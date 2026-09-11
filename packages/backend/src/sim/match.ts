@@ -950,10 +950,13 @@ export class Match {
     this.spawnStartingBase(slot, faction);
   }
 
-  removePlayer(slot: number): void {
-    const index = this.slots.indexOf(slot);
-    if (index >= 0) this.slots.splice(index, 1);
-  }
+  // There is deliberately no `removePlayer`. It spliced a slot out of the
+  // roster with nothing recorded, and it had no caller anywhere in src/, test/
+  // or the frontend — a mutating entry point outside the replay stream, kept
+  // alive by nothing but the symmetry of its name against `addPlayer` (#620).
+  // A slot that leaves goes through `resign`, which resolves it as an
+  // elimination and is recorded; quietly dropping it from the roster is the
+  // thing `resign`'s own comment explains must not happen.
 
   /**
    * The classic opening: a Bastion and a Foundry pre-built, a harvester
@@ -2664,6 +2667,14 @@ export class Match {
    * a game they had already won, waiting for an enemy that no longer exists.
    */
   resign(slot: number): void {
+    // Recorded like any other command, and it is the reason this is the only
+    // public mutating entry point that used not to be (#620). The room reaches
+    // it on every consented walk-out and every out-of-grace disconnect, and
+    // the balance harness resigns too — so the majority of real matches would
+    // have ended in a command the replay never saw, and every one of them
+    // would have replayed as `divergedAtTick`: a determinism-failure report
+    // whose real fault was the checker's own blind spot.
+    this.recordCommand({ tick: this.world.tick, type: 'resign', slot });
     this.eliminate(slot);
     this.resolveVictory();
   }

@@ -46,6 +46,16 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 25: a resignation is a command (#620). The room resigns a slot on every
+ * consented walk-out and every out-of-grace disconnect, and the balance
+ * harness resigns too, but `Match.resign` recorded nothing — so a v24 file of
+ * any match that ended in a concede or a drop holds a stream that plays on
+ * with both commanders alive, and reports `divergedAtTick` for a determinism
+ * failure that never happened. The same bump also widens the state hash over
+ * Biomass, hazards, Drift Health and fauna behaviour, so a v24 file's
+ * checkpoints are hashes of a narrower world and cannot be compared against a
+ * v25 reader's.
+ *
  * 24: the Commune sows (#576, docs/systems-flora.md §2). A new command in the
  * stream — forty-five seconds on station restoring a quarter of a canopy over
  * the two minutes after — so a v23 reader has no case for it, and a bed that
@@ -258,7 +268,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 24;
+export const REPLAY_FORMAT_VERSION = 25;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
@@ -310,7 +320,69 @@ export type ReplayCommand =
   | { tick: number; type: 'ability'; slot: number }
   | { tick: number; type: 'build'; slot: number; kind: StructureKind; x: number; y: number }
   | { tick: number; type: 'produce'; slot: number; structure: number; kind: UnitKind }
-  | { tick: number; type: 'refit'; slot: number; structure: number; kind: RefitKind };
+  | { tick: number; type: 'refit'; slot: number; structure: number; kind: RefitKind }
+  /**
+   * A slot leaves the match (#620). No unit and no target: resigning is a
+   * commander's act on their own roster, like `ability`.
+   *
+   * The last mutating entry point on `Match` to arrive here, and the one that
+   * matters most for what a replay is *for*: the room resigns a slot on every
+   * consented walk-out and every out-of-grace disconnect, so this is how most
+   * real matches end.
+   */
+  | { tick: number; type: 'resign'; slot: number };
+
+/**
+ * Every command type, as a value — so a test can assert that each one
+ * round-trips instead of asserting it about the ones somebody listed.
+ *
+ * The list is held to the union by the `Exact<>` check below, which is the
+ * same idiom that polices the wire (`packages/shared/src/wire.ts`) and is here
+ * for the same reason: `resign` existed on `Match` for the life of the replay
+ * system without a member here or a case in `applyCommand`, and nothing failed
+ * (#620). Now a member added to the union and forgotten here is a build error,
+ * a member here and not in the union is a build error, and one in both with no
+ * dispatch is a build error at `applyCommand`'s `never`.
+ */
+export const REPLAY_COMMAND_TYPES = [
+  'move',
+  'depth',
+  'followFloor',
+  'attackMove',
+  'stop',
+  'hold',
+  'rally',
+  'attack',
+  'torpedo',
+  'noisemaker',
+  'layDecoy',
+  'seedSpore',
+  'sing',
+  'sow',
+  'mine',
+  'depthcharge',
+  'harvest',
+  'embark',
+  'disembark',
+  'throttle',
+  'silent',
+  'engineOff',
+  'ping',
+  'ability',
+  'build',
+  'produce',
+  'refit',
+  'resign',
+] as const satisfies readonly ReplayCommand['type'][];
+
+type Exact<A, B> = [A] extends [B] ? ([B] extends [A] ? true : never) : never;
+
+/** Every command type is in the list, and every listed type is a command. */
+const _replayCommandTypesAreExhaustive: Exact<
+  ReplayCommand['type'],
+  (typeof REPLAY_COMMAND_TYPES)[number]
+> = true;
+void _replayCommandTypesAreExhaustive;
 
 export interface ReplayPlayer {
   slot: number;
@@ -608,5 +680,18 @@ function applyCommand(match: Match, command: ReplayCommand): void {
     case 'refit':
       match.refit(command.slot, eid(command.structure), command.kind);
       break;
+    case 'resign':
+      match.resign(command.slot);
+      break;
+    default: {
+      // Exhaustiveness, not defensive coding — there is no runtime path here.
+      // A new member of `ReplayCommand` that nobody dispatched used to compile,
+      // record, travel and be silently dropped by playback, which reports as a
+      // determinism failure at the next checkpoint rather than as the missing
+      // case it is. This is the wire rule (CLAUDE.md, "The wire") applied to
+      // the replay stream: adding a command on one side only is a build error.
+      const unhandled: never = command;
+      void unhandled;
+    }
   }
 }
