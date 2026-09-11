@@ -279,6 +279,14 @@ the Precentor and the Dredge, locked besides), and the Chorister the cheapest in
 | Economic scouting becomes mandatory busywork | Hum is passive, persistent, and readable from range — you find economies by listening from safety, not by sending scouts to die |
 | Throttling becomes a required micro chore | Three states, per-structure defaults, and a global toggle; a player who never touches it plays a coherent Standard-throttle game |
 
+**These rails are read, not acted on, while balance work is frozen.** The systems the
+numbers describe are still changing shape, so a rail that reads **breached** is recorded
+with its evidence and left standing rather than answered by a repricing — see `CLAUDE.md`,
+"Balance work is frozen". The table below is a statement of design intent and stays true as
+one; what the freeze suspends is tuning against it. A *correctness* fault the harness
+surfaces — a navy that cannot pay for its own roster, an income path that refuses a legal
+purchase — is not balance and is fixed as ordinary work.
+
 **Why the first row is a number and not a mechanism.** Every other risk here names a
 specific shape the asymmetry could fail in, and each one is answered by something in the
 game. "One navy is simply stronger" is the residue — the failure left over when a doctrine

@@ -143,8 +143,9 @@ not.
 ## 3. Choose one issue
 
 From the open issues that are **not** claimed, **not** assigned, and **not**
-labelled `epic`, `needs-hardware`, `needs-decision`, `routine-log` or
-`fable-5.1`, take the oldest. Seven exclusions, for different reasons:
+labelled `epic`, `needs-hardware`, `needs-decision`, `routine-log`,
+`fable-5.1` or `wontfix`, take the oldest. Eight exclusions, for different
+reasons:
 
 - `epic` issues are trackers for work spanning many PRs (#212 is twenty-eight
   campaign missions). There is no single PR that closes one, so an agent that
@@ -198,6 +199,23 @@ labelled `epic`, `needs-hardware`, `needs-decision`, `routine-log` or
   the label across every model still to be built — the structure kinds Phase 3
   has left, and all nineteen of Phase 4's unmodelled hulls — so they are a
   Fable-routed session's, never a firing's.
+- `wontfix` is parked work, in the sense `docs/ROADMAP.md` gives the word: the
+  investigation is written down and the next move is one the build cannot make
+  yet. The finding did not stop being true, so the issue stays open — which,
+  again, is exactly what makes it selectable without this exclusion. Like
+  `needs-hardware` it is a statement about the work rather than about your run,
+  so **do not apply or remove it yourself**; propose it in your run summary.
+
+**Balance work is frozen, whatever an issue is labelled.** `CLAUDE.md` carries
+the rule and its boundary; the short version is that no firing tunes a number
+because a win rate looked wrong, and no firing refreshes a baseline to chase a
+guard-rail. An issue whose subject is a faction winning or losing too much is
+not eligible even when it passes every test above — #654 is the standing
+example, parked on exactly this basis. A *correctness* fault the balance
+harness surfaced is a different thing and is still yours: a navy that cannot
+pay for its own roster, a commander that never builds a structure its own waves
+gate on. If you cannot tell which kind you are looking at, it is balance, and
+you leave it.
 - Anything already claimed is someone else's — including an earlier you.
 - **An issue with an assignee is taken, whoever took it.** A person who
   assigned themselves is on it, and so is an earlier firing of this loop, which
