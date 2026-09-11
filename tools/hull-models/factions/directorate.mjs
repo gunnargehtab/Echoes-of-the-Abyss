@@ -116,15 +116,14 @@ export const segmentSeries = (opts) => series({ section: [0.6, 1.5], ...opts });
  * `offsets[0]` metres off the keel on the even plates and `offsets[1]` on the
  * odd — which is the regimented asymmetry the navy is built on. Two constant
  * offsets rather than a fraction of each plate's beam: the Dredge's stand 5 m
- * and 6 m out on plates that run from 16 m to 25 m of half-beam, so a spine
+ * and 6 m out on plates that run from 17 m to 26 m of half-beam, so a spine
  * is not further out on a wider plate (#630 F5). Omit for a smooth back.
  *
- * The ridge's fractions are the Dredge's own, measured: its half-length is
- * exactly a 3.9th of the plate's, it stands three of its own half-lengths
- * aft of the plate's centre, and its beam is 0.9679 of the plate's (#630
- * F4). Read against the plate's *measured* half-beam — a station rounded to
- * the centimetre puts the ridge 5 mm off, which is where the diff starts to
- * list it.
+ * A station is the orb's *scale*, not its bounding box. A low-facet sphere
+ * never reaches its radius on every axis — an `orb(14, 7)` stops at 0.975 of
+ * sx and 0.950 of sz — so a station read off a box is a few percent short,
+ * and every fraction hung on it then comes out a few percent long (#630,
+ * the second pass).
  */
 export function tergites(root, { violet, red, black }, opts) {
   const { segments, lip = 'seam', spines, facets = [12, 6] } = opts;
@@ -137,10 +136,10 @@ export function tergites(root, { violet, red, black }, opts) {
         0.9 * sz,
       ]);
     else if (lip === 'ridge')
-      add(root, `tergite_ridge_${i}`, orb(10, 6), black, [x - 0.7692 * sx, 0.5, 0], [0, 0, 0], [
-        0.2564 * sx,
+      add(root, `tergite_ridge_${i}`, orb(10, 6), black, [x - 0.75 * sx, 0.5, 0], [0, 0, 0], [
+        0.25 * sx,
         1.125 * sy,
-        0.9679 * sz,
+        0.92 * sz,
       ]);
     if (spines) {
       const { lengths = [7, 10], r = 1.2, rake = -0.3, offsets = [5, 6] } = spines;
@@ -160,16 +159,25 @@ export function rostrum(root, red, { tip, r, length, facets = 6 }) {
 }
 
 /**
- * The telson: a cone astern, apex at `tip`, and the pair of tail spines
- * splayed `splay` radians outward off it.
+ * The telson: a cone astern with its base ring at `tip` — the sternmost
+ * point of the hull — and its apex `length` forward, buried in the last
+ * plate, so the stern is a blunt transom `2r` across; and the pair of tail
+ * spines off it, each centred at `[x, y, ±z]` with its base aft and outboard
+ * and its point forward and inboard, `splay` radians off the keel.
+ *
+ * Both cones go base-aft, point-forward: `cyl(0, r, …)` puts the apex at +X
+ * after the −π/2 roll, as `rostrum` does. The first transcription had both
+ * the other way round — the point at the stern — and every gate passed,
+ * because a cone's bounding box is the same end for end; the approved Dredge
+ * and Precentor both draw them this way (#630, beyond F1–F5).
  */
 export function telson(root, { violet, black }, opts) {
   const { tip, r, length, facets = 6, tailSpines } = opts;
-  add(root, 'telson', cyl(r, 0, length, facets), violet, [tip + length / 2, 0, 0], [0, 0, -Math.PI / 2]);
+  add(root, 'telson', cyl(0, r, length, facets), violet, [tip + length / 2, 0, 0], [0, 0, -Math.PI / 2]);
   if (tailSpines) {
     const { x, y = 1, z, r: sr, length: sl, splay = 0.4 } = tailSpines;
     bothSides((side, sgn) =>
-      add(root, `tail_spine_${side}`, cyl(sr, 0, sl, 5), black, [x, y, sgn * z], [0, sgn * splay, -Math.PI / 2])
+      add(root, `tail_spine_${side}`, cyl(0, sr, sl, 5), black, [x, y, sgn * z], [0, sgn * splay, -Math.PI / 2])
     );
   }
 }
@@ -219,22 +227,14 @@ export function photophores(root, crimson, { spots, size = 1.1, h = 0.4, depth }
  * the plate's height and `z` of its beam — on the shell where it faces up.
  * Port carries `port.count` on every plate; starboard `starboard.count` on
  * every `starboard.every`-th plate only. Regimented, and never symmetric.
- *
- * The defaults are the Dredge's rule as its approved model lays it, to four
- * places — a rank of three runs 0.92 of a half-length, so a pitch given to
- * three places is already a centimetre and a half out at the last lamp
- * (#630 F1). The rule puts the last lamp of a plate under the raised ridge
- * of the plate ahead on two of the Dredge's five, and the export says so;
- * that is the approved model's own placement, and a builder does not move a
- * rank to quiet an audit.
  */
 export function plateEdgePhotophores(root, crimson, opts) {
   const {
     segments,
-    port = { count: 3, start: -0.5128, pitch: 0.4615 },
-    starboard = { count: 2, start: -0.3077, pitch: 0.5641, every: 2 },
+    port = { count: 3, start: -0.5, pitch: 0.45 },
+    starboard = { count: 2, start: -0.3, pitch: 0.55, every: 2 },
     y = 0.72,
-    z = 0.6944,
+    z = 0.66,
     size = 1.4,
   } = opts;
   segments.forEach(([x, sx, sy, sz], i) => {
