@@ -115,11 +115,27 @@ function guess(v, t, indexed, pos, extent) {
             `${r} facets${h > 1 ? ` × ${h}` : ''}, θ₀ ${f5(theta)}) along ${along}`
         );
       }
-  // A sphere: (w+1)(h+1) vertices, 2w(h−1) triangles (single triangles at the poles).
+  // A sphere: (w+1)(h+1) vertices, 2w(h−1) triangles (single triangles at
+  // the poles). The counts cannot tell a sphere from one the export pushed
+  // out of round point by point (the Commune scout's hull), so the radii are
+  // read too: an orb has one, a table has a spread, and the spread is named.
   for (let w = 3; w <= 64; w++)
     for (let h = 2; h <= 64; h++)
-      if (indexed && v === (w + 1) * (h + 1) && t === 2 * w * (h - 1))
-        out.push(`sphere(r ${vec(extent.map((e) => e / 2))}, ${w} × ${h})`);
+      if (indexed && v === (w + 1) * (h + 1) && t === 2 * w * (h - 1)) {
+        const c = [0, 1, 2].map((k) => (extent[k] === 0 ? 0 : 0));
+        let lo = Infinity;
+        let hi = 0;
+        for (let i = 0; i < pos.length; i += 3) {
+          const r = Math.hypot(pos[i] - c[0], pos[i + 1] - c[1], pos[i + 2] - c[2]);
+          lo = Math.min(lo, r);
+          hi = Math.max(hi, r);
+        }
+        const round = hi - lo < 1e-3 * hi;
+        out.push(
+          `sphere(r ${vec(extent.map((e) => e / 2))}, ${w} × ${h})` +
+            (round ? '' : ` — displaced, radii ${f5(lo)}..${f5(hi)}: a table, not a constructor`)
+        );
+      }
   // The lathe family — a lathe of n points round s facets, a torus of rs × ts,
   // a tube of tubular × radial, a plane of w × h — all (n)(s+1) vertices and
   // 2(n−1)s triangles; which one is a matter of where the vertices are.
