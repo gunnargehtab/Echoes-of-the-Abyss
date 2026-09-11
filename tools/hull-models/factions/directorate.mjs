@@ -57,6 +57,8 @@ import {
   polar,
   part,
   segmentSeries as series,
+  capsule,
+  group,
 } from '../kit.mjs';
 
 /**
@@ -505,12 +507,6 @@ export const structureInk = {
   biolightCrimson: (intensity = 1) =>
     lamp('biolight_crimson', hex('#C2465E'), hex('#2C0A12'), 0.4, intensity),
 };
-
-// Two kit primitives the turret's port reaches for and nothing above did —
-// imported beside the builders that use them: the head of this file is the
-// hull vocabulary's and was being edited in parallel when these were written
-// (#639). Folding this line into the import above is a one-line tidy.
-import { capsule, group } from '../kit.mjs';
 
 /**
  * The exchanger on the end of a Vent Tap's draw arm, on `bearing` (#608),

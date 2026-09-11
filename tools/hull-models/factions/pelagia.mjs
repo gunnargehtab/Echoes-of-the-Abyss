@@ -56,6 +56,8 @@ import {
   bothSides,
   polar,
   part,
+  capsule,
+  group,
 } from '../kit.mjs';
 
 /**
@@ -565,12 +567,6 @@ export const structureInk = {
     lamp('biolight_green', hex('#8FE36B'), hex('#123018'), 0.35, intensity),
 };
 
-// Two kit primitives the turret's port reaches for and nothing above did —
-// imported beside the builders that use them: the head of this file is the
-// hull vocabulary's and was being edited in parallel when these were written
-// (#639). Folding this line into the import above is a one-line tidy.
-import { capsule, group } from '../kit.mjs';
-
 /**
  * A grown shell: an orb of `r` and `facets` [round, down] that may stop
  * short of a full turn (`round`, the fraction of one it goes round) or short
@@ -587,8 +583,8 @@ const shell = (r, [w, h], { round = 1, down = 1 } = {}) =>
  * grown as a bladder: a squashed orb ringed three times, the pale bud on its
  * crown, the one vein along its back, and three roots leaning out into the
  * ground beyond. The rings are lofts round the arm's own axis, squashed with
- * the bladder — the Sower's `bladder` rings are toruses round a hull's
- * length, and a ring grown round a pipe is a different shape. Distances are
+ * the bladder — the same shoulder–crown–shoulder ridge `ridgeRing` lathes for
+ * the Sower's `bladder` rings, turned to the pipe's axis. Distances are
  * metres out along the bearing, as the kit's `ventDrawArm` takes them;
  * `roots.across` are metres to the right of it, looking out.
  */

@@ -21,7 +21,8 @@
  * them, and get them wrong the way an eyeball diff does:
  *
  * - **Match by name, never by index.** A port may legitimately reorder parts
- *   (the Sower's moved `stem_keel` ahead of its caudal pair), and an
+ *   (#546's Sower port moved `stem_keel` ahead of its caudal pair, put back
+ *   in #639), and an
  *   index-matched diff reports that single reorder as three separate parts
  *   changing shape. Order is worth reporting — `check.mjs` compares in order,
  *   so it is load-bearing — but it is its own finding, not a reshape. A name
