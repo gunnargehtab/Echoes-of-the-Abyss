@@ -362,7 +362,7 @@ function loadTemplate(
 
 /**
  * A per-entity instance of the approved model, or null while it loads (or
- * when none exists — VentTap, a failed decode). Callers fall back to the
+ * when none exists — the BioReactor, a failed decode). Callers fall back to the
  * Phase-1 sprite until this returns something, so a null is never a hole on
  * screen. Instances share geometry with their template; lamp materials are
  * cloned per instance so each hull's live SIG dims its own lights.
