@@ -24,7 +24,10 @@
  *   (the Sower's moved `stem_keel` ahead of its caudal pair), and an
  *   index-matched diff reports that single reorder as three separate parts
  *   changing shape. Order is worth reporting — `check.mjs` compares in order,
- *   so it is load-bearing — but it is its own finding, not a reshape.
+ *   so it is load-bearing — but it is its own finding, not a reshape. A name
+ *   a file uses more than once — the Vent Tap's draw arm repeats its eleven
+ *   parts four times under the same names (#608) — is matched by occurrence,
+ *   the k-th `anchor_foot` of one file to the k-th of the other.
  * - **Subtract the root scale before judging.** A port is metre-true where its
  *   approved model was not, so the whole hull is expected to move by one
  *   uniform factor (`hulls/sower.mjs` documents its 0.947). Reporting that as
@@ -152,13 +155,26 @@ function box(parts) {
  * eleven, and against a fixed metre no part of theirs qualifies, the scale
  * silently defaults to 1 and every part reads as moved.
  */
+/**
+ * A part's key: its name, and which occurrence of that name it is in the
+ * file — so that a repeated arm's fourth `valve_block` matches the fourth.
+ */
+function keyed(parts) {
+  const seen = new Map();
+  return parts.map((p) => {
+    const n = (seen.get(p.name) ?? 0) + 1;
+    seen.set(p.name, n);
+    return { ...p, key: n === 1 ? p.name : `${p.name}#${n}` };
+  });
+}
+
 function rootScale(before, after) {
-  const afterByName = new Map(after.map((p) => [p.name, p]));
+  const afterByName = new Map(after.map((p) => [p.key, p]));
   const floor = Math.max(...box(before).extent) / 100;
   return [0, 1, 2].map((axis) => {
     const ratios = [];
     for (const p of before) {
-      const q = afterByName.get(p.name);
+      const q = afterByName.get(p.key);
       if (!q) continue;
       const a = box(p).extent[axis];
       const b = box(q).extent[axis];
@@ -196,8 +212,8 @@ function extract(rev, path, dir) {
 function report(beforePath, afterPath, label) {
   const b0 = yawOntoX(readGlb(beforePath).parts);
   const a0 = yawOntoX(readGlb(afterPath).parts);
-  const before = b0.parts;
-  const after = a0.parts;
+  const before = keyed(b0.parts);
+  const after = keyed(a0.parts);
   const scale = rootScale(before, after);
   const uniform = Math.max(...scale) / Math.min(...scale) - 1;
 
@@ -217,18 +233,18 @@ function report(beforePath, afterPath, label) {
       : `⚠ not uniform, ${(uniform * 100).toFixed(2)}% apart: reproportioned, not rescaled`;
   console.log(`  scale   ${scale.map((v) => v.toFixed(4)).join('  ')}  ${scaleNote}`);
 
-  const beforeByName = new Map(before.map((p) => [p.name, p]));
-  const afterByName = new Map(after.map((p) => [p.name, p]));
+  const beforeByName = new Map(before.map((p) => [p.key, p]));
+  const afterByName = new Map(after.map((p) => [p.key, p]));
 
   // The one translation the whole hull moved by — a port that centres a hull
   // the approved export left off-centre moves every part by the same vector,
   // which the bake and the runtime undo and which is therefore not shape.
   const shift = medianAxis(
     before
-      .filter((p) => afterByName.has(p.name))
+      .filter((p) => afterByName.has(p.key))
       .map((p) => {
         const a = box(p).centre;
-        const b = box(afterByName.get(p.name)).centre;
+        const b = box(afterByName.get(p.key)).centre;
         return [0, 1, 2].map((i) => b[i] - a[i] * scale[i]);
       })
   );
@@ -237,15 +253,15 @@ function report(beforePath, afterPath, label) {
       `  shift   ${shift.map((v) => v.toFixed(3)).join('  ')}  (whole hull, m — divided out below)`
     );
 
-  const gone = before.filter((p) => !afterByName.has(p.name)).map((p) => p.name);
-  const added = after.filter((p) => !beforeByName.has(p.name)).map((p) => p.name);
+  const gone = before.filter((p) => !afterByName.has(p.key)).map((p) => p.key);
+  const added = after.filter((p) => !beforeByName.has(p.key)).map((p) => p.key);
   if (gone.length) console.log(`  removed ${gone.length}: ${gone.join(' ')}`);
   if (added.length) console.log(`  added   ${added.length}: ${added.join(' ')}`);
 
   // Order is its own finding: check.mjs compares in order, so a reorder is a
   // real change to the file even when every part kept its shape.
-  const beforeNames = before.map((p) => p.name);
-  const afterNames = after.map((p) => p.name);
+  const beforeNames = before.map((p) => p.key);
+  const afterNames = after.map((p) => p.key);
   const reordered = [];
   if (gone.length === 0 && added.length === 0) {
     beforeNames.forEach((n, i) => {
@@ -259,7 +275,7 @@ function report(beforePath, afterPath, label) {
   // file, because that is the hull the reviewer is looking at.
   const moved = [];
   for (const p of before) {
-    const q = afterByName.get(p.name);
+    const q = afterByName.get(p.key);
     if (!q) continue;
     const a = box(p);
     const b = box(q);
@@ -284,7 +300,7 @@ function report(beforePath, afterPath, label) {
       ...[0, 1, 2].map((i) => Math.abs(sb.centroid[i] - shift[i] - sa.centroid[i] * scale[i]))
     );
     if (cd > 0.005 && cd > d + 0.005) note.push(`centroid ${cd.toFixed(3)} m`);
-    if (d > 0.005 || note.length) moved.push({ name: p.name, d: Math.max(d, cd), note: note.join(', ') });
+    if (d > 0.005 || note.length) moved.push({ name: p.key, d: Math.max(d, cd), note: note.join(', ') });
   }
   moved.sort((x, y) => y.d - x.d);
 
