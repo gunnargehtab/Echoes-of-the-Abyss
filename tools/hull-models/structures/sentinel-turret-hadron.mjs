@@ -48,8 +48,11 @@ const DRAWN = 11.7165;
 const shadow = hadron.structureInk.shadowIndigo();
 const steel = hadron.structureInk.darkSteel();
 const dim = hadron.structureInk.alloyDim();
-const crystal = hadron.structureInk.crystalDim(0.8);
-const navLight = hadron.structureInk.navLight(0.9);
+// The two emissive strengths are the approved export's own floats, not the
+// round 0.8 and 0.9 they plainly started as: the file carries them through a
+// float path, and a port types what the file has (#639 review, N1).
+const crystal = hadron.structureInk.crystalDim(0.800134217970087);
+const navLight = hadron.structureInk.navLight(0.9002684359401738);
 
 const root = new THREE.Group();
 root.name = 'sentinel_turret_hadron';
