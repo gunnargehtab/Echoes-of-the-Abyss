@@ -100,9 +100,14 @@ export const KELP_LABYRINTH: MapDefinition = {
     // players in the deepest, loudest biome on the map.
     //
     // Four of them, one per corner. Two corners had none, so two seats reached
-    // their nearest pocket at 5,124 m against 1,732 m, and approached the
+    // their nearest pocket at 4,384 m against 1,732 m, and approached the
     // centre crystal through quieter water for it — PF 0.9139 against 1.1222,
     // because the pocket a seat crosses is PF 1.6 (#626).
+    //
+    // 4,384 m is the *central* pocket, which is what the seats without a
+    // corner one fell back to. Their nearest corner pocket was 5,124 m, and
+    // that is the number to quote only if the metric is narrowed to corners —
+    // the test measures every AbyssalTrench region, so it reads 4,384.
     //
     // This equalises upward rather than down: every seat now has a pocket at
     // 1,732 m and every crystal approach reads 1.1222. Removing the two would
@@ -173,8 +178,23 @@ export const KELP_LABYRINTH: MapDefinition = {
     { x: 1700, y: H - 1100, kind: ResourceKind.Nodule },
     // Expansions on the open ring: safe to reach, impossible to defend
     // quietly, because holding them means standing outside the kelp.
-    { x: W / 2, y: 1500, kind: ResourceKind.Nodule, amount: 5500 },
-    { x: W / 2, y: H - 1500, kind: ResourceKind.Nodule, amount: 5500 },
+    //
+    // On cell centres, and that is the whole of why these are 1,625 and 6,375
+    // rather than the 1,500 and 6,500 they read as. A cell takes the biome of
+    // the region containing its *centre*, the two thermal veins are y 750-1500
+    // and y 6500-7250, and those two numbers sit on opposite sides of that
+    // rule: y 1,500 falls in the row centred 1,625, outside the north vein,
+    // while y 6,500 falls in the row centred 6,625, inside the south one. So
+    // the north expansion was worked at PF 1.000 and the south at PF 0.450 —
+    // the loudest and the quietest ground on the map, on the one pair of
+    // fields every seat shares. Mirror-symmetric coordinates, asymmetric
+    // ground, and nothing that reads the literal could see it.
+    //
+    // Both are open water now, because that is what the line above asks for:
+    // an expansion here is meant to be impossible to defend quietly, and a
+    // vent would have masked one of them.
+    { x: W / 2, y: 1625, kind: ResourceKind.Nodule, amount: 5500 },
+    { x: W / 2, y: H - 1625, kind: ResourceKind.Nodule, amount: 5500 },
     {
       x: W / 2,
       y: H / 2,
@@ -192,9 +212,12 @@ export const KELP_LABYRINTH: MapDefinition = {
     // where they sat. From the diagonal they were 3,536 m from two seats and
     // 4,465 m from the other two, so two navies funded a reactor 929 m nearer
     // than their opposite numbers, on a map that declares four seats (#626).
-    // At x = 4,000, ±850 m about the centre, both beds are 3,830 m from every
-    // seat — the same arithmetic without adding a third and a fourth and
-    // doubling what the map grows.
+    // At x = 4,000, ±850 m about the centre, every seat's nearer bed is
+    // 3,830 m away and its farther one 5,021 m — the same pair of distances
+    // from all four chairs, rather than the same distance to each bed, which
+    // no two-bed placement can give four corners. That is the arithmetic the
+    // seats needed, without adding a third and a fourth and doubling what the
+    // map grows.
     //
     // ±850 and not ±600, because how far apart they sit is a mechanic and not
     // a layout detail: `bedsInReach` gives a reactor every bed within

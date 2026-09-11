@@ -615,13 +615,15 @@ describe('Abyssal Rift Corridor', () => {
 describe('Kelp Labyrinth', () => {
   it('is the same chair from all four corners', () => {
     // KELP_LABYRINTH_HEADER declares four seats. Until #626 the map authored
-    // its corner pressure pockets, both bio-reactor beds and two of its three
-    // outer cold-shock sites on the NW-SE diagonal alone, so two of those four
+    // its corner pressure pockets, both bio-reactor beds and both of its outer
+    // cold-shock sites on the NW-SE diagonal alone, so two of those four
     // chairs played a measurably different map: the nearest bed at 4,465 m
     // against 3,536 m, the nearest cold shock at 4,384 m against 1,697 m, the
-    // nearest pocket at 5,124 m against 1,732 m, and — because a pocket is
+    // nearest pocket at 4,384 m against 1,732 m, and — because a pocket is
     // PF 1.6 and sits on the run — a crystal approach at 0.9139 against
-    // 1.1222. The beds are the sharp one: this map authors no `blooms`, so
+    // 1.1222. (4,384 m is the central pocket, which the two seats without a
+    // corner one fell back to; their nearest corner pocket was 5,124 m. This
+    // metric counts every AbyssalTrench region, so it reads the former.) The beds are the sharp one: this map authors no `blooms`, so
     // they are its only legal bio-reactor ground, and `reactorSite` picks
     // between them by distance from home.
     //
@@ -644,11 +646,31 @@ describe('Kelp Labyrinth', () => {
       (r) => r.kind === ResourceKind.Nodule && r.amount === undefined
     );
 
+    // The shared ring expansions are in here because coordinates that mirror
+    // each other are not the same ground. y 1,500 and y 6,500 are exact
+    // mirrors and rasterised into different biomes — the north into open water
+    // at PF 1.000, the south into a thermal vein at PF 0.450 — because a cell
+    // takes the biome of the region holding its centre and those two fell on
+    // opposite sides of the north vein's edge. The first version of this test
+    // asserted five metrics and reached none of it.
+    const expansions = KELP_LABYRINTH.resources.filter(
+      (r) => r.kind === ResourceKind.Nodule && r.amount !== undefined
+    );
+    const nearestExpansion = (x: number, y: number) =>
+      expansions.reduce((a, b) =>
+        Math.hypot(x - a.x, y - a.y) <= Math.hypot(x - b.x, y - b.y) ? a : b
+      );
+
     const seats = KELP_LABYRINTH.spawns.map((s) => ({
       'nearest bio-reactor bed': nearest(s.x, s.y, beds),
       'nearest cold shock': nearest(s.x, s.y, cold),
       'nearest pressure pocket': nearest(s.x, s.y, deep),
       'nearest home field': nearest(s.x, s.y, home),
+      'nearest shared expansion': nearest(s.x, s.y, expansions),
+      'PF where that expansion is worked': t.propagationAt(
+        nearestExpansion(s.x, s.y).x,
+        nearestExpansion(s.x, s.y).y
+      ),
       'PF to the crystal': t.pathPropagation(
         s.x,
         s.y,
@@ -685,7 +707,7 @@ describe('Kelp Labyrinth', () => {
     assert.ok(
       asymmetricCells(KELP_LABYRINTH, (col, row, cols, rows) => [cols - 1 - col, rows - 1 - row]) <=
         worst.half,
-      'the two diagonals drifted further apart'
+      'the map stopped matching itself under a half turn'
     );
   });
 
@@ -818,6 +840,17 @@ describe('every map has water where it seats things', () => {
    * alike, because a test scoped to the one instance somebody had in mind is
    * how the next one gets in — and this was the third time this exact shape of
    * fault reached the tree.
+   *
+   * Be clear about how much that buys. Twenty-one of the twenty-three maps
+   * paint a full-extent background region, so containment is trivially true of
+   * them and this binds on the two that paint only what they mean — the
+   * Ventfront and the Rift Corridor. It is also purely syntactic: a rectangle
+   * that sets neither `floorM` nor `ceilingM` satisfies it while saying
+   * nothing about the water column, so a future author could close a gutter
+   * with a biome-only rectangle and reinstate the identical fault. Requiring
+   * that some covering region shape the column would catch that and costs
+   * eight exemptions, all of them kelp-labyrinth's; that is a decision rather
+   * than a patch and is #636's.
    */
   it('paints the ground under every base it seats, on every map', () => {
     const paints = (map: MapDefinition, x: number, y: number) =>
