@@ -179,10 +179,16 @@ export function topDown(parts, ppm = 4) {
         const pz = min[2] + (cz + 0.5) / ppm;
         for (let cx = cx0; cx <= cx1; cx++) {
           const px = min[0] + (cx + 0.5) / ppm;
-          const l1 = ((x1 - x0) * (pz - z0) - (px - x0) * (z1 - z0)) / det;
-          const l2 = ((px - x0) * (z2 - z0) - (x2 - x0) * (pz - z0)) / det;
-          // Barycentrics from the two edge cross products: inside when the
-          // third weight is also non-negative.
+          // Barycentrics from the two edge cross products: the weight on
+          // vertex 1 is cross(P - P0, P2 - P0) / det and the weight on
+          // vertex 2 is cross(P1 - P0, P - P0) / det; inside when the third
+          // weight is also non-negative. The first cut had the two
+          // exchanged. The inside test is symmetric and never noticed, but
+          // the height read off a sloped face was weighted towards its wrong
+          // corner, so a lamp beside a frustum's wall could be told the wall
+          // stood over it (#639, the Knights' turret's `nav_mark_fore_r`).
+          const l1 = ((px - x0) * (z2 - z0) - (x2 - x0) * (pz - z0)) / det;
+          const l2 = ((x1 - x0) * (pz - z0) - (px - x0) * (z1 - z0)) / det;
           const l0 = 1 - l1 - l2;
           if (l0 < -1e-6 || l1 < -1e-6 || l2 < -1e-6) continue;
           const y = l0 * y0 + l1 * y1 + l2 * y2;
