@@ -106,8 +106,7 @@ const ridgeRing = ({ crown, shoulder, halfWidth, facets }) =>
  * its two caps on one diagonal and its walls from its first corner, where a
  * box cuts opposite faces opposite ways, and `diff.mjs` reads a box in an
  * extrusion's place as ten of twelve triangles re-cut (#639). The corners
- * run from the fore end's starboard side, the start the exports were cut
- * from.
+ * run from the fore end's port side, the start the exports were cut from.
  */
 const blade = (from, to, height, t) =>
   plan(
@@ -241,11 +240,11 @@ export function bloomBed(root, mats, opts) {
 
 /**
  * Ribs radiating from a node across a leaf, each with its lit vein riding on
- * top. `midrib` runs straight forward from the node; `port` lists the ribs to
- * one side as `[length, yaw]`, yaw in radians off the midrib, and the other
- * side is mirrored — the Sower's ribs are the one Commune series that is
- * bilateral, because a leaf's venation is. Numbered as the Sower numbers
- * them: the midrib is rib_0, then port, then starboard.
+ * top. `midrib` runs straight forward from the node; `flank` lists the ribs
+ * down one flank as `[length, yaw]`, yaw in radians off the midrib, and the
+ * other flank is mirrored — the Sower's ribs are the one Commune series that
+ * is bilateral, because a leaf's venation is. Numbered as the Sower numbers
+ * them: the midrib is rib_0, then the starboard ribs, then the port.
  *
  * `r` is a rib's radius where it springs from the node and `tip` its radius
  * at the far end — the Sower's taper from 1.1 m to 0.5 m, as a leaf's ribs
@@ -254,11 +253,11 @@ export function bloomBed(root, mats, opts) {
  * out (#639).
  */
 export function ribFan(root, { ridge, vein }, opts) {
-  const { node, y, midrib, port, r = 0.95, tip = r, veinFrac = 0.8, lift = 1.15 } = opts;
+  const { node, y, midrib, flank, r = 0.95, tip = r, veinFrac = 0.8, lift = 1.15 } = opts;
   const [nx, nz] = node;
   const ribs = [[midrib, 0]];
-  for (const [len, yaw] of port) ribs.push([len, -Math.abs(yaw)]);
-  for (const [len, yaw] of port) ribs.push([len, Math.abs(yaw)]);
+  for (const [len, yaw] of flank) ribs.push([len, -Math.abs(yaw)]);
+  for (const [len, yaw] of flank) ribs.push([len, Math.abs(yaw)]);
   ribs.forEach(([len, yaw], i) => {
     const cx = nx + (len / 2) * Math.cos(yaw);
     const cz = nz - (len / 2) * Math.sin(yaw);
@@ -424,7 +423,7 @@ export function stemKeel(root, ridge, { from, to, height, y, t = 0.8 }) {
 /**
  * Membrane fins, port and starboard: thin plates in `algae_membrane` lying
  * flat, mirrored about the keel. Each entry is `[name, corners, opts]`, the
- * corners four `[x, z]` in perimeter order on the **port** side; `opts.t` is
+ * corners four `[x, z]` in perimeter order on the **starboard** side; `opts.t` is
  * the thickness (0.4 m on the Spinner's flukes, 0.5 m on its pectorals and on
  * the Sower's caudals) and `opts.y` the height, defaulting to the call's.
  * Pectorals, flukes, caudals and paddles are all this.
@@ -436,9 +435,10 @@ export function stemKeel(root, ridge, { from, to, height, y, t = 0.8 }) {
  * is *swept*, and a Commune fin that is not swept reads as a wing — the one
  * thing this navy's beam is not.
  *
- * `bySide` exports every port fin before any starboard one — pectoral_p,
- * fluke_p, pectoral_s, fluke_s, which is the order the approved Spinner
- * carries; the default goes pair by pair.
+ * `bySide` exports every starboard fin before any port one — pectoral_s,
+ * fluke_s, pectoral_p, fluke_p, which is the order the approved Spinner
+ * carries (+z first; the names turned round with #642); the default goes
+ * pair by pair.
  */
 export function fins(root, membrane, { y = 0, pairs, bySide = false }) {
   const fin = ([name, corners, { t = 0.5, y: fy = y } = {}], side, sgn) =>

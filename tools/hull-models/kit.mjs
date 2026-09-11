@@ -378,10 +378,42 @@ export function strut(root, name, a, b, mat, t = 0.8) {
   return mesh;
 }
 
-/** Mirror a builder across the keel: called once with +1 and once with -1. */
+/**
+ * Mirror a builder across the keel: called once a side, with the side's tag
+ * and its sign. **`p` is port, and port is -z; `s` is starboard, +z.** The
+ * kit's frame has the bow on +X and Y up, so +z is the right-hand side of a
+ * hull facing forward — the word means what it says at sea, and it means
+ * the same thing here (#642). It is the side the sprite and the conn view
+ * put on a ship's right when it heads right across the screen, the side
+ * `outlines.mjs` cuts first, and the side every prompt block means by
+ * "starboard".
+ *
+ * It was the other way round until #642: this helper handed `p` the +z
+ * side, and the eleven hulls built through it before then — Bulwark,
+ * Cantus, Clarion, Derrick, Dredge, Precentor, Reciter, Responsory, Sower,
+ * Spinner, Tender — carried the mirrored names into their approved files,
+ * while the four Light Scouts, and the twenty shared-kind exports behind
+ * them, name their sides the nautical way (port at the export's +x, which
+ * `drawn` lands on -z). Two conventions in the same four modules meant the
+ * next author would "fix" a scout to match the helper or the helper to match
+ * a scout, and either is a change to what a model is, since `check.mjs`
+ * compares names. So the helper turned round and the eleven were re-run as
+ * a relabel: starboard is drawn first, because +z is the side the first
+ * call always drew, which leaves every buffer of every one of the eleven
+ * byte-identical to its approved binary and changes only the node names.
+ * Where a script chose a side by its tag — the Tender's patches, the
+ * Precentor's ranks, the Dredge's claw and boom — the tag was swapped so the
+ * part stayed where the approved model has it. The four Choristers, X-long
+ * exports of the same early pass, carry the same mirrored names and were
+ * relabelled the same way in their ports, as were the Commune Harvester's
+ * two feed tendrils, the one pair on a Z-long export named the other way.
+ * What the relabel showed about two of those models against their prompt
+ * blocks is on #642. `hadron.pair` is the turrets' own `r`/`l`, the
+ * export's, and not this.
+ */
 export function bothSides(fn) {
-  fn('p', 1);
-  fn('s', -1);
+  fn('s', 1);
+  fn('p', -1);
 }
 
 export function bounds(root) {
@@ -706,7 +738,8 @@ export function yawed(geo) {
  * survive the turn, pitch changes sign, and the order follows the axes
  * round. So a part the export drew at its +x — every `_p` on all four
  * scouts — lands on the kit's -z, because that is where the file has it and
- * a port reproduces the file, not the name.
+ * a port reproduces the file, not the name; and -z is port (`bothSides`
+ * above, #642), so on a shared-kind export the name and the side agree.
  */
 export function drawn(t = [0, 0, 0], e = [0, 0, 0], s = [1, 1, 1]) {
   return {

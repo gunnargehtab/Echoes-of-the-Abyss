@@ -16,7 +16,7 @@
  * Three things the file does that the prompt does not say, kept because the
  * approved model does them:
  *
- * - **The order is the file's.** Port group then starboard group for every
+ * - **The order is the file's.** Starboard group then port group for every
  *   paired family — the ballast with its fore and aft caps, the prop tunnel
  *   with its blades and vent — and the tail runs bow lamp, stencil, then the
  *   twenty-eight rivets; the Bulwark's tail runs the other way round.
@@ -84,8 +84,8 @@ bathyarch.workshop(root, { black, grey, rust, amber, lampM, vent }, {
   roof: { at: [-6, 11.6, 0], size: [27, 1, 21] },
   ridge: { at: [-6, 12.4, 0], size: [27.5, 0.8, 4] },
   patches: {
-    p: { at: [-12, 7.5, 10.2], size: [7, 4, 0.5], old: true },
-    s: { at: [0, 8.5, -10.2], size: [5, 3, 0.5] },
+    s: { at: [-12, 7.5, 10.2], size: [7, 4, 0.5], old: true },
+    p: { at: [0, 8.5, -10.2], size: [5, 3, 0.5] },
   },
   band: { at: [-6, 11, 0], size: [27, 0.6, 21.2] },
   ports: { count: 5, x: -16, pitch: 5, y: 8.4, z: 10.3, size: [2.2, 1.4, 0.4] },
@@ -107,8 +107,8 @@ bathyarch.derrickRig(root, { grey, amber, black, lampM }, {
   lamp: { x: 10.2, y: 18.2, z: 13, size: [1.8, 1.2, 1.8] },
 });
 
-// Deck stores aft of the workshop: the plate rack to port, the bottles to
-// starboard, a pipe run down each side, and the pump house.
+// Deck stores aft of the workshop: the plate rack to starboard, the bottles to
+// port, a pipe run down each side, and the pump house.
 bathyarch.spareRack(root, { grey, rust }, {
   x: -26, z: 9,
   plates: [[4.6, [9, 0.9, 6], false], [5.5, [9, 0.9, 5], true], [6.4, [9, 0.9, 4], false]],

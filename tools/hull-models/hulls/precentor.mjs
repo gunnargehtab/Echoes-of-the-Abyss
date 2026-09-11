@@ -17,8 +17,11 @@
  * Two things the prompt calls out are load-bearing rather than decorative, and
  * both are held by the builders rather than by numbers typed here:
  *
- * - **The port rank is one longer.** Six hydrophones to port against five to
- *   starboard, which is why `arrayBoom` throws on matched ranks: "asymmetric,
+ * - **The starboard rank is one longer.** Six hydrophones to starboard against
+ *   five to port — the block above says port; the approved model was named
+ *   and read with +z as port, #642 settled +z as starboard, and a port keeps
+ *   the model while the call is filed off that issue — which is why
+ *   `arrayBoom` throws on matched ranks: "asymmetric,
  *   yet regimented" is the navy's whole rule, and a boom that balanced would
  *   read as an Order sensor mast.
  * - **The plan is a cross, and it stays X-long by 20 m rather than 60.** The
@@ -94,7 +97,7 @@ directorate.rostrum(root, red, { tip: 30, r: 3.2, length: 12, facets: 8 });
 directorate.telson(root, { violet, black }, { tip: -34, r: 2.5, length: 8 });
 
 // The hydrophone array, and the hull's argument: 44 m of boom across a 64 m
-// body, six sockets to port against five to starboard. `arrayBoom` refuses
+// body, six sockets to starboard against five to port. `arrayBoom` refuses
 // matched ranks, so the asymmetry cannot be lost to a tidy edit. The spines'
 // centres sit 3 m and 3.7 m over the boom's axis — the short one's base on
 // the axis, the long one's 5 cm under it — each in a 1.6 m square socket,
@@ -104,8 +107,8 @@ directorate.arrayBoom(root, { steel, black, red }, {
   x: 0,
   y: 2.5,
   halfSpan: 18,
-  port: 6,
-  starboard: 5,
+  starboard: 6,
+  port: 5,
   z0: 5,
   pitch: 2.6,
   sleeveR: 1.9,
@@ -127,7 +130,7 @@ directorate.listeningDome(root, { red, violet, black }, {
 });
 
 // Four dorsal spines lengthening toward the bow by half a metre a station,
-// alternating sides at 11 m — 1.5 m to starboard, 2 m to port — raked 0.35
+// alternating sides at 11 m — 1.5 m to port, 2 m to starboard — raked 0.35
 // forward and cut five-sided. `dorsalSpines` refuses a mirrored pair; this
 // rank never offers one.
 directorate.dorsalSpines(root, black, {
@@ -145,7 +148,7 @@ directorate.dorsalSpines(root, black, {
 // long, tapering from 0.7 m at the root to 0.5 m at the tip, folded 0.4 rad —
 // the one place on the hull where a mirrored pair is the rule rather than the
 // error. Matched in rule, not in result: the approved model turns the
-// starboard rank the other way about, roots outboard, and the port keeps it.
+// port rank the other way about, roots outboard, and the script keeps it.
 directorate.limbs(root, steel, { xs: [-14, -4, 6], y: -1, z: 7.5, r: [0.7, 0.5], length: 7, fold: 0.4 });
 
 // "Nearly black": four photophores, and that is the whole light budget of a

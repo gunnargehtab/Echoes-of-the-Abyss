@@ -15,7 +15,7 @@
  *              claw_tip_a/b · dredge_boom · dredge_tooth_0..2 · hopper ·
  *              hopper_rim · hopper_throat · photophore_p_ij / s_ij / dorsal_i
  *   Precentor  tergite_0..3 · tergite_seam_0..3 · rostrum · telson · array_boom ·
- *              array_boom_sleeve · hydrophone_p0..5 / s0..4 · boom_tip_p/s ·
+ *              array_boom_sleeve · hydrophone_s0..5 / p0..4 · boom_tip_p/s ·
  *              dome · dome_spine_0..5 · dome_aft · dorsal_spine_0..3 ·
  *              limb_p0..2 / s0..2 · photophore_0..3
  *   Chorister  tergite_0..2 · tergite_seam_0..2 · bladder_dome · rostrum ·
@@ -32,9 +32,13 @@
  *   lathed: a carapace is plates, and the seams between them are the shape.
  * - **Asymmetric, yet regimented.** The spines rake the same way and alternate
  *   sides; the limbs fold at one angle in two matched ranks; the photophores
- *   run in ranks at a fixed pitch — port three to a plate, starboard two on
- *   every other plate — and the Precentor's port hydrophone rank is one longer
- *   than its starboard. The *rule* is regular and the *result* never mirrors,
+ *   run in ranks at a fixed pitch — starboard three to a plate, port two on
+ *   every other plate — and the Precentor's starboard hydrophone rank is one
+ *   longer than its port. (Both blocks say port. The approved models were
+ *   named and read with +z as port, and #642 settled +z as starboard, so the
+ *   models and their blocks now disagree; a port keeps the model, and the
+ *   call is filed off #642.) The *rule* is regular and the *result* never
+ *   mirrors,
  *   so the builders that place light refuse a mirrored pair outright.
  * - **Light is a photophore, and it lies flat.** A photophore is a small flat
  *   box in `biolight_crimson` on an upward face of the carapace, because the
@@ -115,7 +119,7 @@ export const segmentSeries = (opts) => series({ section: [0.6, 1.5], ...opts });
  * the aft edge standing *proud* of the plate, the raised trailing lip of a
  * heavier carapace. `'none'` for a hull whose plates butt.
  *
- * `spines` puts one spine off each plate — alternating sides from port,
+ * `spines` puts one spine off each plate — alternating sides from starboard,
  * alternating between the two `lengths`, all raked forward by `rake`, each
  * `offsets[0]` metres off the keel on the even plates and `offsets[1]` on the
  * odd — which is the regimented asymmetry the navy is built on. Two constant
@@ -206,9 +210,9 @@ export function telson(root, { violet, black }, opts) {
  * bounding box cannot show, as `claw` says of the Dredge's; the first port
  * matched their boxes to the centimetre with a straight 6.9 m leg at a
  * shallower fold and a sixth more surface. The tip is the cylinder's +Y end,
- * and the same Euler folds it forward and outboard to port but aft and
- * *inboard* to starboard, so the approved model's starboard roots stand
- * outboard; a port reproduces that.
+ * and the same Euler folds it forward and outboard to starboard but aft and
+ * *inboard* to port, so the approved model's port roots stand outboard; a
+ * port reproduces that.
  */
 export function limbs(root, steel, { xs, y, z, r = 0.6, length = 6, fold = 0.45 }) {
   const [rootR, tipR] = Array.isArray(r) ? r : [r, r];
@@ -254,14 +258,14 @@ export function photophores(root, crimson, { spots, size = 1.1, h = 0.4, depth, 
  * plate's edge, each rank starting `start` of the plate's half-length from
  * its centre and running aft-to-forward at `pitch` of it, sitting at `y` of
  * the plate's height and `z` of its beam — on the shell where it faces up.
- * Port carries `port.count` on every plate; starboard `starboard.count` on
- * every `starboard.every`-th plate only. Regimented, and never symmetric.
+ * Starboard carries `starboard.count` on every plate; port `port.count` on
+ * every `port.every`-th plate only. Regimented, and never symmetric.
  */
 export function plateEdgePhotophores(root, crimson, opts) {
   const {
     segments,
-    port = { count: 3, start: -0.5, pitch: 0.45 },
-    starboard = { count: 2, start: -0.3, pitch: 0.55, every: 2 },
+    starboard = { count: 3, start: -0.5, pitch: 0.45 },
+    port = { count: 2, start: -0.3, pitch: 0.55, every: 2 },
     y = 0.72,
     z = 0.66,
     size = 1.4,
@@ -275,8 +279,8 @@ export function plateEdgePhotophores(root, crimson, opts) {
           sgn * z * sz,
         ]);
     };
-    rank('p', 1, port);
-    if (i % (starboard.every ?? 1) === 0) rank('s', -1, starboard);
+    rank('s', 1, starboard);
+    if (i % (port.every ?? 1) === 0) rank('p', -1, port);
   });
 }
 
@@ -328,8 +332,9 @@ export function listeningDome(root, { red, violet, black }, opts) {
  * with a sleeve where it passes the body, a rank of hydrophone spines each
  * side stepping outward at `pitch` — alternating between the two `lengths`,
  * each in its socket, canted outward — and a tip spike at each end. `port`
- * and `starboard` are the rank sizes and must differ: the Precentor's port
- * rank is one longer, and a hull whose ranks match is not this navy's.
+ * and `starboard` are the rank sizes and must differ: the Precentor's
+ * starboard rank is one longer (its block says port; #642), and a hull whose
+ * ranks match is not this navy's.
  *
  * The tip spike stands *beyond* `halfSpan` rather than straddling it, so the
  * array's span is the boom plus both tips: the Precentor's 36 m boom and its
@@ -347,7 +352,7 @@ export function listeningDome(root, { red, violet, black }, opts) {
  * (#638).
  */
 export function arrayBoom(root, { steel, black, red }, opts) {
-  const { x, y, halfSpan, r = 1.3, port = 6, starboard = 5, z0 = 5, pitch = 2.6 } = opts;
+  const { x, y, halfSpan, r = 1.3, starboard = 6, port = 5, z0 = 5, pitch = 2.6 } = opts;
   const { lengths = [6, 7.5], hr = 0.9, cant = 0.25, tip = 4, seat, socket = 'drum' } = opts;
   const { sleeveR = r * 1.46 } = opts;
   if (port === starboard)
@@ -355,7 +360,7 @@ export function arrayBoom(root, { steel, black, red }, opts) {
   add(root, 'array_boom', cyl(r, r, halfSpan * 2, 8), steel, [x, y, 0], [Math.PI / 2, 0, 0]);
   add(root, 'array_boom_sleeve', cyl(sleeveR, sleeveR, 6, 8), black, [x, y, 0], [Math.PI / 2, 0, 0]);
   bothSides((side, sgn) => {
-    const count = sgn > 0 ? port : starboard;
+    const count = sgn > 0 ? starboard : port;
     for (let j = 0; j < count; j++) {
       const len = lengths[j % lengths.length];
       const z = sgn * (z0 + pitch * j);
@@ -417,7 +422,7 @@ export function scoopBow(root, { red, steel, black, gullet }, opts) {
  * `tips.a` on the outboard side turning in by `close`, `tips.b` on the
  * inboard side turning out (a negative `close`), each a cone with its point
  * forward. `side` is 'p' or 's' and there is no pair — the Dredge's is to
- * starboard.
+ * port (its block says starboard; #642).
  *
  * The arm is placed from `x`; the forearm and both tips are placed by their
  * centres, `at`, because that is how the approved model placed them: no rule
@@ -435,11 +440,11 @@ export function scoopBow(root, { red, steel, black, gullet }, opts) {
  * which the first transcription did not carry. A scalar is a straight limb.
  */
 export function claw(root, { steel, black }, opts) {
-  const { side = 's', x, y = 1, z, arm, fore, tips } = opts;
-  const sgn = side === 'p' ? 1 : -1;
+  const { side = 'p', x, y = 1, z, arm, fore, tips } = opts;
+  const sgn = side === 'p' ? -1 : 1;
   // A cylinder is born along Y with `rTop` at +Y; rolled onto X, +Y is the
-  // far end, and a yaw about Y turns that end toward −Z. Inboard is −Z to
-  // port and +Z to starboard, so `inboard` radians toward the keel is a yaw
+  // far end, and a yaw about Y turns that end toward −Z. Inboard is +Z to
+  // port and −Z to starboard, so `inboard` radians toward the keel is a yaw
   // of `sgn · inboard`.
   const turn = (inboard) => [0, sgn * inboard, -Math.PI / 2];
   const limb = (r, length) => {
@@ -454,8 +459,8 @@ export function claw(root, { steel, black }, opts) {
 
 /** The dredge boom off the other beam: a spar along the hull with teeth stepped along it. */
 export function dredgeBoom(root, { steel, black }, opts) {
-  const { side = 'p', x, y = 0.5, z, r = 1.2, length = 30, teeth = 3 } = opts;
-  const sgn = side === 'p' ? 1 : -1;
+  const { side = 's', x, y = 0.5, z, r = 1.2, length = 30, teeth = 3 } = opts;
+  const sgn = side === 'p' ? -1 : 1;
   add(root, 'dredge_boom', cyl(r, r, length, 8), steel, [x, y, z], [0, 0, -Math.PI / 2]);
   for (let i = 0; i < teeth; i++)
     add(root, `dredge_tooth_${i}`, box(2.2, 2.2, 3), black, [

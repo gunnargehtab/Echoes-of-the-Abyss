@@ -20,7 +20,8 @@
  * than a construction, and `grownBody` says why. Nothing here is a shape
  * decision; where the export is odd the script is odd with it — the parts
  * named `_port` sit at the export's +x, which is the kit's -z once the file
- * is turned onto its length, and they stay there.
+ * is turned onto its length, and they stay there — and -z is port, so the
+ * names are right (#642).
  *
  * THE SCALE DECISION, made here once for the six shared kinds (#588) and
  * followed by the Corvette, Cruiser, Abyssal Submersible, Harvester and

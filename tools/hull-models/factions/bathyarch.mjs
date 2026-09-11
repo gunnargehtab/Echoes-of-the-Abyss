@@ -287,7 +287,7 @@ export function ramBow(root, { grey, rust, amber }, { plough, teeth, band }) {
 /**
  * The forward twin turret: the ring it trains on, the drum drawn in toward
  * its top, the face plate and the hatch, then a barrel and its muzzle collar
- * a side, port first (the Bulwark's `turret_ring … muzzle_s`). The barrels
+ * a side, starboard first (the Bulwark's `turret_ring … muzzle_p`). The barrels
  * lie along +X and taper from `r` at the breech to `rMuzzle` at the mouth —
  * a cylinder's top lands on −X once it is rolled onto its side, so the
  * breech radius is the geometry's `rTop`.
@@ -374,8 +374,8 @@ export function floodDecks(root, flood, { patches }) {
 
 /**
  * The rows of floods along both deck edges: a lit strip the length of the
- * deck and a rank of lamp housings outboard of it, the port strip and its
- * lamps before starboard's (`flood_strip_p · flood_lamp_p0..7 · …`).
+ * deck and a rank of lamp housings outboard of it, the starboard strip and
+ * its lamps before port's (`flood_strip_s · flood_lamp_s0..7 · …`).
  */
 export function floodStrips(root, { flood, lampM }, { strip, lamps }) {
   bothSides((side, sgn) => {
@@ -393,9 +393,10 @@ export function floodStrips(root, { flood, lampM }, { strip, lamps }) {
  * Ballast blisters low on both flanks — a twelve-facet drum along X a side
  * — with what the hull hangs on each: end caps (the Tender's
  * `ballast_cap_pf/pa`, fore then aft), a keel skid under it and a pipe run
- * above it (the Bulwark's `keel_skid_p · pipe_p`). Written as a whole port
- * group then a whole starboard group, which is how both approved files
- * order them. `ballastAndKeel` above is the Derrick's lighter pair with one
+ * above it (the Bulwark's `keel_skid_p · pipe_p`). Written as a whole
+ * starboard group then a whole port group — +z first, which is how both
+ * approved files order them; the names turned round with #642.
+ * `ballastAndKeel` above is the Derrick's lighter pair with one
  * keel on the centreline; this exists because neither of these hulls has
  * that keel.
  */
@@ -476,7 +477,7 @@ export function rudder(root, grey, { at, size }) {
 
 /**
  * A row of rivet heads along each flank — `count` of them spread over
- * `[from, to]` at mid-cell, port row then starboard row, each a box.
+ * `[from, to]` at mid-cell, starboard row then port row, each a box.
  *
  * Numbered by their index in the file, not from zero: the approved exports
  * named each rivet by the running part count, so the Bulwark's run
@@ -523,7 +524,7 @@ export function boxHull(root, { black, grey, rust }, { hull, deck, strakes }) {
 /**
  * The riveted workshop deckhouse amidships (`workshop … roof_skylight`): the
  * house, its roof and ridge, one patch of repair a side — older plate to
- * port and newer to starboard, and not the same size, because the Klaxon
+ * starboard and newer to port, and not the same size, because the Klaxon
  * repairs what broke rather than what would match — the hazard band under
  * the eaves, a rank of lit ports a side, and the skylight in the roof, which
  * is the one of those lights the top-down bake can see. `machineryHouse`
@@ -535,7 +536,7 @@ export function workshop(root, { black, grey, rust, amber, lampM, vent }, opts) 
   add(root, 'workshop', box(...house.size), black, house.at);
   add(root, 'workshop_roof', box(...roof.size), grey, roof.at);
   add(root, 'workshop_ridge', box(...ridge.size), rust, ridge.at);
-  for (const side of ['p', 's']) {
+  for (const side of ['s', 'p']) {
     const patch = patches[side];
     add(root, `workshop_patch_${side}`, box(...patch.size), patch.old ? rust : grey, patch.at);
   }
@@ -566,8 +567,8 @@ export function workDeck(root, { black, flood, rust }, { deck, bays, job }) {
 }
 
 /**
- * A derrick a side over the work deck (`derrick_mast_p … derrick_floodlamp_p`,
- * then starboard): a tapered mast standing on the deck with a hazard-amber
+ * A derrick a side over the work deck (`derrick_mast_s … derrick_floodlamp_s`,
+ * then port): a tapered mast standing on the deck with a hazard-amber
  * head, the boom — a tube tapering to its tip — swung up `pitch` and in
  * `yaw` toward the centreline, the fall hanging plumb to its hook, and a
  * flood lamp on the head looking down at the work. The Caisson and the

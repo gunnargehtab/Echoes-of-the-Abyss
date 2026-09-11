@@ -113,7 +113,7 @@ pelagia.ribFan(root, { ridge, vein }, {
   r: 1.1,
   tip: 0.5,
   midrib: 54,
-  port: [ribTo(38, 14), ribTo(26, 22), ribTo(10, 22)],
+  flank: [ribTo(38, 14), ribTo(26, 22), ribTo(10, 22)],
 });
 
 // The pressure bladder at the node — 18 m across and 9 m tall, the flattest

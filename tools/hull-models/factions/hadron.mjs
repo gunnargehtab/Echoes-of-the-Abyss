@@ -191,19 +191,22 @@ export function bowArray(root, { alloy, crystal, seam, node }, opts) {
  * A thin swept wing, port and starboard, with a lit outboard edge.
  *
  * `plate` lands an outline's second coordinate on **-z** (kit.mjs), so the
- * outline is drawn at `-sgn` to put the port plate at +z beside the port
- * edge. Written without the sign, `wing_p` and `wing_edge_p` sat on opposite
- * sides of the hull: invisible on a symmetric pair, and the Reciter's
- * three-part wing is where a bounds comparison stops agreeing (#586).
+ * outline is drawn at `-sgn` to put the starboard plate at +z beside the
+ * starboard edge. Written without the sign, `wing_p` and `wing_edge_p` sat
+ * on opposite sides of the hull: invisible on a symmetric pair, and the
+ * Reciter's three-part wing is where a bounds comparison stops agreeing
+ * (#586).
  *
- * The rung's wings are given as an `outline` — the port half's plan, `[x, z]`
- * with z positive, drawn through `plan` so the side is the side it names —
+ * The rung's wings are given as an `outline` — the starboard half's plan,
+ * `[x, z]` with z positive, drawn through `plan` so the side is the side it
+ * names —
  * rather than parametrised, because each is a swept quadrilateral no
  * aft/chord/span form can say, and its `edge` is a second plan hugging the
  * tip rather than a box. `y` centres the plate. A `lamp` (the Reciter's) or a
  * `canard` (the Clarion's) is drawn *inside* each side's group, because the
- * approved files write `wing_p wing_edge_p canard_p` before the starboard
- * three and `check.mjs` compares in order; `name` and `edgeName` are for the
+ * approved files write the +z three — `wing_s wing_edge_s canard_s`, since
+ * #642 turned the names round — before the port three and `check.mjs`
+ * compares in order; `name` and `edgeName` are for the
  * Cantus, whose wings are guard blades. Given no outline, the Responsory's
  * wing is exactly what it was.
  */
@@ -398,7 +401,7 @@ export function point(root, name, mat, { x, y = 0, r, length }) {
   return add(root, name, cyl(r, 0, length, 4), mat, [x, y, 0], [0, 0, Math.PI / 2]);
 }
 
-/** A thin plane from its port plan `outline`, `t` thick, centred at `y`, drawn on `sgn`'s side. */
+/** A thin plane from its starboard plan `outline`, `t` thick, centred at `y`, drawn on `sgn`'s side. */
 function plane(root, name, mat, { outline, t, y }, sgn) {
   const geo = plan(
     outline.map(([x, z]) => [x, sgn * z]),
@@ -411,7 +414,7 @@ function plane(root, name, mat, { outline, t, y }, sgn) {
  * Lit seams ringing the bow horn: `count` boxes of `length` by `section`
  * (`[height, width]`) on an ellipse `halfHeight` by `halfBeam` about the
  * horn's axis at `x`, `y`. Seam 0 sits `phase` radians round from the crown
- * toward port and the rest follow at equal steps the other way — the order
+ * toward starboard and the rest follow at equal steps the other way — the order
  * the approved Clarion numbers its own. Each is rolled to lie flat on its
  * facet and then turned `skew` radians about its own radial axis, so the ring
  * spirals a little and dives into the horn toward the lip; the approved model

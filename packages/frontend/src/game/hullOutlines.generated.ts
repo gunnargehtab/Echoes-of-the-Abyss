@@ -5,8 +5,9 @@
  *   node tools/hull-maps/outlines.mjs
  *
  * The plan outline of every modelled hull, in HULL_OUTLINE's unit space
- * (length 1 along +X, bow at +0.5, port at +Y), for the Tier-4 track and the
- * flat silhouette; silhouettes.ts hand-draws the kinds without a model.
+ * (length 1 along +X, bow at +0.5, starboard at +Y), for the Tier-4 track
+ * and the flat silhouette; silhouettes.ts hand-draws the kinds without a
+ * model.
  * tools/hull-models/check.mjs fails the build when this file and the models
  * disagree.
  */

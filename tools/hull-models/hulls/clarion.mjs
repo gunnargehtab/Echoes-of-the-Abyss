@@ -28,7 +28,8 @@
  *   and dives into the horn toward the lip. Three of the six sit under the
  *   horn, and the export's light audit says so; they are left where they are.
  * - The canard is drawn inside each wing's group, because the approved file
- *   writes `wing_p wing_edge_p canard_p` before the starboard three and
+ *   writes the +z three (`wing_s wing_edge_s canard_s`, since #642) before the
+ *   port three and
  *   `check.mjs` compares in order.
  *
  * The glow bakes at 27.9 — the compass average of the listed 62
@@ -111,7 +112,7 @@ hadron.spine(
 // The bow array, and with it the whole of a cone hull's resting light: the
 // horn and its lit lip (six facets, a vertex on the crown, pressed to 0.7),
 // the emitter crystal and its core as points, then the six seams ringing the
-// horn, numbered from the port shoulder round the way the approved file does.
+// horn, numbered from the starboard shoulder round the way the approved file does.
 hadron.bowArray(
   root,
   { alloy, crystal, seam, node },

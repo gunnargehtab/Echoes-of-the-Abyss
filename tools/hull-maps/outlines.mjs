@@ -17,7 +17,7 @@
  * The model is normalised exactly as the bake normalises it (Z-long exports
  * yawed onto X, rescaled to the design length, centred), so the outline sits
  * on the sprite it will be drawn beside. Then the hull is cut athwartships at
- * `STATIONS` planes and each cut's port and starboard extremes become the
+ * `STATIONS` planes and each cut's starboard and port extremes become the
  * outline — the widest thing at every station, which is what a sonar return
  * resolves to and why a wing tip counts and a gap under it does not. Each
  * side is then passed through a running median `SMOOTH` stations wide, which
@@ -58,9 +58,11 @@ export const kindOf = (slug) =>
 
 /**
  * The plan outline of a model, in unit space: length 1 along +X, bow at
- * +0.5, port at +Y (the bake's world +Z, which it maps to image down — the
- * same convention hullTextures.ts draws the outline into). Bow first, down
- * the port side, back up the starboard.
+ * +0.5, starboard at +Y (the bake's world +Z, which it maps to image down —
+ * the same convention hullTextures.ts draws the outline into, and the side
+ * a hull heading right across the screen has on its right; +z is starboard
+ * in the kit's frame too, tools/hull-models/kit.mjs `bothSides`, #642). Bow
+ * first, down the starboard side, back up the port.
  */
 export function planOutline(parts, lengthM, opts = {}) {
   const { stations = STATIONS, smooth = SMOOTH, tolerance = TOLERANCE } = opts;
@@ -80,9 +82,10 @@ export function planOutline(parts, lengthM, opts = {}) {
   const cz = (min[2] + max[2]) / 2;
 
   // Cut at every station: each triangle edge that crosses the plane gives a
-  // z, and the extremes of those are the hull's beam there.
-  const port = new Array(stations + 1).fill(-Infinity);
-  const stbd = new Array(stations + 1).fill(Infinity);
+  // z, and the extremes of those are the hull's beam there — starboard the
+  // greatest z, port the least.
+  const stbd = new Array(stations + 1).fill(-Infinity);
+  const port = new Array(stations + 1).fill(Infinity);
   const xAt = (i) => {
     const t = 0.5 - i / stations;
     // The end planes sit a hair inside the extremes, or they cut nothing.
@@ -105,18 +108,18 @@ export function planOutline(parts, lengthM, opts = {}) {
         const [bx, bz] = v[(e + 1) % 3];
         if ((ax - X) * (bx - X) > 0) continue;
         const z = ax === bx ? az : az + ((bz - az) * (X - ax)) / (bx - ax);
-        if (z > port[i]) port[i] = z;
-        if (z < stbd[i]) stbd[i] = z;
+        if (z > stbd[i]) stbd[i] = z;
+        if (z < port[i]) port[i] = z;
         if (ax === bx) {
-          if (bz > port[i]) port[i] = bz;
-          if (bz < stbd[i]) stbd[i] = bz;
+          if (bz > stbd[i]) stbd[i] = bz;
+          if (bz < port[i]) port[i] = bz;
         }
       }
     }
   }
 
   const unit = (x, z) => [((x - cx) * scale) / lengthM, ((z - cz) * scale) / lengthM];
-  const keep = [...port.keys()].filter((i) => Number.isFinite(port[i]));
+  const keep = [...stbd.keys()].filter((i) => Number.isFinite(stbd[i]));
   const smoothed = (side) => {
     const half = Math.floor(smooth / 2);
     return keep.map((_, k) => {
@@ -125,15 +128,15 @@ export function planOutline(parts, lengthM, opts = {}) {
       return win[Math.floor(win.length / 2)];
     });
   };
-  const sp = smoothed(port);
   const ss = smoothed(stbd);
-  const chainP = keep.map((i, k) => unit(xs[i], sp[k]));
+  const sp = smoothed(port);
   const chainS = keep.map((i, k) => unit(xs[i], ss[k]));
-  const bow = [0.5, (chainP[0][1] + chainS[0][1]) / 2];
-  const stern = [-0.5, (chainP.at(-1)[1] + chainS.at(-1)[1]) / 2];
+  const chainP = keep.map((i, k) => unit(xs[i], sp[k]));
+  const bow = [0.5, (chainS[0][1] + chainP[0][1]) / 2];
+  const stern = [-0.5, (chainS.at(-1)[1] + chainP.at(-1)[1]) / 2];
   const pts = [
-    ...simplify([bow, ...chainP, stern], tolerance),
-    ...simplify([stern, ...chainS.reverse(), bow], tolerance).slice(1, -1),
+    ...simplify([bow, ...chainS, stern], tolerance),
+    ...simplify([stern, ...chainP.reverse(), bow], tolerance).slice(1, -1),
   ];
   return pts.map(([x, y]) => [round(x), round(y)]);
 }
@@ -190,8 +193,9 @@ export async function renderSource(entries = generatedOutlines()) {
  *   node tools/hull-maps/outlines.mjs
  *
  * The plan outline of every modelled hull, in HULL_OUTLINE's unit space
- * (length 1 along +X, bow at +0.5, port at +Y), for the Tier-4 track and the
- * flat silhouette; silhouettes.ts hand-draws the kinds without a model.
+ * (length 1 along +X, bow at +0.5, starboard at +Y), for the Tier-4 track
+ * and the flat silhouette; silhouettes.ts hand-draws the kinds without a
+ * model.
  * tools/hull-models/check.mjs fails the build when this file and the models
  * disagree.
  */

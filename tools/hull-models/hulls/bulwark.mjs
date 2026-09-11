@@ -19,7 +19,7 @@
  * Three things the file does that the prompt does not say, kept because the
  * approved model does them:
  *
- * - **The order is the file's.** Port group then starboard group for every
+ * - **The order is the file's.** Starboard group then port group for every
  *   paired family, the sixty-four rivets after the rudder and before the two
  *   bow marks, and the stencil ahead of the lamp — the Tender writes those
  *   two the other way round. `check.mjs` compares in order.
@@ -67,7 +67,7 @@ root.name = 'consortium_bulwark';
 root.scale.setScalar(L / DRAWN);
 
 // The slab and the three tiers stepped up it, each a plan in absolute metres,
-// bow first down the port side and back up the starboard. The slab is 14 m
+// bow first down the starboard side and back up the port. The slab is 14 m
 // thick with a metre of chamfer at the rim; the tiers are square-edged and
 // alternate grey plate, hull black, grey plate — the middle one is the older
 // armour showing through under the newer.
@@ -119,7 +119,7 @@ bathyarch.citadel(root, { black, grey, rust, lampM }, {
   bridgePorts: { x: -14.8, y: 26, z: [-6, -2, 2, 6], size: [0.5, 1.6, 2.4] },
 });
 
-// Four stacks in two pairs abaft the citadel, starboard pair first, each
+// Four stacks in two pairs abaft the citadel, port pair first, each
 // with its band written directly after it.
 [[-46, -12], [-54, -12], [-46, 12], [-54, 12]].forEach(([x, z], i) => {
   bathyarch.stack(root, black, { name: `stack_${i}`, at: [x, 20, z], r: 2.8, rTop: 2.4, height: 12 });
@@ -152,7 +152,7 @@ bathyarch.ballastBlisters(root, { grey, rust }, {
 bathyarch.riser(root, rust, { name: 'pipe_riser_a', at: [-40, 14, 8], r: 0.9, h: 10 });
 bathyarch.riser(root, rust, { name: 'pipe_riser_b', at: [-40, 14, -8], r: 0.9, h: 10 });
 
-// Three prop shrouds across the transom, starboard to port, and the rudder.
+// Three prop shrouds across the transom, port to starboard, and the rudder.
 [-17, 0, 17].forEach((z, i) =>
   bathyarch.propTunnel(root, { grey, black }, {
     name: `${i}`, at: [-76, -3, z], r: 5.5, length: 6, hub: { r: 1.5, length: 7 },
