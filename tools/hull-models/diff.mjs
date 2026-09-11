@@ -85,6 +85,19 @@
  *   normals are not, so a hand-written normal buffer over the same triangles
  *   — which only a table-built part like the Commune scout's hull could carry
  *   — is a reviewer's check, not this tool's.
+ * - **Read a material's values, not only its name.** A port may keep every
+ *   material name and move what is under it. The #553 turret ports did: the
+ *   Knights' `shadow_indigo` went from #2C2244 at roughness 0.25 to #3B2E5A
+ *   at 0.35, the Consortium claddings' metalness and roughness moved, and
+ *   emissive strengths were written at 1 over files carrying 0.8, 0.9, 0.953,
+ *   0.905 and 2.4. Every one of those is a visible change to how the hull
+ *   renders, and this tool reported none of them, because a part carried its
+ *   material's name and nothing else (#646). The reviewers found them by
+ *   comparing the GLB material JSON by hand. Now each material both files
+ *   share is compared on base colour, metalness, roughness, emissive colour
+ *   and strength, opacity and double-sidedness, and gets its own line. It is
+ *   a per-*material* finding rather than a per-part one: one material clads
+ *   forty parts, and forty identical lines would bury the shape report.
  * - **Compare the surface centroid too.** A cone built the wrong way round
  *   has the bounds, the triangle count *and* the area of the right one; only
  *   where its surface sits inside that box changes. The Dredge's telson and
@@ -252,6 +265,59 @@ function triangleDiff(p, q, scale, shift) {
     else if (beforeTris.get(t.set) !== t.even) reversed++;
   }
   return { recut, reversed, total: b.length / 9, minSep, floor: TOL };
+}
+
+/**
+ * A linear colour as the sRGB hex a person authored. glTF carries colour
+ * linear, `kit.mjs`'s `hex()` converts on the way in, and a reviewer holding
+ * the design doc is looking for `#2C2244` — so the report converts back
+ * rather than printing five decimals of linear.
+ */
+function srgbHex(rgb) {
+  const channel = (c) => {
+    const v = c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+    return Math.round(Math.min(1, Math.max(0, v)) * 255)
+      .toString(16)
+      .padStart(2, '0');
+  };
+  return `#${rgb.map(channel).join('').toUpperCase()}`;
+}
+
+/**
+ * A finish rendered the way it is reported — and compared in exactly that
+ * form, so that every line printed shows a difference the reader can see and
+ * nothing below the printed precision is reported at all. A float that
+ * survived a JSON round-trip a bit-width apart is not a material change.
+ */
+function finishFields(f) {
+  return {
+    colour: srgbHex(f.colour),
+    metalness: f.metalness.toFixed(3),
+    roughness: f.roughness.toFixed(3),
+    emissive: srgbHex(f.emissive),
+    strength: f.strength.toFixed(3),
+    opacity: f.opacity.toFixed(3),
+    'two-sided': String(f.doubleSided),
+  };
+}
+
+/**
+ * The finishes a file carries, by material name. A name is the key because a
+ * name is what `check.mjs`, the bake and every part here match on; when one
+ * file gives one name two different finishes that is itself the finding, so
+ * it is recorded rather than silently resolved to the first.
+ */
+function finishesByName(parts) {
+  const byName = new Map();
+  const split = new Set();
+  for (const p of parts) {
+    if (!p.material || !p.finish) continue;
+    const fields = finishFields(p.finish);
+    const seen = byName.get(p.material);
+    if (!seen) byName.set(p.material, fields);
+    else if (Object.keys(fields).some((k) => seen[k] !== fields[k])) split.add(p.material);
+  }
+  return { byName, split };
 }
 
 /** Extents and centre of a part or a whole model, in the file's own units. */
@@ -444,6 +510,29 @@ function report(beforePath, afterPath, label) {
   if (shift.some((v) => Math.abs(v) > 0.005))
     console.log(
       `  shift   ${shift.map((v) => v.toFixed(3)).join('  ')}  (whole hull, m — divided out below)`
+    );
+
+  // Material values, per material: a whole-file property, so it is reported
+  // once here rather than repeated on every part a material happens to clad.
+  const fb = finishesByName(before);
+  const fa = finishesByName(after);
+  const finishLines = [];
+  for (const [name, was] of fb.byName) {
+    const now = fa.byName.get(name);
+    if (!now) continue; // gone or renamed — the part census below says so
+    const moved = Object.keys(now)
+      .filter((k) => was[k] !== now[k])
+      .map((k) => `${k} ${was[k]}→${now[k]}`);
+    if (moved.length) finishLines.push(`${name.padEnd(22)} ${moved.join(', ')}`);
+  }
+  for (const name of new Set([...fb.split, ...fa.split]))
+    finishLines.push(
+      `${name.padEnd(22)} ⚠ one name, two finishes in the ${fb.split.has(name) ? 'before' : 'after'} file`
+    );
+  if (finishLines.length)
+    console.log(
+      `  material ${finishLines.length} changed in value — the name matched, what it renders as did not:` +
+        `\n    ${finishLines.join('\n    ')}`
     );
 
   const gone = before.filter((p) => !afterByName.has(p.key)).map((p) => p.key);

@@ -36,7 +36,6 @@ import {
   plate,
   plan,
   loft,
-  strut,
   bothSides,
   polar,
   part,
@@ -680,11 +679,8 @@ const sided = (sgn, [x, y, z], [a = 0, b = 0, c = 0] = []) =>
  * The emplacement: a faceted frustum on the ground, a collar where the head
  * turns, and skirt blades raking outward from it.
  *
- * Two forms. Given `x`/`z`, the #553 draft's: `blades` are `[degrees, radius,
- * [length, height, width]]` octahedra about the frustum's axis, mirrored, and
- * the collar a sixteen-facet torus. Given `at`, the approved turret's own
- * (#639), every number the export's through kit.mjs `drawn`: the frustum's
- * centre and its `yaw` on the node — the approved octagon is turned an eighth
+ * Every number is the approved turret's own (#639), through kit.mjs `drawn`:
+ * the frustum's centre and its `yaw` on the node — the approved octagon is turned an eighth
  * there, and the bake measures the turned box (kit.mjs `fitFootprint`) —
  * `collar.facets` round, and `blades` an object: each blade a four-sided
  * pyramid of radius `r` with its own `[bearing, length]` (radians from +X
@@ -696,52 +692,28 @@ const sided = (sgn, [x, y, z], [a = 0, b = 0, c = 0] = []) =>
  * puts the third pair's `_r` at -x, as the file has it.
  */
 export function emplacement(root, { shadow, steel, dim }, opts) {
-  const { x = 0, z = 0, r, rTop = r * 0.84, height, collar, blades = [] } = opts;
-  const { at = null, yaw = 0 } = opts;
-  if (at) {
-    part(root, 'base_frustum', cyl(rTop, r, height, 8), shadow, drawn(at, [0, yaw, 0]));
-    const ring = torus(collar.r, collar.t, 5, collar.facets ?? 16);
-    part(root, 'base_collar', ring, steel, drawn([at[0], collar.y, at[2]], [Math.PI / 2, 0, 0]));
-    const up = new THREE.Vector3(0, 1, 0);
-    blades.each.forEach(([bearing, length], i) => {
-      const out = new THREE.Vector3(Math.cos(bearing), 0, Math.sin(bearing));
-      const axis = out.clone().setY(blades.lift).normalize();
-      const c = out
-        .multiplyScalar(blades.anchor[0])
-        .setY(blades.anchor[1])
-        .addScaledVector(axis, blades.seat * length);
-      const q = new THREE.Quaternion().setFromUnitVectors(up, axis);
-      const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
-      pair((tag, sgn) =>
-        part(
-          root,
-          `skirt_blade_${i}_${tag}`,
-          cyl(0, blades.r, length, 4),
-          i % 2 ? dim : steel,
-          sided(sgn, c.toArray(), [e.x, e.y, e.z])
-        )
-      );
-    });
-    return;
-  }
-  add(root, 'base_frustum', cyl(rTop, r, height, 8), shadow, [x, height / 2, z]);
+  const { at, yaw = 0, r, rTop = r * 0.84, height, collar, blades } = opts;
+  part(root, 'base_frustum', cyl(rTop, r, height, 8), shadow, drawn(at, [0, yaw, 0]));
   // A torus is born in the XY plane; a collar lies flat, so it is laid down.
-  add(root, 'base_collar', torus(collar.r, collar.t, 5, 16), steel, [x, collar.y, z], [
-    Math.PI / 2,
-    0,
-    0,
-  ]);
-  blades.forEach(([deg, rad, size], i) => {
-    const a = (deg * Math.PI) / 180;
+  const ring = torus(collar.r, collar.t, 5, collar.facets ?? 16);
+  part(root, 'base_collar', ring, steel, drawn([at[0], collar.y, at[2]], [Math.PI / 2, 0, 0]));
+  const up = new THREE.Vector3(0, 1, 0);
+  blades.each.forEach(([bearing, length], i) => {
+    const out = new THREE.Vector3(Math.cos(bearing), 0, Math.sin(bearing));
+    const axis = out.clone().setY(blades.lift).normalize();
+    const c = out
+      .multiplyScalar(blades.anchor[0])
+      .setY(blades.anchor[1])
+      .addScaledVector(axis, blades.seat * length);
+    const q = new THREE.Quaternion().setFromUnitVectors(up, axis);
+    const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
     pair((tag, sgn) =>
-      add(
+      part(
         root,
         `skirt_blade_${i}_${tag}`,
-        octa(1),
+        cyl(0, blades.r, length, 4),
         i % 2 ? dim : steel,
-        [x + rad * Math.cos(a), size[1] / 2 + 3.5, z + sgn * rad * Math.sin(a)],
-        [0, sgn * a, 0],
-        [size[0] / 2, size[1] / 2, size[2] / 2]
+        sided(sgn, c.toArray(), [e.x, e.y, e.z])
       )
     );
   });
@@ -753,62 +725,34 @@ export function emplacement(root, { shadow, steel, dim }, opts) {
  * part of an Order structure that stands proud of everything else, which is
  * what makes the kind readable from above at 120 m.
  *
- * Given `at` it is the approved turret's own (#639), through kit.mjs `drawn`
+ * Every number is the approved turret's own (#639), through kit.mjs `drawn`,
  * and in the file's order: the two struts first — five-facet rods, `r` `[top,
  * bottom]` by `length`, the `_l` mirroring the `_r` placement in x — on the
  * root, then a `turret_head` node at `at` carrying the wedge (a six-facet
  * frustum, `r` `[top, bottom]` by `height`, its node scaled `scale`), the
  * visor box and the crest, a four-sided pyramid. Returns the head node, which
- * is where `railGun` hangs the rail. Given `x`/`y` and array sizes it is the
- * #553 draft's: six-sided wedge and visor, octahedral crest, box struts.
+ * is where `railGun` hangs the rail.
+ *
+ * The wedge is six-sided rather than square. "Blade-like, crystalline
+ * silhouettes" (docs/asset-prompts-3d.md, Block 2) is a facet count as much
+ * as a proportion, and a rectangle is the one plan shape this navy never has.
  */
-export function gunHead(root, { shadow, steel, dim }, opts) {
-  const { x, y, wedge, visor, crest, struts, at = null } = opts;
-  if (at) {
-    pair((tag, sgn) =>
-      part(
-        root,
-        `recoil_strut_${tag}`,
-        cyl(struts.r[0], struts.r[1], struts.length, 5),
-        steel,
-        sided(sgn, struts.at, struts.rot)
-      )
-    );
-    const head = group(root, 'turret_head', drawn(at));
-    const wedgeGeo = cyl(wedge.r[0], wedge.r[1], wedge.height, 6);
-    part(head, 'head_wedge', wedgeGeo, dim, drawn([0, 0, 0], [0, 0, 0], wedge.scale));
-    part(head, 'head_visor', box(...visor.size), shadow, drawn(visor.at, visor.rot));
-    part(head, 'head_crest', cyl(0, crest.r, crest.length, 4), steel, drawn(crest.at, crest.rot));
-    return head;
-  }
-  // Six-sided rather than square. "Blade-like, crystalline silhouettes"
-  // (docs/asset-prompts-3d.md, Block 2) is a facet count as much as a
-  // proportion, and a rectangle is the one plan shape this navy never has.
-  add(root, 'head_wedge', cyl(1, 1, 1, 6), dim, [x, y, 0], [0, Math.PI / 6, 0], [
-    wedge[0] / 2,
-    wedge[1],
-    wedge[2] / 2,
-  ]);
-  add(root, 'head_visor', cyl(1, 1, 1, 6), shadow, [
-    x + wedge[0] * 0.22,
-    y + wedge[1] * 0.45,
-    0,
-  ], [0, Math.PI / 6, 0], [visor[0] / 2, visor[1], visor[2] / 2]);
-  add(root, 'head_crest', octa(1), steel, [x - wedge[0] * 0.15, y + crest[1] / 2 + 4, 0], [0, 0, 0], [
-    crest[0] / 2,
-    crest[1] / 2,
-    crest[2] / 2,
-  ]);
+export function gunHead(root, { shadow, steel, dim }, { at, wedge, visor, crest, struts }) {
   pair((tag, sgn) =>
-    strut(
+    part(
       root,
       `recoil_strut_${tag}`,
-      [struts.from[0], struts.from[1], sgn * struts.from[2]],
-      [struts.to[0], struts.to[1], sgn * struts.to[2]],
+      cyl(struts.r[0], struts.r[1], struts.length, 5),
       steel,
-      struts.t
+      sided(sgn, struts.at, struts.rot)
     )
   );
+  const head = group(root, 'turret_head', drawn(at));
+  const wedgeGeo = cyl(wedge.r[0], wedge.r[1], wedge.height, 6);
+  part(head, 'head_wedge', wedgeGeo, dim, drawn([0, 0, 0], [0, 0, 0], wedge.scale));
+  part(head, 'head_visor', box(...visor.size), shadow, drawn(visor.at, visor.rot));
+  part(head, 'head_crest', cyl(0, crest.r, crest.length, 4), steel, drawn(crest.at, crest.rot));
+  return head;
 }
 
 /**
@@ -819,126 +763,69 @@ export function gunHead(root, { shadow, steel, dim }, opts) {
  * and because a straight run is the shape a top-down map can still read once
  * the emplacement below it has gone dark.
  *
- * Given `at` it is the approved turret's own (#639): a `barrel_group` node
+ * Every number is the approved turret's own (#639): a `barrel_group` node
  * under `parent` — the head node `gunHead` returns — at `at`, pitched `pitch`
  * about x, and inside it, each at its own `z` along the group: the root and
  * mid bars (`size`), a vane box each side at ±`x`, the tip — a four-sided
  * pyramid `r` by `length`, stood on its base — and the pip, a sphere of five
- * by four segments. Returns the group. Given `from`/`to` it is the #553
- * draft's run of six-facet tubes.
+ * by four segments. Returns the group.
  */
 export function railGun(parent, { steel, dim, vane, pip }, opts) {
-  if (opts.at) {
-    const { at, pitch, root: bar, mid, vanes, tip, pip: dot } = opts;
-    const g = group(parent, 'barrel_group', drawn(at, [pitch, 0, 0]));
-    part(g, 'rail_root', box(...bar.size), steel, drawn([0, 0, bar.z]));
-    part(g, 'rail_mid', box(...mid.size), dim, drawn([0, 0, mid.z]));
-    pair((tag, sgn) =>
-      part(g, `rail_vane_${tag}`, box(...vanes.size), vane, sided(sgn, [vanes.x, 0, vanes.z]))
-    );
-    const stood = drawn([0, 0, tip.z], [Math.PI / 2, 0, 0]);
-    part(g, 'rail_tip', cyl(0, tip.r, tip.length, 4), steel, stood);
-    part(g, 'muzzle_pip', new THREE.SphereGeometry(dot.r, 5, 4), pip, drawn([0, 0, dot.z]));
-    return g;
-  }
-  const root = parent;
-  const { from, to, r } = opts;
-  const A = new THREE.Vector3(...from);
-  const B = new THREE.Vector3(...to);
-  const d = B.clone().sub(A);
-  const at = (t) => A.clone().addScaledVector(d, t);
-  const len = d.length();
-  const q = new THREE.Quaternion().setFromUnitVectors(
-    new THREE.Vector3(1, 0, 0),
-    d.clone().normalize()
+  const { at, pitch, root: bar, mid, vanes, tip, pip: dot } = opts;
+  const g = group(parent, 'barrel_group', drawn(at, [pitch, 0, 0]));
+  part(g, 'rail_root', box(...bar.size), steel, drawn([0, 0, bar.z]));
+  part(g, 'rail_mid', box(...mid.size), dim, drawn([0, 0, mid.z]));
+  pair((tag, sgn) =>
+    part(g, `rail_vane_${tag}`, box(...vanes.size), vane, sided(sgn, [vanes.x, 0, vanes.z]))
   );
-  const seg = (name, t0, t1, rad, mat) => {
-    const mesh = add(root, name, cyl(rad, rad, len * (t1 - t0), 6), mat);
-    mesh.geometry.rotateZ(-Math.PI / 2);
-    mesh.position.copy(at((t0 + t1) / 2));
-    mesh.quaternion.copy(q);
-    return mesh;
-  };
-  seg('rail_root', 0, 0.42, r, steel);
-  seg('rail_mid', 0.38, 0.78, r * 0.62, dim);
-  pair((tag, sgn) => {
-    const v = add(root, `rail_vane_${tag}`, box(len * 0.36, r * 1.1, r * 0.22), vane);
-    v.position.copy(at(0.58)).add(new THREE.Vector3(0, 0, sgn * r * 0.68));
-    v.quaternion.copy(q);
-  });
-  seg('rail_tip', 0.76, 0.98, r * 0.5, steel);
-  const p = add(root, 'muzzle_pip', new THREE.SphereGeometry(r * 0.3, 8, 6), pip);
-  p.position.copy(at(1));
+  const stood = drawn([0, 0, tip.z], [Math.PI / 2, 0, 0]);
+  part(g, 'rail_tip', cyl(0, tip.r, tip.length, 4), steel, stood);
+  part(g, 'muzzle_pip', new THREE.SphereGeometry(dot.r, 5, 4), pip, drawn([0, 0, dot.z]));
+  return g;
 }
 
 /**
  * Magazines abaft the emplacement, a feed pipe from each into the collar.
  *
- * Given `pipe.length` it is the approved turret's own (#639), in the file's
- * order — both pipes, then both pods: each pipe a six-facet rod, `r` `[top,
- * bottom]`; each pod a capsule of radius `r` and `waist` with three-step caps
- * and seven facets, laid out as three r184 lays a capsule (kit.mjs
- * `capsule`); the `_l` of each mirroring the `_r` placement in x. Given
- * `pipe.from` it is the #553 draft's spheres and box struts, a pod and its
- * pipe a side.
+ * Every number is the approved turret's own (#639), in the file's order —
+ * both pipes, then both pods: each pipe a six-facet rod, `r` `[top, bottom]`;
+ * each pod a capsule of radius `r` and `waist` with three-step caps and seven
+ * facets, laid out as three r184 lays a capsule (kit.mjs `capsule`); the `_l`
+ * of each mirroring the `_r` placement in x.
  */
 export function magazine(root, steel, { pods, pipe }) {
-  if (pipe.length !== undefined) {
-    pair((tag, sgn) =>
-      part(
-        root,
-        `feed_pipe_${tag}`,
-        cyl(pipe.r[0], pipe.r[1], pipe.length, 6),
-        steel,
-        sided(sgn, pipe.at, pipe.rot)
-      )
-    );
-    pair((tag, sgn) =>
-      part(
-        root,
-        `ammo_pod_${tag}`,
-        capsule(pods.r, pods.waist, 3, 7),
-        steel,
-        sided(sgn, pods.at, pods.rot)
-      )
-    );
-    return;
-  }
-  pair((tag, sgn) => {
-    add(
-      root,
-      `ammo_pod_${tag}`,
-      new THREE.SphereGeometry(1, 10, 6),
-      steel,
-      [pods.x, pods.y, sgn * pods.z],
-      [0, 0, 0],
-      [pods.size[0] / 2, pods.size[1] / 2, pods.size[2] / 2]
-    );
-    strut(
+  pair((tag, sgn) =>
+    part(
       root,
       `feed_pipe_${tag}`,
-      [pipe.from[0], pipe.from[1], sgn * pipe.from[2]],
-      [pipe.to[0], pipe.to[1], sgn * pipe.to[2]],
+      cyl(pipe.r[0], pipe.r[1], pipe.length, 6),
       steel,
-      pipe.t
-    );
-  });
+      sided(sgn, pipe.at, pipe.rot)
+    )
+  );
+  pair((tag, sgn) =>
+    part(
+      root,
+      `ammo_pod_${tag}`,
+      capsule(pods.r, pods.waist, 3, 7),
+      steel,
+      sided(sgn, pods.at, pods.rot)
+    )
+  );
 }
 
 /**
  * Navigation marks, flat on an upward face — the only light a turret shows
  * until it fires. Named rather than numbered, because the Order places them
- * in mirrored pairs and a bare index would hide which pair is which. Given
- * `r` they are the approved turret's spheres of five by four segments at the
- * export's own `[x, y, z]`, the `_r` at +x (#639); otherwise boxes `w` by `d`.
+ * in mirrored pairs and a bare index would hide which pair is which. They are
+ * the approved turret's spheres of `r` on five by four segments at the
+ * export's own `[x, y, z]`, the `_r` at +x (#639).
  */
-export function navMarks(root, light, { marks, w = 3.2, d = 3.2, r = null }) {
+export function navMarks(root, light, { marks, r }) {
   for (const [name, x, y, z] of marks)
-    pair((tag, sgn) => {
-      const mark = `nav_mark_${name}_${tag}`;
-      if (r) part(root, mark, new THREE.SphereGeometry(r, 5, 4), light, sided(sgn, [x, y, z]));
-      else add(root, mark, box(w, 0.6, d), light, [x, y, sgn * z]);
-    });
+    pair((tag, sgn) =>
+      part(root, `nav_mark_${name}_${tag}`, new THREE.SphereGeometry(r, 5, 4), light, sided(sgn, [x, y, z]))
+    );
 }
 
 /* --------------------------------------------------------------------------

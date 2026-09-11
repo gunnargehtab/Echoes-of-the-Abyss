@@ -57,7 +57,6 @@ import {
   cyl,
   torus,
   plan,
-  cable,
   bothSides,
   polar,
   part,
@@ -138,11 +137,14 @@ export const segmentSeries = (opts) => series({ section: [0.6, 1.5], ...opts });
  * `seam` shapes the `'seam'` lip: its centre `at` of the half-length forward
  * of the plate's, and its `size` as fractions of the plate's `[sx, sy, sz]`.
  * The defaults are the Chorister's seam as its approved binary carries it.
- * The Precentor's approved plates carry a heavier one — 0.35 long at 0.8,
- * and 0.7 of the *half-beam* tall, which on plates drawn 0.65 of their
- * half-beam tall is 14/13 of the plate's height: a lip that stands a little
- * proud of its plate above and below rather than shading under the plate
- * ahead — and the hull passes it (#638).
+ * The Precentor's approved plates carry a heavier one — 0.35 long at 0.8 and
+ * 0.7 tall, a lip that stands a little proud of its plate above and below
+ * rather than shading under the plate ahead — and the hull passes it (#638).
+ * That 0.7 is of the *half-beam*, which is what `tallOf: 'beam'` says: read
+ * the height fraction against `sz` rather than `sy`. It was written as
+ * `0.7 / 0.65` against `sy` instead, exact only while every station on that
+ * hull keeps `sy = 0.65 · sz` — true of all four today, and silently wrong
+ * the first time one of them is redrawn (#646).
  *
  * A station is the orb's *scale*, not its bounding box. A low-facet sphere
  * never reaches its radius on every axis — an `orb(14, 7)` stops at 0.975 of
@@ -152,13 +154,15 @@ export const segmentSeries = (opts) => series({ section: [0.6, 1.5], ...opts });
  */
 export function tergites(root, { violet, red, black }, opts) {
   const { segments, lip = 'seam', seam = {}, spines, facets = [12, 6] } = opts;
-  const { at: seamAt = 0.85, size: seamSize = [0.3, 0.95, 0.9] } = seam;
+  const { at: seamAt = 0.85, size: seamSize = [0.3, 0.95, 0.9], tallOf = 'height' } = seam;
+  if (tallOf !== 'height' && tallOf !== 'beam')
+    throw new Error(`tergites: seam.tallOf is '${tallOf}' — 'height' (sy) or 'beam' (sz)`);
   segments.forEach(([x, sx, sy, sz], i) => {
     add(root, `tergite_${i}`, orb(...facets), i % 2 ? red : violet, [x, 0, 0], [0, 0, 0], [sx, sy, sz]);
     if (lip === 'seam')
       add(root, `tergite_seam_${i}`, orb(10, 6), black, [x + seamAt * sx, 0, 0], [0, 0, 0], [
         seamSize[0] * sx,
-        seamSize[1] * sy,
+        seamSize[1] * (tallOf === 'beam' ? sz : sy),
         seamSize[2] * sz,
       ]);
     else if (lip === 'ridge')
@@ -238,11 +242,11 @@ export function limbs(root, steel, { xs, y, z, r = 0.6, length = 6, fold = 0.45 
 /**
  * Dorsal spines along the back, `[x, y, z, length]` each, all raked forward
  * by `rake`. The hull alternates their sides; the builder holds the rake.
- * `facets` is the cone's cut: both approved hulls with a dorsal rank, the
- * Precentor and the Chorister, cut theirs five-sided, and the Precentor
- * passes 5 with its own rake of 0.35 (#638).
+ * `facets` is the cone's cut, and five is the default because five is what
+ * both approved hulls with a dorsal rank have — the Precentor and the
+ * Chorister — and this builder has no third caller to want six (#638, #646).
  */
-export function dorsalSpines(root, black, { spines, r = 0.7, rake = -0.3, facets = 6 }) {
+export function dorsalSpines(root, black, { spines, r = 0.7, rake = -0.3, facets = 5 }) {
   refuseMirror('dorsal_spine', spines.map((s, i) => [i, ...s]));
   spines.forEach(([x, y, z, length], i) =>
     add(root, `dorsal_spine_${i}`, spike(r, length, facets), black, [x, y, z], [0, 0, rake])
@@ -306,18 +310,20 @@ export function bladderDome(root, violet, { x, y, z, r, squash = 0.64, stretch =
  * `studs.ring` of its radius, each tilted outward by `studs.tilt` — with a
  * smaller violet dome behind it. The Precentor's ears, and the Cantor's.
  *
- * `ry` is the dome's half-height in metres in place of `r · squash`, and
- * `aft.ry` the aft dome's; `studs.radius` and `studs.lift` place the ring
- * in metres — out from the dome's centre and up from it — in place of the
- * fractions, and `studs.facets` is the spines' cut. The Precentor's
- * approved dome is 5.5 m by 4.2 m with six five-sided spines 3.2 m out and
- * 3.4 m up, and its aft dome 2.6 m by 2.2 m: typed numbers, not fractions
- * of anything, and the hull passes them (#638).
+ * `ry` is the dome's half-height in metres and `aft.ry` the aft dome's;
+ * `studs.radius` and `studs.lift` place the ring in metres, out from the
+ * dome's centre and up from it. All three are typed numbers because the
+ * approved dome's are: 5.5 m by 4.2 m with six spines 3.2 m out and 3.4 m
+ * up, and an aft dome 2.6 m by 2.2 m. The fractions of `r` that once stood
+ * behind them — squash 0.76, ring 0.58, height 0.81 — are gone: they were
+ * a back-solve from this one dome, they missed it, and the hull passed the
+ * metres over the top of them (#638, #646). `studs.facets` is the spines'
+ * cut, five as the approved dome cuts them.
  */
 export function listeningDome(root, { red, violet, black }, opts) {
-  const { x, y, z = 0, r, squash = 0.76, ry = r * squash, studs = {}, aft } = opts;
-  const { count = 6, ring = 0.58, height = 0.81, tilt = 0.5, length = 3.2, r: sr = 0.5, phase = 0.4 } = studs;
-  const { facets = 6, radius = r * ring, lift = ry * height } = studs;
+  const { x, y, z = 0, r, ry, studs = {}, aft } = opts;
+  const { count = 6, tilt = 0.5, length = 3.2, r: sr = 0.5, phase = 0.4 } = studs;
+  const { facets = 5, radius, lift } = studs;
   add(root, 'dome', orb(14, 7), red, [x, y, z], [0, 0, 0], [r, ry, r]);
   for (let i = 0; i < count; i++) {
     const a = phase + (i * 2 * Math.PI) / count;
@@ -351,18 +357,18 @@ export function listeningDome(root, { red, violet, black }, opts) {
  * to move a plan outline, on a hull whose plan is a cross.
  *
  * `seat` lifts the hydrophones' centres above the boom's axis, in metres,
- * alternating as `lengths` do, in place of the socket's height plus half
- * the spine; `socket` is `'drum'` or `'box'`; `sleeveR` is the sleeve's
- * radius in place of `r · 1.46`. The Precentor's approved rank sits at 3 m
- * and 3.7 m — the short spine's base on the boom's axis, the long one's
- * 5 cm under it — in 1.6 m square boxes 1.2 m tall, round a sleeve of
- * exactly 1.9, which 1.46 transcribed 2 mm short; the hull passes all three
- * (#638).
+ * alternating as `lengths` do, and `sleeveR` is the sleeve's radius. Both are
+ * given rather than ruled, because the rules that stood behind them missed
+ * the only model there is: the approved rank sits at 3 m and 3.7 m — the
+ * short spine's base on the boom's axis, the long one's 5 cm under it, which
+ * is not the socket's height plus half the spine — round a sleeve of exactly
+ * 1.9, which `r · 1.46` transcribed 2 mm short (#638, #646). The socket is a
+ * 1.6 m square box 1.2 m tall, as that model has it; the drum this builder
+ * first drew had no caller left.
  */
 export function arrayBoom(root, { steel, black, red }, opts) {
   const { x, y, halfSpan, r = 1.3, starboard = 6, port = 5, z0 = 5, pitch = 2.6 } = opts;
-  const { lengths = [6, 7.5], hr = 0.9, cant = 0.25, tip = 4, seat, socket = 'drum' } = opts;
-  const { sleeveR = r * 1.46 } = opts;
+  const { lengths = [6, 7.5], hr = 0.9, cant = 0.25, tip = 4, seat, sleeveR } = opts;
   if (port === starboard)
     throw new Error(`array_boom: ${port} hydrophones a side — the ranks never match`);
   add(root, 'array_boom', cyl(r, r, halfSpan * 2, 8), steel, [x, y, 0], [Math.PI / 2, 0, 0]);
@@ -372,19 +378,13 @@ export function arrayBoom(root, { steel, black, red }, opts) {
     for (let j = 0; j < count; j++) {
       const len = lengths[j % lengths.length];
       const z = sgn * (z0 + pitch * j);
-      const lift = seat ? y + seat[j % seat.length] : y + 0.9 + len / 2;
+      const lift = y + seat[j % seat.length];
       add(root, `hydrophone_${side}${j}`, spike(hr, len), red, [x, lift, z], [
         sgn * cant,
         0,
         0.15,
       ]);
-      add(
-        root,
-        `hydrophone_socket_${side}${j}`,
-        socket === 'box' ? box(1.6, 1.2, 1.6) : cyl(0.8, 0.8, 1.2, 6),
-        steel,
-        [x, y + 0.9, z]
-      );
+      add(root, `hydrophone_socket_${side}${j}`, box(1.6, 1.2, 1.6), steel, [x, y + 0.9, z]);
     }
     add(root, `boom_tip_${side}`, spike(r, tip), black, [x, y, sgn * (halfSpan + tip / 2)], [
       sgn * Math.PI / 2,
@@ -604,31 +604,12 @@ const shell = (r, [w, h], { round = 1, down = 1 } = {}) =>
  * its own numbers and its `drawn` placement, built in the file's order
  * (mound, collar, skirt): the mound a `shell` of radius `r` cut `down` of the
  * way to the pole, the collar and the skirt toruses of `R` and `tube` with
- * `facets` [radial, tubular]. The first port's form — `x, z, y, r, skirt,
- * collar`: a closed orb and two toruses in the module's default facets, skirt
- * before collar — still builds what it built.
+ * `facets` [radial, tubular].
  */
-export function carapaceMound(root, { violet, black, steel }, opts) {
-  if (opts.mound) {
-    const { mound, collar: c, skirt: k } = opts;
-    part(root, 'base_mound', shell(mound.r, mound.facets, mound), violet, mound);
-    part(root, 'base_collar', torus(c.R, c.tube, ...c.facets), steel, c);
-    part(root, 'mound_skirt', torus(k.R, k.tube, ...k.facets), black, k);
-    return;
-  }
-  const { x = 0, z = 0, y, r, skirt, collar } = opts;
-  add(root, 'base_mound', scute(12, 6), violet, [x, y, z], [0, 0, 0], r);
-  // A torus is born in the XY plane; a skirt and a collar lie flat.
-  add(root, 'mound_skirt', torus(skirt.r, skirt.t, 4, 20), black, [x, skirt.y, z], [
-    Math.PI / 2,
-    0,
-    0,
-  ]);
-  add(root, 'base_collar', torus(collar.r, collar.t, 5, 18), steel, [x, collar.y, z], [
-    Math.PI / 2,
-    0,
-    0,
-  ]);
+export function carapaceMound(root, { violet, black, steel }, { mound, collar, skirt }) {
+  part(root, 'base_mound', shell(mound.r, mound.facets, mound), violet, mound);
+  part(root, 'base_collar', torus(collar.R, collar.tube, ...collar.facets), steel, collar);
+  part(root, 'mound_skirt', torus(skirt.R, skirt.tube, ...skirt.facets), black, skirt);
 }
 
 /**
@@ -639,32 +620,12 @@ export function carapaceMound(root, { violet, black, steel }, opts) {
  * As the approved turret draws them: an orb each of its own `r` and the
  * shared `facets`, squashed to a plate and laid on the flank by its own node
  * (`drawn`, with the plate's scale) — yawed near its bearing, pitched down the
- * slope and rolled a little, each its own way. The first port's `[degrees,
- * radius, [long, height, wide]]` orbs, radial from `x, z` with `long` running
- * outward, still build what they built.
+ * slope and rolled a little, each its own way.
  */
-export function baseScutes(root, skins, opts) {
-  const { scutes } = opts;
-  if (!Array.isArray(scutes[0])) {
-    const { facets = [7, 5] } = opts;
-    scutes.forEach((s, i) =>
-      part(root, `base_scute_${i}`, shell(s.r, facets), skins[i % skins.length], s)
-    );
-    return;
-  }
-  const { x = 0, z = 0, y } = opts;
-  scutes.forEach(([deg, rad, size], i) => {
-    const a = (deg * Math.PI) / 180;
-    add(
-      root,
-      `base_scute_${i}`,
-      scute(10, 6),
-      skins[i % skins.length],
-      [x + rad * Math.cos(a), y, z + rad * Math.sin(a)],
-      [0, -a, 0],
-      [size[0] / 2, size[1] / 2, size[2] / 2]
-    );
-  });
+export function baseScutes(root, skins, { scutes, facets = [7, 5] }) {
+  scutes.forEach((s, i) =>
+    part(root, `base_scute_${i}`, shell(s.r, facets), skins[i % skins.length], s)
+  );
 }
 
 /**
@@ -680,39 +641,17 @@ export function baseScutes(root, skins, opts) {
  * returned so the stinger can be grown in it, as the file hangs
  * `barrel_group` off `turret_head`; the counter-spike is `counterSpike`
  * below, because the file grows it *after* the stinger and the order is part
- * of what the model is (check.mjs compares in order). The first port's form —
- * `x, y, z, podR, brow, antennae as [x, z, length, rake], counter` — still
- * builds what it built, spike included.
+ * of what the model is (check.mjs compares in order).
  */
 export function browHead(root, { red, black, violet }, opts) {
-  if (opts.pod) {
-    const head = group(root, 'turret_head', opts);
-    const { pod: p, brow: b, antennae } = opts;
-    part(head, 'head_pod', shell(p.r, p.facets), red, p);
-    part(head, 'head_brow', shell(b.r, b.facets, b), black, b);
-    antennae.forEach((a, i) =>
-      part(head, `brow_antenna_${i}`, spike(a.r, a.length, a.facets ?? 4), violet, a)
-    );
-    return head;
-  }
-  const { x, y, z = 0, podR, brow, antennae, counter } = opts;
-  add(root, 'head_pod', scute(10, 6), red, [x, y, z], [0, 0, 0], podR);
-  add(root, 'head_brow', scute(10, 6), black, brow.at, [0, 0, brow.tilt ?? 0], brow.r);
-  antennae.forEach(([ax, az, length, rake], i) =>
-    add(
-      root,
-      `brow_antenna_${i}`,
-      spike(length * 0.09, length, 4),
-      violet,
-      [ax, brow.at[1] + brow.r[1] * 0.55 + length / 2, az],
-      [rake, 0, 0]
-    )
+  const head = group(root, 'turret_head', opts);
+  const { pod, brow, antennae } = opts;
+  part(head, 'head_pod', shell(pod.r, pod.facets), red, pod);
+  part(head, 'head_brow', shell(brow.r, brow.facets, brow), black, brow);
+  antennae.forEach((a, i) =>
+    part(head, `brow_antenna_${i}`, spike(a.r, a.length, a.facets ?? 4), violet, a)
   );
-  add(root, 'counter_spike', spike(counter.r, counter.length, 4), violet, counter.at, [
-    0,
-    0,
-    counter.rake,
-  ]);
+  return head;
 }
 
 /**
@@ -739,55 +678,19 @@ export function counterSpike(head, violet, opts) {
  * list of them: each a frustum of `radii` [tip end, root end], `length` and
  * `facets` at its own station up the frame's Y, alternating steel and violet
  * from the root, with its `barb` — a torus of `R`, `tube` and `facets` — at
- * its foot; then `tip`, a cone, and `pip`, an orb. The first port's `{ from,
- * to, r, segments: 3 }` still builds what it built.
+ * its foot; then `tip`, a cone, and `pip`, an orb.
  */
 export function stingerBarrel(root, { steel, violet, black, pip }, opts) {
-  if (Array.isArray(opts.segments)) {
-    const g = group(root, 'barrel_group', opts);
-    opts.segments.forEach(({ barb, ...s }, i) => {
-      const skin = i % 2 ? violet : steel;
-      part(g, `barrel_seg_${i}`, cyl(s.radii[0], s.radii[1], s.length, s.facets), skin, s);
-      part(g, `barrel_barb_${i}`, torus(barb.R, barb.tube, ...barb.facets), black, barb);
-    });
-    const { tip: t, pip: p } = opts;
-    part(g, 'stinger_tip', spike(t.r, t.length, t.facets), black, t);
-    part(g, 'muzzle_pip', new THREE.SphereGeometry(p.r, ...p.facets), pip, p);
-    return g;
-  }
-  const { from, to, r, segments = 3 } = opts;
-  const A = new THREE.Vector3(...from);
-  const B = new THREE.Vector3(...to);
-  const d = B.clone().sub(A);
-  const len = d.length();
-  const at = (t) => A.clone().addScaledVector(d, t);
-  const q = new THREE.Quaternion().setFromUnitVectors(
-    new THREE.Vector3(1, 0, 0),
-    d.clone().normalize()
-  );
-  const along = (name, geo, mat, t) => {
-    const mesh = add(root, name, geo, mat);
-    mesh.position.copy(at(t));
-    mesh.quaternion.copy(q);
-    return mesh;
-  };
-  const span = 0.86 / segments;
-  for (let i = 0; i < segments; i++) {
-    const t0 = i * span;
-    const t1 = t0 + span * 1.14;
-    const r0 = r * (1 - 0.22 * i);
-    const geo = cyl(r0 * 0.86, r0, len * (t1 - t0), 6);
-    geo.rotateZ(-Math.PI / 2);
-    along(`barrel_seg_${i}`, geo, i % 2 ? violet : steel, (t0 + t1) / 2);
-    along(
-      `barrel_barb_${i}`,
-      scute(8, 4),
-      black,
-      t0 + span * 0.28
-    ).scale.set(r0 * 0.5, r0 * 0.62, r0 * 0.5);
-  }
-  along('stinger_tip', spike(r * 0.4, len * 0.16, 4), black, 0.92).rotateZ(-Math.PI / 2);
-  along('muzzle_pip', new THREE.SphereGeometry(r * 0.2, 8, 6), pip, 1);
+  const g = group(root, 'barrel_group', opts);
+  opts.segments.forEach(({ barb, ...s }, i) => {
+    const skin = i % 2 ? violet : steel;
+    part(g, `barrel_seg_${i}`, cyl(s.radii[0], s.radii[1], s.length, s.facets), skin, s);
+    part(g, `barrel_barb_${i}`, torus(barb.R, barb.tube, ...barb.facets), black, barb);
+  });
+  const { tip, pip: pp } = opts;
+  part(g, 'stinger_tip', spike(tip.r, tip.length, tip.facets), black, tip);
+  part(g, 'muzzle_pip', new THREE.SphereGeometry(pp.r, ...pp.facets), pip, pp);
+  return g;
 }
 
 /**
@@ -800,41 +703,12 @@ export function stingerBarrel(root, { steel, violet, black, pip }, opts) {
  * `length` tall with `facets` sides, laid by its own node so that its point
  * rises out and up from a base near the mound. Skins alternate by the claw's
  * *number*, so the gap leaves 4 red beside 5 black — the file's rule, which a
- * count along the list gets the other way round. The first port's `[index,
- * degrees, radius, [long, height, wide]]`, radial from `x, z` and skinned
- * along the list, still builds what it built.
+ * count along the list gets the other way round.
  */
-export function clawGrips(root, skins, opts) {
-  const { grips } = opts;
-  if (!Array.isArray(grips[0])) {
-    const { facets = 5 } = opts;
-    grips.forEach((c) =>
-      part(
-        root,
-        `claw_grip_${c.index}`,
-        spike(c.r, c.length, facets),
-        skins[c.index % skins.length],
-        c
-      )
-    );
-    return;
-  }
-  const { x = 0, z = 0, y } = opts;
-  grips.forEach(([index, deg, rad, size], i) => {
-    const a = (deg * Math.PI) / 180;
-    // The cone is born apex-up; laid on its side once, it claws outward.
-    const geo = spike(1, 2, 5);
-    geo.rotateZ(-Math.PI / 2);
-    add(
-      root,
-      `claw_grip_${index}`,
-      geo,
-      skins[i % skins.length],
-      [x + rad * Math.cos(a), y, z + rad * Math.sin(a)],
-      [0, -a, 0],
-      [size[0] / 2, size[1] / 2, size[2] / 2]
-    );
-  });
+export function clawGrips(root, skins, { grips, facets = 5 }) {
+  grips.forEach((c) =>
+    part(root, `claw_grip_${c.index}`, spike(c.r, c.length, facets), skins[c.index % skins.length], c)
+  );
 }
 
 /**
@@ -843,24 +717,12 @@ export function clawGrips(root, skins, opts) {
  * As the approved turret draws it, in the file's order — `pipe`, `pod`,
  * `flange`: the feed a straight frustum of `radii`, `length` and `facets`,
  * leaned by its node; the pod a capsule (kit.mjs `capsule`, `facets` [cap,
- * radial]); the flange a torus. The first port's `{ pod, pipe, flangeAt }` —
- * an orb, a sagging cable and a torus, pod first — still builds what it
- * built.
+ * radial]); the flange a torus.
  */
-export function magazine(root, { steel, red }, opts) {
-  if (opts.flange) {
-    const { pipe: p, pod: d, flange: f } = opts;
-    part(root, 'feed_pipe', cyl(p.radii[0], p.radii[1], p.length, p.facets), steel, p);
-    part(root, 'ammo_pod', capsule(d.r, d.length, ...d.facets), steel, d);
-    part(root, 'feed_flange', torus(f.R, f.tube, ...f.facets), red, f);
-    return;
-  }
-  const { pod, pipe, flangeAt } = opts;
-  add(root, 'ammo_pod', scute(10, 6), steel, pod.at, [0, 0, pod.roll ?? 0], pod.r);
-  cable(root, 'feed_pipe', pipe.from, pipe.to, steel, { r: pipe.r, sag: pipe.sag ?? 0, facets: 6 });
-  const ring = torus(flangeAt.r, flangeAt.t, 4, 10);
-  ring.rotateX(Math.PI / 2);
-  add(root, 'feed_flange', ring, red, flangeAt.at);
+export function magazine(root, { steel, red }, { pipe, pod, flange }) {
+  part(root, 'feed_pipe', cyl(pipe.radii[0], pipe.radii[1], pipe.length, pipe.facets), steel, pipe);
+  part(root, 'ammo_pod', capsule(pod.r, pod.length, ...pod.facets), steel, pod);
+  part(root, 'feed_flange', torus(flange.R, flange.tube, ...flange.facets), red, flange);
 }
 
 /* --------------------------------------------------------------------------
