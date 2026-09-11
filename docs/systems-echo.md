@@ -197,16 +197,21 @@ player's ears earned twice over. §9 says what the HUD may draw from that.
 transmission ([audio-direction.md](audio-direction.md) §5), each with a handle from the same
 counter a real contact's comes from, Tier 4, a hull one of the enemy navies on the map could
 field — drawn from that navy's roster, its own locked hulls included, so the class is never the
-tell — with full health and a heading, and no entity behind it. They land 200–900 m from the
-pinger, never within 150 m of anything real inside the reveal, hold still for the three seconds
-the transmission lasts, and then fade as any ghost marker does. An order that resolves a
-phantom's handle is *taken*, not refused: the plan is replaced exactly as it would be for a true
-return, the hull is sent to the point the phantom was reported at, and it arrives to find water.
-Refusing at the order was the mistake — the refusal returned before the plan was touched, and a
-plan is published back to its owner, so a single click sorted the lies from the truth for free.
-A torpedo is still not launched at a phantom, and that refusal is readable too, but only at the
-price of a fish for every return probed. The true returns from the same ping lie in
-bearing like any other contact. A phantom sounds and reads identical to a true one
+tell — with full health and a heading, and no entity behind it. The counter is not what goes on
+the wire: a handle is a per-match, per-observer permutation of it, and a slot's contacts are
+listed in handle order, so neither a handle's value nor its place in the list says when it was
+issued. It must not, because the mint order is not arbitrary — a ping's phantoms are minted
+before the pass resolves its true returns, so a counter published raw sorted the lies to the
+front of the list for free, from a stock client, with no order given and nothing spent. They land
+200–900 m from the pinger, never within 150 m of anything real inside the reveal, hold still for
+the three seconds the transmission lasts, and then fade as any ghost marker does. An order that
+resolves a phantom's handle is *taken*, not refused: the plan is replaced exactly as it would be
+for a true return, the hull is sent to the point the phantom was reported at, and it arrives to
+find water. Refusing at the order was the mistake — the refusal returned before the plan was
+touched, and a plan is published back to its owner, so a single click sorted the lies from the
+truth for free. A torpedo is still not launched at a phantom, and that refusal is readable too,
+but only at the price of a fish for every return probed. The true returns from the same ping lie
+in bearing like any other contact. A phantom sounds and reads identical to a true one
 ([audio-direction.md](audio-direction.md) §9): the terrain teaches its own rule, and it teaches it
 to the pinger.
 
