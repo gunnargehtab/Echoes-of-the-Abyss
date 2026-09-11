@@ -393,14 +393,29 @@ export function setActivePalette(name: unknown): Palette {
  * Shared by all four palettes on purpose (docs/style-neon-noir.md): these sit
  * at 5–10% luminance and carry no hue-only meaning — propagation is read from
  * the overlay and the numbers, never from the tint.
+ *
+ * They sit there now. Four of the six had drifted to 12.2–13.9% (Rec. 709 on
+ * the encoded bytes, which is what a screenshot gate measures), against a
+ * sentence in this very comment and §"Colour-vision palettes" in the style
+ * guide that both say 5–10%. The doc is the source of the number, so the code
+ * moved: one gain of 0.719 across the whole ground palette — the fills, the
+ * rock ramp below — which lands the palest fill on the band's 10% ceiling and
+ * leaves every relationship between them untouched, including the value
+ * ordering the colour-vision palettes lean on when the hue goes.
+ *
+ * The band's floor is `depthShade`'s business and falls out of it: these are
+ * the *shallow* end and nothing is drawn brighter, so the deep end of a map
+ * lands at 0.55 × these, or 3.7–5.5%. Only the Abyssal Trench sits outside the
+ * band, at 2.3%, and that is the one biome the art direction asks for in pitch
+ * black rather than in dark water.
  */
 export const BIOME_COLOR: Record<Biome, number> = {
-  [Biome.OpenWater]: 0x0a1a2a,
-  [Biome.ThermalVein]: 0x3d1a0e,
-  [Biome.KelpForest]: 0x0e2a22,
-  [Biome.AbyssalTrench]: 0x05080d,
-  [Biome.ResonanceField]: 0x241b3a,
-  [Biome.CoralRuins]: 0x17242a,
+  [Biome.OpenWater]: 0x07131e,
+  [Biome.ThermalVein]: 0x2c130a,
+  [Biome.KelpForest]: 0x0a1e18,
+  [Biome.AbyssalTrench]: 0x040609,
+  [Biome.ResonanceField]: 0x1a132a,
+  [Biome.CoralRuins]: 0x111a1e,
 };
 
 /**
@@ -476,10 +491,12 @@ export const VENT_EMBER = 0xe06a2b;
  * always speaks louder than ground you cannot — and `ROCK_SHADOW` is where the
  * darken-only passes land at cliff lips and shadowed bases. Terrain colours,
  * like `BIOME_COLOR`, are identical across all four accessibility palettes:
- * the seafloor carries no hue-only meaning to move.
+ * the seafloor carries no hue-only meaning to move. Both moved with the fills,
+ * by the same 0.719, so "below the palest biome fill" holds by the margin it
+ * always had rather than by a new one.
  */
-export const ROCK_FACE = 0x11161c;
-export const ROCK_SHADOW = 0x080c12;
+export const ROCK_FACE = 0x0c1014;
+export const ROCK_SHADOW = 0x06090d;
 
 /** TUNABLE. How much of a cell's colour the deepest shadow may take. */
 const RELIEF_DEPTH = 0.42;
