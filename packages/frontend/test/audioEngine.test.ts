@@ -23,7 +23,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { Biome, ResolutionTier, SelfEventKind, SIM } from '@echoes/shared';
+import { Biome, Faction, ResolutionTier, SelfEventKind, SIM } from '@echoes/shared';
 import {
   HeadlessAudioContext,
   installHeadlessAudio,
@@ -31,7 +31,13 @@ import {
   type StubAudioNode,
   type StubGainNode,
 } from './support/headlessAudio.ts';
-import { AudioEngine, CONTACT_BOOST_MAX_DB, dbToGain, type TrimBus } from '../src/audio/engine.ts';
+import {
+  AudioEngine,
+  CONTACT_BOOST_MAX_DB,
+  ceilingShape,
+  dbToGain,
+  type TrimBus,
+} from '../src/audio/engine.ts';
 import { MAX_CONTACT_VOICES } from '../src/audio/voiceAllocator.ts';
 import type { ContactAudioEntry, ContactAudioFrame } from '../src/audio/contactMixer.ts';
 import type { SelfAudioFrame } from '../src/audio/selfMixer.ts';
@@ -103,6 +109,210 @@ function hops(from: StubAudioNode, to: StubAudioNode): number {
   return -1;
 }
 
+describe('the audio engine: a drive signature that breathes, and stays put', () => {
+  /**
+   * docs/audio-direction.md §8's drive signature is "the same thing
+   * breathing": a short amplitude bump on a voice that is already running.
+   * `scheduleThump` built that bump by reading the oscillator's live level
+   * back, multiplying it, and easing down to the level it had read.
+   *
+   * Reading it back was wrong twice over, because the `cancelScheduledValues`
+   * in the same breath cancels the ramp `update` scheduled at that instant —
+   * so the read never saw the level the voice was being set to, only the one
+   * it was leaving. A voice promoted while sounding read its previous bump's
+   * tail and settled onto that, so every pulse started higher than the last.
+   *
+   * It bites hardest where §8 puts the fastest mechanism: the Directorate's
+   * swarm is 9 events per second, so its pulse fires on every 5 Hz tick and
+   * the level never gets an un-pulsed tick to fall back on. Measured before
+   * the fix: 260x the voice's own level after eight seconds of being tracked,
+   * still climbing, on a contact that had not changed in any way.
+   *
+   * The promotion is what makes this reproduce, and it is also what happens in
+   * a match — a contact is heard before it is classified.
+   */
+  const heard = (tick: number): ContactAudioFrame => ({
+    tick,
+    entries: [
+      {
+        id: 1,
+        tier: ResolutionTier.Bearing,
+        biome: Biome.OpenWater,
+        freshness: 1,
+        bearing: 0.5,
+        rangeM: 1800,
+      },
+    ],
+  });
+  const classified = (tick: number): ContactAudioFrame => ({
+    tick,
+    entries: [
+      {
+        id: 1,
+        tier: ResolutionTier.Track,
+        biome: Biome.OpenWater,
+        faction: Faction.Directorate,
+        freshness: 1,
+        bearing: 0.5,
+        rangeM: 1800,
+      },
+    ],
+  });
+
+  /** Every gain the voice itself builds — the buses sit at unity by design. */
+  function voiceGains(context: HeadlessAudioContext, from: number): StubGainNode[] {
+    return context.nodes
+      .slice(from)
+      .filter((node): node is StubGainNode => node.kind === 'GainNode');
+  }
+
+  it('does not ratchet a tracked contact upward, tick after tick', () => {
+    const { engine, context } = boot();
+    try {
+      const beforeVoice = context.nodes.length;
+      engine.applyContacts(heard(100));
+      engine.onEchoTick();
+      for (let tick = 1; tick <= 50; tick++) {
+        context.advance(1 / SIM.ECHO_HZ);
+        engine.applyContacts(tick <= 10 ? heard(100 + tick) : classified(100 + tick));
+        engine.onEchoTick();
+      }
+
+      // §8's bump is 1.6x the voice's own level, and the loudest level any
+      // branch of `update` sets is 0.5, so nothing may be driven past 0.8.
+      for (const gain of voiceGains(context, beforeVoice)) {
+        for (const write of gain.gain.writes) {
+          assert.ok(
+            write.value <= 0.8 + 1e-9,
+            `a voice gain reached ${write.value.toFixed(3)}, past the 0.8 a drive signature can reach`
+          );
+        }
+      }
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
+  /**
+   * The same read-back silenced the opposite case. A contact already at Tier 3+
+   * on its first frame had nothing to read but the oscillator's initial zero,
+   * so it bumped to zero and settled at zero — a drive signature that never
+   * sounded, on exactly the contacts §8 says a player must identify by ear.
+   */
+  it('sounds a drive signature on a contact that arrives already classified', () => {
+    const { engine, context } = boot();
+    try {
+      const beforeVoice = context.nodes.length;
+      engine.applyContacts(classified(100));
+      engine.onEchoTick();
+      for (let tick = 1; tick <= 5; tick++) {
+        context.advance(1 / SIM.ECHO_HZ);
+        engine.applyContacts(classified(100 + tick));
+        engine.onEchoTick();
+      }
+
+      // The bump is the only thing in a voice that sets a value outright
+      // rather than ramping to one, so it is what identifies it. A lock tone
+      // sets one too, and sets it to zero before its own ramp, which is why
+      // this asks for the loudest rather than for any.
+      const bumped = Math.max(
+        ...voiceGains(context, beforeVoice).flatMap((gain) =>
+          gain.gain.writes
+            .filter((write) => write.method === 'setValueAtTime')
+            .map((write) => write.value)
+        )
+      );
+      assert.ok(
+        bumped > 0.4,
+        `the drive signature bumped to ${bumped.toFixed(3)}, which is inaudible`
+      );
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+});
+
+describe('the audio engine: the ceiling the device sees', () => {
+  /**
+   * docs/audio-direction.md §12 puts a true-peak ceiling on the mix, and the
+   * graph had nothing enforcing it: six buses summed into master, the world
+   * bus doubles under Silent Running and the contact trim adds up to +12 dB,
+   * so a busy tick ran past full scale and the device clipped it. That is
+   * heard as pain rather than as loudness, and it arrives soonest when §4 has
+   * the player loudest — the one place the mix is meant to be oppressive by
+   * design rather than damaging by accident.
+   *
+   * The curve is asserted as arithmetic, because that is what it is. Whether
+   * a rendered mix stays under the ceiling then follows from the shape rather
+   * than from a sampled signal nobody can reproduce on a different runner.
+   */
+  it('is transparent below the knee', () => {
+    for (const level of [0, 0.05, 0.2, 0.45, 0.6, -0.3, -0.6]) {
+      assert.equal(ceilingShape(level), level, `${level} passes through untouched`);
+    }
+  });
+
+  it('never lets any level past -1 dBTP', () => {
+    const peak = dbToGain(-1);
+    // Far past anything the graph can produce: the measured worst case of the
+    // self bus alone is 1.85, and a curve that only held to 2 would be a
+    // ceiling with a hole in it.
+    for (let level = 0; level <= 40; level += 0.01) {
+      assert.ok(ceilingShape(level) <= peak, `${level.toFixed(2)} stays under the ceiling`);
+      assert.ok(ceilingShape(-level) >= -peak, `${-level.toFixed(2)} stays under the ceiling`);
+    }
+  });
+
+  it('rises without a corner, so limiting is never an event', () => {
+    let previous = 0;
+    for (let level = 0; level <= 4; level += 0.001) {
+      const shaped = ceilingShape(level);
+      assert.ok(shaped >= previous, `monotonic at ${level.toFixed(3)}`);
+      // No step: a discontinuity at the knee would be audible as a click
+      // exactly when the mix got busy.
+      assert.ok(shaped - previous < 0.002, `continuous at ${level.toFixed(3)}`);
+      previous = shaped;
+    }
+  });
+
+  it('puts every path to the device through the ceiling', () => {
+    const { engine, context } = boot();
+    try {
+      const ceiling = engine.outputCeiling as unknown as StubAudioNode | null;
+      assert.ok(ceiling !== null, 'the ceiling exists once started');
+
+      // Asserted over every node the context ever made, so a bus added later
+      // that forgets the ceiling fails here rather than in someone's ears.
+      const direct = context.nodes.filter(
+        (node) => node !== ceiling && node.outputs.includes(context.destination)
+      );
+      assert.deepEqual(direct, [], 'only the ceiling reaches the destination');
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
+  /**
+   * The reason the ceiling is a shaper and not simply a lower MASTER_GAIN:
+   * §4's bands have to stay audibly different from each other, and buying
+   * headroom by turning the whole mix down spends exactly the range that
+   * difference is made of.
+   */
+  it('leaves the nominal mix level alone', () => {
+    const { engine } = boot();
+    try {
+      const master = engine.graph!.master as unknown as StubGainNode;
+      assert.equal(master.gain.value, MASTER_GAIN, 'the headroom is unchanged by the ceiling');
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+});
+
 describe('the audio engine: the graph it builds', () => {
   it('routes every bus to master, and only music through the duck', () => {
     const { engine, context } = boot();
@@ -124,7 +334,11 @@ describe('the audio engine: the graph it builds', () => {
         3,
         'music passes through the duck on its way to its trim'
       );
-      assert.equal(hops(master, context.destination), 1, 'master reaches the device');
+      assert.equal(
+        hops(master, context.destination),
+        3,
+        'master reaches the device through the headroom pre-gain and the ceiling'
+      );
       assert.ok(context.analyser !== undefined, 'the contact bus is tapped by an analyser');
     } finally {
       void engine.destroy();
@@ -309,13 +523,16 @@ describe('the audio engine: the Precedence Law and the trims', () => {
       const duck = (engine.graph!.music as unknown as StubAudioNode).outputs[0] as StubGainNode;
       const analyser = context.analyser!;
 
+      // `target` rather than `value`: the duck is a ramp, and what this test
+      // asks is where the engine aimed it, not how far it has travelled since
+      // the clock has not moved.
       analyser.level = 0.6;
       engine.onEchoTick();
-      assert.equal(duck.gain.value, DUCK_FLOOR, 'a busy contact bus dips the music');
+      assert.equal(duck.gain.target, DUCK_FLOOR, 'a busy contact bus dips the music');
 
       analyser.level = 0;
       engine.onEchoTick();
-      assert.equal(duck.gain.value, 1, 'and silence releases it');
+      assert.equal(duck.gain.target, 1, 'and silence releases it');
       assert.ok(analyser.reads >= 2, 'the level was measured, not assumed');
     } finally {
       void engine.destroy();

@@ -30,6 +30,19 @@ export const PING_RETURN_WINDOW_S = 3;
 export const EXPOSURE_TAIL_S = 2;
 
 /**
+ * The bed's low tone: its resting level, and what a machinery pulse peaks at.
+ *
+ * Named because the pulse has to multiply the *resting* level. It used to
+ * multiply whatever the parameter happened to read, which is the resting level
+ * only if the previous pulse has fully decayed — so each pulse compounded on
+ * the tail of the last and the bed crept upward the longer a player stayed in
+ * a machinery band. It converges rather than runs away, but the level it
+ * converges to is not the one §4's table describes, and it is loudest exactly
+ * where the bed is already loudest.
+ */
+const TONE = { REST: 0.4, PULSE: 1.7 } as const;
+
+/**
  * The continuous own-noise bed.
  *
  * Filtered noise plus a low tone, with an amplitude pulse once the machinery
@@ -62,7 +75,7 @@ export class SelfBed {
     this.tone.type = 'sine';
     this.tone.frequency.value = 44;
     this.toneGain = context.createGain();
-    this.toneGain.gain.value = 0.4;
+    this.toneGain.gain.value = TONE.REST;
 
     this.noise?.connect(this.noiseGain).connect(this.filter);
     this.tone.connect(this.toneGain).connect(this.filter);
@@ -83,10 +96,9 @@ export class SelfBed {
 
     if (mix.rateHz > 0 && now >= this.nextPulseAt) {
       this.nextPulseAt = now + 1 / mix.rateHz;
-      const peak = this.toneGain.gain.value;
       this.toneGain.gain.cancelScheduledValues(now);
-      this.toneGain.gain.setValueAtTime(peak * 1.7, now);
-      this.toneGain.gain.setTargetAtTime(0.4, now + 0.02, 0.12);
+      this.toneGain.gain.setValueAtTime(TONE.REST * TONE.PULSE, now);
+      this.toneGain.gain.setTargetAtTime(TONE.REST, now + 0.02, 0.12);
     }
   }
 
