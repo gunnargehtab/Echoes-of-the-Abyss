@@ -59,6 +59,10 @@
  *   won (#608) would otherwise read as every part moved, so when either file
  *   is square to within a thousandth the other's yaw is tried as well and
  *   the orientation with fewer movers is reported, with a line saying so.
+ *   Both of those are this tool's tolerant reading, made to compare shapes;
+ *   what the bake will actually do with a given file is decided by its own
+ *   strict `raw.z > raw.x`, and hull-intake's `rotatedZtoX` in `meta.json`
+ *   is the only authority on that.
  * - **Compare the surface centroid too.** A cone built the wrong way round
  *   has the bounds, the triangle count *and* the area of the right one; only
  *   where its surface sits inside that box changes. The Dredge's telson and
