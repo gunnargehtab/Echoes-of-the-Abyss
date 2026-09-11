@@ -25,6 +25,15 @@
  *   boom spans 44 m against a 64 m body, so intake's yaw-the-longer-axis-onto-
  *   +X rule still lands the hull correctly — but lengthening the boom or
  *   shortening the body would turn this hull a quarter turn on every map.
+ *
+ * Every number below is the approved binary's own, read off its vertices
+ * rather than its bounding boxes (#638). The first port fitted several parts
+ * to their boxes and matched the boxes while missing the shape: a 7 m limb
+ * tapering 0.7 m to 0.5 m read as a straight 6.9 m one at a shallower fold —
+ * the same box to the centimetre and a sixth more surface — and the spines
+ * gained a facet each. Where the module's rule is not this hull's (the seam,
+ * the socket, the spines' cut and rake, the domes' heights) the hull passes
+ * its own numbers and the module's defaults stay the Chorister's.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -45,7 +54,11 @@ const DRAWN = 64;
 
 /**
  * The four tergites, stern first: `[x, half-length, half-height, half-beam]`,
- * the approved model's own stations. Stated rather than generated, because
+ * the approved model's own stations — the scales its orbs are drawn at. On
+ * this hull those are also the plates' half-extents, because an `orb(12, 6)`
+ * carries a vertex on every axis and reaches its full radius on all three,
+ * unlike the Dredge's `orb(14, 7)` (#630); the seam fractions below are
+ * hung off them and hold either way. Stated rather than generated, because
  * `segmentSeries`'s profile swells aft of amidships and this hull's plates
  * peak at the third — the model is what the port transcribes, not the curve.
  */
@@ -68,14 +81,23 @@ root.scale.setScalar(L / DRAWN);
 
 // The body: four overlapping plates with a seam each, alternating violet and
 // red from the stern. No spines off them — this hull's back carries a dorsal
-// rank of its own, and a plate spine as well would crowd the dome.
-directorate.tergites(root, { violet, red, black }, { segments: SEGMENTS });
+// rank of its own, and a plate spine as well would crowd the dome. The seam
+// is this hull's own rather than the module's: 0.35 of the half-length,
+// centred 0.8 forward, and 0.7 of the half-beam tall on plates that are 0.65
+// of it — so it stands a little proud of its plate above and below instead
+// of sinking under the one ahead.
+directorate.tergites(root, { violet, red, black }, {
+  segments: SEGMENTS,
+  seam: { at: 0.8, size: [0.35, 0.7 / 0.65, 0.9] },
+});
 directorate.rostrum(root, red, { tip: 30, r: 3.2, length: 12, facets: 8 });
 directorate.telson(root, { violet, black }, { tip: -34, r: 2.5, length: 8 });
 
 // The hydrophone array, and the hull's argument: 44 m of boom across a 64 m
 // body, six sockets to port against five to starboard. `arrayBoom` refuses
-// matched ranks, so the asymmetry cannot be lost to a tidy edit.
+// matched ranks, so the asymmetry cannot be lost to a tidy edit. The spines'
+// centres sit 3 m and 3.7 m over the boom's axis — the short one's base on
+// the axis, the long one's 5 cm under it — each in a 1.6 m square socket.
 directorate.arrayBoom(root, { steel, black, red }, {
   x: 0,
   y: 2.5,
@@ -84,33 +106,44 @@ directorate.arrayBoom(root, { steel, black, red }, {
   starboard: 5,
   z0: 5,
   pitch: 2.6,
+  seat: [3, 3.7],
+  socket: 'box',
 });
 
-// The listening dome forward of the boom, studded with six spines, and the
-// smaller violet dome behind it — set off the centreline, because nothing on
-// this navy is centred.
+// The listening dome forward of the boom, 5.5 m by 4.2 m, studded with six
+// five-sided spines in a ring 3.2 m out and 3.4 m up, and the smaller violet
+// dome behind it, 2.6 m by 2.2 m — set off the centreline, because nothing
+// on this navy is centred.
 directorate.listeningDome(root, { red, violet, black }, {
   x: -3,
   y: 3.2,
   r: 5.5,
-  aft: { x: -14, y: 3.6, z: -3.5, r: 2.6 },
+  ry: 4.2,
+  studs: { facets: 5, radius: 3.2, lift: 3.4 },
+  aft: { x: -14, y: 3.6, z: -3.5, r: 2.6, ry: 2.2 },
 });
 
-// Four dorsal spines lengthening toward the bow, alternating sides at 11 m.
-// `dorsalSpines` refuses a mirrored pair; this rank never offers one.
+// Four dorsal spines lengthening toward the bow by half a metre a station,
+// alternating sides at 11 m — 1.5 m to starboard, 2 m to port — raked 0.35
+// forward and cut five-sided. `dorsalSpines` refuses a mirrored pair; this
+// rank never offers one.
 directorate.dorsalSpines(root, black, {
   spines: [
-    [-20, 4.45, -1.4, 4.4],
-    [-9, 4.45, 2.1, 4.9],
-    [2, 4.45, -1.4, 5.4],
-    [13, 4.45, 2.1, 5.9],
+    [-20, 4.5, -1.5, 4.5],
+    [-9, 4.5, 2, 5],
+    [2, 4.5, -1.5, 5.5],
+    [13, 4.5, 2, 6],
   ],
+  rake: -0.35,
+  facets: 5,
 });
 
-// The walking limbs, folded under the flanks: two matched ranks of three, and
+// The walking limbs, folded under the flanks: two matched ranks of three, 7 m
+// long, tapering from 0.7 m at the root to 0.5 m at the tip, folded 0.4 rad —
 // the one place on the hull where a mirrored pair is the rule rather than the
-// error.
-directorate.limbs(root, steel, { xs: [-14, -4, 6], y: -1, z: 7.5, r: 0.7, length: 6.9, fold: 0.38 });
+// error. Matched in rule, not in result: the approved model turns the
+// starboard rank the other way about, roots outboard, and the port keeps it.
+directorate.limbs(root, steel, { xs: [-14, -4, 6], y: -1, z: 7.5, r: [0.7, 0.5], length: 7, fold: 0.4 });
 
 // "Nearly black": four photophores, and that is the whole light budget of a
 // hull that idles at SIG 12. None of them answers another across the keel.
