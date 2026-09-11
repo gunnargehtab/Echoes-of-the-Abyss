@@ -5,6 +5,16 @@ description: Run the balance harness and read what comes back — the thirty-mat
 
 # Balance runs
 
+> **Balance tuning is frozen.** `CLAUDE.md` carries the rule: the systems are
+> still changing shape, so no hull is repriced, no yield retuned and no TUNABLE
+> moved because a win rate looked wrong, and no baseline is refreshed to chase a
+> guard-rail. What this harness is still for while the freeze holds: finding
+> *correctness* faults — a navy that cannot pay for its own roster, a commander
+> that never builds a structure its own waves gate on — and re-recording a
+> baseline after a **mechanic** changed, which is describing the new shape
+> rather than aiming at a target. A **breached** guard-rail is recorded and
+> left. If a run's justification is a win rate, do not make the run.
+
 ```bash
 node tools/balance/run.mjs \
   --matchup consortium,commune,directorate,knights \

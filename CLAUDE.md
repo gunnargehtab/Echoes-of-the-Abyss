@@ -15,6 +15,34 @@ war. The repository holds two things that must stay in agreement:
 The docs came first and remain canonical. Code transcribes the docs; when they disagree,
 that is a bug in one of them — say which one you are changing and why.
 
+## Balance work is frozen
+
+**Do not tune the game for balance.** Not a hull price, not a yield rate, not a build-list
+weight, not a TUNABLE moved because a win rate looked wrong. The systems this game is made
+of are still changing shape — hulls, fauna, flora, the economy's own accounts — and every
+number tuned against today's shape is thrown away by the next mechanic that lands. Balancing
+now is spent effort that buys nothing, and a thirty-match batch costs real wall clock to
+produce and real attention to read.
+
+What the freeze covers and what it does not:
+
+- **Frozen** — repricing a hull, retuning a yield, changing an AI build list to move a win
+  rate, refreshing a baseline to chase a guard-rail, and filing or working an issue whose
+  subject is a faction winning or losing too much. `docs/economy.md` §9's guard-rails stay
+  written down and stay true as a statement of intent; a **breached** reading is recorded
+  and left, not acted on. #654 is the standing example and is deferred on exactly this
+  basis.
+- **Not frozen** — everything else the harness is for. A *correctness* fault the harness
+  surfaces is still a bug and still gets fixed: a navy that cannot pay for its own roster
+  (#520), a commander that never builds a structure its own waves gate on (#518), an
+  economy path that refuses a legal purchase. Those are not balance; they are the
+  simulation failing to do what the docs say it does. A baseline refreshed because a
+  *mechanic* changed is also fine — that is recording the new shape, not chasing a target.
+
+The freeze lifts when the systems stop moving, and it lifts by a decision written here,
+not by a run deciding the moment has come. Until then, if a piece of work's justification
+is a win rate, it is not the work to do.
+
 ## Commands
 
 Run everything from the repository root.
