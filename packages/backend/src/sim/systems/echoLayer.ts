@@ -28,6 +28,7 @@ import {
   directionalSectorFactor,
   maxAudibleRangeM,
   scatterContact,
+  contactHandle,
   stableUnit,
   tierFromRatio,
   unitAvailableTo,
@@ -279,7 +280,25 @@ export class EchoLayer {
    * indexed the way the order path reads it.
    */
   private readonly byHandle = new Map<number, Map<number, number>>();
+  /**
+   * slot -> how many handles it has been issued. An *index*, not a handle:
+   * what goes on the wire is `contactHandle` of it, because a counter
+   * published raw is a sort order, and a sort order separates the phantoms a
+   * ping in scattered water returns from the true returns beside them
+   * (docs/systems-echo.md §3). See `mintHandle`.
+   */
   private readonly nextHandle = new Map<number, number>();
+  /**
+   * This match's seed, hoisted at the top of every pass.
+   *
+   * Only the handle key reads it, and only from inside `run`. Held on the
+   * instance rather than threaded through `handleFor` and `conjurePhantoms`
+   * because both are already deep in the pass's call tree and the value is a
+   * property of the match, not of the call.
+   */
+  private seed = 0;
+  /** Handle order, which is the order a slot's contacts are published in. */
+  private readonly byHandleAscending = (a: Contact, b: Contact): number => a.id - b.id;
   private readonly results = new Map<number, Contact[]>();
   private readonly exposure = new Map<number, ExposureReport>();
   /**
@@ -586,15 +605,39 @@ export class EchoLayer {
    * A phantom's handle comes from here and from nowhere else, so it is
    * indistinguishable from a real one — a client that could sort handles
    * into "issued for an entity" and "issued for nothing" would have the
-   * phantom's whole secret. It is never entered in `handles`, which is why
-   * `entityForHandle` cannot name an entity for it; `resolvePhantom` is what
+   * phantom's whole secret. That sentence is old, and for a long time it was
+   * a statement of intent rather than of the code. Two things make it true:
+   *
+   * - **The counter is not the handle.** `nextHandle` is an index and
+   *   `contactHandle` publishes a keyed permutation of it, so the order
+   *   handles were issued in does not survive onto the wire. It had to stop
+   *   surviving because the mint order is not arbitrary: a ping conjures its
+   *   phantoms in the active-sonar loop and the materialisation loop mints
+   *   the pass's real handles afterwards, so *every* phantom handle sat below
+   *   every real handle first minted on the same pass. One sort of the
+   *   handles a snapshot had never carried before read the lies straight off
+   *   the front, from a stock client, with no order given and nothing spent.
+   * - **The array is in handle order.** `run` sorts each slot's contacts by
+   *   handle before returning, so a contact's position is a function of
+   *   handles the client already holds and carries nothing beyond them. Left
+   *   unsorted, the phantoms were the array's tail, which is the same secret
+   *   told by the cheaper of the two channels.
+   *
+   * A handle is still never entered in `handles`, which is why
+   * `entityForHandle` cannot name an entity for one; `resolvePhantom` is what
    * keeps that from being an answer the client can read, by giving every
    * order path something to take instead of a refusal to publish.
+   *
+   * What is left of the three is the freeze: a phantom's reported position is
+   * written once and a real contact in scattered water is re-lied every pass,
+   * so cross-pass equality still separates them. That one is *specified* —
+   * §3 says a phantom holds still for the three seconds — so it is a doc
+   * change before it is a code change, and neither has happened.
    */
   private mintHandle(slot: number): number {
-    const handle = (this.nextHandle.get(slot) ?? 1) + 1;
-    this.nextHandle.set(slot, handle);
-    return handle;
+    const index = (this.nextHandle.get(slot) ?? 0) + 1;
+    this.nextHandle.set(slot, index);
+    return contactHandle(this.seed, slot, index);
   }
 
   /**
@@ -1048,6 +1091,9 @@ export class EchoLayer {
     const entities = acousticEntities(world);
     this.terrain = terrain;
     this.scatterPass = terrain.hasScatter;
+    // The handle key's one input, and the only thing `mintHandle` needs that
+    // is a property of the match rather than of the contact.
+    this.seed = world.rng.seed;
 
     for (const slot of observers) {
       this.best.get(slot)?.clear();
@@ -1584,7 +1630,8 @@ export class EchoLayer {
       }
     }
 
-    // Phantoms, after the real returns and under the same handle space. A
+    // Phantoms, appended here and sorted into place below, under the same
+    // handle space the real returns were drawn from. A
     // slot's phantoms ride in its own payload only: the AI seat reads that
     // payload and is deceived exactly as a player is (docs/systems-echo.md
     // §3 "Symmetric"), and nothing here raises anybody's exposure, because
@@ -1598,6 +1645,29 @@ export class EchoLayer {
           out.push(phantom);
         }
       }
+    }
+
+    // Publish each slot's contacts in handle order.
+    //
+    // Position used to be mint order, with the phantoms appended after it,
+    // which made "the tail of the array" the cheapest phantom detector there
+    // was — free, from a stock client, needing no orders and no second
+    // snapshot. Handle order costs one sort of a list that is dozens long and
+    // leaves position a function of the handles the client is already
+    // holding, so it discloses nothing the client did not have.
+    //
+    // Sorted for every slot rather than only for slots holding phantoms:
+    // sorting only sometimes would make the *presence* of a sort the tell,
+    // and a list that reorders itself the moment a ping goes out in scattered
+    // water is a worse answer than one that never had an order to read. It is
+    // also the better list — a handle is stable for the life of a contact, so
+    // a slot's contacts now hold their relative places between passes instead
+    // of following the resolution map's insertion order.
+    //
+    // Off both budgets: no path integral and no pair test. See CLAUDE.md,
+    // "Two clocks" — what those assert on is counted work, and this adds none.
+    for (const slot of observers) {
+      this.results.get(slot)?.sort(this.byHandleAscending);
     }
 
     this.resolveMarks(world, slots, entities);

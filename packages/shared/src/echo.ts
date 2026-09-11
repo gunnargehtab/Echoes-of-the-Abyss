@@ -202,6 +202,68 @@ export function stableUnit(seed: number, key: number, salt: number, step: number
   return h / 4294967296;
 }
 
+/**
+ * The handle space a slot's contacts are published under. Two 15-bit halves,
+ * so a handle is at most 2^30 and every arithmetic step below stays inside
+ * the int32 range `Math.imul` and `>>>` are exact over.
+ */
+const HANDLE_HALF_BITS = 15;
+const HANDLE_HALF_MASK = 0x7fff;
+const HANDLE_INDEX_MASK = 0x3fffffff;
+/**
+ * Four rounds. A balanced Feistel is a bijection after one, so the rounds buy
+ * diffusion rather than correctness: at one round the high half is the input's
+ * low half verbatim, and consecutive indices would still sort together, which
+ * is the entire property this function exists to destroy.
+ */
+const HANDLE_ROUNDS = 4;
+/** Separates this key schedule from every other `mix` chain off the seed. */
+const HANDLE_SALT = 0x5bf03635;
+
+/**
+ * The opaque handle a slot's `index`-th minted contact is published under.
+ *
+ * A keyed permutation of the mint counter, and it is a *permutation* rather
+ * than a hash on purpose: distinct indices give distinct handles with no
+ * collision check anywhere, which is what lets one counter issue handles for
+ * real contacts and for a scattered ping's phantoms alike
+ * (systems-echo.md §3) and still promise a client every handle is distinct.
+ *
+ * The counter itself is the thing that had to stop being visible. A phantom is
+ * minted in the active-sonar loop and a real contact in the materialisation
+ * loop that runs after it, so every phantom handle on a pass sat below every
+ * real handle first minted on the same pass, and a monotonic counter published
+ * that ordering intact — a client that sorted its own new handles read the
+ * lies off the front of the list for free, which is the tell §3 says the
+ * Fields must not have.
+ *
+ * The key is folded from the match seed and the observing slot. Neither ever
+ * crosses the wire — the seed is named in no message in `wire.ts` and the
+ * client never computes one — so this is an opaque identifier with a secret
+ * key rather than an encoding a client can undo. It is not cryptographic and
+ * does not need to be: what it must resist is a sort, not an adversary with
+ * the key, and an adversary with the key has the whole simulation anyway.
+ *
+ * Per slot, so two observers issued their nth handle get different values and
+ * neither learns anything about the other's list. Deterministic in the seed,
+ * so a replay issues the identical handles.
+ */
+export function contactHandle(seed: number, slot: number, index: number): number {
+  const key = mix((seed >>> 0) ^ HANDLE_SALT, slot | 0);
+  const n = index & HANDLE_INDEX_MASK;
+  let left = (n >>> HANDLE_HALF_BITS) & HANDLE_HALF_MASK;
+  let right = n & HANDLE_HALF_MASK;
+  for (let round = 0; round < HANDLE_ROUNDS; round++) {
+    const f = mix(mix(key, round), right) & HANDLE_HALF_MASK;
+    const next = left ^ f;
+    left = right;
+    right = next;
+  }
+  // +1 so a handle is never 0, which every caller that stores one in a map
+  // keyed by truthiness would read as "no handle".
+  return ((left << HANDLE_HALF_BITS) | right) + 1;
+}
+
 /** The two channels a scattered contact lies on. Salts into `stableUnit`. */
 const SCATTER_SALT_BEARING = 1;
 const SCATTER_SALT_RANGE = 2;

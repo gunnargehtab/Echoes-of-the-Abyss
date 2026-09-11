@@ -930,10 +930,20 @@ describe('structures in the Echo Layer', () => {
     Position.y[listener.id] = bastion.y;
 
     const contacts = advance(match, 0.5)!.get(0)!.contacts;
-    const heard = contacts.find((c) => c.structure !== undefined);
-    assert.ok(heard !== undefined, 'a Bastion at 300 m must classify');
-    assert.equal(heard.structure, StructureKind.Bastion);
-    assert.equal(heard.kind, undefined, 'a structure contact must not claim a unit kind');
+    // Every structure contact, not `find`'s first one. A slot's contacts are
+    // published in handle order and a handle is a keyed permutation of the
+    // mint counter (#616), so "the first contact carrying a structure" names
+    // whichever structure the seed happened to sort to the front. The rule
+    // under test is about each contact rather than about the list: a
+    // structure is named by its structure kind and never by a unit kind.
+    const structures = contacts.filter((c) => c.structure !== undefined);
+    assert.ok(
+      structures.some((c) => c.structure === StructureKind.Bastion),
+      'a Bastion at 300 m must classify'
+    );
+    for (const heard of structures) {
+      assert.equal(heard.kind, undefined, 'a structure contact must not claim a unit kind');
+    }
   });
 });
 

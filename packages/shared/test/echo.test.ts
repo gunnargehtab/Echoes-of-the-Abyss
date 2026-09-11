@@ -28,6 +28,7 @@ import {
   blurBearing,
   scatterContact,
   scatterLie,
+  contactHandle,
   stableUnit,
   SCATTER,
   SIM,
@@ -423,5 +424,52 @@ describe('scattered water — docs/systems-echo.md §3', () => {
       stableUnit(31, 1, 3, -1),
       'the standing step is its own'
     );
+  });
+});
+
+describe('contactHandle — the opaque per-observer handle (#616)', () => {
+  /**
+   * Enough indices to cover a long match's worth of contacts for one slot,
+   * ordnance included, and cheap enough to run every time.
+   */
+  const SAMPLE = 50_000;
+
+  it('is a permutation, so one counter can issue every handle without a collision check', () => {
+    const seen = new Set<number>();
+    for (let index = 1; index <= SAMPLE; index++) seen.add(contactHandle(31, 0, index));
+    assert.equal(seen.size, SAMPLE, 'distinct handles for distinct indices');
+  });
+
+  it('never issues 0, which a caller is entitled to read as "no handle"', () => {
+    for (let index = 0; index <= 2000; index++) {
+      assert.notEqual(contactHandle(31, 0, index), 0);
+    }
+  });
+
+  it('does not preserve the order the counter issued them in', () => {
+    // The property the whole function exists for. A raw counter scores 1.0
+    // here, and a raw counter is what published the phantoms of a scattered
+    // ping ahead of that pass's true returns (docs/systems-echo.md §3).
+    let ascending = 0;
+    for (let index = 1; index <= SAMPLE; index++) {
+      if (contactHandle(31, 0, index) > contactHandle(31, 0, index - 1)) ascending++;
+    }
+    const fraction = ascending / SAMPLE;
+    assert.ok(fraction > 0.45 && fraction < 0.55, `a coin flip, was ${fraction.toFixed(4)}`);
+  });
+
+  it('gives two observers different handles for the same index', () => {
+    // Each slot resolves its own contacts, so nth-issued is not a fact two
+    // clients may compare. Keyed per slot, they cannot.
+    for (let index = 1; index <= 500; index++) {
+      assert.notEqual(contactHandle(31, 0, index), contactHandle(31, 1, index));
+    }
+  });
+
+  it('is deterministic in the seed, so a replay issues the identical handles', () => {
+    for (let index = 1; index <= 500; index++) {
+      assert.equal(contactHandle(31, 2, index), contactHandle(31, 2, index));
+      assert.notEqual(contactHandle(31, 2, index), contactHandle(32, 2, index));
+    }
   });
 });

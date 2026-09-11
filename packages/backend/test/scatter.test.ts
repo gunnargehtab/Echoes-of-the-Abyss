@@ -501,12 +501,121 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
       const fromEnemy = Math.hypot(phantom.x - Position.x[enemy]!, phantom.y - Position.y[enemy]!);
       assert.ok(fromEnemy >= SCATTER.PHANTOM_CLEARANCE_M, 'never on top of a real contact');
     }
-    // Handles come from the one counter, so the client cannot sort them.
+    // One counter issues them all, and `contactHandle` is a permutation of it,
+    // so distinctness is a property of the construction rather than luck. What
+    // the counter must *not* publish is its order — held below.
     const handles = match.echo
       .run(match.world, [0, 1])
       .contactsBySlot.get(0)!
       .map((c) => c.id);
     assert.equal(new Set(handles).size, handles.length, 'every handle distinct');
+  });
+
+  /**
+   * Six enemy hulls inside the reveal, so a pass has enough true returns for
+   * "where the phantoms sit" to be a question worth asking. One real contact
+   * and one phantom would put the phantom at an end of the list half the time
+   * by arithmetic, and prove nothing either way.
+   */
+  const CROWD = [
+    [600, 0],
+    [-650, 120],
+    [200, 700],
+    [-300, -750],
+    [900, -400],
+    [-850, -500],
+  ] as const;
+
+  function pingCrowd(seed: number) {
+    const match = new Match(VENTFRONT_DIVIDE, { fauna: false, seed, terrain: fieldsMap() });
+    const pinger = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 4000,
+      y: 4000,
+    });
+    for (const [dx, dy] of CROWD) {
+      spawnUnit(match.world, {
+        kind: UnitKind.Cruiser,
+        slot: 1,
+        faction: Faction.Pelagia,
+        x: 4000 + dx,
+        y: 4000 + dy,
+      });
+    }
+    match.activeSonar(0, pinger);
+    const contacts = match.echo.run(match.world, [0, 1]).contactsBySlot.get(0) ?? [];
+    const phantom = contacts.map((c) => match.echo.entityForHandle(0, c.id) === undefined);
+    return { contacts, phantom };
+  }
+
+  /**
+   * Acceptance criterion 2 of #616: no field of the contact payload may
+   * partition a pass into the lies and the truth.
+   *
+   * Two channels did, and both were free — no order given, no ordnance spent,
+   * nothing but the snapshot a stock client already receives:
+   *
+   * - **The handle.** Phantoms are minted in the active-sonar loop and the
+   *   pass's real handles in the materialisation loop that runs after it, so
+   *   against a monotonic counter every phantom handle sat below every real
+   *   handle first minted on the same pass. 40 seeds out of 40.
+   * - **The array.** Phantoms were appended after the whole real loop, so
+   *   they were the list's tail. Again 40 out of 40.
+   *
+   * Asserted over a fixed seed range because neither is a per-seed property:
+   * a phantom is allowed to land at the front of one pass's list, and with
+   * three phantoms and six returns it sometimes will. What is not allowed is
+   * for it to happen *systematically*, which is what a count over many seeds
+   * is able to say and a single pass is not. Both counts stood at 40/40 before
+   * this landed and the assertions below fail on that code.
+   */
+  it('does not sort the lies to one end of the pass, by handle or by position', () => {
+    const SEEDS = 40;
+    const LIMIT = 10;
+    let allBelow = 0;
+    let allAbove = 0;
+    let prefix = 0;
+    let suffix = 0;
+    let sampled = 0;
+
+    for (let seed = 1; seed <= SEEDS; seed++) {
+      const { contacts, phantom } = pingCrowd(seed);
+      const lies = contacts.filter((_, i) => phantom[i]).map((c) => c.id);
+      const truths = contacts.filter((_, i) => !phantom[i]).map((c) => c.id);
+      if (lies.length === 0 || truths.length === 0) continue;
+      sampled++;
+
+      if (Math.max(...lies) < Math.min(...truths)) allBelow++;
+      if (Math.min(...lies) > Math.max(...truths)) allAbove++;
+
+      const at = contacts.map((_, i) => i).filter((i) => phantom[i]);
+      const run = at[at.length - 1]! - at[0]! === at.length - 1;
+      if (run && at[0] === 0) prefix++;
+      if (run && at[at.length - 1] === contacts.length - 1) suffix++;
+    }
+
+    assert.equal(sampled, SEEDS, 'the premise: every seed returned both a phantom and a truth');
+    assert.ok(allBelow <= LIMIT, `phantom handles wholly below the truth in ${allBelow}/${SEEDS}`);
+    assert.ok(allAbove <= LIMIT, `phantom handles wholly above the truth in ${allAbove}/${SEEDS}`);
+    assert.ok(prefix <= LIMIT, `phantoms a contiguous prefix in ${prefix}/${SEEDS}`);
+    assert.ok(suffix <= LIMIT, `phantoms a contiguous suffix in ${suffix}/${SEEDS}`);
+  });
+
+  it('publishes a slot in handle order, so position adds nothing to the handles', () => {
+    // The reason position is safe rather than merely scrambled. A shuffle
+    // would hide the tail; this makes the index a function of handles the
+    // client is already holding, which is a stronger thing to be able to say.
+    for (let seed = 1; seed <= 8; seed++) {
+      const { contacts } = pingCrowd(seed);
+      const handles = contacts.map((c) => c.id);
+      assert.deepEqual(
+        handles,
+        [...handles].sort((a, b) => a - b),
+        `seed ${seed}`
+      );
+    }
   });
 
   /**
