@@ -211,6 +211,29 @@ and it lowers the drift pressure on both arms. A third iteration should drop it 
 the single change most likely to make a difference visible, and it costs one more pair of
 runs.
 
+## Experiment `lobby-callbacks-v2`
+
+The same task, from the same base, with the version guard taken **out of the prompt**. It
+differs from `lobby-callbacks` by exactly two lines:
+
+```diff
+- - Use the Colyseus client API as it exists in the version this repository has installed.
+-   Check it rather than recalling it.
+```
+
+With v1 already run, this completes a 2x2 over {skill, no skill} and {guard in prompt, no
+guard}. **v2 arm C is the only cell with no guard of any kind** — no skill, no `CLAUDE.md`
+paragraph, no instruction to check the installed version — and is where drift appears if it
+appears at all. Same traps, same fixture, same base, same model. The instruction not to read
+other branches stays: it guards against copying, not against drift.
+
+| Arm | Blocking traps | Gates | Cost | Output tokens | Wall clock |
+| --- | --- | --- | --- | --- | --- |
+| A | | | | | |
+| C | | | | | |
+
+Compare each cell against its v1 twin, not only against the other arm.
+
 ### The standing read on the colyseus skill
 
 Across two experiments and five arms — #627's A, B and C, and this one's A and C — the
