@@ -199,9 +199,14 @@ launched torpedo, both end when it does, and neither is available without spendi
   ([systems-echo.md](systems-echo.md) §8) does the same thing six times over, at the reach of a
   Cantor's dome and for two minutes — seekers give both their teeth.
 - **Point defence:** guns can engage torpedoes in their terminal 250 m. A torpedo has
-  40 HP — one or two gun cycles kill it, if the gun is idle and the arithmetic works out.
-  Point defence is not a shield; it is a gun *choosing* — every cycle spent on a torpedo
-  is a cycle not spent on the hull that launched it, and simultaneous bearings beat it.
+  40 HP — one or two gun cycles kill it if the arithmetic works out. **A standing attack
+  order does not switch point defence off.** Inside the terminal 250 m the gun takes the
+  inbound round and returns to its ordered target on the next cycle; the order itself is
+  never cancelled. Point defence is not a shield; it is a gun *choosing* — every cycle
+  spent on a torpedo is a cycle not spent on the hull that launched it, and simultaneous
+  bearings beat it. That is the whole price, and it is charged in cycles rather than in
+  orders: a hull that is already fighting is the hull most likely to be torpedoed, so a
+  counter that lapsed whenever the gun had a target would not be a counter (§2, §13).
 - **A mine astern:** a running torpedo is louder than the cruising Corvette a mine's
   trigger is calibrated on, so it trips any hostile mine it passes within 150 m of, and a
   blast spends every torpedo and depth charge inside its 200 m (§6). Any armed hull carries
@@ -620,6 +625,12 @@ the **loudest** live enemy inside its weapon range rather than the nearest. The 
 and every existing filter are unchanged: ordnance is never auto-acquired, an authored static
 emitter is not a target, and ambient fauna are excluded exactly as they are for every other
 gun. An ordered target still overrides, because an order always does.
+
+That override is about **acquisition** — choosing whom to shell — and it stops at the
+terminal 250 m. A torpedo already in the water is not a choice of target; it is the last
+second of a weapon that has been committed to. So point defence (§5) runs whatever else
+the gun holds, in every posture and under every order, and the ordered target is still
+there when the round is dealt with.
 
 What it costs the other player is the thing the whole design is about. Firing is +25.
 Breaking silence is +40. A descent floors at 72. A harvester on Overburden sits at 68 and a
