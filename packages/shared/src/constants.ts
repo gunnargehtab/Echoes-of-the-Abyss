@@ -655,9 +655,14 @@ export const ORDNANCE = {
    * "Not a shield; a gun *choosing*" — every cycle spent on a torpedo is a
    * cycle not spent on the hull that launched it, which is what keeps a
    * saturation volley a real answer to it.
+   *
+   * §5 also carries the rule about orders, and §11.5 the carve-out that makes
+   * it consistent: inside this radius a standing attack order does not switch
+   * point defence off, because §11.5's "an ordered target still overrides" is
+   * about acquisition and a running torpedo is not an acquisition (#617).
    */
   POINT_DEFENCE: {
-    /** Terminal range at which a gun may engage inbound ordnance. §5. */
+    /** Terminal range at which a gun may engage inbound ordnance. §5, §11.5. */
     RANGE_M: 250,
   },
 

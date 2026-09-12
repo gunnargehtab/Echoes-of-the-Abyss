@@ -230,24 +230,30 @@ function engagementRangeM(shooter: number, target: number): number {
  * a short-ranged hull cannot reach further at ordnance than it can at a ship.
  * §5 is explicit that this is a terminal engagement — the last quarter
  * kilometre, not an escort screen.
+ *
+ * `inbound` is the tick's list, built once by `combatSystem` rather than
+ * re-derived here. Since #617 every armed hull reaches this scan instead of
+ * only the idle ones, which multiplies the list's length by the shooter count
+ * on the 60 Hz path; the kind and liveness filters are properties of the round
+ * rather than of the gun, so they are paid once per round up there instead of
+ * once per (shooter, round) pair down here. What is left is the walk itself,
+ * and that is counted, exactly as the hull loop's is.
  */
 function nearestInboundOrdnance(
   world: SimWorld,
   shooter: number,
   slot: number,
-  weaponRangeM: number
+  weaponRangeM: number,
+  inbound: readonly number[]
 ): number {
   const reach = Math.min(weaponRangeM, ORDNANCE.POINT_DEFENCE.RANGE_M);
-  const inbound = interceptable(world);
   let best = 0;
   let bestD = reach;
 
   for (let i = 0; i < inbound.length; i++) {
     const other = inbound[i]!;
     world.stepWork.acquisitionPairs++;
-    if (other === shooter || Owner.slot[other] === slot) continue;
-    if (Health.hp[other]! <= 0) continue;
-    if (!isInterceptable(Ordnance.kind[other] as OrdnanceKind)) continue;
+    if (Owner.slot[other] === slot) continue;
     const d = engagementRangeM(shooter, other);
     if (d > bestD) continue;
     bestD = d;
@@ -260,6 +266,22 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
   const dt = world.dt;
   const entities = shooters(world);
   const candidates = targetables(world);
+
+  // Point defence's candidate list for this tick, and the gate on the whole
+  // scan: an empty list costs every shooter nothing at all, which is the
+  // ordinary case, because most ticks of most matches have no ordnance in the
+  // water. Mines are what the kind filter removes here — they are ordnance and
+  // they are never interceptable (§5: a mine is not inbound, it is *there*) —
+  // and a wall of them is exactly the board where paying that filter once per
+  // gun per tick would have hurt.
+  const inbound: number[] = [];
+  const ordnanceInWater = interceptable(world);
+  for (let i = 0; i < ordnanceInWater.length; i++) {
+    const oid = ordnanceInWater[i]!;
+    if (Health.hp[oid]! <= 0) continue;
+    if (!isInterceptable(Ordnance.kind[oid] as OrdnanceKind)) continue;
+    inbound.push(oid);
+  }
 
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i]!;
@@ -306,30 +328,43 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
       ordered = false;
       target = 0;
     }
+    // Point defence first, and only inside the terminal range
+    // (docs/systems-combat.md §5, §11.5). A gun with an inbound torpedo 250 m
+    // away has something better to shoot than the hull that launched it — but
+    // the choice is the mechanic, not a shield: this consumes the same cooldown
+    // as any other shot, so a saturation volley still gets through and the
+    // launcher gets a free cycle out of every torpedo it spends.
+    //
+    // Above the ordered branch rather than inside it (#617). It used to sit
+    // under `if (!ordered)`, so a hull holding a live ordered target never ran
+    // the scan — not losing a contention, never looking — and §2's leg of the
+    // weapon triangle was unavailable to precisely the hull most likely to be
+    // torpedoed. §11.5's "an ordered target still overrides" is about
+    // acquisition, and a round already in the water is not an acquisition.
+    //
+    // Unlike the hull loop below, ordnance here is not a detection problem:
+    // a torpedo runs at SIG 60, which is louder than most of the roster's
+    // cruise, and at 250 m it is not merely audible but deafening. The
+    // header's "in range implies heard" licence holds here for real.
+    const intercept =
+      !silent && inbound.length > 0
+        ? nearestInboundOrdnance(world, eid, slot, profile.rangeM, inbound)
+        : 0;
+    // A gun choosing, not a mode switch: the order is not cancelled, and on
+    // the next cycle the hull goes back to shelling the launcher. It is also
+    // not a *movement* act: the guard below is what keeps a hull chasing a
+    // distant ordered target from stopping dead the tick it intercepts.
+    const pdOverride = ordered && intercept !== 0;
+
     if (!ordered) {
       if (!orderStands) Weapon.orderedTargetEid[eid] = 0;
-      target = 0;
+      target = intercept;
       // Auto-acquire: nearest live enemy in range. Silent hulls hold fire, and
       // units already travelling somewhere do not stop to brawl on their own —
       // unless they were told to: an attack-move is the order to do exactly
       // that, and is the one order that lets a force advance into water it
       // cannot see, which in this game is most of it.
       const busy = isMobile && MoveOrder.active[eid] === 1 && !engaging;
-
-      // Point defence first, and only inside the terminal range
-      // (docs/systems-combat.md §5). A gun with an inbound torpedo 250 m away
-      // has something better to shoot than the hull that launched it — but the
-      // choice is the mechanic, not a shield: this consumes the same cooldown
-      // as any other shot, so a saturation volley still gets through and the
-      // launcher gets a free cycle out of every torpedo it spends.
-      //
-      // Unlike the hull loop below, ordnance here is not a detection problem:
-      // a torpedo runs at SIG 60, which is louder than most of the roster's
-      // cruise, and at 250 m it is not merely audible but deafening. The
-      // header's "in range implies heard" licence holds here for real.
-      if (!silent) {
-        target = nearestInboundOrdnance(world, eid, slot, profile.rangeM);
-      }
 
       if (target === 0 && !silent && !busy) {
         let bestDistance = profile.rangeM;
@@ -406,6 +441,8 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
           }
         }
       }
+    } else if (pdOverride) {
+      target = intercept;
     }
     if (target === 0) {
       // Nothing to fight: an attack-move that stopped to fight resumes its
@@ -453,7 +490,7 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
       continue;
     }
 
-    if ((ordered || engaging) && isMobile && MoveOrder.active[eid] === 1) {
+    if (!pdOverride && (ordered || engaging) && isMobile && MoveOrder.active[eid] === 1) {
       // In range: hold position to shoot. An attack-move keeps its course in
       // `Posture` and takes it up again when there is nothing left to fight.
       MoveOrder.active[eid] = 0;

@@ -16,8 +16,11 @@
  * defending hull under a standing attack order (#617). Whether a countermeasure
  * depends on what its owner happens to have ordered is a fact about the game
  * that a player has to be able to predict, so it is asserted rather than left
- * to whichever arm a test happened to be written in. Two of the three do not
- * depend on the order. The third does, and the test that says so says why.
+ * to whichever arm a test happened to be written in. Since #617 was decided,
+ * none of the three depends on the order: a hull under an attack order keeps
+ * its decoy, keeps its mine astern, and keeps its gun's answer. That equality
+ * is the point rather than an accident of three separate tests, so it is
+ * asserted as an equality where the arms can be compared directly.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -267,32 +270,28 @@ describe('countermeasures', () => {
     );
   });
 
-  it('does not look for the torpedo at all while an attack order stands', () => {
-    // A characterisation test (#617): it records what the simulation does
-    // today, in both arms, and it is deliberately not a statement that today's
-    // answer is right.
+  it('looks for the torpedo whether or not an attack order stands', () => {
+    // #617, decided: in §5's Countermeasures bullet *idle* means free this
+    // cycle, not under no order. A standing attack order does not switch point
+    // defence off, and §11.5's "an ordered target still overrides" is about
+    // acquisition — a round already in the water is not an acquisition.
     //
-    // `combatSystem` reads the ordered target, and the whole auto-acquire block
-    // — point defence included — sits inside `if (!ordered)`. So a hull with a
-    // live ordered target never calls `nearestInboundOrdnance`: it is not
-    // losing a contention between two things it could shoot, it never runs the
-    // scan. The geometry makes that unmistakable rather than arguable. The
-    // ordered target is an unarmed Harvester 3 km away — a Cruiser reaches 900
-    // and closes at 45 m/s, so the gun has nothing in range for the whole run
-    // and fires at nothing. The single existing carve-out does not apply: it is
-    // for a hull in *hold* posture, and this one is not.
+    // This was a characterisation test one commit ago, recording the opposite
+    // reading in the same two arms: the whole auto-acquire block, point defence
+    // included, sat inside `if (!ordered)`, so a hull holding a live ordered
+    // target never called `nearestInboundOrdnance` at all. It was not losing a
+    // contention between two things it could shoot; it never ran the scan.
+    // Three sections stated the rule with no condition on them (§2:50 "guns
+    // beat torpedoes", §9.5 listing PD among the verbs a torpedoed hull *has*,
+    // §13 pricing every PD cycle as free for the launcher) and one adjective in
+    // §5 carried the other reading. The adjective went.
     //
-    // The text this rests on is §5's Countermeasures bullet — guns engage
-    // torpedoes in their terminal 250 m "if the gun is idle". That adjective
-    // carries both readings. *Idle* can mean free this cycle, which is how the
-    // very next sentence prices point defence ("every cycle spent on a torpedo
-    // is a cycle not spent on the hull that launched it"), and then the code is
-    // wrong. It can equally mean under no order, which is what the code
-    // implements, and then §2:50, §9.5:532 and §13:676 are each stating the
-    // rule without its condition. Nothing in docs/ resolves it, so #617
-    // reserves the call for the owner. Whichever way it lands, this test
-    // changes shape rather than being deleted — it is the both-arms coverage
-    // the other two countermeasures in this file have.
+    // The geometry keeps the two arms honest rather than arguable. The ordered
+    // target is an unarmed Harvester 3 km away — a Cruiser reaches 900 m and
+    // closes at 45 m/s, so the gun has nothing in range for the whole run and
+    // the order can only ever be a distraction, never a competing shot. The
+    // hold-posture carve-out does not apply either: this hull is not holding.
+    // So an ordered arm that survives can only have survived by looking.
     const torpedoedWith = (ordered: boolean): { defenderHp: number; torpedoes: number } => {
       const match = openWaterMatch();
       const launcher = spawnUnit(match.world, {
@@ -344,10 +343,90 @@ describe('countermeasures', () => {
     assert.equal(idle.defenderHp, statsFor(UnitKind.Cruiser).maxHp, 'and the hull is untouched');
 
     const underOrder = torpedoedWith(true);
+    assert.equal(underOrder.torpedoes, 0, 'ordered: the gun shoots it down too');
     assert.equal(
       underOrder.defenderHp,
-      statsFor(UnitKind.Cruiser).maxHp - ORDNANCE.TORPEDO.DAMAGE,
-      'ordered: the identical torpedo arrives, and takes the whole 350'
+      statsFor(UnitKind.Cruiser).maxHp,
+      'ordered: and the identical torpedo takes nothing off the identical hull'
+    );
+    // Stated as the equality rather than only as two readings, because the
+    // equality is the rule: all three of §5's countermeasures now behave the
+    // same under an order, so there is no exception here for a player to learn.
+    assert.equal(
+      underOrder.defenderHp,
+      idle.defenderHp,
+      'the order changes nothing about what the gun does to the round'
+    );
+  });
+
+  it('goes back to shelling the ordered target once the round is dealt with', () => {
+    // The other half of #617's decision: point defence is a gun *choosing*, not
+    // a mode switch. `Weapon.orderedTargetEid` is never cleared on the point-
+    // defence path, so the cycle after the round is dealt with, the hull is
+    // shelling the launcher again. If the order were cancelled instead, a
+    // player's attack order would be silently revoked by the enemy launching a
+    // torpedo at them, which is a far worse bargain than the one §5 describes.
+    //
+    // Both facts are asserted on one board because either alone is satisfiable
+    // the wrong way: an order that survives on a hull that has stopped firing
+    // proves nothing, and damage on the quarry without a surviving order could
+    // be a re-acquisition.
+    const match = openWaterMatch();
+    const launcher = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 3900,
+      y: 6000,
+    });
+    // In range of the defender's gun and outside its 250 m point-defence
+    // envelope, so the two targets are genuinely distinguishable: 400 m, under
+    // a Corvette's 550 m reach. The launcher sits at 1,000 m, outside that
+    // reach, so it is never a third thing the gun could have been shooting.
+    const quarry = spawnUnit(match.world, {
+      kind: UnitKind.Harvester,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 4500,
+      y: 6000,
+    });
+    const defender = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 4900,
+      y: 6000,
+    });
+    advance(match, 0.2);
+    Weapon.orderedTargetEid[defender] = quarry;
+    const quarryFull = Health.hp[quarry]!;
+
+    launchTorpedo(match.world, launcher, 4900, 6000);
+    // Long enough for the round to be resolved and for the gun to land shots
+    // on the quarry afterwards, and short enough that the quarry is still
+    // alive: a Harvester has 300 HP, and an order whose target has died is
+    // cleared by design, which would make the surviving-order assertion below
+    // measure the clock rather than the rule.
+    advance(match, 8);
+
+    assert.equal(
+      liveOrdnanceOf(match, OrdnanceKind.Torpedo).length,
+      0,
+      'the ordered gun still answered the round'
+    );
+    assert.equal(
+      Health.hp[defender],
+      statsFor(UnitKind.Corvette).maxHp,
+      'and took nothing from it'
+    );
+    assert.equal(
+      Weapon.orderedTargetEid[defender],
+      quarry,
+      'the order is not cancelled by the interception'
+    );
+    assert.ok(
+      Health.hp[quarry]! < quarryFull,
+      'and the quarry is still being shelled, so the gun went back to it'
     );
   });
 
