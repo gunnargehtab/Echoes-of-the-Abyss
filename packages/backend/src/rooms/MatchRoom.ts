@@ -14,7 +14,7 @@
 // latter re-exports via __exportStar, which Node's static CJS export detection
 // cannot see, so `import { Room } from 'colyseus'` fails at runtime under an
 // unbundled ESM loader (the dev server) while working fine once bundled.
-import { Room, type Client } from '@colyseus/core';
+import { OnMessageException, Room, type Client, type RoomException } from '@colyseus/core';
 import {
   AiDifficulty,
   Faction,
@@ -881,6 +881,83 @@ export class MatchRoom extends Room<MatchState> {
           ? ''
           : `; worst mission pass ${this.match.worstMissionMsCost.toFixed(3)} ms`)
     );
+  }
+
+  /**
+   * Contain a throw inside this room rather than letting it end the process.
+   *
+   * Colyseus gates its *entire* wrapping mechanism on this method merely
+   * existing: with it defined, the base constructor wraps `onCreate`, `onAuth`,
+   * `onJoin`, `onLeave`, `onDispose` and both `clock` timers, `onMessage` wraps
+   * every handler as it is registered, and `setSimulationInterval` wraps the
+   * tick callback. Without it none of that happens, and what catches a throw
+   * instead is Colyseus's own `registerGracefulShutdown` — a
+   * `process.on('uncaughtException')` listener that ends by disposing every
+   * room on the box. One bad message in one match used to end every concurrent
+   * match on the server.
+   *
+   * Two calls, and together they are the whole policy:
+   *
+   * - A contained `onMessage` throw **drops the message**. Every other
+   *   server-side refusal here drops rather than ejects — see `commandSlot` and
+   *   the guard at the head of each handler — and ejecting would kick a
+   *   legitimate player out of a live match over a bug in their client.
+   * - A contained `setSimulationInterval` throw **ends this room**, and only
+   *   this one. A step that threw part-way through has left a torn world behind
+   *   it and a state hash that no longer means anything, so limping on is worse
+   *   than stopping. It ends without announcing: a twelfth `SERVER_MSG` and a
+   *   new way a match can end is a design change, not a containment patch.
+   *
+   * Nothing in here may throw. It runs on the error path, and a throw from the
+   * handler that exists to contain throws is exactly the process-wide exit it
+   * was added to prevent — hence the guards below, since `match` and `state`
+   * are both still undefined when `onCreate` is what threw.
+   */
+  override onUncaughtException(
+    error: RoomException<this>,
+    // Spelled out rather than imported: Colyseus declares this union inline on
+    // the optional base method, and a name added to it upstream should be a
+    // compile error here rather than a branch nobody wrote.
+    methodName:
+      | 'onCreate'
+      | 'onAuth'
+      | 'onJoin'
+      | 'onLeave'
+      | 'onDispose'
+      | 'onMessage'
+      | 'setSimulationInterval'
+      | 'setInterval'
+      | 'setTimeout'
+  ): void {
+    // The message name, which is the one thing that says *which* of the 32
+    // handlers threw. `error` itself is only the wrapper Colyseus built; the
+    // throw, with its stack, is on `cause`.
+    const where =
+      error instanceof OnMessageException ? `${methodName} '${String(error.type)}'` : methodName;
+    const tick = this.match === undefined ? 'n/a' : String(this.match.tick);
+    const phase = this.state === undefined ? 'n/a' : MatchPhase[this.state.phase];
+    // Read through a cast because this package compiles against the ES2020 lib,
+    // which predates `Error.cause` — Colyseus sets it on every one of these, and
+    // Node 22 carries it through to the printed stack.
+    const cause = (error as { cause?: unknown }).cause ?? error;
+    console.error(
+      `[MatchRoom ${this.roomId}] contained a throw from ${where} at tick ${tick}, ` +
+        `phase ${phase}`,
+      cause
+    );
+
+    if (methodName !== 'setSimulationInterval') return;
+
+    // Stopped before the room is asked to close, not after: `disconnect`
+    // resolves over several turns of the event loop, and a 60 Hz interval left
+    // running in the meantime would step the torn world dozens more times.
+    this.setSimulationInterval(undefined);
+    try {
+      void this.disconnect().catch(() => {});
+    } catch {
+      // `disconnect` throws outright while `onCreate` is still running, which a
+      // simulation tick cannot be — but see above: nothing in here may throw.
+    }
   }
 
   /** Broadcast the result exactly once. */

@@ -1,0 +1,333 @@
+/**
+ * MatchRoom — the server half of the wire, and what happens when it throws.
+ *
+ * The room is where the simulation meets a socket, and nothing imported it from
+ * a test until this file. What is held here is therefore the seam, not the
+ * simulation: that every name a client may send has a handler registered for
+ * it, and that a throw from one of those handlers — or from the 60 Hz step — is
+ * contained inside this room instead of taking the process, and every other
+ * match on the box, down with it.
+ *
+ * The room is built the way the matchmaker builds one (`MatchMaker.js`,
+ * `handleCreateRoom`): construct, set `roomId`, hand it a listing, await
+ * `onCreate`, then mark it CREATED. Everything stubbed below is stubbed because
+ * a matchmaker, a driver or a socket would otherwise have to exist; nothing
+ * about the room itself is replaced.
+ */
+
+import { after, afterEach, beforeEach, describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
+
+import { Room, type Client } from '@colyseus/core';
+import { defineQuery } from 'bitecs';
+import { CLIENT_MSG, MatchPhase, SIM } from '@echoes/shared';
+import { Owner, Unit } from '../src/sim/components.ts';
+import { MatchRoom } from '../src/rooms/MatchRoom.ts';
+import { Match } from '../src/sim/match.ts';
+import { VENTFRONT_DIVIDE } from '../src/sim/maps/index.ts';
+
+const hulls = defineQuery([Unit, Owner]);
+
+/** Every hull a slot owns, in entity order — the ids a client would command. */
+const unitsOf = (match: Match, slot: number): number[] =>
+  [...hulls(match.world)].filter((eid) => Owner.slot[eid] === slot);
+
+const STEP_MS = 1000 / SIM.TICK_HZ;
+
+/** `RoomInternalState.CREATED`, which the matchmaker sets after `onCreate`. */
+const CREATED = 1;
+/** `RoomInternalState.DISPOSING`, which `disconnect()` sets. */
+const DISPOSING = 2;
+
+/** The private surface these tests reach through, named once. */
+interface RoomInternals {
+  match: Match;
+  update(deltaMs: number): void;
+  onMessageHandlers: Record<string, (client: Client, payload: unknown) => void>;
+  _internalState: number;
+  _simulationInterval: ReturnType<typeof setInterval> | undefined;
+  _autoDisposeTimeout: ReturnType<typeof setTimeout> | undefined;
+}
+
+const inside = (room: MatchRoom): RoomInternals => room as unknown as RoomInternals;
+
+/**
+ * The matchmaker's listing row, as far as a room ever touches one.
+ *
+ * A real driver keeps these in a queryable cache; a room only ever writes to
+ * one, so recording the writes is the whole of what a test needs.
+ */
+function stubListing(): Room['listing'] {
+  return {
+    roomId: '',
+    metadata: undefined,
+    private: false,
+    locked: false,
+    clients: 0,
+    maxClients: Infinity,
+    save: async () => {},
+    updateOne: async () => {},
+    remove: () => {},
+  } as unknown as Room['listing'];
+}
+
+/**
+ * A seat with nothing behind it. The room writes to a client four ways — `send`
+ * for a per-observer payload, `enqueueRaw` for a broadcast, `raw` for the join
+ * handshake, `leave` on a close — and none of the four is what this file is
+ * about, so all four are sinks.
+ */
+function stubClient(sessionId: string): Client {
+  // The socket, carrying the close listener `_onJoin` would have hung on it:
+  // this suite seats players through `onJoin` directly, and closing a room
+  // unhooks that listener by name before it leaves.
+  const ref = new EventEmitter() as EventEmitter & { onleave: () => void };
+  ref.onleave = () => {};
+  return {
+    sessionId,
+    send: () => {},
+    enqueueRaw: () => {},
+    raw: () => {},
+    ref,
+    leave: () => {},
+  } as unknown as Client;
+}
+
+const rooms: MatchRoom[] = [];
+
+/** A room built the way `handleCreateRoom` builds one, and tracked for teardown. */
+async function newRoom(roomId: string): Promise<MatchRoom> {
+  const room = new MatchRoom();
+  room.roomId = roomId;
+  room.listing = stubListing();
+  await room.onCreate({});
+  inside(room)._internalState = CREATED;
+  // The seat-reservation timer the base constructor arms, cleared the way
+  // `_onJoin` clears it when a client actually arrives. Left pending it would
+  // both dispose an idle room fifteen seconds in and — since `_disposeIfEmpty`
+  // refuses while it is live — stop `disconnect()` ever resolving.
+  clearTimeout(inside(room)._autoDisposeTimeout);
+  inside(room)._autoDisposeTimeout = undefined;
+  rooms.push(room);
+  return room;
+}
+
+/**
+ * Seat two commanders and ready them both, which is what starts a match.
+ *
+ * `onJoin` and the `ready` handler are the room's own — the only thing skipped
+ * is the seat reservation, which lives in the transport.
+ */
+function startWithTwoSeats(room: MatchRoom): [Client, Client] {
+  const one = stubClient('one');
+  const two = stubClient('two');
+  for (const client of [one, two]) {
+    room.onJoin(client);
+    room.clients.push(client);
+  }
+  for (const client of [one, two]) {
+    inside(room).onMessageHandlers[CLIENT_MSG.ready](client, { ready: true });
+  }
+  assert.equal(room.state.phase, MatchPhase.Playing, 'two ready commanders start the match');
+  return [one, two];
+}
+
+/** Replace the room's world with a seeded one, so two rooms can be compared. */
+function seedMatch(room: MatchRoom, seed: number): void {
+  inside(room).match = new Match(VENTFRONT_DIVIDE, { seed });
+}
+
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+let logged: string[] = [];
+let realError: typeof console.error;
+
+beforeEach(() => {
+  logged = [];
+  realError = console.error;
+  console.error = (...args: unknown[]) => {
+    logged.push(args.map((arg) => (arg instanceof Error ? arg.message : String(arg))).join(' '));
+  };
+});
+
+afterEach(() => {
+  console.error = realError;
+});
+
+after(async () => {
+  // Every room holds a patch interval, a simulation interval and an
+  // auto-dispose timeout; without this the test process stays alive on them.
+  for (const room of rooms) {
+    if (inside(room)._internalState !== DISPOSING) await room.disconnect();
+  }
+});
+
+describe('MatchRoom — the wire it answers', () => {
+  it('registers a handler for every message a client may send', async () => {
+    const room = await newRoom('wire');
+    const names = Object.values(CLIENT_MSG);
+    for (const name of names) {
+      assert.equal(
+        typeof inside(room).onMessageHandlers[name],
+        'function',
+        `no handler registered for '${name}'`
+      );
+    }
+    // The count is asserted too, because a handler registered for a name that
+    // is not on the wire would pass the loop above and reach nothing.
+    assert.equal(Object.keys(inside(room).onMessageHandlers).length, names.length);
+  });
+});
+
+describe('MatchRoom — exception containment', () => {
+  it('defines the hook Colyseus gates its wrapping on', async () => {
+    assert.equal(typeof MatchRoom.prototype.onUncaughtException, 'function');
+
+    const room = await newRoom('gate');
+    // Colyseus patches `clock.setTimeout`/`setInterval` onto the instance in
+    // `#registerUncaughtExceptionHandlers`, and only when the hook exists. An
+    // own property where the prototype's would otherwise answer is the
+    // observable proof that the whole mechanism armed — which is what puts the
+    // post-match timers, the simulation interval and all 32 handlers inside it.
+    assert.ok(Object.prototype.hasOwnProperty.call(room.clock, 'setTimeout'));
+    assert.ok(Object.prototype.hasOwnProperty.call(room.clock, 'setInterval'));
+    assert.notEqual(inside(room)._simulationInterval, undefined);
+  });
+
+  it('drops a message whose handler throws, and keeps the room stepping', async () => {
+    const room = await newRoom('drop');
+    seedMatch(room, 11);
+    const [one] = startWithTwoSeats(room);
+
+    // Registered through `Room.onMessage`, which is the same call the 32 real
+    // handlers go through — so this is wrapped exactly as they are.
+    room.onMessage('boom', () => {
+      throw new Error('a client-side bug reached the server');
+    });
+
+    const before = inside(room).match.tick;
+    assert.doesNotThrow(() => inside(room).onMessageHandlers['boom'](one, { anything: true }));
+
+    // Still the same room, still in the same match: dropping a message is what
+    // every other refusal in this room does, and this one is no different.
+    assert.equal(room.state.phase, MatchPhase.Playing);
+    assert.notEqual(inside(room)._internalState, DISPOSING);
+
+    // And still stepping — on its own interval, not a hand-driven one.
+    await sleep(120);
+    assert.ok(
+      inside(room).match.tick > before,
+      `the simulation stopped at tick ${inside(room).match.tick}`
+    );
+  });
+
+  it('logs enough to find the throw: room, tick, phase and method', async () => {
+    const room = await newRoom('logged');
+    seedMatch(room, 12);
+    const [one] = startWithTwoSeats(room);
+    room.onMessage('boom', () => {
+      throw new Error('a client-side bug reached the server');
+    });
+
+    const tick = inside(room).match.tick;
+    inside(room).onMessageHandlers['boom'](one, {});
+
+    assert.equal(logged.length, 1);
+    const line = logged[0];
+    assert.match(line, /\blogged\b/, 'names the room');
+    assert.match(line, new RegExp(`tick ${tick}\\b`), 'names the tick');
+    assert.match(line, /phase Playing\b/, 'names the phase');
+    assert.match(line, /onMessage/, 'names the method Colyseus passed');
+    assert.match(line, /'boom'/, 'names the message');
+    assert.match(line, /a client-side bug reached the server/, 'carries the original throw');
+  });
+
+  it('ends the room whose simulation step threw, and no other', async () => {
+    const torn = await newRoom('torn');
+    const bystander = await newRoom('bystander');
+    seedMatch(torn, 13);
+    seedMatch(bystander, 13);
+    startWithTwoSeats(torn);
+    startWithTwoSeats(bystander);
+
+    const tickBefore = inside(bystander).match.tick;
+    // The tick callback is `(deltaMs) => this.update(deltaMs)`, so an own
+    // property shadowing the prototype method is a throw from inside the step.
+    // Counted rather than timed, because what is being asserted is that the
+    // interval stopped, not how quickly.
+    let steps = 0;
+    inside(torn).update = () => {
+      steps++;
+      throw new Error('a step tore the world open');
+    };
+
+    // Long enough that a 60 Hz interval left running would have stepped the
+    // torn world several more times.
+    await sleep(150);
+
+    assert.equal(inside(torn)._internalState, DISPOSING, 'the torn room ended');
+    assert.equal(steps, 1, `the torn room stepped ${steps} times after the throw`);
+
+    assert.notEqual(inside(bystander)._internalState, DISPOSING, 'the other room lived');
+    assert.ok(
+      inside(bystander).match.tick > tickBefore,
+      'and kept stepping through its neighbour ending'
+    );
+
+    // One step, one line: the interval is stopped inside the first contained
+    // throw, so the torn room does not spend the next second logging.
+    assert.equal(logged.length, 1);
+    assert.match(logged[0], /\btorn\b/);
+    assert.match(logged[0], /setSimulationInterval/);
+    assert.match(logged[0], /phase Playing\b/);
+    assert.match(logged[0], /a step tore the world open/);
+  });
+
+  it('adds no counted work to either budget', async () => {
+    // Two identical worlds, same seed, same orders, stepped the same number of
+    // times. One is commanded through the wrapped wire; the other has the same
+    // calls made straight on its `Match`. Both budgets are asserted on counted
+    // work rather than a stopwatch (sim/stepWork.ts), so if Colyseus's wrapper
+    // were an inspection rather than a try/catch, these would diverge.
+    const wired = await newRoom('wired');
+    const direct = await newRoom('direct');
+    seedMatch(wired, 17);
+    seedMatch(direct, 17);
+    const [commander] = startWithTwoSeats(wired);
+    startWithTwoSeats(direct);
+
+    // Hand-driven from here, so both rooms take exactly the same steps.
+    for (const room of [wired, direct]) room.setSimulationInterval(undefined);
+
+    const wiredUnits = unitsOf(inside(wired).match, 0);
+    const directUnits = unitsOf(inside(direct).match, 0);
+    assert.ok(wiredUnits.length > 0, 'a started match seats a force to command');
+    // Counts, not ids: bitecs hands out entity ids from one cursor for the
+    // whole process, so the second world of a seed opens on higher numbers
+    // than the first while holding exactly the same fleet.
+    assert.equal(wiredUnits.length, directUnits.length, 'the same fleet twice');
+
+    let worstWalks = { wired: 0, direct: 0 };
+    for (let step = 0; step < 240; step++) {
+      if (step % 30 === 0) {
+        const x = 1000 + step;
+        inside(wired).onMessageHandlers[CLIENT_MSG.move](commander, {
+          unitIds: wiredUnits,
+          x,
+          y: 1000,
+        });
+        for (const unitId of directUnits) inside(direct).match.orderMove(0, unitId, x, 1000, false);
+      }
+      inside(wired).update(STEP_MS);
+      inside(direct).update(STEP_MS);
+      worstWalks = {
+        wired: Math.max(worstWalks.wired, inside(wired).match.contactPathWalksLastPass),
+        direct: Math.max(worstWalks.direct, inside(direct).match.contactPathWalksLastPass),
+      };
+    }
+
+    assert.deepEqual(inside(wired).match.worstStepWork, inside(direct).match.worstStepWork);
+    assert.equal(worstWalks.wired, worstWalks.direct);
+  });
+});
