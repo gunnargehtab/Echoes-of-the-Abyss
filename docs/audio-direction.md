@@ -139,6 +139,10 @@ Fauna share the Tier-1 sound space **on purpose**. A thump at 40–90 Hz may be 
 
 Fauna voices resolve upward like any other contact — at Tier 3 a Rasp swarm is unmistakably not a fleet. Full behaviour, thresholds and per-species tells are in [bestiary.md](bestiary.md).
 
+**What a creature resolves *to* is a voice of its own, not the absence of one.** At Tier 3 it carries the organic-mass family of §8.1: a low tonal body and a swell so unhurried no navy could be mistaken for it — one event every four to eight seconds, wandering. That is what makes "unmistakably not a fleet" a positive claim. An anonymous voice meets the sentence only in the weak sense, which a quiet room also meets.
+
+One family for the whole bestiary, not one per species. The per-species tells stay visual and behavioural ([bestiary.md](bestiary.md)); the ear is told *creature*, and which creature is the screen's to say.
+
 ---
 
 ## 8. Faction Timbre Families
@@ -155,6 +159,25 @@ A player must identify a faction at Tier 3 by ear alone, with no visual. Each fa
 The Knights' entry is the one that must not be softened. Their emissions are a cone ([factions.md](factions.md)), so the mix places them off-axis at up to −20 dB. A player who walks into the beam hears the volume change and that *is* the tell.
 
 **Those decibels are now the model rather than a mix decision**, which is §1's second law working in the direction it was written for. [systems-echo.md](systems-echo.md) §8 spec's the directional term as ×1.00 in the cone, ×0.35 on the flank and ×0.10 in the wake — 0 dB, −9 dB and −20 dB — so the flank has a level of its own and the −20 dB is the wake specifically. The mix is not asked to invent an off-axis curve; it renders three sectors the server already resolved.
+
+### 8.1 Non-Navy Families
+
+A contact can belong to no navy. The Echo Layer sends no faction for a creature or a piece of ordnance on purpose — a creature belongs to nobody, and a meaningless slot would let a client infer fauna one tier before it earned it. So the table above has nothing to say about either, and a mix that borrowed a row from it would be asserting a fact the server never sent (§2).
+
+Two families, on the same terms as the four above: each owns a mechanism, and the mechanism is what the player learns.
+
+| Family | Sound of | Core material | Signature |
+| --- | --- | --- | --- |
+| **Creature** | Organic mass, moving | Muscle and water, very large | A low tonal body and a slow arrhythmic swell, one event every four to eight seconds. The slowest mechanism in the mix by a wide margin, and that is the tell — nothing a navy owns is that unhurried |
+| **Ordnance** | A small screw, running | Machined, thin, turning fast | A hard tone a register above every drive signature, pulsing about four times a second, close to regular and never quite. Fast where the creature is slow |
+
+**Two, not fifteen.** A voice per species and per kind would put eleven new signatures into the 40–160 Hz octave §11 already flags as the one laptop and phone speakers do not reproduce, and a distinction the target hardware cannot render is not a distinction. Fifteen learnable signatures is also the confusion half of dread-not-confusion.
+
+**The beat stays the Consortium's.** Both families wander, and the screw is the one that had to be made to: four events a second on an exact period is a beat, whatever the row it sits in is called.
+
+**Separation is a property, not a preference.** No two mechanisms in this game may produce the same interval between events. Each family's period band — its rate, widened by its own wander — is disjoint from every other's, with the slower band's shortest interval at least 1.2× the faster band's longest. Each family's fundamental sits at least 10 Hz clear of every navy fundamental and of every octave of one inside the audible band, so no family is heard as another detuned.
+
+The creature is separated from the Commune by **scale**, not by arrhythmia. Both wander; the creature's shortest swell is longer than the Commune's longest breath. The screw is separated from the Directorate the same way and in the other direction: a screw faster than the Directorate's clicks would be the same mechanism heard at a different rate, and the mix already renders the Directorate as the fastest thing on the bus.
 
 ---
 
@@ -383,12 +406,17 @@ is still unwritten: the bus ducks and trims correctly and has one piece to play,
 place where a match is not.
 
 Contacts are sonified (§3): a voice per contact, panned with the authority its tier earned,
-filtered by the biome it arrived through (§9), and carrying the faction's drive signature
-from Tier 3 up (§8). A contact that carries **no** faction — a creature, a piece of ordnance
-— carries no drive signature either: a tonal voice with no events, clear of every navy
-fundamental, which is §7's "unmistakably not a fleet" in the only form the mix can state
-without claiming something the server never sent. What a non-navy contact should sound like
-*in its own right* is unwritten, and §8's table cannot hold it — that table is about navies.
+filtered by the biome it arrived through (§9), and carrying from Tier 3 up the timbre family
+of whatever the server said it **is** (§8, §8.1) — one of the four navies, the creature
+family, or the ordnance family. The mix asks what a contact is rather than whose it is, and
+those six are the only answers it holds: a Tier-3 contact the server classified as none of
+them keeps the unidentifying thump of the tiers below, because a mix with no identity has
+nothing to say about identity.
+
+Nothing defaults. The lookup takes the identity and has no fallback branch, so a field added
+to a contact later cannot quietly become a navy — the wire rule (CLAUDE.md) applied one
+layer inward. It used to default to the Consortium, which is how every classified creature
+and every classified torpedo came to sound like a Consortium hull.
 
 The player's own loudness is implemented too — §4's four bands with their world-bus
 attenuation, Silent Running's inversion, §5's three active-sonar events, the break-silence
