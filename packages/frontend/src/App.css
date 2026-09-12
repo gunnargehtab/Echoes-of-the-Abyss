@@ -125,7 +125,7 @@
      clear are Pixi-drawn and scale too, so a fixed 38px would slide under the
      strip at 200%. Extents divide by it instead, so a panel still occupies at
      most its share of the viewport — larger rows, fewer of them. */
-  top: calc(38px * var(--ui-scale, 1));
+  top: calc(60px * var(--ui-scale, 1));
   right: calc(10px * var(--ui-scale, 1));
   transform: scale(var(--ui-scale, 1));
   transform-origin: top right;
@@ -1466,7 +1466,7 @@
  */
 .objectives {
   position: absolute;
-  top: calc(38px * var(--ui-scale, 1));
+  top: calc(60px * var(--ui-scale, 1));
   /* Clear of the depth ribbon, which owns the first 26 px of the left edge. */
   left: calc(40px * var(--ui-scale, 1));
   transform: scale(var(--ui-scale, 1));

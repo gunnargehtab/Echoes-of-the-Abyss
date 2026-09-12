@@ -684,7 +684,10 @@ What the current client implements against this spec, so nobody re-implements wh
 
 | Requirement | Status |
 | --- | --- |
-| SIG meter, peak value, colour stops | Implemented |
+| SIG meter, peak value, colour stops | Implemented to §3 — 240 × 12 at 1080p above its two-line readout, `SIG 042 / 100` zero-padded so the digit count never shifts, and the stops snapping at 30 and 65 rather than blending. The strip is 52 px to hold it, and the meter leads the strip: §3 puts it top-left and §1.4 makes it the one permanent element, so the stockpiles follow it |
+| The meter's transient (§3) | Implemented — peak SIG is drawn solid and the burst it just came off as a lighter overlay that decays over 2.2 s, inked for the level it represents rather than the live one, so a ping's 95 reads as having entered the red band even once the bar has fallen back to amber |
+| `n units · m loud` (§3) | Implemented — *loud* is SIG over 60, counted from the player's own hulls |
+| §3's red-band crossing | Half implemented — the meter flashes once on entry, with a static equivalent under reduced motion (§11). The contact log does not record it: own-force rows are written from `EchoSnapshot.selfEvents`, and a crossing is not among them, so the other half of that sentence needs a server-sent event rather than a client-derived row |
 | Tier-graded contact rendering, ghost decay | Implemented |
 | Selected-unit detection ring | Implemented |
 | Ping preview rings, ping commit | Implemented (hold `Alt`, `P`) |
