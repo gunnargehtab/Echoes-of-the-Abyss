@@ -115,11 +115,40 @@ result.
 
 ## Record
 
-| Arm | Blocking traps | Tells | Gates | Tokens | Wall clock |
+Run of 2026-09-12, all three on `claude-opus-5` from base `f7bf3f5`, B and C on the
+byte-identical prompt above. Gates were re-run here rather than taken from the arm's own
+report.
+
+| Arm | Blocking traps | Tells | Gates | Cost | Output tokens |
 | --- | --- | --- | --- | --- | --- |
-| A | | | | | |
-| B | | | | | |
-| C | | | | | |
+| A — #687, skill present | 0 | 0 | pass, CI green | not comparable | — |
+| B — no skill, guard intact | 0 | 0 | **fail**, 9 of 10 | $9.38 | 63,576 |
+| C — no skill, no guard | 0 | 0 | pass, 10 of 10 | $7.79 | 50,677 |
+
+**No drift in any arm.** The guard prevented nothing, in the arm that had the skill, the arm
+that had only the `CLAUDE.md` paragraph, and the arm that had neither.
+
+**But the probe was weak, and that is the finding that matters.** Every Colyseus API the
+task required is version-stable: `onUncaughtException` has the same signature in 0.15 as
+later, and so do `setSimulationInterval` and `disconnect()`. The one drifting API in reach,
+`onLeave`, appears in both arms only as a string literal inside the `methodName` union —
+neither arm ever wrote its signature. The drift traps could not have fired. A clean sweep
+here is not evidence that recall gets 0.15 right; it is evidence that this task never asked.
+
+**The only real quality difference had nothing to do with Colyseus.** Arm B's test calls
+`Object.hasOwn`, which needs the ES2022 lib the backend tsconfig does not set, so
+`type-check` fails with two errors. No trap covers that, and none should — it is a house
+convention, not API drift. Arm C, with one guard fewer and 17% less spend, passed all ten.
+With one run per arm that difference is as likely noise as signal.
+
+**Arm B reported "all gates pass" and they did not.** Re-run the gates against the arm's
+branch; never record the arm's own summary.
+
+### What a stronger experiment would need
+
+A task that *forces* a drifting API to be written — client-side state callbacks, an
+`onLeave` signature change, a `@filter` on schema state — rather than one that merely runs
+near them. Until then the colyseus skill's value is untested, not disproved.
 
 ## What this cannot tell you
 
