@@ -848,6 +848,26 @@ export enum SelfEventKind {
    * dived, recovered and climbed back has spent its grace twice.
    */
   SourBleed = 5,
+  /**
+   * One of your units crossed up into SIG_BANDS.RED — docs/ui-ux.md §3, "when
+   * a unit crosses into the red band, the meter flashes once and the contact
+   * log records it".
+   *
+   * The flash was always drawable from the snapshot the client already had;
+   * the *record* was not, and that asymmetry is why this member exists. The
+   * client sees `peakSig`, a max — so a second hull going loud under a louder
+   * one moves nothing on the bar, and a client-derived row would have missed
+   * it and named the wrong hull besides. A crossing is a fact about one hull,
+   * and the loop that computes every hull's SIG is the only place that knows
+   * which (#623).
+   *
+   * Raised on the crossing edge only, exactly as `SourBleed` is: falling back
+   * below the stop re-arms it, so a hull that went loud, quietened and went
+   * loud again is entitled to be told twice. Units only — a structure cannot
+   * be told to be quieter, which is the same reason #623 took structures out
+   * of `peakSig`.
+   */
+  WentLoud = 6,
 }
 
 export interface SelfEvent {

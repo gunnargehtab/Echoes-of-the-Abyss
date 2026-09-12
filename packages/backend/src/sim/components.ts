@@ -97,6 +97,18 @@ export const Acoustic = defineComponent({
    * it to the derived SIG, so the veil quiets whatever the entity is doing.
    */
   sigFactor: Types.f32,
+  /**
+   * 1 while the entity's derived SIG sits at or above SIG_BANDS.RED. Written
+   * by acoustics immediately after `sig`, and read by nothing else.
+   *
+   * The latch for §3's red-band crossing (#623). It is a stored bit rather
+   * than a comparison because the *edge* is the event and the level is not:
+   * without somewhere to remember last tick's side of the stop, a hull idling
+   * at 65 would raise a crossing sixty times a second. `Pressure.sourS`
+   * carries the identical discipline for the Lid's grace, and for the same
+   * reason.
+   */
+  loud: Types.ui8,
 });
 
 /**
