@@ -227,20 +227,66 @@ paragraph, no instruction to check the installed version — and is where drift 
 appears at all. Same traps, same fixture, same base, same model. The instruction not to read
 other branches stays: it guards against copying, not against drift.
 
-| Arm | Blocking traps | Gates | Cost | Output tokens | Wall clock |
+| Arm | Blocking traps | Gates | Cost | Output tokens | Cache reads |
 | --- | --- | --- | --- | --- | --- |
-| A | | | | | |
-| C | | | | | |
+| A — skill and guard | 0 of 8 | 10 of 10 | **$15.56** | 50,254 | 25.5M |
+| C — no guard at all | 0 of 8 | 10 of 10 | $6.28 | 34,670 | 5.9M |
 
-Compare each cell against its v1 twin, not only against the other arm.
+### The 2x2, and the one number that moved
+
+| | Guard in prompt | No guard in prompt |
+| --- | --- | --- |
+| **Skill + `CLAUDE.md`** | $5.25 · 6.2M reads | **$15.56 · 25.5M reads** |
+| **Neither** | $4.36 · 4.6M reads | $6.28 · 5.9M reads |
+
+Every cell wrote the correct 0.15 API and passed all ten gates. **Nothing has ever drifted,
+in any cell, across three experiments and nine arms.**
+
+What moved is the top-right cell. Take the version guard out of the prompt and the arm that
+has the skill spends **three times** what its twin spent, reading 4.1x the cache tokens,
+to arrive at the same code. The arm with no guard of any kind barely moved. That is the
+shape the skill's own cost profile predicts — roughly 4,300 tokens of `SKILL.md` and up to
+60,000 of references, spent to establish that 0.18 does not apply here — and it is the only
+effect any of these experiments has measured.
+
+Read it as circumstantial. The cache-read jump is consistent with the skill firing and
+pulling its references, and nothing else in the cell changed, but the transcript was not
+inspected to confirm it.
+
+### Two caveats on the numbers above
+
+- **v2 arm C's cost is inflated.** A stray message reached that session *after* it had
+  pushed 4fd05f3, and it spent a turn asking what was meant. The committed work is
+  unaffected, and the contamination pushes C's figure **up**, so the A-versus-C gap is if
+  anything understated.
+- **One run per cell.** The v1 gap was inside run-to-run variance. A 3x gap is harder to
+  dismiss, but four runs are still four runs.
+
+### A trap that tested a name, and had to be fixed
+
+`unsubscribed` originally searched for `unsubscribe` and `off(`. Both v2 arms failed it
+while tearing down correctly from three call sites each, having named theirs `unwatchLobby`
+with an `Unsubscribe` type. The pattern now matches the teardown handle being *stored* —
+`push(...listen(...))` and friends — which is the actual contract, and it matches all four
+arms. `docs/ui-ux.md`'s own testing rule says it: assert what is promised, never what the
+source happens to be called.
 
 ### The standing read on the colyseus skill
 
-Across two experiments and five arms — #627's A, B and C, and this one's A and C — the
-vendored `colyseus` skill has never changed an outcome, and the one measurable difference
-went against it on cost. It stays carried as a guard because the failure it protects against
-is real and would be expensive, but nothing measured here argues it earns its context on
-this codebase's day-to-day work.
+Across three experiments and nine arms — #627's A, B and C, `lobby-callbacks`' A and C,
+and `lobby-callbacks-v2`'s A and C, plus #687 as a real arm — the vendored `colyseus` skill
+has **never changed an outcome**. No arm has ever written a 0.17 or 0.18 shape, including
+the arm with no skill, no `CLAUDE.md` paragraph and no instruction to check the version,
+working on the surface 0.17 replaced wholesale with no example in the tree to copy.
+
+Every measured difference has gone against the skill, and the largest is 3x cost for
+identical output. The honest summary is that on this codebase the guard is redundant
+against a model that already gets 0.15 right, and it is not free when it fires.
+
+That is an argument for dropping it, not proof it is worthless: the drift it documents is
+real, and a project actually on 0.17 or 0.18 would be a different test. If it stays, it
+should stay as a deliberate insurance premium with the price written down, not as an
+assumption that it helps.
 
 
 ## What this cannot tell you

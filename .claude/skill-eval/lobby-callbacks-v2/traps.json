@@ -73,11 +73,11 @@
       "group": "criterion",
       "severity": "required",
       "direction": "mustAppear",
-      "pattern": "unsubscribe|off\\(|dispose|\\.forEach\\(\\s*\\(?\\s*(un|off)",
+      "pattern": "(?:push|set)\\(\\s*[^)]*\\.(?:listen|onAdd|onRemove|onChange)\\(",
       "scope": [
         "packages/frontend/src/net/GameClient.ts"
       ],
-      "why": "Each callback returns a teardown function. This client reconnects, so a listener that outlives its room is a leak the task names explicitly."
+      "why": "The registration calls each return a teardown function, so a correct implementation keeps what they return. This matches on that \u2014 the handle being stored \u2014 rather than on what the arm called its teardown. The first version searched for the words `unsubscribe` and `off(`, and failed both v2 arms, which had named theirs `unwatchLobby` and torn down correctly from three call sites. A trap that tests a name is a change detector."
     },
     {
       "id": "stub-extended",
