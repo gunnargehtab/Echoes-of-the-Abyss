@@ -48,8 +48,19 @@ ambiguous between "the skill is redundant" and "no guard was ever needed".
 ## Running an arm
 
 ```bash
-.claude/skill-eval/prepare-arm.sh 627 a      # then b, then optionally c
+.claude/skill-eval/prepare-arm.sh 627 a f7bf3f5    # then b, then optionally c
 ```
+
+**Experiment 627's base is `f7bf3f5`, not `main`.** #627 was closed by #687 while
+this harness was being written, so every later commit already carries the work the
+arms are asked to do. An arm cut from today's `main` would open the issue, find it
+finished, and measure nothing. `f7bf3f5` is the last commit with the issue open, the
+skill on disk and the `CLAUDE.md` guard intact.
+
+That failure mode is not specific to this experiment: **an experiment whose task
+lands while the harness is being built is silently dead**, because every criterion
+reads as already satisfied. `score.mjs` reports a criterion the base already meets as
+`VACUOUS` rather than passing it, which is the signal to re-cut from an earlier base.
 
 Cut every arm of one experiment from the same base, in one sitting. Arms cut days apart
 from a moving `main` are not comparable.

@@ -99,7 +99,7 @@
       "id": "matchroom-test-exists",
       "group": "criterion",
       "severity": "required",
-      "direction": "fileExists",
+      "direction": "fileAdded",
       "path": "packages/backend/test/matchRoom.test.ts",
       "alternates": [
         "packages/backend/test/MatchRoom.test.ts",
