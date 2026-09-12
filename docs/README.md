@@ -86,6 +86,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[naming.md](naming.md)** | Title, taglines, logo direction |
 | **[concept-art/](concept-art/)** | Five survey plates in the Pressure Cartography language, plus two neon-noir presentation plates |
 | **[concept-art/menu-breathing.html](concept-art/menu-breathing.html)** | Five moving title-screen concepts beside the shipped one, live in a browser: what breathes, at what rate, what licenses it, and what each is left with when motion is off |
+| **[concept-art/hud-mockups/](concept-art/hud-mockups/)** | Three directions for the in-match HUD — ring menus, a classical console, and today's interface done properly — as ten frames of one moment, with what each keeps of [ui-ux.md](ui-ux.md) and what it breaks |
 
 ## Technical
 
