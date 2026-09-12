@@ -50,6 +50,13 @@ export function useMenuAudio(active: boolean): void {
     const apply = (settings: Settings) => {
       engine.setMasterVolume(settings.masterVolume);
       engine.setBusTrim('music', settings.busVolumes.music);
+      // §11's speaker profile is a property of the *output*, not of a bus, so
+      // it belongs to every engine this page opens rather than to the one a
+      // match happens to run. It was applied only in `GameCanvas` when it
+      // landed (#663), which left the port humming on the device the profile
+      // exists for while the match it leads into did not — the one place a
+      // player forms their first impression of the mix.
+      engine.setSpeakerProfile(settings.speakerProfile);
     };
     apply(loadSettings());
     // Live, so the Music and Master sliders can be heard as they move. The
@@ -79,6 +86,7 @@ export function useMenuAudio(active: boolean): void {
       playing: bed !== null,
       master: engine.masterVolumeValue,
       music: engine.busTrim('music'),
+      speakerProfile: engine.speakerProfileOn,
       ...(bed?.report ?? {}),
     });
 
