@@ -353,7 +353,7 @@ Because audio carries primary information, every audible fact **must** have a vi
 - **Exposure indicator** — the "you have been pinged" cue also renders as a screen-edge flash on the bearing of the pinging emitter.
 - **Mono mode and HRTF off** — spatialisation is a rendering choice, never a source of information the mono mix lacks. Tier-2 bearing must remain readable in mono via the contact log and the minimap.
 - **Independent buses** — contacts, self-noise, world, music, UI, each with its own slider. Contacts may be boosted to +12 dB above the reference mix.
-- **Speaker profile** — a compressed, small-speaker mix that preserves the 40–160 Hz contact band by adding harmonics rather than relying on fundamentals no laptop can reproduce.
+- **Speaker profile** — a compressed, small-speaker mix that preserves the 40–160 Hz contact band by adding harmonics rather than relying on fundamentals no laptop can reproduce. Built; see §12's scaffold status for what it measures and why it defaults on for a phone.
 
 ---
 
@@ -457,6 +457,63 @@ It is one trim over the whole of §4's table rather than four rewritten gains, b
 come through untouched. It applies to Silent Running as well, and has to: that level is
 absolute where the bands are a scale, so trimming one and not the other would eventually
 have running silent come out louder than sitting still.
+
+**The whole mix has since been measured as a scene, and the layers were the wrong question.**
+Everything above was metered one layer at a time at its own bus, which answers "which layer
+made it hot" and cannot answer "how loud is the thing in the player's hand". Rendering the
+reported picture end to end — the bed at SIG 35, seven contacts at the tiers the log showed,
+through the buses, the master gain and the ceiling — puts the mix at **-21.9 LUFS**, four
+decibels *under* the target in the table above. At SIG 80 it is -18.8. The integrated level
+is not what is left wrong.
+
+What the same render says instead is that **78% of the mix's energy sits below 200 Hz** — 10%
+below 60 and 68% between 60 and 200 — and at SIG 80 it is 82%. That is the band a phone
+speaker is least able to reproduce: it is very inefficient there and distorts when driven,
+so level arriving in that band comes back as harshness rather than as loudness. A meter
+reports such a mix as comfortably within target, and a listener reports it as too loud,
+and both are right. It is also not an accident of any one layer — it is what this game's
+sound design *is*. The plant bed, §3's pressure-thump and §8's four drive signatures all
+live between 40 and 200 Hz, because that is what a submarine sounds like.
+
+Which makes §11's **speaker profile** the unbuilt feature this points at, rather than another
+level trim. It is written down and it has never existed, and every report of the mix being
+uncomfortable has come from a phone.
+
+**The speaker profile now exists** (`packages/frontend/src/audio/speakerProfile.ts`). It is a
+mix option on the output, after master and before the ceiling, and it is two paths summed:
+
+- a **low shelf** at 180 Hz, -10 dB, which stops the driver spending its excursion on a band
+  it cannot turn into sound. A shelf and not a cut, because turning this on is choosing a
+  mix, not throwing the bottom away.
+- a **harmonic path** — the half §11 specifies. It reads everything under 200 Hz, generates
+  that band's harmonic series with a static non-linearity, and keeps only what lands above
+  260 Hz. The fundamental is never sent and the ear puts it back, which is the same
+  reconstruction that lets a telephone carry a 100 Hz voice through a channel starting at
+  300 Hz. A contact at 55 Hz stays a contact at 55 Hz rather than becoming one at 330.
+
+Measured on the reported scene, the profile takes the share of the mix below 200 Hz from
+**78% to 22%** and the integrated figure from -21.9 to -28.6 LUFS. Both halves of that are
+intended. The spectral half is the fix; the level half is because the two are not comparable
+— energy the plain mix spent below 200 Hz was never arriving as sound, so matching the
+loudness reading would have been a real increase in what is heard.
+
+§11 asks for a *compressed* mix and the compression is paid twice: by a static soft knee at
+0.35, below the output ceiling's 0.6, and by the shaper's own saturation. The second is the
+one with teeth, and it is what the profile's drive was tuned against — not against a single
+reading but against §4's scale, which a hard-driven shaper flattens. At a drive of 30 the
+band moves furthest and SIG 10 and SIG 80 come out 5.5 dB apart instead of 14.3, which is
+trading "being loud makes you deaf" for the fix. The setting is 12: §4's climb comes through
+compressed by about a third and still audibly a climb.
+
+**It defaults on where the device implies a small speaker** — a coarse pointer on a narrow
+screen — on the same terms `reducedMotion` defaults to the OS preference: a player on a
+phone should not have to find a setting before the game is bearable, and the default holds
+only until they touch the control. There is no Web API that reports how big a speaker is, so
+that test is a proxy and is written down as one.
+
+What it is not is a real compressor. The knee has no time constants, so it can stop a loud
+passage running away and cannot lift a quiet one — `DynamicsCompressorNode` stays refused
+here for the reason the ceiling refuses it, and that reason has not changed.
 
 One layer is left reading hot and is deliberately not acted on here: the tuned bed at full
 crystal with a corridor in earshot measures -16.1 LUFS through the master gain. That is a
