@@ -649,6 +649,7 @@ export function spawnFauna(
   Acoustic.hyd[eid] = stats.hyd;
   Acoustic.pfFactor[eid] = 1;
   Acoustic.sigFactor[eid] = 1;
+  Acoustic.loud[eid] = 0;
 
   addComponent(world, Health, eid);
   Health.hp[eid] = stats.maxHp;
@@ -750,6 +751,7 @@ export function spawnEmitter(world: SimWorld, opts: SpawnEmitterOptions): number
   Acoustic.sigFactor[eid] = 1;
   Acoustic.spikeRemainingS[eid] = 0;
   Acoustic.spikeAmount[eid] = 0;
+  Acoustic.loud[eid] = 0;
 
   addComponent(world, Health, eid);
   Health.max[eid] = Math.max(1, opts.hp);
@@ -870,6 +872,7 @@ export function spawnOrdnance(world: SimWorld, opts: SpawnOrdnanceOptions): numb
   Acoustic.sigFactor[eid] = 1;
   Acoustic.spikeRemainingS[eid] = 0;
   Acoustic.spikeAmount[eid] = 0;
+  Acoustic.loud[eid] = 0;
 
   addComponent(world, Health, eid);
   // Ordnance that cannot be shot down still carries Health, because the Echo
@@ -1047,6 +1050,7 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   Acoustic.sigFactor[eid] = 1;
   Acoustic.spikeRemainingS[eid] = 0;
   Acoustic.spikeAmount[eid] = 0;
+  Acoustic.loud[eid] = 0;
 
   addComponent(world, Pressure, eid);
   Pressure.rating[eid] = rating;
@@ -1206,6 +1210,7 @@ export function spawnStructure(world: SimWorld, opts: SpawnStructureOptions): nu
   Acoustic.sigFactor[eid] = 1;
   Acoustic.spikeRemainingS[eid] = 0;
   Acoustic.spikeAmount[eid] = 0;
+  Acoustic.loud[eid] = 0;
 
   addComponent(world, Health, eid);
   Health.max[eid] = stats.maxHp;

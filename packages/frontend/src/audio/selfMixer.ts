@@ -234,6 +234,17 @@ export class SelfMixer {
         this.raise('self', now, SOUR_BITE_S);
         return true;
       }
+      case SelfEventKind.WentLoud:
+        // Deliberately silent, and the one case here that is. Every other
+        // event names something the ear could not otherwise know; this one
+        // names the ear's own subject. The self-noise bed is already a
+        // function of fleet SIG, so a hull crossing §3's red stop is the bed
+        // climbing — a cue on top of it would be the mix announcing what the
+        // mix is doing, and it would spend headroom §12 reserves for the
+        // exposure strike. The news gets the flash and the log row (#623);
+        // whether it ever earns a sound of its own is a mix decision and is
+        // not one this change makes.
+        return false;
     }
   }
 

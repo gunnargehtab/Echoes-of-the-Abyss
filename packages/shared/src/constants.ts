@@ -445,6 +445,39 @@ export const FOLLOW_FLOOR = {
   CLEARANCE_M: 30,
 } as const;
 
+/**
+ * The SIG meter's colour stops — SPEC, docs/ui-ux.md §3, "Colour stops".
+ *
+ * Here rather than in the client because the *red* stop stopped being a
+ * drawing decision the moment the server had to raise a crossing event on it
+ * (#623): §3's "when a unit crosses into the red band, the meter flashes once
+ * and the contact log records it" is one sentence about one threshold, and the
+ * flash is drawn on the client while the record is a fact only the simulation
+ * can state. Two literal 65s, one per package, is the arrangement CLAUDE.md
+ * names as belonging in shared.
+ *
+ * The values are §3's and are unchanged by the move. What the stops are
+ * measured *against* — the fixed 0-100 scale, or a mission's own
+ * `silenceCeilingSig` — is the open design call on #623 and is deliberately
+ * not settled here.
+ */
+export const SIG_BANDS = {
+  /** Below this a hull is green: quiet enough that nothing is listening hard. */
+  AMBER: 30,
+  /** At or above this a hull is red, and crossing into it is an event. */
+  RED: 65,
+  /**
+   * The meter's second line counts hulls *over* this — §3's "`n units · m
+   * loud` where loud means SIG > 60 — the number that predicts trouble".
+   *
+   * Five below the red stop, and strictly greater rather than at-or-above, so
+   * the count leads the colour: a hull at 61 is already in the tally while the
+   * bar is still amber, which is what makes the line a prediction rather than
+   * a second reading of the bar.
+   */
+  LOUD: 60,
+} as const;
+
 /** SPEC — docs/systems-echo.md §6. */
 export const SILENT_RUNNING = {
   /** Movement speed multiplier while silent (-45%). */
@@ -1864,6 +1897,20 @@ export const PERSISTENCE = {
   TORPEDO_WAKE_S: 45,
   /** Minimum HYD required to read Echo Marks at all. */
   ECHO_MARK_MIN_HYD: 40,
+  /**
+   * TUNABLE — how long an exposure tier has to hold before the contact log
+   * believes it (docs/ui-ux.md §10, #623).
+   *
+   * The passive record is an edge detector on a number that is recomputed
+   * from scratch at SIM.ECHO_HZ, so a hull parked on a detection threshold
+   * crosses it back and forth every 200 ms and would otherwise write ten rows
+   * a second saying nothing. A settle window costs the record the exposures
+   * that did not last a second — which is the right thing to lose, because
+   * the row is for "when did they hear me" after the fact and an exposure
+   * shorter than this was never the answer. A ping is not affected: it has its
+   * own event and its own row, and arrives whether or not the tier holds.
+   */
+  EXPOSURE_SETTLE_S: 1,
 } as const;
 
 /**

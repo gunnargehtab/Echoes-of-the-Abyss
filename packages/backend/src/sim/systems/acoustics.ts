@@ -19,6 +19,8 @@ import {
   REFIT_STATS,
   ResourceKind,
   SILENT_RUNNING,
+  SIG_BANDS,
+  SelfEventKind,
   harvestSigFor,
   statsFor,
   structureSigFor,
@@ -48,7 +50,7 @@ import {
   Velocity,
 } from '../components.ts';
 import { currentModifiers, kelpModifiers, stormModifiers } from './hazards.ts';
-import type { SimWorld } from '../world.ts';
+import { raiseSelfEvent, type SimWorld } from '../world.ts';
 
 // `Position` is what a hull in a hold lacks (systems/carrying.ts), and the
 // hazard modifiers below read one; a carried hull emits nothing and is not
@@ -270,7 +272,25 @@ export function acousticsSystem(world: SimWorld): void {
     // A Spore Veil muffles the *derived* SIG — whatever the unit is doing,
     // the cloud takes its cut last (auras system, symmetric).
     sig *= Acoustic.sigFactor[eid]! || 1;
-    Acoustic.sig[eid] = Math.min(100, Math.max(0, sig));
+    const live = Math.min(100, Math.max(0, sig));
+    Acoustic.sig[eid] = live;
+
+    // §3's red-band crossing, raised where the number is made (#623). The
+    // latch is what makes this the *edge* and not the level: a hull idling at
+    // 65 is above the stop on every one of the sixty ticks a second, and only
+    // the first of them is news. Falling back below re-arms it, exactly as the
+    // Lid's grace does — a hull that went loud, quietened and went loud again
+    // has been found twice and is entitled to hear so twice.
+    //
+    // Units only. A structure's loudness is a fact about what stage of life it
+    // is in and not something the player can answer, which is the same reason
+    // #623 took structures out of `peakSig`; raising a crossing for a Nodule
+    // Refinery finishing construction would be a row nobody can act on.
+    const loud = live >= SIG_BANDS.RED ? 1 : 0;
+    if (loud === 1 && Acoustic.loud[eid] === 0) {
+      raiseSelfEvent(world, { kind: SelfEventKind.WentLoud, eid });
+    }
+    Acoustic.loud[eid] = loud;
   }
 
   // Structures cannot run silent and cannot move; their loudness is a function

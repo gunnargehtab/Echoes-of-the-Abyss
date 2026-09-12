@@ -25,7 +25,7 @@
  *   palette change bakes a new sprite instead of showing the old ink.
  */
 
-import { Biome, Faction, ResolutionTier, ResourceKind } from '@echoes/shared';
+import { Biome, Faction, ResolutionTier, ResourceKind, SIG_BANDS } from '@echoes/shared';
 
 /** The four palettes of docs/ui-ux.md §11. */
 export type PaletteName = 'standard' | 'deuteranopia' | 'protanopia' | 'tritanopia';
@@ -531,9 +531,18 @@ export function reliefShade(color: number, dropX: number, dropY: number): number
   return scaleRgb(color, 1 - RELIEF_DEPTH * (1 - shade));
 }
 
-/** Interpolate the SIG meter colour. docs/art-direction.md UI requirements. */
+/**
+ * The SIG meter's colour, snapped at §3's stops and never blended.
+ *
+ * The stops are `SIG_BANDS` and not literals here since #623: the server has
+ * to raise a crossing event on the red one, and a threshold spelled out in two
+ * packages is the arrangement CLAUDE.md sends to shared. Nothing about the
+ * mapping changed — docs/ui-ux.md §3's "0-29 green, 30-64 amber, 65-100 red",
+ * still snapping rather than interpolating, which is the section's own
+ * "Transition" row: a threshold crossing is an event and must read as one.
+ */
 export function sigColor(sig: number): number {
-  if (sig < 30) return UI.sigLow;
-  if (sig < 65) return UI.sigMid;
+  if (sig < SIG_BANDS.AMBER) return UI.sigLow;
+  if (sig < SIG_BANDS.RED) return UI.sigMid;
   return UI.sigHigh;
 }

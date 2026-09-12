@@ -79,6 +79,7 @@ import {
   ResolutionTier,
   ResourceKind,
   SelfEventKind,
+  SIG_BANDS,
   SIM,
   statsFor,
   StructureKind,
@@ -446,6 +447,38 @@ class SymbolPool {
 const UNDER_FIRE_REARM_TICKS = PERSISTENCE.UNDER_FIRE_REARM_S * SIM.TICK_HZ;
 
 /**
+ * How long an exposure tier must hold before the log claims it, in simulation
+ * ticks (docs/ui-ux.md §10, #623).
+ */
+const EXPOSURE_SETTLE_TICKS = PERSISTENCE.EXPOSURE_SETTLE_S * SIM.TICK_HZ;
+
+/**
+ * What the log says the rest of the map holds on you, per tier.
+ *
+ * Second person and no subject, because that is the whole fidelity available:
+ * `ExposureReport` is a tier and a count, so the row can say what is known
+ * about you and can never say by whom — which is §10.5's rule holding on the
+ * one channel that points the other way. The count is deliberately left out
+ * too; the `TRACKED xn` label carries it live, and a *historical* row saying
+ * how many of your hulls were resolved at 04:12 is a fact about your own force
+ * that the player already has on their own cards.
+ */
+function exposureRow(tier: ResolutionTier): string {
+  switch (tier) {
+    case ResolutionTier.Silent:
+      return 'they lost you';
+    case ResolutionTier.Contact:
+      return 'you were heard';
+    case ResolutionTier.Bearing:
+      return 'they have your bearing';
+    case ResolutionTier.Classification:
+      return 'they have you classified';
+    case ResolutionTier.Track:
+      return 'they have you tracked';
+  }
+}
+
+/**
  * When a world-space contact mark fades in, milliseconds after it arrives.
  *
  * §2 fixes the start at 250 ms but names no end for the world layer, so the
@@ -783,8 +816,6 @@ const TOP_BAR_HEIGHT = 52;
 const SIG_METER = {
   W: 240,
   H: 12,
-  /** A hull over this is *loud*, and the count of them predicts trouble (§3). */
-  LOUD: 60,
   /**
    * How long a transient stays drawn over the baseline. A ping's burst is 1.5 s
    * of emission (§6), so the overlay outlives it by enough to be read and not
@@ -1169,6 +1200,21 @@ export class EchoRenderer {
   private fleetSilent = false;
   /** What the rest of the map currently holds on the player, server-sent. */
   private exposure: ExposureReport = { tier: ResolutionTier.Silent, trackedCount: 0 };
+  /**
+   * The passive half of the exposure record — §10's "post-match analysis of
+   * *when did they hear me* is a real activity this game should support".
+   *
+   * Two fields rather than one because the row is written on a tier that has
+   * *settled*, not on one that has merely arrived: `loggedTier` is the last
+   * tier the log actually claimed, `settling` the candidate and the tick it
+   * was first seen. §10 already asks for exactly this discipline on the other
+   * side of the glass — "an entry is written when a contact is first heard and
+   * again whenever its tier changes — not every 5 Hz tick, which would bury
+   * the events that matter" — and a hull parked on a detection threshold
+   * flickers at precisely that rate.
+   */
+  private loggedTier: ResolutionTier = ResolutionTier.Silent;
+  private settling: { tier: ResolutionTier; tick: number } | null = null;
   /**
    * Acoustic residue this player can read (docs/systems-echo.md §7).
    *
@@ -4013,6 +4059,8 @@ export class EchoRenderer {
     this.peakSig = 0;
     this.fleetSilent = false;
     this.exposure = { tier: ResolutionTier.Silent, trackedCount: 0 };
+    this.loggedTier = ResolutionTier.Silent;
+    this.settling = null;
     this.drawReport = { capacity: 0, demand: 0, satisfaction: 1 };
     this.biomass = 0;
     this.berths = { used: 0, granted: 0 };
@@ -4043,6 +4091,7 @@ export class EchoRenderer {
     this.ordnance = snapshot.ordnance;
     this.peakSig = snapshot.peakSig;
     this.exposure = snapshot.exposure;
+    this.logExposureChange(snapshot.tick);
     this.marks = snapshot.marks;
     this.hazards = snapshot.hazards;
     this.shoals = snapshot.shoals;
@@ -4198,6 +4247,20 @@ export class EchoRenderer {
             event.unitId,
             event.idleReason === HarvestIdleReason.NoDepot ? 'idle — no yard' : 'idle — mined out'
           );
+          break;
+        case SelfEventKind.WentLoud:
+          // The other half of §3's sentence, which the meter's flash had been
+          // carrying alone: "the meter flashes once and the contact log
+          // records it". The flash says *something* crossed; the row says
+          // which hull, and is focusable, so "why did they find me?" has an
+          // answer with a name and a place on it (#623).
+          //
+          // Not derived from `peakSig` here, and that is the whole reason it
+          // is a server event: the bar is a max, so a second hull going loud
+          // under a louder one never moves it, and a client-side edge detector
+          // would have written one row for the fleet instead of one per hull —
+          // and named whichever hull happened to be the maximum.
+          this.emitOwnForceEvent(snapshot.tick, event.unitId, 'went loud');
           break;
         case SelfEventKind.SourBleed:
           // §11's half of the bite. The card and the ribbon already carry the
@@ -4502,6 +4565,57 @@ export class EchoRenderer {
    * from the scope anchor like every contact row, and focus goes to the hull
    * itself: it is the player's own, fully known, so the camera may.
    */
+  /**
+   * §10's passive exposure rows — the record of *when they heard you*.
+   *
+   * Needs no server change, and that is a statement about what is already on
+   * the wire rather than a shortcut: `ExposureReport` arrives resolved every
+   * snapshot, and until now its only reader was the transient `TRACKED xn`
+   * label, so the one exposure the log could write was `'you were pinged'` —
+   * active sonar, the loudest and rarest way to be found. Everything quieter
+   * left no trace at all, which is the half of "why did they find me?" a
+   * player could not answer.
+   *
+   * Written on a tier that has held for EXPOSURE_SETTLE_TICKS, in either
+   * direction. The settle is not a smoothing filter over a noisy input — the
+   * input is exact — it is §10's own rule about what deserves a row: a hull
+   * sitting on a detection threshold crosses it back and forth at the Echo
+   * rate, and ten rows a second saying "heard / lost / heard" would bury the
+   * one crossing that mattered under the nine that did not. It costs the
+   * record exposures shorter than a second, which were never the answer to a
+   * question asked after the fact.
+   *
+   * `'they lost you'` earns the same patience for a second reason: it is the
+   * only row here that makes a claim about *safety*, and a claim that reverses
+   * 200 ms later is worse than no claim.
+   */
+  private logExposureChange(tick: number): void {
+    const tier = this.exposure.tier;
+    if (tier === this.loggedTier) {
+      this.settling = null;
+      return;
+    }
+    if (this.settling === null || this.settling.tier !== tier) {
+      this.settling = { tier, tick };
+      return;
+    }
+    if (tick - this.settling.tick < EXPOSURE_SETTLE_TICKS) return;
+    this.loggedTier = tier;
+    this.settling = null;
+    // Under the `---` tier the log reserves for events that are not
+    // detections, alongside `'you were pinged'`. Not focusable and carrying
+    // neither bearing nor range: there is nothing to move the camera to, and
+    // a row that could point at a listener would be handing over the position
+    // the Echo Layer spent the whole match refusing to resolve.
+    this.callbacks.onContactEvent({
+      id: `own:${this.ownRowSeq++}`,
+      tick,
+      tier: ResolutionTier.Silent,
+      fresh: true,
+      label: exposureRow(tier),
+    });
+  }
+
   private emitOwnForceEvent(tick: number, entityId: number, what: string): void {
     const subject = this.ownEntity(entityId);
     if (subject === undefined) return;
@@ -5906,7 +6020,7 @@ export class EchoRenderer {
       this.sigHold = Math.max(peak, this.sigHold - fall);
     }
 
-    const red = peak >= 65;
+    const red = peak >= SIG_BANDS.RED;
     if (red && !this.sigBandWasRed) this.sigFlashAt = now;
     this.sigBandWasRed = red;
 
@@ -5939,7 +6053,7 @@ export class EchoRenderer {
     this.sigLabel.style.fill = ink;
     this.sigLabel.position.set(x, y + h + 4);
 
-    const loud = this.units.filter((u) => u.sig > SIG_METER.LOUD).length;
+    const loud = this.units.filter((u) => u.sig > SIG_BANDS.LOUD).length;
     const n = this.units.length;
     this.loudLabel.text = `${n} unit${n === 1 ? '' : 's'} \u00b7 ${loud} loud`;
     this.loudLabel.style.fill = loud > 0 ? UI.sigMid : UI.textDim;

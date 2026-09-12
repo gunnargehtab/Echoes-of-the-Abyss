@@ -2822,6 +2822,11 @@ export class Match {
       // the one its owner most needs told about.
       const bucket = eventsBySlot.get(pending.slot);
       if (bucket === undefined) continue;
+      // Packs the kind into the low three bits, so it is correct while
+      // SelfEventKind has fewer than eight members. #623's `WentLoud` is the
+      // seventh; an eighth is fine and a ninth would silently fold two
+      // different events on neighbouring entities into one, which is the kind
+      // of bug that never reproduces. Widen the stride before adding it.
       const key = pending.eid * 8 + pending.kind;
       if (seen.has(key)) continue;
       seen.add(key);
