@@ -1,0 +1,713 @@
+diff --git a/packages/backend/src/rooms/MatchRoom.ts b/packages/backend/src/rooms/MatchRoom.ts
+index 6f92372..c65a5e1 100644
+--- a/packages/backend/src/rooms/MatchRoom.ts
++++ b/packages/backend/src/rooms/MatchRoom.ts
+@@ -14,7 +14,7 @@
+ // latter re-exports via __exportStar, which Node's static CJS export detection
+ // cannot see, so `import { Room } from 'colyseus'` fails at runtime under an
+ // unbundled ESM loader (the dev server) while working fine once bundled.
+-import { Room, type Client } from '@colyseus/core';
++import { OnMessageException, Room, type Client, type RoomException } from '@colyseus/core';
+ import {
+   AiDifficulty,
+   Faction,
+@@ -62,6 +62,23 @@ import {
+  */
+ const aiSessionId = (slot: number): string => `ai:${slot}`;
+ 
++/**
++ * The error that was actually raised, out of the one Colyseus wraps it in.
++ *
++ * The wrapper is constructed at the catch site, so its own stack points at
++ * Colyseus rather than at the throw; `cause` is the original and is the only
++ * thing in a contained exception that can say which line to go and read. Read
++ * through a cast because `Error.cause` is ES2022 and this package compiles
++ * against the ES2020 lib.
++ */
++function causeOf(err: Error): string {
++  const cause: unknown = (err as Error & { cause?: unknown }).cause;
++  if (cause instanceof Error) return cause.stack ?? `${cause.name}: ${cause.message}`;
++  // A `throw 'string'` has no stack to offer, and Colyseus copied whatever it
++  // could reach into the wrapper's own message.
++  return cause === undefined ? err.message : String(cause);
++}
++
+ /** Options a room may be created with. `mapId` selects the authored map. */
+ export interface MatchRoomOptions {
+   mapId?: string;
+@@ -167,6 +184,84 @@ export class MatchRoom extends Room<MatchState> {
+     this.broadcast(type, payload);
+   }
+ 
++  /**
++   * One room's exceptions, contained to that room.
++   *
++   * Colyseus gates its entire wrapping mechanism on this method merely
++   * existing. Define it and every `onMessage` handler, the simulation
++   * interval, both post-match `clock.setTimeout`s and the lifecycle hooks get
++   * a try/catch around them. Leave it undefined — as this room did — and there
++   * is nothing between a throw and Colyseus's own `registerGracefulShutdown`,
++   * which installs `process.on('uncaughtException')` and ends by disposing
++   * *every* room on the box and exiting. One malformed order in one match
++   * ended every concurrent match on the server.
++   *
++   * The wrapper is a try/catch and not an inspection, so nothing here is paid
++   * per message or per step: neither counted budget moves for defining it.
++   *
++   * What containment means depends on where the throw came from.
++   *
++   * - A **message** is dropped and the room plays on. Dropping is what every
++   *   other server-side refusal in this room already does — an order for a
++   *   unit you do not own is ignored rather than punished — and ejecting the
++   *   sender would kick a legitimate player over a bug in their build.
++   * - The **simulation step** ends this room, and only this room. A step that
++   *   threw part way through has a torn world and a state hash that no longer
++   *   means anything, so limping on is worse than stopping. Nothing is
++   *   announced: a twelfth `SERVER_MSG` and a new way a match can end would be
++   *   a design change rather than a patch.
++   * - Everything else — a clock timer, a lifecycle hook — is logged and left.
++   *   `onCreate`, `onAuth` and `onJoin` are rethrown by Colyseus *after* this
++   *   runs, so the matchmaker still answers the client and this room's own
++   *   refusals (an unknown mission, a full lobby) behave exactly as before.
++   *   The line below is a record that a throw happened, not a crash report.
++   *
++   * The line itself is the point of the whole hook: room, tick, phase, the
++   * method name Colyseus passed, the message name where there is one, and the
++   * original stack — enough to find the throw from a server log alone.
++   */
++  override onUncaughtException(
++    err: RoomException<this>,
++    methodName:
++      | 'onCreate'
++      | 'onAuth'
++      | 'onJoin'
++      | 'onLeave'
++      | 'onDispose'
++      | 'onMessage'
++      | 'setSimulationInterval'
++      | 'setInterval'
++      | 'setTimeout'
++  ): void {
++    // Both guarded, because the throw may be `onCreate`'s own: a room that
++    // refused an unknown mission has neither a Match nor a state to read, and
++    // a TypeError raised in here would be precisely the uncaught exception
++    // this method exists to prevent.
++    const tick = this.match === undefined ? -1 : this.match.tick;
++    const phase = this.state === undefined ? 'uncreated' : MatchPhase[this.state.phase];
++    const where = err instanceof OnMessageException ? `${methodName} '${err.type}'` : methodName;
++    console.error(
++      `[MatchRoom ${this.roomId}] contained ${where} at tick ${tick}, ` +
++        `phase ${phase}: ${causeOf(err)}`
++    );
++
++    if (methodName !== 'setSimulationInterval') return;
++
++    try {
++      // Stopped before the disposal lands. The wrapper swallowed the throw, so
++      // without this the torn world is stepped again 16 ms later, and again,
++      // for as long as it takes `disconnect` to tear the room down.
++      this.setSimulationInterval();
++      void this.disconnect().catch(() => {});
++    } catch {
++      // `disconnect()` refuses outright while `onCreate` is still running, and
++      // a room that never reached the matchmaker has no listing to remove.
++      // Either way this room is already unusable, and throwing from the
++      // containment hook is the one thing that would put the process back
++      // where it was before any of this existed.
++    }
++  }
++
+   override async onCreate(options?: MatchRoomOptions): Promise<void> {
+     const requested = options?.missionId ?? '';
+     this.mission = requested === '' ? null : (missionById(requested) ?? null);
+diff --git a/packages/backend/test/matchRoom.test.ts b/packages/backend/test/matchRoom.test.ts
+new file mode 100644
+index 0000000..3b925d0
+--- /dev/null
++++ b/packages/backend/test/matchRoom.test.ts
+@@ -0,0 +1,272 @@
++/**
++ * `MatchRoom` — the server half of the wire contract, and what happens when
++ * the code behind it throws.
++ *
++ * Nothing imported this class until now. The lobby *rules* were extracted into
++ * `lobby.ts` and are tested there as pure functions, which was the right call
++ * and is still the right call; what it left behind was the half of the room
++ * that only exists because Colyseus is on the other side of it — how many
++ * handlers are registered, and what the framework does around them.
++ *
++ * The second half turned out to matter. Colyseus gates its entire exception
++ * wrapping on `onUncaughtException` merely existing on the room, and this room
++ * did not define one. Every message handler, the 60 Hz step and both post-match
++ * timers ran unwrapped, so the only thing catching a throw was Colyseus's
++ * `registerGracefulShutdown` — `process.on('uncaughtException')`, which ends by
++ * disposing every room on the box and exiting. One throw in one match ended
++ * every concurrent match on the server.
++ *
++ * These tests are about containment, so several of them break the room on
++ * purpose. Each says which fault it is standing in for.
++ */
++
++import { describe, it, mock } from 'node:test';
++import assert from 'node:assert/strict';
++
++import { CLIENT_MSG, MatchPhase, SIM } from '@echoes/shared';
++import { Match } from '../src/sim/match.ts';
++import { internalsOf, isDisposing, standUpRoom } from './support/matchRoom.ts';
++
++/** Whatever the room wrote to stderr while `body` ran. */
++async function captureErrors(body: () => void | Promise<void>): Promise<string[]> {
++  const lines: string[] = [];
++  const spy = mock.method(console, 'error', (...args: unknown[]) => {
++    lines.push(args.map((arg) => String(arg)).join(' '));
++  });
++  try {
++    await body();
++  } finally {
++    spy.mock.restore();
++  }
++  return lines;
++}
++
++/**
++ * A match that cannot be stepped.
++ *
++ * Standing in for a step that threw part way through its own mutation — the
++ * fault the containment rule is written for — without needing a real one, and
++ * carrying a recognisable tick so the log line can be checked for it.
++ */
++const tornMatch = (tick: number): Match =>
++  new Proxy({} as Match, {
++    get: (_target, property) => {
++      if (property === 'tick') return tick;
++      // Every other member is a call that fails, so one stand-in covers the
++      // step and all 32 orders without the test having to know which sim
++      // method a given message reaches.
++      return () => {
++        throw new Error('torn world');
++      };
++    },
++  });
++
++/** Seat one commander and ready up, which at MIN_PLAYERS of 1 starts the match. */
++async function playingRoom(seed?: number) {
++  const harness = await standUpRoom(seed === undefined ? {} : { seed });
++  const client = harness.join('commander');
++  harness.deliver(client, CLIENT_MSG.ready, { ready: true });
++  assert.equal(harness.room.state.phase, MatchPhase.Playing);
++  return { harness, client };
++}
++
++describe('MatchRoom: the wire contract', () => {
++  it('registers a handler for every message a client may send, and for nothing else', async () => {
++    const { room } = await standUpRoom();
++    const registered = Object.keys(internalsOf(room).onMessageHandlers).sort();
++    // Both directions. A missing handler is #489's silent drop — the player
++    // presses a key and the water stays quiet — and a handler under a name no
++    // client can send is a message that will never arrive.
++    assert.deepEqual(registered, [...Object.values(CLIENT_MSG)].sort());
++    assert.equal(registered.length, 32);
++  });
++
++  it('defines the hook Colyseus gates its wrapping on', async () => {
++    const { room } = await standUpRoom();
++    // The one property that decides whether all 32 handlers, the simulation
++    // interval and both clock timers are wrapped. It is read in the `Room`
++    // constructor and never again.
++    assert.equal(typeof room.onUncaughtException, 'function');
++    // And the mark that it was read. Colyseus replaces the clock's own
++    // `setTimeout` and `setInterval` with wrapping ones, per instance, from
++    // that same constructor — so an own property here is the post-match
++    // timers being covered, which is otherwise only visible twenty minutes
++    // into a resolved match.
++    assert.ok(Object.hasOwn(room.clock, 'setTimeout'));
++    assert.ok(Object.hasOwn(room.clock, 'setInterval'));
++  });
++});
++
++describe('MatchRoom: a message that throws', () => {
++  it('ends the message, not the room', async () => {
++    const { harness, client } = await playingRoom();
++    const healthy = harness.match;
++
++    const lines = await captureErrors(() => {
++      // A real registered handler, reaching a sim call that throws: the shape
++      // of every fault this branch is for. Restored immediately, because the
++      // point of the test is the tick *after* the throw.
++      internalsOf(harness.room).match = tornMatch(0);
++      assert.doesNotThrow(() => harness.deliver(client, CLIENT_MSG.stop, { unitIds: [1] }));
++      internalsOf(harness.room).match = healthy;
++    });
++
++    assert.equal(lines.length, 1);
++    assert.match(lines[0], /onMessage 'stop'/);
++
++    // Still a room, still a match, still stepping. One Echo tick's worth of
++    // steps is enough for the room to publish a tick it did not have before.
++    assert.equal(isDisposing(harness.room), false);
++    assert.equal(harness.room.state.phase, MatchPhase.Playing);
++    harness.steps(SIM.TICK_HZ);
++    assert.ok(
++      harness.room.state.tick > 0,
++      `expected the room to keep stepping, saw tick ${harness.room.state.tick}`
++    );
++  });
++
++  it('drops the message rather than ejecting the sender', async () => {
++    const { harness, client } = await playingRoom();
++    const healthy = harness.match;
++
++    await captureErrors(() => {
++      internalsOf(harness.room).match = tornMatch(0);
++      harness.deliver(client, CLIENT_MSG.stop, { unitIds: [1] });
++      internalsOf(harness.room).match = healthy;
++    });
++
++    // The seat survives. Ejecting would kick a legitimate player over a bug in
++    // their build, and every other refusal in this room is a quiet drop.
++    assert.equal(harness.room.clients.length, 1);
++    assert.ok(harness.room.state.players.has(client.sessionId));
++    // And the seat still commands: the next order is handled normally.
++    assert.doesNotThrow(() => harness.deliver(client, CLIENT_MSG.stop, { unitIds: [1] }));
++  });
++});
++
++describe('MatchRoom: a simulation step that throws', () => {
++  it('ends that room and no other', async () => {
++    const doomed = await playingRoom();
++    const bystander = await playingRoom();
++
++    await captureErrors(() => {
++      internalsOf(doomed.harness.room).match = tornMatch(0);
++      assert.doesNotThrow(() => doomed.harness.step());
++    });
++
++    // A torn world is worse to limp on than to stop: the state hash no longer
++    // means anything, so the room ends.
++    assert.equal(isDisposing(doomed.harness.room), true);
++    // And the other match on the box is untouched, which is the whole point.
++    assert.equal(isDisposing(bystander.harness.room), false);
++    bystander.harness.steps(SIM.TICK_HZ);
++    assert.ok(bystander.harness.room.state.tick > 0);
++  });
++
++  it('stops stepping the torn world instead of throwing again every 16 ms', async () => {
++    const { harness } = await playingRoom();
++
++    const lines = await captureErrors(() => {
++      internalsOf(harness.room).match = tornMatch(0);
++      // Ten more wall-clock ticks' worth. The interval was cleared, so the
++      // room's own callback is all that is left to fire, and it must find
++      // nothing to step.
++      harness.steps(11);
++    });
++
++    // One throw, one line. Without clearing the interval this would be eleven.
++    assert.equal(lines.length, 1);
++    assert.equal(harness.stepping, false);
++  });
++
++  it('ends the room without announcing anything', async () => {
++    const { harness, client } = await playingRoom();
++    const before = client.sent.length;
++
++    await captureErrors(() => {
++      internalsOf(harness.room).match = tornMatch(0);
++      harness.step();
++    });
++
++    // Deliberate, and settled: a message saying "this match ended because the
++    // server threw" would be a twelfth SERVER_MSG and a new way a match can
++    // end, which is a design change rather than a patch.
++    assert.equal(client.sent.length, before);
++  });
++});
++
++describe('MatchRoom: what the contained line says', () => {
++  it('names the room, the tick, the phase and the method Colyseus passed', async () => {
++    const { harness, client } = await playingRoom();
++    const healthy = harness.match;
++
++    const lines = await captureErrors(() => {
++      internalsOf(harness.room).match = tornMatch(4242);
++      harness.deliver(client, CLIENT_MSG.ping, { unitId: 1 });
++      internalsOf(harness.room).match = healthy;
++    });
++
++    assert.equal(lines.length, 1);
++    const line = lines[0];
++    // Everything needed to find the throw from a server log alone: which room,
++    // how far in, what it was doing, which entry point, and the original stack
++    // — the wrapper's own stack points at Colyseus's catch, not at the throw.
++    assert.match(line, new RegExp(`\\[MatchRoom ${harness.room.roomId}\\]`));
++    assert.match(line, /tick 4242/);
++    assert.match(line, /phase Playing/);
++    assert.match(line, /onMessage 'ping'/);
++    assert.match(line, /torn world/);
++  });
++
++  it('reports a room that never got a match, rather than throwing over the error', async () => {
++    const lines = await captureErrors(async () => {
++      // `onCreate` refuses an unknown mission, which is this room's own
++      // behaviour and is rethrown to the matchmaker afterwards. The hook runs
++      // first, on a room with no Match and no state — and a TypeError raised
++      // in there would be the uncaught exception the hook exists to prevent.
++      await assert.rejects(() => standUpRoom({ missionId: 'no-such-mission' }));
++    });
++
++    assert.equal(lines.length, 1);
++    assert.match(lines[0], /onCreate/);
++    assert.match(lines[0], /tick -1/);
++    assert.match(lines[0], /phase uncreated/);
++    assert.match(lines[0], /unknown mission: no-such-mission/);
++  });
++});
++
++describe('MatchRoom: what the hook costs', () => {
++  it('moves neither budget’s counted work', async () => {
++    // The same seed, the same map, the same orders on the same steps: the only
++    // difference between the arms is whether Colyseus wrapped the handlers and
++    // the step. Both budgets are asserted on counted work rather than on a
++    // stopwatch (sim/stepWork.ts), so "unchanged" here is an equality and not
++    // a tolerance.
++    const script = async (contained: boolean) => {
++      const harness = await standUpRoom({ seed: 20260912, contained });
++      const client = harness.join('commander');
++      harness.deliver(client, CLIENT_MSG.ready, { ready: true });
++      for (let i = 0; i < 300; i++) {
++        if (i % 50 === 0) {
++          harness.deliver(client, CLIENT_MSG.move, { unitIds: [1, 2], x: 900 + i, y: 700 });
++        }
++        harness.step();
++      }
++      return {
++        work: harness.match.worstStepWork,
++        walks: harness.match.contactPathWalksLastPass,
++        tick: harness.room.state.tick,
++      };
++    };
++
++    const wrapped = await script(true);
++    const bare = await script(false);
++
++    // A guard on the comparison itself: two arms that did no work would agree
++    // about nothing in particular.
++    assert.ok(wrapped.tick > 0);
++    assert.equal(wrapped.tick, bare.tick);
++    assert.deepEqual(wrapped.work, bare.work);
++    assert.equal(wrapped.walks, bare.walks);
++  });
++});
+diff --git a/packages/backend/test/support/matchRoom.ts b/packages/backend/test/support/matchRoom.ts
+new file mode 100644
+index 0000000..17d2d7f
+--- /dev/null
++++ b/packages/backend/test/support/matchRoom.ts
+@@ -0,0 +1,307 @@
++/**
++ * Standing one `MatchRoom` up without a server.
++ *
++ * `lifecycle.test.ts` tested the lobby rules as pure functions and said why:
++ * a room is a network object, and standing one up would test the transport
++ * rather than the decisions. That reasoning still holds for the rules — and it
++ * is exactly why the room itself went untested, which is how it reached #489's
++ * successor with no exception containment at all and nobody noticing.
++ *
++ * What this harness exists for is the half of the room that is *not* a rule:
++ * what Colyseus does around the room's own code. Colyseus decides, in the
++ * `Room` constructor, whether to wrap every message handler and the simulation
++ * interval in a try/catch, and it decides it by looking for a method. Nothing
++ * short of a real `Room` instance can be asked whether that happened.
++ *
++ * So a real one is built, with the three things a server would otherwise
++ * supply stubbed and nothing else:
++ *
++ * - **A listing.** The row a matchmaker driver would hand the room, which
++ *   `setPrivate` and `setMetadata` write to. Hand-rolled rather than borrowed
++ *   from `LocalDriver`: `@colyseus/core` re-exports the drivers through
++ *   `export *`, which Node's static CJS export detection cannot see, so
++ *   importing one fails at runtime under the unbundled ESM test loader in
++ *   exactly the way CLAUDE.md warns the `colyseus` meta-package does.
++ * - **A client.** One object implementing Colyseus's `Client`, recording what
++ *   the room sent it rather than encoding it onto a socket.
++ * - **The clock.** Colyseus starts two real `setInterval`s — the patch rate in
++ *   the constructor, the 60 Hz step at the foot of `onCreate`. Both are
++ *   captured instead of started, so a test drives the room's own wrapped tick
++ *   callback by hand. Asserting on counted steps rather than on elapsed
++ *   milliseconds is this repository's standing rule for the budgets
++ *   (sim/stepWork.ts) and it applies just as well to a room: a test that slept
++ *   for a second to see a tick would be measuring the runner.
++ */
++
++import { EventEmitter } from 'node:events';
++import {
++  ClientState,
++  LocalPresence,
++  RoomInternalState,
++  type Client,
++  type RoomListingData,
++} from '@colyseus/core';
++import { SIM } from '@echoes/shared';
++import { MatchRoom, type MatchRoomOptions } from '../../src/rooms/MatchRoom.ts';
++import { Match } from '../../src/sim/match.ts';
++import type { MapDefinition } from '../../src/sim/maps/types.ts';
++
++/** One message the room sent a client, as the client saw it. */
++export interface SentMessage {
++  type: string;
++  payload: unknown;
++}
++
++export interface StubClient extends Client {
++  /** Everything the room has sent this client, in order. */
++  readonly sent: SentMessage[];
++}
++
++/**
++ * A client that is a recorder rather than a socket.
++ *
++ * `ref` is a real `EventEmitter` because `disconnect()` removes listeners off
++ * it before it will let a client go.
++ */
++export function stubClient(sessionId: string): StubClient {
++  const sent: SentMessage[] = [];
++  return {
++    sent,
++    id: sessionId,
++    sessionId,
++    readyState: 1,
++    state: ClientState.JOINED,
++    ref: new EventEmitter(),
++    _reconnectionToken: sessionId,
++    _afterNextPatchQueue: [],
++    raw: () => {},
++    enqueueRaw: () => {},
++    send: (type: unknown, payload?: unknown) => {
++      sent.push({ type: String(type), payload });
++    },
++    sendBytes: () => {},
++    leave: () => {},
++    close: () => {},
++    error: () => {},
++  };
++}
++
++/**
++ * The matchmaker row this room advertises itself through.
++ *
++ * `save`, `remove` and `updateOne` are the whole driver contract the room
++ * touches: `setMetadata` and `setPrivate` on create, `lock` on start, and
++ * `remove` on the way out.
++ */
++function stubListing(roomId: string): RoomListingData {
++  return {
++    clients: 0,
++    locked: false,
++    private: false,
++    maxClients: Infinity,
++    metadata: undefined,
++    name: 'match',
++    processId: 'test',
++    roomId,
++    unlisted: false,
++    save: () => {},
++    remove: () => {},
++    updateOne: () => {},
++  };
++}
++
++/**
++ * The room's own internals, named once.
++ *
++ * A cast rather than a production seam: none of this is a thing the room
++ * should offer anybody, and inventing five accessors so a test can read them
++ * would be a worse trade than one honest cast in one test file.
++ */
++interface RoomInternals {
++  match: Match;
++  map: MapDefinition;
++  onMessageHandlers: Record<string, (client: Client, payload: unknown) => void>;
++  _internalState: RoomInternalState;
++  _autoDisposeTimeout?: NodeJS.Timeout;
++}
++
++export const internalsOf = (room: MatchRoom): RoomInternals => room as unknown as RoomInternals;
++
++/** Is this room on its way out, in the sense `disconnect()` puts it there? */
++export const isDisposing = (room: MatchRoom): boolean =>
++  internalsOf(room)._internalState === RoomInternalState.DISPOSING;
++
++export interface RoomHarness {
++  readonly room: MatchRoom;
++  /** The match this room is driving. */
++  readonly match: Match;
++  /** Seat a client, as the transport's `_onJoin` would. */
++  join(sessionId?: string): StubClient;
++  /** Deliver one client message exactly as `Room._onMessage` would. */
++  deliver(client: Client, type: string, payload?: unknown): void;
++  /** Drive one fixed step through Colyseus's own wrapped tick callback. */
++  step(deltaMs?: number): void;
++  /** Drive `count` of them. */
++  steps(count: number, deltaMs?: number): void;
++  /** False once the room has cleared its own simulation interval. */
++  readonly stepping: boolean;
++}
++
++export interface HarnessOptions extends MatchRoomOptions {
++  /**
++   * Fix the world's seed.
++   *
++   * The room picks its own — a match is not a replay — so a test that needs
++   * two rooms to do identical work has to say so. Skirmish only; a mission
++   * room builds its match from authored forces this cannot stand in for.
++   */
++  seed?: number;
++  /**
++   * Build the room the way it was built before the containment hook existed.
++   *
++   * Colyseus reads `onUncaughtException` off the instance in the `Room`
++   * constructor and never again, so the only way to get an unwrapped room to
++   * compare against is to take the method off the prototype for the length of
++   * one `new`. That is what makes the "wrapping costs nothing" assertion a
++   * measurement rather than a claim.
++   */
++  contained?: boolean;
++}
++
++type IntervalFn = typeof globalThis.setInterval;
++
++/**
++ * An interval the room asked for and did not get.
++ *
++ * It stands in for the timer handle as well as for the callback, so that a
++ * room clearing its own interval — which the containment hook does the moment
++ * a step throws — is something a test can see rather than infer.
++ */
++interface CapturedInterval {
++  [CAPTURED]: true;
++  fn: (...args: unknown[]) => void;
++  delay: number;
++  cleared: boolean;
++}
++
++const CAPTURED = Symbol('capturedInterval');
++
++const isCaptured = (handle: unknown): handle is CapturedInterval =>
++  typeof handle === 'object' && handle !== null && CAPTURED in handle;
++
++// Installed once, for the life of the process, and inert for every timer this
++// file did not hand out. `setInterval` is only patched while a room is being
++// built, but the clears come later — from `disconnect`, and from the
++// containment hook — so this half cannot be scoped the same way.
++const realClearInterval = globalThis.clearInterval;
++globalThis.clearInterval = ((handle: unknown) => {
++  if (isCaptured(handle)) {
++    handle.cleared = true;
++    return;
++  }
++  realClearInterval(handle as Parameters<typeof realClearInterval>[0]);
++}) as typeof globalThis.clearInterval;
++
++let nextRoomId = 0;
++
++/**
++ * Build a room and run its `onCreate`, with every timer it starts captured.
++ */
++export async function standUpRoom(options: HarnessOptions = {}): Promise<RoomHarness> {
++  const { seed, contained = true, ...roomOptions } = options;
++
++  const captured: CapturedInterval[] = [];
++  const realSetInterval = globalThis.setInterval;
++  globalThis.setInterval = ((fn: (...args: unknown[]) => void, delay?: number) => {
++    const entry: CapturedInterval = { [CAPTURED]: true, fn, delay: delay ?? 0, cleared: false };
++    captured.push(entry);
++    // The entry is its own handle, so the room's `clearInterval` lands back
++    // here. No real timer is started at all, which is also why nothing this
++    // harness builds can hold the test runner open.
++    return entry as unknown as NodeJS.Timeout;
++  }) as IntervalFn;
++
++  const hook = MatchRoom.prototype.onUncaughtException;
++  let room: MatchRoom;
++  try {
++    if (!contained) Reflect.deleteProperty(MatchRoom.prototype, 'onUncaughtException');
++    try {
++      room = new MatchRoom(new LocalPresence());
++    } finally {
++      if (!contained) MatchRoom.prototype.onUncaughtException = hook;
++    }
++
++    // The seat-reservation timer the constructor arms: fifteen seconds out,
++    // and it disposes the room when it fires. Cleared before `onCreate` rather
++    // than after, because `onCreate` is allowed to throw — a room that refused
++    // an unknown mission would otherwise leave a real timer behind and hold
++    // the test runner open for the full fifteen.
++    clearTimeout(internalsOf(room)._autoDisposeTimeout);
++    internalsOf(room)._autoDisposeTimeout = undefined;
++
++    room.roomId = `test${nextRoomId++}`;
++    room.roomName = 'match';
++    room.listing = stubListing(room.roomId);
++
++    await room.onCreate(roomOptions);
++  } finally {
++    globalThis.setInterval = realSetInterval;
++  }
++
++  const internals = internalsOf(room);
++  // The matchmaker does this once `onCreate` resolves, and `disconnect()`
++  // refuses outright until it has.
++  internals._internalState = RoomInternalState.CREATED;
++
++  if (seed !== undefined) internals.match = new Match(internals.map, { seed });
++
++  const tick = captured.find((entry) => entry.delay === 1000 / SIM.TICK_HZ);
++  if (tick === undefined) throw new Error('the room registered no simulation interval');
++
++  // Colyseus's clock reads wall-clock, which would make every step's delta a
++  // property of the runner rather than of the test: the same match stepped
++  // twice would take a different number of fixed steps each time, and two
++  // rooms driven identically would diverge. It is given a cursor the harness
++  // moves instead. `now` is protected on the Clock and assigned per instance,
++  // so replacing it touches this room's clock and nothing else.
++  let now = Date.now();
++  (room.clock as unknown as { now: () => number }).now = () => now;
++  room.clock.currentTime = now;
++
++  const step = (deltaMs = 1000 / SIM.TICK_HZ): void => {
++    // A cleared interval stops firing, so a step past that point does nothing
++    // — the same thing the real timer would do, rather than the harness
++    // reaching past a room that has stopped itself.
++    if (tick.cleared) return;
++    // Colyseus's own arrow — `clock.tick()`, then the wrapped callback with
++    // `clock.deltaTime` — so the wrapping under test is exercised rather than
++    // stepped around.
++    now += deltaMs;
++    tick.fn();
++  };
++
++  return {
++    room,
++    get match() {
++      return internals.match;
++    },
++    join(sessionId = `s${room.clients.length}`) {
++      const client = stubClient(sessionId);
++      room.clients.push(client);
++      room.onJoin!(client, { name: sessionId });
++      return client;
++    },
++    deliver(client, type, payload) {
++      const handler = internals.onMessageHandlers[type];
++      if (handler === undefined) throw new Error(`no handler registered for '${type}'`);
++      handler(client, payload);
++    },
++    step,
++    steps(count, deltaMs) {
++      for (let i = 0; i < count; i++) step(deltaMs);
++    },
++    get stepping() {
++      return !tick.cleared;
++    },
++  };
++}
