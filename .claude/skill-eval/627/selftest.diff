@@ -1,0 +1,13 @@
+--- a/packages/backend/src/rooms/MatchRoom.ts
++++ b/packages/backend/src/rooms/MatchRoom.ts
+-export class MatchRoom extends Room<MatchState> {
++export class MatchRoom extends Room<{ state: MatchState }> {
++  onLeave(client: Client, code: number) {
++import { Room } from 'colyseus';
++    const cb = getStateCallbacks(this.room);
++    this.setMetadata({ ...this.metadata, phase: 'over' });
++import { Client } from '@colyseus/sdk';
++import { SIM } from '../sim/match.js';
+--- a/packages/shared/src/wire.ts
++++ b/packages/shared/src/wire.ts
++  SERVER_MSG.roomTorn,
