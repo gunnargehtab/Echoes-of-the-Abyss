@@ -246,7 +246,7 @@ now *tested* rather than assumed.
 | --- | --- | --- |
 | Seeded RNG | `packages/backend/src/sim/rng.ts` | The simulation's only randomness. `world.rng`, seeded per match; `fork(name)` gives a subsystem its own stream, so adding a die roll to fauna cannot shift every later hazard roll |
 | Lint gate | `.eslintrc.cjs` | `Math.random()` and `Date` are errors anywhere under `sim/`. `rng.ts` is the single exemption, because picking a seed is the one place entropy legitimately enters |
-| State hash | `sim/stateHash.ts` | FNV-1a over the tick, every RNG stream, each entity's position, health, acoustics, orders and fauna behaviour, the ground a mission wrote, acoustic residue, all three banked accounts, every hazard's phase and timers, the Drift Health grid, production queues and rally points |
+| State hash | `sim/stateHash.ts` | FNV-1a over the tick, every RNG stream, each entity's position, health, acoustics, standing and queued orders and fauna behaviour, the ground a mission wrote, acoustic residue, all three banked accounts, every hazard's phase and timers, the Drift Health grid, production queues, rally points and the Standing Wave ledger. Which fields of `SimWorld` it covers is a type, not a habit — see below |
 | Replay | `sim/replay.ts` | Map, seed, roster, and every command attempt with the tick it landed on, plus periodic checkpoints |
 
 Two details are load-bearing and easy to get wrong, both for the same underlying reason:
@@ -277,6 +277,29 @@ red. So the standing rule for `stateHash.ts` is that **no-oping any single block
 `hashWorld` must fail at least one test in `determinism.test.ts`** — checked by trying it,
 block by block, rather than by reading the function. Adding state to `SimWorld` means adding
 a mix here and the residue test that makes the mix load-bearing.
+
+That rule kept the hash honest about what it *already* covered and did nothing about what it
+did not, which is the half that kept failing: four subsystems in a row parked durable state
+on `SimWorld` and nobody remembered there was a second place to add a line. So the
+enumeration is now a type. **Every field of `SimWorld` is named on one of three unions at
+the foot of `stateHash.ts`** — `HashedWorldState`, mixed by name; `CoveredWorldState`, state
+the hash reaches through something it already mixes, each entry naming its carrier; and
+`DerivedWorldState`, map data, caches and per-pass scratch, grouped by which of the three it
+is. A field on none of them fails `npm run type-check` naming itself, and so does a listed
+name that is no longer a field, and so does a field listed twice.
+
+Deciding that for the fields already there is what the gate is worth: it found four more
+outside the fingerprint — the order queues, and the Standing Wave ledger's corridors and its
+two sets of nodes. The corridors are the reason to care about the class rather than the
+instances. A corridor is the only thing in the simulation that edits *propagation itself*,
+and the Echo Layer is resolved per observer and never hashed, so two runs that disagreed
+there agreed about every hull, economy and bed while showing their players different water.
+
+What the gate does not buy is worth stating too, because it decides how much to trust it: it
+forces a decision, not a correct one. An author can put durable state on `DerivedWorldState`
+and the build goes green with the same hole. What it removes is the failure that actually
+happened four times — silence. A wrong entry is a line somebody wrote and a reviewer can
+read; a missing entry was nothing at all.
 
 The same rule applies to the replay stream from the other end. Every mutating entry point on
 `Match` has a `ReplayCommand` variant, and the three ways to break that are now three build

@@ -126,6 +126,17 @@ export interface ProductionQueue {
   refit?: { kind: RefitKind; remainingS: number; totalS: number };
 }
 
+/**
+ * The simulation world.
+ *
+ * **Every field here is named on one of the three lists at the foot of
+ * `sim/stateHash.ts`** — hashed, covered by something the hash already mixes,
+ * or derived — and the build fails naming your field until it is. Adding state
+ * here and forgetting the fingerprint is the mistake this world has made four
+ * times over (#620): a third economy account, the hazards' timers, the Drift
+ * grid, and what a creature was doing. Decide which list before you write the
+ * field, and say why in its comment either way.
+ */
 export interface SimWorld extends IWorld {
   terrain: Terrain;
   /**

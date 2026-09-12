@@ -32,7 +32,7 @@ import {
 } from '@echoes/shared';
 import { hasComponent } from 'bitecs';
 import { Match } from '../src/sim/match.ts';
-import { Fauna, Owner, Structure, Unit } from '../src/sim/components.ts';
+import { Fauna, MoveOrder, Owner, Structure, Unit, Weapon } from '../src/sim/components.ts';
 import { economyFor, type SimWorld } from '../src/sim/world.ts';
 import { Rng } from '../src/sim/rng.ts';
 import { hashWorld } from '../src/sim/stateHash.ts';
@@ -734,6 +734,180 @@ describe('the fingerprint covers what it certifies', () => {
         }
       ),
       'hulls walking off to a different place are an army in a different place'
+    );
+  });
+
+  it('follows the plan behind the leg, and the leg itself', () => {
+    // docs/tech-stack.md has claimed the hash covers "orders" since before it
+    // covered any of them. It covered neither: not `world.orderQueues`, which
+    // the world declares as simulation state a reconnecting player must get
+    // back, nor the `MoveOrder` the hull is actually walking.
+    const match = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
+    matchWorld = match.world;
+    const hull = firstUnit(match, 0);
+    assert.notEqual(hull, 0, 'slot 0 opens with a hull that is not a harvester');
+
+    match.orderMove(0, hull, 3000, 3000);
+    assert.ok(
+      moved(
+        match,
+        () => {
+          MoveOrder.x[hull] = 3500;
+        },
+        () => {
+          MoveOrder.x[hull] = 3000;
+        }
+      ),
+      'two hulls bound for different places are not bound for the same place'
+    );
+
+    // Held rather than moving, which is the case the position would not have
+    // caught: the hull is going nowhere this tick, and still carries where it
+    // goes when released.
+    assert.ok(
+      moved(
+        match,
+        () => {
+          MoveOrder.active[hull] = 0;
+        },
+        () => {
+          MoveOrder.active[hull] = 1;
+        }
+      ),
+      'a hull under way and a hull holding are not the same hull'
+    );
+
+    match.orderMove(0, hull, 4000, 1000, true);
+    match.orderMove(0, hull, 1000, 4000, true);
+    const queue = match.world.orderQueues.get(hull);
+    assert.ok(queue !== undefined && queue.length === 2, 'both legs were queued');
+
+    const first = queue[0]!;
+    const second = queue[1]!;
+    assert.ok(
+      moved(
+        match,
+        () => {
+          queue[0] = second;
+          queue[1] = first;
+        },
+        () => {
+          queue[0] = first;
+          queue[1] = second;
+        }
+      ),
+      'a plan is its order — the same waypoints in the other sequence is another plan'
+    );
+
+    assert.ok(
+      moved(
+        match,
+        () => {
+          queue.push({ kind: 'move', x: 2000, y: 2000 });
+        },
+        () => {
+          queue.pop();
+        }
+      ),
+      'a force holding one more leg than the other has diverged'
+    );
+
+    // What the player sent this hull at, which survives the target passing out
+    // of range and is cleared only when it dies.
+    assert.ok(
+      moved(
+        match,
+        () => {
+          Weapon.orderedTargetEid[hull] = firstUnit(match, 1);
+        },
+        () => {
+          Weapon.orderedTargetEid[hull] = 0;
+        }
+      ),
+      'a hull ordered onto a target is not a hull shooting at whatever it meets'
+    );
+  });
+
+  it('follows the Standing Wave ledger, corridors and both sets', () => {
+    // The one block whose divergence never shows up in a position: a corridor
+    // edits propagation itself (docs/systems-echo.md §7), and the Echo Layer is
+    // resolved per observer and never hashed. Two runs that disagreed here
+    // agreed about every hull, every economy and every bed while showing their
+    // players different water.
+    const match = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
+    const world = match.world;
+
+    assert.ok(
+      moved(
+        match,
+        () => {
+          world.corridors.push({ a: 11, b: 12 });
+        },
+        () => {
+          world.corridors.pop();
+        }
+      ),
+      'a corridor that is up must not hash as one that is not'
+    );
+
+    // Both ends, because a corridor is the pair and not its existence: the
+    // same count of corridors between different nodes is a different kill-line
+    // across ground somebody is standing on.
+    world.corridors.push({ a: 11, b: 12 });
+    assert.ok(
+      moved(
+        match,
+        () => {
+          world.corridors[0] = { a: 11, b: 13 };
+        },
+        () => {
+          world.corridors[0] = { a: 11, b: 12 };
+        }
+      ),
+      'a corridor to a different node is a different corridor'
+    );
+    world.corridors.pop();
+
+    assert.ok(
+      moved(
+        match,
+        () => {
+          world.pairedNodes.add(11);
+        },
+        () => {
+          world.pairedNodes.delete(11);
+        }
+      ),
+      'a node that has spent its one pairing must not hash as one that has not'
+    );
+
+    assert.ok(
+      moved(
+        match,
+        () => {
+          world.nodeSites.add(11);
+        },
+        () => {
+          world.nodeSites.delete(11);
+        }
+      ),
+      'a Spire that will complete must not hash as one that never existed'
+    );
+
+    // And the other way, which is the half that matters more here: the two
+    // sets are membership, so a hash sensitive to the order they were filled
+    // in would report a false divergence — worse than a hole, because the
+    // whole value of `divergedAtTick` is that it is believed.
+    world.pairedNodes.add(11);
+    world.pairedNodes.add(12);
+    const oneOrder = hashWorld(world);
+    world.pairedNodes.clear();
+    world.pairedNodes.add(12);
+    world.pairedNodes.add(11);
+    assert.equal(
+      hashWorld(world),
+      oneOrder,
+      'the same pairings filled in either order are the same ledger'
     );
   });
 });

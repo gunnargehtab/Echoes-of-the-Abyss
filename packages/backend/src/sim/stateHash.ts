@@ -28,6 +28,7 @@ import {
   Laying,
   Magazine,
   MineMagazine,
+  MoveOrder,
   Ordnance,
   Owner,
   Position,
@@ -40,6 +41,7 @@ import {
   Spore,
   Structure,
   Unit,
+  Weapon,
 } from './components.ts';
 import { FNV_OFFSET, mixFloat, mixString, mixU32 } from './fnv.ts';
 import { economyFor, type SimWorld } from './world.ts';
@@ -197,6 +199,26 @@ export function hashWorld(world: SimWorld): number {
       h = mixU32(h, Posture.engage[eid]!);
       h = mixFloat(h, Posture.engageX[eid]!);
       h = mixFloat(h, Posture.engageY[eid]!);
+    }
+    // The leg a hull is actually walking, beside the plan behind it
+    // (`world.orderQueues`, below). Both were outside the fingerprint, and the
+    // second one is why the first is worth mixing rather than leaving to the
+    // position it will produce: a hull that is *holding* carries a move order
+    // it is not executing, so two runs that disagree about where it will go
+    // when released agree on every other field until it is released.
+    if (hasComponent(world, MoveOrder, eid)) {
+      h = mixU32(h, MoveOrder.active[eid]!);
+      h = mixFloat(h, MoveOrder.x[eid]!);
+      h = mixFloat(h, MoveOrder.y[eid]!);
+    }
+    // What the player told this hull to shoot, by ordinal like every other
+    // entity reference. `Posture.engage` above says a hull is fighting on its
+    // way somewhere; this says it was sent at one particular thing, which
+    // survives the target passing out of range and is cleared only when the
+    // target dies.
+    if (hasComponent(world, Weapon, eid)) {
+      h = mixFloat(h, Weapon.cooldownRemainingS[eid]!);
+      h = mixU32(h, ordinalOf.get(Weapon.orderedTargetEid[eid]!) ?? -1);
     }
     if (hasComponent(world, DepthOrder, eid)) {
       h = mixU32(h, DepthOrder.active[eid]!);
@@ -383,6 +405,55 @@ export function hashWorld(world: SimWorld): number {
     h = mixFloat(h, rally.y);
   }
 
+  // Queued orders — the plan behind the leg a hull is walking, which
+  // `world.orderQueues` calls simulation state in as many words and which
+  // docs/tech-stack.md has claimed the hash covered since before it did.
+  //
+  // In queue order, because a plan *is* its order: two forces holding the same
+  // four waypoints in a different sequence are in different places two minutes
+  // later and agree on every other field until the first one pops. The
+  // owning hull and both entity references inside an order go in by ordinal,
+  // for the reason the whole function exists.
+  const planned = [...world.orderQueues.keys()].sort((a, b) => a - b);
+  for (const eid of planned) {
+    const queue = world.orderQueues.get(eid)!;
+    h = mixU32(h, ordinalOf.get(eid) ?? -1);
+    h = mixU32(h, queue.length);
+    for (const order of queue) {
+      h = mixString(h, order.kind);
+      h = mixFloat(h, order.x);
+      h = mixFloat(h, order.y);
+      if (order.kind === 'attack') h = mixU32(h, ordinalOf.get(order.target) ?? -1);
+      if (order.kind === 'harvest') h = mixU32(h, ordinalOf.get(order.node) ?? -1);
+    }
+  }
+
+  // The Standing Wave ledger — the corridors that are up, and the two sets
+  // that decide which ones can ever form (docs/systems-echo.md §7).
+  //
+  // Hashed for a reason none of the other blocks has: a corridor is the only
+  // thing in the simulation that edits *propagation itself*. Two runs that
+  // disagree here disagree about how far every sound in the map carries, and
+  // the Echo Layer is resolved per observer and never hashed — so the
+  // divergence would surface as two players seeing different water, with every
+  // position, hull and economy still in agreement.
+  //
+  // All three are keyed by match-local id rather than by entity id, so they go
+  // in as they are and not through `ordinalOf`. `corridors` walks in list
+  // order, which `standingWaveSystem` writes and which is therefore itself
+  // state. The two sets are sorted instead: membership is what §4's
+  // "decided once" rule is about, and insertion order is not — a hash
+  // sensitive to it would report a false divergence, which is worse than a
+  // known hole because the whole value of `divergedAtTick` is that it is
+  // believed.
+  h = mixU32(h, world.corridors.length);
+  for (const corridor of world.corridors) {
+    h = mixU32(h, corridor.a);
+    h = mixU32(h, corridor.b);
+  }
+  for (const node of [...world.pairedNodes].sort((a, b) => a - b)) h = mixU32(h, node);
+  for (const site of [...world.nodeSites].sort((a, b) => a - b)) h = mixU32(h, site);
+
   return h >>> 0;
 }
 
@@ -390,3 +461,166 @@ export function hashWorld(world: SimWorld): number {
 export function hashHex(world: SimWorld): string {
   return hashWorld(world).toString(16).padStart(8, '0');
 }
+
+// --- Every field of the world is on one of three lists -----------------------
+//
+// The gaps this file has shipped were never subtle once found — a third
+// economy account, the hazards, the Drift grid, fauna behaviour, the order
+// queues, the Standing Wave ledger. They were all the same failure: a
+// subsystem parked durable state on `SimWorld` and nobody remembered there was
+// a second place to add a line. Hand enumeration caught none of them, because
+// hand enumeration is exactly what was failing.
+//
+// So the enumeration is a type. Every key of `SimWorld` belongs to one of the
+// three unions below, the `Exact<>` at the foot asserts that the three together
+// are `keyof SimWorld`, and a field added to the world with no list fails
+// `npm run type-check` naming the field. This is the idiom that polices the
+// wire (`packages/shared/src/wire.ts`) and the replay command union
+// (`sim/replay.ts`), applied to the third place a name had to be written twice
+// (#620).
+//
+// What it buys and what it does not, stated plainly, because the issue that
+// asked for it argued both sides: it forces a *decision*, not a correct one.
+// An author in a hurry can put durable state on `DerivedWorldState` and the
+// build goes green with the same hole. What it removes is the failure that
+// actually happened four times — silence. A wrong entry is a line somebody
+// wrote and a reviewer can read; a missing entry was nothing at all.
+
+/**
+ * Fields `hashWorld` mixes by name.
+ *
+ * Simulation state that lives outside the ECS: a match where two runs disagree
+ * about any of these has diverged, whatever their entities say.
+ */
+export type HashedWorldState =
+  | 'tick'
+  | 'rng'
+  | 'terrain'
+  | 'marks'
+  | 'economies'
+  | 'production'
+  | 'rallies'
+  | 'orderQueues'
+  | 'hazards'
+  | 'drift'
+  | 'corridors'
+  | 'pairedNodes'
+  | 'nodeSites';
+
+/**
+ * State the hash covers through something else it already mixes.
+ *
+ * The third list exists because the alternative was to lie. These are not
+ * derived and not scratch — they are match state a reconnecting player must
+ * get back — but mixing them again would be mixing the same fact twice. Each
+ * entry names its carrier here, and that naming is the whole obligation: an
+ * entry whose carrier stops carrying it belongs above.
+ */
+export type CoveredWorldState =
+  /** Through `Carried.carrier` and `Hold.used` in the entity walk: a hull in a
+   * hold is hashed as a hull, with the carrier it is inside. */
+  | 'holds'
+  /** Through `Pressure.rating` and `Pressure.bonus`. A refit *is* the ratings
+   * it wrote, and `world.refits` says so where it is declared — a world that
+   * agreed about the purchase and disagreed about the hulls would be the
+   * divergence, and that is the half that is mixed. */
+  | 'refits'
+  /** Through `hazards`. A bloom node *is* a bed, held by reference into that
+   * same list rather than copied, precisely so the two cannot drift apart. */
+  | 'blooms';
+
+/**
+ * Fields that are not simulation state, and why.
+ *
+ * Three kinds, and the distinction matters to anyone adding a field: map data
+ * fixed before the first step, caches and broadphases rebuilt from state that
+ * is hashed, and per-pass scratch that is cleared before anything can read it
+ * across a tick. A wrongly-*included* derived field is worse than an excluded
+ * one — it reports false divergence, and a checker that cries wolf is worse
+ * than one with a known hole, because the entire value of `divergedAtTick` is
+ * that it is believed.
+ */
+export type DerivedWorldState =
+  // Fixed before the first step: chosen by map id and built identically on
+  // both sides of a replay.
+  | 'ambientBands'
+  | 'dt'
+  // Identity bookkeeping. The hash deliberately speaks ordinals instead — see
+  // the note at the head of `hashWorld` — so these cannot be state it reads.
+  // `maxEid` is a high-water bound for the walk, not a fact about the match.
+  | 'localOfEid'
+  | 'eidOfLocal'
+  | 'nextLocalId'
+  | 'maxEid'
+  // Caches and broadphases, rebuilt every tick from hashed state.
+  | 'unitGrid'
+  | 'structureGrid'
+  | 'fuseGrid'
+  | 'separationBuffer'
+  | 'fuseBuffer'
+  | 'pathfinder'
+  | 'paths'
+  | 'draw'
+  | 'driftNoise'
+  // Per-tick scratch: written and read inside one step, cleared at the top of
+  // the next.
+  | 'stepWork'
+  | 'spireActive'
+  | 'reactorActive'
+  | 'environmentalDeaths'
+  // Per-mission-pass scratch, cleared and rebuilt whole on every pass so an
+  // expired grant cannot outlive the beat that wrote it. Empty in every
+  // skirmish.
+  | 'liftCutSig'
+  | 'soundingSig'
+  | 'siegeWorkSig'
+  | 'regionPressureBonus'
+  | 'commanderHaste'
+  | 'commanderSilentImmune'
+  // An outbound channel, not a store: drained into the Echo snapshot and
+  // cleared. Anything that could make two runs raise different self-events has
+  // already diverged in something above.
+  | 'selfEvents';
+
+/**
+ * Every field of the world is classified, and no field is classified twice.
+ *
+ * Written as four `Exclude<>`s rather than one `Exact<>` — the idiom the wire
+ * and the replay union use — for one reason: this check has to be read by
+ * whoever tripped it, and `Exact<>` fails with `'true' is not assignable to
+ * type 'never'`, which names nothing. Each of these puts the offending key
+ * *in the error message*, so the build says which field is unclassified rather
+ * than that one is.
+ */
+type Unclassified = Exclude<
+  keyof SimWorld,
+  HashedWorldState | CoveredWorldState | DerivedWorldState
+>;
+type NotAWorldField = Exclude<
+  HashedWorldState | CoveredWorldState | DerivedWorldState,
+  keyof SimWorld
+>;
+type DoubleClassified =
+  | Extract<HashedWorldState, CoveredWorldState>
+  | Extract<HashedWorldState, DerivedWorldState>
+  | Extract<CoveredWorldState, DerivedWorldState>;
+
+/** A field on `SimWorld` and on none of the three lists. Decide which it is. */
+const _everyWorldFieldIsClassified: [Unclassified] extends [never]
+  ? true
+  : ['unclassified field on SimWorld — add it to one of the three lists', Unclassified] = true;
+/** A name on a list that is no longer a field — a rename or a deletion. */
+const _everyClassifiedNameIsAWorldField: [NotAWorldField] extends [never]
+  ? true
+  : ['classified name is not a field of SimWorld', NotAWorldField] = true;
+/**
+ * A field on two lists. Checked separately because the first check accepts it,
+ * and "hashed and also derived" is the one combination that reads as a
+ * decision while being none.
+ */
+const _worldFieldsAreClassifiedOnce: [DoubleClassified] extends [never]
+  ? true
+  : ['field classified twice', DoubleClassified] = true;
+void _everyWorldFieldIsClassified;
+void _everyClassifiedNameIsAWorldField;
+void _worldFieldsAreClassifiedOnce;
