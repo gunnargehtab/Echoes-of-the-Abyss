@@ -1,0 +1,5 @@
+--- a/packages/frontend/src/net/GameClient.ts
++++ b/packages/frontend/src/net/GameClient.ts
++import { getStateCallbacks } from '@colyseus/sdk';
++    const $ = getStateCallbacks(room);
++    $(room.state).players.onAdd((player, key) => this.pushLobby());

@@ -146,9 +146,44 @@ branch; never record the arm's own summary.
 
 ### What a stronger experiment would need
 
-A task that *forces* a drifting API to be written — client-side state callbacks, an
-`onLeave` signature change, a `@filter` on schema state — rather than one that merely runs
-near them. Until then the colyseus skill's value is untested, not disproved.
+A task that *forces* a drifting API to be written rather than one that merely runs near
+them. That is experiment `lobby-callbacks`, below.
+
+## Experiment `lobby-callbacks`
+
+The client subscribes to the room's whole schema through `room.onStateChange`, so the lobby
+view is rebuilt and `JSON.stringify`d five times a second to discover nothing changed. The
+task is to subscribe to what the lobby actually depends on instead, and delete the
+serialised-key workaround.
+
+It is the strong probe #627 was not, for three reasons:
+
+1. **The repository has no example to copy.** The one subscription in the client is coarse.
+   #627's arms could read `extends Room<MatchState>` off the file they were editing; here
+   there is nothing to read, so the arm reaches for recall.
+2. **It is the top row of the skill's own drift table.** Per-collection and per-field
+   callbacks are exactly what 0.17 replaced with the `getStateCallbacks` proxy.
+3. **The installed client cannot express the drift.** `colyseus.js` is 0.15.28 and exports
+   no `getStateCallbacks`, so the 0.18 shape is a compile error.
+
+The correct form, from the installed typings rather than from recall: `MapSchema.onAdd`,
+`onRemove` and `onChange` take a callback and return an unsubscribe function, and
+`Schema.listen(prop, cb)` does the same for a field.
+
+**Cost is the measurement here, not the trap table.** Because drift cannot compile, a
+drifting arm finds out when it runs the gates and fixes itself, so both arms are likely to
+end with clean diffs. What separates them is what the detour cost. The traps stay as a
+backstop for drift that survives to the diff, and the criteria check that the task was
+actually done rather than worked around a second time.
+
+Two arms first, for maximum contrast: **A** with the skill and the guard, **C** with
+neither. If they differ, **B** then says whether the `CLAUDE.md` paragraph alone accounts
+for it. Running B up front buys nothing if A and C agree.
+
+| Arm | Blocking traps | Gates | Cost | Output tokens |
+| --- | --- | --- | --- | --- |
+| A | | | | |
+| C | | | | |
 
 ## What this cannot tell you
 

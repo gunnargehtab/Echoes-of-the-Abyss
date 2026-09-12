@@ -1,0 +1,92 @@
+{
+  "experiment": "lobby-callbacks",
+  "title": "Fine-grained schema listeners on the client \u2014 the surface 0.17 actually removed",
+  "skill": ".claude/skills/colyseus",
+  "pinned": {
+    "colyseus.js": "0.15.28",
+    "@colyseus/schema": "2.0.37",
+    "note": "The installed client exports no getStateCallbacks, so 0.18 recall is a compile error rather than a silent fault. That is the point: this task cannot be completed by writing the shape the skill documents."
+  },
+  "why-this-task": [
+    "The repository has no example of a fine-grained schema listener. The client subscribes once, coarsely, through room.onStateChange, so an arm cannot copy the correct form out of the surrounding code the way #627's arms could copy `extends Room<MatchState>`.",
+    "This is the surface 0.17 replaced wholesale: per-collection and per-field callbacks became the getStateCallbacks proxy. It is the top row of the skill's own drift table.",
+    "Drift is self-detecting here, so expect the final diffs to be clean in both arms. The measurement is therefore COST, not the trap table: a drifting arm pays to discover and undo its mistake. The traps below are a backstop for drift that survives to the diff."
+  ],
+  "scope": [
+    "packages/frontend/src/",
+    "packages/frontend/test/"
+  ],
+  "traps": [
+    {
+      "id": "state-callbacks-proxy",
+      "group": "drift",
+      "severity": "break",
+      "direction": "mustNotAppear",
+      "pattern": "getStateCallbacks",
+      "why": "0.17+ only. colyseus.js 0.15.28 does not export it, so this cannot even compile."
+    },
+    {
+      "id": "callbacks-dollar-proxy",
+      "group": "drift",
+      "severity": "break",
+      "direction": "mustNotAppear",
+      "pattern": "\\$\\(\\s*(this\\.)?room\\.state",
+      "why": "The 0.18 callback proxy, $(room.state).players.onAdd(...). On 0.15 the callbacks hang off the schema instance itself."
+    },
+    {
+      "id": "sdk-package",
+      "group": "drift",
+      "severity": "break",
+      "direction": "mustNotAppear",
+      "pattern": "@colyseus/sdk",
+      "why": "0.18 renamed the browser client package. This repository is on colyseus.js."
+    },
+    {
+      "id": "coarse-subscription-gone",
+      "group": "criterion",
+      "severity": "required",
+      "direction": "mustVanish",
+      "pattern": "room\\.onStateChange\\(\\(\\) => this\\.pushLobby\\(\\)\\)",
+      "file": "packages/frontend/src/net/GameClient.ts",
+      "why": "The whole point of the task. The 5 Hz whole-state subscription must be gone, not supplemented."
+    },
+    {
+      "id": "stringify-guard-gone",
+      "group": "criterion",
+      "severity": "required",
+      "direction": "mustVanish",
+      "pattern": "lastLobbyKey",
+      "file": "packages/frontend/src/net/GameClient.ts",
+      "why": "The serialised-key comparison is the workaround being removed. Kept as a second line of defence, it hides whether the subscription is correct."
+    },
+    {
+      "id": "listener-added",
+      "group": "criterion",
+      "severity": "required",
+      "direction": "mustAppear",
+      "pattern": "\\.(onAdd|onRemove|listen)\\s*\\(",
+      "file": "packages/frontend/src/net/GameClient.ts",
+      "why": "The 0.15 fine-grained callback surface, per the installed typings: MapSchema.onAdd/onRemove/onChange take a callback and return an unsubscribe function, and Schema.listen(prop, cb) does the same for a field."
+    },
+    {
+      "id": "unsubscribed",
+      "group": "criterion",
+      "severity": "required",
+      "direction": "mustAppear",
+      "pattern": "unsubscribe|off\\(|dispose|\\.forEach\\(\\s*\\(?\\s*(un|off)",
+      "scope": [
+        "packages/frontend/src/net/GameClient.ts"
+      ],
+      "why": "Each callback returns a teardown function. This client reconnects, so a listener that outlives its room is a leak the task names explicitly."
+    },
+    {
+      "id": "stub-extended",
+      "group": "criterion",
+      "severity": "required",
+      "direction": "mustAppear",
+      "pattern": "onAdd|onRemove|listen",
+      "file": "packages/frontend/test/support/colyseusStub.ts",
+      "why": "The stub models only the coarse callback today. It has to grow the surface the new subscription uses, or the contract test is not exercising the change."
+    }
+  ]
+}

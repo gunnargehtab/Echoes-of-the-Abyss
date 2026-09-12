@@ -79,6 +79,15 @@ function evaluate(trap, files, spec) {
       walk('added');
       return { tripped: hits.length === 0, hits };
     }
+    case 'mustVanish': {
+      walk('removed');
+      const gone = hits.length > 0;
+      hits.length = 0;
+      walk('added');
+      // Removed *and* not written back. A diff that deletes the guard and
+      // reintroduces it three lines down has not removed it.
+      return { tripped: !(gone && hits.length === 0), hits };
+    }
     case 'mustSurvive': {
       walk('removed');
       const removed = hits.length;
@@ -148,29 +157,16 @@ function report(spec, files) {
   return blocking.length;
 }
 
-/**
- * A trap file that cannot detect its own trap is worse than none, so the
- * scorer ships the 0.18 diff it is meant to catch and refuses to be trusted
- * until it catches it.
- */
-const SELFTEST = `--- a/packages/backend/src/rooms/MatchRoom.ts
-+++ b/packages/backend/src/rooms/MatchRoom.ts
--export class MatchRoom extends Room<MatchState> {
-+export class MatchRoom extends Room<{ state: MatchState }> {
-+  onLeave(client: Client, code: number) {
-+import { Room } from 'colyseus';
-+    const cb = getStateCallbacks(this.room);
-+    this.setMetadata({ ...this.metadata, phase: 'over' });
-+import { Client } from '@colyseus/sdk';
-+import { SIM } from '../sim/match.js';
---- a/packages/shared/src/wire.ts
-+++ b/packages/shared/src/wire.ts
-+  SERVER_MSG.roomTorn,
-`;
 
-const spec = JSON.parse(
-  readFileSync(join(HERE, String(arg('experiment', '627')), 'traps.json'), 'utf8')
-);
+
+const EXP = String(arg('experiment', '627'));
+const spec = JSON.parse(readFileSync(join(HERE, EXP, 'traps.json'), 'utf8'));
+
+/**
+ * The fixture lives with the experiment, because a trap file that cannot detect
+ * its own trap measures nothing, and each experiment traps a different thing.
+ */
+const SELFTEST = () => readFileSync(join(HERE, EXP, 'selftest.diff'), 'utf8');
 
 /** Whether a path exists at the range's base, so a trivially-met criterion shows up. */
 function baseProbe(range) {
@@ -187,19 +183,26 @@ function baseProbe(range) {
 }
 
 if (arg('selftest')) {
-  console.log('SELFTEST — the fixture below exercises every trap, so each one must trip.');
-  const files = parseDiff(SELFTEST);
-  report(spec, files);
-  // Per-trap, not a count: a fixture that happens to trip seven of eleven passes
-  // a threshold while leaving four patterns never once executed.
+  // Two fixtures, because no single diff can exercise every trap. The drift
+  // fixture is an arm that wrote the wrong API; the empty diff is an arm that
+  // did nothing, which is what trips every `mustAppear` and `mustVanish`. A
+  // pattern that fires on neither has never been executed and is not a test.
+  const fixtures = [
+    ['drift fixture', parseDiff(SELFTEST())],
+    ['empty diff', parseDiff('')],
+  ];
+  for (const [name, files] of fixtures) {
+    console.log(`\n=== ${name} ===`);
+    report(spec, files);
+  }
   const silent = spec.traps
-    .filter((t) => !evaluate(t, files, spec).tripped)
+    .filter((t) => !fixtures.some(([, files]) => evaluate(t, files, spec).tripped))
     .map((t) => t.id);
   if (silent.length) {
-    console.error(`\nselftest FAILED — never tripped, so never tested: ${silent.join(', ')}`);
+    console.error(`\nselftest FAILED — never tripped by either fixture: ${silent.join(', ')}`);
     process.exit(2);
   }
-  console.log(`\nselftest passed: all ${spec.traps.length} traps detected their own fixture.`);
+  console.log(`\nselftest passed: all ${spec.traps.length} traps fire on at least one fixture.`);
   process.exit(0);
 }
 
