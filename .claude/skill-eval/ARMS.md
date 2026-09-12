@@ -5,11 +5,23 @@ the base every arm was cut from, restricted to `packages/`. The setup commits th
 arm an arm — removing the skill, removing the `CLAUDE.md` paragraph, stripping the answer
 key — are left out, because they are the apparatus rather than the result.
 
-**These are here because the branches are not.** The arm branches were deleted once their
-experiments were scored, and the README records outcomes: traps tripped, gates, cost. An
-outcome is not evidence. Anyone re-reading a claim in the README — that no arm ever wrote
-a 0.17 shape, that one arm failed `type-check` on `Object.hasOwn`, that two arms named
-their teardown `unwatchLobby` — needs the code that claim was made about.
+**They are here because the README records outcomes, and an outcome is not evidence.**
+Traps tripped, gates, cost — every one of those is a claim *about code*. Anyone re-reading
+one of them, that no arm ever wrote a 0.17 shape, that one arm failed `type-check` on
+`Object.hasOwn`, that two arms named their teardown `unwatchLobby`, needs the code the
+claim was made about.
+
+**The `skill-eval/*` branches still exist**, and they are the fuller record: each carries
+the arm's real commits and the setup commits above, which these diffs deliberately drop.
+Reach for a branch when you care how an arm got there, and for the diff when you only care
+what it wrote. The diffs are kept anyway because a branch is easy to delete by accident and
+because they travel with the repository, where a branch is one `git push --delete` from
+gone.
+
+One hazard that comes with keeping them: `prepare-arm.sh` pushes `--force-with-lease`, so
+re-running an experiment under a name already used **replaces that arm's branch**. The
+diffs here are what survives that, which is the second reason to keep both. Give a re-run a
+new experiment id rather than reusing one whose branches you still want.
 
 | Experiment | Arm | What it was working under |
 | --- | --- | --- |
@@ -35,5 +47,6 @@ passes `listen`'s `immediate` argument explicitly; `lobby-callbacks/arms/c` carr
 clearest note on schema 2.x replay semantics in the test stub.
 
 ```bash
-git apply .claude/skill-eval/lobby-callbacks/arms/c.diff
+git apply .claude/skill-eval/lobby-callbacks/arms/c.diff       # the diff
+git fetch origin skill-eval/lobby-callbacks-arm-c              # or the branch, while it lasts
 ```
