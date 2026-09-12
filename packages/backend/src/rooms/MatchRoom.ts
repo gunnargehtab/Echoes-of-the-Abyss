@@ -14,7 +14,7 @@
 // latter re-exports via __exportStar, which Node's static CJS export detection
 // cannot see, so `import { Room } from 'colyseus'` fails at runtime under an
 // unbundled ESM loader (the dev server) while working fine once bundled.
-import { Room, type Client } from '@colyseus/core';
+import { OnMessageException, Room, type Client, type RoomException } from '@colyseus/core';
 import {
   AiDifficulty,
   Faction,
@@ -61,6 +61,23 @@ import {
  * holds one, so an AI row can never be commanded from the wire.
  */
 const aiSessionId = (slot: number): string => `ai:${slot}`;
+
+/**
+ * The error that was actually raised, out of the one Colyseus wraps it in.
+ *
+ * The wrapper is constructed at the catch site, so its own stack points at
+ * Colyseus rather than at the throw; `cause` is the original and is the only
+ * thing in a contained exception that can say which line to go and read. Read
+ * through a cast because `Error.cause` is ES2022 and this package compiles
+ * against the ES2020 lib.
+ */
+function causeOf(err: Error): string {
+  const cause: unknown = (err as Error & { cause?: unknown }).cause;
+  if (cause instanceof Error) return cause.stack ?? `${cause.name}: ${cause.message}`;
+  // A `throw 'string'` has no stack to offer, and Colyseus copied whatever it
+  // could reach into the wrapper's own message.
+  return cause === undefined ? err.message : String(cause);
+}
 
 /** Options a room may be created with. `mapId` selects the authored map. */
 export interface MatchRoomOptions {
@@ -165,6 +182,84 @@ export class MatchRoom extends Room<MatchState> {
   /** Send one message to everyone in the room. */
   private announce<K extends ServerMessageName>(type: K, payload: ServerMessages[K]): void {
     this.broadcast(type, payload);
+  }
+
+  /**
+   * One room's exceptions, contained to that room.
+   *
+   * Colyseus gates its entire wrapping mechanism on this method merely
+   * existing. Define it and every `onMessage` handler, the simulation
+   * interval, both post-match `clock.setTimeout`s and the lifecycle hooks get
+   * a try/catch around them. Leave it undefined — as this room did — and there
+   * is nothing between a throw and Colyseus's own `registerGracefulShutdown`,
+   * which installs `process.on('uncaughtException')` and ends by disposing
+   * *every* room on the box and exiting. One malformed order in one match
+   * ended every concurrent match on the server.
+   *
+   * The wrapper is a try/catch and not an inspection, so nothing here is paid
+   * per message or per step: neither counted budget moves for defining it.
+   *
+   * What containment means depends on where the throw came from.
+   *
+   * - A **message** is dropped and the room plays on. Dropping is what every
+   *   other server-side refusal in this room already does — an order for a
+   *   unit you do not own is ignored rather than punished — and ejecting the
+   *   sender would kick a legitimate player over a bug in their build.
+   * - The **simulation step** ends this room, and only this room. A step that
+   *   threw part way through has a torn world and a state hash that no longer
+   *   means anything, so limping on is worse than stopping. Nothing is
+   *   announced: a twelfth `SERVER_MSG` and a new way a match can end would be
+   *   a design change rather than a patch.
+   * - Everything else — a clock timer, a lifecycle hook — is logged and left.
+   *   `onCreate`, `onAuth` and `onJoin` are rethrown by Colyseus *after* this
+   *   runs, so the matchmaker still answers the client and this room's own
+   *   refusals (an unknown mission, a full lobby) behave exactly as before.
+   *   The line below is a record that a throw happened, not a crash report.
+   *
+   * The line itself is the point of the whole hook: room, tick, phase, the
+   * method name Colyseus passed, the message name where there is one, and the
+   * original stack — enough to find the throw from a server log alone.
+   */
+  override onUncaughtException(
+    err: RoomException<this>,
+    methodName:
+      | 'onCreate'
+      | 'onAuth'
+      | 'onJoin'
+      | 'onLeave'
+      | 'onDispose'
+      | 'onMessage'
+      | 'setSimulationInterval'
+      | 'setInterval'
+      | 'setTimeout'
+  ): void {
+    // Both guarded, because the throw may be `onCreate`'s own: a room that
+    // refused an unknown mission has neither a Match nor a state to read, and
+    // a TypeError raised in here would be precisely the uncaught exception
+    // this method exists to prevent.
+    const tick = this.match === undefined ? -1 : this.match.tick;
+    const phase = this.state === undefined ? 'uncreated' : MatchPhase[this.state.phase];
+    const where = err instanceof OnMessageException ? `${methodName} '${err.type}'` : methodName;
+    console.error(
+      `[MatchRoom ${this.roomId}] contained ${where} at tick ${tick}, ` +
+        `phase ${phase}: ${causeOf(err)}`
+    );
+
+    if (methodName !== 'setSimulationInterval') return;
+
+    try {
+      // Stopped before the disposal lands. The wrapper swallowed the throw, so
+      // without this the torn world is stepped again 16 ms later, and again,
+      // for as long as it takes `disconnect` to tear the room down.
+      this.setSimulationInterval();
+      void this.disconnect().catch(() => {});
+    } catch {
+      // `disconnect()` refuses outright while `onCreate` is still running, and
+      // a room that never reached the matchmaker has no listing to remove.
+      // Either way this room is already unusable, and throwing from the
+      // containment hook is the one thing that would put the process back
+      // where it was before any of this existed.
+    }
   }
 
   override async onCreate(options?: MatchRoomOptions): Promise<void> {
