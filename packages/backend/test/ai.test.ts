@@ -1158,8 +1158,14 @@ function assertOnlyKnown(command: AiCommand, known: Known): void {
       return;
     case 'mine':
     case 'layDecoy':
-      // Neither carries a position: both are released where the hull stands,
-      // so the only thing to audit is that the hull is one of its own.
+    case 'noisemaker':
+      // None of the three carries a position: all are released where the hull
+      // stands, so the only thing to audit is that the hull is one of its own.
+      //
+      // The decoy is the one with a *contact* behind the decision — the
+      // commander drops it because it heard a torpedo — and it deliberately
+      // does not name it. Nothing crosses into the command but the hull, so
+      // there is no handle here to audit and none to get wrong.
       owns([command.unitId]);
       return;
     case 'torpedo':
@@ -1263,6 +1269,9 @@ function applyTo(match: Match, slot: number, command: AiCommand): void {
       return;
     case 'layDecoy':
       match.layDecoy(slot, command.unitId);
+      return;
+    case 'noisemaker':
+      match.deployNoisemaker(slot, command.unitId);
       return;
     case 'torpedo':
       match.orderLaunchTorpedo(slot, command.unitId, command.contactId);

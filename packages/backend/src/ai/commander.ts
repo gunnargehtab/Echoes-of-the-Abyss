@@ -635,6 +635,49 @@ const ORDNANCE_REACH_M = 2200;
 const SCREEN_RANGE_M = 2600;
 
 /**
+ * How close a classified torpedo has to be before a hull spends its decoy.
+ *
+ * docs/systems-combat.md §5 sizes every countermeasure against the same
+ * window: "launches that connect are launches from inside a kilometre". This
+ * is that kilometre, and the measurement says it is the right end of the band
+ * rather than merely a quotable one. Driving the whole engagement at 60 Hz —
+ * a Cruiser breaking across a torpedo's nose, its gun silent so point defence
+ * cannot take the credit, unaided a certain hit — the decoy saves the hull
+ * anywhere from **173 m to about 2,000 m** and fails outside it in two
+ * different ways. Under ~150 m the seeker is inside its own 150 m turn radius
+ * and cannot come round onto the decoy; past ~2,000 m the decoy's eight
+ * seconds are spent before the torpedo arrives and the suite is on a 20 s
+ * cooldown for the approach that matters. A kilometre is the middle of that,
+ * with half the band spare at each end for the depth, terrain and PF the
+ * measurement held flat.
+ *
+ * Not the same number as `ORDNANCE_REACH_M` above and not derived from it: a
+ * shot is priced by whether the target will still be there in fourteen
+ * seconds, and a decoy by whether it will still be shouting when the weapon
+ * gets here.
+ */
+const DECOY_RANGE_M = 1000;
+
+/**
+ * Metres a hull must have covered since the previous observation to count as
+ * under way — a tenth of the ~15 m a cruising hull makes in one Echo tick.
+ *
+ * `commandCountermeasures` needs it because `Match.deployNoisemaker` drops the
+ * decoy 60 m astern of the hull's *velocity*, and a hull with no velocity has
+ * no astern: the sim reads the reciprocal of a zero heading, so a stopped hull
+ * always drops due west of itself. Measured, a stopped hull is then hit at
+ * every deployment range there is — the torpedo either runs through the decoy
+ * into the hull or reaches the hull on its way to it, and 60 m of separation
+ * is inside the fuse either way. The hull has to be leaving for the decoy to
+ * be something it is leaving *behind*.
+ *
+ * `OwnUnit` carries no velocity, so this is read from the hull's own position
+ * between observations — its own information, and the cheapest question the
+ * commander can ask that the wire already answers.
+ */
+const UNDER_WAY_M = 1.5;
+
+/**
  * Each navy's siege hull (#508), on `OWN_SCOUT`'s and `OWN_ORDNANCE`'s terms:
  * a roster fact, kept off the composition so it cannot re-phase the cycle.
  */
@@ -1028,6 +1071,13 @@ export class AiCommander implements AiPlayer {
   private nextPingTick: number;
   /** Which field each harvester was sent to. Assigned once; the loop cycles. */
   private readonly nodeByHarvester = new Map<number, number>();
+  /**
+   * Where each of its own hulls stood at the previous observation, so
+   * `commandCountermeasures` can tell a hull that is leaving from one that is
+   * parked. Rebuilt from the snapshot every observation, which is also how
+   * dead hulls fall out of it.
+   */
+  private readonly stoodAt = new Map<number, { x: number; y: number }>();
   /** Rotates a rejected build placement, since a refusal is silent. */
   private buildAttempt = 0;
   /** Which leg of the scouting route the scout is on. */
@@ -1228,6 +1278,7 @@ export class AiCommander implements AiPlayer {
     this.commandProduction(snapshot, harvesters, army, purse, commands);
     this.commandScout(snapshot, scout, commands);
     this.commandOrdnance(snapshot, commands);
+    this.commandCountermeasures(snapshot, commands);
     this.commandSiege(snapshot, commands);
     this.commandLayers(snapshot, commands);
     this.commandSeeders(snapshot, commands);
@@ -1243,6 +1294,11 @@ export class AiCommander implements AiPlayer {
     const afloat = lifted.size === 0 ? free : free.filter((u) => !lifted.has(u.id));
     this.commandArmy(snapshot, afloat, raiders, commands);
     this.commandSonar(snapshot, army, raiders, commands);
+
+    // Last, and after every pass that reads it: this is where the hulls were
+    // *this* observation, which is what the next one compares against.
+    this.stoodAt.clear();
+    for (const unit of snapshot.units) this.stoodAt.set(unit.id, { x: unit.x, y: unit.y });
 
     return commands;
   }
@@ -3138,6 +3194,79 @@ export class AiCommander implements AiPlayer {
         default:
           break;
       }
+    }
+  }
+
+  /**
+   * The decoy, spent on a torpedo the commander has actually heard (#621).
+   *
+   * This is the counter cycle's defensive leg, and until now the commander
+   * had no word for it: `noisemaker` was one of six client messages with no
+   * `AiCommand` variant, so every match under `tools/balance/baselines/` was
+   * measured against a navy that could not answer a torpedo with anything but
+   * its guns. Point defence is automatic and needs no order
+   * (`sim/systems/combat.ts`), so the gap was never total — it was the
+   * *deliberate* half of §5's pair that was missing.
+   *
+   * Three gates, and each is a thing that was measured rather than assumed.
+   *
+   * **The doctrine says so.** SIG 70 at the hull's real position is the
+   * loudest thing in the roster short of a ping, and two navies would be
+   * spending the asset they are built on — see `answersTorpedoesWithNoise`.
+   *
+   * **The suite is ready.** `decoyCooldownS` is absent while it is, so the
+   * field is a presence test; the `attackDamage` test beside it is the other
+   * half, because the field is absent on an unarmed hull for the different
+   * reason that it has no suite at all. That mirrors the spawn gate in
+   * `sim/world.ts` — "any combat hull can deploy one" — and without it the
+   * commander would order a decoy out of a harvester every observation and
+   * read the silent refusal as nothing happening.
+   *
+   * **The hull is under way**, which is the one that is not obvious and the
+   * one the measurement is for. See `UNDER_WAY_M`: a stopped hull's decoy
+   * lands on its own axis 60 m out and is hit at every range there is.
+   *
+   * One decoy per torpedo rather than one per hull in range. Four hulls each
+   * dropping SIG 70 for one inbound weapon is 8 seconds of the formation
+   * announcing itself four times over to break a lock that only one of them
+   * is under, and the loudest emitter *now* wins — so the second decoy buys
+   * nothing the first did not and pays for it again. The nearest hull is the
+   * one that spends: it is the one whose seconds are shortest, and it is the
+   * likeliest thing the seeker is steering at, since a seeker takes the
+   * loudest thing it resolves and loudness falls with distance.
+   */
+  private commandCountermeasures(snapshot: EchoSnapshot, out: AiCommand[]): void {
+    if (!this.doctrine.answersTorpedoesWithNoise) return;
+
+    // Tier 3 is where a contact stops being a fast smudge and starts being a
+    // torpedo (docs/systems-combat.md §1, `Contact.ordnance`), and that is the
+    // same wall a player waits behind. A commander that decoyed every closing
+    // Tier-1 contact would be spending its suite on scouts it had not
+    // identified, which is the reveal the tier exists to withhold.
+    const inbound = snapshot.contacts.filter((c) => c.ordnance === OrdnanceKind.Torpedo);
+    if (inbound.length === 0) return;
+
+    // Claimed as they spend, so one hull covering two torpedoes in the same
+    // observation does not emit two commands the sim would refuse the second
+    // of — a refused command is a line in the replay that did nothing.
+    const spent = new Set<number>();
+    for (const torpedo of inbound) {
+      let best: OwnUnit | null = null;
+      let bestD = DECOY_RANGE_M;
+      for (const hull of snapshot.units) {
+        if (spent.has(hull.id)) continue;
+        if (hull.decoyCooldownS !== undefined) continue;
+        if (statsFor(hull.kind).attackDamage <= 0) continue;
+        const stood = this.stoodAt.get(hull.id);
+        if (stood === undefined || distance(hull, stood) < UNDER_WAY_M) continue;
+        const d = distance(hull, torpedo);
+        if (d >= bestD) continue;
+        bestD = d;
+        best = hull;
+      }
+      if (best === null) continue;
+      spent.add(best.id);
+      out.push({ kind: 'noisemaker', unitId: best.id });
     }
   }
 
