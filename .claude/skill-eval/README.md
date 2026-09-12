@@ -180,10 +180,45 @@ Two arms first, for maximum contrast: **A** with the skill and the guard, **C** 
 neither. If they differ, **B** then says whether the `CLAUDE.md` paragraph alone accounts
 for it. Running B up front buys nothing if A and C agree.
 
-| Arm | Blocking traps | Gates | Cost | Output tokens |
-| --- | --- | --- | --- | --- |
-| A | | | | |
-| C | | | | |
+Run of 2026-09-12, both on `claude-opus-5` from base `15f8734`, byte-identical prompt.
+Gates re-run here, never taken from the arm's own report.
+
+| Arm | Blocking traps | Gates | Cost | Output tokens | Wall clock |
+| --- | --- | --- | --- | --- | --- |
+| A — skill and guard present | 0 of 8 | 10 of 10 | $5.25 | 38,356 | ~16 min |
+| C — neither | 0 of 8 | 10 of 10 | **$4.36** | 35,043 | ~11.5 min |
+
+**Both wrote the correct 0.15 API, and the arm without the skill was cheaper.** Arm C, with
+no skill and no `CLAUDE.md` guard, reached for `state.listen('phase', push)` and
+`state.players.onAdd((player, key) => player.onChange(push))` unaided, collected the
+unsubscribe functions each returns, and called them on teardown. Arm A did the same thing,
+passing `listen`'s `immediate` argument explicitly, for 20% more spend and five more
+minutes.
+
+Nothing drifted. On the surface 0.17 replaced wholesale, with no example in the repository
+to copy, on a task that cannot be completed by writing the shape the skill documents,
+neither arm reached for the 0.18 shape.
+
+### What this does and does not establish
+
+It is still one run per arm, and the cost gap is well inside what two runs of the same task
+vary by. Read it as "no measured benefit", not as "measured harm".
+
+**And the prompt did part of the skill's job.** It says: *"Use the Colyseus client API as it
+exists in the version this repository has installed. Check it rather than recalling it."*
+Both arms got that line, so the comparison holds, but it is a version guard in the prompt,
+and it lowers the drift pressure on both arms. A third iteration should drop it — that is
+the single change most likely to make a difference visible, and it costs one more pair of
+runs.
+
+### The standing read on the colyseus skill
+
+Across two experiments and five arms — #627's A, B and C, and this one's A and C — the
+vendored `colyseus` skill has never changed an outcome, and the one measurable difference
+went against it on cost. It stays carried as a guard because the failure it protects against
+is real and would be expensive, but nothing measured here argues it earns its context on
+this codebase's day-to-day work.
+
 
 ## What this cannot tell you
 
