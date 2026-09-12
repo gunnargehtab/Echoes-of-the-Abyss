@@ -74,7 +74,7 @@ export const AUDIO_BUDGET_MS = 1;
  * loudest event in the game", so the mix has to sit low enough that being
  * heard can still be louder than everything else.
  */
-const MASTER_GAIN = 0.5;
+export const MASTER_GAIN = 0.5;
 
 /** How far music ducks when the contact bus is busy, and how fast it recovers. */
 const DUCK = { FLOOR: 0.35, ATTACK_S: 0.08, RELEASE_S: 0.6 } as const;
@@ -240,6 +240,35 @@ export function createSelfLowCut(context: AudioContext): BiquadFilterNode {
   filter.frequency.value = SELF_LOW_CUT_HZ;
   filter.Q.value = Math.SQRT1_2;
   return filter;
+}
+
+/**
+ * Master, the headroom pre-gain and the output ceiling, wired to a destination.
+ *
+ * One definition, for the reason `createSelfLowCut` is one: the meter measures
+ * the whole mix through the same three nodes the player hears it through, and
+ * a second copy of this chain in the harness would be a second thing to keep
+ * in step (#663).
+ *
+ * The pre-gain is not a level change: it scales master's output into the ±1 a
+ * shaper reads its curve over, and the curve puts it back (see CEILING.RANGE).
+ * Nothing here is audible until the mix passes the knee.
+ */
+export function createOutputChain(
+  context: AudioContext,
+  destination: AudioNode
+): { master: GainNode; ceiling: WaveShaperNode } {
+  const headroom = context.createGain();
+  headroom.gain.value = 1 / CEILING.RANGE;
+  const ceiling = context.createWaveShaper();
+  ceiling.curve = ceilingCurve();
+  ceiling.oversample = '4x';
+  headroom.connect(ceiling).connect(destination);
+
+  const master = context.createGain();
+  master.gain.value = MASTER_GAIN;
+  master.connect(headroom);
+  return { master, ceiling };
 }
 
 /** Decibels to linear gain — the settings screen speaks dB, the graph gain. */
@@ -426,21 +455,9 @@ export class AudioEngine {
     // The output ceiling stands between master and the device, so every bus,
     // every trim and every one-shot is behind it — including the ones added
     // after this was written.
-    //
-    // The pre-gain is not a level change: it scales master's output into the
-    // ±1 the shaper reads a curve over, and the curve puts it back (see
-    // CEILING.RANGE). Nothing here is audible until the mix passes the knee.
-    const headroom = context.createGain();
-    headroom.gain.value = 1 / CEILING.RANGE;
-    const ceiling = context.createWaveShaper();
-    ceiling.curve = ceilingCurve();
-    ceiling.oversample = '4x';
-    headroom.connect(ceiling).connect(context.destination);
+    const { master, ceiling } = createOutputChain(context, context.destination);
     this.ceiling = ceiling;
-
-    const master = context.createGain();
     master.gain.value = MASTER_GAIN * this.masterVolume;
-    master.connect(headroom);
 
     const make = (): GainNode => {
       const bus = context.createGain();

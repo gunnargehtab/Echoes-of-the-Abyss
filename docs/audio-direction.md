@@ -458,6 +458,27 @@ come through untouched. It applies to Silent Running as well, and has to: that l
 absolute where the bands are a scale, so trimming one and not the other would eventually
 have running silent come out louder than sitting still.
 
+**The whole mix has since been measured as a scene, and the layers were the wrong question.**
+Everything above was metered one layer at a time at its own bus, which answers "which layer
+made it hot" and cannot answer "how loud is the thing in the player's hand". Rendering the
+reported picture end to end — the bed at SIG 35, seven contacts at the tiers the log showed,
+through the buses, the master gain and the ceiling — puts the mix at **-21.9 LUFS**, four
+decibels *under* the target in the table above. At SIG 80 it is -18.8. The integrated level
+is not what is left wrong.
+
+What the same render says instead is that **78% of the mix's energy sits below 200 Hz** — 10%
+below 60 and 68% between 60 and 200 — and at SIG 80 it is 82%. That is the band a phone
+speaker is least able to reproduce: it is very inefficient there and distorts when driven,
+so level arriving in that band comes back as harshness rather than as loudness. A meter
+reports such a mix as comfortably within target, and a listener reports it as too loud,
+and both are right. It is also not an accident of any one layer — it is what this game's
+sound design *is*. The plant bed, §3's pressure-thump and §8's four drive signatures all
+live between 40 and 200 Hz, because that is what a submarine sounds like.
+
+Which makes §11's **speaker profile** the unbuilt feature this points at, rather than another
+level trim. It is written down and it has never existed, and every report of the mix being
+uncomfortable has come from a phone.
+
 One layer is left reading hot and is deliberately not acted on here: the tuned bed at full
 crystal with a corridor in earshot measures -16.1 LUFS through the master gain. That is a
 maximal input rather than a common one, it sits entirely above 200 Hz so it is none of the
