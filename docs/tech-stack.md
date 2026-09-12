@@ -699,6 +699,44 @@ band it is not in, and only at a contact it has classified, because the depth it
 arrives at Tier 3 and nowhere earlier. One of each, bought behind the escort — ordnance is
 for a fight that exists.
 
+**And since #621 it answers one**, which is the same sentence read from the other side. Point
+defence was never missing — a gun takes an inbound round inside its terminal range without
+being told to ([systems-combat.md](systems-combat.md) §5) — so what the commander lacked was
+the *deliberate* half of that pair, and it lacked it invisibly: `noisemaker` was one of six
+client messages with no `AiCommand` variant, so every stored table under
+`tools/balance/baselines/` was measured against navies that could not drop a decoy at all.
+`commandCountermeasures` spends one on a torpedo it has **classified**, since below Tier 3 a
+closing contact could be ordnance or a scout and the seconds spent deciding are the mechanic
+(§1); one decoy per weapon rather than one per hull in earshot, because the loudest emitter
+*now* wins and the second decoy pays SIG 70 again for what the first already bought; and only
+from a hull that is **under way**. That last is measured rather than reasoned, and it is the
+part that would have been wrong: `Match.deployNoisemaker` releases the decoy 60 m astern of
+the hull's *velocity*, and reads a stopped hull's zero velocity as a zero heading — so a parked
+hull drops the thing on its own axis, where the torpedo either runs through it into the hull or
+reaches the hull on the way to it. Driven at 60 Hz against a shot that is otherwise a certain
+hit, a stopped hull is struck at every deployment range there is; the same hull breaking across
+the torpedo's nose is saved anywhere from **173 m to about 2,000 m**, and fails outside that in
+two different ways — inside ~150 m the seeker cannot come round within its own 150 m turn
+radius, and past ~2,000 m the decoy's eight seconds are gone before the weapon arrives while
+the suite sits on a 20 s cooldown for the approach that mattered. The trigger is a kilometre,
+which is §5's own sizing — "launches that connect are launches from inside a kilometre" — and
+sits in the middle of that band with half of it spare at each end for the depth, terrain and PF
+the measurement held flat.
+
+**Which navies spend it is a doctrine field, not a rule**, because a noisemaker is SIG 70 at
+your real position: the loudest thing in the roster short of a ping, and unlike a ping it buys
+the enemy's ears rather than your own. `answersTorpedoesWithNoise` splits the four where their
+quiet already sits. The Consortium takes it — it is heard from four minutes out whatever it
+does, so eight seconds of noise costs it nothing it was keeping, and §11 already makes
+surviving the torpedo its plan. So does the Order, which fields the fewest hulls and the
+dearest and is not keeping a quiet to spend: its signature is *moved* rather than lowered
+([systems-echo.md](systems-echo.md) §8), so what it gives up is a flank's advantage for eight
+seconds, beside a torpedo already running at SIG 60. The two that approach silently decline,
+and both own a better answer: the Commune lays the same emitter at SIG 45 *ahead* of a fight
+from a Weaver's magazine — a lie told where the Commune is not — and the Directorate, which
+will not spend three seconds of reveal on a transmission in two minutes, goes under the layer
+it already crosses, which §9.5 lists as the other way to starve a seeker.
+
 **And it besieges, which is the one thing it does that is not "go somewhere and shoot".**
 Wave 4's four hulls (#508) are a wall-breaker apiece, and three of them do not shoot at all,
 so the army branch would never have moved them. `commandSiege` picks the nearest enemy
@@ -910,23 +948,27 @@ the seat ignores no longer reads as a commander that chose not to act.
 **That check only ever held one of the two directions**, and the arithmetic above went stale
 while nobody noticed. A client message with *no* variant is invisible to a `never` on a switch,
 because there is nothing in the union for the switch to fail on; five more verbs accumulated
-behind `depth` in exactly that blind spot. The counts today are **21 variants against 27
-in-match client messages** — `hold`, `rally`, `followFloor`, `ability`, `noisemaker` and `sow`
-are the difference — and the reason this paragraph can state them is that both directions are
-now checked rather than asserted (#621). `wire.ts` declares `LOBBY_MSG` beside `CLIENT_MSG`, so
+behind `depth` in exactly that blind spot. The counts today are **22 variants against 27
+in-match client messages** — `hold`, `rally`, `followFloor`, `ability` and `sow` are the
+difference — and the reason this paragraph can state them is that both directions are now
+checked rather than asserted (#621). `wire.ts` declares `LOBBY_MSG` beside `CLIENT_MSG`, so
 the five phase-gated names are a type rather than a comment and the in-match set can be
 subtracted; `ai/types.ts` carries an `Exclude<>` assertion against it, and a 28th in-match
-message fails `npm run type-check` until someone writes the verb or names it in `AiUnbuilt`
+message fails `npm run type-check` until someone writes the verb or names it as an exception
 with the issue that fills it. `Exclude<>` and not the `Exact<>` that polices the wire, because
 `Exact<>` reports only `Type 'true' is not assignable to type 'never'` while `Exclude<>` quotes
 the missing verb — and a build error that does not say which message is missing sends the next
 author to diff two lists by eye, which is how six of them got there.
 
-Two of the six look permanent rather than deferred. An AI seat cannot use `ability` at all —
-`MatchRoom` refuses `addAi` in any room carrying a mission, and the verb does nothing outside
-one — and `docs/systems-flora.md` gives the commander two judgements about flora, neither of
-which is sowing. They are listed with the other four until that is decided, because a narrower
-claim that is true beats a wider one that is not.
+**The five are two different things, and they are two types.** `AiUnbuilt` holds the three
+nobody has written a rule for — `hold`, `rally`, `followFloor` — and the price of an entry
+there is the issue that fills it, because a list you may add to without a number is this same
+defect with a rubber stamp on it. `AiExempt` holds the two an AI seat provably cannot use:
+`MatchRoom` refuses `addAi` in any room carrying a mission and `ability` does nothing outside
+one, and `docs/systems-flora.md` gives the commander two judgements about flora, neither of
+which is sowing. Those carry no issue, and the absence is the claim. A gap and an exemption
+look identical from outside — both are verbs the commander cannot say — which is exactly how
+six of them sat in one undifferentiated silence; only one of the two lists is meant to shrink.
 
 The rule itself is in `commandArmy`, and its shape is the argument. The army crosses **on the
 attack run** and surfaces on contact, so the layer prices a commitment
