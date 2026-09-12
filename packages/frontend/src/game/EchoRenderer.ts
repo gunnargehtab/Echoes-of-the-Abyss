@@ -115,6 +115,7 @@ import {
   type Stockpile,
 } from '@echoes/shared';
 import {
+  ACTIVE_PALETTE,
   BIOME_COLOR,
   FACTION_PALETTE,
   FAUNA_COLOR,
@@ -735,6 +736,43 @@ const BAR_BUTTON_HEIGHT = 40;
 /** Top resource strip. */
 const TOP_BAR_HEIGHT = 30;
 
+/**
+ * The plate VI card, as numbers — docs/style-neon-noir.md "UI chrome".
+ *
+ * The section is an anatomy and the match HUD had never implemented it: panels
+ * were a hairline box on near-black, which is most of what "the HUD looks
+ * underwhelming" turned out to mean (docs/concept-art/hud-mockups/). These are
+ * that anatomy's six rules with the numbers the section gives.
+ */
+const PLATE = {
+  /** Rule 1 — glass, not opaque. The section's band is 82-90%. */
+  FILL_ALPHA: 0.86,
+  /** An inactive panel keeps its glass and loses its halo (rule 2). */
+  QUIET_FILL_ALPHA: 0.8,
+  /** Rule 2 — a 1px bevel in the chrome voice, dimmed to 40% when inactive. */
+  BEVEL_ALPHA: 0.62,
+  QUIET_BEVEL_ALPHA: 0.35,
+  /**
+   * The halo of the glow recipe: the same colour, low alpha, greater width.
+   * Exactly one per plate — the recipe's budget is two halo layers per element
+   * and forbids them stacking on neighbours, and a console of touching blocks
+   * is precisely where bloom-everything would happen.
+   */
+  HALO_WIDTH: 3,
+  HALO_ALPHA: 0.18,
+  /** Rule 4 — corner registration ticks, the survey marks, instead of a radius. */
+  TICK: 7,
+  /** Rule 3 — the thin cyan rule under a header band. */
+  HEADER_RULE_ALPHA: 0.45,
+} as const;
+
+/**
+ * Rule 5 — one diagonal texture across the whole HUD layer, never per-panel,
+ * at no more than 4%. Spacing and angle are chosen to read as a scanline at
+ * 1080p rather than as moiré.
+ */
+const GRAIN = { SPACING_PX: 5, ALPHA: 0.035 } as const;
+
 /** Past this much pointer travel, a left drag is a marquee rather than a click. */
 const DRAG_SLOP_PX = 6;
 /** Two clicks inside this window on the same spot select all of that class. */
@@ -877,6 +915,10 @@ export class EchoRenderer {
   private readonly ordnanceSymbols = new SymbolPool();
   private readonly hud = new Container();
   private readonly hudGraphics = new Graphics();
+  /** Rule 5's single diagonal texture over the whole HUD — see `buildGrain`. */
+  private readonly grainGraphics = new Graphics();
+  /** What the grain was last built for: viewport and palette, its two inputs. */
+  private grainKey = '';
   private readonly barGraphics = new Graphics();
   /** Pooled Text objects for bar labels — button count varies per context. */
   private readonly barTexts: Text[] = [];
@@ -1340,7 +1382,9 @@ export class EchoRenderer {
       this.minimapTerrainG,
       this.minimapOverlayG,
       this.infoGraphics,
-      this.barGraphics
+      this.barGraphics,
+      // Last, so the one texture lies over every panel rather than under them.
+      this.grainGraphics
     );
     this.app.stage.addChild(this.overlay, this.hud);
 
@@ -2650,8 +2694,7 @@ export class EchoRenderer {
 
     const screenWidth = this.hudWidth();
     const barY = this.hudHeight() - BAR_HEIGHT;
-    g.rect(0, barY, screenWidth, BAR_HEIGHT).fill({ color: UI.glass, alpha: 0.92 });
-    g.rect(0, barY, screenWidth, 1).fill({ color: UI.glassStroke });
+    this.plate(g, -1, barY, screenWidth + 2, BAR_HEIGHT + 1);
 
     // Everything the model and its layout read, as one string. Same string,
     // same bar: the buttons are painted from the cached layout and nothing
@@ -5298,16 +5341,100 @@ export class EchoRenderer {
    * HUD. The SIG meter is a permanent element by design — "players must feel
    * their own loudness" (docs/art-direction.md).
    */
+  /**
+   * Draw one plate VI card: glass, one bevel with one halo, corner registration
+   * ticks, and the thin cyan rule under a header band where a panel has one.
+   *
+   * Every HUD panel goes through here so the anatomy exists in exactly one
+   * place. The halo is drawn before the bevel so the 1px core sits on top of
+   * its own bloom rather than under it; `quiet` is the section's inactive
+   * state, which keeps the glass and drops the halo rather than greying out.
+   *
+   * Ticks are eight short rects rather than a rounded rect, because the survey
+   * marks are the point: docs/style-neon-noir.md caps a radius at 4px and asks
+   * for registration marks instead, and a rounded panel reads as a web card
+   * rather than as an instrument.
+   */
+  private plate(
+    g: Graphics,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    opts: { headerH?: number; quiet?: boolean } = {}
+  ): void {
+    const quiet = opts.quiet === true;
+    g.rect(x, y, w, h).fill({
+      color: UI.glass,
+      alpha: quiet ? PLATE.QUIET_FILL_ALPHA : PLATE.FILL_ALPHA,
+    });
+    if (!quiet) {
+      g.rect(x, y, w, h).stroke({
+        width: PLATE.HALO_WIDTH,
+        color: UI.glassStroke,
+        alpha: PLATE.HALO_ALPHA,
+      });
+    }
+    g.rect(x, y, w, h).stroke({
+      width: 1,
+      color: UI.glassStroke,
+      alpha: quiet ? PLATE.QUIET_BEVEL_ALPHA : PLATE.BEVEL_ALPHA,
+    });
+    if (opts.headerH !== undefined) {
+      g.rect(x, y + opts.headerH, w, 1).fill({
+        color: UI.accent,
+        alpha: PLATE.HEADER_RULE_ALPHA,
+      });
+    }
+    const t = PLATE.TICK;
+    for (const [cx, cy, sx, sy] of [
+      [x, y, 1, 1],
+      [x + w, y, -1, 1],
+      [x, y + h, 1, -1],
+      [x + w, y + h, -1, -1],
+    ] as const) {
+      g.rect(sx > 0 ? cx : cx - t, sy > 0 ? cy : cy - 1, t, 1).fill({ color: UI.glassStroke });
+      g.rect(sx > 0 ? cx : cx - 1, sy > 0 ? cy : cy - t, 1, t).fill({ color: UI.glassStroke });
+    }
+  }
+
+  /**
+   * Rule 5's one texture, rebuilt only when the viewport changes.
+   *
+   * It is its own layer and its own Graphics because it is drawn once per
+   * resize and never per frame: at 5px spacing a 1080p frame is about six
+   * hundred short strokes, which is nothing once, and would be real money at
+   * 60 Hz. It sits above the panels and below nothing — the whole HUD layer
+   * wears one texture, which is what stops it becoming per-panel noise.
+   */
+  private buildGrain(): void {
+    const w = Math.ceil(this.hudWidth());
+    const h = Math.ceil(this.hudHeight());
+    const key = `${w}x${h}:${ACTIVE_PALETTE.name}`;
+    if (key === this.grainKey) return;
+    this.grainKey = key;
+    const g = this.grainGraphics;
+    g.clear();
+    // 135°, so the stroke runs the same way as the plates' own bevel light.
+    for (let i = -h; i < w; i += GRAIN.SPACING_PX) {
+      g.moveTo(i, 0).lineTo(i + h, h);
+    }
+    g.stroke({ width: 1, color: UI.text, alpha: GRAIN.ALPHA });
+  }
+
   private drawHud(): void {
     const g = this.hudGraphics;
     g.clear();
+    this.buildGrain();
 
     const screenWidth = this.hudWidth();
 
     // Top strip: stockpile, then the SIG meter — the player's own loudness is
     // a first-class resource and sits beside the others (docs/art-direction.md).
-    g.rect(0, 0, screenWidth, TOP_BAR_HEIGHT).fill({ color: UI.glass, alpha: 0.92 });
-    g.rect(0, TOP_BAR_HEIGHT - 1, screenWidth, 1).fill({ color: UI.glassStroke });
+    // Overhung left and right by a pixel so the bevel's vertical edges fall
+    // outside the viewport: a full-width band has no left or right side to
+    // show, and drawing them would put two bright hairlines down the screen.
+    this.plate(g, -1, -TOP_BAR_HEIGHT, screenWidth + 2, TOP_BAR_HEIGHT * 2);
 
     this.resourceLabel.text = `NODULES ${this.nodules.toFixed(0)}`;
     this.resourceLabel.style.fill = RESOURCE_COLOR[ResourceKind.Nodule];
@@ -5789,7 +5916,16 @@ export class EchoRenderer {
       alpha: 0.85,
     });
 
-    g.rect(RIBBON_X, top, RIBBON_WIDTH, height).stroke({ width: 1, color: UI.glassStroke });
+    g.rect(RIBBON_X, top, RIBBON_WIDTH, height).stroke({
+      width: PLATE.HALO_WIDTH,
+      color: UI.glassStroke,
+      alpha: PLATE.HALO_ALPHA,
+    });
+    g.rect(RIBBON_X, top, RIBBON_WIDTH, height).stroke({
+      width: 1,
+      color: UI.glassStroke,
+      alpha: PLATE.BEVEL_ALPHA,
+    });
 
     // Right of the strip, like the band labels — the ribbon sits 12 px from the
     // window edge, so there is no room on its left and a label placed there is
@@ -6162,8 +6298,7 @@ export class EchoRenderer {
     const h = 96;
     const x = this.hudWidth() - w - 10;
     const y = this.hudHeight() - BAR_HEIGHT - h - 10;
-    g.roundRect(x, y, w, h, 6).fill({ color: UI.glass, alpha: 0.92 });
-    g.roundRect(x, y, w, h, 6).stroke({ width: 1, color: UI.glassStroke });
+    this.plate(g, x, y, w, h);
 
     const name =
       structure !== undefined ? structureStatsFor(structure.kind).name : statsFor(unit!.kind).name;
