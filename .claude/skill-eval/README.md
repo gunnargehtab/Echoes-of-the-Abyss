@@ -77,6 +77,13 @@ and give it `627/PROMPT.md` verbatim and nothing else. The prompt is neutral: it
 mentions no skill and no experiment. Under Claude Code Remote that is
 `create_session` with `source_revision` set to the arm branch.
 
+**The prompt states the task in full rather than pointing at the issue**, and forbids
+reading other branches and pull requests. It has to. #627 is closed on GitHub with the
+merged #687 linked from it as the pull request that closed it, so an arm told to "read
+the issue" is one tool call from the finished answer and would be graded on its ability
+to copy. Any experiment whose task has ever been completed on this repository has the
+same problem: inline the task, and say not to go looking.
+
 The arms must differ in one thing only. Same prompt, same model, same base commit,
 same permission mode.
 
