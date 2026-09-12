@@ -1203,4 +1203,5 @@ renderer work rather than mixer work, so each names what it moves:
 - **[systems-combat.md](systems-combat.md)** — the fight this document's 5 Hz is the clock of; §9.5 counts the snapshots each band contains
 - **[systems-depth.md](systems-depth.md)** — depth bands and pressure, as surfaced in §8
 - **[campaign.md](campaign.md)** — the twenty-nine missions §14's board is a rendering of
+- **[concept-art/hud-mockups/](concept-art/hud-mockups/README.md)** — three directions for the in-match interface, each measured against the rules above: what it keeps, what it breaks, and what the break buys
 - **[tech-stack.md](tech-stack.md)** — why the client is allowed so little
