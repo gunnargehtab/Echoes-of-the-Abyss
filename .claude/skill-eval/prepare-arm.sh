@@ -14,6 +14,11 @@ EXP="${1:?experiment id, e.g. 627}"
 ARM="${2:?arm letter: a, b or c}"
 BASE="${3:-origin/main}"
 BRANCH="skill-eval/${EXP}-arm-${ARM}"
+# An arm is cut from origin/main, which does not carry this harness — so the
+# checkout below deletes this script out from under the shell that is running
+# it. Bash has already read the file, so the run finishes; the next one would
+# not find it. Return to where we started so arms can be cut back to back.
+ORIGINAL="$(git rev-parse --abbrev-ref HEAD)"
 
 git fetch origin "${BASE#origin/}" 2>/dev/null || true
 git checkout -B "$BRANCH" "$BASE"
@@ -53,7 +58,15 @@ PY
 fi
 
 git push -u origin "$BRANCH" --force-with-lease
+
+# Read the arm's shape while its tree is still checked out.
+SKILL="$([ -d .claude/skills/colyseus ] && echo present || echo absent)"
+GUARD="$(grep -qF 'The vendored `colyseus` skill documents' CLAUDE.md && echo present || echo absent)"
+
+git checkout -q "$ORIGINAL"
+
 echo
 echo "arm ${ARM} ready: ${BRANCH}"
-echo "  colyseus skill: $([ -d .claude/skills/colyseus ] && echo present || echo absent)"
-echo "  CLAUDE.md guard: $(grep -qF 'The vendored `colyseus` skill documents' CLAUDE.md && echo present || echo absent)"
+echo "  colyseus skill:  ${SKILL}"
+echo "  CLAUDE.md guard: ${GUARD}"
+echo "  back on:         ${ORIGINAL}"
