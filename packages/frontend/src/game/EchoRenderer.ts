@@ -730,9 +730,41 @@ interface BarButton {
 
 /** Command panel geometry, CSS px. docs/art-direction.md "HUD Layout". */
 const TAB_HEIGHT = 24;
-const BUTTON_ROW_HEIGHT = 56;
-const BAR_HEIGHT = TAB_HEIGHT + BUTTON_ROW_HEIGHT;
+
+/**
+ * The console, from docs/concept-art/hud-mockups/ — the direction chosen for
+ * the in-match interface.
+ *
+ * It replaces an 80 px bar of one button row under a tab strip with a 208 px
+ * console of fixed blocks, which is a real cost in ocean and is paid for by
+ * what the blocks hold: nothing sits behind a tab, so production stops being
+ * something a commander has to go and look for.
+ *
+ * 208 is a *pixel* height rather than a fraction, like the bar it replaces, so
+ * a short window gives up proportionally more of itself — 19% of a 1080p frame
+ * and 23% of a 900px one. That is inherent to a console whose rows have a
+ * minimum size (§11's 44 px touch floor is what sets it), and `uiScale` is the
+ * knob for wanting it bigger rather than the window height.
+ */
+const CONSOLE_HEIGHT = 208;
+/** Breathing room between the console's own edge and its blocks. */
+const CONSOLE_PAD = 8;
+/** A block's cyan header band — the plate VI card's rule 3. */
+const BLOCK_HEAD_H = 22;
+/** Between two blocks. Tight: the blocks are the instrument, the gaps are not. */
+const BLOCK_GAP = 8;
 const BAR_BUTTON_HEIGHT = 40;
+
+/**
+ * What each block needs to say, in px.
+ *
+ * Four of the five are fixed because their content is: a scope is square, a
+ * command card is four columns of a known width, a selection card holds six
+ * stats. Production takes whatever is left, because a queue is the one block
+ * that reads better wider, and it is the first to go when there is not enough
+ * width to give it — see `consoleBlocks`.
+ */
+const BLOCK_W = { scope: 190, selection: 330, commands: 400, productionMin: 260 } as const;
 /** Top resource strip. */
 const TOP_BAR_HEIGHT = 30;
 
@@ -922,6 +954,10 @@ export class EchoRenderer {
   private readonly barGraphics = new Graphics();
   /** Pooled Text objects for bar labels — button count varies per context. */
   private readonly barTexts: Text[] = [];
+  /** One pooled header label per console block — see `blockTitle`. */
+  private readonly blockTitles: Text[] = [];
+  /** Two pooled labels per production row: what it is making, and how long. */
+  private readonly productionTexts: Text[] = [];
   /** Last frame's button layout, hit-tested by pressBarButton. */
   private barButtons: BarButton[] = [];
   private activeTab: CommandTab = 'build';
@@ -2269,7 +2305,7 @@ export class EchoRenderer {
     // a click has to be expressed in them before it can be compared.
     const x = (clientX - rect.left) / this.uiScale;
     const y = (clientY - rect.top) / this.uiScale;
-    if (y < this.hudHeight() - BAR_HEIGHT) return false;
+    if (y < this.hudHeight() - CONSOLE_HEIGHT) return false;
     for (const button of this.barButtons) {
       if (x >= button.x && x <= button.x + button.w && y >= button.y && y <= button.y + button.h) {
         if (button.enabled) button.action();
@@ -2284,9 +2320,58 @@ export class EchoRenderer {
   // --- Sonar scope (minimap) ------------------------------------------------
 
   /** The scope's screen rect. Sized down on narrow screens. */
+  /**
+   * The console's blocks for the current width.
+   *
+   * Blocks are dropped rather than squeezed when the width runs out, because a
+   * block narrower than its content is a block that lies about holding it. They
+   * go in reverse order of how often a commander looks at them: production
+   * first, because its facts are also on the selection card when a yard is
+   * selected, then selection, whose card the world view can carry alone. The
+   * scope and the command card never go — one is how a touchscreen reaches any
+   * order at all, and the other is the only view of the whole map.
+   */
+  private consoleBlocks(): {
+    y: number;
+    h: number;
+    scope: { x: number; w: number };
+    commands: { x: number; w: number };
+    selection?: { x: number; w: number };
+    production?: { x: number; w: number };
+  } {
+    const width = this.hudWidth();
+    const y = this.hudHeight() - CONSOLE_HEIGHT + TAB_HEIGHT + 4;
+    const h = CONSOLE_HEIGHT - TAB_HEIGHT - 4 - CONSOLE_PAD;
+    const left = CONSOLE_PAD + 2;
+    const right = width - CONSOLE_PAD - 2;
+
+    let x = left;
+    const scope = { x, w: BLOCK_W.scope };
+    x += scope.w + BLOCK_GAP;
+
+    const spare = right - x - BLOCK_GAP - BLOCK_W.commands;
+    const wantsSelection = spare >= BLOCK_W.selection;
+    const selection = wantsSelection ? { x, w: BLOCK_W.selection } : undefined;
+    if (selection !== undefined) x += selection.w + BLOCK_GAP;
+
+    const commands = { x, w: BLOCK_W.commands };
+    x += commands.w + BLOCK_GAP;
+
+    const rest = right - x;
+    const production = rest >= BLOCK_W.productionMin ? { x, w: rest } : undefined;
+    return { y, h, scope, commands, selection, production };
+  }
+
   private minimapRect(): { x: number; y: number; size: number } {
-    const size = this.hudWidth() < 700 ? 110 : 170;
-    return { x: 10, y: this.hudHeight() - BAR_HEIGHT - size - 10, size };
+    const blocks = this.consoleBlocks();
+    // Square, and inset inside its block under the header band.
+    const inner = 6;
+    const size = Math.min(blocks.scope.w - inner * 2, blocks.h - BLOCK_HEAD_H - inner * 2);
+    return {
+      x: blocks.scope.x + (blocks.scope.w - size) / 2,
+      y: blocks.y + BLOCK_HEAD_H + (blocks.h - BLOCK_HEAD_H - size) / 2,
+      size,
+    };
   }
 
   /**
@@ -2674,6 +2759,163 @@ export class EchoRenderer {
     return codes.map(keyLabel).join('/');
   }
 
+  /**
+   * A pooled header label for a console block, in the display voice.
+   *
+   * Pooled like the button labels for the same reason: the block set changes
+   * with the width (see `consoleBlocks`), so building a Text per frame would
+   * churn the scene graph every resize.
+   */
+  private blockTitle(index: number): Text {
+    let text = this.blockTitles[index];
+    if (text === undefined) {
+      text = new Text({
+        text: '',
+        style: {
+          fontFamily: FONT_DISPLAY,
+          fontWeight: '600',
+          fontSize: 13,
+          letterSpacing: 2,
+          fill: UI.accent,
+        },
+      });
+      this.blockTitles.push(text);
+      this.hud.addChild(text);
+    }
+    return text;
+  }
+
+  /**
+   * The console's blocks: a plate each, with the cyan header band the plate VI
+   * card's rule 3 asks for.
+   *
+   * Drawn quiet — the section's inactive state, which keeps the glass and drops
+   * the halo. The console's own plate already carries one halo along its top
+   * edge, and the glow recipe forbids halos stacking on neighbours: five more
+   * would be the bloom-everything failure the recipe names, on the one panel
+   * where five of them touch.
+   */
+  private paintConsoleBlocks(g: Graphics): void {
+    const blocks = this.consoleBlocks();
+    const slots: Array<[{ x: number; w: number } | undefined, string]> = [
+      [blocks.scope, 'SCOPE'],
+      [blocks.selection, 'SELECTION'],
+      [blocks.commands, 'COMMANDS'],
+      [blocks.production, 'PRODUCTION'],
+    ];
+    let shown = 0;
+    for (const [slot, title] of slots) {
+      if (slot === undefined) continue;
+      this.plate(g, slot.x, blocks.y, slot.w, blocks.h, {
+        headerH: BLOCK_HEAD_H,
+        quiet: true,
+      });
+      const label = this.blockTitle(shown++);
+      label.visible = true;
+      label.text = title;
+      label.position.set(slot.x + 8, blocks.y + 4);
+      if (title === 'PRODUCTION') this.paintProduction(g, slot, blocks.y, blocks.h);
+    }
+    if (blocks.production === undefined) {
+      for (const text of this.productionTexts) text.visible = false;
+    }
+    for (let i = shown; i < this.blockTitles.length; i++) this.blockTitles[i]!.visible = false;
+  }
+
+  /**
+   * The production block: one row per yard, permanently on screen.
+   *
+   * This is the console's whole argument in one panel. Production used to live
+   * behind the UNITS tab, so a commander had to go and look to find out whether
+   * anything was being built at all; here it is a fact the screen carries.
+   *
+   * One row per *yard*, because a yard is one line: `sim/systems/production.ts`
+   * works a single queue and a single `remainingS` per structure, and
+   * `OwnStructure` carries one `queue` and one `queueProgress`. A yard that
+   * could be running and is not says so rather than being left out, because
+   * an idle line is the thing worth noticing.
+   *
+   * The estimate is honest about the one thing that makes it slip: a starved
+   * line runs at the Thermal Draw's satisfaction rate (docs/economy.md §2), so
+   * the seconds remaining are divided by it. At a deficit the number grows,
+   * which is the correct reading and the reason the row carries it.
+   */
+  private paintProduction(g: Graphics, slot: { x: number; w: number }, y: number, h: number): void {
+    const yards = this.structures
+      .filter((st) => (PRODUCIBLE[st.kind]?.length ?? 0) > 0)
+      .sort((a, b) => a.id - b.id);
+
+    const rowH = 44;
+    const pad = 8;
+    let rowY = y + BLOCK_HEAD_H + 4;
+    let shown = 0;
+    for (const yard of yards) {
+      if (rowY + rowH > y + h - 4) break;
+      const name = structureStatsFor(yard.kind).name.toUpperCase();
+      const running = yard.queue.length > 0;
+      const kind = yard.queue[0];
+      const label = this.productionText(shown * 2);
+      label.visible = true;
+      label.text = running && kind !== undefined ? `${name}  ${UNIT_SHORT[kind]}` : `${name}  idle`;
+      label.style.fill = running ? UI.text : UI.textDim;
+      label.position.set(slot.x + pad, rowY + 4);
+
+      const eta = this.productionText(shown * 2 + 1);
+      eta.visible = true;
+      if (running && kind !== undefined) {
+        const total = statsFor(kind).buildTimeS;
+        const rate = Math.max(0.05, this.drawReport.satisfaction);
+        const left = Math.ceil(((1 - yard.queueProgress) * total) / rate);
+        const behind = yard.queue.length - 1;
+        eta.text = behind > 0 ? `${left}s  +${behind}` : `${left}s`;
+        eta.style.fill = rate < 1 ? UI.threat : UI.accent;
+      } else {
+        eta.text = '\u2014';
+        eta.style.fill = UI.textDim;
+      }
+      eta.position.set(slot.x + slot.w - pad - eta.width, rowY + 4);
+
+      // The line itself. An idle line keeps its track so the row still reads
+      // as a line rather than as a gap.
+      const trackY = rowY + 24;
+      const trackW = slot.w - pad * 2;
+      g.rect(slot.x + pad, trackY, trackW, 5).fill({ color: 0x000000, alpha: 0.5 });
+      if (running) {
+        g.rect(slot.x + pad, trackY, trackW * Math.max(0, Math.min(1, yard.queueProgress)), 5).fill(
+          {
+            color: UI.accent,
+          }
+        );
+      }
+      g.rect(slot.x + pad, trackY, trackW, 5).stroke({
+        width: 1,
+        color: UI.glassStroke,
+        alpha: 0.35,
+      });
+
+      rowY += rowH;
+      shown++;
+    }
+
+    for (let i = shown * 2; i < this.productionTexts.length; i++) {
+      this.productionTexts[i]!.visible = false;
+    }
+  }
+
+  /** Pooled, for the same reason the button labels are — see `blockTitle`. */
+  private productionText(index: number): Text {
+    let text = this.productionTexts[index];
+    if (text === undefined) {
+      text = new Text({
+        text: '',
+        style: { fontFamily: FONT_DATA, fontSize: 12, letterSpacing: 1, fill: UI.text },
+      });
+      this.productionTexts.push(text);
+      this.hud.addChild(text);
+    }
+    return text;
+  }
+
   private barText(index: number): Text {
     let text = this.barTexts[index];
     if (text === undefined) {
@@ -2693,8 +2935,9 @@ export class EchoRenderer {
     g.clear();
 
     const screenWidth = this.hudWidth();
-    const barY = this.hudHeight() - BAR_HEIGHT;
-    this.plate(g, -1, barY, screenWidth + 2, BAR_HEIGHT + 1);
+    const barY = this.hudHeight() - CONSOLE_HEIGHT;
+    this.plate(this.hudGraphics, -1, barY, screenWidth + 2, CONSOLE_HEIGHT + 1);
+    this.paintConsoleBlocks(this.hudGraphics);
 
     // Everything the model and its layout read, as one string. Same string,
     // same bar: the buttons are painted from the cached layout and nothing
@@ -2766,23 +3009,41 @@ export class EchoRenderer {
     });
 
     const model = this.buildBarModel();
-    const gap = 8;
-    const buttonY = barY + TAB_HEIGHT + (BUTTON_ROW_HEIGHT - BAR_BUTTON_HEIGHT) / 2;
+    const blocks = this.consoleBlocks();
+    const card = blocks.commands;
 
-    const widthFor = (label: string) => Math.max(44, label.length * 7.5 + 18);
-    // A full row must fit a phone: when it would overflow, drop the cost
-    // suffix from every label ("CRV 120" -> "CRV") and keep the buttons.
-    const total = model.reduce((sum, entry) => sum + widthFor(entry.label) + gap, 10);
-    if (total > screenWidth) {
-      for (const entry of model) entry.label = entry.label.split(' ')[0]!;
-    }
+    // The command card: a grid rather than a row, which is what buys the
+    // touch floor. The old row gave every button 40 px of height and as much
+    // width as its label wanted, so a long roster ran off a narrow screen and
+    // the fix was to truncate the labels. A grid spends the console's height
+    // instead — four columns of equal cells, three rows deep — so a cell is
+    // 44 px or better on any width the console itself fits on, and a label
+    // never has to lose its price to make room.
+    const COLS = 4;
+    const ROWS = 3;
+    const gap = 4;
+    const pad = 4;
+    const gridX = card.x + pad;
+    const gridY = blocks.y + BLOCK_HEAD_H + pad;
+    const gridW = card.w - pad * 2;
+    const gridH = blocks.h - BLOCK_HEAD_H - pad * 2;
+    const cellW = (gridW - gap * (COLS - 1)) / COLS;
+    const cellH = Math.max(BAR_BUTTON_HEIGHT, (gridH - gap * (ROWS - 1)) / ROWS);
 
-    let x = 10;
-    const buttons = model.map((entry) => {
-      const w = widthFor(entry.label);
-      const button: BarButton = { ...entry, x, y: buttonY, w, h: BAR_BUTTON_HEIGHT };
-      x += w + gap;
-      return button;
+    // More than twelve offers is a roster the card cannot hold. Rather than
+    // shrink the cells under the floor, the overflow is dropped here and the
+    // keyboard keeps reaching it — every entry on this card also has a
+    // binding (docs/ui-ux.md §9), which is what makes that survivable.
+    const buttons = model.slice(0, COLS * ROWS).map((entry, i) => {
+      const col = i % COLS;
+      const row = Math.floor(i / COLS);
+      return {
+        ...entry,
+        x: gridX + col * (cellW + gap),
+        y: gridY + row * (cellH + gap),
+        w: cellW,
+        h: cellH,
+      } satisfies BarButton;
     });
     return [...buttons, ...tabButtons];
   }
@@ -5594,7 +5855,7 @@ export class EchoRenderer {
       if (cut < 0) break;
       this.selectionLabel.text = this.selectionLabel.text.slice(0, cut);
     }
-    this.selectionLabel.position.set(hintX, this.hudHeight() - BAR_HEIGHT - 20);
+    this.selectionLabel.position.set(hintX, this.hudHeight() - CONSOLE_HEIGHT - 20);
 
     if (this.missionOver !== null) {
       // Checked first, and never falling through to the match banner below:
@@ -5843,9 +6104,8 @@ export class EchoRenderer {
       return;
     }
 
-    const scope = this.minimapRect();
     const top = TOP_BAR_HEIGHT + RIBBON_TOP_PAD;
-    const bottom = scope.y - RIBBON_BOTTOM_PAD;
+    const bottom = this.hudHeight() - CONSOLE_HEIGHT - RIBBON_BOTTOM_PAD;
     const height = bottom - top;
     if (height < 60) {
       // Too short to read; better absent than misleading.
@@ -6015,7 +6275,7 @@ export class EchoRenderer {
       : this.isCrushing(lead)
         ? UI.threat
         : UI.accent;
-    this.ribbonReadout.position.set(RIBBON_X, bottom + 4);
+    this.ribbonReadout.position.set(RIBBON_X + RIBBON_WIDTH + 6, bottom - 14);
   }
 
   /**
@@ -6294,11 +6554,21 @@ export class EchoRenderer {
       return;
     }
 
-    const w = 250;
-    const h = 96;
-    const x = this.hudWidth() - w - 10;
-    const y = this.hudHeight() - BAR_HEIGHT - h - 10;
-    this.plate(g, x, y, w, h);
+    const blocks = this.consoleBlocks();
+    const slot = blocks.selection;
+    // Dropped at narrow widths (see `consoleBlocks`), and the card goes with
+    // it rather than floating somewhere else: a card with nowhere to live is
+    // the collision this console exists to fix, arriving by another route.
+    if (slot === undefined) {
+      this.infoName.visible = false;
+      this.infoLine1.visible = false;
+      this.infoLine2.visible = false;
+      this.infoBadge.visible = false;
+      return;
+    }
+    const x = slot.x + 10;
+    const w = slot.w - 20;
+    const y = blocks.y + BLOCK_HEAD_H + 8;
 
     const name =
       structure !== undefined ? structureStatsFor(structure.kind).name : statsFor(unit!.kind).name;

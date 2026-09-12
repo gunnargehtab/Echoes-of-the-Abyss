@@ -20,27 +20,50 @@
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
-│ ┌──────────────────┐                                    ┌────────────┐ │
-│ │ SIG  42 / 100    │                                    │  CONTACT   │ │
-│ │ ███████░░░░░░░░  │                                    │    LOG     │ │
-│ │ 3 units · 2 loud │            world view              │ T+04:12 …  │ │
-│ └──────────────────┘                                    │ T+04:09 …  │ │
-│ ┌──┐                                                    └────────────┘ │
-│ │D │  depth ribbon                                                     │
-│ │E │  (vertical, shows                                                 │
-│ │P │   band + selection                                                │
-│ │T │   + PR warning)                                                   │
-│ │H │                                                                   │
-│ └──┘                                                                   │
-│                                                                        │
-│ ┌───────────────┐  ┌─────────────────────────┐  ┌────────────────────┐ │
-│ │ SONAR SCOPE   │  │  selection / orders      │  │ PING  [P]         │ │
-│ │  (minimap)    │  │  silent-running state    │  │ cooldown 00:12    │ │
-│ └───────────────┘  └─────────────────────────┘  └────────────────────┘ │
+│ NODULES · CRYSTAL · BERTHS · DRAW · SIG ▓▓▓░ · band      map · T+ · n  │
+│ ┌──┐                                              ┌──────────────────┐ │
+│ │D │                                              │   CONTACT LOG    │ │
+│ │E │                                              │ T+04:12 …        │ │
+│ │P │              world view                      └──────────────────┘ │
+│ │T │                                              ┌──────────────────┐ │
+│ │H │                                              │   OBJECTIVES     │ │
+│ └──┘                                              └──────────────────┘ │
+│                      hint line — why a press did nothing               │
+│ ┌BUILD┬UNITS┬SQUAD┐                                            ┌MENU┐  │
+│ ┌────────┬─────────────┬──────────────────┬──────────────────────────┐ │
+│ │ SCOPE  │ SELECTION   │ COMMANDS         │ PRODUCTION               │ │
+│ │        │ name   PR2  │ ┌──┬──┬──┬──┐    │ BASTION  HARVESTER   14s │ │
+│ │ (scope)│ hull ▓▓▓▓   │ ├──┼──┼──┼──┤    │ ▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░░░ │ │
+│ │        │ six stats   │ └──┴──┴──┴──┘    │ FOUNDRY  idle          — │ │
+│ └────────┴─────────────┴──────────────────┴──────────────────────────┘ │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-The world view is the whole screen; every panel floats on it as glass ([art-direction.md](art-direction.md) "UI Direction"). Chrome never occupies more than 22% of screen area at 1080p, and the centre 60% is always clear — contacts appear in the world, not in a list.
+The world view is the whole screen above the console; every panel floats on it as
+glass ([art-direction.md](art-direction.md) "UI Direction"), and the centre of the water
+stays clear — contacts appear in the world, not in a list.
+
+**The console is a deliberate break with this section's old 22% chrome budget, and the
+argument is written down rather than assumed.** The budget was set against a HUD of
+floating panels and an 80 px command bar, where everything not on screen was one tab away.
+The console spends more — about 19% of a 1080p frame for itself, and close to 30% once the
+strip, the log, the objectives panel and the ribbon are counted — and buys permanence with
+it: nothing sits behind a tab, so production is a fact the screen carries rather than
+something a commander goes looking for, and a command cell never moves, which is the one
+thing muscle memory can hold. The three directions this was chosen from, and what each of
+them broke, are in [concept-art/hud-mockups/](concept-art/hud-mockups/README.md).
+
+Two rules the break does **not** touch, and may not. The centre of the world view stays
+clear: the console is resident chrome at the foot of the screen, never over the water.
+And every block shows own force only — the production block reads the player's own yards,
+and a hostile count anywhere in this console would be §10.5's maphack in a numeral.
+
+**A console row is a touch target.** §11's 44 px floor is what sets the console's height
+rather than taste: a command cell is four columns wide and three rows deep so that a cell
+clears the floor at any width the console itself fits on, and a production row is 44 px for
+the same reason. That is why the command card is a grid rather than the row it replaced —
+a row gave each button as much width as its label wanted and 40 px of height, so a long
+roster ran off a narrow screen and the fix was to truncate the labels.
 
 ---
 
@@ -686,6 +709,9 @@ What the current client implements against this spec, so nobody re-implements wh
 | The match clock | Implemented (#208) — the log's T+ axis live in the top strip, from the server tick both share |
 | Own-force log rows | Implemented (§10, #206, #209) — `you were pinged`, `under fire`, `idle — mined out` |
 | The log's `MARK` row | Implemented (§10, #214) — residue derived by diffing the mark set by id, once per mark per match |
+| The console (§2) | Implemented — the 80 px bar is a 208 px console of four blocks: scope, selection, a 4 × 3 command card, and production. Production is no longer behind the UNITS tab; the block reads the player's own yards, one row per yard because a yard is one build line, and its estimate is divided by the Thermal Draw's satisfaction so a starved line's slip is visible rather than silent. The selection card moved inside its block, which is what ends its collision with the hint line |
+| The plate VI card, in match | Implemented — one `plate()` draws glass, one bevel, one halo, the header rule and corner registration ticks, and the top strip, console, blocks, selection card and ribbon all go through it. Rule 5's diagonal texture is one layer over the whole HUD, rebuilt only when the viewport or the palette changes |
+| The fleet block (§2) | Not implemented — the console's fifth block. Control groups, the hulls in hand and a census of own force, all on the 44 px grid |
 | The acoustic veil | Implemented (§4.5, #472) — a min-audible-SIG field over the player's own hulls and structures, shading the seabed, its props and its embers as a vertex colour on the mesh that was already there, so the effect spends no draw call and no triangle. World view only; the scope keeps §5's promise. A slider in Settings (§14) |
 | The scatter envelope on a contact reported from crystal (§4) | Not implemented — the rule it draws shipped server-side with #438 (two ears at 30° tell the truth); the wedge and its collapse are the client's half and are owed |
 | Priced buttons, and the reason a greyed one gives | Implemented (#351) — a button carries its whole price from the sum the server charges (`SUB 260+80c`), greys when any account falls short, and a press on it says which — *Abyssal Submersible: 80 crystal short* — on the hint bar, the way a locked key does (§7). Biomass is the third column ([economy.md](economy.md) §8); nothing is priced in it yet |
