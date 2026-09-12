@@ -628,11 +628,12 @@ describe('Kelp Labyrinth', () => {
     // between them by distance from home.
     //
     // Asserted as a *spread across the seats* rather than as those numbers, so
-    // it keeps holding whatever this map is authored to be next. The Ventfront
-    // and the Rift Corridor assert cell-perfect symmetry instead; this map
-    // cannot yet, because its MAZE array is asymmetric block for block and
-    // straightening it is a redesign of its own (#631). What this holds is the
-    // half that decides a match rather than the half that decides a corridor.
+    // it keeps holding whatever this map is authored to be next. Cell-perfect
+    // symmetry is asserted separately below, as it is on the other two
+    // archetypes; this is the half that decides a match rather than the half
+    // that decides a corridor, and the two fail differently. A maze redrawn
+    // inside a symmetric envelope moves these numbers without touching the
+    // cell counts.
     const t = terrainFor(KELP_LABYRINTH);
     const nearest = (x: number, y: number, to: ReadonlyArray<{ x: number; y: number }>) =>
       Math.min(...to.map((p) => Math.hypot(x - p.x, y - p.y)));
@@ -688,26 +689,33 @@ describe('Kelp Labyrinth', () => {
     }
   });
 
-  it('does not drift further out of symmetry than its maze already is', () => {
-    // A ratchet, not the answer. #631 decides whether this map wants
-    // cell-perfect symmetry like the other two archetypes, or whether a maze
-    // is allowed to be a maze and this becomes a documented property. Until
-    // then the only wrong direction is up: every one of these cells is a
-    // MAZE block's, and the seat-fairness test above is what stops that
-    // mattering to a player.
-    const worst = { ew: 56, ns: 64, half: 80 };
-    assert.ok(
-      asymmetricCells(KELP_LABYRINTH, (col, row, cols) => [cols - 1 - col, row]) <= worst.ew,
-      'the east and west halves drifted further apart'
+  it('is the same map in every mirror', () => {
+    // What replaced the ratchet this test used to be (#631). It read 56 cells
+    // east-west, 64 north-south and 80 under the half turn, every one of them
+    // a MAZE block's, and it could only assert that the drift did not grow —
+    // because the maze was ten hand-placed rectangles and nothing in the data
+    // kept the next edit honest.
+    //
+    // It is now authored as one quadrant mirrored three ways, so the property
+    // this asserts is a property of how the file is written and the assertion
+    // is exact, as it is on the other two archetypes. A map pool where one
+    // archetype is exempt from what the others are held to is a pool where the
+    // exemption has to be re-explained every time somebody reads a balance
+    // table.
+    assert.equal(
+      asymmetricCells(KELP_LABYRINTH, (col, row, cols) => [cols - 1 - col, row]),
+      0,
+      'the east and west halves are not the same map'
     );
-    assert.ok(
-      asymmetricCells(KELP_LABYRINTH, (col, row, _cols, rows) => [col, rows - 1 - row]) <= worst.ns,
-      'the north and south halves drifted further apart'
+    assert.equal(
+      asymmetricCells(KELP_LABYRINTH, (col, row, _cols, rows) => [col, rows - 1 - row]),
+      0,
+      'the north and south halves are not the same map'
     );
-    assert.ok(
-      asymmetricCells(KELP_LABYRINTH, (col, row, cols, rows) => [cols - 1 - col, rows - 1 - row]) <=
-        worst.half,
-      'the map stopped matching itself under a half turn'
+    assert.equal(
+      asymmetricCells(KELP_LABYRINTH, (col, row, cols, rows) => [cols - 1 - col, rows - 1 - row]),
+      0,
+      'the map does not match itself under a half turn'
     );
   });
 
