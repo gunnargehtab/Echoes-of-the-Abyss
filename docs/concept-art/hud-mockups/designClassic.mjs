@@ -22,8 +22,8 @@
  * 2. **Every block is full in every state.** The roster became a FLEET block
  *    that shows the control groups and a census when nothing is selected and
  *    the selected hulls when something is, so it is never a grid of empty
- *    squares. Production carries a summary row — berths, income, rally — under
- *    its two lines. The selection block trades its empty portrait surround for
+ *    squares. Production carries a summary row — berths, draw, rally — under
+ *    its lines. The selection block trades its empty portrait surround for
  *    a six-cell stat grid.
  * 3. **A cell carries three facts, not one.** Every command cell has its
  *    hotkey, its label and a second line: a price, a state, or what it does.
@@ -219,8 +219,8 @@ function fleetBlock({ chips = [], groups = [], census, idle }) {
 
 /**
  * Production. Two lines, and then the summary row the block's width was
- * previously spending on nothing: berths, the income the harvesters are
- * actually returning, and where a new hull goes when it launches.
+ * previously spending on nothing: berths, the Thermal Draw covering the yards,
+ * and where a new hull goes when it launches.
  */
 function production(lines, summary) {
   const row = (l) => `
@@ -337,20 +337,14 @@ const BUILD_CELLS = [
 ];
 
 const LINES_BUSY = [
-  { yard: 'BASTION · LINE 1', making: 'HARVESTER', eta: '14s', pct: 62, queue: ['CORVETTE'] },
-  { yard: 'BASTION · LINE 2', making: 'free', eta: '—', pct: 0, queue: [] },
-  {
-    yard: 'FOUNDRY · LINE 1',
-    making: 'CORVETTE',
-    eta: '38s',
-    pct: 21,
-    queue: ['CORVETTE', 'MINE ×2'],
-  },
+  { yard: 'BASTION', making: 'HARVESTER', eta: '14s', pct: 62, queue: ['CORVETTE'] },
+  { yard: 'FOUNDRY', making: 'CORVETTE', eta: '38s', pct: 21, queue: ['CORVETTE', 'MINE ×2'] },
+  { yard: 'SLIPWAY', making: 'not built', eta: '—', pct: 0, queue: [] },
 ];
 
 const SUMMARY_BUSY = [
   ['BERTHS', '6 / 8 — 2 queued', NEON.amber],
-  ['INCOME', '+12 nod/min', NEON.amber],
+  ['DRAW', '6 / 4 covered', NEON.cyan],
   ['CRYSTAL', 'no refinery', TEXT.dim],
   ['RALLY', 'the vent shelf', TEXT.cyan],
 ];
@@ -372,7 +366,7 @@ export function classicRest() {
               ['HULL', '1,800 / 1,800'],
               ['SIG', '18', NEON.teal],
               ['DEPTH', '640 m'],
-              ['LINES', '1 free', TEXT.cyan],
+              ['LINE', 'free', TEXT.cyan],
               ['RALLY', 'set', TEXT.cyan],
               ['BUILDS', 'Harvester +3'],
             ],
@@ -382,7 +376,7 @@ export function classicRest() {
         )}
         ${block('fleet', 'Fleet', fleetBlock({ groups: GROUPS, census: CENSUS, idle: true }), { sub: 'NOTHING SELECTED' })}
         ${block('commands', 'Commands', commandCard(BASE_CELLS), { sub: 'BASE' })}
-        ${block('production', 'Production', production(LINES_BUSY, SUMMARY_BUSY), { sub: '2 OF 3 RUNNING' })}
+        ${block('production', 'Production', production(LINES_BUSY, SUMMARY_BUSY), { sub: '2 YARDS RUNNING' })}
       `)}
       ${hint('Nothing selected · left-click a hull, 0 for the army, or arm a structure from the card')}
     </div>
@@ -420,7 +414,7 @@ export function classicOrders() {
         )}
         ${block('fleet', 'Fleet', fleetBlock({ chips, groups: GROUPS, census: CENSUS, idle: true }), { sub: '2 SELECTED' })}
         ${block('commands', 'Commands', commandCard(ORDER_CELLS), { sub: 'SQUAD' })}
-        ${block('production', 'Production', production(LINES_BUSY, SUMMARY_BUSY), { sub: '2 OF 3 RUNNING' })}
+        ${block('production', 'Production', production(LINES_BUSY, SUMMARY_BUSY), { sub: '2 YARDS RUNNING' })}
       `)}
       ${hint('Break silence to fire? +40 SIG on the hull that shoots', NEON.amber)}
     </div>
@@ -444,8 +438,8 @@ export function classicBuild() {
               ['HULL', '1,800 / 1,800'],
               ['SIG', '34 — building', NEON.amber],
               ['DEPTH', '640 m'],
-              ['LINE 1', 'HARVESTER 14s', TEXT.cyan],
-              ['LINE 2', 'free'],
+              ['LINE', 'HARVESTER 14s', TEXT.cyan],
+              ['QUEUED', 'Corvette'],
               ['BERTHS', '2 needed'],
             ],
             { hull: 1, lost: 0, note: 'construction is loud — and the water carries it' }
@@ -454,7 +448,7 @@ export function classicBuild() {
         )}
         ${block('fleet', 'Fleet', fleetBlock({ groups: GROUPS, census: CENSUS, idle: true }), { sub: 'YARD SELECTED' })}
         ${block('commands', 'Commands', commandCard(BUILD_CELLS), { sub: 'UNITS' })}
-        ${block('production', 'Production', production(LINES_BUSY, SUMMARY_BUSY), { sub: '2 OF 3 RUNNING' })}
+        ${block('production', 'Production', production(LINES_BUSY, SUMMARY_BUSY), { sub: '2 YARDS RUNNING' })}
       `)}
       ${hint('Abyssal Submersible: 80 crystal short', NEON.red)}
     </div>

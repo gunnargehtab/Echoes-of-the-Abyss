@@ -119,9 +119,8 @@ Three changes, in the order they matter.
    cell gaps 5 → 4, headers 25 → 22. That is 28 px of water back at no cost to content.
 2. **Every block is full in every state.** The roster became a **fleet** block showing the
    control groups, the selected hulls, and a census of what the player owns, so it is never
-   a grid of empty squares. Production lists **build lines** rather than yards, which is
-   what a commander actually spends, and carries a summary row under them: berths, the
-   income the harvesters are returning, and where a new hull goes when it launches. The
+   a grid of empty squares. Production lists one row per **yard**, each being one build line, and carries a summary
+   row under them: berths, Thermal Draw, and where a new hull goes when it launches. The
    selection block trades its empty portrait surround for a six-cell stat grid.
 3. **A cell carries three facts, not one.** Every command cell has its hotkey, its label
    and a second line — a price, a state, or what the order does. Genuinely unassigned
