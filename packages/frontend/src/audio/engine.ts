@@ -63,6 +63,7 @@ import {
   playUnderFire,
 } from './selfVoice.ts';
 import { MAX_CONTACT_VOICES, VoiceAllocator } from './voiceAllocator.ts';
+import { createSpeakerProfile, type SpeakerProfile } from './speakerProfile.ts';
 
 /** SPEC — docs/audio-direction.md §12. Milliseconds per Echo tick. */
 export const AUDIO_BUDGET_MS = 1;
@@ -257,7 +258,7 @@ export function createSelfLowCut(context: AudioContext): BiquadFilterNode {
 export function createOutputChain(
   context: AudioContext,
   destination: AudioNode
-): { master: GainNode; ceiling: WaveShaperNode } {
+): { master: GainNode; ceiling: WaveShaperNode; speaker: SpeakerProfile } {
   const headroom = context.createGain();
   headroom.gain.value = 1 / CEILING.RANGE;
   const ceiling = context.createWaveShaper();
@@ -265,10 +266,16 @@ export function createOutputChain(
   ceiling.oversample = '4x';
   headroom.connect(ceiling).connect(destination);
 
+  // §11's speaker profile sits after master and *before* the ceiling, so it
+  // reshapes the whole mix and the ceiling still has the last word on peak —
+  // a profile that could push the output past -1 dBTP would be answering #663
+  // with the fault #661 fixed.
+  const speaker = createSpeakerProfile(context, headroom);
+
   const master = context.createGain();
   master.gain.value = MASTER_GAIN;
-  master.connect(headroom);
-  return { master, ceiling };
+  master.connect(speaker.input);
+  return { master, ceiling, speaker };
 }
 
 /** Decibels to linear gain — the settings screen speaks dB, the graph gain. */
@@ -395,6 +402,13 @@ export class AudioEngine {
   /** New voices built on the most recent tick. */
   private lastTickBuilt = 0;
   private detachLifecycle: (() => void) | null = null;
+  private speaker: SpeakerProfile | null = null;
+  /**
+   * §11's speaker profile, held here and applied when the graph builds — the
+   * graph is lazy, and settings load before the first gesture, exactly as the
+   * volumes above do.
+   */
+  private speakerProfile = false;
 
   get state(): AudioEngineState {
     if (this.context === null) return 'idle';
@@ -455,8 +469,10 @@ export class AudioEngine {
     // The output ceiling stands between master and the device, so every bus,
     // every trim and every one-shot is behind it — including the ones added
     // after this was written.
-    const { master, ceiling } = createOutputChain(context, context.destination);
+    const { master, ceiling, speaker } = createOutputChain(context, context.destination);
     this.ceiling = ceiling;
+    this.speaker = speaker;
+    speaker.set(this.speakerProfile, context.currentTime);
     master.gain.value = MASTER_GAIN * this.masterVolume;
 
     const make = (): GainNode => {
@@ -817,6 +833,23 @@ export class AudioEngine {
    * contacts, which §11 allows up to +12 dB — information may be boosted,
    * atmosphere may only be turned down. Safe before `start()`.
    */
+  /**
+   * Turn §11's speaker profile on or off.
+   *
+   * Buffered like the volumes, so a player whose device asked for it does not
+   * have to make a gesture before the setting takes.
+   */
+  setSpeakerProfile(on: boolean): void {
+    this.speakerProfile = on;
+    if (this.speaker !== null && this.context !== null) {
+      this.speaker.set(on, this.context.currentTime);
+    }
+  }
+
+  get speakerProfileOn(): boolean {
+    return this.speakerProfile;
+  }
+
   setBusTrim(bus: TrimBus, gain: number): void {
     const cap = bus === 'contact' ? dbToGain(CONTACT_BOOST_MAX_DB) : 1;
     this.busTrims[bus] = Math.min(cap, Math.max(0, gain));
@@ -875,6 +908,7 @@ export class AudioEngine {
     this.context = null;
     this.buses = null;
     this.ceiling = null;
+    this.speaker = null;
     this.duckGain = null;
     this.contactAnalyser = null;
     this.trimNodes = null;

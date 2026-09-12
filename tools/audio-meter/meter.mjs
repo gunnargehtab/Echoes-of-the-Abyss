@@ -57,7 +57,12 @@ const flag = (name, fallback) => {
   const at = args.indexOf(`--${name}`);
   return at === -1 || at + 1 >= args.length ? fallback : args[at + 1];
 };
-const only = flag('case', null);
+// Comma-separated, so a pass over one scene and its profiled twin is one run
+// rather than two — the pair is how this tool is actually read.
+const only =
+  flag('case', null)
+    ?.split(',')
+    .map((name) => name.trim()) ?? null;
 const seconds = Number(flag('seconds', DEFAULT_SECONDS));
 
 // --- Playwright, the same resolution dance the other browser tools do -------
@@ -139,9 +144,9 @@ try {
   await page.goto(`http://127.0.0.1:${port}/`);
   const names = await page.evaluate(() => globalThis.audioMeter.cases());
   const atOutput = new Set(await page.evaluate(() => globalThis.audioMeter.atOutput()));
-  const wanted = only === null ? names : names.filter((name) => name === only);
+  const wanted = only === null ? names : names.filter((name) => only.includes(name));
   if (wanted.length === 0) {
-    console.error(`no such case: ${only}\ncases: ${names.join(', ')}`);
+    console.error(`no such case: ${only?.join(', ')}\ncases: ${names.join(', ')}`);
     process.exitCode = 1;
   }
 

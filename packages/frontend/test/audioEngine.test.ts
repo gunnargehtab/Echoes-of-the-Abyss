@@ -324,6 +324,8 @@ describe('the audio engine: the graph it builds', () => {
       const graph = engine.graph;
       assert.ok(graph !== null, 'the graph exists once started');
       const master = graph.master as unknown as StubAudioNode;
+      const ceiling = engine.outputCeiling as unknown as StubAudioNode;
+      assert.ok(ceiling !== null, 'the ceiling exists once started');
 
       // Every bus reaches master through its own trim: one hop to the trim,
       // one to master. The self bus takes one more, and only the self bus: its
@@ -360,11 +362,14 @@ describe('the audio engine: the graph it builds', () => {
         3,
         'music passes through the duck on its way to its trim'
       );
-      assert.equal(
-        hops(master, context.destination),
-        3,
-        'master reaches the device through the headroom pre-gain and the ceiling'
-      );
+      // Master reaches the device, and reaches it through the ceiling. The
+      // hop count is deliberately not the assertion: §11's speaker profile
+      // (#663) sits between the two, and a test counting edges would have to
+      // be edited every time the output chain gains a stage — which is the
+      // change most in need of a test that still means something afterwards.
+      assert.ok(hops(master, context.destination) > 0, 'master does not reach the device');
+      assert.ok(hops(master, ceiling) > 0, 'master does not reach the device through the ceiling');
+      assert.equal(hops(ceiling, context.destination), 1, 'the ceiling is the last node');
       assert.ok(context.analyser !== undefined, 'the contact bus is tapped by an analyser');
     } finally {
       void engine.destroy();

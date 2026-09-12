@@ -122,6 +122,19 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
           <label className="menu-toggle-row">
             <input
               type="checkbox"
+              checked={settings.speakerProfile}
+              onChange={(event) => patch({ speakerProfile: event.target.checked })}
+            />
+            <span className="menu-toggle-label">Speaker profile</span>
+            <span className="menu-toggle-note">
+              For phone and laptop speakers. Carries the low band on its harmonics instead of
+              sending it to a driver that answers it with rattle. On by default on a phone.
+            </span>
+          </label>
+
+          <label className="menu-toggle-row">
+            <input
+              type="checkbox"
               checked={settings.mono}
               onChange={(event) => patch({ mono: event.target.checked })}
             />

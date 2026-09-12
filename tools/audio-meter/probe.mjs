@@ -206,9 +206,10 @@ CASES['tuned-bed:full'] = (context, destination) => {
  * "TRACKED x7" on the Sorrowgate prologue, with the contact log showing a
  * mixture of unclassified bearings and tracked hulls in abyssal water.
  */
-function sceneCase({ sig, contacts, silentRunning = false }) {
+function sceneCase({ sig, contacts, silentRunning = false, speakerProfile = false }) {
   return (context, destination) => {
-    const { master } = createOutputChain(context, destination);
+    const { master, speaker } = createOutputChain(context, destination);
+    speaker.set(speakerProfile, 0);
 
     const selfBus = context.createGain();
     const lowCut = createSelfLowCut(context);
@@ -302,6 +303,41 @@ CASES['scene:sorrowgate-sig80'] = sceneCase({ sig: 80, contacts: SORROWGATE_SEVE
 CASES['scene:idle-alone'] = sceneCase({ sig: 8, contacts: [] });
 
 /**
+ * The same three scenes through §11's speaker profile.
+ *
+ * The pair is the whole point: the profile is not supposed to change how loud
+ * the mix is, it is supposed to change *where the loudness is*. A profile that
+ * moved the integrated figure would be a level trim wearing a filter, and a
+ * profile that left the band split alone would be doing nothing at all.
+ */
+CASES['profile:sorrowgate-sig35'] = sceneCase({
+  sig: 35,
+  contacts: SORROWGATE_SEVEN,
+  speakerProfile: true,
+});
+CASES['profile:sorrowgate-sig80'] = sceneCase({
+  sig: 80,
+  contacts: SORROWGATE_SEVEN,
+  speakerProfile: true,
+});
+CASES['profile:idle-alone'] = sceneCase({ sig: 8, contacts: [], speakerProfile: true });
+
+/**
+ * §4's scale, as a whole mix, with and without the profile.
+ *
+ * The bed alone at four SIGs, because a scene with seven contacts in it cannot
+ * answer this: the contacts are identical at every SIG and they dominate, so
+ * the difference between SIG 35 and SIG 80 nearly disappears into them. §4's
+ * climb is a promise about the *bed*, and the profile is a non-linearity, so
+ * whether the climb survives it is a question that has to be asked directly.
+ * A profile that flattened this would have traded the mechanic for the fix.
+ */
+for (const sig of [10, 35, 55, 80]) {
+  CASES[`bed:sig${sig}`] = sceneCase({ sig, contacts: [] });
+  CASES[`bed-profile:sig${sig}`] = sceneCase({ sig, contacts: [], speakerProfile: true });
+}
+
+/**
  * Render one case and hand back its channels.
  *
  * The destination is the context's own, so the render includes whatever the
@@ -345,7 +381,11 @@ export async function render(name, seconds) {
  * than the one that was rendered. The distinction is the whole reason both
  * kinds exist, so it is data rather than a naming convention.
  */
-const AT_OUTPUT = new Set(Object.keys(CASES).filter((name) => name.startsWith('scene:')));
+const AT_OUTPUT = new Set(
+  Object.keys(CASES).filter((name) =>
+    ['scene:', 'profile:', 'bed:', 'bed-profile:'].some((prefix) => name.startsWith(prefix))
+  )
+);
 
 globalThis.audioMeter = {
   render,
