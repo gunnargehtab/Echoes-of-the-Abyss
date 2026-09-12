@@ -74,23 +74,55 @@ visible to learn from until the player already knows to hold the button.
 
 ## B · The classical console
 
-One full-width console in fixed blocks: scope, selection with its stat block, group
-roster, a 4 × 3 command card, the production line. Nothing is behind a tab, and the twelve
+**Chosen direction.** One full-width console in fixed blocks: scope, selection, fleet,
+a 4 × 3 command card, the production line. Nothing is behind a tab, and the twelve command
 cells are always in the same twelve places.
 
 **Keeps.** Every information law untouched. Faction ink stays on hulls and contacts and
-never reaches chrome (§12.5); the roster counts own force only and never a hostile total
-(§10.5).
+never reaches chrome (§12.5); the fleet census counts own force only and never a hostile
+total (§10.5).
 
-**Breaks §2's 22% chrome cap** — the console plus the strip is about 30% of a 1080p frame.
+**Breaks §2's 22% chrome cap** — the console alone is 19.3% of a 1080p frame, and with the
+top strip, the log, the objectives panel and the ribbon the whole interface comes to about
+30%.
 
 **What the break buys.** Permanence, which is the genre's oldest argument and still its
-best one. The roster makes a group countable at a glance, the production block makes a
-queue readable without selecting anything, and a command card is the one layout muscle
-memory genuinely works on, because a cell never moves.
+best one. The fleet block makes a group countable at a glance, the production block makes
+every build line readable without selecting anything, and a command card is the one layout
+muscle memory genuinely works on, because a cell never moves.
 
-**Costs.** It is the least interesting of the three to look at, the worst fit for a phone,
-and it gives a fifth of a dark ocean away to instrumentation.
+**Costs.** It is the worst fit for a phone, where the blocks have to stack or scroll, and
+it gives close to a fifth of a dark ocean to instrumentation.
+
+### Iteration 2 — earning the footprint
+
+The first pass took 236 px and filled much of it with air: a roster of fifteen cells that
+was empty whenever nothing was selected, a command card drawing five to seven ghost boxes,
+a 528 px production block carrying two thin bars, and a portrait box with a small wireframe
+floating in it. A console that takes a fifth of the ocean and then shows nothing in the
+space loses both arguments at once.
+
+| | Before | After |
+| --- | --- | --- |
+| Console height | 236 px | 208 px |
+| Console share of frame | 21.9% | 19.3% |
+| Whole interface | 32.5% | 29.9% |
+
+Three changes, in the order they matter.
+
+1. **The footprint came down**, and every internal metric with it — block padding 7 → 6,
+   cell gaps 5 → 4, headers 25 → 22. That is 28 px of water back at no cost to content.
+2. **Every block is full in every state.** The roster became a **fleet** block showing the
+   control groups, the selected hulls, and a census of what the player owns, so it is never
+   a grid of empty squares. Production lists **build lines** rather than yards, which is
+   what a commander actually spends, and carries a summary row under them: berths, the
+   income the harvesters are returning, and where a new hull goes when it launches. The
+   selection block trades its empty portrait surround for a six-cell stat grid.
+3. **A cell carries three facts, not one.** Every command cell has its hotkey, its label
+   and a second line — a price, a state, or what the order does. Genuinely unassigned
+   positions keep their place, because muscle memory is the whole argument for a fixed
+   card, but they are drawn as registration ticks rather than as boxes: a reserved slot
+   should not read as a missing one.
 
 ## C · Improved — the leading candidate
 
