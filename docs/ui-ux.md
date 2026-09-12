@@ -478,11 +478,13 @@ for a cost that no longer exists is the same lie as no warning for one that does
 A scrolling, timestamped feed of every detection event at the fidelity earned. It is a first-class UI element, not a debug view, and it is the accessible mirror of the audio channel.
 
 ```text
-T+04:12  TIER 1  contact          bearing unknown
-T+04:09  TIER 3  ~4 Consortium    bearing 118°   ~2,100 m
-T+04:07  ---     you were pinged  bearing 070°
-T+03:58  TIER 2  contact          bearing 245°   ~1,400 m
-T+03:51  MARK    industrial hum   bearing 310°   decaying
+T+04:12  TIER 1  contact                  bearing unknown
+T+04:09  TIER 3  ~4 Consortium            bearing 118°   ~2,100 m
+T+04:07  ---     you were pinged          bearing 070°
+T+04:02  ---     they have your bearing
+T+03:59  ---     Corvette went loud       bearing 034°   1,050 m
+T+03:58  TIER 2  contact                  bearing 245°   ~1,400 m
+T+03:51  MARK    industrial hum           bearing 310°   decaying
 ```
 
 Entries are click-to-focus (camera moves to the last known position) and copy-pasteable, because post-match analysis of *"when did they hear me"* is a real activity this game should support.
@@ -505,6 +507,26 @@ reserves for events that are not detections. The log also carries the own-force 
 licenses, in the same form: `Corvette under fire`, `Harvester idle — mined out`, each
 focusable because the hull is the player's own. Tier-3 rows currently name the hull and
 faction rather than estimating a count, because the Echo Layer does not model counts.
+
+**The rows that point the other way** — what the rest of the map holds on *you* — are
+implemented too (#623), and they are the half that makes "when did they hear me" answerable
+rather than only "what did I hear". `you were pinged` was the only one of them for a long
+while, and it covers active sonar alone: the loudest and rarest way to be found. Everything
+quieter left no trace at all. So the exposure report now writes a row each time the best
+tier anyone holds on the player settles on a new value, in either direction — `you were
+heard`, `they have your bearing`, `they have you classified`, `they have you tracked`,
+`they lost you` — and `Corvette went loud` records the other end of the same question, the
+moment one of the player's own hulls crossed §3's red stop and made itself findable.
+
+Three things those rows may not do, and the reasons are the same three this section already
+gives. They carry **no bearing, no range and no focus**: the report is a tier and a count,
+so a row that pointed somewhere would be inventing a listener the Echo Layer never resolved,
+and §10.5's rule holds on this channel exactly as on the others. They are **never
+rewritten**, so a tier that deepens writes a second row rather than sharpening the first.
+And a tier has to **hold** before the log claims it — the pass recomputes it at 5 Hz, and
+the rule three paragraphs up is already that an entry is written when a tier changes and
+*not* every tick, which a hull parked on a detection threshold would otherwise defeat by
+flickering across it.
 
 The `MARK` row is implemented (#214), and the one thing it had to settle is that a mark is
 not an event. Every other line here has a moment, and `T+` is when it happened; residue is
@@ -687,7 +709,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | SIG meter, peak value, colour stops | Implemented to §3 — 240 × 12 at 1080p above its two-line readout, `SIG 042 / 100` zero-padded so the digit count never shifts, and the stops snapping at 30 and 65 rather than blending. The strip is 52 px to hold it, and the meter leads the strip: §3 puts it top-left and §1.4 makes it the one permanent element, so the stockpiles follow it. The value is the peak across the player's **units**: structures were folded in until #623, which pinned the meter at the loudest building a base owned, and the self-noise bed refused that figure and recomputed its own |
 | The meter's transient (§3) | Implemented — peak SIG is drawn solid and the burst it just came off as a lighter overlay that decays over 2.2 s, inked for the level it represents rather than the live one, so a ping's 95 reads as having entered the red band even once the bar has fallen back to amber |
 | `n units · m loud` (§3) | Implemented — *loud* is SIG over 60, counted from the player's own hulls |
-| §3's red-band crossing | Half implemented — the meter flashes once on entry, with a static equivalent under reduced motion (§11). The contact log does not record it: own-force rows are written from `EchoSnapshot.selfEvents`, and a crossing is not among them, so the other half of that sentence needs a server-sent event rather than a client-derived row |
+| §3's red-band crossing | Implemented (#623) — the meter flashes once on entry, with a static equivalent under reduced motion (§11), and the log records it: a `WentLoud` self-event, raised on the crossing edge by the loop that computes every hull's SIG and latched so a hull idling above the stop raises nothing after the first tick. Server-sent rather than derived on the client, because `peakSig` is a max and a second hull going loud under a louder one never moves it — the row names the hull that crossed, which the bar cannot |
 | Tier-graded contact rendering, ghost decay | Implemented |
 | Selected-unit detection ring | Implemented |
 | Ping preview rings, ping commit | Implemented (hold `Alt`, `P`) |
@@ -718,7 +740,8 @@ What the current client implements against this spec, so nobody re-implements wh
 | Attention on the scope | Implemented (§5, #206, #209) — exposure wedge, under-fire pulse, idle marker, each with its audio half and its reduced-motion equivalent |
 | Faction glyphs | Implemented (§12.5, #207) — one glyph per navy beside the mark's ink at Tier 3 and Tier 4, in the world view; the scope names no faction, so it owes none |
 | The match clock | Implemented (#208) — the log's T+ axis live in the top strip, from the server tick both share |
-| Own-force log rows | Implemented (§10, #206, #209) — `you were pinged`, `under fire`, `idle — mined out` |
+| Own-force log rows | Implemented (§10, #206, #209, #623) — `you were pinged`, `under fire`, `idle — mined out`, `went loud` |
+| The passive exposure record (§10) | Implemented (#623) — an edge detector on the server-sent `ExposureReport` writes a row each time the best tier anyone holds on the player settles on a new value, in both directions: `you were heard`, `they have your bearing`, `they have you classified`, `they have you tracked`, `they lost you`. Under the `---` tier and carrying no bearing, range or focus, because the report is a tier and a count and a row that pointed anywhere would be inventing a listener. A tier has to hold for `PERSISTENCE.EXPOSURE_SETTLE_S` before the log claims it — the pass recomputes it at 5 Hz, and a hull parked on a detection threshold would otherwise write ten rows a second saying nothing |
 | The log's `MARK` row | Implemented (§10, #214) — residue derived by diffing the mark set by id, once per mark per match |
 | The console (§2) | Implemented — the 80 px bar is a 208 px console of four blocks: scope, selection, a 4 × 3 command card, and production. Production is no longer behind the UNITS tab; the block reads the player's own yards, one row per yard because a yard is one build line, and its estimate is divided by the Thermal Draw's satisfaction so a starved line's slip is visible rather than silent. The selection card moved inside its block, which is what ends its collision with the hint line |
 | The plate VI card, in match | Implemented — one `plate()` draws glass, one bevel, one halo, the header rule and corner registration ticks, and the top strip, console, blocks, selection card and ribbon all go through it. Rule 5's diagonal texture is one layer over the whole HUD, rebuilt only when the viewport or the palette changes |
