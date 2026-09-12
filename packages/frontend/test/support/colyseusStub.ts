@@ -22,30 +22,207 @@ export interface SentMessage {
 
 type Listener = (...args: unknown[]) => void;
 
+/** The lobby-relevant fields of one seat, as the room's schema carries them. */
+export interface StubPlayerFields {
+  sessionId: string;
+  name: string;
+  slot: number;
+  faction: number;
+  ready: boolean;
+  connected: boolean;
+  isAi: boolean;
+  difficulty: number;
+}
+
+/**
+ * One player in the roster, with the per-instance `onChange` a decoded
+ * `Schema` carries.
+ *
+ * It is here because the client subscribes to it: a player readying up or
+ * taking a navy moves no field of the root state, so a stub whose players were
+ * plain objects could not tell that half of the roster's changes happened.
+ */
+export class StubPlayer implements StubPlayerFields {
+  sessionId = '';
+  name = '';
+  slot = 0;
+  faction = 0;
+  ready = false;
+  connected = true;
+  isAi = false;
+  difficulty = 0;
+
+  private readonly changeHandlers: Array<() => void> = [];
+
+  constructor(fields: Partial<StubPlayerFields> = {}) {
+    Object.assign(this, fields);
+  }
+
+  onChange(handler: () => void): () => void {
+    this.changeHandlers.push(handler);
+    return () => {
+      const at = this.changeHandlers.indexOf(handler);
+      if (at >= 0) this.changeHandlers.splice(at, 1);
+    };
+  }
+
+  /** How many callbacks are still wired to this player — leaks are countable. */
+  get watchers(): number {
+    return this.changeHandlers.length;
+  }
+
+  /** Apply a patch, and announce it only if it actually changed something. */
+  assign(fields: Partial<StubPlayerFields>): void {
+    const self = this as unknown as Record<string, unknown>;
+    let moved = false;
+    for (const [key, value] of Object.entries(fields)) {
+      if (self[key] === value) continue;
+      self[key] = value;
+      moved = true;
+    }
+    if (!moved) return;
+    for (const handler of [...this.changeHandlers]) handler();
+  }
+}
+
+/**
+ * The roster, with the collection callbacks `MapSchema` has in
+ * @colyseus/schema 2.x — `onAdd` replaying the entries already in the map
+ * unless it is told not to, and each returning its own de-register.
+ */
+export class StubRoster {
+  private readonly items = new Map<string, StubPlayer>();
+  private readonly addHandlers: Array<(player: StubPlayer, key: string) => void> = [];
+  private readonly removeHandlers: Array<(player: StubPlayer, key: string) => void> = [];
+
+  onAdd(handler: (player: StubPlayer, key: string) => void, triggerAll = true): () => void {
+    this.addHandlers.push(handler);
+    if (triggerAll) this.items.forEach((player, key) => handler(player, key));
+    return () => {
+      const at = this.addHandlers.indexOf(handler);
+      if (at >= 0) this.addHandlers.splice(at, 1);
+    };
+  }
+
+  onRemove(handler: (player: StubPlayer, key: string) => void): () => void {
+    this.removeHandlers.push(handler);
+    return () => {
+      const at = this.removeHandlers.indexOf(handler);
+      if (at >= 0) this.removeHandlers.splice(at, 1);
+    };
+  }
+
+  forEach(callback: (player: StubPlayer, key: string) => void): void {
+    this.items.forEach(callback);
+  }
+
+  get(key: string): StubPlayer | undefined {
+    return this.items.get(key);
+  }
+
+  /** How many callbacks the roster itself is still holding. */
+  get watchers(): number {
+    return this.addHandlers.length + this.removeHandlers.length;
+  }
+
+  // --- the server side of the roster -------------------------------------
+
+  /** Add a player, or patch one already seated. */
+  set(key: string, fields: Partial<StubPlayerFields>): StubPlayer {
+    const existing = this.items.get(key);
+    if (existing !== undefined) {
+      existing.assign(fields);
+      return existing;
+    }
+    const player = new StubPlayer({ sessionId: key, ...fields });
+    this.items.set(key, player);
+    for (const handler of [...this.addHandlers]) handler(player, key);
+    return player;
+  }
+
+  delete(key: string): void {
+    const player = this.items.get(key);
+    if (player === undefined) return;
+    this.items.delete(key);
+    for (const handler of [...this.removeHandlers]) handler(player, key);
+  }
+}
+
+/**
+ * The room's schema, with the `listen` a decoded `Schema` carries.
+ *
+ * `tick` is on it and is what nobody should be listening to: it is the field
+ * that moves five times a second for a whole match, so a client subscribed to
+ * the state as a whole hears every one of them and a client subscribed per
+ * field hears none.
+ */
+export class StubState {
+  tick = 0;
+  phase = 0;
+  mapId = '';
+  winnerSlot = -1;
+  readonly players = new StubRoster();
+
+  private readonly fieldHandlers = new Map<string, Array<(value: unknown) => void>>();
+
+  listen(prop: string, handler: (value: unknown) => void, immediate = true): () => void {
+    const handlers = this.fieldHandlers.get(prop) ?? [];
+    handlers.push(handler);
+    this.fieldHandlers.set(prop, handlers);
+    if (immediate) handler((this as unknown as Record<string, unknown>)[prop]);
+    return () => {
+      const at = handlers.indexOf(handler);
+      if (at >= 0) handlers.splice(at, 1);
+    };
+  }
+
+  /** Every callback still wired to this state, fields and roster together. */
+  get watchers(): number {
+    let total = 0;
+    for (const handlers of this.fieldHandlers.values()) total += handlers.length;
+    this.players.forEach((player) => {
+      total += player.watchers;
+    });
+    return total + this.players.watchers;
+  }
+
+  // --- the server side of the state --------------------------------------
+
+  /**
+   * Write one field, and fire its listeners only when the value moved — which
+   * is what the decoder does, since a field that did not change is not in the
+   * patch at all.
+   */
+  set<K extends 'tick' | 'phase' | 'mapId' | 'winnerSlot'>(prop: K, value: StubState[K]): void {
+    // Through a `StubState`-typed alias rather than `this`, which in a
+    // generic write is the subclass a subclass would have.
+    const self: StubState = this;
+    if (self[prop] === value) return;
+    self[prop] = value;
+    for (const handler of [...(this.fieldHandlers.get(prop) ?? [])]) handler(value);
+  }
+}
+
 /**
  * A stand-in `Room`.
  *
- * The state is a plain object with a real `Map` for `players`: `pushLobby`
- * reads it through the MapSchema-shaped `forEach` and nothing else, so a Map
- * is a faithful stand-in rather than a simplification.
+ * The state is a `StubState`, which models the decoder's callbacks rather than
+ * only its fields: `listen` per field, `onAdd`/`onRemove` on the roster, and
+ * `onChange` on each player. The client subscribes to exactly those, so a stub
+ * offering only the coarse whole-state callback could not say whether it
+ * subscribes to the right ones — nor whether it lets go of them again.
  */
 export class StubRoom {
   readonly sessionId: string;
   readonly roomId: string;
   reconnectionToken = 'token-0';
-  state: {
-    phase?: number;
-    mapId?: string;
-    winnerSlot?: number;
-    players?: Map<string, Record<string, unknown>>;
-  } = {};
+  readonly state = new StubState();
 
   /** Every `send` this room received, oldest first. */
   readonly sent: SentMessage[] = [];
   left = false;
 
   private readonly messageHandlers = new Map<string, Listener>();
-  private readonly stateHandlers: Listener[] = [];
   private readonly errorHandlers: Listener[] = [];
   private readonly leaveHandlers: Listener[] = [];
 
@@ -56,10 +233,6 @@ export class StubRoom {
 
   onMessage(type: string, handler: Listener): void {
     this.messageHandlers.set(type, handler);
-  }
-
-  onStateChange(handler: Listener): void {
-    this.stateHandlers.push(handler);
   }
 
   onError(handler: Listener): void {
@@ -93,10 +266,39 @@ export class StubRoom {
     return true;
   }
 
-  /** Announce a schema change, the way the room's state sync would. */
-  changeState(state: StubRoom['state']): void {
-    this.state = state;
-    for (const handler of [...this.stateHandlers]) handler();
+  /**
+   * Announce a schema change, the way the room's state sync would — every
+   * field that moved, every player added, patched or gone, each through the
+   * callback the decoder would have fired.
+   *
+   * A patch rather than a replacement, because the decoder never replaces the
+   * state object either: the client holds listeners on it, and swapping it out
+   * from under them would be modelling something that cannot happen.
+   */
+  changeState(patch: {
+    tick?: number;
+    phase?: number;
+    mapId?: string;
+    winnerSlot?: number;
+    players?: Map<string, Partial<StubPlayerFields>>;
+  }): void {
+    if (patch.tick !== undefined) this.state.set('tick', patch.tick);
+    if (patch.phase !== undefined) this.state.set('phase', patch.phase);
+    if (patch.mapId !== undefined) this.state.set('mapId', patch.mapId);
+    if (patch.winnerSlot !== undefined) this.state.set('winnerSlot', patch.winnerSlot);
+    const wanted = patch.players;
+    if (wanted === undefined) return;
+    const gone: string[] = [];
+    this.state.players.forEach((_player, key) => {
+      if (!wanted.has(key)) gone.push(key);
+    });
+    for (const key of gone) this.state.players.delete(key);
+    wanted.forEach((fields, key) => this.state.players.set(key, fields));
+  }
+
+  /** One simulation tick and nothing else — the 5 Hz heartbeat of a match. */
+  advanceTick(): void {
+    this.state.set('tick', this.state.tick + 1);
   }
 
   raiseError(code: number, message: string): void {
