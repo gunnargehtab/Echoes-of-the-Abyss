@@ -372,6 +372,57 @@ describe('a draw says how close it came (#223)', () => {
     assert.match(markdown, /\| Nodule Refinery \| 1\.0 \|/);
   });
 
+  it('records the bank as a high-water mark, not as what was left (#518)', () => {
+    // The other half of the same missing measurement. "Built 0.0" and
+    // "commissioned 0.6" together still cannot say whether a hull behind the
+    // rung was *ever affordable*, and that is a maximum rather than a rate: a
+    // navy earning the most nodules a minute in the game can hold the price of
+    // its own heavy at no instant of the match, and every rate column says it
+    // is doing fine.
+    //
+    // So this is asserted as a maximum over observations rather than against a
+    // sampled series: a bank rises to a price and is spent inside one
+    // ten-second sample, which is exactly the instant worth catching.
+    const map = mapById(DEFAULT_MAP_ID)!;
+    const match = new Match(map, { seed: 909, fauna: false });
+    const roster = [{ slot: 0, faction: Faction.Bathyarch }];
+    match.addPlayer(0, Faction.Bathyarch);
+
+    const telemetry = new MatchTelemetry(909, map.id, roster);
+    const stepMs = 1000 / SIM.TICK_HZ;
+    let highest = 0;
+    let spent = false;
+
+    for (let tick = 0; tick < SIM.TICK_HZ * 40; tick++) {
+      const snapshots = match.update(stepMs);
+      if (snapshots === null) continue;
+      const own = snapshots.get(0)!;
+      highest = Math.max(highest, own.nodules);
+      if (!spent) {
+        const bastion = own.structures.find((st) => st.kind === StructureKind.Bastion)!;
+        spent = match.produce(0, bastion.id, UnitKind.Harvester);
+      }
+      telemetry.observe(match.tick, snapshots);
+    }
+
+    assert.ok(spent, 'the premise: the opening bank was spent, so the peak is behind us');
+    const summary = summarise([telemetry.finish(match.tick, null, true)]);
+    const consortium = summary.factions.find((f) => f.faction === Faction.Bathyarch)!;
+    assert.equal(
+      Math.round(consortium.peakBank),
+      Math.round(highest),
+      'the peak is the most the navy ever held, not what it was holding at the end'
+    );
+
+    // No Slipway rose in forty seconds, so the rung rows have no matches to be
+    // read over — reported as nothing rather than as a confident zero, which is
+    // the same rule the guard-rail verdicts follow.
+    assert.equal(consortium.rungMatches, 0, 'and no yard stood in forty seconds');
+    const markdown = toMarkdown(summary, 'bank');
+    assert.match(markdown, /## The bank against the rung/);
+    assert.match(markdown, /\| Peak with the yard up, median \| — \|/);
+  });
+
   it('counts nothing of the opening as built — a base is a gift, not a decision', () => {
     // The rule `accrueIncome` applies to the opening stockpile, applied to what
     // that stockpile could have bought. Twenty seconds is not long enough for
