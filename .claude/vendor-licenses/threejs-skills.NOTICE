@@ -1,0 +1,11 @@
+cloudai-x/threejs-skills carries no LICENSE file. Its README states the terms,
+and this is that statement, quoted verbatim from README.md at commit
+b1c623076c661fc9b03dac19292e825a5d106823:
+
+    ## License
+
+    MIT License - Feel free to use, modify, and distribute.
+
+The same README's "Installation" section directs users to "Clone this
+repository into your project or copy the `.claude/skills` directory", which is
+what .claude/skills/threejs-* is.
