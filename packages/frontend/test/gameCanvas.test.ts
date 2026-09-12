@@ -365,25 +365,12 @@ describe('the shell: what it wires to what', () => {
     const world = await mount();
     try {
       await joinMatch(world);
-      world.room.changeState({
-        phase: MatchPhase.Lobby,
-        mapId: 'smoke-basin',
-        winnerSlot: -1,
-        players: new Map([
-          [
-            'seat-1',
-            {
-              sessionId: 'seat-1',
-              name: 'Marr',
-              slot: 0,
-              faction: Faction.Bathyarch,
-              ready: false,
-              connected: true,
-              isAi: false,
-              difficulty: 0,
-            },
-          ],
-        ]),
+      world.room.state.set({ phase: MatchPhase.Lobby, mapId: 'smoke-basin', winnerSlot: -1 });
+      world.room.state.players.add({
+        sessionId: 'seat-1',
+        name: 'Marr',
+        slot: 0,
+        faction: Faction.Bathyarch,
       });
       await world.settle();
 
