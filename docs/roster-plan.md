@@ -778,12 +778,52 @@ gate on 3.7% of observations and the Bulwark's own price on none of them — and
 Directorate's tops out at 360 against a 450 hull. The Knights' averages 192 and clears 600 on
 543 observations.
 
-**So what is left is anti-starvation, not another saving rule.** Nearest-first is right about
-which hold closes soonest and silent about a want that never wins one; what it needs is a way
-for a bid that has lost for long enough to take the slot regardless of what is cheaper. The
-risk to measure is the one #521 and #536 both found from opposite directions: a purse held
-for a hull the navy cannot reach costs win rate immediately and buys nothing, so the window
-such a bid is allowed to win has to be short enough that the line keeps growing underneath it.
+**Anti-starvation was the obvious repair, and it was measured and does not work.** The rule
+is the one the paragraph above asked for: every want keeps a clock of how long it has been
+losing the arbitration, a want that has lost for ninety seconds takes the slot regardless of
+what is cheaper, and winning spends the clock so the line gets it back. Built three ways —
+with the hold bounded by `RUNG.SAVE_S` and with it unconditional, with `RUNG.SAVE_FROM` kept
+and with it waived for a starved bid — and instrumented at the arbitration itself over seeds
+4000–4009, where it does exactly what it was written to do: **the Consortium's Bulwark, which
+won none of the 4,822 purses it bid for above, wins 3,041 of the 3,865 it bids for now.**
+
+Not one extra hull is built by any of the three. What moves instead is the win rates, by up
+to seven points, and the one rung hull a navy did field — the Knights' Reciter — comes off
+the slip *less* often. On #521's own rule none of them ships: a change to how this commander
+spends nodules that moves the win rates and builds none of the hulls this issue is about is a
+change that buys nothing.
+
+**What the instrumentation found instead is that the money is not there, and it is not close.**
+The bank a navy holds is a maximum rather than a rate, no column in the report was reading it,
+and it is now the `The bank against the rung` table. Peak bank *after the yard is standing*,
+over seeds 4000–4009, against the price of the hull the yard was bought for:
+
+| Navy | Its heavy | Price | Matches with a yard | Peak once the yard is up, median / best |
+| --- | --- | --- | --- | --- |
+| Consortium | Bulwark | 700 | 18 of 30 | 140 / 440 |
+| Commune | Bower | 360 | 0 of 30 | — |
+| Directorate | Dredge | 450 + 40 crystal + 60 Biomass | 9 of 30 | 240 / 380 |
+| Knights | Reciter | 260 | 20 of 30 | 282 / 766 |
+
+Not one Consortium or Directorate match ever holds its heavy's price, in thirty matches with
+the yard standing in twenty-seven of them. **The Knights are the only navy whose peak with a
+yard up clears its own heavy, and the only navy that fields one** — 0.6 Reciters a match, on
+the cheapest heavy in the game. No arbitration between wants reaches a price the navy never
+holds, which is why all three versions of the rule read the same.
+
+**And the yard is what spends the moment.** Peak bank over the *whole* match has a median of
+600 to 620 for all four navies. A Slipway is 600. So a navy climbs to the price of the yard
+once, spends it on the yard, and never holds that much again — the median peak after the rung
+is 140, 240 and 282. The rung and the hull behind it are not both payable out of one navy's
+peak bank on this map at this length, and that is a statement about the economy rather than
+about the commander.
+
+What that leaves is not a saving rule and not an arbitration. It is #520's case for two navies
+(a price in an account the navy does not earn), and for the other two a question the freeze in
+`CLAUDE.md` puts out of bounds until the systems stop moving: whether a 600 nodule yard and a
+700 nodule hull are reachable in the same match at all. The honest gate for waves 4 and 5
+meanwhile is the one the issue's own fourth option named — a longer scenario, judged on
+whether the bank ever holds the price, which the report can now say.
 
 ## 5. What each wave touches
 
