@@ -3,80 +3,90 @@
     {
       "file": "Today.dc.html",
       "title": "Today — baseline",
+      "page": "page-1",
       "x": 0,
       "y": 0,
       "w": 1920,
       "h": 1080
     },
     {
-      "file": "RingRest.dc.html",
-      "title": "A · Ring — at rest",
-      "x": 0,
-      "y": 1280,
-      "w": 1920,
-      "h": 1080
-    },
-    {
-      "file": "RingOrders.dc.html",
-      "title": "A · Ring — giving orders",
-      "x": 2080,
-      "y": 1280,
-      "w": 1920,
-      "h": 1080
-    },
-    {
-      "file": "RingBuild.dc.html",
-      "title": "A · Ring — production",
-      "x": 4160,
-      "y": 1280,
-      "w": 1920,
-      "h": 1080
-    },
-    {
-      "file": "ClassicRest.dc.html",
+      "file": "Main.dc.html",
       "title": "B · Console — at rest",
+      "page": "page-1",
       "x": 0,
-      "y": 2560,
+      "y": 1280,
       "w": 1920,
       "h": 1080
     },
     {
       "file": "ClassicOrders.dc.html",
       "title": "B · Console — giving orders",
+      "page": "page-1",
       "x": 2080,
-      "y": 2560,
+      "y": 1280,
       "w": 1920,
       "h": 1080
     },
     {
       "file": "ClassicBuild.dc.html",
       "title": "B · Console — production",
+      "page": "page-1",
       "x": 4160,
-      "y": 2560,
+      "y": 1280,
       "w": 1920,
       "h": 1080
     },
     {
-      "file": "Main.dc.html",
-      "title": "C · Improved — at rest",
+      "file": "RingRest.dc.html",
+      "title": "A · Ring — at rest",
+      "page": "page-2",
       "x": 0,
-      "y": 3840,
+      "y": 0,
+      "w": 1920,
+      "h": 1080
+    },
+    {
+      "file": "RingOrders.dc.html",
+      "title": "A · Ring — giving orders",
+      "page": "page-2",
+      "x": 2080,
+      "y": 0,
+      "w": 1920,
+      "h": 1080
+    },
+    {
+      "file": "RingBuild.dc.html",
+      "title": "A · Ring — production",
+      "page": "page-2",
+      "x": 4160,
+      "y": 0,
+      "w": 1920,
+      "h": 1080
+    },
+    {
+      "file": "ImprovedRest.dc.html",
+      "title": "C · Improved — at rest",
+      "page": "page-2",
+      "x": 0,
+      "y": 1280,
       "w": 1920,
       "h": 1080
     },
     {
       "file": "ImprovedOrders.dc.html",
       "title": "C · Improved — giving orders",
+      "page": "page-2",
       "x": 2080,
-      "y": 3840,
+      "y": 1280,
       "w": 1920,
       "h": 1080
     },
     {
       "file": "ImprovedBuild.dc.html",
       "title": "C · Improved — production",
+      "page": "page-2",
       "x": 4160,
-      "y": 3840,
+      "y": 1280,
       "w": 1920,
       "h": 1080
     }
@@ -84,6 +94,7 @@
   "annotations": [
     {
       "id": "how-to-read",
+      "page": "page-1",
       "x": 2080,
       "y": 120,
       "w": 620,
@@ -91,6 +102,7 @@
     },
     {
       "id": "note-today",
+      "page": "page-1",
       "x": -520,
       "y": 0,
       "w": 440,
@@ -98,27 +110,41 @@
     },
     {
       "id": "note-ring",
+      "page": "page-2",
       "x": -520,
-      "y": 1280,
+      "y": 0,
       "w": 440,
-      "text": "A · THE RING\n\nRight-hold, or long-press on glass, and a ring of what the selection can do opens at the pointer. Release on a wedge commits, release on the dead centre cancels. There is no command bar at all.\n\nKEEPS\n· §3 — own loudness is never off screen.\n· §6 — preview before commit. The orders frame shows the ping wedge under the pointer and both radii drawn on the water, which is a better fit for a mandatory preview than a bar button ever was.\n· §11 — a 45° wedge is about 91 px of arc at the label radius, twice the 44 px touch floor. One gesture serves a mouse and a finger with no mode switch.\n\nBREAKS §2 — \"the centre 60% is always clear\". The ring opens in it.\n\nWHAT THE BREAK BUYS\nChrome at rest drops from about 22% of the frame to about 11%, and the centre is clear the entire time nobody is giving an order. The argument is that §2 was written against resident chrome, and a ring that exists only while a button is held is a different kind of thing.\n\nCOSTS, HONESTLY\nEight wedges is the ceiling, so a twelve-cell command set has to nest or shed. A ring cannot hold a production queue, so yards still need somewhere to live. And nothing is visible to learn from until you already know to hold the button."
+      "text": "A · THE RING — NOT CHOSEN\n\nRight-hold, or long-press on glass, and a ring of what the selection can do opens at the pointer. Release on a wedge commits, release on the dead centre cancels. There is no command bar at all.\n\nKEEPS\n· §3 — own loudness is never off screen.\n· §6 — preview before commit. The orders frame shows the ping wedge under the pointer and both radii drawn on the water, which is a better fit for a mandatory preview than a bar button ever was.\n· §11 — a 45° wedge is about 91 px of arc at the label radius, twice the 44 px touch floor. One gesture serves a mouse and a finger with no mode switch.\n\nBREAKS §2 — \"the centre 60% is always clear\". The ring opens in it.\n\nWHAT THE BREAK BUYS\nChrome at rest drops from about 22% of the frame to about 11%, and the centre is clear the entire time nobody is giving an order. The argument is that §2 was written against resident chrome, and a ring that exists only while a button is held is a different kind of thing.\n\nCOSTS, HONESTLY\nEight wedges is the ceiling, so a twelve-cell command set has to nest or shed. A ring cannot hold a production queue, so yards still need somewhere to live. And nothing is visible to learn from until you already know to hold the button."
     },
     {
       "id": "note-classic",
+      "page": "page-1",
       "x": -520,
-      "y": 2560,
+      "y": 1280,
       "w": 440,
-      "text": "B · THE CLASSICAL CONSOLE\n\nOne full-width console in fixed blocks: scope, selection with its stat block, group roster, a 4×3 command card, the production line. Nothing is behind a tab, and the twelve cells are always in the same twelve places.\n\nKEEPS\nEvery information law untouched. Faction ink stays on hulls and contacts and never reaches chrome (§12.5); the roster shows own force only, never a hostile count (§10.5).\n\nBREAKS §2's 22% chrome cap — the console plus the strip is about 30% of a 1080p frame.\n\nWHAT THE BREAK BUYS\nPermanence, which is the genre's oldest and best argument. The roster makes a group countable at a glance. The production block makes a queue readable without selecting anything. The command card is the one layout muscle memory genuinely works on, because a cell never moves.\n\nCOSTS, HONESTLY\nIt is the least interesting of the three to look at. It is the worst fit for a phone, where the blocks have to stack or scroll. And a game whose entire subject is a dark ocean gives a fifth of the ocean away to instrumentation."
+      "text": "B · THE CLASSICAL CONSOLE — CHOSEN\n\nOne full-width console in fixed blocks: scope, selection with its stat block, group roster, a 4×3 command card, the production line. Nothing is behind a tab, and the twelve cells are always in the same twelve places.\n\nKEEPS\nEvery information law untouched. Faction ink stays on hulls and contacts and never reaches chrome (§12.5); the roster shows own force only, never a hostile count (§10.5).\n\nBREAKS §2's 22% chrome cap — the console plus the strip is about 30% of a 1080p frame.\n\nWHAT THE BREAK BUYS\nPermanence, which is the genre's oldest and best argument. The roster makes a group countable at a glance. The production block makes a queue readable without selecting anything. The command card is the one layout muscle memory genuinely works on, because a cell never moves.\n\nCOSTS, HONESTLY\nIt is the least interesting of the three to look at. It is the worst fit for a phone, where the blocks have to stack or scroll. And a game whose entire subject is a dark ocean gives a fifth of the ocean away to instrumentation."
     },
     {
       "id": "note-improved",
+      "page": "page-2",
       "x": -520,
-      "y": 3840,
+      "y": 1280,
       "w": 440,
-      "text": "C · IMPROVED — THE LEADING CANDIDATE\n\nSame topology as today: strip, ribbon, scope, log, panel, bar. Nothing has moved, so anyone who knows the client already knows this. Four changes, one per fault.\n\n· MATERIAL. The plate VI card implemented rather than paraphrased — glass at 86%, one magenta bevel with one halo, a cyan header band over a thin rule, corner registration ticks instead of a radius, and one diagonal grain across the whole HUD layer, never per panel.\n\n· HIERARCHY. §3's meter at the size §3 actually specifies, with the zero-padded readout, hard colour stops, the transient spike as a lighter overlay, and the \"3 units · 1 loud\" line the shipped strip never grew. Stockpiles shrink to pay for it, because loudness is what kills you and the nodule count is bookkeeping.\n\n· PRODUCTION IN THE OPEN. A yard strip above the bar — one row per line, what it is making, how long it has left, what is queued behind it — on screen whatever tab is open. The UNITS tab stops being where production hides and becomes only where it starts.\n\n· ORDERS GROUPED BY COST. Posture toggles carry their state as light. Dive and rise become one control that names the rung between them. Ordnance is priced. The ping is pulled out alone in threat red, because §6 calls it the one interaction the UI may be pushy about.\n\nThe card moves into the bar, which is all it takes to fix the collision.\n\nBREAKS §2's 22% cap — strip, yard strip and bar come to about 24%. The yard strip is what costs it, and it is the only one of the four changes that spends screen at all.\n\nEverything else here is spec the client already owes and has not paid: §3's meter, the plate VI card, §13's priced buttons and the reason a greyed one gives."
+      "text": "C · IMPROVED — NOT CHOSEN\n\nSame topology as today: strip, ribbon, scope, log, panel, bar. Nothing has moved, so anyone who knows the client already knows this. Four changes, one per fault.\n\n· MATERIAL. The plate VI card implemented rather than paraphrased — glass at 86%, one magenta bevel with one halo, a cyan header band over a thin rule, corner registration ticks instead of a radius, and one diagonal grain across the whole HUD layer, never per panel.\n\n· HIERARCHY. §3's meter at the size §3 actually specifies, with the zero-padded readout, hard colour stops, the transient spike as a lighter overlay, and the \"3 units · 1 loud\" line the shipped strip never grew. Stockpiles shrink to pay for it, because loudness is what kills you and the nodule count is bookkeeping.\n\n· PRODUCTION IN THE OPEN. A yard strip above the bar — one row per line, what it is making, how long it has left, what is queued behind it — on screen whatever tab is open. The UNITS tab stops being where production hides and becomes only where it starts.\n\n· ORDERS GROUPED BY COST. Posture toggles carry their state as light. Dive and rise become one control that names the rung between them. Ordnance is priced. The ping is pulled out alone in threat red, because §6 calls it the one interaction the UI may be pushy about.\n\nThe card moves into the bar, which is all it takes to fix the collision.\n\nBREAKS §2's 22% cap — strip, yard strip and bar come to about 24%. The yard strip is what costs it, and it is the only one of the four changes that spends screen at all.\n\nEverything else here is spec the client already owes and has not paid: §3's meter, the plate VI card, §13's priced buttons and the reason a greyed one gives."
+    }
+  ],
+  "pages": [
+    {
+      "id": "page-1",
+      "name": "Console — chosen"
+    },
+    {
+      "id": "page-2",
+      "name": "Not chosen"
     }
   ],
   "launch": {
-    "view": "canvas"
+    "view": "canvas",
+    "page": "page-1"
   }
 }

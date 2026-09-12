@@ -9,7 +9,7 @@
  * turned out to mean.
  */
 
-import { BLACK, FONT, GLYPH, NEON, SIG, TEXT, TIER } from './tokens.mjs';
+import { BLACK, FONT, NEON, SIG, TEXT, TIER } from './tokens.mjs';
 
 export const CSS = `
   * { box-sizing: border-box; }
@@ -264,10 +264,6 @@ export function objectiveRows(fontSize = 10.5) {
       </div>`
     )
     .join('');
-}
-
-export function glyphSvg(faction, size, ink) {
-  return `<svg width="${size}" height="${size}" viewBox="-12 -12 24 24" aria-hidden="true" focusable="false"><path d="${GLYPH[faction]}" fill="none" stroke="${ink}" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
 }
 
 /** The wrapper every artboard is cut from. Static: no holes, so no logic class. */

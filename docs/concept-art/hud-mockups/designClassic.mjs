@@ -267,8 +267,7 @@ const CENSUS = [
   ['HARVESTER', '1'],
   ['STRUCTURES', '2'],
 ];
-const STATUS_REST = '0 IDLE · 2 SILENT · 1 TRACKED';
-const STATUS_BUSY = '1 IDLE — MINED OUT · 2 SILENT · 1 TRACKED';
+const STATUS = '1 IDLE — MINED OUT · 2 SILENT · 1 TRACKED';
 
 const ORDER_CELLS = [
   { key: 'RMB', label: 'MOVE', note: 'go there' },
@@ -315,11 +314,6 @@ const BUILD_CELLS = [
   { key: 'ESC', label: 'CANCEL', note: 'placing' },
 ];
 
-const LINES_IDLE = [
-  { yard: 'BASTION · LINE 1', making: 'free', eta: '—', pct: 0, queue: [] },
-  { yard: 'BASTION · LINE 2', making: 'free', eta: '—', pct: 0, queue: [] },
-  { yard: 'FOUNDRY · LINE 1', making: 'free', eta: '—', pct: 0, queue: [] },
-];
 const LINES_BUSY = [
   { yard: 'BASTION · LINE 1', making: 'HARVESTER', eta: '14s', pct: 62, queue: ['CORVETTE'] },
   { yard: 'BASTION · LINE 2', making: 'free', eta: '—', pct: 0, queue: [] },
@@ -332,12 +326,6 @@ const LINES_BUSY = [
   },
 ];
 
-const SUMMARY_IDLE = [
-  ['BERTHS', '6 / 8'],
-  ['INCOME', '+18 nod/min', NEON.amber],
-  ['CRYSTAL', 'no refinery', TEXT.dim],
-  ['RALLY', 'the vent shelf', TEXT.cyan],
-];
 const SUMMARY_BUSY = [
   ['BERTHS', '6 / 8 — 2 queued', NEON.amber],
   ['INCOME', '+12 nod/min', NEON.amber],
@@ -362,7 +350,7 @@ export function classicRest() {
               ['HULL', '1,800 / 1,800'],
               ['SIG', '18', NEON.teal],
               ['DEPTH', '640 m'],
-              ['LINES', '2 free', TEXT.cyan],
+              ['LINES', '1 free', TEXT.cyan],
               ['RALLY', 'set', TEXT.cyan],
               ['BUILDS', 'Harvester +3'],
             ],
@@ -370,9 +358,9 @@ export function classicRest() {
           ),
           { sub: 'STRUCTURE' }
         )}
-        ${block('fleet', 'Fleet', fleetBlock({ groups: GROUPS, census: CENSUS, status: STATUS_REST }), { sub: 'NOTHING SELECTED' })}
+        ${block('fleet', 'Fleet', fleetBlock({ groups: GROUPS, census: CENSUS, status: STATUS }), { sub: 'NOTHING SELECTED' })}
         ${block('commands', 'Commands', commandCard(BASE_CELLS), { sub: 'BASE' })}
-        ${block('production', 'Production', production(LINES_IDLE, SUMMARY_IDLE), { sub: '3 LINES FREE' })}
+        ${block('production', 'Production', production(LINES_BUSY, SUMMARY_BUSY), { sub: '2 OF 3 RUNNING' })}
       `)}
       ${hint('Nothing selected · left-click a hull, 0 for the army, or arm a structure from the card')}
     </div>
@@ -408,7 +396,7 @@ export function classicOrders() {
           ),
           { sub: 'GROUP 1' }
         )}
-        ${block('fleet', 'Fleet', fleetBlock({ chips, groups: GROUPS, census: CENSUS, status: STATUS_REST }), { sub: '2 SELECTED' })}
+        ${block('fleet', 'Fleet', fleetBlock({ chips, groups: GROUPS, census: CENSUS, status: STATUS }), { sub: '2 SELECTED' })}
         ${block('commands', 'Commands', commandCard(ORDER_CELLS), { sub: 'SQUAD' })}
         ${block('production', 'Production', production(LINES_BUSY, SUMMARY_BUSY), { sub: '2 OF 3 RUNNING' })}
       `)}
@@ -442,7 +430,7 @@ export function classicBuild() {
           ),
           { sub: 'STRUCTURE' }
         )}
-        ${block('fleet', 'Fleet', fleetBlock({ groups: GROUPS, census: CENSUS, status: STATUS_BUSY }), { sub: 'YARD SELECTED' })}
+        ${block('fleet', 'Fleet', fleetBlock({ groups: GROUPS, census: CENSUS, status: STATUS }), { sub: 'YARD SELECTED' })}
         ${block('commands', 'Commands', commandCard(BUILD_CELLS), { sub: 'UNITS' })}
         ${block('production', 'Production', production(LINES_BUSY, SUMMARY_BUSY), { sub: '2 OF 3 RUNNING' })}
       `)}

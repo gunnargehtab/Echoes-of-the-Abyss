@@ -20,12 +20,17 @@ Every colour, font, measurement and price is transcribed from `packages/frontend
 No ink here is invented, so a direction that ships is a layout change rather than a
 repaint.
 
-| Row | Frames |
-| --- | --- |
-| **Today** | The baseline: what the client draws now, transcribed rather than flattered |
-| **A · Ring** | At rest · giving orders · production |
-| **B · Console** | At rest · giving orders · production |
-| **C · Improved** | At rest · giving orders · production |
+| Row | Frames | Status |
+| --- | --- | --- |
+| **Today** | The baseline: what the client draws now, transcribed rather than flattered | Reference |
+| **B · Console** | At rest · giving orders · production | **Chosen**, and the one still being iterated |
+| **A · Ring** | At rest · giving orders · production | Not chosen |
+| **C · Improved** | At rest · giving orders · production | Not chosen |
+
+The two unchosen directions are kept rather than deleted. A decision nobody wrote down is
+a decision somebody re-argues, and these frames plus their law-breaks are the whole record
+of why the console won. On the canvas they sit on a second page so the working view carries
+only the chosen direction and its baseline.
 
 ## The four faults the directions answer
 
@@ -51,8 +56,8 @@ layout.
 
 ## A · The ring
 
-Right-hold, or long-press on glass, and a ring of what the current selection can do opens
-at the pointer. Release on a wedge commits; release on the dead centre cancels. There is
+Not chosen, and kept as the record of why. Right-hold, or long-press on glass, and a ring
+of what the current selection can do opens at the pointer. Release on a wedge commits; release on the dead centre cancels. There is
 no command bar at all.
 
 **Keeps.** §3 — own loudness never leaves the screen. §6 — preview before commit, and the
@@ -124,10 +129,11 @@ Three changes, in the order they matter.
    card, but they are drawn as registration ticks rather than as boxes: a reserved slot
    should not read as a missing one.
 
-## C · Improved — the leading candidate
+## C · Improved
 
-Same topology as today: strip, ribbon, scope, log, panel, bar. Nothing has moved, so
-anyone who knows the client already knows this. Four changes, one per fault.
+Not chosen, and kept as the record of why. Same topology as today: strip, ribbon, scope,
+log, panel, bar. Nothing has moved, so anyone who knows the client already knows this. Four
+changes, one per fault.
 
 - **Material.** The plate VI card implemented rather than paraphrased.
 - **Hierarchy.** §3's meter at the size §3 specifies, with the zero-padded readout, the

@@ -81,19 +81,5 @@ export const FONT = {
   data: 'ui-monospace, Consolas, monospace',
 };
 
-/** EchoRenderer.ts, "Command panel geometry, CSS px". */
-export const GEOM = {
-  topBar: 30,
-  tabHeight: 24,
-  buttonRow: 56,
-  barHeight: 80,
-  barButton: 40,
-  ribbonX: 12,
-  ribbonWidth: 14,
-  ribbonTopPad: 18,
-  ribbonBottomPad: 16,
-  scopeReturnPx: { 1: 7, 2: 4.5, 3: 2.5, 4: 2 },
-};
-
 /** Every artboard is one 1080p frame, the resolution docs/ui-ux.md sizes against. */
 export const FRAME = { w: 1920, h: 1080 };

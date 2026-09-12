@@ -25,52 +25,96 @@ import { FRAME } from './tokens.mjs';
 
 const OUT = join(dirname(fileURLToPath(import.meta.url)), 'artboards');
 
-/** `Main` is the leading candidate, which is design C — see the notes below. */
+/**
+ * `Main` holds the chosen direction, which is the console (B). The two
+ * unchosen directions keep their artboards and move to a second page: the
+ * comparison is the record of why the console won, and a record deleted is a
+ * decision that gets re-argued.
+ */
 const FRAMES = [
-  { file: 'Today.dc.html', title: 'Today — baseline', body: today, css: '' },
-  { file: 'RingRest.dc.html', title: 'A · Ring — at rest', body: ringRest, css: RING_CSS },
+  { file: 'Today.dc.html', title: 'Today — baseline', body: today, css: '', page: 'page-1' },
   {
-    file: 'RingOrders.dc.html',
-    title: 'A · Ring — giving orders',
-    body: ringOrders,
-    css: RING_CSS,
+    file: 'Main.dc.html',
+    title: 'B · Console — at rest',
+    body: classicRest,
+    css: '',
+    page: 'page-1',
   },
-  { file: 'RingBuild.dc.html', title: 'A · Ring — production', body: ringBuild, css: RING_CSS },
-  { file: 'ClassicRest.dc.html', title: 'B · Console — at rest', body: classicRest, css: '' },
   {
     file: 'ClassicOrders.dc.html',
     title: 'B · Console — giving orders',
     body: classicOrders,
     css: '',
+    page: 'page-1',
   },
-  { file: 'ClassicBuild.dc.html', title: 'B · Console — production', body: classicBuild, css: '' },
-  { file: 'Main.dc.html', title: 'C · Improved — at rest', body: improvedRest, css: '' },
+  {
+    file: 'ClassicBuild.dc.html',
+    title: 'B · Console — production',
+    body: classicBuild,
+    css: '',
+    page: 'page-1',
+  },
+  {
+    file: 'RingRest.dc.html',
+    title: 'A · Ring — at rest',
+    body: ringRest,
+    css: RING_CSS,
+    page: 'page-2',
+  },
+  {
+    file: 'RingOrders.dc.html',
+    title: 'A · Ring — giving orders',
+    body: ringOrders,
+    css: RING_CSS,
+    page: 'page-2',
+  },
+  {
+    file: 'RingBuild.dc.html',
+    title: 'A · Ring — production',
+    body: ringBuild,
+    css: RING_CSS,
+    page: 'page-2',
+  },
+  {
+    file: 'ImprovedRest.dc.html',
+    title: 'C · Improved — at rest',
+    body: improvedRest,
+    css: '',
+    page: 'page-2',
+  },
   {
     file: 'ImprovedOrders.dc.html',
     title: 'C · Improved — giving orders',
     body: improvedOrders,
     css: '',
+    page: 'page-2',
   },
   {
     file: 'ImprovedBuild.dc.html',
     title: 'C · Improved — production',
     body: improvedBuild,
     css: '',
+    page: 'page-2',
   },
+];
+
+const PAGES = [
+  { id: 'page-1', name: 'Console — chosen' },
+  { id: 'page-2', name: 'Not chosen' },
 ];
 
 /** One row per design, 160 px between frames and 200 px between rows. */
 const COL = [0, 2080, 4160];
-const ROW = { today: 0, ring: 1280, classic: 2560, improved: 3840 };
+const ROW = { today: 0, console: 1280, ring: 0, improved: 1280 };
 const PLACE = {
   'Today.dc.html': [COL[0], ROW.today],
+  'Main.dc.html': [COL[0], ROW.console],
+  'ClassicOrders.dc.html': [COL[1], ROW.console],
+  'ClassicBuild.dc.html': [COL[2], ROW.console],
   'RingRest.dc.html': [COL[0], ROW.ring],
   'RingOrders.dc.html': [COL[1], ROW.ring],
   'RingBuild.dc.html': [COL[2], ROW.ring],
-  'ClassicRest.dc.html': [COL[0], ROW.classic],
-  'ClassicOrders.dc.html': [COL[1], ROW.classic],
-  'ClassicBuild.dc.html': [COL[2], ROW.classic],
-  'Main.dc.html': [COL[0], ROW.improved],
+  'ImprovedRest.dc.html': [COL[0], ROW.improved],
   'ImprovedOrders.dc.html': [COL[1], ROW.improved],
   'ImprovedBuild.dc.html': [COL[2], ROW.improved],
 };
@@ -81,6 +125,7 @@ const NOTE_W = 440;
 const NOTES = [
   {
     id: 'how-to-read',
+    page: 'page-1',
     x: COL[1],
     y: ROW.today + 120,
     w: 620,
@@ -96,6 +141,7 @@ The three designs answer the same four complaints: the HUD has no material, no h
   },
   {
     id: 'note-today',
+    page: 'page-1',
     x: NOTE_X,
     y: ROW.today,
     w: NOTE_W,
@@ -115,10 +161,11 @@ The four faults this comparison is about:
   },
   {
     id: 'note-ring',
+    page: 'page-2',
     x: NOTE_X,
     y: ROW.ring,
     w: NOTE_W,
-    text: `A · THE RING
+    text: `A · THE RING — NOT CHOSEN
 
 Right-hold, or long-press on glass, and a ring of what the selection can do opens at the pointer. Release on a wedge commits, release on the dead centre cancels. There is no command bar at all.
 
@@ -137,10 +184,11 @@ Eight wedges is the ceiling, so a twelve-cell command set has to nest or shed. A
   },
   {
     id: 'note-classic',
+    page: 'page-1',
     x: NOTE_X,
-    y: ROW.classic,
+    y: ROW.console,
     w: NOTE_W,
-    text: `B · THE CLASSICAL CONSOLE
+    text: `B · THE CLASSICAL CONSOLE — CHOSEN
 
 One full-width console in fixed blocks: scope, selection with its stat block, group roster, a 4×3 command card, the production line. Nothing is behind a tab, and the twelve cells are always in the same twelve places.
 
@@ -157,10 +205,11 @@ It is the least interesting of the three to look at. It is the worst fit for a p
   },
   {
     id: 'note-improved',
+    page: 'page-2',
     x: NOTE_X,
     y: ROW.improved,
     w: NOTE_W,
-    text: `C · IMPROVED — THE LEADING CANDIDATE
+    text: `C · IMPROVED — NOT CHOSEN
 
 Same topology as today: strip, ribbon, scope, log, panel, bar. Nothing has moved, so anyone who knows the client already knows this. Four changes, one per fault.
 
@@ -190,13 +239,15 @@ function main() {
     artboards: FRAMES.map((f) => ({
       file: f.file,
       title: f.title,
+      page: f.page,
       x: PLACE[f.file][0],
       y: PLACE[f.file][1],
       w: FRAME.w,
       h: FRAME.h,
     })),
     annotations: NOTES,
-    launch: { view: 'canvas' },
+    pages: PAGES,
+    launch: { view: 'canvas', page: 'page-1' },
   };
   writeFileSync(join(OUT, 'canvas.json'), JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 
