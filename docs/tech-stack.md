@@ -518,6 +518,39 @@ A room with no rematch closes itself after `LIFECYCLE.POST_MATCH_S` rather than 
 until the process restarts. A running room is **locked**, so `joinOrCreate` routes a late
 arrival into a fresh lobby instead of dropping them into a game already in progress.
 
+### A room that fails, and how far the failure reaches
+
+`MatchRoom` defines `onUncaughtException`, and that definition *is* the mechanism. Colyseus
+wraps every client-message handler, the simulation interval and both post-match clock timers
+if and only if a room defines the hook, and wires none of it if the room does not. Without it
+a throw escapes to the `process.on('uncaughtException')` that Colyseus installs for its own
+graceful shutdown, which disposes every room on the box and exits — so one throw in one match
+ended every concurrent match with it. A room is already the boundary this architecture claims:
+one network edge around one simulation. The blast radius now matches the claim.
+
+The two halves are asymmetric on purpose.
+
+A **message handler that throws loses that message and nothing else.** Every other
+server-side refusal in the room is a silent return after a failed guard, and a throw is the
+same answer reached less tidily. Dropping is also the reversible choice: a per-client throw
+counter can be layered on later, where ejecting the sender kicks a real player over a bug in
+their own client.
+
+A **simulation step that throws ends that room.** A step that threw part-way through a
+mutation leaves a half-advanced world and a state hash that certifies nothing
+([Determinism and Replay](#determinism-and-replay)), so limping on produces a match whose
+divergence surfaces minutes later as something else entirely. The room stops stepping
+immediately rather than when the asynchronous disconnect settles, and it ends **without
+announcing anything**: an announcement would be a twelfth server message and a new way a
+match can end, which is a decision about this section rather than a patch to the room. A
+closed socket is what a client already handles for a server that went away.
+
+The four methods Colyseus re-raises from — `onCreate`, `onAuth`, `onJoin`, `onLeave` — still
+report to the caller exactly as they did, so an unknown mission and a full lobby are refused
+the way they always were. What changed is that those refusals are now visible in the server
+log, which they were not. Every line carries the room id, the tick, the phase, the method,
+the client message name where there is one, and what became of the throw.
+
 ### Spectators
 
 Not implemented, and the omission is deliberate rather than an oversight. A spectator is a
