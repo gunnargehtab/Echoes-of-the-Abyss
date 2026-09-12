@@ -129,6 +129,33 @@ Three changes, in the order they matter.
    card, but they are drawn as registration ticks rather than as boxes: a reserved slot
    should not read as a missing one.
 
+### Iteration 3 — a finger has to be able to use it
+
+The control groups were a list of 15 px rows. On glass that is not a control at all: §11
+puts the floor at 44 px, and §9 makes the digits unrebindable — so on a touchscreen, which
+has no digits, that row is the *only* way to recall a group. It was the one place the
+console had quietly stopped being the single layout that serves a mouse and a finger
+equally.
+
+Four 44 px rows do not fit in a 170 px block, so the groups stopped being rows: they are
+square chips laid across the width, which is both denser and reachable. Every horizontal
+band in the fleet block is now a 44 px touch row, and so is every production line, because
+a line row selects the yard running it.
+
+The idle notice changed character in the process. It was a clause in a status line; it is
+now the 44 px control you press to go to the stalled harvester, paired with the `I` key on
+the command card. The status line it came from is gone: `TRACKED` is already in the top
+strip and silence is already the `S` on each chip, so it was restating rather than saying.
+
+Verified by measurement rather than by eye — every bordered control in the console is at
+least 44 px on its short edge in all three frames. The one element under it is a health
+bar, which is a readout and not something to press.
+
+**Not done, and deliberately:** folding the 54 px top strip into the console. It would give
+back the most screen of anything left, but §3 wants own loudness permanently visible and
+the console's five blocks are now dense enough that the strip would be competing rather
+than fitting.
+
 ## C · Improved
 
 Not chosen, and kept as the record of why. Same topology as today: strip, ribbon, scope,

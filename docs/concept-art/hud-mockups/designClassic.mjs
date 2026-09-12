@@ -160,42 +160,60 @@ function selectionBlock(name, badge, stats, { hull = 0.88, lost = 0.08, note = '
 }
 
 /**
- * The fleet block, which replaced the roster. Full in every state: the selected
- * hulls when there is a selection, the control groups when there is not, and a
- * census under either. Own force only — a hostile count here would be
- * docs/ui-ux.md §10.5's maphack in a numeral.
+ * The fleet block, which replaced the roster.
+ *
+ * ## Iteration 3 — a finger has to be able to use this
+ *
+ * The control groups were a list of 15 px rows, and on glass that is not a
+ * control at all: docs/ui-ux.md §11 puts the floor at 44 px, and §9 makes the
+ * digits unrebindable, so on a touchscreen — which has no digits — this row is
+ * the *only* way to recall a group. A 15 px row was the one place the console
+ * quietly stopped being the one layout that serves both pointers.
+ *
+ * Four 44 px rows do not fit in a 170 px block, so the groups stopped being
+ * rows: they are square chips laid across the width, which is both denser and
+ * reachable. Every horizontal band in here is now a 44 px touch row — the
+ * groups, the hulls in hand, and the idle notice, which was a fact in the
+ * status line and is now the thing you press to go to the stalled harvester.
+ *
+ * Own force only. A hostile count here would be §10.5's maphack in a numeral.
  */
-function fleetBlock({ chips = [], groups = [], census, status }) {
-  const chipCell = (c) =>
-    `<div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:1px solid ${c.hurt ? NEON.red : 'rgba(53,224,255,0.3)'};border-radius:2px;background:rgba(10,20,36,0.8);padding:1px 0">
-      <span style="font-size:9px;letter-spacing:0.06em;color:${TEXT.bright}">${c.label}</span>
-      <div style="width:74%;height:3px;background:rgba(3,8,14,0.8)"><div style="width:${c.hp}%;height:3px;background:${c.hurt ? NEON.red : NEON.teal}"></div></div>
-      ${c.silent ? `<span style="position:absolute;top:1px;right:3px;font-size:7.5px;color:${NEON.teal}">S</span>` : ''}
+function fleetBlock({ chips = [], groups = [], census, idle }) {
+  const ROW_H = 44;
+  const groupChip = (g) =>
+    `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;height:${ROW_H}px;flex:0 0 ${ROW_H}px;border:1px solid ${g.n ? 'rgba(53,224,255,0.4)' : 'rgba(214,230,240,0.14)'};border-radius:2px;background:${g.n ? 'rgba(10,20,36,0.85)' : 'rgba(10,20,36,0.4)'}">
+      <span style="font-size:12px;letter-spacing:0.06em;color:${g.n ? NEON.cyan : TEXT.dim}">${g.key}</span>
+      <span style="font-size:9px;letter-spacing:0.05em;color:${g.n ? TEXT.bright : TEXT.dim}">${g.n ? '×' + g.n : '—'}</span>
     </div>`;
-  const groupRow = (g) =>
-    `<div class="row" style="gap:6px;height:15px;align-items:center;font-size:10px;letter-spacing:0.07em">
-      <span style="flex:0 0 14px;color:${g.n ? NEON.cyan : TEXT.dim};border:1px solid ${g.n ? 'rgba(53,224,255,0.4)' : 'rgba(214,230,240,0.14)'};border-radius:2px;text-align:center;line-height:14px;font-size:9px">${g.key}</span>
-      <span style="flex:1 1 auto;text-align:left;color:${g.n ? TEXT.bright : TEXT.dim};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.what}</span>
-      <span style="flex:0 0 auto;color:${g.n ? TEXT.cyan : TEXT.dim}">${g.n ? '×' + g.n : '—'}</span>
+  const hullChip = (c) =>
+    `<div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:${ROW_H}px;flex:0 0 ${ROW_H}px;border:1px solid ${c.hurt ? NEON.red : 'rgba(53,224,255,0.4)'};border-radius:2px;background:rgba(10,20,36,0.85)">
+      <span style="font-size:9.5px;letter-spacing:0.05em;color:${TEXT.bright}">${c.label}</span>
+      <div style="width:70%;height:3px;background:rgba(3,8,14,0.8)"><div style="width:${c.hp}%;height:3px;background:${c.hurt ? NEON.red : NEON.teal}"></div></div>
+      ${c.silent ? `<span style="position:absolute;top:2px;right:4px;font-size:8px;color:${NEON.teal}">S</span>` : ''}
     </div>`;
-  const held = chips.length
-    ? `<div style="display:grid;grid-template-columns:repeat(5, minmax(0, 1fr));grid-auto-rows:25px;gap:3px">${chips.map(chipCell).join('')}</div>
-       <div style="height:1px;background:rgba(214,230,240,0.08)"></div>`
-    : '';
-  const censusCell = ([k, v]) => `
-    <div class="col" style="gap:0;text-align:left;min-width:0">
-      <span style="font-size:8px;letter-spacing:0.12em;color:${TEXT.dim}">${k}</span>
-      <span style="font-size:11.5px;letter-spacing:0.06em;color:${TEXT.bright}">${v}</span>
+  const grid = (cells, cols) =>
+    `<div style="display:grid;grid-template-columns:repeat(${cols}, minmax(0, 1fr));gap:4px;flex:0 0 ${ROW_H}px">${cells}</div>`;
+
+  // With a selection, the hulls in hand take the first band and the groups keep
+  // one; with none, the groups take both. Three 44 px bands either way, so the
+  // block neither hollows out nor overflows as the selection changes.
+  const bands = chips.length
+    ? grid(chips.map(hullChip).join(''), 5) + grid(groups.slice(0, 5).map(groupChip).join(''), 5)
+    : grid(groups.slice(0, 5).map(groupChip).join(''), 5) +
+      grid(groups.slice(5).map(groupChip).join(''), 5);
+
+  const idleRow = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;height:${ROW_H}px;flex:0 0 ${ROW_H}px;padding:0 10px;border:1px solid ${idle ? NEON.amber : 'rgba(214,230,240,0.14)'};border-radius:2px;background:${idle ? 'rgba(242,178,51,0.1)' : 'rgba(10,20,36,0.4)'}">
+      <span style="font-size:11px;letter-spacing:0.1em;color:${idle ? NEON.amber : TEXT.dim}">${idle ? 'IDLE — 1 WAITING' : 'NOTHING IDLE'}</span>
+      <span style="font-size:9px;letter-spacing:0.1em;color:${TEXT.dim}">${idle ? 'TAP OR I TO GO' : ''}</span>
     </div>`;
-  return `<div class="col" style="height:100%;padding:6px 8px;gap:4px">
-    ${held}
-    <div class="col" style="gap:1px">${groups.map(groupRow).join('')}</div>
-    <div style="flex:1 1 auto"></div>
-    <div style="height:1px;background:rgba(214,230,240,0.08)"></div>
-    <div style="display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:6px">
-      ${census.map(censusCell).join('')}
-    </div>
-    <div style="font-size:9.5px;letter-spacing:0.07em;color:${TEXT.dim};text-align:left;white-space:nowrap">${status}</div>
+
+  const line = census.map(([k, v]) => `${v} ${k}`).join(' · ');
+
+  return `<div class="col" style="height:100%;padding:4px 8px;gap:3px">
+    ${bands}
+    ${idleRow}
+    <div style="height:1px;background:rgba(214,230,240,0.08);flex:0 0 1px"></div>
+    <div style="font-size:10px;letter-spacing:0.06em;color:${TEXT.bright};text-align:left;white-space:nowrap;padding-top:2px">${line}</div>
   </div>`;
 }
 
@@ -206,7 +224,7 @@ function fleetBlock({ chips = [], groups = [], census, status }) {
  */
 function production(lines, summary) {
   const row = (l) => `
-    <div class="col" style="gap:3px;padding:5px 8px;border-bottom:1px solid rgba(214,230,240,0.05);text-align:left">
+    <div class="col" style="gap:4px;justify-content:center;height:44px;padding:0 8px;border-bottom:1px solid rgba(214,230,240,0.05);text-align:left">
       <div class="row" style="gap:8px;align-items:baseline">
         <span style="flex:0 0 122px;font-size:10.5px;letter-spacing:0.08em;color:${l.pct ? TEXT.bright : TEXT.dim};white-space:nowrap">${l.yard}</span>
         <span style="flex:0 0 auto;font-size:11px;letter-spacing:0.08em;color:${l.pct ? TEXT.cyan : TEXT.dim}">${l.making}</span>
@@ -256,10 +274,16 @@ function hint(text, ink = TEXT.dim) {
 }
 
 const GROUPS = [
-  { key: '1', what: 'Corvette pair · silent', n: 2 },
-  { key: '2', what: 'Harvester · the field', n: 1 },
-  { key: '3', what: 'unassigned', n: 0 },
-  { key: '0', what: 'Army — everything that fights', n: 2 },
+  { key: '1', n: 2 },
+  { key: '2', n: 1 },
+  { key: '3', n: 0 },
+  { key: '4', n: 0 },
+  { key: '5', n: 0 },
+  { key: '6', n: 0 },
+  { key: '7', n: 0 },
+  { key: '8', n: 0 },
+  { key: '9', n: 0 },
+  { key: '0', n: 2 },
 ];
 
 const CENSUS = [
@@ -267,8 +291,6 @@ const CENSUS = [
   ['HARVESTER', '1'],
   ['STRUCTURES', '2'],
 ];
-const STATUS = '1 IDLE — MINED OUT · 2 SILENT · 1 TRACKED';
-
 const ORDER_CELLS = [
   { key: 'RMB', label: 'MOVE', note: 'go there' },
   { key: 'W', label: 'ATK-MOVE', note: 'fight en route' },
@@ -358,7 +380,7 @@ export function classicRest() {
           ),
           { sub: 'STRUCTURE' }
         )}
-        ${block('fleet', 'Fleet', fleetBlock({ groups: GROUPS, census: CENSUS, status: STATUS }), { sub: 'NOTHING SELECTED' })}
+        ${block('fleet', 'Fleet', fleetBlock({ groups: GROUPS, census: CENSUS, idle: true }), { sub: 'NOTHING SELECTED' })}
         ${block('commands', 'Commands', commandCard(BASE_CELLS), { sub: 'BASE' })}
         ${block('production', 'Production', production(LINES_BUSY, SUMMARY_BUSY), { sub: '2 OF 3 RUNNING' })}
       `)}
@@ -396,7 +418,7 @@ export function classicOrders() {
           ),
           { sub: 'GROUP 1' }
         )}
-        ${block('fleet', 'Fleet', fleetBlock({ chips, groups: GROUPS, census: CENSUS, status: STATUS }), { sub: '2 SELECTED' })}
+        ${block('fleet', 'Fleet', fleetBlock({ chips, groups: GROUPS, census: CENSUS, idle: true }), { sub: '2 SELECTED' })}
         ${block('commands', 'Commands', commandCard(ORDER_CELLS), { sub: 'SQUAD' })}
         ${block('production', 'Production', production(LINES_BUSY, SUMMARY_BUSY), { sub: '2 OF 3 RUNNING' })}
       `)}
@@ -430,7 +452,7 @@ export function classicBuild() {
           ),
           { sub: 'STRUCTURE' }
         )}
-        ${block('fleet', 'Fleet', fleetBlock({ groups: GROUPS, census: CENSUS, status: STATUS }), { sub: 'YARD SELECTED' })}
+        ${block('fleet', 'Fleet', fleetBlock({ groups: GROUPS, census: CENSUS, idle: true }), { sub: 'YARD SELECTED' })}
         ${block('commands', 'Commands', commandCard(BUILD_CELLS), { sub: 'UNITS' })}
         ${block('production', 'Production', production(LINES_BUSY, SUMMARY_BUSY), { sub: '2 OF 3 RUNNING' })}
       `)}
