@@ -653,7 +653,8 @@ What the current client implements against this spec, so nobody re-implements wh
 
 | Requirement | Status |
 | --- | --- |
-| SIG meter, peak value, colour stops | Implemented |
+| SIG meter, peak value, colour stops | Implemented (#623) — the bar, the `SIG nn` readout and the band label beside it all read one number, the peak across the player's **units**. Structures were folded in until #623, which pinned the meter at the loudest building a base owned; the self-noise bed already refused that figure and recomputed its own |
+| The meter's spike overlay, the red-band flash, and the second line | Not implemented — §3 asks for a lighter overlay bar over the baseline, one flash as a unit crosses into the red with the crossing written to the contact log, a zero-padded `SIG 042 / 100` readout, and a `n units · m loud` second line. None of the five is built: the meter draws a background, a fill and a stroke, and `SelfEventKind` has no band-crossing member, so §11's reduced-motion "meter pulse" names nothing the client does (§14's table substitutes the crush badge, and the two disagree) |
 | Tier-graded contact rendering, ghost decay | Implemented |
 | Selected-unit detection ring | Implemented |
 | Ping preview rings, ping commit | Implemented (hold `Alt`, `P`) |
