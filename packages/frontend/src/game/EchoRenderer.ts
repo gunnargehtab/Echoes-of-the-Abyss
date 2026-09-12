@@ -772,7 +772,28 @@ const BLOCK_W = {
   productionMin: 240,
 } as const;
 /** Top resource strip. */
-const TOP_BAR_HEIGHT = 30;
+const TOP_BAR_HEIGHT = 52;
+
+/**
+ * The SIG meter, to docs/ui-ux.md §3 — "240 x 12 px at 1080p, above a two-line
+ * readout". §1.4 makes it the one element that is never a submenu and never a
+ * toggle, and it had been drawn as a 40-120 px offcut squeezed between the
+ * stockpiles and whatever width was left.
+ */
+const SIG_METER = {
+  W: 240,
+  H: 12,
+  /** A hull over this is *loud*, and the count of them predicts trouble (§3). */
+  LOUD: 60,
+  /**
+   * How long a transient stays drawn over the baseline. A ping's burst is 1.5 s
+   * of emission (§6), so the overlay outlives it by enough to be read and not
+   * so long that it reads as a second baseline.
+   */
+  SPIKE_DECAY_MS: 2200,
+  /** The single flash when a hull crosses into the red band (§3). */
+  FLASH_MS: 320,
+} as const;
 
 /**
  * The plate VI card, as numbers — docs/style-neon-noir.md "UI chrome".
@@ -966,6 +987,20 @@ export class EchoRenderer {
   private readonly productionTexts: Text[] = [];
   /** Pooled labels for the fleet block's chips and its census line. */
   private readonly fleetTexts: Text[] = [];
+  /**
+   * The transient half of the SIG meter (§3).
+   *
+   * `sigHold` follows peak SIG up instantly and decays back down, so the bar
+   * can draw the baseline solid and the burst it just came off as a lighter
+   * overlay. It is a *drawing* of a number the server already sent rather than
+   * a second source of truth: at rest it converges on peak SIG and says
+   * nothing the solid bar does not.
+   */
+  private sigHold = 0;
+  private sigHoldAt = 0;
+  /** Which band the meter was in last frame, for §3's one flash on entry. */
+  private sigBandWasRed = false;
+  private sigFlashAt = 0;
   /** Last frame's button layout, hit-tested by pressBarButton. */
   private barButtons: BarButton[] = [];
   private activeTab: CommandTab = 'build';
@@ -996,6 +1031,8 @@ export class EchoRenderer {
   private infoBadge!: Text;
 
   private sigLabel!: Text;
+  /** §3's second line: `n units · m loud`, the count that predicts trouble. */
+  private loudLabel!: Text;
   /**
    * §4's band, in words.
    *
@@ -1481,7 +1518,12 @@ export class EchoRenderer {
     this.crystalLabel = new Text({ text: '', style: { ...mono, fontSize: 13 } });
     this.crystalLabel.visible = false;
 
-    this.sigLabel = new Text({ text: 'SIG --', style: { ...mono, fontSize: 13 } });
+    this.sigLabel = new Text({ text: 'SIG --- / 100', style: { ...mono, fontSize: 13 } });
+
+    this.loudLabel = new Text({
+      text: '',
+      style: { ...mono, fontSize: 11, fill: UI.textDim },
+    });
 
     this.bandLabel = new Text({
       text: '',
@@ -1563,6 +1605,7 @@ export class EchoRenderer {
 
     this.hud.addChild(
       this.sigLabel,
+      this.loudLabel,
       this.bandLabel,
       this.exposureLabel,
       this.mapLabel,
@@ -5822,6 +5865,79 @@ export class EchoRenderer {
     g.stroke({ width: 1, color: UI.text, alpha: GRAIN.ALPHA });
   }
 
+  /**
+   * §3's meter: the permanent element, at the size the section specifies.
+   *
+   * Four things the old strip did not do. The readout is zero-padded, so the
+   * digit count never shifts and the eye can sit on one place rather than
+   * re-finding the number. The transient is drawn separately from the
+   * baseline — a ping pegs SIG to 95 and then it falls, and the lighter
+   * overlay is where it just was, decaying. The second line counts the hulls
+   * over `LOUD`, which is the number that predicts trouble rather than the one
+   * that describes now. And crossing into the red band flashes the frame once,
+   * because a threshold crossing is an event and has to read as one.
+   *
+   * The colour stops themselves were already right: `sigColor` snaps at 30 and
+   * 65 and never blends, which is the section's "Transition" row.
+   *
+   * Returns the width it occupied, so the strip can lay out after it.
+   */
+  private drawSigMeter(g: Graphics, x: number, now: number): number {
+    const peak = this.peakSig;
+    const ink = sigColor(peak);
+
+    // The hold decays toward the live value; it never drags it up.
+    const elapsed = now - this.sigHoldAt;
+    this.sigHoldAt = now;
+    if (peak >= this.sigHold) {
+      this.sigHold = peak;
+    } else {
+      const fall = (100 * elapsed) / SIG_METER.SPIKE_DECAY_MS;
+      this.sigHold = Math.max(peak, this.sigHold - fall);
+    }
+
+    const red = peak >= 65;
+    if (red && !this.sigBandWasRed) this.sigFlashAt = now;
+    this.sigBandWasRed = red;
+
+    const y = 8;
+    const w = SIG_METER.W;
+    const h = SIG_METER.H;
+    g.rect(x, y, w, h).fill({ color: 0x000000, alpha: 0.5 });
+
+    // The transient first, so the baseline sits on top of it rather than under.
+    if (this.sigHold > peak) {
+      const from = (w * peak) / 100;
+      const to = (w * this.sigHold) / 100;
+      // Inked for where it *was*, not where the bar is now: a ping peaks at 95
+      // and the transient's whole job is to say the red band was entered. In
+      // the live ink it would have said the burst was amber.
+      g.rect(x + from, y, to - from, h).fill({ color: sigColor(this.sigHold), alpha: 0.5 });
+    }
+    g.rect(x, y, (w * Math.max(0, Math.min(100, peak))) / 100, h).fill({ color: ink });
+
+    // §11 wants the reduced-motion path to carry the same information without
+    // the flash, so the frame states the crossing in ink that simply stays.
+    const flashing =
+      !this.reducedMotion && this.sigFlashAt > 0 && now - this.sigFlashAt < SIG_METER.FLASH_MS;
+    g.rect(x, y, w, h).stroke({
+      width: flashing ? 2 : 1,
+      color: flashing || (this.reducedMotion && red) ? UI.threat : UI.glassStroke,
+    });
+
+    this.sigLabel.text = `SIG ${Math.round(Math.max(0, peak)).toString().padStart(3, '0')} / 100`;
+    this.sigLabel.style.fill = ink;
+    this.sigLabel.position.set(x, y + h + 4);
+
+    const loud = this.units.filter((u) => u.sig > SIG_METER.LOUD).length;
+    const n = this.units.length;
+    this.loudLabel.text = `${n} unit${n === 1 ? '' : 's'} \u00b7 ${loud} loud`;
+    this.loudLabel.style.fill = loud > 0 ? UI.sigMid : UI.textDim;
+    this.loudLabel.position.set(x, y + h + 20);
+
+    return w;
+  }
+
   private drawHud(): void {
     const g = this.hudGraphics;
     g.clear();
@@ -5836,8 +5952,16 @@ export class EchoRenderer {
     // show, and drawing them would put two bright hairlines down the screen.
     this.plate(g, -1, -TOP_BAR_HEIGHT, screenWidth + 2, TOP_BAR_HEIGHT * 2);
 
+    const meterW = this.drawSigMeter(g, 12, performance.now());
+    const stockX = 12 + meterW + 22;
+    g.rect(stockX - 11, 10, 1, TOP_BAR_HEIGHT - 20).fill({
+      color: UI.glassStroke,
+      alpha: 0.35,
+    });
+
     this.resourceLabel.text = `NODULES ${this.nodules.toFixed(0)}`;
     this.resourceLabel.style.fill = RESOURCE_COLOR[ResourceKind.Nodule];
+    this.resourceLabel.position.set(stockX, 10);
 
     // Crystal appears only once a player has some or has seen a field: an
     // always-on zero would be chrome, and this HUD spends space on decisions.
@@ -5846,7 +5970,7 @@ export class EchoRenderer {
     this.crystalLabel.visible = showCrystal;
     this.crystalLabel.text = `CRYSTAL ${this.crystal.toFixed(0)}`;
     this.crystalLabel.style.fill = RESOURCE_COLOR[ResourceKind.ResonanceCrystal];
-    this.crystalLabel.position.set(this.resourceLabel.x + this.resourceLabel.width + 16, 8);
+    this.crystalLabel.position.set(this.resourceLabel.x + this.resourceLabel.width + 16, 10);
 
     // Biomass appears only once a player has killed something. An always-on
     // zero would be chrome, and this HUD spends its space on decisions.
@@ -5855,7 +5979,7 @@ export class EchoRenderer {
       this.biomassLabel.text = `BIOMASS ${this.biomass.toFixed(0)}`;
       this.biomassLabel.style.fill = FAUNA_COLOR;
       const anchorLabel = showCrystal ? this.crystalLabel : this.resourceLabel;
-      this.biomassLabel.position.set(anchorLabel.x + anchorLabel.width + 16, 8);
+      this.biomassLabel.position.set(anchorLabel.x + anchorLabel.width + 16, 10);
     }
 
     // Thermal Draw, drawn as a *rate* and deliberately not like the stockpiles
@@ -5875,12 +5999,12 @@ export class EchoRenderer {
     const full = this.berths.used >= this.berths.granted;
     this.berthsLabel.text = `BERTHS ${this.berths.used}/${this.berths.granted}`;
     this.berthsLabel.style.fill = full ? UI.threat : UI.text;
-    this.berthsLabel.position.set(beforeBerths.x + beforeBerths.width + 16, 8);
+    this.berthsLabel.position.set(beforeBerths.x + beforeBerths.width + 16, 10);
     const drawX = this.berthsLabel.x + this.berthsLabel.width + 16;
     const deficit = this.drawReport.satisfaction < 1;
     this.drawLabel.text = `DRAW ${this.drawReport.capacity.toFixed(0)}/${this.drawReport.demand.toFixed(0)}`;
     this.drawLabel.style.fill = deficit ? UI.threat : UI.accent;
-    this.drawLabel.position.set(drawX, 8);
+    this.drawLabel.position.set(drawX, 10);
 
     // Segments, one per unit of demand, filled up to what capacity covers.
     // Discrete because draw is discrete: you have four taps or you do not.
@@ -5888,30 +6012,11 @@ export class EchoRenderer {
     const covered = Math.round(segments * this.drawReport.satisfaction);
     const segX = drawX + this.drawLabel.width + 8;
     for (let i = 0; i < segments; i++) {
-      g.rect(segX + i * 6, 11, 4, 9).fill({
+      g.rect(segX + i * 6, 13, 4, 9).fill({
         color: i < covered ? (deficit ? UI.threat : UI.accent) : UI.glassStroke,
         alpha: i < covered ? 0.9 : 0.35,
       });
     }
-
-    const meterX = segX + segments * 6 + 18;
-    // Floored as well as capped. §11's UI scale can shrink the HUD's virtual
-    // viewport to 720 px at 200%, and a meter allowed to go to zero — or
-    // negative — would take the one element the design calls permanent
-    // ("players must feel their own loudness") off the screen first.
-    const meterWidth = Math.max(40, Math.min(120, screenWidth - meterX - 150));
-    const meterY = 9;
-    const meterHeight = 12;
-    g.rect(meterX, meterY, meterWidth, meterHeight).fill({ color: 0x000000, alpha: 0.5 });
-    const fraction = Math.max(0, Math.min(1, this.peakSig / 100));
-    g.rect(meterX, meterY, meterWidth * fraction, meterHeight).fill({
-      color: sigColor(this.peakSig),
-    });
-    g.rect(meterX, meterY, meterWidth, meterHeight).stroke({ width: 1, color: UI.glassStroke });
-
-    this.sigLabel.text = `SIG ${this.peakSig.toFixed(0)}`;
-    this.sigLabel.style.fill = sigColor(this.peakSig);
-    this.sigLabel.position.set(meterX + meterWidth + 8, 8);
 
     // What your own noise is doing to your hearing, in words. The bed makes
     // this audible; §11 requires it also be readable.
@@ -5919,7 +6024,7 @@ export class EchoRenderer {
     const deaf = mix.worldGain < 1 ? '  \u2013 masking' : mix.worldGain > 1 ? '  \u2013 open' : '';
     this.bandLabel.text = `${mix.label.toUpperCase()}${deaf}`;
     this.bandLabel.style.fill = this.fleetSilent ? UI.accent : UI.textDim;
-    this.bandLabel.position.set(this.sigLabel.x + this.sigLabel.width + 12, 10);
+    this.bandLabel.position.set(12 + meterW + 22, 30);
 
     // The continuous half of the exposure report. Deliberately says only how
     // well you are seen, never by whom or from where — that is all the server
@@ -5932,7 +6037,7 @@ export class EchoRenderer {
     this.exposureLabel.style.fill = UI.threat;
     if (tracked) {
       this.exposureLabel.text = `TRACKED \u00d7${this.exposure.trackedCount}`;
-      this.exposureLabel.position.set(this.bandLabel.x + this.bandLabel.width + 14, 10);
+      this.exposureLabel.position.set(this.bandLabel.x + this.bandLabel.width + 14, 30);
     }
 
     const contactCount = this.tracked.size;
