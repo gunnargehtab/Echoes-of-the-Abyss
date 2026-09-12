@@ -2846,12 +2846,20 @@ export class Match {
     for (const slot of this.slots) {
       const units = this.collectOwnUnits(slot);
       const structures = this.collectOwnStructures(slot);
+      // Units only, and structures deliberately not (#623). docs/ui-ux.md §3
+      // spells the headline number as "peak SIG across the player's units",
+      // because it is the one a player can act on: a Nodule Refinery idles at
+      // 65 — exactly §3's red stop — and a base cannot be told to be quieter.
+      // Folding it in pinned the meter at the loudest *building* for the rest
+      // of the match, which is why the self bed already refused this figure
+      // and recomputed its own over units (EchoRenderer.selfAudioFrame,
+      // selfMixer.ts) instead. One set now, read by the bar, the label and
+      // the bed alike. An embarked hull contributes nothing on its own terms
+      // rather than by being filtered: `board` zeroes `Acoustic.sig`, since a
+      // hull in a hold is out of the water (systems/carrying.ts).
       let peakSig = 0;
       for (const unit of units) {
         if (unit.sig > peakSig) peakSig = unit.sig;
-      }
-      for (const structure of structures) {
-        if (structure.sig > peakSig) peakSig = structure.sig;
       }
       snapshots.set(slot, {
         tick: this.world.tick,

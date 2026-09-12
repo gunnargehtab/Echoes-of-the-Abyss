@@ -1033,9 +1033,16 @@ export class EchoRenderer {
   private ordersSeq = 0;
   private selectedUnitsCache: { seq: string; units: OwnUnit[] } = { seq: '', units: [] };
   private selected = new Set<number>();
+  /**
+   * Loudest SIG across the player's own units, server-sent (docs/ui-ux.md §3).
+   *
+   * There used to be a second private beside this one, `fleetSig`, recomputed
+   * over `this.units` because the server folded structures into `peakSig` and
+   * the bar and the band label eight pixels apart therefore measured different
+   * sets of hulls. #623 took the structures out at the source, so there is one
+   * number again and this is it.
+   */
   private peakSig = 0;
-  /** Loudest SIG across own *units* — the self bed's input, see selfAudioFrame. */
-  private fleetSig = 0;
   private fleetSilent = false;
   /** What the rest of the map currently holds on the player, server-sent. */
   private exposure: ExposureReport = { tier: ResolutionTier.Silent, trackedCount: 0 };
@@ -3518,7 +3525,6 @@ export class EchoRenderer {
     this.shoals = [];
     this.jellies = [];
     this.peakSig = 0;
-    this.fleetSig = 0;
     this.fleetSilent = false;
     this.exposure = { tier: ResolutionTier.Silent, trackedCount: 0 };
     this.drawReport = { capacity: 0, demand: 0, satisfaction: 1 };
@@ -3717,9 +3723,14 @@ export class EchoRenderer {
       }
     }
 
-    // Fleet SIG, not `peakSig`: the HUD number folds in structures, and a base
-    // six kilometres away would pin the self bed at "full plant" for the whole
-    // match. See SelfAudioFrame.fleetSig.
+    // The same peak the HUD draws, recomputed here rather than read off
+    // `snapshot.peakSig`, because this loop is already walking every unit for
+    // the silence and sour figures and the max costs nothing on the way past.
+    // It used to be a *different* number: until #623 the server folded
+    // structures into `peakSig`, so a base six kilometres away would have
+    // pinned the self bed at "full plant" for the whole match, and the bed
+    // refused the HUD's figure on exactly that ground. Both sets are now the
+    // player's units. See SelfAudioFrame.fleetSig.
     let fleetSig = 0;
     let allSilent = this.units.length > 0;
     // Worst sour in the fleet, for the same reason SIG is a peak — see
@@ -3734,9 +3745,8 @@ export class EchoRenderer {
       if (sour > worstSour) worstSour = sour;
     }
 
-    // Kept for the HUD too: the band label reads the same numbers the bed
-    // does, so the words and the sound cannot disagree.
-    this.fleetSig = fleetSig;
+    // Held for the HUD, which has no other source for it: the band label inks
+    // itself by whether the whole force is running silent.
     this.fleetSilent = allSilent;
 
     return {
@@ -4859,13 +4869,6 @@ export class EchoRenderer {
   }
 
   /**
-   * A ring on the hull that just broke silence.
-   *
-   * The SIG meter already spikes, but a meter is a number about the whole
-   * force: it cannot say *which* hull gave the ambush away. The audio cue is
-   * per-event, so its visual equivalent has to be per-hull too.
-   */
-  /**
    * The visual half of the Tier-4 lock tone (docs/audio-direction.md §11).
    *
    * Four brackets that close onto the contact over 700 ms and stop. Closing
@@ -5201,6 +5204,13 @@ export class EchoRenderer {
 
       // The hull that just broke silence wears the noise leaving it —
       // expanding outward, unlike the lock brackets which close in.
+      //
+      // Per-hull because the meter cannot be: a peak is a number about the
+      // whole force and cannot say *which* hull gave the ambush away. The
+      // audio cue is per-event, so its visual equivalent has to be too. (This
+      // used to be written against a claim that "the SIG meter already
+      // spikes". It does not — §3's transient overlay bar is unbuilt, and the
+      // comment asserting it outlived the method it was attached to. #623.)
       const broke = this.brokeSilence.get(unit.id);
       if (broke !== undefined) {
         const t = (now - broke) / BREAK_SILENCE_FLASH_MS;
@@ -5388,7 +5398,7 @@ export class EchoRenderer {
 
     // What your own noise is doing to your hearing, in words. The bed makes
     // this audible; §11 requires it also be readable.
-    const mix = selfMixFor(this.fleetSig, this.fleetSilent);
+    const mix = selfMixFor(this.peakSig, this.fleetSilent);
     const deaf = mix.worldGain < 1 ? '  \u2013 masking' : mix.worldGain > 1 ? '  \u2013 open' : '';
     this.bandLabel.text = `${mix.label.toUpperCase()}${deaf}`;
     this.bandLabel.style.fill = this.fleetSilent ? UI.accent : UI.textDim;
