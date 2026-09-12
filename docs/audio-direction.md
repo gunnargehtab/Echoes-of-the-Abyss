@@ -482,28 +482,49 @@ uncomfortable has come from a phone.
 **The speaker profile now exists** (`packages/frontend/src/audio/speakerProfile.ts`). It is a
 mix option on the output, after master and before the ceiling, and it is two paths summed:
 
-- a **low shelf** at 180 Hz, -10 dB, which stops the driver spending its excursion on a band
-  it cannot turn into sound. A shelf and not a cut, because turning this on is choosing a
-  mix, not throwing the bottom away.
+- a **cut** — a 24 dB/octave high-pass at 210 Hz. The direct path does not carry the low
+  band at all.
 - a **harmonic path** — the half §11 specifies. It reads everything under 200 Hz, generates
   that band's harmonic series with a static non-linearity, and keeps only what lands above
-  260 Hz. The fundamental is never sent and the ear puts it back, which is the same
-  reconstruction that lets a telephone carry a 100 Hz voice through a channel starting at
-  300 Hz. A contact at 55 Hz stays a contact at 55 Hz rather than becoming one at 330.
+  320 Hz, at the same slope. The fundamental is never sent and the ear puts it back, which
+  is the same reconstruction that lets a telephone carry a 100 Hz voice through a channel
+  starting at 300 Hz. A contact at 55 Hz stays a contact at 55 Hz rather than becoming one
+  at 330.
 
-Measured on the reported scene, the profile takes the share of the mix below 200 Hz from
-**78% to 22%** and the integrated figure from -21.9 to -28.6 LUFS. Both halves of that are
-intended. The spectral half is the fix; the level half is because the two are not comparable
-— energy the plain mix spent below 200 Hz was never arriving as sound, so matching the
-loudness reading would have been a real increase in what is heard.
+**Replacement, not attenuation, and the first build of this got that wrong.** It used a
+-10 dB shelf on the direct path, reasoning that a full cut was heavy-handed. The result was
+that both paths carried the band — the reconstruction *and* the fundamentals it was
+reconstructing, ten decibels down. Ten decibels down is not gone, a sustained tone is the
+most noticeable thing in any mix, and the player reported the hum afterwards in the same
+word they had used before it. A reconstruction summed with the thing it reconstructs is not
+a reconstruction. The slope was the other half of the same mistake: one biquad a side leaks
+most of an octave either way, so the crossover smeared the band instead of moving it, and
+the smear is exactly the sustained low-mid a phone turns into a hum.
+
+Measured on the reported scene, the profile now takes the share of the mix between 60 and
+200 Hz from **68% to 4%**, and everything below 60 Hz to nothing. The integrated figure goes
+from -21.9 to -28.6 LUFS — and that level is held deliberately rather than derived, because
+it is the one the player called fine. This round changes the spectrum and nothing else: a
+report of "better" that could be either change is a report that settles nothing.
 
 §11 asks for a *compressed* mix and the compression is paid twice: by a static soft knee at
 0.35, below the output ceiling's 0.6, and by the shaper's own saturation. The second is the
-one with teeth, and it is what the profile's drive was tuned against — not against a single
-reading but against §4's scale, which a hard-driven shaper flattens. At a drive of 30 the
-band moves furthest and SIG 10 and SIG 80 come out 5.5 dB apart instead of 14.3, which is
-trading "being loud makes you deaf" for the fix. The setting is 12: §4's climb comes through
-compressed by about a third and still audibly a climb.
+one with teeth, and it is what the drive is tuned against — not a single reading but §4's
+scale, which the shaper distorts in both directions. Too little drive and the profile
+*expands* the scale, since quiet material generates almost no harmonic and the harmonic path
+is now the only thing carrying the band; too much and it flattens it. §4's climb from SIG 10
+to SIG 80 spans 14.3 dB unprofiled:
+
+| drive | §4's span, profiled | left between 60 and 200 Hz |
+| --- | --- | --- |
+| 8 | 18.0 dB — expanded | 8% |
+| 12 | 14.6 dB — unchanged | 6% |
+| 20 | 9.8 dB — compressed by a third | 4% |
+| 30 | 6.4 dB — half the scale gone | 4% |
+
+20 is the setting. It compresses without spending "being loud makes you deaf" to do it, and
+it keeps the idle bed audible where a gentler drive does not — at 8, SIG 10 lands at
+-51.5 LUFS, and §1's third law is that a player hears their own noise.
 
 **It defaults on where the device implies a small speaker** — a coarse pointer on a narrow
 screen — on the same terms `reducedMotion` defaults to the OS preference: a player on a

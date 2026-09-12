@@ -26,15 +26,25 @@
  * Two paths in parallel, summed.
  *
  * ```text
- *          ┌─► low shelf (-10 dB under 180 Hz) ──────────────────────┐
- *   input ─┤                                                          ├─► out
- *          └─► low-pass 200 ─► shaper ─► high-pass 260 ─► lift ───────┘
+ *          ┌─► high-pass 180 ──────────────────────────────────────────┐
+ *   input ─┤                                                           ├─► out
+ *          └─► low-pass 200 ─► shaper ─► high-pass 260 ─► lift ────────┘
  * ```
  *
- * The **direct path** stops spending the driver's excursion on a band it
- * cannot turn into sound. A shelf and not a cut, because a player on speakers
- * that *do* reach down there has only turned on a mix option, not thrown the
- * bottom away.
+ * The **direct path** does not carry the low band at all. That is the whole
+ * design and the first draft of this file got it wrong: it used a -10 dB
+ * shelf, on the reasoning that a cut was heavy-handed, and the result was that
+ * both paths carried the band — the reconstruction *and* the fundamentals it
+ * was reconstructing, ten decibels down. Ten decibels down is not gone, and a
+ * sustained tone is the most noticeable thing in any mix, so the hum this file
+ * exists to remove survived its own fix. The player reported it in the same
+ * word they had used before, which is what a partial fix sounds like.
+ *
+ * Replacement, then, not attenuation: below 180 Hz the direct path is filtered
+ * away and the harmonic path is what the band becomes. This is the topology
+ * every small-speaker bass processor uses, and the reason it is a *profile*
+ * with a switch is exactly so it can be this aggressive — a player on speakers
+ * that reach the bottom octave turns it off and loses nothing.
  *
  * The **harmonic path** is the half §11 actually specifies. It isolates the
  * information band, generates its harmonic series with a static non-linearity,
@@ -67,14 +77,28 @@
  */
 export const SPEAKER_PROFILE = {
   /**
-   * Where the direct path's shelf begins, Hz, and how far it cuts.
+   * Where the direct path stops carrying the mix, Hz.
    *
-   * 180 Hz is above the whole of the contact band §11 names (40-160) on
-   * purpose: the shelf is what stops that band reaching the driver as
-   * excursion, and the harmonic path below is what carries it instead.
+   * Above the whole of the contact band §11 names (40-160) on purpose: this is
+   * what stops that band reaching the driver as excursion, and the harmonic
+   * path below is what carries it instead. 12 dB per octave, so a 44 Hz plant
+   * tone arrives about 26 dB down rather than the 10 dB a shelf left it at —
+   * the difference between a hum that is quieter and a hum that is gone.
    */
-  SHELF_HZ: 180,
-  SHELF_DB: -10,
+  CUT_HZ: 210,
+
+  /**
+   * How many biquads each crossover filter is built from.
+   *
+   * Two, so each side is 24 dB per octave rather than 12. A single biquad was
+   * not enough and the measurement said so plainly: with one pole-pair a side,
+   * the share of the mix between 60 and 200 Hz barely moved when the direct
+   * path went from a -10 dB shelf to a full cut, because both filters were
+   * still leaking most of an octave either side of their corner. A crossover
+   * that gentle does not replace a band, it smears it — and the smear is
+   * exactly the sustained low-mid energy a phone speaker turns into a hum.
+   */
+  POLES: 2,
 
   /** The band the harmonic path reads, Hz. Everything the mix hides below. */
   READ_HZ: 200,
@@ -87,7 +111,7 @@ export const SPEAKER_PROFILE = {
    * its 6th harmonic and up, spaced 44 Hz apart, which the ear resolves as a
    * 44 Hz residue pitch — the plant keeps its pitch without being sent it.
    */
-  HARMONIC_HZ: 260,
+  HARMONIC_HZ: 320,
 
   /**
    * How hard the shaper is driven, and how much of its output is even.
@@ -97,24 +121,27 @@ export const SPEAKER_PROFILE = {
    * either alone is a thinner cue.
    *
    * The drive is where §11's "compressed" is actually paid, and it is the
-   * number this file was tuned on, against §4's scale rather than against a
+   * number this file is tuned on — against §4's scale rather than against a
    * single reading. A `tanh` saturates, so the harder it is driven the less
-   * its output depends on its input — which narrows the dynamic range, and
-   * past a point flattens it. §4's climb from SIG 10 to SIG 80 spans 14.3 dB
-   * unprofiled; measured on the bed alone (tools/audio-meter `bed:` and
-   * `bed-profile:`):
+   * its output depends on its input. Too little and the profile *expands* the
+   * scale, because quiet material generates almost no harmonic and the
+   * harmonic path is now the only thing carrying the low band; too much and it
+   * flattens it. §4's climb from SIG 10 to SIG 80 spans 14.3 dB unprofiled,
+   * measured on the bed alone (tools/audio-meter `bed:` and `bed-profile:`):
    *
-   * | drive | §4's span, profiled | still under 200 Hz at SIG 80 |
+   * | drive | §4's span, profiled | left between 60 and 200 Hz |
    * | --- | --- | --- |
-   * | 6 | 13.0 dB | 54% |
-   * | 12 | 9.5 dB | 38% |
-   * | 30 | 5.5 dB | 28% |
+   * | 8 | 18.0 dB — expanded | 8% |
+   * | 12 | 14.6 dB — unchanged | 6% |
+   * | 20 | 9.8 dB — compressed by a third | 4% |
+   * | 30 | 6.4 dB — half the scale gone | 4% |
    *
-   * 12 compresses the scale by about a third and leaves it a scale. 30 moves
-   * a little more of the band and costs two thirds of "being loud makes you
-   * deaf" doing it, which is trading the mechanic for the fix.
+   * 20 is the setting: §11 asks for a compressed mix and this is the row that
+   * compresses without spending "being loud makes you deaf" to do it. It also
+   * keeps the idle bed audible, which 8 does not — at that drive SIG 10 lands
+   * at -51.5 LUFS, and §1's third law is that a player hears their own noise.
    */
-  DRIVE: 12,
+  DRIVE: 20,
   EVEN: 0.45,
 
   /** How much of the harmonic path is mixed back in, linear. */
@@ -135,26 +162,22 @@ export const SPEAKER_PROFILE = {
    * something to work on.
    *
    * The harmonic path *adds* energy, and a profile that made the mix louder
-   * would answer #663 with the fault it was reported for. Measured rather than
-   * chosen: untrimmed, the profile read about a decibel *hotter* than the mix
-   * it replaces at the reported scene, because a K-weighted meter finally
-   * counts energy that had been sitting in a band it discounts.
+   * would answer #663 with the fault it was reported for. Untrimmed, the
+   * profile reads about a decibel *hotter* than the mix it replaces, because a
+   * K-weighted meter finally counts energy that had been sitting in a band it
+   * discounts.
    *
-   * Set below the mix it replaces rather than at parity — about seven decibels
-   * at the reported scene — and for two reasons that both survive saying out
-   * loud. Matching the integrated figure would be a real increase in what the
-   * player hears: the energy the plain mix spent below 200 Hz was never
-   * arriving as sound, and the profile is the change that makes it arrive, so
-   * two mixes at one loudness reading, one of which wastes three quarters of
-   * itself, are not equally loud in a room. And a profile *is* a level
-   * decision as much as a spectral one: it is the mix for a small speaker held
-   * at arm's length, which wants less than a desk does.
+   * Set so the reported scene lands at -28.6 LUFS, which is not arithmetic:
+   * it is the level the player who filed #663 called fine. They then said the
+   * hum was still there, so this round changes the spectrum and holds the
+   * level exactly where it was — one variable at a time, because a report of
+   * "better" that could be either change is a report that settles nothing.
    *
-   * Erring quiet is also the recoverable direction. A player who finds this
-   * too soft has a master volume and §11's +12 dB contact boost; a player who
-   * finds it too loud has filed #663 three times.
+   * Erring quiet remains the recoverable direction. Too soft has a master
+   * volume and §11's +12 dB contact boost; too loud has this issue filed three
+   * times.
    */
-  TRIM: 0.112,
+  TRIM: 0.106,
 
   /** Samples in each curve. Odd, so the midpoint is exactly zero. */
   POINTS: 4097,
@@ -223,6 +246,34 @@ export function compressCurve(): Float32Array<ArrayBuffer> {
   return curveOf(compressShape);
 }
 
+/**
+ * `POLES` biquads of one type in series, at one corner.
+ *
+ * Butterworth Q on each section, which is not the textbook alignment for a
+ * cascade — two 0.707 sections give -6 dB at the corner rather than -3 — and
+ * is the right trade here: the corner is a crossover between two paths that
+ * are summed, so a little dip where they meet costs less than the resonant
+ * peak a higher Q would put in the band this whole file is trying to empty.
+ */
+function cascade(
+  context: AudioContext,
+  type: 'highpass' | 'lowpass',
+  hz: number
+): { input: BiquadFilterNode; output: BiquadFilterNode } {
+  let first: BiquadFilterNode | null = null;
+  let last: BiquadFilterNode | null = null;
+  for (let i = 0; i < SPEAKER_PROFILE.POLES; i++) {
+    const section = context.createBiquadFilter();
+    section.type = type;
+    section.frequency.value = hz;
+    section.Q.value = Math.SQRT1_2;
+    if (first === null) first = section;
+    else last!.connect(section);
+    last = section;
+  }
+  return { input: first!, output: last! };
+}
+
 /** What `createSpeakerProfile` hands back: where to feed it, and its switch. */
 export interface SpeakerProfile {
   /** Connect the mix to this. */
@@ -265,33 +316,27 @@ export function createSpeakerProfile(
   const summed = context.createGain();
   summed.gain.value = 1;
 
-  // Direct: the mix, with the band the driver cannot play shelved down.
-  const shelf = context.createBiquadFilter();
-  shelf.type = 'lowshelf';
-  shelf.frequency.value = SPEAKER_PROFILE.SHELF_HZ;
-  shelf.gain.value = SPEAKER_PROFILE.SHELF_DB;
-  input.connect(shelf).connect(summed);
+  // Direct: the mix, without the band the driver cannot play.
+  const cut = cascade(context, 'highpass', SPEAKER_PROFILE.CUT_HZ);
+  input.connect(cut.input);
+  cut.output.connect(summed);
 
   // Harmonic: read the low band, generate its series, keep what a small
   // speaker can actually radiate.
-  const read = context.createBiquadFilter();
-  read.type = 'lowpass';
-  read.frequency.value = SPEAKER_PROFILE.READ_HZ;
-  read.Q.value = Math.SQRT1_2;
+  const read = cascade(context, 'lowpass', SPEAKER_PROFILE.READ_HZ);
 
   const generator = context.createWaveShaper();
   generator.curve = harmonicCurve();
   generator.oversample = '4x';
 
-  const keep = context.createBiquadFilter();
-  keep.type = 'highpass';
-  keep.frequency.value = SPEAKER_PROFILE.HARMONIC_HZ;
-  keep.Q.value = Math.SQRT1_2;
+  const keep = cascade(context, 'highpass', SPEAKER_PROFILE.HARMONIC_HZ);
 
   const lift = context.createGain();
   lift.gain.value = SPEAKER_PROFILE.LIFT;
 
-  input.connect(read).connect(generator).connect(keep).connect(lift).connect(summed);
+  input.connect(read.input);
+  read.output.connect(generator).connect(keep.input);
+  keep.output.connect(lift).connect(summed);
 
   // The static knee, then the trim — in that order, because a trim ahead of
   // the knee would move the whole profile below it and leave the compression
