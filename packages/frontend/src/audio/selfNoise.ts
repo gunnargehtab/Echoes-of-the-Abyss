@@ -91,6 +91,37 @@ export const SILENT_MIX = {
   RAMP_S: 0.6,
 } as const;
 
+/**
+ * How far the whole bed sits below its authored levels, linear (#663).
+ *
+ * One number applied to every band and to Silent Running, rather than four
+ * rewritten gains, because §4's *scale* is the specified thing and its
+ * absolute level is not. The table above still says what §4 says — the steps
+ * between the bands, the shape of the climb — and this says how loud the
+ * bottom of it is, which is a question §4 never answers and a phone speaker
+ * answers very differently from a desk.
+ *
+ * -4 dB, and the figure is arithmetic rather than taste. Measured through
+ * MASTER_GAIN (tools/audio-meter), the bed at full plant read -17.6 LUFS
+ * integrated — §12's target for the *entire mix*, reached by one continuous
+ * layer with the contact bus, the world bus and the exposure strike still to
+ * come. Summing the same measurement's figures for a loud moment — full plant,
+ * seven contacts, the tuned bed and the residue under §4's own -8 dB world
+ * attenuation — put the mix at -15.8 LUFS, and -4 dB on the bed alone puts
+ * that sum at -18.1. That is the whole of the arithmetic.
+ *
+ * It is applied to Silent Running too, and it has to be: SILENT_MIX.SELF_GAIN
+ * is an absolute level rather than a relative one, so trimming the bands
+ * without trimming it would eventually have running silent come out *louder*
+ * than sitting still — which would inarguably be the single worst bug in this
+ * file.
+ *
+ * What this does not touch is the world-bus column, which is SPEC: §4's -3 dB
+ * and -8 dB are how being loud makes you deaf, and deafness is a ratio. The
+ * bed getting quieter does not make it a smaller share of what you can hear.
+ */
+export const BED_TRIM = 0.63;
+
 export function bandFor(sig: number): SelfBand {
   for (const band of SELF_BANDS) {
     if (sig <= band.maxSig) return band;
@@ -118,7 +149,7 @@ export function selfMixFor(sig: number, silentRunning: boolean): SelfMix {
   const band = bandFor(sig);
   if (silentRunning) {
     return {
-      selfGain: SILENT_MIX.SELF_GAIN,
+      selfGain: SILENT_MIX.SELF_GAIN * BED_TRIM,
       worldGain: SILENT_MIX.WORLD_GAIN,
       // Running silent is not merely quiet, it is *narrow*: the plant is shut
       // down to the hull, so the bed loses its top as well as its level.
@@ -128,7 +159,7 @@ export function selfMixFor(sig: number, silentRunning: boolean): SelfMix {
     };
   }
   return {
-    selfGain: band.selfGain,
+    selfGain: band.selfGain * BED_TRIM,
     worldGain: band.worldGain,
     cutoffHz: band.cutoffHz,
     rateHz: band.rateHz,

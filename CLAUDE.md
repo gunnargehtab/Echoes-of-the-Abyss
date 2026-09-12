@@ -144,6 +144,17 @@ tools/hull-renders The same models photographed rather than measured:
                    an npm workspace and not a gate — a portrait is a
                    presentation artifact, and a model is still approved by
                    hull-intake and check.mjs, which measure.
+tools/audio-meter  What the mix measures, rather than what it was meant to.
+                   meter.mjs bundles the production audio classes, renders one
+                   layer at a time through Chromium's OfflineAudioContext, and
+                   reads the samples back with Node: loudness.mjs is ITU-R
+                   BS.1770-4 integrated LUFS and true peak, spectrum.mjs the
+                   band split that says where a layer's energy sits. Not an npm
+                   workspace and not a gate — it needs a browser, and a level is
+                   a judgement a number informs rather than settles. Readings
+                   are taken at the bus, before MASTER_GAIN, because a figure at
+                   the output says the mix is hot and a figure at the bus says
+                   which layer made it hot (#663).
 tools/echo-sim     Standalone CommonJS harness for deterministic Echo scenarios.
                    Not an npm workspace; run it directly:
                    node tools/echo-sim/sim.js [tools/echo-sim/scenarios/<name>.json]

@@ -248,11 +248,34 @@ export class StubGainNode extends StubAudioNode {
 export class StubOscillatorNode extends StubSourceNode {
   type = 'sine';
   readonly frequency: StubAudioParam;
+  /**
+   * The wave this oscillator was given, or null while it is still a `type`.
+   *
+   * Kept rather than swallowed for the same reason every other stub keeps what
+   * it was handed: the self bed's partials are the whole of #663's fix on a
+   * phone speaker, and a no-op setter would let a refactor drop them back to a
+   * bare 44 Hz sine with every test still green.
+   */
+  periodicWave: StubPeriodicWave | null = null;
   constructor(context: HeadlessAudioContext) {
     super('OscillatorNode', context);
     this.frequency = new StubAudioParam(440, context.ledger, context);
   }
-  setPeriodicWave(): void {}
+  setPeriodicWave(wave: StubPeriodicWave): void {
+    this.periodicWave = wave;
+    // What a real oscillator does, and what a test asking "is this still a
+    // sine?" has to be able to see.
+    this.type = 'custom';
+  }
+}
+
+/** A `PeriodicWave`, which in Web Audio is its coefficients and nothing else. */
+export class StubPeriodicWave {
+  constructor(
+    readonly real: Float32Array,
+    readonly imag: Float32Array,
+    readonly normalised: boolean
+  ) {}
 }
 
 export class StubBufferSourceNode extends StubSourceNode {
@@ -399,6 +422,16 @@ export class HeadlessAudioContext {
 
   createWaveShaper(): StubWaveShaperNode {
     return this.track(new StubWaveShaperNode(this));
+  }
+
+  createPeriodicWave(
+    real: Float32Array,
+    imag: Float32Array,
+    constraints?: { disableNormalization?: boolean }
+  ): StubPeriodicWave {
+    // Not tracked: a wave is not a node, costs no tick budget, and counting it
+    // in the ledger would make the audio budget look spent on arithmetic.
+    return new StubPeriodicWave(real, imag, constraints?.disableNormalization !== true);
   }
 
   createDelay(): StubDelayNode {

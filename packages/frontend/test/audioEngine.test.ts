@@ -28,17 +28,21 @@ import {
   HeadlessAudioContext,
   installHeadlessAudio,
   uninstallHeadlessAudio,
+  StubBiquadFilterNode,
   type StubAudioNode,
   type StubGainNode,
 } from './support/headlessAudio.ts';
 import {
   AudioEngine,
   CONTACT_BOOST_MAX_DB,
+  SELF_LOW_CUT_HZ,
   ceilingShape,
+  crowdGain,
   dbToGain,
   type TrimBus,
 } from '../src/audio/engine.ts';
 import { MAX_CONTACT_VOICES } from '../src/audio/voiceAllocator.ts';
+import { duckFor } from '../src/audio/precedence.ts';
 import type { ContactAudioEntry, ContactAudioFrame } from '../src/audio/contactMixer.ts';
 import type { SelfAudioFrame } from '../src/audio/selfMixer.ts';
 
@@ -322,10 +326,32 @@ describe('the audio engine: the graph it builds', () => {
       const master = graph.master as unknown as StubAudioNode;
 
       // Every bus reaches master through its own trim: one hop to the trim,
-      // one to master.
+      // one to master. The self bus takes one more, and only the self bus: its
+      // low cut stands before its trim so the bed, the Lid and every self
+      // one-shot are behind it (#663), and a user turning the self slider down
+      // must not be able to route around it.
       for (const bus of BUSES.filter((name) => name !== 'music')) {
         const node = graph[bus] as unknown as StubAudioNode;
-        assert.equal(hops(node, master), 2, `${bus} reaches master through its trim`);
+        const expected = bus === 'self' ? 3 : 2;
+        assert.equal(hops(node, master), expected, `${bus} reaches master through its trim`);
+      }
+      // And the extra hop is the low cut itself, not some other node that
+      // happens to be in the way: §11's speaker profile is only delivered if
+      // this is a high-pass, at the corner engine.ts states, on this one bus.
+      const lowCut = context.nodes.find(
+        (node): node is StubBiquadFilterNode =>
+          node instanceof StubBiquadFilterNode &&
+          (graph.self as unknown as StubAudioNode).outputs.includes(node)
+      );
+      assert.ok(lowCut !== undefined, 'the self bus passes through a filter');
+      assert.equal(lowCut.type, 'highpass', 'the self bus filter cuts the low end');
+      assert.equal(lowCut.frequency.value, SELF_LOW_CUT_HZ, 'at the stated corner');
+      for (const bus of BUSES.filter((name) => name !== 'self')) {
+        const node = graph[bus] as unknown as StubAudioNode;
+        assert.ok(
+          !node.outputs.some((out) => out instanceof StubBiquadFilterNode),
+          `${bus} is not low-cut — only the self bus is`
+        );
       }
       // Music is the one that does not: bus -> duck -> trim -> master, so the
       // Precedence Law's dip cannot be undone by turning the score up.
@@ -436,6 +462,50 @@ describe('the audio engine: what a tick costs', () => {
         `${engine.activeContactVoices} voices is inside the cap of ${MAX_CONTACT_VOICES}`
       );
       assert.equal(engine.activeContactVoices, MAX_CONTACT_VOICES, 'and spends all of it');
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
+  it('holds the contact bus to a constant power as voices arrive', () => {
+    // The fault #663 found behind the two #661 fixed: §12 budgets 24 voices
+    // and said nothing about what they cost between them, so they simply
+    // summed. Measured at the bus, seven classified contacts peaked at
+    // +1.7 dBFS and twenty-four at +7.9 — a mix built to be bent back by its
+    // own safety limiter, with none of the headroom §12 reserves for the
+    // exposure strike left to reserve.
+    //
+    // Asserted as the law rather than as four numbers: one voice is the
+    // reference and is untouched, more voices are quieter, and the whole
+    // budget lands where the sum law for sources out of phase puts it.
+    assert.equal(crowdGain(0), 1, 'an empty bus is not attenuated');
+    assert.equal(crowdGain(1), 1, 'one contact is the reference and does not move');
+    for (let voices = 2; voices <= MAX_CONTACT_VOICES; voices++) {
+      assert.ok(
+        crowdGain(voices) < crowdGain(voices - 1),
+        `${voices} voices is not quieter per voice than ${voices - 1}`
+      );
+    }
+    assert.ok(
+      Math.abs(20 * Math.log10(crowdGain(MAX_CONTACT_VOICES)) + 13.8) < 0.1,
+      'the full voice budget does not cost the 13.8 dB the sum law puts it at'
+    );
+
+    // And the engine actually writes it, multiplied into the Precedence Law's
+    // own claim rather than replacing it — the two are independent facts about
+    // the same bus, exactly as they are on the world bus.
+    const { engine } = boot();
+    try {
+      const contact = engine.graph!.contact as unknown as StubGainNode;
+      engine.applyContacts(contactFrame(9));
+      engine.onEchoTick();
+      const written = contact.gain.writes.at(-1);
+      assert.ok(written !== undefined, 'the tick wrote nothing to the contact bus');
+      assert.ok(
+        Math.abs(written.value - duckFor('contact', null) * crowdGain(9)) < 1e-9,
+        `the bus was written to ${written.value}, not the duck times the crowd gain`
+      );
     } finally {
       void engine.destroy();
       uninstallHeadlessAudio();

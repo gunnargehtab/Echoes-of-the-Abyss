@@ -400,6 +400,70 @@ above it. Deliberately *not* a compressor: Chromium's `DynamicsCompressorNode` a
 internal makeup gain of 3-7 dB depending on threshold, which would move the integrated
 target by an amount no other engine need match.
 
+The **integrated half of that target is now measured** rather than assumed, which is what
+finally named the fault the ceiling could not reach. `tools/audio-meter` renders the
+production audio classes through an offline Web Audio engine and meters the samples to
+ITU-R BS.1770-4, per layer, at the bus. A ceiling is a promise about the loudest instant; a
+player reaching for the volume control is responding to the other twenty minutes, and
+nothing in the repository could read that number back.
+
+What it found was two faults, and both of them were the mix being authored on a desk and
+played on a phone.
+
+**The self bed was 93-98% sub-60 Hz in every one of §4's four bands.** It was a filtered
+noise floor plus a bare 44 Hz sine, and a phone speaker radiates nothing at 44 Hz — it
+answers the tone with cone excursion, which comes back as intermodulation across the bands
+that do carry information. So the loudest continuous layer in the mix was spending almost
+all of itself on the one octave the reporting device could only turn into distortion, and it
+measured *quiet* the whole time, because a K-weighted meter discounts the bottom octave in
+exactly the way the ear does. §11's speaker profile already named the fix for the contact
+band and it is the same fix here: the fundamental stays at 44 Hz and stays present, and the
+level moves up its own harmonic series, where a small speaker is efficient and where the ear
+reconstructs the fundamental it was never sent. The self bus — and only the self bus — is
+then high-passed at 60 Hz, 12 dB per octave. This does not spend §4's reservation of the low
+band for a crush cue: "the low band the hull already occupies" is the bed's own 44-1,100 Hz,
+all of which passes. What is removed is below the plant's fundamental, where nothing is
+authored. The contact bus keeps its bottom octave, because §11 pins the contact band at
+40-160 Hz and a filter there would delete the information the mix exists to deliver. The
+same speaker-profile treatment is applied to §3's unclassified thump instead: seven tracked
+Tier-1 contacts measured 98% sub-60 Hz, since every voice below Tier 3 is the same 55 Hz
+sine by design, and it is voiced through its harmonic series now. The series is identical
+for every unclassified contact, which is the tier rule restated rather than bent — a fixed
+series says no more about what a contact is than a sine did.
+
+**The contact bus had no headroom policy at all.** The 24-voice budget in the table above
+exists so the low band stays legible, and it never said what the voices cost between them:
+they simply summed. Measured, one classified contact sits sensibly against the -18 LUFS
+target, seven peaked at +1.7 dBFS and twenty-four at +7.9 — a mix whose normal operating
+state was inside the soft-clip knee, with the headroom this table reserves for the exposure
+strike already spent. The bus now holds roughly constant *power* as voices arrive rather
+than constant amplitude per voice, at 1/√n, which is the sum law for sources that are not in
+phase with each other. One contact is untouched, so the reference the per-voice levels were
+chosen against does not move; the whole budget costs 13.8 dB, which is close to what the
+same measurement says twenty-four voices actually add. Every voice scales together, so
+nothing about which contact is louder than which changes and §3's tier levels keep saying
+exactly what they said. A crowded ocean is quieter per contact, which is also true of a
+crowded ocean; what it may not be is louder in total than the mix has room for, because that
+buries the one contact the player needed under the six they did not.
+
+**The bed's absolute level came down 4 dB**, and the figure is arithmetic rather than taste.
+The bed at full plant measured -17.6 LUFS integrated through the master gain — this table's
+target for the *entire mix*, reached by one continuous layer with the contact bus, the world
+bus and the exposure strike still to come. Summing the meter's figures for a loud moment
+(full plant, seven contacts, the tuned bed and the residue under §4's own -8 dB world
+attenuation) put the mix at -15.8 LUFS, and 4 dB off the bed alone puts that sum at -18.1.
+It is one trim over the whole of §4's table rather than four rewritten gains, because the
+*scale* is what §4 specifies and its absolute level is not — the steps between the bands
+come through untouched. It applies to Silent Running as well, and has to: that level is
+absolute where the bands are a scale, so trimming one and not the other would eventually
+have running silent come out louder than sitting still.
+
+One layer is left reading hot and is deliberately not acted on here: the tuned bed at full
+crystal with a corridor in earshot measures -16.1 LUFS through the master gain. That is a
+maximal input rather than a common one, it sits entirely above 200 Hz so it is none of the
+fault above, and the standing-wave bed is a mechanic still taking shape. It is recorded, not
+chased.
+
 The **music bus now carries the port's bed** (§10, "The port") — the shell's own engine,
 opened on the first gesture in a menu and closed on the way into a match. The in-game score
 is still unwritten: the bus ducks and trims correctly and has one piece to play, in the
