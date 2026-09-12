@@ -40,6 +40,7 @@ import {
   storedMissionId,
   type ConnectionStatus,
   type GameClientHandlers,
+  type LobbyView,
 } from '../src/net/GameClient.ts';
 import { cannedMap, cannedSnapshot, cannedTerrain } from './support/cannedMatch.ts';
 
@@ -490,42 +491,116 @@ describe('the match client: what the room says', () => {
     assert.equal(log.argsOf('onEcho').length, 1, 'the stale patch found no history to apply to');
   });
 
-  it('pushes the lobby on a real change and swallows the 5 Hz tick', async () => {
+  /**
+   * The lobby view, and what is allowed to produce one.
+   *
+   * The room's schema carries `tick` beside the four things a lobby is a view
+   * of, and the tick moves five times a second for the length of the match. A
+   * client subscribed to the whole schema hears all of it, which is why this
+   * one subscribes to the four fields instead — so these tests are about which
+   * changes reach the shell, and just as much about which do not.
+   */
+  it('treats joining as a lobby view of its own', async () => {
+    const { log } = await connected({});
+    assert.equal(log.argsOf('onLobby').length, 1, 'the room is on screen before the first sync');
+  });
+
+  it('says nothing when only the tick has moved', async () => {
     const { room, log } = await connected({});
-    const players = new Map([
-      [
-        'seat-1',
-        {
-          sessionId: 'seat-1',
-          name: 'Marr',
-          slot: 0,
-          faction: Faction.Bathyarch,
-          ready: false,
-          connected: true,
-          isAi: false,
-          difficulty: 0,
-        },
-      ],
-    ]);
+    room.tick();
+    room.tick();
+    room.tick();
+    assert.equal(room.state.tick, 3, 'the simulation did advance');
+    assert.equal(log.argsOf('onLobby').length, 1, 'and the lobby heard none of it');
+  });
 
-    // `attach` pushes once on its own, so the room's phase is on screen before
-    // the first state sync arrives.
-    assert.equal(log.argsOf('onLobby').length, 1, 'joining is itself a lobby view');
+  it('pushes a view when a field the lobby reads moves', async () => {
+    const { room, log } = await connected({});
 
-    room.changeState({ phase: MatchPhase.Lobby, mapId: 'smoke-basin', winnerSlot: -1, players });
-    assert.equal(log.argsOf('onLobby').length, 2, 'the roster went up');
+    room.changeState({ mapId: 'smoke-basin' });
+    assert.equal(log.argsOf('onLobby').length, 2, 'the water is a lobby fact');
 
-    // The schema also carries `tick`, which moves five times a second. An
-    // unfiltered onStateChange would re-render the lobby forever.
-    room.changeState({ phase: MatchPhase.Lobby, mapId: 'smoke-basin', winnerSlot: -1, players });
-    room.changeState({ phase: MatchPhase.Lobby, mapId: 'smoke-basin', winnerSlot: -1, players });
-    assert.equal(log.argsOf('onLobby').length, 2, 'an unchanged view is not a change');
+    room.tick();
+    room.changeState({ phase: MatchPhase.Playing });
+    room.tick();
+    assert.equal(log.argsOf('onLobby').length, 3, 'so is the phase, and the ticks between are not');
 
-    room.changeState({ phase: MatchPhase.Playing, mapId: 'smoke-basin', winnerSlot: -1, players });
-    assert.equal(log.argsOf('onLobby').length, 3, 'a real change is');
-    const view = log.argsOf('onLobby').at(-1)?.[0] as { phase: MatchPhase; players: unknown[] };
-    assert.equal(view.phase, MatchPhase.Playing);
-    assert.equal(view.players.length, 1);
+    room.changeState({ winnerSlot: 0 });
+    const view = log.argsOf('onLobby').at(-1)?.[0] as LobbyView;
+    assert.equal(log.argsOf('onLobby').length, 4, 'and so is a resolved match');
+    assert.deepEqual(
+      { phase: view.phase, mapId: view.mapId, winnerSlot: view.winnerSlot },
+      { phase: MatchPhase.Playing, mapId: 'smoke-basin', winnerSlot: 0 },
+      'each of them as the schema now holds it'
+    );
+  });
+
+  it('pushes a view for the roster, and for a commander already in it', async () => {
+    const { room, log } = await connected({});
+
+    const marr = room.seat('seat-1', { name: 'Marr', slot: 1, faction: Faction.Bathyarch });
+    room.seat('seat-2', { name: 'Tessel', slot: 0, faction: Faction.Hadron, isAi: true });
+    assert.equal(log.argsOf('onLobby').length, 3, 'each arrival is a change');
+    const seated = (log.argsOf('onLobby').at(-1)?.[0] as LobbyView).players;
+    assert.deepEqual(
+      seated.map((player) => player.name),
+      ['Tessel', 'Marr'],
+      'and the roster is in slot order rather than join order'
+    );
+
+    // A commander picking a navy or readying up moves the seat and not the map
+    // holding it, so the roster's own callbacks never fire for it — which is
+    // the case a subscription to the collection alone would miss.
+    room.changePlayer('seat-1', { faction: Faction.Pelagia, ready: true });
+    assert.equal(log.argsOf('onLobby').length, 4, 'a seat that changes is a change');
+    const ready = (log.argsOf('onLobby').at(-1)?.[0] as LobbyView).players.at(-1);
+    assert.deepEqual(
+      { faction: ready?.faction, ready: ready?.ready },
+      { faction: Faction.Pelagia, ready: true },
+      'and the row says what the seat now says'
+    );
+
+    room.unseat('seat-2');
+    assert.equal(log.argsOf('onLobby').length, 5, 'and so is a seat emptying');
+    assert.equal((log.argsOf('onLobby').at(-1)?.[0] as LobbyView).players.length, 1);
+    assert.equal(marr.watchers, 1, 'the seat still here is still watched');
+  });
+
+  it('takes its listeners with it when a seat empties', async () => {
+    // A listener outliving the thing it listens to is the leak this class is
+    // most exposed to: it reconnects, and a match can seat four commanders.
+    const { room } = await connected({});
+    const tessel = room.seat('seat-2', { name: 'Tessel', slot: 0 });
+    assert.equal(tessel.watchers, 1, 'a seated commander is watched');
+    room.unseat('seat-2');
+    assert.equal(tessel.watchers, 0, 'and an empty seat is not');
+  });
+
+  it('lets go of the room when the player leaves', async () => {
+    const { client, room, log } = await connected({});
+    const pushed = log.argsOf('onLobby').length;
+    client.disconnect();
+
+    room.changeState({ mapId: 'smoke-basin' });
+    room.seat('seat-2', { name: 'Tessel', slot: 1 });
+    assert.equal(log.argsOf('onLobby').length, pushed, 'a room nobody is in says nothing');
+    assert.equal(room.state.watchers('mapId'), 0, 'because nothing is listening to it');
+    assert.equal(room.state.players.watchers, 0, 'nor to its roster');
+  });
+
+  it('does not stack a second set of listeners on a reconnection', async () => {
+    // The stub hands the same room back, which is what makes this checkable:
+    // a re-attach that did not first let go would leave two subscriptions on
+    // one field, and every later change would be pushed twice.
+    const { room, net, log } = await connected({});
+    room.drop();
+    await until(() => net.callOf('reconnect') !== undefined, 'the client retried the seat');
+    await until(() => log.statuses().at(-1) === 'connected', 'the seat was re-taken');
+
+    const pushed = log.argsOf('onLobby').length;
+    room.changeState({ mapId: 'smoke-basin' });
+    assert.equal(log.argsOf('onLobby').length, pushed + 1, 'one change, one view');
+    assert.equal(room.state.watchers('mapId'), 1, 'one field, one listener');
   });
 
   it('reports a room error as a readable status', async () => {
