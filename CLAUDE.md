@@ -228,11 +228,6 @@ working fine once bundled. `@colyseus/schema` needs legacy decorators, which is 
 `useDefineForClassFields` stays `false` in the backend tsconfig — flipping it silently
 wipes the `@type()` metadata.
 
-The vendored `colyseus` skill documents **0.18**, four minors ahead of what is pinned here.
-It checks the installed version first and will tell you to follow 0.15's own docs, which is
-correct — it is carried as a guard against recall writing 0.17/0.18 API shapes into a 0.15
-room, not as a description of this backend.
-
 ### The wire
 
 Every message that crosses the socket — 32 a client may send, 11 the room may send — is
