@@ -93,7 +93,7 @@ function sideChrome() {
 function yardStrip(lines) {
   const row = (l) => `
     <div class="row" style="flex:1 1 0;gap:9px;padding:0 12px;align-items:center;border-right:1px solid rgba(214,230,240,0.07)">
-      <div class="col" style="gap:2px;flex:0 0 82px;text-align:left">
+      <div class="col" style="gap:2px;flex:0 0 112px;text-align:left;white-space:nowrap">
         <span style="font-size:11.5px;letter-spacing:0.12em;color:${TEXT.bright}">${l.yard}</span>
         <span class="lbl" style="color:${l.pct ? TEXT.cyan : TEXT.dim}">${l.state}</span>
       </div>
@@ -200,8 +200,8 @@ function hint(text, ink = TEXT.dim) {
 }
 
 const LINES_IDLE = [
-  { yard: 'BASTION', state: '2 LINES FREE', making: 'idle', eta: '—', pct: 0, queue: [] },
-  { yard: 'FOUNDRY', state: '1 LINE FREE', making: 'idle', eta: '—', pct: 0, queue: [] },
+  { yard: 'BASTION', state: '2 FREE', making: 'idle', eta: '—', pct: 0, queue: [] },
+  { yard: 'FOUNDRY', state: '1 FREE', making: 'idle', eta: '—', pct: 0, queue: [] },
 ];
 const LINES_BUSY = [
   {
