@@ -49,9 +49,10 @@ Why each one earns its context:
 - **PixiJS** is official, written against v8, and `pixi.js` is pinned to `^8.2.0`
   — so it will not hand back the v7 `beginFill`/`endFill` idiom that model
   recall reaches for. `EchoRenderer` constructs `Text` twenty-three times and
-  draws through `Graphics` throughout, which is what the two scene skills cover;
+  draws through `Graphics` throughout, which is what the two scene skills cover.
   `pixijs-performance` is the one that argues for `BitmapText` on per-frame
-  labels, which the HUD does not yet use.
+  labels; that argument has now been measured against this HUD and **does not
+  currently apply** — see below.
 - **three.js** is plain three, with no react-three-fiber assumptions, and it
   uses the post-r152 colour-space API, so it agrees with `three@^0.169`. Geometry
   and materials are the conn view's own surface — `BufferGeometry`, `InstancedMesh`
@@ -79,6 +80,50 @@ Why each one earns its context:
   0.15 room, and `CLAUDE.md`'s own Colyseus notes cover the meta-package import
   and the decorator flag but not that drift. Drop it if the noise outweighs the
   guard.
+
+### The BitmapText argument, measured
+
+This file used to say the HUD "does not yet use" `BitmapText`, which was true and
+misleading: it implied a gap. The premise under the skill's argument is a label
+re-assigned *every frame*, and `EchoRenderer` does look like that from the outside —
+`drawHud` runs on the frame cadence by design (#432: contact freshness fades
+continuously and the scope sweep animates by rule) and re-assigns nearly every label
+as it goes.
+
+What it costs is another question, and it is counted rather than assumed in
+`rendererSmoke.test.ts`. `styleKey` is `text:style:resolution`, and `CanvasTextPipe`
+regenerates the glyph canvas and re-uploads the texture exactly when it changes, so
+transitions of that key are the cost the skill is talking about:
+
+| Over 600 frames (10 s), 39 live `Text` objects | Rasterisations |
+| --- | --- |
+| A still match | **0** |
+| A live one, fresh Echo pass every 12th frame, SIG and nodules moving | **154** (~15/s) |
+| What a genuinely per-frame HUD would pay | 23,400 |
+
+So about **0.7%** of the premise, and the churn is five labels — `sigLabel`,
+`resourceLabel`, `bandLabel`, `loudLabel` at the Echo cadence, and `clockLabel` once a
+second. The reason is that pixi.js 8.19 already does what the skill asks of canvas
+`Text` as its fallback ("only update when the value actually changes"), without being
+asked: `AbstractText`'s `set text` returns early on an equal string and `TextStyle`'s
+`set fill` on an equal value. Glyph measurement is cached the same way, and that matters
+as much — laying out the top strip reads `.width` thirteen times a frame across ten
+labels, 7,800 reads over the same run, and they cost **62** `measureText` calls in
+total.
+
+Converting the five would trade ~15 canvas rasterisations a second for a glyph atlas,
+on the most-read text in the game, and every one of those labels is inside the
+screenshot gates in `docs/graphics-standards.md`. That is a real visual risk against a
+benefit this container cannot measure — it has no GPU, and the upload is the half that
+would matter. So it is not done, and the reason is written down rather than rediscovered.
+
+**What would change the answer.** A label stamped with something that genuinely differs
+every frame — a clock in milliseconds, a frame counter, a continuously interpolated
+readout — puts the HUD back on the skill's premise, and `BitmapText` becomes the right
+answer for that label. The budget in `rendererSmoke.test.ts` fails the moment that
+happens, so the decision is re-opened by a red test rather than by anyone remembering
+this paragraph. The other trigger is #286: a real reading on the Termux floor, where a
+texture upload is priced very differently from a desktop GPU.
 
 ## Rules
 
