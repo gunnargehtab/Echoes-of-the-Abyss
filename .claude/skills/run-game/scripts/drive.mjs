@@ -117,7 +117,14 @@ await page.goto(URL, { waitUntil: 'domcontentloaded' });
 const title = await page.waitForSelector('.menu-screen', { timeout: 3000 }).catch(() => null);
 if (title !== null) {
   await shot('title');
-  await page.click('.menu-entry:has-text("Solo game")');
+  // Matched on the entry's accessible name rather than on a class. #677 turned
+  // the title screen into the listening room and renamed `.menu-entry` to
+  // `.title-entry`, which broke this silently — the drive still found the
+  // screen and then timed out on a click nobody could see was stale. A name is
+  // what the screen promises a player; a class is an implementation detail
+  // this harness has no business depending on, and CLAUDE.md already makes the
+  // accessible name the way the shell's own tests reach a control.
+  await page.getByRole('button', { name: 'Solo game' }).click();
   await page.waitForSelector('.menu-commit', { timeout: 5000 });
   await shot('setup');
   await page.click('.menu-commit');
