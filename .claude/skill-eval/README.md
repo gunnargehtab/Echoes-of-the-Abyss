@@ -297,6 +297,14 @@ tripping in B and not in A is strong evidence the guard works, because the trap 
 named before either arm ran. Treat a single run as a screen, not a verdict, and read
 it alongside the token column rather than instead of it.
 
+**And a gate column is only as honest as the fixtures under it.** Every
+`lobby-callbacks` cell above reads "10 of 10", and three of those four arms had
+nonetheless dropped a load-bearing fallback, because each arm's own test stub
+initialised the room state more completely than the real decoder does and the bug lived
+in the gap. `ARMS.md` has the detail. The lesson generalises past this experiment: an
+arm writes its own fixtures, so a green gate run says the arm is consistent with what it
+believed, not that what it believed was true.
+
 Issue #652 is the only work in the backlog with enough repeated, near-identical units
 to beat this — twenty structure ports, splittable ten and ten, with `check.mjs` giving
 a part-for-part verdict on each.
