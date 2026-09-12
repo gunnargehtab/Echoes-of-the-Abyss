@@ -8,8 +8,10 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { defineQuery } from 'bitecs';
 import {
   Faction,
+  OrdnanceKind,
   SEPARATION,
   SIM,
   StructureKind,
@@ -20,8 +22,10 @@ import {
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
-import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
-import { Position, SilentRunning } from '../src/sim/components.ts';
+import { spawnOrdnance, spawnStructure, spawnUnit } from '../src/sim/world.ts';
+import { Health, Ordnance, Position, SilentRunning, Weapon } from '../src/sim/components.ts';
+
+const liveOrdnance = defineQuery([Ordnance, Health]);
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 
@@ -461,6 +465,130 @@ describe('separation', () => {
       `      separation crowd, ${HULLS} hulls: ${work.separationPairs} pair tests, ` +
         `${work.separationCells} cell probes, ${work.acquisitionPairs} acquisition candidates, ` +
         `worst tick ${match.worstStepMsCost.toFixed(3)} ms (${perTick.toFixed(3)} ms/tick mean)`
+    );
+  });
+
+  it('does not raise the acquisition worst case by giving ordered guns point defence', () => {
+    // #617 hoisted the point-defence scan above the ordered branch, so every
+    // armed hull now walks the inbound list where only idle ones used to. The
+    // owner's decision asked for that cost to be measured against the budget
+    // above — "a saturation volley is the case to measure, not a quiet board".
+    //
+    // Measured here, 200 hulls with a 48-round volley fired into them from
+    // standoff (44 alive at the peak), worst tick inside the volley window:
+    //
+    // | Hulls under an attack order | before #617 | after |
+    // | --- | --- | --- |
+    // | none | 49,557 | 49,557 |
+    // | half | 27,538 | 30,810 |
+    // | all  |  3,840 | 11,520 |
+    //
+    // The shape of that table is the argument, and it is not a coincidence of
+    // this board. Acquisition work is *monotone decreasing* in the number of
+    // hulls under an order, before and after alike, because an ordered shooter
+    // skips the auto-acquire walk over every targetable entity on the map —
+    // two hundred candidates here — and the inbound list it now walks instead
+    // is a few dozen. So the maximum over every mix of orders is the all-idle
+    // arm, and this change leaves that arm byte-identical. Hoisting the scan
+    // cannot raise the worst case; it can only fill in the cheap end.
+    //
+    // The all-idle figure is over the 45,000 budget, and that is a finding
+    // rather than a regression: it is the same 49,557 on `main`, it is the
+    // idle scan that has always been there, and it is all-pairs against
+    // ordnance exactly as the hull walk is all-pairs against hulls. It is not
+    // asserted here, because pinning it would be recording a known overrun as
+    // acceptable, and it is not #617's to fix. What is asserted is the part
+    // this change is answerable for: the arm it adds cost to fits, and no arm
+    // costs more than the idle one it is bounded by.
+    const HULLS = 200;
+    const VOLLEY = 48;
+
+    const worstOverVolley = (orderedFraction: number): { work: number; live: number } => {
+      const match = new Match(undefined, { fauna: false, seed: 8 });
+      for (let slot = 0; slot < 4; slot++) match.addPlayer(slot, slot as Faction);
+      const hulls: number[] = [];
+      for (let i = 0; i < HULLS; i++) {
+        hulls.push(
+          spawnUnit(match.world, {
+            kind: (i % 5) as UnitKind,
+            slot: i % 4,
+            faction: (i % 4) as Faction,
+            x: 3600 + ((i * 37) % 800),
+            y: 3600 + ((i * 53) % 800),
+          })
+        );
+      }
+      for (let i = 0; i < 120; i++) match.update(STEP_MS);
+
+      // Standoff, and deliberately not seeking: a seeker inside a crowd this
+      // dense detonates within a tick or two, which measures a board with
+      // three rounds in the water rather than a saturation volley. Pointed
+      // outward for the same reason. What is under test is the cost of the
+      // scan, and the scan does not care why the round is where it is.
+      const depth = Position.depth[hulls[0]!]!;
+      for (let i = 0; i < VOLLEY; i++) {
+        const bearing = (i * 2 * Math.PI) / VOLLEY;
+        spawnOrdnance(match.world, {
+          kind: OrdnanceKind.Torpedo,
+          slot: 0,
+          faction: Faction.Bathyarch,
+          x: 4000 + 760 * Math.cos(bearing),
+          y: 4000 + 760 * Math.sin(bearing),
+          depth,
+          heading: bearing,
+          pressureRating: 2000,
+          seekerHyd: 0,
+        });
+      }
+
+      let work = 0;
+      let live = 0;
+      for (let t = 0; t < 120; t++) {
+        // Re-applied every tick, and written to the field rather than ordered
+        // through `Match`, for the reason countermeasures.test.ts gives: what
+        // is under test is the state `combatSystem` reads. Re-applied because
+        // hulls die in a crowd this dense and a lapsed order would quietly
+        // turn an ordered arm back into an idle one.
+        for (let i = 0; i < Math.round(HULLS * orderedFraction); i++) {
+          const eid = hulls[i]!;
+          const foe = hulls[(i + 1) % HULLS]!;
+          if (Health.hp[eid]! > 0 && Health.hp[foe]! > 0) Weapon.orderedTargetEid[eid] = foe;
+        }
+        match.update(STEP_MS);
+        work = Math.max(work, match.stepWorkLastTick.acquisitionPairs);
+        let alive = 0;
+        const inWater = liveOrdnance(match.world);
+        for (let j = 0; j < inWater.length; j++) if (Health.hp[inWater[j]!]! > 0) alive++;
+        live = Math.max(live, alive);
+      }
+      return { work, live };
+    };
+
+    const idle = worstOverVolley(0);
+    const half = worstOverVolley(0.5);
+    const ordered = worstOverVolley(1);
+
+    const ACQUISITION_BUDGET = 45_000;
+    assert.ok(
+      ordered.work <= ACQUISITION_BUDGET,
+      `every hull under an order considered ${ordered.work} candidates in its worst tick ` +
+        `with ${ordered.live} rounds in the water, budget ${ACQUISITION_BUDGET}`
+    );
+    // The bound, and the reason the worst case cannot move: whatever an ordered
+    // gun now spends on the inbound list, it was already saving on a candidate
+    // walk that is longer. If this ever inverts, the scan has stopped being
+    // bounded by the thing it replaced and the budget conversation is real.
+    assert.ok(
+      ordered.work <= half.work && half.work <= idle.work,
+      `acquisition work must fall as orders are added, not rise: ` +
+        `idle ${idle.work}, half ${half.work}, ordered ${ordered.work}`
+    );
+
+    console.log(
+      `      saturation volley, ${HULLS} hulls, ${idle.live} rounds in the water: ` +
+        `${idle.work} acquisition candidates idle, ${half.work} half-ordered, ` +
+        `${ordered.work} all ordered (budget ${ACQUISITION_BUDGET}; the idle arm is the ` +
+        `pre-existing all-pairs scan and is unchanged by #617)`
     );
   });
 
