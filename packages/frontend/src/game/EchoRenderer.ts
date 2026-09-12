@@ -764,7 +764,13 @@ const BAR_BUTTON_HEIGHT = 40;
  * that reads better wider, and it is the first to go when there is not enough
  * width to give it — see `consoleBlocks`.
  */
-const BLOCK_W = { scope: 190, selection: 330, commands: 400, productionMin: 260 } as const;
+const BLOCK_W = {
+  scope: 170,
+  selection: 300,
+  fleet: 230,
+  commands: 380,
+  productionMin: 240,
+} as const;
 /** Top resource strip. */
 const TOP_BAR_HEIGHT = 30;
 
@@ -958,6 +964,8 @@ export class EchoRenderer {
   private readonly blockTitles: Text[] = [];
   /** Two pooled labels per production row: what it is making, and how long. */
   private readonly productionTexts: Text[] = [];
+  /** Pooled labels for the fleet block's chips and its census line. */
+  private readonly fleetTexts: Text[] = [];
   /** Last frame's button layout, hit-tested by pressBarButton. */
   private barButtons: BarButton[] = [];
   private activeTab: CommandTab = 'build';
@@ -2337,6 +2345,7 @@ export class EchoRenderer {
     scope: { x: number; w: number };
     commands: { x: number; w: number };
     selection?: { x: number; w: number };
+    fleet?: { x: number; w: number };
     production?: { x: number; w: number };
   } {
     const width = this.hudWidth();
@@ -2345,21 +2354,44 @@ export class EchoRenderer {
     const left = CONSOLE_PAD + 2;
     const right = width - CONSOLE_PAD - 2;
 
+    // Blocks are dropped rather than squeezed when the width runs out, because
+    // a block narrower than its content is a block that lies about holding it.
+    // The order is what each one costs to lose:
+    //
+    // - **Fleet first.** Its facts have somewhere else to be — the hulls in
+    //   hand are also the selection card's, and the groups are also the
+    //   digits. It is the block that makes them quick, not the only one that
+    //   makes them reachable.
+    // - **Production next**, and reluctantly: production being visible without
+    //   a tab is this console's whole argument, so it gives way only to the two
+    //   blocks that cannot go at all.
+    // - **Selection after that**, because the world view carries a hull's state
+    //   on the hull itself.
+    //
+    // Scope and commands never go. One is the only view of the whole map, and
+    // the other is how a touchscreen reaches any order at all.
+    const fixed = BLOCK_W.scope + BLOCK_W.commands + BLOCK_GAP * 2;
+    const spare = right - left - fixed;
+    const wantsSelection = spare >= BLOCK_W.selection + BLOCK_GAP + BLOCK_W.productionMin;
+    const afterSelection = wantsSelection ? spare - BLOCK_W.selection - BLOCK_GAP : spare;
+    const wantsFleet = afterSelection >= BLOCK_W.fleet + BLOCK_GAP + BLOCK_W.productionMin;
+
     let x = left;
     const scope = { x, w: BLOCK_W.scope };
     x += scope.w + BLOCK_GAP;
 
-    const spare = right - x - BLOCK_GAP - BLOCK_W.commands;
-    const wantsSelection = spare >= BLOCK_W.selection;
     const selection = wantsSelection ? { x, w: BLOCK_W.selection } : undefined;
     if (selection !== undefined) x += selection.w + BLOCK_GAP;
+
+    const fleet = wantsFleet ? { x, w: BLOCK_W.fleet } : undefined;
+    if (fleet !== undefined) x += fleet.w + BLOCK_GAP;
 
     const commands = { x, w: BLOCK_W.commands };
     x += commands.w + BLOCK_GAP;
 
     const rest = right - x;
     const production = rest >= BLOCK_W.productionMin ? { x, w: rest } : undefined;
-    return { y, h, scope, commands, selection, production };
+    return { y, h, scope, commands, selection, fleet, production };
   }
 
   private minimapRect(): { x: number; y: number; size: number } {
@@ -2800,6 +2832,7 @@ export class EchoRenderer {
     const slots: Array<[{ x: number; w: number } | undefined, string]> = [
       [blocks.scope, 'SCOPE'],
       [blocks.selection, 'SELECTION'],
+      [blocks.fleet, 'FLEET'],
       [blocks.commands, 'COMMANDS'],
       [blocks.production, 'PRODUCTION'],
     ];
@@ -2815,9 +2848,13 @@ export class EchoRenderer {
       label.text = title;
       label.position.set(slot.x + 8, blocks.y + 4);
       if (title === 'PRODUCTION') this.paintProduction(g, slot, blocks.y, blocks.h);
+      if (title === 'FLEET') this.paintFleet(g, slot, blocks.y, blocks.h);
     }
     if (blocks.production === undefined) {
       for (const text of this.productionTexts) text.visible = false;
+    }
+    if (blocks.fleet === undefined) {
+      for (const text of this.fleetTexts) text.visible = false;
     }
     for (let i = shown; i < this.blockTitles.length; i++) this.blockTitles[i]!.visible = false;
   }
@@ -2900,6 +2937,108 @@ export class EchoRenderer {
     for (let i = shown * 2; i < this.productionTexts.length; i++) {
       this.productionTexts[i]!.visible = false;
     }
+  }
+
+  /**
+   * The fleet block: what is in hand, what is assigned, and what the player
+   * owns — all of it own force, and none of it anybody else's.
+   *
+   * Two bands of 44 px chips over a census line. §11 puts the touch floor at
+   * 44 px and §9 makes the digits unrebindable, so on a touchscreen — which has
+   * no digits — these chips are the *only* way to recall a control group. Four
+   * rows of 44 px do not fit a block this tall, which is why the groups are
+   * chips laid across the width rather than a list: it is both denser and
+   * reachable, where a list of 15 px rows was neither.
+   *
+   * The census counts hulls and structures the player owns. A hostile total
+   * here would be docs/ui-ux.md §10.5's maphack in a numeral — the map-wide
+   * count that opaque contact handles exist to withhold, handed over in a
+   * friendlier font — so the block never reads `this.tracked` and never will.
+   */
+  private paintFleet(g: Graphics, slot: { x: number; w: number }, y: number, h: number): void {
+    const ROW = 44;
+    const pad = 6;
+    const held = this.selectedUnits();
+    const inner = slot.w - pad * 2;
+
+    const chip = (cx: number, cy: number, cw: number, on: boolean, hurt: boolean): void => {
+      g.rect(cx, cy, cw, ROW).fill({ color: UI.glass, alpha: on ? 0.85 : 0.4 });
+      g.rect(cx, cy, cw, ROW).stroke({
+        width: 1,
+        color: hurt ? UI.threat : UI.accent,
+        alpha: on ? 0.55 : 0.16,
+      });
+    };
+
+    let band = y + BLOCK_HEAD_H + 4;
+    let label = 0;
+    const text = (t: string, tx: number, ty: number, ink: number, size = 11): void => {
+      const node = this.fleetText(label++);
+      node.visible = true;
+      node.text = t;
+      node.style.fill = ink;
+      node.style.fontSize = size;
+      node.position.set(tx, ty);
+    };
+
+    // Band one: the hulls in hand when there are any, the groups when not, so
+    // the block is never a row of empty squares — the fault the mockup's own
+    // second pass existed to fix.
+    const COLS = 5;
+    const cw = (inner - 4 * (COLS - 1)) / COLS;
+    if (held.length > 0) {
+      held.slice(0, COLS).forEach((unit, i) => {
+        const cx = slot.x + pad + i * (cw + 4);
+        const hurt = unit.hp < unit.maxHp * 0.5;
+        chip(cx, band, cw, true, hurt);
+        text(UNIT_SHORT[unit.kind], cx + 4, band + 14, hurt ? UI.threat : UI.text, 10);
+      });
+      band += ROW + 4;
+    }
+
+    // Band two: the control groups, 1-5 on one row. 6-9 and 0 are reachable by
+    // key and are left off rather than shrunk below the floor to fit.
+    for (let i = 0; i < COLS; i++) {
+      const key = i + 1;
+      const members = this.controlGroups.get(key)?.length ?? 0;
+      const cx = slot.x + pad + i * (cw + 4);
+      chip(cx, band, cw, members > 0, false);
+      text(String(key), cx + 6, band + 6, members > 0 ? UI.accent : UI.textDim, 12);
+      text(
+        members > 0 ? `\u00d7${members}` : '\u2014',
+        cx + 6,
+        band + 24,
+        members > 0 ? UI.text : UI.textDim,
+        10
+      );
+    }
+    band += ROW + 6;
+
+    const hulls = this.units.length;
+    const built = this.structures.length;
+    text(
+      `${hulls} HULL${hulls === 1 ? '' : 'S'} \u00b7 ${built} STRUCTURE${built === 1 ? '' : 'S'}`,
+      slot.x + pad,
+      Math.min(band, y + h - 18),
+      UI.text,
+      10
+    );
+
+    for (let i = label; i < this.fleetTexts.length; i++) this.fleetTexts[i]!.visible = false;
+  }
+
+  /** Pooled, for the same reason the button labels are — see `blockTitle`. */
+  private fleetText(index: number): Text {
+    let text = this.fleetTexts[index];
+    if (text === undefined) {
+      text = new Text({
+        text: '',
+        style: { fontFamily: FONT_DATA, fontSize: 11, letterSpacing: 1, fill: UI.text },
+      });
+      this.fleetTexts.push(text);
+      this.hud.addChild(text);
+    }
+    return text;
   }
 
   /** Pooled, for the same reason the button labels are — see `blockTitle`. */

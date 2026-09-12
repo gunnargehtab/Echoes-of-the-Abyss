@@ -30,12 +30,12 @@
 │ └──┘                                              └──────────────────┘ │
 │                      hint line — why a press did nothing               │
 │ ┌BUILD┬UNITS┬SQUAD┐                                            ┌MENU┐  │
-│ ┌────────┬─────────────┬──────────────────┬──────────────────────────┐ │
-│ │ SCOPE  │ SELECTION   │ COMMANDS         │ PRODUCTION               │ │
-│ │        │ name   PR2  │ ┌──┬──┬──┬──┐    │ BASTION  HARVESTER   14s │ │
-│ │ (scope)│ hull ▓▓▓▓   │ ├──┼──┼──┼──┤    │ ▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░░░ │ │
-│ │        │ six stats   │ └──┴──┴──┴──┘    │ FOUNDRY  idle          — │ │
-│ └────────┴─────────────┴──────────────────┴──────────────────────────┘ │
+│ ┌───────┬───────────┬──────────┬───────────────┬─────────────────────┐ │
+│ │ SCOPE │ SELECTION │ FLEET    │ COMMANDS      │ PRODUCTION          │ │
+│ │       │ name  PR2 │ ▢▢▢▢▢    │ ┌──┬──┬──┬──┐ │ BASTION HARVEST 14s │ │
+│ │(scope)│ hull ▓▓▓▓ │ 1 2 3 4 5│ ├──┼──┼──┼──┤ │ ▓▓▓▓▓▓▓░░░░░░░░░░░░ │ │
+│ │       │ six stats │ n hulls  │ └──┴──┴──┴──┘ │ FOUNDRY idle      — │ │
+│ └───────┴───────────┴──────────┴───────────────┴─────────────────────┘ │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -57,6 +57,14 @@ Two rules the break does **not** touch, and may not. The centre of the world vie
 clear: the console is resident chrome at the foot of the screen, never over the water.
 And every block shows own force only — the production block reads the player's own yards,
 and a hostile count anywhere in this console would be §10.5's maphack in a numeral.
+
+**A block is dropped rather than squeezed** when the window is too narrow for it, because
+a block narrower than its content lies about holding it. The order is what each costs to
+lose: the fleet block first, since the hulls in hand are also on the selection card and the
+groups are also the digits; then production, reluctantly, since its being visible without a
+tab is the console's whole argument; then selection, since the world view carries a hull's
+state on the hull. The scope and the command card never go — one is the only view of the
+whole map, the other is how a touchscreen reaches any order at all.
 
 **A console row is a touch target.** §11's 44 px floor is what sets the console's height
 rather than taste: a command cell is four columns wide and three rows deep so that a cell
@@ -711,7 +719,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | The log's `MARK` row | Implemented (§10, #214) — residue derived by diffing the mark set by id, once per mark per match |
 | The console (§2) | Implemented — the 80 px bar is a 208 px console of four blocks: scope, selection, a 4 × 3 command card, and production. Production is no longer behind the UNITS tab; the block reads the player's own yards, one row per yard because a yard is one build line, and its estimate is divided by the Thermal Draw's satisfaction so a starved line's slip is visible rather than silent. The selection card moved inside its block, which is what ends its collision with the hint line |
 | The plate VI card, in match | Implemented — one `plate()` draws glass, one bevel, one halo, the header rule and corner registration ticks, and the top strip, console, blocks, selection card and ribbon all go through it. Rule 5's diagonal texture is one layer over the whole HUD, rebuilt only when the viewport or the palette changes |
-| The fleet block (§2) | Not implemented — the console's fifth block. Control groups, the hulls in hand and a census of own force, all on the 44 px grid |
+| The fleet block (§2) | Implemented — the console's fifth block. Two bands of 44 px chips over a census line: the hulls in hand when there are any and the control groups when there are not, so the block is never a grid of empty squares. Groups are chips rather than a list because four 44 px rows do not fit the block, and the floor is what matters — §9 makes the digits unrebindable, so on a touchscreen these chips are the only way to recall a group. The census counts own hulls and structures and nothing else |
 | The acoustic veil | Implemented (§4.5, #472) — a min-audible-SIG field over the player's own hulls and structures, shading the seabed, its props and its embers as a vertex colour on the mesh that was already there, so the effect spends no draw call and no triangle. World view only; the scope keeps §5's promise. A slider in Settings (§14) |
 | The scatter envelope on a contact reported from crystal (§4) | Not implemented — the rule it draws shipped server-side with #438 (two ears at 30° tell the truth); the wedge and its collapse are the client's half and are owed |
 | Priced buttons, and the reason a greyed one gives | Implemented (#351) — a button carries its whole price from the sum the server charges (`SUB 260+80c`), greys when any account falls short, and a press on it says which — *Abyssal Submersible: 80 crystal short* — on the hint bar, the way a locked key does (§7). Biomass is the third column ([economy.md](economy.md) §8); nothing is priced in it yet |
