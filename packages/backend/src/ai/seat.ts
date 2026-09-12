@@ -81,6 +81,9 @@ export class AiSeat {
       case 'layDecoy':
         this.match.layDecoy(slot, command.unitId);
         return;
+      case 'noisemaker':
+        this.match.deployNoisemaker(slot, command.unitId);
+        return;
       case 'torpedo':
         this.match.orderLaunchTorpedo(slot, command.unitId, command.contactId);
         return;

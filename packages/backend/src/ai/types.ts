@@ -14,13 +14,15 @@
  * Not a resemblance — "the AI plays through the interface a player plays
  * through" has to be literally true or it is decoration.
  *
- * Today it is true with **six named exceptions**: 21 variants against the 27
+ * Today it is true with **five named exceptions**: 22 variants against the 27
  * in-match client messages, the difference listed and justified in
- * `AiUnbuilt` below. That is a narrower claim than this comment used to make,
- * and the reason it is written down rather than asserted is #621 — this
- * comment claimed the two sets were identical, and for the whole of this
- * file's life that was false. `depth` was the set difference once; then five
- * more accumulated behind it, because nothing checked.
+ * `AiUnbuilt` and `AiExempt` below — three verbs nobody has written a rule
+ * for, and two an AI seat provably cannot use. That is a narrower claim than
+ * this comment used to make, and the reason it is written down rather than
+ * asserted is #621 — this comment claimed the two sets were identical, and
+ * for the whole of this file's life that was false. `depth` was the set
+ * difference once; then five more accumulated behind it, because nothing
+ * checked.
  *
  * **Both directions are checked now, and by different machinery.** A variant
  * the seat forgets to handle is caught by the `never` at the foot of its
@@ -164,7 +166,18 @@ export type AiCommand =
    */
   | { kind: 'embark'; unitIds: number[]; carrierId: number }
   /** Land the hold of each of these carriers where it stands. */
-  | { kind: 'disembark'; unitIds: number[] };
+  | { kind: 'disembark'; unitIds: number[] }
+  /**
+   * Drop the decoy (docs/systems-combat.md §5). One hull, like `ping` and
+   * `mine`, and for the same reason: the suite is a single boat's and its
+   * cooldown is that boat's own.
+   *
+   * It carries no position because a countermeasure is not aimed — it goes
+   * 60 m astern of wherever the hull is and whichever way it was travelling —
+   * which is why `commandCountermeasures` spends it only on a hull that is
+   * actually under way. See that pass for what was measured.
+   */
+  | { kind: 'noisemaker'; unitId: number };
 
 // --- The vocabularies are held against each other --------------------------
 //
@@ -194,7 +207,7 @@ export type AiCommand =
  * defect again with a rubber stamp on it: the list stops being a record of
  * known gaps and becomes a place to put inconvenient verbs.
  *
- * **Not written yet** — the commander has no rule that would spend them:
+ * The commander has no rule that would spend any of these:
  *
  * - `hold` (`Match.orderHold`) — approximated today by `engineOff`, which
  *   `commandWatchPost` uses to park an Acolyte by cutting its drive. That is
@@ -204,57 +217,71 @@ export type AiCommand =
  *   cannot be conflated with the per-hull walks that send a siege hull back
  *   to the fleet. #621.
  * - `followFloor` (`Match.orderFollowFloor`). #621.
- * - `noisemaker` (`Match.deployNoisemaker`) — the one of the four that buys
- *   strength. Spending `NOISEMAKER` SIG 70 at your real position is a
- *   doctrinal choice rather than a reflex, so it wants a `Doctrine` gate and
- *   a measured trigger threshold, not a variant. It also would not cover
- *   every navy: a cone-locked torpedo acquires on its first pass and never
- *   looks again, so the Order's Lance is immune to the countermeasure. #621.
  *
- * **Written, and an AI seat has no use for it** — these two look permanent,
- * and the evidence is below. They sit here rather than in a separate
- * `AiExempt` union because "permanent exemption or deferred work" is the one
- * design call #621 reserves to the owner; answering it is a one-line move.
+ * `noisemaker` was the fourth of these and is `commandCountermeasures` now.
+ * It was the one that bought strength rather than tidiness, which is what
+ * earned it a doctrine field and a measured range instead of a variant and a
+ * reflex.
+ */
+type AiUnbuilt = 'hold' | 'rally' | 'followFloor';
+
+/**
+ * In-match verbs an AI seat has no use for, with the evidence that it never
+ * will — the answer to the one design call #621 reserved to the owner.
+ *
+ * A separate union from `AiUnbuilt` because these are decisions and those are
+ * holes: nothing closes an entry here, so unlike a gap it carries no issue
+ * number, and the absence is the claim rather than an oversight.
+ *
+ * The separation is worth the second type. A gap and an exemption look
+ * identical from outside — both are verbs the commander cannot say — and
+ * #621 was filed because six of them had been sitting in one undifferentiated
+ * silence for the life of this file. A reviewer asked to wave a name onto a
+ * list is entitled to know which list they are being asked for, because only
+ * one of the two is meant to shrink.
  *
  * - `ability` — `MatchRoom` refuses `addAi` in any room where
  *   `this.mission !== null`, and `Match.commanderAbility` is
  *   `missionRuntime?.fireAbility(slot) === true`. An AI seat can never sit in
- *   a room where the verb does anything. #621.
+ *   a room where the verb does anything.
  * - `sow` — docs/systems-flora.md §"the commander's opinion is two judgements
- *   and no more", and neither of the two is sowing. #621.
+ *   and no more", and neither of the two is sowing.
  */
-type AiUnbuilt = 'hold' | 'rally' | 'followFloor' | 'noisemaker' | 'ability' | 'sow';
+type AiExempt = 'ability' | 'sow';
 
 /**
  * A message a seated client may send that the commander can neither say nor
  * account for. There are none, and the build fails while there are.
  */
 function _everyInMatchVerbIsSaidOrNamed(
-  verb: Exclude<InMatchClientMessageKey, AiCommand['kind'] | AiUnbuilt>
+  verb: Exclude<InMatchClientMessageKey, AiCommand['kind'] | AiUnbuilt | AiExempt>
 ): never {
   return verb;
 }
 void _everyInMatchVerbIsSaidOrNamed;
 
 /**
- * A verb listed as a gap that the commander has since learned to say.
+ * A verb listed above that the commander has since learned to say.
  *
- * The other way `AiUnbuilt` rots: a variant lands, nobody prunes the list,
- * and the count in the comment above drifts again. Filling a gap is now
- * *required* to remove its entry rather than merely polite.
+ * The other way these lists rot: a variant lands, nobody prunes the entry,
+ * and the count in the header drifts again. Filling a gap is now *required*
+ * to remove it rather than merely polite — this is the assertion `noisemaker`
+ * tripped on its way out of `AiUnbuilt`.
  */
-function _noGapIsAlreadyBuilt(verb: Extract<AiUnbuilt, AiCommand['kind']>): never {
+function _noGapIsAlreadyBuilt(verb: Extract<AiUnbuilt | AiExempt, AiCommand['kind']>): never {
   return verb;
 }
 void _noGapIsAlreadyBuilt;
 
 /**
- * A gap naming something no seated client could send in the first place.
+ * An entry naming something no seated client could send in the first place.
  *
  * Catches a typo and catches a lobby name wandering in — either would make
  * the first assertion pass by excluding a verb that was never in the set.
  */
-function _everyGapIsARealMessage(verb: Exclude<AiUnbuilt, InMatchClientMessageKey>): never {
+function _everyGapIsARealMessage(
+  verb: Exclude<AiUnbuilt | AiExempt, InMatchClientMessageKey>
+): never {
   return verb;
 }
 void _everyGapIsARealMessage;

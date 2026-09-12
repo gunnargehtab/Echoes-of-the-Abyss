@@ -68,6 +68,29 @@ export interface Doctrine {
   /** Whether the army runs silent while approaching. */
   approachesSilently: boolean;
   /**
+   * Whether a hull under a torpedo answers it with a decoy
+   * (docs/systems-combat.md §5, and `commandCountermeasures`).
+   *
+   * An argument about sound, like every other field here, and a sharper one
+   * than most: a noisemaker is `ORDNANCE.NOISEMAKER` SIG 70 for eight seconds
+   * **at the hull's real position**. It is the loudest thing in the roster
+   * short of a ping, and unlike a ping it buys the enemy's ears rather than
+   * your own. Saving the hull spends the formation's quiet, so it is a
+   * doctrinal choice and not a reflex — which is why it is declared per navy
+   * here instead of being a rule in the commander.
+   *
+   * The split falls where each navy's quiet already sits. The two that
+   * approach silently decline it: for them the position *is* the asset, and
+   * both already own a better answer — the Commune lays the same emitter
+   * ahead of a fight from a Weaver's magazine (`commandOrdnance`), and the
+   * Directorate goes under the layer it already crosses, which §9.5 lists as
+   * the other way to starve a seeker. The two that are heard regardless take
+   * it, because eight seconds of noise beside a running torpedo is noise on
+   * top of noise, and they are the navies with nothing left to protect by
+   * staying quiet.
+   */
+  answersTorpedoesWithNoise: boolean;
+  /**
    * Whether the army pays the loud descent to attack from under the
    * thermocline (docs/systems-echo.md §3, docs/systems-depth.md §3).
    *
@@ -140,6 +163,12 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     // news and quiet it cannot keep is not worth half its income.
     exposureResponse: null,
     approachesSilently: false,
+    // "Stealth is a rounding error", and this is the field that reads most
+    // literally. It is heard from four minutes out whatever it does, so SIG 70
+    // for eight seconds costs it nothing it was keeping — and §11 already
+    // makes surviving the torpedo the Consortium's plan. The decoy is that
+    // plan one step earlier, at a price only this navy pays in nothing.
+    answersTorpedoesWithNoise: true,
     // Heard regardless, and it knows it. Quiet bought at the cost of a 47 s
     // climb is quiet it cannot spend, and PR-2 refits it pays for by the metre.
     crossesTheLayer: false,
@@ -187,6 +216,14 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     // is not worth 54% of its income.
     exposureResponse: { throttle: HarvestThrottle.Trickle, holdS: 6 },
     approachesSilently: true,
+    // The Veil, and the one navy for which this would be self-defeating: it
+    // harvests at 18 SIG and loses any fight it did not choose, so noise at
+    // its real position is the whole of what it is buying with a halved
+    // economy. It owns the same emitter used the other way round — a Weaver
+    // lays a screen at SIG 45 ahead of an approach (`commandOrdnance`) — which
+    // is a lie told where the Commune is not, and that is the version of this
+    // countermeasure its doctrine can afford.
+    answersTorpedoesWithNoise: false,
     // "They don't survive the deep; they terraform it." PR-1 baseline and the
     // worst refits in the game — the Commune's answer to deep water is to
     // change it, not to visit it, and its quiet already comes from harvesting
@@ -252,6 +289,13 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     // one into the other it will hear first. Waiting is what its ears buy it.
     exposureResponse: { throttle: HarvestThrottle.Trickle, holdS: 25 },
     approachesSilently: true,
+    // The Listening will not spend it. `pingIntervalS` below is 120 — the
+    // longest silence any doctrine keeps — and a navy that will not buy three
+    // seconds of reveal with a transmission will not buy eight of SIG 70 with
+    // a decoy. Its answer to a seeker is the one it is already rated for:
+    // §9.5 lists diving through a thermocline, 0.3 across blinds a seeker, and
+    // `crossesTheLayer` is true one line down.
+    answersTorpedoesWithNoise: false,
     // PR-3 baseline, no refit needed. The layer costs them nothing to cross
     // and hides them from ears that already hear less than theirs — and since
     // #154, the water above 400 m actively poisons them, so down is simply
@@ -284,6 +328,14 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     // fund them on 46% of an economy.
     exposureResponse: null,
     approachesSilently: false,
+    // The Score fields the fewest hulls and the dearest, so a hull saved is
+    // worth more to it than to anyone — and it is not keeping a quiet the
+    // decoy could spend. Its signature is *moved*, not lowered
+    // (docs/systems-echo.md §8: "an ordinary hull with its loudness moved"),
+    // so what it gives up is eight seconds of a flank's advantage, at a moment
+    // when a torpedo at SIG 60 is already running beside the hull and the
+    // water is not quiet anyway.
+    answersTorpedoesWithNoise: true,
     // "Deafening in front and quiet on the flank." Instant refits paid in
     // Resonance make depth a thing they project rather than buy, so the one
     // approach they can make quietly is the one that goes under.
