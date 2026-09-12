@@ -46,6 +46,18 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 26: the fingerprint stops being a hand-kept list (#620). Every field of
+ * `SimWorld` is now named on one of three unions at the foot of
+ * `sim/stateHash.ts` — hashed, covered by something the hash already mixes, or
+ * derived — and the build fails naming the field until it is. Deciding that
+ * for the fields already there found four more that were on none of them: the
+ * order queues, and the Standing Wave ledger's corridors and its two sets. The
+ * hull's own `MoveOrder` and its ordered target went in beside the queue, for
+ * the case the position would not have caught — a hull holding is going
+ * nowhere this tick and still carries where it goes when released. A v25
+ * file's checkpoints are hashes of a narrower world, for the reason v25 gives
+ * about v24.
+ *
  * 25: a resignation is a command (#620). The room resigns a slot on every
  * consented walk-out and every out-of-grace disconnect, and the balance
  * harness resigns too, but `Match.resign` recorded nothing — so a v24 file of
@@ -268,7 +280,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 25;
+export const REPLAY_FORMAT_VERSION = 26;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
