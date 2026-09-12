@@ -811,19 +811,32 @@ yard up clears its own heavy, and the only navy that fields one** — 0.6 Recite
 the cheapest heavy in the game. No arbitration between wants reaches a price the navy never
 holds, which is why all three versions of the rule read the same.
 
-**And the yard is what spends the moment.** Peak bank over the *whole* match has a median of
-600 to 620 for all four navies. A Slipway is 600. So a navy climbs to the price of the yard
-once, spends it on the yard, and never holds that much again — the median peak after the rung
-is 140, 240 and 282. The rung and the hull behind it are not both payable out of one navy's
-peak bank on this map at this length, and that is a statement about the economy rather than
-about the commander.
+**And the peak is not savings at all — it is the opening stockpile.** The paragraph that
+stood here read the 600 as a yard being saved for and spent, which was the wrong reading of
+the right number. `ECONOMY.STARTING_NODULES` is **600**, every commander is handed it at
+second zero, and a Slipway costs exactly that. So a peak of 600 is the *gift*. On the stored
+thirty seeds the Commune's peak is exactly 600 in all thirty matches and the Consortium's in
+thirteen. The best any navy ever banks *on top of* the gift, over thirty matches, is 90
+nodules for the Consortium, 40 for the Directorate and **zero for the Commune** — and 166 for
+the Knights, whose tithe pays them every tick and who are for that reason the only navy here
+whose bank behaves like an income at all. The report prints this directly now, as `Best peak
+above the opening 600`, so the column cannot be misread the way this paragraph misread it.
 
-What that leaves is not a saving rule and not an arbitration. It is #520's case for two navies
-(a price in an account the navy does not earn), and for the other two a question the freeze in
-`CLAUDE.md` puts out of bounds until the systems stop moving: whether a 600 nodule yard and a
-700 nodule hull are reachable in the same match at all. The honest gate for waves 4 and 5
-meanwhile is the one the issue's own fourth option named — a longer scenario, judged on
-whether the bank ever holds the price, which the report can now say.
+**What that leaves is arithmetic against the map.** Ventfront Divide is symmetric to the
+metre: each spawn has a 3,000 nodule home field 743 m away, and the next nearest field is
+3,384 m off and contested by all four. Gross income per navy per match runs 2,300 to 3,150
+— about one home field. Against that, the rung is a 600 nodule yard plus a 260 to 700 nodule
+hull: **29% to 43% of everything a navy earns in a match**, on top of an army that costs it
+1,500 to 2,600. The books reconcile to within a hundred nodules, so nothing is leaking; the
+rung is simply a large fraction of the money that exists.
+
+That is a claim about prices against a map's authored resources, which is what the freeze in
+`CLAUDE.md` covers, and it is not this issue's to settle. What is left here is #520's case
+for two navies — a price in an account the navy does not earn — and, for the other two, a
+question for whoever lifts the freeze: whether a 600 nodule yard and a 700 nodule hull are
+reachable in the same match at all. The honest gate for waves 4 and 5 meanwhile is the one
+the issue's own fourth option named — a longer scenario, judged on whether the bank ever
+holds the price, which the report can now say.
 
 ## 5. What each wave touches
 

@@ -67,12 +67,24 @@ hold:
   for existing: the Order's floor is income, so a Knight with a Bastion still standing does
   not scuttle. It is the one economy that cannot be taken off the map.
 - **Somebody else has the guns and the money** — at least one other commander still standing
-  banked something during the window *and* fields at least as many armed hulls. This is the
+  is *not themselves in this position* — a harvester in the water, a hull on a line, or the
+  price of a harvester in the bank — *and* fields at least as many armed hulls. This is the
   clause that makes the position unwinnable rather than merely poor: attrition against a
   commander who replaces their losses is one-way when you cannot replace yours. A table where
   nobody can pay for anything is a stalemate, not a defeat, and a broke commander who is
   still the strongest fleet on the map is not beaten — the rule refuses to call either one a
   loss.
+
+  This clause used to read *banked something during the window*, and that was the wrong test
+  for the sentence above it. Nodules arrive in **deposits**: a hauler cuts for most of a
+  minute, swims home, and banks a load, and in between the bank only falls, because the
+  commander is spending. Measured over a four-faction match on Ventfront Divide, the gap
+  between two rises ran to 295 seconds for the Directorate and 577 for the Commune while both
+  were hauling normally — against a window of 60. So a navy at work read as *not earning* for
+  most of the match, and the only income that reliably passed the test was the Order's tithe,
+  which pays every tick. A rule about replacing losses was being decided by whether a rival
+  happened to land a load inside the same minute. It now asks the question its own sentence
+  asks, which is the first three clauses of this list turned around.
 
 Sixty seconds because the position has to be a state rather than an instant: a commander who
 has just spent their last nodules is not beaten, and one who has not banked a thing in a

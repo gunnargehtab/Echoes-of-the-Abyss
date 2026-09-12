@@ -20,6 +20,7 @@
  */
 
 import {
+  ECONOMY,
   DRIFT,
   Faction,
   SIM,
@@ -152,9 +153,22 @@ export interface FactionSummary {
    * the matches that *had* a yard rather than over all of them, so a navy that
    * rarely reaches the rung is not reported as a navy that reaches it broke.
    * `rungMatches` is that denominator; at zero the two rung figures are NaN.
+   *
+   * **Read `peakBank` against `ECONOMY.STARTING_NODULES`, never on its own**, and
+   * the first version of this table did not, which is the mistake this note
+   * exists to stop the next reader making. The opening stockpile is 600 and so
+   * is a Slipway, so a peak of exactly 600 is the *gift* rather than anything
+   * the navy earned — and on the stored thirty seeds the Commune's peak is
+   * exactly 600 in all thirty matches, the Consortium's in thirteen. The column
+   * read as savings says those navies banked a yard's price; read against the
+   * opening it says the opposite, which is that they never once got their bank
+   * back above what they were handed at second zero. `peakBankEarned` is that
+   * second reading printed directly, so it cannot be misread again.
    */
   peakBank: number;
   peakBankBest: number;
+  /** The best peak, less the opening stockpile: what a navy ever banked *itself*. */
+  peakBankEarned: number;
   peakBankAtRung: number;
   peakBankAtRungBest: number;
   rungMatches: number;
@@ -560,6 +574,10 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
       ),
       peakBank: distribution(rows.map((r) => r.player.peakNodules)).median,
       peakBankBest: Math.max(0, ...rows.map((r) => r.player.peakNodules)),
+      peakBankEarned: Math.max(
+        0,
+        ...rows.map((r) => r.player.peakNodules - ECONOMY.STARTING_NODULES)
+      ),
       peakBankAtRung: distribution(
         rows.filter((r) => r.player.peakNodulesAtRung > 0).map((r) => r.player.peakNodulesAtRung)
       ).median,
@@ -1074,6 +1092,11 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
       .join(' | ')} |`
   );
   lines.push(
+    `| Best peak above the opening ${ECONOMY.STARTING_NODULES} | ${summary.factions
+      .map((f) => Math.round(f.peakBankEarned).toString())
+      .join(' | ')} |`
+  );
+  lines.push(
     `| Matches with a Slipway standing | ${summary.factions
       .map((f) => f.rungMatches.toString())
       .join(' | ')} |`
@@ -1082,9 +1105,10 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
   bankRow('Peak with the yard up, best', (f) => f.peakBankAtRungBest);
   lines.push('');
   lines.push(
-    '_The rung rows are read over the matches that raised a Slipway, and are "—" for a navy ' +
-      'that raised none. A Slipway is 600 nodules, so the peak above it is usually the ' +
-      'money that bought it._'
+    `_The opening stockpile is ${ECONOMY.STARTING_NODULES} nodules and a Slipway costs 600, so a ` +
+      'peak at the opening is the gift rather than savings — the row above it is what a navy ' +
+      'ever banked on top of what it was handed. The rung rows are read over the matches that ' +
+      'raised a Slipway, and are "—" for a navy that raised none._'
   );
   lines.push('');
   lines.push(

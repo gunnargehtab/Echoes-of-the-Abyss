@@ -191,6 +191,53 @@ describe('scuttling', () => {
 });
 
 describe('scuttling, against the position it must never call', () => {
+  it('reads a rival as earning between two deposits, not only on the tick of one', () => {
+    // The flaw that kept this rule from firing in real matches, and the reason
+    // every other test here hides it: `advance` pays its earner a nodule a
+    // second, so the rival's bank rises on almost every tick and the "is
+    // anybody still earning" clause is never actually tested.
+    //
+    // A real extraction economy does not behave like that. A hauler cuts for
+    // most of a minute, swims home, and banks a load; in between, the bank only
+    // *falls*, because the commander is spending. Measured over one
+    // four-faction match on `ventfront-divide`, the gap between two rises ran
+    // to 295 s for the Directorate and 577 s for the Commune while both were
+    // hauling perfectly normally — against a `CONCESSION.WINDOW_S` of 60. So a
+    // navy at work read as "not earning" for most of the match, nobody was ever
+    // overmatched, and a beaten commander was conceded only if a rival happened
+    // to land a load inside the same minute. The one income in the game that is
+    // continuous is the Order's tithe, which is what made the rule look sound.
+    //
+    // So slot 0 keeps its hauler and spends everything the hauler brings home,
+    // which is what a commander does: its bank is held flat here rather than
+    // paid a trickle, so it never *rises* inside the window while remaining an
+    // economy in every sense the rule's own note names.
+    const match = duel();
+    strand(match, 1);
+
+    const rival = economyFor(match.world, 0);
+    let hauling = false;
+    for (let eid = 0; eid < Owner.slot.length; eid++) {
+      if (!hasComponent(match.world, Harvester, eid) || Owner.slot[eid] !== 0) continue;
+      hauling = true;
+      break;
+    }
+    assert.ok(hauling, 'the premise: the rival still has a hauler in the water');
+
+    const held = rival.nodules;
+    for (let i = 0; i < (WINDOW_S + 10) * SIM.TICK_HZ; i++) {
+      match.update(STEP_MS);
+      // Spent as fast as it lands. A rise is what the old rule looked for, and
+      // a commander at work never shows one.
+      rival.nodules = held;
+    }
+    assert.deepEqual(
+      match.result,
+      { winnerSlot: 0 },
+      'a rival with a hauler is earning, whether or not its bank happened to rise this minute'
+    );
+  });
+
   it('leaves a broke commander alone while they still field the bigger fleet', () => {
     // Being out of money is not being beaten. A commander with no economy and
     // the strongest fleet on the map has one attack left in them, and the rule
