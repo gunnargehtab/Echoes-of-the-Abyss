@@ -19,7 +19,7 @@
  * bookkeeping over `VoiceAllocator`. Tests exercise it with fake voices.
  */
 
-import type { Biome, Faction, ResolutionTier } from '@echoes/shared';
+import type { Biome, Faction, FaunaSpecies, OrdnanceKind, ResolutionTier } from '@echoes/shared';
 import type { VoiceInputs } from './contactVoice.ts';
 import type { VoiceAllocator } from './voiceAllocator.ts';
 
@@ -36,8 +36,19 @@ export interface ContactAudioEntry {
   tier: ResolutionTier;
   /** Biome at the reported position: PF as a DSP chain (§9). */
   biome: Biome;
-  /** Tier 3+ only. Absent below that, so the mix cannot hint at whose navy it is. */
+  /**
+   * What the contact is — Tier 3+ only, exactly one of the three, and absent
+   * below that so the mix cannot hint at what it is before the server said.
+   *
+   * `fauna` and `ordnance` are here for the same reason `faction` is: the mix
+   * asks what a contact is rather than whose it is (docs/audio-direction.md
+   * §8.1), and the renderer already draws and names both at this exact tier.
+   * Carrying them discloses nothing new; *not* carrying them is what made a
+   * classified creature borrow a navy's voice.
+   */
   faction?: Faction;
+  fauna?: FaunaSpecies;
+  ordnance?: OrdnanceKind;
   /**
    * 0-1 on `PERSISTENCE.GHOST_MARKER_DECAY_S`, computed by the renderer from
    * the same tracked-contact map the ghost markers fade on. One source of
@@ -168,6 +179,8 @@ export class ContactMixer {
       freshness: entry.freshness,
     };
     if (entry.faction !== undefined) inputs.faction = entry.faction;
+    if (entry.fauna !== undefined) inputs.fauna = entry.fauna;
+    if (entry.ordnance !== undefined) inputs.ordnance = entry.ordnance;
     if (entry.rangeM !== undefined) inputs.rangeM = entry.rangeM;
     if (entry.bearing !== undefined && this.spatialisation === 'stereo') {
       inputs.bearing = entry.bearing;
