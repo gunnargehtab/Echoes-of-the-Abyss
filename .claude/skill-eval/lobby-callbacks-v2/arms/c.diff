@@ -1,0 +1,730 @@
+diff --git a/packages/frontend/src/net/GameClient.ts b/packages/frontend/src/net/GameClient.ts
+index 6301a70..9aac2cc 100644
+--- a/packages/frontend/src/net/GameClient.ts
++++ b/packages/frontend/src/net/GameClient.ts
+@@ -9,7 +9,6 @@
+ import { Client, type Room } from 'colyseus.js';
+ import {
+   LIFECYCLE,
+-  MatchPhase,
+   type AiDifficulty,
+   type EchoSnapshot,
+   type Faction,
+@@ -18,6 +17,7 @@ import {
+   type LobbyPlayerView,
+   type MatchListing,
+   type MatchListingMetadata,
++  type MatchPhase,
+   type MissionResultPayload,
+   type MissionView,
+   type RefitKind,
+@@ -71,6 +71,51 @@ export interface LobbyView {
+   players: LobbyPlayerView[];
+ }
+ 
++/** Undoing one schema subscription, as @colyseus/schema hands it back. */
++type Unsubscribe = () => unknown;
++
++/**
++ * One seat, as the decoder holds it: the public fields plus the callback the
++ * decoder fires when any of them moves.
++ */
++interface MatchPlayerState extends LobbyPlayerView {
++  onChange(callback: () => void): Unsubscribe;
++}
++
++/**
++ * The half of the room's schema a lobby is a view of.
++ *
++ * Structural rather than the backend's `MatchState` class, because the client
++ * never imports the server — and it deliberately names only the four things
++ * `pushLobby` reads. The schema also carries `tick`, which advances five times
++ * a second for the whole match; a subscription that could see it would push a
++ * lobby view 300 times a minute to discover the roster had not moved, which is
++ * what the `JSON.stringify` guard here used to be for.
++ */
++interface MatchLobbyState {
++  phase: MatchPhase;
++  mapId: string;
++  winnerSlot: number;
++  players: {
++    forEach(each: (player: MatchPlayerState, key: string) => void): void;
++    onAdd(
++      callback: (player: MatchPlayerState, key: string) => void,
++      triggerAll?: boolean
++    ): Unsubscribe;
++    onRemove(callback: (player: MatchPlayerState, key: string) => void): Unsubscribe;
++  };
++  /**
++   * Watch one field. `immediate` defaults to true in @colyseus/schema — every
++   * caller here passes false, because `attach` pushes the joined view itself
++   * and three listeners firing on registration would push it three more times.
++   */
++  listen<K extends 'phase' | 'mapId' | 'winnerSlot'>(
++    prop: K,
++    callback: (value: MatchLobbyState[K], previous: MatchLobbyState[K]) => void,
++    immediate?: boolean
++  ): Unsubscribe;
++}
++
+ export interface GameClientHandlers {
+   onTerrain(terrain: TerrainPayload): void;
+   /** Ground the match changed under the client's feet (#197). */
+@@ -280,7 +325,7 @@ export interface ConnectOptions {
+ export class GameClient {
+   private readonly client: Client;
+   private readonly handlers: GameClientHandlers;
+-  private room: Room | null = null;
++  private room: Room<MatchLobbyState> | null = null;
+   /** The last Echo snapshot reconstructed, and its sequence (#433). */
+   private echoLast: { seq: number; snapshot: EchoSnapshot } | null = null;
+   /** Which room kind this client is in, so a parked token can be matched. */
+@@ -288,12 +333,14 @@ export class GameClient {
+   /** True once the player has deliberately left; suppresses reconnection. */
+   private leaving = false;
+   /**
+-   * Last lobby view pushed upward, serialised.
++   * The schema subscriptions the lobby view is built from, and the per-seat
++   * ones under them.
+    *
+-   * The room's schema also carries `tick`, which changes five times a second,
+-   * so an unfiltered onStateChange would re-render the lobby at 5 Hz forever.
++   * Held so they can be undone: a listener belongs to one room's decoder, and
++   * this client outlives its rooms — every reconnection attaches a new one.
+    */
+-  private lastLobbyKey = '';
++  private lobbyWatch: Unsubscribe[] = [];
++  private readonly seatWatch = new Map<string, Unsubscribe>();
+ 
+   /**
+    * `client` is a seam with exactly one non-default caller: the headless
+@@ -332,7 +379,7 @@ export class GameClient {
+     // and `attach` overwrites the token with the new room's anyway.
+     if (stored !== null && storedMissionId() === wanted) {
+       try {
+-        this.attach(await this.client.reconnect(stored));
++        this.attach(await this.client.reconnect<MatchLobbyState>(stored));
+         this.handlers.onStatus('connected');
+         return;
+       } catch {
+@@ -345,7 +392,7 @@ export class GameClient {
+       // improve on that.
+       if (options.roomId !== undefined && options.roomId !== '') {
+         const name = options.name === undefined || options.name === '' ? undefined : options.name;
+-        this.attach(await this.client.joinById(options.roomId.trim(), { name }));
++        this.attach(await this.client.joinById<MatchLobbyState>(options.roomId.trim(), { name }));
+         this.handlers.onStatus('connected');
+         return;
+       }
+@@ -377,8 +424,8 @@ export class GameClient {
+       // is still the fastest way into a game with strangers.
+       this.attach(
+         options.create === undefined
+-          ? await this.client.joinOrCreate('match', joinOptions)
+-          : await this.client.create('match', joinOptions)
++          ? await this.client.joinOrCreate<MatchLobbyState>('match', joinOptions)
++          : await this.client.create<MatchLobbyState>('match', joinOptions)
+       );
+       this.handlers.onStatus('connected');
+     } catch (error) {
+@@ -397,7 +444,7 @@ export class GameClient {
+ 
+   /** Handle one server message, payload type and all. */
+   private handle<K extends ServerMessageName>(
+-    room: Room,
++    room: Room<MatchLobbyState>,
+     type: K,
+     handler: (payload: ServerMessages[K]) => void
+   ): void {
+@@ -420,9 +467,9 @@ export class GameClient {
+    * produces a *different* Room object for the same seat, and it needs exactly
+    * the same wiring.
+    */
+-  private attach(room: Room): void {
++  private attach(room: Room<MatchLobbyState>): void {
++    this.unwatchLobby();
+     this.room = room;
+-    this.lastLobbyKey = '';
+     rememberToken(room.reconnectionToken, this.missionId);
+ 
+     this.handle(room, SERVER_MSG.terrain, (payload) => this.handlers.onTerrain(payload));
+@@ -457,19 +504,67 @@ export class GameClient {
+     // Sent on start and on reconnection. The schema carries the phase too;
+     // this is the edge-triggered version, for anything that must happen once.
+     this.handle(room, SERVER_MSG.phase, () => this.pushLobby());
+-    room.onStateChange(() => this.pushLobby());
++    this.watchLobby(room.state);
+     room.onError((code, message) => this.handlers.onStatus('error', `${code}: ${message ?? ''}`));
+ 
+     // A reconnection token is only useful while the seat still exists on the
+     // server, so it is read at drop time rather than cached here.
+     room.onLeave(() => {
+       if (this.leaving || room !== this.room) return;
++      this.unwatchLobby();
+       void this.reconnect(room.reconnectionToken);
+     });
+ 
+     this.pushLobby();
+   }
+ 
++  /**
++   * Watch the four things a lobby view is made of, and nothing else.
++   *
++   * Deliberately not `onStateChange`: that fires for every field in the
++   * schema, `tick` included, so it ran five times a second for the length of
++   * the match and the view had to be rebuilt and serialised to find out that
++   * nothing a lobby cares about had moved. These are the fields themselves, so
++   * a push means a change.
++   *
++   * A seat is watched twice over — once for arriving and leaving, and once for
++   * what it does while it is here, since a commander picking a navy or
++   * readying up changes the row rather than the roster.
++   */
++  private watchLobby(state: MatchLobbyState): void {
++    const push = (): void => this.pushLobby();
++    // A seat the decoder is already holding is wired here rather than through
++    // `onAdd`'s `triggerAll`, which would announce each of them as an arrival
++    // — and joining is one lobby view, which `attach` pushes itself.
++    state.players.forEach((player, key) => this.seatWatch.set(key, player.onChange(push)));
++    this.lobbyWatch = [
++      state.listen('phase', push, false),
++      state.listen('mapId', push, false),
++      state.listen('winnerSlot', push, false),
++      state.players.onAdd((player, key) => {
++        this.seatWatch.set(key, player.onChange(push));
++        push();
++      }, false),
++      state.players.onRemove((_player, key) => {
++        this.seatWatch.get(key)?.();
++        this.seatWatch.delete(key);
++        push();
++      }),
++    ];
++  }
++
++  /**
++   * Drop every subscription, because they belong to a room and not to this
++   * client. A listener left on a decoder this client has let go of is a leak
++   * that also pushes stale rosters upward, and this client reconnects.
++   */
++  private unwatchLobby(): void {
++    for (const undo of this.lobbyWatch) undo();
++    this.lobbyWatch = [];
++    for (const undo of this.seatWatch.values()) undo();
++    this.seatWatch.clear();
++  }
++
+   /**
+    * Re-take the seat we just lost, for as long as the server holds it open.
+    *
+@@ -486,7 +581,7 @@ export class GameClient {
+       await sleep(delay);
+       if (this.leaving) return;
+       try {
+-        this.attach(await this.client.reconnect(token));
++        this.attach(await this.client.reconnect<MatchLobbyState>(token));
+         this.handlers.onStatus('connected');
+         return;
+       } catch {
+@@ -499,22 +594,21 @@ export class GameClient {
+     }
+   }
+ 
+-  /** Mirror the room schema into a plain object, when it has actually moved. */
++  /**
++   * Mirror the room schema's lobby facts into a plain object.
++   *
++   * Nothing here asks whether the view changed: the subscriptions in
++   * `watchLobby` are the answer, and a guard under them would only hide
++   * whether they are right.
++   */
+   private pushLobby(): void {
+-    const state = this.room?.state as
+-      | {
+-          phase?: number;
+-          mapId?: string;
+-          winnerSlot?: number;
+-          players?: Map<string, LobbyPlayerView>;
+-        }
+-      | undefined;
++    const state = this.room?.state;
+     if (state === undefined) return;
+ 
+     const players: LobbyPlayerView[] = [];
+     // MapSchema iterates like a Map, and this is the whole roster — four
+     // entries at most, so rebuilding it per change costs nothing.
+-    state.players?.forEach((player) => {
++    state.players.forEach((player) => {
+       players.push({
+         sessionId: player.sessionId,
+         name: player.name,
+@@ -528,16 +622,12 @@ export class GameClient {
+     });
+     players.sort((a, b) => a.slot - b.slot);
+ 
+-    const view: LobbyView = {
+-      phase: (state.phase ?? MatchPhase.Lobby) as MatchPhase,
+-      mapId: state.mapId ?? '',
+-      winnerSlot: state.winnerSlot ?? -1,
++    this.handlers.onLobby({
++      phase: state.phase,
++      mapId: state.mapId,
++      winnerSlot: state.winnerSlot,
+       players,
+-    };
+-    const key = JSON.stringify(view);
+-    if (key === this.lastLobbyKey) return;
+-    this.lastLobbyKey = key;
+-    this.handlers.onLobby(view);
++    });
+   }
+ 
+   /** This client's own seat, or null before the room has assigned one. */
+@@ -769,6 +859,7 @@ export class GameClient {
+ 
+   disconnect(): void {
+     this.leaving = true;
++    this.unwatchLobby();
+     // Leaving on purpose is not something to resume from — and StrictMode's
+     // double-mount in development would otherwise leave a stale token behind
+     // that the next mount tries, and fails, to redeem.
+diff --git a/packages/frontend/test/gameClient.test.ts b/packages/frontend/test/gameClient.test.ts
+index 3ca0290..0cfe4be 100644
+--- a/packages/frontend/test/gameClient.test.ts
++++ b/packages/frontend/test/gameClient.test.ts
+@@ -40,6 +40,7 @@ import {
+   storedMissionId,
+   type ConnectionStatus,
+   type GameClientHandlers,
++  type LobbyView,
+ } from '../src/net/GameClient.ts';
+ import { cannedMap, cannedSnapshot, cannedTerrain } from './support/cannedMatch.ts';
+ 
+@@ -490,42 +491,116 @@ describe('the match client: what the room says', () => {
+     assert.equal(log.argsOf('onEcho').length, 1, 'the stale patch found no history to apply to');
+   });
+ 
+-  it('pushes the lobby on a real change and swallows the 5 Hz tick', async () => {
++  /**
++   * The lobby view, and what is allowed to produce one.
++   *
++   * The room's schema carries `tick` beside the four things a lobby is a view
++   * of, and the tick moves five times a second for the length of the match. A
++   * client subscribed to the whole schema hears all of it, which is why this
++   * one subscribes to the four fields instead — so these tests are about which
++   * changes reach the shell, and just as much about which do not.
++   */
++  it('treats joining as a lobby view of its own', async () => {
++    const { log } = await connected({});
++    assert.equal(log.argsOf('onLobby').length, 1, 'the room is on screen before the first sync');
++  });
++
++  it('says nothing when only the tick has moved', async () => {
+     const { room, log } = await connected({});
+-    const players = new Map([
+-      [
+-        'seat-1',
+-        {
+-          sessionId: 'seat-1',
+-          name: 'Marr',
+-          slot: 0,
+-          faction: Faction.Bathyarch,
+-          ready: false,
+-          connected: true,
+-          isAi: false,
+-          difficulty: 0,
+-        },
+-      ],
+-    ]);
++    room.tick();
++    room.tick();
++    room.tick();
++    assert.equal(room.state.tick, 3, 'the simulation did advance');
++    assert.equal(log.argsOf('onLobby').length, 1, 'and the lobby heard none of it');
++  });
++
++  it('pushes a view when a field the lobby reads moves', async () => {
++    const { room, log } = await connected({});
++
++    room.changeState({ mapId: 'smoke-basin' });
++    assert.equal(log.argsOf('onLobby').length, 2, 'the water is a lobby fact');
+ 
+-    // `attach` pushes once on its own, so the room's phase is on screen before
+-    // the first state sync arrives.
+-    assert.equal(log.argsOf('onLobby').length, 1, 'joining is itself a lobby view');
++    room.tick();
++    room.changeState({ phase: MatchPhase.Playing });
++    room.tick();
++    assert.equal(log.argsOf('onLobby').length, 3, 'so is the phase, and the ticks between are not');
+ 
+-    room.changeState({ phase: MatchPhase.Lobby, mapId: 'smoke-basin', winnerSlot: -1, players });
+-    assert.equal(log.argsOf('onLobby').length, 2, 'the roster went up');
++    room.changeState({ winnerSlot: 0 });
++    const view = log.argsOf('onLobby').at(-1)?.[0] as LobbyView;
++    assert.equal(log.argsOf('onLobby').length, 4, 'and so is a resolved match');
++    assert.deepEqual(
++      { phase: view.phase, mapId: view.mapId, winnerSlot: view.winnerSlot },
++      { phase: MatchPhase.Playing, mapId: 'smoke-basin', winnerSlot: 0 },
++      'each of them as the schema now holds it'
++    );
++  });
+ 
+-    // The schema also carries `tick`, which moves five times a second. An
+-    // unfiltered onStateChange would re-render the lobby forever.
+-    room.changeState({ phase: MatchPhase.Lobby, mapId: 'smoke-basin', winnerSlot: -1, players });
+-    room.changeState({ phase: MatchPhase.Lobby, mapId: 'smoke-basin', winnerSlot: -1, players });
+-    assert.equal(log.argsOf('onLobby').length, 2, 'an unchanged view is not a change');
++  it('pushes a view for the roster, and for a commander already in it', async () => {
++    const { room, log } = await connected({});
++
++    const marr = room.seat('seat-1', { name: 'Marr', slot: 1, faction: Faction.Bathyarch });
++    room.seat('seat-2', { name: 'Tessel', slot: 0, faction: Faction.Hadron, isAi: true });
++    assert.equal(log.argsOf('onLobby').length, 3, 'each arrival is a change');
++    const seated = (log.argsOf('onLobby').at(-1)?.[0] as LobbyView).players;
++    assert.deepEqual(
++      seated.map((player) => player.name),
++      ['Tessel', 'Marr'],
++      'and the roster is in slot order rather than join order'
++    );
++
++    // A commander picking a navy or readying up moves the seat and not the map
++    // holding it, so the roster's own callbacks never fire for it — which is
++    // the case a subscription to the collection alone would miss.
++    room.changePlayer('seat-1', { faction: Faction.Pelagia, ready: true });
++    assert.equal(log.argsOf('onLobby').length, 4, 'a seat that changes is a change');
++    const ready = (log.argsOf('onLobby').at(-1)?.[0] as LobbyView).players.at(-1);
++    assert.deepEqual(
++      { faction: ready?.faction, ready: ready?.ready },
++      { faction: Faction.Pelagia, ready: true },
++      'and the row says what the seat now says'
++    );
++
++    room.unseat('seat-2');
++    assert.equal(log.argsOf('onLobby').length, 5, 'and so is a seat emptying');
++    assert.equal((log.argsOf('onLobby').at(-1)?.[0] as LobbyView).players.length, 1);
++    assert.equal(marr.watchers, 1, 'the seat still here is still watched');
++  });
++
++  it('takes its listeners with it when a seat empties', async () => {
++    // A listener outliving the thing it listens to is the leak this class is
++    // most exposed to: it reconnects, and a match can seat four commanders.
++    const { room } = await connected({});
++    const tessel = room.seat('seat-2', { name: 'Tessel', slot: 0 });
++    assert.equal(tessel.watchers, 1, 'a seated commander is watched');
++    room.unseat('seat-2');
++    assert.equal(tessel.watchers, 0, 'and an empty seat is not');
++  });
++
++  it('lets go of the room when the player leaves', async () => {
++    const { client, room, log } = await connected({});
++    const pushed = log.argsOf('onLobby').length;
++    client.disconnect();
++
++    room.changeState({ mapId: 'smoke-basin' });
++    room.seat('seat-2', { name: 'Tessel', slot: 1 });
++    assert.equal(log.argsOf('onLobby').length, pushed, 'a room nobody is in says nothing');
++    assert.equal(room.state.watchers('mapId'), 0, 'because nothing is listening to it');
++    assert.equal(room.state.players.watchers, 0, 'nor to its roster');
++  });
++
++  it('does not stack a second set of listeners on a reconnection', async () => {
++    // The stub hands the same room back, which is what makes this checkable:
++    // a re-attach that did not first let go would leave two subscriptions on
++    // one field, and every later change would be pushed twice.
++    const { room, net, log } = await connected({});
++    room.drop();
++    await until(() => net.callOf('reconnect') !== undefined, 'the client retried the seat');
++    await until(() => log.statuses().at(-1) === 'connected', 'the seat was re-taken');
+ 
+-    room.changeState({ phase: MatchPhase.Playing, mapId: 'smoke-basin', winnerSlot: -1, players });
+-    assert.equal(log.argsOf('onLobby').length, 3, 'a real change is');
+-    const view = log.argsOf('onLobby').at(-1)?.[0] as { phase: MatchPhase; players: unknown[] };
+-    assert.equal(view.phase, MatchPhase.Playing);
+-    assert.equal(view.players.length, 1);
++    const pushed = log.argsOf('onLobby').length;
++    room.changeState({ mapId: 'smoke-basin' });
++    assert.equal(log.argsOf('onLobby').length, pushed + 1, 'one change, one view');
++    assert.equal(room.state.watchers('mapId'), 1, 'one field, one listener');
+   });
+ 
+   it('reports a room error as a readable status', async () => {
+diff --git a/packages/frontend/test/support/colyseusStub.ts b/packages/frontend/test/support/colyseusStub.ts
+index f089203..cc2f1d0 100644
+--- a/packages/frontend/test/support/colyseusStub.ts
++++ b/packages/frontend/test/support/colyseusStub.ts
+@@ -22,23 +22,188 @@ export interface SentMessage {
+ 
+ type Listener = (...args: unknown[]) => void;
+ 
++/** The public fields of one seat, as the room's schema carries them. */
++export interface StubPlayerFields {
++  sessionId: string;
++  name: string;
++  slot: number;
++  faction: number;
++  ready: boolean;
++  connected: boolean;
++  isAi: boolean;
++  difficulty: number;
++}
++
++/** Registering a listener hands back the call that undoes it, as schema does. */
++function subscribe(listeners: Listener[], listener: Listener): () => void {
++  listeners.push(listener);
++  return () => {
++    const at = listeners.indexOf(listener);
++    if (at >= 0) listeners.splice(at, 1);
++  };
++}
++
++/**
++ * A stand-in `PlayerState`.
++ *
++ * A seat is a Schema of its own in the real room, which is why it carries its
++ * own `onChange`: a commander picking a navy or readying up moves this object
++ * and not the map holding it, so the map's own callbacks never fire for it.
++ */
++export class StubPlayer implements StubPlayerFields {
++  sessionId = '';
++  name = '';
++  slot = 0;
++  faction = 0;
++  ready = false;
++  connected = true;
++  isAi = false;
++  difficulty = 0;
++
++  private readonly changeHandlers: Listener[] = [];
++
++  constructor(fields: Partial<StubPlayerFields> = {}) {
++    Object.assign(this, fields);
++  }
++
++  onChange(handler: Listener): () => void {
++    return subscribe(this.changeHandlers, handler);
++  }
++
++  /** How many listeners are still attached — a leak is visible as a number. */
++  get watchers(): number {
++    return this.changeHandlers.length;
++  }
++
++  /** The server side: move fields on a seat that is already here. */
++  set(fields: Partial<StubPlayerFields>): void {
++    Object.assign(this, fields);
++    for (const handler of [...this.changeHandlers]) handler();
++  }
++}
++
++/**
++ * A stand-in `MapSchema` of seats.
++ *
++ * Only the three things the client reaches for: iteration, and the two edges
++ * of the roster. Each registration hands back its own undo, because that is
++ * what the client is expected to hold on to.
++ */
++export class StubPlayers {
++  private readonly items = new Map<string, StubPlayer>();
++  private readonly addHandlers: Listener[] = [];
++  private readonly removeHandlers: Listener[] = [];
++
++  onAdd(handler: Listener, triggerAll = true): () => void {
++    const undo = subscribe(this.addHandlers, handler);
++    if (triggerAll) this.items.forEach((player, key) => handler(player, key));
++    return undo;
++  }
++
++  onRemove(handler: Listener): () => void {
++    return subscribe(this.removeHandlers, handler);
++  }
++
++  forEach(each: (player: StubPlayer, key: string) => void): void {
++    this.items.forEach(each);
++  }
++
++  get(key: string): StubPlayer | undefined {
++    return this.items.get(key);
++  }
++
++  get size(): number {
++    return this.items.size;
++  }
++
++  /** Listeners still attached to the roster itself, for the leak assertions. */
++  get watchers(): number {
++    return this.addHandlers.length + this.removeHandlers.length;
++  }
++
++  // --- the server side of the wire ---------------------------------------
++
++  add(key: string, fields: Partial<StubPlayerFields> = {}): StubPlayer {
++    const player = new StubPlayer({ sessionId: key, ...fields });
++    this.items.set(key, player);
++    for (const handler of [...this.addHandlers]) handler(player, key);
++    return player;
++  }
++
++  remove(key: string): void {
++    const player = this.items.get(key);
++    if (player === undefined) return;
++    this.items.delete(key);
++    for (const handler of [...this.removeHandlers]) handler(player, key);
++  }
++}
++
++/** The fields of `MatchState` a lobby is a view of, plus the tick under them. */
++export interface StubStateFields {
++  tick: number;
++  phase: number;
++  mapId: string;
++  winnerSlot: number;
++}
++
++/**
++ * A stand-in `MatchState`.
++ *
++ * One object for the life of the room, the way a decoder's state is: the
++ * fields move under it rather than being replaced. That is the whole point of
++ * the stub for #489's successor — `tick` moves five times a second beside
++ * three fields a lobby cares about, and only a per-field subscription can tell
++ * them apart.
++ */
++export class StubState implements StubStateFields {
++  tick = 0;
++  phase = 0;
++  mapId = '';
++  winnerSlot = -1;
++  readonly players = new StubPlayers();
++
++  private readonly fieldHandlers = new Map<string, Listener[]>();
++
++  listen(prop: keyof StubStateFields, handler: Listener, immediate = true): () => void {
++    const listeners = this.fieldHandlers.get(prop) ?? [];
++    this.fieldHandlers.set(prop, listeners);
++    const undo = subscribe(listeners, handler);
++    if (immediate) handler(this[prop], undefined);
++    return undo;
++  }
++
++  /** Listeners still attached to a field, for the leak assertions. */
++  watchers(prop: keyof StubStateFields): number {
++    return this.fieldHandlers.get(prop)?.length ?? 0;
++  }
++
++  // --- the server side of the wire ---------------------------------------
++
++  /** Move fields, firing a listener only for the ones that actually moved. */
++  set(fields: Partial<StubStateFields>): void {
++    for (const [prop, value] of Object.entries(fields) as Array<
++      [keyof StubStateFields, number | string]
++    >) {
++      if (this[prop] === value) continue;
++      const previous = this[prop];
++      (this[prop] as number | string) = value;
++      for (const handler of [...(this.fieldHandlers.get(prop) ?? [])]) handler(value, previous);
++    }
++  }
++}
++
+ /**
+  * A stand-in `Room`.
+  *
+- * The state is a plain object with a real `Map` for `players`: `pushLobby`
+- * reads it through the MapSchema-shaped `forEach` and nothing else, so a Map
+- * is a faithful stand-in rather than a simplification.
++ * The state is a `StubState`: a stable object with per-field listeners and a
++ * roster that announces its own edges, because that is the part of the schema
++ * the client subscribes to.
+  */
+ export class StubRoom {
+   readonly sessionId: string;
+   readonly roomId: string;
+   reconnectionToken = 'token-0';
+-  state: {
+-    phase?: number;
+-    mapId?: string;
+-    winnerSlot?: number;
+-    players?: Map<string, Record<string, unknown>>;
+-  } = {};
++  readonly state = new StubState();
+ 
+   /** Every `send` this room received, oldest first. */
+   readonly sent: SentMessage[] = [];
+@@ -93,12 +258,74 @@ export class StubRoom {
+     return true;
+   }
+ 
+-  /** Announce a schema change, the way the room's state sync would. */
+-  changeState(state: StubRoom['state']): void {
+-    this.state = state;
++  /**
++   * Announce a schema change, the way the room's state sync would.
++   *
++   * Every mutation below ends here, because the real room's whole-state
++   * callback fires for anything in the schema — which is exactly the trap
++   * `tick` sets for a client that listens there.
++   */
++  private announceState(): void {
+     for (const handler of [...this.stateHandlers]) handler();
+   }
+ 
++  /**
++   * Advance the simulation tick, five times a second for the whole match.
++   *
++   * A schema field like any other, and the one thing in the state a lobby has
++   * no business hearing about.
++   */
++  tick(to = this.state.tick + 1): void {
++    this.state.set({ tick: to });
++    this.announceState();
++  }
++
++  /**
++   * Move the lobby fields, and reconcile the roster against the one given.
++   *
++   * Seats are added, moved and removed rather than replaced wholesale, because
++   * the decoder never replaces them either: a commander who readies up is the
++   * same object with a different field.
++   */
++  changeState(
++    next: Partial<StubStateFields> & { players?: Map<string, Partial<StubPlayerFields>> }
++  ): void {
++    const { players, ...fields } = next;
++    this.state.set(fields);
++    if (players !== undefined) {
++      const gone: string[] = [];
++      this.state.players.forEach((_player, key) => {
++        if (!players.has(key)) gone.push(key);
++      });
++      for (const key of gone) this.state.players.remove(key);
++      players.forEach((seatFields, key) => {
++        const seated = this.state.players.get(key);
++        if (seated === undefined) this.state.players.add(key, seatFields);
++        else seated.set(seatFields);
++      });
++    }
++    this.announceState();
++  }
++
++  /** Seat a commander, the way a join does. */
++  seat(key: string, fields: Partial<StubPlayerFields> = {}): StubPlayer {
++    const player = this.state.players.add(key, fields);
++    this.announceState();
++    return player;
++  }
++
++  /** Empty a seat, the way a leave does. */
++  unseat(key: string): void {
++    this.state.players.remove(key);
++    this.announceState();
++  }
++
++  /** Move a field on a commander who is already here — a navy, a ready flag. */
++  changePlayer(key: string, fields: Partial<StubPlayerFields>): void {
++    this.state.players.get(key)?.set(fields);
++    this.announceState();
++  }
++
+   raiseError(code: number, message: string): void {
+     for (const handler of [...this.errorHandlers]) handler(code, message);
+   }
