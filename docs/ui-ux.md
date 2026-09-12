@@ -695,10 +695,12 @@ What the current client implements against this spec, so nobody re-implements wh
 ## 14. The Shell
 
 Everything before a room is joined and after one is left. The in-match interface above ends
-at the hull; the shell is the port. It is DOM and only DOM, for the same reasons §10 gives
-for the contact log — focus rings, keyboard traversal, screen readers — and it draws every
-colour from the tokens transcribed out of [style-neon-noir.md](style-neon-noir.md): cyan
-tells you, magenta asks you, red warns you. The reflection glow that document licenses "on
+at the hull; the shell is the port. Everything on it a player can operate is DOM, for the
+same reasons §10 gives for the contact log — focus rings, keyboard traversal, screen
+readers — and it draws every colour from the tokens transcribed out of
+[style-neon-noir.md](style-neon-noir.md): cyan tells you, magenta asks you, red warns you.
+One canvas exists in the whole shell, on the title screen, and nothing on it is operable or
+readable by a machine: see "The listening room" below. The reflection glow that document licenses "on
 key art and menus only" belongs to the title screen; the in-match HUD still may not use it.
 
 ### Screens
@@ -736,7 +738,9 @@ title screen, and reads the briefing on the way in.
 - **Title** — the vertical logo lockup from [naming.md](naming.md) (mark, wordmark, one
   tagline), and the entries:
   Resume (only while a seat is held, see below), Campaign, Solo Game, Multiplayer,
-  Tutorial, Settings, Credits. There is no Quit; this is a browser.
+  Tutorial, Settings, Credits. There is no Quit; this is a browser. Its dress is **the
+  listening room**, specified below: the port runs a hydrophone, and the screen shows it
+  running.
 - **Campaign** — the board of four campaigns and their slots. A board rather than a list
   because the order is free after the prologue ([campaign.md](campaign.md) §1): a list
   would assert a sequence the campaign refuses to have, and mission ids are namespaced by
@@ -789,6 +793,77 @@ twenty-eight. Its note line is [campaign.md](campaign.md)'s own subtitle, `Four 
 question`, because a note that counted what was finished would be a number to maintain in
 two places. The shape of the finished game is still on screen; a menu that hid its missing
 rooms would still misrepresent the build.
+
+### The listening room
+
+**The port has a sound, and now it has a picture of one.** The title screen is split: a
+hydrophone display down its left, the lockup and the entries to its right. That display is
+the only moving thing in the shell and the only canvas in it. Adopted 2026-09 out of five
+concepts; the four set aside are named at the end of this section, because a rejected
+direction is worth recording once and never again.
+
+**What it shows is an empty channel, and it says so.** A head that names it, a bearing axis
+across the top, elapsed time down a gutter, a foot carrying the gain and the band, and a
+noise floor falling through the middle. Three standing ridges drift in that floor and they
+are the port's own machinery: a real hydrophone floor carries stationary lines, and an even
+field of hiss reads as television snow rather than as water.
+
+This is the browse listing's anti-reveal rule doing the same work one screen out. **The port
+has no water in it**, so its instrument may not imply one. Cyan is the ink that tells and it
+tells you nothing here. The one mark that is not noise is magenta, the ink that asks, and it
+falls only under the entry your pointer or your focus is on — that mark is your hand on the
+console. Nothing on this screen is a contact, and nothing on it can become one.
+
+**One row every 200 ms**, which is `SIM.ECHO_HZ`: the port ticks at the rate the water will.
+A row is 2.4 px of ink over a 1 px gap, so how much history is on screen is a function of
+the panel's height, and the gutter is labelled from what the canvas is actually holding
+rather than from a number maintained in two places.
+
+**It is decoration and it is marked as such.** The whole left panel is `aria-hidden`, holds
+no focusable element, and carries nothing the right-hand column does not. §11 makes
+accessibility a correctness requirement, and an instrument that read "000 090 180 270 359"
+aloud would be spending a player's attention on nothing. What the port's state actually is —
+channel, contacts, room — is a readable list under the entries, where assistive technology
+can reach it.
+
+**Reduced motion stops the fall and keeps it.** §11 asks for information parity, and a
+display carrying no information has none to preserve, so the honest reduction is to stop the
+motion rather than to replace it: the fall holds one primed frame of history and stops
+advancing. A still spectrogram is still a reading, and removing it outright would change
+what the screen *is* for one player and not another.
+
+**Narrow, the instrument turns sideways.** Under 880 px the column becomes a strip across
+the top, the time gutter goes with it — five seconds of history has nothing worth labelling
+— and the lockup and the entries take the full width beneath. The shell runs on a phone
+([SETUP-ANDROID.md](../SETUP-ANDROID.md)) and the menu is the half that has to survive; the
+instrument is dress, and dress yields first.
+
+**The entries lose the plate VI card here.** They are rules with a name on them and a small
+port square at the near end. The card is the in-match voice, and this screen is not the
+instrument the card belongs to; the magenta bevel, the glass fill and the halo stay where
+they mean something. The lockup keeps the reflection glow this section licenses it, and the
+faint violet rise from the bottom edge ([naming.md](naming.md)) stays on the void the lockup
+sits in rather than washing across the display.
+
+#### Considered and set aside
+
+Four concepts were built against this screen and rejected, 2026-09. Each was a real
+argument; none of them is a direction to revisit without a reason this list does not already
+answer.
+
+- **Sounding** — the mark as an emitter, a front leaving the throat every four seconds and
+  lighting each entry as it passed. The smallest change of the five, and the only one that
+  fixed nothing about the frame it left empty.
+- **Thermocline** — depth as layout, entries descending through drifting strata beside a
+  ribbon of the §1 bands. The most build for the least identity, and the first thing to
+  break in portrait.
+- **Silent running** — the menu at the noise floor, each row brightening with how near the
+  pointer was to it. The strongest statement of what this game is about and the worst menu
+  in the set: a screen that dims when you stop touching it is a bet on a player who has not
+  learned the game yet.
+- **The Mouth** — the mark at frame scale, one door per band, labels cut into the arcs. The
+  best key art and a reading order that ran backwards, because the bands brighten downward
+  ([naming.md](naming.md)) and the list had to descend into the light to obey it.
 
 ### The campaign board
 

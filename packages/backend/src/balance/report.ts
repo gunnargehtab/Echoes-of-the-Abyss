@@ -134,6 +134,30 @@ export interface FactionSummary {
    * reached, that says what it spent.
    */
   structuresPerMatchByKind: Partial<Record<StructureKind, number>>;
+  /**
+   * The bank against the rung (#518) — what a navy was ever, at one instant,
+   * holding, and what it was holding once its yard was standing.
+   *
+   * Every other column here answers "how rich was this navy". None of them
+   * answers the question a roster wave rests on, which is whether the navy was
+   * ever holding the *price* of the hull its yard was bought for. That is a
+   * maximum rather than a rate, and the two come apart completely: measured on
+   * the stored seeds, a Consortium earning the most nodules per minute in the
+   * game peaks at 640 in a match and at 380 once its Slipway is up, against a
+   * 700 nodule Bulwark — so no arbitration between its wants and no saving rule
+   * can put that hull in the water, and every rate column says it is doing
+   * fine.
+   *
+   * `peakBankAtRung` is the figure that decides a wave, and it is meaned over
+   * the matches that *had* a yard rather than over all of them, so a navy that
+   * rarely reaches the rung is not reported as a navy that reaches it broke.
+   * `rungMatches` is that denominator; at zero the two rung figures are NaN.
+   */
+  peakBank: number;
+  peakBankBest: number;
+  peakBankAtRung: number;
+  peakBankAtRungBest: number;
+  rungMatches: number;
   /** Share of hull-time spent below the Shelf. */
   deepTimeShare: number;
   /**
@@ -534,6 +558,13 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
         rows.map((r) => r.player),
         (p) => p.structuresBuiltByKind
       ),
+      peakBank: distribution(rows.map((r) => r.player.peakNodules)).median,
+      peakBankBest: Math.max(0, ...rows.map((r) => r.player.peakNodules)),
+      peakBankAtRung: distribution(
+        rows.filter((r) => r.player.peakNodulesAtRung > 0).map((r) => r.player.peakNodulesAtRung)
+      ).median,
+      peakBankAtRungBest: Math.max(0, ...rows.map((r) => r.player.peakNodulesAtRung)),
+      rungMatches: rows.filter((r) => r.player.peakNodulesAtRung > 0).length,
       deepTimeShare: mean(
         rows.map((r) => {
           const bands = Object.values(r.player.hullSecondsByBand);
@@ -1018,6 +1049,44 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
     );
     lines.push('');
   }
+  // The bank against the rung. Read beside the two tables above, and it is what
+  // turns "never built" into a reason: a navy whose peak with a yard standing
+  // is under the price of what the yard builds was never going to build it,
+  // however the commander arbitrates between its wants (#518).
+  lines.push('## The bank against the rung — the most nodules ever held at once');
+  lines.push('');
+  lines.push(`| Measure | ${summary.factions.map((f) => FACTION_NAME[f.faction]).join(' | ')} |`);
+  lines.push(`| --- |${summary.factions.map(() => ' --- |').join('')}`);
+  const bankRow = (label: string, pick: (f: FactionSummary) => number): void => {
+    const cells = summary.factions.map((f) =>
+      Number.isFinite(pick(f)) && f.rungMatches > 0 ? Math.round(pick(f)).toString() : '—'
+    );
+    lines.push(`| ${label} | ${cells.join(' | ')} |`);
+  };
+  lines.push(
+    `| Peak in a match, median | ${summary.factions
+      .map((f) => Math.round(f.peakBank).toString())
+      .join(' | ')} |`
+  );
+  lines.push(
+    `| Peak in any match | ${summary.factions
+      .map((f) => Math.round(f.peakBankBest).toString())
+      .join(' | ')} |`
+  );
+  lines.push(
+    `| Matches with a Slipway standing | ${summary.factions
+      .map((f) => f.rungMatches.toString())
+      .join(' | ')} |`
+  );
+  bankRow('Peak with the yard up, median', (f) => f.peakBankAtRung);
+  bankRow('Peak with the yard up, best', (f) => f.peakBankAtRungBest);
+  lines.push('');
+  lines.push(
+    '_The rung rows are read over the matches that raised a Slipway, and are "—" for a navy ' +
+      'that raised none. A Slipway is 600 nodules, so the peak above it is usually the ' +
+      'money that bought it._'
+  );
+  lines.push('');
   lines.push(
     '_A verdict of "held" means the failure that guard-rail describes did not appear in ' +
       'these runs. It is evidence, not proof; weigh it against the sample size._'

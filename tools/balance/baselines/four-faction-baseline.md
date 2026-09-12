@@ -13,9 +13,9 @@ _One seating: every match dealt each navy the same spawn. A win rate here cannot
 | Risk | Source | Metric | Reading | Verdict |
 | --- | --- | --- | --- | --- |
 | One navy is simply stronger | economy.md §9 | Best win rate against 2x parity | Directorate 94% vs parity 25%, bar 50% (n=17 decided, one seating) | **breached** |
-| Quiet economies simply win | economy.md §9 | Commune win rate, and nodules per minute per point of mean SIG | win 0% vs best rival 94%, premium 4.1 vs 5.4 (n=17 decided) | **held** |
-| Loud economies are unplayable | economy.md §9 | Consortium seconds tracked, against Consortium win rate | 611 s tracked per match, win 0% (n=17 decided) | **held** |
-| Directorate Biomass snowballs | economy.md §9 · bestiary.md §8 | Biomass per minute against final Drift Health | 15.9/min, Drift Health median 70 (n=30) | **held** |
+| Quiet economies simply win | economy.md §9 | Commune win rate, and nodules per minute per point of mean SIG | win 0% vs best rival 94%, premium 4.2 vs 5.5 (n=17 decided) | **held** |
+| Loud economies are unplayable | economy.md §9 | Consortium seconds tracked, against Consortium win rate | 612 s tracked per match, win 0% (n=17 decided) | **held** |
+| Directorate Biomass snowballs | economy.md §9 · bestiary.md §8 | Biomass per minute against final Drift Health | 15.6/min, Drift Health median 70 (n=30) | **held** |
 | Knights starve out of every long game | economy.md §9 | Hadron income against the field, in longer-than-median matches | 141/min vs field 172 — 82% (n=14 long) | **held** |
 | Fauna decide matches | bestiary.md §8 | First blood against first classified enemy — losses before anyone met anyone | enemy found 20 s, first blood 48 s (n=30) | **held** |
 
@@ -23,7 +23,7 @@ _One seating: every match dealt each navy the same spawn. A win rate here cannot
 
 | Measure | Median (p10–p90) |
 | --- | --- |
-| Length, seconds | 1287 (705–1500) |
+| Length, seconds | 1366 (705–1500) |
 | Commanders eliminated, of 3 needed | 2 (2–3) |
 | First contact, seconds | 0 (0–0) |
 | First classified enemy, seconds | 20 (20–20) |
@@ -46,18 +46,18 @@ _One seating: every match dealt each navy the same spawn. A win rate here cannot
 
 | Faction | Matches | Decided | Win rate | Nodules/min | Crystal/min | Biomass/min | Mean SIG | Tracked, s | Found enemy, s | Throttled down | Losses | Below the Shelf | Under the layer |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Consortium | 30 | 17 | 0% | 221 | 1.6 | 3.5 | 41 | 611 | 30 | 0% | 18.7 | 100% | 4% |
+| Consortium | 30 | 17 | 0% | 221 | 1.6 | 3.5 | 40 | 612 | 30 | 0% | 18.7 | 100% | 4% |
 | Commune | 30 | 17 | 0% | 174 | 0.5 | 6.3 | 42 | 625 | 20 | 0% | 43.0 | 45% | 1% |
-| Directorate | 30 | 17 | 94% | 174 | 3.3 | 15.9 | 68 | 883 | 41 | 0% | 22.9 | 100% | 15% |
-| Knights | 30 | 17 | 6% | 164 | 7.2 | 1.0 | 56 | 736 | 60 | 0% | 15.1 | 100% | 7% |
+| Directorate | 30 | 17 | 94% | 172 | 3.2 | 15.6 | 67 | 896 | 41 | 0% | 23.2 | 100% | 15% |
+| Knights | 30 | 17 | 6% | 163 | 7.2 | 1.0 | 56 | 747 | 60 | 0% | 15.3 | 100% | 7% |
 
 ## Hulls per match — built / lost
 
 | Hull | Consortium | Commune | Directorate | Knights |
 | --- | --- | --- | --- | --- |
-| Light Scout | 0.0 / 1.0 | 19.5 / 20.2 | 9.3 / 8.9 | 0.0 / 1.0 |
-| Corvette | 0.0 / 0.0 | 0.0 / 0.0 | 9.8 / 6.8 | 0.0 / 0.0 |
-| Harvester | 9.4 / 10.1 | 13.5 / 14.1 | 6.0 / 3.8 | 9.8 / 9.2 |
+| Light Scout | 0.0 / 1.0 | 19.5 / 20.2 | 9.4 / 8.9 | 0.0 / 1.0 |
+| Corvette | 0.0 / 0.0 | 0.0 / 0.0 | 9.8 / 7.0 | 0.0 / 0.0 |
+| Harvester | 9.4 / 10.1 | 13.5 / 14.1 | 6.0 / 3.9 | 9.9 / 9.3 |
 | Chorister | 0.0 / 0.0 | 2.3 / 2.2 | 0.0 / 1.8 | 0.0 / 0.0 |
 | Clarion | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.9 / 2.8 |
 | Spinner | 0.0 / 0.0 | 0.3 / 0.2 | 0.0 / 0.0 | 0.0 / 0.0 |
@@ -65,7 +65,7 @@ _One seating: every match dealt each navy the same spawn. A win rate here cannot
 | Verger | 0.0 / 0.0 | 0.0 / 0.0 | 0.9 / 0.1 | 0.0 / 0.0 |
 | Beacon | 3.1 / 3.1 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Glider | 0.0 / 0.0 | 3.1 / 3.1 | 0.0 / 0.0 | 0.0 / 0.0 |
-| Acolyte | 0.0 / 0.0 | 0.0 / 0.0 | 2.1 / 1.4 | 0.0 / 0.0 |
+| Acolyte | 0.0 / 0.0 | 0.0 / 0.0 | 2.1 / 1.5 | 0.0 / 0.0 |
 | Herald | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.9 / 0.5 |
 | Broadside | 0.1 / 0.1 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Weaver | 0.0 / 0.0 | 0.5 / 0.3 | 0.0 / 0.0 | 0.0 / 0.0 |
@@ -91,5 +91,17 @@ _The opening escort is not counted as built: it is a gift, not a decision._
 | Bio-Reactor | 0.0 | 0.7 | 1.0 | 0.0 |
 
 _The opening Bastion and Foundry are not counted: they are a gift, not a decision._
+
+## The bank against the rung — the most nodules ever held at once
+
+| Measure | Consortium | Commune | Directorate | Knights |
+| --- | --- | --- | --- | --- |
+| Peak in a match, median | 620 | 600 | 600 | 619 |
+| Peak in any match | 690 | 600 | 640 | 766 |
+| Matches with a Slipway standing | 18 | 0 | 9 | 20 |
+| Peak with the yard up, median | 140 | — | 240 | 282 |
+| Peak with the yard up, best | 440 | — | 380 | 766 |
+
+_The rung rows are read over the matches that raised a Slipway, and are "—" for a navy that raised none. A Slipway is 600 nodules, so the peak above it is usually the money that bought it._
 
 _A verdict of "held" means the failure that guard-rail describes did not appear in these runs. It is evidence, not proof; weigh it against the sample size._

@@ -57,7 +57,12 @@ const flag = (name, fallback) => {
   const at = args.indexOf(`--${name}`);
   return at === -1 || at + 1 >= args.length ? fallback : args[at + 1];
 };
-const only = flag('case', null);
+// Comma-separated, so a pass over one scene and its profiled twin is one run
+// rather than two — the pair is how this tool is actually read.
+const only =
+  flag('case', null)
+    ?.split(',')
+    .map((name) => name.trim()) ?? null;
 const seconds = Number(flag('seconds', DEFAULT_SECONDS));
 
 // --- Playwright, the same resolution dance the other browser tools do -------
@@ -138,9 +143,10 @@ try {
   });
   await page.goto(`http://127.0.0.1:${port}/`);
   const names = await page.evaluate(() => globalThis.audioMeter.cases());
-  const wanted = only === null ? names : names.filter((name) => name === only);
+  const atOutput = new Set(await page.evaluate(() => globalThis.audioMeter.atOutput()));
+  const wanted = only === null ? names : names.filter((name) => only.includes(name));
   if (wanted.length === 0) {
-    console.error(`no such case: ${only}\ncases: ${names.join(', ')}`);
+    console.error(`no such case: ${only?.join(', ')}\ncases: ${names.join(', ')}`);
     process.exitCode = 1;
   }
 
@@ -158,6 +164,7 @@ try {
     });
     rows.push({
       name,
+      atOutput: atOutput.has(name),
       lufs: integratedLufs(data),
       peak: samplePeakDb(data),
       truePeak: truePeakDb(data),
@@ -174,21 +181,28 @@ const db = (value) => (Number.isFinite(value) ? value.toFixed(1).padStart(7) : '
 const pct = (value) => `${(value * 100).toFixed(0).padStart(3)}%`;
 const master = 20 * Math.log10(MASTER_GAIN);
 
-console.log(`\nrendered ${seconds}s at ${RATE} Hz, per layer, at the bus (pre-master)\n`);
+console.log(`\nrendered ${seconds}s at ${RATE} Hz\n`);
 console.log(
-  `${'layer'.padEnd(28)}${'LUFS'.padStart(7)}${'@master'.padStart(9)}${'peak'.padStart(8)}` +
+  `${'layer or scene'.padEnd(28)}${'LUFS'.padStart(7)}${'output'.padStart(9)}${'peak'.padStart(8)}` +
     `${'dBTP'.padStart(8)}   ${BAND_LABELS.map((label) => label.padStart(6)).join(' ')}`
 );
 for (const row of rows) {
+  // A scene has already been through master and the ceiling, so its own
+  // reading *is* the output figure; applying the gain again would report a mix
+  // 6 dB quieter than the one that was rendered.
+  const output = row.atOutput ? row.lufs : row.lufs + master;
   console.log(
-    `${row.name.padEnd(28)}${db(row.lufs)}${db(row.lufs + master).padStart(9)}${db(row.peak)}` +
+    `${row.name.padEnd(28)}${db(row.lufs)}${db(output).padStart(9)}${db(row.peak)}` +
       `${db(row.truePeak)}   ${row.bands.map((share) => pct(share).padStart(6)).join(' ')}`
   );
 }
 console.log(
-  `\ntarget: ${TARGET_LUFS} LUFS integrated at the output (§12). The @master column is the ` +
-    `layer\nalone through MASTER_GAIN (${master.toFixed(1)} dB); a layer at or above the target ` +
-    `on its own leaves\nnothing for the rest of the mix, let alone for the exposure strike §12 ` +
-    `reserves headroom for.\n`
+  `\ntarget: ${TARGET_LUFS} LUFS integrated at the output (§12).\n` +
+    `  layer rows  are one layer alone at its bus; the output column adds MASTER_GAIN ` +
+    `(${master.toFixed(1)} dB).\n` +
+    `              a layer at or above the target on its own leaves nothing for the rest of\n` +
+    `              the mix, let alone the exposure strike §12 reserves headroom for.\n` +
+    `  scene rows  are a whole mix already through master and the ceiling, so both loudness\n` +
+    `              columns read the same. This is what the device is handed.\n`
 );
 if (failed) process.exitCode = 1;
