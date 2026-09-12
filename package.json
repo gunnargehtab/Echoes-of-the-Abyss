@@ -24,18 +24,13 @@
     "format": "prettier --write \"packages/**/*.{ts,tsx,css,json}\" \"tools/**/*.{js,json}\" \"*.json\""
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "concurrently": "^9.0.0",
     "esbuild": "^0.24.2",
     "eslint-config-prettier": "^9.1.2",
     "prettier": "^3.9.6",
     "typescript": "^5.0.0",
     "vite": "^6.4.3"
-  },
-  "overrides": {
-    "@xmldom/xmldom": "0.8.15",
-    "js-yaml": "4.3.2",
-    "@colyseus/core": {
-      "nanoid": "3.3.18"
-    }
   }
 }
