@@ -22,22 +22,84 @@ const W = KELP_LABYRINTH_HEADER.widthM;
 const H = KELP_LABYRINTH_HEADER.heightM;
 
 /**
- * Kelp blocks of the central maze. The corridors are what is left over — which
- * is why these are stated on the 250 m cell grid: a block that paints wider
- * than it reads narrows a corridor somewhere, and the corridors are the map.
+ * The maze, authored as **one quadrant**. The other three are its mirror
+ * images, generated below rather than written down (#631).
+ *
+ * The map is 8,000 m square and declares four seats, so every chair has to be
+ * the same chair. #626 equalised everything a match turns on — the beds, the
+ * cold-shock sites, the corner pockets, the crystal approach — and left the
+ * maze itself, which was ten hand-placed rectangles with not one of them
+ * carrying its own rotated image. The corridors that fell out of that were a
+ * 6.7% spread in the approach to the far expansion depending on which corner
+ * you woke up in, and nothing in the data kept the next edit from widening it.
+ *
+ * Writing the quadrant is the fix, rather than nudging ten rectangles until
+ * the counts fall to zero: symmetry becomes a property of *how the map is
+ * written* instead of a property of its numbers, so the next edit cannot
+ * reintroduce the drift without deleting the mechanism that generates it.
+ * That is the same argument the repository makes about a constant living in
+ * one place.
+ *
+ * ## What the quadrant says
+ *
+ * Two concentric kelp walls around the central pocket, each with one gate per
+ * side, **staggered**: the outer wall opens on the centre lines, the inner
+ * wall on the diagonals. A run at the crystal therefore cannot be a straight
+ * one — through the outer gate you face the inner wall broadside and have to
+ * travel a quarter turn along a 250 m corridor to find its door. That is what
+ * "multiple winding routes" is when written as data, and it is what the old
+ * blob of kelp with two slits in it never actually did.
+ *
+ * The four corner pressure pockets are the other four doors. Each one is
+ * painted over the outer wall's corner further down this file, so the diagonal
+ * approach is open — and it drops a raider one step from the inner wall's own
+ * gate. The shortcut through the maze really is the fast way in, and it is
+ * still the one that costs hull.
+ *
+ * Stated on the 250 m cell grid, as everything in this file is: a block that
+ * paints wider than it reads narrows a corridor somewhere, and the corridors
+ * are the map.
  */
-const MAZE: Array<[number, number, number, number]> = [
-  [2000, 2000, 1500, 1000],
-  [3750, 2000, 1000, 2000],
-  [5000, 2000, 1250, 1000],
-  [2000, 3250, 1000, 1500],
-  [3250, 4250, 1500, 1000],
-  [5000, 3250, 1250, 2000],
-  [2000, 5000, 2000, 1250],
-  [4250, 5000, 1500, 1250],
-  [3250, 2750, 500, 1250],
-  [4250, 3250, 1000, 500],
+const QUADRANT: Array<[number, number, number, number]> = [
+  // Outer wall, north arm. It runs from the corner to x 3,750 and stops there,
+  // so the arm and its own mirror leave a 500 m gate on the centre line.
+  [1750, 1750, 2000, 750],
+  // Outer wall, west arm — the same gate on the other axis, but starting at
+  // y 2,500 rather than at the corner, because the corner belongs to the arm
+  // above. That is what gives each quadrant a handedness: the two faces of the
+  // same wall are not interchangeable, so the maze reads as a maze rather than
+  // as a ring with four notches cut in it.
+  [1750, 2500, 750, 1250],
+  // Inner wall, north arm. It starts at x 3,250, well clear of the corner, and
+  // reaches the centre line — so with its mirror it is one 1,500 m slab
+  // squarely across the outer wall's gate. Come through the gate and the wall
+  // is in front of you, not a corridor.
+  [3250, 2750, 750, 500],
+  // Inner wall, west arm — two cells, hung below the corner rather than from
+  // it, which leaves y 3,250-3,500 open at x 2,750-3,250. That gap is the
+  // inner wall's door, and it is on the diagonal from the gate you came in by.
+  [2750, 3500, 500, 500],
 ];
+
+/**
+ * The quadrant reflected into the other three. Reflection rather than
+ * rotation: a quarter-turn about the centre gives a pinwheel, four identical
+ * approaches that spiral the same way, and this map's centre is already a
+ * pressure pocket with one prize in it. Reflected, the four approaches are
+ * mirror images and the middle reads as a chamber rather than a turbine.
+ *
+ * A block whose far edge lands exactly on a centre line abuts its own mirror
+ * and the pair paint as one wall; a block that stops short of one leaves a
+ * gate twice the gap. Both are used above.
+ */
+const MAZE: Array<[number, number, number, number]> = QUADRANT.flatMap(
+  ([x, y, widthM, heightM]) => [
+    [x, y, widthM, heightM],
+    [W - x - widthM, y, widthM, heightM],
+    [x, H - y - heightM, widthM, heightM],
+    [W - x - widthM, H - y - heightM, widthM, heightM],
+  ]
+);
 
 /**
  * Every rectangle in this file lands on the 250 m cell grid, so each paints

@@ -68,6 +68,8 @@ A dense maze of kelp forests with hidden paths and stealth zones.
 - Central kelp maze with multiple winding routes
 - Open outer ring for expansions
 - Hidden tunnels connecting corners
+- **Four-fold symmetric by construction.** The maze is authored as one quadrant and the
+  other three are its mirror images, so every seat faces the same labyrinth
 
 ### Biome Distribution
 
@@ -91,7 +93,11 @@ A dense maze of kelp forests with hidden paths and stealth zones.
 
 Four-seat skirmish; stealth-heavy, broken-sightline gameplay.
 
-It read *asymmetric campaign missions* until #626, and the map was authored to that reading: the corner pressure pockets, both bio-reactor beds and both outer cold-shock sites sat on the NW-SE diagonal alone, so two of its four seats reached everything measurably later and approached the crystal through different water. An archetype is a member of the public catalogue by definition — a mission map is authored per mission, resolved by mission id, and cannot be selected in a skirmish at all — so this one had to be one thing or the other. It is a four-seat skirmish map, and its content now says so on both diagonals. The asymmetry the maze itself still carries is #631's.
+It read *asymmetric campaign missions* until #626, and the map was authored to that reading: the corner pressure pockets, both bio-reactor beds and both outer cold-shock sites sat on the NW-SE diagonal alone, so two of its four seats reached everything measurably later and approached the crystal through different water. An archetype is a member of the public catalogue by definition — a mission map is authored per mission, resolved by mission id, and cannot be selected in a skirmish at all — so this one had to be one thing or the other. It is a four-seat skirmish map, and its content now says so on both diagonals.
+
+The maze was the half #626 left, and it is settled the same way: **a mirrored maze is still a maze.** Nothing in a labyrinth's character requires that four players get four different labyrinths, and the argument that the corridors *are* the map is an argument about how carefully a maze must be authored rather than an argument for authoring it asymmetrically. So the maze is written as one quadrant and mirrored into the other three, which puts the symmetry in *how the data is written* rather than in its numbers: the next edit cannot reintroduce the drift without deleting the mechanism that generates the other three quadrants. Ventfront Divide and the Abyssal Rift Corridor are both held to cell-perfect symmetry, and this archetype now is too.
+
+What the quadrant says is two concentric kelp walls around the central pocket, each with one gate per side and the gates **staggered** — the outer wall opens on the centre lines, the inner wall on the diagonals. A run at the crystal is therefore never a straight one: through the outer gate the inner wall is broadside, and its door is a quarter turn away along a 250 m corridor. The four corner pressure pockets are the other four doors, painted over the outer wall's corners, so the shortcut through the maze is the fast way in and still the one that costs hull.
 
 ## Map Type 3 — Abyssal Rift Corridor
 
