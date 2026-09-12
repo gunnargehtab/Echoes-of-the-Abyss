@@ -257,6 +257,41 @@ describe('a handler that throws', () => {
   });
 });
 
+describe('a clock timer that throws', () => {
+  it('is dropped, and the room survives it', async () => {
+    const room = await bootRoom();
+    try {
+      startPlaying(room);
+
+      // The room's own two `clock.setTimeout` calls are the post-match ones
+      // that close a room nobody called a rematch in, so they only exist after
+      // a result. This asserts the same wrapping the gate installs over them,
+      // on a timer a test can actually reach. The clock is ticked by the live
+      // simulation interval, so a zero delay fires on the next step.
+      const logged = await capturingErrors(async () => {
+        let fired = false;
+        room.clock.setTimeout(() => {
+          fired = true;
+          throw new Error('the timer went wrong');
+        }, 0);
+        await until(() => fired, 'the clock timer to fire');
+        // One more step, so a throw that escaped the wrapper would have taken
+        // the interval with it by the time the assertions below run.
+        const before = room.state.tick;
+        await until(() => room.state.tick > before, 'the room to step after the timer threw');
+      });
+
+      assert.equal(logged.length, 1, 'the timer throw should have been logged once');
+      assert.match(logged[0] ?? '', /setTimeout/);
+      assert.match(logged[0] ?? '', /dropped/);
+      assert.notEqual(internals(room)._internalState, DISPOSING);
+      assert.equal(room.state.phase, MatchPhase.Playing);
+    } finally {
+      await shutdown(room);
+    }
+  });
+});
+
 describe('a simulation step that throws', () => {
   it('ends that room and leaves another room stepping', async () => {
     const [torn, bystander] = await Promise.all([bootRoom(), bootRoom()]);
