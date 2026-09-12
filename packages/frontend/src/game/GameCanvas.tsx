@@ -553,6 +553,7 @@ export function GameCanvas({
           settings.busVolumes.contact * dbToGain(settings.contactBoostDb)
         );
         audio.setSpatialisation(settings.mono ? 'mono' : 'stereo');
+        audio.setSpeakerProfile(settings.speakerProfile);
         activeRenderer.setPrecedenceMode(settings.visualFirst ? 'visual-first' : 'ear-first');
         // §11's full rebinding. Applied through the same subscription as the
         // rest, so rebinding from the esc menu takes effect without leaving

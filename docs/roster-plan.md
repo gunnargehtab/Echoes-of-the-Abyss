@@ -778,12 +778,65 @@ gate on 3.7% of observations and the Bulwark's own price on none of them — and
 Directorate's tops out at 360 against a 450 hull. The Knights' averages 192 and clears 600 on
 543 observations.
 
-**So what is left is anti-starvation, not another saving rule.** Nearest-first is right about
-which hold closes soonest and silent about a want that never wins one; what it needs is a way
-for a bid that has lost for long enough to take the slot regardless of what is cheaper. The
-risk to measure is the one #521 and #536 both found from opposite directions: a purse held
-for a hull the navy cannot reach costs win rate immediately and buys nothing, so the window
-such a bid is allowed to win has to be short enough that the line keeps growing underneath it.
+**Anti-starvation was the obvious repair, and it was measured and does not work.** The rule
+is the one the paragraph above asked for: every want keeps a clock of how long it has been
+losing the arbitration, a want that has lost for ninety seconds takes the slot regardless of
+what is cheaper, and winning spends the clock so the line gets it back. Built three ways —
+with the hold bounded by `RUNG.SAVE_S` and with it unconditional, with `RUNG.SAVE_FROM` kept
+and with it waived for a starved bid — and instrumented at the arbitration itself over seeds
+4000–4009, where it does exactly what it was written to do: **the Consortium's Bulwark, which
+won none of the 4,822 purses it bid for above, wins 3,041 of the 3,865 it bids for now.**
+
+Not one extra hull is built by any of the three. What moves instead is the win rates, by up
+to seven points, and the one rung hull a navy did field — the Knights' Reciter — comes off
+the slip *less* often. On #521's own rule none of them ships: a change to how this commander
+spends nodules that moves the win rates and builds none of the hulls this issue is about is a
+change that buys nothing.
+
+**What the instrumentation found instead is that the money is not there, and it is not close.**
+The bank a navy holds is a maximum rather than a rate, no column in the report was reading it,
+and it is now the `The bank against the rung` table. Peak bank *after the yard is standing*,
+over seeds 4000–4009, against the price of the hull the yard was bought for:
+
+| Navy | Its heavy | Price | Matches with a yard | Peak once the yard is up, median / best |
+| --- | --- | --- | --- | --- |
+| Consortium | Bulwark | 700 | 18 of 30 | 140 / 440 |
+| Commune | Bower | 360 | 0 of 30 | — |
+| Directorate | Dredge | 450 + 40 crystal + 60 Biomass | 9 of 30 | 240 / 380 |
+| Knights | Reciter | 260 | 20 of 30 | 282 / 766 |
+
+Not one Consortium or Directorate match ever holds its heavy's price, in thirty matches with
+the yard standing in twenty-seven of them. **The Knights are the only navy whose peak with a
+yard up clears its own heavy, and the only navy that fields one** — 0.6 Reciters a match, on
+the cheapest heavy in the game. No arbitration between wants reaches a price the navy never
+holds, which is why all three versions of the rule read the same.
+
+**And the peak is not savings at all — it is the opening stockpile.** The paragraph that
+stood here read the 600 as a yard being saved for and spent, which was the wrong reading of
+the right number. `ECONOMY.STARTING_NODULES` is **600**, every commander is handed it at
+second zero, and a Slipway costs exactly that. So a peak of 600 is the *gift*. On the stored
+thirty seeds the Commune's peak is exactly 600 in all thirty matches and the Consortium's in
+thirteen. The best any navy ever banks *on top of* the gift, over thirty matches, is 90
+nodules for the Consortium, 40 for the Directorate and **zero for the Commune** — and 166 for
+the Knights, whose tithe pays them every tick and who are for that reason the only navy here
+whose bank behaves like an income at all. The report prints this directly now, as `Best peak
+above the opening 600`, so the column cannot be misread the way this paragraph misread it.
+
+**What that leaves is arithmetic against the map.** Ventfront Divide is symmetric to the
+metre: each spawn has a 3,000 nodule home field 743 m away, and the next nearest field is
+3,384 m off and contested by all four. Gross income per navy per match runs 2,300 to 3,150
+— about one home field. Against that, the rung is a 600 nodule yard plus a 260 to 700 nodule
+hull: **29% to 43% of everything a navy earns in a match**, on top of an army that costs it
+1,500 to 2,600. The books reconcile to within a hundred nodules, so nothing is leaking; the
+rung is simply a large fraction of the money that exists.
+
+That is a claim about prices against a map's authored resources, which is what the freeze in
+`CLAUDE.md` covers, and it is not this issue's to settle. What is left here is #520's case
+for two navies — a price in an account the navy does not earn — and, for the other two, a
+question for whoever lifts the freeze: whether a 600 nodule yard and a 700 nodule hull are
+reachable in the same match at all. The honest gate for waves 4 and 5 meanwhile is the one
+the issue's own fourth option named — a longer scenario, judged on whether the bank ever
+holds the price, which the report can now say.
 
 ## 5. What each wave touches
 

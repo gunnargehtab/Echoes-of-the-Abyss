@@ -15,6 +15,7 @@
 import { ACTIONS, DEFAULT_BINDINGS, type Bindings, type LayoutName } from '../input/bindings.ts';
 import { PALETTES, type PaletteName } from '../game/palette.ts';
 import type { TrimBus } from '../audio/engine.ts';
+import { prefersSpeakerProfile } from '../audio/speakerProfile.ts';
 
 /** docs/ui-ux.md §11: "UI scale 75%-200%". */
 export const UI_SCALE_MIN = 0.75;
@@ -75,6 +76,17 @@ export interface Settings {
    * lands by accident.
    */
   edgeScroll: boolean;
+  /**
+   * §11's speaker profile — the small-speaker mix (docs/audio-direction.md
+   * §11, docs/audio-direction.md §12's scaffold status).
+   *
+   * Defaults to what the device already implies rather than to `false`, for
+   * the reason `reducedMotion` defaults to the OS preference: a player on a
+   * phone should not have to discover a setting before the game is bearable.
+   * The default applies only until they touch the control — once written, an
+   * explicit `false` is honoured over the device.
+   */
+  speakerProfile: boolean;
 }
 
 /**
@@ -106,6 +118,7 @@ export const DEFAULT_SETTINGS: Settings = {
   reducedMotion: false,
   acousticVeil: 1,
   edgeScroll: true,
+  speakerProfile: false,
 };
 
 const STORAGE_KEY = 'echoes.settings';
@@ -166,15 +179,21 @@ function sanitise(raw: unknown): Settings {
       typeof record.reducedMotion === 'boolean' ? record.reducedMotion : prefersReducedMotion(),
     acousticVeil: clamp01(record.acousticVeil, DEFAULT_SETTINGS.acousticVeil),
     edgeScroll: typeof record.edgeScroll === 'boolean' ? record.edgeScroll : true,
+    speakerProfile:
+      typeof record.speakerProfile === 'boolean' ? record.speakerProfile : prefersSpeakerProfile(),
   };
 }
 
 /**
  * The defaults as this device would have them — everything in
- * `DEFAULT_SETTINGS`, plus whatever the OS has already said.
+ * `DEFAULT_SETTINGS`, plus whatever the OS and the hardware have already said.
  */
 function defaults(): Settings {
-  return { ...DEFAULT_SETTINGS, reducedMotion: prefersReducedMotion() };
+  return {
+    ...DEFAULT_SETTINGS,
+    reducedMotion: prefersReducedMotion(),
+    speakerProfile: prefersSpeakerProfile(),
+  };
 }
 
 /**

@@ -69,6 +69,15 @@ for the reason the opening stockpile is not income: they are a gift, not a decis
 however well it saves. The Directorate is the case that made the column necessary: it
 commissions a Slipway in nine matches of ten and builds neither hull the yard is for.
 
+**The bank against the rung.** The most nodules a navy ever held at one instant, and the most
+it held once a Slipway was standing. The three tables above are rates and counts, and none of
+them can say whether a hull was ever *affordable* — which is a maximum, and a maximum a
+ten-second sample misses, because a bank rises to a price and is spent inside one interval.
+#518 spent five sessions reading the arbitration between a commander's wants before this
+column said the money was never there: peak bank with a yard up is under 400 for the
+Consortium against a 700 nodule Bulwark, and the peak over the whole match is 600–680 against
+a 600 nodule yard. Read it before attributing a row of zeros to how a commander spends.
+
 ## Three things to know before trusting a number
 
 **The seed places the Drift and nothing else.** Terrain is authored, hazard timings come

@@ -115,6 +115,7 @@ import {
   type Stockpile,
 } from '@echoes/shared';
 import {
+  ACTIVE_PALETTE,
   BIOME_COLOR,
   FACTION_PALETTE,
   FAUNA_COLOR,
@@ -729,11 +730,107 @@ interface BarButton {
 
 /** Command panel geometry, CSS px. docs/art-direction.md "HUD Layout". */
 const TAB_HEIGHT = 24;
-const BUTTON_ROW_HEIGHT = 56;
-const BAR_HEIGHT = TAB_HEIGHT + BUTTON_ROW_HEIGHT;
+
+/**
+ * The console, from docs/concept-art/hud-mockups/ — the direction chosen for
+ * the in-match interface.
+ *
+ * It replaces an 80 px bar of one button row under a tab strip with a 208 px
+ * console of fixed blocks, which is a real cost in ocean and is paid for by
+ * what the blocks hold: nothing sits behind a tab, so production stops being
+ * something a commander has to go and look for.
+ *
+ * 208 is a *pixel* height rather than a fraction, like the bar it replaces, so
+ * a short window gives up proportionally more of itself — 19% of a 1080p frame
+ * and 23% of a 900px one. That is inherent to a console whose rows have a
+ * minimum size (§11's 44 px touch floor is what sets it), and `uiScale` is the
+ * knob for wanting it bigger rather than the window height.
+ */
+const CONSOLE_HEIGHT = 208;
+/** Breathing room between the console's own edge and its blocks. */
+const CONSOLE_PAD = 8;
+/** A block's cyan header band — the plate VI card's rule 3. */
+const BLOCK_HEAD_H = 22;
+/** Between two blocks. Tight: the blocks are the instrument, the gaps are not. */
+const BLOCK_GAP = 8;
 const BAR_BUTTON_HEIGHT = 40;
+
+/**
+ * What each block needs to say, in px.
+ *
+ * Four of the five are fixed because their content is: a scope is square, a
+ * command card is four columns of a known width, a selection card holds six
+ * stats. Production takes whatever is left, because a queue is the one block
+ * that reads better wider, and it is the first to go when there is not enough
+ * width to give it — see `consoleBlocks`.
+ */
+const BLOCK_W = {
+  scope: 170,
+  selection: 300,
+  fleet: 230,
+  commands: 380,
+  productionMin: 240,
+} as const;
 /** Top resource strip. */
-const TOP_BAR_HEIGHT = 30;
+const TOP_BAR_HEIGHT = 52;
+
+/**
+ * The SIG meter, to docs/ui-ux.md §3 — "240 x 12 px at 1080p, above a two-line
+ * readout". §1.4 makes it the one element that is never a submenu and never a
+ * toggle, and it had been drawn as a 40-120 px offcut squeezed between the
+ * stockpiles and whatever width was left.
+ */
+const SIG_METER = {
+  W: 240,
+  H: 12,
+  /** A hull over this is *loud*, and the count of them predicts trouble (§3). */
+  LOUD: 60,
+  /**
+   * How long a transient stays drawn over the baseline. A ping's burst is 1.5 s
+   * of emission (§6), so the overlay outlives it by enough to be read and not
+   * so long that it reads as a second baseline.
+   */
+  SPIKE_DECAY_MS: 2200,
+  /** The single flash when a hull crosses into the red band (§3). */
+  FLASH_MS: 320,
+} as const;
+
+/**
+ * The plate VI card, as numbers — docs/style-neon-noir.md "UI chrome".
+ *
+ * The section is an anatomy and the match HUD had never implemented it: panels
+ * were a hairline box on near-black, which is most of what "the HUD looks
+ * underwhelming" turned out to mean (docs/concept-art/hud-mockups/). These are
+ * that anatomy's six rules with the numbers the section gives.
+ */
+const PLATE = {
+  /** Rule 1 — glass, not opaque. The section's band is 82-90%. */
+  FILL_ALPHA: 0.86,
+  /** An inactive panel keeps its glass and loses its halo (rule 2). */
+  QUIET_FILL_ALPHA: 0.8,
+  /** Rule 2 — a 1px bevel in the chrome voice, dimmed to 40% when inactive. */
+  BEVEL_ALPHA: 0.62,
+  QUIET_BEVEL_ALPHA: 0.35,
+  /**
+   * The halo of the glow recipe: the same colour, low alpha, greater width.
+   * Exactly one per plate — the recipe's budget is two halo layers per element
+   * and forbids them stacking on neighbours, and a console of touching blocks
+   * is precisely where bloom-everything would happen.
+   */
+  HALO_WIDTH: 3,
+  HALO_ALPHA: 0.18,
+  /** Rule 4 — corner registration ticks, the survey marks, instead of a radius. */
+  TICK: 7,
+  /** Rule 3 — the thin cyan rule under a header band. */
+  HEADER_RULE_ALPHA: 0.45,
+} as const;
+
+/**
+ * Rule 5 — one diagonal texture across the whole HUD layer, never per-panel,
+ * at no more than 4%. Spacing and angle are chosen to read as a scanline at
+ * 1080p rather than as moiré.
+ */
+const GRAIN = { SPACING_PX: 5, ALPHA: 0.035 } as const;
 
 /** Past this much pointer travel, a left drag is a marquee rather than a click. */
 const DRAG_SLOP_PX = 6;
@@ -877,9 +974,33 @@ export class EchoRenderer {
   private readonly ordnanceSymbols = new SymbolPool();
   private readonly hud = new Container();
   private readonly hudGraphics = new Graphics();
+  /** Rule 5's single diagonal texture over the whole HUD — see `buildGrain`. */
+  private readonly grainGraphics = new Graphics();
+  /** What the grain was last built for: viewport and palette, its two inputs. */
+  private grainKey = '';
   private readonly barGraphics = new Graphics();
   /** Pooled Text objects for bar labels — button count varies per context. */
   private readonly barTexts: Text[] = [];
+  /** One pooled header label per console block — see `blockTitle`. */
+  private readonly blockTitles: Text[] = [];
+  /** Two pooled labels per production row: what it is making, and how long. */
+  private readonly productionTexts: Text[] = [];
+  /** Pooled labels for the fleet block's chips and its census line. */
+  private readonly fleetTexts: Text[] = [];
+  /**
+   * The transient half of the SIG meter (§3).
+   *
+   * `sigHold` follows peak SIG up instantly and decays back down, so the bar
+   * can draw the baseline solid and the burst it just came off as a lighter
+   * overlay. It is a *drawing* of a number the server already sent rather than
+   * a second source of truth: at rest it converges on peak SIG and says
+   * nothing the solid bar does not.
+   */
+  private sigHold = 0;
+  private sigHoldAt = 0;
+  /** Which band the meter was in last frame, for §3's one flash on entry. */
+  private sigBandWasRed = false;
+  private sigFlashAt = 0;
   /** Last frame's button layout, hit-tested by pressBarButton. */
   private barButtons: BarButton[] = [];
   private activeTab: CommandTab = 'build';
@@ -910,6 +1031,8 @@ export class EchoRenderer {
   private infoBadge!: Text;
 
   private sigLabel!: Text;
+  /** §3's second line: `n units · m loud`, the count that predicts trouble. */
+  private loudLabel!: Text;
   /**
    * §4's band, in words.
    *
@@ -1347,7 +1470,9 @@ export class EchoRenderer {
       this.minimapTerrainG,
       this.minimapOverlayG,
       this.infoGraphics,
-      this.barGraphics
+      this.barGraphics,
+      // Last, so the one texture lies over every panel rather than under them.
+      this.grainGraphics
     );
     this.app.stage.addChild(this.overlay, this.hud);
 
@@ -1400,7 +1525,12 @@ export class EchoRenderer {
     this.crystalLabel = new Text({ text: '', style: { ...mono, fontSize: 13 } });
     this.crystalLabel.visible = false;
 
-    this.sigLabel = new Text({ text: 'SIG --', style: { ...mono, fontSize: 13 } });
+    this.sigLabel = new Text({ text: 'SIG --- / 100', style: { ...mono, fontSize: 13 } });
+
+    this.loudLabel = new Text({
+      text: '',
+      style: { ...mono, fontSize: 11, fill: UI.textDim },
+    });
 
     this.bandLabel = new Text({
       text: '',
@@ -1482,6 +1612,7 @@ export class EchoRenderer {
 
     this.hud.addChild(
       this.sigLabel,
+      this.loudLabel,
       this.bandLabel,
       this.exposureLabel,
       this.mapLabel,
@@ -2232,7 +2363,7 @@ export class EchoRenderer {
     // a click has to be expressed in them before it can be compared.
     const x = (clientX - rect.left) / this.uiScale;
     const y = (clientY - rect.top) / this.uiScale;
-    if (y < this.hudHeight() - BAR_HEIGHT) return false;
+    if (y < this.hudHeight() - CONSOLE_HEIGHT) return false;
     for (const button of this.barButtons) {
       if (x >= button.x && x <= button.x + button.w && y >= button.y && y <= button.y + button.h) {
         if (button.enabled) button.action();
@@ -2247,9 +2378,82 @@ export class EchoRenderer {
   // --- Sonar scope (minimap) ------------------------------------------------
 
   /** The scope's screen rect. Sized down on narrow screens. */
+  /**
+   * The console's blocks for the current width.
+   *
+   * Blocks are dropped rather than squeezed when the width runs out, because a
+   * block narrower than its content is a block that lies about holding it. They
+   * go in reverse order of how often a commander looks at them: production
+   * first, because its facts are also on the selection card when a yard is
+   * selected, then selection, whose card the world view can carry alone. The
+   * scope and the command card never go — one is how a touchscreen reaches any
+   * order at all, and the other is the only view of the whole map.
+   */
+  private consoleBlocks(): {
+    y: number;
+    h: number;
+    scope: { x: number; w: number };
+    commands: { x: number; w: number };
+    selection?: { x: number; w: number };
+    fleet?: { x: number; w: number };
+    production?: { x: number; w: number };
+  } {
+    const width = this.hudWidth();
+    const y = this.hudHeight() - CONSOLE_HEIGHT + TAB_HEIGHT + 4;
+    const h = CONSOLE_HEIGHT - TAB_HEIGHT - 4 - CONSOLE_PAD;
+    const left = CONSOLE_PAD + 2;
+    const right = width - CONSOLE_PAD - 2;
+
+    // Blocks are dropped rather than squeezed when the width runs out, because
+    // a block narrower than its content is a block that lies about holding it.
+    // The order is what each one costs to lose:
+    //
+    // - **Fleet first.** Its facts have somewhere else to be — the hulls in
+    //   hand are also the selection card's, and the groups are also the
+    //   digits. It is the block that makes them quick, not the only one that
+    //   makes them reachable.
+    // - **Production next**, and reluctantly: production being visible without
+    //   a tab is this console's whole argument, so it gives way only to the two
+    //   blocks that cannot go at all.
+    // - **Selection after that**, because the world view carries a hull's state
+    //   on the hull itself.
+    //
+    // Scope and commands never go. One is the only view of the whole map, and
+    // the other is how a touchscreen reaches any order at all.
+    const fixed = BLOCK_W.scope + BLOCK_W.commands + BLOCK_GAP * 2;
+    const spare = right - left - fixed;
+    const wantsSelection = spare >= BLOCK_W.selection + BLOCK_GAP + BLOCK_W.productionMin;
+    const afterSelection = wantsSelection ? spare - BLOCK_W.selection - BLOCK_GAP : spare;
+    const wantsFleet = afterSelection >= BLOCK_W.fleet + BLOCK_GAP + BLOCK_W.productionMin;
+
+    let x = left;
+    const scope = { x, w: BLOCK_W.scope };
+    x += scope.w + BLOCK_GAP;
+
+    const selection = wantsSelection ? { x, w: BLOCK_W.selection } : undefined;
+    if (selection !== undefined) x += selection.w + BLOCK_GAP;
+
+    const fleet = wantsFleet ? { x, w: BLOCK_W.fleet } : undefined;
+    if (fleet !== undefined) x += fleet.w + BLOCK_GAP;
+
+    const commands = { x, w: BLOCK_W.commands };
+    x += commands.w + BLOCK_GAP;
+
+    const rest = right - x;
+    const production = rest >= BLOCK_W.productionMin ? { x, w: rest } : undefined;
+    return { y, h, scope, commands, selection, fleet, production };
+  }
+
   private minimapRect(): { x: number; y: number; size: number } {
-    const size = this.hudWidth() < 700 ? 110 : 170;
-    return { x: 10, y: this.hudHeight() - BAR_HEIGHT - size - 10, size };
+    const blocks = this.consoleBlocks();
+    // Square, and inset inside its block under the header band.
+    const inner = 6;
+    const size = Math.min(blocks.scope.w - inner * 2, blocks.h - BLOCK_HEAD_H - inner * 2);
+    return {
+      x: blocks.scope.x + (blocks.scope.w - size) / 2,
+      y: blocks.y + BLOCK_HEAD_H + (blocks.h - BLOCK_HEAD_H - size) / 2,
+      size,
+    };
   }
 
   /**
@@ -2637,6 +2841,270 @@ export class EchoRenderer {
     return codes.map(keyLabel).join('/');
   }
 
+  /**
+   * A pooled header label for a console block, in the display voice.
+   *
+   * Pooled like the button labels for the same reason: the block set changes
+   * with the width (see `consoleBlocks`), so building a Text per frame would
+   * churn the scene graph every resize.
+   */
+  private blockTitle(index: number): Text {
+    let text = this.blockTitles[index];
+    if (text === undefined) {
+      text = new Text({
+        text: '',
+        style: {
+          fontFamily: FONT_DISPLAY,
+          fontWeight: '600',
+          fontSize: 13,
+          letterSpacing: 2,
+          fill: UI.accent,
+        },
+      });
+      this.blockTitles.push(text);
+      this.hud.addChild(text);
+    }
+    return text;
+  }
+
+  /**
+   * The console's blocks: a plate each, with the cyan header band the plate VI
+   * card's rule 3 asks for.
+   *
+   * Drawn quiet — the section's inactive state, which keeps the glass and drops
+   * the halo. The console's own plate already carries one halo along its top
+   * edge, and the glow recipe forbids halos stacking on neighbours: five more
+   * would be the bloom-everything failure the recipe names, on the one panel
+   * where five of them touch.
+   */
+  private paintConsoleBlocks(g: Graphics): void {
+    const blocks = this.consoleBlocks();
+    const slots: Array<[{ x: number; w: number } | undefined, string]> = [
+      [blocks.scope, 'SCOPE'],
+      [blocks.selection, 'SELECTION'],
+      [blocks.fleet, 'FLEET'],
+      [blocks.commands, 'COMMANDS'],
+      [blocks.production, 'PRODUCTION'],
+    ];
+    let shown = 0;
+    for (const [slot, title] of slots) {
+      if (slot === undefined) continue;
+      this.plate(g, slot.x, blocks.y, slot.w, blocks.h, {
+        headerH: BLOCK_HEAD_H,
+        quiet: true,
+      });
+      const label = this.blockTitle(shown++);
+      label.visible = true;
+      label.text = title;
+      label.position.set(slot.x + 8, blocks.y + 4);
+      if (title === 'PRODUCTION') this.paintProduction(g, slot, blocks.y, blocks.h);
+      if (title === 'FLEET') this.paintFleet(g, slot, blocks.y, blocks.h);
+    }
+    if (blocks.production === undefined) {
+      for (const text of this.productionTexts) text.visible = false;
+    }
+    if (blocks.fleet === undefined) {
+      for (const text of this.fleetTexts) text.visible = false;
+    }
+    for (let i = shown; i < this.blockTitles.length; i++) this.blockTitles[i]!.visible = false;
+  }
+
+  /**
+   * The production block: one row per yard, permanently on screen.
+   *
+   * This is the console's whole argument in one panel. Production used to live
+   * behind the UNITS tab, so a commander had to go and look to find out whether
+   * anything was being built at all; here it is a fact the screen carries.
+   *
+   * One row per *yard*, because a yard is one line: `sim/systems/production.ts`
+   * works a single queue and a single `remainingS` per structure, and
+   * `OwnStructure` carries one `queue` and one `queueProgress`. A yard that
+   * could be running and is not says so rather than being left out, because
+   * an idle line is the thing worth noticing.
+   *
+   * The estimate is honest about the one thing that makes it slip: a starved
+   * line runs at the Thermal Draw's satisfaction rate (docs/economy.md §2), so
+   * the seconds remaining are divided by it. At a deficit the number grows,
+   * which is the correct reading and the reason the row carries it.
+   */
+  private paintProduction(g: Graphics, slot: { x: number; w: number }, y: number, h: number): void {
+    const yards = this.structures
+      .filter((st) => (PRODUCIBLE[st.kind]?.length ?? 0) > 0)
+      .sort((a, b) => a.id - b.id);
+
+    const rowH = 44;
+    const pad = 8;
+    let rowY = y + BLOCK_HEAD_H + 4;
+    let shown = 0;
+    for (const yard of yards) {
+      if (rowY + rowH > y + h - 4) break;
+      const name = structureStatsFor(yard.kind).name.toUpperCase();
+      const running = yard.queue.length > 0;
+      const kind = yard.queue[0];
+      const label = this.productionText(shown * 2);
+      label.visible = true;
+      label.text = running && kind !== undefined ? `${name}  ${UNIT_SHORT[kind]}` : `${name}  idle`;
+      label.style.fill = running ? UI.text : UI.textDim;
+      label.position.set(slot.x + pad, rowY + 4);
+
+      const eta = this.productionText(shown * 2 + 1);
+      eta.visible = true;
+      if (running && kind !== undefined) {
+        const total = statsFor(kind).buildTimeS;
+        const rate = Math.max(0.05, this.drawReport.satisfaction);
+        const left = Math.ceil(((1 - yard.queueProgress) * total) / rate);
+        const behind = yard.queue.length - 1;
+        eta.text = behind > 0 ? `${left}s  +${behind}` : `${left}s`;
+        eta.style.fill = rate < 1 ? UI.threat : UI.accent;
+      } else {
+        eta.text = '\u2014';
+        eta.style.fill = UI.textDim;
+      }
+      eta.position.set(slot.x + slot.w - pad - eta.width, rowY + 4);
+
+      // The line itself. An idle line keeps its track so the row still reads
+      // as a line rather than as a gap.
+      const trackY = rowY + 24;
+      const trackW = slot.w - pad * 2;
+      g.rect(slot.x + pad, trackY, trackW, 5).fill({ color: 0x000000, alpha: 0.5 });
+      if (running) {
+        g.rect(slot.x + pad, trackY, trackW * Math.max(0, Math.min(1, yard.queueProgress)), 5).fill(
+          {
+            color: UI.accent,
+          }
+        );
+      }
+      g.rect(slot.x + pad, trackY, trackW, 5).stroke({
+        width: 1,
+        color: UI.glassStroke,
+        alpha: 0.35,
+      });
+
+      rowY += rowH;
+      shown++;
+    }
+
+    for (let i = shown * 2; i < this.productionTexts.length; i++) {
+      this.productionTexts[i]!.visible = false;
+    }
+  }
+
+  /**
+   * The fleet block: what is in hand, what is assigned, and what the player
+   * owns — all of it own force, and none of it anybody else's.
+   *
+   * Two bands of 44 px chips over a census line. §11 puts the touch floor at
+   * 44 px and §9 makes the digits unrebindable, so on a touchscreen — which has
+   * no digits — these chips are the *only* way to recall a control group. Four
+   * rows of 44 px do not fit a block this tall, which is why the groups are
+   * chips laid across the width rather than a list: it is both denser and
+   * reachable, where a list of 15 px rows was neither.
+   *
+   * The census counts hulls and structures the player owns. A hostile total
+   * here would be docs/ui-ux.md §10.5's maphack in a numeral — the map-wide
+   * count that opaque contact handles exist to withhold, handed over in a
+   * friendlier font — so the block never reads `this.tracked` and never will.
+   */
+  private paintFleet(g: Graphics, slot: { x: number; w: number }, y: number, h: number): void {
+    const ROW = 44;
+    const pad = 6;
+    const held = this.selectedUnits();
+    const inner = slot.w - pad * 2;
+
+    const chip = (cx: number, cy: number, cw: number, on: boolean, hurt: boolean): void => {
+      g.rect(cx, cy, cw, ROW).fill({ color: UI.glass, alpha: on ? 0.85 : 0.4 });
+      g.rect(cx, cy, cw, ROW).stroke({
+        width: 1,
+        color: hurt ? UI.threat : UI.accent,
+        alpha: on ? 0.55 : 0.16,
+      });
+    };
+
+    let band = y + BLOCK_HEAD_H + 4;
+    let label = 0;
+    const text = (t: string, tx: number, ty: number, ink: number, size = 11): void => {
+      const node = this.fleetText(label++);
+      node.visible = true;
+      node.text = t;
+      node.style.fill = ink;
+      node.style.fontSize = size;
+      node.position.set(tx, ty);
+    };
+
+    // Band one: the hulls in hand when there are any, the groups when not, so
+    // the block is never a row of empty squares — the fault the mockup's own
+    // second pass existed to fix.
+    const COLS = 5;
+    const cw = (inner - 4 * (COLS - 1)) / COLS;
+    if (held.length > 0) {
+      held.slice(0, COLS).forEach((unit, i) => {
+        const cx = slot.x + pad + i * (cw + 4);
+        const hurt = unit.hp < unit.maxHp * 0.5;
+        chip(cx, band, cw, true, hurt);
+        text(UNIT_SHORT[unit.kind], cx + 4, band + 14, hurt ? UI.threat : UI.text, 10);
+      });
+      band += ROW + 4;
+    }
+
+    // Band two: the control groups, 1-5 on one row. 6-9 and 0 are reachable by
+    // key and are left off rather than shrunk below the floor to fit.
+    for (let i = 0; i < COLS; i++) {
+      const key = i + 1;
+      const members = this.controlGroups.get(key)?.length ?? 0;
+      const cx = slot.x + pad + i * (cw + 4);
+      chip(cx, band, cw, members > 0, false);
+      text(String(key), cx + 6, band + 6, members > 0 ? UI.accent : UI.textDim, 12);
+      text(
+        members > 0 ? `\u00d7${members}` : '\u2014',
+        cx + 6,
+        band + 24,
+        members > 0 ? UI.text : UI.textDim,
+        10
+      );
+    }
+    band += ROW + 6;
+
+    const hulls = this.units.length;
+    const built = this.structures.length;
+    text(
+      `${hulls} HULL${hulls === 1 ? '' : 'S'} \u00b7 ${built} STRUCTURE${built === 1 ? '' : 'S'}`,
+      slot.x + pad,
+      Math.min(band, y + h - 18),
+      UI.text,
+      10
+    );
+
+    for (let i = label; i < this.fleetTexts.length; i++) this.fleetTexts[i]!.visible = false;
+  }
+
+  /** Pooled, for the same reason the button labels are — see `blockTitle`. */
+  private fleetText(index: number): Text {
+    let text = this.fleetTexts[index];
+    if (text === undefined) {
+      text = new Text({
+        text: '',
+        style: { fontFamily: FONT_DATA, fontSize: 11, letterSpacing: 1, fill: UI.text },
+      });
+      this.fleetTexts.push(text);
+      this.hud.addChild(text);
+    }
+    return text;
+  }
+
+  /** Pooled, for the same reason the button labels are — see `blockTitle`. */
+  private productionText(index: number): Text {
+    let text = this.productionTexts[index];
+    if (text === undefined) {
+      text = new Text({
+        text: '',
+        style: { fontFamily: FONT_DATA, fontSize: 12, letterSpacing: 1, fill: UI.text },
+      });
+      this.productionTexts.push(text);
+      this.hud.addChild(text);
+    }
+    return text;
+  }
+
   private barText(index: number): Text {
     let text = this.barTexts[index];
     if (text === undefined) {
@@ -2656,9 +3124,9 @@ export class EchoRenderer {
     g.clear();
 
     const screenWidth = this.hudWidth();
-    const barY = this.hudHeight() - BAR_HEIGHT;
-    g.rect(0, barY, screenWidth, BAR_HEIGHT).fill({ color: UI.glass, alpha: 0.92 });
-    g.rect(0, barY, screenWidth, 1).fill({ color: UI.glassStroke });
+    const barY = this.hudHeight() - CONSOLE_HEIGHT;
+    this.plate(this.hudGraphics, -1, barY, screenWidth + 2, CONSOLE_HEIGHT + 1);
+    this.paintConsoleBlocks(this.hudGraphics);
 
     // Everything the model and its layout read, as one string. Same string,
     // same bar: the buttons are painted from the cached layout and nothing
@@ -2730,23 +3198,41 @@ export class EchoRenderer {
     });
 
     const model = this.buildBarModel();
-    const gap = 8;
-    const buttonY = barY + TAB_HEIGHT + (BUTTON_ROW_HEIGHT - BAR_BUTTON_HEIGHT) / 2;
+    const blocks = this.consoleBlocks();
+    const card = blocks.commands;
 
-    const widthFor = (label: string) => Math.max(44, label.length * 7.5 + 18);
-    // A full row must fit a phone: when it would overflow, drop the cost
-    // suffix from every label ("CRV 120" -> "CRV") and keep the buttons.
-    const total = model.reduce((sum, entry) => sum + widthFor(entry.label) + gap, 10);
-    if (total > screenWidth) {
-      for (const entry of model) entry.label = entry.label.split(' ')[0]!;
-    }
+    // The command card: a grid rather than a row, which is what buys the
+    // touch floor. The old row gave every button 40 px of height and as much
+    // width as its label wanted, so a long roster ran off a narrow screen and
+    // the fix was to truncate the labels. A grid spends the console's height
+    // instead — four columns of equal cells, three rows deep — so a cell is
+    // 44 px or better on any width the console itself fits on, and a label
+    // never has to lose its price to make room.
+    const COLS = 4;
+    const ROWS = 3;
+    const gap = 4;
+    const pad = 4;
+    const gridX = card.x + pad;
+    const gridY = blocks.y + BLOCK_HEAD_H + pad;
+    const gridW = card.w - pad * 2;
+    const gridH = blocks.h - BLOCK_HEAD_H - pad * 2;
+    const cellW = (gridW - gap * (COLS - 1)) / COLS;
+    const cellH = Math.max(BAR_BUTTON_HEIGHT, (gridH - gap * (ROWS - 1)) / ROWS);
 
-    let x = 10;
-    const buttons = model.map((entry) => {
-      const w = widthFor(entry.label);
-      const button: BarButton = { ...entry, x, y: buttonY, w, h: BAR_BUTTON_HEIGHT };
-      x += w + gap;
-      return button;
+    // More than twelve offers is a roster the card cannot hold. Rather than
+    // shrink the cells under the floor, the overflow is dropped here and the
+    // keyboard keeps reaching it — every entry on this card also has a
+    // binding (docs/ui-ux.md §9), which is what makes that survivable.
+    const buttons = model.slice(0, COLS * ROWS).map((entry, i) => {
+      const col = i % COLS;
+      const row = Math.floor(i / COLS);
+      return {
+        ...entry,
+        x: gridX + col * (cellW + gap),
+        y: gridY + row * (cellH + gap),
+        w: cellW,
+        h: cellH,
+      } satisfies BarButton;
     });
     return [...buttons, ...tabButtons];
   }
@@ -5308,19 +5794,184 @@ export class EchoRenderer {
    * HUD. The SIG meter is a permanent element by design — "players must feel
    * their own loudness" (docs/art-direction.md).
    */
+  /**
+   * Draw one plate VI card: glass, one bevel with one halo, corner registration
+   * ticks, and the thin cyan rule under a header band where a panel has one.
+   *
+   * Every HUD panel goes through here so the anatomy exists in exactly one
+   * place. The halo is drawn before the bevel so the 1px core sits on top of
+   * its own bloom rather than under it; `quiet` is the section's inactive
+   * state, which keeps the glass and drops the halo rather than greying out.
+   *
+   * Ticks are eight short rects rather than a rounded rect, because the survey
+   * marks are the point: docs/style-neon-noir.md caps a radius at 4px and asks
+   * for registration marks instead, and a rounded panel reads as a web card
+   * rather than as an instrument.
+   */
+  private plate(
+    g: Graphics,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    opts: { headerH?: number; quiet?: boolean } = {}
+  ): void {
+    const quiet = opts.quiet === true;
+    g.rect(x, y, w, h).fill({
+      color: UI.glass,
+      alpha: quiet ? PLATE.QUIET_FILL_ALPHA : PLATE.FILL_ALPHA,
+    });
+    if (!quiet) {
+      g.rect(x, y, w, h).stroke({
+        width: PLATE.HALO_WIDTH,
+        color: UI.glassStroke,
+        alpha: PLATE.HALO_ALPHA,
+      });
+    }
+    g.rect(x, y, w, h).stroke({
+      width: 1,
+      color: UI.glassStroke,
+      alpha: quiet ? PLATE.QUIET_BEVEL_ALPHA : PLATE.BEVEL_ALPHA,
+    });
+    if (opts.headerH !== undefined) {
+      g.rect(x, y + opts.headerH, w, 1).fill({
+        color: UI.accent,
+        alpha: PLATE.HEADER_RULE_ALPHA,
+      });
+    }
+    const t = PLATE.TICK;
+    for (const [cx, cy, sx, sy] of [
+      [x, y, 1, 1],
+      [x + w, y, -1, 1],
+      [x, y + h, 1, -1],
+      [x + w, y + h, -1, -1],
+    ] as const) {
+      g.rect(sx > 0 ? cx : cx - t, sy > 0 ? cy : cy - 1, t, 1).fill({ color: UI.glassStroke });
+      g.rect(sx > 0 ? cx : cx - 1, sy > 0 ? cy : cy - t, 1, t).fill({ color: UI.glassStroke });
+    }
+  }
+
+  /**
+   * Rule 5's one texture, rebuilt only when the viewport changes.
+   *
+   * It is its own layer and its own Graphics because it is drawn once per
+   * resize and never per frame: at 5px spacing a 1080p frame is about six
+   * hundred short strokes, which is nothing once, and would be real money at
+   * 60 Hz. It sits above the panels and below nothing — the whole HUD layer
+   * wears one texture, which is what stops it becoming per-panel noise.
+   */
+  private buildGrain(): void {
+    const w = Math.ceil(this.hudWidth());
+    const h = Math.ceil(this.hudHeight());
+    const key = `${w}x${h}:${ACTIVE_PALETTE.name}`;
+    if (key === this.grainKey) return;
+    this.grainKey = key;
+    const g = this.grainGraphics;
+    g.clear();
+    // 135°, so the stroke runs the same way as the plates' own bevel light.
+    for (let i = -h; i < w; i += GRAIN.SPACING_PX) {
+      g.moveTo(i, 0).lineTo(i + h, h);
+    }
+    g.stroke({ width: 1, color: UI.text, alpha: GRAIN.ALPHA });
+  }
+
+  /**
+   * §3's meter: the permanent element, at the size the section specifies.
+   *
+   * Four things the old strip did not do. The readout is zero-padded, so the
+   * digit count never shifts and the eye can sit on one place rather than
+   * re-finding the number. The transient is drawn separately from the
+   * baseline — a ping pegs SIG to 95 and then it falls, and the lighter
+   * overlay is where it just was, decaying. The second line counts the hulls
+   * over `LOUD`, which is the number that predicts trouble rather than the one
+   * that describes now. And crossing into the red band flashes the frame once,
+   * because a threshold crossing is an event and has to read as one.
+   *
+   * The colour stops themselves were already right: `sigColor` snaps at 30 and
+   * 65 and never blends, which is the section's "Transition" row.
+   *
+   * Returns the width it occupied, so the strip can lay out after it.
+   */
+  private drawSigMeter(g: Graphics, x: number, now: number): number {
+    const peak = this.peakSig;
+    const ink = sigColor(peak);
+
+    // The hold decays toward the live value; it never drags it up.
+    const elapsed = now - this.sigHoldAt;
+    this.sigHoldAt = now;
+    if (peak >= this.sigHold) {
+      this.sigHold = peak;
+    } else {
+      const fall = (100 * elapsed) / SIG_METER.SPIKE_DECAY_MS;
+      this.sigHold = Math.max(peak, this.sigHold - fall);
+    }
+
+    const red = peak >= 65;
+    if (red && !this.sigBandWasRed) this.sigFlashAt = now;
+    this.sigBandWasRed = red;
+
+    const y = 8;
+    const w = SIG_METER.W;
+    const h = SIG_METER.H;
+    g.rect(x, y, w, h).fill({ color: 0x000000, alpha: 0.5 });
+
+    // The transient first, so the baseline sits on top of it rather than under.
+    if (this.sigHold > peak) {
+      const from = (w * peak) / 100;
+      const to = (w * this.sigHold) / 100;
+      // Inked for where it *was*, not where the bar is now: a ping peaks at 95
+      // and the transient's whole job is to say the red band was entered. In
+      // the live ink it would have said the burst was amber.
+      g.rect(x + from, y, to - from, h).fill({ color: sigColor(this.sigHold), alpha: 0.5 });
+    }
+    g.rect(x, y, (w * Math.max(0, Math.min(100, peak))) / 100, h).fill({ color: ink });
+
+    // §11 wants the reduced-motion path to carry the same information without
+    // the flash, so the frame states the crossing in ink that simply stays.
+    const flashing =
+      !this.reducedMotion && this.sigFlashAt > 0 && now - this.sigFlashAt < SIG_METER.FLASH_MS;
+    g.rect(x, y, w, h).stroke({
+      width: flashing ? 2 : 1,
+      color: flashing || (this.reducedMotion && red) ? UI.threat : UI.glassStroke,
+    });
+
+    this.sigLabel.text = `SIG ${Math.round(Math.max(0, peak)).toString().padStart(3, '0')} / 100`;
+    this.sigLabel.style.fill = ink;
+    this.sigLabel.position.set(x, y + h + 4);
+
+    const loud = this.units.filter((u) => u.sig > SIG_METER.LOUD).length;
+    const n = this.units.length;
+    this.loudLabel.text = `${n} unit${n === 1 ? '' : 's'} \u00b7 ${loud} loud`;
+    this.loudLabel.style.fill = loud > 0 ? UI.sigMid : UI.textDim;
+    this.loudLabel.position.set(x, y + h + 20);
+
+    return w;
+  }
+
   private drawHud(): void {
     const g = this.hudGraphics;
     g.clear();
+    this.buildGrain();
 
     const screenWidth = this.hudWidth();
 
     // Top strip: stockpile, then the SIG meter — the player's own loudness is
     // a first-class resource and sits beside the others (docs/art-direction.md).
-    g.rect(0, 0, screenWidth, TOP_BAR_HEIGHT).fill({ color: UI.glass, alpha: 0.92 });
-    g.rect(0, TOP_BAR_HEIGHT - 1, screenWidth, 1).fill({ color: UI.glassStroke });
+    // Overhung left and right by a pixel so the bevel's vertical edges fall
+    // outside the viewport: a full-width band has no left or right side to
+    // show, and drawing them would put two bright hairlines down the screen.
+    this.plate(g, -1, -TOP_BAR_HEIGHT, screenWidth + 2, TOP_BAR_HEIGHT * 2);
+
+    const meterW = this.drawSigMeter(g, 12, performance.now());
+    const stockX = 12 + meterW + 22;
+    g.rect(stockX - 11, 10, 1, TOP_BAR_HEIGHT - 20).fill({
+      color: UI.glassStroke,
+      alpha: 0.35,
+    });
 
     this.resourceLabel.text = `NODULES ${this.nodules.toFixed(0)}`;
     this.resourceLabel.style.fill = RESOURCE_COLOR[ResourceKind.Nodule];
+    this.resourceLabel.position.set(stockX, 10);
 
     // Crystal appears only once a player has some or has seen a field: an
     // always-on zero would be chrome, and this HUD spends space on decisions.
@@ -5329,7 +5980,7 @@ export class EchoRenderer {
     this.crystalLabel.visible = showCrystal;
     this.crystalLabel.text = `CRYSTAL ${this.crystal.toFixed(0)}`;
     this.crystalLabel.style.fill = RESOURCE_COLOR[ResourceKind.ResonanceCrystal];
-    this.crystalLabel.position.set(this.resourceLabel.x + this.resourceLabel.width + 16, 8);
+    this.crystalLabel.position.set(this.resourceLabel.x + this.resourceLabel.width + 16, 10);
 
     // Biomass appears only once a player has killed something. An always-on
     // zero would be chrome, and this HUD spends its space on decisions.
@@ -5338,7 +5989,7 @@ export class EchoRenderer {
       this.biomassLabel.text = `BIOMASS ${this.biomass.toFixed(0)}`;
       this.biomassLabel.style.fill = FAUNA_COLOR;
       const anchorLabel = showCrystal ? this.crystalLabel : this.resourceLabel;
-      this.biomassLabel.position.set(anchorLabel.x + anchorLabel.width + 16, 8);
+      this.biomassLabel.position.set(anchorLabel.x + anchorLabel.width + 16, 10);
     }
 
     // Thermal Draw, drawn as a *rate* and deliberately not like the stockpiles
@@ -5358,12 +6009,12 @@ export class EchoRenderer {
     const full = this.berths.used >= this.berths.granted;
     this.berthsLabel.text = `BERTHS ${this.berths.used}/${this.berths.granted}`;
     this.berthsLabel.style.fill = full ? UI.threat : UI.text;
-    this.berthsLabel.position.set(beforeBerths.x + beforeBerths.width + 16, 8);
+    this.berthsLabel.position.set(beforeBerths.x + beforeBerths.width + 16, 10);
     const drawX = this.berthsLabel.x + this.berthsLabel.width + 16;
     const deficit = this.drawReport.satisfaction < 1;
     this.drawLabel.text = `DRAW ${this.drawReport.capacity.toFixed(0)}/${this.drawReport.demand.toFixed(0)}`;
     this.drawLabel.style.fill = deficit ? UI.threat : UI.accent;
-    this.drawLabel.position.set(drawX, 8);
+    this.drawLabel.position.set(drawX, 10);
 
     // Segments, one per unit of demand, filled up to what capacity covers.
     // Discrete because draw is discrete: you have four taps or you do not.
@@ -5371,30 +6022,11 @@ export class EchoRenderer {
     const covered = Math.round(segments * this.drawReport.satisfaction);
     const segX = drawX + this.drawLabel.width + 8;
     for (let i = 0; i < segments; i++) {
-      g.rect(segX + i * 6, 11, 4, 9).fill({
+      g.rect(segX + i * 6, 13, 4, 9).fill({
         color: i < covered ? (deficit ? UI.threat : UI.accent) : UI.glassStroke,
         alpha: i < covered ? 0.9 : 0.35,
       });
     }
-
-    const meterX = segX + segments * 6 + 18;
-    // Floored as well as capped. §11's UI scale can shrink the HUD's virtual
-    // viewport to 720 px at 200%, and a meter allowed to go to zero — or
-    // negative — would take the one element the design calls permanent
-    // ("players must feel their own loudness") off the screen first.
-    const meterWidth = Math.max(40, Math.min(120, screenWidth - meterX - 150));
-    const meterY = 9;
-    const meterHeight = 12;
-    g.rect(meterX, meterY, meterWidth, meterHeight).fill({ color: 0x000000, alpha: 0.5 });
-    const fraction = Math.max(0, Math.min(1, this.peakSig / 100));
-    g.rect(meterX, meterY, meterWidth * fraction, meterHeight).fill({
-      color: sigColor(this.peakSig),
-    });
-    g.rect(meterX, meterY, meterWidth, meterHeight).stroke({ width: 1, color: UI.glassStroke });
-
-    this.sigLabel.text = `SIG ${this.peakSig.toFixed(0)}`;
-    this.sigLabel.style.fill = sigColor(this.peakSig);
-    this.sigLabel.position.set(meterX + meterWidth + 8, 8);
 
     // What your own noise is doing to your hearing, in words. The bed makes
     // this audible; §11 requires it also be readable.
@@ -5402,7 +6034,7 @@ export class EchoRenderer {
     const deaf = mix.worldGain < 1 ? '  \u2013 masking' : mix.worldGain > 1 ? '  \u2013 open' : '';
     this.bandLabel.text = `${mix.label.toUpperCase()}${deaf}`;
     this.bandLabel.style.fill = this.fleetSilent ? UI.accent : UI.textDim;
-    this.bandLabel.position.set(this.sigLabel.x + this.sigLabel.width + 12, 10);
+    this.bandLabel.position.set(12 + meterW + 22, 30);
 
     // The continuous half of the exposure report. Deliberately says only how
     // well you are seen, never by whom or from where — that is all the server
@@ -5415,7 +6047,7 @@ export class EchoRenderer {
     this.exposureLabel.style.fill = UI.threat;
     if (tracked) {
       this.exposureLabel.text = `TRACKED \u00d7${this.exposure.trackedCount}`;
-      this.exposureLabel.position.set(this.bandLabel.x + this.bandLabel.width + 14, 10);
+      this.exposureLabel.position.set(this.bandLabel.x + this.bandLabel.width + 14, 30);
     }
 
     const contactCount = this.tracked.size;
@@ -5477,7 +6109,7 @@ export class EchoRenderer {
       if (cut < 0) break;
       this.selectionLabel.text = this.selectionLabel.text.slice(0, cut);
     }
-    this.selectionLabel.position.set(hintX, this.hudHeight() - BAR_HEIGHT - 20);
+    this.selectionLabel.position.set(hintX, this.hudHeight() - CONSOLE_HEIGHT - 20);
 
     if (this.missionOver !== null) {
       // Checked first, and never falling through to the match banner below:
@@ -5726,9 +6358,8 @@ export class EchoRenderer {
       return;
     }
 
-    const scope = this.minimapRect();
     const top = TOP_BAR_HEIGHT + RIBBON_TOP_PAD;
-    const bottom = scope.y - RIBBON_BOTTOM_PAD;
+    const bottom = this.hudHeight() - CONSOLE_HEIGHT - RIBBON_BOTTOM_PAD;
     const height = bottom - top;
     if (height < 60) {
       // Too short to read; better absent than misleading.
@@ -5799,7 +6430,16 @@ export class EchoRenderer {
       alpha: 0.85,
     });
 
-    g.rect(RIBBON_X, top, RIBBON_WIDTH, height).stroke({ width: 1, color: UI.glassStroke });
+    g.rect(RIBBON_X, top, RIBBON_WIDTH, height).stroke({
+      width: PLATE.HALO_WIDTH,
+      color: UI.glassStroke,
+      alpha: PLATE.HALO_ALPHA,
+    });
+    g.rect(RIBBON_X, top, RIBBON_WIDTH, height).stroke({
+      width: 1,
+      color: UI.glassStroke,
+      alpha: PLATE.BEVEL_ALPHA,
+    });
 
     // Right of the strip, like the band labels — the ribbon sits 12 px from the
     // window edge, so there is no room on its left and a label placed there is
@@ -5889,7 +6529,7 @@ export class EchoRenderer {
       : this.isCrushing(lead)
         ? UI.threat
         : UI.accent;
-    this.ribbonReadout.position.set(RIBBON_X, bottom + 4);
+    this.ribbonReadout.position.set(RIBBON_X + RIBBON_WIDTH + 6, bottom - 14);
   }
 
   /**
@@ -6168,12 +6808,21 @@ export class EchoRenderer {
       return;
     }
 
-    const w = 250;
-    const h = 96;
-    const x = this.hudWidth() - w - 10;
-    const y = this.hudHeight() - BAR_HEIGHT - h - 10;
-    g.roundRect(x, y, w, h, 6).fill({ color: UI.glass, alpha: 0.92 });
-    g.roundRect(x, y, w, h, 6).stroke({ width: 1, color: UI.glassStroke });
+    const blocks = this.consoleBlocks();
+    const slot = blocks.selection;
+    // Dropped at narrow widths (see `consoleBlocks`), and the card goes with
+    // it rather than floating somewhere else: a card with nowhere to live is
+    // the collision this console exists to fix, arriving by another route.
+    if (slot === undefined) {
+      this.infoName.visible = false;
+      this.infoLine1.visible = false;
+      this.infoLine2.visible = false;
+      this.infoBadge.visible = false;
+      return;
+    }
+    const x = slot.x + 10;
+    const w = slot.w - 20;
+    const y = blocks.y + BLOCK_HEAD_H + 8;
 
     const name =
       structure !== undefined ? structureStatsFor(structure.kind).name : statsFor(unit!.kind).name;

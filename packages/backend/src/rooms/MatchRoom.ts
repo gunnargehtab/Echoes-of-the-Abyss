@@ -14,7 +14,7 @@
 // latter re-exports via __exportStar, which Node's static CJS export detection
 // cannot see, so `import { Room } from 'colyseus'` fails at runtime under an
 // unbundled ESM loader (the dev server) while working fine once bundled.
-import { Room, type Client } from '@colyseus/core';
+import { OnMessageException, Room, type Client, type RoomException } from '@colyseus/core';
 import {
   AiDifficulty,
   Faction,
@@ -102,6 +102,42 @@ export interface MatchRoomOptions {
    */
   spent?: string[];
 }
+
+/**
+ * What actually happened to a throw the room caught, for the log line.
+ *
+ * Colyseus's wrapper re-raises for the four lifecycle methods and swallows for
+ * everything else, so "caught" is the only word true of all of them, and the
+ * clause after it is what a reader actually needs: a refused join is a room
+ * doing its job and a thrown message handler is not. Written as a table
+ * because the `never` at the foot is what fails the build if Colyseus ever
+ * hands this hook a method name it does not know about.
+ */
+const outcomeOf = (methodName: Parameters<MatchRoom['onUncaughtException']>[1]): string => {
+  switch (methodName) {
+    case 'setSimulationInterval':
+      // A torn world, so the room is over; see the hook's own comment.
+      return 'ending this room';
+    case 'onMessage':
+      return 'message dropped';
+    case 'onCreate':
+    case 'onAuth':
+    case 'onJoin':
+    case 'onLeave':
+      // Re-raised by the wrapper, so the client is already being told. These
+      // are how the room refuses an unknown mission or a full lobby, and they
+      // were invisible in the server log until this hook existed.
+      return 'reported to the caller';
+    case 'onDispose':
+    case 'setTimeout':
+    case 'setInterval':
+      return 'dropped';
+    default: {
+      const unreachable: never = methodName;
+      return String(unreachable);
+    }
+  }
+};
 
 export class MatchRoom extends Room<MatchState> {
   maxClients = 4;
@@ -881,6 +917,86 @@ export class MatchRoom extends Room<MatchState> {
           ? ''
           : `; worst mission pass ${this.match.worstMissionMsCost.toFixed(3)} ms`)
     );
+  }
+
+  /**
+   * Contain an exception to this room instead of the process (#627).
+   *
+   * Colyseus gates its *entire* wrapping mechanism on this hook merely
+   * existing — the constructor checks `this.onUncaughtException !== undefined`
+   * and only then registers the wrappers — so defining it is what puts a
+   * try/catch around all 32 message handlers, the 60 Hz simulation interval
+   * and both post-match `clock` timers. Nothing else about the room changes,
+   * and the wrapper is a try/catch rather than an inspection, so no per-message
+   * work is added.
+   *
+   * Without it the throw escapes to the `process.on('uncaughtException')` that
+   * Colyseus's own `registerGracefulShutdown` installs, which disposes every
+   * room on the box and exits: one throw in one match ends every concurrent
+   * one. A room is already the boundary this architecture claims — one network
+   * edge around one simulation — and this is what makes the blast radius match
+   * the claim.
+   *
+   * The two halves are deliberately asymmetric:
+   *
+   * - **A handler throws: drop that message, keep the room.** Every other
+   *   server-side refusal here is a silent `return` after a failed guard, and
+   *   a throw is the same answer reached less tidily. Dropping is also
+   *   reversible — a per-client throw counter can be layered on later — where
+   *   ejecting the sender kicks a real player over a client-side bug.
+   * - **The simulation step throws: end this room.** A step that threw
+   *   part-way through a mutation leaves a half-advanced world and a state
+   *   hash that certifies nothing (`sim/stateHash.ts`), so limping on produces
+   *   a match whose divergence surfaces minutes later as something else
+   *   entirely. Stopping is the honest answer, and it stops *before* the next
+   *   tick rather than after the asynchronous disconnect settles.
+   *
+   * The room ends without announcing anything, and that is a decision rather
+   * than an omission: an announcement would be a twelfth `SERVER_MSG` and a
+   * new way a match can end, which moves docs/tech-stack.md "Match lifecycle"
+   * first and is more than this patch. A closed socket is what a client
+   * already handles for a server that went away.
+   */
+  override onUncaughtException(
+    error: RoomException<this>,
+    methodName:
+      | 'onCreate'
+      | 'onAuth'
+      | 'onJoin'
+      | 'onLeave'
+      | 'onDispose'
+      | 'onMessage'
+      | 'setSimulationInterval'
+      | 'setInterval'
+      | 'setTimeout'
+  ): void {
+    // Both reads are defensive for the same reason `onDispose` guards `match`:
+    // a throw out of `onCreate` happens before either exists, and a log line
+    // that threw would bury the one error anybody wanted to read.
+    const tick = this.match === undefined ? 'no match' : `tick ${this.match.tick}`;
+    const phase =
+      this.state === undefined ? 'no state' : (MatchPhase[this.state.phase] ?? 'unknown');
+    // The message name is the one fact that says which of the 32 handlers this
+    // was, and it is only carried by the `onMessage` exception.
+    const where = error instanceof OnMessageException ? `${methodName} ${error.type}` : methodName;
+    // Read through a cast rather than as `error.cause`: every one of these
+    // exceptions passes the original to `super(message, { cause })`, but this
+    // package compiles against `lib: ES2020` and `Error.cause` is ES2022, so
+    // the property is there at runtime and absent from the type.
+    const cause = (error as { cause?: unknown }).cause;
+    console.error(
+      `[MatchRoom ${this.roomId}] caught a throw in ${where} at ${tick}, ` +
+        `phase ${phase}; ${outcomeOf(methodName)}: ` +
+        (cause instanceof Error ? (cause.stack ?? cause.message) : String(cause))
+    );
+
+    if (methodName !== 'setSimulationInterval') return;
+
+    // Cleared before the disconnect is awaited, because `disconnect()` only
+    // clears the interval once its dispose has settled — and a torn world must
+    // not be stepped again even once in the meantime.
+    this.setSimulationInterval();
+    void this.disconnect();
   }
 
   /** Broadcast the result exactly once. */

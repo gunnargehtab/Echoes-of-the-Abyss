@@ -2646,9 +2646,27 @@ export class Match {
       watch.crystal = economy.crystal;
       watch.biomass = economy.biomass;
 
-      if (tick - watch.lastRiseTick < window) earning.add(slot);
-
       const stalled = !harvesters.has(slot) && !pending.has(slot) && !canRebuild.has(slot);
+      // A rival still in an economy, by the same test that says this slot is
+      // out of one — and **not** by whether their bank went up lately.
+      //
+      // `lastRiseTick` cannot answer this question, and using it meant the rule
+      // almost never fired. Nodules arrive in *deposits*: a hauler cuts for
+      // most of a minute, swims home, and banks a load, and in between the bank
+      // only falls, because the commander is spending. Measured over one
+      // four-faction match, the gap between two rises ran to 295 s for the
+      // Directorate and 577 s for the Commune while both were hauling
+      // perfectly normally, against this rule's 60 s window — so a navy at work
+      // read as "not earning" in a third to two thirds of all samples. The one
+      // exception was the Order, whose tithe trickles every tick and so never
+      // showed a gap at all, which is what made the flaw invisible: a rule
+      // calibrated on the only income in the game that is continuous.
+      //
+      // What `overmatched` below actually wants is the sentence its own note
+      // makes — somebody who *replaces their losses* — and that is a hauler in
+      // the water, a hull on a line, or the price of a hauler in the bank. Which
+      // is `stalled`, inverted, and already computed.
+      if (!stalled) earning.add(slot);
       if (!stalled) {
         watch.stalledSince = -1;
         continue;

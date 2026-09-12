@@ -19,7 +19,11 @@
 
 import { Biome, EchoMarkKind, Faction, ResolutionTier } from '@echoes/shared';
 import { SelfBed, SourBed } from '../../packages/frontend/src/audio/selfVoice.ts';
-import { createSelfLowCut, crowdGain } from '../../packages/frontend/src/audio/engine.ts';
+import {
+  createOutputChain,
+  createSelfLowCut,
+  crowdGain,
+} from '../../packages/frontend/src/audio/engine.ts';
 import { SELF_BANDS, selfMixFor, sourMixFor } from '../../packages/frontend/src/audio/selfNoise.ts';
 import { ContactVoice } from '../../packages/frontend/src/audio/contactVoice.ts';
 import { MarkBed } from '../../packages/frontend/src/audio/markBed.ts';
@@ -86,6 +90,18 @@ CASES['sour-bed:bleeding'] = onSelfBus((context, destination) => {
 });
 
 /**
+ * The four navies, by the names the enum uses.
+ *
+ * The HUD and the design bible call two of them something else — Bathyarch is
+ * the Consortium and Pelagia is the Commune (packages/frontend/src/game/
+ * factions.ts) — and `Faction.Consortium` is simply `undefined`, which a voice
+ * reads as "no identity" and answers with the unclassified thump. Spelled out
+ * here because a mixed-navy case written from the prose names measures
+ * something quieter than it claims to and says nothing about it.
+ */
+const NAVIES = [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron];
+
+/**
  * The contact bus at one, seven and twenty-four voices.
  *
  * Seven is the picture #663 was reported from; twenty-four is §12's
@@ -137,12 +153,7 @@ CASES['contacts:seven-tier3-one-navy'] = contactCase(7, ResolutionTier.Classific
 ]);
 
 /** Seven across the four navies, which is the spread case. */
-CASES['contacts:seven-tier3-mixed'] = contactCase(7, ResolutionTier.Classification, [
-  Faction.Directorate,
-  Faction.Consortium,
-  Faction.Bathyarch,
-  Faction.Hadron,
-]);
+CASES['contacts:seven-tier3-mixed'] = contactCase(7, ResolutionTier.Classification, NAVIES);
 
 /**
  * Seven unclassified contacts — the case with no spread available to it.
@@ -155,12 +166,7 @@ CASES['contacts:seven-tier3-mixed'] = contactCase(7, ResolutionTier.Classificati
 CASES['contacts:seven-tier1'] = contactCase(7, ResolutionTier.Contact, null);
 
 /** §12's whole simultaneous-voice budget, spread across the navies. */
-CASES['contacts:twentyfour-tier3'] = contactCase(24, ResolutionTier.Classification, [
-  Faction.Directorate,
-  Faction.Consortium,
-  Faction.Bathyarch,
-  Faction.Hadron,
-]);
+CASES['contacts:twentyfour-tier3'] = contactCase(24, ResolutionTier.Classification, NAVIES);
 
 /** The world bus's two continuous layers, each alone. */
 CASES['mark-bed:all-kinds'] = (context, destination) => {
@@ -181,6 +187,155 @@ CASES['tuned-bed:full'] = (context, destination) => {
   });
   return (now) => bed.update(mix, now);
 };
+
+/**
+ * The whole mix, as one scene, through the real output chain.
+ *
+ * Every case above is a layer measured alone at its bus, which answers "which
+ * layer made it hot" and cannot answer "how loud is the thing in the player's
+ * hand". That second question is the one #663 keeps being reopened on, and it
+ * had never been measured — the layers were metered and the sum was inferred,
+ * which is exactly the reasoning-instead-of-measuring the meter exists to stop.
+ *
+ * So this renders a *scene*: the self bed at a given SIG, N contacts at the
+ * tiers a real picture carries, summed onto their buses and taken through
+ * master, the headroom pre-gain and the soft-clip ceiling to the destination.
+ * What comes back is what the device is asked to play.
+ *
+ * The scene below is the one in #663's screenshot — SIG 35, "DRIVE HUM",
+ * "TRACKED x7" on the Sorrowgate prologue, with the contact log showing a
+ * mixture of unclassified bearings and tracked hulls in abyssal water.
+ */
+function sceneCase({ sig, contacts, silentRunning = false, speakerProfile = false }) {
+  return (context, destination) => {
+    const { master, speaker } = createOutputChain(context, destination);
+    speaker.set(speakerProfile, 0);
+
+    const selfBus = context.createGain();
+    const lowCut = createSelfLowCut(context);
+    selfBus.connect(lowCut).connect(master);
+
+    const contactBus = context.createGain();
+    contactBus.gain.value = crowdGain(contacts.length);
+    contactBus.connect(master);
+
+    const bed = new SelfBed(context, selfBus);
+    const mix = selfMixFor(sig, silentRunning);
+    const voices = [];
+    let built = 0;
+
+    return (now) => {
+      bed.update(mix, now);
+      // One voice per Echo tick, as a match produces them: every oscillator
+      // starting on the same sample would phase-lock voices that share a
+      // fundamental into one at N times the amplitude.
+      if (built < contacts.length) {
+        voices.push([new ContactVoice(context, contactBus), contacts[built++]]);
+      }
+      for (const [voice, inputs] of voices) voice.update(inputs, now);
+    };
+  };
+}
+
+/** The seven contacts #663's screenshot is carrying, by the tiers its log shows. */
+const SORROWGATE_SEVEN = [
+  {
+    tier: ResolutionTier.Bearing,
+    bearing: 4.36,
+    rangeM: 900,
+    biome: Biome.AbyssalTrench,
+    freshness: 1,
+  },
+  {
+    tier: ResolutionTier.Bearing,
+    bearing: 5.39,
+    rangeM: 2200,
+    biome: Biome.AbyssalTrench,
+    freshness: 1,
+  },
+  {
+    tier: ResolutionTier.Bearing,
+    bearing: 5.6,
+    rangeM: 2600,
+    biome: Biome.AbyssalTrench,
+    freshness: 1,
+  },
+  {
+    tier: ResolutionTier.Track,
+    bearing: 3.14,
+    rangeM: 500,
+    faction: Faction.Directorate,
+    biome: Biome.AbyssalTrench,
+    freshness: 1,
+  },
+  {
+    tier: ResolutionTier.Classification,
+    bearing: 1.2,
+    rangeM: 900,
+    faction: Faction.Pelagia,
+    biome: Biome.AbyssalTrench,
+    freshness: 1,
+  },
+  {
+    tier: ResolutionTier.Track,
+    bearing: 2.1,
+    rangeM: 1000,
+    faction: Faction.Bathyarch,
+    biome: Biome.AbyssalTrench,
+    freshness: 1,
+  },
+  {
+    tier: ResolutionTier.Track,
+    bearing: 0.4,
+    rangeM: 800,
+    faction: Faction.Bathyarch,
+    biome: Biome.AbyssalTrench,
+    freshness: 1,
+  },
+];
+
+CASES['scene:sorrowgate-sig35'] = sceneCase({ sig: 35, contacts: SORROWGATE_SEVEN });
+
+/** The same picture with the plant at the top of §4's scale. */
+CASES['scene:sorrowgate-sig80'] = sceneCase({ sig: 80, contacts: SORROWGATE_SEVEN });
+
+/** And the quietest a match gets: idle, nothing detected. */
+CASES['scene:idle-alone'] = sceneCase({ sig: 8, contacts: [] });
+
+/**
+ * The same three scenes through §11's speaker profile.
+ *
+ * The pair is the whole point: the profile is not supposed to change how loud
+ * the mix is, it is supposed to change *where the loudness is*. A profile that
+ * moved the integrated figure would be a level trim wearing a filter, and a
+ * profile that left the band split alone would be doing nothing at all.
+ */
+CASES['profile:sorrowgate-sig35'] = sceneCase({
+  sig: 35,
+  contacts: SORROWGATE_SEVEN,
+  speakerProfile: true,
+});
+CASES['profile:sorrowgate-sig80'] = sceneCase({
+  sig: 80,
+  contacts: SORROWGATE_SEVEN,
+  speakerProfile: true,
+});
+CASES['profile:idle-alone'] = sceneCase({ sig: 8, contacts: [], speakerProfile: true });
+
+/**
+ * §4's scale, as a whole mix, with and without the profile.
+ *
+ * The bed alone at four SIGs, because a scene with seven contacts in it cannot
+ * answer this: the contacts are identical at every SIG and they dominate, so
+ * the difference between SIG 35 and SIG 80 nearly disappears into them. §4's
+ * climb is a promise about the *bed*, and the profile is a non-linearity, so
+ * whether the climb survives it is a question that has to be asked directly.
+ * A profile that flattened this would have traded the mechanic for the fix.
+ */
+for (const sig of [10, 35, 55, 80]) {
+  CASES[`bed:sig${sig}`] = sceneCase({ sig, contacts: [] });
+  CASES[`bed-profile:sig${sig}`] = sceneCase({ sig, contacts: [], speakerProfile: true });
+}
 
 /**
  * Render one case and hand back its channels.
@@ -217,4 +372,23 @@ export async function render(name, seconds) {
   return channels;
 }
 
-globalThis.audioMeter = { render, cases: () => Object.keys(CASES) };
+/**
+ * The cases that are already a finished mix.
+ *
+ * A layer case is measured at its bus and the driver shows what it would come
+ * to through the master gain; a scene has been through master and the ceiling
+ * already, so applying the gain a second time would report a mix 6 dB quieter
+ * than the one that was rendered. The distinction is the whole reason both
+ * kinds exist, so it is data rather than a naming convention.
+ */
+const AT_OUTPUT = new Set(
+  Object.keys(CASES).filter((name) =>
+    ['scene:', 'profile:', 'bed:', 'bed-profile:'].some((prefix) => name.startsWith(prefix))
+  )
+);
+
+globalThis.audioMeter = {
+  render,
+  cases: () => Object.keys(CASES),
+  atOutput: () => [...AT_OUTPUT],
+};

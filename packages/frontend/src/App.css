@@ -125,7 +125,7 @@
      clear are Pixi-drawn and scale too, so a fixed 38px would slide under the
      strip at 200%. Extents divide by it instead, so a panel still occupies at
      most its share of the viewport — larger rows, fewer of them. */
-  top: calc(38px * var(--ui-scale, 1));
+  top: calc(60px * var(--ui-scale, 1));
   right: calc(10px * var(--ui-scale, 1));
   transform: scale(var(--ui-scale, 1));
   transform-origin: top right;
@@ -638,14 +638,285 @@
   gap: 1.1rem;
 }
 
-/* The title screen is the logo's context, so its void is allowed the one
-   atmospheric statement of the brand: a faint violet rise from the bottom
-   edge — the Mouth is below. Title screen only; every other screen keeps
-   the plain void, and the reservation on violet holds everywhere else. */
+/* ---------------------------------------------------------------------------
+   The listening room — docs/ui-ux.md §14.
+
+   The one screen in the port that is not a centred card: an instrument down the
+   left, the lockup and the doors to its right. The instrument is decoration and
+   the component marks it `aria-hidden`; everything here is only how it looks.
+
+   The entries drop the plate VI card deliberately. That card is the in-match
+   voice and this screen is not the instrument it belongs to, so an entry is a
+   rule with a name on it and a port square at the near end. The magenta bevel,
+   the glass fill and the halo stay where they mean something.
+   ------------------------------------------------------------------------- */
 .menu-screen-title {
-  background:
-    radial-gradient(58% 34% at 50% 106%, rgba(139, 92, 246, 0.14), transparent 70%),
-    linear-gradient(var(--abyss-floor), var(--abyss-void) 55%, #000);
+  padding: 0;
+  align-items: stretch;
+  justify-content: stretch;
+  /* The fall is sized to the panel, so a page-level scrollbar would resize it
+     and it would resize the page back. The side column scrolls instead. */
+  overflow: hidden;
+  background: linear-gradient(var(--abyss-floor), var(--abyss-void) 58%, #000);
+}
+
+.title-fall {
+  position: relative;
+  flex: 0 0 clamp(15rem, 30vw, 27rem);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(53, 224, 255, 0.16);
+  font-size: 0.56rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.title-fall-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.7rem 0.8rem 0.35rem;
+}
+
+.title-fall-head b {
+  font-weight: 400;
+  color: var(--text-cyan);
+}
+
+.title-fall-axis {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0.8rem 0.55rem;
+  border-bottom: 1px solid rgba(53, 224, 255, 0.16);
+  font-size: 0.52rem;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.title-fall-axis span {
+  position: relative;
+}
+
+.title-fall-axis span::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -0.5rem;
+  width: 1px;
+  height: 0.3rem;
+  background: rgba(53, 224, 255, 0.45);
+}
+
+.title-fall-body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.title-fall-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.title-fall-time {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 4.4rem;
+  pointer-events: none;
+}
+
+.title-fall-time i {
+  position: absolute;
+  right: 0.58rem;
+  translate: 0 -50%;
+  padding: 0 0.22rem;
+  font-style: normal;
+  font-size: 0.52rem;
+  letter-spacing: 0.08em;
+  /* The gutter sits over the fall, so a label carries its own ground or the
+     noise reads straight through the digits. */
+  background: rgba(3, 8, 14, 0.78);
+  color: var(--text-cyan);
+  font-variant-numeric: tabular-nums;
+}
+
+.title-fall-time i::after {
+  content: '';
+  position: absolute;
+  right: -0.58rem;
+  top: 50%;
+  width: 0.46rem;
+  height: 1px;
+  background: rgba(53, 224, 255, 0.4);
+}
+
+.title-fall-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.5rem 0.8rem 0.6rem;
+  border-top: 1px solid rgba(53, 224, 255, 0.16);
+  font-size: 0.52rem;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.title-side {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.8rem;
+  padding: clamp(1.5rem, 4vw, 3.4rem);
+  overflow-y: auto;
+  /* `#root` centres text for the rest of the app; a column of rules does not
+     want that, and neither does a definition list. */
+  text-align: left;
+  /* The logo's context is allowed the one atmospheric statement of the brand:
+     a faint violet rise from the bottom edge — the Mouth is below. It belongs
+     to the void the lockup sits in rather than to the instrument, and the
+     reservation on violet holds everywhere else (docs/naming.md). */
+  background: radial-gradient(62% 34% at 46% 108%, rgba(139, 92, 246, 0.14), transparent 70%);
+}
+
+.menu-screen-title .title-masthead {
+  align-items: flex-start;
+  text-align: left;
+  gap: 0.7rem;
+  margin-bottom: 0;
+}
+
+/* Capped, because a rule that runs the width of a wide screen stops reading as
+   a row and starts reading as a divider. */
+.title-entries {
+  display: flex;
+  flex-direction: column;
+  max-width: 46rem;
+}
+
+.title-entry {
+  display: grid;
+  grid-template-columns: 0.5rem minmax(6.5rem, 9rem) 1fr;
+  align-items: baseline;
+  gap: 0 0.9rem;
+  padding: 0.6rem 0.2rem 0.58rem;
+  border: 0;
+  border-top: 1px solid rgba(111, 138, 156, 0.2);
+  background: transparent;
+  color: var(--text-bright);
+  font: inherit;
+  font-size: 0.8rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.title-entry:last-child {
+  border-bottom: 1px solid rgba(111, 138, 156, 0.2);
+}
+
+.title-entry-port {
+  width: 0.4rem;
+  height: 0.4rem;
+  translate: 0 -0.05rem;
+  border: 1px solid rgba(53, 224, 255, 0.4);
+}
+
+.title-entry .menu-entry-note {
+  font-size: 0.66rem;
+  opacity: 0.68;
+}
+
+.title-entry:hover,
+.title-entry:focus-visible {
+  border-top-color: var(--neon-magenta);
+  background: rgba(255, 61, 166, 0.06);
+}
+
+.title-entry:hover .title-entry-port,
+.title-entry:focus-visible .title-entry-port {
+  border-color: var(--neon-magenta);
+  background: var(--neon-magenta);
+}
+
+.title-entry:hover .menu-entry-label,
+.title-entry:focus-visible .menu-entry-label {
+  color: var(--neon-magenta);
+}
+
+.title-entry:hover .menu-entry-note,
+.title-entry:focus-visible .menu-entry-note {
+  opacity: 1;
+}
+
+.title-entry:focus-visible {
+  outline: 1px solid var(--text-cyan);
+  outline-offset: -1px;
+}
+
+/* A held seat asks; magenta is the ink that asks. */
+.title-entry.menu-resume {
+  border-top-color: rgba(255, 61, 166, 0.65);
+}
+
+.title-entry.menu-resume .title-entry-port {
+  border-color: var(--neon-magenta);
+}
+
+.title-entry.menu-resume .menu-entry-label {
+  color: var(--neon-magenta);
+}
+
+/* The readable half of the instrument: the fall is hidden from assistive
+   technology, so what it is saying is said here in words. */
+.title-state {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  gap: 0.3rem 1.6rem;
+  margin: 0;
+  font-size: 0.56rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.title-state dt {
+  opacity: 0.5;
+}
+
+.title-state dd {
+  margin: 0;
+  color: var(--text-cyan);
+}
+
+/* Narrow, the instrument turns sideways (§14). The time gutter goes with it —
+   five seconds of history has nothing worth labelling — and the menu, which is
+   the half that has to survive, takes the width. */
+@media (max-width: 880px) {
+  .menu-screen-title {
+    flex-direction: column;
+  }
+
+  .title-fall {
+    flex: 0 0 clamp(4.5rem, 13vh, 7rem);
+    border-right: 0;
+    border-bottom: 1px solid rgba(53, 224, 255, 0.16);
+  }
+
+  .title-fall-axis,
+  .title-fall-time,
+  .title-fall-foot {
+    display: none;
+  }
+
+  .title-side {
+    justify-content: flex-start;
+    gap: 1.4rem;
+  }
 }
 
 /*
@@ -1195,7 +1466,7 @@
  */
 .objectives {
   position: absolute;
-  top: calc(38px * var(--ui-scale, 1));
+  top: calc(60px * var(--ui-scale, 1));
   /* Clear of the depth ribbon, which owns the first 26 px of the left edge. */
   left: calc(40px * var(--ui-scale, 1));
   transform: scale(var(--ui-scale, 1));

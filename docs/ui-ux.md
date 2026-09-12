@@ -20,27 +20,58 @@
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
-│ ┌──────────────────┐                                    ┌────────────┐ │
-│ │ SIG  42 / 100    │                                    │  CONTACT   │ │
-│ │ ███████░░░░░░░░  │                                    │    LOG     │ │
-│ │ 3 units · 2 loud │            world view              │ T+04:12 …  │ │
-│ └──────────────────┘                                    │ T+04:09 …  │ │
-│ ┌──┐                                                    └────────────┘ │
-│ │D │  depth ribbon                                                     │
-│ │E │  (vertical, shows                                                 │
-│ │P │   band + selection                                                │
-│ │T │   + PR warning)                                                   │
-│ │H │                                                                   │
-│ └──┘                                                                   │
-│                                                                        │
-│ ┌───────────────┐  ┌─────────────────────────┐  ┌────────────────────┐ │
-│ │ SONAR SCOPE   │  │  selection / orders      │  │ PING  [P]         │ │
-│ │  (minimap)    │  │  silent-running state    │  │ cooldown 00:12    │ │
-│ └───────────────┘  └─────────────────────────┘  └────────────────────┘ │
+│ NODULES · CRYSTAL · BERTHS · DRAW · SIG ▓▓▓░ · band      map · T+ · n  │
+│ ┌──┐                                              ┌──────────────────┐ │
+│ │D │                                              │   CONTACT LOG    │ │
+│ │E │                                              │ T+04:12 …        │ │
+│ │P │              world view                      └──────────────────┘ │
+│ │T │                                              ┌──────────────────┐ │
+│ │H │                                              │   OBJECTIVES     │ │
+│ └──┘                                              └──────────────────┘ │
+│                      hint line — why a press did nothing               │
+│ ┌BUILD┬UNITS┬SQUAD┐                                            ┌MENU┐  │
+│ ┌───────┬───────────┬──────────┬───────────────┬─────────────────────┐ │
+│ │ SCOPE │ SELECTION │ FLEET    │ COMMANDS      │ PRODUCTION          │ │
+│ │       │ name  PR2 │ ▢▢▢▢▢    │ ┌──┬──┬──┬──┐ │ BASTION HARVEST 14s │ │
+│ │(scope)│ hull ▓▓▓▓ │ 1 2 3 4 5│ ├──┼──┼──┼──┤ │ ▓▓▓▓▓▓▓░░░░░░░░░░░░ │ │
+│ │       │ six stats │ n hulls  │ └──┴──┴──┴──┘ │ FOUNDRY idle      — │ │
+│ └───────┴───────────┴──────────┴───────────────┴─────────────────────┘ │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-The world view is the whole screen; every panel floats on it as glass ([art-direction.md](art-direction.md) "UI Direction"). Chrome never occupies more than 22% of screen area at 1080p, and the centre 60% is always clear — contacts appear in the world, not in a list.
+The world view is the whole screen above the console; every panel floats on it as
+glass ([art-direction.md](art-direction.md) "UI Direction"), and the centre of the water
+stays clear — contacts appear in the world, not in a list.
+
+**The console is a deliberate break with this section's old 22% chrome budget, and the
+argument is written down rather than assumed.** The budget was set against a HUD of
+floating panels and an 80 px command bar, where everything not on screen was one tab away.
+The console spends more — about 19% of a 1080p frame for itself, and close to 30% once the
+strip, the log, the objectives panel and the ribbon are counted — and buys permanence with
+it: nothing sits behind a tab, so production is a fact the screen carries rather than
+something a commander goes looking for, and a command cell never moves, which is the one
+thing muscle memory can hold. The three directions this was chosen from, and what each of
+them broke, are in [concept-art/hud-mockups/](concept-art/hud-mockups/README.md).
+
+Two rules the break does **not** touch, and may not. The centre of the world view stays
+clear: the console is resident chrome at the foot of the screen, never over the water.
+And every block shows own force only — the production block reads the player's own yards,
+and a hostile count anywhere in this console would be §10.5's maphack in a numeral.
+
+**A block is dropped rather than squeezed** when the window is too narrow for it, because
+a block narrower than its content lies about holding it. The order is what each costs to
+lose: the fleet block first, since the hulls in hand are also on the selection card and the
+groups are also the digits; then production, reluctantly, since its being visible without a
+tab is the console's whole argument; then selection, since the world view carries a hull's
+state on the hull. The scope and the command card never go — one is the only view of the
+whole map, the other is how a touchscreen reaches any order at all.
+
+**A console row is a touch target.** §11's 44 px floor is what sets the console's height
+rather than taste: a command cell is four columns wide and three rows deep so that a cell
+clears the floor at any width the console itself fits on, and a production row is 44 px for
+the same reason. That is why the command card is a grid rather than the row it replaced —
+a row gave each button as much width as its label wanted and 40 px of height, so a long
+roster ran off a narrow screen and the fix was to truncate the labels.
 
 ---
 
@@ -653,8 +684,10 @@ What the current client implements against this spec, so nobody re-implements wh
 
 | Requirement | Status |
 | --- | --- |
-| SIG meter, peak value, colour stops | Implemented (#623) — the bar, the `SIG nn` readout and the band label beside it all read one number, the peak across the player's **units**. Structures were folded in until #623, which pinned the meter at the loudest building a base owned; the self-noise bed already refused that figure and recomputed its own |
-| The meter's spike overlay, the red-band flash, and the second line | Not implemented — §3 asks for a lighter overlay bar over the baseline, one flash as a unit crosses into the red with the crossing written to the contact log, a zero-padded `SIG 042 / 100` readout, and a `n units · m loud` second line. None of the five is built: the meter draws a background, a fill and a stroke, and `SelfEventKind` has no band-crossing member, so §11's reduced-motion "meter pulse" names nothing the client does (§14's table substitutes the crush badge, and the two disagree) |
+| SIG meter, peak value, colour stops | Implemented to §3 — 240 × 12 at 1080p above its two-line readout, `SIG 042 / 100` zero-padded so the digit count never shifts, and the stops snapping at 30 and 65 rather than blending. The strip is 52 px to hold it, and the meter leads the strip: §3 puts it top-left and §1.4 makes it the one permanent element, so the stockpiles follow it. The value is the peak across the player's **units**: structures were folded in until #623, which pinned the meter at the loudest building a base owned, and the self-noise bed refused that figure and recomputed its own |
+| The meter's transient (§3) | Implemented — peak SIG is drawn solid and the burst it just came off as a lighter overlay that decays over 2.2 s, inked for the level it represents rather than the live one, so a ping's 95 reads as having entered the red band even once the bar has fallen back to amber |
+| `n units · m loud` (§3) | Implemented — *loud* is SIG over 60, counted from the player's own hulls |
+| §3's red-band crossing | Half implemented — the meter flashes once on entry, with a static equivalent under reduced motion (§11). The contact log does not record it: own-force rows are written from `EchoSnapshot.selfEvents`, and a crossing is not among them, so the other half of that sentence needs a server-sent event rather than a client-derived row |
 | Tier-graded contact rendering, ghost decay | Implemented |
 | Selected-unit detection ring | Implemented |
 | Ping preview rings, ping commit | Implemented (hold `Alt`, `P`) |
@@ -687,6 +720,9 @@ What the current client implements against this spec, so nobody re-implements wh
 | The match clock | Implemented (#208) — the log's T+ axis live in the top strip, from the server tick both share |
 | Own-force log rows | Implemented (§10, #206, #209) — `you were pinged`, `under fire`, `idle — mined out` |
 | The log's `MARK` row | Implemented (§10, #214) — residue derived by diffing the mark set by id, once per mark per match |
+| The console (§2) | Implemented — the 80 px bar is a 208 px console of four blocks: scope, selection, a 4 × 3 command card, and production. Production is no longer behind the UNITS tab; the block reads the player's own yards, one row per yard because a yard is one build line, and its estimate is divided by the Thermal Draw's satisfaction so a starved line's slip is visible rather than silent. The selection card moved inside its block, which is what ends its collision with the hint line |
+| The plate VI card, in match | Implemented — one `plate()` draws glass, one bevel, one halo, the header rule and corner registration ticks, and the top strip, console, blocks, selection card and ribbon all go through it. Rule 5's diagonal texture is one layer over the whole HUD, rebuilt only when the viewport or the palette changes |
+| The fleet block (§2) | Implemented — the console's fifth block. Two bands of 44 px chips over a census line: the hulls in hand when there are any and the control groups when there are not, so the block is never a grid of empty squares. Groups are chips rather than a list because four 44 px rows do not fit the block, and the floor is what matters — §9 makes the digits unrebindable, so on a touchscreen these chips are the only way to recall a group. The census counts own hulls and structures and nothing else |
 | The acoustic veil | Implemented (§4.5, #472) — a min-audible-SIG field over the player's own hulls and structures, shading the seabed, its props and its embers as a vertex colour on the mesh that was already there, so the effect spends no draw call and no triangle. World view only; the scope keeps §5's promise. A slider in Settings (§14) |
 | The scatter envelope on a contact reported from crystal (§4) | Not implemented — the rule it draws shipped server-side with #438 (two ears at 30° tell the truth); the wedge and its collapse are the client's half and are owed |
 | Priced buttons, and the reason a greyed one gives | Implemented (#351) — a button carries its whole price from the sum the server charges (`SUB 260+80c`), greys when any account falls short, and a press on it says which — *Abyssal Submersible: 80 crystal short* — on the hint bar, the way a locked key does (§7). Biomass is the third column ([economy.md](economy.md) §8); nothing is priced in it yet |
@@ -696,10 +732,12 @@ What the current client implements against this spec, so nobody re-implements wh
 ## 14. The Shell
 
 Everything before a room is joined and after one is left. The in-match interface above ends
-at the hull; the shell is the port. It is DOM and only DOM, for the same reasons §10 gives
-for the contact log — focus rings, keyboard traversal, screen readers — and it draws every
-colour from the tokens transcribed out of [style-neon-noir.md](style-neon-noir.md): cyan
-tells you, magenta asks you, red warns you. The reflection glow that document licenses "on
+at the hull; the shell is the port. Everything on it a player can operate is DOM, for the
+same reasons §10 gives for the contact log — focus rings, keyboard traversal, screen
+readers — and it draws every colour from the tokens transcribed out of
+[style-neon-noir.md](style-neon-noir.md): cyan tells you, magenta asks you, red warns you.
+One canvas exists in the whole shell, on the title screen, and nothing on it is operable or
+readable by a machine: see "The listening room" below. The reflection glow that document licenses "on
 key art and menus only" belongs to the title screen; the in-match HUD still may not use it.
 
 ### Screens
@@ -737,7 +775,9 @@ title screen, and reads the briefing on the way in.
 - **Title** — the vertical logo lockup from [naming.md](naming.md) (mark, wordmark, one
   tagline), and the entries:
   Resume (only while a seat is held, see below), Campaign, Solo Game, Multiplayer,
-  Tutorial, Settings, Credits. There is no Quit; this is a browser.
+  Tutorial, Settings, Credits. There is no Quit; this is a browser. Its dress is **the
+  listening room**, specified below: the port runs a hydrophone, and the screen shows it
+  running.
 - **Campaign** — the board of four campaigns and their slots. A board rather than a list
   because the order is free after the prologue ([campaign.md](campaign.md) §1): a list
   would assert a sequence the campaign refuses to have, and mission ids are namespaced by
@@ -790,6 +830,77 @@ twenty-eight. Its note line is [campaign.md](campaign.md)'s own subtitle, `Four 
 question`, because a note that counted what was finished would be a number to maintain in
 two places. The shape of the finished game is still on screen; a menu that hid its missing
 rooms would still misrepresent the build.
+
+### The listening room
+
+**The port has a sound, and now it has a picture of one.** The title screen is split: a
+hydrophone display down its left, the lockup and the entries to its right. That display is
+the only moving thing in the shell and the only canvas in it. Adopted 2026-09 out of five
+concepts; the four set aside are named at the end of this section, because a rejected
+direction is worth recording once and never again.
+
+**What it shows is an empty channel, and it says so.** A head that names it, a bearing axis
+across the top, elapsed time down a gutter, a foot carrying the gain and the band, and a
+noise floor falling through the middle. Three standing ridges drift in that floor and they
+are the port's own machinery: a real hydrophone floor carries stationary lines, and an even
+field of hiss reads as television snow rather than as water.
+
+This is the browse listing's anti-reveal rule doing the same work one screen out. **The port
+has no water in it**, so its instrument may not imply one. Cyan is the ink that tells and it
+tells you nothing here. The one mark that is not noise is magenta, the ink that asks, and it
+falls only under the entry your pointer or your focus is on — that mark is your hand on the
+console. Nothing on this screen is a contact, and nothing on it can become one.
+
+**One row every 200 ms**, which is `SIM.ECHO_HZ`: the port ticks at the rate the water will.
+A row is 2.4 px of ink over a 1 px gap, so how much history is on screen is a function of
+the panel's height, and the gutter is labelled from what the canvas is actually holding
+rather than from a number maintained in two places.
+
+**It is decoration and it is marked as such.** The whole left panel is `aria-hidden`, holds
+no focusable element, and carries nothing the right-hand column does not. §11 makes
+accessibility a correctness requirement, and an instrument that read "000 090 180 270 359"
+aloud would be spending a player's attention on nothing. What the port's state actually is —
+channel, contacts, room — is a readable list under the entries, where assistive technology
+can reach it.
+
+**Reduced motion stops the fall and keeps it.** §11 asks for information parity, and a
+display carrying no information has none to preserve, so the honest reduction is to stop the
+motion rather than to replace it: the fall holds one primed frame of history and stops
+advancing. A still spectrogram is still a reading, and removing it outright would change
+what the screen *is* for one player and not another.
+
+**Narrow, the instrument turns sideways.** Under 880 px the column becomes a strip across
+the top, the time gutter goes with it — five seconds of history has nothing worth labelling
+— and the lockup and the entries take the full width beneath. The shell runs on a phone
+([SETUP-ANDROID.md](../SETUP-ANDROID.md)) and the menu is the half that has to survive; the
+instrument is dress, and dress yields first.
+
+**The entries lose the plate VI card here.** They are rules with a name on them and a small
+port square at the near end. The card is the in-match voice, and this screen is not the
+instrument the card belongs to; the magenta bevel, the glass fill and the halo stay where
+they mean something. The lockup keeps the reflection glow this section licenses it, and the
+faint violet rise from the bottom edge ([naming.md](naming.md)) stays on the void the lockup
+sits in rather than washing across the display.
+
+#### Considered and set aside
+
+Four concepts were built against this screen and rejected, 2026-09. Each was a real
+argument; none of them is a direction to revisit without a reason this list does not already
+answer.
+
+- **Sounding** — the mark as an emitter, a front leaving the throat every four seconds and
+  lighting each entry as it passed. The smallest change of the five, and the only one that
+  fixed nothing about the frame it left empty.
+- **Thermocline** — depth as layout, entries descending through drifting strata beside a
+  ribbon of the §1 bands. The most build for the least identity, and the first thing to
+  break in portrait.
+- **Silent running** — the menu at the noise floor, each row brightening with how near the
+  pointer was to it. The strongest statement of what this game is about and the worst menu
+  in the set: a screen that dims when you stop touching it is a bet on a player who has not
+  learned the game yet.
+- **The Mouth** — the mark at frame scale, one door per band, labels cut into the arcs. The
+  best key art and a reading order that ran backwards, because the bands brighten downward
+  ([naming.md](naming.md)) and the list had to descend into the light to obey it.
 
 ### The campaign board
 
@@ -1129,4 +1240,5 @@ renderer work rather than mixer work, so each names what it moves:
 - **[systems-combat.md](systems-combat.md)** — the fight this document's 5 Hz is the clock of; §9.5 counts the snapshots each band contains
 - **[systems-depth.md](systems-depth.md)** — depth bands and pressure, as surfaced in §8
 - **[campaign.md](campaign.md)** — the twenty-nine missions §14's board is a rendering of
+- **[concept-art/hud-mockups/](concept-art/hud-mockups/README.md)** — three directions for the in-match interface, each measured against the rules above: what it keeps, what it breaks, and what the break buys
 - **[tech-stack.md](tech-stack.md)** — why the client is allowed so little

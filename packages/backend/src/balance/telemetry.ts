@@ -37,6 +37,7 @@ import {
   ThermoclineZone,
   ResolutionTier,
   SIM,
+  StructureKind,
   UnitKind,
   depthBandFor,
   thermoclineZone,
@@ -167,6 +168,28 @@ export interface PlayerTelemetry {
    * *under*count and never an over-count.
    */
   nodulesEarned: number;
+  /**
+   * The most nodules this navy ever held at once, and the most it held with a
+   * finished Slipway standing (#518).
+   *
+   * Gross income and a sampled series both answer "how rich was this navy",
+   * and neither answers the question a roster wave actually asks, which is
+   * whether the navy was ever, at any instant, holding the price of the hull
+   * its yard was bought for. A bank that peaks at 640 and a hull that costs 700
+   * is a hull nothing about the commander's spending can reach, and it reads on
+   * every other column as a navy doing fine.
+   *
+   * Taken on every observation rather than on the ten-second sample, because
+   * this is a maximum: a bank rises to a price and is spent inside one sample
+   * interval, which is exactly the moment worth catching.
+   *
+   * The second figure is the one that decides a wave. A navy reaches its peak
+   * bank *before* the yard and spends it on the yard — the Slipway is 600
+   * nodules — so the bank the hulls behind the rung are actually bought out of
+   * is the one measured from the moment the yard is standing.
+   */
+  peakNodules: number;
+  peakNodulesAtRung: number;
   crystalEarned: number;
   biomassEarned: number;
   /** Tick this slot's force went to nothing, or null if it survived. */
@@ -280,6 +303,8 @@ export class MatchTelemetry {
         structuresBuiltByKind: {},
         structuresLost: 0,
         nodulesEarned: 0,
+        peakNodules: 0,
+        peakNodulesAtRung: 0,
         crystalEarned: 0,
         biomassEarned: 0,
         eliminatedTick: null,
@@ -365,6 +390,7 @@ export class MatchTelemetry {
       }
 
       this.accrueIncome(player, snapshot);
+      this.markPeakBank(player, snapshot);
       this.countBuildsAndLosses(tick, player, snapshot);
       if (snapshot.driftHealth.length > 0) this.drift = snapshot.driftHealth;
       if (sampling) this.sample(player, snapshot);
@@ -387,6 +413,20 @@ export class MatchTelemetry {
     player.peakSig.push(0);
     player.hulls.push(0);
     player.structures.push(0);
+  }
+
+  /** The high-water marks of the bank — see `peakNodules` for what they answer. */
+  private markPeakBank(player: PlayerTelemetry, snapshot: EchoSnapshot): void {
+    if (snapshot.nodules > player.peakNodules) player.peakNodules = snapshot.nodules;
+    // Finished, not merely placed: a yard under construction cannot take an
+    // order, so a bank held against a site still rising is not a bank the rung
+    // could have spent.
+    const rung = snapshot.structures.some(
+      (s) => s.kind === StructureKind.Slipway && s.buildProgress >= 1
+    );
+    if (rung && snapshot.nodules > player.peakNodulesAtRung) {
+      player.peakNodulesAtRung = snapshot.nodules;
+    }
   }
 
   /**

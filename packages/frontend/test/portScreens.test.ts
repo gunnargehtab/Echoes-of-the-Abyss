@@ -15,18 +15,26 @@
  *   named them would let a fourth player counter-pick a match before joining.
  * - **A held seat is offered, never taken.** Resuming is the player's act; the
  *   title screen surfaces the seat and waits.
+ * - **The port has no water in it, so its instrument may not imply one.** The
+ *   title screen's hydrophone (§14, "The listening room") runs on an empty
+ *   channel. It is decoration, it is hidden from anything that reads the screen
+ *   aloud, and the one mark on it that is not noise is the player's own
+ *   pointer. A fall that could show a contact would be the browse listing's
+ *   leak wearing an instrument's clothes.
  *
  * What each screen looks like is `docs/graphics-standards.md`'s. What each one
  * is allowed to say, and what it does when pressed, is this file's.
  */
 
 import assert from 'node:assert/strict';
-import { afterEach, beforeEach, describe, it } from 'node:test';
+import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import { createElement } from 'react';
 import { MAP_HEADERS, type MatchListing } from '@echoes/shared';
 import { clearStorage, installStorage } from './support/headless.ts';
 import { click, render, type Rendered } from './support/screen.ts';
 import { TitleScreen } from '../src/menu/TitleScreen.tsx';
+import { Hydrophone } from '../src/menu/Hydrophone.tsx';
+import { ROW_MS, type Waterfall } from '../src/menu/waterfall.ts';
 import { SetupScreen } from '../src/menu/SetupScreen.tsx';
 import { BrowseScreen } from '../src/menu/BrowseScreen.tsx';
 import { CreditsScreen } from '../src/menu/CreditsScreen.tsx';
@@ -177,6 +185,136 @@ describe('the title screen: a held seat', () => {
       assert.deepEqual(entries.pressed, ['resume']);
     } finally {
       await view.unmount();
+    }
+  });
+});
+
+describe('the title screen: the listening room', () => {
+  it('hides the instrument from anything that reads the screen aloud', async () => {
+    // §14: the panel "is `aria-hidden`, holds no focusable element, and carries
+    // nothing the right-hand column does not". §11 makes accessibility a
+    // correctness requirement, and a display that read "000 090 180 270 359"
+    // aloud would spend a player's attention on nothing.
+    const { view } = await title();
+    try {
+      const fall = view.byClass('title-fall');
+      assert.equal(fall.props['aria-hidden'], 'true', 'the fall is decoration and says so');
+      const operable = fall.findAll(
+        (node) =>
+          typeof node.type === 'string' && ['button', 'a', 'input'].includes(String(node.type))
+      );
+      assert.deepEqual(operable, [], 'and nothing inside it is a control');
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('says in words that there is nothing out there', async () => {
+    // The fall is hidden, so what it is saying has to be said somewhere a
+    // screen reader can reach — and what it is saying is that the channel is
+    // empty. This is the browse listing's anti-reveal rule one screen out.
+    const { view } = await title();
+    try {
+      const said = view.text().join(' ');
+      assert.match(said, /Contacts\s+None/, 'no contact, on a screen with no water behind it');
+      assert.match(said, /Room\s+None joined/, 'and no room held');
+    } finally {
+      await view.unmount();
+    }
+  });
+});
+
+/** What the painter was asked to paint. Counted work, never a stopwatch. */
+interface Painted {
+  fits: number;
+  rows: Array<number | null>;
+}
+
+/**
+ * The fall, against a recording painter.
+ *
+ * `Hydrophone` takes its painter as an optional prop for exactly this: a canvas
+ * under this renderer is a stub with no 2D context, so the real factory returns
+ * null and there is nothing to count. The seam is the one `BrowseScreen`'s
+ * `listRooms` is, and it defaults to the real thing.
+ */
+async function fall(
+  reducedMotion: boolean,
+  mark: { current: number | null }
+): Promise<{ view: Rendered; painted: Painted }> {
+  const painted: Painted = { fits: 0, rows: [] };
+  const create = (): Waterfall => ({
+    fit: () => {
+      painted.fits += 1;
+      return 24;
+    },
+    row: (bin) => {
+      painted.rows.push(bin);
+    },
+  });
+  const view = await render(createElement(Hydrophone, { mark, reducedMotion, create }));
+  return { view, painted };
+}
+
+describe('the title screen: what the fall is allowed to do', () => {
+  it('advances one row on the Echo Layer’s beat, and marks none of them', async () => {
+    // §14: "One row every 200 ms, which is `SIM.ECHO_HZ`: the port ticks at the
+    // rate the water will." That nothing falls through it marked is the
+    // anti-reveal half — cyan tells you, and here it tells you nothing.
+    mock.timers.enable({ apis: ['setInterval'] });
+    const mark: { current: number | null } = { current: null };
+    const { view, painted } = await fall(false, mark);
+    try {
+      assert.equal(painted.fits, 1, 'primed with history on mount');
+      assert.deepEqual(painted.rows, [], 'and nothing has fallen yet');
+
+      mock.timers.tick(ROW_MS * 5);
+      assert.equal(painted.rows.length, 5, 'five beats, five rows');
+      assert.ok(
+        painted.rows.every((row) => row === null),
+        'and not one of them carries a mark'
+      );
+    } finally {
+      await view.unmount();
+      mock.timers.reset();
+    }
+  });
+
+  it('takes the mark from the pointer, and lets go when it does', async () => {
+    // §14: the one mark that is not noise "falls only under the entry your
+    // pointer or your focus is on — that mark is your hand on the console".
+    mock.timers.enable({ apis: ['setInterval'] });
+    const mark: { current: number | null } = { current: null };
+    const { view, painted } = await fall(false, mark);
+    try {
+      mark.current = 12;
+      mock.timers.tick(ROW_MS);
+      assert.equal(painted.rows.at(-1), 12, 'read on the beat, without a re-render');
+
+      mark.current = null;
+      mock.timers.tick(ROW_MS);
+      assert.equal(painted.rows.at(-1), null, 'and dropped the moment the pointer leaves');
+    } finally {
+      await view.unmount();
+      mock.timers.reset();
+    }
+  });
+
+  it('holds its frame and stops advancing under reduced motion', async () => {
+    // §11 asks for information parity. This display carries no information, so
+    // §14's reduction is to stop the motion rather than to replace it: the
+    // primed frame stays, and nothing falls through it. A still spectrogram is
+    // still a reading.
+    mock.timers.enable({ apis: ['setInterval'] });
+    const mark: { current: number | null } = { current: null };
+    const { view, painted } = await fall(true, mark);
+    try {
+      assert.equal(painted.fits, 1, 'the history is painted all the same');
+      mock.timers.tick(ROW_MS * 20);
+      assert.deepEqual(painted.rows, [], 'and never advances');
+    } finally {
+      await view.unmount();
+      mock.timers.reset();
     }
   });
 });

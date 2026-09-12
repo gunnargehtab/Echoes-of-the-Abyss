@@ -228,6 +228,11 @@ working fine once bundled. `@colyseus/schema` needs legacy decorators, which is 
 `useDefineForClassFields` stays `false` in the backend tsconfig — flipping it silently
 wipes the `@type()` metadata.
 
+The vendored `colyseus` skill documents **0.18**, four minors ahead of what is pinned here.
+It checks the installed version first and will tell you to follow 0.15's own docs, which is
+correct — it is carried as a guard against recall writing 0.17/0.18 API shapes into a 0.15
+room, not as a description of this backend.
+
 ### The wire
 
 Every message that crosses the socket — 32 a client may send, 11 the room may send — is
@@ -337,6 +342,22 @@ gotchas. Match that register; don't strip those comments when refactoring.
   text, not as a link.
 - Cross-link rather than restate. Every doc ends with a "Related" section.
 - Use concrete numbers: "45 SIG while idle with systems live", not "moderate SIG".
+
+### Vendored skills
+
+`.claude/skills/` holds five skills written for this repository and eleven copied from
+public marketplaces — PixiJS v8, three.js, WCAG 2.2 accessibility, and the Colyseus version
+guard above. They are copied rather than installed as plugins because a plugin is
+all-or-nothing and every installed skill's description is loaded into every session, so the
+subset that matches what the code actually imports is the whole point.
+`.claude/VENDORED-SKILLS.md` records each one's upstream, commit, licence and reason, how to
+re-sync it, and what was looked at and rejected.
+
+Treat them as read-only. Two local edits exist and both are marked `LOCAL` in place: the
+`pixijs` router says which five of its twenty-six rows are on disk, and the `accessibility`
+skill points one reference at its upstream sibling rather than at a path this repository did
+not take. Do not link them from `docs/` — link checking there is blocking in CI and these
+files live outside it.
 
 ## Design constraints worth knowing before you touch gameplay
 
