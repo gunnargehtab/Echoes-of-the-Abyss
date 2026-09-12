@@ -116,6 +116,13 @@ Echo Marks
 - Decaying acoustic residues left by high-SIG events (battles, construction, mining, destruction). Echo Marks are visible/usable by units with sufficient HYD.
 - Durations are design-tunable (examples: battle sites ≈ 90 s, destroyed structures ≈ 3 min).
 
+Timbre Family
+
+- What a contact sounds like once it is classified, and the unit in which the ear tells one classified contact from another. A family owns a **mechanism** of sound production — a beat, a breath, a swarm of clicks, a drone, a swell, a running screw — not an EQ curve over a shared sample (audio-direction.md §8).
+- **A family is not a navy.** Four of the six are the four navies; the other two are the creature and the ordnance families, because the Echo Layer sends no faction for a creature or a piece of ordnance and a family is the answer to *what is it*, never to *whose is it* (audio-direction.md §8.1).
+- Carried from Tier 3 and never below it: identity and classification are the same event, so a family reaching a Tier-2 voice would be the mix resolving a contact the server had not.
+- One family covers the whole bestiary and one covers all four ordnance kinds. Per-species voices are deliberately not a thing — the per-species tells are visual and behavioural (bestiary.md).
+
 Depth Bands
 
 - The vertical map bands defining pressure and value: Shelf (0–400 m), Mid-Water (400–1,800 m), Abyssal (1,800+ m).

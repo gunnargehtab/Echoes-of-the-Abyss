@@ -18,9 +18,15 @@
  * because range is also something the server did not send at that tier.
  */
 
-import { ResolutionTier, type Biome, type Faction } from '@echoes/shared';
+import {
+  ResolutionTier,
+  type Biome,
+  type Faction,
+  type FaunaSpecies,
+  type OrdnanceKind,
+} from '@echoes/shared';
 import { voicingFor } from './biome.ts';
-import { timbreFor } from './timbre.ts';
+import { identityFor, timbreFor, type ContactTimbre } from './timbre.ts';
 
 /** Refresh snap, seconds. §3: "the return of a sound that was dying is itself a warning." */
 const REFRESH_SNAP_S = 0.08;
@@ -91,7 +97,17 @@ export interface VoiceInputs {
   bearing?: number;
   /** Range in metres, or undefined when unearned. */
   rangeM?: number;
+  /**
+   * What the server said this contact *is*, at Tier 3+ only — exactly one of
+   * the three, and none of them below that tier.
+   *
+   * Three fields rather than one identity because this is the wire's own
+   * shape, and `identityFor` is the single place it is turned into one
+   * (timbre.ts). Reshaping it here would put the mapping in two places.
+   */
   faction?: Faction;
+  fauna?: FaunaSpecies;
+  ordnance?: OrdnanceKind;
   biome: Biome;
   /** 0-1, where 1 is a fresh detection and 0 a fully decayed ghost. */
   freshness: number;
@@ -165,8 +181,16 @@ export class ContactVoice {
     if (this.stopped) return;
 
     const voicing = voicingFor(inputs.biome);
-    const timbre = timbreFor(inputs.faction);
     const isContactTier = inputs.tier === ResolutionTier.Contact;
+    // The family this contact is heard as, or null when it has none to be
+    // heard as. Identity and classification are the same event (§8.1), so both
+    // halves gate it: below Tier 3 the mix must not carry a family at all, and
+    // at Tier 3 a contact the server named as none of the six has no family to
+    // carry. Either way the voice keeps the unidentifying thump of the tiers
+    // below — a mix with no identity has nothing to say about identity, and
+    // saying something anyway was the bug.
+    const timbre =
+      inputs.tier >= ResolutionTier.Classification ? timbreFor(identityFor(inputs)) : null;
 
     // --- Spatialisation: the rule at the top of this file -------------------
     this.panner.pan.setTargetAtTime(panFor(inputs.tier, inputs.bearing), now, 0.12);
@@ -193,9 +217,10 @@ export class ContactVoice {
     this.delayFeedback.gain.setTargetAtTime(voicing.delayFeedback, now, 0.3);
     this.delayMix.gain.setTargetAtTime(voicing.delayS > 0 ? 0.35 : 0, now, 0.3);
 
-    if (inputs.tier >= ResolutionTier.Classification) {
-      // Tier 3+ carries the faction's drive signature (§8). Below that it must
-      // not: §3 forbids Tier 2 from "carrying class information in its timbre".
+    if (timbre !== null) {
+      // Tier 3+ carries the timbre family of whatever the contact is (§8,
+      // §8.1). Below that it must not: §3 forbids Tier 2 from "carrying class
+      // information in its timbre".
       this.osc.type = timbre.wave;
       this.osc.frequency.setTargetAtTime(timbre.baseHz, now, 0.25);
       this.oscBase = DRIVE_LEVEL.CLASSIFIED;
@@ -232,19 +257,18 @@ export class ContactVoice {
    * decaying contact's lengthens, so a fading return audibly *slows* rather
    * than merely thinning.
    */
-  private scheduleThump(
-    inputs: VoiceInputs,
-    timbre: ReturnType<typeof timbreFor>,
-    now: number
-  ): void {
+  private scheduleThump(inputs: VoiceInputs, timbre: ContactTimbre | null, now: number): void {
     if (now < this.nextPulseAt) return;
 
     const stretch = 1 + (1 - inputs.freshness) * DECAY_PERIOD_STRETCH;
     let period: number;
-    if (inputs.tier >= ResolutionTier.Classification && timbre.rateHz > 0) {
+    // `timbre` is null exactly when `update` found no family to sound — below
+    // Tier 3, or at Tier 3 with no identity — and both want the wandering
+    // thump of the last branch rather than any mechanism's period.
+    if (timbre !== null && timbre.rateHz > 0) {
       const wander = 1 + (Math.sin(now * 3.7) * timbre.jitter) / 2;
       period = (1 / timbre.rateHz) * wander;
-    } else if (inputs.tier >= ResolutionTier.Classification) {
+    } else if (timbre !== null) {
       // An eventless mechanism has no pulse at all, so emit nothing and just
       // push the next check forward — the bump below is a *re-trigger*, and
       // "keep it sounding without re-triggering" is what this branch always

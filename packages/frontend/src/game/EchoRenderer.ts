@@ -3834,7 +3834,16 @@ export class EchoRenderer {
         biome: this.biomeAt(contact.x, contact.y),
         freshness: 1 - age / decayMs,
       };
-      if (contact.faction !== undefined) audio.faction = contact.faction;
+      // Identity, under an explicit tier gate rather than on the server's good
+      // behaviour. The Echo Layer resolves exactly one of the three and only
+      // at Tier 3+, so this changes nothing today; it is here because the mix
+      // is one layer further from the wire than the drawing is, and #618 was
+      // the mix asserting an identity nobody sent.
+      if (contact.tier >= ResolutionTier.Classification) {
+        if (contact.faction !== undefined) audio.faction = contact.faction;
+        if (contact.fauna !== undefined) audio.fauna = contact.fauna;
+        if (contact.ordnance !== undefined) audio.ordnance = contact.ordnance;
+      }
       if (contact.tier >= ResolutionTier.Bearing) {
         const dx = contact.x - ear.x;
         const dy = contact.y - ear.y;
