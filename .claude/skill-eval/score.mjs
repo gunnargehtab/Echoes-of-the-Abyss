@@ -88,10 +88,23 @@ function evaluate(trap, files, spec) {
       // the line and rewrites it identically is not a regression.
       return { tripped: removed > 0 && hits.length === 0, hits: [] };
     }
-    case 'fileExists': {
+    case 'fileAdded': {
+      // Graded on the arm's diff, never on the working tree. #627 was closed by
+      // #687 *during* the session that wrote this, so the arms' base already
+      // carried the file this criterion asks for — and an `existsSync` check
+      // read that as satisfied. A criterion the base already meets measures the
+      // base, not the arm, so it is called out rather than passed.
       const candidates = [trap.path, ...(trap.alternates ?? [])];
-      const found = candidates.find((p) => existsSync(join(REPO, p)));
-      return { tripped: !found, hits: found ? [{ path: found, line: 'present' }] : [] };
+      const atBase = candidates.find((p) => spec.baseHas?.(p));
+      if (atBase) {
+        return {
+          tripped: true,
+          vacuous: true,
+          hits: [{ path: atBase, line: 'already present at the base — this arm cannot be graded on it' }],
+        };
+      }
+      const touched = candidates.find((p) => files.has(p) && files.get(p).added.length > 0);
+      return { tripped: !touched, hits: touched ? [{ path: touched, line: 'added by this arm' }] : [] };
     }
     default:
       throw new Error(`unknown direction: ${trap.direction}`);
@@ -107,7 +120,7 @@ function report(spec, files) {
     if (!rows.length) continue;
     console.log(`\n${group.toUpperCase()}`);
     for (const r of rows) {
-      const verdict = r.tripped ? (r.trap.severity === 'tell' ? 'TELL' : 'FAIL') : 'ok';
+      const verdict = r.vacuous ? 'VACUOUS' : r.tripped ? (r.trap.severity === 'tell' ? 'TELL' : 'FAIL') : 'ok';
       console.log(`  ${r.trap.id.padEnd(width)}  ${verdict}`);
       for (const h of r.hits.slice(0, 3)) console.log(`      ${h.path}: ${h.line}`);
     }
@@ -159,6 +172,20 @@ const spec = JSON.parse(
   readFileSync(join(HERE, String(arg('experiment', '627')), 'traps.json'), 'utf8')
 );
 
+/** Whether a path exists at the range's base, so a trivially-met criterion shows up. */
+function baseProbe(range) {
+  const base = String(range).split(/\.{2,3}/)[0];
+  if (!base) return undefined;
+  return (path) => {
+    try {
+      execFileSync('git', ['cat-file', '-e', `${base}:${path}`], { cwd: REPO, stdio: 'ignore' });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+}
+
 if (arg('selftest')) {
   console.log('SELFTEST — the fixture below exercises every trap, so each one must trip.');
   const files = parseDiff(SELFTEST);
@@ -176,10 +203,13 @@ if (arg('selftest')) {
   process.exit(0);
 }
 
+const range = arg('range', 'main...HEAD');
+if (typeof arg('diff') !== 'string') spec.baseHas = baseProbe(range);
+
 const diffText =
   typeof arg('diff') === 'string'
     ? readFileSync(String(arg('diff')), 'utf8')
-    : execFileSync('git', ['diff', '--unified=0', String(arg('range', 'main...HEAD'))], {
+    : execFileSync('git', ['diff', '--unified=0', String(range)], {
         cwd: REPO,
         encoding: 'utf8',
         maxBuffer: 64 * 1024 * 1024,
