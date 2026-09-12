@@ -723,6 +723,24 @@ which is §5's own sizing — "launches that connect are launches from inside a 
 sits in the middle of that band with half of it spare at each end for the depth, terrain and PF
 the measurement held flat.
 
+**And the four-faction baseline does not move at all, which is a finding about the harness
+rather than about the branch.** `baselines/noisemaker-before.md` and `noisemaker-after.md` are
+the same thirty seeds on the same map either side of this change, and they are identical to the
+digit — no guard-rail verdict flips, no win rate shifts, no hull count changes. The reason is
+upstream of the countermeasure and worth writing down, because the obvious reading of a null
+pair is that the branch is inert. It is not. Across six of those seeds the four commanders
+spend 54,575 `attack` orders and **137 torpedoes, all of them in one match**: the Broadside is
+built 0.1 times a match and the Lance not at all, so the weapon this answers is very nearly
+absent from AI-vs-AI play. Instrumenting the gates on the one seed that has torpedoes in it
+says the rest: of the four navies, only the **Directorate** ever resolves a torpedo contact at
+all — 166 of them across 45 observations — and its doctrine declines; the two that would spend
+a decoy hear zero torpedoes in 7,500 observations each. Even for the Directorate the nearest
+hull of its own to any of those weapons is a **median 4,499 m**, four times the window. So the
+baseline is not measuring this branch yet, and it will not until the commander fields its
+ordnance hulls in numbers — which is the same class of gap as #518 and #520 and belongs to
+them, not here. What holds the branch instead is `test/aiCountermeasures.test.ts`, which puts a
+real torpedo in the water and a real `AiSeat` behind it.
+
 **Which navies spend it is a doctrine field, not a rule**, because a noisemaker is SIG 70 at
 your real position: the loudest thing in the roster short of a ping, and unlike a ping it buys
 the enemy's ears rather than your own. `answersTorpedoesWithNoise` splits the four where their
