@@ -13,6 +13,12 @@
  * factions.md, campaign.md, maps.md, systems-echo.md, systems-depth.md. When
  * a number moves in a doc, it moves here.
  *
+ * **Short on purpose.** A visitor decides in a screen or two whether this is
+ * a game they want, and the page's own length is the first thing arguing
+ * against it. One idea per card, the fewest words that keep the fact intact,
+ * and no sentence that only tells the reader what the page is about — the
+ * page is right there. The design docs are where the long version lives.
+ *
  * A roadmap row with no entry in `items` falls back to the doc's own wording,
  * and the build prints a warning naming it, so a new row is never silently
  * shown in engineering-speak.
@@ -23,7 +29,7 @@ export const hero = {
   tagline:
     'An RTS where you cannot see — only listen — and every action you take tells the enemy where you are.',
   pitch:
-    'Two centuries after the surface ocean was poisoned, humanity lives at the bottom of the Pelagion Rift, and four navies are fighting for the last habitable water on the planet. There is no line of sight down here. Every ship makes noise, every ship listens, and everything that makes you strong makes you loud. This page is where the game stands today, what you can already play, and what is coming next.',
+    'Two centuries after the surface ocean was poisoned, four navies fight for the last habitable water at the bottom of the Pelagion Rift. There is no line of sight down here. Every ship makes noise, every ship listens, and everything that makes you strong makes you loud.',
   motto: 'In the abyss, every echo is a warning.',
   primary: { label: 'What you can play', href: '#play' },
   secondary: { label: 'What is next', href: '#next' },
@@ -32,23 +38,23 @@ export const hero = {
 export const pillars = [
   {
     title: 'You do not see. You listen.',
-    text: 'There is no fog of war to lift. Every hull emits an acoustic signature and listens for everyone else’s. What you know about a contact comes in five grades of certainty, from "something is out there" to a full track — and the enemy is grading you the same way.',
+    text: 'There is no fog of war to lift. Every hull makes noise and listens for everyone else’s, and a contact reaches you in five grades of certainty. The enemy is grading you the same way.',
   },
   {
     title: 'The ping is a bargain you will regret.',
-    text: 'Active sonar shows you everything within 900 metres. It shows you to everything within 2,400. You learn everything; everyone learns where you are, twice as far away.',
+    text: 'Active sonar shows you everything within 900 metres. It shows you to everything within 2,400.',
   },
   {
     title: 'Loud is strong. Strong is loud.',
-    text: 'Mining is loud. Building is loud. Firing is loud. A working economy hums and a fleet at full speed is a beacon. Silent running buys you invisibility and costs you everything else.',
+    text: 'Mining is loud, building is loud, firing is loud. Silent running buys you invisibility and costs you everything else.',
   },
   {
     title: 'Depth is a commitment.',
-    text: 'The ocean is three bands deep. Diving is fast and deafening; rising is slow and silent. Go below what your hull is rated for and the pressure eats it, and nothing repairs that. The best resources are at the bottom. A deep raid succeeds, retreats, or dies.',
+    text: 'Diving is fast and deafening, rising is slow and silent, and pressure eats a hull below its rating. The best resources are at the bottom, so a deep raid succeeds, retreats, or dies.',
   },
   {
-    title: 'The water is alive, and it is listening too.',
-    text: 'Sea life answers the loudest thing it hears and looks exactly like a warship until you get close. Vents erupt, resonance storms roll through, cold currents push, kelp grabs. And at 4,410 metres sits the Mouth, which answers sonar pings before they are sent.',
+    title: 'The water is alive, and listening.',
+    text: 'Sea life answers the loudest thing it hears and looks exactly like a warship until you get close. And at 4,410 metres sits the Mouth, which answers a sonar ping before it is sent.',
   },
 ];
 
@@ -57,28 +63,28 @@ export const factions = [
     name: 'Bathyarch Consortium',
     accent: '#f2b233',
     line: 'The loudest thing in the Rift, and proud of it.',
-    text: 'An industrial megacorporation that became a government by accident. They run the heat, the freight, and — through debt — nearly half the population. They built the hulls. They ran the air. They will bring that up.',
+    text: 'An industrial megacorporation that became a government by accident. It runs the heat, the freight, and — through debt — half the population.',
     plays: 'Wins by attrition. Fears insolvency.',
   },
   {
     name: 'Pelagia Commune',
     accent: '#8fe36b',
     line: 'Grown, not built.',
-    text: 'Farmers who feed the whole Rift, with ships closer to animals than machines: chitin hulls, muscle-driven propulsion, sensor organisms. The quietest navy in the game, and the most fragile.',
+    text: 'Farmers who feed the Rift, in ships closer to animals than machines: chitin hulls, muscle-driven propulsion, sensor organisms.',
     plays: 'Wins by map control. Fears being made to fight.',
   },
   {
     name: 'Abyssal Directorate',
     accent: '#c2465e',
     line: 'They listen better than anyone.',
-    text: 'Eight generations of engineered trench-dwellers who can walk out of an airlock at 3,000 metres. The Rift’s most functional society — no debt, no wage, universal everything — and nobody in it chose any of it.',
+    text: 'Eight generations of engineered trench-dwellers who can walk out of an airlock at 3,000 metres. No debt, no wage, universal everything — and nobody in it chose any of it.',
     plays: 'Wins by information and numbers. Fears being wrong about what is below.',
   },
   {
     name: 'Hadron Knights',
     accent: '#c9a6ff',
     line: 'Sound as a weapon.',
-    text: 'Thirty thousand crystal-workers in a techno-order that recruits by acoustic aptitude at age nine. The only faction that cannot grow, and they know exactly how many years that leaves them.',
+    text: 'Thirty thousand crystal-workers in a techno-order that recruits by acoustic aptitude at age nine. The only faction that cannot grow.',
     plays: 'Wins by positioning and burst. Fears extinction by arithmetic.',
   },
 ];
@@ -92,37 +98,36 @@ export const factions = [
  */
 export const roster = {
   title: 'The fleet, as it renders today',
-  text: 'Every hull in the game, seen from above the way the sonar chart shows your own force: four navies, four hulls each, and the yards that build them. Each is lit from its own 3D model and glows exactly as loud as it is — the brighter the running lights, the further away it can be heard. You only ever see your own ships like this. An enemy is a silhouette at best.',
+  text: 'Every hull and yard in the game, seen the way the sonar chart draws your own force. Each glows exactly as loud as it is. An enemy is a silhouette at best.',
   alt: 'Contact sheet of every hull and yard in the game, seen from above, one row per navy: Consortium in amber, Commune in green, Directorate in red, Knights in violet, each hull labelled with its class and its length in metres.',
-  caption:
-    'Re-baked whenever the art changes. This picture is whatever the newest roster looks like, not a mock-up.',
+  caption: 'Re-baked whenever the art changes — the current roster, not a mock-up.',
 };
 
 /** What exists and runs today. Counts are filled in at build time. */
 export const playable = [
   {
     title: 'A {missions}-mission campaign',
-    text: 'A prologue that teaches you to listen, then four seven-mission campaigns you can play in any order, each retelling events the others showed you from the other side. Four endings, none of them canon. The game remembers which scenes you have witnessed and changes the briefings to match.',
+    text: 'A prologue that teaches you to listen, then four seven-mission campaigns in any order, each retelling what the others showed you from the other side. Four endings, none of them canon.',
   },
   {
     title: 'Skirmish against an AI that hears what you hear',
-    text: 'Recruit or Veteran. Neither one cheats: the opponent gets the same sonar picture you get and nothing more. Difficulty is how well it thinks, not how much it sees.',
+    text: 'Recruit or Veteran, and neither cheats: the opponent gets the same sonar picture you do. Difficulty is how well it thinks, not how much it sees.',
   },
   {
     title: 'Multiplayer on the same water',
-    text: 'A lobby, faction pick, reconnecting if your connection drops, a result screen, and a rematch.',
+    text: 'A lobby, faction pick, reconnection after a drop, a result screen and a rematch.',
   },
   {
     title: '{maps} maps, {factions} navies',
-    text: 'The Ventfront Divide, where the safe middle is the quiet middle. The Kelp Labyrinth, which does not hide an army so much as ruin your sense of how far away it is. The Abyssal Rift Corridor, a trench that carries every sound down its whole length.',
+    text: 'The Ventfront Divide, where the safe middle is the quiet middle. The Kelp Labyrinth, which ruins your sense of how far away anything is. The Abyssal Rift Corridor, which carries every sound its whole length.',
   },
   {
     title: 'A full soundscape',
-    text: 'Every contact has its own sound for how well you know it, panned to its bearing and coloured by the water it came through. Your own noise sits under everything, and a cue tells you when you are the one being heard.',
+    text: 'Every contact has its own sound for how well you know it, panned to its bearing and coloured by the water it came through. Your own noise sits under all of it.',
   },
   {
     title: 'A three-layer ocean you can see',
-    text: 'A perspective view over a sculpted seabed, ships sailing at their true depth, and a depth ribbon that warns before a dive would crush you.',
+    text: 'A perspective view over a sculpted seabed, ships sailing at their true depth, and a ribbon that warns before a dive would crush you.',
   },
   {
     title: 'Runs in a browser',
@@ -139,9 +144,9 @@ export const playable = [
 export const roughEdges = {
   440: {
     question: 'Do skirmishes against the AI finish?',
-    text: 'Not reliably, not yet. In a four-player test batch, 29 of 30 matches ran to the 25-minute limit without a winner; two-player matches finish fine. The AI knows how to fight and does not yet know how to close out a game.',
+    text: 'Not reliably. In a four-player test batch, 29 of 30 matches ran to the 25-minute limit with no winner.',
     fixed:
-      'They do now. The AI used to stall four-player matches to the 25-minute limit — 29 of 30 in one test batch — and has since been taught to close out a game.',
+      'They do now. Four-player matches used to stall to the 25-minute limit — 29 of 30 in one test batch — and the AI has since been taught to close one out.',
   },
   430: {
     question: 'Does it stay smooth with a big fleet?',
@@ -151,7 +156,7 @@ export const roughEdges = {
   },
   286: {
     question: 'How does it run on a real PC or phone?',
-    text: 'Unmeasured. Every frame-rate number so far comes from a software renderer in a test container. The game promises to run in a browser, phone included, and that promise has not been timed on real hardware yet.',
+    text: 'Unmeasured. Every frame-rate number so far comes from a software renderer in a test container, never from real hardware.',
     fixed: 'Measured. The game has now been timed on a real graphics card and on a phone.',
   },
 };
@@ -165,11 +170,11 @@ export const phases = {
   0: {
     title: 'Before there was a game',
     blurb:
-      'A glossary, a simulation of sound with nothing around it yet, and the checks that stop the writing and the code from drifting apart.',
+      'A glossary, a simulation of sound with nothing around it yet, and the checks that stop the writing and the code drifting apart.',
   },
   1: {
     title: 'Depth becomes a choice',
-    blurb: 'The ocean was always three bands deep on paper. This is where ships learned to dive.',
+    blurb: 'The ocean was always three bands deep on paper. Here ships learned to dive.',
   },
   2: {
     title: 'The game gets its voice',
@@ -197,8 +202,7 @@ export const phases = {
   },
   8: {
     title: 'The campaign',
-    blurb:
-      'The engine that runs a scripted mission, proven on the prologue — and then all twenty-eight that followed.',
+    blurb: 'The engine that runs a scripted mission, and then all twenty-nine of them.',
   },
   9: {
     title: 'The new view of the ocean',
@@ -206,8 +210,7 @@ export const phases = {
   },
   10: {
     title: 'What is next',
-    blurb:
-      'A full review of the game in September 2026 produced this list. First on it: matches that end.',
+    blurb: 'A full review in September 2026 produced this list. First on it: matches that end.',
   },
   11: {
     title: 'Playing it against other people',
@@ -216,8 +219,7 @@ export const phases = {
   },
   12: {
     title: 'After the game ships',
-    blurb:
-      'Decided, and deliberately not scheduled: a fifth navy of mercenaries, selling the hulls every side already builds.',
+    blurb: 'A fifth navy of mercenaries, selling the hulls every side already builds.',
   },
 };
 
@@ -249,7 +251,7 @@ export const items = {
   23: 'A checklist for playtesting a unit, and somewhere to write down what happened',
   8: 'This roadmap, in its first form',
   9: 'A game client that builds and runs',
-  10: 'The sound model as working code — how far a noise carries, and who hears it — before there was a game around it',
+  10: 'The sound model as working code, before there was a game around it',
   24: 'A first scene on screen, and controls that move something in it',
   26: 'A test bench for the sound model: fixed scenarios that must always come out the same',
   27: 'That bench written up and made reusable, so the tests can call it',
@@ -265,11 +267,11 @@ export const items = {
   14: 'Who owns what',
   15: 'A board to track it on',
   19: 'A place to talk, and the meeting that started it',
-  57: 'The bar a piece of art has to clear before it ships, and a check that the game still runs on a phone',
-  34: 'The five grades of certainty disagreed with themselves — some documents counted five, others six',
-  35: 'Every hull\u2019s listening range was a number the code made up; the design had never chosen one',
+  57: 'The bar art has to clear before it ships, and a check that the game still runs on a phone',
+  34: 'The five grades of certainty disagreed with themselves — some documents counted six',
+  35: 'Every hull’s listening range was a number the code made up; the design had never chosen one',
   36: 'The test bench and the game were computing detection two different ways',
-  37: 'Sound was being measured at the source instead of along the path it travels — the model the whole game rests on, wrong in the one place it is worked out',
+  37: 'Sound was measured at the source instead of along the path it travels — the model the whole game rests on, wrong where it is worked out',
   38: 'About 270 formatting faults in the design documents, and a check that only reported them',
   39: 'Seven documents were linked from others and had never been written',
   // Phase 1
@@ -278,10 +280,10 @@ export const items = {
   100: 'Resonance Crystal at the bottom of the ocean, and the tech it unlocks',
   // Phase 2
   101: 'A real audio engine, mixed per player',
-  102: 'Contacts you can hear: a different sound for each grade of certainty, panned to its bearing',
-  103: 'Your own noise in the mix, a cue when you are being heard, active sonar and silent running',
+  102: 'Contacts you can hear: a different sound per grade of certainty, panned to its bearing',
+  103: 'Your own noise in the mix, a cue when you are heard, active sonar and silent running',
   // Phase 3
-  104: 'The Drift: sea life that listens, answers the loudest thing, and looks like a warship until you get close',
+  104: 'The Drift: sea life that answers the loudest thing and looks like a warship until you get close',
   105: 'Vent eruptions and resonance storms',
   106: 'Echo Marks: the acoustic residue that battles and industry leave in the water',
   107: 'Three hand-built maps: the Ventfront Divide, the Kelp Labyrinth, the Abyssal Rift Corridor',
@@ -300,7 +302,7 @@ export const items = {
   136: 'A working economy can be heard: refineries and depots hum while they run',
   140: 'The Hadron tithe: how the Knights keep an income in a long game',
   // Phase 7
-  149: 'Movement fixes: hulls stacking wrongly, and vent eruptions throwing ships off the map',
+  149: 'Movement fixes: hulls stacking wrongly, and eruptions throwing ships off the map',
   150: 'Terrain that blocks: ridges, roofs and rock you cannot sail through',
   151: 'Cold shock currents that push your fleet',
   152: 'Kelp that entangles',
@@ -309,12 +311,12 @@ export const items = {
   // Phase 8
   190: 'The mission engine, proven on the prologue: Sorrowgate',
   // Phase 9
-  283: 'Contacts you are unsure of are drawn as a column of water, not at a depth you never earned',
+  283: 'Contacts you are unsure of drawn as a column of water, not at a depth you never earned',
   284: 'Hulls stay readable when you zoom all the way out',
   285: 'You can hear it when the surface is hurting your hull',
   286: 'Frame-rate testing on a real graphics card and on a phone',
   // Phase 10
-  440: 'Skirmishes that end: the AI learns to close out a match instead of stalling to the time limit',
+  440: 'Skirmishes that end: the AI learns to close out a match instead of stalling to the limit',
   430: 'Big fleets without slowdown',
   429: 'Your own ships glide between updates instead of stepping',
   432: 'The sonar overlay stops redrawing everything every frame',
@@ -325,8 +327,8 @@ export const items = {
   435: 'Attack-move, rally points, stop and hold, edge scrolling, and a production queue',
   294: 'Mouse and keyboard done properly for desktop play',
   436: 'Two hulls unique to each navy, and one more tech tier above crystal',
-  495: 'A whole fleet of your own: scouts, line ships, siege, ordnance and transports that belong to one navy and no other',
-  501: 'Transports: hulls that carry a force across the map in their hold, where nothing can hear it',
+  495: 'A whole fleet of your own: scouts, line ships, siege, ordnance and transports per navy',
+  501: 'Transports: hulls that carry a force in their hold, where nothing can hear it',
   437: 'A population cap, sized to what the water can carry',
   438: 'A tighter map and redesigned superweapons',
   439: 'Competitive play: a map pool, a ladder, accounts and an observer mode',
@@ -337,18 +339,19 @@ export const items = {
   442: 'Faster loading: art fetched on demand, smaller downloads',
   443: 'More automated testing so updates do not break things',
   445: 'This roadmap, rewritten to tell the truth',
-  458: 'A fair fight between the Consortium and the Directorate — today the Consortium wins nine duels in ten',
+  458: 'A fair fight between the Consortium and the Directorate',
   467: 'The Commune’s minelayer and its living seeder, in the hands of the computer opponent',
   463: 'Longer fights, and a mine the defender can drop in the face of whatever is chasing it',
   472: 'A chart that goes vague where nothing of yours is listening',
   478: 'Harvesters that would not move in the Prologue',
   480: 'The tetherjelly forests one mission needs before it can grow them',
-  491: 'Crystal worth going after: today the deep field is further away and more dangerous than any navy can afford',
-  494: 'Automated testing for the menus, so key rebinding, UI scale and the colour-vision palettes keep working',
-  454: 'A fair fight between all four navies — the Knights used to win five decided matches in six',
+  491: 'Crystal worth going after: today the deep field is further away than any navy can afford',
+  494: 'Automated testing for the menus, so rebinding, UI scale and the colour palettes keep working',
+  454: 'A fair fight between all four navies',
   518: 'Teaching the computer opponent to build the shipyard its best hulls come out of',
   520: 'The Directorate able to afford the two hulls its own shipyard exists to build',
-  462: 'Upgrades and veteran crews: what a navy can improve mid-match, and how loud improving it is',
+  621: 'The computer opponent given every order a player can give, rather than most of them',
+  462: 'Upgrades and veteran crews: what a navy can improve mid-match, and how loud that is',
   461: 'The nine hulls of the second tier, built into the game',
   466: 'Models for those nine, so they look like the navy that sails them',
   498: 'The groundwork for a fleet: the measurements every later wave gets judged by',
@@ -358,37 +361,46 @@ export const items = {
   509: 'A line ship for every navy, and an opening set of hulls that differs by who you are',
   510: 'The three hulls every navy shares: kept, and the balance lab says why',
   529: 'The Knights build their own corvette instead of the generic one',
-  531: 'A mid-sized warship for the two navies that lacked one — and the first two guns that aim at the loudest ship in range rather than the nearest',
+  531: 'A mid-sized warship for the two navies that lacked one — and the first guns that aim at the loudest ship in range rather than the nearest',
   517: 'A refit the Consortium can buy to take its whole fleet deeper',
-  540: 'Every ship in the game built from an editable script, so a navy can be redesigned in one place instead of seventeen',
-  546: 'The Commune\u2019s seeder and its minelayer, rebuilt that way',
-  553: 'The turrets, rebuilt that way, in each navy\u2019s own style',
-  530: 'The Directorate\u2019s own line ship, which today it can afford about once a match',
-  549: 'Kelp beds that thin as they are cut \u2014 and stop hiding you when they do',
-  554: 'Kelp that grows back, and sea life that repopulates, at a rate the health of the water sets',
-  557: 'A reactor that harvests a kelp bed \u2014 and eats the cover it is standing in while it works',
-  560: 'Sea life pays the navy that killed it, instead of whoever happened to be standing nearest',
+  540: 'Every ship built from an editable script, so a navy can be redesigned in one place',
+  546: 'The Commune’s seeder and its minelayer, rebuilt that way',
+  553: 'The turrets, rebuilt that way, in each navy’s own style',
+  640: 'The Clarion’s horn seams straightened back to the symmetry the Order builds to',
+  645: 'The flaws the rebuilt models copied faithfully from the originals, listed to fix on purpose',
+  650: 'Two hulls that came out mirrored — the Dredge’s claw and the Precentor’s rank, put back',
+  652: 'The last twenty buildings rebuilt from scripts: every navy’s yards, and the four landmarks',
+  530: 'The Directorate’s own line ship, which today it can afford about once a match',
+  549: 'Kelp beds that thin as they are cut — and stop hiding you when they do',
+  554: 'Kelp that grows back, and sea life that repopulates, at the rate the water’s health sets',
+  557: 'A reactor that harvests a kelp bed — and eats the cover it stands in while it works',
+  560: 'Sea life pays the navy that killed it, instead of whoever happened to be nearest',
   487: 'Automated testing for the game shell, the network messages and the audio mix',
   489: 'Every network message declared in one place, so a rename cannot quietly break the game',
+  628: 'Every network message checked against that one table as it arrives, rather than by hand',
   515: 'Automated testing for the pause menu, down to where the keyboard goes',
   504: 'This roadmap again: it kept stating things that go out of date on their own',
-  469: 'An outside read of the story \u2014 whether the world arrives for a player, not just whether it holds together on paper',
-  534: 'The campaign read start to finish, in play order, to see what a player actually learns and when',
+  469: 'An outside read of the story — whether the world arrives for a player',
+  534: 'The campaign read start to finish, in play order, to see what a player learns and when',
+  623: 'The signature meter reading your fleet rather than your base, so the prologue teaches a number you can move',
+  636: 'A stricter check that every map starts its navies on ground the map actually paints',
+  655: 'The sea-life health bands, which read as recovering slightly at their very worst',
+  663: 'The mix is still too loud on a phone: finding which layer of it is the loud one',
+  654: 'The Directorate wins three decided matches in four — measured and recorded, and left alone until the systems around it stop moving',
 };
 
 export const sprints = {
   'Sprint 1':
     'The world on paper: the design bible, the four navies, the rules of sound and depth, and the first playable scaffold.',
   'Sprint 2':
-    'Depth became an order, the game got its sound, the map grew sea life and hazards, and an AI opponent made it something one person can play.',
+    'Depth became an order, the game got its sound, the map grew sea life and hazards, and an AI opponent made it playable alone.',
   'Sprint 3':
-    'Currents and kelp with real teeth, the combat design built in full, all twenty-nine campaign missions, and the new 3D view of the ocean.',
+    'Currents and kelp with real teeth, combat built in full, all twenty-nine campaign missions, and the new 3D view of the ocean.',
   'Sprint 4':
-    'Every navy got a fleet of its own \u2014 scouts, ordnance, siege, line ships and a mid-tier \u2014 the chart learned to go dark where nothing of yours is listening, and kelp became something you harvest and something you hide in.',
+    'Every navy got a fleet of its own, the chart learned to go dark where nothing of yours is listening, and kelp became something you harvest and hide in.',
 };
 
 export const footer = {
   note: 'Gameplay footage and the stories of the Rift are on their way. Until then, the roadmap is the game.',
-  provenance:
-    'Progress on this page is read live from the project’s issue tracker when the page is built; nothing here is updated by hand.',
+  provenance: 'Every state on this page is read from the issue tracker when the page is built.',
 };

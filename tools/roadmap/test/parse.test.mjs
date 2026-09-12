@@ -224,9 +224,11 @@ test('render: builds without state, and every tracked item appears with its stat
   assert.match(html, /A 29-mission campaign/);
   assert.match(html, /3 maps, 4 navies/);
   assert.match(html, /Last read 2026-09-05 15:00 UTC/);
-  // A rough edge whose issue has closed reads as fixed, not as current.
-  assert.match(html, /They do now\. The AI used to stall/);
-  assert.doesNotMatch(html, /Not reliably, not yet/);
+  // A rough edge whose issue has closed reads as fixed, not as current. Read
+  // from the copy itself rather than quoted here, so tightening a sentence is
+  // not a test failure — what is being held is which of the two it picks.
+  assert.ok(html.includes(content.roughEdges[440].fixed), 'the closed card reads as fixed');
+  assert.ok(!html.includes(content.roughEdges[440].text), 'and not as still current');
   // Nothing on the page talks about the repository's plumbing.
   assert.doesNotMatch(html, /green main|pull request|merged/i);
 
@@ -240,6 +242,51 @@ test('render: builds without state, and every tracked item appears with its stat
     fontHref: 'fonts/x.woff2',
   });
   assert.match(blind, /without access to the issue tracker/);
+});
+
+test('render: a live phase shows what is open and rolls up what is already done', () => {
+  const roadmap = parseRoadmap(SAMPLE);
+  const shown = (states) =>
+    render({
+      roadmap,
+      states,
+      content,
+      counts: { missions: 29, maps: 3, factions: 4 },
+      repo: REPO,
+      generatedAt: '2026-09-12 19:00 UTC',
+      fontHref: 'fonts/x.woff2',
+    });
+  const rollsIn = (html) =>
+    [...html.matchAll(/<details class="done-roll">([\s\S]*?)<\/details>/g)].map((m) => m[1]);
+
+  // Phase 10 with one row done and two still open: the open rows are the
+  // phase's visible content and the done one is behind a disclosure, because
+  // a section headed "what is next" is not the place to list history.
+  const live = shown(
+    new Map([
+      [440, { state: 'closed', title: 'Match resolution', url: url(440), closedAt: null }],
+      [436, { state: 'open', title: 'Exclusive hulls', url: url(436), closedAt: null }],
+      [437, { state: 'open', title: 'A population cap', url: url(437), closedAt: null }],
+    ])
+  );
+  const rolls = rollsIn(live);
+  assert.equal(rolls.length, 1, 'the one finished group of Phase 10 is rolled up');
+  assert.match(rolls[0], /#440</);
+  assert.doesNotMatch(rolls[0], /#436</);
+  assert.doesNotMatch(rolls[0], /#437</);
+  // A group with nothing left open spends one line, and it is the group's own.
+  assert.match(live, /Matches that finish — 1 done/);
+
+  // A finished phase rolls nothing up: every row it has is the record, and
+  // the card is folded already.
+  const finished = shown(
+    new Map([
+      [98, { state: 'closed', title: 'Depth orders', url: url(98), closedAt: null }],
+      [99, { state: 'closed', title: 'Depth HUD', url: url(99), closedAt: null }],
+    ])
+  );
+  assert.equal(rollsIn(finished).length, 0);
+  assert.match(finished, /class="item closed" data-state="closed"[\s\S]*?#98</);
 });
 
 test('content: every row of the real roadmap has a player-facing sentence', () => {
@@ -294,7 +341,7 @@ test('sheet: the repository has one, so the public page has its picture', () => 
   assert.ok(size.width > 0 && size.height > 0);
 });
 
-test('drift: open issues the roadmap has no row for, epics excluded, prose mentions noted', () => {
+test('drift: open issues the roadmap has no row for, epics and ledgers excluded', () => {
   const roadmap = parseRoadmap(SAMPLE);
   const issue = (number, labels = []) => ({
     number,
@@ -306,6 +353,7 @@ test('drift: open issues the roadmap has no row for, epics excluded, prose menti
     issue(440), // a row in Phase 10 — placed
     issue(286), // a status row — placed
     issue(428, ['epic']), // an epic — never counted
+    issue(580, ['routine-log']), // a ledger that is never to be implemented — never counted
     issue(382), // mentioned nowhere in SAMPLE
     issue(99), // a row in Phase 1 — placed
   ];

@@ -73,30 +73,56 @@ function itemRow(item, states, repo, content) {
 </li>`;
 }
 
+/**
+ * One run of rows. In a phase that still has open work, the rows already done
+ * are rolled up behind a one-line disclosure rather than listed: a section
+ * headed "what is next" that opens with fifty-six struck-through lines is
+ * mostly answering a question nobody asked, and Phase 10 alone was sixty rows
+ * of which fifty-six were history. They are still in the page — the roll
+ * opens, the Done filter opens it, and the phase's own count and bar have
+ * said the number all along — so nothing about the record is lost, only its
+ * claim on the first screen. A finished phase rolls nothing up: every row it
+ * has is the record, and the whole card is already folded.
+ */
+function rowRun(items, states, repo, content, roll, label = null) {
+  const row = (i) => itemRow(i, states, repo, content);
+  const live = roll ? items.filter((i) => states.get(i.number)?.state !== 'closed') : items;
+  const done = roll ? items.filter((i) => states.get(i.number)?.state === 'closed') : [];
+  const list = live.length === 0 ? '' : `<ul class="items">${live.map(row).join('')}</ul>`;
+  const roll_ = (summary) =>
+    `<details class="done-roll"><summary><span class="mark" aria-hidden="true"></span>${summary}</summary><ul class="items">${done
+      .map(row)
+      .join('')}</ul></details>`;
+  if (label === null) return done.length === 0 ? list : `${list}${roll_(`${done.length} already done`)}`;
+  // A group with nothing left open is one line carrying its own name, rather
+  // than a heading over a disclosure that says the heading was finished.
+  if (live.length === 0 && done.length > 0)
+    return `<div class="group done">${roll_(`${escape(label)} — ${done.length} done`)}</div>`;
+  return `<div class="group"><h4>${escape(label)}</h4>${list}${
+    done.length === 0 ? '' : roll_(`${done.length} already done`)
+  }</div>`;
+}
+
 function phaseCard(phase, states, repo, content, open) {
   const p = progress(phase.items, states);
   const when = formatSpan(span(phase.items, states));
   const status = p.complete ? 'complete' : p.closed > 0 ? 'active' : 'pending';
   const copy = content.phases[phase.number] ?? {};
   const title = copy.title ?? phase.title;
-  const row = (i) => itemRow(i, states, repo, content);
+  const roll = !p.complete;
+  const run = (items, label) => rowRun(items, states, repo, content, roll, label);
   const groups =
     phase.groups.length === 0
-      ? `<ul class="items">${phase.items.map(row).join('')}</ul>`
+      ? run(phase.items)
       : phase.groups
-          .map((group) => {
-            const items = phase.items.filter((i) => i.group === group);
-            return `<div class="group"><h4>${escape(content.groups[group] ?? group)}</h4><ul class="items">${items
-              .map(row)
-              .join('')}</ul></div>`;
-          })
+          .map((group) =>
+            run(
+              phase.items.filter((i) => i.group === group),
+              content.groups[group] ?? group
+            )
+          )
           .join('') +
-        (phase.items.some((i) => i.group === null)
-          ? `<ul class="items">${phase.items
-              .filter((i) => i.group === null)
-              .map(row)
-              .join('')}</ul>`
-          : '');
+        (phase.items.some((i) => i.group === null) ? run(phase.items.filter((i) => i.group === null)) : '');
   const verdict = p.complete ? 'done' : p.closed > 0 ? 'in progress' : 'planned';
 
   return `<details class="phase ${status}" id="phase-${phase.number}"${open ? ' open' : ''}>
@@ -531,6 +557,17 @@ section { padding: 4.5rem 0 1rem; }
 .phase .empty { display: none; font-size: 0.78rem; padding: 0.6rem 0; }
 .phase.filtered-empty .empty { display: block; }
 
+/* The rolled-up done rows of a phase still being worked. Quiet by design —
+   it is a way back to the record, not a second heading. */
+.done-roll > summary { list-style: none; cursor: pointer; display: flex; align-items: baseline; gap: 0.7rem; padding: 0.45rem 0; font-size: 0.76rem; letter-spacing: 0.06em; color: var(--neon-teal); opacity: 0.72; }
+.done-roll > summary::-webkit-details-marker { display: none; }
+.done-roll > summary .mark { width: 9px; height: 9px; border-radius: 50%; border: 1px solid currentColor; background: var(--neon-teal); flex: none; align-self: start; margin-top: 0.34em; }
+.done-roll > summary::after { content: '▾'; font-size: 0.7em; }
+.done-roll[open] > summary::after { content: '▴'; }
+.done-roll > summary:hover, .done-roll > summary:focus-visible { opacity: 1; }
+.done-roll[open] > summary { opacity: 0.9; }
+.group.done > .done-roll > summary { margin-top: 0.9rem; }
+
 /* gates */
 .gate { padding-left: 3.2rem; }
 .gate-n { position: absolute; left: 1.1rem; top: 1rem; font-family: var(--display); font-weight: 700; font-size: 1.6rem; color: var(--neon-magenta); text-shadow: var(--magenta-halo); line-height: 1; }
@@ -686,7 +723,6 @@ ${roster}
 ${playable}
       </div>
       <h3 class="subhead">Known rough edges</h3>
-      <p class="lede">The honest part. These are the things a player would notice first, and each one is tracked in the open.</p>
       <div class="grid">
 ${roughEdges}
       </div>
@@ -696,7 +732,7 @@ ${roughEdges}
   <section id="next">
     <div class="wrap">
       <div class="section-head"><h2>What is next</h2><span class="kicker">progress read live from the project tracker</span></div>
-      <p class="lede">Every line below is a piece of work the team has committed to, and its state comes straight from the tracker when this page is built. Nothing here is a wish list. The dates are the tracker's too: each phase runs from the day its first issue was filed to the day its last one closed.</p>
+      <p class="lede">Not a wish list: every line is tracked, and a phase is dated from the day its first issue was filed to the day its last one closed.</p>
 ${backlog}
       <div class="controls" role="group" aria-label="Filter items">
         <button class="chip" type="button" data-filter="all" aria-pressed="true">All</button>
@@ -785,6 +821,7 @@ ${sprints}
   const chips = document.querySelectorAll('.chip[data-filter]');
   const items = [...document.querySelectorAll('.item')];
   const phases = [...document.querySelectorAll('.phase')];
+  const rolls = [...document.querySelectorAll('.done-roll')];
   phases.forEach((p) => { const n = document.createElement('p'); n.className = 'empty'; n.textContent = 'Nothing in this phase matches.'; p.querySelector('.phase-body').appendChild(n); });
   const apply = () => {
     const q = query.trim().toLowerCase();
@@ -792,6 +829,14 @@ ${sprints}
       const okState = filter === 'all' || it.dataset.state === filter;
       const okText = q === '' || it.textContent.toLowerCase().includes(q);
       it.hidden = !(okState && okText);
+    }
+    // A roll of done rows is the answer to "Done" and to a search, so it
+    // opens for both and goes away entirely when nothing in it can match.
+    for (const r of rolls) {
+      const visible = r.querySelectorAll('.item:not([hidden])').length;
+      r.hidden = visible === 0;
+      if (filter === 'closed' || q !== '') r.open = visible > 0;
+      if (filter === 'open') r.open = false;
     }
     for (const p of phases) {
       const visible = p.querySelectorAll('.item:not([hidden])').length;
@@ -810,6 +855,7 @@ ${sprints}
   toggle.addEventListener('click', () => {
     const expand = toggle.dataset.toggle === 'expand';
     phases.forEach((p) => { p.open = expand; });
+    rolls.forEach((r) => { r.open = expand; });
     toggle.dataset.toggle = expand ? 'collapse' : 'expand';
     toggle.textContent = expand ? 'Collapse all' : 'Expand all';
   });
