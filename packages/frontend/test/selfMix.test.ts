@@ -14,6 +14,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { LID, PERSISTENCE, SIM, SelfEventKind, type SelfEvent } from '@echoes/shared';
 import {
+  BED_TRIM,
   SELF_BANDS,
   SILENT_MIX,
   SOUR_MIX,
@@ -99,8 +100,42 @@ describe('self-noise bands', () => {
     assert.ok(silent.selfGain < loud.selfGain, 'the self bed drops');
     assert.ok(silent.worldGain > loud.worldGain, 'the world opens');
     assert.ok(silent.worldGain > 1, 'the world opens past its resting level');
-    assert.equal(silent.selfGain, SILENT_MIX.SELF_GAIN);
+    assert.equal(silent.selfGain, SILENT_MIX.SELF_GAIN * BED_TRIM);
     assert.equal(silent.worldGain, SILENT_MIX.WORLD_GAIN);
+  });
+
+  it('keeps running silent quieter than standing still, at every SIG', () => {
+    // The trap BED_TRIM opens and this closes (#663). SILENT_MIX.SELF_GAIN is
+    // an *absolute* level where the bands are a scale, so a trim applied to
+    // one and not the other eventually has going silent come out louder than
+    // sitting at idle — the inversion running backwards, which would be the
+    // worst bug §4 could have. The trim is applied to both; this is what says
+    // so, and it says it across the whole scale rather than at one SIG.
+    for (let sig = 0; sig <= 100; sig += 5) {
+      assert.ok(
+        selfMixFor(sig, true).selfGain < selfMixFor(sig, false).selfGain,
+        `running silent at SIG ${sig} is not quieter than running loud`
+      );
+    }
+  });
+
+  it('leaves the scale of §4 alone while moving its level', () => {
+    // The trim is one number over the whole table, so the *steps* between the
+    // bands — which are what §4 specifies — come out of it untouched. A trim
+    // that had been spent band by band would have quietly reshaped the scale
+    // while claiming only to lower it.
+    const ratio = (a: number, b: number): number => a / b;
+    for (let i = 1; i < SELF_BANDS.length; i++) {
+      const authored = ratio(SELF_BANDS[i]!.selfGain, SELF_BANDS[i - 1]!.selfGain);
+      const mixed = ratio(
+        selfMixFor(SELF_BANDS[i]!.maxSig, false).selfGain,
+        selfMixFor(SELF_BANDS[i - 1]!.maxSig, false).selfGain
+      );
+      assert.ok(
+        Math.abs(authored - mixed) < 1e-9,
+        `the step into ${SELF_BANDS[i]!.label} moved: ${authored} authored, ${mixed} mixed`
+      );
+    }
   });
 
   it('goes narrow as well as quiet when running silent', () => {

@@ -44,6 +44,50 @@ const FALLOFF_REFERENCE_M = 900;
  * Named because `scheduleThump` has to anchor to the level rather than read one
  * back — see the comment there for what reading it back cost.
  */
+/**
+ * The unclassified thump's partials — §11's speaker profile (#663).
+ *
+ * §3 gives Tier 1 and Tier 2 "a low pressure-thump, 40-90 Hz", and a bare sine
+ * down there is a sound a phone speaker cannot make. It answers 55 Hz with
+ * excursion instead of output, and the excursion returns as intermodulation
+ * over the bands that do carry information. Measured, seven tracked Tier-1
+ * contacts put 98% of their energy below 60 Hz (tools/audio-meter) — seven
+ * voices' worth of the primary information channel arriving at the reporting
+ * device as a hum and nothing else.
+ *
+ * §11 names the fix in as many words: the speaker profile "preserves the
+ * 40-160 Hz contact band by adding harmonics rather than relying on
+ * fundamentals no laptop can reproduce". So the fundamental stays exactly
+ * where §3 put it and the series carries it — 55 Hz is still *sent*, and a
+ * system that can reproduce it still gets the weight; a phone gets 110 and 165
+ * and the ear supplies the rest.
+ *
+ * **The same series for every unclassified contact**, which is the point: §3
+ * forbids these tiers from carrying class information in their timbre, and a
+ * fixed harmonic series says no more about what a contact is than a sine did.
+ */
+export const THUMP_PARTIALS = [0.35, 0.5, 0.25] as const;
+
+/** Built per context and cached; a wave is immutable and every voice wants it. */
+const THUMP_WAVE_BY_CONTEXT = new WeakMap<AudioContext, PeriodicWave>();
+
+function thumpWave(context: AudioContext): PeriodicWave | null {
+  const cached = THUMP_WAVE_BY_CONTEXT.get(context);
+  if (cached !== undefined) return cached;
+  try {
+    const real = new Float32Array(THUMP_PARTIALS.length + 1);
+    const imag = new Float32Array(THUMP_PARTIALS.length + 1);
+    for (let n = 0; n < THUMP_PARTIALS.length; n++) imag[n + 1] = THUMP_PARTIALS[n]!;
+    const wave = context.createPeriodicWave(real, imag, { disableNormalization: true });
+    THUMP_WAVE_BY_CONTEXT.set(context, wave);
+    return wave;
+  } catch {
+    // No createPeriodicWave: the voice keeps its sine, which is the old
+    // behaviour rather than silence.
+    return null;
+  }
+}
+
 const DRIVE_LEVEL = {
   /** Tier 3+: the faction's drive signature (§8). */
   CLASSIFIED: 0.5,
@@ -228,7 +272,13 @@ export class ContactVoice {
       this.noiseGain.gain.setTargetAtTime(voicing.noiseFloor * 0.4, now, 0.3);
     } else {
       // Tier 1-2: a low pressure-thump, 40-90 Hz, and nothing that identifies.
-      this.osc.type = 'sine';
+      // Voiced through its harmonic series rather than as a bare fundamental,
+      // so the band survives a speaker that cannot reproduce 55 Hz — see
+      // THUMP_PARTIALS. Assigning `type` is what puts a classified voice back
+      // on a basic waveform, so the two branches are each other's undo.
+      const wave = thumpWave(this.context);
+      if (wave === null) this.osc.type = 'sine';
+      else this.osc.setPeriodicWave(wave);
       this.osc.frequency.setTargetAtTime(isContactTier ? 55 : 72, now, 0.25);
       this.oscBase = DRIVE_LEVEL.THUMP;
       this.oscGain.gain.setTargetAtTime(this.oscBase, now, 0.25);

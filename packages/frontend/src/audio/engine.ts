@@ -167,6 +167,81 @@ export function ceilingCurve(): Float32Array<ArrayBuffer> {
   return curve;
 }
 
+/**
+ * How far the contact bus comes down for carrying many voices at once (#663).
+ *
+ * §12 budgets 24 simultaneous contact voices and says why: "beyond this the
+ * low band turns to mud and nothing is legible". What it never said is what
+ * happens to the *level* on the way there, and the answer was nothing at all —
+ * the voices simply summed. Measured at the bus (tools/audio-meter), one
+ * classified contact sits sensibly against §12's -18 LUFS target; seven reach
+ * +1.7 dBFS peak and twenty-four reach +7.9, which is a mix that exists only
+ * to be bent back by the output ceiling. A soft-clip is a hearing-safety net,
+ * not a mixing desk, and a mix that lives inside its knee has spent its
+ * dynamic range before the exposure strike gets there.
+ *
+ * So the bus holds roughly constant *power* as voices arrive rather than
+ * constant amplitude per voice: 1/sqrt(n), which is the sum law for sources
+ * that are not in phase with each other. One contact is untouched — the
+ * reference the per-voice levels were chosen against does not move — and the
+ * whole 24-voice budget costs 13.8 dB, which is very close to what the same
+ * measurement says twenty-four voices actually add.
+ *
+ * **Every voice scales together**, so nothing about which contact is louder
+ * than which changes, and §3's tier levels keep saying exactly what they said.
+ * A crowded ocean is quieter per contact, which is also true of a crowded
+ * ocean. What it is not allowed to be is louder in total than the mix has room
+ * for, because that buries the one contact the player needed under the six
+ * they did not.
+ */
+export function crowdGain(voices: number): number {
+  return voices <= 1 ? 1 : 1 / Math.sqrt(voices);
+}
+
+/**
+ * The self bus's low cut, Hz — docs/audio-direction.md §4 and §11 (#663).
+ *
+ * Everything below roughly 60 Hz is inaudible on a phone speaker and is not
+ * free: the driver answers it with excursion, which comes back as
+ * intermodulation across the bands that carry information. Measured before
+ * this filter existed, the self bed was 93-98% sub-60 Hz in every one of §4's
+ * four SIG bands (tools/audio-meter) — so the loudest continuous layer in the
+ * mix was spending almost all of itself on the one octave the reporting device
+ * could only distort. That is heard as a hum that gets harsher rather than
+ * louder, which is exactly what #663 describes and exactly what a -1 dBTP
+ * ceiling cannot help with.
+ *
+ * On the **self** bus and nowhere else. The contact bus keeps its bottom
+ * octave because §11 pins the contact band at 40-160 Hz and a filter there
+ * would delete information the mix exists to deliver. §4 reserves the low band
+ * for a crush cue that does not exist yet, and this does not spend that
+ * reservation: "the low band the hull already occupies" is the bed's own
+ * 44-1,100 Hz, all of which passes. What is removed is below the plant's
+ * fundamental, where nothing is authored and nothing is reserved.
+ *
+ * A gentle 12 dB/octave, not a brick wall: the fundamental is still *sent*,
+ * about 6 dB down, and §4's "low harmonic" is meant to be felt on a system
+ * that can reproduce it. The bed's own partials (selfVoice.ts TONE_PARTIALS)
+ * are what make it audible on a system that cannot.
+ */
+export const SELF_LOW_CUT_HZ = 60;
+
+/**
+ * The low cut as a node — one definition, so the meter measures the bed
+ * through the same filter the player hears it through.
+ *
+ * Q at Butterworth rather than the Web Audio default of 1, which would put a
+ * 1 dB resonant lift at the corner: a filter added to take energy *out* of
+ * that region has no business adding any back.
+ */
+export function createSelfLowCut(context: AudioContext): BiquadFilterNode {
+  const filter = context.createBiquadFilter();
+  filter.type = 'highpass';
+  filter.frequency.value = SELF_LOW_CUT_HZ;
+  filter.Q.value = Math.SQRT1_2;
+  return filter;
+}
+
 /** Decibels to linear gain — the settings screen speaks dB, the graph gain. */
 export function dbToGain(db: number): number {
   return Math.pow(10, db / 20);
@@ -410,7 +485,11 @@ export class AudioEngine {
     // lost: the log is the caption (§13). Its bus gain belongs to the
     // Precedence Law, written on the tick below, exactly as contact's does.
     speech.connect(this.trimNodes.speech);
-    self.connect(this.trimNodes.self);
+    // The self bus alone is low-cut before its trim, so the bed, the Lid and
+    // every self one-shot are behind it — including the ones added after this
+    // was written, which is the same argument the output ceiling makes.
+    const selfLowCut = createSelfLowCut(context);
+    self.connect(selfLowCut).connect(this.trimNodes.self);
     ui.connect(this.trimNodes.ui);
 
     // Taps the contact bus to drive the duck. An analyser rather than a
@@ -580,7 +659,16 @@ export class AudioEngine {
       const now = this.context.currentTime;
       const speaking: BusRung | null = now < this.speechUntil ? 'speech' : null;
       const rung = louderRung(selfMixer?.activeRung ?? null, speaking);
-      buses.contact.gain.setTargetAtTime(duckFor('contact', rung), now, 0.15);
+      // Two independent claims on the contact bus, and they multiply: what the
+      // Precedence Law says should be quiet right now, and how much of the bus
+      // the voices currently on it are entitled to between them. Same shape as
+      // the world bus's pair in selfMixer, and for the same reason — a bus
+      // written by whichever rule ran last is a bus with a bug in it.
+      buses.contact.gain.setTargetAtTime(
+        duckFor('contact', rung) * crowdGain(this.voices.size),
+        now,
+        0.15
+      );
       buses.speech.gain.setTargetAtTime(duckFor('speech', rung), now, 0.15);
       buses.music.gain.setTargetAtTime(duckFor('music', rung), now, 0.25);
     }

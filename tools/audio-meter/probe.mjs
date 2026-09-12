@@ -19,6 +19,7 @@
 
 import { Biome, EchoMarkKind, Faction, ResolutionTier } from '@echoes/shared';
 import { SelfBed, SourBed } from '../../packages/frontend/src/audio/selfVoice.ts';
+import { createSelfLowCut, crowdGain } from '../../packages/frontend/src/audio/engine.ts';
 import { SELF_BANDS, selfMixFor, sourMixFor } from '../../packages/frontend/src/audio/selfNoise.ts';
 import { ContactVoice } from '../../packages/frontend/src/audio/contactVoice.ts';
 import { MarkBed } from '../../packages/frontend/src/audio/markBed.ts';
@@ -41,33 +42,48 @@ const RATE = 48000;
  */
 export const CASES = {};
 
-/** §4's four SIG bands, each as its own case — the bed the player sits under. */
-for (const band of SELF_BANDS) {
-  CASES[`self-bed:${band.label.replace(/\s+/g, '-')}`] = (context, destination) => {
-    const bed = new SelfBed(context, destination);
-    const mix = selfMixFor(band.maxSig, false);
-    return (now) => bed.update(mix, now);
+/**
+ * Everything on the self bus is measured **through the bus's low cut**, which
+ * is the one filter these classes do not build themselves (engine.ts
+ * `createSelfLowCut`). Measuring the bed at its own output would report a
+ * bottom octave the player never receives, which is how #663 went a whole
+ * round of fixes without the layer being named.
+ */
+function onSelfBus(build) {
+  return (context, destination) => {
+    const lowCut = createSelfLowCut(context);
+    lowCut.connect(destination);
+    return build(context, lowCut);
   };
 }
 
+/** §4's four SIG bands, each as its own case — the bed the player sits under. */
+for (const band of SELF_BANDS) {
+  CASES[`self-bed:${band.label.replace(/\s+/g, '-')}`] = onSelfBus((context, destination) => {
+    const bed = new SelfBed(context, destination);
+    const mix = selfMixFor(band.maxSig, false);
+    return (now) => bed.update(mix, now);
+  });
+}
+
 /** Silent Running, for the other end of the scale §4 promises. */
-CASES['self-bed:silent-running'] = (context, destination) => {
+CASES['self-bed:silent-running'] = onSelfBus((context, destination) => {
   const bed = new SelfBed(context, destination);
   const mix = selfMixFor(80, true);
   return (now) => bed.update(mix, now);
-};
+});
 
 /** The Lid, both of its states. */
-CASES['sour-bed:grace'] = (context, destination) => {
+CASES['sour-bed:grace'] = onSelfBus((context, destination) => {
   const bed = new SourBed(context, destination);
   const mix = sourMixFor(15);
   return (now) => bed.update(mix, now);
-};
-CASES['sour-bed:bleeding'] = (context, destination) => {
+});
+CASES['sour-bed:bleeding'] = onSelfBus((context, destination) => {
   const bed = new SourBed(context, destination);
   const mix = sourMixFor(40);
   return (now) => bed.update(mix, now);
-};
+});
 
 /**
  * The contact bus at one, seven and twenty-four voices.
@@ -85,6 +101,13 @@ CASES['sour-bed:bleeding'] = (context, destination) => {
  */
 function contactCase(count, tier, factions) {
   return (context, destination) => {
+    // The bus's own crowd gain stands between the voices and the output, for
+    // the same reason the self cases are measured through the low cut: what a
+    // layer costs the mix is what reaches the mix, not what leaves the voice.
+    const bus = context.createGain();
+    bus.gain.value = crowdGain(count);
+    bus.connect(destination);
+    destination = bus;
     const live = [];
     let built = 0;
     return (now) => {

@@ -20,7 +20,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { Biome, Faction, FaunaSpecies, OrdnanceKind, ResolutionTier } from '@echoes/shared';
-import { ContactVoice, type VoiceInputs } from '../src/audio/contactVoice.ts';
+import { ContactVoice, THUMP_PARTIALS, type VoiceInputs } from '../src/audio/contactVoice.ts';
 import {
   ALL_TIMBRES,
   CREATURE_TIMBRE,
@@ -82,6 +82,42 @@ function drive(identity: Partial<VoiceInputs>, tier: ResolutionTier) {
     osc,
     pulses: oscGain.gain.writes.filter((w) => w.method === 'setValueAtTime').map((w) => w.at),
   };
+}
+
+/**
+ * Assert a voice is the one that identifies nothing.
+ *
+ * Not "is it a sine" any more, and the difference matters. §11's speaker
+ * profile put the unclassified thump on a harmonic series so a phone speaker
+ * can reproduce a 55 Hz fundamental it cannot radiate (#663), so the voice
+ * with no identity is now a custom wave rather than a basic one — and a test
+ * that kept asking for `sine` would fail the fix rather than the bug.
+ *
+ * What §3 actually promises is that these tiers carry no class information,
+ * which is a statement about *sameness*: every unclassified contact gets the
+ * same series, whatever the server knows about it. So that is what is checked
+ * — the exact coefficients, against the one table they come from.
+ */
+function assertUnidentifying(osc: StubOscillatorNode, hz: number, message: string): void {
+  assert.equal(osc.type, 'custom', `${message} — not on the unidentifying wave`);
+  const wave = osc.periodicWave;
+  assert.ok(wave !== null, `${message} — no wave was set`);
+  // Compared with a tolerance, not exactly: a PeriodicWave holds Float32
+  // coefficients, so 0.35 comes back as 0.3499999940395355 and an exact
+  // comparison would fail on the storage rather than on the series.
+  const expected = [0, ...THUMP_PARTIALS];
+  assert.equal(wave.imag.length, expected.length, `${message} — a series of the wrong length`);
+  for (let n = 0; n < expected.length; n++) {
+    assert.ok(
+      Math.abs(wave.imag[n]! - expected[n]!) < 1e-6,
+      `${message} — partial ${n} is ${wave.imag[n]}, not ${expected[n]}`
+    );
+  }
+  assert.ok(
+    Array.from(wave.real).every((coefficient) => coefficient === 0),
+    `${message} — the series carries cosine partials the thump does not`
+  );
+  assert.equal(osc.frequency.writes.at(-1)?.value, hz, `${message} — off §3's fundamental`);
 }
 
 function pulseInstants(identity: Partial<VoiceInputs>, tier: ResolutionTier): number[] {
@@ -224,12 +260,7 @@ describe('contact timbre', () => {
     // withheld it" — the mix has to refuse it even when it is handed one.
     for (const [name, , identity] of NON_NAVY) {
       const { osc } = drive(identity, ResolutionTier.Bearing);
-      assert.equal(osc.type, 'sine', `${name} carried its waveform into Tier 2`);
-      assert.equal(
-        osc.frequency.writes.at(-1)?.value,
-        72,
-        `${name} carried its fundamental into Tier 2`
-      );
+      assertUnidentifying(osc, 72, `${name} carried its voice into Tier 2`);
     }
   });
 
@@ -242,8 +273,7 @@ describe('contact timbre', () => {
     assert.equal(identityFor({}), undefined, 'identityFor invented an identity from nothing');
 
     const { osc, pulses } = drive({}, ResolutionTier.Classification);
-    assert.equal(osc.type, 'sine');
-    assert.equal(osc.frequency.writes.at(-1)?.value, 72);
+    assertUnidentifying(osc, 72, 'a Tier-3 contact of no identity');
     assert.ok(pulses.length > 3, 'a Tier-3 contact of no identity fell silent');
     assert.ok(periodSpread(pulses) > STEP_S * 1.01, 'it became periodic');
   });

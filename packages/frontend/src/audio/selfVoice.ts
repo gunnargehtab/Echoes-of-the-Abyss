@@ -42,6 +42,61 @@ export const EXPOSURE_TAIL_S = 2;
  */
 const TONE = { REST: 0.4, PULSE: 1.7 } as const;
 
+/** SPEC — §4's "low harmonic". The plant's fundamental, Hz. */
+export const TONE_HZ = 44;
+
+/**
+ * The plant tone's partials — §11's speaker profile, applied to the bed.
+ *
+ * The bed used to be a bare 44 Hz sine, and #663 is what that sounds like on a
+ * phone. 44 Hz is below anything a phone speaker radiates: the driver answers
+ * it with excursion instead of sound, and the excursion comes back as
+ * intermodulation across the bands that *do* carry information. Measured, the
+ * bed was 97% sub-60 Hz at the drive-hum band (tools/audio-meter) — so almost
+ * the whole of the loudest continuous layer in the mix was energy the reporting
+ * device could only turn into distortion.
+ *
+ * §11 already names the answer for the contact band and it is the same answer
+ * here: "adding harmonics rather than relying on fundamentals no laptop can
+ * reproduce". The fundamental stays at 44 Hz and stays *present* — the pitch of
+ * the plant is a spec'd fact — but the level moves up the series, where a small
+ * speaker is efficient and where the self bus's low cut (engine.ts
+ * SELF_LOW_CUT_HZ) leaves it alone. The ear reconstructs 44 Hz from 88 and 132
+ * without being sent it, which is how a phone reproduces bass at all.
+ *
+ * Index n is harmonic n+1. Amplitudes, not decibels, and summing to a peak of
+ * 1.3 — the tone gain above scales them, and `disableNormalization` keeps them
+ * meaning what they say rather than whatever peak the browser would rescale to.
+ */
+export const TONE_PARTIALS = [0.3, 0.55, 0.3, 0.15] as const;
+
+/**
+ * The plant tone's waveform, as a `PeriodicWave`.
+ *
+ * Built per context and cached: a wave is immutable and every bed in a context
+ * wants the same one. Sine phase — the imaginary coefficients — because the
+ * real ones would put the partials in cosine phase and stack their peaks at
+ * t=0, which costs headroom for nothing audible.
+ */
+const TONE_WAVE_BY_CONTEXT = new WeakMap<AudioContext, PeriodicWave>();
+
+function toneWave(context: AudioContext): PeriodicWave | null {
+  const cached = TONE_WAVE_BY_CONTEXT.get(context);
+  if (cached !== undefined) return cached;
+  try {
+    const real = new Float32Array(TONE_PARTIALS.length + 1);
+    const imag = new Float32Array(TONE_PARTIALS.length + 1);
+    for (let n = 0; n < TONE_PARTIALS.length; n++) imag[n + 1] = TONE_PARTIALS[n]!;
+    const wave = context.createPeriodicWave(real, imag, { disableNormalization: true });
+    TONE_WAVE_BY_CONTEXT.set(context, wave);
+    return wave;
+  } catch {
+    // No createPeriodicWave: the oscillator keeps its sine, which is the old
+    // behaviour rather than silence. Worse on a phone, and still a plant.
+    return null;
+  }
+}
+
 /**
  * The continuous own-noise bed.
  *
@@ -72,8 +127,10 @@ export class SelfBed {
     this.noise = createNoiseSource(context);
 
     this.tone = context.createOscillator();
-    this.tone.type = 'sine';
-    this.tone.frequency.value = 44;
+    this.tone.frequency.value = TONE_HZ;
+    const wave = toneWave(context);
+    if (wave === null) this.tone.type = 'sine';
+    else this.tone.setPeriodicWave(wave);
     this.toneGain = context.createGain();
     this.toneGain.gain.value = TONE.REST;
 
