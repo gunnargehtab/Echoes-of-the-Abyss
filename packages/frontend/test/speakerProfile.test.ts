@@ -162,17 +162,45 @@ describe('the speaker profile: the graph', () => {
     assert.equal(shapers.length, 2, 'the harmonic generator and the knee are both shapers');
 
     // The harmonic path keeps only what a small speaker can radiate: a
-    // low-pass to read the band, a high-pass to drop the fundamental it was
-    // read from, and a shelf on the direct path so that band is not also sent
-    // to the driver raw.
+    // low-pass to read the band, and a high-pass to drop the fundamental it
+    // was read from.
     const filters = context.nodes.filter(
       (node): node is StubBiquadFilterNode => node instanceof StubBiquadFilterNode
     );
-    const byType = (type: string) => filters.find((node) => node.type === type);
-    assert.equal(byType('lowpass')?.frequency.value, SPEAKER_PROFILE.READ_HZ);
-    assert.equal(byType('highpass')?.frequency.value, SPEAKER_PROFILE.HARMONIC_HZ);
-    assert.equal(byType('lowshelf')?.frequency.value, SPEAKER_PROFILE.SHELF_HZ);
-    assert.ok((byType('lowshelf')?.gain.value ?? 0) < 0, 'the shelf lifts the band it should cut');
+    const byType = (type: string) => filters.filter((node) => node.type === type);
+    // Slope is asserted, not just corner. One biquad a side leaks most of an
+    // octave either way, which is how the first build came to smear the low
+    // band across the crossover instead of moving it — and the smear was the
+    // hum. A cascade that lost a section would be that bug again, silently.
+    assert.equal(byType('lowpass').length, SPEAKER_PROFILE.POLES, 'the read filter is too gentle');
+    for (const node of byType('lowpass')) {
+      assert.equal(node.frequency.value, SPEAKER_PROFILE.READ_HZ);
+    }
+
+    // Two high-passes and they are not interchangeable: one drops the
+    // fundamental out of the *reconstruction*, and one takes the low band off
+    // the *direct* path entirely. The first draft made the second a -10 dB
+    // shelf, so both paths carried the band and the hum survived the fix — a
+    // reconstruction summed with the thing it reconstructs is not a
+    // reconstruction. Asserted as a pair so neither can quietly become a duck.
+    const corners = byType('highpass').map((node) => node.frequency.value);
+    for (const hz of [SPEAKER_PROFILE.CUT_HZ, SPEAKER_PROFILE.HARMONIC_HZ]) {
+      assert.equal(
+        corners.filter((value) => value === hz).length,
+        SPEAKER_PROFILE.POLES,
+        `the crossover at ${hz} Hz is not ${SPEAKER_PROFILE.POLES} sections deep`
+      );
+    }
+    assert.equal(
+      new Set(corners).size,
+      2,
+      'the direct path is not cut, or the reconstruction still carries its fundamental'
+    );
+    assert.equal(
+      byType('lowshelf').length,
+      0,
+      'the low band is being attenuated rather than replaced'
+    );
 
     // And the switch moves level rather than edges, in both directions.
     const gains = context.nodes.filter((node): node is StubGainNode => node.kind === 'GainNode');
