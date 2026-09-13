@@ -137,7 +137,7 @@ import {
   type Bindings,
 } from '../input/bindings.ts';
 import { FACTION_NAME } from './factions.ts';
-import { holdReasonFor, movableIn } from './movementHolds.ts';
+import { heldWholly, holdReasonFor, movableIn } from './movementHolds.ts';
 import { priceTag, priceWords, shortfallLine } from './price.ts';
 import {
   drawScopeEchoMarks,
@@ -2702,26 +2702,37 @@ export class EchoRenderer {
         active: false,
         action: () => this.commandPing(),
       });
+      // The vertical half of the movement hold, on the same terms as the locks
+      // above. `Match.orderDepth` and `orderFollowFloor` both refuse a held
+      // hull, so all three of these were live buttons the server threw away —
+      // and §10.5 is stricter here than for an ability, not looser: the player
+      // "learns the rule before pressing, because a refusal delivered
+      // afterwards teaches nothing". A run north that is mostly a climb
+      // (docs/mission-sorrowgate.md §8) is exactly where that bites (#708).
+      const heldAll = this.heldSelection(units);
       buttons.push({
         label: 'DIVE',
-        enabled: units.length > 0 && this.stepDepthTarget(units, 1) !== null,
+        enabled: units.length > 0 && heldAll === null && this.stepDepthTarget(units, 1) !== null,
         active: units.some((u) => u.depthOrder !== undefined && u.depthOrder > u.depth),
         action: () => this.commandDepthStep(1),
+        refusal: heldAll ?? undefined,
       });
       buttons.push({
         label: 'RISE',
-        enabled: units.length > 0 && this.stepDepthTarget(units, -1) !== null,
+        enabled: units.length > 0 && heldAll === null && this.stepDepthTarget(units, -1) !== null,
         active: units.some((u) => u.depthOrder !== undefined && u.depthOrder < u.depth),
         action: () => this.commandDepthStep(-1),
+        refusal: heldAll ?? undefined,
       });
       buttons.push({
         // The standing order (docs/systems-depth.md §2): hug the seabed at
         // station keeping. Lit while any of the selection is following, so a
         // squad that half-disengaged at a PR edge is visible as exactly that.
         label: 'FOLLOW',
-        enabled: units.length > 0,
+        enabled: units.length > 0 && heldAll === null,
         active: units.some((u) => u.followFloor === true),
         action: () => this.commandFollowFloor(),
+        refusal: heldAll ?? undefined,
       });
       // The three standing orders (§9, #435). ENGAGE arms an attack-move the
       // way a build button arms a placement; on a touchscreen it is the only
@@ -3982,6 +3993,21 @@ export class EchoRenderer {
     const { ids: free, refused } = movableIn(this.missionHolds, ids);
     if (refused !== null) this.refuse(refused);
     return free;
+  }
+
+  /**
+   * The hold the *whole* selection is under, or null while any of it would go.
+   *
+   * What the bar and the hint bar read, because both speak for the selection
+   * rather than for a hull. The rule itself is in `movementHolds.ts` with the
+   * rest of them, for that module's own reason: it needs no GL context, so the
+   * sentence the player meets is testable without one.
+   */
+  private heldSelection(units: readonly OwnUnit[]): string | null {
+    return heldWholly(
+      this.missionHolds,
+      units.map((unit) => unit.id)
+    );
   }
 
   /**
@@ -7109,6 +7135,18 @@ export class EchoRenderer {
       if (this.isTouch || !canBuild) return `${name}${queue}`;
       return `${name}${queue}  ·  UNITS tab to produce  ·  ${this.buildKeyHint()} build`;
     }
+    // A selection the mission is holding whole gets the rule instead of the
+    // bindings. Every line below this one advertises a way to move — `RMB
+    // node/move`, `RMB move`, `D dive`, `A rise` — and naming a binding the
+    // mission refuses is the same silent lie as a dead button, worse because a
+    // hint reads as instruction. That is the `canBuild` guard above applied to
+    // the other half of §7, and §10.5's continuous state rather than the four
+    // seconds the refusal above lasts: the tender was saying `held — not
+    // released yet` on its inspector line while the bar underneath told the
+    // player to send it to a node (#708).
+    const heldAll = this.heldSelection(this.selectedUnits());
+    if (heldAll !== null) return heldAll;
+
     const transport = this.units.find((u) => this.selected.has(u.id) && u.hold !== undefined);
     if (transport !== undefined && this.selected.size === 1) {
       const state = `transport [HOLD ${transport.hold!.used}/${transport.hold!.berths}]`;

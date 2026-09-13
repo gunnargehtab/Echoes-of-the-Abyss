@@ -13,7 +13,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { MovementHoldReason, type MovementHold } from '@echoes/shared';
-import { holdReasonFor, movableIn } from '../src/game/movementHolds.ts';
+import { heldWholly, holdReasonFor, movableIn } from '../src/game/movementHolds.ts';
 
 const UNESCORTED = 'held — no ears in range';
 const UNRELEASED = 'held — not released yet';
@@ -62,5 +62,37 @@ describe('movement holds, as the shell reads them', () => {
     const { ids } = movableIn([], selection);
     ids.push(3);
     assert.deepEqual(selection, [1, 2]);
+  });
+});
+
+describe('a selection the mission holds whole says so before the press', () => {
+  // The other half of #478's rule, and the half #708 was filed on: the refusal
+  // above answers a press, and this answers the four seconds before one.
+  // docs/ui-ux.md §10.5 asks for continuous state, "because a refusal delivered
+  // afterwards teaches nothing" — so what the bar and the hint bar read is
+  // whether *nothing* in the selection can move, never whether something cannot.
+
+  it('names the hold when every hull in the selection is under one', () => {
+    assert.equal(heldWholly(HOLDS, [7]), UNESCORTED);
+    assert.equal(heldWholly(HOLDS, [9]), UNRELEASED);
+    assert.equal(heldWholly(HOLDS, [7, 9]), UNESCORTED);
+  });
+
+  it('says nothing for a mixed selection, which still has somewhere to go', () => {
+    // The flight is in this selection, so DIVE, RISE and FOLLOW are live
+    // buttons and the hint bar owes the player its bindings. Greying them here
+    // would refuse an order the server would have taken (§10.5).
+    assert.equal(heldWholly(HOLDS, [1, 7]), null);
+    assert.equal(heldWholly(HOLDS, [7, 2, 9]), null);
+  });
+
+  it('says nothing in a skirmish, or for a selection of nobody', () => {
+    assert.equal(heldWholly([], [7, 9]), null);
+    assert.equal(heldWholly(HOLDS, []), null);
+  });
+
+  it('reads the selection in its own order, as the refusal does', () => {
+    assert.equal(heldWholly(HOLDS, [9, 7]), UNRELEASED);
+    assert.equal(heldWholly(HOLDS, [7, 9]), UNESCORTED);
   });
 });
