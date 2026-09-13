@@ -369,6 +369,16 @@ export class PerspectiveView {
   private active = false;
   private frameHandle = 0;
   private lastFrameAt = 0;
+  /**
+   * Whether the page went hidden at any point since the last frame. A hidden
+   * tab fires no `requestAnimationFrame`, so the interval spanning one is the
+   * tab and not a frame; every other long interval *is* a frame, and is the
+   * stall gate 6 exists to price.
+   */
+  private hiddenSinceFrame = false;
+  private readonly onVisibility = (): void => {
+    if (document.hidden) this.hiddenSinceFrame = true;
+  };
 
   /**
    * Frame-cost telemetry for the gate-6 measurement drive, as three series
@@ -445,6 +455,7 @@ export class PerspectiveView {
     this.resize();
     this.rebuildTerrain();
     this.exposeProbe();
+    document.addEventListener('visibilitychange', this.onVisibility);
     return true;
   }
 
@@ -590,6 +601,7 @@ export class PerspectiveView {
 
   destroy(): void {
     this.setActive(false);
+    document.removeEventListener('visibilitychange', this.onVisibility);
     this.resizeObserver?.disconnect();
     this.environment.destroy();
     this.ordnanceLayer.dispose();
@@ -1506,11 +1518,15 @@ export class PerspectiveView {
     const now = performance.now();
     const frameMs = now - this.lastFrameAt;
     this.lastFrameAt = now;
-    // Ignore tab-hidden gaps; a 4-second "frame" is not a frame. The guard is
-    // on the *interval* only: the two duration series below are measured
-    // inside a call that a hidden tab never makes, so nothing there can be
-    // inflated by one and a 500 ms draw would be the finding, not the noise.
-    if (frameMs < 500) this.frameCost.add(frameMs);
+    // Ignore tab-hidden gaps; a 4-second "frame" is not a frame. The guard
+    // asks whether the page actually went hidden, never how long the gap was:
+    // it used to drop anything past 500 ms, and on the first real-GPU drive
+    // that swallowed a three-second stall in plain view and reported the
+    // station's worst frame as 17.7 ms (#286). The two duration series below
+    // are measured inside a call a hidden tab never makes, so they need none.
+    const hidden = this.hiddenSinceFrame || document.hidden;
+    this.hiddenSinceFrame = false;
+    if (!hidden) this.frameCost.add(frameMs);
 
     // Ember flicker steps on the 5 Hz sonar bucket, never smoothly — the
     // seabed's one light keeps the register (docs/art-direction.md).

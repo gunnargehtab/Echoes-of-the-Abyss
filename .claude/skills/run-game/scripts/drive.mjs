@@ -87,8 +87,23 @@ for (const [label, probe] of [
   }
 }
 
+// A real GPU wants a real window. Headless Chromium is free to rasterise
+// through SwiftShader even on a machine with a GPU, and a frame time taken
+// that way is the software rasteriser again, not the scene (gate 6, #286).
+// `--channel msedge` or `chrome` drives an installed browser, which is how a
+// Windows desktop with no Playwright browsers gets one.
+const HEADED = process.argv.includes('--headed');
+const CHANNEL = arg('channel');
+
 const { chromium } = loadPlaywright();
-const browser = await chromium.launch({ args: ['--no-sandbox'] });
+const browser = await chromium.launch({
+  // Windows throttles requestAnimationFrame in a window it computes as covered,
+  // and a headed drive's window usually opens behind whatever launched it —
+  // which would price the throttle rather than the frame.
+  args: ['--no-sandbox', ...(HEADED ? ['--disable-features=CalculateNativeWinOcclusion'] : [])],
+  headless: !HEADED,
+  ...(CHANNEL === null ? {} : { channel: CHANNEL }),
+});
 const page = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
 
 const errors = [];
