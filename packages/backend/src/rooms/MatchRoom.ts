@@ -21,12 +21,14 @@ import {
   LIFECYCLE,
   MatchPhase,
   SIM,
+  WIRE,
   driftCarryFrom,
   validDriftCarry,
   type DriftCarry,
   type EchoSnapshot,
   type MatchListingMetadata,
   encodeEcho,
+  isValidClientMessage,
   CLIENT_MSG,
   SERVER_MSG,
   type EchoWire,
@@ -162,6 +164,13 @@ export class MatchRoom extends Room<MatchState> {
    */
   private sentGroundRevision = 0;
   /**
+   * What each connected client has spent of its message budget, and when its
+   * window opened (#628). Keyed by session and cleared on leave, so a room
+   * that has run for an hour holds one entry per client in it rather than one
+   * per client it has ever seen.
+   */
+  private readonly messageBudget = new Map<string, { windowStartMs: number; count: number }>();
+  /**
    * The Drift Health this room's world opened on — docs/campaign.md §2 rule 5
    * — or null for the biome defaults.
    *
@@ -181,12 +190,66 @@ export class MatchRoom extends Room<MatchState> {
   // dropped by a room with no handler registered for it. They add nothing at
   // runtime; each is one call through to the Colyseus method it wraps.
 
-  /** Register a handler for one client message, payload type and all. */
+  /**
+   * Register a handler for one client message, payload type and all.
+   *
+   * Since #628 this is also the one place a payload is *checked*. The type
+   * says what a well-behaved client sends; the socket carries whatever it is
+   * handed, so the shape declared beside the payload in `wire.ts` is read here
+   * and the handler downstream never sees a message that failed it. Before
+   * this, thirty-nine `Number.isFinite` and `Array.isArray` lines were written
+   * by hand across thirty-two handlers and nothing checked the line had been
+   * written — which is exactly how #609's two holes arose.
+   *
+   * Two refusals, both silent, and the budget comes first. The temptation is
+   * the other way round — why charge a client for a message that was never
+   * going to be applied? — but a budget that only counts *well-formed*
+   * messages bounds nothing: the cheapest flood to write is the malformed
+   * one, and it would arrive for free. What is being bounded is what reaches
+   * the room, so what reaches the room is what is counted.
+   *
+   * Silent because every other server-side refusal in this room is: a client
+   * that is told which of its messages was rejected is being told something
+   * about the room.
+   */
   private onClientMessage<K extends ClientMessageName>(
     type: K,
     handler: (client: Client, message: ClientMessages[K]) => void
   ): void {
-    this.onMessage(type, handler);
+    this.onMessage(type, (client: Client, raw: unknown) => {
+      // A message sent with no payload is the empty payload, and the two whose
+      // fields are all optional are satisfied by it. The validator refuses
+      // `undefined` itself rather than accepting it, so that the narrowing it
+      // does is true; normalising is the caller's job and this is the caller.
+      if (!this.withinMessageBudget(client)) return;
+      const message: unknown = raw ?? {};
+      if (!isValidClientMessage(type, message)) return;
+      handler(client, message);
+    });
+  }
+
+  /**
+   * Has this client any of its message budget left?
+   *
+   * `WIRE.MAX_MESSAGES_PER_WINDOW` inside `WIRE.BUDGET_WINDOW_MS`, counted per
+   * session. A fixed window rather than a rolling one, because the thing being
+   * bounded is a script's sustained rate and the seam at a window edge lets
+   * through one extra window's worth at worst — which is cheaper to reason
+   * about, and much cheaper to keep, than a queue of timestamps per client.
+   *
+   * Wall clock rather than the simulation's tick, deliberately: this bounds
+   * what arrives off the socket, which keeps running when the room is in its
+   * lobby and has no tick to count.
+   */
+  private withinMessageBudget(client: Client): boolean {
+    const now = Date.now();
+    const spent = this.messageBudget.get(client.sessionId);
+    if (spent === undefined || now - spent.windowStartMs >= WIRE.BUDGET_WINDOW_MS) {
+      this.messageBudget.set(client.sessionId, { windowStartMs: now, count: 1 });
+      return true;
+    }
+    spent.count += 1;
+    return spent.count <= WIRE.MAX_MESSAGES_PER_WINDOW;
   }
 
   /** Send one message to one client. */
@@ -257,18 +320,18 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onClientMessage(CLIENT_MSG.move, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
-      if (!Number.isFinite(message.x) || !Number.isFinite(message.y)) return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) {
-        // Ownership is re-checked inside the sim; the client is never trusted
-        // to only send units it owns.
+        // Shape is checked in `onClientMessage` against the table in
+        // `wire.ts`; ownership is re-checked inside the sim, because the
+        // client is never trusted to only send units it owns.
         this.match.orderMove(slot, unitId, message.x, message.y, message.queued === true);
       }
     });
 
     this.onClientMessage(CLIENT_MSG.silent, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) {
         this.match.setSilentRunning(slot, unitId, Boolean(message.active));
       }
@@ -276,7 +339,7 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onClientMessage(CLIENT_MSG.engineOff, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) {
         this.match.setEngineOff(slot, unitId, Boolean(message.active));
       }
@@ -284,8 +347,7 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onClientMessage(CLIENT_MSG.depth, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
-      if (!Number.isFinite(message.depth)) return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) {
         // Range and ownership are both re-checked inside the sim; an
         // out-of-range depth is refused there rather than clamped here.
@@ -295,7 +357,7 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onClientMessage(CLIENT_MSG.followFloor, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) {
         this.match.orderFollowFloor(slot, unitId, Boolean(message.active));
       }
@@ -303,7 +365,7 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onClientMessage(CLIENT_MSG.ping, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Number.isFinite(message?.unitId)) return;
+      if (slot === undefined) return;
       this.match.activeSonar(slot, message.unitId);
     });
 
@@ -318,8 +380,7 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onClientMessage(CLIENT_MSG.attackMove, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
-      if (!Number.isFinite(message.x) || !Number.isFinite(message.y)) return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) {
         this.match.orderAttackMove(slot, unitId, message.x, message.y, message.queued === true);
       }
@@ -327,13 +388,13 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onClientMessage(CLIENT_MSG.stop, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) this.match.orderStop(slot, unitId);
     });
 
     this.onClientMessage(CLIENT_MSG.hold, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) {
         this.match.orderHold(slot, unitId, Boolean(message.active));
       }
@@ -341,8 +402,7 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onClientMessage(CLIENT_MSG.embark, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
-      if (typeof message.carrierId !== 'number') return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) {
         this.match.orderEmbark(slot, unitId, message.carrierId);
       }
@@ -350,14 +410,13 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onClientMessage(CLIENT_MSG.disembark, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) this.match.orderDisembark(slot, unitId);
     });
 
     this.onClientMessage(CLIENT_MSG.rally, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.structureIds)) return;
-      if (!Number.isFinite(message.x) || !Number.isFinite(message.y)) return;
+      if (slot === undefined) return;
       for (const structureId of message.structureIds) {
         this.match.setRally(slot, structureId, message.x, message.y);
       }
@@ -365,8 +424,7 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onClientMessage(CLIENT_MSG.attack, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
-      if (!Number.isFinite(message.contactId)) return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) {
         this.match.orderAttackContact(slot, unitId, message.contactId, message.queued === true);
       }
@@ -374,8 +432,7 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onClientMessage(CLIENT_MSG.torpedo, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
-      if (!Number.isFinite(message.contactId)) return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) {
         // The handle is re-resolved per hull inside the sim: a contact one of
         // this player's units heard is a firing solution for all of them, and
@@ -386,7 +443,7 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onClientMessage(CLIENT_MSG.noisemaker, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) {
         this.match.deployNoisemaker(slot, unitId);
       }
@@ -394,32 +451,31 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onClientMessage(CLIENT_MSG.layDecoy, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Number.isFinite(message?.unitId)) return;
+      if (slot === undefined) return;
       this.match.layDecoy(slot, message.unitId);
     });
 
     this.onClientMessage(CLIENT_MSG.seedSpore, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined) return;
-      if (!Number.isFinite(message?.unitId) || !Number.isFinite(message?.contactHandle)) return;
       this.match.seedSpore(slot, message.unitId, message.contactHandle);
     });
 
     this.onClientMessage(CLIENT_MSG.sing, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Number.isFinite(message?.unitId)) return;
+      if (slot === undefined) return;
       this.match.sing(slot, message.unitId);
     });
 
     this.onClientMessage(CLIENT_MSG.sow, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) this.match.sow(slot, unitId);
     });
 
     this.onClientMessage(CLIENT_MSG.mine, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) {
         // The per-player cap and the arming occupancy are both enforced in the
         // sim; a client spamming this gets one mine and a lot of noise.
@@ -429,8 +485,7 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onClientMessage(CLIENT_MSG.depthCharge, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
-      if (!Number.isFinite(message.depth)) return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) {
         // Depth range and ownership are both re-checked inside the sim; an
         // out-of-range depth is refused there rather than clamped here.
@@ -440,8 +495,7 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onClientMessage(CLIENT_MSG.harvest, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
-      if (!Number.isFinite(message.nodeId)) return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) {
         this.match.orderHarvest(slot, unitId, message.nodeId, message.queued === true);
       }
@@ -449,8 +503,7 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onClientMessage(CLIENT_MSG.throttle, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
-      if (!Number.isFinite(message.throttle)) return;
+      if (slot === undefined) return;
       for (const unitId of message.unitIds) {
         this.match.setThrottle(slot, unitId, message.throttle);
       }
@@ -458,22 +511,19 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onClientMessage(CLIENT_MSG.build, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Number.isFinite(message?.kind)) return;
-      if (!Number.isFinite(message.x) || !Number.isFinite(message.y)) return;
+      if (slot === undefined) return;
       this.match.build(slot, message.kind, message.x, message.y);
     });
 
     this.onClientMessage(CLIENT_MSG.produce, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Number.isFinite(message?.structureId)) return;
-      if (!Number.isFinite(message.kind)) return;
+      if (slot === undefined) return;
       this.match.produce(slot, message.structureId, message.kind);
     });
 
     this.onClientMessage(CLIENT_MSG.refit, (client, message) => {
       const slot = this.commandSlot(client);
-      if (slot === undefined || !Number.isFinite(message?.structureId)) return;
-      if (!Number.isFinite(message.kind)) return;
+      if (slot === undefined) return;
       this.match.refit(slot, message.structureId, message.kind);
     });
 
@@ -486,7 +536,7 @@ export class MatchRoom extends Room<MatchState> {
       // would send it never renders in a mission room.
       if (this.mission !== null) return;
       const player = this.state.players.get(client.sessionId);
-      if (player === undefined || !Number.isFinite(message?.faction)) return;
+      if (player === undefined) return;
       const faction = Math.trunc(message.faction);
       // Uniqueness is enforced here and nowhere else — see lobby.ts.
       if (!canChooseFaction(this.roster(), client.sessionId, faction)) return;
@@ -504,7 +554,7 @@ export class MatchRoom extends Room<MatchState> {
       // Ready means "start" in the lobby and "rematch" after a result. Same
       // question, same flag, one code path — see PlayerState.ready.
       if (this.state.phase === MatchPhase.Playing) return;
-      player.ready = message?.ready !== false;
+      player.ready = message.ready !== false;
       this.startIfEveryoneIsReady();
     });
 
@@ -512,14 +562,14 @@ export class MatchRoom extends Room<MatchState> {
       if (this.state.phase !== MatchPhase.Lobby) return;
       if (this.mission !== null) return;
       if (!this.state.players.has(client.sessionId)) return;
-      this.addAiSeat(message?.difficulty);
+      this.addAiSeat(message.difficulty);
     });
 
     this.onClientMessage(CLIENT_MSG.removeAi, (client, message) => {
       if (this.state.phase !== MatchPhase.Lobby) return;
       if (this.mission !== null) return;
       if (!this.state.players.has(client.sessionId)) return;
-      const seat = this.state.players.get(message?.sessionId ?? '');
+      const seat = this.state.players.get(message.sessionId);
       // Only an AI row: this must never become a kick button for a person.
       if (seat === undefined || !seat.isAi) return;
       this.releasePlayer(seat.sessionId);
@@ -530,9 +580,9 @@ export class MatchRoom extends Room<MatchState> {
       if (this.state.phase !== MatchPhase.Lobby) return;
       if (this.mission !== null) return;
       if (!this.state.players.has(client.sessionId)) return;
-      const seat = this.state.players.get(message?.sessionId ?? '');
+      const seat = this.state.players.get(message.sessionId);
       if (seat === undefined || !seat.isAi) return;
-      const difficulty = Math.trunc(message?.difficulty ?? AiDifficulty.Recruit);
+      const difficulty = Math.trunc(message.difficulty ?? AiDifficulty.Recruit);
       if (difficulty !== AiDifficulty.Recruit && difficulty !== AiDifficulty.Veteran) return;
       seat.difficulty = difficulty;
     });
@@ -897,6 +947,7 @@ export class MatchRoom extends Room<MatchState> {
   private releasePlayer(sessionId: string): void {
     this.slotBySession.delete(sessionId);
     this.echoSent.delete(sessionId);
+    this.messageBudget.delete(sessionId);
     this.state.players.delete(sessionId);
     void this.publishListing();
   }

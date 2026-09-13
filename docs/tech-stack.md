@@ -138,11 +138,11 @@ the seat assignment, the mission view. That is not an optimisation, it is the fi
 model — a fact that differs by who is asking cannot live in shared state without leaking.
 
 Both directions of the message channel are declared once, in
-`packages/shared/src/wire.ts`: 26 names a client may send, 11 the room may send, and the
-payload of each. Neither package writes a message name as a string literal, and each side
-reaches the wire through a thin generic wrapper that takes the name and infers the payload
-from the same map. The result is that a message renamed or reshaped anywhere is a compile
-error in both packages at once.
+`packages/shared/src/wire.ts`: 32 names a client may send — 27 in a match and five only in
+the lobby — 11 the room may send, and the payload of each. Neither package writes a message
+name as a string literal, and each side reaches the wire through a thin generic wrapper that
+takes the name and infers the payload from the same map. The result is that a message
+renamed or reshaped anywhere is a compile error in both packages at once.
 
 Before that, the names were string literals written twice, once per package, and the
 payloads were object literals on the server against hand-written interfaces on the client.
@@ -154,6 +154,36 @@ error, no log line. The player presses a key and the water stays quiet.
 The one thing types still cannot catch is a handler never registered at all. That is held
 by a test instead (`packages/frontend/test/gameClient.test.ts`), which checks the client
 registers a handler for every name in `SERVER_MSG` and sends nothing outside `CLIENT_MSG`.
+
+**The contract is name, payload and shape.** The first two are the compile-time half above,
+and they describe what a *well-behaved* client sends; the socket carries whatever it is
+handed, so a type is no defence against a payload that arrives with `NaN` where a depth
+should be. Until #628 the defence was a line written by hand inside each of the room's
+handlers — 39 of them across 32 handlers — and nothing checked the line had been written.
+They were not uniform, and #609's two holes were exactly the two whose author stopped at
+`Number.isFinite` where the others went further.
+
+So each message declares its fields beside its payload, in the same file, as `CLIENT_SHAPE`:
+what each field must be, whether the client may omit it, and — for a field carrying an array
+of ids — how many entries it may carry. `MatchRoom.onClientMessage` reads the declaration
+and refuses there, so no handler validates on its own and the question "is this field
+checked?" is answered by reading the table rather than by reading the handler. The
+declaration is typed against the payload it describes, which is what stops the table from
+becoming a rubber stamp: a field name that is not on the payload, an optional field left out,
+and a message with no entry at all are each a build error, and each names the offender.
+
+Two numbers are bounds rather than shape, and they live in
+`packages/shared/src/constants.ts` as `WIRE`. Every array field is capped at `MAX_IDS`, and
+a message that exceeds it is refused whole rather than truncated — before this, the cost of
+one message was whatever the sender chose to make it, since every `unitIds` handler loops
+its array synchronously on the thread that runs the 60 Hz step. And each client may send
+`MAX_MESSAGES_PER_WINDOW` messages per `BUDGET_WINDOW_MS`, which is the first time that
+frequency has been bounded at all. The budget is charged *before* the shape is read: one
+that counted only well-formed messages would bound nothing, because the cheapest flood to
+write is the malformed one.
+
+All of it runs where the message arrives, not on the step path, so none of it is on the
+60 Hz counted-work budget.
 
 ## Navigation
 
