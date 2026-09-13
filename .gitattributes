@@ -1,0 +1,19 @@
+# Line endings are pinned here rather than left to each machine's core.autocrlf.
+#
+# Git for Windows ships `core.autocrlf=true` in its system gitconfig, so without
+# this file a Windows checkout writes every text file with CRLF. The index stays
+# LF and CI never notices, but Prettier's endOfLine defaults to lf, and
+# `npm run format:check` — and so `npm run gates` — fails on hundreds of files
+# nobody touched. An attribute outranks autocrlf, so this settles it for every
+# clone regardless of how its git was installed.
+#
+# Renormalizing under these rules changes no committed file: the index was
+# already LF throughout when this was added.
+* text=auto eol=lf
+
+# The binary types the repository tracks. text=auto would already detect them;
+# naming them means no heuristic ever gets to guess about a GLB or a baked map.
+*.glb binary
+*.jpg binary
+*.png binary
+*.woff2 binary
