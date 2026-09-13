@@ -32,8 +32,36 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+const npm = 'npm';
+const npx = 'npx';
+
+/**
+ * On Windows `npm` and `npx` are `.cmd` batch files, and since the fix for
+ * CVE-2024-27980 (Node 18.20.2, 20.12.2, 21.7.3) spawning a batch file without a
+ * shell throws EINVAL. spawnSync does not throw it at you — it returns
+ * `status: null` with `error` set — so every gate used to FAIL in 0.0s with
+ * nothing printed. The only supported way to run a `.cmd` is through cmd.exe.
+ *
+ * Shelling out means cmd.exe parses the line, so the arguments are quoted here
+ * rather than handed to spawnSync alongside `shell: true`: Node only joins those
+ * with spaces (and warns that it does, DEP0190), and `docs:links` passes every
+ * doc path as an argument. Inside double quotes cmd.exe leaves `& | < > ^ ( )`
+ * alone, but still expands `%` and cannot contain a `"`, so an argument holding
+ * either is refused outright rather than passed on mangled. The joined line is
+ * also bounded — cmd.exe stops at 8,191 characters — which the doc list (about
+ * 1,600 today) is well inside; past it, cmd.exe says the line is too long itself.
+ */
+function spawn(command, commandArgs, options = {}) {
+  if (process.platform !== 'win32') {
+    return spawnSync(command, commandArgs, { cwd: repo, stdio: 'inherit', ...options });
+  }
+  const unsafe = commandArgs.find((a) => /["%]/.test(a));
+  if (unsafe !== undefined) {
+    return { status: null, error: new Error(`cannot pass ${unsafe} through cmd.exe`) };
+  }
+  const line = [command, ...commandArgs.map((a) => `"${a}"`)].join(' ');
+  return spawnSync(line, { cwd: repo, stdio: 'inherit', shell: true, ...options });
+}
 
 /** An npm script, named for the step that runs it. */
 const run = (script) => ({ command: npm, args: ['run', script] });
@@ -74,11 +102,13 @@ function docsLinks() {
     return { status: 1 };
   }
 
-  return spawnSync(
-    npx,
-    ['-y', 'markdown-link-check', '--config', '.markdown-link-check.json', ...files],
-    { cwd: repo, stdio: 'inherit' }
-  );
+  return spawn(npx, [
+    '-y',
+    'markdown-link-check',
+    '--config',
+    '.markdown-link-check.json',
+    ...files,
+  ]);
 }
 
 const STEPS = [
@@ -149,10 +179,13 @@ const results = [];
 for (const step of selected) {
   process.stdout.write(`\n== ${step.name} == ${step.what}\n`);
   const started = Date.now();
-  const result = step.exec
-    ? step.exec()
-    : spawnSync(step.command, step.args, { cwd: repo, stdio: 'inherit' });
+  const result = step.exec ? step.exec() : spawn(step.command, step.args);
   const seconds = (Date.now() - started) / 1000;
+
+  // A step that never started — the command missing, a batch file refused —
+  // comes back with `error` set and nothing on stdio. Say why, or the summary
+  // line is the only evidence and it reads like a gate that ran and failed.
+  if (result.error) process.stderr.write(`${step.name}: could not run: ${result.error.message}\n`);
 
   // A step killed by a signal reports status null; that is a failure, not a pass.
   const ok = result.status === 0;
@@ -165,7 +198,9 @@ const notRun = selected.length - results.length;
 
 process.stdout.write('\n== summary ==\n');
 for (const r of results) {
-  process.stdout.write(`${r.ok ? 'PASS' : 'FAIL'}  ${r.name.padEnd(16)} ${r.seconds.toFixed(1)}s\n`);
+  process.stdout.write(
+    `${r.ok ? 'PASS' : 'FAIL'}  ${r.name.padEnd(16)} ${r.seconds.toFixed(1)}s\n`
+  );
 }
 if (notRun > 0) process.stdout.write(`      ${notRun} gate(s) not run (--bail)\n`);
 
