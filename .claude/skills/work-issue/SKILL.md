@@ -331,12 +331,31 @@ to look at.
 
 ## 5. Claim it, then work it like any other change
 
-Once it is claimed, the *work* is `dev-loop`'s: build against the doc section
-that is the issue's target, run `npm run gates`, capture evidence, hand the
-round to the `loop-critic` subagent, refine, and stop on its exit criteria or
-its stall rule. This file owns selecting and claiming the issue and the shape of
-the pull request either side of that; it does not describe the refine rounds. §6
-below is the gate that loop's step 3 runs.
+Once it is claimed, **invoke `/dev-loop` and follow it** for the work itself.
+Not "bear it in mind" — invoke it. It is the skill at
+[`.claude/skills/dev-loop/SKILL.md`](../dev-loop/SKILL.md), and it owns the
+round: build against the doc section that is the issue's target, run
+`npm run gates`, capture evidence, hand the diff to the `loop-critic` subagent,
+refine on its verdict, and stop on its exit criteria or its stall rule. This
+file owns selecting and claiming the issue and the shape of the pull request
+either side of that; it does not describe the rounds. §6 below is the gate that
+loop's step 3 runs.
+
+**This paragraph used to describe `dev-loop` rather than tell you to invoke it,
+and a firing read it as context.** The 12:13 firing on 13 September took #698,
+edited nine files and opened #714 without ever spawning the critic — good work,
+self-reviewed, and indistinguishable from reviewed work. That is why the wording
+is an instruction now.
+
+The rule is the edit, not the outcome: **any run that changes a file goes
+through the rounds**, however small it looks. A run that changes none — a
+stand-down, a filing run, an investigation that ends in a comment — never
+reaches `dev-loop`, and correctly reports "no rounds" in §8.
+
+If you cannot invoke it, or the critic cannot be spawned, **do not quietly
+review your own diff instead**. Say so in §8's rounds line, as
+**critic unavailable**, with what happened when you tried. That is the case the
+line exists for.
 
 Before you touch a file, put the claim where the next firing — and a person
 opening the issue — will see it first. Two writes, in this order:
