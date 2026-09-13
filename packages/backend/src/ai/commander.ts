@@ -3757,6 +3757,44 @@ export class AiCommander implements AiPlayer {
       if (distance(hull, garden) > BLOOM_SHARE.TEND_RADIUS_M * 0.8) {
         this.walk(hull, garden, snapshot.tick, out);
       }
+      // Standing in the circle is one clause of three, and this branch used to
+      // order only that one. `bloomShare.ts` pays a hull inside the bed *and*
+      // in the Shelf band *and* not running silent, so a tender holding either
+      // of the other two wrong is a hull parked on a garden for nothing — and
+      // a hull claimed here is out of the army list, so nothing else in the
+      // commander is addressing its state any more.
+      //
+      // The silence is the one that measured, and it is a leak rather than a
+      // decision. `setSilent` keeps one flag for the whole army and only ever
+      // addresses the hulls in that observation's list; a tender is claimed
+      // *out* of that list, above. So a hull silenced on an approach and
+      // claimed as a gardener afterwards is outside every list that could
+      // lift it again, and stands in the kelp silent until it dies
+      // (docs/systems-echo.md §6 — "the share stops accruing"). Silence is
+      // the enemy's counter-play to bloom-share, not the Commune's own. Of
+      // the observations that claimed a tender on `ventfront-divide`, 33 of
+      // 141 on seed 4000 and 51 of 117 on 4001 were a hull that could not be
+      // paid for this reason; on 4002 the army never went silent and none
+      // were.
+      if (hull.silentRunning) {
+        out.push({ kind: 'silent', unitIds: [hull.id], active: false });
+      }
+      // The depth is the same rule's third clause and is a guard rather than
+      // a measured fix: a tender is walked to the bed's *centre*, which on
+      // every bed authored today is plateau, so it fired zero times across
+      // those three seeds. It is here because the rule has three clauses and
+      // the commander should not be relying on the ground happening to
+      // satisfy one of them — a bed is 400 m of radius and a plateau is
+      // whatever the map authored (#577), so the water inside a circle is not
+      // the map's promise to keep. Asked as a PR-1 ceiling rather than as a
+      // number: the Shelf *is* the band a rating of 1 covers, so this moves
+      // with DEPTH_BANDS like every other depth this commander names. Not
+      // re-issued while the climb is already ordered — same reason the walk
+      // above is not.
+      const shelf = ratedDepthCeiling(1);
+      if (depthBandFor(hull.depth) !== DepthBand.Shelf && hull.depthOrder !== shelf) {
+        out.push({ kind: 'depth', unitIds: [hull.id], depthM: shelf });
+      }
     }
     return claimed;
   }

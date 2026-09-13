@@ -331,3 +331,122 @@ describe('and the commander actually does it', () => {
     assert.ok(standing, `a reactor at ${site!.x},${site!.y} stands in no bed`);
   });
 });
+
+describe('a tender is put in the state the share is actually paid for', () => {
+  /**
+   * #706. `bloomShare.ts` pays a hull that is inside the bed *and* in the
+   * Shelf band *and* not running silent, and this branch used to order only
+   * the first of the three. A tender is claimed out of the army list, so
+   * nothing else in the commander addresses its state afterwards — a hull
+   * silenced on an approach and made a gardener next observation is outside
+   * every list that could ever lift the silence again, and stands in the kelp
+   * earning nothing until it dies.
+   *
+   * Measured on `ventfront-divide` before the fix: of the observations that
+   * claimed a tender, 33 of 141 on seed 4000 and 51 of 117 on seed 4001 were
+   * a hull in exactly that state.
+   */
+  function ordersFor(units: unknown[]): { kind: string; [k: string]: unknown }[] {
+    const brief = briefing(Faction.Pelagia);
+    const commander = new AiCommander(brief);
+    const out: { kind: string; [k: string]: unknown }[] = [];
+    for (let i = 0; i < 8; i++) {
+      const commands = commander.observe({
+        tick: i * 12,
+        nodules: 600,
+        crystal: 0,
+        biomass: 0,
+        power: { demand: 0, capacity: 6 },
+        draw: { demand: 0, capacity: 6 },
+        berths: { used: units.length, granted: 40 },
+        units: units as never,
+        structures: [],
+        contacts: [],
+        marks: [],
+        hazards: [],
+        residue: [],
+        refits: [],
+        exposure: { tier: 0, trackedCount: 0 },
+      } as never);
+      out.push(...(commands as never as { kind: string }[]));
+    }
+    return out;
+  }
+
+  /** An army already standing on the first garden, so only its state is wrong. */
+  function armyOnTheGarden(patch: Record<string, unknown>): unknown[] {
+    const brief = briefing(Faction.Pelagia);
+    const garden = brief.blooms[0]!;
+    return Array.from({ length: 12 }, (_, i) => ({
+      id: 100 + i,
+      kind: UnitKind.Reed,
+      x: garden.x,
+      y: garden.y,
+      depth: 300,
+      hp: 400,
+      maxHp: 400,
+      sig: 12,
+      throttle: undefined,
+      cargo: undefined,
+      cargoKind: undefined,
+      mode: undefined,
+      hold: undefined,
+      aboard: undefined,
+      embarking: undefined,
+      silentRunning: false,
+      engineOff: false,
+      followFloor: false,
+      pressureRating: 1,
+      mines: undefined,
+      ...patch,
+    }));
+  }
+
+  it('lifts Silent Running off the hull it sends gardening', () => {
+    const orders = ordersFor(armyOnTheGarden({ silentRunning: true }));
+    const lifted = orders.filter((c) => c.kind === 'silent' && c.active === false);
+    assert.ok(
+      lifted.length > 0,
+      'a silenced tender was left silent, so the bed it stands on pays nothing'
+    );
+  });
+
+  it('does not order silence off a tender that is already loud', () => {
+    // The guard matters: an unconditional order every observation would be a
+    // command on the wire for a state the hull is already in.
+    const orders = ordersFor(armyOnTheGarden({ silentRunning: false }));
+    const forTender = orders.filter(
+      (c) => c.kind === 'silent' && Array.isArray(c.unitIds) && c.unitIds.length === 1
+    );
+    assert.equal(forTender.length, 0, 'a loud tender was told to stop being silent');
+  });
+
+  it('brings a tender hanging under the rim up into the Shelf band', () => {
+    // The third clause. A bed is 400 m of radius and a plateau is whatever the
+    // map authored (#577), so a hull inside the circle is not necessarily in
+    // water the share is paid for.
+    //
+    // Asserted on the *tender's own* id rather than on any shallow order in
+    // the batch, which is the trap here: the army branch already walks the
+    // hulls it still holds down to the same Shelf ceiling, so a test that
+    // matched `depthM < 400` anywhere passed with the branch deleted. The
+    // tenders are exactly the hulls that order does not reach — they are
+    // claimed out of the army list — and they are the two lowest ids, because
+    // `commandGardens` draws from the army sorted by id.
+    const units = armyOnTheGarden({ depth: 900 });
+    const tender = (units[0] as { id: number }).id;
+    const orders = ordersFor(units);
+    const climbs = orders.filter(
+      (c) =>
+        c.kind === 'depth' &&
+        Array.isArray(c.unitIds) &&
+        (c.unitIds as number[]).includes(tender) &&
+        typeof c.depthM === 'number' &&
+        (c.depthM as number) < 400
+    );
+    assert.ok(
+      climbs.length > 0,
+      `the tender ${tender} was left under the rim at 900 m, where bloom-share pays nothing`
+    );
+  });
+});
