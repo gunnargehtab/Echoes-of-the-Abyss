@@ -141,7 +141,7 @@ cost is real and worth naming: #540 carries the label across every model still t
 built — the structure kinds Phase 3 has left, and all nineteen of Phase 4's unmodelled
 hulls — so none of them is the loop's to take.
 
-Three further labels are addressed to the unattended backlog Routine rather than to a
+Four further labels are addressed to the unattended backlog Routine rather than to a
 person, and each takes an issue off its list for a different reason. **`routine-log`**
 marks the run ledger the loop writes to, so it is never mistaken for a work item.
 **`needs-hardware`** marks work that is real but cannot be done in a container — a
@@ -153,6 +153,21 @@ unclaimed is precisely what being blocked looks like from outside. The loop appl
 `needs-decision` itself when it stands down, always alongside a comment saying what is
 owed; the other two are a person's to apply. Removing any of them puts the issue back in
 play on the next firing.
+
+**`standing`** is the fourth, and it marks an issue that is open *because the decision
+went that way* — a permanent target something in the tree cites by number, rather than
+work anybody intends to finish. #703 is the case that cut it. `AiUnbuilt` in
+`packages/backend/src/ai/types.ts` prices each listed gap at "naming the issue that fills
+it", and an entry naming a **closed** issue names nothing — so when #621 closed, the
+three entries were re-pointed at #703, and closing #703 in its turn would have re-created
+the same defect one citation at a time. The way off that treadmill is to let one issue
+stay open on purpose and say so, which is what this label says. It differs from
+`wontfix`, which parks an investigation the build cannot act on yet, and from
+`routine-log`, which is the loop's own ledger: a `standing` issue is a live reference with
+a live citation pointing at it, and the code that cites it is correct precisely because
+the issue never closes. Like `needs-hardware` and `wontfix`, it is a statement about the
+work rather than about a run, so it is **a person's to apply and a person's to remove** —
+and removing it means the citations need somewhere else to point first.
 
 ## Code conventions
 

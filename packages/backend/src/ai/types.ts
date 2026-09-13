@@ -211,9 +211,14 @@ export type AiCommand =
  *
  * - `hold` (`Match.orderHold`) — approximated today by `engineOff`, which
  *   `commandWatchPost` uses to park an Acolyte by cutting its drive. That is
- *   a strictly quieter posture than a hold, so the gap costs tidiness rather
- *   than strength — and converting that caller would trade acoustic advantage
- *   for a rounder count, which is the wrong trade here. #703.
+ *   much the quieter posture, and by more than it looks: `engineOffSig` is
+ *   half the hull's *Silent Running* figure rather than a fraction of idle,
+ *   which puts a parked Acolyte near SIG 2, while a hold leaves the drive
+ *   turning at its idle 10. So the gap costs tidiness rather than strength,
+ *   and converting that caller would spend five-fold the watch post's
+ *   signature on a rounder count — the wrong trade here, on the one axis this
+ *   game is about. The branch that would earn `hold` is a hull that needs its
+ *   *gun* live while stationary, and no pass wants one yet. #703.
  * - `rally` (`Match.setRally`) — a *structure's* spawn point, which is why it
  *   cannot be conflated with the per-hull walks that send a siege hull back
  *   to the fleet. #703.
@@ -223,6 +228,18 @@ export type AiCommand =
  * the maintenance this list costs: an entry naming a *closed* issue names
  * nothing that will fill it, which is the rubber stamp the paragraph above
  * warns about, arrived at by attrition rather than by anyone deciding.
+ *
+ * **#703 is the last of those moves, by decision.** The rule above wants a
+ * live issue, and that issue could only close by building all three or
+ * exempting all three — both of which #703 weighed and declined on the
+ * merits. So it would have closed by attrition in its turn and handed these
+ * same three entries to a fresh successor, and that one to the next: the
+ * convention eating its own tail one closed citation at a time. #703 is
+ * labelled `standing` instead — open because the decision went that way, and
+ * kept off the backlog Routine's list by that label rather than by sitting
+ * permanently assigned (CONTRIBUTING.md, "Labels"). The three citations above
+ * are therefore stable, and an author who wants to add a fourth entry has a
+ * live issue to name rather than a reason to file one.
  *
  * `noisemaker` was the fourth of these and is `commandCountermeasures` now.
  * It was the one that bought strength rather than tidiness, which is what

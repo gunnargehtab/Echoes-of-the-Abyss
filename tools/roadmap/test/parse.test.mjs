@@ -354,6 +354,7 @@ test('drift: open issues the roadmap has no row for, epics and ledgers excluded'
     issue(286), // a status row — placed
     issue(428, ['epic']), // an epic — never counted
     issue(580, ['routine-log']), // a ledger that is never to be implemented — never counted
+    issue(703, ['standing']), // open by design, cited by number — never counted
     issue(382), // mentioned nowhere in SAMPLE
     issue(99), // a row in Phase 1 — placed
   ];

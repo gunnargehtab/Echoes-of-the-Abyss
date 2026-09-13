@@ -144,8 +144,8 @@ not.
 
 From the open issues that are **not** claimed, **not** assigned, and **not**
 labelled `epic`, `needs-hardware`, `needs-decision`, `routine-log`,
-`fable-5.1` or `wontfix`, take the oldest. Eight exclusions, for different
-reasons:
+`standing`, `fable-5.1` or `wontfix`, take the oldest. Nine exclusions, for
+different reasons:
 
 - `epic` issues are trackers for work spanning many PRs (#212 is twenty-eight
   campaign missions). There is no single PR that closes one, so an agent that
@@ -155,6 +155,19 @@ reasons:
   open and unassigned by design — which, without this exclusion, is precisely
   what *eligible* means. A firing that set out to fix its own logbook would be
   an absurd way to spend an hour, and nothing else would stop it.
+- `standing` is an issue that is open **because a decision went that way** — a
+  permanent target something in the tree cites by number, not work anyone
+  means to finish. #703 is the one it was cut for. `AiUnbuilt` prices each
+  listed gap at naming the issue that fills it, an entry naming a *closed*
+  issue names nothing, and the three verbs were re-pointed from #621 to #703
+  when the first closed. Closing #703 too would re-create the same defect one
+  citation at a time, so the decision was to let it stay open and say so. Like
+  `routine-log` this is open and unassigned *by design*, which is exactly what
+  eligible looks like from here — and unlike `routine-log` it is not a ledger
+  but a live reference, correct only for as long as it stays open. **A
+  person's to apply and to remove**, like `needs-hardware`: removing it says
+  the citations have somewhere else to point, which is a claim about the code,
+  not about your run.
 - `needs-hardware` is work that is real but cannot be done where this loop runs.
   #286 wants wall-clock frame timings from an actual GPU and an actual Termux
   handset; a container can neither produce them nor honestly fake them. The

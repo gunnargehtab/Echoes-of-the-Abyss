@@ -16,12 +16,16 @@
  * on the page, not a piece of work the page is missing. So are ledgers — a
  * `routine-log` issue says of itself that it is never to be implemented and
  * should stay open, so counting it as a gap in the roadmap would leave the
- * page permanently one short of the truth. Pull requests never reach here —
- * the API lists them as issues, and `github.mjs` drops them.
+ * page permanently one short of the truth. So are `standing` issues, for the
+ * same arithmetic and a different reason: one is open because a decision went
+ * that way and something in the tree cites it by number (#703 is the case —
+ * see CONTRIBUTING.md's label section), so it will never acquire a row and
+ * would otherwise sit in the unplaced count forever. Pull requests never reach
+ * here — the API lists them as issues, and `github.mjs` drops them.
  */
 
 /** Labels that mean "open, but not a piece of work the roadmap is missing". */
-const NOT_WORK = ['epic', 'routine-log'];
+const NOT_WORK = ['epic', 'routine-log', 'standing'];
 
 const MENTION = /(^|[^\w"/>])#(\d+)\b/g;
 
