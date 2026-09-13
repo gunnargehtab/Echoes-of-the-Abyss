@@ -236,6 +236,57 @@ describe('the speaker profile: the graph', () => {
     }
   });
 
+  it('leaves no path from master to the device that goes around the profile', () => {
+    // #681's fault, held on the graph: a profile that exists and is not on the
+    // output path is the same defect as no profile, and it is invisible to
+    // every reading taken downstream of the path that *is* profiled. So the
+    // profile's input has to be a cut vertex between master and the ceiling —
+    // take it out of the graph and nothing leaving master may still arrive.
+    const context = installHeadlessAudio();
+    const engine = new AudioEngine();
+    try {
+      engine.start();
+      const master = engine.graph!.master as unknown as StubAudioNode;
+      const ceiling = engine.outputCeiling as unknown as StubAudioNode;
+
+      // Found by what it does rather than by a handle the engine would have
+      // to expose for the test: the profile's input is the node feeding the
+      // direct path's cut. A gain, because the cut is a cascade and its own
+      // first section also feeds a filter at that corner.
+      const inputs = context.nodes.filter(
+        (node) =>
+          node.kind === 'GainNode' &&
+          node.outputs.some(
+            (out) =>
+              out instanceof StubBiquadFilterNode &&
+              out.type === 'highpass' &&
+              out.frequency.value === SPEAKER_PROFILE.CUT_HZ
+          )
+      );
+      assert.equal(inputs.length, 1, 'the output chain does not carry exactly one profile');
+      const profile = inputs[0]!;
+      assert.ok(master.reaches(profile), 'master does not feed the profile');
+
+      const seen = new Set<StubAudioNode>([profile]);
+      const stack: StubAudioNode[] = [master];
+      let around = false;
+      while (stack.length > 0) {
+        const node = stack.pop()!;
+        if (node === ceiling) {
+          around = true;
+          break;
+        }
+        if (seen.has(node)) continue;
+        seen.add(node);
+        stack.push(...node.outputs);
+      }
+      assert.equal(around, false, 'master reaches the ceiling without passing the profile');
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
   it('remembers the setting made before the graph exists', () => {
     // The graph is lazy — browsers refuse an AudioContext without a gesture —
     // and settings load long before the first click. A profile that only took
