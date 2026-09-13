@@ -505,14 +505,62 @@ describe('a tender is put in the state the share is actually paid for', () => {
     // observation here lands on a tick the branch never runs.
     const released: { kind: string; [k: string]: unknown }[] = [];
     for (let i = 8; i < 12; i++) released.push(...observe(hulls(7), i * 12));
-    const resilenced = released.filter(
-      (c) =>
-        c.kind === 'silent' &&
-        c.active === true &&
-        Array.isArray(c.unitIds) &&
-        (c.unitIds as number[]).length === 1
-    );
+    // Addressed to the tender, for the same reason as the two above: the
+    // commander emits single-id `active: true` for a scout and for a sailing
+    // carrier, and neither is absent here by any property — only because a
+    // fixture of Reeds designates no scout and builds no carrier.
+    const resilenced = addressedTo(released, 'silent', 100).filter((c) => c.active === true);
     assert.ok(resilenced.length > 0, 'a released tender was left loud inside a silent approach');
+  });
+
+  it('does not silence a released tender back into a loud army', () => {
+    // The guard on the release, which nothing else pins: it hands the hull
+    // back to the state the army is *in*, and a commander that silenced every
+    // returning tender would be inventing an order the force never gave.
+    const brief = briefing(Faction.Pelagia);
+    const commander = new AiCommander(brief);
+    const garden = brief.blooms[0]!;
+    const hulls = (n: number): unknown[] =>
+      Array.from({ length: n }, (_, i) => ({
+        id: 100 + i,
+        kind: UnitKind.Reed,
+        x: garden.x,
+        y: garden.y,
+        depth: 300,
+        hp: 400,
+        maxHp: 400,
+        sig: 12,
+        silentRunning: false,
+        engineOff: false,
+        followFloor: false,
+        pressureRating: 1,
+      }));
+    const observe = (units: unknown[], tick: number): { kind: string; [k: string]: unknown }[] =>
+      commander.observe({
+        tick,
+        nodules: 600,
+        crystal: 0,
+        biomass: 0,
+        power: { demand: 0, capacity: 6 },
+        draw: { demand: 0, capacity: 6 },
+        berths: { used: units.length, granted: 40 },
+        units: units as never,
+        // A contact in reach keeps the army loud: `setSilent(ids, false)` on
+        // the engage branch is what holds `armySilent` false here.
+        contacts: [{ id: 1, x: garden.x + 200, y: garden.y, depth: 300, tier: 4, sig: 60 }],
+        structures: [],
+        marks: [],
+        hazards: [],
+        residue: [],
+        refits: [],
+        exposure: { tier: 0, trackedCount: 0 },
+      } as never) as never;
+
+    for (let i = 0; i < 8; i++) observe(hulls(12), i * 12);
+    const released: { kind: string; [k: string]: unknown }[] = [];
+    for (let i = 8; i < 12; i++) released.push(...observe(hulls(7), i * 12));
+    const silenced = addressedTo(released, 'silent', 100).filter((c) => c.active === true);
+    assert.equal(silenced.length, 0, 'a released tender was silenced into a loud army');
   });
 
   it('brings a tender hanging under the rim up into the Shelf band', () => {

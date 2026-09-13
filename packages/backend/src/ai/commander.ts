@@ -3779,13 +3779,23 @@ export class AiCommander implements AiPlayer {
       // addresses the hulls in that observation's list; a tender is claimed
       // *out* of that list, above. So a hull silenced on an approach and
       // claimed as a gardener afterwards is outside every list that could
-      // lift it again, and stands in the kelp silent until it dies
-      // (docs/systems-echo.md §6 — "the share stops accruing"). Silence is
-      // the enemy's counter-play to bloom-share, not the Commune's own. Of
-      // the observations that claimed a tender on `ventfront-divide`, 33 of
-      // 141 on seed 4000 and 51 of 117 on 4001 were a hull that could not be
-      // paid for this reason; on 4002 the army never went silent and none
-      // were.
+      // lift it again, and stands in the kelp silent until it dies (Silent
+      // Running is docs/systems-echo.md §6; "the share stops accruing" is
+      // docs/mission-tend.md §3). Silence is the enemy's counter-play to
+      // bloom-share, not the Commune's own.
+      //
+      // Measured on `ventfront-divide`, of the observations that claimed a
+      // tender: 33 of 141 on seed 4000 and 51 of 117 on 4001 were a hull that
+      // could not be paid for this reason. On 4002 no claimed tender was ever
+      // observed silent — the army there did go silent, 131 observations of
+      // 912, but never while holding one.
+      //
+      // One order per match is what a fix looks like here, not a weak one:
+      // silence latches, so a single lift ends the whole run of observations
+      // it was costing. Do not read a bank figure off that — a lift changes
+      // the trajectory, and after the first divergence the two runs are
+      // different matches. The state counter above is the claim the evidence
+      // supports.
       if (hull.silentRunning) {
         out.push({ kind: 'silent', unitIds: [hull.id], active: false });
       }
@@ -3823,9 +3833,18 @@ export class AiCommander implements AiPlayer {
    * pointing the other way, and it is worse — a hull broadcasting inside an
    * approach the doctrine bought with a speed penalty and no weapons.
    *
-   * So the release is symmetric with the claim. Setting `armySilent = false`
-   * at the lift instead does not work: `commandArmy` runs later in the same
-   * observation and sets it straight back.
+   * So this is the claim's counterpart, but deliberately *wider* than it. The
+   * claim is guarded on the hull (`if (hull.silentRunning)`); the release is
+   * guarded on `armySilent` and cannot read the hull at all, so it also puts
+   * back a tender this branch never lifted — one claimed while the army was
+   * loud, which then went silent around it while it was out of every list.
+   * That hull is broadcasting on `main` too, and nothing there ever puts it
+   * back, so this repairs a desync older than the lift above as well as the
+   * one the lift introduces.
+   *
+   * Setting `armySilent = false` at the lift instead does not work:
+   * `commandArmy` runs later in the same observation and sets it straight
+   * back.
    */
   private releaseTenders(tending: ReadonlySet<number>, out: AiCommand[]): void {
     for (const id of this.tending) {
