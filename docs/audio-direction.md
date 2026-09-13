@@ -400,6 +400,33 @@ above it. Deliberately *not* a compressor: Chromium's `DynamicsCompressorNode` a
 internal makeup gain of 3-7 dB depending on threshold, which would move the integrated
 target by an amount no other engine need match.
 
+The **`contact` row of §13's duck table is now reachable**, and until #707 it was not. The
+row was transcribed into `precedence.ts` correctly and applied to nothing: the engine folded
+only the self mixer's cue and a line being spoken, so no code path ever named `contact` as
+the loudest rung and a live contact ducked neither the water, nor the speaker, nor the score.
+Half of §2's chain was decorative. The contact mixer now claims the rung for exactly as long
+as a voice is on the bus — §3 binds a voice to a contact for as long as it is tracked, and
+§13's table is headed *while this sounds*, so for a looping voice the row applies
+continuously rather than as a transient.
+
+What made that worth fixing over merely recording is §6's margin, which it was silently
+breaking. Residue is required to sit "always at least 6 dB below the live contact bus", and
+both `markBed.ts`'s ceiling and `tunedBed.ts`'s build on that figure — but §4's inversion
+multiplies the world bus by 1.995 under Silent Running, and the contact duck that pays for
+that was the unreachable one. Measured against the contact bus's one-voice reference, the
+residue bed at its ceiling sat **3.4 dB under** it instead of 6, and at full mark intensity
+with four contacts on the scope it came within 1.3 dB — which is §6's own named failure,
+"if a player can mistake a mark for a contact, the mark is mixed wrong". The residue most
+likely to be mistaken for one is the player's own depot: an industrial hum is written on
+every delivery, marks carry no owner by design ([systems-echo.md](systems-echo.md) §7), and
+so running silent made a player's own economy 6 dB louder in their own ears. The duck
+restores the margin without touching §4's inversion, which is a *ratio* and survives
+multiplication: going quiet still opens the water by the full 6 dB.
+
+Whether the owner's own hum should reach their own mark bed at all is a separate question
+this does not answer — the ownerless mark is what makes the scouting economy work, and the
+margin now holds whenever a contact is live, which may be the whole of it.
+
 The **integrated half of that target is now measured** rather than assumed, which is what
 finally named the fault the ceiling could not reach. `tools/audio-meter` renders the
 production audio classes through an offline Web Audio engine and meters the samples to

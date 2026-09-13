@@ -681,17 +681,29 @@ export class AudioEngine {
       this.pendingSpeech = [];
     }
 
-    // The rest of the chain. `world` is set inside the self mixer, because it
-    // also carries §4's own-noise attenuation; the others are pure precedence
-    // and belong here. Speech is a second claim on the chain beside the self
-    // mixer's cue — a line still being read while nothing else sounds ducks
-    // the score on its own — so the rung written is the louder of the two.
+    // The rest of the chain. `world` is still set *by* the self mixer, because
+    // it also carries §4's own-noise attenuation, but it is written from here
+    // like the others so every bus on the chain moves on the same tick.
+    //
+    // Three independent claims now, not two. A line still being read while
+    // nothing else sounds ducks the score on its own; an own cue is the self
+    // mixer's; and a live contact is the contact mixer's — which until #707
+    // was claimed by nobody, so `DUCK_TABLE`'s whole `contact` row was
+    // unreachable and a contact ducked neither the water nor the score. The
+    // rung written is the loudest of the three.
+    //
     // Written every tick rather than only when a self frame arrived, because
-    // a line's start and end are events of this bus and not of that one.
+    // a line's start and end — and a contact's — are events of those buses
+    // and not of that one.
     if (buses !== null && this.context !== null) {
       const now = this.context.currentTime;
       const speaking: BusRung | null = now < this.speechUntil ? 'speech' : null;
-      const rung = louderRung(selfMixer?.activeRung ?? null, speaking);
+      const contact = this.mixer?.activeRung ?? null;
+      const rung = louderRung(louderRung(selfMixer?.activeRung ?? null, speaking), contact);
+      // The world bus takes the contact rung but never the speech one: §13
+      // puts the world's cell under a line at 1 deliberately, and `applyChain`
+      // says why folding it in would be wrong.
+      selfMixer?.applyChain(contact, now);
       // Two independent claims on the contact bus, and they multiply: what the
       // Precedence Law says should be quiet right now, and how much of the bus
       // the voices currently on it are entitled to between them. Same shape as

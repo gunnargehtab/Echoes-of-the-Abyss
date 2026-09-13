@@ -43,6 +43,8 @@ import {
 } from '../src/audio/engine.ts';
 import { MAX_CONTACT_VOICES } from '../src/audio/voiceAllocator.ts';
 import { duckFor } from '../src/audio/precedence.ts';
+import { MARK_CEILING } from '../src/audio/markBed.ts';
+import { SILENT_MIX, selfMixFor } from '../src/audio/selfNoise.ts';
 import type { ContactAudioEntry, ContactAudioFrame } from '../src/audio/contactMixer.ts';
 import type { SelfAudioFrame } from '../src/audio/selfMixer.ts';
 
@@ -592,6 +594,90 @@ describe('the audio engine: what a tick costs', () => {
 });
 
 describe('the audio engine: the Precedence Law and the trims', () => {
+  it('makes a live contact a claim on the chain, and ducks the water under it', () => {
+    // #707. §13's table gives `A contact -> world 0.3`, and `DUCK_TABLE`
+    // transcribed it correctly — but nothing ever named `contact` as the
+    // loudest rung, so the whole row was unreachable and a contact ducked
+    // nothing at all. The same shape of fault as #661's two: a level the doc
+    // states with nothing in the graph making it true.
+    //
+    // Asserted at the bus rather than at the table, because the table was
+    // never what was broken.
+    const { engine } = boot();
+    try {
+      const world = engine.graph!.world as unknown as StubGainNode;
+
+      engine.applySelf(selfFrame({ fleetSig: 10 }));
+      engine.onEchoTick();
+      const open = world.gain.writes.at(-1)!.value;
+      assert.ok(
+        Math.abs(open - selfMixFor(10, false).worldGain) < 1e-9,
+        `an empty ocean wrote ${open}, not §4's own figure alone`
+      );
+
+      engine.applyContacts(contactFrame(3));
+      engine.applySelf(selfFrame({ tick: 101, fleetSig: 10 }));
+      engine.onEchoTick();
+      const ducked = world.gain.writes.at(-1)!.value;
+      assert.ok(
+        Math.abs(ducked - open * duckFor('world', 'contact')) < 1e-9,
+        `three live contacts wrote ${ducked}, not the water at §13's contact row`
+      );
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
+  it('holds §6 residue margin under Silent Running, which is where it broke', () => {
+    // §6: a mark is "always at least 6 dB below the live contact bus", and
+    // both `markBed.ts` and `tunedBed.ts` build their ceilings on that claim.
+    // It is asserted here as arithmetic across the *whole* chain rather than
+    // at nominal bus gains, because the place it failed was the product:
+    // Silent Running multiplies the world bus by 1.995 (§4's inversion) and
+    // the contact duck that should have paid for it was unreachable.
+    //
+    // The contact bus's reference is one voice: `crowdGain` deliberately holds
+    // the bus at constant power as voices arrive (#663, asserted above), so
+    // the level §6 means by "the live contact bus" is its one-voice figure and
+    // not its gain node with a crowd on it.
+    const { engine } = boot();
+    try {
+      const world = engine.graph!.world as unknown as StubGainNode;
+
+      engine.applyContacts(contactFrame(4));
+      engine.applySelf(selfFrame({ fleetSig: 5, silentRunning: true }));
+      engine.onEchoTick();
+
+      const worldGain = world.gain.writes.at(-1)!.value;
+      assert.ok(
+        worldGain > selfMixFor(5, false).worldGain * duckFor('world', 'contact'),
+        'the Silent Running inversion was lost — the water must still open up'
+      );
+
+      const residue = worldGain * MARK_CEILING;
+      const contactBus = duckFor('contact', 'contact');
+      const marginDb = 20 * Math.log10(residue / contactBus);
+      assert.ok(
+        marginDb <= -6,
+        `residue sits ${marginDb.toFixed(2)} dB under the contact bus, not §6's 6`
+      );
+
+      // And the inversion itself is intact: going quiet still opens the water
+      // by §4's full 6 dB, because the duck multiplies both sides of it.
+      engine.applySelf(selfFrame({ tick: 101, fleetSig: 5, silentRunning: false }));
+      engine.onEchoTick();
+      const loud = world.gain.writes.at(-1)!.value;
+      assert.ok(
+        Math.abs(worldGain / loud - SILENT_MIX.WORLD_GAIN / selfMixFor(5, false).worldGain) < 1e-9,
+        "the contact duck ate part of §4's inversion instead of scaling with it"
+      );
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
   it('ducks the score from the measured contact level, and lets it back up', () => {
     const { engine, context } = boot();
     try {

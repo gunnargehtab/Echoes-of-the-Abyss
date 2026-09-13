@@ -266,14 +266,49 @@ describe('self mixer', () => {
     const { sink, worldGains } = recorder();
     const mixer = new SelfMixer(sink);
 
+    // Since #707 the write is `applyChain`, called by the engine after
+    // `update` has voiced the tick's events, so the strike and the duck land
+    // together rather than an Echo tick apart.
     mixer.update(frame({ fleetSig: 80 }), 0);
+    mixer.applyChain(null, 0);
     const loudOnly = worldGains[worldGains.length - 1]!;
 
     mixer.update(frame({ tick: 1, fleetSig: 80, events: [event(SelfEventKind.Exposed, 1, 0)] }), 1);
+    mixer.applyChain(null, 1);
     const loudAndLit = worldGains[worldGains.length - 1]!;
 
     assert.ok(loudAndLit < loudOnly, `${loudAndLit} should be under ${loudOnly}`);
     assert.ok(Math.abs(loudAndLit - loudOnly * duckFor('world', 'self-exposure')) < 1e-9);
+  });
+
+  it('takes the chain claim the engine hands it, and the louder of the two', () => {
+    // #707: a live contact is a claim on the chain that this mixer cannot see
+    // for itself, and §13's row says it ducks the world to 0.3. Handed in
+    // rather than inferred — the contact mixer owns the question of whether a
+    // voice is sounding.
+    const { sink, worldGains } = recorder();
+    const mixer = new SelfMixer(sink);
+
+    mixer.update(frame({ fleetSig: 10 }), 0);
+    mixer.applyChain(null, 0);
+    const quiet = worldGains[worldGains.length - 1]!;
+
+    mixer.applyChain('contact', 0.2);
+    const underContact = worldGains[worldGains.length - 1]!;
+    assert.ok(
+      Math.abs(underContact - quiet * duckFor('world', 'contact')) < 1e-9,
+      `${underContact} is not the world at §13's contact row`
+    );
+
+    // An own cue and a contact at once resolve to the louder rung, which is
+    // the contact: information outranks the player's own noise.
+    mixer.update(frame({ tick: 1, fleetSig: 10, events: [event(SelfEventKind.Ping, 1)] }), 1);
+    mixer.applyChain('contact', 1);
+    const both = worldGains[worldGains.length - 1]!;
+    assert.ok(
+      Math.abs(both - quiet * duckFor('world', 'contact')) < 1e-9,
+      `${both} took the own cue's 0.55 rather than the contact's 0.3`
+    );
   });
 
   it('fires each server event exactly once', () => {
