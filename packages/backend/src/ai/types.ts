@@ -212,11 +212,17 @@ export type AiCommand =
  * - `hold` (`Match.orderHold`) — approximated today by `engineOff`, which
  *   `commandWatchPost` uses to park an Acolyte by cutting its drive. That is
  *   a strictly quieter posture than a hold, so the gap costs tidiness rather
- *   than strength. #621.
+ *   than strength — and converting that caller would trade acoustic advantage
+ *   for a rounder count, which is the wrong trade here. #703.
  * - `rally` (`Match.setRally`) — a *structure's* spawn point, which is why it
  *   cannot be conflated with the per-hull walks that send a siege hull back
- *   to the fleet. #621.
- * - `followFloor` (`Match.orderFollowFloor`). #621.
+ *   to the fleet. #703.
+ * - `followFloor` (`Match.orderFollowFloor`). #703.
+ *
+ * The issue number moved from #621 to #703 when the first closed, and that is
+ * the maintenance this list costs: an entry naming a *closed* issue names
+ * nothing that will fill it, which is the rubber stamp the paragraph above
+ * warns about, arrived at by attrition rather than by anyone deciding.
  *
  * `noisemaker` was the fourth of these and is `commandCountermeasures` now.
  * It was the one that bought strength rather than tidiness, which is what
