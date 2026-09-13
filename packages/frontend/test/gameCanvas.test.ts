@@ -28,7 +28,14 @@ import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { createElement } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
-import { Faction, MatchPhase, encodeEcho, SERVER_MSG } from '@echoes/shared';
+import {
+  Faction,
+  MatchPhase,
+  ObjectiveStatus,
+  encodeEcho,
+  SERVER_MSG,
+  type MissionView,
+} from '@echoes/shared';
 import {
   clearStorage,
   createHost,
@@ -183,6 +190,46 @@ async function joinMatch(world: Mounted): Promise<void> {
   world.room.emit(SERVER_MSG.nodes, cannedNodes());
   world.room.emit(SERVER_MSG.assigned, { slot: 0, faction: Faction.Bathyarch });
   await world.settle();
+}
+
+/**
+ * The least a mission view can be and still put the objectives panel on screen.
+ *
+ * The budget is deliberately not the silence order's ceiling, because in three
+ * of the five ledger missions it is not: a shell that passed the view's budget
+ * through where the order's ceiling belongs would read as correct against a
+ * fixture where the two agreed.
+ */
+function cannedMissionView(): MissionView {
+  return {
+    missionId: 'prologue-sorrowgate',
+    tick: 100,
+    objectives: [
+      { id: 'stay-quiet', text: 'The flight stays under twenty.', status: ObjectiveStatus.Pending },
+    ],
+    markers: [],
+    locks: [],
+    held: [],
+    sigBudget: 8,
+    debtS: 0,
+  };
+}
+
+/** Every string the panel's ceiling chip renders, descending through it. */
+function ceilingChip(world: Mounted): string {
+  const found = world.tree.root.findAll(
+    (node) => typeof node.type === 'string' && node.props.className === 'objectives-ceiling'
+  );
+  assert.equal(found.length, 1, 'exactly one ceiling chip is on screen');
+  const out: string[] = [];
+  const walk = (node: unknown): void => {
+    if (typeof node === 'string' || typeof node === 'number') out.push(String(node));
+    else if (node !== null && typeof node === 'object' && 'children' in node) {
+      (node as { children: unknown[] }).children.forEach(walk);
+    }
+  };
+  found[0]!.children.forEach(walk);
+  return out.join('');
 }
 
 /** The audio device this mount will open, so teardown can be checked. */
@@ -356,6 +403,34 @@ describe('the shell: what it wires to what', () => {
       // §13: the log row and the hail are one event, so a shell that fired
       // only one of them would be splitting it.
       assert.equal(g.window.__audioProbe().speechCues, 1, 'the line was hailed');
+    } finally {
+      await world.unmount();
+    }
+  });
+
+  it('carries the silence order’s reading from the Echo tick to the panel', async () => {
+    // #623 criterion 8. The reading rides the Echo snapshot and the rest of the
+    // panel rides the mission view, so the two reach this shell on different
+    // channels and it is the shell that puts them back together. That is
+    // precisely the join a composition root gets wrong, and neither the panel's
+    // own tests (which are handed the prop) nor the server's (which never build
+    // a panel) can see it dropped.
+    const world = await mount();
+    try {
+      await joinMatch(world);
+      world.room.changeState({ phase: MatchPhase.Playing });
+      world.room.emit(SERVER_MSG.mission, cannedMissionView());
+      world.room.emit(
+        SERVER_MSG.echo,
+        encodeEcho(null, { ...cannedSnapshot(100), boundSig: { peak: 6, ceiling: 20 } }, 0)
+      );
+      await world.settle();
+
+      assert.equal(
+        ceilingChip(world),
+        'flight SIG 006 / 020',
+        'the reading off the snapshot reached the panel beside the ceiling it is held to'
+      );
     } finally {
       await world.unmount();
     }

@@ -622,6 +622,18 @@ export class Match {
       // observer resolved and has no way to ask about anybody else.
       (eid) => this.echo.tierFor(runtime.definition.playerSlot, eid)
     );
+    // The silence order's own reading, onto the snapshot it was taken from
+    // (#623 criterion 8). Here rather than on `MissionView` because the view
+    // is edge-gated on a JSON of itself and a live number would fire that edge
+    // every Echo tick; and after `runtime.tick` rather than before, because the
+    // ledger is what computes the figure — reading it first would publish the
+    // previous pass's number beside this pass's hulls.
+    //
+    // The player's own slot only. The runtime is built for one seat and the
+    // other slots' snapshots are other observers' — a reading over a set the
+    // mission never assigned them would be a number about nothing.
+    const bound = runtime.boundSig;
+    if (bound !== null) own.boundSig = bound;
     if (resolution !== null) this.missionResult = resolution;
   }
 

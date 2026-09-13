@@ -17,6 +17,7 @@ import {
   ResolutionTier,
   missionHeaderById,
   type AiDifficulty,
+  type BoundSig,
   type EchoSnapshot,
   type Faction,
   type MissionResultPayload,
@@ -163,6 +164,19 @@ export function GameCanvas({
    * only when the view actually changes — so React owns it comfortably.
    */
   const [mission, setMission] = useState<MissionView | null>(null);
+  /**
+   * The silence order's reading, off the snapshot rather than off the view
+   * (#623 criterion 8) — the one piece of the objectives panel that arrives on
+   * the Echo channel, because a live number on the view would fire the view's
+   * own change edge five times a second and re-send every objective with it.
+   *
+   * Held as a value React can compare rather than as the object off the wire,
+   * and only *set* when the pair actually moves: a new object every Echo tick
+   * would re-render the whole shell at 5 Hz for a number that changes a
+   * handful of times a match. The server sends `peak` already rounded (see
+   * `BoundSig.peak`), so this compares the figure the player reads.
+   */
+  const [boundSig, setBoundSig] = useState<BoundSig | null>(null);
   const [missionLines, setMissionLines] = useState<MissionLine[]>([]);
   /** Non-null once the mission has concluded. Never a winner; an outcome. */
   const [missionOver, setMissionOver] = useState<MissionResultPayload | null>(null);
@@ -439,6 +453,12 @@ export function GameCanvas({
           },
           onEcho: (snapshot: EchoSnapshot) => {
             anyHullSilent = snapshot.units.some((unit) => unit.silentRunning);
+            const bound = snapshot.boundSig ?? null;
+            setBoundSig((previous) =>
+              previous?.peak === bound?.peak && previous?.ceiling === bound?.ceiling
+                ? previous
+                : bound
+            );
             activeRenderer.applySnapshot(snapshot);
             perspective.applySnapshot(snapshot);
             // Audio work happens on the tick contacts arrive on, never per
@@ -692,6 +712,7 @@ export function GameCanvas({
         {live && phase !== MatchPhase.Lobby && mission !== null && (
           <MissionPanel
             view={mission}
+            {...(boundSig === null ? {} : { boundSig })}
             onFocus={focusOn}
             onCommanderAbility={() => clientRef.current?.commanderAbility()}
           />
