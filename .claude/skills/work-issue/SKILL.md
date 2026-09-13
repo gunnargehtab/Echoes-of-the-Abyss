@@ -416,9 +416,11 @@ One command, one exit code, no fail-fast, so one run tells you everything that
 is red. This used to be a hand-copied list of eight commands, which is the drift
 `tools/gates.mjs` was written to end — it was missing `check:models`, which CI
 has run since #540, so a firing that followed it was a gate short of CI and
-learned the difference from a red pull request. It also omitted `preflight`,
-which is not a CI gate at all: the workflow gets install currency for free from
-`npm ci`, and locally you do not.
+learned the difference from a red pull request. It also omitted `preflight`, which
+the workflow never names as a step but which the `build` job runs anyway, since
+root `npm run build` chains it. On a runner it cannot really fail — `npm ci` on
+a pinned Node 22 — but locally it is what catches a stale install or too old a
+Node, which is exactly the state a firing can be in.
 
 Every CI gate is in there, both doc gates included, so a dead link in
 `docs/` fails the build exactly as a failing test does. The run is slow — the
