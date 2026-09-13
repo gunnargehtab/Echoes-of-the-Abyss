@@ -45,7 +45,7 @@ The build follows dream-loop's shape and #709's component list.
 | Acceptance tests (`/spec/acceptance_tests.md`) | `tools/echo-sim/scenarios/*.json` with committed `.expected.json`, plus the three suites | No — the scenarios already are this, in a form a harness runs |
 | Harness (`run_headless.py`) | `tools/echo-sim`, `tools/balance`, `tools/audio-meter`, `hull-intake`, and the `run-game` browser drive | No — five harnesses exist; what was missing was a rule for which to reach for, now the evidence table in `dev-loop` |
 | Verifier (`verifier.py`) | `npm run gates` — every blocking CI gate, one pass, one exit code | No — and a parallel verifier would drift from CI, which is the exact failure `tools/gates.mjs` was written to end |
-| Per-cycle logs (`/logs/cycle_001.md`) | `work-issue` §8's run comment, which is durable and on the issue where people look | No — a per-cycle file per round would be a third record after the issue comment and the PR; `.dev-loop/` holds a round's scratch and is gitignored |
+| Per-cycle logs (`/logs/cycle_001.md`) | `work-issue` §8's per-firing comment on the run log (#580), plus the claim and stopping comments on the worked issue — the log reaches whoever watches the loop, the issue comments whoever watches that issue | No — a per-cycle file per round would be a third record after the issue comment and the PR; `.dev-loop/` holds a round's scratch and is gitignored |
 | Loop script (`loop.py`) | Nothing | **Yes** — `skills/dev-loop/SKILL.md` |
 | Self-Refine | Nothing general; `hull-designer`/`hull-reviewer` is this pattern for hulls only | **Yes** — `agents/loop-critic.md` |
 

@@ -335,7 +335,8 @@ Once it is claimed, the *work* is `dev-loop`'s: build against the doc section
 that is the issue's target, run `npm run gates`, capture evidence, hand the
 round to the `loop-critic` subagent, refine, and stop on its exit criteria or
 its stall rule. This file owns selecting and claiming the issue and the shape of
-the pull request either side of that; it does not describe the rounds.
+the pull request either side of that; it does not describe the refine rounds. §6
+below is the gate that loop's step 3 runs.
 
 Before you touch a file, put the claim where the next firing — and a person
 opening the issue — will see it first. Two writes, in this order:
@@ -408,21 +409,21 @@ they break the build.
 ## 6. Run every gate locally before you push
 
 ```bash
-npm run build:shared
-npm run type-check
-npm run lint
-npm run format:check
-npm test
-npm run build
-npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
-git ls-files -z ':(glob)docs/**/*.md' \
-  | xargs -0 npx -y markdown-link-check --config .markdown-link-check.json
+npm run gates
 ```
 
-All of these are blocking in CI, both doc gates included, so a dead link in
-`docs/` fails the build exactly as a failing test does. The suite is slow —
-single test files run over a minute — which is the argument for running it here
-rather than learning the same thing from a red PR a few minutes later.
+One command, one exit code, no fail-fast, so one run tells you everything that
+is red. This used to be a hand-copied list of eight commands, which is the drift
+`tools/gates.mjs` was written to end — it was missing `preflight` and
+`check:models`, so a firing that followed it was two gates short of CI and
+learned the difference from a red pull request.
+
+Every gate it runs is blocking in CI, both doc gates included, so a dead link in
+`docs/` fails the build exactly as a failing test does. The run is slow — the
+test gate alone is over two minutes, and single mission test files run over a
+minute — which is the argument for running it here rather than learning the same
+thing from a red PR a few minutes later. Use `--only=` while you iterate on one
+gate, and drop the filter before you push.
 
 ### Run the claim check again before you open the PR
 

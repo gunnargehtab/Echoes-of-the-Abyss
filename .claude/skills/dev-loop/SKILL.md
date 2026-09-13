@@ -39,8 +39,9 @@ So the target is already locked, and locating it is step one of every round:
 | The mix | `docs/audio-direction.md`, against readings from `tools/audio-meter` |
 
 If you cannot name the target, you do not have one, and that is the whole
-finding. **Stop and say so** rather than inventing one — see "When the loop
-stops instead" below. An unattended session that picks a reading of an ambiguous
+finding. **Stop and say so** rather than inventing one — an unnameable target
+is a stall on round one, and "Stall detection" below says how to stop.
+An unattended session that picks a reading of an ambiguous
 doc and ships it has written a plausible wrong answer into the design bible,
 which is the one failure this loop is built to avoid.
 
@@ -56,7 +57,7 @@ first.
 
 1. **Read the target.** The doc section, every time, not your memory of it. If
    the target and the code disagree, that is a bug in one of them and which one
-   is a design call — see the stop rule.
+   is a design call — see "Three things the loop must never do", second bullet.
 2. **Implement.** One self-contained increment, not the whole issue. `CLAUDE.md`
    asks for instalments because a session can end mid-change and take the
    container with it.
@@ -151,7 +152,9 @@ open finding is how a bounded loop becomes an unbounded one.
 
 ### Stall detection
 
-Two rounds that close no finding the critic had already raised means the
+A target you cannot name is a stall on round one: there is nothing to build
+against, and guessing one is the failure this loop exists to avoid. Otherwise,
+two rounds that close no finding the critic had already raised means the
 approach is wrong, not that it needs a third attempt. Stop refining and
 reconsider the design: re-read the target, and say plainly what about the
 current shape cannot satisfy it.

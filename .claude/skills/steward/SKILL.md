@@ -201,8 +201,9 @@ Everything else is this PR's to root-cause, and §1 is where that starts.
 
 - `.claude/skills/work-issue/SKILL.md` — the loop that opens the PR; §6 for
   the gates and the screenshot path, §7 for the stop-and-comment posture
-- `.claude/skills/dev-loop/SKILL.md` — the rounds that produced the PR; its
-  stall rule is what stops a review cycle becoming an unbounded one
+- `.claude/skills/dev-loop/SKILL.md` — the rounds that produced the PR. A
+  review ask that is really a fresh change goes back through them; §4 is still
+  what decides that it is a design call, and §6 is still this file's own bound
 - `.claude/skills/run-game/SKILL.md` — producing the screenshot a visual PR
   needs
 - `CLAUDE.md` — build order, the two clocks, where constants live, CI layout
