@@ -970,6 +970,58 @@ describe('the seating is a variable, and a rotated batch pools it (#600)', () =>
     assert.match(single, /cannot separate the doctrine from the chair/);
   });
 
+  /**
+   * A duel matrix: every ordered pair of the four, `matches` seeds each, the
+   * win always going to slot 0.
+   *
+   * The shape `--duel-matrix` produces, and the one a rotation cannot: twelve
+   * seatings over **six** rosters, so a navy's pooled win rate is against
+   * different opponents as well as from different chairs.
+   */
+  function matrix(matches: number): ReturnType<typeof summarise> {
+    const one = fourSeatMatch();
+    const results: MatchTelemetryResult[] = [];
+    for (let i = 0; i < FOUR_SEATS.length; i++) {
+      for (let j = 0; j < FOUR_SEATS.length; j++) {
+        if (i === j) continue;
+        for (let k = 0; k < matches; k++) {
+          results.push({
+            ...one,
+            seed: 4400 + k,
+            winnerSlot: 0,
+            players: [
+              { ...one.players[0]!, slot: 0, faction: FOUR_SEATS[i]!.faction },
+              { ...one.players[1]!, slot: 1, faction: FOUR_SEATS[j]!.faction },
+            ],
+          });
+        }
+      }
+    }
+    return summarise(results);
+  }
+
+  it('counts rosters apart from seatings, because a matrix varies both (#518)', () => {
+    // The two come apart exactly once. A rotation is many seatings of one
+    // roster; a matrix is many seatings of many rosters, and only the second
+    // lets a per-faction win rate claim anything about the opponents.
+    const rotation = rotated(4, 5, 2);
+    assert.equal(rotation.seatings, 4);
+    assert.equal(rotation.rosters, 1, 'a rotation re-seats one line-up');
+
+    const duels = matrix(5);
+    assert.equal(duels.seatings, 12, 'six pairings, each way round');
+    assert.equal(duels.rosters, 6, 'and six line-ups under them');
+  });
+
+  it('says a matrix is pooled over opponents, not only over chairs (#518)', () => {
+    const pooled = toMarkdown(matrix(5), 'Duel matrix', 'test');
+    assert.match(pooled, /12 seatings over 6 rosters, pooled/);
+    assert.match(pooled, /more than one opponent/);
+    // And the narrower sentence is not claimed for a rotation, which has one
+    // roster and cannot say anything about who was across the table.
+    assert.doesNotMatch(toMarkdown(rotated(4, 5, 2), 'Rotated', 'test'), /rosters, pooled/);
+  });
+
   it('prints the chair beside the doctrine, and only when they can differ', () => {
     assert.match(toMarkdown(rotated(4, 5, 2), 'Rotated', 'test'), /## Per chair/);
     assert.doesNotMatch(

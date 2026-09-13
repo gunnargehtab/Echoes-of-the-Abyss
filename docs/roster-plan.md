@@ -834,9 +834,41 @@ That is a claim about prices against a map's authored resources, which is what t
 `CLAUDE.md` covers, and it is not this issue's to settle. What is left here is #520's case
 for two navies — a price in an account the navy does not earn — and, for the other two, a
 question for whoever lifts the freeze: whether a 600 nodule yard and a 700 nodule hull are
-reachable in the same match at all. The honest gate for waves 4 and 5 meanwhile is the one
-the issue's own fourth option named — a longer scenario, judged on whether the bank ever
-holds the price, which the report can now say.
+reachable in the same match at all.
+
+### The gate, and what a duel actually says
+
+Issue #518's fourth option asked for a long-form duel *"and make **that** the gate for waves 4 and
+5, rather than pretending the standard duel can see them"*. Its premise was that duels are
+too short. Measured, that premise is half right and the half that is wrong matters.
+
+`--duel-matrix` is that gate, and `baselines/duel-matrix.md` is the committed run: every
+ordered pair of the four navies, ten seeds each, 120 matches pooled — twelve seatings over
+six rosters, so a per-faction row is across three opponents and both chairs. The six pairings
+had been quoted in this issue from the day it was filed and had never been one reproducible
+command; they are now.
+
+What it says, against the issue's own table of six "none"s:
+
+| | Consortium | Commune | Directorate | Knights |
+| --- | --- | --- | --- | --- |
+| Slipway commissioned, per match | 0.4 | 0.1 | 0.2 | 0.2 |
+| Matches with the yard standing, of 60 | 23 | 3 | 13 | 11 |
+| Peak nodules with the yard up, median | 330 | 60 | 250 | 261 |
+| Peak nodules with the yard up, best | 700 | 65 | 770 | 775 |
+| Slipway hulls built a match | Broadside 0.1 | none | none | Reciter 0.3 |
+
+**A duel does reach the rung**, for every navy, in 50 of 240 navy-matches. What it cannot do
+is pay for what the yard builds: two of the thirteen Slipway hulls ever come off the slip,
+and the median bank with a yard standing is 60 to 330 against hulls priced 260 to 700. The
+Consortium's best is exactly 700 — the Bulwark's price, reached once in sixty matches, and
+it built none.
+
+So the duel is not blind, and a longer one would not help either: the constraint is the same
+arithmetic as above, and it is the same in the four-faction baseline where matches run twice
+as long. **Judge a rung hull on whether the bank ever held its price**, which both committed
+baselines now print, rather than on a loss row that cannot tell an unbuilt hull from a
+surviving one.
 
 ## 5. What each wave touches
 
