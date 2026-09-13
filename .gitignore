@@ -43,3 +43,10 @@ coverage/
 # one of these and it cannot be committed by accident.
 *.tmp.ts
 zprobe*.test.ts
+
+# Scratch for one dev-loop round — captured screenshots, intermediate harness
+# output, the verdict being acted on. Nothing in here is an artifact: a
+# screenshot that belongs to the change goes through the graphics gates into
+# docs/screenshots/, and a scenario worth keeping goes in
+# tools/echo-sim/scenarios/ beside its expected output.
+.dev-loop/

@@ -355,7 +355,7 @@ gotchas. Match that register; don't strip those comments when refactoring.
 
 ### Vendored skills
 
-`.claude/skills/` holds five skills written for this repository and eleven copied from
+`.claude/skills/` holds six skills written for this repository and eleven copied from
 public marketplaces — PixiJS v8, three.js, WCAG 2.2 accessibility, and the Colyseus version
 guard above. They are copied rather than installed as plugins because a plugin is
 all-or-nothing and every installed skill's description is loaded into every session, so the
@@ -446,6 +446,24 @@ keyboard to ask which of the two logins took the issue; in an interactive sessio
 and an assignee carrying no loop claim comment already reads as a person's — which is how
 §3 tells a live claim from a stale one. Unassign if the work stops without a pull request:
 an issue left assigned reads as in progress to the next firing and to every person.
+
+## The agentic loop
+
+`work-issue` picks an issue and `steward` drives its pull request to green. Between
+them sits `dev-loop`: one change run as a closed loop — build against the doc section
+that is its target, validate with `npm run gates`, capture evidence, hand it to the
+`loop-critic` subagent fresh, refine on the verdict, and stop on a written criterion
+rather than on a feeling.
+
+The critic is a separate agent with no `Edit` and no `Write`, for the reason #540 already
+settled for hulls: **a generator that also grades itself is not a gate.** Two rounds in
+which the same finding survives is a stall, and a stall stops the loop and asks.
+
+Two rules bind it harder than they bind a person, because a refine loop is the thing most
+likely to break them by accident: it never tunes for balance (the freeze above is exactly
+what a loop maximising a number would launder), and it never resolves a docs/code
+disagreement by guessing. `.claude/AGENTIC-LOOP.md` records how this maps onto #709's
+proposal, what was deliberately not built, and what is still owed.
 
 Related: `README.md` · `CONTRIBUTING.md` · `SETUP.md` · `SETUP-ANDROID.md` (the whole game — server included —
 runs on-device in Termux) · `docs/README.md` · `docs/DEVELOPER_QUICKSTART.md` ·
