@@ -621,7 +621,14 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
         (p) => p.structuresBuiltByKind
       ),
       ordnanceWant: rows.reduce<OrdnanceWantTally>((total, r) => {
-        const t = r.player.ordnanceWant;
+        // `?? empty` is load-bearing rather than defensive. `batch.ts` casts a
+        // worker's JSON straight to `MatchTelemetryResult`, which is where the
+        // type checker stops protecting this field, so a result written before
+        // this column existed arrives with `ordnanceWant` undefined. Reading it
+        // unguarded threw a TypeError here — *before* the render guard below
+        // could decide not to print the table, which is the whole robustness
+        // this was supposed to have.
+        const t = r.player.ordnanceWant ?? emptyOrdnanceWantTally();
         return {
           reached: total.reached + t.reached,
           notEscorted: total.notEscorted + t.notEscorted,
@@ -1138,10 +1145,10 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
   // question for this table to answer.
   //
   // Printed only when somebody was actually instrumented. A batch of human
-  // seats — or a stored result from before this column existed, replayed
-  // through `summarise` — has every counter at zero, and a table of dashes
-  // would read as "no navy ever wanted ordnance" rather than as "nothing here
-  // measured it".
+  // seats — or a stored result from before this column existed, which the
+  // reducer above reads as an empty tally — has every counter at zero, and a
+  // table of dashes would read as "no navy ever wanted ordnance" rather than as
+  // "nothing here measured it".
   if (summary.factions.some((f) => f.ordnanceWant.reached > 0)) {
     lines.push('## The ordnance want — where it was stopped');
     lines.push('');
