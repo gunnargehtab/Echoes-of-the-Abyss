@@ -108,10 +108,20 @@ anything it has not resolved.
   source of truth this repository keeps refusing to build. What is still owed on it is
   *coverage* — the list states the invariants that were written down as invariants by
   the tests holding them, and says plainly that it is not complete.
-- **A scheduled firing of the whole loop.** `work-issue` §5 now routes into
-  `dev-loop` and both it and `steward` link it, so a firing reaches the rounds
-  from inside the repository. What is left is the Routine itself, which is
-  account configuration rather than anything a branch can carry.
+- **The scheduled firing already exists, and needs nothing.** This list used to
+  say the Routine was owed as account configuration. It is not: `Work one issue
+  from the backlog` (`trig_0188TRMLkmwkoArLR7DZ3RGR`) has fired every four hours
+  on `13 */4 * * *` since 27 August, under `claude-opus-5`, in a fresh session
+  per firing. It clones `main` at the start of every run and invokes
+  `/work-issue`, whose §5 now hands the work to `dev-loop` — so a firing picks
+  up the rounds and the critic **from the clone**, with no change to the Routine
+  at all, the moment this branch merges. Until then firings run the old
+  `work-issue`, because `main` does not carry these files yet.
+
+  Its prompt is deliberately left alone. It says so itself — "the rules live in
+  that file and not in this prompt ... if the two ever disagree, the file wins" —
+  which is the whole reason the loop can be changed in a reviewed pull request
+  instead of in trigger configuration nobody can diff.
 
 ## Related
 
