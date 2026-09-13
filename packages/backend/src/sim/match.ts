@@ -1569,6 +1569,17 @@ export class Match {
       node: this.localId(nodeEid),
       queued,
     });
+    // A harvest order is a movement order wearing an economy's clothes: it
+    // walks the hull to the field. So the same hold refuses it, and this was
+    // the one movement path that did not check — the hole that made the rule
+    // porous rather than merely late. `harvestSystem` re-asserts `MoveOrder`
+    // every tick at 60 Hz while `applyMovementHolds` clamps at 5, so a held
+    // hull given a harvest order was not walked twelve ticks and stopped, it
+    // was walked for good: measured at 659 m in twenty seconds on a *Shift
+    // Change* barge that the mission still reported as held (#708). Every
+    // held hull in that mission is a Harvester carrying the crew the whole
+    // mission is about, so the clock its bells keep was optional.
+    if (this.missionRuntime?.holdsMovement(slot, eid) === true) return;
     if (!this.owns(slot, eid) || !hasComponent(this.world, Harvester, eid)) return;
     if (!hasComponent(this.world, ResourceNode, nodeEid)) return;
 

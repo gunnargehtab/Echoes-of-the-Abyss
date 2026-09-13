@@ -2739,9 +2739,16 @@ export class EchoRenderer {
       // way to give one. HOLD is lit while the selection holds.
       const fighters = units.some((u) => u.throttle === undefined);
       buttons.push({
+        // Held too, and for the same reason as DIVE: ENGAGE arms an
+        // attack-move, `Match.orderAttackMove` refuses a held hull, and
+        // without this the player armed the mode, clicked the water, and only
+        // then heard why — the "refusal delivered afterwards" §10.5 says
+        // teaches nothing. The prologue hides this by accident, its tenders
+        // being Harvesters and so not `fighters`; *Radicals* holds a Cruiser.
         label: 'ENGAGE',
-        enabled: fighters && this.missionLock('weapons') === null,
+        enabled: fighters && heldAll === null && this.missionLock('weapons') === null,
         active: this.pendingAttackMove,
+        refusal: heldAll ?? undefined,
         action: () => {
           this.pendingBuild = null;
           this.pendingAttackMove = !this.pendingAttackMove;
@@ -3692,10 +3699,21 @@ export class EchoRenderer {
     const node = this.nearestNodeAt(clientX, clientY);
     const harvesterIds = selectedUnits.filter((u) => u.throttle !== undefined).map((u) => u.id);
     if (node !== null && harvesterIds.length > 0) {
-      this.callbacks.onHarvestOrder(harvesterIds, node.id, queued);
-      this.noteOrder(harvesterIds, 'harvest', node.x, node.y, queued);
+      // The hold filters the harvesters too. A harvest order is a movement
+      // order — it walks the hull to the field — and this branch used to hand
+      // `harvesterIds` straight to the server, so the one gesture that reaches
+      // a held hull was the one nobody filtered. Filtered once over the whole
+      // selection rather than twice, so the hint bar keeps saying the first
+      // refusal in the selection's own order instead of whichever group was
+      // asked last (#708).
+      const free = new Set(this.movable(unitIds));
+      const harvesting = harvesterIds.filter((id) => free.has(id));
+      if (harvesting.length > 0) {
+        this.callbacks.onHarvestOrder(harvesting, node.id, queued);
+        this.noteOrder(harvesting, 'harvest', node.x, node.y, queued);
+      }
       // Everything else in the selection escorts the harvesters.
-      const rest = this.movable(unitIds.filter((id) => !harvesterIds.includes(id)));
+      const rest = unitIds.filter((id) => !harvesterIds.includes(id) && free.has(id));
       if (rest.length > 0 && water !== null) {
         this.callbacks.onMoveOrder(rest, water.x, water.y, queued);
         this.noteOrder(rest, 'move', water.x, water.y, queued);
@@ -7136,14 +7154,23 @@ export class EchoRenderer {
       return `${name}${queue}  ·  UNITS tab to produce  ·  ${this.buildKeyHint()} build`;
     }
     // A selection the mission is holding whole gets the rule instead of the
-    // bindings. Every line below this one advertises a way to move — `RMB
-    // node/move`, `RMB move`, `D dive`, `A rise` — and naming a binding the
-    // mission refuses is the same silent lie as a dead button, worse because a
-    // hint reads as instruction. That is the `canBuild` guard above applied to
-    // the other half of §7, and §10.5's continuous state rather than the four
+    // bindings. Each line below leads with a way to move — `RMB node/move`,
+    // `RMB move`, `D dive`, `A rise` — and naming a binding the mission
+    // refuses is the same silent lie as a dead button, worse because a hint
+    // reads as instruction. That is the `canBuild` guard above applied to the
+    // other half of §7, and §10.5's continuous state rather than the four
     // seconds the refusal above lasts: the tender was saying `held — not
     // released yet` on its inspector line while the bar underneath told the
     // player to send it to a node (#708).
+    //
+    // One binding is genuinely lost to this and is worth naming rather than
+    // glossing: the transport line's `LAND to unload`, which `orderDisembark`
+    // does not refuse, so a held carrier can still empty its hold. The hold
+    // outranks it anyway, for the reason `infoLine2` orders these two the same
+    // way — a hull that is not taking movement orders is the more important
+    // thing about it, and the two surfaces must not disagree. No shipped
+    // mission holds a hull that has a hold, so today this costs nothing; if one
+    // ever does, this is the line to revisit.
     const heldAll = this.heldSelection(this.selectedUnits());
     if (heldAll !== null) return heldAll;
 
