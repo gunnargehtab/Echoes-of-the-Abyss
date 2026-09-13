@@ -83,6 +83,18 @@ export default async ({ page, shot }) => {
     );
   }
 
+  // Which rasteriser is actually drawing. Every invalid row in the Phase-1/2/5
+  // records was SwiftShader, and nothing in the table itself could say so —
+  // a real GPU and a software one produce the same columns. So the table
+  // carries the renderer string, and a software one is named as such.
+  const renderer = await page.evaluate(() => {
+    const gl = document.createElement('canvas').getContext('webgl2');
+    if (gl === null) return 'no webgl2 context';
+    const info = gl.getExtension('WEBGL_debug_renderer_info');
+    return String(gl.getParameter(info === null ? gl.RENDERER : info.UNMASKED_RENDERER_WEBGL));
+  });
+  const software = /swiftshader|llvmpipe|software|basic render/i.test(renderer);
+
   // 1. The base opening. The view the player gets for free, and the floor
   //    every other station is read against.
   await station(page, 'base', 'the opening view, own base centred');
@@ -153,6 +165,13 @@ export default async ({ page, shot }) => {
   const cell = (value) => String(value).padStart(9);
   console.log('');
   console.log(`gate-6 review drive — ${DWELL_MS / 1000}s per station`);
+  console.log(`renderer: ${renderer}`);
+  if (software) {
+    console.log(
+      'WARNING: a software rasteriser drew this run. The millisecond columns below measure ' +
+        'it, not the scene, and are not gate-6 numbers; only calls and tris are.'
+    );
+  }
   console.log(
     '| station | frames | avg over | fps | frame avg/worst ms | conn avg/worst | overlay avg/worst | calls | tris | ordnance |'
   );
@@ -189,5 +208,5 @@ export default async ({ page, shot }) => {
     }
   }
   console.log('');
-  console.log(JSON.stringify(rows, null, 2));
+  console.log(JSON.stringify({ renderer, software, rows }, null, 2));
 };
