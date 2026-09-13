@@ -969,6 +969,11 @@ export interface BoundSig {
    * reads 25 and is not. Rounding to nearest would show a compliant 25 over a
    * flight the court is already charging for.
    *
+   * That "every ceiling is whole" is a **premise**, and it is held rather than
+   * assumed: `silenceReadout.test.ts` asserts it over the mission registry, so
+   * a ceiling of 7.5 authored next month fails there rather than quietly
+   * putting a breach on screen over a flight nobody is charging for.
+   *
    * Integral on the wire is also why the delta fires when the *reading* moves
    * rather than every time a hull's SIG wobbles in the third decimal.
    */

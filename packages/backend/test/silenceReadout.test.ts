@@ -61,9 +61,11 @@ interface Pass {
  * Drive a mission a few Echo passes and keep the player's own snapshot and the
  * ledger's debt from each.
  *
- * Two passes is enough for everything here and matters for the suite's wall
- * clock: the mission tests already play whole missions out at 60 Hz and are
- * most of its time, and nothing asserted below needs a mission played.
+ * A handful of passes, never a mission played out: the mission tests already
+ * run whole missions at 60 Hz and are most of the suite's time, and nothing
+ * asserted below needs one. Three or four is enough because everything here is
+ * a property of a single pass — the reading beside the debt it produced —
+ * rather than of a mission's arc.
  */
 function passes(match: Match, playerSlot: number, count: number): Pass[] {
   const out: Pass[] = [];
@@ -97,6 +99,29 @@ describe('the silence order reads out the set it enforces (#623 §8)', () => {
         assert.ok(
           runsLedger(mission),
           `${mission.id} states a ceiling of ${mission.silenceCeilingSig} but lends no array`
+        );
+      }
+      if (runsLedger(mission)) {
+        // The premise the whole readout rests on, asserted rather than assumed.
+        // `BoundSig.peak` rounds *up* and claims that is safe because every
+        // ceiling is a whole number — `ceil(peak) > ceiling` and
+        // `peak > ceiling` then agree on every input. Author a ceiling of 7.5
+        // and that stops being true: a bound peak of 7.2 reads 8, which is over
+        // 7.5, while the ledger forgives it. Nothing else in the tree would
+        // notice, because the per-mission tests pin the five numbers shipping
+        // today and a sixth authored next month has no test until someone
+        // writes one — which is the gap this criterion exists to close.
+        assert.ok(
+          Number.isInteger(mission.silenceCeilingSig),
+          `${mission.id}: a ledger ceiling must be whole (see BoundSig.peak), got ${mission.silenceCeilingSig}`
+        );
+        // And the converse of the check above. 100 is the sentinel for "no
+        // ceiling"; a mission that lends an array against it keeps a ledger
+        // nothing can ever breach, and the panel would put `flight SIG 022 /
+        // 100` on screen — an order that is not one.
+        assert.ok(
+          mission.silenceCeilingSig < 100,
+          `${mission.id} lends an array against no ceiling at all`
         );
       }
       for (const { own } of passes(matchFor(mission), mission.playerSlot, 2)) {
@@ -160,15 +185,29 @@ describe('the silence order reads out the set it enforces (#623 §8)', () => {
     // nearest or down it reads a compliant 4 while the debt climbs.
     //
     // The sweep sits a point either side of every reading the order actually
-    // takes, because that is where the two roundings differ. Two things about
-    // it are scars rather than style. The ceilings are whole numbers fixed
-    // before the comparison and never derived from the rounded figure — a
-    // ceiling computed from the reading moves when the rounding does, and
-    // every rounding then passes its own test. And *every* reading is probed
-    // rather than the first: these missions open with a party still being
-    // seated and settle a pass later (First Arrival reads 16, then 4.33 for
-    // the rest), so a sweep around the opening figure brackets a number the
-    // order never holds again.
+    // takes, plus the mission's own authored ceiling. Three things about it are
+    // scars rather than style.
+    //
+    // The bracket is `reading ± 1` and the reading *is* rounded, which looks
+    // like the trap the first draft of this test fell into — a ceiling computed
+    // from the rounded figure moves when the rounding does, and every rounding
+    // passes its own test. It is not, and the reason is worth writing down:
+    // whichever of ceil, round or floor is in force, the figure shown is one of
+    // `floor(raw)` or `ceil(raw)`, so a ±1 bracket around it always contains
+    // `floor(raw)` — and `floor(raw)` is exactly the ceiling at which a
+    // fractional reading discriminates, because the ledger charges there
+    // (`raw > floor(raw)`) and only rounding up also reads as a breach. What
+    // the earlier draft got wrong was using a *single* derived ceiling, which
+    // could and did miss that point.
+    //
+    // *Every* reading is probed rather than the first: these missions open with
+    // a party still being seated and settle a pass later (First Arrival reads
+    // 16, then 4.33 for the rest), so a sweep around the opening figure
+    // brackets a number the order never holds again.
+    //
+    // And the mission's own `silenceCeilingSig` is in the set, so the number
+    // actually shipping is exercised for agreement rather than only the ones
+    // this test invented.
     let charged = 0;
     let forgiven = 0;
     let byAFraction = 0;
@@ -176,7 +215,7 @@ describe('the silence order reads out the set it enforces (#623 §8)', () => {
       if (!runsLedger(mission)) continue;
       const probes = passes(matchFor(mission), mission.playerSlot, PROBE_PASSES);
       assert.ok(probes.length > 0, `${mission.id} reads something to work from`);
-      const bracket = new Set([0, 100]);
+      const bracket = new Set([0, 100, mission.silenceCeilingSig]);
       for (const { own } of probes) {
         assert.ok(own.boundSig !== undefined, `${mission.id} reads on every pass`);
         for (const near of [own.boundSig.peak - 1, own.boundSig.peak, own.boundSig.peak + 1]) {

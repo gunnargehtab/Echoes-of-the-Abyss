@@ -586,7 +586,12 @@ something new, and a log role would re-announce the whole panel every time a cou
   for the breach, never from the SIG meter, which is a fleet instrument on §3's fixed stops
   and measures a set the order does not bind
   ([mission-sorrowgate.md](mission-sorrowgate.md) §4). A ceiling with no reading beside it
-  leaves the player nothing to check the one numeric rule of the mission against. Where no
+  leaves the player nothing to check the one numeric rule of the mission against. It is
+  written in §3's form — `flight SIG 006 / 020`, zero-padded so the digit count never
+  shifts — and deliberately **not** as an inequality: a relation is a claim, and in breach
+  the claim would be false at exactly the moment the player most needs to read it. The
+  padding is load-bearing rather than decorative, because this figure moves inside a
+  header laid out end to end. Where no
   order is in force the panel shows the mission's SIG budget instead, which
   [campaign.md](campaign.md) §10 keeps as a design note and not a rule: three of the five
   orders shipping today are held to a different figure than the budget their mission was

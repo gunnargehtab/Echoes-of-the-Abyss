@@ -43,6 +43,16 @@ const STATUS_CLASS: Record<ObjectiveStatus, string> = {
   [ObjectiveStatus.Failed]: 'failed',
 };
 
+/**
+ * A SIG figure in §3's form — three digits, zero-padded, "so the digit count
+ * never shifts".
+ *
+ * Formatting and not arithmetic, which is the line this file holds: the value
+ * is the server's and is rendered unchanged, the same way `Math.ceil` rounds
+ * the debt below without computing it.
+ */
+const sigDigits = (sig: number) => String(sig).padStart(3, '0');
+
 /** The player's own buttons, named the way the command bar names them. */
 const ABILITY_LABEL: Record<MissionAbility, string> = {
   weapons: 'weapons',
@@ -107,6 +117,17 @@ export function MissionPanel({ view, boundSig, onFocus, onCommanderAbility }: Mi
             nearest to hand — the meter — measures a set the rule does not
             bind.
 
+            §3's form, `SIG 042 / 100`, and not an inequality. A relation is a
+            claim, and at the one moment the chip matters — the breach — the
+            claim would be **false**: `flight SIG 26 ≤ 25` says something untrue
+            precisely when the player most needs to read it, which is confusion
+            rather than dread. A value against its limit is never false. The
+            zero-padding is §3's too, and it is load-bearing here rather than
+            decorative: this figure moves (the Dome's watch reads 22 on its
+            first pass and 5 thereafter) and it sits in a `space-between`
+            header, so an unpadded reading would shuffle the row under itself
+            every time a digit came or went.
+
             Where none is, this stays the mission's SIG budget: design metadata
             shown as a ceiling, never a live threshold, and nothing fails for
             crossing it (docs/campaign.md §10). The three ledger missions whose
@@ -122,7 +143,7 @@ export function MissionPanel({ view, boundSig, onFocus, onCommanderAbility }: Mi
           <span className="objectives-ceiling">flight SIG ≤ {view.sigBudget}</span>
         ) : (
           <span className="objectives-ceiling">
-            flight SIG {boundSig.peak} ≤ {boundSig.ceiling}
+            flight SIG {sigDigits(boundSig.peak)} / {sigDigits(boundSig.ceiling)}
           </span>
         )}
       </header>

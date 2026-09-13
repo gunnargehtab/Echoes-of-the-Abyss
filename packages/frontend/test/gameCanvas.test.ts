@@ -428,7 +428,7 @@ describe('the shell: what it wires to what', () => {
 
       assert.equal(
         ceilingChip(world),
-        'flight SIG 6 ≤ 20',
+        'flight SIG 006 / 020',
         'the reading off the snapshot reached the panel beside the ceiling it is held to'
       );
     } finally {
