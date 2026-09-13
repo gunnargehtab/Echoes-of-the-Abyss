@@ -1093,6 +1093,15 @@ export class AiCommander implements AiPlayer {
   private remembered: Remembered | null = null;
   /** Silent Running state it believes the army is in, to avoid re-sending. */
   private armySilent = false;
+  /**
+   * Hulls `commandGardens` held as tenders last observation.
+   *
+   * Kept because lifting a tender's silence is the one thing in this commander
+   * that breaks `armySilent`'s premise — `setCrossed` states it, one bit for
+   * the whole force — and a belief that has been falsified for one hull has to
+   * be made true again when that hull comes back. See `releaseTenders`.
+   */
+  private tending: ReadonlySet<number> = new Set();
   /** Largest the army has been while massing, and when that last rose. */
   private massingPeak = 0;
   private massingPeakTick = -1;
@@ -1315,6 +1324,7 @@ export class AiCommander implements AiPlayer {
     // does not have, and one that had been ordered aboard a transport in the
     // same observation would be walked off the garden it is paying for.
     const tending = this.commandGardens(snapshot, army, commands);
+    this.releaseTenders(tending, commands);
     const free = tending.size === 0 ? army : army.filter((u) => !tending.has(u.id));
     // The lift claims the hulls it orders aboard this observation, so the
     // army branch does not walk them back to the rally in the same breath.
@@ -3797,6 +3807,32 @@ export class AiCommander implements AiPlayer {
       }
     }
     return claimed;
+  }
+
+  /**
+   * Hand a hull back to the army in the state the army believes it is in.
+   *
+   * The lift above is the one place this commander touches Silent Running for
+   * a single hull, and `armySilent` is a *believed* flag — `setCrossed` says
+   * why it is allowed to be: silence is one bit for the whole force. Lifting
+   * it for a tender falsifies that belief for exactly one hull, and the belief
+   * is what stops the army re-sending, so nothing puts it back: `setSilent`
+   * short-circuits on `armySilent === active`, so a released tender rejoining
+   * a silent approach stays loud until something happens to flip the flag
+   * through false and back. That is the same leak this branch exists to fix,
+   * pointing the other way, and it is worse — a hull broadcasting inside an
+   * approach the doctrine bought with a speed penalty and no weapons.
+   *
+   * So the release is symmetric with the claim. Setting `armySilent = false`
+   * at the lift instead does not work: `commandArmy` runs later in the same
+   * observation and sets it straight back.
+   */
+  private releaseTenders(tending: ReadonlySet<number>, out: AiCommand[]): void {
+    for (const id of this.tending) {
+      if (tending.has(id)) continue;
+      if (this.armySilent) out.push({ kind: 'silent', unitIds: [id], active: true });
+    }
+    this.tending = tending;
   }
 
   // --- The lift -------------------------------------------------------------

@@ -27,10 +27,12 @@ import {
   BLOOM_SHARE,
   Biome,
   CONSTRUCTION,
+  DepthBand,
   Faction,
   HazardPhase,
   StructureKind,
   UnitKind,
+  depthBandFor,
   priceOf,
   statsFor,
 } from '@echoes/shared';
@@ -402,23 +404,115 @@ describe('a tender is put in the state the share is actually paid for', () => {
     }));
   }
 
+  /** Orders addressed to this hull alone, which is the only shape this branch emits. */
+  function addressedTo(
+    orders: { kind: string; [k: string]: unknown }[],
+    kind: string,
+    id: number
+  ): { kind: string; [k: string]: unknown }[] {
+    return orders.filter(
+      (c) =>
+        c.kind === kind &&
+        Array.isArray(c.unitIds) &&
+        (c.unitIds as number[]).length === 1 &&
+        (c.unitIds as number[])[0] === id
+    );
+  }
+
   it('lifts Silent Running off the hull it sends gardening', () => {
-    const orders = ordersFor(armyOnTheGarden({ silentRunning: true }));
-    const lifted = orders.filter((c) => c.kind === 'silent' && c.active === false);
+    // Addressed to the tender's own id, not to any `active: false` in the
+    // batch: `setSilent` emits exactly that shape for the whole army on
+    // engage, defend and recall, so a looser filter goes green with this
+    // branch deleted the moment a fixture reaches one of them.
+    const units = armyOnTheGarden({ silentRunning: true });
+    const tender = (units[0] as { id: number }).id;
+    const lifted = addressedTo(ordersFor(units), 'silent', tender).filter(
+      (c) => c.active === false
+    );
     assert.ok(
       lifted.length > 0,
-      'a silenced tender was left silent, so the bed it stands on pays nothing'
+      `the tender ${tender} was left silent, so the bed it stands on pays nothing`
     );
   });
 
   it('does not order silence off a tender that is already loud', () => {
     // The guard matters: an unconditional order every observation would be a
     // command on the wire for a state the hull is already in.
-    const orders = ordersFor(armyOnTheGarden({ silentRunning: false }));
-    const forTender = orders.filter(
-      (c) => c.kind === 'silent' && Array.isArray(c.unitIds) && c.unitIds.length === 1
+    const units = armyOnTheGarden({ silentRunning: false });
+    const tender = (units[0] as { id: number }).id;
+    assert.equal(
+      addressedTo(ordersFor(units), 'silent', tender).length,
+      0,
+      'a loud tender was told to stop being silent'
     );
-    assert.equal(forTender.length, 0, 'a loud tender was told to stop being silent');
+  });
+
+  it('hands a released tender back silent when the army it rejoins is silent', () => {
+    // The other half of the lift, and the regression it would otherwise be.
+    // `armySilent` is a *believed* flag and `setCrossed`'s comment says why
+    // that is allowed: silence is one bit for the whole force. Lifting it for
+    // one tender falsifies the belief for that hull, and the belief is what
+    // stops `setSilent` re-sending — so without a symmetric release the hull
+    // rejoins a silent approach broadcasting, and stays that way until
+    // something flips the flag through false and back.
+    //
+    // Driven through one commander across two observations, because that is
+    // the shape of the fault: claimed while the army is large, released when
+    // it is not.
+    const brief = briefing(Faction.Pelagia);
+    const commander = new AiCommander(brief);
+    const garden = brief.blooms[0]!;
+    const hulls = (n: number): unknown[] =>
+      Array.from({ length: n }, (_, i) => ({
+        id: 100 + i,
+        kind: UnitKind.Reed,
+        x: garden.x,
+        y: garden.y,
+        depth: 300,
+        hp: 400,
+        maxHp: 400,
+        sig: 12,
+        silentRunning: true,
+        engineOff: false,
+        followFloor: false,
+        pressureRating: 1,
+      }));
+    const observe = (units: unknown[], tick: number): { kind: string; [k: string]: unknown }[] =>
+      commander.observe({
+        tick,
+        nodules: 600,
+        crystal: 0,
+        biomass: 0,
+        power: { demand: 0, capacity: 6 },
+        draw: { demand: 0, capacity: 6 },
+        berths: { used: units.length, granted: 40 },
+        units: units as never,
+        structures: [],
+        contacts: [],
+        marks: [],
+        hazards: [],
+        residue: [],
+        refits: [],
+        exposure: { tier: 0, trackedCount: 0 },
+      } as never) as never;
+
+    // Enough hulls to claim a tender, for long enough that the army commits to
+    // its silent approach and `armySilent` is true.
+    for (let i = 0; i < 8; i++) observe(hulls(12), i * 12);
+    // Then a force too small to spare anybody: the claim evaporates. Walked
+    // over several observations because the commander acts on its own cadence
+    // (`AiTuning.cadenceTicks`) and returns early in between — a single
+    // observation here lands on a tick the branch never runs.
+    const released: { kind: string; [k: string]: unknown }[] = [];
+    for (let i = 8; i < 12; i++) released.push(...observe(hulls(7), i * 12));
+    const resilenced = released.filter(
+      (c) =>
+        c.kind === 'silent' &&
+        c.active === true &&
+        Array.isArray(c.unitIds) &&
+        (c.unitIds as number[]).length === 1
+    );
+    assert.ok(resilenced.length > 0, 'a released tender was left loud inside a silent approach');
   });
 
   it('brings a tender hanging under the rim up into the Shelf band', () => {
@@ -433,16 +527,15 @@ describe('a tender is put in the state the share is actually paid for', () => {
     // tenders are exactly the hulls that order does not reach — they are
     // claimed out of the army list — and they are the two lowest ids, because
     // `commandGardens` draws from the army sorted by id.
+    //
+    // Read through `depthBandFor` rather than against a written 400: the
+    // branch asks for a PR-1 ceiling precisely so the line stays in
+    // DEPTH_BANDS, and a test that restates it is the copy the rest of the
+    // stack refuses to keep.
     const units = armyOnTheGarden({ depth: 900 });
     const tender = (units[0] as { id: number }).id;
-    const orders = ordersFor(units);
-    const climbs = orders.filter(
-      (c) =>
-        c.kind === 'depth' &&
-        Array.isArray(c.unitIds) &&
-        (c.unitIds as number[]).includes(tender) &&
-        typeof c.depthM === 'number' &&
-        (c.depthM as number) < 400
+    const climbs = addressedTo(ordersFor(units), 'depth', tender).filter(
+      (c) => depthBandFor(c.depthM as number) === DepthBand.Shelf
     );
     assert.ok(
       climbs.length > 0,
