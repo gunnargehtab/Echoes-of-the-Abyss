@@ -18,6 +18,7 @@
     "test:roadmap": "node --test \"tools/roadmap/test/**/*.test.mjs\"",
     "balance": "node tools/balance/run.mjs",
     "check:models": "node tools/hull-models/check.mjs",
+    "check:invariants": "node tools/invariants/check.mjs",
     "type-check": "npm run build:shared && npm -w packages/shared run type-check && npm -w packages/frontend run type-check && npm -w packages/backend run type-check",
     "lint": "npm -w packages/shared run lint && npm -w packages/frontend run lint && npm -w packages/backend run lint",
     "format:check": "prettier --check \"packages/**/*.{ts,tsx,css,json}\" \"tools/**/*.{js,json}\" \"*.json\"",

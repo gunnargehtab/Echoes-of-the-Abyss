@@ -331,6 +331,13 @@ to look at.
 
 ## 5. Claim it, then work it like any other change
 
+Once it is claimed, the *work* is `dev-loop`'s: build against the doc section
+that is the issue's target, run `npm run gates`, capture evidence, hand the
+round to the `loop-critic` subagent, refine, and stop on its exit criteria or
+its stall rule. This file owns selecting and claiming the issue and the shape of
+the pull request either side of that; it does not describe the refine rounds. §6
+below is the gate that loop's step 3 runs.
+
 Before you touch a file, put the claim where the next firing — and a person
 opening the issue — will see it first. Two writes, in this order:
 
@@ -402,21 +409,25 @@ they break the build.
 ## 6. Run every gate locally before you push
 
 ```bash
-npm run build:shared
-npm run type-check
-npm run lint
-npm run format:check
-npm test
-npm run build
-npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
-git ls-files -z ':(glob)docs/**/*.md' \
-  | xargs -0 npx -y markdown-link-check --config .markdown-link-check.json
+npm run gates
 ```
 
-All of these are blocking in CI, both doc gates included, so a dead link in
-`docs/` fails the build exactly as a failing test does. The suite is slow —
-single test files run over a minute — which is the argument for running it here
-rather than learning the same thing from a red PR a few minutes later.
+One command, one exit code, no fail-fast, so one run tells you everything that
+is red. This used to be a hand-copied list of eight commands, which is the drift
+`tools/gates.mjs` was written to end — it was missing `check:models`, which CI
+has run since #540, so a firing that followed it was a gate short of CI and
+learned the difference from a red pull request. It also omitted `preflight`, which
+the workflow never names as a step but which the `build` job runs anyway, since
+root `npm run build` chains it. On a runner it cannot really fail — `npm ci` on
+a pinned Node 22 — but locally it is what catches a stale install or too old a
+Node, which is exactly the state a firing can be in.
+
+Every CI gate is in there, both doc gates included, so a dead link in
+`docs/` fails the build exactly as a failing test does. The run is slow — the
+test gate alone is over two minutes, and single mission test files run over a
+minute — which is the argument for running it here rather than learning the same
+thing from a red PR a few minutes later. Use `--only=` while you iterate on one
+gate, and drop the filter before you push.
 
 ### Run the claim check again before you open the PR
 
@@ -590,5 +601,7 @@ person closes it, opens a successor, and updates the number here.
 
 - `CONTRIBUTING.md` — branch and commit conventions, the gate list, labels
 - `CLAUDE.md` — architecture, build order, budgets, and the gotchas behind them
+- `.claude/skills/dev-loop/SKILL.md` — the rounds themselves, once §5 has
+  claimed the issue: target, gates, evidence, critic, exit criteria
 - `.claude/skills/run-game/SKILL.md` — verifying a change in the real client
 - `docs/ROADMAP.md` — what the backlog is for

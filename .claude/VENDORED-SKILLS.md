@@ -2,8 +2,8 @@
 
 Eleven of the skills in `.claude/skills/` were not written here. They are copies
 of public Agent Skills, taken from the marketplaces indexed by
-[skills.sh](https://skills.sh), and they sit beside this repository's own five
-(`balance-run`, `hull-intake`, `run-game`, `steward`, `work-issue`).
+[skills.sh](https://skills.sh), and they sit beside this repository's own six
+(`balance-run`, `dev-loop`, `hull-intake`, `run-game`, `steward`, `work-issue`).
 
 ## Why they are copied rather than installed
 

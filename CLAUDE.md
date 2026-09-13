@@ -58,6 +58,7 @@ Run everything from the repository root.
 | Lint | `npm run lint` |
 | Formatting check / fix | `npm run format:check` / `npm run format` |
 | Hull scripts ↔ GLBs ↔ outlines agree | `npm run check:models` |
+| `docs/invariants.md` still names live tests | `npm run check:invariants` |
 | Every blocking gate, in one pass | `npm run gates` |
 
 Single workspace: `npm -w packages/backend run dev`, `npm -w packages/frontend run dev`,
@@ -207,6 +208,24 @@ with a hard-coded one to make a test pass.
 
 If a constant would need to exist in two packages, it belongs in shared.
 
+### Invariants live in exactly one place too
+
+A *number* lives in `constants.ts`. A property that must hold **over every input** —
+"no entity exists above `world.maxEid`", "ordnance never resolves as an observer", "a
+beat never fails an objective the player has met" — is an invariant, and
+[`docs/invariants.md`](docs/invariants.md) is the list of them. Each row names the
+property, the doc section or issue it descends from, and the file and test that hold it.
+
+The tests still hold the invariants; the doc holds the *list*, and
+`npm run check:invariants` holds the doc, asserting every named holder still resolves.
+It is a liveness check, not a correctness one — it cannot tell you a test still asserts
+what its row claims, only that something by that name is still there. That is the same
+bargain `check:models` makes, and it buys the same thing: prose that repeats what code
+does drifts, and a script makes the drift loud.
+
+The list is not complete and does not claim to be. Adding a row is a normal part of
+fixing a bug whose failure mode was silent.
+
 ## Conventions
 
 ### Import extensions differ by package — this is deliberate
@@ -355,7 +374,7 @@ gotchas. Match that register; don't strip those comments when refactoring.
 
 ### Vendored skills
 
-`.claude/skills/` holds five skills written for this repository and eleven copied from
+`.claude/skills/` holds six skills written for this repository and eleven copied from
 public marketplaces — PixiJS v8, three.js, WCAG 2.2 accessibility, and the Colyseus version
 guard above. They are copied rather than installed as plugins because a plugin is
 all-or-nothing and every installed skill's description is loaded into every session, so the
@@ -446,6 +465,24 @@ keyboard to ask which of the two logins took the issue; in an interactive sessio
 and an assignee carrying no loop claim comment already reads as a person's — which is how
 §3 tells a live claim from a stale one. Unassign if the work stops without a pull request:
 an issue left assigned reads as in progress to the next firing and to every person.
+
+## The agentic loop
+
+`work-issue` picks an issue and `steward` drives its pull request to green. Between
+them sits `dev-loop`: one change run as a closed loop — build against the doc section
+that is its target, validate with `npm run gates`, capture evidence, hand it to the
+`loop-critic` subagent fresh, refine on the verdict, and stop on a written criterion
+rather than on a feeling.
+
+The critic is a separate agent with no `Edit` and no `Write`, for the reason #540 already
+settled for hulls: **a generator that also grades itself is not a gate.** Two rounds in
+which the same finding survives is a stall, and a stall stops the loop and asks.
+
+Two rules bind it harder than they bind a person, because a refine loop is the thing most
+likely to break them by accident: it never tunes for balance (the freeze above is exactly
+what a loop maximising a number would launder), and it never resolves a docs/code
+disagreement by guessing. `.claude/AGENTIC-LOOP.md` records how this maps onto #709's
+proposal, what was deliberately not built, and what is still owed.
 
 Related: `README.md` · `CONTRIBUTING.md` · `SETUP.md` · `SETUP-ANDROID.md` (the whole game — server included —
 runs on-device in Termux) · `docs/README.md` · `docs/DEVELOPER_QUICKSTART.md` ·
