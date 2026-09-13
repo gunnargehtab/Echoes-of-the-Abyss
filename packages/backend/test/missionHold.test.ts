@@ -36,9 +36,16 @@ import {
   type EchoSnapshot,
   type MissionView,
 } from '@echoes/shared';
+import { defineQuery, hasComponent } from 'bitecs';
 import { Match } from '../src/sim/match.ts';
+import { Owner, Position, ResourceNode, Weapon } from '../src/sim/components.ts';
 import { missionMapById } from '../src/sim/maps/index.ts';
-import { PROLOGUE_SORROWGATE, type MissionDefinition } from '../src/sim/missions/index.ts';
+import {
+  CHORD_SECOND_CHORD,
+  LEDGER_SHIFT_CHANGE,
+  PROLOGUE_SORROWGATE,
+  type MissionDefinition,
+} from '../src/sim/missions/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const SEED = 11;
@@ -277,5 +284,172 @@ describe('the order path and the wire agree about what is held', () => {
     const h = harness();
     assert.equal(h.match.orderDepth(PLAYER, h.tenderId(), 900), false);
     assert.equal(h.heldReason(), UNRELEASED);
+  });
+});
+
+/**
+ * The harvest order, which is a movement order and was the one that did not know it.
+ *
+ * Every other path into the water — move, attack-move, embark, dive,
+ * follow-floor — asks `holdsMovement` before it writes. `orderHarvest` did
+ * not, and the omission was worse than a missed refusal because of the two
+ * clocks: `harvestSystem` re-asserts `MoveOrder` at 60 Hz while
+ * `applyMovementHolds` clamps at 5, so the clamp never caught up and a held
+ * hull simply left. Measured at 659 m in twenty seconds before the guard.
+ *
+ * Driven against *Shift Change* rather than the Prologue fixture above because
+ * that is where it actually bites: the Prologue has no fields to send anybody
+ * to, and every held hull in *Shift Change* is a Harvester with a watch aboard
+ * (shiftChange.ts §3), so the bells were optional for anyone who right-clicked
+ * a nodule field. The shipped literal, unmodified — the point is the
+ * configuration that ships, not one arranged to fail.
+ */
+describe('a harvest order is a movement order, and the hold refuses it too', () => {
+  const shiftHarness = (): {
+    match: Match;
+    eid: number;
+    slot: number;
+    node: number;
+    /** The view the boot consumed — `takeMissionView` yields only on a change. */
+    view: MissionView;
+    at: () => { x: number; y: number };
+  } => {
+    const map = missionMapById(LEDGER_SHIFT_CHANGE.mapId)!;
+    const match = new Match(map, { mission: LEDGER_SHIFT_CHANGE, fauna: false, seed: 17 });
+    for (let tick = 0; tick < SIM.TICK_HZ; tick++) match.update(STEP_MS);
+
+    // A hull the mission says it is holding, taken from the payload the room
+    // sends rather than from the runtime's own bookkeeping.
+    const view = match.takeMissionView();
+    assert.ok(view !== null && view.held.length > 0, 'the mission is holding nobody to test with');
+    const eid = view.held[0]!.unitId;
+    const slot = Owner.slot[eid]!;
+
+    // The furthest field, so any travel at all is unambiguous rather than drift.
+    const fields = defineQuery([ResourceNode, Position])(match.world);
+    assert.ok(fields.length > 0, 'the map has no field to be sent to');
+    let node = fields[0]!;
+    let far = -1;
+    for (const candidate of fields) {
+      const d = Math.hypot(
+        Position.x[candidate]! - Position.x[eid]!,
+        Position.y[candidate]! - Position.y[eid]!
+      );
+      if (d > far) {
+        far = d;
+        node = candidate;
+      }
+    }
+    return {
+      match,
+      eid,
+      slot,
+      node,
+      view,
+      at: () => ({ x: Position.x[eid]!, y: Position.y[eid]! }),
+    };
+  };
+
+  it('leaves a held hull where it stands, as a move order already did', () => {
+    const h = shiftHarness();
+    const before = h.at();
+    h.match.orderHarvest(h.slot, h.eid, h.node);
+    for (let tick = 0; tick < SIM.TICK_HZ * 20; tick++) h.match.update(STEP_MS);
+    const moved = Math.hypot(h.at().x - before.x, h.at().y - before.y);
+    assert.ok(
+      moved < 5,
+      `a held hull given a harvest order stayed put (moved ${moved.toFixed(0)} m in 20 s)`
+    );
+  });
+
+  it('is still telling the player it is held, twenty seconds later', () => {
+    // The regression was not that the hull twitched; it was that it kept
+    // going, because the order outlived every clamp — twenty seconds is a
+    // hundred Echo passes. Read off the payload the room sends, like the rest
+    // of this file, so what the player is told and what the water does are the
+    // same assertion.
+    const h = shiftHarness();
+    h.match.orderHarvest(h.slot, h.eid, h.node);
+    // Seeded from the boot's own view rather than null: the payload is sent on
+    // a change, so a hold that simply persists produces no second view and a
+    // null start would assert on nothing having happened.
+    let view: MissionView = h.view;
+    for (let tick = 0; tick < SIM.TICK_HZ * 20; tick++) {
+      h.match.update(STEP_MS);
+      const next = h.match.takeMissionView();
+      if (next !== null) view = next;
+    }
+    assert.ok(
+      view.held.some((hold) => hold.unitId === h.eid),
+      'the hull the mission walked was still being reported as held'
+    );
+  });
+});
+
+/**
+ * The ordered target, which is the seventh way to move a hull and the last found.
+ *
+ * `orderAttackContact` writes `Weapon.orderedTargetEid`, and combat.ts chases
+ * an *ordered* target — "only an explicit order chases; auto-acquired targets
+ * were in range by construction". So an attack order is a movement order, on
+ * the same 60 Hz-against-5 Hz footing as the harvest loop above, and it was the
+ * one path that never asked the hold.
+ *
+ * Refused rather than clamped in the chase, because the chase is on the 60 Hz
+ * budget and the command path is not — and refusing the *order* leaves the
+ * auto-acquire alone, so a held hull still answers what comes into range and
+ * simply never goes looking. That is the right reading of a hold: it is a
+ * movement rule, and a mission that wants the guns cold says so with
+ * `denies(slot, 'weapons')` instead.
+ *
+ * Driven against *The Second Chord*, which is where it bites: `escort-b` is an
+ * armed Corvette held by `releaseTick`, with the raid's targets resolved and
+ * four kilometres off. Before the guard it walked 1,699.9 m in twenty seconds
+ * while the wire went on reporting it as held.
+ */
+describe('an ordered target is a movement order, and the hold refuses it too', () => {
+  it('leaves an armed held hull where it stands, with the contact resolved', () => {
+    const map = missionMapById(CHORD_SECOND_CHORD.mapId)!;
+    const match = new Match(map, { mission: CHORD_SECOND_CHORD, fauna: false, seed: 5 });
+    let own: EchoSnapshot | null = null;
+    let view: MissionView | null = null;
+    for (let tick = 0; tick < SIM.TICK_HZ * 5; tick++) {
+      const next = match.update(STEP_MS)?.get(CHORD_SECOND_CHORD.playerSlot);
+      if (next !== undefined) own = next;
+      const sent = match.takeMissionView();
+      if (sent !== null) view = sent;
+    }
+    assert.ok(own !== null && view !== null, 'the mission produced neither a snapshot nor a view');
+    assert.ok(own.contacts.length > 0, 'nothing is resolved to attack');
+
+    // The held hull that can actually shoot — the Cruiser beside it carries no
+    // weapon, so an attack order on it is refused a line earlier for a reason
+    // this test is not about.
+    const armed = view.held
+      .map((hold) => hold.unitId)
+      .find((eid) => hasComponent(match.world, Weapon, eid));
+    assert.ok(armed !== undefined, 'no held hull in this mission is armed');
+
+    // The furthest contact, so a chase would be unmistakable.
+    let far = -1;
+    let target = own.contacts[0]!;
+    for (const contact of own.contacts) {
+      const d = Math.hypot(contact.x - Position.x[armed]!, contact.y - Position.y[armed]!);
+      if (d > far) {
+        far = d;
+        target = contact;
+      }
+    }
+    assert.ok(far > 1000, `the contact to chase is only ${far.toFixed(0)} m off`);
+
+    const before = { x: Position.x[armed]!, y: Position.y[armed]! };
+    match.orderAttackContact(Owner.slot[armed]!, armed, target.id);
+    for (let tick = 0; tick < SIM.TICK_HZ * 20; tick++) match.update(STEP_MS);
+
+    const moved = Math.hypot(Position.x[armed]! - before.x, Position.y[armed]! - before.y);
+    assert.ok(
+      moved < 5,
+      `a held hull chased a contact ${far.toFixed(0)} m off (moved ${moved.toFixed(0)} m)`
+    );
   });
 });

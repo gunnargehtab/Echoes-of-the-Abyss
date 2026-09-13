@@ -37,6 +37,31 @@ export function holdReasonFor(holds: readonly MovementHold[], unitId: number): s
   return hold === undefined ? null : HOLD_TEXT[hold.reason];
 }
 
+/**
+ * The one hold a selection is *wholly* under, or null while any of it would go.
+ *
+ * The steady-state half of the same rule, and the reason it is whole-selection
+ * rather than any-of is `movableIn` directly above: docs/ui-ux.md §10.5 keeps a
+ * mixed selection moving, so a flight with one tender in it still has every
+ * movement affordance it had. Only when nothing in the selection can move is a
+ * movement affordance genuinely dead — and §10.5 wants a dead one to say why
+ * *before* the press, because "a refusal delivered afterwards teaches nothing".
+ *
+ * What that cost before it existed: a held tender's inspector line read `held —
+ * not released yet` while the hint bar under it read `RMB node/move`, and the
+ * player believed the bar (#708).
+ */
+export function heldWholly(holds: readonly MovementHold[], ids: readonly number[]): string | null {
+  if (holds.length === 0 || ids.length === 0) return null;
+  let reason: string | null = null;
+  for (const id of ids) {
+    const hold = holdReasonFor(holds, id);
+    if (hold === null) return null;
+    reason ??= hold;
+  }
+  return reason;
+}
+
 /** What a movement order does with a selection the mission is partly holding. */
 export interface MovableSelection {
   /** The hulls the server would actually move. */
