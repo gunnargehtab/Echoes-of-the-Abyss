@@ -58,6 +58,7 @@ Run everything from the repository root.
 | Lint | `npm run lint` |
 | Formatting check / fix | `npm run format:check` / `npm run format` |
 | Hull scripts ↔ GLBs ↔ outlines agree | `npm run check:models` |
+| `docs/invariants.md` still names live tests | `npm run check:invariants` |
 | Every blocking gate, in one pass | `npm run gates` |
 
 Single workspace: `npm -w packages/backend run dev`, `npm -w packages/frontend run dev`,
@@ -206,6 +207,24 @@ general propagation model instead of being special-cased. Do not replace a deriv
 with a hard-coded one to make a test pass.
 
 If a constant would need to exist in two packages, it belongs in shared.
+
+### Invariants live in exactly one place too
+
+A *number* lives in `constants.ts`. A property that must hold **over every input** —
+"no entity exists above `world.maxEid`", "ordnance never resolves as an observer", "a
+beat never fails an objective the player has met" — is an invariant, and
+[`docs/invariants.md`](docs/invariants.md) is the list of them. Each row names the
+property, the doc section or issue it descends from, and the file and test that hold it.
+
+The tests still hold the invariants; the doc holds the *list*, and
+`npm run check:invariants` holds the doc, asserting every named holder still resolves.
+It is a liveness check, not a correctness one — it cannot tell you a test still asserts
+what its row claims, only that something by that name is still there. That is the same
+bargain `check:models` makes, and it buys the same thing: prose that repeats what code
+does drifts, and a script makes the drift loud.
+
+The list is not complete and does not claim to be. Adding a row is a normal part of
+fixing a bug whose failure mode was silent.
 
 ## Conventions
 

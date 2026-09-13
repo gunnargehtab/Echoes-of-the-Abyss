@@ -41,7 +41,7 @@ The build follows dream-loop's shape and #709's component list.
 | --- | --- | --- |
 | Task system (`/tasks/open.json`) | GitHub Issues, plus `work-issue`'s selection rule, self-assignment and open-PR cap | No — a JSON task file would be a second backlog, diverging from the first by Thursday |
 | Spec (`/spec/systems.md`) | `docs/` — the design bible, canonical, and the source of every SPEC constant | No — a second spec is the one thing `CLAUDE.md` is most emphatic against |
-| Invariants (`/spec/invariants.md`) | Scattered — asserted across 11 test files, named as an `INVARIANT:` comment in exactly one place (`packages/shared/src/missions.ts`) | **No** — see "Still owed". `dev-loop` and `loop-critic` name several hard *rules*, which is not the same thing as stating the invariants |
+| Invariants (`/spec/invariants.md`) | Was scattered — asserted across 11 test files, named as an `INVARIANT:` comment in exactly one place | **Yes** — `docs/invariants.md`, 13 rows, each naming its source and the test that holds it, with `npm run check:invariants` failing when a holder is gone |
 | Acceptance tests (`/spec/acceptance_tests.md`) | `tools/echo-sim/scenarios/*.json` with committed `.expected.json`, plus the three suites | No — the scenarios already are this, in a form a harness runs |
 | Harness (`run_headless.py`) | `tools/echo-sim`, `tools/balance`, `tools/audio-meter`, `hull-intake`, and the `run-game` browser drive | No — five harnesses exist; what was missing was a rule for which to reach for, now the evidence table in `dev-loop` |
 | Verifier (`verifier.py`) | `npm run gates` — every blocking CI gate, one pass, one exit code | No — and a parallel verifier would drift from CI, which is the exact failure `tools/gates.mjs` was written to end |
@@ -99,18 +99,15 @@ anything it has not resolved.
 
 ## Still owed
 
-- **A written invariants contract.** #709's `/spec/invariants.md` is the one
-  component with no real equivalent. The invariants exist and are enforced —
-  `maxEid`, the mission objective monotonicity rule, ordnance and the fog of
-  war, the map containment rule `docs/maps.md` bought with three authoring faults, the
-  counted-work budgets — but they are asserted across 11 test files and stated,
-  as an invariant, in one.
-  A doc that lists each invariant, its source section and the test that holds it
-  would give `loop-critic` a checklist instead of a memory, and it would want a
-  drift gate of its own: a row naming a test that no longer exists must fail
-  loudly, in the idiom of `check:models` and the roadmap's drift report. Not
-  built here, because it is a day's careful reading of the suite and this branch
-  is an instalment.
+- **The invariants contract is built** (`docs/invariants.md`), which was this list's
+  largest gap. Thirteen rows, each naming the property, the doc section or issue it
+  descends from, and the file and test that hold it — and a gate,
+  `npm run check:invariants`, that fails when a row names a test somebody renamed. It is
+  a liveness check rather than a correctness one, for the reason the file itself gives:
+  verifying the assertion would mean re-implementing the suite, which is the second
+  source of truth this repository keeps refusing to build. What is still owed on it is
+  *coverage* — the list states the invariants that were written down as invariants by
+  the tests holding them, and says plainly that it is not complete.
 - **A scheduled firing of the whole loop.** `work-issue` §5 now routes into
   `dev-loop` and both it and `steward` link it, so a firing reaches the rounds
   from inside the repository. What is left is the Routine itself, which is

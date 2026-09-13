@@ -86,6 +86,14 @@ jobs:
       - name: Check hull models round-trip
         run: npm run check:models
 
+      # docs/invariants.md names, per row, the test that holds each invariant.
+      # This asserts every holder still resolves — file present, test name still
+      # in it. A liveness check, not a correctness one: the suites hold the
+      # invariants, this holds the list, so a row naming a renamed test fails
+      # here instead of quietly describing a suite that moved on.
+      - name: Check the invariants list still names live tests
+        run: npm run check:invariants
+
       - name: Build all packages
         run: npm run build
 

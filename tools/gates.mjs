@@ -88,6 +88,11 @@ const STEPS = [
   { name: 'lint', what: 'ESLint', ...run('lint') },
   { name: 'format:check', what: 'Prettier over packages/ and tools/', ...run('format:check') },
   { name: 'check:models', what: 'hull scripts, GLBs and outlines agree', ...run('check:models') },
+  {
+    name: 'check:invariants',
+    what: 'docs/invariants.md still names live tests',
+    ...run('check:invariants'),
+  },
   { name: 'test', what: 'shared, frontend, backend, roadmap', ...run('test') },
   { name: 'build', what: 'the production bundles', ...run('build') },
   { name: 'docs:lint', what: 'markdownlint over docs/', ...docsLint },
@@ -118,7 +123,7 @@ if (flag('help')) {
 }
 
 if (flag('list')) {
-  for (const step of STEPS) process.stdout.write(`${step.name.padEnd(14)} ${step.what}\n`);
+  for (const step of STEPS) process.stdout.write(`${step.name.padEnd(16)} ${step.what}\n`);
   process.exit(0);
 }
 
@@ -160,7 +165,7 @@ const notRun = selected.length - results.length;
 
 process.stdout.write('\n== summary ==\n');
 for (const r of results) {
-  process.stdout.write(`${r.ok ? 'PASS' : 'FAIL'}  ${r.name.padEnd(14)} ${r.seconds.toFixed(1)}s\n`);
+  process.stdout.write(`${r.ok ? 'PASS' : 'FAIL'}  ${r.name.padEnd(16)} ${r.seconds.toFixed(1)}s\n`);
 }
 if (notRun > 0) process.stdout.write(`      ${notRun} gate(s) not run (--bail)\n`);
 

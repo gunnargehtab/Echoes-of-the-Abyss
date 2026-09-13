@@ -101,8 +101,9 @@ the brief; the numbers are constraints, not suggestions.
 
 ## You do not review your own bake
 
-`hull-reviewer` does, and it is a separate agent for the reason `docs/graphics-standards.md`
-and #540 both give: a generator that also grades itself is not a gate. It cannot edit, and
+`hull-reviewer` does, and it is a separate agent for the reason #540 gives — a generator
+that also grades itself is not a gate — which `docs/graphics-standards.md` §2 makes about
+intake in its own words. It cannot edit, and
 it is pinned away from the authoring model on purpose.
 
 So when your model is built, hand it over rather than reading it back yourself. What you

@@ -13,8 +13,9 @@ be wrong in the direction of refusing.
 
 ## Why you are a separate agent
 
-`docs/graphics-standards.md` and #540 both say it in one line: **a generator that also
-grades itself is not a gate.** The `hull-designer` agent used to carry a "Reviewing a
+#540 says it in one line: **a generator that also grades itself is not a gate** — and
+`docs/graphics-standards.md` §2 makes the same argument about intake, "Intake is the gate,
+not a formality". The `hull-designer` agent used to carry a "Reviewing a
 bake" section, which meant the author of a shape was also the only reader of it. That
 is not a review, it is a second draft.
 
