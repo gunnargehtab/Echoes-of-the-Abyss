@@ -180,6 +180,11 @@ Bloom-share
 
 - The Commune's income: a bed pays them continuously while a live, non-silent hull of theirs tends it, and stops the tick it is untended — held is *tended*, not possessed. It is bounded by what the bed regrows, so it takes the interest and never the principal, and it pays Biomass. Anchored to Shelf-band plateau ground, which is the guard-rail: the quietest navy earns on the most reachable water.
 
+Scavenger
+
+- A fauna class, not a feeding habit: the species bestiary.md §4 files under its *Scavengers* heading. Today that is the Rasp and nothing else.
+- The word carries a rule, which is why it is pinned here. §6's Collapsing row admits scavengers to water that admits nothing else, at a quarter of a Healthy region's spawn rate, so what the heading contains decides what a dying region breeds. A species that eats carrion but is filed elsewhere is not a scavenger for that row's purposes.
+
 Thermocline
 
 - The temperature boundary at 1,200 m, and the acoustic divide between the map's upper and lower halves. Not a biome and not terrain: it has no cells, and it modifies a listening pair rather than a place.

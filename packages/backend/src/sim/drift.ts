@@ -17,7 +17,7 @@
  * kilometre away is untouched.
  */
 
-import { DRIFT, FLORA } from '@echoes/shared';
+import { DRIFT, FLORA, FaunaSpecies, SCAVENGERS } from '@echoes/shared';
 
 export class DriftHealth {
   private readonly health: Float32Array;
@@ -167,9 +167,27 @@ export class DriftHealth {
     return 1;
   }
 
-  /** Whether a region will admit new spawns at all. §6: none below Failing. */
-  spawnsAllowed(x: number, y: number): boolean {
-    return this.at(x, y) >= DRIFT.HEALTH_FAILING;
+  /**
+   * Whether a region will admit a new spawn — §6's Failing row, and the
+   * Collapsing row that is not a quieter version of it.
+   *
+   * Failing admits nothing and Collapsing admits **scavengers**, which reads
+   * non-monotone and is meant to: a region that has stopped producing starts
+   * being eaten, so the water past Failing is a different state rather than a
+   * thinner one, with its own sparse signature to be recognised (#655). §4's
+   * *Scavengers* heading is the list, transcribed as `SCAVENGERS`.
+   *
+   * `species` is optional because the flora half has none: kelp asks this
+   * ladder the general question and gets the general answer, which is the same
+   * answer it has always had. Omitting it therefore cannot accidentally open
+   * Collapsing water — the exemption is something a caller names a species to
+   * claim, never a default.
+   */
+  spawnsAllowed(x: number, y: number, species?: FaunaSpecies): boolean {
+    const health = this.at(x, y);
+    if (health >= DRIFT.HEALTH_FAILING) return true;
+    if (health <= 0) return false;
+    return health < DRIFT.HEALTH_COLLAPSING && species !== undefined && SCAVENGERS.has(species);
   }
 
   /**
@@ -182,10 +200,22 @@ export class DriftHealth {
    * than in either caller: the band that stops breeding animals is the band
    * that stops growing the crop that feeds them, and a second copy of this
    * ladder would be free to disagree with the first.
+   *
+   * The Collapsing scavenger rate is answered **here**, inside the one figure,
+   * rather than by a second method beside it — a scavenger rate that came out
+   * of its own number is precisely the split this ladder exists to prevent.
+   *
+   * And it is *derived*: a Collapsing region breeds its scavengers at
+   * `yieldMultiplier`, the row's own −75%. One number is stated on that row
+   * and both of its clauses read it, so a region's carrion cannot be worth a
+   * quarter while breeding at a third. Do not replace this call with the 0.25
+   * it currently returns; the point is that it is the same 0.25.
    */
-  spawnRate(x: number, y: number): number {
+  spawnRate(x: number, y: number, species?: FaunaSpecies): number {
     const health = this.at(x, y);
-    if (health < DRIFT.HEALTH_FAILING) return 0;
+    if (health < DRIFT.HEALTH_FAILING) {
+      return this.spawnsAllowed(x, y, species) ? this.yieldMultiplier(x, y) : 0;
+    }
     if (health < DRIFT.HEALTH_STRAINED) return DRIFT.SPAWN_RATE_STRAINED;
     return 1;
   }

@@ -127,6 +127,24 @@ function creaturesOf(m: Match): number[] {
   return out;
 }
 
+/**
+ * A match opening on ground an earlier mission left in Collapsing water —
+ * docs/campaign.md §2 rule 5, and §6's bottom-but-one row (#655).
+ *
+ * Twelve rather than a number nearer the boundary so quiet water's recovery
+ * (1.2 health a minute) cannot climb out of the band while a test runs, and
+ * `VENTFRONT_DIVIDE`'s eruptions are taken out so nothing but the band decides
+ * what lives: a region thirteen points above Dead is close enough to the floor
+ * that an environmental kill or two would be the whole result. No beds either,
+ * so `cropDensityAt` is 1 and the rate under test is §6's own rather than §4's
+ * crop scaling on top of it.
+ */
+function collapsedMatch(): Match {
+  const map: MapDefinition = { ...VENTFRONT_DIVIDE, id: 'test-collapsed', hazards: [] };
+  const carried = new Array<number>(DRIFT.HEALTH_REGIONS ** 2).fill(DRIFT.HEALTH_COLLAPSING - 13);
+  return new Match(map, { fauna: true, seed: 51, terrain: terrainFor(map), driftCarry: carried });
+}
+
 /** Kill one live creature of a species, and say nothing else about it. */
 function cull(m: Match, species: FaunaSpecies): void {
   for (const eid of creaturesOf(m)) {
@@ -250,6 +268,54 @@ describe('the Drift puts back what it loses', () => {
     assert.ok(
       countFauna(m.world) <= before - 1,
       `"no new spawns" is the whole row: ${countFauna(m.world)} against ${before - 1}`
+    );
+  });
+
+  it('breeds the scavenger back in collapsing water', () => {
+    // §6's Collapsing row, "Scavengers only", read as the spawn rule it is
+    // (#655) rather than as a description of what happened to survive.
+    //
+    // The ground is a **carried** grid rather than a worn one, and that is the
+    // honest way to reach this row rather than a convenience. Wearing a map
+    // down inside one match takes it through Failing, where §6 kills off the
+    // ambient species — and `repopulate` restocks the single most-deficient
+    // species and gives the interval up if it cannot place it, so six dead
+    // Lampfry outrank one dead Rasp for the rest of the match and the row is
+    // never reached. A campaign second visit has no such backlog: the carry is
+    // the ground the match opens on (docs/campaign.md §2 rule 5), and the
+    // complement is counted from what was actually seated on it.
+    const m = collapsedMatch();
+    const before = countFaunaOf(m.world, FaunaSpecies.Rasp);
+    assert.ok(before > 0, 'collapsed ground seats the scavenger and this test needs one');
+    cull(m, FaunaSpecies.Rasp);
+    advance(m, 1);
+    assert.equal(countFaunaOf(m.world, FaunaSpecies.Rasp), before - 1, 'it really died');
+
+    advance(m, DRIFT.RESPAWN_INTERVAL_S * 8);
+    assert.equal(
+      countFaunaOf(m.world, FaunaSpecies.Rasp),
+      before,
+      'carrion is what is left when a region dies, and something arrives to eat it'
+    );
+  });
+
+  it('breeds nothing but the scavenger there', () => {
+    // The half that separates this reading from the monotone one it replaced:
+    // the exemption is a class, not a discount on the whole roster. A predator
+    // put into collapsed water by hand is not replaced when it dies, and the
+    // population never climbs past the scavengers the ground itself seated.
+    const m = collapsedMatch();
+    const scavengers = countFaunaOf(m.world, FaunaSpecies.Rasp);
+    spawnFauna(m.world, { species: FaunaSpecies.Draymaw, x: 4000, y: 4000 });
+    advance(m, 1);
+    cull(m, FaunaSpecies.Draymaw);
+    advance(m, DRIFT.RESPAWN_INTERVAL_S * 8);
+
+    assert.equal(countFaunaOf(m.world, FaunaSpecies.Draymaw), 0, 'a predator stays dead');
+    assert.equal(
+      countFauna(m.world),
+      scavengers,
+      `and dead water holds only what it admits: ${countFauna(m.world)} against ${scavengers}`
     );
   });
 
