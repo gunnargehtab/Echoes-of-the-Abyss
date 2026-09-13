@@ -136,16 +136,44 @@ export const SPEAKER_PROFILE = {
    * | 20 | 9.8 dB — compressed by a third | 4% |
    * | 30 | 6.4 dB — half the scale gone | 4% |
    *
-   * 20 is the setting: §11 asks for a compressed mix and this is the row that
-   * compresses without spending "being loud makes you deaf" to do it. It also
-   * keeps the idle bed audible, which 8 does not — at that drive SIG 10 lands
-   * at -51.5 LUFS, and §1's third law is that a player hears their own noise.
+   * 20 was the setting, chosen on that table, and it was the hum #663 was
+   * reported on a third time. A `tanh` driven that hard is a clipper: it turns
+   * the 44 Hz plant tone into a dense comb of harmonics 44 Hz apart, piled up
+   * between 300 and 450 Hz, which is exactly where a phone speaker is most
+   * efficient. Rendered with the bed alone at SIG 18 (tools/audio-meter's
+   * production classes), 78% of the profiled energy above 200 Hz sat on that
+   * comb against 13% unprofiled, and the harmonic path supplied 18 dB of the
+   * bed's whole level. The table measured the scale and the band split, and
+   * neither of those is what a sustained tone *sounds* like.
+   *
+   * 4 is the setting, and it was chosen by ear rather than by table: of five
+   * loudness-matched renders played on the reporting phone, it is the one the
+   * player said sounds right. A gentle drive keeps the generator near linear,
+   * so the series falls away quickly instead of running up the band — the
+   * bed's weight moves down to 200-320 Hz and the comb's share above 200 Hz
+   * drops to two-thirds. It widens §4's climb a little rather than flattening
+   * it (17.1 dB from SIG 10 to SIG 80, against 14.3 unprofiled and 9.8 at 20),
+   * which is the recoverable direction, and with LIFT carrying the level a
+   * gentle drive no longer manufactures, SIG 10 stays at -47.8 LUFS — above
+   * the -51.5 that ruled out a gentle drive the first time.
    */
-  DRIVE: 20,
+  DRIVE: 4,
   EVEN: 0.45,
 
-  /** How much of the harmonic path is mixed back in, linear. */
-  LIFT: 0.55,
+  /**
+   * How much of the harmonic path is mixed back in, linear.
+   *
+   * Well above unity, and it has to be once DRIVE is gentle: a near-linear
+   * generator makes a small series, and at the 0.55 this used to be the bed
+   * went nearly silent on a phone. LIFT is what sets the bed against the
+   * contacts, because the bed is almost all harmonic path and a contact is not.
+   * Of the lifts measured (0.55, 1.5, 3, 6) with the reported scene held at
+   * TRIM's level, 6 keeps that balance closest to the unprofiled mix: the bed
+   * at SIG 18 sits 12.0 dB under the seven-contact scene, against 9.5 dB
+   * unprofiled and 6.8 dB at the old drive — which was the hum pushed *up*
+   * towards the contacts, not only moved in frequency.
+   */
+  LIFT: 6,
 
   /**
    * The static knee the profile compresses against, linear.
@@ -173,11 +201,15 @@ export const SPEAKER_PROFILE = {
    * level exactly where it was — one variable at a time, because a report of
    * "better" that could be either change is a report that settles nothing.
    *
+   * Re-derived when DRIVE went to 4 and LIFT to 6, at the same -28.6: a lift
+   * that large would otherwise put the scene 6.6 dB hotter, and the level is
+   * still not the variable being changed.
+   *
    * Erring quiet remains the recoverable direction. Too soft has a master
    * volume and §11's +12 dB contact boost; too loud has this issue filed three
    * times.
    */
-  TRIM: 0.106,
+  TRIM: 0.0496,
 
   /** Samples in each curve. Odd, so the midpoint is exactly zero. */
   POINTS: 4097,

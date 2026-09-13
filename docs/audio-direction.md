@@ -528,10 +528,11 @@ a reconstruction. The slope was the other half of the same mistake: one biquad a
 most of an octave either way, so the crossover smeared the band instead of moving it, and
 the smear is exactly the sustained low-mid a phone turns into a hum.
 
-Measured on the reported scene, the profile now takes the share of the mix between 60 and
-200 Hz from **68% to 4%**, and everything below 60 Hz to nothing. The integrated figure goes
-from -21.9 to -28.6 LUFS — and that level is held deliberately rather than derived, because
-it is the one the player called fine. This round changes the spectrum and nothing else: a
+Measured on the reported scene, the profile took the share of the mix between 60 and
+200 Hz from **68% to 4%**, and everything below 60 Hz to nothing, at the first drive (2.6%
+at the drive it now runs, below). The integrated figure goes from -21.9 to -28.6 LUFS — and
+that level is held deliberately rather than derived, because it is the one the player called
+fine. This round changes the spectrum and nothing else: a
 report of "better" that could be either change is a report that settles nothing.
 
 §11 asks for a *compressed* mix and the compression is paid twice: by a static soft knee at
@@ -549,9 +550,30 @@ to SIG 80 spans 14.3 dB unprofiled:
 | 20 | 9.8 dB — compressed by a third | 4% |
 | 30 | 6.4 dB — half the scale gone | 4% |
 
-20 is the setting. It compresses without spending "being loud makes you deaf" to do it, and
-it keeps the idle bed audible where a gentler drive does not — at 8, SIG 10 lands at
--51.5 LUFS, and §1's third law is that a player hears their own noise.
+20 was the setting, and it was the hum reported a third time after #681. A `tanh` driven
+that hard is a clipper: it rebuilds the 44 Hz plant tone as a dense comb of harmonics 44 Hz
+apart, piled up between 300 and 450 Hz — exactly where a phone speaker is most efficient. With
+the bed alone at SIG 18, 78% of the profiled energy above 200 Hz sat on that comb against 13%
+unprofiled, and the harmonic path was supplying 18 dB of the bed's whole level. It also
+pushed the bed *towards* the contacts: 6.8 dB under the reported scene, against 9.5 dB
+unprofiled. The table above measured the scale and the band split, and neither is what a
+sustained tone sounds like.
+
+**Drive 4 is the setting, chosen by ear rather than by table.** Five loudness-matched renders
+of the SIG 18 bed were played on the reporting phone's speaker, and drive 4 is the one the
+player said sounds right. A gentle drive keeps the generator near linear, so the series falls
+away instead of running up the band: the bed's weight moves down to 200-320 Hz and the comb's
+share above 200 Hz falls to two-thirds. A gentle drive also generates far less level, so the
+harmonic path's mix-back rises from 0.55 to 6 — the lift, of 0.55, 1.5, 3 and 6, that keeps
+the bed closest to its unprofiled place under the contacts (12.0 dB) — and the output trim is
+re-derived so the reported scene still lands at -28.5 LUFS. The level is not the variable
+this round changes either.
+
+Measured through the production classes: §4's climb from SIG 10 to SIG 80 spans 17.0 dB
+profiled against 14.4 unprofiled — slightly widened rather than compressed by a third, which
+is the recoverable direction — and the idle bed sits at -47.7 LUFS, above the -51.5 that
+ruled out a gentler drive the first time. The share between 60 and 200 Hz on the reported
+scene is 2.6%, and below 60 Hz 0.2%.
 
 **It defaults on where the device implies a small speaker** — a coarse pointer on a narrow
 screen — on the same terms `reducedMotion` defaults to the OS preference: a player on a
