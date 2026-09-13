@@ -513,8 +513,14 @@ that the Phase-1/2/5 frame-time figures measured the software rasteriser and not
 The geometry the drive counted is unchanged and still inside the caps: 48 draw calls and
 ~142 k triangles at rest, 52 and ~142 k with six own ordnance in the water.
 
-Debts still carried: the sour-exposure audio cue, and the real-GPU / Termux wall-clock
-validation itself — the instrument is ready and the numbers are still owed.
+The desktop half of that validation has since been taken (#286). On a GTX 1070 the two CPU
+halves of the composited frame total under 2.5 ms on average at every station of the drive,
+the overlay the larger of the two, so the frame is paced by the display rather than spent
+by the scene, and nothing on the remedy list is demanded. The table is in
+[graphics-standards.md](graphics-standards.md) gate 6.
+
+Debts still carried: the sour-exposure audio cue, and the Termux half of the wall-clock
+validation, where the floor this debt protects actually is.
 
 ## 10. Open questions
 
