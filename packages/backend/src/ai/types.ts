@@ -297,3 +297,54 @@ export interface AiPlayer {
   readonly slot: number;
   observe(snapshot: EchoSnapshot): AiCommand[];
 }
+
+/**
+ * Why a navy's ordnance hull is or is not in the water (#698).
+ *
+ * Five counters that **partition** the observations reaching the ordnance want
+ * in `commandProduction`: every such observation increments exactly one of
+ * them, so the five sum to `reached` and a column that does not is a bug in the
+ * instrumentation rather than a finding about a navy.
+ *
+ * It exists because the fault it measures is invisible in every other column.
+ * The report can already say a hull was never built (`buildsPerMatchByKind`,
+ * the column #518 was opened for) and can say whether the yard that builds it
+ * ever rose (`structuresPerMatchByKind`) — but between those two there are
+ * three different reasons a want can come to nothing, and a navy that never
+ * fields its declared ordnance hull looks identical under all of them. #698
+ * had to instrument the commander by hand in a scratch run to tell the Order's
+ * case (82% blocked on the escort gate) from the Directorate's (67% blocked on
+ * the yard) from the Commune's (36% blocked on the purse). This makes that
+ * reading a standing column instead of a one-off.
+ *
+ * **This is a measurement of a decision, not of the world**, which is why it
+ * travels beside the telemetry rather than inside it — see the note on
+ * `MatchTelemetry.finish`. Nothing in the simulation reads it and no command
+ * depends on it; a commander that is never asked for it behaves identically.
+ */
+export interface OrdnanceWantTally {
+  /** Observations that reached the want at all. Equals the sum of the rest. */
+  reached: number;
+  /** The escort gate was shut: fewer armed hulls than the doctrine's floor. */
+  notEscorted: number;
+  /** Escorted, and the navy already has one. The want was satisfied. */
+  alreadyHas: number;
+  /** Escorted and wanted, but no yard of the right kind was free. */
+  noYard: number;
+  /** Escorted, wanted, a yard free — and the purse could not pay. */
+  cannotAfford: number;
+  /** Escorted, wanted, a yard free, and paid for. A hull was ordered. */
+  bought: number;
+}
+
+/** A tally with every counter at zero — a commander that has not observed yet. */
+export function emptyOrdnanceWantTally(): OrdnanceWantTally {
+  return {
+    reached: 0,
+    notEscorted: 0,
+    alreadyHas: 0,
+    noYard: 0,
+    cannotAfford: 0,
+    bought: 0,
+  };
+}

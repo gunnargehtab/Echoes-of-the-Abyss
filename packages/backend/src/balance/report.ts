@@ -32,6 +32,8 @@ import {
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
+import { OWN_ORDNANCE } from '../ai/commander.ts';
+import { emptyOrdnanceWantTally, type OrdnanceWantTally } from '../ai/types.ts';
 import type { MatchTelemetryResult, PlayerTelemetry } from './telemetry.ts';
 
 const FACTION_NAME: Record<Faction, string> = {
@@ -135,6 +137,23 @@ export interface FactionSummary {
    * reached, that says what it spent.
    */
   structuresPerMatchByKind: Partial<Record<StructureKind, number>>;
+  /**
+   * Why this navy's ordnance hull was or was not bought, summed over the batch
+   * (#698).
+   *
+   * Totals rather than per-match rates, and deliberately so: these are counts
+   * of *observations*, not of matches, so a per-match figure would be an
+   * average of a thing whose denominator is how long the navy lived. The shares
+   * printed beside them are what the reading is actually made on, and a share
+   * is the same number whether it is taken over ten matches or thirty.
+   *
+   * This is the column the report was missing. `buildsPerMatchByKind` can say
+   * the Lance was never built and `structuresPerMatchByKind` can say the
+   * Slipway rose in twenty matches of thirty; between those two facts sit four
+   * different gates, and until now telling which one shut required
+   * instrumenting the commander by hand.
+   */
+  ordnanceWant: OrdnanceWantTally;
   /**
    * The bank against the rung (#518) — what a navy was ever, at one instant,
    * holding, and what it was holding once its yard was standing.
@@ -601,6 +620,17 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
         rows.map((r) => r.player),
         (p) => p.structuresBuiltByKind
       ),
+      ordnanceWant: rows.reduce<OrdnanceWantTally>((total, r) => {
+        const t = r.player.ordnanceWant;
+        return {
+          reached: total.reached + t.reached,
+          notEscorted: total.notEscorted + t.notEscorted,
+          alreadyHas: total.alreadyHas + t.alreadyHas,
+          noYard: total.noYard + t.noYard,
+          cannotAfford: total.cannotAfford + t.cannotAfford,
+          bought: total.bought + t.bought,
+        };
+      }, emptyOrdnanceWantTally()),
       peakBank: distribution(rows.map((r) => r.player.peakNodules)).median,
       peakBankBest: Math.max(0, ...rows.map((r) => r.player.peakNodules)),
       peakBankEarned: Math.max(
@@ -1098,6 +1128,59 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
     lines.push('');
     lines.push(
       '_The opening Bastion and Foundry are not counted: they are a gift, not a decision._'
+    );
+    lines.push('');
+  }
+  // Why the ordnance hull is or is not in the water (#698). Placed directly
+  // under the two build tables because it is only readable beside them: those
+  // say *whether* a navy fielded its declared ordnance hull, this says which
+  // gate stopped it, and a reader who has not just seen the zero has no
+  // question for this table to answer.
+  //
+  // Printed only when somebody was actually instrumented. A batch of human
+  // seats — or a stored result from before this column existed, replayed
+  // through `summarise` — has every counter at zero, and a table of dashes
+  // would read as "no navy ever wanted ordnance" rather than as "nothing here
+  // measured it".
+  if (summary.factions.some((f) => f.ordnanceWant.reached > 0)) {
+    lines.push('## The ordnance want — where it was stopped');
+    lines.push('');
+    lines.push(`| Reason | ${summary.factions.map((f) => FACTION_NAME[f.faction]).join(' | ')} |`);
+    lines.push(`| --- |${summary.factions.map(() => ' --- |').join('')}`);
+    lines.push(
+      `| Hull wanted | ${summary.factions
+        .map((f) => UNIT_STATS[OWN_ORDNANCE[f.faction]].name)
+        .join(' | ')} |`
+    );
+    lines.push(
+      `| Observations reaching the want | ${summary.factions
+        .map((f) => f.ordnanceWant.reached.toString())
+        .join(' | ')} |`
+    );
+    // Count and share, because neither alone is the reading. A share says which
+    // gate dominates and is comparable between navies that lived different
+    // lengths; the count is what makes a share of a handful of observations
+    // visible as the noise it is.
+    const wantRow = (label: string, pick: (t: OrdnanceWantTally) => number): void => {
+      const cells = summary.factions.map((f) => {
+        const t = f.ordnanceWant;
+        if (t.reached === 0) return '—';
+        return `${pick(t)} (${Math.round((pick(t) / t.reached) * 100)}%)`;
+      });
+      lines.push(`| ${label} | ${cells.join(' | ')} |`);
+    };
+    wantRow('Blocked: not escorted', (t) => t.notEscorted);
+    wantRow('Blocked: no free yard', (t) => t.noYard);
+    wantRow('Blocked: cannot afford', (t) => t.cannotAfford);
+    wantRow('Already has one', (t) => t.alreadyHas);
+    wantRow('**Bought**', (t) => t.bought);
+    lines.push('');
+    lines.push(
+      '_The five reasons partition the want: every observation that reaches it ' +
+        'increments exactly one, so the five sum to the row above them. A navy ' +
+        'whose **bought** cell is 0 never put its own declared ordnance hull in ' +
+        'the water, and the largest blocked row says which gate to argue with ' +
+        '(#698)._'
     );
     lines.push('');
   }

@@ -85,7 +85,8 @@ import {
   type Doctrine,
   type ExposureResponse,
 } from './doctrine.ts';
-import type { AiBriefing, AiCommand, AiPlayer } from './types.ts';
+import { emptyOrdnanceWantTally } from './types.ts';
+import type { AiBriefing, AiCommand, AiPlayer, OrdnanceWantTally } from './types.ts';
 
 /**
  * Ranges the commander reasons with, in metres. TUNABLE throughout — these are
@@ -594,8 +595,14 @@ const OWN_SCOUT: Record<Faction, UnitKind> = {
  * Each navy's ordnance hull (#507), on the same terms as `OWN_SCOUT` and for
  * the same reason: a roster fact, kept off the composition so it cannot
  * re-phase the cycle.
+ *
+ * Exported for the report's block-reason table (#698), which has to name the
+ * hull each navy's column is about. A second list over there would be a copy of
+ * this one, free to drift, in the file least likely to be edited when a wave
+ * moves a navy's ordnance hull — the same argument `atTheRung` makes below for
+ * deriving rather than listing.
  */
-const OWN_ORDNANCE: Record<Faction, UnitKind> = {
+export const OWN_ORDNANCE: Record<Faction, UnitKind> = {
   [Faction.Bathyarch]: UnitKind.Broadside,
   [Faction.Pelagia]: UnitKind.Weaver,
   [Faction.Directorate]: UnitKind.Thurible,
@@ -1111,6 +1118,15 @@ export class AiCommander implements AiPlayer {
    * than expiring the instant it is next asked for. See `RUNG.SAVE_S`.
    */
   private purseSave: { kind: UnitKind; sinceTick: number; lastTick: number } | null = null;
+  /**
+   * Why the ordnance want came to nothing, counted (#698).
+   *
+   * Written in exactly one place — the ordnance branch of `commandProduction`
+   * — and read by nothing in the simulation. It is a diagnostic channel for the
+   * balance harness, not state: no branch here consults it, so deleting every
+   * increment would change no command this commander issues.
+   */
+  private readonly ordnanceWantTally: OrdnanceWantTally = emptyOrdnanceWantTally();
   /** The transport plan, if the navy has a carrier afloat (see `LIFT`). */
   private lift: { carrierId: number; phase: 'loading' | 'sailing'; sinceTick: number } | null =
     null;
@@ -1224,6 +1240,18 @@ export class AiCommander implements AiPlayer {
     this.nextPingTick = this.doctrine.pingIntervalS * SIM.TICK_HZ;
     this.crystalField =
       briefing.nodes.find((node) => node.kind === ResourceKind.ResonanceCrystal) ?? null;
+  }
+
+  /**
+   * The ordnance want's block reasons so far this match (#698).
+   *
+   * A copy, so a reader cannot hold a live handle on the commander's own
+   * counters and cannot reset them by accident. Read by the balance harness at
+   * the end of a run and by the tests that hold the partition; nothing in the
+   * simulation reads it at all.
+   */
+  get ordnanceWant(): OrdnanceWantTally {
+    return { ...this.ordnanceWantTally };
   }
 
   observe(snapshot: EchoSnapshot): AiCommand[] {
@@ -2570,18 +2598,40 @@ export class AiCommander implements AiPlayer {
     //
     // One. Every one of these is a magazine rather than a line hull, and a
     // second would double a cost the commander has no second plan for.
+    //
+    // Every path out of this branch is counted (#698). The counters partition
+    // it — one increment per observation that gets here, five reasons, and the
+    // five sum to `reached` — because "the Lance is never built" has three
+    // different causes that no other column in the report can tell apart, and
+    // the one that turned out to be true for the Order (the escort gate, 82%
+    // of its observations) is the one nothing could see. `OrdnanceWantTally`
+    // carries the rest of that argument. The tallies are writes to a plain
+    // object on a path that already walks the structure list twice; they are
+    // not on the 60 Hz step path at all — `commandProduction` runs on the Echo
+    // tick, behind `observe`.
     const ownOrdnance = OWN_ORDNANCE[this.briefing.faction];
+    const tally = this.ordnanceWantTally;
+    tally.reached++;
+    if (!escorted) tally.notEscorted++;
     if (escorted) {
       const carried =
         snapshot.units.reduce((n, u) => n + (u.kind === ownOrdnance ? 1 : 0), 0) +
         queuedOf(ownOrdnance);
+      if (carried >= 1) tally.alreadyHas++;
       if (carried < 1) {
         const yard = this.freeYard(snapshot.structures, ownOrdnance);
+        if (yard === null) tally.noYard++;
         if (yard !== null) {
           if (this.affordUnit(ownOrdnance, purse)) {
+            tally.bought++;
             buy(ownOrdnance, yard);
             return;
           }
+          // Not a purchase this observation. The bid below may still hold the
+          // purse for it — that is saving, not buying, and `holdPurse` never
+          // issues a produce — so counting it here would count the same hull
+          // once per observation it saved for.
+          tally.cannotAfford++;
           // Three of the four are behind the rung, and out of pocket they were
           // bought by luck: 400 nodules had to be standing in the bank at one
           // of the observations between the yard rising and the duel ending.

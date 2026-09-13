@@ -91,11 +91,21 @@ export function runMatch(options: RunOptions): MatchTelemetryResult {
     }
   }
 
+  // The one measurement that is not in anybody's snapshot, taken from the only
+  // thing that holds it (#698). A commander's reason for *not* buying its
+  // ordnance hull is a fact about a decision rather than about the water, so it
+  // cannot arrive through `telemetry.observe` the way every other series does —
+  // see the note on `MatchTelemetry.finish`. Read once at the end rather than
+  // sampled: the counters are cumulative over the match already, and sampling
+  // them would only add a second, lossier copy.
+  const ordnanceWant = new Map(seats.map((seat) => [seat.slot, seat.ordnanceWant]));
+
   return telemetry.finish(
     match.tick,
     match.result?.winnerSlot ?? null,
     timedOut,
-    match.faunaComplement
+    match.faunaComplement,
+    ordnanceWant
   );
 }
 
