@@ -28,16 +28,17 @@
  *   - Comments are stripped because the long explanation above a test is exactly
  *     the text that survives a rename, and would keep the gate green on a holder
  *     that no longer exists.
- *   - The quote is required because a bare substring matches an identifier. Row
- *     14's holder is `describe('reliefShade', ...)`, and `reliefShade` is also
+ *   - The quote is required because a bare substring matches an identifier. The
+ *     relief-pass row's holder is `describe('reliefShade', ...)`, and `reliefShade` is also
  *     the name of the imported function under test — so with plain `includes`
  *     the whole describe block could be deleted and this gate still reported
  *     "all present". A `describe`/`it` title is always a string literal, so the
  *     opening quote is what separates a title from every other mention.
  *
- * Matching a *prefix* of a title stays allowed — row 7 names the readable start
- * of a title that carries backticks of its own — because the quote anchors the
- * start, which is the half that matters.
+ * Matching a *prefix* of a title stays allowed — the monotonicity row names the
+ * readable start of a title that carries backticks of its own — because the quote
+ * anchors the start, which is the half that matters. Rows are referred to by what
+ * they say rather than by number: numbers shift when a row is split.
  *
  *   node tools/invariants/check.mjs [--list]
  */
@@ -63,7 +64,10 @@ function stripComments(source) {
 
 /**
  * Parse the "Held by" column into { file, testName } pairs. A cell may name more
- * than one holder, separated by `;` — row 12 is held in two suites at once.
+ * than one holder, separated by `;` — the propagation-peak invariant is held in
+ * two suites at once (hazards and terrainChange). Named rather than numbered:
+ * row numbers shift whenever a row is split, and this comment cited a stale one
+ * for exactly that reason.
  */
 function holdersOf(cell) {
   return cell

@@ -37,6 +37,12 @@ Each row names the property, the doc section or issue it descends from, and the 
 and test that hold it. `npm run check:invariants` verifies that every holder still
 exists, by file and by test name.
 
+**The numbers are ordinals, not identifiers.** Splitting or inserting a row renumbers
+everything below it, and the gate reads only the table — it cannot see a cross-reference
+elsewhere that still cites an old number. Refer to a row by what it says, not by its
+number. Three references in this repository had to be repaired after one split for
+exactly this reason.
+
 | # | Invariant | Source | Held by |
 | --- | --- | --- | --- |
 | 1 | Every spawn path registers its entity, so a pass walking ids ascending under `world.maxEid` sees every entity that exists | bitECS sizes stores to capacity; the bound is only correct while this holds | `packages/backend/test/world.test.ts` — `entity id high-water mark` |
@@ -75,6 +81,6 @@ everything else. This gate only holds the *list*.
 - `CLAUDE.md` — the two clocks, constants in one place, server-authoritative
 - [maps.md](maps.md) — how a map is written, and the three authoring faults its tests caught
 - [systems-combat.md](systems-combat.md) — ordnance, decoys, and what a mine does
-- [systems-echo.md](systems-echo.md) — detection, the pass the budget in row 8 bounds
-- [ui-ux.md](ui-ux.md) — §10.5's status region, and the anti-reveal rules row 7 serves
+- [systems-echo.md](systems-echo.md) — detection, the pass the Echo-budget row bounds
+- [ui-ux.md](ui-ux.md) — §10.5's status region, whose counters the mission-panel row holds
 - [README.md](README.md) — the rest of the design bible
