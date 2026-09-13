@@ -24,8 +24,9 @@
  * than assumed.
  *
  * On a device where Playwright will not run — which includes most Termux
- * setups — drive the same five stations by hand in the browser and read the
- * same two calls from the console:
+ * setups — paste stations-console.js beside this file into the page's console
+ * instead. It is these five stations, driven the same way, reading the same
+ * two calls:
  *
  *   window.__perspectiveStation('marquee');   // begin, zeroing the counters
  *   // ... hold the station ...

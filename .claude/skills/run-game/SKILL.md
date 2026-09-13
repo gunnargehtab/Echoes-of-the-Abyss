@@ -213,6 +213,13 @@ STATION_SECONDS=8 node .claude/skills/run-game/scripts/drive.mjs --headed --chan
   --out /tmp/stations --steps .claude/skills/run-game/scripts/stations.mjs
 ```
 
+Where Playwright cannot reach — Chrome on a phone under Termux — paste
+`scripts/stations-console.js` whole into the page's console instead, reached from a PC
+through `edge://inspect/#devices` with USB debugging on. It walks the same five stations
+through the mouse path (touch has no marquee, so a touch drive would ring one hull and
+under-price `marquee`), prints the table, and copies the result as JSON to the inspecting
+PC's clipboard. `window.__stationSeconds` shortens its fifteen-second dwell.
+
 The table's `renderer:` line names the rasteriser, and a software one is flagged. **Run
 nothing else while it drives.** A build rewrites `@echoes/shared/dist`, the backend's
 `tsx watch` restarts, and the `fight` station ends on "No signal" with numbers that still

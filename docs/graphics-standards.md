@@ -339,8 +339,9 @@ The drive is five stations, chosen because each loads a different part of the fr
 
 `.claude/skills/run-game/scripts/stations.mjs` walks all five and prints the table
 (`drive.mjs --steps`, `STATION_SECONDS` to lengthen the dwell). Where Playwright will not
-run — which includes most Termux setups — drive the same five by hand and read the same two
-calls from the console.
+run — which includes most Termux setups — `.claude/skills/run-game/scripts/stations-console.js`
+is the same five as a paste into the page's own console, reached from a PC over USB
+debugging, and it reads the same two calls.
 
 **None of the figures in the Phase-1/2/5 records are candidates.** Every one of them was
 taken under SwiftShader in a container, which is the software rasteriser rather than the
