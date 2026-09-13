@@ -112,7 +112,9 @@ changes that are not hulls.
 
 Two consequences, neither of them style:
 
-- **The critic cannot edit.** It has no `Edit` and no `Write`. A critic that
+- **The critic does not edit.** It has no `Edit` and no `Write`, and a standing
+  rule against writing through the `Bash` it does have — that is granted so it
+  can re-run a scenario or a test file, never to change the tree. A critic that
   fixes what it finds has authored the fix and is grading itself one level down.
   It reports; you fix; it looks again.
 - **The critic starts fresh every round.** Not resumed, not continued. By round
@@ -152,19 +154,27 @@ open finding is how a bounded loop becomes an unbounded one.
 
 ### Stall detection
 
-A target you cannot name is a stall on round one: there is nothing to build
-against, and guessing one is the failure this loop exists to avoid. Otherwise,
-two rounds that close no finding the critic had already raised means the
-approach is wrong, not that it needs a third attempt. Stop refining and
-reconsider the design: re-read the target, and say plainly what about the
-current shape cannot satisfy it.
+Two stalls, with different remedies. Do not treat them alike.
 
-If a reconsidered approach also fails to close a finding, **the loop is stalled
-and stops.** Report what you tried, what the critic keeps saying, and what you
-would need in order to proceed. Under `work-issue` that is a stopping comment
-and a released claim; interactively it is a question to the person at the
-keyboard. A loop that reports a stall is working correctly. A loop that keeps
-going is not.
+**A target you cannot name stalls on round one, and stops immediately.** There
+is nothing to build against, and "reconsidering the design" here is one step
+from inventing the target, which is the failure this loop exists to avoid. Do
+not run a second round. This is `work-issue` §7's design-call case, so stop the
+way it says to — `needs-decision` label and released claim — exactly as "Three
+things the loop must never do" already routes it.
+
+**Two rounds that close no finding the critic had already raised** mean the
+approach is wrong, not that it needs a third attempt. Here reconsidering *is*
+the remedy: stop refining, re-read the target, and say plainly what about the
+current shape cannot satisfy it. If the reconsidered approach also fails to
+close a finding, **the loop is stalled and stops.** Report what you tried, what
+the critic keeps saying, and what you would need in order to proceed. That is
+`work-issue` §7's third case — a fix that did not converge — so it takes a
+stopping comment and a released claim and **no** label; §7 is explicit that the
+next firing deserves its own attempt. Interactively it is a question to the
+person at the keyboard.
+
+A loop that reports a stall is working correctly. A loop that keeps going is not.
 
 ## Guardrails
 

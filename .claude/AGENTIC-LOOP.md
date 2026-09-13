@@ -68,7 +68,8 @@ already commits them under `docs/concept-art/`.
 a blind spot about shape is aesthetic and travels with the model. A blind spot
 about correctness is not that — it is what this session has already talked
 itself into over three rounds — and fresh context is what cures it. So
-`loop-critic` is `opus` and the separation is carried by no write tools and no
+`loop-critic` is `opus`, and the separation is carried by no editing tools, a
+standing rule against writing through the `Bash` it needs for evidence, and no
 resumed context.
 
 **There is no score.** dream-loop exits at a rubric score of 8, which suits a

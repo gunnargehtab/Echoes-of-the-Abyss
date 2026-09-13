@@ -414,11 +414,13 @@ npm run gates
 
 One command, one exit code, no fail-fast, so one run tells you everything that
 is red. This used to be a hand-copied list of eight commands, which is the drift
-`tools/gates.mjs` was written to end — it was missing `preflight` and
-`check:models`, so a firing that followed it was two gates short of CI and
-learned the difference from a red pull request.
+`tools/gates.mjs` was written to end — it was missing `check:models`, which CI
+has run since #540, so a firing that followed it was a gate short of CI and
+learned the difference from a red pull request. It also omitted `preflight`,
+which is not a CI gate at all: the workflow gets install currency for free from
+`npm ci`, and locally you do not.
 
-Every gate it runs is blocking in CI, both doc gates included, so a dead link in
+Every CI gate is in there, both doc gates included, so a dead link in
 `docs/` fails the build exactly as a failing test does. The run is slow — the
 test gate alone is over two minutes, and single mission test files run over a
 minute — which is the argument for running it here rather than learning the same
