@@ -24,109 +24,21 @@ import assert from 'node:assert/strict';
 import type { Client } from '@colyseus/core';
 import { CLIENT_MSG, MatchPhase } from '@echoes/shared';
 
-import { MatchRoom } from '../src/rooms/MatchRoom.ts';
-
-/** A client, as far as anything exercised here is concerned. */
-interface FakeClient {
-  sessionId: string;
-  sent: { type: string; payload: unknown }[];
-  send(type: string, payload: unknown): void;
-}
-
-const fakeClient = (sessionId: string): FakeClient => ({
-  sessionId,
-  sent: [],
-  send(type: string, payload: unknown): void {
-    this.sent.push({ type, payload });
-  },
-});
-
-/**
- * The room's row in the matchmaker's cache.
- *
- * `lock()`, `setPrivate()` and `setMetadata()` all write to it, and `_dispose`
- * removes it, so a room cannot be booted without one.
- */
-const stubListing = (): Record<string, unknown> => ({
-  metadata: undefined,
-  private: false,
-  locked: false,
-  save: async (): Promise<void> => {},
-  remove: (): void => {},
-  updateOne: async (): Promise<void> => {},
-});
-
-/** The private Colyseus internals these tests have to reach through. */
-interface RoomInternals {
-  listing: unknown;
-  _internalState: number;
-  _simulationInterval: NodeJS.Timeout | undefined;
-  onMessageHandlers: Record<string, ((client: Client, payload: unknown) => void) | undefined>;
-  /** The room's own simulation. Private, and the only way to tear a step. */
-  match: { update: (deltaMs: number) => unknown; tick: number };
-}
-
-const internals = (room: MatchRoom): RoomInternals => room as unknown as RoomInternals;
-
-/** Colyseus's `RoomInternalState.CREATED`. */
-const CREATED = 1;
-/** Colyseus's `RoomInternalState.DISPOSING`. */
-const DISPOSING = 2;
-
-/**
- * A booted room on the default map, with its simulation interval live.
- *
- * The patch rate is switched off: it serialises state to clients this room has
- * none of, and leaving it on would put a second timer in the test alongside the
- * one actually under test.
- */
-async function bootRoom(): Promise<MatchRoom> {
-  const room = new MatchRoom();
-  internals(room).listing = stubListing();
-  await room.onCreate({});
-  // The matchmaker flips this once `onCreate` resolves, and `disconnect()`
-  // refuses to run while a room still reads as CREATING. A room that never
-  // left that state could not be ended by the hook under test.
-  internals(room)._internalState = CREATED;
-  room.setPatchRate(null);
-  return room;
-}
-
-/** Deliver one message through the handler Colyseus actually registered. */
-function deliver(room: MatchRoom, type: string, client: FakeClient, payload: unknown): void {
-  const handler = internals(room).onMessageHandlers[type];
-  assert.ok(handler !== undefined, `no handler registered for ${type}`);
-  handler(client as unknown as Client, payload);
-}
-
-/** Seat two commanders and ready them both, so the room is Playing. */
-function startPlaying(room: MatchRoom): FakeClient[] {
-  const clients = [fakeClient('one'), fakeClient('two')];
-  for (const client of clients) room.onJoin(client as unknown as Client);
-  for (const client of clients) deliver(room, CLIENT_MSG.ready, client, { ready: true });
-  assert.equal(room.state.phase, MatchPhase.Playing, 'the room should be playing');
-  return clients;
-}
-
-/** Poll until `done()` holds. A timeout fails rather than passing slowly. */
-async function until(done: () => boolean, what: string): Promise<void> {
-  for (let waited = 0; waited < 2000; waited += 1) {
-    if (done()) return;
-    await new Promise((resolve) => setTimeout(resolve, 1));
-  }
-  assert.fail(`timed out waiting for ${what}`);
-}
-
-/** Tear a room down through the path the server uses, without its log line. */
-async function shutdown(room: MatchRoom): Promise<void> {
-  const log = console.log;
-  console.log = (): void => {};
-  try {
-    await room.disconnect();
-  } finally {
-    console.log = log;
-  }
-}
+import type { MatchRoom } from '../src/rooms/MatchRoom.ts';
+// The boot and delivery harness, shared with `wireValidation.test.ts` since
+// #628 rather than written out twice — see the head of that file.
+import {
+  CREATED,
+  DISPOSING,
+  bootRoom,
+  deliver,
+  fakeClient,
+  internals,
+  shutdown,
+  startPlaying,
+  until,
+  type FakeClient,
+} from './support/room.ts';
 
 /**
  * Run `body` and return what the hook logged.

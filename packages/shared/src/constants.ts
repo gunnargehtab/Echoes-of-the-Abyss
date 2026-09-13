@@ -2605,3 +2605,46 @@ export const HOLD = {
    */
   LANDING_RING_RADII: 2.5,
 } as const;
+
+/**
+ * What the room will accept off the socket, before anything reads it — #628.
+ *
+ * Both numbers are bounds rather than balance: they say how much a *client*
+ * may ask the room to do in one message and in one second, which is a
+ * property of the socket and not of the game. They live here because
+ * `wire.ts` declares the shape that spends them and `MatchRoom` enforces it,
+ * and a constant that has to exist in two packages will eventually disagree
+ * with itself.
+ *
+ * Neither is a balance number, so neither is inside `CLAUDE.md`'s freeze.
+ */
+export const WIRE = {
+  /**
+   * TUNABLE — the most ids one message may carry in an array field.
+   *
+   * Every `unitIds` handler loops the array synchronously, on the thread that
+   * runs the 60 Hz step, so before this the cost of one message was whatever
+   * the sender chose to make it. Nothing caps a player's fleet, so this is a
+   * bound on the *selection* rather than on the roster — but the roster is
+   * what a select-all can name, and `tools/balance/baselines/
+   * four-faction-baseline.md` puts the busiest navy's whole match at about
+   * thirty hulls built against as many lost. 256 is several times the largest
+   * fleet that has ever existed in a measured match, which is what makes it a
+   * bound on abuse rather than on play. A message that exceeds it is refused
+   * whole rather than truncated — a half-applied order is a worse answer than
+   * no order.
+   */
+  MAX_IDS: 256,
+  /**
+   * TUNABLE — the most messages one client may send inside `BUDGET_WINDOW_MS`.
+   *
+   * Declared rather than implicit, which is the point: before this the
+   * frequency a client could order at was unbounded and nothing said so.
+   * Sized for a person rather than for the wire — a drag-select and a burst of
+   * orders is a few messages a second, and the client's own UI cannot emit
+   * near this — so the budget binds a script and not a player.
+   */
+  MAX_MESSAGES_PER_WINDOW: 240,
+  /** TUNABLE — the window the count above is spent in. */
+  BUDGET_WINDOW_MS: 1000,
+} as const;

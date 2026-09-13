@@ -28,6 +28,7 @@
  * stay in `GameClient.ts`, because nothing sends them).
  */
 
+import { WIRE } from './constants.js';
 import type {
   AiDifficulty,
   Faction,
@@ -378,6 +379,187 @@ export interface ClientMessages {
   addAi: AddAiMessage;
   removeAi: AiSeatMessage;
   aiDifficulty: AiSeatMessage;
+}
+
+// --- What a payload must look like at runtime -----------------------------
+//
+// The maps above are the contract's *compile-time* half: a name renamed or a
+// payload reshaped on one side of the socket stops compiling on both (#489).
+// They say nothing about what arrives. `ClientMessages[K]` describes what a
+// well-behaved client sends, and the socket carries whatever it is handed —
+// so until #628 the room's only defence was a line written by hand in each of
+// its handlers, and nothing checked the line had been written. Thirty-nine
+// such checks were scattered across thirty-two handlers, and they were not
+// uniform: #609's two holes were the two whose author stopped at
+// `Number.isFinite` where the others went further.
+//
+// This is the same fact one layer down. Each message declares its fields the
+// way it declares its payload, in this file, and the room validates from the
+// declaration instead of from memory. After it, the answer to "is this field
+// checked?" is "read the table" rather than "read the handler".
+
+/** What one field of one message must be, when it is there at all. */
+export interface FieldShape {
+  /**
+   * `number` is finite — `NaN` and both infinities are refused, because every
+   * one of them reaches the sim as a position or an id and poisons whatever
+   * it touches. `idList` is an array of finite numbers, bounded. `boolean`
+   * and `string` are themselves.
+   */
+  readonly type: 'number' | 'boolean' | 'string' | 'idList';
+  /**
+   * Absent is allowed, and the handler's own default stands. Present-but-wrong
+   * is still a refusal: an optional field is one the client may omit, not one
+   * it may fill with anything.
+   */
+  readonly optional?: true;
+  /**
+   * `idList` only — the most entries this field may carry, `WIRE.MAX_IDS`
+   * unless a message has a reason to be tighter.
+   */
+  readonly max?: number;
+}
+
+/** Every field of every message a client may send. */
+export type MessageShape = Readonly<Record<string, FieldShape>>;
+
+/**
+ * One shape per field of one payload — every field, optional ones included.
+ *
+ * `-?` is the load-bearing character. It makes an optional field of the
+ * payload a *required* entry of its shape, so `queued` cannot be left out of
+ * the table and silently go unchecked; whether the client may omit it is then
+ * said once, in `FieldShape.optional`, where the room reads it. The mapped
+ * key also means a field name that is not on the payload is a build error
+ * rather than a line that validates nothing — which is the failure mode this
+ * table would otherwise have, and the one the issue's own argument against
+ * exemption lists warns about: a check that cannot be wrong by inspection.
+ */
+export type ShapeOf<T> = { readonly [F in keyof T]-?: FieldShape };
+
+const NUM: FieldShape = { type: 'number' };
+const FLAG: FieldShape = { type: 'boolean' };
+/** `queued` and friends: the client may leave it out, and false is the answer. */
+const OPTIONAL_FLAG: FieldShape = { type: 'boolean', optional: true };
+const OPTIONAL_NUM: FieldShape = { type: 'number', optional: true };
+const TEXT: FieldShape = { type: 'string' };
+const IDS: FieldShape = { type: 'idList', max: WIRE.MAX_IDS };
+
+/**
+ * Name to shape, for everything a client sends.
+ *
+ * **Keyed as `ClientMessages` is**, which is the whole reason `depthcharge`
+ * needs no special case: that one name is lower case on the wire and both
+ * maps spell it the way the wire does, so a table keyed here agrees with a
+ * table keyed there by construction. #621 measured the other way round and
+ * found the spurious name it reports.
+ *
+ * The annotation is the exhaustiveness check, and it is deliberately an
+ * annotation rather than one of the `Exact<>` assertions at the foot of this
+ * file. `Exact<>` fails with `Type 'true' is not assignable to type 'never'`
+ * and names nothing; a `Record` keyed on `keyof ClientMessages` fails with
+ * the *message* in the diagnostic, in both directions — a missing entry and
+ * an entry for a name nothing sends. #621 established that the diagnostic is
+ * the point, and this is the same lesson applied one map over.
+ *
+ * A message with no fields declares `{}` rather than being left out: an empty
+ * shape says "this payload carries nothing", which is a claim the room checks,
+ * and a missing one would say nobody had thought about it.
+ */
+export const CLIENT_SHAPE: { readonly [K in keyof ClientMessages]: ShapeOf<ClientMessages[K]> } = {
+  move: { unitIds: IDS, x: NUM, y: NUM, queued: OPTIONAL_FLAG },
+  attackMove: { unitIds: IDS, x: NUM, y: NUM, queued: OPTIONAL_FLAG },
+  stop: { unitIds: IDS },
+  hold: { unitIds: IDS, active: FLAG },
+  rally: { structureIds: IDS, x: NUM, y: NUM },
+  embark: { unitIds: IDS, carrierId: NUM },
+  disembark: { unitIds: IDS },
+  attack: { unitIds: IDS, contactId: NUM, queued: OPTIONAL_FLAG },
+  depth: { unitIds: IDS, depth: NUM },
+  followFloor: { unitIds: IDS, active: FLAG },
+  silent: { unitIds: IDS, active: FLAG },
+  engineOff: { unitIds: IDS, active: FLAG },
+  ping: { unitId: NUM },
+  // The commander's one act carries nothing, and that is the contract rather
+  // than an omission: a payload that named a unit would be a client choosing
+  // where the plateau's bell hangs.
+  ability: {},
+  torpedo: { unitIds: IDS, contactId: NUM },
+  noisemaker: { unitIds: IDS },
+  layDecoy: { unitId: NUM },
+  seedSpore: { unitId: NUM, contactHandle: NUM },
+  sow: { unitIds: IDS },
+  sing: { unitId: NUM },
+  mine: { unitIds: IDS },
+  depthcharge: { unitIds: IDS, depth: NUM },
+  harvest: { unitIds: IDS, nodeId: NUM, queued: OPTIONAL_FLAG },
+  throttle: { unitIds: IDS, throttle: NUM },
+  build: { kind: NUM, x: NUM, y: NUM },
+  produce: { structureId: NUM, kind: NUM },
+  refit: { structureId: NUM, kind: NUM },
+  faction: { faction: NUM },
+  ready: { ready: OPTIONAL_FLAG },
+  addAi: { difficulty: OPTIONAL_NUM },
+  removeAi: { sessionId: TEXT, difficulty: OPTIONAL_NUM },
+  aiDifficulty: { sessionId: TEXT, difficulty: OPTIONAL_NUM },
+};
+
+/** One field against its declaration. */
+function fieldIsValid(value: unknown, shape: FieldShape): boolean {
+  if (value === undefined || value === null) return shape.optional === true;
+  switch (shape.type) {
+    case 'number':
+      return typeof value === 'number' && Number.isFinite(value);
+    case 'boolean':
+      return typeof value === 'boolean';
+    case 'string':
+      return typeof value === 'string';
+    case 'idList': {
+      if (!Array.isArray(value)) return false;
+      // Length before contents, so a client cannot spend the room's time by
+      // sending an array too long to be accepted anyway.
+      if (value.length > (shape.max ?? WIRE.MAX_IDS)) return false;
+      for (const entry of value) {
+        if (typeof entry !== 'number' || !Number.isFinite(entry)) return false;
+      }
+      return true;
+    }
+  }
+}
+
+/**
+ * Is this payload the shape its name declares?
+ *
+ * The one place a client message is checked. Refusals are silent and whole —
+ * silent because every other server-side refusal in this room is (a client
+ * that learns *which* of its messages was rejected learns something about the
+ * room it was not sent), and whole because a half-applied order is a worse
+ * answer than no order.
+ *
+ * Fields the shape does not declare are ignored rather than refused. The
+ * contract is what the room reads, and a client that sends more than that is
+ * wasting its own bytes; refusing on them would make adding a field to a
+ * payload a protocol break for every client that had not yet been rebuilt.
+ */
+export function isValidClientMessage<K extends keyof ClientMessages>(
+  name: K,
+  payload: unknown
+): payload is ClientMessages[K] {
+  // `undefined` is refused here rather than treated as the empty payload, and
+  // the caller normalises it instead (`MatchRoom.onClientMessage`). A
+  // predicate that let `undefined` through would be narrowing to a type it is
+  // not — every payload in `ClientMessages` is an object, including the two
+  // whose every field is optional.
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) return false;
+  // Widened once, here, because the table is typed per message and this
+  // function is written once for all of them. Everything the cast hides has
+  // already been checked by the compiler at the declaration above.
+  const shape = CLIENT_SHAPE[name] as MessageShape;
+  const record = payload as Record<string, unknown>;
+  for (const field of Object.keys(shape)) {
+    if (!fieldIsValid(record[field], shape[field]!)) return false;
+  }
+  return true;
 }
 
 // --- Server to client -----------------------------------------------------
