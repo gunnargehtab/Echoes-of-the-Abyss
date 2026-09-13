@@ -581,14 +581,39 @@ Keep it to what a person needs in order to decide whether to step in:
 > **HH:MM — took #n** / **filed #a, #b** / **stopped on #n** / **nothing to do**
 > One line: the branch and the pull request, or the epic and the boxes it came
 > from, or why a comment beat a pull request.
+> Rounds: how many `dev-loop` rounds and the critic's last verdict — or **no
+> rounds** and why, or **critic unavailable** and what happened when you tried.
 > Passed over: older eligible issues, one clause each, or "nothing older".
 > Needs a person: a stale claim, a `needs-decision` you applied and the call it
 > is waiting on, a recurring skip that wants a label you cannot apply, a branch
 > left behind — or "nothing".
 
-This is the same list steps 3, 4 and 7 already ask for, and writing it twice is
-deliberate rather than redundant: the comment on an issue reaches whoever watches
-*that issue*, and the log reaches whoever watches *the loop*. Before #580 the
+### Say whether the critic ran, every time
+
+The rounds line is not optional and **"no rounds" is a normal entry** — a firing
+that stood down, filed sub-issues, or found nothing eligible ran none, and
+saying so is the whole point. What the line exists to make impossible is the
+silent case.
+
+§5 hands the work to [`dev-loop`](../dev-loop/SKILL.md), whose round ends by
+handing the diff to the `loop-critic` subagent. That subagent is the only thing
+standing between this loop and a generator grading its own work, which #540
+settled is not a gate. If it cannot be spawned — the agent file missing from the
+clone, `Task` refused, an error you could not get past — `dev-loop` degrades to
+self-review and **produces no error at all**: the gates still pass, the pull
+request still opens, and it reads exactly like a run that was reviewed. Nothing
+else in this repository can detect that from the outside.
+
+So write **critic unavailable** and what you saw when you tried, rather than
+omitting the line. A firing that says so is reporting the most useful thing it
+found that hour. A firing that quietly self-reviews has spent an hour producing
+a pull request nobody should trust as reviewed, and left no way to know.
+
+Most of that list is what steps 3, 4 and 7 already ask for, and writing it twice
+is deliberate rather than redundant: the comment on an issue reaches whoever
+watches *that issue*, and the log reaches whoever watches *the loop*. The rounds
+line is the exception — nothing else asks for it, and the log is the only place
+it is ever recorded. Before #580 the
 second person had nowhere to look, which is why step 1 stayed blind for four days
 while every firing dutifully carried on.
 
