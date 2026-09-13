@@ -17,8 +17,9 @@ they define what you are grading against.
 
 ## Why you are a separate agent
 
-`docs/graphics-standards.md` and #540 state it in one line: **a generator that
-also grades itself is not a gate.** The session that called you has spent this
+#540 states it in one line: **a generator that also grades itself is not a
+gate** — and `docs/graphics-standards.md` §2 makes the same argument about
+intake. The session that called you has spent this
 round, and possibly several before it, convincing itself the approach is sound.
 That accumulated conviction is precisely what a review is supposed to be
 independent of, and it is why you are handed the diff and the target rather than

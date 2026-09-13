@@ -101,8 +101,9 @@ is a property of the algorithm and is the same everywhere.
 One fresh [`loop-critic`](../../agents/loop-critic.md) per round. Not a section
 of this file that you read and apply to yourself.
 
-`docs/graphics-standards.md` and #540 already settled the principle in one line:
-**a generator that also grades itself is not a gate.** `hull-designer` used to
+#540 already settled the principle, in one line: **a generator that also grades
+itself is not a gate.** `docs/graphics-standards.md` §2 is the same argument in
+the language of models — "Intake is the gate, not a formality". `hull-designer` used to
 carry its own "reviewing a bake" section, which meant the author of a shape was
 also its only reader — a second draft wearing a review's clothes.
 `hull-reviewer` exists because that did not work, and this is the same split for
@@ -126,9 +127,15 @@ this session has already talked itself into, and fresh context is what cures it.
 So the critic is pinned to the strongest reviewer available rather than to a
 different one.
 
-## Exit criteria
+## Exit criteria — when the *loop* stops
 
-Stop and take the change to a pull request when **all** of these hold:
+These say when to stop iterating. They do **not** say when to open the pull
+request: that happened at the first increment that stood on its own, several
+rounds earlier, and the pull request has been following the branch since.
+`CLAUDE.md` and `work-issue` §5 both require it, because a container can die
+mid-loop and an unopened PR takes the work with it.
+
+Stop running rounds when **all** of these hold:
 
 - `npm run gates` is green — every gate, not a filtered subset.
 - The critic's last verdict is **pass**, or its only open findings are ones you
@@ -186,8 +193,10 @@ exactly the thing most likely to break them by accident.
   economy path that refuses a legal purchase — is not balance and is still a bug
   to fix. If a round's justification is a win rate, it is not the round to run.
 - **Never resolve a docs/code disagreement by guessing.** Which one is wrong is
-  a design call. Write up both readings and what each would cost; that write-up
-  is the run's output and it is a successful run.
+  a design call. Write up both readings and what each would cost — that write-up
+  is the run's output, and it is a successful run. Under `work-issue`, stop the
+  way its §7 says to, `needs-decision` label and released claim included; do not
+  work from a half-copy of that procedure here.
 - **Never send the client anything it has not resolved.** Not temporarily, not
   to make a round's evidence easier to capture, not behind a debug flag. The
   whole game is hidden information; a client holding unresolved world state is a

@@ -331,6 +331,12 @@ to look at.
 
 ## 5. Claim it, then work it like any other change
 
+Once it is claimed, the *work* is `dev-loop`'s: build against the doc section
+that is the issue's target, run `npm run gates`, capture evidence, hand the
+round to the `loop-critic` subagent, refine, and stop on its exit criteria or
+its stall rule. This file owns selecting and claiming the issue and the shape of
+the pull request either side of that; it does not describe the rounds.
+
 Before you touch a file, put the claim where the next firing — and a person
 opening the issue — will see it first. Two writes, in this order:
 
@@ -590,5 +596,7 @@ person closes it, opens a successor, and updates the number here.
 
 - `CONTRIBUTING.md` — branch and commit conventions, the gate list, labels
 - `CLAUDE.md` — architecture, build order, budgets, and the gotchas behind them
+- `.claude/skills/dev-loop/SKILL.md` — the rounds themselves, once §5 has
+  claimed the issue: target, gates, evidence, critic, exit criteria
 - `.claude/skills/run-game/SKILL.md` — verifying a change in the real client
 - `docs/ROADMAP.md` — what the backlog is for
