@@ -30,7 +30,7 @@ const BAND = { lowHz: 120, highHz: 800 } as const;
  * 0.5; this is below that, because the contact bus itself is not always at
  * full and the margin has to hold when it is not.
  */
-const MARK_CEILING = 0.34;
+export const MARK_CEILING = 0.34;
 
 /**
  * Seconds to reach a new level.

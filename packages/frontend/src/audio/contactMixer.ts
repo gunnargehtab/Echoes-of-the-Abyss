@@ -22,6 +22,7 @@
 import type { Biome, Faction, FaunaSpecies, OrdnanceKind, ResolutionTier } from '@echoes/shared';
 import type { VoiceInputs } from './contactVoice.ts';
 import type { VoiceAllocator } from './voiceAllocator.ts';
+import type { BusRung } from './precedence.ts';
 
 /**
  * One contact, reduced to what the mix is allowed to know about it.
@@ -97,6 +98,33 @@ export class ContactMixer {
 
   get mode(): Spatialisation {
     return this.spatialisation;
+  }
+
+  /**
+   * This mixer's claim on the Precedence Law's chain — §2, §13.
+   *
+   * `'contact'` for exactly as long as a voice is on the bus, and that is the
+   * whole of the rule: §3 binds a voice to a contact "for as long as the
+   * contact is tracked, including its 20 s ghost decay", and §13's table is
+   * headed *while this sounds*. A looping voice sounds continuously, so the
+   * row applies continuously. It is not a transient the way an own cue is,
+   * and it is deliberately not modelled as one — a duck that expired while
+   * the contact it was making room for was still sounding would put the water
+   * back over the news.
+   *
+   * This getter exists because until #707 the `contact` row of `DUCK_TABLE`
+   * was unreachable: the engine folded only the self mixer's cue and a line
+   * being spoken, nothing ever named `contact` as the loudest rung, and so a
+   * live contact ducked nothing at all. §13's row was transcribed correctly
+   * and never applied — the same shape of fault as #661's two, a level the
+   * doc states with nothing in the graph making it true.
+   *
+   * Read off the allocator rather than the `live` map because the allocator
+   * is what actually decides a voice exists: a refused contact is tracked and
+   * drawn and has no voice, and a contact with no voice is not sounding.
+   */
+  get activeRung(): BusRung | null {
+    return this.allocator.size > 0 ? 'contact' : null;
   }
 
   setSpatialisation(mode: Spatialisation): void {
