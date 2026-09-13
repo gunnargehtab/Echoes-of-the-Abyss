@@ -83,6 +83,16 @@ const FACTION_BY_NAME: Record<string, Faction> = {
   hadron: Faction.Hadron,
 };
 
+/**
+ * The spelling `--matchup` takes back, per faction — the first name above that
+ * resolves to it, so a banner this file prints reads as something the user
+ * could have typed rather than as an enum.
+ */
+const FACTION_SPEC = Object.entries(FACTION_BY_NAME).reduce<Partial<Record<Faction, string>>>(
+  (spec, [name, faction]) => (spec[faction] === undefined ? { ...spec, [faction]: name } : spec),
+  {}
+) as Record<Faction, string>;
+
 const DIFFICULTY_BY_NAME: Record<string, AiDifficulty> = {
   recruit: AiDifficulty.Recruit,
   veteran: AiDifficulty.Veteran,
@@ -171,6 +181,32 @@ function parseMatchup(spec: string): Seat[] {
   });
 }
 
+/**
+ * Every *ordered* pair of a roster — the duel matrix (#518).
+ *
+ * Ordered, not unordered, because a chair is a variable in this game and the
+ * duel is where it bites hardest: with two seats, one navy always spawns at
+ * `spawns[0]` and the other at `spawns[1]`, and `baselines/seat-rotation.md`
+ * measured four seats of one navy winning 11% to 50% on the furniture alone.
+ * So each pairing is played from both chairs and the report pools them, which
+ * is `--rotate-seats`' argument applied to the other axis.
+ *
+ * Four factions give twelve batches: six pairings, each way round.
+ */
+function duelPairings(roster: readonly Seat[]): Seat[][] {
+  const pairs: Seat[][] = [];
+  for (let i = 0; i < roster.length; i++) {
+    for (let j = 0; j < roster.length; j++) {
+      if (i === j) continue;
+      pairs.push([
+        { ...roster[i]!, slot: 0 },
+        { ...roster[j]!, slot: 1 },
+      ]);
+    }
+  }
+  return pairs;
+}
+
 async function main(): Promise<void> {
   if (process.argv.includes('--help')) {
     console.log(USAGE);
@@ -183,7 +219,22 @@ async function main(): Promise<void> {
   // A worker is handed its seating as a rotation index rather than as a
   // re-spelled `--matchup`, so the command in the report stays the command the
   // user typed and the rotation cannot disagree with the roster it came from.
-  const seats = rotateSeats(roster, Number(flag('rotation', '0')));
+  const duelMatrix = process.argv.includes('--duel-matrix');
+  if (duelMatrix && process.argv.includes('--rotate-seats')) {
+    throw new Error(
+      '--duel-matrix and --rotate-seats both expand one command into a batch per seating, ' +
+        'and they cannot both own that axis. --duel-matrix already plays every pairing from ' +
+        'both chairs, which is what --rotate-seats would have been for.'
+    );
+  }
+  if (duelMatrix && roster.length < 2) {
+    throw new Error('--duel-matrix needs at least two factions in --matchup to pair them up');
+  }
+  const pairings = duelMatrix ? duelPairings(roster) : null;
+  const seats =
+    pairings === null
+      ? rotateSeats(roster, Number(flag('rotation', '0')))
+      : pairings[Number(flag('pairing', '0'))]!;
   const matches = Number(flag('matches', '10'));
   const seed = Number(flag('seed', '1000'));
   const maxMinutes = Number(flag('max-minutes', String(DEFAULT_MAX_MINUTES)));
@@ -214,9 +265,12 @@ async function main(): Promise<void> {
   // One rotation per chair, so every faction sits in every one of them
   // exactly once. `[0]` — the seating as typed — when the flag is absent, which
   // keeps an existing baseline's command producing that baseline's batch.
-  const rotations = process.argv.includes('--rotate-seats')
-    ? Array.from({ length: seats.length }, (_, i) => i)
-    : [0];
+  const variant =
+    pairings !== null
+      ? { flag: 'pairing', values: pairings.map((_, i) => i) }
+      : process.argv.includes('--rotate-seats')
+        ? { flag: 'rotation', values: Array.from({ length: seats.length }, (_, i) => i) }
+        : { flag: 'rotation', values: [0] };
 
   const run = { seats, seed, mapId, maxMinutes, fauna };
 
@@ -239,7 +293,7 @@ async function main(): Promise<void> {
   // to isolate from, and behind a flag for debugging a batch under one
   // debugger.
   const inProcess = process.argv.includes('--in-process');
-  const total = matches * rotations.length;
+  const total = matches * variant.values.length;
   if (inProcess && total > 1) {
     console.error(
       'WARNING: --in-process runs every match in one process, where bitecs recycles ' +
@@ -251,14 +305,20 @@ async function main(): Promise<void> {
   console.error(
     `Running ${total} matches, ${seats.length} seats, seed ${seed}, cap ${maxMinutes} min...`
   );
-  if (rotations.length > 1) {
+  if (pairings !== null) {
+    console.error(
+      `Duel matrix: ${matches} matches on seeds ${seed}-${seed + matches - 1} for each of ` +
+        `${pairings.length} pairings — ` +
+        pairings.map((pair) => pair.map((st) => FACTION_SPEC[st.faction]).join(',')).join(' | ')
+    );
+  } else if (variant.values.length > 1) {
     // The entries as typed, cycled — the banner is about the seating, and the
     // spec is the only spelling of it the reader already recognises.
     const entries = matchup.split(',').map((e) => e.trim());
     console.error(
       `Rotating the seating: ${matches} matches on seeds ${seed}-${seed + matches - 1} for ` +
-        `each of ${rotations.length} cyclic orders — ` +
-        rotations
+        `each of ${variant.values.length} cyclic orders — ` +
+        variant.values
           .map((by) => entries.map((_, i) => entries[(i + by) % entries.length]!).join(','))
           .join(' | ')
     );
@@ -277,13 +337,18 @@ async function main(): Promise<void> {
 
   const results =
     total === 1 || inProcess
-      ? rotations.flatMap((by) => runBatch({ ...run, seats: rotateSeats(roster, by) }, matches))
+      ? variant.values.flatMap((by) =>
+          runBatch(
+            { ...run, seats: pairings === null ? rotateSeats(roster, by) : pairings[by]! },
+            matches
+          )
+        )
       : await runBatchIsolated(
           process.argv.slice(2),
           seed,
           matches,
           Number(flag('jobs', '0')) || undefined,
-          rotations
+          variant
         );
   const summary = summarise(results);
   // Quoted so a title with spaces round-trips through a shell unchanged.
@@ -296,7 +361,7 @@ async function main(): Promise<void> {
     markdown +=
       `\n> **These runs are not independent.** \`--no-fauna\` makes the seed inert, ` +
       `because placing the Drift is the only thing the simulation draws from it. ` +
-      `The ${matches} matches ${rotations.length > 1 ? 'in each seating' : 'below'} are ` +
+      `The ${matches} matches ${variant.values.length > 1 ? 'in each seating' : 'below'} are ` +
       `the same match ${matches} times.\n`;
   }
   if (overrides.length > 0) {
@@ -331,6 +396,14 @@ const USAGE = `Balance harness — headless matches, telemetry, and the guard-ra
                        Default ${DEFAULT_MAX_MINUTES}.
   --map <id>           Map archetype. Default is the room's default.
   --no-fauna           Empty the Drift. Off by default: a normal match has it.
+  --duel-matrix        Play every seed as every ordered pair of --matchup and
+                       pool the lot: four factions give twelve batches, six
+                       pairings each way round. The gate for a roster wave
+                       whose hulls sit behind the rung (#518) — a duel is
+                       where the Slipway is hardest to reach, and the six
+                       pairings had never been one reproducible command.
+                       Mutually exclusive with --rotate-seats, which owns the
+                       same axis.
   --rotate-seats       Play every seed once per cyclic rotation of --matchup,
                        so each faction sits in each spawn exactly once, and
                        pool the lot. Costs one batch per seat. Off by default:

@@ -223,6 +223,12 @@ export interface BatchSummary {
   seatings: number;
   /** Wins by spawn slot — the chair, with whatever sat in it. */
   slots: SlotSummary[];
+  /**
+   * Distinct faction line-ups played, chairs ignored — 1 for any single
+   * matchup however its seats were rotated, and one per pairing for a
+   * `--duel-matrix` batch. See `countRosters`.
+   */
+  rosters: number;
   guardRails: GuardRailVerdict[];
 }
 
@@ -377,6 +383,29 @@ function noSeat(risk: string, source: string, faction: string): GuardRailVerdict
  * batch has one seating and four slots, a rotated four-faction batch has four
  * of each, and only the assignment itself separates them.
  */
+/**
+ * How many distinct *rosters* the batch was played with, ignoring the chairs.
+ *
+ * The other half of what `countSeatings` counts, and the two come apart exactly
+ * once: a `--rotate-seats` batch is many seatings of one roster, and a
+ * `--duel-matrix` batch is many seatings of many rosters. It decides one
+ * sentence, but an important one — pooled over a rotation a navy's win rate is
+ * against the same opponents from different chairs, and pooled over a matrix it
+ * is against different opponents as well, which is a wider claim.
+ */
+function countRosters(results: MatchTelemetryResult[]): number {
+  const seen = new Set<string>();
+  for (const result of results) {
+    seen.add(
+      result.players
+        .map((p) => p.faction)
+        .sort((a, b) => a - b)
+        .join(',')
+    );
+  }
+  return seen.size;
+}
+
 function countSeatings(results: MatchTelemetryResult[]): number {
   const seen = new Set<string>();
   for (const result of results) {
@@ -631,6 +660,7 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
     factions,
     seatings: countSeatings(results),
     slots: slotSummaries(results),
+    rosters: countRosters(results),
     guardRails: judge(results, factions),
   };
 }
@@ -917,8 +947,12 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
       ? '_One seating: every match dealt each navy the same spawn. A win rate here cannot ' +
           'separate the doctrine from the chair — see `baselines/seat-rotation.md`, and ' +
           '`--rotate-seats`._'
-      : `_${summary.seatings} seatings, pooled. Each navy played more than one spawn, so the ` +
+      : summary.rosters === 1
+        ? `_${summary.seatings} seatings, pooled. Each navy played more than one spawn, so the ` +
           'per-faction column is about the doctrine rather than about the chair._'
+        : `_${summary.seatings} seatings over ${summary.rosters} rosters, pooled. Each navy ` +
+          'played more than one spawn *and* more than one opponent, so the per-faction column ' +
+          'is about the doctrine rather than about the chair or the draw._'
   );
   lines.push('');
   lines.push('## Guard-rails');

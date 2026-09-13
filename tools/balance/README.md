@@ -73,8 +73,8 @@ commissions a Slipway in nine matches of ten and builds neither hull the yard is
 it held once a Slipway was standing. The three tables above are rates and counts, and none of
 them can say whether a hull was ever *affordable* — which is a maximum, and a maximum a
 ten-second sample misses, because a bank rises to a price and is spent inside one interval.
-#518 spent five sessions reading the arbitration between a commander's wants before this
-column said the money was never there: peak bank with a yard up is under 400 for the
+Issue #518 spent five sessions reading the arbitration between a commander's wants before
+this column said the money was never there: peak bank with a yard up is under 400 for the
 Consortium against a 700 nodule Bulwark, and the peak over the whole match is 600–680 against
 a 600 nodule yard. Read it before attributing a row of zeros to how a commander spends.
 
@@ -119,6 +119,30 @@ report is the pool. Cyclic rather than all twenty-four permutations because bala
 two marginals against each other is the whole requirement, and that costs four batches
 rather than twenty-four.
 
+### The duel matrix
+
+`--duel-matrix` is the same argument on the other axis: every *ordered* pair of
+`--matchup`, pooled. Four factions give twelve batches — six pairings, each way round.
+
+```bash
+node tools/balance/run.mjs --matchup consortium,commune,directorate,knights \
+  --duel-matrix --matches 10 --seed 4000 --max-minutes 25
+```
+
+`baselines/duel-matrix.md` is the committed run, and it exists because #518 spent its whole
+life quoting a six-duel table nobody could reproduce. A duel is where the Slipway is hardest
+to reach — two commanders, a smaller map share each — so it is the scenario a roster wave
+whose hulls sit behind the rung is actually judged in, and it had never been one command.
+
+Ordered rather than unordered pairs for the reason above it: with two seats one navy always
+takes `spawns[0]`, so a pairing played one way round cannot separate the doctrine from the
+chair. The report says which it is — `12 seatings over 6 rosters, pooled` rather than
+`4 seatings, pooled` — because a win rate pooled over a *matrix* is against different
+opponents as well as different chairs, and that is the wider claim.
+
+Mutually exclusive with `--rotate-seats`, which owns the same axis and is refused with a
+message saying so.
+
 It is **opt-in**, and that is a decision rather than an oversight: on by default it would
 multiply every batch's cost by its seat count and make every baseline committed here
 incomparable with the next one. `baselines/four-faction-rotated.md` is the committed pool,
@@ -142,11 +166,18 @@ claims and it spent fourteen baselines unable to say which it was making (#600).
 **"Held" is evidence, not proof.** It means the failure that guard-rail describes did not
 appear in these runs. The sample size is printed beside every verdict.
 
-**A duel is short, and no flag makes it longer.** The six pairings run to a median of 272 to
-650 seconds against a 25-minute cap, because a duel ends when one commander concedes rather
-than when the clock runs out — so raising `--max-minutes` on a duel changes nothing. Anything
-that arrives late in a match is measurable in the four-faction baseline (a 1,006 s median)
-and not in a duel: the Slipway rises around 420 s, which is most of a duel's whole length.
+**A duel is short, and no flag makes it longer.** The pairings run to a median of 333 to
+1,008 seconds against a 25-minute cap, because a duel ends when one commander concedes rather
+than when the clock runs out — so raising `--max-minutes` on a duel changes nothing. The
+Slipway rises around 420 s, which is a large share of a duel's whole length.
+
+**That is no longer the same as "a duel cannot see the rung", and the distinction is #518's.**
+Over the committed matrix the yard is commissioned 0.4, 0.1, 0.2 and 0.2 times a match and
+stands in 23, 3, 13 and 11 matches of 60 — so a duel *does* reach it. What a duel cannot do
+is pay for what it builds: the peak bank with a yard standing has a median of 330, 60, 250
+and 261 against hulls priced 260 to 700, and exactly two of the thirteen Slipway hulls ever
+come off the slip (the Knights' Reciter at 0.3 a match, the Consortium's Broadside at 0.1).
+Read the two tables together before concluding anything about a hull from a row of zeros.
 
 **A win rate counts decided matches, and most batches are short of them.** Three rails read
 win rates, and a win rate is a ratio over matches that ended with a winner — not over matches

@@ -54,6 +54,13 @@ const PARENT_ONLY = new Set(['--matches', '--seed', '--out', '--jobs', '--rotati
 /**
  * The same, for the flags that take no value.
  *
+ * `--duel-matrix` is deliberately **not** here, and the asymmetry is the point:
+ * a worker handed `--rotation 2` needs no flag to read it, because `rotateSeats`
+ * works off the roster alone, but a worker handed `--pairing 7` has to rebuild
+ * the same pairing list to know what seven means. Stripped, every worker seated
+ * the whole roster instead and a twelve-pairing matrix ran as twelve copies of
+ * one four-faction match — which reads as a batch that simply drew a lot.
+ *
  * `--rotate-seats` asks the *parent* to expand one command into a rotation per
  * chair, so a worker must not see it — and it cannot be stripped by the loop
  * below, which skips the argument after every parent-only flag and would eat a
@@ -81,23 +88,31 @@ function workerArgv(argv: string[]): string[] {
  * `jobs` processes run at once. More than one per core only adds contention:
  * a match is pure computation with no IO to overlap.
  *
- * `rotations` is the seatings to play every one of those seeds under — one
- * entry per `--rotation` the workers are to be given, defaulting to the single
- * unrotated seating. The results come back seating-major and seed-minor, so a
- * `--rotate-seats` batch reads as the rotations concatenated in order and the
- * seed range in the report's header stays the range the user asked for.
+ * `variant` is the axis every one of those seeds is played across — one entry
+ * per value, handed to the worker as an index under its own flag name, and
+ * defaulting to the single unrotated seating. Two expansions use it and they
+ * are mutually exclusive: `--rotate-seats` gives `rotation`, one cyclic seating
+ * per chair, and `--duel-matrix` gives `pairing`, one ordered pair of the
+ * roster per duel.
+ *
+ * An **index** rather than a re-spelled `--matchup`, for the reason the CLI's
+ * own note gives: the command printed in the report stays the command the user
+ * typed, and a worker's seating cannot disagree with the roster it came from.
+ * The results come back variant-major and seed-minor, so a batch reads as the
+ * variants concatenated in order and the seed range in the report's header
+ * stays the range the user asked for.
  */
 export async function runBatchIsolated(
   argv: string[],
   seed: number,
   matches: number,
   jobs = availableParallelism(),
-  rotations: readonly number[] = [0]
+  variant: { flag: string; values: readonly number[] } = { flag: 'rotation', values: [0] }
 ): Promise<MatchTelemetryResult[]> {
   const entry = fileURLToPath(new URL('./cli.ts', import.meta.url));
   const scratch = mkdtempSync(join(tmpdir(), 'balance-batch-'));
   const forwarded = workerArgv(argv);
-  const total = matches * rotations.length;
+  const total = matches * variant.values.length;
   const results = new Array<MatchTelemetryResult | undefined>(total);
   const width = Math.max(1, Math.min(jobs, total));
 
@@ -107,7 +122,7 @@ export async function runBatchIsolated(
   const run = (index: number): Promise<void> =>
     new Promise((resolve, reject) => {
       const out = join(scratch, `match-${index}.json`);
-      const rotation = rotations[Math.floor(index / matches)]!;
+      const value = variant.values[Math.floor(index / matches)]!;
       const matchSeed = seed + (index % matches);
       const child = spawn(
         process.execPath,
@@ -120,8 +135,8 @@ export async function runBatchIsolated(
           '1',
           '--seed',
           String(matchSeed),
-          '--rotation',
-          String(rotation),
+          `--${variant.flag}`,
+          String(value),
           '--worker-out',
           out,
         ],
