@@ -27,10 +27,12 @@ import {
   BLOOM_SHARE,
   Biome,
   CONSTRUCTION,
+  DepthBand,
   Faction,
   HazardPhase,
   StructureKind,
   UnitKind,
+  depthBandFor,
   priceOf,
   statsFor,
 } from '@echoes/shared';
@@ -329,5 +331,263 @@ describe('and the commander actually does it', () => {
       (bed) => Math.hypot(site!.x - bed.x, site!.y - bed.y) <= bed.radiusM
     );
     assert.ok(standing, `a reactor at ${site!.x},${site!.y} stands in no bed`);
+  });
+});
+
+describe('a tender is put in the state the share is actually paid for', () => {
+  /**
+   * #706. `bloomShare.ts` pays a hull that is inside the bed *and* in the
+   * Shelf band *and* not running silent, and this branch used to order only
+   * the first of the three. A tender is claimed out of the army list, so
+   * nothing else in the commander addresses its state afterwards — a hull
+   * silenced on an approach and made a gardener next observation is outside
+   * every list that could ever lift the silence again, and stands in the kelp
+   * earning nothing until it dies.
+   *
+   * Measured on `ventfront-divide` before the fix: of the observations that
+   * claimed a tender, 33 of 141 on seed 4000 and 51 of 117 on seed 4001 were
+   * a hull in exactly that state.
+   */
+  function ordersFor(units: unknown[]): { kind: string; [k: string]: unknown }[] {
+    const brief = briefing(Faction.Pelagia);
+    const commander = new AiCommander(brief);
+    const out: { kind: string; [k: string]: unknown }[] = [];
+    for (let i = 0; i < 8; i++) {
+      const commands = commander.observe({
+        tick: i * 12,
+        nodules: 600,
+        crystal: 0,
+        biomass: 0,
+        power: { demand: 0, capacity: 6 },
+        draw: { demand: 0, capacity: 6 },
+        berths: { used: units.length, granted: 40 },
+        units: units as never,
+        structures: [],
+        contacts: [],
+        marks: [],
+        hazards: [],
+        residue: [],
+        refits: [],
+        exposure: { tier: 0, trackedCount: 0 },
+      } as never);
+      out.push(...(commands as never as { kind: string }[]));
+    }
+    return out;
+  }
+
+  /** An army already standing on the first garden, so only its state is wrong. */
+  function armyOnTheGarden(patch: Record<string, unknown>): unknown[] {
+    const brief = briefing(Faction.Pelagia);
+    const garden = brief.blooms[0]!;
+    return Array.from({ length: 12 }, (_, i) => ({
+      id: 100 + i,
+      kind: UnitKind.Reed,
+      x: garden.x,
+      y: garden.y,
+      depth: 300,
+      hp: 400,
+      maxHp: 400,
+      sig: 12,
+      throttle: undefined,
+      cargo: undefined,
+      cargoKind: undefined,
+      mode: undefined,
+      hold: undefined,
+      aboard: undefined,
+      embarking: undefined,
+      silentRunning: false,
+      engineOff: false,
+      followFloor: false,
+      pressureRating: 1,
+      mines: undefined,
+      ...patch,
+    }));
+  }
+
+  /** Orders addressed to this hull alone, which is the only shape this branch emits. */
+  function addressedTo(
+    orders: { kind: string; [k: string]: unknown }[],
+    kind: string,
+    id: number
+  ): { kind: string; [k: string]: unknown }[] {
+    return orders.filter(
+      (c) =>
+        c.kind === kind &&
+        Array.isArray(c.unitIds) &&
+        (c.unitIds as number[]).length === 1 &&
+        (c.unitIds as number[])[0] === id
+    );
+  }
+
+  it('lifts Silent Running off the hull it sends gardening', () => {
+    // Addressed to the tender's own id, not to any `active: false` in the
+    // batch: `setSilent` emits exactly that shape for the whole army on
+    // engage, defend and recall, so a looser filter goes green with this
+    // branch deleted the moment a fixture reaches one of them.
+    const units = armyOnTheGarden({ silentRunning: true });
+    const tender = (units[0] as { id: number }).id;
+    const lifted = addressedTo(ordersFor(units), 'silent', tender).filter(
+      (c) => c.active === false
+    );
+    assert.ok(
+      lifted.length > 0,
+      `the tender ${tender} was left silent, so the bed it stands on pays nothing`
+    );
+  });
+
+  it('does not order silence off a tender that is already loud', () => {
+    // The guard matters: an unconditional order every observation would be a
+    // command on the wire for a state the hull is already in.
+    const units = armyOnTheGarden({ silentRunning: false });
+    const tender = (units[0] as { id: number }).id;
+    assert.equal(
+      addressedTo(ordersFor(units), 'silent', tender).length,
+      0,
+      'a loud tender was told to stop being silent'
+    );
+  });
+
+  it('hands a released tender back silent when the army it rejoins is silent', () => {
+    // The other half of the lift, and the regression it would otherwise be.
+    // `armySilent` is a *believed* flag and `setCrossed`'s comment says why
+    // that is allowed: silence is one bit for the whole force. Lifting it for
+    // one tender falsifies the belief for that hull, and the belief is what
+    // stops `setSilent` re-sending — so without a symmetric release the hull
+    // rejoins a silent approach broadcasting, and stays that way until
+    // something flips the flag through false and back.
+    //
+    // Driven through one commander across two observations, because that is
+    // the shape of the fault: claimed while the army is large, released when
+    // it is not.
+    const brief = briefing(Faction.Pelagia);
+    const commander = new AiCommander(brief);
+    const garden = brief.blooms[0]!;
+    const hulls = (n: number): unknown[] =>
+      Array.from({ length: n }, (_, i) => ({
+        id: 100 + i,
+        kind: UnitKind.Reed,
+        x: garden.x,
+        y: garden.y,
+        depth: 300,
+        hp: 400,
+        maxHp: 400,
+        sig: 12,
+        silentRunning: true,
+        engineOff: false,
+        followFloor: false,
+        pressureRating: 1,
+      }));
+    const observe = (units: unknown[], tick: number): { kind: string; [k: string]: unknown }[] =>
+      commander.observe({
+        tick,
+        nodules: 600,
+        crystal: 0,
+        biomass: 0,
+        power: { demand: 0, capacity: 6 },
+        draw: { demand: 0, capacity: 6 },
+        berths: { used: units.length, granted: 40 },
+        units: units as never,
+        structures: [],
+        contacts: [],
+        marks: [],
+        hazards: [],
+        residue: [],
+        refits: [],
+        exposure: { tier: 0, trackedCount: 0 },
+      } as never) as never;
+
+    // Enough hulls to claim a tender, for long enough that the army commits to
+    // its silent approach and `armySilent` is true.
+    for (let i = 0; i < 8; i++) observe(hulls(12), i * 12);
+    // Then a force too small to spare anybody: the claim evaporates. Walked
+    // over several observations because the commander acts on its own cadence
+    // (`AiTuning.cadenceTicks`) and returns early in between — a single
+    // observation here lands on a tick the branch never runs.
+    const released: { kind: string; [k: string]: unknown }[] = [];
+    for (let i = 8; i < 12; i++) released.push(...observe(hulls(7), i * 12));
+    // Addressed to the tender, for the same reason as the two above: the
+    // commander emits single-id `active: true` for a scout and for a sailing
+    // carrier, and neither is absent here by any property — only because a
+    // fixture of Reeds designates no scout and builds no carrier.
+    const resilenced = addressedTo(released, 'silent', 100).filter((c) => c.active === true);
+    assert.ok(resilenced.length > 0, 'a released tender was left loud inside a silent approach');
+  });
+
+  it('does not silence a released tender back into a loud army', () => {
+    // The guard on the release, which nothing else pins: it hands the hull
+    // back to the state the army is *in*, and a commander that silenced every
+    // returning tender would be inventing an order the force never gave.
+    const brief = briefing(Faction.Pelagia);
+    const commander = new AiCommander(brief);
+    const garden = brief.blooms[0]!;
+    const hulls = (n: number): unknown[] =>
+      Array.from({ length: n }, (_, i) => ({
+        id: 100 + i,
+        kind: UnitKind.Reed,
+        x: garden.x,
+        y: garden.y,
+        depth: 300,
+        hp: 400,
+        maxHp: 400,
+        sig: 12,
+        silentRunning: false,
+        engineOff: false,
+        followFloor: false,
+        pressureRating: 1,
+      }));
+    const observe = (units: unknown[], tick: number): { kind: string; [k: string]: unknown }[] =>
+      commander.observe({
+        tick,
+        nodules: 600,
+        crystal: 0,
+        biomass: 0,
+        power: { demand: 0, capacity: 6 },
+        draw: { demand: 0, capacity: 6 },
+        berths: { used: units.length, granted: 40 },
+        units: units as never,
+        // A contact in reach keeps the army loud: `setSilent(ids, false)` on
+        // the engage branch is what holds `armySilent` false here.
+        contacts: [{ id: 1, x: garden.x + 200, y: garden.y, depth: 300, tier: 4, tick: 0 }],
+        structures: [],
+        marks: [],
+        hazards: [],
+        residue: [],
+        refits: [],
+        exposure: { tier: 0, trackedCount: 0 },
+      } as never) as never;
+
+    for (let i = 0; i < 8; i++) observe(hulls(12), i * 12);
+    const released: { kind: string; [k: string]: unknown }[] = [];
+    for (let i = 8; i < 12; i++) released.push(...observe(hulls(7), i * 12));
+    const silenced = addressedTo(released, 'silent', 100).filter((c) => c.active === true);
+    assert.equal(silenced.length, 0, 'a released tender was silenced into a loud army');
+  });
+
+  it('brings a tender hanging under the rim up into the Shelf band', () => {
+    // The third clause. A bed is 400 m of radius and a plateau is whatever the
+    // map authored (#577), so a hull inside the circle is not necessarily in
+    // water the share is paid for.
+    //
+    // Asserted on the *tender's own* id rather than on any shallow order in
+    // the batch, which is the trap here: the army branch already walks the
+    // hulls it still holds down to the same Shelf ceiling, so a test that
+    // matched `depthM < 400` anywhere passed with the branch deleted. The
+    // tenders are exactly the hulls that order does not reach — they are
+    // claimed out of the army list — and they are the two lowest ids, because
+    // `commandGardens` draws from the army sorted by id.
+    //
+    // Read through `depthBandFor` rather than against a written 400: the
+    // branch asks for a PR-1 ceiling precisely so the line stays in
+    // DEPTH_BANDS, and a test that restates it is the copy the rest of the
+    // stack refuses to keep.
+    const units = armyOnTheGarden({ depth: 900 });
+    const tender = (units[0] as { id: number }).id;
+    const climbs = addressedTo(ordersFor(units), 'depth', tender).filter(
+      (c) => depthBandFor(c.depthM as number) === DepthBand.Shelf
+    );
+    assert.ok(
+      climbs.length > 0,
+      `the tender ${tender} was left under the rim at 900 m, where bloom-share pays nothing`
+    );
   });
 });
