@@ -51,9 +51,17 @@ a Tuesday.
   `test:` and `refactor:` where they fit), imperative mood, and say what the change
   *does*: `feat: bake structure sprites from the approved 3D models`.
 - Keep commits small and focused; a commit that needs "and" in its subject is usually two.
-- **Squash-merge**, so `main`'s history is one commit per PR and each one is revertable on
-  its own. The PR body is where the reasoning lives; the squash subject is where you find
-  it again.
+- **Merge commits**, one per pull request, so `main`'s first-parent history is one entry
+  per PR and each is revertable on its own with `git revert -m 1`. Read that history with
+  `git log --first-parent`; the branch's own commits stay underneath it, and the PR body
+  is where the reasoning lives.
+
+  This line read *squash-merge* until it was measured. That was true of the first
+  eighteen pull requests and has not been true since 26 August 2026: every one of the
+  291 pull requests merged after it came in as a merge commit, without exception. The
+  intent the old wording gave — one entry per PR, revertable on its own — is what
+  first-parent and `revert -m 1` deliver, so what changed is the mechanism and not the
+  reason. A contributor following the doc would have been the only person squashing.
 - Never rewrite history on a branch someone else may have checked out. On your own branch
   before review, rebase freely.
 
