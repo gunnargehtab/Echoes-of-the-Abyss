@@ -22,7 +22,7 @@
  */
 
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { describe, it, mock } from 'node:test';
 import type { Container } from 'pixi.js';
 import { Faction, MovementHoldReason } from '@echoes/shared';
 import {
@@ -625,16 +625,10 @@ describe('renderer smoke test: the conn view', () => {
 
       world.frame(5);
       const held = probe();
-      // The overlay's count is exact where the composited interval's cannot
-      // be: `recordOverlayCost` is a duration inside a call, so nothing
-      // filters it, while a frame *interval* is dropped above 500 ms because
-      // a tab-hidden gap is not a frame. So this is the counted assertion and
-      // the one below it is the bounded one.
+      // Both counts are exact. An interval is dropped only when the page went
+      // hidden across it, never for its size, so a slow runner cannot lose one.
       assert.equal(held.overlayFrames, 5, 'every overlay tick reported into the conn probe');
-      assert.ok(
-        (held.stationFrames as number) > 0 && (held.stationFrames as number) <= 5,
-        `the station counted its own frames, saw ${held.stationFrames}`
-      );
+      assert.equal(held.stationFrames, 5, 'and the station counted every one of its own frames');
       assert.equal(held.station, 'marquee', 'and stayed at the station across them');
 
       // Two painters, two numbers. Both halves are timed inside a call, so
@@ -645,6 +639,52 @@ describe('renderer smoke test: the conn view', () => {
         assert.equal(typeof held[key], 'number', `${key} is reported`);
       }
     } finally {
+      world.teardown();
+    }
+  });
+
+  it('prices a stall the page stayed visible through, and drops only a hidden gap (#286)', async () => {
+    const world = await boot();
+    // Skewed rather than stopped: the real clock still advances underneath, so
+    // every interval stays positive and only the jump is the test's.
+    const real = performance.now.bind(performance);
+    let skew = 0;
+    const clock = mock.method(performance, 'now', () => real() + skew);
+    const doc = globalThis as unknown as { document: { hidden?: boolean } };
+    try {
+      const station = (
+        globalThis as unknown as {
+          window: { __perspectiveStation: (label?: string) => Record<string, number> };
+        }
+      ).window.__perspectiveStation;
+
+      world.frame(2);
+      station('stall');
+      world.frame(2);
+      skew += 3000;
+      world.frame(2);
+      const stalled = station('hidden');
+      // The regression: a guard on the interval's *size* dropped this frame,
+      // and on the first real-GPU drive a three-second freeze in plain view
+      // read back as a station whose worst frame was 17.7 ms.
+      assert.equal(stalled.stationFrames, 4, 'the stalled frame is still a frame');
+      assert.ok(
+        stalled.worstFrameMs! >= 3000,
+        `and it is the station's worst, saw ${stalled.worstFrameMs}`
+      );
+
+      world.frame(1);
+      doc.document.hidden = true;
+      skew += 3000;
+      world.frame(1);
+      doc.document.hidden = false;
+      world.frame(1);
+      const hidden = station();
+      assert.equal(hidden.stationFrames, 2, 'a gap the page spent hidden is not a frame');
+      assert.ok(hidden.worstFrameMs! < 3000, `and is never the worst, saw ${hidden.worstFrameMs}`);
+    } finally {
+      clock.mock.restore();
+      delete doc.document.hidden;
       world.teardown();
     }
   });

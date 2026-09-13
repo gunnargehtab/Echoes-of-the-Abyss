@@ -339,17 +339,48 @@ The drive is five stations, chosen because each loads a different part of the fr
 
 `.claude/skills/run-game/scripts/stations.mjs` walks all five and prints the table
 (`drive.mjs --steps`, `STATION_SECONDS` to lengthen the dwell). Where Playwright will not
-run — which includes most Termux setups — drive the same five by hand and read the same two
-calls from the console.
+run — which includes most Termux setups — `.claude/skills/run-game/scripts/stations-console.js`
+is the same five as a paste into the page's own console, reached from a PC over USB
+debugging, and it reads the same two calls.
 
-**No valid numbers exist yet, and none of the figures in the Phase-1/2/5 records are
-candidates.** Every one of them was taken under SwiftShader in a container, which is the
-software rasteriser rather than the scene: the container's composited frame runs ~170 ms
-while the two CPU halves it contains total under 3 ms, so what those figures measured was
-almost entirely the thing that will not be there on a GPU. The numbers this gate wants come
-from one desktop with a real GPU and one Android device under Termux, and they belong here
-and in the Phase-5 record ([three-layer-ocean.md](three-layer-ocean.md)) once taken. Until
-then this gate bounds geometry and says out loud that it does not bound the frame.
+**None of the figures in the Phase-1/2/5 records are candidates.** Every one of them was
+taken under SwiftShader in a container, which is the software rasteriser rather than the
+scene: the container's composited frame runs ~170 ms while the two CPU halves it contains
+total under 3 ms, so what those figures measured was almost entirely the thing that will
+not be there on a GPU.
+
+The first real-GPU reading (#286) is a desktop: a GTX 1070 through ANGLE/Direct3D 11 and an
+i7-6700K, Edge driven headed by `stations.mjs` at 1440×900 on a 60 Hz display, eight seconds
+a station, against the dev build with the server on the same machine:
+
+| Station | fps | Frame avg / worst ms | Conn avg / worst ms | Overlay avg / worst ms | Draw calls | Triangles |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `base` | 57.0 | 17.55 / 24.8 | 0.62 / 1.3 | 1.39 / 2.7 | 42 | 140,920 |
+| `marquee` | 57.1 | 17.52 / 24.6 | 0.59 / 1.0 | 1.58 / 2.6 | 42 | 140,920 |
+| `ping-preview` | 57.1 | 17.53 / 23.7 | 0.63 / 1.3 | 1.68 / 3.1 | 42 | 140,920 |
+| `survey-zoom` | 57.0 | 17.52 / 24.6 | 0.62 / 1.0 | 1.64 / 2.5 | 42 | 140,920 |
+| `fight` | 57.0 | 17.54 / 25.5 | 0.68 / 1.3 | 1.74 / 3.0 | 44 | 141,208 |
+
+What it says: both painters together spend **under 2.5 ms on average** at every station,
+and their worst cases sum to under 4.5 ms, against a 16.7 ms display interval. The overlay
+is the larger half, as expected, and it grows from `base` to `fight` by a third of a
+millisecond. On this floor the frame is paced by the display rather than spent by the
+scene, so no remedy on the list above is demanded, and none lands.
+
+One reading does not come from the scene, and it is recorded rather than explained away.
+Two drives on the same machine the same hour held **60.0 fps** at every station with the
+same two halves, and two later drives held ~57. A shortfall that is identical at the idle
+`base` and the loaded `fight`, while neither half moves, is frame pacing on the machine
+rather than cost in the frame. The split is what makes that distinction possible.
+
+The same drive found a fault in the instrument itself. The probe used to drop any interval
+over 500 ms as a hidden tab, and a three-second stall in plain view was reported as a
+station whose worst frame was 17.7 ms. It now drops an interval only when the page actually
+went hidden, and [invariants.md](invariants.md) lists that as the conn probe's rule.
+
+**The Termux row is still owed.** It belongs here and in the Phase-5 record
+([three-layer-ocean.md](three-layer-ocean.md)) once taken, and until then this gate bounds
+the desktop frame and says out loud that it does not bound the floor.
 
 ### 7. Readability outranks richness
 
