@@ -41,7 +41,7 @@ The build follows dream-loop's shape and #709's component list.
 | --- | --- | --- |
 | Task system (`/tasks/open.json`) | GitHub Issues, plus `work-issue`'s selection rule, self-assignment and open-PR cap | No — a JSON task file would be a second backlog, diverging from the first by Thursday |
 | Spec (`/spec/systems.md`) | `docs/` — the design bible, canonical, and the source of every SPEC constant | No — a second spec is the one thing `CLAUDE.md` is most emphatic against |
-| Invariants (`/spec/invariants.md`) | Was scattered — asserted across 11 test files, named as an `INVARIANT:` comment in exactly one place | **Yes** — `docs/invariants.md`, 13 rows, each naming its source and the test that holds it, with `npm run check:invariants` failing when a holder is gone |
+| Invariants (`/spec/invariants.md`) | Was scattered — stated as an invariant in prose in one place, and asserted across the suites | **Yes** — `docs/invariants.md`, 14 rows over 13 test files, each naming its source and the test that holds it, with `npm run check:invariants` failing when a holder is gone |
 | Acceptance tests (`/spec/acceptance_tests.md`) | `tools/echo-sim/scenarios/*.json` with committed `.expected.json`, plus the three suites | No — the scenarios already are this, in a form a harness runs |
 | Harness (`run_headless.py`) | `tools/echo-sim`, `tools/balance`, `tools/audio-meter`, `hull-intake`, and the `run-game` browser drive | No — five harnesses exist; what was missing was a rule for which to reach for, now the evidence table in `dev-loop` |
 | Verifier (`verifier.py`) | `npm run gates` — every blocking CI gate, one pass, one exit code | No — and a parallel verifier would drift from CI, which is the exact failure `tools/gates.mjs` was written to end |
@@ -100,7 +100,7 @@ anything it has not resolved.
 ## Still owed
 
 - **The invariants contract is built** (`docs/invariants.md`), which was this list's
-  largest gap. Thirteen rows, each naming the property, the doc section or issue it
+  largest gap. Fourteen rows across thirteen test files, each naming the property, the doc section or issue it
   descends from, and the file and test that hold it — and a gate,
   `npm run check:invariants`, that fails when a row names a test somebody renamed. It is
   a liveness check rather than a correctness one, for the reason the file itself gives:

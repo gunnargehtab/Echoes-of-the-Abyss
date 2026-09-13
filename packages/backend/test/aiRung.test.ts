@@ -425,7 +425,7 @@ describe('the commander saves for the hull the rung was bought for', () => {
   });
 
   it('has a rung hull for every navy, so no navy is left with nothing to save for', () => {
-    // The invariant docs/roster-plan.md §3 states in words — "every navy has a
+    // The invariant docs/roster-plan.md §4 states in words — "every navy has a
     // hull at each rung" — read from the side the commander reads it from. A
     // navy whose composition named no Slipway hull would silently opt out of
     // everything above, which is the failure #518 was opened about in the

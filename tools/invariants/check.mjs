@@ -21,11 +21,23 @@
  * suite here, which is the second source of truth this repository keeps refusing
  * to build. The tests hold the invariants; this holds the list.
  *
- * Name matching is substring, against the file with its own comments stripped.
- * A `describe`/`it` title is a string literal, so a substring hit inside code is
- * what we want; a hit inside the long explanatory comment above a test is not,
- * because that is exactly the text that survives a rename and would make the
- * gate pass on a holder that no longer exists.
+ * A name matches only where it appears **immediately after a quote**, against
+ * the file with its own comments stripped. Both halves of that are load-bearing
+ * and both were learned by watching this gate lie:
+ *
+ *   - Comments are stripped because the long explanation above a test is exactly
+ *     the text that survives a rename, and would keep the gate green on a holder
+ *     that no longer exists.
+ *   - The quote is required because a bare substring matches an identifier. Row
+ *     14's holder is `describe('reliefShade', ...)`, and `reliefShade` is also
+ *     the name of the imported function under test — so with plain `includes`
+ *     the whole describe block could be deleted and this gate still reported
+ *     "all present". A `describe`/`it` title is always a string literal, so the
+ *     opening quote is what separates a title from every other mention.
+ *
+ * Matching a *prefix* of a title stays allowed — row 7 names the readable start
+ * of a title that carries backticks of its own — because the quote anchors the
+ * start, which is the half that matters.
  *
  *   node tools/invariants/check.mjs [--list]
  */
@@ -126,7 +138,10 @@ for (const row of rows) {
     }
 
     const source = stripComments(readFileSync(abs, 'utf8'));
-    if (!source.includes(holder.testName)) {
+    // Anchored to an opening quote: a title is a string literal, an identifier
+    // is not. See the header — plain `includes` let a deleted describe pass.
+    const named = ["'", '"', '`'].some((quote) => source.includes(quote + holder.testName));
+    if (!named) {
       failures.push(
         `row ${row.n}: ${holder.file} has no test named "${holder.testName}" ` +
           '(renamed, or moved to another file?)'
