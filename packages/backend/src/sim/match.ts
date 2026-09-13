@@ -863,7 +863,9 @@ export class Match {
     const wantVein = species === FaunaSpecies.Ashgrazer;
     const onVein = this.world.terrain.biomeAt(x, y) === Biome.ThermalVein;
     if (wantVein !== onVein) return false;
-    if (!this.world.drift.spawnsAllowed(x, y)) return false;
+    // Per species since #655: Collapsing water is closed to everything except
+    // §6's scavengers, and closed to them is not the same as closed.
+    if (!this.world.drift.spawnsAllowed(x, y, species)) return false;
     // Deep enough for the species to live there. A Sounder seeded over a
     // 700 m plateau would be a colossus in a puddle, and the roster's
     // habitats are the reason the depths exist at all (bestiary.md §4).
@@ -2345,8 +2347,12 @@ export class Match {
    * - **Toward the complement, never past it.** The Drift replaces losses; it
    *   does not breed a map fuller than the ground it stands on can feed.
    * - **The band sets the rate.** Full in Healthy water, `−40%` in Strained,
-   *   nothing at Failing and below — and a Strained region is closed to
-   *   megafauna outright, which is the same row's second clause.
+   *   nothing at Failing — and a Strained region is closed to megafauna
+   *   outright, which is the same row's second clause. Collapsing breeds
+   *   §6's scavengers and nothing else, at the quarter that row is worth
+   *   (#655), so this is the only path by which a dying region restocks: the
+   *   Drift opens between 70 and 95, so no region is Collapsing at seed time
+   *   and every scavenger in one arrived here.
    * - **The herd eats the crop** (docs/systems-flora.md §4). A region's rate
    *   is scaled by the standing crop of the beds in it, so a plateau stripped
    *   to bare rock feeds fewer animals. Inert until something can cut a bed,
@@ -2367,6 +2373,19 @@ export class Match {
     // Whichever species is furthest below what this map held, ties going to
     // the roster's own order — a deterministic choice, because a replay that
     // restocked a different animal diverges from the tick it did.
+    //
+    // One candidate, and the interval is spent whether or not it can be
+    // placed. Measured while #655 opened Collapsing water to the scavengers:
+    // on a map worn past Failing *everywhere*, §6's own Failing row kills the
+    // six Lampfry and five Tetherjelly, whose deficits then outrank a dead
+    // Rasp's for the rest of the match and can never be filled, so the
+    // Collapsing row is never reached. It is reachable whenever some of the
+    // map is still living — the ambient deficits are filled there and the
+    // queue moves on — and a returning campaign mission seats on the carried
+    // grid directly, which is how `floraRegrowth.test.ts` holds the row. Left
+    // as it is rather than made to fall through: falling through would restock
+    // a different animal in every band, which is a change to what the map
+    // holds rather than to what this row means.
     let wanted: FaunaSpecies | null = null;
     let worst = 0;
     for (const { species } of DRIFT_ROSTER) {
@@ -2385,7 +2404,7 @@ export class Match {
     const species = wanted;
     const admitted = (x: number, y: number): boolean => {
       if (MEGAFAUNA.has(species) && !this.world.drift.admitsMegafauna(x, y)) return false;
-      const rate = this.world.drift.spawnRate(x, y) * this.cropDensityAt(x, y);
+      const rate = this.world.drift.spawnRate(x, y, species) * this.cropDensityAt(x, y);
       // A rate below 1 is a thinner region rather than a closed one: the draw
       // spends the attempt, so Strained water breeds more slowly instead of
       // searching harder for a spot inside itself.

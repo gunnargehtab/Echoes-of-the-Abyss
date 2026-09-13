@@ -241,7 +241,13 @@ Every map region carries a **Drift Health** value, 0–100, starting between 70 
 | 24–1 | Collapsing | Scavengers only, Biomass yield −75%, ambient audio bed audibly emptied |
 | 0 | Dead | No fauna, no masking bonus, no Biomass, permanent for the match |
 
-The same table governs the kelp. Standing crop regrows on these bands and stops regrowing where spawns stop, so a region worked past Strained is one that neither breeds animals nor grows the crop that feeds them ([systems-flora.md](systems-flora.md) §3). One instrument, read the same way for both halves of the Drift.
+**"Scavengers only" is a spawn rule, not a census of what survived.** It is the one place this table stops getting worse in one direction, and it means what it says: Failing water breeds nothing, and Collapsing water breeds carrion-eaters. A region that has stopped producing starts being eaten, so a commander who works one past Failing does not get a thinner version of the same water — they get different water, with thin, scattered returns from the one class of animal that arrives *because* everything else has gone. That is a thing to be learned by listening, which is what the row is worth keeping for: a player who hears that particular sparse signature has learned **this region is finished** without being told. Read as a description of survivors instead, the row says nothing a fade to silence does not already say.
+
+**Which animals that is, by name.** The scavengers are the species §4 files under its *Scavengers* heading — today the **Rasp**, and only the Rasp. The heading is the list; a species added under it inherits this row, and a species added anywhere else does not, however it feeds.
+
+**And at what rate.** A Collapsing region breeds its scavengers at **a quarter** of a Healthy region's rate — the row's own −75%, the same quarter it already charges Biomass. Nothing else spawns there at all, Failing still breeds nothing whatever, and Dead is still nothing for good.
+
+The same table governs the kelp, with that one exception. Standing crop regrows on these bands and stops regrowing where spawns stop, so a region worked past Strained is one that neither breeds animals nor grows the crop that feeds them ([systems-flora.md](systems-flora.md) §3). One instrument, read the same way for both halves of the Drift — except in Collapsing, where the exception is fauna-only, because carrion is something to eat and is not something a crop can grow back from. Kelp stops at Failing and stays stopped.
 
 A dead region is quieter, more legible, and worth less to everyone — which means **the Commune loses their concealment, the Directorate loses their income, and the Consortium barely notices.** That asymmetry is deliberate: environmental collapse in this game is not a moral event with a lecture attached, it is a strategic act that helps exactly one faction and is available to all four.
 

@@ -373,6 +373,22 @@ export const DRIFT_ROSTER: readonly { species: FaunaSpecies; count: number }[] =
 ];
 
 /**
+ * The species under §4's *Scavengers* heading — docs/bestiary.md, and
+ * docs/glossary.md, which pins the word because it carries a rule.
+ *
+ * A class, not a feeding habit. §6's Collapsing row admits scavengers to water
+ * that admits nothing else, so membership of this set is what decides whether
+ * a dying region breeds a given animal at all. It is a set rather than a
+ * predicate over behaviour for exactly that reason: the doc's answer is its
+ * heading, and a creature that eats carrion while filed under Predators is not
+ * in it.
+ *
+ * The Rasp is the whole list today. The set exists so that the next one is a
+ * line here rather than a condition rediscovered in the Drift.
+ */
+export const SCAVENGERS: ReadonlySet<FaunaSpecies> = new Set([FaunaSpecies.Rasp]);
+
+/**
  * What one rendered creature pays, averaged over the map's own seeding —
  * about 19 Biomass, from 916 across 48 animals.
  *

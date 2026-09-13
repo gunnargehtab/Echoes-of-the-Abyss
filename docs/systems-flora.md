@@ -158,8 +158,11 @@ table [bestiary.md](bestiary.md) §6 already runs spawns on:
 | 24–1 | Collapsing | none |
 | 0 | Dead | none, permanently for the match |
 
-One instrument, read the same way everywhere: the band that stops fauna spawning is the band
-that stops kelp growing. A full field cut to bare and left alone in healthy water is back in
+One instrument, read the same way everywhere, with one exception on the bottom row: the band
+that stops fauna spawning is the band that stops kelp growing, and both stop at Failing.
+Collapsing water breeds scavengers again ([bestiary.md](bestiary.md) §6) and still grows
+nothing, because carrion is something to eat and is not something a crop can grow back from.
+Nothing else about the instrument differs. A full field cut to bare and left alone in healthy water is back in
 about twenty-five minutes — one match — so regrowth is real without being a tap you can farm
 in place.
 
@@ -363,7 +366,8 @@ order:
    income, and it is both halves of the Drift at once: kelp regrows at 4% a minute in Healthy
    water and the Drift replaces the creatures it has lost, toward the complement the map was
    seeded with, at the same bands. Strained water grows and breeds at the row's own −40% and
-   is closed to megafauna; Failing and below does neither. A region's respawn is scaled by the
+   is closed to megafauna; Failing and below does neither, but for the scavengers §6's
+   Collapsing row breeds at a quarter rate in water that grows no crop at all. A region's respawn is scaled by the
    standing crop of the beds in it, which is §4 above — inert until step 3 gives anyone a way
    to cut a bed, and the reason the Directorate's income is paid by a crop it does not
    harvest.

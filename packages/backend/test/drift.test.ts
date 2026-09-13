@@ -29,6 +29,7 @@ import assert from 'node:assert/strict';
 
 import {
   DRIFT,
+  DRIFT_ROSTER,
   Faction,
   FaunaSpecies,
   MISSION,
@@ -40,9 +41,15 @@ import { Match } from '../src/sim/match.ts';
 import { DriftHealth } from '../src/sim/drift.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnFauna, spawnUnit } from '../src/sim/world.ts';
+import { countFaunaOf } from '../src/sim/systems/fauna.ts';
 import { Acoustic, Position } from '../src/sim/components.ts';
 import { rebuildPropagation } from '../src/sim/systems/hazards.ts';
-import { VENTFRONT_DIVIDE, missionMapById, type MapDefinition } from '../src/sim/maps/index.ts';
+import {
+  VENTFRONT_DIVIDE,
+  missionMapById,
+  terrainFor,
+  type MapDefinition,
+} from '../src/sim/maps/index.ts';
 import { missionById } from '../src/sim/missions/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -302,6 +309,84 @@ describe('Drift Health', () => {
     assert.equal(match.world.drift.spawnsAllowed(4000, 4000), false, '§6: no new spawns');
   });
 
+  /**
+   * §6's Collapsing row, which is the one place the table stops getting worse
+   * in one direction — "Scavengers only", and it is a spawn rule rather than a
+   * census of what happened to survive (#655).
+   *
+   * Exact rather than directional, for this file's own reason: the reading
+   * that was wrong for four waves ("nothing below Failing") is a *monotone*
+   * one, and every directional assertion anybody could write about a dying
+   * region is true of it. What separates the two readings is one band and one
+   * class, so that is what these assert.
+   */
+  describe('the Collapsing row admits scavengers and nothing else', () => {
+    /** A grid parked in one band, without waiting for a match to wear it. */
+    const at = (health: number): DriftHealth =>
+      new DriftHealth(8000, 8000, new Array<number>(DRIFT.HEALTH_REGIONS ** 2).fill(health));
+
+    it('breeds the scavenger in Collapsing water, at the quarter that row is worth', () => {
+      const drift = at(DRIFT.HEALTH_COLLAPSING - 13);
+      assert.equal(drift.spawnsAllowed(0, 0, FaunaSpecies.Rasp), true);
+      assert.equal(
+        drift.spawnRate(0, 0, FaunaSpecies.Rasp),
+        drift.yieldMultiplier(0, 0),
+        'the row states one number and both of its clauses read it'
+      );
+      assert.equal(drift.spawnRate(0, 0, FaunaSpecies.Rasp), 0.25, 'which is the −75%');
+    });
+
+    it('breeds nothing else there', () => {
+      const drift = at(DRIFT.HEALTH_COLLAPSING - 13);
+      for (const species of [
+        FaunaSpecies.Draymaw,
+        FaunaSpecies.Ashgrazer,
+        FaunaSpecies.Sounder,
+        FaunaSpecies.Lampfry,
+        FaunaSpecies.Tetherjelly,
+        FaunaSpecies.Hollow,
+      ]) {
+        assert.equal(drift.spawnsAllowed(0, 0, species), false, `species ${species}`);
+        assert.equal(drift.spawnRate(0, 0, species), 0, `species ${species}`);
+      }
+    });
+
+    it('keeps the scavenger out of Failing water, which breeds nothing whatever', () => {
+      // The half that makes the row non-monotone rather than merely lenient:
+      // the exemption belongs to Collapsing alone, so a region on its way down
+      // closes to the Rasp and then opens again.
+      const drift = at(DRIFT.HEALTH_FAILING - 10);
+      assert.equal(drift.spawnsAllowed(0, 0, FaunaSpecies.Rasp), false);
+      assert.equal(drift.spawnRate(0, 0, FaunaSpecies.Rasp), 0);
+    });
+
+    it('keeps it out of Dead water, which is permanent', () => {
+      const drift = at(0);
+      assert.equal(drift.spawnsAllowed(0, 0, FaunaSpecies.Rasp), false);
+      assert.equal(drift.spawnRate(0, 0, FaunaSpecies.Rasp), 0);
+    });
+
+    it('answers the general question when nobody names a species', () => {
+      // The flora half asks this ladder with no species and must get the
+      // answer it has always had — the exemption is claimed by naming a
+      // species, never granted by default (docs/systems-flora.md §3).
+      const collapsing = at(DRIFT.HEALTH_COLLAPSING - 13);
+      assert.equal(collapsing.spawnsAllowed(0, 0), false, 'kelp does not grow back on carrion');
+      assert.equal(collapsing.spawnRate(0, 0), 0);
+    });
+
+    it('leaves the living bands alone, species or no species', () => {
+      const healthy = at(DRIFT.HEALTH_START);
+      const strained = at(DRIFT.HEALTH_STRAINED - 10);
+      for (const species of [undefined, FaunaSpecies.Rasp, FaunaSpecies.Draymaw]) {
+        assert.equal(healthy.spawnsAllowed(0, 0, species), true);
+        assert.equal(healthy.spawnRate(0, 0, species), 1);
+        assert.equal(strained.spawnsAllowed(0, 0, species), true);
+        assert.equal(strained.spawnRate(0, 0, species), DRIFT.SPAWN_RATE_STRAINED);
+      }
+    });
+  });
+
   it('makes the Failing row observable end to end', () => {
     // #306's definition of done, verbatim: "scatter tells stop, jelly-field
     // PF rises". The row was half-wired until the ambient species existed —
@@ -530,5 +615,64 @@ describe('Drift Health carries between missions on the same map', () => {
     const fresh = new Match(map, { mission, fauna: mission.fauna });
     assert.equal(deadCorner, false);
     assert.equal(fresh.world.drift.spawnsAllowed(1, 1), true, 'a first visit is not this');
+  });
+
+  /**
+   * §6's Collapsing row, end to end and without a stopwatch or a private
+   * method: what a returning mission's *seeding* seats on ground the last one
+   * left in each band (#655).
+   *
+   * This is the strongest reading of the row available, because seeding is the
+   * one moment the whole map is in a known band and the roster is asked for
+   * every species at once. A second visit to collapsed water is not a
+   * contrivance either — it is exactly what rule 5 carries.
+   */
+  describe('and seats on it whatever that ground admits', () => {
+    /** The eruptions out, so what lives is the band's doing and not a plume's. */
+    const quietVentfront: MapDefinition = { ...VENTFRONT_DIVIDE, id: 'test-bands', hazards: [] };
+
+    const seededOn = (health: number): Map<FaunaSpecies, number> => {
+      const carried = new Array<number>(REGIONS).fill(health);
+      const match = new Match(quietVentfront, {
+        fauna: true,
+        seed: 51,
+        terrain: terrainFor(quietVentfront),
+        driftCarry: carried,
+      });
+      const counts = new Map<FaunaSpecies, number>();
+      for (const { species } of DRIFT_ROSTER) {
+        counts.set(species, countFaunaOf(match.world, species));
+      }
+      return counts;
+    };
+
+    it('seats the scavengers, and only the scavengers, on collapsing ground', () => {
+      const counts = seededOn(DRIFT.HEALTH_COLLAPSING - 13);
+      assert.ok(counts.get(FaunaSpecies.Rasp)! > 0, '§6: "Scavengers only" — and they are here');
+      for (const [species, n] of counts) {
+        if (species === FaunaSpecies.Rasp) continue;
+        assert.equal(n, 0, `species ${species} on collapsing ground`);
+      }
+    });
+
+    it('seats nothing at all on failing ground, the scavenger included', () => {
+      // The clause that makes the table non-monotone rather than merely
+      // lenient: the exemption belongs to Collapsing and not to the band above
+      // it, so a region on its way down closes to the Rasp and then reopens.
+      for (const [, n] of seededOn(DRIFT.HEALTH_FAILING - 10)) assert.equal(n, 0);
+    });
+
+    it('seats nothing on dead ground, which is the permanent one', () => {
+      for (const [, n] of seededOn(0)) assert.equal(n, 0);
+    });
+
+    it('seats the whole roster on ground the last mission left alone', () => {
+      // The control. Without it the three above are equally satisfied by a
+      // seeding that never places anything.
+      const counts = seededOn(DRIFT.HEALTH_START);
+      for (const { species, count } of DRIFT_ROSTER) {
+        assert.equal(counts.get(species), count, `species ${species} on healthy ground`);
+      }
+    });
   });
 });
