@@ -1323,6 +1323,20 @@ export class Match {
       queued,
     });
     if (this.missionDenies(slot, 'weapons')) return;
+    // The seventh path, and the one that hid the longest: an ordered target is
+    // a movement order, because `combat.ts` chases one. Only an *ordered*
+    // target chases — an auto-acquired one "was in range by construction" —
+    // so refusing the order here leaves a held hull shooting whatever comes to
+    // it while never going to look, which is the right reading of a hold: it
+    // is a movement rule, and a mission that wants the guns cold has
+    // `denies(slot, 'weapons')` for that. The same carve-out the chase already
+    // makes for a hull holding position, which "was told to".
+    //
+    // Refused on this path rather than clamped in the chase, because the chase
+    // is on the 60 Hz budget and this is not. Measured before the guard: a
+    // Corvette the mission was still reporting as held walked 1,565 m in
+    // twenty seconds on one right-click (#708).
+    if (this.missionRuntime?.holdsMovement(slot, eid) === true) return;
     if (!this.owns(slot, eid) || !hasComponent(this.world, Weapon, eid)) return;
     const target = this.echo.entityForHandle(slot, contactHandle);
     // A phantom's handle names no entity by construction, and refusing it here
@@ -1569,6 +1583,17 @@ export class Match {
       node: this.localId(nodeEid),
       queued,
     });
+    // A harvest order is a movement order wearing an economy's clothes: it
+    // walks the hull to the field. So the same hold refuses it, and this was
+    // the one movement path that did not check — the hole that made the rule
+    // porous rather than merely late. `harvestSystem` re-asserts `MoveOrder`
+    // every tick at 60 Hz while `applyMovementHolds` clamps at 5, so a held
+    // hull given a harvest order was not walked twelve ticks and stopped, it
+    // was walked for good: measured at 659 m in twenty seconds on a *Shift
+    // Change* barge that the mission still reported as held (#708). Every
+    // held hull in that mission is a Harvester carrying the crew the whole
+    // mission is about, so the clock its bells keep was optional.
+    if (this.missionRuntime?.holdsMovement(slot, eid) === true) return;
     if (!this.owns(slot, eid) || !hasComponent(this.world, Harvester, eid)) return;
     if (!hasComponent(this.world, ResourceNode, nodeEid)) return;
 

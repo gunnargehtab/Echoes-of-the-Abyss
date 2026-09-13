@@ -137,7 +137,7 @@ import {
   type Bindings,
 } from '../input/bindings.ts';
 import { FACTION_NAME } from './factions.ts';
-import { holdReasonFor, movableIn } from './movementHolds.ts';
+import { heldWholly, holdReasonFor, movableIn } from './movementHolds.ts';
 import { priceTag, priceWords, shortfallLine } from './price.ts';
 import {
   drawScopeEchoMarks,
@@ -2702,35 +2702,53 @@ export class EchoRenderer {
         active: false,
         action: () => this.commandPing(),
       });
+      // The vertical half of the movement hold, on the same terms as the locks
+      // above. `Match.orderDepth` and `orderFollowFloor` both refuse a held
+      // hull, so all three of these were live buttons the server threw away —
+      // and §10.5 is stricter here than for an ability, not looser: the player
+      // "learns the rule before pressing, because a refusal delivered
+      // afterwards teaches nothing". A run north that is mostly a climb
+      // (docs/mission-sorrowgate.md §8) is exactly where that bites (#708).
+      const heldAll = this.heldSelection(units);
       buttons.push({
         label: 'DIVE',
-        enabled: units.length > 0 && this.stepDepthTarget(units, 1) !== null,
+        enabled: units.length > 0 && heldAll === null && this.stepDepthTarget(units, 1) !== null,
         active: units.some((u) => u.depthOrder !== undefined && u.depthOrder > u.depth),
         action: () => this.commandDepthStep(1),
+        refusal: heldAll ?? undefined,
       });
       buttons.push({
         label: 'RISE',
-        enabled: units.length > 0 && this.stepDepthTarget(units, -1) !== null,
+        enabled: units.length > 0 && heldAll === null && this.stepDepthTarget(units, -1) !== null,
         active: units.some((u) => u.depthOrder !== undefined && u.depthOrder < u.depth),
         action: () => this.commandDepthStep(-1),
+        refusal: heldAll ?? undefined,
       });
       buttons.push({
         // The standing order (docs/systems-depth.md §2): hug the seabed at
         // station keeping. Lit while any of the selection is following, so a
         // squad that half-disengaged at a PR edge is visible as exactly that.
         label: 'FOLLOW',
-        enabled: units.length > 0,
+        enabled: units.length > 0 && heldAll === null,
         active: units.some((u) => u.followFloor === true),
         action: () => this.commandFollowFloor(),
+        refusal: heldAll ?? undefined,
       });
       // The three standing orders (§9, #435). ENGAGE arms an attack-move the
       // way a build button arms a placement; on a touchscreen it is the only
       // way to give one. HOLD is lit while the selection holds.
       const fighters = units.some((u) => u.throttle === undefined);
       buttons.push({
+        // Held too, and for the same reason as DIVE: ENGAGE arms an
+        // attack-move, `Match.orderAttackMove` refuses a held hull, and
+        // without this the player armed the mode, clicked the water, and only
+        // then heard why — the "refusal delivered afterwards" §10.5 says
+        // teaches nothing. The prologue hides this by accident, its tenders
+        // being Harvesters and so not `fighters`; *Radicals* holds a Cruiser.
         label: 'ENGAGE',
-        enabled: fighters && this.missionLock('weapons') === null,
+        enabled: fighters && heldAll === null && this.missionLock('weapons') === null,
         active: this.pendingAttackMove,
+        refusal: heldAll ?? undefined,
         action: () => {
           this.pendingBuild = null;
           this.pendingAttackMove = !this.pendingAttackMove;
@@ -3681,10 +3699,21 @@ export class EchoRenderer {
     const node = this.nearestNodeAt(clientX, clientY);
     const harvesterIds = selectedUnits.filter((u) => u.throttle !== undefined).map((u) => u.id);
     if (node !== null && harvesterIds.length > 0) {
-      this.callbacks.onHarvestOrder(harvesterIds, node.id, queued);
-      this.noteOrder(harvesterIds, 'harvest', node.x, node.y, queued);
+      // The hold filters the harvesters too. A harvest order is a movement
+      // order — it walks the hull to the field — and this branch used to hand
+      // `harvesterIds` straight to the server, so the one gesture that reaches
+      // a held hull was the one nobody filtered. Filtered once over the whole
+      // selection rather than twice, so the hint bar keeps saying the first
+      // refusal in the selection's own order instead of whichever group was
+      // asked last (#708).
+      const free = new Set(this.movable(unitIds));
+      const harvesting = harvesterIds.filter((id) => free.has(id));
+      if (harvesting.length > 0) {
+        this.callbacks.onHarvestOrder(harvesting, node.id, queued);
+        this.noteOrder(harvesting, 'harvest', node.x, node.y, queued);
+      }
       // Everything else in the selection escorts the harvesters.
-      const rest = this.movable(unitIds.filter((id) => !harvesterIds.includes(id)));
+      const rest = unitIds.filter((id) => !harvesterIds.includes(id) && free.has(id));
       if (rest.length > 0 && water !== null) {
         this.callbacks.onMoveOrder(rest, water.x, water.y, queued);
         this.noteOrder(rest, 'move', water.x, water.y, queued);
@@ -3716,8 +3745,15 @@ export class EchoRenderer {
       // through to the move it can still be, rather than being swallowed.
       // The hint bar says which of the two the player got, and why.
       if (!this.refusedByMission('weapons')) {
-        this.callbacks.onAttackOrder(unitIds, contact.id, queued);
-        this.noteOrder(unitIds, 'attack', contact.x, contact.y, queued);
+        // Filtered like every other branch: an ordered target is a movement
+        // order, because only an ordered one chases. A held hull keeps its
+        // auto-acquire and so still answers what comes to it — what it may
+        // not do is be sent (#708).
+        const attacking = this.movable(unitIds);
+        if (attacking.length > 0) {
+          this.callbacks.onAttackOrder(attacking, contact.id, queued);
+          this.noteOrder(attacking, 'attack', contact.x, contact.y, queued);
+        }
         return;
       }
     }
@@ -3982,6 +4018,21 @@ export class EchoRenderer {
     const { ids: free, refused } = movableIn(this.missionHolds, ids);
     if (refused !== null) this.refuse(refused);
     return free;
+  }
+
+  /**
+   * The hold the *whole* selection is under, or null while any of it would go.
+   *
+   * What the bar and the hint bar read, because both speak for the selection
+   * rather than for a hull. The rule itself is in `movementHolds.ts` with the
+   * rest of them, for that module's own reason: it needs no GL context, so the
+   * sentence the player meets is testable without one.
+   */
+  private heldSelection(units: readonly OwnUnit[]): string | null {
+    return heldWholly(
+      this.missionHolds,
+      units.map((unit) => unit.id)
+    );
   }
 
   /**
@@ -7109,9 +7160,27 @@ export class EchoRenderer {
       if (this.isTouch || !canBuild) return `${name}${queue}`;
       return `${name}${queue}  ·  UNITS tab to produce  ·  ${this.buildKeyHint()} build`;
     }
+    // A selection the mission is holding whole says so where it would
+    // otherwise say how to move it. §10.5 wants continuous state rather than
+    // the four seconds the refusal above lasts: the tender was saying `held —
+    // not released yet` on its inspector line while the bar underneath told
+    // the player to send it to a node (#708).
+    //
+    // The hold replaces the *movement* bindings and nothing else. Dropping the
+    // whole line instead was the same §7 fault inverted — it hid `V throttle`,
+    // `SPACE silent`, `P ping`, `X stop` and `H hold`, none of which the hold
+    // refuses, and the first of those in the one mission whose entire subject
+    // is a SIG budget. A hull that cannot go anywhere can still be made quiet,
+    // can still be told to stand, and can still empty its hold: `setThrottle`,
+    // `setSilentRunning`, `orderStop`, `orderHold` and `orderDisembark` ask
+    // `holdsMovement` nothing, and a bar that hides a working key is as much a
+    // silent lie as one that advertises a dead one.
+    const heldAll = this.heldSelection(this.selectedUnits());
     const transport = this.units.find((u) => this.selected.has(u.id) && u.hold !== undefined);
     if (transport !== undefined && this.selected.size === 1) {
       const state = `transport [HOLD ${transport.hold!.used}/${transport.hold!.berths}]`;
+      // Boarding is `orderEmbark`, which the hold does refuse; landing is not.
+      if (heldAll !== null) return `${state}  ·  ${heldAll}  ·  LAND to unload`;
       return this.isTouch
         ? `${state}  ·  select hulls, tap the transport to board  ·  LAND to unload`
         : `${state}  ·  select hulls, RMB the transport to board  ·  LAND to unload  ·  RMB move`;
@@ -7120,9 +7189,17 @@ export class EchoRenderer {
     if (harvester !== undefined) {
       const throttle = THROTTLE_LABEL[harvester.throttle!];
       const state = `harvester [${throttle}] ${harvester.cargo?.toFixed(0) ?? 0} cargo`;
+      if (heldAll !== null) return `${state}  ·  ${heldAll}  ·  V throttle`;
       return this.isTouch
         ? `${state}  ·  tap a field`
         : `${state}  ·  RMB node/move  ·  V throttle`;
+    }
+    if (heldAll !== null) {
+      // What is left of the generic line once every way to move is off it.
+      return this.isTouch
+        ? `${this.selected.size} selected  ·  ${heldAll}`
+        : `${this.selected.size} selected  ·  ${heldAll}  ·  X stop  ·  H hold  ·  ` +
+            `CTRL+RMB torpedo  ·  SPACE silent  ·  P ping`;
     }
     return this.isTouch
       ? `${this.selected.size} selected  ·  tap map to order`
