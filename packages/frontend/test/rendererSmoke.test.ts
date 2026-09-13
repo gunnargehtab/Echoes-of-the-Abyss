@@ -24,7 +24,7 @@
 import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
 import type { Container } from 'pixi.js';
-import { Faction } from '@echoes/shared';
+import { Faction, MovementHoldReason } from '@echoes/shared';
 import {
   createHost,
   dispatchWindow,
@@ -777,6 +777,67 @@ describe('renderer smoke test: the conn view', () => {
 });
 
 describe('renderer smoke test: input and teardown', () => {
+  /**
+   * The mission hold, through the input path rather than through the predicate.
+   *
+   * `movementHolds.test.ts` holds `heldWholly` and `movableIn`, which is the
+   * rule; this is the wiring, and the wiring is what #708 got wrong twice. The
+   * harvest branch of the context order handed its harvesters straight to the
+   * server without ever consulting the hold, so the one gesture that reaches a
+   * held hull was the one nobody filtered — and because a harvest order
+   * republishes `MoveOrder` at 60 Hz against a 5 Hz clamp, the hull did not
+   * twitch, it left. Asserted on the callbacks because those are what crosses
+   * the wire: an order not sent is an order the server never has to refuse.
+   */
+  it('sends no order at all for a hull the mission is holding', async () => {
+    const world = await boot();
+    try {
+      const snapshot = cannedSnapshot();
+      const harvester = snapshot.units.find((unit) => unit.throttle !== undefined);
+      assert.ok(harvester !== undefined, 'the canned match has no harvester to hold');
+      world.chart.setMissionHolds([
+        { unitId: harvester.id, reason: MovementHoldReason.Unreleased },
+      ]);
+      world.chart.focusOn(harvester.x, harvester.y);
+      world.frame(2);
+
+      const canvas = world.app.canvas;
+      const at = world.conn.projectPoint(harvester.x, harvester.y, harvester.depth);
+      assert.ok(at.visible, 'the camera is looking at the hull we are about to click');
+      for (const type of ['pointerdown', 'pointerup']) {
+        canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x,
+          clientY: at.y,
+        });
+      }
+      world.frame(1);
+
+      // Right-click the field. This is the branch that used to bypass the
+      // hold; a harvest order is a movement order and the shell may not send
+      // one for a hull that is going nowhere.
+      const node = cannedNodes()[0]!;
+      const onField = world.conn.projectPoint(node.x, node.y, node.depth);
+      canvas.dispatch('pointerdown', {
+        button: 2,
+        pointerId: 1,
+        pointerType: 'mouse',
+        clientX: onField.x,
+        clientY: onField.y,
+        shiftKey: false,
+        ctrlKey: false,
+        metaKey: false,
+      });
+
+      assert.equal(world.log.first('onHarvestOrder'), undefined, 'a held hull was sent to a field');
+      assert.equal(world.log.first('onMoveOrder'), undefined, 'a held hull was sent anywhere');
+    } finally {
+      world.teardown();
+    }
+  });
+
   it('turns a click and a right-click into a move order', async () => {
     const world = await boot();
     try {

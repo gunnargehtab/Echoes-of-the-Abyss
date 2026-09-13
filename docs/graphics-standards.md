@@ -375,7 +375,7 @@ rather than cost in the frame. The split is what makes that distinction possible
 The same drive found a fault in the instrument itself. The probe used to drop any interval
 over 500 ms as a hidden tab, and a three-second stall in plain view was reported as a
 station whose worst frame was 17.7 ms. It now drops an interval only when the page actually
-went hidden ([invariants.md](invariants.md), row 16).
+went hidden, and [invariants.md](invariants.md) lists that as the conn probe's rule.
 
 **The Termux row is still owed.** It belongs here and in the Phase-5 record
 ([three-layer-ocean.md](three-layer-ocean.md)) once taken, and until then this gate bounds
