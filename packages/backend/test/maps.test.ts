@@ -830,14 +830,13 @@ describe('every map has water where it seats things', () => {
 
   /**
    * docs/maps.md, "How a map is written": a spawn and its Foundry stand on
-   * ground the map paints.
+   * ground the map paints — and *paints* means shapes the water column. Some
+   * region containing the point sets `floorM` or `ceilingM`.
    *
-   * Containment in *some* authored rectangle, and deliberately not "a floor
-   * different from the map's own". A region setting neither floor nor ceiling
-   * still satisfies this — the doc sanctions a base on the base seabed inside
-   * an authored region — and strengthening the predicate to the floor flags
-   * fourteen legitimate placements across kelp-labyrinth, sorrowgate,
-   * holding-board and the-first.
+   * Deliberately not "a floor different from the map's own": the doc
+   * sanctions a base on the base seabed inside an authored region, and that
+   * stronger reading flags fourteen legitimate placements across
+   * kelp-labyrinth, sorrowgate, holding-board and the-first.
    *
    * This is the invariant that was missing while the Ventfront seated all
    * eight of its placements in an unpainted 250 m gutter (#622). Neither of
@@ -846,40 +845,154 @@ describe('every map has water where it seats things', () => {
    * and the fault was identical on all four seats, so the cell-by-cell
    * symmetry count read zero. Written over every map, catalogue and mission
    * alike, because a test scoped to the one instance somebody had in mind is
-   * how the next one gets in — and this was the third time this exact shape of
-   * fault reached the tree.
+   * how the next one gets in — and this was the third time this exact shape
+   * of fault reached the tree.
    *
-   * Be clear about how much that buys. Twenty-one of the twenty-three maps
-   * paint a full-extent background region, so containment is trivially true of
-   * them and this binds on the two that paint only what they mean — the
-   * Ventfront and the Rift Corridor. It is also purely syntactic: a rectangle
-   * that sets neither `floorM` nor `ceilingM` satisfies it while saying
-   * nothing about the water column, so a future author could close a gutter
-   * with a biome-only rectangle and reinstate the identical fault. Requiring
-   * that some covering region shape the column would catch that and costs
-   * eight exemptions, all of them kelp-labyrinth's; that is a decision rather
-   * than a patch and is #636's.
+   * Be clear about what this predicate can and cannot see. #622 shipped mere
+   * containment, and #636 measured what that was worth:
+   *
+   * - **It rejects the fault it was bought for; containment did not.** Close
+   *   the Ventfront gutter with a biome-only rectangle instead of growing the
+   *   plateaus and containment reports zero offenders, while the loiter
+   *   position under your own base is back. `SHAM_VENTFRONT` below is that
+   *   map, and a test below asserts it red under this predicate and green
+   *   under containment. A guard that cannot reject the fault it was bought
+   *   for is not a weaker version of the rule, it is the rule not enforced.
+   * - **It does not see a full-extent background region.** Twenty of the
+   *   twenty-three maps paint one that sets a floor, so this is trivially
+   *   true everywhere on them. Of the three left it binds for real on the two
+   *   that paint only what they mean — the Ventfront and the Rift Corridor —
+   *   and the third, the Kelp Labyrinth, is exempt below. What it buys on the
+   *   twenty is that the background has to be a statement about
+   *   the water column rather than a biome wash, which is a much smaller hole
+   *   than containment left. Closing it needs the innermost covering region
+   *   to shape rather than any of them (#636's fourth shape), which measures
+   *   at exactly this predicate's cost on today's tree — the same eight
+   *   placements, the same one map — and is a refinement of this predicate
+   *   rather than a different one.
+   * - **A map-level `floorM` deliberately does not count.** All twenty-three
+   *   maps set one, so admitting it would make the predicate vacuously true
+   *   on every placement on every map, `SHAM_VENTFRONT` included. It would
+   *   read as a small widening and would in fact be this guard switched off.
    */
-  it('paints the ground under every base it seats, on every map', () => {
-    const paints = (map: MapDefinition, x: number, y: number) =>
-      map.regions.some((r) => x >= r.x && x < r.x + r.widthM && y >= r.y && y < r.y + r.heightM);
+  const shapesColumn = (r: MapRegion) => r.floorM !== undefined || r.ceilingM !== undefined;
+  const covers = (r: MapRegion, x: number, y: number) =>
+    x >= r.x && x < r.x + r.widthM && y >= r.y && y < r.y + r.heightM;
 
-    const unpainted: string[] = [];
-    for (const map of [...MAPS, ...MISSION_MAPS]) {
-      for (const spawn of map.spawns) {
-        if (!paints(map, spawn.x, spawn.y)) {
-          unpainted.push(`${map.id}: a Bastion at ${spawn.x},${spawn.y}`);
-        }
-        const fx = spawn.x + spawn.foundryOffsetX;
-        const fy = spawn.y + spawn.foundryOffsetY;
-        if (!paints(map, fx, fy)) unpainted.push(`${map.id}: a Foundry at ${fx},${fy}`);
-      }
-    }
+  /** Every Bastion and Foundry a map seats, as the guard reads them. */
+  const placements = (map: MapDefinition) =>
+    map.spawns.flatMap((spawn, slot) => [
+      { what: `slot ${slot} Bastion`, x: spawn.x, y: spawn.y },
+      {
+        what: `slot ${slot} Foundry`,
+        x: spawn.x + spawn.foundryOffsetX,
+        y: spawn.y + spawn.foundryOffsetY,
+      },
+    ]);
+
+  /** The rule: some region containing the point shapes the water column. */
+  const paints = (map: MapDefinition, x: number, y: number) =>
+    map.regions.some((r) => covers(r, x, y) && shapesColumn(r));
+
+  /** #622's predicate, kept because an exempt map is still held to it. */
+  const contained = (map: MapDefinition, x: number, y: number) =>
+    map.regions.some((r) => covers(r, x, y));
+
+  const failing = (map: MapDefinition, rule: (m: MapDefinition, x: number, y: number) => boolean) =>
+    placements(map)
+      .filter((p) => !rule(map, p.x, p.y))
+      .map((p) => `${map.id}: ${p.what} at ${p.x},${p.y}`);
+
+  /**
+   * The one map exempt from the rule, and the reason, which docs/maps.md
+   * carries in the same words.
+   *
+   * The Kelp Labyrinth states its water column once, at the map level —
+   * `floorM: 1800`, with the reason kept beside it — and shapes no region
+   * anywhere near a spawn: its outer Coral Ruins ring is a biome and nothing
+   * else, and the only regions that set a floor or a ceiling are the pressure
+   * pockets and the two wall tunnels. So all eight of its placements fail the
+   * predicate and not one of them is a finding: they open on ground the map
+   * shaped, stated another way.
+   *
+   * The exemption is from the strengthening only: an exempt map is still held
+   * to containment below, so it keeps everything #622 bought.
+   *
+   * Whole-map rather than per-placement because that is what is true — the
+   * corners are not special, every point on this map is in the same position.
+   * The fix available instead was to restate `floorM: 1800` on the background
+   * region, which paints no cell differently and is a line written to satisfy
+   * a guard; that is the fault this guard is for.
+   */
+  const COLUMN_EXEMPT = new Map<string, string>([
+    ['kelp-labyrinth', 'states its column once at the map level — floorM: 1800 (#636)'],
+  ]);
+
+  it('paints the ground under every base it seats, on every map', () => {
+    // An exempt map is exempt from the *strengthening*, not from the rule. It
+    // is still held to containment, so the #622 fault — a base in water no
+    // rectangle covers at all — cannot walk in behind an exemption.
+    const unpainted = [...MAPS, ...MISSION_MAPS].flatMap((map) =>
+      failing(map, COLUMN_EXEMPT.has(map.id) ? contained : paints)
+    );
 
     assert.deepEqual(
       unpainted,
       [],
-      `these stand on ground no region paints:\n  ${unpainted.join('\n  ')}`
+      `these stand on ground no region shapes:\n  ${unpainted.join('\n  ')}`
+    );
+  });
+
+  // An exemption that outlives its reason is a hole nobody is looking at, so
+  // the exempt map has to keep needing the exemption. If the Kelp Labyrinth
+  // ever shapes the column under its corners, this fails and the entry comes
+  // out rather than sitting there granting something it no longer grants.
+  it('keeps no exemption it has stopped needing', () => {
+    for (const [id, why] of COLUMN_EXEMPT) {
+      const map = [...MAPS, ...MISSION_MAPS].find((m) => m.id === id);
+      assert.ok(map, `${id} is exempt from the paint rule but is not a map`);
+      assert.ok(
+        failing(map, paints).length > 0,
+        `${id} now satisfies the paint rule — drop its exemption (${why})`
+      );
+    }
+  });
+
+  /**
+   * The fault as #636 reinstates it: the pre-patch Ventfront, with its gutter
+   * closed by a biome-only rectangle rather than by growing the plateaus.
+   *
+   * Built from the live map so it cannot drift away from it — every region
+   * that shapes the column under a placement is dropped, which is the
+   * plateau growth #622 landed, and the two rectangles #636 quotes are
+   * painted in its place. The result seats all eight placements inside an
+   * authored rectangle that says nothing whatever about the water.
+   */
+  const SHAM_VENTFRONT: MapDefinition = {
+    ...VENTFRONT_DIVIDE,
+    id: 'sham-ventfront',
+    regions: [
+      ...VENTFRONT_DIVIDE.regions.filter(
+        (r) => !placements(VENTFRONT_DIVIDE).some((p) => covers(r, p.x, p.y) && shapesColumn(r))
+      ),
+      { x: 0, y: 1000, widthM: 8000, heightM: 250, biome: Biome.OpenWater },
+      { x: 0, y: 6750, widthM: 8000, heightM: 250, biome: Biome.OpenWater },
+    ],
+  };
+
+  it('goes red on the fault containment lets through', () => {
+    // Containment — the #622 predicate — is satisfied by every placement on
+    // this map. That is the whole reason the rule needed strengthening.
+    assert.deepEqual(
+      failing(SHAM_VENTFRONT, contained),
+      [],
+      'the sham must satisfy containment, or it is not the fault #636 describes'
+    );
+
+    assert.equal(
+      failing(SHAM_VENTFRONT, paints).length,
+      placements(SHAM_VENTFRONT).length,
+      'the sham map must fail the paint rule at every placement'
     );
   });
 
