@@ -250,6 +250,16 @@ no handler registered for it. Colyseus *schema* state is a different channel and
 covered here — it syncs to everyone, which is exactly why the per-observer payloads are
 messages instead.
 
+Since #628 the table carries a third thing: each client message's **shape** at runtime, in
+`CLIENT_SHAPE` beside its payload. A type describes what a well-behaved client sends and
+the socket carries whatever it is handed, so `MatchRoom.onClientMessage` validates against
+that declaration once, for every message, and no handler writes a `Number.isFinite` of its
+own. Adding a message means a third edit: its shape, typed against its payload, which is
+why a field name that is not on the payload fails the build. The two bounds it spends —
+`WIRE.MAX_IDS` on an array field and `WIRE.MAX_MESSAGES_PER_WINDOW` per client — live in
+`constants.ts` like every other number. Validation runs on the message path, never the step
+path; nothing here is on the 60 Hz budget.
+
 ### Frontend tests run under a Vite shim
 
 The client is authored for Vite, and two of its idioms are build-time transforms rather
