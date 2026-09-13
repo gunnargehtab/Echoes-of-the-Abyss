@@ -1323,6 +1323,20 @@ export class Match {
       queued,
     });
     if (this.missionDenies(slot, 'weapons')) return;
+    // The seventh path, and the one that hid the longest: an ordered target is
+    // a movement order, because `combat.ts` chases one. Only an *ordered*
+    // target chases — an auto-acquired one "was in range by construction" —
+    // so refusing the order here leaves a held hull shooting whatever comes to
+    // it while never going to look, which is the right reading of a hold: it
+    // is a movement rule, and a mission that wants the guns cold has
+    // `denies(slot, 'weapons')` for that. The same carve-out the chase already
+    // makes for a hull holding position, which "was told to".
+    //
+    // Refused on this path rather than clamped in the chase, because the chase
+    // is on the 60 Hz budget and this is not. Measured before the guard: a
+    // Corvette the mission was still reporting as held walked 1,565 m in
+    // twenty seconds on one right-click (#708).
+    if (this.missionRuntime?.holdsMovement(slot, eid) === true) return;
     if (!this.owns(slot, eid) || !hasComponent(this.world, Weapon, eid)) return;
     const target = this.echo.entityForHandle(slot, contactHandle);
     // A phantom's handle names no entity by construction, and refusing it here

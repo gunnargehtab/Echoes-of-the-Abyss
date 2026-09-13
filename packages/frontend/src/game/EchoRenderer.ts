@@ -3745,8 +3745,15 @@ export class EchoRenderer {
       // through to the move it can still be, rather than being swallowed.
       // The hint bar says which of the two the player got, and why.
       if (!this.refusedByMission('weapons')) {
-        this.callbacks.onAttackOrder(unitIds, contact.id, queued);
-        this.noteOrder(unitIds, 'attack', contact.x, contact.y, queued);
+        // Filtered like every other branch: an ordered target is a movement
+        // order, because only an ordered one chases. A held hull keeps its
+        // auto-acquire and so still answers what comes to it — what it may
+        // not do is be sent (#708).
+        const attacking = this.movable(unitIds);
+        if (attacking.length > 0) {
+          this.callbacks.onAttackOrder(attacking, contact.id, queued);
+          this.noteOrder(attacking, 'attack', contact.x, contact.y, queued);
+        }
         return;
       }
     }
@@ -7153,30 +7160,27 @@ export class EchoRenderer {
       if (this.isTouch || !canBuild) return `${name}${queue}`;
       return `${name}${queue}  ·  UNITS tab to produce  ·  ${this.buildKeyHint()} build`;
     }
-    // A selection the mission is holding whole gets the rule instead of the
-    // bindings. Each line below leads with a way to move — `RMB node/move`,
-    // `RMB move`, `D dive`, `A rise` — and naming a binding the mission
-    // refuses is the same silent lie as a dead button, worse because a hint
-    // reads as instruction. That is the `canBuild` guard above applied to the
-    // other half of §7, and §10.5's continuous state rather than the four
-    // seconds the refusal above lasts: the tender was saying `held — not
-    // released yet` on its inspector line while the bar underneath told the
-    // player to send it to a node (#708).
+    // A selection the mission is holding whole says so where it would
+    // otherwise say how to move it. §10.5 wants continuous state rather than
+    // the four seconds the refusal above lasts: the tender was saying `held —
+    // not released yet` on its inspector line while the bar underneath told
+    // the player to send it to a node (#708).
     //
-    // One binding is genuinely lost to this and is worth naming rather than
-    // glossing: the transport line's `LAND to unload`, which `orderDisembark`
-    // does not refuse, so a held carrier can still empty its hold. The hold
-    // outranks it anyway, for the reason `infoLine2` orders these two the same
-    // way — a hull that is not taking movement orders is the more important
-    // thing about it, and the two surfaces must not disagree. No shipped
-    // mission holds a hull that has a hold, so today this costs nothing; if one
-    // ever does, this is the line to revisit.
+    // The hold replaces the *movement* bindings and nothing else. Dropping the
+    // whole line instead was the same §7 fault inverted — it hid `V throttle`,
+    // `SPACE silent`, `P ping`, `X stop` and `H hold`, none of which the hold
+    // refuses, and the first of those in the one mission whose entire subject
+    // is a SIG budget. A hull that cannot go anywhere can still be made quiet,
+    // can still be told to stand, and can still empty its hold: `setThrottle`,
+    // `setSilentRunning`, `orderStop`, `orderHold` and `orderDisembark` ask
+    // `holdsMovement` nothing, and a bar that hides a working key is as much a
+    // silent lie as one that advertises a dead one.
     const heldAll = this.heldSelection(this.selectedUnits());
-    if (heldAll !== null) return heldAll;
-
     const transport = this.units.find((u) => this.selected.has(u.id) && u.hold !== undefined);
     if (transport !== undefined && this.selected.size === 1) {
       const state = `transport [HOLD ${transport.hold!.used}/${transport.hold!.berths}]`;
+      // Boarding is `orderEmbark`, which the hold does refuse; landing is not.
+      if (heldAll !== null) return `${state}  ·  ${heldAll}  ·  LAND to unload`;
       return this.isTouch
         ? `${state}  ·  select hulls, tap the transport to board  ·  LAND to unload`
         : `${state}  ·  select hulls, RMB the transport to board  ·  LAND to unload  ·  RMB move`;
@@ -7185,9 +7189,17 @@ export class EchoRenderer {
     if (harvester !== undefined) {
       const throttle = THROTTLE_LABEL[harvester.throttle!];
       const state = `harvester [${throttle}] ${harvester.cargo?.toFixed(0) ?? 0} cargo`;
+      if (heldAll !== null) return `${state}  ·  ${heldAll}  ·  V throttle`;
       return this.isTouch
         ? `${state}  ·  tap a field`
         : `${state}  ·  RMB node/move  ·  V throttle`;
+    }
+    if (heldAll !== null) {
+      // What is left of the generic line once every way to move is off it.
+      return this.isTouch
+        ? `${this.selected.size} selected  ·  ${heldAll}`
+        : `${this.selected.size} selected  ·  ${heldAll}  ·  X stop  ·  H hold  ·  ` +
+            `CTRL+RMB torpedo  ·  SPACE silent  ·  P ping`;
     }
     return this.isTouch
       ? `${this.selected.size} selected  ·  tap map to order`
