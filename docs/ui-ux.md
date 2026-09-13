@@ -580,6 +580,19 @@ something new, and a log role would re-announce the whole panel every time a cou
   court says *the flight stays under twenty* ([mission-sorrowgate.md](mission-sorrowgate.md)
   §12); a shared string would say "maintain SIG below 20", which is a sentence no faction in
   this setting speaks, and three of the four would have to be broken to make one template fit.
+- **A silence order states both of its numbers, and both come off the ledger.** Where a
+  mission lends an array against a SIG ceiling, the panel carries the loudest hull the order
+  binds beside the ceiling it is actually held to — both read from the ledger that charges
+  for the breach, never from the SIG meter, which is a fleet instrument on §3's fixed stops
+  and measures a set the order does not bind
+  ([mission-sorrowgate.md](mission-sorrowgate.md) §4). A ceiling with no reading beside it
+  leaves the player nothing to check the one numeric rule of the mission against. Where no
+  order is in force the panel shows the mission's SIG budget instead, which
+  [campaign.md](campaign.md) §10 keeps as a design note and not a rule: three of the five
+  orders shipping today are held to a different figure than the budget their mission was
+  tuned for, so a reading drawn against the budget would read as a breach of nothing. The
+  reading sits in the header rather than in the status region, because it moves on the Echo
+  tick and a live region would announce it over every objective.
 - **A locked ability shows its reason**, in the §7 form and in the panel as well as on the
   affordance: `disabled — silence order`. The lock is continuous state, not a reply to a
   click — the player learns the rule before pressing, because a refusal delivered afterwards
@@ -732,7 +745,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | The shell — title, browse, setup, briefing, settings, credits | Implemented (§14) |
 | Mission runtime and the prologue | Implemented (#190) — one mission when it shipped, thirteen now; the campaign entry is a live door onto the board (#374) rather than the disabled placeholder it was |
 | The campaign board | Implemented (#374) — twenty-nine slots in three states, the prologue lane spanning four columns of seven, one tab stop with a roving `tabindex`, and every unbuilt slot `aria-disabled` and announced with its teaching target. The slot titles and teaching lines are transcribed from [campaign.md](campaign.md) §1 and §4–§7; which slots open is read off the shipped mission catalogue rather than written down, so a mission lights its own slot. `played` reads the progression record (#371, [campaign.md](campaign.md) §11) through a lookup the board is handed |
-| Objectives panel | Implemented (§10.5) — DOM, `role="status"`, focusable rows, own-force counters only |
+| Objectives panel | Implemented (§10.5) — DOM, `role="status"`, focusable rows, own-force counters only, and a silence order's own reading beside the ceiling it is held to (#623) |
 | Settings persistence and per-bus volume | Implemented (§14) — `localStorage`, applied at match mount |
 | Match browser, private rooms, join by code | Implemented (#193) — a listing names the water and the seat count and nothing else; solo and missions are private |
 | Menu music | Implemented (#194) — the port's own bed on the `music` bus, a different piece from the score |

@@ -21,6 +21,7 @@
 
 import {
   ObjectiveStatus,
+  type BoundSig,
   type MissionAbility,
   type MissionView,
   type ObjectiveView,
@@ -55,6 +56,18 @@ const ABILITY_LABEL: Record<MissionAbility, string> = {
 
 export interface MissionPanelProps {
   view: MissionView;
+  /**
+   * What a mission's silence order is reading, and the ceiling it is held to —
+   * `EchoSnapshot.boundSig`, off the snapshot rather than off the view
+   * (#623 criterion 8).
+   *
+   * A prop and not a field of `view` because the two arrive on different
+   * channels for a reason the runtime spells out: the view is edge-gated on a
+   * JSON of itself, and a live SIG reading on it would re-send every objective
+   * five times a second. Absent is a mission that lends no array, and every
+   * skirmish.
+   */
+  boundSig?: BoundSig;
   /** Recentre the camera. The same callback the contact log focuses with. */
   onFocus(x: number, y: number): void;
   /**
@@ -66,7 +79,7 @@ export interface MissionPanelProps {
   onCommanderAbility?(): void;
 }
 
-export function MissionPanel({ view, onFocus, onCommanderAbility }: MissionPanelProps) {
+export function MissionPanel({ view, boundSig, onFocus, onCommanderAbility }: MissionPanelProps) {
   const markerFor = (objective: ObjectiveView) =>
     objective.markerId === undefined
       ? undefined
@@ -76,15 +89,42 @@ export function MissionPanel({ view, onFocus, onCommanderAbility }: MissionPanel
     <section className="objectives" aria-label="Objectives">
       <header className="objectives-title">
         <span>ORDERS</span>
-        {/* The SIG budget is design metadata shown as a ceiling, never a live
-            threshold — nothing fails for crossing it (docs/campaign.md §10).
-            Named for what it binds, because the meter in the top bar is the
+        {/* Named for what it binds, because the meter in the top bar is the
             peak across everything the player owns and the court's order binds
             only the flight: the tenders are the loudest thing in the convoy
             and are not party to it (docs/mission-sorrowgate.md §4). Without
             the word, a compliant flight reads as being in breach of its own
-            freight. */}
-        <span className="objectives-ceiling">flight SIG ≤ {view.sigBudget}</span>
+            freight.
+
+            Two different numbers can stand here, and which one depends on
+            whether the mission is enforcing anything.
+
+            Where a silence order is in force, this is *the order*: the loudest
+            hull it binds and the ceiling it is actually held to, both off
+            `boundSig` and both computed by the ledger that charges for the
+            breach (#623 criterion 8). A ceiling with no reading beside it left
+            the player nothing to check the rule against, and the instrument
+            nearest to hand — the meter — measures a set the rule does not
+            bind.
+
+            Where none is, this stays the mission's SIG budget: design metadata
+            shown as a ceiling, never a live threshold, and nothing fails for
+            crossing it (docs/campaign.md §10). The three ledger missions whose
+            budget and ceiling differ are why the two cannot be the same field —
+            Attendance's budget of 8 is "a description rather than a ceiling"
+            in its own §4 while its order is 25, so a reading drawn against the
+            budget would read as a breach of a rule nobody is enforcing.
+
+            Outside the `role="status"` region below on purpose: this number
+            moves on the Echo tick, and a live region that announced it would
+            talk over every objective the panel exists to read out. */}
+        {boundSig === undefined ? (
+          <span className="objectives-ceiling">flight SIG ≤ {view.sigBudget}</span>
+        ) : (
+          <span className="objectives-ceiling">
+            flight SIG {boundSig.peak} ≤ {boundSig.ceiling}
+          </span>
+        )}
       </header>
 
       <div className="objectives-body" role="status" aria-live="polite">

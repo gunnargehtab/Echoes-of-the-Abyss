@@ -934,6 +934,49 @@ export interface BerthReport {
   granted: number;
 }
 
+/**
+ * The silence order's own reading — the number the court is enforcing, and the
+ * ceiling it is enforcing it against (docs/mission-sorrowgate.md §4, #623).
+ *
+ * `peakSig` beside it is a different set on purpose: the meter is a fleet
+ * instrument with docs/ui-ux.md §3's fixed stops, measured over everything the
+ * player owns, and a mission's order binds one named role — Sorrowgate's
+ * flight, Attendance's shift, the Dome's watch. In Sorrowgate those genuinely
+ * differ, because the court's two tenders sit inside the player's own party
+ * block so the dome's grant reaches the flight: the meter reads their 18 while
+ * the order reads the flight's 6. A panel that printed the ceiling with no
+ * reading beside it left the player with no way to check the one rule the
+ * mission is enforcing, and the instrument nearest to hand measured a set the
+ * rule does not bind.
+ *
+ * Absent in a skirmish and in every mission that lends no array: no ledger, no
+ * rule in force, and a ceiling drawn against nothing would be exactly the note
+ * in the margin turned into a rule that `MissionDefinition.sigBudget` warns
+ * about.
+ *
+ * It leaks nothing. A max over the player's own hulls, each of whose `sig` is
+ * already on this payload per unit.
+ */
+export interface BoundSig {
+  /**
+   * The loudest hull the order binds, rounded **up**.
+   *
+   * Up rather than to nearest, and here rather than in the client, because the
+   * comparison the player makes against the ceiling has to come out the same
+   * way the ledger's does. Every `silenceCeilingSig` is a whole number, so
+   * `ceil(peak) > ceiling` and `peak > ceiling` agree on every input — a flight
+   * at 25.4 under a ceiling of 25 reads 26 and is in breach, and one at 24.6
+   * reads 25 and is not. Rounding to nearest would show a compliant 25 over a
+   * flight the court is already charging for.
+   *
+   * Integral on the wire is also why the delta fires when the *reading* moves
+   * rather than every time a hull's SIG wobbles in the third decimal.
+   */
+  peak: number;
+  /** `MissionDefinition.silenceCeilingSig` — the ceiling actually enforced. */
+  ceiling: number;
+}
+
 export interface EchoSnapshot {
   tick: number;
   units: OwnUnit[];
@@ -943,6 +986,11 @@ export interface EchoSnapshot {
   contacts: Contact[];
   /** Loudest SIG across the player's units — the headline HUD number. */
   peakSig: number;
+  /**
+   * What a mission's silence order reads and what it is held to, when one is
+   * in force. Absent is no order — see `BoundSig`.
+   */
+  boundSig?: BoundSig;
   /** The player's nodule stockpile — the C&C-style spendable pool. */
   nodules: number;
   /** Resonance Crystal stockpile. Everything crystal-locked is bought here. */

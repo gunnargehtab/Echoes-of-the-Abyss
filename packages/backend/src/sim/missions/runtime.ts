@@ -41,6 +41,7 @@ import {
   thermoclineFactor,
   speakerOf,
   voiceOf,
+  type BoundSig,
   type CommanderAbilityView,
   type EchoSnapshot,
   type MissionAbility,
@@ -432,6 +433,18 @@ export class MissionRuntime {
    */
   private readonly conditionStartedAt = new Map<number, number>();
   private debtS = 0;
+  /**
+   * The figure the ledger last charged against, latched by
+   * `applySilenceLedger` so the panel reads the very number the court read.
+   *
+   * A field rather than a second call to `flightPeakSig`, for the discipline
+   * `peakSigOf` already records: the number the court enforces and the number
+   * it reads out to the player have to be the same one, computed once. A
+   * second call on the same snapshot would give the same answer today and
+   * would stop doing so the first time anything about the order's set is
+   * decided inside the ledger.
+   */
+  private boundPeak = 0;
   private view: MissionView | null = null;
   /** The last view built, kept for a client that needs it re-sent. */
   private latest: MissionView | null = null;
@@ -771,6 +784,34 @@ export class MissionRuntime {
    */
   get currentView(): MissionView | null {
     return this.latest;
+  }
+
+  /**
+   * What the silence order is reading and what it is holding that reading to —
+   * `EchoSnapshot.boundSig`, annotated by `Match.tickMission` on the pass that
+   * produced it (#623 criterion 8).
+   *
+   * Not on `MissionView`. `rebuildView` keys its edge on a JSON of the whole
+   * view and rounds `debtS` precisely so the edge stops firing continuously; a
+   * live SIG reading on the view would fire it every Echo tick and re-send
+   * every objective, marker and lock with it. This rides the snapshot the
+   * reading was taken from instead, which is the payload that is being sent
+   * on that tick anyway.
+   *
+   * Null where no order is in force — no `arrayTag`, no ledger, no rule — so
+   * the panel draws a ceiling only where there is one to draw.
+   *
+   * Rounded up here rather than in the client: see `BoundSig.peak`. Every
+   * `silenceCeilingSig` is a whole number, so rounding up is the one rounding
+   * under which the player's comparison and the ledger's come out the same on
+   * every input.
+   */
+  get boundSig(): BoundSig | null {
+    if (this.definition.arrayTag === undefined) return null;
+    return {
+      peak: Math.ceil(this.boundPeak),
+      ceiling: this.definition.silenceCeilingSig,
+    };
   }
 
   /** Authored lines a `say` beat produced since the last drain. */
@@ -2109,8 +2150,10 @@ export class MissionRuntime {
     // stays zero rather than silently accounting for a rule not in force.
     if (this.definition.arrayTag === undefined) return;
     const ceiling = this.definition.silenceCeilingSig;
+    const peak = this.flightPeakSig(own);
+    this.boundPeak = peak;
     this.debtS =
-      this.flightPeakSig(own) > ceiling
+      peak > ceiling
         ? Math.min(this.definition.debtCapS, this.debtS + TICK_DT_S)
         : Math.max(0, this.debtS - TICK_DT_S);
 

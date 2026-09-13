@@ -16,9 +16,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { createElement } from 'react';
+import type { ReactTestInstance } from 'react-test-renderer';
 import {
   MovementHoldReason,
   ObjectiveStatus,
+  type BoundSig,
   type CommanderAbilityView,
   type MissionView,
   type ObjectiveView,
@@ -58,11 +60,15 @@ interface Calls {
   rung: number;
 }
 
-async function panel(view: MissionView): Promise<{ rendered: Rendered; calls: Calls }> {
+async function panel(
+  view: MissionView,
+  boundSig?: BoundSig
+): Promise<{ rendered: Rendered; calls: Calls }> {
   const calls: Calls = { focused: [], rung: 0 };
   const rendered = await render(
     createElement(MissionPanel, {
       view,
+      ...(boundSig === undefined ? {} : { boundSig }),
       onFocus: (x, y) => calls.focused.push([x, y]),
       onCommanderAbility: () => calls.rung++,
     })
@@ -85,6 +91,24 @@ function reads(instance: { props: { children?: unknown } }): string {
     else if (Array.isArray(node)) node.forEach(walk);
   };
   walk(instance.props.children);
+  return out.join('');
+}
+
+/**
+ * Every string a subtree *renders*, descending through its elements.
+ *
+ * `reads` above stops at a node's own children, which is what the chip
+ * assertions want and is exactly wrong for "is this text inside the live
+ * region?" — a walker that does not descend answers "no" for every node with
+ * an element between it and the words, which is a guard that cannot fail.
+ */
+function deepText(instance: ReactTestInstance): string {
+  const out: string[] = [];
+  const walk = (node: ReactTestInstance | string): void => {
+    if (typeof node === 'string' || typeof node === 'number') out.push(String(node));
+    else node.children.forEach(walk);
+  };
+  instance.children.forEach(walk);
   return out.join('');
 }
 
@@ -114,6 +138,47 @@ describe('the objectives panel: how it announces itself', () => {
     const { rendered } = await panel(missionView({ sigBudget: 20 }));
     try {
       assert.match(reads(rendered.byClass('objectives-ceiling')), /flight SIG ≤ 20/);
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('carries the order’s own reading beside the ceiling it is enforced against', async () => {
+    // #623 criterion 8. The ceiling alone left the player nothing to check the
+    // one numeric rule of the mission against, and the instrument nearest to
+    // hand — the SIG meter — is a fleet instrument measuring a set the order
+    // does not bind.
+    //
+    // The budget and the ceiling are deliberately different numbers here,
+    // because in three of the five ledger missions they are: Attendance's
+    // budget of 8 is "a description rather than a ceiling" in its own §4 while
+    // its order is 25. A reading drawn against the budget would read as a
+    // breach of a rule nobody is enforcing, so when an order is in force the
+    // budget is not what is shown.
+    const { rendered } = await panel(missionView({ sigBudget: 8 }), { peak: 6, ceiling: 25 });
+    try {
+      const chip = reads(rendered.byClass('objectives-ceiling'));
+      assert.match(chip, /flight SIG 6 ≤ 25/);
+      assert.equal(/8/.test(chip), false, 'the budget is not the rule and is not shown as one');
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('keeps that reading out of the region that reads itself aloud', async () => {
+    // It moves on the Echo tick. §10.5's body is `role="status"` with
+    // `aria-live="polite"` so a row changing in place is announced; a number
+    // changing five times a second inside it would talk over every objective
+    // the panel exists to read out. The header is not live, and that is where
+    // this belongs.
+    const { rendered } = await panel(missionView(), { peak: 6, ceiling: 20 });
+    try {
+      assert.match(reads(rendered.byClass('objectives-ceiling')), /flight SIG 6 ≤ 20/);
+      assert.equal(
+        /flight SIG/.test(deepText(rendered.byClass('objectives-body'))),
+        false,
+        'the live region does not carry the reading'
+      );
     } finally {
       await rendered.unmount();
     }

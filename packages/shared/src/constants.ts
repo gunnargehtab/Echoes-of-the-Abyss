@@ -457,9 +457,18 @@ export const FOLLOW_FLOOR = {
  * names as belonging in shared.
  *
  * The values are §3's and are unchanged by the move. What the stops are
- * measured *against* — the fixed 0-100 scale, or a mission's own
- * `silenceCeilingSig` — is the open design call on #623 and is deliberately
- * not settled here.
+ * measured *against* was the open design call on #623 and is settled: **the
+ * SIG meter is a fleet instrument with §3's fixed 30/65 stops.** It does not
+ * recolour against a mission's `silenceCeilingSig` and it is not measured
+ * against anything but the 0-100 scale, so §3's "Value shown" and "Colour
+ * stops" rows stand exactly as written.
+ *
+ * A mission's own ceiling is a different instrument and lives in a different
+ * place: `EchoSnapshot.boundSig` carries what a silence order reads and what
+ * it holds that reading to, and the objectives panel draws it beside the
+ * order. The two measure different sets on purpose — the meter everything the
+ * player owns, the order the one role it binds — which is why neither is
+ * expressible as a recolouring of the other.
  */
 export const SIG_BANDS = {
   /** Below this a hull is green: quiet enough that nothing is listening hard. */

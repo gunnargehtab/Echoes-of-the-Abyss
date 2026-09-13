@@ -124,6 +124,26 @@ describe('the Echo delta', () => {
     assert.deepEqual(roundTrip(prev, next, 3), next);
   });
 
+  it('carries a silence order arriving, moving and going away again', () => {
+    // `boundSig` is the one field a snapshot may be *missing*, so it is the one
+    // field for which "unchanged" and "gone" are different messages. A mission
+    // resolves and stops annotating, and a patch that said nothing would leave
+    // the finished order's last reading on screen for the rest of the match.
+    const quiet = snapshot(60, [hull(1, 0, 0)]);
+    const under = snapshot(72, [hull(1, 0, 0)], { boundSig: { peak: 6, ceiling: 20 } });
+    const over = snapshot(84, [hull(1, 0, 0)], { boundSig: { peak: 24, ceiling: 20 } });
+
+    assert.deepEqual(roundTrip(quiet, under, 3), under, 'an order coming into force');
+    assert.deepEqual(roundTrip(under, over, 3), over, 'the reading moving under it');
+    assert.deepEqual(roundTrip(over, quiet, 3), quiet, 'and the order going away');
+
+    // Absence travels as an explicit null, because `undefined` in a patch
+    // already means "unchanged".
+    assert.equal((encodeEcho(over, quiet, 3) as { boundSig?: unknown }).boundSig, null);
+    // And a reading that did not move is not sent at all.
+    assert.equal('boundSig' in encodeEcho(under, { ...under, tick: 84 }, 3), false);
+  });
+
   it('is whole for a first send and on the keyframe cadence', () => {
     const next = snapshot(72, [hull(1, 0, 0)]);
     assert.equal(encodeEcho(null, next, 1).kind, 'full');

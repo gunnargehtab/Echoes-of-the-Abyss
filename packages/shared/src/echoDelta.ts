@@ -36,6 +36,7 @@
 
 import type {
   BerthReport,
+  BoundSig,
   Contact,
   DrawReport,
   EchoMarkInfo,
@@ -98,6 +99,12 @@ export interface EchoPatch {
    */
   refits?: RefitKind[];
   exposure?: ExposureReport;
+  /**
+   * The silence order's reading, when it moved. `null` is the order going
+   * away — see `applyBoundSig`, since `undefined` in a patch already means
+   * "unchanged" and this is the only field on a snapshot that can be absent.
+   */
+  boundSig?: BoundSig | null;
   draw?: DrawReport;
   /** [index, value] pairs for the regions that moved. */
   driftHealth?: number[];
@@ -256,6 +263,7 @@ export function encodeEcho(
   if (!wireEqual(prev.berths, next.berths)) patch.berths = next.berths;
   if (!wireEqual(prev.refits, next.refits)) patch.refits = next.refits;
   if (!wireEqual(prev.exposure, next.exposure)) patch.exposure = next.exposure;
+  if (!wireEqual(prev.boundSig, next.boundSig)) patch.boundSig = next.boundSig ?? null;
   if (!wireEqual(prev.draw, next.draw)) patch.draw = next.draw;
   if (prev.driftHealth.length !== next.driftHealth.length) {
     patch.driftHealth = next.driftHealth.flatMap((value, index) => [index, value]);
@@ -267,6 +275,24 @@ export function encodeEcho(
     if (moved.length > 0) patch.driftHealth = moved;
   }
   return patch;
+}
+
+/**
+ * `boundSig` is the one field a snapshot may be missing, so it is the one that
+ * needs a way to say *gone* as well as *changed*.
+ *
+ * A mission's silence order runs for the whole of a mission and for none of a
+ * skirmish, but it does stop: `Match.tickMission` returns early once the
+ * mission has resolved, so the last snapshots of a match carry no reading.
+ * `undefined` in a patch already means "unchanged", which would leave a
+ * finished order's last number on screen for the rest of the match, so absence
+ * travels as `null` and is read back here as absence.
+ */
+function applyBoundSig(base: EchoSnapshot, wire: EchoPatch): { boundSig?: BoundSig } {
+  if (wire.boundSig === undefined) {
+    return base.boundSig === undefined ? {} : { boundSig: base.boundSig };
+  }
+  return wire.boundSig === null ? {} : { boundSig: wire.boundSig };
 }
 
 /**
@@ -307,5 +333,6 @@ export function applyEchoWire(
     draw: wire.draw ?? base.draw,
     driftHealth,
     selfEvents: wire.selfEvents,
+    ...applyBoundSig(base, wire),
   };
 }
