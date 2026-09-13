@@ -16,7 +16,7 @@
 import { PERSISTENCE, SIM, SelfEventKind, type SelfEvent } from '@echoes/shared';
 import { PING_RETURN_WINDOW_S } from './selfVoice.ts';
 import { SOUR_BITE_S, selfMixFor, sourMixFor, type SelfMix, type SourMix } from './selfNoise.ts';
-import { duckFor, type BusRung } from './precedence.ts';
+import { duckFor, louderRung, type BusRung } from './precedence.ts';
 
 /**
  * How long one engagement lasts, in simulation ticks — the same window the
@@ -104,6 +104,8 @@ export class SelfMixer {
   private readonly underFireTick = new Map<number, number>();
   /** The tick the Lid last bit on, so a simultaneous crossing sounds once. */
   private sourBiteTick = -1;
+  /** §4's world-bus figure from the last frame, for `applyChain` to multiply. */
+  private worldGain = 1;
 
   constructor(private readonly sink: SelfSink) {}
 
@@ -156,16 +158,13 @@ export class SelfMixer {
       }
     }
 
-    // The world bus carries two independent claims on it: how deaf your own
-    // noise has made you (§4), and the precedence chain (§2). They multiply —
-    // a player at SIG 80 who is also being lit should hear the world at the
-    // product of both, not at whichever rule ran last.
-    //
-    // Set *after* the events, not before. Setting it first cost the duck a
-    // whole Echo tick: the strike would land 200 ms before the world gave way
-    // to it, which is long enough to hear as two separate things rather than
-    // one consequence.
-    this.sink.world(mix.worldGain * duckFor('world', this.loudest), now);
+    // How deaf your own noise has made you (§4). Held rather than written,
+    // because the world bus carries a second, independent claim — the
+    // precedence chain (§2) — and the two multiply: a player at SIG 80 who is
+    // also being lit should hear the world at the product of both, not at
+    // whichever rule ran last. `applyChain` is where they meet, and the
+    // engine calls it every tick.
+    this.worldGain = mix.worldGain;
 
     // Returns are scheduled, not fired: §5 wants them ordered by range across
     // a three-second window so the player "literally hears the sweep resolve
@@ -188,6 +187,31 @@ export class SelfMixer {
         }
       }
     }
+  }
+
+  /**
+   * Write the world bus: §4's own-noise attenuation times §2's chain.
+   *
+   * Called by the engine rather than from `update`, and every tick rather
+   * than only on a tick a self frame arrived, for the reason the engine's own
+   * every-tick block gives about speech: a contact's arrival and departure
+   * are events of the *contact* bus, and a world bus that only moved when the
+   * player's own force changed would hold a stale duck across them. The
+   * arithmetic still lives here, because the §4 half of it does.
+   *
+   * It is also called *after* `update` has voiced this tick's events, not
+   * before. Writing it first cost the duck a whole Echo tick: the exposure
+   * strike would land 200 ms before the world gave way to it, which is long
+   * enough to hear as two separate things rather than one consequence.
+   *
+   * `chain` is every claim on the chain that is not this mixer's own — in
+   * practice the contact rung (#707). Speech is deliberately **not** folded
+   * in: §13 puts the world's cell under a line at 1, and handing it here
+   * would let a line outrank an own cue's 0.55 and quietly *raise* the world
+   * mid-sentence, which is the opposite of what that cell is for.
+   */
+  applyChain(chain: BusRung | null, now: number): void {
+    this.sink.world(this.worldGain * duckFor('world', louderRung(this.loudest, chain)), now);
   }
 
   /** Voice one event. Returns whether a cue actually sounded. */
