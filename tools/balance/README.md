@@ -71,9 +71,11 @@ commissions a Slipway in nine matches of ten and builds neither hull the yard is
 
 **The ordnance want — where it was stopped.** The three tables above say *whether* a navy
 fielded its declared ordnance hull. None of them can say *why not*, and the answer differs
-per navy: measured on ten seeds for #698, the Order is stopped by the escort gate in 82% of
-its observations, the Directorate by the yard in 67% of its own, and the Commune by the purse
-in 36% — one zero in the build column, three different remedies. The five reasons partition
+per navy: measured on ten seeds for #698, the Order is stopped by the escort gate in 82% of the
+observations that reached this want, the Directorate by the yard in 67% of its own, and the
+Commune by the purse in 36% — one zero in the build column, three different remedies. The
+denominator is the row the table prints, *observations reaching the want*, and not the
+commander's observations: most of those return earlier, at the harvester or the scout. The five reasons partition
 the want, so they sum to the observations that reached it and each cell carries its share of
 them. A `Bought` cell at zero means that navy never once ordered the hull its own doctrine
 declares; the largest blocked row above it says which gate to argue with. This is a count of
@@ -81,7 +83,7 @@ declares; the largest blocked row above it says which gate to argue with. This i
 commander rather than from a snapshot — see `MatchTelemetry.finish`.
 
 **The bank against the rung.** The most nodules a navy ever held at one instant, and the most
-it held once a Slipway was standing. The three tables above are rates and counts, and none of
+it held once a Slipway was standing. The four tables above are rates and counts, and none of
 them can say whether a hull was ever *affordable* — which is a maximum, and a maximum a
 ten-second sample misses, because a bank rises to a price and is spent inside one interval.
 Issue #518 spent five sessions reading the arbitration between a commander's wants before

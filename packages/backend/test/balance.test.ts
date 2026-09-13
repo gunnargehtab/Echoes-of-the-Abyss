@@ -160,7 +160,16 @@ describe('telemetry measures what it says it measures', () => {
     // table, and the reading taken off it ("82% of the Order's observations
     // are stopped by the escort gate") would be wrong in a way nothing else
     // would catch.
-    const result = runMatch({ seats: DUEL, seed: 59, maxMinutes: 2, fauna: false });
+    // **Eight minutes, not two, and the length is the assertion.** The first
+    // version of this test ran a two-minute duel, in which `alreadyHas` and
+    // `bought` are zero for both seats — so the sum below could not see a
+    // miscount on either branch and the `bought` check was the vacuous
+    // `0 >= 0`. A holder that never runs two of the five branches does not hold
+    // invariant 14, which exists precisely because a miscounted branch still
+    // prints a perfectly well-formed table. Measured on this seed: two minutes
+    // reaches three branches, five reaches all five thinly (`alreadyHas` 8),
+    // eight reaches all five with room (`alreadyHas` 477).
+    const result = runMatch({ seats: DUEL, seed: 59, maxMinutes: 8, fauna: false });
     for (const player of result.players) {
       const t = player.ordnanceWant;
       assert.ok(t.reached > 0, `slot ${player.slot} reached the ordnance want at all`);
@@ -169,6 +178,35 @@ describe('telemetry measures what it says it measures', () => {
         t.reached,
         `slot ${player.slot}: the five reasons have to add up to the observations`
       );
+    }
+
+    // Every branch actually runs, somewhere in the match. Summed over the seats
+    // rather than per seat, because which navy reaches which gate is a fact
+    // about doctrine and would make this a change detector; that *all five* are
+    // reachable is a fact about the instrumentation, which is what is held here.
+    //
+    // What this does **not** hold, said plainly so the next reader does not
+    // assume it does: the counting *order*. `alreadyHas` is counted before the
+    // escort, so an observation in which the navy already holds its ordnance
+    // hull is a satisfied want whether or not its army has dipped below the
+    // massing floor — asking `escorted` first, which is what shipped in #714,
+    // files those under `notEscorted` instead. Both orders leave all five
+    // branches live on this scenario (they differ by 41 observations, 548/436
+    // against 507/477), so the assertion above passes either way. Pinning those
+    // numbers would make this a change detector on every commander edit, and a
+    // scenario that separates the two orders decisively needs a navy holding
+    // its ordnance hull while permanently unescorted, which a two-seat duel
+    // does not reliably produce. The order is argued from a baseline-scale
+    // measurement on the pull request instead, and from the comment at the
+    // branch itself.
+    const union = { notEscorted: 0, alreadyHas: 0, noYard: 0, cannotAfford: 0, bought: 0 };
+    for (const player of result.players) {
+      for (const key of Object.keys(union) as (keyof typeof union)[]) {
+        union[key] += player.ordnanceWant[key];
+      }
+    }
+    for (const [reason, count] of Object.entries(union)) {
+      assert.ok(count > 0, `no observation ever reached '${reason}' — the branch is untested`);
     }
 
     // And the counter means what the build column means. `bought` counts the

@@ -2603,21 +2603,43 @@ export class AiCommander implements AiPlayer {
     // it — one increment per observation that gets here, five reasons, and the
     // five sum to `reached` — because "the Lance is never built" has three
     // different causes that no other column in the report can tell apart, and
-    // the one that turned out to be true for the Order (the escort gate, 82%
-    // of its observations) is the one nothing could see. `OrdnanceWantTally`
-    // carries the rest of that argument. The tallies are writes to a plain
-    // object on a path that already walks the structure list twice; they are
-    // not on the 60 Hz step path at all — `commandProduction` runs on the Echo
-    // tick, behind `observe`.
+    // the one that turned out to be true for the Order (the escort gate, 82% of
+    // the observations that reached this want) is the one nothing could see.
+    // `OrdnanceWantTally` carries the rest of that argument. The tallies are
+    // writes to a plain object; they are not on the 60 Hz step path at all —
+    // `commandProduction` runs on the Echo tick, behind `observe`.
+    //
+    // **`carried` is counted before the escort, and the order matters.** The
+    // first version of this asked `escorted` first, so an observation in which
+    // the navy *already holds* its ordnance hull while its army is below the
+    // massing floor was counted as `notEscorted` — a want that is satisfied,
+    // filed under a gate that is blocking. It is not a rounding error: on three
+    // baseline seeds roughly 1,300 of the Commune's 1,713 `notEscorted`
+    // observations were a Weaver already in the water, which is enough to move
+    // that navy's largest row from "not escorted" to "already has one" and so
+    // to point the report's own footnote — *the largest blocked row says which
+    // gate to argue with* — at the wrong gate. The Order is unaffected either
+    // way (it has `bought 0`, so no Lance ever exists to be miscounted), which
+    // is exactly why the fault survived a reading taken for the Order.
+    //
+    // The cost is one `units.reduce` and one `queuedOf` on observations that
+    // are not escorted, which used to skip both. Cheap, on a 5 Hz path that
+    // already walks these lists several times — and the alternative is a column
+    // that cannot be read for any navy whose ordnance hull outlives a dip in
+    // its army.
+    //
+    // **The gates are untouched.** Only the counting moved: the purchase below
+    // is still `escorted && carried < 1`, the same conjunction in the same
+    // order, so no command changes.
     const ownOrdnance = OWN_ORDNANCE[this.briefing.faction];
+    const carried =
+      snapshot.units.reduce((n, u) => n + (u.kind === ownOrdnance ? 1 : 0), 0) +
+      queuedOf(ownOrdnance);
     const tally = this.ordnanceWantTally;
     tally.reached++;
-    if (!escorted) tally.notEscorted++;
+    if (carried >= 1) tally.alreadyHas++;
+    else if (!escorted) tally.notEscorted++;
     if (escorted) {
-      const carried =
-        snapshot.units.reduce((n, u) => n + (u.kind === ownOrdnance ? 1 : 0), 0) +
-        queuedOf(ownOrdnance);
-      if (carried >= 1) tally.alreadyHas++;
       if (carried < 1) {
         const yard = this.freeYard(snapshot.structures, ownOrdnance);
         if (yard === null) tally.noYard++;
