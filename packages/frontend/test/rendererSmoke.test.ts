@@ -34,6 +34,8 @@ import {
   HeadlessWebGLRenderer,
   pumpAnimationFrames,
   textCount,
+  textRasterisations,
+  textStyleKeys,
   treeIdentities,
   treeSize,
   windowListenerCount,
@@ -234,6 +236,71 @@ describe('renderer smoke test: the chart', () => {
         identities,
         'thirty frames allocated no new display object'
       );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('re-rasterises a HUD label when its value moves, and never once a frame', async () => {
+    const world = await boot();
+    try {
+      // Warm up: the first frames legitimately build every label.
+      world.frame(5);
+
+      // A match that is not moving. `drawHud` runs on the frame cadence by
+      // design (#432 — contact freshness and the scope sweep have to keep
+      // moving) and re-assigns almost every label unchanged as it goes. That
+      // costs nothing, because pixi.js 8.19 guards both setters: `set text`
+      // returns on an equal string (`AbstractText`), `set fill` on an equal
+      // value (`TextStyle`).
+      let keys = textStyleKeys(world.app.stage);
+      world.frame(60);
+      assert.equal(
+        textRasterisations(keys, textStyleKeys(world.app.stage)),
+        0,
+        'a second of frames over a still match rasterised no text at all'
+      );
+
+      // And a match that is moving: sixty frames a second with a fresh Echo
+      // pass every twelfth, which is the 5 Hz the room resolves at, and the
+      // two readouts that move on every pass actually moving.
+      const labels = textCount(world.app.stage);
+      let rasters = 0;
+      keys = textStyleKeys(world.app.stage);
+      for (let frame = 0; frame < 600; frame++) {
+        if (frame % 12 === 0) {
+          const snapshot = cannedSnapshot(600 + frame);
+          snapshot.peakSig = 30 + (frame % 60);
+          snapshot.nodules = 120 + frame;
+          world.chart.applySnapshot(snapshot);
+          world.conn.applySnapshot(snapshot);
+        }
+        world.frame();
+        const next = textStyleKeys(world.app.stage);
+        rasters += textRasterisations(keys, next);
+        keys = next;
+      }
+
+      // Each of those is one glyph canvas re-rendered and one texture
+      // uploaded — `styleKey` carries the string, so `CanvasTextPipe`
+      // regenerates on any change — and it is the cost
+      // `.claude/skills/pixijs-performance` argues `BitmapText` exists to
+      // avoid. The budget is that argument's own premise: a HUD updating its
+      // labels per frame would pay `labels x frames`. This one pays under a
+      // fiftieth of it, because it pays per *change* instead, which is what
+      // the same skill asks of canvas `Text` where `BitmapText` is not used.
+      //
+      // The number is a budget rather than a fact about today's draw loop: it
+      // is here to fail if a label is ever stamped with the clock, a counter
+      // or anything else that genuinely differs every frame, because that is
+      // the point at which the `BitmapText` argument would start to apply to
+      // this HUD. See `.claude/VENDORED-SKILLS.md`.
+      const perFrame = labels * 600;
+      assert.ok(
+        rasters < perFrame / 50,
+        `expected far under the per-frame cost of ${perFrame}, saw ${rasters}`
+      );
+      assert.ok(rasters > 0, 'and the probe can still see a rasterisation when one happens');
     } finally {
       world.teardown();
     }

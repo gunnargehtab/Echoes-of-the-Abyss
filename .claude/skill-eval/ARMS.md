@@ -34,17 +34,46 @@ new experiment id rather than reusing one whose branches you still want.
 
 `627` arm `a` has no diff: it was never run. #687 stands in for that cell, and is on `main`.
 
-## One of these is real work that never landed
+## One of these was real work, and it has now landed
 
 All four `lobby-callbacks` arms rebuilt the client's lobby subscription — fine-grained
 schema listeners in place of the 5 Hz whole-state callback and its `JSON.stringify` guard —
-and all four passed ten of ten gates. **None of it is on `main`.** It was written to be
-measured, not to be shipped, and shipping it is a separate decision nobody has taken.
+and all four passed ten of ten gates. It was written to be measured rather than shipped,
+and shipping it was a separate decision, taken in #699: **`lobby-callbacks-v2/arms/c` is on
+`main`**, because it is the only arm that pins *both* replay knobs rather than inheriting a
+default — `immediate: false` on each `listen`, `triggerAll: false` on `onAdd` with an
+explicit `forEach` seed beside it.
 
-If it is ever wanted, take one of these four rather than starting again, and read the
-others: they disagree in small ways worth choosing between. `lobby-callbacks-v2/arms/a`
-passes `listen`'s `immediate` argument explicitly; `lobby-callbacks/arms/c` carries the
-clearest note on schema 2.x replay semantics in the test stub.
+The other three were read rather than discarded, and two of them changed what shipped.
+`lobby-callbacks-v2/arms/a` supplied the reasoning about the decoder's initialisation that
+the shipped fallbacks now carry, and `lobby-callbacks/arms/c` the note anchoring the
+roster's replay behaviour to the installed @colyseus/schema. `lobby-callbacks/arms/a` is
+the one to learn from rather than copy: it collects the per-seat unsubscribes in a flat
+array and never releases one on `onRemove`, so a seat that empties leaves its listener
+attached until the whole room is let go.
+
+### The defect all four shared, and what it says about the harness
+
+Three of the four arms — every one that reshaped `pushLobby` — dropped the
+`?? MatchPhase.Lobby`, `?? ''` and `?? -1` fallbacks on the room's three primitives, and
+all four passed ten of ten gates anyway. The fallbacks are load-bearing. `Reflection.decode`
+auto-initialises only the root's *referenced* types, which is exactly what makes
+`state.players` safe to subscribe to on join and leaves `phase`, `mapId` and `winnerSlot`
+`undefined` until the first patch — and the join handshake fires `onJoin`, where `attach`
+pushes its first view, before that patch arrives. Without them the client pushes a
+`LobbyView` whose `phase` is `undefined` against a type that says `MatchPhase`.
+
+Nothing caught it because **the stub was better initialised than the decoder it stands in
+for**: every arm's `StubState` started its primitives at `0`, `''` and `-1`, so the one
+push that reads them undecoded could not be observed. That is a lesson about the apparatus
+rather than about any arm. A stub more complete than the real thing does not fail a test,
+it deletes one, and a gate run over it reports ten of ten either way. The shipped stub
+starts those fields undefined and `gameClient.test.ts` asserts the fallbacks directly.
+
+It also sharpens the standing read below. Nine arms wrote no API drift, but this is the
+second time a real defect has crossed a clean trap table untouched — arm B's
+`Object.hasOwn` was the first. The traps measure what they were named for and nothing
+else; the gates are what catch the rest, and only where the fixtures are honest.
 
 ```bash
 git apply .claude/skill-eval/lobby-callbacks/arms/c.diff       # the diff

@@ -787,4 +787,37 @@ export function textCount(root: Container): number {
   return total;
 }
 
+/**
+ * Every `Text` in the tree by uid, against the key Pixi rasterises it under.
+ *
+ * `styleKey` is `text:style:resolution` (pixi.js 8.19, `AbstractText`), and
+ * `CanvasTextPipe.addRenderable` regenerates the glyph canvas and re-uploads
+ * the texture exactly when it changes. So a *transition* in this map is one
+ * canvas re-render plus one GPU upload — the cost
+ * `.claude/skills/pixijs-performance` argues `BitmapText` exists to avoid,
+ * counted rather than assumed.
+ *
+ * Counted work again, for the reason this whole file gives: the wall-clock
+ * price of a rasterisation belongs to whatever machine ran it, while the
+ * number of them is a property of the draw loop and is the same everywhere.
+ */
+export function textStyleKeys(root: Container): Map<number, string> {
+  const keys = new Map<number, string>();
+  for (const node of walk(root)) if (node instanceof Text) keys.set(node.uid, node.styleKey);
+  return keys;
+}
+
+/** How many of those keys moved between two samples. */
+export function textRasterisations(
+  before: Map<number, string>,
+  after: Map<number, string>
+): number {
+  let total = 0;
+  for (const [uid, key] of after) {
+    const was = before.get(uid);
+    if (was !== undefined && was !== key) total++;
+  }
+  return total;
+}
+
 installHeadlessDom();
