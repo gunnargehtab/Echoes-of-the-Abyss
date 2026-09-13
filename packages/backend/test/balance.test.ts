@@ -31,6 +31,7 @@ import {
   seedHasAnyEffect,
   type Seat,
 } from '../src/balance/runner.ts';
+import { OWN_ORDNANCE } from '../src/ai/commander.ts';
 import { summarise, toMarkdown, type GuardRailVerdict } from '../src/balance/report.ts';
 import { MatchTelemetry, type MatchTelemetryResult } from '../src/balance/telemetry.ts';
 import { Match } from '../src/sim/match.ts';
@@ -148,6 +149,42 @@ describe('telemetry measures what it says it measures', () => {
     // Two minutes at a ten-second sample is a dozen points.
     assert.ok(player.nodules.length >= 10, `sampled ${player.nodules.length} times`);
     assert.equal(player.peakSig.length, player.nodules.length, 'series stay aligned');
+  });
+
+  it('partitions the ordnance want into the reason it was stopped', () => {
+    // The invariant the whole column rests on (#698). Five reasons, one
+    // increment per observation that reaches the want, so the five sum to
+    // `reached` — and a column that does not sum is an instrumentation bug
+    // rather than a finding about a navy. Held here because the failure mode
+    // is silent: a miscounted branch produces a table that still looks like a
+    // table, and the reading taken off it ("82% of the Order's observations
+    // are stopped by the escort gate") would be wrong in a way nothing else
+    // would catch.
+    const result = runMatch({ seats: DUEL, seed: 59, maxMinutes: 2, fauna: false });
+    for (const player of result.players) {
+      const t = player.ordnanceWant;
+      assert.ok(t.reached > 0, `slot ${player.slot} reached the ordnance want at all`);
+      assert.equal(
+        t.notEscorted + t.alreadyHas + t.noYard + t.cannotAfford + t.bought,
+        t.reached,
+        `slot ${player.slot}: the five reasons have to add up to the observations`
+      );
+    }
+
+    // And the counter means what the build column means. `bought` counts the
+    // produce order, `unitsBuiltByKind` counts the hull leaving the yard, so
+    // the two differ by whatever is still in the queue when the match ends —
+    // never the other way about, which is the direction that would say the
+    // navy fielded a hull this branch never ordered.
+    const summary = summarise([result]);
+    for (const faction of summary.factions) {
+      const hull = OWN_ORDNANCE[faction.faction];
+      const built = (faction.buildsPerMatchByKind[hull] ?? 0) * faction.matches;
+      assert.ok(
+        faction.ordnanceWant.bought >= built,
+        `${hull}: ordered ${faction.ordnanceWant.bought}, finished ${built}`
+      );
+    }
   });
 
   it('accumulates hull-time by depth band rather than sampling it', () => {

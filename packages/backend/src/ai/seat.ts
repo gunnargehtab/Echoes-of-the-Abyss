@@ -16,7 +16,7 @@
 import type { EchoSnapshot } from '@echoes/shared';
 import type { Match } from '../sim/match.ts';
 import { AiCommander } from './commander.ts';
-import type { AiBriefing, AiCommand } from './types.ts';
+import type { AiBriefing, AiCommand, OrdnanceWantTally } from './types.ts';
 
 export class AiSeat {
   readonly slot: number;
@@ -33,6 +33,17 @@ export class AiSeat {
 
   get commandsIssued(): number {
     return this.issued;
+  }
+
+  /**
+   * The ordnance want's block reasons for this seat's commander (#698).
+   *
+   * Passed straight through. The seat is the only crossing point the harness
+   * has, and a diagnostic about a *decision* has nowhere else to come from —
+   * it is not in any snapshot, because it is not a fact about the world.
+   */
+  get ordnanceWant(): OrdnanceWantTally {
+    return this.commander.ordnanceWant;
   }
 
   /** One Echo tick: observe, then apply whatever came back. */

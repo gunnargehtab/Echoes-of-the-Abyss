@@ -45,6 +45,7 @@ import {
   type Faction,
   type FaunaSpecies,
 } from '@echoes/shared';
+import { emptyOrdnanceWantTally, type OrdnanceWantTally } from '../ai/types.ts';
 
 /** How often a series is sampled, in seconds of simulated time. */
 export const SAMPLE_INTERVAL_S = 10;
@@ -149,6 +150,21 @@ export interface PlayerTelemetry {
    */
   structuresBuiltByKind: Record<number, number>;
   structuresLost: number;
+  /**
+   * Why this navy's declared ordnance hull was or was not bought (#698).
+   *
+   * The one field on this interface that is **not** read from a snapshot, and
+   * the note on `finish` says why it cannot be. It is filled at the end of the
+   * match from the commander that made the decisions, and is all zeroes for a
+   * seat nobody instrumented.
+   *
+   * Read it beside `unitsBuiltByKind`, never instead of it. That column says a
+   * hull was never built; this one says which of four gates stopped it, and the
+   * answer differs per navy — the Order is stopped by the escort, the
+   * Directorate by the yard, the Commune by the purse. One zero, three
+   * remedies, and before this there was no column that could tell them apart.
+   */
+  ordnanceWant: OrdnanceWantTally;
   /**
    * Gross income: every rise in the stockpile, summed.
    *
@@ -308,6 +324,7 @@ export class MatchTelemetry {
         crystalEarned: 0,
         biomassEarned: 0,
         eliminatedTick: null,
+        ordnanceWant: emptyOrdnanceWantTally(),
       });
       this.lastUnits.set(slot, new Map());
       this.lastStructures.set(slot, new Map());
@@ -522,12 +539,33 @@ export class MatchTelemetry {
     this.lastComplete.set(player.slot, nowComplete);
   }
 
+  /**
+   * Close the match and hand back what it looked like.
+   *
+   * `ordnanceWant` is the one thing here that did **not** come from a snapshot,
+   * and it is a parameter rather than a field for exactly that reason. The note
+   * at the top of this file says everything is read from the players' own
+   * snapshots, and that stays true of everything this class *observes* — the
+   * invariant is worth more than the convenience of a second source inside
+   * `observe`. But a commander's block reason is not a fact about the world at
+   * all, so no snapshot could ever carry it: it is a fact about a decision, and
+   * the only thing holding it is the commander. The runner reads it off the
+   * seats at the end of the match and passes it in here, where it is visibly a
+   * different channel rather than a quiet exception to the rule above (#698).
+   *
+   * A slot with no entry gets an empty tally, which is what a human seat would
+   * produce — a player is not instrumented and has no ordnance want to block.
+   */
   finish(
     finalTick: number,
     winnerSlot: number | null,
     timedOut: boolean,
-    faunaComplement: readonly FaunaComplement[] = []
+    faunaComplement: readonly FaunaComplement[] = [],
+    ordnanceWant: ReadonlyMap<number, OrdnanceWantTally> = new Map()
   ): MatchTelemetryResult {
+    for (const player of this.players.values()) {
+      player.ordnanceWant = ordnanceWant.get(player.slot) ?? emptyOrdnanceWantTally();
+    }
     return {
       seed: this.seed,
       mapId: this.mapId,

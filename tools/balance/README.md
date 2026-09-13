@@ -51,7 +51,7 @@ past the first few matches are not reproducible.
 
 ## What a report says about a wave
 
-Three of the per-faction tables answer the question a roster wave is judged on, and they are
+Four of the per-faction tables answer the question a roster wave is judged on, and they are
 meant to be read together — none of them means much alone.
 
 **Hulls per match — built / lost.** A loss column cannot tell a hull that was never built
@@ -68,6 +68,17 @@ for the reason the opening stockpile is not income: they are a gift, not a decis
 (`docs/economy.md` §8), so a navy that cannot fill those accounts cannot field what they buy
 however well it saves. The Directorate is the case that made the column necessary: it
 commissions a Slipway in nine matches of ten and builds neither hull the yard is for.
+
+**The ordnance want — where it was stopped.** The three tables above say *whether* a navy
+fielded its declared ordnance hull. None of them can say *why not*, and the answer differs
+per navy: measured on ten seeds for #698, the Order is stopped by the escort gate in 82% of
+its observations, the Directorate by the yard in 67% of its own, and the Commune by the purse
+in 36% — one zero in the build column, three different remedies. The five reasons partition
+the want, so they sum to the observations that reached it and each cell carries its share of
+them. A `Bought` cell at zero means that navy never once ordered the hull its own doctrine
+declares; the largest blocked row above it says which gate to argue with. This is a count of
+*decisions* rather than of the water, so unlike every other series here it comes from the
+commander rather than from a snapshot — see `MatchTelemetry.finish`.
 
 **The bank against the rung.** The most nodules a navy ever held at one instant, and the most
 it held once a Slipway was standing. The three tables above are rates and counts, and none of
