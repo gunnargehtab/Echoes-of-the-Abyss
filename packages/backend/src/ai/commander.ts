@@ -3779,16 +3779,24 @@ export class AiCommander implements AiPlayer {
       // addresses the hulls in that observation's list; a tender is claimed
       // *out* of that list, above. So a hull silenced on an approach and
       // claimed as a gardener afterwards is outside every list that could
-      // lift it again, and stands in the kelp silent until it dies (Silent
-      // Running is docs/systems-echo.md §6; "the share stops accruing" is
-      // docs/mission-tend.md §3). Silence is the enemy's counter-play to
-      // bloom-share, not the Commune's own.
+      // lift it again for as long as the claim holds, and stands in the kelp
+      // silent for exactly that long — the claim lapsing is the only thing
+      // that ever ends it, and on seed 4000 that was an unbroken run of 33
+      // claim-observations on one hull, which recovered only when the gate
+      // above stopped sparing it. (Silent Running is docs/systems-echo.md §6;
+      // "the share stops accruing" is docs/mission-tend.md §3.) Silence is the
+      // enemy's counter-play to bloom-share, not the Commune's own.
       //
-      // Measured on `ventfront-divide`, of the observations that claimed a
-      // tender: 33 of 141 on seed 4000 and 51 of 117 on 4001 were a hull that
-      // could not be paid for this reason. On 4002 no claimed tender was ever
-      // observed silent — the army there did go silent, 131 observations of
-      // 912, but never while holding one.
+      // Measured on `ventfront-divide` against the pre-fix commander, of the
+      // observations that claimed a tender: 33 of 141 on seed 4000 and 51 of
+      // 117 on 4001 were a hull that could not be paid for this reason. On
+      // 4002 no claimed tender was ever observed silent — that army did go
+      // silent, 77 gardens-observations of 931, but never while holding one.
+      //
+      // Every figure in this comment is a *baseline* reading, which is worth
+      // saying because the two are easy to mix: one order diverges the match,
+      // so the same seed run against the fixed commander is a different match
+      // with different totals (4002 reads 131 of 912 there).
       //
       // One order per match is what a fix looks like here, not a weak one:
       // silence latches, so a single lift ends the whole run of observations

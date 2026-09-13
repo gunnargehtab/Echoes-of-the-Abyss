@@ -547,7 +547,7 @@ describe('a tender is put in the state the share is actually paid for', () => {
         units: units as never,
         // A contact in reach keeps the army loud: `setSilent(ids, false)` on
         // the engage branch is what holds `armySilent` false here.
-        contacts: [{ id: 1, x: garden.x + 200, y: garden.y, depth: 300, tier: 4, sig: 60 }],
+        contacts: [{ id: 1, x: garden.x + 200, y: garden.y, depth: 300, tier: 4, tick: 0 }],
         structures: [],
         marks: [],
         hazards: [],
