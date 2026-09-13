@@ -21,14 +21,11 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import type { Client } from '@colyseus/core';
 import { CLIENT_MSG, MatchPhase } from '@echoes/shared';
 
-import type { MatchRoom } from '../src/rooms/MatchRoom.ts';
 // The boot and delivery harness, shared with `wireValidation.test.ts` since
 // #628 rather than written out twice — see the head of that file.
 import {
-  CREATED,
   DISPOSING,
   bootRoom,
   deliver,
@@ -37,7 +34,6 @@ import {
   shutdown,
   startPlaying,
   until,
-  type FakeClient,
 } from './support/room.ts';
 
 /**
