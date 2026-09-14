@@ -835,6 +835,16 @@ const BLOCK_W = {
 const TOP_BAR_HEIGHT = 52;
 
 /**
+ * How far a readout's control reaches past its glyphs, each side (#724).
+ *
+ * Six rather than eight because §2's strip leaves 16 px between readouts, and
+ * two controls that met in the middle would have no gap at all — a pointer
+ * crossing the strip would then never be over nothing, and every readout's
+ * line would hand straight over to the next one's.
+ */
+const TOUCH_PAD_PX = 6;
+
+/**
  * The SIG meter, to docs/ui-ux.md §3 — "240 x 12 px at 1080p, above a two-line
  * readout". §1.4 makes it the one element that is never a submenu and never a
  * toggle, and it had been drawn as a 40-120 px offcut squeezed between the
@@ -1283,13 +1293,14 @@ export class EchoRenderer {
   /**
    * The strip's readouts as last recorded, flat and reused (#724).
    *
-   * Five numbers per readout — x, y, width, height and whether it is the one
-   * the pointer is over — beside its key and its text in a parallel string
-   * array. Flat and reused rather than an array of objects because this is
+   * Four numbers per readout — x, y, width and height — beside its key and its
+   * text in a parallel string array. Flat and reused rather than objects because this is
    * filled on the draw path: a frame on which the strip has not changed must
    * allocate nothing, or the explanation surface would be paid for at 60 Hz by
    * every player who never hovers anything.
    */
+  /** Hulls over `SIG_BANDS.LOUD`, as `drawSigMeter` counted them this frame. */
+  private loudCount = 0;
   private readonly stripNums: number[] = [];
   private readonly stripStrs: string[] = [];
   private stripN = 0;
@@ -6174,6 +6185,11 @@ export class EchoRenderer {
     this.sigLabel.position.set(x, y + h + 4);
 
     const loud = this.units.filter((u) => u.sig > SIG_BANDS.LOUD).length;
+    // Kept, because the line explaining this label quotes the same count and a
+    // second `filter` over the same set is the "written twice" rule broken in
+    // the one place it would be hardest to notice: the explanation sits
+    // directly under the label it would disagree with.
+    this.loudCount = loud;
     const n = this.units.length;
     this.loudLabel.text = `${n} unit${n === 1 ? '' : 's'} \u00b7 ${loud} loud`;
     this.loudLabel.style.fill = loud > 0 ? UI.sigMid : UI.textDim;
@@ -6198,6 +6214,72 @@ export class EchoRenderer {
     height: number,
     value: string
   ): void {
+    /* eslint-disable no-param-reassign -- the box is grown to its touch band
+       and its pad before anything else looks at it; carrying five more locals
+       through the checks below would say less. */
+    // §11's 44 px touch floor, as far as a 52 px strip can carry it.
+    //
+    // §2 sets the console's height by that floor — "a console row is a touch
+    // target" — and criterion 3 asks for a route a touch player actually has.
+    // The drawn glyphs are 11-13 px tall, which is not one. The strip holds two
+    // rows in TOP_BAR_HEIGHT, so 44 apiece is arithmetically impossible without
+    // the rows overlapping each other; what is reachable is the whole of a
+    // readout's own row band, which is TOP_BAR_HEIGHT / 2, and the gaps either
+    // side of it. That is a little over half the floor rather than a fifth of
+    // it. Raising the strip itself to carry two 44 px rows is a layout call
+    // about a permanent instrument and is not this change's to make.
+    //
+    // A readout already taller than its band — the SIG instrument, which is a
+    // meter and two lines — keeps the box it earned.
+    const band = TOP_BAR_HEIGHT / 2;
+    if (height < band) {
+      const middle = y + height / 2;
+      y = middle < band ? 0 : band;
+      height = band;
+    }
+    x = Math.max(0, x - TOUCH_PAD_PX);
+    width += TOUCH_PAD_PX * 2;
+
+    // A readout the strip has put where it cannot be read gets no control.
+    //
+    // Two ways that happens, and both are the strip's doing rather than this
+    // surface's. At 200% UI scale on a 1280 px window the strip lays `DRAW`
+    // out past the right-hand edge of the canvas, so a control there would be
+    // a tab stop with nothing behind it and a line that can never be shown —
+    // `.app` clips it. And the first row overruns `map · T+ · n`, because the
+    // rule that drops those measures the *second* row's right edge
+    // (`leftEdge`, above) while the row that collides is the stockpile row, so
+    // two numbers print on top of each other and a control over both would
+    // answer for the wrong one.
+    //
+    // Fixing either means deciding what a strip that cannot fit its own first
+    // row gives up, which is a layout call about a permanent instrument. What
+    // this can do is refuse to lie about it: an unreadable readout is dropped,
+    // later ones first, which is the order §2 already gives for dropping (the
+    // map name, then the clock).
+    //
+    // The bound is the canvas and deliberately not TOP_BAR_HEIGHT: the SIG
+    // instrument is a meter and two lines and its second line sits a couple of
+    // pixels below the strip's own bevel, so a strip-height bound dropped the
+    // one readout §3 calls permanent, at every scale.
+    if (x < 0 || y < 0 || x + width > this.hudWidth() || y + height > this.hudHeight()) return;
+    //
+    // The strip can reach that state today: at 200% UI scale on a 1440 px
+    // window its first row overruns `map · T+ · n`, because the rule that
+    // drops those measures the *second* row's right edge (`leftEdge`, above)
+    // and the row that actually collides is the stockpile row. That is the
+    // strip's bug and not this surface's, and fixing it means deciding what a
+    // strip that cannot fit its own first row gives up — a layout call about a
+    // permanent instrument. What this can do is refuse to lie about it: an
+    // overlapped readout is dropped, later ones first, which is the order §2
+    // already gives for dropping (the map name, then the clock).
+    for (let j = 0; j < this.stripN; j++) {
+      const ox = this.stripNums[j * 4]! / this.uiScale;
+      const oy = this.stripNums[j * 4 + 1]! / this.uiScale;
+      const ow = this.stripNums[j * 4 + 2]! / this.uiScale;
+      const oh = this.stripNums[j * 4 + 3]! / this.uiScale;
+      if (x < ox + ow && ox < x + width && y < oy + oh && oy < y + height) return;
+    }
     const i = this.stripN++;
     const s = this.uiScale;
     this.stripNums[i * 4] = x * s;
@@ -6206,6 +6288,7 @@ export class EchoRenderer {
     this.stripNums[i * 4 + 3] = height * s;
     this.stripStrs[i * 2] = key;
     this.stripStrs[i * 2 + 1] = value;
+    /* eslint-enable no-param-reassign */
   }
 
   /**
@@ -6367,7 +6450,6 @@ export class EchoRenderer {
    */
   private readoutBoxes(): ReadoutBox[] {
     const mix = selfMixFor(this.peakSig, this.fleetSilent);
-    const loud = this.units.filter((u) => u.sig > SIG_BANDS.LOUD).length;
     const boxes: ReadoutBox[] = [];
     for (let i = 0; i < this.stripN; i++) {
       const key = this.stripStrs[i * 2] as ReadoutKey;
@@ -6378,7 +6460,7 @@ export class EchoRenderer {
         width: this.stripNums[i * 4 + 2]!,
         height: this.stripNums[i * 4 + 3]!,
         value: this.stripStrs[i * 2 + 1]!,
-        detail: this.readoutDetail(key, mix.label, mix.worldGain, loud),
+        detail: this.readoutDetail(key, mix.label, mix.worldGain, this.loudCount),
       });
     }
     return boxes;

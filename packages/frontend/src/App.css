@@ -181,6 +181,10 @@
   overflow: visible;
   clip-path: none;
   white-space: normal;
+  /* Left, not the body's centre: this is a data line in three clauses, and a
+     centred ragged edge makes the clause boundaries harder to find than the
+     separators already make them easy. */
+  text-align: left;
   /* No transition and no fade: §11's motion limits, and a line that arrived
      late would be a worse instrument than one that is simply there. */
   transform: scale(var(--ui-scale, 1));

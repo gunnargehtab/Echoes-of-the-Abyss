@@ -19,7 +19,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { createElement } from 'react';
-import { BERTHS, SIG_BANDS } from '@echoes/shared';
+import { BERTHS, SIG_BANDS, StructureKind, structureStatsFor } from '@echoes/shared';
 import './support/headless.ts';
 import { render, click } from './support/screen.ts';
 import {
@@ -87,6 +87,11 @@ describe('the strip explains itself: what each line claims', () => {
       new RegExp(`Foundry ${BERTHS.FOUNDRY}`),
       'and the Foundry grant, which is the only way to raise the ceiling'
     );
+    assert.match(
+      line,
+      new RegExp(`Slipway ${BERTHS.SLIPWAY}`),
+      'and the Slipway, which §10 grants and the first draft of this line forgot'
+    );
     assert.match(line, new RegExp(`ceiling of ${BERTHS.CEILING}`), 'and the hard ceiling');
     assert.match(
       line,
@@ -129,13 +134,14 @@ describe('the strip explains itself: what each line claims', () => {
     );
   });
 
-  it('says TRACKED counts the player’s own hulls, not the hostiles holding them', () => {
+  it('says TRACKED counts the player’s own entities, not the hostiles holding them', () => {
     const line = trackedDetail(2);
-    assert.match(
-      line,
-      /2 of your own hulls/,
-      'the readout a player is most likely to read backwards'
-    );
+    // Two misreadings to stop, not one. The count is *yours*, not theirs — and
+    // it is entities rather than hulls: `ExposureReport.trackedCount` is
+    // documented over entities and the exposure walk excludes only ordnance,
+    // so a tracked Bastion is in it.
+    assert.match(line, /2 of your own/, 'the readout a player is most likely to read backwards');
+    assert.match(line, /structures/, 'and the set is not hulls alone');
     assert.match(line, /never by whom or from where/, '§11: the report is a tier and a count');
   });
 
@@ -145,8 +151,29 @@ describe('the strip explains itself: what each line claims', () => {
     assert.match(contactsDetail(2), /2 contacts you/);
   });
 
-  it('tells the player biomass buys nothing yet, which the number cannot', () => {
-    assert.match(biomassDetail(48), /nothing is priced in it yet/);
+  it('says biomass buys hulls, because it does', () => {
+    // This line read "nothing is priced in it yet" on its first draft, copied
+    // from a stale sentence in §13. Seven hulls carry a `biomassCost` and
+    // `Match.produce` refuses a hull short in Biomass alone exactly as it
+    // refuses one short in Nodules, so a Directorate player was being told the
+    // opposite of the truth about the account their roster runs on.
+    const line = biomassDetail(48);
+    assert.match(line, /buys hulls/);
+    assert.doesNotMatch(line, /nothing is priced/);
+  });
+
+  it('says the Bastion makes draw and asks for nothing, which is a new base', () => {
+    // The covered branch is what a player reads at T+0, before any tap exists:
+    // the capacity is the Bastion's own, and "every structure asks for its
+    // share" was false at both ends — a Vent Tap and a turret ask for nothing.
+    const line = drawDetail({ capacity: 6, demand: 0, satisfaction: 1 });
+    assert.match(
+      line,
+      new RegExp(`Bastion makes ${structureStatsFor(StructureKind.Bastion).drawCapacity}`),
+      'the figure is structures.ts, not a second copy'
+    );
+    assert.match(line, /asks for nothing/);
+    assert.match(line, /Refinery, the Foundry and the Slipway are what spend it/);
   });
 
   it('reads the band label the mix already chose, and names the masking', () => {
@@ -203,6 +230,58 @@ describe('the strip explains itself: the surface', () => {
     assert.equal(expanded(), true, 'a tap pins it open — no hover, and no key named');
     await click(view, 'BERTHS 3/6');
     assert.equal(expanded(), false, 'and the next tap closes it');
+    await view.unmount();
+  });
+
+  it('closes the line on Escape, and only swallows the press when it closed one', async () => {
+    const view = await render(createElement(StripReadouts, { boxes: [box()] }));
+    await click(view, 'BERTHS 3/6');
+    const expanded = () =>
+      (view.button('BERTHS 3/6').props as { 'aria-expanded'?: boolean })['aria-expanded'];
+    assert.equal(expanded(), true);
+
+    // The handler has to do two things the first draft did neither of: change
+    // something visible (the line is shown by `:focus-visible` as well as by
+    // the pin, so clearing the pin alone left it on screen), and leave the
+    // press alone when there was nothing to close — React delegates to the
+    // root, so stopping it here is stopping the window `keydown` that opens
+    // the esc menu (§9.5).
+    const layer = view.byClass('readouts');
+    let blurred = false;
+    let stopped = false;
+    const escape = () => ({
+      key: 'Escape',
+      target: {
+        blur: () => {
+          blurred = true;
+        },
+      },
+      stopPropagation: () => {
+        stopped = true;
+      },
+    });
+
+    await view.act(() => {
+      (layer.props as { onKeyDown: (e: unknown) => void }).onKeyDown(escape());
+    });
+    assert.equal(expanded(), false, 'the pin is released');
+    assert.ok(blurred, 'and the focus route is closed too, or nothing on screen changes');
+    assert.ok(stopped, 'the press is spent on the line rather than reaching the menu');
+
+    // Nothing is open now, and nothing focusable was the target: the press has
+    // to travel, or the strip becomes a place where Escape does not work.
+    stopped = false;
+    await view.act(() => {
+      (layer.props as { onKeyDown: (e: unknown) => void }).onKeyDown({
+        key: 'Escape',
+        target: {},
+        stopPropagation: () => {
+          stopped = true;
+        },
+      });
+    });
+    assert.ok(!stopped, 'with nothing to close, Escape belongs to the esc menu');
+
     await view.unmount();
   });
 

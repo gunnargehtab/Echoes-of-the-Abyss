@@ -1197,6 +1197,92 @@ describe('renderer smoke test: the strip explains itself', () => {
     booted.teardown();
   });
 
+  it('never explains a number the strip has printed on top of another', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    // §11's ceiling. At 200% on a 1280-wide viewport the strip's first row
+    // overruns `map · T+ · n`: the rule that drops those measures the *second*
+    // row's right edge, and the row that collides is the stockpile row. That
+    // is the strip's own defect and this change does not fix it — what is held
+    // here is that the explanation surface refuses to point at the wreckage,
+    // because a control over two overlapping numbers answers for the wrong one.
+    booted.chart.setUiScale(2);
+    booted.frame(3);
+
+    const boxes = booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
+      .args[0] as ReadoutBox[];
+    assert.ok(boxes.length > 0, 'the strip is still explained at the scale ceiling');
+    for (let i = 0; i < boxes.length; i++) {
+      for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i]!;
+        const b = boxes[j]!;
+        const overlaps =
+          a.x < b.x + b.width &&
+          b.x < a.x + a.width &&
+          a.y < b.y + b.height &&
+          b.y < a.y + a.height;
+        assert.ok(!overlaps, `${a.key} and ${b.key} would answer for each other`);
+      }
+    }
+
+    booted.teardown();
+  });
+
+  it('gives each readout a control taller than its glyphs, for a touch player', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    booted.frame();
+    const boxes = booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
+      .args[0] as ReadoutBox[];
+
+    // §2 sets the console's height by §11's 44 px touch floor — "a console row
+    // is a touch target" — and the strip's drawn glyphs are 11-13 px tall. The
+    // strip holds two rows in 52 px, so 44 apiece cannot be had without the
+    // rows overlapping; half the floor is what is reachable, and it is what is
+    // asserted. The bar is in CSS pixels, which is what a finger is measured in.
+    for (const box of boxes) {
+      assert.ok(box.height >= 26, `${box.key} is ${box.height} px tall — not a touch target`);
+    }
+
+    booted.teardown();
+  });
+
+  it('keeps the permanent element at every scale, and every box on the canvas', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    const latest = () =>
+      booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!.args[0] as ReadoutBox[];
+
+    // §11's range, ends and middle. §3 makes the SIG meter the one permanent
+    // element, so it is the readout that may never lose its control — and it
+    // is the one most likely to, being the only readout taller than a line of
+    // text. Its box runs a pixel or two past the strip's own bevel, so a bound
+    // taken on TOP_BAR_HEIGHT rather than on the canvas drops it.
+    //
+    // This is the half of that a headless runner can hold. The half it cannot
+    // is the trigger: the box clears 52 px here and does not in Chromium,
+    // because the fonts are not the same ones. A browser drive is what found
+    // it (docs/screenshots/issue-724), and nothing in this file would have.
+    for (const scale of [0.75, 1, 2]) {
+      booted.chart.setUiScale(scale);
+      booted.frame(2);
+      const boxes = latest();
+      assert.ok(
+        boxes.some((box) => box.key === 'sig'),
+        `the permanent element has no control at ${scale * 100}%`
+      );
+      for (const box of boxes) {
+        assert.ok(box.x >= 0 && box.y >= 0, `${box.key} starts off the canvas at ${scale * 100}%`);
+        assert.ok(
+          box.x + box.width <= 1280 && box.y + box.height <= 720,
+          `${box.key} runs off the canvas at ${scale * 100}% — a tab stop nobody can see`
+        );
+      }
+    }
+
+    booted.teardown();
+  });
+
   it('reports once more when a number actually moves', async () => {
     const booted = await boot();
     booted.chart.setStatus('connected');

@@ -26,7 +26,13 @@
  * quietly wrong copy of the economy.
  */
 
-import { BERTHS, SIG_BANDS, type DrawReport } from '@echoes/shared';
+import {
+  BERTHS,
+  SIG_BANDS,
+  StructureKind,
+  structureStatsFor,
+  type DrawReport,
+} from '@echoes/shared';
 
 /** One readout on the strip. Ordered left to right, as the strip lays them out. */
 export type ReadoutKey =
@@ -85,17 +91,21 @@ export function crystalDetail(banked: number): string {
 }
 
 /**
- * docs/economy.md §2, §8 — grown rather than mined.
+ * docs/economy.md §2, §8, §10 — grown rather than mined, and spent like any
+ * other account.
  *
- * The last clause is the honest one and is why this readout is worth a line at
- * all: docs/ui-ux.md §13 records that nothing is priced in biomass yet, so a
- * player watching the number climb is owed the news that it buys nothing today.
+ * This line said "nothing is priced in it yet" on its first draft, which was a
+ * transcription of a stale sentence in docs/ui-ux.md §13 rather than of the
+ * game: seven hulls carry a `biomassCost`, and `Match.produce` refuses a hull
+ * short in Biomass alone "exactly as one short in Nodules is". §10 has the
+ * Directorate's swarm bought in it outright. The doc row was corrected in the
+ * same change.
  */
 export function biomassDetail(banked: number): string {
   return (
     `${Math.round(banked)} banked` +
     ' · grown rather than mined: kelp crop, and rendered kills as a windfall' +
-    ' · nothing is priced in it yet'
+    ' · it buys hulls the way nodules do, and the Directorate’s swarm is priced in it'
   );
 }
 
@@ -116,7 +126,7 @@ export function berthsDetail(used: number, granted: number): string {
     state +
     ' · a hull takes its berths when the keel is laid, not when it launches' +
     ` · a Bastion grants ${BERTHS.BASTION}, each commissioned Foundry ${BERTHS.FOUNDRY}` +
-    `, to a ceiling of ${BERTHS.CEILING}`
+    ` and the Slipway ${BERTHS.SLIPWAY}, to a ceiling of ${BERTHS.CEILING}`
   );
 }
 
@@ -133,7 +143,17 @@ export function drawDetail(report: DrawReport): string {
     `${Math.round(report.capacity)} made against ${Math.round(report.demand)} asked for` +
     ' · a rate, never banked — surplus is simply lost';
   if (report.satisfaction >= 1) {
-    return rate + ' · taps on vents make it, and every structure asks for its share';
+    // Not "every structure asks for its share", which was this line's first
+    // draft and is false at both ends: the Bastion makes its own and demands
+    // nothing on purpose — `structures.ts`, "a player whose power fails should
+    // be slowed, never bricked" — and a Vent Tap and a turret ask for nothing
+    // either. The figure is the Bastion's own `drawCapacity`, not a copy.
+    const bastion = structureStatsFor(StructureKind.Bastion).drawCapacity ?? 0;
+    return (
+      rate +
+      ` · a Bastion makes ${bastion} and asks for nothing; Vent Taps add the rest` +
+      ' · the Refinery, the Foundry and the Slipway are what spend it'
+    );
   }
   return (
     rate +
@@ -183,13 +203,18 @@ export function bandDetail(label: string, worldGain: number): string {
  * docs/ui-ux.md §11's parity table — "being tracked, continuously".
  *
  * The count is the easiest thing on the strip to read backwards, and the line
- * exists mostly to stop that: `TRACKED ×3` is three hulls **of yours** held at
+ * exists mostly to stop that: `TRACKED ×3` is three things **of yours** held at
  * Bearing or better, not three hostiles. The report says how well you are seen
  * and nothing else, so the line may not imply a listener it does not name.
+ *
+ * "Things" rather than "hulls" because `ExposureReport.trackedCount` is
+ * documented as entities and the exposure walk excludes only ordnance: a
+ * tracked Bastion or Foundry is in the count, and a line that said hulls would
+ * be the same misreading one step further on.
  */
 export function trackedDetail(count: number): string {
   return (
-    `${count} of your own hulls are resolved by somebody at bearing or better` +
+    `${count} of your own hulls and structures are resolved by somebody at bearing or better` +
     ' · how well you are seen, never by whom or from where — that is all the report carries' +
     ' · quieter hulls, or distance, is what lowers it'
   );
@@ -219,6 +244,6 @@ export function mapDetail(name: string): string {
     `the water this match is being fought in: ${name}` +
     ' · context rather than a number, which is why it is the first thing dropped' +
     ' when the strip runs out of room' +
-    ' · a map is a biome, and a biome is how sound moves through it'
+    ' · a map is several biomes, and a biome is how sound moves through it'
   );
 }

@@ -30,6 +30,13 @@
  *
  * `pointer-events` is `none` on the layer and `auto` on the controls alone, so
  * the only pixels this takes away from the canvas are the readouts themselves.
+ * Over those, two gestures are genuinely lost and are not worth the machinery
+ * to forward: a right-click *move order*, which is issued from the canvas's
+ * `pointerdown` rather than from the context menu, and the *start* of a
+ * marquee, which would need the whole pointer sequence and a capture to follow
+ * it. Both are over opaque chrome at the top of the screen with no world
+ * visible through it. The browser context menu and the wheel are handed back
+ * below, because those two are a broken frame rather than a lost affordance.
  */
 
 import { useEffect, useState } from 'react';
@@ -63,13 +70,56 @@ export function StripReadouts({ boxes }: { boxes: ReadoutBox[] }): React.JSX.Ele
     <div
       className="readouts"
       onKeyDown={(event) => {
-        // Escape closes the line and leaves focus where it is: the esc menu is
-        // one press further out (§9.5), and a pinned bubble is exactly the kind
-        // of thing that press should step back through first.
-        if (event.key === 'Escape' && pinned !== null) {
-          event.stopPropagation();
-          setPinned(null);
-        }
+        if (event.key !== 'Escape') return;
+        // Escape steps back one level, as §9.5 has it — a shown line first,
+        // the esc menu after. Two things this has to get right and the first
+        // draft got neither.
+        //
+        // It must actually change something. The line is shown by
+        // `:focus-visible` as well as by the pin, so clearing `pinned` alone
+        // left a keyboard player pressing Escape, seeing the line stay, and
+        // not getting the menu either. Blurring the control is what closes the
+        // focus route, and it is also the step back: focus lands on the
+        // document, so a second Escape reaches the menu.
+        //
+        // And it must only swallow the press when it closed something. React
+        // delegates to the root container, so `stopPropagation` here halts the
+        // native event before the window `keydown` that opens the menu —
+        // unconditionally stopping it would take the menu away from anyone
+        // whose focus happened to be on the strip.
+        const target = event.target as { blur?: () => void };
+        const closing = pinned !== null || typeof target.blur === 'function';
+        if (!closing) return;
+        event.stopPropagation();
+        setPinned(null);
+        target.blur?.();
+      }}
+      // The canvas below owns every gesture over the water, and these controls
+      // are not its descendants, so what lands on one never reaches it. Two of
+      // those are worth handing back rather than losing.
+      //
+      // The context menu is the outright bug: `EchoRenderer` binds
+      // `contextmenu` on the canvas for the sole purpose of calling
+      // `preventDefault` — App.css says why, "right-click is a move order, not
+      // a browser menu" — and without this a right-click on a readout opens
+      // the browser's menu over a live match.
+      onContextMenu={(event) => event.preventDefault()}
+      // The wheel is forwarded rather than merely swallowed: zoom is a
+      // continuous gesture and losing it over a rectangle in the corner reads
+      // as the game stuttering. The canvas handler takes `clientX/Y` and
+      // `deltaY` and captures nothing, so a synthetic event is enough.
+      onWheel={(event) => {
+        const canvas = (event.currentTarget as HTMLElement).parentElement?.querySelector(
+          '.game-host canvas'
+        );
+        canvas?.dispatchEvent(
+          new WheelEvent('wheel', {
+            deltaY: event.deltaY,
+            clientX: event.clientX,
+            clientY: event.clientY,
+            cancelable: true,
+          })
+        );
       }}
     >
       {boxes.map((box) => (
