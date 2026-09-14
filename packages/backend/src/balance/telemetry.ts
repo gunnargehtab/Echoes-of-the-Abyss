@@ -134,8 +134,11 @@ export interface PlayerTelemetry {
    * - `nodulesLostInTransit` — cargo aboard a harvester the observation before
    *   it stopped existing. Ore that was cut, was never banked, and is
    *   invisible in every income column.
-   * - `harvesterSecondsLaden` — the haul half of the trip, so the walk home
-   *   can be told apart from the time on the node.
+   * - `harvesterSecondsLaden` — time with ore aboard: the cut after the first
+   *   bite, plus the haul home. **Not** the walk home on its own, which would
+   *   need the harvest mode and is not in the snapshot; on the commander-free
+   *   match the two are 39 points of ToDepot against 19 of mining with a
+   *   partial hold, so reading this as the haul would overstate it by half.
    *
    * **Three biases, all one-directional, and the largest is on the banked
    * side.** `nodulesEarned` is a per-observation stockpile delta, so a purchase
@@ -480,8 +483,9 @@ export class MatchTelemetry {
         if (throttle === HarvestThrottle.Trickle || throttle === HarvestThrottle.Idle) {
           player.harvesterSecondsQuiet += dt;
         }
-        // Laden is the haul half of the trip and is nodules only, because that
-        // is the trip this instrument is about — a crystal hold is a different
+        // Ore aboard, which starts at the first bite rather than at the turn
+        // for home — see the field's own note. Nodules only, because that is
+        // the trip this instrument is about: a crystal hold is a different
         // round trip with a different clock on it (docs/economy.md §7).
         if (noduleHold(unit) > 0) player.harvesterSecondsLaden += dt;
         if (unit.idle !== undefined) player.harvesterSecondsStalled += dt;

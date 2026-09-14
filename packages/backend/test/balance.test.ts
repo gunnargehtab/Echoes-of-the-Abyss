@@ -345,12 +345,12 @@ describe('telemetry measures what it says it measures', () => {
           `${player.noduleDeliveries} trips and banked ${player.nodulesEarned.toFixed(1)}, ` +
           `against ${expected.toFixed(1)} — the two sides of the ledger have parted`
       );
-      // The haul is a real fraction of the trip, not the whole of it and not
-      // none: a hauler drives out empty and home full.
+      // Ore is aboard for a real fraction of the trip, not the whole of it and
+      // not none: a hauler drives out empty and comes home full.
       assert.ok(
         player.harvesterSecondsLaden > 0 && player.harvesterSecondsLaden < player.harvesterSeconds,
         `slot ${player.slot} spent ${player.harvesterSecondsLaden.toFixed(1)} s of ` +
-          `${player.harvesterSeconds.toFixed(1)} laden, which is not a round trip`
+          `${player.harvesterSeconds.toFixed(1)} with ore aboard, which is not a round trip`
       );
     }
 
@@ -389,7 +389,7 @@ describe('telemetry measures what it says it measures', () => {
     assert.match(
       markdown,
       /\| Harvester-time laden \| 58% \| 58% \| 58% \|/,
-      'the walk home is a little over half of a round trip on this map'
+      'ore is aboard for a little over half of a round trip on this map'
     );
 
     // Ten seconds in, nobody has landed anything, and a mean hold over no

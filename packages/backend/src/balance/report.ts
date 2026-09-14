@@ -225,7 +225,13 @@ export interface FactionSummary {
   nodulesDelivered: number;
   nodulesBanked: number;
   nodulesLostInTransit: number;
-  /** Share of harvester-time spent carrying a nodule hold, and spent stalled. */
+  /**
+   * Share of harvester-time spent with a nodule hold aboard, and spent stalled.
+   *
+   * Laden begins at the first bite, not at the turn for home, so it is the cut
+   * and the haul together rather than the haul alone — `PlayerTelemetry`'s own
+   * note has the split measured.
+   */
   ladenShare: number;
   stalledShare: number;
   /** Share of hull-time spent below the Shelf. */
