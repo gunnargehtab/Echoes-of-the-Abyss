@@ -157,6 +157,21 @@ import {
   type PrecedenceTiming,
 } from '../audio/precedence.ts';
 import { selfMixFor } from '../audio/selfNoise.ts';
+import {
+  bandDetail,
+  berthsDetail,
+  biomassDetail,
+  clockDetail,
+  contactsDetail,
+  crystalDetail,
+  drawDetail,
+  mapDetail,
+  nodulesDetail,
+  sigDetail,
+  trackedDetail,
+  type ReadoutBox,
+  type ReadoutKey,
+} from './readouts.ts';
 import { stamp } from './clock.ts';
 import {
   drawFactionGlyph,
@@ -291,6 +306,18 @@ export interface RendererCallbacks {
   onTunedAudio(inputs: TunedInputs): void;
   /** Live hazards, once per Echo tick. Public to every player by design. */
   onHazards(hazards: HazardState[]): void;
+  /**
+   * Where the top strip's readouts are, and what each one means (§2, §7, #724).
+   *
+   * The strip is Pixi text, so it is neither selectable nor reachable by a
+   * screen reader — the same fact that made the contact log and the objectives
+   * panel DOM (§10, §11). This is that route applied to a readout that cannot
+   * move out of the canvas: the renderer says where each number *is*, and the
+   * shell lays a DOM control over it carrying the explanation.
+   *
+   * Emitted only when the strip changes, never per frame.
+   */
+  onReadouts(boxes: ReadoutBox[]): void;
 }
 
 /**
@@ -1253,6 +1280,23 @@ export class EchoRenderer {
   private driftHealth: number[] = [];
   private nodules = 0;
   private crystal = 0;
+  /**
+   * The strip's readouts as last recorded, flat and reused (#724).
+   *
+   * Five numbers per readout — x, y, width, height and whether it is the one
+   * the pointer is over — beside its key and its text in a parallel string
+   * array. Flat and reused rather than an array of objects because this is
+   * filled on the draw path: a frame on which the strip has not changed must
+   * allocate nothing, or the explanation surface would be paid for at 60 Hz by
+   * every player who never hovers anything.
+   */
+  private readonly stripNums: number[] = [];
+  private readonly stripStrs: string[] = [];
+  private stripN = 0;
+  private readonly lastStripNums: number[] = [];
+  private readonly lastStripStrs: string[] = [];
+  /** -1 until the first record, so the first strip always publishes. */
+  private lastStripN = -1;
   private status = 'connecting';
   private slot = 0;
   private faction: Faction = Faction.Bathyarch;
@@ -6138,6 +6182,236 @@ export class EchoRenderer {
     return w;
   }
 
+  /**
+   * Record one readout into the flat scratch.
+   *
+   * `value` is the string the strip already built for that `Text`, passed by
+   * reference rather than re-composed: the accessible name a screen reader
+   * speaks is then the same object the player is looking at, and the two
+   * cannot drift.
+   */
+  private pushStrip(
+    key: ReadoutKey,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    value: string
+  ): void {
+    const i = this.stripN++;
+    const s = this.uiScale;
+    this.stripNums[i * 4] = x * s;
+    this.stripNums[i * 4 + 1] = y * s;
+    this.stripNums[i * 4 + 2] = width * s;
+    this.stripNums[i * 4 + 3] = height * s;
+    this.stripStrs[i * 2] = key;
+    this.stripStrs[i * 2 + 1] = value;
+  }
+
+  /**
+   * The top strip's readouts, where they are and what they mean (§2, §7, #724).
+   *
+   * Read off the `Text` objects the strip has *just* laid out rather than
+   * recomputed from the layout arithmetic above, for the reason the hint bar
+   * learned the hard way: a second copy of a layout is a second thing to keep
+   * right, and a box that has drifted off its number is worse than no box. It
+   * also means a readout the strip dropped for want of room (the map name, the
+   * clock) drops out of here by construction, since `visible` is what this
+   * reads.
+   *
+   * Scaled on the way out because the HUD lays out in unscaled units and
+   * `this.hud` carries §11's UI scale for it; the DOM overlay has no such
+   * container to inherit from, so it is handed CSS pixels.
+   *
+   * Published only when something moved or changed its text. On a frame where
+   * the strip is identical this costs one integer compare per readout and no
+   * allocation at all, which is what keeps a hover surface off the 60 Hz path.
+   */
+  private recordStrip(): void {
+    this.stripN = 0;
+
+    // §3 makes the bar, `SIG 042 / 100` and `n units · m loud` one instrument,
+    // so they are one readout: the second line explains the first.
+    const meterW = Math.max(SIG_METER.W, this.sigLabel.width, this.loudLabel.width);
+    const meterTop = 8;
+    this.pushStrip(
+      'sig',
+      12,
+      meterTop,
+      meterW,
+      this.loudLabel.y + this.loudLabel.height - meterTop,
+      this.sigLabel.text
+    );
+    this.pushStrip(
+      'band',
+      this.bandLabel.x,
+      this.bandLabel.y,
+      this.bandLabel.width,
+      this.bandLabel.height,
+      this.bandLabel.text
+    );
+    if (this.exposureLabel.visible) {
+      this.pushStrip(
+        'tracked',
+        this.exposureLabel.x,
+        this.exposureLabel.y,
+        this.exposureLabel.width,
+        this.exposureLabel.height,
+        this.exposureLabel.text
+      );
+    }
+    this.pushStrip(
+      'nodules',
+      this.resourceLabel.x,
+      this.resourceLabel.y,
+      this.resourceLabel.width,
+      this.resourceLabel.height,
+      this.resourceLabel.text
+    );
+    if (this.crystalLabel.visible) {
+      this.pushStrip(
+        'crystal',
+        this.crystalLabel.x,
+        this.crystalLabel.y,
+        this.crystalLabel.width,
+        this.crystalLabel.height,
+        this.crystalLabel.text
+      );
+    }
+    if (this.biomassLabel.visible) {
+      this.pushStrip(
+        'biomass',
+        this.biomassLabel.x,
+        this.biomassLabel.y,
+        this.biomassLabel.width,
+        this.biomassLabel.height,
+        this.biomassLabel.text
+      );
+    }
+    this.pushStrip(
+      'berths',
+      this.berthsLabel.x,
+      this.berthsLabel.y,
+      this.berthsLabel.width,
+      this.berthsLabel.height,
+      this.berthsLabel.text
+    );
+    this.pushStrip(
+      'draw',
+      this.drawLabel.x,
+      this.drawLabel.y,
+      this.drawLabel.width,
+      this.drawLabel.height,
+      this.drawLabel.text
+    );
+    if (this.mapLabel.visible) {
+      this.pushStrip(
+        'map',
+        this.mapLabel.x,
+        this.mapLabel.y,
+        this.mapLabel.width,
+        this.mapLabel.height,
+        this.mapLabel.text
+      );
+    }
+    if (this.clockLabel.visible) {
+      this.pushStrip(
+        'clock',
+        this.clockLabel.x,
+        this.clockLabel.y,
+        this.clockLabel.width,
+        this.clockLabel.height,
+        this.clockLabel.text
+      );
+    }
+    // The status label is the contact count only while it *is* one: before the
+    // room is live it carries the connection state instead, and a line about
+    // what your ears hold would be a lie over the word `connecting`.
+    if (this.status === 'connected') {
+      this.pushStrip(
+        'contacts',
+        this.statusLabel.x,
+        this.statusLabel.y,
+        this.statusLabel.width,
+        this.statusLabel.height,
+        this.statusLabel.text
+      );
+    }
+
+    if (!this.stripMoved()) return;
+    this.lastStripN = this.stripN;
+    for (let i = 0; i < this.stripN * 4; i++) this.lastStripNums[i] = this.stripNums[i]!;
+    for (let i = 0; i < this.stripN * 2; i++) this.lastStripStrs[i] = this.stripStrs[i]!;
+    this.callbacks.onReadouts(this.readoutBoxes());
+  }
+
+  /** Whether this frame's strip differs from the one last published. */
+  private stripMoved(): boolean {
+    if (this.stripN !== this.lastStripN) return true;
+    for (let i = 0; i < this.stripN * 4; i++) {
+      if (this.stripNums[i] !== this.lastStripNums[i]) return true;
+    }
+    for (let i = 0; i < this.stripN * 2; i++) {
+      if (this.stripStrs[i] !== this.lastStripStrs[i]) return true;
+    }
+    return false;
+  }
+
+  /**
+   * The recorded strip, with each readout's explanation composed.
+   *
+   * Runs only on a frame that actually changed, which is what lets it allocate
+   * freely. Every figure quoted comes from the report the strip drew from or
+   * from `@echoes/shared`; nothing is recomputed here, and nothing is written
+   * twice (see `readouts.ts`).
+   */
+  private readoutBoxes(): ReadoutBox[] {
+    const mix = selfMixFor(this.peakSig, this.fleetSilent);
+    const loud = this.units.filter((u) => u.sig > SIG_BANDS.LOUD).length;
+    const boxes: ReadoutBox[] = [];
+    for (let i = 0; i < this.stripN; i++) {
+      const key = this.stripStrs[i * 2] as ReadoutKey;
+      boxes.push({
+        key,
+        x: this.stripNums[i * 4]!,
+        y: this.stripNums[i * 4 + 1]!,
+        width: this.stripNums[i * 4 + 2]!,
+        height: this.stripNums[i * 4 + 3]!,
+        value: this.stripStrs[i * 2 + 1]!,
+        detail: this.readoutDetail(key, mix.label, mix.worldGain, loud),
+      });
+    }
+    return boxes;
+  }
+
+  /** One readout's line, in §7's register. */
+  private readoutDetail(key: ReadoutKey, band: string, worldGain: number, loud: number): string {
+    switch (key) {
+      case 'sig':
+        return sigDetail(this.peakSig, this.units.length, loud);
+      case 'band':
+        return bandDetail(band, worldGain);
+      case 'tracked':
+        return trackedDetail(this.exposure.trackedCount);
+      case 'nodules':
+        return nodulesDetail(this.nodules);
+      case 'crystal':
+        return crystalDetail(this.crystal);
+      case 'biomass':
+        return biomassDetail(this.biomass);
+      case 'berths':
+        return berthsDetail(this.berths.used, this.berths.granted);
+      case 'draw':
+        return drawDetail(this.drawReport);
+      case 'map':
+        return mapDetail(this.mapLabel.text);
+      case 'clock':
+        return clockDetail();
+      case 'contacts':
+        return contactsDetail(this.tracked.size);
+    }
+  }
+
   private drawHud(): void {
     const g = this.hudGraphics;
     g.clear();
@@ -6280,6 +6554,10 @@ export class EchoRenderer {
     if (this.mapLabel.visible) {
       this.mapLabel.position.set(rightEdge - this.mapLabel.width - 16, 10);
     }
+
+    // The strip is laid out; say where it ended up, so the DOM overlay can
+    // put an explanation on each number (§7, #724).
+    this.recordStrip();
 
     // Hint line rides just above the command panel, clear of the scope.
     //

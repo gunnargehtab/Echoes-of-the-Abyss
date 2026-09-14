@@ -106,6 +106,107 @@
 }
 
 /*
+ * The top strip's explanations — docs/ui-ux.md §2, §7, §11, #724.
+ *
+ * A transparent control laid over each readout the renderer reports, carrying
+ * the line that says what the number is. DOM for §10 and §11's reason: the
+ * strip is Pixi text, and Pixi text reaches no screen reader.
+ */
+.readouts {
+  position: absolute;
+  inset: 0;
+  /* Only the readouts themselves take a pointer. Everything else over the
+     water stays the canvas's, which owns every gesture in the world view. */
+  pointer-events: none;
+}
+
+.readout-slot {
+  position: absolute;
+}
+
+/*
+ * The control is the number: it has no ink of its own, because the glyphs it
+ * sits on were drawn on the glass a frame ago and drawing them again here
+ * would be two copies of one readout, at two different moments.
+ */
+.readout {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  pointer-events: auto;
+  cursor: help;
+}
+
+/* Drawn rather than suppressed: on a HUD with no other DOM chrome over the
+   water, this ring is the only thing that says where the keyboard is. */
+.readout:focus-visible {
+  outline: 1px solid var(--text-cyan);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/*
+ * Clipped when shut, never `display: none`. `aria-describedby` has to resolve
+ * whether the line is on screen or not, and removing the element would take it
+ * out of the accessible tree along with the pixels — so a screen reader would
+ * hear the number and lose the explanation, which is the bug this closes.
+ */
+.readout-detail {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.readout-slot:hover .readout-detail,
+.readout:focus-visible ~ .readout-detail,
+.readout[aria-expanded='true'] ~ .readout-detail {
+  top: calc(100% + 6px);
+  left: 0;
+  width: max-content;
+  /* Divided by the scale for the reason the three panels are (§11): the box is
+     handed to us already scaled, so only the type inside it grows, and an
+     extent that did not divide would cover the water at 200%. */
+  max-width: min(420px, calc(66vw / var(--ui-scale, 1)));
+  height: auto;
+  margin: 0;
+  padding: 6px 9px;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+  /* No transition and no fade: §11's motion limits, and a line that arrived
+     late would be a worse instrument than one that is simply there. */
+  transform: scale(var(--ui-scale, 1));
+  transform-origin: top left;
+  border: 1px solid rgba(255, 61, 166, 0.45);
+  border-radius: 4px;
+  background: var(--abyss-glass);
+  font-family: var(--font-data);
+  font-size: 0.68rem;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  color: var(--text-dim);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+/* The right-hand end of the strip has no room to its right, so its lines open
+   the other way. */
+.readout-slot:hover .to-left,
+.readout:focus-visible ~ .to-left,
+.readout[aria-expanded='true'] ~ .to-left {
+  left: auto;
+  right: 0;
+  transform-origin: top right;
+}
+
+/*
  * Contact log — docs/ui-ux.md §10.
  *
  * DOM rather than canvas so entries are selectable, copy-pasteable and

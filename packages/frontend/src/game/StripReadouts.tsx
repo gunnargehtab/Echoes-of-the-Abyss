@@ -1,0 +1,101 @@
+/**
+ * The top strip's explanations — docs/ui-ux.md §2, §7, §11, #724.
+ *
+ * DOM rather than Pixi, for the reason §10 and §11 already gave for the contact
+ * log and the objectives panel: canvas text is neither selectable nor reachable
+ * by a screen reader, so an explanation drawn on the glass could be read by a
+ * pointer and by nothing else. The strip itself cannot move off the canvas —
+ * it is the HUD — so this is the other half of that arrangement: the renderer
+ * reports where each readout ended up (`onReadouts`), and one transparent
+ * control is laid over each, carrying the line.
+ *
+ * Three routes, one surface:
+ *
+ * - **Pointer** — hovering the number shows its line. The control sits exactly
+ *   on the glyphs the renderer drew, so it is the number that is hovered rather
+ *   than a legend beside it.
+ * - **Keyboard** — the controls are buttons in strip order, so Tab walks the
+ *   strip left to right and `:focus-visible` shows the same line. The focus ring
+ *   is drawn rather than suppressed: it is the only thing on the glass that says
+ *   where the keyboard is.
+ * - **Touch** — a tap pins the line open and a second tap closes it, which is
+ *   the route a touchscreen actually has. Nothing here names a key, because
+ *   §7's promise is about what the player in front of the screen can do, and
+ *   #722 §4 is the open bug filed for the case where one line forgot that.
+ *
+ * The line is always in the accessible tree via `aria-describedby`, open or
+ * shut — it is clipped when shut, not `display: none`, which would take it out
+ * of the tree along with the pixels. A screen reader therefore hears the
+ * explanation on focus without anything having to be opened at all.
+ *
+ * `pointer-events` is `none` on the layer and `auto` on the controls alone, so
+ * the only pixels this takes away from the canvas are the readouts themselves.
+ */
+
+import { useEffect, useState } from 'react';
+import type { ReadoutBox, ReadoutKey } from './readouts.ts';
+
+/**
+ * The readouts that sit at the right-hand end of the strip, whose line is
+ * anchored to their right edge instead of their left.
+ *
+ * A bubble anchored left on the contact count would start near the screen edge
+ * and have nowhere to go; §2's strip puts these three there by construction —
+ * the map name, the clock and the count — so the list is a fact about the
+ * layout rather than a measurement of one.
+ */
+const RIGHT_ANCHORED: ReadonlySet<ReadoutKey> = new Set<ReadoutKey>(['map', 'clock', 'contacts']);
+
+export function StripReadouts({ boxes }: { boxes: ReadoutBox[] }): React.JSX.Element | null {
+  const [pinned, setPinned] = useState<ReadoutKey | null>(null);
+
+  // A pinned line outlives the readout it belongs to — crystal appears and
+  // disappears with the field, and the clock is dropped when the strip runs out
+  // of room — so a key that is no longer on the strip is unpinned rather than
+  // left addressing nothing.
+  useEffect(() => {
+    if (pinned !== null && !boxes.some((box) => box.key === pinned)) setPinned(null);
+  }, [boxes, pinned]);
+
+  if (boxes.length === 0) return null;
+
+  return (
+    <div
+      className="readouts"
+      onKeyDown={(event) => {
+        // Escape closes the line and leaves focus where it is: the esc menu is
+        // one press further out (§9.5), and a pinned bubble is exactly the kind
+        // of thing that press should step back through first.
+        if (event.key === 'Escape' && pinned !== null) {
+          event.stopPropagation();
+          setPinned(null);
+        }
+      }}
+    >
+      {boxes.map((box) => (
+        <div
+          key={box.key}
+          className="readout-slot"
+          style={{ left: box.x, top: box.y, width: box.width, height: box.height }}
+        >
+          <button
+            type="button"
+            className="readout"
+            // The strip's own text is the name: a screen reader hears the
+            // number the way the screen shows it, then the line explaining it.
+            aria-label={box.value}
+            aria-describedby={`readout-${box.key}`}
+            aria-expanded={pinned === box.key}
+            onClick={() => setPinned((open) => (open === box.key ? null : box.key))}
+          />
+          <span
+            id={`readout-${box.key}`}
+            className={RIGHT_ANCHORED.has(box.key) ? 'readout-detail to-left' : 'readout-detail'}
+          >
+            {box.detail}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}

@@ -52,6 +52,7 @@ import {
   COLS,
 } from './support/cannedMatch.ts';
 import { EchoRenderer, type RendererCallbacks } from '../src/game/EchoRenderer.ts';
+import type { ReadoutBox } from '../src/game/readouts.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { BufferAttribute, Mesh, type Scene } from 'three';
 
@@ -1122,5 +1123,97 @@ describe('renderer smoke test: input and teardown', () => {
     // A key pressed after teardown reaches nothing. This is the leak that
     // survives a StrictMode double-mount and drives the next match's camera.
     dispatchWindow('keydown', { code: 'KeyW' });
+  });
+});
+
+/**
+ * The top strip's explanations (#724) — docs/ui-ux.md §2, §7.
+ *
+ * The strip is Pixi text and its explanation is DOM, so the renderer's half of
+ * the arrangement is reporting *where each readout is and what it says*. Two
+ * properties matter and neither is visible from the component's side: that the
+ * value a screen reader will speak is the string the strip actually drew, and
+ * that reporting it does not cost a frame.
+ *
+ * The second is a counted assertion in this file's sense — calls made over a
+ * known number of frames, never a stopwatch. A hover surface that republished
+ * every frame would re-render the React shell at 60 Hz, which is the one thing
+ * `GameCanvas`'s own header says it must never do.
+ */
+describe('renderer smoke test: the strip explains itself', () => {
+  it('reports every readout the strip drew, with the strip’s own text', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    booted.frame();
+
+    const published = booted.log.calls.filter((call) => call.name === 'onReadouts');
+    assert.ok(published.length > 0, 'the strip is reported at all');
+    const boxes = published.at(-1)!.args[0] as ReadoutBox[];
+    const keys = boxes.map((box) => box.key);
+
+    // Every account the canned snapshot carries, plus the two instruments and
+    // the three right-hand readouts. Crystal and biomass are here because the
+    // fixture has some of each; they are the two the strip hides at zero.
+    for (const key of [
+      'sig',
+      'band',
+      'tracked',
+      'nodules',
+      'crystal',
+      'biomass',
+      'berths',
+      'draw',
+      'contacts',
+    ]) {
+      assert.ok(keys.includes(key as ReadoutBox['key']), `${key} is explained`);
+    }
+
+    // The name a screen reader speaks is the string on the glass, not a second
+    // composition of the same numbers — so the two cannot drift apart.
+    const nodules = boxes.find((box) => box.key === 'nodules')!;
+    assert.equal(
+      nodules.value,
+      textSaying(booted.app.stage as unknown as Container, 'NODULES'),
+      'the reported value is the Text the player is looking at'
+    );
+    assert.ok(nodules.width > 0 && nodules.height > 0, 'and it has a box to be hovered in');
+
+    booted.teardown();
+  });
+
+  it('reports nothing further while the strip is unchanged', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    booted.frame();
+    const settled = booted.log.calls.filter((call) => call.name === 'onReadouts').length;
+
+    booted.frame(60);
+    const after = booted.log.calls.filter((call) => call.name === 'onReadouts').length;
+    // One second of frames at the rate the ticker runs, and not one republish:
+    // the scratch is compared in place, so an unmoved strip costs no allocation
+    // and no React render.
+    assert.equal(after, settled, 'a strip that did not move is not reported again');
+
+    booted.teardown();
+  });
+
+  it('reports once more when a number actually moves', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    booted.frame(10);
+    const before = booted.log.calls.filter((call) => call.name === 'onReadouts').length;
+
+    booted.chart.applySnapshot({ ...cannedSnapshot(), nodules: 1751 });
+    booted.frame(10);
+    const published = booted.log.calls.filter((call) => call.name === 'onReadouts');
+    assert.equal(published.length, before + 1, 'exactly one republish for one change');
+    const boxes = published.at(-1)!.args[0] as ReadoutBox[];
+    assert.match(
+      boxes.find((box) => box.key === 'nodules')!.value,
+      /1751/,
+      'and it carries the new figure'
+    );
+
+    booted.teardown();
   });
 });
