@@ -91,6 +91,60 @@ this column said the money was never there: peak bank with a yard up is under 40
 Consortium against a 700 nodule Bulwark, and the peak over the whole match is 600–680 against
 a 600 nodule yard. Read it before attributing a row of zeros to how a commander spends.
 
+**The nodule round trip.** Every table above this one is an *account*: what the bank held,
+what rose into it, how fast. None of them can say whether a navy is **paid what it mines**,
+because a flat bank reads identically whether the ore never left the field, never reached a
+depot, or arrived and was spent the same second. This table is the other side of that ledger
+— what the depots took in, counted one hold at a time, plus the ore that was cut and went
+down with its hauler, which no income column can show at all.
+
+Read `Nodules delivered a match` against `Nodules banked a match`. Only two paths in the tree
+credit nodules — the deposit in `systems/harvest.ts` and the Order's tithe in
+`systems/tithe.ts` — so for three of the four navies those two figures are the same number
+arrived at from opposite ends.
+
+The Knights are the table's own control, and their row carries **both** of the nodule terms
+`docs/economy.md` §6 gives that navy, not just the famous one:
+
+```text
+banked  ≈  delivered × HADRON.NODULE_YIELD_MULTIPLIER  +  HADRON.TITHE_PER_S × seconds
+```
+
+**Both terms, because the printed gap is their difference and neither alone predicts it.** The
+half-yield pulls banked down and the tithe pushes it back up, and over the thirty stored seeds
+the half-yield is the larger by some four hundred nodules: it takes **1,476** off a delivered
+column of 2,951 and the tithe puts **1,077** back over a mean 1,077 s alive, leaving **399** —
+and the **405** the table prints is that plus the same ~7 nodules of purchase-netting the other
+three rows carry, the first bias in the table below. Name only the multiplier and a reader
+expects 1,476 and finds
+2,546 — a thousand-nodule excess that is the doctrine rather than a fault. What the control
+actually buys is this: an instrument that had quietly ended up reading the bank twice would
+report the Knights' two columns *equal*.
+
+**A gap between the two columns is a magnitude to weigh, not a defect on sight.** Three biases
+sit between them, all one-directional, and the largest is on the banked side:
+
+| Bias | Direction | Size |
+| --- | --- | --- |
+| A purchase inside the same 200 ms pass as a deposit nets against `nodulesEarned` | banked down | up to a whole hold per delivery. Over the thirty stored seeds it means 0.31% of the delivered column for the Consortium, 0.34% for the Commune and 0.46% for the Directorate; the largest in any single match is 150 nodules, three holds, in a 12.5-minute one |
+| A hold is recorded as the harvester was last seen carrying it | delivered down | up to one observation's mining, 2 nodules |
+| A hold whose hull dies in the pass it empties in is counted as lost | delivered down, lost up | one hold per death |
+
+**`Harvester-time laden` is any second with a nodule hold aboard**, which begins at the first
+bite rather than at the turn for home — so it is the cut and the haul together, not the haul
+alone. On the commander-free match the split is 39 points of hauling against 19 of cutting with
+a partial hold, so reading the column as the walk home overstates it by half. The harvest mode
+is not in the snapshot, which is why the counter cannot separate the two.
+
+**The ledger closes exactly only where nothing is bought.** That is not a limitation of the
+counters, it is the first bias above, and it is why `balance.test.ts` holds the equality on a
+match with no commander in it — three navies, nothing purchased, and delivered equals banked
+to zero nodules, the Order's §6 identity included.
+
+This was built for #706, where the Commune's bank never once rises above its opening 600 in
+thirty matches and nothing in the harness could say whether that was a price problem or a
+payment one.
+
 ## Three things to know before trusting a number
 
 **The seed places the Drift and nothing else.** Terrain is authored, hazard timings come
