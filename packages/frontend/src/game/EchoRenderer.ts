@@ -2137,14 +2137,28 @@ export class EchoRenderer {
       if (this.selected.size === 0) return;
 
       switch (action) {
-        case 'attackMove':
+        case 'attackMove': {
           // Armed, then aimed: the next click on the water is the point, as a
           // build key arms a placement. A press with a build pending drops
           // the build — one thing armed at a time.
           e.preventDefault();
+          // ENGAGE's refusal, on the key that does the same thing. §10.5 is
+          // about the action rather than the affordance — the player "learns
+          // the rule before pressing, because a refusal delivered afterwards
+          // teaches nothing" — and a mode armed over a held selection is that
+          // refusal deferred to the click. It was worse on the key than on the
+          // button, because #719 gave the hold the hint bar's movement half:
+          // an armed mode had nothing left to announce it, so the press did
+          // not merely fail late, it failed invisibly (#722).
+          const held = this.heldSelection(this.selectedUnits());
+          if (held !== null) {
+            this.refuse(held);
+            return;
+          }
           this.pendingBuild = null;
           this.pendingAttackMove = true;
           return;
+        }
         case 'stop':
           e.preventDefault();
           this.commandStop();
@@ -7189,7 +7203,20 @@ export class EchoRenderer {
     if (harvester !== undefined) {
       const throttle = THROTTLE_LABEL[harvester.throttle!];
       const state = `harvester [${throttle}] ${harvester.cargo?.toFixed(0) ?? 0} cargo`;
-      if (heldAll !== null) return `${state}  ·  ${heldAll}  ·  V throttle`;
+      // Split for touch like every other line here, which this one skipped:
+      // `V throttle` is a key a touch player cannot press, and the comment
+      // above calls a bar that hides a working key a silent lie. Naming a dead
+      // one is the same lie the other way round, and §7 is about what the
+      // player in front of *this* screen can actually do. The throttle is
+      // reachable on a touchscreen — it is the `THR` button on the command bar
+      // — so the line points at the affordance that exists rather than going
+      // quiet, which is what the transport line above already does with
+      // `LAND to unload` (#722).
+      if (heldAll !== null) {
+        return this.isTouch
+          ? `${state}  ·  ${heldAll}  ·  THR to throttle`
+          : `${state}  ·  ${heldAll}  ·  V throttle`;
+      }
       return this.isTouch
         ? `${state}  ·  tap a field`
         : `${state}  ·  RMB node/move  ·  V throttle`;

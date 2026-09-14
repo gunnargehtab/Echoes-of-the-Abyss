@@ -425,6 +425,26 @@ let installed = false;
  * the first time anything measures text, so both must be in place before a
  * single instance exists.
  */
+/**
+ * Whether the stub window reports a touchscreen.
+ *
+ * `EchoRenderer.isTouch` is a field initialiser reading
+ * `matchMedia('(pointer: coarse)')`, so it is fixed at construction and the
+ * flag has to be set *before* the renderer is built. Module-level rather than
+ * an option on the stub, because `installHeadlessDom` runs once per process
+ * while a test wants the pointer to differ per case — and default `false`
+ * keeps every existing test on the desktop branch it was written against.
+ *
+ * Only the coarse-pointer query answers to it. `prefers-reduced-motion` and
+ * the rest keep their `false`, which is what they had.
+ */
+let coarsePointer = false;
+
+/** Report a touchscreen (or stop). Set it before booting the renderer. */
+export function setCoarsePointer(on: boolean): void {
+  coarsePointer = on;
+}
+
 export function installHeadlessDom(): void {
   if (installed) return;
   installed = true;
@@ -462,7 +482,10 @@ export function installHeadlessDom(): void {
       search: '',
       hash: '',
     },
-    matchMedia: (query: string) => ({ matches: false, media: query }),
+    matchMedia: (query: string) => ({
+      matches: coarsePointer && query.includes('pointer: coarse'),
+      media: query,
+    }),
     addEventListener: (type: string, fn: Listener) => windowElement.addEventListener(type, fn),
     removeEventListener: (type: string, fn: Listener) =>
       windowElement.removeEventListener(type, fn),
@@ -785,6 +808,26 @@ export function textCount(root: Container): number {
   let total = 0;
   for (const node of walk(root)) if (node instanceof Text) total++;
   return total;
+}
+
+/**
+ * What every `Text` in the tree currently says.
+ *
+ * The counting walkers above answer "how much", and there was no way to ask
+ * "what" — so a line the player reads, like the hint bar, could only be tested
+ * by reaching into a private. The HUD's sentences are a contract
+ * (docs/ui-ux.md §7: an action that will not happen says what it is waiting
+ * on), and a contract wants an assertion rather than a count.
+ */
+export function textContents(root: Container): string[] {
+  const said: string[] = [];
+  for (const node of walk(root)) if (node instanceof Text) said.push(node.text);
+  return said;
+}
+
+/** The one line in the tree that contains `needle`, or null when none does. */
+export function textSaying(root: Container, needle: string): string | null {
+  return textContents(root).find((line) => line.includes(needle)) ?? null;
 }
 
 /**

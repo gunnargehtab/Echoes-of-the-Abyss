@@ -33,8 +33,10 @@ import {
   HeadlessApplication,
   HeadlessWebGLRenderer,
   pumpAnimationFrames,
+  setCoarsePointer,
   textCount,
   textRasterisations,
+  textSaying,
   textStyleKeys,
   treeIdentities,
   treeSize,
@@ -835,6 +837,135 @@ describe('renderer smoke test: input and teardown', () => {
       assert.equal(world.log.first('onMoveOrder'), undefined, 'a held hull was sent anywhere');
     } finally {
       world.teardown();
+    }
+  });
+
+  /**
+   * The `W` key, which armed attack-move over a held selection — #722.
+   *
+   * ENGAGE, the *button* for the same action, has carried the hold as its
+   * refusal since #708; the key never asked. §10.5 is about the action rather
+   * than the affordance — the player "learns the rule before pressing, because
+   * a refusal delivered afterwards teaches nothing" — so an armed mode whose
+   * click the server throws away is that refusal deferred, whichever hand
+   * reached it.
+   *
+   * It was worse on the key than on the button and #719 is why: the held hint
+   * line replaced the movement bindings, and `ATTACK-MOVE armed` is one of
+   * them, so the mode was armed with nothing on screen saying so or saying
+   * that ESC cancels it. Hence the shape of this test — arm, then *lift* the
+   * hold, and read the line the mode would announce itself on. Asserting
+   * while the hold is up would pass with the bug in, because the hold owns the
+   * line either way.
+   */
+  it('arms no attack-move on a selection the mission is holding whole', async () => {
+    const armed = async (held: boolean): Promise<string | null> => {
+      const world = await boot();
+      try {
+        const snapshot = cannedSnapshot();
+        // A hull with no throttle: `hintLine` answers for a harvester before
+        // it ever reaches the armed branch, so a harvester cannot see this.
+        const fighter = snapshot.units.find((unit) => unit.throttle === undefined);
+        assert.ok(fighter !== undefined, 'the canned match has no fighter to arm');
+        if (held) {
+          world.chart.setMissionHolds([
+            { unitId: fighter.id, reason: MovementHoldReason.Unreleased },
+          ]);
+        }
+        world.chart.focusOn(fighter.x, fighter.y);
+        world.frame(2);
+
+        const canvas = world.app.canvas;
+        const at = world.conn.projectPoint(fighter.x, fighter.y, fighter.depth);
+        assert.ok(at.visible, 'the camera is looking at the hull we are about to select');
+        for (const type of ['pointerdown', 'pointerup']) {
+          canvas.dispatch(type, {
+            button: 0,
+            pointerId: 1,
+            pointerType: 'mouse',
+            clientX: at.x,
+            clientY: at.y,
+          });
+        }
+        world.frame(1);
+
+        dispatchWindow('keydown', { code: 'KeyW' });
+        // The hold comes off, so the armed branch of the hint line is the one
+        // that answers. Nothing re-presses the key.
+        world.chart.setMissionHolds([]);
+        world.frame(1);
+        return textSaying(world.app.stage, 'ATTACK-MOVE armed');
+      } finally {
+        world.teardown();
+      }
+    };
+
+    // The control first, because it is what makes the assertion below mean
+    // anything: the key does arm, and this test can see it when it does.
+    assert.ok(
+      (await armed(false)) !== null,
+      'the control never armed at all, so the case below proves nothing'
+    );
+    assert.equal(
+      await armed(true),
+      null,
+      'the W key armed an attack-move over a selection the mission is holding'
+    );
+  });
+
+  /**
+   * The held harvester's line named a key on a touchscreen — #722.
+   *
+   * Every other line in `hintLine` splits on `isTouch`; this one returned
+   * before the split, so a touch player read `held — not released yet · V
+   * throttle` and had no `V` to press. The comment above that block argues a
+   * bar hiding a working key is a silent lie; naming a dead one is the same
+   * lie the other way, and §7's "with a reason attached, never silently" is
+   * about what the player in front of this screen can actually do.
+   *
+   * The throttle is not gone on touch — it is the `THR` button on the command
+   * bar — so the line points there, as the transport line one branch up
+   * already does with `LAND to unload`.
+   */
+  it('names no keyboard key on a touchscreen, on the one held line that did', async () => {
+    setCoarsePointer(true);
+    try {
+      const world = await boot();
+      try {
+        const snapshot = cannedSnapshot();
+        const harvester = snapshot.units.find((unit) => unit.throttle !== undefined);
+        assert.ok(harvester !== undefined, 'the canned match has no harvester to hold');
+        world.chart.setMissionHolds([
+          { unitId: harvester.id, reason: MovementHoldReason.Unreleased },
+        ]);
+        world.chart.focusOn(harvester.x, harvester.y);
+        world.frame(2);
+
+        const canvas = world.app.canvas;
+        const at = world.conn.projectPoint(harvester.x, harvester.y, harvester.depth);
+        assert.ok(at.visible, 'the camera is looking at the hull we are about to select');
+        for (const type of ['pointerdown', 'pointerup']) {
+          canvas.dispatch(type, {
+            button: 0,
+            pointerId: 1,
+            pointerType: 'touch',
+            clientX: at.x,
+            clientY: at.y,
+          });
+        }
+        world.frame(1);
+
+        const line = textSaying(world.app.stage, 'harvester [');
+        assert.ok(line !== null, 'the hint bar never described the held harvester');
+        assert.ok(!/\bV throttle\b/.test(line), `a touchscreen was told to press a key: ${line}`);
+        // And not silent either: §7 wants the affordance that exists named,
+        // which is the command bar's own button.
+        assert.match(line, /THR/);
+      } finally {
+        world.teardown();
+      }
+    } finally {
+      setCoarsePointer(false);
     }
   });
 
