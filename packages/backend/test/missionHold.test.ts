@@ -429,8 +429,9 @@ describe('an ordered target is a movement order, and the hold refuses it too', (
    * in this file for any verb that needs guns, and every case here but one runs
    * the literal unmodified. The Cruiser beside it carries no weapon, which sends
    * each verb down a different branch for a reason none of these tests is about:
-   * `orderAttackContact` returns one line *after* the hold guard, and
-   * `orderAttackMove` falls through to a plain `applyMove` four lines after it.
+   * `orderAttackContact` returns just after the hold guard, and
+   * `orderAttackMove` does not refuse at all but falls through to a plain
+   * `applyMove` for a hull with no `Weapon`.
    * Either way an unarmed hull would make a case here vacuous rather than
    * refused, which is why the armed one is resolved by component rather than by
    * tag.
@@ -591,20 +592,26 @@ describe('an ordered target is a movement order, and the hold refuses it too', (
  * nothing to board at any tick, and a test driven against a shipped literal
  * would assert that a hull which could not have boarded anyway did not board.
  *
- * Every other verb here is driven against a literal: attack-move on *The Second
- * Chord*, which ships an armed held Corvette, with only its clock moved.
+ * Adding a hull is the line this file otherwise does not cross, and it is worth
+ * being exact about which line that is. Most cases here run a *derivative*:
+ * `HOLD_MISSION` is Sorrowgate with its parties trimmed, its fauna off, its
+ * silence ceiling opened and its tender's clock pulled in, and the attack-move
+ * pair runs *The Second Chord* with one clock moved. Every one of those changes
+ * subtracts or retimes something the literal already has. This one is the only
+ * fixture that puts a hull in the water the mission never fielded, and only
+ * embark needs it.
  *
- * Both added hulls take their berth from tender-2's, read off the definition
+ * The added hull takes its berth from tender-2's, read off the definition
  * rather than transcribed: water this mission already puts a PR 2 hull in, and
- * both are PR 2, so a fixture cannot crush the thing it is testing with — and a
- * berth that moves takes the fixture with it instead of leaving a comment
- * asserting a fact the literal no longer carries.
+ * the Freighter is PR 2, so the fixture cannot crush the thing it is testing
+ * with — and a berth that moves takes the fixture with it instead of leaving a
+ * comment asserting a fact the literal no longer carries.
  *
- * Each is given a `role` that is neither `escort` nor `tender`, and both halves
- * matter: an escort alongside would satisfy the escort hold the moment it came
- * inside 400 m, and a tender would be held by that hold rather than by the
- * clock under test. `MissionRole` is a free string (types.ts), so a third word
- * costs nothing.
+ * Its `role` is neither `escort` nor `tender`, and both halves matter: an
+ * escort alongside would satisfy the escort hold the moment it came inside
+ * 400 m, and a tender would be held by that hold rather than by the clock under
+ * test. `MissionRole` is a free string (types.ts), so a third word costs
+ * nothing.
  */
 function alongside(id: string, extra: MissionUnit): MissionDefinition {
   return {
@@ -627,7 +634,6 @@ interface Alongside {
   tender: number;
   settle(seconds: number, close?: boolean): void;
   heldOf(eid: number): MovementHoldReason | null;
-  at(eid: number): { x: number; y: number };
 }
 
 function alongsideHarness(mission: MissionDefinition, added: UnitKind): Alongside {
@@ -663,7 +669,6 @@ function alongsideHarness(mission: MissionDefinition, added: UnitKind): Alongsid
       assert.ok(view !== null, 'the mission sent no view at all');
       return view.held.find((hold) => hold.unitId === eid)?.reason ?? null;
     },
-    at: (eid) => ({ x: Position.x[eid]!, y: Position.y[eid]! }),
   };
   self.settle(1);
   return self;
