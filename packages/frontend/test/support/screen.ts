@@ -86,6 +86,17 @@ export interface Rendered {
    */
   button(label: string): ReactTestInstance;
   /**
+   * Every button on the screen by the name assistive technology would call it,
+   * in document order.
+   *
+   * `button()` reaches one control by that name; this is the same identity read
+   * as a list, and it is what an assertion about **order** needs. The order a
+   * screen offers its doors in is a fact about the screen (§14 writes the title
+   * screen's out), so reading it off a label span's class would be asserting
+   * the markup instead of the thing the doc specifies (#723).
+   */
+  buttonNames(): string[];
+  /**
    * Host nodes created for refs, indexed by every class their element
    * carries. First one wins, so this reaches a host that is unique by class;
    * a control among siblings is told apart by `focused()` naming it instead.
@@ -231,6 +242,8 @@ export async function render(element: ReactElement): Promise<Rendered> {
       }
       return found[0]!;
     },
+    buttonNames: () =>
+      tree.root.findAll((node) => node.type === 'button').map((node) => accessibleName(node.props)),
     hosts,
     focused: () => focusOrder.at(-1) ?? null,
     focuses: () => [...focusOrder],

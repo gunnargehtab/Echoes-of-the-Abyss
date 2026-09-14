@@ -96,6 +96,16 @@ export function TitleScreen({
           },
         ]
       : []),
+    // Tutorial leads, above Campaign — docs/ui-ux.md §14. The prologue is the
+    // authored teaching this game opens with, and Solo game and Multiplayer
+    // below it both assume a player who has already had it. A held seat still
+    // outranks it: that is a match still in the water.
+    {
+      id: 'tutorial',
+      label: 'Tutorial',
+      note: 'Prologue: Sorrowgate — four hulls, no guns, and an order to be quiet',
+      open: onTutorial,
+    },
     { id: 'campaign', label: CAMPAIGN_ENTRY.label, note: CAMPAIGN_ENTRY.note, open: onCampaign },
     {
       id: 'solo',
@@ -108,12 +118,6 @@ export function TitleScreen({
       label: 'Multiplayer',
       note: 'Join whoever is listening on the same water',
       open: onMultiplayer,
-    },
-    {
-      id: 'tutorial',
-      label: 'Tutorial',
-      note: 'Prologue: Sorrowgate — four hulls, no guns, and an order to be quiet',
-      open: onTutorial,
     },
     { id: 'settings', label: 'Settings', note: 'Volumes, mono, visual-first', open: onSettings },
     { id: 'credits', label: 'Credits', open: onCredits },

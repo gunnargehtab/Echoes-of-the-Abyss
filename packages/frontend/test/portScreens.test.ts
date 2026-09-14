@@ -101,23 +101,122 @@ async function title(): Promise<{ view: Rendered; entries: Entries }> {
   return { view, entries };
 }
 
-/** The entries a player sees, in the order §14 lists them. */
-function labels(view: Rendered): string[] {
-  return view.allByClass('menu-entry-label').map((node) => String(node.props.children));
+/**
+ * The entries a player is offered, in the order they are offered, read the way
+ * assistive technology reads them.
+ *
+ * An entry's accessible name is its name and then its note — "Tutorial
+ * Prologue: Sorrowgate …" — so this holds the name each one *leads with*.
+ * Asserting the whole string would be asserting the note's authored copy, and
+ * what §14 specifies here is the list, not the prose beside it. Reading the
+ * order off `.menu-entry-label` instead, which is what this file used to do,
+ * asserts the markup: a label span is where the name happens to be rendered,
+ * and the order the doors are offered in is a fact about the screen (#723).
+ *
+ * The length assertion is the other half. Every control on this screen is an
+ * entry, so a list that matched position for position while carrying one more
+ * button than it named would still be wrong.
+ */
+function offers(view: Rendered, expected: string[]): void {
+  const names = view.buttonNames();
+  assert.equal(names.length, expected.length, `offered ${names.length} controls: ${names}`);
+  expected.forEach((want, index) => {
+    assert.ok(
+      leadsWith(names[index] ?? '', want),
+      `entry ${index} reads ${JSON.stringify(names[index])}, expected it to lead with "${want}"`
+    );
+  });
+}
+
+/**
+ * Whether an accessible name is this entry's, at the word boundary.
+ *
+ * A bare prefix would let "Tutorials" keep Tutorial's position, so the match is
+ * at the boundary: the whole name, or the name and then a space. Credits
+ * carries no note and so is its whole accessible name, which is the equality
+ * arm.
+ *
+ * What it cannot catch, said plainly rather than left to be discovered: a label
+ * extended by a further word. An entry relabelled "Campaign board" reads
+ * "Campaign board Four wars, one question", and from the accessible name alone
+ * that is indistinguishable from "Campaign" followed by its note — the note is
+ * joined with a space, so the boundary is in the same place. Telling them apart
+ * means reading the label span, which is the markup #723's criterion 2 asks
+ * this assertion not to be about.
+ *
+ * So this is weaker against a relabel than the exact `deepEqual` on label text
+ * it replaced, and nothing else in this file closes that: `button()` matches on
+ * `includes`, so "sends each entry to its own door" finds a renamed entry too.
+ * Order is what this holds. A relabel is a change to what the screen says and
+ * is reviewed by looking at it, which is what the committed frame is for.
+ */
+function leadsWith(name: string, want: string): boolean {
+  return name === want || name.startsWith(`${want} `);
+}
+
+/**
+ * One tab stop per entry, and exactly one of them autofocused.
+ *
+ * What a reorder can break without failing any assertion about order. The one
+ * stop with a roving `tabindex` is the campaign board, specified in §14's "The
+ * campaign board — Keyboard"; this screen has never had one, so its list keeps
+ * as many stops as it has entries and none of them carries an explicit
+ * `tabIndex`.
+ *
+ * Both lists are checked, because they are not the same list: a held seat adds
+ * an entry *and* moves the autofocus, and `autoFocus` is an expression over
+ * both facts (`entry.resume === true || (!held && entry.id === 'solo')`). Held
+ * on the no-seat list alone, that expression could lose its `!held` and
+ * autofocus two entries whenever a seat was held with nothing to say so.
+ */
+function oneStopPerEntry(view: Rendered, stopCount: number, focused: string): void {
+  const stops = view.root.findAll((node) => node.type === 'button');
+  const names = view.buttonNames();
+  assert.equal(stops.length, stopCount, `${stopCount} entries, ${stopCount} stops`);
+  // The values, never the instances. `deepEqual` on a `ReactTestInstance` tries
+  // to diff the fiber tree behind it, which does not terminate in any useful
+  // time: a violation took ~97 s and then SIGKILLed the runner with no message,
+  // taking the rest of the file's tests with it. A guard whose failure mode is
+  // "the shard timed out" is worse than the assertion it was making.
+  assert.deepEqual(
+    stops.map((node) => node.props.tabIndex).filter((index) => index !== undefined),
+    [],
+    'no entry carries an explicit tabIndex, so the list is one stop per entry'
+  );
+  const armed = stops.map((node) => node.props.autoFocus === true);
+  assert.equal(
+    armed.filter(Boolean).length,
+    1,
+    `one entry is autofocused, not ${armed.filter(Boolean).length}`
+  );
+  assert.ok(
+    leadsWith(names[armed.indexOf(true)] ?? '', focused),
+    `the autofocused entry is ${focused}, not ${JSON.stringify(names[armed.indexOf(true)])}`
+  );
 }
 
 describe('the title screen: the shape of the finished game', () => {
   it('offers §14’s entries and no Quit, because this is a browser', async () => {
     const { view } = await title();
     try {
-      assert.deepEqual(labels(view), [
-        'Campaign',
-        'Solo game',
-        'Multiplayer',
-        'Tutorial',
-        'Settings',
-        'Credits',
-      ]);
+      offers(view, ['Tutorial', 'Campaign', 'Solo game', 'Multiplayer', 'Settings', 'Credits']);
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('leads with Tutorial, because Solo game and Multiplayer assume a player who has played', async () => {
+    // §14: "Tutorial leads the list, above Campaign, because the prologue is
+    // the authored teaching this game opens with, and Solo Game and
+    // Multiplayer below it both assume a player who has already had it." Held
+    // as the pair rather than as a position, so it stays an assertion about the
+    // rule when another entry lands between them or above them.
+    const { view } = await title();
+    try {
+      const names = view.buttonNames();
+      const at = (lead: string): number => names.findIndex((name) => leadsWith(name, lead));
+      assert.ok(at('Tutorial') >= 0 && at('Campaign') >= 0, `both doors are offered: ${names}`);
+      assert.ok(at('Tutorial') < at('Campaign'), 'Tutorial precedes Campaign');
     } finally {
       await view.unmount();
     }
@@ -128,12 +227,36 @@ describe('the title screen: the shape of the finished game', () => {
     // none." The disabled rule has not gone away — it moved one screen in, to
     // the board, where the reasons are specific instead of one line covering
     // twenty-eight.
+    //
+    // By name rather than by node, for the reason `oneStopPerEntry` gives: this
+    // is #723's criterion 4 and its only holder, and `deepEqual` on the
+    // instances took 97 s and a SIGKILL to say so — a criterion whose breach
+    // reaches CI as a shard timeout is not held.
     const { view } = await title();
     try {
-      const dead = view.root.findAll(
-        (node) => node.type === 'button' && node.props.disabled === true
-      );
-      assert.deepEqual(dead, []);
+      const names = view.buttonNames();
+      const dead = view.root
+        .findAll((node) => node.type === 'button')
+        .map((node, index) => (node.props.disabled === true ? (names[index] ?? '?') : null))
+        .filter((name) => name !== null);
+      assert.deepEqual(dead, [], 'no entry on this screen is disabled');
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('changes which entry is offered first, never how many stops the list has', async () => {
+    // The half of #723 that a reorder can break silently, on the list with no
+    // seat to resume; the held-seat list is checked in its own describe below.
+    //
+    // Autofocus is keyed on an entry's id rather than its index, so moving
+    // Tutorial up leaves it where it was: on Solo game, which is now the third
+    // entry rather than the second. §14 documents autofocus only for a held
+    // seat, so where it lands without one is the code's call, and this holds it
+    // still rather than changing it.
+    const { view } = await title();
+    try {
+      oneStopPerEntry(view, 6, 'Solo game');
     } finally {
       await view.unmount();
     }
@@ -143,10 +266,10 @@ describe('the title screen: the shape of the finished game', () => {
     const { view, entries } = await title();
     try {
       for (const [label, door] of [
+        ['Tutorial', 'tutorial'],
         ['Campaign', 'campaign'],
         ['Solo game', 'solo'],
         ['Multiplayer', 'multiplayer'],
-        ['Tutorial', 'tutorial'],
         ['Settings', 'settings'],
         ['Credits', 'credits'],
       ] as const) {
@@ -177,8 +300,25 @@ describe('the title screen: a held seat', () => {
     holdASeat();
     const { view, entries } = await title();
     try {
-      assert.equal(labels(view)[0], 'Resume match', 'first, where the reload lands');
+      // Above Tutorial as well, since #723 put that first. The reason is §14's
+      // "Resume" subsection rather than a principle: a held seat is a match
+      // still in the water, and the screen "surfaces it as its first entry,
+      // autofocused — one keypress back into the match".
+      offers(view, [
+        'Resume match',
+        'Tutorial',
+        'Campaign',
+        'Solo game',
+        'Multiplayer',
+        'Settings',
+        'Credits',
+      ]);
       assert.equal(view.byClass('menu-resume').props.autoFocus, true);
+      // And it is the *only* one armed, on the longer list. Both lists were
+      // re-ranked; this is the one where the re-rank meets Resume, and the one
+      // where an autofocus expression that lost its `!held` would arm two
+      // entries and nothing else would say so.
+      oneStopPerEntry(view, 7, 'Resume match');
       assert.deepEqual(entries.pressed, [], 'and rendering resumed nothing');
 
       await click(view, 'Resume match');
