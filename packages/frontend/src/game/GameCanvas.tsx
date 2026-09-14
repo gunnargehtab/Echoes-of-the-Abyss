@@ -726,7 +726,7 @@ export function GameCanvas({
         {/* Over the glass, under the panels: the strip's readouts are Pixi
             text, so their explanations are laid over them in the DOM — the
             only route that reaches a keyboard and a screen reader (§7, §11). */}
-        {live && phase !== MatchPhase.Lobby && <StripReadouts boxes={readouts} />}
+        {live && phase !== MatchPhase.Lobby && <StripReadouts boxes={readouts} host={hostRef} />}
         {live && phase !== MatchPhase.Lobby && <ContactLog entries={log} onFocus={focusOn} />}
         {live && phase !== MatchPhase.Lobby && mission !== null && (
           <MissionPanel

@@ -137,11 +137,17 @@ describe('the strip explains itself: what each line claims', () => {
   it('says TRACKED counts the player’s own entities, not the hostiles holding them', () => {
     const line = trackedDetail(2);
     // Two misreadings to stop, not one. The count is *yours*, not theirs — and
-    // it is entities rather than hulls: `ExposureReport.trackedCount` is
-    // documented over entities and the exposure walk excludes only ordnance,
-    // so a tracked Bastion is in it.
+    // it is entities rather than any list of kinds.
     assert.match(line, /2 of your own/, 'the readout a player is most likely to read backwards');
-    assert.match(line, /structures/, 'and the set is not hulls alone');
+    // And no enumeration: every list this line tried was narrower than the set.
+    // Hulls miss a tracked Bastion; hulls and structures miss a mission's own
+    // emitters, which are seated on the player's slot and carry exactly what
+    // the exposure walk counts.
+    assert.doesNotMatch(
+      line.split(' · ')[0]!,
+      /\bhulls\b|\bstructures\b/,
+      'the set is not enumerable here'
+    );
     assert.match(line, /never by whom or from where/, '§11: the report is a tier and a count');
   });
 
@@ -197,9 +203,33 @@ function box(over: Partial<ReadoutBox> = {}): ReadoutBox {
   };
 }
 
+/**
+ * The element the shell hands over, and the canvas inside it.
+ *
+ * `StripReadouts` forwards a wheel to that canvas rather than reaching for a
+ * sibling's by selector, so a test can watch what it dispatched.
+ */
+function stubHost(): {
+  host: { current: HTMLElement | null };
+  dispatched: Array<{ type: string; deltaY: number }>;
+} {
+  const dispatched: Array<{ type: string; deltaY: number }> = [];
+  const canvas = {
+    dispatchEvent: (event: WheelEvent) => {
+      dispatched.push({ type: event.type, deltaY: event.deltaY });
+      return true;
+    },
+  };
+  const host = { current: { querySelector: () => canvas } as unknown as HTMLElement };
+  return { host, dispatched };
+}
+
+const mount = (boxes: ReadoutBox[], host = stubHost().host) =>
+  render(createElement(StripReadouts, { boxes, host }));
+
 describe('the strip explains itself: the surface', () => {
   it('speaks the strip’s own text as the control’s name', async () => {
-    const view = await render(createElement(StripReadouts, { boxes: [box()] }));
+    const view = await mount([box()]);
     // Not a label of our own invention: the accessible name is the string the
     // renderer drew, so what is heard and what is seen cannot drift apart.
     assert.deepEqual(view.buttonNames(), ['BERTHS 3/6']);
@@ -207,7 +237,7 @@ describe('the strip explains itself: the surface', () => {
   });
 
   it('keeps the line in the accessible tree while it is off screen', async () => {
-    const view = await render(createElement(StripReadouts, { boxes: [box()] }));
+    const view = await mount([box()]);
     const button = view.button('BERTHS 3/6');
     const described = (button.props as { 'aria-describedby'?: string })['aria-describedby'];
     assert.equal(typeof described, 'string', 'the control points at its explanation');
@@ -222,7 +252,7 @@ describe('the strip explains itself: the surface', () => {
   });
 
   it('opens on a tap and closes on the next one, which is the route touch has', async () => {
-    const view = await render(createElement(StripReadouts, { boxes: [box()] }));
+    const view = await mount([box()]);
     const expanded = () =>
       (view.button('BERTHS 3/6').props as { 'aria-expanded'?: boolean })['aria-expanded'];
     assert.equal(expanded(), false, 'shut to begin with');
@@ -234,7 +264,7 @@ describe('the strip explains itself: the surface', () => {
   });
 
   it('closes the line on Escape, and only swallows the press when it closed one', async () => {
-    const view = await render(createElement(StripReadouts, { boxes: [box()] }));
+    const view = await mount([box()]);
     await click(view, 'BERTHS 3/6');
     const expanded = () =>
       (view.button('BERTHS 3/6').props as { 'aria-expanded'?: boolean })['aria-expanded'];
@@ -285,13 +315,50 @@ describe('the strip explains itself: the surface', () => {
     await view.unmount();
   });
 
+  it('hands the canvas back the two gestures it would otherwise lose', async () => {
+    const { host, dispatched } = stubHost();
+    const view = await mount([box()], host);
+    const layer = view.byClass('readouts').props as {
+      onContextMenu: (e: unknown) => void;
+      onWheel: (e: unknown) => void;
+    };
+
+    // The context menu is the outright bug: EchoRenderer binds `contextmenu`
+    // on the canvas for the sole purpose of preventing it — App.css says why,
+    // "right-click is a move order, not a browser menu" — and these controls
+    // are not the canvas's descendants, so without this a right-click on a
+    // readout opens the browser's menu over a live match.
+    let prevented = false;
+    await view.act(() => {
+      layer.onContextMenu({
+        preventDefault: () => {
+          prevented = true;
+        },
+      });
+    });
+    assert.ok(prevented, 'the browser context menu is refused');
+
+    // And the wheel is forwarded rather than swallowed, at the host the shell
+    // handed over rather than at a sibling found by selector.
+    await view.act(() => {
+      layer.onWheel({ deltaY: -240, clientX: 40, clientY: 20 });
+    });
+    assert.deepEqual(
+      dispatched,
+      [{ type: 'wheel', deltaY: -240 }],
+      'the zoom reaches the canvas, carrying the delta that was scrolled'
+    );
+
+    await view.unmount();
+  });
+
   it('walks the strip left to right, so Tab does', async () => {
     const boxes = [
       box({ key: 'sig', value: 'SIG 042 / 100', detail: sigDetail(42, 5, 1) }),
       box({ key: 'nodules', value: 'NODULES 340', detail: nodulesDetail(340) }),
       box(),
     ];
-    const view = await render(createElement(StripReadouts, { boxes }));
+    const view = await mount(boxes);
     // The controls are in the order the renderer reported them, which is the
     // order §2 lays the strip out in. Tab order is DOM order, so this is the
     // whole of the keyboard traversal: no roving index, nothing to keep in sync.
@@ -300,14 +367,14 @@ describe('the strip explains itself: the surface', () => {
   });
 
   it('drops a readout the strip dropped, rather than explaining a number that is gone', async () => {
-    const view = await render(
-      createElement(StripReadouts, {
-        boxes: [box(), box({ key: 'clock', value: 'T+04:12', detail: clockDetail() })],
-      })
+    const { host } = stubHost();
+    const view = await mount(
+      [box(), box({ key: 'clock', value: 'T+04:12', detail: clockDetail() })],
+      host
     );
     assert.equal(view.buttonNames().length, 2);
     // The clock is the second thing §2 drops when the strip runs out of room.
-    await view.update(createElement(StripReadouts, { boxes: [box()] }));
+    await view.update(createElement(StripReadouts, { boxes: [box()], host }));
     assert.deepEqual(view.buttonNames(), ['BERTHS 3/6']);
     await view.unmount();
   });

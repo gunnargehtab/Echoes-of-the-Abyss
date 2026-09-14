@@ -207,14 +207,17 @@ export function bandDetail(label: string, worldGain: number): string {
  * Bearing or better, not three hostiles. The report says how well you are seen
  * and nothing else, so the line may not imply a listener it does not name.
  *
- * "Things" rather than "hulls" because `ExposureReport.trackedCount` is
- * documented as entities and the exposure walk excludes only ordnance: a
- * tracked Bastion or Foundry is in the count, and a line that said hulls would
- * be the same misreading one step further on.
+ * "Things" rather than any enumeration, because `ExposureReport.trackedCount`
+ * is documented as entities and the exposure walk excludes only ordnance. It is
+ * not just hulls — a tracked Bastion is in it — and it is not just hulls and
+ * structures either: a mission's own emitters are seated on the player's slot
+ * and carry Position, Acoustic, Owner and Health, which is exactly what the
+ * walk counts, so a rung bell resolved at Bearing raises this number. Every
+ * list this line has tried has been narrower than the set.
  */
 export function trackedDetail(count: number): string {
   return (
-    `${count} of your own hulls and structures are resolved by somebody at bearing or better` +
+    `${count} of your own are resolved by somebody at bearing or better` +
     ' · how well you are seen, never by whom or from where — that is all the report carries' +
     ' · quieter hulls, or distance, is what lowers it'
   );

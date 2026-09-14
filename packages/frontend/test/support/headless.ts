@@ -449,6 +449,34 @@ export function installHeadlessDom(): void {
   if (installed) return;
   installed = true;
 
+  // `WheelEvent`, because the client *constructs* one (#724): the readout
+  // controls sit over the canvas and are not its descendants, so a wheel on one
+  // is forwarded to it as a synthetic event rather than lost. Node has no DOM
+  // constructors at all, so without this the forwarding throws — which is the
+  // right failure, and exactly the kind of thing this file exists to supply
+  // rather than to let a test route around. Carries only what the renderer's
+  // handler reads: `deltaY` and the client coordinates.
+  if ((globalThis as { WheelEvent?: unknown }).WheelEvent === undefined) {
+    (globalThis as { WheelEvent?: unknown }).WheelEvent = class {
+      readonly type: string;
+      readonly deltaY: number;
+      readonly clientX: number;
+      readonly clientY: number;
+      readonly cancelable: boolean;
+      constructor(
+        type: string,
+        init: { deltaY?: number; clientX?: number; clientY?: number; cancelable?: boolean } = {}
+      ) {
+        this.type = type;
+        this.deltaY = init.deltaY ?? 0;
+        this.clientX = init.clientX ?? 0;
+        this.clientY = init.clientY ?? 0;
+        this.cancelable = init.cancelable ?? false;
+      }
+      preventDefault(): void {}
+    };
+  }
+
   const documentStub = {
     createElement: (tag: string): StubElement =>
       tag === 'canvas' ? new StubCanvas() : new StubElement(tag),

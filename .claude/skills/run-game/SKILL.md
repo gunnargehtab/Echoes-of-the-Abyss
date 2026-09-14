@@ -257,6 +257,37 @@ and `inert` delivers that — with nothing else focusable left in the document t
 browser hands focus to the document itself before wrapping back to the first
 entry.
 
+### The strip's explanations
+
+```bash
+node .claude/skills/run-game/scripts/drive.mjs --out /tmp/readouts \
+  --steps .claude/skills/run-game/scripts/readoutGuards.mjs
+```
+
+A `--steps` module holding the half of [ui-ux.md](../../../docs/ui-ux.md) §2's readout
+explanations (#724) that a runner cannot reach. Most of that contract is held in
+`packages/frontend/test` — the lines themselves, the publish gate, the rule that a control
+never covers a number which is not its own — and belongs there, because it needs no engine.
+
+Three things do need one. The controls are refused when a readout runs off the **canvas**,
+and the bound is the canvas rather than the strip's own 52 px because the SIG instrument
+sits a couple of pixels below the strip's bevel: headless that box measures 51 px and fits,
+in Chromium about 53 and it does not, the fonts not being the same ones. So a strip-height
+bound drops §3's one permanent element *in the browser and nowhere else* — reintroduce it
+and the whole suite stays green while this drive fails on its second line. `:focus-visible`
+is likewise an engine's judgement about how the focus arrived rather than a flag a test can
+set, and Tab order is sequential focus navigation, which jsdom does not implement — the
+same bargain the esc menu's walk records above.
+
+It walks §11's range — 75%, 100% and 200% — resetting the scale through `localStorage` and
+resuming the same match from the title, so the strip carries the same figures at each. Run
+it when the strip's layout or the explanation surface changes. Like `escFocus.mjs` it is
+deliberately not part of `npm test`, and it fails loudly.
+
+One thing it cannot see: a control laid over a number the strip drew but *refused* a
+control. It reads the DOM, and the glyphs underneath are Pixi — that property is held
+headlessly against the `Text` objects themselves.
+
 ## 3. Stop the servers
 
 ```bash

@@ -23,7 +23,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
-import type { Container } from 'pixi.js';
+import { Text, type Container } from 'pixi.js';
 import { Faction, MovementHoldReason } from '@echoes/shared';
 import {
   createHost,
@@ -106,6 +106,47 @@ function symbolCounts(app: HeadlessApplication): {
   const at = (index: number): number => (overlay.children[index] as Container).children.length;
   return { structures: at(3), contacts: at(5), units: at(6), ordnance: at(7) };
 }
+
+/**
+ * Every visible `Text` the strip drew, in the CSS pixels the readout boxes are
+ * reported in.
+ *
+ * The renderer lays the HUD out in unscaled units and `this.hud` carries §11's
+ * scale, so a glyph's on-screen box is its global position and its local extent
+ * times that scale. Invisible subtrees are skipped rather than measured: a
+ * readout the strip dropped for want of room is not on screen, and a control
+ * may sit wherever it was.
+ */
+function stripGlyphs(
+  app: HeadlessApplication,
+  scale: number
+): Array<{ text: string; x: number; y: number; width: number; height: number }> {
+  const found: Array<{ text: string; x: number; y: number; width: number; height: number }> = [];
+  const walk = (node: Container): void => {
+    for (const child of node.children) {
+      if (!child.visible) continue;
+      if (child instanceof Text) {
+        const at = child.getGlobalPosition();
+        if (at.y < TOP_BAR_HEIGHT_PX * scale && child.text.length > 0) {
+          found.push({
+            text: child.text,
+            x: at.x,
+            y: at.y,
+            width: child.width * scale,
+            height: child.height * scale,
+          });
+        }
+      } else {
+        walk(child as Container);
+      }
+    }
+  };
+  walk(app.stage as unknown as Container);
+  return found;
+}
+
+/** `TOP_BAR_HEIGHT` in EchoRenderer, restated so a change to it fails here. */
+const TOP_BAR_HEIGHT_PX = 52;
 
 interface Booted {
   chart: EchoRenderer;
@@ -1197,33 +1238,72 @@ describe('renderer smoke test: the strip explains itself', () => {
     booted.teardown();
   });
 
-  it('never explains a number the strip has printed on top of another', async () => {
+  it('never lays a control over a number that is not its own', async () => {
     const booted = await boot();
     booted.chart.setStatus('connected');
-    // §11's ceiling. At 200% on a 1280-wide viewport the strip's first row
-    // overruns `map · T+ · n`: the rule that drops those measures the *second*
-    // row's right edge, and the row that collides is the stockpile row. That
-    // is the strip's own defect and this change does not fix it — what is held
-    // here is that the explanation surface refuses to point at the wreckage,
-    // because a control over two overlapping numbers answers for the wrong one.
-    booted.chart.setUiScale(2);
+    // §11's ceiling, which is where the strip collides with itself. At 200% on
+    // a 1280-wide viewport the first row overruns `map · T+ · n`: the rule that
+    // drops those measures the *second* row's right edge, and the row that
+    // collides is the stockpile row. That is the strip's own defect and this
+    // change does not fix it — what is held here is that the explanation
+    // surface refuses to point at the wreckage.
+    const scale = 2;
+    booted.chart.setUiScale(scale);
     booted.frame(3);
 
     const boxes = booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
       .args[0] as ReadoutBox[];
     assert.ok(boxes.length > 0, 'the strip is still explained at the scale ceiling');
-    for (let i = 0; i < boxes.length; i++) {
-      for (let j = i + 1; j < boxes.length; j++) {
-        const a = boxes[i]!;
-        const b = boxes[j]!;
-        const overlaps =
-          a.x < b.x + b.width &&
-          b.x < a.x + a.width &&
-          a.y < b.y + b.height &&
-          b.y < a.y + a.height;
-        assert.ok(!overlaps, `${a.key} and ${b.key} would answer for each other`);
+
+    // Against the glyphs the renderer actually drew, and deliberately not
+    // against the other published boxes. A readout refused a control — for
+    // running off the canvas, say — is still *drawn*, so a later control can
+    // sit on top of it, and a boxes-against-boxes test is green in exactly that
+    // case. It was: `BERTHS 6/24` was refused for overrunning the edge by two
+    // pixels and the contact count's control was laid straight over it.
+    const glyphs = stripGlyphs(booted.app, scale);
+    assert.ok(glyphs.length > boxes.length, 'the strip drew more than it explained');
+
+    for (const box of boxes) {
+      for (const glyph of glyphs) {
+        // A readout's own number, and the SIG instrument's second line, which
+        // §3 makes part of the same instrument rather than a readout of its own.
+        if (glyph.text === box.value) continue;
+        if (box.key === 'sig' && / unit/.test(glyph.text)) continue;
+        const hits =
+          box.x < glyph.x + glyph.width &&
+          glyph.x < box.x + box.width &&
+          box.y < glyph.y + glyph.height &&
+          glyph.y < box.y + box.height;
+        assert.ok(!hits, `the ${box.key} control covers "${glyph.text}", which is not its number`);
       }
     }
+
+    booted.teardown();
+  });
+
+  it('quotes the same loud count as the label the line sits under', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    booted.frame();
+    const boxes = booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
+      .args[0] as ReadoutBox[];
+
+    // `drawSigMeter` counts the hulls over SIG_BANDS.LOUD for §3's second line,
+    // and the explanation quotes that count rather than filtering the set a
+    // second time. The two sit one above the other on screen, so a second
+    // filter is the "written twice" rule broken where it would be hardest to
+    // notice — and nothing catches it unless the two are compared.
+    const second = textSaying(booted.app.stage as unknown as Container, ' loud');
+    assert.ok(second !== null, '§3’s second line is on the strip');
+    const [, drawnLoud] = /(\d+) loud/.exec(second)!;
+    const [, drawnUnits] = /(\d+) unit/.exec(second)!;
+    const detail = boxes.find((box) => box.key === 'sig')!.detail;
+    assert.match(
+      detail,
+      new RegExp(`\\b${drawnLoud} of ${drawnUnits} over `),
+      `the line says "${detail}" while the label above it says "${second}"`
+    );
 
     booted.teardown();
   });

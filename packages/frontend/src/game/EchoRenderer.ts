@@ -1290,17 +1290,25 @@ export class EchoRenderer {
   private driftHealth: number[] = [];
   private nodules = 0;
   private crystal = 0;
-  /**
-   * The strip's readouts as last recorded, flat and reused (#724).
-   *
-   * Four numbers per readout — x, y, width and height — beside its key and its
-   * text in a parallel string array. Flat and reused rather than objects because this is
-   * filled on the draw path: a frame on which the strip has not changed must
-   * allocate nothing, or the explanation surface would be paid for at 60 Hz by
-   * every player who never hovers anything.
-   */
   /** Hulls over `SIG_BANDS.LOUD`, as `drawSigMeter` counted them this frame. */
   private loudCount = 0;
+  /**
+   * The strip's readouts, flat and reused (#724).
+   *
+   * Four numbers per readout — x, y, width and height — beside its key and its
+   * text in a parallel string array. Flat and reused rather than an array of
+   * objects because these are filled on the draw path: a frame on which the
+   * strip has not changed must allocate nothing, or the explanation surface
+   * would be paid for at 60 Hz by every player who never hovers anything.
+   *
+   * Two of them, because a control is refused by where the *drawn* numbers are
+   * and not by where the accepted controls are. `drawn*` is every readout the
+   * strip laid out this frame, in HUD units; `strip*` is the subset that earned
+   * a control, in CSS pixels. See `acceptStrip`.
+   */
+  private readonly drawnNums: number[] = [];
+  private readonly drawnStrs: string[] = [];
+  private drawnN = 0;
   private readonly stripNums: number[] = [];
   private readonly stripStrs: string[] = [];
   private stripN = 0;
@@ -6199,14 +6207,19 @@ export class EchoRenderer {
   }
 
   /**
-   * Record one readout into the flat scratch.
+   * Record one readout's *drawn* glyphs — where the number actually is.
+   *
+   * Pass one of two. Nothing is judged here: the box is the `Text`'s own, with
+   * no touch band, no pad and no bound, because pass two has to be able to ask
+   * "does this control cover a number that is not its own" about every readout
+   * the strip drew, including the ones it is about to refuse a control to.
    *
    * `value` is the string the strip already built for that `Text`, passed by
    * reference rather than re-composed: the accessible name a screen reader
    * speaks is then the same object the player is looking at, and the two
    * cannot drift.
    */
-  private pushStrip(
+  private recordDrawn(
     key: ReadoutKey,
     x: number,
     y: number,
@@ -6214,81 +6227,100 @@ export class EchoRenderer {
     height: number,
     value: string
   ): void {
-    /* eslint-disable no-param-reassign -- the box is grown to its touch band
-       and its pad before anything else looks at it; carrying five more locals
-       through the checks below would say less. */
-    // §11's 44 px touch floor, as far as a 52 px strip can carry it.
-    //
-    // §2 sets the console's height by that floor — "a console row is a touch
-    // target" — and criterion 3 asks for a route a touch player actually has.
-    // The drawn glyphs are 11-13 px tall, which is not one. The strip holds two
-    // rows in TOP_BAR_HEIGHT, so 44 apiece is arithmetically impossible without
-    // the rows overlapping each other; what is reachable is the whole of a
-    // readout's own row band, which is TOP_BAR_HEIGHT / 2, and the gaps either
-    // side of it. That is a little over half the floor rather than a fifth of
-    // it. Raising the strip itself to carry two 44 px rows is a layout call
-    // about a permanent instrument and is not this change's to make.
-    //
-    // A readout already taller than its band — the SIG instrument, which is a
-    // meter and two lines — keeps the box it earned.
-    const band = TOP_BAR_HEIGHT / 2;
-    if (height < band) {
-      const middle = y + height / 2;
-      y = middle < band ? 0 : band;
-      height = band;
-    }
-    x = Math.max(0, x - TOUCH_PAD_PX);
-    width += TOUCH_PAD_PX * 2;
+    const i = this.drawnN++;
+    this.drawnNums[i * 4] = x;
+    this.drawnNums[i * 4 + 1] = y;
+    this.drawnNums[i * 4 + 2] = width;
+    this.drawnNums[i * 4 + 3] = height;
+    this.drawnStrs[i * 2] = key;
+    this.drawnStrs[i * 2 + 1] = value;
+  }
 
-    // A readout the strip has put where it cannot be read gets no control.
-    //
-    // Two ways that happens, and both are the strip's doing rather than this
-    // surface's. At 200% UI scale on a 1280 px window the strip lays `DRAW`
-    // out past the right-hand edge of the canvas, so a control there would be
-    // a tab stop with nothing behind it and a line that can never be shown —
-    // `.app` clips it. And the first row overruns `map · T+ · n`, because the
-    // rule that drops those measures the *second* row's right edge
-    // (`leftEdge`, above) while the row that collides is the stockpile row, so
-    // two numbers print on top of each other and a control over both would
-    // answer for the wrong one.
-    //
-    // Fixing either means deciding what a strip that cannot fit its own first
-    // row gives up, which is a layout call about a permanent instrument. What
-    // this can do is refuse to lie about it: an unreadable readout is dropped,
-    // later ones first, which is the order §2 already gives for dropping (the
-    // map name, then the clock).
-    //
-    // The bound is the canvas and deliberately not TOP_BAR_HEIGHT: the SIG
-    // instrument is a meter and two lines and its second line sits a couple of
-    // pixels below the strip's own bevel, so a strip-height bound dropped the
-    // one readout §3 calls permanent, at every scale.
-    if (x < 0 || y < 0 || x + width > this.hudWidth() || y + height > this.hudHeight()) return;
-    //
-    // The strip can reach that state today: at 200% UI scale on a 1440 px
-    // window its first row overruns `map · T+ · n`, because the rule that
-    // drops those measures the *second* row's right edge (`leftEdge`, above)
-    // and the row that actually collides is the stockpile row. That is the
-    // strip's bug and not this surface's, and fixing it means deciding what a
-    // strip that cannot fit its own first row gives up — a layout call about a
-    // permanent instrument. What this can do is refuse to lie about it: an
-    // overlapped readout is dropped, later ones first, which is the order §2
-    // already gives for dropping (the map name, then the clock).
-    for (let j = 0; j < this.stripN; j++) {
-      const ox = this.stripNums[j * 4]! / this.uiScale;
-      const oy = this.stripNums[j * 4 + 1]! / this.uiScale;
-      const ow = this.stripNums[j * 4 + 2]! / this.uiScale;
-      const oh = this.stripNums[j * 4 + 3]! / this.uiScale;
-      if (x < ox + ow && ox < x + width && y < oy + oh && oy < y + height) return;
-    }
-    const i = this.stripN++;
+  /**
+   * Pass two: turn the drawn readouts into controls, and refuse the ones that
+   * would answer for the wrong number.
+   *
+   * Each control is grown to §11's touch floor as far as a 52 px strip can
+   * carry it. §2 sets the console's height by that floor — "a console row is a
+   * touch target" — and the drawn glyphs are 11-13 px tall, which is not one.
+   * The strip holds two rows in TOP_BAR_HEIGHT, so 44 apiece is arithmetically
+   * impossible without the rows overlapping each other; what is reachable is
+   * the whole of a readout's own row band, plus the gaps either side. That is a
+   * little over half the floor rather than a fifth of it. Raising the strip
+   * itself is a layout call about a permanent instrument and is not this
+   * change's to make. A readout already taller than its band — the SIG
+   * instrument, which is a meter and two lines — keeps the box it earned.
+   *
+   * Then two refusals, and both are about the strip having put a number where
+   * it cannot be pointed at:
+   *
+   * - **Off the canvas.** At 200% UI scale on a 1280 px window the strip lays
+   *   `DRAW` out past the right-hand edge, so a control there would be a tab
+   *   stop with nothing behind it and a line that can never be shown, `.app`
+   *   clipping it. The bound is the canvas and deliberately not
+   *   TOP_BAR_HEIGHT: the SIG instrument's second line sits a couple of pixels
+   *   below the strip's own bevel, so a strip-height bound dropped the one
+   *   readout §3 calls permanent, at every scale — in Chromium, and not in the
+   *   headless suite, whose fonts are not the same ones.
+   * - **Over somebody else's number.** The strip's first row overruns
+   *   `map · T+ · n` at that scale, because the rule that drops those measures
+   *   the *second* row's right edge (`leftEdge`, in `drawHud`) while the row
+   *   that collides is the stockpile row. A control laid over two numbers
+   *   answers for the wrong one.
+   *
+   * The test is against every drawn readout rather than against the controls
+   * already accepted, and that distinction is the whole reason this is two
+   * passes: a readout refused for being off the canvas is still *drawn*, so a
+   * later control can sit on top of it. At 200% that is exactly what happened —
+   * `BERTHS 6/24` was refused for overrunning the edge by two pixels, and the
+   * contact count's control was then laid straight over it.
+   *
+   * Fixing the strip's layout means deciding what a strip that cannot fit its
+   * own first row gives up, which is not this change's call. Refusing to lie
+   * about it is.
+   */
+  private acceptStrip(): void {
+    this.stripN = 0;
+    const band = TOP_BAR_HEIGHT / 2;
     const s = this.uiScale;
-    this.stripNums[i * 4] = x * s;
-    this.stripNums[i * 4 + 1] = y * s;
-    this.stripNums[i * 4 + 2] = width * s;
-    this.stripNums[i * 4 + 3] = height * s;
-    this.stripStrs[i * 2] = key;
-    this.stripStrs[i * 2 + 1] = value;
-    /* eslint-enable no-param-reassign */
+    const canvasW = this.hudWidth();
+    const canvasH = this.hudHeight();
+
+    for (let i = 0; i < this.drawnN; i++) {
+      let x = this.drawnNums[i * 4]!;
+      let y = this.drawnNums[i * 4 + 1]!;
+      let width = this.drawnNums[i * 4 + 2]!;
+      let height = this.drawnNums[i * 4 + 3]!;
+
+      if (height < band) {
+        const middle = y + height / 2;
+        y = middle < band ? 0 : band;
+        height = band;
+      }
+      x = Math.max(0, x - TOUCH_PAD_PX);
+      width += TOUCH_PAD_PX * 2;
+
+      if (x < 0 || y < 0 || x + width > canvasW || y + height > canvasH) continue;
+
+      let covers = false;
+      for (let j = 0; j < this.drawnN && !covers; j++) {
+        if (j === i) continue;
+        const ox = this.drawnNums[j * 4]!;
+        const oy = this.drawnNums[j * 4 + 1]!;
+        const ow = this.drawnNums[j * 4 + 2]!;
+        const oh = this.drawnNums[j * 4 + 3]!;
+        covers = x < ox + ow && ox < x + width && y < oy + oh && oy < y + height;
+      }
+      if (covers) continue;
+
+      const at = this.stripN++;
+      this.stripNums[at * 4] = x * s;
+      this.stripNums[at * 4 + 1] = y * s;
+      this.stripNums[at * 4 + 2] = width * s;
+      this.stripNums[at * 4 + 3] = height * s;
+      this.stripStrs[at * 2] = this.drawnStrs[i * 2]!;
+      this.stripStrs[at * 2 + 1] = this.drawnStrs[i * 2 + 1]!;
+    }
   }
 
   /**
@@ -6311,13 +6343,13 @@ export class EchoRenderer {
    * allocation at all, which is what keeps a hover surface off the 60 Hz path.
    */
   private recordStrip(): void {
-    this.stripN = 0;
+    this.drawnN = 0;
 
     // §3 makes the bar, `SIG 042 / 100` and `n units · m loud` one instrument,
     // so they are one readout: the second line explains the first.
     const meterW = Math.max(SIG_METER.W, this.sigLabel.width, this.loudLabel.width);
     const meterTop = 8;
-    this.pushStrip(
+    this.recordDrawn(
       'sig',
       12,
       meterTop,
@@ -6325,7 +6357,7 @@ export class EchoRenderer {
       this.loudLabel.y + this.loudLabel.height - meterTop,
       this.sigLabel.text
     );
-    this.pushStrip(
+    this.recordDrawn(
       'band',
       this.bandLabel.x,
       this.bandLabel.y,
@@ -6334,7 +6366,7 @@ export class EchoRenderer {
       this.bandLabel.text
     );
     if (this.exposureLabel.visible) {
-      this.pushStrip(
+      this.recordDrawn(
         'tracked',
         this.exposureLabel.x,
         this.exposureLabel.y,
@@ -6343,7 +6375,7 @@ export class EchoRenderer {
         this.exposureLabel.text
       );
     }
-    this.pushStrip(
+    this.recordDrawn(
       'nodules',
       this.resourceLabel.x,
       this.resourceLabel.y,
@@ -6352,7 +6384,7 @@ export class EchoRenderer {
       this.resourceLabel.text
     );
     if (this.crystalLabel.visible) {
-      this.pushStrip(
+      this.recordDrawn(
         'crystal',
         this.crystalLabel.x,
         this.crystalLabel.y,
@@ -6362,7 +6394,7 @@ export class EchoRenderer {
       );
     }
     if (this.biomassLabel.visible) {
-      this.pushStrip(
+      this.recordDrawn(
         'biomass',
         this.biomassLabel.x,
         this.biomassLabel.y,
@@ -6371,7 +6403,7 @@ export class EchoRenderer {
         this.biomassLabel.text
       );
     }
-    this.pushStrip(
+    this.recordDrawn(
       'berths',
       this.berthsLabel.x,
       this.berthsLabel.y,
@@ -6379,7 +6411,7 @@ export class EchoRenderer {
       this.berthsLabel.height,
       this.berthsLabel.text
     );
-    this.pushStrip(
+    this.recordDrawn(
       'draw',
       this.drawLabel.x,
       this.drawLabel.y,
@@ -6388,7 +6420,7 @@ export class EchoRenderer {
       this.drawLabel.text
     );
     if (this.mapLabel.visible) {
-      this.pushStrip(
+      this.recordDrawn(
         'map',
         this.mapLabel.x,
         this.mapLabel.y,
@@ -6398,7 +6430,7 @@ export class EchoRenderer {
       );
     }
     if (this.clockLabel.visible) {
-      this.pushStrip(
+      this.recordDrawn(
         'clock',
         this.clockLabel.x,
         this.clockLabel.y,
@@ -6411,7 +6443,7 @@ export class EchoRenderer {
     // room is live it carries the connection state instead, and a line about
     // what your ears hold would be a lie over the word `connecting`.
     if (this.status === 'connected') {
-      this.pushStrip(
+      this.recordDrawn(
         'contacts',
         this.statusLabel.x,
         this.statusLabel.y,
@@ -6421,6 +6453,7 @@ export class EchoRenderer {
       );
     }
 
+    this.acceptStrip();
     if (!this.stripMoved()) return;
     this.lastStripN = this.stripN;
     for (let i = 0; i < this.stripN * 4; i++) this.lastStripNums[i] = this.stripNums[i]!;

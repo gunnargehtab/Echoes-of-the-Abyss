@@ -39,7 +39,7 @@
  * below, because those two are a broken frame rather than a lost affordance.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type RefObject } from 'react';
 import type { ReadoutBox, ReadoutKey } from './readouts.ts';
 
 /**
@@ -53,7 +53,21 @@ import type { ReadoutBox, ReadoutKey } from './readouts.ts';
  */
 const RIGHT_ANCHORED: ReadonlySet<ReadoutKey> = new Set<ReadoutKey>(['map', 'clock', 'contacts']);
 
-export function StripReadouts({ boxes }: { boxes: ReadoutBox[] }): React.JSX.Element | null {
+export function StripReadouts({
+  boxes,
+  host,
+}: {
+  boxes: ReadoutBox[];
+  /**
+   * The element holding the Pixi canvas, from the composition root.
+   *
+   * A prop rather than a `querySelector` for a sibling's canvas, which is the
+   * seam this shell already uses everywhere it has to reach an imperative
+   * thing — `harness`, `listRooms`, the renderer factory. `GameCanvas` is
+   * where that element is created, so it is what hands it over.
+   */
+  host: RefObject<HTMLElement | null>;
+}): React.JSX.Element | null {
   const [pinned, setPinned] = useState<ReadoutKey | null>(null);
 
   // A pinned line outlives the readout it belongs to — crystal appears and
@@ -109,9 +123,7 @@ export function StripReadouts({ boxes }: { boxes: ReadoutBox[] }): React.JSX.Ele
       // as the game stuttering. The canvas handler takes `clientX/Y` and
       // `deltaY` and captures nothing, so a synthetic event is enough.
       onWheel={(event) => {
-        const canvas = (event.currentTarget as HTMLElement).parentElement?.querySelector(
-          '.game-host canvas'
-        );
+        const canvas = host.current?.querySelector('canvas');
         canvas?.dispatchEvent(
           new WheelEvent('wheel', {
             deltaY: event.deltaY,
