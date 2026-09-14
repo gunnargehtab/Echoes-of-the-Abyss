@@ -349,6 +349,64 @@ describe('the shell: what it wires to what', () => {
     }
   });
 
+  it('puts the strip’s explanations in the DOM, over the canvas that drew them', async () => {
+    const world = await mount();
+    try {
+      await joinMatch(world);
+      // The strip is in-match chrome, so the room has to be out of the lobby
+      // before it exists at all — the ready room is what §2's console replaces.
+      world.room.changeState({ phase: MatchPhase.Playing });
+      world.room.emit(SERVER_MSG.echo, encodeEcho(null, cannedSnapshot(100), 0));
+      await world.settle();
+
+      // §2's strip is Pixi text and its explanations are DOM controls laid over
+      // it, so the two halves are wired here and nowhere else: the renderer
+      // reports the boxes and this shell renders them. Neither half's own test
+      // can see the join — `readouts.test.ts` supplies its own boxes and its
+      // own host, and `rendererSmoke.test.ts` never mounts the shell — which is
+      // exactly what CLAUDE.md says this file is for.
+      const controls = world.tree.root.findAll(
+        (node) =>
+          typeof node.type === 'string' &&
+          String((node.props as { className?: string }).className ?? '') === 'readout'
+      );
+      assert.ok(controls.length > 0, 'the strip is explained at all');
+      const names = controls.map((control) =>
+        String((control.props as { 'aria-label'?: string })['aria-label'] ?? '')
+      );
+      assert.ok(
+        names.some((name) => name.startsWith('NODULES')),
+        `a control carries the strip's own text (got ${names.join(' | ')})`
+      );
+
+      // And the canvas it forwards a wheel to is the *Pixi* one. `GameCanvas`
+      // holds two hosts of the same type — the conn view's is a sibling — and a
+      // wheel sent to the three.js canvas would be silently lost, since the
+      // zoom listener is on the glass.
+      const chartCanvas = world.hosts.get('game-host')!.querySelector('canvas');
+      assert.ok(chartCanvas !== null, 'the Pixi canvas is inside the host that was handed over');
+      let delivered = 0;
+      chartCanvas.addEventListener('wheel', () => {
+        delivered++;
+      });
+      const layer = world.tree.root.find(
+        (node) =>
+          typeof node.type === 'string' &&
+          String((node.props as { className?: string }).className ?? '') === 'readouts'
+      );
+      await act(async () => {
+        (layer.props as { onWheel: (e: unknown) => void }).onWheel({
+          deltaY: -120,
+          clientX: 40,
+          clientY: 20,
+        });
+      });
+      assert.equal(delivered, 1, 'a wheel over a readout still reaches the view that zooms');
+    } finally {
+      await world.unmount();
+    }
+  });
+
   it('drives the mix from the Echo tick, never from a frame', async () => {
     const world = await mount();
     try {

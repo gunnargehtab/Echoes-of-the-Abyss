@@ -79,7 +79,12 @@ export default async ({ page, shot }) => {
   await page.waitForTimeout(5000);
 
   for (const scale of SCALES) {
-    if (scale !== 1) await atScale(page, scale);
+    // Unconditionally, including 1. Skipping the reset "because 100% is the
+    // default" left the 100% pass measuring whatever the 75% pass had put in
+    // localStorage, so the range was walked as 75, 75, 200 with the middle one
+    // labelled 100 — one measurement printed twice. It also makes the run
+    // independent of whatever a previous drive left behind.
+    await atScale(page, scale);
     await shot(`scale-${String(scale).replace('.', '-')}`);
 
     const found = await controls(page);

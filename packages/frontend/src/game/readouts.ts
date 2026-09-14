@@ -9,7 +9,7 @@
  *
  * The console already explains itself at the point of refusal, and the register
  * is §7's — a reason attached, never silently — as the production buttons show
- * it: `Dredge: no berth — 2 needed, 1 free · a Foundry grants 4`. That names the
+ * it: `Dredge: no berth — 2 needed, 1 free · a Foundry grants 8`. That names the
  * account it fell short in, the quantity, and the thing that would fix it. The
  * strip's readouts are never refused, so nothing in that mechanism ever speaks
  * for them; these lines are the same register applied to a number that is

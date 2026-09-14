@@ -1363,6 +1363,45 @@ describe('renderer smoke test: the strip explains itself', () => {
     booted.teardown();
   });
 
+  it('republishes when §3’s second line moves under a held peak', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    booted.frame();
+
+    const sigDetail = (): string =>
+      (
+        booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
+          .args[0] as ReadoutBox[]
+      ).find((box) => box.key === 'sig')!.detail;
+    const secondLine = (): string =>
+      textSaying(booted.app.stage as unknown as Container, ' loud') ?? '';
+    const before = secondLine();
+
+    // One more hull, quieter than the loudest: `n units · m loud` moves and the
+    // rounded peak does not. The instrument is drawn as two lines and its box
+    // is named by the first, so watching only that string calls this frame
+    // unchanged — and the explanation underneath goes on quoting the old count,
+    // indefinitely. Two ordinary ways in: a hull launched while the loudest
+    // holds, and a hull crossing 60 under a louder one.
+    const snapshot = cannedSnapshot();
+    booted.chart.applySnapshot({
+      ...snapshot,
+      units: [...snapshot.units, { ...snapshot.units[1]!, id: 99, sig: 3 }],
+    });
+    booted.frame(2);
+
+    assert.notEqual(secondLine(), before, 'the strip’s own second line moved');
+    const [, loud] = /(\d+) loud/.exec(secondLine())!;
+    const [, units] = /(\d+) unit/.exec(secondLine())!;
+    assert.match(
+      sigDetail(),
+      new RegExp(`\\b${loud} of ${units} over `),
+      `the line says "${sigDetail()}" while the label above it says "${secondLine()}"`
+    );
+
+    booted.teardown();
+  });
+
   it('reports once more when a number actually moves', async () => {
     const booted = await boot();
     booted.chart.setStatus('connected');
