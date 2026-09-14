@@ -38,18 +38,29 @@ import {
 } from '@echoes/shared';
 import { defineQuery, hasComponent } from 'bitecs';
 import { Match } from '../src/sim/match.ts';
-import { Owner, Position, ResourceNode, Weapon } from '../src/sim/components.ts';
+import {
+  Embarking,
+  MoveOrder,
+  Owner,
+  Position,
+  Posture,
+  ResourceNode,
+  Weapon,
+} from '../src/sim/components.ts';
 import { missionMapById } from '../src/sim/maps/index.ts';
 import {
   CHORD_SECOND_CHORD,
   LEDGER_SHIFT_CHANGE,
   PROLOGUE_SORROWGATE,
   type MissionDefinition,
+  type MissionUnit,
 } from '../src/sim/missions/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const SEED = 11;
 const PLAYER = PROLOGUE_SORROWGATE.playerSlot;
+/** A mission's own player slot — the chord cases run a different mission. */
+const PLAYER_OF = (mission: MissionDefinition): number => mission.playerSlot;
 
 /**
  * The two rules, as the wire spells them.
@@ -68,6 +79,8 @@ const RELEASE_TICK = 2 * SIM.TICK_HZ;
 const PLAYER_PARTY = PROLOGUE_SORROWGATE.parties.find((party) => party.slot === PLAYER)!;
 const ESCORT = PLAYER_PARTY.units.find((unit) => unit.tag === 'escort-1')!;
 const TENDER = PLAYER_PARTY.units.find((unit) => unit.tag === 'tender-1')!;
+/** Read rather than transcribed, so a berth that moves takes the fixture with it. */
+const TENDER_2 = PLAYER_PARTY.units.find((unit) => unit.tag === 'tender-2')!;
 
 /**
  * One escort, one tender, and the court's array — the escort hold with nothing
@@ -408,27 +421,68 @@ describe('a harvest order is a movement order, and the hold refuses it too', () 
  * while the wire went on reporting it as held.
  */
 describe('an ordered target is a movement order, and the hold refuses it too', () => {
-  it('leaves an armed held hull where it stands, with the contact resolved', () => {
-    const map = missionMapById(CHORD_SECOND_CHORD.mapId)!;
-    const match = new Match(map, { mission: CHORD_SECOND_CHORD, fauna: false, seed: 5 });
-    let own: EchoSnapshot | null = null;
-    let view: MissionView | null = null;
-    for (let tick = 0; tick < SIM.TICK_HZ * 5; tick++) {
-      const next = match.update(STEP_MS)?.get(CHORD_SECOND_CHORD.playerSlot);
-      if (next !== undefined) own = next;
-      const sent = match.takeMissionView();
-      if (sent !== null) view = sent;
-    }
-    assert.ok(own !== null && view !== null, 'the mission produced neither a snapshot nor a view');
-    assert.ok(own.contacts.length > 0, 'nothing is resolved to attack');
-
-    // The held hull that can actually shoot — the Cruiser beside it carries no
-    // weapon, so an attack order on it is refused a line earlier for a reason
-    // this test is not about.
-    const armed = view.held
+  /**
+   * *The Second Chord*, and the held hull in it that can shoot.
+   *
+   * `escort-b` is an armed Corvette held by `releaseTick` (secondChord.ts), in a
+   * mission whose only lock is `construction` — so this is the strongest fixture
+   * in this file for any verb that needs guns, and every case here but one runs
+   * the literal unmodified. The Cruiser beside it carries no weapon, which sends
+   * each verb down a different branch for a reason none of these tests is about:
+   * `orderAttackContact` returns just after the hold guard, and
+   * `orderAttackMove` does not refuse at all but falls through to a plain
+   * `applyMove` for a hull with no `Weapon`.
+   * Either way an unarmed hull would make a case here vacuous rather than
+   * refused, which is why the armed one is resolved by component rather than by
+   * tag.
+   */
+  const chord = (
+    mission: MissionDefinition = CHORD_SECOND_CHORD,
+    seconds = 5
+  ): {
+    match: Match;
+    own: EchoSnapshot;
+    armed: number;
+    settle(s: number): void;
+    held(): boolean;
+    at(): { x: number; y: number };
+  } => {
+    const map = missionMapById(mission.mapId)!;
+    const match = new Match(map, { mission, fauna: false, seed: 5 });
+    // Held on an object rather than in two `let`s: the loop moved into a
+    // closure when this harness grew a `settle`, and a captured `let` a
+    // function reassigns cannot be narrowed by the assertion below.
+    const seen: { own: EchoSnapshot | null; view: MissionView | null } = { own: null, view: null };
+    const run = (s: number): void => {
+      for (let tick = 0; tick < SIM.TICK_HZ * s; tick++) {
+        const next = match.update(STEP_MS)?.get(mission.playerSlot);
+        if (next !== undefined) seen.own = next;
+        const sent = match.takeMissionView();
+        if (sent !== null) seen.view = sent;
+      }
+    };
+    run(seconds);
+    assert.ok(
+      seen.own !== null && seen.view !== null,
+      'the mission produced neither a snapshot nor a view'
+    );
+    const armed = seen.view.held
       .map((hold) => hold.unitId)
       .find((eid) => hasComponent(match.world, Weapon, eid));
     assert.ok(armed !== undefined, 'no held hull in this mission is armed');
+    return {
+      match,
+      own: seen.own,
+      armed,
+      settle: run,
+      held: () => seen.view?.held.some((hold) => hold.unitId === armed) === true,
+      at: () => ({ x: Position.x[armed]!, y: Position.y[armed]! }),
+    };
+  };
+
+  it('leaves an armed held hull where it stands, with the contact resolved', () => {
+    const { match, own, armed } = chord();
+    assert.ok(own.contacts.length > 0, 'nothing is resolved to attack');
 
     // The furthest contact, so a chase would be unmistakable.
     let far = -1;
@@ -451,5 +505,273 @@ describe('an ordered target is a movement order, and the hold refuses it too', (
       moved < 5,
       `a held hull chased a contact ${far.toFixed(0)} m off (moved ${moved.toFixed(0)} m)`
     );
+  });
+
+  /**
+   * Attack-move, refused, against the configuration that ships.
+   *
+   * Binary components read with no step between the order and the read, so
+   * nothing races the clamp: `Posture.engage` is written by `orderAttackMove`
+   * itself and by nothing else on this path.
+   */
+  it('refuses an attack-move from that same hull, with nothing added and nothing unlocked', () => {
+    const { match, armed } = chord();
+    match.orderAttackMove(Owner.slot[armed]!, armed, Position.x[armed]! + 2000, Position.y[armed]!);
+    assert.equal(Posture.engage[armed], 0, 'a held hull was put into engage posture');
+    assert.equal(MoveOrder.active[armed], 0, 'a held hull was given somewhere to be');
+  });
+
+  /**
+   * The same verb with its control leg, on the same mission with its clock
+   * pulled in.
+   *
+   * The refusal above is worth little without the same call going through, and
+   * the shipped literal cannot give that: `escort-b` releases at 15:30, which
+   * is 55,800 ticks. So the clock moves and nothing else does — `HOLD_MISSION`'s
+   * own move at the top of this file, for the same reason, "because what is
+   * under test is the rule, not the wait". The `releaseTick` and its `release`
+   * beat move together, because a held hull with no beat to release it is a
+   * shape `missions.test.ts` forbids in any shipped literal and there is no
+   * reason for a fixture to wear it.
+   *
+   * Worth saying what this replaced: an added Corvette in a Sorrowgate
+   * derivative with the mission's `weapons` lock deleted. That fixture worked,
+   * and it was two manufactured facts where this is one — and the deleted lock
+   * was a rule the mission document authors (§3 strikes the hardpoints).
+   */
+  const CHORD_RELEASE_TICK = 2 * SIM.TICK_HZ;
+  const ARMED_CHORD: MissionDefinition = {
+    ...CHORD_SECOND_CHORD,
+    id: 'test-movement-hold-armed',
+    fauna: false,
+    parties: CHORD_SECOND_CHORD.parties.map((party) => ({
+      ...party,
+      units: party.units.map((unit) =>
+        unit.tag === 'escort-b' ? { ...unit, releaseTick: CHORD_RELEASE_TICK } : unit
+      ),
+    })),
+    beats: CHORD_SECOND_CHORD.beats.map((beat) =>
+      beat.kind === 'release' && beat.tag === 'escort-b'
+        ? { ...beat, atTick: CHORD_RELEASE_TICK }
+        : beat
+    ),
+  };
+
+  it('refuses attack-move, and a hull with guns takes the same order once it is free', () => {
+    const h = chord(ARMED_CHORD, 1);
+    const gun = h.armed;
+    assert.equal(h.held(), true, 'the hull under test is not held at all');
+    const before = h.at();
+    const north = { x: before.x, y: before.y + 2000 };
+    h.match.orderAttackMove(PLAYER_OF(ARMED_CHORD), gun, north.x, north.y);
+    assert.equal(Posture.engage[gun], 0, 'a held hull was put into engage posture');
+    assert.equal(MoveOrder.active[gun], 0, 'a held hull was given somewhere to be');
+
+    // The control, and the reason the clock was moved at all.
+    h.settle(4);
+    assert.equal(h.held(), false, 'the clock has run out before the control');
+    h.match.orderAttackMove(PLAYER_OF(ARMED_CHORD), gun, north.x, north.y);
+    assert.equal(Posture.engage[gun], 1, 'a free hull did not reach the attack-move body');
+    assert.equal(MoveOrder.active[gun], 1);
+
+    h.settle(6);
+    assert.ok(
+      h.at().y > before.y + 10,
+      `and advances on the point (y ${h.at().y.toFixed(0)}, was ${before.y.toFixed(0)})`
+    );
+  });
+});
+
+/**
+ * `HOLD_MISSION` with one hull alongside — the only fixture in this file that
+ * *adds* a hull, and the one verb that leaves no other way.
+ *
+ * **No definition in the tree fields a hull with a hold at all.** `Freighter`,
+ * `Drifter`, `Verger` and `Antiphon` are the four kinds carrying `holdBerths`,
+ * and not one of the twenty-nine definitions spawns any of them — so there is
+ * nothing to board at any tick, and a test driven against a shipped literal
+ * would assert that a hull which could not have boarded anyway did not board.
+ *
+ * Adding a hull is the line this file otherwise does not cross, and it is worth
+ * being exact about which line that is. Most cases here run a *derivative*:
+ * `HOLD_MISSION` is Sorrowgate with its parties trimmed, its fauna off, its
+ * silence ceiling opened and its tender's clock pulled in, and the attack-move
+ * pair runs *The Second Chord* with one clock moved. Every one of those changes
+ * subtracts or retimes something the literal already has. This one is the only
+ * fixture that puts a hull in the water the mission never fielded, and only
+ * embark needs it.
+ *
+ * The added hull takes its berth from tender-2's, read off the definition
+ * rather than transcribed: water this mission already puts a PR 2 hull in, and
+ * the Freighter is PR 2, so the fixture cannot crush the thing it is testing
+ * with — and a berth that moves takes the fixture with it instead of leaving a
+ * comment asserting a fact the literal no longer carries.
+ *
+ * Its `role` is neither `escort` nor `tender`, and both halves matter: an
+ * escort alongside would satisfy the escort hold the moment it came inside
+ * 400 m, and a tender would be held by that hold rather than by the clock under
+ * test. `MissionRole` is a free string (types.ts), so a third word costs
+ * nothing.
+ */
+function alongside(id: string, extra: MissionUnit): MissionDefinition {
+  return {
+    ...HOLD_MISSION,
+    id,
+    parties: [
+      {
+        ...PLAYER_PARTY,
+        units: [ESCORT, { ...TENDER, releaseTick: RELEASE_TICK }, extra],
+      },
+    ],
+  };
+}
+
+interface Alongside {
+  match: Match;
+  /** The added hull, resolved off the player's own snapshot by class. */
+  extra: number;
+  /** The Prologue's tender, for the case whose subject is the tender. */
+  tender: number;
+  settle(seconds: number, close?: boolean): void;
+  heldOf(eid: number): MovementHoldReason | null;
+}
+
+function alongsideHarness(mission: MissionDefinition, added: UnitKind): Alongside {
+  const map = missionMapById(mission.mapId)!;
+  const match = new Match(map, { mission, fauna: false, seed: SEED });
+  let last: EchoSnapshot | null = null;
+  let view: MissionView | null = null;
+
+  const step = (close?: boolean): void => {
+    const own = match.update(STEP_MS)?.get(PLAYER);
+    if (own !== undefined) last = own;
+    const next = match.takeMissionView();
+    if (next !== null) view = next;
+    if (close !== true || match.tick % 12 !== 0) return;
+    const escort = last?.units.find((unit) => unit.kind === UnitKind.LightScout);
+    const tender = last?.units.find((unit) => unit.kind === UnitKind.Harvester);
+    if (escort === undefined || tender === undefined) return;
+    match.orderMove(PLAYER, escort.id, tender.x + STATION_OFFSET_M, tender.y);
+  };
+
+  const self: Alongside = {
+    match,
+    get extra() {
+      return last?.units.find((unit) => unit.kind === added)?.id ?? 0;
+    },
+    get tender() {
+      return last?.units.find((unit) => unit.kind === UnitKind.Harvester)?.id ?? 0;
+    },
+    settle: (seconds, close) => {
+      for (let tick = 0; tick < SIM.TICK_HZ * seconds; tick++) step(close);
+    },
+    heldOf: (eid) => {
+      assert.ok(view !== null, 'the mission sent no view at all');
+      return view.held.find((hold) => hold.unitId === eid)?.reason ?? null;
+    },
+  };
+  self.settle(1);
+  return self;
+}
+
+/**
+ * Follow-floor — the last of the three verbs both rows named and no mission test
+ * reached — #722.
+ *
+ * Attack-move is held beside the attack-contact case above, on *The Second
+ * Chord*, because that verb needs guns and that is the mission that ships them.
+ * Embark is below, because it needs a hold and no mission ships one.
+ *
+ * `docs/invariants.md` rows 16 and 17 each listed seven orders before this
+ * change; the server row still does, and holds all seven. Across the whole
+ * backend suite `orderAttackMove`, `orderEmbark` and `orderFollowFloor` were
+ * reached only by files that run no mission at all — `ai.test.ts`,
+ * `posture.test.ts`, `followFloor.test.ts`, `echoDelta.test.ts`,
+ * `carrying.test.ts` — so three sevenths of the server row were prose. The
+ * shell row was worse and is not fixed here: its holder drove move and harvest
+ * and nothing else, so five of its seven were prose, and it now claims three
+ * rather than asserting the four still undriven. That is the
+ * drift `invariants.md`'s own admission rule exists to stop, *"It is held by a
+ * test, not by a convention. A rule nobody checks is a comment"*, and
+ * `check:invariants` cannot see it: it is a liveness check, and a holder that
+ * still resolves tells it nothing about how many clauses the holder asserts.
+ *
+ * Every case here is a **pair** — the refusal while the hull is held, then the
+ * same call going through once it is free. The second half is not politeness:
+ * `orderFollowFloor` returns `false` for an unowned hull and for one with no
+ * `DepthOrder` too, so a lone `false` would read as the hold's answer whatever
+ * produced it. That is the vacuous `0 >= 0` the ordnance-want partition's
+ * holder warns about (`balance.test.ts`, #698), and it is the failure mode a
+ * refusal test is most prone to.
+ */
+describe('the hold refuses follow-floor, which no mission test reached', () => {
+  it('refuses follow-floor, because a hold that let a hull drift down a slope is not one', () => {
+    const h = harness();
+    assert.equal(h.heldReason(), UNRELEASED);
+    assert.equal(
+      h.match.orderFollowFloor(PLAYER, h.tenderId(), true),
+      false,
+      'a held hull took a standing order to hug the seabed'
+    );
+
+    // The control. Same call, same hull, once the clock has run out and the
+    // ears are in range: a `true` here is what makes the `false` above the
+    // hold's answer rather than the ownership check's.
+    h.settle(4, 'close');
+    assert.equal(h.heldReason(), null, 'the tender has its ears back before the control');
+    assert.equal(h.match.orderFollowFloor(PLAYER, h.tenderId(), true), true);
+  });
+});
+
+/**
+ * Embark, which is a movement order and which no shipped mission can exercise.
+ *
+ * The guard is real — `orderEmbark` asks `holdsMovement` before it asks
+ * `canBoard` — but **no mission definition in the tree fields a hull with a
+ * hold.** `Freighter`, `Drifter`, `Verger` and `Antiphon` are the four kinds
+ * that carry `holdBerths`, and not one of the twenty-nine definitions spawns
+ * any of them. So there is nothing in the shipped configuration to board, and
+ * a test driven against one would assert that a hull which could not have
+ * boarded anyway did not board: a guard that passes with the bug in, which is
+ * the shape `balance.test.ts` records against #698 and exactly what this
+ * file's harvest case takes such care to avoid.
+ *
+ * Hence the one fixture here that *adds* a hull rather than removing one, and
+ * hence this being the only case in the file not driven against a shipped
+ * literal. #722 offers the alternative of cutting embark out of both rows
+ * instead; that is the worse half of the choice, because the guard exists, the
+ * rows are the checklist the next author reads before adding an order, and the
+ * first mission to field a transport should find the property already held
+ * rather than have to discover it.
+ */
+describe('the hold refuses a boarding, which no shipped mission has a hold to show', () => {
+  const BOARDING_MISSION = alongside('test-movement-hold-boarding', {
+    tag: 'lighter',
+    kind: UnitKind.Freighter,
+    x: TENDER_2.x,
+    y: TENDER_2.y,
+    depthM: TENDER_2.depthM,
+    role: 'lighter',
+    note: 'A transport, so the boarding both rows claim has something to refuse',
+  });
+
+  it('leaves a held hull in the water, and lets the same hull board once it is free', () => {
+    const h = alongsideHarness(BOARDING_MISSION, UnitKind.Freighter);
+    const carrier = h.extra;
+    assert.notEqual(carrier, 0, 'the fixture fielded no transport to board');
+    assert.equal(h.heldOf(h.tender), UNRELEASED);
+
+    const boarding = (): boolean => hasComponent(h.match.world, Embarking, h.tender);
+    h.match.orderEmbark(PLAYER, h.tender, carrier);
+    assert.equal(boarding(), false, 'a held hull was sent to close on a transport');
+
+    // The control, and the whole reason this fixture exists: the same order,
+    // the same two hulls, once the hold is off. Without it the assertion above
+    // is satisfied by every hull in every mission that ships, none of which
+    // has anything to board.
+    h.settle(4, true);
+    assert.equal(h.heldOf(h.tender), null, 'the tender has its ears back before the control');
+    h.match.orderEmbark(PLAYER, h.tender, carrier);
+    assert.equal(boarding(), true, 'a free hull takes the same order');
   });
 });
