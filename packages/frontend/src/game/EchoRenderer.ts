@@ -2142,14 +2142,23 @@ export class EchoRenderer {
           // build key arms a placement. A press with a build pending drops
           // the build — one thing armed at a time.
           e.preventDefault();
-          // ENGAGE's refusal, on the key that does the same thing. §10.5 is
-          // about the action rather than the affordance — the player "learns
-          // the rule before pressing, because a refusal delivered afterwards
-          // teaches nothing" — and a mode armed over a held selection is that
-          // refusal deferred to the click. It was worse on the key than on the
-          // button, because #719 gave the hold the hint bar's movement half:
-          // an armed mode had nothing left to announce it, so the press did
-          // not merely fail late, it failed invisibly (#722).
+          // The *hold* half of ENGAGE's refusal, on the key that arms the same
+          // mode. §10.5 is about the action rather than the affordance — the
+          // player "learns the rule before pressing, because a refusal
+          // delivered afterwards teaches nothing" — and a mode armed over a
+          // held selection is that refusal deferred to the click. It was worse
+          // on the key than on the button, because #719 gave the hold the hint
+          // bar's movement half: an armed mode had nothing left to announce
+          // it, so the press did not merely fail late, it failed invisibly
+          // (#722).
+          //
+          // One half and not three: ENGAGE greys on `fighters` and on
+          // `missionLock('weapons')` as well, and the key still arms under
+          // either. The weapons lock is the live asymmetry — under it the
+          // button is dead while the key arms and the click falls through to
+          // the move `orderAttackMove` makes of it, which is a refusal §7
+          // wants stated rather than performed. #722 asks for the hold mirror
+          // and only that, so the rest is recorded here rather than taken.
           const held = this.heldSelection(this.selectedUnits());
           if (held !== null) {
             this.refuse(held);

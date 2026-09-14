@@ -792,52 +792,95 @@ describe('renderer smoke test: input and teardown', () => {
    * the wire: an order not sent is an order the server never has to refuse.
    */
   it('sends no order at all for a hull the mission is holding', async () => {
-    const world = await boot();
-    try {
-      const snapshot = cannedSnapshot();
-      const harvester = snapshot.units.find((unit) => unit.throttle !== undefined);
-      assert.ok(harvester !== undefined, 'the canned match has no harvester to hold');
-      world.chart.setMissionHolds([
-        { unitId: harvester.id, reason: MovementHoldReason.Unreleased },
-      ]);
-      world.chart.focusOn(harvester.x, harvester.y);
-      world.frame(2);
+    /**
+     * Both gestures, in one drive, with the hold on or off.
+     *
+     * The second right-click is the one #722's own review found missing. With
+     * only a harvester selected and the click on a node, `handleContextOrder`
+     * takes the harvest branch and `rest` — everything in the selection that is
+     * *not* a harvester — is empty either way, so the `onMoveOrder` assertion
+     * below used to hold whether the guard was there or not. The open-water
+     * click reaches `movable` on the move branch instead, which is the path
+     * that can actually fail.
+     *
+     * And the free leg is what proves the water click is open water: if the
+     * offset happened to land on a node, the harvest branch would swallow it
+     * again and the held leg would pass for the old reason. Ordered and named
+     * rather than asserted only as an absence.
+     */
+    const drive = async (held: boolean): Promise<string[]> => {
+      const world = await boot();
+      try {
+        const snapshot = cannedSnapshot();
+        const harvester = snapshot.units.find((unit) => unit.throttle !== undefined);
+        assert.ok(harvester !== undefined, 'the canned match has no harvester to hold');
+        if (held) {
+          world.chart.setMissionHolds([
+            { unitId: harvester.id, reason: MovementHoldReason.Unreleased },
+          ]);
+        }
+        world.chart.focusOn(harvester.x, harvester.y);
+        world.frame(2);
 
-      const canvas = world.app.canvas;
-      const at = world.conn.projectPoint(harvester.x, harvester.y, harvester.depth);
-      assert.ok(at.visible, 'the camera is looking at the hull we are about to click');
-      for (const type of ['pointerdown', 'pointerup']) {
-        canvas.dispatch(type, {
-          button: 0,
+        const canvas = world.app.canvas;
+        const at = world.conn.projectPoint(harvester.x, harvester.y, harvester.depth);
+        assert.ok(at.visible, 'the camera is looking at the hull we are about to click');
+        for (const type of ['pointerdown', 'pointerup']) {
+          canvas.dispatch(type, {
+            button: 0,
+            pointerId: 1,
+            pointerType: 'mouse',
+            clientX: at.x,
+            clientY: at.y,
+          });
+        }
+        world.frame(1);
+
+        // Right-click the field. This is the branch that used to bypass the
+        // hold; a harvest order is a movement order and the shell may not send
+        // one for a hull that is going nowhere.
+        const node = cannedNodes()[0]!;
+        const onField = world.conn.projectPoint(node.x, node.y, node.depth);
+        canvas.dispatch('pointerdown', {
+          button: 2,
           pointerId: 1,
           pointerType: 'mouse',
-          clientX: at.x,
-          clientY: at.y,
+          clientX: onField.x,
+          clientY: onField.y,
+          shiftKey: false,
+          ctrlKey: false,
+          metaKey: false,
         });
+
+        // Right-click open water, the same screen offset the plain move-order
+        // case below uses to clear this very node.
+        canvas.dispatch('pointerdown', {
+          button: 2,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x + 120,
+          clientY: at.y + 40,
+          shiftKey: false,
+          ctrlKey: false,
+          metaKey: false,
+        });
+
+        return world.log.names();
+      } finally {
+        world.teardown();
       }
-      world.frame(1);
+    };
 
-      // Right-click the field. This is the branch that used to bypass the
-      // hold; a harvest order is a movement order and the shell may not send
-      // one for a hull that is going nowhere.
-      const node = cannedNodes()[0]!;
-      const onField = world.conn.projectPoint(node.x, node.y, node.depth);
-      canvas.dispatch('pointerdown', {
-        button: 2,
-        pointerId: 1,
-        pointerType: 'mouse',
-        clientX: onField.x,
-        clientY: onField.y,
-        shiftKey: false,
-        ctrlKey: false,
-        metaKey: false,
-      });
+    // The control, and it is load-bearing twice over: it proves both branches
+    // are reachable in this arrangement, and it proves the water click is not
+    // quietly landing on the field.
+    const free = await drive(false);
+    assert.ok(free.includes('onHarvestOrder'), `no harvest order at all, saw ${free.join(', ')}`);
+    assert.ok(free.includes('onMoveOrder'), `no move order at all, saw ${free.join(', ')}`);
 
-      assert.equal(world.log.first('onHarvestOrder'), undefined, 'a held hull was sent to a field');
-      assert.equal(world.log.first('onMoveOrder'), undefined, 'a held hull was sent anywhere');
-    } finally {
-      world.teardown();
-    }
+    const sent = await drive(true);
+    assert.ok(!sent.includes('onHarvestOrder'), 'a held hull was sent to a field');
+    assert.ok(!sent.includes('onMoveOrder'), 'a held hull was sent anywhere');
   });
 
   /**
@@ -853,13 +896,22 @@ describe('renderer smoke test: input and teardown', () => {
    * It was worse on the key than on the button and #719 is why: the held hint
    * line replaced the movement bindings, and `ATTACK-MOVE armed` is one of
    * them, so the mode was armed with nothing on screen saying so or saying
-   * that ESC cancels it. Hence the shape of this test — arm, then *lift* the
-   * hold, and read the line the mode would announce itself on. Asserting
-   * while the hold is up would pass with the bug in, because the hold owns the
-   * line either way.
+   * that ESC cancels it.
+   *
+   * Hence the shape — arm, then *lift* the hold, then act. Asserting while the
+   * hold is up would pass with the bug in, because the hold owns both the bar
+   * and the order path either way.
+   *
+   * **What is asserted is the order, not the bar.** The refusal this fix adds
+   * occupies the hint line for `REFUSAL_MS` (`hintLine`'s first branch), so a
+   * bar that fails to say `ATTACK-MOVE armed` proves only that something else
+   * is written there — a later change that armed the mode *and* refused would
+   * read as a pass. The armed mode's one real effect is what a left click on
+   * the water becomes, so that is the assertion; the bar is checked second,
+   * for the half of the defect that is about what the player can see.
    */
   it('arms no attack-move on a selection the mission is holding whole', async () => {
-    const armed = async (held: boolean): Promise<string | null> => {
+    const armed = async (held: boolean): Promise<{ ordered: boolean; bar: string | null }> => {
       const world = await boot();
       try {
         const snapshot = cannedSnapshot();
@@ -890,27 +942,42 @@ describe('renderer smoke test: input and teardown', () => {
         world.frame(1);
 
         dispatchWindow('keydown', { code: 'KeyW' });
-        // The hold comes off, so the armed branch of the hint line is the one
-        // that answers. Nothing re-presses the key.
+        // The hold comes off, so nothing downstream can refuse on its own
+        // account and what happens next is the mode's doing alone. Nothing
+        // re-presses the key.
         world.chart.setMissionHolds([]);
         world.frame(1);
-        return textSaying(world.app.stage, 'ATTACK-MOVE armed');
+        const bar = textSaying(world.app.stage, 'ATTACK-MOVE armed');
+
+        // The water, left button: the one thing an armed mode does.
+        canvas.dispatch('pointerdown', {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x + 140,
+          clientY: at.y + 60,
+          shiftKey: false,
+        });
+        return { ordered: world.log.first('onAttackMoveOrder') !== undefined, bar };
       } finally {
         world.teardown();
       }
     };
 
-    // The control first, because it is what makes the assertion below mean
-    // anything: the key does arm, and this test can see it when it does.
-    assert.ok(
-      (await armed(false)) !== null,
-      'the control never armed at all, so the case below proves nothing'
-    );
+    // The control first, because it is what makes the case below mean
+    // anything: the key does arm, the click does become an attack-move, and
+    // this test can see both when they happen.
+    const free = await armed(false);
+    assert.ok(free.ordered, 'the control never armed at all, so the case below proves nothing');
+    assert.ok(free.bar !== null, 'the control armed without the bar ever saying so');
+
+    const held = await armed(true);
     assert.equal(
-      await armed(true),
-      null,
+      held.ordered,
+      false,
       'the W key armed an attack-move over a selection the mission is holding'
     );
+    assert.equal(held.bar, null, 'and the bar announced a mode that should not have armed');
   });
 
   /**

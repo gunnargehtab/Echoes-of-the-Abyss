@@ -418,14 +418,6 @@ let nextFrameHandle = 1;
 let installed = false;
 
 /**
- * Put the stub browser on `globalThis`, once per process.
- *
- * Called at import time rather than from a test body: the renderers read
- * `window.matchMedia` in a field initialiser, and Pixi resolves its adapter
- * the first time anything measures text, so both must be in place before a
- * single instance exists.
- */
-/**
  * Whether the stub window reports a touchscreen.
  *
  * `EchoRenderer.isTouch` is a field initialiser reading
@@ -445,6 +437,14 @@ export function setCoarsePointer(on: boolean): void {
   coarsePointer = on;
 }
 
+/**
+ * Put the stub browser on `globalThis`, once per process.
+ *
+ * Called at import time rather than from a test body: the renderers read
+ * `window.matchMedia` in a field initialiser, and Pixi resolves its adapter
+ * the first time anything measures text, so both must be in place before a
+ * single instance exists.
+ */
 export function installHeadlessDom(): void {
   if (installed) return;
   installed = true;
