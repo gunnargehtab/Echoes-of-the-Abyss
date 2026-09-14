@@ -2154,11 +2154,13 @@ export class EchoRenderer {
           //
           // One half and not three: ENGAGE greys on `fighters` and on
           // `missionLock('weapons')` as well, and the key still arms under
-          // either. The weapons lock is the live asymmetry — under it the
-          // button is dead while the key arms and the click falls through to
-          // the move `orderAttackMove` makes of it, which is a refusal §7
-          // wants stated rather than performed. #722 asks for the hold mirror
-          // and only that, so the rest is recorded here rather than taken.
+          // either. The weapons lock is the case worth writing down, and it is
+          // not that the button has it right — its `refusal` carries the hold
+          // only, so under a weapons lock the button greys *silently* while
+          // the key arms and the click falls through to the move
+          // `orderAttackMove` makes of it. §7's "with a reason attached, never
+          // silently" is owed on both halves there. #722 asks for the hold
+          // mirror and only that, so this is recorded rather than taken.
           const held = this.heldSelection(this.selectedUnits());
           if (held !== null) {
             this.refuse(held);
