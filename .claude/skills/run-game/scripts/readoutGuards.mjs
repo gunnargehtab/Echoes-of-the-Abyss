@@ -45,15 +45,43 @@ async function controls(page) {
     [...document.querySelectorAll('.readout')].map((button) => {
       const box = button.getBoundingClientRect();
       const detail = button.nextElementSibling;
+      // Clipped when shut, laid out when shown. The line is never removed, so
+      // `aria-describedby` resolves either way — this is asking which.
+      const shown = detail !== null && getComputedStyle(detail).clipPath === 'none';
+      // And *laid out* is not *readable*, which this drive learned the hard
+      // way: nothing in the HUD carries a `z-index`, so paint order is DOM
+      // order, and the lines for the strip's right-hand end opened underneath
+      // the contact log. `clipPath` said "shown" for every one of them.
+      //
+      // Asked as a hit test, which is the only thing a page can be asked about
+      // paint order — but the bubble is `pointer-events: none` and so is never
+      // in a hit test at all, which made the first version of this check report
+      // the panel whether it painted above or below. So it is made hit-testable
+      // for the length of one `elementsFromPoint` and put back: if anything
+      // else comes back on top of it at its own centre, that thing paints over
+      // the line.
+      let covered = null;
+      if (shown) {
+        const line = detail.getBoundingClientRect();
+        const wasInert = detail.style.pointerEvents;
+        detail.style.pointerEvents = 'auto';
+        const top = document.elementsFromPoint(
+          line.x + line.width / 2,
+          line.y + line.height / 2
+        )[0];
+        detail.style.pointerEvents = wasInert;
+        if (top !== undefined && top !== detail && !detail.contains(top)) {
+          covered = top.closest('section, div')?.className ?? top.tagName.toLowerCase();
+        }
+      }
       return {
         name: button.getAttribute('aria-label') ?? '',
         x: box.x,
         y: box.y,
         width: box.width,
         height: box.height,
-        // Clipped when shut, laid out when shown. The line is never removed,
-        // so `aria-describedby` resolves either way — this is asking which.
-        shown: detail !== null && getComputedStyle(detail).clipPath === 'none',
+        shown,
+        covered,
         described: button.getAttribute('aria-describedby'),
       };
     })
@@ -210,6 +238,24 @@ export default async ({ page, shot }) => {
     `hovering a readout shows its line and only its line (${hovered.map((h) => h.described).join(', ')})`
   );
 
+  // Every readout's line, opened one at a time, and *read* rather than merely
+  // laid out. The strip's right-hand end is where this bites: those bubbles
+  // open toward the contact log, and with no `z-index` anywhere the panel wins
+  // on DOM order alone.
+  const buried = [];
+  for (const control of await controls(page)) {
+    await page.hover(`[aria-describedby="${control.described}"]`);
+    await page.waitForTimeout(140);
+    const opened = (await controls(page)).find((c) => c.described === control.described);
+    if (opened === undefined || !opened.shown) buried.push(`${control.described} (never opened)`);
+    else if (opened.covered !== null) buried.push(`${control.described} under ${opened.covered}`);
+  }
+  await page.mouse.move(0, 400);
+  check(
+    buried.length === 0,
+    `every line is readable where it opens${buried.length === 0 ? '' : ` — ${buried.join(', ')}`}`
+  );
+
   // §9.5's Escape, which is the one part of this surface a stub actively
   // hid. `:focus-visible` cannot be asked at press time — the press *is* the
   // keyboard interaction that makes a focused element match — so two versions
@@ -274,6 +320,26 @@ export default async ({ page, shot }) => {
   await page.keyboard.press('Escape');
   await page.waitForTimeout(350);
   check((await escState()).menu, 'with nothing shown, Escape reached the esc menu');
+  await closeMenu();
+
+  // 3 — a pin must not outlive the focus that set it. Tap a readout, then click
+  // in the water: the focus goes to the document, and the line used to stay on
+  // screen with `aria-expanded` still true — while this handler lives on the
+  // layer, so the Escape that followed never reached it and opened the esc menu
+  // *over* the line. §9.5 opens the menu only when Escape has nothing left to
+  // cancel, and a line on screen is something left.
+  await page.click('.readout');
+  await page.waitForTimeout(150);
+  await page.mouse.click(640, 520);
+  await page.waitForTimeout(250);
+  const released = await escState();
+  check(released.shown === 0, 'clicking away from a pinned line dismissed it');
+  check(!released.onReadout, 'and took the focus off the readout');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(350);
+  const afterRelease = await escState();
+  check(afterRelease.menu, 'so Escape reached the menu');
+  check(afterRelease.shown === 0, 'and did not open it over a line still on screen');
   await closeMenu();
   await shot('escape');
 

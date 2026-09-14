@@ -723,10 +723,6 @@ export function GameCanvas({
             pointer input lands on the top canvas and is interpreted there. */}
         <div ref={perspectiveHostRef} className="perspective-host" />
         <div ref={hostRef} className="game-host" />
-        {/* Over the glass, under the panels: the strip's readouts are Pixi
-            text, so their explanations are laid over them in the DOM — the
-            only route that reaches a keyboard and a screen reader (§7, §11). */}
-        {live && phase !== MatchPhase.Lobby && <StripReadouts boxes={readouts} host={hostRef} />}
         {live && phase !== MatchPhase.Lobby && <ContactLog entries={log} onFocus={focusOn} />}
         {live && phase !== MatchPhase.Lobby && mission !== null && (
           <MissionPanel
@@ -739,6 +735,18 @@ export function GameCanvas({
         {live && phase !== MatchPhase.Lobby && missionLines.length > 0 && (
           <MissionLog lines={missionLines} />
         )}
+        {/* Last of the in-match layer, and that is the whole of its stacking
+            rule: nothing here carries a `z-index`, so DOM order is paint order
+            (§2's "DOM order stacks them"). Rendered before the panels, the
+            lines for the strip's right-hand end — the map name, the clock and
+            the contact count — opened *underneath* the contact log and could
+            not be read at all, which is three of the eleven readouts not
+            explained however reachable their control was.
+
+            It takes nothing from the panels in exchange: the layer is
+            `pointer-events: none` and the controls themselves sit inside the
+            52 px strip, clear of the log's `top: 60px`. */}
+        {live && phase !== MatchPhase.Lobby && <StripReadouts boxes={readouts} host={hostRef} />}
         {/* A mission has no faction to pick and no readiness to declare — the
           room pins both — so the ready room is not shown at all rather than
           shown empty. */}

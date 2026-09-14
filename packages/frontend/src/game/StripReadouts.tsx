@@ -190,7 +190,18 @@ export function StripReadouts({
                 ) === true
               )
             }
-            onBlur={() => setShownByFocus(false)}
+            onBlur={() => {
+              setShownByFocus(false);
+              // A pin may not outlive the focus that set it. Tap a readout, then
+              // click in the water: focus goes to the document and the line
+              // stayed on screen with `aria-expanded` still true — and this
+              // handler is on the layer, so the Escape that followed never
+              // reached it and opened the esc menu *over* the line. §9.5 binds
+              // Escape to opening the menu only when it has nothing left to
+              // cancel, and something was plainly left. Tapping elsewhere
+              // dismisses now, which is what a pinned tooltip should do anyway.
+              setPinned(null);
+            }}
           />
           <span
             id={`readout-${box.key}`}

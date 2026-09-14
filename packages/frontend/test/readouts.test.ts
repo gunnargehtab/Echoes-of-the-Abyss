@@ -38,16 +38,29 @@ import {
 } from '../src/game/readouts.ts';
 import { StripReadouts } from '../src/game/StripReadouts.tsx';
 
-/** Every line the strip can show, so a new one cannot be added unexplained. */
+/**
+ * Every line the strip can show — **both branches** of the four that have one.
+ *
+ * One call per function is what this list was, and it was one call short of
+ * covering what it is the input to: the register guard and the key guard below
+ * saw `drawDetail`'s deficit branch and never its surplus branch, which is the
+ * one most recently edited. Four functions branch, and all eight readings are
+ * here now.
+ */
 const EVERY_LINE = [
   nodulesDetail(340),
   crystalDetail(12),
   biomassDetail(48),
   berthsDetail(3, 6),
+  berthsDetail(6, 6),
   drawDetail({ capacity: 12, demand: 18, satisfaction: 12 / 18 }),
+  drawDetail({ capacity: 20, demand: 12, satisfaction: 1 }),
   sigDetail(42, 5, 1),
   bandDetail('drive hum', 1),
+  bandDetail('full plant', 0.6),
+  bandDetail('silent running', 1.4),
   trackedDetail(2),
+  contactsDetail(1),
   contactsDetail(3),
   clockDetail(),
   mapDetail('SORROWGATE'),
