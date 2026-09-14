@@ -122,18 +122,28 @@ export interface PlayerTelemetry {
    * - `noduleDeliveries` — holds that reached a depot and emptied there.
    * - `nodulesDelivered` — what those holds were carrying when they emptied.
    *   Against `nodulesEarned` this says whether the deposit path credits what
-   *   it accepts; the Order is the one navy where the two are meant to differ,
-   *   by `HADRON.NODULE_YIELD_MULTIPLIER` (docs/economy.md §6).
+   *   it accepts. The Order is the one navy whose two figures are *meant* to
+   *   differ, and by both of the nodule terms docs/economy.md §6 gives it:
+   *   `banked ≈ delivered × HADRON.NODULE_YIELD_MULTIPLIER + HADRON.TITHE_PER_S
+   *   × seconds`. The tithe is most of the gap a reader sees and pushes banked
+   *   back *up* toward delivered, so a note that named only the multiplier
+   *   would make the control row read as a fault of this instrument.
    * - `nodulesLostInTransit` — cargo aboard a harvester the observation before
    *   it stopped existing. Ore that was cut, was never banked, and is
    *   invisible in every income column.
    * - `harvesterSecondsLaden` — the haul half of the trip, so the walk home
    *   can be told apart from the time on the node.
    *
-   * A hold that empties and whose hull dies inside the same 200 ms observation
-   * is recorded as lost rather than delivered. That biases the loss column up
-   * and the delivery column down by at most one hold per death, never the
-   * other way round.
+   * **Three biases, all one-directional, and the largest is on the banked
+   * side.** `nodulesEarned` is a per-observation stockpile delta, so a purchase
+   * landing in the same pass as a deposit nets against it — up to a whole hold
+   * per delivery, and measured at two of them inside one eight-minute match. A
+   * hold is recorded as the hauler was last seen carrying it, which is up to
+   * one observation's mining short. And a hold whose hull dies in the pass it
+   * empties in is recorded as lost rather than delivered. So a gap between the
+   * two columns is a *magnitude* to weigh, never a defect on its own — the
+   * ledger only closes exactly where nothing is bought, which is what
+   * `balance.test.ts`'s commander-free match is for.
    */
   noduleDeliveries: number;
   nodulesDelivered: number;

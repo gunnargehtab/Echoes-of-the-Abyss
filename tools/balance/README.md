@@ -101,17 +101,34 @@ down with its hauler, which no income column can show at all.
 Read `Nodules delivered a match` against `Nodules banked a match`. Only two paths in the tree
 credit nodules — the deposit in `systems/harvest.ts` and the Order's tithe in
 `systems/tithe.ts` — so for three of the four navies those two figures are the same number
-arrived at from opposite ends, and a gap between them is a defect in the credit path rather
-than a reading. The Knights are the table's own control: `HADRON.NODULE_YIELD_MULTIPLIER`
-banks half of every hold by spec (`docs/economy.md` §6), so their two columns are *meant* to
-disagree, and an instrument that had quietly ended up reading the bank twice would report
-them equal.
+arrived at from opposite ends.
 
-Two caveats on the arithmetic, both of them small and both one-directional. A hold is
-recorded as the harvester was last seen carrying it, which is up to one 5 Hz observation's
-mining — 2 nodules — under what it actually landed. And a hold whose hull dies in the same
-200 ms window it empties in is counted as lost rather than delivered. Both bias the delivered
-column down and never up.
+The Knights are the table's own control, and their row carries **both** of the nodule terms
+`docs/economy.md` §6 gives that navy, not just the famous one:
+
+```text
+banked  ≈  delivered × HADRON.NODULE_YIELD_MULTIPLIER  +  HADRON.TITHE_PER_S × seconds
+```
+
+The half-yield pulls banked down and the tithe pushes it back up, and on the stored thirty
+seeds the tithe is the larger correction. A footnote that named only the multiplier would make
+the control row read as a 400-nodule fault of this instrument. What the control actually buys
+is this: an instrument that had quietly ended up reading the bank twice would report the
+Knights' two columns *equal*.
+
+**A gap between the two columns is a magnitude to weigh, not a defect on sight.** Three biases
+sit between them, all one-directional, and the largest is on the banked side:
+
+| Bias | Direction | Size |
+| --- | --- | --- |
+| A purchase inside the same 200 ms pass as a deposit nets against `nodulesEarned` | banked down | up to a whole hold per delivery; measured at two holds inside one 8-minute match, and at 0.3–0.5% of the delivered column meaned over the thirty stored seeds |
+| A hold is recorded as the harvester was last seen carrying it | delivered down | up to one observation's mining, 2 nodules |
+| A hold whose hull dies in the pass it empties in is counted as lost | delivered down, lost up | one hold per death |
+
+**The ledger closes exactly only where nothing is bought.** That is not a limitation of the
+counters, it is the first bias above, and it is why `balance.test.ts` holds the equality on a
+match with no commander in it — three navies, nothing purchased, and delivered equals banked
+to zero nodules, the Order's §6 identity included.
 
 This was built for #706, where the Commune's bank never once rises above its opening 600 in
 thirty matches and nothing in the harness could say whether that was a price problem or a

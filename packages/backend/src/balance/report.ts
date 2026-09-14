@@ -200,12 +200,20 @@ export interface FactionSummary {
    * field, never reached a depot, or arrived and was spent. These read the trip
    * instead.
    *
-   * `nodulesDelivered` is what the depots took in and `incomePerMinute`'s
-   * source is what the bank credited, so the two together are a ledger with two
-   * sides. They are meant to agree everywhere but the Order, whose
-   * `HADRON.NODULE_YIELD_MULTIPLIER` banks half of every hold by spec
-   * (docs/economy.md §6) — which makes the Knights' row the instrument's own
-   * control.
+   * `nodulesDelivered` is what the depots took in and `nodulesBanked` is what
+   * the account rose by, so the two together are a ledger with two sides. The
+   * Order's row is the instrument's own control, and it carries *both* of the
+   * nodule terms docs/economy.md §6 gives that navy — `banked ≈ delivered ×
+   * HADRON.NODULE_YIELD_MULTIPLIER + HADRON.TITHE_PER_S × seconds`. The tithe
+   * is most of the gap on the page and pushes banked back up toward delivered;
+   * naming only the multiplier would make the control read as a fault.
+   *
+   * For the other three the two sides are meant to agree, but **as a magnitude
+   * rather than on sight**: `nodulesEarned` is a per-observation stockpile
+   * delta, so a purchase landing in the same pass as a deposit nets against it,
+   * by up to a whole hold per delivery. The ledger closes exactly only where
+   * nothing is bought, which is what `balance.test.ts`'s commander-free match
+   * is for.
    *
    * `nodulesLostInTransit` is ore that was cut and never banked because the
    * hull carrying it died. It is invisible in every income column by
@@ -1307,12 +1315,14 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
   tripRow('Harvester-time stalled', (f) => `${Math.round(f.stalledShare * 100)}%`);
   lines.push('');
   lines.push(
-    '_Delivered is what reached a depot; banked is what the account rose by. They are meant ' +
-      'to agree for every navy but the Order, which banks half of each hold by spec ' +
-      "(`HADRON.NODULE_YIELD_MULTIPLIER`, economy.md §6) — so that row is this table's own " +
-      'control. Lost in transit is ore that was cut and died with its hauler, which no income ' +
-      'column can show. Stalled counts a harvester the server reports as out of work, never ' +
-      'one throttled down on purpose._'
+    '_Delivered is what reached a depot; banked is what the account rose by. The Order is this ' +
+      "table's own control and is meant to differ, by both of economy.md §6's nodule terms — " +
+      'half of each hold (`HADRON.NODULE_YIELD_MULTIPLIER`) plus the tithe ' +
+      '(`HADRON.TITHE_PER_S` a second), which pushes it back up. For the other three, weigh a ' +
+      'gap rather than read it as a defect: banked is a per-observation delta, so a purchase in ' +
+      'the same pass as a deposit nets against it. Lost in transit is ore that was cut and died ' +
+      'with its hauler, which no income column can show. Stalled counts a harvester the server ' +
+      'reports as out of work, never one throttled down on purpose._'
   );
   lines.push('');
   lines.push(
