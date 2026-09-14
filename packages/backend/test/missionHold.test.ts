@@ -682,11 +682,15 @@ function alongsideHarness(mission: MissionDefinition, added: UnitKind): Alongsid
  * Chord*, because that verb needs guns and that is the mission that ships them.
  * Embark is below, because it needs a hold and no mission ships one.
  *
- * `docs/invariants.md` rows 16 and 17 each list seven orders. Across the whole
+ * `docs/invariants.md` rows 16 and 17 each listed seven orders before this
+ * change; the server row still does, and holds all seven. Across the whole
  * backend suite `orderAttackMove`, `orderEmbark` and `orderFollowFloor` were
  * reached only by files that run no mission at all — `ai.test.ts`,
  * `posture.test.ts`, `followFloor.test.ts`, `echoDelta.test.ts`,
- * `carrying.test.ts` — so three sevenths of both rows were prose. That is the
+ * `carrying.test.ts` — so three sevenths of the server row were prose. The
+ * shell row was worse and is not fixed here: its holder drove move and harvest
+ * and nothing else, so five of its seven were prose, and it now claims three
+ * rather than asserting the four still undriven. That is the
  * drift `invariants.md`'s own admission rule exists to stop, *"It is held by a
  * test, not by a convention. A rule nobody checks is a comment"*, and
  * `check:invariants` cannot see it: it is a liveness check, and a holder that
@@ -696,8 +700,9 @@ function alongsideHarness(mission: MissionDefinition, added: UnitKind): Alongsid
  * same call going through once it is free. The second half is not politeness:
  * `orderFollowFloor` returns `false` for an unowned hull and for one with no
  * `DepthOrder` too, so a lone `false` would read as the hold's answer whatever
- * produced it. That is the vacuous guard #722 found in the row-14 holder, and
- * it is the failure mode a refusal test is most prone to.
+ * produced it. That is the vacuous `0 >= 0` the ordnance-want partition's
+ * holder warns about (`balance.test.ts`, #698), and it is the failure mode a
+ * refusal test is most prone to.
  */
 describe('the hold refuses follow-floor, which no mission test reached', () => {
   it('refuses follow-floor, because a hold that let a hull drift down a slope is not one', () => {
@@ -728,8 +733,8 @@ describe('the hold refuses follow-floor, which no mission test reached', () => {
  * any of them. So there is nothing in the shipped configuration to board, and
  * a test driven against one would assert that a hull which could not have
  * boarded anyway did not board: a guard that passes with the bug in, which is
- * exactly what #722 found in the row-14 holder and exactly what this file's
- * harvest case takes such care to avoid.
+ * the shape `balance.test.ts` records against #698 and exactly what this
+ * file's harvest case takes such care to avoid.
  *
  * Hence the one fixture here that *adds* a hull rather than removing one, and
  * hence this being the only case in the file not driven against a shipped
