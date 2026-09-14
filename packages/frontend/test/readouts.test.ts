@@ -57,7 +57,7 @@ describe('the strip explains itself: what each line claims', () => {
   it('says the quantity, what it is measured against, and what moves it', () => {
     for (const line of EVERY_LINE) {
       // §7's register is clause-separated, the way a refusal's is:
-      // `Dredge: no berth — 2 needed, 1 free · a Foundry grants 4`.
+      // `Dredge: no berth — 2 needed, 1 free · a Foundry grants 8`.
       assert.ok(
         line.split(' · ').length >= 3,
         `a line with fewer than three clauses is not §7's register: ${line}`
@@ -143,11 +143,11 @@ describe('the strip explains itself: what each line claims', () => {
     // Hulls miss a tracked Bastion; hulls and structures miss a mission's own
     // emitters, which are seated on the player's slot and carry exactly what
     // the exposure walk counts.
-    assert.doesNotMatch(
-      line.split(' · ')[0]!,
-      /\bhulls\b|\bstructures\b/,
-      'the set is not enumerable here'
-    );
+    // The whole line, not its first clause. Scoping this to the quantity left
+    // the third clause — "quieter hulls, or distance, is what lowers it" —
+    // naming the set the first clause had just stopped naming, and telling a
+    // player whose count includes a structure the wrong lever.
+    assert.doesNotMatch(line, /\bhulls\b|\bstructures\b/, 'the set is never enumerated');
     assert.match(line, /never by whom or from where/, '§11: the report is a tier and a count');
   });
 
@@ -265,52 +265,58 @@ describe('the strip explains itself: the surface', () => {
 
   it('closes the line on Escape, and only swallows the press when it closed one', async () => {
     const view = await mount([box()]);
-    await click(view, 'BERTHS 3/6');
     const expanded = () =>
       (view.button('BERTHS 3/6').props as { 'aria-expanded'?: boolean })['aria-expanded'];
-    assert.equal(expanded(), true);
-
-    // The handler has to do two things the first draft did neither of: change
-    // something visible (the line is shown by `:focus-visible` as well as by
-    // the pin, so clearing the pin alone left it on screen), and leave the
-    // press alone when there was nothing to close — React delegates to the
-    // root, so stopping it here is stopping the window `keydown` that opens
-    // the esc menu (§9.5).
     const layer = view.byClass('readouts');
-    let blurred = false;
-    let stopped = false;
-    const escape = () => ({
-      key: 'Escape',
-      target: {
-        blur: () => {
-          blurred = true;
-        },
-      },
-      stopPropagation: () => {
-        stopped = true;
-      },
-    });
 
-    await view.act(() => {
-      (layer.props as { onKeyDown: (e: unknown) => void }).onKeyDown(escape());
-    });
-    assert.equal(expanded(), false, 'the pin is released');
-    assert.ok(blurred, 'and the focus route is closed too, or nothing on screen changes');
-    assert.ok(stopped, 'the press is spent on the line rather than reaching the menu');
-
-    // Nothing is open now, and nothing focusable was the target: the press has
-    // to travel, or the strip becomes a place where Escape does not work.
-    stopped = false;
-    await view.act(() => {
-      (layer.props as { onKeyDown: (e: unknown) => void }).onKeyDown({
+    // A target the DOM can actually produce: an element, which always has
+    // `blur`, and which either matches `:focus-visible` or does not. Asking
+    // whether it *has* `blur` was the first version of this guard and was
+    // constant-true, so Escape was swallowed whatever was on screen.
+    const press = (focusVisible: boolean) => {
+      let blurred = false;
+      let stopped = false;
+      const event = {
         key: 'Escape',
-        target: {},
+        target: {
+          blur: () => {
+            blurred = true;
+          },
+          matches: (query: string) => query === ':focus-visible' && focusVisible,
+        },
         stopPropagation: () => {
           stopped = true;
         },
-      });
-    });
-    assert.ok(!stopped, 'with nothing to close, Escape belongs to the esc menu');
+      };
+      return {
+        fire: () => (layer.props as { onKeyDown: (e: unknown) => void }).onKeyDown(event),
+        was: () => ({ blurred, stopped }),
+      };
+    };
+
+    // 1 — pinned by a tap, and the pointer is nowhere near it. Escape closes it
+    // and spends the press, whether or not the keyboard is what showed it.
+    await click(view, 'BERTHS 3/6');
+    assert.equal(expanded(), true, 'a tap pins it open');
+    const pinned = press(false);
+    await view.act(() => pinned.fire());
+    assert.equal(expanded(), false, 'the pin is released');
+    assert.ok(pinned.was().stopped, 'and the press is spent on the line');
+
+    // 2 — nothing pinned, but the keyboard put the line on screen. Same.
+    const focused = press(true);
+    await view.act(() => focused.fire());
+    assert.ok(focused.was().blurred, 'blurring is what closes the focus route');
+    assert.ok(focused.was().stopped, 'and that press is spent too');
+
+    // 3 — nothing pinned and nothing focus-visible, which is exactly where the
+    // old guard was wrong: click a readout to pin, click again to unpin, and
+    // focus is still on a button Chrome does not call `:focus-visible`. Nothing
+    // is on screen to close, so the press belongs to the esc menu (§9.5).
+    const quiet = press(false);
+    await view.act(() => quiet.fire());
+    assert.ok(!quiet.was().stopped, 'with nothing shown, Escape reaches the menu');
+    assert.ok(!quiet.was().blurred, 'and the focus is left where the player put it');
 
     await view.unmount();
   });

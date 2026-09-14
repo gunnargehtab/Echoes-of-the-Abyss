@@ -219,7 +219,7 @@ export function trackedDetail(count: number): string {
   return (
     `${count} of your own are resolved by somebody at bearing or better` +
     ' · how well you are seen, never by whom or from where — that is all the report carries' +
-    ' · quieter hulls, or distance, is what lowers it'
+    ' · quieter, or further away, is what lowers it'
   );
 }
 

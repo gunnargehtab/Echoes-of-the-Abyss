@@ -101,9 +101,18 @@ export function StripReadouts({
         // native event before the window `keydown` that opens the menu —
         // unconditionally stopping it would take the menu away from anyone
         // whose focus happened to be on the strip.
-        const target = event.target as { blur?: () => void };
-        const closing = pinned !== null || typeof target.blur === 'function';
-        if (!closing) return;
+        // What is *on screen*, not what the target happens to support. The
+        // first version of this asked `typeof target.blur === 'function'`,
+        // which is true of every element a browser can give this handler — the
+        // only focusable things under `.readouts` are these buttons — so the
+        // condition was constant-true and Escape was swallowed unconditionally.
+        // The live case: pin a line by clicking, click again to unpin, press
+        // Escape. Focus is still on the button, a mouse-clicked button is not
+        // `:focus-visible`, so nothing is shown — and the press was eaten
+        // anyway, taking the esc menu with it.
+        const target = event.target as { blur?: () => void; matches?: (q: string) => boolean };
+        const shownByFocus = target.matches?.(':focus-visible') === true;
+        if (pinned === null && !shownByFocus) return;
         event.stopPropagation();
         setPinned(null);
         target.blur?.();

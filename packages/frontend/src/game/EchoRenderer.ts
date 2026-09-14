@@ -1306,20 +1306,27 @@ export class EchoRenderer {
    * strip laid out this frame, in HUD units; `strip*` is the subset that earned
    * a control, in CSS pixels. See `acceptStrip`.
    *
-   * Five numbers and three strings rather than four and two, because the fifth
-   * and the third are **watches**: a figure the explanation quotes that its own
+   * Four numbers and **three** strings rather than four and two, because the
+   * third is a **watch**: a figure the explanation quotes that its own
    * readout's drawn text does not carry, so `stripMoved` would otherwise call
-   * the frame unchanged and leave a stale line on screen. Two readouts have
-   * one. The SIG instrument is drawn as two lines and its box is named by the
-   * first, so `4 units · 2 loud` becoming `5 units · 2 loud` moves nothing the
-   * scratch was watching. The draw rate prints its label rounded, so 12.4/18
-   * and 12.6/18 are one string and two different satisfactions. Both were live:
-   * a quiet hull launched under a louder one republished nothing and the line
-   * went on quoting the old count.
+   * the frame unchanged and leave a stale line on screen.
    *
-   * They are a stored string and a number rather than a composed key, because
-   * composing one would allocate on the draw path every frame — which is the
-   * cost this whole scratch exists to avoid.
+   * One readout has one. The SIG instrument is drawn as two lines and its box
+   * is named by the first, so `4 units · 2 loud` becoming `5 units · 2 loud`
+   * moves nothing the scratch was watching — and that was live: a quiet hull
+   * launched under a louder one republished nothing and the line went on
+   * quoting the old count, indefinitely.
+   *
+   * The draw rate looks like a second case and is not, which is worth writing
+   * down because the first attempt at this added a watch for it. Its line
+   * quotes a percentage the rounded label does not print — but `capacity` and
+   * `demand` are sums of integer constants (`structures.ts`, `THERMAL_DRAW`),
+   * so `toFixed(0)` prints them exactly and `satisfaction` is a pure function
+   * of the two. `DRAW c/d` is a complete key for that line, branch included.
+   *
+   * A stored string rather than a composed key, because composing one would
+   * allocate on the draw path every frame — the cost this scratch exists to
+   * avoid.
    */
   private readonly drawnNums: number[] = [];
   private readonly drawnStrs: string[] = [];
@@ -6241,15 +6248,13 @@ export class EchoRenderer {
     width: number,
     height: number,
     value: string,
-    watchStr = '',
-    watchNum = 0
+    watchStr = ''
   ): void {
     const i = this.drawnN++;
-    this.drawnNums[i * 5] = x;
-    this.drawnNums[i * 5 + 1] = y;
-    this.drawnNums[i * 5 + 2] = width;
-    this.drawnNums[i * 5 + 3] = height;
-    this.drawnNums[i * 5 + 4] = watchNum;
+    this.drawnNums[i * 4] = x;
+    this.drawnNums[i * 4 + 1] = y;
+    this.drawnNums[i * 4 + 2] = width;
+    this.drawnNums[i * 4 + 3] = height;
     this.drawnStrs[i * 3] = key;
     this.drawnStrs[i * 3 + 1] = value;
     this.drawnStrs[i * 3 + 2] = watchStr;
@@ -6306,10 +6311,10 @@ export class EchoRenderer {
     const canvasH = this.hudHeight();
 
     for (let i = 0; i < this.drawnN; i++) {
-      let x = this.drawnNums[i * 5]!;
-      let y = this.drawnNums[i * 5 + 1]!;
-      let width = this.drawnNums[i * 5 + 2]!;
-      let height = this.drawnNums[i * 5 + 3]!;
+      let x = this.drawnNums[i * 4]!;
+      let y = this.drawnNums[i * 4 + 1]!;
+      let width = this.drawnNums[i * 4 + 2]!;
+      let height = this.drawnNums[i * 4 + 3]!;
 
       if (height < band) {
         const middle = y + height / 2;
@@ -6324,20 +6329,19 @@ export class EchoRenderer {
       let covers = false;
       for (let j = 0; j < this.drawnN && !covers; j++) {
         if (j === i) continue;
-        const ox = this.drawnNums[j * 5]!;
-        const oy = this.drawnNums[j * 5 + 1]!;
-        const ow = this.drawnNums[j * 5 + 2]!;
-        const oh = this.drawnNums[j * 5 + 3]!;
+        const ox = this.drawnNums[j * 4]!;
+        const oy = this.drawnNums[j * 4 + 1]!;
+        const ow = this.drawnNums[j * 4 + 2]!;
+        const oh = this.drawnNums[j * 4 + 3]!;
         covers = x < ox + ow && ox < x + width && y < oy + oh && oy < y + height;
       }
       if (covers) continue;
 
       const at = this.stripN++;
-      this.stripNums[at * 5] = x * s;
-      this.stripNums[at * 5 + 1] = y * s;
-      this.stripNums[at * 5 + 2] = width * s;
-      this.stripNums[at * 5 + 3] = height * s;
-      this.stripNums[at * 5 + 4] = this.drawnNums[i * 5 + 4]!;
+      this.stripNums[at * 4] = x * s;
+      this.stripNums[at * 4 + 1] = y * s;
+      this.stripNums[at * 4 + 2] = width * s;
+      this.stripNums[at * 4 + 3] = height * s;
       this.stripStrs[at * 3] = this.drawnStrs[i * 3]!;
       this.stripStrs[at * 3 + 1] = this.drawnStrs[i * 3 + 1]!;
       this.stripStrs[at * 3 + 2] = this.drawnStrs[i * 3 + 2]!;
@@ -6448,12 +6452,7 @@ export class EchoRenderer {
       this.drawLabel.y,
       this.drawLabel.width,
       this.drawLabel.height,
-      this.drawLabel.text,
-      '',
-      // The label is rounded, so 12.4/18 and 12.6/18 are one string and two
-      // different percentages in the line below it. Watched as the figure the
-      // line actually prints.
-      Math.round(this.drawReport.satisfaction * 100)
+      this.drawLabel.text
     );
     if (this.mapLabel.visible) {
       this.recordDrawn(
@@ -6492,7 +6491,7 @@ export class EchoRenderer {
     this.acceptStrip();
     if (!this.stripMoved()) return;
     this.lastStripN = this.stripN;
-    for (let i = 0; i < this.stripN * 5; i++) this.lastStripNums[i] = this.stripNums[i]!;
+    for (let i = 0; i < this.stripN * 4; i++) this.lastStripNums[i] = this.stripNums[i]!;
     for (let i = 0; i < this.stripN * 3; i++) this.lastStripStrs[i] = this.stripStrs[i]!;
     this.callbacks.onReadouts(this.readoutBoxes());
   }
@@ -6500,7 +6499,7 @@ export class EchoRenderer {
   /** Whether this frame's strip differs from the one last published. */
   private stripMoved(): boolean {
     if (this.stripN !== this.lastStripN) return true;
-    for (let i = 0; i < this.stripN * 5; i++) {
+    for (let i = 0; i < this.stripN * 4; i++) {
       if (this.stripNums[i] !== this.lastStripNums[i]) return true;
     }
     for (let i = 0; i < this.stripN * 3; i++) {
@@ -6524,10 +6523,10 @@ export class EchoRenderer {
       const key = this.stripStrs[i * 3] as ReadoutKey;
       boxes.push({
         key,
-        x: this.stripNums[i * 5]!,
-        y: this.stripNums[i * 5 + 1]!,
-        width: this.stripNums[i * 5 + 2]!,
-        height: this.stripNums[i * 5 + 3]!,
+        x: this.stripNums[i * 4]!,
+        y: this.stripNums[i * 4 + 1]!,
+        width: this.stripNums[i * 4 + 2]!,
+        height: this.stripNums[i * 4 + 3]!,
         value: this.stripStrs[i * 3 + 1]!,
         detail: this.readoutDetail(key, mix.label, mix.worldGain, this.loudCount),
       });

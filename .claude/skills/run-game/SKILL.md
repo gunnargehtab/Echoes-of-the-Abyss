@@ -269,7 +269,7 @@ explanations (#724) that a runner cannot reach. Most of that contract is held in
 `packages/frontend/test` — the lines themselves, the publish gate, the rule that a control
 never covers a number which is not its own — and belongs there, because it needs no engine.
 
-Three things do need one. The controls are refused when a readout runs off the **canvas**,
+Four things do need one. The controls are refused when a readout runs off the **canvas**,
 and the bound is the canvas rather than the strip's own 52 px because the SIG instrument
 sits a couple of pixels below the strip's bevel: headless that box measures 51 px and fits,
 in Chromium about 53 and it does not, the fonts not being the same ones. So a strip-height
@@ -277,7 +277,10 @@ bound drops §3's one permanent element *in the browser and nowhere else* — re
 and the whole suite stays green while this drive fails on its second line. `:focus-visible`
 is likewise an engine's judgement about how the focus arrived rather than a flag a test can
 set, and Tab order is sequential focus navigation, which jsdom does not implement — the
-same bargain the esc menu's walk records above.
+same bargain the esc menu's walk records above. So is the pointer route, which is the one
+criterion 1 names first: the line is shown by `.readout-slot:hover`, a cascade reaching
+through a layer that carries `pointer-events: none`, and a renderer that has no pointer and
+builds no cascade can say nothing about it.
 
 It walks §11's range — 75%, 100% and 200% — resetting the scale through `localStorage` and
 resuming the same match from the title, so the strip carries the same figures at each. Run

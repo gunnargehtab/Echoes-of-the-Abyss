@@ -187,6 +187,29 @@ export default async ({ page, shot }) => {
     `and the keyboard is what showed the line (${shown.map((s) => s.described).join(', ')})`
   );
 
+  // The pointer route, which criterion 1 names first and which nothing else
+  // holds. Hover is pure CSS — `.readout-slot:hover .readout-detail` — reaching
+  // through a layer that carries `pointer-events: none`, so whether it works at
+  // all is an engine's judgement about where the pointer is, not a class a test
+  // can set. `react-test-renderer` sees no pointer and no cascade.
+  await page.evaluate(() => document.activeElement?.blur?.());
+  await page.mouse.move(0, 400);
+  await page.waitForTimeout(200);
+  check(
+    (await controls(page)).every((control) => !control.shown),
+    'with the pointer in the water, no line is on screen'
+  );
+
+  const target = (await controls(page))[0];
+  await page.hover('.readout');
+  await page.waitForTimeout(250);
+  const hovered = (await controls(page)).filter((control) => control.shown);
+  await shot('pointer-hover');
+  check(
+    hovered.length === 1 && hovered[0].described === target.described,
+    `hovering a readout shows its line and only its line (${hovered.map((h) => h.described).join(', ')})`
+  );
+
   console.log('');
   console.log(
     `readouts: ${expected.length} controls, all reachable by Tab, none overlapping, ` +
