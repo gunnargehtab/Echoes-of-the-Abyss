@@ -386,6 +386,11 @@ describe('telemetry measures what it says it measures', () => {
       /\| Nodules banked a match \| 300 \| 300 \| 330 \|/,
       "and the Order's row is its §6 half-yield plus its tithe, which is the control"
     );
+    assert.match(
+      markdown,
+      /\| Harvester-time laden \| 58% \| 58% \| 58% \|/,
+      'the walk home is a little over half of a round trip on this map'
+    );
 
     // Ten seconds in, nobody has landed anything, and a mean hold over no
     // deliveries is a division this table must refuse rather than print.
@@ -480,6 +485,11 @@ describe('telemetry measures what it says it measures', () => {
       player.harvesterSecondsQuiet,
       0,
       'and a stall is not a throttle: nobody chose to be poor here'
+    );
+    assert.match(
+      toMarkdown(summarise([telemetry.finish(match.tick, null, true)]), 'mined out'),
+      /\| Harvester-time stalled \| [1-9][0-9]*% \|/,
+      'and the column reaches the page rather than stopping at the telemetry object'
     );
   });
 
@@ -584,6 +594,22 @@ describe('telemetry measures what it says it measures', () => {
       player.noduleDeliveries,
       0,
       'and none of it may be recorded as having reached a depot'
+    );
+
+    // Through the report as well as off the telemetry: the seam between
+    // `summarise` and `toMarkdown` is where a column silently prints zero
+    // forever, and lost-in-transit is the one the register calls the only way
+    // a navy can mine well and still be poor.
+    const markdown = toMarkdown(summarise([result]), 'a hold that went down');
+    assert.match(
+      markdown,
+      /\| Nodules lost in transit a match \| [1-9][0-9]*(\.[0-9]+)? \| 0 \|/,
+      'the slot that lost a hauler, and the slot that did not'
+    );
+    assert.match(
+      markdown,
+      /\| Lost as a share of what was cut \| 100% \| — \|/,
+      'everything this slot cut was lost; the other cut nothing, which is not 0% but no answer'
     );
   });
 

@@ -204,9 +204,10 @@ export interface FactionSummary {
    * the account rose by, so the two together are a ledger with two sides. The
    * Order's row is the instrument's own control, and it carries *both* of the
    * nodule terms docs/economy.md §6 gives that navy — `banked ≈ delivered ×
-   * HADRON.NODULE_YIELD_MULTIPLIER + HADRON.TITHE_PER_S × seconds`. The tithe
-   * is most of the gap on the page and pushes banked back up toward delivered;
-   * naming only the multiplier would make the control read as a fault.
+   * HADRON.NODULE_YIELD_MULTIPLIER + HADRON.TITHE_PER_S × seconds`. Both, since
+   * the printed gap is the *difference* of the two: over the thirty stored
+   * seeds the multiplier takes 1,476 off and the tithe puts 1,077 back, and
+   * what the table shows is the 405 left over.
    *
    * For the other three the two sides are meant to agree, but **as a magnitude
    * rather than on sight**: `nodulesEarned` is a per-observation stockpile
@@ -1317,8 +1318,9 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
   lines.push(
     '_Delivered is what reached a depot; banked is what the account rose by. The Order is this ' +
       "table's own control and is meant to differ, by both of economy.md §6's nodule terms — " +
-      'half of each hold (`HADRON.NODULE_YIELD_MULTIPLIER`) plus the tithe ' +
-      '(`HADRON.TITHE_PER_S` a second), which pushes it back up. For the other three, weigh a ' +
+      'half of each hold (`HADRON.NODULE_YIELD_MULTIPLIER`) taken off, and the tithe ' +
+      '(`HADRON.TITHE_PER_S` a second) put back on. The gap printed is what is left of the ' +
+      'larger term after the smaller one. For the other three, weigh a ' +
       'gap rather than read it as a defect: banked is a per-observation delta, so a purchase in ' +
       'the same pass as a deposit nets against it. Lost in transit is ore that was cut and died ' +
       'with its hauler, which no income column can show. Stalled counts a harvester the server ' +

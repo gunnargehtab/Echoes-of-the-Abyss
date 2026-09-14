@@ -110,18 +110,21 @@ The Knights are the table's own control, and their row carries **both** of the n
 banked  ≈  delivered × HADRON.NODULE_YIELD_MULTIPLIER  +  HADRON.TITHE_PER_S × seconds
 ```
 
-The half-yield pulls banked down and the tithe pushes it back up, and on the stored thirty
-seeds the tithe is the larger correction. A footnote that named only the multiplier would make
-the control row read as a 400-nodule fault of this instrument. What the control actually buys
-is this: an instrument that had quietly ended up reading the bank twice would report the
-Knights' two columns *equal*.
+**Both terms, because the printed gap is their difference and neither alone predicts it.** The
+half-yield pulls banked down and the tithe pushes it back up, and over the thirty stored seeds
+the half-yield is the larger by some four hundred nodules: it takes **1,476** off a delivered
+column of 2,951, the tithe puts **1,077** back over a mean 1,077 s alive, and what the table
+prints is the **405** left over. Name only the multiplier and a reader expects 1,476 and finds
+2,546 — a thousand-nodule excess that is the doctrine rather than a fault. What the control
+actually buys is this: an instrument that had quietly ended up reading the bank twice would
+report the Knights' two columns *equal*.
 
 **A gap between the two columns is a magnitude to weigh, not a defect on sight.** Three biases
 sit between them, all one-directional, and the largest is on the banked side:
 
 | Bias | Direction | Size |
 | --- | --- | --- |
-| A purchase inside the same 200 ms pass as a deposit nets against `nodulesEarned` | banked down | up to a whole hold per delivery; measured at two holds inside one 8-minute match, and at 0.3–0.5% of the delivered column meaned over the thirty stored seeds |
+| A purchase inside the same 200 ms pass as a deposit nets against `nodulesEarned` | banked down | up to a whole hold per delivery. Over the thirty stored seeds it means 0.31% of the delivered column for the Consortium, 0.34% for the Commune and 0.46% for the Directorate; the largest in any single match is 150 nodules, three holds, in a 12.5-minute one |
 | A hold is recorded as the harvester was last seen carrying it | delivered down | up to one observation's mining, 2 nodules |
 | A hold whose hull dies in the pass it empties in is counted as lost | delivered down, lost up | one hold per death |
 

@@ -125,9 +125,12 @@ export interface PlayerTelemetry {
    *   it accepts. The Order is the one navy whose two figures are *meant* to
    *   differ, and by both of the nodule terms docs/economy.md §6 gives it:
    *   `banked ≈ delivered × HADRON.NODULE_YIELD_MULTIPLIER + HADRON.TITHE_PER_S
-   *   × seconds`. The tithe is most of the gap a reader sees and pushes banked
-   *   back *up* toward delivered, so a note that named only the multiplier
-   *   would make the control row read as a fault of this instrument.
+   *   × seconds`. Both terms, because the printed gap is their *difference* and
+   *   neither alone predicts it: over the thirty stored seeds the multiplier
+   *   takes 1,476 off and the tithe puts 1,077 back, which is the 405 the
+   *   baseline shows. Name only the multiplier and a reader expects 1,476 and
+   *   finds 2,546 — a thousand-nodule excess that is the doctrine, not a
+   *   fault.
    * - `nodulesLostInTransit` — cargo aboard a harvester the observation before
    *   it stopped existing. Ore that was cut, was never banked, and is
    *   invisible in every income column.
@@ -547,15 +550,6 @@ export class MatchTelemetry {
   }
 
   /**
-   * What appeared and what went away, both read off the player's own lists.
-   *
-   * A loss is an id that was in this player's own list and is not any more; a
-   * build is an id that was not and now is. Their own units and structures are
-   * always sent in full, so both are exact — no inference, no fog. The kind of
-   * a loss is remembered from the last tick the hull existed, because by the
-   * time it is gone there is nothing left to ask.
-   */
-  /**
    * The nodule round trip, closed one hold at a time (#706).
    *
    * Cargo only ever rises while a harvester mines and is set to zero at the
@@ -586,6 +580,15 @@ export class MatchTelemetry {
     this.lastHolds.set(player.slot, now);
   }
 
+  /**
+   * What appeared and what went away, both read off the player's own lists.
+   *
+   * A loss is an id that was in this player's own list and is not any more; a
+   * build is an id that was not and now is. Their own units and structures are
+   * always sent in full, so both are exact — no inference, no fog. The kind of
+   * a loss is remembered from the last tick the hull existed, because by the
+   * time it is gone there is nothing left to ask.
+   */
   private countBuildsAndLosses(
     tick: number,
     player: PlayerTelemetry,
