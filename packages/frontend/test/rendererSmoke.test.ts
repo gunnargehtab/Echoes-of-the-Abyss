@@ -911,7 +911,9 @@ describe('renderer smoke test: input and teardown', () => {
    * for the half of the defect that is about what the player can see.
    */
   it('arms no attack-move on a selection the mission is holding whole', async () => {
-    const armed = async (held: boolean): Promise<{ ordered: boolean; bar: string | null }> => {
+    const armed = async (
+      held: boolean
+    ): Promise<{ ordered: boolean; bar: string | null; reason: string | null }> => {
       const world = await boot();
       try {
         const snapshot = cannedSnapshot();
@@ -948,6 +950,12 @@ describe('renderer smoke test: input and teardown', () => {
         world.chart.setMissionHolds([]);
         world.frame(1);
         const bar = textSaying(world.app.stage, 'ATTACK-MOVE armed');
+        // `movementHolds.ts`'s own `HOLD_TEXT` for `Unreleased`, which is
+        // §10.5's wording rather than this component's markup. Read after the
+        // hold is lifted on purpose: `refuse` parks its reason on the bar for
+        // `REFUSAL_MS`, so what is on screen here is the press answering for
+        // itself rather than the steady-state held line.
+        const reason = textSaying(world.app.stage, 'held — not released yet');
 
         // The water, left button: the one thing an armed mode does.
         canvas.dispatch('pointerdown', {
@@ -958,7 +966,7 @@ describe('renderer smoke test: input and teardown', () => {
           clientY: at.y + 60,
           shiftKey: false,
         });
-        return { ordered: world.log.first('onAttackMoveOrder') !== undefined, bar };
+        return { ordered: world.log.first('onAttackMoveOrder') !== undefined, bar, reason };
       } finally {
         world.teardown();
       }
@@ -970,6 +978,7 @@ describe('renderer smoke test: input and teardown', () => {
     const free = await armed(false);
     assert.ok(free.ordered, 'the control never armed at all, so the case below proves nothing');
     assert.ok(free.bar !== null, 'the control armed without the bar ever saying so');
+    assert.equal(free.reason, null, 'nothing was refused, so nothing should be giving a reason');
 
     const held = await armed(true);
     assert.equal(
@@ -978,6 +987,13 @@ describe('renderer smoke test: input and teardown', () => {
       'the W key armed an attack-move over a selection the mission is holding'
     );
     assert.equal(held.bar, null, 'and the bar announced a mode that should not have armed');
+    // The other half of the fix, and the half an absence cannot hold: §7 wants
+    // the refusal *stated*, and ENGAGE's mirror is its `refusal`, not merely
+    // its greying. Without this, deleting `this.refuse(held)` and keeping the
+    // bare `return` leaves the whole suite green — the press would fail
+    // silently, which is the half of #722 item 3 that made the key worse than
+    // the button rather than merely different.
+    assert.equal(held.reason, 'held — not released yet', 'the refused press never said why');
   });
 
   /**
