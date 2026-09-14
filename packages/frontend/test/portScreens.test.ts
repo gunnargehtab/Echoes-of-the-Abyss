@@ -122,10 +122,22 @@ function offers(view: Rendered, expected: string[]): void {
   assert.equal(names.length, expected.length, `offered ${names.length} controls: ${names}`);
   expected.forEach((want, index) => {
     assert.ok(
-      names[index]?.startsWith(want),
+      leadsWith(names[index] ?? '', want),
       `entry ${index} reads ${JSON.stringify(names[index])}, expected it to lead with "${want}"`
     );
   });
+}
+
+/**
+ * Whether an accessible name is this entry's, at the word boundary.
+ *
+ * Not a bare prefix: an entry relabelled "Tutorials" or "Campaign board" would
+ * keep its position under `startsWith` alone, and what this replaced was an
+ * exact match on the label. Credits carries no note, so its whole accessible
+ * name is its name — which is the equality arm.
+ */
+function leadsWith(name: string, want: string): boolean {
+  return name === want || name.startsWith(`${want} `);
 }
 
 describe('the title screen: the shape of the finished game', () => {
@@ -140,14 +152,14 @@ describe('the title screen: the shape of the finished game', () => {
 
   it('leads with Tutorial, because the entries under it assume a player who has played', async () => {
     // §14: "Tutorial leads the list, above Campaign, because the prologue is
-    // the fifteen minutes of authored teaching this game opens with and the two
-    // entries below it assume a player who has already had them." Held as the
-    // pair rather than as a position, so it stays an assertion about the rule
-    // when an eighth entry lands between them or above them.
+    // the authored teaching this game opens with and the two entries below it
+    // assume a player who has already had it." Held as the pair rather than as
+    // a position, so it stays an assertion about the rule when an eighth entry
+    // lands between them or above them.
     const { view } = await title();
     try {
       const names = view.buttonNames();
-      const at = (lead: string): number => names.findIndex((name) => name.startsWith(lead));
+      const at = (lead: string): number => names.findIndex((name) => leadsWith(name, lead));
       assert.ok(at('Tutorial') >= 0 && at('Campaign') >= 0, `both doors are offered: ${names}`);
       assert.ok(at('Tutorial') < at('Campaign'), 'Tutorial precedes Campaign');
     } finally {
@@ -174,8 +186,8 @@ describe('the title screen: the shape of the finished game', () => {
   it('changes which entry is offered first, never how many stops the list has', async () => {
     // The half of #723 that a reorder can break silently. Every entry is its
     // own tab stop here — the one stop with a roving `tabindex` is the campaign
-    // board (§13), not this screen — so the list keeps as many stops as it has
-    // entries, and none of them is taken out of the tab order.
+    // board, specified in §14's "The campaign board — Keyboard", not this
+    // screen — so the list keeps as many stops as it has entries.
     //
     // Autofocus is the other half, and it is keyed on an entry's id rather than
     // its index, so moving Tutorial up leaves it where it was: on Solo game
@@ -190,7 +202,7 @@ describe('the title screen: the shape of the finished game', () => {
       assert.deepEqual(
         stops.filter((node) => node.props.tabIndex !== undefined),
         [],
-        'no entry is taken out of the tab order'
+        'no entry carries an explicit tabIndex, so the list is one stop per entry'
       );
       const armed = stops.map((node) => node.props.autoFocus === true);
       assert.equal(

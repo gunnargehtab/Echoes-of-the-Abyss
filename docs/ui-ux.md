@@ -819,12 +819,13 @@ title screen, and reads the briefing on the way in.
   Multiplayer, Settings, Credits. There is no Quit; this is a browser. Its dress is **the
   listening room**, specified below: the port runs a hydrophone, and the screen shows it
   running.
-  **Tutorial leads the list**, above Campaign, because the prologue is the fifteen minutes
-  of authored teaching this game opens with and the two entries below it assume a player
-  who has already had them. Resume stays above it when a seat is held: that is a match
-  already in the water, and §1.5's class of accident is putting anything above it. The
-  order is the only thing this says — the door is unchanged, and Tutorial still opens the
-  briefing on the prologue directly, one mission behind two doors as below.
+  **Tutorial leads the list**, above Campaign, because the prologue is the authored
+  teaching this game opens with and the two entries below it assume a player who has
+  already had it. Its length is [mission-sorrowgate.md](mission-sorrowgate.md)'s and is
+  not repeated here. Resume stays above it when a seat is held: that is a match already in
+  the water, and §1.5's class of accident is putting anything above it. The order is the
+  only thing this says — the door is unchanged, and Tutorial still opens the briefing on
+  the prologue directly, one mission behind two doors.
 - **Campaign** — the board of four campaigns and their slots. A board rather than a list
   because the order is free after the prologue ([campaign.md](campaign.md) §1): a list
   would assert a sequence the campaign refuses to have, and mission ids are namespaced by
