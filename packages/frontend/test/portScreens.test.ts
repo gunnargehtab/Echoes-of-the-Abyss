@@ -131,10 +131,24 @@ function offers(view: Rendered, expected: string[]): void {
 /**
  * Whether an accessible name is this entry's, at the word boundary.
  *
- * Not a bare prefix: an entry relabelled "Tutorials" or "Campaign board" would
- * keep its position under `startsWith` alone, and what this replaced was an
- * exact match on the label. Credits carries no note, so its whole accessible
- * name is its name — which is the equality arm.
+ * A bare prefix would let "Tutorials" keep Tutorial's position, so the match is
+ * at the boundary: the whole name, or the name and then a space. Credits
+ * carries no note and so is its whole accessible name, which is the equality
+ * arm.
+ *
+ * What it cannot catch, said plainly rather than left to be discovered: a label
+ * extended by a further word. An entry relabelled "Campaign board" reads
+ * "Campaign board Four wars, one question", and from the accessible name alone
+ * that is indistinguishable from "Campaign" followed by its note — the note is
+ * joined with a space, so the boundary is in the same place. Telling them apart
+ * means reading the label span, which is the markup #723's criterion 2 asks
+ * this assertion not to be about.
+ *
+ * So this is weaker against a relabel than the exact `deepEqual` on label text
+ * it replaced, and nothing else in this file closes that: `button()` matches on
+ * `includes`, so "sends each entry to its own door" finds a renamed entry too.
+ * Order is what this holds. A relabel is a change to what the screen says and
+ * is reviewed by looking at it, which is what the committed frame is for.
  */
 function leadsWith(name: string, want: string): boolean {
   return name === want || name.startsWith(`${want} `);
@@ -159,8 +173,13 @@ function oneStopPerEntry(view: Rendered, stopCount: number, focused: string): vo
   const stops = view.root.findAll((node) => node.type === 'button');
   const names = view.buttonNames();
   assert.equal(stops.length, stopCount, `${stopCount} entries, ${stopCount} stops`);
+  // The values, never the instances. `deepEqual` on a `ReactTestInstance` tries
+  // to diff the fiber tree behind it, which does not terminate in any useful
+  // time: a violation took ~97 s and then SIGKILLed the runner with no message,
+  // taking the rest of the file's tests with it. A guard whose failure mode is
+  // "the shard timed out" is worse than the assertion it was making.
   assert.deepEqual(
-    stops.filter((node) => node.props.tabIndex !== undefined),
+    stops.map((node) => node.props.tabIndex).filter((index) => index !== undefined),
     [],
     'no entry carries an explicit tabIndex, so the list is one stop per entry'
   );
@@ -274,9 +293,10 @@ describe('the title screen: a held seat', () => {
     holdASeat();
     const { view, entries } = await title();
     try {
-      // Above Tutorial as well, since #723 put that first: §14 keeps a held
-      // seat at the top because it is a match already in the water, and §1.5
-      // forbids putting anything above it.
+      // Above Tutorial as well, since #723 put that first. The reason is §14's
+      // "Resume" subsection rather than a principle: a held seat is a match
+      // still in the water, and the screen "surfaces it as its first entry,
+      // autofocused — one keypress back into the match".
       offers(view, [
         'Resume match',
         'Tutorial',
