@@ -15,7 +15,8 @@
  *   a path in. It says nothing about what an author put in those strings —
  *   that half is prose and is checked against prose by the sweep in
  *   `missions.test.ts` — which bans the proper nouns of somebody else's force
- *   and cannot bound prose beyond that, as its own comment says. A docblock
+ *   except a navy the player's own party also flies, and cannot bound prose at
+ *   all beyond that, as its own comment says. A docblock
  *   claiming this file holds both is how a gloss naming another party's
  *   Corvettes passed every gate in the tree.
  * - **The gloss follows the reading it belongs to.** §12 authors two readings

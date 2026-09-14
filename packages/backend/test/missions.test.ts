@@ -89,6 +89,16 @@ const NAVY: Record<Faction, string> = {
 const words = (name: string): string[] =>
   name.split(/[^A-Za-z]+/).filter((word) => word.length >= 4);
 
+/**
+ * A banned name, as a whole word.
+ *
+ * Substring matching is what made the first version of this refuse "flight" on
+ * behalf of a foreign party's Light Scouts. A gloss naming another party's hull
+ * writes the word; it does not hide it inside a longer one.
+ */
+const atWordBoundary = (name: string): RegExp =>
+  new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+
 /** Every tag a mission places in the water, unit and structure alike. */
 function authoredTags(mission: MissionDefinition): Set<string> {
   const tags = new Set<string>();
@@ -632,11 +642,20 @@ describe('the objectives', () => {
     // What this holds, and what it does not — stated here because a gate whose
     // reach is overestimated is worse than one nobody has. It bans proper nouns
     // belonging to somebody else's force, which is the reveal an author writes
-    // by accident. It cannot bound prose: `Three other delegations hold the
-    // east and the west` passes, names nobody, and gives away a count and two
-    // bearings. §10.5's "never a count of anything hostile" is a review rule,
-    // `docs/invariants.md` row 24 is scoped to what is here, and neither should
-    // be read as the other.
+    // by accident. Two things it cannot do, both established by breaking it:
+    //
+    // It cannot bound prose. `Three other delegations hold the east and the
+    // west` passes, names nobody, and gives away a count and two bearings.
+    //
+    // And it cannot ban a navy the player's own party also flies. Sorrowgate
+    // seats a Commune delegation in the water beside a Commune player, so
+    // `NAVY[Pelagia]` is not in `foreign` and `the Commune delegation to the
+    // west` passes — banning it would ban the player's own navy, which §10.5
+    // explicitly permits a gloss to name.
+    //
+    // §10.5's "never a count of anything hostile" is a review rule,
+    // `docs/invariants.md` row 24 is scoped to what is here and names that
+    // exception, and neither should be read as the other.
     //
     // The key check is §10.5's last clause and it is here because #722 is what
     // taught it: the held harvester's hint line named `V throttle` to a touch
@@ -698,13 +717,25 @@ describe('the objectives', () => {
       // water. A gloss is the plain layer — it describes the player's own force
       // and quotes nobody. Split into words as well as kept whole, because an
       // author writes "Drenn", not "Underwriter Sela Drenn".
+      //
+      // **Capitalised words only, and `mine` subtracted here too.** A speaker is
+      // a free-text label rather than a name: the catalogue carries `The record,
+      // read from the stalls` and `Voice of the reconnaissance, for the Order`,
+      // so taking every long word banned `from`, `read`, `order` and `voice`
+      // outright. And `First Cantor Vehl Ossary` put `Cantor` in the set for the
+      // four missions whose *player* fields a Cantor — the `Light Scout` failure
+      // over again, on the path where the subtraction had not been applied.
       for (const beat of mission.beats) {
         if (beat.kind === 'say') {
           foreign.add(beat.speaker);
-          for (const word of words(beat.speaker)) foreign.add(word);
+          for (const word of words(beat.speaker)) {
+            if (/^[A-Z]/.test(word) && !mine.has(word)) foreign.add(word);
+          }
         }
         if (beat.kind === 'creature' && beat.species !== undefined) {
-          for (const word of words(faunaStatsFor(beat.species).name)) foreign.add(word);
+          for (const word of words(faunaStatsFor(beat.species).name)) {
+            if (!mine.has(word)) foreign.add(word);
+          }
         }
       }
 
@@ -727,10 +758,13 @@ describe('the objectives', () => {
             objective.text,
             `${mission.id}: "${objective.id}" glosses itself, so the row says one thing twice`
           );
-          const lower = gloss.toLowerCase();
+          // On a word boundary, never a substring. `Light` is foreign in
+          // First Arrival, where another party fields Light Scouts, and an
+          // `includes` refused the word **flight** — which is the one word the
+          // court uses for the player's own four hulls.
           for (const name of foreign) {
             assert.equal(
-              lower.includes(name.toLowerCase()),
+              atWordBoundary(name).test(gloss),
               false,
               `${mission.id}: "${objective.id}" glosses with "${name}", which is not the ` +
                 `player's — §10.5: never a contact the player has not detected`

@@ -487,7 +487,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       text: 'The flight holds at the arch.',
       gloss:
         'The court asks the flight to wait, and nothing but the clock is measured: this row ' +
-        'closes when the arch comes down, ten minutes in, wherever the escorts are standing.',
+        'closes when the arch comes down, wherever the escorts are standing.',
       initial: ObjectiveStatus.Pending,
       // The station ends when the arch does. Nothing else about the first ten
       // minutes is a task, on purpose: §10 gives them to SIG, to the array, and

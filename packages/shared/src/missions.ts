@@ -1559,9 +1559,13 @@ export interface ObjectiveView {
    * The second is a **necessary condition and not the whole rule**, and saying
    * so is part of it: a deny-list over proper nouns catches a gloss that names
    * a Corvette and cannot catch one that says *three other delegations hold the
-   * east*, which names nobody and reveals a count and two bearings. The gate
-   * bounds what an author can do by accident; the rest is review. Two rounds of
-   * a reveal surviving a green suite is what that sentence was learned from.
+   * east*, which names nobody and reveals a count and two bearings. It also
+   * cannot ban a navy the player's own party flies — Sorrowgate seats a Commune
+   * delegation beside a Commune player — so *the Commune delegation to the
+   * west* passes too. The gate bounds what an author can do by accident; the
+   * rest is review. Three rounds of a reveal surviving a green suite is what
+   * that sentence was learned from, and under-claiming is the whole point of
+   * it.
    *
    * Absent is the ordinary case — twenty-eight missions author none, and a
    * mission that authors none shows the reading alone exactly as before.
