@@ -101,23 +101,55 @@ async function title(): Promise<{ view: Rendered; entries: Entries }> {
   return { view, entries };
 }
 
-/** The entries a player sees, in the order §14 lists them. */
-function labels(view: Rendered): string[] {
-  return view.allByClass('menu-entry-label').map((node) => String(node.props.children));
+/**
+ * The entries a player is offered, in the order they are offered, read the way
+ * assistive technology reads them.
+ *
+ * An entry's accessible name is its name and then its note — "Tutorial
+ * Prologue: Sorrowgate …" — so this holds the name each one *leads with*.
+ * Asserting the whole string would be asserting the note's authored copy, and
+ * what §14 specifies here is the list, not the prose beside it. Reading the
+ * order off `.menu-entry-label` instead, which is what this file used to do,
+ * asserts the markup: a label span is where the name happens to be rendered,
+ * and the order the doors are offered in is a fact about the screen (#723).
+ *
+ * The length assertion is the other half. Every control on this screen is an
+ * entry, so a list that matched position for position while carrying a seventh
+ * button would still be wrong.
+ */
+function offers(view: Rendered, expected: string[]): void {
+  const names = view.buttonNames();
+  assert.equal(names.length, expected.length, `offered ${names.length} controls: ${names}`);
+  expected.forEach((want, index) => {
+    assert.ok(
+      names[index]?.startsWith(want),
+      `entry ${index} reads ${JSON.stringify(names[index])}, expected it to lead with "${want}"`
+    );
+  });
 }
 
 describe('the title screen: the shape of the finished game', () => {
   it('offers §14’s entries and no Quit, because this is a browser', async () => {
     const { view } = await title();
     try {
-      assert.deepEqual(labels(view), [
-        'Campaign',
-        'Solo game',
-        'Multiplayer',
-        'Tutorial',
-        'Settings',
-        'Credits',
-      ]);
+      offers(view, ['Tutorial', 'Campaign', 'Solo game', 'Multiplayer', 'Settings', 'Credits']);
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('leads with Tutorial, because the entries under it assume a player who has played', async () => {
+    // §14: "Tutorial leads the list, above Campaign, because the prologue is
+    // the fifteen minutes of authored teaching this game opens with and the two
+    // entries below it assume a player who has already had them." Held as the
+    // pair rather than as a position, so it stays an assertion about the rule
+    // when an eighth entry lands between them or above them.
+    const { view } = await title();
+    try {
+      const names = view.buttonNames();
+      const at = (lead: string): number => names.findIndex((name) => name.startsWith(lead));
+      assert.ok(at('Tutorial') >= 0 && at('Campaign') >= 0, `both doors are offered: ${names}`);
+      assert.ok(at('Tutorial') < at('Campaign'), 'Tutorial precedes Campaign');
     } finally {
       await view.unmount();
     }
@@ -139,14 +171,50 @@ describe('the title screen: the shape of the finished game', () => {
     }
   });
 
+  it('changes which entry is offered first, never how many stops the list has', async () => {
+    // The half of #723 that a reorder can break silently. Every entry is its
+    // own tab stop here — the one stop with a roving `tabindex` is the campaign
+    // board (§13), not this screen — so the list keeps as many stops as it has
+    // entries, and none of them is taken out of the tab order.
+    //
+    // Autofocus is the other half, and it is keyed on an entry's id rather than
+    // its index, so moving Tutorial up leaves it where it was: on Solo game
+    // with no seat to resume. §14 documents autofocus only for a held seat, so
+    // where it lands without one is the code's call and this holds it still
+    // rather than changing it.
+    const { view } = await title();
+    try {
+      const stops = view.root.findAll((node) => node.type === 'button');
+      const names = view.buttonNames();
+      assert.equal(stops.length, 6, 'six entries, six stops');
+      assert.deepEqual(
+        stops.filter((node) => node.props.tabIndex !== undefined),
+        [],
+        'no entry is taken out of the tab order'
+      );
+      const armed = stops.map((node) => node.props.autoFocus === true);
+      assert.equal(
+        armed.filter(Boolean).length,
+        1,
+        `one entry is autofocused, not ${armed.filter(Boolean).length}`
+      );
+      assert.ok(
+        names[armed.indexOf(true)]?.startsWith('Solo game'),
+        `focus is unmoved by the reorder, on ${JSON.stringify(names[armed.indexOf(true)])}`
+      );
+    } finally {
+      await view.unmount();
+    }
+  });
+
   it('sends each entry to its own door', async () => {
     const { view, entries } = await title();
     try {
       for (const [label, door] of [
+        ['Tutorial', 'tutorial'],
         ['Campaign', 'campaign'],
         ['Solo game', 'solo'],
         ['Multiplayer', 'multiplayer'],
-        ['Tutorial', 'tutorial'],
         ['Settings', 'settings'],
         ['Credits', 'credits'],
       ] as const) {
@@ -177,7 +245,18 @@ describe('the title screen: a held seat', () => {
     holdASeat();
     const { view, entries } = await title();
     try {
-      assert.equal(labels(view)[0], 'Resume match', 'first, where the reload lands');
+      // Above Tutorial as well, since #723 put that first: §14 keeps a held
+      // seat at the top because it is a match already in the water, and §1.5
+      // forbids putting anything above it.
+      offers(view, [
+        'Resume match',
+        'Tutorial',
+        'Campaign',
+        'Solo game',
+        'Multiplayer',
+        'Settings',
+        'Credits',
+      ]);
       assert.equal(view.byClass('menu-resume').props.autoFocus, true);
       assert.deepEqual(entries.pressed, [], 'and rendering resumed nothing');
 
