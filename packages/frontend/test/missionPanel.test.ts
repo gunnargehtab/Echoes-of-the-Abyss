@@ -249,6 +249,90 @@ describe('the objectives panel: whose words these are', () => {
     }
   });
 
+  it('prints the plain gloss beside the authored line and never instead of it', async () => {
+    // §10.5's gloss rule, and the decision on #720: the court still says what
+    // the court says, and a plainly-worded line sits beside it. Both halves are
+    // authored strings and this file templates neither — the assertion is that
+    // each survives into the tree *whole*, which is what "verbatim" means and
+    // what a reworded or assembled line would fail.
+    const reading = 'The flight stays under twenty.';
+    const plain = 'Hold every escort under SIG 20 — the reading in this panel’s header.';
+    const { rendered } = await panel(
+      missionView({
+        objectives: [objective({ id: 'silence', text: reading, gloss: plain })],
+        markers: [],
+      })
+    );
+    try {
+      const strings = rendered.text();
+      assert.ok(strings.includes(reading), 'the court’s line is one string, whole and unedited');
+      assert.ok(strings.includes(plain), 'the gloss is one string, whole and unedited');
+      // Beside, never instead. A gloss that replaced the reading would still
+      // pass a test that only looked for the gloss.
+      assert.equal(
+        reads(rendered.byClass('objectives-text')),
+        reading,
+        'the reading’s own span carries the reading and nothing else'
+      );
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('keeps the authored line first, and the gloss after it and inside the same row', async () => {
+    // Two promises at once, and they are the two §10.5 makes about where a
+    // gloss may go.
+    //
+    // *Secondary in the reading order*: the authored sentence comes first, so a
+    // player who wants the fiction reads it and can stop. Asserted on the row's
+    // rendered text rather than on the markup — §11's concern is the order the
+    // words are announced in, which is the order they are in the tree.
+    //
+    // *Inside the row*: the status region changes in place (the first test in
+    // this file), and a gloss that were its own row would make the panel grow
+    // and shrink under a live region every time a mission revealed an
+    // objective. Inside the row it is also part of a button row's accessible
+    // name for free, which is the other half of what §11 asks.
+    const reading = 'Tender One is loaded. Tender One does not move without ears.';
+    const plain = 'Tender One only moves while one of your escorts is within 400 m of it.';
+    const { rendered } = await panel(
+      missionView({
+        objectives: [objective({ id: 'tender-one', text: reading, gloss: plain })],
+        markers: [],
+      })
+    );
+    try {
+      const row = deepText(rendered.byClass('objectives-row'));
+      assert.ok(
+        row.indexOf(reading) < row.indexOf(plain),
+        'the court speaks first and the gloss explains it second'
+      );
+      assert.equal(
+        rendered.allByClass('objectives-row').length,
+        1,
+        'one rule is one row, whether or not it carries a second sentence'
+      );
+      assert.ok(
+        deepText(rendered.byClass('objectives-row')).includes(plain),
+        'and the gloss is inside that row rather than beside it'
+      );
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('draws no gloss at all for the twenty-eight missions that author none', async () => {
+    // Absent is the ordinary case. A panel that rendered an empty span would
+    // put a second grid cell under every reading in the game for nothing, and
+    // would announce an empty string to a screen reader.
+    const { rendered } = await panel(missionView({ objectives: [objective()], markers: [] }));
+    try {
+      assert.equal(rendered.allByClass('objectives-gloss').length, 0);
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
   it('shows the counters the server sent and does no arithmetic of its own', async () => {
     // The INVARIANT on `ObjectiveView.progress`: `done` and `of` come off the
     // observer's own resolved snapshot. The panel's job is to print them.

@@ -437,11 +437,27 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
    * register in this setting can do: the Commune cannot command, the Consortium
    * would price it, the Directorate would put it in the passive, and the
    * Knights would be courteous about it.
+   *
+   * Each reading also carries a `gloss` — docs/ui-ux.md §10.5, and the decision
+   * on #720 that the court's line is not rewritten and a plain line sits beside
+   * it. Five readings, five glosses: the station, the ceiling, the ceiling in
+   * debt, and the two tenders. They are written from §4, §8 and §10 rather than
+   * invented, and every fact in them is one of §10's four teaching targets
+   * stated plainly — the flight is the four escorts, twenty is a SIG reading,
+   * the consequence of crossing it is the array and never the mission, and
+   * *ears* is an escort within 400 m.
+   *
+   * They name no key. The panel is read on a device with no keyboard as well as
+   * on one with (#722), so a gloss points at what is on screen — this panel's
+   * own header reading, the line at its foot, the camera this row moves.
    */
   objectives: [
     {
       id: 'station',
       text: 'The flight holds at the arch.',
+      gloss:
+        'Keep your four escorts at the arch. Nothing else is asked of them until the arch ' +
+        'comes down, and the water below it is deeper than their refit allows.',
       initial: ObjectiveStatus.Pending,
       // The station ends when the arch does. Nothing else about the first ten
       // minutes is a task, on purpose: §10 gives them to SIG, to the array, and
@@ -451,7 +467,16 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     {
       id: 'silence',
       text: 'The flight stays under twenty.',
+      gloss:
+        'Hold every escort under SIG 20 — that is the reading in this panel’s header. The ' +
+        'faster a hull moves the louder it is, so slowing down is how you stay under. ' +
+        'Crossing it costs you the court’s hearing, never the mission.',
       debtText: 'The flight owes the court a silence.',
+      debtGloss:
+        'An escort went over the ceiling. Until the debt is paid the court’s array is off ' +
+        'all four of them and they hear only what their own hulls hear. It repays itself a ' +
+        'second for every second you are quiet; the seconds still owed are at the foot of ' +
+        'this panel.',
       initial: ObjectiveStatus.Pending,
       // The simulation does not clamp loudness; it notices it. Breaching this
       // costs the flight the array and never the mission, which is §4 stated
@@ -461,6 +486,10 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     {
       id: 'tender-one',
       text: 'Tender One is loaded. Tender One does not move without ears.',
+      gloss:
+        'Tender One is deaf and will not move unless one of your escorts is within 400 m of ' +
+        'it. Take them away and it stops where it stands; bring them back and it carries on ' +
+        'from there. This row puts the camera on the Concourse it is making for.',
       initial: ObjectiveStatus.Pending,
       revealAtTick: T(11, 20),
       markerId: 'concourse',
@@ -475,6 +504,10 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     {
       id: 'tender-two',
       text: 'Tender Two is loaded. The gate is open, and it will not be open twice.',
+      gloss:
+        'Tender Two is under the same rule — an escort within 400 m or it does not move. ' +
+        'Both tenders at the Concourse is everyone out, and you have four escorts to cover ' +
+        'two routes.',
       initial: ObjectiveStatus.Pending,
       revealAtTick: T(13, 40),
       markerId: 'concourse',

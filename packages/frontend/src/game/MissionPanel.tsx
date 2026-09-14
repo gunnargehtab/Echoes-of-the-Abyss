@@ -160,6 +160,29 @@ export function MissionPanel({ view, boundSig, onFocus, onCommanderAbility }: Mi
                   the voice of whoever is setting them; the client never
                   templates or rewords one. */}
               <span className="objectives-text">{objective.text}</span>
+              {/* The plain line beside the court's own — §10.5's gloss rule,
+                  and the decision on #720 that the reading is not rewritten.
+                  Authored server-side and printed here unedited, exactly as
+                  the line above it is: this file templates neither half.
+
+                  Inside the row rather than after it, which is the whole of
+                  what §10.5 and §11 ask for and is one decision rather than
+                  two. §10.5 promises this region changes *in place*, so a
+                  gloss that were its own row would make the panel grow and
+                  shrink under a live region as a mission revealed objectives.
+                  §11 asks that it be announced with its row rather than be a
+                  second unannounced thing on screen — and a row is either a
+                  `p` inside the status region or a `button` whose accessible
+                  name is its contents, so being *in* the row satisfies both
+                  without the panel having to know which kind it built.
+
+                  Secondary in the visual hierarchy is App.css's half of the
+                  same rule; secondary in the reading order is this position,
+                  after the authored sentence. A player who wants the fiction
+                  reads it first and can stop there. */}
+              {objective.gloss !== undefined && (
+                <span className="objectives-gloss">{objective.gloss}</span>
+              )}
               {objective.progress !== undefined && (
                 <span className="objectives-progress">
                   {objective.progress.done} of {objective.progress.of}

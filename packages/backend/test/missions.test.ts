@@ -596,6 +596,78 @@ describe('the objectives', () => {
     }
   });
 
+  it('glosses a rule in the player’s own terms and names nobody else’s hulls', () => {
+    // docs/ui-ux.md §10.5's gloss rule, over every mission there will ever be.
+    //
+    // The structural half of the anti-reveal rule — that a gloss on the wire is
+    // one the literal authored, never assembled — is held by
+    // `objectiveGloss.test.ts` against a running mission. This is the authoring
+    // half, and it catches the one way a fixed string can still say too much:
+    // an author writing another party's hull into it. A gloss is the plain
+    // layer, and the plain layer is about the player's own force.
+    //
+    // The key check is §10.5's last clause and it is here because #722 is what
+    // taught it: the held harvester's hint line named `V throttle` to a touch
+    // player who has no keyboard, and "naming a key the player cannot press is
+    // the same lie as hiding one that works". This panel is read on both kinds
+    // of device and knows about neither, so a gloss points at what is on
+    // screen and §7's affordances carry their own bindings.
+    const CONTROL_WORDS = /\b(press|presses|key|keys|keyboard|click|clicks|tap|taps)\b/i;
+    for (const mission of MISSIONS) {
+      const foreign = new Set<string>();
+      for (const party of mission.parties) {
+        if (party.slot === mission.playerSlot) continue;
+        for (const unit of party.units) foreign.add(unit.tag);
+        for (const structure of party.structures ?? []) foreign.add(structure.tag);
+        for (const emitter of party.emitters ?? []) foreign.add(emitter.tag);
+      }
+      for (const objective of mission.objectives) {
+        const glosses = [objective.gloss, objective.debtGloss].filter(
+          (gloss): gloss is string => gloss !== undefined
+        );
+        for (const gloss of glosses) {
+          assert.equal(
+            gloss.trim(),
+            gloss,
+            `${mission.id}: "${objective.id}" glosses with untrimmed whitespace`
+          );
+          assert.ok(
+            gloss.length > 0,
+            `${mission.id}: "${objective.id}" carries an empty gloss, which announces nothing`
+          );
+          assert.notEqual(
+            gloss,
+            objective.text,
+            `${mission.id}: "${objective.id}" glosses itself, so the row says one thing twice`
+          );
+          for (const tag of foreign) {
+            assert.equal(
+              gloss.includes(tag),
+              false,
+              `${mission.id}: "${objective.id}" glosses with "${tag}", which is not the player's`
+            );
+          }
+          const named = CONTROL_WORDS.exec(gloss);
+          assert.equal(
+            named,
+            null,
+            `${mission.id}: "${objective.id}" glosses with "${named?.[0]}" — §10.5: a gloss ` +
+              `names no key, because the same panel is read without a keyboard`
+          );
+        }
+        // A debt gloss with no debt reading is a sentence that can never be
+        // shown, and the reverse is the shape §10.5 permits: a reading may
+        // change without the ask changing, and `glossFor` falls back.
+        if (objective.debtGloss !== undefined) {
+          assert.ok(
+            objective.debtText !== undefined,
+            `${mission.id}: "${objective.id}" glosses a debt reading it does not author`
+          );
+        }
+      }
+    }
+  });
+
   it('names every marker it authors from at least one objective', () => {
     // The other half of the rule above, and the half `projectMissionView`
     // depends on. A marker ships to the client only while an objective naming

@@ -182,6 +182,16 @@ function objectiveView(
     }),
     status: state.statuses.get(objective.id) ?? objective.initial,
   };
+  // The plain line beside the reading — docs/ui-ux.md §10.5, #720, #725.
+  //
+  // Chosen from the literal, never assembled: this is one of the mission's own
+  // authored strings or it is absent, which is what makes the anti-reveal rule
+  // on `ObjectiveView.gloss` a property of the shape rather than of the
+  // author's care. There is no interpolation here on purpose — the moment a
+  // gloss could carry a runtime figure, a figure about somebody else could
+  // reach the player's screen through it.
+  const gloss = glossFor(objective, state);
+  if (gloss !== undefined) view.gloss = gloss;
   if (objective.markerId !== undefined) view.markerId = objective.markerId;
   // The walk sends the camera to wherever the question currently is, which is
   // the one marker in this format that is not a constant. An objective carries
@@ -228,6 +238,21 @@ function inSeconds(progress: { done: number; of: number }): { done: number; of: 
  * The court's reading of a rule changes while the flight owes it a silence —
  * docs/mission-sorrowgate.md §12 authors both readings of the same objective.
  */
+/**
+ * The gloss that goes with whichever reading is live.
+ *
+ * `debtGloss` wins while the debt does, on the one condition `textFor` keys
+ * the debt reading on, so the two halves of a row can never describe different
+ * states. Every other reading — `stallText`, a `states` entry — falls through
+ * to `gloss`, and that is the correct fallback rather than a gap: those are
+ * two readings of one rule (`MissionObjective.debtText`), so the sentence
+ * saying what the rule asks still says it.
+ */
+function glossFor(objective: MissionObjective, state: MissionState): string | undefined {
+  if (objective.debtGloss !== undefined && state.debtS > 0) return objective.debtGloss;
+  return objective.gloss;
+}
+
 function textFor(
   objective: MissionObjective,
   state: MissionState,

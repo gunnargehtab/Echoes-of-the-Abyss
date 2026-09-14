@@ -1530,6 +1530,29 @@ export interface ObjectiveView {
   id: string;
   /** Authored, in-register, shown verbatim. Never templated (docs/campaign.md §10). */
   text: string;
+  /**
+   * The plain line that sits *beside* `text`, never in place of it —
+   * docs/ui-ux.md §10.5's gloss rule, and the decision on #720 that put it
+   * there rather than rewriting the reading.
+   *
+   * Authored per mission and shown verbatim, on exactly the terms `text` is:
+   * a shared string would have to speak for four registers at once, so what is
+   * shared here is the *slot*. It is a second sentence about the same rule, so
+   * it joins its row rather than becoming one — a gloss that made the panel
+   * grow a row would break the promise §10.5 keeps that this region changes in
+   * place.
+   *
+   * INVARIANT: the same anti-reveal rule that binds `text` and `progress`
+   * binds this. It may name the player's own hulls, their own numbers and an
+   * authored place, and never a contact the player has not detected. That
+   * holds structurally as well as by authoring: every gloss that reaches this
+   * field is one of the literal's own strings, chosen and not assembled, so
+   * there is no path by which a resolved contact could reach it.
+   *
+   * Absent is the ordinary case — twenty-eight missions author none, and a
+   * mission that authors none shows the reading alone exactly as before.
+   */
+  gloss?: string;
   status: ObjectiveStatus;
   /**
    * INVARIANT: `done` and `of` are computed exclusively from the observer's own
