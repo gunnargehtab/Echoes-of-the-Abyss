@@ -97,9 +97,9 @@ export function TitleScreen({
         ]
       : []),
     // Tutorial leads, above Campaign — docs/ui-ux.md §14. The prologue is the
-    // authored teaching this game opens with, and the two entries below it
-    // assume a player who has already had it. A held seat still outranks it:
-    // that is a match already in the water.
+    // authored teaching this game opens with, and Solo game and Multiplayer
+    // below it both assume a player who has already had it. A held seat still
+    // outranks it: that is a match still in the water.
     {
       id: 'tutorial',
       label: 'Tutorial',

@@ -114,8 +114,8 @@ async function title(): Promise<{ view: Rendered; entries: Entries }> {
  * and the order the doors are offered in is a fact about the screen (#723).
  *
  * The length assertion is the other half. Every control on this screen is an
- * entry, so a list that matched position for position while carrying a seventh
- * button would still be wrong.
+ * entry, so a list that matched position for position while carrying one more
+ * button than it named would still be wrong.
  */
 function offers(view: Rendered, expected: string[]): void {
   const names = view.buttonNames();
@@ -140,6 +140,42 @@ function leadsWith(name: string, want: string): boolean {
   return name === want || name.startsWith(`${want} `);
 }
 
+/**
+ * One tab stop per entry, and exactly one of them autofocused.
+ *
+ * What a reorder can break without failing any assertion about order. The one
+ * stop with a roving `tabindex` is the campaign board, specified in §14's "The
+ * campaign board — Keyboard"; this screen has never had one, so its list keeps
+ * as many stops as it has entries and none of them carries an explicit
+ * `tabIndex`.
+ *
+ * Both lists are checked, because they are not the same list: a held seat adds
+ * an entry *and* moves the autofocus, and `autoFocus` is an expression over
+ * both facts (`entry.resume === true || (!held && entry.id === 'solo')`). Held
+ * on the no-seat list alone, that expression could lose its `!held` and
+ * autofocus two entries whenever a seat was held with nothing to say so.
+ */
+function oneStopPerEntry(view: Rendered, stopCount: number, focused: string): void {
+  const stops = view.root.findAll((node) => node.type === 'button');
+  const names = view.buttonNames();
+  assert.equal(stops.length, stopCount, `${stopCount} entries, ${stopCount} stops`);
+  assert.deepEqual(
+    stops.filter((node) => node.props.tabIndex !== undefined),
+    [],
+    'no entry carries an explicit tabIndex, so the list is one stop per entry'
+  );
+  const armed = stops.map((node) => node.props.autoFocus === true);
+  assert.equal(
+    armed.filter(Boolean).length,
+    1,
+    `one entry is autofocused, not ${armed.filter(Boolean).length}`
+  );
+  assert.ok(
+    leadsWith(names[armed.indexOf(true)] ?? '', focused),
+    `the autofocused entry is ${focused}, not ${JSON.stringify(names[armed.indexOf(true)])}`
+  );
+}
+
 describe('the title screen: the shape of the finished game', () => {
   it('offers §14’s entries and no Quit, because this is a browser', async () => {
     const { view } = await title();
@@ -150,12 +186,12 @@ describe('the title screen: the shape of the finished game', () => {
     }
   });
 
-  it('leads with Tutorial, because the entries under it assume a player who has played', async () => {
+  it('leads with Tutorial, because Solo game and Multiplayer assume a player who has played', async () => {
     // §14: "Tutorial leads the list, above Campaign, because the prologue is
-    // the authored teaching this game opens with and the two entries below it
-    // assume a player who has already had it." Held as the pair rather than as
-    // a position, so it stays an assertion about the rule when an eighth entry
-    // lands between them or above them.
+    // the authored teaching this game opens with, and Solo Game and
+    // Multiplayer below it both assume a player who has already had it." Held
+    // as the pair rather than as a position, so it stays an assertion about the
+    // rule when another entry lands between them or above them.
     const { view } = await title();
     try {
       const names = view.buttonNames();
@@ -184,36 +220,17 @@ describe('the title screen: the shape of the finished game', () => {
   });
 
   it('changes which entry is offered first, never how many stops the list has', async () => {
-    // The half of #723 that a reorder can break silently. Every entry is its
-    // own tab stop here — the one stop with a roving `tabindex` is the campaign
-    // board, specified in §14's "The campaign board — Keyboard", not this
-    // screen — so the list keeps as many stops as it has entries.
+    // The half of #723 that a reorder can break silently, on the list with no
+    // seat to resume; the held-seat list is checked in its own describe below.
     //
-    // Autofocus is the other half, and it is keyed on an entry's id rather than
-    // its index, so moving Tutorial up leaves it where it was: on Solo game
-    // with no seat to resume. §14 documents autofocus only for a held seat, so
-    // where it lands without one is the code's call and this holds it still
-    // rather than changing it.
+    // Autofocus is keyed on an entry's id rather than its index, so moving
+    // Tutorial up leaves it where it was: on Solo game, which is now the third
+    // entry rather than the second. §14 documents autofocus only for a held
+    // seat, so where it lands without one is the code's call, and this holds it
+    // still rather than changing it.
     const { view } = await title();
     try {
-      const stops = view.root.findAll((node) => node.type === 'button');
-      const names = view.buttonNames();
-      assert.equal(stops.length, 6, 'six entries, six stops');
-      assert.deepEqual(
-        stops.filter((node) => node.props.tabIndex !== undefined),
-        [],
-        'no entry carries an explicit tabIndex, so the list is one stop per entry'
-      );
-      const armed = stops.map((node) => node.props.autoFocus === true);
-      assert.equal(
-        armed.filter(Boolean).length,
-        1,
-        `one entry is autofocused, not ${armed.filter(Boolean).length}`
-      );
-      assert.ok(
-        names[armed.indexOf(true)]?.startsWith('Solo game'),
-        `focus is unmoved by the reorder, on ${JSON.stringify(names[armed.indexOf(true)])}`
-      );
+      oneStopPerEntry(view, 6, 'Solo game');
     } finally {
       await view.unmount();
     }
@@ -270,6 +287,10 @@ describe('the title screen: a held seat', () => {
         'Credits',
       ]);
       assert.equal(view.byClass('menu-resume').props.autoFocus, true);
+      // And it is the *only* one armed, on the longer list: this is the list
+      // #723 actually re-ranked, and the one where an autofocus expression that
+      // lost its `!held` would arm two entries and nothing else would say so.
+      oneStopPerEntry(view, 7, 'Resume match');
       assert.deepEqual(entries.pressed, [], 'and rendering resumed nothing');
 
       await click(view, 'Resume match');
