@@ -455,9 +455,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     {
       id: 'station',
       text: 'The flight holds at the arch.',
-      gloss:
-        'Keep your four escorts at the arch. Nothing else is asked of them until the arch ' +
-        'comes down, and the water below it is deeper than their refit allows.',
+      gloss: 'Keep your four escorts at the arch until it comes down. Nothing else is asked yet.',
       initial: ObjectiveStatus.Pending,
       // The station ends when the arch does. Nothing else about the first ten
       // minutes is a task, on purpose: §10 gives them to SIG, to the array, and
@@ -468,15 +466,12 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       id: 'silence',
       text: 'The flight stays under twenty.',
       gloss:
-        'Hold every escort under SIG 20 — that is the reading in this panel’s header. The ' +
-        'faster a hull moves the louder it is, so slowing down is how you stay under. ' +
-        'Crossing it costs you the court’s hearing, never the mission.',
+        'Every escort under SIG 20 — the reading in this panel’s header. Slower is quieter. ' +
+        'Going over costs you the court’s hearing, never the mission.',
       debtText: 'The flight owes the court a silence.',
       debtGloss:
-        'An escort went over the ceiling. Until the debt is paid the court’s array is off ' +
-        'all four of them and they hear only what their own hulls hear. It repays itself a ' +
-        'second for every second you are quiet; the seconds still owed are at the foot of ' +
-        'this panel.',
+        'An escort went over. The court’s array is off all four until a second of quiet has ' +
+        'paid for each loud one — the seconds owed are at the foot of this panel.',
       initial: ObjectiveStatus.Pending,
       // The simulation does not clamp loudness; it notices it. Breaching this
       // costs the flight the array and never the mission, which is §4 stated
@@ -487,9 +482,8 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       id: 'tender-one',
       text: 'Tender One is loaded. Tender One does not move without ears.',
       gloss:
-        'Tender One is deaf and will not move unless one of your escorts is within 400 m of ' +
-        'it. Take them away and it stops where it stands; bring them back and it carries on ' +
-        'from there. This row puts the camera on the Concourse it is making for.',
+        'Tender One is deaf: it moves only while an escort is within 400 m, and stops where ' +
+        'it stands when they leave. This row sends the camera to the Concourse.',
       initial: ObjectiveStatus.Pending,
       revealAtTick: T(11, 20),
       markerId: 'concourse',
@@ -505,9 +499,8 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       id: 'tender-two',
       text: 'Tender Two is loaded. The gate is open, and it will not be open twice.',
       gloss:
-        'Tender Two is under the same rule — an escort within 400 m or it does not move. ' +
-        'Both tenders at the Concourse is everyone out, and you have four escorts to cover ' +
-        'two routes.',
+        'Same rule as Tender One — an escort within 400 m or it stays put. Both tenders at ' +
+        'the Concourse is everyone out, and four escorts have two routes to cover.',
       initial: ObjectiveStatus.Pending,
       revealAtTick: T(13, 40),
       markerId: 'concourse',
