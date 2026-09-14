@@ -127,10 +127,11 @@ export interface PlayerTelemetry {
    *   `banked ≈ delivered × HADRON.NODULE_YIELD_MULTIPLIER + HADRON.TITHE_PER_S
    *   × seconds`. Both terms, because the printed gap is their *difference* and
    *   neither alone predicts it: over the thirty stored seeds the multiplier
-   *   takes 1,476 off and the tithe puts 1,077 back, which is the 405 the
-   *   baseline shows. Name only the multiplier and a reader expects 1,476 and
-   *   finds 2,546 — a thousand-nodule excess that is the doctrine, not a
-   *   fault.
+   *   takes 1,476 off and the tithe puts 1,077 back, leaving 399 — and the 405
+   *   the baseline prints is that plus the same ~7 nodules of purchase-netting
+   *   the other three rows carry. Name only the multiplier and a reader expects
+   *   1,476 and finds 2,546 — a thousand-nodule excess that is the doctrine,
+   *   not a fault.
    * - `nodulesLostInTransit` — cargo aboard a harvester the observation before
    *   it stopped existing. Ore that was cut, was never banked, and is
    *   invisible in every income column.
@@ -143,7 +144,8 @@ export interface PlayerTelemetry {
    * **Three biases, all one-directional, and the largest is on the banked
    * side.** `nodulesEarned` is a per-observation stockpile delta, so a purchase
    * landing in the same pass as a deposit nets against it — up to a whole hold
-   * per delivery, and measured at two of them inside one eight-minute match. A
+   * per delivery; the largest in the stored batch is three holds, 150 nodules,
+   * in a 12.5-minute match. A
    * hold is recorded as the hauler was last seen carrying it, which is up to
    * one observation's mining short. And a hold whose hull dies in the pass it
    * empties in is recorded as lost rather than delivered. So a gap between the

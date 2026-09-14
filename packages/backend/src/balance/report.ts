@@ -206,8 +206,9 @@ export interface FactionSummary {
    * nodule terms docs/economy.md §6 gives that navy — `banked ≈ delivered ×
    * HADRON.NODULE_YIELD_MULTIPLIER + HADRON.TITHE_PER_S × seconds`. Both, since
    * the printed gap is the *difference* of the two: over the thirty stored
-   * seeds the multiplier takes 1,476 off and the tithe puts 1,077 back, and
-   * what the table shows is the 405 left over.
+   * seeds the multiplier takes 1,476 off and the tithe puts 1,077 back, leaving
+   * 399; the 405 the table shows is that plus the same ~7 nodules of
+   * purchase-netting every other row carries.
    *
    * For the other three the two sides are meant to agree, but **as a magnitude
    * rather than on sight**: `nodulesEarned` is a per-observation stockpile
@@ -1326,11 +1327,13 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
       "table's own control and is meant to differ, by both of economy.md §6's nodule terms — " +
       'half of each hold (`HADRON.NODULE_YIELD_MULTIPLIER`) taken off, and the tithe ' +
       '(`HADRON.TITHE_PER_S` a second) put back on. The gap printed is what is left of the ' +
-      'larger term after the smaller one. For the other three, weigh a ' +
+      'larger term after the smaller one, plus the netting below. For the other three, weigh a ' +
       'gap rather than read it as a defect: banked is a per-observation delta, so a purchase in ' +
       'the same pass as a deposit nets against it. Lost in transit is ore that was cut and died ' +
-      'with its hauler, which no income column can show. Stalled counts a harvester the server ' +
-      'reports as out of work, never one throttled down on purpose._'
+      'with its hauler, which no income column can show. Laden is any second with a hold ' +
+      'aboard, so it is the cut after the first bite plus the haul home, not the haul alone. ' +
+      'Stalled counts a harvester the server reports as out of work, never one throttled down ' +
+      'on purpose._'
   );
   lines.push('');
   lines.push(
