@@ -19,7 +19,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { createElement } from 'react';
-import { BERTHS, SIG_BANDS, StructureKind, structureStatsFor } from '@echoes/shared';
+import { BERTHS, SIG_BANDS, StructureKind, THERMAL_DRAW, structureStatsFor } from '@echoes/shared';
 import './support/headless.ts';
 import { render, click } from './support/screen.ts';
 import {
@@ -70,7 +70,17 @@ describe('the strip explains itself: what each line claims', () => {
     // that named `V throttle` on a device with no keyboard. A line that is
     // reachable by tap may not tell the player to press something.
     for (const line of EVERY_LINE) {
-      assert.doesNotMatch(line, /\bpress\b|\bkey\b|\bhold [A-Z]\b/i, `names a key: ${line}`);
+      assert.doesNotMatch(line, /\bpress\b|\bkey\b/i, `names a key: ${line}`);
+      // A bound key as the HUD writes one — `hold Alt`, `V throttle`, `P` —
+      // which is case-sensitive, so it cannot ride on the clause above: with
+      // `i` that clause matched "hold a vent", which names no key at all.
+      // The trailing `\b` this replaces could not match either, since it was
+      // asked for a boundary in the middle of "Alt".
+      assert.doesNotMatch(
+        line,
+        /\b(?:hold|press|tap|hit) +(?:[A-Z](?![a-z])|Alt|Shift|Ctrl|Esc|Space|Tab)/,
+        `names a bound key: ${line}`
+      );
     }
   });
 
@@ -117,8 +127,8 @@ describe('the strip explains itself: what each line claims', () => {
     assert.match(short, /runs at 50%/, 'the report’s own field, not a second arithmetic');
     assert.match(
       short,
-      /build a tap, or lose a consumer/,
-      'a deficit is a setback, never a spiral'
+      /build a tap, hold a vent, or lose a consumer/,
+      'a deficit is a setback, never a spiral — and all three ways out are named'
     );
   });
 
@@ -179,6 +189,14 @@ describe('the strip explains itself: what each line claims', () => {
       'the figure is structures.ts, not a second copy'
     );
     assert.match(line, /asks for nothing/);
+    // The third source, which two drafts of this line missed and which is live
+    // on Ventfront Divide: `thermal.ts` pays a Bathyarch hull holding a dormant
+    // vent, with no structure involved. From the constant, like the Bastion's.
+    assert.match(
+      line,
+      new RegExp(`Consortium is holding pays ${THERMAL_DRAW.STABILISE_CAPACITY}`),
+      'a stabilised vent is capacity too, and the line has to say so'
+    );
     assert.match(line, /Refinery, the Foundry and the Slipway are what spend it/);
   });
 
@@ -268,55 +286,69 @@ describe('the strip explains itself: the surface', () => {
     const expanded = () =>
       (view.button('BERTHS 3/6').props as { 'aria-expanded'?: boolean })['aria-expanded'];
     const layer = view.byClass('readouts');
+    const control = view.button('BERTHS 3/6');
 
-    // A target the DOM can actually produce: an element, which always has
-    // `blur`, and which either matches `:focus-visible` or does not. Asking
-    // whether it *has* `blur` was the first version of this guard and was
-    // constant-true, so Escape was swallowed whatever was on screen.
-    const press = (focusVisible: boolean) => {
-      let blurred = false;
-      let stopped = false;
-      const event = {
-        key: 'Escape',
-        target: {
-          blur: () => {
-            blurred = true;
-          },
-          matches: (query: string) => query === ':focus-visible' && focusVisible,
-        },
-        stopPropagation: () => {
-          stopped = true;
-        },
-      };
-      return {
-        fire: () => (layer.props as { onKeyDown: (e: unknown) => void }).onKeyDown(event),
-        was: () => ({ blurred, stopped }),
-      };
+    // How the focus arrived, which is what decides whether a line is on screen
+    // — and it is read on focus rather than at press time, because the press
+    // itself makes a focused element match `:focus-visible`. That is why this
+    // drives `onFocus` with the two answers an engine gives (Tab true, click
+    // false) instead of handing the Escape handler a `matches` of its own.
+    const focusBy = async (keyboard: boolean) => {
+      await view.act(() => {
+        (control.props as { onFocus: (e: unknown) => void }).onFocus({
+          target: { matches: (query: string) => query === ':focus-visible' && keyboard },
+        });
+      });
+    };
+    const blurAway = async () => {
+      await view.act(() => (control.props as { onBlur: () => void }).onBlur());
     };
 
-    // 1 — pinned by a tap, and the pointer is nowhere near it. Escape closes it
-    // and spends the press, whether or not the keyboard is what showed it.
+    let blurred = false;
+    let stopped = false;
+    const escape = async () => {
+      blurred = false;
+      stopped = false;
+      await view.act(() => {
+        (layer.props as { onKeyDown: (e: unknown) => void }).onKeyDown({
+          key: 'Escape',
+          target: {
+            blur: () => {
+              blurred = true;
+            },
+          },
+          stopPropagation: () => {
+            stopped = true;
+          },
+        });
+      });
+    };
+
+    // 1 — reached by Tab, so the line is on screen. Escape closes it and spends
+    // the press: §9.5's step back is one level, not straight to the menu.
+    await focusBy(true);
+    await escape();
+    assert.ok(blurred, 'blurring is what closes the focus route');
+    assert.ok(stopped, 'and the press is spent on the line');
+
+    // 2 — pinned by a tap, with the focus arrived by pointer. Still closes.
+    await blurAway();
+    await focusBy(false);
     await click(view, 'BERTHS 3/6');
     assert.equal(expanded(), true, 'a tap pins it open');
-    const pinned = press(false);
-    await view.act(() => pinned.fire());
+    await escape();
     assert.equal(expanded(), false, 'the pin is released');
-    assert.ok(pinned.was().stopped, 'and the press is spent on the line');
+    assert.ok(stopped, 'and that press is spent too');
 
-    // 2 — nothing pinned, but the keyboard put the line on screen. Same.
-    const focused = press(true);
-    await view.act(() => focused.fire());
-    assert.ok(focused.was().blurred, 'blurring is what closes the focus route');
-    assert.ok(focused.was().stopped, 'and that press is spent too');
-
-    // 3 — nothing pinned and nothing focus-visible, which is exactly where the
-    // old guard was wrong: click a readout to pin, click again to unpin, and
-    // focus is still on a button Chrome does not call `:focus-visible`. Nothing
-    // is on screen to close, so the press belongs to the esc menu (§9.5).
-    const quiet = press(false);
-    await view.act(() => quiet.fire());
-    assert.ok(!quiet.was().stopped, 'with nothing shown, Escape reaches the menu');
-    assert.ok(!quiet.was().blurred, 'and the focus is left where the player put it');
+    // 3 — the case both earlier versions of this guard got wrong: clicked to
+    // pin, clicked again to unpin, focus still on a button the engine does not
+    // call `:focus-visible`. Nothing is on screen, so the press is the menu's.
+    await click(view, 'BERTHS 3/6');
+    await click(view, 'BERTHS 3/6');
+    assert.equal(expanded(), false, 'nothing is pinned');
+    await escape();
+    assert.ok(!stopped, 'with nothing shown, Escape reaches the menu');
+    assert.ok(!blurred, 'and the focus is left where the player put it');
 
     await view.unmount();
   });

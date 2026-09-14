@@ -69,6 +69,15 @@ export function StripReadouts({
   host: RefObject<HTMLElement | null>;
 }): React.JSX.Element | null {
   const [pinned, setPinned] = useState<ReadoutKey | null>(null);
+  /**
+   * Whether the keyboard is what put a line on screen.
+   *
+   * `:focus-visible` is the engine's judgement about how the focus arrived, and
+   * it is the CSS that shows the line — but it cannot be asked at press time,
+   * because the press changes the answer. Captured on focus instead, where the
+   * question is still about the gesture that got here.
+   */
+  const [shownByFocus, setShownByFocus] = useState(false);
 
   // A pinned line outlives the readout it belongs to — crystal appears and
   // disappears with the field, and the clock is dropped when the strip runs out
@@ -77,6 +86,13 @@ export function StripReadouts({
   useEffect(() => {
     if (pinned !== null && !boxes.some((box) => box.key === pinned)) setPinned(null);
   }, [boxes, pinned]);
+
+  // A control that is dropped takes the focus with it, and React fires no blur
+  // for a node it has unmounted — so the flag would otherwise stay true with
+  // nothing focused, and Escape would swallow a press that closed nothing.
+  useEffect(() => {
+    if (shownByFocus && boxes.length === 0) setShownByFocus(false);
+  }, [boxes, shownByFocus]);
 
   if (boxes.length === 0) return null;
 
@@ -101,20 +117,29 @@ export function StripReadouts({
         // native event before the window `keydown` that opens the menu —
         // unconditionally stopping it would take the menu away from anyone
         // whose focus happened to be on the strip.
-        // What is *on screen*, not what the target happens to support. The
-        // first version of this asked `typeof target.blur === 'function'`,
-        // which is true of every element a browser can give this handler — the
-        // only focusable things under `.readouts` are these buttons — so the
-        // condition was constant-true and Escape was swallowed unconditionally.
-        // The live case: pin a line by clicking, click again to unpin, press
-        // Escape. Focus is still on the button, a mouse-clicked button is not
-        // `:focus-visible`, so nothing is shown — and the press was eaten
-        // anyway, taking the esc menu with it.
-        const target = event.target as { blur?: () => void; matches?: (q: string) => boolean };
-        const shownByFocus = target.matches?.(':focus-visible') === true;
+        // What is on screen, decided **before** the press rather than during
+        // it. Two earlier versions of this condition were constant-true in a
+        // browser and only the engine could show it:
+        //
+        // - `typeof target.blur === 'function'` — true of every element a
+        //   browser can hand this handler, since the only focusable things
+        //   under `.readouts` are these buttons.
+        // - asking the engine `target.matches(':focus-visible')` here — also
+        //   true, and for a subtler reason: Selectors-4 makes a focused element
+        //   match as soon as the user interacts by keyboard, and *this press is
+        //   that interaction*. Measured in Chromium: false before the press,
+        //   true inside the handler for the same element.
+        //
+        // So the flag is read in `onFocus`, which runs before any keypress on
+        // the control — Tab gives true, a click gives false — and kept. The
+        // live case both versions left open: pin a line by clicking, click
+        // again to unpin, press Escape. Nothing is on screen, and the press was
+        // swallowed anyway, taking the esc menu (§9.5) with it.
         if (pinned === null && !shownByFocus) return;
+        const target = event.target as { blur?: () => void };
         event.stopPropagation();
         setPinned(null);
+        setShownByFocus(false);
         target.blur?.();
       }}
       // The canvas below owns every gesture over the water, and these controls
@@ -158,6 +183,14 @@ export function StripReadouts({
             aria-describedby={`readout-${box.key}`}
             aria-expanded={pinned === box.key}
             onClick={() => setPinned((open) => (open === box.key ? null : box.key))}
+            onFocus={(event) =>
+              setShownByFocus(
+                (event.target as unknown as { matches?: (q: string) => boolean }).matches?.(
+                  ':focus-visible'
+                ) === true
+              )
+            }
+            onBlur={() => setShownByFocus(false)}
           />
           <span
             id={`readout-${box.key}`}

@@ -30,6 +30,7 @@ import {
   BERTHS,
   SIG_BANDS,
   StructureKind,
+  THERMAL_DRAW,
   structureStatsFor,
   type DrawReport,
 } from '@echoes/shared';
@@ -147,18 +148,26 @@ export function drawDetail(report: DrawReport): string {
     // draft and is false at both ends: the Bastion makes its own and demands
     // nothing on purpose — `structures.ts`, "a player whose power fails should
     // be slowed, never bricked" — and a Vent Tap and a turret ask for nothing
-    // either. The figure is the Bastion's own `drawCapacity`, not a copy.
+    // either.
+    //
+    // The third source is the one a second draft still missed, and it is live
+    // on a shipped map: `thermal.ts` pays `STABILISE_CAPACITY` to a Bathyarch
+    // hull holding a dormant geothermal vent, with no structure at all
+    // (docs/hazards.md §1, "Bathyarch can stabilize vents for energy boosts").
+    // A Consortium player reading `DRAW 10/4` off one Bastion and no tap was
+    // being told where 6 of it came from. Both figures are the constants.
     const bastion = structureStatsFor(StructureKind.Bastion).drawCapacity ?? 0;
     return (
       rate +
-      ` · a Bastion makes ${bastion} and asks for nothing; Vent Taps add the rest` +
+      ` · a Bastion makes ${bastion} and asks for nothing; a Vent Tap adds more,` +
+      ` and a vent the Consortium is holding pays ${THERMAL_DRAW.STABILISE_CAPACITY}` +
       ' · the Refinery, the Foundry and the Slipway are what spend it'
     );
   }
   return (
     rate +
     ` · short: everything that needs power runs at ${Math.round(report.satisfaction * 100)}%` +
-    ' · build a tap, or lose a consumer'
+    ' · build a tap, hold a vent, or lose a consumer'
   );
 }
 

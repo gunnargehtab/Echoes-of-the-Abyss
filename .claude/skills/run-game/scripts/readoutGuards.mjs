@@ -210,9 +210,77 @@ export default async ({ page, shot }) => {
     `hovering a readout shows its line and only its line (${hovered.map((h) => h.described).join(', ')})`
   );
 
+  // §9.5's Escape, which is the one part of this surface a stub actively
+  // hid. `:focus-visible` cannot be asked at press time — the press *is* the
+  // keyboard interaction that makes a focused element match — so two versions
+  // of the guard were constant-true in Chromium while green against a fake
+  // `matches`. These three cases are the engine's answer.
+  const escState = async () =>
+    page.evaluate(() => ({
+      shown: [...document.querySelectorAll('.readout-detail')].filter(
+        (detail) => getComputedStyle(detail).clipPath === 'none'
+      ).length,
+      menu: document.querySelector('.esc-menu') !== null,
+      onReadout: document.activeElement?.classList.contains('readout') === true,
+    }));
+  const closeMenu = async () => {
+    if ((await escState()).menu) {
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(300);
+    }
+  };
+
+  // 1 — reached by Tab, so the line is on screen. Escape closes it and does not
+  // reach the menu: one level back, not two.
+  //
+  // Tabbed *onto* a readout rather than once from a blurred document, because
+  // blurring does not reset Chrome's sequential-focus starting point: it stays
+  // where the focus was, and by this point in the drive that is the end of the
+  // strip, so one Tab lands on the contact log's first row instead. A loop says
+  // what is meant — put the keyboard on a readout — rather than assuming where
+  // one press goes.
+  await page.evaluate(() => document.activeElement?.blur?.());
+  await page.mouse.move(0, 400);
+  for (let i = 0; i < 24 && !(await escState()).onReadout; i++) {
+    await page.keyboard.press('Tab');
+    await page.waitForTimeout(80);
+  }
+  await page.waitForTimeout(200);
+  check((await escState()).onReadout, 'Tab reached a readout');
+  check((await escState()).shown === 1, 'and that put its line on screen');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(250);
+  const afterTab = await escState();
+  check(afterTab.shown === 0, 'Escape closed the line it had shown');
+  check(!afterTab.menu, 'and stopped there rather than opening the menu as well');
+
+  // 2 — clicked to pin, clicked again to unpin. Nothing is on screen, so the
+  // press belongs to the esc menu — and this is the case both earlier versions
+  // of the guard swallowed, leaving the player without a line *and* without a
+  // menu until a second press.
+  await page.click('.readout');
+  await page.waitForTimeout(150);
+  await page.click('.readout');
+  await page.waitForTimeout(150);
+  // The pointer is left on the control by a click, and hover shows the line on
+  // its own — so it has to come off before the question "is anything shown"
+  // means anything. The focus stays where the click put it, which is the half
+  // of the state this case is about.
+  await page.mouse.move(0, 400);
+  await page.waitForTimeout(200);
+  const unpinned = await escState();
+  check(unpinned.shown === 0, 'a second tap closed the line');
+  check(unpinned.onReadout, 'and left the focus on the readout, where a click puts it');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(350);
+  check((await escState()).menu, 'with nothing shown, Escape reached the esc menu');
+  await closeMenu();
+  await shot('escape');
+
   console.log('');
   console.log(
     `readouts: ${expected.length} controls, all reachable by Tab, none overlapping, ` +
-      `SIG present at ${SCALES.map((s) => `${s * 100}%`).join(', ')}.`
+      `SIG present at ${SCALES.map((s) => `${s * 100}%`).join(', ')}; ` +
+      `hover, Tab and Escape all answered by the engine.`
   );
 };
