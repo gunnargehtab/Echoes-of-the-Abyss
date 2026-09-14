@@ -90,14 +90,23 @@ const words = (name: string): string[] =>
   name.split(/[^A-Za-z]+/).filter((word) => word.length >= 4);
 
 /**
- * A banned name, as a whole word.
+ * A banned name, anchored at its start.
  *
  * Substring matching is what made the first version of this refuse "flight" on
- * behalf of a foreign party's Light Scouts. A gloss naming another party's hull
- * writes the word; it does not hide it inside a longer one.
+ * behalf of a foreign party's Light Scouts — a gloss naming another party's
+ * hull writes the word, it does not hide it inside a longer one. The left
+ * boundary is what fixes that: `\bLight` does not match *flight*, because
+ * there is no boundary between `f` and `L`.
+ *
+ * **Anchored on the left only, and the right-hand `\b` is the bug that taught
+ * it.** With one, `Corvette` stopped matching *Corvettes* — so `Two Corvettes
+ * hold the west` passed in all twenty-nine missions, which is the plural of the
+ * exact sentence this sweep exists to refuse and the one the docblock in
+ * `objectiveGloss.test.ts` names. A name written in the plural, possessive or
+ * hyphenated is the same name.
  */
 const atWordBoundary = (name: string): RegExp =>
-  new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+  new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
 
 /** Every tag a mission places in the water, unit and structure alike. */
 function authoredTags(mission: MissionDefinition): Set<string> {
