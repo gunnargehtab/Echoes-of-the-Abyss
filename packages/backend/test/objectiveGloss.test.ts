@@ -14,8 +14,10 @@
  *   field can hold is fixed before a match exists, so no resolved contact has
  *   a path in. It says nothing about what an author put in those strings —
  *   that half is prose and is checked against prose by the sweep in
- *   `missions.test.ts`, and a docblock claiming this file holds both is how a
- *   gloss naming another party's Corvettes passed every gate in the tree.
+ *   `missions.test.ts` — which bans the proper nouns of somebody else's force
+ *   and cannot bound prose beyond that, as its own comment says. A docblock
+ *   claiming this file holds both is how a gloss naming another party's
+ *   Corvettes passed every gate in the tree.
  * - **The gloss follows the reading it belongs to.** §12 authors two readings
  *   of the silence order and marks the second *while in debt*; a row whose
  *   sentence said one thing and whose gloss explained the other would be worse

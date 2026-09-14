@@ -462,10 +462,20 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
    * a **"yet"**: a gloss is a fixed string on a row that outlives its moment,
    * and the station row is still on screen, met, at 15:00 with Tender One
    * loaded underneath it. And it may not point at **where something is on the
-   * panel**: the body scrolls, and the debt line the debt gloss used to name
-   * sits 341 px below the fold at 100% once four rows are up. The header is the
-   * exception the `silence` gloss uses, because it is outside the scrolling
-   * body and cannot go under the fold.
+   * panel**: the body scrolls, and the debt line the debt gloss used to name is
+   * well below the fold once four rows are up — the committed frame under
+   * docs/screenshots/issue-725/ carries that measurement, so this comment keeps
+   * no second copy of a number to go stale. The header is the exception the
+   * `silence` gloss uses, because it is outside the scrolling body and cannot
+   * go under the fold.
+   *
+   * The same rule caught the array twice more. A breach costs the court's array
+   * only **while the array is standing**: §9's 10:40 beat zeroes it and
+   * `applySilenceLedger` then returns at its `arrayEid === 0` guard, so from
+   * 10:40 the debt still accrues and nothing is withdrawn — while the silence
+   * row carries its gloss until the court adjourns at 20:00. The ledger's cap
+   * belongs to the sentence too: `debtCapS` is 60, so "a second for every loud
+   * one" stops being true after a minute of them.
    *
    * They name no key. The panel is read on a device with no keyboard as well as
    * on one with (#722), so a gloss points at what is on screen — this panel's
@@ -489,13 +499,12 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       text: 'The flight stays under twenty.',
       gloss:
         'Every escort under SIG 20 — the reading in this panel’s header. A scout cruises at ' +
-        '12 and idles at 6, so moving is safe; it is diving that takes one over. The court ' +
-        'lends its array to a quiet flight, so a breach costs the flight’s hearing and never ' +
-        'the mission.',
+        '12 and idles at 6, and diving takes one far over. While the court’s array is ' +
+        'standing a breach costs the flight its hearing; it never costs the mission.',
       debtText: 'The flight owes the court a silence.',
       debtGloss:
         'An escort went over. The flight now owes the court a second of quiet for every loud ' +
-        'one, and pays it back simply by staying under the ceiling again.',
+        'one, up to a minute, and pays it back simply by staying under the ceiling again.',
       initial: ObjectiveStatus.Pending,
       // The simulation does not clamp loudness; it notices it. Breaching this
       // costs the flight the array and never the mission, which is §4 stated

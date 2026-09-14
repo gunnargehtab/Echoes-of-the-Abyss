@@ -1556,6 +1556,13 @@ export interface ObjectiveView {
    * kind or a speaker the player has not detected would satisfy the first and
    * break the second.
    *
+   * The second is a **necessary condition and not the whole rule**, and saying
+   * so is part of it: a deny-list over proper nouns catches a gloss that names
+   * a Corvette and cannot catch one that says *three other delegations hold the
+   * east*, which names nobody and reveals a count and two bearings. The gate
+   * bounds what an author can do by accident; the rest is review. Two rounds of
+   * a reveal surviving a green suite is what that sentence was learned from.
+   *
    * Absent is the ordinary case — twenty-eight missions author none, and a
    * mission that authors none shows the reading alone exactly as before.
    */

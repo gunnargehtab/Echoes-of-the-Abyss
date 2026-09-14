@@ -29,6 +29,7 @@ import assert from 'node:assert/strict';
 import {
   Biome,
   DIRECTIONAL_SIGNATURE,
+  Faction,
   FaunaSpecies,
   MISSION,
   ambientBandsFor,
@@ -65,6 +66,28 @@ import type {
  * exported this test is the thing that notices the two disagree.
  */
 const MAX_SLOTS = 8;
+
+/**
+ * The four navies as anyone in the fiction says them, transcribed rather than
+ * imported: `FACTION_NAME` lives in `packages/frontend`, and a backend test
+ * reaching across the wire for a string would be a worse dependency than a
+ * copy the day it drifts. `MAX_SLOTS` above is here on the same terms.
+ */
+const NAVY: Record<Faction, string> = {
+  [Faction.Bathyarch]: 'Consortium',
+  [Faction.Pelagia]: 'Commune',
+  [Faction.Directorate]: 'Directorate',
+  [Faction.Hadron]: 'Knights',
+};
+
+/**
+ * The words of a name worth banning on their own. Four characters, because an
+ * author writes "Drenn" rather than "Underwriter Sela Drenn" and "Corvette"
+ * rather than "Fleet Corvette", while a three-letter fragment would start
+ * matching inside ordinary prose.
+ */
+const words = (name: string): string[] =>
+  name.split(/[^A-Za-z]+/).filter((word) => word.length >= 4);
 
 /** Every tag a mission places in the water, unit and structure alike. */
 function authoredTags(mission: MissionDefinition): Set<string> {
@@ -606,6 +629,15 @@ describe('the objectives', () => {
     // an author writing another party's hull into it. A gloss is the plain
     // layer, and the plain layer is about the player's own force.
     //
+    // What this holds, and what it does not — stated here because a gate whose
+    // reach is overestimated is worse than one nobody has. It bans proper nouns
+    // belonging to somebody else's force, which is the reveal an author writes
+    // by accident. It cannot bound prose: `Three other delegations hold the
+    // east and the west` passes, names nobody, and gives away a count and two
+    // bearings. §10.5's "never a count of anything hostile" is a review rule,
+    // `docs/invariants.md` row 24 is scoped to what is here, and neither should
+    // be read as the other.
+    //
     // The key check is §10.5's last clause and it is here because #722 is what
     // taught it: the held harvester's hint line named `V throttle` to a touch
     // player who has no keyboard, and "naming a key the player cannot press is
@@ -619,38 +651,63 @@ describe('the objectives', () => {
     const KEY_WORDS = /\b(press|presses|pressing|key|keys|keyboard)\b/i;
     for (const mission of MISSIONS) {
       // What an author would actually write, not what the literal happens to
-      // key on. The first version of this checked authored *tags* and nothing
-      // else, which meant `Underwriter Sela Drenn is holding the east with a
-      // Cruiser and two Corvettes` passed every gate in the tree: the display
-      // name misses the lowercase tag, hull kinds were not in the set at all,
-      // and `missionSafety.test.ts` cannot help because a gloss is in its
-      // allow-list by construction. A prose rule has to be checked against
-      // prose.
+      // key on — and this sweep has been wrong in both directions, so both are
+      // written down. Checking authored *tags* alone let `Underwriter Sela
+      // Drenn … with a Cruiser and two Corvettes` through every gate in the
+      // tree; then banning every foreign hull's whole display name banned
+      // `Light Scout`, which is what the player's own four hulls *are*, and
+      // §10.5 says in terms that a gloss may name the player's own hulls.
+      //
+      // So: proper nouns nobody else's force owns. Tags, speakers, the other
+      // navies' names and the species a beat puts in the water are absolute.
+      // Hull and structure kinds are banned by their *words*, minus every word
+      // that appears in a kind the player's own party also fields — which bans
+      // Cruiser, Corvette, Abyssal and Submersible while leaving scout,
+      // harvester and tender to a gloss that is talking about the player's own.
+      const mine = new Set<string>();
+      const ours = mission.parties.filter((party) => party.slot === mission.playerSlot);
+      for (const party of ours) {
+        for (const unit of party.units) {
+          for (const word of words(statsFor(unit.kind).name)) mine.add(word);
+        }
+        for (const structure of party.structures ?? []) {
+          for (const word of words(structureStatsFor(structure.kind).name)) mine.add(word);
+        }
+      }
+      const myFactions = new Set(ours.map((party) => party.faction));
+
       const foreign = new Set<string>();
       for (const party of mission.parties) {
         if (party.slot === mission.playerSlot) continue;
+        if (!myFactions.has(party.faction)) foreign.add(NAVY[party.faction]);
         for (const unit of party.units) {
           foreign.add(unit.tag);
-          foreign.add(statsFor(unit.kind).name);
+          for (const word of words(statsFor(unit.kind).name)) {
+            if (!mine.has(word)) foreign.add(word);
+          }
         }
         for (const structure of party.structures ?? []) {
           foreign.add(structure.tag);
-          foreign.add(structureStatsFor(structure.kind).name);
+          for (const word of words(structureStatsFor(structure.kind).name)) {
+            if (!mine.has(word)) foreign.add(word);
+          }
         }
         for (const emitter of party.emitters ?? []) foreign.add(emitter.tag);
       }
-      // Everybody the mission gives a voice to. The four in Sorrowgate's water
-      // are the other three navies and the court, and a gloss is the plain
-      // layer — it describes the player's own force and quotes nobody. Split
-      // into words as well as kept whole, because an author writes "Drenn",
-      // not "Underwriter Sela Drenn".
+      // Everybody the mission gives a voice to, and everything it puts in the
+      // water. A gloss is the plain layer — it describes the player's own force
+      // and quotes nobody. Split into words as well as kept whole, because an
+      // author writes "Drenn", not "Underwriter Sela Drenn".
       for (const beat of mission.beats) {
-        if (beat.kind !== 'say') continue;
-        foreign.add(beat.speaker);
-        for (const word of beat.speaker.split(/\s+/)) {
-          if (word.length >= 4) foreign.add(word);
+        if (beat.kind === 'say') {
+          foreign.add(beat.speaker);
+          for (const word of words(beat.speaker)) foreign.add(word);
+        }
+        if (beat.kind === 'creature' && beat.species !== undefined) {
+          for (const word of words(faunaStatsFor(beat.species).name)) foreign.add(word);
         }
       }
+
       for (const objective of mission.objectives) {
         const glosses = [objective.gloss, objective.debtGloss].filter(
           (gloss): gloss is string => gloss !== undefined
