@@ -238,21 +238,6 @@ function inSeconds(progress: { done: number; of: number }): { done: number; of: 
  * The court's reading of a rule changes while the flight owes it a silence —
  * docs/mission-sorrowgate.md §12 authors both readings of the same objective.
  */
-/**
- * The gloss that goes with whichever reading is live.
- *
- * `debtGloss` wins while the debt does, on the one condition `textFor` keys
- * the debt reading on, so the two halves of a row can never describe different
- * states. Every other reading — `stallText`, a `states` entry — falls through
- * to `gloss`, and that is the correct fallback rather than a gap: those are
- * two readings of one rule (`MissionObjective.debtText`), so the sentence
- * saying what the rule asks still says it.
- */
-function glossFor(objective: MissionObjective, state: MissionState): string | undefined {
-  if (objective.debtGloss !== undefined && state.debtS > 0) return objective.debtGloss;
-  return objective.gloss;
-}
-
 function textFor(
   objective: MissionObjective,
   state: MissionState,
@@ -270,6 +255,29 @@ function textFor(
     if (holds(reading.when)) return reading.text;
   }
   return objective.text;
+}
+
+/**
+ * The gloss that goes with whichever reading is live.
+ *
+ * `debtGloss` wins while the debt does, on the one condition `textFor` keys
+ * the debt reading on, so the two halves of a row can never describe different
+ * states.
+ *
+ * There is deliberately no branch for `stallText` or for a `states` entry, and
+ * `missions.test.ts` is what keeps that honest rather than this quietly
+ * returning the base gloss: a glossed objective may author no alternate
+ * reading without a gloss of its own — `debtText` without `debtGloss`
+ * included, which is the near miss, since the branch above would fall back
+ * happily. A sentence explaining the rule shown underneath a *different*
+ * sentence stating it is the one failure this pairing exists to prevent, and
+ * it is what makes invariants row 24 true over every mission rather than over
+ * this one. A mission that wants another reading gains a paired field here
+ * beside it, exactly as `debtGloss` did.
+ */
+function glossFor(objective: MissionObjective, state: MissionState): string | undefined {
+  if (objective.debtGloss !== undefined && state.debtS > 0) return objective.debtGloss;
+  return objective.gloss;
 }
 
 /**

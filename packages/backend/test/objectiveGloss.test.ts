@@ -20,12 +20,22 @@
  *   sentence said one thing and whose gloss explained the other would be worse
  *   than no gloss, because it is the half the player is reading for the facts.
  *
- * The debt is provoked rather than waited for: the flight idles at SIG 6 and
- * cruises at 12 against a ceiling of 20 (docs/mission-sorrowgate.md §4), so a
- * mission played normally never owes a second — which is exactly what
- * `missionRuntime.test.ts` asserts two files over. Diving the flight to 1,700 m
- * puts it at SIG 72 and the ledger starts counting, which is the same lever the
- * array-withdrawal test pulls.
+ * The debt is provoked rather than waited for: `acoustics.ts` gives a Light
+ * Scout two states, `sigCruise` 12 and `sigIdle` 6, so *no* amount of moving
+ * reaches a ceiling of 20 and a mission played normally never owes a second —
+ * which is exactly what `missionRuntime.test.ts` asserts two files over.
+ * `DEPTH.DESCENT_SIG`'s 72 is the one thing that crosses it, so the drive dives
+ * the flight, which is the same lever the array-withdrawal test pulls.
+ *
+ * **The run is fourteen minutes and that is the point of it.** Tender One's
+ * reading appears at 11:20 and Tender Two's at 13:40 (`revealAtTick`), so a
+ * shorter drive never puts their glosses on the wire at all — the first version
+ * of this file ran twenty-five seconds and exercised three of the five, which
+ * means an interpolated tender gloss would have passed it while the mutation
+ * that "caught" interpolation happened to land on a covered one. The coverage
+ * assertion below is what stops that recurring: the set of glosses seen has to
+ * equal the set the literal authors, so shortening the drive fails the test
+ * rather than quietly narrowing it.
  */
 
 import { describe, it } from 'node:test';
@@ -37,10 +47,19 @@ import { missionMapById } from '../src/sim/maps/index.ts';
 import { PROLOGUE_SORROWGATE, type MissionObjective } from '../src/sim/missions/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
+/**
+ * Fourteen minutes, which is the first tick at which every authored gloss has
+ * had a chance to reach the wire: Tender Two's reading is revealed at 13:40 and
+ * the court does not adjourn until 20:00.
+ */
+const RUN_TICKS = SIM.TICK_HZ * 14 * 60;
 const SEED = 7;
 const PLAYER = PROLOGUE_SORROWGATE.playerSlot;
 
-/** Every mission view the room would have sent over a run that runs up a debt. */
+/**
+ * Every mission view the room would have sent over a run that runs up a debt
+ * and stays in the water long enough for both tenders to be handed over.
+ */
 function viewsThroughABreach(): MissionView[] {
   const match = new Match(missionMapById(PROLOGUE_SORROWGATE.mapId)!, {
     mission: PROLOGUE_SORROWGATE,
@@ -54,7 +73,7 @@ function viewsThroughABreach(): MissionView[] {
   // only on the tick it wanted to give an order on would silently give none,
   // and the breach it is driving would never happen.
   let own: EchoSnapshot | null = null;
-  for (let tick = 0; tick < SIM.TICK_HZ * 25; tick++) {
+  for (let tick = 0; tick < RUN_TICKS; tick++) {
     const next = match.update(STEP_MS)?.get(PLAYER);
     if (next !== undefined) own = next;
     // Ten seconds in, dive the flight: SIG 72 against a ceiling of 20.
@@ -96,18 +115,29 @@ describe('the gloss beside a mission’s own reading', () => {
       if (objective.debtGloss !== undefined) strings.add(objective.debtGloss);
       authored.set(objective.id, strings);
     }
-    let seen = 0;
+    const seen = new Set<string>();
     for (const view of breachRun()) {
       for (const objective of view.objectives) {
         if (objective.gloss === undefined) continue;
-        seen++;
+        seen.add(objective.gloss);
         assert.ok(
           authored.get(objective.id)?.has(objective.gloss),
           `"${objective.id}" was sent a gloss its literal does not author: ${objective.gloss}`
         );
       }
     }
-    assert.ok(seen > 0, 'no gloss was sent at all, so this proves nothing');
+    // Coverage asserted rather than assumed, and this is the half that makes
+    // the loop above mean anything: a gloss the run never reaches is a gloss
+    // nothing checks, and the two tender readings are revealed eleven and
+    // thirteen minutes in. Stated as set equality so it fails in both
+    // directions — a drive shortened below a reveal, and a gloss authored and
+    // then never shown.
+    const all = new Set([...authored.values()].flatMap((strings) => [...strings]));
+    assert.deepEqual(
+      [...seen].sort(),
+      [...all].sort(),
+      'the run did not put every authored gloss on the wire'
+    );
   });
 
   it('swaps to the debt gloss exactly when the court’s reading swaps, and back', () => {

@@ -441,11 +441,19 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
    * Each reading also carries a `gloss` — docs/ui-ux.md §10.5, and the decision
    * on #720 that the court's line is not rewritten and a plain line sits beside
    * it. Five readings, five glosses: the station, the ceiling, the ceiling in
-   * debt, and the two tenders. They are written from §4, §8 and §10 rather than
-   * invented, and every fact in them is one of §10's four teaching targets
-   * stated plainly — the flight is the four escorts, twenty is a SIG reading,
-   * the consequence of crossing it is the array and never the mission, and
-   * *ears* is an escort within 400 m.
+   * debt, and the two tenders. Every factual clause is re-derived from the
+   * simulation rather than transcribed from the prose that describes it, which
+   * is the trap #724 recorded four times over. The SIG figures are
+   * `acoustics.ts`'s two states for a Light Scout — `sigCruise` 12 while moving
+   * and `sigIdle` 6 while still, with nothing in between — and
+   * `DEPTH.DESCENT_SIG`'s 72, which is the only thing in this mission that can
+   * put an escort over 20 at all. §4's "a Light Scout at flank is far above the
+   * ceiling" implies a speed band the code does not model, so the gloss says
+   * what is true in play and §4 is left for a person; a run does not resolve a
+   * docs/code disagreement by editing either side to match its own sentence.
+   * *Ears* is `escortRadiusM`. And no gloss promises the array back: §9's 10:40
+   * `lose` beat destroys it and both tenders load after that, so the ledger —
+   * which accrues and repays either way — is what stays true for the whole run.
    *
    * They name no key. The panel is read on a device with no keyboard as well as
    * on one with (#722), so a gloss points at what is on screen — this panel's
@@ -455,7 +463,8 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     {
       id: 'station',
       text: 'The flight holds at the arch.',
-      gloss: 'Keep your four escorts at the arch until it comes down. Nothing else is asked yet.',
+      gloss:
+        'Keep your four escorts at the arch until it comes down. The tenders are not loaded yet.',
       initial: ObjectiveStatus.Pending,
       // The station ends when the arch does. Nothing else about the first ten
       // minutes is a task, on purpose: §10 gives them to SIG, to the array, and
@@ -466,12 +475,13 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       id: 'silence',
       text: 'The flight stays under twenty.',
       gloss:
-        'Every escort under SIG 20 — the reading in this panel’s header. Slower is quieter. ' +
-        'Going over costs you the court’s hearing, never the mission.',
+        'Every escort under SIG 20 — the reading in this panel’s header. A scout cruises at ' +
+        '12 and idles at 6, so moving is safe; it is diving that takes one over. A breach is ' +
+        'paid for in silence, never in the mission.',
       debtText: 'The flight owes the court a silence.',
       debtGloss:
-        'An escort went over. The court’s array is off all four until a second of quiet has ' +
-        'paid for each loud one — the seconds owed are at the foot of this panel.',
+        'An escort went over. The flight owes the court a second of quiet for every loud one ' +
+        'and pays it back by staying under — the seconds owed are at the foot of this panel.',
       initial: ObjectiveStatus.Pending,
       // The simulation does not clamp loudness; it notices it. Breaching this
       // costs the flight the array and never the mission, which is §4 stated
@@ -499,8 +509,8 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       id: 'tender-two',
       text: 'Tender Two is loaded. The gate is open, and it will not be open twice.',
       gloss:
-        'Same rule as Tender One — an escort within 400 m or it stays put. Both tenders at ' +
-        'the Concourse is everyone out, and four escorts have two routes to cover.',
+        'Same rule as Tender One — an escort within 400 m or it stays put. Both at the ' +
+        'Concourse is everyone out, and one flight cannot be in two places.',
       initial: ObjectiveStatus.Pending,
       revealAtTick: T(13, 40),
       markerId: 'concourse',

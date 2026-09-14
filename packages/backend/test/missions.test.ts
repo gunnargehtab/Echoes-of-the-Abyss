@@ -612,7 +612,11 @@ describe('the objectives', () => {
     // the same lie as hiding one that works". This panel is read on both kinds
     // of device and knows about neither, so a gloss points at what is on
     // screen and §7's affordances carry their own bindings.
-    const CONTROL_WORDS = /\b(press|presses|key|keys|keyboard|click|clicks|tap|taps)\b/i;
+    // Exactly §10.5's clause — "it names no key" — and no wider. `click` and
+    // `tap` are pointer verbs rather than keys, and `clicks` is a *sound* in
+    // this setting: a gloss saying a player will hear a Sounder's clicks would
+    // be refused by a gate whose message quotes a rule about keyboards.
+    const KEY_WORDS = /\b(press|presses|pressing|key|keys|keyboard)\b/i;
     for (const mission of MISSIONS) {
       const foreign = new Set<string>();
       for (const party of mission.parties) {
@@ -647,7 +651,7 @@ describe('the objectives', () => {
               `${mission.id}: "${objective.id}" glosses with "${tag}", which is not the player's`
             );
           }
-          const named = CONTROL_WORDS.exec(gloss);
+          const named = KEY_WORDS.exec(gloss);
           assert.equal(
             named,
             null,
@@ -656,12 +660,45 @@ describe('the objectives', () => {
           );
         }
         // A debt gloss with no debt reading is a sentence that can never be
-        // shown, and the reverse is the shape §10.5 permits: a reading may
-        // change without the ask changing, and `glossFor` falls back.
+        // shown.
         if (objective.debtGloss !== undefined) {
           assert.ok(
             objective.debtText !== undefined,
             `${mission.id}: "${objective.id}" glosses a debt reading it does not author`
+          );
+        }
+        // And the converse, which is what makes invariants row 24 true as
+        // written rather than true of one case. `glossFor` pairs a gloss to
+        // `debtText` and to nothing else, so an objective that authors a gloss
+        // *and* a `stallText` or `states` reading would show the base sentence
+        // explaining the rule underneath a different sentence stating it — the
+        // two halves of the row describing different states, which is the whole
+        // thing the pairing prevents. Adding the paired field is a two-line
+        // change; shipping the mismatch is silent, so the gate is here.
+        if (glosses.length > 0) {
+          // Every alternate reading a glossed objective authors needs its own
+          // gloss, `debtText` included — this one is the near miss, because
+          // `glossFor` *does* have a debt branch and would still fall back to
+          // the base sentence for an objective that authored the reading and
+          // not the gloss, which is the mismatch one field over.
+          if (objective.debtText !== undefined) {
+            assert.ok(
+              objective.debtGloss !== undefined,
+              `${mission.id}: "${objective.id}" is glossed and authors a debt reading with ` +
+                `no gloss of its own, so the row would explain the ceiling while stating the debt`
+            );
+          }
+          assert.equal(
+            objective.stallText,
+            undefined,
+            `${mission.id}: "${objective.id}" is glossed and authors a stall reading with ` +
+              `no gloss of its own — add a paired field beside it, as \`debtGloss\` is`
+          );
+          assert.equal(
+            objective.states,
+            undefined,
+            `${mission.id}: "${objective.id}" is glossed and authors a \`states\` reading ` +
+              `with no gloss of its own — add a paired field beside it`
           );
         }
       }
