@@ -321,6 +321,47 @@ describe('the objectives panel: whose words these are', () => {
     }
   });
 
+  it('puts the gloss inside the accessible name of a row that is a button', async () => {
+    // §10.5 says the gloss "is part of that row's accessible name rather than
+    // a second unannounced thing on screen", and this is the only form where a
+    // row *has* an accessible name — a `p` has none, and the two rows that
+    // actually carry a gloss and a marker in the shipped prologue are both
+    // buttons. Asserting this on the `p` branch alone, which is what the tests
+    // above do, tests the claim on the one shape it cannot be made about.
+    //
+    // A button's accessible name is its rendered contents, so the assertion is
+    // that the gloss is in them — and that being in them has not cost the row
+    // the gesture, since the gloss's own sentence is a claim about exactly
+    // that affordance.
+    const reading = 'Tender One is loaded. Tender One does not move without ears.';
+    const plain =
+      'Tender One only moves while an escort is within 400 m. This row sends the camera to the Concourse.';
+    const { rendered, calls } = await panel(
+      missionView({
+        objectives: [
+          objective({ id: 'tender-one', text: reading, gloss: plain, markerId: CONCOURSE.id }),
+        ],
+      })
+    );
+    try {
+      const row = rendered.byClass('objectives-row');
+      assert.equal(row.type, 'button', 'a row with somewhere to go is a button');
+      const name = deepText(row);
+      assert.ok(name.includes(reading), 'the reading is in the button’s accessible name');
+      assert.ok(name.includes(plain), 'and so is the gloss, rather than sitting outside it');
+      await rendered.act(() => {
+        (row.props as { onClick?: () => void }).onClick?.();
+      });
+      assert.deepEqual(
+        calls.focused,
+        [[CONCOURSE.x, CONCOURSE.y]],
+        'and the gesture the gloss describes still works'
+      );
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
   it('draws no gloss at all for the twenty-eight missions that author none', async () => {
     // Absent is the ordinary case. A panel that rendered an empty span would
     // put a second grid cell under every reading in the game for nothing, and

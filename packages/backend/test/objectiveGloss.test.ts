@@ -9,12 +9,13 @@
  *
  * - **A gloss that reaches the client is one the mission authored.** Not
  *   assembled, not interpolated, not templated. That is §10.5's verbatim rule
- *   applied to the second half of a row, and it is also what makes the
- *   anti-reveal rule structural rather than a matter of the author's care: the
- *   set of strings this field can hold is fixed before a match exists, so no
- *   resolved contact has a path into it. A gloss carrying a runtime figure
- *   would be a figure about *something*, and the panel is one of the two
- *   surfaces §10.5 spends its last paragraph on.
+ *   applied to the second half of a row, and it closes the half of the
+ *   anti-reveal rule the *running match* could break: the set of strings this
+ *   field can hold is fixed before a match exists, so no resolved contact has
+ *   a path in. It says nothing about what an author put in those strings —
+ *   that half is prose and is checked against prose by the sweep in
+ *   `missions.test.ts`, and a docblock claiming this file holds both is how a
+ *   gloss naming another party's Corvettes passed every gate in the tree.
  * - **The gloss follows the reading it belongs to.** §12 authors two readings
  *   of the silence order and marks the second *while in debt*; a row whose
  *   sentence said one thing and whose gloss explained the other would be worse

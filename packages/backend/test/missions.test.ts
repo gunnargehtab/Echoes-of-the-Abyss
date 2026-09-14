@@ -618,12 +618,38 @@ describe('the objectives', () => {
     // be refused by a gate whose message quotes a rule about keyboards.
     const KEY_WORDS = /\b(press|presses|pressing|key|keys|keyboard)\b/i;
     for (const mission of MISSIONS) {
+      // What an author would actually write, not what the literal happens to
+      // key on. The first version of this checked authored *tags* and nothing
+      // else, which meant `Underwriter Sela Drenn is holding the east with a
+      // Cruiser and two Corvettes` passed every gate in the tree: the display
+      // name misses the lowercase tag, hull kinds were not in the set at all,
+      // and `missionSafety.test.ts` cannot help because a gloss is in its
+      // allow-list by construction. A prose rule has to be checked against
+      // prose.
       const foreign = new Set<string>();
       for (const party of mission.parties) {
         if (party.slot === mission.playerSlot) continue;
-        for (const unit of party.units) foreign.add(unit.tag);
-        for (const structure of party.structures ?? []) foreign.add(structure.tag);
+        for (const unit of party.units) {
+          foreign.add(unit.tag);
+          foreign.add(statsFor(unit.kind).name);
+        }
+        for (const structure of party.structures ?? []) {
+          foreign.add(structure.tag);
+          foreign.add(structureStatsFor(structure.kind).name);
+        }
         for (const emitter of party.emitters ?? []) foreign.add(emitter.tag);
+      }
+      // Everybody the mission gives a voice to. The four in Sorrowgate's water
+      // are the other three navies and the court, and a gloss is the plain
+      // layer — it describes the player's own force and quotes nobody. Split
+      // into words as well as kept whole, because an author writes "Drenn",
+      // not "Underwriter Sela Drenn".
+      for (const beat of mission.beats) {
+        if (beat.kind !== 'say') continue;
+        foreign.add(beat.speaker);
+        for (const word of beat.speaker.split(/\s+/)) {
+          if (word.length >= 4) foreign.add(word);
+        }
       }
       for (const objective of mission.objectives) {
         const glosses = [objective.gloss, objective.debtGloss].filter(
@@ -644,11 +670,13 @@ describe('the objectives', () => {
             objective.text,
             `${mission.id}: "${objective.id}" glosses itself, so the row says one thing twice`
           );
-          for (const tag of foreign) {
+          const lower = gloss.toLowerCase();
+          for (const name of foreign) {
             assert.equal(
-              gloss.includes(tag),
+              lower.includes(name.toLowerCase()),
               false,
-              `${mission.id}: "${objective.id}" glosses with "${tag}", which is not the player's`
+              `${mission.id}: "${objective.id}" glosses with "${name}", which is not the ` +
+                `player's — §10.5: never a contact the player has not detected`
             );
           }
           const named = KEY_WORDS.exec(gloss);

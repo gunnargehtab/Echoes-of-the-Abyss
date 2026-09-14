@@ -1544,10 +1544,17 @@ export interface ObjectiveView {
    *
    * INVARIANT: the same anti-reveal rule that binds `text` and `progress`
    * binds this. It may name the player's own hulls, their own numbers and an
-   * authored place, and never a contact the player has not detected. That
-   * holds structurally as well as by authoring: every gloss that reaches this
-   * field is one of the literal's own strings, chosen and not assembled, so
-   * there is no path by which a resolved contact could reach it.
+   * authored place, and never a contact the player has not detected.
+   *
+   * That is two claims and they are held by different things, which is worth
+   * keeping straight because conflating them hides the weaker one. *Nothing
+   * about the running match can reach this field*: every gloss here is one of
+   * the literal's own strings, chosen and not assembled, so no resolved
+   * contact has a path in — structural, and held by `objectiveGloss.test.ts`.
+   * *Nothing an author wrote may name somebody else's force*: prose, checked
+   * against prose, by the sweep in `missions.test.ts`. A gloss naming a hull
+   * kind or a speaker the player has not detected would satisfy the first and
+   * break the second.
    *
    * Absent is the ordinary case — twenty-eight missions author none, and a
    * mission that authors none shows the reading alone exactly as before.

@@ -185,11 +185,12 @@ function objectiveView(
   // The plain line beside the reading — docs/ui-ux.md §10.5, #720, #725.
   //
   // Chosen from the literal, never assembled: this is one of the mission's own
-  // authored strings or it is absent, which is what makes the anti-reveal rule
-  // on `ObjectiveView.gloss` a property of the shape rather than of the
-  // author's care. There is no interpolation here on purpose — the moment a
-  // gloss could carry a runtime figure, a figure about somebody else could
-  // reach the player's screen through it.
+  // authored strings or it is absent. There is no interpolation here on
+  // purpose — the moment a gloss could carry a runtime figure, a figure about
+  // somebody else could reach the player's screen through it. That closes the
+  // half of `ObjectiveView.gloss`'s anti-reveal rule the match can break; the
+  // half an *author* can break is prose, and `missions.test.ts` is what holds
+  // it.
   const gloss = glossFor(objective, state);
   if (gloss !== undefined) view.gloss = gloss;
   if (objective.markerId !== undefined) view.markerId = objective.markerId;
