@@ -59,6 +59,8 @@ import {
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const SEED = 11;
 const PLAYER = PROLOGUE_SORROWGATE.playerSlot;
+/** A mission's own player slot — the chord cases run a different mission. */
+const PLAYER_OF = (mission: MissionDefinition): number => mission.playerSlot;
 
 /**
  * The two rules, as the wire spells them.
@@ -420,35 +422,61 @@ describe('a harvest order is a movement order, and the hold refuses it too', () 
  */
 describe('an ordered target is a movement order, and the hold refuses it too', () => {
   /**
-   * *The Second Chord* five seconds in, and the held hull in it that can shoot.
+   * *The Second Chord*, and the held hull in it that can shoot.
    *
    * `escort-b` is an armed Corvette held by `releaseTick` (secondChord.ts), in a
-   * mission whose only lock is `construction` — so this is the shipped literal,
-   * unmodified, and it is the strongest fixture in this file for any verb that
-   * needs guns. The Cruiser beside it carries no weapon, so an attack order on
-   * that one is refused a line earlier for a reason these tests are not about.
+   * mission whose only lock is `construction` — so this is the strongest fixture
+   * in this file for any verb that needs guns, and every case here but one runs
+   * the literal unmodified. The Cruiser beside it carries no weapon, which sends
+   * each verb down a different branch for a reason none of these tests is about:
+   * `orderAttackContact` returns one line *after* the hold guard, and
+   * `orderAttackMove` falls through to a plain `applyMove` four lines after it.
+   * Either way an unarmed hull would make a case here vacuous rather than
+   * refused, which is why the armed one is resolved by component rather than by
+   * tag.
    */
-  const chord = (): {
+  const chord = (
+    mission: MissionDefinition = CHORD_SECOND_CHORD,
+    seconds = 5
+  ): {
     match: Match;
     own: EchoSnapshot;
     armed: number;
+    settle(s: number): void;
+    held(): boolean;
+    at(): { x: number; y: number };
   } => {
-    const map = missionMapById(CHORD_SECOND_CHORD.mapId)!;
-    const match = new Match(map, { mission: CHORD_SECOND_CHORD, fauna: false, seed: 5 });
-    let own: EchoSnapshot | null = null;
-    let view: MissionView | null = null;
-    for (let tick = 0; tick < SIM.TICK_HZ * 5; tick++) {
-      const next = match.update(STEP_MS)?.get(CHORD_SECOND_CHORD.playerSlot);
-      if (next !== undefined) own = next;
-      const sent = match.takeMissionView();
-      if (sent !== null) view = sent;
-    }
-    assert.ok(own !== null && view !== null, 'the mission produced neither a snapshot nor a view');
-    const armed = view.held
+    const map = missionMapById(mission.mapId)!;
+    const match = new Match(map, { mission, fauna: false, seed: 5 });
+    // Held on an object rather than in two `let`s: the loop moved into a
+    // closure when this harness grew a `settle`, and a captured `let` a
+    // function reassigns cannot be narrowed by the assertion below.
+    const seen: { own: EchoSnapshot | null; view: MissionView | null } = { own: null, view: null };
+    const run = (s: number): void => {
+      for (let tick = 0; tick < SIM.TICK_HZ * s; tick++) {
+        const next = match.update(STEP_MS)?.get(mission.playerSlot);
+        if (next !== undefined) seen.own = next;
+        const sent = match.takeMissionView();
+        if (sent !== null) seen.view = sent;
+      }
+    };
+    run(seconds);
+    assert.ok(
+      seen.own !== null && seen.view !== null,
+      'the mission produced neither a snapshot nor a view'
+    );
+    const armed = seen.view.held
       .map((hold) => hold.unitId)
       .find((eid) => hasComponent(match.world, Weapon, eid));
     assert.ok(armed !== undefined, 'no held hull in this mission is armed');
-    return { match, own, armed };
+    return {
+      match,
+      own: seen.own,
+      armed,
+      settle: run,
+      held: () => seen.view?.held.some((hold) => hold.unitId === armed) === true,
+      at: () => ({ x: Position.x[armed]!, y: Position.y[armed]! }),
+    };
   };
 
   it('leaves an armed held hull where it stands, with the contact resolved', () => {
@@ -481,12 +509,6 @@ describe('an ordered target is a movement order, and the hold refuses it too', (
   /**
    * Attack-move, refused, against the configuration that ships.
    *
-   * The pair below in `ARMED_MISSION` needs a fixture for its *control* leg —
-   * `escort-b` releases at 15:30 and no shipped mission holds an armed hull on
-   * a clock a test can wait out — but the refusal itself needs nothing added
-   * and nothing unlocked, so it is held here where the hull, its guns and its
-   * hold are all the literal's own.
-   *
    * Binary components read with no step between the order and the read, so
    * nothing races the clamp: `Posture.engage` is written by `orderAttackMove`
    * itself and by nothing else on this path.
@@ -497,19 +519,80 @@ describe('an ordered target is a movement order, and the hold refuses it too', (
     assert.equal(Posture.engage[armed], 0, 'a held hull was put into engage posture');
     assert.equal(MoveOrder.active[armed], 0, 'a held hull was given somewhere to be');
   });
+
+  /**
+   * The same verb with its control leg, on the same mission with its clock
+   * pulled in.
+   *
+   * The refusal above is worth little without the same call going through, and
+   * the shipped literal cannot give that: `escort-b` releases at 15:30, which
+   * is 55,800 ticks. So the clock moves and nothing else does — `HOLD_MISSION`'s
+   * own move at the top of this file, for the same reason, "because what is
+   * under test is the rule, not the wait". The `releaseTick` and its `release`
+   * beat move together, because a held hull with no beat to release it is a
+   * shape `missions.test.ts` forbids in any shipped literal and there is no
+   * reason for a fixture to wear it.
+   *
+   * Worth saying what this replaced: an added Corvette in a Sorrowgate
+   * derivative with the mission's `weapons` lock deleted. That fixture worked,
+   * and it was two manufactured facts where this is one — and the deleted lock
+   * was a rule the mission document authors (§3 strikes the hardpoints).
+   */
+  const CHORD_RELEASE_TICK = 2 * SIM.TICK_HZ;
+  const ARMED_CHORD: MissionDefinition = {
+    ...CHORD_SECOND_CHORD,
+    id: 'test-movement-hold-armed',
+    fauna: false,
+    parties: CHORD_SECOND_CHORD.parties.map((party) => ({
+      ...party,
+      units: party.units.map((unit) =>
+        unit.tag === 'escort-b' ? { ...unit, releaseTick: CHORD_RELEASE_TICK } : unit
+      ),
+    })),
+    beats: CHORD_SECOND_CHORD.beats.map((beat) =>
+      beat.kind === 'release' && beat.tag === 'escort-b'
+        ? { ...beat, atTick: CHORD_RELEASE_TICK }
+        : beat
+    ),
+  };
+
+  it('refuses attack-move, and a hull with guns takes the same order once it is free', () => {
+    const h = chord(ARMED_CHORD, 1);
+    const gun = h.armed;
+    assert.equal(h.held(), true, 'the hull under test is not held at all');
+    const before = h.at();
+    const north = { x: before.x, y: before.y + 2000 };
+    h.match.orderAttackMove(PLAYER_OF(ARMED_CHORD), gun, north.x, north.y);
+    assert.equal(Posture.engage[gun], 0, 'a held hull was put into engage posture');
+    assert.equal(MoveOrder.active[gun], 0, 'a held hull was given somewhere to be');
+
+    // The control, and the reason the clock was moved at all.
+    h.settle(4);
+    assert.equal(h.held(), false, 'the clock has run out before the control');
+    h.match.orderAttackMove(PLAYER_OF(ARMED_CHORD), gun, north.x, north.y);
+    assert.equal(Posture.engage[gun], 1, 'a free hull did not reach the attack-move body');
+    assert.equal(MoveOrder.active[gun], 1);
+
+    h.settle(6);
+    assert.ok(
+      h.at().y > before.y + 10,
+      `and advances on the point (y ${h.at().y.toFixed(0)}, was ${before.y.toFixed(0)})`
+    );
+  });
 });
 
 /**
- * `HOLD_MISSION` with one hull alongside — the only fixtures in this file that
- * *add* a hull, and the narrowest claim that justifies doing so.
+ * `HOLD_MISSION` with one hull alongside — the only fixture in this file that
+ * *adds* a hull, and the one verb that leaves no other way.
  *
- * Not "no shipped mission can exercise these verbs". *The Second Chord* holds
- * an armed Corvette and the case above drives an attack-move refusal against
- * it, unmodified. What no shipped mission offers is a **control leg**: the
- * refusal is only worth asserting beside the same call going through, and
- * `escort-b` releases at 15:30 — 55,800 ticks, which is not a test. Embark is
- * the stronger case and needs no such qualification: no definition in the tree
- * fields a hull with a hold at all, so there is nothing to board at any tick.
+ * **No definition in the tree fields a hull with a hold at all.** `Freighter`,
+ * `Drifter`, `Verger` and `Antiphon` are the four kinds carrying `holdBerths`,
+ * and not one of the twenty-nine definitions spawns any of them — so there is
+ * nothing to board at any tick, and a test driven against a shipped literal
+ * would assert that a hull which could not have boarded anyway did not board.
+ *
+ * Every other verb here is driven against a literal: attack-move on *The Second
+ * Chord*, which ships an armed held Corvette, with only its clock moved.
  *
  * Both added hulls take their berth from tender-2's, read off the definition
  * rather than transcribed: water this mission already puts a PR 2 hull in, and
@@ -587,43 +670,12 @@ function alongsideHarness(mission: MissionDefinition, added: UnitKind): Alongsid
 }
 
 /**
- * A hull with guns, held by the clock exactly as the tender is.
+ * Follow-floor — the last of the three verbs both rows named and no mission test
+ * reached — #722.
  *
- * The `weapons` lock comes off with it, and the reason is narrower than "it
- * would hide the defect" — measured, it does not. The hold guard runs *before*
- * the lock (`match.ts`: guard, then `missionDenies`, then `applyMove` four
- * lines down), so the **held** leg is lock-independent and would pass either
- * way. What the lock does is make the *control* leg impossible: a locked slot
- * returns through `applyMove` without touching `Posture.engage`, so with the
- * lock in place the control fails outright — `expected 1, actual 0`. It comes
- * off so the pair can exist at all, which is the same trade `HOLD_MISSION`
- * makes when it opens the silence ceiling to 100: a rule this file is not
- * testing, set aside where it would otherwise decide the outcome.
- *
- * `armed: true` is the other half and neither substitutes for the other: a
- * mission hull is spawned `weaponsCold` unless its literal arms it
- * (`runtime.ts`), so with the lock lifted alone the Corvette still has no
- * `Weapon` and the order still lands as a plain move.
- */
-const ARMED_MISSION: MissionDefinition = {
-  ...alongside('test-movement-hold-armed', {
-    tag: 'gun',
-    kind: UnitKind.Corvette,
-    x: TENDER_2.x,
-    y: TENDER_2.y,
-    depthM: TENDER_2.depthM,
-    role: 'gun',
-    releaseTick: RELEASE_TICK,
-    // See the block above: without this the hull is `weaponsCold` and the
-    // control leg lands as a plain move rather than an attack-move.
-    armed: true,
-    note: 'A hull with a Weapon, so an attack-move is one rather than a move in its clothes',
-  }),
-  locks: PROLOGUE_SORROWGATE.locks.filter((lock) => lock.ability !== 'weapons'),
-};
-
-/**
- * The three verbs both invariant rows named and no mission test ever reached — #722.
+ * Attack-move is held beside the attack-contact case above, on *The Second
+ * Chord*, because that verb needs guns and that is the mission that ships them.
+ * Embark is below, because it needs a hold and no mission ships one.
  *
  * `docs/invariants.md` rows 16 and 17 each list seven orders. Across the whole
  * backend suite `orderAttackMove`, `orderEmbark` and `orderFollowFloor` were
@@ -642,7 +694,7 @@ const ARMED_MISSION: MissionDefinition = {
  * produced it. That is the vacuous guard #722 found in the row-14 holder, and
  * it is the failure mode a refusal test is most prone to.
  */
-describe('the hold refuses the three verbs the rows claim and nothing asserted', () => {
+describe('the hold refuses follow-floor, which no mission test reached', () => {
   it('refuses follow-floor, because a hold that let a hull drift down a slope is not one', () => {
     const h = harness();
     assert.equal(h.heldReason(), UNRELEASED);
@@ -658,44 +710,6 @@ describe('the hold refuses the three verbs the rows claim and nothing asserted',
     h.settle(4, 'close');
     assert.equal(h.heldReason(), null, 'the tender has its ears back before the control');
     assert.equal(h.match.orderFollowFloor(PLAYER, h.tenderId(), true), true);
-  });
-
-  it('refuses attack-move, and a hull with guns takes the same order once it is free', () => {
-    const h = alongsideHarness(ARMED_MISSION, UnitKind.Corvette);
-    const gun = h.extra;
-    assert.notEqual(gun, 0, 'the fixture fielded no armed hull');
-    assert.equal(h.heldOf(gun), UNRELEASED);
-    const before = h.at(gun);
-    h.match.orderAttackMove(PLAYER, gun, NORTH.x, NORTH.y);
-
-    // Read immediately, before a single step: `Posture.engage` and
-    // `MoveOrder.active` are written by `orderAttackMove` itself and are binary,
-    // so the refusal is asserted without racing the clamp. A distance check
-    // here would be the weaker instrument — `applyMovementHolds` suspends a
-    // held hull every Echo pass, so the 60 Hz mover can creep a few metres
-    // before the 5 Hz clamp catches it and any margin is a bet on the tick
-    // rates rather than on the guard.
-    assert.equal(Posture.engage[gun], 0, 'a held hull was put into engage posture');
-    assert.equal(MoveOrder.active[gun], 0, 'a held hull was given somewhere to be');
-
-    // The control, and it is what makes this case about attack-move at all.
-    // `orderAttackMove` falls through to a plain `applyMove` for a hull with no
-    // `Weapon` (match.ts), so driving it with the Prologue's tender — a
-    // Harvester, `attackDamage` 0 — would exercise the move path and prove
-    // nothing about the verb row 17 names. The Corvette has guns, so the free
-    // leg reaches the attack-move body and `Posture.engage` says so.
-    h.settle(4);
-    assert.equal(h.heldOf(gun), null, 'the clock has run out before the control');
-    h.match.orderAttackMove(PLAYER, gun, NORTH.x, NORTH.y);
-    assert.equal(Posture.engage[gun], 1, 'a free hull did not reach the attack-move body');
-    assert.equal(MoveOrder.active[gun], 1);
-    assert.equal(Math.round(Posture.engageX[gun]!), NORTH.x);
-
-    h.settle(4);
-    assert.ok(
-      h.at(gun).y < before.y - 10,
-      `and advances on it (y ${h.at(gun).y.toFixed(0)}, was ${before.y.toFixed(0)})`
-    );
   });
 });
 
