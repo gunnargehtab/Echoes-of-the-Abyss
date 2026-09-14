@@ -227,12 +227,19 @@ describe('the title screen: the shape of the finished game', () => {
     // none." The disabled rule has not gone away — it moved one screen in, to
     // the board, where the reasons are specific instead of one line covering
     // twenty-eight.
+    //
+    // By name rather than by node, for the reason `oneStopPerEntry` gives: this
+    // is #723's criterion 4 and its only holder, and `deepEqual` on the
+    // instances took 97 s and a SIGKILL to say so — a criterion whose breach
+    // reaches CI as a shard timeout is not held.
     const { view } = await title();
     try {
-      const dead = view.root.findAll(
-        (node) => node.type === 'button' && node.props.disabled === true
-      );
-      assert.deepEqual(dead, []);
+      const names = view.buttonNames();
+      const dead = view.root
+        .findAll((node) => node.type === 'button')
+        .map((node, index) => (node.props.disabled === true ? (names[index] ?? '?') : null))
+        .filter((name) => name !== null);
+      assert.deepEqual(dead, [], 'no entry on this screen is disabled');
     } finally {
       await view.unmount();
     }
@@ -307,9 +314,10 @@ describe('the title screen: a held seat', () => {
         'Credits',
       ]);
       assert.equal(view.byClass('menu-resume').props.autoFocus, true);
-      // And it is the *only* one armed, on the longer list: this is the list
-      // #723 actually re-ranked, and the one where an autofocus expression that
-      // lost its `!held` would arm two entries and nothing else would say so.
+      // And it is the *only* one armed, on the longer list. Both lists were
+      // re-ranked; this is the one where the re-rank meets Resume, and the one
+      // where an autofocus expression that lost its `!held` would arm two
+      // entries and nothing else would say so.
       oneStopPerEntry(view, 7, 'Resume match');
       assert.deepEqual(entries.pressed, [], 'and rendering resumed nothing');
 
