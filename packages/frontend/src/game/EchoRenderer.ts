@@ -6324,7 +6324,9 @@ export class EchoRenderer {
       x = Math.max(0, x - TOUCH_PAD_PX);
       width += TOUCH_PAD_PX * 2;
 
-      if (x < 0 || y < 0 || x + width > canvasW || y + height > canvasH) continue;
+      // No `x < 0` clause: the pad above already clamped it, so such a test
+      // would read as a bound being enforced while never being true.
+      if (y < 0 || x + width > canvasW || y + height > canvasH) continue;
 
       let covers = false;
       for (let j = 0; j < this.drawnN && !covers; j++) {

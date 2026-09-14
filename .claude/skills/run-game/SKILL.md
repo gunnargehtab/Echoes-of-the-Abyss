@@ -269,7 +269,7 @@ explanations (#724) that a runner cannot reach. Most of that contract is held in
 `packages/frontend/test` — the lines themselves, the publish gate, the rule that a control
 never covers a number which is not its own — and belongs there, because it needs no engine.
 
-Four things do need one. The controls are refused when a readout runs off the **canvas**,
+Five things do need one. The controls are refused when a readout runs off the **canvas**,
 and the bound is the canvas rather than the strip's own 52 px because the SIG instrument
 sits a couple of pixels below the strip's bevel: headless that box measures 51 px and fits,
 in Chromium about 53 and it does not, the fonts not being the same ones. So a strip-height
@@ -280,7 +280,10 @@ set, and Tab order is sequential focus navigation, which jsdom does not implemen
 same bargain the esc menu's walk records above. So is the pointer route, which is the one
 criterion 1 names first: the line is shown by `.readout-slot:hover`, a cascade reaching
 through a layer that carries `pointer-events: none`, and a renderer that has no pointer and
-builds no cascade can say nothing about it.
+builds no cascade can say nothing about it. And so is whether a line opens *above* what it
+opens over — nothing in this HUD carries a `z-index`, so that is paint order, which is DOM
+order, and only a hit test in an engine can ask about it. Three of the eleven readouts once
+opened underneath the contact log and every headless check called them shown.
 
 It walks §11's range — 75%, 100% and 200% — resetting the scale through `localStorage` and
 resuming the same match from the title, so the strip carries the same figures at each. Run

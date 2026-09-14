@@ -44,8 +44,8 @@ import { StripReadouts } from '../src/game/StripReadouts.tsx';
  * One call per function is what this list was, and it was one call short of
  * covering what it is the input to: the register guard and the key guard below
  * saw `drawDetail`'s deficit branch and never its surplus branch, which is the
- * one most recently edited. Four functions branch, and all eight readings are
- * here now.
+ * one most recently edited. Four functions branch — berths two ways, draw two,
+ * band three, contacts two — and all nine of those readings are here now.
  */
 const EVERY_LINE = [
   nodulesDetail(340),

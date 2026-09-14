@@ -11,7 +11,13 @@
  * the collision rule against the drawn glyphs — and is held there because it
  * needs no engine.
  *
- * **One half of it cannot live there, and this is why it exists.** The boxes
+ * **Four halves of it cannot live there, and that is why it exists:** the
+ * canvas bound below, `:focus-visible` and Tab order, hover, and whether a line
+ * opens *above* what it opens over — nothing in this HUD carries a `z-index`,
+ * so that last one is paint order, which is DOM order, and only a hit test in a
+ * real engine can ask about it.
+ *
+ * **The first of them, at length, because it is the least obvious.** The boxes
  * are refused when a readout runs off the canvas, and the bound is the canvas
  * rather than the strip's own 52 px because the SIG instrument — a meter and
  * two lines, §3's one permanent element — sits a couple of pixels below the
