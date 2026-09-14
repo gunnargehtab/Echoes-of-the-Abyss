@@ -36,6 +36,7 @@ import {
   HarvestThrottle,
   ThermoclineZone,
   ResolutionTier,
+  ResourceKind,
   SIM,
   StructureKind,
   UnitKind,
@@ -49,6 +50,17 @@ import { emptyOrdnanceWantTally, type OrdnanceWantTally } from '../ai/types.ts';
 
 /** How often a series is sampled, in seconds of simulated time. */
 export const SAMPLE_INTERVAL_S = 10;
+
+/**
+ * Nodules aboard a harvester, and zero for any other hold.
+ *
+ * `cargoKind` is whatever the hull last cut and is meaningless while the hold
+ * is empty, so both halves are checked rather than only the amount.
+ */
+function noduleHold(unit: { cargo?: number; cargoKind?: ResourceKind }): number {
+  if (unit.cargoKind !== ResourceKind.Nodule) return 0;
+  return unit.cargo ?? 0;
+}
 
 /** One player's story, from their own snapshots. */
 export interface PlayerTelemetry {
@@ -98,6 +110,42 @@ export interface PlayerTelemetry {
    */
   harvesterSeconds: number;
   harvesterSecondsQuiet: number;
+  /**
+   * The nodule round trip, counted rather than inferred (#706).
+   *
+   * Income alone cannot say whether a navy is *paid what it mines*. A flat
+   * bank is equally consistent with "priced out of everything" and with
+   * "cutting ore that never reaches a depot", and #706 is open because nothing
+   * in the harness distinguished them. These measure the trip rather than the
+   * account:
+   *
+   * - `noduleDeliveries` — holds that reached a depot and emptied there.
+   * - `nodulesDelivered` — what those holds were carrying when they emptied.
+   *   Against `nodulesEarned` this says whether the deposit path credits what
+   *   it accepts; the Order is the one navy where the two are meant to differ,
+   *   by `HADRON.NODULE_YIELD_MULTIPLIER` (docs/economy.md §6).
+   * - `nodulesLostInTransit` — cargo aboard a harvester the observation before
+   *   it stopped existing. Ore that was cut, was never banked, and is
+   *   invisible in every income column.
+   * - `harvesterSecondsLaden` — the haul half of the trip, so the walk home
+   *   can be told apart from the time on the node.
+   *
+   * A hold that empties and whose hull dies inside the same 200 ms observation
+   * is recorded as lost rather than delivered. That biases the loss column up
+   * and the delivery column down by at most one hold per death, never the
+   * other way round.
+   */
+  noduleDeliveries: number;
+  nodulesDelivered: number;
+  nodulesLostInTransit: number;
+  harvesterSecondsLaden: number;
+  /**
+   * Harvester-seconds with no work to do — `OwnUnit.idle`, which the server
+   * sets only for a stall and never for a throttle a commander chose
+   * (docs/ui-ux.md §5). A navy whose haulers are stalled is not being denied
+   * by a price.
+   */
+  harvesterSecondsStalled: number;
   /** Seconds spent with someone holding a full Track. */
   secondsHardTracked: number;
   /** Seconds of hull-time spent in each depth band, summed over the force. */
@@ -283,6 +331,15 @@ export class MatchTelemetry {
     number,
     { nodules: number; crystal: number; biomass: number }
   >();
+  /**
+   * Nodule cargo aboard each harvester at the previous observation, per slot.
+   *
+   * Its own map rather than a field on `lastUnits`, because that map is
+   * rebuilt inside `countBuildsAndLosses` and the two questions are asked at
+   * different moments: a hull that vanished is a loss there and, here, a hold
+   * that never arrived.
+   */
+  private readonly lastHolds = new Map<number, Map<number, number>>();
 
   constructor(
     private readonly seed: number,
@@ -304,6 +361,11 @@ export class MatchTelemetry {
         secondsHardTracked: 0,
         harvesterSeconds: 0,
         harvesterSecondsQuiet: 0,
+        noduleDeliveries: 0,
+        nodulesDelivered: 0,
+        nodulesLostInTransit: 0,
+        harvesterSecondsLaden: 0,
+        harvesterSecondsStalled: 0,
         hullSecondsByBand: {
           [DepthBand.Shelf]: 0,
           [DepthBand.MidWater]: 0,
@@ -328,6 +390,7 @@ export class MatchTelemetry {
       });
       this.lastUnits.set(slot, new Map());
       this.lastStructures.set(slot, new Map());
+      this.lastHolds.set(slot, new Map());
     }
   }
 
@@ -404,8 +467,14 @@ export class MatchTelemetry {
         if (throttle === HarvestThrottle.Trickle || throttle === HarvestThrottle.Idle) {
           player.harvesterSecondsQuiet += dt;
         }
+        // Laden is the haul half of the trip and is nodules only, because that
+        // is the trip this instrument is about — a crystal hold is a different
+        // round trip with a different clock on it (docs/economy.md §7).
+        if (noduleHold(unit) > 0) player.harvesterSecondsLaden += dt;
+        if (unit.idle !== undefined) player.harvesterSecondsStalled += dt;
       }
 
+      this.countNoduleRoundTrip(player, snapshot);
       this.accrueIncome(player, snapshot);
       this.markPeakBank(player, snapshot);
       this.countBuildsAndLosses(tick, player, snapshot);
@@ -476,6 +545,37 @@ export class MatchTelemetry {
    * a loss is remembered from the last tick the hull existed, because by the
    * time it is gone there is nothing left to ask.
    */
+  /**
+   * The nodule round trip, closed one hold at a time (#706).
+   *
+   * Cargo only ever rises while a harvester mines and is set to zero at the
+   * deposit (`systems/harvest.ts`), so a hold leaving this map is a hold that
+   * arrived — unless the hull carrying it left with it, which is the other
+   * column. Nothing here reads the bank: that is the point, since the question
+   * is whether the bank agrees with what the depots took in.
+   */
+  private countNoduleRoundTrip(player: PlayerTelemetry, snapshot: EchoSnapshot): void {
+    const held = this.lastHolds.get(player.slot)!;
+    const live = new Set<number>();
+    const now = new Map<number, number>();
+    for (const unit of snapshot.units) {
+      live.add(unit.id);
+      if (unit.kind !== UnitKind.Harvester) continue;
+      const cargo = noduleHold(unit);
+      if (cargo > 0) now.set(unit.id, cargo);
+    }
+    for (const [id, hold] of held) {
+      if (now.has(id)) continue;
+      if (live.has(id)) {
+        player.noduleDeliveries++;
+        player.nodulesDelivered += hold;
+      } else {
+        player.nodulesLostInTransit += hold;
+      }
+    }
+    this.lastHolds.set(player.slot, now);
+  }
+
   private countBuildsAndLosses(
     tick: number,
     player: PlayerTelemetry,

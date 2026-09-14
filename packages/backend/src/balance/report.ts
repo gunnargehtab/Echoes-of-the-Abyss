@@ -191,6 +191,34 @@ export interface FactionSummary {
   peakBankAtRung: number;
   peakBankAtRungBest: number;
   rungMatches: number;
+  /**
+   * The nodule round trip, per match (#706).
+   *
+   * Every other economy column here is an *account*: what the bank held, what
+   * rose into it, how fast. None of them can say whether a navy is paid what it
+   * mines, because a flat bank reads the same whether the ore never left the
+   * field, never reached a depot, or arrived and was spent. These read the trip
+   * instead.
+   *
+   * `nodulesDelivered` is what the depots took in and `incomePerMinute`'s
+   * source is what the bank credited, so the two together are a ledger with two
+   * sides. They are meant to agree everywhere but the Order, whose
+   * `HADRON.NODULE_YIELD_MULTIPLIER` banks half of every hold by spec
+   * (docs/economy.md §6) — which makes the Knights' row the instrument's own
+   * control.
+   *
+   * `nodulesLostInTransit` is ore that was cut and never banked because the
+   * hull carrying it died. It is invisible in every income column by
+   * construction, and it is the one way a navy can mine well and still be poor
+   * without any price being wrong.
+   */
+  noduleDeliveries: number;
+  nodulesDelivered: number;
+  nodulesBanked: number;
+  nodulesLostInTransit: number;
+  /** Share of harvester-time spent carrying a nodule hold, and spent stalled. */
+  ladenShare: number;
+  stalledShare: number;
   /** Share of hull-time spent below the Shelf. */
   deepTimeShare: number;
   /**
@@ -597,6 +625,24 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
         rows
           .filter((r) => r.player.firstEnemyContactTick !== null)
           .map((r) => r.player.firstEnemyContactTick! / SIM.TICK_HZ)
+      ),
+      noduleDeliveries: mean(rows.map((r) => r.player.noduleDeliveries)),
+      nodulesDelivered: mean(rows.map((r) => r.player.nodulesDelivered)),
+      nodulesBanked: mean(rows.map((r) => r.player.nodulesEarned)),
+      nodulesLostInTransit: mean(rows.map((r) => r.player.nodulesLostInTransit)),
+      ladenShare: mean(
+        rows.map((r) =>
+          r.player.harvesterSeconds === 0
+            ? 0
+            : r.player.harvesterSecondsLaden / r.player.harvesterSeconds
+        )
+      ),
+      stalledShare: mean(
+        rows.map((r) =>
+          r.player.harvesterSeconds === 0
+            ? 0
+            : r.player.harvesterSecondsStalled / r.player.harvesterSeconds
+        )
       ),
       throttledDownShare: mean(
         rows.map((r) =>
@@ -1233,6 +1279,40 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
       'peak at the opening is the gift rather than savings — the row above it is what a navy ' +
       'ever banked on top of what it was handed. The rung rows are read over the matches that ' +
       'raised a Slipway, and are "—" for a navy that raised none._'
+  );
+  lines.push('');
+  // The nodule round trip. The table above says what the bank held; this says
+  // what the depots took in, which is the other side of the same ledger and the
+  // only one that can distinguish a navy priced out of everything from a navy
+  // that is not being paid (#706).
+  lines.push('## The nodule round trip — what the depots took in');
+  lines.push('');
+  lines.push(`| Measure | ${summary.factions.map((f) => FACTION_NAME[f.faction]).join(' | ')} |`);
+  lines.push(`| --- |${summary.factions.map(() => ' --- |').join('')}`);
+  const tripRow = (label: string, cell: (f: FactionSummary) => string): void => {
+    lines.push(`| ${label} | ${summary.factions.map(cell).join(' | ')} |`);
+  };
+  tripRow('Deliveries a match', (f) => f.noduleDeliveries.toFixed(1));
+  tripRow('Nodules delivered a match', (f) => Math.round(f.nodulesDelivered).toString());
+  tripRow('Nodules banked a match', (f) => Math.round(f.nodulesBanked).toString());
+  tripRow('Mean hold delivered', (f) =>
+    f.noduleDeliveries === 0 ? '—' : (f.nodulesDelivered / f.noduleDeliveries).toFixed(1)
+  );
+  tripRow('Nodules lost in transit a match', (f) => Math.round(f.nodulesLostInTransit).toString());
+  tripRow('Lost as a share of what was cut', (f) => {
+    const cut = f.nodulesDelivered + f.nodulesLostInTransit;
+    return cut === 0 ? '—' : `${Math.round((f.nodulesLostInTransit / cut) * 100)}%`;
+  });
+  tripRow('Harvester-time laden', (f) => `${Math.round(f.ladenShare * 100)}%`);
+  tripRow('Harvester-time stalled', (f) => `${Math.round(f.stalledShare * 100)}%`);
+  lines.push('');
+  lines.push(
+    '_Delivered is what reached a depot; banked is what the account rose by. They are meant ' +
+      'to agree for every navy but the Order, which banks half of each hold by spec ' +
+      "(`HADRON.NODULE_YIELD_MULTIPLIER`, economy.md §6) — so that row is this table's own " +
+      'control. Lost in transit is ore that was cut and died with its hauler, which no income ' +
+      'column can show. Stalled counts a harvester the server reports as out of work, never ' +
+      'one throttled down on purpose._'
   );
   lines.push('');
   lines.push(

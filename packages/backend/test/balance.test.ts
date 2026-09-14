@@ -18,6 +18,7 @@ import {
   AiDifficulty,
   ECONOMY,
   Faction,
+  HADRON,
   HARVEST_THROTTLE,
   HarvestThrottle,
   SIM,
@@ -35,11 +36,20 @@ import { OWN_ORDNANCE } from '../src/ai/commander.ts';
 import { summarise, toMarkdown, type GuardRailVerdict } from '../src/balance/report.ts';
 import { MatchTelemetry, type MatchTelemetryResult } from '../src/balance/telemetry.ts';
 import { Match } from '../src/sim/match.ts';
+import { Health } from '../src/sim/components.ts';
 import { DEFAULT_MAP_ID, mapById } from '../src/sim/maps/index.ts';
 
 const DUEL: Seat[] = [
   { slot: 0, faction: Faction.Bathyarch, difficulty: AiDifficulty.Veteran },
   { slot: 1, faction: Faction.Pelagia, difficulty: AiDifficulty.Veteran },
+];
+
+/** All four navies, for the columns whose claim is a comparison between them. */
+const FOUR_FACTION: Seat[] = [
+  { slot: 0, faction: Faction.Bathyarch, difficulty: AiDifficulty.Veteran },
+  { slot: 1, faction: Faction.Pelagia, difficulty: AiDifficulty.Veteran },
+  { slot: 2, faction: Faction.Directorate, difficulty: AiDifficulty.Veteran },
+  { slot: 3, faction: Faction.Hadron, difficulty: AiDifficulty.Veteran },
 ];
 
 describe('the harness is reproducible', () => {
@@ -258,6 +268,137 @@ describe('telemetry measures what it says it measures', () => {
       consortium.throttledDownShare,
       0,
       'a navy whose doctrine never throttles down should never be recorded doing it'
+    );
+  });
+
+  it('closes a nodule round trip on the hold, not on the bank (#706)', () => {
+    // #706 is open because no column in this harness could tell "priced out of
+    // everything" from "cutting ore that never reaches a depot" — a flat bank
+    // reads identically either way. These counters read the trip instead, and
+    // the claim they carry is a ledger with two sides: what the depots took in
+    // against what the accounts rose by.
+    const result = runMatch({ seats: FOUR_FACTION, seed: 4000, maxMinutes: 3, fauna: true });
+    // The largest hold anybody can land: a full Standard hold at the loudest
+    // throttle's load multiplier. The instrument records a hold as last seen
+    // before it emptied, which can only be less, so this is a ceiling the
+    // arithmetic may not cross.
+    const largestHold =
+      ECONOMY.CARGO_CAPACITY_NODULES * HARVEST_THROTTLE[HarvestThrottle.Overburden].cargoMultiplier;
+
+    for (const player of result.players) {
+      assert.ok(
+        player.noduleDeliveries > 0 && player.nodulesDelivered > 0,
+        `slot ${player.slot} hauled for three minutes and should have landed something`
+      );
+      const meanHold = player.nodulesDelivered / player.noduleDeliveries;
+      assert.ok(
+        meanHold > 0 && meanHold <= largestHold,
+        `slot ${player.slot} landed a mean hold of ${meanHold.toFixed(1)}, over ${largestHold}`
+      );
+      assert.ok(
+        player.harvesterSecondsLaden <= player.harvesterSeconds,
+        'the laden part of hauling cannot exceed the hauling'
+      );
+      assert.ok(
+        player.harvesterSecondsStalled <= player.harvesterSeconds,
+        'nor can the stalled part'
+      );
+    }
+
+    // Only two paths in the tree credit nodules — the deposit
+    // (`systems/harvest.ts`) and the Order's tithe (`systems/tithe.ts`) — so a
+    // navy without a tithe banks exactly what its depots took in, less at most
+    // one observation's mining per delivery, which is 2 nodules at
+    // MINING_RATE_PER_S over a 5 Hz pass.
+    const slack = 2 * ECONOMY.CARGO_CAPACITY_NODULES;
+    for (const faction of [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate]) {
+      const player = result.players.find((p) => p.faction === faction)!;
+      assert.ok(
+        Math.abs(player.nodulesDelivered - player.nodulesEarned) <= slack,
+        `${Faction[faction]} landed ${player.nodulesDelivered.toFixed(1)} and banked ` +
+          `${player.nodulesEarned.toFixed(1)} — the two sides of the ledger have parted`
+      );
+    }
+
+    // The control, and the reason this is not simply the bank rendered twice:
+    // the Order banks half of every hold by spec (docs/economy.md §6,
+    // HADRON.NODULE_YIELD_MULTIPLIER), so its two sides are *meant* to differ.
+    // An instrument that read the account would report them equal.
+    const knights = result.players.find((p) => p.faction === Faction.Hadron)!;
+    assert.ok(
+      knights.nodulesEarned < knights.nodulesDelivered,
+      `the Order landed ${knights.nodulesDelivered.toFixed(1)} and banked ` +
+        `${knights.nodulesEarned.toFixed(1)}; §6 halves every hold, so these cannot agree`
+    );
+    // And the gap is the multiplier rather than a miscount: the tithe only ever
+    // adds, so the banked figure sits above the halved holds and below the
+    // whole ones. Both bounds, because either alone is satisfied by an
+    // instrument that is simply wrong in the right direction.
+    assert.ok(
+      knights.nodulesEarned + slack >= knights.nodulesDelivered * HADRON.NODULE_YIELD_MULTIPLIER,
+      `the Order banked ${knights.nodulesEarned.toFixed(1)}, under the ` +
+        `${HADRON.NODULE_YIELD_MULTIPLIER} of ${knights.nodulesDelivered.toFixed(1)} §6 promises`
+    );
+  });
+
+  it('counts a hold that died with its hauler as lost, never as delivered (#706)', () => {
+    // The column no income table can show: ore that was cut, was aboard, and
+    // never reached a depot. It is the difference between a navy that is poor
+    // because everything costs too much and one that is poor because its
+    // haulers keep dying full.
+    const map = mapById(DEFAULT_MAP_ID)!;
+    // No fauna, for the reason `MatchOptions.fauna` gives: a world full of
+    // animals is noise when the thing under test is a harvester round trip —
+    // and here it would also be a second thing that could kill the hauler.
+    const match = new Match(map, { seed: 706, fauna: false });
+    match.addPlayer(0, Faction.Bathyarch);
+    match.addPlayer(1, Faction.Pelagia);
+    const telemetry = new MatchTelemetry(706, map.id, [
+      { slot: 0, faction: Faction.Bathyarch },
+      { slot: 1, faction: Faction.Pelagia },
+    ]);
+    const stepMs = 1000 / SIM.TICK_HZ;
+
+    let victim: number | null = null;
+    let lastHold = 0;
+    let died = false;
+    for (let tick = 0; tick < SIM.TICK_HZ * 40 && !died; tick++) {
+      const snapshots = match.update(stepMs);
+      if (snapshots === null) continue;
+      const own = snapshots.get(0)!;
+      if (victim !== null) {
+        const still = own.units.find((u) => u.id === victim);
+        if (still === undefined) died = true;
+        else lastHold = still.cargo ?? 0;
+      }
+      telemetry.observe(match.tick, snapshots);
+      if (victim === null) {
+        // Any hull with ore aboard will do; the first one to start cutting is
+        // the cheapest to wait for.
+        const laden = own.units.find((u) => u.kind === UnitKind.Harvester && (u.cargo ?? 0) > 0);
+        if (laden !== undefined) {
+          victim = laden.id;
+          lastHold = laden.cargo!;
+          // Killed after the observation that recorded the hold, so what the
+          // instrument last saw aboard is exactly what it must report lost.
+          Health.hp[laden.id] = 0;
+        }
+      }
+    }
+
+    assert.ok(died, 'the hauler under test never actually died');
+    const result = telemetry.finish(match.tick, null, true);
+    const player = result.players.find((p) => p.slot === 0)!;
+    assert.ok(lastHold > 0, 'the hauler was meant to die with ore aboard');
+    assert.equal(
+      player.nodulesLostInTransit,
+      lastHold,
+      'a hold that went down with its hauler is the whole of what was lost'
+    );
+    assert.equal(
+      player.noduleDeliveries,
+      0,
+      'and none of it may be recorded as having reached a depot'
     );
   });
 

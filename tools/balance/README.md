@@ -91,6 +91,32 @@ this column said the money was never there: peak bank with a yard up is under 40
 Consortium against a 700 nodule Bulwark, and the peak over the whole match is 600–680 against
 a 600 nodule yard. Read it before attributing a row of zeros to how a commander spends.
 
+**The nodule round trip.** Every table above this one is an *account*: what the bank held,
+what rose into it, how fast. None of them can say whether a navy is **paid what it mines**,
+because a flat bank reads identically whether the ore never left the field, never reached a
+depot, or arrived and was spent the same second. This table is the other side of that ledger
+— what the depots took in, counted one hold at a time, plus the ore that was cut and went
+down with its hauler, which no income column can show at all.
+
+Read `Nodules delivered a match` against `Nodules banked a match`. Only two paths in the tree
+credit nodules — the deposit in `systems/harvest.ts` and the Order's tithe in
+`systems/tithe.ts` — so for three of the four navies those two figures are the same number
+arrived at from opposite ends, and a gap between them is a defect in the credit path rather
+than a reading. The Knights are the table's own control: `HADRON.NODULE_YIELD_MULTIPLIER`
+banks half of every hold by spec (`docs/economy.md` §6), so their two columns are *meant* to
+disagree, and an instrument that had quietly ended up reading the bank twice would report
+them equal.
+
+Two caveats on the arithmetic, both of them small and both one-directional. A hold is
+recorded as the harvester was last seen carrying it, which is up to one 5 Hz observation's
+mining — 2 nodules — under what it actually landed. And a hold whose hull dies in the same
+200 ms window it empties in is counted as lost rather than delivered. Both bias the delivered
+column down and never up.
+
+This was built for #706, where the Commune's bank never once rises above its opening 600 in
+thirty matches and nothing in the harness could say whether that was a price problem or a
+payment one.
+
 ## Three things to know before trusting a number
 
 **The seed places the Drift and nothing else.** Terrain is authored, hazard timings come
