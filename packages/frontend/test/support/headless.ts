@@ -134,6 +134,48 @@ export class StubElement {
     }
   }
 
+  /**
+   * Deliver an already-built event object, the way `EventTarget` does.
+   *
+   * The sibling of `dispatch` above, and it exists because the *client*
+   * dispatches rather than only listening: the readout controls sit over the
+   * Pixi canvas and are not its descendants, so a wheel on one is forwarded to
+   * it as a synthetic `WheelEvent` (#724). `dispatch` builds the payload; this
+   * takes one that was built elsewhere.
+   */
+  dispatchEvent(event: { type: string }): boolean {
+    const bucket = this.listeners.get(event.type);
+    if (bucket === undefined) return true;
+    for (const entry of [...bucket]) {
+      if (entry.once) this.removeEventListener(event.type, entry.fn);
+      entry.fn(event);
+    }
+    return true;
+  }
+
+  /**
+   * The first descendant with this tag name.
+   *
+   * **Tag selectors only**, which is the whole of what the client asks for: it
+   * reaches its own canvas through `host.querySelector('canvas')` and nothing
+   * else in the tree queries the DOM at all. A stub that pretended to parse CSS
+   * would be a second selector engine to keep right, and one that silently
+   * returned `null` for a selector it could not read would turn a broken query
+   * into a quietly missing feature — so anything else throws.
+   */
+  querySelector(selector: string): StubElement | null {
+    if (!/^[a-z][a-z0-9-]*$/i.test(selector)) {
+      throw new Error(`headless: querySelector supports a tag name, not "${selector}"`);
+    }
+    const wanted = selector.toLowerCase();
+    for (const child of this.childNodes) {
+      if (child.tagName.toLowerCase() === wanted) return child;
+      const deeper = child.querySelector(selector);
+      if (deeper !== null) return deeper;
+    }
+    return null;
+  }
+
   appendChild<T extends StubElement>(child: T): T {
     child.parentNode = this;
     this.childNodes.push(child);
@@ -448,6 +490,34 @@ export function setCoarsePointer(on: boolean): void {
 export function installHeadlessDom(): void {
   if (installed) return;
   installed = true;
+
+  // `WheelEvent`, because the client *constructs* one (#724): the readout
+  // controls sit over the canvas and are not its descendants, so a wheel on one
+  // is forwarded to it as a synthetic event rather than lost. Node has no DOM
+  // constructors at all, so without this the forwarding throws — which is the
+  // right failure, and exactly the kind of thing this file exists to supply
+  // rather than to let a test route around. Carries only what the renderer's
+  // handler reads: `deltaY` and the client coordinates.
+  if ((globalThis as { WheelEvent?: unknown }).WheelEvent === undefined) {
+    (globalThis as { WheelEvent?: unknown }).WheelEvent = class {
+      readonly type: string;
+      readonly deltaY: number;
+      readonly clientX: number;
+      readonly clientY: number;
+      readonly cancelable: boolean;
+      constructor(
+        type: string,
+        init: { deltaY?: number; clientX?: number; clientY?: number; cancelable?: boolean } = {}
+      ) {
+        this.type = type;
+        this.deltaY = init.deltaY ?? 0;
+        this.clientX = init.clientX ?? 0;
+        this.clientY = init.clientY ?? 0;
+        this.cancelable = init.cancelable ?? false;
+      }
+      preventDefault(): void {}
+    };
+  }
 
   const documentStub = {
     createElement: (tag: string): StubElement =>

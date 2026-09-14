@@ -739,9 +739,11 @@ describe('construction and production', () => {
 describe('the third account — Biomass as a price', () => {
   // docs/economy.md §6 and §8: a cohort hull carries a Biomass price beside
   // its Nodules and Crystal, refused and debited on the path the other two
-  // already take. The roster's own Biomass column is empty until issue #352
-  // prices a cohort hull, so this block prices a Corvette in Biomass for its
-  // own duration — the one variable in the block is the account, the way
+  // already take. The roster's Biomass column was empty when this block was
+  // written and is not any longer — seven hulls carry a `biomassCost` now — but
+  // the block still prices a *Corvette* in Biomass for its own duration,
+  // because a hull that is priced in only one account is what isolates the
+  // account: the one variable in the block is the account, the way
   // missionShiftChange.test.ts holds the other two accounts at a decoy. Each
   // test file runs in its own process, and `after` restores the roster for
   // the rest of this one.

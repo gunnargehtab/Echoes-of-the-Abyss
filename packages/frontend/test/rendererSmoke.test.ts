@@ -23,7 +23,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
-import type { Container } from 'pixi.js';
+import { Text, type Container } from 'pixi.js';
 import { Faction, MovementHoldReason } from '@echoes/shared';
 import {
   createHost,
@@ -52,6 +52,7 @@ import {
   COLS,
 } from './support/cannedMatch.ts';
 import { EchoRenderer, type RendererCallbacks } from '../src/game/EchoRenderer.ts';
+import type { ReadoutBox } from '../src/game/readouts.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { BufferAttribute, Mesh, type Scene } from 'three';
 
@@ -105,6 +106,47 @@ function symbolCounts(app: HeadlessApplication): {
   const at = (index: number): number => (overlay.children[index] as Container).children.length;
   return { structures: at(3), contacts: at(5), units: at(6), ordnance: at(7) };
 }
+
+/**
+ * Every visible `Text` the strip drew, in the CSS pixels the readout boxes are
+ * reported in.
+ *
+ * The renderer lays the HUD out in unscaled units and `this.hud` carries §11's
+ * scale, so a glyph's on-screen box is its global position and its local extent
+ * times that scale. Invisible subtrees are skipped rather than measured: a
+ * readout the strip dropped for want of room is not on screen, and a control
+ * may sit wherever it was.
+ */
+function stripGlyphs(
+  app: HeadlessApplication,
+  scale: number
+): Array<{ text: string; x: number; y: number; width: number; height: number }> {
+  const found: Array<{ text: string; x: number; y: number; width: number; height: number }> = [];
+  const walk = (node: Container): void => {
+    for (const child of node.children) {
+      if (!child.visible) continue;
+      if (child instanceof Text) {
+        const at = child.getGlobalPosition();
+        if (at.y < TOP_BAR_HEIGHT_PX * scale && child.text.length > 0) {
+          found.push({
+            text: child.text,
+            x: at.x,
+            y: at.y,
+            width: child.width * scale,
+            height: child.height * scale,
+          });
+        }
+      } else {
+        walk(child as Container);
+      }
+    }
+  };
+  walk(app.stage as unknown as Container);
+  return found;
+}
+
+/** `TOP_BAR_HEIGHT` in EchoRenderer, restated so a change to it fails here. */
+const TOP_BAR_HEIGHT_PX = 52;
 
 interface Booted {
   chart: EchoRenderer;
@@ -1122,5 +1164,261 @@ describe('renderer smoke test: input and teardown', () => {
     // A key pressed after teardown reaches nothing. This is the leak that
     // survives a StrictMode double-mount and drives the next match's camera.
     dispatchWindow('keydown', { code: 'KeyW' });
+  });
+});
+
+/**
+ * The top strip's explanations (#724) — docs/ui-ux.md §2, §7.
+ *
+ * The strip is Pixi text and its explanation is DOM, so the renderer's half of
+ * the arrangement is reporting *where each readout is and what it says*. Two
+ * properties matter and neither is visible from the component's side: that the
+ * value a screen reader will speak is the string the strip actually drew, and
+ * that reporting it does not cost a frame.
+ *
+ * The second is a counted assertion in this file's sense — calls made over a
+ * known number of frames, never a stopwatch. A hover surface that republished
+ * every frame would re-render the React shell at 60 Hz, which is the one thing
+ * `GameCanvas`'s own header says it must never do.
+ */
+describe('renderer smoke test: the strip explains itself', () => {
+  it('reports every readout the strip drew, with the strip’s own text', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    booted.frame();
+
+    const published = booted.log.calls.filter((call) => call.name === 'onReadouts');
+    assert.ok(published.length > 0, 'the strip is reported at all');
+    const boxes = published.at(-1)!.args[0] as ReadoutBox[];
+    const keys = boxes.map((box) => box.key);
+
+    // Every account the canned snapshot carries, plus the two instruments and
+    // the three right-hand readouts. Crystal and biomass are here because the
+    // fixture has some of each; they are the two the strip hides at zero.
+    for (const key of [
+      'sig',
+      'band',
+      'tracked',
+      'nodules',
+      'crystal',
+      'biomass',
+      'berths',
+      'draw',
+      'contacts',
+    ]) {
+      assert.ok(keys.includes(key as ReadoutBox['key']), `${key} is explained`);
+    }
+
+    // The name a screen reader speaks is the string on the glass, not a second
+    // composition of the same numbers — so the two cannot drift apart.
+    const nodules = boxes.find((box) => box.key === 'nodules')!;
+    assert.equal(
+      nodules.value,
+      textSaying(booted.app.stage as unknown as Container, 'NODULES'),
+      'the reported value is the Text the player is looking at'
+    );
+    assert.ok(nodules.width > 0 && nodules.height > 0, 'and it has a box to be hovered in');
+
+    booted.teardown();
+  });
+
+  it('reports nothing further while the strip is unchanged', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    booted.frame();
+    const settled = booted.log.calls.filter((call) => call.name === 'onReadouts').length;
+
+    booted.frame(60);
+    const after = booted.log.calls.filter((call) => call.name === 'onReadouts').length;
+    // One second of frames at the rate the ticker runs, and not one republish:
+    // the scratch is compared in place, so an unmoved strip costs no allocation
+    // and no React render.
+    assert.equal(after, settled, 'a strip that did not move is not reported again');
+
+    booted.teardown();
+  });
+
+  it('never lays a control over a number that is not its own', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    // §11's ceiling, which is where the strip collides with itself. At 200% on
+    // a 1280-wide viewport the first row overruns `map · T+ · n`: the rule that
+    // drops those measures the *second* row's right edge, and the row that
+    // collides is the stockpile row. That is the strip's own defect and this
+    // change does not fix it — what is held here is that the explanation
+    // surface refuses to point at the wreckage.
+    const scale = 2;
+    booted.chart.setUiScale(scale);
+    booted.frame(3);
+
+    const boxes = booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
+      .args[0] as ReadoutBox[];
+    assert.ok(boxes.length > 0, 'the strip is still explained at the scale ceiling');
+
+    // Against the glyphs the renderer actually drew, and deliberately not
+    // against the other published boxes. A readout refused a control — for
+    // running off the canvas, say — is still *drawn*, so a later control can
+    // sit on top of it, and a boxes-against-boxes test is green in exactly that
+    // case. It was: `BERTHS 6/24` was refused for overrunning the edge by two
+    // pixels and the contact count's control was laid straight over it.
+    const glyphs = stripGlyphs(booted.app, scale);
+    assert.ok(glyphs.length > boxes.length, 'the strip drew more than it explained');
+
+    for (const box of boxes) {
+      for (const glyph of glyphs) {
+        // A readout's own number, and the SIG instrument's second line, which
+        // §3 makes part of the same instrument rather than a readout of its own.
+        if (glyph.text === box.value) continue;
+        if (box.key === 'sig' && / unit/.test(glyph.text)) continue;
+        const hits =
+          box.x < glyph.x + glyph.width &&
+          glyph.x < box.x + box.width &&
+          box.y < glyph.y + glyph.height &&
+          glyph.y < box.y + box.height;
+        assert.ok(!hits, `the ${box.key} control covers "${glyph.text}", which is not its number`);
+      }
+    }
+
+    booted.teardown();
+  });
+
+  it('quotes the same loud count as the label the line sits under', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    booted.frame();
+    const boxes = booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
+      .args[0] as ReadoutBox[];
+
+    // `drawSigMeter` counts the hulls over SIG_BANDS.LOUD for §3's second line,
+    // and the explanation quotes that count rather than filtering the set a
+    // second time. The two sit one above the other on screen, so a second
+    // filter is the "written twice" rule broken where it would be hardest to
+    // notice — and nothing catches it unless the two are compared.
+    const second = textSaying(booted.app.stage as unknown as Container, ' loud');
+    assert.ok(second !== null, '§3’s second line is on the strip');
+    const [, drawnLoud] = /(\d+) loud/.exec(second)!;
+    const [, drawnUnits] = /(\d+) unit/.exec(second)!;
+    const detail = boxes.find((box) => box.key === 'sig')!.detail;
+    assert.match(
+      detail,
+      new RegExp(`\\b${drawnLoud} of ${drawnUnits} over `),
+      `the line says "${detail}" while the label above it says "${second}"`
+    );
+
+    booted.teardown();
+  });
+
+  it('gives each readout a control taller than its glyphs, for a touch player', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    booted.frame();
+    const boxes = booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
+      .args[0] as ReadoutBox[];
+
+    // §2 sets the console's height by §11's 44 px touch floor — "a console row
+    // is a touch target" — and the strip's drawn glyphs are 11-13 px tall. The
+    // strip holds two rows in 52 px, so 44 apiece cannot be had without the
+    // rows overlapping; half the floor is what is reachable, and it is what is
+    // asserted. The bar is in CSS pixels, which is what a finger is measured in.
+    for (const box of boxes) {
+      assert.ok(box.height >= 26, `${box.key} is ${box.height} px tall — not a touch target`);
+    }
+
+    booted.teardown();
+  });
+
+  it('keeps the permanent element at every scale, and every box on the canvas', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    const latest = () =>
+      booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!.args[0] as ReadoutBox[];
+
+    // §11's range, ends and middle. §3 makes the SIG meter the one permanent
+    // element, so it is the readout that may never lose its control — and it
+    // is the one most likely to, being the only readout taller than a line of
+    // text. Its box runs a pixel or two past the strip's own bevel, so a bound
+    // taken on TOP_BAR_HEIGHT rather than on the canvas drops it.
+    //
+    // This is the half of that a headless runner can hold. The half it cannot
+    // is the trigger: the box clears 52 px here and does not in Chromium,
+    // because the fonts are not the same ones. A browser drive is what found
+    // it (docs/screenshots/issue-724), and nothing in this file would have.
+    for (const scale of [0.75, 1, 2]) {
+      booted.chart.setUiScale(scale);
+      booted.frame(2);
+      const boxes = latest();
+      assert.ok(
+        boxes.some((box) => box.key === 'sig'),
+        `the permanent element has no control at ${scale * 100}%`
+      );
+      for (const box of boxes) {
+        assert.ok(box.x >= 0 && box.y >= 0, `${box.key} starts off the canvas at ${scale * 100}%`);
+        assert.ok(
+          box.x + box.width <= 1280 && box.y + box.height <= 720,
+          `${box.key} runs off the canvas at ${scale * 100}% — a tab stop nobody can see`
+        );
+      }
+    }
+
+    booted.teardown();
+  });
+
+  it('republishes when §3’s second line moves under a held peak', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    booted.frame();
+
+    const sigDetail = (): string =>
+      (
+        booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
+          .args[0] as ReadoutBox[]
+      ).find((box) => box.key === 'sig')!.detail;
+    const secondLine = (): string =>
+      textSaying(booted.app.stage as unknown as Container, ' loud') ?? '';
+    const before = secondLine();
+
+    // One more hull, quieter than the loudest: `n units · m loud` moves and the
+    // rounded peak does not. The instrument is drawn as two lines and its box
+    // is named by the first, so watching only that string calls this frame
+    // unchanged — and the explanation underneath goes on quoting the old count,
+    // indefinitely. Two ordinary ways in: a hull launched while the loudest
+    // holds, and a hull crossing 60 under a louder one.
+    const snapshot = cannedSnapshot();
+    booted.chart.applySnapshot({
+      ...snapshot,
+      units: [...snapshot.units, { ...snapshot.units[1]!, id: 99, sig: 3 }],
+    });
+    booted.frame(2);
+
+    assert.notEqual(secondLine(), before, 'the strip’s own second line moved');
+    const [, loud] = /(\d+) loud/.exec(secondLine())!;
+    const [, units] = /(\d+) unit/.exec(secondLine())!;
+    assert.match(
+      sigDetail(),
+      new RegExp(`\\b${loud} of ${units} over `),
+      `the line says "${sigDetail()}" while the label above it says "${secondLine()}"`
+    );
+
+    booted.teardown();
+  });
+
+  it('reports once more when a number actually moves', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    booted.frame(10);
+    const before = booted.log.calls.filter((call) => call.name === 'onReadouts').length;
+
+    booted.chart.applySnapshot({ ...cannedSnapshot(), nodules: 1751 });
+    booted.frame(10);
+    const published = booted.log.calls.filter((call) => call.name === 'onReadouts');
+    assert.equal(published.length, before + 1, 'exactly one republish for one change');
+    const boxes = published.at(-1)!.args[0] as ReadoutBox[];
+    assert.match(
+      boxes.find((box) => box.key === 'nodules')!.value,
+      /1751/,
+      'and it carries the new figure'
+    );
+
+    booted.teardown();
   });
 });

@@ -33,6 +33,8 @@ import { MatchResult } from './MatchResult.tsx';
 import { MissionLog } from './MissionLog.tsx';
 import { MissionPanel } from './MissionPanel.tsx';
 import { MissionResult } from './MissionResult.tsx';
+import { StripReadouts } from './StripReadouts.tsx';
+import type { ReadoutBox } from './readouts.ts';
 import { AudioEngine, dbToGain } from '../audio/engine.ts';
 import type { TunedInputs } from '../audio/tunedBed.ts';
 import { driftCarryForMap, recordMissionResult, spentCadre } from '../progression/store.ts';
@@ -181,6 +183,18 @@ export function GameCanvas({
   /** Non-null once the mission has concluded. Never a winner; an outcome. */
   const [missionOver, setMissionOver] = useState<MissionResultPayload | null>(null);
   const [mapName, setMapName] = useState('');
+  /**
+   * Where the top strip's readouts are, and what each one means (§2, §7, #724).
+   *
+   * The one piece of per-frame geometry that crosses back into React, and it
+   * does so only when the strip actually changes — `EchoRenderer.recordStrip`
+   * compares before it calls, so this does not re-render the shell at 60 Hz.
+   * It has to cross at all because the explanation is DOM and the strip is not:
+   * §10 and §11 put the log and the objectives panel in the DOM for the same
+   * reason, and a readout that cannot leave the canvas needs the DOM brought
+   * to it instead.
+   */
+  const [readouts, setReadouts] = useState<ReadoutBox[]>([]);
   /**
    * §11's UI scale, mirrored into React for the DOM half of the interface.
    *
@@ -376,6 +390,7 @@ export function GameCanvas({
           onContactAudio: (frame) => audio.applyContacts(frame),
           // The other half of the mix: what is true of the player's own force.
           onSelfAudio: (frame) => audio.applySelf(frame),
+          onReadouts: setReadouts,
           onHazards: (hazards) => {
             // Read-only, for the headless harness. Hazards are public anyway.
             (window as unknown as { __hazardProbe?: () => unknown }).__hazardProbe = () =>
@@ -720,6 +735,18 @@ export function GameCanvas({
         {live && phase !== MatchPhase.Lobby && missionLines.length > 0 && (
           <MissionLog lines={missionLines} />
         )}
+        {/* Last of the in-match layer, and that is the whole of its stacking
+            rule: nothing here carries a `z-index`, so DOM order is paint order
+            (§2's "DOM order stacks them"). Rendered before the panels, the
+            lines for the strip's right-hand end — the map name, the clock and
+            the contact count — opened *underneath* the contact log and could
+            not be read at all, which is three of the eleven readouts not
+            explained however reachable their control was.
+
+            It takes nothing from the panels in exchange: the layer is
+            `pointer-events: none` and the controls themselves sit inside the
+            52 px strip, clear of the log's `top: 60px`. */}
+        {live && phase !== MatchPhase.Lobby && <StripReadouts boxes={readouts} host={hostRef} />}
         {/* A mission has no faction to pick and no readiness to declare — the
           room pins both — so the ready room is not shown at all rather than
           shown empty. */}

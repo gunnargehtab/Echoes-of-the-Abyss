@@ -1,0 +1,358 @@
+/**
+ * The top strip's explanations, in a real engine, as a `--steps` module (#724).
+ *
+ *   node .claude/skills/run-game/scripts/drive.mjs --out /tmp/readouts \
+ *     --steps .claude/skills/run-game/scripts/readoutGuards.mjs
+ *
+ * docs/ui-ux.md §2's permanent strip is Pixi text, so its explanations are DOM
+ * controls laid over it: the renderer reports where each readout ended up and
+ * `StripReadouts` puts one transparent button on each. Most of that contract is
+ * held in `packages/frontend/test` — the lines themselves, the publish gate,
+ * the collision rule against the drawn glyphs — and is held there because it
+ * needs no engine.
+ *
+ * **Four halves of it cannot live there, and that is why it exists:** the
+ * canvas bound below, `:focus-visible` and Tab order, hover, and whether a line
+ * opens *above* what it opens over — nothing in this HUD carries a `z-index`,
+ * so that last one is paint order, which is DOM order, and only a hit test in a
+ * real engine can ask about it.
+ *
+ * **The first of them, at length, because it is the least obvious.** The boxes
+ * are refused when a readout runs off the canvas, and the bound is the canvas
+ * rather than the strip's own 52 px because the SIG instrument — a meter and
+ * two lines, §3's one permanent element — sits a couple of pixels below the
+ * strip's bevel. Headless that box measures 51 px and fits; in Chromium it
+ * measures about 53 and does not, because the fonts are not the same ones. A
+ * strip-height bound therefore drops the SIG readout's control *in the browser
+ * and nowhere else*, and the whole suite stays green while it does. That is the
+ * same bargain `escFocus.mjs` records for the esc menu's focus trap: a property
+ * the runner cannot reach is asserted in a real engine or nowhere.
+ *
+ * Deliberately **not** part of `npm test`, for `escFocus.mjs`'s reasons:
+ * Playwright is a global install rather than a devDependency, the harness needs
+ * both dev servers, and a browser drive on every push is not what the CI budget
+ * is best spent on. Run it when the strip's layout or this surface changes.
+ *
+ * It fails loudly — a thrown error, which drive.mjs turns into a non-zero exit
+ * and a `steps-failed` screenshot.
+ */
+
+/** §11's range, ends and middle. The ceiling is where the strip collides with itself. */
+const SCALES = [0.75, 1, 2];
+
+function check(ok, message) {
+  console.log(`${ok ? 'ok  ' : 'FAIL'}  ${message}`);
+  if (!ok) throw new Error(message);
+}
+
+/** Every readout control on screen, with the box the player's finger has to hit. */
+async function controls(page) {
+  return page.evaluate(() =>
+    [...document.querySelectorAll('.readout')].map((button) => {
+      const box = button.getBoundingClientRect();
+      const detail = button.nextElementSibling;
+      // Clipped when shut, laid out when shown. The line is never removed, so
+      // `aria-describedby` resolves either way — this is asking which.
+      const shown = detail !== null && getComputedStyle(detail).clipPath === 'none';
+      // And *laid out* is not *readable*, which this drive learned the hard
+      // way: nothing in the HUD carries a `z-index`, so paint order is DOM
+      // order, and the lines for the strip's right-hand end opened underneath
+      // the contact log. `clipPath` said "shown" for every one of them.
+      //
+      // Asked as a hit test, which is the only thing a page can be asked about
+      // paint order — but the bubble is `pointer-events: none` and so is never
+      // in a hit test at all, which made the first version of this check report
+      // the panel whether it painted above or below. So it is made hit-testable
+      // for the length of one `elementsFromPoint` and put back: if anything
+      // else comes back on top of it at its own centre, that thing paints over
+      // the line.
+      let covered = null;
+      if (shown) {
+        const line = detail.getBoundingClientRect();
+        const wasInert = detail.style.pointerEvents;
+        detail.style.pointerEvents = 'auto';
+        const top = document.elementsFromPoint(
+          line.x + line.width / 2,
+          line.y + line.height / 2
+        )[0];
+        detail.style.pointerEvents = wasInert;
+        if (top !== undefined && top !== detail && !detail.contains(top)) {
+          covered = top.closest('section, div')?.className ?? top.tagName.toLowerCase();
+        }
+      }
+      return {
+        name: button.getAttribute('aria-label') ?? '',
+        x: box.x,
+        y: box.y,
+        width: box.width,
+        height: box.height,
+        shown,
+        covered,
+        described: button.getAttribute('aria-describedby'),
+      };
+    })
+  );
+}
+
+/** Put the client at one of §11's scales and get back into the same match. */
+async function atScale(page, scale) {
+  await page.evaluate((ui) => {
+    const raw = localStorage.getItem('echoes.settings');
+    const next = raw === null ? {} : JSON.parse(raw);
+    next.uiScale = ui;
+    localStorage.setItem('echoes.settings', JSON.stringify(next));
+  }, scale);
+  await page.reload();
+  // The reload lands on the title with the seat still held, so the strip comes
+  // back carrying the same figures rather than a fresh base's.
+  await page.locator('.menu-resume').click({ timeout: 20000 });
+  await page.waitForTimeout(8000);
+}
+
+export default async ({ page, shot }) => {
+  await page.waitForTimeout(5000);
+
+  for (const scale of SCALES) {
+    // Unconditionally, including 1. Skipping the reset "because 100% is the
+    // default" left the 100% pass measuring whatever the 75% pass had put in
+    // localStorage, so the range was walked as 75, 75, 200 with the middle one
+    // labelled 100 — one measurement printed twice. It also makes the run
+    // independent of whatever a previous drive left behind.
+    await atScale(page, scale);
+    await shot(`scale-${String(scale).replace('.', '-')}`);
+
+    const found = await controls(page);
+    check(found.length > 0, `${scale * 100}%: the strip is explained at all`);
+
+    // §3 makes the SIG meter the one permanent element, and it is the readout
+    // most likely to be dropped, being the only one taller than a line of text.
+    check(
+      found.some((control) => control.name.startsWith('SIG')),
+      `${scale * 100}%: the permanent element has a control (${found.map((c) => c.name).join(' | ')})`
+    );
+
+    // One line per property per scale rather than per control: a passing drive
+    // that prints sixty lines is one nobody reads, and the failure names the
+    // control that broke it either way.
+    const view = page.viewportSize();
+    const offScreen = found.filter(
+      (control) =>
+        control.x < 0 ||
+        control.y < 0 ||
+        control.x + control.width > view.width ||
+        control.y + control.height > view.height
+    );
+    check(
+      offScreen.length === 0,
+      `${scale * 100}%: every control is on screen rather than a tab stop nobody can reach` +
+        (offScreen.length === 0 ? '' : ` — ${offScreen.map((c) => `"${c.name}"`).join(', ')}`)
+    );
+
+    const undescribed = found.filter((control) => control.described === null);
+    check(
+      undescribed.length === 0,
+      `${scale * 100}%: every control points at its explanation` +
+        (undescribed.length === 0 ? '' : ` — ${undescribed.map((c) => `"${c.name}"`).join(', ')}`)
+    );
+
+    const collisions = [];
+    for (let i = 0; i < found.length; i++) {
+      for (let j = i + 1; j < found.length; j++) {
+        const a = found[i];
+        const b = found[j];
+        if (
+          a.x < b.x + b.width &&
+          b.x < a.x + a.width &&
+          a.y < b.y + b.height &&
+          b.y < a.y + a.height
+        ) {
+          collisions.push(`"${a.name}" / "${b.name}"`);
+        }
+      }
+    }
+    // Control against control. Control against a *drawn* number that was
+    // refused a control is the same property one step further out, and it is
+    // held headlessly against the Pixi objects themselves — this drive can see
+    // the DOM and not the glyphs under it.
+    check(
+      collisions.length === 0,
+      `${scale * 100}%: no two controls answer for each other` +
+        (collisions.length === 0 ? '' : ` — ${collisions.join(', ')}`)
+    );
+  }
+
+  // Back to 100% for the keyboard walk, which is about traversal rather than
+  // about scale — and which jsdom could not hold either: it implements no
+  // sequential focus navigation, and `:focus-visible` is an engine's judgement
+  // about how the focus arrived, not a flag a test can set.
+  await atScale(page, 1);
+  await page.evaluate(() => document.activeElement?.blur?.());
+
+  // Keyed on `aria-describedby` (`readout-sig`, `readout-clock`, …) and not on
+  // the accessible name, because one of the readouts is a **clock**: it ticks
+  // between the read that records the order and the walk that checks it, and a
+  // comparison of names then fails for the one reason that is not a bug.
+  const expected = (await controls(page)).map((control) => control.described);
+  const reached = [];
+  for (let i = 0; i < expected.length + 6 && reached.length < expected.length; i++) {
+    await page.keyboard.press('Tab');
+    const at = await page.evaluate(() => {
+      const el = document.activeElement;
+      return el !== null && el.classList.contains('readout')
+        ? el.getAttribute('aria-describedby')
+        : null;
+    });
+    if (at !== null && !reached.includes(at)) reached.push(at);
+  }
+  await shot('keyboard-walk');
+
+  check(
+    reached.join(' | ') === expected.join(' | '),
+    `Tab walks the strip in the order it is drawn` +
+      ` (reached ${reached.join(' ')} against ${expected.join(' ')})`
+  );
+
+  // `:focus-visible` is an engine's judgement about how the focus arrived, so
+  // this is the half of criterion 1 that no runner can hold: the line is on
+  // screen because the keyboard put it there, and on exactly one readout.
+  const shown = (await controls(page)).filter((control) => control.shown);
+  check(
+    shown.length === 1 && shown[0].described === reached[reached.length - 1],
+    `and the keyboard is what showed the line (${shown.map((s) => s.described).join(', ')})`
+  );
+
+  // The pointer route, which criterion 1 names first and which nothing else
+  // holds. Hover is pure CSS — `.readout-slot:hover .readout-detail` — reaching
+  // through a layer that carries `pointer-events: none`, so whether it works at
+  // all is an engine's judgement about where the pointer is, not a class a test
+  // can set. `react-test-renderer` sees no pointer and no cascade.
+  await page.evaluate(() => document.activeElement?.blur?.());
+  await page.mouse.move(0, 400);
+  await page.waitForTimeout(200);
+  check(
+    (await controls(page)).every((control) => !control.shown),
+    'with the pointer in the water, no line is on screen'
+  );
+
+  const target = (await controls(page))[0];
+  await page.hover('.readout');
+  await page.waitForTimeout(250);
+  const hovered = (await controls(page)).filter((control) => control.shown);
+  await shot('pointer-hover');
+  check(
+    hovered.length === 1 && hovered[0].described === target.described,
+    `hovering a readout shows its line and only its line (${hovered.map((h) => h.described).join(', ')})`
+  );
+
+  // Every readout's line, opened one at a time, and *read* rather than merely
+  // laid out. The strip's right-hand end is where this bites: those bubbles
+  // open toward the contact log, and with no `z-index` anywhere the panel wins
+  // on DOM order alone.
+  const buried = [];
+  for (const control of await controls(page)) {
+    await page.hover(`[aria-describedby="${control.described}"]`);
+    await page.waitForTimeout(140);
+    const opened = (await controls(page)).find((c) => c.described === control.described);
+    if (opened === undefined || !opened.shown) buried.push(`${control.described} (never opened)`);
+    else if (opened.covered !== null) buried.push(`${control.described} under ${opened.covered}`);
+  }
+  await page.mouse.move(0, 400);
+  check(
+    buried.length === 0,
+    `every line is readable where it opens${buried.length === 0 ? '' : ` — ${buried.join(', ')}`}`
+  );
+
+  // §9.5's Escape, which is the one part of this surface a stub actively
+  // hid. `:focus-visible` cannot be asked at press time — the press *is* the
+  // keyboard interaction that makes a focused element match — so two versions
+  // of the guard were constant-true in Chromium while green against a fake
+  // `matches`. These three cases are the engine's answer.
+  const escState = async () =>
+    page.evaluate(() => ({
+      shown: [...document.querySelectorAll('.readout-detail')].filter(
+        (detail) => getComputedStyle(detail).clipPath === 'none'
+      ).length,
+      menu: document.querySelector('.esc-menu') !== null,
+      onReadout: document.activeElement?.classList.contains('readout') === true,
+    }));
+  const closeMenu = async () => {
+    if ((await escState()).menu) {
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(300);
+    }
+  };
+
+  // 1 — reached by Tab, so the line is on screen. Escape closes it and does not
+  // reach the menu: one level back, not two.
+  //
+  // Tabbed *onto* a readout rather than once from a blurred document, because
+  // blurring does not reset Chrome's sequential-focus starting point: it stays
+  // where the focus was, and by this point in the drive that is the end of the
+  // strip, so one Tab lands on the contact log's first row instead. A loop says
+  // what is meant — put the keyboard on a readout — rather than assuming where
+  // one press goes.
+  await page.evaluate(() => document.activeElement?.blur?.());
+  await page.mouse.move(0, 400);
+  for (let i = 0; i < 24 && !(await escState()).onReadout; i++) {
+    await page.keyboard.press('Tab');
+    await page.waitForTimeout(80);
+  }
+  await page.waitForTimeout(200);
+  check((await escState()).onReadout, 'Tab reached a readout');
+  check((await escState()).shown === 1, 'and that put its line on screen');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(250);
+  const afterTab = await escState();
+  check(afterTab.shown === 0, 'Escape closed the line it had shown');
+  check(!afterTab.menu, 'and stopped there rather than opening the menu as well');
+
+  // 2 — clicked to pin, clicked again to unpin. Nothing is on screen, so the
+  // press belongs to the esc menu — and this is the case both earlier versions
+  // of the guard swallowed, leaving the player without a line *and* without a
+  // menu until a second press.
+  await page.click('.readout');
+  await page.waitForTimeout(150);
+  await page.click('.readout');
+  await page.waitForTimeout(150);
+  // The pointer is left on the control by a click, and hover shows the line on
+  // its own — so it has to come off before the question "is anything shown"
+  // means anything. The focus stays where the click put it, which is the half
+  // of the state this case is about.
+  await page.mouse.move(0, 400);
+  await page.waitForTimeout(200);
+  const unpinned = await escState();
+  check(unpinned.shown === 0, 'a second tap closed the line');
+  check(unpinned.onReadout, 'and left the focus on the readout, where a click puts it');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(350);
+  check((await escState()).menu, 'with nothing shown, Escape reached the esc menu');
+  await closeMenu();
+
+  // 3 — a pin must not outlive the focus that set it. Tap a readout, then click
+  // in the water: the focus goes to the document, and the line used to stay on
+  // screen with `aria-expanded` still true — while this handler lives on the
+  // layer, so the Escape that followed never reached it and opened the esc menu
+  // *over* the line. §9.5 opens the menu only when Escape has nothing left to
+  // cancel, and a line on screen is something left.
+  await page.click('.readout');
+  await page.waitForTimeout(150);
+  await page.mouse.click(640, 520);
+  await page.waitForTimeout(250);
+  const released = await escState();
+  check(released.shown === 0, 'clicking away from a pinned line dismissed it');
+  check(!released.onReadout, 'and took the focus off the readout');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(350);
+  const afterRelease = await escState();
+  check(afterRelease.menu, 'so Escape reached the menu');
+  check(afterRelease.shown === 0, 'and did not open it over a line still on screen');
+  await closeMenu();
+  await shot('escape');
+
+  console.log('');
+  console.log(
+    `readouts: ${expected.length} controls, all reachable by Tab, none overlapping, ` +
+      `SIG present at ${SCALES.map((s) => `${s * 100}%`).join(', ')}; ` +
+      `hover, Tab and Escape all answered by the engine.`
+  );
+};
