@@ -192,12 +192,10 @@ const SWARM_SCATTER_FLOOR = 0.45;
  * strikes at all.)
  *
  * **The two strikes are exactly evenly spaced, and that is a choice with
- * reasons rather than the only placement §8.1 admits.** Two uneven ones
- * survive a full check against every other family's band, and both were
- * worked: a 0.3675/0.4658 s lope, and a 0.1567-0.1615 s knock followed by the
- * 0.672-0.677 s balance of the cycle, threaded through the gap between the
- * swarm and the screw. Even spacing was taken over both, for reasons that are
- * not that the others are forbidden:
+ * reasons rather than the only placement §8.1 admits.** One uneven placement
+ * survives a full check against every other family's band: a 0.3675/0.4658 s
+ * lope. Even spacing was taken over it for two reasons, neither of them that
+ * the lope is forbidden:
  *
  * - §8 makes this "the only faction with a *beat*", and this repository
  *   already reads that as an unwavering interval between strikes:
@@ -205,11 +203,18 @@ const SWARM_SCATTER_FLOOR = 0.45;
  *   and did so before this mechanism existed. An uneven split fails that test,
  *   so taking one means re-deciding what §8's beat is measured over. That is a
  *   design call and not an unattended run's to make.
- * - The knock window is three per cent wide. It exists only because the
- *   screw's shortest interval is 1.48x the swarm's longest, against the 1.44
- *   two consecutive 1.2x clearances need — and both of those are TUNABLE
- *   jitters, so a later tuning of either closes it silently.
  * - The lope is 1.27:1, which is a limp rather than machinery under load.
+ *
+ * A second placement looks admissible and is not, recorded because it is where
+ * this argument first went wrong. A short knock threaded through the gap
+ * between the swarm and the screw — 0.1567-0.1615 s, then the 0.672-0.677 s
+ * balance of the cycle — clears both neighbours *interval by interval*. But
+ * §8.1 separates families by their **band**, "its rate, widened by its own
+ * wander", and a knock gives the Consortium a band from 0.157 to 0.677 s that
+ * swallows the screw's 0.194-0.306 s whole. Implemented in a scratch tree it
+ * fails `renders no two mechanisms at the same interval` in exactly those
+ * terms. A family owning two disjoint bands is a reading of §8.1 this
+ * repository does not take, and taking it would be a design call of its own.
  *
  * What even spacing buys is that no instant in this train moves at all. The
  * cycle is carried by *what the strikes are*, so §8.1's separation over
@@ -218,20 +223,26 @@ const SWARM_SCATTER_FLOOR = 0.45;
  * What tells the two strikes apart is the shape first and the level a distant
  * second, and the arithmetic is worth stating because it is slighter than it
  * looks. The return's decay is an eighth of the stroke's — 22 ms against
- * 180 ms — and its hold a fifth. Its *peak* is 1.80 dB under the stroke's, and
- * what it actually steps is less again, because it does not fire into silence:
- * measured off the rendered timeline at the engine's own 5 Hz, the level
- * before the return is 0.5571 and the return steps **1.34 dB** over it, where
- * the stroke steps 4.01 dB. So the shape is doing almost all of the work.
+ * 180 ms — and its hold a fifth. Its *peak* is 1.80 dB under the stroke's,
+ * which is the one figure here the family owns outright.
  *
- * Those two figures are the caller's as well as the family's — `update` writes
- * a level ramp on this same param every tick, and an `AudioParam` event
- * supersedes the strike's own decay from the instant it starts, so the level
- * *between* strikes is aligned to whoever is asking (1.30 dB and 3.79 dB at
- * 60 Hz). The strikes themselves are not: their instants and their peaks are
- * the family's alone, which is what §8.1 is separated on. An earlier draft of
- * this paragraph read the decay in isolation and said 0.533 and 1.72 dB; that
- * is the strike's envelope alone and not what the graph renders.
+ * What it actually *steps* is less again, and is a range rather than a number.
+ * `update` writes a level ramp on this same param every tick, and an
+ * `AudioParam` event supersedes the strike's own decay from the instant it
+ * starts, so the level between strikes is aligned to whoever is asking.
+ * Replayed off the recorded timeline over 30 s: at the engine's 5 Hz the
+ * return steps 1.29-1.57 dB and the stroke 3.79-4.08 dB; at 60 Hz, 1.30-1.36
+ * and 3.79-3.80. The 5 Hz spread is the wider because the train does not
+ * divide that tick — 0.4167 s is 2.0833 of them, so the phase walks and the
+ * level before a return takes seven values. **The shape is doing almost all of
+ * the work**, at either rate.
+ *
+ * Two earlier drafts got that number wrong in two different ways, and both are
+ * worth naming because the next reader will reach for the same shortcuts.
+ * 0.533 and 1.72 dB read the strike's envelope in isolation, as though nothing
+ * else wrote to the param. 0.5571 and 1.34 dB were one strike out of the
+ * twelve, quoted as a steady state. What *is* steady is the strikes' own
+ * instants and peaks, and they are what §8.1 separates on.
  *
  * **Whether any of it reads as a knock on a phone speaker is not settled
  * here**: #731's acceptance criterion is a listening test on the reporting
