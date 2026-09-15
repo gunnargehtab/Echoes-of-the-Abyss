@@ -608,16 +608,18 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
 
   it('gives every Consortium contact its own crank, not the water’s', () => {
     // `strokePhase` is counted along the voice's own train rather than read off
-    // the clock, and this is the only test that says the phase is *per
-    // contact*. A phase derived from absolute time — `Math.round(at * rateHz) %
-    // STROKES`, which is the shape `swarmSpread` two functions away would
-    // suggest to a refactor — puts every Consortium hull in the water on the
-    // same stroke, and only this test asks four voices about it. (The reopen
-    // test below catches that mutation too, for its own reason: a reopening is
-    // not at a whole number of strikes. Two tests, two properties.) The
-    // lockstep is what #742 left open on the swarm, and a crank is the one
-    // place it plainly does not belong: two machines are not built at the same
-    // instant.
+    // the clock, and this is the only test that holds the phase *per contact*.
+    // Two mutations it exists for, and neither is exotic — both are what a
+    // refactor would reach for. A phase derived from absolute time,
+    // `Math.round(at * rateHz) % STROKES`, which is the shape `swarmSpread`
+    // two functions away suggests; and a counter shared between voices. The
+    // first puts every Consortium hull on the same stroke and is caught by the
+    // opening assertions below (the reopen test catches it too, for its own
+    // reason: a reopening is not at a whole number of strikes). The second
+    // survives every opening assertion there is, and is caught only by the
+    // second half of this test. The lockstep is what #742 left open on the
+    // swarm, and a crank is the one place it plainly does not belong: two
+    // machines are not built at the same instant.
     //
     // Four offsets across one cycle rather than one, because any nonconstant
     // function of absolute time agrees with the counter at *some* offset, and a
@@ -665,6 +667,36 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
       new Set(opening.map((w) => w.at.toFixed(6))).size === opening.length,
       'fixture expects four voices opening at four different instants'
     );
+
+    // And each keeps its own cycle once they are all in the water, which is
+    // the half opening alike cannot reach. A counter *shared* between voices —
+    // a module-level `strokePhase`, which is what a refactor tidying four
+    // voices into one table would reach for — still zeroes at every birth, so
+    // all four still open alike and every assertion above passes. What it
+    // destroys is the alternation: with two live contacts the emits interleave,
+    // and one hull rings for ever while the other knocks for ever, which is
+    // #731's own reported fault reintroduced on a green suite.
+    for (let tick = 0; tick < 24; tick++) {
+      for (const { voice } of voices) voice.update(inputs, context.currentTime);
+      context.advance(ECHO_STEP_S);
+    }
+    for (let i = 0; i < voices.length; i++) {
+      const struck = voices[i]!.gain.gain.writes.filter((w) => w.method === 'setValueAtTime').map(
+        (w) => w.value
+      );
+      assert.ok(struck.length > 8, `voice ${i} struck too few times to measure`);
+      assert.ok(
+        Math.abs(struck[0]! - struck[1]!) > 1e-9,
+        `voice ${i} strikes one level throughout, so it has no cycle to be its own`
+      );
+      for (let k = 0; k < struck.length; k++) {
+        assert.ok(
+          Math.abs(struck[k]! - struck[k % RECIPROCATING.STROKES]!) < 1e-9,
+          `voice ${i}'s strike ${k} is ${struck[k]!.toFixed(4)}, off its own cycle — the phase ` +
+            'is shared between contacts rather than each voice carrying one'
+        );
+      }
+    }
   });
 
   it('reopens a Consortium contact on the loaded stroke after it falls and returns', () => {

@@ -218,12 +218,24 @@ const SWARM_SCATTER_FLOOR = 0.45;
  * What tells the two strikes apart is the shape first and the level a distant
  * second, and the arithmetic is worth stating because it is slighter than it
  * looks. The return's decay is an eighth of the stroke's — 22 ms against
- * 180 ms — and its hold a fifth. Its *peak* is 1.80 dB under the stroke's, but
- * it fires into the stroke's own tail, still at 0.533, so it steps only
- * 1.72 dB above the level the voice is at, where the stroke steps 4.08 dB from
- * a settled base. **Whether that reads as a knock on a phone speaker is not
- * settled here**: #731's acceptance criterion is a listening test on the
- * reporting device, and nothing in this file stands in for it.
+ * 180 ms — and its hold a fifth. Its *peak* is 1.80 dB under the stroke's, and
+ * what it actually steps is less again, because it does not fire into silence:
+ * measured off the rendered timeline at the engine's own 5 Hz, the level
+ * before the return is 0.5571 and the return steps **1.34 dB** over it, where
+ * the stroke steps 4.01 dB. So the shape is doing almost all of the work.
+ *
+ * Those two figures are the caller's as well as the family's — `update` writes
+ * a level ramp on this same param every tick, and an `AudioParam` event
+ * supersedes the strike's own decay from the instant it starts, so the level
+ * *between* strikes is aligned to whoever is asking (1.30 dB and 3.79 dB at
+ * 60 Hz). The strikes themselves are not: their instants and their peaks are
+ * the family's alone, which is what §8.1 is separated on. An earlier draft of
+ * this paragraph read the decay in isolation and said 0.533 and 1.72 dB; that
+ * is the strike's envelope alone and not what the graph renders.
+ *
+ * **Whether any of it reads as a knock on a phone speaker is not settled
+ * here**: #731's acceptance criterion is a listening test on the reporting
+ * device, and nothing in this file stands in for it.
  *
  * `RETURN_LIFT` is **the one number here with no doc-side argument** — a half,
  * because a return is the unloaded half of the cycle, and §8 does not say by
