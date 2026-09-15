@@ -186,16 +186,18 @@ const SWARM_SCATTER_FLOOR = 0.45;
  * reciprocating machine has a stroke and a return — two events in one cycle,
  * the second of them the mass coming back with no load behind it. Until now
  * the mix built one strike and called the repetition the mechanism, which is
- * the same event shape every other family has at a different rate: the
- * EQ-curve distinction §8 opens by ruling out.
+ * the same event shape the breathing, swell and screw families have at a
+ * different rate: the EQ-curve distinction §8 opens by ruling out. (Not the
+ * swarm, whose cluster #742 had already built, and not the drone, which never
+ * strikes at all.)
  *
  * **The two strikes are exactly evenly spaced, and that is a choice with
  * reasons rather than the only placement §8.1 admits.** Two uneven ones
  * survive a full check against every other family's band, and both were
- * worked: a 0.3675/0.4658 s lope, and a 0.1567-0.1615 s knock followed by a
- * 0.672 s wait, threaded through the gap between the swarm and the screw.
- * Even spacing was taken over both, for reasons that are not that the others
- * are forbidden:
+ * worked: a 0.3675/0.4658 s lope, and a 0.1567-0.1615 s knock followed by the
+ * 0.672-0.677 s balance of the cycle, threaded through the gap between the
+ * swarm and the screw. Even spacing was taken over both, for reasons that are
+ * not that the others are forbidden:
  *
  * - §8 makes this "the only faction with a *beat*", and this repository
  *   already reads that as an unwavering interval between strikes:
@@ -597,8 +599,8 @@ export class ContactVoice {
    * The Consortium is the other compound family, and it is compound in the
    * other direction: its strikes land where they always did and alternate
    * between the loaded stroke and the return (`RECIPROCATING`). Nothing about
-   * *when* is available to it — §8.1's separation leaves no room inside the
-   * cycle for an uneven split — so the cycle is in what each strike is.
+   * *when* changes — even spacing is the choice `RECIPROCATING` argues, not
+   * the only one §8.1 admits — so the cycle is in what each strike is.
    */
   private emit(timbre: ContactTimbre | null, at: number, period: number): void {
     if (timbre !== null && timbre.mechanism === 'reciprocating') {
