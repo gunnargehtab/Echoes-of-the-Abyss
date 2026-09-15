@@ -34,6 +34,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import {
   DRIFT,
@@ -43,6 +44,7 @@ import {
   ObjectiveStatus,
   ResolutionTier,
   SIM,
+  UNIT_STATS,
   UnitKind,
   type EchoSnapshot,
   type MissionView,
@@ -735,6 +737,12 @@ describe('the four voices in the water', () => {
     // player is the court's flight rather than a faction's fleet, so every
     // voice here is authored; the assertion is that the union, the literal
     // and the runtime's default agree on four different answers.
+    //
+    // Filtered to the water since #726, because the court now speaks in the
+    // opening window as well and it is not one of the four — §12 keeps the
+    // two lists apart and so does this. The filter is on the register rather
+    // than on the minute, so a fifth voice arriving in the water at 03:00
+    // would fail here rather than be quietly counted as the court's.
     const run = passiveRun();
     const spoken = run.lines.map((line) => ({
       atS: Math.round(line.tick / SIM.TICK_HZ),
@@ -742,16 +750,327 @@ describe('the four voices in the water', () => {
       voice: line.voice,
       speakerId: line.speakerId,
     }));
+    const inWater = spoken.filter((line) => line.voice !== 'court');
     // Four registers, and since #403 four speakers: Kalliso and Teel are
     // signed, and Drenn and Sende — who have no entry in docs/characters.md —
     // are the grid and those below, which is the register's plain hail.
-    assert.deepEqual(spoken, [
+    assert.deepEqual(inWater, [
       { atS: 6 * 60 + 20, speaker: 'Voice Ren Kalliso', voice: 'order', speakerId: 'kalliso' },
       { atS: 9 * 60, speaker: 'Underwriter Sela Drenn', voice: 'concern', speakerId: 'the-grid' },
       { atS: 9 * 60 + 20, speaker: 'Sende', voice: 'cohorts', speakerId: 'those-below' },
       { atS: 10 * 60 + 40, speaker: 'Warden Juno Teel', voice: 'plateaus', speakerId: 'teel' },
     ]);
-    assert.equal(new Set(spoken.map((line) => line.voice)).size, 4, 'four voices, four registers');
+    assert.equal(new Set(inWater.map((line) => line.voice)).size, 4, 'four voices, four registers');
+  });
+});
+
+describe('the court, in the opening window', () => {
+  it('reads four lines into the record between 00:20 and 02:40', () => {
+    // §9's guidance beats and §12's authored text for them. The window is
+    // §10's first lesson — a ceiling, a meter and a flight — and #720 is the
+    // report that a player handed a meter does not work out that it is theirs.
+    //
+    // The minutes are the assertion, because a guidance line is only guidance
+    // while the thing it is about is still in front of the player: all four
+    // land inside the empty approach, before the delegations take station at
+    // 04:00 and give the player something else to look at.
+    const run = passiveRun();
+    const court = run.lines
+      .filter((line) => line.voice === 'court')
+      .map((line) => ({
+        atS: Math.round(line.tick / SIM.TICK_HZ),
+        speaker: line.speaker,
+        voice: line.voice,
+        speakerId: line.speakerId,
+      }));
+    const halloran = {
+      speaker: 'Arbiter Mosk Halloran',
+      voice: 'court' as const,
+      speakerId: 'halloran' as const,
+    };
+    assert.deepEqual(court, [
+      { atS: 20, ...halloran },
+      { atS: 60, ...halloran },
+      { atS: 110, ...halloran },
+      { atS: 160, ...halloran },
+    ]);
+  });
+
+  it('binds every figure the window says aloud to the constant it comes from', () => {
+    // §12's claim: six and twelve are the Light Scout's own figures, twenty is
+    // §4's ceiling, the minute is the debt cap and the flight is four hulls.
+    //
+    // **Three earlier versions of this test each asserted less than its name.**
+    // The first matched the three words the authored text hard-codes — true by
+    // construction. The second derived the values from the constants but matched
+    // them against all four lines joined into one string, so authoring 01:50
+    // backwards stayed green. The third still joined, and left "entered at six"
+    // and the cap bound to nothing, so "entered at nine" and "stops counting at
+    // five minutes" both passed. The shape was the fault rather than any of the
+    // three patches: a claim about a sentence has to be matched against *that
+    // sentence*, and every figure the window speaks has to come from the
+    // constant it is the figure for. Hence lookup by tick, and no joined string
+    // anywhere below.
+    const scout = UNIT_STATS[UnitKind.LightScout];
+    const flight = PROLOGUE_SORROWGATE.parties
+      .find((party) => party.slot === PROLOGUE_SORROWGATE.playerSlot)!
+      .units.filter((unit) => unit.kind === UnitKind.LightScout).length;
+    const spell = new Map([
+      [4, 'Four'],
+      [6, 'six'],
+      [12, 'twelve'],
+      [20, 'twenty'],
+      [60, 'a minute'],
+    ]);
+    const word = (value: number) => {
+      const spelled = spell.get(value);
+      assert.ok(spelled !== undefined, `the court has no word for ${value} — the literal moved`);
+      return spelled;
+    };
+    const court = passiveRun().lines.filter((line) => line.voice === 'court');
+    const at = (second: number) => {
+      const line = court.find((spoken) => Math.round(spoken.tick / SIM.TICK_HZ) === second);
+      assert.ok(line !== undefined, `the court says nothing at ${second}s`);
+      return line.text;
+    };
+
+    // **Nothing numeric is left over.** The clause matches below say the
+    // figures that must be there; on their own they say nothing about a figure
+    // the court speaks that comes from nowhere. Round 5 held that with a
+    // whitelist of number-words, and a whitelist is open by construction: "for
+    // a second **and a half** afterwards" and "a hull descending reads
+    // **fifteen**" both went straight through it.
+    //
+    // So the check is inverted. Every clause of every line that carries a
+    // numeral is accounted for below — struck out of the text, each one bound
+    // to the constant it comes from — and whatever survives is then held to
+    // carry no figure at all.
+    //
+    // **Two checks, and only one of them is total, which is worth stating
+    // rather than implying.** Digits are closed absolutely: no line and no
+    // accounted clause contains one, so the remainder may contain no digit
+    // anywhere, in any form. An earlier version put the digit branch inside
+    // the word alternation's word boundary, which let every digit touching a
+    // letter through — "reaches 400m", "falls 20dB" and "SIG20" all passed.
+    // Spelled numbers are a named lexicon and so are open by construction;
+    // `score` is in it because it spells this mission's own ceiling. A word
+    // nobody listed can still escape, and that is the honest limit of this
+    // half rather than something the comment above should paper over.
+    const NUMERALS =
+      /\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|half|quarter|third|once|twice|thrice|dozen|pair|first|fourth|fifth|sixth|seventh|eighth|ninth|tenth|second|seconds|minute|minutes|hour|hours|score)\b/gi;
+    const accounted: ReadonlyArray<readonly [number, readonly string[]]> = [
+      // 00:20 — the flight, numbered from one to the roster's size.
+      [20, [`Escort One through ${word(flight)}`]],
+      // 01:00 — the idle figure and the ceiling, each entered into the record.
+      [
+        60,
+        [
+          `entered at ${word(scout.sigIdle)} when`,
+          `the ceiling at ${word(PROLOGUE_SORROWGATE.silenceCeilingSig)}`,
+        ],
+      ],
+      // 01:50 — the two states, and one clause carrying no simulation figure:
+      // "twice" counts the court's own explanations, and is struck here rather
+      // than quietly omitted from the lexicon.
+      [
+        110,
+        [
+          `standing in this water reads ${word(scout.sigIdle)}`,
+          `under way reads ${word(scout.sigCruise)}`,
+          'has never yet had to explain it twice',
+        ],
+      ],
+      // 02:40 — the ceiling, the ledger's one-for-one rate (+/-TICK_DT_S in
+      // `applySilenceLedger`), the whole flight rather than the offending hull,
+      // and the cap.
+      [
+        160,
+        [
+          `above ${word(PROLOGUE_SORROWGATE.silenceCeilingSig)} is shoving`,
+          'for every second it shoves',
+          `withdrawn from all ${word(flight).toLowerCase()} hulls`,
+          'for a second afterwards',
+          `stops counting at ${word(PROLOGUE_SORROWGATE.debtCapS)}`,
+        ],
+      ],
+    ];
+    for (const [second, clauses] of accounted) {
+      let remainder = at(second);
+      for (const clause of clauses) {
+        assert.ok(
+          remainder.includes(clause),
+          `the line at ${second}s no longer carries "${clause}"`
+        );
+        remainder = remainder.replace(clause, ' ');
+      }
+      // Digits: closed, and unconditional.
+      assert.ok(
+        !/\d/.test(remainder),
+        `the line at ${second}s speaks a digit no constant accounts for: "${remainder.trim()}"`
+      );
+      const loose = remainder.match(NUMERALS) ?? [];
+      assert.deepEqual(
+        loose,
+        [],
+        `the line at ${second}s speaks ${loose.join(', ')}, which no constant accounts for`
+      );
+    }
+
+    // 00:20 — the flight, counted, against the roster the party actually seats.
+    assert.match(
+      at(20),
+      new RegExp(`Escort One through ${word(flight)} are admitted`),
+      'the court names a flight of a different size from the one it was given'
+    );
+
+    // 01:00 — the two numbers entered into the record.
+    assert.match(
+      at(60),
+      new RegExp(`entered at ${word(scout.sigIdle)} when`),
+      'the count is not the hull\u2019s own idle figure'
+    );
+    assert.match(
+      at(60),
+      new RegExp(`the ceiling at ${word(PROLOGUE_SORROWGATE.silenceCeilingSig)}`),
+      'the count is not the ceiling the ledger enforces'
+    );
+
+    // 01:50 — each figure against the state it is the figure for. This is the
+    // pairing, and inverting it is the mutation that has to fail.
+    assert.match(
+      at(110),
+      new RegExp(`standing in this water reads ${word(scout.sigIdle)}`),
+      'the idle figure is no longer read against standing still'
+    );
+    assert.match(
+      at(110),
+      new RegExp(`under way reads ${word(scout.sigCruise)}`),
+      'the cruise figure is no longer read against being under way'
+    );
+
+    // 02:40 — the ceiling, whose array is withdrawn, and the cap.
+    assert.match(
+      at(160),
+      new RegExp(`above ${word(PROLOGUE_SORROWGATE.silenceCeilingSig)} is shoving`),
+      'the breach is not stated against the ceiling'
+    );
+    assert.match(
+      at(160),
+      new RegExp(`withdrawn from all ${word(flight).toLowerCase()} hulls`),
+      '\u00a74 clause 3 withdraws the array from the party, not from the offending hull'
+    );
+    assert.match(
+      at(160),
+      new RegExp(`stops counting at ${word(PROLOGUE_SORROWGATE.debtCapS)}`),
+      'the cap the court reads aloud is not debtCapS'
+    );
+  });
+
+  it('is true of the flight at both ends of the difference it describes', () => {
+    // The 01:50 line is the window's whole lesson — "standing reads six, under
+    // way reads twelve" — and it is the one claim here a drive can falsify.
+    // Both legs, off runs this file already pays for: the passive run never
+    // orders the flight anywhere, and the escorted run moves it for minutes.
+    const scout = UNIT_STATS[UnitKind.LightScout];
+    assert.equal(
+      passiveRun().peakEscortSig,
+      scout.sigIdle,
+      'a flight nobody ordered anywhere was not at its idle figure'
+    );
+    assert.equal(
+      escortedRun().peakEscortSig,
+      scout.sigCruise,
+      'a flight under way for minutes never reached its cruise figure'
+    );
+    // And the court's ceiling is above both, which is what §9 records the
+    // beats as stopping short of: nothing the flight does while moving
+    // reaches twenty.
+    assert.ok(scout.sigCruise < PROLOGUE_SORROWGATE.silenceCeilingSig);
+  });
+
+  it('is §12’s text, and not a paraphrase of it', () => {
+    // Criterion 1: "the literal transcribes the doc, not the other way round."
+    // Every round of this change has spent its effort on the numbers inside the
+    // lines while the stronger and cheaper property — that the lines *are* the
+    // document's — was held by nothing at all. A later edit to either side is
+    // exactly how doc-first quietly inverts, and no gate would say a word.
+    //
+    // Reading the doc from a test is an idiom this suite already has
+    // (`missionSafety.test.ts` does it with `readFileSync`). The four block
+    // quotes under §12's "The court, in the opening window" are pulled in
+    // order and held to the four court beats' `text`, character for character.
+    const doc = readFileSync(
+      new URL('../../../docs/mission-sorrowgate.md', import.meta.url),
+      'utf8'
+    );
+    // Bounded at the next `##`, so a blockquote in §13 cannot drift in.
+    const section = doc.split('### The court, in the opening window')[2]?.split('\n## ')[0];
+    assert.ok(section !== undefined, '§12 no longer has the subsection this reads');
+    // Each authored line is one blockquote: consecutive `> ` lines, unwrapped.
+    const quoted = [...section.matchAll(/(?:^> .*\n)+/gm)].map((match) =>
+      match[0]
+        .split('\n')
+        .filter((line) => line.startsWith('> '))
+        .map((line) => line.slice(2).trim())
+        .join(' ')
+    );
+    const authored = PROLOGUE_SORROWGATE.beats
+      .filter((beat) => beat.kind === 'say' && beat.voice === 'court')
+      .map((beat) => (beat as { text: string }).text);
+    assert.equal(authored.length, 4, 'the literal no longer carries four court lines');
+    // No slice: a fifth line authored in §12 with no beat behind it is the
+    // drift the doc-first rule makes *likely*, and slicing to the literal's
+    // length is precisely the blindness that would hide it.
+    assert.deepEqual(
+      quoted,
+      authored,
+      '§12 and the literal have drifted — the doc is the source, so the literal is wrong'
+    );
+  });
+
+  it('is not a gate — stripping all four changes nothing but the log', () => {
+    // §9: "Guidance that can be failed is a tutorial, and this is not one",
+    // and the issue's seventh criterion. Asserting that the beats are `say`
+    // would only restate the literal; this drives the mission twice, once
+    // against a derivative with every court line removed, and holds the two
+    // resolutions to each other.
+    //
+    // Both sides here are *passive* runs, so what this holds is that guidance
+    // has no simulation effect. The other half of the criterion — that a
+    // player who ignores every line can still **finish** — is held by "reads
+    // fourteen out when the flight escorts both loads up the climb" above,
+    // which completes with all four lines present and obeys none of them. If any objective, the outcome, the minute it
+    // closed on or the epilogue moved, guidance would be load-bearing.
+    const stripped = {
+      ...PROLOGUE_SORROWGATE,
+      beats: PROLOGUE_SORROWGATE.beats.filter(
+        (beat) => !(beat.kind === 'say' && beat.voice === 'court')
+      ),
+    };
+    assert.equal(
+      PROLOGUE_SORROWGATE.beats.length - stripped.beats.length,
+      4,
+      'the derivative did not remove the four lines it exists to remove'
+    );
+    const map = missionMapById(PROLOGUE_SORROWGATE.mapId)!;
+    const match = new Match(map, { mission: stripped, fauna: false, seed: SEED });
+    let spoke = 0;
+    for (let tick = 0; tick < SIM.TICK_HZ * 21 * 60; tick++) {
+      match.update(STEP_MS);
+      spoke += match.takeMissionLines().length;
+      if (match.missionOver !== null) break;
+    }
+    const over = match.missionOver;
+    const withGuidance = passiveRun().match.missionOver;
+    assert.ok(over !== null && withGuidance !== null, 'a run did not resolve');
+    assert.equal(spoke, 4, 'the four in the water are all that is left to say');
+    assert.equal(over.outcome, withGuidance.outcome);
+    assert.equal(match.tick, passiveRun().match.tick, 'the court adjourned on a different tick');
+    assert.equal(over.epilogue, withGuidance.epilogue);
+    assert.deepEqual(
+      over.objectives.map((objective) => [objective.id, objective.status]),
+      withGuidance.objectives.map((objective) => [objective.id, objective.status])
+    );
   });
 });
 

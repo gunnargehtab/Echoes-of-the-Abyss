@@ -248,7 +248,7 @@ Runs the Rift's only functioning neutral court out of a collapsed transit dome. 
 
 **Campaign role:** the prologue's arbiter and the Rift's neutral record — not a hub. The built campaign has none: the four campaigns are played apart and converge on the same eleven kilometres from four directions in the same week, never at the same table ([campaign.md](campaign.md) §8). What Halloran is, is the one register in the setting that describes a room without joining it, and the one person all four powers will be read to by.
 
-**Voice:** the fifth register — [culture.md](culture.md) §3, *the language of the record*. He is heard at length exactly once, in the prologue ([mission-sorrowgate.md](mission-sorrowgate.md) §12), and in the mix his signature is a heavier tap than the record's — high-passed at 900 Hz against the court's 1,200, read at 2.8 a second: the count, said aloud and left to sit. Built and unspent, since the briefing is read before the socket opens ([audio-direction.md](audio-direction.md) §13).
+**Voice:** the fifth register — [culture.md](culture.md) §3, *the language of the record*. He is heard at length exactly once, in the prologue ([mission-sorrowgate.md](mission-sorrowgate.md) §12), and in the mix his signature is a heavier tap than the record's — high-passed at 900 Hz against the court's 1,200, read at 2.8 a second: the count, said aloud and left to sit. **Spent since #726**, on the four lines he reads into the prologue's opening window (§9) — the first time the court's signature carries anything, the briefing and the objective readings being read before the socket opens ([audio-direction.md](audio-direction.md) §13).
 
 ### The Three
 

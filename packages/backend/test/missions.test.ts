@@ -1660,14 +1660,23 @@ describe('who is speaking', () => {
     // A name in the wrong register is the string mentioning somebody, not
     // them speaking: the register decides which chorus, the name which member.
     assert.equal(speakerOf('Executor Odile Varr-Kest', 'order'), 'the-chapter');
-    // The cast that is actually spent: every commander but Halloran speaks
+    // The cast that is actually spent: every one of the fourteen speaks
     // somewhere, and the pair is heard.
+    //
+    // **Halloran joined them in #726** and the exception that used to sit
+    // under this loop — "Halloran speaks in the briefing, which is not a
+    // beat" — is gone with it. That line was a description of the tree
+    // rather than a rule from a document: nothing in docs/characters.md or
+    // docs/mission-sorrowgate.md §12 ever said the court could not speak on
+    // a beat, and §12's own argument is the opposite, that the court states
+    // facts about the room and they function as instructions. Sorrowgate's
+    // opening window now carries four of them (§9), so the census covers the
+    // whole cast and is a stronger check than it was with a hole in it.
     const spent = new Set(named.values());
     for (const speaker of SPEAKERS) {
-      if (speaker === 'halloran' || speaker === chorusOf(registerOf(speaker))) continue;
+      if (speaker === chorusOf(registerOf(speaker))) continue;
       assert.ok(spent.has(speaker), `${speaker} has a voice and no line`);
     }
-    assert.ok(!spent.has('halloran'), 'Halloran speaks in the briefing, which is not a beat');
   });
 
   it('is authored only where the string does not say', () => {
