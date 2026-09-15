@@ -338,6 +338,34 @@ have taken and the scoping decision it needs from a human, and end the run. That
 comment is a good outcome. Filing a vague issue is not — it converts a design
 question into a work item that some later run will treat as settled.
 
+### A finding of your own goes to #746, not into #580 a second time
+
+Some of what a firing finds belongs to no epic: a defect noticed while reading
+code for something else, a doc claim the code contradicts, a rule in this skill
+that did not survive contact with a run. Until #746 there was nowhere for it to
+go, so it went into the run log — and the log is a record, not a queue. Eight
+findings sat in it across seven entries, re-listed by every firing and filed by
+none.
+
+**#746 is the home for exactly those.** File against it as you would any epic,
+with one extra bar: the finding is **verified against code at a named commit**,
+and the issue says which file, which line, which commit. Never against the prose
+describing the code. Five entries of #580 record that trap and the most
+expensive instance transcribed `mission-sorrowgate.md` §4 into five authored
+sentences `acoustics.ts` makes false.
+
+**This is not only a §4 run's to do.** A finding usually turns up while working
+something else, and this step is reached only when nothing was eligible. File it
+at the end of whatever run found it — after the pull request is open, before
+§8's comment — and do not then work it. Filing is not taking: the issue you
+claimed is still the issue this firing worked.
+
+Two things stay out of it. A finding **inside the balance freeze** is not yours
+to file — it stays in #580 until the freeze lifts, because filing it converts a
+frozen number into a work item a later run will treat as thawed. And a finding
+you cannot state as a defect — *this feels wrong*, *§7 is awkward* — is a design
+question, so this step's own rule against filing those holds here too.
+
 ### Say what you passed over
 
 Reaching this step at all means you decided that nothing in the backlog was
@@ -453,6 +481,35 @@ touching simulation code: the build order, the two clocks and their budgets, the
 per-package import extensions, and the rule that tuning numbers live only in
 `packages/shared/src/constants.ts` are all things that look like style until
 they break the build.
+
+### When the issue is the loop's own
+
+An issue filed against #746 can be about this loop: a rule that misfires, a step
+that costs a firing an hour, a case these files do not cover. Work it like any
+other — claim, rounds, gates, pull request — with one boundary.
+
+**A firing may edit its own rules, except the ones that bound it.** Those are:
+
+- §2's open-PR cap, and what counts against it.
+- §3's exclusion list, the claim check, and oldest-first.
+- §7's stopping cases, and which labels a firing may apply to itself.
+- §5's instruction to invoke `dev-loop`, and `loop-critic`'s separation from the
+  author — its own file, its missing edit tools, and §8's rounds line, which is
+  the only thing that makes a missing critic visible from outside.
+
+Everything else in these files is ordinary work: the register of a comment, the
+wording of a step, a case worth recording, a stale link, a claim that is no
+longer true. Change those in a pull request like anything else.
+
+For the four above, **write the issue and stop.** Say what the rule costs and
+what you would put in its place; a person decides. This is #540's rule at one
+remove — a generator that also grades itself is not a gate — and the loop is the
+generator here: it can widen what it may select without anyone having chosen
+that. The cap, the exclusions, the stopping cases and the critic are what stand
+between an unattended firing and work nobody meant it to have.
+
+The boundary is about **authorship, not difficulty**. A one-word edit to §3's
+exclusion list is on the far side of it; a rewrite of §8's register is not.
 
 ## 6. Run every gate locally before you push
 
@@ -656,6 +713,14 @@ Keep it to what a person needs in order to decide whether to step in:
 > Needs a person: a stale claim, a `needs-decision` you applied and the call it
 > is waiting on, a recurring skip that wants a label you cannot apply, a branch
 > left behind — or "nothing".
+> Found: a defect you verified and filed against #746, or "nothing".
+
+The **Found** line is what stops this log silting up. A finding written here and
+filed nowhere is one the next firing re-reads, re-lists and leaves — the log
+carried eight of them for seven entries before #746 existed. Verified and
+outside the freeze: file it, and name the issue on this line. Not verified: say
+that instead. An unverified finding is a lead, and leads are half of what the
+next firing reads this log for.
 
 ### Say whether the critic ran, every time
 
