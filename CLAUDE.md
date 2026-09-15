@@ -45,26 +45,27 @@ is a win rate, it is not the work to do.
 
 ## Write short on GitHub
 
-Long writing costs the reader, not the writer. The last six merged pull requests had
-bodies averaging 1,598 words. That is why this section exists.
+Long writing costs the reader, not the writer. The six pull requests merged before this
+rule averaged 1,598-word bodies.
 
-Every issue, pull request, review and comment follows these rules:
+Issues, pull requests, reviews, comments and commit messages follow these rules:
 
-- **Short sentences.** One idea each. Prefer a full stop to a dash or a semicolon.
-- **Plain words.** Say what happened. Do not stage a drama around it.
+- **Short sentences.** One idea each.
 - **Lead with the answer.** The first line says what changed, or what is wrong.
-- **Budgets.** A PR body under 200 words. An issue under 150. A comment under 80. Over
-  budget means cut, not explain why this one had to be long.
-- **Facts, not narrative.** Numbers, file paths, issue numbers, the failing test's name.
-  Do not retell how you got there. Do not restate the diff in prose.
-- **Link instead of quoting.** If the detail is in a doc, a test or an issue, name it.
+- **Facts, not narrative.** Numbers, paths, the failing test's name. Do not retell how you
+  got there.
+- **Link instead of quoting.** Name the doc, the test or the issue and move on.
+- **Budgets.** 300 words for a pull request body, 200 for an issue, 100 for a comment.
+  Over budget means cut.
 
-Reasoning still belongs in a PR body. State it in a sentence or two. A decision a future
-reader needs is worth its words; the route you took to find it is not.
+Commit messages count because a merge commit carries the body into `main` permanently.
+Reasoning still belongs in a body, in a sentence or two.
 
-This rule covers GitHub text only. Code comments still explain *why* and keep their
-gotchas ([Style](#style)). `docs/` is a design bible and stays prose. And brevity never
-turns a caveat into a false claim — keep the limit, cut the story around it.
+Scope is GitHub text. Code comments still explain *why* ([Style](#style)), `docs/` stays
+prose, and brevity never turns a caveat into a false claim.
+
+`tools/prose-budget/` measures a body, and the **PR body** workflow reports each pull
+request's count. It is advisory and never blocks a merge.
 
 ## Commands
 
@@ -179,6 +180,12 @@ tools/audio-meter  What the mix measures, rather than what it was meant to.
                    are taken at the bus, before MASTER_GAIN, because a figure at
                    the output says the mix is hot and a figure at the bus says
                    which layer made it hot (#663).
+tools/prose-budget How long a GitHub body is, in the words a person reads —
+                   markdown scaffolding, template prompts, fenced evidence and
+                   the attribution footer are not reading and do not count.
+                   lib/count.mjs is the counter and holds the budgets;
+                   check.mjs is the CLI the PR body workflow runs, advisory
+                   there and --strict locally. Tested under npm test.
 tools/echo-sim     Standalone CommonJS harness for deterministic Echo scenarios.
                    Not an npm workspace; run it directly:
                    node tools/echo-sim/sim.js [tools/echo-sim/scenarios/<name>.json]

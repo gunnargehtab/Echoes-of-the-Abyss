@@ -1,5 +1,6 @@
 <!--
-Keep this body under 200 words. Short sentences, plain words, facts over narrative.
+Keep this body under 300 words — the merge commit inherits it. Short sentences, plain
+words, facts over narrative.
 Link to the doc, test or issue instead of quoting it. See CLAUDE.md, "Write short on
 GitHub".
 -->

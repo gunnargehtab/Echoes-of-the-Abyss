@@ -1,0 +1,44 @@
+name: PR body
+
+# How long the pull request body is, reported rather than enforced.
+#
+# CLAUDE.md's "Write short on GitHub" sets the budget; this says what a body
+# actually costs, because a rule nobody measures drifts back. It is deliberately
+# **advisory**: the step always succeeds, so a body a few words over is a note
+# in the run summary and never a blocked merge. Prose length is the last thing
+# that should stop a fix from landing.
+#
+# `edited` is in the trigger list on purpose — a body is editable without a
+# commit, so the reading refreshes when the author trims it, at no cost to the
+# rest of CI.
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+concurrency:
+  group: pr-body-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # `body-length` rather than `length`: this name is what the merge box shows,
+  # next to `build`, `docs` and `test (shard 1)`, and it should say what it
+  # measured without the reader opening it.
+  body-length:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # The body goes through the environment, never through the command line:
+      # interpolating it into `run:` would let anything that can open a pull
+      # request run shell here.
+      - name: Count the words
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: node tools/prose-budget/check.mjs --kind=pr --env=PR_BODY >> "$GITHUB_STEP_SUMMARY"
