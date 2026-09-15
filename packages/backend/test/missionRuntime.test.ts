@@ -793,17 +793,11 @@ describe('the court, in the opening window', () => {
       { atS: 110, ...halloran },
       { atS: 160, ...halloran },
     ]);
-    assert.ok(
-      court.every((line) => line.atS < 4 * 60),
-      'a guidance line landed after the approach it is guidance for'
-    );
   });
 
   it('binds every figure the window says aloud to the constant it comes from', () => {
     // §12's claim: six and twelve are the Light Scout's own figures, twenty is
     // §4's ceiling, the minute is the debt cap and the flight is four hulls.
-    // §13 sells this test as what holds that transcription, so it has to hold
-    // all of it.
     //
     // **Three earlier versions of this test each asserted less than its name.**
     // The first matched the three words the authored text hard-codes — true by
@@ -838,6 +832,57 @@ describe('the court, in the opening window', () => {
       assert.ok(line !== undefined, `the court says nothing at ${second}s`);
       return line.text;
     };
+
+    // **Every numeral each line speaks, not only the ones looked for.** The
+    // assertions below match the clauses that must be present; on their own
+    // they say nothing about a figure the court speaks that comes from
+    // nowhere. Authoring "The array has the flight at nine" into 01:00, or
+    // "withdrawn from all four hulls for a minute afterwards" into 02:40 —
+    // which contradicts §4 clause 3's one-for-one repayment — passes every
+    // clause match and is caught only here. So each line's numerals are
+    // extracted and held as a multiset against one built from the constants:
+    // an unbound figure fails as an extra, a dropped one as a miss.
+    //
+    // "Twice", in 01:50's last sentence, is deliberately not in the
+    // vocabulary: it counts the court's explanations, not anything the
+    // simulation produces.
+    const FIGURES =
+      /\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|sixty|hundred|minute|minutes|second|seconds|\d+)\b/gi;
+    const figuresIn = (text: string) =>
+      (text.match(FIGURES) ?? []).map((figure) => figure.toLowerCase()).sort();
+    const minute = word(PROLOGUE_SORROWGATE.debtCapS);
+    assert.deepEqual(
+      figuresIn(at(20)),
+      // The flight is numbered from one, and runs to the roster's size.
+      ['one', word(flight)].map((figure) => figure.toLowerCase()).sort(),
+      '00:20 speaks a figure that is not the flight it was given'
+    );
+    assert.deepEqual(
+      figuresIn(at(60)),
+      [word(scout.sigIdle), word(PROLOGUE_SORROWGATE.silenceCeilingSig)].sort(),
+      '01:00 speaks a figure bound to no constant'
+    );
+    assert.deepEqual(
+      figuresIn(at(110)),
+      [word(scout.sigIdle), word(scout.sigCruise)].sort(),
+      '01:50 speaks a figure bound to no constant'
+    );
+    assert.deepEqual(
+      figuresIn(at(160)),
+      // Two seconds, and they are the ledger's rate: `applySilenceLedger`
+      // accrues +TICK_DT_S over the ceiling and repays -TICK_DT_S under it,
+      // so one second earned and one second repaid is what §4 clause 3 says
+      // and what the line reads aloud. Either one becoming "a minute" fails
+      // here as a multiset that no longer matches.
+      [
+        word(PROLOGUE_SORROWGATE.silenceCeilingSig),
+        'second',
+        word(flight).toLowerCase(),
+        'second',
+        minute.replace('a ', ''),
+      ].sort(),
+      '02:40 speaks a figure bound to no constant, or breaks the one-for-one repayment'
+    );
 
     // 00:20 — the flight, counted, against the roster the party actually seats.
     assert.match(

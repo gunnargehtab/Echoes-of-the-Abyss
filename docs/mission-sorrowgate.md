@@ -416,8 +416,8 @@ first four minutes of the game. The same conclusion arrives from the other direc
 mission log is read on a device with no keyboard, and a line naming a key there is the lie
 that #722 spent an item on. So the beats say what is **true about the room** — whose the
 hulls are, what the array reads, what the numbers are, what being heard costs — and the
-binding stays where bindings live, on the command bar and in the hint line under the
-selection ([ui-ux.md](ui-ux.md) §7).
+binding stays where bindings live — on the command bar and in the hint line under the
+selection, which are [ui-ux.md](ui-ux.md) §2's layout and §9's bindings.
 
 **Where 01:00 points, and why it is the panel and not the meter.** The mission carries two
 numbers that could be called the flight's SIG and they are not the same number. The headline
@@ -443,8 +443,9 @@ exactly the terms §8 gives. Guidance that can be failed is a tutorial, and this
 The first is the **gesture**. No line says how to select a hull or how to order it somewhere,
 because the register cannot form the sentence — see above. The beats establish that the four
 hulls are the flight's, that the water inside the arch is theirs to choose and what choosing
-costs; the *how* stays on the command bar and the hint line under the selection, which is where
-[ui-ux.md](ui-ux.md) §7 puts it and where a touch player can also reach it. A player who never
+costs; the *how* stays on the command bar and the hint line under the selection —
+[ui-ux.md](ui-ux.md) §9 for the bindings, §2 for where they are on the screen — which is also
+where a touch player reaches them. A player who never
 works out the gesture is not stuck — §8's adjournment closes the record either way — but they
 are also not taught it here, and this document should not pretend otherwise.
 
@@ -659,9 +660,12 @@ room. The numbers are read aloud and left sitting, which is the court's characte
 > second afterwards. The court stops counting at a minute. The flight would be deaf in the
 > court's own water, and the record has heard that before.
 
-Each fails [culture.md](culture.md) §3 for the other four registers, on the test §6 sets — take
-the line and ask which register could not have said it. Per line, because a test run once
-across four lines is not the test §6 describes:
+[culture.md](culture.md) §6's test is *take any line and ask which faction could not have said
+it*, and one register that could not is what passes it. So each line below is given the
+refusals that are actually informative about it rather than a full set of four, and the
+section closes with the one refusal all four share. What this section does **not** claim is
+that every line is unsayable by all four others in some equally interesting way; the bar is
+§6's, and each line clears it:
 
 - **00:20** — an admission stated, and a thing the court declines to record. The Commune could
   not close a question that way; the plateaus offer it back, in the collective first person, and
