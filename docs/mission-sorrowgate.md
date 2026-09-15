@@ -355,7 +355,11 @@ their hearing and never the mission.
 | Time | Beat |
 | --- | --- |
 | 00:00 | The flight is admitted at the arch, 1,450 m. Hardpoints struck. Array live. Ceiling 20 |
-| 00:00–04:00 | The approach. Nothing happens, on purpose. The meter and the array are the only instruments and there is nothing else to attend to |
+| 00:00–04:00 | The approach. Nothing arrives and nothing is decided, on purpose. The meter and the array are the only instruments, and the court is the only voice |
+| 00:20 | **Halloran — the flight.** Four hulls, and the water inside the arch is the flight's own to hold |
+| 01:00 | **Halloran — the count.** Six, against a ceiling of twenty. Read aloud and left sitting |
+| 01:50 | **Halloran — what moving costs.** Six standing, twelve under way. The difference is the whole of the first lesson |
+| 02:40 | **Halloran — what the ceiling costs.** The court does not enforce it. The array does, and it is withdrawn from all four hulls for as long again |
 | 04:00 | The delegations take station — Consortium east, Commune west. The Directorate observer was already here and does not move |
 | 06:20 | Kalliso arrives from the north-west, states her position, and holds — quiet, at an interval, and inaudible from the arch. She does not climb |
 | 06:20–09:00 | The exchange runs. The flight's job is to hold and listen. Kalliso flickers — nothing, then Tier 2 for a few seconds as she turns, then nothing again. She never climbs past Tier 2, so the flight never learns whose she is |
@@ -371,6 +375,56 @@ their hearing and never the mission.
 The array is lost to an authored beat rather than to the colossus's pathing, because a mission's
 beats have to happen at the time the document says they happen. The colossus is why; the beat is
 when.
+
+### The court, in the opening window
+
+The first four minutes used to be silent, and the silence was load-bearing: §10's first lesson
+is a meter and a ceiling, and a player with something to fight has never once looked at either.
+That argument survives. What did not survive contact with a first-time player is the assumption
+underneath it — that a flight which has been *given* a meter will work out that the meter is
+about them. #720 is the report that they do not.
+
+So the window keeps its emptiness and loses its silence. Nothing arrives, nothing is decided and
+nobody else speaks; the court reads four lines into the record across four minutes, and they are
+the only thing in the window that is not an instrument.
+
+**Why the court and not a tutor.** §12's argument is that the court states facts about the room
+and they function as instructions, and that no other register in the Rift can do it. That is
+exactly the shape guidance needs, and it is already the voice this mission opens in. A tutorial
+overlay would be a second thing teaching the same four systems, which
+[campaign.md](campaign.md) §10 and [ui-ux.md](ui-ux.md) §14 have both already refused.
+
+**The lines name no control, and this is forced twice over.** Halloran speaks in the third
+person and the perfect tense about things that have been done by named parties
+([culture.md](culture.md) §3); "right-click the water" is not a sentence the register can
+produce, and a court that started issuing button prompts would stop being the court in the
+first four minutes of the game. The same conclusion arrives from the other direction: the
+mission log is read on a device with no keyboard, and a line naming a key there is the lie
+that #722 spent an item on. So the beats say what is **true about the room** — whose the
+hulls are, what the array reads, what the numbers are, what being heard costs — and the
+binding stays where bindings live, on the command bar and in the hint line under the
+selection ([ui-ux.md](ui-ux.md) §7).
+
+**Four lines, not more.** One per thing the window has to land: the flight is yours, here is the
+number, moving moves it, and here is the price. A fifth would be teaching a fifth system, which
+§10 forbids in as many words.
+
+**They are not a gate.** Every one is a `say`. No objective keys on them, no beat is conditional
+on the player having heard one, and a player who reads none of them finishes the mission on
+exactly the terms §8 gives. Guidance that can be failed is a tutorial, and this is not one.
+
+**What the lines stop short of, and why.** None of the four says how to cross twenty, and that
+is not an authoring choice so much as an open question the beats were written around. §4's
+first clause says a Light Scout at flank is far above the ceiling, citing
+[systems-echo.md](systems-echo.md) §2's 45–70 flank band. The simulation gives this hull two
+SIG states and nothing between them — 6 standing, 12 under way at any speed — so the only
+thing that carries a hull of the flight over twenty is descent, at a floor of 72, which is the
+one system §10 refuses to teach here. **Which of those two is wrong is a design call and this
+document does not settle it.** The four lines were authored to be true under either reading,
+which is why they state the ceiling and what breaching it costs and never a way to breach it.
+The consequence is worth writing down rather than discovering twice: under §4 the first lesson
+has a lever and teeth, and under the simulation as built it has a number the player cannot
+move past. #726 carries the measurement.
 
 ### The arch, as ground
 
@@ -411,7 +465,7 @@ mission is decided on.
 
 | Order | Teach | Where it lands | Load-bearing by |
 | --- | --- | --- | --- |
-| 1 | **SIG** | 00:00–04:00. A ceiling, a meter, and a flight that has to move under a number | Every minute after 10:40 |
+| 1 | **SIG** | 00:00–04:00. A ceiling, a meter, and a flight that has to move under a number — and, since #726, the court's four lines saying so, because a meter nobody has been told is theirs teaches nothing (§9) | Every minute after 10:40 |
 | 2 | **Listening (HYD)** | 04:00–06:20. The court's array. While you are quiet you hear the whole basin; the moment you are not, you hear yourself | The tender runs, where being deaf is being lost |
 | 3 | **Resolution tiers** | 06:20–09:00. Kalliso holds the interval quiet and is simply not there; twice she turns, and for a few seconds she is a Tier 2 that names nobody. The player learns what a tier is by watching a contact refuse to become one | 09:00, when someone else raises it for everyone at once |
 | 4 | **What hearing is worth** | 10:40–20:00. The colossus is a SIG-100 emitter in a PF-1.6 basin, so it is a Tier-4 track from the moment it turns and it stays one through the climb — exact position, exact heading, all the way out. The lesson is the inverse of the first three: the player has finally been given perfect information, and there is nothing whatever they can do with it | The last three minutes, entirely |
@@ -538,6 +592,49 @@ Knight's; Teel's is unusable by anybody who can give an order; Sende's claims no
 therefore cannot be Consortium; Kalliso's offers a way out of a confrontation, which the
 Directorate has no grammar for.
 
+### The court, in the opening window
+
+Four lines, 00:20 to 02:40, read into the record by Halloran while nothing else is happening
+(§9). The register's own constraints do most of the authoring here: third person, perfect
+tense, no collective first person, and instructions that arrive as statements of fact about the
+room. The numbers are read aloud and left sitting, which is the court's characteristic move
+([culture.md](culture.md) §3) and, conveniently, also how you teach somebody a meter.
+
+**00:20 — whose the hulls are**
+
+> Escort One through Four are admitted and they are the flight. The flight holds at the arch.
+> Which water it holds inside the arch is the flight's own affair, and the court has no view
+> on it.
+
+**01:00 — the count**
+
+> The array has the flight at six. The ceiling is twenty. Both numbers have been on the record
+> since the hardpoints came off, and both are in front of whoever is flying.
+
+**01:50 — what moving costs**
+
+> A hull of the flight standing in this water reads six. The same hull under way reads twelve.
+> The court has recorded that difference at every sitting it has held and has never yet had to
+> explain it twice.
+
+**02:40 — what the ceiling costs**
+
+> The court does not enforce the ceiling. The array does. A hull above twenty is shoving, and
+> for every second it shoves the court's readings are withdrawn from all four hulls for a
+> second afterwards. The flight would be deaf in the court's own water, and the record has
+> seen that before.
+
+Each fails [culture.md](culture.md) §3 for the other four registers on the same test §6 sets:
+the Commune could not say "the court has no view on it" without offering to discuss it, the
+Consortium would price the array rather than withdraw it, the Directorate would put the
+shoving in the passive and decline to say whose it was, and a Knight would apologise for the
+ceiling before stating it. None of the four could read a count and leave it sitting.
+
+**Six and twelve are the Light Scout's own figures** (§3), not a second set invented here, and
+twenty is §4's ceiling. A line that stated a number this simulation does not produce would be
+the court getting a fact about its own room wrong, in the one register whose entire authority
+is that everybody afterwards agrees what was said.
+
 ---
 
 ## 13. Scaffold Status
@@ -555,6 +652,7 @@ not.
 | The beat schedule, including Drenn's ping and the transit | Implemented (#190) |
 | Objectives, results, and the failure at adjournment | Implemented (#190) |
 | The briefing and the objective readings | Implemented (#190) |
+| The court's four lines in the opening window | **Built** (#726) — four `say` beats at 00:20, 01:00, 01:50 and 02:40, authored in §12 and transcribed by the literal, in the court's register and signed by Halloran, who until now spoke only in the briefing. They name no control, for the two reasons §9 gives, and they are `say` beats and nothing else, so no objective and no conditional beat keys on one. `missionRuntime.test.ts` plays the mission and asserts all four arrive at their minute, that the four in the water still arrive at theirs, and that a run which ignores every one of them still resolves on §8's terms |
 | The four voices in the water | **Built** (#381) — the `say` beat carries speaker and line to the mission log beside the orders panel at the times §12 gives, and the mix now hails each on the speech bus [audio-direction.md](audio-direction.md) §13 owns: 600 ms of signature in the speaker's register's material, then a murmur bed for the reading. The four are four registers by construction — Kalliso in the Order's note at 06:20, Drenn in the concern's beat at 09:00, Sende in the cohorts' ticks at 09:20, Teel in the plateaus' breath at 10:40 — and `missionRuntime.test.ts` plays the mission and asserts they arrive as four different voices. Under the silence order the hail whispers (−6 dB, the top octave gone, the bed half as long) and never mutes; the log stays the caption, so a player with their eyes on the water now hears that somebody spoke and which of the four it was. Under the cast (#403) Kalliso and Teel are signed — the Order's own note at a soldier's pace, and the warden's breath — and Drenn and Sende, who have no entry in [characters.md](characters.md), speak as the grid and as those below: still four registers, and now four speakers |
 | Ghost markers as a taught system | **Not taught here, and [campaign.md](campaign.md) §3 now says so.** §10's fourth beat was written for a fading twenty-second trail; measured, the colossus holds Tier 4 from 09:00 to the adjournment in every drive — passive, escorted, and escorted-with-the-climb — because SIG 100 through PF 1.6 stays four times over threshold even across the thermocline. §10 row 4 has been rewritten to what the phase does teach. Whether the lesson moves to another mission or the colossus is made quieter is a campaign-level decision, not this document's |
 | Mid-match Coral Ruins state change | Built, and spent by three other missions; not relied on here ([environments.md](environments.md)) |

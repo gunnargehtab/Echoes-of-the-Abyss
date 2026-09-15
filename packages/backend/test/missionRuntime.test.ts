@@ -735,6 +735,12 @@ describe('the four voices in the water', () => {
     // player is the court's flight rather than a faction's fleet, so every
     // voice here is authored; the assertion is that the union, the literal
     // and the runtime's default agree on four different answers.
+    //
+    // Filtered to the water since #726, because the court now speaks in the
+    // opening window as well and it is not one of the four — §12 keeps the
+    // two lists apart and so does this. The filter is on the register rather
+    // than on the minute, so a fifth voice arriving in the water at 03:00
+    // would fail here rather than be quietly counted as the court's.
     const run = passiveRun();
     const spoken = run.lines.map((line) => ({
       atS: Math.round(line.tick / SIM.TICK_HZ),
@@ -742,16 +748,120 @@ describe('the four voices in the water', () => {
       voice: line.voice,
       speakerId: line.speakerId,
     }));
+    const inWater = spoken.filter((line) => line.voice !== 'court');
     // Four registers, and since #403 four speakers: Kalliso and Teel are
     // signed, and Drenn and Sende — who have no entry in docs/characters.md —
     // are the grid and those below, which is the register's plain hail.
-    assert.deepEqual(spoken, [
+    assert.deepEqual(inWater, [
       { atS: 6 * 60 + 20, speaker: 'Voice Ren Kalliso', voice: 'order', speakerId: 'kalliso' },
       { atS: 9 * 60, speaker: 'Underwriter Sela Drenn', voice: 'concern', speakerId: 'the-grid' },
       { atS: 9 * 60 + 20, speaker: 'Sende', voice: 'cohorts', speakerId: 'those-below' },
       { atS: 10 * 60 + 40, speaker: 'Warden Juno Teel', voice: 'plateaus', speakerId: 'teel' },
     ]);
-    assert.equal(new Set(spoken.map((line) => line.voice)).size, 4, 'four voices, four registers');
+    assert.equal(new Set(inWater.map((line) => line.voice)).size, 4, 'four voices, four registers');
+  });
+});
+
+describe('the court, in the opening window', () => {
+  it('reads four lines into the record between 00:20 and 02:40', () => {
+    // §9's guidance beats and §12's authored text for them. The window is
+    // §10's first lesson — a ceiling, a meter and a flight — and #720 is the
+    // report that a player handed a meter does not work out that it is theirs.
+    //
+    // The minutes are the assertion, because a guidance line is only guidance
+    // while the thing it is about is still in front of the player: all four
+    // land inside the empty approach, before the delegations take station at
+    // 04:00 and give the player something else to look at.
+    const run = passiveRun();
+    const court = run.lines
+      .filter((line) => line.voice === 'court')
+      .map((line) => ({
+        atS: Math.round(line.tick / SIM.TICK_HZ),
+        speaker: line.speaker,
+        voice: line.voice,
+        speakerId: line.speakerId,
+      }));
+    const halloran = {
+      speaker: 'Arbiter Mosk Halloran',
+      voice: 'court' as const,
+      speakerId: 'halloran' as const,
+    };
+    assert.deepEqual(court, [
+      { atS: 20, ...halloran },
+      { atS: 60, ...halloran },
+      { atS: 110, ...halloran },
+      { atS: 160, ...halloran },
+    ]);
+    assert.ok(
+      court.every((line) => line.atS < 4 * 60),
+      'a guidance line landed after the approach it is guidance for'
+    );
+  });
+
+  it('states the two numbers the lesson is made of, and never a way past them', () => {
+    // §12: six and twelve are §3's own figures for this hull and twenty is
+    // §4's ceiling, so the court is stating facts about its own room. The
+    // negative half is the one worth a test: §9 records that nothing a hull
+    // of the flight does while moving reaches twenty — the two SIG states are
+    // 6 and 12 — so a line that told the player how to breach the ceiling
+    // would be teaching either a lever this simulation does not have or
+    // descent, which §10 refuses to teach here. Both readings of that
+    // disagreement leave these four lines true, which is why they are these
+    // four lines.
+    const run = passiveRun();
+    const said = run.lines
+      .filter((line) => line.voice === 'court')
+      .map((line) => line.text)
+      .join(' ');
+    for (const figure of ['six', 'twelve', 'twenty']) {
+      assert.match(said, new RegExp(`\\b${figure}\\b`), `the court never reads ${figure} aloud`);
+    }
+    // The flight's own two states, as the court states them, are the hull's.
+    const scout = run.last.units.find((unit) => unit.kind === UnitKind.LightScout);
+    assert.ok(scout !== undefined, 'the flight is not in the player\u2019s own snapshot');
+    assert.ok(
+      run.peakEscortSig <= 20,
+      `an escort reached SIG ${run.peakEscortSig}, so "under twenty" is not what this run shows`
+    );
+  });
+
+  it('is not a gate — stripping all four changes nothing but the log', () => {
+    // §9: "Guidance that can be failed is a tutorial, and this is not one",
+    // and the issue's seventh criterion. Asserting that the beats are `say`
+    // would only restate the literal; this drives the mission twice, once
+    // against a derivative with every court line removed, and holds the two
+    // resolutions to each other. If any objective, the outcome, the minute it
+    // closed on or the epilogue moved, guidance would be load-bearing.
+    const stripped = {
+      ...PROLOGUE_SORROWGATE,
+      beats: PROLOGUE_SORROWGATE.beats.filter(
+        (beat) => !(beat.kind === 'say' && beat.voice === 'court')
+      ),
+    };
+    assert.equal(
+      PROLOGUE_SORROWGATE.beats.length - stripped.beats.length,
+      4,
+      'the derivative did not remove the four lines it exists to remove'
+    );
+    const map = missionMapById(PROLOGUE_SORROWGATE.mapId)!;
+    const match = new Match(map, { mission: stripped, fauna: false, seed: SEED });
+    let spoke = 0;
+    for (let tick = 0; tick < SIM.TICK_HZ * 21 * 60; tick++) {
+      match.update(STEP_MS);
+      spoke += match.takeMissionLines().length;
+      if (match.missionOver !== null) break;
+    }
+    const over = match.missionOver;
+    const withGuidance = passiveRun().match.missionOver;
+    assert.ok(over !== null && withGuidance !== null, 'a run did not resolve');
+    assert.equal(spoke, 4, 'the four in the water are all that is left to say');
+    assert.equal(over.outcome, withGuidance.outcome);
+    assert.equal(match.tick, passiveRun().match.tick, 'the court adjourned on a different tick');
+    assert.equal(over.epilogue, withGuidance.epilogue);
+    assert.deepEqual(
+      over.objectives.map((objective) => [objective.id, objective.status]),
+      withGuidance.objectives.map((objective) => [objective.id, objective.status])
+    );
   });
 });
 

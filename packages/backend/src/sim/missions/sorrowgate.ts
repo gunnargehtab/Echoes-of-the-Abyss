@@ -505,6 +505,81 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     { atTick: 0, kind: 'silent', tag: 'kalliso-1', active: true, note: 'Quiet on approach' },
     { atTick: 0, kind: 'silent', tag: 'kalliso-2', active: true, note: '' },
 
+    // 00:20 to 02:40 — the court, in the opening window (§9, §12).
+    //
+    // The window keeps its emptiness and loses its silence. Nothing arrives
+    // and nothing is decided; the court reads four lines into the record and
+    // they are the only thing in it that is not an instrument. #720 is the
+    // report that a player handed a meter does not work out that the meter is
+    // about them, and §10's first lesson is a meter.
+    //
+    // **Halloran, who until now spoke only in the briefing.** §12's argument
+    // is that the court states facts about the room and they function as
+    // instructions, and that no other register can do it — which is the
+    // shape guidance needs and is already the voice this mission opens in.
+    //
+    // **No line names a control, and the register is why before the device
+    // is.** Halloran speaks in the third person and the perfect tense about
+    // things that have been done (docs/culture.md §3); "right-click the
+    // water" is not a sentence he can produce. The mission log being read on
+    // a device with no keyboard (#722) gets to the same place from the other
+    // side. So the beats say what is true about the room and the binding
+    // stays on the command bar.
+    //
+    // **Six, twelve and twenty are §3's and §4's own figures** — the Light
+    // Scout's two SIG states and the ceiling — rather than a second set
+    // invented for a lesson. The court's whole authority is that everybody
+    // afterwards agrees what was said, so a line stating a number this
+    // simulation does not produce would be worse here than in any other
+    // register.
+    {
+      atTick: T(0, 20),
+      kind: 'say',
+      speaker: 'Arbiter Mosk Halloran',
+      voice: 'court',
+      text: "Escort One through Four are admitted and they are the flight. The flight holds at the arch. Which water it holds inside the arch is the flight's own affair, and the court has no view on it.",
+      note: 'Whose the hulls are, and that the water inside the arch is theirs to use',
+    },
+    {
+      atTick: T(1),
+      kind: 'say',
+      speaker: 'Arbiter Mosk Halloran',
+      voice: 'court',
+      text: 'The array has the flight at six. The ceiling is twenty. Both numbers have been on the record since the hardpoints came off, and both are in front of whoever is flying.',
+      // Reading the count: the number said aloud and left sitting, which is
+      // the court's characteristic move (docs/culture.md §3) and also how a
+      // meter gets taught. "In front of whoever is flying" points at the
+      // readout without naming it.
+      note: 'The count. Six against twenty, and both are on the player’s own instruments',
+    },
+    {
+      atTick: T(1, 50),
+      kind: 'say',
+      speaker: 'Arbiter Mosk Halloran',
+      voice: 'court',
+      text: 'A hull of the flight standing in this water reads six. The same hull under way reads twelve. The court has recorded that difference at every sitting it has held and has never yet had to explain it twice.',
+      // The doubling is §3's argument for this hull carrying the mission:
+      // "a ceiling teaches nothing unless moving is audibly a decision, and
+      // on this hull it is". Six to twelve is what the player's own choice
+      // moves, and it is the whole of the first lesson.
+      note: 'Moving moves the meter — six standing, twelve under way',
+    },
+    {
+      atTick: T(2, 40),
+      kind: 'say',
+      speaker: 'Arbiter Mosk Halloran',
+      voice: 'court',
+      text: "The court does not enforce the ceiling. The array does. A hull above twenty is shoving, and for every second it shoves the court's readings are withdrawn from all four hulls for a second afterwards. The flight would be deaf in the court's own water, and the record has seen that before.",
+      // §4's three clauses stated as one consequence: debt accrues a second
+      // per second over the ceiling, the array is withdrawn from the whole
+      // flight rather than the offending hull, and it repays one for one.
+      // What the line does *not* say is how to cross twenty, because on this
+      // hull nothing the player does while moving reaches it. §9's "What the
+      // lines stop short of" records why, and records that which side of
+      // that is wrong is not settled.
+      note: 'What the ceiling costs: the array, withdrawn from all four for as long again',
+    },
+
     // 04:00 — the delegations take station. Consortium east, Commune west. The
     // Directorate observer was already here and has no beat.
     {
