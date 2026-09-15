@@ -58,6 +58,21 @@ first.
 1. **Read the target.** The doc section, every time, not your memory of it. If
    the target and the code disagree, that is a bug in one of them and which one
    is a design call — see "Three things the loop must never do", second bullet.
+
+   **Then read the code for anything the change will state as fact.** The target
+   says what the game *should* do; a sentence that ships — a gloss, a beat, a
+   label, a pull request's own argument — is a claim about what it *does*, and
+   only the simulation settles that. This is the trap this loop falls into most:
+   six instances over 13–15 September across two issues. #738's gloss taught
+   "slower is quieter", transcribed from `docs/mission-sorrowgate.md` §4, when
+   `acoustics.ts` gives a Light Scout two states — `sigCruise` 12 and `sigIdle`
+   6 — so nothing it does under way reaches the ceiling of 20, and only descent
+   crosses it. #739 did it from a worse source still: it read **#623's issue
+   body**, which describes a state somebody has since deliberately changed, and
+   deleted a clause that was true to write a false one in its place. It is not
+   that docs go stale. It is that everything which is not the code goes stale,
+   and an issue body is the worst of them, because it is a description of the
+   past written as though it were the present.
 2. **Implement.** One self-contained increment, not the whole issue. `CLAUDE.md`
    asks for instalments because a session can end mid-change and take the
    container with it.
@@ -147,10 +162,53 @@ Stop running rounds when **all** of these hold:
   evidence for each.
 - The change is still an instalment that stands on its own. If it has grown into
   three unrelated things, that is three pull requests.
+- **Every acceptance condition is the issue's own**, not a stricter bar you set
+  on the way through — see "The bar is the issue's" below.
+- **Nothing in the tree is an edit nobody has looked at.** A verdict covers the
+  diff the critic was handed, never the fixes you made in answer to it — see
+  "One pass over the way out" below.
 
 A round that meets these is finished. Do not run another for polish — this loop
 has no notion of a score to maximise, deliberately, and "one more round" with no
 open finding is how a bounded loop becomes an unbounded one.
+
+### One pass over the way out
+
+Every round ends on an edit the critic never saw: it reported, you fixed, you
+stopped. On #738 that edit was the fault. Round 4's critic declared the stall and
+said not to run a fifth round chasing it; round 5 fixed its three ordinary bugs
+and was ready to ship. One short pass over *just those fixes* found that
+anchoring a banned-name match at both ends had stopped it catching `Corvettes` —
+the plural of the exact sentence the anti-reveal sweep exists to refuse, passing
+in all twenty-nine missions. Eleven green gates and six green CI runs said
+nothing about it, and neither did the verdict, which predated the fix.
+
+So before the loop stops, run one **verification pass scoped to the edits made
+after the last verdict**. It is not a round and it does not spawn a critic: no
+new scope, no re-litigating a stalled question, four questions and no more —
+
+- does each fix do the thing its finding asked for;
+- does it break a case that used to hold;
+- is there a positive control that must still pass, and does it;
+- did it touch anything its finding did not name?
+
+It costs a fraction of a round. **A stall verdict stops the refining; it does not
+review the last edit.**
+
+### The bar is the issue's, not the one you invented
+
+#739 spent four rounds failing a standard the issue never asked for — "no figure
+in any form survives", arrived at by closing each previous attempt's hole — while
+criteria 1 to 8 sat met. Round 6's critic said so in terms: the bar was
+self-imposed, and the honest exit was one round taking its two remaining
+one-liners. It was right, and round 7 did exactly that and passed.
+
+A loop can fail its own invented bar indefinitely, and from the inside that is
+indistinguishable from diligence — every round has a real finding and every fix
+is a real improvement. Which is why the criterion above names the **issue's**
+acceptance conditions. A critic saying a bar is self-imposed is a stop signal
+rather than a finding to fix, and a round whose only open finding is one you set
+yourself is the round to stop on.
 
 ### Stall detection
 

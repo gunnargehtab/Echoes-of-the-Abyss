@@ -229,6 +229,22 @@ harness surfaced is a different thing and is still yours: a navy that cannot
 pay for its own roster, a commander that never builds a structure its own waves
 gate on. If you cannot tell which kind you are looking at, it is balance, and
 you leave it.
+
+**An issue whose remaining work is all inside the freeze takes `needs-decision`,
+and you may apply that one yourself.** Leaving it is not enough: an issue that is
+open, unassigned and unlabelled is precisely what *eligible* looks like, so the
+next firing selects it, re-derives that everything left is frozen, stands down,
+and proposes `wontfix` again. #706 has run that cycle five times across 14 and
+15 September — its decision-free halves worked and merged as #721 and #736, the
+remainder four candidate levers and two parked readings, all of them yield
+arguments — and the label is still not applied. `wontfix` is a statement about
+the work and stays a person's, per the bullet above. But whether the freeze
+lifts is a decision `CLAUDE.md` says is written down rather than taken by a run,
+and being unable to take it is a fact about **your** run, which is what
+`needs-decision` is for. Say in the stopping comment that the freeze is what
+stopped you, and that `wontfix` is the durable answer if the work is parked
+rather than merely waiting. A person who disagrees removes the label, and the
+issue is eligible again on the next firing.
 - Anything already claimed is someone else's — including an earlier you.
 - **An issue with an assignee is taken, whoever took it.** A person who
   assigned themselves is on it, and so is an earlier firing of this loop, which
@@ -526,8 +542,11 @@ both ways — this was tested on #231, not assumed:
   renders as literal text;
 - an HTML `<img src=…>` comes back with `src` stripped, so it renders as nothing.
 
-Ordinary markdown **links survive intact**. So the strongest form available is a
-committed file plus a link to it:
+**A bare URL is the strongest form available**, and it renders as a link. Link
+syntax around an image file has not survived either, in any run that tried it —
+#735, #737 and #738 each ended up pasting the URL on a line of its own instead.
+So the shape is a committed file, its URL bare, and a sentence above it saying
+what the frame shows:
 
 1. Capture with the run-game skill, as the gate requires. Look at the frames —
    that is the point of them, and #231's own draw-order bug was found in a
@@ -538,9 +557,14 @@ committed file plus a link to it:
    screenshot commit pushed after review has started can miss the merge entirely,
    which is exactly what happened on #231 — the frames landed on the branch a few
    minutes after it merged, so they never reached `main` at all.
-3. Link them from the PR body by full commit SHA, not by branch name — a branch
-   is deleted after merge and takes the link with it:
-   `[the scope](https://github.com/gunnargehtab/Echoes-of-the-Abyss/blob/<sha>/docs/screenshots/issue-<n>/<file>.png)`
+3. Put the URL in the PR body **bare, on a line of its own**, by full commit SHA
+   rather than by branch name — a branch is deleted after merge and takes the
+   link with it:
+
+   ```text
+   The panel at 100% and 200% UI scale, in a live prologue:
+   https://github.com/gunnargehtab/Echoes-of-the-Abyss/blob/<sha>/docs/screenshots/issue-<n>/<file>.png
+   ```
 4. **Say in the PR that the link is a link.** A reviewer clicking through is
    weaker than a rendered frame, and the gate's author should be able to see that
    trade rather than discover it.
@@ -587,6 +611,12 @@ is a statement about a run rather than about the work: you tried, and the thing
 that stopped you was a call that is not yours. It is also cheap to undo — a
 person who disagrees removes it, and the issue is eligible again on the next
 firing.
+
+**A remainder inside the balance freeze is the second case**, even when the issue
+reads like a bug and its first half was real work somebody merged. What such an
+issue waits on is the freeze lifting, which `CLAUDE.md` says is a written
+decision and not a firing's. Label it and say so; §3 carries the reasoning and
+the five stand-downs on #706 that argued for it.
 
 Do **not** label the third case. A fix that did not converge is a fact about
 your hour, not about the issue, and the next firing deserves its own attempt.
@@ -649,9 +679,12 @@ it is ever recorded. Before #580 the
 second person had nowhere to look, which is why step 1 stayed blind for four days
 while every firing dutifully carried on.
 
-The Routine's own completion notifications are off, and there is no API that can
-turn them on — only the Routines UI. So treat this comment as the single record of
-the run, because that is what it is. Never close #580; when it grows unwieldy, a
+The Routine's completion notifications are **on** — push, per the trigger's own
+settings — and that changes nothing about this comment. A notification is not a
+record: it reaches one person's phone, it scrolls past, and the next firing
+cannot read it. This log is where the loop's history lives and where every firing
+reads what the last one did, so write it whatever the notification already said.
+Never close #580; when it grows unwieldy, a
 person closes it, opens a successor, and updates the number here.
 
 ## Related
