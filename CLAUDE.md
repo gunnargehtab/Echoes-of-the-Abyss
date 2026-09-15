@@ -43,6 +43,29 @@ The freeze lifts when the systems stop moving, and it lifts by a decision writte
 not by a run deciding the moment has come. Until then, if a piece of work's justification
 is a win rate, it is not the work to do.
 
+## Write short on GitHub
+
+Long writing costs the reader, not the writer. The last six merged pull requests had
+bodies averaging 1,598 words. That is why this section exists.
+
+Every issue, pull request, review and comment follows these rules:
+
+- **Short sentences.** One idea each. Prefer a full stop to a dash or a semicolon.
+- **Plain words.** Say what happened. Do not stage a drama around it.
+- **Lead with the answer.** The first line says what changed, or what is wrong.
+- **Budgets.** A PR body under 200 words. An issue under 150. A comment under 80. Over
+  budget means cut, not explain why this one had to be long.
+- **Facts, not narrative.** Numbers, file paths, issue numbers, the failing test's name.
+  Do not retell how you got there. Do not restate the diff in prose.
+- **Link instead of quoting.** If the detail is in a doc, a test or an issue, name it.
+
+Reasoning still belongs in a PR body. State it in a sentence or two. A decision a future
+reader needs is worth its words; the route you took to find it is not.
+
+This rule covers GitHub text only. Code comments still explain *why* and keep their
+gotchas ([Style](#style)). `docs/` is a design bible and stays prose. And brevity never
+turns a caveat into a false claim — keep the limit, cut the story around it.
+
 ## Commands
 
 Run everything from the repository root.

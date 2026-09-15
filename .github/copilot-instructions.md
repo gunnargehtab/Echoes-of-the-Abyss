@@ -9,6 +9,8 @@ Code transcribes the docs. When the two disagree, that is a bug in one of them â
 
 For engineering conventions, build order, and the runtime gotchas that cost the most time, read **[CLAUDE.md](../CLAUDE.md)** at the repository root. This file covers the design side.
 
+**Write short on GitHub.** Issues, pull requests, reviews and comments use clear, simple, short sentences. A PR body stays under 200 words, an issue under 150, a comment under 80. Lead with what changed or what is wrong. Link to a doc or a test instead of quoting it. This applies to GitHub text only â€” `docs/` is a design bible and stays prose. The full rule is in [CLAUDE.md](../CLAUDE.md#write-short-on-github).
+
 ---
 
 ## High-Level Architecture
