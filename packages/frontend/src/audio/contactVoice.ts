@@ -180,6 +180,83 @@ const SWARM_ORGANISE_HZ = 0.19;
 const SWARM_SCATTER_FLOOR = 0.45;
 
 /**
+ * A reciprocating cycle, in strikes, and how hard the second of them lands.
+ *
+ * §8 gives the Consortium "machinery under load; steel, reciprocating", and a
+ * reciprocating machine has a stroke and a return — two events in one cycle,
+ * the second of them the mass coming back with no load behind it. Until now
+ * the mix built one strike and called the repetition the mechanism, which is
+ * the same event shape the breathing, swell and screw families have at a
+ * different rate: the EQ-curve distinction §8 opens by ruling out. (Not the
+ * swarm, whose cluster #742 had already built, and not the drone, which never
+ * strikes at all.)
+ *
+ * **The two strikes are exactly evenly spaced, and that is a choice with
+ * reasons rather than the only placement §8.1 admits.** One uneven placement
+ * survives a full check against every other family's band: a 0.3675/0.4658 s
+ * lope. Even spacing was taken over it for two reasons, neither of them that
+ * the lope is forbidden:
+ *
+ * - §8 makes this "the only faction with a *beat*", and this repository
+ *   already reads that as an unwavering interval between strikes:
+ *   `contactTimbre.test.ts` holds the Consortium's period spread under 1e-6,
+ *   and did so before this mechanism existed. An uneven split fails that test,
+ *   so taking one means re-deciding what §8's beat is measured over. That is a
+ *   design call and not an unattended run's to make.
+ * - The lope is 1.27:1, which is a limp rather than machinery under load.
+ *
+ * A second placement looks admissible and is not, recorded because it is where
+ * this argument first went wrong. A short knock threaded through the gap
+ * between the swarm and the screw — 0.1567-0.1615 s, then the 0.672-0.677 s
+ * balance of the cycle — clears both neighbours *interval by interval*. But
+ * §8.1 separates families by their **band**, "its rate, widened by its own
+ * wander", and a knock gives the Consortium a band from 0.157 to 0.677 s that
+ * swallows the screw's 0.194-0.306 s whole. Implemented in a scratch tree it
+ * fails `renders no two mechanisms at the same interval` in exactly those
+ * terms. A family owning two disjoint bands is a reading of §8.1 this
+ * repository does not take, and taking it would be a design call of its own.
+ *
+ * What even spacing buys is that no instant in this train moves at all. The
+ * cycle is carried by *what the strikes are*, so §8.1's separation over
+ * rendered intervals is untouched by construction rather than re-argued.
+ *
+ * What tells the two strikes apart is the shape first and the level a distant
+ * second, and the arithmetic is worth stating because it is slighter than it
+ * looks. The return's decay is an eighth of the stroke's — 22 ms against
+ * 180 ms — and its hold a fifth. Its *peak* is 1.80 dB under the stroke's,
+ * which is the one figure here the family owns outright.
+ *
+ * What it actually *steps* is less again, and is a range rather than a number.
+ * `update` writes a level ramp on this same param every tick, and an
+ * `AudioParam` event supersedes the strike's own decay from the instant it
+ * starts, so the level between strikes is aligned to whoever is asking.
+ * Replayed off the recorded timeline over 30 s: at the engine's 5 Hz the
+ * return steps 1.29-1.57 dB and the stroke 3.79-4.08 dB; at 60 Hz, 1.30-1.36
+ * and 3.79-3.80. The 5 Hz spread is the wider because the train does not
+ * divide that tick — 0.4167 s is 2.0833 of them, so the phase walks and the
+ * level before a return takes seven values. **The shape is doing almost all of
+ * the work**, at either rate.
+ *
+ * Two earlier drafts got that number wrong in two different ways, and both are
+ * worth naming because the next reader will reach for the same shortcuts.
+ * 0.533 and 1.72 dB read the strike's envelope in isolation, as though nothing
+ * else wrote to the param. 0.5571 and 1.34 dB were one strike out of the
+ * twelve, quoted as a steady state. What *is* steady is the strikes' own
+ * instants and peaks, and they are what §8.1 separates on.
+ *
+ * **Whether any of it reads as a knock on a phone speaker is not settled
+ * here**: #731's acceptance criterion is a listening test on the reporting
+ * device, and nothing in this file stands in for it.
+ *
+ * `RETURN_LIFT` is **the one number here with no doc-side argument** — a half,
+ * because a return is the unloaded half of the cycle, and §8 does not say by
+ * how much. It stays clear of the unclassified thump's own peak, because a
+ * Tier-3 family that dipped under it on alternate strikes would be handing the
+ * tier back every other event.
+ */
+export const RECIPROCATING = { STROKES: 2, RETURN_LIFT: 0.5 } as const;
+
+/**
  * The two shapes an event is heard as, in seconds: a breath and a tick.
  *
  * Every mechanism used to ease back over 0.18 s. On a family whose events are
@@ -192,9 +269,15 @@ const SWARM_SCATTER_FLOOR = 0.45;
  * That ratio is the whole difference between a click train and a texture, and
  * it is what `contactTimbre.test.ts` holds rather than the constant.
  *
- * The breath is the other four families' and is unchanged. §8's drive
- * signature there is "the same thing breathing", and a breath that was over in
- * 22 ms would be a tick by another name.
+ * The breath is the other three striking families', plus the Consortium's own
+ * stroke, and is unchanged. §8's drive signature there is "the same thing
+ * breathing", and a breath that was over in 22 ms would be a tick by another
+ * name.
+ *
+ * The one family that uses both is the Consortium, and it uses them to say
+ * which half of its cycle a strike is: the loaded stroke rings and the return
+ * knocks (`RECIPROCATING`). That is not a third shape, and it is the reason
+ * the pair is exported as a table rather than as one shape per mechanism.
  */
 export const ENVELOPE = {
   BREATH: { holdS: 0.02, decayS: 0.18 },
@@ -333,6 +416,20 @@ export class ContactVoice {
    * its timbre, and a scheduling horizon is not an exemption from it.
    */
   private voicedMechanism: Mechanism | null = null;
+  /**
+   * Which strike of a reciprocating cycle the next event is — 0 is the loaded
+   * stroke (`RECIPROCATING`).
+   *
+   * Counted along the train rather than read off the clock, unlike
+   * `swarmSpread`. Both are driver-independent, which is the property that
+   * matters: the train is a function of its own start and of nothing the
+   * caller did, so a 5 Hz and a 60 Hz caller walk the same strikes in the same
+   * order and get the same phase. What the counter buys over absolute time is
+   * that two Consortium contacts are *not* on the same crank — a function of
+   * absolute time alone would put every machine in the water in step, which is
+   * the open question #742 left on the swarm and not a thing to spread.
+   */
+  private strokePhase = 0;
   private stopped = false;
 
   constructor(context: AudioContext, destination: AudioNode) {
@@ -400,6 +497,10 @@ export class ContactVoice {
       this.oscGain.gain.cancelScheduledValues(now);
       this.voicedMechanism = mechanism;
       this.nextEventAt = now;
+      // The cycle restarts with the train it is counted along, so a contact
+      // that becomes a Consortium hull opens on the loaded stroke rather than
+      // wherever the last family left the counter.
+      this.strokePhase = 0;
     }
 
     // --- Spatialisation: the rule at the top of this file -------------------
@@ -509,7 +610,7 @@ export class ContactVoice {
   /**
    * One event of a mechanism.
    *
-   * Four of the six families have one body and it hits once. The swarm is
+   * Three of the six families have one body and it hits once. The swarm is
    * "many small things", so its event is a cluster of `SWARM_LAYERS` clicks
    * whose spacing breathes: fully spread they are evenly spaced and the train
    * runs at three times the family rate, and closed they land together as one
@@ -517,8 +618,25 @@ export class ContactVoice {
    * unison as cohorts converge", carried in *when they land* — a level alone
    * would be a tremolo, and a tremolo on a continuous tone is what #731
    * reports hearing.
+   *
+   * The Consortium is the other compound family, and it is compound in the
+   * other direction: its strikes land where they always did and alternate
+   * between the loaded stroke and the return (`RECIPROCATING`). Nothing about
+   * *when* changes — even spacing is the choice `RECIPROCATING` argues, not
+   * the only one §8.1 admits — so the cycle is in what each strike is.
    */
   private emit(timbre: ContactTimbre | null, at: number, period: number): void {
+    if (timbre !== null && timbre.mechanism === 'reciprocating') {
+      const stroke = this.strokePhase;
+      this.strokePhase = (stroke + 1) % RECIPROCATING.STROKES;
+      // The stroke rings at the full drive-signature bump; the return lifts a
+      // share of it and is over in a knock. Both stay above the unclassified
+      // thump's own peak, which is what keeps every strike a Tier-3 event.
+      const lift = stroke === 0 ? 1 : RECIPROCATING.RETURN_LIFT;
+      const shape = stroke === 0 ? ENVELOPE.BREATH : ENVELOPE.TICK;
+      this.strike(at, this.oscBase * (1 + (DRIVE_LEVEL.BUMP - 1) * lift), shape);
+      return;
+    }
     if (timbre !== null && timbre.mechanism === 'swarm') {
       const spread = swarmSpread(period, at);
       // 0 while the cluster is fully scattered, 1 as it closes — the same

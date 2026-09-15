@@ -147,6 +147,18 @@ function contactCase(count, tier, factions) {
 /** One classified contact — the reference a per-voice level is chosen against. */
 CASES['contacts:one-tier3'] = contactCase(1, ResolutionTier.Classification, [Faction.Directorate]);
 
+/**
+ * The same, as the Consortium — #731's own repro, in as many words.
+ *
+ * The Directorate case above cannot stand for both: §8 gives the two navies
+ * different mechanisms, so a reading of one says nothing about the other, and
+ * #731 reports both. One voice rather than seven because a mechanism is what
+ * is being read, and a crowd is a sum.
+ */
+CASES['contacts:one-tier3-consortium'] = contactCase(1, ResolutionTier.Classification, [
+  Faction.Bathyarch,
+]);
+
 /** Seven of one navy: every voice on that navy's drive signature, so they stack. */
 CASES['contacts:seven-tier3-one-navy'] = contactCase(7, ResolutionTier.Classification, [
   Faction.Directorate,

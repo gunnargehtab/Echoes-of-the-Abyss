@@ -23,6 +23,7 @@ import { Biome, Faction, FaunaSpecies, OrdnanceKind, ResolutionTier, SIM } from 
 import {
   ContactVoice,
   ENVELOPE,
+  RECIPROCATING,
   SWARM_LAYERS,
   THUMP_PARTIALS,
   type VoiceInputs,
@@ -523,6 +524,284 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
     assert.ok(periodSpread(beat.pulses) < 1e-6, 'the Consortium lost its beat');
   });
 
+  it('gives the Consortium a stroke and a return, and spends nothing on when', () => {
+    // §8: "machinery under load; steel, reciprocating". A reciprocating machine
+    // has a stroke and a return; the mix had one strike repeated, which is the
+    // event shape the breathing, swell and screw families already had at a
+    // different rate — the EQ-curve distinction §8 opens by ruling out. The
+    // argument in full is in `RECIPROCATING`, including why the swarm and the
+    // drone are not in that list.
+    //
+    // The cycle is carried by *what each strike is* rather than by when it
+    // lands. §8.1 admits two uneven placements as well, and `RECIPROCATING`
+    // argues the choice; what is asserted here is the consequence, which is
+    // that the strike train did not move. An uneven split is exactly what a
+    // later round reaching for "more mechanical" would try, and it is a design
+    // call rather than a refinement — it changes what §8's beat is measured
+    // over, so it fails the beat test above and should.
+    const beat = drive({ faction: Faction.Bathyarch }, ResolutionTier.Classification, ECHO_STEP_S);
+
+    // Each strike with the level it decays back to — the voice's own base,
+    // read off the class rather than restated here, so the lifts below are
+    // ratios of something real. The decay is the write immediately after the
+    // strike, which is how `strike` places the pair.
+    const strikes: { peak: number; base: number }[] = [];
+    for (let i = 0; i < beat.writes.length - 1; i++) {
+      if (beat.writes[i]!.method !== 'setValueAtTime') continue;
+      const decay = beat.writes[i + 1]!;
+      assert.equal(decay.method, 'setTargetAtTime', 'a strike was written without its decay');
+      strikes.push({ peak: beat.writes[i]!.value, base: decay.value });
+    }
+    assert.ok(strikes.length > 6, 'the Consortium wrote too few strikes to measure');
+
+    const strokeLift = strikes[0]!.peak - strikes[0]!.base;
+    assert.ok(strokeLift > 0, 'the loaded stroke does not lift the voice at all');
+    for (let i = 0; i < strikes.length; i++) {
+      const { peak, base } = strikes[i]!;
+      const stroke = i % RECIPROCATING.STROKES === 0;
+      const expected = strokeLift * (stroke ? 1 : RECIPROCATING.RETURN_LIFT);
+      assert.ok(
+        Math.abs(peak - base - expected) < 1e-9,
+        `strike ${i} lifts ${(peak - base).toFixed(4)} where the ` +
+          `${stroke ? 'stroke' : 'return'} lifts ${expected.toFixed(4)}: the cycle is gone`
+      );
+      // A return is the unloaded half and not a tier handed back. Under the
+      // thump's own peak it would be an unclassified event on alternate
+      // strikes, which is §3's line crossed from the other side.
+      assert.ok(
+        peak > THUMP_PEAK + 1e-9,
+        `strike ${i} peaks at ${peak.toFixed(4)}, under the unidentifying thump's ${THUMP_PEAK}`
+      );
+    }
+
+    // And the half that must not have moved: every strike still lands on the
+    // family's declared period, so §8.1's separation is untouched by
+    // construction rather than re-argued. The beat test above holds the spread
+    // at zero; this holds *which* period it is exact at.
+    const declared = 1 / FACTION_TIMBRE[Faction.Bathyarch].rateHz;
+    for (const gap of intervals(beat.pulses)) {
+      assert.ok(
+        Math.abs(gap - declared) < 1e-9,
+        `a strike landed ${gap.toFixed(4)} s after the last, not on the declared ${declared}`
+      );
+    }
+
+    // The cycle is a periodicity of its own, though — the alternation repeats
+    // every `STROKES` strikes, and no table test covers that: `periodBand`
+    // reads `rateHz`, which is the strike. §8.1 as written
+    // describes "its rate, widened by its own wander" and says nothing about a
+    // cycle above it, so holding one to the same 1.2x is the mix being
+    // *stricter* than the doc rather than the doc being extended. Kept that way
+    // deliberately: a firing does not widen a property in the design bible.
+    const cycleS = (RECIPROCATING.STROKES * 1) / FACTION_TIMBRE[Faction.Bathyarch].rateHz;
+    for (const timbre of ALL_TIMBRES) {
+      if (timbre === FACTION_TIMBRE[Faction.Bathyarch]) continue;
+      const band = periodBand(timbre);
+      if (band === null) continue;
+      assert.ok(
+        band[0] >= cycleS * 1.2 || cycleS >= band[1] * 1.2,
+        `the reciprocating cycle at ${cycleS.toFixed(4)} s is under 1.2x clear of ` +
+          `${timbre.mechanism} (${band[0].toFixed(4)}-${band[1].toFixed(4)} s)`
+      );
+    }
+  });
+
+  it('gives every Consortium contact its own crank, not the water’s', () => {
+    // `strokePhase` is counted along the voice's own train rather than read off
+    // the clock, and this is the only test that holds the phase *per contact*.
+    // Two mutations it exists for, and neither is exotic — both are what a
+    // refactor would reach for. A phase derived from absolute time,
+    // `Math.round(at * rateHz) % STROKES`, which is the shape `swarmSpread`
+    // two functions away suggests; and a counter shared between voices. The
+    // first puts every Consortium hull on the same stroke and is caught by the
+    // opening assertions below (the reopen test catches it too, for its own
+    // reason: a reopening is not at a whole number of strikes). The second
+    // survives every opening assertion there is, and is caught only by the
+    // second half of this test. The lockstep is what #742 left open on the
+    // swarm, and a crank is the one place it plainly does not belong: two
+    // machines are not built at the same instant.
+    //
+    // Four offsets across one cycle rather than one, because any nonconstant
+    // function of absolute time agrees with the counter at *some* offset, and a
+    // single one would assert this on luck.
+    const strikeS = 1 / FACTION_TIMBRE[Faction.Bathyarch].rateHz;
+    const context = new HeadlessAudioContext();
+    const destination = context.createGain();
+    const inputs = {
+      tier: ResolutionTier.Classification,
+      biome: Biome.OpenWater,
+      freshness: 1,
+      faction: Faction.Bathyarch,
+    };
+
+    const voices: { voice: ContactVoice; gain: StubGainNode }[] = [];
+    for (let i = 0; i < 4; i++) {
+      // Built one at a time as the match would build them, each at its own
+      // instant, and found through the graph rather than by creation order.
+      const built = context.nodes.length;
+      const voice = new ContactVoice(
+        context as unknown as AudioContext,
+        destination as unknown as AudioNode
+      );
+      const osc = context.nodes
+        .slice(built)
+        .find((n): n is StubOscillatorNode => n instanceof StubOscillatorNode)!;
+      voices.push({ voice, gain: osc.outputs[0] as StubGainNode });
+      voice.update(inputs, context.currentTime);
+      for (const live of voices) live.voice.update(inputs, context.currentTime);
+      context.advance((strikeS * RECIPROCATING.STROKES) / 4);
+    }
+
+    const opening = voices.map(
+      ({ gain }) => gain.gain.writes.filter((w) => w.method === 'setValueAtTime')[0]!
+    );
+    for (let i = 0; i < opening.length; i++) {
+      assert.ok(
+        Math.abs(opening[i]!.value - opening[0]!.value) < 1e-9,
+        `the voice built at ${opening[i]!.at.toFixed(4)} s opens at ` +
+          `${opening[i]!.value.toFixed(4)} and the first at ${opening[0]!.value.toFixed(4)}: ` +
+          'the cycle is being read off the clock, so every crank in the water is the same one'
+      );
+    }
+    assert.ok(
+      new Set(opening.map((w) => w.at.toFixed(6))).size === opening.length,
+      'fixture expects four voices opening at four different instants'
+    );
+
+    // And each keeps its own cycle once they are all in the water, which is
+    // the half opening alike cannot reach. A counter *shared* between voices —
+    // a module-level `strokePhase`, which is what a refactor tidying four
+    // voices into one table would reach for — still zeroes at every birth, so
+    // all four still open alike and every assertion above passes. What it
+    // destroys is the alternation: with two live contacts the emits interleave,
+    // and one hull rings for ever while the other knocks for ever, which is
+    // #731's own reported fault reintroduced on a green suite.
+    for (let tick = 0; tick < 24; tick++) {
+      for (const { voice } of voices) voice.update(inputs, context.currentTime);
+      context.advance(ECHO_STEP_S);
+    }
+    for (let i = 0; i < voices.length; i++) {
+      const struck = voices[i]!.gain.gain.writes.filter((w) => w.method === 'setValueAtTime').map(
+        (w) => w.value
+      );
+      assert.ok(struck.length > 8, `voice ${i} struck too few times to measure`);
+      assert.ok(
+        Math.abs(struck[0]! - struck[1]!) > 1e-9,
+        `voice ${i} strikes one level throughout, so it has no cycle to be its own`
+      );
+      for (let k = 0; k < struck.length; k++) {
+        assert.ok(
+          Math.abs(struck[k]! - struck[k % RECIPROCATING.STROKES]!) < 1e-9,
+          `voice ${i}'s strike ${k} is ${struck[k]!.toFixed(4)}, off its own cycle — the phase ` +
+            'is shared between contacts rather than each voice carrying one'
+        );
+      }
+    }
+  });
+
+  it('reopens a Consortium contact on the loaded stroke after it falls and returns', () => {
+    // The third thing `strokePhase` does, after alternating and staying the
+    // voice's own: it resets with the train when the family changes. A contact
+    // flickering across the Tier-2/Tier-3 boundary is a mechanism change and
+    // back, and it is ordinary rather than exotic. Without the reset the phase
+    // survives the gap and the hull reopens on the *return* — the short half,
+    // 1.80 dB quieter — at the moment §3 wants a refreshed contact to be a
+    // warning in its own right. Nothing about the frame or the log disagrees,
+    // so the failure is silent.
+    //
+    // Over eight demotion phases, like the cancellation test below and for the
+    // same reason: the train is 0.4167 s against a 0.2 s tick, so only some
+    // phases leave the counter odd, and one would assert this on luck.
+    //
+    // `sawMidCycle` is the sibling's `sawCommitted` and exists for the same
+    // reason: today four of these phases leave the counter mid-cycle (ticks 4,
+    // 5, 8 and 9), but that is arithmetic nothing pins. Which phases do is a
+    // joint function of the rate, the driver's step and `EVENT_HORIZON_S`, and
+    // not of any one of them — at 2.5 Hz, where the train divides the tick
+    // exactly, the counts do not move at all. The case that does empty it is
+    // the step: measured against this class, a caller at 0.05 s or 0.04 s
+    // leaves none of the eight mid-cycle, and there the reset could be deleted
+    // with the rest of this test green and still reading as a gate.
+    let sawMidCycle = false;
+    for (let demoteTick = 4; demoteTick <= 11; demoteTick++) {
+      const context = new HeadlessAudioContext();
+      const destination = context.createGain();
+      const voice = new ContactVoice(
+        context as unknown as AudioContext,
+        destination as unknown as AudioNode
+      );
+      const osc = context.nodes.find(
+        (n): n is StubOscillatorNode => n instanceof StubOscillatorNode
+      )!;
+      const oscGain = osc.outputs[0] as StubGainNode;
+
+      // Counted in ticks rather than accumulated in seconds, as the
+      // cancellation test is and for the same binary-arithmetic reason.
+      const DOWN = 2;
+      let reopenedAt = -1;
+      let demotedAt = -1;
+      for (let tick = 0; tick < demoteTick + DOWN + 3; tick++) {
+        const down = tick >= demoteTick && tick < demoteTick + DOWN;
+        if (tick === demoteTick) demotedAt = context.currentTime;
+        if (tick === demoteTick + DOWN) reopenedAt = context.currentTime;
+        voice.update(
+          {
+            tier: down ? ResolutionTier.Bearing : ResolutionTier.Classification,
+            biome: Biome.OpenWater,
+            freshness: 1,
+            faction: Faction.Bathyarch,
+          },
+          context.currentTime
+        );
+        context.advance(ECHO_STEP_S);
+      }
+
+      // Read off this voice's *own* opening strike rather than written down, so
+      // what is held here is "reopens the way it opened". That the opening is
+      // the loaded stroke is a separate claim and is held separately — by the
+      // envelope test below, whose first Consortium strike must be on
+      // `ENVELOPE.BREATH`, and by the stroke-and-return test above. A voice
+      // that opened *and* reopened on the return would satisfy this assertion
+      // and fail both of those, which is the division of labour intended.
+      const writes = oscGain.gain.writes;
+      const opening = writes.find((w) => w.method === 'setValueAtTime')!;
+      // Taken by position after the reopening's cancel, not by time: a
+      // cancelled write stays in the record, and the thump's own events were
+      // committed ahead of the reopening before it happened.
+      const cancelAt = writes.findIndex(
+        (w) => w.method === 'cancel' && Math.abs(w.at - reopenedAt) < 1e-9
+      );
+      assert.ok(cancelAt >= 0, `no family change at the reopening on tick ${demoteTick}`);
+      const reopening = writes.slice(cancelAt).find((w) => w.method === 'setValueAtTime')!;
+      assert.ok(reopening !== undefined, `nothing sounded after the reopening on ${demoteTick}`);
+      assert.ok(
+        Math.abs(reopening.value - opening.value) < 1e-9,
+        `demoting at tick ${demoteTick}: the contact reopens at ` +
+          `${reopening.value.toFixed(4)} against the stroke's ${opening.value.toFixed(4)} — ` +
+          'the cycle carried across a family it was not sounding'
+      );
+
+      // Whether this phase could have caught anything: a whole number of cycles
+      // before the demotion leaves the counter where a reset would have put it,
+      // so only a phase that struck mid-cycle tests the reset at all. Counted
+      // the same way, by position before the demotion's own cancel.
+      const demoteCancel = writes.findIndex(
+        (w) => w.method === 'cancel' && Math.abs(w.at - demotedAt) < 1e-9
+      );
+      assert.ok(demoteCancel >= 0, `no family change at the demotion on tick ${demoteTick}`);
+      const struck = writes
+        .slice(0, demoteCancel)
+        .filter((w) => w.method === 'setValueAtTime' && w.value > THUMP_PEAK + 1e-9).length;
+      if (struck % RECIPROCATING.STROKES !== 0) sawMidCycle = true;
+    }
+
+    assert.ok(
+      sawMidCycle,
+      'every demotion phase fell on a whole cycle, so the reset was never exercised and this ' +
+        'test proved nothing'
+    );
+  });
+
   it('hears the swarm organise: clicks that close into unison, then scatter', () => {
     // §8's Directorate is "clicks that phase into unison as cohorts converge —
     // you hear them *organise*". That is a statement about *when clicks land*,
@@ -618,15 +897,21 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
       'the tightest clusters land no harder than the loosest, so the level follows nothing'
     );
 
-    // The control: every other family has one body that hits once, so a
-    // cluster is the swarm's own tell and not something the whole mix caught.
+    // The control: no other family's level *follows* anything, so a cluster is
+    // the swarm's own tell and not something the whole mix caught. Stated as a
+    // fixed repeat rather than as one level, because §8 gives the Consortium a
+    // stroke and a return and they are two strengths — but two that alternate
+    // exactly, which is a cycle and not a cluster closing. Everyone else
+    // repeats on one.
     for (const [name, identity] of SOUNDING) {
       if (name === Faction[Faction.Directorate]) continue;
       const theirs = drive(identity, ResolutionTier.Classification, ECHO_STEP_S);
       const values = theirs.events.map((w) => w.value);
+      const cycle = name === Faction[Faction.Bathyarch] ? RECIPROCATING.STROKES : 1;
       assert.ok(
-        values.every((v) => Math.abs(v - values[0]!) < 1e-9),
-        `${name}'s events vary in strength, which belongs to a cluster that is closing`
+        values.every((v, k) => Math.abs(v - values[k % cycle]!) < 1e-9),
+        `${name}'s events vary in strength off any fixed cycle, which belongs to a cluster ` +
+          'that is closing'
       );
       assert.ok(
         Math.min(...intervals(theirs.pulses)) > 1e-6,
@@ -635,7 +920,7 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
     }
   });
 
-  it('gives the swarm a tick, and every other family the breath §8 gives it', () => {
+  it('gives the swarm a tick, the Consortium both, and every other family the breath', () => {
     // Why the swarm needed an envelope of its own, in one comparison. Every
     // mechanism used to ease back over BREATH.decayS, which is longer than the
     // whole gap between two swarm events — so no click was ever a click, only
@@ -675,8 +960,26 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
       );
     }
 
+    // The Consortium is the one family that uses both shapes, and it uses them
+    // to say which half of its cycle a strike is: §8's loaded stroke rings and
+    // its return knocks. Asserted as an alternation rather than as a set, so a
+    // voice that gave every strike the same shape — the mechanism gone, the
+    // constants still exported — fails here.
+    const cycle = decaysOf({ faction: Faction.Bathyarch });
+    assert.ok(cycle.length > 4, 'the Consortium wrote too few strikes to measure');
+    for (let i = 0; i < cycle.length; i++) {
+      const stroke = i % RECIPROCATING.STROKES === 0;
+      const shape = stroke ? ENVELOPE.BREATH : ENVELOPE.TICK;
+      const half = stroke ? 'stroke' : 'return';
+      assert.equal(cycle[i]!.tau, shape.decayS, `the Consortium's ${half} is on the wrong shape`);
+      assert.ok(
+        Math.abs(cycle[i]!.hold - shape.holdS) < 1e-9,
+        `the Consortium's ${half} is held for ${cycle[i]!.hold.toFixed(4)} s, not ${shape.holdS}`
+      );
+    }
+
     for (const [name, identity] of SOUNDING) {
-      if (name === Faction[Faction.Directorate]) continue;
+      if (name === Faction[Faction.Directorate] || name === Faction[Faction.Bathyarch]) continue;
       const theirs = decaysOf(identity);
       assert.ok(theirs.length > 2, `${name} wrote too few events to measure`);
       for (const { tau, hold } of theirs) {
