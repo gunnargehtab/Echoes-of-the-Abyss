@@ -117,10 +117,11 @@ anything it has not resolved.
   rather than on backlog supply: the 04:15 firing on 15 September was the first
   to find two of its own pull requests open, green and unmerged, and to stop at
   step 2 without selecting anything. It clones `main` at the start of every run and invokes
-  `/work-issue`, whose §5 now hands the work to `dev-loop` — so a firing picks
-  up the rounds and the critic **from the clone**, with no change to the Routine
-  at all, the moment this branch merges. Until then firings run the old
-  `work-issue`, because `main` does not carry these files yet.
+  `/work-issue`, whose §5 hands the work to `dev-loop` — so a firing picks up
+  the rounds and the critic **from the clone**, with no change to the Routine at
+  all. That took effect when these files merged on 13 September: the firing that
+  landed #738 ran five rounds with a fresh critic each, four of them `revise`,
+  and the one that landed #742 ran three.
 
   Its prompt is deliberately thin, and it says so itself — "the rules live in
   that file and not in this prompt ... if the two ever disagree, the file wins" —
