@@ -145,6 +145,12 @@ Sorrowgate is the place that counts it in seconds.
 1. **The ceiling.** SIG 20, per hull, for the duration. The simulation does not clamp your
    loudness; it notices it. A Light Scout at cruise is 12 and compliant. A Light Scout at flank
    is far above the ceiling ([systems-echo.md](systems-echo.md) §2) and is shoving.
+
+   **That last sentence is an open question and not a settled reading.** The simulation gives
+   this hull two SIG states and nothing between them, so on the build as it stands nothing the
+   flight does while moving reaches 20. §9's *What the lines stop short of, and why* records
+   both readings and what each would cost. Neither number is changed here, and the guidance
+   beats were authored to be true under either.
 2. **The court's array.** The gate mounts the transit line's civic hydrophone array — larger
    than anything any faction has built since, because the Rift lost things. By the arbitration
    protocol the court shares its readings with every admitted party, which is the only reason
@@ -645,11 +651,28 @@ room. The numbers are read aloud and left sitting, which is the court's characte
 > second afterwards. The court stops counting at a minute. The flight would be deaf in the
 > court's own water, and the record has heard that before.
 
-Each fails [culture.md](culture.md) §3 for the other four registers on the same test §6 sets:
-the Commune could not say "the court does not record it" without offering to discuss it, the
-Consortium would price the array rather than withdraw it, the Directorate would put the
-shoving in the passive and decline to say whose it was, and a Knight would apologise for the
-ceiling before stating it. None of the four could read a count and leave it sitting.
+Each fails [culture.md](culture.md) §3 for the other four registers, on the test §6 sets — take
+the line and ask which register could not have said it. Per line, because a test run once
+across four lines is not the test §6 describes:
+
+- **00:20** — *the court does not record it.* The Commune could not close a question that way;
+  the plateaus offer it back, in the collective first person, and treat every statement as an
+  opening position.
+- **01:00** — the two numbers entered and left sitting, with nothing asked of anybody. The
+  concern would attach a tolerance or a grade to a figure rather than simply enter it, and the
+  Order would ask leave before stating a number about somebody else's hulls.
+- **01:50** — six standing, twelve under way, *recorded* and not explained. This is the line
+  closest to another register, and the one that most needs the test: the Consortium is the
+  language of instruments and would say the first two sentences almost as they stand. What
+  refuses them is the third — the concern does not have a register in which a difference is
+  filed and then nothing follows from it. It would cost the difference, or grade it, or write
+  it down as an exposure. The court files it and stops.
+- **02:40** — the shoving, and whose it is. The Directorate would put it in the passive and
+  decline to say whose; a Knight would be courteous about the ceiling before stating it; and
+  the Commune has no imperative mood to withdraw an array with.
+
+None of the four could read a count aloud and leave it sitting, which is what §3 gives the
+court as its characteristic move and what all four lines are built on.
 
 **Six and twelve are the Light Scout's own figures** (§3), not a second set invented here, and
 twenty is §4's ceiling. A line that stated a number this simulation does not produce would be

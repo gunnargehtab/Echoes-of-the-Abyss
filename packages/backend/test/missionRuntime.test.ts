@@ -806,29 +806,47 @@ describe('the court, in the opening window', () => {
     );
   });
 
-  it('reads the simulation’s own three numbers aloud, and never a way past them', () => {
+  it('binds each number to the clause it is the number for', () => {
     // §12: six and twelve are the Light Scout's own figures and twenty is
     // §4's ceiling, so the court is stating facts about its own room.
     //
-    // **Derived from the literal rather than spelled here**, which is the
-    // whole point of the test. An earlier version asserted that the authored
-    // text contained the three words the authored text hard-codes — true by
-    // construction, and green after any change to the ceiling or the hull
-    // that made all four lines false. These read `silenceCeilingSig` and
-    // `UNIT_STATS`, so retuning either fails here until the court is
-    // re-authored to match.
+    // **Derived from the literal, and matched per clause.** Two weaker
+    // versions of this test were written first and both read green while
+    // saying nothing. The first asserted that the authored text contained the
+    // three words the authored text hard-codes — true by construction. The
+    // second read the three values out of `UNIT_STATS` and
+    // `silenceCeilingSig` but matched them against all four lines joined into
+    // one string, so authoring 01:50 backwards — "standing reads twelve, under
+    // way reads six" — left every gate green while the window's whole lesson
+    // was inverted. A number has to be matched against the clause that is
+    // about it, which is what this does.
     const scout = UNIT_STATS[UnitKind.LightScout];
     const spell = new Map([
       [6, 'six'],
       [12, 'twelve'],
       [20, 'twenty'],
     ]);
+    const word = (value: number) => {
+      const spelled = spell.get(value);
+      assert.ok(spelled !== undefined, `the court has no word for ${value} — the literal moved`);
+      return spelled;
+    };
     const said = courtSaid(passiveRun().lines);
-    for (const value of [scout.sigIdle, scout.sigCruise, PROLOGUE_SORROWGATE.silenceCeilingSig]) {
-      const word = spell.get(value);
-      assert.ok(word !== undefined, `the court has no word for ${value} — the literal moved`);
-      assert.match(said, new RegExp(`\\b${word}\\b`), `the court never reads ${value} aloud`);
-    }
+    // 01:50, both halves, each against its own state.
+    assert.match(
+      said,
+      new RegExp(`standing in this water reads ${word(scout.sigIdle)}`),
+      'the court no longer reads the idle figure against standing still'
+    );
+    assert.match(
+      said,
+      new RegExp(`under way reads ${word(scout.sigCruise)}`),
+      'the court no longer reads the cruise figure against being under way'
+    );
+    // 01:00 and 02:40, against the ceiling the ledger actually enforces.
+    const ceiling = word(PROLOGUE_SORROWGATE.silenceCeilingSig);
+    assert.match(said, new RegExp(`the ceiling at ${ceiling}`), 'the count is not the ceiling');
+    assert.match(said, new RegExp(`above ${ceiling} is shoving`), 'the breach is not the ceiling');
   });
 
   it('is true of the flight at both ends of the difference it describes', () => {
