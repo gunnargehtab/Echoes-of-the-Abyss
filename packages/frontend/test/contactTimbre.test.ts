@@ -677,6 +677,13 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
     // Over eight demotion phases, like the cancellation test below and for the
     // same reason: the train is 0.4167 s against a 0.2 s tick, so only some
     // phases leave the counter odd, and one would assert this on luck.
+    //
+    // `sawMidCycle` is the sibling's `sawCommitted` and exists for the same
+    // reason: today four of these phases leave the counter mid-cycle, but that
+    // is arithmetic nothing pins. At `rateHz: 2.5` the train would be an exact
+    // two ticks and every phase would land on a whole cycle — the reset could
+    // then be deleted with this test still green and still reading as a gate.
+    let sawMidCycle = false;
     for (let demoteTick = 4; demoteTick <= 11; demoteTick++) {
       const context = new HeadlessAudioContext();
       const destination = context.createGain();
@@ -693,8 +700,10 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
       // cancellation test is and for the same binary-arithmetic reason.
       const DOWN = 2;
       let reopenedAt = -1;
+      let demotedAt = -1;
       for (let tick = 0; tick < demoteTick + DOWN + 3; tick++) {
         const down = tick >= demoteTick && tick < demoteTick + DOWN;
+        if (tick === demoteTick) demotedAt = context.currentTime;
         if (tick === demoteTick + DOWN) reopenedAt = context.currentTime;
         voice.update(
           {
@@ -708,9 +717,13 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
         context.advance(ECHO_STEP_S);
       }
 
-      // The stroke's own level, read off this voice's opening strike rather
-      // than written down — the voice opens on the loaded stroke, which the
-      // crank test above holds.
+      // Read off this voice's *own* opening strike rather than written down, so
+      // what is held here is "reopens the way it opened". That the opening is
+      // the loaded stroke is a separate claim and is held separately — by the
+      // envelope test below, whose first Consortium strike must be on
+      // `ENVELOPE.BREATH`, and by the stroke-and-return test above. A voice
+      // that opened *and* reopened on the return would satisfy this assertion
+      // and fail both of those, which is the division of labour intended.
       const writes = oscGain.gain.writes;
       const opening = writes.find((w) => w.method === 'setValueAtTime')!;
       // Taken by position after the reopening's cancel, not by time: a
@@ -728,7 +741,26 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
           `${reopening.value.toFixed(4)} against the stroke's ${opening.value.toFixed(4)} — ` +
           'the cycle carried across a family it was not sounding'
       );
+
+      // Whether this phase could have caught anything: a whole number of cycles
+      // before the demotion leaves the counter where a reset would have put it,
+      // so only a phase that struck mid-cycle tests the reset at all. Counted
+      // the same way, by position before the demotion's own cancel.
+      const demoteCancel = writes.findIndex(
+        (w) => w.method === 'cancel' && Math.abs(w.at - demotedAt) < 1e-9
+      );
+      assert.ok(demoteCancel >= 0, `no family change at the demotion on tick ${demoteTick}`);
+      const struck = writes
+        .slice(0, demoteCancel)
+        .filter((w) => w.method === 'setValueAtTime' && w.value > THUMP_PEAK + 1e-9).length;
+      if (struck % RECIPROCATING.STROKES !== 0) sawMidCycle = true;
     }
+
+    assert.ok(
+      sawMidCycle,
+      'every demotion phase fell on a whole cycle, so the reset was never exercised and this ' +
+        'test proved nothing'
+    );
   });
 
   it('hears the swarm organise: clicks that close into unison, then scatter', () => {
