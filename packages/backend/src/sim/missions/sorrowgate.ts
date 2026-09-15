@@ -545,12 +545,19 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       kind: 'say',
       speaker: 'Arbiter Mosk Halloran',
       voice: 'court',
-      text: 'The array has the flight at six. The ceiling is twenty. Both numbers have been on the record since the hardpoints came off, and both are in front of whoever is flying.',
+      text: "The array has the flight at six. The ceiling is twenty. Both numbers went on the record when the hardpoints came off, and both are the court's to read and not the flight's to argue with.",
       // Reading the count: the number said aloud and left sitting, which is
-      // the court's characteristic move (docs/culture.md §3) and also how a
-      // meter gets taught. "In front of whoever is flying" points at the
-      // readout without naming it.
-      note: 'The count. Six against twenty, and both are on the player’s own instruments',
+      // the court's characteristic move (docs/culture.md §3).
+      //
+      // **It points at no instrument, and that is deliberate.** An earlier
+      // draft ended "both are in front of whoever is flying". In this mission
+      // they are not: `peakSig` maxes over the player's structures too, and
+      // the court's Cantor is authored inside the player's party block so the
+      // dome's HYD grant reaches the flight — so the headline meter reads 35
+      // here and never the flight's 6 (#623, which is needs-decision and is
+      // not settled by this change). The line would have been true of the
+      // simulation and false on the screen.
+      note: 'The count. Six against twenty, read aloud and left sitting',
     },
     {
       atTick: T(1, 50),

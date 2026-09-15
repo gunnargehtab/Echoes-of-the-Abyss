@@ -394,7 +394,7 @@ exactly the shape guidance needs, and it is already the voice this mission opens
 overlay would be a second thing teaching the same four systems, which
 [campaign.md](campaign.md) §10 and [ui-ux.md](ui-ux.md) §14 have both already refused.
 
-**The lines name no control, and this is forced twice over.** Halloran speaks in the third
+**The lines name no control, and this is forced three times over.** Halloran speaks in the third
 person and the perfect tense about things that have been done by named parties
 ([culture.md](culture.md) §3); "right-click the water" is not a sentence the register can
 produce, and a court that started issuing button prompts would stop being the court in the
@@ -404,6 +404,19 @@ that #722 spent an item on. So the beats say what is **true about the room** —
 hulls are, what the array reads, what the numbers are, what being heard costs — and the
 binding stays where bindings live, on the command bar and in the hint line under the
 selection ([ui-ux.md](ui-ux.md) §7).
+
+The third reason is the one that decided the wording of the 01:00 line, and it is worth
+recording because it is not obvious. **The court may not point at the meter, because in this
+mission the meter is not reading the flight.** #623 measured it here: `EchoSnapshot.peakSig`
+maxes over the player's structures as well as their units, and the court's Cantor sits inside
+the player's own party block so that the dome's HYD grant reaches the flight at all — so the
+headline number reads **35** from 00:30 to the transit and **18** after it, and never the
+flight's 6 at any point in the twenty minutes. A line saying "both numbers are in front of
+whoever is flying" would therefore have been false on the screen while being true in the
+simulation, which is the one mistake this register cannot survive. So 01:00 reads the count and
+points nowhere, and 01:50 states a fact about a hull — which is visible, per-hull, on the
+selection readout. #623 is `needs-decision` and stays that way; none of it is settled here, and
+nothing in this change depends on which way it goes.
 
 **Four lines, not more.** One per thing the window has to land: the flight is yours, here is the
 number, moving moves it, and here is the price. A fifth would be teaching a fifth system, which
@@ -608,8 +621,8 @@ room. The numbers are read aloud and left sitting, which is the court's characte
 
 **01:00 — the count**
 
-> The array has the flight at six. The ceiling is twenty. Both numbers have been on the record
-> since the hardpoints came off, and both are in front of whoever is flying.
+> The array has the flight at six. The ceiling is twenty. Both numbers went on the record when
+> the hardpoints came off, and both are the court's to read and not the flight's to argue with.
 
 **01:50 — what moving costs**
 
