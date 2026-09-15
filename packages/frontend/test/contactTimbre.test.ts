@@ -664,6 +664,73 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
     );
   });
 
+  it('reopens a Consortium contact on the loaded stroke after it falls and returns', () => {
+    // The third thing `strokePhase` does, after alternating and staying the
+    // voice's own: it resets with the train when the family changes. A contact
+    // flickering across the Tier-2/Tier-3 boundary is a mechanism change and
+    // back, and it is ordinary rather than exotic. Without the reset the phase
+    // survives the gap and the hull reopens on the *return* — the short half,
+    // 1.80 dB quieter — at the moment §3 wants a refreshed contact to be a
+    // warning in its own right. Nothing about the frame or the log disagrees,
+    // so the failure is silent.
+    //
+    // Over eight demotion phases, like the cancellation test below and for the
+    // same reason: the train is 0.4167 s against a 0.2 s tick, so only some
+    // phases leave the counter odd, and one would assert this on luck.
+    for (let demoteTick = 4; demoteTick <= 11; demoteTick++) {
+      const context = new HeadlessAudioContext();
+      const destination = context.createGain();
+      const voice = new ContactVoice(
+        context as unknown as AudioContext,
+        destination as unknown as AudioNode
+      );
+      const osc = context.nodes.find(
+        (n): n is StubOscillatorNode => n instanceof StubOscillatorNode
+      )!;
+      const oscGain = osc.outputs[0] as StubGainNode;
+
+      // Counted in ticks rather than accumulated in seconds, as the
+      // cancellation test is and for the same binary-arithmetic reason.
+      const DOWN = 2;
+      let reopenedAt = -1;
+      for (let tick = 0; tick < demoteTick + DOWN + 3; tick++) {
+        const down = tick >= demoteTick && tick < demoteTick + DOWN;
+        if (tick === demoteTick + DOWN) reopenedAt = context.currentTime;
+        voice.update(
+          {
+            tier: down ? ResolutionTier.Bearing : ResolutionTier.Classification,
+            biome: Biome.OpenWater,
+            freshness: 1,
+            faction: Faction.Bathyarch,
+          },
+          context.currentTime
+        );
+        context.advance(ECHO_STEP_S);
+      }
+
+      // The stroke's own level, read off this voice's opening strike rather
+      // than written down — the voice opens on the loaded stroke, which the
+      // crank test above holds.
+      const writes = oscGain.gain.writes;
+      const opening = writes.find((w) => w.method === 'setValueAtTime')!;
+      // Taken by position after the reopening's cancel, not by time: a
+      // cancelled write stays in the record, and the thump's own events were
+      // committed ahead of the reopening before it happened.
+      const cancelAt = writes.findIndex(
+        (w) => w.method === 'cancel' && Math.abs(w.at - reopenedAt) < 1e-9
+      );
+      assert.ok(cancelAt >= 0, `no family change at the reopening on tick ${demoteTick}`);
+      const reopening = writes.slice(cancelAt).find((w) => w.method === 'setValueAtTime')!;
+      assert.ok(reopening !== undefined, `nothing sounded after the reopening on ${demoteTick}`);
+      assert.ok(
+        Math.abs(reopening.value - opening.value) < 1e-9,
+        `demoting at tick ${demoteTick}: the contact reopens at ` +
+          `${reopening.value.toFixed(4)} against the stroke's ${opening.value.toFixed(4)} — ` +
+          'the cycle carried across a family it was not sounding'
+      );
+    }
+  });
+
   it('hears the swarm organise: clicks that close into unison, then scatter', () => {
     // §8's Directorate is "clicks that phase into unison as cohorts converge —
     // you hear them *organise*". That is a statement about *when clicks land*,
