@@ -115,7 +115,8 @@ Two things close that, decided on 15 September:
 - **A firing may edit its own rules, except the ones that bound it** —
   `work-issue` §2's cap, §3's exclusions and claim check, §7's stopping cases,
   and `loop-critic`'s separation from the author. Those it writes an issue about
-  and stops, per §5.
+  and stops, per §5. The critic's check 4 fails a round that edits one, which is
+  the only enforcement there is: `npm run gates` does not read `.claude/`.
 
 So the loop improves itself the way it improves anything else: an issue, a claim,
 rounds, a critic, a reviewed pull request. The one thing it may not do is author

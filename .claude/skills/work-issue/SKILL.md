@@ -511,6 +511,9 @@ between an unattended firing and work nobody meant it to have.
 The boundary is about **authorship, not difficulty**. A one-word edit to §3's
 exclusion list is on the far side of it; a rewrite of §8's register is not.
 
+`loop-critic`'s check 4 holds this, and **nothing else does** — no gate reads
+`.claude/`, so a round that quietly widens §3 passes every one of them.
+
 ## 6. Run every gate locally before you push
 
 ```bash
