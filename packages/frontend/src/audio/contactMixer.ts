@@ -9,10 +9,13 @@
  *    information rather than by asking the voice to ignore it — a Tier-1 entry
  *    has no bearing field at all, so there is nothing for a later change to
  *    accidentally start using.
- * 2. **Voices are tick-aligned** (§12). `update` is driven by the 5 Hz Echo
- *    snapshot, never by the render loop. Contacts arrive on the tick, so a
- *    mix that moved between ticks would be interpolating knowledge the server
- *    did not send.
+ * 2. **Contact state is tick-aligned** (§12). `update` is driven by the 5 Hz
+ *    Echo snapshot, never by the render loop. Contacts arrive on the tick, so
+ *    a mix that moved a contact between ticks would be interpolating knowledge
+ *    the server did not send. A family's own event train is not state and does
+ *    not ride this clock — `ContactVoice` places it ahead on the audio clock,
+ *    because holding a mechanism to the tick protects nothing here and leaves
+ *    §8.1's faster families unrenderable (§12's scaffold status, #731).
  *
  * Deliberately free of Web Audio: the voice is injected. What has to be right
  * here is *which contact gets a voice and what it is told*, and that is pure
@@ -149,7 +152,8 @@ export class ContactMixer {
     // renderer, which is the only place that expiry is decided. The voice ends
     // on the Echo tick that follows, which is as precise as this layer is
     // permitted to be about a fact the server sent (§12). A voice's own
-    // mechanism is finer than the tick and may be; when it stops is not.
+    // mechanism is finer than the tick and may be; when it stops is not, and
+    // `stop` takes the mechanism's committed events down with it.
     const present = new Set(frame.entries.map((entry) => entry.id));
     for (const id of [...this.live.keys()]) {
       if (present.has(id)) continue;

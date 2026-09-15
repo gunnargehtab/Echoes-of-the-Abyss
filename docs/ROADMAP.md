@@ -267,7 +267,7 @@ sonification by tier, and the player's own loudness in the mix.
 
 | Work | Issue |
 | --- | --- |
-| Audio engine — bus graph, 24-voice budget, tick-aligned scheduling | [#101](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/101) |
+| Audio engine — bus graph, 24-voice budget, tick-aligned contact state | [#101](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/101) |
 | Contact sonification — tier timbre, panning as information, biome filtering | [#102](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/102) |
 | Own loudness — self bus, the exposure cue, active sonar, silent running | [#103](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/103) |
 

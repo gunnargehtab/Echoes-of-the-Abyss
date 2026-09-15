@@ -41,8 +41,8 @@ const FALLOFF_REFERENCE_M = 900;
  * The oscillator's level, by what the tier is allowed to say, and how far a
  * drive-signature pulse lifts it.
  *
- * Named because `emit` has to anchor to the level rather than read one back —
- * see the comment there for what reading it back cost.
+ * Named because `strike` has to anchor to the level rather than read one back
+ * — see the comment there for what reading it back cost.
  */
 /**
  * The unclassified thump's partials — §11's speaker profile (#663).
@@ -106,25 +106,34 @@ const DRIVE_LEVEL = {
  * at the instant the caller happens to ask quantises every mechanism onto that
  * grid, and §8.1's fastest family does not survive it. The Directorate's 9 Hz
  * has a period of 0.092-0.131 s, every value of it shorter than one tick, so
- * every click landed on the next tick and the swarm rendered as an exact
- * 0.2000 s metronome: the beat §8 reserves to the Consortium, at the same
- * interval as the ordnance screw at the short end of its own wander, which
- * §8.1 forbids by name and in that direction.
+ * every click landed on the next tick and the swarm rendered as one click per
+ * snapshot. On a caller ticking at an exact 5 Hz that is a perfect 0.2000 s
+ * metronome — the beat §8 reserves to the Consortium, at the same interval as
+ * the ordnance screw at the short end of its own wander, which §8.1 forbids by
+ * name and in that direction. A live client's snapshots arrive on the network
+ * rather than on a timer, so there it was one click per snapshot at whatever
+ * interval the snapshots came in at — not a metronome, and not a mechanism
+ * either: a rate the wire chose rather than one §8 did.
  *
  * So a family's events are placed on the audio clock ahead of the caller
  * instead, which is what #731 asks for in as many words — "clicks inside a
  * tick would need their own scheduling, not the tick's amplitude bump". What
  * that buys past the clicks is that **what a mechanism sounds like stops
- * depending on how often it is asked**: the same events at the same instants
- * whether the caller runs at 5 Hz or at 60, which is what makes §8.1's
- * separation a property of the mix rather than of its driver.
+ * depending on how often it is asked**: given the same contact state, the same
+ * events at the same instants whether the caller runs at 5 Hz or at 60, which
+ * is what makes §8.1's separation a property of the mix rather than of its
+ * driver. "Given the same state" is not a hedge — §3's decay stretches the
+ * period, and freshness is delivered by the tick, so a caller that sampled it
+ * more often would be reading a curve nobody sent.
  *
  * None of it abandons §12's tick alignment. What arrives on the tick is what
- * the server sent — tier, bearing, range, freshness — and an event train
- * carries none of it: the same rate at the same strength whatever the contact
- * is doing, so it tells the player nothing the tick did not. §12's own
- * preamble asks for "sample-accurate scheduling" on this bus, which is the
- * thing being used here.
+ * the server sent — tier, bearing, range, freshness — and an event train adds
+ * nothing to it: its rate and its strength are the family's own row and the
+ * clock. The one term of the train that *is* server state is §3's decay
+ * stretch, which comes off `inputs.freshness` and therefore changes on the
+ * tick and nowhere else, so the train still tells the player nothing the tick
+ * had not already told them. §12's own preamble asks for "sample-accurate
+ * scheduling" on this bus, which is the thing being used here.
  *
  * Longer than one tick so the train never runs dry between updates, and no
  * longer than it has to be, because everything inside the horizon is committed
@@ -570,6 +579,13 @@ export class ContactVoice {
   stop(now: number): void {
     if (this.stopped) return;
     this.stopped = true;
+    // The mechanism's committed events go with it. A voice is scheduled up to
+    // `EVENT_HORIZON_S` ahead, so a contact that stops — expired, or stolen
+    // for a higher tier (§12's stealing policy) — otherwise leaves a horizon
+    // of its family's clicks standing on the graph, audible *under* the fade
+    // below rather than silenced by it. Measured at three swarm clicks, the
+    // last 96 ms past the stop, before this line existed.
+    this.oscGain.gain.cancelScheduledValues(now);
     this.out.gain.cancelScheduledValues(now);
     this.out.gain.setTargetAtTime(0, now, 0.12);
     const end = now + 0.6;

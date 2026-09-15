@@ -397,11 +397,16 @@ position nobody resolved. A family's **event train** is a different thing and is
 the audio clock ahead of the caller, because holding it to the tick does not protect
 anything and costs §8.1 its fastest families outright: the Directorate's 9 Hz has a period
 band of 0.092-0.131 s, every value of it shorter than one tick, so quantising it rendered
-the swarm as an exact 0.2000 s metronome — the beat §8 reserves to the Consortium, at the
-same interval as the ordnance screw at the short end of its own wander, which §8.1 forbids
-by name and in that direction. An event train tells the player nothing the tick did not:
-the same rate at the same strength whatever the contact is doing, a function of the clock
-and of the family's own row. The distinction is the one this table's reason column was
+the swarm as one click per snapshot — on a caller ticking at an exact 5 Hz, a perfect
+0.2000 s metronome, which is the beat §8 reserves to the Consortium, at the same interval
+as the ordnance screw at the short end of its own wander, which §8.1 forbids by name and in
+that direction. A live client's snapshots arrive on the network rather than on a timer, so
+what it rendered there was one click per snapshot at whatever interval the snapshots came
+in at — not a metronome, and not a mechanism either: a rate the wire chose rather than one
+§8 did. An event train tells the player nothing the tick
+did not: its rate and its strength are the clock and the family's own row, and the one term
+of it that is server state — §3's decay, which lengthens a fading contact's period — is
+read off the freshness the tick delivered and changes only when that does. The distinction is the one this table's reason column was
 always making; it is written out here because the row's short form read as a ban on
 sub-tick scheduling of any kind, and three files' comments had taken it that way.
 
