@@ -38,10 +38,10 @@ export interface ContactTimbre {
    * The Consortium is the one family with structure *above* this number rather
    * than below it. §8's "reciprocating" is a stroke and a return, so its cycle
    * is `RECIPROCATING.STROKES` events long — but an event is still one strike,
-   * and the rate is still the rate strikes land at. That is not a convention
-   * chosen to keep this docblock true: §8.1 admits no uneven split of a
-   * Consortium cycle (contactVoice.ts, `RECIPROCATING`), so the strikes are
-   * evenly spaced, and an evenly spaced cycle *is* its own strike rate.
+   * and the rate is still the rate strikes land at. That follows from the
+   * strikes being evenly spaced, which `RECIPROCATING` argues for rather than
+   * derives: an evenly spaced cycle *is* its own strike rate, which is why
+   * this number did not move when the mechanism was built.
    */
   rateHz: number;
   /**
@@ -61,8 +61,8 @@ export const FACTION_TIMBRE: Record<Faction, ContactTimbre> = {
   // Machinery under load: steel, reciprocating, rhythmic. Audible from absurd
   // range and completely unbothered about it. The rate is the rate strikes
   // land at; the stroke and the return that make one cycle are two of them
-  // (contactVoice.ts, `RECIPROCATING`), which is why this number did not move
-  // when the mechanism was built and why §8.1's band did not either.
+  // (contactVoice.ts, `RECIPROCATING`), evenly spaced, which is why neither
+  // this number nor §8.1's band moved when the mechanism was built.
   [Faction.Bathyarch]: {
     mechanism: 'reciprocating',
     baseHz: 68,

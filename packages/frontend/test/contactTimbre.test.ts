@@ -531,12 +531,12 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
     // EQ-curve distinction §8 opens by ruling out.
     //
     // The cycle is carried by *what each strike is* rather than by when it
-    // lands, and that is forced rather than chosen. §8 makes this the only
-    // faction with a beat, and §8.1 keeps every rendered band 1.2x clear of the
-    // next; the ordnance screw runs out to 0.306 s, so both halves of a cycle
-    // would have to exceed 0.367 s and there is not 0.735 s in one. Asserted
-    // rather than left in a comment, because an uneven split is exactly what a
-    // later round reaching for "more mechanical" would try.
+    // lands. §8.1 admits two uneven placements as well, and `RECIPROCATING`
+    // argues the choice; what is asserted here is the consequence, which is
+    // that the strike train did not move. An uneven split is exactly what a
+    // later round reaching for "more mechanical" would try, and it is a design
+    // call rather than a refinement — it changes what §8's beat is measured
+    // over, so it fails the beat test above and should.
     const beat = drive({ faction: Faction.Bathyarch }, ResolutionTier.Classification, ECHO_STEP_S);
 
     // Each strike with the level it decays back to — the voice's own base,
@@ -585,9 +585,12 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
     }
 
     // The cycle is a periodicity of its own, though — the alternation repeats
-    // every `STROKES` strikes and a player hears that, so §8.1 applies to it
-    // and no table test covers it: `periodBand` reads `rateHz`, which is the
-    // strike. Held against every other family's band, both directions.
+    // every `STROKES` strikes and a player hears that, and no table test covers
+    // it: `periodBand` reads `rateHz`, which is the strike. §8.1 as written
+    // describes "its rate, widened by its own wander" and says nothing about a
+    // cycle above it, so holding one to the same 1.2x is the mix being
+    // *stricter* than the doc rather than the doc being extended. Kept that way
+    // deliberately: a firing does not widen a property in the design bible.
     const cycleS = (RECIPROCATING.STROKES * 1) / FACTION_TIMBRE[Faction.Bathyarch].rateHz;
     for (const timbre of ALL_TIMBRES) {
       if (timbre === FACTION_TIMBRE[Faction.Bathyarch]) continue;
@@ -599,6 +602,64 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
           `${timbre.mechanism} (${band[0].toFixed(4)}-${band[1].toFixed(4)} s)`
       );
     }
+  });
+
+  it('gives every Consortium contact its own crank, not the water’s', () => {
+    // `strokePhase` is counted along the voice's own train rather than read off
+    // the clock, and this is the only thing that says so. A phase derived from
+    // absolute time — `Math.round(at * rateHz) % STROKES`, which is the shape
+    // `swarmSpread` two functions away would suggest to a refactor — passes
+    // every other test in this file and puts every Consortium hull in the water
+    // on the same stroke. That is the lockstep #742 left open on the swarm, and
+    // a crank is the one place it plainly does not belong: two machines are not
+    // built at the same instant.
+    //
+    // Four offsets across one cycle rather than one, because any nonconstant
+    // function of absolute time agrees with the counter at *some* offset, and a
+    // single one would assert this on luck.
+    const strikeS = 1 / FACTION_TIMBRE[Faction.Bathyarch].rateHz;
+    const context = new HeadlessAudioContext();
+    const destination = context.createGain();
+    const inputs = {
+      tier: ResolutionTier.Classification,
+      biome: Biome.OpenWater,
+      freshness: 1,
+      faction: Faction.Bathyarch,
+    };
+
+    const voices: { voice: ContactVoice; gain: StubGainNode }[] = [];
+    for (let i = 0; i < 4; i++) {
+      // Built one at a time as the match would build them, each at its own
+      // instant, and found through the graph rather than by creation order.
+      const built = context.nodes.length;
+      const voice = new ContactVoice(
+        context as unknown as AudioContext,
+        destination as unknown as AudioNode
+      );
+      const osc = context.nodes
+        .slice(built)
+        .find((n): n is StubOscillatorNode => n instanceof StubOscillatorNode)!;
+      voices.push({ voice, gain: osc.outputs[0] as StubGainNode });
+      voice.update(inputs, context.currentTime);
+      for (const live of voices) live.voice.update(inputs, context.currentTime);
+      context.advance((strikeS * RECIPROCATING.STROKES) / 4);
+    }
+
+    const opening = voices.map(
+      ({ gain }) => gain.gain.writes.filter((w) => w.method === 'setValueAtTime')[0]!
+    );
+    for (let i = 0; i < opening.length; i++) {
+      assert.ok(
+        Math.abs(opening[i]!.value - opening[0]!.value) < 1e-9,
+        `the voice built at ${opening[i]!.at.toFixed(4)} s opens at ` +
+          `${opening[i]!.value.toFixed(4)} and the first at ${opening[0]!.value.toFixed(4)}: ` +
+          'the cycle is being read off the clock, so every crank in the water is the same one'
+      );
+    }
+    assert.ok(
+      new Set(opening.map((w) => w.at.toFixed(6))).size === opening.length,
+      'fixture expects four voices opening at four different instants'
+    );
   });
 
   it('hears the swarm organise: clicks that close into unison, then scatter', () => {

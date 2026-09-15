@@ -189,25 +189,45 @@ const SWARM_SCATTER_FLOOR = 0.45;
  * the same event shape every other family has at a different rate: the
  * EQ-curve distinction §8 opens by ruling out.
  *
- * **The two strikes are exactly evenly spaced, and that is forced rather than
- * chosen.** §8 makes the Consortium "the only faction with a *beat*", and
- * §8.1 requires every family's rendered interval band to clear the next
- * family's by 1.2x. The ordnance screw runs out to 0.306 s, so both halves of
- * a cycle would have to be at least 0.367 s — 0.735 s between them, which is
- * more than the cycle has. An uneven split therefore lands inside the screw's
- * band, and an even one is the only split §8.1 admits. So the cycle is carried
- * by *what the strikes are*, not by when they land: no instant in this train
- * moves, and §8.1's separation is untouched by construction rather than
- * re-argued.
+ * **The two strikes are exactly evenly spaced, and that is a choice with
+ * reasons rather than the only placement §8.1 admits.** Two uneven ones
+ * survive a full check against every other family's band, and both were
+ * worked: a 0.3675/0.4658 s lope, and a 0.1567-0.1615 s knock followed by a
+ * 0.672 s wait, threaded through the gap between the swarm and the screw.
+ * Even spacing was taken over both, for reasons that are not that the others
+ * are forbidden:
  *
- * What tells the two apart is the envelope first and the level second. The
- * bump is 1.6x the voice's own level, so halving a return's lift is under 2 dB
- * and would be inaudible on the reporting device on its own; a 22 ms knock
- * against a 180 ms ring is not. `RETURN_LIFT` is **the one number here with no
- * doc-side argument** — a half, because a return is the unloaded half of the
- * cycle, and §8 does not say by how much. It stays clear of the unclassified
- * thump's own peak, because a Tier-3 family that dipped under it on alternate
- * strikes would be handing the tier back every other event.
+ * - §8 makes this "the only faction with a *beat*", and this repository
+ *   already reads that as an unwavering interval between strikes:
+ *   `contactTimbre.test.ts` holds the Consortium's period spread under 1e-6,
+ *   and did so before this mechanism existed. An uneven split fails that test,
+ *   so taking one means re-deciding what §8's beat is measured over. That is a
+ *   design call and not an unattended run's to make.
+ * - The knock window is three per cent wide. It exists only because the
+ *   screw's shortest interval is 1.48x the swarm's longest, against the 1.44
+ *   two consecutive 1.2x clearances need — and both of those are TUNABLE
+ *   jitters, so a later tuning of either closes it silently.
+ * - The lope is 1.27:1, which is a limp rather than machinery under load.
+ *
+ * What even spacing buys is that no instant in this train moves at all. The
+ * cycle is carried by *what the strikes are*, so §8.1's separation over
+ * rendered intervals is untouched by construction rather than re-argued.
+ *
+ * What tells the two strikes apart is the shape first and the level a distant
+ * second, and the arithmetic is worth stating because it is slighter than it
+ * looks. The return's decay is an eighth of the stroke's — 22 ms against
+ * 180 ms — and its hold a fifth. Its *peak* is 1.80 dB under the stroke's, but
+ * it fires into the stroke's own tail, still at 0.533, so it steps only
+ * 1.72 dB above the level the voice is at, where the stroke steps 4.08 dB from
+ * a settled base. **Whether that reads as a knock on a phone speaker is not
+ * settled here**: #731's acceptance criterion is a listening test on the
+ * reporting device, and nothing in this file stands in for it.
+ *
+ * `RETURN_LIFT` is **the one number here with no doc-side argument** — a half,
+ * because a return is the unloaded half of the cycle, and §8 does not say by
+ * how much. It stays clear of the unclassified thump's own peak, because a
+ * Tier-3 family that dipped under it on alternate strikes would be handing the
+ * tier back every other event.
  */
 export const RECIPROCATING = { STROKES: 2, RETURN_LIFT: 0.5 } as const;
 
@@ -224,9 +244,10 @@ export const RECIPROCATING = { STROKES: 2, RETURN_LIFT: 0.5 } as const;
  * That ratio is the whole difference between a click train and a texture, and
  * it is what `contactTimbre.test.ts` holds rather than the constant.
  *
- * The breath is the other four families' and is unchanged. §8's drive
- * signature there is "the same thing breathing", and a breath that was over in
- * 22 ms would be a tick by another name.
+ * The breath is the other three striking families', plus the Consortium's own
+ * stroke, and is unchanged. §8's drive signature there is "the same thing
+ * breathing", and a breath that was over in 22 ms would be a tick by another
+ * name.
  *
  * The one family that uses both is the Consortium, and it uses them to say
  * which half of its cycle a strike is: the loaded stroke rings and the return
