@@ -197,6 +197,11 @@ When it is `main`'s failure:
 
 Everything else is this PR's to root-cause, and §1 is where that starts.
 
+Every comment in this file — the stand-down, a reply to a reviewer, a status
+refresh — is under 80 words and in short sentences, per `CLAUDE.md`'s "Write
+short on GitHub". Name the check, the commit, the fix. A reviewer reading a
+thread is mid-task; give them the fact and let them get back to it.
+
 ## Related
 
 - `.claude/skills/work-issue/SKILL.md` — the loop that opens the PR; §6 for

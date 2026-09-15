@@ -526,6 +526,13 @@ referencing `Fixes #<n>`. Not a draft. **Label it `routine`** — that label is 
 step 2 counts the loop's own open pull requests, and one you forget to label is
 one the next firing cannot see when it budgets.
 
+**Keep the body under 200 words**, and every comment this skill asks for under
+80 — the claim, the stand-down, the stopping comment, the run log entry. Short
+sentences, plain words, facts over narrative. `CLAUDE.md`'s "Write short on
+GitHub" is the rule; this loop writes most of the repository's GitHub text, so
+it is the loop that most needs it. A stopping comment that states two readings
+and their costs still fits: state them, do not narrate them.
+
 ### The screenshot, when the change is visual
 
 `docs/graphics-standards.md`'s review checklist asks for a "Screenshot in the PR,

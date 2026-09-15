@@ -273,6 +273,15 @@ exactly the thing most likely to break them by accident.
   whole game is hidden information; a client holding unresolved world state is a
   maphack regardless of what it draws.
 
+## Evidence is for the critic, not for the PR body
+
+The evidence a round captures is long on purpose — the critic reads all of it.
+What reaches GitHub is the conclusion. Do not paste a round's transcript, its
+gate output, or its verdict history into a PR body or a comment; say what the
+change does and what proves it, in the budgets `CLAUDE.md`'s "Write short on
+GitHub" sets. Five rounds and one round should produce the same length of PR
+body, because the reader cares about the diff rather than the route to it.
+
 ## Working files
 
 Scratch for a loop — captured screenshots, intermediate harness output, the

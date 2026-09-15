@@ -1,6 +1,12 @@
+<!--
+Keep this body under 200 words. Short sentences, plain words, facts over narrative.
+Link to the doc, test or issue instead of quoting it. See CLAUDE.md, "Write short on
+GitHub".
+-->
+
 ## Summary
 
-<!-- What does this PR change, and why? -->
+<!-- What does this PR change, and why? Two or three sentences. -->
 
 ## Related issue
 
@@ -24,4 +30,4 @@
 
 ## Additional context
 
-<!-- Screenshots, design decisions, follow-up work, etc. -->
+<!-- Screenshots, design decisions, follow-up work. Only what a reviewer needs. -->

@@ -18,6 +18,10 @@ short contract every change is reviewed against.
 4. **Visual changes clear the gates** in
    [docs/graphics-standards.md](docs/graphics-standards.md), including a screenshot in
    the PR.
+5. **Write short on GitHub.** Clear, simple, short sentences in every issue, PR, review
+   and comment. A PR body under 200 words, an issue under 150, a comment under 80. The
+   rule and what it does not cover are in
+   [CLAUDE.md](CLAUDE.md#write-short-on-github).
 
 ## Running it locally
 
@@ -54,7 +58,7 @@ a Tuesday.
 - **Merge commits**, one per pull request, so `main`'s first-parent history is one entry
   per PR and each is revertable on its own with `git revert -m 1`. Read that history with
   `git log --first-parent`; the branch's own commits stay underneath it, and the PR body
-  is where the reasoning lives.
+  is where the reasoning lives — in a sentence or two, per ground rule 5.
 
   This line read *squash-merge* until it was measured. That was true of the first
   eighteen pull requests and has not been true since 26 August 2026: every one of the
@@ -89,6 +93,7 @@ Until then, `main` is the release, and the way to get a change to people is to m
 
 - One concern per PR, referencing the issue it closes (`Fixes #30`).
 - Fill in the template in [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md).
+- Keep the body under 200 words — ground rule 5. Say what changed and why, then stop.
 - Run the CI gates locally first — the full sequence is cheap, and it is one command:
 
   ```bash
