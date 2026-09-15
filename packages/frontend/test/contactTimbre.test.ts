@@ -608,13 +608,16 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
 
   it('gives every Consortium contact its own crank, not the water’s', () => {
     // `strokePhase` is counted along the voice's own train rather than read off
-    // the clock, and this is the only thing that says so. A phase derived from
-    // absolute time — `Math.round(at * rateHz) % STROKES`, which is the shape
-    // `swarmSpread` two functions away would suggest to a refactor — passes
-    // every other test in this file and puts every Consortium hull in the water
-    // on the same stroke. That is the lockstep #742 left open on the swarm, and
-    // a crank is the one place it plainly does not belong: two machines are not
-    // built at the same instant.
+    // the clock, and this is the only test that says the phase is *per
+    // contact*. A phase derived from absolute time — `Math.round(at * rateHz) %
+    // STROKES`, which is the shape `swarmSpread` two functions away would
+    // suggest to a refactor — puts every Consortium hull in the water on the
+    // same stroke, and only this test asks four voices about it. (The reopen
+    // test below catches that mutation too, for its own reason: a reopening is
+    // not at a whole number of strikes. Two tests, two properties.) The
+    // lockstep is what #742 left open on the swarm, and a crank is the one
+    // place it plainly does not belong: two machines are not built at the same
+    // instant.
     //
     // Four offsets across one cycle rather than one, because any nonconstant
     // function of absolute time agrees with the counter at *some* offset, and a
@@ -679,10 +682,14 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
     // phases leave the counter odd, and one would assert this on luck.
     //
     // `sawMidCycle` is the sibling's `sawCommitted` and exists for the same
-    // reason: today four of these phases leave the counter mid-cycle, but that
-    // is arithmetic nothing pins. At `rateHz: 2.5` the train would be an exact
-    // two ticks and every phase would land on a whole cycle — the reset could
-    // then be deleted with this test still green and still reading as a gate.
+    // reason: today four of these phases leave the counter mid-cycle (ticks 4,
+    // 5, 8 and 9), but that is arithmetic nothing pins. Which phases do is a
+    // joint function of the rate, the driver's step and `EVENT_HORIZON_S`, and
+    // not of any one of them — at 2.5 Hz, where the train divides the tick
+    // exactly, the counts do not move at all. The case that does empty it is
+    // the step: measured against this class, a caller at 0.05 s or 0.04 s
+    // leaves none of the eight mid-cycle, and there the reset could be deleted
+    // with the rest of this test green and still reading as a gate.
     let sawMidCycle = false;
     for (let demoteTick = 4; demoteTick <= 11; demoteTick++) {
       const context = new HeadlessAudioContext();
