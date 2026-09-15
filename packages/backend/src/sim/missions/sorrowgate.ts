@@ -582,7 +582,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       kind: 'say',
       speaker: 'Arbiter Mosk Halloran',
       voice: 'court',
-      text: "The court does not enforce the ceiling. The array does. A hull above twenty is shoving, and for every second it shoves the court's readings are withdrawn from all four hulls for a second afterwards. The court stops counting at a minute. The flight would be deaf in the court's own water, and the record has heard that before.",
+      text: "The court does not enforce the ceiling. The array does. A hull of the flight above twenty is shoving, and for every second it shoves the court's readings are withdrawn from all four hulls for a second afterwards. The court stops counting at a minute. The flight would be deaf in the court's own water, and the record has heard that before.",
       // §4's clause 3 stated as one consequence: debt accrues a second per
       // second over the ceiling, the array is withdrawn from the whole
       // flight rather than the offending hull, and it repays one for one.

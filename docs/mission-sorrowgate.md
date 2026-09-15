@@ -655,17 +655,22 @@ room. The numbers are read aloud and left sitting, which is the court's characte
 
 **02:40 — what the ceiling costs**
 
-> The court does not enforce the ceiling. The array does. A hull above twenty is shoving, and
+> The court does not enforce the ceiling. The array does. A hull of the flight above twenty is shoving, and
 > for every second it shoves the court's readings are withdrawn from all four hulls for a
 > second afterwards. The court stops counting at a minute. The flight would be deaf in the
 > court's own water, and the record has heard that before.
 
-[culture.md](culture.md) §6's test is *take any line and ask which faction could not have said
-it*, and one register that could not is what passes it. So each line below is given the
-refusals that are actually informative about it rather than a full set of four, and the
-section closes with the one refusal all four share. What this section does **not** claim is
-that every line is unsayable by all four others in some equally interesting way; the bar is
-§6's, and each line clears it:
+[culture.md](culture.md) §3 does not define this register by one refusal but by **four, one per
+faction**: the court states a cost without pricing it, which the Consortium cannot do; it
+closes a question, which the Commune cannot do; it claims no humility before anything, which
+the Directorate cannot do; and it is entirely without courtesy, which the Knights cannot be.
+§3 is explicit that §6's test returns all four for this voice, "which is how the voice was
+built rather than something it happens to pass" — so a line of Halloran's that only cleared
+§6's bar of *one* register would not be in register, it would merely be unlike one faction.
+
+Every line below inherits all four, which is what makes it the court's. What each bullet adds
+is the refusal that bites **hardest** on that particular line, and for 01:50 that is the whole
+of why it survives:
 
 - **00:20** — an admission stated, and a thing the court declines to record. The Commune could
   not close a question that way; the plateaus offer it back, in the collective first person, and

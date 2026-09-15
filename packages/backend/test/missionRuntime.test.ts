@@ -34,6 +34,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import {
   DRIFT,
@@ -833,56 +834,73 @@ describe('the court, in the opening window', () => {
       return line.text;
     };
 
-    // **Every numeral each line speaks, not only the ones looked for.** The
-    // assertions below match the clauses that must be present; on their own
-    // they say nothing about a figure the court speaks that comes from
-    // nowhere. Authoring "The array has the flight at nine" into 01:00, or
-    // "withdrawn from all four hulls for a minute afterwards" into 02:40 —
-    // which contradicts §4 clause 3's one-for-one repayment — passes every
-    // clause match and is caught only here. So each line's numerals are
-    // extracted and held as a multiset against one built from the constants:
-    // an unbound figure fails as an extra, a dropped one as a miss.
+    // **Nothing numeric is left over.** The clause matches below say the
+    // figures that must be there; on their own they say nothing about a figure
+    // the court speaks that comes from nowhere. Round 5 held that with a
+    // whitelist of number-words, and a whitelist is open by construction: "for
+    // a second **and a half** afterwards" and "a hull descending reads
+    // **fifteen**" both went straight through it.
     //
-    // "Twice", in 01:50's last sentence, is deliberately not in the
-    // vocabulary: it counts the court's explanations, not anything the
-    // simulation produces.
-    const FIGURES =
-      /\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|sixty|hundred|minute|minutes|second|seconds|\d+)\b/gi;
-    const figuresIn = (text: string) =>
-      (text.match(FIGURES) ?? []).map((figure) => figure.toLowerCase()).sort();
-    const minute = word(PROLOGUE_SORROWGATE.debtCapS);
-    assert.deepEqual(
-      figuresIn(at(20)),
-      // The flight is numbered from one, and runs to the roster's size.
-      ['one', word(flight)].map((figure) => figure.toLowerCase()).sort(),
-      '00:20 speaks a figure that is not the flight it was given'
-    );
-    assert.deepEqual(
-      figuresIn(at(60)),
-      [word(scout.sigIdle), word(PROLOGUE_SORROWGATE.silenceCeilingSig)].sort(),
-      '01:00 speaks a figure bound to no constant'
-    );
-    assert.deepEqual(
-      figuresIn(at(110)),
-      [word(scout.sigIdle), word(scout.sigCruise)].sort(),
-      '01:50 speaks a figure bound to no constant'
-    );
-    assert.deepEqual(
-      figuresIn(at(160)),
-      // Two seconds, and they are the ledger's rate: `applySilenceLedger`
-      // accrues +TICK_DT_S over the ceiling and repays -TICK_DT_S under it,
-      // so one second earned and one second repaid is what §4 clause 3 says
-      // and what the line reads aloud. Either one becoming "a minute" fails
-      // here as a multiset that no longer matches.
+    // So the check is inverted and closed. Every clause of every line that
+    // carries a numeral is accounted for below — struck out of the text, each
+    // one bound to the constant it comes from — and whatever survives is then
+    // held against a *full* lexicon plus digits. A figure in any form the
+    // author did not account for fails, whether or not anybody thought of that
+    // form when writing this.
+    const NUMERALS =
+      /\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|half|quarter|third|once|twice|thrice|dozen|pair|first|fourth|fifth|sixth|seventh|eighth|ninth|tenth|second|seconds|minute|minutes|hour|hours|\d+)\b/gi;
+    const accounted: ReadonlyArray<readonly [number, readonly string[]]> = [
+      // 00:20 — the flight, numbered from one to the roster's size.
+      [20, [`Escort One through ${word(flight)}`]],
+      // 01:00 — the idle figure and the ceiling, each entered into the record.
       [
-        word(PROLOGUE_SORROWGATE.silenceCeilingSig),
-        'second',
-        word(flight).toLowerCase(),
-        'second',
-        minute.replace('a ', ''),
-      ].sort(),
-      '02:40 speaks a figure bound to no constant, or breaks the one-for-one repayment'
-    );
+        60,
+        [
+          `entered at ${word(scout.sigIdle)} when`,
+          `the ceiling at ${word(PROLOGUE_SORROWGATE.silenceCeilingSig)}`,
+        ],
+      ],
+      // 01:50 — the two states, and one clause carrying no simulation figure:
+      // "twice" counts the court's own explanations, and is struck here rather
+      // than quietly omitted from the lexicon.
+      [
+        110,
+        [
+          `standing in this water reads ${word(scout.sigIdle)}`,
+          `under way reads ${word(scout.sigCruise)}`,
+          'has never yet had to explain it twice',
+        ],
+      ],
+      // 02:40 — the ceiling, the ledger's one-for-one rate (+/-TICK_DT_S in
+      // `applySilenceLedger`), the whole flight rather than the offending hull,
+      // and the cap.
+      [
+        160,
+        [
+          `above ${word(PROLOGUE_SORROWGATE.silenceCeilingSig)} is shoving`,
+          'for every second it shoves',
+          `withdrawn from all ${word(flight).toLowerCase()} hulls`,
+          'for a second afterwards',
+          `stops counting at ${word(PROLOGUE_SORROWGATE.debtCapS)}`,
+        ],
+      ],
+    ];
+    for (const [second, clauses] of accounted) {
+      let remainder = at(second);
+      for (const clause of clauses) {
+        assert.ok(
+          remainder.includes(clause),
+          `the line at ${second}s no longer carries "${clause}"`
+        );
+        remainder = remainder.replace(clause, ' ');
+      }
+      const loose = remainder.match(NUMERALS) ?? [];
+      assert.deepEqual(
+        loose,
+        [],
+        `the line at ${second}s speaks ${loose.join(', ')}, which no constant accounts for`
+      );
+    }
 
     // 00:20 — the flight, counted, against the roster the party actually seats.
     assert.match(
@@ -954,6 +972,42 @@ describe('the court, in the opening window', () => {
     // beats as stopping short of: nothing the flight does while moving
     // reaches twenty.
     assert.ok(scout.sigCruise < PROLOGUE_SORROWGATE.silenceCeilingSig);
+  });
+
+  it('is §12’s text, and not a paraphrase of it', () => {
+    // Criterion 1: "the literal transcribes the doc, not the other way round."
+    // Every round of this change has spent its effort on the numbers inside the
+    // lines while the stronger and cheaper property — that the lines *are* the
+    // document's — was held by nothing at all. A later edit to either side is
+    // exactly how doc-first quietly inverts, and no gate would say a word.
+    //
+    // Reading the doc from a test is an idiom this suite already has
+    // (`missionSafety.test.ts` does it with `readFileSync`). The four block
+    // quotes under §12's "The court, in the opening window" are pulled in
+    // order and held to the four court beats' `text`, character for character.
+    const doc = readFileSync(
+      new URL('../../../docs/mission-sorrowgate.md', import.meta.url),
+      'utf8'
+    );
+    const section = doc.split('### The court, in the opening window')[2];
+    assert.ok(section !== undefined, '§12 no longer has the subsection this reads');
+    // Each authored line is one blockquote: consecutive `> ` lines, unwrapped.
+    const quoted = [...section.matchAll(/(?:^> .*\n)+/gm)].map((match) =>
+      match[0]
+        .split('\n')
+        .filter((line) => line.startsWith('> '))
+        .map((line) => line.slice(2).trim())
+        .join(' ')
+    );
+    const authored = PROLOGUE_SORROWGATE.beats
+      .filter((beat) => beat.kind === 'say' && beat.voice === 'court')
+      .map((beat) => (beat as { text: string }).text);
+    assert.equal(authored.length, 4, 'the literal no longer carries four court lines');
+    assert.deepEqual(
+      quoted.slice(0, authored.length),
+      authored,
+      '§12 and the literal have drifted — the doc is the source, so the literal is wrong'
+    );
   });
 
   it('is not a gate — stripping all four changes nothing but the log', () => {
