@@ -147,10 +147,12 @@ Sorrowgate is the place that counts it in seconds.
    is far above the ceiling ([systems-echo.md](systems-echo.md) §2) and is shoving.
 
    **That last sentence is an open question and not a settled reading.** The simulation gives
-   this hull two SIG states and nothing between them, so on the build as it stands nothing the
-   flight does while moving reaches 20. §9's *What the lines stop short of, and why* records
-   both readings and what each would cost. Neither number is changed here, and the guidance
-   beats were authored to be true under either.
+   this hull two SIG states and nothing between them — 6 standing and 12 under way, at any
+   speed — so on the build as it stands nothing the flight does *under way* reaches 20. The one
+   thing that does is **descent**, which floors SIG at 72 whatever else a hull is doing, and
+   which §10 refuses to teach here. §9's *What the lines stop short of, and why* records both
+   readings and what each would cost. Neither number is changed here, and the guidance beats
+   were authored to be true under either.
 2. **The court's array.** The gate mounts the transit line's civic hydrophone array — larger
    than anything any faction has built since, because the Rift lost things. By the arbitration
    protocol the court shares its readings with every admitted party, which is the only reason
@@ -396,9 +398,15 @@ the only thing in the window that is not an instrument.
 
 **Why the court and not a tutor.** §12's argument is that the court states facts about the room
 and they function as instructions, and that no other register in the Rift can do it. That is
-exactly the shape guidance needs, and it is already the voice this mission opens in. A tutorial
-overlay would be a second thing teaching the same four systems, which
-[campaign.md](campaign.md) §10 and [ui-ux.md](ui-ux.md) §14 have both already refused.
+exactly the shape guidance needs, and it is already the voice this mission opens in.
+
+The standing decision it rests on is narrower than "no tutorials", and worth quoting exactly.
+[campaign.md](campaign.md) §3 and [ui-ux.md](ui-ux.md) §14 refuse a **separate tutorial
+mission** — "a second first mission teaching the same four systems" — which is why Tutorial and
+the campaign's first slot launch this one behind two doors. Neither refuses guidance *inside*
+the prologue; what they establish is that it has to happen here, in this mission, because there
+is nowhere else for it to happen. #720's own decision then rules out a client-side hint layer
+over the HUD, which is what leaves beats in §9's own schedule as the shape.
 
 **The lines name no control, and this is forced twice over.** Halloran speaks in the third
 person and the perfect tense about things that have been done by named parties
@@ -655,9 +663,12 @@ Each fails [culture.md](culture.md) §3 for the other four registers, on the tes
 the line and ask which register could not have said it. Per line, because a test run once
 across four lines is not the test §6 describes:
 
-- **00:20** — *the court does not record it.* The Commune could not close a question that way;
-  the plateaus offer it back, in the collective first person, and treat every statement as an
-  opening position.
+- **00:20** — an admission stated, and a thing the court declines to record. The Commune could
+  not close a question that way; the plateaus offer it back, in the collective first person, and
+  treat every statement as an opening position. The concern would grade the admission or attach
+  an exposure to it rather than simply enter it and stop. The Directorate would put the
+  admitting in the passive and decline to say whose the hulls are. And a Knight would ask leave
+  before telling another party what its own water is for.
 - **01:00** — the two numbers entered and left sitting, with nothing asked of anybody. The
   concern would attach a tolerance or a grade to a figure rather than simply enter it, and the
   Order would ask leave before stating a number about somebody else's hulls.

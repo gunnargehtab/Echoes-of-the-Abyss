@@ -764,13 +764,6 @@ describe('the four voices in the water', () => {
 });
 
 describe('the court, in the opening window', () => {
-  /** Everything the court said in one string, for the number assertions below. */
-  const courtSaid = (lines: readonly MissionLine[]) =>
-    lines
-      .filter((line) => line.voice === 'court')
-      .map((line) => line.text)
-      .join(' ');
-
   it('reads four lines into the record between 00:20 and 02:40', () => {
     // §9's guidance beats and §12's authored text for them. The window is
     // §10's first lesson — a ceiling, a meter and a flight — and #720 is the
@@ -806,47 +799,94 @@ describe('the court, in the opening window', () => {
     );
   });
 
-  it('binds each number to the clause it is the number for', () => {
-    // §12: six and twelve are the Light Scout's own figures and twenty is
-    // §4's ceiling, so the court is stating facts about its own room.
+  it('binds every figure the window says aloud to the constant it comes from', () => {
+    // §12's claim: six and twelve are the Light Scout's own figures, twenty is
+    // §4's ceiling, the minute is the debt cap and the flight is four hulls.
+    // §13 sells this test as what holds that transcription, so it has to hold
+    // all of it.
     //
-    // **Derived from the literal, and matched per clause.** Two weaker
-    // versions of this test were written first and both read green while
-    // saying nothing. The first asserted that the authored text contained the
-    // three words the authored text hard-codes — true by construction. The
-    // second read the three values out of `UNIT_STATS` and
-    // `silenceCeilingSig` but matched them against all four lines joined into
-    // one string, so authoring 01:50 backwards — "standing reads twelve, under
-    // way reads six" — left every gate green while the window's whole lesson
-    // was inverted. A number has to be matched against the clause that is
-    // about it, which is what this does.
+    // **Three earlier versions of this test each asserted less than its name.**
+    // The first matched the three words the authored text hard-codes — true by
+    // construction. The second derived the values from the constants but matched
+    // them against all four lines joined into one string, so authoring 01:50
+    // backwards stayed green. The third still joined, and left "entered at six"
+    // and the cap bound to nothing, so "entered at nine" and "stops counting at
+    // five minutes" both passed. The shape was the fault rather than any of the
+    // three patches: a claim about a sentence has to be matched against *that
+    // sentence*, and every figure the window speaks has to come from the
+    // constant it is the figure for. Hence lookup by tick, and no joined string
+    // anywhere below.
     const scout = UNIT_STATS[UnitKind.LightScout];
+    const flight = PROLOGUE_SORROWGATE.parties
+      .find((party) => party.slot === PROLOGUE_SORROWGATE.playerSlot)!
+      .units.filter((unit) => unit.kind === UnitKind.LightScout).length;
     const spell = new Map([
+      [4, 'Four'],
       [6, 'six'],
       [12, 'twelve'],
       [20, 'twenty'],
+      [60, 'a minute'],
     ]);
     const word = (value: number) => {
       const spelled = spell.get(value);
       assert.ok(spelled !== undefined, `the court has no word for ${value} — the literal moved`);
       return spelled;
     };
-    const said = courtSaid(passiveRun().lines);
-    // 01:50, both halves, each against its own state.
+    const court = passiveRun().lines.filter((line) => line.voice === 'court');
+    const at = (second: number) => {
+      const line = court.find((spoken) => Math.round(spoken.tick / SIM.TICK_HZ) === second);
+      assert.ok(line !== undefined, `the court says nothing at ${second}s`);
+      return line.text;
+    };
+
+    // 00:20 — the flight, counted, against the roster the party actually seats.
     assert.match(
-      said,
+      at(20),
+      new RegExp(`Escort One through ${word(flight)} are admitted`),
+      'the court names a flight of a different size from the one it was given'
+    );
+
+    // 01:00 — the two numbers entered into the record.
+    assert.match(
+      at(60),
+      new RegExp(`entered at ${word(scout.sigIdle)} when`),
+      'the count is not the hull\u2019s own idle figure'
+    );
+    assert.match(
+      at(60),
+      new RegExp(`the ceiling at ${word(PROLOGUE_SORROWGATE.silenceCeilingSig)}`),
+      'the count is not the ceiling the ledger enforces'
+    );
+
+    // 01:50 — each figure against the state it is the figure for. This is the
+    // pairing, and inverting it is the mutation that has to fail.
+    assert.match(
+      at(110),
       new RegExp(`standing in this water reads ${word(scout.sigIdle)}`),
-      'the court no longer reads the idle figure against standing still'
+      'the idle figure is no longer read against standing still'
     );
     assert.match(
-      said,
+      at(110),
       new RegExp(`under way reads ${word(scout.sigCruise)}`),
-      'the court no longer reads the cruise figure against being under way'
+      'the cruise figure is no longer read against being under way'
     );
-    // 01:00 and 02:40, against the ceiling the ledger actually enforces.
-    const ceiling = word(PROLOGUE_SORROWGATE.silenceCeilingSig);
-    assert.match(said, new RegExp(`the ceiling at ${ceiling}`), 'the count is not the ceiling');
-    assert.match(said, new RegExp(`above ${ceiling} is shoving`), 'the breach is not the ceiling');
+
+    // 02:40 — the ceiling, whose array is withdrawn, and the cap.
+    assert.match(
+      at(160),
+      new RegExp(`above ${word(PROLOGUE_SORROWGATE.silenceCeilingSig)} is shoving`),
+      'the breach is not stated against the ceiling'
+    );
+    assert.match(
+      at(160),
+      new RegExp(`withdrawn from all ${word(flight).toLowerCase()} hulls`),
+      '\u00a74 clause 3 withdraws the array from the party, not from the offending hull'
+    );
+    assert.match(
+      at(160),
+      new RegExp(`stops counting at ${word(PROLOGUE_SORROWGATE.debtCapS)}`),
+      'the cap the court reads aloud is not debtCapS'
+    );
   });
 
   it('is true of the flight at both ends of the difference it describes', () => {
