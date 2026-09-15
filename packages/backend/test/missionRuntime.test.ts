@@ -841,14 +841,23 @@ describe('the court, in the opening window', () => {
     // a second **and a half** afterwards" and "a hull descending reads
     // **fifteen**" both went straight through it.
     //
-    // So the check is inverted and closed. Every clause of every line that
-    // carries a numeral is accounted for below — struck out of the text, each
-    // one bound to the constant it comes from — and whatever survives is then
-    // held against a *full* lexicon plus digits. A figure in any form the
-    // author did not account for fails, whether or not anybody thought of that
-    // form when writing this.
+    // So the check is inverted. Every clause of every line that carries a
+    // numeral is accounted for below — struck out of the text, each one bound
+    // to the constant it comes from — and whatever survives is then held to
+    // carry no figure at all.
+    //
+    // **Two checks, and only one of them is total, which is worth stating
+    // rather than implying.** Digits are closed absolutely: no line and no
+    // accounted clause contains one, so the remainder may contain no digit
+    // anywhere, in any form. An earlier version put the digit branch inside
+    // the word alternation's word boundary, which let every digit touching a
+    // letter through — "reaches 400m", "falls 20dB" and "SIG20" all passed.
+    // Spelled numbers are a named lexicon and so are open by construction;
+    // `score` is in it because it spells this mission's own ceiling. A word
+    // nobody listed can still escape, and that is the honest limit of this
+    // half rather than something the comment above should paper over.
     const NUMERALS =
-      /\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|half|quarter|third|once|twice|thrice|dozen|pair|first|fourth|fifth|sixth|seventh|eighth|ninth|tenth|second|seconds|minute|minutes|hour|hours|\d+)\b/gi;
+      /\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|half|quarter|third|once|twice|thrice|dozen|pair|first|fourth|fifth|sixth|seventh|eighth|ninth|tenth|second|seconds|minute|minutes|hour|hours|score)\b/gi;
     const accounted: ReadonlyArray<readonly [number, readonly string[]]> = [
       // 00:20 — the flight, numbered from one to the roster's size.
       [20, [`Escort One through ${word(flight)}`]],
@@ -894,6 +903,11 @@ describe('the court, in the opening window', () => {
         );
         remainder = remainder.replace(clause, ' ');
       }
+      // Digits: closed, and unconditional.
+      assert.ok(
+        !/\d/.test(remainder),
+        `the line at ${second}s speaks a digit no constant accounts for: "${remainder.trim()}"`
+      );
       const loose = remainder.match(NUMERALS) ?? [];
       assert.deepEqual(
         loose,
@@ -989,7 +1003,8 @@ describe('the court, in the opening window', () => {
       new URL('../../../docs/mission-sorrowgate.md', import.meta.url),
       'utf8'
     );
-    const section = doc.split('### The court, in the opening window')[2];
+    // Bounded at the next `##`, so a blockquote in §13 cannot drift in.
+    const section = doc.split('### The court, in the opening window')[2]?.split('\n## ')[0];
     assert.ok(section !== undefined, '§12 no longer has the subsection this reads');
     // Each authored line is one blockquote: consecutive `> ` lines, unwrapped.
     const quoted = [...section.matchAll(/(?:^> .*\n)+/gm)].map((match) =>
@@ -1003,8 +1018,11 @@ describe('the court, in the opening window', () => {
       .filter((beat) => beat.kind === 'say' && beat.voice === 'court')
       .map((beat) => (beat as { text: string }).text);
     assert.equal(authored.length, 4, 'the literal no longer carries four court lines');
+    // No slice: a fifth line authored in §12 with no beat behind it is the
+    // drift the doc-first rule makes *likely*, and slicing to the literal's
+    // length is precisely the blindness that would hide it.
     assert.deepEqual(
-      quoted.slice(0, authored.length),
+      quoted,
       authored,
       '§12 and the literal have drifted — the doc is the source, so the literal is wrong'
     );
