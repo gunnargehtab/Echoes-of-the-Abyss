@@ -34,6 +34,14 @@ export interface ContactTimbre {
    * Directorate "layered voices" and asks them to converge. The rate is the
    * cluster's, so this number stays the one §8.1's period band is built from
    * and stays a description of what the mix renders.
+   *
+   * The Consortium is the one family with structure *above* this number rather
+   * than below it. §8's "reciprocating" is a stroke and a return, so its cycle
+   * is `RECIPROCATING.STROKES` events long — but an event is still one strike,
+   * and the rate is still the rate strikes land at. That is not a convention
+   * chosen to keep this docblock true: §8.1 admits no uneven split of a
+   * Consortium cycle (contactVoice.ts, `RECIPROCATING`), so the strikes are
+   * evenly spaced, and an evenly spaced cycle *is* its own strike rate.
    */
   rateHz: number;
   /**
@@ -51,7 +59,10 @@ export interface ContactTimbre {
 
 export const FACTION_TIMBRE: Record<Faction, ContactTimbre> = {
   // Machinery under load: steel, reciprocating, rhythmic. Audible from absurd
-  // range and completely unbothered about it.
+  // range and completely unbothered about it. The rate is the rate strikes
+  // land at; the stroke and the return that make one cycle are two of them
+  // (contactVoice.ts, `RECIPROCATING`), which is why this number did not move
+  // when the mechanism was built and why §8.1's band did not either.
   [Faction.Bathyarch]: {
     mechanism: 'reciprocating',
     baseHz: 68,

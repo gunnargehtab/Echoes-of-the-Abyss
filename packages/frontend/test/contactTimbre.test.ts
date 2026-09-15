@@ -23,6 +23,7 @@ import { Biome, Faction, FaunaSpecies, OrdnanceKind, ResolutionTier, SIM } from 
 import {
   ContactVoice,
   ENVELOPE,
+  RECIPROCATING,
   SWARM_LAYERS,
   THUMP_PARTIALS,
   type VoiceInputs,
@@ -523,6 +524,83 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
     assert.ok(periodSpread(beat.pulses) < 1e-6, 'the Consortium lost its beat');
   });
 
+  it('gives the Consortium a stroke and a return, and spends nothing on when', () => {
+    // §8: "machinery under load; steel, reciprocating". A reciprocating machine
+    // has a stroke and a return; the mix had one strike repeated, which is the
+    // event shape every other family already had at a different rate — the
+    // EQ-curve distinction §8 opens by ruling out.
+    //
+    // The cycle is carried by *what each strike is* rather than by when it
+    // lands, and that is forced rather than chosen. §8 makes this the only
+    // faction with a beat, and §8.1 keeps every rendered band 1.2x clear of the
+    // next; the ordnance screw runs out to 0.306 s, so both halves of a cycle
+    // would have to exceed 0.367 s and there is not 0.735 s in one. Asserted
+    // rather than left in a comment, because an uneven split is exactly what a
+    // later round reaching for "more mechanical" would try.
+    const beat = drive({ faction: Faction.Bathyarch }, ResolutionTier.Classification, ECHO_STEP_S);
+
+    // Each strike with the level it decays back to — the voice's own base,
+    // read off the class rather than restated here, so the lifts below are
+    // ratios of something real. The decay is the write immediately after the
+    // strike, which is how `strike` places the pair.
+    const strikes: { peak: number; base: number }[] = [];
+    for (let i = 0; i < beat.writes.length - 1; i++) {
+      if (beat.writes[i]!.method !== 'setValueAtTime') continue;
+      const decay = beat.writes[i + 1]!;
+      assert.equal(decay.method, 'setTargetAtTime', 'a strike was written without its decay');
+      strikes.push({ peak: beat.writes[i]!.value, base: decay.value });
+    }
+    assert.ok(strikes.length > 6, 'the Consortium wrote too few strikes to measure');
+
+    const strokeLift = strikes[0]!.peak - strikes[0]!.base;
+    assert.ok(strokeLift > 0, 'the loaded stroke does not lift the voice at all');
+    for (let i = 0; i < strikes.length; i++) {
+      const { peak, base } = strikes[i]!;
+      const stroke = i % RECIPROCATING.STROKES === 0;
+      const expected = strokeLift * (stroke ? 1 : RECIPROCATING.RETURN_LIFT);
+      assert.ok(
+        Math.abs(peak - base - expected) < 1e-9,
+        `strike ${i} lifts ${(peak - base).toFixed(4)} where the ` +
+          `${stroke ? 'stroke' : 'return'} lifts ${expected.toFixed(4)}: the cycle is gone`
+      );
+      // A return is the unloaded half and not a tier handed back. Under the
+      // thump's own peak it would be an unclassified event on alternate
+      // strikes, which is §3's line crossed from the other side.
+      assert.ok(
+        peak > THUMP_PEAK + 1e-9,
+        `strike ${i} peaks at ${peak.toFixed(4)}, under the unidentifying thump's ${THUMP_PEAK}`
+      );
+    }
+
+    // And the half that must not have moved: every strike still lands on the
+    // family's declared period, so §8.1's separation is untouched by
+    // construction rather than re-argued. The beat test above holds the spread
+    // at zero; this holds *which* period it is exact at.
+    const declared = 1 / FACTION_TIMBRE[Faction.Bathyarch].rateHz;
+    for (const gap of intervals(beat.pulses)) {
+      assert.ok(
+        Math.abs(gap - declared) < 1e-9,
+        `a strike landed ${gap.toFixed(4)} s after the last, not on the declared ${declared}`
+      );
+    }
+
+    // The cycle is a periodicity of its own, though — the alternation repeats
+    // every `STROKES` strikes and a player hears that, so §8.1 applies to it
+    // and no table test covers it: `periodBand` reads `rateHz`, which is the
+    // strike. Held against every other family's band, both directions.
+    const cycleS = (RECIPROCATING.STROKES * 1) / FACTION_TIMBRE[Faction.Bathyarch].rateHz;
+    for (const timbre of ALL_TIMBRES) {
+      if (timbre === FACTION_TIMBRE[Faction.Bathyarch]) continue;
+      const band = periodBand(timbre);
+      if (band === null) continue;
+      assert.ok(
+        band[0] >= cycleS * 1.2 || cycleS >= band[1] * 1.2,
+        `the reciprocating cycle at ${cycleS.toFixed(4)} s is under 1.2x clear of ` +
+          `${timbre.mechanism} (${band[0].toFixed(4)}-${band[1].toFixed(4)} s)`
+      );
+    }
+  });
+
   it('hears the swarm organise: clicks that close into unison, then scatter', () => {
     // §8's Directorate is "clicks that phase into unison as cohorts converge —
     // you hear them *organise*". That is a statement about *when clicks land*,
@@ -618,15 +696,21 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
       'the tightest clusters land no harder than the loosest, so the level follows nothing'
     );
 
-    // The control: every other family has one body that hits once, so a
-    // cluster is the swarm's own tell and not something the whole mix caught.
+    // The control: no other family's level *follows* anything, so a cluster is
+    // the swarm's own tell and not something the whole mix caught. Stated as a
+    // fixed repeat rather than as one level, because §8 gives the Consortium a
+    // stroke and a return and they are two strengths — but two that alternate
+    // exactly, which is a cycle and not a cluster closing. Everyone else
+    // repeats on one.
     for (const [name, identity] of SOUNDING) {
       if (name === Faction[Faction.Directorate]) continue;
       const theirs = drive(identity, ResolutionTier.Classification, ECHO_STEP_S);
       const values = theirs.events.map((w) => w.value);
+      const cycle = name === Faction[Faction.Bathyarch] ? RECIPROCATING.STROKES : 1;
       assert.ok(
-        values.every((v) => Math.abs(v - values[0]!) < 1e-9),
-        `${name}'s events vary in strength, which belongs to a cluster that is closing`
+        values.every((v, k) => Math.abs(v - values[k % cycle]!) < 1e-9),
+        `${name}'s events vary in strength off any fixed cycle, which belongs to a cluster ` +
+          'that is closing'
       );
       assert.ok(
         Math.min(...intervals(theirs.pulses)) > 1e-6,
@@ -635,7 +719,7 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
     }
   });
 
-  it('gives the swarm a tick, and every other family the breath §8 gives it', () => {
+  it('gives the swarm a tick, the Consortium both, and every other family the breath', () => {
     // Why the swarm needed an envelope of its own, in one comparison. Every
     // mechanism used to ease back over BREATH.decayS, which is longer than the
     // whole gap between two swarm events — so no click was ever a click, only
@@ -675,8 +759,26 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
       );
     }
 
+    // The Consortium is the one family that uses both shapes, and it uses them
+    // to say which half of its cycle a strike is: §8's loaded stroke rings and
+    // its return knocks. Asserted as an alternation rather than as a set, so a
+    // voice that gave every strike the same shape — the mechanism gone, the
+    // constants still exported — fails here.
+    const cycle = decaysOf({ faction: Faction.Bathyarch });
+    assert.ok(cycle.length > 4, 'the Consortium wrote too few strikes to measure');
+    for (let i = 0; i < cycle.length; i++) {
+      const stroke = i % RECIPROCATING.STROKES === 0;
+      const shape = stroke ? ENVELOPE.BREATH : ENVELOPE.TICK;
+      const half = stroke ? 'stroke' : 'return';
+      assert.equal(cycle[i]!.tau, shape.decayS, `the Consortium's ${half} is on the wrong shape`);
+      assert.ok(
+        Math.abs(cycle[i]!.hold - shape.holdS) < 1e-9,
+        `the Consortium's ${half} is held for ${cycle[i]!.hold.toFixed(4)} s, not ${shape.holdS}`
+      );
+    }
+
     for (const [name, identity] of SOUNDING) {
-      if (name === Faction[Faction.Directorate]) continue;
+      if (name === Faction[Faction.Directorate] || name === Faction[Faction.Bathyarch]) continue;
       const theirs = decaysOf(identity);
       assert.ok(theirs.length > 2, `${name} wrote too few events to measure`);
       for (const { tau, hold } of theirs) {
