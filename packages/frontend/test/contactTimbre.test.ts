@@ -527,8 +527,10 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
   it('gives the Consortium a stroke and a return, and spends nothing on when', () => {
     // §8: "machinery under load; steel, reciprocating". A reciprocating machine
     // has a stroke and a return; the mix had one strike repeated, which is the
-    // event shape every other family already had at a different rate — the
-    // EQ-curve distinction §8 opens by ruling out.
+    // event shape the breathing, swell and screw families already had at a
+    // different rate — the EQ-curve distinction §8 opens by ruling out. The
+    // argument in full is in `RECIPROCATING`, including why the swarm and the
+    // drone are not in that list.
     //
     // The cycle is carried by *what each strike is* rather than by when it
     // lands. §8.1 admits two uneven placements as well, and `RECIPROCATING`
@@ -585,8 +587,8 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
     }
 
     // The cycle is a periodicity of its own, though — the alternation repeats
-    // every `STROKES` strikes and a player hears that, and no table test covers
-    // it: `periodBand` reads `rateHz`, which is the strike. §8.1 as written
+    // every `STROKES` strikes, and no table test covers that: `periodBand`
+    // reads `rateHz`, which is the strike. §8.1 as written
     // describes "its rate, widened by its own wander" and says nothing about a
     // cycle above it, so holding one to the same 1.2x is the mix being
     // *stricter* than the doc rather than the doc being extended. Kept that way
