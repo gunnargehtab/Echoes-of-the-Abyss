@@ -102,6 +102,14 @@ function authoredStrings(): Set<string> {
     strings.add(objective.id);
     strings.add(objective.text);
     if (objective.debtText !== undefined) strings.add(objective.debtText);
+    // The plain line beside a reading — docs/ui-ux.md §10.5's gloss rule. It is
+    // in this set for the same reason `text` is and on the same terms: authored
+    // in the literal before the match exists, so it is a string a leak could
+    // not have composed. `objectiveGloss.test.ts` holds the stronger form of
+    // the same claim, that a gloss arrives on the rule it was authored *on*;
+    // this set is flat over the mission and would accept one that had wandered.
+    if (objective.gloss !== undefined) strings.add(objective.gloss);
+    if (objective.debtGloss !== undefined) strings.add(objective.debtGloss);
     if (objective.markerId !== undefined) strings.add(objective.markerId);
   }
   for (const marker of PROLOGUE_SORROWGATE.markers) {
@@ -254,7 +262,13 @@ describe('a mission view says only what the player could have worked out', () =>
       'sigBudget',
       'debtS',
     ]);
-    const objective = new Set(['id', 'text', 'status', 'progress', 'markerId']);
+    // `gloss` is named here deliberately rather than by accident: it is a
+    // second free-text field on the row, which is exactly the shape this test
+    // exists to refuse, and it is admitted only because the field can hold
+    // nothing but one of the literal's own constants (§10.5, and the two tests
+    // in `objectiveGloss.test.ts` that hold it). Adding a third would want the
+    // same argument made again.
+    const objective = new Set(['id', 'text', 'gloss', 'status', 'progress', 'markerId']);
     const marker = new Set(['id', 'label', 'x', 'y', 'radiusM']);
     const lock = new Set(['ability', 'reason']);
     // A held hull is the one place the payload names an *entity*, so it gets

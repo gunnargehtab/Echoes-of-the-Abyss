@@ -1687,7 +1687,31 @@ button.objectives-row:hover {
   font-weight: 700;
 }
 
+/* The reading and its gloss share the middle column, one above the other —
+   §10.5's gloss rule. Placed explicitly rather than left to auto-flow, because
+   the row is a three-column grid and a fourth child would otherwise take the
+   progress counter's slot and push the counter onto a second line.
+
+   Secondary in the visual hierarchy, as §10.5 asks: smaller and dimmer than
+   the sentence it explains, so the authored line still reads first. In `rem`
+   like everything else here, so §11's 75–200% scale carries it. */
+.objectives-text {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.objectives-gloss {
+  grid-column: 2;
+  grid-row: 2;
+  margin-top: 2px;
+  font-size: 0.6rem;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+
 .objectives-progress {
+  grid-column: 3;
+  grid-row: 1;
   font-variant-numeric: tabular-nums;
   color: var(--text-cyan);
   opacity: 0.85;

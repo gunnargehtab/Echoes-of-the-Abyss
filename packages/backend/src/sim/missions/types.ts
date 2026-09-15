@@ -769,6 +769,40 @@ export interface MissionObjective {
    */
   debtText?: string;
   /**
+   * The plain line shown beside `text`, never instead of it — docs/ui-ux.md
+   * §10.5's gloss rule, settled on #720.
+   *
+   * What the reading is for and what the gloss is for are different jobs, and
+   * that is why this is a second field rather than a rewrite of the first. The
+   * court states a fact about the room and it functions as an instruction; the
+   * gloss says which of the player's own hulls and numbers the fact is about,
+   * and where to look. Authored per mission, because a shared string here
+   * would have to speak for four registers at once.
+   *
+   * It names **no key**. The same panel is read on a device with no keyboard,
+   * where naming one the player cannot press is the same lie as hiding a key
+   * that works (#722), so a gloss points at what is on screen instead.
+   */
+  gloss?: string;
+  /**
+   * The gloss for `debtText`, when the debt reading wants its own.
+   *
+   * `debtText`'s arrangement, one field over, and paired for its reason:
+   * docs/mission-sorrowgate.md §12 lists *The flight owes the court a silence*
+   * as a reading in its own right, and in debt the plain line has something
+   * different to say — what the flight lost and how it gets it back, rather
+   * than what the ceiling is. Absent falls back to `gloss`, which is the
+   * honest default rather than a convenience: `debtText`'s own docblock is
+   * that these are two readings of **one rule** and the ask has not changed,
+   * so the sentence describing the ask still describes it.
+   *
+   * `stallText` and `states` have no paired field for the same reason stated
+   * the other way round: no mission authors a gloss for either yet, and a slot
+   * nobody fills is a claim that something has been thought about. When one
+   * does, it is added here beside its reading, exactly as this was.
+   */
+  debtGloss?: string;
+  /**
    * The same rule as the plateau states it while the walk is stalled —
    * docs/mission-convocation.md §12 lists both readings under "Objective
    * readings, in play": *The walk's on the second row. It wants somebody

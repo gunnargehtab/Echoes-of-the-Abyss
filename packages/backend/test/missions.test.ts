@@ -29,6 +29,7 @@ import assert from 'node:assert/strict';
 import {
   Biome,
   DIRECTIONAL_SIGNATURE,
+  Faction,
   FaunaSpecies,
   MISSION,
   ambientBandsFor,
@@ -65,6 +66,47 @@ import type {
  * exported this test is the thing that notices the two disagree.
  */
 const MAX_SLOTS = 8;
+
+/**
+ * The four navies as anyone in the fiction says them, transcribed rather than
+ * imported: `FACTION_NAME` lives in `packages/frontend`, and a backend test
+ * reaching across the wire for a string would be a worse dependency than a
+ * copy the day it drifts. `MAX_SLOTS` above is here on the same terms.
+ */
+const NAVY: Record<Faction, string> = {
+  [Faction.Bathyarch]: 'Consortium',
+  [Faction.Pelagia]: 'Commune',
+  [Faction.Directorate]: 'Directorate',
+  [Faction.Hadron]: 'Knights',
+};
+
+/**
+ * The words of a name worth banning on their own. Four characters, because an
+ * author writes "Drenn" rather than "Underwriter Sela Drenn" and "Corvette"
+ * rather than "Fleet Corvette", while a three-letter fragment would start
+ * matching inside ordinary prose.
+ */
+const words = (name: string): string[] =>
+  name.split(/[^A-Za-z]+/).filter((word) => word.length >= 4);
+
+/**
+ * A banned name, anchored at its start.
+ *
+ * Substring matching is what made the first version of this refuse "flight" on
+ * behalf of a foreign party's Light Scouts — a gloss naming another party's
+ * hull writes the word, it does not hide it inside a longer one. The left
+ * boundary is what fixes that: `\bLight` does not match *flight*, because
+ * there is no boundary between `f` and `L`.
+ *
+ * **Anchored on the left only, and the right-hand `\b` is the bug that taught
+ * it.** With one, `Corvette` stopped matching *Corvettes* — so `Two Corvettes
+ * hold the west` passed in all twenty-nine missions, which is the plural of the
+ * exact sentence this sweep exists to refuse and the one the docblock in
+ * `objectiveGloss.test.ts` names. A name written in the plural, possessive or
+ * hyphenated is the same name.
+ */
+const atWordBoundary = (name: string): RegExp =>
+  new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
 
 /** Every tag a mission places in the water, unit and structure alike. */
 function authoredTags(mission: MissionDefinition): Set<string> {
@@ -593,6 +635,201 @@ describe('the objectives', () => {
       }
       const ids = mission.objectives.map((objective) => objective.id);
       assert.equal(new Set(ids).size, ids.length, `${mission.id}: duplicate objective id`);
+    }
+  });
+
+  it('glosses a rule in the player’s own terms and names nobody else’s hulls', () => {
+    // docs/ui-ux.md §10.5's gloss rule, over every mission there will ever be.
+    //
+    // The structural half of the anti-reveal rule — that a gloss on the wire is
+    // one the literal authored, never assembled — is held by
+    // `objectiveGloss.test.ts` against a running mission. This is the authoring
+    // half, and it catches the one way a fixed string can still say too much:
+    // an author writing another party's hull into it. A gloss is the plain
+    // layer, and the plain layer is about the player's own force.
+    //
+    // What this holds, and what it does not — stated here because a gate whose
+    // reach is overestimated is worse than one nobody has. It bans proper nouns
+    // belonging to somebody else's force, which is the reveal an author writes
+    // by accident. Two things it cannot do, both established by breaking it:
+    //
+    // It cannot bound prose. `Three other delegations hold the east and the
+    // west` passes, names nobody, and gives away a count and two bearings.
+    //
+    // And it cannot ban a navy the player's own party also flies. Sorrowgate
+    // seats a Commune delegation in the water beside a Commune player, so
+    // `NAVY[Pelagia]` is not in `foreign` and `the Commune delegation to the
+    // west` passes — banning it would ban the player's own navy, which §10.5
+    // explicitly permits a gloss to name.
+    //
+    // §10.5's "never a count of anything hostile" is a review rule,
+    // `docs/invariants.md` row 24 is scoped to what is here and names that
+    // exception, and neither should be read as the other.
+    //
+    // The key check is §10.5's last clause and it is here because #722 is what
+    // taught it: the held harvester's hint line named `V throttle` to a touch
+    // player who has no keyboard, and "naming a key the player cannot press is
+    // the same lie as hiding one that works". This panel is read on both kinds
+    // of device and knows about neither, so a gloss points at what is on
+    // screen and §7's affordances carry their own bindings.
+    // Exactly §10.5's clause — "it names no key" — and no wider. `click` and
+    // `tap` are pointer verbs rather than keys, and `clicks` is a *sound* in
+    // this setting: a gloss saying a player will hear a Sounder's clicks would
+    // be refused by a gate whose message quotes a rule about keyboards.
+    const KEY_WORDS = /\b(press|presses|pressing|key|keys|keyboard)\b/i;
+    for (const mission of MISSIONS) {
+      // What an author would actually write, not what the literal happens to
+      // key on — and this sweep has been wrong in both directions, so both are
+      // written down. Checking authored *tags* alone let `Underwriter Sela
+      // Drenn … with a Cruiser and two Corvettes` through every gate in the
+      // tree; then banning every foreign hull's whole display name banned
+      // `Light Scout`, which is what the player's own four hulls *are*, and
+      // §10.5 says in terms that a gloss may name the player's own hulls.
+      //
+      // So: proper nouns nobody else's force owns. Tags, speakers, the other
+      // navies' names and the species a beat puts in the water are absolute.
+      // Hull and structure kinds are banned by their *words*, minus every word
+      // that appears in a kind the player's own party also fields — which bans
+      // Cruiser, Corvette, Abyssal and Submersible while leaving scout,
+      // harvester and tender to a gloss that is talking about the player's own.
+      const mine = new Set<string>();
+      const ours = mission.parties.filter((party) => party.slot === mission.playerSlot);
+      for (const party of ours) {
+        for (const unit of party.units) {
+          for (const word of words(statsFor(unit.kind).name)) mine.add(word);
+        }
+        for (const structure of party.structures ?? []) {
+          for (const word of words(structureStatsFor(structure.kind).name)) mine.add(word);
+        }
+      }
+      const myFactions = new Set(ours.map((party) => party.faction));
+
+      const foreign = new Set<string>();
+      for (const party of mission.parties) {
+        if (party.slot === mission.playerSlot) continue;
+        if (!myFactions.has(party.faction)) foreign.add(NAVY[party.faction]);
+        for (const unit of party.units) {
+          foreign.add(unit.tag);
+          for (const word of words(statsFor(unit.kind).name)) {
+            if (!mine.has(word)) foreign.add(word);
+          }
+        }
+        for (const structure of party.structures ?? []) {
+          foreign.add(structure.tag);
+          for (const word of words(structureStatsFor(structure.kind).name)) {
+            if (!mine.has(word)) foreign.add(word);
+          }
+        }
+        for (const emitter of party.emitters ?? []) foreign.add(emitter.tag);
+      }
+      // Everybody the mission gives a voice to, and everything it puts in the
+      // water. A gloss is the plain layer — it describes the player's own force
+      // and quotes nobody. Split into words as well as kept whole, because an
+      // author writes "Drenn", not "Underwriter Sela Drenn".
+      //
+      // **Capitalised words only, and `mine` subtracted here too.** A speaker is
+      // a free-text label rather than a name: the catalogue carries `The record,
+      // read from the stalls` and `Voice of the reconnaissance, for the Order`,
+      // so taking every long word banned `from`, `read`, `order` and `voice`
+      // outright. And `First Cantor Vehl Ossary` put `Cantor` in the set for the
+      // four missions whose *player* fields a Cantor — the `Light Scout` failure
+      // over again, on the path where the subtraction had not been applied.
+      for (const beat of mission.beats) {
+        if (beat.kind === 'say') {
+          foreign.add(beat.speaker);
+          for (const word of words(beat.speaker)) {
+            if (/^[A-Z]/.test(word) && !mine.has(word)) foreign.add(word);
+          }
+        }
+        if (beat.kind === 'creature' && beat.species !== undefined) {
+          for (const word of words(faunaStatsFor(beat.species).name)) {
+            if (!mine.has(word)) foreign.add(word);
+          }
+        }
+      }
+
+      for (const objective of mission.objectives) {
+        const glosses = [objective.gloss, objective.debtGloss].filter(
+          (gloss): gloss is string => gloss !== undefined
+        );
+        for (const gloss of glosses) {
+          assert.equal(
+            gloss.trim(),
+            gloss,
+            `${mission.id}: "${objective.id}" glosses with untrimmed whitespace`
+          );
+          assert.ok(
+            gloss.length > 0,
+            `${mission.id}: "${objective.id}" carries an empty gloss, which announces nothing`
+          );
+          assert.notEqual(
+            gloss,
+            objective.text,
+            `${mission.id}: "${objective.id}" glosses itself, so the row says one thing twice`
+          );
+          // On a word boundary, never a substring. `Light` is foreign in
+          // First Arrival, where another party fields Light Scouts, and an
+          // `includes` refused the word **flight** — which is the one word the
+          // court uses for the player's own four hulls.
+          for (const name of foreign) {
+            assert.equal(
+              atWordBoundary(name).test(gloss),
+              false,
+              `${mission.id}: "${objective.id}" glosses with "${name}", which is not the ` +
+                `player's — §10.5: never a contact the player has not detected`
+            );
+          }
+          const named = KEY_WORDS.exec(gloss);
+          assert.equal(
+            named,
+            null,
+            `${mission.id}: "${objective.id}" glosses with "${named?.[0]}" — §10.5: a gloss ` +
+              `names no key, because the same panel is read without a keyboard`
+          );
+        }
+        // A debt gloss with no debt reading is a sentence that can never be
+        // shown.
+        if (objective.debtGloss !== undefined) {
+          assert.ok(
+            objective.debtText !== undefined,
+            `${mission.id}: "${objective.id}" glosses a debt reading it does not author`
+          );
+        }
+        // And the converse, which is what makes invariants row 24 true as
+        // written rather than true of one case. `glossFor` pairs a gloss to
+        // `debtText` and to nothing else, so an objective that authors a gloss
+        // *and* a `stallText` or `states` reading would show the base sentence
+        // explaining the rule underneath a different sentence stating it — the
+        // two halves of the row describing different states, which is the whole
+        // thing the pairing prevents. Adding the paired field is a two-line
+        // change; shipping the mismatch is silent, so the gate is here.
+        if (glosses.length > 0) {
+          // Every alternate reading a glossed objective authors needs its own
+          // gloss, `debtText` included — this one is the near miss, because
+          // `glossFor` *does* have a debt branch and would still fall back to
+          // the base sentence for an objective that authored the reading and
+          // not the gloss, which is the mismatch one field over.
+          if (objective.debtText !== undefined) {
+            assert.ok(
+              objective.debtGloss !== undefined,
+              `${mission.id}: "${objective.id}" is glossed and authors a debt reading with ` +
+                `no gloss of its own, so the row would explain the ceiling while stating the debt`
+            );
+          }
+          assert.equal(
+            objective.stallText,
+            undefined,
+            `${mission.id}: "${objective.id}" is glossed and authors a stall reading with ` +
+              `no gloss of its own — add a paired field beside it, as \`debtGloss\` is`
+          );
+          assert.equal(
+            objective.states,
+            undefined,
+            `${mission.id}: "${objective.id}" is glossed and authors a \`states\` reading ` +
+              `with no gloss of its own — add a paired field beside it`
+          );
+        }
+      }
     }
   });
 

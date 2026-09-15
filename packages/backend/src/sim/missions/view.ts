@@ -182,6 +182,17 @@ function objectiveView(
     }),
     status: state.statuses.get(objective.id) ?? objective.initial,
   };
+  // The plain line beside the reading — docs/ui-ux.md §10.5, #720, #725.
+  //
+  // Chosen from the literal, never assembled: this is one of the mission's own
+  // authored strings or it is absent. There is no interpolation here on
+  // purpose — the moment a gloss could carry a runtime figure, a figure about
+  // somebody else could reach the player's screen through it. That closes the
+  // half of `ObjectiveView.gloss`'s anti-reveal rule the match can break; the
+  // half an *author* can break is prose, and `missions.test.ts` is what holds
+  // it.
+  const gloss = glossFor(objective, state);
+  if (gloss !== undefined) view.gloss = gloss;
   if (objective.markerId !== undefined) view.markerId = objective.markerId;
   // The walk sends the camera to wherever the question currently is, which is
   // the one marker in this format that is not a constant. An objective carries
@@ -245,6 +256,29 @@ function textFor(
     if (holds(reading.when)) return reading.text;
   }
   return objective.text;
+}
+
+/**
+ * The gloss that goes with whichever reading is live.
+ *
+ * `debtGloss` wins while the debt does, on the one condition `textFor` keys
+ * the debt reading on, so the two halves of a row can never describe different
+ * states.
+ *
+ * There is deliberately no branch for `stallText` or for a `states` entry, and
+ * `missions.test.ts` is what keeps that honest rather than this quietly
+ * returning the base gloss: a glossed objective may author no alternate
+ * reading without a gloss of its own — `debtText` without `debtGloss`
+ * included, which is the near miss, since the branch above would fall back
+ * happily. A sentence explaining the rule shown underneath a *different*
+ * sentence stating it is the one failure this pairing exists to prevent, and
+ * it is what makes invariants row 24 true over every mission rather than over
+ * this one. A mission that wants another reading gains a paired field here
+ * beside it, exactly as `debtGloss` did.
+ */
+function glossFor(objective: MissionObjective, state: MissionState): string | undefined {
+  if (objective.debtGloss !== undefined && state.debtS > 0) return objective.debtGloss;
+  return objective.gloss;
 }
 
 /**

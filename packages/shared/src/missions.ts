@@ -1530,6 +1530,47 @@ export interface ObjectiveView {
   id: string;
   /** Authored, in-register, shown verbatim. Never templated (docs/campaign.md §10). */
   text: string;
+  /**
+   * The plain line that sits *beside* `text`, never in place of it —
+   * docs/ui-ux.md §10.5's gloss rule, and the decision on #720 that put it
+   * there rather than rewriting the reading.
+   *
+   * Authored per mission and shown verbatim, on exactly the terms `text` is:
+   * a shared string would have to speak for four registers at once, so what is
+   * shared here is the *slot*. It is a second sentence about the same rule, so
+   * it joins its row rather than becoming one — a gloss that made the panel
+   * grow a row would break the promise §10.5 keeps that this region changes in
+   * place.
+   *
+   * INVARIANT: the same anti-reveal rule that binds `text` and `progress`
+   * binds this. It may name the player's own hulls, their own numbers and an
+   * authored place, and never a contact the player has not detected.
+   *
+   * That is two claims and they are held by different things, which is worth
+   * keeping straight because conflating them hides the weaker one. *Nothing
+   * about the running match can reach this field*: every gloss here is one of
+   * the literal's own strings, chosen and not assembled, so no resolved
+   * contact has a path in — structural, and held by `objectiveGloss.test.ts`.
+   * *Nothing an author wrote may name somebody else's force*: prose, checked
+   * against prose, by the sweep in `missions.test.ts`. A gloss naming a hull
+   * kind or a speaker the player has not detected would satisfy the first and
+   * break the second.
+   *
+   * The second is a **necessary condition and not the whole rule**, and saying
+   * so is part of it: a deny-list over proper nouns catches a gloss that names
+   * a Corvette and cannot catch one that says *three other delegations hold the
+   * east*, which names nobody and reveals a count and two bearings. It also
+   * cannot ban a navy the player's own party flies — Sorrowgate seats a Commune
+   * delegation beside a Commune player — so *the Commune delegation to the
+   * west* passes too. The gate bounds what an author can do by accident; the
+   * rest is review. Three rounds of a reveal surviving a green suite is what
+   * that sentence was learned from, and under-claiming is the whole point of
+   * it.
+   *
+   * Absent is the ordinary case — twenty-eight missions author none, and a
+   * mission that authors none shows the reading alone exactly as before.
+   */
+  gloss?: string;
   status: ObjectiveStatus;
   /**
    * INVARIANT: `done` and `of` are computed exclusively from the observer's own

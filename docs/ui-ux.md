@@ -580,6 +580,27 @@ something new, and a log role would re-announce the whole panel every time a cou
   court says *the flight stays under twenty* ([mission-sorrowgate.md](mission-sorrowgate.md)
   §12); a shared string would say "maintain SIG below 20", which is a sentence no faction in
   this setting speaks, and three of the four would have to be broken to make one template fit.
+- **A mission may author a plain gloss beside a reading, and the gloss never replaces it.**
+  The verbatim rule above is exactly why the panel needs one. *The flight stays under twenty*
+  is a sentence the court speaks and not one a first-time player can act on: they do not know
+  what the flight is, which hulls are in it, that *twenty* is a SIG reading rather than a count
+  of anything, or what *ears* means. So a second, plainly-worded line sits **beside** the
+  authored one and says what is being asked, which of the player's own numbers or hulls it is
+  about, and where to look. The authored line stays first and stays whole, in the reading order
+  and in the visual hierarchy — a player who wants the fiction gets the fiction. This is the
+  decision taken on 13 September (#720): the argument above stands, the reading is not
+  rewritten, and §10.5 permits the gloss rather than replacing anything.
+- **The gloss is authored per mission and is never templated either.** A shared string fails
+  here for the reason it fails above, and four registers would have to be broken to make one
+  fit; what is shared is the **slot**, not the sentence. Three rules bind a gloss exactly as
+  they bind the reading it accompanies. The anti-reveal rule below: a gloss may name the
+  player's own hulls, their own numbers and an authored place, and never a contact the player
+  has not detected or a count of anything hostile. The status region's promise to change in
+  place: a gloss joins its row rather than becoming a row of its own, and is part of that row's
+  accessible name rather than a second unannounced thing on screen (§11).
+  And it **names no key** — the same panel is read on a device with no keyboard, where naming
+  one is the same lie as hiding a working one (#722); a gloss points at what is on screen, and
+  §7's affordances carry their own bindings.
 - **A silence order states both of its numbers, and both come off the ledger.** Where a
   mission lends an array against a SIG ceiling, the panel carries the loudest hull the order
   binds beside the ceiling it is actually held to — both read from the ledger that charges
