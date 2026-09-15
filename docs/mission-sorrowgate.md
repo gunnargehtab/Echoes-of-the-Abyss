@@ -394,7 +394,7 @@ exactly the shape guidance needs, and it is already the voice this mission opens
 overlay would be a second thing teaching the same four systems, which
 [campaign.md](campaign.md) §10 and [ui-ux.md](ui-ux.md) §14 have both already refused.
 
-**The lines name no control, and this is forced three times over.** Halloran speaks in the third
+**The lines name no control, and this is forced twice over.** Halloran speaks in the third
 person and the perfect tense about things that have been done by named parties
 ([culture.md](culture.md) §3); "right-click the water" is not a sentence the register can
 produce, and a court that started issuing button prompts would stop being the court in the
@@ -405,18 +405,16 @@ hulls are, what the array reads, what the numbers are, what being heard costs �
 binding stays where bindings live, on the command bar and in the hint line under the
 selection ([ui-ux.md](ui-ux.md) §7).
 
-The third reason is the one that decided the wording of the 01:00 line, and it is worth
-recording because it is not obvious. **The court may not point at the meter, because in this
-mission the meter is not reading the flight.** #623 measured it here: `EchoSnapshot.peakSig`
-maxes over the player's structures as well as their units, and the court's Cantor sits inside
-the player's own party block so that the dome's HYD grant reaches the flight at all — so the
-headline number reads **35** from 00:30 to the transit and **18** after it, and never the
-flight's 6 at any point in the twenty minutes. A line saying "both numbers are in front of
-whoever is flying" would therefore have been false on the screen while being true in the
-simulation, which is the one mistake this register cannot survive. So 01:00 reads the count and
-points nowhere, and 01:50 states a fact about a hull — which is visible, per-hull, on the
-selection readout. #623 is `needs-decision` and stays that way; none of it is settled here, and
-nothing in this change depends on which way it goes.
+**Where 01:00 points, and why it is the panel and not the meter.** The mission carries two
+numbers that could be called the flight's SIG and they are not the same number. The headline
+meter is `EchoSnapshot.peakSig`, a max over the player's **units** since #623 — which in this
+mission is the two tenders at §4's 18 idle, not the flight's 6, because the court's freight is
+the player's too. The reading the court's line is about is the **objectives panel's**, which
+[ui-ux.md](ui-ux.md) §10.5 requires beside the ceiling and which renders `flight SIG 006 / 020`
+off `boundSig` — the peak over the hulls the order actually binds, against the ceiling it binds
+them to, latched from the same ledger that charges the debt ([invariants.md](invariants.md)
+row 21). That is the instrument the line means, it is on screen for the whole window, and it is
+the only place in the mission where both of the court's two numbers appear together.
 
 **Four lines, not more.** One per thing the window has to land: the flight is yours, here is the
 number, moving moves it, and here is the price. A fifth would be teaching a fifth system, which
@@ -426,8 +424,18 @@ number, moving moves it, and here is the price. A fifth would be teaching a fift
 on the player having heard one, and a player who reads none of them finishes the mission on
 exactly the terms §8 gives. Guidance that can be failed is a tutorial, and this is not one.
 
-**What the lines stop short of, and why.** None of the four says how to cross twenty, and that
-is not an authoring choice so much as an open question the beats were written around. §4's
+**What the lines stop short of, and why.** Two things, and they fail for different reasons.
+
+The first is the **gesture**. No line says how to select a hull or how to order it somewhere,
+because the register cannot form the sentence — see above. The beats establish that the four
+hulls are the flight's, that the water inside the arch is theirs to choose and what choosing
+costs; the *how* stays on the command bar and the hint line under the selection, which is where
+[ui-ux.md](ui-ux.md) §7 puts it and where a touch player can also reach it. A player who never
+works out the gesture is not stuck — §8's adjournment closes the record either way — but they
+are also not taught it here, and this document should not pretend otherwise.
+
+The second is the **lever**, and it is an open question rather than an authoring choice. None of
+the four says how to cross twenty. §4's
 first clause says a Light Scout at flank is far above the ceiling, citing
 [systems-echo.md](systems-echo.md) §2's 45–70 flank band. The simulation gives this hull two
 SIG states and nothing between them — 6 standing, 12 under way at any speed — so the only
@@ -616,13 +624,13 @@ room. The numbers are read aloud and left sitting, which is the court's characte
 **00:20 — whose the hulls are**
 
 > Escort One through Four are admitted and they are the flight. The flight holds at the arch.
-> Which water it holds inside the arch is the flight's own affair, and the court has no view
-> on it.
+> Which water it holds inside the arch is the flight's own affair, and the court does not
+> record it.
 
 **01:00 — the count**
 
-> The array has the flight at six. The ceiling is twenty. Both numbers went on the record when
-> the hardpoints came off, and both are the court's to read and not the flight's to argue with.
+> The flight was entered at six when the hardpoints came off, and the ceiling at twenty. Both
+> numbers are on the record, and both are in front of whoever is flying.
 
 **01:50 — what moving costs**
 
@@ -634,11 +642,11 @@ room. The numbers are read aloud and left sitting, which is the court's characte
 
 > The court does not enforce the ceiling. The array does. A hull above twenty is shoving, and
 > for every second it shoves the court's readings are withdrawn from all four hulls for a
-> second afterwards. The flight would be deaf in the court's own water, and the record has
-> seen that before.
+> second afterwards. The court stops counting at a minute. The flight would be deaf in the
+> court's own water, and the record has heard that before.
 
 Each fails [culture.md](culture.md) §3 for the other four registers on the same test §6 sets:
-the Commune could not say "the court has no view on it" without offering to discuss it, the
+the Commune could not say "the court does not record it" without offering to discuss it, the
 Consortium would price the array rather than withdraw it, the Directorate would put the
 shoving in the passive and decline to say whose it was, and a Knight would apologise for the
 ceiling before stating it. None of the four could read a count and leave it sitting.

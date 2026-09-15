@@ -537,7 +537,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       kind: 'say',
       speaker: 'Arbiter Mosk Halloran',
       voice: 'court',
-      text: "Escort One through Four are admitted and they are the flight. The flight holds at the arch. Which water it holds inside the arch is the flight's own affair, and the court has no view on it.",
+      text: "Escort One through Four are admitted and they are the flight. The flight holds at the arch. Which water it holds inside the arch is the flight's own affair, and the court does not record it.",
       note: 'Whose the hulls are, and that the water inside the arch is theirs to use',
     },
     {
@@ -545,18 +545,24 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       kind: 'say',
       speaker: 'Arbiter Mosk Halloran',
       voice: 'court',
-      text: "The array has the flight at six. The ceiling is twenty. Both numbers went on the record when the hardpoints came off, and both are the court's to read and not the flight's to argue with.",
+      text: 'The flight was entered at six when the hardpoints came off, and the ceiling at twenty. Both numbers are on the record, and both are in front of whoever is flying.',
       // Reading the count: the number said aloud and left sitting, which is
       // the court's characteristic move (docs/culture.md §3).
       //
-      // **It points at no instrument, and that is deliberate.** An earlier
-      // draft ended "both are in front of whoever is flying". In this mission
-      // they are not: `peakSig` maxes over the player's structures too, and
-      // the court's Cantor is authored inside the player's party block so the
-      // dome's HYD grant reaches the flight — so the headline meter reads 35
-      // here and never the flight's 6 (#623, which is needs-decision and is
-      // not settled by this change). The line would have been true of the
-      // simulation and false on the screen.
+      // **In the perfect tense, because a present-tense measurement is
+      // falsifiable at the tick it is read.** An earlier draft opened "The
+      // array has the flight at six" — order the flight anywhere before
+      // 01:00 and the panel beside the court reads 12 while the court says
+      // six. What was entered when the hardpoints came off cannot go stale.
+      //
+      // **"In front of whoever is flying" means the objectives panel, not
+      // the headline meter**, and the two are different numbers here. The
+      // meter is `peakSig`, a max over the player's units, which in this
+      // mission is the two tenders at 18 idle — the court's freight is the
+      // player's too. The panel renders `flight SIG 006 / 020` off
+      // `boundSig`, the peak over the hulls the order binds against the
+      // ceiling it binds them to (docs/ui-ux.md §10.5, invariants row 21).
+      // That is the only place both of the court's numbers appear together.
       note: 'The count. Six against twenty, read aloud and left sitting',
     },
     {
@@ -576,10 +582,16 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       kind: 'say',
       speaker: 'Arbiter Mosk Halloran',
       voice: 'court',
-      text: "The court does not enforce the ceiling. The array does. A hull above twenty is shoving, and for every second it shoves the court's readings are withdrawn from all four hulls for a second afterwards. The flight would be deaf in the court's own water, and the record has seen that before.",
-      // §4's three clauses stated as one consequence: debt accrues a second
-      // per second over the ceiling, the array is withdrawn from the whole
+      text: "The court does not enforce the ceiling. The array does. A hull above twenty is shoving, and for every second it shoves the court's readings are withdrawn from all four hulls for a second afterwards. The court stops counting at a minute. The flight would be deaf in the court's own water, and the record has heard that before.",
+      // §4's clause 3 stated as one consequence: debt accrues a second per
+      // second over the ceiling, the array is withdrawn from the whole
       // flight rather than the offending hull, and it repays one for one.
+      //
+      // "The court stops counting at a minute" is `debtCapS` (60), and it is
+      // read aloud rather than left out because §4 spends a sentence on it
+      // and gives its reason — "so one catastrophic breach cannot black out
+      // the rest of the mission. Dread, not confusion." Without the clause
+      // the line promises exactly the blackout the cap exists to prevent.
       // What the line does *not* say is how to cross twenty, because on this
       // hull nothing the player does while moving reaches it. §9's "What the
       // lines stop short of" records why, and records that which side of

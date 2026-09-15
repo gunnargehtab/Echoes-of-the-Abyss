@@ -43,6 +43,7 @@ import {
   ObjectiveStatus,
   ResolutionTier,
   SIM,
+  UNIT_STATS,
   UnitKind,
   type EchoSnapshot,
   type MissionView,
@@ -763,6 +764,13 @@ describe('the four voices in the water', () => {
 });
 
 describe('the court, in the opening window', () => {
+  /** Everything the court said in one string, for the number assertions below. */
+  const courtSaid = (lines: readonly MissionLine[]) =>
+    lines
+      .filter((line) => line.voice === 'court')
+      .map((line) => line.text)
+      .join(' ');
+
   it('reads four lines into the record between 00:20 and 02:40', () => {
     // §9's guidance beats and §12's authored text for them. The window is
     // §10's first lesson — a ceiling, a meter and a flight — and #720 is the
@@ -798,31 +806,51 @@ describe('the court, in the opening window', () => {
     );
   });
 
-  it('states the two numbers the lesson is made of, and never a way past them', () => {
-    // §12: six and twelve are §3's own figures for this hull and twenty is
-    // §4's ceiling, so the court is stating facts about its own room. The
-    // negative half is the one worth a test: §9 records that nothing a hull
-    // of the flight does while moving reaches twenty — the two SIG states are
-    // 6 and 12 — so a line that told the player how to breach the ceiling
-    // would be teaching either a lever this simulation does not have or
-    // descent, which §10 refuses to teach here. Both readings of that
-    // disagreement leave these four lines true, which is why they are these
-    // four lines.
-    const run = passiveRun();
-    const said = run.lines
-      .filter((line) => line.voice === 'court')
-      .map((line) => line.text)
-      .join(' ');
-    for (const figure of ['six', 'twelve', 'twenty']) {
-      assert.match(said, new RegExp(`\\b${figure}\\b`), `the court never reads ${figure} aloud`);
+  it('reads the simulation’s own three numbers aloud, and never a way past them', () => {
+    // §12: six and twelve are the Light Scout's own figures and twenty is
+    // §4's ceiling, so the court is stating facts about its own room.
+    //
+    // **Derived from the literal rather than spelled here**, which is the
+    // whole point of the test. An earlier version asserted that the authored
+    // text contained the three words the authored text hard-codes — true by
+    // construction, and green after any change to the ceiling or the hull
+    // that made all four lines false. These read `silenceCeilingSig` and
+    // `UNIT_STATS`, so retuning either fails here until the court is
+    // re-authored to match.
+    const scout = UNIT_STATS[UnitKind.LightScout];
+    const spell = new Map([
+      [6, 'six'],
+      [12, 'twelve'],
+      [20, 'twenty'],
+    ]);
+    const said = courtSaid(passiveRun().lines);
+    for (const value of [scout.sigIdle, scout.sigCruise, PROLOGUE_SORROWGATE.silenceCeilingSig]) {
+      const word = spell.get(value);
+      assert.ok(word !== undefined, `the court has no word for ${value} — the literal moved`);
+      assert.match(said, new RegExp(`\\b${word}\\b`), `the court never reads ${value} aloud`);
     }
-    // The flight's own two states, as the court states them, are the hull's.
-    const scout = run.last.units.find((unit) => unit.kind === UnitKind.LightScout);
-    assert.ok(scout !== undefined, 'the flight is not in the player\u2019s own snapshot');
-    assert.ok(
-      run.peakEscortSig <= 20,
-      `an escort reached SIG ${run.peakEscortSig}, so "under twenty" is not what this run shows`
+  });
+
+  it('is true of the flight at both ends of the difference it describes', () => {
+    // The 01:50 line is the window's whole lesson — "standing reads six, under
+    // way reads twelve" — and it is the one claim here a drive can falsify.
+    // Both legs, off runs this file already pays for: the passive run never
+    // orders the flight anywhere, and the escorted run moves it for minutes.
+    const scout = UNIT_STATS[UnitKind.LightScout];
+    assert.equal(
+      passiveRun().peakEscortSig,
+      scout.sigIdle,
+      'a flight nobody ordered anywhere was not at its idle figure'
     );
+    assert.equal(
+      escortedRun().peakEscortSig,
+      scout.sigCruise,
+      'a flight under way for minutes never reached its cruise figure'
+    );
+    // And the court's ceiling is above both, which is what §9 records the
+    // beats as stopping short of: nothing the flight does while moving
+    // reaches twenty.
+    assert.ok(scout.sigCruise < PROLOGUE_SORROWGATE.silenceCeilingSig);
   });
 
   it('is not a gate — stripping all four changes nothing but the log', () => {
@@ -830,7 +858,13 @@ describe('the court, in the opening window', () => {
     // and the issue's seventh criterion. Asserting that the beats are `say`
     // would only restate the literal; this drives the mission twice, once
     // against a derivative with every court line removed, and holds the two
-    // resolutions to each other. If any objective, the outcome, the minute it
+    // resolutions to each other.
+    //
+    // Both sides here are *passive* runs, so what this holds is that guidance
+    // has no simulation effect. The other half of the criterion — that a
+    // player who ignores every line can still **finish** — is held by "reads
+    // fourteen out when the flight escorts both loads up the climb" above,
+    // which completes with all four lines present and obeys none of them. If any objective, the outcome, the minute it
     // closed on or the epilogue moved, guidance would be load-bearing.
     const stripped = {
       ...PROLOGUE_SORROWGATE,
