@@ -26,7 +26,7 @@ import {
   type OrdnanceKind,
 } from '@echoes/shared';
 import { voicingFor } from './biome.ts';
-import { identityFor, timbreFor, type ContactTimbre } from './timbre.ts';
+import { identityFor, timbreFor, type ContactTimbre, type Mechanism } from './timbre.ts';
 
 /** Refresh snap, seconds. §3: "the return of a sound that was dying is itself a warning." */
 const REFRESH_SNAP_S = 0.08;
@@ -41,8 +41,8 @@ const FALLOFF_REFERENCE_M = 900;
  * The oscillator's level, by what the tier is allowed to say, and how far a
  * drive-signature pulse lifts it.
  *
- * Named because `scheduleThump` has to anchor to the level rather than read one
- * back — see the comment there for what reading it back cost.
+ * Named because `strike` has to anchor to the level rather than read one back
+ * — see the comment there for what reading it back cost.
  */
 /**
  * The unclassified thump's partials — §11's speaker profile (#663).
@@ -96,6 +96,144 @@ const DRIVE_LEVEL = {
   /** How far a pulse lifts the voice above its own level. */
   BUMP: 1.6,
 } as const;
+
+/**
+ * How far past the caller's own clock a mechanism's events are placed, seconds.
+ *
+ * `update` is called once per Echo tick — 5 Hz, 0.2 s — because that is when a
+ * contact's *state* arrives (§12: "contacts arrive on the tick; anything
+ * smoother implies knowledge the server did not send"). Emitting an event only
+ * at the instant the caller happens to ask quantises every mechanism onto that
+ * grid, and §8.1's fastest family does not survive it. The Directorate's 9 Hz
+ * has a period of 0.092-0.131 s, every value of it shorter than one tick, so
+ * every click landed on the next tick and the swarm rendered as one click per
+ * snapshot. On a caller ticking at an exact 5 Hz that is a perfect 0.2000 s
+ * metronome — the beat §8 reserves to the Consortium, at the same interval as
+ * the ordnance screw at the short end of its own wander, which §8.1 forbids by
+ * name and in that direction. A live client's snapshots arrive on the network
+ * rather than on a timer, so there it was one click per snapshot at whatever
+ * interval the snapshots came in at — not a metronome, and not a mechanism
+ * either: a rate the wire chose rather than one §8 did.
+ *
+ * So a family's events are placed on the audio clock ahead of the caller
+ * instead, which is what #731 asks for in as many words — "clicks inside a
+ * tick would need their own scheduling, not the tick's amplitude bump". What
+ * that buys past the clicks is that **what a mechanism sounds like stops
+ * depending on how often it is asked**: given the same contact state, the same
+ * events at the same instants whether the caller runs at 5 Hz or at 60, which
+ * is what makes §8.1's separation a property of the mix rather than of its
+ * driver. "Given the same state" is not a hedge — §3's decay stretches the
+ * period, and freshness is delivered by the tick, so a caller that sampled it
+ * more often would be reading a curve nobody sent.
+ *
+ * None of it abandons §12's tick alignment. What arrives on the tick is what
+ * the server sent — tier, bearing, range, freshness — and an event train adds
+ * nothing to it: its rate and its strength are the family's own row and the
+ * clock. The one term of the train that *is* server state is §3's decay
+ * stretch, which comes off `inputs.freshness` and therefore changes on the
+ * tick and nowhere else, so the train still tells the player nothing the tick
+ * had not already told them. §12's own preamble asks for "sample-accurate
+ * scheduling" on this bus, which is the thing being used here.
+ *
+ * Longer than one tick so the train never runs dry between updates, and no
+ * longer than it has to be, because everything inside the horizon is committed
+ * — a contact that drops below Tier 3 must not go on sounding its family, so
+ * see the cancellation in `update`.
+ */
+const EVENT_HORIZON_S = 0.3;
+
+/**
+ * How many layers a swarm's one event is made of — §8's "layered voices".
+ *
+ * The Directorate is "many small things agreeing ... clicks that phase into
+ * unison as cohorts converge — you hear them *organise*", so a swarm event is
+ * not one click but a cluster of three, and what converges is *when they land*.
+ * The family's own rate is still the rate of the cluster, which is what keeps
+ * `rateHz` meaning what its docblock says and keeps §8.1's period band a
+ * description of what the mix renders.
+ */
+export const SWARM_LAYERS = 3;
+
+/**
+ * How often a swarm's layers come back into step, Hz.
+ *
+ * Slow on purpose. §8 asks the player to *hear* them organise, which is a
+ * thing that happens over seconds — a cluster that tightened and scattered
+ * inside one period would be a timbre, not an event anyone could follow. At
+ * 0.19 Hz the cycle is 5.3 seconds — spread, closing, together, opening again
+ * — which is about the rate a held note is heard to phase against another.
+ */
+const SWARM_ORGANISE_HZ = 0.19;
+
+/**
+ * How hard one layer of a fully scattered cluster lands, 0-1.
+ *
+ * Three sources arriving together are louder than three spread out, and an
+ * `AudioParam` timeline cannot say so on its own: two `setValueAtTime` writes
+ * at the same instant do not sum, the later one simply wins. So the summing
+ * the graph cannot do is modelled here — a cluster's clicks are quieter while
+ * it is spread and reach the full drive-signature bump when it closes — and
+ * the level is a consequence of the spread rather than a second oscillator
+ * with its own opinion. Not zero, because a layer out of step is still a layer
+ * that clicked: §8's swarm thins, it does not go silent.
+ */
+const SWARM_SCATTER_FLOOR = 0.45;
+
+/**
+ * The two shapes an event is heard as, in seconds: a breath and a tick.
+ *
+ * Every mechanism used to ease back over 0.18 s. On a family whose events are
+ * 0.111 s apart that is a tail longer than the gap — each bump was still 81%
+ * of the way up when the next arrived, so the swarm was never a train of
+ * clicks at all, but a continuous 140 Hz tone with a tremolo on it. §8 asks
+ * the Directorate for "chitin ticks", and a tick is a transient: at the
+ * densest the cluster gets, a third of the family's period, a tick is down to
+ * 19% of itself when the next click lands and the breath is still at 81%.
+ * That ratio is the whole difference between a click train and a texture, and
+ * it is what `contactTimbre.test.ts` holds rather than the constant.
+ *
+ * The breath is the other four families' and is unchanged. §8's drive
+ * signature there is "the same thing breathing", and a breath that was over in
+ * 22 ms would be a tick by another name.
+ */
+export const ENVELOPE = {
+  BREATH: { holdS: 0.02, decayS: 0.18 },
+  TICK: { holdS: 0.004, decayS: 0.022 },
+} as const;
+
+/**
+ * The period between one event of a mechanism and the next, at an instant.
+ *
+ * A function of the event's *own* time rather than of the caller's, which is
+ * what lets `scheduleEvents` walk a train forward past the horizon without the
+ * shape of it depending on who asked or when.
+ */
+function periodAt(timbre: ContactTimbre | null, at: number): number | null {
+  // `timbre` is null exactly when `update` found no family to sound — below
+  // Tier 3, or at Tier 3 with no identity — and both want the wandering thump
+  // rather than any mechanism's period. §3: "irregular period 1.2-2.5 s",
+  // deterministic in shape but not periodic.
+  if (timbre === null) return 1.85 + Math.sin(at * 1.3) * 0.65;
+  if (timbre.rateHz <= 0) return null;
+  return (1 / timbre.rateHz) * (1 + (Math.sin(at * 3.7) * timbre.jitter) / 2);
+}
+
+/**
+ * How far apart a swarm cluster's layers land at one instant, seconds.
+ *
+ * Zero when they are in unison and a third of the family's period when they
+ * are fully scattered, which is exactly even spacing — so a scattered cluster
+ * is a steady train at three times the family rate, and a closed one is a
+ * single harder click at the family rate. That is the whole of "you hear them
+ * organise", and it is in *when the clicks land* rather than in a level.
+ *
+ * A pure function of absolute time, like `periodAt`, so nothing about the
+ * cluster depends on when the caller happened to ask.
+ */
+function swarmSpread(period: number, at: number): number {
+  const closed = (1 + Math.cos(2 * Math.PI * SWARM_ORGANISE_HZ * at)) / 2;
+  return ((1 - closed) * period) / SWARM_LAYERS;
+}
 
 /**
  * Authority a tier has over stereo position, 0-1.
@@ -182,7 +320,19 @@ export class ContactVoice {
   /** The level the oscillator is being held at, which a pulse bumps around. */
   private oscBase: number = DRIVE_LEVEL.THUMP;
   private lockToneFired = false;
-  private nextPulseAt = 0;
+  /** Absolute time of the next event this voice owes its mechanism. */
+  private nextEventAt = 0;
+  /**
+   * The family the events already on the clock belong to, or null for the
+   * thump.
+   *
+   * Events are committed up to `EVENT_HORIZON_S` ahead, so which family they
+   * belong to has to be remembered rather than re-derived: a contact demoted
+   * below Tier 3, or reclassified as something else, must not go on sounding
+   * the family it had. §3 forbids Tier 2 from carrying class information in
+   * its timbre, and a scheduling horizon is not an exemption from it.
+   */
+  private voicedMechanism: Mechanism | null = null;
   private stopped = false;
 
   constructor(context: AudioContext, destination: AudioNode) {
@@ -235,6 +385,22 @@ export class ContactVoice {
     // saying something anyway was the bug.
     const timbre =
       inputs.tier >= ResolutionTier.Classification ? timbreFor(identityFor(inputs)) : null;
+
+    // A family's events are already on the clock up to `EVENT_HORIZON_S` out,
+    // so a change of family has to take back the ones that have not happened
+    // yet — otherwise a contact demoted to Tier 2 goes on clicking like a
+    // Directorate hull after the server stopped saying it was one, which is
+    // the leak §3 closes at the tier and not at the horizon. The window is the
+    // horizon less one tick, since the update that demotes it arrives a tick
+    // after the one that committed them: 0.1 s at 5 Hz, and every click the
+    // swarm can fit in it. Taken before the writes below rather than after, so
+    // it cancels the old schedule and never this tick's own.
+    const mechanism = timbre?.mechanism ?? null;
+    if (mechanism !== this.voicedMechanism) {
+      this.oscGain.gain.cancelScheduledValues(now);
+      this.voicedMechanism = mechanism;
+      this.nextEventAt = now;
+    }
 
     // --- Spatialisation: the rule at the top of this file -------------------
     this.panner.pan.setTargetAtTime(panFor(inputs.tier, inputs.bearing), now, 0.12);
@@ -297,65 +463,99 @@ export class ContactVoice {
     }
 
     this.tier = inputs.tier;
-    this.scheduleThump(inputs, timbre, now);
+    this.scheduleEvents(inputs, timbre, now);
   }
 
   /**
-   * The pulse that gives a contact its period.
+   * Place every event this voice owes between the caller's clock and the
+   * horizon.
    *
-   * Tier 1's is irregular by design (§3: "irregular period 1.2-2.5 s"), and a
-   * decaying contact's lengthens, so a fading return audibly *slows* rather
-   * than merely thinning.
+   * The loop walks the *event train* rather than the caller's ticks, which is
+   * the whole of `EVENT_HORIZON_S`'s argument: an event's time is a function
+   * of the event before it and of nothing whatever the caller did. A decaying
+   * contact's period lengthens as it goes, so a fading return audibly *slows*
+   * rather than merely thinning (§3).
    */
-  private scheduleThump(inputs: VoiceInputs, timbre: ContactTimbre | null, now: number): void {
-    if (now < this.nextPulseAt) return;
+  private scheduleEvents(inputs: VoiceInputs, timbre: ContactTimbre | null, now: number): void {
+    // A voice that has never scheduled, or one whose clock jumped forward —
+    // §12 suspends the context on tab blur and holds state, so `now` can
+    // return minutes later — starts its train where the caller is rather than
+    // replaying the whole gap into the graph in one go.
+    if (this.nextEventAt < now) this.nextEventAt = now;
 
     const stretch = 1 + (1 - inputs.freshness) * DECAY_PERIOD_STRETCH;
-    let period: number;
-    // `timbre` is null exactly when `update` found no family to sound — below
-    // Tier 3, or at Tier 3 with no identity — and both want the wandering
-    // thump of the last branch rather than any mechanism's period.
-    if (timbre !== null && timbre.rateHz > 0) {
-      const wander = 1 + (Math.sin(now * 3.7) * timbre.jitter) / 2;
-      period = (1 / timbre.rateHz) * wander;
-    } else if (timbre !== null) {
-      // An eventless mechanism has no pulse at all, so emit nothing and just
-      // push the next check forward — the bump below is a *re-trigger*, and
-      // "keep it sounding without re-triggering" is what this branch always
-      // meant to say. Scheduling one here gave the Knights' drone, and every
-      // no-faction contact with it, a 1.5000 s period with zero variation,
-      // which is the beat docs/audio-direction.md §8 reserves to the
-      // Consortium. The oscillator is already running at its own level; an
-      // eventless voice stays audible without any amplitude event.
-      this.nextPulseAt = now + 1.5 * stretch;
-      return;
-    } else {
-      // 1.2-2.5 s, wandering. Deterministic in shape but not periodic.
-      period = 1.85 + Math.sin(now * 1.3) * 0.65;
-    }
-    this.nextPulseAt = now + period * stretch;
+    const horizon = now + EVENT_HORIZON_S;
 
-    // A short amplitude bump on the oscillator rather than a new source: it
-    // reads as the same thing breathing, which is what a drive signature is.
-    //
-    // Both ends of the bump are anchored to the voice's *own* level, never to
-    // whatever the parameter happens to read. Reading it back was two bugs at
-    // once, because the `cancelScheduledValues` below cancels the ramp `update`
-    // scheduled at this same instant, so the read never saw the level the voice
-    // was being set to — only the level it was leaving.
-    //
-    // A contact already at Tier 3+ on its first frame therefore read 0, bumped
-    // to 0, settled at 0, and its drive signature never sounded at all. And a
-    // contact promoted while sounding read its *previous bump's tail* and
-    // settled back onto that, so every pulse started higher than the last: a
-    // ratchet with no ceiling, worst where §8 puts the fastest mechanism. The
-    // Directorate's swarm is 9 events per second, so its pulse fires on every
-    // 5 Hz tick and never gets an un-pulsed tick to fall back on — measured at
-    // 260x the voice's own level after eight seconds of being tracked, and
-    // still climbing.
-    this.oscGain.gain.cancelScheduledValues(now);
-    this.oscGain.gain.setValueAtTime(this.oscBase * DRIVE_LEVEL.BUMP, now);
-    this.oscGain.gain.setTargetAtTime(this.oscBase, now + 0.02, 0.18);
+    while (this.nextEventAt < horizon) {
+      const at = this.nextEventAt;
+      const period = periodAt(timbre, at);
+      if (period === null) {
+        // An eventless mechanism has no pulse at all, so emit nothing and
+        // carry the train forward — the bump is a *re-trigger*, and "keep it
+        // sounding without re-triggering" is what this branch always meant to
+        // say. Emitting one here gave the Knights' drone, and every
+        // no-faction contact with it, a 1.5000 s period with zero variation,
+        // which is the beat §8 reserves to the Consortium. The oscillator is
+        // already running at its own level; an eventless voice stays audible
+        // with no amplitude event at all.
+        this.nextEventAt = at + 1.5 * stretch;
+        continue;
+      }
+      this.emit(timbre, at, period);
+      this.nextEventAt = at + period * stretch;
+    }
+  }
+
+  /**
+   * One event of a mechanism.
+   *
+   * Four of the six families have one body and it hits once. The swarm is
+   * "many small things", so its event is a cluster of `SWARM_LAYERS` clicks
+   * whose spacing breathes: fully spread they are evenly spaced and the train
+   * runs at three times the family rate, and closed they land together as one
+   * harder click at the family rate. Which is §8's "clicks that phase into
+   * unison as cohorts converge", carried in *when they land* — a level alone
+   * would be a tremolo, and a tremolo on a continuous tone is what #731
+   * reports hearing.
+   */
+  private emit(timbre: ContactTimbre | null, at: number, period: number): void {
+    if (timbre !== null && timbre.mechanism === 'swarm') {
+      const spread = swarmSpread(period, at);
+      // 0 while the cluster is fully scattered, 1 as it closes — the same
+      // number the spacing is made of, so the level cannot drift out of step
+      // with what the player is actually hearing converge.
+      const closed = 1 - (spread * SWARM_LAYERS) / period;
+      const strength = SWARM_SCATTER_FLOOR + (1 - SWARM_SCATTER_FLOOR) * closed;
+      const peak = this.oscBase * (1 + (DRIVE_LEVEL.BUMP - 1) * strength);
+      for (let layer = 0; layer < SWARM_LAYERS; layer++) {
+        this.strike(at + layer * spread, peak, ENVELOPE.TICK);
+      }
+      return;
+    }
+    this.strike(at, this.oscBase * DRIVE_LEVEL.BUMP, ENVELOPE.BREATH);
+  }
+
+  /**
+   * A short amplitude event on the oscillator rather than a new source: it
+   * reads as the same thing breathing, which is what a drive signature is, and
+   * it keeps §12's budget a question of what a tick *builds* — a mechanism
+   * with twenty-seven clicks a second could not afford a node each.
+   *
+   * Both ends of it are anchored to the voice's *own* level, never to whatever
+   * the parameter happens to read. Reading it back was two bugs at once,
+   * because a `cancelScheduledValues` in the same breath cancels the ramp
+   * `update` scheduled at that instant, so the read never saw the level the
+   * voice was being set to — only the level it was leaving. A contact already
+   * at Tier 3+ on its first frame therefore read 0, bumped to 0, settled at 0,
+   * and its drive signature never sounded at all; and a contact promoted while
+   * sounding read its previous bump's tail and settled back onto that, so
+   * every pulse started higher than the last: a ratchet with no ceiling,
+   * measured at 260x the voice's own level after eight seconds of being
+   * tracked, and worst on the swarm, whose events are the closest together.
+   */
+  private strike(at: number, peak: number, shape: (typeof ENVELOPE)[keyof typeof ENVELOPE]): void {
+    this.oscGain.gain.setValueAtTime(peak, at);
+    this.oscGain.gain.setTargetAtTime(this.oscBase, at + shape.holdS, shape.decayS);
   }
 
   private fireLockTone(now: number): void {
@@ -379,6 +579,13 @@ export class ContactVoice {
   stop(now: number): void {
     if (this.stopped) return;
     this.stopped = true;
+    // The mechanism's committed events go with it. A voice is scheduled up to
+    // `EVENT_HORIZON_S` ahead, so a contact that stops — expired, or stolen
+    // for a higher tier (§12's stealing policy) — otherwise leaves a horizon
+    // of its family's clicks standing on the graph, audible *under* the fade
+    // below rather than silenced by it. Measured at three swarm clicks, the
+    // last 96 ms past the stop, before this line existed.
+    this.oscGain.gain.cancelScheduledValues(now);
     this.out.gain.cancelScheduledValues(now);
     this.out.gain.setTargetAtTime(0, now, 0.12);
     const end = now + 0.6;

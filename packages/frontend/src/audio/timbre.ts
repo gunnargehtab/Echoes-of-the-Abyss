@@ -26,7 +26,15 @@ export interface ContactTimbre {
   mechanism: Mechanism;
   /** Fundamental of the signature, Hz. */
   baseHz: number;
-  /** Events per second, where the mechanism has events. */
+  /**
+   * Events per second, where the mechanism has events.
+   *
+   * The *family's* event, which is not always one click: the swarm's is a
+   * cluster of layers (contactVoice.ts, `SWARM_LAYERS`), because §8 gives the
+   * Directorate "layered voices" and asks them to converge. The rate is the
+   * cluster's, so this number stays the one §8.1's period band is built from
+   * and stays a description of what the mix renders.
+   */
   rateHz: number;
   /**
    * How much the period wanders, 0-1.
@@ -103,14 +111,24 @@ export const CREATURE_TIMBRE: ContactTimbre = {
  *
  * Four events a second, a register above every drive signature. Deliberately
  * *not* faster than the Directorate's 9 Hz, which is where "a small fast
- * running screw" first points: the contact mix is driven by the 5 Hz Echo
- * snapshot (engine.ts, `onEchoTick`), so any rate past 5 fires on every tick
- * and is rendered as the Directorate already is. Faster than the swarm is not
- * a mechanism the player can hear; clear of it, in the slower direction, is.
+ * running screw" first points — and the reason is now §8.1's own and nothing
+ * else's: it separates the screw from the swarm "the same way and in the other
+ * direction", so a screw faster than the swarm's clicks would be that
+ * mechanism at another rate rather than a mechanism of its own.
+ *
+ * **That is a different argument from the one this comment used to make**, and
+ * the old one is worth recording as gone. Until #731 the contact mix rendered
+ * every event on the 5 Hz Echo snapshot, so any rate past 5 fired on every
+ * tick and came out as the Directorate already did; 4 Hz was chosen partly to
+ * stay inside what the tick could express. It no longer has to be: an event
+ * train is placed on the audio clock (contactVoice.ts, `EVENT_HORIZON_S`), so
+ * this rate renders as itself. The number does not move, because §8.1's
+ * direction was always the better half of the argument.
  *
  * `jitter` is what keeps this off the Consortium's row. A screw is nearly
  * periodic and an exactly periodic one is a beat, which §8 reserves — so it
- * wanders by 45%, enough to land on two different multiples of the Echo tick.
+ * wanders by 45%, and now wanders continuously rather than between two
+ * multiples of a tick: 0.194-0.306 s, measured.
  */
 export const ORDNANCE_TIMBRE: ContactTimbre = {
   mechanism: 'screw',

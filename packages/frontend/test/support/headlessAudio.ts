@@ -47,6 +47,19 @@ export interface ParamWrite {
   method: 'setValueAtTime' | 'setTargetAtTime' | 'linearRamp' | 'exponentialRamp' | 'cancel';
   value: number;
   at: number;
+  /**
+   * The time constant of a `setTargetAtTime`, and undefined for every other
+   * method.
+   *
+   * Kept because the *shape* of an envelope is a design claim in its own
+   * right, not a detail of one: docs/audio-direction.md §8 gives the
+   * Directorate "chitin ticks" and the other families a thing that breathes,
+   * and the difference between a tick and a breath is entirely this number.
+   * Dropping it meant a test could assert every instant and every level a
+   * voice wrote and still not notice the swarm being put back on a 0.18 s tail
+   * — which is most of what #731 reports hearing.
+   */
+  timeConstant?: number;
 }
 
 /**
@@ -111,10 +124,15 @@ export class StubAudioParam {
     this.settled = value;
   }
 
-  private record(method: ParamWrite['method'], value: number, at: number): this {
+  private record(
+    method: ParamWrite['method'],
+    value: number,
+    at: number,
+    timeConstant?: number
+  ): this {
     this.approach = null;
     this.settled = value;
-    this.writes.push({ method, value, at });
+    this.writes.push({ method, value, at, timeConstant });
     this.ledger.scheduled++;
     return this;
   }
@@ -125,7 +143,7 @@ export class StubAudioParam {
 
   setTargetAtTime(target: number, at: number, timeConstant: number): this {
     const from = this.value;
-    this.record('setTargetAtTime', target, at);
+    this.record('setTargetAtTime', target, at, timeConstant);
     this.approach = { from, to: target, at, tau: timeConstant };
     return this;
   }
