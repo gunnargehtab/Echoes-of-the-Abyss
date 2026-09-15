@@ -621,9 +621,11 @@ export class AudioEngine {
   /**
    * Per-Echo-tick work: update the duck from measured contact level.
    *
-   * Called on the 5 Hz snapshot rather than per frame, because scheduling is
-   * aligned to the tick contacts actually arrive on — anything smoother would
-   * imply knowledge the server did not send (§12).
+   * Called on the 5 Hz snapshot rather than per frame, because a contact's
+   * *state* is aligned to the tick it actually arrives on — anything smoother
+   * would imply knowledge the server did not send (§12). A family's own event
+   * train is not state and is not on this clock: `ContactVoice` places it
+   * ahead on the audio clock, per §12's scaffold status (#731).
    */
   onEchoTick(): void {
     const started = performance.now();

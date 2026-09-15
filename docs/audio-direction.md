@@ -376,7 +376,7 @@ AudioContext
 | --- | --- | --- |
 | Simultaneous contact voices | 24 | Beyond this the low band turns to mud and nothing is legible |
 | Voice stealing order | Lowest tier first, then oldest, then quietest | Never steal a Tier-4 track; it is the only exact information the player has |
-| Voice scheduling | Aligned to the 5 Hz Echo tick | Contacts arrive on the tick; anything smoother implies knowledge the server did not send |
+| Voice scheduling | Contact state on the 5 Hz Echo tick; a family's own event train on the audio clock | Contacts arrive on the tick, and anything smoother implies knowledge the server did not send. A mechanism's events are not that: they carry no server state, and holding them to the tick makes §8.1's faster families unrenderable — see below |
 | Audio thread budget | 1 ms per Echo tick on the main thread | The Echo Layer already owns 2 ms server-side; the client must not spend it again |
 | Format | Opus in WebM, AAC fallback | Browser coverage without shipping two full banks at full size |
 | Loudness target | −18 LUFS integrated, −1 dBTP | Headroom for the exposure cue, which is deliberately the loudest event in the game |
@@ -387,8 +387,23 @@ AudioContext
 ### Scaffold status
 
 The engine exists (`packages/frontend/src/audio/`): the bus graph above, the 24-voice
-contact budget with its stealing policy, tick-aligned scheduling, tab-blur suspend, and the
-first-gesture unlock.
+contact budget with its stealing policy, tick-aligned contact state, tab-blur suspend, and
+the first-gesture unlock.
+
+**What the tick aligns, and what it does not** (#731). A contact's *state* arrives on the
+Echo tick and is applied there — tier, bearing, range, freshness — because that is when the
+server said it, and a mix that interpolated between ticks would be showing the player a
+position nobody resolved. A family's **event train** is a different thing and is placed on
+the audio clock ahead of the caller, because holding it to the tick does not protect
+anything and costs §8.1 its fastest families outright: the Directorate's 9 Hz has a period
+band of 0.092-0.131 s, every value of it shorter than one tick, so quantising it rendered
+the swarm as an exact 0.2000 s metronome — the beat §8 reserves to the Consortium, at the
+same interval as the ordnance screw at the short end of its own wander, which §8.1 forbids
+by name and in that direction. An event train tells the player nothing the tick did not:
+the same rate at the same strength whatever the contact is doing, a function of the clock
+and of the family's own row. The distinction is the one this table's reason column was
+always making; it is written out here because the row's short form read as a ban on
+sub-tick scheduling of any kind, and three files' comments had taken it that way.
 
 The **-1 dBTP ceiling in the table above is now held by the graph** rather than assumed of
 the material. It has to be: the buses are summed, the world bus doubles under Silent

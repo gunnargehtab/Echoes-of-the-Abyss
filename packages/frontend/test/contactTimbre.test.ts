@@ -23,6 +23,7 @@ import { Biome, Faction, FaunaSpecies, OrdnanceKind, ResolutionTier, SIM } from 
 import {
   ContactVoice,
   ENVELOPE,
+  SWARM_LAYERS,
   THUMP_PARTIALS,
   type VoiceInputs,
 } from '../src/audio/contactVoice.ts';
@@ -450,13 +451,21 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
       'the Directorate presents a beat at the rate the engine drives it'
     );
 
-    // And it is finally heard at the rate its own row declares: 9 events a
-    // second, not the 5 the tick could express.
-    const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+    // And its cluster is finally heard at the rate its own row declares: 9
+    // events a second, not the 5 the tick could express. Counted as clusters
+    // rather than as clicks, since §8's swarm event is `SWARM_LAYERS` of them
+    // — which is what keeps `rateHz` meaning what its docblock says and keeps
+    // §8.1's period band a description of what the mix renders.
     const declared = 1 / FACTION_TIMBRE[Faction.Directorate].rateHz;
+    const clusters = swarm.pulses.filter((at) => at < SPAN_S).length / SWARM_LAYERS;
     assert.ok(
-      Math.abs(mean - declared) < declared * 0.1,
-      `the swarm renders at ${(1 / mean).toFixed(2)} Hz against the ${FACTION_TIMBRE[Faction.Directorate].rateHz} Hz it declares`
+      Math.abs(clusters / SPAN_S - FACTION_TIMBRE[Faction.Directorate].rateHz) < 0.5,
+      `the swarm renders ${(clusters / SPAN_S).toFixed(2)} clusters a second against the ` +
+        `${FACTION_TIMBRE[Faction.Directorate].rateHz} Hz it declares`
+    );
+    assert.ok(
+      Math.max(...gaps) <= declared * 1.2,
+      'a gap longer than the declared period: the cluster is not the family event'
     );
 
     // The positive control, and the half that must not move: the Consortium's
@@ -465,67 +474,243 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
     assert.ok(periodSpread(beat.pulses) < 1e-6, 'the Consortium lost its beat');
   });
 
-  it('hears the swarm organise: clicks that arrive together, then scatter', () => {
+  it('hears the swarm organise: clicks that close into unison, then scatter', () => {
     // §8's Directorate is "clicks that phase into unison as cohorts converge —
-    // you hear them *organise*". That is the one thing in the table that is a
-    // change over time rather than a setting, so it is asserted as one: the
-    // strength of a click rises and falls as the cohorts drift through phase.
+    // you hear them *organise*". That is a statement about *when clicks land*,
+    // so it is asserted about when they land. A level that rose and fell on a
+    // train whose instants never moved would be a tremolo, and a tremolo on a
+    // continuous tone is what #731 reports hearing in the first place.
     const swarm = drive(
       { faction: Faction.Directorate },
       ResolutionTier.Classification,
       ECHO_STEP_S
     );
-    const strengths = swarm.events.map((w) => w.value);
-    const lo = Math.min(...strengths);
-    const hi = Math.max(...strengths);
+    const period = 1 / FACTION_TIMBRE[Faction.Directorate].rateHz;
+    const gaps = intervals(swarm.pulses.filter((at) => at < SPAN_S));
+
+    // Closed: the layers land together, so some gaps are ~nothing and the gap
+    // to the next cluster is the family's whole period.
     assert.ok(
-      hi > lo * 1.25,
-      `swarm clicks all land alike (${lo.toFixed(3)}-${hi.toFixed(3)}): nothing converges`
+      Math.min(...gaps) < period * 0.02,
+      `the layers never came within ${(period * 0.02).toFixed(4)} s of unison: nothing converges`
+    );
+    assert.ok(
+      Math.max(...gaps) > period * 0.85,
+      'no gap ever opened to the family period, so the cluster never closed'
     );
 
-    let turns = 0;
-    for (let i = 2; i < strengths.length; i++) {
-      const before = strengths[i - 1]! - strengths[i - 2]!;
-      const after = strengths[i]! - strengths[i - 1]!;
-      if (before > 0 !== after > 0) turns++;
+    // Scattered: three layers evenly spread is three gaps of a third of the
+    // period each, which is the other end of the same cycle.
+    let evenly = 0;
+    for (let i = SWARM_LAYERS - 1; i < gaps.length; i++) {
+      const window = gaps.slice(i - SWARM_LAYERS + 1, i + 1);
+      if (window.every((g) => g > period * 0.25 && g < period * 0.42)) evenly++;
+    }
+    assert.ok(evenly > 0, 'the cluster never spread evenly, so it only ever sounded as one click');
+
+    // And it is a cycle rather than a one-off: the swarm passes through unison
+    // more than once inside the span, which is what makes it something a
+    // player can learn rather than a transient.
+    let closings = 0;
+    for (let i = 1; i < gaps.length; i++) {
+      if (gaps[i]! < period * 0.02 && gaps[i - 1]! >= period * 0.02) closings++;
     }
     assert.ok(
-      turns >= 4,
-      `the swarm converged ${turns} times in ${SPAN_S} s, which is not a cycle`
+      closings >= 2,
+      `the swarm closed ${closings} times in ${SPAN_S} s, which is not a cycle`
     );
 
-    // The control: every other family has one body and hits the same way each
-    // time, so a varying strength is the swarm's alone and not a wobble the
-    // whole mix picked up.
+    // The control: every other family has one body that hits once, so a
+    // cluster is the swarm's own tell and not something the whole mix caught.
     for (const [name, identity] of SOUNDING) {
       if (name === Faction[Faction.Directorate]) continue;
-      const values = drive(identity, ResolutionTier.Classification, ECHO_STEP_S).events.map(
-        (w) => w.value
-      );
+      const theirs = drive(identity, ResolutionTier.Classification, ECHO_STEP_S);
+      const values = theirs.events.map((w) => w.value);
       assert.ok(
         values.every((v) => Math.abs(v - values[0]!) < 1e-9),
-        `${name}'s events vary in strength, which is the swarm's own tell`
+        `${name}'s events vary in strength, which belongs to a cluster that is closing`
+      );
+      assert.ok(
+        Math.min(...intervals(theirs.pulses)) > 1e-6,
+        `${name} emits clicks on top of one another, which is the swarm's own shape`
       );
     }
   });
 
-  it('gives the swarm a tick that is over before the next one starts', () => {
+  it('gives the swarm a tick, and every other family the breath §8 gives it', () => {
     // Why the swarm needed an envelope of its own, in one comparison. Every
     // mechanism used to ease back over BREATH.decayS, which is longer than the
     // whole gap between two swarm events — so no click was ever a click, only
     // a tremolo on a continuous tone, which is what #731 reports hearing.
-    const gaps = intervals(
-      drive({ faction: Faction.Directorate }, ResolutionTier.Classification, ECHO_STEP_S).pulses
-    );
-    const shortest = Math.min(...gaps);
+    //
+    // Asserted on the decay the voice actually wrote, not on arithmetic
+    // between two exported constants: the round before this one held the
+    // shape that way and the swarm could be put straight back on the breath
+    // with the whole suite still green.
+    // Each event's own decay is the write immediately after it, which is how
+    // `strike` places the pair — picking them out by value instead would also
+    // collect the level ramp `update` writes every tick for its own reasons.
+    const decaysOf = (identity: Partial<VoiceInputs>) => {
+      const writes = drive(identity, ResolutionTier.Classification, ECHO_STEP_S).writes;
+      const out: (number | undefined)[] = [];
+      for (let i = 0; i < writes.length - 1; i++) {
+        if (writes[i]!.method !== 'setValueAtTime') continue;
+        const next = writes[i + 1]!;
+        assert.equal(next.method, 'setTargetAtTime', 'an event was written without its decay');
+        out.push(next.timeConstant);
+      }
+      return out;
+    };
+
+    const swarmDecays = decaysOf({ faction: Faction.Directorate });
+    assert.ok(swarmDecays.length > 10, 'the swarm wrote too few decays to measure');
     assert.ok(
-      ENVELOPE.BREATH.decayS > shortest,
-      'fixture assumes the breath is too long for the swarm; it no longer is, so this test is moot'
+      swarmDecays.every((tau) => tau === ENVELOPE.TICK.decayS),
+      `the swarm decays over ${swarmDecays.find((t) => t !== ENVELOPE.TICK.decayS)} s, not a tick`
+    );
+
+    for (const [name, identity] of SOUNDING) {
+      if (name === Faction[Faction.Directorate]) continue;
+      const theirs = decaysOf(identity);
+      assert.ok(theirs.length > 2, `${name} wrote too few decays to measure`);
+      assert.ok(
+        theirs.every((tau) => tau === ENVELOPE.BREATH.decayS),
+        `${name} lost the breath §8 gives it and is decaying over ${theirs[0]} s`
+      );
+    }
+
+    // And the shapes are the right way round for the spacing they have to sit
+    // in. The densest the swarm gets is its layers evenly spread — a third of
+    // the family's period — and what separates a click train from a tremolo is
+    // how much of one event is still sounding when the next arrives.
+    const densest = 1 / (FACTION_TIMBRE[Faction.Directorate].rateHz * SWARM_LAYERS);
+    const leftOver = (tau: number) => Math.exp(-densest / tau);
+    assert.ok(
+      leftOver(ENVELOPE.TICK.decayS) < 0.25,
+      `a tick still has ${(leftOver(ENVELOPE.TICK.decayS) * 100).toFixed(0)}% of itself left ` +
+        'when the next click lands, which is a texture rather than a click'
     );
     assert.ok(
-      ENVELOPE.TICK.decayS * 3 <= shortest,
-      `a swarm tick is still 95% audible ${(ENVELOPE.TICK.decayS * 3).toFixed(3)} s in, ` +
-        `against a shortest gap of ${shortest.toFixed(3)} s`
+      leftOver(ENVELOPE.BREATH.decayS) > 0.7,
+      'fixture assumes the breath smears at this spacing; it no longer does, so this is moot'
+    );
+  });
+
+  it('starts a voice built mid-match at the caller’s clock, not at the context’s', () => {
+    // `nextEventAt` starts at zero and a voice is constructed whenever a
+    // contact is first heard, which in a match is minutes into a running
+    // context. Without the snap in `scheduleEvents` the first update walks the
+    // train from zero to now and lays the whole gap into the graph at once.
+    //
+    // Driven at Tier 2 on purpose, and that is the whole point of this test: a
+    // voice that arrives *classified* is saved by the family-change branch,
+    // which resets the train because the mechanism crossed from null. A voice
+    // with no family crosses nothing — null is what it already was — so the
+    // snap is the only thing standing between a new contact and its own
+    // backlog. §3 gives Tier 1-2 an irregular 1.2-2.5 s thump, so five minutes
+    // of it is a hundred and sixty-odd past-dated events on one tick.
+    const context = new HeadlessAudioContext();
+    context.advance(300);
+    const destination = context.createGain();
+    const voice = new ContactVoice(
+      context as unknown as AudioContext,
+      destination as unknown as AudioNode
+    );
+    const osc = context.nodes.find(
+      (n): n is StubOscillatorNode => n instanceof StubOscillatorNode
+    )!;
+    const oscGain = osc.outputs[0] as StubGainNode;
+
+    voice.update(
+      { tier: ResolutionTier.Bearing, biome: Biome.OpenWater, freshness: 1 },
+      context.currentTime
+    );
+
+    const events = oscGain.gain.writes.filter((w) => w.method === 'setValueAtTime');
+    const stale = events.filter((w) => w.at < 300 - 1e-9);
+    assert.equal(
+      stale.length,
+      0,
+      `a voice built 300 s into a match scheduled ${stale.length} events in the past, the ` +
+        'earliest at ' +
+        (stale[0]?.at.toFixed(2) ?? 'n/a') +
+        ' s'
+    );
+    assert.ok(
+      events.length <= 2,
+      `one update on a new voice wrote ${events.length} events, which is the gap replayed`
+    );
+
+    // The classified case too, so the branch that happens to cover it is not
+    // quietly the only thing that does.
+    const classified = new HeadlessAudioContext();
+    classified.advance(300);
+    const out = classified.createGain();
+    const heard = new ContactVoice(
+      classified as unknown as AudioContext,
+      out as unknown as AudioNode
+    );
+    const osc2 = classified.nodes.find(
+      (n): n is StubOscillatorNode => n instanceof StubOscillatorNode
+    )!;
+    heard.update(
+      {
+        tier: ResolutionTier.Classification,
+        biome: Biome.OpenWater,
+        freshness: 1,
+        faction: Faction.Directorate,
+      },
+      classified.currentTime
+    );
+    const late = (osc2.outputs[0] as StubGainNode).gain.writes.filter(
+      (w) => w.method === 'setValueAtTime' && w.at < 300 - 1e-9
+    );
+    assert.equal(
+      late.length,
+      0,
+      `a classified voice built 300 s in back-dated ${late.length} clicks`
+    );
+  });
+
+  it('writes a bounded number of events per update, for the fastest family there is', () => {
+    // §12 budgets 1 ms per Echo tick and audioEngine.test.ts holds it on nodes
+    // built. Nothing holds what a tick *schedules*, and the horizon is what
+    // decides it: a horizon of two seconds would build no node at all and put
+    // ten times this many writes on the graph every tick.
+    const context = new HeadlessAudioContext();
+    const destination = context.createGain();
+    const voice = new ContactVoice(
+      context as unknown as AudioContext,
+      destination as unknown as AudioNode
+    );
+    const osc = context.nodes.find(
+      (n): n is StubOscillatorNode => n instanceof StubOscillatorNode
+    )!;
+    const oscGain = osc.outputs[0] as StubGainNode;
+
+    let worst = 0;
+    for (let tick = 0; tick < 100; tick++) {
+      const before = oscGain.gain.writes.length;
+      voice.update(
+        {
+          tier: ResolutionTier.Classification,
+          biome: Biome.OpenWater,
+          // The decaying case too: a period that stretches schedules fewer
+          // events, but the level ramps are written either way.
+          freshness: tick % 3 === 0 ? 0.2 : 1,
+          faction: Faction.Directorate,
+        },
+        context.currentTime
+      );
+      worst = Math.max(worst, oscGain.gain.writes.length - before);
+      context.advance(ECHO_STEP_S);
+    }
+    // A horizon of one tick plus a margin, at nine clusters a second, is three
+    // clusters — so three times the layers, twice over for the level and its
+    // decay, and the handful of ramps `update` writes whatever happens.
+    assert.ok(
+      worst <= SWARM_LAYERS * 3 * 2 + 4,
+      `one update wrote ${worst} parameter events on the fastest family in the mix`
     );
   });
 

@@ -134,40 +134,54 @@ const DRIVE_LEVEL = {
 const EVENT_HORIZON_S = 0.3;
 
 /**
- * A swarm's cohorts, as the fraction each one's own rate sits off the family's.
+ * How many layers a swarm's one event is made of — §8's "layered voices".
  *
- * §8's Directorate is "many small things agreeing ... clicks that phase into
- * unison as cohorts converge — you hear them *organise*". Three cohorts a few
- * percent apart drift in and out of phase with one another at the difference
- * between their rates, which is 0.19-0.57 Hz at the swarm's 9: the train
- * tightens into unison strikes and scatters again every few seconds, and does
- * it without the rate itself moving at all.
- *
- * **The rate staying put is the design, not an omission.** §8.1 separates the
- * swarm from the ordnance screw by interval and in a stated direction — "a
- * screw faster than the Directorate's clicks would be the same mechanism heard
- * at a different rate" — so cohorts emitting their own clicks would put events
- * between the family's own and collapse that separation the moment they
- * dispersed. Carrying them in how hard each click hits is also the truer
- * reading of the sentence: many small things are not louder when they agree
- * because there are more of them, they are louder because they arrive
- * together.
+ * The Directorate is "many small things agreeing ... clicks that phase into
+ * unison as cohorts converge — you hear them *organise*", so a swarm event is
+ * not one click but a cluster of three, and what converges is *when they land*.
+ * The family's own rate is still the rate of the cluster, which is what keeps
+ * `rateHz` meaning what its docblock says and keeps §8.1's period band a
+ * description of what the mix renders.
  */
-const SWARM_COHORTS = [-0.045, 0.021, 0.063] as const;
+export const SWARM_LAYERS = 3;
 
-/** How hard a swarm click still lands with its cohorts fully dispersed, 0-1. */
-const SWARM_SCATTER_FLOOR = 0.3;
+/**
+ * How often a swarm's layers come back into step, Hz.
+ *
+ * Slow on purpose. §8 asks the player to *hear* them organise, which is a
+ * thing that happens over seconds — a cluster that tightened and scattered
+ * inside one period would be a timbre, not an event anyone could follow. At
+ * 0.19 Hz the cycle is 5.3 seconds — spread, closing, together, opening again
+ * — which is about the rate a held note is heard to phase against another.
+ */
+const SWARM_ORGANISE_HZ = 0.19;
+
+/**
+ * How hard one layer of a fully scattered cluster lands, 0-1.
+ *
+ * Three sources arriving together are louder than three spread out, and an
+ * `AudioParam` timeline cannot say so on its own: two `setValueAtTime` writes
+ * at the same instant do not sum, the later one simply wins. So the summing
+ * the graph cannot do is modelled here — a cluster's clicks are quieter while
+ * it is spread and reach the full drive-signature bump when it closes — and
+ * the level is a consequence of the spread rather than a second oscillator
+ * with its own opinion. Not zero, because a layer out of step is still a layer
+ * that clicked: §8's swarm thins, it does not go silent.
+ */
+const SWARM_SCATTER_FLOOR = 0.45;
 
 /**
  * The two shapes an event is heard as, in seconds: a breath and a tick.
  *
  * Every mechanism used to ease back over 0.18 s. On a family whose events are
- * 0.111 s apart that is a tail longer than the gap — each bump was under
- * halfway down when the next arrived, so the swarm was never a train of clicks
- * at all, but a continuous 140 Hz tone with a tremolo on it. §8 asks the
- * Directorate for "chitin ticks", and a tick is a transient: it has to be over
- * before the next one starts, which at 9 Hz leaves about a tenth of a second
- * and wants a great deal less than that.
+ * 0.111 s apart that is a tail longer than the gap — each bump was still 81%
+ * of the way up when the next arrived, so the swarm was never a train of
+ * clicks at all, but a continuous 140 Hz tone with a tremolo on it. §8 asks
+ * the Directorate for "chitin ticks", and a tick is a transient: at the
+ * densest the cluster gets, a third of the family's period, a tick is down to
+ * 19% of itself when the next click lands and the breath is still at 81%.
+ * That ratio is the whole difference between a click train and a texture, and
+ * it is what `contactTimbre.test.ts` holds rather than the constant.
  *
  * The breath is the other four families' and is unchanged. §8's drive
  * signature there is "the same thing breathing", and a breath that was over in
@@ -196,20 +210,20 @@ function periodAt(timbre: ContactTimbre | null, at: number): number | null {
 }
 
 /**
- * How far a swarm's cohorts have converged at one instant, floor to 1.
+ * How far apart a swarm cluster's layers land at one instant, seconds.
  *
- * At 1 they are in unison and the click lands with the full drive-signature
- * bump behind it; at the floor they are spread and it is one small thing on
- * its own. The floor is not zero because a cohort out of phase with the rest
- * is still a cohort that clicked — §8's swarm thins, it does not go silent.
+ * Zero when they are in unison and a third of the family's period when they
+ * are fully scattered, which is exactly even spacing — so a scattered cluster
+ * is a steady train at three times the family rate, and a closed one is a
+ * single harder click at the family rate. That is the whole of "you hear them
+ * organise", and it is in *when the clicks land* rather than in a level.
+ *
+ * A pure function of absolute time, like `periodAt`, so nothing about the
+ * cluster depends on when the caller happened to ask.
  */
-function swarmAgreement(timbre: ContactTimbre, at: number): number {
-  let sum = 0;
-  for (let i = 0; i < SWARM_COHORTS.length; i++) {
-    const drift = 2 * Math.PI * timbre.rateHz * SWARM_COHORTS[i]! * at;
-    sum += (1 + Math.cos(drift + (i * 2 * Math.PI) / SWARM_COHORTS.length)) / 2;
-  }
-  return SWARM_SCATTER_FLOOR + (1 - SWARM_SCATTER_FLOOR) * (sum / SWARM_COHORTS.length);
+function swarmSpread(period: number, at: number): number {
+  const closed = (1 + Math.cos(2 * Math.PI * SWARM_ORGANISE_HZ * at)) / 2;
+  return ((1 - closed) * period) / SWARM_LAYERS;
 }
 
 /**
@@ -478,18 +492,45 @@ export class ContactVoice {
         this.nextEventAt = at + 1.5 * stretch;
         continue;
       }
-      this.emit(timbre, at);
+      this.emit(timbre, at, period);
       this.nextEventAt = at + period * stretch;
     }
   }
 
   /**
-   * One event of a mechanism, as an envelope on the voice's own level.
+   * One event of a mechanism.
    *
+   * Four of the six families have one body and it hits once. The swarm is
+   * "many small things", so its event is a cluster of `SWARM_LAYERS` clicks
+   * whose spacing breathes: fully spread they are evenly spaced and the train
+   * runs at three times the family rate, and closed they land together as one
+   * harder click at the family rate. Which is §8's "clicks that phase into
+   * unison as cohorts converge", carried in *when they land* — a level alone
+   * would be a tremolo, and a tremolo on a continuous tone is what #731
+   * reports hearing.
+   */
+  private emit(timbre: ContactTimbre | null, at: number, period: number): void {
+    if (timbre !== null && timbre.mechanism === 'swarm') {
+      const spread = swarmSpread(period, at);
+      // 0 while the cluster is fully scattered, 1 as it closes — the same
+      // number the spacing is made of, so the level cannot drift out of step
+      // with what the player is actually hearing converge.
+      const closed = 1 - (spread * SWARM_LAYERS) / period;
+      const strength = SWARM_SCATTER_FLOOR + (1 - SWARM_SCATTER_FLOOR) * closed;
+      const peak = this.oscBase * (1 + (DRIVE_LEVEL.BUMP - 1) * strength);
+      for (let layer = 0; layer < SWARM_LAYERS; layer++) {
+        this.strike(at + layer * spread, peak, ENVELOPE.TICK);
+      }
+      return;
+    }
+    this.strike(at, this.oscBase * DRIVE_LEVEL.BUMP, ENVELOPE.BREATH);
+  }
+
+  /**
    * A short amplitude event on the oscillator rather than a new source: it
    * reads as the same thing breathing, which is what a drive signature is, and
    * it keeps §12's budget a question of what a tick *builds* — a mechanism
-   * with nine events a second could not afford a node each.
+   * with twenty-seven clicks a second could not afford a node each.
    *
    * Both ends of it are anchored to the voice's *own* level, never to whatever
    * the parameter happens to read. Reading it back was two bugs at once,
@@ -503,15 +544,8 @@ export class ContactVoice {
    * measured at 260x the voice's own level after eight seconds of being
    * tracked, and worst on the swarm, whose events are the closest together.
    */
-  private emit(timbre: ContactTimbre | null, at: number): void {
-    const swarm = timbre !== null && timbre.mechanism === 'swarm';
-    // How hard this one lands: the full bump when the cohorts are in unison,
-    // and a small thing on its own when they are spread (§8, and the comment
-    // on SWARM_COHORTS). Every other mechanism has one body and hits the same
-    // way every time.
-    const strength = swarm ? swarmAgreement(timbre, at) : 1;
-    const shape = swarm ? ENVELOPE.TICK : ENVELOPE.BREATH;
-    this.oscGain.gain.setValueAtTime(this.oscBase * (1 + (DRIVE_LEVEL.BUMP - 1) * strength), at);
+  private strike(at: number, peak: number, shape: (typeof ENVELOPE)[keyof typeof ENVELOPE]): void {
+    this.oscGain.gain.setValueAtTime(peak, at);
     this.oscGain.gain.setTargetAtTime(this.oscBase, at + shape.holdS, shape.decayS);
   }
 

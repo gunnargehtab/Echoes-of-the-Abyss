@@ -148,7 +148,8 @@ export class ContactMixer {
     // A contact absent from the frame has passed its ghost decay in the
     // renderer, which is the only place that expiry is decided. The voice ends
     // on the Echo tick that follows, which is as precise as this layer is
-    // permitted to be (§12).
+    // permitted to be about a fact the server sent (§12). A voice's own
+    // mechanism is finer than the tick and may be; when it stops is not.
     const present = new Set(frame.entries.map((entry) => entry.id));
     for (const id of [...this.live.keys()]) {
       if (present.has(id)) continue;
