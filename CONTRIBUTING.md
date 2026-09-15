@@ -19,9 +19,10 @@ short contract every change is reviewed against.
    [docs/graphics-standards.md](docs/graphics-standards.md), including a screenshot in
    the PR.
 5. **Write short on GitHub.** Clear, simple, short sentences in every issue, PR, review
-   and comment. A PR body under 200 words, an issue under 150, a comment under 80. The
-   rule and what it does not cover are in
-   [CLAUDE.md](CLAUDE.md#write-short-on-github).
+   comment and commit message. A PR body under 300 words, an issue under 200, a comment
+   under 100. The rule and what it does not cover are in
+   [CLAUDE.md](CLAUDE.md#write-short-on-github); `tools/prose-budget/check.mjs` counts a
+   body, and the **PR body** workflow reports every PR's count without blocking it.
 
 ## Running it locally
 
@@ -58,7 +59,9 @@ a Tuesday.
 - **Merge commits**, one per pull request, so `main`'s first-parent history is one entry
   per PR and each is revertable on its own with `git revert -m 1`. Read that history with
   `git log --first-parent`; the branch's own commits stay underneath it, and the PR body
-  is where the reasoning lives — in a sentence or two, per ground rule 5.
+  is where the reasoning lives — in a sentence or two, per ground rule 5. That body
+  *becomes* the merge commit's message, so it is held to the same budget for the same
+  reason: `main`'s history is read with `git log`, where nobody scrolls.
 
   This line read *squash-merge* until it was measured. That was true of the first
   eighteen pull requests and has not been true since 26 August 2026: every one of the
@@ -93,7 +96,8 @@ Until then, `main` is the release, and the way to get a change to people is to m
 
 - One concern per PR, referencing the issue it closes (`Fixes #30`).
 - Fill in the template in [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md).
-- Keep the body under 200 words — ground rule 5. Say what changed and why, then stop.
+- Keep the body under 300 words — ground rule 5. Say what changed and why, then stop.
+  The merge commit inherits this body, so its length is permanent.
 - Run the CI gates locally first — the full sequence is cheap, and it is one command:
 
   ```bash
