@@ -533,9 +533,10 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
     // drone are not in that list.
     //
     // The cycle is carried by *what each strike is* rather than by when it
-    // lands. §8.1 admits two uneven placements as well, and `RECIPROCATING`
-    // argues the choice; what is asserted here is the consequence, which is
-    // that the strike train did not move. An uneven split is exactly what a
+    // lands. §8.1 admits one uneven placement as well — a lope — and
+    // `RECIPROCATING` argues the choice, including the knock that looks
+    // admissible and is not. What is asserted here is the consequence: the
+    // strike train did not move. An uneven split is exactly what a
     // later round reaching for "more mechanical" would try, and it is a design
     // call rather than a refinement — it changes what §8's beat is measured
     // over, so it fails the beat test above and should.
