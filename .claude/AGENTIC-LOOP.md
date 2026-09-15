@@ -97,12 +97,42 @@ The two guardrails #709 does not have, and this repository needs, are in
 never resolve a docs/code disagreement by guessing, never send the client
 anything it has not resolved.
 
+## How it improves itself
+
+#709 has no clause for this, and the gap it left was not the loop's ability to
+*change* — several pull requests have changed these files — but its ability to
+**say** that something needs changing. A firing's findings went into #580, which
+is a record and not a queue, and eight sat there across seven entries.
+
+Two things close that, decided on 15 September:
+
+- **#746** is the epic a firing files a verified finding against when the finding
+  belongs to no other epic — a defect found while reading code for something
+  else, a doc claim the code contradicts, or a rule in these files that did not
+  survive a run. `work-issue` §4 carries the bar: verified against code at a
+  named commit, never against the prose describing it, and never inside the
+  balance freeze.
+- **A firing may edit its own rules, except the ones that bound it** —
+  `work-issue` §2's cap, §3's exclusions and claim check, §7's stopping cases,
+  and `loop-critic`'s separation from the author. Those it writes an issue about
+  and stops, per §5. The critic's check 4 fails a round that edits one, which is
+  the only enforcement there is: `npm run gates` does not read `.claude/`.
+
+So the loop improves itself the way it improves anything else: an issue, a claim,
+rounds, a critic, a reviewed pull request. The one thing it may not do is author
+the constraint it is under. That is #540's rule at one remove — a generator that
+also grades itself is not a gate — and the cost of getting it wrong is not a bad
+patch, which the gates and the critic catch, but a firing quietly widening what
+it is allowed to select.
+
 ## Still owed
 
 - **The invariants contract is built** (`docs/invariants.md`), which was this list's
-  largest gap. Fourteen rows across thirteen test files, each naming the property, the doc section or issue it
-  descends from, and the file and test that hold it — and a gate,
-  `npm run check:invariants`, that fails when a row names a test somebody renamed. It is
+  largest gap. Each row names the property, the doc section or issue it descends
+  from, and the file and test that hold it. The count is the gate's to print
+  rather than this file's to restate — `npm run check:invariants` reads 25
+  invariants and 50 holders on `4457538`, and fails when a row names a test
+  somebody renamed. It is
   a liveness check rather than a correctness one, for the reason the file itself gives:
   verifying the assertion would mean re-implementing the suite, which is the second
   source of truth this repository keeps refusing to build. What is still owed on it is
@@ -116,11 +146,12 @@ anything it has not resolved.
   cadence moved because the loop's open-PR cap now binds on review throughput
   rather than on backlog supply: the 04:15 firing on 15 September was the first
   to find two of its own pull requests open, green and unmerged, and to stop at
-  step 2 without selecting anything. It clones `main` at the start of every run and invokes
-  `/work-issue`, whose §5 now hands the work to `dev-loop` — so a firing picks
-  up the rounds and the critic **from the clone**, with no change to the Routine
-  at all, the moment this branch merges. Until then firings run the old
-  `work-issue`, because `main` does not carry these files yet.
+  step 2 without selecting anything. It clones `main` at the start of every run
+  and invokes `/work-issue`, whose §5 hands the work to `dev-loop` — so a firing
+  picks up the rounds and the critic **from the clone**, with no change to the
+  Routine at all. That took effect when these files merged on 13 September: the
+  firing that landed #738 ran five rounds with a fresh critic each, four of them
+  `revise`, and the one that landed #742 ran three.
 
   Its prompt is deliberately thin, and it says so itself — "the rules live in
   that file and not in this prompt ... if the two ever disagree, the file wins" —
