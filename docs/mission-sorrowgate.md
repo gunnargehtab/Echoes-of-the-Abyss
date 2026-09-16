@@ -144,9 +144,9 @@ Sorrowgate is the place that counts it in seconds.
 
 1. **The ceiling.** SIG 20, per hull, for the duration. The simulation does not clamp your
    loudness; it notices it. A Light Scout is **6 standing and 12 under way** — two states and
-   nothing between them, at any speed ([systems-echo.md](systems-echo.md) §2) — so the flight
-   is compliant everywhere it can go under its own power. There is no faster gear to find and
-   no way to shove by steering.
+   nothing between them, at any speed ([systems-echo.md](systems-echo.md) §2) — so moving
+   never puts a hull of the flight over the ceiling. There is no faster gear to find and no
+   way to shove by steering.
 
    **The ceiling is therefore a reading, not a lever, and that is deliberate.** What would
    cross it is **descent**, which floors SIG at 72 whatever else a hull is doing, and §10
@@ -453,10 +453,12 @@ works out the gesture is not stuck — §8's adjournment closes the record eithe
 are also not taught it here, and this document should not pretend otherwise.
 
 The second is the **lever**, and it is settled: there is not one, on purpose. None of the four
-lines says how to cross twenty because in this mission nothing the flight can do crosses it.
-A Light Scout has two SIG states and nothing between them — 6 standing, 12 under way at any
-speed — and every other loud thing an escort owns is locked at the arch. What would cross the
-ceiling is descent, at a floor of 72, and §10 refuses to teach depth here.
+lines says how to cross twenty because nothing the flight does *under way* crosses it. A Light
+Scout has two SIG states and nothing between them — 6 standing, 12 under way at any speed —
+and every other loud thing an escort owns is locked at the arch. One thing does cross it:
+**descent**, at a floor of 72. It is not locked, so a player who orders the band below can
+breach the ceiling — but §10 refuses to teach depth here, so no line names it, and reaching it
+by accident in a mission with nothing below to go and see takes some doing.
 
 This used to be recorded as an open question, because §4 read a flank band out of
 [systems-echo.md](systems-echo.md) §2 that the simulation has never modelled. The decision on
