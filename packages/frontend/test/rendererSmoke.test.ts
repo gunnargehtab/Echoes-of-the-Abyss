@@ -148,6 +148,26 @@ function stripGlyphs(
 /** `TOP_BAR_HEIGHT` in EchoRenderer, restated so a change to it fails here. */
 const TOP_BAR_HEIGHT_PX = 52;
 
+/**
+ * The strip's **first** row, as drawn (#743).
+ *
+ * §2 names the readouts the strip carries and §13 gives it 52 px holding two
+ * rows; the y that split happens at is `drawHud`'s own — the stockpile cluster
+ * and the right-hand `map · T+ · n` at y = 10, the SIG band and `TRACKED` at
+ * y = 30. §2's own diagram draws all of them on one line, `band` included, so
+ * it is not the authority for the split.
+ *
+ * Which row a glyph is on is the whole subject of the two tests below, so it
+ * is read off the glyph's own y rather than assumed — and the SIG instrument's
+ * two lines, which sit lower still, fall out on the same test.
+ */
+function firstRowGlyphs(
+  app: HeadlessApplication,
+  scale: number
+): Array<{ text: string; x: number; y: number; width: number; height: number }> {
+  return stripGlyphs(app, scale).filter((glyph) => glyph.y < 14 * scale);
+}
+
 interface Booted {
   chart: EchoRenderer;
   conn: PerspectiveView;
@@ -1398,6 +1418,90 @@ describe('renderer smoke test: the strip explains itself', () => {
       new RegExp(`\\b${loud} of ${units} over `),
       `the line says "${sigDetail()}" while the label above it says "${secondLine()}"`
     );
+
+    booted.teardown();
+  });
+
+  it('drops the clock on the row it is on, not the row below it', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+
+    // 135%, inside §11's range, and the scale #724 measured the strip starting
+    // to go quiet at. The rows disagree here and that disagreement is the bug:
+    // the stockpile row is full while the second row — the band label and
+    // `TRACKED ×2` — ends hundreds of pixels left of where the clock would
+    // sit. The drop rule used to measure that second row, so it concluded
+    // there was room on the strength of a row the clock cannot collide with.
+    booted.chart.setUiScale(1.35);
+    booted.frame(3);
+    const full = firstRowGlyphs(booted.app, 1.35).map((glyph) => glyph.text);
+    assert.ok(
+      !full.some((text) => text.startsWith('T+')),
+      `the clock was printed onto a full first row: ${full.join(' | ')}`
+    );
+    // The authored yield order, which this change does not touch. It lives in
+    // `EchoRenderer.drawHud`'s own comment rather than in §2, which states a
+    // drop order for the console's *blocks* and none for the strip: the map
+    // name is the first thing to give way and is gone before the clock is.
+    assert.ok(
+      !full.includes('SMOKE BASIN'),
+      `the map name was printed onto a full first row: ${full.join(' | ')}`
+    );
+
+    // The same scale and the same second row, with a first row that fits:
+    // `DRAW 4/3` is a shorter label and three segments rather than twelve.
+    // Nothing the old rule measured has moved, so a rule reading the second
+    // row cannot tell these two frames apart — and the clock coming back is
+    // what says the first row is what decides.
+    booted.chart.applySnapshot({
+      ...cannedSnapshot(),
+      draw: { capacity: 4, demand: 3, satisfaction: 1 },
+    });
+    booted.frame(3);
+    const light = firstRowGlyphs(booted.app, 1.35).map((glyph) => glyph.text);
+    assert.ok(
+      light.some((text) => text.startsWith('T+')),
+      `the clock stayed dropped on a row with room for it: ${light.join(' | ')}`
+    );
+    // The map name does *not* come back here, and that is the yield order
+    // rather than a second fault: it is the first to go and the last to
+    // return, and this row has found room for one of the two.
+
+    booted.teardown();
+  });
+
+  it('never prints the two droppable readouts over another number, across §11’s range', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+
+    // §11's ends and middle, plus the two scales §13 records the strip going
+    // quiet at. The property is the one the authored yield order promises
+    // (`EchoRenderer.drawHud`, not §2): the map name and the clock give way
+    // rather than being printed over the stockpile row. Every glyph here is on
+    // one row by construction, so an overlap in x is a collision and the y
+    // test would be noise.
+    //
+    // What this pass can see is glyph against glyph. The draw meter's segments
+    // are Graphics rather than Text and are not in the walk, so the 135% case
+    // — where the map name lands on the segments rather than on `DRAW` itself
+    // — is not the one that fails here. 150% is, where it lands on the label.
+    for (const scale of [0.75, 1, 1.35, 1.5, 2]) {
+      booted.chart.setUiScale(scale);
+      booted.frame(3);
+      const row = firstRowGlyphs(booted.app, scale);
+      const droppable = row.filter(
+        (glyph) => glyph.text.startsWith('T+') || glyph.text === 'SMOKE BASIN'
+      );
+      for (const one of droppable) {
+        for (const other of row) {
+          if (other === one) continue;
+          assert.ok(
+            !(one.x < other.x + other.width && other.x < one.x + one.width),
+            `at ${scale * 100}% "${one.text}" is printed over "${other.text}"`
+          );
+        }
+      }
+    }
 
     booted.teardown();
   });
