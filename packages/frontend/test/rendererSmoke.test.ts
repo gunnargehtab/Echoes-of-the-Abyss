@@ -151,12 +151,15 @@ const TOP_BAR_HEIGHT_PX = 52;
 /**
  * The strip's **first** row, as drawn (#743).
  *
- * §2 lays the strip out in two rows inside TOP_BAR_HEIGHT: the stockpile
- * cluster and the right-hand `map · T+ · n` at y = 10, the SIG band and
- * `TRACKED` at y = 30. Which row a glyph is on is the whole subject of the two
- * tests below, so it is read off the glyph's own y rather than assumed — and
- * the SIG instrument's two lines, which sit lower still, fall out on the same
- * test.
+ * §2 names the readouts the strip carries and §13 gives it 52 px holding two
+ * rows; the y that split happens at is `drawHud`'s own — the stockpile cluster
+ * and the right-hand `map · T+ · n` at y = 10, the SIG band and `TRACKED` at
+ * y = 30. §2's own diagram draws all of them on one line, `band` included, so
+ * it is not the authority for the split.
+ *
+ * Which row a glyph is on is the whole subject of the two tests below, so it
+ * is read off the glyph's own y rather than assumed — and the SIG instrument's
+ * two lines, which sit lower still, fall out on the same test.
  */
 function firstRowGlyphs(
   app: HeadlessApplication,
@@ -1474,8 +1477,9 @@ describe('renderer smoke test: the strip explains itself', () => {
     // §11's ends and middle, plus the two scales §13 records the strip going
     // quiet at. The property is the one the authored yield order promises
     // (`EchoRenderer.drawHud`, not §2): the map name and the clock give way
-    // rather than being printed over the stockpile row. Every glyph here is on one row by construction, so an overlap in x
-    // is a collision and the y test would be noise.
+    // rather than being printed over the stockpile row. Every glyph here is on
+    // one row by construction, so an overlap in x is a collision and the y
+    // test would be noise.
     //
     // What this pass can see is glyph against glyph. The draw meter's segments
     // are Graphics rather than Text and are not in the walk, so the 135% case

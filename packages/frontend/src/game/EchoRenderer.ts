@@ -6716,7 +6716,9 @@ export class EchoRenderer {
     // Measured against the row the two of them are *on* (#743). This used to
     // read the second row — `exposureLabel` when tracked and `bandLabel` when
     // not — and both of those sit at y = 30 while everything gated here is at
-    // y = 10, so the test could only ever find room. The two readouts were
+    // y = 10, so its answer carried no information about the row that could
+    // actually collide — and across §13's sweep it found room at every scale
+    // right through 200%. The two readouts were
     // then printed over the stockpile row's own right-hand end rather than
     // yielding — the draw meter, whose segments run past the `DRAW` label,
     // and the map name reaches it first. Which UI scale that starts at is a
