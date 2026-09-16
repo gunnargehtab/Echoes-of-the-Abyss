@@ -16,7 +16,7 @@ a ping — is how you are found. So the style rule is the game rule:
    system, a contact, a warning, a player choice. If a glow carries no data,
    cut it.
 3. **Glow intensity encodes loudness.** The brighter something burns, the
-   louder it is in the Echo Layer — a flank-speed sub streaks light, a silent
+   louder it is in the Echo Layer — a sub under way streaks light, a silent
    runner is a black shape against black water. Detail is something you *own*
    (see the Asymmetric Fidelity Law in [art-direction.md](art-direction.md)).
 4. **Noir means consequence.** Hard rim light, deep shadow, flicker under

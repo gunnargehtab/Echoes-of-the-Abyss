@@ -841,8 +841,8 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     name: 'Freighter',
     /**
      * SPEC — docs/units.md, Freighter: "30 / 50 / — (no weapon), empty; 48 /
-     * 68 full". A loaded Freighter at cruise is as loud as a Cruiser at
-     * flank, and it stays that loud under Silent Running.
+     * 68 full". A loaded Freighter under way is louder than a Cruiser under
+     * way — 68 against 65 — and it stays that loud under Silent Running.
      */
     sigIdle: 30,
     sigCruise: 50,
@@ -1481,7 +1481,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     buildTimeS: 26,
     berths: 2,
     /**
-     * 20 at flank is unreadable outside a navy whose economy is built to be
+     * 20 under way is unreadable outside a navy whose economy is built to be
      * poor and unheard; any other doctrine buying this has bought a Corvette
      * that dies faster (docs/units.md).
      */

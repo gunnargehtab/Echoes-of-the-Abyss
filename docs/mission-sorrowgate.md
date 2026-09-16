@@ -143,16 +143,19 @@ Sorrowgate is the place that counts it in seconds.
 ### The three clauses
 
 1. **The ceiling.** SIG 20, per hull, for the duration. The simulation does not clamp your
-   loudness; it notices it. A Light Scout at cruise is 12 and compliant. A Light Scout at flank
-   is far above the ceiling ([systems-echo.md](systems-echo.md) §2) and is shoving.
+   loudness; it notices it. A Light Scout is **6 standing and 12 under way** — two states and
+   nothing between them, at any speed ([systems-echo.md](systems-echo.md) §2) — so moving
+   never puts a hull of the flight over the ceiling. There is no faster gear to find and no
+   way to shove by steering.
 
-   **That last sentence is an open question and not a settled reading.** The simulation gives
-   this hull two SIG states and nothing between them — 6 standing and 12 under way, at any
-   speed — so on the build as it stands nothing the flight does *under way* reaches 20. The one
-   thing that does is **descent**, which floors SIG at 72 whatever else a hull is doing, and
-   which §10 refuses to teach here. §9's *What the lines stop short of, and why* records both
-   readings and what each would cost. Neither number is changed here, and the guidance beats
-   were authored to be true under either.
+   **The ceiling is therefore a reading, not a lever, and that is deliberate.** What would
+   cross it is **descent**, which floors SIG at 72 whatever else a hull is doing, and §10
+   refuses to teach depth here; every other loud thing an escort could do — the guns, the
+   mines, the noisemakers, the ping — is struck at the arch and refused by the server (§3, and
+   the mission's own locks). What the player watches is the flight's own reading against the
+   ceiling, and the lesson is what breaching it would *cost* rather than how to breach it.
+   §9's *What the lines stop short of, and why* records why the guidance beats never name a
+   way over.
 2. **The court's array.** The gate mounts the transit line's civic hydrophone array — larger
    than anything any faction has built since, because the Rift lost things. By the arbitration
    protocol the court shares its readings with every admitted party, which is the only reason
@@ -449,18 +452,24 @@ where a touch player reaches them. A player who never
 works out the gesture is not stuck — §8's adjournment closes the record either way — but they
 are also not taught it here, and this document should not pretend otherwise.
 
-The second is the **lever**, and it is an open question rather than an authoring choice. None of
-the four says how to cross twenty. §4's
-first clause says a Light Scout at flank is far above the ceiling, citing
-[systems-echo.md](systems-echo.md) §2's 45–70 flank band. The simulation gives this hull two
-SIG states and nothing between them — 6 standing, 12 under way at any speed — so the only
-thing that carries a hull of the flight over twenty is descent, at a floor of 72, which is the
-one system §10 refuses to teach here. **Which of those two is wrong is a design call and this
-document does not settle it.** The four lines were authored to be true under either reading,
-which is why they state the ceiling and what breaching it costs and never a way to breach it.
-The consequence is worth writing down rather than discovering twice: under §4 the first lesson
-has a lever and teeth, and under the simulation as built it has a number the player cannot
-move past. #726 carries the measurement.
+The second is the **lever**, and it is settled: there is not one, on purpose. None of the four
+lines says how to cross twenty because nothing the flight does *under way* crosses it. A Light
+Scout has two SIG states and nothing between them — 6 standing, 12 under way at any speed —
+and every other loud thing an escort owns is locked at the arch. One thing does cross it:
+**descent**, at a floor of 72. It is not locked, so a player who orders the band below can
+breach the ceiling — but §10 refuses to teach depth here, so no line names it, and reaching it
+by accident in a mission with nothing below to go and see takes some doing.
+
+This used to be recorded as an open question, because §4 read a flank band out of
+[systems-echo.md](systems-echo.md) §2 that the simulation has never modelled. The decision on
+issue #741 is that the **code is right and the docs overstated**: §2's bands describe the
+roster rather than bind it, the flank row is gone, and §4's flank sentence with it. No hull's
+SIG moved, so nothing about the mission's difficulty changed — what changed is that the
+document now says the same thing the simulation does.
+
+So the first lesson is a reading and a cost rather than a lever, and the four lines are
+authored to that: they state the ceiling and what breaching it costs, and never a way to
+breach it. #726 carries the measurement.
 
 ### The arch, as ground
 

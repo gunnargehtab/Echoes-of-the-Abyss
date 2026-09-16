@@ -549,9 +549,9 @@ Freighter (Foundry)
 
 - Role: The armoured hold. Six berths of hull moved in one slow, loud, very tough hull — the
   Klaxon's transport is the one that is heard coming and arrives anyway
-- SIG: 30 / 50 / — (no weapon), empty; **48 / 68 full**. A loaded Freighter at cruise is as
-  loud as a Cruiser at flank, and it stays that loud under Silent Running: a hold cannot be
-  hushed
+- SIG: 30 / 50 / — (no weapon), empty; **48 / 68 full**. A loaded Freighter under way is louder
+  than a Cruiser under way — 68 against 65 — and it stays that loud under Silent Running: a
+  hold cannot be hushed
 - HYD: 35
 - PR: 2 — the Consortium baseline, and the rating everything aboard takes for the trip, which
   is what makes the hull a *depth* argument: a hold of PR-1 scouts crosses the Shelf line
@@ -981,7 +981,7 @@ Reed (Foundry)
   cycle — so the duel is the same duel and everything the Reed changed is about reaching it:
   it dies in seven shots against a Corvette's nine, and a Corvette that has not closed can
   fire at it from outside its reply
-- Faction-locked: yes. The SIG line is the argument: 20 at flank is unreadable outside a navy
+- Faction-locked: yes. The SIG line is the argument: 20 under way is unreadable outside a navy
   whose economy is built to be poor and unheard, and any other doctrine buying this hull has
   bought a Corvette that dies faster
 

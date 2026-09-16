@@ -455,10 +455,10 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
    * `acoustics.ts`'s two states for a Light Scout — `sigCruise` 12 while moving
    * and `sigIdle` 6 while still, with nothing in between — and
    * `DEPTH.DESCENT_SIG`'s 72, which is the only thing in this mission that can
-   * put an escort over 20 at all. §4's "a Light Scout at flank is far above the
-   * ceiling" implies a speed band the code does not model, so the gloss says
-   * what is true in play and §4 is left for a person; a run does not resolve a
-   * docs/code disagreement by editing either side to match its own sentence.
+   * put an escort over 20 at all. §4 used to imply a third, faster state the
+   * code has never modelled; the decision on #741 settled that the code is
+   * right and deleted the band, so the doc and these glosses now say one thing.
+   * `test/silenceUnderWay.test.ts` is what keeps them saying it.
    * *Ears* is `escortRadiusM`, and `escorted` is *any* escort inside it — the
    * two tenders spawn 260 m apart against a 400 m radius, so one hull can
    * cover both and no gloss says otherwise.
