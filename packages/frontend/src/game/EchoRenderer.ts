@@ -6286,11 +6286,14 @@ export class EchoRenderer {
    *   below the strip's own bevel, so a strip-height bound dropped the one
    *   readout §3 calls permanent, at every scale — in Chromium, and not in the
    *   headless suite, whose fonts are not the same ones.
-   * - **Over somebody else's number.** The strip's first row overruns
-   *   `map · T+ · n` at that scale, because the rule that drops those measures
-   *   the *second* row's right edge (`leftEdge`, in `drawHud`) while the row
-   *   that collides is the stockpile row. A control laid over two numbers
-   *   answers for the wrong one.
+   * - **Over somebody else's number.** A control laid over two numbers answers
+   *   for the wrong one. The collision this was written against is gone —
+   *   until #743 the rule dropping `map · T+` measured the *second* row's
+   *   right edge while the row that collided was the stockpile row, so `T+`
+   *   was printed over `DRAW` from 135% UI scale. The refusal stays anyway:
+   *   it is a property of the surface rather than a patch for one layout bug,
+   *   and the residual case above — a first row with nothing left that the
+   *   authored order permits to yield — still reaches it.
    *
    * The test is against every drawn readout rather than against the controls
    * already accepted, and that distinction is the whole reason this is two
@@ -6299,9 +6302,10 @@ export class EchoRenderer {
    * `BERTHS 6/24` was refused for overrunning the edge by two pixels, and the
    * contact count's control was then laid straight over it.
    *
-   * Fixing the strip's layout means deciding what a strip that cannot fit its
-   * own first row gives up, which is not this change's call. Refusing to lie
-   * about it is.
+   * What a strip that cannot fit its own first row gives up, once the map name
+   * and the clock are both gone, is still a design call about a permanent
+   * instrument and is nobody's to settle in a pull request (#743, ui-ux.md
+   * §13). Refusing to lie about it is this surface's job.
    */
   private acceptStrip(): void {
     this.stripN = 0;
@@ -6637,12 +6641,22 @@ export class EchoRenderer {
     const segments = Math.max(1, Math.min(12, Math.ceil(this.drawReport.demand)));
     const covered = Math.round(segments * this.drawReport.satisfaction);
     const segX = drawX + this.drawLabel.width + 8;
+    // The step and the segment's own width, named rather than inline because
+    // `firstRowEdge` below is measured from them (#743). A second copy of
+    // either is a second thing to keep right, and the number that goes stale
+    // is the one nothing draws.
+    const segStep = 6;
+    const segWidth = 4;
     for (let i = 0; i < segments; i++) {
-      g.rect(segX + i * 6, 13, 4, 9).fill({
+      g.rect(segX + i * segStep, 13, segWidth, 9).fill({
         color: i < covered ? (deficit ? UI.threat : UI.accent) : UI.glassStroke,
         alpha: i < covered ? 0.9 : 0.35,
       });
     }
+    // Where the strip's first row actually ends. The draw meter is the last
+    // thing on it and its segments run past `drawLabel`, so the label's own
+    // right edge is not the row's — which is the distinction #743 turned on.
+    const firstRowEdge = segX + (segments - 1) * segStep + segWidth;
 
     // What your own noise is doing to your hearing, in words. The bed makes
     // this audible; §11 requires it also be readable.
@@ -6693,16 +6707,23 @@ export class EchoRenderer {
     // clock printed *over* `TRACKED ×n` would cost the player the readout
     // that tells them how well they are seen. A missing clock is a smaller
     // loss than an unreadable one.
-    const leftEdge = tracked
-      ? this.exposureLabel.x + this.exposureLabel.width
-      : this.bandLabel.x + this.bandLabel.width;
+    //
+    // Measured against the row the two of them are *on* (#743). This used to
+    // read the second row — `exposureLabel` when tracked and `bandLabel` when
+    // not — and both of those sit at y = 30 while everything gated here is at
+    // y = 10. So the strip concluded there was room on the strength of a row
+    // neither drop can collide with, and from 135% UI scale, where the
+    // stockpile row is full and the second row is short, it printed `T+` over
+    // `DRAW`. The yield order above is unchanged; only the measurement was
+    // wrong.
     this.clockLabel.text = stamp(this.lastTick);
-    this.clockLabel.visible = this.statusLabel.x - 16 - leftEdge >= this.clockLabel.width + 16;
+    this.clockLabel.visible = this.statusLabel.x - 16 - firstRowEdge >= this.clockLabel.width + 16;
     const rightEdge = this.clockLabel.visible
       ? this.statusLabel.x - this.clockLabel.width - 16
       : this.statusLabel.x;
     if (this.clockLabel.visible) this.clockLabel.position.set(rightEdge, 10);
-    this.mapLabel.visible = this.mapNamed && rightEdge - 16 - leftEdge >= this.mapLabel.width + 16;
+    this.mapLabel.visible =
+      this.mapNamed && rightEdge - 16 - firstRowEdge >= this.mapLabel.width + 16;
     if (this.mapLabel.visible) {
       this.mapLabel.position.set(rightEdge - this.mapLabel.width - 16, 10);
     }
