@@ -84,7 +84,7 @@ of a service (Cantus, Reciter).
 | Role | Consortium — *few, heavy, tough* | Commune — *many, fast, fragile* | Directorate — *very many, cheap, slow* | Knights — *very few, elite, precise* |
 | --- | --- | --- | --- | --- |
 | **Scout** | *Beacon* — hears by shouting | *Glider* — engine off, the quietest hull | *Acolyte* — a listener that stays | *Herald* — a cone that runs away quiet |
-| **Line** | *Caisson* — armoured, loud, Klaxon-fed | *Reed* — fast, fragile, silent at flank | Chorister (exists, by price) | Clarion (exists) |
+| **Line** | *Caisson* — armoured, loud, Klaxon-fed | *Reed* — fast, fragile, silent under way | Chorister (exists, by price) | Clarion (exists) |
 | **Mid** | *Derrick* — the gun that aims by ear | none, on the Bower's reasoning | Precentor (exists) | *Responsory* — the gun paid by its target |
 | **Heavy** | Bulwark (exists) | *Bower* — a swarm's anchor, not a hull's | Dredge (exists) | Reciter (exists) |
 | **Support** | Tender (exists) | Sower (exists), Spinner (exists) | Precentor (exists) | Cantus (exists) |
@@ -132,7 +132,7 @@ is the Chorister by doctrine and by price. Two navies are missing theirs.
   the Klaxon's +12% always lit because it never drops below 60. Slower. The Consortium's line
   hull is the one that cannot hide and has stopped trying. Locked: the Clarion test fails
   the same way the Clarion does — it is a hull built for one damage rule.
-- *Reed* (Commune, Foundry). A Corvette that is faster, thinner, and quieter at flank (SIG 20
+- *Reed* (Commune, Foundry). A Corvette that is faster, thinner, and quieter under way (SIG 20
   at 100 m/s, against the Corvette's 28 at 85) with a shorter gun; the fight it wins is the
   one it chose, and the fight it loses is any other. Locked: the SIG line is the Veil's
   argument written out.

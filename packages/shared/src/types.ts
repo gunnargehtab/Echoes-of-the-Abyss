@@ -179,7 +179,7 @@ export enum UnitKind {
    */
   /** Consortium, Foundry: always over the Klaxon's line. */
   Caisson = 31,
-  /** Commune, Foundry: quieter at flank, and thinner everywhere. */
+  /** Commune, Foundry: quieter under way, and thinner everywhere. */
   Reed = 32,
   /** Commune, Slipway: a Spore Veil with a drive. */
   Bower = 33,
