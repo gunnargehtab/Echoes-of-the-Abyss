@@ -28,11 +28,15 @@ hull sitting outside a band here is not thereby wrong — a Light Scout idles at
 6 and cruises at 12, under both idle and cruise, because a scout is quiet for a
 living.
 
-Movement is **two states and nothing between them**: a hull is under way or it
-is not, at one figure either way, whatever speed it is making. There is no
-flank or boost state and no throttle on the movement path. The one throttle in
-the game is the Harvester's mining lever ([economy.md](economy.md) §3), which
-is a decision about cutting ore rather than about speed.
+**Speed enters SIG as a yes/no and nothing more.** Under way a hull reads its
+cruise figure, at every speed it can make; at rest it reads its idle figure.
+There is no flank or boost state, and no speed term anywhere on the movement
+path.
+
+A *posture* can replace that figure outright — Silent Running and a cut drive
+below it (§6), a ping (§5), a mining throttle ([economy.md](economy.md) §3) —
+and the loudest thing a hull is doing is what it is heard as. None of those is
+a faster gear, and the two that change speed make a hull **slower**.
 
 | Source | Typical SIG |
 | --- | --- |

@@ -41,7 +41,7 @@ import { PROLOGUE_SORROWGATE } from '../src/sim/missions/sorrowgate.ts';
 import { acousticsSystem } from '../src/sim/systems/acoustics.ts';
 import { Acoustic, DepthOrder, Velocity } from '../src/sim/components.ts';
 import { spawnUnit } from '../src/sim/world.ts';
-import { VENTFRONT_DIVIDE } from '../src/sim/maps/index.ts';
+import { SORROWGATE } from '../src/sim/maps/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 
@@ -69,16 +69,25 @@ const boundKinds = (): UnitKind[] => {
  * and nothing else. One `update` first so the world is stepped and `dt` is
  * real; `acousticsSystem` is then called directly, with no movement pass in
  * between to overwrite what we wrote.
+ *
+ * **On Sorrowgate's own map, at an escort's authored station.** The hull is not
+ * the only term: `acousticsSystem` adds `kelpModifiers` for a hull driving
+ * through kelp and `currentModifiers` for one crossing a cold shock, both on
+ * top of the movement figure. §4's claim is true of this mission partly because
+ * its map carries `hazards: []`, so testing it on another archetype would hold
+ * a weaker property than the one the doc states — and would break for reasons
+ * that are not this property's if that archetype ever grew a hazard near the
+ * fixture.
  */
 const sigAtSpeed = (kind: UnitKind, speed: number): number => {
-  const match = new Match(VENTFRONT_DIVIDE, { fauna: false, seed: 741 });
+  const match = new Match(SORROWGATE, { fauna: false, seed: 741 });
   match.addPlayer(0, Faction.Pelagia);
   const hull = spawnUnit(match.world, {
     kind,
     slot: 0,
     faction: Faction.Pelagia,
-    x: 1500,
-    y: 1500,
+    x: 2550,
+    y: 2150,
   });
   match.update(STEP_MS);
 
@@ -140,14 +149,14 @@ describe('the flight under way — docs/mission-sorrowgate.md §4, clause 1', ()
     // The positive control. "Nothing under way crosses 20" would also be true
     // of a hull whose SIG never moved at all, so the ceiling has to be shown
     // reachable — by the one thing §10 refuses to teach here.
-    const match = new Match(VENTFRONT_DIVIDE, { fauna: false, seed: 742 });
+    const match = new Match(SORROWGATE, { fauna: false, seed: 742 });
     match.addPlayer(0, Faction.Pelagia);
     const hull = spawnUnit(match.world, {
       kind: UnitKind.LightScout,
       slot: 0,
       faction: Faction.Pelagia,
-      x: 1500,
-      y: 1500,
+      x: 2550,
+      y: 2150,
     });
     match.update(STEP_MS);
 
