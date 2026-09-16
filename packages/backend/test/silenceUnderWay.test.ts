@@ -15,8 +15,8 @@
  * Two properties, because the fault could return in two different ways:
  *
  * - **The definition** could acquire a bound hull whose cruise figure is over
- *   the ceiling, which would make §4's "compliant everywhere it can go under
- *   its own power" false without anyone touching `acoustics.ts`.
+ *   the ceiling, which would make §4's "moving never puts a hull of the flight
+ *   over the ceiling" false without anyone touching `acoustics.ts`.
  * - **The acoustics path** could acquire a speed term, which would make it
  *   false without anyone touching the mission. The speed sweep below is the
  *   half that catches that one, and it is why this test drives the real system

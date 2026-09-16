@@ -33,10 +33,15 @@ cruise figure, at every speed it can make; at rest it reads its idle figure.
 There is no flank or boost state, and no speed term anywhere on the movement
 path.
 
-A *posture* can replace that figure outright — Silent Running and a cut drive
-below it (§6), a ping (§5), a mining throttle ([economy.md](economy.md) §3) —
-and the loudest thing a hull is doing is what it is heard as. None of those is
-a faster gear, and the two that change speed make a hull **slower**.
+A *posture* replaces that figure rather than scaling it — Silent Running or a
+cut drive (§6), an active ping (§5), a mining throttle
+([economy.md](economy.md) §3) — and the posture is what the hull is heard as,
+whether that is quieter than the figure it replaced or louder. None of them is
+a faster gear; the two that change speed make a hull **slower**.
+
+What a posture cannot do is quieten a hull that is loud for another reason:
+descent, laying, cutting and a working hull's figure are floors over the whole
+chain. §6 owns that rule.
 
 | Source | Typical SIG |
 | --- | --- |

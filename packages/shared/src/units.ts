@@ -841,8 +841,8 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     name: 'Freighter',
     /**
      * SPEC — docs/units.md, Freighter: "30 / 50 / — (no weapon), empty; 48 /
-     * 68 full". A loaded Freighter under way is as loud as a Cruiser under
-     * way, and it stays that loud under Silent Running.
+     * 68 full". A loaded Freighter under way is louder than a Cruiser under
+     * way — 68 against 65 — and it stays that loud under Silent Running.
      */
     sigIdle: 30,
     sigCruise: 50,
