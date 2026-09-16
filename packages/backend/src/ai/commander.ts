@@ -1102,6 +1102,17 @@ export class AiCommander implements AiPlayer {
    * be made true again when that hull comes back. See `releaseTenders`.
    */
   private tending: ReadonlySet<number> = new Set();
+  /**
+   * Which bed each tender was claimed for (#706).
+   *
+   * Assigned once and kept, exactly like `nodeByHarvester`: a claim that is
+   * re-decided every observation is a hull that is re-sent every observation,
+   * and `commandGardens` says what that measured. Arriving does not end an
+   * entry — it is what puts one back under the gate, which may then end it on
+   * the next army dip exactly as it always did. `docs/invariants.md` row 28
+   * states the property, and is the only place that states it whole.
+   */
+  private readonly gardenByTender = new Map<number, number>();
   /** Largest the army has been while massing, and when that last rose. */
   private massingPeak = 0;
   private massingPeakTick = -1;
@@ -3712,15 +3723,22 @@ export class AiCommander implements AiPlayer {
    *
    * One hull per garden and no more, because the share is per bed and never
    * per gardener: a second tender on the same node buys nothing but a louder
-   * cluster of targets. Claimed by id like the anchors, so the same hull is
-   * asked every observation — a branch that changed its mind about which hull
-   * was the tender would keep both walking and neither earning.
+   * cluster of targets. Claimed by id like the anchors, and the claim is kept
+   * in `gardenByTender` rather than re-derived — a branch that changed its
+   * mind about which hull was the tender kept both walking and neither
+   * earning, which is what it did until #706.
    *
-   * Drawn from the army and capped at half of it. Tending is the Commune
-   * spending exposure on income on the most reachable ground on the map,
-   * which is the guard-rail (docs/systems-echo.md §10) working as designed —
-   * but a navy that sent its whole fleet gardening would have answered the
-   * guard-rail by deleting itself.
+   * Drawn from the army, and a claim is *started* only out of the surplus
+   * above the doctrine's attack threshold — capped at half of that surplus and
+   * at one per bed. Tending is the Commune spending exposure on income on the
+   * most reachable ground on the map, which is the guard-rail
+   * (docs/systems-echo.md §10) working as designed.
+   *
+   * A claim already walking is held through that cap, so the beds are the only
+   * bound on the total and the army can go under its own threshold behind one:
+   * on `ventfront-divide`, two beds and both tenders still on their way, an
+   * army of 3 hands `commandArmy` 1 and an army of 2 hands it 0. Deliberate,
+   * and the paragraph above `spare` argues it where the gate is.
    *
    * Returns the ids it claimed, for `observe` to keep out of the army branch,
    * exactly as the lift does.
@@ -3733,38 +3751,160 @@ export class AiCommander implements AiPlayer {
     const claimed = new Set<number>();
     if (this.briefing.faction !== Faction.Pelagia) return claimed;
     const gardens = this.briefing.blooms;
-    if (gardens.length === 0 || army.length === 0) return claimed;
+    if (gardens.length === 0) {
+      this.gardenByTender.clear();
+      return claimed;
+    }
 
-    // Tended with what the army does not need, and never out of what it does.
+    // A claim outlives the observation that made it, and `gardenByTender` is
+    // what carries it — hull id to the index of the bed that hull was sent to,
+    // the same shape `nodeByHarvester` uses for the same reason.
+    //
+    // It is here because the branch used to re-decide the whole assignment
+    // every observation. The tender was whichever unclaimed id sorted lowest
+    // and the bed whichever sorted nearest *that* observation, so a dip in army
+    // size below the gate dropped the claim outright, and the next observation
+    // above the gate started a different hull walking somewhere else. Measured
+    // on `ventfront-divide` against the pre-fix commander, seeds 4000-4002: of
+    // 17 claims, **16 ended with the hull holding them still alive** and only
+    // five ever reached a bed. The median claim's closest approach to the
+    // *nearest* bed over its whole life was 826 m on seed 4000 and 1,451 m on
+    // 4002, against a `TEND_RADIUS_M` of 400 — a lower bound on the distance
+    // to the bed the hull was actually sent to, and already twice the radius.
+    // The median seed-4000 claim opened 940 m out and closed 114 m of the 540
+    // it needed: a fifth of the way, and then recalled by the commander that
+    // had just sent it.
+    //
+    // The gate below is unchanged, and so is the pair of questions it answers:
+    // whether to *start* a claim, and whether to keep one that has **arrived**.
+    // What it no longer decides is whether to keep a claim that is still on its
+    // way — a walking tender is held above the gate's allowance, so the count
+    // claimed at once can exceed `tenders` and, when the army is under the
+    // line, does. That is the change, and it is the whole of it: an order
+    // abandoned before it arrives is not a cheaper order, it is a hull that
+    // walked for nothing (#706).
+    //
+    // The price, stated because nothing else in the tree states it: `observe`
+    // filters tenders out of the list `commandArmy` defends with, so a walking
+    // tender no longer comes home for a raid. The old churn ended one
+    // incidentally — an army losing hulls fell under the gate, which dropped
+    // the claim — and that was never a decision this branch made. An arrived
+    // tender is still recalled by the gate the moment the army shrinks under
+    // it, which is where the protection actually lived and still lives.
+    const inArmy = new Map(army.map((u) => [u.id, u]));
+    // A claim never outlives its hull: a tender that died, or that the lift
+    // took aboard, is out of `army` and out of the map with it.
+    for (const id of [...this.gardenByTender.keys()]) {
+      if (!inArmy.has(id)) this.gardenByTender.delete(id);
+    }
+    if (army.length === 0) return claimed;
+
+    // A tender is *started* out of what the army does not need.
     //
     // Tending is exposure spent on income on the most reachable ground on the
     // map, and the doctrine already carries the number that means "enough
-    // hulls to act" — so a tender comes out of the *surplus* above that line
-    // and never out of the force itself. Anything else has the commander
-    // gardening its way below its own attack threshold, which measured
-    // exactly as it sounds: a navy that stopped approaching because two of
-    // its hulls were standing in kelp.
+    // hulls to act" — so a claim opens only out of the *surplus* above that
+    // line. That was once true of holding one too, and it is not any more, so
+    // say what this branch now does rather than what it used to: a walking
+    // claim is held through the line. On `ventfront-divide`, two beds and an
+    // `attackAtArmySize` of 6, with both tenders still on their way, an army
+    // of 7 hands `commandArmy` 5 and an army of 6 hands it 4. Against the
+    // pre-fix commander the same probe holds none at either size.
+    //
+    // Which is the failure the old wording named — "a navy that stopped
+    // approaching because two of its hulls were standing in kelp" — and it is
+    // a real cost, not a bookkeeping one. It is taken because the alternative
+    // is the fault #706 is about: an army dipping under the gate is exactly
+    // the common case, so releasing on it is the churn that made a claim worth
+    // nothing. The exposure is bounded on both sides — never more tenders than
+    // the map has beds (`holds no more tenders than the map has beds, whatever
+    // the army does` pins that count; one-*per*-bed is the argument below), and
+    // the hold above the gate lasts only as far as the bed. Arriving does not
+    // end the claim, but it does hand it back to the gate, which then closes
+    // on it at the next dip as it always did (`docs/invariants.md` row 28 for
+    // the property, whole). Whether the trade is the right one is #706's
+    // question rather than this branch's, and it is written down there.
     const spare = army.length - this.doctrine.attackAtArmySize;
     const tenders = Math.min(gardens.length, Math.floor(spare / 2));
-    if (tenders <= 0) return claimed;
+
+    // What is already claimed, split by whether it has got there. One local,
+    // read here and by the walk below, because the two must be the same line:
+    // "arrived" has to mean exactly what this branch already meant by it, and
+    // two copies of a number that must stay equal is the constants rule in
+    // miniature.
+    const arrivedM = BLOOM_SHARE.TEND_RADIUS_M * 0.8;
+    const held: { hull: OwnUnit; garden: { x: number; y: number }; index: number }[] = [];
+    const standing = new Set<number>();
+    for (const [id, index] of this.gardenByTender) {
+      const hull = inArmy.get(id);
+      const garden = gardens[index];
+      // A bed that is no longer on the briefing cannot be tended.
+      if (hull === undefined || garden === undefined) {
+        this.gardenByTender.delete(id);
+        continue;
+      }
+      if (distance(hull, garden) <= arrivedM) standing.add(id);
+      held.push({ hull, garden, index });
+    }
+
+    // A tender that has arrived is a choice the navy is still making, so the
+    // gate governs it exactly as it governed every tender before this change:
+    // the army shrinks, the share stops, the hull goes back to the force. A
+    // tender still on its way is a choice already made, and taking it back
+    // mid-walk spends the whole trip and buys nothing — so the standing ones
+    // fill the gate's allowance and the walking ones are held on top of it.
+    //
+    // The total that can accumulate is bounded by the beds on the map however
+    // small the army gets: a claim opens only while the gate is open and only
+    // for a bed nothing else holds, and there is one claim per bed.
+    //
+    // That bounds the *count* and not the *duration*. Nothing here tests
+    // elapsed time, progress or reachability, and a claim that never arrives
+    // never comes back under the gate, so a tender that could never arrive
+    // would hold its bed until it left the army or died — for the match, in
+    // other words. `movement.ts`'s slide along a too-shallow
+    // edge is the mechanism by which such a tender could exist; the evidence
+    // neither shows one nor rules one out. The closest it comes is seed 4002's
+    // fifth claim, which held its bed to the end of the match having closed
+    // none of its 2,765 m — but it ran only 13 observations and the match
+    // ended under it, so it is not an unreachable bed either. Left unguarded
+    // on purpose: a timeout is a policy #706 does not ask for, and `stoodAt`
+    // already carries what a later guard would read.
+    const kept = [
+      ...held.filter((h) => standing.has(h.hull.id)).slice(0, Math.max(tenders, 0)),
+      ...held.filter((h) => !standing.has(h.hull.id)),
+    ];
+    this.gardenByTender.clear();
+    for (const h of kept) this.gardenByTender.set(h.hull.id, h.index);
+    const assignments = kept.map((h) => ({ hull: h.hull, garden: h.garden }));
 
     // Nearest gardens first: a commander that walked past one to reach
     // another would spend the difference in travel for the same rate.
-    const wanted = [...gardens]
-      .sort((a, b) => distance(this.home, a) - distance(this.home, b))
-      .slice(0, tenders);
-    const available = [...army].sort((a, b) => a.id - b.id);
+    const openings = Math.max(0, tenders - kept.length);
+    if (openings > 0) {
+      const taken = new Set(kept.map((h) => h.index));
+      const free = gardens
+        .map((garden, index) => ({ garden, index }))
+        .filter((g) => !taken.has(g.index))
+        .sort((a, b) => distance(this.home, a.garden) - distance(this.home, b.garden))
+        .slice(0, openings);
+      const available = [...army].sort((a, b) => a.id - b.id);
+      for (const { garden, index } of free) {
+        const hull = available.find((u) => !this.gardenByTender.has(u.id));
+        if (hull === undefined) break;
+        this.gardenByTender.set(hull.id, index);
+        assignments.push({ hull, garden });
+      }
+    }
 
-    for (const garden of wanted) {
-      const hull = available.find((u) => !claimed.has(u.id));
-      if (hull === undefined) break;
+    for (const { hull, garden } of assignments) {
       claimed.add(hull.id);
       // Inside the radius already: leave it alone. Re-issuing a move every
       // observation is what `walk` throttles, but a tender that is *there*
       // should not be given an order at all — an arriving hull that keeps
       // being told to arrive never stops moving, and a moving hull is a
       // louder hull.
-      if (distance(hull, garden) > BLOOM_SHARE.TEND_RADIUS_M * 0.8) {
+      if (distance(hull, garden) > arrivedM) {
         this.walk(hull, garden, snapshot.tick, out);
       }
       // Standing in the circle is one clause of three, and this branch used to
