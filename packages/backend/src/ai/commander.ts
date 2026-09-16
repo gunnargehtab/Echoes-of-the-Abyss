@@ -3780,8 +3780,8 @@ export class AiCommander implements AiPlayer {
     // tender no longer comes home for a raid. The old churn ended one
     // incidentally — an army losing hulls fell under the gate, which dropped
     // the claim — and that was never a decision this branch made. An arrived
-    // tender is still recalled by the gate the moment the army shrinks, which
-    // is where the protection actually lived and still lives.
+    // tender is still recalled by the gate the moment the army shrinks under
+    // it, which is where the protection actually lived and still lives.
     const inArmy = new Map(army.map((u) => [u.id, u]));
     // A claim never outlives its hull: a tender that died, or that the lift
     // took aboard, is out of `army` and out of the map with it.
@@ -3790,15 +3790,28 @@ export class AiCommander implements AiPlayer {
     }
     if (army.length === 0) return claimed;
 
-    // Tended with what the army does not need, and never out of what it does.
+    // A tender is *started* out of what the army does not need.
     //
     // Tending is exposure spent on income on the most reachable ground on the
     // map, and the doctrine already carries the number that means "enough
-    // hulls to act" — so a tender comes out of the *surplus* above that line
-    // and never out of the force itself. Anything else has the commander
-    // gardening its way below its own attack threshold, which measured
-    // exactly as it sounds: a navy that stopped approaching because two of
-    // its hulls were standing in kelp.
+    // hulls to act" — so a claim opens only out of the *surplus* above that
+    // line. That was once true of holding one too, and it is not any more, so
+    // say what this branch now does rather than what it used to: a walking
+    // claim is held through the line. On `ventfront-divide`, two beds and an
+    // `attackAtArmySize` of 6, with both tenders still on their way, an army
+    // of 7 hands `commandArmy` 5 and an army of 6 hands it 4. Against the
+    // pre-fix commander the same probe holds none at either size.
+    //
+    // Which is the failure the old wording named — "a navy that stopped
+    // approaching because two of its hulls were standing in kelp" — and it is
+    // a real cost, not a bookkeeping one. It is taken because the alternative
+    // is the fault #706 is about: an army dipping under the gate is exactly
+    // the common case, so releasing on it is the churn that made a claim worth
+    // nothing. The exposure is bounded on both sides — at most one hull per
+    // bed (the argument is below, and `holds one tender per bed at a time,
+    // whatever the army does` pins it), and each ends when its hull arrives,
+    // leaves the army, or dies. Whether that trade is the right one is a question for
+    // #706 rather than for this branch, and it is written down there.
     const spare = army.length - this.doctrine.attackAtArmySize;
     const tenders = Math.min(gardens.length, Math.floor(spare / 2));
 
@@ -3834,12 +3847,14 @@ export class AiCommander implements AiPlayer {
     // for a bed nothing else holds, and there is one claim per bed.
     //
     // That bounds the *count* and not the *duration*. Nothing here tests
-    // elapsed time, progress or reachability, so a tender that can never arrive
-    // holds its bed until it dies — `movement.ts` slides a hull too deep for
-    // the ground ahead along the edge rather than stopping it, which is the
-    // path to one. Left unguarded on purpose: the exposure is one hull per bed
-    // and ends with the hull, a timeout is a policy #706 does not ask for, and
-    // `stoodAt` already carries what a later guard would read.
+    // elapsed time, progress or reachability, so a claim ends only when its
+    // hull arrives, leaves the army, or dies. A tender that could never arrive
+    // would therefore hold its bed for the match; `movement.ts`'s slide along
+    // a too-shallow edge is the mechanism by which one could exist, and no run
+    // in the evidence produced one — the longest claim across the three seeds
+    // ran 381 observations and arrived. Left unguarded on purpose: a timeout
+    // is a policy #706 does not ask for, and `stoodAt` already carries what a
+    // later guard would read.
     const kept = [
       ...held.filter((h) => standing.has(h.hull.id)).slice(0, Math.max(tenders, 0)),
       ...held.filter((h) => !standing.has(h.hull.id)),

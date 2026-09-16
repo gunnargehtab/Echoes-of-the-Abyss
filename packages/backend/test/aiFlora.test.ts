@@ -16,8 +16,10 @@
  *
  * What is pinned here is those two judgements and the ways they must not go
  * wrong: no reactor for a navy with nothing to spend, no reactor before the
- * Refinery that shortens every haul, and never a tender taken out of an army
- * that is still gathering.
+ * Refinery that shortens every haul, and never a tender *started* out of an
+ * army that is still gathering. Started, since #706: a claim already on its
+ * way is held through that line, and the suite at the foot of this file is
+ * where that rule lives.
  */
 
 import { describe, it } from 'node:test';
@@ -144,7 +146,24 @@ describe('a reactor is worth having only if the account is spendable', () => {
 });
 
 describe('a garden is tended out of the surplus, never out of the force', () => {
-  /** The commander's own reading of how many hulls it may send gardening. */
+  /**
+   * This suite pins the **gate arithmetic**, and only that. It asserts over
+   * the local `tenders` below rather than over `AiCommander`, so it cannot see
+   * the branch change around it — and since #706 the branch has: the gate
+   * governs whether a claim *starts* and whether an *arrived* one is kept,
+   * while a claim still walking is held through the line. So an army of 6 can
+   * hand `commandArmy` 4, which the rule below neither describes nor forbids.
+   * `a claim the commander makes is a claim it keeps`, at the foot of this
+   * file, is what holds that half, against the real commander.
+   *
+   * Left asserting the arithmetic on purpose: it is the number the gate reads,
+   * it is frozen (`CLAUDE.md`'s balance freeze, and #706's decision names the
+   * ~9% duty cycle as staying frozen), and a test that would go green on it
+   * moving is worth having. It is a copy of the rule, which is why it needs
+   * this comment to say what it does not cover.
+   */
+
+  /** The commander's own reading of how many hulls it may *start* gardening. */
   function tenders(faction: Faction, army: number): number {
     const gardens = VENTFRONT_DIVIDE.blooms?.length ?? 0;
     if (faction !== Faction.Pelagia || gardens === 0) return 0;
@@ -707,6 +726,68 @@ describe('a claim the commander makes is a claim it keeps', () => {
       0,
       'a tender was recalled mid-walk, so it spent the whole trip and earned nothing'
     );
+  });
+
+  it('holds one tender per bed at a time, whatever the army does', () => {
+    // The safety half of the trade the branch comment argues, and nothing else
+    // asserted it. Holding a walking claim through the gate is only acceptable
+    // because the count cannot grow: the new-claim search skips the beds
+    // already held and the ids already claimed, so there is one claim per bed
+    // and `blooms.length` claims at most, however large the army gets.
+    //
+    // Counted by census rather than by the walk, which is what makes this
+    // hold anything. The claim set is private, but every claimed tender that
+    // is running silent is lifted by a *single-id* order every observation
+    // (`setSilent` batches the army's own, so the shape tells them apart), and
+    // `walk` only re-issues on a 300-tick window — a test reading the moves
+    // sees one observation's worth and passes with both guards removed, which
+    // this one was written as and did.
+    //
+    // Sixty hulls against an `attackAtArmySize` of 6: the gate would grant 27
+    // were the beds not the binding constraint, and it is asked twelve times,
+    // so a claim that could be opened twice for one bed has eleven chances to
+    // be.
+    //
+    // Two guards stand behind this and each masks the other, which is worth
+    // knowing before reading a surviving mutant as a gap: removing the
+    // already-held-bed filter alone changes nothing, because `openings` is
+    // already `tenders - kept.length` and goes to zero once the beds are held;
+    // removing that subtraction alone changes nothing, because the filter
+    // leaves no free bed to open. Remove both and this test fails, which is
+    // the check that was actually run.
+    const commander = new AiCommander(brief);
+    for (let i = 0; i < 12; i++) {
+      const units = hullsAtHome(60);
+      const commands = commander.observe({
+        tick: i * 12,
+        nodules: 600,
+        crystal: 0,
+        biomass: 0,
+        power: { demand: 0, capacity: 6 },
+        draw: { demand: 0, capacity: 6 },
+        berths: { used: units.length, granted: 80 },
+        units: units as never,
+        structures: [],
+        contacts: [],
+        marks: [],
+        hazards: [],
+        residue: [],
+        refits: [],
+        exposure: { tier: 0, trackedCount: 0 },
+      } as never) as never as { kind: string; [k: string]: unknown }[];
+      const lifted = commands.filter(
+        (c) =>
+          c.kind === 'silent' &&
+          c.active === false &&
+          Array.isArray(c.unitIds) &&
+          (c.unitIds as number[]).length === 1
+      );
+      if (lifted.length === 0) continue;
+      assert.ok(
+        lifted.length <= brief.blooms.length,
+        `observation ${i} held ${lifted.length} tenders for ${brief.blooms.length} beds`
+      );
+    }
   });
 
   it('keeps sending that tender to the one bed it was sent to', () => {
