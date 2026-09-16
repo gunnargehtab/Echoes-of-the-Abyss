@@ -25,23 +25,17 @@ Every entity has a live **SIG value, 0–100.**
 These bands **describe** the roster; they do not bind it. Each hull's own
 figures are in `UNIT_STATS` ([units.md](units.md) reports them per hull), and a
 hull sitting outside a band here is not thereby wrong — a Light Scout idles at
-6 and cruises at 12, under both idle and cruise, because a scout is quiet for a
-living.
+6 and cruises at 12, under the systems-live band and under cruise, because a
+scout is quiet for a living.
 
-**Speed enters SIG as a yes/no and nothing more.** Under way a hull reads its
-cruise figure, at every speed it can make; at rest it reads its idle figure.
-There is no flank or boost state, and no speed term anywhere on the movement
-path.
+**Speed enters SIG as a yes/no and nothing more.** A hull under way reads its
+cruise figure, at every speed it can make, and its idle figure at rest. There
+is no flank or boost figure, and no speed term anywhere on the movement path.
 
-A *posture* replaces that figure rather than scaling it — Silent Running or a
-cut drive (§6), an active ping (§5), a mining throttle
-([economy.md](economy.md) §3) — and the posture is what the hull is heard as,
-whether that is quieter than the figure it replaced or louder. None of them is
-a faster gear; the two that change speed make a hull **slower**.
-
-What a posture cannot do is quieten a hull that is loud for another reason:
-descent, laying, cutting and a working hull's figure are floors over the whole
-chain. §6 owns that rule.
+That is the movement term alone, and it is not always what a listener hears: a
+posture can replace it, and a load, the water and a veil adjust what is finally
+heard. §6 has the postures, §3 the load and the layer, and
+[hazards.md](hazards.md) the water. This section does not restate them.
 
 | Source | Typical SIG |
 | --- | --- |
