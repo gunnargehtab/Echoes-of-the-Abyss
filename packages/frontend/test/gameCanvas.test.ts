@@ -480,10 +480,18 @@ describe('the shell: what it wires to what', () => {
       world.room.emit(SERVER_MSG.mission, cannedMissionView());
       world.room.emit(
         SERVER_MSG.echo,
-        encodeEcho(null, { ...cannedSnapshot(100), boundSig: { peak: 6, ceiling: 20 } }, 0)
+        encodeEcho(
+          null,
+          { ...cannedSnapshot(100), boundSig: { peak: 6, ceiling: 20, setName: 'flight' } },
+          0
+        )
       );
       await world.settle();
 
+      // The word rides the same object as the numbers (#623 criterion 9), so
+      // the join this test is about carries all three or none — which is the
+      // argument for it living on `BoundSig` rather than on the mission view,
+      // where it would have been a fourth thing for the shell to lose.
       assert.equal(
         ceilingChip(world),
         'flight SIG 006 / 020',

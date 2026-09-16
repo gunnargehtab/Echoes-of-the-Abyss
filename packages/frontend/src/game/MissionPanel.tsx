@@ -53,6 +53,28 @@ const STATUS_CLASS: Record<ObjectiveStatus, string> = {
  */
 const sigDigits = (sig: number) => String(sig).padStart(3, '0');
 
+/**
+ * The header's SIG reading, in whichever of §10.5's forms the mission earns.
+ *
+ * Three, and the differences between them are the whole of #623's criteria 9
+ * and 10:
+ *
+ * - A silence order that the mission has worded — `flight SIG 006 / 020`.
+ * - A silence order it has not — `SIG 022 / 025`. The numbers are the same
+ *   numbers; what is missing is only the claim about whose they are.
+ * - No order at all — `SIG budget 050`, a labelled figure and not a rule.
+ *
+ * The set-name is the server's word, rendered as sent. What this function
+ * composes is the surrounding form, which §10.5 authors and which is the
+ * same for every mission — formatting, the way `sigDigits` is, and not the
+ * templating of authored prose that the rows below refuse.
+ */
+const sigReading = (view: MissionView, boundSig: BoundSig | undefined): string => {
+  if (boundSig === undefined) return `SIG budget ${sigDigits(view.sigBudget)}`;
+  const figure = `SIG ${sigDigits(boundSig.peak)} / ${sigDigits(boundSig.ceiling)}`;
+  return boundSig.setName === undefined ? figure : `${boundSig.setName} ${figure}`;
+};
+
 /** The player's own buttons, named the way the command bar names them. */
 const ABILITY_LABEL: Record<MissionAbility, string> = {
   weapons: 'weapons',
@@ -99,14 +121,7 @@ export function MissionPanel({ view, boundSig, onFocus, onCommanderAbility }: Mi
     <section className="objectives" aria-label="Objectives">
       <header className="objectives-title">
         <span>ORDERS</span>
-        {/* Named for what it binds, because the meter in the top bar is the
-            peak across everything the player owns and the court's order binds
-            only the flight: the tenders are the loudest thing in the convoy
-            and are not party to it (docs/mission-sorrowgate.md §4). Without
-            the word, a compliant flight reads as being in breach of its own
-            freight.
-
-            Two different numbers can stand here, and which one depends on
+        {/* Two different numbers can stand here, and which one depends on
             whether the mission is enforcing anything.
 
             Where a silence order is in force, this is *the order*: the loudest
@@ -114,8 +129,10 @@ export function MissionPanel({ view, boundSig, onFocus, onCommanderAbility }: Mi
             `boundSig` and both computed by the ledger that charges for the
             breach (#623 criterion 8). A ceiling with no reading beside it left
             the player nothing to check the rule against, and the instrument
-            nearest to hand — the meter — measures a set the rule does not
-            bind.
+            nearest to hand — the meter in the top bar — is the peak across
+            everything the player owns, which is a set the order does not bind:
+            at Sorrowgate the tenders are the loudest thing in the convoy and
+            are not party to the rule (docs/mission-sorrowgate.md §4).
 
             §3's form, `SIG 042 / 100`, and not an inequality. A relation is a
             claim, and at the one moment the chip matters — the breach — the
@@ -128,24 +145,29 @@ export function MissionPanel({ view, boundSig, onFocus, onCommanderAbility }: Mi
             header, so an unpadded reading would shuffle the row under itself
             every time a digit came or went.
 
-            Where none is, this stays the mission's SIG budget: design metadata
-            shown as a ceiling, never a live threshold, and nothing fails for
-            crossing it (docs/campaign.md §10). The three ledger missions whose
-            budget and ceiling differ are why the two cannot be the same field —
-            Attendance's budget of 8 is "a description rather than a ceiling"
-            in its own §4 while its order is 25, so a reading drawn against the
-            budget would read as a breach of a rule nobody is enforcing.
+            The set-name in front of the figure is the mission's own word and
+            arrives only where one was authored (#623 criterion 9). It is not
+            decoration: without it a compliant flight reads as being in breach
+            of its own freight. But the ledger's `silenceRole` is not that word
+            and is never sent — it is an internal id, so `called SIG 022 / 025`
+            would be worse than the bare figure, which at least claims nothing
+            it cannot support.
+
+            Where no order is in force, this is the mission's SIG budget, said
+            as a budget: design metadata, never a live threshold, and nothing
+            fails for crossing it (docs/campaign.md §10). It carried a `≤` until
+            #623 criterion 10, which stated a rule the game does not enforce
+            across the twenty-four missions that lend no array. The three ledger
+            missions whose budget and ceiling differ are why the two cannot be
+            the same field — Attendance's budget of 8 is "a description rather
+            than a ceiling" in its own §4 while its order is 25, so a reading
+            drawn against the budget would read as a breach of a rule nobody is
+            enforcing.
 
             Outside the `role="status"` region below on purpose: this number
             moves on the Echo tick, and a live region that announced it would
             talk over every objective the panel exists to read out. */}
-        {boundSig === undefined ? (
-          <span className="objectives-ceiling">flight SIG ≤ {view.sigBudget}</span>
-        ) : (
-          <span className="objectives-ceiling">
-            flight SIG {sigDigits(boundSig.peak)} / {sigDigits(boundSig.ceiling)}
-          </span>
-        )}
+        <span className="objectives-ceiling">{sigReading(view, boundSig)}</span>
       </header>
 
       <div className="objectives-body" role="status" aria-live="polite">

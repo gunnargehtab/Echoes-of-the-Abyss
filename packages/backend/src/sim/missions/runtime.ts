@@ -808,9 +808,17 @@ export class MissionRuntime {
    */
   get boundSig(): BoundSig | null {
     if (this.definition.arrayTag === undefined) return null;
+    const setName = this.definition.silenceSetName;
     return {
       peak: Math.ceil(this.boundPeak),
       ceiling: this.definition.silenceCeilingSig,
+      // The authored word and nothing else. `silenceRole` is one field away
+      // and is the wrong one: it indexes the ledger and is an internal id, so
+      // defaulting to it here is how `called SIG 022 / 025` would reach a
+      // screen (docs/ui-ux.md §10.5). Omitted rather than sent as
+      // `undefined`, so an unworded court and a worded one do not differ on
+      // the wire by a key that means nothing.
+      ...(setName === undefined ? {} : { setName }),
     };
   }
 

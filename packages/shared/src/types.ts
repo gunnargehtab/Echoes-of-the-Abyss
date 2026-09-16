@@ -980,6 +980,20 @@ export interface BoundSig {
   peak: number;
   /** `MissionDefinition.silenceCeilingSig` — the ceiling actually enforced. */
   ceiling: number;
+  /**
+   * What the mission calls the set this reading is over, where it has
+   * authored a word for it — `MissionDefinition.silenceSetName`.
+   *
+   * It rides here rather than on `MissionView` so that the name cannot
+   * arrive without the numbers it qualifies, or outlive them: the reading and
+   * the word for it are one thing the player reads in one glance, and the
+   * static `ceiling` is already here on the same argument.
+   *
+   * Absent is a court that has not been worded, and the panel then draws
+   * §3's bare form. The mission's `silenceRole` never travels — it is the
+   * ledger's index, not prose (docs/ui-ux.md §10.5).
+   */
+  setName?: string;
 }
 
 export interface EchoSnapshot {

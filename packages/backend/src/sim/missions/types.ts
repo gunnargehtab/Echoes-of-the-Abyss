@@ -1344,6 +1344,23 @@ export interface MissionDefinition extends MissionHeader {
    * a `shift` of listeners to twenty-five (docs/mission-attendance.md §5).
    */
   silenceRole?: MissionRole;
+  /**
+   * What to call the bound set on screen — docs/ui-ux.md §10.5.
+   *
+   * Authored prose, and deliberately not `silenceRole`. The role is the
+   * ledger's index and is an internal id by design (see `MissionRole`), so
+   * rendering it gives the player `called SIG 022 / 025` — a word that names
+   * nothing they can act on and reads as a leak of the machine. Omitted is
+   * the honest fallback rather than a missing feature: the panel drops to
+   * §3's bare `SIG 022 / 025`, which states both numbers correctly and
+   * claims nothing about whose they are.
+   *
+   * Sorrowgate's is `flight`, the word docs/mission-sorrowgate.md §4 uses for
+   * the four hulls the order admits. The other four courts hold a shift, a
+   * watch, the called and a cohort and are unworded until somebody writes
+   * the line; none of them needs a decision first.
+   */
+  silenceSetName?: string;
   /** Debt cap in seconds, so one catastrophic breach cannot black out the rest. */
   debtCapS: number;
   /**
