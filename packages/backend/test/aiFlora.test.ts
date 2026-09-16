@@ -591,3 +591,184 @@ describe('a tender is put in the state the share is actually paid for', () => {
     );
   });
 });
+
+describe('a claim the commander makes is a claim it keeps', () => {
+  /**
+   * #706, the second half. The branch above puts a *claimed* tender in the
+   * state the share is paid for; this one is about the claim itself lasting
+   * long enough for any of that to matter.
+   *
+   * `commandGardens` used to re-derive the whole assignment every observation
+   * — the tender was whichever unclaimed id sorted lowest, the bed whichever
+   * sorted nearest, and the count came straight off `army.length` through the
+   * spare gate. So a single hull lost anywhere in the navy took the army under
+   * the gate, dropped the claim, and handed a hull that was most of the way to
+   * a bed back to the army branch, which walked it to the rally.
+   *
+   * Measured on `ventfront-divide`, seeds 4000–4002, against the pre-fix
+   * commander: of 17 claims, **16 ended with the hull that held them still
+   * alive** — not one of those was ended by the tender dying — and 5 reached a
+   * bed. The median claim's closest approach to the bed it was sent to was
+   * 826 m on seed 4000 and 1,451 m on 4002, against a `TEND_RADIUS_M` of 400.
+   *
+   * What is pinned here is the rule, not those numbers: **the gate decides
+   * whether to start a claim, never whether to keep one that is still on its
+   * way.** An arrived tender is still the gate's to recall, which is the test
+   * above this one ('hands a released tender back silent…') and is why that
+   * fixture stands the army on the garden.
+   */
+  const brief = briefing(Faction.Pelagia);
+  const home = brief.spawns[brief.slot]!;
+
+  /** An army at its own spawn, so every tender it claims has a walk ahead of it. */
+  function hullsAtHome(n: number): unknown[] {
+    return Array.from({ length: n }, (_, i) => ({
+      id: 100 + i,
+      kind: UnitKind.Reed,
+      x: home.x,
+      y: home.y,
+      depth: 300,
+      hp: 400,
+      maxHp: 400,
+      sig: 12,
+      silentRunning: true,
+      engineOff: false,
+      followFloor: false,
+      pressureRating: 1,
+    }));
+  }
+
+  /** The dip: eight observations with hulls to spare, then four without. */
+  function acrossADip(hulls: (n: number) => unknown[]): {
+    kind: string;
+    [k: string]: unknown;
+  }[] {
+    const commander = new AiCommander(brief);
+    const observe = (units: unknown[], tick: number): { kind: string; [k: string]: unknown }[] =>
+      commander.observe({
+        tick,
+        nodules: 600,
+        crystal: 0,
+        biomass: 0,
+        power: { demand: 0, capacity: 6 },
+        draw: { demand: 0, capacity: 6 },
+        berths: { used: units.length, granted: 40 },
+        units: units as never,
+        structures: [],
+        contacts: [],
+        marks: [],
+        hazards: [],
+        residue: [],
+        refits: [],
+        exposure: { tier: 0, trackedCount: 0 },
+      } as never) as never;
+    for (let i = 0; i < 8; i++) observe(hulls(12), i * 12);
+    const after: { kind: string; [k: string]: unknown }[] = [];
+    // Below `attackAtArmySize + 2`, so the gate grants nothing at all. Walked
+    // over several observations because the commander acts on its own cadence
+    // and returns early in between.
+    for (let i = 8; i < 12; i++) after.push(...observe(hulls(7), i * 12));
+    return after;
+  }
+
+  /** Orders addressed to this hull alone, which is the only shape this branch emits. */
+  function addressedTo(
+    orders: { kind: string; [k: string]: unknown }[],
+    kind: string,
+    id: number
+  ): { kind: string; [k: string]: unknown }[] {
+    return orders.filter(
+      (c) =>
+        c.kind === kind &&
+        Array.isArray(c.unitIds) &&
+        (c.unitIds as number[]).length === 1 &&
+        (c.unitIds as number[])[0] === id
+    );
+  }
+
+  it('holds a tender that is still walking when the army dips under the gate', () => {
+    // Read through the silence release rather than through the claim set,
+    // which is private and deliberately so. `releaseTenders` emits a single-id
+    // `silent active: true` for a tender it is handing back to a silent army,
+    // and nothing else in this fixture emits that shape — a fixture of Reeds
+    // designates no scout and builds no carrier. So the order is the release,
+    // and its absence is the claim surviving.
+    //
+    // The positive control is the sibling test above: the same dip, with the
+    // army standing *on* the garden, does emit it. Without that pair this
+    // assertion would also pass if the branch never claimed anything at all.
+    const released = addressedTo(acrossADip(hullsAtHome), 'silent', 100).filter(
+      (c) => c.active === true
+    );
+    assert.equal(
+      released.length,
+      0,
+      'a tender was recalled mid-walk, so it spent the whole trip and earned nothing'
+    );
+  });
+
+  it('keeps sending that tender to the one bed it was sent to', () => {
+    // The other way the old branch abandoned an order it had issued: the bed
+    // was re-chosen every observation too, from a list sliced to a count that
+    // moved with the army. Turning a hull that is most of the way to one
+    // garden toward another costs the trip exactly as a recall does.
+    //
+    // The fixture is the case where the old assignment actually *changes*,
+    // which is the only one that holds anything: both tenders are drawn from
+    // the army sorted by id, so losing the lowest id shifts every hull behind
+    // it one bed along. With the two hulls at 100 and 101 holding the two
+    // gardens, hull 100 dying used to walk 101 off the bed it had been
+    // crossing the map for and onto 100's.
+    //
+    // Ticks run to 1,800 because two throttles have to line up before a move
+    // is emitted at all: `walk` re-issues on a 300-tick window, and a Veteran
+    // acts on every third observation (`AiTuning.cadenceTicks`). Both land
+    // together only every 75th call, so a short run emits exactly one move —
+    // at tick 0, before anything under test has happened — and passes with the
+    // branch deleted. The assertion below requires a move on each side of the
+    // loss for the same reason.
+    const commander = new AiCommander(brief);
+    const moves: { tick: number; x: number; y: number }[] = [];
+    const lostAt = 120;
+    for (let tick = 0; tick <= 1800; tick += 12) {
+      // Twelve hulls, then eleven: still two tenders' worth of spare either
+      // side of the loss, so nothing about the *gate* changes here. Only which
+      // hull sorts lowest does.
+      const units = hullsAtHome(12).filter(
+        (u) => tick < lostAt || (u as { id: number }).id !== 100
+      );
+      const commands = commander.observe({
+        tick,
+        nodules: 600,
+        crystal: 0,
+        biomass: 0,
+        power: { demand: 0, capacity: 6 },
+        draw: { demand: 0, capacity: 6 },
+        berths: { used: units.length, granted: 40 },
+        units: units as never,
+        structures: [],
+        contacts: [],
+        marks: [],
+        hazards: [],
+        residue: [],
+        refits: [],
+        exposure: { tier: 0, trackedCount: 0 },
+      } as never) as never as { kind: string; [k: string]: unknown }[];
+      for (const c of addressedTo(commands, 'move', 101)) {
+        moves.push({ tick, x: c.x as number, y: c.y as number });
+      }
+    }
+    assert.ok(
+      moves.some((m) => m.tick < lostAt) && moves.some((m) => m.tick >= lostAt),
+      `hull 101 was not walked on both sides of the loss (${JSON.stringify(moves)})`
+    );
+    const first = moves[0]!;
+    for (const move of moves) {
+      assert.ok(
+        Math.hypot(move.x - first.x, move.y - first.y) < 1,
+        `hull 101 was walked to ${move.x},${move.y} at tick ${move.tick} after being ` +
+          `claimed for the bed at ${first.x},${first.y}`
+      );
+    }
+  });
+});

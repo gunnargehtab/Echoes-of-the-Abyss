@@ -1102,6 +1102,14 @@ export class AiCommander implements AiPlayer {
    * be made true again when that hull comes back. See `releaseTenders`.
    */
   private tending: ReadonlySet<number> = new Set();
+  /**
+   * Which bed each tender was claimed for, held until the hull arrives (#706).
+   *
+   * Assigned once and kept, exactly like `nodeByHarvester`: a claim that is
+   * re-decided every observation is a hull that is re-sent every observation,
+   * and `commandGardens` says what that measured.
+   */
+  private readonly gardenByTender = new Map<number, number>();
   /** Largest the army has been while massing, and when that last rose. */
   private massingPeak = 0;
   private massingPeakTick = -1;
@@ -3712,9 +3720,10 @@ export class AiCommander implements AiPlayer {
    *
    * One hull per garden and no more, because the share is per bed and never
    * per gardener: a second tender on the same node buys nothing but a louder
-   * cluster of targets. Claimed by id like the anchors, so the same hull is
-   * asked every observation — a branch that changed its mind about which hull
-   * was the tender would keep both walking and neither earning.
+   * cluster of targets. Claimed by id like the anchors, and the claim is kept
+   * in `gardenByTender` rather than re-derived — a branch that changed its
+   * mind about which hull was the tender kept both walking and neither
+   * earning, which is what it did until #706.
    *
    * Drawn from the army and capped at half of it. Tending is the Commune
    * spending exposure on income on the most reachable ground on the map,
@@ -3733,7 +3742,39 @@ export class AiCommander implements AiPlayer {
     const claimed = new Set<number>();
     if (this.briefing.faction !== Faction.Pelagia) return claimed;
     const gardens = this.briefing.blooms;
-    if (gardens.length === 0 || army.length === 0) return claimed;
+    if (gardens.length === 0) {
+      this.gardenByTender.clear();
+      return claimed;
+    }
+
+    // A claim outlives the observation that made it, and `gardenByTender` is
+    // what carries it — hull id to the index of the bed that hull was sent to,
+    // the same shape `nodeByHarvester` uses for the same reason.
+    //
+    // It is here because the branch used to re-decide the whole assignment
+    // every observation. The tender was whichever unclaimed id sorted lowest
+    // and the bed whichever sorted nearest *that* observation, so a dip in army
+    // size below the gate dropped the claim outright, and the next observation
+    // above the gate started a different hull walking somewhere else. Measured
+    // on `ventfront-divide` against the pre-fix commander, seeds 4000-4002: of
+    // 17 claims, **16 ended with the hull holding them still alive** and only
+    // five ever reached a bed. The median claim's closest approach over its
+    // whole life was 826 m on seed 4000 and 1,451 m on 4002, against a
+    // `TEND_RADIUS_M` of 400 — the hull walked a fifth of the way and was
+    // recalled, by the commander that had just sent it.
+    //
+    // Nothing here decides how many tenders the navy runs. The gate below still
+    // does and is unchanged. What changed is that it decides whether to *start*
+    // a claim rather than whether to keep one, because an order abandoned
+    // before it arrives is not a cheaper order — it is a hull that walked for
+    // nothing (#706).
+    const inArmy = new Map(army.map((u) => [u.id, u]));
+    // A claim never outlives its hull: a tender that died, or that the lift
+    // took aboard, is out of `army` and out of the map with it.
+    for (const id of [...this.gardenByTender.keys()]) {
+      if (!inArmy.has(id)) this.gardenByTender.delete(id);
+    }
+    if (army.length === 0) return claimed;
 
     // Tended with what the army does not need, and never out of what it does.
     //
@@ -3746,18 +3787,62 @@ export class AiCommander implements AiPlayer {
     // its hulls were standing in kelp.
     const spare = army.length - this.doctrine.attackAtArmySize;
     const tenders = Math.min(gardens.length, Math.floor(spare / 2));
-    if (tenders <= 0) return claimed;
+
+    // What is already claimed, split by whether it has got there. The line is
+    // the same 0.8 of the radius the walk below stops re-ordering at, so
+    // "arrived" here means exactly what this branch already meant by it.
+    const held: { hull: OwnUnit; garden: { x: number; y: number }; index: number }[] = [];
+    const standing = new Set<number>();
+    for (const [id, index] of this.gardenByTender) {
+      const hull = inArmy.get(id);
+      const garden = gardens[index];
+      // A bed that is no longer on the briefing cannot be tended.
+      if (hull === undefined || garden === undefined) {
+        this.gardenByTender.delete(id);
+        continue;
+      }
+      if (distance(hull, garden) <= BLOOM_SHARE.TEND_RADIUS_M * 0.8) standing.add(id);
+      held.push({ hull, garden, index });
+    }
+
+    // A tender that has arrived is a choice the navy is still making, so the
+    // gate governs it exactly as it governed every tender before this change:
+    // the army shrinks, the share stops, the hull goes back to the force. A
+    // tender still on its way is a choice already made, and taking it back
+    // mid-walk spends the whole trip and buys nothing — so the standing ones
+    // fill the gate's allowance and the walking ones are held on top of it.
+    //
+    // The total that can accumulate is bounded by the beds on the map however
+    // small the army gets: a claim opens only while the gate is open and only
+    // for a bed nothing else holds, and there is one claim per bed.
+    const kept = [
+      ...held.filter((h) => standing.has(h.hull.id)).slice(0, Math.max(tenders, 0)),
+      ...held.filter((h) => !standing.has(h.hull.id)),
+    ];
+    this.gardenByTender.clear();
+    for (const h of kept) this.gardenByTender.set(h.hull.id, h.index);
+    const assignments = kept.map((h) => ({ hull: h.hull, garden: h.garden }));
 
     // Nearest gardens first: a commander that walked past one to reach
     // another would spend the difference in travel for the same rate.
-    const wanted = [...gardens]
-      .sort((a, b) => distance(this.home, a) - distance(this.home, b))
-      .slice(0, tenders);
-    const available = [...army].sort((a, b) => a.id - b.id);
+    const openings = Math.max(0, tenders - kept.length);
+    if (openings > 0) {
+      const taken = new Set(kept.map((h) => h.index));
+      const free = gardens
+        .map((garden, index) => ({ garden, index }))
+        .filter((g) => !taken.has(g.index))
+        .sort((a, b) => distance(this.home, a.garden) - distance(this.home, b.garden))
+        .slice(0, openings);
+      const available = [...army].sort((a, b) => a.id - b.id);
+      for (const { garden, index } of free) {
+        const hull = available.find((u) => !this.gardenByTender.has(u.id));
+        if (hull === undefined) break;
+        this.gardenByTender.set(hull.id, index);
+        assignments.push({ hull, garden });
+      }
+    }
 
-    for (const garden of wanted) {
-      const hull = available.find((u) => !claimed.has(u.id));
-      if (hull === undefined) break;
+    for (const { hull, garden } of assignments) {
       claimed.add(hull.id);
       // Inside the radius already: leave it alone. Re-issuing a move every
       // observation is what `walk` throttles, but a tender that is *there*
