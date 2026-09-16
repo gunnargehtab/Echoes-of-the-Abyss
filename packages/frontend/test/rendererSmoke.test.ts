@@ -1436,8 +1436,10 @@ describe('renderer smoke test: the strip explains itself', () => {
       !full.some((text) => text.startsWith('T+')),
       `the clock was printed onto a full first row: ${full.join(' | ')}`
     );
-    // §2's yield order, which this change does not touch: the map name is the
-    // first thing to give way and is gone before the clock is.
+    // The authored yield order, which this change does not touch. It lives in
+    // `EchoRenderer.drawHud`'s own comment rather than in §2, which states a
+    // drop order for the console's *blocks* and none for the strip: the map
+    // name is the first thing to give way and is gone before the clock is.
     assert.ok(
       !full.includes('SMOKE BASIN'),
       `the map name was printed onto a full first row: ${full.join(' | ')}`
@@ -1470,9 +1472,9 @@ describe('renderer smoke test: the strip explains itself', () => {
     booted.chart.setStatus('connected');
 
     // §11's ends and middle, plus the two scales §13 records the strip going
-    // quiet at. The property is the one §2's yield order promises: the map
-    // name and the clock give way rather than being printed over the stockpile
-    // row. Every glyph here is on one row by construction, so an overlap in x
+    // quiet at. The property is the one the authored yield order promises
+    // (`EchoRenderer.drawHud`, not §2): the map name and the clock give way
+    // rather than being printed over the stockpile row. Every glyph here is on one row by construction, so an overlap in x
     // is a collision and the y test would be noise.
     //
     // What this pass can see is glyph against glyph. The draw meter's segments

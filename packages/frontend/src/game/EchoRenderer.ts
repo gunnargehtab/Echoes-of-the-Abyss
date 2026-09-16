@@ -6289,8 +6289,9 @@ export class EchoRenderer {
    * - **Over somebody else's number.** A control laid over two numbers answers
    *   for the wrong one. The collision this was written against is gone —
    *   until #743 the rule dropping `map · T+` measured the *second* row's
-   *   right edge while the row that collided was the stockpile row, so `T+`
-   *   was printed over `DRAW` from 135% UI scale. The refusal stays anyway:
+   *   right edge while the row that collided was the stockpile row, so the
+   *   map name and then the clock were printed over the draw meter rather
+   *   than yielding. The refusal stays anyway:
    *   it is a property of the surface rather than a patch for one layout bug,
    *   and the residual case above — a first row with nothing left that the
    *   authored order permits to yield — still reaches it.
@@ -6703,19 +6704,25 @@ export class EchoRenderer {
     // Two things yield when the strip runs out of room, in this order: the
     // map name, which is context rather than a number, and then the clock
     // itself. Nothing further down gives way, because everything to the left
-    // is either a live number or one of §11's audio-parity readouts — and a
-    // clock printed *over* `TRACKED ×n` would cost the player the readout
-    // that tells them how well they are seen. A missing clock is a smaller
-    // loss than an unreadable one.
+    // is either a live number or one of §11's audio-parity readouts. A
+    // missing clock is a smaller loss than an unreadable one.
+    //
+    // This once argued from a clock printed *over* `TRACKED ×n`, and that
+    // reading is dead: `TRACKED` is on the second row and no drop decided
+    // here can reach it. It is worth recording as gone, because believing it
+    // is what put the measurement below on the wrong row for as long as it
+    // was there.
     //
     // Measured against the row the two of them are *on* (#743). This used to
     // read the second row — `exposureLabel` when tracked and `bandLabel` when
     // not — and both of those sit at y = 30 while everything gated here is at
-    // y = 10. So the strip concluded there was room on the strength of a row
-    // neither drop can collide with, and from 135% UI scale, where the
-    // stockpile row is full and the second row is short, it printed `T+` over
-    // `DRAW`. The yield order above is unchanged; only the measurement was
-    // wrong.
+    // y = 10, so the test could only ever find room. The two readouts were
+    // then printed over the stockpile row's own right-hand end rather than
+    // yielding — the draw meter, whose segments run past the `DRAW` label,
+    // and the map name reaches it first. Which UI scale that starts at is a
+    // fact about how wide the stockpiles happen to be, so it lives in
+    // docs/ui-ux.md §13 with the fixture it was swept on. The yield order
+    // above is unchanged; only the measurement was wrong.
     this.clockLabel.text = stamp(this.lastTick);
     this.clockLabel.visible = this.statusLabel.x - 16 - firstRowEdge >= this.clockLabel.width + 16;
     const rightEdge = this.clockLabel.visible
