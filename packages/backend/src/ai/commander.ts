@@ -1107,10 +1107,10 @@ export class AiCommander implements AiPlayer {
    *
    * Assigned once and kept, exactly like `nodeByHarvester`: a claim that is
    * re-decided every observation is a hull that is re-sent every observation,
-   * and `commandGardens` says what that measured. An entry lives until the
-   * hull leaves the army or the bed leaves the briefing — *not* until the hull
-   * arrives, which is when the gate begins governing it again rather than when
-   * the claim ends.
+   * and `commandGardens` says what that measured. Arriving does not end an
+   * entry — it is what puts one back under the gate, which may then end it on
+   * the next army dip exactly as it always did. `docs/invariants.md` row 28
+   * states the property, and is the only place that states it whole.
    */
   private readonly gardenByTender = new Map<number, number>();
   /** Largest the army has been while massing, and when that last rose. */
@@ -3819,11 +3819,11 @@ export class AiCommander implements AiPlayer {
     // nothing. The exposure is bounded on both sides — never more tenders than
     // the map has beds (`holds no more tenders than the map has beds, whatever
     // the army does` pins that count; one-*per*-bed is the argument below), and
-    // the hold through the gate ends as soon as the hull arrives, after which
-    // the gate governs it again. The claim itself outlives arrival and ends
-    // only when the hull leaves the army or dies. Whether the trade is the
-    // right one is #706's question rather than this branch's, and it is
-    // written down there.
+    // the hold above the gate lasts only as far as the bed. Arriving does not
+    // end the claim, but it does hand it back to the gate, which then closes
+    // on it at the next dip as it always did (`docs/invariants.md` row 28 for
+    // the property, whole). Whether the trade is the right one is #706's
+    // question rather than this branch's, and it is written down there.
     const spare = army.length - this.doctrine.attackAtArmySize;
     const tenders = Math.min(gardens.length, Math.floor(spare / 2));
 
@@ -3859,9 +3859,10 @@ export class AiCommander implements AiPlayer {
     // for a bed nothing else holds, and there is one claim per bed.
     //
     // That bounds the *count* and not the *duration*. Nothing here tests
-    // elapsed time, progress or reachability, so a claim ends only when its
-    // hull leaves the army or dies, and a tender that could never arrive would
-    // hold its bed for the match. `movement.ts`'s slide along a too-shallow
+    // elapsed time, progress or reachability, and a claim that never arrives
+    // never comes back under the gate, so a tender that could never arrive
+    // would hold its bed until it left the army or died — for the match, in
+    // other words. `movement.ts`'s slide along a too-shallow
     // edge is the mechanism by which such a tender could exist; the evidence
     // neither shows one nor rules one out. The closest it comes is seed 4002's
     // fifth claim, which held its bed to the end of the match having closed
