@@ -156,8 +156,8 @@ export function MissionPanel({ view, boundSig, onFocus, onCommanderAbility }: Mi
             Where no order is in force, this is the mission's SIG budget, said
             as a budget: design metadata, never a live threshold, and nothing
             fails for crossing it (docs/campaign.md §10). It carried a `≤` until
-            #623 criterion 10, which stated a rule the game does not enforce
-            across the twenty-four missions that lend no array. The three ledger
+            #623 criterion 10 — an inequality that stated a rule the game does
+            not enforce, across the twenty-four missions that lend no array. The three ledger
             missions whose budget and ceiling differ are why the two cannot be
             the same field — Attendance's budget of 8 is "a description rather
             than a ceiling" in its own §4 while its order is 25, so a reading

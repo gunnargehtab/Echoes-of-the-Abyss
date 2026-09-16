@@ -956,8 +956,11 @@ export interface BerthReport {
  * in the margin turned into a rule that `MissionDefinition.sigBudget` warns
  * about.
  *
- * It leaks nothing. A max over the player's own hulls, each of whose `sig` is
- * already on this payload per unit.
+ * It leaks nothing. The figures are a max over the player's own hulls, each of
+ * whose `sig` is already on this payload per unit; the word beside them was
+ * authored before the match existed, so there is nothing it could be carrying
+ * a figure about (docs/invariants.md row 24 makes the same argument for a
+ * gloss).
  */
 export interface BoundSig {
   /**

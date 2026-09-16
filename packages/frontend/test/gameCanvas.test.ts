@@ -215,7 +215,7 @@ function cannedMissionView(): MissionView {
   };
 }
 
-/** Every string the panel's ceiling chip renders, descending through it. */
+/** Every string the panel's SIG chip renders, descending through it. */
 function ceilingChip(world: Mounted): string {
   const found = world.tree.root.findAll(
     (node) => typeof node.type === 'string' && node.props.className === 'objectives-ceiling'
