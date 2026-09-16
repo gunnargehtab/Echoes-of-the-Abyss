@@ -941,10 +941,12 @@ export interface BerthReport {
  * `peakSig` beside it is a different set on purpose: the meter is a fleet
  * instrument with docs/ui-ux.md §3's fixed stops, measured over everything the
  * player owns, and a mission's order binds one named role — Sorrowgate's
- * flight, Attendance's shift, the Dome's watch. In Sorrowgate those genuinely
- * differ, because the court's two tenders sit inside the player's own party
- * block so the dome's grant reaches the flight: the meter reads their 18 while
- * the order reads the flight's 6. A panel that printed the ceiling with no
+ * `escort`, Attendance's `shift`, the Dome's `watch`. Those are the ledger's
+ * ids rather than prose; what a court *calls* that set on screen is a
+ * separate authored word, and is `setName` below. In Sorrowgate the two sets
+ * genuinely differ, because the court's two tenders sit inside the player's
+ * own party block so the dome's grant reaches the flight: the meter reads
+ * their 18 while the order reads the flight's 6. A panel that printed the ceiling with no
  * reading beside it left the player with no way to check the one rule the
  * mission is enforcing, and the instrument nearest to hand measured a set the
  * rule does not bind.
@@ -954,8 +956,11 @@ export interface BerthReport {
  * in the margin turned into a rule that `MissionDefinition.sigBudget` warns
  * about.
  *
- * It leaks nothing. A max over the player's own hulls, each of whose `sig` is
- * already on this payload per unit.
+ * It leaks nothing. The figures are a max over the player's own hulls, each of
+ * whose `sig` is already on this payload per unit; the word beside them was
+ * authored before the match existed, so there is nothing it could be carrying
+ * a figure about (docs/invariants.md row 24 makes the same argument for a
+ * gloss).
  */
 export interface BoundSig {
   /**
@@ -980,6 +985,20 @@ export interface BoundSig {
   peak: number;
   /** `MissionDefinition.silenceCeilingSig` — the ceiling actually enforced. */
   ceiling: number;
+  /**
+   * What the mission calls the set this reading is over, where it has
+   * authored a word for it — `MissionDefinition.silenceSetName`.
+   *
+   * It rides here rather than on `MissionView` so that the name cannot
+   * arrive without the numbers it qualifies, or outlive them: the reading and
+   * the word for it are one thing the player reads in one glance, and the
+   * static `ceiling` is already here on the same argument.
+   *
+   * Absent is a court that has not been worded, and the panel then draws
+   * §3's bare form. The mission's `silenceRole` never travels — it is the
+   * ledger's index, not prose (docs/ui-ux.md §10.5).
+   */
+  setName?: string;
 }
 
 export interface EchoSnapshot {

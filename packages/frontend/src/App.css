@@ -1602,7 +1602,7 @@
   border-bottom: 1px solid color-mix(in srgb, var(--neon-magenta) 30%, transparent);
 }
 
-/* The ceiling is a readout, not a title — it stays in the data voice. */
+/* The reading is a readout, not a title — it stays in the data voice. */
 .objectives-ceiling {
   font-family: var(--font-data);
   font-size: 0.62rem;

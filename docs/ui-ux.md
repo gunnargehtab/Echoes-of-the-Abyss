@@ -608,16 +608,34 @@ something new, and a log role would re-announce the whole panel every time a cou
   and measures a set the order does not bind
   ([mission-sorrowgate.md](mission-sorrowgate.md) §4). A ceiling with no reading beside it
   leaves the player nothing to check the one numeric rule of the mission against. It is
-  written in §3's form — `flight SIG 006 / 020`, zero-padded so the digit count never
+  written in §3's form — `SIG 006 / 020`, zero-padded so the digit count never
   shifts — and deliberately **not** as an inequality: a relation is a claim, and in breach
   the claim would be false at exactly the moment the player most needs to read it. The
   padding is load-bearing rather than decorative, because this figure moves inside a
-  header laid out end to end. Where no
-  order is in force the panel shows the mission's SIG budget instead, which
-  [campaign.md](campaign.md) §10 keeps as a design note and not a rule: three of the five
-  orders shipping today are held to a different figure than the budget their mission was
-  tuned for, so a reading drawn against the budget would read as a breach of nothing. The
-  reading sits in the header rather than in the status region, because it moves on the Echo
+  header laid out end to end.
+- **The bound set is named only where the mission has authored a word for it**, and the
+  reading reads `flight SIG 006 / 020` where it has. The word is what tells the player
+  *which* hulls the figure is over, so getting it wrong is worse than omitting it: the set
+  the ledger measures is identified internally by a role id, and those ids are a mission's
+  own private vocabulary rather than prose — rendering one directly gives `called SIG 022 /
+  025`, which names nothing a player can act on. So a mission authors a display word or the
+  panel shows none, and the figure falls back to §3's bare form. Sorrowgate authors
+  **flight**, which is the word its own §4 uses for the four hulls the order binds
+  ([mission-sorrowgate.md](mission-sorrowgate.md) §4); the other four courts hold a *shift*,
+  a *watch*, the *called* and a *cohort*, and each can be worded whenever somebody writes the
+  line. An unworded court states its numbers correctly in the meantime, which is the half
+  that matters.
+- **Where no order is in force the panel states the mission's SIG budget, labelled as one.**
+  It is written `SIG budget 050` — the same zero-padded figure, under a word that says what
+  it is, and again **not** an inequality. [campaign.md](campaign.md) §10 keeps the budget in
+  a mission's design notes: it is the loudness the mission was tuned to expect, nothing
+  fails for crossing it, and missions are playtested against players who exceed it. A `≤`
+  states a rule, so putting one there renders a note in the margin as a threshold the game
+  does not enforce — the same false claim the form above refuses, told about a number that
+  is not even being watched. The budget is also not the ceiling: three of the five orders
+  shipping today are held to a different figure than the budget their mission was tuned
+  for, which is why the two cannot share a field or a form. The reading sits in the header
+  rather than in the status region, because it moves on the Echo
   tick and a live region would announce it over every objective.
 - **A locked ability shows its reason**, in the §7 form and in the panel as well as on the
   affordance: `disabled — silence order`. The lock is continuous state, not a reply to a

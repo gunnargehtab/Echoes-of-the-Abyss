@@ -106,6 +106,14 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
   arrayTag: 'array',
   silenceCeilingSig: 20,
   /**
+   * §4 — "the order binds the flight and not the tenders". The word is the
+   * mission's own, and it is the whole reason the panel takes an authored one
+   * rather than the role: this order's `silenceRole` is the default `escort`,
+   * which is what the court calls the job and not what the doc calls the
+   * hulls.
+   */
+  silenceSetName: 'flight',
+  /**
    * §4 — debt repays a second for a second and caps here, so one catastrophic
    * breach cannot black out the rest of the mission. Dread, not confusion.
    */

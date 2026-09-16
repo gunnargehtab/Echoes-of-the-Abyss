@@ -80,9 +80,9 @@ async function panel(
  * Every string *and number* a node renders, joined.
  *
  * `Rendered.text()` collects strings, which is right for prose and wrong for
- * every line in this panel that interpolates a count — `flight SIG ≤ {20}`
- * puts a number in the tree, and a text walker that dropped it would let the
- * assertions pass on a panel showing no number at all.
+ * every line in this panel that interpolates a count — an objective's `3 of
+ * 5` puts numbers in the tree, and a text walker that dropped them would let
+ * the assertions pass on a panel showing no number at all.
  */
 function reads(instance: { props: { children?: unknown } }): string {
   const out: string[] = [];
@@ -131,15 +131,50 @@ describe('the objectives panel: how it announces itself', () => {
     }
   });
 
-  it('names the SIG ceiling for the flight, not for everything the player owns', async () => {
-    // The meter in the top bar is the peak across the whole force; the court's
-    // order binds the flight alone (docs/mission-sorrowgate.md §4). Without the
-    // word, a compliant flight reads as being in breach of its own freight.
-    const { rendered } = await panel(missionView({ sigBudget: 20 }));
+  it('states a mission’s SIG budget as a budget, never as a rule', async () => {
+    // #623 criterion 10, and the twenty-four missions that lend no array are
+    // its population. `sigBudget` is design metadata — docs/campaign.md §10
+    // keeps it in a mission's design notes, nothing fails for crossing it, and
+    // missions are playtested against players who exceed it. The chip carried
+    // a `≤` until now, which states a threshold the game does not enforce.
+    //
+    // Intake's 50 rather than the prologue's 20, for two reasons. Intake is
+    // one of the missions this form is *about* — its own §3 says the figure
+    // "is a description, not a ceiling" — where Sorrowgate's budget and
+    // its order are the same number and the distinction does not show. And 50
+    // is two digits, so it exercises the padding this form inherits.
+    const { rendered } = await panel(missionView({ sigBudget: 50 }));
     try {
-      assert.match(reads(rendered.byClass('objectives-ceiling')), /flight SIG ≤ 20/);
+      const chip = reads(rendered.byClass('objectives-ceiling'));
+      assert.match(chip, /^SIG budget 050$/);
+      assert.equal(/≤|<=/.test(chip), false, 'a design note is not stated as a threshold');
     } finally {
       await rendered.unmount();
+    }
+  });
+
+  it('names the bound set where the mission worded it, and not otherwise', async () => {
+    // #623 criterion 9. The word tells the player *which* hulls the figure is
+    // over, and without it a compliant flight reads as being in breach of its
+    // own freight — the meter in the top bar is the peak across the whole
+    // force while the court's order binds the flight alone
+    // (docs/mission-sorrowgate.md §4).
+    //
+    // The unworded half is the half worth holding. Four of the five orders
+    // shipping today have no authored word, and the tempting fallback is the
+    // `silenceRole` the ledger indexes by — an internal id, which renders as
+    // `called SIG 022 / 025` and names nothing a player can act on. So the
+    // fallback is *no name*: the same two numbers, claiming nothing about
+    // whose they are. The server settles which of the two arrives; this holds
+    // that the panel draws each as §10.5 writes it.
+    const worded = await panel(missionView(), { peak: 6, ceiling: 20, setName: 'flight' });
+    const unworded = await panel(missionView(), { peak: 22, ceiling: 25 });
+    try {
+      assert.match(reads(worded.rendered.byClass('objectives-ceiling')), /^flight SIG 006 \/ 020$/);
+      assert.match(reads(unworded.rendered.byClass('objectives-ceiling')), /^SIG 022 \/ 025$/);
+    } finally {
+      await worded.rendered.unmount();
+      await unworded.rendered.unmount();
     }
   });
 
@@ -155,7 +190,11 @@ describe('the objectives panel: how it announces itself', () => {
     // its order is 25. A reading drawn against the budget would read as a
     // breach of a rule nobody is enforcing, so when an order is in force the
     // budget is not what is shown.
-    const { rendered } = await panel(missionView({ sigBudget: 9 }), { peak: 6, ceiling: 25 });
+    const { rendered } = await panel(missionView({ sigBudget: 9 }), {
+      peak: 6,
+      ceiling: 25,
+      setName: 'flight',
+    });
     try {
       const chip = reads(rendered.byClass('objectives-ceiling'));
       assert.match(chip, /flight SIG 006 \/ 025/);
@@ -172,7 +211,11 @@ describe('the objectives panel: how it announces itself', () => {
     // moment the player most needs to read it, which CLAUDE.md calls confusion
     // rather than dread. This is the case the compliant readings above cannot
     // see, and the reason the form is what it is.
-    const { rendered } = await panel(missionView({ debtS: 1.2 }), { peak: 26, ceiling: 25 });
+    const { rendered } = await panel(missionView({ debtS: 1.2 }), {
+      peak: 26,
+      ceiling: 25,
+      setName: 'flight',
+    });
     try {
       const chip = reads(rendered.byClass('objectives-ceiling'));
       assert.match(chip, /flight SIG 026 \/ 025/);
@@ -207,7 +250,7 @@ describe('the objectives panel: how it announces itself', () => {
     // changing five times a second inside it would talk over every objective
     // the panel exists to read out. The header is not live, and that is where
     // this belongs.
-    const { rendered } = await panel(missionView(), { peak: 6, ceiling: 20 });
+    const { rendered } = await panel(missionView(), { peak: 6, ceiling: 20, setName: 'flight' });
     try {
       assert.match(reads(rendered.byClass('objectives-ceiling')), /flight SIG 006 \/ 020/);
       assert.equal(

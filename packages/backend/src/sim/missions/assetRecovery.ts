@@ -72,8 +72,8 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
   fauna: false,
   /**
    * §9 — 65, inverted: the budget is the level the mission *expects*, and the
-   * playtest adversary is the player who creeps. Shown as a ceiling like any
-   * budget, and never a rule (campaign.md §10).
+   * playtest adversary is the player who creeps. Labelled as a budget like
+   * any other, and never a rule (campaign.md §10, ui-ux.md §10.5).
    */
   sigBudget: 65,
   // No arrayTag: no court, no lent hearing, no silence ledger (§3). The

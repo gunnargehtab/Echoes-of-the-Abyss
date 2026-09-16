@@ -117,8 +117,8 @@ describe('the silence order reads out the set it enforces (#623 §8)', () => {
         );
         // And the converse of the check above. 100 is the sentinel for "no
         // ceiling"; a mission that lends an array against it keeps a ledger
-        // nothing can ever breach, and the panel would put `flight SIG 022 /
-        // 100` on screen — an order that is not one.
+        // nothing can ever breach, and the panel would put `SIG 022 / 100` on
+        // screen — an order that is not one.
         assert.ok(
           mission.silenceCeilingSig < 100,
           `${mission.id} lends an array against no ceiling at all`
@@ -146,6 +146,70 @@ describe('the silence order reads out the set it enforces (#623 §8)', () => {
     // empty side would read as coverage and hold nothing.
     assert.ok(withLedger > 0, `${withLedger} passes under a ledger`);
     assert.ok(withoutLedger > 0, `${withoutLedger} passes with no ledger`);
+  });
+
+  it('names the bound set from the authored word alone, or not at all', () => {
+    // Criterion 9. The panel puts a word in front of the figure so the player
+    // knows *which* hulls it is over, and the tempting source for that word is
+    // one field away: `silenceRole`, which the ledger already indexes the set
+    // by. It is the wrong source, and `MissionRole`'s own comment says why —
+    // roles are internal ids authored per mission, so rendering one gives
+    // `called SIG 022 / 025`, a word that names nothing a player can act on.
+    //
+    // So the reading carries `silenceSetName` verbatim or carries nothing, and
+    // this holds both halves of that over the registry rather than over
+    // Sorrowgate: a court worded next month is covered, and so is one that is
+    // not.
+    let worded = 0;
+    let unworded = 0;
+    for (const mission of MISSIONS) {
+      if (!runsLedger(mission)) continue;
+
+      // The premise, in the same register as the whole-ceiling one above. If a
+      // mission's display word is also a role it hands out, then the word and
+      // the id have converged and nothing downstream can tell an authored
+      // noun from the ledger's index piped through — which is exactly the
+      // defect this criterion exists to prevent, wearing the right clothes.
+      // Today no mission trips it; one that means to wants the reason written
+      // down rather than a silently passing test.
+      const assigned = new Set(
+        mission.parties
+          .flatMap((party) => party.units.map((unit) => unit.role))
+          .filter((role): role is string => role !== undefined)
+      );
+      assigned.add(mission.silenceRole ?? 'escort');
+      if (mission.silenceSetName !== undefined) {
+        assert.ok(
+          mission.silenceSetName.length > 0,
+          `${mission.id}: an authored set-name is a word, not an empty string`
+        );
+        assert.ok(
+          !assigned.has(mission.silenceSetName),
+          `${mission.id}: "${mission.silenceSetName}" is a role this mission assigns, ` +
+            'so the display word is indistinguishable from the ledger id'
+        );
+      }
+
+      for (const { own } of passes(matchFor(mission), mission.playerSlot, 2)) {
+        const bound = own.boundSig;
+        assert.ok(bound !== undefined);
+        // Identity with the authored field, not merely "a string". This is
+        // what forbids the default: `setName: definition.silenceRole` would
+        // satisfy every other assertion in this file and fails here.
+        assert.equal(
+          bound.setName,
+          mission.silenceSetName,
+          `${mission.id}: the word shown is the word authored`
+        );
+        if (bound.setName === undefined) unworded++;
+        else worded++;
+      }
+    }
+    // Both branches walked. Sorrowgate is the worded one today and the other
+    // four courts are not, so an assertion that only ever ran on one side
+    // would hold half of the criterion and read as all of it.
+    assert.ok(worded > 0, `${worded} passes under a worded order`);
+    assert.ok(unworded > 0, `${unworded} passes under an unworded one`);
   });
 
   it('reads a narrower set than the meter beside it, and never a wider one', () => {
