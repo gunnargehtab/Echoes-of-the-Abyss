@@ -3758,16 +3758,30 @@ export class AiCommander implements AiPlayer {
     // above the gate started a different hull walking somewhere else. Measured
     // on `ventfront-divide` against the pre-fix commander, seeds 4000-4002: of
     // 17 claims, **16 ended with the hull holding them still alive** and only
-    // five ever reached a bed. The median claim's closest approach over its
-    // whole life was 826 m on seed 4000 and 1,451 m on 4002, against a
-    // `TEND_RADIUS_M` of 400 — the hull walked a fifth of the way and was
-    // recalled, by the commander that had just sent it.
+    // five ever reached a bed. The median claim's closest approach to the
+    // *nearest* bed over its whole life was 826 m on seed 4000 and 1,451 m on
+    // 4002, against a `TEND_RADIUS_M` of 400 — a lower bound on the distance
+    // to the bed the hull was actually sent to, and already twice the radius.
+    // The median seed-4000 claim opened 940 m out and closed 114 m of the 540
+    // it needed: a fifth of the way, and then recalled by the commander that
+    // had just sent it.
     //
-    // Nothing here decides how many tenders the navy runs. The gate below still
-    // does and is unchanged. What changed is that it decides whether to *start*
-    // a claim rather than whether to keep one, because an order abandoned
-    // before it arrives is not a cheaper order — it is a hull that walked for
-    // nothing (#706).
+    // The gate below is unchanged, and so is the pair of questions it answers:
+    // whether to *start* a claim, and whether to keep one that has **arrived**.
+    // What it no longer decides is whether to keep a claim that is still on its
+    // way — a walking tender is held above the gate's allowance, so the count
+    // claimed at once can exceed `tenders` and, when the army is under the
+    // line, does. That is the change, and it is the whole of it: an order
+    // abandoned before it arrives is not a cheaper order, it is a hull that
+    // walked for nothing (#706).
+    //
+    // The price, stated because nothing else in the tree states it: `observe`
+    // filters tenders out of the list `commandArmy` defends with, so a walking
+    // tender no longer comes home for a raid. The old churn ended one
+    // incidentally — an army losing hulls fell under the gate, which dropped
+    // the claim — and that was never a decision this branch made. An arrived
+    // tender is still recalled by the gate the moment the army shrinks, which
+    // is where the protection actually lived and still lives.
     const inArmy = new Map(army.map((u) => [u.id, u]));
     // A claim never outlives its hull: a tender that died, or that the lift
     // took aboard, is out of `army` and out of the map with it.
@@ -3788,9 +3802,12 @@ export class AiCommander implements AiPlayer {
     const spare = army.length - this.doctrine.attackAtArmySize;
     const tenders = Math.min(gardens.length, Math.floor(spare / 2));
 
-    // What is already claimed, split by whether it has got there. The line is
-    // the same 0.8 of the radius the walk below stops re-ordering at, so
-    // "arrived" here means exactly what this branch already meant by it.
+    // What is already claimed, split by whether it has got there. One local,
+    // read here and by the walk below, because the two must be the same line:
+    // "arrived" has to mean exactly what this branch already meant by it, and
+    // two copies of a number that must stay equal is the constants rule in
+    // miniature.
+    const arrivedM = BLOOM_SHARE.TEND_RADIUS_M * 0.8;
     const held: { hull: OwnUnit; garden: { x: number; y: number }; index: number }[] = [];
     const standing = new Set<number>();
     for (const [id, index] of this.gardenByTender) {
@@ -3801,7 +3818,7 @@ export class AiCommander implements AiPlayer {
         this.gardenByTender.delete(id);
         continue;
       }
-      if (distance(hull, garden) <= BLOOM_SHARE.TEND_RADIUS_M * 0.8) standing.add(id);
+      if (distance(hull, garden) <= arrivedM) standing.add(id);
       held.push({ hull, garden, index });
     }
 
@@ -3815,6 +3832,14 @@ export class AiCommander implements AiPlayer {
     // The total that can accumulate is bounded by the beds on the map however
     // small the army gets: a claim opens only while the gate is open and only
     // for a bed nothing else holds, and there is one claim per bed.
+    //
+    // That bounds the *count* and not the *duration*. Nothing here tests
+    // elapsed time, progress or reachability, so a tender that can never arrive
+    // holds its bed until it dies — `movement.ts` slides a hull too deep for
+    // the ground ahead along the edge rather than stopping it, which is the
+    // path to one. Left unguarded on purpose: the exposure is one hull per bed
+    // and ends with the hull, a timeout is a policy #706 does not ask for, and
+    // `stoodAt` already carries what a later guard would read.
     const kept = [
       ...held.filter((h) => standing.has(h.hull.id)).slice(0, Math.max(tenders, 0)),
       ...held.filter((h) => !standing.has(h.hull.id)),
@@ -3849,7 +3874,7 @@ export class AiCommander implements AiPlayer {
       // should not be given an order at all — an arriving hull that keeps
       // being told to arrive never stops moving, and a moving hull is a
       // louder hull.
-      if (distance(hull, garden) > BLOOM_SHARE.TEND_RADIUS_M * 0.8) {
+      if (distance(hull, garden) > arrivedM) {
         this.walk(hull, garden, snapshot.tick, out);
       }
       // Standing in the circle is one clause of three, and this branch used to

@@ -608,8 +608,10 @@ describe('a claim the commander makes is a claim it keeps', () => {
    * Measured on `ventfront-divide`, seeds 4000–4002, against the pre-fix
    * commander: of 17 claims, **16 ended with the hull that held them still
    * alive** — not one of those was ended by the tender dying — and 5 reached a
-   * bed. The median claim's closest approach to the bed it was sent to was
-   * 826 m on seed 4000 and 1,451 m on 4002, against a `TEND_RADIUS_M` of 400.
+   * bed. The median claim's closest approach to the *nearest* bed was 826 m on
+   * seed 4000 and 1,451 m on 4002, against a `TEND_RADIUS_M` of 400. Nearest,
+   * which is a lower bound on the distance to the bed the hull was sent to and
+   * is the figure #706's own decision comment quotes.
    *
    * What is pinned here is the rule, not those numbers: **the gate decides
    * whether to start a claim, never whether to keep one that is still on its
