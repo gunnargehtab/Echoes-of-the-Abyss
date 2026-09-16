@@ -156,11 +156,14 @@ describe('a garden is tended out of the surplus, never out of the force', () => 
    * `a claim the commander makes is a claim it keeps`, at the foot of this
    * file, is what holds that half, against the real commander.
    *
-   * Left asserting the arithmetic on purpose: it is the number the gate reads,
-   * it is frozen (`CLAUDE.md`'s balance freeze, and #706's decision names the
-   * ~9% duty cycle as staying frozen), and a test that would go green on it
-   * moving is worth having. It is a copy of the rule, which is why it needs
-   * this comment to say what it does not cover.
+   * Left asserting the arithmetic on purpose, but be clear what that buys: the
+   * helper re-reads `attackAtArmySize` and re-implements the `/2`, so neither
+   * the doctrine number nor the gate in `commander.ts` moving turns any of
+   * these red. What they would catch is a map that authors no bed, and the
+   * shape of the rule itself — that nobody gardens while the army is still
+   * gathering, that the cap is the bed count, that it is the Commune's alone.
+   * The copy is a reminder to whoever moves the real rule, not a guard on it,
+   * which is why it needs this comment to say so.
    */
 
   /** The commander's own reading of how many hulls it may *start* gardening. */
@@ -728,12 +731,15 @@ describe('a claim the commander makes is a claim it keeps', () => {
     );
   });
 
-  it('holds one tender per bed at a time, whatever the army does', () => {
+  it('holds no more tenders than the map has beds, whatever the army does', () => {
     // The safety half of the trade the branch comment argues, and nothing else
     // asserted it. Holding a walking claim through the gate is only acceptable
     // because the count cannot grow: the new-claim search skips the beds
     // already held and the ids already claimed, so there is one claim per bed
-    // and `blooms.length` claims at most, however large the army gets.
+    // and `blooms.length` claims at most, however large the army gets. What is
+    // asserted below is the **count**, since the census cannot say which bed a
+    // tender was claimed for; one-per-bed stays an argument from the code, and
+    // the name says count so that nothing cites this for more than it holds.
     //
     // Counted by census rather than by the walk, which is what makes this
     // hold anything. The claim set is private, but every claimed tender that
@@ -743,10 +749,19 @@ describe('a claim the commander makes is a claim it keeps', () => {
     // sees one observation's worth and passes with both guards removed, which
     // this one was written as and did.
     //
+    // Two other paths emit a single-id `silent`, and neither is absent here by
+    // any property — only because a fixture of Reeds builds no carrier, so the
+    // landing-carrier lift never fires, and because `setSilent`'s batch is 58
+    // ids at an army of 60 rather than one. Both would redden this test rather
+    // than green it, which is the safe direction, but the count is a census and
+    // a census should say what it is counting.
+    //
     // Sixty hulls against an `attackAtArmySize` of 6: the gate would grant 27
-    // were the beds not the binding constraint, and it is asked twelve times,
-    // so a claim that could be opened twice for one bed has eleven chances to
-    // be.
+    // were the beds not the binding constraint. Twelve observations, but a
+    // Veteran returns early on two in three (`AiTuning.cadenceTicks`), so the
+    // branch runs on four of them — i = 0, 3, 6, 9 — and a claim that could be
+    // opened a second time for a held bed has three chances after the first.
+    // The double mutant below fails on the second of those.
     //
     // Two guards stand behind this and each masks the other, which is worth
     // knowing before reading a surviving mutant as a gap: removing the

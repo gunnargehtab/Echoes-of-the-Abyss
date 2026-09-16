@@ -1103,11 +1103,14 @@ export class AiCommander implements AiPlayer {
    */
   private tending: ReadonlySet<number> = new Set();
   /**
-   * Which bed each tender was claimed for, held until the hull arrives (#706).
+   * Which bed each tender was claimed for (#706).
    *
    * Assigned once and kept, exactly like `nodeByHarvester`: a claim that is
    * re-decided every observation is a hull that is re-sent every observation,
-   * and `commandGardens` says what that measured.
+   * and `commandGardens` says what that measured. An entry lives until the
+   * hull leaves the army or the bed leaves the briefing — *not* until the hull
+   * arrives, which is when the gate begins governing it again rather than when
+   * the claim ends.
    */
   private readonly gardenByTender = new Map<number, number>();
   /** Largest the army has been while massing, and when that last rose. */
@@ -3725,11 +3728,17 @@ export class AiCommander implements AiPlayer {
    * mind about which hull was the tender kept both walking and neither
    * earning, which is what it did until #706.
    *
-   * Drawn from the army and capped at half of it. Tending is the Commune
-   * spending exposure on income on the most reachable ground on the map,
-   * which is the guard-rail (docs/systems-echo.md §10) working as designed —
-   * but a navy that sent its whole fleet gardening would have answered the
-   * guard-rail by deleting itself.
+   * Drawn from the army, and a claim is *started* only out of the surplus
+   * above the doctrine's attack threshold — capped at half of that surplus and
+   * at one per bed. Tending is the Commune spending exposure on income on the
+   * most reachable ground on the map, which is the guard-rail
+   * (docs/systems-echo.md §10) working as designed.
+   *
+   * A claim already walking is held through that cap, so the beds are the only
+   * bound on the total and the army can go under its own threshold behind one:
+   * on `ventfront-divide`, two beds and both tenders still on their way, an
+   * army of 3 hands `commandArmy` 1 and an army of 2 hands it 0. Deliberate,
+   * and the paragraph above `spare` argues it where the gate is.
    *
    * Returns the ids it claimed, for `observe` to keep out of the army branch,
    * exactly as the lift does.
@@ -3807,11 +3816,14 @@ export class AiCommander implements AiPlayer {
     // a real cost, not a bookkeeping one. It is taken because the alternative
     // is the fault #706 is about: an army dipping under the gate is exactly
     // the common case, so releasing on it is the churn that made a claim worth
-    // nothing. The exposure is bounded on both sides — at most one hull per
-    // bed (the argument is below, and `holds one tender per bed at a time,
-    // whatever the army does` pins it), and each ends when its hull arrives,
-    // leaves the army, or dies. Whether that trade is the right one is a question for
-    // #706 rather than for this branch, and it is written down there.
+    // nothing. The exposure is bounded on both sides — never more tenders than
+    // the map has beds (`holds no more tenders than the map has beds, whatever
+    // the army does` pins that count; one-*per*-bed is the argument below), and
+    // the hold through the gate ends as soon as the hull arrives, after which
+    // the gate governs it again. The claim itself outlives arrival and ends
+    // only when the hull leaves the army or dies. Whether the trade is the
+    // right one is #706's question rather than this branch's, and it is
+    // written down there.
     const spare = army.length - this.doctrine.attackAtArmySize;
     const tenders = Math.min(gardens.length, Math.floor(spare / 2));
 
@@ -3848,13 +3860,15 @@ export class AiCommander implements AiPlayer {
     //
     // That bounds the *count* and not the *duration*. Nothing here tests
     // elapsed time, progress or reachability, so a claim ends only when its
-    // hull arrives, leaves the army, or dies. A tender that could never arrive
-    // would therefore hold its bed for the match; `movement.ts`'s slide along
-    // a too-shallow edge is the mechanism by which one could exist, and no run
-    // in the evidence produced one — the longest claim across the three seeds
-    // ran 381 observations and arrived. Left unguarded on purpose: a timeout
-    // is a policy #706 does not ask for, and `stoodAt` already carries what a
-    // later guard would read.
+    // hull leaves the army or dies, and a tender that could never arrive would
+    // hold its bed for the match. `movement.ts`'s slide along a too-shallow
+    // edge is the mechanism by which such a tender could exist; the evidence
+    // neither shows one nor rules one out. The closest it comes is seed 4002's
+    // fifth claim, which held its bed to the end of the match having closed
+    // none of its 2,765 m — but it ran only 13 observations and the match
+    // ended under it, so it is not an unreachable bed either. Left unguarded
+    // on purpose: a timeout is a policy #706 does not ask for, and `stoodAt`
+    // already carries what a later guard would read.
     const kept = [
       ...held.filter((h) => standing.has(h.hull.id)).slice(0, Math.max(tenders, 0)),
       ...held.filter((h) => !standing.has(h.hull.id)),
