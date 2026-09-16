@@ -117,8 +117,8 @@ describe('the silence order reads out the set it enforces (#623 §8)', () => {
         );
         // And the converse of the check above. 100 is the sentinel for "no
         // ceiling"; a mission that lends an array against it keeps a ledger
-        // nothing can ever breach, and the panel would put `flight SIG 022 /
-        // 100` on screen — an order that is not one.
+        // nothing can ever breach, and the panel would put `SIG 022 / 100` on
+        // screen — an order that is not one.
         assert.ok(
           mission.silenceCeilingSig < 100,
           `${mission.id} lends an array against no ceiling at all`

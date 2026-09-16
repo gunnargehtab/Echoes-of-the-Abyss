@@ -138,9 +138,11 @@ describe('the objectives panel: how it announces itself', () => {
     // missions are playtested against players who exceed it. The chip carried
     // a `≤` until now, which states a threshold the game does not enforce.
     //
-    // 50 rather than 20 because it is Intake's, the loudest budget the
-    // campaign has authored, and because a two-digit figure is what shows the
-    // padding is applied to this form too.
+    // Intake's 50 rather than the prologue's 20, for two reasons. Intake is
+    // one of the missions this form is *about* — its own §3 says the figure
+    // "is a description, not a ceiling" — where Sorrowgate's budget and
+    // its order are the same number and the distinction does not show. And 50
+    // is two digits, so it exercises the padding this form inherits.
     const { rendered } = await panel(missionView({ sigBudget: 50 }));
     try {
       const chip = reads(rendered.byClass('objectives-ceiling'));

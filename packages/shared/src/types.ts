@@ -941,10 +941,12 @@ export interface BerthReport {
  * `peakSig` beside it is a different set on purpose: the meter is a fleet
  * instrument with docs/ui-ux.md §3's fixed stops, measured over everything the
  * player owns, and a mission's order binds one named role — Sorrowgate's
- * flight, Attendance's shift, the Dome's watch. In Sorrowgate those genuinely
- * differ, because the court's two tenders sit inside the player's own party
- * block so the dome's grant reaches the flight: the meter reads their 18 while
- * the order reads the flight's 6. A panel that printed the ceiling with no
+ * `escort`, Attendance's `shift`, the Dome's `watch`. Those are the ledger's
+ * ids rather than prose; what a court *calls* that set on screen is a
+ * separate authored word, and is `setName` below. In Sorrowgate the two sets
+ * genuinely differ, because the court's two tenders sit inside the player's
+ * own party block so the dome's grant reaches the flight: the meter reads
+ * their 18 while the order reads the flight's 6. A panel that printed the ceiling with no
  * reading beside it left the player with no way to check the one rule the
  * mission is enforcing, and the instrument nearest to hand measured a set the
  * rule does not bind.

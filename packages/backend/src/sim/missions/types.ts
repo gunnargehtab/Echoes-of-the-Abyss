@@ -1320,9 +1320,11 @@ export interface MissionDefinition extends MissionHeader {
   /**
    * docs/campaign.md §10 — the loudness the mission is tuned for.
    *
-   * Metadata, shown as a ceiling. Never a live threshold: a predicate that
-   * derived its own number from this would turn a note in the margin into a
-   * rule, and §10 is explicit that the budget never fails a mission.
+   * Metadata, and shown as metadata: the panel labels it — `SIG budget 050`
+   * — rather than stating it as a ceiling the way it used to (docs/ui-ux.md
+   * §10.5, #623 criterion 10). Never a live threshold either: a predicate
+   * that derived its own number from this would turn a note in the margin
+   * into a rule, and §10 is explicit that the budget never fails a mission.
    */
   sigBudget: number;
   /**

@@ -1631,7 +1631,7 @@ export interface MissionView {
    * Empty in every mission that holds nothing, which is most of them.
    */
   held: readonly MovementHold[];
-  /** docs/campaign.md §10 metadata, shown as a ceiling. Never a live threshold. */
+  /** docs/campaign.md §10 metadata, labelled as a budget and never as a ceiling (ui-ux.md §10.5). */
   sigBudget: number;
   /** Seconds of silence-debt owed. 0 while compliant (docs/mission-sorrowgate.md §4). */
   debtS: number;
