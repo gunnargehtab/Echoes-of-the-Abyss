@@ -684,14 +684,30 @@ describe('the objectives panel: a row fits the panel that holds it', () => {
    * `.objectives-progress` right edges outside the panel and cut every
    * `n of m` the mission was counting with (#752).
    *
-   * 340 is the panel at its widest: `.objectives` is `min(340px, 32vw /
-   * --ui-scale)`. It is a fair number to test at because the fault does not
-   * depend on it — under `content-box` a row overflows its body by the sum of
-   * its padding whatever that body measures, and under `border-box` it fits
-   * for the same reason. The last test here holds that independence rather
-   * than leaving it as an argument.
+   * It is the width to lead with because it is the one that was measured, not
+   * because it is any kind of bound — the panel is `min(340px, 32vw /
+   * --ui-scale)` unconditionally and `46vw` under `@media (max-width: 900px)`,
+   * so it is *wider* than 340 at a 900 px viewport and narrower on a small
+   * one. The fault does not depend on the number either way: under
+   * `content-box` a row overflows its body by the sum of its padding whatever
+   * that body measures, and under `border-box` it fits for the same reason.
+   * The last test here holds that independence rather than leaving it as an
+   * argument.
    */
   const BODY_WIDTH = 340;
+
+  /**
+   * Where a row sits, so a descendant rule can be resolved rather than refused.
+   *
+   * `MissionPanel` renders `section.objectives > div.objectives-body > row`,
+   * and `GameCanvas` mounts that under `div.game-root`, which is the element
+   * carrying `--ui-scale`.
+   */
+  const ANCESTORS = [
+    { tag: 'div', classes: ['game-root'] },
+    { tag: 'section', classes: ['objectives'] },
+    { tag: 'div', classes: ['objectives-body'] },
+  ];
 
   /** Every row shape a mission can put in the panel, in one view. */
   const shapes = (): MissionView =>
@@ -721,6 +737,7 @@ describe('the objectives panel: a row fits the panel that holds it', () => {
       return rendered.allByClass('objectives-row').map((row) => ({
         tag: String(row.type),
         classes: String((row.props as { className: string }).className).split(/\s+/),
+        ancestors: ANCESTORS,
       }));
     } finally {
       await rendered.unmount();
@@ -771,7 +788,11 @@ describe('the objectives panel: a row fits the panel that holds it', () => {
       assert.equal(counters.length, 3, 'three of the five shapes count something');
       for (const counter of counters) {
         assert.equal(
-          resolveBox(parseCss(APP_CSS), { tag: 'span', classes: ['objectives-progress'] }).width,
+          resolveBox(parseCss(APP_CSS), {
+            tag: 'span',
+            classes: ['objectives-progress'],
+            ancestors: [...ANCESTORS, { tag: 'p', classes: ['objectives-row', 'pending'] }],
+          }).width,
           undefined,
           'the counter is sized by its content, so only the row can clip it'
         );
@@ -789,7 +810,7 @@ describe('the objectives panel: a row fits the panel that holds it', () => {
     // scales with them. Two things have to hold for that to be true, and both
     // are read off the stylesheet rather than asserted about it.
     const rules = parseCss(APP_CSS);
-    const row = { tag: 'p', classes: ['objectives-row', 'pending'] };
+    const row = { tag: 'p', classes: ['objectives-row', 'pending'], ancestors: ANCESTORS };
 
     // One: nothing in the row's own box depends on the scale variable.
     for (const rule of boxRulesFor(rules, row)) {
@@ -817,9 +838,13 @@ describe('the objectives panel: a row fits the panel that holds it', () => {
       }
     }
 
-    // And the arithmetic itself, at the narrow width that media query brings:
-    // 46vw of a 900px viewport is 414, less the panel's 1px borders.
-    for (const containerContentWidth of [BODY_WIDTH, 412, 120]) {
+    // And the arithmetic itself, at the width that media query brings and at
+    // an absurdly narrow one. 46vw of a 900px viewport is 414, and that is the
+    // body's content width rather than 414 less the panel's 1px borders:
+    // `.objectives` sets no `box-sizing` either, so it is content-box and its
+    // border sits outside the width it declares. The live client agrees — the
+    // unconditional `min(340px, …)` reads back as a body of 340, not 338.
+    for (const containerContentWidth of [BODY_WIDTH, 414, 120]) {
       assert.ok(
         borderBoxWidth({ css: APP_CSS, element: row, containerContentWidth }) <=
           containerContentWidth,

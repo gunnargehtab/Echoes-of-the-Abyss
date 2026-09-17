@@ -9,29 +9,31 @@
  * layout engine, so `offsetWidth` there is 0 for everything.
  *
  * So this reads the shipped stylesheet and does the arithmetic instead of
- * measuring. It is a deliberately small box model — `box-sizing`, `width`, and
- * the horizontal padding and border, on one element, in its resting state —
- * and it throws on anything it cannot resolve rather than guessing. A value it
- * does not understand becomes a test failure naming the value, which is the
- * right outcome: the alternative is a guard that quietly stops guarding.
+ * measuring.
  *
- * What it is **not** is a CSS engine. No specificity tie-breaking beyond source
- * order, no inheritance, no `calc()`, no custom properties, no cascade layers.
- * Two of those are worth naming because they would change an answer rather
- * than merely refuse one:
+ * **The one rule this file has to keep is that it never guesses low.** A
+ * reader that silently drops a rule, or silently ignores a property, reports a
+ * box narrower than the browser's and turns a test that would have caught an
+ * overflow into one that cannot — which is worse than having no test, because
+ * it reads as cover. So every path that cannot resolve something throws,
+ * naming what it could not read:
  *
- * - **Specificity is approximated by source order.** Every rule this reads in
- *   this repository is a bare class or a tag-and-class on one element, and
- *   those are written in increasing specificity anyway (`.objectives-row`
- *   before `p.objectives-row`). A stylesheet that put the tag rule first would
- *   be read wrongly here and correctly by the browser.
- * - **A conditional rule is excluded, not evaluated.** `boxRulesFor` drops
- *   anything under `@media`, because "which viewport" is the caller's question;
- *   `rulesTargeting` hands back the conditional rules so a caller can ask it.
+ * - a selector shaped in a way it does not parse, if that rule sets a property
+ *   that could change the box (`rulesTargeting`);
+ * - a property in `BOX_PROPERTIES` that `resolveBox`'s switch does not handle,
+ *   which is what stops that set and that switch drifting apart;
+ * - a length in a unit it cannot turn into px (`lengthPx`).
  *
- * Shorthands are expanded **in source order** rather than collected per
- * property, because `border: 0` after `border-left-width: 2px` means zero and a
- * reader that kept the two side by side would have to guess which won.
+ * What it does **not** model, and does not need to: inheritance, `calc()`,
+ * custom properties, cascade layers, `!important`, and specificity beyond
+ * source order. That last one is an approximation rather than a refusal, so it
+ * is the one to know about — every rule it reads here is a bare class or a
+ * tag-and-class, and those are written in increasing specificity anyway
+ * (`.objectives-row` before `p.objectives-row`). A stylesheet that put the tag
+ * rule first would be read wrongly here and correctly by a browser.
+ *
+ * Writing directions are assumed horizontal and left-to-right, which is what
+ * the client ships; the logical properties below are mapped on that basis.
  */
 
 import { readFileSync } from 'node:fs';
@@ -43,19 +45,68 @@ export const APP_CSS = readFileSync(
   'utf8'
 );
 
-/** The declarations that can change how wide an element's border box is. */
-const BOX_PROPERTIES = new Set([
+/**
+ * Every declaration that can change how wide an element's border box is.
+ *
+ * Closed on purpose, and asserted twice: `rulesTargeting` refuses a selector it
+ * cannot read when the rule sets one of these, and `resolveBox` throws on one
+ * it does not handle. A property that widens the box and is in neither place is
+ * the silent underestimate this file exists to refuse.
+ */
+export const BOX_PROPERTIES = new Set([
   'box-sizing',
   'width',
+  'min-width',
+  'max-width',
+  'inline-size',
+  'min-inline-size',
+  'max-inline-size',
   'padding',
   'padding-left',
   'padding-right',
+  'padding-inline',
+  'padding-inline-start',
+  'padding-inline-end',
   'border',
   'border-width',
+  'border-style',
   'border-left',
   'border-right',
   'border-left-width',
   'border-right-width',
+  'border-inline',
+  'border-inline-start',
+  'border-inline-end',
+  'border-inline-start-width',
+  'border-inline-end-width',
+]);
+
+/**
+ * Pseudo-classes that describe a state an element is not in while simply
+ * sitting on screen, so a rule carrying one does not apply at rest.
+ *
+ * A closed list rather than "anything after a colon", which is the distinction
+ * that matters: `:hover` genuinely does not apply, while `:not(.met)` and
+ * `:first-child` do, and are *more* specific than the bare class they qualify.
+ * Treating those as inapplicable is exactly how a later rule re-boxing the row
+ * — the door #752 comes back through — would go unnoticed. Anything not on
+ * this list is `unknown`, and `rulesTargeting` turns that into a failure.
+ */
+const STATE_PSEUDOS = new Set([
+  'hover',
+  'active',
+  'focus',
+  'focus-visible',
+  'focus-within',
+  'disabled',
+  'enabled',
+  'checked',
+  'indeterminate',
+  'target',
+  'visited',
+  'link',
+  'placeholder-shown',
+  'autofill',
 ]);
 
 export interface CssRule {
@@ -68,10 +119,10 @@ export interface CssRule {
 /**
  * Every rule in a stylesheet, flattened, with the condition it sits under.
  *
- * Comments go first — a `/*` comment can contain braces and this repository's
- * CSS comments are long prose — and then it is a brace walk rather than a
- * regex, because `@media` nests and a regex that pretends otherwise reads a
- * media block's closing brace as a selector.
+ * Comments go first — a CSS comment can contain braces and this repository's
+ * are long prose — and then it is a brace walk rather than a regex, because
+ * `@media` nests and a regex that pretends otherwise reads a media block's
+ * closing brace as a selector.
  */
 export function parseCss(css: string): CssRule[] {
   const clean = css.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -136,37 +187,126 @@ function declarationsOf(body: string): Array<[string, string]> {
   return out;
 }
 
-export interface Element {
+/** One element in a tree, as much of it as a selector can ask about. */
+export interface Node {
   /** The host tag React rendered — `p` and `button` box differently. */
   tag: string;
   classes: string[];
+}
+
+export interface Element extends Node {
+  /**
+   * The element's ancestors, **outermost first**.
+   *
+   * Supplying them is what lets a descendant selector be *resolved* rather than
+   * refused: `.objectives-body .objectives-row` styles the row, and a reader
+   * with no ancestry has to throw on it. Leave it out and any rule whose
+   * subject matches but whose ancestry is unverifiable becomes `unknown`.
+   */
+  ancestors?: Node[];
+}
+
+type Verdict = 'yes' | 'no' | 'unknown';
+
+/** Does one compound selector — `p.objectives-row`, `*`, `.a.b` — match a node? */
+function matchesCompound(compound: string, node: Node): Verdict {
+  const trimmed = compound.trim();
+  if (trimmed === '*') return 'yes';
+  // A pseudo-element is a box of its own, never this element's.
+  if (trimmed.includes('::')) return 'no';
+
+  const pseudos = [...trimmed.matchAll(/:([a-zA-Z-]+)/g)].map((m) => m[1]);
+  if (pseudos.some((p) => !STATE_PSEUDOS.has(p))) return 'unknown';
+  if (pseudos.length > 0) return 'no';
+
+  const match = /^([a-z][a-z0-9]*)?((?:\.[A-Za-z0-9_-]+)*)$/.exec(trimmed);
+  if (match === null) return 'unknown';
+  const [, tag, classPart] = match;
+  if (tag === undefined && classPart === '') return 'unknown';
+  if (tag !== undefined && tag !== node.tag) return 'no';
+  const wanted = classPart === '' ? [] : classPart.slice(1).split('.');
+  return wanted.every((c) => node.classes.includes(c)) ? 'yes' : 'no';
+}
+
+interface Step {
+  /** How this compound relates to the one before it. Null on the leftmost. */
+  combinator: ' ' | '>' | '+' | '~' | null;
+  compound: string;
+}
+
+/** `.a > .b .c` into its compounds and the combinators between them. */
+function steps(selector: string): Step[] {
+  const tokens = selector
+    .trim()
+    .replace(/\s*([>+~])\s*/g, ' $1 ')
+    .split(/\s+/)
+    .filter(Boolean);
+  const out: Step[] = [];
+  let pending: '>' | '+' | '~' | null = null;
+  for (const token of tokens) {
+    if (token === '>' || token === '+' || token === '~') {
+      pending = token;
+      continue;
+    }
+    out.push({ combinator: out.length === 0 ? null : (pending ?? ' '), compound: token });
+    pending = null;
+  }
+  return out;
 }
 
 /**
  * Does this selector target `element` itself, in its resting state?
  *
  * Three answers rather than two, because "no" and "this reader cannot tell"
- * are different facts and collapsing them is how a guard goes quiet. A
- * selector naming a state (`:hover`) or a descendant (`.row .cell`) targets
- * something other than this element at rest and is `no`; a selector shaped in
- * a way this reader does not parse is `unknown`, and the caller fails on it.
+ * are different facts and collapsing them is how a guard goes quiet.
+ *
+ * The **subject of a selector is its rightmost compound**, which is the thing a
+ * first draft of this file got wrong: it refused every selector containing a
+ * combinator on the reasoning that such rules style something *inside* the
+ * element, when `.objectives-body .objectives-row` styles the row itself.
  */
-function targets(selector: string, element: Element): 'yes' | 'no' | 'unknown' {
-  const trimmed = selector.trim();
-  // A combinator means the subject is a descendant or a sibling, not this
-  // element as named. Those rules style something inside the row.
-  if (/[\s>+~]/.test(trimmed)) return 'no';
-  // A pseudo-element, or a state this element is not in while simply sitting
-  // on screen.
-  if (trimmed.includes(':')) return 'no';
+function targets(selector: string, element: Element): Verdict {
+  const chain = steps(selector);
+  if (chain.length === 0) return 'unknown';
 
-  const match = /^([a-z][a-z0-9]*)?((?:\.[A-Za-z0-9_-]+)*)$/.exec(trimmed);
-  if (match === null) return 'unknown';
-  const [, tag, classPart] = match;
-  if (tag === undefined && classPart === '') return 'unknown';
-  if (tag !== undefined && tag !== element.tag) return 'no';
-  const wanted = classPart === '' ? [] : classPart.slice(1).split('.');
-  return wanted.every((c) => element.classes.includes(c)) ? 'yes' : 'no';
+  const subject = matchesCompound(chain[chain.length - 1].compound, element);
+  if (subject !== 'yes') return subject;
+  if (chain.length === 1) return 'yes';
+  if (element.ancestors === undefined) return 'unknown';
+
+  // Nearest ancestor first, which is the order the chain is walked in.
+  const up = [...element.ancestors].reverse();
+  let from = 0;
+  for (let i = chain.length - 1; i >= 1; i--) {
+    const { combinator } = chain[i];
+    const wanted = chain[i - 1].compound;
+    // Siblings are not in scope here — `ancestors` says nothing about them.
+    if (combinator === '+' || combinator === '~') return 'unknown';
+
+    if (combinator === '>') {
+      const parent = up[from];
+      if (parent === undefined) return 'no';
+      const verdict = matchesCompound(wanted, parent);
+      if (verdict !== 'yes') return verdict === 'unknown' ? 'unknown' : 'no';
+      from += 1;
+      continue;
+    }
+
+    // Descendant. First match wins rather than backtracking, which is enough
+    // for a stylesheet whose ancestor compounds are all distinct classes.
+    let found = -1;
+    for (let j = from; j < up.length; j++) {
+      const verdict = matchesCompound(wanted, up[j]);
+      if (verdict === 'unknown') return 'unknown';
+      if (verdict === 'yes') {
+        found = j;
+        break;
+      }
+    }
+    if (found === -1) return 'no';
+    from = found + 1;
+  }
+  return 'yes';
 }
 
 /**
@@ -219,6 +359,8 @@ export interface ResolvedBox {
   boxSizing: 'content-box' | 'border-box';
   /** As authored — `100%` or a length. Undefined when nothing sets it. */
   width: string | undefined;
+  minWidth: string | undefined;
+  maxWidth: string | undefined;
   paddingLeft: string;
   paddingRight: string;
   borderLeftWidth: string;
@@ -268,10 +410,22 @@ export function resolveBox(rules: CssRule[], element: Element): ResolvedBox {
   const box: ResolvedBox = {
     boxSizing: uaBoxSizing(element.tag),
     width: undefined,
+    minWidth: undefined,
+    maxWidth: undefined,
     paddingLeft: '0',
     paddingRight: '0',
     borderLeftWidth: '0',
     borderRightWidth: '0',
+  };
+
+  const setPadding = (value: string): void => {
+    const { left, right } = horizontalSlots(value);
+    box.paddingLeft = left;
+    box.paddingRight = right;
+  };
+  const setBorder = (width: string): void => {
+    box.borderLeftWidth = width;
+    box.borderRightWidth = width;
   };
 
   for (const rule of boxRulesFor(rules, element)) {
@@ -284,46 +438,71 @@ export function resolveBox(rules: CssRule[], element: Element): ResolvedBox {
           box.boxSizing = value;
           break;
         }
+        // `inline-size` is `width` in a horizontal writing mode.
         case 'width':
+        case 'inline-size':
           box.width = value;
           break;
-        case 'padding': {
-          const { left, right } = horizontalSlots(value);
-          box.paddingLeft = left;
-          box.paddingRight = right;
+        case 'min-width':
+        case 'min-inline-size':
+          box.minWidth = value;
           break;
-        }
+        case 'max-width':
+        case 'max-inline-size':
+          box.maxWidth = value;
+          break;
+        case 'padding':
+        case 'padding-inline':
+          setPadding(value);
+          break;
         case 'padding-left':
+        case 'padding-inline-start':
           box.paddingLeft = value;
           break;
         case 'padding-right':
+        case 'padding-inline-end':
           box.paddingRight = value;
           break;
-        case 'border': {
-          const width = borderShorthandWidth(value);
-          box.borderLeftWidth = width;
-          box.borderRightWidth = width;
+        case 'border':
+        case 'border-inline':
+          setBorder(borderShorthandWidth(value));
           break;
-        }
         case 'border-width': {
           const { left, right } = horizontalSlots(value);
           box.borderLeftWidth = left;
           box.borderRightWidth = right;
           break;
         }
+        // A style of `none` zeroes the used width whatever the width says; any
+        // other style leaves the width where it is.
+        case 'border-style':
+          if (/\b(none|hidden)\b/.test(value) && !/\b(solid|dashed|dotted|double)\b/.test(value)) {
+            setBorder('0');
+          }
+          break;
         case 'border-left':
+        case 'border-inline-start':
           box.borderLeftWidth = borderShorthandWidth(value);
           break;
         case 'border-right':
+        case 'border-inline-end':
           box.borderRightWidth = borderShorthandWidth(value);
           break;
         case 'border-left-width':
+        case 'border-inline-start-width':
           box.borderLeftWidth = value;
           break;
         case 'border-right-width':
+        case 'border-inline-end-width':
           box.borderRightWidth = value;
           break;
         default:
+          // The set and this switch are two halves of one list, and a property
+          // in the first that never reaches the second is the silent
+          // underestimate this file refuses.
+          if (BOX_PROPERTIES.has(property)) {
+            throw new Error(`cssBox does not model \`${property}\``);
+          }
           break;
       }
     }
@@ -340,6 +519,19 @@ function lengthPx(value: string, rootFontPx: number, what: string): number {
   const rem = /^(-?[\d.]+)rem$/.exec(trimmed);
   if (rem !== null) return Number(rem[1]) * rootFontPx;
   throw new Error(`cssBox cannot resolve \`${what}: ${trimmed}\` to px`);
+}
+
+/** A length or a percentage of the containing block's content width. */
+function resolveWidth(
+  value: string,
+  containerContentWidth: number,
+  rootFontPx: number,
+  what: string
+): number {
+  const percent = /^([\d.]+)%$/.exec(value.trim());
+  return percent !== null
+    ? (Number(percent[1]) / 100) * containerContentWidth
+    : lengthPx(value, rootFontPx, what);
 }
 
 export interface BorderBoxQuery {
@@ -367,11 +559,21 @@ export function borderBoxWidth(query: BorderBoxQuery): number {
   if (box.width === undefined) {
     throw new Error(`cssBox needs an explicit width for \`${element.classes.join('.')}\``);
   }
-  const percent = /^([\d.]+)%$/.exec(box.width.trim());
-  const width =
-    percent !== null
-      ? (Number(percent[1]) / 100) * containerContentWidth
-      : lengthPx(box.width, rootFontPx, 'width');
+  let width = resolveWidth(box.width, containerContentWidth, rootFontPx, 'width');
+  // `min-width` and `max-width` are measured in whatever box `box-sizing`
+  // names, so they clamp before padding and border are accounted for.
+  if (box.maxWidth !== undefined && box.maxWidth.trim() !== 'none') {
+    width = Math.min(
+      width,
+      resolveWidth(box.maxWidth, containerContentWidth, rootFontPx, 'max-width')
+    );
+  }
+  if (box.minWidth !== undefined) {
+    width = Math.max(
+      width,
+      resolveWidth(box.minWidth, containerContentWidth, rootFontPx, 'min-width')
+    );
+  }
 
   const extra =
     lengthPx(box.paddingLeft, rootFontPx, 'padding-left') +
