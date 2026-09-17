@@ -499,8 +499,8 @@ export function lightAudit(root, { ppm = 4, minM2 = 0.25 } = {}) {
  * Slipway shares a skeleton the same way. The Foundry and the Refinery do
  * not (#652): what their four files share is a vocabulary by *name* — the
  * same parts in the same order, at each navy's own numbers, one navy's
- * crane 0.94 of the next's and its trolley at a different station — so
- * their builders, at the foot of this file, take every number as a
+ * crane its own in every dimension and its trolley at a different station
+ * — so their builders, at the foot of this file, take every number as a
  * parameter with one file's as the default, and the names with them. The
  * Bastion shares nothing across its four files and lives in each navy's
  * module.
@@ -526,8 +526,9 @@ export const polar = (a, r, y = 0) => [r * Math.cos(a), y, r * Math.sin(a)];
  * of `2π / count`, each call given its bearing and its index. The rotational
  * counterpart of `bothSides`, as `segmentSeries` is the linear one: a Vent
  * Tap's four draw arms, its five basalt lobes and its eight wellhead floods
- * are each one of these, and the Sounding Spire's fins and the Bastion's
- * docking collars will be.
+ * are each one of these. The Bastions' docking collars and the Sounding
+ * Spire's legs turned out to sit on no regular bearing in their approved
+ * files (#652) and are placed one by one.
  */
 export function radialSeries({ count, phase = 0 }, fn) {
   for (let i = 0; i < count; i++) fn(phase + (i * 2 * Math.PI) / count, i);
