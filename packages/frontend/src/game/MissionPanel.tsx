@@ -23,6 +23,7 @@ import {
   ObjectiveStatus,
   type BoundSig,
   type MissionAbility,
+  type AbilityLock,
   type MissionView,
   type ObjectiveView,
 } from '@echoes/shared';
@@ -73,6 +74,30 @@ const sigReading = (view: MissionView, boundSig: BoundSig | undefined): string =
   if (boundSig === undefined) return `SIG budget ${sigDigits(view.sigBudget)}`;
   const figure = `SIG ${sigDigits(boundSig.peak)} / ${sigDigits(boundSig.ceiling)}`;
   return boundSig.setName === undefined ? figure : `${boundSig.setName} ${figure}`;
+};
+
+/**
+ * Locks that share a reason are stated once, naming every ability they cover
+ * (docs/ui-ux.md §10.5).
+ *
+ * §7 asks that a dead affordance carry its reason; it does not ask that the
+ * same sentence be printed once per affordance. Sorrowgate strikes four of the
+ * player's buttons under two reasons, and printing them separately spent eight
+ * lines of a panel that must fit (§2) to say two things — while a player
+ * reading `weapons cold` for the fourth time learns nothing they did not have
+ * on the first. Order is preserved, and it is the mission's: the first lock to
+ * name a reason is where that reason stands.
+ */
+const groupLocks = (
+  locks: readonly AbilityLock[]
+): { abilities: MissionAbility[]; reason: string }[] => {
+  const groups: { abilities: MissionAbility[]; reason: string }[] = [];
+  for (const lock of locks) {
+    const existing = groups.find((group) => group.reason === lock.reason);
+    if (existing === undefined) groups.push({ abilities: [lock.ability], reason: lock.reason });
+    else existing.abilities.push(lock.ability);
+  }
+  return groups;
 };
 
 /** The player's own buttons, named the way the command bar names them. */
@@ -239,14 +264,17 @@ export function MissionPanel({ view, boundSig, onFocus, onCommanderAbility }: Mi
 
         {view.locks.length > 0 && (
           <ul className="objectives-locks" aria-label="Disabled actions">
-            {view.locks.map((lock) => (
+            {groupLocks(view.locks).map((group) => (
               // Dead affordances, named with the reason attached (§7). The
               // reason is here as standing state rather than as a response to
               // a refused order, so the player reads it before reaching for
-              // the key rather than after.
-              <li key={lock.ability} className="objectives-lock">
-                <span className="objectives-lock-name">{ABILITY_LABEL[lock.ability]}</span>
-                <span className="objectives-lock-reason">{lock.reason}</span>
+              // the key rather than after. One row per *reason*, naming every
+              // ability it covers — see `groupLocks`.
+              <li key={group.abilities.join('-')} className="objectives-lock">
+                <span className="objectives-lock-name">
+                  {group.abilities.map((ability) => ABILITY_LABEL[ability]).join(' · ')}
+                </span>
+                <span className="objectives-lock-reason">{group.reason}</span>
               </li>
             ))}
           </ul>

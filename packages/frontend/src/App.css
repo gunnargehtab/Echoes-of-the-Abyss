@@ -284,11 +284,15 @@
 
 .contact-log-row {
   display: grid;
-  /* The detail is the long cell and the flexible one, so it is the cell that
-     gives when the panel is narrow — which it is at 200% UI scale. An `auto`
-     track refuses to shrink below max-content, so leaving the detail on `auto`
-     made the columns overrun each other rather than wrap. */
-  grid-template-columns: auto auto auto minmax(0, 1fr);
+  /* The *label* is the unbounded cell, so it is the one that gives. A hull name
+     is a faction plus a class and can run to `Directorate Abyssal Submersible`;
+     a detail is `bearing 107° ~800 m` and has a width you can predict. Putting
+     the `1fr` on the detail instead made the label take its max-content and
+     starve the detail to about fifteen pixels, which `overflow-wrap: anywhere`
+     then broke one character per line — a bearing column rendered as a vertical
+     stack of digits. So the flexible track is the label's, the detail sits on
+     `auto` at its natural width, and it is the hull name that wraps. */
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
   gap: 8px;
   width: 100%;
   padding: 3px 8px;
@@ -381,9 +385,11 @@
   font-weight: 400;
 }
 
+/* Never broken mid-token: a bearing split across two lines is not a bearing.
+   The label above it is what wraps when the panel is narrow. */
 .contact-log-detail {
   opacity: 0.7;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
   text-align: right;
 }
 
@@ -1733,17 +1739,25 @@ button.objectives-row:hover {
   border-top: 1px solid color-mix(in srgb, var(--neon-magenta) 25%, transparent);
 }
 
+/* Name over reason rather than two columns. The name is a *group* of abilities
+   since #720 — `mines · depth charges` — so a fixed first column either clipped
+   it or took a third of the panel from the sentence that is the point. Stacked,
+   the reason gets the full width and wraps at most once.
+
+   `text-align: left` because it is not inherited here: `#root` centres text for
+   the app, `.objectives-row` opts out for the rows above, and this block never
+   did — so a wrapped reason sat centred under a centred name. */
 .objectives-lock {
-  display: grid;
-  grid-template-columns: 5.6rem 1fr;
-  gap: 8px;
+  display: block;
   font-size: 0.6rem;
   line-height: 1.6;
+  text-align: left;
 }
 
 /* Dimmed to 40%, never greyed out, per the shell's disabled rule — and the
    reason beside it stays legible, because the reason is the point. */
 .objectives-lock-name {
+  display: block;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-bright);
@@ -1751,6 +1765,7 @@ button.objectives-row:hover {
 }
 
 .objectives-lock-reason {
+  display: block;
   color: var(--text-dim);
 }
 
@@ -1830,8 +1845,13 @@ button.objectives-row:hover {
 .mission-log {
   position: absolute;
   right: calc(10px * var(--ui-scale, 1));
-  /* Above the command bar (80 px) with a hand's breadth of clearance. */
-  bottom: calc(92px * var(--ui-scale, 1));
+  /* Clear of the console with a hand's breadth to spare. 208 px is
+     `EchoRenderer`'s `CONSOLE_HEIGHT`, and it is the number that matters: this
+     rule still cleared the *old* 80 px command bar §2 replaced, so the panel
+     sat 116 px inside the console and covered the production block. Scaled by
+     `--ui-scale` rather than divided, because the console is Pixi-drawn and
+     scales with the HUD — the same reasoning the panel offsets above use. */
+  bottom: calc(220px * var(--ui-scale, 1));
   transform: scale(var(--ui-scale, 1));
   transform-origin: bottom right;
   width: min(420px, calc(34vw / var(--ui-scale, 1)));
