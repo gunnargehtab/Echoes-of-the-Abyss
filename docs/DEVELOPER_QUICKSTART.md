@@ -113,10 +113,11 @@ format and the programmatic API.
 ## Docs and CI
 
 CI (`.github/workflows/ci.yml`) runs on every push and pull request: build
-shared, type-check, ESLint, Prettier check, tests, full build, then two
-documentation gates over `docs/` — markdownlint and a link check.
+shared, type-check, ESLint, Prettier check, tests, full build, then the
+documentation gates — markdownlint and a link check over `docs/`, and
+`npm run docs:claude` over the prose this repository wrote under `.claude/`.
 
-**Both documentation gates are blocking.** In particular, linking a file that
+**All three documentation gates are blocking.** In particular, linking a file that
 does not exist fails the build. Planned-but-unwritten documents belong in the
 "Planned / Not Yet Written" section of [README.md](README.md) as plain text,
 not as links.
@@ -128,6 +129,7 @@ npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
 git ls-files ':(glob)docs/**/*.md' | while read -r file; do
   npx -y markdown-link-check --config .markdown-link-check.json "$file" || exit 1
 done
+npm run docs:claude
 ```
 
 Prettier deliberately does not cover `docs/`. Design docs are authored prose and

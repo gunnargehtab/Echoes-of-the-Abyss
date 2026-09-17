@@ -288,7 +288,6 @@ real, and a project actually on 0.17 or 0.18 would be a different test. If it st
 should stay as a deliberate insurance premium with the price written down, not as an
 assumption that it helps.
 
-
 ## What this cannot tell you
 
 One issue per arm is a sample of one, and the same prompt run twice does not produce

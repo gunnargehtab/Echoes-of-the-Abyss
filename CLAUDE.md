@@ -83,6 +83,7 @@ Run everything from the repository root.
 | Formatting check / fix | `npm run format:check` / `npm run format` |
 | Hull scripts ↔ GLBs ↔ outlines agree | `npm run check:models` |
 | `docs/invariants.md` still names live tests | `npm run check:invariants` |
+| `.claude/`'s own prose lints and its links resolve | `npm run docs:claude` |
 | Every blocking gate, in one pass | `npm run gates` |
 
 Single workspace: `npm -w packages/backend run dev`, `npm -w packages/frontend run dev`,
@@ -96,9 +97,10 @@ Doc gates, exactly as CI runs them:
 npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
 git ls-files -z ':(glob)docs/**/*.md' \
   | xargs -0 npx -y markdown-link-check --config .markdown-link-check.json
+npm run docs:claude
 ```
 
-`npm run gates` is those two plus every other blocking check in
+`npm run gates` is those three plus every other blocking check in
 `.github/workflows/ci.yml`, run in one pass and summarised: one exit code for "this branch
 would pass CI". It is the finish line to work against — a condition a machine can settle,
 rather than a judgement about whether the work looks done — which is what makes it the
@@ -180,6 +182,23 @@ tools/audio-meter  What the mix measures, rather than what it was meant to.
                    are taken at the bus, before MASTER_GAIN, because a figure at
                    the output says the mix is hot and a figure at the bus says
                    which layer made it hot (#663).
+tools/claude-docs  markdownlint and a relative-link check over the markdown
+                   this repository wrote under .claude/, which was outside
+                   every glob in CI until #748 and had already drifted.
+                   check.mjs also decides the scope, and decides it closed:
+                   a skill in neither of its two lists fails, a listed skill
+                   that is gone fails, and a tracked document that is neither
+                   linted nor vendored fails — so nothing new is ungated by
+                   being unnoticed. The vendored skills stay out as upstream
+                   copies, and check.mjs's list of them is asserted against
+                   VENDORED-SKILLS.md's own table, so the two cannot drift.
+                   Configs are .claude/.markdownlint.json,
+                   which extends the root one and turns MD018 off because
+                   these files open paragraphs with issue numbers, and
+                   .claude/.markdown-link-check.json, which checks relative
+                   links only, because a link between two of these files is
+                   the one that goes stale unread. Runs in npm run gates
+                   and in CI's docs job.
 tools/prose-budget How long a GitHub body is, in the words a person reads —
                    markdown scaffolding, template prompts, fenced evidence and
                    the attribution footer are not reading and do not count.
@@ -412,7 +431,10 @@ subset that matches what the code actually imports is the whole point.
 `.claude/VENDORED-SKILLS.md` records each one's upstream, commit, licence and reason, how to
 re-sync it, and what was looked at and rejected.
 
-Treat them as read-only. Two local edits exist and both are marked `LOCAL` in place: the
+Treat them as read-only — `npm run docs:claude` lints the six written here and
+leaves the eleven alone, because reformatting a copy destroys the one property
+that makes re-syncing it cheap. Two local edits exist and both are marked `LOCAL`
+in place: the
 `pixijs` router says which five of its twenty-six rows are on disk, and the `accessibility`
 skill points one reference at its upstream sibling rather than at a path this repository did
 not take. Do not link them from `docs/` — link checking there is blocking in CI and these
@@ -451,7 +473,8 @@ jobs that share one cached install (`.github/actions/setup`):
   out at 60 Hz and are most of the suite's time; the shard count in the matrix is the one
   knob for wall clock, at the cost of one more billed minute per shard.
 - `docs` — markdownlint on `docs/`, then one `markdown-link-check` invocation over every
-  doc. **Both doc gates are blocking**, so a dead link in `docs/` fails the build.
+  doc, then `npm run docs:claude` over the prose this repository wrote under `.claude/`.
+  **All three are blocking**, so a dead link in `docs/` fails the build.
 
 The link checker config (`.markdown-link-check.json`) ignores this repo's own github.com
 URLs — the repository is private, so unauthenticated requests to its issues and clone URL

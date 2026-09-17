@@ -105,7 +105,7 @@ Until then, `main` is the release, and the way to get a change to people is to m
   ```
 
   That is `preflight`, `build:shared`, `type-check`, `lint`, `format:check`,
-  `check:models`, `test`, `build`, and both doc gates — every blocking check in
+  `check:models`, `test`, `build`, and all three doc gates — every blocking check in
   `.github/workflows/ci.yml`, so a dead link in `docs/` fails here exactly as it fails
   there. It runs them in one pass rather than stopping at the first red one, prints a
   pass/fail summary, and exits non-zero if any gate failed. `npm run gates -- --list`

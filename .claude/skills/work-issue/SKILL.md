@@ -245,6 +245,7 @@ and being unable to take it is a fact about **your** run, which is what
 stopped you, and that `wontfix` is the durable answer if the work is parked
 rather than merely waiting. A person who disagrees removes the label, and the
 issue is eligible again on the next firing.
+
 - Anything already claimed is someone else's — including an earlier you.
 - **An issue with an assignee is taken, whoever took it.** A person who
   assigned themselves is on it, and so is an earlier firing of this loop, which
@@ -511,8 +512,9 @@ between an unattended firing and work nobody meant it to have.
 The boundary is about **authorship, not difficulty**. A one-word edit to §3's
 exclusion list is on the far side of it; a rewrite of §8's register is not.
 
-`loop-critic`'s check 4 holds this, and **nothing else does** — no gate reads
-`.claude/`, so a round that quietly widens §3 passes every one of them.
+`loop-critic`'s check 4 holds this, and **nothing else does**. `npm run
+docs:claude` lints these files and resolves their links; no gate reads what they
+*mean*, so a round that quietly widens §3 passes every one of them.
 
 ## 6. Run every gate locally before you push
 
@@ -530,7 +532,7 @@ root `npm run build` chains it. On a runner it cannot really fail — `npm ci` o
 a pinned Node 22 — but locally it is what catches a stale install or too old a
 Node, which is exactly the state a firing can be in.
 
-Every CI gate is in there, both doc gates included, so a dead link in
+Every CI gate is in there, all three doc gates included, so a dead link in
 `docs/` fails the build exactly as a failing test does. The run is slow — the
 test gate alone is over two minutes, and single mission test files run over a
 minute — which is the argument for running it here rather than learning the same
@@ -632,6 +634,7 @@ what the frame shows:
    The panel at 100% and 200% UI scale, in a live prologue:
    https://github.com/gunnargehtab/Echoes-of-the-Abyss/blob/<sha>/docs/screenshots/issue-<n>/<file>.png
    ```
+
 4. **Say in the PR that the link is a link.** A reviewer clicking through is
    weaker than a rendered frame, and the gate's author should be able to see that
    trade rather than discover it.

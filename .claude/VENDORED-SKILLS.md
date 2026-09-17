@@ -48,8 +48,9 @@ Why each one earns its context:
 
 - **PixiJS** is official, written against v8, and `pixi.js` is pinned to `^8.2.0`
   — so it will not hand back the v7 `beginFill`/`endFill` idiom that model
-  recall reaches for. `EchoRenderer` constructs `Text` twenty-three times and
-  draws through `Graphics` throughout, which is what the two scene skills cover.
+  recall reaches for. `EchoRenderer` constructs `Text` at 25 call sites
+  (`grep -c 'new Text(' packages/frontend/src/game/EchoRenderer.ts` at
+  `8cf4be6`) and draws through `Graphics` throughout, which is what the two scene skills cover.
   `pixijs-performance` is the one that argues for `BitmapText` on per-frame
   labels; that argument has now been measured against this HUD and **does not
   currently apply** — see below.

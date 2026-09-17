@@ -138,13 +138,14 @@ jobs:
           "test/*.test.ts"
 
   # --- Documentation checks -------------------------------------------
-  # Both doc gates are blocking. #38 fixed the ~270 markdownlint issues
+  # All three doc gates are blocking. #38 fixed the ~270 markdownlint issues
   # and #39 wrote the seven documents that were linked but never
   # authored, so a dead link in docs/ is now a real regression rather
   # than pre-existing content debt.
   #
-  # Neither gate needs node_modules — both tools come from `npx -y` — so this
-  # job skips the install and overlaps the whole of the code jobs.
+  # No gate here needs node_modules — the tools come from `npx -y`, and the
+  # .claude/ step reaches the same two through it — so this job skips the install
+  # and overlaps the whole of the code jobs.
   docs:
     runs-on: ubuntu-latest
     steps:
@@ -184,3 +185,11 @@ jobs:
         run: |
           git ls-files -z ':(glob)docs/**/*.md' \
             | xargs -0 npx -y markdown-link-check --config .markdown-link-check.json
+
+      # The same two gates over the prose this repository wrote under .claude/,
+      # which was outside every glob above until #748 and had already drifted.
+      # A script rather than two more shell steps, because it also decides which
+      # files are in scope: the eleven vendored skills are upstream copies and
+      # stay out, and a skill in neither list fails rather than being skipped.
+      - name: Lint and link-check .claude/
+        run: npm run docs:claude
