@@ -82,8 +82,8 @@ export const BOX_PROPERTIES = new Set([
 ]);
 
 /**
- * Pseudo-classes that describe a state an element is not in while simply
- * sitting on screen, so a rule carrying one does not apply at rest.
+ * Pseudo-classes that are **false while an element simply sits on screen**, so
+ * a rule carrying one does not apply at rest and can be skipped.
  *
  * A closed list rather than "anything after a colon", which is the distinction
  * that matters: `:hover` genuinely does not apply, while `:not(.met)` and
@@ -91,21 +91,27 @@ export const BOX_PROPERTIES = new Set([
  * Treating those as inapplicable is exactly how a later rule re-boxing the row
  * — the door #752 comes back through — would go unnoticed. Anything not on
  * this list is `unknown`, and `rulesTargeting` turns that into a failure.
+ *
+ * The form-state pseudos are deliberately **not** here, and that is the
+ * correction worth naming: `:disabled`, `:enabled`, `:checked`,
+ * `:indeterminate`, `:link` and `:placeholder-shown` describe what an element
+ * *is*, not what is being done to it, so they hold at rest. Every marker row is
+ * an enabled `<button>`, which makes `button.objectives-row:enabled` a live
+ * selector rather than a hypothetical one — skipping it would drop its box
+ * declarations in silence. They fall to `unknown` instead.
+ *
+ * This list only ever decides a compound whose tag and classes have *already*
+ * matched, so the dozen `:disabled` rules in this sheet that belong to other
+ * controls are settled by their base and never reach it.
  */
-const STATE_PSEUDOS = new Set([
+const NOT_AT_REST = new Set([
   'hover',
   'active',
   'focus',
   'focus-visible',
   'focus-within',
-  'disabled',
-  'enabled',
-  'checked',
-  'indeterminate',
   'target',
   'visited',
-  'link',
-  'placeholder-shown',
   'autofill',
 ]);
 
@@ -208,24 +214,43 @@ export interface Element extends Node {
 
 type Verdict = 'yes' | 'no' | 'unknown';
 
-/** Does one compound selector — `p.objectives-row`, `*`, `.a.b` — match a node? */
-function matchesCompound(compound: string, node: Node): Verdict {
-  const trimmed = compound.trim();
-  if (trimmed === '*') return 'yes';
-  // A pseudo-element is a box of its own, never this element's.
-  if (trimmed.includes('::')) return 'no';
-
-  const pseudos = [...trimmed.matchAll(/:([a-zA-Z-]+)/g)].map((m) => m[1]);
-  if (pseudos.some((p) => !STATE_PSEUDOS.has(p))) return 'unknown';
-  if (pseudos.length > 0) return 'no';
-
-  const match = /^([a-z][a-z0-9]*)?((?:\.[A-Za-z0-9_-]+)*)$/.exec(trimmed);
+/** The tag-and-class part of a compound, with any pseudo-classes stripped off. */
+function matchesBase(base: string, node: Node): Verdict {
+  if (base === '*') return 'yes';
+  // A compound that is nothing but a pseudo (`:root`) names no tag and no
+  // class, so there is nothing here to match it on.
+  if (base === '') return 'unknown';
+  const match = /^([a-z][a-z0-9]*)?((?:\.[A-Za-z0-9_-]+)*)$/.exec(base);
   if (match === null) return 'unknown';
   const [, tag, classPart] = match;
-  if (tag === undefined && classPart === '') return 'unknown';
   if (tag !== undefined && tag !== node.tag) return 'no';
   const wanted = classPart === '' ? [] : classPart.slice(1).split('.');
   return wanted.every((c) => node.classes.includes(c)) ? 'yes' : 'no';
+}
+
+/**
+ * Does one compound selector — `p.objectives-row`, `*`, `.a.b:hover` — match a
+ * node at rest?
+ *
+ * **The base is matched first, and that order is load-bearing.** A compound
+ * whose tag and classes do not match is settled whatever its pseudo says, which
+ * is what lets the reader be strict about pseudo-classes without throwing on
+ * the dozen `:disabled` rules in this sheet that belong to other controls.
+ * Only once the base matches does the pseudo decide, and then anything not
+ * demonstrably false at rest is `unknown` rather than skipped.
+ */
+function matchesCompound(compound: string, node: Node): Verdict {
+  const trimmed = compound.trim();
+  // A pseudo-element is a box of its own, never this element's.
+  if (trimmed.includes('::')) return 'no';
+
+  const colon = trimmed.indexOf(':');
+  const base = colon === -1 ? trimmed : trimmed.slice(0, colon);
+  const verdict = matchesBase(base, node);
+  if (verdict !== 'yes' || colon === -1) return verdict;
+
+  const pseudos = [...trimmed.slice(colon).matchAll(/:([a-zA-Z-]+)/g)].map((m) => m[1]);
+  return pseudos.every((p) => NOT_AT_REST.has(p)) ? 'no' : 'unknown';
 }
 
 interface Step {
@@ -338,9 +363,27 @@ export function rulesTargeting(rules: CssRule[], element: Element): CssRule[] {
   return out;
 }
 
-/** The same list, narrowed to the rules that apply at every viewport. */
+/**
+ * The same list, narrowed to the rules that apply at every viewport.
+ *
+ * A conditional rule that sets a box property on this element is a **throw**
+ * rather than a quiet omission. This reader does not evaluate `@media`
+ * conditions, so it cannot say whether such a rule is in force — and dropping
+ * it reports a box narrower than the browser's at the viewport where it is,
+ * which is the silent underestimate the header refuses. Nothing in `App.css`
+ * does this today: the one media query touching the panel restyles
+ * `.objectives`, not the rows inside it.
+ */
 export function boxRulesFor(rules: CssRule[], element: Element): CssRule[] {
-  return rulesTargeting(rules, element).filter((rule) => rule.condition === null);
+  const targeted = rulesTargeting(rules, element);
+  for (const rule of targeted) {
+    if (rule.condition === null) continue;
+    if (!rule.declarations.some(([property]) => BOX_PROPERTIES.has(property))) continue;
+    throw new Error(
+      `cssBox does not evaluate \`${rule.condition}\`, and \`${rule.selector}\` sets a box property under it`
+    );
+  }
+  return targeted.filter((rule) => rule.condition === null);
 }
 
 /**

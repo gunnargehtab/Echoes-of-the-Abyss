@@ -699,12 +699,16 @@ describe('the objectives panel: a row fits the panel that holds it', () => {
   /**
    * Where a row sits, so a descendant rule can be resolved rather than refused.
    *
-   * `MissionPanel` renders `section.objectives > div.objectives-body > row`,
-   * and `GameCanvas` mounts that under `div.game-root`, which is the element
-   * carrying `--ui-scale`.
+   * `MissionPanel` renders `section.objectives > div.objectives-body > row`;
+   * `GameCanvas` mounts that inside `div.game-under` — the wrapper one `inert`
+   * silences for the esc menu (§9.5) — inside `div.game-root`, which carries
+   * `--ui-scale`. `.game-under` is easy to leave out and matters: `App.css`
+   * already styles a `p` by its wrapper elsewhere, so a chain missing a link
+   * would answer such a rule wrongly rather than loudly.
    */
   const ANCESTORS = [
     { tag: 'div', classes: ['game-root'] },
+    { tag: 'div', classes: ['game-under'] },
     { tag: 'section', classes: ['objectives'] },
     { tag: 'div', classes: ['objectives-body'] },
   ];

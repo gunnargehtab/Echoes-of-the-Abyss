@@ -34,6 +34,7 @@ import {
 /** Where an objective row actually sits — see `MissionPanel` and `GameCanvas`. */
 const ANCESTORS = [
   { tag: 'div', classes: ['game-root'] },
+  { tag: 'div', classes: ['game-under'] },
   { tag: 'section', classes: ['objectives'] },
   { tag: 'div', classes: ['objectives-body'] },
 ];
@@ -114,14 +115,32 @@ describe('cssBox: a rule that re-boxes the row is never silently dropped', () =>
   // element is not in would wave these through — and both are more specific
   // than the bare class they qualify, so they win in a browser whatever the
   // source order.
-  for (const selector of ['.objectives-row:not(.met)', '.objectives-row:first-child']) {
+  for (const selector of [
+    '.objectives-row:not(.met)',
+    '.objectives-row:first-child',
+    // A form state is not a state the element is merely *put into*: every
+    // marker row is an enabled button at rest, so this one holds and its
+    // declarations count. An allow-list that called it a state like `:hover`
+    // would drop it in silence.
+    'button.objectives-row:enabled',
+  ]) {
     it(`throws rather than guessing at \`${selector}\``, () => {
       assert.throws(
-        () => widthOf(`${selector} { box-sizing: content-box; }`),
+        () => widthOf(`${selector} { box-sizing: content-box; }`, { ...ROW, tag: 'button' }),
         /cannot read the selector/
       );
     });
   }
+
+  it('throws on a rule it cannot tell is in force', () => {
+    // The reader does not evaluate media conditions, so it cannot say whether
+    // this applies — and dropping it would report a box narrower than the
+    // browser's at the viewport where it does.
+    assert.throws(
+      () => widthOf('@media (min-width: 1px) { .objectives-row { min-width: 420px; } }'),
+      /does not evaluate/
+    );
+  });
 
   it('still ignores a state the row is not in at rest', () => {
     // The other half of the same rule: `:hover` genuinely does not apply, so
@@ -232,6 +251,32 @@ describe('cssBox: properties that widen a box', () => {
     assert.equal(
       boxOf('.objectives-row { border: 2px solid red; border: none; }').borderLeftWidth,
       '0'
+    );
+  });
+});
+
+describe('cssBox: a rule that belongs to another control is settled by its base', () => {
+  it('does not throw on the twelve `:disabled` rules this sheet already has', () => {
+    // The strictness above is only affordable because the base is matched
+    // first. `.contact-log-row:disabled`, `.lobby-ready:disabled` and the rest
+    // name controls that are not this row, so they never reach the pseudo
+    // test — a reader that checked the pseudo first would refuse the shipped
+    // stylesheet outright.
+    assert.doesNotThrow(() => widthOf(''));
+    assert.doesNotThrow(() => widthOf('', { ...ROW, tag: 'button' }));
+    assert.equal(boxOf('.contact-log-row:enabled { padding-left: 70px; }').paddingLeft, '8px');
+  });
+
+  it('reads the row’s real ancestry, `.game-under` included', () => {
+    // `GameCanvas` wraps the in-match layer in `div.game-under` so one `inert`
+    // can silence it. A fixture missing that link answers a rule hung off it
+    // wrongly rather than loudly, which spends the ancestry resolution it cost
+    // a round to buy.
+    assert.equal(boxOf('.game-under .objectives-row { padding-left: 43px; }').paddingLeft, '43px');
+    assert.equal(
+      boxOf('.game-root > .objectives .objectives-row { padding-left: 44px; }').paddingLeft,
+      '8px',
+      '`.objectives` is not a child of `.game-root` — `.game-under` sits between them'
     );
   });
 });
