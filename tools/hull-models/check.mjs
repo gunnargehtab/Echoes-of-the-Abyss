@@ -3,7 +3,15 @@
  * the committed GLB; every modelled kind's plan outline regenerates, and it
  * must be the committed TypeScript.
  *
- *   node tools/hull-models/check.mjs      # npm run check:models
+ *   node tools/hull-models/check.mjs              # npm run check:models
+ *   node tools/hull-models/check.mjs slipway foundry-hadron   # only the scripts named
+ *
+ * A name filter runs only the scripts whose file name contains one of the
+ * words given — the way `--only=` narrows `npm run gates` — because four
+ * ports written in parallel each want to know about their own scripts and
+ * not about a neighbour's half-written one (#652). The outline check still
+ * runs, since it reads the committed files rather than the scripts. Without
+ * a filter every script runs, which is what CI does.
  *
  * A script and its binary can disagree silently — edit a faction module,
  * forget to re-run one of its hulls, and nothing downstream notices, because
@@ -71,12 +79,18 @@ export function diffParts(built, committed) {
 const scratch = mkdtempSync(join(tmpdir(), 'hull-models-'));
 let failed = 0;
 try {
+  const only = process.argv.slice(2);
   const scripts = ['hulls', 'structures'].flatMap((dir) =>
     readdirSync(join(here, dir))
       .filter((f) => f.endsWith('.mjs'))
+      .filter((f) => only.length === 0 || only.some((word) => f.includes(word)))
       .sort()
       .map((file) => [dir, file])
   );
+  if (only.length && scripts.length === 0) {
+    console.error(`no script under hulls/ or structures/ matches ${only.join(', ')}`);
+    process.exit(2);
+  }
   for (const [dir, script] of scripts) {
     const out = join(scratch, script.replace(/\.mjs$/, ''));
     const run = spawnSync('node', [join(here, dir, script)], {
