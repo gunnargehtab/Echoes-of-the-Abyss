@@ -197,12 +197,12 @@ and what the alternatives cost.
 
 ### The SIG budget
 
-**SIG budget: 50** — the loudest the campaign has authored *so far*, and by a wide margin:
-Attendance's was 8 ([mission-attendance.md](mission-attendance.md) §4). The campaign is not done
-going up: Trench Awakening's 55 is the one later figure above this one, and the last that rises at
-all ([mission-trench-awakening.md](mission-trench-awakening.md) §4). Fifty is the middle of a harvest cycle's
-45–60 ([economy.md](economy.md) §2, §9), which is what the Directorate sounds like while it is
-being paid.
+**SIG budget: 50** — the loudest the Directorate campaign has authored *so far*, and by a wide
+margin: Attendance's was 8 ([mission-attendance.md](mission-attendance.md) §4). The campaign is
+not done going up: Trench Awakening's 55 is the one later figure above this one
+([mission-trench-awakening.md](mission-trench-awakening.md) §4). Fifty is the middle of a harvest
+cycle's 45–60 ([economy.md](economy.md) §2, §9), which is what the Directorate sounds like while
+it is being paid.
 
 It is a description, not a ceiling — [campaign.md](campaign.md) §10 — and this mission has neither
 a silence order nor anything on the map that would sanction a breach. Exceeding it costs nothing

@@ -292,10 +292,10 @@ route:
 
 **SIG budget: 45** — a working level, the sowing's own figure, and the loudest the Commune
 campaign has authored *so far*: *Tend*'s twenty and *Convocation*'s twenty-six were ceilings, *Thin
-Water*'s thirty a ceiling the column broke by firing. This one is the number the day is *for*.
+Water*'s thirty a ceiling the column broke by firing. This one is the number the day is *for*, and
 *Radicals*' sixty-five is the one that goes above it, two missions on
-([mission-radicals.md](mission-radicals.md) §4).
-It is playtested, per [campaign.md](campaign.md) §10, against the player who exceeds it: the one
+([mission-radicals.md](mission-radicals.md) §4). It is playtested, per
+[campaign.md](campaign.md) §10, against the player who exceeds it: the one
 who dives in the throat, the one who dives on the move, and the one who pings the cleft to find
 out what is on the walls and is answered by both of them.
 
