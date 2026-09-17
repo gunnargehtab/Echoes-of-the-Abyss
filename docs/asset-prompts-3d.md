@@ -213,34 +213,45 @@ Lamp bases are the near-black a `lamp()` puts in `color` for its emissive to sit
 | Navy | Role | Values |
 | --- | --- | --- |
 | Consortium | emissive | `#B07A1E` `amber_vent` · `#F28A1E` `amber_vent` (cruiser) · `#FFD070` `amber_flood` |
+| Consortium | cladding | `#1C1F22` `baffle-foam` (the Baffle Barge) |
 | Consortium | lamp base | `#1A1408` · `#120E06` · `#2A2210` · `#1A1206` |
-| Commune | cladding | `#14332A` / `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#14664C` `algae_hull` · `#22302C` `grown_steel` |
-| Commune | emissive | `#5FAE42` `bio_vein` |
-| Commune | lamp base | `#061206` · `#0A1A08` · `#123018` · `#14301A` · `#2A4A20` · `#3F6B2E` |
+| Commune | cladding | `#14332A` / `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` / `#14664C` `algae_hull` · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` |
+| Commune | emissive | `#5FAE42` `bio_vein` · `#E8F0A3` `forge_light` / `floodlight_pale` (the spore token as a light) |
+| Commune | lamp base | `#061206` · `#0A1A08` · `#123018` · `#14301A` · `#14351A` · `#0F2A12` · `#2E3A16` · `#3A3F1E` · `#2A4A20` · `#3F6B2E` |
 | Directorate | cladding | `#3A3F4A` / `#27313B` `weld_steel` · `#4E1220` `chitin_red_dark` |
-| Directorate | emissive | `#E0506A` `gullet_glow` |
-| Directorate | lamp base | `#1A0810` / `#2C0A12` `biolight_crimson` · `#2A0C14` `gullet_glow` |
-| Knights | cladding | `#1C2230` `dark_steel` · `#2C2244` `shadow_indigo` · `#8A8FA3` `alloy_dim` |
+| Directorate | emissive | `#E0506A` `gullet_glow` · `#E07A8C` `forge_light` / `floodlight_hot` |
+| Directorate | lamp base | `#1A0810` / `#2C0A12` / `#3A0D16` `biolight_crimson` · `#2A0C14` `gullet_glow` · `#40141C` `forge_light` / `floodlight_hot` |
+| Knights | cladding | `#1C2230` `dark_steel` · `#2C2244` `shadow_indigo` · `#8A8FA3` `alloy_dim` · `#E6E9F2` `alloy_white` (the token's hex under a second name) |
 | Knights | emissive | `#9B6CF9` `crystal_panel_glow` · `#A77CFF` `resonance_node` |
-| Knights | lamp base | `#1A1030` · `#1E1038` · `#241744` · `#2A1A50` |
+| Knights | lamp base | `#1A1030` · `#1E1038` · `#241744` · `#2A1A50` · `#2A1650` · `#3A2560` |
 
-Four names carry two values, which rule 3 forbids and which the approved binaries
+Five names carry more than one value, which rule 3 forbids and which the approved binaries
 nonetheless contain. They are recorded here rather than corrected, because correcting one
 means re-exporting a model and that is a change of shape, not of prose:
 
 | Name | Values | Where they split |
 | --- | --- | --- |
 | `growth_ridge` | `#14332A` · `#14382C` | the Commune's scout against its Sower |
-| `weld_steel` | `#27313B` · `#3A3F4A` | the Directorate's Sentinel Turret against its Dredge and Precentor |
-| `biolight_crimson` base | `#2C0A12` · `#1A0810` | the same turret against the hulls |
+| `algae_hull` | `#1FA67A` · `#14664C` | the Commune's Bastion, Foundry and Refinery against its Sentinel Turret |
+| `weld_steel` | `#27313B` · `#3A3F4A` | the Directorate's Sentinel Turret, Bastion, Cantor, Foundry and Refinery against its Dredge and Precentor |
+| `biolight_crimson` base | `#2C0A12` · `#1A0810` · `#3A0D16` | the same turret against the hulls, and the r184 settlement pass (Bastion, Cantor, Foundry, Refinery) against both |
 | `shadow_indigo` | `#2C2244` · `#3B2E5A` | the Knights' Sentinel Turret against the hulls, and `#3B2E5A` is the Block 2 token |
 
-The split runs the same way three times out of four — a structure against the hulls of its
+The split runs the same way in every row but one — a structure against the hulls of its
 own navy — which says the structure passes were authored without the hull modules open
-rather than that anyone disagreed. The hull value is canonical in all four cases, and
-`#3B2E5A` doubly so, being the token. A model PR that touches any of these four should
-bring the structure onto the hull's value on its way past; none of them is worth a PR of
-its own, because none of them is visible until two of the parts are on screen together.
+rather than that anyone disagreed. The hull value is canonical in all five cases, and
+`#3B2E5A` doubly so, being the token. A model PR that *authors* one of these should bring
+the structure onto the hull's value on its way past; a *port* may not, because a port
+matches its approved binary part for part and finish for finish (rule 3), and the #652
+ports kept every split above. None of them is worth a PR of its own, because none of them
+is visible until two of the parts are on screen together.
+
+The same hex can also split on *finish*: the Consortium's `hull_black`, `iron_grey` and
+`oxide_rust` carry one value each at three metalness / roughness pairs across its Foundry
+(the hull finishes), its Refinery, Bastion and turret (the structure finishes) and its
+Baffle Barge, and the Knights' `shadow_indigo` carries the token's hex at 0.35 on the
+hulls and at 0.25 / 0.45 on its Bastion and Spire. Metalness and roughness survive the
+recolour where a hue does not, so these are the visible ones.
 
 One correction landed with the #649 ports and belongs here rather than in a module comment:
 `#5FAE42` was described as the biolight token at half strength. It is not a scaling of

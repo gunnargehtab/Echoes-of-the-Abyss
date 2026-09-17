@@ -64,6 +64,10 @@ import {
   segmentSeries as series,
   capsule,
   group,
+  sidedPost,
+  eulerXYZ,
+  zLong,
+  xLong,
 } from '../kit.mjs';
 
 /**
@@ -704,10 +708,24 @@ export function stingerBarrel(root, { steel, violet, black, pip }, opts) {
  * rises out and up from a base near the mound. Skins alternate by the claw's
  * *number*, so the gap leaves 4 red beside 5 black — the file's rule, which a
  * count along the list gets the other way round.
+ *
+ * `name` is the rank's stem where a file names it otherwise — the Bastion's
+ * `anchor_claw_0..7` (2 and 6 never grown) and the Cantor's `skirt_claw_0..9`
+ * (3 and 7) — and a grip given its own `skin` wears it in place of the rule:
+ * both of those files skin their claws by no rule a count can recover (the
+ * Bastion's run red, black, red, black, black, black along 0, 1, 3, 4, 5, 7).
+ * The placement is `drawn` on a Z-long export and `laid` on an X-long one
+ * (`place`, below the structures).
  */
-export function clawGrips(root, skins, { grips, facets = 5 }) {
+export function clawGrips(root, skins, { grips, facets = 5, name = 'claw_grip' }) {
   grips.forEach((c) =>
-    part(root, `claw_grip_${c.index}`, spike(c.r, c.length, facets), skins[c.index % skins.length], c)
+    place(
+      root,
+      `${name}_${c.index}`,
+      spike(c.r, c.length, facets),
+      c.skin ?? skins[c.index % skins.length],
+      c
+    )
   );
 }
 
@@ -723,6 +741,519 @@ export function magazine(root, { steel, red }, { pipe, pod, flange }) {
   part(root, 'feed_pipe', cyl(pipe.radii[0], pipe.radii[1], pipe.length, pipe.facets), steel, pipe);
   part(root, 'ammo_pod', capsule(pod.r, pod.length, ...pod.facets), steel, pod);
   part(root, 'feed_flange', torus(flange.R, flange.tube, ...flange.facets), red, flange);
+}
+
+/* --------------------------------------------------------------------------
+ * The Slipway (#652): the Directorate's yard on the kit's skeleton (kit.mjs
+ * `slipwayBed`, `slipwayGantry`, `slipwayHeadGate`). What is the
+ * Directorate's is the hull on the blocks — a squashed carapace orb in
+ * red — the posts, which lean: a steel cone of a leg with a black claw
+ * hooked over the beam, a red cone of a pylon leaning in at the head; and
+ * the hall, a run of seven tergites laid along the slip, violet and red by
+ * turns, each with its dark seam, a spine raked off its back and, on every
+ * other one, a photophore; a black lip along the slip's edge with six
+ * photophores, six steel claws into the ground along the outer wall, and
+ * a mandible at the mouth. Every number is the approved
+ * slipway-directorate.glb's own and is the default.
+ * ------------------------------------------------------------------------ */
+
+/** A gantry leg: a six-facet steel cone 44 m tall, 32 m out, leaning 0.15 outward. */
+export const slipwayLeg = (steel) =>
+  sidedPost({
+    name: 'gantry_leg',
+    geo: () => cyl(2, 3.4, 44, 6),
+    mat: steel,
+    y: 22,
+    spread: 32,
+    lean: 0.15,
+  });
+
+/** The claw on a leg: a black five-facet spike hooked 1.1 outward over the beam's end. */
+export const slipwayClaw = (black) =>
+  sidedPost({
+    name: 'gantry_claw',
+    geo: () => spike(2.4, 10, 5),
+    mat: black,
+    y: 46,
+    spread: 24,
+    lean: 1.1,
+  });
+
+/** A head pylon: a red six-facet cone 54 m to its point, 34 m out, leaning 0.12 in. */
+export const slipwayPylon = (red) =>
+  sidedPost({
+    name: 'head_pylon',
+    geo: () => spike(6, 54, 6),
+    mat: red,
+    y: 27,
+    spread: 34,
+    lean: -0.12,
+  });
+
+/**
+ * The hull in progress on the keel blocks: a carapace orb in red pressed
+ * to 112 m long and 12 m tall, with a slim violet deck on it. The kit's
+ * `slipwayBed` calls this between the last block and the sill.
+ */
+export function slipwayHull(root, { hull: red, deck: violet }, opts = {}) {
+  const {
+    body = { facets: [14, 7], at: [-50, 7, 0], r: [56, 6, 10] },
+    deck = { size: [60, 1, 8], at: [-60, 12, 0] },
+  } = opts;
+  add(root, 'hull_in_progress', orb(...body.facets), red, body.at, [0, 0, 0], body.r);
+  add(root, 'hull_in_progress_deck', box(...deck.size), violet, deck.at);
+}
+
+/**
+ * One hall flanking the slip, on `sgn`'s side, built into `hall` (the
+ * `hall_s` or `hall_p` frame the script makes): seven tergites 44 m apart,
+ * violet on the even and red on the odd, each with its black seam orb
+ * behind it, a spine raked toward +x and leaned `sgn` outward — 16 m and
+ * 22 m by turns, stepping 5 m further out every plate and back — and, on
+ * the even plates, one photophore on the inner shoulder; then the black
+ * lip along the slip's edge with six photophores along it, six steel
+ * anchor claws along the outer wall, and the steel mandible at the mouth,
+ * laid along the slip and yawed `sgn` outward.
+ *
+ * The claws are the approved file's own and are carried across rather
+ * than mirrored (#540): each is a cone laid across by π/2 about X and
+ * then turned `sgn · raise`, which on the +z hall hangs it point-down and
+ * leaning out into the ground, and on the −z hall stands it point-up,
+ * leaning toward the slip. A mirror would negate the whole angle; the
+ * file adds to it. Everything else in the hall is the +z hall's mirror to
+ * the digit.
+ */
+export function slipwayHall(hall, { violet, red, black, steel, crimson }, opts) {
+  const {
+    sgn,
+    z = 54,
+    tergites: plates = { count: 7, from: -132, pitch: 44, facets: [14, 7], y: 6, r: [28, 16, 30] },
+    seams = { facets: [10, 6], dx: 24, y: 5, r: [7, 15, 29] },
+    spines = { dx: 4, y: 26, out: 6, step: 5, r: 2.4, lengths: [16, 22], lean: 0.3, rake: -0.25 },
+    photophores: dots = { dx: -8, y: 21.5, z: 45, size: [2.5, 0.6, 2.5] },
+    lip = { size: [320, 3, 8], y: 1.5, z: 27 },
+    lipLights = { count: 6, from: -125, pitch: 50, size: [3, 0.5, 3], y: 3.2 },
+    claws = { count: 6, from: -125, pitch: 50, r: 2.6, length: 20, y: 0, z: 88, raise: 1.35 },
+    mandible = { r: 5, length: 40, at: [-170, 4, 36], yaw: 0.2 },
+  } = opts;
+  for (let i = 0; i < plates.count; i++) {
+    const x = plates.from + plates.pitch * i;
+    add(
+      hall,
+      `tergite_${i}`,
+      orb(...plates.facets),
+      i % 2 ? red : violet,
+      [x, plates.y, sgn * z],
+      [0, 0, 0],
+      plates.r
+    );
+    add(
+      hall,
+      `tergite_seam_${i}`,
+      orb(...seams.facets),
+      black,
+      [x + seams.dx, seams.y, sgn * z],
+      [0, 0, 0],
+      seams.r
+    );
+    add(
+      hall,
+      `tergite_spine_${i}`,
+      spike(spines.r, spines.lengths[i % spines.lengths.length]),
+      black,
+      [x + spines.dx, spines.y, sgn * (z + spines.out + spines.step * (i % 3))],
+      [sgn * spines.lean, 0, spines.rake]
+    );
+    if (i % 2 === 0)
+      add(hall, `photophore_${i}`, box(...dots.size), crimson, [x + dots.dx, dots.y, sgn * dots.z]);
+  }
+  add(hall, 'slip_lip', box(...lip.size), black, [0, lip.y, sgn * lip.z]);
+  for (let i = 0; i < lipLights.count; i++)
+    add(hall, `lip_photophore_${i}`, box(...lipLights.size), crimson, [
+      lipLights.from + lipLights.pitch * i,
+      lipLights.y,
+      sgn * lip.z,
+    ]);
+  for (let i = 0; i < claws.count; i++)
+    add(
+      hall,
+      `anchor_claw_${i}`,
+      spike(claws.r, claws.length, 5),
+      steel,
+      [claws.from + claws.pitch * i, claws.y, sgn * claws.z],
+      [Math.PI / 2 + sgn * claws.raise, 0, 0]
+    );
+  const [mx, my, mz] = mandible.at;
+  add(
+    hall,
+    'launch_mandible',
+    spike(mandible.r, mandible.length, 6),
+    steel,
+    [mx, my, sgn * mz],
+    [0, -sgn * mandible.yaw, -Math.PI / 2]
+  );
+}
+
+/* --------------------------------------------------------------------------
+ * The Bastion and the Cantor (#652, the last of #540 Phase 3): the HQ and
+ * the listening dome, two r184 exports of the settlement pass, read off
+ * their node names as the turret's vocabulary was:
+ *
+ *   Bastion  carapace_tier_0..3 · seam_ring_0..3 · carapace_crown · apex_boss ·
+ *            apex_light · reinforce_rib_0..5 (rib_plate_i_0..2, rib_spike_i) ·
+ *            crown_spine_0..6 (4 never grown) · dock_main / dock_small
+ *            (_throat, _lip, _mouth, _mandible_0..1) · hull_pipe_0..1 ·
+ *            standpipe_0..2 / standpipe_flange_0..2 · ballast_tank_0..1 ·
+ *            anchor_claw_0..7 (2 and 6 never grown) · photophore_0..15 ·
+ *            dock_worklight
+ *   Cantor   base_tier_low / base_tier_high · weld_collar · dome_shell ·
+ *            shell_plate_0..2 · hydrophone_spine_0..41 · primary_quill
+ *            (quill_seg_0..2, quill_tip_light) · apex_boss · photophore_0..18 ·
+ *            photophore_base_0..2 · skirt_claw_0..9 (3 and 7 never grown) ·
+ *            ballast_pipe_0..1 / pipe_flange_0..1
+ *
+ * "The HQ — a large pressure dome with visible reinforcement ribs, docking
+ * collars and external pipework, anchored to the seabed" and "listening dome
+ * — a grown, chitinous hemispherical shell studded with hydrophone spines"
+ * (docs/asset-prompts-3d.md, the Bastion and Cantor blocks), said the
+ * Directorate's way: the dome is carapace tiers stepping in under a crown,
+ * each tier yawed a little further than the one below it and welded to it
+ * with a seam ring; the ribs are plates stood on the flank; the collars are
+ * throats with mandibles; and every spine, claw and rib on both files leans
+ * *out along its own bearing* — the rule `leaning` holds, checked against
+ * all sixty-eight to the last bit of a double.
+ *
+ * One of the two is X-long. The Bastion was exported bow-on-X like the
+ * Choristers and the Vent Taps, and its approved bake did not yaw it, so it
+ * builds in the export's own frame with no yaw (kit.mjs `add`); the Cantor
+ * is Z-long and builds through `drawn` like the turret. The builders below
+ * take a *placement* either way and put it through `place`, which reads
+ * which frame it is in off the placement itself — `laid` for the export's
+ * own frame, `drawn` for the yawed one — so that `clawGrips` and
+ * `photophoreDomes` serve both files without a second copy.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The settlement palette: the two finishes the Bastion and the Cantor carry
+ * that no ink above does.
+ *
+ * `biolight_crimson` on the r184 settlement exports (the Bastion, the
+ * Cantor, and the Foundry and Refinery beside them) sits on a **third** base,
+ * #3A0D16, where the hulls' is #1A0810 and the turret's #2C0A12 — the same
+ * name, three values, which docs/asset-prompts-3d.md § "What the approved
+ * models derived" already records for two of them. Its strength is the
+ * file's own: 3.323 on the Bastion, 3.6 on the Cantor.
+ *
+ * `chitin_violet` on the Cantor is the hull ink's value **double-sided**,
+ * because the three shell plates are open patches of a sphere and the pass
+ * that authored them turned the one material two-sided for every violet
+ * part on the file — the base tier and twenty-one hydrophone spines with
+ * them. `diff.mjs` reads `two-sided` as part of a finish (#646), so a port
+ * carries it.
+ */
+export const settlementInk = {
+  chitinVioletOpen: () => {
+    const m = clad('chitin_violet', hex('#2D1B3D'), 0.1, 0.62);
+    m.side = THREE.DoubleSide;
+    return m;
+  },
+  biolightCrimson: (intensity = 1) =>
+    lamp('biolight_crimson', hex('#C2465E'), hex('#3A0D16'), 0.4, intensity),
+};
+
+/**
+ * A placement in an X-long export's own frame — the file's translation, XYZ
+ * Euler and scale, no yaw — as `drawn` is one in a Z-long export's. The
+ * Bastion is the first r184 structure exported bow-on-X, and the builders
+ * that served the Z-long turret through `part` needed a way to serve it
+ * without a second copy: `place` below reads the flag. Faction-neutral, and
+ * a kit candidate (kit.mjs is frozen for #652).
+ */
+export const laid = (t = [0, 0, 0], e = [0, 0, 0], s = [1, 1, 1]) => ({
+  at: t,
+  rot: e,
+  scale: s,
+  laid: true,
+});
+
+/**
+ * A part placed in whichever frame its placement names: `laid` through
+ * the kit's `xLong`, the geometry as built; anything else through `zLong`,
+ * the geometry turned once onto +X (the frames landed in the kit with the
+ * Foundry builders in the same change; `laid` is the placement-side way of
+ * naming one). Every builder below goes through this, and so do
+ * `clawGrips`, `photophoreDomes` and `photophoreMarks` above, so the
+ * Bastion can use them in its own frame.
+ */
+function place(root, name, geo, mat, p = {}) {
+  return (p.laid ? xLong : zLong).place(root, name, geo, mat, p);
+}
+
+/**
+ * The one rule every spine, claw and rib on both files follows: a cone at
+ * `polar(bearing, rho, y)` leaning `tilt` radians out of vertical *along
+ * that same bearing*, placed by the minimal rotation from +Y onto that
+ * direction — three's `Quaternion.setFromUnitVectors`, as the Cruiser's
+ * `aimedSpikes` found its thirteen. Every one of the Bastion's twelve
+ * spikes and six claws and the Cantor's forty-two spines and eight claws
+ * decomposes so, to 1e-16 in the rotation matrix and with the direction's
+ * bearing equal to the position's — and two of the tilts turn out to be
+ * numbers somebody typed: the crown spines lean `atan(0.8)`, the crown's
+ * own y-squash, and the rib spikes `atan(1 / 1.35)`. Returns the export's
+ * `[translation, XYZ Euler]` for `drawn` or `laid` to place.
+ */
+export function leaning(bearing, rho, y, tilt) {
+  const dir = new THREE.Vector3(
+    Math.sin(tilt) * Math.cos(bearing),
+    Math.cos(tilt),
+    Math.sin(tilt) * Math.sin(bearing)
+  );
+  const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+  const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+  return [polar(bearing, rho, y), [e.x, e.y, e.z]];
+}
+
+/** A patch of a sphere: `r`, `facets` [round, down], and the window it fills, `phi` and `theta` each [start, length]. */
+const patch = (r, [w, h], { phi, theta }) =>
+  new THREE.SphereGeometry(r, w, h, phi[0], phi[1], theta[0], theta[1]);
+
+/** An arc of a torus: kit `torus` with three's fifth argument, the angle it goes round. */
+const torusArc = (R, tube, rs, ts, arc) => new THREE.TorusGeometry(R, tube, rs, ts, arc);
+
+/**
+ * Carapace tiers: the dome as the Directorate builds one — frusta stepping
+ * in, each in its own `skin`, each yawed a little further than the one
+ * below, and welded to the tier above by a `ring`, a flat torus on its top
+ * edge. Every tier is `{ name, skin, radii: [top, bottom], length, facets,
+ * ...placement }` and its ring, where it has one, `{ name, skin, R, tube,
+ * facets: [radial, tubular], ...placement }`, drawn straight after it as
+ * the files order them: the Bastion's four tiers each with a `seam_ring`,
+ * the Cantor's two with the one `weld_collar` after the second.
+ *
+ * The numbers are the scripts' because the two files' rules differ: the
+ * Bastion's tiers narrow to 0.86 of their foot, ring at 0.88 of it with a
+ * 0.14 tube, and turn 0.22 rad a tier; the Cantor's narrow to 0.88 and
+ * 0.874, its collar sits at 0.8815 of the upper foot, and its two yaws are
+ * 0.16 and 0.42.
+ */
+export function carapaceTiers(root, { tiers }) {
+  tiers.forEach(({ name, skin, radii, length, facets, ring, ...placement }) => {
+    place(root, name, cyl(radii[0], radii[1], length, facets), skin, placement);
+    if (ring) {
+      const { name: rn, skin: rs, R, tube, facets: rf, ...rp } = ring;
+      place(root, rn, torus(R, tube, ...rf), rs, rp);
+    }
+  });
+}
+
+/**
+ * The dome shell: a half-orb of `r` and `facets` [round, down] on the tiers
+ * — the Cantor's `dome_shell`, 5.4 by 16 × 9, and the Bastion's
+ * `carapace_crown`, 3.25 by 10 × 5 squashed to 0.8 in height by its node —
+ * and, on the Cantor, three `shell_plate`s: patches of a slightly larger
+ * sphere (5.53, 5.531 and 5.532 — a millimetre apart each, so none fights
+ * the one under it) at the same centre, each a window `phi` and `theta`
+ * [start, length] wide, 16 × 3, in the two-sided violet.
+ */
+export function domeShell(root, { shell: shellMat, plate: plateMat }, opts) {
+  const { name = 'dome_shell', r, facets, plates = [], ...placement } = opts;
+  place(root, name, shell(r, facets, { down: 0.5 }), shellMat, placement);
+  plates.forEach(({ r: pr, facets: pf, phi, theta, ...pp }, i) =>
+    place(root, `shell_plate_${i}`, patch(pr, pf, { phi, theta }), plateMat, pp)
+  );
+}
+
+/**
+ * The apex boss: the cap at the crown of the dome, off-centre as a grown
+ * thing is — a drum (`radii` [top, bottom], `length`, `facets`) on the
+ * Bastion with `apex_light`, an orb of `r` and `facets` [round, down],
+ * over it; a half-orb (`r`, `facets`) on the Cantor with no light, because
+ * the Cantor's light is the quill's tip.
+ */
+export function apexBoss(root, { boss: bossMat, light: lightMat }, { boss, light }) {
+  const { radii, r, length, facets, ...bp } = boss;
+  place(
+    root,
+    'apex_boss',
+    radii ? cyl(radii[0], radii[1], length, facets) : shell(r, facets, { down: 0.5 }),
+    bossMat,
+    bp
+  );
+  if (light) {
+    const { r: lr, facets: lf, ...lp } = light;
+    place(root, 'apex_light', new THREE.SphereGeometry(lr, ...lf), lightMat, lp);
+  }
+}
+
+/** The Bastion's rib, as its file draws every one: three plates up the flank and a spike off the top. */
+const RIB_PLATES = [
+  { size: [0.35, 1.4, 0.5], rho: 6.2, y: 1.5, roll: 0.42, skin: 'black' },
+  { size: [0.3, 1.2, 0.5], rho: 5.4, y: 3.5, roll: 0.36, skin: 'red' },
+  { size: [0.26, 1, 0.5], rho: 4.3, y: 5.5, roll: 0.3, skin: 'black' },
+];
+const RIB_SPIKE = { r: 0.2, rho: 4.1, y: 6.6, tilt: Math.atan(1 / 1.35), facets: 5, skin: 'violet' };
+
+/**
+ * "Visible reinforcement ribs": `ribs.length` of them, each a frame of its
+ * own (`reinforce_rib_i`, at the origin) holding three `rib_plate_i_j` —
+ * boxes stood on the flank at `plates[j].rho` out and `y` up on the rib's
+ * `bearing`, turned to face it (a yaw of π/2 − bearing lays the box's depth
+ * radial) and rolled `roll` about that radial, black, red, black — and one
+ * `rib_spike_i`, a violet cone off the top of the rib at `spike.rho` and
+ * `y`, leaning out `spike.tilt` along the bearing (`leaning`), each spike its
+ * own length. The defaults are the Bastion's own numbers; the six bearings
+ * and six lengths are the script's.
+ *
+ * Three things are the file's and are carried across: the ribs cluster on
+ * the back of the dome — bearings from 2.16 to 4.11 rad, a third of a turn
+ * across the side away from the main dock — rather than round it; the
+ * plates' roll is about their *radial* axis, so a plate tilts sideways
+ * along the flank rather than leaning back against the tier's slope; and
+ * the file wrote ribs 3 to 5 under a flipped Euler, (π, y, −(π − roll)),
+ * which is the same rotation as (0, π − y, roll) and is written so here.
+ * `frame` is `laid` on the Bastion; `drawn` would serve a Z-long file.
+ */
+export function reinforceRibs(root, mats, opts) {
+  const { ribs, plates = RIB_PLATES, spike: sp = RIB_SPIKE, frame = drawn } = opts;
+  ribs.forEach(({ bearing, spike: length }, i) => {
+    const rib = group(root, `reinforce_rib_${i}`);
+    plates.forEach((p, j) =>
+      place(
+        rib,
+        `rib_plate_${i}_${j}`,
+        box(...p.size),
+        mats[p.skin],
+        frame(polar(bearing, p.rho, p.y), [0, Math.PI / 2 - bearing, p.roll])
+      )
+    );
+    place(
+      rib,
+      `rib_spike_${i}`,
+      spike(sp.r, length, sp.facets),
+      mats[sp.skin],
+      frame(...leaning(bearing, sp.rho, sp.y, sp.tilt))
+    );
+  });
+}
+
+/**
+ * Spines studded over a shell, each by its own placement — "studded with
+ * hydrophone spines", the Cantor's forty-two `hydrophone_spine`s in four
+ * rings down the dome (seven of 0.115, ten of 0.1, eleven of 0.09, fourteen
+ * of 0.08), and the Bastion's `crown_spine`s at seven stations of 2π/7 from
+ * a phase of 0.5 rad round the apex, the fifth never grown. Every spine is
+ * `{ n, skin, r, length, ...placement }`: its own number, its own skin (the
+ * Cantor's twenty-one violet and twenty-one black fall by no rule a count
+ * recovers), its own length, and a `leaning` placement.
+ */
+export function shellSpines(root, { name, facets = 5, spines }) {
+  spines.forEach(({ n, skin, r, length, ...placement }) =>
+    place(root, `${name}_${n}`, spike(r, length, facets), skin, placement)
+  );
+}
+
+/**
+ * A docking collar, "docking collars" of the Bastion block: a frame of its
+ * own placed by the top of `opts` (the file's `dock_main`, rolled a quarter
+ * turn so the throat lies along the flank and yawed 0.26 off it, and
+ * `dock_small` the same the other way), holding a `throat` — a frustum of
+ * `r` at the mouth and 1.25 `r` at the root, 2.4 long, eight-sided, violet
+ * — a `lip`, a steel torus of 1.05 `r` and a 0.2 tube, 5 × 10, at 1.25 up
+ * the throat; a `mouth`, the lit disc of 0.72 `r` at 1.3; and two
+ * `mandible`s, four-sided black cones 1.3 long at ±1.15 `r` across the
+ * mouth, each rolled 0.35 in toward it. The ratios are the file's, exact
+ * on both collars (1.4 and 0.9).
+ *
+ * Two things are the file's and stay: the lip's torus lies in the frame's
+ * XY plane, which after the quarter-turn roll is a plane *containing* the
+ * throat's axis — the ring stands across the mouth rather than round it;
+ * and the mouth and the mandibles sit at the throat's +Y end, which the
+ * roll puts at the tier's flank, so the collar's light faces the hull and
+ * the throat stands out from it. `frame` is `laid` on the Bastion.
+ */
+export function dockingCollar(root, { violet, steel, crimson, black }, opts) {
+  const { name, r, frame = drawn, ...placement } = opts;
+  const dock = group(root, name, placement);
+  place(dock, `${name}_throat`, cyl(r, 1.25 * r, 2.4, 8), violet, frame());
+  place(dock, `${name}_lip`, torus(1.05 * r, 0.2, 5, 10), steel, frame([0, 1.25, 0]));
+  place(dock, `${name}_mouth`, cyl(0.72 * r, 0.72 * r, 0.18, 8), crimson, frame([0, 1.3, 0]));
+  [1, -1].forEach((sgn, i) =>
+    place(
+      dock,
+      `${name}_mandible_${i}`,
+      spike(0.16, 1.3, 4),
+      black,
+      frame([sgn * 1.15 * r, 1, 0], [0, 0, -sgn * 0.35])
+    )
+  );
+}
+
+/**
+ * "External pipework": `hull_pipe_i`, each an arc of a torus — `R` round,
+ * `tube` thick, `facets` [radial, tubular], `arc` radians of the way round
+ * — born flat and stood up on the flank by its node. The Bastion's two run
+ * round at 0.92 of the base tier's foot (R 5.888), 1.1 rad each, tubes of
+ * 0.16 and 0.13, rolled up π/2 − 0.5 and π/2 − 0.85 and yawed 0.6 and
+ * 1.05. `parts.mjs` offers the buffer as a torus of 16 × 5 among its
+ * lathe-family guesses; the rows of seventeen at six tube angles say which.
+ */
+export function hullPipes(root, steel, { pipes }) {
+  pipes.forEach(({ R, tube, facets, arc, ...placement }, i) =>
+    place(root, `hull_pipe_${i}`, torusArc(R, tube, ...facets, arc), steel, placement)
+  );
+}
+
+/**
+ * Standpipes: a frustum each (`radii` [top, bottom], `length`, `facets`)
+ * with a flat black flange — a torus of `R`, `tube` and `facets` [radial,
+ * tubular] — part way up it, pipe then flange in the file's order:
+ * `standpipe_i` / `standpipe_flange_i` on the Bastion, `ballast_pipe_i` /
+ * `pipe_flange_i` on the Cantor (`name` and `flange` are the stems). The
+ * Bastion's three pipes lean a hundredth or two off vertical while their
+ * flanges lie dead flat at 0.22 of the pipe's length above its centre; the
+ * Cantor's two lean 0.12 and 0.28 / 0.42 and their flanges lean with them.
+ * Both are the files' own and both are the script's numbers.
+ */
+export function standpipes(root, { steel, black }, opts) {
+  const { name = 'standpipe', flange: flangeName = 'standpipe_flange', pipes } = opts;
+  pipes.forEach(({ radii, length, facets, flange, ...placement }, i) => {
+    place(root, `${name}_${i}`, cyl(radii[0], radii[1], length, facets), steel, placement);
+    const { R, tube, facets: ff, ...fp } = flange;
+    place(root, `${flangeName}_${i}`, torus(R, tube, ...ff), black, fp);
+  });
+}
+
+/**
+ * Ballast tanks: `ballast_tank_i`, a steel capsule each (kit.mjs `capsule`,
+ * `r`, `length`, `facets` [cap, radial]) laid on its side by its node. The
+ * Bastion's two are 0.75 by 2, three cap rings round nine, rolled a quarter
+ * turn and yawed 0.5 and 0.8 on the -z flank.
+ */
+export function ballastTanks(root, steel, { tanks }) {
+  tanks.forEach(({ r, length, facets, ...placement }, i) =>
+    place(root, `ballast_tank_${i}`, capsule(r, length, ...facets), steel, placement)
+  );
+}
+
+/**
+ * The primary quill: the Cantor's one tall spine, a frame of its own
+ * (`primary_quill`, placed by the top of `opts` — pitched −0.1 and rolled
+ * 0.17 off the apex in the file) holding `segments` up its Y, each a
+ * frustum of `radii` [top, bottom], `length` and `facets` at its own
+ * station, alternating through `skins` from the root (black, red, black),
+ * and `quill_tip_light`, the lit orb of `r` and `facets` [round, down] at
+ * the tip — the Cantor's brightest point, 8 × 6 where its photophores are
+ * 6 × 5. As `stingerBarrel` is the turret's gun, this is the dome's
+ * listening mast.
+ */
+export function primaryQuill(root, { skins, light }, opts) {
+  const { segments, tip, ...placement } = opts;
+  const quill = group(root, 'primary_quill', placement);
+  segments.forEach(({ radii, length, facets, ...sp }, i) =>
+    place(quill, `quill_seg_${i}`, cyl(radii[0], radii[1], length, facets), skins[i % skins.length], sp)
+  );
+  const { r, facets, ...tp } = tip;
+  place(quill, 'quill_tip_light', new THREE.SphereGeometry(r, ...facets), light, tp);
 }
 
 /* --------------------------------------------------------------------------
@@ -853,9 +1384,16 @@ export function telsonFan(root, skins, { name = 'telson', size, blades }) {
  * its own buffer, which is how the Submersible's ten photophores and the
  * Cruiser's seven light domes are drawn — the Cruiser's as unit orbs
  * squashed by their nodes, no two alike (#649). `tolerance` is
- * `refuseMirror`'s, in the frame the placements are in.
+ * `refuseMirror`'s, in the frame the placements are in. `frame` is the
+ * kit's `zLong` (the default, every placement a `drawn` one) or `xLong`,
+ * for the Refinery's four, whose file is X-long and whose placements are
+ * the export's own (#652); a placement made by `laid` below names the
+ * X-long frame itself, which is how the Bastion's sixteen — drawn the
+ * Submersible's way, an orb each of its own radius — go through `place`.
  */
-export function photophoreDomes(root, light, { r = 0.32, facets = [8, 6], domes, tolerance }) {
+export function photophoreDomes(root, light, opts) {
+  const { r = 0.32, facets = [8, 6], domes, tolerance, frame = null } = opts;
+  const put = frame ? frame.place : place;
   refuseMirror(
     'photophore_dome',
     domes.map((d) => [d[0], ...d[d.length - 1].at]),
@@ -864,8 +1402,8 @@ export function photophoreDomes(root, light, { r = 0.32, facets = [8, 6], domes,
   const dome = new THREE.SphereGeometry(r, ...facets);
   domes.forEach((d) =>
     d.length === 3
-      ? part(root, d[0], new THREE.SphereGeometry(d[1], ...facets), light, d[2])
-      : part(root, d[0], dome, light, d[1])
+      ? put(root, d[0], new THREE.SphereGeometry(d[1], ...facets), light, d[2])
+      : put(root, d[0], dome, light, d[1])
   );
 }
 
@@ -989,7 +1527,7 @@ export function photophoreMarks(root, light, { size, marks, tolerance }) {
     tolerance
   );
   const mark = box(...size);
-  marks.forEach(([name, placement]) => part(root, name, mark, light, placement));
+  marks.forEach(([name, placement]) => place(root, name, mark, light, placement));
 }
 
 /**
@@ -1174,6 +1712,314 @@ export function walkingLimbs(root, { chitin, red }, opts) {
       )
     );
   });
+}
+
+/* --------------------------------------------------------------------------
+ * The works — the Foundry and the Nodule Refinery (#652, off #540 Phase 3).
+ *
+ * Two structures the Directorate shares by name with the Knights and the
+ * Commune: the bay, the cranes, the launch mouth, the ballast tanks and
+ * the graft pipes of the Foundry, and the crusher, stacks, conveyor gantry,
+ * hopper, transfer pipes and flood masts of the Refinery are the kit's
+ * (kit.mjs, its last section), called with this navy's numbers. What is
+ * the Directorate's alone is read off the two files' node names:
+ *
+ *   Foundry    tergite_starboard_0..3 / tergite_port_0..3 · tergite_seam_0_0..3 /
+ *              _1_0..3 · spine_spike_0_0..2 / _1_0..2 · outrigger_pod_big ·
+ *              outrigger_spike · outrigger_pod_small · stern_carapace · stern_seam ·
+ *              stern_spike · launch_mandible_0..1 · flank_photophore_0..9 ·
+ *              anchor_claw_0..4
+ *   Refinery   silo_k_seg_i / silo_k_seam_i · silo_cap_k · silo_tip_light_k ·
+ *              silo_spike_k_j · maw_tooth_0..2 · intake_tooth_0..4 ·
+ *              anchor_claw_0..3, 5 · photophore_0..3
+ *
+ * A carapace laid down either side of the bay, as the turret's is laid
+ * round its mound: four tergites a flank, each a shell open 0.58 of the way
+ * down, yawed a little further along the rank and rolled 0.12 outboard,
+ * with a half-torus seam standing on it and a spine off its shoulder — the
+ * spines all raked the one way, along (±0.35, 1, 0.1), and the rank on each
+ * flank one spine short at the bow. The Refinery's silos are the same
+ * carapace stood up: segments alternating red and violet up each, every
+ * one twisted 0.3 further round than the one below it, a steel seam between
+ * them, a black cap and a crimson tip, and spikes off the flanks in ranks
+ * with holes in them. Asymmetric, yet regimented, on both.
+ *
+ * Every builder here takes the export's own numbers through a kit frame —
+ * `zLong` for the Foundry (a Z-long export, every placement through `drawn`)
+ * and `xLong` for the Refinery (an X-long one, every placement as the file
+ * has it), which is what the two approved files are (#652) — and the rule
+ * each holds is the file's, read off it and checked against it.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The works' palette: what the Foundry and the Refinery carry that no hull
+ * or turret did. Four of their six materials are the Dredge's `ink` and the
+ * turret's `structureInk` at those exact values; these are the other two,
+ * plus a third `biolight_crimson` — the same name as the Dredge's and the
+ * turret's on a third base, #3A0D16, burning at 2.277 on the Foundry and
+ * 2.6 on the Refinery (`KHR_materials_emissive_strength`; the bake caps it
+ * at 1). `forge_light` is the Foundry's line and launch glow, "interior
+ * forge light spilling from the bay when producing"; `floodlight_hot` the
+ * Refinery's maw, stack tips, gantry lights, intake mouth and flood lamps,
+ * "floodlit working surfaces, visible machinery light" — one lamp colour on
+ * one base, polished to 0.3, at each file's own strength. Values are the
+ * approved files' own; the names are what the models are and stay.
+ */
+export const worksInk = {
+  forgeLight: (intensity = 3.697972238428193) =>
+    lamp('forge_light', hex('#E07A8C'), hex('#40141C'), 0.3, intensity),
+  floodlightHot: (intensity = 3.475863563109638) =>
+    lamp('floodlight_hot', hex('#E07A8C'), hex('#40141C'), 0.3, intensity),
+  // The same third base the Bastion and the Cantor carry (`settlementInk`),
+  // at the Foundry's own strength; one entry, so the value cannot split.
+  biolightCrimson: (intensity = 2.276723666358973) => settlementInk.biolightCrimson(intensity),
+};
+
+/**
+ * The tergite flanks either side of the Foundry's bay: on each flank
+ * (`{ name, n, plates }`, `tergite_${name}_${i}`), a rank of plates,
+ * alternating red and violet from the stern, each an orb of `facets` open
+ * `down` of the way to the pole and squashed by its own `scale`; over each,
+ * `tergite_seam_${n}_${i}`, a half-torus of `seam.tube` in `seam.facets`
+ * [radial, tubular] standing `seam.lift` above the plate's centre, scaled
+ * `seam.of` [x, y] of the plate's and turned with it; and off each that
+ * carries one, `spine_spike_${n}_${i}`, a cone of `spike.r` and its own
+ * `length` laid by its own node.
+ *
+ * As the approved file draws them: a plate's `rot` is a YXZ Euler — a pitch
+ * of its own, the rank's yaw (0.12 and 0.05 further each plate) and a roll
+ * of 0.12 outboard — and its seam takes the yaw and the roll without the
+ * pitch. Each spine's rotation is the minimal one carrying +Y onto
+ * (±0.35, 1, 0.1), the one rake for all six, and its foot sits on its
+ * plate's shoulder where the file put it; the file's node is transcribed
+ * rather than the rule re-derived, since the feet are nowhere a formula
+ * reaches. Both ranks are four plates and three spines: the bow plate on
+ * each flank carries none.
+ */
+export function tergiteFlanks(root, { violet, red, black, steel }, opts) {
+  const {
+    frame = zLong,
+    facets = [9, 6],
+    down = 0.58,
+    seam = { tube: 0.06, facets: [4, 16], of: [0.9, 0.98], lift: 0.15 },
+    spike: spk = { r: 0.14, facets: 5 },
+    flanks,
+  } = opts;
+  for (const { name, n, plates } of flanks)
+    plates.forEach((p, i) => {
+      const [x, y, z] = p.at;
+      const [pitch, yaw, roll] = p.rot;
+      frame.part(
+        root,
+        `tergite_${name}_${i}`,
+        shell(1, facets, { down }),
+        i % 2 ? violet : red,
+        p.at,
+        eulerXYZ([pitch, yaw, roll], 'YXZ'),
+        p.scale
+      );
+      frame.part(
+        root,
+        `tergite_seam_${n}_${i}`,
+        new THREE.TorusGeometry(1, seam.tube, ...seam.facets, Math.PI),
+        steel,
+        [x, y + seam.lift, z],
+        [0, yaw, roll],
+        [seam.of[0] * p.scale[0], seam.of[1] * p.scale[1], 1]
+      );
+      if (p.spike)
+        frame.part(
+          root,
+          `spine_spike_${n}_${i}`,
+          spike(spk.r, p.spike.length, spk.facets),
+          black,
+          p.spike.at,
+          p.spike.rot
+        );
+    });
+}
+
+/**
+ * The outrigger pods off the Foundry's flanks: a big violet orb yawed off
+ * one corner with a black spike raked off it, and a small red one off the
+ * other — `outrigger_pod_big`, `outrigger_spike`, `outrigger_pod_small`,
+ * in the file's order. Each orb is its own `r` and `facets`, squashed by
+ * its node.
+ */
+export function outriggerPods(root, { violet, black, red }, opts) {
+  const { frame = zLong, big, spike: spk, small } = opts;
+  const orbOf = (o) => new THREE.SphereGeometry(o.r, ...o.facets);
+  frame.part(root, 'outrigger_pod_big', orbOf(big), violet, big.at, big.rot, big.scale);
+  const barb = spike(spk.r, spk.length, spk.facets ?? 5);
+  frame.part(root, 'outrigger_spike', barb, black, spk.at, spk.rot);
+  frame.part(root, 'outrigger_pod_small', orbOf(small), red, small.at, small.rot, small.scale);
+}
+
+/**
+ * The stern carapace closing the bay's blind end: a red orb squashed by its
+ * node, the steel seam ring lying flat on it — a full torus of `R` and
+ * `tube` in `facets` [radial, tubular] — and the black spike raked off its
+ * crown: `stern_carapace`, `stern_seam`, `stern_spike`.
+ */
+export function sternCarapace(root, { red, steel, black }, opts) {
+  const { frame = zLong, carapace: c, seam, spike: spk } = opts;
+  const orb = new THREE.SphereGeometry(c.r, ...c.facets);
+  frame.part(root, 'stern_carapace', orb, red, c.at, c.rot, c.scale);
+  const ring = torus(seam.R, seam.tube, ...seam.facets);
+  frame.part(root, 'stern_seam', ring, steel, seam.at, seam.rot, seam.scale);
+  const barb = spike(spk.r, spk.length, spk.facets ?? 5);
+  frame.part(root, 'stern_spike', barb, black, spk.at, spk.rot);
+}
+
+/**
+ * The mandibles either side of the launch mouth: four-sided cones of one
+ * `r` and `length`, `launch_mandible_${n}` each, laid by their own nodes —
+ * pitched 0.5 forward and rolled 0.6 outboard, one a hair further out than
+ * the other, as the file has them.
+ */
+export function launchMandibles(root, violet, opts) {
+  const { frame = zLong, r, length, facets = 4, mandibles } = opts;
+  for (const m of mandibles)
+    frame.part(root, `launch_mandible_${m.n}`, spike(r, length, facets), violet, m.at, m.rot);
+}
+
+/**
+ * Anchor claws on the seabed, `anchor_claw_${index}`: cones of one `r` and
+ * `facets` and their own `length`, each laid by its own node so that its
+ * point rises out and up from a foot near the hull, skinned through `skins`
+ * by the claw's number — as `clawGrips` skins the turret's, with the same
+ * hole in the rank: the Refinery's run 0, 1, 2, 3, 5. Every rotation is
+ * the minimal one carrying +Y onto the claw's own line, the file's node
+ * transcribed. Both works carry them, so the builder takes its `frame`.
+ */
+export function anchorClaws(root, skins, { frame = zLong, r = 0.28, facets = 5, claws }) {
+  for (const c of claws) {
+    const skin = skins[c.index % skins.length];
+    frame.part(root, `anchor_claw_${c.index}`, spike(r, c.length, facets), skin, c.at, c.rot);
+  }
+}
+
+/**
+ * The Refinery's silos: "a rank of upright silos" (docs/asset-prompts-3d.md,
+ * STRUCTURE — Nodule Refinery), grown as carapace stood on end. Each silo
+ * `{ n, at: [x, z], r, height, segments, yaw, spikes }` is `segments`
+ * eight-sided frusta stacked up from the ground, `silo_${n}_seg_${i}`,
+ * alternating red and violet from the foot, each `height / segments` tall
+ * and `r · (1 − waist · i / segments)` at its foot and `taper` of that at
+ * its crown, yawed `yaw + twist · i`; between them and over the top one,
+ * `silo_${n}_seam_${i}`, a steel torus of `seam.of` the segment's foot
+ * radius, `seam.tube` thick in `seam.facets` [radial, tubular], lying
+ * flat; then `silo_cap_${n}`, a black cone of `cap.of · r` and `cap.h`
+ * standing `cap.lift` above the top; `silo_tip_light_${n}`, a crimson orb
+ * `tip.lift` above it; and then the silo's spikes, `silo_spike_${n}_${j}`
+ * with each `j` its own (the ranks are 1; 0, 2; 0, 1; 0, 1, 2 — holes and
+ * all), violet cones of `spike.r` and their own `length` laid by their own
+ * nodes, every one the minimal rotation carrying +Y onto a line 0.35 up
+ * for every 1 out.
+ *
+ * Every fraction here is read off the approved file and checked against
+ * every segment of every silo: 0.82 for the taper, 0.22 for the waist over
+ * a silo's height, 0.85 for the seam, 0.72 for the cap, and 0.3 for the
+ * twist, each silo starting half a radian further round than the last.
+ */
+export function silos(root, { red, violet, steel, black, light }, opts) {
+  const {
+    frame = xLong,
+    facets = 8,
+    taper = 0.82,
+    waist = 0.22,
+    twist = 0.3,
+    seam = { of: 0.85, tube: 0.1, facets: [4, 14] },
+    cap = { of: 0.72, h: 1.5, lift: 0.7, facets: 8 },
+    tip = { r: 0.16, facets: [6, 5], lift: 1.55 },
+    spike: spk = { r: 0.13, facets: 5 },
+    silos: list,
+  } = opts;
+  for (const s of list) {
+    const [x, z] = s.at;
+    const h = s.height / s.segments;
+    for (let i = 0; i < s.segments; i++) {
+      const rb = s.r * (1 - (waist * i) / s.segments);
+      frame.part(
+        root,
+        `silo_${s.n}_seg_${i}`,
+        cyl(taper * rb, rb, h, facets),
+        i % 2 ? violet : red,
+        [x, h * (i + 0.5), z],
+        [0, s.yaw + twist * i, 0]
+      );
+      frame.part(
+        root,
+        `silo_${s.n}_seam_${i}`,
+        torus(seam.of * rb, seam.tube, ...seam.facets),
+        steel,
+        [x, h * (i + 1), z],
+        [Math.PI / 2, 0, 0]
+      );
+    }
+    frame.part(
+      root,
+      `silo_cap_${s.n}`,
+      cyl(0, cap.of * s.r, cap.h, cap.facets),
+      black,
+      [x, s.height + cap.lift, z]
+    );
+    frame.part(
+      root,
+      `silo_tip_light_${s.n}`,
+      new THREE.SphereGeometry(tip.r, ...tip.facets),
+      light,
+      [x, s.height + tip.lift, z]
+    );
+    for (const j of s.spikes)
+      frame.part(
+        root,
+        `silo_spike_${s.n}_${j.n}`,
+        spike(spk.r, j.length, spk.facets),
+        violet,
+        j.at,
+        j.rot
+      );
+  }
+}
+
+/**
+ * The maw's teeth: four-sided cones of one `r` and `length` hung point-down
+ * over the crusher's maw, `maw_tooth_${n}` each at its own station along
+ * the maw's lip, as the file places them.
+ */
+export function mawTeeth(root, black, opts) {
+  const { frame = xLong, r = 0.14, length = 0.8, facets = 4, teeth } = opts;
+  for (const t of teeth) {
+    const rot = t.rot ?? [Math.PI, 0, 0];
+    frame.part(root, `maw_tooth_${t.n}`, spike(r, length, facets), black, t.at, rot);
+  }
+}
+
+/**
+ * The intake's teeth: `count` four-sided cones of `r` and `length` round
+ * the hopper's mouth, `intake_tooth_${k}`, each at `radius` out from `at`
+ * (the hopper's centre) on bearing `phase + k · 2π / count` anticlockwise
+ * from +x, at height `y`, and leaned `lean` radians outward — an XYZ Euler
+ * of `[lean · sin a, 0, −lean · cos a]` — which is the rule the file's five
+ * teeth follow to the seventh decimal (intake_tooth_0 at x = 13.4 + 1.45 ·
+ * cos 0.2). `millMouth` above holds the Harvester's version of the same
+ * rule with the teeth in the bow plane; these lie in the ground plane.
+ */
+export function intakeTeeth(root, black, opts) {
+  const { frame = xLong, r = 0.13, length = 0.9, facets = 4, count = 5 } = opts;
+  const { at, radius, y, phase = 0, lean } = opts;
+  for (let k = 0; k < count; k++) {
+    const a = phase + (k * 2 * Math.PI) / count;
+    frame.part(
+      root,
+      `intake_tooth_${k}`,
+      spike(r, length, facets),
+      black,
+      [at[0] + radius * Math.cos(a), y, at[2] + radius * Math.sin(a)],
+      [lean * Math.sin(a), 0, -lean * Math.cos(a)]
+    );
+  }
 }
 
 export { THREE };

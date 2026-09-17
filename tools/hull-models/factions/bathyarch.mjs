@@ -38,6 +38,7 @@ import {
   group,
   flanks,
   pointLight,
+  sidedPost,
 } from '../kit.mjs';
 
 /**
@@ -508,6 +509,24 @@ export function rivetRows(root, mat, opts) {
   });
 }
 
+/**
+ * One rank of rivets, on one side only: `rivetRows` above for a face that
+ * has no twin — the outer eave of a Slipway hall carries one rank and the
+ * inner eave none (#652). Same pitch rule, same numbering: from
+ * `numberFrom`, the root's own child count unless said, which is how the
+ * approved Slipway numbers each hall's rank from 39 — the count of parts
+ * already in that hall — in both halls alike.
+ */
+export function rivetRow(root, mat, opts) {
+  const { from, to, count, y, z, size, numberFrom = root.children.length } = opts;
+  for (let i = 0; i < count; i++)
+    add(root, `rivet_${numberFrom + i}`, box(...size), mat, [
+      from + ((to - from) * (i + 0.5)) / count,
+      y,
+      z,
+    ]);
+}
+
 /** The bow stencil, painted flat on the foredeck, and the bow lamp — separate, because the two hulls write them in opposite orders. */
 export function bowStencil(root, amber, { at, size }) {
   add(root, 'stencil_bow', box(...size), amber, at);
@@ -687,6 +706,13 @@ export const structureInk = {
   // token, not a near-black — so it reads as a fixture in the albedo map too.
   workLamp: (intensity = 1) =>
     lamp('work_lamp', hex('#F2B233'), hex('#F2B233'), 0.35, intensity),
+  // The Refinery's and the Bastion's second lamp (#652): the token through
+  // and through like the work lamp, a shade rougher at 0.4 and banked to
+  // 1.1 — the lit ports of a dome that "can never run silent", the belt
+  // lines on the conveyors, the crusher's intake. Values the approved
+  // exports' own.
+  portGlow: (intensity = 1.1) =>
+    lamp('port_glow', hex('#F2B233'), hex('#F2B233'), 0.4, intensity),
 };
 
 /**
@@ -803,16 +829,9 @@ export function mountDrum(root, { black, grey, rust }, opts) {
  * own builder and not a line of `mountDrum` (#639).
  */
 export function feedPipe(root, rust, { from, to, r, facets = 6 }) {
-  const A = new THREE.Vector3(...from);
-  const B = new THREE.Vector3(...to);
-  const run = B.clone().sub(A);
-  const up = new THREE.Vector3(0, 1, 0);
-  const e = new THREE.Euler().setFromQuaternion(
-    new THREE.Quaternion().setFromUnitVectors(up, run.clone().normalize()),
-    'XYZ'
-  );
-  const mid = A.clone().add(B).multiplyScalar(0.5).toArray();
-  part(root, 'feed_pipe', cyl(r, r, run.length(), facets), rust, drawn(mid, [e.x, e.y, e.z]));
+  // The same rule stands every pipe on the Refinery and the Bastion (#652),
+  // so the arithmetic lives once, in `pipeBetween` below.
+  pipeBetween(root, alongZ, rust, { name: 'feed_pipe', from, to, r, facets });
 }
 
 /**
@@ -874,6 +893,125 @@ export function heavyBarrel(root, { black, grey, rust }, opts) {
 export function baseLamp(root, { lampMat, black }, { at, bracket, r, segments = [6, 4] }) {
   part(root, 'base_lamp', new THREE.SphereGeometry(r, ...segments), lampMat, drawn(at));
   part(root, 'base_lamp_bracket', box(...bracket.size), black, drawn(bracket.at));
+}
+
+/* --------------------------------------------------------------------------
+ * The Slipway (#652): the Klaxon's yard on the kit's skeleton (kit.mjs
+ * `slipwayBed`, `slipwayGantry`, `slipwayHeadGate`). What is the Klaxon's
+ * is the hull on the blocks, the posts — a square iron column with a rust
+ * brace collar, a black square pylon — and the hall: a riveted shed in
+ * "boxy, riveted, over-engineered rectangles and cylinders". Every number
+ * is the approved slipway-bathyarch.glb's own and is the default.
+ * ------------------------------------------------------------------------ */
+
+/** A gantry leg: a square iron column, 44 m tall, 32 m out from the slip's centre. */
+export const slipwayLeg = (grey) =>
+  sidedPost({ name: 'gantry_leg', geo: () => box(6, 44, 6), mat: grey, y: 22, spread: 32 });
+
+/** The collar on a leg: a rust brace plate round the column at 30 m. */
+export const slipwayBrace = (rust) =>
+  sidedPost({ name: 'gantry_leg_brace', geo: () => box(8, 3, 8), mat: rust, y: 30, spread: 32 });
+
+/** A head pylon: a black square column, 50 m tall, 34 m out. */
+export const slipwayPylon = (black) =>
+  sidedPost({ name: 'head_pylon', geo: () => box(12, 50, 12), mat: black, y: 25, spread: 34 });
+
+/**
+ * The hull in progress on the keel blocks: an iron box 110 m long with a
+ * rust deck on it, laid a third of the way down the slip toward the mouth.
+ * The kit's `slipwayBed` calls this between the last block and the sill.
+ */
+export function slipwayHull(root, { hull: grey, deck: rust }, opts = {}) {
+  const {
+    body = { size: [110, 8, 22], at: [-50, 8, 0] },
+    deck = { size: [60, 1, 18], at: [-60, 12.5, 0] },
+  } = opts;
+  add(root, 'hull_in_progress', box(...body.size), grey, body.at);
+  add(root, 'hull_in_progress_deck', box(...deck.size), rust, deck.at);
+}
+
+/**
+ * One hall flanking the slip, on `sgn`'s side, built into `hall` (the
+ * `hall_s` or `hall_p` frame the script makes): the black shed body with
+ * its iron roof and rust ridge, eight iron pilasters through it each with
+ * a rust roof vent over its outer eave, three black stacks banded amber,
+ * two roof patches, the hazard stripe along the inner eave, the iron slip
+ * apron along the floor's edge with six floods on it, four iron tanks laid
+ * along the outer wall, and a rank of rivets down the outer eave.
+ *
+ * Every z here is `sgn` times the file's, so the −z hall is the +z hall's
+ * mirror to the digit — which the approved file is; nothing on the Klaxon
+ * refuses a matched pair. The rivets take their numbers from the hall's
+ * own child count (`rivetRow`): 39 parts precede them, so they run
+ * `rivet_39..62` in both halls, as the approved file has them.
+ */
+export function slipwayHall(hall, { black, grey, rust, amber, flood }, opts) {
+  const {
+    sgn,
+    z = 54,
+    body = { size: [300, 30, 50], y: 15 },
+    roof = { size: [302, 3, 54], y: 31 },
+    ridge = { size: [296, 3, 8], y: 34 },
+    pilasters = { count: 8, from: -140, pitch: 40, size: [6, 32, 54], y: 16 },
+    vents = { size: [4, 2.5, 4], y: 33.5, z: 66 },
+    stacks = { xs: [-100, -10, 80], y: 42, z: 68, r: 4.2, rTop: 3.5, height: 26 },
+    bands = { y: 50, r: 4.4, h: 2 },
+    patches = [
+      { size: [40, 3.2, 16], at: [-60, 32.6, 46], mat: rust },
+      { size: [24, 3.2, 12], at: [90, 32.6, 64], mat: grey },
+    ],
+    stripe = { size: [296, 0.6, 2], y: 32.6, z: 30 },
+    apron = { size: [320, 2, 8], y: 1, z: 27 },
+    floods = { count: 6, from: -125, pitch: 50, size: [10, 0.5, 5], y: 2.1 },
+    tanks = { xs: [-120, -40, 40, 120], y: 3, z: 90, r: 6, length: 40 },
+    rivets = { from: -145, to: 145, count: 24, y: 32.7, z: 78, size: [2.2, 1.32, 2.2] },
+  } = opts;
+  add(hall, 'hall_body', box(...body.size), black, [0, body.y, sgn * z]);
+  add(hall, 'hall_roof', box(...roof.size), grey, [0, roof.y, sgn * z]);
+  add(hall, 'hall_ridge', box(...ridge.size), rust, [0, ridge.y, sgn * z]);
+  for (let i = 0; i < pilasters.count; i++) {
+    const x = pilasters.from + pilasters.pitch * i;
+    add(hall, `pilaster_${i}`, box(...pilasters.size), grey, [x, pilasters.y, sgn * z]);
+    add(hall, `roof_vent_${i}`, box(...vents.size), rust, [x, vents.y, sgn * vents.z]);
+  }
+  stacks.xs.forEach((x, i) => {
+    stack(hall, black, {
+      name: `stack_${i}`,
+      at: [x, stacks.y, sgn * stacks.z],
+      r: stacks.r,
+      rTop: stacks.rTop,
+      height: stacks.height,
+    });
+    stackBand(hall, amber, {
+      name: `stack_band_${i}`,
+      at: [x, bands.y, sgn * stacks.z],
+      r: bands.r,
+      h: bands.h,
+    });
+  });
+  patches.forEach(({ size, at: [x, y, pz], mat }, i) =>
+    add(hall, `patch_${'ab'[i]}`, box(...size), mat, [x, y, sgn * pz])
+  );
+  add(hall, 'hazard_stripe', box(...stripe.size), amber, [0, stripe.y, sgn * stripe.z]);
+  add(hall, 'slip_apron', box(...apron.size), grey, [0, apron.y, sgn * apron.z]);
+  for (let i = 0; i < floods.count; i++)
+    add(hall, `apron_flood_${i}`, box(...floods.size), flood, [
+      floods.from + floods.pitch * i,
+      floods.y,
+      sgn * apron.z,
+    ]);
+  // A tank is born on Y and laid along the wall by −π/2 about Z, as the file has it.
+  tanks.xs.forEach((x, i) =>
+    add(
+      hall,
+      `tank_${i}`,
+      cyl(tanks.r, tanks.r, tanks.length, 10),
+      grey,
+      [x, tanks.y, sgn * tanks.z],
+      [0, 0, -Math.PI / 2]
+    )
+  );
+  rivetRow(hall, grey, { ...rivets, z: sgn * rivets.z });
 }
 
 /* --------------------------------------------------------------------------
@@ -1471,8 +1609,10 @@ export function hullLights(root, lampM, { running, strip, beacon }) {
     running.stations.forEach((x, i) =>
       add(root, `running-light-${side}-${i + 1}`, box(...running.size), lampM, [x, running.y, sgn * running.z])
     );
-  add(root, 'tower-light-strip', box(...strip.size), lampM, strip.at);
-  add(root, 'aft-beacon', cyl(beacon.rTop, beacon.r, beacon.h, 8), lampM, beacon.at);
+  // The Baffle Barge's six running lights are this rank in this order and
+  // nothing else of it (#652), so the strip and the beacon are optional.
+  if (strip) add(root, 'tower-light-strip', box(...strip.size), lampM, strip.at);
+  if (beacon) add(root, 'aft-beacon', cyl(beacon.rTop, beacon.r, beacon.h, 8), lampM, beacon.at);
 }
 
 /**
@@ -1543,6 +1683,830 @@ export function tailScrew(root, { grey, black }, { at, shroud, hub }) {
 export function spineGun(root, { grey, black }, { mount, gun }) {
   add(root, 'gun_mount', box(...mount.size), grey, mount.at);
   add(root, 'gun', cyl(gun.radii[0], gun.radii[1], gun.length, 6), black, gun.at, TO_BOW);
+}
+
+/* --------------------------------------------------------------------------
+ * The Foundry, the Nodule Refinery, the Bastion and the Baffle Barge (#652,
+ * off #540 Phase 3): the Klaxon's four remaining approved structures. The
+ * first three are the earlier authoring pass the Sentinel Turret came from
+ * and share nothing with the other navies' Foundries, Refineries and
+ * Bastions — the turret's bolted raft and riveted drum grown into a riveted
+ * hall with gantry cranes, a rank of silos with a crusher, a ribbed dome
+ * with docking collars; the fourth is the navy's own signature structure.
+ * Two of the four are Z-long exports (the Foundry and the Bastion) and two
+ * are X-long (the Refinery and the Barge), and one vocabulary — a banded
+ * tank, a pipe stood between two points, a work lamp on a post — sits on
+ * both kinds of file, so every builder here takes a `put` that says which
+ * frame it lands in, and is written once. Every number is the approved
+ * export's own, read off parts.mjs, and every oddity is carried across
+ * rather than corrected (#540); the builder that carries one says so.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The frame a structure builder lands its parts in, as `put(root, name,
+ * geo, mat, t, e, s)` with every argument the export's own — translation,
+ * XYZ Euler and scale. `alongZ` is a Z-long export's: kit `part` and
+ * `drawn`, the one yaw, the way the Sentinel Turret and the shared kinds
+ * are built. `inFrame` is an X-long export's: kit `add` in the file's own
+ * frame, nothing turned, the way the Submersible and the Choristers are.
+ */
+export const alongZ = (root, name, geo, mat, t, e, s) => part(root, name, geo, mat, drawn(t, e, s));
+export const inFrame = (root, name, geo, mat, t, e, s) => add(root, name, geo, mat, t, e, s);
+
+/** The work lamp these three structures hang everywhere: a six-by-four orb, as the turret's `base_lamp` is. */
+const lampOrb = (r) => new THREE.SphereGeometry(r, 6, 4);
+
+/**
+ * The Baffle Barge's palette: the Submersible's four finishes to the value
+ * and the name — hyphenated, the heavier black, the brown named for what it
+ * is, the running light on #1A1206 at 2.6 — and two of its own: the
+ * acoustic foam of its vanes and pads, #1C1F22, a near-black nothing in the
+ * docs names, rougher than anything else in the navy; and the hazard amber
+ * as paint rather than plate, at 0.4 metal. Values the approved export's
+ * own.
+ */
+export const bargeInk = {
+  hullBlack: () => submersibleInk.hullBlack(),
+  ironGrey: () => submersibleInk.ironGrey(),
+  oxideBrown: () => submersibleInk.oxideBrown(),
+  runningLight: () => submersibleInk.runningLight(),
+  baffleFoam: () => clad('baffle-foam', hex('#1C1F22'), 0.1, 0.98),
+  hazardPaint: () => clad('hazard-amber-paint', hex('#F2B233'), 0.4, 0.6),
+};
+
+/**
+ * A pipe stood between two points of the export's frame: at their
+ * midpoint, `length` their distance, turned by the one rotation that
+ * carries +Y onto the run (three's `setFromUnitVectors`) — the turret's
+ * `feed_pipe` rule, which every pipe on the Refinery and the Bastion
+ * follows, each from a round point to a round point. The export's own
+ * midpoints and lengths fall out of the same arithmetic, to the bit.
+ */
+export function pipeBetween(root, put, mat, { name, from, to, r, facets = 6 }) {
+  const A = new THREE.Vector3(...from);
+  const B = new THREE.Vector3(...to);
+  const run = B.clone().sub(A);
+  const e = new THREE.Euler().setFromQuaternion(
+    new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), run.clone().normalize()),
+    'XYZ'
+  );
+  const mid = A.clone().add(B).multiplyScalar(0.5).toArray();
+  put(root, name, cyl(r, r, run.length(), facets), mat, mid, [e.x, e.y, e.z]);
+}
+
+/**
+ * A ballast tank with a reinforcing band round it: a nine-facet drum and,
+ * where the file fits one, a five-by-ten torus of `band.R` by `band.t` at
+ * the same point under the same turn (`ballast · ballast_band` on the
+ * Refinery, `ballast_a · ballast_a_band` on the Bastion, whose `ballast_b`
+ * has none). `ballastBlisters` and `ballastPair` above are hulls' pairs
+ * along the keel; a structure's tank lies where it was dropped.
+ */
+export function bandedTank(root, put, { tank, band: bandMat }, opts) {
+  const { name, at, r, length, facets = 9, rot, band } = opts;
+  put(root, name, cyl(r, r, length, facets), tank, at, rot);
+  if (band) put(root, `${name}_band`, torus(band.R, band.t, 5, 10), bandMat, at, rot);
+}
+
+/* -- The Foundry: "unit production hall with a recessed launch bay and
+ *    gantry cranes" — a Z-long export, every builder through `alongZ`. -- */
+
+/**
+ * The foundation: the slab on the seabed, the step it stands on in older
+ * plate, and an anchor pylon at each corner — fore then aft, port then
+ * starboard (`foundation_slab · foundation_step · anchor_pylon_pf · _sf ·
+ * _pa · _sa`). The step is wider than the slab and sinks a tenth into the
+ * ground.
+ */
+export function foundationSlab(root, put, { black, rust }, { slab, step, pylons }) {
+  put(root, 'foundation_slab', box(...slab.size), black, slab.at);
+  put(root, 'foundation_step', box(...step.size), rust, step.at);
+  for (const [end, z] of [
+    ['f', pylons.fore],
+    ['a', pylons.aft],
+  ])
+    flanks((side, sgn) =>
+      put(root, `anchor_pylon_${side}${end}`, box(...pylons.size), rust, [
+        sgn * pylons.x,
+        pylons.y,
+        z,
+      ])
+    );
+}
+
+/**
+ * The production hall: the body on its plinth under its roof and ridge,
+ * the gable closing the bay end, the lintel over the bay mouth, and a rank
+ * of ribs down each flank — port then starboard at every station, which is
+ * how the file interleaves them (`hall_body · hall_plinth · hall_roof ·
+ * hall_roof_ridge · hall_gable · bay_lintel · rib_p0 · rib_s0 · rib_p1 …`).
+ * A box each; nothing shared.
+ */
+export function productionHall(root, put, { grey, black }, opts) {
+  const { body, plinth, roof, ridge, gable, lintel, ribs } = opts;
+  put(root, 'hall_body', box(...body.size), grey, body.at);
+  put(root, 'hall_plinth', box(...plinth.size), black, plinth.at);
+  put(root, 'hall_roof', box(...roof.size), black, roof.at);
+  put(root, 'hall_roof_ridge', box(...ridge.size), grey, ridge.at);
+  put(root, 'hall_gable', box(...gable.size), grey, gable.at);
+  put(root, 'bay_lintel', box(...lintel.size), black, lintel.at);
+  ribs.stations.forEach((z, i) =>
+    flanks((side, sgn) =>
+      put(root, `rib_${side}${i}`, box(...ribs.size), black, [sgn * ribs.x, ribs.y, z])
+    )
+  );
+}
+
+/**
+ * The hall's two stacks: a twelve-facet frustum in older plate with the
+ * hazard band ringed round it, and a second, shorter, in black with no band
+ * (`stack_a · stack_a_band · stack_b`). `stack` and `stackBand` above are
+ * the Tender's and the Bulwark's ten-facet ones in the X-long frame.
+ */
+export function hallStacks(root, put, { rust, amber, black }, { a, band, b }) {
+  put(root, 'stack_a', cyl(a.radii[0], a.radii[1], a.h, 12), rust, a.at);
+  put(root, 'stack_a_band', cyl(band.r, band.r, band.h, 12), amber, band.at);
+  put(root, 'stack_b', cyl(b.radii[0], b.radii[1], b.h, 12), black, b.at);
+}
+
+/** Two roof vents, a box each, one older plate and one black (`roof_vent_a · roof_vent_b`). */
+export function roofVents(root, put, { rust, black }, { a, b }) {
+  put(root, 'roof_vent_a', box(...a.size), rust, a.at);
+  put(root, 'roof_vent_b', box(...b.size), black, b.at);
+}
+
+/**
+ * "Visibly patchworked repairs, older armour showing through newer plate":
+ * a rank of patches, `[name, plate, size, at]` each, a thin box in the
+ * plate named — older under newer, none the size of its opposite, on the
+ * flanks, the roof and the gable as the file scatters them.
+ */
+export function repairPatches(root, put, mats, { patches }) {
+  for (const [name, plate, size, at] of patches) put(root, name, box(...size), mats[plate], at);
+}
+
+/**
+ * "A recessed launch bay … interior forge light spilling from the bay when
+ * producing": the bay walls a side and the wall closing it aft, the sill
+ * across its mouth, an apron a side with a hazard stripe along it, the lit
+ * forge floor and back wall, a lit rim strip along each wall and one across
+ * the front, a lit seam down each eave of the hall roof, and the strip
+ * under the gable — in that order, the file's (`bay_wall_p · _s · _aft ·
+ * bay_sill · apron_p · _s · apron_stripe_p · _s · forge_floor ·
+ * forge_backwall · bay_rim_strip_p · _s · _fwd · roof_seam_p · _s ·
+ * gable_strip`). The roof seams are the hall's and the file writes them
+ * with the bay's light, so this does. Every lamp is `amber_lamp` at 3.5,
+ * the scout's; the forge floor faces up and is most of what the bake sees
+ * of SIG 25.
+ */
+export function launchBay(root, put, { grey, black, amber, lampM }, opts) {
+  const { walls, aft, sill, aprons, stripes, floor, backwall, rim, seams, gableStrip } = opts;
+  flanks((side, sgn) =>
+    put(root, `bay_wall_${side}`, box(...walls.size), grey, [sgn * walls.x, walls.y, walls.z])
+  );
+  put(root, 'bay_wall_aft', box(...aft.size), black, aft.at);
+  put(root, 'bay_sill', box(...sill.size), black, sill.at);
+  flanks((side, sgn) =>
+    put(root, `apron_${side}`, box(...aprons.size), black, [sgn * aprons.x, aprons.y, aprons.z])
+  );
+  flanks((side, sgn) =>
+    put(root, `apron_stripe_${side}`, box(...stripes.size), amber, [
+      sgn * stripes.x,
+      stripes.y,
+      stripes.z,
+    ])
+  );
+  put(root, 'forge_floor', box(...floor.size), lampM, floor.at);
+  put(root, 'forge_backwall', box(...backwall.size), lampM, backwall.at);
+  flanks((side, sgn) =>
+    put(root, `bay_rim_strip_${side}`, box(...rim.side.size), lampM, [
+      sgn * rim.side.x,
+      rim.side.y,
+      rim.side.z,
+    ])
+  );
+  put(root, 'bay_rim_strip_fwd', box(...rim.fwd.size), lampM, rim.fwd.at);
+  flanks((side, sgn) =>
+    put(root, `roof_seam_${side}`, box(...seams.size), lampM, [sgn * seams.x, seams.y, seams.z])
+  );
+  put(root, 'gable_strip', box(...gableStrip.size), lampM, gableStrip.at);
+}
+
+/**
+ * "Gantry cranes": a rail a side along the bay aprons, then each crane in
+ * turn — a leg a side, the bridge across them, its chord, the trolley and
+ * the hook under it at the trolley's own station, the hazard stripe on the
+ * bridge's bay face and the flood patch under the bridge (`crane_rail_p ·
+ * _s · crane_fwd_leg_p · _s · crane_fwd_bridge · _bridge_chord · _trolley ·
+ * _hook · _stripe · _floodpatch · crane_aft_…`). The forward trolley is
+ * run out to starboard and the after one to port, as the file has them.
+ * `derrickRig` above is the Tender's swung boom; a gantry bridges.
+ */
+export function gantryCranes(root, put, { grey, black, rust, amber, lampM }, opts) {
+  const { rails, cranes, legs, bridge, chord, trolley, hook, stripe, flood } = opts;
+  flanks((side, sgn) =>
+    put(root, `crane_rail_${side}`, box(...rails.size), grey, [sgn * rails.x, rails.y, rails.z])
+  );
+  for (const { tag, z, trolley: tx } of cranes) {
+    flanks((side, sgn) =>
+      put(root, `crane_${tag}_leg_${side}`, box(...legs.size), grey, [sgn * legs.x, legs.y, z])
+    );
+    put(root, `crane_${tag}_bridge`, box(...bridge.size), grey, [0, bridge.y, z]);
+    put(root, `crane_${tag}_bridge_chord`, box(...chord.size), black, [0, chord.y, z]);
+    put(root, `crane_${tag}_trolley`, box(...trolley.size), black, [tx, trolley.y, z]);
+    put(root, `crane_${tag}_hook`, box(...hook.size), rust, [tx, hook.y, z]);
+    put(root, `crane_${tag}_stripe`, box(...stripe.size), amber, [0, stripe.y, z + stripe.proud]);
+    put(root, `crane_${tag}_floodpatch`, box(...flood.size), lampM, [0, flood.y, z]);
+  }
+}
+
+/**
+ * The tanks along the hall's flanks: two to port, one over the other in
+ * black and older plate, strapped twice; one to starboard in older plate
+ * with a black cap drawn in on its forward end (`tank_p1 · tank_p2 ·
+ * tank_strap_a · tank_strap_b · tank_s1 · tank_s_cap`). Eighteen-facet
+ * drums laid along the export's z by the same quarter turn the shared
+ * kinds put on a keel drum. No pair on this hall matches its opposite.
+ */
+export function sideTanks(root, put, { black, rust, grey }, { p1, p2, straps, s1, sCap }) {
+  put(root, 'tank_p1', cyl(p1.r, p1.r, p1.length, 18), black, p1.at, ALONG_KEEL);
+  put(root, 'tank_p2', cyl(p2.r, p2.r, p2.length, 18), rust, p2.at, ALONG_KEEL);
+  for (const [tag, z] of [
+    ['a', straps.a],
+    ['b', straps.b],
+  ])
+    put(root, `tank_strap_${tag}`, box(...straps.size), grey, [straps.x, straps.y, z]);
+  put(root, 'tank_s1', cyl(s1.r, s1.r, s1.length, 18), rust, s1.at, ALONG_KEEL);
+  put(
+    root,
+    'tank_s_cap',
+    cyl(sCap.radii[0], sCap.radii[1], sCap.length, 18),
+    black,
+    sCap.at,
+    ALONG_KEEL
+  );
+}
+
+/**
+ * The hall's pipework: a run a side laid across the export's x — a
+ * twelve-facet pipe rolled a quarter turn about z, `[name, plate, r,
+ * length, at]` each, port in older plate and starboard in black, neither
+ * at the other's height or station — then the down pipe standing beside the
+ * gable and the elbow at its foot (`pipe_p_run · pipe_s_run ·
+ * pipe_gable_down · pipe_gable_elbow`).
+ */
+export function hallPipes(root, put, mats, { runs, down, elbow }) {
+  for (const [name, plate, r, length, at] of runs)
+    put(root, name, cyl(r, r, length, 12), mats[plate], at, [0, 0, Math.PI / 2]);
+  put(root, 'pipe_gable_down', cyl(down.r, down.r, down.h, 12), mats.rust, down.at);
+  put(root, 'pipe_gable_elbow', box(...elbow.size), mats.rust, elbow.at);
+}
+
+/* -- The Nodule Refinery: "a rank of upright silos with conveyor and
+ *    crusher machinery" — an X-long export, every builder through
+ *    `inFrame`. -- */
+
+/**
+ * The platform: the slab, the skirt under it in older plate, the working
+ * apron beside it, two lit stripes across the apron and the pad between
+ * them (`platform · platform_skirt · apron · apron_stripe_1 · _2 ·
+ * apron_pad`). The stripes are `work_lamp`, the turret's fixture, laid
+ * flat where the bake can count them — "floodlit working surfaces".
+ */
+export function refineryPlatform(root, put, { black, rust, grey, lampM }, opts) {
+  const { platform, skirt, apron, stripes, pad } = opts;
+  put(root, 'platform', box(...platform.size), black, platform.at);
+  put(root, 'platform_skirt', box(...skirt.size), rust, skirt.at);
+  put(root, 'apron', box(...apron.size), grey, apron.at);
+  stripes.x.forEach((x, i) =>
+    put(root, `apron_stripe_${i + 1}`, box(...stripes.size), lampM, [x, stripes.y, stripes.z])
+  );
+  put(root, 'apron_pad', box(...pad.size), black, pad.at);
+}
+
+/**
+ * "A rank of upright silos": each a nine-facet frustum standing on the
+ * platform top (`base`), its cap a cone to a point sat `cap.lift` above
+ * the silo's top, a five-by-ten torus of a band round it `band.at` of its
+ * height up, and a work lamp `lamp.above` its top — silo by silo in the
+ * file's order, then the one patch of older plate on the second (`silo_1 ·
+ * silo_cap_1 · silo_band_1 · silo_lamp_1 · silo_2 … · silo_patch`). The
+ * heights alternate short, tall, short, tall; each cap's base sits 0.005
+ * into its silo's top.
+ */
+export function siloRank(root, put, { grey, black, rust, lampM }, opts) {
+  const { silos, z, base, radii, facets = 9, cap, band, lamp, patch } = opts;
+  silos.forEach(({ x, h }, i) => {
+    const n = i + 1;
+    put(root, `silo_${n}`, cyl(radii[0], radii[1], h, facets), grey, [x, base + h / 2, z]);
+    put(root, `silo_cap_${n}`, cyl(0, cap.r, cap.h, facets), black, [x, base + h + cap.lift, z]);
+    put(
+      root,
+      `silo_band_${n}`,
+      torus(band.R, band.t, 5, 10),
+      rust,
+      [x, base + band.at * h, z],
+      [Math.PI / 2, 0, 0]
+    );
+    put(root, `silo_lamp_${n}`, lampOrb(lamp.r), lampM, [x, base + h + lamp.above, z]);
+  });
+  put(root, 'silo_patch', box(...patch.size), rust, patch.at);
+}
+
+/**
+ * "Crusher machinery": the hall, its roof in older plate, the lit intake
+ * on its face with a rank of teeth above and below, the stack leaning
+ * `stack.lean` off plumb — a seven-facet frustum — and the lamp at its
+ * throat (`crusher_hall · crusher_roof · crusher_intake · crusher_teeth_top
+ * · crusher_teeth_bot · crusher_stack · crusher_stack_lamp`). The intake is
+ * `port_glow` on a vertical face; the bake has never seen it.
+ */
+export function crusherHall(root, put, { black, rust, glow, grey, lampM }, opts) {
+  const { hall, roof, intake, teeth, stack, lamp } = opts;
+  put(root, 'crusher_hall', box(...hall.size), black, hall.at);
+  put(root, 'crusher_roof', box(...roof.size), rust, roof.at);
+  put(root, 'crusher_intake', box(...intake.size), glow, intake.at);
+  put(root, 'crusher_teeth_top', box(...teeth.size), grey, [teeth.x, teeth.top, teeth.z]);
+  put(root, 'crusher_teeth_bot', box(...teeth.size), grey, [teeth.x, teeth.bot, teeth.z]);
+  put(root, 'crusher_stack', cyl(stack.radii[0], stack.radii[1], stack.h, 7), rust, stack.at, [
+    0,
+    0,
+    stack.lean,
+  ]);
+  put(root, 'crusher_stack_lamp', lampOrb(lamp.r), lampM, lamp.at);
+}
+
+/**
+ * A conveyor: the belt, a box as long as the run from `from` to `to`, at
+ * their midpoint and turned by three's `lookAt` so its +z looks up the
+ * belt — not `setFromUnitVectors`: the file keeps the belt's width level
+ * — and the lit line down it, `line.frac` of the length and `line.width`
+ * of the width, `line.lift` straight up (`conveyor_<name> ·
+ * conveyor_<name>_line`). The apron belt climbs to the crusher and the
+ * silo belt from it; each writes its midpoint from its ends, so the
+ * export's own 0.14999999999999997 falls out.
+ */
+export function conveyorRun(root, put, { belt, line: lineMat }, opts) {
+  const { name, from, to, width, t = 0.14, line = {} } = opts;
+  const { frac = 0.96, width: wf = 0.4, t: lt = 0.04, lift = 0.09 } = line;
+  const A = new THREE.Vector3(...from);
+  const B = new THREE.Vector3(...to);
+  const mid = A.clone().add(B).multiplyScalar(0.5);
+  const length = A.distanceTo(B);
+  // Object3D.lookAt for a non-camera is Matrix4.lookAt(target, position, up).
+  const look = new THREE.Matrix4().lookAt(B, mid, new THREE.Vector3(0, 1, 0));
+  const e = new THREE.Euler().setFromRotationMatrix(look, 'XYZ');
+  const rot = [e.x, e.y, e.z];
+  put(root, `conveyor_${name}`, box(width, t, length), belt, mid.toArray(), rot);
+  put(
+    root,
+    `conveyor_${name}_line`,
+    box(width * wf, lt, length * frac),
+    lineMat,
+    [mid.x, mid.y + lift, mid.z],
+    rot
+  );
+}
+
+/** The conveyors' legs: a box each, `[at, height]`, numbered from one (`leg_1..3`). */
+export function conveyorLegs(root, put, grey, { width, legs }) {
+  legs.forEach(([at, h], i) => put(root, `leg_${i + 1}`, box(width, h, width), grey, at));
+}
+
+/**
+ * A flood mast: a five-facet post and the lamp bank on its head, turned
+ * to look where the file points it (`flood_<tag>_mast · flood_<tag>_bank`).
+ * The silo mast writes its bank before its post, alone of the four
+ * (`bankFirst`); that is the file's order and the port keeps it. Three of
+ * the banks look down and out at 0.5 of pitch and the fourth at 0.4; two
+ * are yawed past a right angle, which parts.mjs prints as the wrapped
+ * triple and three composes to the same turn.
+ */
+export function floodMast(root, put, { black, lampM }, opts) {
+  const { tag, at, mast, bank, bankFirst = false } = opts;
+  const [x, , z] = at;
+  const post = () =>
+    put(root, `flood_${tag}_mast`, cyl(mast.radii[0], mast.radii[1], mast.h, 5), black, [
+      x,
+      mast.y,
+      z,
+    ]);
+  const lamp = () =>
+    put(root, `flood_${tag}_bank`, box(...bank.size), lampM, [x, bank.y, z], bank.rot);
+  if (bankFirst) {
+    lamp();
+    post();
+  } else {
+    post();
+    lamp();
+  }
+}
+
+/** A row of work lamps along a line: `count` orbs of `r` from `from` at `pitch` along x (`apron_lamp_1..5`). */
+export function lampRow(root, put, lampM, { name, r, from, pitch, count, y, z }) {
+  for (let i = 0; i < count; i++)
+    put(root, `${name}_${i + 1}`, lampOrb(r), lampM, [from + pitch * i, y, z]);
+}
+
+/* -- The Bastion: "a large pressure dome with visible reinforcement ribs,
+ *    docking collars and external pipework" — a Z-long export, every
+ *    builder through `alongZ`. -- */
+
+/**
+ * The dome: the ten-facet foundation and skirt, the dome itself — a
+ * twelve-by-seven hemisphere squashed `dome.squash` in height and yawed
+ * `dome.yaw` on its foot so no seam lies on an axis — `ribs.count` ribs
+ * over it, each a half torus stood on end and yawed its share of a half
+ * turn, squashed with the dome; the cap on the crown in older plate and the
+ * beacon over it, an eight-by-five orb of the work lamp (`foundation ·
+ * dome_skirt · dome · dome_rib_1..6 · dome_cap · beacon`). A rib's outer
+ * radius is 2.51 against the dome's 2.4, and it is centred 0.02 higher.
+ */
+export function ribbedDome(root, put, { black, grey, rust, lampM }, opts) {
+  const { foundation, skirt, dome, ribs, cap, beacon } = opts;
+  put(root, 'foundation', cyl(foundation.radii[0], foundation.radii[1], foundation.h, 10), black, [
+    0,
+    foundation.y,
+    0,
+  ]);
+  put(root, 'dome_skirt', cyl(skirt.radii[0], skirt.radii[1], skirt.h, 10), grey, [0, skirt.y, 0]);
+  put(
+    root,
+    'dome',
+    new THREE.SphereGeometry(dome.r, 12, 7, 0, Math.PI * 2, 0, Math.PI / 2),
+    grey,
+    [0, dome.y, 0],
+    [0, dome.yaw, 0],
+    [1, dome.squash, 1]
+  );
+  for (let i = 0; i < ribs.count; i++)
+    put(
+      root,
+      `dome_rib_${i + 1}`,
+      new THREE.TorusGeometry(ribs.R, ribs.t, 5, 18, Math.PI),
+      black,
+      [0, ribs.y, 0],
+      [0, (i * Math.PI) / ribs.count, 0],
+      [1, dome.squash, 1]
+    );
+  put(root, 'dome_cap', cyl(cap.radii[0], cap.radii[1], cap.h, 8), rust, [0, cap.y, 0]);
+  put(root, 'beacon', new THREE.SphereGeometry(beacon.r, 8, 5), lampM, [0, beacon.y, 0]);
+}
+
+/**
+ * "Sustained glow from ports": `count` portholes round the skirt at radius
+ * `r`, from `phase` radians, each a six-facet disc of `port_glow` turned
+ * `[π/2, 0, π/2 − a]` (`porthole_1..10`). That Euler is the file's and it
+ * is odd: in three's XYZ order it stands the disc's axis on (−cos a, 0,
+ * sin a), the radial mirrored across z, which is 2a off the radial folded
+ * into a right angle — so the two ports nearest ±z face out and the other
+ * eight face 0.62 to 1.27 radians off their bearings. Carried across, not
+ * squared up (#540).
+ */
+export function portholes(root, put, glow, { count, phase, r, y, disc }) {
+  for (let i = 0; i < count; i++) {
+    const a = phase + (i * 2 * Math.PI) / count;
+    put(root, `porthole_${i + 1}`, cyl(disc.r, disc.r, disc.h, 6), glow, polar(a, r, y), [
+      Math.PI / 2,
+      0,
+      Math.PI / 2 - a,
+    ]);
+  }
+}
+
+/**
+ * "Docking collars": on each of `bearings` — three, at 0.4, 2.3 and 4.4
+ * radians, spaced in nothing — an eight-facet collar at radius `r`, its
+ * ring `ring.out` further out, a five-by-ten torus faced radially, and the
+ * work lamp `lamp.out` out and up (`dock_collar_1 · dock_ring_1 ·
+ * dock_lamp_1 · dock_collar_2 …`). The collar carries the portholes' Euler
+ * and the same mirrored axis, so the three lie 0.80, 1.46 and 0.62 radians
+ * off the rings they are meant to feed. Carried across (#540).
+ */
+export function dockingCollars(root, put, { grey, rust, lampM }, opts) {
+  const { bearings, r, y, collar, ring, lamp } = opts;
+  bearings.forEach((a, i) => {
+    const n = i + 1;
+    put(
+      root,
+      `dock_collar_${n}`,
+      cyl(collar.radii[0], collar.radii[1], collar.h, 8),
+      grey,
+      polar(a, r, y),
+      [Math.PI / 2, 0, Math.PI / 2 - a]
+    );
+    put(root, `dock_ring_${n}`, torus(ring.R, ring.t, 5, 10), rust, polar(a, r + ring.out, y), [
+      0,
+      Math.PI / 2 - a,
+      0,
+    ]);
+    put(root, `dock_lamp_${n}`, lampOrb(lamp.r), lampM, polar(a, r + lamp.out, lamp.y));
+  });
+}
+
+/**
+ * The modules round the dome — the refinery, the quarters, the store — a
+ * box each yawed its own way with, where the file fits one, a patch of
+ * older plate on its face yawed with it; then the lit windows, `port_glow`
+ * boxes of one size at the file's own points, unyawed (`module_refinery ·
+ * module_refinery_patch · module_quarters · module_quarters_patch ·
+ * module_store · win_refinery_1 · _2 · win_quarters_1 · _2`). The windows
+ * do not turn with their modules; the file's, and kept.
+ */
+export function bastionModules(root, put, mats, { modules: list, windows }) {
+  for (const { name, plate, size, at, yaw, patch } of list) {
+    put(root, `module_${name}`, box(...size), mats[plate], at, [0, yaw, 0]);
+    if (patch)
+      put(root, `module_${name}_patch`, box(...patch.size), mats.rust, patch.at, [0, yaw, 0]);
+  }
+  for (const [name, at] of windows.at)
+    put(root, `win_${name}`, box(...windows.size), mats.glow, at);
+}
+
+/**
+ * The jib crane on the dome's flank: the mast, the jib pitched `jib.pitch`
+ * up off it, the counterweight astern, the fall — a four-facet cable — and
+ * the hook under the jib's head, and the work lamp on the head
+ * (`crane_mast · crane_jib · crane_counter · crane_cable · crane_hook ·
+ * crane_lamp`). The Foundry's are gantries; this one swings.
+ */
+export function jibCrane(root, put, { grey, rust, black, lampM }, opts) {
+  const { mast, jib, counter, cable, hook, lamp } = opts;
+  put(root, 'crane_mast', box(...mast.size), grey, mast.at);
+  put(root, 'crane_jib', box(...jib.size), grey, jib.at, [jib.pitch, 0, 0]);
+  put(root, 'crane_counter', box(...counter.size), rust, counter.at);
+  put(root, 'crane_cable', cyl(cable.r, cable.r, cable.h, 4), black, cable.at);
+  put(root, 'crane_hook', box(...hook.size), rust, hook.at);
+  put(root, 'crane_lamp', lampOrb(lamp.r), lampM, lamp.at);
+}
+
+/**
+ * The perimeter: `count` posts round the foundation's edge at radius `r`
+ * from `phase` radians, each a five-facet post with a work lamp on it,
+ * post then lamp (`perimeter_post_1 · perimeter_lamp_1 · …_8`) — the ring
+ * of light the settlement's "constant hum" shows from above.
+ */
+export function perimeterPosts(root, put, { black, lampM }, { count, phase, r, post, lamp }) {
+  for (let i = 0; i < count; i++) {
+    const a = phase + (i * 2 * Math.PI) / count;
+    put(
+      root,
+      `perimeter_post_${i + 1}`,
+      cyl(post.radii[0], post.radii[1], post.h, 5),
+      black,
+      polar(a, r, post.y)
+    );
+    put(root, `perimeter_lamp_${i + 1}`, lampOrb(lamp.r), lampM, polar(a, r, lamp.y));
+  }
+}
+
+/* -- The Baffle Barge: "moored noise-masking support barge, boxy and
+ *    over-engineered, ringed with baffle vanes and acoustic dampening
+ *    panels" — an X-long export, hyphenated like the Submersible, every
+ *    builder through `inFrame`. -- */
+
+/**
+ * The barge: the hull box at the origin with no transform of its own, the
+ * skirt under it in older plate, the deck plate on it and a gunwale a side,
+ * port first (`barge-hull · hull-skirt · deck-plate · gunwale-port ·
+ * gunwale-stb`). "Boxy and over-engineered": the hull is a box, and that
+ * is the whole of it.
+ */
+export function bargeHull(root, put, { black, brown, grey }, { hull, skirt, deck, gunwales }) {
+  put(root, 'barge-hull', box(...hull.size), black);
+  put(root, 'hull-skirt', box(...skirt.size), brown, skirt.at);
+  put(root, 'deck-plate', box(...deck.size), grey, deck.at);
+  for (const [side, sgn] of [
+    ['port', -1],
+    ['stb', 1],
+  ])
+    put(root, `gunwale-${side}`, box(...gunwales.size), grey, [0, gunwales.y, sgn * gunwales.z]);
+}
+
+/** The Barge's four corners in the file's order for its pontoons and domes: aft port, aft starboard, fore port, fore starboard. */
+const CORNERS = [
+  ['ap', -1, -1],
+  ['as', -1, 1],
+  ['fp', 1, -1],
+  ['fs', 1, 1],
+];
+
+/**
+ * A pontoon at each corner: the ten-facet drum, the cap on it in older
+ * plate, the foot drawn in under it, and six bolts round the cap at
+ * `bolts.radius`, from +x round toward +z a sixth of a turn apart
+ * (`pontoon-ap · pontoon-cap-ap · pontoon-foot-ap · pontoon-bolt-ap-1..6 ·
+ * pontoon-as …`). Every bolt a buffer of its own, as the file has them.
+ */
+export function pontoons(root, put, { grey, brown, black }, opts) {
+  const { x, z, y, r, h, cap, foot, bolts } = opts;
+  for (const [tag, sx, sz] of CORNERS) {
+    const [cx, cz] = [sx * x, sz * z];
+    put(root, `pontoon-${tag}`, cyl(r, r, h, 10), grey, [cx, y, cz]);
+    put(root, `pontoon-cap-${tag}`, cyl(cap.r, cap.r, cap.h, 10), brown, [cx, cap.y, cz]);
+    put(root, `pontoon-foot-${tag}`, cyl(foot.radii[0], foot.radii[1], foot.h, 10), black, [
+      cx,
+      foot.y,
+      cz,
+    ]);
+    for (let k = 0; k < 6; k++) {
+      const a = (k * Math.PI) / 3;
+      put(root, `pontoon-bolt-${tag}-${k + 1}`, cyl(bolts.r, bolts.r, bolts.h, 6), black, [
+        cx + bolts.radius * Math.cos(a),
+        bolts.y,
+        cz + bolts.radius * Math.sin(a),
+      ]);
+    }
+  }
+}
+
+/**
+ * "Ringed with baffle vanes": six foam vanes down each flank at
+ * `flank.stations`, each yawed `flank.yaw` outboard, and the rail they
+ * hang from in older plate — port then starboard — then three across the
+ * stern and three across the bow, yawed the other way round
+ * (`baffle-vane-port-1..6 · vane-rail-port · baffle-vane-stb-1..6 ·
+ * vane-rail-stb · baffle-vane-stern-1..3 · baffle-vane-bow-1..3`). The end
+ * vanes have no rail.
+ */
+export function baffleVanes(root, put, { foam, brown }, { flank, rail, ends }) {
+  for (const [side, sgn] of [
+    ['port', -1],
+    ['stb', 1],
+  ]) {
+    flank.stations.forEach((x, i) =>
+      put(
+        root,
+        `baffle-vane-${side}-${i + 1}`,
+        box(...flank.size),
+        foam,
+        [x, flank.y, sgn * flank.z],
+        [0, sgn * flank.yaw, 0]
+      )
+    );
+    put(root, `vane-rail-${side}`, box(...rail.size), brown, [0, rail.y, sgn * rail.z]);
+  }
+  for (const [end, sgn] of [
+    ['stern', -1],
+    ['bow', 1],
+  ])
+    ends.stations.forEach((z, i) =>
+      put(
+        root,
+        `baffle-vane-${end}-${i + 1}`,
+        box(...ends.size),
+        foam,
+        [sgn * ends.x, ends.y, z],
+        [0, -sgn * ends.yaw, 0]
+      )
+    );
+}
+
+/**
+ * "Acoustic dampening panels": foam pads, two on the deck — the second
+ * yawed a tenth — and one on each flank, port then starboard, none the
+ * size of another (`pad-deck-1 · pad-deck-2 · pad-flank-p · pad-flank-s`);
+ * `[name, size, at, yaw]` each.
+ */
+export function dampeningPads(root, put, foam, { pads }) {
+  for (const [name, size, at, yaw = 0] of pads)
+    put(root, name, box(...size), foam, at, [0, yaw, 0]);
+}
+
+/**
+ * Three patch plates, `[plate, size, at, yaw]` each: older plate on the
+ * deck, newer grey on the starboard flank, hazard paint low on the port
+ * bow (`patch-plate-1..3`).
+ */
+export function patchPlates(root, put, mats, { plates }) {
+  plates.forEach(([plate, size, at, yaw = 0], i) =>
+    put(root, `patch-plate-${i + 1}`, box(...size), mats[plate], at, [0, yaw, 0])
+  );
+}
+
+/**
+ * The emitter mast amidships: the base, the trunk — an eight-facet frustum
+ * — the collar round it, the ten-facet emitter drum at its head, eight foam
+ * fins out from the drum at `fins.r`, each yawed back by its bearing so it
+ * stands radial, and the beacon on top, the running light's lit frustum
+ * (`mast-base · mast-trunk · mast-collar · emitter-drum · emitter-fin-1..8
+ * · mast-beacon`). The collar sits below the trunk's middle; the file's.
+ */
+export function emitterMast(root, put, { grey, brown, black, foam, lampM }, opts) {
+  const { x, base, trunk, collar, drum, fins, beacon } = opts;
+  put(root, 'mast-base', box(...base.size), grey, [x, base.y, 0]);
+  put(root, 'mast-trunk', cyl(trunk.radii[0], trunk.radii[1], trunk.h, 8), brown, [x, trunk.y, 0]);
+  put(root, 'mast-collar', cyl(collar.r, collar.r, collar.h, 8), grey, [x, collar.y, 0]);
+  put(root, 'emitter-drum', cyl(drum.r, drum.r, drum.h, 10), black, [x, drum.y, 0]);
+  for (let k = 0; k < 8; k++) {
+    const a = (k * Math.PI) / 4;
+    put(
+      root,
+      `emitter-fin-${k + 1}`,
+      box(...fins.size),
+      foam,
+      [x + fins.r * Math.cos(a), fins.y, fins.r * Math.sin(a)],
+      [0, -a, 0]
+    );
+  }
+  put(root, 'mast-beacon', cyl(beacon.radii[0], beacon.radii[1], beacon.h, 8), lampM, [
+    x,
+    beacon.y,
+    0,
+  ]);
+}
+
+/**
+ * The deck gear, in the file's order: the winch house and its drum laid
+ * across the beam; two vent stacks and the elbow on the first; a capstan
+ * fore and aft; the pipe run along the port deck edge rolled onto x, an
+ * elbow at each end and the riser off the forward one (`winch-house ·
+ * winch-drum · vent-stack-1 · _2 · vent-elbow-1 · capstan-f · capstan-a ·
+ * pipe-main · pipe-elbow-a · pipe-riser · pipe-elbow-b`). Eight facets
+ * throughout. `deckPipework` above is the Submersible's run with its drop;
+ * this one has a riser.
+ */
+export function deckGear(root, put, { brown, grey }, { winch, vents, capstans, pipe }) {
+  put(root, 'winch-house', box(...winch.house.size), brown, winch.house.at);
+  put(root, 'winch-drum', cyl(winch.drum.r, winch.drum.r, winch.drum.h, 8), grey, winch.drum.at, [
+    Math.PI / 2,
+    0,
+    0,
+  ]);
+  vents.stacks.forEach(({ radii, h, at }, i) =>
+    put(root, `vent-stack-${i + 1}`, cyl(radii[0], radii[1], h, 8), grey, at)
+  );
+  put(root, 'vent-elbow-1', box(...vents.elbow.size), brown, vents.elbow.at);
+  for (const [end, x] of [
+    ['f', capstans.fore],
+    ['a', capstans.aft],
+  ])
+    put(root, `capstan-${end}`, cyl(capstans.radii[0], capstans.radii[1], capstans.h, 8), grey, [
+      x,
+      capstans.y,
+      capstans.z,
+    ]);
+  put(root, 'pipe-main', cyl(pipe.r, pipe.r, pipe.length, 8), grey, pipe.at, [0, 0, Math.PI / 2]);
+  put(root, 'pipe-elbow-a', box(...pipe.elbow.size), brown, pipe.elbowA);
+  put(root, 'pipe-riser', cyl(pipe.r, pipe.r, pipe.riser.h, 8), grey, pipe.riser.at);
+  put(root, 'pipe-elbow-b', box(...pipe.elbow.size), brown, pipe.elbowB);
+}
+
+/**
+ * "Moored": at each corner a chain — a six-facet cylinder from a point
+ * under the pontoon down to the anchor block — and the block on the seabed
+ * beyond it; aft port, fore port, aft starboard, fore starboard, which is
+ * not the order the pontoons come in (`mooring-chain-ap · anchor-block-ap
+ * · mooring-chain-fp · …`).
+ *
+ * Two things here are the file's. The chain is not stood by
+ * `setFromUnitVectors` like every pipe on the Refinery and the Bastion: it
+ * is three's `lookAt` at the anchor, then a quarter turn about its own x,
+ * which keeps the cylinder's x horizontal and rolls its facets differently
+ * — the one rule that reproduces all four matrices. And the four anchor
+ * blocks are all yawed 0.4 the same way, not mirrored corner to corner.
+ */
+export function moorings(root, put, { brown, black }, { chain, block }) {
+  for (const [tag, sx, sz] of [
+    ['ap', -1, -1],
+    ['fp', 1, -1],
+    ['as', -1, 1],
+    ['fs', 1, 1],
+  ]) {
+    const A = new THREE.Vector3(sx * chain.from[0], chain.from[1], sz * chain.from[2]);
+    const B = new THREE.Vector3(sx * chain.to[0], chain.to[1], sz * chain.to[2]);
+    const hang = new THREE.Object3D();
+    hang.position.copy(A).add(B).multiplyScalar(0.5);
+    hang.lookAt(B);
+    hang.rotateX(Math.PI / 2);
+    put(
+      root,
+      `mooring-chain-${tag}`,
+      cyl(chain.r, chain.r, A.distanceTo(B), 6),
+      brown,
+      hang.position.toArray(),
+      [hang.rotation.x, hang.rotation.y, hang.rotation.z]
+    );
+    put(
+      root,
+      `anchor-block-${tag}`,
+      box(...block.size),
+      black,
+      [sx * block.x, block.y, sz * block.z],
+      [0, block.yaw, 0]
+    );
+  }
+}
+
+/**
+ * A dome light on each pontoon cap, an eight-facet lit frustum, in the
+ * pontoons' corner order (`corner-dome-ap · -as · -fp · -fs`). With the
+ * six running lights and the beacon, the "dim amber running lights" of a
+ * barge that idles at SIG 30.
+ */
+export function cornerDomes(root, put, lampM, { x, z, y, radii, h }) {
+  for (const [tag, sx, sz] of CORNERS)
+    put(root, `corner-dome-${tag}`, cyl(radii[0], radii[1], h, 8), lampM, [sx * x, y, sz * z]);
 }
 
 export { THREE };
