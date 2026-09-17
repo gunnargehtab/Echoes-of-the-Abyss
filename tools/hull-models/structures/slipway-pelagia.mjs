@@ -60,6 +60,10 @@
  * - The trolley sits 6 to starboard on the outer gantries and 8 to port
  *   on the middle one; the worklight hangs a metre beyond the beam's +x
  *   face — 4.5 here, on the wider beam.
+ * - The light audit names `line_cross_5` and `line_cross_3`: the crosses at
+ *   x 90 and x −2 lie under gantry 2's and gantry 1's 7 m beams, so the
+ *   top-down bake has never seen them. The approved binary earns the same
+ *   two warnings; carried (#645).
  */
 import {
   THREE,
