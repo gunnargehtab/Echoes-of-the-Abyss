@@ -103,17 +103,20 @@ anything it has not resolved.
 markdown this repository wrote under `.claude/`. It joins
 `npm run gates` and the CI `docs` job beside the two that have always covered
 `docs/`. The eleven vendored skills are excluded — they are upstream copies, and
-reformatting one destroys the only property that makes a re-sync cheap. That
-eleven is one of the few numbers here a gate does hold: `check.mjs` asserts its
-list against `VENDORED-SKILLS.md`'s table and against the directories on disk,
-and fails on any of the three disagreeing.
+reformatting one destroys the only property that makes a re-sync cheap. What
+the gate holds there is the *list* — `check.mjs`'s array, `VENDORED-SKILLS.md`'s
+table and the directories on disk, failing on any two disagreeing. The spelled
+word "eleven" it does not read, here or anywhere else the number is written out,
+which is why the convention below is the only thing keeping those sentences
+honest.
 
 A gate over prose catches a broken heading, not a false sentence. So the
 convention these files follow, which nothing can enforce, is that **a number
 restated here names the command that produced it and the commit it was read
 at** — the invariants row above is the worked example. Before #748 it claimed
-"14 rows over 13 test files" while the gate printed thirty and sixty-four; the
-same figure had been corrected one file away in #747 and this copy was missed.
+"14 rows over 13 test files" while the gate printed thirty and sixty-four —
+and #747 had corrected the same figure further down this very file, without
+touching the copy in the table.
 A bare number reads as a live fact and goes on reading that way forever. A
 number stamped with `at <sha>` reads as a measurement, which is what it is, and
 a reader who needs today's figure knows which command to run.

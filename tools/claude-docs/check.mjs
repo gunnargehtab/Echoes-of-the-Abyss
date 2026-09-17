@@ -5,8 +5,8 @@
  * `docs/` has had both gates since the beginning; `.claude/` has had neither,
  * and #748 is what that cost. `AGENTIC-LOOP.md` claimed `docs/invariants.md`
  * held "14 rows over 13 test files" while `npm run check:invariants` printed
- * thirty and sixty-four — the same figure had been corrected one file away and
- * this copy was missed. `CLAUDE.md` already states the rule that was broken:
+ * thirty and sixty-four — and #747 had corrected the same figure further down
+ * that same file, without touching the copy in the table. `CLAUDE.md` already states the rule that was broken:
  * prose repeating what code does drifts, and a script makes the drift loud. It
  * is the argument `check:models` and `check:invariants` were built on, and
  * these files were simply outside every glob that enforces it.
@@ -31,8 +31,10 @@
  * `.claude/.markdown-link-check.json` is where that scoping is declared.
  *
  * **MD018 is off, and that costs something.** These files open paragraphs with
- * issue numbers — "#709 has no clause for this" — seven times across four of
- * them, and markdownlint reads every one as a heading missing its space. They
+ * issue numbers — "#709 has no clause for this" — seven times across five of
+ * them (`npx -y markdownlint-cli --config .markdownlint.json $(node
+ * tools/claude-docs/check.mjs --list)`), and markdownlint reads every one as a
+ * heading missing its space. They
  * are false positives: CommonMark needs a space after the hash, so GitHub
  * renders all seven as the paragraphs they are. The price of turning the rule
  * off is measured rather than assumed: a genuinely malformed `##Heading` now
@@ -189,7 +191,9 @@ function unaccountedDocs(inScope) {
  */
 function vendoredTableAgrees() {
   const doc = readFileSync(resolve(repo, '.claude/VENDORED-SKILLS.md'), 'utf8');
-  const section = doc.slice(doc.indexOf('## What is here'));
+  // Bounded at the next heading: a future table under a later section would
+  // otherwise be read as vendored skills.
+  const section = doc.slice(doc.indexOf('## What is here')).split(/\n## /)[0];
   const rows = [...section.matchAll(/^\|\s*`([^`]+)`[^|]*\|/gm)].map((m) => m[1]);
   const listed = rows.map((cell) => cell.split(' ')[0]).sort();
   const expected = [...VENDORED_SKILLS].sort();

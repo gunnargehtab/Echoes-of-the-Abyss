@@ -144,8 +144,8 @@ jobs:
   # than pre-existing content debt.
   #
   # No gate here needs node_modules — the tools come from `npx -y`, and the
-  # .claude/ step is plain node — so this job skips the install and overlaps the
-  # whole of the code jobs.
+  # .claude/ step reaches the same two through it — so this job skips the install
+  # and overlaps the whole of the code jobs.
   docs:
     runs-on: ubuntu-latest
     steps:

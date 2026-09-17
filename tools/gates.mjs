@@ -51,8 +51,9 @@ const spawn = (command, commandArgs, options = {}) =>
 const run = (script) => ({ command: npm, args: ['run', script] });
 
 /**
- * The doc gates come from `npx -y`, not from node_modules, so they are the two
- * steps that need the network. They are also what CI runs in a job with no
+ * The doc gates come from `npx -y`, not from node_modules, so they are the three
+ * steps that need the network — `docs:claude` reaches the same two tools the
+ * same way. They are also what CI runs in a job with no
  * install at all, which is why they are last here: everything before them is
  * answerable offline.
  */

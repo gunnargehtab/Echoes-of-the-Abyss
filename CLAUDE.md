@@ -190,9 +190,9 @@ tools/claude-docs  markdownlint and a relative-link check over the markdown
                    that is gone fails, and a tracked document that is neither
                    linted nor vendored fails — so nothing new is ungated by
                    being unnoticed. The vendored skills stay out as upstream
-                   copies, and check.mjs asserts its list of them against
-                   VENDORED-SKILLS.md's own table rather than keeping a
-                   second copy. Configs are .claude/.markdownlint.json,
+                   copies, and check.mjs's list of them is asserted against
+                   VENDORED-SKILLS.md's own table, so the two cannot drift.
+                   Configs are .claude/.markdownlint.json,
                    which extends the root one and turns MD018 off because
                    these files open paragraphs with issue numbers, and
                    .claude/.markdown-link-check.json, which checks relative

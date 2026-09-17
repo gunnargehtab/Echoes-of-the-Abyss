@@ -514,7 +514,7 @@ exclusion list is on the far side of it; a rewrite of §8's register is not.
 
 `loop-critic`'s check 4 holds this, and **nothing else does**. `npm run
 docs:claude` lints these files and resolves their links; no gate reads what they
-*say*, so a round that quietly widens §3 passes every one of them.
+*mean*, so a round that quietly widens §3 passes every one of them.
 
 ## 6. Run every gate locally before you push
 
