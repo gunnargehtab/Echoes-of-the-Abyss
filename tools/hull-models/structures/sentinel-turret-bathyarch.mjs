@@ -27,27 +27,41 @@
  * a six-by-four sphere on its bracket, which is the whole resting light of
  * SIG 12.
  *
- * Where the export is odd the script is odd with it. The gun is trained
- * `BEARING` off the export's +Z, and every part of it sits at a round
- * distance out along that bearing — but each tube's node is turned
- * `[π/2 − 0.06, BEARING, 0]`, and three's XYZ order yaws before it lays the
- * tube down, so every tube lies parallel to +Z instead: breech, jacket,
- * barrel and brake march across the line of fire each on its own axis, and
- * the brake stands 17 m off the barrel's at 120 m. The approved model is
- * that, so this is that (#540).
+ * One pass over the export, and it is this file's only departure from it
+ * (#645, off #540 Phase 6): the gun and the glacis are turned the way their
+ * own numbers say. The export put every part of the gun at a round distance
+ * out along `BEARING` and turned each tube `[π/2 − 0.06, BEARING, 0]`, and
+ * three's XYZ order yaws before it lays the tube down, so breech, jacket,
+ * barrel and brake lay parallel to +Z each on its own axis, the brake 17 m
+ * off the barrel's at 120 m; the glacis, turned the same way, was rolled
+ * 0.16 rad out of the housing's plane. `heavyBarrel` now lays every tube
+ * along one axis through the breech's centre and the brake's, both where
+ * the export has them, so the gun droops the 0.055 rad its own centres
+ * step, and the barrel and the jacket come onto that axis by 0.17 m and
+ * 0.44 m; `turretHouse` pitches the glacis about its own beam; and the one
+ * lamp, which the straightened breech would otherwise half cover, steps
+ * 2.8 m outboard with its bracket (the note at `baseLamp` below). The port
+ * carried the stagger (#639) because a port must; this is the pass it
+ * deferred it to. `node tools/hull-models/diff.mjs sentinel-turret-bathyarch
+ * 0522b01~1` lists those eight parts — five tubes, the glacis, the lamp and
+ * its bracket — and nothing else: 30 parts, 796 triangles, one uniform
+ * scale, one shift. (The tool's default revision is the parent of the last
+ * commit that touched the file, which here is the first port's file rather
+ * than the export; name `0522b01~1` to read against the approved binary.)
  *
  * THE FRAME is the one every turret here keeps: metre-true at 120 m with the
  * muzzle on +X, which is what the bake and the runtime canonicalise a Z-long
  * export to (see sentinel-turret-hadron.mjs). Drawn along Z, `DRAWN` units
- * long by three's `Box3.setFromObject` — a hair over the 3.8856 of its
- * vertices, from the turned tubes' boxes — the ground at y = 0. Every number
+ * long by three's `Box3.setFromObject` — over the 3.9348 of its vertices by
+ * the turned tubes' boxes, which is why the figure moved from 3.8894 when
+ * the tubes turned onto the bearing — the ground at y = 0. Every number
  * below is the export's, through kit.mjs `drawn`.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
 
 const L = 120;
-const DRAWN = 3.8894;
+const DRAWN = 3.9425;
 const BEARING = 0.5;
 
 const black = bathyarch.structureInk.hullBlack();
@@ -100,16 +114,17 @@ bathyarch.turretHouse(
   }
 );
 
-// A short thick gun, and the counterweight that lets it train.
+// A short thick gun on one axis — through the breech's centre and the
+// brake's, both the export's own, so it droops 0.055 rad from breech to
+// muzzle — and the counterweight that lets it train.
 bathyarch.heavyBarrel(
   root,
   { black, grey, rust },
   {
     bearing: BEARING,
-    tilt: 0.06,
     breech: { r: [0.17, 0.2], length: 0.55, along: 0.55, y: 1.12 },
-    barrel: { r: [0.11, 0.13], length: 2.3, along: 1.9, y: 1.051 },
-    jacket: { r: [0.145, 0.155], length: 0.7, along: 1.35, y: 1.09 },
+    barrel: { r: [0.11, 0.13], length: 2.3, along: 1.9 },
+    jacket: { r: [0.145, 0.155], length: 0.7, along: 1.35 },
     brake: { r: [0.16, 0.14], length: 0.3, along: 3.05, y: 0.982 },
     recoil: { r: [0.06, 0.06], length: 0.9, along: 0.95, y: 0.93 },
     counterweight: { size: [0.45, 0.4, 0.35], along: -0.6, y: 1.05 },
@@ -121,14 +136,19 @@ bathyarch.feedPipe(root, rust, { from: [0.5, 0.4, -0.45], to: [0.2, 0.95, -0.25]
 
 // The whole resting light budget: one work lamp on its bracket, on the raft
 // where the top-down bake can see it — the approved turret's emissive map is
-// this one lamp and nothing else.
+// this one lamp and nothing else. The export had it at (0.55, 0.42, 0.7),
+// in the open only because the staggered breech ran wide of it; the gun on
+// its axis passes over that spot and shaded half the lamp (5.9 m² of 10.8
+// facing up). It stands 0.09 units — 2.8 m — outboard of there now, square
+// off the gun's axis, on the raft's corner with its bracket under it, and
+// the whole sphere faces up again.
 bathyarch.baseLamp(
   root,
   { lampMat: work, black },
   {
     r: 0.06,
-    at: [0.55, 0.42, 0.7],
-    bracket: { at: [0.5, 0.32, 0.64], size: [0.08, 0.14, 0.06] },
+    at: [0.64, 0.42, 0.65],
+    bracket: { at: [0.59, 0.32, 0.59], size: [0.08, 0.14, 0.06] },
   }
 );
 

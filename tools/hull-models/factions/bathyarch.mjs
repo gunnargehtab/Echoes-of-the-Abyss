@@ -35,6 +35,7 @@ import {
   polar,
   part,
   drawn,
+  eulerXYZ,
   group,
   flanks,
   pointLight,
@@ -840,13 +841,22 @@ export function feedPipe(root, rust, { from, to, r, facets = 6 }) {
  * Every number is the approved turret's own (#639), through kit.mjs `drawn`:
  * the gun is trained `bearing` radians off the export's +Z toward +X, so the
  * housing and the roof patch are yawed by it where they stand (`at`), and the
- * glacis sits `along` the bearing at height `y`, pitched `pitch` and yawed
- * with them.
+ * glacis sits `along` the bearing at height `y`, pitched `pitch` about its
+ * own beam and yawed with them.
+ *
+ * The glacis's turn is written in YXZ order — the yaw, then the pitch about
+ * the axis the yaw carried its beam onto (kit.mjs `eulerXYZ`). The approved
+ * file wrote the same two numbers in XYZ, which pitches about the export's
+ * own X after the yaw and so rolled the plate 0.16 rad out of the housing's
+ * plane, one end of it 4 m lower than the other at 120 m. That is the slip
+ * the gun's tubes carry too (`heavyBarrel` below), and it comes out in the
+ * same pass (#645, off #540 Phase 6).
  */
 export function turretHouse(root, { black, grey, rust }, { housing, glacis, roofPatch, bearing }) {
   part(root, 'turret_housing', box(...housing.size), black, drawn(housing.at, [0, bearing, 0]));
   const at = [glacis.along * Math.sin(bearing), glacis.y, glacis.along * Math.cos(bearing)];
-  part(root, 'turret_glacis', box(...glacis.size), grey, drawn(at, [glacis.pitch, bearing, 0]));
+  const trained = eulerXYZ([glacis.pitch, bearing, 0], 'YXZ');
+  part(root, 'turret_glacis', box(...glacis.size), grey, drawn(at, trained));
   const roof = box(...roofPatch.size);
   part(root, 'turret_roof_patch', roof, rust, drawn(roofPatch.at, [0, bearing, 0]));
 }
@@ -855,29 +865,40 @@ export function turretHouse(root, { black, grey, rust }, { housing, glacis, roof
  * A short thick gun on a static mount: breech, barrel, jacket, muzzle brake,
  * the recoil cylinder alongside and the counterweight astern.
  *
- * Every number is the approved turret's own (#639), through kit.mjs
- * `drawn`: every part sits at its own round distance `along` the bearing the
- * gun is trained on (radians off the export's +Z toward +X) at height `y`;
- * the five tubes are eight-facet frusta, `r` `[top, bottom]` by `length`
- * (the recoil cylinder six-facet), each node turned `[π/2 − tilt, bearing,
- * 0]`; the counterweight a box yawed by the bearing. That Euler, in three's
- * XYZ order, yaws *before* it lays the tube down, so every tube ends up
- * parallel to the export's +Z rather than along the bearing its centre was
- * put on: the approved model's breech, jacket, barrel and brake are staggered
- * across its line of fire, each on its own axis, and the brake stands 17 m
- * off the barrel's at 120 m. That is the approved shape and it is carried
- * across, not straightened — a change to it is a separate PR with its own
- * screenshot (#540).
+ * The gun is one axis. It is trained `bearing` radians off the export's +Z
+ * toward +X and runs through the breech's centre and the brake's, both where
+ * the approved turret has them (#639) — `along` the bearing at height `y` —
+ * so its pitch is the file's own droop, 0.055 rad down from breech to
+ * muzzle, and not a number chosen here. The barrel and the jacket sit on
+ * that axis at their own `along`; the recoil cylinder keeps its own `y`
+ * under the breech and lies parallel; the counterweight is a box yawed by
+ * the bearing, astern. The five tubes are eight-facet frusta, `r` `[top,
+ * bottom]` by `length` (the recoil cylinder six-facet), each laid along the
+ * axis in YXZ order — the yaw, then a quarter turn less the pitch about the
+ * beam the yaw carried the tube's X onto (kit.mjs `eulerXYZ`).
+ *
+ * The approved file turned each tube `[π/2 − 0.06, bearing, 0]` in three's
+ * XYZ order, which yaws *before* it lays the tube down, so every tube lay
+ * parallel to the export's +Z with only its centre out on the bearing:
+ * breech, jacket, barrel and brake staggered across the line of fire, each
+ * on its own axis, the brake 17 m off the barrel's at 120 m, and all of them
+ * pitched 0.06 up while their centres stepped down. The port carried that
+ * (#639), as a port must; this is the pass it deferred it to (#645, off #540
+ * Phase 6). Against the file the jacket comes 0.44 m and the barrel 0.17 m
+ * onto the axis, under a pixel at either map density; the breech, the brake,
+ * the recoil cylinder and the counterweight stand where they stood.
  */
 export function heavyBarrel(root, { black, grey, rust }, opts) {
-  const { breech, barrel, jacket, brake, recoil, counterweight, bearing, tilt = 0 } = opts;
+  const { breech, barrel, jacket, brake, recoil, counterweight, bearing } = opts;
+  const pitch = Math.atan2(brake.y - breech.y, brake.along - breech.along);
   const at = (p) => [p.along * Math.sin(bearing), p.y, p.along * Math.cos(bearing)];
-  const laid = [Math.PI / 2 - tilt, bearing, 0];
+  const onAxis = (p) => ({ ...p, y: breech.y + (p.along - breech.along) * Math.tan(pitch) });
+  const laid = eulerXYZ([Math.PI / 2 - pitch, bearing, 0], 'YXZ');
   const tube = (name, p, mat, facets = 8) =>
     part(root, name, cyl(p.r[0], p.r[1], p.length, facets), mat, drawn(at(p), laid));
   tube('barrel_breech', breech, grey);
-  tube('barrel', barrel, black);
-  tube('barrel_jacket', jacket, rust);
+  tube('barrel', onAxis(barrel), black);
+  tube('barrel_jacket', onAxis(jacket), rust);
   tube('muzzle_brake', brake, grey);
   tube('recoil_cylinder', recoil, grey, 6);
   const weight = box(...counterweight.size);
