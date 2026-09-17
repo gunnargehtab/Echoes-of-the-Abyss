@@ -52,7 +52,7 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -128,26 +128,15 @@ function classifySkills() {
 }
 
 /**
- * The repo-authored markdown under `.claude/`, from git rather than from a
- * directory walk, so an untracked scratch file is not linted.
+ * Tracked files matching `pathspecs`, or null if git failed.
  *
- * The `:(glob)` magic is load-bearing and is the same trap `tools/gates.mjs`
- * documents: git pathspecs are fnmatch without FNM_PATHNAME, so a bare
- * `.claude/**\/*.md` matches nothing nested and the gate silently checks zero
- * files. The count is asserted below for exactly that reason.
+ * The `:(glob)` magic is load-bearing everywhere it is used below, and is the
+ * same trap `tools/gates.mjs` documents: git pathspecs are fnmatch without
+ * FNM_PATHNAME, so a bare `.claude/**\/*.md` matches nothing nested and a gate
+ * built on it silently checks zero files.
  */
-function repoAuthoredDocs() {
-  const pathspecs = [
-    ':(glob).claude/*.md',
-    ':(glob).claude/agents/**/*.md',
-    ':(glob).claude/skill-eval/**/*.md',
-    ...REPO_AUTHORED_SKILLS.map((name) => `:(glob).claude/skills/${name}/**/*.md`),
-  ];
-
-  const listed = spawnSync('git', ['ls-files', '-z', ...pathspecs], {
-    cwd: repo,
-    encoding: 'utf8',
-  });
+function gitLs(pathspecs) {
+  const listed = spawnSync('git', ['ls-files', '-z', ...pathspecs], { cwd: repo, encoding: 'utf8' });
   if (listed.status !== 0) {
     process.stderr.write(listed.stderr ?? '');
     return null;
@@ -155,16 +144,89 @@ function repoAuthoredDocs() {
   return listed.stdout.split('\0').filter(Boolean);
 }
 
-const problems = classifySkills();
+/**
+ * The repo-authored markdown under `.claude/`, from git rather than from a
+ * directory walk, so an untracked scratch file is not linted.
+ */
+const IN_SCOPE = [
+  ':(glob).claude/*.md',
+  ':(glob).claude/agents/**/*.md',
+  ':(glob).claude/skill-eval/**/*.md',
+  ...REPO_AUTHORED_SKILLS.map((name) => `:(glob).claude/skills/${name}/**/*.md`),
+];
+
+/**
+ * Every tracked document under `.claude/` is either linted or deliberately
+ * vendored, and nothing falls between.
+ *
+ * `classifySkills` makes this argument for the directories under
+ * `.claude/skills/`; this makes it for the documents, which is the half that was
+ * missing. The pathspecs above name four places — the root, `agents/`,
+ * `skill-eval/` and the six skills — so a repo-authored file in a *fifth*
+ * top-level directory was matched by neither list and was silently ungated. It
+ * lints nothing, reports nothing and exits 0, which is "quietly outside the
+ * glob": the exact defect #748 reported, reproduced by the gate written to end
+ * it. Found by `loop-critic` on this change's first round.
+ */
+function unaccountedDocs(inScope) {
+  const all = gitLs([':(glob).claude/*.md', ':(glob).claude/**/*.md']);
+  const vendored = gitLs(VENDORED_SKILLS.map((name) => `:(glob).claude/skills/${name}/**/*.md`));
+  if (all === null || vendored === null) return null;
+
+  const accounted = new Set([...inScope, ...vendored]);
+  return all.filter((file) => !accounted.has(file));
+}
+
+/**
+ * `VENDORED_SKILLS` above says the same thing as the `## What is here` table in
+ * `.claude/VENDORED-SKILLS.md`, and this is what stops the two drifting.
+ *
+ * The array stays the list the gate acts on — prose cannot be trusted to drive a
+ * gate, and a list parsed from it would inherit its errors. But a second copy of
+ * a table that is already machine-readable is the thing `CLAUDE.md` says belongs
+ * in one place, so the copy is checked rather than trusted. If the table is ever
+ * reformatted this fails loudly, which is the right direction.
+ */
+function vendoredTableAgrees() {
+  const doc = readFileSync(resolve(repo, '.claude/VENDORED-SKILLS.md'), 'utf8');
+  const section = doc.slice(doc.indexOf('## What is here'));
+  const rows = [...section.matchAll(/^\|\s*`([^`]+)`[^|]*\|/gm)].map((m) => m[1]);
+  const listed = rows.map((cell) => cell.split(' ')[0]).sort();
+  const expected = [...VENDORED_SKILLS].sort();
+
+  if (listed.length === 0) {
+    return ["Parsed no rows from .claude/VENDORED-SKILLS.md '## What is here' — the table moved."];
+  }
+  if (listed.join(',') !== expected.join(',')) {
+    return [
+      "VENDORED_SKILLS and .claude/VENDORED-SKILLS.md '## What is here' disagree.\n" +
+        `  table: ${listed.join(', ')}\n` +
+        `  array: ${expected.join(', ')}`,
+    ];
+  }
+  return [];
+}
+
+const problems = [...classifySkills(), ...vendoredTableAgrees()];
 if (problems.length > 0) {
   for (const problem of problems) process.stderr.write(`${problem}\n`);
   process.exit(1);
 }
 
-const files = repoAuthoredDocs();
+const files = gitLs(IN_SCOPE);
 if (files === null) process.exit(1);
 if (files.length === 0) {
   process.stderr.write('No documents matched under .claude/ — the pathspecs are wrong.\n');
+  process.exit(1);
+}
+
+const unaccounted = unaccountedDocs(files);
+if (unaccounted === null) process.exit(1);
+if (unaccounted.length > 0) {
+  process.stderr.write(
+    `Tracked under .claude/ but neither linted nor vendored:\n${unaccounted.map((f) => `  ${f}`).join('\n')}\n` +
+      'Add the directory to IN_SCOPE in tools/claude-docs/check.mjs, or classify its skill.\n'
+  );
   process.exit(1);
 }
 

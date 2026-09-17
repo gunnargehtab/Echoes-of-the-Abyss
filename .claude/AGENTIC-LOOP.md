@@ -86,7 +86,7 @@ through a correctness review while `CLAUDE.md`'s balance freeze is in force.
 | --- | --- |
 | Max cycles per task | Ten rounds, hard, in `dev-loop` — reaching it is a stall |
 | Max patch size | Not a line count: one increment per round, and a round whose diff outgrows its target is a finding `loop-critic` raises |
-| Schema validation for patches | `npm run gates` — type-check, lint, format, the model round-trip, both doc gates |
+| Schema validation for patches | `npm run gates` — type-check, lint, format, the model round-trip, all three doc gates |
 | Crash detection | The suites, and the evidence step: a harness run that does not reproduce is `evidence-missing` |
 | Progress detection | The `CARRIED OVER` section of the verdict, read by the stall rule |
 | Rollback on catastrophic failure | Instalment pushes on a branch; `steward` covers the pull request from there |
@@ -100,10 +100,13 @@ anything it has not resolved.
 ### These files are gated too, and a number in them carries its source
 
 `npm run docs:claude` runs markdownlint and a relative-link check over the
-sixteen markdown files this repository wrote under `.claude/`. It joins
+markdown this repository wrote under `.claude/`. It joins
 `npm run gates` and the CI `docs` job beside the two that have always covered
-`docs/`. The eleven vendored skills are excluded — they are upstream copies,
-and reformatting one destroys the only property that makes a re-sync cheap.
+`docs/`. The eleven vendored skills are excluded — they are upstream copies, and
+reformatting one destroys the only property that makes a re-sync cheap. That
+eleven is one of the few numbers here a gate does hold: `check.mjs` asserts its
+list against `VENDORED-SKILLS.md`'s table and against the directories on disk,
+and fails on any of the three disagreeing.
 
 A gate over prose catches a broken heading, not a false sentence. So the
 convention these files follow, which nothing can enforce, is that **a number

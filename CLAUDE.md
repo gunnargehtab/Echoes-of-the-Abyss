@@ -97,9 +97,10 @@ Doc gates, exactly as CI runs them:
 npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
 git ls-files -z ':(glob)docs/**/*.md' \
   | xargs -0 npx -y markdown-link-check --config .markdown-link-check.json
+npm run docs:claude
 ```
 
-`npm run gates` is those two plus every other blocking check in
+`npm run gates` is those three plus every other blocking check in
 `.github/workflows/ci.yml`, run in one pass and summarised: one exit code for "this branch
 would pass CI". It is the finish line to work against — a condition a machine can settle,
 rather than a judgement about whether the work looks done — which is what makes it the
@@ -181,15 +182,19 @@ tools/audio-meter  What the mix measures, rather than what it was meant to.
                    are taken at the bus, before MASTER_GAIN, because a figure at
                    the output says the mix is hot and a figure at the bus says
                    which layer made it hot (#663).
-tools/claude-docs  markdownlint and a relative-link check over the sixteen
-                   markdown files this repository wrote under .claude/, which
-                   were outside every glob in CI until #748 and had already
-                   drifted. check.mjs also decides the scope: the eleven
-                   vendored skills are upstream copies and stay out, and a skill
-                   in neither of its two lists fails the gate rather than being
-                   skipped silently. Configs are .claude/.markdownlint.json,
-                   which extends the root one and turns MD018 off because these
-                   files open paragraphs with issue numbers, and
+tools/claude-docs  markdownlint and a relative-link check over the markdown
+                   this repository wrote under .claude/, which was outside
+                   every glob in CI until #748 and had already drifted.
+                   check.mjs also decides the scope, and decides it closed:
+                   a skill in neither of its two lists fails, a listed skill
+                   that is gone fails, and a tracked document that is neither
+                   linted nor vendored fails — so nothing new is ungated by
+                   being unnoticed. The vendored skills stay out as upstream
+                   copies, and check.mjs asserts its list of them against
+                   VENDORED-SKILLS.md's own table rather than keeping a
+                   second copy. Configs are .claude/.markdownlint.json,
+                   which extends the root one and turns MD018 off because
+                   these files open paragraphs with issue numbers, and
                    .claude/.markdown-link-check.json, which checks relative
                    links only — the vendored upstream URLs are history, not
                    navigation. Runs in npm run gates and in CI's docs job.
@@ -467,7 +472,8 @@ jobs that share one cached install (`.github/actions/setup`):
   out at 60 Hz and are most of the suite's time; the shard count in the matrix is the one
   knob for wall clock, at the cost of one more billed minute per shard.
 - `docs` — markdownlint on `docs/`, then one `markdown-link-check` invocation over every
-  doc. **Both doc gates are blocking**, so a dead link in `docs/` fails the build.
+  doc, then `npm run docs:claude` over the prose this repository wrote under `.claude/`.
+  **All three are blocking**, so a dead link in `docs/` fails the build.
 
 The link checker config (`.markdown-link-check.json`) ignores this repo's own github.com
 URLs — the repository is private, so unauthenticated requests to its issues and clone URL

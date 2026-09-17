@@ -97,7 +97,8 @@ them, because a round optimising for its own target is how they get broken:
   cases, and your own separation from the author. `work-issue` §5 makes those a
   person's to write, so a round that edits one is a finding whatever else it got
   right — name the clause and say the change belongs in an issue. **You are the
-  only check on this.** No gate reads these files, and the firing proposing the
+  only check on this.** `npm run docs:claude` lints these files and resolves
+  their links, but no gate reads what they *mean*, and the firing proposing the
   change is the firing the clause constrains.
 
 **5. Is it still one increment?** A round whose diff has grown into several

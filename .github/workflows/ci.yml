@@ -138,13 +138,14 @@ jobs:
           "test/*.test.ts"
 
   # --- Documentation checks -------------------------------------------
-  # Both doc gates are blocking. #38 fixed the ~270 markdownlint issues
+  # All three doc gates are blocking. #38 fixed the ~270 markdownlint issues
   # and #39 wrote the seven documents that were linked but never
   # authored, so a dead link in docs/ is now a real regression rather
   # than pre-existing content debt.
   #
-  # Neither gate needs node_modules — both tools come from `npx -y` — so this
-  # job skips the install and overlaps the whole of the code jobs.
+  # No gate here needs node_modules — the tools come from `npx -y`, and the
+  # .claude/ step is plain node — so this job skips the install and overlaps the
+  # whole of the code jobs.
   docs:
     runs-on: ubuntu-latest
     steps:
