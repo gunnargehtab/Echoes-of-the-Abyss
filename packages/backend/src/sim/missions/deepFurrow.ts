@@ -173,9 +173,9 @@ export const SEEDING_DEEP_FURROW: MissionDefinition = {
   runsItsLength: true,
   /**
    * §4, §9 — forty-five, the sowing's own figure and the loudest the Commune
-   * campaign has authored. A working level rather than a ceiling: Tend's
-   * twenty and Convocation's twenty-six were ceilings, and this is the number
-   * the day is *for*.
+   * campaign has authored so far; Radicals' 65 goes above it two missions on.
+   * A working level rather than a ceiling: Tend's twenty and Convocation's
+   * twenty-six were ceilings, and this is the number the day is *for*.
    */
   sigBudget: SOWING_SIG,
   // No arrayTag and no silence order — Asset Recovery's posture, as §9 states

@@ -339,8 +339,10 @@ export const CHORD_NINETEEN: MissionDefinition = {
    * §4, §9 — eighty, and the qualifier is that it is the thing the mission is
    * *for*: a sounding held at 80 for twenty seconds, nineteen times, with no
    * quieter version of the committal available. Metadata and never a threshold
-   * (types.ts, `sigBudget`), which is what lets the loudest figure in the
-   * campaign be the one the mission asks for.
+   * (types.ts, `sigBudget`), which is what lets the loudest thing the mission
+   * asks the player to do be the figure its budget states. Not the loudest in
+   * the campaign: the Rim Deposits ties it at eighty and the Second Chord's
+   * hundred goes above it.
    */
   sigBudget: 80,
   /**

@@ -188,8 +188,9 @@ an empty terrace, and First Arrival on a head start.
 
 ### The SIG budget
 
-**SIG budget: 24** — a Chorister's cruise, and for the third time in this campaign a
-description rather than a ceiling ([campaign.md](campaign.md) §10). Twenty-four is what the
+**SIG budget: 24** — a Chorister's cruise, and a description rather than a ceiling
+([campaign.md](campaign.md) §10), after Attendance's 8, Intake's 50 and Trench Awakening's 55;
+The Dome's 28 called itself a working level instead. Twenty-four is what the
 column sounds like doing the only thing it is asked to do, and it is one under the silence
 order the galleries wrote for it, which is not an accident and is not remarked on by anybody.
 

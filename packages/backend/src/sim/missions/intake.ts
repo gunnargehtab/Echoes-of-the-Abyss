@@ -203,7 +203,8 @@ export const ATTENDING_INTAKE: MissionDefinition = {
   runsItsLength: true,
   /**
    * §3 — fifty, the middle of a harvest cycle's 45–60 and the loudest the
-   * campaign has authored. A description, not a ceiling: this mission has no
+   * Directorate campaign has authored so far; Trench Awakening's 55 is the one
+   * later figure above it. A description, not a ceiling: this mission has no
    * silence order and nothing on the map that would sanction a breach.
    */
   sigBudget: 50,
