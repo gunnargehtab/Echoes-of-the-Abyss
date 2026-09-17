@@ -1419,11 +1419,10 @@ describe("the walk, the holds and the commander's act", () => {
 describe('Sorrowgate, as docs/mission-sorrowgate.md states it', () => {
   it('makes the SIG budget and the silence order the same number', () => {
     // §9, verbatim: "The budget and the silence order are the same number, and
-    // that is the point." This is the first of the two missions where §10's
-    // budget is a rule the player can feel rather than a note in the margin —
-    // the Directorate's Conclave is the other — so the two being equal is the
-    // design rather than a coincidence, and if a later tuning pass moves one,
-    // it has to move the other or say why.
+    // that is the point." This is the first of the two missions where they are
+    // one figure — the Directorate's Conclave is the other — so the two being
+    // equal is the design rather than a coincidence, and if a later tuning pass
+    // moves one, it has to move the other or say why.
     assert.equal(PROLOGUE_SORROWGATE.sigBudget, PROLOGUE_SORROWGATE.silenceCeilingSig);
     assert.equal(PROLOGUE_SORROWGATE.sigBudget, 20, '§4 and §9 both say twenty');
   });

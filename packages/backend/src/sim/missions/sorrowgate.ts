@@ -99,9 +99,8 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
   fauna: false,
   /**
    * §9 — the budget and the silence order are the same number, and that is the
-   * point. This is the first of the two missions where the SIG budget is a rule
-   * the player can feel rather than a note in the margin; the Directorate's
-   * Conclave is the other (docs/mission-conclave-attending.md §4).
+   * point. This is the first of the two missions where they are one figure; the
+   * Directorate's Conclave is the other (docs/mission-conclave-attending.md §4).
    */
   sigBudget: 20,
   arrayTag: 'array',

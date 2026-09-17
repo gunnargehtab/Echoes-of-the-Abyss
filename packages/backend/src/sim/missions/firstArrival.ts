@@ -273,9 +273,9 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
   runsItsLength: true,
   /**
    * §4 — twenty-four: a Chorister's cruise, and a description rather than a
-   * ceiling, after Attendance's 8, Intake's 50 and Trench Awakening's 55. It is
-   * what the column sounds like doing the only thing it is asked to do, and it
-   * is one under the
+   * ceiling, after Attendance's 8, Intake's 50 and Trench Awakening's 55; The
+   * Dome's 28 called itself a working level instead. It is what the column
+   * sounds like doing the only thing it is asked to do, and it is one under the
    * silence order the galleries wrote for it, which is not an accident and is
    * not remarked on by anybody.
    */

@@ -359,10 +359,10 @@ of them lands with a minute left, for a player who ignored the first. [campaign.
 **Length: twenty minutes.** Inside [campaign.md](campaign.md) §10's 12–25.
 
 **SIG budget: 20.** The budget and the silence order are the same number, and that is the point.
-This is the first of the two missions in the bible where the budget is a rule the player can
-feel rather than a note in the margin — the Directorate's Conclave is the other
-([mission-conclave-attending.md](mission-conclave-attending.md) §4) — and §10's promise still
-holds, because exceeding it costs the player their hearing and never the mission.
+This is the first of the two missions in the bible where they are one figure — the Directorate's
+Conclave is the other ([mission-conclave-attending.md](mission-conclave-attending.md) §4) — and
+§10's promise still holds, because exceeding it costs the player their hearing and never the
+mission.
 
 | Time | Beat |
 | --- | --- |
