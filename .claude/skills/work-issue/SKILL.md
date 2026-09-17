@@ -245,6 +245,7 @@ and being unable to take it is a fact about **your** run, which is what
 stopped you, and that `wontfix` is the durable answer if the work is parked
 rather than merely waiting. A person who disagrees removes the label, and the
 issue is eligible again on the next firing.
+
 - Anything already claimed is someone else's — including an earlier you.
 - **An issue with an assignee is taken, whoever took it.** A person who
   assigned themselves is on it, and so is an earlier firing of this loop, which
@@ -632,6 +633,7 @@ what the frame shows:
    The panel at 100% and 200% UI scale, in a live prologue:
    https://github.com/gunnargehtab/Echoes-of-the-Abyss/blob/<sha>/docs/screenshots/issue-<n>/<file>.png
    ```
+
 4. **Say in the PR that the link is a link.** A reviewer clicking through is
    weaker than a rendered frame, and the gate's author should be able to see that
    trade rather than discover it.

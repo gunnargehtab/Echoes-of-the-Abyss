@@ -83,6 +83,7 @@ Run everything from the repository root.
 | Formatting check / fix | `npm run format:check` / `npm run format` |
 | Hull scripts ↔ GLBs ↔ outlines agree | `npm run check:models` |
 | `docs/invariants.md` still names live tests | `npm run check:invariants` |
+| `.claude/`'s own prose lints and its links resolve | `npm run docs:claude` |
 | Every blocking gate, in one pass | `npm run gates` |
 
 Single workspace: `npm -w packages/backend run dev`, `npm -w packages/frontend run dev`,
@@ -180,6 +181,18 @@ tools/audio-meter  What the mix measures, rather than what it was meant to.
                    are taken at the bus, before MASTER_GAIN, because a figure at
                    the output says the mix is hot and a figure at the bus says
                    which layer made it hot (#663).
+tools/claude-docs  markdownlint and a relative-link check over the sixteen
+                   markdown files this repository wrote under .claude/, which
+                   were outside every glob in CI until #748 and had already
+                   drifted. check.mjs also decides the scope: the eleven
+                   vendored skills are upstream copies and stay out, and a skill
+                   in neither of its two lists fails the gate rather than being
+                   skipped silently. Configs are .claude/.markdownlint.json,
+                   which extends the root one and turns MD018 off because these
+                   files open paragraphs with issue numbers, and
+                   .claude/.markdown-link-check.json, which checks relative
+                   links only — the vendored upstream URLs are history, not
+                   navigation. Runs in npm run gates and in CI's docs job.
 tools/prose-budget How long a GitHub body is, in the words a person reads —
                    markdown scaffolding, template prompts, fenced evidence and
                    the attribution footer are not reading and do not count.
@@ -412,7 +425,10 @@ subset that matches what the code actually imports is the whole point.
 `.claude/VENDORED-SKILLS.md` records each one's upstream, commit, licence and reason, how to
 re-sync it, and what was looked at and rejected.
 
-Treat them as read-only. Two local edits exist and both are marked `LOCAL` in place: the
+Treat them as read-only — `npm run docs:claude` lints the six written here and
+leaves the eleven alone, because reformatting a copy destroys the one property
+that makes re-syncing it cheap. Two local edits exist and both are marked `LOCAL`
+in place: the
 `pixijs` router says which five of its twenty-six rows are on disk, and the `accessibility`
 skill points one reference at its upstream sibling rather than at a path this repository did
 not take. Do not link them from `docs/` — link checking there is blocking in CI and these

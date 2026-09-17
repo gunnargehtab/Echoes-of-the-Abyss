@@ -31,37 +31,21 @@ import { spawnSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { spawn as spawnAt } from './lib/spawn.mjs';
+
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const npm = 'npm';
 const npx = 'npx';
 
 /**
- * On Windows `npm` and `npx` are `.cmd` batch files, and since the fix for
- * CVE-2024-27980 (Node 18.20.2, 20.12.2, 21.7.3) spawning a batch file without a
- * shell throws EINVAL. spawnSync does not throw it at you — it returns
- * `status: null` with `error` set — so every gate used to FAIL in 0.0s with
- * nothing printed. The only supported way to run a `.cmd` is through cmd.exe.
- *
- * Shelling out means cmd.exe parses the line, so the arguments are quoted here
- * rather than handed to spawnSync alongside `shell: true`: Node only joins those
- * with spaces (and warns that it does, DEP0190), and `docs:links` passes every
- * doc path as an argument. Inside double quotes cmd.exe leaves `& | < > ^ ( )`
- * alone, but still expands `%` and cannot contain a `"`, so an argument holding
- * either is refused outright rather than passed on mangled. The joined line is
- * also bounded — cmd.exe stops at 8,191 characters — which the doc list (about
- * 1,600 today) is well inside; past it, cmd.exe says the line is too long itself.
+ * Every gate runs from the repository root. `tools/lib/spawn.mjs` carries the
+ * Windows reasoning — `npm` and `npx` are batch files there, and a batch file
+ * spawned without a shell fails in a way spawnSync reports as `error` rather
+ * than throwing, which used to make every gate FAIL in 0.0s with nothing
+ * printed.
  */
-function spawn(command, commandArgs, options = {}) {
-  if (process.platform !== 'win32') {
-    return spawnSync(command, commandArgs, { cwd: repo, stdio: 'inherit', ...options });
-  }
-  const unsafe = commandArgs.find((a) => /["%]/.test(a));
-  if (unsafe !== undefined) {
-    return { status: null, error: new Error(`cannot pass ${unsafe} through cmd.exe`) };
-  }
-  const line = [command, ...commandArgs.map((a) => `"${a}"`)].join(' ');
-  return spawnSync(line, { cwd: repo, stdio: 'inherit', shell: true, ...options });
-}
+const spawn = (command, commandArgs, options = {}) =>
+  spawnAt(command, commandArgs, { cwd: repo, ...options });
 
 /** An npm script, named for the step that runs it. */
 const run = (script) => ({ command: npm, args: ['run', script] });
@@ -127,6 +111,7 @@ const STEPS = [
   { name: 'build', what: 'the production bundles', ...run('build') },
   { name: 'docs:lint', what: 'markdownlint over docs/', ...docsLint },
   { name: 'docs:links', what: 'every link in docs/', exec: docsLinks },
+  { name: 'docs:claude', what: "markdownlint and links over .claude/'s own prose", ...run('docs:claude') },
 ];
 
 const args = process.argv.slice(2);

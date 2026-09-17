@@ -41,7 +41,7 @@ The build follows dream-loop's shape and #709's component list.
 | --- | --- | --- |
 | Task system (`/tasks/open.json`) | GitHub Issues, plus `work-issue`'s selection rule, self-assignment and open-PR cap | No — a JSON task file would be a second backlog, diverging from the first by Thursday |
 | Spec (`/spec/systems.md`) | `docs/` — the design bible, canonical, and the source of every SPEC constant | No — a second spec is the one thing `CLAUDE.md` is most emphatic against |
-| Invariants (`/spec/invariants.md`) | Was scattered — stated as an invariant in prose in one place, and asserted across the suites | **Yes** — `docs/invariants.md`, 14 rows over 13 test files, each naming its source and the test that holds it, with `npm run check:invariants` failing when a holder is gone |
+| Invariants (`/spec/invariants.md`) | Was scattered — stated as an invariant in prose in one place, and asserted across the suites | **Yes** — `docs/invariants.md`, 30 rows over 64 holders (`npm run check:invariants` at `083257a`), each naming its source and the test that holds it, with that gate failing when a holder is gone |
 | Acceptance tests (`/spec/acceptance_tests.md`) | `tools/echo-sim/scenarios/*.json` with committed `.expected.json`, plus the three suites | No — the scenarios already are this, in a form a harness runs |
 | Harness (`run_headless.py`) | `tools/echo-sim`, `tools/balance`, `tools/audio-meter`, `hull-intake`, and the `run-game` browser drive | No — five harnesses exist; what was missing was a rule for which to reach for, now the evidence table in `dev-loop` |
 | Verifier (`verifier.py`) | `npm run gates` — every blocking CI gate, one pass, one exit code | No — and a parallel verifier would drift from CI, which is the exact failure `tools/gates.mjs` was written to end |
@@ -96,6 +96,24 @@ The two guardrails #709 does not have, and this repository needs, are in
 `dev-loop` under "Three things the loop must never do": never tune for balance,
 never resolve a docs/code disagreement by guessing, never send the client
 anything it has not resolved.
+
+### These files are gated too, and a number in them carries its source
+
+`npm run docs:claude` runs markdownlint and a relative-link check over the
+sixteen markdown files this repository wrote under `.claude/`. It joins
+`npm run gates` and the CI `docs` job beside the two that have always covered
+`docs/`. The eleven vendored skills are excluded — they are upstream copies,
+and reformatting one destroys the only property that makes a re-sync cheap.
+
+A gate over prose catches a broken heading, not a false sentence. So the
+convention these files follow, which nothing can enforce, is that **a number
+restated here names the command that produced it and the commit it was read
+at** — the invariants row above is the worked example. Before #748 it claimed
+"14 rows over 13 test files" while the gate printed thirty and sixty-four; the
+same figure had been corrected one file away in #747 and this copy was missed.
+A bare number reads as a live fact and goes on reading that way forever. A
+number stamped with `at <sha>` reads as a measurement, which is what it is, and
+a reader who needs today's figure knows which command to run.
 
 ## How it improves itself
 

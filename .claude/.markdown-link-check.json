@@ -1,0 +1,4 @@
+{
+  "timeout": "20s",
+  "ignorePatterns": [{ "pattern": "^https?://" }, { "pattern": "^mailto:" }]
+}
