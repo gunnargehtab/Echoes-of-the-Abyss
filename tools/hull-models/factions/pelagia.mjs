@@ -59,6 +59,7 @@ import {
   capsule,
   group,
   pointLight,
+  sidedPost,
 } from '../kit.mjs';
 
 /**
@@ -819,6 +820,194 @@ export function magazine(root, { pipe: pipeMat, pod: podMat, flange }, { pipe, p
   part(root, 'feed_pipe', cyl(pipe.radii[0], pipe.radii[1], pipe.length, pipe.facets), pipeMat, pipe);
   part(root, 'ammo_pod', capsule(pod.r, pod.length, ...pod.facets), podMat, pod);
   part(root, 'feed_flange', torus(f.R, f.tube, ...f.facets), flange, f);
+}
+
+/* --------------------------------------------------------------------------
+ * The Slipway (#652): the Commune's yard on the kit's skeleton (kit.mjs
+ * `slipwayBed`, `slipwayGantry`, `slipwayHeadGate`). What is the
+ * Commune's is the hull on the blocks — a squashed orb in membrane — the
+ * posts, which are grown: a ridge stalk of a leg leaning out with a
+ * chitin knuckle where it meets the beam, and a tall chitin orb of a
+ * pylon at the head; and the hall, six husk lobes along the slip, each
+ * ringed twice in membrane with a pale bud on its crown, five knuckles
+ * between them, a ridge lip along the slip's edge with five veins lit
+ * along it, six roots into the ground along the outer wall and three
+ * ballast bladders beyond. Every number is the approved
+ * slipway-pelagia.glb's own and is the default.
+ * ------------------------------------------------------------------------ */
+
+/** A gantry leg: an eight-facet ridge stalk 44 m tall, 32 m out, leaning 0.18 outward. */
+export const slipwayLeg = (ridge) =>
+  sidedPost({
+    name: 'gantry_leg',
+    geo: () => cyl(2.4, 4.2, 44, 8),
+    mat: ridge,
+    y: 22,
+    spread: 32,
+    lean: 0.18,
+  });
+
+/** The knuckle on a leg: a chitin orb 8 m across where the stalk meets the beam. */
+export const slipwayKnuckle = (chitin) =>
+  sidedPost({
+    name: 'gantry_knuckle',
+    geo: () => orb(8, 6),
+    mat: chitin,
+    y: 44,
+    spread: 27,
+    scale: [4, 3, 4],
+  });
+
+/** A head pylon: a chitin orb drawn 56 m tall, 34 m out. */
+export const slipwayPylon = (chitin) =>
+  sidedPost({
+    name: 'head_pylon',
+    geo: () => orb(10, 6),
+    mat: chitin,
+    y: 24,
+    spread: 34,
+    scale: [6, 28, 6],
+  });
+
+/**
+ * The hull in progress on the keel blocks: an orb in membrane pressed to
+ * 112 m long and 12 m tall, with a slim chitin deck on it. The kit's
+ * `slipwayBed` calls this between the last block and the sill.
+ */
+export function slipwayHull(root, { hull: membrane, deck: chitin }, opts = {}) {
+  const {
+    body = { facets: [14, 7], at: [-50, 7, 0], r: [56, 6, 10] },
+    deck = { size: [60, 1, 8], at: [-60, 12, 0] },
+  } = opts;
+  add(root, 'hull_in_progress', orb(...body.facets), membrane, body.at, [0, 0, 0], body.r);
+  add(root, 'hull_in_progress_deck', box(...deck.size), chitin, deck.at);
+}
+
+/**
+ * One hall flanking the slip, on `sgn`'s side, built into `hall` (the
+ * `hall_s` or `hall_p` frame the script makes): six husk lobes 50 m apart,
+ * ridge on the even and chitin on the odd, no two the same size — 17, 19
+ * and 21 m tall by turns, 26 and 30 m across by turns — each with two
+ * membrane rings lathed round it (`ridgeRing`, cresting at 0.8 of the
+ * lobe's half-beam and shouldered at 0.9 of that, squashed 0.62 with the
+ * lobe) and a spore bud on its crown; five chitin knuckles between the
+ * lobes; the ridge lip along the slip's edge with five veins along it;
+ * six ridge roots along the outer wall; three membrane ballast bladders
+ * beyond them.
+ *
+ * The roots are the approved file's own and are carried across rather
+ * than mirrored (#540): each is a stalk laid across by π/2 about X and
+ * then turned `sgn · raise`, which on the +z hall dives it into the ground
+ * leaning out, and on the −z hall stands it up, leaning toward the slip.
+ * A mirror would negate the whole angle; the file adds to it. Everything
+ * else in the hall is the +z hall's mirror to the digit.
+ */
+export function slipwayHall(hall, { chitin, ridge, membrane, spore, vein }, opts) {
+  const {
+    sgn,
+    z = 54,
+    lobes = {
+      count: 6,
+      from: -125,
+      pitch: 50,
+      facets: [14, 7],
+      y: 8,
+      sx: 30,
+      sy: [17, 19, 21],
+      sz: [26, 30],
+    },
+    rings = { dx: [-12, 8], crown: 0.8, shoulder: 0.9, halfWidth: 1.5, facets: 14, squash: 0.62 },
+    buds = { dx: 6, rise: 9, out: 6, facets: [8, 6], r: [4, 3, 4] },
+    knuckles = { count: 5, from: -100, pitch: 50, facets: [10, 6], y: 6, r: [12, 9, 14] },
+    lip = { size: [320, 3, 8], y: 1.5, z: 27 },
+    veins = { count: 5, from: -120, pitch: 60, size: [24, 0.4, 1.4], y: 3.1 },
+    roots = {
+      count: 6,
+      from: -130,
+      pitch: 52,
+      r: [1.5, 3.5],
+      length: 22,
+      y: -3,
+      z: 86,
+      raise: 1.2,
+    },
+    bladders = { count: 3, from: -90, pitch: 90, facets: [10, 6], y: 2, z: 88, r: [12, 6, 7] },
+  } = opts;
+  for (let i = 0; i < lobes.count; i++) {
+    const x = lobes.from + lobes.pitch * i;
+    const sy = lobes.sy[i % lobes.sy.length];
+    const sz = lobes.sz[i % lobes.sz.length];
+    add(
+      hall,
+      `husk_lobe_${i}`,
+      orb(...lobes.facets),
+      i % 2 ? chitin : ridge,
+      [x, lobes.y, sgn * z],
+      [0, 0, 0],
+      [lobes.sx, sy, sz]
+    );
+    rings.dx.forEach((dx, j) =>
+      add(
+        hall,
+        `lobe_ring_${i}_${j}`,
+        ridgeRing({
+          crown: rings.crown * sz,
+          shoulder: rings.shoulder * rings.crown * sz,
+          halfWidth: rings.halfWidth,
+          facets: rings.facets,
+        }),
+        membrane,
+        [x + dx, lobes.y, sgn * z],
+        [0, 0, 0],
+        [1, rings.squash, 1]
+      )
+    );
+    add(
+      hall,
+      `lobe_bud_${i}`,
+      orb(...buds.facets),
+      spore,
+      [x + buds.dx, sy + buds.rise, sgn * (z + buds.out)],
+      [0, 0, 0],
+      buds.r
+    );
+  }
+  for (let i = 0; i < knuckles.count; i++)
+    add(
+      hall,
+      `husk_knuckle_${i}`,
+      orb(...knuckles.facets),
+      chitin,
+      [knuckles.from + knuckles.pitch * i, knuckles.y, sgn * z],
+      [0, 0, 0],
+      knuckles.r
+    );
+  add(hall, 'slip_lip', box(...lip.size), ridge, [0, lip.y, sgn * lip.z]);
+  for (let i = 0; i < veins.count; i++)
+    add(hall, `lip_vein_${i}`, box(...veins.size), vein, [
+      veins.from + veins.pitch * i,
+      veins.y,
+      sgn * lip.z,
+    ]);
+  for (let i = 0; i < roots.count; i++)
+    add(
+      hall,
+      `root_anchor_${i}`,
+      cyl(roots.r[0], roots.r[1], roots.length, 6),
+      ridge,
+      [roots.from + roots.pitch * i, roots.y, sgn * roots.z],
+      [Math.PI / 2 + sgn * roots.raise, 0, 0]
+    );
+  for (let i = 0; i < bladders.count; i++)
+    add(
+      hall,
+      `ballast_bladder_${i}`,
+      orb(...bladders.facets),
+      membrane,
+      [bladders.from + bladders.pitch * i, bladders.y, sgn * bladders.z],
+      [0, 0, 0],
+      bladders.r
+    );
 }
 
 /* --------------------------------------------------------------------------

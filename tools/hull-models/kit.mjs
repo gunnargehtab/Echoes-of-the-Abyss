@@ -672,6 +672,180 @@ export function wellheadFloods(root, flood, opts = {}) {
   );
 }
 
+/* --------------------------------------------------------------------------
+ * The Slipway's faction-neutral skeleton (#652, off #540 Phase 3).
+ *
+ * The Vent Tap's case again, at the yard's scale. The four approved
+ * Slipways are one template drawn four ways: the foundation slab, the slip
+ * floor with its two line lights and seven crosses, five keel blocks, the
+ * launch sill, three gantry frames and the head gate — 45 names common to
+ * all four files, the trolleys, cables and worklights identical to the
+ * digit, the rest the same skeleton at each navy's numbers — and then two
+ * halls that are entirely the navy's. So the skeleton is built here, once,
+ * taking the navy's materials the way `ventDrawArm` takes its own, and
+ * taking the three parts of it that carry a navy's *shape* — the hull on
+ * the blocks, a gantry's leg and the ornament on it, the head gate's pylon
+ * — as builders the navy's module hands over (`sidedPost` is the shape a
+ * post builder takes). A structure script contributes its halls and those
+ * builders and nothing else.
+ *
+ * The numbers are the approved files' own and are the defaults, because
+ * all four carry them unchanged; what differs between the files — the
+ * Commune's wider beam, the Klaxon's deeper deck — is a parameter.
+ *
+ * PORT IS −Z HERE TOO (#642, `bothSides` above). The four approved exports
+ * name their sides the other way — every `_p` in them sits at +z, the
+ * kit's starboard — so the skeleton writes the +z part of each pair first,
+ * as the files do, and names it `_s`; its −z twin follows as `_p`. No
+ * buffer moves and nothing is mirrored: only the names turn, which is the
+ * relabel the four Choristers and the eleven `bothSides` hulls had before
+ * them (hulls/chorister-bathyarch.mjs). The trolleys are not a pair and
+ * keep their file z.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * A builder for one side's post — a gantry leg, the ornament on it, a head
+ * pylon: `<name>_<tag>`, a fresh `geo()` in `mat`, `y` up and `spread` out
+ * on the side, leaned `lean` radians about X on the +z side and its mirror
+ * on the −z one, `scale` on the node. The navy's module says what its post
+ * is — a riveted column, a pyramid, a leaning claw, a grown stalk — and
+ * returns one of these; the skeleton calls it with the side's tag and sign
+ * and the frame's x. `geo` is a factory because every part of every
+ * approved Slipway has a buffer of its own, and a geometry two meshes share
+ * exports as one.
+ */
+export const sidedPost =
+  ({ name, geo, mat, y, spread, lean = 0, scale = [1, 1, 1] }) =>
+  (parent, { tag, sgn, x }) =>
+    add(parent, `${name}_${tag}`, geo(), mat, [x, y, sgn * spread], [sgn * lean, 0, 0], scale);
+
+/**
+ * The bed: the foundation slab, the slip floor down the middle of it, the
+ * line lights along both edges of the floor and the crosses across it, the
+ * keel blocks, the navy's hull on them, and the launch sill at the mouth —
+ * "the slip cut through its whole length and open at both ends, so a hull
+ * is laid at the head gate, walked down the line under three gantries, and
+ * launched out of the mouth ... a keel on blocks two thirds down the slip.
+ * Dim at rest: the line lights along the slip floor, the gantry working
+ * lights and the launch sill" (docs/asset-prompts-3d.md, STRUCTURE —
+ * Slipway). The mouth is −x, the head gate +x.
+ *
+ * `slab` clads the foundation, `floor` the slip, `keel` the blocks; `line`
+ * is the lit strip the two line lights, the crosses and the sill share.
+ * `hull` is the navy's: called once, between the last keel block and the
+ * sill, where all four files put the hull in progress and its deck — a box
+ * in iron on the Klaxon's yard, a spar on the Order's, a squashed orb on
+ * the Directorate's and the Commune's.
+ *
+ * The slab is a bevelled plan on eight corners — the rectangle with its
+ * corners cut — 5 thick with a 2 chamfer, and carried as the approved
+ * files carry it: the extrusion un-centred, its lower chamfer at −2 and
+ * its top cap at +7 about a node that sits at −8, so the slab's top lies
+ * a metre under the floor. The outline walks from the −x, +z corner as
+ * the approved contour does, which is what lands its lids on the same
+ * diagonals.
+ */
+export function slipwayBed(root, { slab, floor, line, keel }, opts = {}) {
+  const {
+    foundation = {
+      outline: [
+        [-165, 88],
+        [-170, 70],
+        [-170, -70],
+        [-165, -88],
+        [165, -88],
+        [170, -70],
+        [170, 70],
+        [165, 88],
+      ],
+      t: 5,
+      bevel: 2,
+      y: -8,
+    },
+    slip = { size: [340, 1.5, 46], y: -0.5 },
+    lines = { size: [310, 0.4, 2.2], y: 0.5, z: 19 },
+    crosses = { count: 7, from: -140, pitch: 46, size: [1.6, 0.4, 36], y: 0.5 },
+    blocks = { count: 5, from: -70, pitch: 22, size: [6, 4, 14], y: 2 },
+    hull,
+    sill = { size: [4, 0.6, 42], at: [-160, 0.6, 0] },
+  } = opts;
+  const bed = plan(foundation.outline, foundation.t, foundation.bevel);
+  bed.translate(0, foundation.t / 2, 0);
+  add(root, 'foundation_slab', bed, slab, [0, foundation.y, 0]);
+  add(root, 'slip_floor', box(...slip.size), floor, [0, slip.y, 0]);
+  bothSides((tag, sgn) =>
+    add(root, `line_light_${tag}`, box(...lines.size), line, [0, lines.y, sgn * lines.z])
+  );
+  for (let i = 0; i < crosses.count; i++)
+    add(root, `line_cross_${i}`, box(...crosses.size), line, [
+      crosses.from + crosses.pitch * i,
+      crosses.y,
+      0,
+    ]);
+  for (let i = 0; i < blocks.count; i++)
+    add(root, `keel_block_${i}`, box(...blocks.size), keel, [
+      blocks.from + blocks.pitch * i,
+      blocks.y,
+      0,
+    ]);
+  hull(root);
+  add(root, 'launch_sill', box(...sill.size), line, sill.at);
+}
+
+/**
+ * One gantry frame over the slip, `gantry_<index>`: the navy's leg and the
+ * ornament on it a side (+z first, as the files write them), the beam
+ * across, the trolley under it with its cable hanging to the hull, and the
+ * worklight along the beam a metre beyond its +x face — "walked down the
+ * line under three gantries ... the gantry working lights". The frame is a
+ * group at the origin holding parts at their absolute x, which is how the
+ * approved files carry all three (kit `group`).
+ *
+ * The three frames stand at x −90, 0 and 90 and the trolley sits 6 to
+ * starboard on the outer two and 8 to port on the middle one, in all four
+ * files, so `index` alone places a frame; `beam.size[0]` is where the
+ * Commune's 7 m beam differs from the others' 5 m, and it moves the
+ * worklight with it.
+ */
+export function slipwayGantry(root, { beam, trolley, cable, worklight }, opts) {
+  const {
+    index,
+    x = [-90, 0, 90][index],
+    leg,
+    ornament,
+    beam: beamBar = { size: [5, 4, 70], y: 44 },
+    trolley: crab = { size: [8, 5, 8], y: 40, z: [6, -8, 6][index] },
+    cable: fall = { r: 0.4, h: 24, y: 26 },
+    worklight: light = { size: [3, 0.8, 62], y: 46.2, clear: 1 },
+  } = opts;
+  const g = group(root, `gantry_${index}`);
+  bothSides((tag, sgn) => {
+    leg(g, { tag, sgn, x });
+    ornament(g, { tag, sgn, x });
+  });
+  add(g, 'gantry_beam', box(...beamBar.size), beam, [x, beamBar.y, 0]);
+  add(g, 'gantry_trolley', box(...crab.size), trolley, [x, crab.y, crab.z]);
+  add(g, 'gantry_cable', cyl(fall.r, fall.r, fall.h, 4), cable, [x, fall.y, crab.z]);
+  add(g, 'gantry_worklight', box(...light.size), worklight, [
+    x + beamBar.size[0] / 2 + light.clear,
+    light.y,
+    0,
+  ]);
+  return g;
+}
+
+/**
+ * The head gate at the +x end of the slip, where "a hull is laid": the
+ * navy's pylon a side (+z first, as the files write them) and the lintel
+ * across the two in `lintel`. The lintel is the one box of the gate all
+ * four files share to the digit; the pylon is the navy's post.
+ */
+export function slipwayHeadGate(root, lintel, opts) {
+  const { x = 158, pylon, beam = { size: [10, 6, 80], y: 52 } } = opts;
+  bothSides((tag, sgn) => pylon(root, { tag, sgn, x }));
+  add(root, 'head_lintel', box(...beam.size), lintel, [x, beam.y, 0]);
+}
+
 /**
  * Where a hull script writes: docs/concept-art/models/ by default, or the
  * directory in `HULL_MODELS_OUT`, which is how check.mjs rebuilds every hull

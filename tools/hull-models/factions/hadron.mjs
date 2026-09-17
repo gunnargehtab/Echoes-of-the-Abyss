@@ -42,6 +42,7 @@ import {
   drawn,
   group,
   capsule,
+  sidedPost,
 } from '../kit.mjs';
 
 /**
@@ -404,11 +405,13 @@ export function panelSeams(root, alloy, { from, to, count, halfBeam }) {
  * `x` places the spar along the hull. The rung's three draw every station
  * absolute and leave it at 0; the Chorister's three segments are one spar
  * drawn at three stations, its own profile about its own middle, and each
- * node carries the station (chorister-hadron.glb, #649).
+ * node carries the station (chorister-hadron.glb, #649). `z` is for a spar
+ * off the centreline — the Slipway's two blade halls stand 54 m out either
+ * side of the slip (#652); every hull leaves it at 0.
  */
-export function spar(root, name, mat, { profile, facets = 4, x = 0, y = 0, flat = [1, 1] }) {
+export function spar(root, name, mat, { profile, facets = 4, x = 0, y = 0, z = 0, flat = [1, 1] }) {
   const geo = loft(profile, facets, Math.PI / facets);
-  return add(root, name, geo, mat, [x, y, 0], [0, 0, 0], [1, flat[0], flat[1]]);
+  return add(root, name, geo, mat, [x, y, z], [0, 0, 0], [1, flat[0], flat[1]]);
 }
 
 /**
@@ -826,6 +829,122 @@ export function navMarks(root, light, { marks, r }) {
     pair((tag, sgn) =>
       part(root, `nav_mark_${name}_${tag}`, new THREE.SphereGeometry(r, 5, 4), light, sided(sgn, [x, y, z]))
     );
+}
+
+/* --------------------------------------------------------------------------
+ * The Slipway (#652): the Order's yard on the kit's skeleton (kit.mjs
+ * `slipwayBed`, `slipwayGantry`, `slipwayHeadGate`). What is the Order's
+ * is the hull on the blocks — a spar, the blade every Order hull is — the
+ * posts, which are pyramids: an alloy leg drawn to a point with a crystal
+ * finial standing on it, and a taller alloy pylon at the head; and the
+ * hall, a blade laid on its side with a crest along its back, five crystal
+ * spines each on a lit seam, a lit lip along the slip, and four alloy
+ * buttresses wedged against the outer wall. Bilateral to the digit, as the
+ * Order is. Every number is the approved slipway-hadron.glb's own and is
+ * the default.
+ * ------------------------------------------------------------------------ */
+
+/** A gantry leg: a four-sided alloy pyramid 46 m to its point, 32 m out. */
+export const slipwayLeg = (alloy) =>
+  sidedPost({ name: 'gantry_leg', geo: () => cyl(0, 4, 46, 4), mat: alloy, y: 23, spread: 32 });
+
+/** The finial on a leg: a smaller crystal pyramid standing on the point. */
+export const slipwayFinial = (crystal) =>
+  sidedPost({ name: 'gantry_finial', geo: () => cyl(0, 2, 8, 4), mat: crystal, y: 50, spread: 32 });
+
+/** A head pylon: the same pyramid 56 m tall, 34 m out. */
+export const slipwayPylon = (alloy) =>
+  sidedPost({ name: 'head_pylon', geo: () => cyl(0, 6, 56, 4), mat: alloy, y: 28, spread: 34 });
+
+/**
+ * The hull in progress on the keel blocks: an alloy spar 122 m long, full
+ * a third of the way along and drawn to a point at both ends, laid flat
+ * (`spar`, 0.6 tall), with a slim shadow deck on it. The kit's `slipwayBed`
+ * calls this between the last block and the sill.
+ */
+export function slipwayHull(root, { hull: alloy, deck: shadow }, opts = {}) {
+  const {
+    body = {
+      profile: [
+        [-110, 0.2],
+        [-90, 7],
+        [-40, 9],
+        [0, 7],
+        [12, 0.2],
+      ],
+      y: 6,
+      flat: [0.6, 1],
+    },
+    deck = { size: [60, 1, 8], at: [-60, 12, 0] },
+  } = opts;
+  spar(root, 'hull_in_progress', alloy, body);
+  add(root, 'hull_in_progress_deck', box(...deck.size), shadow, deck.at);
+}
+
+/**
+ * One hall flanking the slip, on `sgn`'s side, built into `hall` (the
+ * `hall_s` or `hall_p` frame the script makes): the blade hall — a shadow
+ * spar 304 m long laid on its side and pressed wide (1.75 across) — with
+ * the alloy crest along its back, five crystal spines standing off it
+ * each over a lit seam, the alloy lip along the slip's edge with its lit
+ * seam, and four alloy buttresses: triangles in plan stood on their base
+ * against the outer wall, reaching outward. Every z is `sgn` times the
+ * file's, and the buttress is drawn reaching `sgn` outward, so each hall's
+ * wedge is its own buffer, as the approved file has them.
+ */
+export function slipwayHall(hall, { shadow, alloy, crystal, seam }, opts) {
+  const {
+    sgn,
+    z = 54,
+    blade = {
+      profile: [
+        [-152, 0.2],
+        [-140, 12],
+        [-60, 16],
+        [60, 16],
+        [140, 12],
+        [152, 0.2],
+      ],
+      y: 6,
+      flat: [1, 1.75],
+    },
+    crest = {
+      profile: [
+        [-140, 0.2],
+        [-120, 4],
+        [120, 4],
+        [140, 0.2],
+      ],
+      y: 22,
+      flat: [0.8, 1.6],
+    },
+    spines = { count: 5, from: -100, pitch: 50, r: 4, h: 22, y: 30 },
+    seams = { size: [1.2, 0.5, 14], y: 23.5 },
+    lip = { size: [320, 3, 8], y: 1.5, z: 27 },
+    lipSeam = { size: [300, 0.4, 1], y: 3.1 },
+    buttresses = { xs: [-110, -40, 30, 100], halfBase: 8, reach: 20, t: 6, y: -1, z: 78 },
+  } = opts;
+  spar(hall, 'blade_hall', shadow, { ...blade, z: sgn * z });
+  spar(hall, 'blade_crest', alloy, { ...crest, z: sgn * z });
+  for (let i = 0; i < spines.count; i++) {
+    const x = spines.from + spines.pitch * i;
+    add(hall, `crystal_spine_${i}`, cyl(0, spines.r, spines.h, 4), crystal, [x, spines.y, sgn * z]);
+    add(hall, `spine_seam_${i}`, box(...seams.size), seam, [x, seams.y, sgn * z]);
+  }
+  add(hall, 'slip_lip', box(...lip.size), alloy, [0, lip.y, sgn * lip.z]);
+  add(hall, 'lip_seam', box(...lipSeam.size), seam, [0, lipSeam.y, sgn * lip.z]);
+  buttresses.xs.forEach((x, i) => {
+    const wedge = plan(
+      [
+        [-buttresses.halfBase, 0],
+        [buttresses.halfBase, 0],
+        [0, sgn * buttresses.reach],
+      ],
+      buttresses.t
+    );
+    wedge.translate(0, buttresses.t / 2, 0);
+    add(hall, `buttress_${i}`, wedge, alloy, [x, buttresses.y, sgn * buttresses.z]);
+  });
 }
 
 /* --------------------------------------------------------------------------

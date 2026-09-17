@@ -38,6 +38,7 @@ import {
   group,
   flanks,
   pointLight,
+  sidedPost,
 } from '../kit.mjs';
 
 /**
@@ -508,6 +509,24 @@ export function rivetRows(root, mat, opts) {
   });
 }
 
+/**
+ * One rank of rivets, on one side only: `rivetRows` above for a face that
+ * has no twin — the outer eave of a Slipway hall carries one rank and the
+ * inner eave none (#652). Same pitch rule, same numbering: from
+ * `numberFrom`, the root's own child count unless said, which is how the
+ * approved Slipway numbers each hall's rank from 39 — the count of parts
+ * already in that hall — in both halls alike.
+ */
+export function rivetRow(root, mat, opts) {
+  const { from, to, count, y, z, size, numberFrom = root.children.length } = opts;
+  for (let i = 0; i < count; i++)
+    add(root, `rivet_${numberFrom + i}`, box(...size), mat, [
+      from + ((to - from) * (i + 0.5)) / count,
+      y,
+      z,
+    ]);
+}
+
 /** The bow stencil, painted flat on the foredeck, and the bow lamp — separate, because the two hulls write them in opposite orders. */
 export function bowStencil(root, amber, { at, size }) {
   add(root, 'stencil_bow', box(...size), amber, at);
@@ -874,6 +893,125 @@ export function heavyBarrel(root, { black, grey, rust }, opts) {
 export function baseLamp(root, { lampMat, black }, { at, bracket, r, segments = [6, 4] }) {
   part(root, 'base_lamp', new THREE.SphereGeometry(r, ...segments), lampMat, drawn(at));
   part(root, 'base_lamp_bracket', box(...bracket.size), black, drawn(bracket.at));
+}
+
+/* --------------------------------------------------------------------------
+ * The Slipway (#652): the Klaxon's yard on the kit's skeleton (kit.mjs
+ * `slipwayBed`, `slipwayGantry`, `slipwayHeadGate`). What is the Klaxon's
+ * is the hull on the blocks, the posts — a square iron column with a rust
+ * brace collar, a black square pylon — and the hall: a riveted shed in
+ * "boxy, riveted, over-engineered rectangles and cylinders". Every number
+ * is the approved slipway-bathyarch.glb's own and is the default.
+ * ------------------------------------------------------------------------ */
+
+/** A gantry leg: a square iron column, 44 m tall, 32 m out from the slip's centre. */
+export const slipwayLeg = (grey) =>
+  sidedPost({ name: 'gantry_leg', geo: () => box(6, 44, 6), mat: grey, y: 22, spread: 32 });
+
+/** The collar on a leg: a rust brace plate round the column at 30 m. */
+export const slipwayBrace = (rust) =>
+  sidedPost({ name: 'gantry_leg_brace', geo: () => box(8, 3, 8), mat: rust, y: 30, spread: 32 });
+
+/** A head pylon: a black square column, 50 m tall, 34 m out. */
+export const slipwayPylon = (black) =>
+  sidedPost({ name: 'head_pylon', geo: () => box(12, 50, 12), mat: black, y: 25, spread: 34 });
+
+/**
+ * The hull in progress on the keel blocks: an iron box 110 m long with a
+ * rust deck on it, laid a third of the way down the slip toward the mouth.
+ * The kit's `slipwayBed` calls this between the last block and the sill.
+ */
+export function slipwayHull(root, { hull: grey, deck: rust }, opts = {}) {
+  const {
+    body = { size: [110, 8, 22], at: [-50, 8, 0] },
+    deck = { size: [60, 1, 18], at: [-60, 12.5, 0] },
+  } = opts;
+  add(root, 'hull_in_progress', box(...body.size), grey, body.at);
+  add(root, 'hull_in_progress_deck', box(...deck.size), rust, deck.at);
+}
+
+/**
+ * One hall flanking the slip, on `sgn`'s side, built into `hall` (the
+ * `hall_s` or `hall_p` frame the script makes): the black shed body with
+ * its iron roof and rust ridge, eight iron pilasters through it each with
+ * a rust roof vent over its outer eave, three black stacks banded amber,
+ * two roof patches, the hazard stripe along the inner eave, the iron slip
+ * apron along the floor's edge with six floods on it, four iron tanks laid
+ * along the outer wall, and a rank of rivets down the outer eave.
+ *
+ * Every z here is `sgn` times the file's, so the −z hall is the +z hall's
+ * mirror to the digit — which the approved file is; nothing on the Klaxon
+ * refuses a matched pair. The rivets take their numbers from the hall's
+ * own child count (`rivetRow`): 39 parts precede them, so they run
+ * `rivet_39..62` in both halls, as the approved file has them.
+ */
+export function slipwayHall(hall, { black, grey, rust, amber, flood }, opts) {
+  const {
+    sgn,
+    z = 54,
+    body = { size: [300, 30, 50], y: 15 },
+    roof = { size: [302, 3, 54], y: 31 },
+    ridge = { size: [296, 3, 8], y: 34 },
+    pilasters = { count: 8, from: -140, pitch: 40, size: [6, 32, 54], y: 16 },
+    vents = { size: [4, 2.5, 4], y: 33.5, z: 66 },
+    stacks = { xs: [-100, -10, 80], y: 42, z: 68, r: 4.2, rTop: 3.5, height: 26 },
+    bands = { y: 50, r: 4.4, h: 2 },
+    patches = [
+      { size: [40, 3.2, 16], at: [-60, 32.6, 46], mat: rust },
+      { size: [24, 3.2, 12], at: [90, 32.6, 64], mat: grey },
+    ],
+    stripe = { size: [296, 0.6, 2], y: 32.6, z: 30 },
+    apron = { size: [320, 2, 8], y: 1, z: 27 },
+    floods = { count: 6, from: -125, pitch: 50, size: [10, 0.5, 5], y: 2.1 },
+    tanks = { xs: [-120, -40, 40, 120], y: 3, z: 90, r: 6, length: 40 },
+    rivets = { from: -145, to: 145, count: 24, y: 32.7, z: 78, size: [2.2, 1.32, 2.2] },
+  } = opts;
+  add(hall, 'hall_body', box(...body.size), black, [0, body.y, sgn * z]);
+  add(hall, 'hall_roof', box(...roof.size), grey, [0, roof.y, sgn * z]);
+  add(hall, 'hall_ridge', box(...ridge.size), rust, [0, ridge.y, sgn * z]);
+  for (let i = 0; i < pilasters.count; i++) {
+    const x = pilasters.from + pilasters.pitch * i;
+    add(hall, `pilaster_${i}`, box(...pilasters.size), grey, [x, pilasters.y, sgn * z]);
+    add(hall, `roof_vent_${i}`, box(...vents.size), rust, [x, vents.y, sgn * vents.z]);
+  }
+  stacks.xs.forEach((x, i) => {
+    stack(hall, black, {
+      name: `stack_${i}`,
+      at: [x, stacks.y, sgn * stacks.z],
+      r: stacks.r,
+      rTop: stacks.rTop,
+      height: stacks.height,
+    });
+    stackBand(hall, amber, {
+      name: `stack_band_${i}`,
+      at: [x, bands.y, sgn * stacks.z],
+      r: bands.r,
+      h: bands.h,
+    });
+  });
+  patches.forEach(({ size, at: [x, y, pz], mat }, i) =>
+    add(hall, `patch_${'ab'[i]}`, box(...size), mat, [x, y, sgn * pz])
+  );
+  add(hall, 'hazard_stripe', box(...stripe.size), amber, [0, stripe.y, sgn * stripe.z]);
+  add(hall, 'slip_apron', box(...apron.size), grey, [0, apron.y, sgn * apron.z]);
+  for (let i = 0; i < floods.count; i++)
+    add(hall, `apron_flood_${i}`, box(...floods.size), flood, [
+      floods.from + floods.pitch * i,
+      floods.y,
+      sgn * apron.z,
+    ]);
+  // A tank is born on Y and laid along the wall by −π/2 about Z, as the file has it.
+  tanks.xs.forEach((x, i) =>
+    add(
+      hall,
+      `tank_${i}`,
+      cyl(tanks.r, tanks.r, tanks.length, 10),
+      grey,
+      [x, tanks.y, sgn * tanks.z],
+      [0, 0, -Math.PI / 2]
+    )
+  );
+  rivetRow(hall, grey, { ...rivets, z: sgn * rivets.z });
 }
 
 /* --------------------------------------------------------------------------

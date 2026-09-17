@@ -64,6 +64,7 @@ import {
   segmentSeries as series,
   capsule,
   group,
+  sidedPost,
 } from '../kit.mjs';
 
 /**
@@ -723,6 +724,157 @@ export function magazine(root, { steel, red }, { pipe, pod, flange }) {
   part(root, 'feed_pipe', cyl(pipe.radii[0], pipe.radii[1], pipe.length, pipe.facets), steel, pipe);
   part(root, 'ammo_pod', capsule(pod.r, pod.length, ...pod.facets), steel, pod);
   part(root, 'feed_flange', torus(flange.R, flange.tube, ...flange.facets), red, flange);
+}
+
+/* --------------------------------------------------------------------------
+ * The Slipway (#652): the Directorate's yard on the kit's skeleton (kit.mjs
+ * `slipwayBed`, `slipwayGantry`, `slipwayHeadGate`). What is the
+ * Directorate's is the hull on the blocks — a squashed carapace orb in
+ * red — the posts, which lean: a steel cone of a leg with a black claw
+ * hooked over the beam, a red cone of a pylon leaning in at the head; and
+ * the hall, a run of seven tergites laid along the slip, violet and red by
+ * turns, each with its dark seam, a spine raked off its back and, on every
+ * other one, a photophore; a black lip along the slip's edge with six
+ * photophores, six steel claws into the ground along the outer wall, and
+ * a mandible at the mouth. Every number is the approved
+ * slipway-directorate.glb's own and is the default.
+ * ------------------------------------------------------------------------ */
+
+/** A gantry leg: a six-facet steel cone 44 m tall, 32 m out, leaning 0.15 outward. */
+export const slipwayLeg = (steel) =>
+  sidedPost({
+    name: 'gantry_leg',
+    geo: () => cyl(2, 3.4, 44, 6),
+    mat: steel,
+    y: 22,
+    spread: 32,
+    lean: 0.15,
+  });
+
+/** The claw on a leg: a black five-facet spike hooked 1.1 outward over the beam's end. */
+export const slipwayClaw = (black) =>
+  sidedPost({
+    name: 'gantry_claw',
+    geo: () => spike(2.4, 10, 5),
+    mat: black,
+    y: 46,
+    spread: 24,
+    lean: 1.1,
+  });
+
+/** A head pylon: a red six-facet cone 54 m to its point, 34 m out, leaning 0.12 in. */
+export const slipwayPylon = (red) =>
+  sidedPost({
+    name: 'head_pylon',
+    geo: () => spike(6, 54, 6),
+    mat: red,
+    y: 27,
+    spread: 34,
+    lean: -0.12,
+  });
+
+/**
+ * The hull in progress on the keel blocks: a carapace orb in red pressed
+ * to 112 m long and 12 m tall, with a slim violet deck on it. The kit's
+ * `slipwayBed` calls this between the last block and the sill.
+ */
+export function slipwayHull(root, { hull: red, deck: violet }, opts = {}) {
+  const {
+    body = { facets: [14, 7], at: [-50, 7, 0], r: [56, 6, 10] },
+    deck = { size: [60, 1, 8], at: [-60, 12, 0] },
+  } = opts;
+  add(root, 'hull_in_progress', orb(...body.facets), red, body.at, [0, 0, 0], body.r);
+  add(root, 'hull_in_progress_deck', box(...deck.size), violet, deck.at);
+}
+
+/**
+ * One hall flanking the slip, on `sgn`'s side, built into `hall` (the
+ * `hall_s` or `hall_p` frame the script makes): seven tergites 44 m apart,
+ * violet on the even and red on the odd, each with its black seam orb
+ * behind it, a spine raked toward +x and leaned `sgn` outward — 16 m and
+ * 22 m by turns, stepping 5 m further out every plate and back — and, on
+ * the even plates, one photophore on the inner shoulder; then the black
+ * lip along the slip's edge with six photophores along it, six steel
+ * anchor claws along the outer wall, and the steel mandible at the mouth,
+ * laid along the slip and yawed `sgn` outward.
+ *
+ * The claws are the approved file's own and are carried across rather
+ * than mirrored (#540): each is a cone laid across by π/2 about X and
+ * then turned `sgn · raise`, which on the +z hall hangs it point-down and
+ * leaning out into the ground, and on the −z hall stands it point-up,
+ * leaning toward the slip. A mirror would negate the whole angle; the
+ * file adds to it. Everything else in the hall is the +z hall's mirror to
+ * the digit.
+ */
+export function slipwayHall(hall, { violet, red, black, steel, crimson }, opts) {
+  const {
+    sgn,
+    z = 54,
+    tergites: plates = { count: 7, from: -132, pitch: 44, facets: [14, 7], y: 6, r: [28, 16, 30] },
+    seams = { facets: [10, 6], dx: 24, y: 5, r: [7, 15, 29] },
+    spines = { dx: 4, y: 26, out: 6, step: 5, r: 2.4, lengths: [16, 22], lean: 0.3, rake: -0.25 },
+    photophores: dots = { dx: -8, y: 21.5, z: 45, size: [2.5, 0.6, 2.5] },
+    lip = { size: [320, 3, 8], y: 1.5, z: 27 },
+    lipLights = { count: 6, from: -125, pitch: 50, size: [3, 0.5, 3], y: 3.2 },
+    claws = { count: 6, from: -125, pitch: 50, r: 2.6, length: 20, y: 0, z: 88, raise: 1.35 },
+    mandible = { r: 5, length: 40, at: [-170, 4, 36], yaw: 0.2 },
+  } = opts;
+  for (let i = 0; i < plates.count; i++) {
+    const x = plates.from + plates.pitch * i;
+    add(
+      hall,
+      `tergite_${i}`,
+      orb(...plates.facets),
+      i % 2 ? red : violet,
+      [x, plates.y, sgn * z],
+      [0, 0, 0],
+      plates.r
+    );
+    add(
+      hall,
+      `tergite_seam_${i}`,
+      orb(...seams.facets),
+      black,
+      [x + seams.dx, seams.y, sgn * z],
+      [0, 0, 0],
+      seams.r
+    );
+    add(
+      hall,
+      `tergite_spine_${i}`,
+      spike(spines.r, spines.lengths[i % spines.lengths.length]),
+      black,
+      [x + spines.dx, spines.y, sgn * (z + spines.out + spines.step * (i % 3))],
+      [sgn * spines.lean, 0, spines.rake]
+    );
+    if (i % 2 === 0)
+      add(hall, `photophore_${i}`, box(...dots.size), crimson, [x + dots.dx, dots.y, sgn * dots.z]);
+  }
+  add(hall, 'slip_lip', box(...lip.size), black, [0, lip.y, sgn * lip.z]);
+  for (let i = 0; i < lipLights.count; i++)
+    add(hall, `lip_photophore_${i}`, box(...lipLights.size), crimson, [
+      lipLights.from + lipLights.pitch * i,
+      lipLights.y,
+      sgn * lip.z,
+    ]);
+  for (let i = 0; i < claws.count; i++)
+    add(
+      hall,
+      `anchor_claw_${i}`,
+      spike(claws.r, claws.length, 5),
+      steel,
+      [claws.from + claws.pitch * i, claws.y, sgn * claws.z],
+      [Math.PI / 2 + sgn * claws.raise, 0, 0]
+    );
+  const [mx, my, mz] = mandible.at;
+  add(
+    hall,
+    'launch_mandible',
+    spike(mandible.r, mandible.length, 6),
+    steel,
+    [mx, my, sgn * mz],
+    [0, -sgn * mandible.yaw, -Math.PI / 2]
+  );
 }
 
 /* --------------------------------------------------------------------------
