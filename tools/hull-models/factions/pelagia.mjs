@@ -60,6 +60,9 @@ import {
   group,
   pointLight,
   sidedPost,
+  xLong,
+  zLong,
+  eulerXYZ,
 } from '../kit.mjs';
 
 /**
@@ -1011,12 +1014,16 @@ export function slipwayHall(hall, { chitin, ridge, membrane, spore, vein }, opts
 }
 
 /* --------------------------------------------------------------------------
- * The Bastion and the Spore Veil (#652, off #540 Phase 3) — the Commune's
- * HQ and its signature structure. Both approved exports are r184 and drawn
- * along X, so every builder here takes the export's own numbers un-yawed,
- * through `verbatim` and `placed` (the Submersible's X-long twins of kit.mjs
- * `drawn` and `part`, defined with the shared kinds below), and the one
- * scale is the script's `fitFootprint`.
+ * The Bastion, the Spore Veil, the Foundry and the Refinery (#652, off #540
+ * Phase 3) — the Commune's HQ, its signature structure and its two works.
+ * All four approved exports are r184; the Bastion, the Veil and the
+ * Refinery are drawn along X and the Foundry along Z, so every builder here
+ * takes the export's own numbers and places them through a kit frame —
+ * `xLong` (no yaw, the default) or `zLong` (`drawn` and `part`, one yaw;
+ * the Foundry's) — or, on the Veil's X-long-only builders, through
+ * `verbatim` and `placed` (the Submersible's X-long twins, defined with the
+ * shared kinds below). The one scale is the script's `fitFootprint` or
+ * `metreTrue`.
  *
  * The Bastion "shares nothing" across the four navies (#652): "a large
  * pressure dome with visible reinforcement ribs, docking collars and
@@ -1032,8 +1039,16 @@ export function slipwayHall(hall, { chitin, ridge, membrane, spore, vein }, opts
  * series — a ring's station on the dome, a slit's place on a gill, a
  * stalk's proportions, a vein ring's segments — recovered from the file to
  * the float as the #649 ports did, so the script holds the decision and not
- * the arithmetic. Neither file carries a table: every buffer `parts.mjs`
- * could not name is a partial sphere or an r184 capsule.
+ * the arithmetic. None of the four files carries a table: every buffer
+ * `parts.mjs` could not name is a partial sphere or an r184 capsule.
+ *
+ * The Foundry and the Refinery share their bay, cranes, launch mouth,
+ * ballast tanks, pipes, crusher, stacks, conveyor, hopper and flood masts
+ * with the other navies through the kit's Foundry and Refinery vocabulary
+ * (kit.mjs, #652), and the Bastion's tanks and standpipes are the same
+ * `ballastTanks` and `flangedPipes`; what is the Commune's — husk lobes
+ * ringed where they grew, knuckles, outrigger lobes, a stern pod, lit
+ * veins, silos capped, ringed, budded and veined, root anchors — is here.
  * ------------------------------------------------------------------------ */
 
 /**
@@ -1087,14 +1102,18 @@ export const veilInk = {
 
 /**
  * A grown dome: a `shell` stopped `down` of a half-turn short of its pole,
- * placed verbatim. The Bastion's `pressure_dome` is an 18 × 10 orb of 6.2
- * stopped at 0.56, squashed 0.88 tall and 1.12 across and rolled 0.06 by
- * its node; its `crown_pod` a 12 × 7 of 2.3 stopped at 0.6. Neither is a
- * table: the counts `parts.mjs` could not name are a partial sphere's,
- * w·(2h − 1) triangles where a closed orb has 2w(h − 1).
+ * placed by `frame` (kit.mjs `xLong` or `zLong`) from the export's own
+ * `at`, `rot` and `scale`. The Bastion's `pressure_dome` is an 18 × 10 orb
+ * of 6.2 stopped at 0.56, squashed 0.88 tall and 1.12 across and rolled
+ * 0.06 by its node; its `crown_pod` a 12 × 7 of 2.3 stopped at 0.6; the
+ * Foundry's eight husk lobes are unit 10 × 7 orbs stopped at 0.62
+ * (`huskFlanks`). None is a table: the counts `parts.mjs` could not name
+ * are a partial sphere's, w·(2h − 1) triangles where a closed orb has
+ * 2w(h − 1).
  */
-export function grownDome(root, mat, { name = 'pressure_dome', r, facets, down, ...placement }) {
-  return placed(root, name, shell(r, facets, { down }), mat, placement);
+export function grownDome(root, mat, opts) {
+  const { name = 'pressure_dome', r, facets, down, frame = xLong, at, rot, scale } = opts;
+  frame.part(root, name, shell(r, facets, { down }), mat, at, rot, scale);
 }
 
 /**
@@ -1121,29 +1140,34 @@ export function domeRings(root, mat, opts) {
 }
 
 /**
- * Arcs of torus round a dome's centre, all at the centre with one squash on
- * their nodes, each born in the XY plane, rolled `roll` about the keel and
- * yawed `yaw` about the crown: the Bastion's five reinforce ribs ("visible
- * reinforcement ribs" — a quarter turn each, 6.076 by 0.18 on 4 × 22,
- * rolled π/2), its three lit veins (6.231 by 0.07 on 4 × 18, each its own
- * arc a little over 0.9 and its own roll, 0.35, 0.47 and 0.59 short of
- * π/2) and its two hull pipes ("external pipework" — 6.324 by 0.16 and
- * 0.13 on 5 × 16, arcs 0.9 and 1.15, yawed 3.9 and 4.5). `arcs` lists each
- * one's `yaw` and whatever of `arc`, `tube`, `roll` differs from the
- * defaults at the top. The file writes eight of the ten rotations in
- * three's other XYZ form of the same matrix, (±π, b, c − π); they are
- * written here as (0, π − b, c), which is the form the other two are in
- * and the one that shows the pipes' yaws to be round.
+ * Arcs of torus, each born in the XY plane and placed by its node — round a
+ * dome's centre, all at `centre` with one `scale` on their nodes, rolled
+ * `roll` about the keel and yawed `yaw` about the crown: the Bastion's five
+ * reinforce ribs ("visible reinforcement ribs" — a quarter turn each, 6.076
+ * by 0.18 on 4 × 22, rolled π/2), its three lit veins (6.231 by 0.07 on
+ * 4 × 18, each its own arc a little over 0.9 and its own roll, 0.35, 0.47
+ * and 0.59 short of π/2) and its two hull pipes ("external pipework" —
+ * 6.324 by 0.16 and 0.13 on 5 × 16, arcs 0.9 and 1.15, yawed 3.9 and 4.5);
+ * or each on a station of its own, `at` and `rot` — the Foundry's four
+ * `hull_vein`s climbing its flanks, each its own radius and arc. `arcs`
+ * lists each one's `yaw` (or `rot`) and whatever of `R`, `arc`, `tube`,
+ * `roll`, `at` differs from the defaults at the top; `frame` is the kit's
+ * `xLong` or `zLong`. The Bastion's file writes eight of its ten rotations
+ * in three's other XYZ form of the same matrix, (±π, b, c − π); they are
+ * written as (0, π − b, c), which is the form the other two are in and the
+ * one that shows the pipes' yaws to be round.
  */
 export function domeArcs(root, mat, opts) {
-  const { name, first = 0, centre, scale, R, tube, facets, arc, roll, arcs } = opts;
+  const { name, first = 0, frame = xLong, centre, scale, R, tube, facets, arc, roll, arcs } = opts;
   arcs.forEach((a, i) =>
-    placed(
+    frame.part(
       root,
       `${name}_${first + i}`,
-      new THREE.TorusGeometry(R, a.tube ?? tube, ...facets, a.arc ?? arc),
+      new THREE.TorusGeometry(a.R ?? R, a.tube ?? tube, ...facets, a.arc ?? arc),
       mat,
-      verbatim(centre, [0, a.yaw, a.roll ?? roll], scale)
+      a.at ?? centre,
+      a.rot ?? [0, a.yaw, a.roll ?? roll],
+      scale
     )
   );
 }
@@ -1164,44 +1188,24 @@ export function portLights(root, mat, { name = 'port_light', r, facets = [6, 5],
  * Root buttresses — "anchored to the seabed", grown: capsules (kit.mjs
  * `capsule`, `facets` [cap, radial]) each its own girth and length, laid
  * over `roll` about the keel and yawed each its own way, skinned alternately
- * from the first. A matched pair is refused, as `rootGrips` refuses one on
- * the turret. The Bastion's seven lie 0.18 short of flat and roughly along
- * the dome's radius, where the turret's five lie across it; three of the
- * seven rotations the file writes in three's (π, b, −roll) form and four in
- * (0, yaw, roll), the same matrix, and all seven are written here in the
- * second.
+ * from the first, placed by `frame`. A matched pair is refused, as
+ * `rootGrips` refuses one on the turret. The Bastion's seven
+ * (`root_buttress`, on 3 × 7) lie 0.18 short of flat and roughly along the
+ * dome's radius, where the turret's five lie across it; the Foundry's five
+ * and the Refinery's six `root_anchor`s are the turret's 3 × 6 capsules
+ * laid 0.14 and 0.15 short of flat. On every file some of the rotations are
+ * written in three's (π, b, −roll) form and the rest in (0, yaw, roll), the
+ * same matrix, and all are written here in the second.
  */
 export function rootButtresses(root, skins, opts) {
-  const { name = 'root_buttress', roll, facets = [3, 7], grips } = opts;
+  const { name = 'root_buttress', frame = xLong, roll, facets = [3, 7], grips } = opts;
   refuseMirror(name, grips, ({ r, length }) => `${r},${length}`);
   grips.forEach(({ r, length, at, yaw }, i) =>
-    placed(
-      root,
-      `${name}_${i}`,
-      capsule(r, length, ...facets),
-      skins[i % skins.length],
-      verbatim(at, [0, yaw, roll])
-    )
-  );
-}
-
-/**
- * Ballast tanks: capsules of one size laid flat — a quarter turn about the
- * keel — and each turned its own way about the crown, `{ at, turn }` each.
- * The Bastion's two are 0.75 by 2 on 3 × 9 in grown steel, turned 0.5 and
- * 0.8; a matched pair on purpose, because a tank is fitted rather than
- * grown, and the file has two alike.
- */
-export function ballastTanks(root, mat, opts) {
-  const { name = 'ballast_tank', r, length, facets = [3, 9], tanks } = opts;
-  tanks.forEach(({ at, turn }, i) =>
-    placed(
-      root,
-      `${name}_${i}`,
-      capsule(r, length, ...facets),
-      mat,
-      verbatim(at, [Math.PI / 2, 0, turn])
-    )
+    frame.part(root, `${name}_${i}`, capsule(r, length, ...facets), skins[i % skins.length], at, [
+      0,
+      yaw,
+      roll,
+    ])
   );
 }
 
@@ -1241,36 +1245,6 @@ export function dockingCollar(root, mats, opts) {
     mouthMat,
     verbatim(mouth.at, attitude)
   );
-}
-
-/**
- * Standpipes: a tapered pipe stood on the seabed, `h` tall at `[x, z]` and
- * leaned `lean` about the keel, with a flange round it — a torus lying flat
- * — `flange.at` of its height above its middle; exported pipe then flange.
- * The Bastion's three are 3.2, 3.6 and 2.6 tall, 0.22 to 0.26 across on 8
- * facets, flanged 0.3 by 0.07 on 5 × 10 at 0.22 of their height, each
- * leaned a degree or three its own way.
- */
-export function standpipes(root, mats, opts) {
-  const { pipe: pipeMat, flange: flangeMat } = mats;
-  const { radii = [0.22, 0.26], facets = 8, pipes } = opts;
-  const { flange = { R: 0.3, tube: 0.07, facets: [5, 10], at: 0.22 } } = opts;
-  pipes.forEach(({ at: [x, z], h, lean }, i) => {
-    placed(
-      root,
-      `standpipe_${i}`,
-      cyl(radii[0], radii[1], h, facets),
-      pipeMat,
-      verbatim([x, h / 2, z], [0, 0, lean])
-    );
-    placed(
-      root,
-      `standpipe_flange_${i}`,
-      torus(flange.R, flange.tube, ...flange.facets),
-      flangeMat,
-      verbatim([x, h / 2 + flange.at * h, z], [Math.PI / 2, 0, 0])
-    );
-  });
 }
 
 /**
@@ -1445,6 +1419,214 @@ export function rootFlares(root, mat, opts) {
       verbatim([x, y, z], [lean + (k % 2) * leanStep, yaw0 - (k * 2 * Math.PI) / at.length, 0])
     )
   );
+}
+
+/**
+ * The works' palette — what the Foundry and the Refinery carry that no
+ * other Commune model does: two lamps of the spore token, `forge_light` on
+ * a base of #2E3A16 burning at 3.8398 ("interior forge light spilling from
+ * the bay") and `floodlight_pale` on #3A3F1E at 3.2587 ("floodlit working
+ * surfaces"), both at 0.3 rough. Their claddings and their `biolight_green`
+ * are `bastionInk`'s at the Bastion's values, the lamp at the Foundry's
+ * 3.0999 and the Refinery's 2.6. Values are the approved exports' own.
+ */
+export const worksInk = {
+  forgeLight: (intensity = 3.8397711422314402) =>
+    lamp('forge_light', hex('#E8F0A3'), hex('#2E3A16'), 0.3, intensity),
+  floodlightPale: (intensity = 3.258717662091468) =>
+    lamp('floodlight_pale', hex('#E8F0A3'), hex('#3A3F1E'), 0.3, intensity),
+};
+
+/**
+ * The husk flanks either side of the Foundry's bay — the Commune's "unit
+ * production hall", grown: on each flank (`{ name, n, lobes }`,
+ * `husk_lobe_${name}_${i}`) a rank of lobes, each an orb of `facets`
+ * stopped `down` of the way to its pole (`grownDome`) and squashed by its
+ * own `scale`, pitched a little its own way and rolled outboard by its
+ * `rot`; and round each, `lobe_ring_${n}_${i}_${j}`, growth rings where it
+ * grew — a unit torus of `ring.facets` and its own `tube` at fraction `f`
+ * up the lobe's own axis, scaled to the lobe's section there,
+ * [sx·√(1 − f²), sz·√(1 − f²), 1], lying flat and rolled with the lobe.
+ * The rule reproduces all twenty rings' nodes to the double; the fractions
+ * and tubes are the file's, no two alike. In the file's order: each lobe
+ * then its rings, the +x flank first — which a Z-long port names port
+ * (#642; see structures/foundry-pelagia.mjs).
+ */
+export function huskFlanks(root, { skin, ring: ringMat }, opts) {
+  const { frame = zLong, facets = [10, 7], down = 0.62, ring = { facets: [4, 20] }, flanks } = opts;
+  for (const { name, n, lobes } of flanks)
+    lobes.forEach(({ at, rot, scale, rings }, i) => {
+      grownDome(root, skin, {
+        name: `husk_lobe_${name}_${i}`,
+        r: 1,
+        facets,
+        down,
+        frame,
+        at,
+        rot,
+        scale,
+      });
+      const roll = rot[2];
+      const [sx, sy, sz] = scale;
+      rings.forEach(({ f, tube }, j) => {
+        const g = Math.sqrt(1 - f * f);
+        frame.part(
+          root,
+          `lobe_ring_${n}_${i}_${j}`,
+          torus(1, tube, ...ring.facets),
+          ringMat,
+          [at[0] - Math.sin(roll) * sy * f, at[1] + Math.cos(roll) * sy * f, at[2]],
+          [Math.PI / 2, 0, roll],
+          [sx * g, sz * g, 1]
+        );
+      });
+    });
+}
+
+/**
+ * Husk knuckles: orbs of `facets` in the ridge ink where the lobes meet,
+ * three a flank, each its own radius — `husk_knuckle_${i}`, `[r, at]`
+ * each. A matched pair is refused.
+ */
+export function huskKnuckles(root, mat, { frame = zLong, facets = [7, 5], knuckles }) {
+  refuseMirror('husk_knuckle', knuckles, ([r]) => r);
+  knuckles.forEach(([r, at], i) =>
+    frame.part(root, `husk_knuckle_${i}`, new THREE.SphereGeometry(r, ...facets), mat, at)
+  );
+}
+
+/**
+ * The outrigger lobes off the Foundry's corners: the big one with a growth
+ * ring round it, the small one with a pale bud on it — `outrigger_lobe_big`,
+ * `outrigger_ring_big`, `outrigger_lobe_small`, `outrigger_bud`, in that
+ * order. The lobes are orbs of `r` on `facets`, squashed and yawed by their
+ * nodes; the ring a torus of `R` and `tube` lying flat; the bud an orb.
+ */
+export function outriggerLobes(root, { skin, ring: ringMat, bud: budMat }, opts) {
+  const { frame = zLong, big, ring, small, bud } = opts;
+  const orbOf = (o) => new THREE.SphereGeometry(o.r, ...o.facets);
+  frame.part(root, 'outrigger_lobe_big', orbOf(big), skin, big.at, big.rot, big.scale);
+  frame.part(
+    root,
+    'outrigger_ring_big',
+    torus(ring.R, ring.tube, ...ring.facets),
+    ringMat,
+    ring.at,
+    ring.rot,
+    ring.scale
+  );
+  frame.part(root, 'outrigger_lobe_small', orbOf(small), skin, small.at, small.rot, small.scale);
+  frame.part(root, 'outrigger_bud', orbOf(bud), budMat, bud.at);
+}
+
+/**
+ * The stern pod closing the Foundry's blind end: a squashed orb with a
+ * growth ring lying flat round it and a pale bud on its shoulder —
+ * `stern_pod`, `stern_ring`, `stern_bud`.
+ */
+export function sternPod(root, { skin, ring: ringMat, bud: budMat }, opts) {
+  const { frame = zLong, pod, ring, bud } = opts;
+  frame.part(
+    root,
+    'stern_pod',
+    new THREE.SphereGeometry(pod.r, ...pod.facets),
+    skin,
+    pod.at,
+    pod.rot,
+    pod.scale
+  );
+  frame.part(
+    root,
+    'stern_ring',
+    torus(ring.R, ring.tube, ...ring.facets),
+    ringMat,
+    ring.at,
+    ring.rot,
+    ring.scale
+  );
+  frame.part(root, 'stern_bud', new THREE.SphereGeometry(bud.r, ...bud.facets), budMat, bud.at);
+}
+
+/**
+ * The Refinery's silos — "a rank of upright silos", grown: each a drum of
+ * `facets` tapering to `taper` of its radius `R` at the top, `h` tall,
+ * stood at `at` = [x, z] and turned by a YXZ Euler of its own `lean`, `yaw`
+ * and the same `lean` again — which is how all four files' nodes decompose,
+ * to the double; a hemisphere cap of `cap.of`·R on `cap.facets`, squashed
+ * `cap.squash`, on its top; growth rings round it, `silo_ring_${n}_${j}`,
+ * each a torus of its own `R` and `tube` lying flat at its own `y`; a pale
+ * bud of `bud.r` `bud.lift`·R above the top on the silos that grew one
+ * (`bud: true` — two of the Refinery's four); and a lit vein, a torus of
+ * `vein.of`·R and `vein.tube` over `vein.arc` (0.65 of a half-turn),
+ * `vein.at` of the height up, rolled `vein.roll` and yawed its own way. In
+ * the file's order: silo, cap, rings, bud, vein. The drum wears `skin`
+ * unless the silo says otherwise (the Refinery's fourth is chitin where
+ * the rest are algae); the cap is always `cap`'s.
+ */
+export function silos(root, mats, opts) {
+  const { skin: skinMat, cap: capMat, ring: ringMat, bud: budMat, vein: veinMat } = mats;
+  const {
+    frame = xLong,
+    facets = 9,
+    taper = 0.72,
+    cap = { of: 0.74, facets: [9, 5], squash: 0.75 },
+    ring = { facets: [4, 18] },
+    bud = { r: 0.5, facets: [7, 5], lift: 0.62 },
+    vein = {
+      of: 0.92,
+      tube: 0.06,
+      facets: [4, 14],
+      arc: Math.PI * 0.65,
+      at: 0.55,
+      roll: Math.PI / 2 - 0.5,
+    },
+    silos: list,
+  } = opts;
+  for (const s of list) {
+    const { n, R, h, lean, yaw } = s;
+    const [x, z] = s.at;
+    frame.part(
+      root,
+      `silo_${n}`,
+      cyl(taper * R, R, h, facets),
+      s.skin ?? skinMat,
+      [x, h / 2, z],
+      eulerXYZ([lean, yaw, lean], 'YXZ')
+    );
+    frame.part(
+      root,
+      `silo_cap_${n}`,
+      shell(cap.of * R, cap.facets, { down: 0.5 }),
+      capMat,
+      [x, h, z],
+      [0, 0, 0],
+      [1, cap.squash, 1]
+    );
+    s.rings.forEach(({ y, R: rr, tube }, j) =>
+      frame.part(
+        root,
+        `silo_ring_${n}_${j}`,
+        torus(rr, tube, ...ring.facets),
+        ringMat,
+        [x, y, z],
+        [Math.PI / 2, 0, 0]
+      )
+    );
+    if (s.bud)
+      frame.part(root, `silo_bud_${n}`, new THREE.SphereGeometry(bud.r, ...bud.facets), budMat, [
+        x,
+        h + bud.lift * R,
+        z,
+      ]);
+    frame.part(
+      root,
+      `silo_vein_${n}`,
+      new THREE.TorusGeometry(vein.of * R, vein.tube, ...vein.facets, vein.arc),
+      veinMat,
+      [x, vein.at * h, z],
+      [0, s.vein.yaw, vein.roll]
+    );
+  }
 }
 
 /* --------------------------------------------------------------------------

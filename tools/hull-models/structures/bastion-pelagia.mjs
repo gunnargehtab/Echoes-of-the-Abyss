@@ -21,7 +21,10 @@
  * A port of the approved export (docs/concept-art/models/bastion-pelagia.glb
  * at f7cce0f), part for part in its order, every number the export's own,
  * read off its nodes and its buffers with tools/hull-models/parts.mjs. Every
- * part comes from `factions/pelagia.mjs`. Nothing here is a shape decision;
+ * part comes from `factions/pelagia.mjs` but the ballast tanks and the
+ * standpipes, which are the kit's `ballastTanks` and `flangedPipes` — the
+ * Foundry's vocabulary (#652) — at this file's own numbers, in the export's
+ * own frame. Nothing here is a shape decision;
  * where the export is odd the script is odd with it:
  *
  * - The dome and the crown pod are partial spheres, not tables: the counts
@@ -50,7 +53,7 @@
  * collar, so a top-down map sees only its rim; the approved binary earns
  * the same.
  */
-import { THREE, exportGlb, fitFootprint } from '../kit.mjs';
+import { THREE, xLong, ballastTanks, flangedPipes, exportGlb, fitFootprint } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 440;
@@ -261,27 +264,53 @@ pelagia.domeArcs(root, steel, {
   ],
 });
 
-// Three standpipes with flanges, each leaned a degree or three its own way.
-pelagia.standpipes(
+// Three standpipes with flanges, each leaned a degree or three its own way:
+// each pipe stands h/2 up with its flange at 0.72h, and the file has all
+// three so.
+flangedPipes(
   root,
   { pipe: steel, flange: chitin },
   {
+    frame: xLong,
+    stems: { pipe: 'standpipe', flange: 'standpipe_flange' },
+    pipe: { radii: [0.22, 0.26], facets: 8 },
+    flange: { R: 0.3, tube: 0.07, facets: [5, 10] },
     pipes: [
-      { at: [-4.2, -3.6], h: 3.2, lean: -0.0210595568642 },
-      { at: [-5.2, -2.2], h: 3.6, lean: 0.0517818810884 },
-      { at: [3.4, -5.3], h: 2.6, lean: -0.0409674101137 },
+      {
+        n: '0',
+        length: 3.2,
+        at: [-4.2, 1.6, -3.6],
+        rot: [0, 0, -0.0210595568642],
+        flange: { at: [-4.2, 2.304, -3.6], rot: [Math.PI / 2, 0, 0] },
+      },
+      {
+        n: '1',
+        length: 3.6,
+        at: [-5.2, 1.8, -2.2],
+        rot: [0, 0, 0.0517818810884],
+        flange: { at: [-5.2, 2.592, -2.2], rot: [Math.PI / 2, 0, 0] },
+      },
+      {
+        n: '2',
+        length: 2.6,
+        at: [3.4, 1.3, -5.3],
+        rot: [0, 0, -0.0409674101137],
+        flange: { at: [3.4, 1.872, -5.3], rot: [Math.PI / 2, 0, 0] },
+      },
     ],
   }
 );
 
-// Two ballast tanks laid flat on the -z side, turned 0.5 and 0.8.
-pelagia.ballastTanks(root, steel, {
+// Two ballast tanks laid flat on the -z side, turned 0.5 and 0.8 — the
+// Foundry's capsule at this file's size, two alike on purpose.
+ballastTanks(root, steel, {
+  frame: xLong,
   r: 0.75,
   length: 2,
   facets: [3, 9],
   tanks: [
-    { at: [-2, 1.05, -5.9], turn: 0.5 },
-    { at: [-0.2, 1.05, -6.4], turn: 0.8 },
+    { n: '0', at: [-2, 1.05, -5.9], rot: [Math.PI / 2, 0, 0.5] },
+    { n: '1', at: [-0.2, 1.05, -6.4], rot: [Math.PI / 2, 0, 0.8] },
   ],
 });
 
