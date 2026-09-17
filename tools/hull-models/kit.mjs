@@ -1183,9 +1183,12 @@ export function capsule(radius, length, capSegments = 4, radialSegments = 8, hei
  * Three more things are here that #652's analysis had down as the
  * Directorate's own: the launch mouth and glow, the ballast tanks and the
  * graft pipes are the Directorate's and the Commune's at identical numbers,
- * and the Order's under other names (`gate_*`, `ballast_tank_r`,
+ * and the tanks and pipes the Order's under other names (`ballast_tank_r`,
  * `standpipe_r`) at its own — a vocabulary shared by name, parameterised
- * the same way. What has no twin in any other file — the Directorate's
+ * the same way. The Order's gate is not the launch mouth under another
+ * name: five parts of four primitives where this is a torus and a drum, so
+ * it has no twin and lives in `factions/hadron.mjs` (`launchGate`). What
+ * has no twin in any other file either — the Directorate's
  * mandibles, flank photophores, anchor claws, tergite flanks, outrigger pods
  * and stern carapace, and its Refinery's silos, maw teeth and intake teeth
  * (the Commune's `silo_cap_0..3` is a name twin over a grown dome, not a
