@@ -22,10 +22,13 @@
  * than reporting a violation, so a gate that swept all of `.claude/` would fail
  * on an internal error and stay failed until upstream changed.
  *
- * **It checks relative links only.** `VENDORED-SKILLS.md` records each copy's
- * upstream URL and commit, which is history rather than navigation — a
- * marketplace that reorganises its paths should not turn this gate red, and
- * pinging a dozen third parties on every local `npm run gates` buys nothing.
+ * **It checks relative links only.** The external URLs in these files are a
+ * marketplace index, one upstream repository and one of this repository's own
+ * issues — `VENDORED-SKILLS.md` records each copy's upstream as a backticked
+ * slug rather than a link, so there is barely anything here to resolve. A
+ * marketplace that reorganises its paths should not redden a local
+ * `npm run gates`, and this repository's own github.com URLs 404 unauthenticated,
+ * which `.markdown-link-check.json` already records for `docs/`.
  * What the gate is actually for is the link between two of these files, which
  * goes stale the moment a skill is renamed and which nothing else reads.
  * `.claude/.markdown-link-check.json` is where that scoping is declared.

@@ -19,7 +19,8 @@
  * `& | < > ^ ( )` alone, but still expands `%` and cannot contain a `"`, so an
  * argument holding either is refused outright rather than passed on mangled. The
  * joined line is also bounded — cmd.exe stops at 8,191 characters — which the
- * doc lists (about 1,600 characters today) are well inside; past it, cmd.exe
+ * doc lists (1,793 characters for `docs/` and 641 for `.claude/` at `8cf4be6`)
+ * are well inside; past it, cmd.exe
  * says the line is too long itself.
  */
 

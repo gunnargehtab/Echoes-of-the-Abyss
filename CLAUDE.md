@@ -196,8 +196,9 @@ tools/claude-docs  markdownlint and a relative-link check over the markdown
                    which extends the root one and turns MD018 off because
                    these files open paragraphs with issue numbers, and
                    .claude/.markdown-link-check.json, which checks relative
-                   links only — the vendored upstream URLs are history, not
-                   navigation. Runs in npm run gates and in CI's docs job.
+                   links only, because a link between two of these files is
+                   the one that goes stale unread. Runs in npm run gates
+                   and in CI's docs job.
 tools/prose-budget How long a GitHub body is, in the words a person reads —
                    markdown scaffolding, template prompts, fenced evidence and
                    the attribution footer are not reading and do not count.
