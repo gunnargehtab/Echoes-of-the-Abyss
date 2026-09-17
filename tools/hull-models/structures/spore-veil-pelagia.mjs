@@ -30,7 +30,8 @@
  *
  * - Port is −z (#642): `gill-organ-port` sits at z −0.35 and `-stb` at
  *   +0.35, so the names are right and stay. The two organs are not a
- *   mirrored pair (see `gillOrgan`), and their children are identical.
+ *   mirrored pair (see `gillOrgan`): the slits and breathing lines are
+ *   identical on both, and the mound and the haze carry negated rolls.
  * - The root flares all lean toward +z: their lean is applied before their
  *   yaw in the file's XYZ Euler, so the yaw only spins each cone on its own
  *   axis (see `rootFlares`). Kept.
