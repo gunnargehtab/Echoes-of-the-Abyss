@@ -1121,7 +1121,8 @@ export const spireInk = {
   heatShimmer: () => {
     const m = lamp('heat_shimmer', hex('#8B5CF6'), hex('#C9A6FF'), 0.1, 0.55);
     m.transparent = true;
-    m.opacity = 0.06;
+    // The file's own float, not the 0.06 it was typed as (#652 review).
+    m.opacity = 0.06000000004553697;
     return m;
   },
 };

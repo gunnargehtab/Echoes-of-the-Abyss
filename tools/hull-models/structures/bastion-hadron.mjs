@@ -43,23 +43,29 @@
  * maps 661 at 1.5, for a model that is 440 m wide. This port carries the
  * same root scale, and intake's own rescale of it lands back on 440 exactly
  * (`scaleApplied` 0.9999999999999999, printed ×1.000), so it bakes 880 and
- * 660 wide, one column narrower, and gate 3's raw E reads 11.747 against the
- * approved 11.849 — every pixel of the difference is that column and the
- * sub-pixel resampling it moves, none of it shape (`diff.mjs` below). A root
- * scale one ulp larger (`root.scale.multiplyScalar(1 + Number.EPSILON)`)
- * lands intake's product on 440.00000000000006 again and re-bakes the
- * approved maps, the way structures/vent-tap-hadron.mjs carries intake's tie
- * on a square plan; it is not done here, because that column is 0.67 m of
- * map that no part of the model occupies, and carrying it would write
- * intake's rounding into a script. The Sounding Spire's product lands on
- * 140 exactly and its maps re-bake byte for byte.
+ * 660 wide, one column narrower. The camera frames the same 440 m either
+ * way, so the difference is a sub-pixel horizontal resample of the whole
+ * map — 0.4994 m a pixel against 0.5000 — not an empty column: on the
+ * emissive map the lit span runs 61..819 of 881 before and 61..818 of 880
+ * after, 754 of 880 column sums are identical, and gate 3's raw E reads
+ * 11.747 against the approved 11.849 (#652 review). None of it is shape
+ * (`diff.mjs` below). A root scale one ulp larger
+ * (`root.scale.multiplyScalar(1 + Number.EPSILON)`) lands intake's product
+ * on 440.00000000000006 again and re-bakes the approved maps, the way
+ * structures/vent-tap-hadron.mjs carries intake's tie on a square plan; it
+ * is not done here, because it would write intake's rounding into a
+ * script, and the 660 px the port bakes is what `ceil(440 × 1.5)` gives
+ * every one of its 27 sibling structure maps. The Sounding Spire's product
+ * lands on 140 exactly and its maps re-bake byte for byte.
  *
  * SIDES. Every pair is the export's `_r`/`_l` (`hadron.pair`), and the file
  * mirrors them across two planes. The port lights, the x prongs, the
  * conduits, the anchor blades, the standpipes and the ballast tanks mirror
  * across x, the `_r` at +x — which on an unyawed X-long file is the bow
  * axis and neither beam (the conduits' `fore` and `aft` are each other's
- * z-mirror, `fore` toward −z). The four rib pairs mirror across z: every
+ * z-mirror, `fore` toward −z) — except that `anchorBlades` seeds each pair
+ * from a bearing, and blades 2 and 3 sit past π/2, so their `_r` lands at
+ * −x (−51.6 and −154.3 m) with the `_l` opposite; the pairs still mirror. The four rib pairs mirror across z: every
  * rib `_r` foots at +z, which is starboard (kit.mjs `bothSides`, #642),
  * every `_l` at −z. The two docks are named `starboard` and `port` and sit at +x
  * and −x — `dock_starboard` at x +7.5 with its throat pointing +x,

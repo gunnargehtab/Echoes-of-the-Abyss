@@ -216,8 +216,8 @@ Lamp bases are the near-black a `lamp()` puts in `color` for its emissive to sit
 | Consortium | cladding | `#1C1F22` `baffle-foam` (the Baffle Barge) |
 | Consortium | lamp base | `#1A1408` · `#120E06` · `#2A2210` · `#1A1206` |
 | Commune | cladding | `#14332A` / `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` / `#14664C` `algae_hull` · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` |
-| Commune | emissive | `#5FAE42` `bio_vein` |
-| Commune | lamp base | `#061206` · `#0A1A08` · `#123018` · `#14301A` · `#14351A` · `#0F2A12` · `#2A4A20` · `#3F6B2E` |
+| Commune | emissive | `#5FAE42` `bio_vein` · `#E8F0A3` `forge_light` / `floodlight_pale` (the spore token as a light) |
+| Commune | lamp base | `#061206` · `#0A1A08` · `#123018` · `#14301A` · `#14351A` · `#0F2A12` · `#2E3A16` · `#3A3F1E` · `#2A4A20` · `#3F6B2E` |
 | Directorate | cladding | `#3A3F4A` / `#27313B` `weld_steel` · `#4E1220` `chitin_red_dark` |
 | Directorate | emissive | `#E0506A` `gullet_glow` · `#E07A8C` `forge_light` / `floodlight_hot` |
 | Directorate | lamp base | `#1A0810` / `#2C0A12` / `#3A0D16` `biolight_crimson` · `#2A0C14` `gullet_glow` · `#40141C` `forge_light` / `floodlight_hot` |
