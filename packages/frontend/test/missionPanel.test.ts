@@ -27,6 +27,15 @@ import {
 } from '@echoes/shared';
 import './support/headless.ts';
 import { render, type Rendered } from './support/screen.ts';
+import {
+  APP_CSS,
+  borderBoxWidth,
+  boxRulesFor,
+  parseCss,
+  resolveBox,
+  rulesTargeting,
+  uaBoxSizing,
+} from './support/cssBox.ts';
 import { MissionPanel } from '../src/game/MissionPanel.tsx';
 
 /** The Concourse, in the words mission-sorrowgate.md §12 uses for it. */
@@ -664,6 +673,187 @@ describe('the objectives panel: silence owed', () => {
       );
     } finally {
       await owed.rendered.unmount();
+    }
+  });
+});
+
+describe('the objectives panel: a row fits the panel that holds it', () => {
+  /**
+   * `.objectives-body` measured 340 CSS px in a live client on `main` at
+   * `4d87c0a`, holding rows of 356 — 16 px of overflow, which put all three
+   * `.objectives-progress` right edges outside the panel and cut every
+   * `n of m` the mission was counting with (#752).
+   *
+   * It is the width to lead with because it is the one that was measured, not
+   * because it is any kind of bound — the panel is `min(340px, 32vw /
+   * --ui-scale)` unconditionally and `46vw` under `@media (max-width: 900px)`,
+   * so it is *wider* than 340 at a 900 px viewport and narrower on a small
+   * one. The fault does not depend on the number either way: under
+   * `content-box` a row overflows its body by the sum of its padding whatever
+   * that body measures, and under `border-box` it fits for the same reason.
+   * The last test here holds that independence rather than leaving it as an
+   * argument.
+   */
+  const BODY_WIDTH = 340;
+
+  /**
+   * Where a row sits, so a descendant rule can be resolved rather than refused.
+   *
+   * `MissionPanel` renders `section.objectives > div.objectives-body > row`;
+   * `GameCanvas` mounts that inside `div.game-under` — the wrapper one `inert`
+   * silences for the esc menu (§9.5) — inside `div.game-root`, which carries
+   * `--ui-scale`. `.game-under` is easy to leave out and matters: `App.css`
+   * already styles a `p` by its wrapper elsewhere, so a chain missing a link
+   * would answer such a rule wrongly rather than loudly.
+   */
+  const ANCESTORS = [
+    { tag: 'div', classes: ['game-root'] },
+    { tag: 'div', classes: ['game-under'] },
+    { tag: 'section', classes: ['objectives'] },
+    { tag: 'div', classes: ['objectives-body'] },
+  ];
+
+  /** Every row shape a mission can put in the panel, in one view. */
+  const shapes = (): MissionView =>
+    missionView({
+      objectives: [
+        // What #752 was measured on: no marker, so a `p`, with a counter in
+        // the third column for the overflow to cut.
+        objective({ id: 'markerless', progress: { done: 4, of: 3 } }),
+        // A marker makes the row a `button`, which the UA boxes the other way.
+        objective({ id: 'marker', markerId: CONCOURSE.id, progress: { done: 1, of: 2 } }),
+        // A gloss is a second line *inside* the row, so it changes the row's
+        // height and must not change its width (§10.5).
+        objective({
+          id: 'glossed',
+          gloss: 'Both tenders, out through the lock.',
+          progress: { done: 0, of: 3 },
+        }),
+        objective({ id: 'met', status: ObjectiveStatus.Met }),
+        objective({ id: 'failed', status: ObjectiveStatus.Failed }),
+      ],
+    });
+
+  /** The tag and classes of every row the panel rendered, in document order. */
+  async function rowElements(): Promise<Array<{ tag: string; classes: string[] }>> {
+    const { rendered } = await panel(shapes());
+    try {
+      return rendered.allByClass('objectives-row').map((row) => ({
+        tag: String(row.type),
+        classes: String((row.props as { className: string }).className).split(/\s+/),
+        ancestors: ANCESTORS,
+      }));
+    } finally {
+      await rendered.unmount();
+    }
+  }
+
+  it('boxes every row shape inside the body, so no progress counter is cut', async () => {
+    const rows = await rowElements();
+    assert.equal(rows.length, 5, 'all five shapes rendered');
+
+    for (const element of rows) {
+      const width = borderBoxWidth({ css: APP_CSS, element, containerContentWidth: BODY_WIDTH });
+      assert.ok(
+        width <= BODY_WIDTH,
+        `a ${element.tag}.${element.classes.join('.')} row is ${width}px in a ${BODY_WIDTH}px body`
+      );
+    }
+  });
+
+  it('boxes the two host tags identically, which is what hid the fault', async () => {
+    // The markerless row is a `p` and the marker row is a `button`, and the UA
+    // stylesheet gives only the second `border-box`. That is the whole reason
+    // #752 survived: the shapes sat side by side in the same panel under the
+    // same author CSS, and one of them fitted. They agree now, and a test that
+    // only ever rendered a marker row would still have seen nothing.
+    const rows = await rowElements();
+    const tags = new Set(rows.map((row) => row.tag));
+    assert.deepEqual([...tags].sort(), ['button', 'p'], 'both shapes are under test');
+    assert.equal(uaBoxSizing('p'), 'content-box');
+    assert.equal(uaBoxSizing('button'), 'border-box');
+
+    const widths = new Set(
+      rows.map((element) =>
+        borderBoxWidth({ css: APP_CSS, element, containerContentWidth: BODY_WIDTH })
+      )
+    );
+    assert.equal(widths.size, 1, `every row shape is one width, got ${[...widths].join(', ')}`);
+  });
+
+  it('keeps the counter inside the row, so a row that fits is a counter that fits', async () => {
+    // The arithmetic above is about the row. What §10.5 promises is about the
+    // number in it — "an objective may say *get both tenders out*" — so this
+    // is the step that connects them: the counter is a child of the row and
+    // has no width of its own, which is why the row's box is the thing to fix.
+    const { rendered } = await panel(shapes());
+    try {
+      const counters = rendered.allByClass('objectives-progress');
+      assert.equal(counters.length, 3, 'three of the five shapes count something');
+      for (const counter of counters) {
+        assert.equal(
+          resolveBox(parseCss(APP_CSS), {
+            tag: 'span',
+            classes: ['objectives-progress'],
+            ancestors: [...ANCESTORS, { tag: 'p', classes: ['objectives-row', 'pending'] }],
+          }).width,
+          undefined,
+          'the counter is sized by its content, so only the row can clip it'
+        );
+        assert.match(reads(counter), /^\d+ of \d+$/);
+      }
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('does not depend on the UI scale, at either end of §11’s 75–200%', async () => {
+    // §11's scale is applied as `transform: scale()` on `.objectives` as a
+    // whole, so the row and the body it sits in are scaled by one factor and
+    // the overflow — a difference between two lengths in the same space —
+    // scales with them. Two things have to hold for that to be true, and both
+    // are read off the stylesheet rather than asserted about it.
+    const rules = parseCss(APP_CSS);
+    const row = { tag: 'p', classes: ['objectives-row', 'pending'], ancestors: ANCESTORS };
+
+    // One: nothing in the row's own box depends on the scale variable.
+    for (const rule of boxRulesFor(rules, row)) {
+      for (const [property, value] of rule.declarations) {
+        assert.doesNotMatch(
+          value,
+          /--ui-scale/,
+          `${rule.selector} { ${property}: ${value} } would make the row scale twice`
+        );
+      }
+    }
+
+    // Two: no conditional rule puts the row back on `content-box` at some
+    // viewport. The panel does narrow under `@media (max-width: 900px)`, and a
+    // row that stopped counting its padding there would overflow again.
+    const conditional = rulesTargeting(rules, row).filter((rule) => rule.condition !== null);
+    for (const rule of conditional) {
+      for (const [property, value] of rule.declarations) {
+        if (property !== 'box-sizing') continue;
+        assert.equal(
+          value,
+          'border-box',
+          `${rule.condition} { ${rule.selector} } re-boxes the row`
+        );
+      }
+    }
+
+    // And the arithmetic itself, at the width that media query brings and at
+    // an absurdly narrow one. 46vw of a 900px viewport is 414, and that is the
+    // body's content width rather than 414 less the panel's 1px borders:
+    // `.objectives` sets no `box-sizing` either, so it is content-box and its
+    // border sits outside the width it declares. The live client agrees — the
+    // unconditional `min(340px, …)` reads back as a body of 340, not 338.
+    for (const containerContentWidth of [BODY_WIDTH, 414, 120]) {
+      assert.ok(
+        borderBoxWidth({ css: APP_CSS, element: row, containerContentWidth }) <=
+          containerContentWidth,
+        `a row overflows a ${containerContentWidth}px body`
+      );
     }
   });
 });

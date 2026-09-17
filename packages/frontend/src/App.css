@@ -1630,6 +1630,14 @@
   grid-template-columns: 3.2rem 1fr auto;
   gap: 8px;
   width: 100%;
+  /* `width: 100%` is the body's content width, and these 8s are added to it
+     unless the padding is counted inside the box. A marker row is a `button`,
+     which the UA already gives `border-box`, so only the markerless `p` rows
+     overflowed — by exactly 16 px, which put the progress counter's right edge
+     outside the panel and cut every `n of m` (#752). The row is the one place
+     in this stylesheet that needed saying: every other `width: 100%` rule with
+     horizontal padding is on a button. */
+  box-sizing: border-box;
   padding: 5px 8px;
   border: 0;
   background: transparent;
