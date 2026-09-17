@@ -39,8 +39,8 @@
  * the export has them, so the gun droops the 0.055 rad its own centres
  * step, and the barrel and the jacket come onto that axis by 0.17 m and
  * 0.44 m; `turretHouse` pitches the glacis about its own beam; and the one
- * lamp, which the straightened breech would otherwise half cover, steps
- * 2.8 m outboard with its bracket (the note at `baseLamp` below). The port
+ * lamp, a third of which the gun on its axis would otherwise cover, steps
+ * 3.1 m outboard with its bracket (the note at `baseLamp` below). The port
  * carried the stagger (#639) because a port must; this is the pass it
  * deferred it to. `node tools/hull-models/diff.mjs sentinel-turret-bathyarch
  * 0522b01~1` lists those eight parts — five tubes, the glacis, the lamp and
@@ -137,11 +137,13 @@ bathyarch.feedPipe(root, rust, { from: [0.5, 0.4, -0.45], to: [0.2, 0.95, -0.25]
 // The whole resting light budget: one work lamp on its bracket, on the raft
 // where the top-down bake can see it — the approved turret's emissive map is
 // this one lamp and nothing else. The export had it at (0.55, 0.42, 0.7),
-// in the open only because the staggered breech ran wide of it; the gun on
-// its axis passes over that spot and shaded half the lamp (5.9 m² of 10.8
-// facing up). It stands 0.09 units — 2.8 m — outboard of there now, square
-// off the gun's axis, on the raft's corner with its bracket under it, and
-// the whole sphere faces up again.
+// in the open only because the staggered tubes ran wide of it; the gun on
+// its axis passes over that spot — the barrel most of all — and shaded a
+// third of the lamp (5.9 m² facing up of the 8.4 the audit reads clear; a
+// six-by-four sphere's plan is a hexagon). It stands 0.103 units — 3.1 m —
+// outboard of there now, square off the gun's axis (2.74 m of that on x,
+// which is the figure `diff.mjs` prints), over the raft's corner with its
+// bracket under it, and the whole sphere faces up again.
 bathyarch.baseLamp(
   root,
   { lampMat: work, black },

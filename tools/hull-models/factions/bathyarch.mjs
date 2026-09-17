@@ -885,8 +885,9 @@ export function turretHouse(root, { black, grey, rust }, { housing, glacis, roof
  * pitched 0.06 up while their centres stepped down. The port carried that
  * (#639), as a port must; this is the pass it deferred it to (#645, off #540
  * Phase 6). Against the file the jacket comes 0.44 m and the barrel 0.17 m
- * onto the axis, under a pixel at either map density; the breech, the brake,
- * the recoil cylinder and the counterweight stand where they stood.
+ * onto the axis, under a pixel at the 1.5 px/m a structure bakes at; the
+ * breech, the brake and the recoil cylinder stand where they stood, turned
+ * onto the axis with the rest, and the counterweight does not move at all.
  */
 export function heavyBarrel(root, { black, grey, rust }, opts) {
   const { breech, barrel, jacket, brake, recoil, counterweight, bearing } = opts;
