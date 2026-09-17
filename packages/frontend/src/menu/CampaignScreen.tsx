@@ -175,7 +175,7 @@ export function CampaignScreen({ hasPlayed, onSelect, onRecord, onBack }: Campai
   };
 
   return (
-    <div className="menu-screen" role="dialog" aria-label="Campaign">
+    <div className="menu-screen menu-screen-board" role="dialog" aria-label="Campaign">
       <div className="menu-panel menu-panel-board">
         <header className="menu-head">
           <h2>Campaign</h2>

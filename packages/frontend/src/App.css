@@ -2516,7 +2516,7 @@ button.objectives-row:hover {
 .campaign-board {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.3rem;
 }
 
 /* The lane, the heads and the seven rows share one four-column track so the
@@ -2525,7 +2525,7 @@ button.objectives-row:hover {
 .campaign-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.4rem;
+  gap: 0.3rem;
 }
 
 .campaign-lane {
@@ -2539,8 +2539,8 @@ button.objectives-row:hover {
 .campaign-head {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.5rem 0.6rem 0.35rem;
+  gap: 0.1rem;
+  padding: 0.3rem 0.5rem 0.28rem;
   /* The navy's ink, and only on the head: a rule under the column rather than
      a box around it, so the head names the column without competing with the
      slots for the eye. */
@@ -2564,8 +2564,8 @@ button.objectives-row:hover {
 }
 
 .campaign-head-commander {
-  font-size: 0.58rem;
-  line-height: 1.5;
+  font-size: 0.55rem;
+  line-height: 1.35;
   letter-spacing: 0.04em;
   font-style: italic;
   color: var(--text-dim);
@@ -2576,8 +2576,8 @@ button.objectives-row:hover {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.5rem 0.6rem;
+  gap: 0.15rem;
+  padding: 0.38rem 0.5rem;
   border: 1px solid color-mix(in srgb, var(--neon-magenta) 45%, transparent);
   border-radius: 4px;
   background: var(--abyss-glass);
@@ -2650,9 +2650,13 @@ button.objectives-row:hover {
   text-shadow: 0 0 6px color-mix(in srgb, var(--neon-cyan) 45%, transparent);
 }
 
+/* Set tighter than the port's body type, because twenty-eight of these are on
+   screen at once and the board has to fit without scrolling (§2). A slot's line
+   is quoted material and may not be cut (§14), so the room comes from the
+   setting: a line that ran to four rows at 0.62/1.5 runs to two. */
 .campaign-slot-line {
-  font-size: 0.62rem;
-  line-height: 1.5;
+  font-size: 0.57rem;
+  line-height: 1.38;
   letter-spacing: 0.04em;
   color: var(--text-dim);
 }
@@ -2702,23 +2706,31 @@ button.objectives-row:hover {
    and cannot be scrolled to, whereas auto margins collapse to zero when there
    is no room and the panel starts at the top. The board and the record are
    the two panels that can be taller than a phone. */
+/* The widest screen in the port, and the one with the least slack: twenty-nine
+   slots have to fit without scrolling (§2), so it takes the screen's side
+   padding down with it. Nothing is lost — the board is already inset from the
+   viewport by its own column gaps. */
+.menu-screen-board {
+  padding: 0.9rem 1.5rem;
+}
+
 .menu-panel-board {
   width: min(1360px, 100%);
   margin-block: auto;
+  gap: 0.7rem;
 }
 
 .campaign-body {
   display: grid;
-  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
-  gap: 1.1rem;
+  grid-template-columns: minmax(180px, 218px) minmax(0, 1fr);
+  gap: 0.9rem;
   align-items: start;
 }
 
-/* The chart holds its place while the eight rows scroll past it, so the mark
-   the focus is on is always beside the slot it is on. */
+/* The chart is beside the whole board rather than beside a scrolled window of
+   it: since the board fits (§2), there is nothing to hold position against, and
+   the sticky offset only ever mattered while the rows moved. */
 .campaign-chart {
-  position: sticky;
-  top: 0;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
