@@ -1063,4 +1063,560 @@ export function cage(root, alloy, { r, length, at, lean }) {
   );
 }
 
+/* --------------------------------------------------------------------------
+ * The Bastion and the Sounding Spire (#652, off #540 Phase 3) — the two
+ * r184 structure exports of the Order's that build in their own frame. Both
+ * are X-long files (the Bastion 20.9 by 19.34 in plan, the Spire square to
+ * the digit), so nothing below goes through `drawn`: every part is `add`ed
+ * at the file's own translation, XYZ Euler and scale, and each script holds
+ * its footprint with kit.mjs `fitFootprint`. Every pair is the export's
+ * `_r`/`_l` (`pair`), and which side each lands on is a fact about the file,
+ * said at each builder: the two files mirror their pairs across two
+ * different planes, and on an unyawed X-long file a `_r` at +x is on the
+ * bow axis and on neither beam.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The Bastion's palette, which the Sounding Spire carries too — the same
+ * five names at the same finishes, the two lamps at each file's own
+ * strength. Values are the approved files' own (bastion-hadron.glb and
+ * sounding-spire-hadron.glb at f7cce0f), and three of the five are a third
+ * reading of a name this module already holds twice: `shadow_indigo` is the
+ * Block 2 token #3B2E5A, the hulls' colour, at the turret's metalness of
+ * 0.25 — neither `ink`'s (0.35) nor `structureInk`'s (#2C2244); `alloy_white`
+ * is `pale_alloy`'s hex #E6E9F2 dulled to 0.35 / 0.28 under a name of its
+ * own; and `resonance_crystal`, a cladding on every hull, is a lamp here —
+ * the crystal-violet token burning over a #2A1650 base at metalness 0.1,
+ * which kit.mjs `lamp` cannot say (it writes 0) and which is set after.
+ * `dark_steel` is `structureInk`'s to the value. The strengths are the
+ * files' floats — 2.000036651280468 and 2.6000523589720967 on the Bastion,
+ * 2.1000000006830546 and 3.000000001062529 on the Spire — as the turret's
+ * are (#639 review, N1). Neither lamp base (#2A1650, #3A2560) is in a
+ * palette table: derived, in Block 2b's sense, and reported on #641.
+ */
+export const bastionInk = {
+  alloyWhite: () => clad('alloy_white', hex('#E6E9F2'), 0.35, 0.28),
+  shadowIndigo: () => clad('shadow_indigo', hex('#3B2E5A'), 0.25, 0.45),
+  darkSteel: structureInk.darkSteel,
+  resonanceCrystal: (intensity) => {
+    const m = lamp('resonance_crystal', hex('#8B5CF6'), hex('#2A1650'), 0.15, intensity);
+    m.metalness = 0.1;
+    return m;
+  },
+  crystalGlow: (intensity) => lamp('crystal_glow', hex('#C9A6FF'), hex('#3A2560'), 0.2, intensity),
+};
+
+/**
+ * The Spire's: the Bastion's five and the heat shimmer — "heat-shimmer
+ * distortion" (docs/asset-prompts-3d.md, STRUCTURE — Sounding Spire) as a
+ * material: a sheath over the core whose *base* is the crystal-glow token
+ * #C9A6FF, six percent opaque and alpha-blended, with the crystal-violet
+ * emissive under it at 0.55. The one translucent material on any approved
+ * Order model; kit.mjs `lamp` has no opacity, so it is set after.
+ */
+export const spireInk = {
+  ...bastionInk,
+  heatShimmer: () => {
+    const m = lamp('heat_shimmer', hex('#8B5CF6'), hex('#C9A6FF'), 0.1, 0.55);
+    m.transparent = true;
+    m.opacity = 0.06;
+    return m;
+  },
+};
+
+/**
+ * A torus drawn part way round: `angle` radians of a ring of radius `r` and
+ * tube `t`, `radial` facets round the tube and `tubular` along the arc,
+ * starting on the ring's +x and turning toward its +y — three's own `arc`.
+ * The Bastion's eight reinforcement ribs are one of these (0.52π, past the
+ * equator by a facet, four-sided) and so are its four conduits (0.9 rad,
+ * five-sided). Kit `torus` draws only the full ring; a partial one is
+ * faction-neutral and is a kit candidate.
+ */
+export const arc = (r, t, radial, tubular, angle) =>
+  new THREE.TorusGeometry(r, t, radial, tubular, angle);
+
+/** A crystal: an octahedron of `r` at `at`, drawn tall by its node's `scale`. */
+const crystal = (root, name, mat, { r, at, scale }) =>
+  add(root, name, octa(r), mat, at, [0, 0, 0], scale);
+
+/**
+ * A ring laid flat at `at`: a torus of `r` and `t`, `radial` by `tubular`,
+ * born in the xy-plane, turned `roll` about its own axis and then laid down
+ * by a quarter about x — an XYZ Euler of (π/2, 0, roll) applies the z turn
+ * first. The Bastion's equator and plinth bands, the Spire's three collars
+ * (rolled an eighth) and both files' flanges are all this.
+ */
+export function ring(root, name, mat, { r, t, radial, tubular, at, roll = 0 }) {
+  return add(root, name, torus(r, t, radial, tubular), mat, at, [Math.PI / 2, 0, roll]);
+}
+
+/**
+ * A plinth: a `facets`-sided frustum of `rTop` over `r`, `h` tall and
+ * centred at `y`, turned `yaw` on its node — an eighth on both files, so a
+ * flat faces each axis and the yawed box overhangs the vertices, which is
+ * the measure the bake takes (kit.mjs `fitFootprint`).
+ */
+export function plinth(root, name, mat, { rTop, r, h, y, facets = 8, yaw = Math.PI / 8 }) {
+  return add(root, name, cyl(rTop, r, h, facets), mat, [0, y, 0], [0, yaw, 0]);
+}
+
+/**
+ * The pressure dome under its apex lantern — "a large pressure dome with
+ * visible reinforcement ribs" (the Bastion block), the Order's. The dome is
+ * a sphere of `dome.r` drawn `dome.theta` down from its pole — 0.52π on the
+ * file, past the equator by a ring, so its skirt tucks under the band —
+ * `dome.segments` `[round, down]`, pressed to `dome.scale` on its node at
+ * `dome.at`. The `lantern` and the `finial` are crystals stood on the pole,
+ * the finial in the brighter glow, and four `prongs` hold the lantern: a
+ * box of `prongs.size` at ±`prongs.reach` along x, `_r` at +x, rolled
+ * ∓`prongs.splay` about z so each leans in, and the same box turned across
+ * at ±`reach` along z, `_f` at +z, pitched the same way. The x pair shares
+ * one buffer; the z pair, the same box with its axes swapped, is drawn
+ * twice — the file's.
+ */
+export function pressureDome(root, { alloy, crystal: lit, glow, shadow }, opts) {
+  const { dome, lantern, finial, prongs } = opts;
+  add(
+    root,
+    'pressure_dome',
+    new THREE.SphereGeometry(
+      dome.r,
+      dome.segments[0],
+      dome.segments[1],
+      0,
+      Math.PI * 2,
+      0,
+      dome.theta
+    ),
+    alloy,
+    dome.at,
+    [0, 0, 0],
+    dome.scale
+  );
+  crystal(root, 'apex_lantern', lit, lantern);
+  crystal(root, 'apex_finial', glow, finial);
+  const { size, y, reach, splay } = prongs;
+  const along = box(...size);
+  pair((tag, sgn) =>
+    add(root, `lantern_prong_x_${tag}`, along, shadow, [-sgn * reach, y, 0], [0, 0, -sgn * splay])
+  );
+  for (const [tag, sgn] of [
+    ['f', 1],
+    ['b', -1],
+  ])
+    add(
+      root,
+      `lantern_prong_z_${tag}`,
+      box(size[2], size[1], size[0]),
+      shadow,
+      [0, y, sgn * reach],
+      [-sgn * splay, 0, 0]
+    );
+}
+
+/**
+ * The reinforcement ribs: `yaws.length` pairs of arcs (`arc` above) stood on
+ * end — lathed in the ring's own plane, then turned upright by a quarter
+ * about z so the arc runs from the pole down past the equator — and yawed
+ * round the dome, the `_r` of pair `i` at +`yaws[i]` and the `_l` at
+ * −`yaws[i]`, on the dome's `at` and pressed to its `scale`; alloy on the
+ * even pairs, shadow on the odd. A rib's `_r` and `_l` mirror across the
+ * beam (the export's xy-plane): every `_r` foots at +z, which is starboard
+ * (kit.mjs `bothSides`, #642), every `_l` at −z — unlike the lights and the
+ * anchor blades on the same file, whose pairs mirror across x. The yaws are
+ * 0.35, 1.05, 2.09 and 2.79 rad; parts.mjs prints the last two pairs as
+ * (π, π − yaw, −π/2), the same matrix said the other way. The 0.92 is on the
+ * y of the rib's *own* frame, which after the quarter turn is the world's
+ * x-z, so a rib is a quarter-ellipse 5.41 out by 6.05 up against a dome
+ * 5.99 out by 5.51 up. The file's. Each rib is its own buffer, eight in all.
+ */
+export function reinforceRibs(root, { alloy, shadow }, opts) {
+  const { r, t, radial, tubular, angle, yaws, at, scale } = opts;
+  yaws.forEach((yaw, i) =>
+    pair((tag, sgn) =>
+      add(
+        root,
+        `reinforce_rib_${i}_${tag}`,
+        arc(r, t, radial, tubular, angle),
+        i % 2 ? shadow : alloy,
+        at,
+        [0, -sgn * yaw, Math.PI / 2],
+        scale
+      )
+    )
+  );
+}
+
+/**
+ * Lit marks in mirrored pairs — the Bastion's twelve port lights, "sustained
+ * glow from ports and working lights" (the Bastion block), and the Spire's
+ * ten running lights. One sphere of `r`, six round by five up, drawn once
+ * and placed at each `[x, y, z]` of `at` as `${name}_${i}_r` and, at −x, as
+ * `${name}_${i}_l`: the pairs mirror across the export's x, the `_r` toward
+ * +x — the bow axis on these X-long files, neither beam. A twin of
+ * `navMarks` (the turret's five-by-four orbs through `drawn`) for files that
+ * are not yawed; every node shares the one buffer, as both files do.
+ */
+export function lightPairs(root, light, { name, r, at }) {
+  const orb = new THREE.SphereGeometry(r, 6, 5);
+  at.forEach(([x, y, z], i) =>
+    pair((tag, sgn) => add(root, `${name}_${i}_${tag}`, orb, light, [-sgn * x, y, z]))
+  );
+}
+
+/**
+ * A docking collar — "docking collars and external pipework" (the Bastion
+ * block) — as a frame of its own: a `dock_${name}` node at `at`, rolled
+ * `roll` about z so its y runs out along the beam, and inside it a throat
+ * (an eight-facet frustum of `throat.rTop` over `throat.r`, `throat.h`
+ * long, on the node's origin with no transform of its own), a lip, a lit
+ * mouth and two fins. The Bastion has two, `starboard` at +x rolled −π/2 and
+ * `port` at −x rolled +π/2, each throat pointing outboard along the file's
+ * x: the bow axis and not the beam, so neither #642's relabel rule nor its
+ * exception applies by the letter, and the names are carried as the file
+ * has them.
+ *
+ * The lip is the file's oddity: a four-sided ring (`lip.r`, `lip.t`, eight
+ * round) at `lip.y` up the throat with no rotation on its node, so it stands
+ * in the frame's xy-plane — edge-on to the throat, a ring the throat runs
+ * through — rather than laid round the mouth. A collar's lip wants the
+ * quarter turn about x the export never gave it; a port keeps the buffer
+ * where it is. The mouth is a thin drum of `mouth.r` by `mouth.t` at
+ * `mouth.y`, lit; the fins are four-sided pyramids of `fins.r` by
+ * `fins.length` at `fins.y` and ±`fins.z`, canted ±`fins.cant` about x so
+ * each leans outboard, `_0` at +z first.
+ */
+export function dockingCollar(root, { alloy, shadow, crystal: lit }, opts) {
+  const { name, at, roll, throat, lip, mouth, fins } = opts;
+  const dock = group(root, `dock_${name}`, { at, rot: [0, 0, roll] });
+  add(dock, `dock_${name}_throat`, cyl(throat.rTop, throat.r, throat.h, 8), alloy);
+  add(dock, `dock_${name}_lip`, torus(lip.r, lip.t, 4, 8), shadow, [0, lip.y, 0]);
+  add(dock, `dock_${name}_mouth`, cyl(mouth.r, mouth.r, mouth.t, 8), lit, [0, mouth.y, 0]);
+  [1, -1].forEach((sgn, i) =>
+    add(
+      dock,
+      `dock_${name}_fin_${i}`,
+      cyl(0, fins.r, fins.length, 4),
+      shadow,
+      [0, fins.y, sgn * fins.z],
+      [sgn * fins.cant, 0, 0]
+    )
+  );
+  return dock;
+}
+
+/**
+ * The conduits — "external pipework" — four arcs (`arc` above, five-sided)
+ * of a circle of `r` about the dome's `at`, laid over the dome's crown (6.1
+ * to 7.0 up on a dome that tops at 7.4) and pressed to its `scale`: `fore_r`
+ * at the XYZ Euler (0, `lean`, `lean`), yawed and rolled by the one angle
+ * (π/2 − 0.55 on the file), which drapes it from 2.5 out at −z to 1.4 out at
+ * +z on the +x side; `aft_r` with the yaw negated, its z-mirror — so `fore`
+ * is toward −z and `aft` toward +z, the file's names on an X-long file; and
+ * each `_l` its `_r` mirrored across the export's x with the tube's
+ * section turned over with it — two reflections, so a proper rotation and
+ * not a node scale of −1 — which the file decomposes as (±π, yaw, roll − π),
+ * the half turn carrying the yaw's sign, and which is written so, since the
+ * matrix is the same to the sixteenth place either way and parts.mjs then
+ * reads it back line for line. `fore` before `aft`,
+ * `_r` before `_l`; each conduit its own buffer.
+ */
+export function conduits(root, steel, { r, t, radial, tubular, angle, lean, at, scale }) {
+  for (const [name, yaw] of [
+    ['fore', lean],
+    ['aft', -lean],
+  ])
+    pair((tag, sgn) =>
+      add(
+        root,
+        `conduit_${name}_${tag}`,
+        arc(r, t, radial, tubular, angle),
+        steel,
+        at,
+        sgn < 0 ? [0, yaw, lean] : [Math.sign(yaw) * Math.PI, yaw, lean - Math.PI],
+        scale
+      )
+    );
+}
+
+/**
+ * Standpipes: a pair of eight-facet pipes of `pipe.rTop` over `pipe.r`,
+ * `pipe.h` tall, at ±`at[0]` and `at[1]`, `at[2]`, and a flange each — a
+ * ring of `flange.r` and `flange.t`, `flange.radial` by `flange.tubular`,
+ * laid flat at `flange.y` — both pipes before both flanges, the `_r` at +x,
+ * each pair one buffer. The Spire's `ballastPipes` are the same two pipes
+ * drawn a side at a time, leaned, and sharing nothing.
+ */
+export function standpipes(root, { steel, shadow }, { at: [x, y, z], pipe, flange }) {
+  const stem = cyl(pipe.rTop, pipe.r, pipe.h, 8);
+  pair((tag, sgn) => add(root, `standpipe_${tag}`, stem, steel, [-sgn * x, y, z]));
+  const collar = torus(flange.r, flange.t, flange.radial, flange.tubular);
+  pair((tag, sgn) =>
+    add(
+      root,
+      `standpipe_flange_${tag}`,
+      collar,
+      shadow,
+      [-sgn * x, flange.y, z],
+      [Math.PI / 2, 0, 0]
+    )
+  );
+}
+
+/**
+ * Ballast tanks: a capsule of `r` and `waist`, three-step caps and eight
+ * facets, laid along z by a quarter about x at ±`at[0]` — a later three's
+ * CapsuleGeometry as the turret's pods are (kit.mjs `capsule`) — one buffer
+ * for the pair, the `_r` at +x. Both files carry one pair.
+ */
+export function ballastTanks(root, mat, { r, waist, at: [x, y, z] }) {
+  const tank = capsule(r, waist, 3, 8);
+  pair((tag, sgn) =>
+    add(root, `ballast_tank_${tag}`, tank, mat, [-sgn * x, y, z], [Math.PI / 2, 0, 0])
+  );
+}
+
+/**
+ * Anchor blades — "anchored to the seabed" — `bearings.length` mirrored
+ * pairs of four-sided pyramids of `r` by `length` round the plinth's foot:
+ * each stood on the `anchor` circle `[radius, y]` at its bearing (radians
+ * from +x toward +z), its axis the outward radial with `lift` added to y
+ * before normalising, its centre `seat` out along that axis, and turned onto
+ * the axis by the one rotation that carries +y there — the Sentinel Turret's
+ * skirt-blade construction (`emplacement`) with the seat a distance rather
+ * than a fraction of the length, on a file that is not yawed, so the `_l` of
+ * each pair is the `_r` mirrored across x by `sided`'s rule without `drawn`.
+ * Shadow on the even pairs, alloy on the odd; every blade its own buffer.
+ * From bearings 0.45, 1.35, 1.9 and 2.75 on a circle of 7.3 at 0.6, lifted
+ * 0.5 and seated 0.8, that regenerates the approved node matrices to the
+ * sixteenth place. Its twin in `emplacement` could be folded onto this; it
+ * has not been, because the turret's file is not this issue's.
+ */
+export function anchorBlades(root, { shadow, alloy }, opts) {
+  const { r, length, anchor, lift, seat, bearings } = opts;
+  const up = new THREE.Vector3(0, 1, 0);
+  bearings.forEach((bearing, i) => {
+    const out = new THREE.Vector3(Math.cos(bearing), 0, Math.sin(bearing));
+    const axis = out.clone().setY(lift).normalize();
+    const c = out.multiplyScalar(anchor[0]).setY(anchor[1]).addScaledVector(axis, seat);
+    const q = new THREE.Quaternion().setFromUnitVectors(up, axis);
+    const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+    pair((tag, sgn) =>
+      add(
+        root,
+        `anchor_blade_${i}_${tag}`,
+        cyl(0, r, length, 4),
+        i % 2 ? alloy : shadow,
+        [-sgn * c.x, c.y, c.z],
+        [e.x, -sgn * e.y, -sgn * e.z]
+      )
+    );
+  });
+}
+
+/**
+ * The Spire's anchor legs — "bilaterally symmetrical, pale alloy frame" stood
+ * on the seabed: four, on the plinth's diagonals in the order (+x,+z),
+ * (+x,−z), (−x,+z), (−x,−z), each a box of `leg.size` at `leg.reach` out on
+ * both axes and `leg.y` up, yawed to its diagonal — `atan2(sx, sz)`, so its
+ * length runs outboard — and pitched `leg.pitch` about the *export's* x
+ * (an XYZ Euler puts the x turn outermost), so the two legs at +z rise
+ * outboard and the two at −z dip: the file's asymmetry across the beam,
+ * kept, its symmetry across x exact. A claw on the end of each, a
+ * four-sided pyramid of `claw.r` by `claw.length` at `claw.reach`, yawed the
+ * same way and then pitched a quarter and `claw.dip` about its *own* x (YXZ,
+ * the turrets' order, kit.mjs `eulerXYZ`) so the point goes outboard and a
+ * little down — the other rotation order on the same file. Leg then claw a
+ * corner at a time, each its own buffer.
+ */
+export function anchorLegs(root, { alloy, steel }, { leg, claw }) {
+  [
+    [1, 1],
+    [1, -1],
+    [-1, 1],
+    [-1, -1],
+  ].forEach(([sx, sz], i) => {
+    const yaw = Math.atan2(sx, sz);
+    add(
+      root,
+      `anchor_leg_${i}`,
+      box(...leg.size),
+      alloy,
+      [sx * leg.reach, leg.y, sz * leg.reach],
+      [leg.pitch, yaw, 0]
+    );
+    add(
+      root,
+      `anchor_claw_${i}`,
+      cyl(0, claw.r, claw.length, 4),
+      steel,
+      [sx * claw.reach, claw.y, sz * claw.reach],
+      [Math.PI / 2 + claw.dip, yaw, 0, 'YXZ']
+    );
+  });
+}
+
+/**
+ * The crystal core — "a violet crystal core", "burning bright along the
+ * crystal" (the Sounding Spire block): three octahedra on the axis, each
+ * drawn tall by its node — the `core` in resonance crystal, the `throat`
+ * inside it in the brighter glow, standing a millimetre off the axis in z
+ * (the file's z-fight nudge), and the `apex` above in the same glow.
+ */
+export function crystalCore(root, { crystal: lit, glow }, { core, throat, apex }) {
+  crystal(root, 'crystal_core', lit, core);
+  crystal(root, 'crystal_throat', glow, throat);
+  crystal(root, 'crystal_apex', glow, apex);
+}
+
+/**
+ * The frame blades — "pale alloy frame around a violet crystal core": one
+ * blade drawn in the export's xy-plane from `outline`, `[x, y]` up the
+ * blade — base first, out along the outer edge to the tip and back down
+ * the inner — extruded `depth` along z with a one-segment bevel of `bevel`
+ * `[thickness, size]` and centred on its depth, standing on `at`; the `_r`
+ * as drawn, at +x, and the `_l` the same buffer under a node scale of
+ * [−1, 1, 1] — a reflection, written as the file decomposes it and as the
+ * scout's drive prism is (#588 review, F1), not as the rotation it is
+ * equivalent to. The outline reaches ExtrudeGeometry unclosed: three
+ * reverses a counter-clockwise outline and only then drops a repeated first
+ * point, so a `closePath` would start the walls one point on from where the
+ * file's start (`plane` above says the same of the Chorister's plates).
+ */
+export function frameBlades(root, alloy, { outline, depth, bevel: [thickness, size], at }) {
+  const shape = new THREE.Shape();
+  outline.forEach(([x, y], i) => (i === 0 ? shape.moveTo(x, y) : shape.lineTo(x, y)));
+  const blade = new THREE.ExtrudeGeometry(shape, {
+    depth,
+    bevelEnabled: true,
+    bevelThickness: thickness,
+    bevelSize: size,
+    bevelSegments: 1,
+    steps: 1,
+  });
+  blade.translate(0, 0, -depth / 2);
+  add(root, 'frame_blade_r', blade, alloy, at);
+  add(root, 'frame_blade_l', blade, alloy, at, [0, 0, 0], [-1, 1, 1]);
+}
+
+/**
+ * The resonance collars — the tuned rings up the core: one a `[y, r, reach]`
+ * of `rings`, a four-sided ring of `t` laid flat at `y` and rolled an eighth
+ * first (`ring`), with a vane each side — a four-sided pyramid of `vane.r`
+ * by `vane.length` at ±`reach`, rolled ∓π/2 so its point goes outboard
+ * along x, the `_r` at +x. Collar, `_r`, `_l` a ring at a time; each collar
+ * its own buffer and each vane pair one.
+ */
+export function resonanceCollars(root, { alloy, shadow }, { rings, t, vane }) {
+  rings.forEach(([y, r, reach], i) => {
+    ring(root, `resonance_collar_${i}`, alloy, {
+      r,
+      t,
+      radial: 4,
+      tubular: 8,
+      at: [0, y, 0],
+      roll: Math.PI / 8,
+    });
+    const spike = cyl(0, vane.r, vane.length, 4);
+    pair((tag, sgn) =>
+      add(
+        root,
+        `collar_vane_${i}_${tag}`,
+        spike,
+        shadow,
+        [-sgn * reach, y, 0],
+        [0, 0, (sgn * Math.PI) / 2]
+      )
+    );
+  });
+}
+
+/**
+ * The tuning horns — "tall crystalline resonance spire ... directional": a
+ * bar of `horn.size` each side of the apex at ±`horn.reach`, `horn.y`, rolled
+ * ∓`horn.lean` about z so the pair leans in at the top; a lit tip on each, a
+ * four-sided pyramid of `tip.r` by `tip.length` at ±`tip.reach`, `tip.y`,
+ * yawed ±`tip.yaw` — an eighth, so a flat faces the beam — and rolled with
+ * its horn; and the brace between them, a box of `brace.size` at `brace.y`.
+ * Both horns, both tips, the brace; the horns one buffer, the tips one.
+ */
+export function tuningHorns(root, { alloy, glow, steel }, { horn, tip, brace }) {
+  const bar = box(...horn.size);
+  pair((tag, sgn) =>
+    add(
+      root,
+      `tuning_horn_${tag}`,
+      bar,
+      alloy,
+      [-sgn * horn.reach, horn.y, 0],
+      [0, 0, -sgn * horn.lean]
+    )
+  );
+  const spike = cyl(0, tip.r, tip.length, 4);
+  pair((tag, sgn) =>
+    add(
+      root,
+      `tuning_horn_tip_${tag}`,
+      spike,
+      glow,
+      [-sgn * tip.reach, tip.y, 0],
+      [0, -sgn * tip.yaw, -sgn * horn.lean]
+    )
+  );
+  add(root, 'horn_brace', box(...brace.size), steel, [0, brace.y, 0]);
+}
+
+/**
+ * The ballast pipes: a pipe and its flange a side at a time, `_r` then
+ * `_l`. The pipe is an eight-facet frustum of `pipe.rTop` over `pipe.r`,
+ * `pipe.h` tall, at ±`pipe.at[0]`, rolled ∓`pipe.lean` about z so it leans
+ * in at the top; the flange a six-sided ring of `flange.r` and `flange.t`
+ * laid flat at ±`flange.at[0]` and turned ∓`pipe.lean` about the vertical
+ * — not leaned with its pipe, because the file wrote the roll and the laying
+ * in the order that spins the ring instead (`ring`: XYZ puts the z turn
+ * first). Four buffers, none shared; the Bastion's `standpipes` are the same
+ * two pipes drawn pair-first and sharing.
+ */
+export function ballastPipes(root, { steel, alloy }, { pipe, flange }) {
+  pair((tag, sgn) => {
+    add(
+      root,
+      `ballast_pipe_${tag}`,
+      cyl(pipe.rTop, pipe.r, pipe.h, 8),
+      steel,
+      [-sgn * pipe.at[0], pipe.at[1], pipe.at[2]],
+      [0, 0, -sgn * pipe.lean]
+    );
+    ring(root, `pipe_flange_${tag}`, alloy, {
+      r: flange.r,
+      t: flange.t,
+      radial: 6,
+      tubular: 12,
+      at: [-sgn * flange.at[0], flange.at[1], flange.at[2]],
+      roll: -sgn * pipe.lean,
+    });
+  });
+}
+
+/**
+ * The heat shimmer — "heat-shimmer distortion" as a mesh: an octahedron
+ * subdivided once, thirty-two faces, round the core in the translucent
+ * `heat_shimmer`, stretched by its node to three floats nobody chose —
+ * [0.97872, 4.89772, 1.00288] on the file, a pulse caught mid-frame by the
+ * look of them — and carried to the digit. Lit and see-through: the one part
+ * on any Order model the bake draws blended.
+ */
+export function shimmerSheath(root, mat, { r, at, scale }) {
+  return add(
+    root,
+    'heat_shimmer_sheath',
+    new THREE.OctahedronGeometry(r, 1),
+    mat,
+    at,
+    [0, 0, 0],
+    scale
+  );
+}
+
 export { THREE };
