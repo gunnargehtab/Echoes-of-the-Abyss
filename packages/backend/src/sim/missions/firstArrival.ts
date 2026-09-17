@@ -272,9 +272,10 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
   /** §9, §13 — the tide turns at 21:00 whatever the count stands at. See the header. */
   runsItsLength: true,
   /**
-   * §4 — twenty-four: a Chorister's cruise, and for the third time in this
-   * campaign a description rather than a ceiling. It is what the column sounds
-   * like doing the only thing it is asked to do, and it is one under the
+   * §4 — twenty-four: a Chorister's cruise, and a description rather than a
+   * ceiling, after Attendance's 8, Intake's 50 and Trench Awakening's 55. It is
+   * what the column sounds like doing the only thing it is asked to do, and it
+   * is one under the
    * silence order the galleries wrote for it, which is not an accident and is
    * not remarked on by anybody.
    */
