@@ -1,0 +1,233 @@
+/**
+ * The Foundry, Hadron Knights — 320 m of footprint (2 × `radiusM` 160,
+ * tools/hull-maps/models.mjs), SIG 25 idle, 55 with the line running.
+ *
+ * "Unit production hall with a recessed launch bay and gantry cranes (SIG
+ * 25 idle, 55 with the line running). Dim at rest; interior forge light
+ * spilling from the bay when producing" (docs/asset-prompts-3d.md,
+ * STRUCTURE — Foundry). One prompt block, four scripts; the per-navy
+ * difference is docs/art-direction.md's.
+ *
+ * The Order's is two wing halls either side of the bay — a six-facet drum
+ * each, pointed at both ends, crested in alloy, ridged in crystal, three
+ * port lights down its flank — the bay between them with its forge line,
+ * an octahedron of a hull in progress and a lip either side carrying five
+ * crystal guides, two gantry cranes over it with crystal loads, a launch
+ * gate of two pylons, a lit threshold, a crossbeam and a gate crystal, two
+ * ballast tanks and two standpipes with flanges astern, and three mirrored
+ * pairs of anchor blades raked out from the flanks.
+ *
+ * A port of the approved export (docs/concept-art/models/foundry-hadron.glb
+ * at f7cce0f), part for part in its order, every number the export's own
+ * (#652 round two). Sixty-six parts, 1,608 triangles. The bay, the cranes,
+ * the tanks and the standpipes are the kit's Foundry vocabulary (kit.mjs
+ * `foundryBay`, `gantryCrane`, `ballastTanks`, `flangedPipes`) at this
+ * file's numbers; the wings, the gate and the blades are
+ * `factions/hadron.mjs`'s works section (`hallWings`, `launchGate`,
+ * `rakedBlades`). The kit's `launchMouth` does not reach the gate: it draws
+ * a torus and a drum under fixed names, and the Order's gate is four other
+ * shapes under four other names, so it is the module's. Nothing here is a
+ * shape decision; where the export is odd the script is odd with it:
+ *
+ * - The lips and their guides are `_r` and `_l` (the kit's `sides`, named
+ *   as the file names them), the trolleys sit on the centreline, the loads
+ *   are octahedra pressed to [0.7, 0.9, 0.7] and hang 1.1 apart, and the
+ *   cable keeps the kit's 0.2 above each.
+ * - The wings' 0.82 press is on their own z, which after the quarter turn
+ *   is the world's height; the six port lights are six buffers where the
+ *   pylons, the tanks and the standpipes share one a pair.
+ * - The three blade pairs are one rake, (1, 0.55, 0.1), seated 0.65 from
+ *   anchors at (7.2, 0.5, 4.2), (8, 0.5, −0.6) and (6.6, 0.5, −6), shadow,
+ *   alloy, shadow.
+ * - The two lamps burn at 2.118362294686672 and 3.7930280838563952, the
+ *   file's floats; `forge_light` is `crystal_glow`'s finish under this
+ *   file's name (`worksInk`).
+ *
+ * SIDES. Every pair is the export's `_r`/`_l` (`hadron.pair`), mirrored
+ * across the export's x, the `_r` at +x. This is a Z-long export, so the
+ * export's +x lands on the kit's −z through `drawn`, which is port (#642):
+ * every `_r` — wing, lip, guide, pylon, tank, standpipe, blade — is on the
+ * port side of the built file. That is the Sentinel Turret's case (#639),
+ * whose `_r`/`_l` are the export's own and were carried, and not #642's
+ * relabel case, whose rule names port and starboard; the names are carried
+ * as the file has them, nothing relabelled, nothing mirrored. The bow is
+ * the gate end, the export's +z, on the kit's +x.
+ *
+ * THE FRAME is the one the Light Scouts state for the shared kinds and the
+ * Directorate's Foundry follows: the export is drawn along Z, 19.30 units
+ * long for a 320 m footprint (hull-intake's `rawSize.z` on the approved
+ * file, which yawed it onto X — Z-long by a hair, 19.30 against 19.07),
+ * ground at y = 0; built here metre-true at 320 m along +X, centred on its
+ * length, the ground kept at y = 0. Every placement goes through kit.mjs
+ * `drawn` (the kit's `zLong` frame); the two crane frames through `group`;
+ * the one scale and shift through `metreTrue`. `DRAWN` is the export's
+ * length as intake measures it, so both consumers' own rescale is exactly 1
+ * and the maps stay where the approved export put them; the built file is
+ * X-long (320 × 316.2 m), so intake does not yaw it again — which the
+ * script asserts after the fit, the plan being nearly square.
+ *
+ * `diff.mjs foundry-hadron f7cce0f`: unchanged beyond the root scale and
+ * shift — every part is where it was. Light audit: `exportGlb` names
+ * eighteen lamps hidden from above — the six wing port lights on the wings'
+ * outboard flanks under their crests, the ten bay guides on the lips under
+ * the crane beams, and the two crystal loads under their trolleys; the
+ * approved binary earns the same eighteen (kit.mjs `lightAudit` on it after
+ * the bake's own yaw and scale).
+ */
+import {
+  THREE,
+  octa,
+  foundryBay,
+  gantryCrane,
+  ballastTanks,
+  flangedPipes,
+  metreTrue,
+  exportGlb,
+} from '../kit.mjs';
+import * as hadron from '../factions/hadron.mjs';
+
+const L = 320;
+const DRAWN = 19.300000047683717;
+const DATUM = 0;
+
+const shadow = hadron.worksInk.shadowIndigo();
+const alloy = hadron.worksInk.alloyWhite();
+// The two strengths are the approved export's own floats (#639 review, N1).
+const crystal = hadron.worksInk.resonanceCrystal(2.118362294686672);
+const forge = hadron.worksInk.forgeLight(3.7930280838563952);
+const steel = hadron.worksInk.darkSteel();
+
+const root = new THREE.Group();
+root.name = 'foundry_hadron';
+
+// The two wing halls, `_r` then `_l`.
+hadron.hallWings(
+  root,
+  { shadow, alloy, crystal, light: forge },
+  {
+    hull: { r: 2.5, length: 13, x: 3.7, y: 1.9, squash: 0.82 },
+    crest: { size: [1.7, 0.35, 11.96], x: 4.2, y: 3.75, roll: -0.28 },
+    ridge: { size: [0.2, 0.2, 11.18], x: 2.1, y: 3.45 },
+    ends: { r: 2.05, length: 3.2, z: 8.05 },
+    lights: { r: 0.11, x: 5.75, y: 2.3, zs: [-3.6, 0, 3.6] },
+  }
+);
+
+// The bay: floor, forge line, the hull in progress — an octahedron — and a
+// lip either side with five crystal guides, `_r` then `_l`.
+foundryBay(
+  root,
+  { floor: steel, forge, hull: alloy, guide: crystal },
+  {
+    floor: { size: [3.2, 0.4, 12], at: [0, 0.35, 0] },
+    forge: { size: [1.0, 0.18, 10.6], at: [0, 0.58, 0] },
+    hull: { geo: octa(0.85), at: [0, 1.15, 1.6], scale: [0.7, 0.6, 2.2] },
+    lip: { size: [0.45, 1.4, 12.2], x: 1.65, y: 0.85 },
+    guide: { r: 0.09, facets: [5, 4], y: 1.62, from: -5, pitch: 2.5, count: 5 },
+    sides: [
+      { lip: 'r', guides: 'r', sgn: 1 },
+      { lip: 'l', guides: 'l', sgn: -1 },
+    ],
+  }
+);
+
+// Two cranes over the bay, smaller than the Directorate's in every
+// dimension, trolleys on the centreline, crystal loads 1.1 apart.
+const crane = {
+  steel: alloy,
+  finial: shadow,
+  trolley: steel,
+  cable: steel,
+  load: crystal,
+  warnlight: forge,
+};
+const order = {
+  legs: { x: 2.45, y: 2.7, size: [0.32, 5.4, 0.32] },
+  beam: { y: 5.6, size: [5.6, 0.42, 0.55] },
+  finials: { x: 2.8, y: 6.3, r: 0.11, h: 1.0, facets: 4 },
+  trolley: { x: 0, y: 5.15, size: [0.75, 0.48, 0.65] },
+  cable: { r: 0.05, facets: 5, hang: 0.2 },
+  warnlight: { y: 5.95, r: 0.09, facets: [5, 4] },
+};
+const load = (y) => ({ y, geo: octa(0.42), scale: [0.7, 0.9, 0.7] });
+gantryCrane(root, crane, { ...order, n: 0, at: [0, 0, -2.7], load: load(2.45) });
+gantryCrane(root, crane, { ...order, n: 1, at: [0, 0, 2.7], load: load(3.55) });
+
+// The launch gate: pylons, lit threshold, crossbeam, gate crystal.
+hadron.launchGate(
+  root,
+  { alloy, glow: forge, shadow, crystal },
+  {
+    pylon: { r: 0.35, length: 3.4, at: [2, 2.6, 7.1] },
+    threshold: { size: [3.8, 0.22, 0.6], at: [0, 0.5, 7] },
+    crossbeam: { size: [4.4, 0.35, 0.4], at: [0, 4.15, 7.1] },
+    crystal: { r: 0.45, at: [0, 4.75, 7.1], scale: [0.6, 1.4, 0.6] },
+  }
+);
+
+// Ballast tanks and standpipes with flanges astern, a pair on one buffer
+// each, the pipes before the flanges.
+ballastTanks(root, steel, {
+  r: 0.65,
+  length: 1.7,
+  share: true,
+  tanks: [
+    { n: 'r', at: [5.4, 1, -5.6], rot: [Math.PI / 2, 0, 0] },
+    { n: 'l', at: [-5.4, 1, -5.6], rot: [Math.PI / 2, 0, 0] },
+  ],
+});
+flangedPipes(
+  root,
+  { pipe: steel, flange: alloy },
+  {
+    stems: { pipe: 'standpipe', flange: 'standpipe_flange' },
+    pipe: { radii: [0.15, 0.19], facets: 7 },
+    flange: { R: 0.2, tube: 0.05, facets: [5, 10] },
+    order: 'kind',
+    share: true,
+    pipes: [
+      {
+        n: 'r',
+        length: 2.4,
+        at: [5.9, 1.4, -3.9],
+        rot: [0.08, 0, -0.1],
+        flange: { at: [5.9, 2.1, -3.9], rot: [Math.PI / 2, 0, 0] },
+      },
+      {
+        n: 'l',
+        length: 2.4,
+        at: [-5.9, 1.4, -3.9],
+        rot: [0.08, 0, 0.1],
+        flange: { at: [-5.9, 2.1, -3.9], rot: [Math.PI / 2, 0, 0] },
+      },
+    ],
+  }
+);
+
+// Three pairs of anchor blades on one rake down the flanks.
+const RAKE = [1, 0.55, 0.1];
+hadron.rakedBlades(
+  root,
+  { shadow, alloy },
+  {
+    r: 0.26,
+    length: 1.9,
+    seat: 0.65,
+    blades: [
+      { anchor: [7.2, 0.5, 4.2], axis: RAKE },
+      { anchor: [8.0, 0.5, -0.6], axis: RAKE },
+      { anchor: [6.6, 0.5, -6.0], axis: RAKE },
+    ],
+  }
+);
+
+metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
+{
+  root.updateMatrixWorld(true);
+  const size = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
+  if (size.z >= size.x)
+    throw new Error(
+      `${root.name}: built ${size.x.toFixed(3)} × ${size.z.toFixed(3)}; intake would yaw it`
+    );
+}
+await exportGlb(root, 'foundry-hadron.glb');
