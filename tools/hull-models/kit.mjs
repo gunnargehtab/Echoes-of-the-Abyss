@@ -496,8 +496,14 @@ export function lightAudit(root, { ppm = 4, minM2 = 0.25 } = {}) {
  * exchanger on the end of each arm is the navy's (#608). So the skeleton is
  * built here, once, taking the navy's materials the way `plate` and `louvres`
  * take theirs, and a structure script contributes its exchanger alone. The
- * Foundry, the Refinery, the Slipway and the Bastion share the same
- * faction-neutral core and inherit the decision.
+ * Slipway shares a skeleton the same way. The Foundry and the Refinery do
+ * not (#652): what their four files share is a vocabulary by *name* — the
+ * same parts in the same order, at each navy's own numbers, one navy's
+ * crane 0.94 of the next's and its trolley at a different station — so
+ * their builders, at the foot of this file, take every number as a
+ * parameter with one file's as the default, and the names with them. The
+ * Bastion shares nothing across its four files and lives in each navy's
+ * module.
  *
  * The numbers are the approved files' own and are the defaults, because all
  * four carry them unchanged: repeating them in four scripts is the
@@ -1127,4 +1133,582 @@ export function capsule(radius, length, capSegments = 4, radialSegments = 8, hei
   geo.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
   geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
   return geo;
+}
+
+/* --------------------------------------------------------------------------
+ * The Foundry's and the Refinery's shared vocabulary (#652, off #540 Phase 3).
+ *
+ * The Vent Tap's skeleton above is identical to the centimetre across its
+ * four files. The Foundry's and the Refinery's are not: across the
+ * Directorate, the Knights and the Commune the Foundry's `bay_floor`,
+ * `forge_line`, `hull_in_progress`, two bay lips with their guide lights and
+ * two `gantry_crane_N` frames carry the same names in the same order and
+ * differ in their numbers — the Order's crane is smaller in every dimension
+ * and not by one factor, the trolley sits at a different station on every
+ * crane, the lips are `_starboard`/`_port` on two files and `_r`/`_l` on the
+ * third, the Commune's cranes have no finials and the Directorate's port lip
+ * is short one guide. The Refinery's `conveyor_gantry` (bed, belt, nodules,
+ * rails, gantry lights, legs), crusher house, cowl and maw, exhaust stacks,
+ * intake hopper and mouth, transfer pipes and flanges and flood masts are
+ * the same story, with the Knights' file carrying two gantries named `_r`
+ * and `_l` and its pairs written kind by kind (`exhaust_stack_r`,
+ * `exhaust_stack_l`, `exhaust_tip_r` …) where the other two write each unit
+ * whole. So each builder here takes every number as a parameter with the
+ * Directorate file's as the default, every name as a parameter too, and the
+ * file's order (`order`) and buffer sharing (`share`) where the files differ
+ * in those. A navy's script passes what its file carries; what a file
+ * carries that no parameter reaches is a finding, not a kit edit. The
+ * Consortium's Foundry and Refinery are from the earlier authoring pass and
+ * share none of this; they build from `factions/bathyarch.mjs` alone.
+ *
+ * Two things every builder takes that the Vent Tap's did not:
+ *
+ * - **A frame.** All three Foundries are Z-long exports and all three
+ *   Refineries X-long (hull-intake's `rotatedZtoX` on the approved files),
+ *   and a builder places the export's own numbers either way: `zLong`
+ *   through `drawn` and `part`, one yaw and the geometry turned with it;
+ *   `xLong` through `add`, no yaw. Every placement a builder takes — `at`,
+ *   `rot`, `scale` — is in the export's own frame, as `anchoredRaft` in
+ *   factions/bathyarch.mjs takes its raft's; the frame decides what is done
+ *   with it. The Foundry builders default to `zLong`, the Refinery's to
+ *   `xLong`, and `flangedPipes`, which both use, to `zLong`.
+ * - **The lip's own material.** The materials are the navy's, as the Vent
+ *   Tap's are; a Foundry's bay lips wear its floor's cladding on all three
+ *   files, so `lip` defaults to `floor`.
+ *
+ * Three more things are here that #652's analysis had down as the
+ * Directorate's own: the launch mouth and glow, the ballast tanks and the
+ * graft pipes are the Directorate's and the Commune's at identical numbers,
+ * and the Order's under other names (`gate_*`, `ballast_tank_r`,
+ * `standpipe_r`) at its own — a vocabulary shared by name, parameterised
+ * the same way. What has no twin in any other file — the Directorate's
+ * mandibles, flank photophores, anchor claws, tergite flanks, outrigger pods
+ * and stern carapace, and its Refinery's silos, maw teeth and intake teeth
+ * — lives in `factions/directorate.mjs`.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * A Z-long export's frame: the export's own `(t, e, s)` placed through
+ * `drawn` and `part`, and a frame node through `group`. `place` takes a
+ * placement already made by `drawn`, for the module builders that were
+ * written against one (`photophoreDomes`).
+ */
+export const zLong = {
+  part: (root, name, geo, mat, t, e, s) => part(root, name, geo, mat, drawn(t, e, s)),
+  place: part,
+  group: (parent, name, t, e, s) => group(parent, name, drawn(t, e, s)),
+};
+
+/**
+ * An X-long export's frame: the export's own `(t, e, s)` placed as they
+ * are, no yaw and the geometry as built — the Choristers' and the Vent
+ * Taps' way, `add` with the file's own translation, rotation and scale.
+ */
+export const xLong = {
+  part: (root, name, geo, mat, t = [0, 0, 0], e = [0, 0, 0], s = [1, 1, 1]) =>
+    add(root, name, geo, mat, t, e, s),
+  place: (root, name, geo, mat, { at = [0, 0, 0], rot = [0, 0, 0], scale = [1, 1, 1] } = {}) =>
+    add(root, name, geo, mat, at, rot, scale),
+  group: (parent, name, t = [0, 0, 0], e = [0, 0, 0], s = [1, 1, 1]) =>
+    group(parent, name, { at: t, rot: e, scale: s }),
+};
+
+/**
+ * Parts of several kinds over several units, in the file's order: each
+ * unit's parts together (`'each'` — `exhaust_stack_0`, `exhaust_tip_0`,
+ * `exhaust_stack_1` …, the Directorate's and the Commune's way), or every
+ * unit's part of one kind before the next kind's (`'kind'` —
+ * `exhaust_stack_r`, `exhaust_stack_l`, `exhaust_tip_r` …, the Order's).
+ * `check.mjs` compares in order, so this is part of what a model is.
+ */
+function inOrder(order, units, kinds) {
+  if (order === 'kind') kinds.forEach((kind) => units.forEach((u, i) => kind(u, i)));
+  else units.forEach((u, i) => kinds.forEach((kind) => kind(u, i)));
+}
+
+/**
+ * One geometry a part, or one a kind: a builder drawing the same primitive
+ * for several parts makes it afresh for each unless `share`, when every
+ * part of that kind takes the first one's buffer — which is how the Order's
+ * exports carry a pair (`exhaust_stack_l` on `exhaust_stack_r`'s buffer,
+ * `parts.mjs` says "buffer of") and the Directorate's and the Commune's do
+ * not. No gate reads the difference; a port reproduces it anyway.
+ */
+function sharer(share) {
+  const cache = new Map();
+  return (key, make) => {
+    if (!share) return make();
+    if (!cache.has(key)) cache.set(key, make());
+    return cache.get(key);
+  };
+}
+
+/**
+ * The Foundry's bay: "a recessed launch bay" (docs/asset-prompts-3d.md,
+ * STRUCTURE — Foundry) — the floor, the forge line lit along it, the hull
+ * in progress lying on it, and a lip either side carrying a rank of guide
+ * lights. In the files' order: floor, forge line, hull, then each side's
+ * lip and its guides.
+ *
+ * `hull.geo` is the navy's — a capsule on the Directorate's and the
+ * Commune's files (the default), an octahedron on the Order's — placed by
+ * `hull.at`, `hull.rot` and `hull.scale`. A side is `{ lip, guides, sgn }`:
+ * `bay_lip_${lip}` at `sgn · lip.x`, and `bay_guide_${guides}_${i}` for each
+ * `i` of `guide.count` — or of `only`, for a rank with a hole in it: the
+ * Directorate's file has no `bay_guide_1_2`. The default sides are the
+ * export's +x first, as every file writes it, named as a port of a Z-long
+ * export names it (#642): the export's +x lands on the kit's −z, which is
+ * port, so the lip the Directorate's and the Commune's files call
+ * `bay_lip_starboard` is written `bay_lip_port` and the guides keep their
+ * `0`; the Order's file says `_r` and `_l` and a port carries those.
+ */
+export function foundryBay(root, mats, opts = {}) {
+  const {
+    frame = zLong,
+    floor = { size: [3.4, 0.4, 12], at: [0, 0.35, 0] },
+    forge = { size: [1.1, 0.18, 10.6], at: [0.15, 0.58, 0.4] },
+    hull = { geo: capsule(0.65, 2.2, 3, 7), at: [0.1, 1.15, 2.1], rot: [Math.PI / 2, 0, 0.06] },
+    lip = { size: [0.5, 1.5, 12.2], x: 1.75, y: 0.9 },
+    guide = { r: 0.1, facets: [5, 4], y: 1.72, from: -5, pitch: 2.5, count: 5 },
+    sides = [
+      { lip: 'port', guides: '0', sgn: 1 },
+      { lip: 'starboard', guides: '1', sgn: -1 },
+    ],
+  } = opts;
+  const { floor: floorMat, forge: forgeMat, hull: hullMat, guide: guideMat } = mats;
+  const lipMat = mats.lip ?? floorMat;
+  frame.part(root, 'bay_floor', box(...floor.size), floorMat, floor.at);
+  frame.part(root, 'forge_line', box(...forge.size), forgeMat, forge.at);
+  frame.part(root, 'hull_in_progress', hull.geo, hullMat, hull.at, hull.rot, hull.scale);
+  for (const side of sides) {
+    const x = side.sgn * lip.x;
+    frame.part(root, `bay_lip_${side.lip}`, box(...lip.size), lipMat, [x, lip.y, 0]);
+    const rank = side.only ?? Array.from({ length: guide.count }, (_, i) => i);
+    for (const i of rank)
+      frame.part(
+        root,
+        `bay_guide_${side.guides}_${i}`,
+        new THREE.SphereGeometry(guide.r, ...guide.facets),
+        guideMat,
+        [x, guide.y, guide.from + guide.pitch * i]
+      );
+  }
+}
+
+/**
+ * One gantry crane over the bay — "gantry cranes" (the Foundry block) — as
+ * a frame of its own, `gantry_crane_${n}`, standing at `at`: two legs, the
+ * beam across them, a finial at each end of it, the trolley on the beam,
+ * the cable down from it, the load on the cable and the warning light on
+ * the beam's crown, in that order, the files' own.
+ *
+ * The cable is drawn by the rule all three files follow: from `cable.hang`
+ * above the load's station to the trolley's — half the Directorate's box of
+ * a load, and the Order keeps the same 0.2 under its crystal. `finials`
+ * null is a crane without them (the Commune's). `load.geo` is the navy's,
+ * as the bay's hull is — a box by default, the Order's an octahedron
+ * squashed by `load.scale`. The trolley's `x` is each crane's own on every
+ * file but the Order's, whose two sit on the centreline.
+ */
+export function gantryCrane(root, mats, opts) {
+  const {
+    n,
+    at,
+    frame = zLong,
+    legs = { x: 2.6, y: 2.8, size: [0.35, 5.6, 0.35] },
+    beam = { y: 5.75, size: [6, 0.45, 0.6] },
+    finials = { x: 3, y: 6.4, r: 0.12, h: 0.9, facets: 4 },
+    trolley = { x: 0, y: 5.3, size: [0.8, 0.5, 0.7] },
+    cable = { r: 0.05, facets: 5, hang: 0.2 },
+    load = { y: 2.5, size: [0.55, 0.4, 0.5] },
+    warnlight = { y: 6.08, r: 0.09, facets: [5, 4] },
+  } = opts;
+  const crane = frame.group(root, `gantry_crane_${n}`, at);
+  for (const [i, sgn] of [
+    [0, 1],
+    [1, -1],
+  ])
+    frame.part(crane, `gantry_leg_${n}_${i}`, box(...legs.size), mats.steel, [
+      sgn * legs.x,
+      legs.y,
+      0,
+    ]);
+  frame.part(crane, `gantry_beam_${n}`, box(...beam.size), mats.steel, [0, beam.y, 0]);
+  if (finials)
+    for (const [i, sgn] of [
+      [0, 1],
+      [1, -1],
+    ])
+      frame.part(
+        crane,
+        `gantry_finial_${n}_${i}`,
+        cyl(0, finials.r, finials.h, finials.facets),
+        mats.finial,
+        [sgn * finials.x, finials.y, 0]
+      );
+  const x = trolley.x ?? 0;
+  frame.part(crane, `gantry_trolley_${n}`, box(...trolley.size), mats.trolley, [x, trolley.y, 0]);
+  const top = load.y + cable.hang;
+  frame.part(
+    crane,
+    `gantry_cable_${n}`,
+    cyl(cable.r, cable.r, trolley.y - top, cable.facets),
+    mats.cable,
+    [x, (trolley.y + top) / 2, 0]
+  );
+  frame.part(
+    crane,
+    `gantry_load_${n}`,
+    load.geo ?? box(...load.size),
+    mats.load,
+    [x, load.y, 0],
+    [0, 0, 0],
+    load.scale
+  );
+  frame.part(
+    crane,
+    `gantry_warnlight_${n}`,
+    new THREE.SphereGeometry(warnlight.r, ...warnlight.facets),
+    mats.warnlight,
+    [0, warnlight.y, 0]
+  );
+  return crane;
+}
+
+/**
+ * The launch mouth at the bay's open end: a torus for the mouth, squashed
+ * by its node, and the forge glow lying in it as a thin drum — "interior
+ * forge light spilling from the bay when producing" (the Foundry block).
+ * The Directorate's and the Commune's files carry it at one set of numbers,
+ * the defaults; the Order's gate is its own.
+ */
+export function launchMouth(root, { mouth: mouthMat, glow: glowMat }, opts = {}) {
+  const {
+    frame = zLong,
+    mouth = { R: 1.7, tube: 0.3, facets: [5, 10], at: [0.1, 1.5, 6.7], scale: [1.15, 0.8, 1] },
+    glow = { r: 1.35, h: 0.2, facets: 9, at: [0.1, 1.45, 6.62], rot: [Math.PI / 2, 0, 0] },
+  } = opts;
+  const ring = torus(mouth.R, mouth.tube, ...mouth.facets);
+  frame.part(root, 'launch_mouth', ring, mouthMat, mouth.at, [0, 0, 0], mouth.scale);
+  const drum = cyl(glow.r, glow.r, glow.h, glow.facets);
+  frame.part(root, 'launch_glow', drum, glowMat, glow.at, glow.rot);
+}
+
+/**
+ * Ballast tanks along a flank: capsules (r184's, kit `capsule`) laid on
+ * their sides by their nodes, `ballast_tank_${n}` each. Two on every file:
+ * `_0` and `_1` leaning 0.15 on the Directorate's and the Commune's, `_r`
+ * and `_l` square on the Order's, on one buffer (`share`).
+ */
+export function ballastTanks(root, steel, opts = {}) {
+  const {
+    frame = zLong,
+    r = 0.7,
+    length = 1.8,
+    facets = [3, 8],
+    share = false,
+    tanks = [
+      { n: '0', at: [-6.3, 1, -2.4], rot: [Math.PI / 2, 0, 0.15] },
+      { n: '1', at: [-6.7, 1, 0.4], rot: [Math.PI / 2, 0, 0.15] },
+    ],
+  } = opts;
+  const geo = sharer(share);
+  for (const t of tanks) {
+    const tank = geo('tank', () => capsule(r, length, ...facets));
+    frame.part(root, `ballast_tank_${t.n}`, tank, steel, t.at, t.rot);
+  }
+}
+
+/**
+ * Pipes with a flange each: a seven-sided pipe of `pipe.radii` [top,
+ * bottom] leaned by its node, and a torus of `flange.R` and `flange.tube`
+ * in `flange.facets` [radial, tubular] where it meets the hull, at its own
+ * `at` (the Foundry's graft pipes) or the pipe's (the Refinery's transfer
+ * pipes, whose flange sits on the pipe's station turned its own way).
+ * Named `${stems.pipe}_${n}` and `${stems.flange}_${n}` — `graft_pipe_0`
+ * and `graft_flange_0`, `transfer_pipe_0` and `transfer_flange_0`,
+ * `standpipe_r` and `standpipe_flange_r` — in `order` (`inOrder` above:
+ * pipe, flange, pipe, flange on two files; pipes then flanges on the
+ * Order's) and on one buffer a kind when `share`. Defaults are the
+ * Directorate Foundry's graft pipes; its Refinery passes `xLong` with its
+ * own radii and stems.
+ */
+export function flangedPipes(root, { pipe: pipeMat, flange: flangeMat }, opts = {}) {
+  const {
+    frame = zLong,
+    stems = { pipe: 'graft_pipe', flange: 'graft_flange' },
+    pipe = { radii: [0.16, 0.2], facets: 7 },
+    flange = { R: 0.22, tube: 0.06, facets: [5, 10] },
+    order = 'each',
+    share = false,
+    pipes = [
+      {
+        n: '0',
+        length: 2.6,
+        at: [-5.4, 1.7, -1.2],
+        rot: [0.1, 0, -0.5],
+        flange: { at: [-5.7, 2.35, -1.2], rot: [Math.PI / 2 + 0.1, 0, -0.5] },
+      },
+      {
+        n: '1',
+        length: 2.1,
+        at: [-5, 1.45, 1.6],
+        rot: [0.1, 0, -0.65],
+        flange: { at: [-5.3, 1.975, 1.6], rot: [Math.PI / 2 + 0.1, 0, -0.65] },
+      },
+    ],
+  } = opts;
+  const geo = sharer(share);
+  inOrder(order, pipes, [
+    (p) =>
+      frame.part(
+        root,
+        `${stems.pipe}_${p.n}`,
+        geo(`pipe_${p.length}`, () => cyl(pipe.radii[0], pipe.radii[1], p.length, pipe.facets)),
+        pipeMat,
+        p.at,
+        p.rot
+      ),
+    (p) =>
+      frame.part(
+        root,
+        `${stems.flange}_${p.n}`,
+        geo('flange', () => torus(flange.R, flange.tube, ...flange.facets)),
+        flangeMat,
+        p.flange.at ?? p.at,
+        p.flange.rot
+      ),
+  ]);
+}
+
+/**
+ * The crusher: "crusher machinery" (docs/asset-prompts-3d.md, STRUCTURE —
+ * Nodule Refinery) — the house, a box turned on its station; the cowl over
+ * it; and the maw, a lit slab on its face. The cowl is the navy's: on the
+ * Directorate's file a shell of a sphere half a turn round and 0.55 of a
+ * half-turn deep, squashed by its node (the default, `cowl.geo`); on the
+ * Order's and the Commune's a half drum, the Commune's named
+ * `crusher_roof` (`cowl.name`).
+ */
+export function crusher(root, mats, opts = {}) {
+  const {
+    frame = xLong,
+    house = { size: [4.6, 3.4, 3.6], at: [5.2, 1.7, -2.2], rot: [0, -0.25, 0] },
+    cowl = {
+      geo: new THREE.SphereGeometry(2.9, 9, 5, 0, Math.PI, 0, Math.PI * 0.55),
+      at: [5.2, 3.1, -2.2],
+      rot: [0, Math.PI / 2 - 0.25, 0],
+      scale: [1.05, 0.75, 0.85],
+    },
+    maw = { size: [1.7, 1.3, 0.3], at: [6.9, 1.6, -0.9], rot: [0, Math.PI / 2 - 0.6, 0] },
+  } = opts;
+  frame.part(root, 'crusher_house', box(...house.size), mats.house, house.at, house.rot);
+  frame.part(root, cowl.name ?? 'crusher_cowl', cowl.geo, mats.cowl, cowl.at, cowl.rot, cowl.scale);
+  frame.part(root, 'crusher_maw', box(...maw.size), mats.maw, maw.at, maw.rot);
+}
+
+/**
+ * Exhaust stacks off the crusher: a seven-sided frustum each, leaned by its
+ * node, with a lit tip drum on it — `exhaust_stack_${n}` and
+ * `exhaust_tip_${n}`, in `order` and on one buffer a kind when `share`.
+ * The tips sit 0.13 down-lean of their stacks on the Directorate's and the
+ * Commune's files, which is the file's rounding of 1.6 · sin 0.08 and is
+ * carried as the file has it.
+ */
+export function exhaustStacks(root, { steel, glow }, opts = {}) {
+  const {
+    frame = xLong,
+    stack = { radii: [0.3, 0.38], h: 3.2, facets: 7 },
+    tip = { radii: [0.34, 0.3], h: 0.25, facets: 7 },
+    order = 'each',
+    share = false,
+    stacks = [
+      { n: '0', at: [4.4, 4.6, -3.2], rot: [-0.08, 0, 0], tip: { at: [4.4, 6.2, -3.33] } },
+      { n: '1', at: [5.9, 4.6, -3.5], rot: [-0.08, 0, 0], tip: { at: [5.9, 6.2, -3.63] } },
+    ],
+  } = opts;
+  const geo = sharer(share);
+  inOrder(order, stacks, [
+    (s) =>
+      frame.part(
+        root,
+        `exhaust_stack_${s.n}`,
+        geo('stack', () => cyl(stack.radii[0], stack.radii[1], stack.h, stack.facets)),
+        steel,
+        s.at,
+        s.rot
+      ),
+    (s) =>
+      frame.part(
+        root,
+        `exhaust_tip_${s.n}`,
+        geo('tip', () => cyl(tip.radii[0], tip.radii[1], tip.h, tip.facets)),
+        glow,
+        s.tip.at,
+        s.tip.rot
+      ),
+  ]);
+}
+
+/**
+ * The conveyor gantry: "conveyor ... machinery" — a frame of its own,
+ * `conveyor_gantry`, turned to run from the intake hopper up to the crusher, holding
+ * the bed, the belt on it, the nodules riding the belt (dodecahedra, each
+ * its own radius and tumble, in the navy's skins — `nodules` is the file's
+ * list), the rails along the bed's edges with the gantry lights on them,
+ * and the legs under it. In the files' order: bed, belt, nodules, then each
+ * rail followed by its row of lights if it carries one (`sides`: the
+ * Directorate's and the Commune's `conveyor_rail_r` carries row `0` and
+ * `_l` row `1`; the Order's two rails carry no lights and its one row, on
+ * the centreline, follows the second), then the legs.
+ *
+ * The frame's rotation is a YXZ Euler on all three files — 0.72π of yaw and
+ * 0.34 of roll on the Directorate's and the Commune's, ±0.3π and 0.3 on
+ * the Order's — given here as the XYZ triple `eulerXYZ` makes of it. A leg
+ * is `{ n, x, y, h }` with its `y` its own: the Directorate's two longer
+ * legs stand 0.025 and 0.05 off centred on their height, and the file has
+ * them so. `suffix` names the frame, the bed and the belt (`_r` on the
+ * Order's `conveyor_gantry_r`, `conveyor_bed_r`, `conveyor_belt_r`); the
+ * rails, lights and legs carry their own names and stems. Returns the
+ * frame.
+ */
+export function conveyorGantry(root, mats, opts = {}) {
+  const {
+    frame = xLong,
+    suffix = '',
+    at = [10.2, 2.1, 4.6],
+    rot = eulerXYZ([0, Math.PI * 0.72, 0.34], 'YXZ'),
+    bed = { size: [9.5, 0.35, 1.7], at: [0, 0, 0] },
+    belt = { size: [9.12, 0.12, 1.15], at: [0, 0.24, 0] },
+    nodules = [],
+    rails = {
+      size: [9.5, 0.16, 0.16],
+      y: 0.55,
+      sides: [
+        { name: 'conveyor_rail_r', z: 0.85, lights: { row: '0', z: 0.85 } },
+        { name: 'conveyor_rail_l', z: -0.85, lights: { row: '1', z: -0.85 } },
+      ],
+    },
+    lights = { r: 0.09, facets: [5, 4], y: 0.72, xs: [-3.25, -0.95, 1.35, 3.65] },
+    legs = {
+      radii: [0.14, 0.18],
+      facets: 6,
+      stem: 'gantry_leg',
+      legs: [
+        { n: '0', x: -3.15, y: -1.1, h: 2.2 },
+        { n: '1', x: -0.05, y: -1.65, h: 3.35 },
+        { n: '2', x: 3.05, y: -2.2, h: 4.5 },
+      ],
+    },
+  } = opts;
+  const gantry = frame.group(root, `conveyor_gantry${suffix}`, at, rot);
+  frame.part(gantry, `conveyor_bed${suffix}`, box(...bed.size), mats.bed, bed.at);
+  frame.part(gantry, `conveyor_belt${suffix}`, box(...belt.size), mats.belt, belt.at);
+  for (const nod of nodules) {
+    const lump = new THREE.DodecahedronGeometry(nod.r, 0);
+    frame.part(gantry, nod.name, lump, nod.skin, nod.at, nod.rot);
+  }
+  for (const side of rails.sides) {
+    frame.part(gantry, side.name, box(...rails.size), mats.rail, [0, rails.y, side.z]);
+    if (side.lights)
+      lights.xs.forEach((x, i) =>
+        frame.part(
+          gantry,
+          `gantry_light_${side.lights.row}_${i}`,
+          new THREE.SphereGeometry(lights.r, ...lights.facets),
+          mats.light,
+          [x, lights.y, side.lights.z]
+        )
+      );
+  }
+  for (const leg of legs.legs) {
+    const post = cyl(legs.radii[0], legs.radii[1], leg.h, legs.facets);
+    frame.part(gantry, `${legs.stem}_${leg.n}`, post, mats.leg, [leg.x, leg.y, 0]);
+  }
+  return gantry;
+}
+
+/**
+ * The intake hopper at the conveyor's foot: an eight-sided frustum and the
+ * lit mouth drum on it, `intake_hopper` and `intake_mouth` with `suffix`
+ * (`''` on two files, `_r` and `_l` on the Order's, which has one a
+ * gantry).
+ */
+export function intakeHopper(root, { hopper: hopperMat, mouth: mouthMat }, opts = {}) {
+  const {
+    frame = xLong,
+    suffix = '',
+    hopper = { radii: [1.5, 0.9], h: 1.3, facets: 8, at: [13.4, 0.65, 6.9] },
+    mouth = { r: 1.1, h: 0.18, facets: 8, at: [13.4, 1.35, 6.9] },
+  } = opts;
+  const funnel = cyl(hopper.radii[0], hopper.radii[1], hopper.h, hopper.facets);
+  frame.part(root, `intake_hopper${suffix}`, funnel, hopperMat, hopper.at);
+  const lip = cyl(mouth.r, mouth.r, mouth.h, mouth.facets);
+  frame.part(root, `intake_mouth${suffix}`, lip, mouthMat, mouth.at);
+}
+
+/**
+ * Flood masts: "floodlit working surfaces" — a six-sided mast each, the
+ * head box on top of it turned to aim, and the lamp slab on the head's
+ * face turned with it: `flood_mast_${n}`, `flood_head_${n}`,
+ * `flood_lamp_${n}`, in `order` and on one buffer a kind when `share`. The
+ * heads' rotations are YXZ Eulers on every file (0.5 of pitch and the
+ * mast's own yaw), given as the XYZ triple `eulerXYZ` makes of them; the
+ * lamp is offset from the head in the export's frame, not the head's, and
+ * the files have it so.
+ */
+export function floodMasts(root, { steel, lamp: lampMat }, opts = {}) {
+  const {
+    frame = xLong,
+    mast = { radii: [0.1, 0.14], facets: 6 },
+    head = { size: [0.9, 0.3, 0.45] },
+    lamp = { size: [0.8, 0.12, 0.36] },
+    order = 'each',
+    share = false,
+    masts = [
+      {
+        n: '0',
+        at: [2.6, 3.2, 1.8],
+        h: 6.4,
+        head: { at: [2.6, 6.5, 1.8], rot: eulerXYZ([0.5, -0.5, 0], 'YXZ') },
+        lamp: { at: [2.6, 6.42, 1.92] },
+      },
+      {
+        n: '1',
+        at: [7.6, 2.6, -4.4],
+        h: 5.2,
+        head: { at: [7.6, 5.3, -4.4], rot: eulerXYZ([0.5, 0.4, 0], 'YXZ') },
+        lamp: { at: [7.6, 5.22, -4.28] },
+      },
+    ],
+  } = opts;
+  const geo = sharer(share);
+  inOrder(order, masts, [
+    (m) =>
+      frame.part(
+        root,
+        `flood_mast_${m.n}`,
+        geo(`mast_${m.h}`, () => cyl(mast.radii[0], mast.radii[1], m.h, mast.facets)),
+        steel,
+        m.at
+      ),
+    (m) =>
+      frame.part(
+        root,
+        `flood_head_${m.n}`,
+        geo('head', () => box(...head.size)),
+        steel,
+        m.head.at,
+        m.head.rot
+      ),
+    (m) =>
+      frame.part(
+        root,
+        `flood_lamp_${m.n}`,
+        geo('lamp', () => box(...lamp.size)),
+        lampMat,
+        m.lamp.at,
+        m.lamp.rot ?? m.head.rot
+      ),
+  ]);
 }
