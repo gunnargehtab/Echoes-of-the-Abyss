@@ -520,7 +520,7 @@ describe('the objectives panel: the affordances a mission withholds', () => {
     const { rendered } = await panel(
       missionView({
         locks: [
-          { ability: 'weapons', reason: 'disabled — silence order' },
+          { ability: 'weapons', reason: 'the hardpoints are on the table' },
           { ability: 'activeSonar', reason: 'disabled — silence order' },
         ],
       })
@@ -529,7 +529,36 @@ describe('the objectives panel: the affordances a mission withholds', () => {
       const names = rendered.allByClass('objectives-lock-name').map((n) => n.props.children);
       assert.deepEqual(names, ['weapons', 'active sonar'], 'named as the command bar names them');
       const reasons = rendered.allByClass('objectives-lock-reason').map((n) => n.props.children);
-      assert.deepEqual(reasons, ['disabled — silence order', 'disabled — silence order']);
+      assert.deepEqual(reasons, ['the hardpoints are on the table', 'disabled — silence order']);
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('states a shared reason once and names every action it covers', async () => {
+    // docs/ui-ux.md §10.5, and §2's no-scroll rule is why: Sorrowgate strikes
+    // four buttons under two reasons, and a row apiece pushed the rows beneath
+    // them off a panel that has to fit. A player reading `weapons cold` for the
+    // fourth time learns nothing the first did not tell them.
+    const { rendered } = await panel(
+      missionView({
+        locks: [
+          { ability: 'weapons', reason: 'weapons cold' },
+          { ability: 'torpedoes', reason: 'weapons cold' },
+          { ability: 'noisemakers', reason: 'disabled — silence order' },
+          { ability: 'mines', reason: 'weapons cold' },
+        ],
+      })
+    );
+    try {
+      const names = rendered.allByClass('objectives-lock-name').map((n) => n.props.children);
+      assert.deepEqual(
+        names,
+        ['weapons · torpedoes · mines', 'noisemakers'],
+        'one row per reason, in the order the mission first states each'
+      );
+      const reasons = rendered.allByClass('objectives-lock-reason').map((n) => n.props.children);
+      assert.deepEqual(reasons, ['weapons cold', 'disabled — silence order']);
     } finally {
       await rendered.unmount();
     }

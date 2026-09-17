@@ -66,6 +66,22 @@ tab is the console's whole argument; then selection, since the world view carrie
 state on the hull. The scope and the command card never go — one is the only view of the
 whole map, the other is how a touchscreen reaches any order at all.
 
+**Nothing scrolls except a text box.** A panel is not a page. An objective under the fold
+is an objective the player has not been given, and a screen that runs off the bottom hides
+a control behind a gesture the game never taught. So a screen and a panel **fit what they
+hold** — at every width the game supports and across §11's 75–200% UI scale — by dropping a
+block (above), by grouping what repeats, or by being written shorter. When something will
+not fit, what it holds is cut down; a scrollbar is not the answer, because it makes the
+part that did not fit invisible rather than absent, and the player cannot tell the
+difference.
+
+The exception is a **text box**: a region whose content is prose to read or an append-only
+feed whose newest line is the one that matters, where going back through the rest is a real
+activity the game means to support. There are four — the contact log (§10), the mission log,
+the briefing and the record's pages (§14) — and each scrolls inside its own box while the
+screen around it does not. The objectives panel (§10.5) is deliberately not one: it states
+what is being asked *now*, and every row of it has to be on screen at once.
+
 **A console row is a touch target.** §11's 44 px floor is what sets the console's height
 rather than taste: a command cell is four columns wide and three rows deep so that a cell
 clears the floor at any width the console itself fits on, and a production row is 44 px for
@@ -590,6 +606,15 @@ something new, and a log role would re-announce the whole panel every time a cou
   and in the visual hierarchy — a player who wants the fiction gets the fiction. This is the
   decision taken on 13 September (#720): the argument above stands, the reading is not
   rewritten, and §10.5 permits the gloss rather than replacing anything.
+- **A gloss is one sentence, and the panel fits without one being cut.** §2's no-scroll rule
+  binds here hardest, because this panel is the one that grows: a mission reveals objectives
+  as it runs, a silence order adds a debt row, and every locked ability adds another. A gloss
+  is therefore held to a single short sentence saying what to do and which of the player's
+  own numbers to read it against — the colour belongs in the authored line above it and in
+  the mission log, both of which have room for it. Where a mission locks several abilities
+  for the **same** reason, the panel states that reason once and names the abilities it
+  covers together, because four rows reading `weapons cold` teach nothing the first one did
+  not and cost the rows underneath their place on screen.
 - **The gloss is authored per mission and is never templated either.** A shared string fails
   here for the reason it fails above, and four registers would have to be broken to make one
   fit; what is shared is the **slot**, not the sentence. Three rules bind a gloss exactly as
