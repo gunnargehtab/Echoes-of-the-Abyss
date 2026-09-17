@@ -822,6 +822,443 @@ export function magazine(root, { pipe: pipeMat, pod: podMat, flange }, { pipe, p
 }
 
 /* --------------------------------------------------------------------------
+ * The Bastion and the Spore Veil (#652, off #540 Phase 3) — the Commune's
+ * HQ and its signature structure. Both approved exports are r184 and drawn
+ * along X, so every builder here takes the export's own numbers un-yawed,
+ * through `verbatim` and `placed` (the Submersible's X-long twins of kit.mjs
+ * `drawn` and `part`, defined with the shared kinds below), and the one
+ * scale is the script's `fitFootprint`.
+ *
+ * The Bastion "shares nothing" across the four navies (#652): "a large
+ * pressure dome with visible reinforcement ribs, docking collars and
+ * external pipework, anchored to the seabed" (docs/asset-prompts-3d.md,
+ * STRUCTURE — Bastion), grown the Commune's way — a dome ringed where it
+ * grew, ribbed, veined, held down by root buttresses, its collars, pipes and
+ * tanks in grown steel. The Veil is the Commune's own — "a low, breathing
+ * spore bed grown into the seabed: broad overlapping lobes, paired gill
+ * organs with vent slits exhaling a faint haze, slender spore stalks
+ * swaying above" (STRUCTURE — Spore Veil). Where a part is one of the
+ * module's orbs, cones or hoops it is built through those (`grownOrbs`,
+ * `grownCones`, `grownHoops`); what is new here is the rule behind each
+ * series — a ring's station on the dome, a slit's place on a gill, a
+ * stalk's proportions, a vein ring's segments — recovered from the file to
+ * the float as the #649 ports did, so the script holds the decision and not
+ * the arithmetic. Neither file carries a table: every buffer `parts.mjs`
+ * could not name is a partial sphere or an r184 capsule.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The Bastion's palette: the structure names with the approved export's own
+ * finishes. `deep_chlorophyll` and `grown_steel` are the turret's, from
+ * `structureInk`. `algae_hull` is the membrane token #1FA67A at 0.08 metal
+ * and 0.6 rough where the turret's `algae_hull` is #14664C at 0.62 — one
+ * name, two values across the navy's structures, recorded rather than
+ * corrected (docs/asset-prompts-3d.md § "What the approved models derived").
+ * `spore_pale` is the spore token at the Sower's finish under the
+ * Submersible's name without its hyphen. `biolight_green` is the biolight
+ * token on a base of its own, #14351A, burning at 2.9447 — the strongest
+ * lamp on any Commune model, for "the one building that can never run
+ * silent".
+ */
+export const bastionInk = {
+  deepChlorophyll: structureInk.deepChlorophyll,
+  grownSteel: structureInk.grownSteel,
+  algaeHull: () => clad('algae_hull', hex('#1FA67A'), 0.08, 0.6),
+  sporePale: () => clad('spore_pale', hex('#E8F0A3'), 0.05, 0.5),
+  biolightGreen: (intensity = 1) =>
+    lamp('biolight_green', hex('#8FE36B'), hex('#14351A'), 0.35, intensity),
+};
+
+/**
+ * The Spore Veil's palette, hyphenated as its export names it like the
+ * Submersible's, and matte as a bed on the seabed is: chitin as
+ * `deep-chlorophyll` at 0.05 metal and 0.85 rough, `algae-teal` the membrane
+ * token at 0.75 rough, `algae-teal-dark` a shade of it the docs do not name
+ * (#11563F), `spore-pale` at no metal; and three lamps of the biolight
+ * token — `bio-vein` at 2.2 on a base of #0F2A12, `bio-vein-dim` the same
+ * base at 0.9, and `spore-haze`, the one translucent material on any
+ * Commune model: the token as its own base at 0.16 opacity, blended, rough
+ * 1, burning at 0.35 — "exhaling a faint haze". Values are the approved
+ * export's own.
+ */
+export const veilInk = {
+  deepChlorophyll: () => clad('deep-chlorophyll', hex('#0B241E'), 0.05, 0.85),
+  algaeTealDark: () => clad('algae-teal-dark', hex('#11563F'), 0.05, 0.8),
+  algaeTeal: () => clad('algae-teal', hex('#1FA67A'), 0.05, 0.75),
+  bioVein: () => lamp('bio-vein', hex('#8FE36B'), hex('#0F2A12'), 0.45, 2.2),
+  sporeHaze: () => {
+    const m = lamp('spore-haze', hex('#8FE36B'), hex('#8FE36B'), 1, 0.35);
+    m.transparent = true;
+    m.opacity = 0.16;
+    return m;
+  },
+  bioVeinDim: () => lamp('bio-vein-dim', hex('#8FE36B'), hex('#0F2A12'), 0.5, 0.9),
+  sporePale: () => clad('spore-pale', hex('#E8F0A3'), 0, 0.65),
+};
+
+/**
+ * A grown dome: a `shell` stopped `down` of a half-turn short of its pole,
+ * placed verbatim. The Bastion's `pressure_dome` is an 18 × 10 orb of 6.2
+ * stopped at 0.56, squashed 0.88 tall and 1.12 across and rolled 0.06 by
+ * its node; its `crown_pod` a 12 × 7 of 2.3 stopped at 0.6. Neither is a
+ * table: the counts `parts.mjs` could not name are a partial sphere's,
+ * w·(2h − 1) triangles where a closed orb has 2w(h − 1).
+ */
+export function grownDome(root, mat, { name = 'pressure_dome', r, facets, down, ...placement }) {
+  return placed(root, name, shell(r, facets, { down }), mat, placement);
+}
+
+/**
+ * Growth rings round a dome, where it grew: each a torus lying flat at the
+ * height of the dome's surface at polar angle `t` from the crown — y = cy +
+ * squash·R·cos t — cresting `lift` beyond the dome's radius there, R·sin t +
+ * lift, `tube` thick on `facets` [radial, tubular], with the dome's beam
+ * scale on its node. The Bastion's four sit at t = 0.32, 0.62, 0.88 and
+ * 1.12 on its 6.2 dome, 0.1 proud, thinning 0.3, 0.24, 0.2, 0.16 down the
+ * dome; the rule reproduces all four buffers and heights to the float.
+ */
+export function domeRings(root, mat, opts) {
+  const { name = 'growth_ring', centre, R, squash, lift, rings, facets = [5, 26], scale } = opts;
+  const [cx, cy, cz] = centre;
+  rings.forEach(({ t, tube }, i) =>
+    placed(
+      root,
+      `${name}_${i}`,
+      torus(R * Math.sin(t) + lift, tube, ...facets),
+      mat,
+      verbatim([cx, cy + squash * R * Math.cos(t), cz], [Math.PI / 2, 0, 0], scale)
+    )
+  );
+}
+
+/**
+ * Arcs of torus round a dome's centre, all at the centre with one squash on
+ * their nodes, each born in the XY plane, rolled `roll` about the keel and
+ * yawed `yaw` about the crown: the Bastion's five reinforce ribs ("visible
+ * reinforcement ribs" — a quarter turn each, 6.076 by 0.18 on 4 × 22,
+ * rolled π/2), its three lit veins (6.231 by 0.07 on 4 × 18, each its own
+ * arc a little over 0.9 and its own roll, 0.35, 0.47 and 0.59 short of
+ * π/2) and its two hull pipes ("external pipework" — 6.324 by 0.16 and
+ * 0.13 on 5 × 16, arcs 0.9 and 1.15, yawed 3.9 and 4.5). `arcs` lists each
+ * one's `yaw` and whatever of `arc`, `tube`, `roll` differs from the
+ * defaults at the top. The file writes eight of the ten rotations in
+ * three's other XYZ form of the same matrix, (±π, b, c − π); they are
+ * written here as (0, π − b, c), which is the form the other two are in
+ * and the one that shows the pipes' yaws to be round.
+ */
+export function domeArcs(root, mat, opts) {
+  const { name, first = 0, centre, scale, R, tube, facets, arc, roll, arcs } = opts;
+  arcs.forEach((a, i) =>
+    placed(
+      root,
+      `${name}_${first + i}`,
+      new THREE.TorusGeometry(R, a.tube ?? tube, ...facets, a.arc ?? arc),
+      mat,
+      verbatim(centre, [0, a.yaw, a.roll ?? roll], scale)
+    )
+  );
+}
+
+/**
+ * Lit ports round a dome — "sustained glow from ports and working lights":
+ * orbs of `r` on `facets` in the lamp, one buffer shared by all as the file
+ * has it, each where the export put it. The Bastion's eight sit a little
+ * above the dome's waist at eight radii between 6.23 and 6.31 from its
+ * centre, on no rule the port could find, so the places are the file's.
+ */
+export function portLights(root, mat, { name = 'port_light', r, facets = [6, 5], at }) {
+  const geo = new THREE.SphereGeometry(r, ...facets);
+  at.forEach((p, i) => placed(root, `${name}_${i}`, geo, mat, verbatim(p)));
+}
+
+/**
+ * Root buttresses — "anchored to the seabed", grown: capsules (kit.mjs
+ * `capsule`, `facets` [cap, radial]) each its own girth and length, laid
+ * over `roll` about the keel and yawed each its own way, skinned alternately
+ * from the first. A matched pair is refused, as `rootGrips` refuses one on
+ * the turret. The Bastion's seven lie 0.18 short of flat and roughly along
+ * the dome's radius, where the turret's five lie across it; three of the
+ * seven rotations the file writes in three's (π, b, −roll) form and four in
+ * (0, yaw, roll), the same matrix, and all seven are written here in the
+ * second.
+ */
+export function rootButtresses(root, skins, opts) {
+  const { name = 'root_buttress', roll, facets = [3, 7], grips } = opts;
+  refuseMirror(name, grips, ({ r, length }) => `${r},${length}`);
+  grips.forEach(({ r, length, at, yaw }, i) =>
+    placed(
+      root,
+      `${name}_${i}`,
+      capsule(r, length, ...facets),
+      skins[i % skins.length],
+      verbatim(at, [0, yaw, roll])
+    )
+  );
+}
+
+/**
+ * Ballast tanks: capsules of one size laid flat — a quarter turn about the
+ * keel — and each turned its own way about the crown, `{ at, turn }` each.
+ * The Bastion's two are 0.75 by 2 on 3 × 9 in grown steel, turned 0.5 and
+ * 0.8; a matched pair on purpose, because a tank is fitted rather than
+ * grown, and the file has two alike.
+ */
+export function ballastTanks(root, mat, opts) {
+  const { name = 'ballast_tank', r, length, facets = [3, 9], tanks } = opts;
+  tanks.forEach(({ at, turn }, i) =>
+    placed(
+      root,
+      `${name}_${i}`,
+      capsule(r, length, ...facets),
+      mat,
+      verbatim(at, [Math.PI / 2, 0, turn])
+    )
+  );
+}
+
+/**
+ * A docking collar: the collar, a frustum laid on its side — a quarter turn
+ * about the keel — and yawed out `yaw`; the lip round its mouth, a torus
+ * stood on edge at π/2 + yaw; and the lit mouth, a thin drum in the collar's
+ * own attitude and facet count. Exported collar, lip, mouth, as the file
+ * has them, under `docking_<part>_<tag>`. The Bastion's `main` (1.5 to 1.9
+ * by 2.6 on 9 facets, yawed −0.4 off the +x flank) and `small` (0.95 to
+ * 1.25 by 2 on 8, yawed 0.75, aft and to starboard). The lip's and the
+ * mouth's places are the file's and not a distance along the collar's axis
+ * — each sits a few centimetres off it.
+ */
+export function dockingCollar(root, mats, opts) {
+  const { collar: collarMat, lip: lipMat, mouth: mouthMat } = mats;
+  const { tag, yaw, collar, lip, mouth } = opts;
+  const attitude = [0, yaw, Math.PI / 2];
+  placed(
+    root,
+    `docking_collar_${tag}`,
+    cyl(collar.radii[0], collar.radii[1], collar.length, collar.facets),
+    collarMat,
+    verbatim(collar.at, attitude)
+  );
+  placed(
+    root,
+    `docking_lip_${tag}`,
+    torus(lip.R, lip.tube, ...lip.facets),
+    lipMat,
+    verbatim(lip.at, [0, Math.PI / 2 + yaw, 0])
+  );
+  placed(
+    root,
+    `docking_mouth_${tag}`,
+    cyl(mouth.r, mouth.r, mouth.t, collar.facets),
+    mouthMat,
+    verbatim(mouth.at, attitude)
+  );
+}
+
+/**
+ * Standpipes: a tapered pipe stood on the seabed, `h` tall at `[x, z]` and
+ * leaned `lean` about the keel, with a flange round it — a torus lying flat
+ * — `flange.at` of its height above its middle; exported pipe then flange.
+ * The Bastion's three are 3.2, 3.6 and 2.6 tall, 0.22 to 0.26 across on 8
+ * facets, flanged 0.3 by 0.07 on 5 × 10 at 0.22 of their height, each
+ * leaned a degree or three its own way.
+ */
+export function standpipes(root, mats, opts) {
+  const { pipe: pipeMat, flange: flangeMat } = mats;
+  const { radii = [0.22, 0.26], facets = 8, pipes } = opts;
+  const { flange = { R: 0.3, tube: 0.07, facets: [5, 10], at: 0.22 } } = opts;
+  pipes.forEach(({ at: [x, z], h, lean }, i) => {
+    placed(
+      root,
+      `standpipe_${i}`,
+      cyl(radii[0], radii[1], h, facets),
+      pipeMat,
+      verbatim([x, h / 2, z], [0, 0, lean])
+    );
+    placed(
+      root,
+      `standpipe_flange_${i}`,
+      torus(flange.R, flange.tube, ...flange.facets),
+      flangeMat,
+      verbatim([x, h / 2 + flange.at * h, z], [Math.PI / 2, 0, 0])
+    );
+  });
+}
+
+/**
+ * A gill organ — "paired gill organs with vent slits exhaling a faint
+ * haze": a frame of its own (the file's `gill-organ-<side>`, placed
+ * verbatim) holding the mound, an orb squashed to `mound.scale` and rolled
+ * `mound.roll`; `slits.count` vent slits, each with its "faint
+ * bioluminescent breathing line" lit beside it; and the haze, a cone
+ * standing over the top in the translucent ink. The slits are one rule,
+ * recovered from the file to the float: the k-th yaws `yaw0 + k·pitch`
+ * about the mound's crown, sits at (0.72·sin yaw, 0.28, 0.28·cos yaw − 0.14)
+ * pitched 0.5 forward, and its breathing line at (0.78·sin yaw, 0.3, the
+ * same z) in the same attitude. Port is −z (#642): the file's `-port` frame
+ * is at z −0.35 and its `-stb` at +0.35, and the two are not a mirrored
+ * pair — the starboard organ sits where the port one lands turned half a
+ * turn about the crown, with its yaw and its rolls merely negated, so each
+ * is grown its own way and the script says which by `side`.
+ */
+export function gillOrgan(root, mats, opts) {
+  const { mound: moundMat, slit: slitMat, breath: breathMat, haze: hazeMat } = mats;
+  const { side, at, yaw, mound, slits, haze } = opts;
+  const organ = group(root, `gill-organ-${side}`, verbatim(at, [0, yaw, 0]));
+  placed(
+    organ,
+    `gill-mound-${side}`,
+    new THREE.SphereGeometry(1, ...mound.facets),
+    moundMat,
+    verbatim([0, 0, 0], [0, 0, mound.roll], mound.scale)
+  );
+  const { count = 4, yaw0 = -0.5, pitch = 0.34, tilt = 0.5, slit, breath } = slits;
+  const { y = [0.28, 0.3], reach = [0.72, 0.78], lift = 0.28, sink = 0.14 } = slits;
+  for (let k = 0; k < count; k++) {
+    const a = yaw0 + pitch * k;
+    const z = lift * Math.cos(a) - sink;
+    placed(
+      organ,
+      `gill-slit-${side}-${k + 1}`,
+      box(...slit),
+      slitMat,
+      verbatim([reach[0] * Math.sin(a), y[0], z], [tilt, a, 0])
+    );
+    placed(
+      organ,
+      `gill-breath-line-${side}-${k + 1}`,
+      box(...breath),
+      breathMat,
+      verbatim([reach[1] * Math.sin(a), y[1], z], [tilt, a, 0])
+    );
+  }
+  placed(
+    organ,
+    `gill-haze-${side}`,
+    cyl(haze.radii[0], haze.radii[1], haze.h, haze.facets),
+    hazeMat,
+    verbatim([0, haze.y, 0], [0, 0, haze.roll])
+  );
+  return organ;
+}
+
+/**
+ * A vein ring — "faint bioluminescent breathing lines" round a lobe: a
+ * frame of the file's name at the origin holding `count` lit boxes, the
+ * k-th at bearing `centre − span/2 + (k + ½)·span/count` on a circle of `r`
+ * about `at` = [cx, y, cz], laid tangent (yawed −(bearing + π/2)) and cut
+ * r·(span/count)·`overlap` long by `section` [tall, wide] — the segments
+ * overlap by 8 % so the arc reads as one line. The Veil's four: `vein-
+ * ring-core`, nine on 1.35 about the crown over 2.2 rad centred on 1.5;
+ * `vein-ring-core-2`, eight on 1.75 over 2.0 on 4.3, dim; `vein-ring-west`,
+ * seven on 0.95 about the west lobe over 2.2 on 2.3; `vein-ring-east`,
+ * seven on 0.9 about the east over 2.1 on −0.75. The rule reproduces all
+ * thirty-one nodes to the double; sixteen of them the file writes in
+ * three's (π, b, π) form of the XYZ Euler, the plain yaw of the same
+ * matrix here.
+ */
+export function veinRing(root, mat, opts) {
+  const { name, at, r, centre, span, count, section = [0.045, 0.06], overlap = 1.08 } = opts;
+  const [cx, y, cz] = at;
+  const frame = group(root, name);
+  const step = span / count;
+  for (let k = 0; k < count; k++) {
+    const a = centre - span / 2 + (k + 0.5) * step;
+    placed(
+      frame,
+      `${name}-seg-${k + 1}`,
+      box(r * step * overlap, ...section),
+      mat,
+      verbatim([cx + r * Math.cos(a), y, cz + r * Math.sin(a)], [0, -(a + Math.PI / 2), 0])
+    );
+  }
+  return frame;
+}
+
+/**
+ * How far up-stalk a spore stalk's upper stem leans across, per unit of
+ * its height: 0.0298876264947198 on all six of the Veil's, identical to
+ * fifteen places, and no expression in the stalk's two leans (0.06 and
+ * 0.16) or its proportions that the port could find reproduces it — so it
+ * is carried as the file's number rather than a guess at its origin. The
+ * pod and its tip sit 1.4 times as far across, exactly.
+ */
+const STALK_SWAY = 0.0298876264947198;
+
+/**
+ * A spore stalk — "slender spore stalks swaying above ... dim lit tips on
+ * the stalks only": a frame of its own (`stalk-<n>`, placed verbatim, each
+ * leaned its own way off the bed) holding a two-piece stem, the pod and its
+ * lit tip, all one rule of the stalk's height `H`: the lower stem 0.55H
+ * tall, 0.075 to 0.05 across on 7 facets, centred 0.27H up and leaned 0.06
+ * about the keel; the upper 0.45H tall, 0.05 to 0.032, centred 0.75H up
+ * and `STALK_SWAY`·H across, leaned 0.16; the pod a 7 × 5 orb of 0.13
+ * drawn 1.35 tall at 0.98H up and 1.4 times as far across; the tip a 6 × 4
+ * orb of 0.07 drawn 1.2 tall, 0.16 above the pod. The Veil's six stand 2.3,
+ * 2.7, 2, 1.8, 3.1 and 1.5 tall; the rule reproduces all twenty-four nodes
+ * to the double.
+ */
+export function sporeStalk(root, mats, opts) {
+  const { lower: lowerMat, upper: upperMat, pod: podMat, tip: tipMat } = mats;
+  const { name, H, sway = STALK_SWAY, ...placement } = opts;
+  const stalk = group(root, name, placement);
+  placed(
+    stalk,
+    `${name}-stem-lower`,
+    cyl(0.05, 0.075, 0.55 * H, 7),
+    lowerMat,
+    verbatim([0, 0.27 * H, 0], [0, 0, 0.06])
+  );
+  placed(
+    stalk,
+    `${name}-stem-upper`,
+    cyl(0.032, 0.05, 0.45 * H, 7),
+    upperMat,
+    verbatim([sway * H, 0.75 * H, 0], [0, 0, 0.16])
+  );
+  placed(
+    stalk,
+    `${name}-pod`,
+    new THREE.SphereGeometry(0.13, 7, 5),
+    podMat,
+    verbatim([1.4 * sway * H, 0.98 * H, 0], [0, 0, 0], [1, 1.35, 1])
+  );
+  placed(
+    stalk,
+    `${name}-pod-tip`,
+    new THREE.SphereGeometry(0.07, 6, 4),
+    tipMat,
+    verbatim([1.4 * sway * H, 0.98 * H + 0.16, 0], [0, 0, 0], [1, 1.2, 1])
+  );
+  return stalk;
+}
+
+/**
+ * Root flares — the bed "grown into the seabed": cones of `radii` [tip,
+ * foot] by `length` on `facets` round the bed's edge, sunk to `y`, the k-th
+ * yawed `yaw0 − k·2π/count` and leaned `lean` on the even ones, `lean +
+ * leanStep` on the odd. The lean is about the frame's own x *before* the
+ * yaw — an XYZ Euler — so every flare tips the same way, toward +z, and
+ * the yaw only spins each cone about its own axis: the file's rotation,
+ * kept, and worth knowing before the bake is read. The Veil's seven lean
+ * 0.6847 and π/3 more by turns, on bearings a wobble off their yaws at
+ * seven radii between 2.08 and 2.53 from the crown, so their places are the
+ * file's.
+ */
+export function rootFlares(root, mat, opts) {
+  const { name = 'root-flare', radii, length, facets = 6, y, lean, leanStep = Math.PI / 3 } = opts;
+  const { yaw0, at } = opts;
+  at.forEach(([x, z], k) =>
+    placed(
+      root,
+      `${name}-${k + 1}`,
+      cyl(radii[0], radii[1], length, facets),
+      mat,
+      verbatim([x, y, z], [lean + (k % 2) * leanStep, yaw0 - (k * 2 * Math.PI) / at.length, 0])
+    )
+  );
+}
+
+/* --------------------------------------------------------------------------
  * Shared kinds. The Light Scout is the first of the six kinds every navy
  * models (#588, off #540 Phase 3), and the Commune's is a grown pod on a
  * 60 m brief: a displaced orb for a hull, four rings that lean as they grew,
