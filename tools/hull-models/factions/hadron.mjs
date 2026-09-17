@@ -43,6 +43,8 @@ import {
   group,
   capsule,
   sidedPost,
+  zLong,
+  xLong,
 } from '../kit.mjs';
 
 /**
@@ -1616,6 +1618,224 @@ export function shimmerSheath(root, mat, { r, at, scale }) {
     at,
     [0, 0, 0],
     scale
+  );
+}
+
+/* --------------------------------------------------------------------------
+ * The Order's works — its Foundry and its Nodule Refinery (#652 round two),
+ * on the kit's Foundry and Refinery builders. What the kit reaches by
+ * parameter is composed in the scripts; what it does not — the Foundry's
+ * wing halls and launch gate, the Refinery's silos and maw blades, and the
+ * raked anchor blades both files carry — is here. Every builder takes the
+ * kit's `frame` (`zLong` for the Foundry, which is a Z-long export, `xLong`
+ * for the Refinery), and every number is the export's own.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The works' palette: the Bastion's five and two lamps of the Foundry's and
+ * the Refinery's own — `forge_light` and `floodlight_glow`, which are
+ * `crystal_glow`'s finish to the value (the crystal-glow token over #3A2560
+ * at roughness 0.2) under a name each, at the files' strengths:
+ * 3.7930280838563952 on the Foundry, 4.392641074180667 on the Refinery
+ * (#639 review, N1). `resonance_crystal` burns at 2.118362294686672 and
+ * 2.996320537090334 on the two, through the same `intensity`.
+ */
+export const worksInk = {
+  ...bastionInk,
+  forgeLight: (intensity) => lamp('forge_light', hex('#C9A6FF'), hex('#3A2560'), 0.2, intensity),
+  floodlightGlow: (intensity) =>
+    lamp('floodlight_glow', hex('#C9A6FF'), hex('#3A2560'), 0.2, intensity),
+};
+
+/**
+ * The export's own `_r` placement mirrored across its x for the `_l`, on
+ * `sgn`'s side of a `pair`: x negated and the y and z angles with it — the
+ * rule `sided` applies through `drawn`, here as numbers for any `frame`.
+ */
+const mirrored = (sgn, [x, y, z], [a = 0, b = 0, c = 0] = []) => [
+  [-sgn * x, y, z],
+  [a, -sgn * b, -sgn * c],
+];
+
+/**
+ * The Foundry's halls — "unit production hall" (docs/asset-prompts-3d.md,
+ * STRUCTURE — Foundry) said the Order's way: a wing either side of the bay,
+ * each a six-facet drum of `hull.r` by `hull.length` laid along the bay by
+ * a quarter about x and pressed to `hull.squash` on its own z (the world's
+ * height, after the turn), a crest of `crest.size` on its shoulder rolled
+ * `crest.roll` in toward the bay, a crystal ridge of `ridge.size` along its
+ * inboard edge, a six-facet point of `ends.r` by `ends.length` at each end
+ * — the bow's apex forward at +`ends.z`, the stern's aft — under the same
+ * press, and three port lights of `lights.r` down its outboard flank at
+ * `lights.zs`. A wing at a time, `_r` first at the export's +x, then `_l`
+ * its mirror; every part its own buffer, as the file has it. On a Z-long
+ * export the `_r` wing lands on the kit's −z, port (kit.mjs `drawn`, #642),
+ * as the Sentinel Turret's `_r` does (#639): the export's own name, carried.
+ */
+export function hallWings(root, { shadow, alloy, crystal: ridgeMat, light }, opts) {
+  const { frame = zLong, hull, crest, ridge, ends, lights } = opts;
+  const press = [1, 1, hull.squash];
+  pair((tag, sgn) => {
+    const [hullAt, hullRot] = mirrored(sgn, [hull.x, hull.y, 0], [Math.PI / 2, 0, 0]);
+    frame.part(
+      root,
+      `wing_hull_${tag}`,
+      cyl(hull.r, hull.r, hull.length, 6),
+      shadow,
+      hullAt,
+      hullRot,
+      press
+    );
+    const [crestAt, crestRot] = mirrored(sgn, [crest.x, crest.y, 0], [0, 0, crest.roll]);
+    frame.part(root, `wing_crest_${tag}`, box(...crest.size), alloy, crestAt, crestRot);
+    const [ridgeAt] = mirrored(sgn, [ridge.x, ridge.y, 0]);
+    frame.part(root, `wing_ridge_${tag}`, box(...ridge.size), ridgeMat, ridgeAt);
+    for (const [end, dir] of [
+      ['bow', 1],
+      ['stern', -1],
+    ]) {
+      const [at, rot] = mirrored(sgn, [hull.x, hull.y, dir * ends.z], [(dir * Math.PI) / 2, 0, 0]);
+      frame.part(root, `wing_${end}_${tag}`, cyl(0, ends.r, ends.length, 6), alloy, at, rot, press);
+    }
+    lights.zs.forEach((z, i) => {
+      const [at] = mirrored(sgn, [lights.x, lights.y, z]);
+      frame.part(
+        root,
+        `wing_portlight_${tag}_${i}`,
+        new THREE.SphereGeometry(lights.r, 6, 5),
+        light,
+        at
+      );
+    });
+  });
+}
+
+/**
+ * The launch gate at the bay's open end — the Order's reading of the kit's
+ * `launchMouth`, under its own names and shapes: a four-sided pylon of
+ * `pylon.r` by `pylon.length` either side, `_r` at +x, on one buffer; the
+ * lit threshold of `threshold.size` across the sill; the crossbeam of
+ * `crossbeam.size` over the pylons; and the gate crystal, an octahedron of
+ * `crystal.r` drawn tall by `crystal.scale`, on the beam. In that order.
+ */
+export function launchGate(root, { alloy, glow, shadow, crystal: lit }, opts) {
+  const { frame = zLong, pylon, threshold, crossbeam, crystal: gem } = opts;
+  const post = cyl(0, pylon.r, pylon.length, 4);
+  pair((tag, sgn) => {
+    const [at] = mirrored(sgn, pylon.at);
+    frame.part(root, `gate_pylon_${tag}`, post, alloy, at);
+  });
+  frame.part(root, 'gate_threshold', box(...threshold.size), glow, threshold.at);
+  frame.part(root, 'gate_crossbeam', box(...crossbeam.size), shadow, crossbeam.at);
+  frame.part(root, 'gate_crystal', octa(gem.r), lit, gem.at, [0, 0, 0], gem.scale);
+}
+
+/**
+ * Raked anchor blades — "anchored to the seabed" — along a works' flank:
+ * `blades.length` mirrored pairs of four-sided pyramids of `r` by `length`,
+ * each stood on its own `anchor` and seated `seat` out along its own
+ * `axis` (normalised here), turned onto that axis by the one rotation that
+ * carries +y there; the `_l` of each pair the `_r` mirrored across the
+ * export's x (`mirrored` above). Shadow on the even pairs, alloy on the
+ * odd; every blade its own buffer. The Bastion's `anchorBlades` stand
+ * theirs on one circle by bearing; these two files stand each blade where
+ * it is: the Foundry's three on one rake, (1, 0.55, 0.1), seated 0.65 from
+ * anchors on round numbers; the Refinery's three on axes whose z is 0.4 of
+ * their y on every one and whose x is each blade's own — transcribed, since
+ * no bearing or rake gives 1.755165, −0.058399 and −1.713778 — seated 0.7.
+ * Both regenerate the approved node matrices to the sixteenth place.
+ */
+export function rakedBlades(root, { shadow, alloy }, opts) {
+  const { frame = zLong, r, length, seat, blades } = opts;
+  const up = new THREE.Vector3(0, 1, 0);
+  blades.forEach(({ anchor, axis: raw }, i) => {
+    const axis = new THREE.Vector3(...raw).normalize();
+    const c = new THREE.Vector3(...anchor).addScaledVector(axis, seat);
+    const q = new THREE.Quaternion().setFromUnitVectors(up, axis);
+    const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+    pair((tag, sgn) => {
+      const [at, rot] = mirrored(sgn, c.toArray(), [e.x, e.y, e.z]);
+      frame.part(
+        root,
+        `anchor_blade_${i}_${tag}`,
+        cyl(0, r, length, 4),
+        i % 2 ? alloy : shadow,
+        at,
+        rot
+      );
+    });
+  });
+}
+
+/**
+ * "A rank of upright silos" (docs/asset-prompts-3d.md, STRUCTURE — Nodule
+ * Refinery), the Order's: each silo a six-facet frustum of `r` at the foot
+ * and 0.8 `r` at the head, `h` tall, standing on the ground at `at`
+ * `[x, z]`; a crystal seam up its face, 0.22 square and 0.82 `h` tall, 0.88
+ * `r` toward +z; a four-sided steel collar of 0.82 `r` and tube 0.12 laid
+ * flat at 0.72 `h`; a tip that is an octahedron of 0.55 `r` drawn to
+ * [0.7, 1.9, 0.7] at `h` + 0.85 `r`; and a tip light, a sphere of `light.r`
+ * six by five, at `h` + 1.9 `r`. Those ratios are the file's: three sizes
+ * of silo carry them to the digit. Body and tip alternate alloy and shadow
+ * by the silo's `n`, the even silos' bodies in alloy. A silo is drawn once
+ * a `tag` — `_c` on the centreline, `_r` at +x and `_l` its mirror — its
+ * five parts together, each its own buffer.
+ */
+export function silos(root, { alloy, shadow, crystal: seamMat, steel, light }, opts) {
+  const { frame = xLong, light: lamp = { r: 0.14 }, silos: ranks } = opts;
+  for (const {
+    n,
+    tags,
+    r,
+    h,
+    at: [x, z],
+  } of ranks) {
+    const [body, tip] = n % 2 ? [shadow, alloy] : [alloy, shadow];
+    for (const tag of tags) {
+      const sx = tag === 'l' ? -x : x;
+      const name = (stem) => `${stem}${n}_${tag}`;
+      frame.part(root, name('silo_'), cyl(0.8 * r, r, h, 6), body, [sx, h / 2, z]);
+      frame.part(root, name('silo_seam_'), box(0.22, 0.82 * h, 0.22), seamMat, [
+        sx,
+        h / 2,
+        z + 0.88 * r,
+      ]);
+      frame.part(
+        root,
+        name('silo_collar_'),
+        torus(0.82 * r, 0.12, 4, 12),
+        steel,
+        [sx, 0.72 * h, z],
+        [Math.PI / 2, 0, 0]
+      );
+      frame.part(
+        root,
+        name('silo_tip_'),
+        octa(0.55 * r),
+        tip,
+        [sx, h + 0.85 * r, z],
+        [0, 0, 0],
+        [0.7, 1.9, 0.7]
+      );
+      frame.part(root, name('silo_tiplight_'), new THREE.SphereGeometry(lamp.r, 6, 5), light, [
+        sx,
+        h + 1.9 * r,
+        z,
+      ]);
+    }
+  }
+}
+
+/**
+ * The maw blades: a four-sided pyramid of `r` by `length` hung point-down
+ * (a half turn about x) either side of the crusher's maw at ±`at[0]`, the
+ * `_r` at +x, on one buffer — the Order's teeth, where the Directorate hangs
+ * three.
+ */
+export function mawBlades(root, shadow, { frame = xLong, r, length, at: [x, y, z] }) {
+  const tooth = cyl(0, r, length, 4);
+  pair((tag, sgn) =>
+    frame.part(root, `maw_blade_${tag}`, tooth, shadow, [-sgn * x, y, z], [Math.PI, 0, 0])
   );
 }
 
