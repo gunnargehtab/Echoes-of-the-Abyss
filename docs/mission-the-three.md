@@ -248,9 +248,10 @@ the fact that two orders which have never shared a page have been writing down t
 ### The SIG budget
 
 **SIG budget: 8** — a description rather than a ceiling, which is
-[mission-attendance.md](mission-attendance.md)'s kind of number and its exact figure: the two
-quietest missions in the bible are a Directorate watch that does not move and a Knight escort that
-does not sound, and both come out at eight. It is not what the party emits — the Choirmaster's hull
+[mission-attendance.md](mission-attendance.md)'s kind of number and its exact figure: eight is the
+quietest budget in the bible, and three missions come out at it — a Directorate watch that does not
+move, a Commune bed sown with every hull under silent running
+([mission-in-writing.md](mission-in-writing.md) §4), and a Knight escort that does not sound. It is not what the party emits — the Choirmaster's hull
 sits at 55 beside it all mission and is in breach of nothing. It is what the *escort* emits once it
 is in the chord, and the whole of the mission's difficulty is that holding still is a decision
 somebody has to keep making for eight minutes.
