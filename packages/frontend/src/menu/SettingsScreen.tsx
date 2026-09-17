@@ -67,7 +67,7 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
 
   return (
     <div className="menu-screen" role="dialog" aria-label="Settings">
-      <div className="menu-panel">
+      <div className="menu-panel menu-panel-settings">
         <header className="menu-head">
           <h2>Settings</h2>
           <p className="menu-subtitle">Saved on this device. Whatever is live takes it live.</p>
