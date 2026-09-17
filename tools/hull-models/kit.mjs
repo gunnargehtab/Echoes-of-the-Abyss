@@ -502,8 +502,10 @@ export function lightAudit(root, { ppm = 4, minM2 = 0.25 } = {}) {
  * crane its own in every dimension and its trolley at a different station
  * — so their builders, at the foot of this file, take every number as a
  * parameter with one file's as the default, and the names with them. The
- * Bastion shares nothing across its four files and lives in each navy's
- * module.
+ * Bastion shares nothing across its four files as a set — pairwise, the
+ * Directorate's and the Commune's carry fifteen part names in common and
+ * the Knights' and the Commune's a `pressure_dome`, at no common number —
+ * and lives in each navy's module.
  *
  * The numbers are the approved files' own and are the defaults, because all
  * four carry them unchanged: repeating them in four scripts is the
@@ -1144,11 +1146,12 @@ export function capsule(radius, length, capSegments = 4, radialSegments = 8, hei
  * Directorate, the Knights and the Commune the Foundry's `bay_floor`,
  * `forge_line`, `hull_in_progress`, two bay lips with their guide lights and
  * two `gantry_crane_N` frames carry the same names in the same order and
- * differ in their numbers — the Order's crane is smaller in every dimension
+ * differ in their numbers — the Order's crane is its own in every dimension
  * and not by one factor, the trolley sits at a different station on every
  * crane, the lips are `_starboard`/`_port` on two files and `_r`/`_l` on the
- * third, the Commune's cranes have no finials and the Directorate's port lip
- * is short one guide. The Refinery's `conveyor_gantry` (bed, belt, nodules,
+ * third, the Commune's cranes have no finials and the lip the Directorate's
+ * file calls port (its −x lip; starboard once #642 turns the name) is short
+ * one guide. The Refinery's `conveyor_gantry` (bed, belt, nodules,
  * rails, gantry lights, legs), crusher house, cowl and maw, exhaust stacks,
  * intake hopper and mouth, transfer pipes and flanges and flood masts are
  * the same story, with the Knights' file carrying two gantries named `_r`
@@ -1185,7 +1188,8 @@ export function capsule(radius, length, capSegments = 4, radialSegments = 8, hei
  * the same way. What has no twin in any other file — the Directorate's
  * mandibles, flank photophores, anchor claws, tergite flanks, outrigger pods
  * and stern carapace, and its Refinery's silos, maw teeth and intake teeth
- * — lives in `factions/directorate.mjs`.
+ * (the Commune's `silo_cap_0..3` is a name twin over a grown dome, not a
+ * cone) — lives in `factions/directorate.mjs`.
  * ------------------------------------------------------------------------ */
 
 /**
