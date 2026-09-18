@@ -1,0 +1,49 @@
+{
+  "experiment": "724-text",
+  "title": "Top-strip readouts (#724) — does pixijs-scene-text materially contribute?",
+  "skill": ".claude/skills/pixijs-scene-text",
+  "scope": ["packages/frontend/src/", "packages/frontend/test/"],
+  "traps": [
+    {
+      "id": "bitmaptext-introduced",
+      "group": "drift",
+      "severity": "tell",
+      "direction": "mustNotAppear",
+      "pattern": "\\b(BitmapText|SplitText|SplitBitmapText|HTMLText)\\b",
+      "why": "A tell only: if the issue was solved by swapping text renderers, the sub-skill likely steered API selection rather than explanation behavior."
+    },
+    {
+      "id": "textstyle-construction",
+      "group": "drift",
+      "severity": "tell",
+      "direction": "mustNotAppear",
+      "pattern": "new\\s+TextStyle\\s*\\(",
+      "why": "A tell only: #724 is about explanation surfaces and accessibility route; constructing new TextStyle objects is not required to satisfy that scope."
+    },
+    {
+      "id": "renderer-publishes-readouts",
+      "group": "criterion",
+      "severity": "required",
+      "direction": "mustAppear",
+      "pattern": "onReadouts\\s*\\(",
+      "file": "packages/frontend/src/game/EchoRenderer.ts",
+      "why": "The issue requires the canvas strip to expose explanation surfaces through the shell route."
+    },
+    {
+      "id": "readout-rules-file",
+      "group": "criterion",
+      "severity": "required",
+      "direction": "fileAdded",
+      "path": "packages/frontend/src/game/readouts.ts",
+      "why": "Readout explanation content is extracted into a dedicated module in the landed solution."
+    },
+    {
+      "id": "readout-tests-file",
+      "group": "criterion",
+      "severity": "required",
+      "direction": "fileAdded",
+      "path": "packages/frontend/test/readouts.test.ts",
+      "why": "The issue requires frontend tests that assert explanation content."
+    }
+  ]
+}

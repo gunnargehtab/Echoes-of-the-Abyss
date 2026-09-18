@@ -126,6 +126,27 @@ happens, so the decision is re-opened by a red test rather than by anyone rememb
 this paragraph. The other trigger is #286: a real reading on the Termux floor, where a
 texture upload is priced very differently from a desktop GPU.
 
+### A skill-eval probe on `pixijs-scene-text` (#724)
+
+`#724` ("the top strip's readouts never say what they are") is directly in
+`pixijs-scene-text`'s area. It landed in #737 with new readout content, a renderer→shell
+bridge (`onReadouts`) and dedicated frontend content tests.
+
+The probe is `.claude/skill-eval/724-text/` and was scored against the historical range
+`94248a13..e59d28e`:
+
+```bash
+node .claude/skill-eval/score.mjs --experiment 724-text --selftest
+node .claude/skill-eval/score.mjs --experiment 724-text --range 94248a13..e59d28e
+```
+
+Result: **0 blocking, 0 tell, 5 clean of 5.** The issue was completed without introducing
+`BitmapText`, `SplitText`, `HTMLText` or `new TextStyle(...)` in added lines, while all
+three criteria traps passed (renderer callback plus the two added files).
+
+**Decision:** keep `pixijs-scene-text` for now. One clean probe says this issue did not
+need that API surface, but it does not yet show redundancy across repeated text tasks.
+
 ## Rules
 
 - **Do not edit a vendored skill.** Two exceptions exist, both marked `LOCAL`

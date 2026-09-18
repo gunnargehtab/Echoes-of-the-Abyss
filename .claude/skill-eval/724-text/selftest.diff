@@ -1,0 +1,8 @@
+diff --git a/packages/frontend/src/game/EchoRenderer.ts b/packages/frontend/src/game/EchoRenderer.ts
+--- a/packages/frontend/src/game/EchoRenderer.ts
++++ b/packages/frontend/src/game/EchoRenderer.ts
+@@ -0,0 +1,4 @@
++import { BitmapText } from 'pixi.js';
++const style = new TextStyle({ fill: 0xffffff });
++this.onReadouts([]);
++new BitmapText({ text: 'demo' });
