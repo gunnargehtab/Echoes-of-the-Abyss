@@ -27,6 +27,10 @@
  *              (_collar, _door, _rim, _dog_0..1) · keel · ballast_tank_0..1 ·
  *              drive_duct · drive_hub · drive_vane_0..2 · photophore_0..3 — built
  *              here rather than read off an export (#783), the first of them
+ *   Acolyte    tergite_0..2 · tergite_seam_0..2 · rostrum · telson · dome ·
+ *              dome_spine_0..5 · dorsal_spine_0..2 · limb_s0..2 / p0..2 (_hip,
+ *              _femur, _knee, _tibia, _foot) · photophore_s0..2 / p0..2 — built
+ *              (#784), the second
  *
  * Three rules fall out of those, and they are what this module holds rather
  * than any one hull:
@@ -731,6 +735,156 @@ export function ductedDrive(root, { duct: ductMat, hub: hubMat, vane: vaneMat },
       0,
     ]);
   }
+}
+
+/* --------------------------------------------------------------------------
+ * The Acolyte (#784, off #540 Phase 4): the scout that sits still, the
+ * second Directorate hull built here rather than ported. What it adds is
+ * what a hull that *stands* needs and no hull before it had — where the
+ * carapace's flank is, so a limb can be rooted on the shell, and a limb
+ * walked out and planted rather than folded under it.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The carapace's half-beam at `(x, y)` in elevation: the widest of the
+ * tergite orbs and their seam orbs there, or 0 where nothing is — the
+ * flank, as `tergiteCrown` is the crown. The seams are taken as
+ * `tergites` draws them for the same reason: a seam is 0.9 of its plate's
+ * beam at a station where the plate itself has drawn in to half, so around
+ * a plate's forward end the seam is the flank. A hull that seats its limbs
+ * by this roots them in the shell rather than beside it.
+ */
+export function tergiteFlank(segments, x, y, seam = {}) {
+  const { at: seamAt = 0.85, size: seamSize = [0.3, 0.95, 0.9], tallOf = 'height' } = seam ?? {};
+  const side = (cx, sx, sy, sz) => {
+    const u = (x - cx) / sx;
+    const v = y / sy;
+    const d = 1 - u * u - v * v;
+    return d > 0 ? sz * Math.sqrt(d) : 0;
+  };
+  let z = 0;
+  segments.forEach(([cx, sx, sy, sz]) => {
+    z = Math.max(z, side(cx, sx, sy, sz));
+    if (seam)
+      z = Math.max(
+        z,
+        side(
+          cx + seamAt * sx,
+          seamSize[0] * sx,
+          seamSize[1] * (tallOf === 'beam' ? sz : sy),
+          seamSize[2] * sz
+        )
+      );
+  });
+  return z;
+}
+
+/**
+ * A bone: a steel frustum `[root, tip]` in radius laid from `a` to `b`,
+ * the rotation the minimal one taking +Y onto that line, as `aimedSpikes`
+ * lays the Cruiser's antennae. The node sits at the midpoint and the
+ * length is the distance, so a script holds joints and never a length.
+ */
+function bone(root, name, mat, [rootR, tipR], a, b, facets) {
+  const A = new THREE.Vector3(...a);
+  const B = new THREE.Vector3(...b);
+  const d = B.clone().sub(A);
+  const q = new THREE.Quaternion().setFromUnitVectors(
+    new THREE.Vector3(0, 1, 0),
+    d.clone().normalize()
+  );
+  const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+  const mid = A.clone().add(B).multiplyScalar(0.5).toArray();
+  return add(root, name, cyl(tipR, rootR, d.length(), facets), mat, mid, [e.x, e.y, e.z]);
+}
+
+/**
+ * Hydrophone limbs walked out and planted: the Acolyte's array, built in
+ * the stance it hears at 85 in (docs/models-plan.md §3.5). Each limb is
+ * five parts, `limb_${side}${i}_hip`, `_femur`, `_knee`, `_tibia`, `_foot`:
+ * a black hip orb of `hip.r` rooted on the flank `tergiteFlank` finds at
+ * `hip.y`, its centre `hip.sink` inside the shell; a steel femur from the
+ * hip `femur.reach` outboard and `femur.rise` up to a black knee orb of
+ * `knee.r`; a steel tibia from the knee `tibia.reach` further out and
+ * `tibia.drop` down to the ankle; and from the ankle a red six-sided
+ * spike, `foot.r` by `foot.length`, planted point-down — a hydrophone on
+ * the Precentor's rule (`arrayBoom`), which is what the limb is. Bones
+ * are `[root, tip]` in radius, and every limb is drawn from the one set
+ * of numbers: regimented.
+ *
+ * `segments` and `seam` are the shell as `tergites` drew it, which is
+ * where the hips are seated. `limbs` is `[{ side, x, rake }]` — each
+ * limb's own station along the hull and its rake in plan, radians ahead
+ * of athwartships, astern when negative. The reach is read *along the raked line*, so a raked limb
+ * stands a little nearer the keel than a square one and reaches further
+ * along the hull, as a crab's fore and hind legs do. The hips are seated
+ * on the shell rather than typed: a station whose flank the plates do not
+ * reach is refused, because a limb rooted in water is a limb the conn view
+ * shows floating.
+ *
+ * A mirrored pair of hips is refused. `limbs` above lets its folded ranks
+ * match, because they carry no light; these carry the hull's whole light
+ * budget at their knees, and a knee that answers another across the keel
+ * is a photophore that does. A stance is a stride, and a stride has a
+ * phase — the Acolyte's is a hexapod's tripod, fore and hind a side
+ * planted together and the middle one a half-stride the other way.
+ * Returns the joints, `[{ side, i, hip, knee, ankle }]`, numbered a side
+ * in the order given, so the hull can seat its light on them.
+ */
+export function plantedLimbs(root, { steel, black, red }, opts) {
+  const {
+    segments,
+    seam,
+    hip = { y: -0.8, sink: 0.5, r: 1.1 },
+    femur = { r: [1.1, 0.9], reach: 5, rise: 3.2 },
+    knee = { r: 1.3 },
+    tibia = { r: [0.9, 0.7], reach: 4, drop: 6 },
+    foot = { r: 0.8, length: 2.4 },
+    facets = 6,
+    limbs: list,
+  } = opts;
+  const count = { p: 0, s: 0 };
+  const joints = list.map(({ side, x, rake = 0 }) => {
+    if (side !== 'p' && side !== 's')
+      throw new Error(`limb_${side}: side is '${side}' — 'p' (port, -z) or 's' (starboard, +z)`);
+    const i = count[side]++;
+    const sgn = side === 'p' ? -1 : 1;
+    const flank = tergiteFlank(segments, x, hip.y, seam);
+    if (flank <= hip.sink)
+      throw new Error(`limb_${side}${i}: no shell to root on at x = ${x}, y = ${hip.y}`);
+    const out = [Math.sin(rake), 0, sgn * Math.cos(rake)];
+    const from = ([px, py, pz], reach, lift) => [
+      px + out[0] * reach,
+      py + lift,
+      pz + out[2] * reach,
+    ];
+    const at = [x, hip.y, sgn * (flank - hip.sink)];
+    const kneeAt = from(at, femur.reach, femur.rise);
+    const ankle = from(kneeAt, tibia.reach, -tibia.drop);
+    return { side, i, hip: at, knee: kneeAt, ankle };
+  });
+  refuseMirror(
+    'limb',
+    joints.map(({ side, i, hip: at }) => [`limb_${side}${i}`, ...at])
+  );
+  joints.forEach(({ side, i, hip: at, knee: kneeAt, ankle }) => {
+    const name = `limb_${side}${i}`;
+    add(root, `${name}_hip`, orb(8, 5), black, at, [0, 0, 0], [hip.r, hip.r, hip.r]);
+    bone(root, `${name}_femur`, steel, femur.r, at, kneeAt, facets);
+    add(root, `${name}_knee`, orb(8, 5), black, kneeAt, [0, 0, 0], [knee.r, knee.r, knee.r]);
+    bone(root, `${name}_tibia`, steel, tibia.r, kneeAt, ankle, facets);
+    // A cone's apex is +Y; a half turn about X plants it point-down, its
+    // base ring on the ankle.
+    add(
+      root,
+      `${name}_foot`,
+      spike(foot.r, foot.length, facets),
+      red,
+      [ankle[0], ankle[1] - foot.length / 2, ankle[2]],
+      [Math.PI, 0, 0]
+    );
+  });
+  return joints;
 }
 
 /* --------------------------------------------------------------------------

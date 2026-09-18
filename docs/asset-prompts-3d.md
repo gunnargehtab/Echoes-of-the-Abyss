@@ -509,9 +509,11 @@ squat three-tergite carapace, wider in its limbs than in its shell, with
 six hydrophone limbs walked out and planted — three a side, stout and
 jointed, the forward pair raked ahead and the aft pair astern — a short
 rostrum, a telson, and a listening dome sunk low into the middle tergite.
-The limbs are the array and the model shows them down, which is the posture
-it hears at 85 in; under way they fold flat under the shell. Nearly black: a
-photophore at each limb's joint, in a pattern that repeats on neither side.
+The limbs are the array and the model shows them down, planted in a
+hexapod's tripod stance — fore and hind together a side, the middle limb a
+half-stride the other way — which is the posture it hears at 85 in; under
+way they fold flat under the shell. Nearly black: a photophore on each
+limb's knee, in a pattern the stance keeps from repeating on either side.
 ```
 
 The Acolyte carries no faction lock — the Biomass is the lock, as the Chorister's is — so a
