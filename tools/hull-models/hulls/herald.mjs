@@ -73,7 +73,14 @@
  *   theirs either, and every Order hull but the Light Scout carries the
  *   three. They are what makes a bare spar read as the family from the
  *   conn view, and none is a lamp. The fin stands astern, which "nothing
- *   astern to hear" does not forbid — a fin is not heard.
+ *   astern to hear" does not forbid — a fin is not heard. It is 6 m long
+ *   from x −26 to −20, and the stern mark sits on the spine's crown at
+ *   x −28..−27, a metre ahead of its leading edge: a first cut ran the fin
+ *   from −28 through the mark, and review found the mark on the shipped
+ *   emissive as two one-pixel dashes either side of the fin's root — one
+ *   light named, none on the chart (§3.2, rule 1). The Clarion keeps 2 m
+ *   between its fin and its mark; this keeps 1, and the mark stands 0.3 m
+ *   proud of the crown with the drive prism's ridge 0.4 m under it.
  * - **The slot flares.** "The slot is the cone's mouth" says what it is and
  *   not its shape; a mouth widens toward its lips, so the inner edges
  *   diverge forward from ±3 at the throat to ±5.2 at the tips while the
@@ -90,13 +97,16 @@
  *
  * Resting light, all of it on the axis, and the kit's audit clean: the
  * emitter crystal, 5.0 m² facing up, and the stern mark on the spine's
- * crown, 0.5 m² — nothing on the flanks, nothing on the tines. 5.5 m² on
- * 612 m² of plan (the bake's 2,449 mask px at 2 px/m). The bake at
- * E(6.3) = 0.71 — the compass average of the idle 14, as every Order row
- * bakes (models-plan.md §3.3) — reads raw E 8.28 and dims by ×0.086 onto
- * 0.70, five and a half times above the ×1/64 floor the quiet end has to
- * stay clear of and nowhere near the ×64 ceiling. 15 parts, 256 triangles,
- * bounds x ±32.5, y −3.8..4.9, z ±10.
+ * crown, 1.0 m², one patch with nothing over it and the fin clear of it —
+ * nothing on the flanks, nothing on the tines. 6.0 m² on 595 m² of plan
+ * (the bake's 9,521 mask px at 4 px/m). On the shipped emissive at that
+ * density the mark is one 4 by 4 pixel patch either side of the keel and
+ * the crystal one of 25 by 6. The bake at E(6.3) = 0.71 — the compass
+ * average of the idle 14, as every Order row bakes (models-plan.md §3.3) —
+ * reads raw E 9.62 and dims by ×0.073 onto 0.71, four and a half times
+ * above the ×1/64 floor the quiet end has to stay clear of and nowhere
+ * near the ×64 ceiling. 15 parts, 256 triangles, bounds x ±32.5,
+ * y −3.8..4.9, z ±10.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -188,15 +198,19 @@ hadron.forkedBow(
   }
 );
 
+// The fin's leading edge is at x −26, a metre abaft the stern mark's forward
+// face: a first cut ran it from −28 and buried the mark inside it (the
+// header).
 hadron.finAndKeel(root, alloy, {
-  fin: { x: -24, y: 3.2, length: 8, height: 3.4 },
+  fin: { x: -23, y: 3.2, length: 6, height: 3.4 },
   keel: { x: -6, y: -2.6, length: 14, height: 2.4 },
   t: 0.6,
 });
 
 // The drive: a crystal point in the spine's line, its base in the transom's
 // upper half at the stern; no ring, and the one mark astern on the spine's
-// crown — the only light on the hull that is not in the throat.
+// crown at x −27.5 — the crown is at y 1.76 there and the prism's ridge
+// 0.4 m under it — the only light on the hull that is not in the throat.
 hadron.drive(
   root,
   { shadow, crystal, node },
@@ -209,7 +223,7 @@ hadron.drive(
     length: 8,
     mat: crystal,
     ring: false,
-    mark: { mat: seam, size: [1.0, 0.4, 0.8], x: -27, y: 2.05 },
+    mark: { mat: seam, size: [1.0, 0.4, 0.8], x: -27.5, y: 1.9 },
   }
 );
 

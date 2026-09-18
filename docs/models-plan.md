@@ -161,10 +161,12 @@ rail — because a spent one is the same hull with its doors open.
 
 The Glider's wing is to starboard and its trim vane to port; the Reed's leaves alternate,
 starboard at the forward node and port at the after; the Acolyte's and Thurible's
-photophores and the Thurible's spines repeat on neither side. These compose through the
-kit's `flank`, one side at a time, and never through `bothSides`, which mirrors.
-`outlines.mjs` cuts each station's port and starboard extremes independently, so an
-asymmetric plan generates as drawn.
+photophores and the Thurible's spines repeat on neither side. These compose one side at a
+time — each part placed at its own signed z, port negative (#642), as the Drifter's bays and
+vanes are and as the Glider's wing and the Acolyte's limbs are (#784) — and never through
+`bothSides`, which mirrors. The kit's `flank` is the Z-long ports' pair placement and an
+X-long built hull has no use for it. `outlines.mjs` cuts each station's port and starboard
+extremes independently, so an asymmetric plan generates as drawn.
 
 ### 3.7 Vocabulary lives in the module
 
