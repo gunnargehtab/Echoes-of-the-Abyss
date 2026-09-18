@@ -52,6 +52,13 @@
  * moved, swapping z, and nothing else. Under the settled convention the
  * hull reads with its four-lamp row to starboard and its spine-gun to
  * port — its block names neither side, so it does not read against it.
+ *
+ * ONE DEPARTURE (#645): the port limbs' taper. The export ran its port
+ * rank root-outboard — the starboard rank turned over, not mirrored,
+ * against the module's own rule for `limbs` — and the port kept it. The
+ * builder mirrors since #645, so `limb_p0..2` are the three parts
+ * `diff.mjs` lists against the file beyond the relabel: the same lines in
+ * plan, 0.15 m of taper the other way along them.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -118,6 +125,8 @@ directorate.dorsalSpines(root, black, {
 
 // The walking limbs: two matched ranks of three at 8 off the keel, 6 long,
 // tapering 0.6 to 0.45, folded 0.45 — the one place the navy allows a pair.
+// The port rank mirrors the starboard one since #645; the export ran its
+// taper backwards (the header says so).
 directorate.limbs(root, steel, {
   xs: [-12, 0, 12],
   y: -1.2,
