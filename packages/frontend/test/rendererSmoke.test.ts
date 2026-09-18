@@ -182,7 +182,12 @@ function drawSegments(
             if (step.action !== 'rect') continue;
             const [x, y, width, height] = step.data as number[];
             if (width !== SEG.width || height !== SEG.height) continue;
-            if (y! >= TOP_BAR_HEIGHT_PX) continue;
+            // Scoped by where the rect *is*, the way `stripGlyphs` scopes its
+            // glyphs. A local y is a number inside whatever container drew it,
+            // so ink far down the HUD has one under 52 as readily as the strip
+            // does, and the shape filter above is then the only thing keeping
+            // a stray rect out of the collision premise below.
+            if (at.y + y! * scale >= TOP_BAR_HEIGHT_PX * scale) continue;
             found.push({
               x: at.x + x! * scale,
               y: at.y + y! * scale,

@@ -1340,8 +1340,9 @@ export class EchoRenderer {
    * why, on its own, it can only ever record a *number*. The segments are
    * `Graphics`, they are the last thing on the first row, and they run past
    * the `DRAW` label they belong to. Nothing recorded them, so `acceptStrip`
-   * could refuse nothing for them: at 200% UI scale they print through the
-   * contact count, which kept a control over glyphs reading `███ontacts` —
+   * could refuse nothing for them: at 200% UI scale on the 1,440 px canvas the
+   * browser drive opens they print through the contact count, which kept a
+   * control over glyphs reading `███ontacts` —
    * the surface wrong about a number rather than silent about it, which is the
    * one thing ui-ux.md §13 promises it will not be.
    */
