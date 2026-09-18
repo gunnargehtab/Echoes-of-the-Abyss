@@ -47,7 +47,8 @@
  * axis 5.1 m outboard of it (42 m · sin 7°); the widest thing at that
  * casing's tail is its hoop lamp at r 3.45, so the aft torpedo, 0.8 m
  * across, passes it with 1.3 m to spare — a few degrees, and the fewest
- * that clear. Each casing's
+ * that clear with a margin worth having on a tube that launches (6° clears
+ * by half a metre; 5° does not). Each casing's
  * inboard face lies 0.5 m off the flank at its breech and 4.6 m off at its
  * muzzle, its axis 1 m above the waterline and its crown a metre under the
  * deck; the muzzle flanges reach z ±26.4, a 0.44 beam, on a 0.26 box.
