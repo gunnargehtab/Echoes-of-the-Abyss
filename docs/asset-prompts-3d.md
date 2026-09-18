@@ -221,7 +221,7 @@ Lamp bases are the near-black a `lamp()` puts in `color` for its emissive to sit
 | Directorate | cladding | `#3A3F4A` / `#27313B` `weld_steel` · `#4E1220` `chitin_red_dark` · `#1A0810` `biolight_unlit` (the lamp base worn as cladding by a part the block lights only in a later band — the Verger's bay doors) |
 | Directorate | emissive | `#E0506A` `gullet_glow` · `#E07A8C` `forge_light` / `floodlight_hot` |
 | Directorate | lamp base | `#1A0810` / `#2C0A12` / `#3A0D16` `biolight_crimson` · `#2A0C14` `gullet_glow` · `#40141C` `forge_light` / `floodlight_hot` |
-| Knights | cladding | `#1C2230` `dark_steel` · `#2C2244` `shadow_indigo` · `#8A8FA3` `alloy_dim` · `#E6E9F2` `alloy_white` (the token's hex under a second name) · `#1A1030` `crystal_seam_unlit` (the seam's lamp base worn as cladding by a part the block lights only under way — the Herald's tine seams) |
+| Knights | cladding | `#1C2230` `dark_steel` · `#2C2244` `shadow_indigo` · `#8A8FA3` `alloy_dim` · `#E6E9F2` `alloy_white` (the token's hex under a second name) · `#1A1030` `crystal_seam_unlit` (the seam's lamp base worn as cladding by a part the block lights only under way — the Herald's tine seams, the Lance's guard edges and rail) |
 | Knights | emissive | `#9B6CF9` `crystal_panel_glow` · `#A77CFF` `resonance_node` |
 | Knights | lamp base | `#1A1030` · `#1E1038` · `#241744` · `#2A1A50` · `#2A1650` · `#3A2560` |
 
@@ -632,9 +632,10 @@ drawn as the guard, and the tube launches only between them. The grip is a
 narrow faceted shaft aft to a flat transom with the drive prism in the
 spine — no canards, no guard wings astern, nothing behind the guard to hear,
 and nothing of the Reciter's needle. Dim at rest but for the crystal in the
-collar; under way, sustained glow along the guard's leading edges and up the
-rail to the collar, thrown forward, faint on the beam and dark astern but
-for one mark — the quarter it is loud in is the quarter it can fire into.
+collar and the one mark astern; under way, sustained glow along the guard's
+leading edges and up the rail to the collar, thrown forward, faint on the
+beam and dark astern but for that mark — the quarter it is loud in is the
+quarter it can fire into.
 ```
 
 ### The siege hulls — one a navy, and four answers to a wall

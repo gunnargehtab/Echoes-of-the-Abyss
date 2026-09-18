@@ -282,12 +282,14 @@ with a drive, sized to its berths. None carries a weapon.
   photophore rows along the shield's rim and down the abdomen (`plateEdgePhotophores`),
   asymmetric; the cells carry no lamp. No lock.
 - **Lance.** Bilaterally symmetric: a spike, a crossguard and a grip. The spike, an open
-  faceted rail the length of the forward third (new) with the one torpedo (`magazine`)
-  lying in it and its nose in a crystal muzzle collar as the bow. The crossguard, two
-  crystal-edged guard blades amidships opened to a right angle, leading edges at 45° to the
-  keel (`wings`, re-angled). The grip, a narrow faceted `spar` aft to a flat transom with
-  the `drive` prism; no `canards`, nothing astern. Built loaded. Resting lamps: the collar
-  crystal and one stern mark; the guard edges and the rail light under way and are clad.
+  faceted rail the length of the forward third (`spike`, new) with the one torpedo (a
+  capsule, the `magazine` pods' idiom, drawn by `spike`) lying in it and its nose in a
+  crystal muzzle collar as the bow. The crossguard, two crystal-edged guard blades
+  amidships opened to a right angle, leading edges at 45° to the keel (`wings`, re-angled,
+  the edge in the unlit finish through `edge.mat`). The grip, a narrow faceted `spar` aft
+  to a flat transom with the `drive` prism; no `canards`, nothing astern. Built loaded.
+  Resting lamps: the collar crystal and one stern mark; the guard edges and the rail light
+  under way and are clad.
 
 ### The siege hulls — #786
 
