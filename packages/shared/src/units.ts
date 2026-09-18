@@ -1281,7 +1281,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     berths: 3,
     /**
      * Thermal cutters are the Consortium's tool (docs/hazards.md §4 — the same
-     * gear that opens kelp), and a hull that must stand at 200 m of a wall for
+     * gear that opens kelp), and a hull that must stand at 320 m of a wall for
      * half a minute at SIG 75 is only fieldable by a navy that brings a Bulwark
      * to stand in front of it. Every other doctrine would be buying a siege it
      * cannot escort.
