@@ -37,12 +37,31 @@
  *   the block refuses (`resonatorRing`). 45 parts and 2,816 triangles
  *   become 43 and 2,256.
  *
- * `node tools/hull-models/diff.mjs responsory-hadron HEAD` lists the core's
+ * `node tools/hull-models/diff.mjs responsory-hadron 2059d57` lists the core's
  * move and the two removals, and nothing else. The generated outline's bow
  * loses one vertex of its port side with the tip's move: the model is
  * mirror-true part for part, and the asymmetry is `outlines.mjs`'s
  * simplifier, run once round a closed polygon, which was already leaving
  * eight unmatched points on this hull before the pass.
+ *
+ * A third light went in #775, and it was never sealed: it was the one lit
+ * part the block does not light at rest. `spine_thread` — a `crystal_seam`
+ * lamp 43 m long on the inlay's top, 13.25 m² of plan area and 30 % of the
+ * hull's resting lit area — was here because `hadron.spine` drew one unless
+ * told not to. The block puts the thread under way — "the array brightens
+ * along its whole length and a thread runs the spine to the rings" — and the
+ * subsection's own gloss says what rest is: "the cone lit and the flanks
+ * not". A lamp dark at rest is a lamp this pipeline never shows: the chart
+ * bakes the resting state, and the conn view swings every lamp from its
+ * resting strength by one factor (`applyLiveGlow`), so nothing dark at rest
+ * lights under way. That is the rule the ring cores went on, and the thread
+ * goes on it too — removed rather than clad, because the block names no
+ * thread among the hull's parts, only among its lights. The bow array and
+ * the two nav marks carry the whole of E(27) now: 31.6 m² facing up where
+ * 44.9 did, raw E 22.1 where 28.7, and the bake's gain ×0.139 where ×0.108,
+ * nowhere near the ×64 ceiling. 43 parts and 2,256 triangles become 42 and
+ * 2,244; `diff.mjs responsory-hadron 7fbb9ba` lists the one removal and no
+ * movement, and the outline does not change.
  */
 import { THREE, bothSides, add, box, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -62,7 +81,9 @@ root.name = 'hadron_responsory';
 
 // The body: a spar 9 m in section on 95 m, not a slab. The Clarion's rule.
 hadron.bladeBody(root, shadow, { bow: 30, stern: STERN, maxR: 4.6 });
-hadron.spine(root, { alloy, crystal, seam }, { from: -34, to: 28, y: 4.4, thread: true });
+// The spine and its inlay, and no thread: the block lights one under way, and
+// a lamp dark at rest is a lamp this pipeline never shows (the header).
+hadron.spine(root, { alloy, crystal, seam }, { from: -34, to: 28, y: 4.4 });
 
 // The bow array, and the hull's whole resting light budget with it. The
 // crystal's tip is at 47.3; the core's leads it by 0.2 m, onto the bow at
