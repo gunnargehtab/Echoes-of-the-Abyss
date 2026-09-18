@@ -11,6 +11,38 @@
  * built from the Order's vocabulary rather than beside it: a narrow faceted
  * spar, thin planar wings for the beam, the bow array carrying the light, and
  * the rings where a Clarion has canards.
+ *
+ * Two things changed in #645 (off #540 Phase 6), and both are lights the
+ * built model of #531 carried sealed inside opaque parts — the emitter core
+ * seen by neither renderer, the ring cores by nothing but a tangent sliver
+ * on the chart — and named on every build by the kit's light audit:
+ *
+ * - The emitter core stands 1.5 m further forward, its tip 0.2 m proud of
+ *   the crystal's and on the bow at x 47.5, and because the two octahedra
+ *   are the same shape its forward faces stand proud of the crystal's by
+ *   that 0.2 m along their whole slope: the emitter's forward faces are the
+ *   lit thing, as the Clarion's core is the lit point of its crystal
+ *   (`bowArray`'s `coreLead`). The lead is the largest that keeps the tip
+ *   inside the design half-length of 47.5 — 0.25 pushes the bow out — and
+ *   at that lead the core owns 40 cells of the 4 px/m raster, 2.5 m²
+ *   facing up where none did, twice the Clarion's core, so it reads. The
+ *   hull is drawn 95.01 m to it (the drive prism reaches −47.51, a
+ *   centimetre past `STERN`, as it always has), so the bake's rescale is
+ *   0.9999 where the crystal's tip at 47.3 had left it 1.002.
+ * - The two ring cores are gone. "The rings cold" is the block's own word
+ *   for the resting state, which is the state the chart bakes, so a lamp
+ *   inside each ring could never be lifted into view without contradicting
+ *   it — and sealed in crystal it was 560 triangles that put nothing on
+ *   the chart but a tangent sliver, seven pixels a ring of the very glow
+ *   the block refuses (`resonatorRing`). 45 parts and 2,816 triangles
+ *   become 43 and 2,256.
+ *
+ * `node tools/hull-models/diff.mjs responsory-hadron HEAD` lists the core's
+ * move and the two removals, and nothing else. The generated outline's bow
+ * loses one vertex of its port side with the tip's move: the model is
+ * mirror-true part for part, and the asymmetry is `outlines.mjs`'s
+ * simplifier, run once round a closed polygon, which was already leaving
+ * eight unmatched points on this hull before the pass.
  */
 import { THREE, bothSides, add, box, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -32,15 +64,25 @@ root.name = 'hadron_responsory';
 hadron.bladeBody(root, shadow, { bow: 30, stern: STERN, maxR: 4.6 });
 hadron.spine(root, { alloy, crystal, seam }, { from: -34, to: 28, y: 4.4, thread: true });
 
-// The bow array, and the hull's whole resting light budget with it.
-hadron.bowArray(root, { alloy, crystal, seam, node }, { from: 29, to: BOW - 5.4, r: 5.2 });
+// The bow array, and the hull's whole resting light budget with it. The
+// crystal's tip is at 47.3; the core's leads it by 0.2 m, onto the bow at
+// 47.5 (the header says why that number).
+hadron.bowArray(
+  root,
+  { alloy, crystal, seam, node },
+  { from: 29, to: BOW - 5.4, r: 5.2, coreLead: 0.2 }
+);
 // The emitter runs aft from the array along the spine as a slim faired barrel.
 const barrel = new THREE.CylinderGeometry(0.85, 1.0, 22, 10);
 add(root, 'emitter_barrel', barrel, alloy, [10, 5.9, 0], [0, 0, Math.PI / 2]);
 
-// The resonator shoulders — the one thing a Clarion does not have.
-hadron.resonatorRing(root, { shadow, alloy, crystal, node },
-  { x: 1, y: 5.2, z: 13.5, r: 5.8, cant: 0.42 });
+// The resonator shoulders — the one thing a Clarion does not have. Cold at
+// rest, as the block has them (the header).
+hadron.resonatorRing(
+  root,
+  { shadow, alloy, crystal },
+  { x: 1, y: 5.2, z: 13.5, r: 5.8, cant: 0.42 }
+);
 
 // Beam is wing, as it is on every Order hull.
 hadron.wings(root, { alloy, crystal }, { aft: -42, fwd: -8, inner: 1.2, outer: 17, tipChord: 9 });

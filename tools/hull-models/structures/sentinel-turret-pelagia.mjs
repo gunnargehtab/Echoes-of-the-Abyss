@@ -17,11 +17,24 @@
  * A port of the approved export (docs/concept-art/models/sentinel-turret-
  * pelagia.glb at 0522b01~1), part for part in its order, every number the
  * export's own, read off its nodes and its buffers (#639). Every part comes
- * from `factions/pelagia.mjs`. Nothing here is a shape decision; where the
- * export is odd the script is odd with it: the roots lie *across* the mound's
- * radius rather than out along it, two of the three nav marks sit low on the
- * flank rather than on the crown, the recoil ribs wear the cowl's ink, and
- * the lamp burns at 0.953 of full strength.
+ * from `factions/pelagia.mjs`. Nothing here is a shape decision but one;
+ * where the export is odd the script is odd with it: the roots lie *across*
+ * the mound's radius rather than out along it, two of the three nav marks
+ * sit low on the flank rather than on the crown, the recoil ribs wear the
+ * cowl's ink, and the lamp burns at 0.953 of full strength.
+ *
+ * The one (#645, off #540 Phase 6): `nav_mark_0` stands 0.2 units (3 m)
+ * higher than the export put it. The export had it at y 0.75 on the flank's
+ * bearing at a radius of 3.0, where the mound's shell — an orb cut off 0.42
+ * of a half-turn short of its pole, its rim at y 0.63, and flaring out to
+ * that rim — passes at 0.95, so the whole bud sat inside the shell, seen by
+ * neither renderer and named on every build by the kit's light audit. Its
+ * y is read off the shell over its own column and its centre sits on it
+ * now, as `nav_mark_1`'s sits within 0.05 units of its own, and it still
+ * sits low on the flank: nothing moves in plan. Move the mound and the
+ * audit names the bud again on the next build, which is the guard. `node
+ * tools/hull-models/diff.mjs sentinel-turret-pelagia HEAD` lists that part
+ * and nothing else.
  *
  * THE FRAME is the one every turret here shares, and the one the Light Scouts
  * state for the shared kinds (hulls/light-scout-pelagia.mjs): the export is
@@ -147,10 +160,12 @@ pelagia.grownBarrel(
 
 // "Navigation marks only": three buds of biolight — two low on the flank, one
 // on the cowl — which with the pip at the muzzle are the whole resting light.
+// The first is on the shell since #645 (the header); the export had it 0.2
+// under.
 pelagia.lightBuds(root, bio, {
   facets: [5, 4],
   buds: [
-    ['nav_mark_0', 0.08, drawn([2.9, 0.75, 1.1])],
+    ['nav_mark_0', 0.08, drawn([2.9, 0.95, 1.1])],
     ['nav_mark_1', 0.08, drawn([-2.3, 1.15, -1.6])],
     ['nav_mark_2', 0.08, drawn([0.4, 3.55, -1.35])],
   ],

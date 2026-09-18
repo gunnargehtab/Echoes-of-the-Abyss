@@ -124,9 +124,23 @@ export function spine(root, { alloy, crystal, seam }, opts) {
  * The bow array: a faceted horn, its lip, the emitter crystal and its core —
  * and the standing glow, which rides the horn's *top* so the top-down bake can
  * see it. A glow inside the cone is invisible to gate 3.
+ *
+ * So is a core inside its crystal. The core is the crystal at half size,
+ * and drawn on the crystal's own centre it is a lamp sealed in opaque
+ * stone: the Responsory's was, from #531 to #645, and the audit named it on
+ * every build. `coreLead` is how far the core's *tip* stands proud of the
+ * crystal's: the core's centre comes forward by the quarter-radius that
+ * levels the two tips and then by the lead, and because the two octahedra
+ * are the same shape the core's forward faces then stand proud of the
+ * crystal's by exactly the lead — the emitter's forward faces lit, which
+ * is where a cone hull's light is, and the Clarion's own idiom: its core
+ * (`emitter.core`) is a point 0.9 m proud of its crystal's tip. Left
+ * unset, the core sits sealed on the crystal's centre, for a caller that
+ * wants it so.
  */
 export function bowArray(root, { alloy, crystal, seam, node }, opts) {
   const { from, to, r, y = 0, horn = null, lip = null, ridges = true, emitter = null } = opts;
+  const { coreLead = null } = opts;
   const L = to - from;
   // The Clarion's array is the Responsory's said in the rung's forms: a horn
   // and a lip that are six-facet lathes on their own stations with a vertex on
@@ -178,15 +192,8 @@ export function bowArray(root, { alloy, crystal, seam, node }, opts) {
     [0, 0, Math.PI / 2],
     [1.4, 1, 1]
   );
-  add(
-    root,
-    'emitter_core',
-    octa(r * 0.25),
-    node,
-    [to + r * 0.5, y, 0],
-    [0, 0, Math.PI / 2],
-    [1.4, 1, 1]
-  );
+  const coreX = coreLead == null ? to + r * 0.5 : to + r * 0.75 + coreLead;
+  add(root, 'emitter_core', octa(r * 0.25), node, [coreX, y, 0], [0, 0, Math.PI / 2], [1.4, 1, 1]);
 }
 
 /**
@@ -324,8 +331,20 @@ export function drive(root, { shadow, crystal, node }, opts) {
  * because it is an Order form (a tuned instrument, bilaterally paired) and the
  * next Order hull that listens across the beam should reuse it rather than
  * redraw it.
+ *
+ * The ring is cold. Its block says so of the resting state — "the bow array
+ * holding a low standing glow and the rings cold" — and the resting state is
+ * the one the chart bakes and gate 3 calibrates. From #531 to #645 each ring
+ * carried a `ring_core` besides: a torus of `resonance_node` at the inner
+ * ring's own radius with a tube half the inner ring's, so it lay sealed
+ * inside the crystal — 280 triangles a side the kit's light audit scored at
+ * no plan area and named on every build, and that the bake's rasteriser
+ * still caught a tangent sliver of, seven pixels at 7/255 on each ring of
+ * the shipped emissive map: a faint glow on the rings in the resting map,
+ * which is the one thing the block refuses. It could not be lifted into
+ * view without refusing it outright, so #645 took the two out.
  */
-export function resonatorRing(root, { shadow, alloy, crystal, node }, { x, y, z, r, cant }) {
+export function resonatorRing(root, { shadow, alloy, crystal }, { x, y, z, r, cant }) {
   bothSides((side, sgn) => {
     add(root, `ring_cradle_${side}`, box(r * 1.7, 1.5, r * 0.9), shadow, [
       x,
@@ -350,14 +369,6 @@ export function resonatorRing(root, { shadow, alloy, crystal, node }, { x, y, z,
       `ring_inner_${side}`,
       torus(r * 0.74, 0.35, 6, 28),
       crystal,
-      [x, y + r * 0.7, sgn * z],
-      [sgn * cant, 0, 0]
-    );
-    add(
-      root,
-      `ring_core_${side}`,
-      torus(r * 0.74, 0.18, 5, 28),
-      node,
       [x, y + r * 0.7, sgn * z],
       [sgn * cant, 0, 0]
     );
