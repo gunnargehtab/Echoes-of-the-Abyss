@@ -199,8 +199,9 @@ with a drive, sized to its berths. None carries a weapon.
   four `propTunnels`. Resting lamps: the hold-door seams and the bridge ports; the
   doors-open floodlight is a transient.
 - **Drifter.** `podBody`, `growthRings`, `cargoLobes` as the two swelling bays under
-  `membranes` opening like a bivalve, one muscle-drive fin, trim vanes. Resting lamps: one
-  faint seam a bay, brightening as it opens. The quietest hull in the roster.
+  `membranes` opening like a bivalve, one muscle-drive fluke, trim vanes. Resting lamps: one
+  faint seam a bay, brightening as it opens, and one bow mark. The quietest hull in the
+  roster.
 - **Verger.** `tergites` ribbed and domed like the Precentor's, `listeningDome` forward,
   `ballastTanks` flanking a heavy keel. New: four cohort bays in the belly behind pressure
   hatches, one ducted drive. Resting lamps: low and cold at the hatch rims and the dome; the
