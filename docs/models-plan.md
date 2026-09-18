@@ -275,12 +275,14 @@ with a drive, sized to its berths. None carries a weapon.
   hull. Resting lamps: navigation marks; the stem vein is under way only and clad; the
   pods carry no lamp.
 - **Thurible.** `rostrum`, a broad domed carapace forward stepping down sharply to a narrow
-  jointed abdomen (`tergites` at two scales), `telson`, one `spineGun` off the centreline
-  ahead of the rack, `dorsalSpines` at different stations a side, folded `walkingLimbs`, a
-  ribbed pressure keel. New: the charge rack let into the shield's back, open-topped cells
-  in two ranks, round wells with hinged lids standing open upward. Resting lamps:
-  photophore rows along the shield's rim and down the abdomen (`plateEdgePhotophores`),
-  asymmetric; the cells carry no lamp. No lock.
+  jointed abdomen (`tergites` at two scales, in three calls through `first`: the tail and
+  the aft shield plate with the Dredge's `ridge`, the fore plate with none — the aft
+  plate's lip is the step), `telson`, one `spineGun` off the centreline ahead of the rack,
+  `rimSpines` at different stations a side, `limbs` folded under the shield and rooted on
+  its flank, a ribbed pressure `keel`. New: `chargeRack`, the cells let into the shield's
+  back, open-topped in two ranks, round wells with hinged lids standing open upward.
+  Resting lamps: `rimPhotophores` along the shield's rim and down the abdomen, asymmetric,
+  laid on the shell's slope; the cells carry no lamp. No lock.
 - **Lance.** Bilaterally symmetric: a spike, a crossguard and a grip. The spike, an open
   faceted rail the length of the forward third (`spike`, new) with the one torpedo (a
   capsule, the `magazine` pods' idiom, drawn by `spike`) lying in it and its nose in a
