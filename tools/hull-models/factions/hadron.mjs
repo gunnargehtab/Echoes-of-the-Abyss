@@ -108,12 +108,15 @@ export function bladeBody(root, mat, { bow, stern, maxR, facets = 10, profile = 
  * Given a `profile` it is the rung's spine instead: a four-facet ridge lathed
  * on its own stations (`spar`), the inlay another (`spineInlay`) — drawn here
  * when `inlay` is given, or by the hull itself when something comes between
- * the two in the approved order, as the Reciter's lance does.
+ * the two in the approved order, as the Reciter's lance does. `name` is for
+ * a hull whose spine is interrupted — the Antiphon's landing deck cuts its
+ * back in two, and the after ridge cannot be a second `blade_spine`.
  */
 export function spine(root, { alloy, crystal, seam }, opts) {
   const { from, to, y, thread = false, profile = null, flat, inlay = null } = opts;
+  const { name = 'blade_spine' } = opts;
   if (profile) {
-    spar(root, 'blade_spine', alloy, { profile, y, flat });
+    spar(root, name, alloy, { profile, y, flat });
     if (inlay) spineInlay(root, crystal, inlay);
     return;
   }
@@ -309,12 +312,14 @@ export function finAndKeel(root, alloy, { fin, keel = null, t = 0.6 }) {
  * the defaults. The rung's three end in a crystal point instead: four
  * `facets`, no `taper`, no `ring`, cut in `mat` crystal — and each marks its
  * stern in its own way (`mark`: a name, a material, a size and a place) or,
- * the Cantus, not at all (`mark: null`).
+ * the Cantus, not at all (`mark: null`). `y` lifts the prism off the hull
+ * axis, for a drive that sits in the spine rather than in the tail (the
+ * Antiphon); every other Order hull leaves it on the axis.
  */
 export function drive(root, { shadow, crystal, node }, opts) {
   const { x, r, facets = 6, taper = 0.34, length = r * 3.4, mat = shadow, ring = true } = opts;
-  const { mark = {} } = opts;
-  add(root, 'drive_prism', cyl(r, r * taper, length, facets), mat, [x, 0, 0], [0, 0, Math.PI / 2]);
+  const { mark = {}, y = 0 } = opts;
+  add(root, 'drive_prism', cyl(r, r * taper, length, facets), mat, [x, y, 0], [0, 0, Math.PI / 2]);
   if (ring)
     add(
       root,
@@ -400,6 +405,95 @@ export function panelSeams(root, alloy, { from, to, count, halfBeam }) {
       ]);
     }
   });
+}
+
+/**
+ * A plate in the kit's `plan` frame — centred on y = 0, `[x, z]` as given —
+ * with `holes` cut through it, which `plate` and `plan` cannot do. A well
+ * let into a deck is a hole with a floor under it, and the Order's landing
+ * deck is three of them; a raised coaming would say "landing pad", and the
+ * block says "let into". The geometry is `plan`'s own extrude-then-turn, so
+ * a hole's outline lands on the same side its points name.
+ */
+function wellPlate(outline, holes, t) {
+  const path = (pts, into) => {
+    pts.forEach(([x, z], i) => (i === 0 ? into.moveTo(x, -z) : into.lineTo(x, -z)));
+    into.closePath();
+    return into;
+  };
+  const shape = path(outline, new THREE.Shape());
+  for (const h of holes) shape.holes.push(path(h, new THREE.Path()));
+  const geo = new THREE.ExtrudeGeometry(shape, { depth: t, bevelEnabled: false, steps: 1 });
+  geo.rotateX(-Math.PI / 2);
+  geo.translate(0, -t / 2, 0);
+  return geo;
+}
+
+/**
+ * A landing deck let into a hull's back — the Antiphon's, "a wide three-bay
+ * landing deck let into its back" (docs/asset-prompts-3d.md, Block 3). One
+ * faceted plate, `outline` in plan and `t` thick with its top at `y`, laid
+ * over the blade's crown so the crown vanishes under it; each of `bays` is a
+ * rectangle `[length, width]` about `[x, z]` cut clean through the plate,
+ * with a `floor` plate of its own `t` under the hole at `floor.y`, so the
+ * bay is a well `y - floor.y` deep. The deck is the navy's shadow indigo and
+ * the floors its pale alloy, because a well has to read at sprite scale by
+ * value (Block 2b rule 2) and a lit pad is a state the resting bake never
+ * shows (models-plan.md §3.2). A bay named `p` or `s` is placed on that side
+ * by its own `z`, and its floor is drawn in `bothSides` order like every
+ * other Order pair: starboard first.
+ */
+export function landingDeck(root, { shadow, alloy }, { outline, y, t, bays, floor }) {
+  const rect = ({ x, z, size: [l, w] }) => [
+    [x + l / 2, z - w / 2],
+    [x + l / 2, z + w / 2],
+    [x - l / 2, z + w / 2],
+    [x - l / 2, z - w / 2],
+  ];
+  add(root, 'landing_deck', wellPlate(outline, bays.map(rect), t), shadow, [0, y - t / 2, 0]);
+  for (const bay of bays)
+    add(root, `bay_floor_${bay.name}`, plan(rect(bay), floor.t), alloy, [0, floor.y, 0]);
+}
+
+/**
+ * A resonator ring lying flat around a deck — the Antiphon's, "a crystal
+ * resonator ring around the deck that is the grant made visible". The
+ * Responsory's `resonatorRing` is a mirrored pair of canted shoulders
+ * standing off the spine; this is one ring on its side about a vertical
+ * axis at `[x, z]`, its underside resting on the deck at `y`: the alloy ring
+ * of radius `r` and tube `tube`, and the crystal `inner` inside it, both
+ * eight-sided in section and `segments` round. The names are the
+ * Responsory's without a side, because a ring on the centreline has none.
+ *
+ * It is cold for the reason the Responsory's are: the crystal is a `clad`
+ * finish, never a lamp, because the block flares the ring "when the deck
+ * opens" and the resting bake is the state the chart shows (models-plan.md
+ * §3.2, the Responsory's header for the cores that were sealed in it).
+ */
+export function deckRing(root, { alloy, crystal }, opts) {
+  const { x, y, z = 0, r, tube, inner, segments = 28 } = opts;
+  const flat = [Math.PI / 2, 0, 0];
+  add(root, 'resonator_ring', torus(r, tube, 8, segments), alloy, [x, y + tube, z], flat);
+  add(
+    root,
+    'ring_inner',
+    torus(inner.r, inner.tube, 8, segments),
+    crystal,
+    [x, y + inner.tube, z],
+    flat
+  );
+}
+
+/**
+ * A pair of navigation marks on a hull, flat on an upward face — the
+ * Responsory's two abaft its rings, as a builder: `crystal_seam` boxes of
+ * `size` at `[x, y, ±z]`, starboard first. The one light the band table
+ * licenses at every SIG ("navigation marks only"), so the one light a quiet
+ * Order hull carries besides its bow. `navMarks`, in the structures section
+ * below, is the Sentinel Turret's spheres and is not this.
+ */
+export function navMarkPair(root, seam, { x, y, z, size = [1.6, 0.3, 0.5] }) {
+  bothSides((side, sgn) => add(root, `nav_mark_${side}`, box(...size), seam, [x, y, sgn * z]));
 }
 
 /* --------------------------------------------------------------------------
