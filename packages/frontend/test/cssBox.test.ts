@@ -417,6 +417,20 @@ describe('cssBox: what a column track refuses to shrink below', () => {
     }
   });
 
+  it('does not let a blockless at-rule eat the rule after it', () => {
+    // `@import` ends at a semicolon, so the first `{` after it belongs to the
+    // next rule. Walking to a matching brace from there swallows that rule
+    // whole — which is the silent drop again, one rule further on.
+    const rules = parseCss(
+      withRule('@import url("x.css");\n.objectives-row { grid-template-columns: 1fr 1fr }')
+    );
+    assert.deepEqual(
+      columnFloors(rules, ROW).map((floor) => floor.kind),
+      ['content', 'content'],
+      'the rule after the @import was read'
+    );
+  });
+
   it('still skips an at-rule whose block styles nothing', () => {
     // The other half of that change: `@keyframes` and `@font-face` hold no
     // style rules, so recording them as conditions would turn `0%` and `100%`

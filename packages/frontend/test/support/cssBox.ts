@@ -185,6 +185,16 @@ export function parseCss(css: string): CssRule[] {
     const prelude = clean.slice(i, open).trim();
 
     if (prelude.startsWith('@')) {
+      // A *statement* at-rule — `@import`, `@charset`, `@namespace` — ends at
+      // a semicolon and has no block, so the `{` found above belongs to
+      // whatever rule comes next. Skipping to that semicolon is what stops the
+      // brace walk swallowing a real rule, or taking a whole selector into a
+      // condition.
+      const semicolon = clean.indexOf(';', i);
+      if (semicolon !== -1 && semicolon < open) {
+        i = semicolon + 1;
+        continue;
+      }
       // An at-rule whose block holds ordinary rules that *do* apply, under a
       // condition or a precedence this reader cannot evaluate. Recording the
       // prelude as the condition is what lets `boxRulesFor` refuse it; the
