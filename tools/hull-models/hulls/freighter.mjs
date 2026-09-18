@@ -4,19 +4,20 @@
  *
  * "The armoured hold, 160 m — six berths of hull moved slowly and loudly and
  * very hard to sink (SIG 30 idle, 50 cruise, 68 with a full hold; no weapon;
- * 1,800 hull). A long slab-sided box hull with the Bulwark's riveted plate, a
- * raised bridge castle aft with two stacks, two great hold doors along each
- * flank hinged at the sill with hinge rails and dogging wheels, crane
- * gantries over a foredeck hatch, ballast blisters low on the hull, and four
- * prop tunnels in a heavy skeg. Lit along the hold-door seams and the bridge
- * ports, and floodlit when the doors open." (docs/asset-prompts-3d.md,
- * UNIT — Freighter, as #783 amended it)
+ * 1,800 hull). A long slab-sided box hull with the Bulwark's riveted plate
+ * and a plated weather deck inside its rim, a raised bridge castle aft with
+ * two stacks, two great hold doors along each flank hinged at the sill with
+ * hinge rails and dogging wheels, crane gantries over a foredeck hatch,
+ * ballast blisters low on the hull, and four prop tunnels in a heavy skeg.
+ * Lit along the hold-door seams and the bridge ports, and floodlit when the
+ * doors open." (docs/asset-prompts-3d.md, UNIT — Freighter, as #783 amended
+ * it)
  *
  * A hold with a drive, and the fattest plan in the roster: the hand-drawn
  * outline this model replaces (silhouettes.ts) asks for "near-parallel
  * flanks the whole length, a bluff bow and a heavy squared stern", so the
- * slab is square-edged — no chamfer, the one Consortium hull without —
- * with its flanks parallel from x −64 to 66 and everything on them (plates,
+ * slab is square-edged — no chamfer, the one `armouredSlab` hull without —
+ * with its flanks parallel from x −72 to 66 and everything on them (plates,
  * doors, hinge gear) standing under 2.4 m proud, which `outlines.mjs`'s
  * simplifier folds back into one straight line. Every part comes from
  * `factions/bathyarch.mjs`; the Freighter's own words — `bowPlate`,

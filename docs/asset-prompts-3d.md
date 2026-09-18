@@ -419,11 +419,12 @@ budget is for the hull running home empty. None carries a weapon.
 UNIT — Freighter (pair with Consortium): the armoured hold, 160 m — six berths
 of hull moved slowly and loudly and very hard to sink (SIG 30 idle, 50 cruise,
 68 with a full hold; no weapon; 1,800 hull). A long slab-sided box hull with
-the Bulwark's riveted plate, a raised bridge castle aft with two stacks, two
-great hold doors along each flank hinged at the sill with hinge rails and
-dogging wheels, crane gantries over a foredeck hatch, ballast blisters low on
-the hull, and four prop tunnels in a heavy skeg. Lit along the hold-door seams
-and the bridge ports, and floodlit when the doors open.
+the Bulwark's riveted plate and a plated weather deck inside its rim, a raised
+bridge castle aft with two stacks, two great hold doors along each flank hinged
+at the sill with hinge rails and dogging wheels, crane gantries over a foredeck
+hatch, ballast blisters low on the hull, and four prop tunnels in a heavy skeg.
+Lit along the hold-door seams and the bridge ports, and floodlit when the doors
+open.
 ```
 
 ```text
