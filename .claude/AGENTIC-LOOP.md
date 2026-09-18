@@ -84,7 +84,7 @@ through a correctness review while `CLAUDE.md`'s balance freeze is in force.
 
 | #709 guardrail | Here |
 | --- | --- |
-| Max cycles per task | Ten rounds, hard, in `dev-loop` — reaching it is a stall |
+| Max cycles per task | Three rounds, hard, in `dev-loop` — reaching it is a stall, and the pull request stays open with what is left written in its body |
 | Max patch size | Not a line count: one increment per round, and a round whose diff outgrows its target is a finding `loop-critic` raises |
 | Schema validation for patches | `npm run gates` — type-check, lint, format, the model round-trip, all three doc gates |
 | Crash detection | The suites, and the evidence step: a harness run that does not reproduce is `evidence-missing` |
@@ -138,8 +138,8 @@ Two things close that, decided on 15 September:
   balance freeze.
 - **A firing may edit its own rules, except the ones that bound it** —
   `work-issue` §2's cap, §3's exclusions and claim check, §7's stopping cases,
-  and `loop-critic`'s separation from the author. Those it writes an issue about
-  and stops, per §5. The critic's check 4 fails a round that edits one, which is
+  `dev-loop`'s three-round cap, and `loop-critic`'s separation from the author.
+  Those it writes an issue about and stops, per §5. The critic's check 4 fails a round that edits one, which is
   the only enforcement there is: `npm run gates` does not read `.claude/`.
 
 So the loop improves itself the way it improves anything else: an issue, a claim,
@@ -176,6 +176,16 @@ it is allowed to select.
   Routine at all. That took effect when these files merged on 13 September: the
   firing that landed #738 ran five rounds with a fresh critic each, four of them
   `revise`, and the one that landed #742 ran three.
+
+  **The cap is three rounds rather than ten since 18 September**, set by the
+  repository owner for efficiency. A round cap bounds an unattended firing, so it
+  is a person's number and not a firing's, which is why it is on the list above.
+  What changes for a run shaped like #738's is the ending rather than the work:
+  it stops on round three with its pull request open and the findings still open
+  written in the body, instead of refining to round five. `dev-loop`'s "Reaching
+  the cap" says how to stop there, and carries the cost side — what rounds four
+  to seven have actually found in the runs on record. The Routine itself needed
+  no edit, for the reason the paragraph below gives.
 
   Its prompt is deliberately thin, and it says so itself — "the rules live in
   that file and not in this prompt ... if the two ever disagree, the file wins" —

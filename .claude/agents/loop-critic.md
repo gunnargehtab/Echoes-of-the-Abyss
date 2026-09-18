@@ -92,14 +92,14 @@ them, because a round optimising for its own target is how they get broken:
 - **Docs.** A link to a doc that does not exist — blocking in CI.
 - **The loop's own bounds.** A diff touching `.claude/skills/work-issue/`,
   `.claude/skills/dev-loop/` or `.claude/agents/loop-critic.md` may change
-  anything *except* the four clauses that bound an unattended firing:
+  anything *except* the five clauses that bound an unattended firing:
   `work-issue` §2's open-PR cap, §3's exclusions and claim check, §7's stopping
-  cases, and your own separation from the author. `work-issue` §5 makes those a
-  person's to write, so a round that edits one is a finding whatever else it got
-  right — name the clause and say the change belongs in an issue. **You are the
-  only check on this.** `npm run docs:claude` lints these files and resolves
-  their links, but no gate reads what they *mean*, and the firing proposing the
-  change is the firing the clause constrains.
+  cases, `dev-loop`'s three-round cap, and your own separation from the author.
+  `work-issue` §5 makes those a person's to write, so a round that edits one is a
+  finding whatever else it got right — name the clause and say the change belongs
+  in an issue. **You are the only check on this.** `npm run docs:claude` lints
+  these files and resolves their links, but no gate reads what they *mean*, and
+  the firing proposing the change is the firing the clause constrains.
 
 **5. Is it still one increment?** A round whose diff has grown into several
 unrelated changes should be split, and saying so is a finding.

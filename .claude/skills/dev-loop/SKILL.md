@@ -234,14 +234,65 @@ person at the keyboard.
 
 A loop that reports a stall is working correctly. A loop that keeps going is not.
 
+### Reaching the cap is the third stall
+
+Three rounds is the hard cap under "Guardrails" below, so round three is the last
+one. The round that hits it ends one of two ways, and neither of them is a fourth
+round.
+
+**The exit criteria are met.** Then there is nothing to say: the loop is
+finished, the way any round meeting them is.
+
+**They are not.** Then the cap has stopped the refining exactly as a stall
+verdict does, and what the run owes is the state rather than another attempt.
+
+- **Run the verification pass over the way out anyway.** It is not a round, the
+  cap does not delete it, and the cap makes it matter more: a capped run's last
+  edit is the one nobody looked at, which is the fault #738 shipped past eleven
+  green gates.
+- **Leave the work where the next session or a person can pick it up.** The pull
+  request has been open since the first increment that stood on its own, so push
+  what is green and say in its body what is done and what is left. List the open
+  findings as the critic worded them — a finding re-derived from scratch costs one
+  of the three rounds.
+- **If no increment stands on its own after three rounds**, nothing is landable,
+  and that is `work-issue` §7's third case: a fix that did not converge. Stop the
+  way it says to — stopping comment, released claim, no label.
+- **Do not buy a round back.** Skipping the critic, folding two increments into
+  one round, or calling the verification pass a round each spend the cap's saving
+  on the thing the cap was not meant to cut.
+
+Interactively the cap is where the loop **asks** rather than where it stops for
+good: a person at the keyboard can read the open findings and say whether a
+fourth round is worth its cost. That is the only way past three, and it is theirs
+to give. An unattended firing has nobody to ask, so for it three is the end.
+
+The cap costs something real, and the record says what. Of the runs these files
+measure, #742 finished inside three rounds; #738 took five
+(`.claude/AGENTIC-LOOP.md`) and #739 reached a seventh ("The bar is the issue's"
+above). Both long runs found a genuine fault late — #738's fifth round fixed
+three ordinary bugs, #739's seventh took the two one-liners that were left — so
+under this cap those two hand over a list instead of a fix. Against that, #739
+spent rounds four to six failing a bar it had invented while criteria 1 to 8 sat
+met, and the cap stops that run three rounds before its own critic did. The trade
+is a person reading a shorter pull request with findings on it, rather than an
+unwatched firing spending a fourth round. It is a spending decision, which is why
+it is a person's to make and not a round's.
+
 ## Guardrails
 
 #709 asks for caps, and they translate:
 
-- **Ten rounds per change, hard.** Reaching ten is a stall by definition,
-  whatever the critic last said.
+- **Three rounds per change, hard.** Reaching three is a stall by definition,
+  whatever the critic last said, and "Reaching the cap" above says how to stop on
+  it. The cap was ten until 18 September, when the repository owner set it to
+  three for efficiency. An unattended firing may not raise it back: `work-issue`
+  §5's boundary list makes a bound a person's to write, for the same reason its
+  open-PR cap is.
 - **One increment per round.** If a round's diff touches parts of the tree the
-  round's target does not name, split it.
+  round's target does not name, split it. A tighter cap is not a licence to make
+  a round bigger — three rounds of one increment each is the shape, and a round
+  carrying two is a finding the critic raises.
 - **Never widen the change to satisfy a finding.** A critic finding about code
   the change does not touch is a note for the issue tracker, not this round's
   work.
