@@ -131,6 +131,17 @@ export const UNITS = [
   { slug: 'weaver', model: 'weaver-pelagia.glb', lengthM: 70, sig: 12 },
   { slug: 'thurible', model: 'thurible-directorate.glb', lengthM: 105, sig: 16 },
   { slug: 'lance', model: 'lance-hadron.glb', lengthM: 95, sig: 9 },
+  // The siege hulls (docs/units.md "The siege hulls", #786 — Phase 4's fourth
+  // box): one a navy, so each model is the kind's canonical one, and three of
+  // the four are built in their working state (models-plan.md §3.5) with the
+  // resting band's lamps (§3.2). The Lure carries no lock and takes the
+  // Chorister's rule, as the Thurible does. The Tocsin's listed 22 is a cone
+  // figure like the Lance's: it bakes on the compass average, 9.9, and the
+  // light is placed forward, in the muzzle collar.
+  { slug: 'furnace', model: 'furnace-bathyarch.glb', lengthM: 115, sig: 40 },
+  { slug: 'blight', model: 'blight-pelagia.glb', lengthM: 80, sig: 10 },
+  { slug: 'lure', model: 'lure-directorate.glb', lengthM: 100, sig: 14 },
+  { slug: 'tocsin', model: 'tocsin-hadron.glb', lengthM: 105, sig: 9.9 },
 ];
 
 /**

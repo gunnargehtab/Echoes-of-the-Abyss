@@ -159,8 +159,11 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Weaver]: 'weaver',
   [UnitKind.Thurible]: 'thurible',
   [UnitKind.Lance]: 'lance',
-  // The siege hulls (#508). No model yet: the procedural bake is gate 1's
-  // sanctioned state until one clears intake, and the slug is where it lands.
+  // The siege hulls (#508), script-built in #786: one model a navy. The Lure
+  // carries no lock, so a navy rendering for one resolves lure-<its
+  // faction>.glb — only the Directorate's exists, and the others stay on the
+  // recoloured sprite until a variant passes intake, as the Chorister's, the
+  // Verger's, the Acolyte's and the Thurible's do.
   [UnitKind.Furnace]: 'furnace',
   [UnitKind.Blight]: 'blight',
   [UnitKind.Lure]: 'lure',

@@ -7,9 +7,9 @@
 
 **Glossary:** See [Glossary](glossary.md) for SIG, PF, HYD, PR and Resolution Tier.
 
-**Status:** in progress — the transports (#783), the scouts (#784) and the ordnance hulls
-(#785) are built, the other three boxes are planned. The tracking issue is #540, Phase 4, and its six boxes are filed as
-issues #783 (the transports), #784 (the scouts), #785 (the ordnance hulls), #786 (the siege
+**Status:** in progress — the transports (#783), the scouts (#784), the ordnance hulls
+(#785) and the siege hulls (#786) are built, the other two boxes are planned. The tracking
+issue is #540, Phase 4, and its six boxes are filed as issues #783 (the transports), #784 (the scouts), #785 (the ordnance hulls), #786 (the siege
 hulls), #787 (the line hulls and the anchor) and #788 (the Bio-Reactor). Every figure below
 is read from the working tree at `19ac7f9`; where it is a stat, [units.md](units.md) and
 `packages/shared/src/units.ts` are canonical and this document only repeats them.
@@ -305,35 +305,62 @@ the Blight's, and §3.2 says which one the model lights.
 | Lure | Directorate | 100 m | 14 | fan spread, plectrum raised | `lure-directorate.glb` |
 | Tocsin | Knights | 105 m | 9.9 | braced, blades locked | `tocsin-hadron.glb` |
 
-- **Furnace.** `boxHull` with the Tender's `workshop` turned outward, `gasBottles` in two
-  ranks with `pumpHouse` and `pipeRuns` between them, a `citadel` aft, `ballastBlisters`,
-  two `propTunnels`; the flanks bare. New: a boxed gantry frame at the bow and three cutter
-  ladders run out ahead of it — `lattice` booms, one on the keel and one either side, with
-  hooded burner heads and gas lines strapped along them. Resting lamps: bridge ports, the
-  gas plant's lamps, the stern vents. The burner heads, the bow floods and the ladders are
-  lit only cutting, and are clad by default.
+- **Furnace.** `boxHull` with the Tender's `workshop` turned outward — the manifold house
+  abaft the frame, its forward face to the bow — then `gasRacks` (new: two ranks of banded
+  `gasBottles`, which took a rank tag and a band, each rank in a sill with a post at each
+  end, a rail across them and the plant's lamp housings on the rail), `pumpHouse` and
+  `pipeRuns` between the ranks, a `citadel` aft, `ballastBlisters`, two `propTunnel`s
+  notched into the stern; the flanks bare. New: `cutterGantry`, the boxed frame at the bow
+  with a guide sill at each station, a keeper over every ladder and the bow floods on the
+  forward beam; `cutterLadders`, the three lattice booms run out through it — four chords,
+  the kit's `strut` as lacing on each side face and across the top, a strip along the top,
+  a hood of top plate and two cheeks over a nozzle at each tip, two gas lines strapped
+  along each with feed drops at the heel — one on the keel and one either side, each drawn
+  at its own z; `gasManifold`, the header across the house's forward face with a valve
+  wheel to each ladder. Resting lamps: the bridge ports, the gas plant's lamps (the rack
+  housings, the house's ports and skylight), the stern vents. The burner nozzles, the bow
+  floods, the ladder strips and the manifold strip light only cutting and are clad in
+  `amber_lamp_unlit` (§3.2 rule 2).
 - **Blight.** `podBody` with `growthRings`, widest a little forward of amidships and never
-  wider at the bow than at the waist; one spore sac (`bladder`) sunk into the back as a
-  paler dome; leaf trim vanes; a muscle-drive fluke. New: the husk parted at the bow into
-  two rounded lobes curling outward, and the seeding arm standing in the cleft — a short
-  jointed stem folded back on itself with a pale sac head under a membrane, reaching no
-  further than the husk's lips. Curved everywhere; not a fork. Resting lamps: navigation
-  marks; the sac's dome carries no lamp; nothing brightens when it seeds, by design.
-- **Lure.** `rostrum`, three overlapping `tergites`, a jointed abdomen, folded
-  `walkingLimbs`, a ribbed pressure keel, `bladderDome` in the abdomen forward of the fan.
-  New: the sounding fan — five chitin plates opened wide astern, two a side about a telson
-  (`telsonFan`, widened), a file ridge down the abdomen's back, and a plectrum limb raised
-  over it (`jointedLimb`). Resting lamps: photophores in a pattern that repeats on neither
-  side; the tergite-edge rows, the fan ribs and the bladder's dome light later and are
-  clad. No lock.
-- **Tocsin.** A bell on its side, crown forward. The barrel: a faceted emitter rail
-  (`railGun`) on the centreline for a third of the length to a crystal muzzle collar. New:
-  the bell skirt, faceted pale alloy widening in one unbroken flare from the crown's
-  shoulders to a lip astern that is the widest beam on any Order hull, a violet
-  `spineInlay` down its back from breech to lip, brace blades at the lip's two corners swung
-  out and down and locked; the `drive` prism dark in the mouth. No `wings`, no `canards`.
-  Resting lamps: the collar crystal, and navigation marks as the band table licenses at
-  every band; the rail, the crown's ridge seams and the spine light under way or firing and
+  wider at the bow than at the waist, the nose shut blunt inside the cleft; the spore sac is
+  `bladder` in the spore-pale finish, given a `name` and a `z` for it, sunk into the back
+  amidships as a paler dome, ringless; `trimVanes`, one a side and not a pair, their tips at
+  the waist's half-beam and not over it; `driveFluke` off the peduncle. New: `huskLobes`, the
+  husk parted at the bow into two rounded lobes, each its own lathe at its own signed z with
+  its aft stations buried in the nose and curled outboard in the geometry rather than yawed
+  (`curlOutboard` — bent, not splayed, which is what keeps it from a fork); and `seedingArm`
+  standing in the cleft — a root knuckle half-sunk in the nose's crown, a stem up and forward
+  to an elbow, folded back to a wrist, and the pale sac head there under a membrane hood open
+  forward, the elbow four metres inside the lips. Curved everywhere; not a fork. Resting
+  lamps: `navMarks`, two; the stem vein runs from the arm's root to the sac's rim, is under
+  way only and clad (`sweptVein` in `bio_vein_unlit`); the sac's dome, the head and the hood
+  carry no lamp; nothing brightens when it seeds, by design.
+- **Lure.** `rostrum`, three overlapping `tergites` with the Verger's seam over a jointed
+  abdomen with the Dredge's `ridge` (two calls through `first`, the abdomen's last plate
+  the fan's root), `bladderDome` forward of the fan — violet on the red plate, no lamp —
+  `dorsalSpines`, `limbs` folded under the carapace and rooted on its flank, a ribbed
+  pressure `keel` under the carapace. New: `soundingFan`, five chitin plates opened wide
+  astern — the telson a plate on the keel line and two broad squared paddles a side yawed
+  out about it, a rib in the unlit finish down each; `fileRidge`, one saw-toothed fin down
+  the abdomen's back off the keel line, riding over the joints; `plectrumLimb`, one
+  jointed limb raised from the other flank across the keel, a flat pick aimed at the file.
+  Resting lamps: `rimPhotophores` on the shell's shoulders, asymmetric, laid on the
+  slope; the tergite-edge rows (`rimPhotophores` in `biolight_unlit`, a row a carapace
+  plate along its rim) and the fan ribs are clad. No lock.
+- **Tocsin.** A bell on its side, crown forward (`bell`, new): two six-facet lathes pressed
+  flat and sharing a ring at the shoulders — the skirt widening in one unbroken flare from
+  the shoulders to a lip astern that is the widest beam on any Order hull, its mouth a bore
+  to a bulkhead, the crown a faceted cone — four seams on the crown's shoulder ridges, and
+  the crystal spine swept down the crown ridge from breech to lip (kit.mjs `sweep`;
+  `spineInlay` is a lathe at one height and this back rises 7 m). The barrel
+  (`emitterRail`, new — `railGun`'s register, not its frame): a flat four-facet spar on the
+  centreline for a third of the length, the rail let into its top, a breech collar where it
+  leaves the crown, and the Lance's crystal muzzle collar as the bow. Brace blades at the
+  lip's two corners (`braceBlades`, new), each hinged along the flank's last segment and
+  turned down about it, a pin in the hinge and a cold crystal strip on the forward edge; the
+  `drive` prism dark in the mouth, its mark laid to the ridge's slope (`mark.pitch`). No
+  `wings`, no `canards`, no fin. Built braced. Resting lamps: the collar crystal and one
+  stern mark; the rail, the crown seams, the spine and the prism light in later bands and
   are clad.
 
 ### The line hulls, and the anchor — #787
