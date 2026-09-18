@@ -31,6 +31,11 @@
  *              dome_spine_0..5 · dorsal_spine_0..2 · limb_s0..2 / p0..2 (_hip,
  *              _femur, _knee, _tibia, _foot) · photophore_s0..2 / p0..2 — built
  *              (#784), the second
+ *   Thurible   tergite_0..5 · tergite_ridge_0..4 · rostrum · telson · rim_spine_s0..1 /
+ *              p0..1 · limb_s0..3 / p0..3 · spine_gun · spine_gun_mount · keel ·
+ *              keel_rib_0..6 · cell_s0..3 / p0..2 (_collar, _well, _lid, _hinge) ·
+ *              photophore_rim_s0..4 / p0..3 · photophore_tail_s0..3 / p0..1 — built
+ *              (#785), the third
  *
  * Three rules fall out of those, and they are what this module holds rather
  * than any one hull:
@@ -51,7 +56,7 @@
  *   round, and the prose was amended to the models.) The *rule* is regular
  *   and the *result* never mirrors, so the builders that place light refuse
  *   a mirrored pair outright.
- * - **Light is a photophore, and it lies flat.** A photophore is a small flat
+ * - **Light is a photophore, and it lies flat — or on a dome's own slope, the Thurible's rim (#785) —.** A photophore is a small flat
  *   box in `biolight_crimson` on an upward face — of the carapace, or of a
  *   limb's knee standing clear of it, as the Acolyte's six are (#784) —
  *   because the maps are top-down (kit.mjs); the gullet and the hopper
@@ -172,6 +177,19 @@ export const segmentSeries = (opts) => series({ section: [0.6, 1.5], ...opts });
  * hull keeps `sy = 0.65 · sz` — true of all four today, and silently wrong
  * the first time one of them is redrawn (#646).
  *
+ * `ridge` shapes the `'ridge'` lip the same way: its centre `at` of the
+ * half-length from the plate's (aft when negative), its `size` as fractions
+ * of `[sx, sy, sz]`, and its `lift` above the hull axis in metres. The
+ * defaults are the Dredge's ridge exactly, so the Dredge passes nothing. The
+ * Thurible's trailing lip is the same orb drawn lower — 0.8 of the plate's
+ * height rather than 1.125 — because a lip that tops the dome behind it is
+ * a collar, not an edge (#785).
+ *
+ * `first` numbers the plates from somewhere other than 0, so a hull whose
+ * plates are at two scales — the Thurible's shield over its tail — can draw
+ * the series in two or three calls with different lips and keep one run of
+ * names and one violet-red alternation. Stern first, still.
+ *
  * A station is the orb's *scale*, not its bounding box. A low-facet sphere
  * never reaches its radius on every axis — an `orb(14, 7)` stops at 0.975 of
  * sx and 0.950 of sz — so a station read off a box is a few percent short,
@@ -179,11 +197,13 @@ export const segmentSeries = (opts) => series({ section: [0.6, 1.5], ...opts });
  * the second pass).
  */
 export function tergites(root, { violet, red, black }, opts) {
-  const { segments, lip = 'seam', seam = {}, spines, facets = [12, 6] } = opts;
+  const { segments, lip = 'seam', seam = {}, ridge = {}, spines, facets = [12, 6], first = 0 } = opts;
   const { at: seamAt = 0.85, size: seamSize = [0.3, 0.95, 0.9], tallOf = 'height' } = seam;
+  const { at: ridgeAt = -0.75, size: ridgeSize = [0.25, 1.125, 0.92], lift: ridgeLift = 0.5 } = ridge;
   if (tallOf !== 'height' && tallOf !== 'beam')
     throw new Error(`tergites: seam.tallOf is '${tallOf}' — 'height' (sy) or 'beam' (sz)`);
-  segments.forEach(([x, sx, sy, sz], i) => {
+  segments.forEach(([x, sx, sy, sz], k) => {
+    const i = first + k;
     add(root, `tergite_${i}`, orb(...facets), i % 2 ? red : violet, [x, 0, 0], [0, 0, 0], [sx, sy, sz]);
     if (lip === 'seam')
       add(root, `tergite_seam_${i}`, orb(10, 6), black, [x + seamAt * sx, 0, 0], [0, 0, 0], [
@@ -192,10 +212,10 @@ export function tergites(root, { violet, red, black }, opts) {
         seamSize[2] * sz,
       ]);
     else if (lip === 'ridge')
-      add(root, `tergite_ridge_${i}`, orb(10, 6), black, [x - 0.75 * sx, 0.5, 0], [0, 0, 0], [
-        0.25 * sx,
-        1.125 * sy,
-        0.92 * sz,
+      add(root, `tergite_ridge_${i}`, orb(10, 6), black, [x + ridgeAt * sx, ridgeLift, 0], [0, 0, 0], [
+        ridgeSize[0] * sx,
+        ridgeSize[1] * sy,
+        ridgeSize[2] * sz,
       ]);
     if (spines) {
       const { lengths = [7, 10], r = 1.2, rake = -0.3, offsets = [5, 6] } = spines;
@@ -261,12 +281,27 @@ export function telson(root, { violet, black }, opts) {
  * rather than mirrored. Both ports reproduced that, as a port must; #645
  * corrected it here, in the builder, so the module cannot draw a pair that
  * does not mirror.
+ *
+ * `rim(x, y)`, when given, seats each limb's root `sink` inside the flank
+ * it finds there instead of reading `z` — the Thurible's shield is 16 m of
+ * half-beam under one limb station and 22 under the next, and one `z`
+ * roots a limb in water at one end of the rank or buries it whole at the
+ * other (#785). The Chorister and the Precentor pass none and are
+ * unchanged.
  */
-export function limbs(root, steel, { xs, y, z, r = 0.6, length = 6, fold = 0.45 }) {
+export function limbs(root, steel, { xs, y, z, r = 0.6, length = 6, fold = 0.45, rim, sink = 0.8 }) {
   const [rootR, tipR] = Array.isArray(r) ? r : [r, r];
+  // A limb's centre is `x`; its root, half a length back along the fold,
+  // is where the flank is asked. `rim` given, `z` is not read.
+  const centreZ = (x) => {
+    if (!rim) return z;
+    const flank = rim(x - (length / 2) * Math.sin(fold), y);
+    if (flank <= sink) throw new Error(`limb: no shell to root in at x = ${x}, y = ${y}`);
+    return flank - sink + (length / 2) * Math.cos(fold);
+  };
   bothSides((side, sgn) =>
     xs.forEach((x, i) =>
-      add(root, `limb_${side}${i}`, cyl(tipR, rootR, length, 6), steel, [x, y, sgn * z], [
+      add(root, `limb_${side}${i}`, cyl(tipR, rootR, length, 6), steel, [x, y, sgn * centreZ(x)], [
         (sgn * Math.PI) / 2,
         0,
         -fold,
@@ -293,11 +328,16 @@ export function dorsalSpines(root, black, { spines, r = 0.7, rake = -0.3, facets
  * Photophores: flat crimson boxes, one each at `[name, x, y, z]`, on an
  * upward face. A mirrored pair is refused — a pattern that repeats on
  * neither side is the Block 2 rule, and the Chorister's four-and-one is it.
+ *
+ * A fifth element, `[a, b, c]`, is the mark's own XYZ Euler in place of
+ * the rank's `yaw` — for a mark laid on a slope rather than a crown, as
+ * `rimPhotophores` lays the Thurible's on its shield's flank (#785). A
+ * spot without one lies flat, as every rank before it did.
  */
 export function photophores(root, crimson, { spots, size = 1.1, h = 0.4, depth, yaw = 0 }) {
   refuseMirror('photophore', spots);
-  spots.forEach(([name, x, y, z]) =>
-    add(root, name, box(size, h, depth ?? size), crimson, [x, y, z], [0, yaw, 0])
+  spots.forEach(([name, x, y, z, rot]) =>
+    add(root, name, box(size, h, depth ?? size), crimson, [x, y, z], rot ?? [0, yaw, 0])
   );
 }
 
@@ -563,14 +603,24 @@ export function hopper(root, { black, steel, gullet }, { x, y, z = 0, w = 18, h 
  * the Precentor's rule and a mark laid on the plate's crown alone can end
  * up under a rib the audit then names. A hull that seats its spines, its
  * marks and its dome by this cannot type a number the shell does not reach.
+ *
+ * `seam.lift` is the lip orb's centre above the hull axis, for a hull that
+ * asks after a `'ridge'` lip instead — the Thurible seats a rim spine on
+ * its shield's trailing lip, which `tergites` draws half a metre up (#785).
+ * Pass `null` for a series drawn with no lip at all.
  */
 export function tergiteCrown(segments, x, z, seam = {}) {
-  const { at: seamAt = 0.85, size: seamSize = [0.3, 0.95, 0.9], tallOf = 'height' } = seam ?? {};
-  const top = (cx, sx, sy, sz) => {
+  const {
+    at: seamAt = 0.85,
+    size: seamSize = [0.3, 0.95, 0.9],
+    tallOf = 'height',
+    lift = 0,
+  } = seam ?? {};
+  const top = (cx, sx, sy, sz, cy = 0) => {
     const u = (x - cx) / sx;
     const w = z / sz;
     const d = 1 - u * u - w * w;
-    return d > 0 ? sy * Math.sqrt(d) : -Infinity;
+    return d > 0 ? cy + sy * Math.sqrt(d) : -Infinity;
   };
   let y = -Infinity;
   segments.forEach(([cx, sx, sy, sz]) => {
@@ -582,7 +632,8 @@ export function tergiteCrown(segments, x, z, seam = {}) {
           cx + seamAt * sx,
           seamSize[0] * sx,
           seamSize[1] * (tallOf === 'beam' ? sz : sy),
-          seamSize[2] * sz
+          seamSize[2] * sz,
+          lift
         )
       );
   });
@@ -679,13 +730,36 @@ export function pressureHatches(root, { collar, door, rim, black }, opts) {
  * Submersible's is (0.75, `drums`). A keel is a side-elevation feature and
  * shows on no map; it is here because the block names it and the conn view
  * sees it under the plates' rise at either end.
+ *
+ * `ribs` hoops it: `{ count, mat, tube, proud, inset }` puts `count`
+ * `keel_rib_i` rings round the spar, evenly from `inset` inside one end to
+ * `inset` inside the other, each `proud` of the keel's radius at its own
+ * station and `tube` thick, in `mat` (the keel's own unless given). The
+ * Thurible's "ribbed pressure keel" (#785); the Verger passes none and is
+ * unchanged.
  */
-export function keel(root, mat, { x, y, z = 0, radii, length, facets = 7, squash = 0.8 }) {
+export function keel(root, mat, opts) {
+  const { x, y, z = 0, radii, length, facets = 7, squash = 0.8, ribs } = opts;
   add(root, 'keel', cyl(radii[0], radii[1], length, facets), mat, [x, y, z], [0, 0, -Math.PI / 2], [
     1,
     1,
     squash,
   ]);
+  if (!ribs) return;
+  const { count, mat: ribMat = mat, tube = 0.35, proud = 0.25, inset = 0.5 } = ribs;
+  // `count` hoops from `inset` of the length inside each end, each a ring
+  // round the spar at the keel's own radius there plus `proud`, squashed as
+  // the spar is. The cone's +X is its `radii[0]` end (the -π/2 roll above).
+  for (let i = 0; i < count; i++) {
+    const t = count > 1 ? i / (count - 1) : 0.5;
+    const rx = x + (length / 2 - inset) * (1 - 2 * t);
+    const r = radii[0] + (radii[1] - radii[0]) * (rx - (x + length / 2)) / -length;
+    add(root, `keel_rib_${i}`, torus(r + proud, tube, 5, 14).rotateY(Math.PI / 2), ribMat, [rx, y, z], [
+      0,
+      0,
+      0,
+    ], [1, 1, squash]);
+  }
 }
 
 /**
@@ -756,10 +830,15 @@ export function ductedDrive(root, { duct: ductMat, hub: hubMat, vane: vaneMat },
  * by this roots them in the shell rather than beside it.
  */
 export function tergiteFlank(segments, x, y, seam = {}) {
-  const { at: seamAt = 0.85, size: seamSize = [0.3, 0.95, 0.9], tallOf = 'height' } = seam ?? {};
-  const side = (cx, sx, sy, sz) => {
+  const {
+    at: seamAt = 0.85,
+    size: seamSize = [0.3, 0.95, 0.9],
+    tallOf = 'height',
+    lift = 0,
+  } = seam ?? {};
+  const side = (cx, sx, sy, sz, cy = 0) => {
     const u = (x - cx) / sx;
-    const v = y / sy;
+    const v = (y - cy) / sy;
     const d = 1 - u * u - v * v;
     return d > 0 ? sz * Math.sqrt(d) : 0;
   };
@@ -773,7 +852,8 @@ export function tergiteFlank(segments, x, y, seam = {}) {
           cx + seamAt * sx,
           seamSize[0] * sx,
           seamSize[1] * (tallOf === 'beam' ? sz : sy),
-          seamSize[2] * sz
+          seamSize[2] * sz,
+          lift
         )
       );
   });
@@ -886,6 +966,203 @@ export function plantedLimbs(root, { steel, black, red }, opts) {
     );
   });
   return joints;
+}
+
+/* --------------------------------------------------------------------------
+ * The Thurible (#785, off #540 Phase 4): the censer, the third Directorate
+ * hull built here. What it adds is what a hull that carries its ordnance on
+ * its *back* needs and no hull before it had — a rack of open wells let
+ * into the shell — and two ways of dressing a carapace's *rim* rather than
+ * its crown: spines off the edge, and photophore rows along it. All three
+ * seat their parts by functions the hull supplies, `crown(x, z)` and
+ * `rim(x, y)`, because the Thurible's shell is three series drawn with
+ * three lips and no one `tergiteCrown` call knows all of them.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Spines off a carapace's rim, `rim_spine_${side}${i}` each: a black
+ * five-sided spike whose base ring is `sink` inside the shell's flank at
+ * `(x, y)` — `rim(x, y)` gives the half-beam there — canted outboard by
+ * `cant` and raked forward by `rake`, one cant and one rake for the rank
+ * because the rule is regular and only the stations vary. A dorsal spine
+ * stands off the crown and reads from above as a dot; a rim spine lies out
+ * past the edge and reads as a spike in plan, which is the navy's tell on
+ * a hull whose back is a rack. `spines` is `[{ side, x, y, length }]`,
+ * each at its own signed side — port −z (#642) — and a mirrored pair is
+ * refused: "spines off the shield's rim at different stations each side"
+ * (docs/asset-prompts-3d.md, the Thurible block).
+ */
+export function rimSpines(root, black, opts) {
+  const { rim, spines, r = 0.9, rake = -0.25, cant = 1.0, sink = 0.8, facets = 5 } = opts;
+  const count = { p: 0, s: 0 };
+  const placed = spines.map(({ side, x, y = 1, length }) => {
+    if (side !== 'p' && side !== 's')
+      throw new Error(`rim_spine_${side}: side is '${side}' — 'p' (port, -z) or 's' (starboard, +z)`);
+    const i = count[side]++;
+    const sgn = side === 'p' ? -1 : 1;
+    const half = rim(x, y);
+    if (half <= sink) throw new Error(`rim_spine_${side}${i}: no shell to root in at x = ${x}`);
+    // Euler XYZ is Rx · Ry · Rz: the rake about Z first, then the cant about
+    // X, so the apex of a +Y cone lands on (−sin rake, cos rake · cos cant,
+    // ±cos rake · sin cant) — forward, up, and out past the rim.
+    const dir = [-Math.sin(rake), Math.cos(rake) * Math.cos(cant), sgn * Math.cos(rake) * Math.sin(cant)];
+    const reach = length / 2 - sink;
+    const at = [x + dir[0] * reach, y + dir[1] * reach, sgn * half + dir[2] * reach];
+    return { name: `rim_spine_${side}${i}`, at, rot: [sgn * cant, 0, rake], length };
+  });
+  refuseMirror('rim_spine', placed.map(({ name, at }) => [name, ...at]));
+  placed.forEach(({ name, at, rot, length }) =>
+    add(root, name, spike(r, length, facets), black, at, rot)
+  );
+}
+
+/**
+ * Photophore rows along a carapace's rim, `${name}_${side}${j}` each: a
+ * rank a side, `ranks.s` and `ranks.p` as `{ from, pitch, count }` — its
+ * first mark at station `from` and the rest `pitch` metres aft of it, one
+ * after another — every mark seated on the shell where it is, `at` of the
+ * rim's half-beam there (`rim(x, 0)`) and on the crown `crown(x, z)` finds
+ * at that point, laid on the shell's own slope with its underside `sink`
+ * into it. The two ranks carry their own `from`, `pitch` and `count`, and
+ * the module's rule refuses the one pair the two rules could still
+ * produce: regimented, and never symmetric.
+ *
+ * Beside `plateEdgePhotophores`, which is the Dredge's rule: that rank is
+ * a fraction of each *plate*, at a fixed fraction of the plate's height,
+ * and is right on a series of near-equal plates that overlap by a third.
+ * On the Thurible's shield the two plates overlap by two thirds and a rank
+ * on each collides with the other's, and a fixed `y` on a dome 27 m across
+ * is under the shell at one station and a metre above it at the next —
+ * so the rank here is along the hull rather than per plate, and the shell
+ * is asked where it is (#785).
+ */
+export function rimPhotophores(root, crimson, opts) {
+  const { rim, crown, ranks, name = 'photophore', at = 0.84, size = 1.2, h = 0.4, sink = 0.15 } = opts;
+  const up = new THREE.Vector3(0, 1, 0);
+  const step = 0.3;
+  const spots = [];
+  for (const side of ['s', 'p']) {
+    const rank = ranks[side];
+    if (!rank) continue;
+    const sgn = side === 'p' ? -1 : 1;
+    for (let j = 0; j < rank.count; j++) {
+      const x = rank.from - rank.pitch * j;
+      const half = rim(x, 0);
+      if (half <= 0) throw new Error(`${name}_${side}${j}: no shell at x = ${x}`);
+      const z = sgn * at * half;
+      const y = crown(x, z);
+      if (!Number.isFinite(y)) throw new Error(`${name}_${side}${j}: no crown at x = ${x}, z = ${z}`);
+      // The shell's normal there, off the crown's own slope, and the mark
+      // laid on the tangent plane with its underside `sink` into it: a
+      // flat box seated at its centre's height on a 30° slope buries its
+      // uphill corner half a metre and bakes as a triangle.
+      const gx = (crown(x + step, z) - crown(x - step, z)) / (2 * step);
+      const gz = (crown(x, z + step) - crown(x, z - step)) / (2 * step);
+      const n = new THREE.Vector3(-gx, 1, -gz).normalize();
+      const e = new THREE.Euler().setFromQuaternion(
+        new THREE.Quaternion().setFromUnitVectors(up, n),
+        'XYZ'
+      );
+      const lift = h / 2 - sink;
+      spots.push([
+        `${name}_${side}${j}`,
+        x + n.x * lift,
+        y + n.y * lift,
+        z + n.z * lift,
+        [e.x, e.y, e.z],
+      ]);
+    }
+  }
+  photophores(root, crimson, { spots, size, h });
+}
+
+/**
+ * The charge rack: open-topped cells let into the shell's back, in ranks,
+ * `cell_${side}${i}` each and four parts to a cell. A `_collar`, a steel
+ * ring `r` outside and `r - wall` inside standing `proud` of the crown at
+ * the cell's centre and running `sink` into it — one closed profile
+ * through the kit's `loft`, stood on end, as `ductedDrive`'s duct is, so
+ * the well has an inside; a `_well`, the floor, a black drum across the
+ * bore `depth` under the collar's top, which is the dark the chart sees
+ * down the bore — and `proud - depth` is the metre it stands *above* the
+ * crown at the cell's centre, because the shell is a dome and not a deck:
+ * a floor let into the plate is a floor the plate's own surface covers on
+ * the uphill side of the bore, and the first run drew seven rings with
+ * chitin showing through every one; a `_lid`, a steel disc of the collar's radius hinged at
+ * the collar's aft edge and standing `lid.open` radians up from shut —
+ * open forward and upward, because up is the way the rack fires; and a
+ * `_hinge`, a black pin along the hinge line. `cells` is `[{ side, x, z }]`,
+ * `z` unsigned and the side signing it (port −z, #642), each seated on
+ * `crown(x, z)`; a mirrored pair across the keel is refused.
+ *
+ * A rack and not a tube: nothing here has a muzzle and no face of it
+ * points along the hull. The cells carry no lamp (docs/models-plan.md
+ * §3.2, rule 4) — the light of a charge is the charge's, above the hull —
+ * so the well's floor is trench black and the lids and collars the
+ * spine-gun's steel: ordnance is machinery let into a grown shell, as the
+ * Chorister's gun is bolted to its plate.
+ */
+export function chargeRack(root, { steel, black }, opts) {
+  const {
+    crown,
+    cells,
+    r = 2.8,
+    wall = 0.55,
+    proud = 2.2,
+    sink = 1.2,
+    depth = 1.2,
+    floor = 0.3,
+    lid = { t: 0.25, open: 1.35 },
+    hinge = { r: 0.22, length: 0.85 },
+    facets = 10,
+  } = opts;
+  const count = { p: 0, s: 0 };
+  const placed = cells.map(({ side, x, z }) => {
+    if (side !== 'p' && side !== 's')
+      throw new Error(`cell_${side}: side is '${side}' — 'p' (port, -z) or 's' (starboard, +z)`);
+    const i = count[side]++;
+    const sgn = side === 'p' ? -1 : 1;
+    const y = crown(x, sgn * z);
+    if (!Number.isFinite(y)) throw new Error(`cell_${side}${i}: no shell at x = ${x}, z = ${sgn * z}`);
+    return { name: `cell_${side}${i}`, at: [x, y, sgn * z] };
+  });
+  refuseMirror('cell', placed.map(({ name, at }) => [name, ...at]));
+  const inner = r - wall;
+  placed.forEach(({ name, at: [x, y, z] }) => {
+    const top = y + proud;
+    add(
+      root,
+      `${name}_collar`,
+      loft(
+        [
+          [0, inner],
+          [0, r],
+          [proud + sink, r],
+          [proud + sink, inner],
+          [0, inner],
+        ],
+        facets
+      ),
+      steel,
+      [x, y - sink, z],
+      [0, 0, Math.PI / 2]
+    );
+    add(root, `${name}_well`, cyl(inner, inner, floor, facets), black, [x, top - depth - floor / 2, z]);
+    // The lid turns about the hinge at the collar's aft edge: a roll of
+    // `open` about Z lifts a flat disc's forward edge, and its centre swings
+    // with it round the pin.
+    const { t, open } = lid;
+    add(root, `${name}_lid`, cyl(r, r, t, facets), steel, [
+      x - r + r * Math.cos(open),
+      top + t / 2 + r * Math.sin(open),
+      z,
+    ], [0, 0, open]);
+    add(root, `${name}_hinge`, cyl(hinge.r, hinge.r, 2 * r * hinge.length, 6), black, [x - r, top, z], [
+      Math.PI / 2,
+      0,
+      0,
+    ]);
+  });
 }
 
 /* --------------------------------------------------------------------------

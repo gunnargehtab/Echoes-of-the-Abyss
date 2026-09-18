@@ -150,8 +150,11 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Glider]: 'glider',
   [UnitKind.Acolyte]: 'acolyte',
   [UnitKind.Herald]: 'herald',
-  // The ordnance hulls (#507). No model yet: the procedural bake is gate 1's
-  // sanctioned state until one clears intake, and the slug is where it lands.
+  // The ordnance hulls (#507), script-built in #785: one model a navy. The
+  // Thurible carries no lock, so a navy rendering for one resolves
+  // thurible-<its faction>.glb — only the Directorate's exists, and the
+  // others stay on the recoloured sprite until a variant passes intake, as
+  // the Chorister's, the Verger's and the Acolyte's do.
   [UnitKind.Broadside]: 'broadside',
   [UnitKind.Weaver]: 'weaver',
   [UnitKind.Thurible]: 'thurible',

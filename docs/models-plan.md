@@ -7,8 +7,8 @@
 
 **Glossary:** See [Glossary](glossary.md) for SIG, PF, HYD, PR and Resolution Tier.
 
-**Status:** in progress — the transports (#783) and the scouts (#784) are built, the other
-four boxes are planned. The tracking issue is #540, Phase 4, and its six boxes are filed as
+**Status:** in progress — the transports (#783), the scouts (#784) and the ordnance hulls
+(#785) are built, the other three boxes are planned. The tracking issue is #540, Phase 4, and its six boxes are filed as
 issues #783 (the transports), #784 (the scouts), #785 (the ordnance hulls), #786 (the siege
 hulls), #787 (the line hulls and the anchor) and #788 (the Bio-Reactor). Every figure below
 is read from the working tree at `19ac7f9`; where it is a stat, [units.md](units.md) and
@@ -259,30 +259,39 @@ with a drive, sized to its berths. None carries a weapon.
 | Lance | Knights | 95 m | 9 | `lance-hadron.glb` |
 
 - **Broadside.** `boxHull` narrower than the Freighter's, a chamfered `ramBow`, a low
-  `citadel` aft, two `propTunnels`, `ballastBlisters` under the casings, patchwork plate.
-  New: four tube casings outside the hull (`bandedTank`), two a side in tandem, each toed a
-  few degrees outboard, a hinged muzzle door forward and a dogged breech door aft. Bare plate
-  between them. Built loaded. Resting lamps: bridge ports, the hoop lamps at each breech
-  door, the stern `engineVents`; the muzzle floods are transients.
-- **Weaver.** `nose`, `stem` with `growthRings`, three `bladder` pods in a row down the aft
-  two thirds, each the same size, the aftmost at an open lay port in the tail (new), a
-  muscle-drive fluke, leaf trim vanes forward. Not `mineSacs` and not tubes: each pod is a
-  whole bladder that leaves the hull. Resting lamps: navigation marks; the stem vein is
-  under way only and clad; the pods carry no lamp.
+  `citadel` aft, two `propTunnel`s notched into the stern, `ballastBlisters` under the
+  casings, patchwork plate, a `doggedHatch` on the foredeck. New: `tubeCasings` — four
+  casings outside the hull, two a side in tandem, each toed 7° outboard, saddled to the
+  flank, a hinged muzzle door forward and a dogged breech door aft with a lit hoop ahead
+  of it. Bare plate between them. Built loaded. Resting lamps: the hoop at each breech
+  door (the chart's light), the bridge ports, the stern `engineVents` proud of the
+  transom, a `bowLamp`; the muzzle floods are transients.
+- **Weaver.** `nose`, `stem` with `growthRings`, three `decoyPods` in a row down the aft
+  two thirds — the Sower's bladder orb at one size, centred on the stem so it threads
+  them — the aftmost in an open `layPort` in the tail (new: the stem's skin flared into a
+  cup, a ridge lip, the sheath peeled back in sepals), a muscle-drive `driveFluke` hinged
+  on a `tailKnuckle` under the lip so the mouth astern stays clear, leaf `trimVanes`
+  forward. Not `mineSacs` and not tubes: each pod is a whole bladder that leaves the
+  hull. Resting lamps: navigation marks; the stem vein is under way only and clad; the
+  pods carry no lamp.
 - **Thurible.** `rostrum`, a broad domed carapace forward stepping down sharply to a narrow
-  jointed abdomen (`tergites` at two scales), `telson`, one `spineGun` off the centreline
-  ahead of the rack, `dorsalSpines` at different stations a side, folded `walkingLimbs`, a
-  ribbed pressure keel. New: the charge rack let into the shield's back, open-topped cells
-  in two ranks, round wells with hinged lids standing open upward. Resting lamps:
-  photophore rows along the shield's rim and down the abdomen (`plateEdgePhotophores`),
-  asymmetric; the cells carry no lamp. No lock.
+  jointed abdomen (`tergites` at two scales, in three calls through `first`: the tail and
+  the aft shield plate with the Dredge's `ridge`, the fore plate with none — the aft
+  plate's lip is the step), `telson`, one `spineGun` off the centreline ahead of the rack,
+  `rimSpines` at different stations a side, `limbs` folded under the shield and rooted on
+  its flank, a ribbed pressure `keel`. New: `chargeRack`, the cells let into the shield's
+  back, open-topped in two ranks, round wells with hinged lids standing open upward.
+  Resting lamps: `rimPhotophores` along the shield's rim and down the abdomen, asymmetric,
+  laid on the shell's slope; the cells carry no lamp. No lock.
 - **Lance.** Bilaterally symmetric: a spike, a crossguard and a grip. The spike, an open
-  faceted rail the length of the forward third (new) with the one torpedo (`magazine`)
-  lying in it and its nose in a crystal muzzle collar as the bow. The crossguard, two
-  crystal-edged guard blades amidships opened to a right angle, leading edges at 45° to the
-  keel (`wings`, re-angled). The grip, a narrow faceted `spar` aft to a flat transom with
-  the `drive` prism; no `canards`, nothing astern. Built loaded. Resting lamps: the collar
-  crystal and one stern mark; the guard edges and the rail light under way and are clad.
+  faceted rail the length of the forward third (`spike`, new) with the one torpedo (a
+  capsule, the `magazine` pods' idiom, drawn by `spike`) lying in it and its nose in a
+  crystal muzzle collar as the bow. The crossguard, two crystal-edged guard blades
+  amidships opened to a right angle, leading edges at 45° to the keel (`wings`, re-angled,
+  the edge in the unlit finish through `edge.mat`). The grip, a narrow faceted `spar` aft
+  to a flat transom with the `drive` prism; no `canards`, nothing astern. Built loaded.
+  Resting lamps: the collar crystal and one stern mark; the guard edges and the rail light
+  under way and are clad.
 
 ### The siege hulls — #786
 

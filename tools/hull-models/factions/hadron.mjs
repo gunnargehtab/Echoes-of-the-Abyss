@@ -235,8 +235,11 @@ export function bowArray(root, { alloy, crystal, seam, node }, opts) {
  * approved files write the +z three — `wing_s wing_edge_s canard_s`, since
  * #642 turned the names round — before the port three and `check.mjs`
  * compares in order; `name` and `edgeName` are for the
- * Cantus, whose wings are guard blades. Given no outline, the Responsory's
- * wing is exactly what it was.
+ * Cantus, whose wings are guard blades. `edge.mat` is for an edge the block
+ * lights only under way — the Lance's guard edges, which carry the seam's
+ * unlit finish (`ink.crystalSeamUnlit`, models-plan.md §3.2 rule 2) — and
+ * is the crystal otherwise, as `bowArray`'s `lip.mat` is. Given no outline,
+ * the Responsory's wing is exactly what it was.
  *
  * The Chorister's guards and canards are the same pairs without an edge —
  * `edge` left out draws none — and `seated` (see `plane`) stands each plate
@@ -250,7 +253,7 @@ export function wings(root, { alloy, crystal, seam }, opts) {
   bothSides((side, sgn) => {
     if (outline) {
       plane(root, `${name}_${side}`, alloy, { outline, t, y, seated }, sgn);
-      if (edge) plane(root, `${edgeName}_${side}`, crystal, edge, sgn);
+      if (edge) plane(root, `${edgeName}_${side}`, edge.mat ?? crystal, edge, sgn);
       if (lamp)
         add(root, `${name}_lamp_${side}`, box(...lamp.size), seam, [lamp.x, lamp.y, sgn * lamp.z]);
       if (canard) plane(root, `canard_${side}`, alloy, { seated, ...canard }, sgn);
@@ -801,6 +804,52 @@ export function forkedBow(root, { alloy, crystal, unlit, node }, opts) {
  */
 export function transom(root, mat, { x, t = 0.8, halfHeight, halfBeam, y = 0 }) {
   add(root, 'transom', box(t, 2 * halfHeight, 2 * halfBeam), mat, [x + t / 2, y, 0]);
+}
+
+/**
+ * The spike — the Lance's forward third (#785): "an open faceted rail the
+ * length of the forward third with the one torpedo lying in it, its nose
+ * standing in a crystal muzzle collar as the bow — the weapon is the point
+ * of the ship" (docs/asset-prompts-3d.md, Block 3, the ordnance hulls).
+ * Built loaded (models-plan.md §3.5): the torpedo in the rail, because a
+ * spent Lance is the same hull with the rail empty and the loaded one is
+ * the track an enemy sees. Not `lance` above, which is the Reciter's
+ * needle — a spar drawn to a point with a lit bar let into its top — and
+ * which the Lance's block refuses by name: here nothing on the axis is
+ * hull, and the thing drawn to a point is the weapon.
+ *
+ * The `rail` is two runners, `rail_s` and `rail_p`: four-facet spars on
+ * their own `[x, r]` stations (`spar`), laid `flat`, at `rail.z` either
+ * side of the axis and `rail.y` under it, joined beneath the torpedo by
+ * `ribs` — crossbars of `ribs.size` at each x in `ribs.at`, at `ribs.y` —
+ * and by nothing else: open above, open at the flanks above the runners,
+ * and the torpedo the only thing on the axis. The runners carry the lamp
+ * family's unlit finish (`ink.crystalSeamUnlit`), because the block lights
+ * the rail under way and a lamp dark at rest is a lamp this pipeline never
+ * shows (§3.2, rule 2); the ribs are alloy. The `torpedo` is one capsule
+ * (kit.mjs `capsule` — the turrets' ammo-pod idiom, `magazine` below) of
+ * `torpedo.r` on `torpedo.length` of straight side, `torpedo.facets`
+ * round, laid along X about `torpedo.x` at `torpedo.y`, with a cross of
+ * two tail plates at `fins.x` — `fins.chord` along the hull, `fins.span`
+ * out from the axis each way, `fins.t` thick. The `collar` is a six-facet
+ * ring lathed on its own stations, bore and all, with a vertex on the crown
+ * as the Clarion's lip has (`spar`), and it is a lamp — the resting light
+ * the block names — whole, as the Herald's emitter is and not the gun
+ * hulls' clad crystal with a lit core. Its forward face is the bow, and it
+ * stands with nothing over it, which makes it the unoccluded upward emitter
+ * every hull needs (§3.2, rule 5).
+ *
+ * Starboard runner, port runner, the ribs forward in order, the torpedo,
+ * its two fin plates, then the collar.
+ */
+export function spike(root, { alloy, unlit, node }, { rail, ribs, torpedo, collar }) {
+  bothSides((side, sgn) => spar(root, `rail_${side}`, unlit, { ...rail, z: sgn * rail.z }));
+  ribs.at.forEach((x, i) => add(root, `rail_rib_${i}`, box(...ribs.size), alloy, [x, ribs.y, 0]));
+  const { x, y, r, length, facets = 8, fins } = torpedo;
+  add(root, 'torpedo', capsule(r, length, 3, facets), alloy, [x, y, 0], [0, 0, -Math.PI / 2]);
+  add(root, 'torpedo_fins_lateral', box(fins.chord, fins.t, 2 * fins.span), alloy, [fins.x, y, 0]);
+  add(root, 'torpedo_fins_vertical', box(fins.chord, 2 * fins.span, fins.t), alloy, [fins.x, y, 0]);
+  spar(root, 'muzzle_collar', node, { facets: 6, ...collar });
 }
 
 /* --------------------------------------------------------------------------

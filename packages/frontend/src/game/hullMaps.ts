@@ -156,6 +156,18 @@ import acolyteEmissive from '../assets/hulls/maps/acolyte-emissive.png';
 import heraldAlbedo from '../assets/hulls/maps/herald-albedo.png';
 import heraldHeight from '../assets/hulls/maps/herald-height.png';
 import heraldEmissive from '../assets/hulls/maps/herald-emissive.png';
+import broadsideAlbedo from '../assets/hulls/maps/broadside-albedo.png';
+import broadsideHeight from '../assets/hulls/maps/broadside-height.png';
+import broadsideEmissive from '../assets/hulls/maps/broadside-emissive.png';
+import weaverAlbedo from '../assets/hulls/maps/weaver-albedo.png';
+import weaverHeight from '../assets/hulls/maps/weaver-height.png';
+import weaverEmissive from '../assets/hulls/maps/weaver-emissive.png';
+import thuribleAlbedo from '../assets/hulls/maps/thurible-albedo.png';
+import thuribleHeight from '../assets/hulls/maps/thurible-height.png';
+import thuribleEmissive from '../assets/hulls/maps/thurible-emissive.png';
+import lanceAlbedo from '../assets/hulls/maps/lance-albedo.png';
+import lanceHeight from '../assets/hulls/maps/lance-height.png';
+import lanceEmissive from '../assets/hulls/maps/lance-emissive.png';
 
 /**
  * Pixels per world metre the maps were baked at. The maps carry no metadata,
@@ -313,6 +325,30 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
     albedo: heraldAlbedo,
     height: heraldHeight,
     emissive: heraldEmissive,
+  },
+  // The ordnance hulls (#785), on the same rule: one navy's hull each, so
+  // the kind's canonical model. The Thurible carries no lock, so its
+  // Directorate model serves every navy recoloured — the Chorister's, the
+  // Verger's and the Acolyte's rule — until a variant passes intake.
+  [UnitKind.Broadside]: {
+    albedo: broadsideAlbedo,
+    height: broadsideHeight,
+    emissive: broadsideEmissive,
+  },
+  [UnitKind.Weaver]: {
+    albedo: weaverAlbedo,
+    height: weaverHeight,
+    emissive: weaverEmissive,
+  },
+  [UnitKind.Thurible]: {
+    albedo: thuribleAlbedo,
+    height: thuribleHeight,
+    emissive: thuribleEmissive,
+  },
+  [UnitKind.Lance]: {
+    albedo: lanceAlbedo,
+    height: lanceHeight,
+    emissive: lanceEmissive,
   },
 };
 

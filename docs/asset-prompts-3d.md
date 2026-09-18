@@ -215,13 +215,13 @@ Lamp bases are the near-black a `lamp()` puts in `color` for its emissive to sit
 | Consortium | emissive | `#B07A1E` `amber_vent` · `#F28A1E` `amber_vent` (cruiser) · `#FFD070` `amber_flood` |
 | Consortium | cladding | `#1C1F22` `baffle-foam` (the Baffle Barge) |
 | Consortium | lamp base | `#1A1408` · `#120E06` · `#2A2210` · `#1A1206` |
-| Commune | cladding | `#14332A` / `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` / `#14664C` `algae_hull` · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` · `#061206` `bio_vein_unlit` (the vein's base worn as cladding by a part the block lights only in a later band — the Glider's tail veins, dark with the drive cut) |
+| Commune | cladding | `#14332A` / `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` / `#14664C` `algae_hull` · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` · `#061206` `bio_vein_unlit` (the vein's base worn as cladding by a part the block lights only in a later band — the Glider's tail veins, dark with the drive cut, and the Weaver's stem vein) |
 | Commune | emissive | `#5FAE42` `bio_vein` (at strength 1 on the Sower and the Spinner, 0.2 on the Drifter's seams and the Glider's wing vein — a strength survives the recolour as a finish does) · `#E8F0A3` `forge_light` / `floodlight_pale` (the spore token as a light) |
 | Commune | lamp base | `#061206` · `#0A1A08` · `#123018` · `#14301A` · `#14351A` · `#0F2A12` · `#2E3A16` · `#3A3F1E` · `#2A4A20` · `#3F6B2E` |
 | Directorate | cladding | `#3A3F4A` / `#27313B` `weld_steel` · `#4E1220` `chitin_red_dark` · `#1A0810` `biolight_unlit` (the lamp base worn as cladding by a part the block lights only in a later band — the Verger's bay doors) |
 | Directorate | emissive | `#E0506A` `gullet_glow` · `#E07A8C` `forge_light` / `floodlight_hot` |
 | Directorate | lamp base | `#1A0810` / `#2C0A12` / `#3A0D16` `biolight_crimson` · `#2A0C14` `gullet_glow` · `#40141C` `forge_light` / `floodlight_hot` |
-| Knights | cladding | `#1C2230` `dark_steel` · `#2C2244` `shadow_indigo` · `#8A8FA3` `alloy_dim` · `#E6E9F2` `alloy_white` (the token's hex under a second name) · `#1A1030` `crystal_seam_unlit` (the seam's lamp base worn as cladding by a part the block lights only under way — the Herald's tine seams) |
+| Knights | cladding | `#1C2230` `dark_steel` · `#2C2244` `shadow_indigo` · `#8A8FA3` `alloy_dim` · `#E6E9F2` `alloy_white` (the token's hex under a second name) · `#1A1030` `crystal_seam_unlit` (the seam's lamp base worn as cladding by a part the block lights only under way — the Herald's tine seams, the Lance's guard edges and rail) |
 | Knights | emissive | `#9B6CF9` `crystal_panel_glow` · `#A77CFF` `resonance_node` |
 | Knights | lamp base | `#1A1030` · `#1E1038` · `#241744` · `#2A1A50` · `#2A1650` · `#3A2560` |
 
@@ -559,16 +559,19 @@ launches; no gun; 700 hull; 40 m/s). A long riveted box hull, narrower than
 the Freighter's slab, carrying its four tubes outside the hull as four
 casings, two a side in tandem along each flank: each a banded pressure
 cylinder toed a few degrees outboard so the aft tube fires clear of the
-forward casing's tail, a hinged muzzle door on its forward face, a dogged
-breech door at its tail, so the plan is a box with two teeth a side and the
-teeth are the count. A chamfered ram bow, a square stern with two prop
-tunnels, a low bridge citadel aft, ballast blisters under the casings, plate
-patchworked older-under-newer. Between the casings the deck is bare plate —
-no turret, no crane, no mount: the hull is a box four tubes are bolted to,
-and once the four doors have opened there is nothing on it that points at
-anything. Sustained amber glow from the bridge ports, the hoop lamps at each
-breech door and the stern vents; each muzzle door floods for the instant of
-a launch, four times in twelve seconds, and is dark again after.
+forward casing's tail, saddled to the flank, a hinged muzzle door on its
+forward face, a dogged breech door at its tail with a lit hoop round the
+casing ahead of it, so the plan is a box with two teeth a side and the teeth
+are the count. A chamfered ram bow, a square stern with two prop tunnels
+notched into it and two lit vents proud of the transom between them, a
+low bridge citadel aft, a dogged crew hatch on the foredeck, ballast
+blisters under the casings, plate patchworked older-under-newer. Between the
+casings the deck is bare plate — no turret, no crane, no mount: the hull is
+a box four tubes are bolted to, and once the four doors have opened there is
+nothing on it that points at anything. Sustained amber glow from the hoop at
+each breech door, the bridge ports and the stern vents, and one mark at the
+bow; each muzzle door floods for the instant of a launch, four times in
+twelve seconds, and is dark again after.
 ```
 
 ```text
@@ -629,9 +632,10 @@ drawn as the guard, and the tube launches only between them. The grip is a
 narrow faceted shaft aft to a flat transom with the drive prism in the
 spine — no canards, no guard wings astern, nothing behind the guard to hear,
 and nothing of the Reciter's needle. Dim at rest but for the crystal in the
-collar; under way, sustained glow along the guard's leading edges and up the
-rail to the collar, thrown forward, faint on the beam and dark astern but
-for one mark — the quarter it is loud in is the quarter it can fire into.
+collar and the one mark astern; under way, sustained glow along the guard's
+leading edges and up the rail to the collar, thrown forward, faint on the
+beam and dark astern but for that mark — the quarter it is loud in is the
+quarter it can fire into.
 ```
 
 ### The siege hulls — one a navy, and four answers to a wall
