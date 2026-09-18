@@ -131,8 +131,12 @@ const REFIT_PR = 3;
  *
  * Eight is `SILENT_RUNNING`'s band ceiling, which makes it a number no hull on
  * this map can reach any other way: a Knight Corvette that simply stops emits
- * 28 and the Voice idles at 55. Every previous ceiling in the bible was a
- * discipline a hull could hold at cruise; this one is the button.
+ * 28 and the Voice idles at 55. The three SIG ceilings §4 names before it are
+ * each a figure some hull already reaches without a mode — the prologue's 20
+ * over a Scout's 12 at cruise, the galleries' 25 cleared by a Submersible's 22
+ * idle rather than by its 28 cruise, the Third's 28 a Corvette's own cruise
+ * figure. Those three, not every ceiling in the tree: `seeding-tend`'s 20 and
+ * `convocation.ts`'s row ceiling of 26 are outside §4's list.
  */
 const HUSH_CEILING_SIG = SILENT_RUNNING.SIG_MAX;
 
