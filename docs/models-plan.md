@@ -335,13 +335,18 @@ the Blight's, and §3.2 says which one the model lights.
   lamps: `navMarks`, two; the stem vein runs from the arm's root to the sac's rim, is under
   way only and clad (`sweptVein` in `bio_vein_unlit`); the sac's dome, the head and the hood
   carry no lamp; nothing brightens when it seeds, by design.
-- **Lure.** `rostrum`, three overlapping `tergites`, a jointed abdomen, folded
-  `walkingLimbs`, a ribbed pressure keel, `bladderDome` in the abdomen forward of the fan.
-  New: the sounding fan — five chitin plates opened wide astern, two a side about a telson
-  (`telsonFan`, widened), a file ridge down the abdomen's back, and a plectrum limb raised
-  over it (`jointedLimb`). Resting lamps: photophores in a pattern that repeats on neither
-  side; the tergite-edge rows, the fan ribs and the bladder's dome light later and are
-  clad. No lock.
+- **Lure.** `rostrum`, three overlapping `tergites` with the Verger's seam over a jointed
+  abdomen with the Dredge's `ridge` (two calls through `first`, the abdomen's last plate
+  the fan's root), `bladderDome` forward of the fan — violet on the red plate, no lamp —
+  `dorsalSpines`, `limbs` folded under the carapace and rooted on its flank, a ribbed
+  pressure `keel` under the carapace. New: `soundingFan`, five chitin plates opened wide
+  astern — the telson a plate on the keel line and two broad squared paddles a side yawed
+  out about it, a rib in the unlit finish down each; `fileRidge`, one saw-toothed fin down
+  the abdomen's back off the keel line, riding over the joints; `plectrumLimb`, one
+  jointed limb raised from the other flank across the keel, a flat pick aimed at the file.
+  Resting lamps: `rimPhotophores` on the shell's shoulders, asymmetric, laid on the
+  slope; the tergite-edge rows (`rimPhotophores` in `biolight_unlit`, a row a carapace
+  plate along its rim) and the fan ribs are clad. No lock.
 - **Tocsin.** A bell on its side, crown forward. The barrel: a faceted emitter rail
   (`railGun`) on the centreline for a third of the length to a crystal muzzle collar. New:
   the bell skirt, faceted pale alloy widening in one unbroken flare from the crown's

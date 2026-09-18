@@ -36,6 +36,12 @@
  *              keel_rib_0..6 · cell_s0..3 / p0..2 (_collar, _well, _lid, _hinge) ·
  *              photophore_rim_s0..4 / p0..3 · photophore_tail_s0..3 / p0..1 — built
  *              (#785), the third
+ *   Lure       tergite_0..6 · tergite_ridge_0..3 · tergite_seam_4..6 · rostrum ·
+ *              bladder_dome · dorsal_spine_0..2 · limb_s0..2 / p0..2 · keel ·
+ *              keel_rib_0..5 · file_ridge · plectrum_hip / _femur / _knee / _tibia /
+ *              _wrist · plectrum · telson (_plate, _rib) · fan_s0..1 / p0..1 (_plate,
+ *              _rib) · edge_row_4..6_s / _p · photophore_s0..2 / p0..2 ·
+ *              photophore_tail_s0..1 / p0..1 — built (#786), the fourth
  *
  * Three rules fall out of those, and they are what this module holds rather
  * than any one hull:
@@ -1163,6 +1169,217 @@ export function chargeRack(root, { steel, black }, opts) {
       0,
     ]);
   });
+}
+
+/* --------------------------------------------------------------------------
+ * The Lure (#786, off #540 Phase 4): the song, the fourth Directorate hull
+ * built here. What it adds is what a hull that is an instrument needs and
+ * no hull before it had — a tail that is a fan of broad plates rather than
+ * a spike, a file down the back, and one limb raised *over* the shell
+ * rather than folded under it or planted beside it. All three seat their
+ * parts by the functions the hull supplies, `crown(x, z)` and `rim(x, y)`,
+ * as the Thurible's do.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * A sounding plate's outline in its own frame: the root at the origin, the
+ * blade running aft along −x, `root` and `tip` its half-widths at the root
+ * and at the squared end, the widening done by `shoulder` of the length,
+ * and the end's two corners cut back `chamfer` — a broad paddle with a
+ * squared end rather than a spine, which is the outline note's own phrase
+ * for it (silhouettes.ts, the Lure). Symmetric about its own axis, so a
+ * port plate is the starboard one at the opposite yaw.
+ */
+const paddle = ({ length, root, tip, shoulder = 0.7, chamfer }) => [
+  [0, root],
+  [-shoulder * length, tip],
+  [-length + chamfer, tip],
+  [-length, tip - chamfer],
+  [-length, chamfer - tip],
+  [-length + chamfer, -tip],
+  [-shoulder * length, -tip],
+  [0, -root],
+];
+
+/**
+ * The sounding fan: five chitin plates opened wide astern, two a side about
+ * a telson — a tail fan of the kind a lobster carries, the telson in the
+ * middle and two broad uropods a side, which is the count the block gives
+ * and the shape the outline note draws. Each plate is a frame of its own
+ * (`telson`, `fan_${side}${i}`, i = 0 the inner pair and 1 the outer)
+ * placed at the fan's root `at` — `dx` along the hull and `y` up from it,
+ * and the pairs `dz` off the keel at their own signed z, port negative
+ * (#642), yawed `spread` radians out from the keel on their own side —
+ * holding a `_plate`, the kit's `plan` of `paddle` above `t` thick with a
+ * `bevel` chamfer all round, because chitin has an edge and not a sheet's
+ * corner; and a `_rib`, a bar of `rib.w` by `rib.h` down the plate's own
+ * centreline from `rib.from` to `rib.to` of its length, sunk `rib.sink`
+ * into the top face, in `ribMat`. The plates alternate through `skins`
+ * from the telson outward.
+ *
+ * The ribs are the fan's light and the fan lights only singing — "each
+ * plate of the fan lit along its rib" is the block's third band — so a
+ * hull passes the lamp family's unlit finish (`ink.biolightUnlit`) and
+ * never a lamp (docs/models-plan.md §3.2, rule 2). The telson is a plate
+ * here and not `telson`'s cone: the block says the plates fold "into a
+ * telson" under way, and a telson that is the middle plate of the fan is
+ * what they fold into. Nothing on the fan points and nothing on it fires.
+ *
+ * The pairs are the one matched pair on the hull, and the plan says why
+ * they may be (docs/models-plan.md §4, the Lure): an instrument is tuned
+ * symmetric, and the plates carry no light to refuse.
+ */
+export function soundingFan(root, { skins, rib: ribMat }, opts) {
+  const {
+    at: [ax, ay] = [0, 0],
+    t = 0.7,
+    bevel = 0.35,
+    rib = { w: 0.7, h: 0.4, from: 0.08, to: 0.92, sink: 0.1 },
+    telson: tl,
+    pairs,
+  } = opts;
+  const blade = (frame, name, shape, skin) => {
+    add(frame, `${name}_plate`, plan(paddle(shape), t, bevel), skin);
+    const ribLength = (rib.to - rib.from) * shape.length;
+    add(frame, `${name}_rib`, box(ribLength, rib.h, rib.w), ribMat, [
+      -(rib.from * shape.length + ribLength / 2),
+      t / 2 + bevel + rib.h / 2 - rib.sink,
+      0,
+    ]);
+  };
+  const frame = group(root, 'telson', { at: [ax + (tl.dx ?? 0), ay + (tl.y ?? 0), 0] });
+  blade(frame, 'telson', tl, skins[0]);
+  pairs.forEach((p, i) => {
+    // A yaw of +a about Y carries the plate's own −x onto (−cos a, +sin a):
+    // aft and to starboard; the port plate takes −a.
+    for (const side of ['s', 'p']) {
+      const sgn = side === 'p' ? -1 : 1;
+      const name = `fan_${side}${i}`;
+      const f = group(root, name, {
+        at: [ax + (p.dx ?? 0), ay + (p.y ?? 0), sgn * p.dz],
+        rot: [0, sgn * p.spread, 0],
+      });
+      blade(f, name, p, skins[(i + 1) % skins.length]);
+    }
+  });
+}
+
+/**
+ * The file ridge: one black fin down the abdomen's back at `z`, from
+ * station `from` aft to `to`, `t` thick across the beam — a stridulating
+ * file, a row of `teeth` along a crest. The crest is a straight line from
+ * `top[0]` at `from` to `top[1]` at `to`, each tooth `tooth` tall above it
+ * with its point `rake` of the pitch back from the tooth's forward foot,
+ * so the teeth lean the way the navy's spines do; the fin's underside
+ * follows the shell, `crown(x, z)` sampled twice a tooth and sunk `sink`
+ * into it, so the ridge is rooted in every plate and every lip it crosses
+ * and rides over the joints rather than following them. A crest line that
+ * comes within `base` of the shell anywhere along the run is refused: a
+ * file whose teeth are buried is a seam.
+ *
+ * One `ExtrudeGeometry` in the hull's own x–y plane, extruded across the
+ * beam and centred on `z` — the kit's `plate` and `plan` lay an outline
+ * flat, and a ridge stands on edge.
+ */
+export function fileRidge(root, black, opts) {
+  const {
+    crown,
+    z,
+    from,
+    to,
+    teeth,
+    top: [yFrom, yTo],
+    tooth = 0.8,
+    rake = 0.3,
+    sink = 0.8,
+    base = 0.3,
+    t = 0.7,
+    name = 'file_ridge',
+  } = opts;
+  const pitch = (from - to) / teeth;
+  const line = (x) => yFrom + ((yTo - yFrom) * (from - x)) / (from - to);
+  const shape = new THREE.Shape();
+  shape.moveTo(from, line(from));
+  for (let i = 0; i < teeth; i++) {
+    const foot = from - i * pitch;
+    const crest = foot - rake * pitch;
+    shape.lineTo(crest, line(crest) + tooth);
+    shape.lineTo(foot - pitch, line(foot - pitch));
+  }
+  const n = teeth * 2;
+  for (let k = 0; k <= n; k++) {
+    const x = to + ((from - to) * k) / n;
+    const y = crown(x, z);
+    if (!Number.isFinite(y)) throw new Error(`${name}: no shell at x = ${x}, z = ${z}`);
+    if (line(x) - y < base)
+      throw new Error(
+        `${name}: the crest at x = ${x} stands ${(line(x) - y).toFixed(2)} m over the shell` +
+          ` — under the ${base} it needs`
+      );
+    shape.lineTo(x, y - sink);
+  }
+  const geo = new THREE.ExtrudeGeometry(shape, { depth: t, bevelEnabled: false, steps: 1 });
+  geo.translate(0, 0, -t / 2);
+  add(root, name, geo, black, [0, 0, z]);
+}
+
+/**
+ * The plectrum limb: one limb raised over the back, `${name}_hip`,
+ * `_femur`, `_knee`, `_tibia`, `_wrist` and the pick itself, `${name}`.
+ * The joints are given — `hip` on the flank, `knee` above the shell,
+ * `wrist` over the file, the pick's `tip` just clear of its teeth — and
+ * the bones are drawn between them on `plantedLimbs`' rule (`bone`): a
+ * steel frustum `femur` and `tibia` in `[root, tip]` radius, a black orb
+ * at each joint of `joints`' radii. The pick is a black four-sided cone
+ * from the wrist to the tip, its base square `pick.r` in radius and
+ * pressed to `pick.flat` of that across the beam, so its broad face lies
+ * in the plane of the stroke — along the hull — and its edge across the
+ * file's teeth. Its frame is built rather than taken from the minimal
+ * rotation: +Y onto the aim, the beam axis kept as near the hull's beam
+ * as the aim allows, and the third axis their cross — a cone aimed by the
+ * minimal rotation lands its flat at whatever angle the rotation's axis
+ * leaves it.
+ *
+ * The one limb on the hull that stands up, and a limb and not a spine:
+ * it is jointed and it holds a tool. The block's "raised" is the state it
+ * is built in (docs/models-plan.md §3.5); under way it lies flat.
+ */
+export function plectrumLimb(root, { steel, black }, opts) {
+  const {
+    hip,
+    knee,
+    wrist,
+    tip,
+    joints = { hip: 1.3, knee: 1.15, wrist: 0.85 },
+    femur = [1.0, 0.85],
+    tibia = [0.85, 0.65],
+    pick = { r: 1.2, flat: 0.3 },
+    facets = 6,
+    name = 'plectrum',
+  } = opts;
+  const joint = (n, at, r) => add(root, `${name}_${n}`, orb(8, 5), black, at, [0, 0, 0], [r, r, r]);
+  joint('hip', hip, joints.hip);
+  bone(root, `${name}_femur`, steel, femur, hip, knee, facets);
+  joint('knee', knee, joints.knee);
+  bone(root, `${name}_tibia`, steel, tibia, knee, wrist, facets);
+  joint('wrist', wrist, joints.wrist);
+  const W = new THREE.Vector3(...wrist);
+  const T = new THREE.Vector3(...tip);
+  const aim = T.clone().sub(W);
+  const yAxis = aim.clone().normalize();
+  const beam = new THREE.Vector3(0, 0, 1);
+  const zAxis = beam.sub(yAxis.clone().multiplyScalar(beam.dot(yAxis))).normalize();
+  const xAxis = new THREE.Vector3().crossVectors(yAxis, zAxis);
+  const e = new THREE.Euler().setFromRotationMatrix(
+    new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis),
+    'XYZ'
+  );
+  const mid = W.clone().add(T).multiplyScalar(0.5).toArray();
+  add(root, name, cyl(0, pick.r, aim.length(), 4, Math.PI / 4), black, mid, [e.x, e.y, e.z], [
+    1,
+    1,
+    pick.flat,
+  ]);
 }
 
 /* --------------------------------------------------------------------------
