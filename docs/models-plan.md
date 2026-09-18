@@ -259,11 +259,13 @@ with a drive, sized to its berths. None carries a weapon.
 | Lance | Knights | 95 m | 9 | `lance-hadron.glb` |
 
 - **Broadside.** `boxHull` narrower than the Freighter's, a chamfered `ramBow`, a low
-  `citadel` aft, two `propTunnels`, `ballastBlisters` under the casings, patchwork plate.
-  New: four tube casings outside the hull (`bandedTank`), two a side in tandem, each toed a
-  few degrees outboard, a hinged muzzle door forward and a dogged breech door aft. Bare plate
-  between them. Built loaded. Resting lamps: bridge ports, the hoop lamps at each breech
-  door, the stern `engineVents`; the muzzle floods are transients.
+  `citadel` aft, two `propTunnel`s notched into the stern, `ballastBlisters` under the
+  casings, patchwork plate, a `doggedHatch` on the foredeck. New: `tubeCasings` — four
+  casings outside the hull, two a side in tandem, each toed 7° outboard, saddled to the
+  flank, a hinged muzzle door forward and a dogged breech door aft with a lit hoop ahead
+  of it. Bare plate between them. Built loaded. Resting lamps: the hoop at each breech
+  door (the chart's light), the bridge ports, the stern `engineVents` proud of the
+  transom, a `bowLamp`; the muzzle floods are transients.
 - **Weaver.** `nose`, `stem` with `growthRings`, three `bladder` pods in a row down the aft
   two thirds, each the same size, the aftmost at an open lay port in the tail (new), a
   muscle-drive fluke, leaf trim vanes forward. Not `mineSacs` and not tubes: each pod is a

@@ -952,6 +952,94 @@ export function transducerDrum(root, { black, grey, rust, lampM }, opts) {
   ]);
 }
 
+/**
+ * The tube casings outside the hull — the Broadside's whole argument, "four
+ * casings, two a side in tandem along each flank: each a banded pressure
+ * cylinder toed a few degrees outboard so the aft tube fires clear of the
+ * forward casing's tail, a hinged muzzle door on its forward face, a dogged
+ * breech door at its tail, so the plan is a box with two teeth a side and
+ * the teeth are the count" (docs/asset-prompts-3d.md, UNIT — Broadside).
+ *
+ * A casing is the Submersible's `bandedHull` family — a faceted drum with
+ * flat reinforcement bands round it, not `bandedTank`'s torus, which is a
+ * structure's tank lying where it was dropped — laid along its own toed
+ * axis rather than the keel, and doored at both ends. Every part is placed
+ * by `t`, metres along that axis from the breech face, so a casing is one
+ * number to move and one to lengthen. Starboard casings first, then port,
+ * each written whole (`casing_s0 · casing_band_s0_0..n · tail_flange_s0 ·
+ * breech_door_s0 · breech_hub_s0 · breech_wheel_s0 · hoop_lamp_s0 ·
+ * muzzle_flange_s0 · muzzle_door_s0 · muzzle_hinge_s0 · casing_saddle_s0f ·
+ * casing_saddle_s0a · casing_s1 …`).
+ *
+ * The toe: a drum laid on X by a quarter turn about Z and then yawed about
+ * Y — an XYZ Euler of `[0, −sgn·toe, π/2]` — carries its muzzle outboard on
+ * both sides; the wheel, a torus born facing Z, takes the same yaw after a
+ * quarter turn about Y. `toe` is the hull's clearance arithmetic and the
+ * hull script states it: the aft tube's path runs parallel to the forward
+ * casing's axis at (length + gap) · tan(toe) outboard of it, so it clears
+ * when that exceeds the casing's radius and the torpedo's together.
+ *
+ * The breech door's hoop is the lit part: a raised band `hoopLamp.r` round
+ * the casing just ahead of the tail flange, wider than the drum and as wide
+ * as a reinforcement band, so its whole width is on top where the maps read
+ * it and its rim shows from the beam — the Beacon's `hoop_lamp`, one a
+ * casing. The muzzle door is cladding: it floods only for the instant of a
+ * launch, a transient, and a transient is not a lamp (docs/models-plan.md
+ * §3.2). The hinge is a knuckle standing up the door's outboard edge, so
+ * the door swings out and clear of the hull; the breech wheel faces aft on
+ * its hub. The saddles are the bolting: a block a quarter-length in from
+ * each end, run from the flank to the casing's axis and buried in the drum
+ * where the two meet, so the toe's widening gap is filled where it is
+ * carried.
+ */
+export function tubeCasings(root, { black, grey, rust, lampM }, opts) {
+  const { r, y, flank, gap, toe, facets = 16, casings, bands, tail, hoopLamp, muzzle, saddles } =
+    opts;
+  bothSides((side, sgn) => {
+    // The axis runs from the breech face at `breech` outboard by `toe`; `at`
+    // is a point `t` metres along it, `out` the same point carried outboard
+    // across it.
+    const dir = [Math.cos(toe), 0, sgn * Math.sin(toe)];
+    const perp = [-Math.sin(toe), 0, sgn * Math.cos(toe)];
+    const along = [0, -sgn * toe, Math.PI / 2];
+    const facing = [0, -sgn * toe + Math.PI / 2, 0];
+    casings.forEach(({ tag, breech, length }) => {
+      const name = `${side}${tag}`;
+      const zb = sgn * (flank + r + gap);
+      const at = (t, dy = 0) => [breech + t * dir[0], y + dy, zb + t * dir[2]];
+      const out = (t, d) => [breech + t * dir[0] + d * perp[0], y, zb + t * dir[2] + d * perp[2]];
+      add(root, `casing_${name}`, cyl(r, r, length, facets), black, at(length / 2), along);
+      bands.t.forEach((t, k) =>
+        add(root, `casing_band_${name}_${k}`, cyl(bands.r, bands.r, bands.width, facets), grey, at(t), along)
+      );
+      // The tail: the flange the door dogs against, the door on it, the
+      // wheel's hub through the door and the wheel on the hub.
+      add(root, `tail_flange_${name}`, cyl(tail.flange.r, tail.flange.r, tail.flange.width, facets), rust, at(tail.flange.width / 2), along);
+      add(root, `breech_door_${name}`, cyl(tail.door.r, tail.door.r, tail.door.h, facets), grey, at(-tail.door.h / 2), along);
+      add(root, `breech_hub_${name}`, cyl(tail.hub.r, tail.hub.r, tail.hub.length, 8), black, at(-tail.door.h - tail.hub.length / 2 + tail.hub.sink), along);
+      add(root, `breech_wheel_${name}`, torus(tail.wheel.R, tail.wheel.t, 6, 12), grey, at(-tail.door.h - tail.wheel.stand), facing);
+      add(root, `hoop_lamp_${name}`, cyl(hoopLamp.r, hoopLamp.r, hoopLamp.width, facets), lampM, at(hoopLamp.t), along);
+      // The muzzle: its flange, the door on the forward face, the knuckle
+      // up the door's outboard edge.
+      add(root, `muzzle_flange_${name}`, cyl(muzzle.flange.r, muzzle.flange.r, muzzle.flange.width, facets), rust, at(length - muzzle.flange.width / 2), along);
+      add(root, `muzzle_door_${name}`, cyl(muzzle.door.r, muzzle.door.r, muzzle.door.h, facets), grey, at(length + muzzle.door.h / 2), along);
+      add(root, `muzzle_hinge_${name}`, cyl(muzzle.hinge.r, muzzle.hinge.r, muzzle.hinge.h, 8), rust, out(length + muzzle.door.h / 2, muzzle.hinge.inset));
+      for (const [end, t] of [
+        ['f', saddles.t[1]],
+        ['a', saddles.t[0]],
+      ]) {
+        const [x, , z] = at(t);
+        const reach = Math.abs(z) - flank;
+        add(root, `casing_saddle_${name}${end}`, box(saddles.size[0], saddles.size[1], reach), rust, [
+          x,
+          y + saddles.dy,
+          sgn * (flank + reach / 2),
+        ]);
+      }
+    });
+  });
+}
+
 /* --------------------------------------------------------------------------
  * Structures. A settlement is the same architecture grown four ways, so the
  * base / mount / head / barrel family lives here beside the hull vocabulary

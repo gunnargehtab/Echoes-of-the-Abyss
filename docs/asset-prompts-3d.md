@@ -559,16 +559,19 @@ launches; no gun; 700 hull; 40 m/s). A long riveted box hull, narrower than
 the Freighter's slab, carrying its four tubes outside the hull as four
 casings, two a side in tandem along each flank: each a banded pressure
 cylinder toed a few degrees outboard so the aft tube fires clear of the
-forward casing's tail, a hinged muzzle door on its forward face, a dogged
-breech door at its tail, so the plan is a box with two teeth a side and the
-teeth are the count. A chamfered ram bow, a square stern with two prop
-tunnels, a low bridge citadel aft, ballast blisters under the casings, plate
-patchworked older-under-newer. Between the casings the deck is bare plate —
-no turret, no crane, no mount: the hull is a box four tubes are bolted to,
-and once the four doors have opened there is nothing on it that points at
-anything. Sustained amber glow from the bridge ports, the hoop lamps at each
-breech door and the stern vents; each muzzle door floods for the instant of
-a launch, four times in twelve seconds, and is dark again after.
+forward casing's tail, saddled to the flank, a hinged muzzle door on its
+forward face, a dogged breech door at its tail with a lit hoop round the
+casing ahead of it, so the plan is a box with two teeth a side and the teeth
+are the count. A chamfered ram bow, a square stern with two prop tunnels
+notched into it and two louvred vents proud of the transom between them, a
+low bridge citadel aft, a dogged crew hatch on the foredeck, ballast
+blisters under the casings, plate patchworked older-under-newer. Between the
+casings the deck is bare plate — no turret, no crane, no mount: the hull is
+a box four tubes are bolted to, and once the four doors have opened there is
+nothing on it that points at anything. Sustained amber glow from the hoop at
+each breech door, the bridge ports and the stern vents, and one mark at the
+bow; each muzzle door floods for the instant of a launch, four times in
+twelve seconds, and is dark again after.
 ```
 
 ```text
