@@ -343,7 +343,7 @@ stern for the eye that gets closer; floodlit when it works.
 
 ```text
 UNIT — Bulwark (pair with Consortium): the heavy, 150 m — the loudest hull
-in the game (SIG 70 idle, 75 cruise) and the widest beam in the roster. A
+in the game (SIG 70 idle, 75 cruise) and the widest beam of the rung. A
 slab: blunt ram bow with a plough plate and teeth, blunt stern, three
 stepped armour tiers, flank plates patchworked older-under-newer, one
 enormous forward twin turret (an 800 m gun), a bridge citadel aft, four
@@ -419,11 +419,11 @@ budget is for the hull running home empty. None carries a weapon.
 UNIT — Freighter (pair with Consortium): the armoured hold, 160 m — six berths
 of hull moved slowly and loudly and very hard to sink (SIG 30 idle, 50 cruise,
 68 with a full hold; no weapon; 1,800 hull). A long slab-sided box hull with
-the Bulwark's riveted plate, a raised bridge castle aft, two great hold doors
-along the flank with hinge rails and dogging wheels, crane gantries over the
-foredeck, ballast blisters low on the hull, and four prop tunnels in a heavy
-skeg. Lit along the hold-door seams and the bridge ports, and floodlit when
-the doors open.
+the Bulwark's riveted plate, a raised bridge castle aft with two stacks, two
+great hold doors along each flank hinged at the sill with hinge rails and
+dogging wheels, crane gantries over a foredeck hatch, ballast blisters low on
+the hull, and four prop tunnels in a heavy skeg. Lit along the hold-door seams
+and the bridge ports, and floodlit when the doors open.
 ```
 
 ```text
@@ -431,8 +431,9 @@ UNIT — Drifter (pair with Commune): the quiet way in, 62 m — two berths of h
 at 90 m/s and SIG 10 (4 idle; 10 cruise; 16 with a full hold; no weapon; 300
 hull). A slim seed-pod hull of grown shell, the two berths as a pair of
 swelling bays amidships under a membrane that opens like a bivalve, a single
-muscle-drive fin astern and trim vanes rather than planes. Almost dark: a
-faint bioluminescent seam along each bay, brightening only as it opens.
+muscle-drive fluke astern and trim vanes rather than planes. Almost dark: a
+faint bioluminescent seam along each bay, brightening only as it opens, and
+one navigation mark at the bow.
 ```
 
 ```text

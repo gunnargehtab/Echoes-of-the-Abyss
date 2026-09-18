@@ -72,14 +72,23 @@ import {
  * The vein's `#5FAE42` is the Sower's own — a hue of its own, not the
  * biolight token dimmed (its linear channels are 0.42, 0.55 and 0.37 of the
  * bud's) — which is the difference between a thread along a rib and a bud.
+ *
+ * The two lamps take an `intensity`, the `KHR_materials_emissive_strength`
+ * the file carries, at 1 unless said — the Sower's and the Spinner's — and
+ * it is the one knob that reaches the conn view: the bake calibrates a
+ * map's energy onto E(SIG) whatever the file says, but the conn view keeps
+ * a lamp's authored strength as its resting one (rosterModels.ts
+ * `applyLiveGlow`), so a hull the block calls *faint* has to be faint in
+ * the file. The Drifter's seams burn at 0.2 (hulls/drifter.mjs); the
+ * fleet passes below take theirs the same way.
  */
 export const ink = {
   chitinHull: () => clad('chitin_hull', hex('#0B241E'), 0.08, 0.6),
   growthRidge: () => clad('growth_ridge', hex('#14382C'), 0.1, 0.65),
   algaeMembrane: () => clad('algae_membrane', hex('#1FA67A'), 0.05, 0.55),
   sporePod: () => clad('spore_pod', hex('#E8F0A3'), 0.05, 0.5),
-  bioVein: () => lamp('bio_vein', hex('#5FAE42'), hex('#061206')),
-  bioLight: () => lamp('bio_light', hex('#8FE36B'), hex('#0A1A08')),
+  bioVein: (intensity = 1) => lamp('bio_vein', hex('#5FAE42'), hex('#061206'), 0.4, intensity),
+  bioLight: (intensity = 1) => lamp('bio_light', hex('#8FE36B'), hex('#0A1A08'), 0.4, intensity),
 };
 
 /** A grown orb: few facets, and squashed by the caller — never round in section. */
@@ -521,7 +530,10 @@ export function vein(root, veinMat, { name = 'dorsal_vein', from, to, y, z = 0, 
  * entry is `{ side, ...placement }` through kit.mjs `drawn`, the orb ten by
  * seven rather than the first reading's ten by six — `facets` — and the
  * roll and the three radii in the node, as the file carries them. The array
- * form above still builds what it built.
+ * form above still builds what it built, on the same ten-by-six orb unless
+ * `facets` says otherwise — the Drifter's bays are twelve by six, so that
+ * the valves over them (`bayValves`) can be cut on half their facets and
+ * nest (#783).
  */
 export function cargoLobes(root, chitin, { lobes, facets = [10, 6] }) {
   if (!Array.isArray(lobes[0])) {
@@ -533,7 +545,7 @@ export function cargoLobes(root, chitin, { lobes, facets = [10, 6] }) {
   }
   refuseMirror('cargo_lobe', lobes, ([, , , , rx, ry, rz]) => `${rx},${ry},${rz}`);
   lobes.forEach(([side, x, y, z, rx, ry, rz, roll = 0]) =>
-    add(root, `cargo_lobe_${side}`, orb(10, 6), chitin, [x, y, z], [0, 0, roll], [rx, ry, rz])
+    add(root, `cargo_lobe_${side}`, orb(...facets), chitin, [x, y, z], [0, 0, roll], [rx, ry, rz])
   );
 }
 
@@ -2156,6 +2168,124 @@ export function cohortLobes(root, ridge, opts) {
       [1, ry / rz, 1]
     );
   });
+}
+
+/* --------------------------------------------------------------------------
+ * The transports (#783, off #540 Phase 4): the Drifter's bays and tail.
+ *
+ * The Drifter is the first Commune hull built to its block rather than
+ * ported from a binary since the Sower and the Spinner were re-run, so the
+ * four builders here answer to docs/asset-prompts-3d.md and to nothing in
+ * docs/concept-art/models/. All are X-long in the kit's frame and yaw
+ * nothing. hulls/drifter.mjs is the consumer.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The bivalve membrane over a bay, shut: two quarter-shells of membrane
+ * grown `grow` proud of the lobe they cover, one outboard and one inboard,
+ * hinged along the bay's waterline and meeting along its crown — so the
+ * seam where they meet is the line that parts when the bay opens, and the
+ * light along it (`baySeams`) is what shows first. Each shell is a sector
+ * of the same orb as the lobe, cut at the crown meridian and the equator,
+ * on half the lobe's facets round and half its rings down, so every vertex
+ * lies on one of the lobe's own facet directions and the two nest instead
+ * of crossing. Exported outboard then inboard, a bay at a time.
+ *
+ * `bays` is `[{ side, at: [x, y, z], radii: [rx, ry, rz] }]` — the lobe's
+ * own centre and radii, as `cargoLobes` took them — and which way is
+ * outboard is the sign of `z`; a bay on the keel line has no outboard and
+ * is refused. `bay_valve_outboard_<side>`, `bay_valve_inboard_<side>`.
+ */
+export function bayValves(root, membrane, { bays, grow = 1.04, facets = [6, 3] }) {
+  const [w, h] = facets;
+  bays.forEach(({ side, at: [x, y, z], radii: [rx, ry, rz] }) => {
+    if (!z) throw new Error(`bay_valve_${side}: a bay on the keel line has no outboard`);
+    // three's sphere runs phi from -x through +z to +x, so [0, π) is the +z
+    // half of the shell and [π, 2π) the -z half.
+    const halves = z > 0 ? [0, Math.PI] : [Math.PI, 0];
+    ['outboard', 'inboard'].forEach((which, i) =>
+      add(
+        root,
+        `bay_valve_${which}_${side}`,
+        new THREE.SphereGeometry(1, w, h, halves[i], Math.PI, 0, Math.PI / 2),
+        membrane,
+        [x, y, z],
+        [0, 0, 0],
+        [rx * grow, ry * grow, rz * grow]
+      )
+    );
+  });
+}
+
+/**
+ * The seam along a bay where its two valves meet: a bead of vein swept
+ * along the valve's crown meridian, `reach` of its `rings` down the shell
+ * forward and the same aft, through the shell's own ring stations so the
+ * bead lies on the facets rather than floating over their chords, and sunk
+ * `sink` into it. "A faint bioluminescent seam along each bay, brightening
+ * only as it opens": the seam is a bay's one resting lamp, on the crown
+ * where the top-down maps see it, and the Drifter's whole light budget is
+ * two of them and a bow mark. `bay_seam_<side>`; `bays` and `grow` are
+ * `bayValves`' own.
+ */
+export function baySeams(root, veinMat, opts) {
+  const { bays, grow = 1.04, rings = 3, reach = 2, r = 0.18, sink = 0.08 } = opts;
+  const { steps = 16, facets = 5 } = opts;
+  bays.forEach(({ side, at: [x, y, z], radii: [rx, ry] }) => {
+    const through = [];
+    for (let k = -reach; k <= reach; k++) {
+      const theta = (k * Math.PI) / 2 / rings;
+      through.push([x + rx * grow * Math.sin(theta), y + ry * grow * Math.cos(theta) - sink, z]);
+    }
+    sweptVein(root, veinMat, { name: `bay_seam_${side}`, through, steps, r, facets });
+  });
+}
+
+/**
+ * Trim vanes rather than planes: small membrane leaves off the hull, each
+ * its own size and its own rake — a matched pair would be a submarine's
+ * bow planes, and this navy grows each side its own way, so a pair is
+ * refused. A vane is `{ side, root: [x, y, z], corners, roll?, t? }`: its
+ * plan outline in its own frame as `[x, out]` corners, `x` along the keel
+ * from the root and `out` running outboard from it, laid flat, `t` thick,
+ * and rolled `roll` radians about the root's own keel-wise axis in the
+ * sense that dips a flank vane's tip; which side is outboard is the sign
+ * of the root's `z`, and a vane rooted on the crown (`z` 0) at −π/2 stands
+ * up as a dorsal. `trim_vane_<side>`.
+ */
+export function trimVanes(root, membrane, { vanes, t = 0.4 }) {
+  refuseMirror('trim_vane', vanes, (v) => v.corners.map((c) => c.join()).join('|'));
+  vanes.forEach(({ side, root: [x, y, z], corners, roll = 0, t: vt = t }) => {
+    const sgn = Math.sign(z) || 1;
+    add(
+      root,
+      `trim_vane_${side}`,
+      plan(
+        corners.map(([cx, out]) => [cx, sgn * out]),
+        vt
+      ),
+      membrane,
+      [x, y, z],
+      [sgn * roll, 0, 0]
+    );
+  });
+}
+
+/**
+ * The single muscle-drive fluke astern: one membrane paddle spanning the
+ * keel from a plan outline of `[x, z]` in metres, `t` between its faces,
+ * bevelled `bevel` and centred at `y`. One plate and not a pair, because
+ * a drive is one muscle: the Spinner's flukes are `fins`, a mirrored pair
+ * off a peduncle, and a transport's tail is not that. The outline need not
+ * be symmetric about the keel and should not quite be. kit.mjs `plan`'s
+ * bevel stands the paddle's waist a bevel proud of the outline all round,
+ * so an outline drawn to the stern lands the hull's aftmost point a bevel
+ * further aft — a caller that wants the file metre-true draws to the
+ * design stern less the bevel.
+ */
+export function driveFluke(root, membrane, opts) {
+  const { outline, y = 0, t = 0.4, bevel = 0, name = 'drive_fluke' } = opts;
+  add(root, name, plan(outline, t, bevel), membrane, [0, y, 0]);
 }
 
 export { THREE };
