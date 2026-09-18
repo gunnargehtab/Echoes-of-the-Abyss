@@ -44,9 +44,10 @@
  * the after pair's at −30, so 8 m of bare flank lie between a muzzle door
  * and the breech ahead of it. The toe is 7°, and it is arithmetic rather
  * than taste: the aft tube's path runs parallel to the forward casing's
- * axis at (34 + 8) · tan 7° = 5.2 m outboard of it, against a 3 m casing
- * radius and a 0.8 m torpedo, so the aft tube clears the forward casing's
- * tail by 1.4 m — a few degrees, and the fewest that clear. Each casing's
+ * axis 5.1 m outboard of it (42 m · sin 7°); the widest thing at that
+ * casing's tail is its hoop lamp at r 3.45, so the aft torpedo, 0.8 m
+ * across, passes it with 1.3 m to spare — a few degrees, and the fewest
+ * that clear. Each casing's
  * inboard face lies 0.5 m off the flank at its breech and 4.6 m off at its
  * muzzle, its axis 1 m above the waterline and its crown a metre under the
  * deck; the muzzle flanges reach z ±26.4, a 0.44 beam, on a 0.26 box.
@@ -66,7 +67,7 @@
  *   third of itself to coverage.
  * - **The stern vents stand proud of the transom.** "The stern vents" on the
  *   Tender and the Bulwark sit under the deck edge, where the bake cannot
- *   see them and the kit's audit warns. Here the two vents are lit louvre
+ *   see them and the kit's audit warns. Here the two vents are lit
  *   boxes 1.2 m proud of the transom on the centre block between the
  *   tunnels, so the conn view reads their after faces and the chart their
  *   tops — the Freighter's "ports proud of their faces" applied to a vent.
@@ -102,9 +103,10 @@
  *   face 1.4 m proud of the flank: under both casings, and under nothing
  *   else.
  * - **Three patches and a stencil.** The navy's patchwork (Block 2): older
- *   plate on the foredeck to starboard and newer on the citadel's starboard
- *   flank and on the bare port flank between the casings; the asset number
- *   on the foredeck.
+ *   plate on the deck to starboard abeam the forward casings — a flush
+ *   patch is still bare plate, and nothing on it points at anything — and
+ *   newer on the citadel's starboard flank and on the bare port flank
+ *   between the casings; the asset number on the foredeck.
  *
  * The resting light, as the export's audit counts it from above: the four
  * hoop lamps at 10.5–10.6 m² each, the two vents at 4.4 and 4.7 m², the six
@@ -240,7 +242,7 @@ bathyarch.citadel(root, { black, grey, rust, lampM }, {
   bridgePorts: { x: -37.65, y: 12.1, z: [-4.2, -1.4, 1.4, 4.2], size: [0.5, 1.4, 2.2] },
 });
 
-// The stern vents: two lit louvre boxes on the transom's centre block
+// The stern vents: two lit boxes on the transom's centre block
 // between the tunnels, 1.2 m proud of it, their after faces to −60.
 bathyarch.engineVents(root, vent, { x: -59.4, y: 1, z: [-3.2, 3.2], size: [1.2, 3, 3.6] });
 
@@ -249,7 +251,8 @@ bathyarch.doggedHatch(root, { hatch: rust, wheel: grey }, {
   name: 'deck_hatch', at: [51.5, 5.85, -5], r: 1.3, h: 0.5, wheel: { R: 0.55, t: 0.1, dy: 0.35 },
 });
 
-// The patchwork: older plate on the foredeck to starboard, newer on the
+// The patchwork: older plate on the deck abeam the forward casings to
+// starboard — flush, so still bare plate — newer on the
 // citadel's starboard flank under its ports — a plate over a lit port is a
 // port the chart loses — and on the bare port flank between the casings.
 bathyarch.repairPatches(root, bathyarch.inFrame, { rust, grey }, {

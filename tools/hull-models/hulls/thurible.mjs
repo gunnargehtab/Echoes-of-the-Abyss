@@ -91,9 +91,10 @@
  *   +33, +23, +13 and +3, each rooted 0.8 m into the flank at y = −6
  *   where the shell actually is there (16 m of half-beam at the first
  *   station, 22 at the second, which is why the builder now takes `rim`),
- *   8 m long and folded 0.6, so the tips stand 5.8 m out from the flank
- *   and at the rim's line or a metre past it: under the rim, where the conn
- *   view sees them and the chart barely does. The plan's `walkingLimbs` is
+ *   8 m long and folded 0.6, so the tips stand 5.8 m out from the flank:
+ *   the forward pair's 3.5 m past the rim and the next pair's 1.7 m past
+ *   it, where the chart sees them, the after two pairs' 0.6 and 0.1 m
+ *   inside it, under the rim, where only the conn view does. The plan's `walkingLimbs` is
  *   the Submersible's box-and-claw builder in that export's own frame; a
  *   hull in the Chorister's family carries the Chorister's limb.
  * - **The keel and its ribs.** A black seven-sided spar 64 m long from +25
@@ -103,7 +104,7 @@
  *   map; the conn view sees it under the step.
  * - **The photophores.** Two rims, one rule (`rimPhotophores`): a rank a
  *   side at its own start and pitch, every mark seated on the shell at
- *   0.84 of the rim's half-beam and laid on the shell's own slope — 25° to
+ *   0.84 of the rim's half-beam on the shield and 0.7 on the tail, and laid on the shell's own slope — 25° to
  *   30° on the shield, where a flat mark buried its uphill corner. The
  *   shield: starboard five from +34 at 8 m, port four from +30 at 9 m,
  *   1.4 m marks. The abdomen: starboard

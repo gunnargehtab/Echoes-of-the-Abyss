@@ -56,7 +56,7 @@
  *   round, and the prose was amended to the models.) The *rule* is regular
  *   and the *result* never mirrors, so the builders that place light refuse
  *   a mirrored pair outright.
- * - **Light is a photophore, and it lies flat.** A photophore is a small flat
+ * - **Light is a photophore, and it lies flat — or on a dome's own slope, the Thurible's rim (#785) —.** A photophore is a small flat
  *   box in `biolight_crimson` on an upward face — of the carapace, or of a
  *   limb's knee standing clear of it, as the Acolyte's six are (#784) —
  *   because the maps are top-down (kit.mjs); the gullet and the hopper

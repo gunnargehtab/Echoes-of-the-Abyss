@@ -2549,6 +2549,10 @@ export function decoyPods(root, chitin, opts) {
  *   outward at the tip — peeled back along the pod, not spread. Each its
  *   own size and angle, one side at a time (docs/models-plan.md §3.6); a
  *   matched pair is refused.
+ *
+ * "Port" is the block's word for the aperture, not the −z side: every part
+ * here is centred on z, and the side convention stays the `_p`/`_s` suffix
+ * (#642).
  */
 export function layPort(root, { chitin, ridge, membrane }, opts) {
   const { profile, y = 0, squash = 0.8, facets = 14, lip, sepals = [] } = opts;

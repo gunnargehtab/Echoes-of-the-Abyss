@@ -50,8 +50,8 @@
  *   −24.5, a ridge lip round the mouth, and the membrane that sheathed the
  *   last bead peeled back off the rim in three sepals — at 50°, 145° and
  *   265° round from starboard, 3.4, 2.7 and 3.1 m long, none a pair and
- *   none at the crown. The third bead sits in the cup with its equator at
- *   the mouth and its aft half out in the water, the cup's wall 0.3 m
+ *   none at the crown. The third bead sits in the cup with its equator
+ *   2.5 m inside the mouth and a quarter of it proud in the water, the cup's wall 0.3 m
  *   clear of it at every station, because both are polygons of fourteen
  *   and sixteen facets and a vertex of one would show through a flat of
  *   the other at less. In plan the cup and the cap it holds are 10.9 m
@@ -86,6 +86,10 @@
  *   the Drifter's block reads it: one a side, each its own size and rake.
  *   The port one is the larger, rooted at x 19.5 and dipped 17°; the
  *   starboard at 16.5, dipped 24°. `trimVanes` would refuse them matched.
+ *   The port vane's tip reaches z −5.59, 0.19 m outboard of a bead's ±5.4,
+ *   and stays: the two vanes are 3 m apart in x, so they make no symmetric
+ *   lobe, and the generated outline reads them at ±0.078 and ±0.066 against
+ *   the beads' ±0.075..0.085.
  * - **Three rings, all forward.** At x 26, 21 and 14, on the seed body
  *   where the block puts them, each a 0.6 m ridge cresting 0.4 m proud of
  *   the skin and leaned its own way. None on the bead run: a ring in a
@@ -102,9 +106,10 @@
  * quiet end about and a hundredfold under the ×64 ceiling, with no lamp
  * but the two marks — the Glider's raw 4.34 at E(8) and the Drifter's
  * 5.75 at E(4) both carry a vein or a seam this hull does not light.
- * 20 parts, 2,104 triangles, bounds x ±35, y −6.0..5.7, z ±6.3; the
- * 12.7 m beam is the lip, and the 11.7 m of height is the fluke under the
- * cup against the sepals' tips over it.
+ * 20 parts, 2,104 triangles, bounds x ±35, y −6.0..5.3, z ±6.3; the
+ * 12.7 m beam is the lip, and the 11.3 m of height is the fluke under the
+ * cup against the tail mark on the lip's crest over it (the intake's box
+ * reads 11.7, three's bounding box overstating the rotated sepals).
  *
  * The hand-drawn entry in silhouettes.ts stays until the kind is wired
  * (docs/models-plan.md §2); the generated outline will read the beads at

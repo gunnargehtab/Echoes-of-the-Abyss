@@ -17,11 +17,12 @@
  * is a narrow faceted shaft aft to a flat transom with the drive prism in
  * the spine — no canards, no guard wings astern, nothing behind the guard
  * to hear, and nothing of the Reciter's needle. Dim at rest but for the
- * crystal in the collar; under way, sustained glow along the guard's
- * leading edges and up the rail to the collar, thrown forward, faint on the
- * beam and dark astern but for one mark — the quarter it is loud in is the
- * quarter it can fire into." (docs/asset-prompts-3d.md, Block 3, the
- * ordnance hulls)
+ * crystal in the collar and the one mark astern; under way, sustained glow
+ * along the guard's leading edges and up the rail to the collar, thrown
+ * forward, faint on the beam and dark astern but for that mark — the
+ * quarter it is loud in is the quarter it can fire into."
+ * (docs/asset-prompts-3d.md, Block 3, the ordnance hulls, as #785 amended
+ * it)
  *
  * Built, not ported (#785, off #540 Phase 4): drawn from the module's
  * vocabulary with no approved binary behind it, so every number here is a
@@ -51,7 +52,9 @@
  *   13, its leading edge running from the root at (13, 3) to the tip at
  *   (−3.5, 19.5) — 16.5 m out for 16.5 m aft, 45° to the keel exactly, so
  *   the two leading edges open to the right angle the block asks for and
- *   the torpedo launches between them — a bevel from the point back to
+ *   the torpedo launches between them (extended, the two lines cross on
+ *   the keel at x 16, the torpedo's tail, so the forward wedge from that
+ *   apex is the firing cone itself) — a bevel from the point back to
  *   (−7, 17.5), and the trailing edge home to the flank at 4.5. It is a
  *   bar, 6 m across at the root and drawn to a point: a first cut ran the
  *   root chord 28 m to x −15, and the plate that made read from above as
@@ -70,22 +73,25 @@
  *   three alloy ribs and by nothing else: the runners are the rail, and
  *   carry the unlit finish for the reason the guard edges do. The torpedo
  *   is a capsule of eight facets, 3 m across and 30 m long from its tail at
- *   x 16.5 to its nose at 46.5, lying between the runners with 1.3 m of its
+ *   x 16.5 to its nose at 46.5, lying between the runners with 2.1 m of its
  *   back above them and a cross of tail fins at x 19; the body's lathe
  *   closes to r 0.7 inside its tail. The collar is a six-facet crystal
  *   ring, bore and all, 2 m long from x 45.5 to the bow, its wall from
- *   r 1.8 inside to 2.5 aft and 2.9 at the lip — wider than the rail it
- *   ends, so the bow reads as a mouth and not a tube — with a vertex on the
+ *   r 1.8 inside to 2.5 aft and 2.9 at the lip — taller than the rail it
+ *   ends, so from the conn view the bow reads as a mouth and not a tube,
+ *   though in plan its 5.0 m is the ribs' 5.0 and the chart shows no
+ *   bulge — with a vertex on the
  *   crown as the Clarion's lip has; the nose stands 1 m inside it.
  *
- * WHAT THE BLOCK DID NOT SAY — decided here:
+ * WHAT THE BLOCK, AS FIRST WRITTEN, DID NOT SAY — decided here, and the
+ * first written into it in #785:
  *
  * - **The stern mark is a resting lamp.** The block puts "dark astern but
  *   for one mark" in its under-way clause only, exactly as the Herald's did
  *   before #784 amended it; the band table's floor row is "navigation marks
  *   only", which licenses a mark at every band, and the plan's §4 bullet
  *   names "the collar crystal and one stern mark" as the resting lamps.
- *   The block should say so in both clauses, as the Herald's now does.
+ *   The block now says so in both clauses, as the Herald's does.
  * - **The collar is the lamp, whole.** "The crystal in the collar" is read
  *   as the collar being crystal and lit, as the Herald's throat crystal is
  *   one whole lamp — not the gun hulls' clad crystal with a lit core
@@ -126,8 +132,8 @@
  *   amidships.
  *
  * Resting light, all of it on the axis, and the kit's audit clean: the
- * muzzle collar, 9.6 m² facing up, and the stern mark on the spine's crown,
- * 0.8 m² — nothing on the flanks, nothing on the guard, nothing on the
+ * muzzle collar, 9.4 m² facing up, and the stern mark on the spine's crown,
+ * 1.0 m² — nothing on the flanks, nothing on the guard, nothing on the
  * rail. 10.4 m² on 891 m² of plan (the bake's 3,565 mask px at 2 px/m).
  * On the shipped emissive at 4 px/m the collar is a patch of about 19 by
  * 8 pixels at the bow and the mark one of 4 by 3 astern. The bake at

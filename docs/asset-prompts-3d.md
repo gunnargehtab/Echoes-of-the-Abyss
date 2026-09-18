@@ -215,7 +215,7 @@ Lamp bases are the near-black a `lamp()` puts in `color` for its emissive to sit
 | Consortium | emissive | `#B07A1E` `amber_vent` · `#F28A1E` `amber_vent` (cruiser) · `#FFD070` `amber_flood` |
 | Consortium | cladding | `#1C1F22` `baffle-foam` (the Baffle Barge) |
 | Consortium | lamp base | `#1A1408` · `#120E06` · `#2A2210` · `#1A1206` |
-| Commune | cladding | `#14332A` / `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` / `#14664C` `algae_hull` · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` · `#061206` `bio_vein_unlit` (the vein's base worn as cladding by a part the block lights only in a later band — the Glider's tail veins, dark with the drive cut) |
+| Commune | cladding | `#14332A` / `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` / `#14664C` `algae_hull` · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` · `#061206` `bio_vein_unlit` (the vein's base worn as cladding by a part the block lights only in a later band — the Glider's tail veins, dark with the drive cut, and the Weaver's stem vein) |
 | Commune | emissive | `#5FAE42` `bio_vein` (at strength 1 on the Sower and the Spinner, 0.2 on the Drifter's seams and the Glider's wing vein — a strength survives the recolour as a finish does) · `#E8F0A3` `forge_light` / `floodlight_pale` (the spore token as a light) |
 | Commune | lamp base | `#061206` · `#0A1A08` · `#123018` · `#14301A` · `#14351A` · `#0F2A12` · `#2E3A16` · `#3A3F1E` · `#2A4A20` · `#3F6B2E` |
 | Directorate | cladding | `#3A3F4A` / `#27313B` `weld_steel` · `#4E1220` `chitin_red_dark` · `#1A0810` `biolight_unlit` (the lamp base worn as cladding by a part the block lights only in a later band — the Verger's bay doors) |
@@ -563,7 +563,7 @@ forward casing's tail, saddled to the flank, a hinged muzzle door on its
 forward face, a dogged breech door at its tail with a lit hoop round the
 casing ahead of it, so the plan is a box with two teeth a side and the teeth
 are the count. A chamfered ram bow, a square stern with two prop tunnels
-notched into it and two louvred vents proud of the transom between them, a
+notched into it and two lit vents proud of the transom between them, a
 low bridge citadel aft, a dogged crew hatch on the foredeck, ballast
 blisters under the casings, plate patchworked older-under-newer. Between the
 casings the deck is bare plate — no turret, no crane, no mount: the hull is
