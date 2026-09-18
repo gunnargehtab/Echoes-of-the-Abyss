@@ -97,19 +97,27 @@ export function hullSlab(root, { black, grey, amber }, { outline, lengthM, depth
  * Bulwark's is the same family in a heavier gauge — `plateT` 2.4 and the seam
  * given outright as `{ y, h, t, z }` — and carries no rivets *here*: its
  * sixty-four are `rivetRows` at the tail of the file, where the approved
- * export put them (#587).
+ * export put them (#587). The seam is centred on x 0 unless `seam.x` says
+ * otherwise, and its rivets go with it: every hull before the Furnace had
+ * its parallel flank about the origin, and the Furnace's runs from x 30
+ * aft, so a seam centred on 0 stood 7 m past its bow corner with nothing
+ * behind it (#786 review).
  */
 export function flankPlates(root, { grey, rust }, opts) {
   const { z, plates, plateT = 1.2, seamLength, seam = {}, rivets = [] } = opts;
-  const { y: seamY = 2.2, h: seamH = 0.5, t: seamT = 1.4, z: seamZ = z } = seam;
+  const { x: seamX = 0, y: seamY = 2.2, h: seamH = 0.5, t: seamT = 1.4, z: seamZ = z } = seam;
   bothSides((side, sgn) => {
     plates.forEach(([x, len, h, y, old], i) =>
       add(root, `flank_plate_${side}${i}`, box(len, h, plateT), old ? rust : grey, [x, y, sgn * z])
     );
-    add(root, `flank_seam_${side}`, box(seamLength, seamH, seamT), rust, [0, seamY, sgn * seamZ]);
+    add(root, `flank_seam_${side}`, box(seamLength, seamH, seamT), rust, [
+      seamX,
+      seamY,
+      sgn * seamZ,
+    ]);
     for (const [tag, y] of rivets) {
       for (let i = 0; i < 14; i++) {
-        const x = -seamLength / 2 + 4 + ((seamLength - 8) * i) / 13;
+        const x = seamX - seamLength / 2 + 4 + ((seamLength - 8) * i) / 13;
         add(root, `rivet_${side}${tag}_${i}`, new THREE.SphereGeometry(0.45, 6, 4), grey, [
           x,
           y,

@@ -678,12 +678,13 @@ are bare — no casings, no tubes, no turret — because everything this hull
 does, it does ahead of itself at arm's length, and a burner head is a nozzle
 under a hood, not a muzzle. The model is the hull with its ladders run out,
 which is the state it is built for; under way they stow raised against the
-frame. Sustained amber glow from the bridge ports, the gas plant's lamps —
-the rack housings and the manifold house's ports and skylight — and the
-stern vents, at rest and under way alike; cutting, burning bright — the
-three burner heads the brightest thing on the hull, the bow floodlit from
-the frame, the ladders and the manifold lit along their length, visible
-machinery light: a siege you can hear being prepared.
+frame. Sustained amber glow from the gas plant's lamps — the lamp housings
+on the rack rails and the manifold house's skylight, its ports beside them
+— then the bridge ports and the stern vents, at rest and under way alike;
+cutting, burning bright — the three burner heads the brightest thing on the
+hull, the bow floodlit from the frame, the ladders and the manifold lit
+along their length, visible machinery light: a siege you can hear being
+prepared.
 ```
 
 ```text

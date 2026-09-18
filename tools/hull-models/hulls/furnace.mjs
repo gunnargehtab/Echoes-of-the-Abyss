@@ -23,13 +23,13 @@
  * this hull does, it does ahead of itself at arm's length, and a burner head
  * is a nozzle under a hood, not a muzzle. The model is the hull with its
  * ladders run out, which is the state it is built for; under way they stow
- * raised against the frame. Sustained amber glow from the bridge ports, the
- * gas plant's lamps — the rack housings and the manifold house's ports and
- * skylight — and the stern vents, at rest and under way alike; cutting,
- * burning bright — the three burner heads the brightest thing on the hull,
- * the bow floodlit from the frame, the ladders and the manifold lit along
- * their length, visible machinery light: a siege you can hear being
- * prepared."
+ * raised against the frame. Sustained amber glow from the gas plant's lamps
+ * — the lamp housings on the rack rails and the manifold house's skylight,
+ * its ports beside them — then the bridge ports and the stern vents, at
+ * rest and under way alike; cutting, burning bright — the three burner
+ * heads the brightest thing on the hull, the bow floodlit from the frame,
+ * the ladders and the manifold lit along their length, visible machinery
+ * light: a siege you can hear being prepared."
  * (docs/asset-prompts-3d.md, UNIT — Furnace)
  *
  * Built to that block and not ported from a binary, like the Broadside
@@ -57,7 +57,11 @@
  * which is what makes the bow the whole argument at RTS distance. The
  * ladders run out at z 0 and ±11, 2.6 m square in section with 5 m hoods
  * at their tips, so their outer edges stand 3.5 m inside the flanks: bow
- * gear, not flank gear, and nothing on the flanks but plate.
+ * gear, not flank gear, and nothing on the flanks but plate. The plates
+ * and the seam lie on the parallel body — the seam's 82 m centred on
+ * x −12, so it runs x −53 to 29 and stops a metre short of the chamfer —
+ * and nothing on a flank reaches past the bow corner, so the chamfer the
+ * outline cuts is the box's own.
  *
  * What the script decided that the block did not say:
  *
@@ -134,14 +138,16 @@
  *   between the plates; the asset number on the deck inside the frame,
  *   between the keel and starboard ladders where the chart sees it.
  *
- * Where the block, the plan bullet and the visual law disagreed: the
- * block's pose clause reads "run out and lit", which is the cutting state,
- * and docs/models-plan.md §3.2 lights the resting band only — so the model
- * is built in the pose and lit as it rests, and the block is amended to
- * "run out", as the Lure's and the Tocsin's leave their light to the
- * lighting clause. The one thing the block has no word for — the manifold
- * house — is the plan bullet's `workshop`, and the block is amended to
- * name it (§2).
+ * Where the block, the plan bullet and the visual law disagreed — and the
+ * block was amended for each in #786: its pose clause read "run out and
+ * lit", which is the cutting state, and docs/models-plan.md §3.2 lights
+ * the resting band only, so the model is built in the pose and lit as it
+ * rests and the block says "run out", as the Lure's and the Tocsin's leave
+ * their light to the lighting clause; it had no word for the manifold
+ * house, which is the plan bullet's `workshop`, and now names it (§2);
+ * and its resting clause led with the bridge ports, a vertical face, where
+ * "Glow encodes loudness" asks a block to name the light the chart reads
+ * first, so it now leads with the rack housings and the skylight.
  *
  * The resting light, as the export's audit counts it from above: the six
  * rack lamps at 2.5 m² each, the skylight at 12.0 m², the two vents at 4.4
@@ -149,9 +155,9 @@
  * 0.5–1.0 m² and the four bridge ports at 1.0–1.1 m² (the starboard citadel
  * ports are a cell narrower than the port ones, a raster alignment and not
  * the model's, as on the Broadside), and the bow lamp at 3.0 m² —
- * twenty-six lit parts, 54.0 m² facing up on a 3,518 m² plan, no part
- * hidden. The intake bake at 115 m reads raw E 12.08 against the target
- * E(40) = 7.84 and dims by ×0.649 — inside the ×1/64 .. ×64 window, between
+ * twenty-six lit parts, 54.0 m² facing up on a 3,497 m² plan, no part
+ * hidden. The intake bake at 115 m reads raw E 12.18 against the target
+ * E(40) = 7.84 and dims by ×0.643 — inside the ×1/64 .. ×64 window, between
  * the Freighter's ×0.527 and the Broadside's ×0.876, so the conn view's
  * lamps, which take the model's own intensity and never the bake's gain
  * (rosterModels.ts), sit near the band the chart shows. Cutting is these
@@ -231,11 +237,15 @@ bathyarch.boxHull(root, { black, grey, rust }, {
 // The Bulwark's flank plate in the Derrick's gauge, 1.2 m: one plate a side
 // under the house and the plant's forward end in newer grey, one aft under
 // the citadel in older rust riding higher, and the seam of older plate
-// along the flank under the deck edge.
+// along the flank under the deck edge — centred on x −12, not 0, so its
+// 82 m run x −53 .. 29 lies on the parallel flank and stops a metre short
+// of the bow chamfer at 30. Centred on the origin it stood 7 m past the
+// bow corner with nothing behind it and held the outline at full beam
+// past its own bow face (#786 review).
 bathyarch.flankPlates(root, { grey, rust }, {
   z: HALF, plateT: 1.2,
   plates: [[8, 26, 2.6, -3.4, false], [-44, 14, 3.2, 0.4, true]],
-  seamLength: 82, seam: { y: 4.4, h: 0.5, t: 1.0, z: HALF },
+  seamLength: 82, seam: { x: -12, y: 4.4, h: 0.5, t: 1.0, z: HALF },
 });
 
 // Ballast blisters low on both flanks under the plant and the house, capped
