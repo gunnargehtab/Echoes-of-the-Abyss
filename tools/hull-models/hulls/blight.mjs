@@ -50,8 +50,8 @@
  *   (`huskLobes`): the body's own profile draws in from 5.1 m at x 20 to
  *   4.0 at 27 and shuts at 30.8, inside the cleft, and each lobe is lathed
  *   on twelve facets with its aft station at x 21 buried in the body
- *   (r 1.1 against the body's 4.85 there), emerging from the flank at
- *   about 25.5, fullest at x 30 — 4.8 m across and 4.1 tall to starboard,
+ *   (r 1.1 against the body's 5.03 there), its skin clearing the body's
+ *   at x 24.4, fullest at x 30 — 4.8 m across and 4.1 tall to starboard,
  *   4.6 by 3.9 to port, squashed 0.85 — and closing to a blunt tip at 40
  *   and 39.4. Their axes lie at z ±2.75 and −2.7, and from x 27 each is
  *   curled outboard in the geometry, on a quadratic, by 1.3 and 1.1 m at
@@ -62,15 +62,18 @@
  *   lobes to r 2.6 at ±2.9 while the body drew in to 4.0 under them, and
  *   the nose read as a bulb on a neck. This one holds the outer envelope
  *   on the body's own taper — 5.2 at x 30, 5.46 at 35.5, 4.05 at the
- *   tips, against a 6.8 waist — so the bow is 10.9 m across at its
- *   fullest, 0.8 of the waist, and never wider than it.
+ *   tips, against a 6.8 waist — so the bow is 10.7 m across at its
+ *   fullest, 0.78 of the waist, and never wider than it.
  * - **How deep the cleft is.** The lobes' inner faces part where the nose
  *   shuts, at x 31, a metre's slit, and open to 2.4 m at 35.5, 3.9 at 37.5
  *   and 7.9 m between the tips: 9 m deep, 0.11 of the length, where the
  *   hand-drawn outline this model replaces drew 0.18 and the Herald's
- *   mouth is 20 m on 65. `outlines.mjs` closes every bow at the mean of
- *   the first station's extremes, as it does the Herald's, so the track a
- *   scope resolves is a blunt bow at ±0.056 and the cleft is the maps'
+ *   mouth is 20 m on 65. The maps show 7 m of it rather than 9, because
+ *   the head and its hood lie over the slit from x 30.3 to 33.8 and the
+ *   mask does not open until 33.1 — 0.086 of the length in plan.
+ *   `outlines.mjs` closes every bow at the mean of the first station's
+ *   extremes, as it does the Herald's, so the track a scope resolves is a
+ *   blunt bow closing at one point, +0.056, and the cleft is the maps'
  *   and the conn view's to show.
  * - **Where the arm stands, and how it folds.** The root is a knuckle of
  *   ridge r 1.0 at (28.4, 1.9, 0.3), half-sunk in the nose's crown where
@@ -98,7 +101,13 @@
  * - **The vein, dark, from the arm to the sac.** "Under way a dim vein
  *   along the stem" is a later band, so it is built and clad in
  *   `bio_vein_unlit` (§3.2 rule 2; the Weaver's stem vein and the
- *   Glider's tail veins are the precedent): one tube of r 0.16 swept along
+ *   Glider's tail veins are the precedent). The stem it lies along is the
+ *   hull's, not the arm's, though the block calls the arm "a short
+ *   jointed stem" a sentence earlier: the Weaver's block carries the
+ *   identical lighting sentence and settles the word for the series —
+ *   "the stem is what stays" — and its model runs `stem_vein` down the
+ *   seed body from the same station, so the arm carries no vein. One tube
+ *   of r 0.16 swept along
  *   the crown from the root knuckle's aft edge at x 27.4 to the dome's
  *   forward rim at 3.4, humping over the rings at 20 and 13, and lying
  *   0.25–0.75 m to port of the crown line — the seeding organ's one
@@ -115,10 +124,12 @@
  *   forward" read as the Drifter's and the Weaver's: one a side, each its
  *   own size and rake, the starboard the larger this time — 4.9 m of chord
  *   and 2.6 out, rooted at (17, −1.7, 4.5) and dipped 0.5 rad; the port
- *   3.9 by 2.2 at (16, −1.6, −5.0), dipped 0.6. Their tips reach z ±6.8,
- *   the waist's own half-beam and not over it: the first cut reached 7.1,
- *   and a vane proud of the waist forward of it is a second swelling on a
- *   pod the hand-drawn outline says is swollen once.
+ *   3.9 by 2.2 at (16, −1.6, −5.0), dipped 0.6. Their tips reach z +6.88
+ *   and −6.93 — the rolled plates' lower corners, a tenth of a metre proud
+ *   of the waist's 6.8, which the outline's running median drops: the
+ *   first cut reached 7.1, and a vane proud of the waist forward of it is
+ *   a second swelling on a pod the hand-drawn outline says is swollen
+ *   once.
  * - **Four rings, none over the sac.** At x 20, 13, −9 and −17, each a
  *   0.75 m ridge cresting 0.5 m proud of the skin and leaned its own way:
  *   the forward pair either side of the bow mark and clear of the lobes'
@@ -142,13 +153,15 @@
  * quiet end about and 69× under the ×64 ceiling, with no lamp but the two
  * marks — the Weaver's raw 1.65 on a 507 m² plan is the same two marks
  * on a smaller hull. 20 parts, 2,468 triangles, bounds x ±40, y −4.9..8.6,
- * z ±6.9; the 13.6 m beam is the waist and the 13.5 m of height is the
- * hood over the head against the keel under the waist (the intake's box
- * reads 13.8 across, three's bounding box overstating the rolled vanes).
+ * z ±6.9; the waist is 13.6 m and the intake's 13.8 m beam is the vanes'
+ * rolled lower corners at z +6.88 and −6.93, and the 13.5 m of height is
+ * the hood over the head against the keel under the waist.
  *
  * The hand-drawn entry in silhouettes.ts stays until the kind is wired
  * (docs/models-plan.md §2); the generated outline will read the waist at
- * ±0.085, the bow at ±0.056 and the fluke at ±0.07.
+ * ±0.085 and the fluke at ±0.07, and close the bow at one point, +0.056,
+ * off the keel line because the starboard lobe is the 0.6 m longer — as
+ * the Glider's closes at −0.07 for the same reason.
  */
 import { THREE, exportGlb, metreTrue } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
