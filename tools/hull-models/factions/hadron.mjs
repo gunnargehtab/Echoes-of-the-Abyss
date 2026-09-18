@@ -60,6 +60,17 @@ export const ink = {
   // The node's glow is not the crystal-glow token: it is the Clarion's own,
   // a shade bluer, and every Order hull since has carried it.
   resonanceNode: () => lamp('resonance_node', hex('#A77CFF'), hex('#2A1A50')),
+  /**
+   * The seam's base worn as cladding: a part the block lights only in a
+   * later band — the Herald's tine seams, lit under way and dark at rest —
+   * is built as a part and carries the lamp family's *unlit* finish, never
+   * a lamp (docs/models-plan.md §3.2, rule 2; the Directorate's
+   * `biolightUnlit` is the same rule for its bay doors). It is `crystal_seam`'s
+   * own base, `#1A1030`, at the lamp's metalness and roughness, so the seam
+   * lit and the seam dark are one value apart and nothing else (Block 2b,
+   * rule 3); it recolours to near-black under any flag.
+   */
+  crystalSeamUnlit: () => clad('crystal_seam_unlit', hex('#1A1030'), 0, 0.4),
 };
 
 /**
@@ -702,6 +713,94 @@ export function resonanceNode(root, ink, { lower, upper, apex, cradle, spineSeam
 export function bowPrism(root, { alloy, seam }, { x, r, length, mark }) {
   point(root, 'bow_prism', alloy, { x, r, length });
   add(root, 'nav_bow', box(...mark.size), seam, [mark.x, mark.y, 0]);
+}
+
+/**
+ * A strip `w` wide hugging the edge `a`→`b` of a plan, on the side of
+ * `toward`: the edge line itself, drawn in by `cut` at each end, and the
+ * inner line parallel to it, drawn in by `inset` at each end. A strip that
+ * hugs an edge all the way to a point has to pull its inner corner back
+ * from the point, or it stands outside the plan it edges.
+ */
+function strip(a, b, w, toward, { cut = [0, 0], inset = [0, 0] } = {}) {
+  const dx = b[0] - a[0];
+  const dz = b[1] - a[1];
+  const len = Math.hypot(dx, dz);
+  const u = [dx / len, dz / len];
+  let n = [-u[1], u[0]];
+  if ((toward[0] - a[0]) * n[0] + (toward[1] - a[1]) * n[1] < 0) n = [-n[0], -n[1]];
+  const at = (p, s, o) => [p[0] + s * u[0] + o * n[0], p[1] + s * u[1] + o * n[1]];
+  return [at(a, cut[0], 0), at(b, -cut[1], 0), at(b, -inset[1], w), at(a, inset[0], w)];
+}
+
+/**
+ * The forked bow — the Herald's (#784): "forked at the bow into two
+ * crystal-edged tines with an emitter crystal standing in the throat
+ * between them — the fork is the horn and the slot is the cone's mouth"
+ * (docs/asset-prompts-3d.md, Block 3, the scouts). A cone hull with no
+ * array: where the Clarion's horn is a lathe with its emitter in the mouth,
+ * this is the horn split open — two planar blades and the slot between —
+ * built in the state the hull is for, the mouth open (models-plan.md §3.5).
+ *
+ * Each tine is one plane in the kit's plan frame, its starboard outline
+ * drawn from five points and mirrored by `bothSides`: `tip` at the bow,
+ * `shoulder` the widest point — on an Order hull the beam is blade, and
+ * with no wing the blade is tine — `heel` where the trailing edge meets the
+ * body's flank, `inner` the z of the root edge buried in the body, and
+ * `throat` where the inner edge leaves the body and the slot begins. Two
+ * strips ride each tine, each a plane of its own so its top faces the
+ * bake: the crystal `edge` along the outer edge from shoulder to tip — the
+ * Clarion's wing edge, on a blade that points forward — and the `seam`
+ * along the inner edge, which is the light the block puts under way and so
+ * carries the lamp family's unlit finish (`ink.crystalSeamUnlit`), because
+ * a lamp dark at rest is a lamp this pipeline never shows (§3.2, rule 2).
+ * `short` on each is how far from the tip its inner line stops, so a strip
+ * stays inside a tine that has drawn to a point; `width` is measured
+ * inboard from the edge it hugs.
+ *
+ * The `emitter` is a crystal `point` in the throat, tip forward, and it is a
+ * lamp — the resting light the block names — as the Cantus's apex is. Not
+ * the gun hulls' clad crystal with a core standing proud (`bowArray`): there
+ * is no horn for a core to be sealed in, the block names one crystal, and
+ * the hull has no weapon. It stands on the axis at `y` with nothing over it,
+ * which is what makes it the unoccluded upward emitter every hull needs
+ * (§3.2, rule 5): a lamp in a slot is shadowed from above only if the slot
+ * is roofed, and this one is open to the water.
+ *
+ * Starboard first, tine then edge then seam, then the crystal, in
+ * `bothSides` order like every Order pair.
+ */
+export function forkedBow(root, { alloy, crystal, unlit, node }, opts) {
+  const { tip, shoulder, heel, throat, inner, t = 0.8, y = 0, edge, seam, emitter } = opts;
+  const outline = [tip, shoulder, heel, [heel[0], inner], [throat[0], inner], throat];
+  const toward = outline
+    .reduce((c, [x, z]) => [c[0] + x, c[1] + z], [0, 0])
+    .map((v) => v / outline.length);
+  const edgeOutline = strip(tip, shoulder, edge.width, toward, { inset: [edge.short, 0] });
+  const seamOutline = strip(throat, tip, seam.width, toward, {
+    cut: [0, seam.short],
+    inset: [0, seam.short],
+  });
+  bothSides((side, sgn) => {
+    plane(root, `tine_${side}`, alloy, { outline, t, y }, sgn);
+    plane(root, `tine_edge_${side}`, crystal, { outline: edgeOutline, t: edge.t, y }, sgn);
+    plane(root, `tine_seam_${side}`, unlit, { outline: seamOutline, t: seam.t, y }, sgn);
+  });
+  point(root, 'emitter_crystal', node, { y, ...emitter });
+}
+
+/**
+ * A flat transom: the plate that closes a blade drawn aft to a square stern
+ * rather than to a point — the Herald's, "drawn aft to a flat transom with
+ * the drive prism in the spine". `bladeBody` is an open lathe, and every
+ * other Order hull buries its after end inside the drive prism; a hull that
+ * keeps its section to the stern needs the end closed, or the conn view
+ * looks in through it. `halfHeight` and `halfBeam` are the section's at the
+ * last station with a hand's breadth over; `x` is the stern face and `t`
+ * the plate's thickness forward of it.
+ */
+export function transom(root, mat, { x, t = 0.8, halfHeight, halfBeam, y = 0 }) {
+  add(root, 'transom', box(t, 2 * halfHeight, 2 * halfBeam), mat, [x + t / 2, y, 0]);
 }
 
 /* --------------------------------------------------------------------------
