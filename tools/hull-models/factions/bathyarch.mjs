@@ -672,6 +672,160 @@ export function pumpHouse(root, { grey, rust }, { house, riser: up }) {
 }
 
 /* --------------------------------------------------------------------------
+ * The Freighter's own (#783, off #540 Phase 4): the parts of "the armoured
+ * hold" that neither the Bulwark nor the Tender had a word for — hold doors
+ * along the flank, crane gantries at hull scale, a skeg with the screws in
+ * it — plus a plated bow and a cargo hatch, written the way the family
+ * above is written: every number the hull's, none a default. Nothing here
+ * is a lamp except the door seams, and those are the whole of what the
+ * block lights at rest (docs/asset-prompts-3d.md, UNIT — Freighter).
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The plated bow: the plate across the bow face and the hazard band over
+ * it (`bow_plate · bow_band`). The Derrick's `hullSlab` above writes the
+ * same two parts at the Derrick's own sizes (its band named
+ * `rubbing_strake`); a box hull with a bluff bow takes its own.
+ */
+export function bowPlate(root, { grey, amber }, { plate, band }) {
+  add(root, 'bow_plate', box(...plate.size), grey, plate.at);
+  add(root, 'bow_band', box(...band.size), amber, band.at);
+}
+
+/**
+ * Hold doors along the flank, a side at a time (starboard first, as every
+ * `bothSides` family here is written): each door a plate standing proud of
+ * the flank in newer grey or older rust (`[x, length, old]`), a hazard
+ * stripe painted across its face, the hinge rail along its bottom edge with
+ * its knuckles, dogging wheels on the face — a rim and a hub each — and the
+ * lit seams: one along the top edge, lying on the deck edge where the
+ * straight-down bake can count it, and one up each end, standing the door's
+ * own depth proud so its top shows from above (`hold_door_s0 ·
+ * door_stripe_s0 · hinge_rail_s0 · hinge_knuckle_s0_0.. · dog_wheel_s0_0 ·
+ * dog_hub_s0_0 .. · door_seam_s0_top · door_seam_s0_f · door_seam_s0_a ·
+ * hold_door_s1 …`).
+ *
+ * The door is hinged at the bottom — it drops as a ramp, which is what six
+ * berths of hull drive off — so the three edges that open are the three
+ * that leak light, and the hinge edge carries the rail and no lamp. A
+ * hinge rail and its knuckles are the one kind of part here that stands
+ * outside the door's plan; the seam bars stand inside it, in x, beyond the
+ * door's ends.
+ */
+export function holdDoors(root, { grey, rust, amber, lampM }, opts) {
+  const { doors, height, y, z, t, stripe, hinge, wheels, seams } = opts;
+  const onX = [0, 0, Math.PI / 2];
+  const onZ = [Math.PI / 2, 0, 0];
+  bothSides((side, sgn) => {
+    doors.forEach(([x, length, old], i) => {
+      const tag = `${side}${i}`;
+      add(root, `hold_door_${tag}`, box(length, height, t), old ? rust : grey, [x, y, sgn * z]);
+      add(root, `door_stripe_${tag}`, box(length - stripe.inset, stripe.h, stripe.t), amber, [
+        x,
+        stripe.y,
+        sgn * stripe.z,
+      ]);
+      add(root, `hinge_rail_${tag}`, cyl(hinge.r, hinge.r, length, 8), rust, [x, hinge.y, sgn * hinge.z], onX);
+      hinge.knuckles.forEach((dx, k) =>
+        add(
+          root,
+          `hinge_knuckle_${tag}_${k}`,
+          cyl(hinge.knuckle.r, hinge.knuckle.r, hinge.knuckle.length, 8),
+          grey,
+          [x + dx, hinge.y, sgn * hinge.z],
+          onX
+        )
+      );
+      wheels.at.forEach((dx, k) => {
+        add(root, `dog_wheel_${tag}_${k}`, torus(wheels.r, wheels.rim, 5, 10), grey, [
+          x + dx,
+          wheels.y,
+          sgn * wheels.z,
+        ]);
+        add(
+          root,
+          `dog_hub_${tag}_${k}`,
+          cyl(wheels.hub.r, wheels.hub.r, wheels.hub.length, 8),
+          rust,
+          [x + dx, wheels.y, sgn * wheels.hub.z],
+          onZ
+        );
+      });
+      add(root, `door_seam_${tag}_top`, box(length, seams.top.h, seams.top.w), lampM, [
+        x,
+        seams.top.y,
+        sgn * seams.top.z,
+      ]);
+      for (const [end, s] of [
+        ['f', 1],
+        ['a', -1],
+      ])
+        add(
+          root,
+          `door_seam_${tag}_${end}`,
+          box(seams.jamb.w, seams.jamb.h, seams.jamb.t),
+          lampM,
+          [x + s * (length / 2 + seams.jamb.w / 2), seams.jamb.y, sgn * seams.jamb.z]
+        );
+    });
+  });
+}
+
+/**
+ * The skeg: a heavy block under the stern (`skeg`) and a rank of prop
+ * tunnels through its after face, port to starboard, named `0..n` as the
+ * Bulwark's three are (`propTunnel` above, shroud and hub each).
+ */
+export function skeg(root, { rust, grey, black }, { block, tunnels }) {
+  add(root, 'skeg', box(...block.size), rust, block.at);
+  tunnels.z.forEach((z, i) =>
+    propTunnel(root, { grey, black }, {
+      name: `${i}`,
+      at: [tunnels.x, tunnels.y, z],
+      r: tunnels.r,
+      length: tunnels.length,
+      hub: tunnels.hub,
+    })
+  );
+}
+
+/**
+ * Crane gantries over a deck at hull scale: a rail a side along the deck
+ * edges, then each gantry — a leg a side standing on the deck, the beam
+ * across them, the trolley under the beam run out to its own side, the
+ * fall hanging plumb from it and the hook on the end (`crane_rail_s · _p ·
+ * gantry_0_leg_s · _p · gantry_0_beam · gantry_0_trolley · gantry_0_cable ·
+ * gantry_0_hook · gantry_1_…`). A gantry is `[x, trolleyZ]`. The Derrick's
+ * `lattice` is the same navy's frame carried out *over* both beams; a
+ * gantry stays inside the hull's, so the plan outline is still the slab's.
+ */
+export function deckGantries(root, { grey, rust, black }, opts) {
+  const { rails, gantries, legs, beam, trolley, cable, hook } = opts;
+  bothSides((side, sgn) =>
+    add(root, `crane_rail_${side}`, box(...rails.size), rust, [rails.x, rails.y, sgn * rails.z])
+  );
+  gantries.forEach(([x, tz], i) => {
+    bothSides((side, sgn) =>
+      add(root, `gantry_${i}_leg_${side}`, box(...legs.size), grey, [x, legs.y, sgn * legs.z])
+    );
+    add(root, `gantry_${i}_beam`, box(...beam.size), grey, [x, beam.y, 0]);
+    add(root, `gantry_${i}_trolley`, box(...trolley.size), black, [x, trolley.y, tz]);
+    add(root, `gantry_${i}_cable`, cyl(cable.r, cable.r, cable.length, 6), black, [x, cable.y, tz]);
+    add(root, `gantry_${i}_hook`, box(...hook.size), rust, [x, hook.y, tz]);
+  });
+}
+
+/**
+ * A cargo hatch in the deck: the coaming in older plate and the cover
+ * plate on it (`hatch_coaming · hatch_cover`) — what the gantries lift
+ * through.
+ */
+export function cargoHatch(root, { grey, rust }, { coaming, cover }) {
+  add(root, 'hatch_coaming', box(...coaming.size), rust, coaming.at);
+  add(root, 'hatch_cover', box(...cover.size), grey, cover.at);
+}
+
+/* --------------------------------------------------------------------------
  * Structures. A settlement is the same architecture grown four ways, so the
  * base / mount / head / barrel family lives here beside the hull vocabulary
  * rather than in any one structure script (#553, off #540 Phase 3).

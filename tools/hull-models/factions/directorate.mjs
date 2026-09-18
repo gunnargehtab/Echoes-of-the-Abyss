@@ -22,6 +22,11 @@
  *              telson · tail_spine_p/s · dorsal_spine_0..2 · limb_p0..2 / s0..2 ·
  *              spine_gun · spine_gun_mount · photophore_s0..3 / p0 (the export
  *              wrote its row `_p`; its port turned the names round, #642 / #649)
+ *   Verger     tergite_0..5 · tergite_seam_0..5 · rostrum · dome · dome_spine_0..5 ·
+ *              dome_aft · dome_crown · dorsal_spine_0..3 · hatch_s0 / p1 / s2 / p3
+ *              (_collar, _door, _rim, _dog_0..1) · keel · ballast_tank_0..1 ·
+ *              drive_duct · drive_hub · drive_vane_0..2 · photophore_0..3 — built
+ *              here rather than read off an export (#783), the first of them
  *
  * Three rules fall out of those, and they are what this module holds rather
  * than any one hull:
@@ -58,6 +63,7 @@ import {
   cyl,
   torus,
   plan,
+  loft,
   bothSides,
   polar,
   part,
@@ -88,6 +94,16 @@ export const ink = {
   weldSteel: () => clad('weld_steel', hex('#3A3F4A'), 0.38, 0.44),
   biolightCrimson: () => lamp('biolight_crimson', hex('#C2465E'), hex('#1A0810')),
   gulletGlow: () => lamp('gullet_glow', hex('#E0506A'), hex('#2A0C14')),
+  /**
+   * The photophore family's *unlit* finish: `biolight_crimson`'s base, at the
+   * hulls' value, with no emissive and the lamp's own finish (metalness 0,
+   * roughness 0.4). A part the block lights only in a later band is built
+   * and clad in this, never lit (docs/models-plan.md §3.2, rule 2) — the
+   * Verger's bay hatches, which "glow through their hatches while they are
+   * occupied" and are dark at rest. One name, one value (asset-prompts-3d.md
+   * Block 2b, rule 3); it recolours to near-black under any flag.
+   */
+  biolightUnlit: () => clad('biolight_unlit', hex('#1A0810'), 0, 0.4),
 };
 
 /** A carapace orb: a low-facet sphere the caller squashes into a plate. */
@@ -334,9 +350,17 @@ export function bladderDome(root, violet, { x, y, z, r, squash = 0.64, stretch =
  * a back-solve from this one dome, they missed it, and the hull passed the
  * metres over the top of them (#638, #646). `studs.facets` is the spines'
  * cut, five as the approved dome cuts them.
+ *
+ * `crown` lights the dome: `dome_crown`, a squashed orb in `crimson` of
+ * `crown.r` across and `crown.ry` tall, seated `crown.sink` into the dome's
+ * top so its upper half stands proud — a lit boss on the crown, facing
+ * straight up where the chart's bake can see it. The Verger's (#783), whose
+ * block lights "the dome" at rest and which needs one unoccluded upward
+ * emitter (docs/models-plan.md §3.2, rule 5); the Precentor's dome is dark
+ * and passes none, and its output is unchanged.
  */
-export function listeningDome(root, { red, violet, black }, opts) {
-  const { x, y, z = 0, r, ry, studs = {}, aft } = opts;
+export function listeningDome(root, { red, violet, black, crimson }, opts) {
+  const { x, y, z = 0, r, ry, studs = {}, aft, crown } = opts;
   const { count = 6, tilt = 0.5, length = 3.2, r: sr = 0.5, phase = 0.4 } = studs;
   const { facets = 5, radius, lift } = studs;
   add(root, 'dome', orb(14, 7), red, [x, y, z], [0, 0, 0], [r, ry, r]);
@@ -354,6 +378,10 @@ export function listeningDome(root, { red, violet, black }, opts) {
       aft.ry ?? aft.r * 0.85,
       aft.r,
     ]);
+  if (crown) {
+    const { r: cr, ry: cry = cr * 0.4, sink = 0.3 } = crown;
+    add(root, 'dome_crown', orb(10, 5), crimson, [x, y + ry - sink, z], [0, 0, 0], [cr, cry, cr]);
+  }
 }
 
 /**
@@ -511,6 +539,198 @@ export function hopper(root, { black, steel, gullet }, { x, y, z = 0, w = 18, h 
   add(root, 'hopper', box(w, h, d), black, [x, y, z]);
   add(root, 'hopper_rim', box(w + 1, 0.8, d + 1), steel, [x, y + h / 2 + 0.2, z]);
   add(root, 'hopper_throat', box(w * 0.67, 0.3, d * 0.57), gullet, [x, y + h / 2 + 0.7, z]);
+}
+
+/* --------------------------------------------------------------------------
+ * The Verger (#783, off #540 Phase 4): the cohort transport, the first hull
+ * built here rather than ported, so the first whose numbers are a design
+ * and not a transcription. What it adds to the vocabulary is what a hold
+ * needs that no hull before it had — a hatch, a keel, a ducted drive — and
+ * one rule the ports never needed: where the carapace *is* at a point, so a
+ * part can be seated on the shell rather than typed onto it.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The carapace's height at `(x, z)` in plan: the highest of the tergite
+ * orbs and their seam orbs there, or `-Infinity` where nothing is. The
+ * seams are taken as `tergites` draws them (`lip: 'seam'`, the same `seam`
+ * options), because a seam stands proud of its plate above and below on
+ * the Precentor's rule and a mark laid on the plate's crown alone can end
+ * up under a rib the audit then names. A hull that seats its spines, its
+ * marks and its dome by this cannot type a number the shell does not reach.
+ */
+export function tergiteCrown(segments, x, z, seam = {}) {
+  const { at: seamAt = 0.85, size: seamSize = [0.3, 0.95, 0.9], tallOf = 'height' } = seam ?? {};
+  const top = (cx, sx, sy, sz) => {
+    const u = (x - cx) / sx;
+    const w = z / sz;
+    const d = 1 - u * u - w * w;
+    return d > 0 ? sy * Math.sqrt(d) : -Infinity;
+  };
+  let y = -Infinity;
+  segments.forEach(([cx, sx, sy, sz]) => {
+    y = Math.max(y, top(cx, sx, sy, sz));
+    if (seam)
+      y = Math.max(
+        y,
+        top(
+          cx + seamAt * sx,
+          seamSize[0] * sx,
+          seamSize[1] * (tallOf === 'beam' ? sz : sy),
+          seamSize[2] * sz
+        )
+      );
+  });
+  return y;
+}
+
+/**
+ * Pressure hatches on the flanks: the cohort bays' doors, one a plate,
+ * `hatch_${side}${i}` each — a frame seated on its plate's flank at `y`
+ * below the hull axis and `dx` along it, its axis the ellipsoid's own
+ * normal there (outboard, and canted down by however far below the axis it
+ * sits: 14–17° at two metres on the Verger's plates), holding in that
+ * frame a `_collar`, a steel frustum `r` at the mouth and 1.15 `r` at the
+ * root running from `sink` inside the shell to `proud` outside it; a
+ * `_door`, the pressure face, a drum 0.9 `r` across in the lamp family's
+ * unlit finish (`ink.biolightUnlit`); a `_rim`, the lit lip, a torus of
+ * `r` and `tube` stood on the collar's mouth; and two `_dog_k`, black
+ * four-sided spines hooked over the door from either side, their points on
+ * its face — the two `dogs.lengths` by turns, so the pair on one door does
+ * not mirror. `hatches` is `[{ side, plate, dx }]`, and the module's rule
+ * places them: a mirrored pair across the keel is refused.
+ *
+ * Why the rim is the light and the door is not: the block lights "the
+ * hatch rims" at rest and the bays "through their hatches while they are
+ * occupied" — a later band, which this pipeline draws by cladding, never
+ * by a lamp (docs/models-plan.md §3.2). Why a torus: the chart bakes
+ * straight down and the conn view looks down at 55°, and a door canted
+ * under the belly is seen well by neither — but a ring has a face at every
+ * angle, so its top arc stands outboard of the plate's widest beam where
+ * the bake counts it (2.6 m outboard of the shell at 1.8 m proud and 16°
+ * down: `lightAudit` reads each rim at three to four square metres) and
+ * its outboard arc reads from the conn view on either side. The Verger's
+ * first pass seated them 3 m down at 1.4 m proud, and from the conn pitch
+ * that was a lit lug under the silhouette line, not a door on a flank.
+ */
+export function pressureHatches(root, { collar, door, rim, black }, opts) {
+  const {
+    segments,
+    y = -3,
+    r = 2.8,
+    proud = 1.4,
+    sink = 0.8,
+    tube = 0.3,
+    facets = 8,
+    dogs = { r: 0.28, lengths: [2.4, 2], reach: 0.8, hook: 0.25 },
+    hatches,
+  } = opts;
+  const up = new THREE.Vector3(0, 1, 0);
+  const seat = ({ side, plate, dx = 0 }) => {
+    const [cx, sx, sy, sz] = segments[plate];
+    const sgn = side === 'p' ? -1 : 1;
+    const u = dx / sx;
+    const v = y / sy;
+    const w = Math.sqrt(1 - u * u - v * v);
+    const at = [cx + dx, y, sgn * sz * w];
+    const n = new THREE.Vector3(u / sx, v / sy, (sgn * w) / sz).normalize();
+    const e = new THREE.Euler().setFromQuaternion(
+      new THREE.Quaternion().setFromUnitVectors(up, n),
+      'XYZ'
+    );
+    return { at, rot: [e.x, e.y, e.z] };
+  };
+  const seats = hatches.map(seat);
+  refuseMirror(
+    'hatch',
+    hatches.map((h, i) => [`hatch_${h.side}${i}`, ...seats[i].at])
+  );
+  hatches.forEach(({ side }, i) => {
+    const name = `hatch_${side}${i}`;
+    const frame = group(root, name, seats[i]);
+    add(frame, `${name}_collar`, cyl(r, r * 1.15, proud + sink, facets), collar, [
+      0,
+      (proud - sink) / 2,
+      0,
+    ]);
+    add(frame, `${name}_door`, cyl(r * 0.9, r * 0.9, 0.4, facets), door, [0, proud + 0.2, 0]);
+    add(frame, `${name}_rim`, torus(r, tube, 5, 14).rotateX(Math.PI / 2), rim, [0, proud, 0]);
+    // A cone's apex is +Y; a roll of ±(π/2 + hook) about Z lays it across
+    // the face toward the centre and dips the point onto the door.
+    [1, -1].forEach((s, k) =>
+      add(frame, `${name}_dog_${k}`, spike(dogs.r, dogs.lengths[k % dogs.lengths.length], 4), black, [
+        s * dogs.reach * r,
+        proud + 0.5,
+        0,
+      ], [0, 0, s * (Math.PI / 2 + dogs.hook)])
+    );
+  });
+}
+
+/**
+ * A heavy keel: one spar under the belly, `radii` [fore, aft] over
+ * `length` with `facets` sides, laid along the hull at `[x, y]` and
+ * squashed `squash` across the beam — narrower than it is tall, as the
+ * Submersible's is (0.75, `drums`). A keel is a side-elevation feature and
+ * shows on no map; it is here because the block names it and the conn view
+ * sees it under the plates' rise at either end.
+ */
+export function keel(root, mat, { x, y, z = 0, radii, length, facets = 7, squash = 0.8 }) {
+  add(root, 'keel', cyl(radii[0], radii[1], length, facets), mat, [x, y, z], [0, 0, -Math.PI / 2], [
+    1,
+    1,
+    squash,
+  ]);
+}
+
+/**
+ * A single ducted drive astern: `drive_duct`, a hollow faceted ring of
+ * `r` outside and `r - wall` inside running `length` forward from `stern`
+ * — one closed profile through the kit's `loft`, so the inner wall and
+ * both caps face the right way without a second material — with
+ * `drive_hub` inside it, a cone base-aft and point-forward on the telson's
+ * rule (`telson` above: the stern is a blunt face, and the apex is buried
+ * forward), and `vanes.count` `drive_vane_i` bars from hub to duct at
+ * `vanes.phase` plus equal turns — three, so no vane answers another
+ * across the keel.
+ */
+export function ductedDrive(root, { duct: ductMat, hub: hubMat, vane: vaneMat }, opts) {
+  const { stern, length, r, wall = 0.6, facets = 10, hub, vanes = {} } = opts;
+  const { count = 3, phase = 0.5, chord = 2.5, t = 0.4, x: vx = stern + length / 2 } = vanes;
+  const inner = r - wall;
+  add(
+    root,
+    'drive_duct',
+    loft(
+      [
+        [stern, inner],
+        [stern, r],
+        [stern + length, r],
+        [stern + length, inner],
+        [stern, inner],
+      ],
+      facets
+    ),
+    ductMat
+  );
+  add(root, 'drive_hub', cyl(0, hub.r, hub.length, hub.facets ?? 8), hubMat, [
+    hub.tip + hub.length / 2,
+    0,
+    0,
+  ], [0, 0, -Math.PI / 2]);
+  // The hub's radius where the vanes cross it, at `vx` along a cone that
+  // tapers from `hub.r` at its base to a point `hub.length` forward.
+  const hubAt = (hub.r * (hub.tip + hub.length - vx)) / hub.length;
+  const span = inner - hubAt + 0.4;
+  const rc = (hubAt + inner) / 2;
+  for (let i = 0; i < count; i++) {
+    const a = phase + (i * 2 * Math.PI) / count;
+    add(root, `drive_vane_${i}`, box(chord, span, t), vaneMat, [vx, rc * Math.cos(a), rc * Math.sin(a)], [
+      a,
+      0,
+      0,
+    ]);
+  }
 }
 
 /* --------------------------------------------------------------------------
