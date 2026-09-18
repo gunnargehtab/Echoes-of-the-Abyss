@@ -24,7 +24,10 @@ import { describe, it } from 'node:test';
 import {
   APP_CSS,
   BOX_PROPERTIES,
+  TRACK_PROPERTIES,
   borderBoxWidth,
+  columnFloors,
+  columnOf,
   parseCss,
   resolveBox,
   uaBoxSizing,
@@ -277,6 +280,160 @@ describe('cssBox: a rule that belongs to another control is settled by its base'
       boxOf('.game-root > .objectives .objectives-row { padding-left: 44px; }').paddingLeft,
       '8px',
       '`.objectives` is not a child of `.game-root` — `.game-under` sits between them'
+    );
+  });
+});
+
+/**
+ * The same reader's other question, added for #760: not how wide the row's box
+ * is declared, but whether what sits inside it can push the row past that.
+ *
+ * It is a separate axis and it failed separately — #752 fitted the row's
+ * border box into the panel while the grid inside the row could still overrun
+ * it — so these hold the track reader to the same bargain the box reader is
+ * held to above. A floor it cannot resolve is a throw, never a quiet
+ * `definite`, because a `definite` it has not earned is the answer that reads
+ * as cover.
+ */
+describe('cssBox: what a column track refuses to shrink below', () => {
+  const TEXT: Element = {
+    tag: 'span',
+    classes: ['objectives-text'],
+    ancestors: [...ANCESTORS, { tag: 'p', classes: ['objectives-row', 'pending'] }],
+  };
+  const STATUS: Element = { ...TEXT, classes: ['objectives-status'] };
+
+  it('reads the row’s tracks as they now ship', () => {
+    const floors = columnFloors(parseCss(APP_CSS), ROW);
+    // The third track is `auto` and is *meant* to be: it holds the progress
+    // counter, which is `n of m` under `white-space: nowrap` — a width you can
+    // predict, which is the same trade `.contact-log-row` makes for its detail
+    // column. The middle one is the track with a mission's own prose in it.
+    assert.deepEqual(
+      floors.map((floor) => floor.kind),
+      ['definite', 'definite', 'content']
+    );
+  });
+
+  it('reproduces #760 when the two declarations are taken away', () => {
+    // The negative control, read-only, and asserted to have bitten: a strip
+    // that quietly matched nothing would leave this passing against the fixed
+    // sheet and say nothing at all.
+    //
+    // The anchor is the whole declaration rather than the `minmax(0, 1fr)` in
+    // it, and that is not fussiness. `.contact-log-row` carries the identical
+    // pair and is written 1,300 lines earlier, so the short anchor strips the
+    // *log's* track and leaves this row's fixed — a control aimed at the wrong
+    // row, passing against a sheet it never changed. The uniqueness assertions
+    // are what turn that into a failure rather than a green tick.
+    const TRACK = 'calc(3.2rem * var(--panel-type, 1)) minmax(0, 1fr) auto;';
+    const ITEMS = '.objectives-row > * {\n  min-width: 0;\n}\n';
+    assert.equal(APP_CSS.split(TRACK).length - 1, 1, 'the row’s track declaration is unique');
+    assert.equal(APP_CSS.split(ITEMS).length - 1, 1, 'the row’s item rule is unique');
+
+    const stripped = APP_CSS.replace(
+      TRACK,
+      'calc(3.2rem * var(--panel-type, 1)) 1fr auto;'
+    ).replace(ITEMS, '');
+    assert.ok(!stripped.includes(TRACK), 'the strip reached the track');
+    assert.ok(!stripped.includes('.objectives-row > *'), 'the strip reached the item rule');
+
+    const rules = parseCss(stripped);
+    assert.deepEqual(
+      columnFloors(rules, ROW).map((floor) => floor.kind),
+      ['definite', 'content', 'content']
+    );
+    assert.equal(resolveBox(rules, TEXT).minWidth, undefined);
+  });
+
+  it('throws on a track sizing function it cannot read', () => {
+    for (const columns of ['repeat(3, 1fr)', 'minmax(1fr, 2fr)', 'subgrid', 'minmax(0)']) {
+      assert.throws(
+        () =>
+          columnFloors(
+            parseCss(withRule(`.objectives-row { grid-template-columns: ${columns} }`)),
+            ROW
+          ),
+        /cannot read the track/,
+        `\`${columns}\` was read rather than refused`
+      );
+    }
+  });
+
+  it('throws on a shorthand that could set the columns behind its back', () => {
+    for (const property of ['grid-template', 'grid']) {
+      assert.throws(
+        () =>
+          columnFloors(parseCss(withRule(`.objectives-row { ${property}: none / 1fr 1fr }`)), ROW),
+        /does not model/
+      );
+    }
+  });
+
+  it('throws rather than answer for something that is not a grid', () => {
+    assert.throws(
+      () => columnFloors(parseCss(withRule('.objectives-row { display: block }')), ROW),
+      /whose display is `block`/
+    );
+  });
+
+  it('throws on a rule it cannot tell is in force', () => {
+    assert.throws(
+      () =>
+        columnFloors(
+          parseCss(
+            withRule('@media (max-width: 900px) { .objectives-row { grid-template-columns: 1fr } }')
+          ),
+          ROW
+        ),
+      /does not evaluate/
+    );
+  });
+
+  it('never ignores a property it claims to read', () => {
+    // The closed-set assertion `BOX_PROPERTIES` already gets: a property named
+    // in the set that never reaches a branch is the silent drop this file
+    // refuses, and the two halves cannot drift while this holds.
+    const sample: Record<string, string> = {
+      display: 'block',
+      'grid-template-columns': '1fr 1fr',
+      'grid-template': 'none / 1fr',
+      grid: 'none / 1fr',
+    };
+    assert.deepEqual(Object.keys(sample).sort(), [...TRACK_PROPERTIES].sort());
+
+    const shipped = JSON.stringify(columnFloors(parseCss(APP_CSS), ROW));
+    for (const [property, value] of Object.entries(sample)) {
+      const rules = parseCss(withRule(`.objectives-row { ${property}: ${value} }`));
+      let answer: string;
+      try {
+        answer = JSON.stringify(columnFloors(rules, ROW));
+      } catch {
+        // Refusing it is the other honest outcome, and the two shorthands take
+        // this branch.
+        continue;
+      }
+      assert.notEqual(answer, shipped, `\`${property}\` changed nothing and threw nothing`);
+    }
+  });
+
+  it('refuses a placement it cannot resolve rather than reporting none', () => {
+    // `undefined` means "the stylesheet places this nowhere, so auto-flow
+    // decides". A form this reader cannot read is a different fact, and
+    // returning `undefined` for it would drop a column from the check above
+    // without saying so.
+    assert.equal(columnOf(parseCss(APP_CSS), TEXT), 2);
+    assert.equal(columnOf(parseCss(APP_CSS), STATUS), undefined);
+    for (const placement of ['span 2', 'auto', '2 / 4', 'text-start']) {
+      assert.throws(
+        () => columnOf(parseCss(withRule(`.objectives-text { grid-column: ${placement} }`)), TEXT),
+        /cannot read the placement/,
+        `\`${placement}\` was read rather than refused`
+      );
+    }
+    assert.throws(
+      () => columnOf(parseCss(withRule('.objectives-text { grid-area: a }')), TEXT),
+      /does not model/
     );
   });
 });

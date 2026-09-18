@@ -1,6 +1,13 @@
 /**
- * Enough of the CSS box model to answer one question these tests cannot
- * otherwise ask: does an element's **border box** fit the box that holds it?
+ * Enough of the CSS box model to answer two questions these tests cannot
+ * otherwise ask, both of them about whether something fits:
+ *
+ * - does an element's **border box** fit the box that holds it (`#752`);
+ * - can a grid row be pushed wider than that box by what sits **inside** it
+ *   (`#760`)?
+ *
+ * They are separate axes and they failed separately on the same row, which is
+ * why the second one is here rather than assumed to follow from the first.
  *
  * The frontend suite renders through `react-test-renderer`, which builds an
  * object tree and lays nothing out, so an overflow is invisible to it — #752
@@ -343,13 +350,17 @@ function targets(selector: string, element: Element): Verdict {
  * stylesheet growing a shape this reader does not model fails loudly here
  * rather than silently dropping a declaration that mattered.
  */
-export function rulesTargeting(rules: CssRule[], element: Element): CssRule[] {
+export function rulesTargeting(
+  rules: CssRule[],
+  element: Element,
+  properties: Set<string> = BOX_PROPERTIES
+): CssRule[] {
   const out: CssRule[] = [];
   for (const rule of rules) {
     for (const selector of rule.selector.split(',')) {
       const verdict = targets(selector, element);
       if (verdict === 'unknown') {
-        if (!rule.declarations.some(([property]) => BOX_PROPERTIES.has(property))) continue;
+        if (!rule.declarations.some(([property]) => properties.has(property))) continue;
         throw new Error(
           `cssBox cannot read the selector \`${selector.trim()}\`, and it sets a box property`
         );
@@ -374,11 +385,15 @@ export function rulesTargeting(rules: CssRule[], element: Element): CssRule[] {
  * does this today: the one media query touching the panel restyles
  * `.objectives`, not the rows inside it.
  */
-export function boxRulesFor(rules: CssRule[], element: Element): CssRule[] {
-  const targeted = rulesTargeting(rules, element);
+export function boxRulesFor(
+  rules: CssRule[],
+  element: Element,
+  properties: Set<string> = BOX_PROPERTIES
+): CssRule[] {
+  const targeted = rulesTargeting(rules, element, properties);
   for (const rule of targeted) {
     if (rule.condition === null) continue;
-    if (!rule.declarations.some(([property]) => BOX_PROPERTIES.has(property))) continue;
+    if (!rule.declarations.some(([property]) => properties.has(property))) continue;
     throw new Error(
       `cssBox does not evaluate \`${rule.condition}\`, and \`${rule.selector}\` sets a box property under it`
     );
@@ -628,4 +643,180 @@ export function borderBoxWidth(query: BorderBoxQuery): number {
   // rather than adding to it — but they cannot make the box narrower than
   // themselves, which is the floor the browser clamps to.
   return box.boxSizing === 'border-box' ? Math.max(width, extra) : width + extra;
+}
+
+/**
+ * Every declaration that decides what a grid row's **columns** refuse to
+ * shrink below.
+ *
+ * A second closed set beside `BOX_PROPERTIES`, because the two questions this
+ * file answers depend on different declarations and a reader that threw on
+ * every selector it could not parse — whatever the rule happened to set —
+ * would refuse most of this stylesheet. `min-width` is on both: it is the
+ * item's half of the same floor.
+ *
+ * `grid-template` and `grid` are here without being modelled, deliberately.
+ * Either can set the columns, so a stylesheet that grew one must fail loudly
+ * in `columnFloors` rather than have it read an older longhand and report a
+ * floor the browser does not have.
+ */
+export const TRACK_PROPERTIES = new Set([
+  'display',
+  'grid-template-columns',
+  'grid-template',
+  'grid',
+]);
+
+/**
+ * What one column track refuses to shrink below.
+ *
+ * `definite` is a length, a percentage or a `calc()`: a number the browser can
+ * reach without looking at the track's contents, so nothing a mission authors
+ * into that column can change the row's width. `content` is min-content of
+ * whatever sits there — the floor #760 is about, because authored prose has no
+ * bound and one long unbreakable token sets it.
+ *
+ * A bare `<flex>` is `content`, and that is the case worth naming: `1fr` looks
+ * like a share of the free space and is one, but its *automatic minimum* is
+ * min-content, so a `1fr` track holding a long word is as unshrinkable as an
+ * `auto` one. `minmax(0, 1fr)` is the same track with that minimum written
+ * down.
+ */
+export type TrackFloor = { kind: 'definite'; value: string } | { kind: 'content'; from: string };
+
+/** The track sizing keywords whose minimum is the contents of the track. */
+const CONTENT_SIZED = new Set(['auto', 'min-content', 'max-content']);
+
+/** Split on whitespace, or on commas, at paren depth zero only. */
+function topLevel(value: string, on: 'space' | 'comma'): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let current = '';
+  for (const ch of value) {
+    if (ch === '(') depth++;
+    else if (ch === ')') depth--;
+    const breaks = on === 'space' ? /\s/.test(ch) : ch === ',';
+    if (depth === 0 && breaks) {
+      if (current.trim() !== '') out.push(current.trim());
+      current = '';
+      continue;
+    }
+    current += ch;
+  }
+  if (current.trim() !== '') out.push(current.trim());
+  return out;
+}
+
+/** A definite length, or a throw naming the track it came from. */
+function definiteFloor(length: string, track: string): TrackFloor {
+  if (length === '0') return { kind: 'definite', value: length };
+  if (/^calc\(.*\)$/.test(length)) return { kind: 'definite', value: length };
+  if (/^-?[\d.]+(px|rem|em|ch|ex|vw|vh|vmin|vmax|%)$/.test(length)) {
+    return { kind: 'definite', value: length };
+  }
+  throw new Error(`cssBox cannot read the track \`${track}\``);
+}
+
+/** One track's floor, from the sizing function the stylesheet wrote for it. */
+function floorOf(track: string): TrackFloor {
+  if (CONTENT_SIZED.has(track)) return { kind: 'content', from: track };
+  // `<flex>`: a share of the free space, but min-content underneath it.
+  if (/^[\d.]+fr$/.test(track)) return { kind: 'content', from: track };
+  // `fit-content(x)` clamps the *maximum* at x; the minimum stays min-content.
+  if (/^fit-content\(.*\)$/.test(track)) return { kind: 'content', from: track };
+
+  const minmax = /^minmax\((.*)\)$/.exec(track);
+  if (minmax === null) return definiteFloor(track, track);
+
+  const parts = topLevel(minmax[1], 'comma');
+  if (parts.length !== 2) throw new Error(`cssBox cannot read the track \`${track}\``);
+  const min = parts[0];
+  if (CONTENT_SIZED.has(min)) return { kind: 'content', from: track };
+  // A `<flex>` is not a legal minimum, so a stylesheet with one here is
+  // something this reader should not be quietly interpreting.
+  if (/fr$/.test(min)) throw new Error(`cssBox cannot read the track \`${track}\``);
+  return definiteFloor(min, track);
+}
+
+/**
+ * Each column track of a grid element, in order, by what it refuses to shrink
+ * below.
+ *
+ * This is the other half of the question `borderBoxWidth` answers. That one
+ * says how wide the row's box is *declared*; this one says whether the row can
+ * be pushed past it from the inside, which is a property of the tracks and of
+ * nothing else in the box arithmetic. #752 was the first; #760 is the second,
+ * on the same row.
+ *
+ * Throws, in this file's register, on everything it cannot settle: an element
+ * that is not a grid, a `grid`/`grid-template` shorthand it does not model, a
+ * `repeat()` it would have to expand, and any track sizing function outside
+ * the list above.
+ */
+export function columnFloors(rules: CssRule[], element: Element): TrackFloor[] {
+  let display: string | undefined;
+  let columns: string | undefined;
+
+  for (const rule of boxRulesFor(rules, element, TRACK_PROPERTIES)) {
+    for (const [property, value] of rule.declarations) {
+      switch (property) {
+        case 'display':
+          display = value;
+          break;
+        case 'grid-template-columns':
+          columns = value;
+          break;
+        case 'grid-template':
+        case 'grid':
+          throw new Error(`cssBox does not model \`${property}: ${value}\``);
+        default:
+          break;
+      }
+    }
+  }
+
+  if (display !== 'grid' && display !== 'inline-grid') {
+    throw new Error(
+      `cssBox was asked for the tracks of \`${element.classes.join('.')}\`, whose display is \`${display ?? 'unset'}\``
+    );
+  }
+  if (columns === undefined) {
+    throw new Error(
+      `cssBox found no \`grid-template-columns\` on \`${element.classes.join('.')}\``
+    );
+  }
+  return topLevel(columns, 'space').map(floorOf);
+}
+
+/**
+ * Which column a child is placed in, 1-based, or undefined when the stylesheet
+ * places it nowhere and auto-flow decides.
+ *
+ * Only the single-integer form is read, because it is the only one the panel
+ * uses and because every other form — a span, a line name, `auto`, the
+ * `grid-area` shorthand — would have to be resolved against the flow to give
+ * an answer. Those throw rather than return undefined: "nothing places this"
+ * and "this is placed in a way I cannot read" are different facts, and a test
+ * that treated the second as the first would stop checking a column without
+ * saying so.
+ */
+export function columnOf(rules: CssRule[], element: Element): number | undefined {
+  const properties = new Set(['grid-column', 'grid-column-start', 'grid-area']);
+  let placement: string | undefined;
+
+  for (const rule of boxRulesFor(rules, element, properties)) {
+    for (const [property, value] of rule.declarations) {
+      if (property === 'grid-area') {
+        throw new Error(`cssBox does not model \`grid-area: ${value}\``);
+      }
+      if (properties.has(property)) placement = value;
+    }
+  }
+
+  if (placement === undefined) return undefined;
+  const single = /^(\d+)$/.exec(placement.trim());
+  if (single === null) {
+    throw new Error(`cssBox cannot read the placement \`grid-column: ${placement}\``);
+  }
+  return Number(single[1]);
 }

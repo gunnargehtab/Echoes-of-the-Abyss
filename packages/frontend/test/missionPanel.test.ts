@@ -31,6 +31,8 @@ import {
   APP_CSS,
   borderBoxWidth,
   boxRulesFor,
+  columnFloors,
+  columnOf,
   parseCss,
   resolveBox,
   rulesTargeting,
@@ -883,6 +885,92 @@ describe('the objectives panel: a row fits the panel that holds it', () => {
           containerContentWidth,
         `a row overflows a ${containerContentWidth}px body`
       );
+    }
+  });
+  it('gives a mission’s own words a track that cannot widen the row', async () => {
+    // #752 fitted the row's border box into the body. The grid inside the row
+    // is a separate axis and was untouched by it: a `1fr` track's automatic
+    // minimum is min-content, so one long unbreakable token in a mission's own
+    // sentence sets a floor the track cannot shrink under and the row grows
+    // back out of the box it was just fitted into (#760).
+    //
+    // Which track to ask about is read off the stylesheet rather than assumed.
+    // §10.5 puts the authored sentence and its gloss in one column, and an
+    // edit that moved either would move this check with it instead of leaving
+    // it guarding a column with nothing in it.
+    const rules = parseCss(APP_CSS);
+    const rows = await rowElements();
+    assert.equal(rows.length, 5, 'all five shapes rendered');
+
+    for (const row of rows) {
+      const floors = columnFloors(rules, row);
+      for (const authored of ['objectives-text', 'objectives-gloss']) {
+        const column = columnOf(rules, {
+          tag: 'span',
+          classes: [authored],
+          ancestors: [...ANCESTORS, { tag: row.tag, classes: row.classes }],
+        });
+        assert.notEqual(column, undefined, `.${authored} is placed in a column of its own`);
+        const floor = floors[(column as number) - 1];
+        assert.equal(
+          floor.kind,
+          'definite',
+          `a ${row.tag} row puts .${authored} in a track floored by ${JSON.stringify(floor)}`
+        );
+      }
+    }
+  });
+
+  it('lets every child of a row shrink to its track, which the track alone does not', async () => {
+    // The track's floor and the item's are two floors, and a grid item's
+    // automatic minimum is min-content as well — so `minmax(0, 1fr)` on its
+    // own still leaves the span inside it refusing to shrink. Both halves or
+    // neither, which is the pair `.contact-log-row` has carried since its own
+    // columns overran each other.
+    //
+    // Read off the rendered tree rather than from a list of class names here,
+    // because the failure is about whatever the panel actually puts in a row:
+    // a child added later with no `min-width` is exactly the regression, and a
+    // hand-written list would not see it.
+    const rules = parseCss(APP_CSS);
+    const { rendered } = await panel(shapes());
+    try {
+      const rows = rendered.allByClass('objectives-row');
+      assert.equal(rows.length, 5, 'all five shapes rendered');
+
+      let checked = 0;
+      for (const row of rows) {
+        const parent = {
+          tag: String(row.type),
+          classes: String((row.props as { className: string }).className).split(/\s+/),
+        };
+        const children = row.children.filter(
+          (child): child is ReactTestInstance => typeof child !== 'string'
+        );
+        assert.ok(children.length >= 2, 'a row is at least a status word and a sentence');
+
+        for (const child of children) {
+          const element = {
+            tag: String(child.type),
+            classes: String((child.props as { className?: string }).className ?? '')
+              .split(/\s+/)
+              .filter(Boolean),
+            ancestors: [...ANCESTORS, parent],
+          };
+          assert.equal(
+            resolveBox(rules, element).minWidth,
+            '0',
+            `a ${element.tag}.${element.classes.join('.')} in a ${parent.tag} row can push its track`
+          );
+          checked += 1;
+        }
+      }
+      // Two spans in every row, a gloss in one of the five and a counter in
+      // three: the arithmetic is here so that a shape quietly dropping out of
+      // `shapes()` fails rather than shrinking what this walks.
+      assert.equal(checked, 14, 'every child of every shape was asked');
+    } finally {
+      await rendered.unmount();
     }
   });
 });

@@ -1670,7 +1670,7 @@
 
 .objectives-row {
   display: grid;
-  grid-template-columns: calc(3.2rem * var(--panel-type, 1)) 1fr auto;
+  grid-template-columns: calc(3.2rem * var(--panel-type, 1)) minmax(0, 1fr) auto;
   gap: 8px;
   width: 100%;
   /* `width: 100%` is the body's content width, and these 8s are added to it
@@ -1691,6 +1691,25 @@
   text-align: left;
   cursor: pointer;
   user-select: text;
+}
+
+/* #752 fixed the row's border box; this is the grid inside it, which is a
+   separate axis and was untouched by that change. A `1fr` track's automatic
+   minimum is min-content, and the middle track holds the mission's own
+   sentence and its gloss — authored prose, so nothing bounds the longest
+   unbreakable token in it. One such token sets a floor the track cannot
+   shrink under and the row grows back out of the body it was just fitted
+   into.
+
+   Two declarations, because either alone leaves the other free to push: the
+   `minmax(0, …)` gives the *track* a floor, and `min-width: 0` gives the
+   *items* in it one, a grid item's automatic minimum being min-content as
+   well. It is the pair the contact log has carried since its own columns
+   overran each other — `.contact-log-row` and the `> *` rule under it — and
+   those two rows are the places in this stylesheet that put authored text in
+   a flexible track. */
+.objectives-row > * {
+  min-width: 0;
 }
 
 /* An objective with nowhere to send the camera is still readable text; it
