@@ -176,6 +176,33 @@ describe('the campaign board: dimmed is not unreachable', () => {
     }
   });
 
+  it('carries every slot’s line in its name, and draws only the lit one’s', async () => {
+    // §14 since #720: the board stopped *drawing* a slot's line, because
+    // twenty-nine of them is 1,117 px against an 852 px screen and §2 does not
+    // let a board scroll. What it may not do is stop *carrying* it — the line
+    // is inside the button either way, so a reader's name is unchanged and the
+    // chart stays `aria-hidden` honestly. This is the half a screenshot cannot
+    // check and the half most likely to be lost in a later tidy-up.
+    const { view } = await board([]);
+    try {
+      const lines = view.allByClass('campaign-slot-line');
+      assert.equal(lines.length, 29, 'every slot still carries its line');
+      for (const line of lines)
+        assert.ok(String(line.props.children).length > 0, 'and none of them is empty');
+
+      // Drawn exactly once, in the caption, for whichever slot is lit.
+      const drawn = view.allByClass('campaign-chart-line');
+      assert.equal(drawn.length, 1, 'one line is drawn, and it is the caption’s');
+      const lit = String(drawn[0]!.props.children);
+      assert.ok(
+        lines.some((line) => String(line.props.children) === lit),
+        'and the line the caption draws is a slot’s own, not a sentence written for it'
+      );
+    } finally {
+      await view.unmount();
+    }
+  });
+
   it('keeps a played mission playable, with the tick added rather than substituted', async () => {
     // §14's state table: "Available's treatment, plus one cyan registration
     // tick in the corner. Cyan tells you; a played mission stays playable, so

@@ -49,7 +49,7 @@ import {
 import { installHeadlessAudio, uninstallHeadlessAudio } from './support/headlessAudio.ts';
 import { StubClient, StubRoom } from './support/colyseusStub.ts';
 import { cannedMap, cannedNodes, cannedSnapshot, cannedTerrain } from './support/cannedMatch.ts';
-import { GameCanvas, type GameCanvasProps } from '../src/game/GameCanvas.tsx';
+import { GameCanvas, panelType, type GameCanvasProps } from '../src/game/GameCanvas.tsx';
 
 /** Every string the rendered tree contains, in document order. */
 function textOf(tree: ReactTestRenderer): string[] {
@@ -638,5 +638,33 @@ describe('the shell: leaving', () => {
     assert.equal(audioContext.state, 'closed', 'and the audio device was released');
     assert.equal(g.window.__perspectiveProbe, undefined, 'the conn probe was removed');
     assert.equal(world.hosts.get('game-host')?.listenerCount(), 0, 'no listener outlived it');
+  });
+});
+
+describe('the shell: what a panel’s own type does under §11’s UI scale', () => {
+  // docs/ui-ux.md §11, and §2 is the reason. The strip and the console scale
+  // with the HUD, so at 200% the room between them halves while a panel that
+  // magnified everything wanted four times the area — the orders panel asked
+  // for 444 panel units of rows in 182 units of screen. The square root is
+  // what makes it fit while still being magnification worth asking for.
+  it('leaves type alone at or below 100%, where shrinking the HUD already buys room', () => {
+    for (const scale of [0.75, 0.9, 1]) assert.equal(panelType(scale), 1, `at ${scale}`);
+  });
+
+  it('grows a panel’s type by the square root of the scale above 100%', () => {
+    // 1.41x at 200%, not 2x — so the panel holds about twice the rows.
+    assert.equal(panelType(2).toFixed(4), Math.SQRT1_2.toFixed(4));
+    assert.equal((panelType(2) * 2).toFixed(4), Math.SQRT2.toFixed(4), 'type is 1.41x, not 2x');
+  });
+
+  it('never returns a factor that would make type grow faster than the panel', () => {
+    // The failure this guards is a sign error or an inverted ratio, which would
+    // magnify the type *more* than the scale and overflow the panel harder.
+    for (const scale of [1.25, 1.5, 1.75, 2]) {
+      const factor = panelType(scale);
+      assert.ok(factor > 0 && factor < 1, `${scale} counter-scales`);
+      assert.ok(factor * scale > 1, `${scale} still magnifies`);
+      assert.ok(factor * scale < scale, `${scale} magnifies less than the panel`);
+    }
   });
 });

@@ -692,6 +692,14 @@ Audio carries primary information, so accessibility here is a correctness requir
 - **Tier encoding is never hue-alone.** Tiers differ in size, alpha, edge hardness and shape before they differ in colour, so the whole scale survives any colour vision deficiency. Three additional palettes ship regardless: deuteranopia, protanopia, tritanopia.
 - **Faction colour is never the only identifier.** Tier-3+ contacts carry a faction glyph as well as a colour.
 - **UI scale** 75%–200%, independent of world zoom, with the SIG meter and ping preview scaling first.
+  Above 100% a floating panel's own type grows by the **square root** of the scale rather than
+  by the scale, and the panel keeps its width in panel units instead of narrowing. The reason is
+  §2: the strip and the console scale too, so at 200% the room between them halves while a panel
+  that magnified everything needed four times the area — the orders panel wanted 444 units of rows
+  in 182 units of screen, which is arithmetic rather than a layout to tune. Under the square root
+  a reader still gets type about 1.4x the size at 200%, and the panel holds roughly twice the
+  rows, which is what makes it fit. A panel is never allowed past the console to buy the
+  difference; the console is not the water, but it is not spare room either.
 - **Full rebinding**, including a one-handed layout, and no timing-critical chords.
 - **Motion and flash limits** — a reduced-motion mode replaces the sonar sweep, screen-edge exposure flash and meter pulse with static equivalents that carry the same information.
 - **The acoustic veil is a slider, 0–100%.** §4.5 drains contrast over the ground, and a contrast-reduced overlay owes a control the same way the colour-vision palettes do. It is the one setting here that can reach *off* without argument: the veil hides no information, so a player at 0% and a player at 100% are looking at the same facts.
@@ -1034,12 +1042,23 @@ navy's ink and glyph. That is the licensed dress of §12.5 — ink on chrome, on
 is not the instrument — and it is the only place a faction colour appears here. The slots
 themselves stay cyan and magenta, or the board becomes four boards.
 
-**What a slot shows** is its number, its mission title, and one line. The line is quoted
-from material that already exists — the teaching target from §4–§7 for a slot that cannot
-be opened, the mission's own premise for one that can — and is never written for the board.
-Missions introduce themselves in the voice of whoever is speaking ([campaign.md](campaign.md)
-§10, "Briefings are in-register"), so a board that summarised twenty-nine of them in one
-template voice would flatten the thing the briefing exists to protect.
+**What a slot shows** is its number and its mission title. Each slot also *carries* one
+line, quoted from material that already exists — the teaching target from §4–§7 for a slot
+that cannot be opened, the mission's own premise for one that can — and never written for
+the board. Missions introduce themselves in the voice of whoever is speaking
+([campaign.md](campaign.md) §10, "Briefings are in-register"), so a board that summarised
+twenty-nine of them in one template voice would flatten the thing the briefing exists to
+protect.
+
+**The board does not draw that line; the chart's caption draws it, for the one slot the
+board is lighting.** Twenty-nine lines drawn at once is 1,117 px of board against an 852 px
+screen, and §2 does not let a board scroll. Nothing is cut. The line stays inside the slot's
+button, so the accessible name is exactly what it was and §11's reader loses nothing; it is
+simply taken off screen, the same way the state word already is. The caption beside the
+chart already follows hover and focus and already reads the lit slot's ground, so the line
+joins it there — at a reading size, one at a time, beside the water it is on. What the board
+gives up is being readable as twenty-nine paragraphs at once, which is not something anybody
+does with a picker; what it gains is fitting on the screen it is picked from.
 
 #### The three states a slot can be in
 
@@ -1060,11 +1079,11 @@ the build's filing system on a player's screen would be the confusion this game'
 reason about, and *specified but unbuilt* is not something a player can do anything with.
 
 **The reason line has to be true**, which is the same rule the title screen's Campaign entry
-already obeys with `Awaits the faction campaigns`. On a board where twenty-eight of
-twenty-nine slots are unbuilt, the reason lines are most of the text on screen, so each is
-the mission's own teaching target rather than one sentence repeated twenty-eight times. A
-board that said `Not yet built` twenty-eight times would read as a loading screen for a game
-that is not loading.
+already obeys with `Awaits the faction campaigns`. Each is the mission's own teaching target
+rather than one sentence repeated twenty-eight times: a board that said `Not yet built`
+twenty-eight times would read as a loading screen for a game that is not loading. That rule
+is about what the line *says*, and it survives the line not being drawn — a reader and the
+caption both get the teaching target, and neither gets a stock sentence.
 
 **Dimmed is not unreachable, and this is where the board differs from the title screen.**
 The title screen carries its one disabled entry on a DOM `disabled` button, which is

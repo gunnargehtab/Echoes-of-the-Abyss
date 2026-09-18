@@ -158,7 +158,8 @@ tab and with how many buttons the current selection produces, so a pixel that
 hits `PING` in one frame hits `SILENT` in the next. Their shortcuts don't move.
 
 Coordinates are load-bearing, but the camera helps. The view opens centred on
-the player's own base, so on `drive.mjs`'s **1440×900** viewport the friendly
+the player's own base, so on `drive.mjs`'s default **1440×900** viewport (`VIEW_W` and
+`VIEW_H` move it, which is how a layout is checked against 1080p) the friendly
 cluster sits near screen centre (~720, 450). Three things make aiming less
 fragile than it sounds: selection picks the *nearest* owned entity on screen
 within a reach that never drops below 18 px, the minimap is a fixed
