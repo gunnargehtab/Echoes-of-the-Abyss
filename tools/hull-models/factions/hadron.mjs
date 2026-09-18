@@ -20,8 +20,8 @@
  * above and is the one silhouette this navy must never have.
  *
  * Every Order hull's *listed* SIG is a cone figure (docs/systems-echo.md §8), so
- * light goes forward: the bow array is the bright thing, the spine a thread to
- * it, the flanks unlit at every posture.
+ * light goes forward: the bow array is the bright thing, the spine at most a
+ * thread to it, the flanks unlit at every posture.
  */
 import {
   THREE,
@@ -98,7 +98,12 @@ export function bladeBody(root, mat, { bow, stern, maxR, facets = 10, profile = 
 }
 
 /**
- * The spine: a raised ridge along the back, its inlay, and the lit thread.
+ * The spine: a raised ridge along the back, its inlay, and — for a hull whose
+ * block lights its spine at rest — the lit thread. `thread` is asked for,
+ * never assumed, since #775: a lamp is a claim about SIG (gate 3), and the one
+ * hull that inherited a thread from this option's old default drew it for two
+ * passes against a block that puts its thread under way (the Responsory's
+ * header). No Order hull lights its spine at rest today.
  *
  * Given a `profile` it is the rung's spine instead: a four-facet ridge lathed
  * on its own stations (`spar`), the inlay another (`spineInlay`) — drawn here
@@ -106,7 +111,7 @@ export function bladeBody(root, mat, { bow, stern, maxR, facets = 10, profile = 
  * the two in the approved order, as the Reciter's lance does.
  */
 export function spine(root, { alloy, crystal, seam }, opts) {
-  const { from, to, y, thread = true, profile = null, flat, inlay = null } = opts;
+  const { from, to, y, thread = false, profile = null, flat, inlay = null } = opts;
   if (profile) {
     spar(root, 'blade_spine', alloy, { profile, y, flat });
     if (inlay) spineInlay(root, crystal, inlay);
