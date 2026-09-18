@@ -70,7 +70,7 @@
  *   over the next 18, and 6.0 m over the last 10.5 — a bell's sound-bow,
  *   not a cone. The crown is the last 7.5 m, one straight faceted cone from
  *   the shoulders to the apex at r 3.8, 6.6 m across, and its four shoulder
- *   ridges each carry a seam 6.9 m long, 0.4 by 0.3 in section, laid along
+ *   ridges each carry a seam 6.7 m long, 0.4 by 0.3 in section, laid along
  *   the ridge and half proud of it (`alongFrame`): the two upper ones show
  *   from above at the crown's plan edge and the two lower ones only from
  *   the conn view, as three of the Clarion's six horn seams show from
@@ -79,7 +79,7 @@
  *   1.3 m thick, drawn in the order that makes a lathe's inside face in —
  *   from astern the conn view sees a hollow with a floor, not through a
  *   shell. The drive prism sits in it: a four-facet point 10 m long, r 4.5,
- *   its base on the bulkhead and its apex 4.5 m inside the lip. The crystal
+ *   its apex on the bulkhead and its base 4.5 m inside the lip. The crystal
  *   spine is the Order's diamond section swept down the crown ridge
  *   (kit.mjs `sweep`) from inside the breech collar at x 17.2 to the lip,
  *   69.7 m, 0.8 m wide at the breech and 1.2 at the lip, 0.8 tall, bedded
@@ -119,7 +119,7 @@
  *   in both clauses, as theirs do. It sits on the spine's ridge at
  *   x −46, 1.0 by 0.4 by 0.8, pitched 9° to the ridge's own slope
  *   (`drive`'s `mark.pitch`, new for this hull) so it lies on the crystal
- *   rather than floating off one end of it, and the drive prism's apex
+ *   rather than floating off one end of it, and the drive prism's base
  *   is 2 m astern of it and 7.5 m under.
  * - **What is unlit, and in what finish.** The rail, the crown's ridge
  *   seams and the crystal spine are lamps the block lights under way or
@@ -315,8 +315,8 @@ hadron.braceBlades(
   }
 );
 
-// The drive: a four-facet point in the mouth, its base on the bulkhead at
-// x −38 and its apex at −48, dark — the unlit finish, no lamp (the header);
+// The drive: a four-facet point in the mouth, its apex on the bulkhead at
+// x −38 and its base at −48, dark — the unlit finish, no lamp (the header);
 // and the one mark astern on the spine's ridge at x −46, laid to the
 // ridge's slope of 0.16, the only light on the hull that is not in the
 // collar.

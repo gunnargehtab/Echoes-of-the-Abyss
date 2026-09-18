@@ -19,6 +19,15 @@
  * beam is wing rather than body. A wide flat extrusion reads as a slab from
  * above and is the one silhouette this navy must never have.
  *
+ * One body is wide by order (#786): the Tocsin's bell, 48 m across at its lip
+ * on 105 m of length — 0.457, the widest body in the navy — because its block
+ * says "a lip astern that is the widest beam on any Order hull". What keeps
+ * it off the slab is not its width but its construction: a six-facet flare
+ * that widens to its very stern and opens there, a bell and not an
+ * extrusion, and the barrel a fifth of it in beam standing thin ahead of it
+ * (`bell`, `emitterRail`). A wide body without a block ordering it is still
+ * the silhouette above.
+ *
  * Every Order hull's *listed* SIG is a cone figure (docs/systems-echo.md §8), so
  * light goes forward: the bow array is the bright thing, the spine at most a
  * thread to it, the flanks unlit at every posture.
@@ -330,7 +339,7 @@ export function finAndKeel(root, alloy, { fin, keel = null, t = 0.6 }) {
  * the Cantus, not at all (`mark: null`). `y` lifts the prism off the hull
  * axis, for a drive that sits in the spine rather than in the tail (the
  * Antiphon); every other Order hull leaves it on the axis. `mark.pitch` lays
- * the mark on a crown that slopes — the Tocsin's bell rises 10° toward its
+ * the mark on a crown that slopes — the Tocsin's bell rises 9° toward its
  * lip where the mark sits, and a level box there is buried at one end and
  * floating at the other; every other Order hull's crown is level under its
  * mark and leaves it at 0, which writes the rotation it always had.
