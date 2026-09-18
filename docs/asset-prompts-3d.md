@@ -215,13 +215,13 @@ Lamp bases are the near-black a `lamp()` puts in `color` for its emissive to sit
 | Consortium | emissive | `#B07A1E` `amber_vent` · `#F28A1E` `amber_vent` (cruiser) · `#FFD070` `amber_flood` |
 | Consortium | cladding | `#1C1F22` `baffle-foam` (the Baffle Barge) |
 | Consortium | lamp base | `#1A1408` · `#120E06` · `#2A2210` · `#1A1206` |
-| Commune | cladding | `#14332A` / `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` / `#14664C` `algae_hull` · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` |
-| Commune | emissive | `#5FAE42` `bio_vein` (at strength 1 on the Sower and the Spinner, 0.2 on the Drifter's seams — a strength survives the recolour as a finish does) · `#E8F0A3` `forge_light` / `floodlight_pale` (the spore token as a light) |
+| Commune | cladding | `#14332A` / `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` / `#14664C` `algae_hull` · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` · `#061206` `bio_vein_unlit` (the vein's base worn as cladding by a part the block lights only in a later band — the Glider's tail veins, dark with the drive cut) |
+| Commune | emissive | `#5FAE42` `bio_vein` (at strength 1 on the Sower and the Spinner, 0.2 on the Drifter's seams and the Glider's wing vein — a strength survives the recolour as a finish does) · `#E8F0A3` `forge_light` / `floodlight_pale` (the spore token as a light) |
 | Commune | lamp base | `#061206` · `#0A1A08` · `#123018` · `#14301A` · `#14351A` · `#0F2A12` · `#2E3A16` · `#3A3F1E` · `#2A4A20` · `#3F6B2E` |
 | Directorate | cladding | `#3A3F4A` / `#27313B` `weld_steel` · `#4E1220` `chitin_red_dark` · `#1A0810` `biolight_unlit` (the lamp base worn as cladding by a part the block lights only in a later band — the Verger's bay doors) |
 | Directorate | emissive | `#E0506A` `gullet_glow` · `#E07A8C` `forge_light` / `floodlight_hot` |
 | Directorate | lamp base | `#1A0810` / `#2C0A12` / `#3A0D16` `biolight_crimson` · `#2A0C14` `gullet_glow` · `#40141C` `forge_light` / `floodlight_hot` |
-| Knights | cladding | `#1C2230` `dark_steel` · `#2C2244` `shadow_indigo` · `#8A8FA3` `alloy_dim` · `#E6E9F2` `alloy_white` (the token's hex under a second name) |
+| Knights | cladding | `#1C2230` `dark_steel` · `#2C2244` `shadow_indigo` · `#8A8FA3` `alloy_dim` · `#E6E9F2` `alloy_white` (the token's hex under a second name) · `#1A1030` `crystal_seam_unlit` (the seam's lamp base worn as cladding by a part the block lights only under way — the Herald's tine seams) |
 | Knights | emissive | `#9B6CF9` `crystal_panel_glow` · `#A77CFF` `resonance_node` |
 | Knights | lamp base | `#1A1030` · `#1E1038` · `#241744` · `#2A1A50` · `#2A1650` · `#3A2560` |
 
@@ -478,12 +478,13 @@ active sonar fired every 20 s at SIG 80, and nothing else (SIG 30 idle, 42
 cruise; no weapon; HYD 55). A riveted box hull over a pressure-cylinder body
 with the transducer drum standing athwartships amidships in a bolted
 cradle: a banded cylinder wider than the hull and proud of both flanks, hoop
-flanges, a dogged inspection hatch, a stub lamp mast over it; ballast
-blisters low on the hull, one prop tunnel in a square stern, plate
-patchworked older-under-newer. Dim amber running lights along the hull line
-at rest, the drum's hoop lamps a sustained glow under way; the drum floods
-bright for the instant of a ping, once every twenty seconds, and is dim
-again between — the cadence is the light.
+flanges, a dogged inspection hatch, a stub lamp mast over it; a dogged crew
+hatch on the foredeck, ballast blisters low on the hull, one prop tunnel in
+a square stern, plate patchworked older-under-newer. Dim amber running
+lights along the hull line and the drum's hoop lamps at rest, the hoops
+brightening to a sustained glow under way; the drum floods bright for the
+instant of a ping, once every twenty seconds, and is dim again between —
+the cadence is the light.
 ```
 
 ```text
@@ -509,9 +510,11 @@ squat three-tergite carapace, wider in its limbs than in its shell, with
 six hydrophone limbs walked out and planted — three a side, stout and
 jointed, the forward pair raked ahead and the aft pair astern — a short
 rostrum, a telson, and a listening dome sunk low into the middle tergite.
-The limbs are the array and the model shows them down, which is the posture
-it hears at 85 in; under way they fold flat under the shell. Nearly black: a
-photophore at each limb's joint, in a pattern that repeats on neither side.
+The limbs are the array and the model shows them down, planted in a
+hexapod's tripod stance — fore and hind together a side, the middle limb a
+half-stride the other way — which is the posture it hears at 85 in; under
+way they fold flat under the shell. Nearly black: a photophore on each
+limb's knee, in a pattern the stance keeps from repeating on either side.
 ```
 
 The Acolyte carries no faction lock — the Biomass is the lock, as the Chorister's is — so a
@@ -527,10 +530,10 @@ with an emitter crystal standing in the throat between them — the fork is
 the horn and the slot is the cone's mouth — widest just abaft the fork and
 drawn aft to a flat transom with the drive prism in the spine: no guard
 wings, no canards, nothing astern to hear. Nearly black at rest but for the
-crystal in the throat; under way, sustained glow along the tines' inner
-edges, thrown forward out of the fork, and dark astern but for one mark —
-the quarter it is loud in is the quarter it faces, and the quarter it shows
-you is the one it runs in.
+crystal in the throat and the one mark astern; under way, sustained glow
+along the tines' inner edges, thrown forward out of the fork, and dark
+astern but for that mark — the quarter it is loud in is the quarter it
+faces, and the quarter it shows you is the one it runs in.
 ```
 
 ### The ordnance hulls — one a navy, and one corner of the triangle each

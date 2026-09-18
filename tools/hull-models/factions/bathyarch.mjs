@@ -826,6 +826,133 @@ export function cargoHatch(root, { grey, rust }, { coaming, cover }) {
 }
 
 /* --------------------------------------------------------------------------
+ * The Beacon (#784, off #540 Phase 4): the picket that shouts. What the
+ * Freighter's family above has no call for — the transducer drum lying
+ * across the beam in its bolted cradle, and the dogged hatch the drum's
+ * crown and the foredeck share. Built, not ported: the numbers are the
+ * hull script's and nothing here transcribes a binary.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Athwartships: a drum born on Y laid across the beam by a quarter turn
+ * about X, top to starboard. `ALONG_KEEL` below is the same turn on a
+ * Z-long export's node; this is the kit's own frame, and the beam is Z.
+ */
+const ATHWART = [Math.PI / 2, 0, 0];
+
+/**
+ * A dogged hatch: a round coaming standing on Y, `facets` round, and the
+ * dogging wheel lying flat on it — a torus turned onto the horizontal,
+ * `wheel.dy` above the coaming's centre. Named `<name>` and `<name>_wheel`.
+ * The hold doors above carry their wheels on a vertical face
+ * (`holdDoors`); a hatch is dogged from above, where the top-down maps see
+ * the wheel as a ring.
+ */
+export function doggedHatch(root, { hatch: hatchMat, wheel: wheelMat }, opts) {
+  const { name, at, r, h, facets = 8, wheel } = opts;
+  add(root, name, cyl(r, r, h, facets), hatchMat, at);
+  add(
+    root,
+    `${name}_wheel`,
+    torus(wheel.R, wheel.t, 6, 12),
+    wheelMat,
+    [at[0], at[1] + wheel.dy, at[2]],
+    ATHWART
+  );
+}
+
+/**
+ * The transducer drum, athwartships amidships in its bolted cradle — the
+ * Beacon's whole argument, "a banded cylinder wider than the hull and proud
+ * of both flanks, hoop flanges, a dogged inspection hatch, a stub lamp mast
+ * over it" (docs/asset-prompts-3d.md, UNIT — Beacon).
+ *
+ * In the file's order: the cradle first — the bed plate on the deck, a
+ * chock fore and aft of the drum, and the hex bolts along each chock's
+ * outboard foot (`drum_bed · drum_chock_f · cradle_bolt_f0..n ·
+ * drum_chock_a · cradle_bolt_a0..n`) — then the drum, then a starboard
+ * group and a port group each of the dished head (a frustum drawn in to
+ * `heads.tipR`, its small end outboard), the hoop flanges at `hoops.z`
+ * and the one lit hoop at `hoopLamps.z` (`transducer_drum · drum_head_s ·
+ * drum_hoop_s0..n · hoop_lamp_s · drum_head_p …`), then the hatch on the
+ * crown with its wheel, and the mast standing on the crown with the lamp
+ * on its head (`drum_hatch · drum_hatch_wheel · drum_mast · mast_lamp`).
+ *
+ * The heads are a dished pressure head, not a flat end: `outlines.mjs`
+ * cuts the widest thing at every station, and a frustum gives the plan
+ * bump the chamfered corners the hand-drawn outline drew, where a flat end
+ * would give it square ones. The lit hoop is a raised band `hoopLamps.r`
+ * round the drum, wider than the drum and narrower than the flange beside
+ * it, so its whole width is on top where the maps read it and its rim
+ * shows from the beam where the conn view does. The mast lamp is the one
+ * emitter on the hull that nothing can occlude.
+ */
+export function transducerDrum(root, { black, grey, rust, lampM }, opts) {
+  const { at, r, length, facets = 16, cradle, heads, hoops, hoopLamps, hatch, mast } = opts;
+  const [x, y, z] = at;
+  const bolt = cyl(cradle.bolts.r, cradle.bolts.r, cradle.bolts.h, 6);
+  add(root, 'drum_bed', box(...cradle.bed.size), grey, [x, cradle.bed.y, z]);
+  for (const [tag, sgn] of [
+    ['f', 1],
+    ['a', -1],
+  ]) {
+    add(root, `drum_chock_${tag}`, box(...cradle.chock.size), rust, [
+      x + sgn * cradle.chock.x,
+      cradle.chock.y,
+      z,
+    ]);
+    cradle.bolts.z.forEach((bz, i) =>
+      add(root, `cradle_bolt_${tag}${i}`, bolt, rust, [
+        x + sgn * cradle.bolts.x,
+        cradle.bolts.y,
+        z + bz,
+      ])
+    );
+  }
+  add(root, 'transducer_drum', cyl(r, r, length, facets), black, at, ATHWART);
+  const head = cyl(heads.tipR, r, heads.length, facets);
+  const hoop = cyl(hoops.r, hoops.r, hoops.width, facets);
+  const lit = cyl(hoopLamps.r, hoopLamps.r, hoopLamps.width, facets);
+  bothSides((side, sgn) => {
+    // The frustum's small end is its top, and the turn carries the top to
+    // +z on the starboard side and -z on the port: outboard both times.
+    add(
+      root,
+      `drum_head_${side}`,
+      head,
+      grey,
+      [x, y, z + sgn * (length / 2 + heads.length / 2)],
+      [(sgn * Math.PI) / 2, 0, 0]
+    );
+    hoops.z.forEach((hz, i) =>
+      add(root, `drum_hoop_${side}${i}`, hoop, grey, [x, y, z + sgn * hz], ATHWART)
+    );
+    add(root, `hoop_lamp_${side}`, lit, lampM, [x, y, z + sgn * hoopLamps.z], ATHWART);
+  });
+  doggedHatch(
+    root,
+    { hatch: rust, wheel: grey },
+    {
+      name: 'drum_hatch',
+      at: [x, y + r + hatch.h / 2 - hatch.sink, z + hatch.z],
+      r: hatch.r,
+      h: hatch.h,
+      wheel: hatch.wheel,
+    }
+  );
+  add(root, 'drum_mast', cyl(mast.rTop, mast.r, mast.h, 8), grey, [
+    x,
+    y + r + mast.h / 2 - mast.sink,
+    z,
+  ]);
+  add(root, 'mast_lamp', new THREE.SphereGeometry(mast.lamp.r, 8, 6), lampM, [
+    x,
+    y + r + mast.h - mast.sink + mast.lamp.dy,
+    z,
+  ]);
+}
+
+/* --------------------------------------------------------------------------
  * Structures. A settlement is the same architecture grown four ways, so the
  * base / mount / head / barrel family lives here beside the hull vocabulary
  * rather than in any one structure script (#553, off #540 Phase 3).

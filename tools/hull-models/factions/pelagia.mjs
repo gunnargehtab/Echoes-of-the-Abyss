@@ -81,6 +81,15 @@ import {
  * `applyLiveGlow`), so a hull the block calls *faint* has to be faint in
  * the file. The Drifter's seams burn at 0.2 (hulls/drifter.mjs); the
  * fleet passes below take theirs the same way.
+ * The Glider's wing vein burns at the Drifter's 0.2 (hulls/glider.mjs).
+ *
+ * `bioVeinUnlit` is the vein family's *unlit* finish: `bio_vein`'s base
+ * worn as cladding, at the lamp's own roughness, by a part the block
+ * lights only in a later band — the Glider's tail veins, which light only
+ * while the drive turns and are built with it cut. A lamp dark at rest is
+ * a lamp this pipeline never shows (docs/models-plan.md §3.2), so the part
+ * carries the family's base and no emissive, as the Directorate's
+ * `biolight_unlit` does on the Verger's bay doors (#783).
  */
 export const ink = {
   chitinHull: () => clad('chitin_hull', hex('#0B241E'), 0.08, 0.6),
@@ -88,6 +97,7 @@ export const ink = {
   algaeMembrane: () => clad('algae_membrane', hex('#1FA67A'), 0.05, 0.55),
   sporePod: () => clad('spore_pod', hex('#E8F0A3'), 0.05, 0.5),
   bioVein: (intensity = 1) => lamp('bio_vein', hex('#5FAE42'), hex('#061206'), 0.4, intensity),
+  bioVeinUnlit: () => clad('bio_vein_unlit', hex('#061206'), 0, 0.4),
   bioLight: (intensity = 1) => lamp('bio_light', hex('#8FE36B'), hex('#0A1A08'), 0.4, intensity),
 };
 
@@ -2286,6 +2296,179 @@ export function trimVanes(root, membrane, { vanes, t = 0.4 }) {
 export function driveFluke(root, membrane, opts) {
   const { outline, y = 0, t = 0.4, bevel = 0, name = 'drive_fluke' } = opts;
   add(root, name, plan(outline, t, bevel), membrane, [0, y, 0]);
+}
+
+/* --------------------------------------------------------------------------
+ * The scouts (#784, off #540 Phase 4): the Glider's wing and its folded tail.
+ *
+ * Built to its block, as the Drifter's builders above were: nothing here
+ * answers to a binary in docs/concept-art/models/. X-long in the kit's
+ * frame, yawing nothing. Both compose one side at a time — a wing is on the
+ * flank its root's `z` names and has no mirror, which is docs/models-plan.md
+ * §3.6's rule for the first plan in the roster not mirrored across its keel.
+ * hulls/glider.mjs is the consumer.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Where a leaf's outline crosses the station `u` along its span, in its
+ * own frame: the depths at which the outline's polyline cuts `u`, least and
+ * greatest — the chord a ring across the blade has to wrap. Sampled rather
+ * than solved, because the outline is three quadratics and a station near
+ * the tip cuts the curl twice.
+ */
+function leafChord(shape, u, divisions = 48) {
+  const pts = shape.getPoints(divisions);
+  const cuts = [];
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1];
+    const b = pts[i];
+    if ((a.x - u) * (b.x - u) > 0 || a.x === b.x) continue;
+    cuts.push(a.y + ((b.y - a.y) * (u - a.x)) / (b.x - a.x));
+  }
+  if (cuts.length < 2) throw new Error(`leafChord: no chord at ${u} on a leaf ${shape.L} long`);
+  return [Math.min(...cuts), Math.max(...cuts)];
+}
+
+/**
+ * The leading edge of a leaf as a polyline `inset` inside its margin, from
+ * the root out along the crown's curve and round the tip to the point
+ * furthest along the span — the edge that meets the water first when the
+ * leaf lies with its stalk forward. The offset runs along each sample's
+ * inward normal, which is to the right of travel because `leafOutline`
+ * walks its margin clockwise.
+ */
+function leafLeadingEdge(shape, inset, divisions = 10) {
+  const pts = shape.getPoints(divisions);
+  let tip = 0;
+  for (let i = 1; i < pts.length; i++) if (pts[i].x > pts[tip].x) tip = i;
+  const edge = pts.slice(0, tip + 1);
+  return edge.map((p, i) => {
+    const a = edge[Math.max(0, i - 1)];
+    const b = edge[Math.min(edge.length - 1, i + 1)];
+    const d = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+    return [p.x + (inset * (b.y - a.y)) / d, p.y - (inset * (b.x - a.x)) / d];
+  });
+}
+
+/**
+ * A wing that is a leaf — "a winged seed": one `leafOutline` blade laid flat
+ * off a flank with its stalk forward, so its span runs aft along the keel
+ * and its crown swells outboard. The margin from the root out and round to
+ * the tip is the leading edge, the quick rise at the root what sweeps it,
+ * and the curl at the tip the trailing edge, which comes back forward to
+ * the flank; the stalk itself sits inside the body. One blade and never a
+ * pair: which flank is the sign of the root's `z`, and `side` names it.
+ * The blade is the kit's `plan` off the sampled outline, `t` between its
+ * faces and bevelled `bevel` (the Sower's bed and the Drifter's fluke are
+ * soft-edged the same way), so its waist stands a bevel proud of the
+ * outline and the outline is its top face.
+ *
+ * `rings` are growth rings across the blade, `[{ at, halfWidth, proud,
+ * tube, lean }]`: each a ridge lathed round the span axis (`ridgeRing`,
+ * every approved Commune ring's cut) at `at` of the span, wrapping the
+ * chord the blade has there (`leafChord`) plus `tube` beyond each edge,
+ * and pressed flat to the blade so its crest stands `proud` of the top
+ * face at mid-chord and its shoulders sink into the blade — a ring around a
+ * body that is a membrane, which reads as a rib across it from above and a
+ * ridge in the conn view. `lean` yaws it off square in plan, as the
+ * Harvester's rings lean. No two alike is the caller's to keep.
+ *
+ * `vein` is the stiffening vein along the leading edge, a tube of `r`
+ * swept `inset` inside the margin from the stalk round to the tip
+ * (`leafLeadingEdge`), riding the top face `sink` below its crest — the one
+ * lit part a wing carries, in whatever lamp the caller hands it.
+ *
+ * `wing_<side>`, then `wing_ring_<side><i>`, then `wing_vein_<side>`.
+ */
+export function leafWing(root, { membrane, ridge, vein: veinMat }, opts) {
+  const {
+    side,
+    root: [x0, y0, z0],
+    span,
+    depth,
+    t = 0.4,
+    bevel = 0.15,
+    segments = 12,
+  } = opts;
+  const { rings = [], vein, facets = 14 } = opts;
+  if (!z0) throw new Error(`wing_${side}: a wing on the keel line has no flank`);
+  const sgn = Math.sign(z0);
+  const shape = leafOutline(span, depth);
+  shape.L = span;
+  // Stalk forward, span aft, crown outboard: the leaf's u runs to -x and
+  // its v to the flank's own side.
+  const toPlan = ([u, v]) => [x0 - u, z0 + sgn * v];
+  const pts = shape.getPoints(segments).map((p) => [p.x, p.y]);
+  if (pts.length > 2 && pts[0].join() === pts.at(-1).join()) pts.pop();
+  add(root, `wing_${side}`, plan(pts.map(toPlan), t, bevel), membrane, [0, y0, 0]);
+  const top = t / 2 + bevel;
+  refuseMirror(`wing_ring_${side}`, rings, (r) => `${r.at}|${r.halfWidth}|${r.proud}`);
+  rings.forEach(({ at, halfWidth = 0.6, proud = 0.3, tube = 0.4, lean = 0 }, i) => {
+    const u = at * span;
+    const [lo, hi] = leafChord(shape, u);
+    const crown = (hi - lo) / 2 + tube;
+    const [x, z] = toPlan([u, (lo + hi) / 2]);
+    add(
+      root,
+      `wing_ring_${side}${i}`,
+      // The shoulders sink a blade's depth under the face; the crest rides
+      // `proud` over it once the ring is pressed flat.
+      ridgeRing({ crown, shoulder: crown * (top / (top + proud)) - tube, halfWidth, facets }),
+      ridge,
+      [x, y0, z],
+      [0, lean, 0],
+      [1, (top + proud) / crown, 1]
+    );
+  });
+  if (vein) {
+    const { r = 0.14, inset = 0.35, sink = 0.05, steps = 36, facets: vf = 5 } = vein;
+    const through = leafLeadingEdge(shape, inset).map(([u, v]) => {
+      const [x, z] = toPlan([u, v]);
+      return [x, y0 + top - sink, z];
+    });
+    sweptVein(root, veinMat, { name: `wing_vein_${side}`, through, steps, r, facets: vf });
+  }
+}
+
+/**
+ * The muscle-drive tail folded flat along the stem — the Drifter's
+ * `driveFluke` with its drive cut: one membrane paddle hinged on a knuckle
+ * at the stern and laid forward over the stem's back, `pitch` radians nose
+ * up so that a flat blade lies along a crown that falls away astern. The
+ * paddle's `outline` is `[x, z]` in the hinge's own frame, `x` forward from
+ * the hinge, `t` between its faces and bevelled `bevel` like the fluke it
+ * is. `knuckle` is `{ at: [x, y, z], r, squash }`, a squashed orb of ridge
+ * the hinge turns on, exported first; the blade and its veins sit in a
+ * `tail` frame at `hinge`, pitched, so a vein drawn on the blade's top face
+ * stays on it.
+ *
+ * `veins` are the tail's own, `[[x, z], ...]` polylines on the top face in
+ * the same frame, each swept as a tube of `r` (`sweptVein`) — in whatever
+ * finish the caller hands in, because on a hull built with its drive cut
+ * they are dark: they light only while the drive turns, and a part the
+ * block lights in a later band is clad, not lit (docs/models-plan.md §3.2).
+ *
+ * `tail_knuckle`, then `tail_fluke`, then `tail_vein_<i>`.
+ */
+export function foldedTail(root, { membrane, ridge, vein: veinMat }, opts) {
+  const { hinge, pitch = 0, outline, t = 0.4, bevel = 0.15, knuckle, veins = [] } = opts;
+  const { r = 0.12, steps = 12, facets = 5, sink = 0.04 } = opts.vein ?? {};
+  if (knuckle) {
+    const { at, r: kr, squash = 0.85, facets: kf = [10, 6] } = knuckle;
+    add(root, 'tail_knuckle', orb(...kf), ridge, at, [0, 0, 0], [kr, kr * squash, kr]);
+  }
+  const frame = group(root, 'tail', { at: hinge, rot: [0, 0, pitch] });
+  add(frame, 'tail_fluke', plan(outline, t, bevel), membrane);
+  const top = t / 2 + bevel - sink;
+  veins.forEach((through, i) =>
+    sweptVein(frame, veinMat, {
+      name: `tail_vein_${i}`,
+      through: through.map(([x, z]) => [x, top, z]),
+      steps,
+      r,
+      facets,
+    })
+  );
 }
 
 export { THREE };

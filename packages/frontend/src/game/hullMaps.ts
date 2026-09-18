@@ -144,6 +144,18 @@ import vergerEmissive from '../assets/hulls/maps/verger-emissive.png';
 import antiphonAlbedo from '../assets/hulls/maps/antiphon-albedo.png';
 import antiphonHeight from '../assets/hulls/maps/antiphon-height.png';
 import antiphonEmissive from '../assets/hulls/maps/antiphon-emissive.png';
+import beaconAlbedo from '../assets/hulls/maps/beacon-albedo.png';
+import beaconHeight from '../assets/hulls/maps/beacon-height.png';
+import beaconEmissive from '../assets/hulls/maps/beacon-emissive.png';
+import gliderAlbedo from '../assets/hulls/maps/glider-albedo.png';
+import gliderHeight from '../assets/hulls/maps/glider-height.png';
+import gliderEmissive from '../assets/hulls/maps/glider-emissive.png';
+import acolyteAlbedo from '../assets/hulls/maps/acolyte-albedo.png';
+import acolyteHeight from '../assets/hulls/maps/acolyte-height.png';
+import acolyteEmissive from '../assets/hulls/maps/acolyte-emissive.png';
+import heraldAlbedo from '../assets/hulls/maps/herald-albedo.png';
+import heraldHeight from '../assets/hulls/maps/herald-height.png';
+import heraldEmissive from '../assets/hulls/maps/herald-emissive.png';
 
 /**
  * Pixels per world metre the maps were baked at. The maps carry no metadata,
@@ -277,6 +289,30 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
     albedo: antiphonAlbedo,
     height: antiphonHeight,
     emissive: antiphonEmissive,
+  },
+  // The scouts (#784), on the same rule: one navy's hull each, so the kind's
+  // canonical model. The Acolyte carries no lock, so its Directorate model
+  // serves every navy recoloured — the Chorister's and the Verger's rule —
+  // until a variant passes intake.
+  [UnitKind.Beacon]: {
+    albedo: beaconAlbedo,
+    height: beaconHeight,
+    emissive: beaconEmissive,
+  },
+  [UnitKind.Glider]: {
+    albedo: gliderAlbedo,
+    height: gliderHeight,
+    emissive: gliderEmissive,
+  },
+  [UnitKind.Acolyte]: {
+    albedo: acolyteAlbedo,
+    height: acolyteHeight,
+    emissive: acolyteEmissive,
+  },
+  [UnitKind.Herald]: {
+    albedo: heraldAlbedo,
+    height: heraldHeight,
+    emissive: heraldEmissive,
   },
 };
 
