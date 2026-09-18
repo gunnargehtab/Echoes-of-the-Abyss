@@ -1704,19 +1704,25 @@
    columns to the right of the token with it. Driven on `attending-the-dome`
    with one long token in the text, the middle track resolves to 412.75px
    without these two declarations against 218.69px with them, and the progress
-   counter's right edge lands at x 567 against a panel edge of 381: the counter
-   is not clipped, it is outside the panel.
+   counter's *layout* box lands at x 567 against a panel edge of 381. It is
+   not drawn there: `.objectives-body` sets `overflow-y: auto`, and an
+   `overflow` that is `visible` on one axis computes to `auto` on the other,
+   so the body clips and the counter is simply absent. §2's own words for that
+   are that a scrollbar "makes the part that did not fit invisible rather than
+   absent"; this is the worse half.
 
    Two declarations, because either alone leaves the other free to push: the
    `minmax(0, …)` gives the *track* a floor, and `min-width: 0` gives the
    *items* in it one, a grid item's automatic minimum being min-content as
-   well. Neither stops the token's own glyphs spilling out of the cell they
-   sit in, and neither is meant to — how a mission's own word may be broken is
-   a wrapping decision and not this rule's to take.
+   well. What neither does is stop the token's own glyphs printing across the
+   cells beside it — in any row where the token shares a line with the counter,
+   it prints straight over it. That is a third axis, how a word may be broken,
+   and §2 is what it is owed against rather than taste; it is #774 and not this
+   rule's to close.
 
    It is the pair the contact log has carried since its own columns overran
    each other. `.mission-result-objective` and `.mission-log-row` are the same
-   shape without it, and were left alone as outside #760. */
+   shape without it — #773, left alone as outside #760. */
 .objectives-row > * {
   min-width: 0;
 }

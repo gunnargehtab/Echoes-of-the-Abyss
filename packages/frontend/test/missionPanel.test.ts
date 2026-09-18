@@ -895,8 +895,9 @@ describe('the objectives panel: a row fits the panel that holds it', () => {
     //
     // The row's own box does not move — `width: 100%` and `border-box` pin it.
     // What moves is everything to the right of that track: in a live drive the
-    // progress counter leaves the panel entirely rather than being clipped at
-    // its edge.
+    // progress counter's layout box lands outside the panel body, which clips
+    // horizontally (`overflow-y: auto` computes the other axis to `auto`), so
+    // the counter is drawn nowhere at all.
     //
     // Which track to ask about is read off the stylesheet rather than assumed.
     // §10.5 puts the authored sentence and its gloss in one column, and an

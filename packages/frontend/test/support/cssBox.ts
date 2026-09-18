@@ -33,11 +33,14 @@
  * - a rule sitting under a condition it cannot evaluate, which since #760 is
  *   **any** at-rule that is not a known self-contained one — `@media`,
  *   `@supports`, `@container`, `@layer`, `@scope` and anything nobody here has
- *   heard of alike (`boxRulesFor`).
+ *   heard of alike (`boxRulesFor`);
+ * - an `!important` anywhere in a value it reads, which is unmodelled and
+ *   throws wherever it appears — `lengthPx` on the box side, `floorOf` on the
+ *   track side.
  *
  * What it does **not** model and does **not** throw on — so these are the
- * assumptions rather than the refusals: inheritance, `!important`, and
- * specificity beyond source order. The last is the one to know about, because
+ * assumptions rather than the refusals: inheritance, and specificity beyond
+ * source order. The second is the one to know about, because
  * every rule it reads here is a bare class or a tag-and-class and those are
  * written in increasing specificity anyway (`.objectives-row` before
  * `p.objectives-row`); a stylesheet that put the tag rule first would be read
@@ -134,9 +137,17 @@ const NOT_AT_REST = new Set([
 export interface CssRule {
   selector: string;
   declarations: Array<[string, string]>;
-  /** The `@media`/`@supports` prelude this rule sits under, or null at top level. */
+  /** The at-rule prelude this rule sits under, or null at top level. */
   condition: string | null;
 }
+
+/**
+ * At-rules whose block is not a list of style rules, so skipping it drops
+ * nothing that could style an element. Named rather than inferred: everything
+ * else is treated as a condition, which is the failing-loud direction.
+ */
+const SELF_CONTAINED_AT_RULES =
+  /^@(keyframes|-\w+-keyframes|font-face|font-feature-values|font-palette-values|counter-style|property|page|view-transition)\b/;
 
 /**
  * Every rule in a stylesheet, flattened, with the condition it sits under.
@@ -146,14 +157,6 @@ export interface CssRule {
  * `@media` nests and a regex that pretends otherwise reads a media block's
  * closing brace as a selector.
  */
-/**
- * At-rules whose block is not a list of style rules, so skipping it drops
- * nothing that could style an element. Named rather than inferred: everything
- * else is treated as a condition, which is the failing-loud direction.
- */
-const SELF_CONTAINED_AT_RULES =
-  /^@(keyframes|-\w+-keyframes|font-face|font-feature-values|font-palette-values|counter-style|property|page|view-transition)\b/;
-
 export function parseCss(css: string): CssRule[] {
   const clean = css.replace(/\/\*[\s\S]*?\*\//g, '');
   const rules: CssRule[] = [];
