@@ -355,32 +355,61 @@ describe('the mission result: a mission’s words cannot carry the counter out',
   ];
 
   /**
-   * Every row shape the card can draw: one per status word, since the
-   * stylesheet distinguishes all three, and a counter on two of them, since
-   * the counter is the child the overflow carries off and a row without one
-   * has a different child count.
+   * Every row shape the card can draw, which is six: the counter is printed on
+   * `progress !== undefined` alone (`MissionResult`), independently of the
+   * status, so the two vary freely. Both halves matter — the counter is the
+   * child the overflow carries off, and a row without one has a different
+   * child count — and so does the status, because the sheet qualifies two of
+   * the three words (`.mission-result-objective.met` and `.failed`; `open`
+   * falls to the base rule), so a later rule qualified by status would sit
+   * outside a walk that skipped one.
    */
   const shapes = (): MissionResultPayload =>
     payload({
       objectives: [
         {
-          id: 'open',
+          id: 'open-counted',
           text: 'Both tenders reach the Upper Concourse.',
           status: ObjectiveStatus.Pending,
           progress: { done: 0, of: 2 },
         },
-        { id: 'met', text: 'The flight stays under twenty.', status: ObjectiveStatus.Met },
         {
-          id: 'failed',
+          id: 'open',
+          text: 'The flight stays under twenty.',
+          status: ObjectiveStatus.Pending,
+        },
+        {
+          id: 'met-counted',
+          text: 'Nine are aboard and the lock is shut.',
+          status: ObjectiveStatus.Met,
+          progress: { done: 2, of: 2 },
+        },
+        { id: 'met', text: 'The court is answered.', status: ObjectiveStatus.Met },
+        {
+          id: 'failed-counted',
           text: 'The service lock is held to the adjournment.',
           status: ObjectiveStatus.Failed,
           progress: { done: 1, of: 2 },
         },
+        {
+          id: 'failed',
+          text: 'The second tender is in the record.',
+          status: ObjectiveStatus.Failed,
+        },
       ],
     });
 
-  /** Every row the card rendered, as the box reader wants them. */
-  async function rows(): Promise<Array<{ element: Element; children: string[][] }>> {
+  /**
+   * Every row the card rendered, as the box reader wants them. Tags are read
+   * off the tree rather than assumed, the row's and its children's alike:
+   * `cssBox` branches on the tag (`uaBoxSizing`), and a tag-qualified selector
+   * asked about under the wrong tag misses in silence, which is the direction
+   * that reads as cover. Two tags boxing differently under identical author
+   * CSS is the whole of what hid #752.
+   */
+  async function rows(): Promise<
+    Array<{ element: Element; children: Array<{ tag: string; classes: string[] }> }>
+  > {
     const { view } = await missionResult(shapes());
     try {
       return view.allByClass('mission-result-objective').map((row) => ({
@@ -391,11 +420,12 @@ describe('the mission result: a mission’s words cannot carry the counter out',
         },
         children: row.children
           .filter((child): child is ReactTestInstance => typeof child !== 'string')
-          .map((child) =>
-            String((child.props as { className?: string }).className ?? '')
+          .map((child) => ({
+            tag: String(child.type),
+            classes: String((child.props as { className?: string }).className ?? '')
               .split(/\s+/)
-              .filter(Boolean)
-          ),
+              .filter(Boolean),
+          })),
       }));
     } finally {
       await view.unmount();
@@ -417,7 +447,7 @@ describe('the mission result: a mission’s words cannot carry the counter out',
     // layout box sat 116px past the card's padding edge.
     const rules = parseCss(APP_CSS);
     const rendered = await rows();
-    assert.equal(rendered.length, 3, 'all three shapes rendered');
+    assert.equal(rendered.length, 6, 'all six shapes rendered');
 
     for (const { element, children } of rendered) {
       // Which track holds the authored sentence is decided by auto-flow here,
@@ -425,11 +455,11 @@ describe('the mission result: a mission’s words cannot carry the counter out',
       // that first: a child given an explicit column would invalidate the
       // arithmetic below rather than merely move it, and this fails loudly
       // instead of guarding whichever track the old order happened to use.
-      for (const classes of children) {
+      for (const child of children) {
         assert.equal(
-          columnOf(rules, { tag: 'span', classes, ancestors: [...ANCESTORS, element] }),
+          columnOf(rules, { ...child, ancestors: [...ANCESTORS, element] }),
           undefined,
-          `.${classes.join('.')} is placed explicitly, so flow order no longer says which track is the sentence's`
+          `.${child.classes.join('.')} is placed explicitly, so flow order no longer says which track is the sentence's`
         );
       }
 
@@ -437,7 +467,7 @@ describe('the mission result: a mission’s words cannot carry the counter out',
       assert.equal(floors.length, 3, 'the row is the three-column shape');
       // Flow order: the status word, the mission's sentence, then the counter.
       assert.deepEqual(
-        children.map((classes) => classes[0]),
+        children.map((child) => child.classes[0]),
         ['mission-result-status', 'mission-result-text', 'mission-result-progress'].slice(
           0,
           children.length
@@ -466,19 +496,19 @@ describe('the mission result: a mission’s words cannot carry the counter out',
     let checked = 0;
     for (const { element, children } of rendered) {
       assert.ok(children.length >= 2, 'a row is at least a status word and a sentence');
-      for (const classes of children) {
+      for (const child of children) {
         assert.equal(
-          resolveBox(rules, { tag: 'span', classes, ancestors: [...ANCESTORS, element] }).minWidth,
+          resolveBox(rules, { ...child, ancestors: [...ANCESTORS, element] }).minWidth,
           '0',
-          `a span.${classes.join('.')} can push its track wider than the row`
+          `a ${child.tag}.${child.classes.join('.')} can push its track wider than the row`
         );
         checked += 1;
       }
     }
-    // Three statuses, three sentences, and a counter on two of the three: the
+    // Six status words, six sentences, and a counter on three of the six: the
     // arithmetic is here so that a shape dropping out of `shapes()` fails
     // rather than quietly shrinking what this walks.
-    assert.equal(checked, 8, 'every child of every shape was asked');
+    assert.equal(checked, 15, 'every child of every shape was asked');
   });
 });
 

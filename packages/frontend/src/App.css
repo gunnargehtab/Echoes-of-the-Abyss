@@ -1724,8 +1724,12 @@
    rule's to close.
 
    It is the pair the contact log has carried since its own columns overran
-   each other. `.mission-result-objective` and `.mission-log-row` are the same
-   shape without it — #773, left alone as outside #760. */
+   each other, and `.mission-result-objective` carries it too since #773.
+   `.mission-log-row` has the shape and not this exposure: its `1fr` is the
+   *last* column and `.mission-log-text` spans `1 / -1`, and its tracks measure
+   the same with a long token in them as without, so no cell is carried
+   anywhere. Its authored line's own ink does leave `.mission-log-entries`
+   (186 px at 1440x900 and 100% scale), which is not this rule's. */
 .objectives-row > * {
   min-width: 0;
 }
