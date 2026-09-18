@@ -141,8 +141,11 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Drifter]: 'drifter',
   [UnitKind.Verger]: 'verger',
   [UnitKind.Antiphon]: 'antiphon',
-  // The scouts (#506). No model yet: the procedural bake is gate 1's
-  // sanctioned state until one clears intake, and the slug is where it lands.
+  // The scouts (#506), script-built in #784: one model a navy. The Acolyte
+  // carries no lock, so a navy rendering for one resolves
+  // acolyte-<its faction>.glb — only the Directorate's exists, and the others
+  // stay on the recoloured sprite until a variant passes intake, as the
+  // Chorister's and the Verger's do.
   [UnitKind.Beacon]: 'beacon',
   [UnitKind.Glider]: 'glider',
   [UnitKind.Acolyte]: 'acolyte',
