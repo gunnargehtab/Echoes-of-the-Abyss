@@ -563,7 +563,7 @@ it is the phase the build is in, not because the audit found them.
 | The first structures under `tools/hull-models/` — the Sentinel Turret's four faction variants | [#553](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/553) |
 | The Clarion's six horn seams spiral in the approved binary, against the Order's bilateral symmetry | [#640](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/640) |
 | Approved-model defects the #638 / #639 restorations reproduce on purpose — buried lights, root-outboard limbs, a staggered gun. A port transcribes a shape; correcting one is its own PR, and this is the list | [#645](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/645) |
-| Under #642's port convention the approved Dredge and Precentor sit the other way about from their UNIT blocks: the claw to port, the longer rank to starboard | [#650](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/650) |
+| Under #642's port convention the approved Dredge and Precentor sat the other way about from their UNIT blocks — the claw to port, the longer rank to starboard. The blocks had been written to the old reading and were amended to the models; no model moved | [#650](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/650) |
 | Phase 3's last twenty models — the Foundry, Refinery, Slipway and Bastion in four navies, and the four signature structures | [#652](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/652) |
 
 **The Biomass account**

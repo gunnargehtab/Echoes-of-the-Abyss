@@ -35,12 +35,11 @@
  *   sides; the limbs fold at one angle in two matched ranks; the photophores
  *   run in ranks at a fixed pitch — starboard three to a plate, port two on
  *   every other plate — and the Precentor's starboard hydrophone rank is one
- *   longer than its port. (Both blocks say port. The approved models were
- *   named and read with +z as port, and #642 settled +z as starboard, so the
- *   models and their blocks now disagree; a port keeps the model, and the
- *   call is filed off #642.) The *rule* is regular and the *result* never
- *   mirrors,
- *   so the builders that place light refuse a mirrored pair outright.
+ *   longer than its port. (Both blocks had their sides the other way about
+ *   until #650: the approved models were named and read with +z as port,
+ *   #642 turned that reading round, and the prose was amended to the
+ *   models.) The *rule* is regular and the *result* never mirrors, so the
+ *   builders that place light refuse a mirrored pair outright.
  * - **Light is a photophore, and it lies flat.** A photophore is a small flat
  *   box in `biolight_crimson` on an upward face of the carapace, because the
  *   maps are top-down (kit.mjs); the gullet and the hopper throat are the
@@ -361,8 +360,8 @@ export function listeningDome(root, { red, violet, black }, opts) {
  * side stepping outward at `pitch` — alternating between the two `lengths`,
  * each in its socket, canted outward — and a tip spike at each end. `port`
  * and `starboard` are the rank sizes and must differ: the Precentor's
- * starboard rank is one longer (its block says port; #642), and a hull whose
- * ranks match is not this navy's.
+ * starboard rank is one longer, and a hull whose ranks match is not this
+ * navy's.
  *
  * The tip spike stands *beyond* `halfSpan` rather than straddling it, so the
  * array's span is the boom plus both tips: the Precentor's 36 m boom and its
@@ -457,7 +456,7 @@ export function scoopBow(root, { red, steel, black, gullet }, opts) {
  * `tips.a` on the outboard side turning in by `close`, `tips.b` on the
  * inboard side turning out (a negative `close`), each a cone with its point
  * forward. `side` is 'p' or 's' and there is no pair — the Dredge's is to
- * port (its block says starboard; #642).
+ * port.
  *
  * The arm is placed from `x`; the forearm and both tips are placed by their
  * centres, `at`, because that is how the approved model placed them: no rule

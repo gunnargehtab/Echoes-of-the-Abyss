@@ -373,9 +373,9 @@ UNIT — Precentor (pair with Directorate): the ears on the move, 60 m — a
 hull that is only ears (SIG 12 idle; HYD 95, the cap; no weapon). Short
 segmented body carrying a hydrophone array athwartships, so the plan is a
 cross and the hull is broader than it is long amidships: ranks of spines
-along the boom, the port rank one longer, a studded listening dome, folded
-walking limbs. Nearly black: four photophores in a pattern that repeats on
-neither side.
+along the boom, the starboard rank one longer, a studded listening dome,
+folded walking limbs. Nearly black: four photophores in a pattern that
+repeats on neither side.
 ```
 
 ```text
@@ -383,9 +383,9 @@ UNIT — Dredge (pair with Directorate): the hull for the floor of the map,
 120 m — the roster's only PR-4 entry (SIG 40 idle, 52 cruise). The Abyssal
 Submersible's deep body with the Directorate's armour grown over it: five
 wide overlapping tergites with a spine off each, a scoop bow with mandibles
-and a glowing gullet, one great folded claw to starboard and the dredge
-boom to port, a hopper amidships lit around its throat. Sustained glow:
-rows of photophores along every plate edge.
+and a glowing gullet, one great folded claw to port and the dredge boom to
+starboard, a hopper amidships lit around its throat. Sustained glow: rows
+of photophores along every plate edge.
 ```
 
 ```text

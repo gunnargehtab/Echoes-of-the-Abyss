@@ -370,7 +370,7 @@ export const items = {
   553: 'The turrets, rebuilt that way, in each navy’s own style',
   640: 'The Clarion’s horn seams straightened back to the symmetry the Order builds to',
   645: 'The flaws the rebuilt models copied faithfully from the originals, listed to fix on purpose',
-  650: 'Two hulls that came out mirrored — the Dredge’s claw and the Precentor’s rank, put back',
+  650: 'Two ships described with left and right swapped — the descriptions corrected, the ships unchanged',
   652: 'The last twenty buildings rebuilt from scripts: every navy’s yards, and the four landmarks',
   530: 'The Directorate’s own line ship, which today it can afford about once a match',
   549: 'Kelp beds that thin as they are cut — and stop hiding you when they do',
