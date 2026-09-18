@@ -5,9 +5,9 @@
  * "A hull that is only ears (SIG 12 idle; HYD 95, the cap; no weapon). Short
  * segmented body carrying a hydrophone array athwartships, so the plan is a
  * cross and the hull is broader than it is long amidships: ranks of spines
- * along the boom, the port rank one longer, a studded listening dome, folded
- * walking limbs. Nearly black: four photophores in a pattern that repeats on
- * neither side."
+ * along the boom, the starboard rank one longer, a studded listening dome,
+ * folded walking limbs. Nearly black: four photophores in a pattern that
+ * repeats on neither side."
  *
  * So it is the navy's segment series cut short — four plates rather than the
  * Dredge's five — with everything else on the hull spent on hearing. Every
@@ -18,12 +18,11 @@
  * both are held by the builders rather than by numbers typed here:
  *
  * - **The starboard rank is one longer.** Six hydrophones to starboard against
- *   five to port — the block above says port; the approved model was named
- *   and read with +z as port, #642 settled +z as starboard, and a port keeps
- *   the model while the call is filed off that issue — which is why
- *   `arrayBoom` throws on matched ranks: "asymmetric,
- *   yet regimented" is the navy's whole rule, and a boom that balanced would
- *   read as an Order sensor mast.
+ *   five to port — the block above said port until #650, written with +z
+ *   read as port before #642 turned that reading round, and was amended to
+ *   the model — which is why `arrayBoom` throws on matched ranks:
+ *   "asymmetric, yet regimented" is the navy's whole rule, and a boom that
+ *   balanced would read as an Order sensor mast.
  * - **The plan is a cross, and it stays X-long by 20 m rather than 60.** The
  *   boom spans 44 m against a 64 m body, so intake's yaw-the-longer-axis-onto-
  *   +X rule still lands the hull correctly — but lengthening the boom or

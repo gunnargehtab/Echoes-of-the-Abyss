@@ -408,8 +408,9 @@ export function strut(root, name, a, b, mat, t = 0.8) {
  * relabelled the same way in their ports, as were the Commune Harvester's
  * two feed tendrils, the one pair on a Z-long export named the other way.
  * What the relabel showed about two of those models against their prompt
- * blocks is on #642. `hadron.pair` is the turrets' own `r`/`l`, the
- * export's, and not this.
+ * blocks — the Dredge's claw and the Precentor's longer rank, both written
+ * to the old reading — #650 settled by amending the blocks. `hadron.pair`
+ * is the turrets' own `r`/`l`, the export's, and not this.
  */
 export function bothSides(fn) {
   fn('s', 1);

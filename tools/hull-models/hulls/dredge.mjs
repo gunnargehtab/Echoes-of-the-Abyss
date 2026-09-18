@@ -5,9 +5,9 @@
  * "The roster's only PR-4 entry (SIG 40 idle, 52 cruise). The Abyssal
  * Submersible's deep body with the Directorate's armour grown over it: five
  * wide overlapping tergites with a spine off each, a scoop bow with mandibles
- * and a glowing gullet, one great folded claw to starboard and the dredge boom
- * to port, a hopper amidships lit around its throat. Sustained glow: rows of
- * photophores along every plate edge."
+ * and a glowing gullet, one great folded claw to port and the dredge boom to
+ * starboard, a hopper amidships lit around its throat. Sustained glow: rows
+ * of photophores along every plate edge."
  *
  * Every part comes from `factions/directorate.mjs`, and six of that module's
  * builders exist for this hull alone — `scoopBow`, `claw`, `dredgeBoom` and
@@ -16,14 +16,15 @@
  *
  * Two rules of the navy are load-bearing here rather than decorative:
  *
- * - **Nothing mirrors.** The claw is to port and the boom to starboard — the
- *   other way about from the block above, as the approved model has it once
- *   +z is read as starboard (#642); which of the two is the bug is a design
- *   call filed off that issue, and a port reproduces the model — and
- *   they are not the same object flipped: one folds and closes, the other is a
- *   spar with teeth stepped along it. The plate lights carry the same rule at
- *   a smaller scale — starboard three to a plate, port two on every other
- *   plate — which is the "asymmetric, yet regimented" line made countable.
+ * - **Nothing mirrors.** The claw is to port and the boom to starboard — as
+ *   the approved model has them, and as the block above has said since #650:
+ *   it was written with +z read as port, #642 turned that reading round, and
+ *   the prose was amended to the model rather than the model mirrored to the
+ *   prose — and they are not the same object flipped: one folds and closes,
+ *   the other is a spar with teeth stepped along it. The plate lights carry
+ *   the same rule at a smaller scale — starboard three to a plate, port two
+ *   on every other plate — which is the "asymmetric, yet regimented" line
+ *   made countable.
  * - **The glow is the loudness.** SIG 40 idle is the third-loudest resting
  *   figure in the roster, and the hull spends it on twenty-one plate-edge
  *   photophores, five dorsal marks, the gullet and the hopper throat. They lie
@@ -152,8 +153,7 @@ directorate.scoopBow(root, { red, steel, black, gullet }, {
   gullet: { x: 51, y: 3.5, w: 10, d: 9 },
 });
 
-// One great folded claw to port and the dredge boom to starboard (the block
-// says the reverse; #642 has the call). There is no
+// One great folded claw to port and the dredge boom to starboard. There is no
 // pair anywhere here: the claw is 34 m of arm, a 20 m forearm folded a quarter
 // radian back in toward the keel, and two tips closing on each other off its
 // end — the outboard one turning in, the inboard one turning out, points
