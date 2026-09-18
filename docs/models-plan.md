@@ -207,7 +207,7 @@ with a drive, sized to its berths. None carries a weapon.
   hatches, one ducted drive. Resting lamps: low and cold at the hatch rims and the dome; the
   bays' glow is a state. No lock (§3.4).
 - **Antiphon.** `bladeBody` in the Clarion's family, `wings` swept as guards, `drive` in the
-  spine, `navMarks`. New: a three-bay landing deck let into the back, with `resonatorRing`
+  spine, `navMarks`. New: a three-bay landing deck across the back, its bays let into it, with `resonatorRing`
   around it as the grant made visible. Resting lamps: from the bow back, dark astern; the
   ring is cold at rest as the Responsory's rings are, and flares only when the deck opens.
 
