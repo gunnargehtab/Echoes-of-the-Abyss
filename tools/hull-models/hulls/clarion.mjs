@@ -21,16 +21,28 @@
  * because the Cantus and the Reciter are cut the same way.
  *
  * Two things a reader will want to check are the approved model's, not this
- * script's:
+ * script's, and a third is this script's own since #640:
  *
- * - The horn's seams are 14 m boxes rolled onto the horn's six edges and then
- *   turned 0.17 rad about their own radial axis, so the ring spirals a little
- *   and dives into the horn toward the lip. Three of the six sit under the
- *   horn, and the export's light audit says so; they are left where they are.
+ * - The horn's seams are 14 m boxes rolled onto the horn's six edges at the
+ *   radius the horn has at x 35.3, so the flare buries the forward two-thirds
+ *   of each in the horn and the ring reads as diving toward the lip. Three of
+ *   the six sit under the horn, and the export's light audit says so; they
+ *   are left where they are.
  * - The canard is drawn inside each wing's group, because the approved file
  *   writes the +z three (`wing_s wing_edge_s canard_s`, since #642) before the
  *   port three and
  *   `check.mjs` compares in order.
+ * - The seams run straight along their edges. The approved model turned each
+ *   a further 0.17 rad about its own radial axis, the same way round, so the
+ *   ring spiralled: each seam's ends drifted across its facet — 2.37 m on
+ *   the pre-port export, 2.16 m in the file this script replaced, one root
+ *   scale apart — and no seam had a mirror partner, against Block 2's
+ *   "precise bilateral symmetry (the only faction with it)". The port carried that, correctly — a port
+ *   decides nothing — and #640 decided for the prose, which is canonical
+ *   (docs/graphics-standards.md, "Where the GLB comes from"). Now the seam at
+ *   a bearing is the seam at its mirror bearing rolled the other way, the
+ *   crown's and the keel's are their own mirrors, and nothing else on the
+ *   hull moves.
  *
  * The glow bakes at 27.9 — the compass average of the listed 62
  * (tools/hull-maps/models.mjs), not `sigIdle` — and every lit part but the
@@ -150,7 +162,6 @@ hadron.hornSeams(root, seam, {
   halfBeam: 3.6,
   count: 6,
   phase: Math.PI / 3,
-  skew: -0.17,
 });
 
 // Beam is wing, as it is on every Order hull: 34 m of it, 0.9 m thick, the

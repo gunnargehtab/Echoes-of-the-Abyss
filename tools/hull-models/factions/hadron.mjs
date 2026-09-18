@@ -462,12 +462,18 @@ function plane(root, name, mat, { outline, t, y, seated = false }, sgn) {
  * horn's axis at `x`, `y`. Seam 0 sits `phase` radians round from the crown
  * toward starboard and the rest follow at equal steps the other way — the order
  * the approved Clarion numbers its own. Each is rolled to lie flat on its
- * facet and then turned `skew` radians about its own radial axis, so the ring
- * spirals a little and dives into the horn toward the lip; the approved model
- * does exactly that, and a port keeps it.
+ * facet and runs straight along it, so a ring set on mirrored bearings
+ * mirrors across the centre plane: the seam at bearing `a` is the seam at
+ * `-a` rolled the other way, and one on the crown or the keel is its own
+ * mirror. The approved Clarion turned every seam a further 0.17 rad about its
+ * own radial axis, the same way round, so the ring spiralled and no seam had
+ * a partner — the one part of the three ported Order hulls that broke Block
+ * 2's "precise bilateral symmetry" (#640). The prose is canonical, so that
+ * yaw is not an option here on purpose: this module is the Order's, and a
+ * ring is a thing it cannot draw unmirrored.
  */
 export function hornSeams(root, mat, opts) {
-  const { x, y = 0, length, section, halfHeight, halfBeam, count = 6, phase = 0, skew = 0 } = opts;
+  const { x, y = 0, length, section, halfHeight, halfBeam, count = 6, phase = 0 } = opts;
   for (let i = 0; i < count; i++) {
     const a = phase - (i * 2 * Math.PI) / count;
     add(
@@ -476,7 +482,7 @@ export function hornSeams(root, mat, opts) {
       box(length, section[0], section[1]),
       mat,
       [x, y + halfHeight * Math.cos(a), halfBeam * Math.sin(a)],
-      [a, skew, 0]
+      [a, 0, 0]
     );
   }
 }
