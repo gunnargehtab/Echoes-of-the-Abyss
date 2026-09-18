@@ -37,6 +37,12 @@
  * gained a facet each. Where the module's rule is not this hull's (the seam,
  * the socket, the spines' cut and rake, the domes' heights) the hull passes
  * its own numbers and the module's defaults stay the Chorister's.
+ *
+ * One thing below is not the binary's: the port limbs' taper runs
+ * root-inboard, the starboard rank's mirror, where the approved model ran
+ * it the other way (#645, the one Phase 6 correction this file carries).
+ * `diff.mjs` against the file as #642 left it lists `limb_p0..2` and
+ * nothing else.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -145,8 +151,10 @@ directorate.dorsalSpines(root, black, {
 // The walking limbs, folded under the flanks: two matched ranks of three, 7 m
 // long, tapering from 0.7 m at the root to 0.5 m at the tip, folded 0.4 rad —
 // the one place on the hull where a mirrored pair is the rule rather than the
-// error. Matched in rule, not in result: the approved model turns the
-// port rank the other way about, roots outboard, and the script keeps it.
+// error. The approved model had the port rank turned the other way about,
+// roots outboard, and the port kept it (#638); since #645 `limbs` mirrors,
+// so the port roots stand at the flank as the starboard ones do — the same
+// six lines in plan, the taper the other way along three of them.
 directorate.limbs(root, steel, { xs: [-14, -4, 6], y: -1, z: 7.5, r: [0.7, 0.5], length: 7, fold: 0.4 });
 
 // "Nearly black": four photophores, and that is the whole light budget of a

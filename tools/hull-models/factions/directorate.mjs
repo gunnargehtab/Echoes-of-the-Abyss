@@ -225,19 +225,29 @@ export function telson(root, { violet, black }, opts) {
  * from 0.7 m at the flank to 0.5 m at the tip over 7 m (#638) — a taper a
  * bounding box cannot show, as `claw` says of the Dredge's; the first port
  * matched their boxes to the centimetre with a straight 6.9 m leg at a
- * shallower fold and a sixth more surface. The tip is the cylinder's +Y end,
- * and the same Euler folds it forward and outboard to starboard but aft and
- * *inboard* to port, so the approved model's port roots stand outboard; a
- * port reproduces that.
+ * shallower fold and a sixth more surface.
+ *
+ * The tip is the cylinder's +Y end, laid athwartships by a quarter turn
+ * about X and folded forward by `fold` about Z. The port rank is the
+ * starboard rank's mirror across the keel, and the mirror of an XYZ Euler
+ * across the XY plane negates its X and Y angles and keeps Z (`flank` in
+ * kit.mjs says the same of the export's x) — so it is the quarter turn that
+ * changes sign a side, and the fold does not. The approved exports had it
+ * the other way about, `[π/2, 0, ∓fold]`: the same six lines in plan, so
+ * nothing at 4 px/m showed it, but the port rank's taper ran backwards —
+ * roots outboard, tips at the flank — the starboard rank turned over
+ * rather than mirrored. Both ports reproduced that, as a port must; #645
+ * corrected it here, in the builder, so the module cannot draw a pair that
+ * does not mirror.
  */
 export function limbs(root, steel, { xs, y, z, r = 0.6, length = 6, fold = 0.45 }) {
   const [rootR, tipR] = Array.isArray(r) ? r : [r, r];
   bothSides((side, sgn) =>
     xs.forEach((x, i) =>
       add(root, `limb_${side}${i}`, cyl(tipR, rootR, length, 6), steel, [x, y, sgn * z], [
-        Math.PI / 2,
+        (sgn * Math.PI) / 2,
         0,
-        -sgn * fold,
+        -fold,
       ])
     )
   );
