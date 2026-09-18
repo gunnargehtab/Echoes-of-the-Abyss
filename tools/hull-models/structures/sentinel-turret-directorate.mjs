@@ -18,12 +18,26 @@
  * A port of the approved export (docs/concept-art/models/sentinel-turret-
  * directorate.glb at 0522b01~1), part for part in its order, every number the
  * export's own, read off its nodes and its buffers (#639). Every part comes
- * from `factions/directorate.mjs`. Nothing here is a shape decision; where
- * the export is odd the script is odd with it: the counter-spike is grown
- * after the stinger, the claws' points rise out and up from bases near the
- * mound, two of the three nav marks sit low on the flank rather than on the
- * crown, the turret's steel and lamp carry the hull palette's names at their
- * own values, and the lamp burns at 0.905 of full strength.
+ * from `factions/directorate.mjs`. Nothing here is a shape decision but one;
+ * where the export is odd the script is odd with it: the counter-spike is
+ * grown after the stinger, the claws' points rise out and up from bases
+ * near the mound, two of the three nav marks sit low on the flank rather
+ * than on the crown, the turret's steel and lamp carry the hull palette's
+ * names at their own values, and the lamp burns at 0.905 of full strength.
+ *
+ * The one (#645, off #540 Phase 6): the two flank marks ride their scutes.
+ * The export put `nav_mark_0` at y 0.75 and `nav_mark_1` at 1.15, on the
+ * mound's flank under the plates it then laid over that flank — scute 0
+ * stands 0.71 to 1.39 over the first mark's column, scute 3 1.28 to 1.75
+ * over the second's — so both domes sat under a plate, seen by neither
+ * renderer and named on every build by the kit's light audit. Each mark's y
+ * is read off its scute's upper face over its own column and its centre
+ * sits on that face now, 1.39 and 1.75 — a photophore on a plate, as the
+ * navy's lie flat on a carapace; both still sit low on the flank, and
+ * nothing moves in plan. The marks are placed in the root frame, not the
+ * scutes', so a scute that moves re-buries its mark — and the audit names
+ * it on the next build, which is the guard. `node tools/hull-models/diff.mjs
+ * sentinel-turret-directorate HEAD` lists those two and nothing else.
  *
  * THE FRAME is the one every turret here shares, and the one the Light Scouts
  * state for the shared kinds (hulls/light-scout-pelagia.mjs): the export is
@@ -207,12 +221,14 @@ directorate.counterSpike(head, violet, {
 // "Navigation marks only": three photophore domes — two low on the flank, one
 // on the brow — which with the pip at the muzzle are the whole resting light.
 // `photophoreDomes` refuses a mirrored pair, as every light builder here does.
+// The flank two ride their scutes since #645 (the header); the export had
+// them under, at 0.75 and 1.15.
 directorate.photophoreDomes(root, crimson, {
   r: 0.08,
   facets: [5, 4],
   domes: [
-    ['nav_mark_0', drawn([2.9, 0.75, 1.1])],
-    ['nav_mark_1', drawn([-2.3, 1.15, -1.6])],
+    ['nav_mark_0', drawn([2.9, 1.39, 1.1])],
+    ['nav_mark_1', drawn([-2.3, 1.75, -1.6])],
     ['nav_mark_2', drawn([0.4, 3.45, -1.35])],
   ],
 });
