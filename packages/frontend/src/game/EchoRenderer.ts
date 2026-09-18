@@ -1331,6 +1331,22 @@ export class EchoRenderer {
   private readonly drawnNums: number[] = [];
   private readonly drawnStrs: string[] = [];
   private drawnN = 0;
+  /**
+   * The draw meter's bar, in HUD units: its right edge and its bottom, written
+   * where `drawHud` draws the segments (#757).
+   *
+   * `recordStrip` reads the `Text` objects the strip just laid out, which is
+   * what keeps it from holding a second copy of the layout — and it is also
+   * why, on its own, it can only ever record a *number*. The segments are
+   * `Graphics`, they are the last thing on the first row, and they run past
+   * the `DRAW` label they belong to. Nothing recorded them, so `acceptStrip`
+   * could refuse nothing for them: at 200% UI scale they print through the
+   * contact count, which kept a control over glyphs reading `███ontacts` —
+   * the surface wrong about a number rather than silent about it, which is the
+   * one thing ui-ux.md §13 promises it will not be.
+   */
+  private drawMeterRight = 0;
+  private drawMeterBottom = 0;
   private readonly stripNums: number[] = [];
   private readonly stripStrs: string[] = [];
   private stripN = 0;
@@ -6453,12 +6469,18 @@ export class EchoRenderer {
       this.berthsLabel.height,
       this.berthsLabel.text
     );
+    // The label and the segmented bar beside it are one instrument, so they
+    // are one readout — the same rule §3 puts the SIG bar and its two lines
+    // under. economy.md §2 makes the draw a rate that is never banked and the
+    // bar is how it says so; a control that stopped at `DRAW 6/4` would leave
+    // the half of the instrument that carries the meaning unexplained, and
+    // leave it unseen by the refusal below (#757).
     this.recordDrawn(
       'draw',
       this.drawLabel.x,
       this.drawLabel.y,
-      this.drawLabel.width,
-      this.drawLabel.height,
+      Math.max(this.drawLabel.width, this.drawMeterRight - this.drawLabel.x),
+      Math.max(this.drawLabel.height, this.drawMeterBottom - this.drawLabel.y),
       this.drawLabel.text
     );
     if (this.mapLabel.visible) {
@@ -6642,14 +6664,17 @@ export class EchoRenderer {
     const segments = Math.max(1, Math.min(12, Math.ceil(this.drawReport.demand)));
     const covered = Math.round(segments * this.drawReport.satisfaction);
     const segX = drawX + this.drawLabel.width + 8;
-    // The step and the segment's own width, named rather than inline because
-    // `firstRowEdge` below is measured from them (#743). A second copy of
-    // either is a second thing to keep right, and the number that goes stale
-    // is the one nothing draws.
+    // The step, the segment's own width and where the bar sits in the row,
+    // named rather than inline because `firstRowEdge` below and the box
+    // `recordStrip` records are both measured from them (#743, #757). A second
+    // copy of any of them is a second thing to keep right, and the number that
+    // goes stale is the one nothing draws.
     const segStep = 6;
     const segWidth = 4;
+    const segTop = 13;
+    const segHeight = 9;
     for (let i = 0; i < segments; i++) {
-      g.rect(segX + i * segStep, 13, segWidth, 9).fill({
+      g.rect(segX + i * segStep, segTop, segWidth, segHeight).fill({
         color: i < covered ? (deficit ? UI.threat : UI.accent) : UI.glassStroke,
         alpha: i < covered ? 0.9 : 0.35,
       });
@@ -6658,6 +6683,15 @@ export class EchoRenderer {
     // thing on it and its segments run past `drawLabel`, so the label's own
     // right edge is not the row's — which is the distinction #743 turned on.
     const firstRowEdge = segX + (segments - 1) * segStep + segWidth;
+    // The bar's own extent, kept for `recordStrip` (#757). It is read here
+    // rather than recomputed there for the same reason `firstRowEdge` is
+    // measured from `segStep` and `segWidth` rather than from 6 and 4: this is
+    // where the segments are drawn, so a box taken from anywhere else is a
+    // second copy of a layout. Two numbers on the instance rather than a rect,
+    // because this is the draw path and the strip's scratch exists to allocate
+    // nothing on it.
+    this.drawMeterRight = firstRowEdge;
+    this.drawMeterBottom = segTop + segHeight;
 
     // What your own noise is doing to your hearing, in words. The bed makes
     // this audible; §11 requires it also be readable.

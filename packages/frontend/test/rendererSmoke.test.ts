@@ -23,7 +23,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
-import { Text, type Container } from 'pixi.js';
+import { Graphics, Text, type Container, type GraphicsPath } from 'pixi.js';
 import { Faction, MovementHoldReason } from '@echoes/shared';
 import {
   createHost,
@@ -147,6 +147,57 @@ function stripGlyphs(
 
 /** `TOP_BAR_HEIGHT` in EchoRenderer, restated so a change to it fails here. */
 const TOP_BAR_HEIGHT_PX = 52;
+
+/**
+ * The draw meter's segments, in the CSS pixels the readout boxes are reported
+ * in (#757).
+ *
+ * The one part of the strip that is ink rather than a number: `drawHud` draws
+ * the bar as `Graphics` rects, so no walk over `Text` can see it and the test
+ * above — box against drawn glyph — is green while the bar prints through a
+ * readout. Read off the queued draw instructions, which is this file's own
+ * unit of evidence, rather than recomputed from the layout.
+ *
+ * Found by shape: `SEG` is the bar's own size in HUD units, and nothing else
+ * on the strip is drawn at it. A rect of the same size is asserted to be one
+ * of a run immediately right of the `DRAW` label before anything is concluded
+ * from it, so a stray match cannot pass for the bar.
+ */
+const SEG = { width: 4, height: 9 };
+
+function drawSegments(
+  app: HeadlessApplication,
+  scale: number
+): Array<{ x: number; y: number; width: number; height: number }> {
+  const found: Array<{ x: number; y: number; width: number; height: number }> = [];
+  const walk = (node: Container): void => {
+    for (const child of node.children) {
+      if (!child.visible) continue;
+      if (child instanceof Graphics) {
+        const at = child.getGlobalPosition();
+        for (const instruction of child.context.instructions) {
+          if (instruction.action !== 'fill') continue;
+          const path = (instruction.data as { path?: GraphicsPath }).path;
+          for (const step of path?.instructions ?? []) {
+            if (step.action !== 'rect') continue;
+            const [x, y, width, height] = step.data as number[];
+            if (width !== SEG.width || height !== SEG.height) continue;
+            if (y! >= TOP_BAR_HEIGHT_PX) continue;
+            found.push({
+              x: at.x + x! * scale,
+              y: at.y + y! * scale,
+              width: width * scale,
+              height: height * scale,
+            });
+          }
+        }
+      }
+      walk(child as Container);
+    }
+  };
+  walk(app.stage as unknown as Container);
+  return found.sort((a, b) => a.x - b.x);
+}
 
 /**
  * The strip's **first** row, as drawn (#743).
@@ -1298,6 +1349,112 @@ describe('renderer smoke test: the strip explains itself', () => {
         assert.ok(!hits, `the ${box.key} control covers "${glyph.text}", which is not its number`);
       }
     }
+
+    booted.teardown();
+  });
+
+  it('refuses a control to a readout the draw meter’s bar prints through', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+
+    // The blind spot #757 was filed for. `recordStrip` reads the `Text`
+    // objects the strip laid out, so the draw meter's bar — `Graphics`, and
+    // the last thing on the first row — was in no box at all, and a refusal
+    // that compares readouts against readouts can refuse nothing for ink that
+    // nothing recorded. The control was published over glyphs the bar prints
+    // through, which is the surface wrong about a number rather than silent
+    // about it: the one thing ui-ux.md §13 promises it will not be.
+    //
+    // 150%, because the scale this bites at is a fact about the fixture rather
+    // than about the product — §13 records it at 200% on the 1,440 px canvas
+    // the browser drive opens, and this strip is 1,280 px wide with a
+    // twelve-segment `DRAW 40/34`. The premise is asserted below rather than
+    // taken from either number.
+    const scale = 1.5;
+    booted.chart.setUiScale(scale);
+    booted.frame(3);
+
+    const bar = drawSegments(booted.app, scale);
+    assert.ok(bar.length > 0, 'the draw meter drew its bar');
+    // The rects are the bar and not some other ink of the same size: they are
+    // a run that starts just right of the `DRAW` label, checked before
+    // anything is concluded from them.
+    const label = firstRowGlyphs(booted.app, scale).find((glyph) => glyph.text.startsWith('DRAW'))!;
+    assert.ok(label !== undefined, 'the DRAW label is on the strip');
+    assert.ok(
+      bar[0]!.x > label.x + label.width && bar[0]!.x - (label.x + label.width) < 10 * scale,
+      'the bar starts just right of the DRAW label'
+    );
+
+    const count = firstRowGlyphs(booted.app, scale).find((glyph) =>
+      / contacts?$/.test(glyph.text)
+    )!;
+    assert.ok(count !== undefined, 'the contact count is on the strip');
+    // The premise, asserted rather than assumed. Without it every assertion
+    // below is green on a strip where nothing collides at all — which is how
+    // this defect survived the sweep that found the rest of them.
+    assert.ok(
+      bar.some((seg) => seg.x < count.x + count.width && count.x < seg.x + seg.width),
+      `the draw meter’s bar clears the contact count at ${scale * 100}%`
+    );
+
+    const collided = booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
+      .args[0] as ReadoutBox[];
+    // Both of them, and that is the existing rule rather than a new one: the
+    // bar is the draw meter's own half of one instrument, so a strip that has
+    // laid the two over each other has no control to offer for either. On
+    // `main` the count kept one — box x 1154 w 117 over a bar ending at 1203.
+    assert.ok(
+      !collided.some((box) => box.key === 'contacts'),
+      'the contact count is refused a control where the bar prints through it'
+    );
+    assert.ok(
+      !collided.some((box) => box.key === 'draw'),
+      'and so is the instrument printing through it'
+    );
+    assert.ok(collided.length > 0, 'while the rest of the strip is still explained');
+
+    // The positive control, twice over. At 135% the bar clears the count, and
+    // §13's sweep says every readout on the strip is explained there — so a
+    // fix that went quiet earlier than it had to would fail here rather than
+    // read as caution.
+    booted.chart.setUiScale(1.35);
+    booted.frame(3);
+    const clear = drawSegments(booted.app, 1.35);
+    const clearCount = firstRowGlyphs(booted.app, 1.35).find((glyph) =>
+      / contacts?$/.test(glyph.text)
+    )!;
+    assert.ok(
+      !clear.some(
+        (seg) => seg.x < clearCount.x + clearCount.width && clearCount.x < seg.x + seg.width
+      ),
+      'the bar is clear of the contact count at 135%'
+    );
+    const quiet = booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
+      .args[0] as ReadoutBox[];
+    for (const key of ['draw', 'contacts']) {
+      assert.ok(
+        quiet.some((box) => box.key === key),
+        `${key} keeps its control at 135%`
+      );
+    }
+
+    // And the other half of the fix, at a scale with room to see it: the draw
+    // meter's control covers its bar rather than stopping at the label,
+    // because economy.md §2's rate and the segments that say how much of it is
+    // covered are one instrument — the rule §3's meter and its two lines are
+    // already under.
+    booted.chart.setUiScale(1);
+    booted.frame(3);
+    const plain = booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
+      .args[0] as ReadoutBox[];
+    const draw = plain.find((box) => box.key === 'draw')!;
+    assert.ok(draw !== undefined, 'the draw meter keeps its control');
+    const barEnd = drawSegments(booted.app, 1).at(-1)!;
+    assert.ok(
+      draw.x + draw.width >= barEnd.x + barEnd.width,
+      'and its control covers the bar, not just the label'
+    );
 
     booted.teardown();
   });
