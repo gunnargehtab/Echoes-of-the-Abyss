@@ -136,8 +136,7 @@ const REFIT_PR = 3;
  * over a Scout's 12 at cruise, the galleries' 25 cleared by a Submersible's 22
  * idle rather than by its 28 cruise, the Third's 28 a Corvette's own cruise
  * figure. Those three, not every ceiling in the tree: `seeding-tend`'s 20 and
- * `convocation.ts`'s row ceiling of 26 are outside §4's list. Here it is the
- * button or nothing, which is a fact about this map's four hulls.
+ * `convocation.ts`'s row ceiling of 26 are outside §4's list.
  */
 const HUSH_CEILING_SIG = SILENT_RUNNING.SIG_MAX;
 
