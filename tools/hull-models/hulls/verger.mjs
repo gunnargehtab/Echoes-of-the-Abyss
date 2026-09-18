@@ -71,10 +71,13 @@
  * ribbed capsule … twice the beam, with the four bays reading as a belly")
  * was drawn blunter at both ends than a plate series with a rostrum and a
  * duct can be: 18 m of half-beam 12 m from the bow where the model has 11,
- * and 14 m at the stern's last 4 m where the duct is 6.5. The middle holds
- * its 22 m from −23 to +23 as drawn, and the hatches add their collars to
- * the outline on alternating sides, which is the plan §3.6 says an
- * asymmetric hull generates as drawn.
+ * and 14 m at the stern's last 4 m where the duct is 6.5. The middle
+ * carries the drawn 22 m at the two amidships plate centres, x = ±8, and
+ * scallops between and beyond them — 18.6 m at x = 0, 19 m at the third
+ * and fourth plates' centres — which is the plate series' own plan and
+ * more this navy's than a parallel side would be; and the hatches add
+ * their collars to the outline on alternating sides, which is the plan
+ * §3.6 says an asymmetric hull generates as drawn.
  *
  * Every part comes from `factions/directorate.mjs`. The hatches, the keel,
  * the ducted drive, the crown lamp and the crown-height rule were written
@@ -89,12 +92,13 @@ const STERN = -L / 2;
 
 /**
  * The six tergites, stern first: `[x, half-length, half-height, half-beam]`,
- * the scales the orbs are drawn at. Height is 0.6 of the beam — rounder
- * than the Dredge's 0.4 and a little flatter than the Precentor's 0.65 —
- * because a pressure hull is round in section and a hold is not a shovel.
- * The two amidships plates match, so the plan holds its full 44 m of beam
- * from −23 to +23 and the four bays read as one belly; the plates overlap
- * by about a half-length, as the Dredge's do, so the seams stand as ribs.
+ * the scales the orbs are drawn at. Height is 0.6 of the beam (the bow
+ * plate 0.58) — rounder than the Dredge's 0.4 and a little flatter than
+ * the Precentor's 0.65 — because a pressure hull is round in section and
+ * a hold is not a shovel. The two amidships plates match, so the plan
+ * carries its full 44 m at both, scalloping to 37 m between them, and the
+ * four bays read as one belly; the plates overlap by about a half-length,
+ * as the Dredge's do, so the seams stand as ribs.
  */
 const SEGMENTS = [
   [-34, 11, 9.6, 16],
@@ -145,8 +149,9 @@ directorate.listeningDome(root, { red, violet, black, crimson }, {
 });
 
 // Four dorsal spines on the four aft plates, alternating sides — 3 m to
-// port, 4 m to starboard — 6, 7, 8 and 8 m from the stern, raked 0.35
-// forward and cut five-sided, each with its base a metre into the shell;
+// port, 4 m to starboard — 6, 7, 8 and 8 m long, numbered from the stern,
+// raked 0.35 forward and cut five-sided, each with its base a metre into
+// the shell;
 // the tallest tops the dome's crown by 3 m, as the Chorister's tops its
 // bladder dome.
 // `dorsalSpines` refuses a mirrored pair; this rank never offers one.

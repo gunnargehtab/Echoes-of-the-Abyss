@@ -535,9 +535,9 @@ const HAND_DRAWN_OUTLINE: Record<Exclude<UnitKind, ModelledUnitKind>, number[][]
   // which is the state it anchors in. Widest amidships and rounded at both
   // ends, so it reads apart from the Sower's leaf (wide at the bow, a stem
   // aft), the Thurible's shield over a tail, the Lure's fan at the stern and
-  // the Verger's capsule, whose flanks run parallel where these bulge. The
-  // scallops are the Veil's own outline (drawStructureSilhouette, below)
-  // given a bow and a stern.
+  // the Verger's ribbed capsule, scalloped at its plate seams where these
+  // bulge lobe by lobe. The scallops are the Veil's own outline
+  // (drawStructureSilhouette, below) given a bow and a stern.
   [UnitKind.Bower]: [
     [0.5, 0.0],
     [0.45, 0.11],

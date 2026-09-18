@@ -14,14 +14,15 @@
  * Built, not ported (#783, off #540 Phase 4): the first Order hull drawn from
  * the module's vocabulary with no approved binary behind it, so every number
  * here is a decision, and this header says which ones the block did not
- * make. Metre-true at 110 with no root scale: the emitter core's tip is the
- * bow at x 55 and the drive prism's base the stern at −55.
+ * make. Metre-true at 110 with no root scale: the bow prism's tip is the bow
+ * at x 55 and the drive prism's base the stern at −55.
  *
  * The body is the rung's blade — a four-facet spar laid flat, the Cantus's
- * section of 0.55 by 1.6 — and it is a spar: 88 m long, 15.8 m in beam and
- * 5.4 m tall at its fullest station, a beam-to-length of 0.14 against the
- * Clarion's 0.13. Everything wider than that is a planar surface, which is
- * the module's rule for this navy, and there are two of them:
+ * section of 0.55 by 1.6 — and it is a spar: 96 m long, 15.8 m in beam and
+ * 5.4 m tall at its fullest station, a beam-to-length of 0.144 against the
+ * Clarion's 0.121 (10.85 m on 90, metre-true). Everything wider than that is
+ * a planar surface, which is the module's rule for this navy, and there are
+ * two of them:
  *
  * - The landing deck (`landingDeck`) is one faceted plate, an elongated
  *   hexagon 36 m long and 34 m across, 1.2 m thick, laid over the crown
@@ -35,21 +36,21 @@
  *   a row, and "precise bilateral symmetry" (Block 2) keeps one on the
  *   centreline; the beam still opens wide amidships for them, which is what
  *   the hand-drawn outline this model replaces said it must do, and the
- *   generated outline says it: flat at ±0.152 of the length from x 0.04 to
- *   −0.16, the ring's hexagon.
+ *   generated outline says it: the deck's hexagon is a flat run at ±0.152
+ *   of the length from x 0.04 to −0.15.
  * - The resonator ring (`deckRing`) lies flat around the three wells: an
- *   alloy ring 30 m across, its crystal inner ring inside it, both resting
- *   on the deck with 1 m of apron outside the ring at the flanks and 4 m at
- *   the nose and tail. It is a ring on its side where the Responsory's are
- *   canted shoulders, and it is the one thing on the hull an enemy's track
- *   will show that is not a blade. The crystal is `resonance_crystal` clad,
- *   not a lamp: the block flares it "when the deck opens", the resting bake
- *   is the state the chart shows, and a lamp dark at rest is a lamp this
- *   pipeline never shows (models-plan.md §3.2; the Responsory's header,
- *   twice).
+ *   alloy ring 32 m across the outside of its tube, its crystal inner ring
+ *   inside it, both resting on the deck. Outside the alloy ring the apron
+ *   is 1 m at the flanks and 2 m at the nose and tail. It is a ring on its
+ *   side where the Responsory's are canted shoulders, and it is the one
+ *   thing on the hull an enemy's track will show that is not a blade. The
+ *   crystal is `resonance_crystal` clad, not a lamp: the block flares it
+ *   "when the deck opens", the resting bake is the state the chart shows,
+ *   and a lamp dark at rest is a lamp this pipeline never shows
+ *   (models-plan.md §3.2; the Responsory's header, twice).
  *
  * The guard wings are the Clarion's wing under the Cantus's name: swept
- * plates 0.9 m thick, 21 m to the tip, the crystal edge a strip along it and
+ * plates 0.9 m thick, 23 m to the tip, the crystal edge a strip along it and
  * no lamp. They run beside the deck rather than behind it — the root from
  * x −4 to −38 with the leading edge coming out from under the apron's flank
  * at its after corner and sweeping to the tip at x −22 — so that the
@@ -58,40 +59,43 @@
  * of 11 m between the two, and a plan that read as two hulls. They sit with
  * their top face against the deck's underside, not on the hull axis, so
  * they frame the deck as the block asks rather than carry the hull as the
- * Clarion's do.
+ * Clarion's do. The tip is at 23 m and not 21, a shape decision taken at
+ * review: at 21 the wings stood 4 m beyond a 34 m deck and the track's
+ * beam read as the deck, against the module's own rule that on an Order
+ * hull the beam is wing; at 23 the outline's tips are ±0.208 over the
+ * deck's ±0.152, and the wing owns it.
  *
- * The bow carries the whole of the resting light, and the bow is an array —
- * a smaller horn than the Clarion's, its lip lit, an emitter crystal in its
- * mouth and the core standing 2 m proud of it, exactly the Clarion's idiom
- * at two-thirds the size. The block names no array among the parts and the
- * stat block says "no weapon"; what licenses one is the same stat block's
- * SIG — 35 ahead, 3.5 astern, a cone figure like every Order hull's
- * (docs/systems-echo.md §8) — because a hull that is ten times louder ahead
- * than astern is projecting something forward, and the Order's forward
- * projector is a horn. The Cantus has none because its 80 sings "in every
- * quarter"; the Antiphon's does not. So the horn is the cone made visible,
- * unarmed, and the block should say so (the report proposes the words).
- * There are no horn seams and no spine thread: the bake target is
- * E(5.4) = 0.66, the floor of the band table, "nearly black; navigation
- * marks only, barely visible".
+ * The bow is the Cantus's: a plain alloy point where the Clarion has its
+ * horn, and one navigation mark abaft it. `bowArray` is the Order's gun
+ * idiom — its approved callers are the Clarion and the Responsory, both
+ * hulls whose blocks name an array — and this hull has "no weapon" in its
+ * block, in the transports' preamble and in docs/units.md. A first cut put
+ * a smaller horn here on the argument that a cone figure means something
+ * projecting forward; review turned that down, correctly, because
+ * docs/systems-echo.md §8 makes the cone a property of every Knight hull and
+ * not of a bow part, and the Cantus has already settled how an unarmed
+ * Order hull ends: "the hull saying it has no array, in the place a Knight
+ * would look for one" (hulls/cantus.mjs). So the prism is 10 m of alloy
+ * point on the blade's nose, and the mark 3 m abaft its base, flat on the
+ * crown.
  *
  * The spine is in two pieces because the deck cuts it: a fore ridge with
- * its crystal inlay from under the deck's nose to the horn, and an after
- * ridge from under the deck's tail down onto the drive prism, which is a
- * four-facet crystal point 10 m long lifted 0.4 m off the axis so the
- * ridge's end lies inside its base — "the drive in the spine". No ring, no
- * stern mark: the block says dark astern and stops, where the Clarion's
- * says "dark astern but for one mark", and 3.5 is the quietest quarter in
- * the navy.
+ * its crystal inlay from under the deck's nose out to x 31, where the crown
+ * is still under it, and an after ridge from under the deck's tail down
+ * onto the drive prism, which is a four-facet crystal point 10 m long
+ * lifted 0.4 m off the axis so the ridge's end lies inside its base — "the
+ * drive in the spine". No ring, no stern mark: the block says dark astern
+ * and stops, where the Clarion's says "dark astern but for one mark", and
+ * 3.5 is the quietest quarter in the navy.
  *
- * Resting light, all of it forward of the deck's centre, and the kit's
- * audit clean: the array lip, 9.6 m² facing up; the emitter core, 2.6; and
- * one navigation mark each side on the deck's forward shoulders, 0.75 each
- * — the family's licence at every band. 13.8 m² on 2,013 m² of plan. The
- * bake reads raw E 6.82 and dims by ×0.096 onto 0.66, six and a half times
- * above its ×1/64 floor and nowhere near the ×64 ceiling a light-starved
- * hull runs into. 23 parts, 1,340 triangles, bounds x ±55, y −5.2..5.6,
- * z ±21.
+ * Resting light, all of it forward, and the kit's audit clean: the bow
+ * mark, 1.0 m² facing up, and one navigation mark each side on the deck's
+ * forward shoulders, 0.75 each — the band table's floor row, "navigation
+ * marks only, barely visible", and the family's licence at every band.
+ * 2.5 m² on 2,109 m² of plan (the bake's 33,747 mask px at 4 px/m). The
+ * bake reads raw E 1.16 and dims by ×0.570 onto 0.66, inside its ×1/64..×64
+ * range with room either way. 21 parts, 1,280 triangles, bounds x ±55,
+ * y −5.2..5.6, z ±23.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -112,9 +116,9 @@ const node = hadron.ink.resonanceNode();
 const root = new THREE.Group();
 root.name = 'hadron_antiphon';
 
-// The body: 88 m of spar from x −49 to 39, fullest at x −6 under the deck,
+// The body: 96 m of spar from x −49 to 47, fullest at x −6 under the deck,
 // closed to a small radius at both ends so each open end of the lathe sits
-// inside the part that takes over — the drive prism astern, the horn ahead.
+// inside the prism that takes over — the drive astern, the bow point ahead.
 hadron.bladeBody(root, shadow, {
   profile: [
     [-49, 1.2],
@@ -123,16 +127,18 @@ hadron.bladeBody(root, shadow, {
     [-24, 6.4],
     [-6, 7.0],
     [12, 6.3],
-    [28, 4.6],
-    [36, 3.0],
-    [39, 1.2],
+    [28, 5.0],
+    [38, 3.6],
+    [44, 1.8],
+    [47, 0.8],
   ],
   facets: 4,
   flat: BLADE,
 });
 
-// The fore spine and its inlay, from under the deck's nose to the horn's
-// root; the inlay is crystal clad and unlit, as the Clarion's is.
+// The fore spine and its inlay, from under the deck's nose out along the
+// blade to where the crown falls away; the inlay is crystal clad and unlit,
+// as the Clarion's is.
 hadron.spine(
   root,
   { alloy, crystal, seam },
@@ -140,19 +146,19 @@ hadron.spine(
     profile: [
       [10, 0.3],
       [16, 1.6],
-      [34, 1.6],
-      [40, 0.6],
+      [26, 1.6],
+      [31, 0.4],
     ],
-    y: 2.45,
+    y: 2.2,
     flat: [0.7, 1],
     inlay: {
       profile: [
-        [16, 0.5],
-        [20, 1.4],
-        [30, 1.4],
-        [34, 0.4],
+        [15, 0.4],
+        [18, 1.3],
+        [24, 1.3],
+        [28, 0.4],
       ],
-      y: 3.3,
+      y: 3.0,
       flat: [0.5, 1],
     },
   }
@@ -174,37 +180,15 @@ hadron.spine(
   }
 );
 
-// The bow array: the horn, its lit lip, the emitter crystal and its core —
-// the Clarion's at two-thirds the size, no seams, no ridges. The core's tip
-// is the bow at x 55.
-hadron.bowArray(
-  root,
-  { alloy, crystal, seam, node },
-  {
-    y: 0.5,
-    horn: {
-      profile: [
-        [34, 1.4],
-        [40, 2.5],
-        [46, 3.6],
-        [49.5, 4.4],
-        [50, 4.1],
-      ],
-      flat: [0.7, 1],
-    },
-    lip: {
-      mat: seam,
-      profile: [
-        [49.7, 4.35],
-        [50.6, 4.6],
-        [51.0, 4.0],
-      ],
-      flat: [0.7, 1],
-    },
-    ridges: false,
-    emitter: { x: 50, r: 1.8, length: 6, core: { x: BOW - 3, r: 1.0, length: 6 } },
-  }
-);
+// The bow: a plain alloy point where the Clarion has its horn, and one mark
+// abaft it — the Cantus's answer for an Order hull with no weapon (the
+// header). The point's tip is the bow at x 55.
+hadron.bowPrism(root, { alloy, seam }, {
+  x: BOW - 5,
+  r: 2.2,
+  length: 10,
+  mark: { size: [1, 0.4, 0.8], x: 42, y: 1.15 },
+});
 
 // The landing deck: a hexagonal plate over the crown, its top at y 3.6,
 // and the three wells through it to floors 0.8 m down. The ring's centre
@@ -251,17 +235,17 @@ hadron.wings(
     outline: [
       [-38, 2.5],
       [-4, 2.5],
-      [-22, 21],
-      [-30, 20],
+      [-22, 23],
+      [-30, 22],
     ],
     t: 0.9,
     y: 1.95,
     edge: {
       outline: [
-        [-30, 20],
-        [-22, 21],
-        [-21.6, 19.9],
-        [-29.2, 18.9],
+        [-30, 22],
+        [-22, 23],
+        [-21.6, 21.9],
+        [-29.2, 20.9],
       ],
       t: 1.4,
       y: 2.1,
@@ -293,7 +277,7 @@ hadron.drive(
 );
 
 // Two navigation marks on the deck's forward shoulders, outboard of the
-// ring — with the array, the whole of the resting light.
+// ring — with the bow mark, the whole of the resting light.
 hadron.navMarkPair(root, seam, { x: 2, y: 3.75, z: 15.2 });
 
 await exportGlb(root, 'antiphon-hadron.glb');

@@ -453,10 +453,11 @@ UNIT — Antiphon (pair with Hadron Knights): the Order's way of arriving, 110 m
 — three berths of hull, and what it lands, lands with +1 PR for twenty seconds
 (SIG 12 idle, 35 cruise ahead, 3.5 astern; 44 ahead with a full hold; no
 weapon; 700 hull). A faceted blade hull in the Clarion's family with a wide
-three-bay landing deck let into its back, a crystal resonator ring around the
-deck that is the grant made visible, swept guard wings, and the drive in the
-spine. Lit from the bow back like every Order hull and dark astern; the
-resonator ring flares when the deck opens.
+three-bay landing deck across its back, the three bays let into it, a crystal
+resonator ring lying flat around the deck that is the grant made visible, swept
+guard wings framing the deck, and the drive in the spine. Lit from the bow back
+like every Order hull — a navigation mark at the bow and on each shoulder of the
+deck — and dark astern; the resonator ring flares when the deck opens.
 ```
 
 ### The scouts — one a navy, and two ways of not being heard

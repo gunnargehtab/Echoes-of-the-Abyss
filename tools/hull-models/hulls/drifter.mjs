@@ -35,13 +35,19 @@
  *   every band (docs/asset-prompts-3d.md, "Glow encodes loudness"; #775 on
  *   the Responsory's marks), and a symmetric pair of seams says nothing
  *   about which way the hull is facing. One, smaller than the Spinner's
- *   two, on a bow 3.4 m across.
+ *   two, on a bow 3.4 m across. It burns at strength 1, as the Spinner's
+ *   two and the Chorister's do (spinner.mjs, chorister-pelagia.mjs), where
+ *   the seams burn at a fifth (`SEAM` below): a mark is the one light the
+ *   floor row licenses whole, and a mark dimmed with the seams would read
+ *   as a third seam. In the conn view that is 0.618 luminance against a
+ *   seam's 0.066 — the brightest thing on the quietest hull, and half a
+ *   square metre of it.
  * - **Three vanes, none a pair.** "Trim vanes rather than planes" is two
  *   leaves forward where a submarine carries its bow planes, each its own
  *   size and rake, and one dorsal on the peduncle. The module refuses a
  *   matched pair, and the block's plural is what the third one answers to.
  * - **The bays are not quite a pair either.** The port bay is the longer
- *   and sits half a metre further aft; the starboard the fuller. The
+ *   and sits a metre and a half further aft; the starboard the fuller. The
  *   navy's rule that pods sit where they grew (`cargoLobes` refuses a
  *   matched pair) — a metre's difference at sprite scale, a grown thing at
  *   the conn view's.
@@ -72,12 +78,18 @@ const BOW = L / 2;
 const STERN = -L / 2;
 
 /**
- * How faintly the seams burn: a fifth of the Spinner's vein. The bake
- * dims a map onto E(4) whatever the file says; the conn view does not, and
- * keeps a lamp's authored strength (rosterModels.ts `applyLiveGlow`), so
- * at the vein's full strength the two seams carried a raw E of 11.7 — half
- * again the SIG-8 Spinner's 7.6 on a hull that idles at 4 — and at this
- * they carry less than the SIG-6 Light Scout's 3.2. "Faint" is a number.
+ * How faintly the seams burn: a fifth of the Spinner's vein. The bake dims
+ * a map onto E(4) whatever the file says; the conn view does not — its
+ * `recolor` keeps the file's `emissiveIntensity` and `applyLiveGlow` writes
+ * that times the SIG factor (rosterModels.ts) — so there the fifth is a
+ * fifth, linear: at strength 1 these two seams would burn as the Spinner's
+ * vein does on a hull half as loud. The chart does not scale the same way.
+ * page.html's emissive pass multiplies the colour by min(strength, 1) and
+ * renders sRGB-encoded, so a fifth of the strength is 0.46 of the mapped
+ * energy: at 1 the model measured raw E 11.32, half again the SIG-8
+ * Spinner's 7.56; at this, 5.75, the seams alone 4.99 — still 1.6× the
+ * SIG-6 Light Scout's 3.16 — and the calibration dims either onto 0.60.
+ * "Faint" is the conn view's number, and the conn view is where it holds.
  */
 const SEAM = 0.2;
 
@@ -95,8 +107,9 @@ root.name = 'pelagia_drifter';
  * forward of amidships and drawn out long astern to the peduncle the fluke
  * grows from, closed to a point at the bow. 11.2 m across the waist and
  * 8.1 m tall — the navy's rule that beam is body, on a hull the block
- * calls slim: the Spinner is 16.8 m across on 55 m, and the bays, not the
- * body, are what make this one wide.
+ * calls slim: the Spinner's body is 15 m across on 55 m and its beam 21.5
+ * over the sacs and fins, and the bays, not the body, are what make this
+ * one wide.
  */
 const SQUASH = 0.72;
 const PROFILE = [
@@ -207,7 +220,7 @@ pelagia.trimVanes(root, membrane, {
   ],
 });
 
-// The single muscle-drive fluke: one paddle off the peduncle, 9.8 m across
+// The single muscle-drive fluke: one paddle off the peduncle, 9.5 m across
 // at its widest and drawn to the stern, its port lobe the shorter. 0.4 m
 // between its faces with a 0.2 m bevel, so its waist stands 0.8 m thick and
 // a bevel proud of the outline — which is why the outline stops 0.2 m short
