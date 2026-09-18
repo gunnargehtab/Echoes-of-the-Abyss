@@ -1704,12 +1704,15 @@
    columns to the right of the token with it. Driven on `attending-the-dome`
    with one long token in the text, the middle track resolves to 412.75px
    without these two declarations against 218.69px with them, and the progress
-   counter's *layout* box lands at x 567 against a panel edge of 381. It is
-   not drawn there: `.objectives-body` sets `overflow-y: auto`, and an
+   counter's *layout* box lands at x 567 against a body edge of 381 — and it
+   is not drawn there. `.objectives-body` sets `overflow-y: auto`, and an
    `overflow` that is `visible` on one axis computes to `auto` on the other,
-   so the body clips and the counter is simply absent. §2's own words for that
-   are that a scrollbar "makes the part that did not fit invisible rather than
-   absent"; this is the worse half.
+   so the body is a scroll container on both and clips at its padding box
+   (checked in Chromium: `overflowX` computes to `auto` and `scrollLeft`
+   moves). The counter is therefore not spilled over the world but scrolled
+   out of a box the game never teaches anyone to scroll — §2's "invisible
+   rather than absent, and the player cannot tell the difference", which is
+   the state §2 rejects a scrollbar for.
 
    Two declarations, because either alone leaves the other free to push: the
    `minmax(0, …)` gives the *track* a floor, and `min-width: 0` gives the
