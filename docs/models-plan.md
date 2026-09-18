@@ -322,12 +322,19 @@ the Blight's, and §3.2 says which one the model lights.
   floods, the ladder strips and the manifold strip light only cutting and are clad in
   `amber_lamp_unlit` (§3.2 rule 2).
 - **Blight.** `podBody` with `growthRings`, widest a little forward of amidships and never
-  wider at the bow than at the waist; one spore sac (`bladder`) sunk into the back as a
-  paler dome; leaf trim vanes; a muscle-drive fluke. New: the husk parted at the bow into
-  two rounded lobes curling outward, and the seeding arm standing in the cleft — a short
-  jointed stem folded back on itself with a pale sac head under a membrane, reaching no
-  further than the husk's lips. Curved everywhere; not a fork. Resting lamps: navigation
-  marks; the sac's dome carries no lamp; nothing brightens when it seeds, by design.
+  wider at the bow than at the waist, the nose shut blunt inside the cleft; the spore sac is
+  `bladder` in the spore-pale finish, given a `name` and a `z` for it, sunk into the back
+  amidships as a paler dome, ringless; `trimVanes`, one a side and not a pair, their tips at
+  the waist's half-beam and not over it; `driveFluke` off the peduncle. New: `huskLobes`, the
+  husk parted at the bow into two rounded lobes, each its own lathe at its own signed z with
+  its aft stations buried in the nose and curled outboard in the geometry rather than yawed
+  (`curlOutboard` — bent, not splayed, which is what keeps it from a fork); and `seedingArm`
+  standing in the cleft — a root knuckle half-sunk in the nose's crown, a stem up and forward
+  to an elbow, folded back to a wrist, and the pale sac head there under a membrane hood open
+  forward, the elbow four metres inside the lips. Curved everywhere; not a fork. Resting
+  lamps: `navMarks`, two; the stem vein runs from the arm's root to the sac's rim, is under
+  way only and clad (`sweptVein` in `bio_vein_unlit`); the sac's dome, the head and the hood
+  carry no lamp; nothing brightens when it seeds, by design.
 - **Lure.** `rostrum`, three overlapping `tergites`, a jointed abdomen, folded
   `walkingLimbs`, a ribbed pressure keel, `bladderDome` in the abdomen forward of the fan.
   New: the sounding fan — five chitin plates opened wide astern, two a side about a telson

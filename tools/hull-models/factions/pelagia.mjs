@@ -310,10 +310,17 @@ export function ribFan(root, { ridge, vein }, opts) {
  * same way: each ring a lathed ridge cresting at `r + 0.8`, its shoulders
  * `rise` below, `halfWidth` 0.8 unless said — the Sower's two are 0.7 m
  * ridges on sixteen facets.
+ *
+ * `name` and `z` are the Blight's: its spore sac is this orb sunk into
+ * the back amidships in the spore-pale finish rather than chitin, a
+ * little off the centreline, ringless and unlit (hulls/blight.mjs;
+ * docs/models-plan.md §3.2 rule 4). The Sower's stays `bladder` on the
+ * keel line.
  */
-export function bladder(root, { chitin, ridge }, { x, y, r, squash = 0.5, rings = [], ring }) {
+export function bladder(root, { chitin, ridge }, opts) {
+  const { name = 'bladder', x, y, z = 0, r, squash = 0.5, rings = [], ring } = opts;
   const tube = 0.8;
-  add(root, 'bladder', orb(16, 8), chitin, [x, y, 0], [0, 0, 0], [r, r * squash, r]);
+  add(root, name, orb(16, 8), chitin, [x, y, z], [0, 0, 0], [r, r * squash, r]);
   rings.forEach(([dx, rr], i) =>
     add(
       root,
@@ -325,7 +332,7 @@ export function bladder(root, { chitin, ridge }, { x, y, r, squash = 0.5, rings 
         facets: ring.facets,
       }),
       ridge,
-      [x + dx, y, 0],
+      [x + dx, y, z],
       [0, 0, 0],
       [1, squash, 1]
     )
@@ -2598,6 +2605,122 @@ export function layPort(root, { chitin, ridge, membrane }, opts) {
       [Math.PI / 2 - angle, 0, -curl]
     );
   });
+}
+
+/* --------------------------------------------------------------------------
+ * The siege hulls (#786, off #540 Phase 4): the Blight's parted husk and
+ * the seeding arm that stands in it.
+ *
+ * Built to its block, as the Weaver's builders above were: nothing here
+ * answers to a binary in docs/concept-art/models/. X-long in the kit's
+ * frame, yawing nothing. Both compose one side at a time — a lobe is on
+ * the flank its `z` names and is placed there by itself, never through
+ * `bothSides` (docs/models-plan.md §3.6). hulls/blight.mjs is the consumer.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Curl a lofted body outboard: every vertex from `from` along x to `to`
+ * is carried across z by `reach · t²`, t running 0 to 1 over that span,
+ * so the root stays where it was lathed and the tip swings out on a
+ * quadratic — a husk lobe peeling away from the seed it covered, bent
+ * rather than splayed, which a yaw of the whole lathe would be. x is
+ * untouched, so a tip lathed at the bow stays the bow (kit.mjs
+ * `metreTrue`). The normals are recomputed, because a bend is not a
+ * rigid move and the lathe's were computed straight.
+ */
+function curlOutboard(geo, { from, to, reach, sgn }) {
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const t = Math.min(1, Math.max(0, (pos.getX(i) - from) / (to - from)));
+    pos.setZ(i, pos.getZ(i) + sgn * reach * t * t);
+  }
+  pos.needsUpdate = true;
+  geo.computeVertexNormals();
+  return geo;
+}
+
+/**
+ * The husk parted at the bow — "its husk parted at the bow into two
+ * rounded lobes that curl outward": two lobes, each a lathe of its own
+ * `[x, r]` `profile` in chitin on `facets`, squashed `squash`, laid along
+ * the keel at its own signed `z` (port negative, #642) with its aft
+ * stations buried in the body's nose and its fore station the tip, curled
+ * outboard by `curl` metres over the run from `from` to that tip
+ * (`curlOutboard`), then rolled `roll` radians about its own axis. Rounded
+ * because a lathe closes at its tip on whatever the last stations draw and
+ * the caller draws them blunt; "not a fork" is the caller's to keep, by
+ * holding the lobes' outer edges inside the waist. Two because the block
+ * counts two, and each its own profile, curl and roll — a matched pair is
+ * refused. `husk_lobe_<side>`.
+ */
+export function huskLobes(root, chitin, { lobes, facets = 12 }) {
+  refuseMirror('husk_lobe', lobes, (l) => `${l.profile.map((s) => s.join()).join('|')}|${l.curl}`);
+  lobes.forEach(({ side, z, y = 0, profile, squash = 0.85, curl = 0, from, roll = 0 }) => {
+    if (!z) throw new Error(`husk_lobe_${side}: a lobe on the keel line has no side`);
+    const sgn = Math.sign(z);
+    const tip = profile[profile.length - 1][0];
+    const geo = curlOutboard(loft(profile, facets), {
+      from: from ?? profile[0][0],
+      to: tip,
+      reach: curl,
+      sgn,
+    });
+    add(root, `husk_lobe_${side}`, geo, chitin, [0, y, z], [roll, 0, 0], [1, squash, 1]);
+  });
+}
+
+/**
+ * The seeding arm standing in the cleft — "a short jointed stem folded
+ * back on itself with the spore head at its tip, a pale sac under a
+ * membrane, reaching no further than the husk's own lips". Six parts, in
+ * this order: `seed_arm_root`, a squashed orb of ridge half-sunk in the
+ * nose's crown at `joints[0]`; `seed_arm_stem_0`, a seven-sided tapered
+ * spar from it to the elbow; `seed_arm_knuckle`, the elbow's orb at
+ * `joints[1]`; `seed_arm_stem_1`, folded back from the elbow to the wrist
+ * at `joints[2]`; `seed_arm_head`, the sac, a squashed orb in the caller's
+ * pale finish centred at `head.at`; and `seed_arm_hood` over it, a
+ * part-sphere of membrane `hood.grow` of the head's radius, covering the
+ * sac's crown and back and open toward +x and below (three's sphere
+ * starts its azimuth at −x, so `hood.phi` is the arc it covers, centred
+ * aft), pitched `hood.pitch` nose-up about z so the sac presents forward
+ * and up, and rolled `hood.roll` its own few degrees off square. The
+ * stems are oriented by quaternion between their joints, kit.mjs
+ * `strut`'s way, so the fold is whatever the three joints say; the caller
+ * keeps every joint inside the lips. No part of it carries a lamp:
+ * nothing on this arm brightens when it seeds (docs/models-plan.md §3.2,
+ * rule 4).
+ */
+export function seedingArm(root, { ridge, chitin, sac, membrane }, opts) {
+  const { joints, knuckles, stems, head, hood } = opts;
+  const [rootAt, elbowAt, wristAt] = joints.map((j) => new THREE.Vector3(...j));
+  const knuckle = (name, at, { r, squash = 0.85, facets = [10, 6] }) =>
+    add(root, name, orb(...facets), ridge, at.toArray(), [0, 0, 0], [r, r * squash, r]);
+  const stem = (name, a, b, { r: [rBase, rTip], facets = 7 }) => {
+    const d = b.clone().sub(a);
+    const mesh = new THREE.Mesh(cyl(rTip, rBase, d.length(), facets), chitin);
+    mesh.name = name;
+    mesh.position.copy(a).add(b).multiplyScalar(0.5);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize());
+    root.add(mesh);
+    return mesh;
+  };
+  knuckle('seed_arm_root', rootAt, knuckles[0]);
+  stem('seed_arm_stem_0', rootAt, elbowAt, stems[0]);
+  knuckle('seed_arm_knuckle', elbowAt, knuckles[1]);
+  stem('seed_arm_stem_1', elbowAt, wristAt, stems[1]);
+  const { at, r, squash = 0.85, facets = [12, 6] } = head;
+  add(root, 'seed_arm_head', orb(...facets), sac, at, [0, 0, 0], [r, r * squash, r]);
+  const { grow = 1.14, phi = 1.1 * Math.PI, theta = 0.6 * Math.PI, pitch = 0, roll = 0 } = hood;
+  const R = r * grow;
+  add(
+    root,
+    'seed_arm_hood',
+    new THREE.SphereGeometry(1, facets[0], facets[1], -phi / 2, phi, 0, theta),
+    membrane,
+    hood.at ?? at,
+    [roll, 0, pitch],
+    [R, R * squash, R]
+  );
 }
 
 export { THREE };
