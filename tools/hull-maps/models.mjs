@@ -121,6 +121,16 @@ export const UNITS = [
   { slug: 'glider', model: 'glider-pelagia.glb', lengthM: 55, sig: 8 },
   { slug: 'acolyte', model: 'acolyte-directorate.glb', lengthM: 58, sig: 10 },
   { slug: 'herald', model: 'herald-hadron.glb', lengthM: 65, sig: 6.3 },
+  // The ordnance hulls (docs/units.md "The ordnance hulls", #785 — Phase 4's
+  // third box): one a navy, so each model is the kind's canonical one. The
+  // Thurible carries no lock and takes the Chorister's rule, as the Verger
+  // and the Acolyte do. The Lance's listed 20 is a cone figure like the
+  // Herald's: it bakes on the compass average, 9, and the light is placed
+  // forward, in the muzzle collar.
+  { slug: 'broadside', model: 'broadside-bathyarch.glb', lengthM: 120, sig: 42 },
+  { slug: 'weaver', model: 'weaver-pelagia.glb', lengthM: 70, sig: 12 },
+  { slug: 'thurible', model: 'thurible-directorate.glb', lengthM: 105, sig: 16 },
+  { slug: 'lance', model: 'lance-hadron.glb', lengthM: 95, sig: 9 },
 ];
 
 /**
