@@ -44,24 +44,31 @@
  * simplifier, run once round a closed polygon, which was already leaving
  * eight unmatched points on this hull before the pass.
  *
- * A third light went in #775, and it was never sealed: it was the one lit
- * part the block does not light at rest. `spine_thread` — a `crystal_seam`
+ * A third light went in #775, and it was never sealed: it was the one lit part
+ * the block names and puts under way, so a lamp on it at rest contradicted the
+ * block rather than going unmentioned by it. `spine_thread` — a `crystal_seam`
  * lamp 43 m long on the inlay's top, 13.25 m² of plan area and 30 % of the
  * hull's resting lit area — was here because `hadron.spine` drew one unless
  * told not to. The block puts the thread under way — "the array brightens
  * along its whole length and a thread runs the spine to the rings" — and the
- * subsection's own gloss says what rest is: "the cone lit and the flanks
- * not". A lamp dark at rest is a lamp this pipeline never shows: the chart
- * bakes the resting state, and the conn view swings every lamp from its
+ * subsection's own gloss says what rest is: "the cone lit and the flanks not".
+ * The three marks the block is silent on stay: the Clarion's block licenses
+ * its stern mark ("dark astern but for one mark"), this hull's inherits it
+ * ("the same fall away astern, the faction's shape and not this hull's"), and
+ * the band table's floor row is "navigation marks only", so a mark is licensed
+ * at every band. A lamp dark at rest is a lamp this pipeline never shows: the
+ * chart bakes the resting state, and the conn view swings every lamp from its
  * resting strength by one factor (`applyLiveGlow`), so nothing dark at rest
  * lights under way. That is the rule the ring cores went on, and the thread
- * goes on it too — removed rather than clad, because the block names no
- * thread among the hull's parts, only among its lights. The bow array and
- * the two nav marks carry the whole of E(27) now: 31.6 m² facing up where
- * 44.9 did, raw E 22.1 where 28.7, and the bake's gain ×0.139 where ×0.108,
- * nowhere near the ×64 ceiling. 43 parts and 2,256 triangles become 42 and
- * 2,244; `diff.mjs responsory-hadron 7fbb9ba` lists the one removal and no
- * movement, and the outline does not change.
+ * goes on it too — removed rather than clad, because the block names no thread
+ * among the hull's parts, only among its lights. The bow array, the two nav
+ * marks and the drive's stern mark carry the whole of E(27) now: 31.6 m²
+ * facing up where 44.9 did, raw E 22.1 where 28.7, and the bake still dimming,
+ * at ×0.139 where it was ×0.108: a sevenfold surplus of raw energy, 8.9× above
+ * the ×1/64 floor, and nowhere near the ×64 ceiling a light-starved hull runs
+ * into. 43 parts and 2,256 triangles become 42 and 2,244; `diff.mjs
+ * responsory-hadron 7fbb9ba` lists the one removal and no movement, and the
+ * outline does not change.
  */
 import { THREE, bothSides, add, box, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -115,7 +122,8 @@ hadron.finAndKeel(root, alloy, {
 hadron.drive(root, { shadow, crystal, node }, { x: -43.6, r: 2.3 });
 hadron.panelSeams(root, alloy, { from: -26, to: 22, count: 4, halfBeam: 4.2 });
 
-// Two navigation marks abaft the rings, the only light that is not forward.
+// Two navigation marks abaft the rings — with the drive's stern mark, the
+// only light that is not forward.
 bothSides((side, sgn) =>
   add(root, `nav_mark_${side}`, box(1.6, 0.3, 0.5), seam, [-16, 4.9, sgn * 3.4]));
 
