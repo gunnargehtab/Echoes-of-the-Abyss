@@ -1,6 +1,13 @@
 /**
- * Enough of the CSS box model to answer one question these tests cannot
- * otherwise ask: does an element's **border box** fit the box that holds it?
+ * Enough of the CSS box model to answer two questions these tests cannot
+ * otherwise ask, both of them about whether something fits:
+ *
+ * - does an element's **border box** fit the box that holds it (`#752`);
+ * - can a grid row be pushed wider than that box by what sits **inside** it
+ *   (`#760`)?
+ *
+ * They are separate axes and they failed separately on the same row, which is
+ * why the second one is here rather than assumed to follow from the first.
  *
  * The frontend suite renders through `react-test-renderer`, which builds an
  * object tree and lays nothing out, so an overflow is invisible to it — #752
@@ -22,15 +29,27 @@
  *   that could change the box (`rulesTargeting`);
  * - a property in `BOX_PROPERTIES` that `resolveBox`'s switch does not handle,
  *   which is what stops that set and that switch drifting apart;
- * - a length in a unit it cannot turn into px (`lengthPx`).
+ * - a length in a unit it cannot turn into px (`lengthPx`);
+ * - a rule sitting under a condition it cannot evaluate, which since #760 is
+ *   **any** at-rule that is not a known self-contained one — `@media`,
+ *   `@supports`, `@container`, `@layer`, `@scope` and anything nobody here has
+ *   heard of alike (`boxRulesFor`);
+ * - an `!important` anywhere in a value it reads, which is unmodelled and
+ *   throws wherever it appears — `lengthPx` on the box side, `floorOf` on the
+ *   track side.
  *
- * What it does **not** model, and does not need to: inheritance, `calc()`,
- * custom properties, cascade layers, `!important`, and specificity beyond
- * source order. That last one is an approximation rather than a refusal, so it
- * is the one to know about — every rule it reads here is a bare class or a
- * tag-and-class, and those are written in increasing specificity anyway
- * (`.objectives-row` before `p.objectives-row`). A stylesheet that put the tag
- * rule first would be read wrongly here and correctly by a browser.
+ * What it does **not** model and does **not** throw on — so these are the
+ * assumptions rather than the refusals: inheritance, and specificity beyond
+ * source order. The second is the one to know about, because
+ * every rule it reads here is a bare class or a tag-and-class and those are
+ * written in increasing specificity anyway (`.objectives-row` before
+ * `p.objectives-row`); a stylesheet that put the tag rule first would be read
+ * wrongly here and correctly by a browser.
+ *
+ * `calc()` and custom properties are refused in one direction and assumed in
+ * the other, which is worth knowing precisely: a length the *box* arithmetic
+ * needs throws (`lengthPx`), while a *track floor* takes a `calc()` as definite
+ * under the assumption named on `TrackFloor`.
  *
  * Writing directions are assumed horizontal and left-to-right, which is what
  * the client ships; the logical properties below are mapped on that basis.
@@ -118,9 +137,17 @@ const NOT_AT_REST = new Set([
 export interface CssRule {
   selector: string;
   declarations: Array<[string, string]>;
-  /** The `@media`/`@supports` prelude this rule sits under, or null at top level. */
+  /** The at-rule prelude this rule sits under, or null at top level. */
   condition: string | null;
 }
+
+/**
+ * At-rules whose block is not a list of style rules, so skipping it drops
+ * nothing that could style an element. Named rather than inferred: everything
+ * else is treated as a condition, which is the failing-loud direction.
+ */
+const SELF_CONTAINED_AT_RULES =
+  /^@(keyframes|-\w+-keyframes|font-face|font-feature-values|font-palette-values|counter-style|property|page|view-transition)\b/;
 
 /**
  * Every rule in a stylesheet, flattened, with the condition it sits under.
@@ -160,13 +187,34 @@ export function parseCss(css: string): CssRule[] {
     if (open === -1) break;
     const prelude = clean.slice(i, open).trim();
 
-    if (/^@(media|supports)\b/.test(prelude)) {
-      condition = prelude;
-      i = open + 1;
-      continue;
-    }
     if (prelude.startsWith('@')) {
-      // `@keyframes`, `@font-face` — nested blocks this reader has no use for.
+      // A *statement* at-rule — `@import`, `@charset`, `@namespace` — ends at
+      // a semicolon and has no block, so the `{` found above belongs to
+      // whatever rule comes next. Skipping to that semicolon is what stops the
+      // brace walk swallowing a real rule, or taking a whole selector into a
+      // condition.
+      const semicolon = clean.indexOf(';', i);
+      if (semicolon !== -1 && semicolon < open) {
+        i = semicolon + 1;
+        continue;
+      }
+      // An at-rule whose block holds ordinary rules that *do* apply, under a
+      // condition or a precedence this reader cannot evaluate. Recording the
+      // prelude as the condition is what lets `boxRulesFor` refuse it; the
+      // list is open on purpose, because the failure it prevents is a
+      // stylesheet growing an at-rule nobody here has heard of and having its
+      // declarations silently vanish. Before #760 anything that was not
+      // `@media` or `@supports` was skipped whole, so a `@container` or an
+      // `@layer` re-boxing the row reported the outer answer and no throw —
+      // a `definite` this file had not earned, in the one direction it says
+      // it will never fail.
+      if (!SELF_CONTAINED_AT_RULES.test(prelude)) {
+        condition = prelude;
+        i = open + 1;
+        continue;
+      }
+      // `@keyframes`, `@font-face` and friends: nested blocks whose contents
+      // are not rules that style anything, so there is nothing to drop.
       i = matchingBrace(open);
       continue;
     }
@@ -343,13 +391,17 @@ function targets(selector: string, element: Element): Verdict {
  * stylesheet growing a shape this reader does not model fails loudly here
  * rather than silently dropping a declaration that mattered.
  */
-export function rulesTargeting(rules: CssRule[], element: Element): CssRule[] {
+export function rulesTargeting(
+  rules: CssRule[],
+  element: Element,
+  properties: Set<string> = BOX_PROPERTIES
+): CssRule[] {
   const out: CssRule[] = [];
   for (const rule of rules) {
     for (const selector of rule.selector.split(',')) {
       const verdict = targets(selector, element);
       if (verdict === 'unknown') {
-        if (!rule.declarations.some(([property]) => BOX_PROPERTIES.has(property))) continue;
+        if (!rule.declarations.some(([property]) => properties.has(property))) continue;
         throw new Error(
           `cssBox cannot read the selector \`${selector.trim()}\`, and it sets a box property`
         );
@@ -374,11 +426,15 @@ export function rulesTargeting(rules: CssRule[], element: Element): CssRule[] {
  * does this today: the one media query touching the panel restyles
  * `.objectives`, not the rows inside it.
  */
-export function boxRulesFor(rules: CssRule[], element: Element): CssRule[] {
-  const targeted = rulesTargeting(rules, element);
+export function boxRulesFor(
+  rules: CssRule[],
+  element: Element,
+  properties: Set<string> = BOX_PROPERTIES
+): CssRule[] {
+  const targeted = rulesTargeting(rules, element, properties);
   for (const rule of targeted) {
     if (rule.condition === null) continue;
-    if (!rule.declarations.some(([property]) => BOX_PROPERTIES.has(property))) continue;
+    if (!rule.declarations.some(([property]) => properties.has(property))) continue;
     throw new Error(
       `cssBox does not evaluate \`${rule.condition}\`, and \`${rule.selector}\` sets a box property under it`
     );
@@ -628,4 +684,192 @@ export function borderBoxWidth(query: BorderBoxQuery): number {
   // rather than adding to it — but they cannot make the box narrower than
   // themselves, which is the floor the browser clamps to.
   return box.boxSizing === 'border-box' ? Math.max(width, extra) : width + extra;
+}
+
+/**
+ * Every declaration that decides what a grid row's **columns** refuse to
+ * shrink below.
+ *
+ * A second closed set beside `BOX_PROPERTIES`, because the two questions this
+ * file answers depend on different declarations and a reader that threw on
+ * every selector it could not parse — whatever the rule happened to set —
+ * would refuse most of this stylesheet. The item's half of the same floor —
+ * `min-width` on the children — is not here and does not need to be: it is a
+ * box property, so it comes through `BOX_PROPERTIES` and `resolveBox`, which
+ * is where the tests read it.
+ *
+ * `grid-template` and `grid` are here without being modelled, deliberately.
+ * Either can set the columns, so a stylesheet that grew one must fail loudly
+ * in `columnFloors` rather than have it read an older longhand and report a
+ * floor the browser does not have.
+ */
+export const TRACK_PROPERTIES = new Set([
+  'display',
+  'grid-template-columns',
+  'grid-template',
+  'grid',
+]);
+
+/**
+ * What one column track refuses to shrink below.
+ *
+ * `definite` is a length, a percentage or a `calc()`: a number the browser can
+ * reach without looking at the track's contents, so nothing a mission authors
+ * into that column can change the row's width. `content` is min-content of
+ * whatever sits there — the floor #760 is about, because authored prose has no
+ * bound and one long unbreakable token sets it.
+ *
+ * A `calc()` is taken as `definite` on an assumption worth naming, because
+ * this file models neither `calc()` nor custom properties: that every `var()`
+ * inside it substitutes to something the expression can use. One that does not
+ * makes the `calc()` invalid at computed-value time, which takes the whole
+ * `grid-template-columns` declaration to its initial `none` — and then *every*
+ * track is an implicit `auto` and the floor below is undone, while this still
+ * answers `definite`. The shipped first track is
+ * `calc(3.2rem * var(--panel-type, 1))` and `--panel-type` is a plain number
+ * (`GameCanvas.tsx`), so the assumption holds today rather than always.
+ *
+ * A bare `<flex>` is `content`, and that is the case worth naming: `1fr` looks
+ * like a share of the free space and is one, but its *automatic minimum* is
+ * min-content, so a `1fr` track holding a long word is as unshrinkable as an
+ * `auto` one. `minmax(0, 1fr)` is the same track with that minimum written
+ * down.
+ */
+export type TrackFloor = { kind: 'definite'; value: string } | { kind: 'content'; from: string };
+
+/** The track sizing keywords whose minimum is the contents of the track. */
+const CONTENT_SIZED = new Set(['auto', 'min-content', 'max-content']);
+
+/** Split on whitespace, or on commas, at paren depth zero only. */
+function topLevel(value: string, on: 'space' | 'comma'): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let current = '';
+  for (const ch of value) {
+    if (ch === '(') depth++;
+    else if (ch === ')') depth--;
+    const breaks = on === 'space' ? /\s/.test(ch) : ch === ',';
+    if (depth === 0 && breaks) {
+      if (current.trim() !== '') out.push(current.trim());
+      current = '';
+      continue;
+    }
+    current += ch;
+  }
+  if (current.trim() !== '') out.push(current.trim());
+  return out;
+}
+
+/** A definite length, or a throw naming the track it came from. */
+function definiteFloor(length: string, track: string): TrackFloor {
+  if (length === '0') return { kind: 'definite', value: length };
+  if (/^calc\(.*\)$/.test(length)) return { kind: 'definite', value: length };
+  if (/^-?[\d.]+(px|rem|em|ch|ex|vw|vh|vmin|vmax|%)$/.test(length)) {
+    return { kind: 'definite', value: length };
+  }
+  throw new Error(`cssBox cannot read the track \`${track}\``);
+}
+
+/** One track's floor, from the sizing function the stylesheet wrote for it. */
+function floorOf(track: string): TrackFloor {
+  if (CONTENT_SIZED.has(track)) return { kind: 'content', from: track };
+  // `<flex>`: a share of the free space, but min-content underneath it.
+  if (/^[\d.]+fr$/.test(track)) return { kind: 'content', from: track };
+  // `fit-content(x)` clamps the *maximum* at x; the minimum stays min-content.
+  if (/^fit-content\(.*\)$/.test(track)) return { kind: 'content', from: track };
+
+  const minmax = /^minmax\((.*)\)$/.exec(track);
+  if (minmax === null) return definiteFloor(track, track);
+
+  const parts = topLevel(minmax[1], 'comma');
+  if (parts.length !== 2) throw new Error(`cssBox cannot read the track \`${track}\``);
+  const min = parts[0];
+  if (CONTENT_SIZED.has(min)) return { kind: 'content', from: track };
+  // A `<flex>` is not a legal minimum, so a stylesheet with one here is
+  // something this reader should not be quietly interpreting.
+  if (/fr$/.test(min)) throw new Error(`cssBox cannot read the track \`${track}\``);
+  return definiteFloor(min, track);
+}
+
+/**
+ * Each column track of a grid element, in order, by what it refuses to shrink
+ * below.
+ *
+ * This is the other half of the question `borderBoxWidth` answers. That one
+ * says how wide the row's box is *declared*; this one says whether the row can
+ * be pushed past it from the inside, which is a property of the tracks and of
+ * nothing else in the box arithmetic. #752 was the first; #760 is the second,
+ * on the same row.
+ *
+ * Throws, in this file's register, on everything it cannot settle: an element
+ * that is not a grid, a `grid`/`grid-template` shorthand it does not model, a
+ * `repeat()` it would have to expand, and any track sizing function outside
+ * the list above.
+ */
+export function columnFloors(rules: CssRule[], element: Element): TrackFloor[] {
+  let display: string | undefined;
+  let columns: string | undefined;
+
+  for (const rule of boxRulesFor(rules, element, TRACK_PROPERTIES)) {
+    for (const [property, value] of rule.declarations) {
+      switch (property) {
+        case 'display':
+          display = value;
+          break;
+        case 'grid-template-columns':
+          columns = value;
+          break;
+        case 'grid-template':
+        case 'grid':
+          throw new Error(`cssBox does not model \`${property}: ${value}\``);
+        default:
+          break;
+      }
+    }
+  }
+
+  if (display !== 'grid' && display !== 'inline-grid') {
+    throw new Error(
+      `cssBox was asked for the tracks of \`${element.classes.join('.')}\`, whose display is \`${display ?? 'unset'}\``
+    );
+  }
+  if (columns === undefined) {
+    throw new Error(
+      `cssBox found no \`grid-template-columns\` on \`${element.classes.join('.')}\``
+    );
+  }
+  return topLevel(columns, 'space').map(floorOf);
+}
+
+/**
+ * Which column a child is placed in, 1-based, or undefined when the stylesheet
+ * places it nowhere and auto-flow decides.
+ *
+ * Only the single-integer form is read, because it is the only one the panel
+ * uses and because every other form — a span, a line name, `auto`, the
+ * `grid-area` shorthand — would have to be resolved against the flow to give
+ * an answer. Those throw rather than return undefined: "nothing places this"
+ * and "this is placed in a way I cannot read" are different facts, and a test
+ * that treated the second as the first would stop checking a column without
+ * saying so.
+ */
+export function columnOf(rules: CssRule[], element: Element): number | undefined {
+  const properties = new Set(['grid-column', 'grid-column-start', 'grid-area']);
+  let placement: string | undefined;
+
+  for (const rule of boxRulesFor(rules, element, properties)) {
+    for (const [property, value] of rule.declarations) {
+      if (property === 'grid-area') {
+        throw new Error(`cssBox does not model \`grid-area: ${value}\``);
+      }
+      if (properties.has(property)) placement = value;
+    }
+  }
+
+  if (placement === undefined) return undefined;
+  const single = /^(\d+)$/.exec(placement.trim());
+  if (single === null) {
+    throw new Error(`cssBox cannot read the placement \`grid-column: ${placement}\``);
+  }
+  return Number(single[1]);
 }

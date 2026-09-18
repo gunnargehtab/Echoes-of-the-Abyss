@@ -1670,7 +1670,7 @@
 
 .objectives-row {
   display: grid;
-  grid-template-columns: calc(3.2rem * var(--panel-type, 1)) 1fr auto;
+  grid-template-columns: calc(3.2rem * var(--panel-type, 1)) minmax(0, 1fr) auto;
   gap: 8px;
   width: 100%;
   /* `width: 100%` is the body's content width, and these 8s are added to it
@@ -1691,6 +1691,43 @@
   text-align: left;
   cursor: pointer;
   user-select: text;
+}
+
+/* #752 fixed the row's border box; this is the grid inside it, which is a
+   separate axis and was untouched by that change. A `1fr` track's automatic
+   minimum is min-content, and the middle track holds the mission's own
+   sentence and its gloss — authored prose, so nothing bounds the longest
+   unbreakable token in it.
+
+   The row itself never grows — `width: 100%` and `border-box` pin its border
+   box to the body. What grows is the grid inside it, and it carries the
+   columns to the right of the token with it. Driven on `attending-the-dome`
+   with one long token in the text, the middle track resolves to 412.75px
+   without these two declarations against 218.69px with them, and the progress
+   counter's *layout* box lands at x 567 against a body edge of 381 — and it
+   is not drawn there. `.objectives-body` sets `overflow-y: auto`, and an
+   `overflow` that is `visible` on one axis computes to `auto` on the other,
+   so the body is a scroll container on both and clips at its padding box
+   (checked in Chromium: `overflowX` computes to `auto` and `scrollLeft`
+   moves). The counter is therefore not spilled over the world but scrolled
+   out of a box the game never teaches anyone to scroll — §2's "invisible
+   rather than absent, and the player cannot tell the difference", which is
+   the state §2 rejects a scrollbar for.
+
+   Two declarations, because either alone leaves the other free to push: the
+   `minmax(0, …)` gives the *track* a floor, and `min-width: 0` gives the
+   *items* in it one, a grid item's automatic minimum being min-content as
+   well. What neither does is stop the token's own glyphs printing across the
+   cells beside it — in any row where the token shares a line with the counter,
+   it prints straight over it. That is a third axis, how a word may be broken,
+   and §2 is what it is owed against rather than taste; it is #774 and not this
+   rule's to close.
+
+   It is the pair the contact log has carried since its own columns overran
+   each other. `.mission-result-objective` and `.mission-log-row` are the same
+   shape without it — #773, left alone as outside #760. */
+.objectives-row > * {
+  min-width: 0;
 }
 
 /* An objective with nowhere to send the camera is still readable text; it
