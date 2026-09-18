@@ -35,11 +35,13 @@
  *   sides; the limbs fold at one angle in two matched ranks; the photophores
  *   run in ranks at a fixed pitch — starboard three to a plate, port two on
  *   every other plate — and the Precentor's starboard hydrophone rank is one
- *   longer than its port. (Both blocks had their sides the other way about
- *   until #650: the approved models were named and read with +z as port,
- *   #642 turned that reading round, and the prose was amended to the
- *   models.) The *rule* is regular and the *result* never mirrors, so the
- *   builders that place light refuse a mirrored pair outright.
+ *   longer than its port. (Until #650 the Dredge's block put the claw to
+ *   starboard and the boom to port, and the Precentor's put the longer rank
+ *   to port; neither block pins the photophores to a side. The approved
+ *   models were named and read with +z as port, #642 turned that reading
+ *   round, and the prose was amended to the models.) The *rule* is regular
+ *   and the *result* never mirrors, so the builders that place light refuse
+ *   a mirrored pair outright.
  * - **Light is a photophore, and it lies flat.** A photophore is a small flat
  *   box in `biolight_crimson` on an upward face of the carapace, because the
  *   maps are top-down (kit.mjs); the gullet and the hopper throat are the
