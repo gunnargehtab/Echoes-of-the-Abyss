@@ -23,6 +23,23 @@
  * - **Light is a vein.** Fifteen lit parts and every one of them is a strip on
  *   an upward face — seven rib veins, six margin lights, one on the stem, and
  *   the single bud at the node. Nothing on this hull points a lamp at anything.
+ *
+ * That last sentence is true since #645 and was not true of the approved
+ * binary, which is the one thing below that is not the file's own. Its six
+ * margin lights sat at y 1.8, 0.4 m tall, inside a bed whose top face is at
+ * 2.5 — their tops half a metre under it, in the bevel's own band — and its
+ * stem light at y 4.4 inside a keel standing from 3.5 to 6.5, 1.9 m of
+ * chitin over it: seven lit parts buried solid, seen from no angle by
+ * either renderer, and named on every build by the kit's light audit. The
+ * two ports (#546, #639) carried that, as a port must. This is the Phase 6
+ * pass it was deferred to: the margin lights ride the bed's top face and
+ * the stem light the keel's top edge, each sunk the 0.05 m the rib veins
+ * are sunk into their ribs, and nothing moves in plan — the pairs stand
+ * 1.3, 5.5 and 2.3 m inside the face's edge, the approved model's own
+ * stations, and the middle pair's 5.5 is kept as it is rather than moved
+ * out to the margin its name claims, because that would be a second
+ * decision this pass was not asked for. `diff.mjs` against `main`'s file
+ * lists those seven and nothing else.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -182,15 +199,19 @@ pelagia.stemKeel(root, ridge, { from: -38, to: -22, height: 3, y: 5 });
 pelagia.nose(root, ridge, { tip: 50, y: 0.2, r: 1.5, length: 6 });
 
 // Three margin lights a side and one on the stem: dim accents, all of them
-// flat on an upward face where the top-down maps can see them.
+// flat on an upward face where the top-down maps can see them — since #645,
+// the header says why. A margin light is 0.4 m tall on the bed's top face
+// at 2.5 (0.85 m up from the file's 1.8); the stem light the same on the
+// keel's top edge at 6.5 (2.25 m up from 4.4), a lit bar capping the fin
+// the way the Spinner's dorsal mark caps its blade.
 pelagia.edgeLights(root, light, {
-  y: 1.8,
+  y: 2.65,
   spots: [
     [8, 21],
     [20, 19.5],
     [32, 18],
   ],
 });
-pelagia.navMarks(root, light, { marks: [['stem_light', -32, 4.4]], w: 1.2, h: 0.4, d: 0.8 });
+pelagia.navMarks(root, light, { marks: [['stem_light', -32, 6.65]], w: 1.2, h: 0.4, d: 0.8 });
 
 await exportGlb(root, 'sower-pelagia.glb');
