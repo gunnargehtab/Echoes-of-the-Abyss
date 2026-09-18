@@ -1724,8 +1724,10 @@
    rule's to close.
 
    It is the pair the contact log has carried since its own columns overran
-   each other. `.mission-result-objective` and `.mission-log-row` are the same
-   shape without it — #773, left alone as outside #760. */
+   each other, and `.mission-result-objective` carries it too since #773.
+   `.mission-log-row` has the shape and not the exposure: its `1fr` is the
+   *last* column and `.mission-log-text` spans `1 / -1`, so no cell sits to the
+   right of the flexible track for a token to carry out of the panel. */
 .objectives-row > * {
   min-width: 0;
 }
