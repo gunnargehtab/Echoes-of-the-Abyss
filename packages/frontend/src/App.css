@@ -1725,9 +1725,12 @@
 
    It is the pair the contact log has carried since its own columns overran
    each other, and `.mission-result-objective` carries it too since #773.
-   `.mission-log-row` has the shape and not the exposure: its `1fr` is the
-   *last* column and `.mission-log-text` spans `1 / -1`, so no cell sits to the
-   right of the flexible track for a token to carry out of the panel. */
+   `.mission-log-row` has the shape and not this exposure: its `1fr` is the
+   *last* column and `.mission-log-text` spans `1 / -1`, and its tracks measure
+   the same with a long token in them as without, so no cell is carried
+   anywhere. It is not clear of the *other* axis, though, and has more of it
+   than either row here — 186 px of the authored line's own ink leaves
+   `.mission-log-entries`, which is #774's rather than this rule's. */
 .objectives-row > * {
   min-width: 0;
 }
