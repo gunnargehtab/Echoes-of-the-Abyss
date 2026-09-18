@@ -1047,6 +1047,7 @@ For environment props (Block 4):
 - [style-neon-noir.md](style-neon-noir.md) — glow rules and palette tokens
 - [units.md](units.md) — the roster and the SIG/PR numbers cited here
 - [glossary.md](glossary.md) — SIG, PF, HYD, PR definitions
+- [models-plan.md](models-plan.md) — how the blocks below that have no model yet become scripts (#540, Phase 4)
 
 ### The mid-tier — two guns that read SIG
 
