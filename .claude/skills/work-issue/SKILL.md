@@ -405,6 +405,14 @@ edited nine files and opened #714 without ever spawning the critic — good work
 self-reviewed, and indistinguishable from reviewed work. That is why the wording
 is an instruction now.
 
+**That loop is capped at three rounds**, in its own "Guardrails", which is what
+bounds a firing's spend on refining. Reaching the cap is not a failed run: the
+pull request has been open since the first increment that stood on its own, so
+the run stops with what is done and what is left written in its body, and §8's
+rounds line says the third round was the last. A firing that landed nothing in
+three rounds stops on §7's third case instead. Neither case is a reason to raise
+the cap — see "When the issue is the loop's own" below.
+
 The rule is the edit, not the outcome: **any run that changes a file goes
 through the rounds**, however small it looks. A run that changes none — a
 stand-down, a filing run, an investigation that ends in a comment — never
@@ -497,17 +505,20 @@ other — claim, rounds, gates, pull request — with one boundary.
 - §5's instruction to invoke `dev-loop`, and `loop-critic`'s separation from the
   author — its own file, its missing edit tools, and §8's rounds line, which is
   the only thing that makes a missing critic visible from outside.
+- `dev-loop`'s three-round cap, and the verification pass that is not a round.
+  The cap is what one firing may spend on refining, which makes it the same kind
+  of number as §2's.
 
 Everything else in these files is ordinary work: the register of a comment, the
 wording of a step, a case worth recording, a stale link, a claim that is no
 longer true. Change those in a pull request like anything else.
 
-For the four above, **write the issue and stop.** Say what the rule costs and
+For the five above, **write the issue and stop.** Say what the rule costs and
 what you would put in its place; a person decides. This is #540's rule at one
 remove — a generator that also grades itself is not a gate — and the loop is the
 generator here: it can widen what it may select without anyone having chosen
-that. The cap, the exclusions, the stopping cases and the critic are what stand
-between an unattended firing and work nobody meant it to have.
+that. The two caps, the exclusions, the stopping cases and the critic are what
+stand between an unattended firing and work nobody meant it to have.
 
 The boundary is about **authorship, not difficulty**. A one-word edit to §3's
 exclusion list is on the far side of it; a rewrite of §8's register is not.
@@ -713,8 +724,9 @@ Keep it to what a person needs in order to decide whether to step in:
 > **HH:MM — took #n** / **filed #a, #b** / **stopped on #n** / **nothing to do**
 > One line: the branch and the pull request, or the epic and the boxes it came
 > from, or why a comment beat a pull request.
-> Rounds: how many `dev-loop` rounds and the critic's last verdict — or **no
-> rounds** and why, or **critic unavailable** and what happened when you tried.
+> Rounds: how many `dev-loop` rounds and the critic's last verdict, and **at the
+> cap** when the third round was the last — or **no rounds** and why, or
+> **critic unavailable** and what happened when you tried.
 > Passed over: older eligible issues, one clause each, or "nothing older".
 > Needs a person: a stale claim, a `needs-decision` you applied and the call it
 > is waiting on, a recurring skip that wants a label you cannot apply, a branch
@@ -743,6 +755,11 @@ clone, `Task` refused, an error you could not get past — `dev-loop` degrades t
 self-review and **produces no error at all**: the gates still pass, the pull
 request still opens, and it reads exactly like a run that was reviewed. Nothing
 else in this repository can detect that from the outside.
+
+**Say when the cap bound, too.** Three rounds is a spending decision a person
+made on 18 September, and the only evidence for whether it is the right number is
+how often a firing stops on it with findings still open. That is one phrase in
+this line — **at the cap** — and nothing else in this repository records it.
 
 So write **critic unavailable** and what you saw when you tried, rather than
 omitting the line. A firing that says so is reporting the most useful thing it

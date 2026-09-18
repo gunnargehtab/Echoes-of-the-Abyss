@@ -591,6 +591,15 @@ The critic is a separate agent with no `Edit` and no `Write`, for the reason #54
 settled for hulls: **a generator that also grades itself is not a gate.** Two rounds in
 which the same finding survives is a stall, and a stall stops the loop and asks.
 
+**A change gets three rounds, and that cap is a person's to set.** It was ten until
+18 September, when it was cut to three for efficiency: an unattended firing spends around
+twenty dollars, and the rounds after the third are the ones nobody is watching. Reaching
+the cap is a stall like any other — the pull request stays open with the findings still
+open written in its body, so the next session or a person picks up a list instead of
+re-deriving one. Interactively the cap is where the loop asks, and a person can grant a
+fourth round; a firing cannot grant itself one, for the same reason it cannot raise the
+open-PR cap.
+
 Two rules bind it harder than they bind a person, because a refine loop is the thing most
 likely to break them by accident: it never tunes for balance (the freeze above is exactly
 what a loop maximising a number would launder), and it never resolves a docs/code
