@@ -213,7 +213,7 @@ Lamp bases are the near-black a `lamp()` puts in `color` for its emissive to sit
 | Navy | Role | Values |
 | --- | --- | --- |
 | Consortium | emissive | `#B07A1E` `amber_vent` · `#F28A1E` `amber_vent` (cruiser) · `#FFD070` `amber_flood` |
-| Consortium | cladding | `#1C1F22` `baffle-foam` (the Baffle Barge) |
+| Consortium | cladding | `#1C1F22` `baffle-foam` (the Baffle Barge) · `#1A1408` `amber_lamp_unlit` (the lamp's base worn as cladding by a part the block lights only in a later band — the Furnace's burner nozzles, bow floods, ladder strips and manifold strip, all of them lit only cutting) |
 | Consortium | lamp base | `#1A1408` · `#120E06` · `#2A2210` · `#1A1206` |
 | Commune | cladding | `#14332A` / `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` / `#14664C` `algae_hull` · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` · `#061206` `bio_vein_unlit` (the vein's base worn as cladding by a part the block lights only in a later band — the Glider's tail veins, dark with the drive cut, and the Weaver's stem vein) |
 | Commune | emissive | `#5FAE42` `bio_vein` (at strength 1 on the Sower and the Spinner, 0.2 on the Drifter's seams and the Glider's wing vein — a strength survives the recolour as a finish does) · `#E8F0A3` `forge_light` / `floodlight_pale` (the spore token as a light) |
@@ -658,27 +658,31 @@ silence is the design claim, not an omission.
 
 ```text
 UNIT — Furnace (pair with Consortium): the cutters, 115 m — thermal cutters,
-the same tool that opens kelp, turned on plate at 200 m, on a hull that must
+the same tool that opens kelp, turned on plate at 320 m, on a hull that must
 stand still at a wall for half a minute while a Bulwark keeps the line off it
 (SIG 40 idle, 55 cruise, 75 cutting; cutters that do 100 to a structure and
-9 to a hull every two seconds at 200 m, so a Corvette out-trades it four to
+9 to a hull every two seconds at 320 m, so a Corvette out-trades it four to
 one; 900 hull; 32 m/s; 380 nodules). A riveted box hull — the Tender's
 workshop turned outward — with three cutter ladders run out ahead of the bow
 from a boxed gantry frame, one on the keel and one either side: each a
 lattice boom with a hooded burner head at its end and gas lines strapped
 along it back to the manifold, so the plan is a box with three prongs at the
-bow and the prongs are the count. Behind the frame the gas plant, two ranks
-of banded gas cylinders in racks on the deck with a pump house and pipe runs
-between them; a bridge citadel aft; ballast blisters low on the hull; two
-prop tunnels in a square stern; plate patchworked older-under-newer. The
-flanks are bare — no casings, no tubes, no turret — because everything this
-hull does, it does ahead of itself at arm's length, and a burner head is a
-nozzle under a hood, not a muzzle. The model is the hull with its ladders
-run out and lit, which is the state it is built for; under way they stow
-raised against the frame. Sustained amber glow from the bridge ports, the
-gas plant's lamps and the stern vents, at rest and under way alike; cutting,
-burning bright — the three burner heads the brightest thing on the hull, the
-bow floodlit, the ladders and manifolds lit along their length, visible
+bow and the prongs are the count. Behind the frame the manifold house — the
+workshop itself, its forward face to the bow with the manifold header lying
+across it under the ladders' heels and a valve wheel to each — and behind
+that the gas plant, two ranks of banded gas cylinders in racks on the deck
+with lamp housings on the rack rails, a pump house and pipe runs between
+them; a bridge citadel aft; ballast blisters low on the hull; two prop
+tunnels in a square stern; plate patchworked older-under-newer. The flanks
+are bare — no casings, no tubes, no turret — because everything this hull
+does, it does ahead of itself at arm's length, and a burner head is a nozzle
+under a hood, not a muzzle. The model is the hull with its ladders run out,
+which is the state it is built for; under way they stow raised against the
+frame. Sustained amber glow from the bridge ports, the gas plant's lamps —
+the rack housings and the manifold house's ports and skylight — and the
+stern vents, at rest and under way alike; cutting, burning bright — the
+three burner heads the brightest thing on the hull, the bow floodlit from
+the frame, the ladders and the manifold lit along their length, visible
 machinery light: a siege you can hear being prepared.
 ```
 

@@ -40,6 +40,7 @@ import {
   flanks,
   pointLight,
   sidedPost,
+  strut,
 } from '../kit.mjs';
 
 /**
@@ -56,6 +57,19 @@ export const ink = {
   amberLamp: () => lamp('amber_lamp', hex('#F2B233'), hex('#1A1408')),
   amberVent: () => lamp('amber_vent', hex('#B07A1E'), hex('#120E06')),
   amberFlood: () => lamp('amber_flood', hex('#FFD070'), hex('#2A2210')),
+  /**
+   * The lamp family's *unlit* finish: `amber_lamp`'s base, #1A1408, at the
+   * lamp's own metalness and roughness and with no emissive — worn as
+   * cladding by a part the block lights only in a later band
+   * (docs/models-plan.md §3.2 rule 2): the Furnace's burner nozzles, bow
+   * floods, ladder strips and manifold strip, every one of them lit only
+   * cutting and built dark. The Directorate's `biolight_unlit`, the
+   * Commune's `bio_vein_unlit` and the Order's `crystal_seam_unlit` are the
+   * same rule in the other three navies. One name, one value
+   * (asset-prompts-3d.md Block 2b, rule 3); it recolours to near-black under
+   * any flag.
+   */
+  amberLampUnlit: () => clad('amber_lamp_unlit', hex('#1A1408'), 0, 0.4),
 };
 
 /** The body: a flat-sided slab from a plan outline, with a bow face and transom. */
@@ -652,10 +666,24 @@ export function spareRack(root, { grey, rust }, { x, z, plates }) {
   );
 }
 
-/** Gas bottles in a rank on the deck: eight-facet cylinders `pitch` apart (`gas_bottle_0..n`). */
-export function gasBottles(root, amber, { x, y, z, count, pitch, r, h }) {
-  for (let i = 0; i < count; i++)
-    add(root, `gas_bottle_${i}`, cyl(r, r, h, 8), amber, [x + i * pitch, y, z]);
+/**
+ * Gas bottles in a rank on the deck: eight-facet cylinders `pitch` apart
+ * (`gas_bottle_0..n`). `tag` names the rank when a hull carries more than
+ * one (`gas_bottle_s0..`), and `band` — `{ mat, r, h, dy }` — rings each
+ * bottle with a reinforcement band `dy` above its centre, written after
+ * its bottle (`gas_band_s0`), which is what "banded gas cylinders" (UNIT —
+ * Furnace) are. The Tender passes neither and draws as it always did.
+ */
+export function gasBottles(root, amber, { x, y, z, count, pitch, r, h, tag = '', band }) {
+  for (let i = 0; i < count; i++) {
+    add(root, `gas_bottle_${tag}${i}`, cyl(r, r, h, 8), amber, [x + i * pitch, y, z]);
+    if (band)
+      add(root, `gas_band_${tag}${i}`, cyl(band.r, band.r, band.h, 8), band.mat, [
+        x + i * pitch,
+        y + band.dy,
+        z,
+      ]);
+  }
 }
 
 /** A pipe run along each side of the deck (`pipe_run_p/s`): an eight-facet tube on X. */
@@ -1038,6 +1066,257 @@ export function tubeCasings(root, { black, grey, rust, lampM }, opts) {
       }
     });
   });
+}
+
+/* --------------------------------------------------------------------------
+ * The Furnace (#786, off #540 Phase 4): the cutters. What the Tender's gas
+ * plant and the Derrick's frame have no word for — a boxed gantry frame on
+ * the foredeck, three lattice cutter ladders run out through it ahead of
+ * the bow with a hooded burner head at each tip and the gas lines strapped
+ * along them, the manifold those lines run back to, and the racks the gas
+ * plant's cylinders stand in under their lamps. Built, not ported: the
+ * numbers are the hull script's, and every part the block lights only
+ * cutting is clad in `ink.amberLampUnlit` and never lit
+ * (docs/models-plan.md §3.2 rule 2).
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The boxed gantry frame at the bow the cutter ladders run out through —
+ * "a boxed gantry frame" (docs/asset-prompts-3d.md, UNIT — Furnace). Four
+ * legs on foot plates at the frame's two stations, a top beam a side and a
+ * cross beam at each station over them, a guide sill at each station at
+ * ladder height with a keeper over every ladder, one diagonal brace a
+ * side from the after foot to the forward beam, and the bow floods on the
+ * forward cross beam — clad, not lit, because the block floods the bow
+ * only cutting. The Derrick's `lattice` above is the same navy's frame
+ * carried out over both beams with its floods lit; this one stays inside
+ * the deck edge, so the flanks are bare and the plan outline is the box's,
+ * and lights nothing (`frame_leg_0..3 · frame_foot_0..3 · frame_beam_s/p ·
+ * frame_cross_a/f · frame_sill_a/f · ladder_keeper_a_<tag>.. ·
+ * ladder_keeper_f_<tag>.. · frame_brace_s/p · bow_flood_s/p`). Legs are
+ * numbered starboard aft, starboard forward, port aft, port forward, as the
+ * Derrick's are.
+ */
+export function cutterGantry(root, { grey, rust, unlit }, opts) {
+  const { fwd, aft, z, deck, top, leg, foot, beam, sill, keepers, brace, floods } = opts;
+  const stations = [
+    [aft, 'a'],
+    [fwd, 'f'],
+  ];
+  [
+    [aft, z],
+    [fwd, z],
+    [aft, -z],
+    [fwd, -z],
+  ].forEach(([x, lz], i) => {
+    add(root, `frame_leg_${i}`, box(leg.t, top - deck, leg.t), grey, [x, (top + deck) / 2, lz]);
+    add(root, `frame_foot_${i}`, box(foot.size, foot.h, foot.size), rust, [x, deck + foot.h / 2, lz]);
+  });
+  bothSides((side, sgn) =>
+    add(root, `frame_beam_${side}`, box(fwd - aft + beam.t, beam.t, beam.t), grey, [
+      (fwd + aft) / 2,
+      top,
+      sgn * z,
+    ])
+  );
+  for (const [x, tag] of stations)
+    add(root, `frame_cross_${tag}`, box(beam.t, beam.t, 2 * z + beam.t), grey, [x, top, 0]);
+  for (const [x, tag] of stations)
+    add(root, `frame_sill_${tag}`, box(sill.t, sill.t, 2 * z + sill.t), rust, [x, sill.y, 0]);
+  for (const [x, tag] of stations)
+    for (const [ktag, kz] of keepers.at)
+      add(root, `ladder_keeper_${tag}_${ktag}`, box(...keepers.size), rust, [x, keepers.y, kz]);
+  bothSides((side, sgn) =>
+    strut(
+      root,
+      `frame_brace_${side}`,
+      [aft, deck + foot.h, sgn * z],
+      [fwd, top - beam.t / 2, sgn * z],
+      grey,
+      brace.t
+    )
+  );
+  bothSides((side, sgn) =>
+    add(root, `bow_flood_${side}`, box(...floods.size), unlit, [fwd, floods.y, sgn * floods.z])
+  );
+}
+
+/**
+ * The cutter ladders run out ahead of the bow — "three cutter ladders run
+ * out ahead of the bow from a boxed gantry frame, one on the keel and one
+ * either side: each a lattice boom with a hooded burner head at its end
+ * and gas lines strapped along it back to the manifold, so the plan is a
+ * box with three prongs at the bow and the prongs are the count" (UNIT —
+ * Furnace). Each ladder is `[tag, z]`, written whole in the order given —
+ * starboard, keel, port — and the three are not a mirrored pair with one
+ * between: the keel ladder is the count's middle term and is placed at its
+ * own z like the others. A ladder is four chord rails along X; the lacing,
+ * a zig-zag of struts across each side face and across the top, `bays` a
+ * face, none on the underside nothing looks at; the light strip along the
+ * top chords; the head at the tip — the coupling block, the hood's top
+ * plate and two cheeks, the nozzle under them; the two gas lines along the
+ * lower chords outboard of them with the straps that hold them; and the
+ * feed drop at the aft end from each line to the manifold's height
+ * (`ladder_chord_s_0..3 · ladder_lace_s_s0.. · ladder_lace_s_p0.. ·
+ * ladder_lace_s_t0.. · ladder_strip_s · burner_block_s · burner_hood_s ·
+ * burner_cheek_s_s/p · burner_nozzle_s · gas_line_s_s/p · gas_strap_s_0.. ·
+ * gas_feed_s_s/p · ladder_chord_keel_0 …`).
+ *
+ * The strip and the nozzle are cladding in the lamp family's unlit finish,
+ * because the block lights them — "the three burner heads the brightest
+ * thing on the hull … the ladders and manifolds lit along their length" —
+ * only cutting (docs/models-plan.md §3.2 rule 2). The hood is what makes
+ * "a nozzle under a hood, not a muzzle": open ahead and below, its top
+ * plate the prong's tip in plan and its lip proud of the nozzle's face, so
+ * nothing on the ladder points the way a tube points. The prong's tip is
+ * the hood's forward edge, and the hull script puts it on the bow.
+ */
+export function cutterLadders(root, { grey, rust, unlit }, opts) {
+  const { ladders, aft, tip, y, half, chord, bays, lace, strip, head, lines, straps, feed } = opts;
+  const length = tip - aft;
+  const xc = (tip + aft) / 2;
+  const onX = [0, 0, Math.PI / 2];
+  const bay = length / bays;
+  for (const [tag, z] of ladders) {
+    [
+      [1, 1],
+      [1, -1],
+      [-1, 1],
+      [-1, -1],
+    ].forEach(([sy, sz], j) =>
+      add(root, `ladder_chord_${tag}_${j}`, box(length, chord, chord), grey, [
+        xc,
+        y + sy * half,
+        z + sz * half,
+      ])
+    );
+    // Side faces lace up and down between the lower and upper chords;
+    // the top face laces across between the two upper chords.
+    for (const [face, fz] of [
+      ['s', 1],
+      ['p', -1],
+      ['t', 0],
+    ])
+      for (let i = 0; i < bays; i++) {
+        const x0 = aft + i * bay;
+        const s = i % 2 ? -1 : 1;
+        const a = fz ? [x0, y - s * half, z + fz * half] : [x0, y + half, z - s * half];
+        const b = fz ? [x0 + bay, y + s * half, z + fz * half] : [x0 + bay, y + half, z + s * half];
+        strut(root, `ladder_lace_${tag}_${face}${i}`, a, b, grey, lace);
+      }
+    add(root, `ladder_strip_${tag}`, box(length - strip.inset, strip.h, strip.w), unlit, [
+      xc,
+      y + half + chord / 2 + strip.h / 2,
+      z,
+    ]);
+    add(root, `burner_block_${tag}`, box(...head.block.size), rust, [tip + head.block.dx, y, z]);
+    add(root, `burner_hood_${tag}`, box(head.length, head.plate, head.width), grey, [
+      tip + head.length / 2,
+      y + head.height / 2 - head.plate / 2,
+      z,
+    ]);
+    bothSides((side, sgn) =>
+      add(root, `burner_cheek_${tag}_${side}`, box(head.length, head.height, head.plate), grey, [
+        tip + head.length / 2,
+        y,
+        z + sgn * (head.width / 2 - head.plate / 2),
+      ])
+    );
+    add(
+      root,
+      `burner_nozzle_${tag}`,
+      cyl(head.nozzle.r, head.nozzle.r, head.nozzle.length, 8),
+      unlit,
+      [tip + head.nozzle.dx, y + head.nozzle.dy, z],
+      onX
+    );
+    bothSides((side, sgn) =>
+      add(root, `gas_line_${tag}_${side}`, cyl(lines.r, lines.r, length, 8), rust, [
+        xc,
+        y + lines.dy,
+        z + sgn * lines.dz,
+      ], onX)
+    );
+    straps.x.forEach((sx, i) =>
+      add(root, `gas_strap_${tag}_${i}`, box(...straps.size), rust, [sx, y + straps.dy, z])
+    );
+    bothSides((side, sgn) =>
+      add(root, `gas_feed_${tag}_${side}`, cyl(lines.r, lines.r, feed.h, 8), rust, [
+        feed.x,
+        feed.y,
+        z + sgn * lines.dz,
+      ])
+    );
+  }
+}
+
+/**
+ * The manifold the gas lines run back to: a header pipe lying across the
+ * manifold house's forward face at the feed drops' height, on a post a
+ * side where it runs past the house, a valve on it under each ladder — a
+ * hub standing forward off the header and the wheel on it facing the bow
+ * — and the sight strip along its top in the unlit finish, lit only
+ * cutting with the ladders (§3.2 rule 2) (`manifold_header ·
+ * manifold_post_s/p · valve_hub_<tag> · valve_wheel_<tag> .. ·
+ * manifold_strip`).
+ */
+export function gasManifold(root, { rust, grey, unlit }, opts) {
+  const { header, posts, valves, strip } = opts;
+  add(root, 'manifold_header', cyl(header.r, header.r, header.length, 8), rust, header.at, ATHWART);
+  bothSides((side, sgn) =>
+    add(root, `manifold_post_${side}`, cyl(posts.r, posts.r, posts.h, 8), rust, [
+      posts.x,
+      posts.y,
+      sgn * posts.z,
+    ])
+  );
+  for (const [tag, z] of valves.at) {
+    add(
+      root,
+      `valve_hub_${tag}`,
+      cyl(valves.hub.r, valves.hub.r, valves.hub.length, 8),
+      grey,
+      [valves.hub.x, header.at[1], z],
+      [0, 0, Math.PI / 2]
+    );
+    add(
+      root,
+      `valve_wheel_${tag}`,
+      torus(valves.wheel.R, valves.wheel.t, 6, 12),
+      grey,
+      [valves.wheel.x, header.at[1], z],
+      [0, Math.PI / 2, 0]
+    );
+  }
+  add(root, 'manifold_strip', box(...strip.size), unlit, strip.at);
+}
+
+/**
+ * The gas plant's racks — "two ranks of banded gas cylinders in racks on
+ * the deck" and "the gas plant's lamps" (UNIT — Furnace). For each rank,
+ * `[tag, z]`: the sill the bottles stand in, the bottles through
+ * `gasBottles` with their bands, a post at each end of the rank and the
+ * rail across them, and the plant's lamps on the rail — lit housings in
+ * the machinery light, their tops to the chart, which is the resting light
+ * the block names second and the one with plan area (`rack_sill_s ·
+ * gas_bottle_s0 · gas_band_s0 .. · rack_post_s_a · rack_post_s_f ·
+ * rack_rail_s · rack_lamp_s0.. · rack_sill_p …`).
+ */
+export function gasRacks(root, { grey, rust, amber, lampM }, opts) {
+  const { ranks, bottles, band, sill, posts, rail, lamps } = opts;
+  for (const [tag, z] of ranks) {
+    add(root, `rack_sill_${tag}`, box(...sill.size), rust, [sill.x, sill.y, z]);
+    gasBottles(root, amber, { ...bottles, z, tag, band: { mat: grey, ...band } });
+    for (const [end, x] of [
+      ['a', posts.xa],
+      ['f', posts.xf],
+    ])
+      add(root, `rack_post_${tag}_${end}`, box(...posts.size), grey, [x, posts.y, z]);
+    add(root, `rack_rail_${tag}`, box(...rail.size), grey, [rail.x, rail.y, z]);
+    lamps.x.forEach((x, i) =>
+      add(root, `rack_lamp_${tag}${i}`, box(...lamps.size), lampM, [x, lamps.y, z])
+    );
+  }
 }
 
 /* --------------------------------------------------------------------------

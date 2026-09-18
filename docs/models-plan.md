@@ -305,13 +305,22 @@ the Blight's, and §3.2 says which one the model lights.
 | Lure | Directorate | 100 m | 14 | fan spread, plectrum raised | `lure-directorate.glb` |
 | Tocsin | Knights | 105 m | 9.9 | braced, blades locked | `tocsin-hadron.glb` |
 
-- **Furnace.** `boxHull` with the Tender's `workshop` turned outward, `gasBottles` in two
-  ranks with `pumpHouse` and `pipeRuns` between them, a `citadel` aft, `ballastBlisters`,
-  two `propTunnels`; the flanks bare. New: a boxed gantry frame at the bow and three cutter
-  ladders run out ahead of it — `lattice` booms, one on the keel and one either side, with
-  hooded burner heads and gas lines strapped along them. Resting lamps: bridge ports, the
-  gas plant's lamps, the stern vents. The burner heads, the bow floods and the ladders are
-  lit only cutting, and are clad by default.
+- **Furnace.** `boxHull` with the Tender's `workshop` turned outward — the manifold house
+  abaft the frame, its forward face to the bow — then `gasRacks` (new: two ranks of banded
+  `gasBottles`, which took a rank tag and a band, each rank in a sill with a post at each
+  end, a rail across them and the plant's lamp housings on the rail), `pumpHouse` and
+  `pipeRuns` between the ranks, a `citadel` aft, `ballastBlisters`, two `propTunnel`s
+  notched into the stern; the flanks bare. New: `cutterGantry`, the boxed frame at the bow
+  with a guide sill at each station, a keeper over every ladder and the bow floods on the
+  forward beam; `cutterLadders`, the three lattice booms run out through it — four chords,
+  the kit's `strut` as lacing on each side face and across the top, a strip along the top,
+  a hood of top plate and two cheeks over a nozzle at each tip, two gas lines strapped
+  along each with feed drops at the heel — one on the keel and one either side, each drawn
+  at its own z; `gasManifold`, the header across the house's forward face with a valve
+  wheel to each ladder. Resting lamps: the bridge ports, the gas plant's lamps (the rack
+  housings, the house's ports and skylight), the stern vents. The burner nozzles, the bow
+  floods, the ladder strips and the manifold strip light only cutting and are clad in
+  `amber_lamp_unlit` (§3.2 rule 2).
 - **Blight.** `podBody` with `growthRings`, widest a little forward of amidships and never
   wider at the bow than at the waist; one spore sac (`bladder`) sunk into the back as a
   paler dome; leaf trim vanes; a muscle-drive fluke. New: the husk parted at the bow into
