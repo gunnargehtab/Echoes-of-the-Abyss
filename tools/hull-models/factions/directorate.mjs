@@ -40,7 +40,8 @@
  *              bladder_dome · dorsal_spine_0..2 · limb_s0..2 / p0..2 · keel ·
  *              keel_rib_0..5 · file_ridge · plectrum_hip / _femur / _knee / _tibia /
  *              _wrist · plectrum · telson (_plate, _rib) · fan_s0..1 / p0..1 (_plate,
- *              _rib) · edge_row_4..6_s / _p · photophore_s0..2 / p0..2 ·
+ *              _rib) · edge_row_6_s0..2 / p0..2 · edge_row_5_s0..3 / p0..2 ·
+ *              edge_row_4_s0..2 / p0..1 · photophore_s0..2 / p0..2 ·
  *              photophore_tail_s0..1 / p0..1 — built (#786), the fourth
  *
  * Three rules fall out of those, and they are what this module holds rather
@@ -1225,9 +1226,12 @@ const paddle = ({ length, root, tip, shoulder = 0.7, chamfer }) => [
  * telson" under way, and a telson that is the middle plate of the fan is
  * what they fold into. Nothing on the fan points and nothing on it fires.
  *
- * The pairs are the one matched pair on the hull, and the plan says why
- * they may be (docs/models-plan.md §4, the Lure): an instrument is tuned
- * symmetric, and the plates carry no light to refuse.
+ * The pairs are matched: "two a side about a telson" is the block's own
+ * count, and an instrument is tuned symmetric. They are one of the Lure's
+ * two licensed pairs — `limbs`' folded ranks are the other — and neither
+ * carries light. Composed as docs/models-plan.md §3.6 asks all the same:
+ * each plate placed on its own side at its own signed z and its own yaw,
+ * never through `bothSides`, so the match is a result and not a mirror.
  */
 export function soundingFan(root, { skins, rib: ribMat }, opts) {
   const {

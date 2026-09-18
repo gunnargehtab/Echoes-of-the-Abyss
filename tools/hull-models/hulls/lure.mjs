@@ -69,9 +69,14 @@
  *   violet, red from the telson. The outer plates' squared corners stand
  *   23.8 m off the keel at x = −37: 47.6 m across, 14 m wider than the
  *   carapace, which is "widest at the stern" by a margin the chart can
- *   read. The pairs are the one matched pair on the hull, and are one on
- *   purpose: an instrument is tuned symmetric, and the plates carry no
- *   light to refuse (docs/models-plan.md §3.6 refuses a *lit* pair).
+ *   read. The pairs are matched, and matched on purpose: "two a side
+ *   about a telson" is the block's own count, and an instrument is tuned
+ *   symmetric. They are one of the hull's two licensed pairs, the folded
+ *   `limbs` the other (below), each with its own warrant. §3.6 governs
+ *   *how* an asymmetry is composed — one part at a time at its own
+ *   signed z, never through `bothSides` — and the fan is composed that
+ *   way: each plate placed on its own side at its own yaw, a matched
+ *   result and not a mirrored call.
  * - **The ribs are clad, not lit.** "Each plate of the fan lit along its
  *   rib" is the singing band and this pipeline draws the resting one
  *   (§3.2, rule 2), so each plate carries its rib — 0.7 m wide, 0.4 tall,
@@ -111,8 +116,13 @@
  *   finish either, though #786's brief expected that: the block says
  *   "a paler dome" and `biolight_unlit` is near-black, so a dome in it
  *   would read as a hole in the shell where the block asks for a bulge
- *   that is lighter than its plate. The Chorister's approved dome is the
- *   precedent, and this hull follows it.
+ *   that is lighter than its plate. Nor does the finish chosen meet the
+ *   word: `chitin_violet` (#2D1B3D, luminance 0.017) is three times
+ *   darker than the `chitin_red` plate (0.051) it sits on, and the
+ *   recolour takes the albedo's luminance. The navy has no paler cladding
+ *   token, and the Chorister's approved dome — the same violet on the same
+ *   red — settled the call for the series; what the dome buys is value
+ *   separation from its plate and 2.2 m of relief, not paleness.
  * - **What "a row along each tergite's edge" is.** The 16–35 band's own
  *   language is "dim running lights along the hull line", and a plate's
  *   edge on this series is its outboard rim. So: three rows a side, one a
@@ -124,6 +134,9 @@
  *   port rank two metres behind the starboard on every plate and one
  *   mark shorter on the middle and aft plates. Eighteen dark studs,
  *   built and never lit (§3.2, rule 2); the block lights them under way.
+ *   On the three carapace plates only: the block distinguishes "three
+ *   overlapping tergites" from "a jointed abdomen", so "each tergite's
+ *   edge" is the three, and the abdomen's four plates carry no row.
  * - **Three dorsal spines.** The block names none. The Chorister's, the
  *   Precentor's, the Verger's and the Acolyte's blocks name none either
  *   and all four carry a rank alternating sides — it is the navy's tell
@@ -132,8 +145,10 @@
  *   plate, 3 m to port, 3.5 to starboard, 3.5 to port.
  * - **Three limbs a side, folded under the carapace.** The block says
  *   "folded walking limbs" and no count. `limbs` — the Chorister's and
- *   the Thurible's folded steel ranks, the one place the navy allows a
- *   pair, because they carry no light — centred at +30, +18 and +6, each
+ *   the Thurible's folded steel ranks, the hull's other licensed pair
+ *   beside the fan's (above): the module lets these match because they
+ *   carry no light, as the fan's plates carry none — centred at +30, +18
+ *   and +6, each
  *   rooted 0.8 m into the flank at y = −5 where the shell is there (`rim`,
  *   as the Thurible seats its), 8 m long and folded 0.6, so the forward
  *   pair's tips stand 2 m inside the fore plate's rim and the other two
@@ -153,8 +168,12 @@
  *   in section (0.6) slopes 30° as the Thurible's flatter shield does at
  *   0.84, and 0.84 here would be 45° — laid on the slope, 1.4 m marks on
  *   the carapace and 1.2 on the abdomen: starboard at +35, +20, +5 and
- *   −10.5, −17.5; port at +36.5, +19.5, +2.5 and −19, −27. No two
- *   opposite, and the stations chosen to miss four things: the seam
+ *   −10.5, −17.5, on a 15 m pitch; port at +37, +18.5, 0 and −19, −27,
+ *   on 18.5 — a different pitch, so the port rank is not the starboard
+ *   one moved. No mark within 1.5 m of opposite another (the Thurible's
+ *   tightest is 1 m; a first draft's port rank at +36.5, +19.5, +2.5 had
+ *   one at half a metre, two pixels at 4 px/m), and the stations chosen
+ *   to miss four things: the seam
  *   ribs, the ridge lips, the bladder's dome — which `crown` does not
  *   know, so a mark seated on the plate under it would sit *inside* it,
  *   which is why the starboard abdomen rank stops at −17.5 — and the
@@ -167,9 +186,9 @@
  * lit parts, the marks, 18.3 m² facing up — the carapace's six at 1.88 to
  * 2.25 m² each, the abdomen's four at 1.25 to 1.5 — on a plan of 10,198
  * mask pixels at 2 px/m, some 2,550 m². The bake at E(14) = 1.22 reads
- * raw E = 5.38 and dims by ×0.227: the Thurible's band (×0.224 at E(16))
- * and the Verger's (×0.195 at E(14)), and fourteen and a half times clear
- * of the ×1/64 floor the quiet end must not touch (§3.2). The bake is
+ * raw E = 5.44 and dims by ×0.225: the Thurible's band (×0.224 at E(16))
+ * and the Verger's (×0.195 at E(14)), and fourteen times clear of the
+ * ×1/64 floor the quiet end must not touch (§3.2). The bake is
  * warning-free — no rescale, no rotate, 100.0 × 47.6 m.
  *
  * The hand-drawn outline this model retires (silhouettes.ts, "a rostrum
@@ -408,7 +427,7 @@ directorate.rimPhotophores(root, crimson, {
   rim,
   crown,
   name: 'photophore',
-  ranks: { s: { from: 35, pitch: 15, count: 3 }, p: { from: 36.5, pitch: 17, count: 3 } },
+  ranks: { s: { from: 35, pitch: 15, count: 3 }, p: { from: 37, pitch: 18.5, count: 3 } },
   at: 0.7,
   size: 1.4,
 });
