@@ -346,6 +346,66 @@ describe('cssBox: what a column track refuses to shrink below', () => {
     assert.equal(resolveBox(rules, TEXT).minWidth, undefined);
   });
 
+  /**
+   * The same axis on the result card's row, which had neither declaration until
+   * #773. It is the same shape holding the same verbatim authored text, so the
+   * control is the same one: strip the pair and the middle track goes back to
+   * being floored by a mission's own words.
+   */
+  const RESULT_ANCESTORS = [
+    { tag: 'div', classes: ['game-root'] },
+    { tag: 'div', classes: ['game-under'] },
+    { tag: 'div', classes: ['mission-result'] },
+    { tag: 'div', classes: ['mission-result-panel'] },
+    { tag: 'ul', classes: ['mission-result-objectives'] },
+  ];
+  const RESULT_ROW: Element = {
+    tag: 'li',
+    classes: ['mission-result-objective', 'failed'],
+    ancestors: RESULT_ANCESTORS,
+  };
+  const RESULT_TEXT: Element = {
+    tag: 'span',
+    classes: ['mission-result-text'],
+    ancestors: [...RESULT_ANCESTORS, RESULT_ROW],
+  };
+
+  it('reads the result row’s tracks as they now ship', () => {
+    // The third track is `auto` for the reason the panel's is: it holds
+    // `n of m` under `white-space: nowrap`.
+    assert.deepEqual(
+      columnFloors(parseCss(APP_CSS), RESULT_ROW).map((floor) => floor.kind),
+      ['definite', 'definite', 'content']
+    );
+    assert.equal(resolveBox(parseCss(APP_CSS), RESULT_TEXT).minWidth, '0');
+  });
+
+  it('reproduces #773 when the two declarations are taken away', () => {
+    // Anchored on the whole declaration, and asserted unique, for the reason
+    // the #760 control gives: three rows in this sheet now carry `minmax(0,
+    // 1fr)`, so a short anchor strips somebody else's track and leaves this
+    // one's fixed — a control aimed at the wrong row, passing against a sheet
+    // it never changed.
+    const TRACK = '3.2rem minmax(0, 1fr) auto;';
+    const ITEMS = '.mission-result-objective > * {\n  min-width: 0;\n}\n';
+    assert.equal(APP_CSS.split(TRACK).length - 1, 1, 'the row’s track declaration is unique');
+    assert.equal(APP_CSS.split(ITEMS).length - 1, 1, 'the row’s item rule is unique');
+
+    const stripped = APP_CSS.replace(TRACK, '3.2rem 1fr auto;').replace(ITEMS, '');
+    assert.ok(!stripped.includes(TRACK), 'the strip reached the track');
+    assert.ok(
+      !stripped.includes('.mission-result-objective > *'),
+      'the strip reached the item rule'
+    );
+
+    const rules = parseCss(stripped);
+    assert.deepEqual(
+      columnFloors(rules, RESULT_ROW).map((floor) => floor.kind),
+      ['definite', 'content', 'content']
+    );
+    assert.equal(resolveBox(rules, RESULT_TEXT).minWidth, undefined);
+  });
+
   it('throws on a track sizing function it cannot read', () => {
     for (const columns of ['repeat(3, 1fr)', 'minmax(1fr, 2fr)', 'subgrid', 'minmax(0)']) {
       assert.throws(
