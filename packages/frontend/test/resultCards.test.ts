@@ -20,6 +20,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { createElement } from 'react';
+import type { ReactTestInstance } from 'react-test-renderer';
 import {
   AiDifficulty,
   Faction,
@@ -30,6 +31,14 @@ import {
 } from '@echoes/shared';
 import './support/headless.ts';
 import { click, render, type Rendered } from './support/screen.ts';
+import {
+  APP_CSS,
+  columnFloors,
+  columnOf,
+  parseCss,
+  resolveBox,
+  type Element,
+} from './support/cssBox.ts';
 import { MatchResult } from '../src/game/MatchResult.tsx';
 import { MissionResult } from '../src/game/MissionResult.tsx';
 
@@ -318,6 +327,158 @@ describe('the mission result: a partial run is a result', () => {
     } finally {
       await view.unmount();
     }
+  });
+});
+
+/**
+ * The card's objective row, and whether a mission's own words can carry the
+ * counter beside them out of it (#773).
+ *
+ * `.objectives-row` was given a floored track and shrinkable items in #760
+ * (invariant 33). This row is the same three-column shape, holding the same
+ * verbatim authored text, and it had neither — so the fault was not fixed
+ * there, it was fixed in one of the three places that have it.
+ *
+ * Held here the way it is held for the panel: over every row shape the card can
+ * draw rather than one mission's objectives, and against the placement the
+ * stylesheet actually declares, so an edit that moves the authored text to
+ * another column moves the check with it.
+ */
+describe('the mission result: a mission’s words cannot carry the counter out', () => {
+  /** Where a result row sits — see `MissionResult` and `GameCanvas`. */
+  const ANCESTORS = [
+    { tag: 'div', classes: ['game-root'] },
+    { tag: 'div', classes: ['game-under'] },
+    { tag: 'div', classes: ['mission-result'] },
+    { tag: 'div', classes: ['mission-result-panel'] },
+    { tag: 'ul', classes: ['mission-result-objectives'] },
+  ];
+
+  /**
+   * Every row shape the card can draw: one per status word, since the
+   * stylesheet distinguishes all three, and a counter on two of them, since
+   * the counter is the child the overflow carries off and a row without one
+   * has a different child count.
+   */
+  const shapes = (): MissionResultPayload =>
+    payload({
+      objectives: [
+        {
+          id: 'open',
+          text: 'Both tenders reach the Upper Concourse.',
+          status: ObjectiveStatus.Pending,
+          progress: { done: 0, of: 2 },
+        },
+        { id: 'met', text: 'The flight stays under twenty.', status: ObjectiveStatus.Met },
+        {
+          id: 'failed',
+          text: 'The service lock is held to the adjournment.',
+          status: ObjectiveStatus.Failed,
+          progress: { done: 1, of: 2 },
+        },
+      ],
+    });
+
+  /** Every row the card rendered, as the box reader wants them. */
+  async function rows(): Promise<Array<{ element: Element; children: string[][] }>> {
+    const { view } = await missionResult(shapes());
+    try {
+      return view.allByClass('mission-result-objective').map((row) => ({
+        element: {
+          tag: String(row.type),
+          classes: String((row.props as { className: string }).className).split(/\s+/),
+          ancestors: ANCESTORS,
+        },
+        children: row.children
+          .filter((child): child is ReactTestInstance => typeof child !== 'string')
+          .map((child) =>
+            String((child.props as { className?: string }).className ?? '')
+              .split(/\s+/)
+              .filter(Boolean)
+          ),
+      }));
+    } finally {
+      await view.unmount();
+    }
+  }
+
+  it('gives a mission’s own words a track that cannot widen the row', async () => {
+    // A `1fr` track's automatic minimum is min-content, so one long unbreakable
+    // token in an authored objective floors the middle track at that token's
+    // own width and pushes the columns to its right out of the card. The card
+    // is a scroll container on both axes — `.mission-result-panel` sets
+    // `overflow-y: auto`, and an `overflow` that is `visible` on one axis
+    // computes to `auto` on the other — so what the player gets is a counter
+    // scrolled out of a box nothing teaches them to scroll: §2's "invisible
+    // rather than absent".
+    //
+    // Driven in Chromium at 1440x900 before this was fixed: the middle track
+    // resolved to 597.69px against 455.83px with the pair, and the counter's
+    // layout box sat 116px past the card's padding edge.
+    const rules = parseCss(APP_CSS);
+    const rendered = await rows();
+    assert.equal(rendered.length, 3, 'all three shapes rendered');
+
+    for (const { element, children } of rendered) {
+      // Which track holds the authored sentence is decided by auto-flow here,
+      // not by a `grid-column` the way the panel's row decides it. So assert
+      // that first: a child given an explicit column would invalidate the
+      // arithmetic below rather than merely move it, and this fails loudly
+      // instead of guarding whichever track the old order happened to use.
+      for (const classes of children) {
+        assert.equal(
+          columnOf(rules, { tag: 'span', classes, ancestors: [...ANCESTORS, element] }),
+          undefined,
+          `.${classes.join('.')} is placed explicitly, so flow order no longer says which track is the sentence's`
+        );
+      }
+
+      const floors = columnFloors(rules, element);
+      assert.equal(floors.length, 3, 'the row is the three-column shape');
+      // Flow order: the status word, the mission's sentence, then the counter.
+      assert.deepEqual(
+        children.map((classes) => classes[0]),
+        ['mission-result-status', 'mission-result-text', 'mission-result-progress'].slice(
+          0,
+          children.length
+        ),
+        'the sentence is the second child, so it is in the second track'
+      );
+      assert.equal(
+        floors[1]!.kind,
+        'definite',
+        `a row puts the mission's sentence in a track floored by ${JSON.stringify(floors[1])}`
+      );
+    }
+  });
+
+  it('lets every child of a result row shrink to its track', async () => {
+    // Two floors, not one: a grid item's automatic minimum is min-content as
+    // well, so `minmax(0, 1fr)` on the track still leaves the span inside it
+    // refusing to shrink. Both halves or neither — the pair `.contact-log-row`
+    // and `.objectives-row` carry.
+    //
+    // Walked off the rendered tree rather than a list of class names, because
+    // the regression is a child added later with no `min-width`.
+    const rules = parseCss(APP_CSS);
+    const rendered = await rows();
+
+    let checked = 0;
+    for (const { element, children } of rendered) {
+      assert.ok(children.length >= 2, 'a row is at least a status word and a sentence');
+      for (const classes of children) {
+        assert.equal(
+          resolveBox(rules, { tag: 'span', classes, ancestors: [...ANCESTORS, element] }).minWidth,
+          '0',
+          `a span.${classes.join('.')} can push its track wider than the row`
+        );
+        checked += 1;
+      }
+    }
+    // Three statuses, three sentences, and a counter on two of the three: the
+    // arithmetic is here so that a shape dropping out of `shapes()` fails
+    // rather than quietly shrinking what this walks.
+    assert.equal(checked, 8, 'every child of every shape was asked');
   });
 });
 

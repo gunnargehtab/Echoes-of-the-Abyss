@@ -2068,14 +2068,28 @@ button.objectives-row:hover {
   border-top: 1px solid color-mix(in srgb, var(--neon-magenta) 25%, transparent);
 }
 
+/* The middle track carries the mission's own sentence, rendered verbatim
+   (ui-ux.md §10.5), so its width is a mission's words rather than a template's.
+   A `1fr` track's automatic minimum is min-content, so one long unbreakable
+   token in an authored objective floors that track at the token's own width and
+   pushes the `n of m` beside it out of the card — which is a scroll container on
+   both axes (`overflow-y: auto` on the panel computes the other to `auto`), so
+   the counter goes invisible rather than absent, §2's state. The pair
+   `.objectives-row` and `.contact-log-row` carry, and for the same reason: the
+   track's floor and the item's are two floors, and `minmax(0, …)` alone leaves
+   the span inside the track refusing to shrink (#773). */
 .mission-result-objective {
   display: grid;
-  grid-template-columns: 3.2rem 1fr auto;
+  grid-template-columns: 3.2rem minmax(0, 1fr) auto;
   gap: 8px;
   padding: 3px 0;
   font-size: 0.64rem;
   line-height: 1.5;
   text-align: left;
+}
+
+.mission-result-objective > * {
+  min-width: 0;
 }
 
 .mission-result-status {
