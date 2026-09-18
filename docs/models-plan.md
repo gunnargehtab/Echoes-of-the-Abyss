@@ -266,11 +266,14 @@ with a drive, sized to its berths. None carries a weapon.
   of it. Bare plate between them. Built loaded. Resting lamps: the hoop at each breech
   door (the chart's light), the bridge ports, the stern `engineVents` proud of the
   transom, a `bowLamp`; the muzzle floods are transients.
-- **Weaver.** `nose`, `stem` with `growthRings`, three `bladder` pods in a row down the aft
-  two thirds, each the same size, the aftmost at an open lay port in the tail (new), a
-  muscle-drive fluke, leaf trim vanes forward. Not `mineSacs` and not tubes: each pod is a
-  whole bladder that leaves the hull. Resting lamps: navigation marks; the stem vein is
-  under way only and clad; the pods carry no lamp.
+- **Weaver.** `nose`, `stem` with `growthRings`, three `decoyPods` in a row down the aft
+  two thirds — the Sower's bladder orb at one size, centred on the stem so it threads
+  them — the aftmost in an open `layPort` in the tail (new: the stem's skin flared into a
+  cup, a ridge lip, the sheath peeled back in sepals), a muscle-drive `driveFluke` hinged
+  on a `tailKnuckle` under the lip so the mouth astern stays clear, leaf `trimVanes`
+  forward. Not `mineSacs` and not tubes: each pod is a whole bladder that leaves the
+  hull. Resting lamps: navigation marks; the stem vein is under way only and clad; the
+  pods carry no lamp.
 - **Thurible.** `rostrum`, a broad domed carapace forward stepping down sharply to a narrow
   jointed abdomen (`tergites` at two scales), `telson`, one `spineGun` off the centreline
   ahead of the rack, `dorsalSpines` at different stations a side, folded `walkingLimbs`, a

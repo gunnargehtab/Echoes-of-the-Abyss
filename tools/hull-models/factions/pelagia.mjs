@@ -2431,6 +2431,18 @@ export function leafWing(root, { membrane, ridge, vein: veinMat }, opts) {
 }
 
 /**
+ * The knuckle a tail hinges on: a squashed orb of ridge at `at`, `r`
+ * across and `squash` of that tall. The Glider's is the stern its folded
+ * tail turns on (`foldedTail`); the Weaver's is the joint its fluke hangs
+ * from under an open lay port, where the paddle cannot root on the body
+ * because the mouth astern of it has to stay clear (hulls/weaver.mjs).
+ * `tail_knuckle`.
+ */
+export function tailKnuckle(root, ridge, { at, r, squash = 0.85, facets = [10, 6] }) {
+  add(root, 'tail_knuckle', orb(...facets), ridge, at, [0, 0, 0], [r, r * squash, r]);
+}
+
+/**
  * The muscle-drive tail folded flat along the stem — the Drifter's
  * `driveFluke` with its drive cut: one membrane paddle hinged on a knuckle
  * at the stern and laid forward over the stem's back, `pitch` radians nose
@@ -2453,10 +2465,7 @@ export function leafWing(root, { membrane, ridge, vein: veinMat }, opts) {
 export function foldedTail(root, { membrane, ridge, vein: veinMat }, opts) {
   const { hinge, pitch = 0, outline, t = 0.4, bevel = 0.15, knuckle, veins = [] } = opts;
   const { r = 0.12, steps = 12, facets = 5, sink = 0.04 } = opts.vein ?? {};
-  if (knuckle) {
-    const { at, r: kr, squash = 0.85, facets: kf = [10, 6] } = knuckle;
-    add(root, 'tail_knuckle', orb(...kf), ridge, at, [0, 0, 0], [kr, kr * squash, kr]);
-  }
+  if (knuckle) tailKnuckle(root, ridge, knuckle);
   const frame = group(root, 'tail', { at: hinge, rot: [0, 0, pitch] });
   add(frame, 'tail_fluke', plan(outline, t, bevel), membrane);
   const top = t / 2 + bevel - sink;
@@ -2469,6 +2478,122 @@ export function foldedTail(root, { membrane, ridge, vein: veinMat }, opts) {
       facets,
     })
   );
+}
+
+/* --------------------------------------------------------------------------
+ * The ordnance hulls (#785, off #540 Phase 4): the Weaver's decoy pods and
+ * the open lay port they leave by.
+ *
+ * Built to its block, as the Drifter's and the Glider's builders above
+ * were: nothing here answers to a binary in docs/concept-art/models/.
+ * X-long in the kit's frame, yawing nothing. hulls/weaver.mjs is the
+ * consumer.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Decoy pods strung along a stem — "three bulbs in a row down the aft two
+ * thirds, each a smooth bladder the same size as the one before it, so the
+ * plan is a beaded thread and the beads are the count": the Sower's
+ * `bladder` orb (sixteen by eight, squashed) at one `r`, once at each `x`
+ * of `stations`, centred on the stem's axis at `y` so the stem threads
+ * them. Smooth — no cap, no ring, no bud, which is what sets them apart
+ * from `mineSacs` and `seedPods` — and no lamp: a decoy is dark until it is
+ * laid (docs/models-plan.md §3.2, rule 4).
+ *
+ * This is the one series in the navy that repeats a size on purpose, and
+ * the module's refusal of a matched pair (`refuseMirror`) does not apply
+ * to it: the pods are a magazine, the count is the argument, and a bead
+ * that differed from the one before it would read as a different thing
+ * carried rather than one more of the same. What stays grown is the lean
+ * — each pod rolled and pitched its own few degrees off square by its
+ * index, as `growthRings`' wobble leans a ring — never the size.
+ * `decoy_pod_<i>`.
+ */
+export function decoyPods(root, chitin, opts) {
+  const { name = 'decoy_pod', stations, y = 0, r, squash = 0.72, facets = [16, 8] } = opts;
+  const { lean = 0 } = opts;
+  stations.forEach((x, i) =>
+    add(
+      root,
+      `${name}_${i}`,
+      orb(...facets),
+      chitin,
+      [x, y, 0],
+      [lean * Math.sin(1 + i * 2.4), 0, lean * Math.cos(2 + i * 1.7)],
+      [r, r * squash, r]
+    )
+  );
+}
+
+/**
+ * The open lay port in a tail — "the aftmost sits at an open lay port in
+ * the tail": the stem's skin flared open astern into a cup the last pod
+ * sits in with its aft half out of the mouth, and the membrane that
+ * sheathed it peeled back off the rim. Three parts in three finishes:
+ *
+ * - `lay_port`, the cup: a lathe of the caller's `[x, r]` `profile` in
+ *   chitin on the stem's `facets` and `squash`, stern to bow as every
+ *   lathe profile here runs — the mouth is its first station and the
+ *   throat its last, which is the stem's first, so the two lathes meet
+ *   skin to skin. Open at both ends as every Commune stem is — the throat
+ *   because the stem fills it, the mouth because the port is open. The
+ *   caller keeps the cup's radius outside the pod's at every station they
+ *   share, or the pod shows through the wall.
+ * - `lay_port_lip`, the rim: a ridge (`ridgeRing`) lathed round the mouth
+ *   at its radius, `lip` = `{ tube, rise, halfWidth? }` as `growthRings`
+ *   takes them.
+ * - `lay_sepal_<i>`, the peeled membrane: one ovate leaf each at `sepals`
+ *   = `[{ angle, length, width, curl, t? }]`, rooted on the rim `angle`
+ *   radians round from starboard (+z) towards the crown (+y), lying aft
+ *   over the pod with its width along the rim and pitched `curl` radians
+ *   outward at the tip — peeled back along the pod, not spread. Each its
+ *   own size and angle, one side at a time (docs/models-plan.md §3.6); a
+ *   matched pair is refused.
+ */
+export function layPort(root, { chitin, ridge, membrane }, opts) {
+  const { profile, y = 0, squash = 0.8, facets = 14, lip, sepals = [] } = opts;
+  add(root, 'lay_port', loft(profile, facets), chitin, [0, y, 0], [0, 0, 0], [1, squash, 1]);
+  const [mx, mr] = profile[0];
+  add(
+    root,
+    'lay_port_lip',
+    ridgeRing({
+      crown: mr + lip.tube,
+      shoulder: mr + lip.tube - lip.rise,
+      halfWidth: lip.halfWidth ?? lip.tube,
+      facets,
+    }),
+    ridge,
+    [mx, y, 0],
+    [0, 0, 0],
+    [1, squash, 1]
+  );
+  refuseMirror('lay_sepal', sepals, (s) => `${s.length}|${s.width}`);
+  sepals.forEach(({ angle, length: len, width: w, curl = 0, t = 0.3 }, i) => {
+    // The leaf in its own frame: root at the rim, tip `len` aft, its width
+    // across z — which the roll about x below turns along the rim.
+    const corners = [
+      [0, -0.35 * w],
+      [0, 0.35 * w],
+      [-0.3 * len, 0.5 * w],
+      [-0.7 * len, 0.42 * w],
+      [-len, 0.08 * w],
+      [-len, -0.08 * w],
+      [-0.7 * len, -0.42 * w],
+      [-0.3 * len, -0.5 * w],
+    ];
+    // XYZ: the pitch about z lifts the tip off the pod first, then the roll
+    // about x carries the leaf's normal from +y round to the rim's radial
+    // at `angle`, so it lies flat on the cup's wall at that bearing.
+    add(
+      root,
+      `lay_sepal_${i}`,
+      plan(corners, t),
+      membrane,
+      [mx, y + mr * squash * Math.sin(angle), mr * Math.cos(angle)],
+      [Math.PI / 2 - angle, 0, -curl]
+    );
+  });
 }
 
 export { THREE };
