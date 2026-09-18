@@ -24,10 +24,7 @@ the red check:
 
 ```bash
 npm run build:shared                                     # always, first
-npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
-git ls-files -z ':(glob)docs/**/*.md' \
-  | xargs -0 npx -y markdown-link-check --config .markdown-link-check.json
-npm run docs:claude
+npm run gates -- --only=docs:lint,docs:links,docs:claude # the whole docs job
 npm run type-check
 npm run lint
 npm run format:check
@@ -45,12 +42,14 @@ Three repo facts decide how to read what comes back:
   all. Root scripts (`type-check`, `test`, `build`) rebuild for you; workspace
   scripts do not.
 - **A red `docs` job is a dead link or a markdownlint hit**, in `docs/` or in
-  the prose this repository wrote under `.claude/`, and the three commands above
-  are exactly what CI runs. They need no install and finish in
+  the prose this repository wrote under `.claude/`, and the `--only=` line above
+  is that job's three gates and nothing else. They need no install and finish in
   well under a minute, so on a docs-touching PR they go before anything else.
-  The link check ignores this repo's own github.com URLs by config; any other
-  dead link is real, and "Never link a doc that does not exist" is the rule
-  that was broken.
+  `gates.mjs` does not bail, so one run names every red gate rather than the
+  first; the `--` is required, for the reason `CLAUDE.md`'s Commands section
+  gives. The link check ignores this repo's own github.com URLs by config; any
+  other dead link is real, and "Never link a doc that does not exist" is the
+  rule that was broken.
 - **A red `test` shard names its files.** The backend suite is dealt out
   file-by-file by `--test-shard`, deterministically, so the failing file is
   the same one every run. Run that one file with the command above, not
