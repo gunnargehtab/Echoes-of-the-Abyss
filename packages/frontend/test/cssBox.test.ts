@@ -390,6 +390,46 @@ describe('cssBox: what a column track refuses to shrink below', () => {
     );
   });
 
+  it('refuses an at-rule it has never heard of rather than reading past it', () => {
+    // The hole this closed: anything that was not `@media` or `@supports` used
+    // to be skipped whole, block and all, so a rule inside it vanished and the
+    // reader answered with the outer sheet's tracks and no throw — a
+    // `definite` it had not earned, which is the one direction this file says
+    // it will never fail in. `App.css` uses only `@media` today, so the guard
+    // is for the sheet that grows one of these, not for the sheet as it is.
+    for (const prelude of [
+      '@container (max-width: 300px)',
+      '@layer ui',
+      '@scope (.objectives-body)',
+      '@nonsense whatever',
+    ]) {
+      assert.throws(
+        () =>
+          columnFloors(
+            parseCss(
+              withRule(`${prelude} { .objectives-row { grid-template-columns: 1fr auto } }`)
+            ),
+            ROW
+          ),
+        /does not evaluate/,
+        `\`${prelude}\` was read past rather than refused`
+      );
+    }
+  });
+
+  it('still skips an at-rule whose block styles nothing', () => {
+    // The other half of that change: `@keyframes` and `@font-face` hold no
+    // style rules, so recording them as conditions would turn `0%` and `100%`
+    // into selectors and throw on a sheet that is perfectly readable.
+    const keyframes = '@keyframes nudge { 0% { width: 900px } 100% { width: 900px } }';
+    const fontFace = '@font-face { font-family: x; src: url(x.woff2) }';
+    assert.deepEqual(
+      columnFloors(parseCss(withRule(`${keyframes}\n${fontFace}`)), ROW).map((f) => f.kind),
+      ['definite', 'definite', 'content']
+    );
+    assert.equal(widthOf(`${keyframes}\n${fontFace}`), BODY_WIDTH);
+  });
+
   it('never ignores a property it claims to read', () => {
     // The closed-set assertion `BOX_PROPERTIES` already gets: a property named
     // in the set that never reaches a branch is the silent drop this file

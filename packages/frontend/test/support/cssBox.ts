@@ -29,15 +29,24 @@
  *   that could change the box (`rulesTargeting`);
  * - a property in `BOX_PROPERTIES` that `resolveBox`'s switch does not handle,
  *   which is what stops that set and that switch drifting apart;
- * - a length in a unit it cannot turn into px (`lengthPx`).
+ * - a length in a unit it cannot turn into px (`lengthPx`);
+ * - a rule sitting under a condition it cannot evaluate, which since #760 is
+ *   **any** at-rule that is not a known self-contained one — `@media`,
+ *   `@supports`, `@container`, `@layer`, `@scope` and anything nobody here has
+ *   heard of alike (`boxRulesFor`).
  *
- * What it does **not** model, and does not need to: inheritance, `calc()`,
- * custom properties, cascade layers, `!important`, and specificity beyond
- * source order. That last one is an approximation rather than a refusal, so it
- * is the one to know about — every rule it reads here is a bare class or a
- * tag-and-class, and those are written in increasing specificity anyway
- * (`.objectives-row` before `p.objectives-row`). A stylesheet that put the tag
- * rule first would be read wrongly here and correctly by a browser.
+ * What it does **not** model and does **not** throw on — so these are the
+ * assumptions rather than the refusals: inheritance, `!important`, and
+ * specificity beyond source order. The last is the one to know about, because
+ * every rule it reads here is a bare class or a tag-and-class and those are
+ * written in increasing specificity anyway (`.objectives-row` before
+ * `p.objectives-row`); a stylesheet that put the tag rule first would be read
+ * wrongly here and correctly by a browser.
+ *
+ * `calc()` and custom properties are refused in one direction and assumed in
+ * the other, which is worth knowing precisely: a length the *box* arithmetic
+ * needs throws (`lengthPx`), while a *track floor* takes a `calc()` as definite
+ * under the assumption named on `TrackFloor`.
  *
  * Writing directions are assumed horizontal and left-to-right, which is what
  * the client ships; the logical properties below are mapped on that basis.
@@ -137,6 +146,14 @@ export interface CssRule {
  * `@media` nests and a regex that pretends otherwise reads a media block's
  * closing brace as a selector.
  */
+/**
+ * At-rules whose block is not a list of style rules, so skipping it drops
+ * nothing that could style an element. Named rather than inferred: everything
+ * else is treated as a condition, which is the failing-loud direction.
+ */
+const SELF_CONTAINED_AT_RULES =
+  /^@(keyframes|-\w+-keyframes|font-face|font-feature-values|font-palette-values|counter-style|property|page|view-transition)\b/;
+
 export function parseCss(css: string): CssRule[] {
   const clean = css.replace(/\/\*[\s\S]*?\*\//g, '');
   const rules: CssRule[] = [];
@@ -167,13 +184,24 @@ export function parseCss(css: string): CssRule[] {
     if (open === -1) break;
     const prelude = clean.slice(i, open).trim();
 
-    if (/^@(media|supports)\b/.test(prelude)) {
-      condition = prelude;
-      i = open + 1;
-      continue;
-    }
     if (prelude.startsWith('@')) {
-      // `@keyframes`, `@font-face` — nested blocks this reader has no use for.
+      // An at-rule whose block holds ordinary rules that *do* apply, under a
+      // condition or a precedence this reader cannot evaluate. Recording the
+      // prelude as the condition is what lets `boxRulesFor` refuse it; the
+      // list is open on purpose, because the failure it prevents is a
+      // stylesheet growing an at-rule nobody here has heard of and having its
+      // declarations silently vanish. Before #760 anything that was not
+      // `@media` or `@supports` was skipped whole, so a `@container` or an
+      // `@layer` re-boxing the row reported the outer answer and no throw —
+      // a `definite` this file had not earned, in the one direction it says
+      // it will never fail.
+      if (!SELF_CONTAINED_AT_RULES.test(prelude)) {
+        condition = prelude;
+        i = open + 1;
+        continue;
+      }
+      // `@keyframes`, `@font-face` and friends: nested blocks whose contents
+      // are not rules that style anything, so there is nothing to drop.
       i = matchingBrace(open);
       continue;
     }
@@ -652,8 +680,10 @@ export function borderBoxWidth(query: BorderBoxQuery): number {
  * A second closed set beside `BOX_PROPERTIES`, because the two questions this
  * file answers depend on different declarations and a reader that threw on
  * every selector it could not parse — whatever the rule happened to set —
- * would refuse most of this stylesheet. `min-width` is on both: it is the
- * item's half of the same floor.
+ * would refuse most of this stylesheet. The item's half of the same floor —
+ * `min-width` on the children — is not here and does not need to be: it is a
+ * box property, so it comes through `BOX_PROPERTIES` and `resolveBox`, which
+ * is where the tests read it.
  *
  * `grid-template` and `grid` are here without being modelled, deliberately.
  * Either can set the columns, so a stylesheet that grew one must fail loudly
@@ -675,6 +705,16 @@ export const TRACK_PROPERTIES = new Set([
  * into that column can change the row's width. `content` is min-content of
  * whatever sits there — the floor #760 is about, because authored prose has no
  * bound and one long unbreakable token sets it.
+ *
+ * A `calc()` is taken as `definite` on an assumption worth naming, because
+ * this file models neither `calc()` nor custom properties: that every `var()`
+ * inside it substitutes to something the expression can use. One that does not
+ * makes the `calc()` invalid at computed-value time, which takes the whole
+ * `grid-template-columns` declaration to its initial `none` — and then *every*
+ * track is an implicit `auto` and the floor below is undone, while this still
+ * answers `definite`. The shipped first track is
+ * `calc(3.2rem * var(--panel-type, 1))` and `--panel-type` is a plain number
+ * (`GameCanvas.tsx`), so the assumption holds today rather than always.
  *
  * A bare `<flex>` is `content`, and that is the case worth naming: `1fr` looks
  * like a share of the free space and is one, but its *automatic minimum* is

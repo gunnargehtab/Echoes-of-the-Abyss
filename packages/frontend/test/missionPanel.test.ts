@@ -891,8 +891,12 @@ describe('the objectives panel: a row fits the panel that holds it', () => {
     // #752 fitted the row's border box into the body. The grid inside the row
     // is a separate axis and was untouched by it: a `1fr` track's automatic
     // minimum is min-content, so one long unbreakable token in a mission's own
-    // sentence sets a floor the track cannot shrink under and the row grows
-    // back out of the box it was just fitted into (#760).
+    // sentence sets a floor the middle track cannot shrink under (#760).
+    //
+    // The row's own box does not move — `width: 100%` and `border-box` pin it.
+    // What moves is everything to the right of that track: in a live drive the
+    // progress counter leaves the panel entirely rather than being clipped at
+    // its edge.
     //
     // Which track to ask about is read off the stylesheet rather than assumed.
     // §10.5 puts the authored sentence and its gloss in one column, and an
