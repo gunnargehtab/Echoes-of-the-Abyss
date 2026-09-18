@@ -112,6 +112,15 @@ export const UNITS = [
   { slug: 'drifter', model: 'drifter-pelagia.glb', lengthM: 62, sig: 4 },
   { slug: 'verger', model: 'verger-directorate.glb', lengthM: 100, sig: 14 },
   { slug: 'antiphon', model: 'antiphon-hadron.glb', lengthM: 110, sig: 5.4 },
+  // The scouts (docs/units.md "The scouts", #784 — Phase 4's second box):
+  // one a navy, so each model is the kind's canonical one. The Acolyte
+  // carries no lock and takes the Chorister's rule, as the Verger does. The
+  // Herald's listed 14 is a cone figure like the Antiphon's: it bakes on the
+  // compass average, 6.3, and the light is placed forward, in the throat.
+  { slug: 'beacon', model: 'beacon-bathyarch.glb', lengthM: 70, sig: 30 },
+  { slug: 'glider', model: 'glider-pelagia.glb', lengthM: 55, sig: 8 },
+  { slug: 'acolyte', model: 'acolyte-directorate.glb', lengthM: 58, sig: 10 },
+  { slug: 'herald', model: 'herald-hadron.glb', lengthM: 65, sig: 6.3 },
 ];
 
 /**

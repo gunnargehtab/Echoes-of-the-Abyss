@@ -52,9 +52,10 @@
  *   and the *result* never mirrors, so the builders that place light refuse
  *   a mirrored pair outright.
  * - **Light is a photophore, and it lies flat.** A photophore is a small flat
- *   box in `biolight_crimson` on an upward face of the carapace, because the
- *   maps are top-down (kit.mjs); the gullet and the hopper throat are the
- *   same thing writ large. The Directorate's listed SIGs are baseline figures,
+ *   box in `biolight_crimson` on an upward face — of the carapace, or of a
+ *   limb's knee standing clear of it, as the Acolyte's six are (#784) —
+ *   because the maps are top-down (kit.mjs); the gullet and the hopper
+ *   throat are the same thing writ large. The Directorate's listed SIGs are baseline figures,
  *   so its light is spread along the plates, not thrown forward.
  */
 import {
