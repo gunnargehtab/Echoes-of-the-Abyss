@@ -168,6 +168,18 @@ import thuribleEmissive from '../assets/hulls/maps/thurible-emissive.png';
 import lanceAlbedo from '../assets/hulls/maps/lance-albedo.png';
 import lanceHeight from '../assets/hulls/maps/lance-height.png';
 import lanceEmissive from '../assets/hulls/maps/lance-emissive.png';
+import furnaceAlbedo from '../assets/hulls/maps/furnace-albedo.png';
+import furnaceHeight from '../assets/hulls/maps/furnace-height.png';
+import furnaceEmissive from '../assets/hulls/maps/furnace-emissive.png';
+import blightAlbedo from '../assets/hulls/maps/blight-albedo.png';
+import blightHeight from '../assets/hulls/maps/blight-height.png';
+import blightEmissive from '../assets/hulls/maps/blight-emissive.png';
+import lureAlbedo from '../assets/hulls/maps/lure-albedo.png';
+import lureHeight from '../assets/hulls/maps/lure-height.png';
+import lureEmissive from '../assets/hulls/maps/lure-emissive.png';
+import tocsinAlbedo from '../assets/hulls/maps/tocsin-albedo.png';
+import tocsinHeight from '../assets/hulls/maps/tocsin-height.png';
+import tocsinEmissive from '../assets/hulls/maps/tocsin-emissive.png';
 
 /**
  * Pixels per world metre the maps were baked at. The maps carry no metadata,
@@ -349,6 +361,31 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
     albedo: lanceAlbedo,
     height: lanceHeight,
     emissive: lanceEmissive,
+  },
+  // The siege hulls (#786), on the same rule: one navy's hull each, so the
+  // kind's canonical model, and three of the four baked in their working
+  // state — ladders run out, fan spread, bell braced. The Lure carries no
+  // lock, so its Directorate model serves every navy recoloured — the
+  // Chorister's and the Thurible's rule — until a variant passes intake.
+  [UnitKind.Furnace]: {
+    albedo: furnaceAlbedo,
+    height: furnaceHeight,
+    emissive: furnaceEmissive,
+  },
+  [UnitKind.Blight]: {
+    albedo: blightAlbedo,
+    height: blightHeight,
+    emissive: blightEmissive,
+  },
+  [UnitKind.Lure]: {
+    albedo: lureAlbedo,
+    height: lureHeight,
+    emissive: lureEmissive,
+  },
+  [UnitKind.Tocsin]: {
+    albedo: tocsinAlbedo,
+    height: tocsinHeight,
+    emissive: tocsinEmissive,
   },
 };
 
