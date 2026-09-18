@@ -163,6 +163,12 @@ export function CampaignScreen({ hasPlayed, onSelect, onRecord, onBack }: Campai
             </span>
           )}
         </span>
+        {/* Carried, not drawn (§14). Twenty-nine lines drawn at once is
+            1,117 px of board against an 852 px screen, and §2 does not let a
+            board scroll. It stays inside the button, so the accessible name is
+            byte-for-byte what it was and §11's reader loses nothing — the
+            class keeps its name and only stops being drawn. The chart's
+            caption draws it for whichever slot is lit. */}
         <span className="campaign-slot-line">{slot.line}</span>
         {/* Visually hidden, and deliberately: §14 warns that a board saying
             `Not yet built` twenty-eight times would read as a loading screen,
@@ -175,7 +181,7 @@ export function CampaignScreen({ hasPlayed, onSelect, onRecord, onBack }: Campai
   };
 
   return (
-    <div className="menu-screen" role="dialog" aria-label="Campaign">
+    <div className="menu-screen menu-screen-board" role="dialog" aria-label="Campaign">
       <div className="menu-panel menu-panel-board">
         <header className="menu-head">
           <h2>Campaign</h2>
@@ -201,6 +207,14 @@ export function CampaignScreen({ hasPlayed, onSelect, onRecord, onBack }: Campai
                   <span className="campaign-chart-facts">
                     {lit.ground.depthM.toLocaleString('en-GB')} m · {lit.ground.whose}
                   </span>
+                  {/* The lit slot's own line, which the board stops drawing
+                      once the slot is unbuilt (§14). Here it is read at a
+                      reading size, one at a time, beside the ground it is on.
+                      Rendered for every state rather than only the undrawn
+                      ones: the caption says the same thing about whichever
+                      slot is lit, and a caption that changed shape between
+                      slots would read as two different captions. */}
+                  <span className="campaign-chart-line">{lit.slot.line}</span>
                 </>
               )}
             </p>

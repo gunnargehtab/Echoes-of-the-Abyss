@@ -169,7 +169,10 @@ export function ControlsScreen({ onBack }: ControlsScreenProps) {
                 modifier should find it here and learn it is not movable,
                 rather than conclude the rebinder forgot it. */}
             {FIXED_CONTROLS.map((fixed) => (
-              <div key={fixed.label} className="menu-binding-row fixed">
+              // Keyed on label *and* keys: two fixed controls are both called
+              // `Pan` (the arrows and the middle button), and a bare label put
+              // React's duplicate-key warning on the console every render.
+              <div key={`${fixed.label}-${fixed.keys}`} className="menu-binding-row fixed">
                 <span className="menu-binding-label">{fixed.label}</span>
                 <span className="menu-binding-hint">{fixed.why}</span>
                 <span className="menu-binding-key static">{fixed.keys}</span>

@@ -1316,10 +1316,27 @@
   outline-offset: 2px;
 }
 
+/* Wider than the port's 560 px card, and left-aligned.
+
+   Both are the same fault: `#root` centres text for the app, so every toggle's
+   note was centred inside a 560 px column and ran to two or three ragged lines.
+   Flush left in a 720 px column, most of them are one line — which is 130 px off
+   a screen that has to fit without scrolling (§2). The sliders keep their own
+   grid, so only the prose moves. */
+.menu-panel-settings {
+  width: min(880px, 100%);
+  gap: 0.7rem;
+}
+
+/* Seventeen rows, and the gaps between them were 128 px of the 804 px this
+   screen used to need against a 672 px budget — more than any row. Tightened to
+   where the groups still read as groups, which the sliders' own labels do most
+   of anyway. */
 .menu-settings {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.24rem;
+  text-align: left;
 }
 
 .menu-slider-row {
@@ -1366,8 +1383,8 @@
 }
 
 .menu-toggle-note {
-  font-size: 0.64rem;
-  line-height: 1.5;
+  font-size: 0.62rem;
+  line-height: 1.4;
   opacity: 0.6;
 }
 
@@ -1582,8 +1599,22 @@
   left: calc(40px * var(--ui-scale, 1));
   transform: scale(var(--ui-scale, 1));
   transform-origin: top left;
-  width: min(340px, calc(32vw / var(--ui-scale, 1)));
-  max-height: calc(38vh / var(--ui-scale, 1));
+  /* Divided by `--panel-type` as well as by the scale, so the panel keeps its
+     width in panel units as it magnifies instead of narrowing to a column that
+     wraps every row twice. At 100% both are 1 and this is the old rule. The
+     extra height is the same argument: at 200% the screen between the strip and
+     the console is 182 units, and 38vh/2 left 171 of them unused. */
+  width: min(340px, calc(32vw / var(--ui-scale, 1) / var(--panel-type, 1)));
+  /* Two caps, and the smaller wins. The first is the panel's share of the
+     screen. The second is the room that actually exists between the top strip
+     and the console — 60 and 208 panel units, both Pixi-drawn and both scaling
+     with the HUD — because a panel allowed past it would cover the console
+     rather than the water, which §2 does not allow either. At 100% the first
+     binds (38vh against 632 units); at 200% the second does. */
+  max-height: min(
+    calc(38vh / var(--ui-scale, 1) / var(--panel-type, 1)),
+    calc(100vh / var(--ui-scale, 1) - 280px)
+  );
   display: flex;
   flex-direction: column;
   border: 1px solid color-mix(in srgb, var(--neon-magenta) 45%, transparent);
@@ -1617,6 +1648,12 @@
   opacity: 0.7;
 }
 
+/* The rows set their own type against `--panel-type` (GameCanvas says why):
+   above 100% UI scale a panel's type grows by the square root of the scale, so
+   the panel keeps roughly twice the rows it otherwise would. `overflow-y` is the
+   backstop rather than the plan — §2 requires this panel to fit, and it does at
+   every scale the setting offers; a scrollbar here means a mission has authored
+   more rows than any screen can hold, and clipping them would be worse. */
 .objectives-body {
   overflow-y: auto;
   padding-bottom: 2px;
@@ -1633,7 +1670,7 @@
 
 .objectives-row {
   display: grid;
-  grid-template-columns: 3.2rem 1fr auto;
+  grid-template-columns: calc(3.2rem * var(--panel-type, 1)) 1fr auto;
   gap: 8px;
   width: 100%;
   /* `width: 100%` is the body's content width, and these 8s are added to it
@@ -1649,7 +1686,7 @@
   background: transparent;
   color: var(--text-bright);
   font: inherit;
-  font-size: 0.66rem;
+  font-size: calc(0.66rem * var(--panel-type, 1));
   line-height: 1.5;
   text-align: left;
   cursor: pointer;
@@ -1718,7 +1755,7 @@ button.objectives-row:hover {
   grid-column: 2;
   grid-row: 2;
   margin-top: 2px;
-  font-size: 0.6rem;
+  font-size: calc(0.6rem * var(--panel-type, 1));
   line-height: 1.45;
   color: var(--text-dim);
 }
@@ -1749,7 +1786,7 @@ button.objectives-row:hover {
    did — so a wrapped reason sat centred under a centred name. */
 .objectives-lock {
   display: block;
-  font-size: 0.6rem;
+  font-size: calc(0.6rem * var(--panel-type, 1));
   line-height: 1.6;
   text-align: left;
 }
@@ -1822,7 +1859,7 @@ button.objectives-row:hover {
 .objectives-debt {
   margin: 4px 0 0;
   padding: 4px 8px 6px;
-  font-size: 0.62rem;
+  font-size: calc(0.62rem * var(--panel-type, 1));
   letter-spacing: 0.1em;
   color: var(--neon-red);
 }
@@ -2094,8 +2131,12 @@ button.objectives-row:hover {
    place. A capturing button is magenta because it is the only thing on screen
    waiting for the player.
    ------------------------------------------------------------------------- */
+/* Wider than the 560 px card the rest of the port uses: this is a table of
+   twenty-eight rows and it has to fit without a scrollbar (§2). The width is
+   what buys the hint its own line, which is most of the height. */
 .menu-panel-wide {
-  width: min(760px, 100%);
+  width: min(1240px, 100%);
+  gap: 0.75rem;
 }
 
 .menu-subscreen {
@@ -2172,13 +2213,23 @@ button.objectives-row:hover {
   line-height: 1.5;
 }
 
+/* Forty rows in five groups, which is 1,207 px stacked — so it used to be a
+   52vh box with a scrollbar, and §2 no longer allows that. Columns instead:
+   `column-width` rather than a fixed count so the number follows the panel,
+   and `break-inside: avoid` keeps a group whole rather than splitting its
+   heading from its first row. The groups are uneven (fleet has nine rows,
+   depth three), so the balancing is the browser's and not a hand-assigned
+   split that would go wrong the moment an action is added. */
 .menu-bindings {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-  max-height: 52vh;
-  overflow-y: auto;
-  padding-right: 0.3rem;
+  columns: 26rem auto;
+  column-gap: 1.8rem;
+}
+
+/* A group is one piece: its heading may not be left at the foot of a column
+   with its rows in the next one. */
+.menu-binding-group {
+  break-inside: avoid;
+  margin-bottom: 0.9rem;
 }
 
 .menu-binding-group h3 {
@@ -2190,14 +2241,24 @@ button.objectives-row:hover {
   text-transform: uppercase;
 }
 
+/* Narrow enough that a hint stops wrapping, which is what actually cost the
+   height: at the old 11rem/7.5rem the hint had 184 px in a two-column list and
+   most of them ran to two lines, so 28 rows that should be 26 px each averaged
+   39 and ran to 56. Taking 1.5rem off the label and dropping the type a step
+   gives the hint about 250 px, which is one line for all but the longest.
+
+   `text-align: left` because it is not inherited — `#root` centres text for the
+   app, so every hint used to be centred inside its own cell, ragged down the
+   middle of a table whose other columns were flush. */
 .menu-binding-row {
   display: grid;
-  grid-template-columns: 11rem 1fr 7.5rem;
+  grid-template-columns: 9.5rem 1fr auto;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.3rem 0;
+  gap: 0.5rem;
+  padding: 0.26rem 0;
   border-bottom: 1px solid color-mix(in srgb, var(--glass-stroke) 45%, transparent);
-  font-size: 0.66rem;
+  font-size: 0.64rem;
+  text-align: left;
 }
 
 .menu-binding-row.clash .menu-binding-key {
@@ -2221,11 +2282,16 @@ button.objectives-row:hover {
 
 .menu-binding-hint {
   color: var(--text-dim);
-  font-size: 0.6rem;
+  font-size: 0.58rem;
 }
 
+/* `auto` column and `nowrap`: the fixed controls carry key *phrases*, and
+   `Shift + right click` broke across two lines in any fixed column narrow
+   enough for the rest of the table, which was the tallest row on the screen.
+   Letting the column take its content costs width the hint can spare. */
 .menu-binding-key {
-  padding: 0.3rem 0.5rem;
+  white-space: nowrap;
+  padding: 0.24rem 0.4rem;
   border: 1px solid var(--glass-stroke);
   border-radius: 3px;
   background: transparent;
@@ -2262,7 +2328,7 @@ button.objectives-row:hover {
 .menu-choice {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.28rem;
   margin: 0;
   padding: 0;
   border: none;
@@ -2276,7 +2342,7 @@ button.objectives-row:hover {
 
 .menu-choice-option {
   flex: 1 1 7rem;
-  padding: 0.4rem 0.6rem;
+  padding: 0.32rem 0.6rem;
   border: 1px solid var(--glass-stroke);
   border-radius: 3px;
   background: transparent;
@@ -2296,7 +2362,7 @@ button.objectives-row:hover {
   margin: 0;
   color: var(--text-dim);
   font-size: 0.58rem;
-  line-height: 1.5;
+  line-height: 1.4;
   letter-spacing: 0.03em;
 }
 
@@ -2475,7 +2541,7 @@ button.objectives-row:hover {
 .campaign-board {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.3rem;
 }
 
 /* The lane, the heads and the seven rows share one four-column track so the
@@ -2484,7 +2550,7 @@ button.objectives-row:hover {
 .campaign-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.4rem;
+  gap: 0.3rem;
 }
 
 .campaign-lane {
@@ -2498,8 +2564,8 @@ button.objectives-row:hover {
 .campaign-head {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.5rem 0.6rem 0.35rem;
+  gap: 0.1rem;
+  padding: 0.3rem 0.5rem 0.28rem;
   /* The navy's ink, and only on the head: a rule under the column rather than
      a box around it, so the head names the column without competing with the
      slots for the eye. */
@@ -2523,8 +2589,8 @@ button.objectives-row:hover {
 }
 
 .campaign-head-commander {
-  font-size: 0.58rem;
-  line-height: 1.5;
+  font-size: 0.55rem;
+  line-height: 1.35;
   letter-spacing: 0.04em;
   font-style: italic;
   color: var(--text-dim);
@@ -2535,8 +2601,13 @@ button.objectives-row:hover {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.5rem 0.6rem;
+  justify-content: center;
+  gap: 0.15rem;
+  /* §11's 44 px touch floor. The slot stopped drawing its line (§14) and
+     collapsed to 31 px, which is a target a finger misses; the board has the
+     room now, so it spends it here rather than on prose it no longer shows. */
+  min-height: 44px;
+  padding: 0.38rem 0.5rem;
   border: 1px solid color-mix(in srgb, var(--neon-magenta) 45%, transparent);
   border-radius: 4px;
   background: var(--abyss-glass);
@@ -2609,16 +2680,13 @@ button.objectives-row:hover {
   text-shadow: 0 0 6px color-mix(in srgb, var(--neon-cyan) 45%, transparent);
 }
 
-.campaign-slot-line {
-  font-size: 0.62rem;
-  line-height: 1.5;
-  letter-spacing: 0.04em;
-  color: var(--text-dim);
-}
-
-/* Announced, never drawn: §14 warns that a board saying `Not yet built`
-   twenty-eight times would read as a loading screen. The dimming is the
-   visual half; this is the audible one. */
+/* Announced, never drawn — the state word, and since #720 the slot's line too.
+   §14 warns that a board saying `Not yet built` twenty-eight times would read as
+   a loading screen, and twenty-nine drawn lines overran the screen outright; the
+   dimming and the chart's caption are the visual halves, and this is the audible
+   one. Two rules rather than one selector so each keeps the name of what it
+   carries — a test reads the state by its own class. */
+.campaign-slot-line,
 .campaign-slot-state {
   position: absolute;
   width: 1px;
@@ -2661,23 +2729,41 @@ button.objectives-row:hover {
    and cannot be scrolled to, whereas auto margins collapse to zero when there
    is no room and the panel starts at the top. The board and the record are
    the two panels that can be taller than a phone. */
+/* The widest screen in the port, and the one with the least slack: twenty-nine
+   slots have to fit without scrolling (§2), so it takes the screen's side
+   padding down with it. Nothing is lost — the board is already inset from the
+   viewport by its own column gaps. */
+.menu-screen-board {
+  padding: 0.9rem 1.5rem;
+}
+
+/* On a short screen every port screen gives its side padding back, for the
+   reason the board gives its up always: §2 requires these to fit, and 24 px of
+   top and bottom air is the cheapest thing on any of them to spend. The side
+   padding stays — a panel that touched the edges would read as clipped. */
+@media (max-height: 820px) {
+  .menu-screen {
+    padding: 0.9rem 1.5rem;
+  }
+}
+
 .menu-panel-board {
   width: min(1360px, 100%);
   margin-block: auto;
+  gap: 0.7rem;
 }
 
 .campaign-body {
   display: grid;
-  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
-  gap: 1.1rem;
+  grid-template-columns: minmax(180px, 218px) minmax(0, 1fr);
+  gap: 0.9rem;
   align-items: start;
 }
 
-/* The chart holds its place while the eight rows scroll past it, so the mark
-   the focus is on is always beside the slot it is on. */
+/* The chart is beside the whole board rather than beside a scrolled window of
+   it: since the board fits (§2), there is nothing to hold position against, and
+   the sticky offset only ever mattered while the rows moved. */
 .campaign-chart {
-  position: sticky;
-  top: 0;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -2813,7 +2899,9 @@ button.objectives-row:hover {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-  min-height: 3.6rem;
+  /* Tall enough for the longest line the board can light, so the chart above
+     does not walk up and down the screen as the focus moves between slots. */
+  min-height: 8.5rem;
   padding: 0 0.2rem;
   text-align: left;
 }
@@ -2836,6 +2924,18 @@ button.objectives-row:hover {
   line-height: 1.5;
   letter-spacing: 0.04em;
   color: var(--text-cyan);
+}
+
+/* The lit slot's line, at a reading size — this is the one place it is drawn
+   for a slot the board has stopped drawing it on (§14). `min-height` on the
+   caption above holds the column steady so the chart does not shift as the
+   line changes length under the focus. */
+.campaign-chart-line {
+  margin-top: 0.2rem;
+  font-size: 0.66rem;
+  line-height: 1.55;
+  letter-spacing: 0.02em;
+  color: var(--text-dim);
 }
 
 /* Below the width the chart and four readable columns need, the chart goes

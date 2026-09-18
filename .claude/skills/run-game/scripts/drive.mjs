@@ -104,7 +104,7 @@ const browser = await chromium.launch({
   headless: !HEADED,
   ...(CHANNEL === null ? {} : { channel: CHANNEL }),
 });
-const page = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
+const page = await (await browser.newContext({ viewport: { width: Number(process.env.VIEW_W ?? 1440), height: Number(process.env.VIEW_H ?? 900) } })).newPage();
 
 const errors = [];
 page.on('console', (m) => {

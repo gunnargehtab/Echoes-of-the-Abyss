@@ -57,6 +57,24 @@ const MAX_LOG_ENTRIES = 300;
 const hex = (color: number) => `#${color.toString(16).padStart(6, '0')}`;
 
 /**
+ * How much smaller a floating panel's own type is set than the panel it sits
+ * in — docs/ui-ux.md §2 and §11.
+ *
+ * The panels scale by a transform, so at 200% each one covers four times the
+ * area while the screen between the top strip and the console stays the size
+ * it was. The orders panel loses that argument outright: at 200% on a 900 px
+ * screen it has about 182 panel units of room for 444 units of rows, which is
+ * not a layout to be tuned but arithmetic, and §2 does not let it scroll.
+ *
+ * So above 100% the type inside a panel grows by the square root of the scale
+ * rather than by the scale. At 200% the reader still gets type about 1.4x the
+ * size it was — magnification that is worth asking for — while the panel holds
+ * roughly twice the rows it otherwise would. Below 100% it is 1: shrinking the
+ * HUD is a request for more room and the panels already give it.
+ */
+export const panelType = (uiScale: number) => (uiScale <= 1 ? 1 : Math.sqrt(uiScale) / uiScale);
+
+/**
  * What the DOM half of the interface needs from the settings the renderer
  * already applied: the UI scale and the four tier inks.
  */
@@ -64,6 +82,7 @@ function cssVariables(uiScale: number, palette: PaletteName): CSSProperties {
   const { tier } = paletteFor(palette);
   return {
     '--ui-scale': uiScale,
+    '--panel-type': panelType(uiScale),
     '--tier-1': hex(tier[ResolutionTier.Contact].color),
     '--tier-2': hex(tier[ResolutionTier.Bearing].color),
     '--tier-3': hex(tier[ResolutionTier.Classification].color),
