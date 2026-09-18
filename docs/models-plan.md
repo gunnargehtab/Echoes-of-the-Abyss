@@ -347,14 +347,20 @@ the Blight's, and §3.2 says which one the model lights.
   Resting lamps: `rimPhotophores` on the shell's shoulders, asymmetric, laid on the
   slope; the tergite-edge rows (`rimPhotophores` in `biolight_unlit`, a row a carapace
   plate along its rim) and the fan ribs are clad. No lock.
-- **Tocsin.** A bell on its side, crown forward. The barrel: a faceted emitter rail
-  (`railGun`) on the centreline for a third of the length to a crystal muzzle collar. New:
-  the bell skirt, faceted pale alloy widening in one unbroken flare from the crown's
-  shoulders to a lip astern that is the widest beam on any Order hull, a violet
-  `spineInlay` down its back from breech to lip, brace blades at the lip's two corners swung
-  out and down and locked; the `drive` prism dark in the mouth. No `wings`, no `canards`.
-  Resting lamps: the collar crystal, and navigation marks as the band table licenses at
-  every band; the rail, the crown's ridge seams and the spine light under way or firing and
+- **Tocsin.** A bell on its side, crown forward (`bell`, new): two six-facet lathes pressed
+  flat and sharing a ring at the shoulders — the skirt widening in one unbroken flare from
+  the shoulders to a lip astern that is the widest beam on any Order hull, its mouth a bore
+  to a bulkhead, the crown a faceted cone — four seams on the crown's shoulder ridges, and
+  the crystal spine swept down the crown ridge from breech to lip (kit.mjs `sweep`;
+  `spineInlay` is a lathe at one height and this back rises 7 m). The barrel
+  (`emitterRail`, new — `railGun`'s register, not its frame): a flat four-facet spar on the
+  centreline for a third of the length, the rail let into its top, a breech collar where it
+  leaves the crown, and the Lance's crystal muzzle collar as the bow. Brace blades at the
+  lip's two corners (`braceBlades`, new), each hinged along the flank's last segment and
+  turned down about it, a pin in the hinge and a cold crystal strip on the forward edge; the
+  `drive` prism dark in the mouth, its mark laid to the ridge's slope (`mark.pitch`). No
+  `wings`, no `canards`, no fin. Built braced. Resting lamps: the collar crystal and one
+  stern mark; the rail, the crown seams, the spine and the prism light in later bands and
   are clad.
 
 ### The line hulls, and the anchor — #787

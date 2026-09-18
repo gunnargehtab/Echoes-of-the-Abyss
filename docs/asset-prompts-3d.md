@@ -221,7 +221,7 @@ Lamp bases are the near-black a `lamp()` puts in `color` for its emissive to sit
 | Directorate | cladding | `#3A3F4A` / `#27313B` `weld_steel` · `#4E1220` `chitin_red_dark` · `#1A0810` `biolight_unlit` (the lamp base worn as cladding by a part the block lights only in a later band — the Verger's bay doors, and the Lure's fan ribs and tergite-edge rows) |
 | Directorate | emissive | `#E0506A` `gullet_glow` · `#E07A8C` `forge_light` / `floodlight_hot` |
 | Directorate | lamp base | `#1A0810` / `#2C0A12` / `#3A0D16` `biolight_crimson` · `#2A0C14` `gullet_glow` · `#40141C` `forge_light` / `floodlight_hot` |
-| Knights | cladding | `#1C2230` `dark_steel` · `#2C2244` `shadow_indigo` · `#8A8FA3` `alloy_dim` · `#E6E9F2` `alloy_white` (the token's hex under a second name) · `#1A1030` `crystal_seam_unlit` (the seam's lamp base worn as cladding by a part the block lights only under way — the Herald's tine seams, the Lance's guard edges and rail) |
+| Knights | cladding | `#1C2230` `dark_steel` · `#2C2244` `shadow_indigo` · `#8A8FA3` `alloy_dim` · `#E6E9F2` `alloy_white` (the token's hex under a second name) · `#1A1030` `crystal_seam_unlit` (the seam's lamp base worn as cladding by a part the block lights only in a later band — the Herald's tine seams, the Lance's guard edges and rail, and the Tocsin's rail, crown seams and crystal spine, lit under way or firing, and its drive prism, lit under way and dark in the firing state it is built in) |
 | Knights | emissive | `#9B6CF9` `crystal_panel_glow` · `#A77CFF` `resonance_node` |
 | Knights | lamp base | `#1A1030` · `#1E1038` · `#241744` · `#2A1A50` · `#2A1650` · `#3A2560` |
 
@@ -761,12 +761,12 @@ canards — nothing of the Lance's chevron or the Reciter's needle: the barrel
 is thin and the hull is wide, and neither is anything without the other. The
 model is the hull braced and firing, which is the only state it fires in;
 under way the blades fold flat along the skirt and the prism is lit. Dim at
-rest but for the crystal in the collar; under way, sustained glow up the
-rail and along the crown's ridge seams, thrown forward, faint on the beam
-and dark astern but for one mark; firing, burning bright — the rail lit from
-breech to muzzle, the crystal spine lit down the skirt, heat-shimmer about
-the collar — with the mouth of the bell still dark, because the quarter it is
-loud in is the quarter it fires into.
+rest but for the crystal in the collar and the one mark astern; under way,
+sustained glow up the rail and along the crown's ridge seams, thrown
+forward, faint on the beam and dark astern but for that mark; firing,
+burning bright — the rail lit from breech to muzzle, the crystal spine lit
+down the skirt, heat-shimmer about the collar — with the mouth of the bell
+still dark, because the quarter it is loud in is the quarter it fires into.
 ```
 
 ### The line hulls, and the anchor — the Corvette twice, and a bed with a drive

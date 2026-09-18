@@ -36,6 +36,7 @@ import {
   plate,
   plan,
   loft,
+  sweep,
   bothSides,
   polar,
   part,
@@ -328,7 +329,11 @@ export function finAndKeel(root, alloy, { fin, keel = null, t = 0.6 }) {
  * stern in its own way (`mark`: a name, a material, a size and a place) or,
  * the Cantus, not at all (`mark: null`). `y` lifts the prism off the hull
  * axis, for a drive that sits in the spine rather than in the tail (the
- * Antiphon); every other Order hull leaves it on the axis.
+ * Antiphon); every other Order hull leaves it on the axis. `mark.pitch` lays
+ * the mark on a crown that slopes — the Tocsin's bell rises 10° toward its
+ * lip where the mark sits, and a level box there is buried at one end and
+ * floating at the other; every other Order hull's crown is level under its
+ * mark and leaves it at 0, which writes the rotation it always had.
  */
 export function drive(root, { shadow, crystal, node }, opts) {
   const { x, r, facets = 6, taper = 0.34, length = r * 3.4, mat = shadow, ring = true } = opts;
@@ -344,9 +349,9 @@ export function drive(root, { shadow, crystal, node }, opts) {
       [0, 0, Math.PI / 2]
     );
   if (mark) {
-    const { name = 'stern_mark', mat: lit = node, size = [0.6, 0.6, 1.4] } = mark;
+    const { name = 'stern_mark', mat: lit = node, size = [0.6, 0.6, 1.4], pitch = 0 } = mark;
     const { x: markX = x - r * 0.6, y: markY = r * 1.4 } = mark;
-    add(root, name, box(...size), lit, [markX, markY, 0]);
+    add(root, name, box(...size), lit, [markX, markY, 0], [0, 0, pitch]);
   }
 }
 
@@ -850,6 +855,264 @@ export function spike(root, { alloy, unlit, node }, { rail, ribs, torpedo, colla
   add(root, 'torpedo_fins_lateral', box(fins.chord, fins.t, 2 * fins.span), alloy, [fins.x, y, 0]);
   add(root, 'torpedo_fins_vertical', box(fins.chord, 2 * fins.span, fins.t), alloy, [fins.x, y, 0]);
   spar(root, 'muzzle_collar', node, { facets: 6, ...collar });
+}
+
+/** The radius a `[x, r]` polyline has at `x`, read off the segment `x` falls in. */
+function radiusAt(stations, x) {
+  const pts = [...stations].sort((a, b) => a[0] - b[0]);
+  if (x <= pts[0][0]) return pts[0][1];
+  for (let i = 1; i < pts.length; i++) {
+    const [x0, r0] = pts[i - 1];
+    const [x1, r1] = pts[i];
+    if (x <= x1) return r0 + ((r1 - r0) * (x - x0)) / (x1 - x0);
+  }
+  return pts[pts.length - 1][1];
+}
+
+/**
+ * A swept geometry given the UV set every lathe and box in this module
+ * carries. The runtime merges one material's meshes into a draw and three's
+ * `mergeGeometries` refuses a bucket whose members disagree on attributes —
+ * hull-intake warns on exactly that — and kit.mjs `sweep` writes positions
+ * and normals only. Nothing here samples a texture, so the values are zero
+ * and the attribute's presence is the point.
+ */
+function uvAlike(geo) {
+  const n = geo.attributes.position.count;
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(2 * n), 2));
+  return geo;
+}
+
+/**
+ * A mesh turned onto a frame: local +x along `X`, local +z along `Z`, and
+ * +y their right-handed third — for a part that has to lie along a line no
+ * Euler triple names, as the kit's `strut` does with a quaternion. `X` and
+ * `Z` need not be perpendicular; `Z` is squared up to `X` first, so the
+ * caller says "along this edge, facing that way" and the frame is exact.
+ */
+function alongFrame(mesh, X, Z) {
+  const x = new THREE.Vector3(...X).normalize();
+  const z = new THREE.Vector3(...Z);
+  z.addScaledVector(x, -z.dot(x)).normalize();
+  const y = new THREE.Vector3().crossVectors(z, x);
+  mesh.setRotationFromMatrix(new THREE.Matrix4().makeBasis(x, y, z));
+  return mesh;
+}
+
+/**
+ * The bell — the Tocsin's hull (#786): "a bell in plan, bilaterally
+ * symmetric, laid on its side with the crown forward and the mouth astern
+ * … a faceted skirt of pale alloy widening in one unbroken flare from the
+ * crown's shoulders to a lip astern that is the widest beam on any Order
+ * hull, a violet crystal spine down its back from breech to lip"
+ * (docs/asset-prompts-3d.md, Block 3, the siege hulls). Not `bladeBody`: a
+ * blade is fullest amidships and drawn to both ends, and this widens to its
+ * very stern and is open there.
+ *
+ * Two six-facet lathes (`spar`, a vertex on the crown, both pressed by
+ * `flat`) that share the ring at `shoulder`, so the skin is unbroken across
+ * it: `bell_skirt` from the lip forward to the shoulder and `bell_crown`
+ * from the shoulder to the apex the barrel stands out of. `outer` is the
+ * skin's `[x, r]` stations from the lip forward, and `bore` the mouth's from
+ * the bulkhead's centre aft to the lip's inner edge; the skirt's profile is
+ * the bore drawn aft, the lip's own face, then the skin drawn forward — in
+ * that order, because a lathe's faces are wound one way whatever its
+ * profile does, and a skin drawn toward +x faces out while a bore drawn
+ * toward −x faces in. So the mouth is a mouth: from astern the conn view
+ * looks into a hollow with the bulkhead at the back, not through a shell.
+ *
+ * `seams` are the crown's ridge seams: one box a ridge, laid along the
+ * ridge from `seams.from` to `seams.to` on the pressed cone (`alongFrame`,
+ * because the pressing gives every ridge its own pitch — the crown rises at
+ * a tenth of the rate the flanks spread), centred on the edge so half its
+ * `section` stands proud, at each bearing in `seams.bearings` (radians from
+ * the crown, starboard positive; the default is the four shoulder ridges,
+ * starboard first). The crown ridge carries the spine and the keel ridge
+ * nothing anyone sees, which is why six ridges get four seams. They carry
+ * the seam family's unlit finish: the block lights them under way and a
+ * lamp dark at rest is a lamp this pipeline never shows (models-plan.md
+ * §3.2, rule 2).
+ *
+ * The `spine` is the crystal run down the crown ridge: the Order's diamond
+ * section (a square on its corner, `spine.halfBeam` by `spine.halfHeight`)
+ * swept along the ridge (kit.mjs `sweep`) at every x in `spine.stations`,
+ * its centre `spine.lift` over the skin so its lower vertex is bedded and
+ * its upper stands clear. `spineInlay` is a lathe at one height and cannot
+ * follow a back that rises 7 m from breech to lip. `halfBeam` may be a pair
+ * `[at the first station, at the last]` for a run that widens as the bell
+ * does. It is `unlit` for the reason the seams are: the block lights it
+ * firing and nowhere earlier.
+ *
+ * Skirt, crown, the seams in bearing order, then the spine.
+ */
+export function bell(root, { alloy, unlit }, opts) {
+  const { outer, bore, shoulder, flat = [0.3, 1], seams = null, spine = null } = opts;
+  const [h, w] = flat;
+  const forward = outer.filter(([x]) => x > shoulder);
+  const aft = outer.filter(([x]) => x <= shoulder);
+  // The bore's last station is the lip's inner edge and `aft`'s first its
+  // outer, so the segment between them is the lip's own face.
+  spar(root, 'bell_skirt', alloy, { profile: [...bore, ...aft], facets: 6, flat });
+  spar(root, 'bell_crown', alloy, {
+    profile: [aft[aft.length - 1], ...forward],
+    facets: 6,
+    flat,
+  });
+  const onRidge = (x, a) => {
+    const r = radiusAt(outer, x);
+    return [x, r * h * Math.cos(a), r * w * Math.sin(a)];
+  };
+  if (seams) {
+    const { from, to, section, bearings = [Math.PI / 3, (2 * Math.PI) / 3] } = seams;
+    const all = [...bearings, ...bearings.map((a) => -a).reverse()];
+    all.forEach((a, i) => {
+      const p0 = onRidge(from, a);
+      const p1 = onRidge(to, a);
+      const mid = p0.map((v, k) => (v + p1[k]) / 2);
+      const length = Math.hypot(...p1.map((v, k) => v - p0[k]));
+      const seam = add(root, `crown_seam_${i}`, box(length, section[0], section[1]), unlit, mid);
+      alongFrame(
+        seam,
+        p1.map((v, k) => v - p0[k]),
+        [0, -Math.sin(a) * w, Math.cos(a) * h]
+      );
+    });
+  }
+  if (spine) {
+    const { stations, halfBeam, halfHeight, lift } = spine;
+    const [b0, b1] = Array.isArray(halfBeam) ? halfBeam : [halfBeam, halfBeam];
+    const n = stations.length - 1;
+    add(
+      root,
+      'crystal_spine',
+      uvAlike(
+        sweep(
+          stations.map((x, i) => [
+            x,
+            b0 + ((b1 - b0) * i) / n,
+            halfHeight,
+            onRidge(x, 0)[1] + lift,
+          ]),
+          [
+            [0, 1],
+            [1, 0],
+            [0, -1],
+            [-1, 0],
+          ]
+        )
+      ),
+      unlit
+    );
+  }
+}
+
+/**
+ * The emitter rail — the Tocsin's barrel (#786): "the barrel stands out of
+ * the crown: a faceted emitter rail on the centreline, a third of the
+ * length, ending in a crystal muzzle collar" (docs/asset-prompts-3d.md,
+ * Block 3, the siege hulls). The turret's `railGun` is the idiom — a
+ * straight instrument, not a tube — and not the builder: it is the Z-long
+ * export's barrel in its own frame, named `r`/`l`, and it ends in a pyramid
+ * and a pip where this ends in a collar. Nor `lance`, the Reciter's needle,
+ * a spar drawn to a point with a lit bar let into it, which the Tocsin's
+ * block refuses by name; nor `spike`, the Lance's open rail with a torpedo
+ * lying in it. This is a closed rail with nothing in it.
+ *
+ * Four parts on the axis, in order: `emitter_barrel`, a four-facet spar
+ * (`spar`) on `barrel`'s stations, alloy, its after end buried in the
+ * crown; `breech_collar`, a six-facet ring on `breech`'s stations, bore and
+ * all, in the hull's shadow indigo, which caps the crown's open apex and
+ * marks where the barrel enters it; `emitter_rail`, a four-facet spar on
+ * `rail`'s stations let into the barrel's top, in the seam family's unlit
+ * finish — the block lights the rail under way and firing, and a lamp dark
+ * at rest is a lamp this pipeline never shows (models-plan.md §3.2, rule
+ * 2); and `muzzle_collar`, the Lance's collar exactly — a six-facet crystal
+ * ring lathed on `collar`'s stations with a vertex on the crown — and a
+ * lamp, whole, the resting light the block names. Its forward face is the
+ * bow and nothing stands over it, so it is the unoccluded upward emitter
+ * every hull needs (§3.2, rule 5).
+ */
+export function emitterRail(
+  root,
+  { alloy, shadow, unlit, node },
+  { barrel, breech, rail, collar }
+) {
+  spar(root, 'emitter_barrel', alloy, barrel);
+  spar(root, 'breech_collar', shadow, { facets: 6, ...breech });
+  spar(root, 'emitter_rail', unlit, rail);
+  spar(root, 'muzzle_collar', node, { facets: 6, ...collar });
+}
+
+/**
+ * The brace blades — the Tocsin's (#786): "at the lip's two corners brace
+ * blades that swing out and down when the hull stops, and lock … under way
+ * the blades fold flat along the skirt" (docs/asset-prompts-3d.md, Block 3,
+ * the siege hulls). Built swung out and locked (models-plan.md §3.5),
+ * because that is the state the hull fires in and the track an enemy sees.
+ *
+ * Each blade is one plane of the Order's wing thickness hinged along the
+ * lip's flank: `hinge.at` is a point `[x, z]` on the starboard flank's
+ * surface and `hinge.along` the flank's direction there in plan, pointing
+ * forward, so the hinge line is the skin's own edge and a blade folded flat
+ * would lie against it. `outline` is the blade's plan in the hinge's frame —
+ * `[along, out]`, the root on `out = 0` — and the whole plane is turned
+ * `anhedral` radians down about the hinge (`alongFrame`): out and down in
+ * one motion, which is what one hinge gives. A `pin` is the hinge itself, a
+ * six-facet rod of `pin.r` by `pin.length` lying in the hinge line, half in
+ * the skin, in shadow indigo. The `edge` is a crystal strip `edge.width`
+ * wide along the blade's forward edge — the outline's first point to its
+ * last — stopping `edge.short` short of the bevel (`strip`), a plane of its
+ * own stood `edge.t` thick so it rides the blade's face: the Clarion's wing
+ * edge on a blade that points down. It is clad and cold: the block lights
+ * nothing on the blades in any band.
+ *
+ * Port is the mirror of starboard through the centre plane, as a rotation:
+ * the frame's x and y have their z negated and its z has x and y negated
+ * (M·R·M for the reflection M), and the outline is mirrored by `plane`, so
+ * the pair is exact to the digit. Starboard first: pin, blade, edge.
+ */
+export function braceBlades(root, { alloy, crystal, shadow }, opts) {
+  const { hinge, outline, t = 0.9, anhedral, pin = null, edge = null } = opts;
+  const [hx, hz] = hinge.at;
+  const [ax, az] = hinge.along;
+  const along = Math.hypot(ax, az);
+  const c = Math.cos(anhedral);
+  const s = Math.sin(anhedral);
+  // Starboard: x along the hinge (forward), z out and down the anhedral.
+  const X = [ax / along, 0, az / along];
+  const Z = [(-az / along) * c, -s, (ax / along) * c];
+  const frame = (mesh, sgn) =>
+    alongFrame(mesh, [X[0], X[1], sgn * X[2]], [sgn * Z[0], sgn * Z[1], Z[2]]);
+  const toward = outline
+    .reduce((acc, [x, z]) => [acc[0] + x, acc[1] + z], [0, 0])
+    .map((v) => v / outline.length);
+  bothSides((side, sgn) => {
+    const at = [hx, 0, sgn * hz];
+    if (pin) {
+      const rod = cyl(pin.r, pin.r, pin.length, 6);
+      rod.rotateZ(-Math.PI / 2);
+      frame(add(root, `brace_pin_${side}`, rod, shadow, at), sgn);
+    }
+    const blade = plane(root, `brace_blade_${side}`, alloy, { outline, t, y: 0 }, sgn);
+    blade.position.set(...at);
+    frame(blade, sgn);
+    if (edge) {
+      // The forward edge: from the root's forward corner, the outline's
+      // first point, to the forward bevel corner, its last.
+      const fore = outline[0];
+      const bevel = outline[outline.length - 1];
+      const lip = strip(fore, bevel, edge.width, toward, { inset: [0, edge.short] });
+      const rim = plane(
+        root,
+        `brace_edge_${side}`,
+        crystal,
+        { outline: lip, t: edge.t, y: 0 },
+        sgn
+      );
+      rim.position.set(...at);
+      frame(rim, sgn);
+    }
+  });
 }
 
 /* --------------------------------------------------------------------------
