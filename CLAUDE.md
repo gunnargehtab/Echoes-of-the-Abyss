@@ -27,17 +27,19 @@ produce and real attention to read.
 What the freeze covers and what it does not:
 
 - **Frozen** — repricing a hull, retuning a yield, changing an AI build list to move a win
-  rate, refreshing a baseline to chase a guard-rail, and filing or working an issue whose
-  subject is a faction winning or losing too much. `docs/economy.md` §9's guard-rails stay
-  written down and stay true as a statement of intent; a **breached** reading is recorded
-  and left, not acted on. #654 is the standing example and is deferred on exactly this
-  basis.
-- **Not frozen** — everything else the harness is for. A *correctness* fault the harness
-  surfaces is still a bug and still gets fixed: a navy that cannot pay for its own roster
-  (#520), a commander that never builds a structure its own waves gate on (#518), an
-  economy path that refuses a legal purchase. Those are not balance; they are the
-  simulation failing to do what the docs say it does. A baseline refreshed because a
-  *mechanic* changed is also fine — that is recording the new shape, not chasing a target.
+  rate, refreshing a baseline in `tools/balance/baselines/` to chase a guard-rail, and
+  filing or working an issue whose subject is a faction winning or losing too much.
+  `docs/economy.md` §9's guard-rails stay written down and stay true as a statement of
+  intent; a **breached** reading is recorded and left, not acted on. #654 is the standing
+  example and is deferred on exactly this basis.
+- **Not frozen** — everything else the harness is for. The harness is `tools/balance`,
+  driven by the `balance-run` skill, and its committed readings are
+  `tools/balance/baselines/`. A *correctness* fault it surfaces is still a bug and still
+  gets fixed: a navy that cannot pay for its own roster (#520), a commander that never
+  builds a structure its own waves gate on (#518), an economy path that refuses a legal
+  purchase. Those are not balance; they are the simulation failing to do what the docs say
+  it does. A baseline refreshed because a *mechanic* changed is also fine — that is
+  recording the new shape, not chasing a target.
 
 The freeze lifts when the systems stop moving, and it lifts by a decision written here,
 not by a run deciding the moment has come. Until then, if a piece of work's justification
@@ -91,14 +93,14 @@ Single workspace: `npm -w packages/backend run dev`, `npm -w packages/frontend r
 
 Single backend test file: `npm -w packages/backend exec -- node --import tsx --test test/match.test.ts`.
 
-Doc gates, exactly as CI runs them:
+The three doc gates on their own — the same three CI's `docs` job runs:
 
 ```bash
-npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
-git ls-files -z ':(glob)docs/**/*.md' \
-  | xargs -0 npx -y markdown-link-check --config .markdown-link-check.json
-npm run docs:claude
+npm run gates -- --only=docs:lint,docs:links,docs:claude
 ```
+
+The `--` is load-bearing. `npm run gates --only=…` is npm's *own* `--only` config, which
+npm rejects as invalid and never forwards, so that spelling silently runs every gate.
 
 `npm run gates` is those three plus every other blocking check in
 `.github/workflows/ci.yml`, run in one pass and summarised: one exit code for "this branch
@@ -182,6 +184,14 @@ tools/audio-meter  What the mix measures, rather than what it was meant to.
                    are taken at the bus, before MASTER_GAIN, because a figure at
                    the output says the mix is hot and a figure at the bus says
                    which layer made it hot (#663).
+tools/invariants   check.mjs reads docs/invariants.md's table and asserts that
+                   every holder it names still resolves — the file is there and
+                   the quoted test name is still in it, matched against the file
+                   with its comments stripped, because the long explanation above
+                   a test is exactly the text that survives a rename and would
+                   keep the gate green on a holder that is gone. Liveness, not
+                   correctness; see "Invariants live in exactly one place too"
+                   below. Runs in npm run gates and in CI's build job.
 tools/claude-docs  markdownlint and a relative-link check over the markdown
                    this repository wrote under .claude/, which was outside
                    every glob in CI until #748 and had already drifted.
@@ -205,10 +215,44 @@ tools/prose-budget How long a GitHub body is, in the words a person reads —
                    lib/count.mjs is the counter and holds the budgets;
                    check.mjs is the CLI the PR body workflow runs, advisory
                    there and --strict locally. Tested under npm test.
+tools/roadmap      docs/ROADMAP.md rendered against live GitHub issue state, for
+                   GitHub Pages. build.mjs parses the doc rather than keeping a
+                   second copy of it, so the doc owns the phases and the
+                   reasoning and GitHub owns whether each issue is open: adding a
+                   row to a phase table is how you add an item to the site.
+                   Dependency-free on purpose, so the page cannot fail to build
+                   on something in node_modules, and without a token it still
+                   builds with every state reading "unknown". npm run test:roadmap
+                   is its suite. Published by .github/workflows/pages.yml, not by
+                   ci.yml — see CI below.
+tools/balance      Headless matches, telemetry, and a verdict against every
+                   guard-rail the design bible names. run.mjs is a launcher only:
+                   the harness is packages/backend/src/balance/, because it
+                   imports Match and AiSeat and those are backend TypeScript with
+                   real .ts import extensions. baselines/ holds the committed
+                   readings, each stamped with the command that produced it. Read
+                   the freeze above before running it: the harness is not frozen,
+                   tuning a number against it is.
 tools/echo-sim     Standalone CommonJS harness for deterministic Echo scenarios.
                    Not an npm workspace; run it directly:
                    node tools/echo-sim/sim.js [tools/echo-sim/scenarios/<name>.json]
                    Tests can also require('./lib') for detect/runScenario.
+tools/lib          spawn.mjs, the one way a gate is spawned, carrying the Windows
+                   reasoning: npm and npx are .cmd batch files there, and since
+                   the CVE-2024-27980 fix spawning one without a shell returns
+                   status: null with error set rather than throwing, which made
+                   every gate FAIL in 0.0s printing nothing. Extracted when
+                   claude-docs became gates.mjs's second caller.
+tools/*.mjs        The three scripts that sit at the top of the tree.
+                   gates.mjs is every blocking gate in one pass — see Commands
+                   above. preflight-deps.mjs is the presence check that dev,
+                   build and test run first, so a stale node_modules fails at the
+                   front door instead of ten seconds into Vite (#301).
+                   android-check.mjs is the on-device smoke check for the Termux
+                   deployment (SETUP-ANDROID.md): build, tests, and a real server
+                   boot probed on both ports. All three are plain Node with no
+                   dependencies — the last two because they have to run before
+                   anyone has a working install.
 docs/              The design bible. Prose, and the source of every SPEC number.
 ```
 
@@ -464,14 +508,17 @@ from those two.
 ## CI
 
 `.github/workflows/ci.yml` runs on every push to `main` and on every PR, as four parallel
-jobs that share one cached install (`.github/actions/setup`):
+jobs. The three that need `node_modules` share one cached install
+(`.github/actions/setup`); `docs` needs none and skips it.
 
 - `build` — build shared → type-check → ESLint → Prettier check → hull-model round-trip
-  check → full build.
-- `test (shard 1)` and `test (shard 2)` — the shared and frontend suites, then the backend
-  suite split file-by-file with node's `--test-shard`. The mission tests play whole missions
-  out at 60 Hz and are most of the suite's time; the shard count in the matrix is the one
-  knob for wall clock, at the cost of one more billed minute per shard.
+  check (`check:models`) → invariants-list check (`check:invariants`) → full build.
+- `test (shard 1)` and `test (shard 2)` — the backend suite split file-by-file with node's
+  `--test-shard`. The mission tests play whole missions out at 60 Hz and are most of the
+  suite's time; the shard count in the matrix is the one knob for wall clock, at the cost
+  of one more billed minute per shard. The last shard, and only the last
+  (`if: matrix.shard == strategy.job-total`), also runs the shared and frontend suites and
+  `npm run test:roadmap` — ten seconds between them, put on the lighter side of the split.
 - `docs` — markdownlint on `docs/`, then one `markdown-link-check` invocation over every
   doc, then `npm run docs:claude` over the prose this repository wrote under `.claude/`.
   **All three are blocking**, so a dead link in `docs/` fails the build.
@@ -481,7 +528,20 @@ URLs — the repository is private, so unauthenticated requests to its issues an
 return 404 and those links would fail forever — and enables `retryOn429`, because
 `docs/ROADMAP.md` links roughly twenty GitHub issues.
 
-Run the same checks locally before pushing; the full sequence is cheap.
+Three other workflows live beside it, and none of them gates a merge:
+
+- `pages.yml` — **Roadmap site**. Builds `tools/roadmap` on pushes to `main` that touch
+  what feeds the page, on issue events, and daily. It deploys only once someone sets the
+  `PUBLISH_ROADMAP` variable, because this repository is private and a Pages site is not;
+  until then it uploads the site as an artifact and stays green.
+- `pr-body.yml` — **PR body**. Reports a pull request's word count through
+  `tools/prose-budget` ("Write short on GitHub" above). Advisory: the step always succeeds.
+- `labels.yml` — **Sync Labels**. Applies `.github/labels.yml` on a push that changes it.
+  That file is the complete set, so a label it does not list is deleted, not merely
+  unmanaged (#599).
+
+Run the same checks locally before pushing; `npm run gates` is the whole blocking sequence
+and is cheap.
 
 ## Contributing
 
