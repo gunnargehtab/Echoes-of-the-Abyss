@@ -7,7 +7,8 @@
 
 **Glossary:** See [Glossary](glossary.md) for SIG, PF, HYD, PR and Resolution Tier.
 
-**Status:** planned. The tracking issue is #540, Phase 4, and its six boxes are filed as
+**Status:** in progress — the transports (#783) are built, the other five boxes are
+planned. The tracking issue is #540, Phase 4, and its six boxes are filed as
 issues #783 (the transports), #784 (the scouts), #785 (the ordnance hulls), #786 (the siege
 hulls), #787 (the line hulls and the anchor) and #788 (the Bio-Reactor). Every figure below
 is read from the working tree at `19ac7f9`; where it is a stat, [units.md](units.md) and
@@ -198,14 +199,15 @@ with a drive, sized to its berths. None carries a weapon.
   four `propTunnels`. Resting lamps: the hold-door seams and the bridge ports; the
   doors-open floodlight is a transient.
 - **Drifter.** `podBody`, `growthRings`, `cargoLobes` as the two swelling bays under
-  `membranes` opening like a bivalve, one muscle-drive fin, trim vanes. Resting lamps: one
-  faint seam a bay, brightening as it opens. The quietest hull in the roster.
+  `membranes` opening like a bivalve, one muscle-drive fluke, trim vanes. Resting lamps: one
+  faint seam a bay, brightening as it opens, and one bow mark. The quietest hull in the
+  roster.
 - **Verger.** `tergites` ribbed and domed like the Precentor's, `listeningDome` forward,
   `ballastTanks` flanking a heavy keel. New: four cohort bays in the belly behind pressure
   hatches, one ducted drive. Resting lamps: low and cold at the hatch rims and the dome; the
   bays' glow is a state. No lock (§3.4).
 - **Antiphon.** `bladeBody` in the Clarion's family, `wings` swept as guards, `drive` in the
-  spine, `navMarks`. New: a three-bay landing deck let into the back, with `resonatorRing`
+  spine, `navMarks`. New: a three-bay landing deck across the back, its bays let into it, with `resonatorRing`
   around it as the grant made visible. Resting lamps: from the bow back, dark astern; the
   ring is cold at rest as the Responsory's rings are, and flares only when the deck opens.
 

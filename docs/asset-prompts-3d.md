@@ -216,9 +216,9 @@ Lamp bases are the near-black a `lamp()` puts in `color` for its emissive to sit
 | Consortium | cladding | `#1C1F22` `baffle-foam` (the Baffle Barge) |
 | Consortium | lamp base | `#1A1408` · `#120E06` · `#2A2210` · `#1A1206` |
 | Commune | cladding | `#14332A` / `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` / `#14664C` `algae_hull` · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` |
-| Commune | emissive | `#5FAE42` `bio_vein` · `#E8F0A3` `forge_light` / `floodlight_pale` (the spore token as a light) |
+| Commune | emissive | `#5FAE42` `bio_vein` (at strength 1 on the Sower and the Spinner, 0.2 on the Drifter's seams — a strength survives the recolour as a finish does) · `#E8F0A3` `forge_light` / `floodlight_pale` (the spore token as a light) |
 | Commune | lamp base | `#061206` · `#0A1A08` · `#123018` · `#14301A` · `#14351A` · `#0F2A12` · `#2E3A16` · `#3A3F1E` · `#2A4A20` · `#3F6B2E` |
-| Directorate | cladding | `#3A3F4A` / `#27313B` `weld_steel` · `#4E1220` `chitin_red_dark` |
+| Directorate | cladding | `#3A3F4A` / `#27313B` `weld_steel` · `#4E1220` `chitin_red_dark` · `#1A0810` `biolight_unlit` (the lamp base worn as cladding by a part the block lights only in a later band — the Verger's bay doors) |
 | Directorate | emissive | `#E0506A` `gullet_glow` · `#E07A8C` `forge_light` / `floodlight_hot` |
 | Directorate | lamp base | `#1A0810` / `#2C0A12` / `#3A0D16` `biolight_crimson` · `#2A0C14` `gullet_glow` · `#40141C` `forge_light` / `floodlight_hot` |
 | Knights | cladding | `#1C2230` `dark_steel` · `#2C2244` `shadow_indigo` · `#8A8FA3` `alloy_dim` · `#E6E9F2` `alloy_white` (the token's hex under a second name) |
@@ -343,7 +343,7 @@ stern for the eye that gets closer; floodlit when it works.
 
 ```text
 UNIT — Bulwark (pair with Consortium): the heavy, 150 m — the loudest hull
-in the game (SIG 70 idle, 75 cruise) and the widest beam in the roster. A
+in the game (SIG 70 idle, 75 cruise) and the widest beam of the rung. A
 slab: blunt ram bow with a plough plate and teeth, blunt stern, three
 stepped armour tiers, flank plates patchworked older-under-newer, one
 enormous forward twin turret (an 800 m gun), a bridge citadel aft, four
@@ -419,11 +419,12 @@ budget is for the hull running home empty. None carries a weapon.
 UNIT — Freighter (pair with Consortium): the armoured hold, 160 m — six berths
 of hull moved slowly and loudly and very hard to sink (SIG 30 idle, 50 cruise,
 68 with a full hold; no weapon; 1,800 hull). A long slab-sided box hull with
-the Bulwark's riveted plate, a raised bridge castle aft, two great hold doors
-along the flank with hinge rails and dogging wheels, crane gantries over the
-foredeck, ballast blisters low on the hull, and four prop tunnels in a heavy
-skeg. Lit along the hold-door seams and the bridge ports, and floodlit when
-the doors open.
+the Bulwark's riveted plate and a plated weather deck inside its rim, a raised
+bridge castle aft with two stacks, two great hold doors along each flank hinged
+at the sill with hinge rails and dogging wheels, crane gantries over a foredeck
+hatch, ballast blisters low on the hull, and four prop tunnels in a heavy skeg.
+Lit along the hold-door seams and the bridge ports, and floodlit when the doors
+open.
 ```
 
 ```text
@@ -431,8 +432,9 @@ UNIT — Drifter (pair with Commune): the quiet way in, 62 m — two berths of h
 at 90 m/s and SIG 10 (4 idle; 10 cruise; 16 with a full hold; no weapon; 300
 hull). A slim seed-pod hull of grown shell, the two berths as a pair of
 swelling bays amidships under a membrane that opens like a bivalve, a single
-muscle-drive fin astern and trim vanes rather than planes. Almost dark: a
-faint bioluminescent seam along each bay, brightening only as it opens.
+muscle-drive fluke astern and trim vanes rather than planes. Almost dark: a
+faint bioluminescent seam along each bay, brightening only as it opens, and
+one navigation mark at the bow.
 ```
 
 ```text
@@ -440,9 +442,10 @@ UNIT — Verger (pair with Abyssal Directorate): the cohort's way down, 100 m �
 four berths of hull taken below the Shelf line at PR-3 (SIG 14 idle, 26 cruise,
 38 with a full hold; no weapon; 800 hull). A deep-pressure hull, ribbed and
 domed like the Precentor's, with four cohort bays set into its belly behind
-pressure hatches, a listening dome forward, ballast tanks flanking a heavy keel,
-and a single ducted drive. Lit low and cold at the hatch rims and the dome;
-the bays glow through their hatches while they are occupied.
+pressure hatches low on the flanks, a listening dome forward, ballast tanks
+flanking a heavy keel, and a single ducted drive. Lit low and cold at the hatch
+rims and at a boss on the dome's crown; the doors behind the rims stay dark
+until the bays are occupied, when they glow through their hatches.
 ```
 
 ```text
@@ -450,10 +453,11 @@ UNIT — Antiphon (pair with Hadron Knights): the Order's way of arriving, 110 m
 — three berths of hull, and what it lands, lands with +1 PR for twenty seconds
 (SIG 12 idle, 35 cruise ahead, 3.5 astern; 44 ahead with a full hold; no
 weapon; 700 hull). A faceted blade hull in the Clarion's family with a wide
-three-bay landing deck let into its back, a crystal resonator ring around the
-deck that is the grant made visible, swept guard wings, and the drive in the
-spine. Lit from the bow back like every Order hull and dark astern; the
-resonator ring flares when the deck opens.
+three-bay landing deck across its back, the three bays let into it, a crystal
+resonator ring lying flat around the deck that is the grant made visible, swept
+guard wings framing the deck, and the drive in the spine. Lit from the bow back
+like every Order hull — a navigation mark at the bow and on each shoulder of the
+deck — and dark astern; the resonator ring flares when the deck opens.
 ```
 
 ### The scouts — one a navy, and two ways of not being heard

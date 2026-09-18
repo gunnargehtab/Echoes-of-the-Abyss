@@ -132,6 +132,18 @@ import derrickEmissive from '../assets/hulls/maps/derrick-emissive.png';
 import responsoryAlbedo from '../assets/hulls/maps/responsory-albedo.png';
 import responsoryHeight from '../assets/hulls/maps/responsory-height.png';
 import responsoryEmissive from '../assets/hulls/maps/responsory-emissive.png';
+import freighterAlbedo from '../assets/hulls/maps/freighter-albedo.png';
+import freighterHeight from '../assets/hulls/maps/freighter-height.png';
+import freighterEmissive from '../assets/hulls/maps/freighter-emissive.png';
+import drifterAlbedo from '../assets/hulls/maps/drifter-albedo.png';
+import drifterHeight from '../assets/hulls/maps/drifter-height.png';
+import drifterEmissive from '../assets/hulls/maps/drifter-emissive.png';
+import vergerAlbedo from '../assets/hulls/maps/verger-albedo.png';
+import vergerHeight from '../assets/hulls/maps/verger-height.png';
+import vergerEmissive from '../assets/hulls/maps/verger-emissive.png';
+import antiphonAlbedo from '../assets/hulls/maps/antiphon-albedo.png';
+import antiphonHeight from '../assets/hulls/maps/antiphon-height.png';
+import antiphonEmissive from '../assets/hulls/maps/antiphon-emissive.png';
 
 /**
  * Pixels per world metre the maps were baked at. The maps carry no metadata,
@@ -241,6 +253,30 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
     albedo: responsoryAlbedo,
     height: responsoryHeight,
     emissive: responsoryEmissive,
+  },
+  // The transports (#783), on the rung's rule: one navy's hull each, so the
+  // kind's canonical model. The Verger carries no lock, so its Directorate
+  // model serves every navy recoloured — the Chorister's rule — until a
+  // variant passes intake.
+  [UnitKind.Freighter]: {
+    albedo: freighterAlbedo,
+    height: freighterHeight,
+    emissive: freighterEmissive,
+  },
+  [UnitKind.Drifter]: {
+    albedo: drifterAlbedo,
+    height: drifterHeight,
+    emissive: drifterEmissive,
+  },
+  [UnitKind.Verger]: {
+    albedo: vergerAlbedo,
+    height: vergerHeight,
+    emissive: vergerEmissive,
+  },
+  [UnitKind.Antiphon]: {
+    albedo: antiphonAlbedo,
+    height: antiphonHeight,
+    emissive: antiphonEmissive,
   },
 };
 
