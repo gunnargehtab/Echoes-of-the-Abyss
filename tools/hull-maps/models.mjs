@@ -102,6 +102,16 @@ export const UNITS = [
   // Reciter's (systems-echo.md §8); its emissive calibrates on the compass
   // average, 27, and the light is placed on the bow array, where the 78 is.
   { slug: 'responsory', model: 'responsory-hadron.glb', lengthM: 95, sig: 27 },
+  // The transports (docs/units.md "The transports", #783 — Phase 4's first
+  // box): one a navy, so each model is the kind's canonical one. The Verger
+  // carries no lock and takes the Chorister's rule — its Directorate model
+  // serves every navy recoloured until a variant passes intake. The
+  // Antiphon's listed 12 is a cone figure like the Clarion's: it bakes on
+  // the compass average, 5.4, and the light is placed forward.
+  { slug: 'freighter', model: 'freighter-bathyarch.glb', lengthM: 160, sig: 30 },
+  { slug: 'drifter', model: 'drifter-pelagia.glb', lengthM: 62, sig: 4 },
+  { slug: 'verger', model: 'verger-directorate.glb', lengthM: 100, sig: 14 },
+  { slug: 'antiphon', model: 'antiphon-hadron.glb', lengthM: 110, sig: 5.4 },
 ];
 
 /**

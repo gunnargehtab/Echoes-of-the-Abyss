@@ -5,11 +5,12 @@
  * "The armoured hold, 160 m — six berths of hull moved slowly and loudly and
  * very hard to sink (SIG 30 idle, 50 cruise, 68 with a full hold; no weapon;
  * 1,800 hull). A long slab-sided box hull with the Bulwark's riveted plate, a
- * raised bridge castle aft, two great hold doors along the flank with hinge
- * rails and dogging wheels, crane gantries over the foredeck, ballast
- * blisters low on the hull, and four prop tunnels in a heavy skeg. Lit along
- * the hold-door seams and the bridge ports, and floodlit when the doors
- * open." (docs/asset-prompts-3d.md, UNIT — Freighter)
+ * raised bridge castle aft with two stacks, two great hold doors along each
+ * flank hinged at the sill with hinge rails and dogging wheels, crane
+ * gantries over a foredeck hatch, ballast blisters low on the hull, and four
+ * prop tunnels in a heavy skeg. Lit along the hold-door seams and the bridge
+ * ports, and floodlit when the doors open." (docs/asset-prompts-3d.md,
+ * UNIT — Freighter, as #783 amended it)
  *
  * A hold with a drive, and the fattest plan in the roster: the hand-drawn
  * outline this model replaces (silhouettes.ts) asks for "near-parallel
@@ -22,7 +23,8 @@
  * `holdDoors`, `skeg`, `deckGantries`, `cargoHatch` — were written for it
  * there, beside the Bulwark's and the Tender's families.
  *
- * What the script does that the block does not say:
+ * What the script decided that the block, as first written, did not say —
+ * the block was amended with the first four in #783:
  *
  * - **The doors are hinged at the bottom.** "Hinge rails and dogging wheels"
  *   places neither; a bottom hinge drops each door as a ramp, which is how

@@ -7,7 +7,8 @@
 
 **Glossary:** See [Glossary](glossary.md) for SIG, PF, HYD, PR and Resolution Tier.
 
-**Status:** planned. The tracking issue is #540, Phase 4, and its six boxes are filed as
+**Status:** in progress — the transports (#783) are built, the other five boxes are
+planned. The tracking issue is #540, Phase 4, and its six boxes are filed as
 issues #783 (the transports), #784 (the scouts), #785 (the ordnance hulls), #786 (the siege
 hulls), #787 (the line hulls and the anchor) and #788 (the Bio-Reactor). Every figure below
 is read from the working tree at `19ac7f9`; where it is a stat, [units.md](units.md) and

@@ -132,8 +132,11 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Dredge]: 'dredge',
   [UnitKind.Cantus]: 'cantus',
   [UnitKind.Reciter]: 'reciter',
-  // The transports (#501). No model yet: the procedural bake is gate 1's
-  // sanctioned state until one clears intake, and the slug is where it lands.
+  // The transports (#501), script-built in #783: one model a navy. The
+  // Verger carries no lock, so a navy rendering for one resolves
+  // verger-<its faction>.glb — only the Directorate's exists, and the others
+  // stay on the recoloured sprite until a variant passes intake, as the
+  // Chorister's do.
   [UnitKind.Freighter]: 'freighter',
   [UnitKind.Drifter]: 'drifter',
   [UnitKind.Verger]: 'verger',

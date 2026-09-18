@@ -218,7 +218,7 @@ Lamp bases are the near-black a `lamp()` puts in `color` for its emissive to sit
 | Commune | cladding | `#14332A` / `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` / `#14664C` `algae_hull` · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` |
 | Commune | emissive | `#5FAE42` `bio_vein` · `#E8F0A3` `forge_light` / `floodlight_pale` (the spore token as a light) |
 | Commune | lamp base | `#061206` · `#0A1A08` · `#123018` · `#14301A` · `#14351A` · `#0F2A12` · `#2E3A16` · `#3A3F1E` · `#2A4A20` · `#3F6B2E` |
-| Directorate | cladding | `#3A3F4A` / `#27313B` `weld_steel` · `#4E1220` `chitin_red_dark` |
+| Directorate | cladding | `#3A3F4A` / `#27313B` `weld_steel` · `#4E1220` `chitin_red_dark` · `#1A0810` `biolight_unlit` (the lamp base worn as cladding by a part the block lights only in a later band — the Verger's bay doors) |
 | Directorate | emissive | `#E0506A` `gullet_glow` · `#E07A8C` `forge_light` / `floodlight_hot` |
 | Directorate | lamp base | `#1A0810` / `#2C0A12` / `#3A0D16` `biolight_crimson` · `#2A0C14` `gullet_glow` · `#40141C` `forge_light` / `floodlight_hot` |
 | Knights | cladding | `#1C2230` `dark_steel` · `#2C2244` `shadow_indigo` · `#8A8FA3` `alloy_dim` · `#E6E9F2` `alloy_white` (the token's hex under a second name) |
@@ -441,9 +441,10 @@ UNIT — Verger (pair with Abyssal Directorate): the cohort's way down, 100 m �
 four berths of hull taken below the Shelf line at PR-3 (SIG 14 idle, 26 cruise,
 38 with a full hold; no weapon; 800 hull). A deep-pressure hull, ribbed and
 domed like the Precentor's, with four cohort bays set into its belly behind
-pressure hatches, a listening dome forward, ballast tanks flanking a heavy keel,
-and a single ducted drive. Lit low and cold at the hatch rims and the dome;
-the bays glow through their hatches while they are occupied.
+pressure hatches low on the flanks, a listening dome forward, ballast tanks
+flanking a heavy keel, and a single ducted drive. Lit low and cold at the hatch
+rims and at a boss on the dome's crown; the doors behind the rims stay dark
+until the bays are occupied, when they glow through their hatches.
 ```
 
 ```text

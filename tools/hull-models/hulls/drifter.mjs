@@ -5,9 +5,10 @@
  * "The quiet way in, 62 m — two berths of hull at 90 m/s and SIG 10 (4 idle;
  * 10 cruise; 16 with a full hold; no weapon; 300 hull). A slim seed-pod hull
  * of grown shell, the two berths as a pair of swelling bays amidships under
- * a membrane that opens like a bivalve, a single muscle-drive fin astern and
- * trim vanes rather than planes. Almost dark: a faint bioluminescent seam
- * along each bay, brightening only as it opens."
+ * a membrane that opens like a bivalve, a single muscle-drive fluke astern
+ * and trim vanes rather than planes. Almost dark: a faint bioluminescent
+ * seam along each bay, brightening only as it opens, and one navigation mark
+ * at the bow." (as #783 amended it)
  *
  * Built to that block and not ported from a binary, which no Commune hull
  * has been since the Sower and the Spinner were re-run: the pod body, the
@@ -17,7 +18,8 @@
  * docs/models-plan.md §3.5 says a stated hull is: the membranes shut, the
  * seam where the valves meet.
  *
- * What the script did that the block does not say:
+ * What the script decided that the block, as first written, did not say —
+ * the block was amended with the first two in #783:
  *
  * - **The fin is a fluke.** "A single muscle-drive fin astern" is one
  *   horizontal paddle spanning the keel, the tail every other Commune block
