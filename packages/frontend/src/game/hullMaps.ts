@@ -180,6 +180,15 @@ import lureEmissive from '../assets/hulls/maps/lure-emissive.png';
 import tocsinAlbedo from '../assets/hulls/maps/tocsin-albedo.png';
 import tocsinHeight from '../assets/hulls/maps/tocsin-height.png';
 import tocsinEmissive from '../assets/hulls/maps/tocsin-emissive.png';
+import caissonAlbedo from '../assets/hulls/maps/caisson-albedo.png';
+import caissonHeight from '../assets/hulls/maps/caisson-height.png';
+import caissonEmissive from '../assets/hulls/maps/caisson-emissive.png';
+import reedAlbedo from '../assets/hulls/maps/reed-albedo.png';
+import reedHeight from '../assets/hulls/maps/reed-height.png';
+import reedEmissive from '../assets/hulls/maps/reed-emissive.png';
+import bowerAlbedo from '../assets/hulls/maps/bower-albedo.png';
+import bowerHeight from '../assets/hulls/maps/bower-height.png';
+import bowerEmissive from '../assets/hulls/maps/bower-emissive.png';
 
 /**
  * Pixels per world metre the maps were baked at. The maps carry no metadata,
@@ -386,6 +395,26 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
     albedo: tocsinAlbedo,
     height: tocsinHeight,
     emissive: tocsinEmissive,
+  },
+  // The line hulls and the anchor (#787): the Consortium's line hull and the
+  // Commune's line hull and its anchor, all three faction-locked, so each
+  // model is the kind's canonical one and none takes the Chorister's rule.
+  // The Bower is baked grown out, the state it anchors in; its cloud is drawn
+  // around the hull by the renderer and is not in the model.
+  [UnitKind.Caisson]: {
+    albedo: caissonAlbedo,
+    height: caissonHeight,
+    emissive: caissonEmissive,
+  },
+  [UnitKind.Reed]: {
+    albedo: reedAlbedo,
+    height: reedHeight,
+    emissive: reedEmissive,
+  },
+  [UnitKind.Bower]: {
+    albedo: bowerAlbedo,
+    height: bowerHeight,
+    emissive: bowerEmissive,
   },
 };
 
