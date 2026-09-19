@@ -21,7 +21,7 @@ For engineering conventions, build order, and the runtime gotchas that cost the 
 - **No line-of-sight vision.** Instead, every unit and structure continuously emits an **Acoustic Signature (SIG, 0–100)** based on idle state, movement speed, construction, firing weapons, etc.
 - Detection is **not binary.** Enemies resolve you across **five resolution tiers** — from "something is out there" (Tier 1) to a full track with velocity (Tier 5).
 - **Key mechanic:** Active sonar reveals everything within 900 m — but reveals *you* to everything within 2,400 m. Alpha strikes are loud. Economy is loud. Stealth and power are in direct tension.
-- **Server-authoritative.** Detection is computed server-side per-player (Colyseus + spatial hash at 5 Hz, 2 ms/tick budget) and only the resolved result is sent to each client. Maphack prevention is the entire threat model.
+- **Server-authoritative.** Detection is computed server-side per-player (Colyseus + spatial hash at 5 Hz, 2 ms/tick budget) and only the resolved result is sent to each client. Maphack prevention is the entire threat model. The rule and the budget are stated in full at the root: [server-authoritative](../CLAUDE.md#server-authoritative-is-a-hard-rule-not-a-preference), [two clocks](../CLAUDE.md#two-clocks).
 - Read: **[systems-echo.md](../docs/systems-echo.md)**
 
 ### 2. Depth — The Axis of Commitment
@@ -52,32 +52,21 @@ No faction is written as the villain. Read: **[factions.md](../docs/factions.md)
 - **Build:** Vite · ESBuild · npm workspaces
 - **Deployment:** container images (`packages/*/Dockerfile`, root `docker-compose.yml`) targeting Vercel (frontend) · Hetzner Cloud (game servers, low latency in EU); no platform project is configured yet
 
-**Node 22+ is required.** The backend dev and test scripts use `node --import tsx` and the stable `node:test` runner; CI pins Node 22.
+**Node 22+ is required** ([CLAUDE.md § Commands](../CLAUDE.md#commands)), and `@echoes/shared` is imported by its build output rather than its source, which is the thing that breaks first ([CLAUDE.md § Build order](../CLAUDE.md#build-order--the-thing-that-breaks-first)).
 
 ### What is implemented today
 
 The scaffold is playable end to end, not a stub: a fixed-step simulation, per-player acoustic detection, and a client that renders only what the server resolved for it.
 
-```text
-packages/shared    @echoes/shared — types, tuning constants, Echo Layer math.
-                   Compiled to dist/; frontend and backend import the OUTPUT,
-                   so run `npm run build:shared` after editing it.
-packages/backend   Colyseus server. Owns the simulation.
-                   sim/match.ts — 60 Hz fixed step, 5 Hz Echo Layer pass
-                   sim/systems/echoLayer.ts — per-player detection resolution
-                   rooms/MatchRoom.ts — the network boundary; rules live in sim/
-packages/frontend  React shell + two-canvas renderer (three.js world, PixiJS
-                   HUD over it, one shared camera). A terminal, not a simulation.
-tools/echo-sim     Standalone deterministic Echo scenario harness.
-```
+The package-by-package tour — what each workspace owns, which file holds the fixed step, where the network boundary is, and what every directory under `tools/` is for — is [CLAUDE.md § Architecture](../CLAUDE.md#architecture).
 
 Redis and PostgreSQL are the intended shape for accounts and caching, and neither exists — there is no auth or persistence code, and the match server holds everything in memory for the life of a room. They were once declared as backend dependencies and imported nowhere; that was removed, because an installed driver reads as persistence already there.
 
-**Tuning constants live in exactly one place:** `packages/shared/src/constants.ts`. Each is tagged **SPEC** (transcribed from a design doc — change the doc first, and cite the section) or **TUNABLE** (a prototype number the docs do not pin down). Some are *derived* rather than chosen: `BASE_THRESHOLD` is solved from the spec'd 2,400 m active-sonar self-reveal so the documented ping radii fall out of the general propagation model. Do not replace a derived value with a literal to make a test pass.
+Three engineering rules constrain design work, and each is stated in full in exactly one place — `CLAUDE.md`, with the reasoning that makes it a rule rather than a preference:
 
-**Echo Layer performance:** spatial hash evaluated at 5 Hz against a hard 2 ms/tick budget, to stay inside the Colyseus frame budget. `Match` tracks the rolling worst-case cost, so a regression is observable rather than theoretical.
-
-**Detection is computed server-side and per-player.** This is a hard rule, not a preference: the whole game is hidden information, so a client that receives unresolved world state is a maphack regardless of what it chooses to draw. Contacts are reported under opaque per-observer handles rather than raw entity ids, so a client cannot infer the map-wide unit count from contacts it legitimately detected. Never send the client anything it has not resolved — not "temporarily", not behind a debug flag that ships.
+- **[Constants live in exactly one place](../CLAUDE.md#constants-live-in-exactly-one-place)** — `packages/shared/src/constants.ts`, and the tag on a constant says what changing it obliges you to do first. Editing convention 1 below sends you there.
+- **[Server-authoritative detection](../CLAUDE.md#server-authoritative-is-a-hard-rule-not-a-preference)** — the threat model the Echo Layer section above names, and the reason a mechanic may not show the player anything the server has not resolved for them.
+- **[Two clocks](../CLAUDE.md#two-clocks)** — the 60 Hz step and the 5 Hz Echo pass on its 2 ms budget. That budget is the ceiling a new detection mechanic is designed under.
 
 Read: **[tech-stack.md](../docs/tech-stack.md)** · **[CLAUDE.md](../CLAUDE.md)**
 

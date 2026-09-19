@@ -12,7 +12,8 @@ short contract every change is reviewed against.
    your PR says which one you are changing and why.
 2. **Server-authoritative is a hard rule.** The whole game is hidden information. Never
    send the client anything it has not resolved — not "temporarily", not behind a debug
-   flag that ships.
+   flag that ships. Why, and what the opaque per-observer handles buy, is in
+   [CLAUDE.md](CLAUDE.md#server-authoritative-is-a-hard-rule-not-a-preference).
 3. **Every mechanic is an argument about sound or depth.** A unit ability or faction
    trait anchored to neither is arbitrary; reconsider it before implementing it.
 4. **Visual changes clear the gates** in
@@ -33,15 +34,13 @@ npm run dev          # server on :3000, client on :5173
 
 [docs/DEVELOPER_QUICKSTART.md](docs/DEVELOPER_QUICKSTART.md) is the orientation for a first
 contribution: repository layout, what each workspace is, how to run one of them on its own,
-and how to drive the standalone Echo simulator.
-[SETUP.md](SETUP.md) is the full setup, and [CLAUDE.md](CLAUDE.md) explains the build order,
-which is the thing that breaks first: `frontend` and `backend` import `@echoes/shared` by
-its **build output**, so a stale `dist/` produces confusing errors in both. Every root
-script rebuilds it for you; if you invoke a workspace script directly after editing
-`packages/shared`, run `npm run build:shared` yourself.
+and how to drive the standalone Echo simulator. [SETUP.md](SETUP.md) is the full setup.
 
-**Node 22+ is required.** Older runtimes fail with errors that do not obviously point at
-the Node version.
+Two things break before anything else does, and both are stated once in `CLAUDE.md`:
+[the build order](CLAUDE.md#build-order--the-thing-that-breaks-first), because `frontend`
+and `backend` import `@echoes/shared` by its build output and a stale `dist/` breaks both,
+and [the Node 22 floor](CLAUDE.md#commands), whose failures do not point at the Node
+version.
 
 ## Branches and commits
 
@@ -105,7 +104,8 @@ Until then, `main` is the release, and the way to get a change to people is to m
   ```
 
   That is `preflight`, `build:shared`, `type-check`, `lint`, `format:check`,
-  `check:models`, `test`, `build`, and all three doc gates — every blocking check in
+  `check:models`, `check:invariants`, `test`, `build`, and all three doc gates — every
+  blocking check in
   `.github/workflows/ci.yml`, so a dead link in `docs/` fails here exactly as it fails
   there. It runs them in one pass rather than stopping at the first red one, prints a
   pass/fail summary, and exits non-zero if any gate failed. `npm run gates -- --list`
@@ -180,59 +180,54 @@ and removing it means the citations need somewhere else to point first.
 
 ## Code conventions
 
-- **Constants live in exactly one place**: `packages/shared/src/constants.ts`, tagged
-  **SPEC** (from a design doc — change the doc first, cite the section) or **TUNABLE**
-  (prototype number, free to move). Never replace a *derived* value with a hard-coded one
-  to make a test pass. If a constant would exist in two packages, it belongs in shared.
-- **Import extensions differ by package, deliberately.** `packages/shared` uses `.js`
-  extensions on relative imports (NodeNext); backend and frontend use the real `.ts`
-  extension (bundler resolution). Copying an import line between packages will break it.
-- **Colyseus**: import from `@colyseus/core`, never the `colyseus` meta-package, and
-  leave `useDefineForClassFields` alone in the backend tsconfig. The reasons are runtime
-  gotchas, spelled out in [CLAUDE.md](CLAUDE.md).
-- **Budgets are part of correctness.** Per-tick code is on the 60 Hz budget; anything
-  touching detection is on the 2 ms Echo budget, and `Match` tracks the rolling
-  worst case.
-- **Comments explain *why*, not *what***, and several encode hard-won runtime gotchas —
-  match that register and don't strip them when refactoring.
-- **Style is Prettier's job** (100 columns, single quotes, ES5 trailing commas,
-  semicolons): `npm run format` and stop thinking about it.
+The code conventions are stated once, in [CLAUDE.md](CLAUDE.md), each with the runtime
+gotcha behind it. The gotcha is the reason the rule is worth following, and it is the part
+a summary drops — which is why this file names each rule and links rather than repeating
+it:
+
+- [Constants live in exactly one place](CLAUDE.md#constants-live-in-exactly-one-place) —
+  and what the two tags on them oblige you to do.
+- [Import extensions differ by package](CLAUDE.md#import-extensions-differ-by-package--this-is-deliberate)
+  — copying an import line between packages breaks it.
+- [Colyseus](CLAUDE.md#colyseus) — which package to import from, and the one tsconfig flag
+  to leave alone.
+- [The wire](CLAUDE.md#the-wire) — every socket message declared once, name and payload,
+  plus a runtime shape for everything a client sends.
+- [Two clocks](CLAUDE.md#two-clocks) — the 60 Hz step and the 2 ms Echo budget, both
+  asserted on counted work rather than on a stopwatch.
+- [Style](CLAUDE.md#style) — Prettier's settings, and what a comment in this codebase is
+  for.
+
+`npm run format` settles the last one. The rest are reviewed.
 
 ## Docs conventions
 
-- [docs/glossary.md](docs/glossary.md) is authoritative. A term that means two things in
-  two docs gets fixed in the glossary first, then everywhere.
-- **Never link a doc that does not exist** — the link check is blocking. Planned work
-  goes in the "Planned / Not Yet Written" section of [docs/README.md](docs/README.md) as
-  plain text.
-- Cross-link rather than restate; every doc ends with a "Related" section.
-- Use concrete numbers: "45 SIG while idle with systems live", not "moderate SIG".
+Four rules, stated once in [CLAUDE.md](CLAUDE.md#docs): the glossary is authoritative,
+never link a doc that does not exist, cross-link rather than restate, and use concrete
+numbers. [docs/README.md](docs/README.md) is the design bible's own index and its editing
+rules.
+
+The third of those is why this file links instead of repeating. It applies to the
+repository's own prose as much as to `docs/`.
 
 ## Project skills
 
 Repeatable workflows are captured as Claude Code skills in `.claude/skills/`, so the
-process lives in the repo instead of in one person's head:
+process lives in the repo instead of in one person's head. Read that directory rather
+than a list here, and each skill's own front matter for what it is for.
 
-- **run-game** — boots both dev servers as a stoppable unit and drives the game in a
-  headless browser; the way to verify a change in the real client and to produce the
-  screenshot an art PR needs.
-- **hull-intake** — validates a 3D model export (GLB) and bakes the review maps; the
-  intake gate in [docs/graphics-standards.md](docs/graphics-standards.md).
-- **work-issue** — picks one unclaimed, non-epic issue off the backlog, assigns it to
-  itself with a comment saying the Routine has it, and takes it to a PR — or comments,
-  releases the claim, and stops when the call is a design one. When nothing is eligible it
-  files a single sub-issue off an epic instead, so the backlog refills itself one scoped
-  item at a time. This is the skill a scheduled Routine runs unattended several times a
-  day; its open-PR cap, not its schedule, is what keeps CI spend bounded.
-- **steward** — what a session subscribed to an open PR does between "opened" and
-  "merged", where this repository differs from the generic drive-to-green rules: reproduce
-  locally before reading job logs, when a CI re-run is affordable on this account's Actions
-  minutes, merge rather than rebase on `claude/` branches, and which review asks are design
-  calls that stop on a comment instead of a push.
+`tools/claude-docs/check.mjs` holds the authoritative split between the skills this
+repository wrote and the vendored copies, and fails `npm run docs:claude` on a skill in
+neither list. [CLAUDE.md](CLAUDE.md#vendored-skills) says why the copies are read-only,
+and `.claude/VENDORED-SKILLS.md` records each one's upstream and licence.
+
+This file used to name four of them, and there are six. A list here is a second copy of
+something the gate already holds, and it drifts the same quiet way the hand-copied gate
+list above drifted before `npm run gates` became the one command that runs them all.
 
 When you find yourself re-explaining a workflow a second time — a bake step, a test
-harness, a review checklist — turn it into a skill next to these four rather than a wiki
-page nobody runs.
+harness, a review checklist — turn it into a skill next to those rather than a wiki page
+nobody runs.
 
 `.claude/hooks/session-start.sh` runs `npm install` and `npm run build:shared` when a
 remote session starts, so an agent container arrives with the gates above already
