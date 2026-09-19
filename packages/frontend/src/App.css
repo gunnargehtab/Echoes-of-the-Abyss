@@ -1748,19 +1748,29 @@
    is the correction rather than the tidiness. On `> *` this also reached
    `.objectives-status`, whose `font-size` is a flat `0.58rem` while its track
    is `calc(3.2rem * var(--panel-type, 1))` and *shrinks* above 100% — so from
-   about 119% the word stopped fitting, and where it used to overflow into the
-   gap intact it broke instead: `PENDIN` / `G` at 120%, `FAILE` / `D` at 165%,
-   on shipping content with no token in it, across a range §11 makes a
-   correctness requirement. A templated word in a fixed track is exactly what
-   must not break, which is the argument `.objectives-progress` already wins
-   with its own `white-space: nowrap`: `4 of 3` over three lines is the same
+   about 119% the word stopped fitting, and where it used to overflow its track
+   intact it broke instead: `PENDIN` / `G` at 120%, `FAILE` / `D` at 165%, on
+   shipping content with no token in it, across a range §11 makes a correctness
+   requirement. A templated word in a fixed track is exactly what must not
+   break, which is the argument `.objectives-progress` already wins with its
+   own `white-space: nowrap`: `4 of 3` over three lines is the same
    illegibility one column along.
+
+   What that word overflows *into* is the gap up to about 165% and the
+   sentence's own ink at 200% — 95.6 px² of `PENDING` printed over `Get`,
+   measured the same way the token was. That is a fourth axis and it is not
+   this rule's: the figures are identical against `main`, so it is a residual
+   this declaration neither causes nor closes.
 
    `break-word` rather than `anywhere`. Measured here they are
    indistinguishable — identical line counts, row heights and scroll at 75%,
-   100% and 200% — because no track in this row is sized by min-content, which
-   is the only thing the two differ in. So the narrower declaration, on the
-   rule that nothing yet needs the wider one. `.contact-log-row`'s comment
+   100% and 200% — and the reason is narrower than "no track is content-sized",
+   which would be false: the third track *is* `auto`, whose automatic minimum
+   is min-content. It is that the two cells this rule reaches both sit in the
+   `minmax(0, …)` track, whose minimum is a length rather than its contents, so
+   the min-content contribution the two values differ in cannot reach a track
+   from here. So the narrower declaration, on the rule that nothing yet needs
+   the wider one. `.contact-log-row`'s comment
    records `anywhere` giving a bearing as a vertical stack of digits in a
    fifteen-pixel column; that is why the wider one is not reached for, not a
    claim that it would misbehave here. */
