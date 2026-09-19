@@ -22,7 +22,7 @@ For engineering conventions, build order, and the runtime gotchas that cost the 
 - **No line-of-sight vision.** Instead, every unit and structure continuously emits an **Acoustic Signature (SIG, 0–100)** based on idle state, movement speed, construction, firing weapons, etc.
 - Detection is **not binary.** Enemies resolve you across **five resolution tiers** — from "something is out there" (Tier 1) to a full track with velocity (Tier 5).
 - **Key mechanic:** Active sonar reveals everything within 900 m — but reveals *you* to everything within 2,400 m. Alpha strikes are loud. Economy is loud. Stealth and power are in direct tension.
-- **Server-authoritative.** Detection is computed server-side per-player (Colyseus + spatial hash at 5 Hz, 2 ms/tick budget) and only the resolved result is sent to each client. Maphack prevention is the entire threat model. The rule and the budget are stated in full at the root: [server-authoritative](../CLAUDE.md#server-authoritative-is-a-hard-rule-not-a-preference), [two clocks](../CLAUDE.md#two-clocks).
+- **Server-authoritative.** Detection is computed server-side per-player (Colyseus + spatial hash at 5 Hz, 2 ms/tick budget) and only the resolved result is sent to each client. Maphack prevention is the entire threat model. The rule is stated in full at the root ([server-authoritative](../CLAUDE.md#server-authoritative-is-a-hard-rule-not-a-preference)); the budget sits beside the code that spends it ([two clocks](../packages/backend/CLAUDE.md#two-clocks)).
 - Read: **[systems-echo.md](../docs/systems-echo.md)**
 
 ### 2. Depth — The Axis of Commitment
@@ -61,15 +61,15 @@ No faction is written as the villain. Read: **[factions.md](../docs/factions.md)
 
 The scaffold is playable end to end, not a stub: a fixed-step simulation, per-player acoustic detection, and a client that renders only what the server resolved for it.
 
-The package-by-package tour — what each workspace owns, which file holds the fixed step, where the network boundary is, and what every directory under `tools/` is for — is [CLAUDE.md § Architecture](../CLAUDE.md#architecture).
+The package-by-package tour — what each workspace owns, and one line per directory under `tools/` — is [CLAUDE.md § Architecture](../CLAUDE.md#architecture). Three directories carry their own nested file, loaded only for a session working under them: which file holds the fixed step and where the network boundary is are in [packages/backend/CLAUDE.md](../packages/backend/CLAUDE.md), the client's two canvases in [packages/frontend/CLAUDE.md](../packages/frontend/CLAUDE.md), and the paragraph behind each `tools/` line in [tools/CLAUDE.md](../tools/CLAUDE.md).
 
 Redis and PostgreSQL are the intended shape for accounts and caching, and neither exists — there is no auth or persistence code, and the match server holds everything in memory for the life of a room. They were once declared as backend dependencies and imported nowhere; that was removed, because an installed driver reads as persistence already there.
 
-Three engineering rules constrain design work, and each is stated in full in exactly one place — `CLAUDE.md`, with the reasoning that makes it a rule rather than a preference:
+Three engineering rules constrain design work, and each is stated in full in exactly one place — `CLAUDE.md`, or the package's own nested file where the rule is true of one package only — with the reasoning that makes it a rule rather than a preference:
 
 - **[Constants live in exactly one place](../CLAUDE.md#constants-live-in-exactly-one-place)** — `packages/shared/src/constants.ts`, and the tag on a constant says what changing it obliges you to do first. Editing convention 1 below sends you there.
 - **[Server-authoritative detection](../CLAUDE.md#server-authoritative-is-a-hard-rule-not-a-preference)** — the threat model the Echo Layer section above names, and the reason a mechanic may not show the player anything the server has not resolved for them.
-- **[Two clocks](../CLAUDE.md#two-clocks)** — the 60 Hz step and the 5 Hz Echo pass on its 2 ms budget. That budget is the ceiling a new detection mechanic is designed under.
+- **[Two clocks](../packages/backend/CLAUDE.md#two-clocks)** — the 60 Hz step and the 5 Hz Echo pass on its 2 ms budget. That budget is the ceiling a new detection mechanic is designed under.
 
 Read: **[tech-stack.md](../docs/tech-stack.md)** · **[CLAUDE.md](../CLAUDE.md)**
 
@@ -175,5 +175,5 @@ It is referenced from the root README. Until it is authored, do not add further 
 - **Adding a unit or ability?** Check [factions.md](../docs/factions.md) and [systems-echo.md](../docs/systems-echo.md) — does your addition fit the faction's noise doctrine?
 - **Designing a biome variant?** See [environments.md](../docs/environments.md) and [tech-stack.md](../docs/tech-stack.md) (propagation factors).
 - **Stuck on lore/character consistency?** Check [world.md](../docs/world.md), [characters.md](../docs/characters.md), and [factions.md](../docs/factions.md).
-- **Writing or changing code?** Read [CLAUDE.md](../CLAUDE.md) first — build order, per-package import conventions, and the Colyseus import rule are all places where the obvious approach fails at runtime.
+- **Writing or changing code?** Read [CLAUDE.md](../CLAUDE.md) first, and the nested file for the package you are in — build order, per-package import conventions, and the Colyseus import rule ([packages/backend/CLAUDE.md](../packages/backend/CLAUDE.md)) are all places where the obvious approach fails at runtime.
 - **Setting up locally?** [DEVELOPER_QUICKSTART.md](../docs/DEVELOPER_QUICKSTART.md) and [SETUP.md](../SETUP.md).

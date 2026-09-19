@@ -23,10 +23,12 @@ the `Room` generic and 32 message handlers.
 
 ## The finding that shapes the arm list
 
-**`CLAUDE.md` already carries the guard**, in the Colyseus paragraph under
-"Conventions": the skill documents 0.18, four minors ahead of what is pinned, and is
-carried against exactly this drift. A control arm that keeps `CLAUDE.md` intact is
-therefore not an unguarded control.
+**The repository's own engineering prose already carries the guard**, in the Colyseus
+paragraph: the skill documents 0.18, four minors ahead of what is pinned, and is carried
+against exactly this drift. A control arm that keeps that paragraph intact is therefore
+not an unguarded control. It sat under `CLAUDE.md`'s "Conventions" at this experiment's
+base and moved to `packages/backend/CLAUDE.md` with #791's split, so `prepare-arm.sh`
+asks git which file holds it rather than naming one.
 
 That is not a flaw to design out. It is the decision-relevant question — the repository
 already pays about 1,150 tokens per session for eleven skill descriptions, and the

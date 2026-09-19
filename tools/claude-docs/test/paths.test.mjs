@@ -67,7 +67,7 @@ test('an indented fence is still a fence', () => {
 });
 
 test('trailing punctuation inside a span is trimmed', () => {
-  // The defensive normalisation. No live span needs it — all twenty gated
+  // The defensive normalisation. No live span needs it — all twenty-three gated
   // documents extract identically with it and without — so it is pinned here
   // rather than left as an untested claim in a comment.
   assert.deepEqual(candidatePaths('Read `docs/a.md, docs/b.md` in order.'), [

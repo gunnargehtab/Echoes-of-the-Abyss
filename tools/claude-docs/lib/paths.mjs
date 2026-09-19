@@ -69,15 +69,15 @@ function inlineSpans(markdown) {
  * - **A `:line` suffix.** `EchoRenderer.ts:279` is how this repository cites a
  *   line, and the line number is not part of the name.
  * - **Trailing punctuation**, which is the defensive one. Re-extracting all
- *   twenty gated documents with it and without differs on **0 of 182 spans**,
- *   before and after every token started being read. It is kept because a path
+ *   twenty-three gated documents with it and without differs on **0 of 201
+ *   spans**, before and after every token started being read. It is kept because a path
  *   followed by a comma inside a span is a sentence somebody will write, and it
  *   is tested rather than trusted — but no live span needs it, and if it ever
  *   costs anything it should go rather than be argued for.
  * - **Angle brackets mean a template, not a path.** `docs/mission-<name>.md` and
- *   `docs/screenshots/issue-<n>/` are shapes an author fills in; there are six
+ *   `docs/screenshots/issue-<n>/` are shapes an author fills in; there are seven
  *   such spans under `.claude/` and not one of them is meant to exist. A rule
- *   that read them literally would need six escapes to say what one rule says.
+ *   that read them literally would need seven escapes to say what one rule says.
  */
 export function candidatePaths(markdown) {
   const found = [];
