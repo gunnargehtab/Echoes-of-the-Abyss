@@ -138,8 +138,11 @@ npm run build:shared
 packages/shared    @echoes/shared — types, tuning constants, Echo Layer math.
                    Compiled with tsc (NodeNext) to dist/. Imported by both sides.
 packages/backend   Colyseus server. Owns the simulation. Node + esbuild bundle.
-                   sim/maps/ holds the authored map archetypes — data literals,
-                   never generated. Terrain.demo() is a test fixture, not a map.
+                   sim/match.ts is the fixed step and the Echo pass;
+                   rooms/MatchRoom.ts is the network boundary, and the rules
+                   live in sim/ rather than in the room. sim/maps/ holds the
+                   authored map archetypes — data literals, never generated.
+                   Terrain.demo() is a test fixture, not a map.
 packages/frontend  React shell + two-canvas renderer: three.js conn view (the
                    world) under a transparent PixiJS HUD, one shared camera
                    (EchoRenderer.setConn). A terminal, not a simulation.

@@ -52,13 +52,13 @@ No faction is written as the villain. Read: **[factions.md](../docs/factions.md)
 - **Build:** Vite · ESBuild · npm workspaces
 - **Deployment:** container images (`packages/*/Dockerfile`, root `docker-compose.yml`) targeting Vercel (frontend) · Hetzner Cloud (game servers, low latency in EU); no platform project is configured yet
 
-**Node 22+ is required**, and `@echoes/shared` is imported by its build output rather than its source, which is the thing that breaks first. Both are in [CLAUDE.md](../CLAUDE.md#build-order--the-thing-that-breaks-first).
+**Node 22+ is required** ([CLAUDE.md § Commands](../CLAUDE.md#commands)), and `@echoes/shared` is imported by its build output rather than its source, which is the thing that breaks first ([CLAUDE.md § Build order](../CLAUDE.md#build-order--the-thing-that-breaks-first)).
 
 ### What is implemented today
 
 The scaffold is playable end to end, not a stub: a fixed-step simulation, per-player acoustic detection, and a client that renders only what the server resolved for it.
 
-The package-by-package tour — what each workspace owns, which file holds the simulation, where the network boundary is, and what every directory under `tools/` is for — is [CLAUDE.md § Architecture](../CLAUDE.md#architecture).
+The package-by-package tour — what each workspace owns, which file holds the fixed step, where the network boundary is, and what every directory under `tools/` is for — is [CLAUDE.md § Architecture](../CLAUDE.md#architecture).
 
 Redis and PostgreSQL are the intended shape for accounts and caching, and neither exists — there is no auth or persistence code, and the match server holds everything in memory for the life of a room. They were once declared as backend dependencies and imported nowhere; that was removed, because an installed driver reads as persistence already there.
 
