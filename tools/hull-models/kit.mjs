@@ -1721,3 +1721,171 @@ export function floodMasts(root, { steel, lamp: lampMat }, opts = {}) {
       ),
   ]);
 }
+
+/* --------------------------------------------------------------------------
+ * The Bio-Reactor's faction-neutral skeleton (#788, off #540 Phase 4).
+ *
+ * The Vent Tap's case a third time (#608, #652), and the first where the
+ * split was decided before four files existed rather than read off them.
+ * What a reactor is, every navy alike, is a piece of ground: the holdfast
+ * mat it is driven into, the footprint slab bolted over it, and three intake
+ * arms reaching out into the canopy. None of that is a navy's argument —
+ * the crop is where the crop is and a boom reaches it — so it is built here
+ * once, taking the navy's materials the way `ventDrawArm` takes its own.
+ *
+ * What *is* a navy's argument is the vessel that stands on the slab and
+ * renders what the arms bring in, and that lives in each navy's module: a
+ * riveted tank, a grown bladder, a carapace mound, a crystal-framed dome
+ * (docs/models-plan.md, "The Bio-Reactor"). A script contributes its vessel
+ * and its outflow and nothing else.
+ *
+ * THREE ARMS, NOT FOUR, and the phase is load-bearing. Three is the read
+ * the procedural silhouette already had — "a digester drum with intake
+ * booms reaching out into the canopy", three of them
+ * (packages/frontend/src/game/silhouettes.ts) — and it is what tells a
+ * reactor from a tap at sprite size. Three arms on an odd phase also settle
+ * which axis is longer: at `phase` 0 the plan is 1.5 r by 1.73 r and Z-long,
+ * which intake would yaw a quarter turn (`rotatedZtoX`, a warning and a
+ * turned map); at −π/2 the same three arms are 1.73 r by 1.5 r and X-long.
+ * The default is −π/2 for that reason, and each script asserts x ≥ z after
+ * `fitFootprint` so a moved arm fails in the script and not in the maps.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The bed: the kelp holdfast mat, the octagonal footprint slab bolted over
+ * it, the kerb round the slab's rim and the run lights along that kerb —
+ * "a render vessel standing over the holdfast on a low footprint slab ...
+ * Dim at rest: the slab's run lights" (docs/asset-prompts-3d.md, STRUCTURE
+ * — Bio-Reactor).
+ *
+ * The run lights are the model's one ring of resting light and the only
+ * emitter the reactor is guaranteed to show from above, because the vessel
+ * stands inside them: the mat is `mat.r` across, the slab `pad.r`, and the
+ * lights sit on the kerb at the slab's own rim where nothing a navy builds
+ * on the slab can cover them (docs/models-plan.md §3.2 rule 5). Everything
+ * the block lights only *rendering* — the feed throats, the vessel's ports,
+ * the outflow — is clad in the navy's unlit finish instead (§3.2 rule 2).
+ *
+ * `holdfast` clads the mat, `slab` the pad, `kerb` the ring; `lamp` is the
+ * run light.
+ */
+export function reactorBed(root, { holdfast, slab, kerb, lamp }, opts = {}) {
+  const {
+    mat = { r: 46, rTop: 41, y: -1.4, t: 3.6, facets: 16 },
+    pad = { r: 34, rTop: 30.5, y: 2.2, t: 4.4 },
+    rim = { r: 29.6, t: 1, radial: 5, facets: 16, y: 4.4 },
+    // Phase 0, so a light sits on each sixth from +X: the three arms leave
+    // the kerb clear (a boom starts at 30 m and the lights are at 29.6), but
+    // the outflow trunk crosses it, and every navy runs that out on the same
+    // bearing — the gap at −30°, which is halfway between two lights here.
+    lights = { count: 6, phase: 0, r: 29.6, y: 5.6, size: [3.2, 0.5, 1.8] },
+  } = opts;
+  add(root, 'holdfast_mat', cyl(mat.rTop, mat.r, mat.t, mat.facets), holdfast, [0, mat.y, 0]);
+  // Eight facets turned an eighth, so a flat faces the bow rather than a
+  // corner: plate cut and welded, which is what a slab under a plant is
+  // whoever built it (factions/bathyarch.mjs `anchoredRaft` makes the same
+  // argument about an octagon).
+  add(root, 'footprint_slab', cyl(pad.rTop, pad.r, pad.t, 8, Math.PI / 8), slab, [0, pad.y, 0]);
+  add(
+    root,
+    'slab_kerb',
+    torus(rim.r, rim.t, rim.radial, rim.facets),
+    kerb,
+    [0, rim.y, 0],
+    [Math.PI / 2, 0, 0]
+  );
+  radialSeries(lights, (a, i) =>
+    add(root, `slab_run_light_${i}`, box(...lights.size), lamp, polar(a, lights.r, lights.y), [
+      0,
+      -a,
+      0,
+    ])
+  );
+}
+
+/**
+ * One intake arm on `bearing`: the boom out from the slab, the trestle legs
+ * and the anchor foot under it, the throat drum and its mouth at the head,
+ * and the cutter rake across the end with its tines hanging into the canopy
+ * — "three intake arms reaching out into the canopy on booms, each ending in
+ * a cutter rake and a feed throat that carries the crop back in ... anchor
+ * feet driven into the holdfast at the foot of every arm". Distances are
+ * metres out along the bearing, as the kit's `ventDrawArm` takes them;
+ * `across` is metres to the left of it, looking out.
+ *
+ * `boom` clads the boom, the legs and the rake beam, `collar` the throat
+ * drum, `foot` the anchor plate and `rake` the tines; `throat` is the mouth,
+ * and it is the navy's *unlit* finish rather than a lamp, because the block
+ * lights the throats only while crop is coming in (docs/models-plan.md §3.2
+ * rule 2).
+ */
+export function reactorIntakeArm(
+  root,
+  { boom: boomMat, collar, throat: throatMat, foot: footMat, rake: rakeMat },
+  opts
+) {
+  const {
+    bearing: a,
+    boom = { from: 30, to: 72, size: [3, 3.6], y: 14 },
+    legs = { at: 48, spread: 5.2, r: [1.1, 1.5], h: 12.4 },
+    foot = { at: 48, size: [11, 4.2, 11], y: 1.4 },
+    drum = { at: 68, r: [3.6, 4.2], h: 6.4, y: 15.2 },
+    mouth = { at: 68, r: 2.9, t: 1, y: 18.6 },
+    rake = { at: 74.5, size: [2.8, 2.4, 15], y: 10.5 },
+    tines = { count: 5, across: 3.2, r: [0.25, 0.95], h: 7, y: 5.6, facets: 5 },
+  } = opts;
+  const yaw = [0, -a, 0];
+  // A point `r` out along the bearing and `s` to the left of it: `polar`
+  // walks the arm, this walks across it, and the rake's tines are the only
+  // rank on the model that needs the second.
+  const beside = (r, s, y) => [
+    r * Math.cos(a) - s * Math.sin(a),
+    y,
+    r * Math.sin(a) + s * Math.cos(a),
+  ];
+  add(
+    root,
+    'intake_boom',
+    box(boom.to - boom.from, boom.size[0], boom.size[1]),
+    boomMat,
+    polar(a, (boom.from + boom.to) / 2, boom.y),
+    yaw
+  );
+  for (const [tag, sgn] of [
+    ['a', 1],
+    ['b', -1],
+  ])
+    add(
+      root,
+      `boom_leg_${tag}`,
+      cyl(legs.r[0], legs.r[1], legs.h, 6),
+      boomMat,
+      beside(legs.at, sgn * legs.spread, legs.h / 2),
+      yaw
+    );
+  add(root, 'anchor_foot', box(...foot.size), footMat, polar(a, foot.at, foot.y), yaw);
+  add(
+    root,
+    'throat_drum',
+    cyl(drum.r[0], drum.r[1], drum.h, 10),
+    collar,
+    polar(a, drum.at, drum.y)
+  );
+  add(
+    root,
+    'feed_throat',
+    cyl(mouth.r, mouth.r, mouth.t, 10),
+    throatMat,
+    polar(a, mouth.at, mouth.y)
+  );
+  add(root, 'rake_beam', box(...rake.size), boomMat, polar(a, rake.at, rake.y), yaw);
+  for (let i = 0; i < tines.count; i++)
+    add(
+      root,
+      `rake_tine_${i}`,
+      cyl(tines.r[0], tines.r[1], tines.h, tines.facets),
+      rakeMat,
+      beside(rake.at, (i - (tines.count - 1) / 2) * tines.across, tines.y),
+      yaw
+    );
+}

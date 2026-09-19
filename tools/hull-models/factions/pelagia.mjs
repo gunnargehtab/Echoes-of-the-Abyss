@@ -2922,3 +2922,80 @@ export function broodNubs(root, pale, opts) {
 }
 
 export { THREE };
+
+/* --------------------------------------------------------------------------
+ * The Bio-Reactor (#788, off #540 Phase 4). The bed and the three intake
+ * arms are the kit's (`reactorBed`, `reactorIntakeArm`) and identical on all
+ * four navies; what is a navy's is the vessel that stands on the slab and
+ * the outflow off it, which is these two builders.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The render vessel, Pelagia Commune: a grown bladder. The navy whose
+ * technology is "algae reactors" ([factions.md](factions.md)) is the one navy
+ * for which this structure is not a machine bolted onto a bed but a bigger
+ * version of what it already grows — so the vessel is the Sower's bladder at
+ * settlement scale, a squashed orb ringed three times, held down by root
+ * grips biting the slab, with a pale bud on its crown.
+ *
+ * The grips are the Commune's rule and no two are alike: one size repeated
+ * five times would read as a machine, which is the argument the approved
+ * turret's `rootGrips` above makes in its own words.
+ *
+ * `mark` is the vessel's one lamp. The nubs — the block's ports — carry the
+ * bio-vein's *unlit* finish, because the block lights them only while crop
+ * is coming in (docs/models-plan.md §3.2 rule 2).
+ */
+export function reactorVessel(root, { chitin, ridge, membrane, spore, lampM, unlit }, opts) {
+  const { bladder, rings, grips, bud, mark, nubs } = opts;
+  add(root, 'reactor_vessel', orb(12, 8), membrane, [0, bladder.y, 0], [0, 0, 0], bladder.r);
+  rings.forEach((g, i) =>
+    add(root, `vessel_ring_${i}`, torus(g.r, g.t, 5, 14), ridge, [0, g.y, 0], [Math.PI / 2, 0, 0])
+  );
+  grips.forEach((g, i) =>
+    add(root, `root_grip_${i}`, cyl(g.r[0], g.r[1], g.h, 5), chitin, polar(g.bearing, g.at, g.y), [
+      0,
+      -g.bearing,
+      g.lean,
+    ])
+  );
+  add(root, 'crown_bud', orb(10, 6), spore, bud.at, [0, 0, 0], bud.r);
+  add(root, 'crown_mark', box(...mark.size), lampM, mark.at, [0, mark.yaw ?? 0, 0]);
+  nubs.at.forEach(([a, r, y], i) =>
+    add(root, `vessel_nub_${i}`, orb(8, 6), unlit, polar(a, r, y), [0, -a, 0], nubs.scale)
+  );
+}
+
+/**
+ * The Biomass outflow, Pelagia Commune: a gut off the bladder on `bearing`,
+ * ringed as the vessel is, swelling into the dispatch sac at its end —
+ * "the Biomass outflow off the vessel to a dispatch hopper", grown rather
+ * than bolted, which is why nothing here is square.
+ *
+ * The gut is one lathe along the bearing (kit.mjs `loft`) rather than a run
+ * of pipe: a grown thing is continuous, and the rings are what give it
+ * sections. Distances are metres out along the bearing, as the kit's
+ * `reactorIntakeArm` takes them; the sac's mouth is the unlit finish for the
+ * same reason the nubs are.
+ */
+export function reactorOutflow(root, { ridge, membrane, unlit }, opts) {
+  const { bearing: a, gut, rings, sac, mouth } = opts;
+  add(root, 'outflow_gut', loft(gut.profile, gut.facets ?? 8), membrane, [0, gut.y, 0], [0, -a, 0]);
+  // A torus is born round +Z, so the turn that lays its axis on the bearing
+  // is π/2 − a about Y, not −a: the rings ride the gut rather than stand
+  // across it.
+  rings.at.forEach((d, i) =>
+    add(root, `gut_ring_${i}`, torus(rings.r, rings.t, 5, 12), ridge, polar(a, d, gut.y), [
+      0,
+      Math.PI / 2 - a,
+      0,
+    ])
+  );
+  add(root, 'outflow_sac', orb(10, 6), membrane, polar(a, sac.at, sac.y), [0, -a, 0], sac.r);
+  add(root, 'sac_ring', torus(sac.ring.r, sac.ring.t, 5, 14), ridge, polar(a, sac.at, sac.ring.y), [
+    Math.PI / 2,
+    0,
+    0,
+  ]);
+  add(root, 'sac_mouth', cyl(mouth.r, mouth.r, mouth.t, 8), unlit, polar(a, sac.at, mouth.y));
+}

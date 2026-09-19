@@ -952,6 +952,21 @@ floor, the gantry working lights and the launch sill; floodlit when a hull
 is on the line.
 ```
 
+```text
+STRUCTURE — Bio-Reactor (any faction): the bed's income — the Vent Tap's
+argument on living ground, bolted into a kelp holdfast instead of a vent,
+and it eats the cover it stands in (SIG 25 idle, 50 rendering —
+docs/systems-flora.md §2 and §7). A render vessel standing over the
+holdfast on a low footprint slab, three intake arms reaching out into the
+canopy on booms, each ending in a cutter rake and a feed throat that
+carries the crop back in; the Biomass outflow off the vessel to a
+dispatch hopper; anchor feet driven into the holdfast at the foot of every
+arm. Dim at rest: the slab's run lights and one mark on the vessel's
+crown. Lit rendering — the three feed throats, the vessel's ports and the
+outflow burning while crop is coming in, which is also when the canopy
+over it is going. A reactor found quiet has stripped its own bed bare.
+```
+
 ## Block 4 — ENVIRONMENT (props: no faction, no SIG)
 
 Environment props dress the biomes the terrain grid already declares — they are world

@@ -180,12 +180,12 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Responsory]: 'responsory',
 };
 
-/** Every structure kind but one has an approved model; the Partial is what
- * the exception rides on. The Bio-Reactor (#557) has none yet, so it has no
- * slug: `slugFor` returns null, and `structureTextures.ts` gives it the
- * procedural architecture bake, which is gate 1's sanctioned state until a
- * model clears intake. */
-const STRUCTURE_SLUG: Partial<Record<StructureKind, string>> = {
+/** Every structure kind has an approved model since the Bio-Reactor (#788),
+ * so this is a total map and not a Partial: a structure kind added without a
+ * slug is a compile error here rather than a silent fall through to the
+ * procedural architecture bake in `structureTextures.ts`, which stays as the
+ * loading fallback. */
+const STRUCTURE_SLUG: Record<StructureKind, string> = {
   [StructureKind.Bastion]: 'bastion',
   [StructureKind.Refinery]: 'refinery',
   [StructureKind.Foundry]: 'foundry',
@@ -196,6 +196,7 @@ const STRUCTURE_SLUG: Partial<Record<StructureKind, string>> = {
   [StructureKind.SporeVeil]: 'spore-veil',
   [StructureKind.Slipway]: 'slipway',
   [StructureKind.VentTap]: 'vent-tap',
+  [StructureKind.BioReactor]: 'bio-reactor',
 };
 
 const FACTION_SLUG: Record<Faction, string> = {
@@ -208,9 +209,8 @@ const FACTION_SLUG: Record<Faction, string> = {
 export type RosterModelKey =
   { unit: UnitKind; faction: Faction } | { structure: StructureKind; faction: Faction };
 
-function slugFor(key: RosterModelKey): string | null {
+function slugFor(key: RosterModelKey): string {
   const base = 'unit' in key ? UNIT_SLUG[key.unit] : STRUCTURE_SLUG[key.structure];
-  if (base === undefined) return null;
   return `${base}-${FACTION_SLUG[key.faction]}`;
 }
 
@@ -445,14 +445,13 @@ function loadTemplate(
 
 /**
  * A per-entity instance of the approved model, or null while it loads (or
- * when none exists — the BioReactor, a failed decode). Callers fall back to the
- * Phase-1 sprite until this returns something, so a null is never a hole on
- * screen. Instances share geometry with their template; lamp materials are
+ * when none exists — a kind whose navy has no variant, a failed decode).
+ * Callers fall back to the Phase-1 sprite until this returns something, so a
+ * null is never a hole on screen. Instances share geometry with their template; lamp materials are
  * cloned per instance so each hull's live SIG dims its own lights.
  */
 export function rosterModelInstance(key: RosterModelKey): RosterModelInstance | null {
   const slug = slugFor(key);
-  if (slug === null) return null;
   const load = MODEL_BY_FILE.get(`${slug}.glb`);
   if (load === undefined) return null;
   const templateKey = `${slug}:${ACTIVE_PALETTE.name}`;

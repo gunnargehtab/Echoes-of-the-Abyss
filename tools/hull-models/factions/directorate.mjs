@@ -2907,3 +2907,94 @@ export function intakeTeeth(root, black, opts) {
 }
 
 export { THREE };
+
+/* --------------------------------------------------------------------------
+ * The Bio-Reactor (#788, off #540 Phase 4). The bed and the three intake
+ * arms are the kit's (`reactorBed`, `reactorIntakeArm`) and identical on all
+ * four navies; what is a navy's is the vessel that stands on the slab and
+ * the outflow off it, which is these two builders.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The render vessel, Abyssal Directorate: a carapace mound. The navy that
+ * grows a turret's base as a shell grows a digester the same way — an orb
+ * pressed down onto the slab, a steel collar round its waist, scutes plated
+ * up its flank alternating violet and red as the tergites alternate along a
+ * hull, a dark seam across its crown and a rank of spines raked off its
+ * back.
+ *
+ * The spines are on one side only, and they are not there to be symmetrical:
+ * this navy's ranks repeat on neither side (docs/models-plan.md §3.6), and
+ * the spines are what makes the mound read as a back rather than a dome.
+ *
+ * `mark` is the vessel's one lamp. The ports carry the biolight's *unlit*
+ * finish, because the block lights them only while crop is coming in
+ * (docs/models-plan.md §3.2 rule 2).
+ */
+export function reactorVessel(root, { violet, red, black, steel, lampM, unlit }, opts) {
+  const { mound, collar, scutes, seam, spines, mark, ports } = opts;
+  add(root, 'reactor_vessel', orb(12, 8), violet, [0, mound.y, 0], [0, 0, 0], mound.r);
+  add(
+    root,
+    'mound_collar',
+    torus(collar.r, collar.t, 6, 16),
+    steel,
+    [0, collar.y, 0],
+    [Math.PI / 2, 0, 0]
+  );
+  const skins = [violet, red];
+  scutes.at.forEach(([a, r, y], i) =>
+    add(
+      root,
+      `base_scute_${i}`,
+      orb(8, 6),
+      skins[i % 2],
+      polar(a, r, y),
+      [0, -a, scutes.pitch],
+      scutes.scale
+    )
+  );
+  add(root, 'mound_seam', orb(10, 6), black, seam.at, [0, seam.yaw, 0], seam.r);
+  spines.at.forEach(([a, r, y, length], i) =>
+    add(root, `mound_spine_${i}`, spike(spines.r, length, 5), black, polar(a, r, y), [
+      0,
+      -a,
+      spines.rake,
+    ])
+  );
+  add(root, 'crown_mark', box(...mark.size), lampM, mark.at, [0, mark.yaw ?? 0, 0]);
+  ports.at.forEach(([a, r, y], i) =>
+    add(root, `vessel_port_${i}`, orb(8, 5), unlit, polar(a, r, y), [0, -a, 0], ports.scale)
+  );
+}
+
+/**
+ * The Biomass outflow, Abyssal Directorate: a gullet off the mound on
+ * `bearing`, ribbed where it leaves the shell, into a dispatch hopper with
+ * its rim and throat — "the Biomass outflow off the vessel to a dispatch
+ * hopper", in the vocabulary the Dredge already carries (`hopper` above).
+ *
+ * The hopper is the Dredge's three parts by name and yawed onto the
+ * bearing, which the Dredge's own never has to be — a hull's hopper lies
+ * along its keel and this one lies along the gullet that feeds it.
+ * Distances are metres out along the bearing, as the kit's
+ * `reactorIntakeArm` takes them; the throat is the biolight's unlit finish
+ * for the same reason the ports are.
+ */
+export function reactorOutflow(root, { red, black, steel, unlit }, opts) {
+  const { bearing: a, gullet, ribs, hopper: bin, rim, throat } = opts;
+  const yaw = [0, -a, 0];
+  add(root, 'outflow_gullet', loft(gullet.profile, gullet.facets ?? 8), red, [0, gullet.y, 0], yaw);
+  // A torus is born round +Z, so the turn that lays its axis on the bearing
+  // is π/2 − a about Y: the ribs ride the gullet rather than stand across it.
+  ribs.at.forEach((d, i) =>
+    add(root, `gullet_rib_${i}`, torus(ribs.r, ribs.t, 5, 12), steel, polar(a, d, gullet.y), [
+      0,
+      Math.PI / 2 - a,
+      0,
+    ])
+  );
+  add(root, 'outflow_hopper', box(...bin.size), black, polar(a, bin.at, bin.y), yaw);
+  add(root, 'hopper_rim', box(...rim.size), steel, polar(a, bin.at, rim.y), yaw);
+  add(root, 'hopper_throat', box(...throat.size), unlit, polar(a, bin.at, throat.y), yaw);
+}
