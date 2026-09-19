@@ -34,6 +34,7 @@ import {
   HeadlessWebGLRenderer,
   pumpAnimationFrames,
   setCoarsePointer,
+  textContents,
   textCount,
   textRasterisations,
   textSaying,
@@ -1686,5 +1687,80 @@ describe('renderer smoke test: the strip explains itself', () => {
     );
 
     booted.teardown();
+  });
+});
+
+/**
+ * #815 — the card is offered more than its twelve cells hold, and what went
+ * used to be whatever `buildBarModel` pushed last. For any hull carrying
+ * torpedoes — ten of them, the Corvette and the Cruiser among them — that was
+ * the depth charge, and on a touchscreen the card is the only route to an
+ * order at all (docs/ui-ux.md §2).
+ *
+ * The two halves of the fix are asserted together because either alone leaves
+ * the Corvette one cell over: the torpedo count is a readout and leaves the
+ * order grid, and what remains yields in the order §9 writes down.
+ */
+describe('the command card when it is offered more than it holds', () => {
+  /** Click a hull on the conn view, the way the attack-move tests do. */
+  const selectHull = (world: Booted, unit: { x: number; y: number; depth: number }): void => {
+    world.chart.focusOn(unit.x, unit.y);
+    world.frame(2);
+    const at = world.conn.projectPoint(unit.x, unit.y, unit.depth);
+    assert.ok(at.visible, 'the camera is looking at the hull we are about to select');
+    for (const type of ['pointerdown', 'pointerup']) {
+      world.app.canvas.dispatch(type, {
+        button: 0,
+        pointerId: 1,
+        pointerType: 'mouse',
+        clientX: at.x,
+        clientY: at.y,
+      });
+    }
+    world.frame(1);
+  };
+
+  it('keeps every order a torpedo hull can give, and moves the count to the stat line', async () => {
+    const world = await boot();
+    try {
+      const corvette = cannedSnapshot().units.find((unit) => unit.torpedoes !== undefined);
+      assert.ok(corvette !== undefined, 'the canned match has no hull carrying torpedoes');
+      selectHull(world, corvette);
+
+      const lines = textContents(world.app.stage);
+      // The squad page's twelve orders. CHARGE is the one #815 lost.
+      for (const label of [
+        'SILENT',
+        'DRIVE OFF',
+        'PING',
+        'DIVE',
+        'RISE',
+        'FOLLOW',
+        'ENGAGE',
+        'STOP',
+        'HOLD',
+        'DECOY',
+        'MINE',
+        'CHARGE',
+      ]) {
+        assert.ok(
+          lines.some((line) => line.includes(label)),
+          `${label} is not on the card — the yield order dropped an order`
+        );
+      }
+
+      // The count is still readable, on the block that already carries this
+      // hull's numbers rather than on one of twelve order cells.
+      assert.ok(
+        lines.some((line) => /HULL .*SIG .*TORP 2/.test(line)),
+        'the torpedo count is not on the selection block’s stat line'
+      );
+      assert.ok(
+        !lines.some((line) => line.trim().startsWith('TORP ')),
+        'TORP is still holding a command cell'
+      );
+    } finally {
+      world.teardown();
+    }
   });
 });

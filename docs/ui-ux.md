@@ -454,6 +454,37 @@ A page opens by selection: picking a yard shows that yard's. Both stay reachable
 because a Slipway hull greyed for *no Slipway standing* is how a commander finds out what the rung
 is for, and §7's rule is that a disabled action names its reason rather than going quiet.
 
+### What yields when the card is full
+
+A squad page can be offered more than twelve entries too, without a roster in sight: a mixed
+selection holding a screen hull, a transport and a harvester offers sixteen. **Which entries yield
+is written here**, rather than being whatever the model happened to push last. That was the bug
+in #815 — the depth charge went on every hull carrying torpedoes, which is ten of them, because
+the torpedo readout made them the thirteenth and the charge was pushed after it.
+
+This is §2's block-drop order one level down, and for §2's reason: *the order is what each costs to
+lose*. What it is **not** is an order sorted by whether a key reaches the same action. §2 makes this
+card "how a touchscreen reaches any order at all", and a touchscreen has no keys — so a binding buys
+an entry nothing here. What decides rank is whether the card is the only route.
+
+Lowest yields first:
+
+| Rank | What it holds | What it costs to lose |
+| --- | --- | --- |
+| Deselect | `✕` | Nothing: a tap on empty water clears the selection |
+| Situational | `DECOY`, `MINE`, `CHARGE`, the harvest throttle | An order reached for occasionally, never in the same breath as a move |
+| Core | Every other order on the page | An order given all match |
+| Only route | `SCREEN`, `LAND`, and every production button | The action itself — no key and no gesture reaches it |
+
+Within a rank the later entry yields, so the page's own order decides among equals. Survivors keep
+that order, so a cell moves only when something above it actually left.
+
+**A readout is not an order, and does not hold a cell.** The torpedo count used to. It sits on the
+selection block's stat line now, beside `HULL` and `SIG`, where this hull's other numbers already
+are — and a launch was never on the card anyway, being `Ctrl` + right-click on a contact. That one
+move is what makes a torpedo hull's squad page fit its twelve exactly, with the deselect the only
+thing yielding.
+
 ---
 
 ## 9.5 The Esc Menu
