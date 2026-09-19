@@ -37,6 +37,7 @@ import {
   resolveBox,
   rulesTargeting,
   uaBoxSizing,
+  wordBreaking,
 } from './support/cssBox.ts';
 import { MissionPanel } from '../src/game/MissionPanel.tsx';
 
@@ -975,6 +976,103 @@ describe('the objectives panel: a row fits the panel that holds it', () => {
       // three: the arithmetic is here so that a shape quietly dropping out of
       // `shapes()` fails rather than shrinking what this walks.
       assert.equal(checked, 14, 'every child of every shape was asked');
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('breaks a word a mission authors too long for its cell, so the counter still reads', async () => {
+    // The third axis, and #774. The two floors above are about how wide a
+    // *box* is, and a word with no break opportunity in it is laid out on one
+    // line whatever its box measures — so flooring the track stopped the
+    // counter being carried out of the panel and did nothing about its being
+    // covered where it sits.
+    //
+    // Driven in Chromium against this panel's own markup and the shipped
+    // sheet, with a 64-character token written into an authored objective: the
+    // token's glyphs cover 457 px² of the counter's own glyphs at 100% UI
+    // scale, 257 at 75% and 970 at 200%, and 134 px of ink leaves the body's
+    // padding edge. All of it goes to zero with the declaration in. Only the
+    // rows where the token lands on the counter's *line* are covered — #774's
+    // body draws that distinction and it is why the measurement compares ink
+    // with ink rather than ink with the counter's box, which is a grid item at
+    // `grid-row: 1` and stretches the whole row.
+    //
+    // Walked off the rendered tree rather than a list of class names, for the
+    // reason the test above gives, and every child is classified rather than
+    // filtered: a cell added later that this does not recognise fails here
+    // instead of being skipped in silence.
+    const rules = parseCss(APP_CSS);
+    const { rendered } = await panel(shapes());
+    try {
+      const rows = rendered.allByClass('objectives-row');
+      assert.equal(rows.length, 5, 'all five shapes rendered');
+
+      let authored = 0;
+      let counters = 0;
+      let templated = 0;
+      for (const row of rows) {
+        const parent = {
+          tag: String(row.type),
+          classes: String((row.props as { className: string }).className).split(/\s+/),
+        };
+        for (const child of row.children) {
+          if (typeof child === 'string') continue;
+          const classes = String((child.props as { className?: string }).className ?? '')
+            .split(/\s+/)
+            .filter(Boolean);
+          const element = { tag: String(child.type), classes, ancestors: [...ANCESTORS, parent] };
+          const verdict = wordBreaking(rules, element);
+
+          // The mission's own words, printed verbatim and therefore unbounded.
+          if (classes.includes('objectives-text') || classes.includes('objectives-gloss')) {
+            assert.equal(
+              verdict.kind,
+              'permits',
+              `a .${classes.join('.')} in a ${parent.tag} row cannot break a token it cannot fit`
+            );
+            authored += 1;
+            continue;
+          }
+
+          // The counter is the one cell that must *not* break. `4 of 3` split
+          // over three lines is the same illegibility one column along, and it
+          // is also what lets the third track be `auto` at all.
+          if (classes.includes('objectives-progress')) {
+            assert.equal(verdict.kind, 'refuses', 'the counter may wrap');
+            counters += 1;
+            continue;
+          }
+
+          // The status word is templated (`STATUS_WORD`) and sits in a track
+          // that is `calc(3.2rem * var(--panel-type, 1))` — a *fixed* width
+          // that shrinks above 100% UI scale while the word's `0.58rem` does
+          // not. So it must not break either, for the counter's reason, and
+          // asserting it is what stops this declaration being written on
+          // `.objectives-row > *` again: there it reached this cell too and
+          // broke `PENDING` into `PENDIN` / `G` from about 119% up, on
+          // shipping content with no token in it.
+          assert.deepEqual(
+            classes,
+            ['objectives-status'],
+            `unclassified cell .${classes.join('.')}`
+          );
+          assert.equal(
+            wordBreaking(rules, element).kind,
+            'refuses',
+            'the status word may break, and its track shrinks above 100% scale'
+          );
+          templated += 1;
+        }
+      }
+      // A sentence in every shape and a gloss in one; a counter in three; a
+      // status word in every shape. The arithmetic is here so that a shape
+      // quietly dropping out of `shapes()` fails rather than shrinking what
+      // this walks.
+      assert.deepEqual(
+        { authored, counters, templated },
+        { authored: 6, counters: 3, templated: 5 }
+      );
     } finally {
       await rendered.unmount();
     }

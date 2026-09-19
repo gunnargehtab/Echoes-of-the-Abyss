@@ -25,12 +25,14 @@ import {
   APP_CSS,
   BOX_PROPERTIES,
   TRACK_PROPERTIES,
+  WRAP_PROPERTIES,
   borderBoxWidth,
   columnFloors,
   columnOf,
   parseCss,
   resolveBox,
   uaBoxSizing,
+  wordBreaking,
   type Element,
 } from './support/cssBox.ts';
 
@@ -549,5 +551,212 @@ describe('cssBox: what a column track refuses to shrink below', () => {
       () => columnOf(parseCss(withRule('.objectives-text { grid-area: a }')), TEXT),
       /does not model/
     );
+  });
+});
+
+/**
+ * The reader's third question, added for #774: not how wide a box is, but
+ * whether the ink inside it may be broken to fit.
+ *
+ * Rows 33 and 34 floored two rows' middle tracks and both left the same
+ * residual behind, which is the whole argument for a separate reader here: a
+ * box is not ink. An unbreakable word is laid out on one line whatever its box
+ * measures, so flooring the track stops the counter being *carried* out of the
+ * panel and does nothing about its being *covered* where it sits.
+ *
+ * Held to the same bargain as the two readers above — a value it cannot read
+ * is a throw, never a quiet `refuses` and never a quiet `permits`. The second
+ * is the one that would read as cover.
+ */
+describe('cssBox: whether a word too long for its box may be broken', () => {
+  const CELL_ANCESTORS = [...ANCESTORS, { tag: 'p', classes: ['objectives-row', 'pending'] }];
+  const cell = (className: string): Element => ({
+    tag: 'span',
+    classes: [className],
+    ancestors: CELL_ANCESTORS,
+  });
+
+  /** One legal value per wrap property, for the coverage assertion below. */
+  const WRAP_SAMPLE: Record<string, string> = {
+    'overflow-wrap': 'break-word',
+    'word-wrap': 'break-word',
+    'word-break': 'break-all',
+    'white-space': 'normal',
+    'white-space-collapse': 'collapse',
+    'text-wrap': 'wrap',
+    'text-wrap-mode': 'wrap',
+  };
+
+  it('reads the row’s cells as they now ship', () => {
+    const rules = parseCss(APP_CSS);
+    // The two cells a mission authors into. Both are unbounded prose, so both
+    // are what #774 is about.
+    for (const authored of ['objectives-text', 'objectives-gloss']) {
+      const verdict = wordBreaking(rules, cell(authored));
+      assert.equal(verdict.kind, 'permits', `.${authored} cannot break a token it cannot fit`);
+    }
+    // And the counter is the one cell that must *not* break: `4 of 3` split
+    // over three lines is the same unreadable one column along, which is why
+    // `white-space: nowrap` sits on it and why the third track can be `auto`.
+    const counter = wordBreaking(rules, cell('objectives-progress'));
+    assert.equal(counter.kind, 'refuses');
+    assert.match(
+      (counter as { because: string }).because,
+      /line breaking is off/,
+      'the counter holds its line by `white-space`, not by accident'
+    );
+  });
+
+  it('reproduces #774 when the declaration is taken away', () => {
+    // The negative control, read-only, and asserted to have bitten. Anchored
+    // on the whole rule body rather than on `overflow-wrap: break-word`, for
+    // the reason the #760 and #773 controls give: a short anchor strips
+    // whichever row happens to be written first and leaves this one's intact,
+    // which is a control aimed at the wrong row passing against a sheet it
+    // never changed.
+    const CELLS = '.objectives-text,\n.objectives-gloss {\n  overflow-wrap: break-word;\n}\n';
+    assert.equal(APP_CSS.split(CELLS).length - 1, 1, 'the authored cells’ rule is unique');
+
+    const stripped = APP_CSS.replace(CELLS, '');
+    assert.ok(!stripped.includes(CELLS), 'the strip reached the rule');
+    // And it reached *only* it: the two floors are a different axis, and a
+    // control that took them out too could not say which fault it had caught.
+    assert.ok(
+      stripped.includes('.objectives-row > * {\n  min-width: 0;\n}'),
+      'the strip left the item floor standing'
+    );
+
+    const rules = parseCss(stripped);
+    for (const authored of ['objectives-text', 'objectives-gloss']) {
+      assert.deepEqual(wordBreaking(rules, cell(authored)), {
+        kind: 'refuses',
+        because: 'nothing sets `overflow-wrap` or `word-break`',
+      });
+    }
+    // The floors are untouched by the strip, which is what says this axis is
+    // genuinely the third one and not row 33 restated.
+    assert.deepEqual(
+      columnFloors(rules, ROW).map((floor) => floor.kind),
+      ['definite', 'definite', 'content']
+    );
+  });
+
+  it('reads an ancestor’s `white-space`, which is the one inherited axis here', () => {
+    // Every property in `WRAP_PROPERTIES` is inherited, which is where this
+    // reader parts company with the box one: `width` cannot reach a child from
+    // an ancestor, and `white-space: nowrap` reaches everything under it. A
+    // first draft looked only at the element's own rules and called
+    // `.objectives-body { white-space: nowrap }` a `permits` — verified in
+    // Chromium to break nothing: a 40-character token stayed on one line.
+    const off = wordBreaking(
+      parseCss(withRule('.objectives-body { white-space: nowrap; }')),
+      cell('objectives-text')
+    );
+    assert.equal(off.kind, 'refuses', 'an ancestor’s `nowrap` was not read');
+
+    // And the other direction, which is the one that reads as cover: these
+    // properties inherit, so an ancestor that buys the break buys it for every
+    // cell that does not set one of its own. Asked of the status word, which
+    // sets neither — the counter cannot show this, because its own
+    // `white-space: nowrap` refuses first and would pass for the wrong reason.
+    const on = wordBreaking(
+      parseCss(withRule('.objectives-body { overflow-wrap: anywhere; }')),
+      cell('objectives-status')
+    );
+    assert.equal(on.kind, 'permits', 'an ancestor’s break was not read');
+  });
+
+  it('keeps last-wins per property, not across them', () => {
+    // A first draft kept one flag for `overflow-wrap`, `word-wrap` and
+    // `word-break` together, so an inert declaration of one wiped a live
+    // declaration of another. Chromium breaks all four of these; the reader
+    // used to refuse the first two.
+    for (const rule of [
+      '.objectives-text { word-break: normal; }',
+      '.objectives-text { word-break: keep-all; }',
+      '.objectives-text { white-space-collapse: preserve; }',
+      '.objectives-text { overflow-wrap: normal; word-break: break-all; }',
+    ]) {
+      const verdict = wordBreaking(parseCss(withRule(rule)), cell('objectives-text'));
+      assert.equal(verdict.kind, 'permits', `\`${rule}\` wiped a live break`);
+    }
+  });
+
+  it('expands the two shorthands, so a later one undoes an earlier one', () => {
+    // `white-space` and `text-wrap` both contain the mode longhand, so a later
+    // one resets it — which a reader keeping them as separate flags gets
+    // backwards.
+    assert.equal(
+      wordBreaking(
+        parseCss(withRule('.objectives-text { text-wrap: nowrap; white-space: normal; }')),
+        cell('objectives-text')
+      ).kind,
+      'permits',
+      '`white-space: normal` did not reset the mode `text-wrap: nowrap` set'
+    );
+    assert.equal(
+      wordBreaking(
+        parseCss(withRule('.objectives-text { white-space: nowrap; text-wrap: wrap; }')),
+        cell('objectives-text')
+      ).kind,
+      'permits',
+      '`text-wrap: wrap` did not reset the mode `white-space: nowrap` set'
+    );
+  });
+
+  it('refuses a break that something else switches line breaking off over', () => {
+    // The false pass this reader exists to refuse: `overflow-wrap: anywhere`
+    // under `white-space: nowrap` breaks nothing, because there are no lines
+    // to break onto. Either order, because these are two properties rather
+    // than two values of one.
+    for (const rule of [
+      '.objectives-text { white-space: nowrap; }',
+      '.objectives-text { white-space: nowrap; overflow-wrap: anywhere; }',
+      '.objectives-text { overflow-wrap: anywhere; white-space: nowrap; }',
+      '.objectives-text { text-wrap: nowrap; }',
+    ]) {
+      const verdict = wordBreaking(parseCss(withRule(rule)), cell('objectives-text'));
+      assert.equal(verdict.kind, 'refuses', `\`${rule}\` was read as a break`);
+    }
+  });
+
+  it('lets a later declaration undo an earlier one, as the cascade does', () => {
+    const verdict = wordBreaking(
+      parseCss(withRule('.objectives-text { overflow-wrap: normal; }')),
+      cell('objectives-text')
+    );
+    assert.equal(verdict.kind, 'refuses', 'a later `normal` did not undo the shipped break');
+  });
+
+  it('throws on a wrap value it cannot read, rather than reading it as inert', () => {
+    for (const value of ['anywhere !important', 'inherit', 'initial', 'unset', 'break-spaces']) {
+      assert.throws(
+        () =>
+          wordBreaking(
+            parseCss(withRule(`.objectives-text { overflow-wrap: ${value} }`)),
+            cell('objectives-text')
+          ),
+        /does not model|cannot read/,
+        `\`overflow-wrap: ${value}\` was read rather than refused`
+      );
+    }
+  });
+
+  it('covers every property in its own set', () => {
+    assert.deepEqual(
+      [...WRAP_PROPERTIES].sort(),
+      Object.keys(WRAP_SAMPLE).sort(),
+      'every wrap property has a sample value, and every sample names a wrap property'
+    );
+    for (const [property, value] of Object.entries(WRAP_SAMPLE)) {
+      assert.doesNotThrow(
+        () =>
+          wordBreaking(
+            parseCss(withRule(`.objectives-text { ${property}: ${value}; }`)),
+            cell('objectives-text')
+          ),
+        `\`${property}\` is in WRAP_PROPERTIES but wordBreaking does not read it`
+      );
+    }
   });
 });

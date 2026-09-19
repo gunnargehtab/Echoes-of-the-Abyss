@@ -873,3 +873,194 @@ export function columnOf(rules: CssRule[], element: Element): number | undefined
   }
   return Number(single[1]);
 }
+
+/**
+ * Every declaration that decides whether a word too long for its box may be
+ * **broken**.
+ *
+ * A third closed set beside `BOX_PROPERTIES` and `TRACK_PROPERTIES`, and a
+ * third question: those two ask how wide a box is, and this one asks where the
+ * ink goes inside it. They are genuinely independent — #760 floored the track
+ * and #773 floored the result card's, and in both the token's glyphs went on
+ * printing across the cells beside them, because a box is not ink (#774).
+ *
+ * `white-space` and `text-wrap` are in here without being about word breaking
+ * at all: either can switch line breaking off entirely, and then no
+ * `overflow-wrap` in the world breaks anything. A reader that looked only at
+ * `overflow-wrap` would call `white-space: nowrap; overflow-wrap: anywhere` a
+ * pass, which is the false pass this file exists to refuse.
+ *
+ * **Every property here is inherited**, and that is the one place this reader
+ * does *not* share the header's "inheritance is not modelled" bargain. For a
+ * box property the assumption is harmless — `width` does not inherit, so a
+ * rule on an ancestor cannot change a child's box. Here an ancestor's
+ * `white-space: nowrap` switches line breaking off for everything under it,
+ * and a reader that looked only at the element's own rules would report
+ * `permits` against a browser that breaks nothing. So `wordBreaking` resolves
+ * its properties up the `ancestors` chain, which is the same chain that lets a
+ * descendant selector be resolved rather than refused.
+ */
+export const WRAP_PROPERTIES = new Set([
+  'overflow-wrap',
+  'word-wrap',
+  'word-break',
+  'white-space',
+  'white-space-collapse',
+  'text-wrap',
+  'text-wrap-mode',
+]);
+
+/**
+ * Whether an element may break a word it cannot otherwise fit.
+ *
+ * `permits` names the declaration that buys the break, so a failure says which
+ * rule to look at. `refuses` names why — either nothing asked for a break, or
+ * something switched line breaking off over the top of it.
+ */
+export type WordBreaking = { kind: 'permits'; by: string } | { kind: 'refuses'; because: string };
+
+/**
+ * The three computed longhands this question actually turns on.
+ *
+ * A declaration is resolved into one of these rather than being scored on its
+ * own, because the alternative does not survive contact with the cascade: a
+ * first draft kept one "does something break" flag shared by `overflow-wrap`,
+ * `word-wrap` and `word-break`, and then an inert `word-break: normal` beside
+ * a live `overflow-wrap: break-word` wiped it and reported `refuses` against a
+ * browser that breaks. Last-wins has to be *per property*, so the properties
+ * have to exist as such.
+ */
+interface ComputedWrap {
+  /** `overflow-wrap`, with `word-wrap` resolved as the alias it is. */
+  overflowWrap?: { value: string; from: string };
+  wordBreak?: { value: string; from: string };
+  /** `wrap` or `nowrap`, from `white-space`, `text-wrap` or `text-wrap-mode`. */
+  textWrapMode?: { value: string; from: string };
+}
+
+/**
+ * Values of a wrap property this reader understands, as what they compute to.
+ *
+ * `white-space` and `text-wrap` are **shorthands** and are expanded here,
+ * which is the only way a later one can undo an earlier one the way a browser
+ * does: `text-wrap: nowrap` followed by `white-space: normal` wraps, because
+ * the shorthand resets the mode longhand it contains.
+ *
+ * Anything not in this table throws rather than being read as inert, for
+ * `BOX_PROPERTIES`' reason one question along: a value silently treated as
+ * inert reports `refuses` where the browser breaks, which turns a holder into
+ * a change detector, and the same silence on the other side reports `permits`
+ * where the browser does not, which is cover.
+ */
+const WRAP_VALUES: Record<string, Record<string, Partial<Record<keyof ComputedWrap, string>>>> = {
+  'overflow-wrap': {
+    normal: { overflowWrap: 'normal' },
+    'break-word': { overflowWrap: 'break-word' },
+    anywhere: { overflowWrap: 'anywhere' },
+  },
+  // The pre-standard alias, which every engine still maps onto `overflow-wrap`.
+  'word-wrap': {
+    normal: { overflowWrap: 'normal' },
+    'break-word': { overflowWrap: 'break-word' },
+    anywhere: { overflowWrap: 'anywhere' },
+  },
+  // `break-word` here is the deprecated spelling and behaves as
+  // `overflow-wrap: anywhere` with `word-break: normal`, so it breaks too.
+  'word-break': {
+    normal: { wordBreak: 'normal' },
+    'keep-all': { wordBreak: 'keep-all' },
+    'auto-phrase': { wordBreak: 'auto-phrase' },
+    'break-all': { wordBreak: 'break-all' },
+    'break-word': { wordBreak: 'break-word' },
+  },
+  // The shorthand, expanded. Only the mode half decides anything here; the
+  // collapse half is carried so that the table is the whole shorthand rather
+  // than the part that happened to matter.
+  'white-space': {
+    normal: { textWrapMode: 'wrap' },
+    'pre-wrap': { textWrapMode: 'wrap' },
+    'pre-line': { textWrapMode: 'wrap' },
+    'break-spaces': { textWrapMode: 'wrap' },
+    nowrap: { textWrapMode: 'nowrap' },
+    pre: { textWrapMode: 'nowrap' },
+  },
+  // Collapsing is not wrapping: `white-space-collapse: preserve` preserves
+  // newlines and changes no line-breaking decision, so it computes to nothing
+  // this question reads. It is in the set so that setting it is *read* rather
+  // than refused.
+  'white-space-collapse': { collapse: {}, preserve: {}, 'preserve-breaks': {} },
+  // Also a shorthand — `balance`, `pretty` and `stable` set the *style* half
+  // and leave the mode at its initial `wrap`.
+  'text-wrap': {
+    wrap: { textWrapMode: 'wrap' },
+    balance: { textWrapMode: 'wrap' },
+    pretty: { textWrapMode: 'wrap' },
+    stable: { textWrapMode: 'wrap' },
+    nowrap: { textWrapMode: 'nowrap' },
+  },
+  'text-wrap-mode': { wrap: { textWrapMode: 'wrap' }, nowrap: { textWrapMode: 'nowrap' } },
+};
+
+/** One element's own declarations, folded onto what it inherited. */
+function foldWrap(rules: CssRule[], element: Element, inherited: ComputedWrap): ComputedWrap {
+  const computed: ComputedWrap = { ...inherited };
+  for (const rule of boxRulesFor(rules, element, WRAP_PROPERTIES)) {
+    for (const [property, value] of rule.declarations) {
+      if (!WRAP_PROPERTIES.has(property)) continue;
+      if (/!important/i.test(value)) {
+        throw new Error(`cssBox does not model \`!important\` (\`${property}: ${value}\`)`);
+      }
+      const known = WRAP_VALUES[property];
+      if (known === undefined) {
+        // The set and this table are two halves of one list, exactly as
+        // `BOX_PROPERTIES` and `resolveBox`'s switch are.
+        throw new Error(`cssBox does not model \`${property}\``);
+      }
+      const expanded = known[value.trim().toLowerCase()];
+      if (expanded === undefined) {
+        throw new Error(`cssBox cannot read \`${property}: ${value}\``);
+      }
+      const from = `${rule.selector} { ${property}: ${value} }`;
+      for (const [longhand, computedValue] of Object.entries(expanded)) {
+        computed[longhand as keyof ComputedWrap] = { value: computedValue, from };
+      }
+    }
+  }
+  return computed;
+}
+
+/**
+ * What the shipped stylesheet lets this element do with a word that will not
+ * fit its box.
+ *
+ * Hyphenation is deliberately not read. `hyphens` needs a dictionary or a soft
+ * hyphen in the text, so it cannot break the run of identical characters an
+ * authored token can be, and counting it would be the optimistic direction.
+ */
+export function wordBreaking(rules: CssRule[], element: Element): WordBreaking {
+  // Outermost ancestor inwards, each element resolved against its own
+  // ancestry, so a descendant selector on an ancestor is read rather than
+  // refused. A nearer declaration overwrites a further one, which is
+  // inheritance and source order in the one pass.
+  const chain = element.ancestors ?? [];
+  let computed: ComputedWrap = {};
+  for (let i = 0; i < chain.length; i++) {
+    computed = foldWrap(rules, { ...chain[i], ancestors: chain.slice(0, i) }, computed);
+  }
+  computed = foldWrap(rules, element, computed);
+
+  if (computed.textWrapMode?.value === 'nowrap') {
+    return { kind: 'refuses', because: `line breaking is off — ${computed.textWrapMode.from}` };
+  }
+  const breaks =
+    (computed.overflowWrap?.value === 'break-word' || computed.overflowWrap?.value === 'anywhere'
+      ? computed.overflowWrap
+      : undefined) ??
+    (computed.wordBreak?.value === 'break-all' || computed.wordBreak?.value === 'break-word'
+      ? computed.wordBreak
+      : undefined);
+
+  return breaks === undefined
+    ? { kind: 'refuses', because: 'nothing sets `overflow-wrap` or `word-break`' }
+    : { kind: 'permits', by: breaks.from };
+}
