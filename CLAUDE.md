@@ -85,7 +85,7 @@ Run everything from the repository root.
 | Formatting check / fix | `npm run format:check` / `npm run format` |
 | Hull scripts ↔ GLBs ↔ outlines agree | `npm run check:models` |
 | `docs/invariants.md` still names live tests | `npm run check:invariants` |
-| `.claude/`'s own prose lints and its links resolve | `npm run docs:claude` |
+| This repo's own prose lints, its links resolve, its paths exist | `npm run docs:claude` |
 | Every blocking gate, in one pass | `npm run gates` |
 
 Single workspace: `npm -w packages/backend run dev`, `npm -w packages/frontend run dev`,
@@ -195,23 +195,34 @@ tools/invariants   check.mjs reads docs/invariants.md's table and asserts that
                    keep the gate green on a holder that is gone. Liveness, not
                    correctness; see "Invariants live in exactly one place too"
                    below. Runs in npm run gates and in CI's build job.
-tools/claude-docs  markdownlint and a relative-link check over the markdown
-                   this repository wrote under .claude/, which was outside
-                   every glob in CI until #748 and had already drifted.
-                   check.mjs also decides the scope, and decides it closed:
-                   a skill in neither of its two lists fails, a listed skill
-                   that is gone fails, and a tracked document that is neither
-                   linted nor vendored fails — so nothing new is ungated by
-                   being unnoticed. The vendored skills stay out as upstream
-                   copies, and check.mjs's list of them is asserted against
-                   VENDORED-SKILLS.md's own table, so the two cannot drift.
-                   Configs are .claude/.markdownlint.json,
-                   which extends the root one and turns MD018 off because
-                   these files open paragraphs with issue numbers, and
-                   .claude/.markdown-link-check.json, which checks relative
+tools/claude-docs  markdownlint, a relative-link check, and a path check over
+                   the prose this repository wrote about itself: the markdown
+                   under .claude/, which was outside every glob in CI until
+                   #748 and had already drifted, and since #795 this file,
+                   CONTRIBUTING.md and .github/copilot-instructions.md, which
+                   were outside all three doc gates. The root three are listed
+                   by a pathspec that also catches a nested CLAUDE.md, so the
+                   split #791 is weighing arrives gated. check.mjs also decides
+                   the scope, and decides it closed: a skill in neither of its
+                   two lists fails, a listed skill that is gone fails, and a
+                   tracked document that is neither linted nor vendored fails —
+                   so nothing new is ungated by being unnoticed. The vendored
+                   skills stay out as upstream copies, and check.mjs's list of
+                   them is asserted against VENDORED-SKILLS.md's own table, so
+                   the two cannot drift. lib/paths.mjs is the path check: a
+                   backticked span under packages/, tools/, docs/, .claude/ or
+                   .github/ must resolve against git, a glob must match
+                   something, and an exemption nothing names any more fails —
+                   which is what a link checker cannot see, since prose names a
+                   file far more often than it links one. Configs are
+                   .claude/.markdownlint.json, which extends the root one and
+                   turns MD018 off because those files open paragraphs with
+                   issue numbers — the root three neither need that nor get it —
+                   and .claude/.markdown-link-check.json, which checks relative
                    links only, because a link between two of these files is
                    the one that goes stale unread. Runs in npm run gates
-                   and in CI's docs job.
+                   and in CI's docs job; its own suite is npm run
+                   test:claude-docs.
 tools/prose-budget How long a GitHub body is, in the words a person reads —
                    markdown scaffolding, template prompts, fenced evidence and
                    the attribution footer are not reading and do not count.
@@ -475,7 +486,8 @@ jobs. The three that need `node_modules` share one cached install
   (`if: matrix.shard == strategy.job-total`), also runs the shared and frontend suites and
   `npm run test:roadmap` — ten seconds between them, put on the lighter side of the split.
 - `docs` — markdownlint on `docs/`, then one `markdown-link-check` invocation over every
-  doc, then `npm run docs:claude` over the prose this repository wrote under `.claude/`.
+  doc, then `npm run docs:claude` over the prose this repository wrote about itself —
+  `.claude/`, plus `CLAUDE.md`, `CONTRIBUTING.md` and `.github/copilot-instructions.md`.
   **All three are blocking**, so a dead link in `docs/` fails the build.
 
 The link checker config (`.markdown-link-check.json`) ignores this repo's own github.com
