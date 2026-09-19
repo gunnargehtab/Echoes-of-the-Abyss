@@ -212,7 +212,8 @@ thread is mid-task; give them the fact and let them get back to it.
   what decides that it is a design call, and §6 is still this file's own bound
 - `.claude/skills/run-game/SKILL.md` — producing the screenshot a visual PR
   needs
-- `CLAUDE.md` — build order, the two clocks, where constants live, CI layout
+- `CLAUDE.md` — build order, where constants live, CI layout
+- `packages/backend/CLAUDE.md` — the two clocks, and the Colyseus import rule
 - `CONTRIBUTING.md` — branch and commit conventions, the gate list
 - `.github/workflows/ci.yml` — the jobs, the shard split, and the header note
   recording the 2026-08-25 incident and its fix

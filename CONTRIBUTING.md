@@ -180,21 +180,22 @@ and removing it means the citations need somewhere else to point first.
 
 ## Code conventions
 
-The code conventions are stated once, in [CLAUDE.md](CLAUDE.md), each with the runtime
-gotcha behind it. The gotcha is the reason the rule is worth following, and it is the part
-a summary drops — which is why this file names each rule and links rather than repeating
-it:
+The code conventions are stated once, each with the runtime gotcha behind it — in
+[CLAUDE.md](CLAUDE.md) where the rule binds two or more packages, and in the package's own
+nested file where it does not. The gotcha is the reason the rule is worth following, and it
+is the part a summary drops — which is why this file names each rule and links rather than
+repeating it:
 
 - [Constants live in exactly one place](CLAUDE.md#constants-live-in-exactly-one-place) —
   and what the two tags on them oblige you to do.
 - [Import extensions differ by package](CLAUDE.md#import-extensions-differ-by-package--this-is-deliberate)
   — copying an import line between packages breaks it.
-- [Colyseus](CLAUDE.md#colyseus) — which package to import from, and the one tsconfig flag
-  to leave alone.
+- [Colyseus](packages/backend/CLAUDE.md#colyseus) — which package to import from, and the
+  one tsconfig flag to leave alone.
 - [The wire](CLAUDE.md#the-wire) — every socket message declared once, name and payload,
   plus a runtime shape for everything a client sends.
-- [Two clocks](CLAUDE.md#two-clocks) — the 60 Hz step and the 2 ms Echo budget, both
-  asserted on counted work rather than on a stopwatch.
+- [Two clocks](packages/backend/CLAUDE.md#two-clocks) — the 60 Hz step and the 2 ms Echo
+  budget, both asserted on counted work rather than on a stopwatch.
 - [Style](CLAUDE.md#style) — Prettier's settings, and what a comment in this codebase is
   for.
 

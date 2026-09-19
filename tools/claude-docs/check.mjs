@@ -60,7 +60,7 @@
  * tree — and they were outside `docs:lint`, `docs:links` and this gate alike.
  * `CLAUDE.md` passed markdownlint by luck rather than by anything holding it
  * there. They are listed from git by a pathspec that also picks up a nested
- * `CLAUDE.md`, so the split #791 is weighing needs no edit here to be gated.
+ * `CLAUDE.md`, which is why #791's three nested files needed no edit here.
  *
  * They lint under the **root** config rather than `.claude/`'s: none of the
  * three opens a paragraph with an issue number, so none needs MD018 turned off,
@@ -125,10 +125,10 @@ const VENDORED_SKILLS = [
 /**
  * The root engineering prose, as git pathspecs.
  *
- * A `**` pathspec rather than a literal `CLAUDE.md` so that the nested files
- * #791 is weighing are gated the day they land rather than the day somebody
- * remembers this list. The `:(glob)` magic is as load-bearing here as it is in
- * `IN_SCOPE` below.
+ * A `**` pathspec rather than a literal `CLAUDE.md` so that a nested file is
+ * gated the day it lands rather than the day somebody remembers this list —
+ * which is how #791's three arrived gated. The `:(glob)` magic is as
+ * load-bearing here as it is in `IN_SCOPE` below.
  */
 const ROOT_DOCS = [
   ':(glob)**/CLAUDE.md',
@@ -317,9 +317,9 @@ const rootFiles = gitLs(ROOT_DOCS);
 if (rootFiles === null) process.exit(1);
 // A pathspec set that matches nothing lints nothing and exits 0, which is the
 // silent pass this gate exists to refuse. Membership rather than a count: the
-// `**` pathspec is there so #791's nested files arrive gated, and the day the
-// first one lands a count of three stops distinguishing "all three present"
-// from "CONTRIBUTING.md gone, a nested file in its place".
+// `**` pathspec brought #791's nested files in, so a count of three no longer
+// distinguishes "all three present" from "CONTRIBUTING.md gone, a nested file
+// in its place".
 const REQUIRED_ROOT_DOCS = ['CLAUDE.md', 'CONTRIBUTING.md', '.github/copilot-instructions.md'];
 const missingRoot = REQUIRED_ROOT_DOCS.filter((file) => !rootFiles.includes(file));
 if (missingRoot.length > 0) {

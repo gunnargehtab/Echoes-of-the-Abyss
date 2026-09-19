@@ -3,7 +3,7 @@
 #
 #   .claude/skill-eval/prepare-arm.sh 627 a     # skill present  (treatment)
 #   .claude/skill-eval/prepare-arm.sh 627 b     # skill removed  (control)
-#   .claude/skill-eval/prepare-arm.sh 627 c     # skill and the CLAUDE.md guard removed
+#   .claude/skill-eval/prepare-arm.sh 627 c     # skill and the prose guard removed
 #
 # Cut every arm of one experiment from the same base, or they are not
 # comparable. The default base is origin/main, so cut them together rather than
@@ -30,6 +30,17 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
   exit 1
 fi
 
+# The CLAUDE.md that carries the colyseus version guard, or empty if none does.
+# The `**/CLAUDE.md` pathspec matches the root file as well as a nested one.
+guard_doc() {
+  # No `| head -1`: this runs under `set -o pipefail`, where git taking a SIGPIPE
+  # from a reader that has stopped reading would fail the whole script.
+  local found
+  found="$(git grep -l -F 'The vendored `colyseus` skill documents' \
+    -- ':(glob)**/CLAUDE.md' || true)"
+  printf '%s' "${found%%$'\n'*}"
+}
+
 ORIGINAL="$(git rev-parse --abbrev-ref HEAD)"
 trap 'git checkout -q "$ORIGINAL" 2>/dev/null || true' EXIT
 
@@ -52,26 +63,32 @@ if [ "$ARM" != a ]; then
 fi
 
 if [ "$ARM" = c ]; then
-  # CLAUDE.md carries the same version guard in prose, so arm B measures the
+  # The engineering prose carries the same version guard, so arm B measures the
   # skill's value *over that paragraph* rather than its value outright. Arm C
   # removes the paragraph too, which is the only way to price the guard itself.
-  grep -qF 'The vendored `colyseus` skill documents' CLAUDE.md \
-    || { echo "refusing: the CLAUDE.md guard paragraph moved; re-find it" >&2; exit 1; }
-  python3 - <<'PY'
-import pathlib
-p = pathlib.Path('CLAUDE.md')
+  #
+  # Which file holds it depends on the base: the root CLAUDE.md before #791,
+  # packages/backend/CLAUDE.md after it split the per-package rules out. Ask git
+  # rather than hard-coding either, so a base from before the split and one from
+  # after it both cut.
+  GUARD_DOC="$(guard_doc)"
+  [ -n "$GUARD_DOC" ] \
+    || { echo "refusing: no CLAUDE.md carries the guard paragraph; re-find it" >&2; exit 1; }
+  python3 - "$GUARD_DOC" <<'PY'
+import pathlib, sys
+p = pathlib.Path(sys.argv[1])
 s = p.read_text()
 start = s.index('The vendored `colyseus` skill documents')
 end = s.index('\n\n', s.index('not as a description of this backend.'))
 p.write_text(s[:start].rstrip('\n') + '\n\n' + s[end:].lstrip('\n'))
 PY
-  git commit -qam "eval(${EXP}): arm c — the CLAUDE.md version guard is also absent"
+  git commit -qam "eval(${EXP}): arm c — the version guard in ${GUARD_DOC} is also absent"
 fi
 
 # Assert the arm's shape rather than trusting the steps that built it.
 KEY="$([ -e .claude/skill-eval ] && echo present || echo absent)"
 SKILL="$([ -d .claude/skills/colyseus ] && echo present || echo absent)"
-GUARD="$(grep -qF 'The vendored `colyseus` skill documents' CLAUDE.md && echo present || echo absent)"
+GUARD="$([ -n "$(guard_doc)" ] && echo present || echo absent)"
 case "$ARM" in
   a) WANT_SKILL=present; WANT_GUARD=present ;;
   b) WANT_SKILL=absent;  WANT_GUARD=present ;;
