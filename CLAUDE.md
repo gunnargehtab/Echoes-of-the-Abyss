@@ -138,138 +138,28 @@ npm run build:shared
 packages/shared    @echoes/shared — types, tuning constants, Echo Layer math.
                    Compiled with tsc (NodeNext) to dist/. Imported by both sides.
 packages/backend   Colyseus server. Owns the simulation. Node + esbuild bundle.
-                   sim/match.ts is the fixed step and the Echo pass;
-                   rooms/MatchRoom.ts is the network boundary, and the rules
-                   live in sim/ rather than in the room. sim/maps/ holds the
-                   authored map archetypes — data literals, never generated.
-                   Terrain.demo() is a test fixture, not a map.
-packages/frontend  React shell + two-canvas renderer: three.js conn view (the
-                   world) under a transparent PixiJS HUD, one shared camera
-                   (EchoRenderer.setConn). A terminal, not a simulation.
-tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
-                   (buildability), factions/*.mjs (one navy's shape language),
-                   hulls/*.mjs (one hull), structures/*.mjs (one structure kind
-                   in one navy). Not an npm workspace; run a script directly and
-                   it writes into docs/concept-art/models/, which then goes
-                   through hull-intake like any other export. check.mjs rebuilds
-                   every script in both directories in a scratch directory and
-                   fails on any drift from the committed GLB; CI runs it in the
-                   build job. diff.mjs answers the one thing check.mjs cannot —
-                   what a port changed about a shape — by reading the pre-port
-                   binary out of git history, since after a port the committed
-                   file is the script's own output and the check is comparing it
-                   against itself. parts.mjs reads a file the way a script is
-                   written — each node's transform, which primitive its buffer
-                   is, which nodes share one — and is what a port transcribes
-                   from. Port is -z: the bow is on +X and Y is up, so +z is
-                   starboard (kit.mjs `bothSides`, #642).
-tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
-                   the sprite maps (Chromium), outlines.mjs writes each modelled
-                   kind's plan outline into packages/frontend/src/game/
-                   hullOutlines.generated.ts (no browser). models.mjs is the one
-                   table both read.
-tools/hull-renders The same models photographed rather than measured:
-                   render.mjs drives Chromium/three.js to write one beauty
-                   frame per hull into docs/concept-art/renders/, in the
-                   water its navy lives in, under the neon-noir rig.
-                   shots.mjs is the table of which hull in whose biome. Not
-                   an npm workspace and not a gate — a portrait is a
-                   presentation artifact, and a model is still approved by
-                   hull-intake and check.mjs, which measure.
-tools/audio-meter  What the mix measures, rather than what it was meant to.
-                   meter.mjs bundles the production audio classes, renders one
-                   layer at a time through Chromium's OfflineAudioContext, and
-                   reads the samples back with Node: loudness.mjs is ITU-R
-                   BS.1770-4 integrated LUFS and true peak, spectrum.mjs the
-                   band split that says where a layer's energy sits. Not an npm
-                   workspace and not a gate — it needs a browser, and a level is
-                   a judgement a number informs rather than settles. Readings
-                   are taken at the bus, before MASTER_GAIN, because a figure at
-                   the output says the mix is hot and a figure at the bus says
-                   which layer made it hot (#663).
-tools/invariants   check.mjs reads docs/invariants.md's table and asserts that
-                   every holder it names still resolves — the file is there and
-                   the quoted test name is still in it, matched against the file
-                   with its comments stripped, because the long explanation above
-                   a test is exactly the text that survives a rename and would
-                   keep the gate green on a holder that is gone. Liveness, not
-                   correctness; see "Invariants live in exactly one place too"
-                   below. Runs in npm run gates and in CI's build job.
-tools/claude-docs  markdownlint, a relative-link check, and a path check over
-                   the prose this repository wrote about itself: the markdown
-                   under .claude/, which was outside every glob in CI until
-                   #748 and had already drifted, and since #795 this file,
-                   CONTRIBUTING.md and .github/copilot-instructions.md, which
-                   were outside all three doc gates. The root three are listed
-                   by a pathspec that also catches a nested CLAUDE.md, so the
-                   split #791 is weighing arrives gated. check.mjs also decides
-                   the scope, and decides it closed: a skill in neither of its
-                   two lists fails, a listed skill that is gone fails, and a
-                   tracked document that is neither linted nor vendored fails —
-                   so nothing new is ungated by being unnoticed. The vendored
-                   skills stay out as upstream copies, and check.mjs's list of
-                   them is asserted against VENDORED-SKILLS.md's own table, so
-                   the two cannot drift. lib/paths.mjs is the path check: a
-                   backticked span under packages/, tools/, docs/, .claude/ or
-                   .github/ must resolve against git or be one of two declared
-                   build outputs, a glob must match something, and an exemption
-                   nothing names any more fails —
-                   which is what a link checker cannot see, since prose names a
-                   file far more often than it links one. Configs are
-                   .claude/.markdownlint.json, which extends the root one and
-                   turns MD018 off because those files open paragraphs with
-                   issue numbers — the root three neither need that nor get it —
-                   and .claude/.markdown-link-check.json, which checks relative
-                   links only, because a link between two of these files is
-                   the one that goes stale unread. Runs in npm run gates
-                   and in CI's docs job; its own suite is npm run
-                   test:claude-docs.
-tools/prose-budget How long a GitHub body is, in the words a person reads —
-                   markdown scaffolding, template prompts, fenced evidence and
-                   the attribution footer are not reading and do not count.
-                   lib/count.mjs is the counter and holds the budgets;
-                   check.mjs is the CLI the PR body workflow runs, advisory
-                   there and --strict locally. Tested under npm test.
-tools/roadmap      docs/ROADMAP.md rendered against live GitHub issue state, for
-                   GitHub Pages. build.mjs parses the doc rather than keeping a
-                   second copy of it, so the doc owns the phases and the
-                   reasoning and GitHub owns whether each issue is open: adding a
-                   row to a phase table is how you add an item to the site.
-                   Dependency-free on purpose, so the page cannot fail to build
-                   on something in node_modules, and without a token it still
-                   builds with every state reading "unknown". npm run test:roadmap
-                   is its suite. Published by .github/workflows/pages.yml, not by
-                   ci.yml — see CI below.
-tools/balance      Headless matches, telemetry, and a verdict against every
-                   guard-rail the design bible names. run.mjs is a launcher only:
-                   the harness is packages/backend/src/balance/, because it
-                   imports Match and AiSeat and those are backend TypeScript with
-                   real .ts import extensions. baselines/ holds the committed
-                   readings, each stamped with the command that produced it. Read
-                   the freeze above before running it: the harness is not frozen,
-                   tuning a number against it is.
-tools/echo-sim     Standalone CommonJS harness for deterministic Echo scenarios.
-                   Not an npm workspace; run it directly:
-                   node tools/echo-sim/sim.js [tools/echo-sim/scenarios/<name>.json]
-                   Tests can also require('./lib') for detect/runScenario.
-tools/lib          spawn.mjs, the one way a gate is spawned, carrying the Windows
-                   reasoning: npm and npx are .cmd batch files there, and since
-                   the CVE-2024-27980 fix spawning one without a shell returns
-                   status: null with error set rather than throwing, which made
-                   every gate FAIL in 0.0s printing nothing. Extracted when
-                   claude-docs became gates.mjs's second caller.
-tools/*.mjs        The three scripts that sit at the top of the tree.
-                   gates.mjs is every blocking gate in one pass — see Commands
-                   above. preflight-deps.mjs is the presence check that dev,
-                   build and test run first, so a stale node_modules fails at the
-                   front door instead of ten seconds into Vite (#301).
-                   android-check.mjs is the on-device smoke check for the Termux
-                   deployment (SETUP-ANDROID.md): build, tests, and a real server
-                   boot probed on both ports. All three are plain Node with no
-                   dependencies — the last two because they have to run before
-                   anyone has a working install.
+packages/frontend  React shell + two-canvas renderer, three.js under PixiJS. A
+                   terminal, not a simulation.
+tools/hull-models  The kit, faction, hull and structure scripts that build the GLBs.
+tools/hull-maps    The sprite maps and plan outlines those models bake to.
+tools/hull-renders One beauty frame per hull, in the water its navy lives in.
+tools/audio-meter  What the mix measures: LUFS, true peak, band split.
+tools/invariants   Every holder docs/invariants.md names still resolves.
+tools/claude-docs  This file and its siblings: lint, links, live paths.
+tools/prose-budget How long a GitHub body is, in the words a person reads.
+tools/roadmap      docs/ROADMAP.md rendered against live GitHub issue state.
+tools/balance      Headless matches, and a verdict against every guard-rail.
+tools/echo-sim     Deterministic Echo scenarios, standalone.
+tools/lib          spawn.mjs, the one way a gate is spawned.
+tools/*.mjs        gates.mjs, preflight-deps.mjs, android-check.mjs.
 docs/              The design bible. Prose, and the source of every SPEC number.
 ```
+
+Three directories carry their own `CLAUDE.md`, loaded only for a session working under
+them: `tools/CLAUDE.md` is the paragraph behind each line above,
+`packages/backend/CLAUDE.md` holds the two clocks and the Colyseus import rule, and
+`packages/frontend/CLAUDE.md` holds the test shim and the production seams. What stays
+here binds two or more of them.
 
 ### Server-authoritative is a hard rule, not a preference
 
@@ -281,25 +171,6 @@ so a client cannot infer the map-wide unit count from contacts it legitimately d
 
 Never send the client anything it has not resolved — not "temporarily", not behind a debug
 flag that ships.
-
-### Two clocks
-
-`packages/backend/src/sim/match.ts` runs a fixed 60 Hz simulation step (`SIM.TICK_HZ`) so
-behaviour does not vary with server load, and resolves the Echo Layer at 5 Hz
-(`SIM.ECHO_HZ`) against a hard 2 ms budget (`SIM.ECHO_BUDGET_MS`). Detection is the
-expensive pass, and players cannot perceive 60 Hz changes in a sonar contact.
-
-Anything you add to the per-tick path is on the 60 Hz budget. Anything touching detection
-is on the 2 ms one — `Match` tracks the rolling worst-case cost, so a regression here is
-observable rather than theoretical.
-
-Both budgets are asserted on **counted work**, never on a stopwatch: the Echo pass by its
-path integrals (`Match.contactPathWalksLastPass`), the 60 Hz step by its pair tests and
-cell probes (`Match.worstStepWork`, defined in `sim/stepWork.ts`). A maximum of a
-wall-clock sample is the noisiest statistic available on a shared runner — identical work
-has spread eightfold between runs in one process and failed CI on the spread alone — while
-a count is a property of the algorithm and is the same everywhere. The milliseconds are
-still tracked and still worth printing; they are not what a test fails on.
 
 ### Constants live in exactly one place
 
@@ -346,20 +217,6 @@ fixing a bug whose failure mode was silent.
 
 Copying an import line between packages will break it.
 
-### Colyseus
-
-Import from `@colyseus/core`, never the `colyseus` meta-package. The meta-package
-re-exports via `__exportStar`, which Node's static CJS export detection cannot see, so
-`import { Room } from 'colyseus'` fails at runtime under the unbundled ESM dev server while
-working fine once bundled. `@colyseus/schema` needs legacy decorators, which is why
-`useDefineForClassFields` stays `false` in the backend tsconfig — flipping it silently
-wipes the `@type()` metadata.
-
-The vendored `colyseus` skill documents **0.18**, four minors ahead of what is pinned here.
-It checks the installed version first and will tell you to follow 0.15's own docs, which is
-correct — it is carried as a guard against recall writing 0.17/0.18 API shapes into a 0.15
-room, not as a description of this backend.
-
 ### The wire
 
 Every message that crosses the socket — 32 a client may send, 11 the room may send — is
@@ -386,32 +243,6 @@ why a field name that is not on the payload fails the build. The two bounds it s
 `WIRE.MAX_IDS` on an array field and `WIRE.MAX_MESSAGES_PER_WINDOW` per client — live in
 `constants.ts` like every other number. Validation runs on the message path, never the step
 path; nothing here is on the 60 Hz budget.
-
-### Frontend tests run under a Vite shim
-
-Two Vite idioms are build-time transforms, not runtime APIs: `import url from
-'./thing.png'` and `import.meta.glob(...)`. Node has neither, so `packages/frontend`'s
-test script passes loader hooks (`test/support/viteAssets.mjs`) alongside tsx. A
-hand-rolled `node --test` reaching `EchoRenderer` or `PerspectiveView` needs them, or the
-import throws first.
-
-Four rules hold over every test in `packages/frontend/test/`:
-
-- **Boot the real class.** A test of a stub tests the stub.
-- **Stub only what the runner genuinely lacks**, and model it rather than swallow it
-  (`test/support/`).
-- **Assert counted work, never a stopwatch.** `AUDIO_BUDGET_MS` is wall clock; nodes
-  built per tick is the assertion.
-- **Assert what a doc section promises, never what the JSX says.** A test mirroring
-  markup is a change detector; screenshots cover how it looks.
-
-Why there is no jsdom is at the foot of `test/support/screen.ts`.
-
-Five production seams exist for these and have no other caller: an optional `Application`
-on `EchoRenderer`, renderer factory on `PerspectiveView.mount`, `Client` on `GameClient`,
-`harness` on `GameCanvas` — which *constructs* the other three, so a GPU-less boot
-without it stops at `mount()` — and `listRooms` on `BrowseScreen`. All default to the
-real thing; none is a feature.
 
 ### Style
 

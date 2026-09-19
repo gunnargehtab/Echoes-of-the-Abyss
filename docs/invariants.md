@@ -53,8 +53,8 @@ exactly this reason.
 | 6 | Every spawn and its Foundry on a catalogue map sits over water deep enough to hold a structure | [systems-depth.md](systems-depth.md) §2; `CONSTRUCTION.WORKING_DEPTH_M` | `packages/backend/test/maps.test.ts` — `seats every spawn and its Foundry over deep enough water` |
 | 7 | A mission beat never fails an objective the player has already met — objective status is monotonic | [mission-tolerance.md](mission-tolerance.md) §13 — "the runtime's own monotonicity invariant" | `packages/backend/test/missionUnderworks.test.ts` — `the choice, as rules` |
 | 8 | The mission panel prints the progress counters the server sent it and computes none of its own | [ui-ux.md](ui-ux.md) §10.5; the `INVARIANT:` comment in `packages/shared/src/missions.ts` | `packages/frontend/test/missionPanel.test.ts` — `shows the counters the server sent and does no arithmetic of its own` |
-| 9 | The Echo pass stays inside its work budget, counted as path integrals rather than timed | `CLAUDE.md`, "Two clocks"; `SIM.ECHO_BUDGET_MS` | `packages/backend/test/match.test.ts` — `stays inside its work budget for a small match in contact` |
-| 10 | The 60 Hz step stays inside its work budget, counted as pair tests and cell probes rather than timed | `CLAUDE.md`, "Two clocks"; `sim/stepWork.ts` | `packages/backend/test/separation.test.ts` — `stays inside the 60 Hz per-tick work budget with a crowd` |
+| 9 | The Echo pass stays inside its work budget, counted as path integrals rather than timed | `packages/backend/CLAUDE.md`, "Two clocks"; `SIM.ECHO_BUDGET_MS` | `packages/backend/test/match.test.ts` — `stays inside its work budget for a small match in contact` |
+| 10 | The 60 Hz step stays inside its work budget, counted as pair tests and cell probes rather than timed | `packages/backend/CLAUDE.md`, "Two clocks"; `sim/stepWork.ts` | `packages/backend/test/separation.test.ts` — `stays inside the 60 Hz per-tick work budget with a crowd` |
 | 11 | `MAX_UNIT_RADIUS_M` bounds every hull in the roster, so the broadphase cannot miss a pair | Derived from the longest hull in `UNIT_STATS`; #149, #461 | `packages/shared/test/units.test.ts` — `roster invariants` |
 | 12 | Every navy has a hull at every rung, so no commander is left with nothing to save for | [roster-plan.md](roster-plan.md) §4, Wave 0; #518 | `packages/backend/test/aiRung.test.ts` — `has a rung hull for every navy, so no navy is left with nothing to save for` |
 | 13 | No propagation cell exceeds the grid's reported peak, and that peak never exceeds the loudest PF anything is specified to produce | [environments.md](environments.md); #372 — a storm ×10 is a modifier like any other | `packages/backend/test/hazards.test.ts` — `resonance storms`; `packages/backend/test/terrainChange.test.ts` — `the water a beat rewrites` |
@@ -99,7 +99,7 @@ everything else. This gate only holds the *list*.
 
 ## Related
 
-- `CLAUDE.md` — the two clocks, constants in one place, server-authoritative
+- `CLAUDE.md` — constants in one place, server-authoritative · `packages/backend/CLAUDE.md` — the two clocks
 - [maps.md](maps.md) — how a map is written, and the three authoring faults its tests caught
 - [systems-combat.md](systems-combat.md) — ordnance, decoys, and what a mine does
 - [systems-echo.md](systems-echo.md) — detection, the pass the Echo-budget row bounds

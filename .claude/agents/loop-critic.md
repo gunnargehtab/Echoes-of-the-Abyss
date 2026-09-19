@@ -46,8 +46,9 @@ Two structural things follow, and neither is a style choice:
   round's own diff if the caller names one.
 - **The evidence** the caller captured — the test output, the screenshot, the
   `tools/echo-sim` run, the `hull-intake` report, the meter readings.
-- `CLAUDE.md`, when the diff touches constants, the wire, imports across
-  packages, or either clock. Most of your highest-value findings are there.
+- `CLAUDE.md`, when the diff touches constants, the wire or imports across
+  packages, and `packages/backend/CLAUDE.md` when it touches either clock. Most
+  of your highest-value findings are there.
 - [`docs/invariants.md`](../../docs/invariants.md) — the properties this simulation
   must hold over every input, each with the test that holds it. Read it as a
   checklist against the diff rather than from memory. It is not complete, so a

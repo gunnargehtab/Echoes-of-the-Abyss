@@ -486,10 +486,11 @@ nothing.
 
 Commit subjects take the `feat:` / `fix:` / `docs:` / `test:` / `refactor:`
 prefixes from `CONTRIBUTING.md`, imperative mood. Read `CLAUDE.md` before
-touching simulation code: the build order, the two clocks and their budgets, the
-per-package import extensions, and the rule that tuning numbers live only in
-`packages/shared/src/constants.ts` are all things that look like style until
-they break the build.
+touching simulation code, and `packages/backend/CLAUDE.md` too, which is where
+the rules that are the server's alone live: the build order, the per-package
+import extensions, the rule that tuning numbers live only in
+`packages/shared/src/constants.ts`, and the two clocks and their budgets are all
+things that look like style until they break the build.
 
 ### When the issue is the loop's own
 

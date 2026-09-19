@@ -78,7 +78,7 @@ Why each one earns its context:
   `^0.15.57`. It is installed as a **guard**: the 0.17 and 0.18 API drift
   (the `Room` generic, the `onLeave` close code, the removal of `client.id`,
   `@filter` becoming views) is exactly what stale model recall writes into a
-  0.15 room, and `CLAUDE.md`'s own Colyseus notes cover the meta-package import
+  0.15 room, and `packages/backend/CLAUDE.md`'s own Colyseus notes cover the meta-package import
   and the decorator flag but not that drift. Drop it if the noise outweighs the
   guard.
 
