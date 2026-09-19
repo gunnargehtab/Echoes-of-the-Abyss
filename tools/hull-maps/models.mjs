@@ -142,6 +142,17 @@ export const UNITS = [
   { slug: 'blight', model: 'blight-pelagia.glb', lengthM: 80, sig: 10 },
   { slug: 'lure', model: 'lure-directorate.glb', lengthM: 100, sig: 14 },
   { slug: 'tocsin', model: 'tocsin-hadron.glb', lengthM: 105, sig: 9.9 },
+  // The line hulls and the anchor (docs/units.md "The line hulls, and the
+  // anchor", #787 — Phase 4's fifth box): the Consortium's line hull and the
+  // Commune's line hull and its anchor. All three are faction-locked, so each
+  // model is the kind's canonical one and no variant dimension exists; none is
+  // a cone figure, so each bakes on its listed idle SIG. The Caisson's 64 is
+  // the roster's loudest bake and the reason its lit upward area is large
+  // (models-plan.md §3.2); the Bower is built grown out (§3.5) and lit at its
+  // resting band, its cloud drawn by the renderer and never as geometry.
+  { slug: 'caisson', model: 'caisson-bathyarch.glb', lengthM: 90, sig: 64 },
+  { slug: 'reed', model: 'reed-pelagia.glb', lengthM: 70, sig: 12 },
+  { slug: 'bower', model: 'bower-pelagia.glb', lengthM: 105, sig: 10 },
 ];
 
 /**

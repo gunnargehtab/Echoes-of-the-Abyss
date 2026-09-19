@@ -8,7 +8,10 @@
 **Glossary:** See [Glossary](glossary.md) for SIG, PF, HYD, PR and Resolution Tier.
 
 **Status:** in progress — the transports (#783), the scouts (#784), the ordnance hulls
-(#785) and the siege hulls (#786) are built, the other two boxes are planned. The tracking
+(#785), the siege hulls (#786) and the line hulls and the anchor (#787) are built, and the
+Bio-Reactor is the box that is left. With #787 every one of the 36 unit kinds has a model,
+so each takes its plan outline from its GLB and `HAND_DRAWN_OUTLINE` in `silhouettes.ts` is
+empty: the one kind still baking procedurally is a structure. The tracking
 issue is #540, Phase 4, and its six boxes are filed as issues #783 (the transports), #784 (the scouts), #785 (the ordnance hulls), #786 (the siege
 hulls), #787 (the line hulls and the anchor) and #788 (the Bio-Reactor). Every figure below
 is read from the working tree at `19ac7f9`; where it is a stat, [units.md](units.md) and

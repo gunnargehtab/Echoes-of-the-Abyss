@@ -84,108 +84,14 @@ export const HULL_LENGTH_M: Record<UnitKind, number> = {
  * Silhouette-first, per docs/art-direction.md: each kind must read at a
  * glance from shape alone.
  *
- * Hand-drawn for the kinds without a model. The type is the completeness
- * check: a kind that gains a model moves to hullOutlines.generated.ts, and
- * its entry here becomes a compile error until it is deleted; a kind absent
- * from both fails HULL_OUTLINE below.
+ * Hand-drawn for the kinds without a model — and since #787 there are none.
+ * Every unit kind is modelled, so this is empty and every outline the runtime
+ * reads is cut from a GLB by tools/hull-maps/outlines.mjs. The type is still
+ * the completeness check and now resolves to `Record<never, number[][]>`: a
+ * kind whose model is withdrawn reappears here as a missing key until someone
+ * draws it, and a kind absent from both fails HULL_OUTLINE below.
  */
-const HAND_DRAWN_OUTLINE: Record<Exclude<UnitKind, ModelledUnitKind>, number[][]> = {
-  // --- The line hulls, and the anchor (#509). What a line hull's silhouette
-  // has to say at RTS distance is whose Corvette this is — the duel is the
-  // Corvette's, and what differs is what the doctrine did to the hull around
-  // the tubes — and the third is a state made into geometry, as the Glider
-  // and the Lure are: the Bower is drawn grown out.
-
-  // A pressure box: the Corvette's wedge made in plate and no longer
-  // tapering — a blunt plough bow, flanks parallel from the shoulders for
-  // two thirds of the length, then a step in to the bare drive hull and a
-  // square stern. The step is the third more plate: the caisson bolted over
-  // the forward two thirds stands proud of the hull behind it. Reads apart
-  // from the Freighter's and the Bulwark's slabs, which never step, from the
-  // Tender's box, whose notch is at the stern, and from the Beacon, the
-  // Broadside and the Furnace, whose boxes carry something proud of the
-  // flanks or the bow where this one carries its plant on its back.
-  [UnitKind.Caisson]: [
-    [0.5, 0.14],
-    [0.44, 0.23],
-    [-0.14, 0.23],
-    [-0.18, 0.16],
-    [-0.46, 0.16],
-    [-0.5, 0.11],
-    [-0.5, -0.11],
-    [-0.46, -0.16],
-    [-0.18, -0.16],
-    [-0.14, -0.23],
-    [0.44, -0.23],
-    [0.5, -0.14],
-  ],
-  // A reed: a slim stem, the thinnest gun hull in the roster, swelling at
-  // two nodes with a narrow leaf blade swept aft off each — starboard (+Y)
-  // at the forward node, port at the after one, alternate as a reed's leaves
-  // are — and a fluke astern. Not mirrored across its keel, as the Glider is
-  // not, but balanced where the Glider is one-sided: what stands out to
-  // starboard forward stands out to port aft. Reads apart from the Lance's
-  // chevron, which is mirrored and amidships, from the Weaver's beads, which
-  // swell three times where this barely swells at all, and from the Light
-  // Scout's arrowhead, which is all bow.
-  [UnitKind.Reed]: [
-    [0.5, 0.0],
-    [0.4, 0.04],
-    [0.3, 0.06],
-    [0.28, 0.08],
-    [0.04, 0.19],
-    [-0.02, 0.07],
-    [-0.12, 0.07],
-    [-0.3, 0.06],
-    [-0.44, 0.04],
-    [-0.5, 0.08],
-    [-0.5, -0.08],
-    [-0.44, -0.04],
-    [-0.36, -0.06],
-    [-0.3, -0.18],
-    [-0.06, -0.08],
-    [0.0, -0.07],
-    [0.2, -0.07],
-    [0.3, -0.06],
-    [0.4, -0.04],
-  ],
-  // The Spore Veil's bed with a drive: a broad low oval, the widest Commune
-  // plan, its edge scalloped by overlapping lobes that alternate a side at a
-  // time, a blunt nose and a broad short fluke astern — drawn grown out,
-  // which is the state it anchors in. Widest amidships and rounded at both
-  // ends, so it reads apart from the Sower's leaf (wide at the bow, a stem
-  // aft), the Thurible's shield over a tail, the Lure's fan at the stern and
-  // the Verger's ribbed capsule, scalloped at its plate seams where these
-  // bulge lobe by lobe. The scallops are the Veil's own outline
-  // (drawStructureSilhouette, below) given a bow and a stern.
-  [UnitKind.Bower]: [
-    [0.5, 0.0],
-    [0.45, 0.11],
-    [0.36, 0.2],
-    [0.3, 0.17],
-    [0.18, 0.26],
-    [0.1, 0.22],
-    [-0.02, 0.28],
-    [-0.12, 0.23],
-    [-0.24, 0.24],
-    [-0.34, 0.17],
-    [-0.42, 0.09],
-    [-0.45, 0.04],
-    [-0.5, 0.11],
-    [-0.5, -0.11],
-    [-0.45, -0.04],
-    [-0.4, -0.12],
-    [-0.32, -0.22],
-    [-0.24, -0.19],
-    [-0.12, -0.27],
-    [-0.04, -0.23],
-    [0.08, -0.27],
-    [0.16, -0.22],
-    [0.28, -0.22],
-    [0.38, -0.15],
-    [0.46, -0.07],
-  ],
-};
+const HAND_DRAWN_OUTLINE: Record<Exclude<UnitKind, ModelledUnitKind>, number[][]> = {};
 
 export const HULL_OUTLINE: Record<UnitKind, number[][]> = {
   ...HAND_DRAWN_OUTLINE,

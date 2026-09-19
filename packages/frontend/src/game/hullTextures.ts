@@ -110,7 +110,9 @@ const HULL_ART_URL: Record<UnitKind, string> = {
   [UnitKind.Lure]: shadowUrl,
   [UnitKind.Tocsin]: cruiserUrl,
   // The line hulls and the anchor (#509), on the class each hull's tonnage
-  // and navy put it in until a model passes intake: the Caisson is a
+  // and navy put it in. Their models landed in #787, so the class is no
+  // longer what the chart bakes — it is what clads them while the maps
+  // decode. The Caisson is a
   // Consortium warship on the Bulwark's and the Broadside's plate — a third
   // more plate than the Corvette it replaces, so not the Corvette's — the
   // Reed a raider's shell like every quiet Commune hull, the Bower on the
