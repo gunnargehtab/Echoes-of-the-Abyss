@@ -294,11 +294,14 @@ export function ribFan(root, { ridge, vein }, opts) {
     const cx = nx + (len / 2) * Math.cos(yaw);
     const cz = nz - (len / 2) * Math.sin(yaw);
     add(root, `rib_${i}`, cyl(tip, r, len, 6), ridge, [cx, y, cz], [0, yaw, -Math.PI / 2]);
-    add(root, `rib_vein_${i}`, box(len * veinFrac, 0.2, 0.5), vein, [cx, y + lift, cz], [
-      0,
-      yaw,
-      0,
-    ]);
+    add(
+      root,
+      `rib_vein_${i}`,
+      box(len * veinFrac, 0.2, 0.5),
+      vein,
+      [cx, y + lift, cz],
+      [0, yaw, 0]
+    );
   });
 }
 
@@ -598,7 +601,14 @@ export function baleen(root, ridge, opts) {
   const { x, y, z = 0, count, pitch, h, d, splay = 0.045, rake = -0.35, t = 0.4 } = opts;
   for (let i = 0; i < count; i++) {
     const k = i - (count - 1) / 2;
-    add(root, `baleen_plate_${i}`, box(t, h, d), ridge, [x, y, z + k * pitch], [0, k * splay, rake]);
+    add(
+      root,
+      `baleen_plate_${i}`,
+      box(t, h, d),
+      ridge,
+      [x, y, z + k * pitch],
+      [0, k * splay, rake]
+    );
   }
 }
 
@@ -849,7 +859,13 @@ export function grownBarrel(root, mats, opts) {
  * radial]); the flange a torus.
  */
 export function magazine(root, { pipe: pipeMat, pod: podMat, flange }, { pipe, pod, flange: f }) {
-  part(root, 'feed_pipe', cyl(pipe.radii[0], pipe.radii[1], pipe.length, pipe.facets), pipeMat, pipe);
+  part(
+    root,
+    'feed_pipe',
+    cyl(pipe.radii[0], pipe.radii[1], pipe.length, pipe.facets),
+    pipeMat,
+    pipe
+  );
   part(root, 'ammo_pod', capsule(pod.r, pod.length, ...pod.facets), podMat, pod);
   part(root, 'feed_flange', torus(f.R, f.tube, ...f.facets), flange, f);
 }
@@ -1291,14 +1307,27 @@ export function dockingCollar(root, mats, opts) {
  * pair — the starboard organ sits where the port one lands turned half a
  * turn about the crown, with its yaw and its rolls merely negated, so each
  * is grown its own way and the script says which by `side`.
+ *
+ * Two things a *hull* carrying these needs and the structure does not.
+ * `haze` is optional: the Bower's cloud is drawn around the hull by the
+ * renderer and never on it (docs/asset-prompts-3d.md, UNIT — Bower), so a
+ * caller that passes none gets an organ with no fog geometry. It is
+ * present on the Veil and stays, so the structure's file is unchanged.
+ * `sep` is the separator between the parts of a name — `-` here, as every
+ * Veil part is hyphenated, and `_` for a hull, whose parts are not — and
+ * `prefix` the stem of the name, `gill`. Defaults leave
+ * `gill-organ-port`, `gill-mound-port`, `gill-slit-port-1`,
+ * `gill-breath-line-port-1` and `gill-haze-port` exactly as the approved
+ * export has them.
  */
 export function gillOrgan(root, mats, opts) {
   const { mound: moundMat, slit: slitMat, breath: breathMat, haze: hazeMat } = mats;
-  const { side, at, yaw, mound, slits, haze } = opts;
-  const organ = group(root, `gill-organ-${side}`, verbatim(at, [0, yaw, 0]));
+  const { side, at, yaw, mound, slits, haze, prefix = 'gill', sep = '-' } = opts;
+  const n = (...w) => [prefix, ...w].join(sep);
+  const organ = group(root, n('organ', side), verbatim(at, [0, yaw, 0]));
   placed(
     organ,
-    `gill-mound-${side}`,
+    n('mound', side),
     new THREE.SphereGeometry(1, ...mound.facets),
     moundMat,
     verbatim([0, 0, 0], [0, 0, mound.roll], mound.scale)
@@ -1310,26 +1339,27 @@ export function gillOrgan(root, mats, opts) {
     const z = lift * Math.cos(a) - sink;
     placed(
       organ,
-      `gill-slit-${side}-${k + 1}`,
+      n('slit', side, k + 1),
       box(...slit),
       slitMat,
       verbatim([reach[0] * Math.sin(a), y[0], z], [tilt, a, 0])
     );
     placed(
       organ,
-      `gill-breath-line-${side}-${k + 1}`,
+      n('breath', 'line', side, k + 1),
       box(...breath),
       breathMat,
       verbatim([reach[1] * Math.sin(a), y[1], z], [tilt, a, 0])
     );
   }
-  placed(
-    organ,
-    `gill-haze-${side}`,
-    cyl(haze.radii[0], haze.radii[1], haze.h, haze.facets),
-    hazeMat,
-    verbatim([0, haze.y, 0], [0, 0, haze.roll])
-  );
+  if (haze)
+    placed(
+      organ,
+      n('haze', side),
+      cyl(haze.radii[0], haze.radii[1], haze.h, haze.facets),
+      hazeMat,
+      verbatim([0, haze.y, 0], [0, 0, haze.roll])
+    );
   return organ;
 }
 
@@ -1388,35 +1418,42 @@ const STALK_SWAY = 0.0298876264947198;
  * orb of 0.07 drawn 1.2 tall, 0.16 above the pod. The Veil's six stand 2.3,
  * 2.7, 2, 1.8, 3.1 and 1.5 tall; the rule reproduces all twenty-four nodes
  * to the double.
+ *
+ * Every dimension above is absolute in the stalk's own frame, which is what
+ * makes the rule reproduce the file — so a *hull* growing these smaller
+ * takes them down by the frame's own `scale` rather than by `H` alone,
+ * or the stem stays 0.15 across however short it gets (hulls/bower.mjs).
+ * `sep` is `gillOrgan`'s: `-` for the Veil's hyphenated parts, `_` for a
+ * hull's.
  */
 export function sporeStalk(root, mats, opts) {
   const { lower: lowerMat, upper: upperMat, pod: podMat, tip: tipMat } = mats;
-  const { name, H, sway = STALK_SWAY, ...placement } = opts;
+  const { name, H, sway = STALK_SWAY, sep = '-', ...placement } = opts;
   const stalk = group(root, name, placement);
   placed(
     stalk,
-    `${name}-stem-lower`,
+    `${name}${sep}stem${sep}lower`,
     cyl(0.05, 0.075, 0.55 * H, 7),
     lowerMat,
     verbatim([0, 0.27 * H, 0], [0, 0, 0.06])
   );
   placed(
     stalk,
-    `${name}-stem-upper`,
+    `${name}${sep}stem${sep}upper`,
     cyl(0.032, 0.05, 0.45 * H, 7),
     upperMat,
     verbatim([sway * H, 0.75 * H, 0], [0, 0, 0.16])
   );
   placed(
     stalk,
-    `${name}-pod`,
+    `${name}${sep}pod`,
     new THREE.SphereGeometry(0.13, 7, 5),
     podMat,
     verbatim([1.4 * sway * H, 0.98 * H, 0], [0, 0, 0], [1, 1.35, 1])
   );
   placed(
     stalk,
-    `${name}-pod-tip`,
+    `${name}${sep}pod${sep}tip`,
     new THREE.SphereGeometry(0.07, 6, 4),
     tipMat,
     verbatim([1.4 * sway * H, 0.98 * H + 0.16, 0], [0, 0, 0], [1, 1.2, 1])
@@ -1701,9 +1738,18 @@ export const scoutInk = {
  * 1.093 + 0.07·cos(ψ + 0.7) + 0.06·sin 3ψ — but not wholly, and a port
  * transcribes rather than guesses: the table is the export's, to five
  * decimals, and a formula that nearly fit it would be a different hull.
+ *
+ * `frame` is which way the buffer is read. The default is the scouts' —
+ * `zLong`, the export's own frame, yawed onto +X by `part` — because those
+ * four files are ports and their tables are the binaries'. A hull *built*
+ * this way has no binary to transcribe and may generate its buffer by
+ * formula, in which case it authors it in the kit's frame and passes
+ * `xLong`, so the points read bow-on-+X as the script's other stations do
+ * (hulls/bower.mjs). The two differ only in the one yaw; the table, the
+ * facet counts and the pole rule below are the same either way.
  */
 export function grownBody(root, mat, opts) {
-  const { name = 'hull', facets = [16, 10], buffer, ...placement } = opts;
+  const { name = 'hull', facets = [16, 10], buffer, frame = zLong, ...placement } = opts;
   const [w, h] = facets;
   if (buffer.length !== (h - 1) * w + 2)
     throw new Error(
@@ -1728,7 +1774,7 @@ export function grownBody(root, mat, opts) {
   // normal on a table-built hull that a world-space comparison finds moved
   // (#649 review). Orphans in both files; nothing renders from them.
   geo.computeVertexNormals();
-  return part(root, name, geo, mat, placement);
+  return frame.place(root, name, geo, mat, placement);
 }
 
 /**
@@ -2385,7 +2431,11 @@ function leafLeadingEdge(shape, inset, divisions = 10) {
  * (`leafLeadingEdge`), riding the top face `sink` below its crest — the one
  * lit part a wing carries, in whatever lamp the caller hands it.
  *
- * `wing_<side>`, then `wing_ring_<side><i>`, then `wing_vein_<side>`.
+ * `<name>_<side>`, then `<name>_ring_<side><i>`, then `<name>_vein_<side>`,
+ * `name` being `wing` unless said — the Glider's. The Reed's two blades are
+ * this leaf at a third of the chord and pass `leaf_blade`, because its own
+ * block says the hull has no wing and a part called one would contradict it
+ * (hulls/reed.mjs).
  */
 export function leafWing(root, { membrane, ridge, vein: veinMat }, opts) {
   const {
@@ -2396,9 +2446,10 @@ export function leafWing(root, { membrane, ridge, vein: veinMat }, opts) {
     t = 0.4,
     bevel = 0.15,
     segments = 12,
+    name = 'wing',
   } = opts;
   const { rings = [], vein, facets = 14 } = opts;
-  if (!z0) throw new Error(`wing_${side}: a wing on the keel line has no flank`);
+  if (!z0) throw new Error(`${name}_${side}: a leaf on the keel line has no flank`);
   const sgn = Math.sign(z0);
   const shape = leafOutline(span, depth);
   shape.L = span;
@@ -2407,9 +2458,9 @@ export function leafWing(root, { membrane, ridge, vein: veinMat }, opts) {
   const toPlan = ([u, v]) => [x0 - u, z0 + sgn * v];
   const pts = shape.getPoints(segments).map((p) => [p.x, p.y]);
   if (pts.length > 2 && pts[0].join() === pts.at(-1).join()) pts.pop();
-  add(root, `wing_${side}`, plan(pts.map(toPlan), t, bevel), membrane, [0, y0, 0]);
+  add(root, `${name}_${side}`, plan(pts.map(toPlan), t, bevel), membrane, [0, y0, 0]);
   const top = t / 2 + bevel;
-  refuseMirror(`wing_ring_${side}`, rings, (r) => `${r.at}|${r.halfWidth}|${r.proud}`);
+  refuseMirror(`${name}_ring_${side}`, rings, (r) => `${r.at}|${r.halfWidth}|${r.proud}`);
   rings.forEach(({ at, halfWidth = 0.6, proud = 0.3, tube = 0.4, lean = 0 }, i) => {
     const u = at * span;
     const [lo, hi] = leafChord(shape, u);
@@ -2417,7 +2468,7 @@ export function leafWing(root, { membrane, ridge, vein: veinMat }, opts) {
     const [x, z] = toPlan([u, (lo + hi) / 2]);
     add(
       root,
-      `wing_ring_${side}${i}`,
+      `${name}_ring_${side}${i}`,
       // The shoulders sink a blade's depth under the face; the crest rides
       // `proud` over it once the ring is pressed flat.
       ridgeRing({ crown, shoulder: crown * (top / (top + proud)) - tube, halfWidth, facets }),
@@ -2433,7 +2484,7 @@ export function leafWing(root, { membrane, ridge, vein: veinMat }, opts) {
       const [x, z] = toPlan([u, v]);
       return [x, y0 + top - sink, z];
     });
-    sweptVein(root, veinMat, { name: `wing_vein_${side}`, through, steps, r, facets: vf });
+    sweptVein(root, veinMat, { name: `${name}_vein_${side}`, through, steps, r, facets: vf });
   }
 }
 
@@ -2720,6 +2771,147 @@ export function seedingArm(root, { ridge, chitin, sac, membrane }, opts) {
     hood.at ?? at,
     [roll, 0, pitch],
     [R, R * squash, R]
+  );
+}
+
+/* --------------------------------------------------------------------------
+ * The line hulls, and the anchor (#787, off #540 Phase 4): the Reed's two
+ * hardpoints and its standing drive, and the Bower's nursery.
+ *
+ * Built to their blocks, as the siege hulls' builders above were: nothing
+ * here answers to a binary in docs/concept-art/models/. X-long in the kit's
+ * frame, yawing nothing. Every one composes a side at a time — a node, a
+ * row of nubs, a blade is on the flank its `z` names and is placed there by
+ * itself, never through `bothSides` (docs/models-plan.md §3.6).
+ * hulls/reed.mjs and hulls/bower.mjs are the consumers.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The two hardpoints grown into a stem — "the Corvette's two hardpoints
+ * grown into the stem below the nose as a pair of hollow nodes with lips,
+ * one a side, the seed torpedoes inside them". Three parts a node, in this
+ * order, and the starboard node's three before the port node's:
+ *
+ * - `seed_node_<side>`, the node: one lathe of the caller's `profile` in
+ *   chitin, squashed `squash` and laid along X at its own `at` = [x, y, z],
+ *   port negative (#642). It is *hollow* — the profile is a closed wall,
+ *   not a skin: it runs aft-to-forward up the outside from the throat
+ *   buried in the stem to the mouth, across the rim at one station, and
+ *   back aft down the bore to its blind end, so the node has an inside as
+ *   well as an outside and the mouth is a hole. Which way round the two
+ *   halves are written is load-bearing and not a style: a lathe's faces
+ *   wind from its profile's direction, and the outside drawn *aft*-ward
+ *   comes out inside-out — nine tenths of the wall back-facing, which a
+ *   single-sided chitin renders as a gap in a top-down bake. Outside first.
+ * - `seed_node_lip_<side>`, the lip: a ridge (`ridgeRing`) lathed round the
+ *   mouth at the profile's widest station, `lip` = `{ tube, rise,
+ *   halfWidth? }` as `growthRings` and `layPort` take them. The block's
+ *   "with lips", and the thing that flares for the instant of a launch —
+ *   which is a transient and carries no lamp (docs/models-plan.md §3.2
+ *   rule 3).
+ * - `seed_torpedo_<side>`, the seed: a lathe of `seed.profile` in the pale
+ *   finish lying in the bore with its point `seed.proud` metres out of the
+ *   mouth, so what a scope sees at each lip is a pale nose and not a hole.
+ *
+ * Two, because the block counts two, and each its own size — a matched pair
+ * is refused. This is not `seedLauncher`, the Corvette port's sheath with a
+ * row of seeds in it, and there are no tubes: a reed is hollow and its
+ * hardpoints are two swellings of the same stem.
+ */
+export function seedNodes(root, { chitin, ridge, seed: seedMat }, opts) {
+  const { nodes, facets = 10 } = opts;
+  refuseMirror('seed_node', nodes, (nd) => nd.profile.map((st) => st.join()).join('|'));
+  nodes.forEach(({ side, at, profile, squash = 0.85, lip, seed }) => {
+    const [x, y, z] = at;
+    if (!z) throw new Error(`seed_node_${side}: a hardpoint on the keel line has no side`);
+    add(root, `seed_node_${side}`, loft(profile, facets), chitin, at, [0, 0, 0], [1, squash, 1]);
+    const mouth = profile.reduce((a, b) => (b[1] > a[1] ? b : a));
+    add(
+      root,
+      `seed_node_lip_${side}`,
+      ridgeRing({
+        crown: mouth[1] + lip.tube,
+        shoulder: mouth[1] + lip.tube - lip.rise,
+        halfWidth: lip.halfWidth ?? lip.tube,
+        facets,
+      }),
+      ridge,
+      [x + mouth[0], y, z],
+      [0, 0, 0],
+      [1, squash, 1]
+    );
+    const nose = seed.profile[seed.profile.length - 1][0];
+    add(
+      root,
+      `seed_torpedo_${side}`,
+      loft(seed.profile, seed.facets ?? 8),
+      seedMat,
+      [x + mouth[0] + seed.proud - nose, y, z],
+      [0, 0, 0],
+      [1, seed.squash ?? 0.9, 1]
+    );
+  });
+}
+
+/**
+ * The muscle-drive fluke stood on edge — "a narrow deep muscle-drive fluke
+ * astern": `driveFluke`'s membrane paddle turned a quarter about the keel,
+ * so its span is in height and its thickness across the beam. `outline` is
+ * `[x, y]` in metres, the blade's own plan in elevation; `t` between its
+ * faces, `bevel` as `plan` takes it, and the whole laid at `z` — the keel
+ * line unless a hull wants it off.
+ *
+ * Its own builder because the two flukes are two different drives and the
+ * plan is where the difference reads: every Commune tail until now lies
+ * flat and is broad — the Drifter's, the Weaver's, the Blight's, the
+ * Bower's — and a hull that is 0.07 of its length across cannot carry a
+ * broad one and stay a reed. On edge the same muscle is deep instead, and
+ * the track keeps a thin stern where the flat flukes give a wide one.
+ * kit.mjs `plan`'s bevel stands the paddle proud of the outline all round,
+ * so a caller that wants the file metre-true draws its aftmost edge to the
+ * design stern less the bevel, and draws it as two points at one x: the
+ * miter at a corner of a constant-x edge carries exactly the bevel aft.
+ */
+export function standingFluke(root, membrane, opts) {
+  const { outline, y = 0, z = 0, t = 0.4, bevel = 0, name = 'drive_fluke' } = opts;
+  const geo = plan(outline, t, bevel);
+  // `plan` lays the outline's second coordinate on world z; a quarter turn
+  // about the keel carries it to y and the slab's thickness to z.
+  geo.rotateX(-Math.PI / 2);
+  add(root, name, geo, membrane, [0, y, z]);
+}
+
+/**
+ * The nursery — "the nursery under the lobes along each flank: brood
+ * pouches showing through the shell as rows of paler nubs, where a
+ * Spinner's mine regrows". One row a flank, each nub a squashed orb in the
+ * caller's pale finish at `[x, y, z, r]`, half-sunk in the skin so it shows
+ * *through* the shell rather than sitting on it — the Blight's spore sac in
+ * miniature and repeated, which is the difference between a pouch and a
+ * pod. `brood_nub_<side>_<i>`, the starboard row before the port.
+ *
+ * Counts and sizes differ a side and the two rows cannot be the same row
+ * (`refuseMirror`): a brood is grown, not machined. No nub carries a lamp —
+ * the block lights them only under way and grown out, so they are clad
+ * (docs/models-plan.md §3.2 rule 2), and a row under a lobe is under it in
+ * a top-down bake too, which is where the block puts it.
+ */
+export function broodNubs(root, pale, opts) {
+  const { rows, facets = [8, 5], name = 'brood_nub' } = opts;
+  refuseMirror(name, rows, (r) => r.nubs.map((nb) => nb.join()).join('|'));
+  rows.forEach(({ side, nubs, squash = 0.55 }) =>
+    nubs.forEach(([x, y, z, r], i) => {
+      if (!z) throw new Error(`${name}_${side}_${i}: a pouch on the keel line has no flank`);
+      add(
+        root,
+        `${name}_${side}_${i}`,
+        orb(...facets),
+        pale,
+        [x, y, z],
+        [0, 0, 0],
+        [r, r * squash, r]
+      );
+    })
   );
 }
 
