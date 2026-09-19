@@ -374,77 +374,29 @@ path; nothing here is on the 60 Hz budget.
 
 ### Frontend tests run under a Vite shim
 
-The client is authored for Vite, and two of its idioms are build-time transforms rather
-than runtime APIs: `import url from './thing.png'` and `import.meta.glob(...)`. Node has
-neither, so `packages/frontend`'s test script passes loader hooks
-(`test/support/viteAssets.mjs`) alongside tsx. Any hand-rolled `node --test` invocation
-that reaches a client module through to `EchoRenderer` or `PerspectiveView` needs them
-too, or the import throws before a single assertion runs.
+Two Vite idioms are build-time transforms, not runtime APIs: `import url from
+'./thing.png'` and `import.meta.glob(...)`. Node has neither, so `packages/frontend`'s
+test script passes loader hooks (`test/support/viteAssets.mjs`) alongside tsx. A
+hand-rolled `node --test` reaching `EchoRenderer` or `PerspectiveView` needs them, or the
+import throws first.
 
-Three tests are what those hooks exist for, and all three follow the same rule: boot the
-real class, stub only what the runner genuinely lacks, and assert on counted work rather
-than on a stopwatch.
+Four rules hold over every test in `packages/frontend/test/`:
 
-- `test/rendererSmoke.test.ts` — both painters against a canned match, with only the two
-  rasterisers stubbed (`test/support/headless.ts`). Display objects, draw instructions,
-  scene-graph identities. Pixels stay the screenshot gates in `docs/graphics-standards.md`.
-- `test/audioEngine.test.ts` — the bus graph against a stubbed `AudioContext`
-  (`test/support/headlessAudio.ts`), which models edges and parameter writes rather than
-  swallowing them, so routing and ducking are checkable. `AUDIO_BUDGET_MS` is a wall-clock
-  number and is *not* what the test asserts; nodes built per tick is.
-- `test/gameClient.test.ts` — the message contract, against a stub room
-  (`test/support/colyseusStub.ts`). A renamed or reshaped message is a compile error
-  since #489 (see "The wire" above), so what is left here is the half types cannot
-  reach: that the client actually registers a handler for every name the room can send.
-- `test/gameCanvas.test.ts` — the shell, through `react-test-renderer`, which renders to
-  an object tree and needs no DOM (hence no jsdom). `createNodeMock` supplies the two
-  host elements. It tests *connections*, because that is what a composition root gets
-  wrong: a message that reaches one painter and not the other, a snapshot that never
-  reaches the mix, a device left open on unmount.
-- `test/appShell.test.ts`, `lobby.test.ts`, `settingsScreen.test.ts`,
-  `controlsScreen.test.ts` — the screens that implement a written rule, through the same
-  renderer and the helpers in `test/support/screen.ts`. `docs/ui-ux.md` §11 calls
-  accessibility "a correctness requirement, not a feature tier", so full rebinding, the
-  75–200% UI scale and the colour-vision palettes are held here; §14's doors are held in
-  the shell test. **Assert what a doc section promises, never what the JSX says** — a
-  test that mirrors markup is a change detector, and screenshots already cover how things
-  look. `Rendered.button()` matches a control's *accessible name* for the same reason.
-- `test/missionPanel.test.ts`, `matchFeeds.test.ts`, `resultCards.test.ts` — the in-match
-  panels and the two ways a room ends, under the same rule. What they hold is what a row is
-  allowed to *claim*: `docs/ui-ux.md` §10.5's status region that changes in place and its
-  verbatim, never-templated objective text; §10's sample rows and the `MARK` row that spends
-  its range column on the fade; the one `T+mm:ss` clock both feeds stamp with, which
-  `MissionLog` spells out a second time rather than importing; and the pair of anti-reveal
-  rules on the result cards — a match names only the winner, and a partial mission *ended*
-  rather than lost (`docs/mission-sorrowgate.md` §8).
-- `test/campaignScreen.test.ts`, `briefingAndRecord.test.ts`, `portScreens.test.ts`,
-  `escMenu.test.ts` — the port's own screens and the one door mid-match, under that same
-  rule. What they hold is §14's accessibility arithmetic rather than its layout: the
-  board's one tab stop and its `aria-disabled` that is never a DOM `disabled` (which would
-  delete twenty-eight slots for a keyboard), the
-  chart being decorative *because* every fact on it is in a slot's accessible name, the
-  authored prose of a briefing and of the record rendered whole and unedited with the
-  "already seen" variant attributed identically and left unmarked, and the two anti-reveal
-  rules of the port — a setup screen that names no navy, and a listing row that says the
-  water and the seat count and never the room's code. The esc menu's §9.5 contract is held
-  as far as it goes without a DOM: the dialog, Escape stepping back one level, the leave
-  entry armed rather than instant, and — since #515 — where the menu *places* focus,
-  which needed no jsdom, only a `createNodeMock` that stops merging sibling controls into
-  one host node. Where focus actually *is*, and whether Tab can walk under the glass, are
-  not a jsdom question after all: jsdom implements neither `inert` nor sequential focus
-  navigation, so those live in the browser drive at
-  `.claude/skills/run-game/scripts/escFocus.mjs` or nowhere. The foot of
-  `test/support/screen.ts` carries that research rather than leaving it to be re-derived.
+- **Boot the real class.** A test of a stub tests the stub.
+- **Stub only what the runner genuinely lacks**, and model it rather than swallow it
+  (`test/support/`).
+- **Assert counted work, never a stopwatch.** `AUDIO_BUDGET_MS` is wall clock; nodes
+  built per tick is the assertion.
+- **Assert what a doc section promises, never what the JSX says.** A test mirroring
+  markup is a change detector; screenshots cover how it looks.
 
-Five seams in production code exist for these and have no other caller: `EchoRenderer`'s
-constructor takes an optional `Application`, `PerspectiveView.mount` an optional renderer
-factory, `GameClient`'s constructor an optional `Client`, `GameCanvas` an optional
-`harness` prop carrying all three — it needs its own because it is where the other three
-are *constructed*, so without it the boot stops at `mount()` on a machine with no GPU —
-and `BrowseScreen` an optional `listRooms`, because `listMatches` reaches a matchmaker a
-test has none of, and the empty list a refused connection returns is the only listing its
-rows could otherwise ever be asked about. All default to the real thing; none is a
-feature.
+Why there is no jsdom is at the foot of `test/support/screen.ts`.
+
+Five production seams exist for these and have no other caller: an optional `Application`
+on `EchoRenderer`, renderer factory on `PerspectiveView.mount`, `Client` on `GameClient`,
+`harness` on `GameCanvas` — which *constructs* the other three, so a GPU-less boot
+without it stops at `mount()` — and `listRooms` on `BrowseScreen`. All default to the
+real thing; none is a feature.
 
 ### Style
 
