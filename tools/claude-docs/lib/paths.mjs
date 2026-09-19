@@ -120,10 +120,9 @@ function escapeLiteral(text) {
  * `generated` is the third answer, and it is neither tracked nor missing.
  * Two skills name `packages/shared/dist`, which is real, is the thing
  * `CLAUDE.md` § Build order is *about*, and is gitignored — so tracking cannot
- * see it, and `existsSync` would answer differently before and after a build,
- * which in CI means the `docs` job (no install, no build) disagreeing with
- * every developer's machine. A gitignore rule is static, so asking git whether
- * a path is ignored is the one test that gives the same answer everywhere.
+ * see it, and `existsSync` would answer differently before and after a build.
+ * `ignoreQueries` below is how that set is asked for, and why asking naively
+ * reproduces the very disagreement it is meant to remove.
  */
 export function makeResolver(trackedFiles, generated = new Set()) {
   const files = new Set(trackedFiles);
@@ -144,6 +143,34 @@ export function makeResolver(trackedFiles, generated = new Set()) {
     }
     return files.has(bare) || directories.has(bare);
   };
+}
+
+/**
+ * The forms to ask `git check-ignore` about, for each path — both of them.
+ *
+ * `git check-ignore` is **not** a pure function of the ignore rules, and
+ * assuming it was is what turned CI red on the first push of #795. `.gitignore`
+ * line 10 is `dist/`, a directory-only rule, and git matches a bare path
+ * against it only when the directory is on disk to be seen as one. Measured:
+ *
+ *     IGNORED      (exists)  packages/backend/dist
+ *     not-ignored  (absent)  docs/dist
+ *     IGNORED      (absent)  docs/dist/
+ *
+ * So `packages/shared/dist` answered "generated" on a machine that had built
+ * shared and "missing" in CI's `docs` job, which installs nothing and builds
+ * nothing — the same environment split the resolver exists to avoid, arriving
+ * by a different door. The trailing slash tells git the last component is a
+ * directory without asking the filesystem, which is disk-independent. The bare
+ * form is kept because a file rule (`*.log`) needs it.
+ */
+export function ignoreQueries(paths) {
+  const asked = [];
+  for (const path of paths) {
+    const bare = path.endsWith('/') ? path.slice(0, -1) : path;
+    for (const form of [bare, `${bare}/`]) if (!asked.includes(form)) asked.push(form);
+  }
+  return asked;
 }
 
 /**

@@ -86,7 +86,13 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { spawn } from '../lib/spawn.mjs';
-import { candidatePaths, makeResolver, unresolvedPaths, unusedAllowances } from './lib/paths.mjs';
+import {
+  candidatePaths,
+  ignoreQueries,
+  makeResolver,
+  unresolvedPaths,
+  unusedAllowances,
+} from './lib/paths.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const npx = 'npx';
@@ -208,13 +214,19 @@ function gitIgnored(documents) {
   const result = spawnSync('git', ['check-ignore', '--stdin'], {
     cwd: repo,
     encoding: 'utf8',
-    input: `${[...named].join('\n')}\n`,
+    input: `${ignoreQueries([...named]).join('\n')}\n`,
   });
   if (result.status !== 0 && result.status !== 1) {
     process.stderr.write(result.stderr ?? '');
     return new Set();
   }
-  return new Set(result.stdout.split('\n').filter(Boolean));
+  // Both forms were asked; the resolver keys on the bare one.
+  return new Set(
+    result.stdout
+      .split('\n')
+      .filter(Boolean)
+      .map((path) => (path.endsWith('/') ? path.slice(0, -1) : path))
+  );
 }
 
 /**

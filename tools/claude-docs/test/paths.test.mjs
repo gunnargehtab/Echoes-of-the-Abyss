@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   candidatePaths,
   globToRegExp,
+  ignoreQueries,
   makeResolver,
   unresolvedPaths,
   unusedAllowances,
@@ -121,4 +122,20 @@ test('an exemption outliving its sentence is reported', () => {
   ]);
   const naming = [{ file: 'CLAUDE.md', text: 'It names `docs/old-escape.md` still.' }];
   assert.deepEqual(unusedAllowances(naming, new Set(['docs/old-escape.md'])), []);
+});
+
+test('a gitignore query asks for the directory form too', () => {
+  // This is the assertion CI bought. `dist/` is a directory-only rule, and git
+  // matches a bare path against one only when the directory is on disk to be
+  // seen as one — so `packages/shared/dist` read as generated on a machine that
+  // had built shared and as missing in CI's docs job, which builds nothing.
+  // The trailing slash answers without consulting the filesystem.
+  assert.deepEqual(ignoreQueries(['packages/shared/dist']), [
+    'packages/shared/dist',
+    'packages/shared/dist/',
+  ]);
+  // The bare form is still asked, because a file rule needs it.
+  assert.ok(ignoreQueries(['tools/x.log']).includes('tools/x.log'));
+  // A path already carrying a slash is not asked for twice.
+  assert.deepEqual(ignoreQueries(['docs/a/', 'docs/a']), ['docs/a', 'docs/a/']);
 });
