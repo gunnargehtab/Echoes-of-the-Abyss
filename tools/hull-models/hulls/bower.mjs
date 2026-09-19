@@ -9,7 +9,8 @@
  * it is moving or not (SIG 10 idle, 16 cruise, 45 grown out and heard at
  * 18; HYD 40, 5 grown out; no weapon; 620 hull; 40 m/s; PR 1; 360 nodules).
  * The Veil Mother's bed with a drive: a broad low grown body, an oval in
- * plan and the widest Commune hull, its edge made of overlapping lobes that
+ * plan and the broadest hull the Commune has grown as one body, its edge
+ * made of overlapping lobes that
  * alternate a side at a time, a blunt grown nose, and a broad short
  * muscle-drive fluke astern. Paired gill organs let into the back along
  * each flank with vent slits, exhaling the haze; slender spore stalks
@@ -63,24 +64,31 @@
  *   an ellipsoid's, closing 5.6 m up and 3.5 m down. The bed alone is 90.2
  *   by 48.5 by 9.1 m — 0.087 of its length in height, which is what
  *   "broad low" measures out as.
- * - **How wide "the widest Commune hull" is, and against what.** 58.2 m
- *   over the lobes, vertex to vertex — 61.2 m by the box measure the intake
- *   takes, which the rolled lobes' axis-aligned boxes overstate — against
- *   the Sower's `bloom_bed` at 51.2 m, the Harvester at 51.9 and the
- *   Commune Cruiser's body at 42. The Cruiser's file spans 71.1 m and every
- *   metre of that past 42 is its two pectoral fins spread off the hull, so
- *   the claim is true of bodies and not of bounding boxes, and this bed is
- *   drawn to the first reading. In unit space it is 0.55 of the length,
- *   where the hand-drawn outline it replaces drew 0.56.
+ * - **How broad this bed is, and against what.** 58.2 m over the lobes,
+ *   vertex to vertex — 61.2 m by the box measure the intake takes, which
+ *   the rolled lobes' axis-aligned boxes overstate — against the Sower's
+ *   `bloom_bed` at 51.2 m, the Harvester at 51.9 and the Commune Cruiser's
+ *   body at 42. The block first said "the widest Commune hull" and that is
+ *   false as a reader will read it: `cruiser-pelagia.glb` spans 71.1 m, 13
+ *   m more than this, and every metre of it past 42 is the two pectoral
+ *   fins spread off the hull. The claim that survives measurement is the
+ *   one about bodies, so the block now says so (#787 review). In unit space
+ *   this bed is 0.55 of the length, where the hand-drawn outline it
+ *   replaces drew 0.56.
  * - **Nine lobes, alternating, and none opposite another.** Starboard at
  *   x 36, 21, 5, −12 and −29, port at 29, 13, −4 and −21 — five and four,
  *   because a count that matched a side would be the mirror §3.6 refuses —
- *   and the nearest opposite pair is 8 m apart, where the Lure's rule
+ *   and the nearest opposite pair is 7 m apart, where the Lure's rule
  *   (#786) is 1.5. Each its own three radii, its own yaw and its own roll,
  *   no two the same size, every one set from the rim's own beam at its
  *   station so that it stands seven tenths of its width proud of the bed
  *   and three tenths buried in it. Consecutive lobes on one flank overlap
- *   by 1 to 3 m in x, which is the block's "overlapping", and they are
+ *   by 0.01 to 2.4 m in x, except the starboard pair at −12 and −29, which
+ *   is 1.5 m clear: the block's "overlapping" is the alternating edge, and
+ *   the edge alternates, so between those two sits the port lobe at −21
+ *   and the bed's own rim carries the line under both — the generated
+ *   outline runs 0.247 and 0.209 either side of the station with no notch
+ *   (#787 review). They are
  *   chitin and ridge by turns as the Veil's six alternate deep chlorophyll
  *   and a darker teal: the scallops read by value as well as by outline.
  * - **Where the widest point is.** x 0, three metres aft of the bed's own
@@ -136,12 +144,17 @@
  *   edge. Its aftmost edge is drawn as two points at one x, twice over, so
  *   the bevel's miter carries exactly 0.3 m aft and the stern is −52.500.
  * - **Four marks, where every other quiet Commune hull has two.** The band
- *   table's floor row and the block's "navigation marks only" — but this
- *   plan is 4,402 m², eleven times the Reed's, and the gate-3 metric is
- *   energy per thousand pixels of mask. Two marks of the Weaver's size bake
- *   at raw E 0.43 against E(10) = 0.92, and the calibration pins at its ×64
- *   ceiling and still reaches only 0.72 — which docs/models-plan.md §3.2
- *   says is the light geometry being wrong and not its intensity. So bow,
+ *   table's floor row says "navigation marks only" and the block's plural
+ *   leaves the count to the hull, so this is a choice and the header first
+ *   argued it as a necessity, wrongly: it claimed two marks would pin the
+ *   calibration at its ×64 ceiling and still undershoot. They do not. Built
+ *   and baked (#787 review), two marks of this hull's own 1.6 by 1.0 give
+ *   raw E 0.653 against E(10) = 0.919 and the calibration reaches it by
+ *   lifting ×3.15, which is well inside the window. What four buy is the
+ *   direction of the gain — raw E 1.31 and a gain of ×0.703, dimming rather
+ *   than lifting, which is the side of §3.2's quiet-end trap a hull wants
+ *   to be on — and a plan of 4,402 m², eleven times the Reed's, with a mark
+ *   at each end of both axes rather than two on a bed 58 m across. So bow,
  *   both beams and stern, 1.6 by 1.0 each and all at strength 1, none
  *   opposite another (the two beam marks are 18 m apart in x) and none on
  *   the keel line: raw E 1.31, and the gain dims rather than lifts.

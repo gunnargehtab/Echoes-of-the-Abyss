@@ -2898,7 +2898,13 @@ export function standingFluke(root, membrane, opts) {
  */
 export function broodNubs(root, pale, opts) {
   const { rows, facets = [8, 5], name = 'brood_nub' } = opts;
-  refuseMirror(name, rows, (r) => r.nubs.map((nb) => nb.join()).join('|'));
+  // Key on the flank-independent fields: a nub is [x, y, z, r] and its z
+  // carries the side's sign, so keying on the raw tuple gave two rows that
+  // ARE each other's mirror two different keys and let them through — the
+  // one case §3.6 asks this guard to refuse (#787 review).
+  refuseMirror(name, rows, (r) =>
+    r.nubs.map(([x, y, z, rad]) => `${x}|${y}|${Math.abs(z)}|${rad}`).join('|')
+  );
   rows.forEach(({ side, nubs, squash = 0.55 }) =>
     nubs.forEach(([x, y, z, r], i) => {
       if (!z) throw new Error(`${name}_${side}_${i}: a pouch on the keel line has no flank`);

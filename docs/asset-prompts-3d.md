@@ -847,7 +847,8 @@ everything inside it, itself included, and it is a nursery for Spinner
 magazines within 300 m whether it is moving or not (SIG 10 idle, 16 cruise,
 45 grown out and heard at 18; HYD 40, 5 grown out; no weapon; 620 hull;
 40 m/s; PR 1; 360 nodules). The Veil Mother's bed with a drive: a broad low
-grown body, an oval in plan and the widest Commune hull, its edge made of
+grown body, an oval in plan and the broadest hull the Commune has grown
+as one body, its edge made of
 overlapping lobes that alternate a side at a time, a blunt grown nose, and
 a broad short muscle-drive fluke astern. Paired gill organs let into the
 back along each flank with vent slits, exhaling the haze; slender spore

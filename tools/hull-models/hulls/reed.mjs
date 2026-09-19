@@ -118,16 +118,17 @@
  *   is lit: the leaves are membrane, the lips are a transient, the seeds
  *   are cladding, the vein is clad.
  * - **The nose.** 7 m of six-sided cone at r 1.0 where the stem's lathe
- *   ends, skin to skin — the Weaver's cone a shade finer, on a hull of the
- *   same length.
+ *   ends, skin to skin — a shade finer than the Weaver's r 1.1, on a hull
+ *   of the same length.
  *
  * The light, measured (`lightAudit`, printed on export): nav_bow 0.75 m²,
  * nav_tail 0.75 — 1.5 m² facing up on a 390 m² plan, nothing hidden, which
- * is the Weaver's own figure on three quarters of its plan. The bake at
+ * is the Weaver's own figure on five sixths of its plan — 389.6 m² against
+ * 462.9. The bake at
  * E(12) = 1.06 reads raw E 2.84 → calibrated 1.06 at a gain of ×0.373: 24×
  * above the ×1/64 floor docs/models-plan.md §3.2 warns the quiet end about
  * and 172× under the ×64 ceiling, with no lamp but the two marks — the
- * Weaver's raw 1.65 at the same E is the same two marks on a fuller hull.
+ * Weaver's raw 1.89 at the same E is the same two marks on a fuller hull.
  * 16 parts, 2,448 triangles, six materials, bounds x ±35, y −4.6..6.6,
  * z −8.4..10.0; the 18.4 m of beam is the two leaves and the 11.2 m of
  * height is the fluke's two lobes.
