@@ -786,7 +786,33 @@ interface BarButton {
    * swallowed, which is what it was before anything carried a reason.
    */
   refusal?: string;
+  /**
+   * Where this entry stands when the card is offered more than it holds
+   * (docs/ui-ux.md §9, "What yields when the card is full"). Lower yields
+   * first; `YIELD.CORE` when absent.
+   */
+  yieldRank?: number;
 }
+
+/**
+ * The card's yield order — §2's block-drop order applied one level down, and
+ * for its reason: "the order is what each costs to lose".
+ *
+ * A key is not what makes an entry cheap to lose. §2 says the command card is
+ * "how a touchscreen reaches any order at all", and a touchscreen has no keys
+ * at all, so the thing that decides rank is whether the *card* is the only
+ * route — not whether a keyboard has a second one.
+ */
+const YIELD = {
+  /** A tap on empty water does the same thing (`onPointerUp`). */
+  DESELECT: 0,
+  /** Reached for occasionally, and never in the same breath as a move order. */
+  SITUATIONAL: 1,
+  /** The orders a player gives all match. The default. */
+  CORE: 2,
+  /** Nothing but this button reaches it. Yields only to another of its own. */
+  ONLY_ROUTE: 3,
+} as const;
 
 /** Command panel geometry, CSS px. docs/art-direction.md "HUD Layout". */
 const TAB_HEIGHT = 24;
@@ -2894,22 +2920,15 @@ export class EchoRenderer {
         action: () => this.commandHold(),
       });
       // Ordnance, docs/systems-combat.md §5, §6, §8. Each button reports its
-      // own scarcity rather than merely greying out: a torpedo count and a
-      // decoy cooldown are decisions the player is supposed to be making, and
-      // a weapon whose state is invisible is one they will reach for at the
-      // moment it is not there.
-      const armed = units.filter((u) => u.torpedoes !== undefined);
-      if (armed.length > 0) {
-        const aboard = armed[0]!.torpedoes ?? 0;
-        buttons.push({
-          label: `TORP ${aboard}`,
-          // No action of its own: a launch needs a contact, so it is
-          // CTRL+right-click. The button is the readout.
-          enabled: false,
-          active: aboard > 0,
-          action: () => {},
-        });
-      }
+      // own scarcity rather than merely greying out: a decoy cooldown is a
+      // decision the player is supposed to be making, and a weapon whose state
+      // is invisible is one they will reach for at the moment it is not there.
+      //
+      // The torpedo count is not among them any more (#815). It never was an
+      // order — a launch needs a contact, so it is CTRL+right-click and the
+      // cell was a readout holding one of twelve order slots. It is on the
+      // selection block's own stat line now, beside HULL and SIG, which is
+      // where this hull's other numbers already live.
       if (units.length > 0) {
         const cooling = first?.decoyCooldownS;
         buttons.push({
@@ -2917,6 +2936,7 @@ export class EchoRenderer {
           enabled: cooling === undefined && this.missionLock('noisemakers') === null,
           active: false,
           action: () => this.commandNoisemaker(),
+          yieldRank: YIELD.SITUATIONAL,
         });
         // The screen, for the one hull that carries a magazine of decoys
         // (docs/systems-combat.md §5). Button only, no key: every left-hand
@@ -2932,6 +2952,8 @@ export class EchoRenderer {
               first.decoys > 0 && spacing === undefined && this.missionLock('noisemakers') === null,
             active: false,
             action: () => this.commandLayDecoy(),
+            // Button only, no key — so it outlasts every entry that has one.
+            yieldRank: YIELD.ONLY_ROUTE,
           });
         }
         buttons.push({
@@ -2939,6 +2961,7 @@ export class EchoRenderer {
           enabled: this.missionLock('mines') === null,
           active: false,
           action: () => this.commandLayMine(),
+          yieldRank: YIELD.SITUATIONAL,
         });
         buttons.push({
           label: 'CHARGE',
@@ -2946,6 +2969,7 @@ export class EchoRenderer {
             this.stepDepthTarget(units, 1) !== null && this.missionLock('depthCharges') === null,
           active: false,
           action: () => this.commandDepthCharge(),
+          yieldRank: YIELD.SITUATIONAL,
         });
       }
 
@@ -2956,6 +2980,7 @@ export class EchoRenderer {
           enabled: true,
           active: harvester.throttle === HarvestThrottle.Overburden,
           action: () => this.commandCycleThrottle(),
+          yieldRank: YIELD.SITUATIONAL,
         });
       }
       // A transport's hold: the button is the readout and the landing. Boarding
@@ -2970,6 +2995,8 @@ export class EchoRenderer {
           active: used > 0,
           action: () => this.commandDisembark(),
           refusal: 'hold is empty: select hulls and right-click the transport to board',
+          // No key and no gesture: this button is the only way to unload.
+          yieldRank: YIELD.ONLY_ROUTE,
         });
       }
     } else {
@@ -3008,6 +3035,7 @@ export class EchoRenderer {
           this.selected.clear();
           this.onSelectionChanged();
         },
+        yieldRank: YIELD.DESELECT,
       });
     }
     return buttons;
@@ -3411,10 +3439,25 @@ export class EchoRenderer {
     const cellH = Math.max(BAR_BUTTON_HEIGHT, (gridH - gap * (ROWS - 1)) / ROWS);
 
     // More than twelve offers is a roster the card cannot hold. Rather than
-    // shrink the cells under the floor, the overflow is dropped here and the
-    // keyboard keeps reaching it — every entry on this card also has a
-    // binding (docs/ui-ux.md §9), which is what makes that survivable.
-    const buttons = model.slice(0, COLS * ROWS).map((entry, i) => {
+    // shrink the cells under the floor, entries yield — and *which* is written
+    // down (docs/ui-ux.md §9) rather than being whatever the push order happened
+    // to leave at the end. That was the bug in #815: the last thing pushed went,
+    // which for any torpedo hull was the depth charge.
+    //
+    // Lowest rank goes first, and within a rank the later entry goes, so the
+    // authored order still decides among equals. Survivors keep that order, so
+    // a cell moves only when something above it actually left.
+    const cells = COLS * ROWS;
+    const shown =
+      model.length <= cells
+        ? model
+        : model
+            .map((entry, i) => ({ entry, i, rank: entry.yieldRank ?? YIELD.CORE }))
+            .sort((a, b) => b.rank - a.rank || a.i - b.i)
+            .slice(0, cells)
+            .sort((a, b) => a.i - b.i)
+            .map((held) => held.entry);
+    const buttons = shown.map((entry, i) => {
       const col = i % COLS;
       const row = Math.floor(i / COLS);
       return {
@@ -7542,7 +7585,13 @@ export class EchoRenderer {
     }
 
     this.infoLine1.visible = true;
-    this.infoLine1.text = `HULL ${any.hp.toFixed(0)}/${any.maxHp.toFixed(0)}   SIG ${any.sig.toFixed(0)}`;
+    // The torpedo count rides here rather than on a command cell (#815): it is
+    // a number about this hull, not an order, and the card's twelve cells are
+    // the only route a touchscreen has to an order.
+    const aboard = unit?.torpedoes;
+    this.infoLine1.text =
+      `HULL ${any.hp.toFixed(0)}/${any.maxHp.toFixed(0)}   SIG ${any.sig.toFixed(0)}` +
+      (aboard === undefined ? '' : `   TORP ${aboard.toFixed(0)}`);
     this.infoLine1.position.set(x + 12, y + 48);
 
     // PR badge. A rented rating is drawn as rented — it evaporates the moment
