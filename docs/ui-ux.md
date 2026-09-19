@@ -357,10 +357,13 @@ Implemented in the client scaffold today (`packages/frontend/src/game/EchoRender
 | Arrows, screen edge | Pan. Edge scrolling is a setting (§14), because a trackpad makes the edge a place the pointer lands by accident |
 | Wheel | Zoom about the cursor |
 | `Space` | Toggle Silent Running for the selection |
+| `Q` | Toggle Engine Off — cut the drive. Quieter than silence and stopped ([systems-echo.md](systems-echo.md) §6) |
 | `P` | Active sonar ping from the first selected unit |
 | `D` / `A` | Dive / rise one depth band |
 | `S` | Toggle floor-following — hug the seabed at station keeping ([systems-depth.md](systems-depth.md) §2) |
-| `R` / `F` / `T` / `B` | Arm a Refinery / Foundry / Turret / faction structure |
+| `V` | Harvest throttle — cycle the dredge rate ([economy.md](economy.md) §3) |
+| `N` / `M` / `C` | Noisemaker, mine, depth charge — a decoy, laid at the hull, dropped into the band below |
+| `R` / `F` / `T` / `G` / `B` | Arm a Refinery / Foundry / Turret / Vent Tap / faction structure |
 | Hold `Alt` | Ping-cost preview rings |
 
 Still planned: a repeat-last-order binding, and ping-at-cursor — which needs a key that is
@@ -388,14 +391,16 @@ quietly changed meaning, with nothing to press and notice.
 
 §11 owes a one-handed layout, and the default is not one: `P`, `N`, `M`, `B` and `H` sit under
 a right hand that is on the mouse, and `X` is the mine's once `M` has moved. The alternative
-layout moves exactly those and leaves the rest alone, because a layout that also shuffles the
-keys a player knows is a worse layout.
+layout moves those, and the one key they displace on the way — Engine Off, because the ping
+lands on its `Q` — and leaves the rest alone, because a layout that also shuffles the keys a
+player knows is a worse layout.
 
 | Action | Standard | One-handed |
 | --- | --- | --- |
 | Stop | `X` | `` ` `` — `X` is the mine's in this layout |
 | Hold position | `H` | `Tab` |
 | Active sonar | `P` | `Q` |
+| Engine off | `Q` | `B` — `Q` is the ping's in this layout, and `B` is the structure's old key |
 | Harvest throttle | `V` | `E` |
 | Noisemaker | `N` | `Z` |
 | Mine | `M` | `X` |
@@ -422,6 +427,32 @@ reconnecting player gets their plan back, and two clients watching one slot cann
 about what a fleet is doing. Each queued order is drawn at the position it was *issued* at.
 For a queued attack that matters: the player is entitled to where they saw the contact when
 they gave the order, not to a live feed of where it is now.
+
+### The production card is a page per yard
+
+Production's route is the console's command card, and that card is 4 × 3 (§2). A whole navy's
+roster does not fit in twelve cells: the Bathyarch Consortium, the Pelagia Commune and the Hadron
+Knights each offer eighteen hulls and a refit, and only the Abyssal Directorate's twelve fit as one
+list. Both of the usual escapes are already closed — §2 does not let a panel scroll, and the digits
+belong to control groups rather than to production (above).
+
+So the page is the unit of the answer, and the yard is the page. The UNITS tab is **one page per
+yard**, FOUNDRY and SLIPWAY, and each page fits what it holds:
+
+| Page | Consortium | Commune | Directorate | Knights |
+| --- | --- | --- | --- | --- |
+| FOUNDRY | 12 | 12 | 8 | 11 |
+| SLIPWAY, with the refits | 6 | 6 | 3 | 7 |
+
+Two placements make those figures fit rather than a wider grid, and both follow from what the yard
+is. The **Harvester** is on the Bastion's line as well as the Foundry's and the Bastion always
+stands, so it belongs to the page of the yard that never has to be built — which is what takes the
+Foundry's thirteen down to twelve. The **refits** sit on the Slipway's page because the Slipway's
+line is what they compete for ([systems-progression.md](systems-progression.md) §1).
+
+A page opens by selection: picking a yard shows that yard's. Both stay reachable without one,
+because a Slipway hull greyed for *no Slipway standing* is how a commander finds out what the rung
+is for, and §7's rule is that a disabled action names its reason rather than going quiet.
 
 ---
 

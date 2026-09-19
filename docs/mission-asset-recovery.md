@@ -138,8 +138,9 @@ politics, taught through the hands ([campaign.md](campaign.md) §2, rule 2).
 the loudness the mission is tuned to expect; the failure it anticipates is not the player who
 exceeds it but the tutorial-trained player who creeps, splits quiet, and leaves the barges to be
 the loudest things on the field. The prologue's budget was a ceiling with a courtesy attached.
-This one is a working level with a doctrine attached, and the campaign alternates between those
-two readings for seven missions.
+This one is a working level with a doctrine attached. The Ledger's other six do not alternate
+with it — fifty, sixty-five, twenty, seventy, seventy-two and thirty — and that rule gets a set of
+readings across the campaigns rather than a pattern.
 
 ---
 

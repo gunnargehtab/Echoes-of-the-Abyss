@@ -259,9 +259,9 @@ the Directorate stands rather than about what it shoots.
 
 ### The SIG budget
 
-**SIG budget: 100** — the transmission's own figure, and the first budget in the bible at the
-scale's ceiling. This is the sixth reading the campaign has given [campaign.md](campaign.md) §10's
-rule: the prologue's twenty is a ceiling, Asset Recovery's sixty-five a working level, Attendance's
+**SIG budget: 100** — the transmission's own figure, and the only budget in the bible at the
+scale's ceiling. It is another reading of [campaign.md](campaign.md) §10's rule: the prologue's
+twenty is a ceiling, Asset Recovery's sixty-five a working level, Attendance's
 eight a description, Aptitude's twenty-eight a direction, the raid's eighty an instrument singing,
 and this one is **the number the mission is for**. There is nothing above it. A player cannot
 exceed it, and the fact that the scale runs out is the point: the Order has arrived at the loudest
