@@ -1771,7 +1771,10 @@ export function floodMasts(root, { steel, lamp: lampMat }, opts = {}) {
  */
 export function reactorBed(root, { holdfast, slab, kerb, lamp }, opts = {}) {
   const {
-    mat = { r: 46, rTop: 41, y: -1.4, t: 3.6, facets: 16 },
+    // Wide enough that an arm's `foot` at 48 m straddles the mat's top face
+    // rather than grazing its skirt: "anchor feet driven into the holdfast"
+    // is a claim the geometry has to carry (#788 review, N6).
+    mat = { r: 52, rTop: 47, y: -1.4, t: 3.6, facets: 16 },
     pad = { r: 34, rTop: 30.5, y: 2.2, t: 4.4 },
     rim = { r: 29.6, t: 1, radial: 5, facets: 16, y: 4.4 },
     // Phase 0, so a light sits on each sixth from +X: the three arms leave
@@ -1826,13 +1829,30 @@ export function reactorIntakeArm(
 ) {
   const {
     bearing: a,
-    boom = { from: 30, to: 72, size: [3, 3.6], y: 14 },
+    // From 16 m, which is inside every navy's vessel at this height, so the
+    // boom plugs into the thing it feeds rather than stopping short of it:
+    // "a feed throat that carries the crop back in" is the block's claim,
+    // and an arm standing on its own legs 12 m clear of the vessel does not
+    // make it. It clears the kerb's run lights — the booms sit 30° off the
+    // nearest light and present 3.5° of arc at the kerb's radius.
+    boom = { from: 16, to: 74, size: [3, 3.6], y: 14 },
     legs = { at: 48, spread: 5.2, r: [1.1, 1.5], h: 12.4 },
     foot = { at: 48, size: [11, 4.2, 11], y: 1.4 },
     drum = { at: 68, r: [3.6, 4.2], h: 6.4, y: 15.2 },
     mouth = { at: 68, r: 2.9, t: 1, y: 18.6 },
-    rake = { at: 74.5, size: [2.8, 2.4, 15], y: 10.5 },
-    tines = { count: 5, across: 3.2, r: [0.25, 0.95], h: 7, y: 5.6, facets: 5 },
+    // The rake hangs off the boom's end and has to *reach* it: the beam
+    // overlaps the boom by 0.9 m along the bearing and 0.6 m in height, and
+    // each tine's head is 0.2 m up inside the beam. A top-down bake cannot
+    // see a vertical gap and neither can `lightAudit` or `check.mjs`, so the
+    // first draft's rake hung a metre clear of the arm on all four navies
+    // and every gate passed it (#788 review, F1).
+    rake = { at: 74.5, size: [2.8, 2.4, 15], y: 11.9 },
+    // `r` is [top, bottom], so a hanging tine is thick where it is held and
+    // fine where it cuts — the opposite of every standing part in this file
+    // (`legs`, `drum`, a stack), which is the convention the first draft took
+    // by mistake and which left five cones fat-end-down under the beam
+    // (#788 review, F2).
+    tines = { count: 5, across: 3.2, r: [0.95, 0.25], h: 7, y: 7.4, facets: 5 },
   } = opts;
   const yaw = [0, -a, 0];
   // A point `r` out along the bearing and `s` to the left of it: `polar`

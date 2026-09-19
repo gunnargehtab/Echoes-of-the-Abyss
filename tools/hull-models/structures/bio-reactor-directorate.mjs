@@ -1,7 +1,8 @@
 /**
  * The Bio-Reactor, Abyssal Directorate — 180 m of footprint (2 × `radiusM`
- * 90, packages/shared/src/structures.ts), SIG 25 idle and 50 rendering
- * (docs/systems-flora.md §2 and §7).
+ * 90, packages/shared/src/structures.ts), SIG 25 idle — TUNABLE, and
+ * `structures.ts`'s own figure — against 50 rendering, which is the SPEC one
+ * (docs/systems-flora.md §2 and §7). The bake takes the idle 25.
  *
  * "The bed's income — the Vent Tap's argument on living ground, bolted into
  * a kelp holdfast instead of a vent, and it eats the cover it stands in ... A
@@ -133,7 +134,10 @@ directorate.reactorOutflow(
   {
     bearing: OUTFLOW,
     gullet: {
-      y: 19,
+      // Low enough to enter the hopper's throat: the first draft's gullet ran
+      // level at 19 and left the whole terminal a floating island (#788
+      // review, F3).
+      y: 14.8,
       profile: [
         [12, 3.9],
         [24, 3.2],
@@ -142,9 +146,9 @@ directorate.reactorOutflow(
       ],
     },
     ribs: { r: 3.7, t: 0.9, at: [21, 33] },
-    hopper: { at: 49, size: [16, 11, 14], y: 6 },
-    rim: { size: [17, 0.9, 15], y: 11.9 },
-    throat: { size: [10.5, 0.5, 8], y: 12.6 },
+    hopper: { at: 49, size: [16, 11, 14], y: 5.5 },
+    rim: { size: [17, 0.9, 15], y: 11.4 },
+    throat: { size: [10.5, 0.5, 8], y: 12.1 },
   }
 );
 

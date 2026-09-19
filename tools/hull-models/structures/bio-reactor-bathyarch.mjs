@@ -1,7 +1,8 @@
 /**
  * The Bio-Reactor, Bathyarch Consortium — 180 m of footprint (2 × `radiusM`
- * 90, packages/shared/src/structures.ts), SIG 25 idle and 50 rendering
- * (docs/systems-flora.md §2 and §7).
+ * 90, packages/shared/src/structures.ts), SIG 25 idle — TUNABLE, and
+ * `structures.ts`'s own figure — against 50 rendering, which is the SPEC one
+ * (docs/systems-flora.md §2 and §7). The bake takes the idle 25.
  *
  * "The bed's income — the Vent Tap's argument on living ground, bolted into
  * a kelp holdfast instead of a vent, and it eats the cover it stands in ... A
@@ -22,6 +23,21 @@
  * vessel: a riveted digester tank, banded, crowned and bolted, with the vent
  * stack off-centre on its roof and a square hopper on the end of the
  * outflow, from `factions/bathyarch.mjs`.
+ *
+ * WHAT THE BLOCK DOES NOT SAY: the vent stack. The block names the vessel,
+ * the slab, the three arms, the outflow and the feet, and it does not name a
+ * stack, because it is written for any faction and a stack is one navy's
+ * answer to a crown — the Commune grows a bud there, the Directorate a seam,
+ * the Order the crystal core. So the block stands unamended and this header
+ * carries the departure instead, which is the other half of what
+ * docs/models-plan.md §2 asks for. The licence is the procedural silhouette
+ * this model replaces: "the vent stack, off-centre: a reactor is not a
+ * symmetrical building" (packages/frontend/src/game/silhouettes.ts). That is
+ * the one thing the schematic ever said about the kind, it is the Klaxon's
+ * to say in plate, and a script that centred it would have lost it. The
+ * Order's vessel is deliberately the exception: the Knights are bilaterally
+ * symmetrical by doctrine, and giving them an off-centre stack to match this
+ * one would be the worse error.
  *
  * WHAT IS LIT, AND WHY SO LITTLE. The block's resting band is "the slab's run
  * lights and one mark on the vessel's crown", so those seven parts are the
@@ -80,7 +96,7 @@ radialSeries(ARMS, (a) =>
   )
 );
 
-// The tank: 30 m of banded plate on the slab, its crown bolted down.
+// The tank: 30 m drawn of banded plate on the slab, its crown bolted down.
 bathyarch.reactorVessel(
   root,
   { black, grey, rust, lampM, unlit },
@@ -120,9 +136,11 @@ bathyarch.reactorOutflow(
     bearing: OUTFLOW,
     trunk: { from: 15, to: 47, r: 2.6, y: 20 },
     flanges: { r: 3.3, t: 1.2, at: [22, 34] },
-    hopper: { at: 47, size: [15, 11, 15], y: 6 },
-    lip: { size: [16.4, 1.2, 16.4], y: 12.1 },
-    chute: { at: 47, r: [3.2, 4.4], h: 7.4, y: 16.2 },
+    // Base at y 0, the model's ground plane — where the slab bottoms and
+    // every boom leg stands (#788 review, F3).
+    hopper: { at: 47, size: [15, 11, 15], y: 5.5 },
+    lip: { size: [16.4, 1.2, 16.4], y: 11.6 },
+    chute: { at: 47, r: [3.2, 4.4], h: 7.4, y: 15.7 },
   }
 );
 

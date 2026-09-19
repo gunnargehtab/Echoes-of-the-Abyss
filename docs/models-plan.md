@@ -456,7 +456,16 @@ and the odd phase is what leaves the plan X-long so intake does not yaw it. The 
 slab's kerb and one mark on the vessel's crown — because the block's resting band names
 only those; the feed throats, the vessel's ports and the outflow's mouth are built and clad
 in each navy's unlit finish (§3.2 rule 2). All four bake warning-free at 180 m with a clean
-light audit — no lamp on any of them shows under a cell from above.
+light audit — no lamp on any of them shows under a cell from above, and each
+bakes as one connected body.
+
+The odd phase has one cost, and it is worth stating because it is the first thing the next
+reader will ask: three arms are never symmetric fore-and-aft, so the plan's centre sits
+19.4 m off the model's own origin on every navy. Nothing downstream minds — `normalise` in
+`rosterModels.ts` centres on the bounding box before scaling, as it does for the Commune's
+Bastion at x +26 — but the drum stands about a fifth of the footprint radius off the centre
+of its own selection ring. The alternative is a Z-long plan that intake yaws, which is
+worse.
 
 ## 5. After Phase 4
 

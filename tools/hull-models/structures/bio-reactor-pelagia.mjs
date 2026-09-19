@@ -1,7 +1,8 @@
 /**
  * The Bio-Reactor, Pelagia Commune — 180 m of footprint (2 × `radiusM` 90,
- * packages/shared/src/structures.ts), SIG 25 idle and 50 rendering
- * (docs/systems-flora.md §2 and §7).
+ * packages/shared/src/structures.ts), SIG 25 idle — TUNABLE, and
+ * `structures.ts`'s own figure — against 50 rendering, which is the SPEC one
+ * (docs/systems-flora.md §2 and §7). The bake takes the idle 25.
  *
  * "The bed's income — the Vent Tap's argument on living ground, bolted into
  * a kelp holdfast instead of a vent, and it eats the cover it stands in ... A
@@ -131,12 +132,14 @@ pelagia.reactorOutflow(
         [12, 3.8],
         [22, 3.2],
         [32, 3.5],
-        [44, 2.8],
+        [46, 2.8],
       ],
     },
     rings: { r: 3.6, t: 0.8, at: [20, 34] },
-    sac: { at: 50, y: 8.5, r: [9.5, 8, 9.5], ring: { r: 9.8, t: 1.2, y: 8.5 } },
-    mouth: { r: 3, t: 0.9, y: 16.8 },
+    // Base at y 0, the model's ground plane, and the gut carried out to 46 so
+    // it plunges into the sac rather than ending short of it (#788 review, F3).
+    sac: { at: 50, y: 8, r: [9.5, 8, 9.5], ring: { r: 9.8, t: 1.2, y: 8 } },
+    mouth: { r: 3, t: 0.9, y: 16.3 },
   }
 );
 

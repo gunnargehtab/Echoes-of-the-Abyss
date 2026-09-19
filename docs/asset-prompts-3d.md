@@ -874,6 +874,14 @@ Architecture anchors from the Rendering Target and Base Identity sections of
 [art-direction.md](art-direction.md); SIG from [units.md](units.md). Replace "vessel"
 framing: these are anchored to the seabed.
 
+Two structures have no [units.md](units.md) block, and their figures come from two places
+each rather than one: the Vent Tap's working pair from [economy.md](economy.md) §2, the
+Bio-Reactor's rendering 50 from [systems-flora.md](systems-flora.md) §2 and §7 — both SPEC
+— and each one's *idle* figure from `packages/shared/src/structures.ts`, where it is
+TUNABLE. A block below states the pair and cites neither, as the other fifty-one do: a path
+is not something a generator can read, and this is the file's one place for saying where a
+number came from.
+
 ```text
 STRUCTURE — Bastion (any faction): the HQ — a large pressure dome with
 visible reinforcement ribs, docking collars and external pipework, anchored
@@ -955,8 +963,8 @@ is on the line.
 ```text
 STRUCTURE — Bio-Reactor (any faction): the bed's income — the Vent Tap's
 argument on living ground, bolted into a kelp holdfast instead of a vent,
-and it eats the cover it stands in (SIG 25 idle, 50 rendering —
-docs/systems-flora.md §2 and §7). A render vessel standing over the
+and it eats the cover it stands in (SIG 25 idle, 50 rendering). A render
+vessel standing over the
 holdfast on a low footprint slab, three intake arms reaching out into the
 canopy on booms, each ending in a cutter rake and a feed throat that
 carries the crop back in; the Biomass outflow off the vessel to a

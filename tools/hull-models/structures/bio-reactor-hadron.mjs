@@ -1,7 +1,8 @@
 /**
  * The Bio-Reactor, Hadron Knights — 180 m of footprint (2 × `radiusM` 90,
- * packages/shared/src/structures.ts), SIG 25 idle and 50 rendering
- * (docs/systems-flora.md §2 and §7).
+ * packages/shared/src/structures.ts), SIG 25 idle — TUNABLE, and
+ * `structures.ts`'s own figure — against 50 rendering, which is the SPEC one
+ * (docs/systems-flora.md §2 and §7). The bake takes the idle 25.
  *
  * "The bed's income — the Vent Tap's argument on living ground, bolted into
  * a kelp holdfast instead of a vent, and it eats the cover it stands in ... A
@@ -133,7 +134,10 @@ hadron.reactorOutflow(
   {
     bearing: OUTFLOW,
     conduit: {
-      y: 19,
+      // Low enough to land on the cistern's cap: the first draft's conduit ran
+      // level at 19 and left the whole terminal a floating island (#788
+      // review, F3).
+      y: 16.3,
       profile: [
         [12, 3.4],
         [26, 2.9],
@@ -142,9 +146,9 @@ hadron.reactorOutflow(
       ],
     },
     collars: { r: 3.5, t: 0.8, at: [22, 35] },
-    cistern: { at: 50, r: [9, 11], h: 12, y: 6.5 },
-    cap: { r: [7.5, 9.2], h: 2.2, y: 13.6 },
-    mouth: { r: 3.2, t: 0.9, y: 15.2 },
+    cistern: { at: 50, r: [9, 11], h: 12, y: 6 },
+    cap: { r: [7.5, 9.2], h: 2.2, y: 13.1 },
+    mouth: { r: 3.2, t: 0.9, y: 14.6 },
   }
 );
 
