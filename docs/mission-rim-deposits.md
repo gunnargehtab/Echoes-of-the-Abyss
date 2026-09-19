@@ -212,8 +212,8 @@ arrive in two waves three minutes apart on the mission's clock.
 
 ### The SIG budget
 
-**SIG budget: 80** — the node's own active figure, and the fifth reading the campaign has given
-the same rule: the prologue's twenty is a ceiling, Asset Recovery's sixty-five a working level,
+**SIG budget: 80** — the node's own active figure, and another reading of the same rule: the
+prologue's twenty is a ceiling, Asset Recovery's sixty-five a working level,
 Attendance's eight a description, Aptitude's twenty-eight a direction, and this one is **the
 instrument singing**. The Order cannot be under it while it works, because the number is emitted
 by the party's own tool on the party's behalf and there is no throttle on it

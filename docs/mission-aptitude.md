@@ -194,11 +194,10 @@ fifth time, and its verb is *bearing* ([campaign.md](campaign.md) §2, rule 2).
 
 ### The SIG budget, aimed
 
-**SIG budget: 28 — in the cone**, and the qualifier is the point. This is the fourth reading the
-campaign has given the same rule and the first that could not be stated without a direction
-attached: the prologue's twenty is a ceiling, Asset Recovery's sixty-five is a working level,
-Attendance's eight is a description, and this one is **a figure that is meaningless until you say
-where the listener is standing**. Twenty-eight is what a corvette at cruise puts down its own bow.
+**SIG budget: 28 — in the cone**, and the qualifier is the point. It is a reading of the same rule
+that cannot be stated without a direction attached: the prologue's twenty is a ceiling, Asset
+Recovery's sixty-five is a working level, Attendance's eight is a description, and this one is
+**a figure that is meaningless until you say where the listener is standing**. Twenty-eight is what a corvette at cruise puts down its own bow.
 The same hull is emitting 2.8 astern in the same instant, and both are true.
 
 **Which is why the meter this mission asks the player to watch is not the SIG meter.** A single
