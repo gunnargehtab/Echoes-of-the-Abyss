@@ -328,24 +328,17 @@ describe('cssBox: what a column track refuses to shrink below', () => {
     // *log's* track and leaves this row's fixed — a control aimed at the wrong
     // row, passing against a sheet it never changed. The uniqueness assertions
     // are what turn that into a failure rather than a green tick.
-    //
-    // The item half is stripped **declaration by declaration** rather than by
-    // deleting the rule, because that rule carries `overflow-wrap` as well
-    // since #774. Taking the whole rule out would reproduce two faults at once
-    // and leave this control unable to say which of them it had caught.
     const TRACK = 'calc(3.2rem * var(--panel-type, 1)) minmax(0, 1fr) auto;';
-    const ITEMS = '.objectives-row > * {\n  min-width: 0;\n  overflow-wrap: break-word;\n}\n';
-    const ITEMS_WITHOUT_FLOOR = '.objectives-row > * {\n  overflow-wrap: break-word;\n}\n';
+    const ITEMS = '.objectives-row > * {\n  min-width: 0;\n}\n';
     assert.equal(APP_CSS.split(TRACK).length - 1, 1, 'the row’s track declaration is unique');
     assert.equal(APP_CSS.split(ITEMS).length - 1, 1, 'the row’s item rule is unique');
 
     const stripped = APP_CSS.replace(
       TRACK,
       'calc(3.2rem * var(--panel-type, 1)) 1fr auto;'
-    ).replace(ITEMS, ITEMS_WITHOUT_FLOOR);
+    ).replace(ITEMS, '');
     assert.ok(!stripped.includes(TRACK), 'the strip reached the track');
-    assert.ok(!stripped.includes(ITEMS), 'the strip reached the item rule');
-    assert.ok(stripped.includes(ITEMS_WITHOUT_FLOOR), 'the strip left the rule standing');
+    assert.ok(!stripped.includes('.objectives-row > *'), 'the strip reached the item rule');
 
     const rules = parseCss(stripped);
     assert.deepEqual(
@@ -621,12 +614,17 @@ describe('cssBox: whether a word too long for its box may be broken', () => {
     // whichever row happens to be written first and leaves this one's intact,
     // which is a control aimed at the wrong row passing against a sheet it
     // never changed.
-    const ITEMS = '.objectives-row > * {\n  min-width: 0;\n  overflow-wrap: break-word;\n}\n';
-    assert.equal(APP_CSS.split(ITEMS).length - 1, 1, 'the row’s item rule is unique');
+    const CELLS = '.objectives-text,\n.objectives-gloss {\n  overflow-wrap: break-word;\n}\n';
+    assert.equal(APP_CSS.split(CELLS).length - 1, 1, 'the authored cells’ rule is unique');
 
-    const stripped = APP_CSS.replace(ITEMS, '.objectives-row > * {\n  min-width: 0;\n}\n');
-    assert.ok(!stripped.includes(ITEMS), 'the strip reached the item rule');
-    assert.ok(stripped.includes('.objectives-row > *'), 'the strip left the rest of the rule');
+    const stripped = APP_CSS.replace(CELLS, '');
+    assert.ok(!stripped.includes(CELLS), 'the strip reached the rule');
+    // And it reached *only* it: the two floors are a different axis, and a
+    // control that took them out too could not say which fault it had caught.
+    assert.ok(
+      stripped.includes('.objectives-row > * {\n  min-width: 0;\n}'),
+      'the strip left the item floor standing'
+    );
 
     const rules = parseCss(stripped);
     for (const authored of ['objectives-text', 'objectives-gloss']) {
@@ -640,6 +638,69 @@ describe('cssBox: whether a word too long for its box may be broken', () => {
     assert.deepEqual(
       columnFloors(rules, ROW).map((floor) => floor.kind),
       ['definite', 'definite', 'content']
+    );
+  });
+
+  it('reads an ancestor’s `white-space`, which is the one inherited axis here', () => {
+    // Every property in `WRAP_PROPERTIES` is inherited, which is where this
+    // reader parts company with the box one: `width` cannot reach a child from
+    // an ancestor, and `white-space: nowrap` reaches everything under it. A
+    // first draft looked only at the element's own rules and called
+    // `.objectives-body { white-space: nowrap }` a `permits` — verified in
+    // Chromium to break nothing: a 40-character token stayed on one line.
+    const off = wordBreaking(
+      parseCss(withRule('.objectives-body { white-space: nowrap; }')),
+      cell('objectives-text')
+    );
+    assert.equal(off.kind, 'refuses', 'an ancestor’s `nowrap` was not read');
+
+    // And the other direction, which is the one that reads as cover: these
+    // properties inherit, so an ancestor that buys the break buys it for every
+    // cell that does not set one of its own. Asked of the status word, which
+    // sets neither — the counter cannot show this, because its own
+    // `white-space: nowrap` refuses first and would pass for the wrong reason.
+    const on = wordBreaking(
+      parseCss(withRule('.objectives-body { overflow-wrap: anywhere; }')),
+      cell('objectives-status')
+    );
+    assert.equal(on.kind, 'permits', 'an ancestor’s break was not read');
+  });
+
+  it('keeps last-wins per property, not across them', () => {
+    // A first draft kept one flag for `overflow-wrap`, `word-wrap` and
+    // `word-break` together, so an inert declaration of one wiped a live
+    // declaration of another. Chromium breaks all four of these; the reader
+    // used to refuse the first two.
+    for (const rule of [
+      '.objectives-text { word-break: normal; }',
+      '.objectives-text { word-break: keep-all; }',
+      '.objectives-text { white-space-collapse: preserve; }',
+      '.objectives-text { overflow-wrap: normal; word-break: break-all; }',
+    ]) {
+      const verdict = wordBreaking(parseCss(withRule(rule)), cell('objectives-text'));
+      assert.equal(verdict.kind, 'permits', `\`${rule}\` wiped a live break`);
+    }
+  });
+
+  it('expands the two shorthands, so a later one undoes an earlier one', () => {
+    // `white-space` and `text-wrap` both contain the mode longhand, so a later
+    // one resets it — which a reader keeping them as separate flags gets
+    // backwards.
+    assert.equal(
+      wordBreaking(
+        parseCss(withRule('.objectives-text { text-wrap: nowrap; white-space: normal; }')),
+        cell('objectives-text')
+      ).kind,
+      'permits',
+      '`white-space: normal` did not reset the mode `text-wrap: nowrap` set'
+    );
+    assert.equal(
+      wordBreaking(
+        parseCss(withRule('.objectives-text { white-space: nowrap; text-wrap: wrap; }')),
+        cell('objectives-text')
+      ).kind,
+      'permits',
+      '`text-wrap: wrap` did not reset the mode `white-space: nowrap` set'
     );
   });
 

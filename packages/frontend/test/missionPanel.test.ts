@@ -1044,10 +1044,23 @@ describe('the objectives panel: a row fits the panel that holds it', () => {
             continue;
           }
 
+          // The status word is templated (`STATUS_WORD`) and sits in a track
+          // that is `calc(3.2rem * var(--panel-type, 1))` — a *fixed* width
+          // that shrinks above 100% UI scale while the word's `0.58rem` does
+          // not. So it must not break either, for the counter's reason, and
+          // asserting it is what stops this declaration being written on
+          // `.objectives-row > *` again: there it reached this cell too and
+          // broke `PENDING` into `PENDIN` / `G` from about 119% up, on
+          // shipping content with no token in it.
           assert.deepEqual(
             classes,
             ['objectives-status'],
             `unclassified cell .${classes.join('.')}`
+          );
+          assert.equal(
+            wordBreaking(rules, element).kind,
+            'refuses',
+            'the status word may break, and its track shrinks above 100% scale'
           );
           templated += 1;
         }

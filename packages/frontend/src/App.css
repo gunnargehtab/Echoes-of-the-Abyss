@@ -1720,29 +1720,8 @@
    well.
 
    Neither of those stops the token's own glyphs printing across the cells
-   beside it, and that was #774: a box is not ink. Both declarations are about
-   how wide a *box* is, and a word that cannot be broken is laid out on one
-   line whatever the box measures, so the counter's column was covered rather
-   than carried — in any row where the token shares a line with the counter,
-   it printed straight over it. `overflow-wrap` is the third axis, how a word
-   may be broken, and §2 is what it is owed against rather than taste: the
-   panel "fits what it holds", and a counter under ink is the same unreadable
-   as one scrolled out of the box.
-
-   `break-word` rather than `anywhere`, and the difference is only intrinsic
-   sizing — both break an overlong word at the same place at layout time, but
-   `anywhere` also takes the item's min-content to one character. Nothing here
-   needs that: the track's floor is already written down as `minmax(0, …)`
-   above. So this is the narrower of the two, and it cannot re-open the
-   starvation `.contact-log-row`'s own comment records, where `anywhere` on a
-   fifteen-pixel column gave a bearing as a vertical stack of digits.
-
-   The row grows taller instead, which is the trade §2 asks for — it says what
-   will not fit is "cut down … a scrollbar is not the answer", and a word cut
-   across two lines is still read. `.objectives-progress` keeps its
-   `white-space: nowrap` and is not part of this: a counter that wrapped would
-   be the same illegibility one column along, and `n of m` has a width you can
-   predict.
+   beside it — that is #774, and it is the rule below rather than this one.
+   Both of these are about how wide a *box* is, and a box is not ink.
 
    It is the pair the contact log has carried since its own columns overran
    each other, and `.mission-result-objective` carries it too since #773.
@@ -1753,6 +1732,40 @@
    (186 px at 1440x900 and 100% scale), which is not this rule's. */
 .objectives-row > * {
   min-width: 0;
+}
+
+/* The third axis, and #774: how a word may be broken. The two floors above are
+   about how wide a box is, and a word with no break opportunity in it is laid
+   out on one line whatever its box measures — so flooring the track stopped
+   the progress counter being *carried* out of the panel and did nothing about
+   its being *covered* where it sits. Driven in Chromium with a 64-character
+   token written into an authored objective, the token's glyphs cover 457 px²
+   of the counter's own glyphs at 100% UI scale and 134 px of ink leaves the
+   body. §2 is what that is owed against rather than taste: a counter under ink
+   is as unreadable as one scrolled out of the box.
+
+   **Scoped to the two cells a mission authors into, not to `> *`**, and that
+   is the correction rather than the tidiness. On `> *` this also reached
+   `.objectives-status`, whose `font-size` is a flat `0.58rem` while its track
+   is `calc(3.2rem * var(--panel-type, 1))` and *shrinks* above 100% — so from
+   about 119% the word stopped fitting, and where it used to overflow into the
+   gap intact it broke instead: `PENDIN` / `G` at 120%, `FAILE` / `D` at 165%,
+   on shipping content with no token in it, across a range §11 makes a
+   correctness requirement. A templated word in a fixed track is exactly what
+   must not break, which is the argument `.objectives-progress` already wins
+   with its own `white-space: nowrap`: `4 of 3` over three lines is the same
+   illegibility one column along.
+
+   `break-word` rather than `anywhere`. Measured here they are
+   indistinguishable — identical line counts, row heights and scroll at 75%,
+   100% and 200% — because no track in this row is sized by min-content, which
+   is the only thing the two differ in. So the narrower declaration, on the
+   rule that nothing yet needs the wider one. `.contact-log-row`'s comment
+   records `anywhere` giving a bearing as a vertical stack of digits in a
+   fifteen-pixel column; that is why the wider one is not reached for, not a
+   claim that it would misbehave here. */
+.objectives-text,
+.objectives-gloss {
   overflow-wrap: break-word;
 }
 
