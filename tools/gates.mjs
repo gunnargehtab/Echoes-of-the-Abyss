@@ -108,11 +108,15 @@ const STEPS = [
     what: 'docs/invariants.md still names live tests',
     ...run('check:invariants'),
   },
-  { name: 'test', what: 'shared, frontend, backend, roadmap', ...run('test') },
+  { name: 'test', what: 'shared, frontend, backend, and the tools suites', ...run('test') },
   { name: 'build', what: 'the production bundles', ...run('build') },
   { name: 'docs:lint', what: 'markdownlint over docs/', ...docsLint },
   { name: 'docs:links', what: 'every link in docs/', exec: docsLinks },
-  { name: 'docs:claude', what: "markdownlint and links over .claude/'s own prose", ...run('docs:claude') },
+  {
+    name: 'docs:claude',
+    what: "lint, links and named paths over .claude/ and the root engineering docs",
+    ...run('docs:claude'),
+  },
 ];
 
 const args = process.argv.slice(2);

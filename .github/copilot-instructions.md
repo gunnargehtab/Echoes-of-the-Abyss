@@ -18,6 +18,7 @@ For engineering conventions, build order, and the runtime gotchas that cost the 
 **Echoes of the Abyss** is built on **two interdependent core systems** that all game design descends from:
 
 ### 1. The Echo Layer — Acoustic Fog of War
+
 - **No line-of-sight vision.** Instead, every unit and structure continuously emits an **Acoustic Signature (SIG, 0–100)** based on idle state, movement speed, construction, firing weapons, etc.
 - Detection is **not binary.** Enemies resolve you across **five resolution tiers** — from "something is out there" (Tier 1) to a full track with velocity (Tier 5).
 - **Key mechanic:** Active sonar reveals everything within 900 m — but reveals *you* to everything within 2,400 m. Alpha strikes are loud. Economy is loud. Stealth and power are in direct tension.
@@ -25,6 +26,7 @@ For engineering conventions, build order, and the runtime gotchas that cost the 
 - Read: **[systems-echo.md](../docs/systems-echo.md)**
 
 ### 2. Depth — The Axis of Commitment
+
 - Maps are vertical stacks: **Shelf (0–400 m)**, **Mid-Water (400–1,800 m)**, **Abyssal (1,800+ m).**
 - **Value increases with depth; cost increases with depth.** Units below their **Pressure Rating (PR)** take unhealable crush attrition.
 - Descent is fast and loud (SIG burst). Ascent is slow and silent. Deep raids are a real bet: you cannot both hit the richest ground and retreat quickly.
@@ -32,10 +34,11 @@ For engineering conventions, build order, and the runtime gotchas that cost the 
 - Read: **[systems-depth.md](../docs/systems-depth.md)**
 
 ### Factions as Arguments
+
 All four factions are coherent answers to the same problem — **noise** — and their mechanics *are* their worldview:
 
 | Faction | Noise Doctrine | Wins By | Depth Strategy |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Bathyarch Consortium** | Loudest in the game | Attrition | Buys access (PR-2) |
 | **Pelagia Commune** | Quietest, fragile | Map control + evasion | Terraforms (PR-1, converts terrain) |
 | **Abyssal Directorate** | Listens better than anyone | Information + numbers | Born to depth (PR-3, no refits needed) |
@@ -75,11 +78,13 @@ Read: **[tech-stack.md](../docs/tech-stack.md)** · **[CLAUDE.md](../CLAUDE.md)*
 ## Documentation Structure & Editing Rules
 
 ### Start Here
+
 1. **[game-identity.md](../docs/game-identity.md)** — Pitch, pillars, target emotion
 2. **[systems-echo.md](../docs/systems-echo.md)** — The acoustic fog of war
 3. **[systems-depth.md](../docs/systems-depth.md)** — Depth and commitment
 
 ### Narrative & World
+
 - **[world.md](../docs/world.md)** — The Pelagion Rift, the Salinity Collapse, the Mouth, culture
 - **[timeline.md](../docs/timeline.md)** — Two centuries of history; the present is 214 PC
 - **[habitats.md](../docs/habitats.md)** — Inside the cities: berths, light, air, the hush, and what each culture calls beautiful
@@ -89,6 +94,7 @@ Read: **[tech-stack.md](../docs/tech-stack.md)** · **[CLAUDE.md](../CLAUDE.md)*
 - **[campaign.md](../docs/campaign.md)** — 29 missions and four irreconcilable endings
 
 ### Gameplay
+
 - **[environments.md](../docs/environments.md)** — Five biomes with propagation factors and mechanical effects
 - **[bestiary.md](../docs/bestiary.md)** — The Drift: fauna as listeners, Biomass, Drift Health
 - **[hazards.md](../docs/hazards.md)** — Eight hazards and faction interactions
@@ -97,6 +103,7 @@ Read: **[tech-stack.md](../docs/tech-stack.md)** · **[CLAUDE.md](../CLAUDE.md)*
 - **[units.md](../docs/units.md)** — Prototype roster and playtest plan
 
 ### Presentation
+
 - **[art-direction.md](../docs/art-direction.md)** — Palettes, shape language, silhouette law, UI requirements
 - **[habitats-art-brief.md](../docs/habitats-art-brief.md)** — The Rift's beauty as an art brief per habitat, inside the gates
 - **[audio-direction.md](../docs/audio-direction.md)** — The mix as primary information channel; tier sonification
@@ -105,6 +112,7 @@ Read: **[tech-stack.md](../docs/tech-stack.md)** · **[CLAUDE.md](../CLAUDE.md)*
 - **[concept-art/](../docs/concept-art/)** — Four visual survey plates in the Pressure Cartography language
 
 ### Editing Conventions
+
 1. **Numbers are design intent, not balance-final.** They exist to prototype the systems against something real. When iterating, update the numbers in-place and document the change — and if the number is marked SPEC in `packages/shared/src/constants.ts`, update that constant in the same change so code and docs do not drift.
 2. **All major mechanics must be an argument about sound or depth** (see systems-echo.md and systems-depth.md). If a faction trait or unit ability is not anchored to one of these two axes, it's arbitrary and should be reconsidered.
 3. **Cross-link generously.** Every doc should end with a "Related" section. Keep links current as docs change.
@@ -116,10 +124,12 @@ Read: **[tech-stack.md](../docs/tech-stack.md)** · **[CLAUDE.md](../CLAUDE.md)*
 ## Key Conventions
 
 ### Acoustic Signature (SIG) as a Design Axis
+
 - Every source of SIG is a design choice. If you add a unit ability, consider: *Is it loud? How loud? Does the noise fit the faction's doctrine?*
 - The Consortium embraces loudness. The Commune hides. The Directorate listens. The Knights weaponise precision. Every choice should map back to sound.
 
 ### Propagation Factor (PF)
+
 - Biomes are defined by how sound travels through them:
   - **Thermal Veins (PF 0.45):** Vent roar masks you — the Consortium is quieter here
   - **Kelp Forest (PF 0.55):** The stealth biome
@@ -130,6 +140,7 @@ Read: **[tech-stack.md](../docs/tech-stack.md)** · **[CLAUDE.md](../CLAUDE.md)*
 - When designing gameplay, PF is a **lever**: changing terrain PF changes which factions thrive where.
 
 ### Depth Band Mechanics
+
 - **Shelf (0–400 m):** Low value, exposed, where the Pelagia Commune is strong
 - **Mid-Water (400–1,800 m):** The contested middle
 - **Abyssal (1,800+ m):** Highest value, Resonance Crystal lives here, highest pressure risk
