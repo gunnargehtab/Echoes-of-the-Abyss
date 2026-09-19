@@ -65,7 +65,7 @@ Redis and PostgreSQL are the intended shape for accounts and caching, and neithe
 Three engineering rules constrain design work, and each is stated in full in exactly one place — `CLAUDE.md`, with the reasoning that makes it a rule rather than a preference:
 
 - **[Constants live in exactly one place](../CLAUDE.md#constants-live-in-exactly-one-place)** — `packages/shared/src/constants.ts`, and the tag on a constant says what changing it obliges you to do first. Editing convention 1 below sends you there.
-- **[Server-authoritative detection](../CLAUDE.md#server-authoritative-is-a-hard-rule-not-a-preference)** — the threat model §1 names, and the reason a mechanic may not show the player anything the server has not resolved for them.
+- **[Server-authoritative detection](../CLAUDE.md#server-authoritative-is-a-hard-rule-not-a-preference)** — the threat model the Echo Layer section above names, and the reason a mechanic may not show the player anything the server has not resolved for them.
 - **[Two clocks](../CLAUDE.md#two-clocks)** — the 60 Hz step and the 5 Hz Echo pass on its 2 ms budget. That budget is the ceiling a new detection mechanic is designed under.
 
 Read: **[tech-stack.md](../docs/tech-stack.md)** · **[CLAUDE.md](../CLAUDE.md)**
