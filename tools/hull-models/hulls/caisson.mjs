@@ -9,8 +9,8 @@
  * 550 m; 560 hull; 70 m/s; PR 2; 170 nodules). A pressure box: the
  * skirmisher's wedge made in riveted plate and no longer tapering — a blunt
  * plough bow, a flat plate face with chamfered corners, flanks parallel from
- * the shoulders for two thirds of the length, then a step in to the bare
- * drive hull and a square stern with two prop tunnels. The caisson is the
+ * the shoulders aft to the step at two thirds of the length, then a step in
+ * to the bare drive hull and a square stern with two prop tunnels. The caisson is the
  * step: a box of heavier plate bolted over the forward two thirds, riveted,
  * patchworked older-under-newer, its after edge standing proud of the drive
  * hull as a shoulder — the third more plate, visible in the plan. On its
@@ -19,8 +19,9 @@
  * louvres down each side that have no shutters, because there is nothing
  * aboard to throttle. The Corvette's two torpedo tubes let into the bow face
  * either side of the plough plate, with hinged muzzle doors; a low bridge
- * citadel abaft the plant; ballast blisters low on the hull. No baffle, no
- * shroud, no cowl on anything. Burning bright at rest and under way alike —
+ * citadel abaft the plant; ballast blisters low on the hull. Nothing aboard
+ * is there to quiet it: no baffle, no acoustic shroud, no cowl on anything.
+ * Burning bright at rest and under way alike —
  * the louvres the brightest thing on the hull, the stacks lit at the throat,
  * floods along the caisson's edge and the bridge ports — because the loud
  * state is the only state; the muzzle doors flood for the instant of a
@@ -45,12 +46,19 @@
  * notched twice for the tunnels. The caisson is a second box of heavier
  * plate bolted over it from the bow to x −15, 58.5 m of the 90 — the
  * forward two thirds within a metre and a half — 26 m across its parallel
- * flanks (0.29, between the Broadside's 0.26 and the Furnace's 0.30) with a
+ * flanks (0.29, between the Broadside's 0.26 and the Furnace's 0.30 — core
+ * boxes, where those two carry casings and racks proud of theirs and this
+ * hull carries nothing, so it is the narrowest Consortium hull overall at
+ * 0.293 of its length; the comparison the beam answers to is
+ * corvette-bathyarch.glb's 0.180, which is the third more plate read
+ * against the hull it replaces) with a
  * 5.5 m chamfer to a 13.6 m bow face, and 3.5 m of half-beam proud of the
- * drive hull on each side. Its own parallel run is 53 m, 0.59 of the
- * length, because the chamfer to the bow face eats 5.5 m of it: the block's
- * two thirds is the caisson, and the flank is parallel from the shoulders
- * for all of the caisson that is not chamfer. That 3.5 m is the step,
+ * drive hull on each side. Its after edge is at x −15, which is the two
+ * thirds station of a hull spanning ±45 exactly; the flank is parallel from
+ * the shoulders aft to it, and the 53 m that run is 0.59 of the length
+ * rather than two thirds because the chamfer to the bow face eats 5.5 m of
+ * it. The block's fraction is the step's station, and it is met to the
+ * centimetre (#787 review). That 3.5 m is the step,
  * and everything on a flank is inside it: the blisters reach z 12.7 under
  * the caisson and end at its after edge, under the shoulder, the rivets
  * on the caisson's rim reach 12.2, the bolt heads 13.2 at a 3 m pitch, and
@@ -82,7 +90,9 @@
  *   dropped with one torus round it and flat ends. This one lies
  *   fore-and-aft on the spine, 24 m by 5.2, with three flat bands, a dished
  *   head at each end and two saddles under it: `plantCylinder`, beside the
- *   Broadside's casings.
+ *   Broadside's casings. The bands are what carries the block's "riveted"
+ *   at 4 px/m, where a rivet on a 5.2 m drum is a pixel and a band is
+ *   three.
  * - **The stacks are abreast at z ±4.8, inboard of the louvres.** "Two
  *   stacks abreast of it" gives no station. They stand at x 21 either side
  *   of the cylinder, 5.4 m tall, and the lit throat is a 0.8 m collar at
@@ -97,7 +107,7 @@
  *   port rank's tilt the negation of the starboard rank's — because a slat
  *   laid on a deck presents `slat·cos(tilt)` of plan width and a louvre
  *   hung on a wall, as the Derrick's are, presents none. 78.0 m² of the
- *   hull's 162.4, and the block's "brightest thing on the hull" is true by
+ *   hull's 161.4, and the block's "brightest thing on the hull" is true by
  *   area as well as by material.
  * - **The slats and the flood housings are sized to the raster.** The maps
  *   bake at 4 px/m and the cell grid is not symmetric about the keel — a
@@ -174,18 +184,22 @@
  * the only light, because this hull has one band: the eight louvre slats at
  * 9.75 m² each, the two flood strips at 20.0 m², the two stack throats at
  * 8.25 and 8.13 m², the eight flood housings at 1.88 m², the six citadel
- * ports and four bridge ports at 1.0 m² and the bow lamp at 3.0 m² —
- * thirty-one lit parts, 162.4 m² facing up on a 2,126 m² plan, no part
- * hidden, and every pair symmetric to the cell but the two round throats.
+ * ports at 1.0 m², the four bridge ports at 0.75 m² and the bow lamp at
+ * 3.0 m² — thirty-one lit parts, 161.4 m² facing up on a 2,126 m² plan, no
+ * part hidden, and every pair symmetric to the cell but the two round
+ * throats. The bridge ports are 1.4 m across on a 2 m pitch: at 2 m they
+ * abutted and baked as one 8 m bar where this header counted four (#787
+ * review), and 0.6 m of gap is what the Broadside leaves between its own.
  * That ratio is the point: §3.2 says the Caisson, at E(64) = 43.51, is the
  * one hull in Phase 4 whose lit upward area has to be large, and 7.6 % of
  * the plan is five times the Broadside's 1.3 %. The intake bake at 90 m
  * reads raw E 75.01 and dims by ×0.581 — inside the ×1/64 .. ×64 window,
- * between the Freighter's ×0.527 and the Furnace's ×0.643, so the conn
+ * between the Freighter's ×0.527 and the Furnace's ×0.64, so the conn
  * view's lamps, which take the model's own intensity and never the bake's
  * gain (rosterModels.ts), sit near the band the chart shows. There is no
- * second band to scale to: 64 idle and 64 cruise is one state, and
- * `applyLiveGlow` leaves these lamps where they are.
+ * second band to scale to: 64 idle and 64 cruise is one state, so
+ * `applyLiveGlow` leaves these lamps where they are at rest and under way
+ * alike. The +25 of a launch still scales them, as it scales every hull's.
  *
  * 158 parts, 3,688 triangles, seven materials; the file spans x −45 .. 45
  * and z −13.2 .. 13.2 to the centimetre, so the bake neither rescales nor
@@ -346,7 +360,7 @@ bathyarch.citadel(root, { black, grey, rust, lampM }, {
   top: { at: [-10, 12.8, 0], size: [6.5, 1.8, 9] },
   visor: { at: [-3.4, 11, 0], size: [1.2, 1.4, 14.2] },
   ports: { count: 3, x: -12.5, pitch: 3.5, y: 9.6, z: 7.25, size: [2.2, 1.4, 0.5] },
-  bridgePorts: { x: -6.5, y: 12.9, z: [-3, -1, 1, 3], size: [0.5, 1.2, 2] },
+  bridgePorts: { x: -6.5, y: 12.9, z: [-3, -1, 1, 3], size: [0.5, 1.2, 1.4] },
 });
 
 // Ballast blisters low on both flanks under the caisson, capped fore and

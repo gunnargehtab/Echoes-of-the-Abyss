@@ -1359,8 +1359,9 @@ export function gasRacks(root, { grey, rust, amber, lampM }, opts) {
  *
  * The step is the whole point and `outlines.mjs` has to keep it: the box is
  * the widest thing on the hull at every station it covers, the drive hull
- * behind it is bare, and nothing on a flank — blister, strake, bolt —
- * reaches past the box's own half-beam. A tier that stood proud of it
+ * behind it is bare, and nothing on a flank — blister, strake — reaches
+ * past the box's own half-beam but the bolt heads, which stand 0.2 m proud
+ * of it and set the file's beam. A tier that stood proud of it
  * would read as one hull with a bulge rather than two boxes, which is the
  * Furnace's seam-on-the-flank fault (#786 review) in the other direction.
  */
@@ -1469,9 +1470,9 @@ export function plantCylinder(root, { black, grey, rust }, opts) {
  * louvre_well_p · louvre_p_0..n`).
  *
  * The kit's builder draws one bank and this navy's hulls are bilateral, so
- * the pair is here, and the port rank's tilt is the starboard rank's
- * negated — slats that all lean the same way are a mirror this hull does
- * not have. Every slat presents `slat·cos(tilt)` of plan width, which is
+ * the pair is here, and the port rank's tilt mirrors the starboard rank's,
+ * as every pair on this hull mirrors: §3.6's one-side-at-a-time rule is
+ * the Commune's and the Directorate's, and a plate navy is not it. Every slat presents `slat·cos(tilt)` of plan width, which is
  * why this is the one light on the hull that the top-down bake sees whole;
  * `machineryHouse` above hangs the Derrick's on a vertical wall, where gate
  * 3 counts none of it (kit.mjs `louvres`).
