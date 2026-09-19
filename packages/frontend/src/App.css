@@ -1717,11 +1717,32 @@
    Two declarations, because either alone leaves the other free to push: the
    `minmax(0, …)` gives the *track* a floor, and `min-width: 0` gives the
    *items* in it one, a grid item's automatic minimum being min-content as
-   well. What neither does is stop the token's own glyphs printing across the
-   cells beside it — in any row where the token shares a line with the counter,
-   it prints straight over it. That is a third axis, how a word may be broken,
-   and §2 is what it is owed against rather than taste; it is #774 and not this
-   rule's to close.
+   well.
+
+   Neither of those stops the token's own glyphs printing across the cells
+   beside it, and that was #774: a box is not ink. Both declarations are about
+   how wide a *box* is, and a word that cannot be broken is laid out on one
+   line whatever the box measures, so the counter's column was covered rather
+   than carried — in any row where the token shares a line with the counter,
+   it printed straight over it. `overflow-wrap` is the third axis, how a word
+   may be broken, and §2 is what it is owed against rather than taste: the
+   panel "fits what it holds", and a counter under ink is the same unreadable
+   as one scrolled out of the box.
+
+   `break-word` rather than `anywhere`, and the difference is only intrinsic
+   sizing — both break an overlong word at the same place at layout time, but
+   `anywhere` also takes the item's min-content to one character. Nothing here
+   needs that: the track's floor is already written down as `minmax(0, …)`
+   above. So this is the narrower of the two, and it cannot re-open the
+   starvation `.contact-log-row`'s own comment records, where `anywhere` on a
+   fifteen-pixel column gave a bearing as a vertical stack of digits.
+
+   The row grows taller instead, which is the trade §2 asks for — it says what
+   will not fit is "cut down … a scrollbar is not the answer", and a word cut
+   across two lines is still read. `.objectives-progress` keeps its
+   `white-space: nowrap` and is not part of this: a counter that wrapped would
+   be the same illegibility one column along, and `n of m` has a width you can
+   predict.
 
    It is the pair the contact log has carried since its own columns overran
    each other, and `.mission-result-objective` carries it too since #773.
@@ -1732,6 +1753,7 @@
    (186 px at 1440x900 and 100% scale), which is not this rule's. */
 .objectives-row > * {
   min-width: 0;
+  overflow-wrap: break-word;
 }
 
 /* An objective with nowhere to send the camera is still readable text; it

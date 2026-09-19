@@ -25,12 +25,14 @@ import {
   APP_CSS,
   BOX_PROPERTIES,
   TRACK_PROPERTIES,
+  WRAP_PROPERTIES,
   borderBoxWidth,
   columnFloors,
   columnOf,
   parseCss,
   resolveBox,
   uaBoxSizing,
+  wordBreaking,
   type Element,
 } from './support/cssBox.ts';
 
@@ -326,17 +328,24 @@ describe('cssBox: what a column track refuses to shrink below', () => {
     // *log's* track and leaves this row's fixed — a control aimed at the wrong
     // row, passing against a sheet it never changed. The uniqueness assertions
     // are what turn that into a failure rather than a green tick.
+    //
+    // The item half is stripped **declaration by declaration** rather than by
+    // deleting the rule, because that rule carries `overflow-wrap` as well
+    // since #774. Taking the whole rule out would reproduce two faults at once
+    // and leave this control unable to say which of them it had caught.
     const TRACK = 'calc(3.2rem * var(--panel-type, 1)) minmax(0, 1fr) auto;';
-    const ITEMS = '.objectives-row > * {\n  min-width: 0;\n}\n';
+    const ITEMS = '.objectives-row > * {\n  min-width: 0;\n  overflow-wrap: break-word;\n}\n';
+    const ITEMS_WITHOUT_FLOOR = '.objectives-row > * {\n  overflow-wrap: break-word;\n}\n';
     assert.equal(APP_CSS.split(TRACK).length - 1, 1, 'the row’s track declaration is unique');
     assert.equal(APP_CSS.split(ITEMS).length - 1, 1, 'the row’s item rule is unique');
 
     const stripped = APP_CSS.replace(
       TRACK,
       'calc(3.2rem * var(--panel-type, 1)) 1fr auto;'
-    ).replace(ITEMS, '');
+    ).replace(ITEMS, ITEMS_WITHOUT_FLOOR);
     assert.ok(!stripped.includes(TRACK), 'the strip reached the track');
-    assert.ok(!stripped.includes('.objectives-row > *'), 'the strip reached the item rule');
+    assert.ok(!stripped.includes(ITEMS), 'the strip reached the item rule');
+    assert.ok(stripped.includes(ITEMS_WITHOUT_FLOOR), 'the strip left the rule standing');
 
     const rules = parseCss(stripped);
     assert.deepEqual(
@@ -549,5 +558,144 @@ describe('cssBox: what a column track refuses to shrink below', () => {
       () => columnOf(parseCss(withRule('.objectives-text { grid-area: a }')), TEXT),
       /does not model/
     );
+  });
+});
+
+/**
+ * The reader's third question, added for #774: not how wide a box is, but
+ * whether the ink inside it may be broken to fit.
+ *
+ * Rows 33 and 34 floored two rows' middle tracks and both left the same
+ * residual behind, which is the whole argument for a separate reader here: a
+ * box is not ink. An unbreakable word is laid out on one line whatever its box
+ * measures, so flooring the track stops the counter being *carried* out of the
+ * panel and does nothing about its being *covered* where it sits.
+ *
+ * Held to the same bargain as the two readers above — a value it cannot read
+ * is a throw, never a quiet `refuses` and never a quiet `permits`. The second
+ * is the one that would read as cover.
+ */
+describe('cssBox: whether a word too long for its box may be broken', () => {
+  const CELL_ANCESTORS = [...ANCESTORS, { tag: 'p', classes: ['objectives-row', 'pending'] }];
+  const cell = (className: string): Element => ({
+    tag: 'span',
+    classes: [className],
+    ancestors: CELL_ANCESTORS,
+  });
+
+  /** One legal value per wrap property, for the coverage assertion below. */
+  const WRAP_SAMPLE: Record<string, string> = {
+    'overflow-wrap': 'break-word',
+    'word-wrap': 'break-word',
+    'word-break': 'break-all',
+    'white-space': 'normal',
+    'white-space-collapse': 'collapse',
+    'text-wrap': 'wrap',
+    'text-wrap-mode': 'wrap',
+  };
+
+  it('reads the row’s cells as they now ship', () => {
+    const rules = parseCss(APP_CSS);
+    // The two cells a mission authors into. Both are unbounded prose, so both
+    // are what #774 is about.
+    for (const authored of ['objectives-text', 'objectives-gloss']) {
+      const verdict = wordBreaking(rules, cell(authored));
+      assert.equal(verdict.kind, 'permits', `.${authored} cannot break a token it cannot fit`);
+    }
+    // And the counter is the one cell that must *not* break: `4 of 3` split
+    // over three lines is the same unreadable one column along, which is why
+    // `white-space: nowrap` sits on it and why the third track can be `auto`.
+    const counter = wordBreaking(rules, cell('objectives-progress'));
+    assert.equal(counter.kind, 'refuses');
+    assert.match(
+      (counter as { because: string }).because,
+      /line breaking is off/,
+      'the counter holds its line by `white-space`, not by accident'
+    );
+  });
+
+  it('reproduces #774 when the declaration is taken away', () => {
+    // The negative control, read-only, and asserted to have bitten. Anchored
+    // on the whole rule body rather than on `overflow-wrap: break-word`, for
+    // the reason the #760 and #773 controls give: a short anchor strips
+    // whichever row happens to be written first and leaves this one's intact,
+    // which is a control aimed at the wrong row passing against a sheet it
+    // never changed.
+    const ITEMS = '.objectives-row > * {\n  min-width: 0;\n  overflow-wrap: break-word;\n}\n';
+    assert.equal(APP_CSS.split(ITEMS).length - 1, 1, 'the row’s item rule is unique');
+
+    const stripped = APP_CSS.replace(ITEMS, '.objectives-row > * {\n  min-width: 0;\n}\n');
+    assert.ok(!stripped.includes(ITEMS), 'the strip reached the item rule');
+    assert.ok(stripped.includes('.objectives-row > *'), 'the strip left the rest of the rule');
+
+    const rules = parseCss(stripped);
+    for (const authored of ['objectives-text', 'objectives-gloss']) {
+      assert.deepEqual(wordBreaking(rules, cell(authored)), {
+        kind: 'refuses',
+        because: 'nothing sets `overflow-wrap` or `word-break`',
+      });
+    }
+    // The floors are untouched by the strip, which is what says this axis is
+    // genuinely the third one and not row 33 restated.
+    assert.deepEqual(
+      columnFloors(rules, ROW).map((floor) => floor.kind),
+      ['definite', 'definite', 'content']
+    );
+  });
+
+  it('refuses a break that something else switches line breaking off over', () => {
+    // The false pass this reader exists to refuse: `overflow-wrap: anywhere`
+    // under `white-space: nowrap` breaks nothing, because there are no lines
+    // to break onto. Either order, because these are two properties rather
+    // than two values of one.
+    for (const rule of [
+      '.objectives-text { white-space: nowrap; }',
+      '.objectives-text { white-space: nowrap; overflow-wrap: anywhere; }',
+      '.objectives-text { overflow-wrap: anywhere; white-space: nowrap; }',
+      '.objectives-text { text-wrap: nowrap; }',
+    ]) {
+      const verdict = wordBreaking(parseCss(withRule(rule)), cell('objectives-text'));
+      assert.equal(verdict.kind, 'refuses', `\`${rule}\` was read as a break`);
+    }
+  });
+
+  it('lets a later declaration undo an earlier one, as the cascade does', () => {
+    const verdict = wordBreaking(
+      parseCss(withRule('.objectives-text { overflow-wrap: normal; }')),
+      cell('objectives-text')
+    );
+    assert.equal(verdict.kind, 'refuses', 'a later `normal` did not undo the shipped break');
+  });
+
+  it('throws on a wrap value it cannot read, rather than reading it as inert', () => {
+    for (const value of ['anywhere !important', 'inherit', 'initial', 'unset', 'break-spaces']) {
+      assert.throws(
+        () =>
+          wordBreaking(
+            parseCss(withRule(`.objectives-text { overflow-wrap: ${value} }`)),
+            cell('objectives-text')
+          ),
+        /does not model|cannot read/,
+        `\`overflow-wrap: ${value}\` was read rather than refused`
+      );
+    }
+  });
+
+  it('covers every property in its own set', () => {
+    assert.deepEqual(
+      [...WRAP_PROPERTIES].sort(),
+      Object.keys(WRAP_SAMPLE).sort(),
+      'every wrap property has a sample value, and every sample names a wrap property'
+    );
+    for (const [property, value] of Object.entries(WRAP_SAMPLE)) {
+      assert.doesNotThrow(
+        () =>
+          wordBreaking(
+            parseCss(withRule(`.objectives-text { ${property}: ${value}; }`)),
+            cell('objectives-text')
+          ),
+        `\`${property}\` is in WRAP_PROPERTIES but wordBreaking does not read it`
+      );
+    }
   });
 });

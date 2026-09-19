@@ -873,3 +873,125 @@ export function columnOf(rules: CssRule[], element: Element): number | undefined
   }
   return Number(single[1]);
 }
+
+/**
+ * Every declaration that decides whether a word too long for its box may be
+ * **broken**.
+ *
+ * A third closed set beside `BOX_PROPERTIES` and `TRACK_PROPERTIES`, and a
+ * third question: those two ask how wide a box is, and this one asks where the
+ * ink goes inside it. They are genuinely independent — #760 floored the track
+ * and #773 floored the result card's, and in both the token's glyphs went on
+ * printing across the cells beside them, because a box is not ink (#774).
+ *
+ * `white-space` and `text-wrap` are in here without being about word breaking
+ * at all: either can switch line breaking off entirely, and then no
+ * `overflow-wrap` in the world breaks anything. A reader that looked only at
+ * `overflow-wrap` would call `white-space: nowrap; overflow-wrap: anywhere` a
+ * pass, which is the false pass this file exists to refuse.
+ */
+export const WRAP_PROPERTIES = new Set([
+  'overflow-wrap',
+  'word-wrap',
+  'word-break',
+  'white-space',
+  'white-space-collapse',
+  'text-wrap',
+  'text-wrap-mode',
+]);
+
+/**
+ * Whether an element may break a word it cannot otherwise fit.
+ *
+ * `permits` names the declaration that buys the break, so a failure says which
+ * rule to look at. `refuses` names why — either nothing asked for a break, or
+ * something switched line breaking off over the top of it.
+ */
+export type WordBreaking = { kind: 'permits'; by: string } | { kind: 'refuses'; because: string };
+
+/**
+ * Values of a wrap property this reader understands. Anything else throws
+ * rather than being read as "no break", for `BOX_PROPERTIES`' reason one
+ * question along: a value silently treated as inert reports `refuses` where
+ * the browser breaks, which turns a holder into a change detector, and a value
+ * silently treated as inert on the *other* side reports `permits` where the
+ * browser does not, which is cover.
+ */
+const WRAP_VALUES: Record<string, Record<string, 'breaks' | 'inert' | 'no-wrapping'>> = {
+  'overflow-wrap': { normal: 'inert', 'break-word': 'breaks', anywhere: 'breaks' },
+  // The pre-standard alias, which every engine still maps onto `overflow-wrap`.
+  'word-wrap': { normal: 'inert', 'break-word': 'breaks', anywhere: 'breaks' },
+  // `break-word` here is the deprecated spelling and behaves as
+  // `overflow-wrap: anywhere` with `word-break: normal`, so it breaks too.
+  'word-break': {
+    normal: 'inert',
+    'keep-all': 'inert',
+    'auto-phrase': 'inert',
+    'break-all': 'breaks',
+    'break-word': 'breaks',
+  },
+  'white-space': {
+    normal: 'inert',
+    'pre-wrap': 'inert',
+    'pre-line': 'inert',
+    'break-spaces': 'inert',
+    nowrap: 'no-wrapping',
+    pre: 'no-wrapping',
+  },
+  'white-space-collapse': { collapse: 'inert', preserve: 'inert', 'preserve-breaks': 'inert' },
+  'text-wrap': {
+    wrap: 'inert',
+    balance: 'inert',
+    pretty: 'inert',
+    stable: 'inert',
+    nowrap: 'no-wrapping',
+  },
+  'text-wrap-mode': { wrap: 'inert', nowrap: 'no-wrapping' },
+};
+
+/**
+ * What the shipped stylesheet lets this element do with a word that will not
+ * fit its box.
+ *
+ * Hyphenation is deliberately not read. `hyphens` needs a dictionary or a soft
+ * hyphen in the text, so it cannot break the run of identical characters an
+ * authored token can be, and counting it would be the optimistic direction.
+ */
+export function wordBreaking(rules: CssRule[], element: Element): WordBreaking {
+  let breaksBy: string | undefined;
+  let suppressedBy: string | undefined;
+
+  for (const rule of boxRulesFor(rules, element, WRAP_PROPERTIES)) {
+    for (const [property, value] of rule.declarations) {
+      if (!WRAP_PROPERTIES.has(property)) continue;
+      if (/!important/i.test(value)) {
+        throw new Error(`cssBox does not model \`!important\` (\`${property}: ${value}\`)`);
+      }
+      const known = WRAP_VALUES[property];
+      if (known === undefined) {
+        // The set and this table are two halves of one list, exactly as
+        // `BOX_PROPERTIES` and `resolveBox`'s switch are.
+        throw new Error(`cssBox does not model \`${property}\``);
+      }
+      const effect = known[value.trim().toLowerCase()];
+      if (effect === undefined) {
+        throw new Error(`cssBox cannot read \`${property}: ${value}\``);
+      }
+      // Last wins, per property, and a later rule genuinely undoes an earlier
+      // one — `overflow-wrap: normal` after `break-word` is a refusal.
+      if (property === 'white-space' || property.startsWith('text-wrap')) {
+        suppressedBy =
+          effect === 'no-wrapping' ? `${rule.selector} { ${property}: ${value} }` : undefined;
+      } else {
+        breaksBy = effect === 'breaks' ? `${rule.selector} { ${property}: ${value} }` : undefined;
+      }
+    }
+  }
+
+  if (suppressedBy !== undefined) {
+    return { kind: 'refuses', because: `line breaking is off — ${suppressedBy}` };
+  }
+  return breaksBy === undefined
+    ? { kind: 'refuses', because: 'nothing sets `overflow-wrap` or `word-break`' }
+    : { kind: 'permits', by: breaksBy };
+}
