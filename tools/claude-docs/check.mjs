@@ -86,13 +86,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { spawn } from '../lib/spawn.mjs';
-import {
-  candidatePaths,
-  ignoreQueries,
-  makeResolver,
-  unresolvedPaths,
-  unusedAllowances,
-} from './lib/paths.mjs';
+import { makeResolver, unresolvedPaths, unusedAllowances } from './lib/paths.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const npx = 'npx';
@@ -165,6 +159,31 @@ const DECLARED_ABSENT = new Map([
 ]);
 
 /**
+ * Backticked paths that exist only after a build, and why.
+ *
+ * The second escape hatch, declared for the same reason as the first. This was
+ * `git check-ignore` at first — ask git whether a path is ignored, and treat
+ * ignored as generated — and that was wrong twice over. It is disk-dependent:
+ * `.gitignore` line 10 is `dist/`, a directory-only rule, and git matches a
+ * bare path against one only when the directory is there to be seen as a
+ * directory, so `packages/shared/dist` read as generated on a machine that had
+ * built shared and as missing in CI's `docs` job, which builds nothing. That
+ * turned #813 red on its first push. And it was unbounded: every ignore rule in
+ * this repository is unanchored, so `docs/build/anything.md` or
+ * `packages/backend/node_modules/anything` would have resolved too — prose
+ * naming a build output the build does not emit would have passed unread.
+ *
+ * Two live spans need it. Two entries, declared, reviewed, and expiring
+ * themselves through `unusedAllowances` exactly as `DECLARED_ABSENT` does.
+ */
+const DECLARED_GENERATED = new Map([
+  [
+    'packages/shared/dist',
+    'The build output @echoes/shared is imported by, and the subject of CLAUDE.md § Build order. Named by run-game and steward. Real, and absent from git by design.',
+  ],
+]);
+
+/**
  * Every skill on disk is in exactly one of the two lists above.
  *
  * A skill added to `.claude/skills/` and to neither list is the failure this
@@ -197,36 +216,6 @@ function classifySkills() {
     );
   }
   return problems;
-}
-
-/**
- * Which of the paths these documents name are gitignored — that is, generated.
- *
- * One `git check-ignore --stdin` for the whole set rather than one call each.
- * Exit 1 means "none of them matched", which is an answer and not a failure;
- * only 128 and above is git complaining.
- */
-function gitIgnored(documents) {
-  const named = new Set();
-  for (const { text } of documents) for (const path of candidatePaths(text)) named.add(path);
-  if (named.size === 0) return new Set();
-
-  const result = spawnSync('git', ['check-ignore', '--stdin'], {
-    cwd: repo,
-    encoding: 'utf8',
-    input: `${ignoreQueries([...named]).join('\n')}\n`,
-  });
-  if (result.status !== 0 && result.status !== 1) {
-    process.stderr.write(result.stderr ?? '');
-    return new Set();
-  }
-  // Both forms were asked; the resolver keys on the bare one.
-  return new Set(
-    result.stdout
-      .split('\n')
-      .filter(Boolean)
-      .map((path) => (path.endsWith('/') ? path.slice(0, -1) : path))
-  );
 }
 
 /**
@@ -327,11 +316,15 @@ if (files.length === 0) {
 const rootFiles = gitLs(ROOT_DOCS);
 if (rootFiles === null) process.exit(1);
 // A pathspec set that matches nothing lints nothing and exits 0, which is the
-// silent pass this gate exists to refuse. Three files are named literally, so
-// fewer than three means a rename went unnoticed.
-if (rootFiles.length < 3) {
+// silent pass this gate exists to refuse. Membership rather than a count: the
+// `**` pathspec is there so #791's nested files arrive gated, and the day the
+// first one lands a count of three stops distinguishing "all three present"
+// from "CONTRIBUTING.md gone, a nested file in its place".
+const REQUIRED_ROOT_DOCS = ['CLAUDE.md', 'CONTRIBUTING.md', '.github/copilot-instructions.md'];
+const missingRoot = REQUIRED_ROOT_DOCS.filter((file) => !rootFiles.includes(file));
+if (missingRoot.length > 0) {
   process.stderr.write(
-    `Expected at least 3 root engineering documents, matched ${rootFiles.length}: ${rootFiles.join(', ') || '(none)'}.\n` +
+    `Root engineering document(s) not matched: ${missingRoot.join(', ')}.\n` +
       'One was renamed or removed — fix ROOT_DOCS in tools/claude-docs/check.mjs.\n'
   );
   process.exit(1);
@@ -366,8 +359,9 @@ const documents = gated.map((file) => ({
 }));
 
 const allowed = new Set(DECLARED_ABSENT.keys());
+const generated = new Set(DECLARED_GENERATED.keys());
 const pathProblems = [];
-const dead = unresolvedPaths(documents, makeResolver(tracked, gitIgnored(documents)), allowed);
+const dead = unresolvedPaths(documents, makeResolver(tracked, generated), allowed);
 if (dead.length > 0) {
   pathProblems.push(
     `Backticked repository path(s) that do not resolve:\n${dead
@@ -376,12 +370,17 @@ if (dead.length > 0) {
       'Fix the sentence, or declare it in DECLARED_ABSENT in tools/claude-docs/check.mjs with the reason.'
   );
 }
-const unused = unusedAllowances(documents, allowed);
-if (unused.length > 0) {
-  pathProblems.push(
-    `DECLARED_ABSENT entr(ies) no document names any more:\n${unused.map((p) => `  ${p}`).join('\n')}\n` +
-      'Remove each from tools/claude-docs/check.mjs — a stale exemption widens the gate silently.'
-  );
+for (const [name, set] of [
+  ['DECLARED_ABSENT', allowed],
+  ['DECLARED_GENERATED', generated],
+]) {
+  const unused = unusedAllowances(documents, set);
+  if (unused.length > 0) {
+    pathProblems.push(
+      `${name} entr(ies) no document names any more:\n${unused.map((p) => `  ${p}`).join('\n')}\n` +
+        'Remove each from tools/claude-docs/check.mjs — a stale exemption widens the gate silently.'
+    );
+  }
 }
 if (pathProblems.length > 0) {
   for (const problem of pathProblems) process.stderr.write(`${problem}\n`);

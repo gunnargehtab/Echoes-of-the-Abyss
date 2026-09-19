@@ -124,6 +124,7 @@ jobs:
           npm -w packages/shared run test
           npm -w packages/frontend run test
           npm run test:roadmap
+          npm run test:claude-docs
 
       # `--test-shard` is node:test's own file-level partition — deterministic,
       # so the same file always lands in the same shard and a failure is

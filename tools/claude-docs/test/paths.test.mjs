@@ -4,7 +4,6 @@ import assert from 'node:assert/strict';
 import {
   candidatePaths,
   globToRegExp,
-  ignoreQueries,
   makeResolver,
   unresolvedPaths,
   unusedAllowances,
@@ -30,12 +29,55 @@ test('a span is deduplicated and kept in source order', () => {
   assert.deepEqual(found, ['tools/a.mjs', 'docs/b.md']);
 });
 
-test('a command whose first word is a path resolves on that word', () => {
-  // `tools/gates.mjs --only=docs:lint` is one span. Reading the whole of it
-  // looks for a filename with a space in it and reports a miss that is not one.
+test('every token of a span is read, not just the first', () => {
+  // `tools/gates.mjs --only=docs:lint` is one span, and reading the whole of it
+  // looks for a filename with a space in it. Reading only the FIRST token is
+  // the opposite error: a command names its path second far more often than
+  // first, and that left seven live paths in this repository unchecked.
   assert.deepEqual(candidatePaths('Run `tools/gates.mjs --only=docs:lint` while iterating.'), [
     'tools/gates.mjs',
   ]);
+  assert.deepEqual(candidatePaths('Run `node tools/hull-models/parts.mjs` on it.'), [
+    'tools/hull-models/parts.mjs',
+  ]);
+  assert.deepEqual(candidatePaths('`npm -w packages/backend run dev` starts it.'), [
+    'packages/backend',
+  ]);
+});
+
+test('a span may wrap, and a blank line still ends one', () => {
+  // These files are authored at 100 columns, so a backticked span wrapping
+  // mid-path is routine. A regex stopping at the newline could not match one:
+  // it paired that span's closing backtick with the next opening one and read
+  // the prose between as code. That hid `packages/frontend` in CLAUDE.md.
+  assert.deepEqual(
+    candidatePaths('A wrapped `span across\nlines` and then `docs/yes.md` is named.'),
+    ['docs/yes.md']
+  );
+  // Without the blank-line bound one stray backtick swallows the document.
+  assert.deepEqual(candidatePaths('stray ` backtick\n\nlater `docs/x.md` here'), []);
+});
+
+test('an indented fence is still a fence', () => {
+  // The three real indented fences in the gated set are two-space, inside a
+  // list item — CONTRIBUTING.md:102 is one. Anchoring the pattern at column
+  // zero left all three unseen, so their contents were read as prose.
+  const body = 'Text:\n\n  ```bash\n  rm `docs/nope.md`\n  ```\n\nThen `docs/yes.md`.';
+  assert.deepEqual(candidatePaths(body), ['docs/yes.md']);
+});
+
+test('trailing punctuation inside a span is trimmed', () => {
+  // The defensive normalisation. No live span needs it — all twenty gated
+  // documents extract identically with it and without — so it is pinned here
+  // rather than left as an untested claim in a comment.
+  assert.deepEqual(candidatePaths('Read `docs/a.md, docs/b.md` in order.'), [
+    'docs/a.md',
+    'docs/b.md',
+  ]);
+  // Trailing only. A leading bracket is not trimmed, so such a token simply
+  // fails the prefix test and is not read as a path — stated here so the
+  // asymmetry is a decision on the record rather than a surprise.
+  assert.deepEqual(candidatePaths('`(docs/c.md)` is cited.'), []);
 });
 
 test('a line citation is not part of the filename', () => {
@@ -82,10 +124,11 @@ test('a directory resolves through the files tracked inside it', () => {
   assert.ok(!resolves('tools/balance/baselines'));
 });
 
-test('a generated path resolves, and an absent one does not', () => {
-  // packages/shared/dist is gitignored, real, and the subject of CLAUDE.md's
-  // build-order section. Tracking cannot see it and existsSync would answer
-  // differently before and after a build.
+test('a declared build output resolves, and an absent one does not', () => {
+  // packages/shared/dist is real, is the subject of CLAUDE.md's build-order
+  // section, and is absent from git by design. It is declared rather than
+  // detected: asking git whether a path is ignored is disk-dependent for a
+  // directory-only rule, and unbounded besides.
   const resolves = makeResolver(['packages/shared/src/index.ts'], new Set(['packages/shared/dist']));
   assert.ok(resolves('packages/shared/dist'));
   assert.ok(resolves('packages/shared/dist/'));
@@ -113,6 +156,13 @@ test('a declared absence is not a failure', () => {
   assert.deepEqual(unresolvedPaths(documents, resolves, allowed), []);
 });
 
+test('an exemption is matched without its trailing slash', () => {
+  // Two skills name the same build output, one with the slash and one without.
+  // A single declared entry answers for both rather than reading as stale.
+  const documents = [{ file: 'a.md', text: 'It names `packages/shared/dist/` only.' }];
+  assert.deepEqual(unusedAllowances(documents, new Set(['packages/shared/dist'])), []);
+});
+
 test('an exemption outliving its sentence is reported', () => {
   // A stale escape reads as a live one and widens the gate silently, which is
   // classifySkills' "listed skill not on disk" check one level down.
@@ -124,18 +174,3 @@ test('an exemption outliving its sentence is reported', () => {
   assert.deepEqual(unusedAllowances(naming, new Set(['docs/old-escape.md'])), []);
 });
 
-test('a gitignore query asks for the directory form too', () => {
-  // This is the assertion CI bought. `dist/` is a directory-only rule, and git
-  // matches a bare path against one only when the directory is on disk to be
-  // seen as one — so `packages/shared/dist` read as generated on a machine that
-  // had built shared and as missing in CI's docs job, which builds nothing.
-  // The trailing slash answers without consulting the filesystem.
-  assert.deepEqual(ignoreQueries(['packages/shared/dist']), [
-    'packages/shared/dist',
-    'packages/shared/dist/',
-  ]);
-  // The bare form is still asked, because a file rule needs it.
-  assert.ok(ignoreQueries(['tools/x.log']).includes('tools/x.log'));
-  // A path already carrying a slash is not asked for twice.
-  assert.deepEqual(ignoreQueries(['docs/a/', 'docs/a']), ['docs/a', 'docs/a/']);
-});

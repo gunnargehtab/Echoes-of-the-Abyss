@@ -85,7 +85,7 @@ Run everything from the repository root.
 | Formatting check / fix | `npm run format:check` / `npm run format` |
 | Hull scripts ↔ GLBs ↔ outlines agree | `npm run check:models` |
 | `docs/invariants.md` still names live tests | `npm run check:invariants` |
-| This repo's own prose lints, its links resolve, its paths exist | `npm run docs:claude` |
+| `.claude/`, `CLAUDE.md`, `CONTRIBUTING.md`, `copilot-instructions.md`: lint, links, live paths | `npm run docs:claude` |
 | Every blocking gate, in one pass | `npm run gates` |
 
 Single workspace: `npm -w packages/backend run dev`, `npm -w packages/frontend run dev`,
@@ -211,8 +211,9 @@ tools/claude-docs  markdownlint, a relative-link check, and a path check over
                    them is asserted against VENDORED-SKILLS.md's own table, so
                    the two cannot drift. lib/paths.mjs is the path check: a
                    backticked span under packages/, tools/, docs/, .claude/ or
-                   .github/ must resolve against git, a glob must match
-                   something, and an exemption nothing names any more fails —
+                   .github/ must resolve against git or be one of two declared
+                   build outputs, a glob must match something, and an exemption
+                   nothing names any more fails —
                    which is what a link checker cannot see, since prose names a
                    file far more often than it links one. Configs are
                    .claude/.markdownlint.json, which extends the root one and

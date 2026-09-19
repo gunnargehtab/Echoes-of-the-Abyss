@@ -18,8 +18,24 @@
 export const PATH_PREFIXES = ['packages/', 'tools/', 'docs/', '.claude/', '.github/'];
 
 const PREFIX_RE = new RegExp(`^(${PATH_PREFIXES.map((p) => p.replace('.', '\\.')).join('|')})`);
-const FENCE_RE = /^```[\s\S]*?^```/gm;
-const INLINE_CODE_RE = /`([^`\n]+)`/g;
+// CommonMark allows a fence to be indented up to three spaces, which is also
+// where a fence inside a single-level list item sits. Anchoring at column zero
+// left three real fences unseen (CONTRIBUTING.md:102 among them), so their
+// contents were read as prose — harmless only by the accident that none of
+// them contained a backtick. Three is CommonMark's own bound: past it a block
+// is an indented code block rather than a fence. A fence nested deeper than
+// that, inside a nested list, would not be stripped; none exists here.
+const FENCE_RE = /^ {0,3}```[\s\S]*?^ {0,3}```/gm;
+// A span may cross a newline. These files are authored at 100 columns, so a
+// backticked path wrapping mid-span is routine, and a regex that stopped at the
+// newline could not match one — it paired that span's CLOSING backtick with the
+// next OPENING one and read the prose between them as code, inverting the
+// polarity of the rest of the line. Five such sites exist in the gated set, and
+// one of them hides `packages/frontend` in CLAUDE.md itself. A blank line still
+// ends a span, because an inline code span cannot contain one; without that
+// bound a single stray backtick would swallow the rest of the document.
+const INLINE_CODE_RE = /`([^`]+)`/g;
+const BLANK_LINE = /\n[ \t]*\n/;
 const GLOB_CHARS = /[*?{]/;
 
 /**
@@ -33,19 +49,31 @@ const GLOB_CHARS = /[*?{]/;
  */
 function inlineSpans(markdown) {
   const prose = markdown.replace(FENCE_RE, '');
-  return [...prose.matchAll(INLINE_CODE_RE)].map((m) => m[1]);
+  return [...prose.matchAll(INLINE_CODE_RE)]
+    .map((m) => m[1])
+    .filter((span) => !BLANK_LINE.test(span));
 }
 
 /**
  * The repository paths named in `markdown`, unique and in the order they appear.
  *
- * Three normalisations, each earning its place against a real span in the tree:
+ * Three normalisations. The first two earn their place against a real span in
+ * the tree; the third is defensive, and says so:
  *
- * - **First whitespace token.** A span can be a command whose first word is a
- *   path — `tools/gates.mjs --only=docs:lint`. Taking the whole span would look
- *   for a file with a space in it and report a miss that is not one.
- * - **Trailing punctuation and a `:line` suffix.** `EchoRenderer.ts:279` is how
- *   this repository cites a line, and the line number is not part of the name.
+ * - **Every whitespace token, not just the first.** A span is often a command,
+ *   and the path in it is rarely the verb: `node tools/hull-models/parts.mjs`
+ *   names its path second. Reading only the first token left seven live paths
+ *   under the five prefixes unchecked, `packages/frontend/src/game/
+ *   EchoRenderer.ts` among them. Reading the whole span as one string would be
+ *   the opposite error — it looks for a filename with a space in it.
+ * - **A `:line` suffix.** `EchoRenderer.ts:279` is how this repository cites a
+ *   line, and the line number is not part of the name.
+ * - **Trailing punctuation**, which is the defensive one. Re-extracting all
+ *   twenty gated documents with it and without differs on **0 of 182 spans**,
+ *   before and after every token started being read. It is kept because a path
+ *   followed by a comma inside a span is a sentence somebody will write, and it
+ *   is tested rather than trusted — but no live span needs it, and if it ever
+ *   costs anything it should go rather than be argued for.
  * - **Angle brackets mean a template, not a path.** `docs/mission-<name>.md` and
  *   `docs/screenshots/issue-<n>/` are shapes an author fills in; there are six
  *   such spans under `.claude/` and not one of them is meant to exist. A rule
@@ -54,11 +82,12 @@ function inlineSpans(markdown) {
 export function candidatePaths(markdown) {
   const found = [];
   for (const span of inlineSpans(markdown)) {
-    const first = span.trim().split(/\s/)[0];
-    const bare = first.replace(/:\d+(-\d+)?$/, '').replace(/[.,;:)\]]+$/, '');
-    if (!PREFIX_RE.test(bare)) continue;
-    if (bare.includes('<') || bare.includes('>')) continue;
-    if (!found.includes(bare)) found.push(bare);
+    for (const token of span.trim().split(/\s+/)) {
+      const bare = token.replace(/:\d+(-\d+)?$/, '').replace(/[.,;:)\]]+$/, '');
+      if (!PREFIX_RE.test(bare)) continue;
+      if (bare.includes('<') || bare.includes('>')) continue;
+      if (!found.includes(bare)) found.push(bare);
+    }
   }
   return found;
 }
@@ -117,12 +146,11 @@ function escapeLiteral(text) {
  * (`tools/balance`, `packages/frontend`), and a directory is tracked only
  * through the files inside it.
  *
- * `generated` is the third answer, and it is neither tracked nor missing.
- * Two skills name `packages/shared/dist`, which is real, is the thing
- * `CLAUDE.md` § Build order is *about*, and is gitignored — so tracking cannot
- * see it, and `existsSync` would answer differently before and after a build.
- * `ignoreQueries` below is how that set is asked for, and why asking naively
- * reproduces the very disagreement it is meant to remove.
+ * `generated` is the third answer, and it is neither tracked nor missing — a
+ * build output, named in prose and absent from git by design. `check.mjs` owns
+ * that list and the reason beside each entry, for the same reason it owns the
+ * declared-absent one: an escape a reviewer cannot see is not an escape, it is
+ * a hole.
  */
 export function makeResolver(trackedFiles, generated = new Set()) {
   const files = new Set(trackedFiles);
@@ -143,34 +171,6 @@ export function makeResolver(trackedFiles, generated = new Set()) {
     }
     return files.has(bare) || directories.has(bare);
   };
-}
-
-/**
- * The forms to ask `git check-ignore` about, for each path — both of them.
- *
- * `git check-ignore` is **not** a pure function of the ignore rules, and
- * assuming it was is what turned CI red on the first push of #795. `.gitignore`
- * line 10 is `dist/`, a directory-only rule, and git matches a bare path
- * against it only when the directory is on disk to be seen as one. Measured:
- *
- *     IGNORED      (exists)  packages/backend/dist
- *     not-ignored  (absent)  docs/dist
- *     IGNORED      (absent)  docs/dist/
- *
- * So `packages/shared/dist` answered "generated" on a machine that had built
- * shared and "missing" in CI's `docs` job, which installs nothing and builds
- * nothing — the same environment split the resolver exists to avoid, arriving
- * by a different door. The trailing slash tells git the last component is a
- * directory without asking the filesystem, which is disk-independent. The bare
- * form is kept because a file rule (`*.log`) needs it.
- */
-export function ignoreQueries(paths) {
-  const asked = [];
-  for (const path of paths) {
-    const bare = path.endsWith('/') ? path.slice(0, -1) : path;
-    for (const form of [bare, `${bare}/`]) if (!asked.includes(form)) asked.push(form);
-  }
-  return asked;
 }
 
 /**
@@ -199,7 +199,11 @@ export function unresolvedPaths(documents, resolves, allowed = new Set()) {
  * check, one level down.
  */
 export function unusedAllowances(documents, allowed) {
+  // Both sides are compared without a trailing slash: two skills name the same
+  // build output, one with and one without, and a single declared entry should
+  // answer for both rather than reading as stale the moment one goes.
+  const strip = (path) => (path.endsWith('/') ? path.slice(0, -1) : path);
   const named = new Set();
-  for (const { text } of documents) for (const path of candidatePaths(text)) named.add(path);
-  return [...allowed].filter((path) => !named.has(path)).sort();
+  for (const { text } of documents) for (const path of candidatePaths(text)) named.add(strip(path));
+  return [...allowed].filter((path) => !named.has(strip(path))).sort();
 }
