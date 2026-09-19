@@ -180,10 +180,10 @@ and removing it means the citations need somewhere else to point first.
 
 ## Code conventions
 
-The code conventions are stated once, in [CLAUDE.md](CLAUDE.md#conventions), each with the
-runtime gotcha behind it. The gotcha is the reason the rule is worth following and it does not survive
-being summarised, which is why this file names the rules and links rather than repeating
-them:
+The code conventions are stated once, in [CLAUDE.md](CLAUDE.md), each with the runtime
+gotcha behind it. The gotcha is the reason the rule is worth following, and it is the part
+a summary drops — which is why this file names each rule and links rather than repeating
+it:
 
 - [Constants live in exactly one place](CLAUDE.md#constants-live-in-exactly-one-place) —
   and what the two tags on them oblige you to do.

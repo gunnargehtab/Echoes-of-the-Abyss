@@ -21,7 +21,7 @@ For engineering conventions, build order, and the runtime gotchas that cost the 
 - **No line-of-sight vision.** Instead, every unit and structure continuously emits an **Acoustic Signature (SIG, 0–100)** based on idle state, movement speed, construction, firing weapons, etc.
 - Detection is **not binary.** Enemies resolve you across **five resolution tiers** — from "something is out there" (Tier 1) to a full track with velocity (Tier 5).
 - **Key mechanic:** Active sonar reveals everything within 900 m — but reveals *you* to everything within 2,400 m. Alpha strikes are loud. Economy is loud. Stealth and power are in direct tension.
-- **Server-authoritative.** Detection is computed server-side per-player (Colyseus + spatial hash at 5 Hz, 2 ms/tick budget) and only the resolved result is sent to each client. Maphack prevention is the entire threat model.
+- **Server-authoritative.** Detection is computed server-side per-player (Colyseus + spatial hash at 5 Hz, 2 ms/tick budget) and only the resolved result is sent to each client. Maphack prevention is the entire threat model. The rule and the budget are stated in full at the root: [server-authoritative](../CLAUDE.md#server-authoritative-is-a-hard-rule-not-a-preference), [two clocks](../CLAUDE.md#two-clocks).
 - Read: **[systems-echo.md](../docs/systems-echo.md)**
 
 ### 2. Depth — The Axis of Commitment
@@ -62,10 +62,10 @@ The package-by-package tour — what each workspace owns, which file holds the f
 
 Redis and PostgreSQL are the intended shape for accounts and caching, and neither exists — there is no auth or persistence code, and the match server holds everything in memory for the life of a room. They were once declared as backend dependencies and imported nowhere; that was removed, because an installed driver reads as persistence already there.
 
-Three engineering rules constrain design work, and each is stated once in `CLAUDE.md` with the reasoning that makes it a rule rather than a preference:
+Three engineering rules constrain design work, and each is stated in full in exactly one place — `CLAUDE.md`, with the reasoning that makes it a rule rather than a preference:
 
 - **[Constants live in exactly one place](../CLAUDE.md#constants-live-in-exactly-one-place)** — `packages/shared/src/constants.ts`, and the tag on a constant says what changing it obliges you to do first. Editing convention 1 below sends you there.
-- **[Server-authoritative detection](../CLAUDE.md#server-authoritative-is-a-hard-rule-not-a-preference)** — maphack prevention is the entire threat model, so it bounds what any new mechanic is allowed to show the player.
+- **[Server-authoritative detection](../CLAUDE.md#server-authoritative-is-a-hard-rule-not-a-preference)** — the threat model §1 names, and the reason a mechanic may not show the player anything the server has not resolved for them.
 - **[Two clocks](../CLAUDE.md#two-clocks)** — the 60 Hz step and the 5 Hz Echo pass on its 2 ms budget. That budget is the ceiling a new detection mechanic is designed under.
 
 Read: **[tech-stack.md](../docs/tech-stack.md)** · **[CLAUDE.md](../CLAUDE.md)**
