@@ -31,6 +31,7 @@ import {
   torus,
   plate,
   plan,
+  louvres,
   bothSides,
   polar,
   part,
@@ -1325,6 +1326,170 @@ export function gasRacks(root, { grey, rust, amber, lampM }, opts) {
       add(root, `rack_lamp_${tag}${i}`, box(...lamps.size), lampM, [x, lamps.y, z])
     );
   }
+}
+
+/* --------------------------------------------------------------------------
+ * The Caisson (#787, off #540 Phase 4): the box of plate, the plant on its
+ * back, and the two tubes in its bow face. Four families the navy had no
+ * word for — the Bulwark's `armouredSlab` is a hull carrying its beam in
+ * tiers, and this hull's plate is a *separate box bolted over the forward
+ * two thirds* whose after edge is the step in the plan; `bandedTank` is a
+ * structure's tank lying where it was dropped, one torus round it and flat
+ * ends, and this one lies fore-and-aft on a hull's spine with dished heads
+ * and saddles under it; `tubeCasings` bolts its tubes to the flank, and
+ * these are let into the bow face; and the kit's `louvres` draws one bank
+ * where a hull wants the pair. Built, not ported: every number is the hull
+ * script's.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The caisson: "a box of heavier plate bolted over the forward two thirds,
+ * riveted, patchworked older-under-newer, its after edge standing proud of
+ * the drive hull as a shoulder" (docs/asset-prompts-3d.md, UNIT — Caisson).
+ *
+ * In the file's order: the box itself — a square-edged plan, blunt at the
+ * bow with a chamfer to each corner — then the plate courses laid on its
+ * back, older first and the newer over it so the older shows round its
+ * edges; the shoulder plate across its after face; the plough plate
+ * standing proud of the bow face on the centreline with the hazard band
+ * across the crown behind it; and a row of bolt heads down each flank,
+ * starboard then port, which is what "bolted over" looks like at arm's
+ * length (`caisson · caisson_course_0..n · caisson_shoulder · plough_plate
+ * · plough_band · caisson_bolt_s0..n · caisson_bolt_p0..n`).
+ *
+ * The step is the whole point and `outlines.mjs` has to keep it: the box is
+ * the widest thing on the hull at every station it covers, the drive hull
+ * behind it is bare, and nothing on a flank — blister, strake — reaches
+ * past the box's own half-beam but the bolt heads, which stand 0.2 m proud
+ * of it and set the file's beam. A tier that stood proud of it
+ * would read as one hull with a bulge rather than two boxes, which is the
+ * Furnace's seam-on-the-flank fault (#786 review) in the other direction.
+ */
+export function caissonBox(root, mats, opts) {
+  const { slab, courses = [], shoulder, plough, band, bolts } = opts;
+  add(root, 'caisson', plan(slab.outline, slab.depth), mats[slab.mat ?? 'black'], [0, slab.y, 0]);
+  courses.forEach((c, i) =>
+    add(root, `caisson_course_${i}`, plan(c.outline, c.depth), mats[c.mat ?? 'grey'], [0, c.y, 0])
+  );
+  add(root, 'caisson_shoulder', box(...shoulder.size), mats.rust, shoulder.at);
+  add(root, 'plough_plate', plan(plough.outline, plough.depth, plough.bevel ?? 0), mats.grey, [
+    0,
+    plough.y,
+    0,
+  ]);
+  add(root, 'plough_band', box(...band.size), mats.amber, band.at);
+  bothSides((side, sgn) => {
+    for (let i = 0; i < bolts.count; i++)
+      add(
+        root,
+        `caisson_bolt_${side}${i}`,
+        cyl(bolts.r, bolts.r, bolts.h, 6),
+        mats.grey,
+        [bolts.from + ((bolts.to - bolts.from) * (i + 0.5)) / bolts.count, bolts.y, sgn * bolts.z],
+        ATHWART
+      );
+  });
+}
+
+/**
+ * "The Corvette's two torpedo tubes let into the bow face either side of
+ * the plough plate, with hinged muzzle doors" — the Broadside's door idiom
+ * moved off the flank and into the bow.
+ *
+ * A tube a side, starboard first, each written whole: the socket the tube
+ * is let into, sunk back behind the bow face; the flange on the face; the
+ * door shut on the flange; and the hinge knuckle standing up its outboard
+ * edge, so the door swings out and clear of the hull (`bow_tube_s ·
+ * tube_flange_s · tube_door_s · tube_hinge_s · bow_tube_p …`).
+ *
+ * Built loaded, like the Broadside (docs/models-plan.md §3.5): both doors
+ * shut, so the bore is what the door is. Every part is cladding — the
+ * muzzle flood is the instant of a launch, and a transient is not a lamp
+ * (§3.2 rule 3) — and nothing points outboard: the tubes lie along the
+ * keel and only the doors show.
+ */
+export function bowTubes(root, { black, grey, rust }, opts) {
+  const { x, y, z, facets = 16, socket, flange, door, hinge } = opts;
+  const onX = [0, 0, Math.PI / 2];
+  bothSides((side, sgn) => {
+    const at = (dx) => [x + dx, y, sgn * z];
+    add(root, `bow_tube_${side}`, cyl(socket.r, socket.r, socket.depth, facets), black, at(-socket.depth / 2), onX);
+    add(root, `tube_flange_${side}`, cyl(flange.r, flange.r, flange.width, facets), rust, at(flange.width / 2), onX);
+    add(root, `tube_door_${side}`, cyl(door.r, door.r, door.h, facets), grey, at(flange.width + door.h / 2), onX);
+    add(root, `tube_hinge_${side}`, cyl(hinge.r, hinge.r, hinge.h, 8), rust, [
+      x + flange.width + door.h / 2,
+      y,
+      sgn * (z + hinge.out),
+    ]);
+  });
+}
+
+/**
+ * The plant's pressure cylinder: "a riveted pressure cylinder lying
+ * fore-and-aft along the spine with dished heads".
+ *
+ * The drum on the centreline, the reinforcement bands round it — flat
+ * bands like `tubeCasings`', not `bandedTank`'s torus — a dished head at
+ * each end, fore then aft as `ballastBlisters` orders its caps, and the
+ * saddles it sits on (`plant_cylinder · plant_band_0..n · plant_head_f ·
+ * plant_head_a · plant_saddle_0..n`). The drum is hull black under grey
+ * bands and oxide heads, not plate grey: it stands on a grey deck, and a
+ * grey cylinder on it is the one part of the plant the top-down albedo
+ * cannot tell from the deck it sits on.
+ *
+ * The heads are frusta drawn in to `heads.tipR`, so the plan bump they add
+ * has the chamfered corners a dished pressure head reads as from above and
+ * not the square ones a flat end would give — the Beacon's drum heads, the
+ * same reason (`transducerDrum`). A cylinder laid on X by a quarter turn
+ * about Z carries its `rTop` onto −X, so the fore head is `cyl(r, tipR)`
+ * and the after one `cyl(tipR, r)`.
+ */
+export function plantCylinder(root, { black, grey, rust }, opts) {
+  const { at, r, length, facets = 16, bands, heads, saddles } = opts;
+  const [x, y, z] = at;
+  const onX = [0, 0, Math.PI / 2];
+  add(root, 'plant_cylinder', cyl(r, r, length, facets), black, at, onX);
+  bands.x.forEach((bx, i) =>
+    add(root, `plant_band_${i}`, cyl(bands.r, bands.r, bands.width, facets), grey, [bx, y, z], onX)
+  );
+  for (const [end, cx, rTop, rBottom] of [
+    ['f', x + length / 2 + heads.length / 2, r, heads.tipR],
+    ['a', x - length / 2 - heads.length / 2, heads.tipR, r],
+  ])
+    add(root, `plant_head_${end}`, cyl(rTop, rBottom, heads.length, facets), rust, [cx, y, z], onX);
+  saddles.x.forEach((sx, i) =>
+    add(root, `plant_saddle_${i}`, box(...saddles.size), rust, [sx, saddles.y, z])
+  );
+}
+
+/**
+ * "A rank of exhaust louvres down each side that have no shutters, because
+ * there is nothing aboard to throttle": the kit's `louvres` a side, laid on
+ * the deck rather than hung on a wall, over a well of hull black that the
+ * gaps between the slats show (`louvre_well_s · louvre_s_0..n ·
+ * louvre_well_p · louvre_p_0..n`).
+ *
+ * The kit's builder draws one bank and this navy's hulls are bilateral, so
+ * the pair is here, and the port rank's tilt mirrors the starboard rank's,
+ * as every pair on this hull mirrors: §3.6's one-side-at-a-time rule is
+ * the Commune's and the Directorate's, and a plate navy is not it. Every slat presents `slat·cos(tilt)` of plan width, which is
+ * why this is the one light on the hull that the top-down bake sees whole;
+ * `machineryHouse` above hangs the Derrick's on a vertical wall, where gate
+ * 3 counts none of it (kit.mjs `louvres`).
+ */
+export function exhaustLouvres(root, { black, flood }, opts) {
+  const { x, y, z, length, well, slats } = opts;
+  bothSides((side, sgn) => {
+    add(root, `louvre_well_${side}`, box(...well.size), black, [x, well.y, sgn * z]);
+    louvres(root, `louvre_${side}`, flood, {
+      ...slats,
+      x,
+      y,
+      z: sgn * z,
+      length,
+      tilt: sgn * (slats.tilt ?? 0.5),
+    });
+  });
 }
 
 /* --------------------------------------------------------------------------

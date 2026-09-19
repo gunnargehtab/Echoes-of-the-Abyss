@@ -168,9 +168,9 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Blight]: 'blight',
   [UnitKind.Lure]: 'lure',
   [UnitKind.Tocsin]: 'tocsin',
-  // The line hulls and the anchor (#509). No model yet: the procedural bake
-  // is gate 1's sanctioned state until one clears intake, and the slug is
-  // where it lands.
+  // The line hulls and the anchor (#509), script-built in #787: one model a
+  // kind, all three faction-locked, so none takes the Chorister's rule and no
+  // navy resolves a variant that does not exist.
   [UnitKind.Caisson]: 'caisson',
   [UnitKind.Reed]: 'reed',
   [UnitKind.Bower]: 'bower',

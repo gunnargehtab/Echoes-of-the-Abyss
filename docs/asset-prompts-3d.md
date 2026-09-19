@@ -798,9 +798,9 @@ four above the Klaxon's line at every posture (SIG 64 idle, 64 cruise, +25
 firing; the Corvette's gun, 50 at 550 m; 560 hull; 70 m/s; PR 2; 170
 nodules). A pressure box: the skirmisher's wedge made in riveted plate and
 no longer tapering — a blunt plough bow, a flat plate face with chamfered
-corners, flanks parallel from the shoulders for two thirds of the length,
-then a step in to the bare drive hull and a square stern with two prop
-tunnels. The caisson is the step: a box of heavier plate bolted over the
+corners, flanks parallel from the shoulders aft to the step at two thirds
+of the length, then a step in to the bare drive hull and a square stern
+with two prop tunnels. The caisson is the step: a box of heavier plate bolted over the
 forward two thirds, riveted, patchworked older-under-newer, its after edge
 standing proud of the drive hull as a shoulder — the third more plate,
 visible in the plan. On its back the plant: a riveted pressure cylinder
@@ -809,7 +809,8 @@ of it, and a rank of exhaust louvres down each side that have no shutters,
 because there is nothing aboard to throttle. The Corvette's two torpedo
 tubes let into the bow face either side of the plough plate, with hinged
 muzzle doors; a low bridge citadel abaft the plant; ballast blisters low
-on the hull. No baffle, no shroud, no cowl on anything. Burning bright at
+on the hull. Nothing aboard is there to quiet it: no baffle, no acoustic
+shroud, no cowl on anything. Burning bright at
 rest and under way alike — the louvres the brightest thing on the hull,
 the stacks lit at the throat, floods along the caisson's edge and the
 bridge ports — because the loud state is the only state; the muzzle doors
@@ -846,7 +847,8 @@ everything inside it, itself included, and it is a nursery for Spinner
 magazines within 300 m whether it is moving or not (SIG 10 idle, 16 cruise,
 45 grown out and heard at 18; HYD 40, 5 grown out; no weapon; 620 hull;
 40 m/s; PR 1; 360 nodules). The Veil Mother's bed with a drive: a broad low
-grown body, an oval in plan and the widest Commune hull, its edge made of
+grown body, an oval in plan and the broadest hull the Commune has grown
+as one body, its edge made of
 overlapping lobes that alternate a side at a time, a blunt grown nose, and
 a broad short muscle-drive fluke astern. Paired gill organs let into the
 back along each flank with vent slits, exhaling the haze; slender spore
