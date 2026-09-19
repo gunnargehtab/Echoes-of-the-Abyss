@@ -194,10 +194,12 @@ the prologue's.
 
 **Silent Running is present, and here it is the whole mission rather than its last thirty seconds.**
 §4 is the whole of why, and the arithmetic is short: a Knight Corvette idles at 28 and the Voice at
-55, the hush's ceiling is 8, and the button is the only thing on this map that gets under it — a
-Corvette to **5.3** and the Voice to **7.6**, because `silentRunningSig` places a hull inside the
-3–8 band by its own idle figure rather than at the band's ceiling (`acoustics.ts`). Four tenths of a
-point of margin on the loudest hull the row measures, and no other way to buy it.
+55, the hush's ceiling is 8, and nothing on this map gets under it with its drive turning — the
+button takes a Corvette to **5.3** and the Voice to **7.6**, because `silentRunningSig` places a
+hull inside the 3–8 band by its own idle figure rather than at the band's ceiling (`acoustics.ts`).
+Four tenths of a point of margin on the loudest hull the row measures. Engine Off, the state below
+silence, halves both again — **2.7** and **3.8** ([systems-echo.md](systems-echo.md) §6) — and pays
+for that room with the drive, which a hull already holding station is not using.
 
 ---
 
@@ -214,10 +216,21 @@ and 8 SIG, costs 45% of its speed and disables its weapons, and cannot be locked
 button they emit **5.3** and **7.6**: `silentRunningSig` scales the band by the hull's own idle
 figure — `3 + 5 x min(1, sigIdle / 60)` (`acoustics.ts`) — so only a hull idling at 60 or more ever
 reads the eight. The hush's predicate is `quiet` at **ceilingSig 8**, which is a number no hull on
-this map can reach any other way — the first ceiling in the bible that is not a discipline but a
-mode. The prologue's twenty was a ceiling the flight could hold at cruise; the galleries'
-twenty-five was a written order a Submersible clears by idling; twenty-eight at the Third was a
-Corvette's own cruise figure. Eight is the button, and the Voice keeps it by four tenths of a point.
+this map can reach with its drive turning. The prologue's twenty was a ceiling the flight could
+hold at cruise; the galleries' twenty-five was a written order a Submersible clears by idling; the
+Third's twenty-eight already wanted the button, because a `party` ceiling is measured on the
+loudest hull in the role and that role holds the Voice
+([mission-conclave-chord.md](mission-conclave-chord.md) §3). Eight is what that ceiling becomes when
+the escort has to keep it too, and the Voice keeps it by four tenths of a point.
+
+**Engine Off is the second way under, and the mission does not withhold it.** The state below
+silence ([systems-echo.md](systems-echo.md) §6) halves the silent figure again — a Corvette to
+**2.7**, the Voice to **3.8** — for the price of the drive, and it is not among the seven locks
+above. That is deliberate rather than an oversight the hush survives. An escort that has taken
+station at the mouth of the room has no further use for thrust (point 2 below), so there the
+quieter posture costs it nothing it was spending; an escort still following the party down its four
+ceilings cannot hold it at all. The mission asks the same question in both places and charges two
+different prices for the answer, which is the shape the twelve minutes actually have.
 
 **2. The hold is the escort, and it puts them where the room is.** `escortRadiusM` is **600 m**: the
 `'tender'` moves only while an `'escort'` is inside that radius, measured horizontally, and its

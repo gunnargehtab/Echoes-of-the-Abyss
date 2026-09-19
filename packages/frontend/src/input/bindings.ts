@@ -174,11 +174,13 @@ export const DEFAULT_BINDINGS: Bindings = {
 /**
  * §11's one-handed layout — every binding inside a left hand's reach.
  *
- * The default is not one-handed for four of them: `P`, `N`, `M` and `B` sit
- * under a right hand that is on the mouse, which for a player using one hand
- * means the binding may as well not exist. This moves those four and leaves
- * the nine that were already left-hand alone, because a layout that also
- * shuffles the keys a player already knows is a worse layout.
+ * The default is not one-handed for five of them: `P`, `N`, `M`, `B` and `H`
+ * sit under a right hand that is on the mouse, which for a player using one
+ * hand means the binding may as well not exist. This moves those five and the
+ * three they displace on the way — `X` to the mine, `V` to the signature
+ * structure, `Q` to the ping — and leaves the other eleven alone, because a
+ * layout that also shuffles the keys a player already knows is a worse
+ * layout.
  *
  * Control groups are the one thing this cannot fix: the digits are not
  * rebindable (see `RESERVED_CODES`), and 6–9 are out of reach. §9 is honest

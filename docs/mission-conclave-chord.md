@@ -240,7 +240,7 @@ it.
 
 ### The SIG budget
 
-**SIG budget: 28**, and it is the campaign's fifth reading of the same rule. The prologue's twenty
+**SIG budget: 28**, and it is another reading of the same rule. The prologue's twenty
 is a ceiling, Asset Recovery's sixty-five a working level, Attendance's eight a description, and
 [Aptitude](mission-aptitude.md)'s twenty-eight is *in the cone* — a figure with a bearing attached
 and no meaning without one. **This twenty-eight is that same integer read as a flat scalar**,
