@@ -204,4 +204,19 @@ export const STRUCTURES = [
   { slug: 'vent-tap-pelagia', model: 'vent-tap-pelagia.glb', lengthM: 180, sig: 55 },
   { slug: 'vent-tap-directorate', model: 'vent-tap-directorate.glb', lengthM: 180, sig: 55 },
   { slug: 'vent-tap-hadron', model: 'vent-tap-hadron.glb', lengthM: 180, sig: 55 },
+  // The Bio-Reactor (#788): every navy's, on Kelp Forest ground only, and the
+  // one structure whose SIG gap is the tell — 25 idle (TUNABLE, structures.ts)
+  // against 50 rendering (SPEC, systems-flora.md §2 and §7), so a reactor gone
+  // quiet has stripped its bed. The rows bake at the idle 25, as the Foundry's
+  // do against its own 25/55, because the table's figure is the idle one.
+  // 180 m is 2 × radiusM 90.
+  { slug: 'bio-reactor', model: 'bio-reactor-bathyarch.glb', lengthM: 180, sig: 25 },
+  { slug: 'bio-reactor-pelagia', model: 'bio-reactor-pelagia.glb', lengthM: 180, sig: 25 },
+  {
+    slug: 'bio-reactor-directorate',
+    model: 'bio-reactor-directorate.glb',
+    lengthM: 180,
+    sig: 25,
+  },
+  { slug: 'bio-reactor-hadron', model: 'bio-reactor-hadron.glb', lengthM: 180, sig: 25 },
 ];

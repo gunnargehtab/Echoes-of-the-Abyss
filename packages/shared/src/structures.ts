@@ -12,6 +12,7 @@
 
 import { COMMUNE_ECONOMY, THERMAL_DRAW } from './constants.js';
 import { Biome, Faction, StructureKind, UnitKind } from './types.js';
+import { unitAvailableTo } from './units.js';
 
 export interface StructureStats {
   kind: StructureKind;
@@ -485,10 +486,65 @@ export const PRODUCIBLE: Partial<Record<StructureKind, readonly UnitKind[]>> = {
 };
 
 /**
- * The yards: every structure with a production line, in the order the command
- * bar lists their rosters. Derived from `PRODUCIBLE` so a third yard could not
- * be added to one reader and not the other.
+ * Every structure with a production line, in the order the command card pages
+ * them (docs/ui-ux.md §9, "The production card is a page per yard").
+ *
+ * The order is **`StructureKind`'s**, not this file's: integer-like object keys
+ * enumerate in ascending numeric order whatever order they were written in. The
+ * Bastion leads because `StructureKind.Bastion` is 0, and that is what places
+ * the Harvester — built on the Bastion's line as well as the Foundry's — on the
+ * page of the line that never has to be built, taking the Foundry's thirteen
+ * down to twelve. So reordering the entries above changes nothing and
+ * renumbering the enum would move the Harvester; `units.test.ts` pins both the
+ * lead and the placement rather than leaving that to a reader.
  */
-export const YARDS: readonly StructureKind[] = (
-  Object.keys(PRODUCIBLE).map(Number) as StructureKind[]
-).filter((kind) => kind !== StructureKind.Bastion);
+export const PRODUCTION_LINES: readonly StructureKind[] = Object.keys(PRODUCIBLE).map(
+  Number
+) as StructureKind[];
+
+/**
+ * The yards: the production lines a commander has to build, and so the ones
+ * the command card gives a tab of their own. Derived from `PRODUCTION_LINES`
+ * so a third yard could not be added to one reader and not the other.
+ *
+ * The Bastion is a depot rather than a yard, and needs no tab for its page to
+ * be reachable: it always stands, so selecting it always opens that page —
+ * which is the route §9 gives every page.
+ */
+export const YARDS: readonly StructureKind[] = PRODUCTION_LINES.filter(
+  (kind) => kind !== StructureKind.Bastion
+);
+
+/**
+ * The line whose page a hull's production button sits on: the first in
+ * `PRODUCTION_LINES` that builds it.
+ *
+ * Only the Harvester is built on two lines, and the rule is written for it
+ * (docs/ui-ux.md §9). It is on the Bastion's line as well as the Foundry's,
+ * and because the Bastion always stands it "belongs to the page of the yard
+ * that never has to be built" — which is what takes the Foundry's thirteen
+ * down to twelve and gives the Derrick and the Reed their cells back (#820).
+ *
+ * Where a hull is *produced* is a different question and is unchanged: the
+ * server still accepts a Harvester ordered at a Foundry, and the bar still
+ * routes one there when no yard is selected.
+ */
+export function productionPageFor(kind: UnitKind): StructureKind | undefined {
+  return PRODUCTION_LINES.find((line) => PRODUCIBLE[line]?.includes(kind));
+}
+
+/**
+ * One page's roster: the line's own hulls, less whatever belongs to another
+ * navy and less whatever pages to an earlier line.
+ *
+ * The command card calls this, and so does the test that pins §9's per-faction
+ * figures — one filter, so the table cannot certify something the card does not
+ * draw. The navy filter is not decoration: the Clarion is the Order's and the
+ * server refuses it to anyone else, so offering it would be the bar lying about
+ * the rules.
+ */
+export function productionPage(line: StructureKind, faction: Faction): readonly UnitKind[] {
+  return (PRODUCIBLE[line] ?? []).filter(
+    (kind) => productionPageFor(kind) === line && unitAvailableTo(kind, faction)
+  );
+}

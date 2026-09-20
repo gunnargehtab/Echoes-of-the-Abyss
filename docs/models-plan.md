@@ -7,14 +7,15 @@
 
 **Glossary:** See [Glossary](glossary.md) for SIG, PF, HYD, PR and Resolution Tier.
 
-**Status:** in progress — the transports (#783), the scouts (#784), the ordnance hulls
-(#785), the siege hulls (#786) and the line hulls and the anchor (#787) are built, and the
-Bio-Reactor is the box that is left. With #787 every one of the 36 unit kinds has a model,
-so each takes its plan outline from its GLB and `HAND_DRAWN_OUTLINE` in `silhouettes.ts` is
-empty: the one kind still baking procedurally is a structure. The tracking
-issue is #540, Phase 4, and its six boxes are filed as issues #783 (the transports), #784 (the scouts), #785 (the ordnance hulls), #786 (the siege
-hulls), #787 (the line hulls and the anchor) and #788 (the Bio-Reactor). Every figure below
-is read from the working tree at `19ac7f9`; where it is a stat, [units.md](units.md) and
+**Status:** done — the transports (#783), the scouts (#784), the ordnance hulls (#785), the
+siege hulls (#786), the line hulls and the anchor (#787) and the Bio-Reactor (#788) are all
+built. Every one of the 36 unit kinds has a model, so each takes its plan outline from its
+GLB and `HAND_DRAWN_OUTLINE` in `silhouettes.ts` is empty; with #788 every one of the eleven
+structure kinds has one too, and nothing in the roster bakes procedurally any more. The
+tracking issue is #540, Phase 4, and its six boxes are filed as issues #783 (the
+transports), #784 (the scouts), #785 (the ordnance hulls), #786 (the siege hulls), #787 (the
+line hulls and the anchor) and #788 (the Bio-Reactor). Every figure below is read from the
+working tree at `19ac7f9`; where it is a stat, [units.md](units.md) and
 `packages/shared/src/units.ts` are canonical and this document only repeats them.
 
 ---
@@ -22,12 +23,13 @@ is read from the working tree at `19ac7f9`; where it is a stat, [units.md](units
 ## 1. Where the models stand
 
 Phases 1 to 3 of #540 are done: every modelled hull and structure is script-built, 63
-models, and `npm run check:models` holds each script to its committed GLB. What is left of
-the roster is the half [roster-plan.md](roster-plan.md) §5 deliberately let lag — *"a wave
-does not wait for its models"* — which is nineteen of the 36 unit kinds and one of the
-eleven structure kinds. Each bakes today through the procedural fallback that
-[graphics-standards.md](graphics-standards.md) gate 1 sanctions, and each therefore renders
-on the chart as a hand-drawn outline and in the conn view as a recoloured sprite.
+models, and `npm run check:models` holds each script to its committed GLB. What Phase 4
+built is the half [roster-plan.md](roster-plan.md) §5 deliberately let lag — *"a wave does
+not wait for its models"* — which was nineteen of the 36 unit kinds and one of the eleven
+structure kinds. Each baked through the procedural fallback that
+[graphics-standards.md](graphics-standards.md) gate 1 sanctions, and each therefore rendered
+on the chart as a hand-drawn outline and in the conn view as a recoloured sprite. The
+sections below are written as the plan was written, in the present tense of that state.
 
 Every one of the nineteen already carries the whole of a hull except its shape:
 
@@ -445,6 +447,25 @@ fallback.
 table's rule is the idle figure and no number moves. Four variants rather than one Commune
 model, because `structures.ts` gives the kind no `faction`; if the design intent is one
 navy's, that is a `structures.ts` change first and outside the shape issue.
+
+**Built.** Three arms rather than four, at −90°, 30° and 150° — three is the read the
+procedural silhouette already had and is what tells a reactor from a tap at sprite size,
+and the odd phase is what leaves the plan X-long so intake does not yaw it. The skeleton in
+`kit.mjs` came out as `reactorBed` and `reactorIntakeArm`; each navy's module gained a
+`reactorVessel` and a `reactorOutflow`. Seven lamps a model — the six run lights on the
+slab's kerb and one mark on the vessel's crown — because the block's resting band names
+only those; the feed throats, the vessel's ports and the outflow's mouth are built and clad
+in each navy's unlit finish (§3.2 rule 2). All four bake warning-free at 180 m with a clean
+light audit — no lamp on any of them shows under a cell from above, and each
+bakes as one connected body.
+
+The odd phase has one cost, and it is worth stating because it is the first thing the next
+reader will ask: three arms are never symmetric fore-and-aft, so the plan's centre sits
+19.4 m off the model's own origin on every navy. Nothing downstream minds — `normalise` in
+`rosterModels.ts` centres on the bounding box before scaling, as it does for the Commune's
+Bastion at x +26 — but the drum stands about a fifth of the footprint radius off the centre
+of its own selection ring. The alternative is a Z-long plan that intake yaws, which is
+worse.
 
 ## 5. After Phase 4
 

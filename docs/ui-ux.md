@@ -29,7 +29,7 @@
 │ │H │                                              │   OBJECTIVES     │ │
 │ └──┘                                              └──────────────────┘ │
 │                      hint line — why a press did nothing               │
-│ ┌BUILD┬UNITS┬SQUAD┐                                            ┌MENU┐  │
+│ ┌BUILD┬FOUNDRY┬SLIPWAY┬SQUAD┐                                  ┌MENU┐  │
 │ ┌───────┬───────────┬──────────┬───────────────┬─────────────────────┐ │
 │ │ SCOPE │ SELECTION │ FLEET    │ COMMANDS      │ PRODUCTION          │ │
 │ │       │ name  PR2 │ ▢▢▢▢▢    │ ┌──┬──┬──┬──┐ │ BASTION HARVEST 14s │ │
@@ -377,7 +377,7 @@ conflict this document settled:
 
 | Fixed | Why it cannot move |
 | --- | --- |
-| `0`–`9` | Control groups have no alternative route; production has the UNITS tab. `0` is the army |
+| `0`–`9` | Control groups have no alternative route; production has the card's yard pages. `0` is the army |
 | Arrows | Pan, with the screen edge; a rebind that took an arrow would take half the camera |
 | `Shift` | Queues an order, and adds to a selection |
 | `Ctrl` | Subtracts from a selection, and assigns a control group |
@@ -415,7 +415,7 @@ something the layout is hiding.
 a conflict.** Order queueing and the ping-cost preview were both assigned to `Shift`;
 queueing keeps it, as the RTS convention and by far the more frequent action, and the
 preview moved to `Alt`. Control groups and unit production were both assigned to the digits;
-control groups keep them, because production also has the command bar's UNITS tab and
+control groups keep them, because production also has the command bar's yard pages and
 control groups have no alternative route at all.
 
 Every added binding must respect §1.5 — no destructive-to-information action lands on a
@@ -436,11 +436,13 @@ Knights each offer eighteen hulls and a refit, and only the Abyssal Directorate'
 list. Both of the usual escapes are already closed — §2 does not let a panel scroll, and the digits
 belong to control groups rather than to production (above).
 
-So the page is the unit of the answer, and the yard is the page. The UNITS tab is **one page per
-yard**, FOUNDRY and SLIPWAY, and each page fits what it holds:
+So the page is the unit of the answer, and the line is the page. Production is **one page per
+production line** — BASTION, FOUNDRY and SLIPWAY — in place of the single UNITS tab, and each page
+fits what it holds:
 
 | Page | Consortium | Commune | Directorate | Knights |
 | --- | --- | --- | --- | --- |
+| BASTION | 1 | 1 | 1 | 1 |
 | FOUNDRY | 12 | 12 | 8 | 11 |
 | SLIPWAY, with the refits | 6 | 6 | 3 | 7 |
 
@@ -450,9 +452,20 @@ stands, so it belongs to the page of the yard that never has to be built — whi
 Foundry's thirteen down to twelve. The **refits** sit on the Slipway's page because the Slipway's
 line is what they compete for ([systems-progression.md](systems-progression.md) §1).
 
-A page opens by selection: picking a yard shows that yard's. Both stay reachable without one,
-because a Slipway hull greyed for *no Slipway standing* is how a commander finds out what the rung
-is for, and §7's rule is that a disabled action names its reason rather than going quiet.
+The Bastion's page is the Harvester by itself, and it is the one page with no *standing*
+tab: it is lit only while it is the open page, because a strip that lit nothing would be
+lying about which page the card is showing. FOUNDRY and SLIPWAY are the standing tabs,
+because they are the two a commander may not have.
+
+Selecting the Bastion is what opens its page, and that is always a route: losing the Bastion
+is elimination, so a commander with a yard to produce at has one. The alternative reading —
+the Harvester on *every* page, being the one hull no rung gates — was rejected because it
+leaves the Foundry at thirteen, which is the count this section exists to bring down.
+
+A page opens by selection: picking a yard shows that yard's. Both *yards'* pages stay reachable
+with the yard not standing, because a Slipway hull greyed for *no Slipway standing* is how a
+commander finds out what the rung is for, and §7's rule is that a disabled action names its reason
+rather than going quiet.
 
 ### What yields when the card is full
 
@@ -895,7 +908,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | Own-force log rows | Implemented (§10, #206, #209, #623) — `you were pinged`, `under fire`, `idle — mined out`, `went loud` |
 | The passive exposure record (§10) | Implemented (#623) — an edge detector on the server-sent `ExposureReport` writes a row each time the best tier anyone holds on the player settles on a new value, in both directions: `you were heard`, `they have your bearing`, `they have you classified`, `they have you tracked`, `they lost you`. Under the `---` tier and carrying no bearing, range or focus, because the report is a tier and a count and a row that pointed anywhere would be inventing a listener. A tier has to hold for `PERSISTENCE.EXPOSURE_SETTLE_S` before the log claims it — the pass recomputes it at 5 Hz, and a hull parked on a detection threshold would otherwise write ten rows a second saying nothing |
 | The log's `MARK` row | Implemented (§10, #214) — residue derived by diffing the mark set by id, once per mark per match |
-| The console (§2) | Implemented — the 80 px bar is a 208 px console of four blocks: scope, selection, a 4 × 3 command card, and production. Production is no longer behind the UNITS tab; the block reads the player's own yards, one row per yard because a yard is one build line, and its estimate is divided by the Thermal Draw's satisfaction so a starved line's slip is visible rather than silent. The selection card moved inside its block, which is what ends its collision with the hint line |
+| The console (§2) | Implemented — the 80 px bar is a 208 px console of four blocks: scope, selection, a 4 × 3 command card, and production. Production is no longer behind a tab at all; the block reads the player's own yards, one row per yard because a yard is one build line, and its estimate is divided by the Thermal Draw's satisfaction so a starved line's slip is visible rather than silent. The selection card moved inside its block, which is what ends its collision with the hint line |
 | The strip's readouts, explained (§2, §7) | Implemented (#724) — each readout on the permanent strip carries a line in §7's register: the quantity, what it is measured against, and what moves it. DOM rather than Pixi, for §10 and §11's reason — canvas text reaches no screen reader — so the renderer reports where each readout ended up and one transparent control is laid over each, reached by hover, by Tab and by a tap. The lines quote no figure of their own: the grants are `BERTHS`, the stops are `SIG_BANDS`, the deficit is the draw report's own satisfaction, and the spoken name is the string the strip drew. Reported only when the strip changes, so the surface costs the frame nothing. A control takes its whole row band rather than the height of its glyphs — §11's 44 px floor is not reachable inside a 52 px strip holding two rows, and half of it is what is. A readout the strip has laid out off the canvas, or on top of another, is given no control at all — so the surface is silent about a number rather than wrong about it. Until #743 that happened well inside §11's range for a reason that was not the layout's: the rule dropping the map name and the clock measured the *second* row's right edge while the row that collided was the stockpile row, so the two readouts the strip permits to yield — an order authored in `EchoRenderer.drawHud` rather than here, §2 having a drop order for the console's blocks and none for this strip — were printed over the stockpile row rather than yielding. Since #743 the rule measures the row it governs — the first row's own right edge, the last draw segment included. Re-swept in a live match on the Ventfront Divide, on the 1,440 px canvas the browser drive opens, where nine readouts are on the strip: all nine are explained from 75% to **135%**, the map name goes at **150%** and the clock goes at **200%**. One residual the refusal could not see, because it was not a readout, is closed since #757: the draw meter's segments are `Graphics` rather than a recorded number, nothing recorded them, and so `acceptStrip` could refuse nothing for them — at 200% they print through the contact count, which kept a control over glyphs reading `███ontacts`, in the committed frame's 200% pair, before and after alike. The bar is part of the `DRAW` readout's own box now, the way §3's meter is part of the SIG readout's and for the same reason — [economy.md](economy.md) §2 makes the draw a rate that is never banked and the bar is how it says so — so the existing comparison sees it. Two consequences, both the rule this surface already had rather than a new one: a hover anywhere on the bar answers for the rate it belongs to, and where the bar and another readout are laid over each other **both** are refused, so the sweep's earlier clause — every readout still on the strip keeping its control at every scale — no longer holds at the scales where the strip overruns itself. On the 1,280 px canned strip of `rendererSmoke.test.ts`, where `DRAW 40/34` carries twelve segments, that is 150%; which scale it starts at is a fact about the fixture rather than about the product, as below. The same sweep before the change kept both readouts to 150% and then lost the explanations instead — six readouts at 175% and four at 200%, the rest drawn on top of one another. Which readouts are present at all is a fact about the fixture rather than about the product — `BIOMASS`, `CRYSTAL` and `TRACKED` each render only conditionally — so a fuller strip is wider than this one, and on an eleven-readout fixture the first row still overruns a 1,280 px canvas at 200%. **What a strip that cannot fit its own first row should give up, once the map name and the clock are both gone, is still a design call about a permanent instrument.** It is recorded and left, with frames under `docs/screenshots/issue-724/` and `docs/screenshots/issue-743/` |
 | The plate VI card, in match | Implemented — one `plate()` draws glass, one bevel, one halo, the header rule and corner registration ticks, and the top strip, console, blocks, selection card and ribbon all go through it. Rule 5's diagonal texture is one layer over the whole HUD, rebuilt only when the viewport or the palette changes |
 | The fleet block (§2) | Implemented — the console's fifth block. Two bands of 44 px chips over a census line: the hulls in hand when there are any and the control groups when there are not, so the block is never a grid of empty squares. Groups are chips rather than a list because four 44 px rows do not fit the block, and the floor is what matters — §9 makes the digits unrebindable, so on a touchscreen these chips are the only way to recall a group. The census counts own hulls and structures and nothing else |

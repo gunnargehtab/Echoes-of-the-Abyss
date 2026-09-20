@@ -2377,3 +2377,132 @@ export function mawBlades(root, shadow, { frame = xLong, r, length, at: [x, y, z
 }
 
 export { THREE };
+
+/* --------------------------------------------------------------------------
+ * The Bio-Reactor (#788, off #540 Phase 4). The bed and the three intake
+ * arms are the kit's (`reactorBed`, `reactorIntakeArm`) and identical on all
+ * four navies; what is a navy's is the vessel that stands on the slab and
+ * the outflow off it, which is these two builders.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The render vessel, Hadron Knights: a crystal-framed dome. The Order's
+ * settlement idiom, on a bed rather than a floor — a plinth, a dome over it,
+ * three alloy arches thrown across the dome on the thirds, two collars round
+ * it, and the crystal core standing out of its crown, which is the Sounding
+ * Spire's "pale alloy frame around a violet crystal core" doing a different
+ * job.
+ *
+ * An arch is one half-torus in the x–y plane, yawed onto its bearing and
+ * drawn to the dome's own height by its node — three of them, so six ribs
+ * show, on the only bilaterally symmetric vessel of the four. `mark` is the
+ * vessel's one lamp; the seams carry the crystal seam's *unlit* finish,
+ * because the block lights them only while crop is coming in
+ * (docs/models-plan.md §3.2 rule 2), and so does the core, which the block
+ * never lists among the lights at rest.
+ */
+export function reactorVessel(root, { shadow, alloy, crystal: crystalMat, lampM, unlit }, opts) {
+  const { plinth: base, dome, arches, collars, core, mark, seams } = opts;
+  plinth(root, 'vessel_plinth', shadow, base);
+  add(
+    root,
+    'reactor_vessel',
+    new THREE.SphereGeometry(1, dome.facets[0], dome.facets[1], 0, Math.PI * 2, 0, Math.PI / 2),
+    shadow,
+    [0, dome.y, 0],
+    [0, 0, 0],
+    dome.r
+  );
+  arches.at.forEach((a, i) =>
+    add(
+      root,
+      `frame_arch_${i}`,
+      arc(arches.r, arches.t, arches.radial, arches.tubular, Math.PI),
+      alloy,
+      [0, dome.y, 0],
+      [0, a, 0],
+      arches.scale
+    )
+  );
+  collars.at.forEach(([r, y], i) =>
+    ring(root, `dome_collar_${i}`, alloy, {
+      r,
+      t: collars.t,
+      radial: 5,
+      tubular: 16,
+      at: [0, y, 0],
+    })
+  );
+  add(root, 'crystal_core', octa(core.r), crystalMat, [0, core.y, 0], [0, core.yaw, 0], core.scale);
+  ring(root, 'core_collar', alloy, {
+    r: core.collar.r,
+    t: core.collar.t,
+    radial: 5,
+    tubular: 12,
+    at: [0, core.collar.y, 0],
+  });
+  add(root, 'crown_mark', box(...mark.size), lampM, mark.at, [0, mark.yaw ?? 0, 0]);
+  seams.at.forEach(([a, r, y], i) =>
+    add(root, `vessel_seam_${i}`, box(...seams.size), unlit, polar(a, r, y), [0, -a, 0])
+  );
+}
+
+/**
+ * The Biomass outflow, Hadron Knights: a faceted conduit off the dome on
+ * `bearing`, collared twice, into a six-sided dispatch cistern with its cap
+ * and mouth — "the Biomass outflow off the vessel to a dispatch hopper",
+ * where every edge is straight because this navy has no other kind.
+ *
+ * The conduit is one lathe of four facets turned an eighth, so a flat faces
+ * up rather than an edge — the Vent Tap's exchanger prism, at a structure's
+ * scale (`exchangerHead` above). Distances are metres out along the bearing,
+ * as the kit's `reactorIntakeArm` takes them; the mouth is the crystal
+ * seam's unlit finish for the same reason the vessel's seams are.
+ */
+export function reactorOutflow(root, { shadow, alloy, unlit }, opts) {
+  const { bearing: a, conduit, collars, cistern, cap, mouth } = opts;
+  add(
+    root,
+    'outflow_conduit',
+    loft(conduit.profile, 4, Math.PI / 4),
+    alloy,
+    [0, conduit.y, 0],
+    [0, -a, 0]
+  );
+  // A torus is born round +Z, so the turn that lays its axis on the bearing
+  // is π/2 − a about Y: the collars ride the conduit rather than stand
+  // across it.
+  collars.at.forEach((d, i) =>
+    add(
+      root,
+      `conduit_collar_${i}`,
+      torus(collars.r, collars.t, 5, 12),
+      shadow,
+      polar(a, d, conduit.y),
+      [0, Math.PI / 2 - a, 0]
+    )
+  );
+  add(
+    root,
+    'outflow_cistern',
+    cyl(cistern.r[0], cistern.r[1], cistern.h, 6, Math.PI / 6),
+    shadow,
+    polar(a, cistern.at, cistern.y),
+    [0, -a, 0]
+  );
+  add(
+    root,
+    'cistern_cap',
+    cyl(cap.r[0], cap.r[1], cap.h, 6, Math.PI / 6),
+    alloy,
+    polar(a, cistern.at, cap.y),
+    [0, -a, 0]
+  );
+  add(
+    root,
+    'cistern_mouth',
+    cyl(mouth.r, mouth.r, mouth.t, 6),
+    unlit,
+    polar(a, cistern.at, mouth.y)
+  );
+}

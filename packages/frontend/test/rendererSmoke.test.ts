@@ -24,7 +24,7 @@
 import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
 import { Graphics, Text, type Container, type GraphicsPath } from 'pixi.js';
-import { Faction, MovementHoldReason } from '@echoes/shared';
+import { Faction, MovementHoldReason, StructureKind } from '@echoes/shared';
 import {
   createHost,
   dispatchWindow,
@@ -1703,7 +1703,11 @@ describe('renderer smoke test: the strip explains itself', () => {
  */
 describe('the command card when it is offered more than it holds', () => {
   /** Click a hull on the conn view, the way the attack-move tests do. */
-  const selectHull = (world: Booted, unit: { x: number; y: number; depth: number }): void => {
+  const selectHull = (
+    world: Booted,
+    unit: { x: number; y: number; depth: number },
+    add = false
+  ): void => {
     world.chart.focusOn(unit.x, unit.y);
     world.frame(2);
     const at = world.conn.projectPoint(unit.x, unit.y, unit.depth);
@@ -1715,6 +1719,7 @@ describe('the command card when it is offered more than it holds', () => {
         pointerType: 'mouse',
         clientX: at.x,
         clientY: at.y,
+        shiftKey: add,
       });
     }
     world.frame(1);
@@ -1759,6 +1764,134 @@ describe('the command card when it is offered more than it holds', () => {
         !lines.some((line) => line.trim().startsWith('TORP ')),
         'TORP is still holding a command cell'
       );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  /**
+   * The other half of the same argument, and the half #776 and #820 report:
+   * a navy's roster is nineteen offers against twelve cells, so yielding by
+   * rank is not enough — three of the four navies lost every Slipway hull.
+   * §9's answer is the page, and the strip is where a page is reached.
+   */
+  it('gives each yard a tab, and the Harvester the Bastion’s page', async () => {
+    const world = await boot();
+    try {
+      // Visible text only. Bar labels are pooled and a retired one keeps its
+      // last string with `visible = false` (see `barText`), so `textContents`
+      // — which does not look at visibility — reports tabs that are no longer
+      // drawn. Reading those made an earlier version of this test pass with
+      // the behaviour it was written to catch reverted.
+      const strip = (): string[] => {
+        const said: string[] = [];
+        const walkVisible = (node: Container): void => {
+          if (!node.visible) return;
+          if (node instanceof Text) said.push(node.text.trim());
+          for (const child of node.children) walkVisible(child as Container);
+        };
+        walkVisible(world.app.stage as unknown as Container);
+        return said;
+      };
+      world.frame(2);
+
+      // FOUNDRY and SLIPWAY are the tabs, in place of the one UNITS tab,
+      // because they are the two yards a commander may not have.
+      for (const tab of ['BUILD', 'FOUNDRY', 'SLIPWAY']) {
+        assert.ok(strip().includes(tab), `${tab} is not on the tab strip`);
+      }
+      assert.ok(!strip().includes('UNITS'), 'the single UNITS tab is still there');
+
+      // The canned base is a Bastion and a half-built Refinery, so no yard
+      // stands: the Bastion's page is the one with anything live on it, and
+      // reaching it is what selecting the Bastion does (§9, "A page opens by
+      // selection").
+      const bastion = cannedSnapshot().structures.find(
+        (structure) => structure.kind === StructureKind.Bastion
+      );
+      assert.ok(bastion !== undefined, 'the canned match has no Bastion to select');
+      selectHull(world, bastion);
+
+      assert.ok(
+        strip().some((line) => line.startsWith('HRV ')),
+        'selecting the Bastion did not open the page its Harvester sits on'
+      );
+      assert.ok(
+        strip().includes('BASTION'),
+        'the open page has no tab lit for it — the strip is lying about what the card shows'
+      );
+
+      // The page really is one line's rather than the flat roster. The shared
+      // suite pins §9's figures against `productionPageFor`; this pins the
+      // card against the renderer's own `pageRoster`, so the two cannot drift
+      // apart in silence.
+      // Foundry hulls that survived the old flat roster's yield, which is what
+      // makes them the ones worth asserting: a regression to flat puts them
+      // back on this card. A Slipway hull or the Derrick would be absent under
+      // that regression too, so they would prove nothing here.
+      for (const elsewhere of ['SCT ', 'CRV ']) {
+        assert.ok(
+          !strip().some((line) => line.startsWith(elsewhere)),
+          `${elsewhere.trim()} is on the Bastion's page — the card is not paging`
+        );
+      }
+    } finally {
+      world.teardown();
+    }
+  });
+
+  /**
+   * The strip grew from three tabs to as many as five, and `MENU` is anchored
+   * to the right edge with nothing between them. §2 drops a console *block*
+   * when the width runs out, but the strip has no such guard, so the question
+   * is whether the widest strip can reach `MENU` at any width the console
+   * itself survives — §11's 200% is where a HUD unit is most expensive.
+   *
+   * Five is the real worst case and it takes a mixed selection to reach: the
+   * structure branch of the auto-open wins, so a Bastion *and* a hull gives
+   * BUILD, both yards, the Bastion's own tab, and SQUAD.
+   */
+  it('keeps the widest tab strip clear of MENU at 200%', async () => {
+    const world = await boot();
+    try {
+      // Select at 100%, where the projection the click relies on is the one
+      // the other tests use, then scale — the strip is laid out per frame, so
+      // the scale is what is under test rather than the click.
+      const bastion = cannedSnapshot().structures.find(
+        (structure) => structure.kind === StructureKind.Bastion
+      );
+      assert.ok(bastion !== undefined, 'the canned match has no Bastion to select');
+      const hull = cannedSnapshot().units.find((unit) => unit.torpedoes !== undefined);
+      assert.ok(hull !== undefined, 'the canned match has no hull to add to the selection');
+      selectHull(world, bastion);
+      selectHull(world, hull, true);
+      world.chart.setUiScale(2);
+      world.frame(2);
+
+      // Bar labels are the only ones anchored at their centre, and every name
+      // read below is one of them.
+      const spans = new Map<string, { left: number; right: number }>();
+      const walk = (node: Container): void => {
+        if (node instanceof Text && node.visible) {
+          spans.set(node.text, { left: node.x - node.width / 2, right: node.x + node.width / 2 });
+        }
+        for (const child of node.children) walk(child as Container);
+      };
+      walk(world.app.stage as unknown as Container);
+
+      const menu = spans.get('MENU');
+      assert.ok(menu !== undefined, 'the MENU door is not on the bar');
+      const tabs = ['BUILD', 'FOUNDRY', 'SLIPWAY', 'BASTION', 'SQUAD'].map((name) => {
+        const span = spans.get(name);
+        assert.ok(span !== undefined, `${name} is not on the tab strip`);
+        return { name, span };
+      });
+      for (const { name, span } of tabs) {
+        assert.ok(
+          span.right < menu.left,
+          `${name} runs into MENU at 200% — the strip has outgrown the bar`
+        );
+      }
     } finally {
       world.teardown();
     }

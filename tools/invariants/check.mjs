@@ -110,6 +110,27 @@ if (rows.length === 0) {
   process.exit(1);
 }
 
+// Two rows may not share a number. This is the one fault in the table that git
+// merges cleanly and every other check ignores: two branches that each append a
+// row off the same base both write the next number, and the merge keeps both.
+// It happened on #815, whose row landed as a second 30 beside #743's. Holders
+// still resolved, so the gate stayed green and the duplicate reached `main`.
+//
+// Numbers are not how a row is cited — `holdersOf`'s own comment says rows are
+// named rather than numbered because a split shifts them — so this checks that
+// the column is a usable index, and nothing downstream depends on the order.
+const seen = new Map();
+const duplicates = [];
+for (const row of rows) {
+  if (seen.has(row.n)) duplicates.push(row.n);
+  else seen.set(row.n, row.invariant);
+}
+if (duplicates.length > 0) {
+  const each = [...new Set(duplicates)].sort((a, b) => a - b).join(', ');
+  process.stderr.write(`${DOC}: more than one row numbered ${each}.\n`);
+  process.exit(1);
+}
+
 if (process.argv.includes('--list')) {
   for (const row of rows) process.stdout.write(`${String(row.n).padStart(2)}  ${row.invariant}\n`);
   process.exit(0);
