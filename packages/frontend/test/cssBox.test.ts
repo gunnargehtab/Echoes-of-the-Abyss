@@ -641,6 +641,91 @@ describe('cssBox: whether a word too long for its box may be broken', () => {
     );
   });
 
+  /**
+   * The same axis on the result card's row, which carried it in no form until
+   * #809. Row 34 gave that row the two floors and said in terms what they do
+   * not do; this is the part they left. It outlived #774 by *fitting* the
+   * fixture that caught the panel — the cell is 455.8 px against the panel's
+   * 218.7, so a 64-character token inks 394.3 px there and never reaches the
+   * counter at all. `resultCards.test.ts` carries that measurement.
+   */
+  const RESULT_ROW = { tag: 'li', classes: ['mission-result-objective', 'failed'] };
+  const RESULT_ANCESTRY = [
+    { tag: 'div', classes: ['game-root'] },
+    { tag: 'div', classes: ['game-under'] },
+    { tag: 'div', classes: ['mission-result'] },
+    { tag: 'div', classes: ['mission-result-panel'] },
+    { tag: 'ul', classes: ['mission-result-objectives'] },
+  ];
+  const resultCell = (className: string): Element => ({
+    tag: 'span',
+    classes: [className],
+    ancestors: [...RESULT_ANCESTRY, RESULT_ROW],
+  });
+
+  it('reads the result row’s cells as they now ship', () => {
+    const rules = parseCss(APP_CSS);
+    // The one cell a mission authors into. The card prints a sentence and no
+    // gloss, which is the only way its row differs from the panel's here.
+    assert.equal(
+      wordBreaking(rules, resultCell('mission-result-text')).kind,
+      'permits',
+      '.mission-result-text cannot break a token it cannot fit'
+    );
+    // The two the client templates, neither of which may break: the counter
+    // for `4 of 3`'s sake, and the status word because it sits in a fixed
+    // `3.2rem` track where a break is the same illegibility one column along.
+    for (const templated of ['mission-result-progress', 'mission-result-status']) {
+      assert.equal(
+        wordBreaking(rules, resultCell(templated)).kind,
+        'refuses',
+        `.${templated} may break`
+      );
+    }
+  });
+
+  it('reproduces #809 when the declaration is taken away', () => {
+    // The negative control, read-only, and asserted to have bitten. Anchored
+    // on the whole rule body rather than on `overflow-wrap: break-word`, for
+    // the reason the #760, #773 and #774 controls give: a short anchor strips
+    // whichever row happens to be written first and leaves this one's intact,
+    // which is a control aimed at the wrong row passing against a sheet it
+    // never changed. Replaced rather than removed, so the cell keeps the
+    // colour it had before this axis reached it.
+    const CELL =
+      '.mission-result-text {\n  color: var(--text-bright);\n  overflow-wrap: break-word;\n}\n';
+    const WITHOUT = '.mission-result-text {\n  color: var(--text-bright);\n}\n';
+    assert.equal(APP_CSS.split(CELL).length - 1, 1, 'the authored cell’s rule is unique');
+
+    const stripped = APP_CSS.replace(CELL, WITHOUT);
+    assert.ok(!stripped.includes(CELL), 'the strip reached the rule');
+    // And it reached *only* it. The two floors are row 34's axis, and a
+    // control that took them out too could not say which fault it had caught.
+    assert.ok(
+      stripped.includes('.mission-result-objective > * {\n  min-width: 0;\n}'),
+      'the strip left the item floor standing'
+    );
+    // Nor the panel's own cells one row along: this fault is a copy of #774
+    // rather than an instance of it, so a strip reaching both would pass here
+    // while saying nothing about this row.
+    assert.ok(
+      stripped.includes('.objectives-text,\n.objectives-gloss {\n  overflow-wrap: break-word;\n}'),
+      'the strip left the panel’s own declaration standing'
+    );
+
+    const rules = parseCss(stripped);
+    assert.deepEqual(wordBreaking(rules, resultCell('mission-result-text')), {
+      kind: 'refuses',
+      because: 'nothing sets `overflow-wrap` or `word-break`',
+    });
+    // The floors are untouched by the strip, which is what says this axis is
+    // genuinely the third one and not row 34 restated.
+    assert.deepEqual(
+      columnFloors(rules, { ...RESULT_ROW, ancestors: RESULT_ANCESTRY }).map((floor) => floor.kind),
+      ['definite', 'definite', 'content']
+    );
+  });
+
   it('reads an ancestor’s `white-space`, which is the one inherited axis here', () => {
     // Every property in `WRAP_PROPERTIES` is inherited, which is where this
     // reader parts company with the box one: `width` cannot reach a child from
