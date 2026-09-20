@@ -17,12 +17,14 @@ import { hasComponent } from 'bitecs';
 import {
   Acoustic,
   Carried,
+  Craft,
   Countermeasure,
   DepthOrder,
   Embarking,
   Fauna,
   Harvester,
   Health,
+  Flightdeck,
   Hold,
   LandingGrant,
   Laying,
@@ -109,6 +111,22 @@ export function hashWorld(world: SimWorld): number {
     if (hasComponent(world, LandingGrant, eid)) {
       h = mixFloat(h, LandingGrant.remainingS[eid]!);
       h = mixU32(h, LandingGrant.bonus[eid]!);
+    }
+    // A carrier's deck and a craft's cell (docs/systems-combat.md §15). The
+    // deck's own counter is mixed because it decides where the *next* craft
+    // enters the water, so two runs that agreed about everything else and
+    // disagreed about it would diverge one launch later and blame the wrong
+    // tick.
+    if (hasComponent(world, Flightdeck, eid)) {
+      h = mixU32(h, Flightdeck.aboard[eid]!);
+      h = mixFloat(h, Flightdeck.rebuildRemainingS[eid]!);
+      h = mixFloat(h, Flightdeck.launchRemainingS[eid]!);
+      h = mixU32(h, Flightdeck.launched[eid]!);
+    }
+    if (hasComponent(world, Craft, eid)) {
+      h = mixU32(h, ordinalOf.get(Craft.carrier[eid]!) ?? -1);
+      h = mixFloat(h, Craft.enduranceRemainingS[eid]!);
+      h = mixU32(h, Craft.station[eid]!);
     }
 
     if (hasComponent(world, Health, eid)) {
@@ -520,6 +538,11 @@ export type CoveredWorldState =
   /** Through `Carried.carrier` and `Hold.used` in the entity walk: a hull in a
    * hold is hashed as a hull, with the carrier it is inside. */
   | 'holds'
+  /** Through `Craft.carrier` and `Flightdeck.aboard` in the entity walk: a
+   * craft is an ordinary entity that is hashed as one, and it names the deck
+   * it belongs to, so the pair of counts `capacity` bounds is already mixed —
+   * what is aboard, and what is in the water naming this carrier. */
+  | 'flights'
   /** Through `Pressure.rating` and `Pressure.bonus`. A refit *is* the ratings
    * it wrote, and `world.refits` says so where it is declared — a world that
    * agreed about the purchase and disagreed about the hulls would be the

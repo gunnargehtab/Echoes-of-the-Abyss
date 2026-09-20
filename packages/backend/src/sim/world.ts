@@ -35,6 +35,7 @@ import {
   Acoustic,
   Countermeasure,
   DepthOrder,
+  Flightdeck,
   Harvester,
   HarvestMode,
   Fauna,
@@ -182,6 +183,16 @@ export interface SimWorld extends IWorld {
    * carrier in `reap`, exactly as the rallies are.
    */
   holds: Map<number, number[]>;
+  /**
+   * What each carrier has in the water, by carrier entity, in launch order —
+   * docs/systems-combat.md §15, systems/flight.ts. The mirror image of
+   * `holds`, and kept for the opposite reason: a craft has a `Position` and is
+   * found by every query there is, so this is not how it is *seen* but how a
+   * deck knows how many of its own are out — the half of `capacity` that is
+   * not `Flightdeck.aboard`. Dropped with the carrier in `reap`, where the
+   * flight dies with it.
+   */
+  flights: Map<number, number[]>;
   /**
    * Sounding Spires whose PR grant is load-bearing this tick — an allied
    * unit under the aura is actually below its own rating. Written by the
@@ -532,6 +543,7 @@ export function createSimWorld(
   world.refits = new Map();
   world.rallies = new Map();
   world.holds = new Map();
+  world.flights = new Map();
   world.spireActive = new Set();
   world.reactorActive = new Set();
   world.blooms = [];
@@ -1086,7 +1098,13 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
     PingCadence.remainingS[eid] = stats.pingCadenceS;
   }
 
-  if (stats.attackDamage > 0 && opts.weaponsCold !== true) {
+  // A gun, or a deck. A carrier has no gun and still carries a `Weapon`,
+  // because the component *is* fire control: it is where an ordered target
+  // lives, and a carrier's ordered target is what its flight is sent at
+  // (docs/systems-combat.md §15). `combatSystem` drops it on the first gate it
+  // reaches — a profile with no damage in it shoots nothing — so the hull is
+  // armed in exactly the sense of being able to be told what to attack.
+  if ((stats.attackDamage > 0 || stats.flight !== undefined) && opts.weaponsCold !== true) {
     addComponent(world, Weapon, eid);
     Weapon.cooldownRemainingS[eid] = 0;
     Weapon.orderedTargetEid[eid] = 0;
@@ -1163,6 +1181,18 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
     addComponent(world, Hold, eid);
     Hold.berths[eid] = stats.holdBerths;
     Hold.used[eid] = 0;
+  }
+
+  // A carrier's deck, full at launch and with nothing in the water — the
+  // Spinner's rule for a grown magazine (docs/units.md, "The carriers"). What
+  // is aboard and what is flying are bounded together by `capacity`, so a
+  // carrier that has launched nothing rebuilds nothing.
+  if (stats.flight !== undefined) {
+    addComponent(world, Flightdeck, eid);
+    Flightdeck.aboard[eid] = stats.flight.capacity;
+    Flightdeck.rebuildRemainingS[eid] = 0;
+    Flightdeck.launchRemainingS[eid] = 0;
+    Flightdeck.launched[eid] = 0;
   }
 
   if (opts.kind === UnitKind.Harvester) {
