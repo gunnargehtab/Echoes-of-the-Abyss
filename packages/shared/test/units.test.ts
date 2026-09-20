@@ -43,6 +43,8 @@ import {
   MAX_UNIT_RADIUS_M,
   OPENING_ESCORT,
   PRODUCIBLE,
+  PRODUCTION_LINES,
+  REFIT_KINDS,
   StructureKind,
   UNIT_STATS,
   UnitKind,
@@ -50,6 +52,7 @@ import {
   priceOf,
   statsFor,
   structureStatsFor,
+  productionPageFor,
   unitAvailableTo,
   unitRadiusM,
 } from '../dist/index.js';
@@ -560,5 +563,130 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
     // point of "two ways a Biomass hull is the Directorate's, and the roster
     // uses both" (economy.test.ts).
     assert.equal(statsFor(UnitKind.Spinner).mineMagazine, HULL_EFFECTS.SPINNER.MAGAZINE);
+  });
+});
+
+/**
+ * docs/ui-ux.md §9, "The production card is a page per yard".
+ *
+ * The card is 4 × 3, and §2 closes both of the usual escapes: a panel does not
+ * scroll, and the digits belong to control groups rather than to production.
+ * So a roster that does not fit twelve cells does not shrink — it loses
+ * entries. Flat, three of the four navies were offered nineteen and lost
+ * seven: every Slipway hull, and the Pressure Refit behind them (#776, #820).
+ *
+ * The page is the unit of the answer, and these are §9's own figures. A roster
+ * edit is exactly the thing that breaks them, and breaks them in silence —
+ * the card goes on rendering twelve buttons either way.
+ */
+describe('the production card’s pages', () => {
+  /** §2's grid: four columns, three rows. */
+  const CELLS = 12;
+  const navies = [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron];
+
+  /** One page's hulls — the renderer's `pageRoster`, in shared's own terms. */
+  const page = (line: StructureKind, faction: Faction): UnitKind[] =>
+    (PRODUCIBLE[line] ?? []).filter(
+      (kind) => productionPageFor(kind) === line && unitAvailableTo(kind, faction)
+    );
+
+  /**
+   * The refits ride the Slipway's page, because the Slipway's line is what
+   * they compete for (docs/systems-progression.md §1). Where a navy *strikes*
+   * one is a different question — the Order's is struck at a Bastion — and it
+   * does not move the button.
+   */
+  const refitsOn = (line: StructureKind, faction: Faction): number =>
+    line === StructureKind.Slipway
+      ? REFIT_KINDS.filter((kind) => refitOfferedTo(kind, faction)).length
+      : 0;
+
+  /** §9's table, read across: Bastion, Foundry, Slipway-with-its-refits. */
+  const TABLE = new Map<Faction, ReadonlyArray<[StructureKind, number]>>([
+    [
+      Faction.Bathyarch,
+      [
+        [StructureKind.Bastion, 1],
+        [StructureKind.Foundry, 12],
+        [StructureKind.Slipway, 6],
+      ],
+    ],
+    [
+      Faction.Pelagia,
+      [
+        [StructureKind.Bastion, 1],
+        [StructureKind.Foundry, 12],
+        [StructureKind.Slipway, 6],
+      ],
+    ],
+    [
+      Faction.Directorate,
+      [
+        [StructureKind.Bastion, 1],
+        [StructureKind.Foundry, 8],
+        [StructureKind.Slipway, 3],
+      ],
+    ],
+    [
+      Faction.Hadron,
+      [
+        [StructureKind.Bastion, 1],
+        [StructureKind.Foundry, 11],
+        [StructureKind.Slipway, 7],
+      ],
+    ],
+  ]);
+
+  it('puts the Harvester on the page of the line that never has to be built', () => {
+    // It is on the Bastion's line as well as the Foundry's, and the Bastion
+    // always stands. That one placement takes the Foundry's thirteen down to
+    // twelve, which is how the Derrick and the Reed keep their cells (#820).
+    assert.equal(productionPageFor(UnitKind.Harvester), StructureKind.Bastion);
+    assert.ok(
+      PRODUCIBLE[StructureKind.Foundry]!.includes(UnitKind.Harvester),
+      'the Foundry still builds Harvesters — the page says where the button sits, not where the hull is made'
+    );
+    for (const faction of navies) {
+      assert.ok(
+        !page(StructureKind.Foundry, faction).includes(UnitKind.Harvester),
+        `${Faction[faction]}'s Foundry page is still carrying the Harvester`
+      );
+    }
+  });
+
+  it('fits every page into the card’s twelve cells, at §9’s figures', () => {
+    for (const faction of navies) {
+      const expected = TABLE.get(faction);
+      assert.ok(expected !== undefined, `${Faction[faction]} is missing from §9's table`);
+      assert.equal(expected.length, PRODUCTION_LINES.length, 'a line has no row in §9’s table');
+      for (const [line, held] of expected) {
+        const actual = page(line, faction).length + refitsOn(line, faction);
+        const name = structureStatsFor(line).name;
+        assert.equal(
+          actual,
+          held,
+          `${Faction[faction]}'s ${name} page holds ${actual}, and §9's table says ${held}`
+        );
+        assert.ok(actual <= CELLS, `${Faction[faction]}'s ${name} page does not fit the card`);
+      }
+    }
+  });
+
+  it('leaves no hull and no refit without a cell', () => {
+    // The property the figures are for. A page that fits is worth nothing if
+    // something fell off the pages altogether on the way.
+    for (const faction of navies) {
+      const paged = new Set(PRODUCTION_LINES.flatMap((line) => page(line, faction)));
+      for (const line of PRODUCTION_LINES) {
+        for (const kind of PRODUCIBLE[line] ?? []) {
+          if (!unitAvailableTo(kind, faction)) continue;
+          assert.ok(
+            paged.has(kind),
+            `${Faction[faction]} cannot reach ${statsFor(kind).name} on any page`
+          );
+        }
+      }
+    }
+    assert.ok(YARDS.includes(StructureKind.Slipway), 'the Slipway still has a tab of its own');
   });
 });

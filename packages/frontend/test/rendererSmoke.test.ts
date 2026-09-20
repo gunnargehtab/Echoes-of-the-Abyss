@@ -24,7 +24,7 @@
 import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
 import { Graphics, Text, type Container, type GraphicsPath } from 'pixi.js';
-import { Faction, MovementHoldReason } from '@echoes/shared';
+import { Faction, MovementHoldReason, StructureKind } from '@echoes/shared';
 import {
   createHost,
   dispatchWindow,
@@ -1758,6 +1758,48 @@ describe('the command card when it is offered more than it holds', () => {
       assert.ok(
         !lines.some((line) => line.trim().startsWith('TORP ')),
         'TORP is still holding a command cell'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  /**
+   * The other half of the same argument, and the half #776 and #820 report:
+   * a navy's roster is nineteen offers against twelve cells, so yielding by
+   * rank is not enough — three of the four navies lost every Slipway hull.
+   * §9's answer is the page, and the strip is where a page is reached.
+   */
+  it('gives each yard a tab, and the Harvester the Bastion’s page', async () => {
+    const world = await boot();
+    try {
+      const strip = (): string[] => textContents(world.app.stage).map((line) => line.trim());
+      world.frame(2);
+
+      // FOUNDRY and SLIPWAY are the tabs, in place of the one UNITS tab,
+      // because they are the two yards a commander may not have.
+      for (const tab of ['BUILD', 'FOUNDRY', 'SLIPWAY']) {
+        assert.ok(strip().includes(tab), `${tab} is not on the tab strip`);
+      }
+      assert.ok(!strip().includes('UNITS'), 'the single UNITS tab is still there');
+
+      // The canned base is a Bastion and a half-built Refinery, so no yard
+      // stands: the Bastion's page is the one with anything live on it, and
+      // reaching it is what selecting the Bastion does (§9, "A page opens by
+      // selection").
+      const bastion = cannedSnapshot().structures.find(
+        (structure) => structure.kind === StructureKind.Bastion
+      );
+      assert.ok(bastion !== undefined, 'the canned match has no Bastion to select');
+      selectHull(world, bastion);
+
+      assert.ok(
+        strip().some((line) => line.startsWith('HRV ')),
+        'selecting the Bastion did not open the page its Harvester sits on'
+      );
+      assert.ok(
+        strip().includes('BASTION'),
+        'the open page has no tab lit for it — the strip is lying about what the card shows'
       );
     } finally {
       world.teardown();

@@ -81,9 +81,11 @@ like:
 - A textured seabed with relief, receding into fog, seen from a 55° tilt — not
   a flat map. The base opens centred: a hub structure with outbuildings and a
   handful of hulls, each hanging over a ground shadow on a thin plumb line.
-- The minimap bottom-left, and `BUILD` / `UNITS` tabs over a build bar along
-  the bottom. (A third `SQUAD` tab appears only once something is selected, so
-  its absence on the first frame is correct.)
+- The minimap bottom-left, and `BUILD` / `FOUNDRY` / `SLIPWAY` tabs over a
+  build bar along the bottom — production is a page per yard (docs/ui-ux.md
+  §9). (A `SQUAD` tab appears only once something is selected, so its absence
+  on the first frame is correct, and a `BASTION` tab only while the Bastion's
+  own page is open.)
 
 The GLB models decode in the background: the first seconds show flat baked
 sprites lying at depth, which then swap for dimensional hulls — wait ~5 s
@@ -134,8 +136,9 @@ into water through the shared conn camera:
 | `Escape` | Cancel a pending build — handled before every other key, so it is safe to press unconditionally | no |
 
 Unit production has no keys — the digits are control groups — so producing a
-unit means pressing its button on the `UNITS` tab, which is the one case where
-clicking the bar is unavoidable.
+unit means pressing its button on the yard's own tab — `FOUNDRY` or `SLIPWAY`,
+or the `BASTION` page the Harvester sits on, which selecting the Bastion opens.
+That is the one case where clicking the bar is unavoidable.
 
 The "needs a selection" column is the thing that catches people: `EchoRenderer`
 returns early on most keys when nothing is selected, so a bare `page.keyboard
@@ -147,7 +150,7 @@ build the unit and so need one.
 **There is nothing to select against, so commands go through the keyboard.**
 The page is two stacked canvases and about 17 DOM elements;
 `document.body.innerText` is empty, and the HUD you can see (the `BUILD` /
-`UNITS` / `SQUAD` tabs, `SILENT`, `PING`, the build buttons) is drawn by Pixi,
+`FOUNDRY` / `SQUAD` tabs, `SILENT`, `PING`, the build buttons) is drawn by Pixi,
 not rendered as DOM. So `page.click('text=PING')` matches nothing, and every
 Playwright selector strategy is unavailable by construction.
 

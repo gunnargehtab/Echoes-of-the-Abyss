@@ -29,7 +29,7 @@
 │ │H │                                              │   OBJECTIVES     │ │
 │ └──┘                                              └──────────────────┘ │
 │                      hint line — why a press did nothing               │
-│ ┌BUILD┬UNITS┬SQUAD┐                                            ┌MENU┐  │
+│ ┌BUILD┬FOUNDRY┬SLIPWAY┬SQUAD┐                                  ┌MENU┐  │
 │ ┌───────┬───────────┬──────────┬───────────────┬─────────────────────┐ │
 │ │ SCOPE │ SELECTION │ FLEET    │ COMMANDS      │ PRODUCTION          │ │
 │ │       │ name  PR2 │ ▢▢▢▢▢    │ ┌──┬──┬──┬──┐ │ BASTION HARVEST 14s │ │
@@ -441,6 +441,7 @@ yard**, FOUNDRY and SLIPWAY, and each page fits what it holds:
 
 | Page | Consortium | Commune | Directorate | Knights |
 | --- | --- | --- | --- | --- |
+| BASTION | 1 | 1 | 1 | 1 |
 | FOUNDRY | 12 | 12 | 8 | 11 |
 | SLIPWAY, with the refits | 6 | 6 | 3 | 7 |
 
@@ -449,6 +450,11 @@ is. The **Harvester** is on the Bastion's line as well as the Foundry's and the 
 stands, so it belongs to the page of the yard that never has to be built — which is what takes the
 Foundry's thirteen down to twelve. The **refits** sit on the Slipway's page because the Slipway's
 line is what they compete for ([systems-progression.md](systems-progression.md) §1).
+
+The Bastion's page is the Harvester by itself, and it is the one page with no tab: the
+Bastion is a depot rather than a yard, and it always stands, so selecting it is always a
+route to that page. FOUNDRY and SLIPWAY are the tabs, because they are the two a commander
+may not have.
 
 A page opens by selection: picking a yard shows that yard's. Both stay reachable without one,
 because a Slipway hull greyed for *no Slipway standing* is how a commander finds out what the rung

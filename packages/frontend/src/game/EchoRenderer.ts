@@ -67,6 +67,7 @@ import {
   PERSISTENCE,
   priceOf,
   PRODUCIBLE,
+  productionPageFor,
   REFIT_KINDS,
   REFIT_STATS,
   REFIT_TERMS,
@@ -1025,12 +1026,20 @@ const BAND_LABEL: Record<DepthBand, string> = {
 /** The ribbon's vertical range. Past this the strip would imply map we lack. */
 const RIBBON_MAX_DEPTH_M = DEPTH.MAX_M;
 
-/** The command panel's three pages. 'squad' appears only while units are selected. */
+/**
+ * The command panel's pages. 'squad' appears only while units are selected,
+ * and 'units' is not one page but one per yard — `activePage` says which
+ * (docs/ui-ux.md §9, "The production card is a page per yard").
+ */
 type CommandTab = 'build' | 'units' | 'squad';
 
-const TAB_LABEL: Record<CommandTab, string> = {
+/**
+ * The strip's two fixed labels. A production page's label is its own yard's
+ * name, read from the structure rather than repeated here, so a navy that
+ * gained a third line would gain its tab without an edit in this file.
+ */
+const TAB_LABEL: Record<Exclude<CommandTab, 'units'>, string> = {
   build: 'BUILD',
-  units: 'UNITS',
   squad: 'SQUAD',
 };
 
@@ -1098,6 +1107,13 @@ export class EchoRenderer {
   /** Last frame's button layout, hit-tested by pressBarButton. */
   private barButtons: BarButton[] = [];
   private activeTab: CommandTab = 'build';
+  /**
+   * Which yard's page the production side of the card is showing. Flat, a
+   * navy's roster does not fit the card's twelve cells — the Consortium
+   * offers nineteen — and seven entries yielded, every Slipway hull among
+   * them (#776, #820). A page per yard is what makes each one fit.
+   */
+  private activePage: StructureKind = YARDS[0] ?? StructureKind.Foundry;
 
   /** Sonar scope. Terrain cached; overlay redrawn per frame. */
   private readonly minimapTerrainG = new Graphics();
@@ -2729,11 +2745,35 @@ export class EchoRenderer {
     const structure = this.structures.find((s) => this.selected.has(s.id));
     if (structure !== undefined && (PRODUCIBLE[structure.kind]?.length ?? 0) > 0) {
       this.activeTab = 'units';
+      // §9: "A page opens by selection: picking a yard shows that yard's."
+      // The Bastion trips this too, which is the Harvester's whole route to
+      // the card — see `pageRoster`.
+      this.activePage = structure.kind;
     } else if (this.selectedUnits().length > 0) {
       this.activeTab = 'squad';
     } else if (this.selected.size === 0) {
       this.activeTab = 'build';
     }
+  }
+
+  /**
+   * One production page's roster: the yard's own line, less whatever belongs
+   * to another navy (the Clarion is the Order's and the server refuses it to
+   * anyone else, so offering it would be the bar lying about the rules —
+   * units.ts, `unitAvailableTo`).
+   *
+   * A hull built on two lines sits on the page of the *first* line that
+   * offers it, which is docs/ui-ux.md §9's placement of the Harvester: it is
+   * on the Bastion's line as well as the Foundry's, and because the Bastion
+   * always stands it "belongs to the page of the yard that never has to be
+   * built". That is what takes the Foundry's thirteen down to twelve, and
+   * `PRODUCIBLE` already lists the Bastion first, so the rule reads off the
+   * order rather than naming the Harvester.
+   */
+  private pageRoster(page: StructureKind): UnitKind[] {
+    return (PRODUCIBLE[page] ?? []).filter(
+      (kind) => productionPageFor(kind) === page && unitAvailableTo(kind, this.faction)
+    );
   }
 
   /**
@@ -2758,17 +2798,13 @@ export class EchoRenderer {
     }
 
     if (this.shownTab === 'units') {
-      // One row of the whole roster; each button routes to a structure that
-      // can actually build it, selected or not.
-      // Every yard's roster, less whatever belongs to another navy: the Clarion
-      // is the Order's and the server refuses it to anyone else, so showing a
-      // Pelagia commander a button that can only be refused would be the bar
-      // lying about the rules (units.ts, `unitAvailableTo`). The Slipway's
-      // hull is listed beside the Foundry's — greyed until a Slipway stands,
-      // which is what tells a commander what the rung is for.
-      const roster = YARDS.flatMap((yard) => PRODUCIBLE[yard] ?? []).filter((kind) =>
-        unitAvailableTo(kind, this.faction)
-      );
+      // One yard's page, not every yard at once; each button still routes to
+      // a structure that can actually build it, selected or not. A page is
+      // listed whether or not its yard stands — a Slipway hull greyed for no
+      // Slipway standing is how a commander finds out what the rung is for
+      // (docs/ui-ux.md §9), and §7's rule is that a disabled action names its
+      // reason rather than going quiet.
+      const roster = this.pageRoster(this.activePage);
       const stockpile = this.stockpile();
       for (const kind of roster) {
         const stats = statsFor(kind);
@@ -2791,7 +2827,7 @@ export class EchoRenderer {
           // names a combat hull.
           refusal:
             target === undefined
-              ? `${stats.name}: no Foundry standing`
+              ? `${stats.name}: no ${structureStatsFor(this.activePage).name} standing`
               : !berthed
                 ? `${stats.name}: no berth — ${stats.berths} needed, ` +
                   `${this.berths.granted - this.berths.used} free · a Foundry grants ${BERTHS.FOUNDRY}`
@@ -2799,12 +2835,16 @@ export class EchoRenderer {
         });
       }
 
-      // The refits, on the same page as the hulls they compete with for the
-      // yard's line (docs/systems-progression.md §2). Listed only where this
-      // navy is offered one at all — the Directorate's row of §2's per-faction
-      // table is "not offered", so a Directorate bar shows nothing here rather
-      // than a button that can only ever be refused.
-      for (const kind of REFIT_KINDS) {
+      // The refits, on the Slipway's page: the Slipway's line is what they
+      // compete for (docs/ui-ux.md §9, docs/systems-progression.md §1), so
+      // they sit beside the hulls they compete with rather than on every
+      // page. Where a navy strikes its refit is not the same question — the
+      // Order's is struck at a Bastion — and the refusal below says so.
+      // Listed only where this navy is offered one at all — the Directorate's
+      // row of docs/systems-progression.md §2's per-faction table is "not
+      // offered", so a Directorate bar shows nothing here rather than a button
+      // that can only ever be refused.
+      for (const kind of this.activePage === StructureKind.Slipway ? REFIT_KINDS : []) {
         if (!refitOfferedTo(kind, this.faction)) continue;
         const refit = REFIT_STATS[kind];
         const price = refitPriceFor(kind, this.faction);
@@ -3352,6 +3392,7 @@ export class EchoRenderer {
     // is rebuilt (#432).
     const signature = [
       this.shownTab,
+      this.activePage,
       this.pendingBuild,
       this.pendingAttackMove,
       this.snapshotSeq,
@@ -3377,26 +3418,58 @@ export class EchoRenderer {
     // reason is not lost — it stands in the orders panel's lock list with the
     // other six, which is where docs/ui-ux.md §7 wants it.
     const canBuild = this.missionLock('construction') === null;
-    const tabs: CommandTab[] = canBuild
-      ? this.selectedUnits().length > 0
-        ? ['build', 'units', 'squad']
-        : ['build', 'units']
-      : ['squad'];
+    // One production tab per yard rather than a single UNITS tab, because a
+    // whole navy's roster does not fit twelve cells and §9 makes the yard the
+    // page. BUILD, FOUNDRY and SLIPWAY never move; only the tail of the strip
+    // changes, which is where SQUAD has always come and gone.
+    const strip: Array<{ label: string; active: boolean; open: () => void }> = [];
+    const page = (yard: StructureKind): void => {
+      strip.push({
+        label: structureStatsFor(yard).name.toUpperCase(),
+        active: this.shownTab === 'units' && this.activePage === yard,
+        open: () => {
+          this.activeTab = 'units';
+          this.activePage = yard;
+        },
+      });
+    };
+    if (canBuild) {
+      strip.push({
+        label: TAB_LABEL.build,
+        active: this.shownTab === 'build',
+        open: () => {
+          this.activeTab = 'build';
+        },
+      });
+      for (const yard of YARDS) page(yard);
+      // The Bastion's page has no standing tab — it is a depot, not a yard,
+      // and selecting it is what opens it. It still gets one *while it is
+      // open*, because a strip that lit nothing would be lying about which
+      // page the card is showing.
+      if (this.shownTab === 'units' && !YARDS.includes(this.activePage)) page(this.activePage);
+    }
+    if (!canBuild || this.selectedUnits().length > 0) {
+      strip.push({
+        label: TAB_LABEL.squad,
+        active: this.shownTab === 'squad',
+        open: () => {
+          this.activeTab = 'squad';
+        },
+      });
+    }
     const tabButtons: BarButton[] = [];
     let tabX = 10;
-    for (const tab of tabs) {
-      const w = TAB_LABEL[tab].length * 7.5 + 22;
+    for (const tab of strip) {
+      const w = tab.label.length * 7.5 + 22;
       tabButtons.push({
         x: tabX,
         y: barY,
         w,
         h: TAB_HEIGHT,
-        label: TAB_LABEL[tab],
+        label: tab.label,
         enabled: true,
-        active: this.shownTab === tab,
-        action: () => {
-          this.activeTab = tab;
-        },
+        active: tab.active,
+        action: tab.open,
       });
       tabX += w + 4;
     }
@@ -7727,7 +7800,11 @@ export class EchoRenderer {
       const queue = structure.queue.length > 0 ? `  ·  queue ${structure.queue.length}` : '';
       const name = structureStatsFor(structure.kind).name;
       if (this.isTouch || !canBuild) return `${name}${queue}`;
-      return `${name}${queue}  ·  UNITS tab to produce  ·  ${this.buildKeyHint()} build`;
+      // Not "UNITS tab to produce" any more: selecting a yard *is* what opens
+      // its page (§9), so by the time this line is read the roster is already
+      // on the card. Naming a tab the strip no longer carries would send a
+      // commander looking for it.
+      return `${name}${queue}  ·  produce on the card  ·  ${this.buildKeyHint()} build`;
     }
     // A selection the mission is holding whole says so where it would
     // otherwise say how to move it. §10.5 wants continuous state rather than
