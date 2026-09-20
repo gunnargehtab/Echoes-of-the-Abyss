@@ -67,7 +67,7 @@ import {
   PERSISTENCE,
   priceOf,
   PRODUCIBLE,
-  productionPageFor,
+  productionPage,
   REFIT_KINDS,
   REFIT_STATS,
   REFIT_TERMS,
@@ -91,7 +91,6 @@ import {
   THERMOCLINE_ZONE_MAX,
   ThermoclineZone,
   thermoclineZone,
-  unitAvailableTo,
   UnitKind,
   YARDS,
   type AbilityLock,
@@ -2757,23 +2756,12 @@ export class EchoRenderer {
   }
 
   /**
-   * One production page's roster: the yard's own line, less whatever belongs
-   * to another navy (the Clarion is the Order's and the server refuses it to
-   * anyone else, so offering it would be the bar lying about the rules —
-   * units.ts, `unitAvailableTo`).
-   *
-   * A hull built on two lines sits on the page of the *first* line that
-   * offers it, which is docs/ui-ux.md §9's placement of the Harvester: it is
-   * on the Bastion's line as well as the Foundry's, and because the Bastion
-   * always stands it "belongs to the page of the yard that never has to be
-   * built". That is what takes the Foundry's thirteen down to twelve, and
-   * `PRODUCIBLE` already lists the Bastion first, so the rule reads off the
-   * order rather than naming the Harvester.
+   * One production page's roster, straight from shared — the card and the test
+   * that pins docs/ui-ux.md §9's per-faction figures call the same filter, so
+   * the table cannot certify a page the card does not draw.
    */
-  private pageRoster(page: StructureKind): UnitKind[] {
-    return (PRODUCIBLE[page] ?? []).filter(
-      (kind) => productionPageFor(kind) === page && unitAvailableTo(kind, this.faction)
-    );
+  private pageRoster(page: StructureKind): readonly UnitKind[] {
+    return productionPage(page, this.faction);
   }
 
   /**
@@ -3448,10 +3436,12 @@ export class EchoRenderer {
       });
       for (const yard of YARDS) page(yard);
       // The Bastion's page has no standing tab — it is a depot, not a yard,
-      // and selecting it is what opens it. It still gets one *while it is
-      // open*, because a strip that lit nothing would be lying about which
-      // page the card is showing.
-      if (this.shownTab === 'units' && !YARDS.includes(this.activePage)) page(this.activePage);
+      // and selecting it is what opens it. It gets one for as long as it is
+      // the page the card would return to, which is not the same as being the
+      // page on show: gated on `shownTab === 'units'`, pressing BUILD with the
+      // Bastion still selected took away the only route back to it, and the
+      // player had to go and click the structure again.
+      if (!YARDS.includes(this.activePage)) page(this.activePage);
     }
     if (!canBuild || this.selectedUnits().length > 0) {
       strip.push({

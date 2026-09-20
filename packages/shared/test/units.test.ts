@@ -52,6 +52,7 @@ import {
   priceOf,
   statsFor,
   structureStatsFor,
+  productionPage,
   productionPageFor,
   unitAvailableTo,
   unitRadiusM,
@@ -584,11 +585,13 @@ describe('the production card’s pages', () => {
   const CELLS = 12;
   const navies = [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron];
 
-  /** One page's hulls — the renderer's `pageRoster`, in shared's own terms. */
-  const page = (line: StructureKind, faction: Faction): UnitKind[] =>
-    (PRODUCIBLE[line] ?? []).filter(
-      (kind) => productionPageFor(kind) === line && unitAvailableTo(kind, faction)
-    );
+  /**
+   * The filter the card itself calls, not a copy of it — `EchoRenderer`'s
+   * `pageRoster` is one line and that line is this function, so a change to
+   * the placement rule cannot pass here and fail on screen.
+   */
+  const page = (line: StructureKind, faction: Faction): readonly UnitKind[] =>
+    productionPage(line, faction);
 
   /**
    * The refits ride the Slipway's page, because the Slipway's line is what
@@ -642,6 +645,12 @@ describe('the production card’s pages', () => {
     // always stands. That one placement takes the Foundry's thirteen down to
     // twelve, which is how the Derrick and the Reed keep their cells (#820).
     assert.equal(productionPageFor(UnitKind.Harvester), StructureKind.Bastion);
+    // The placement rests on the Bastion leading `PRODUCTION_LINES`, and it
+    // leads because `StructureKind.Bastion` is 0 — the keys of `PRODUCIBLE`
+    // enumerate in numeric order, not in the order the entries are written.
+    // Renumbering the enum would move the Harvester silently; this is what
+    // catches it.
+    assert.equal(PRODUCTION_LINES[0], StructureKind.Bastion, 'the depot no longer leads the pages');
     assert.ok(
       PRODUCIBLE[StructureKind.Foundry]!.includes(UnitKind.Harvester),
       'the Foundry still builds Harvesters — the page says where the button sits, not where the hull is made'

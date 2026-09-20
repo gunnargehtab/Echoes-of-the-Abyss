@@ -1703,7 +1703,11 @@ describe('renderer smoke test: the strip explains itself', () => {
  */
 describe('the command card when it is offered more than it holds', () => {
   /** Click a hull on the conn view, the way the attack-move tests do. */
-  const selectHull = (world: Booted, unit: { x: number; y: number; depth: number }): void => {
+  const selectHull = (
+    world: Booted,
+    unit: { x: number; y: number; depth: number },
+    add = false
+  ): void => {
     world.chart.focusOn(unit.x, unit.y);
     world.frame(2);
     const at = world.conn.projectPoint(unit.x, unit.y, unit.depth);
@@ -1715,6 +1719,7 @@ describe('the command card when it is offered more than it holds', () => {
         pointerType: 'mouse',
         clientX: at.x,
         clientY: at.y,
+        shiftKey: add,
       });
     }
     world.frame(1);
@@ -1773,7 +1778,21 @@ describe('the command card when it is offered more than it holds', () => {
   it('gives each yard a tab, and the Harvester the Bastion’s page', async () => {
     const world = await boot();
     try {
-      const strip = (): string[] => textContents(world.app.stage).map((line) => line.trim());
+      // Visible text only. Bar labels are pooled and a retired one keeps its
+      // last string with `visible = false` (see `barText`), so `textContents`
+      // — which does not look at visibility — reports tabs that are no longer
+      // drawn. Reading those made an earlier version of this test pass with
+      // the behaviour it was written to catch reverted.
+      const strip = (): string[] => {
+        const said: string[] = [];
+        const walkVisible = (node: Container): void => {
+          if (!node.visible) return;
+          if (node instanceof Text) said.push(node.text.trim());
+          for (const child of node.children) walkVisible(child as Container);
+        };
+        walkVisible(world.app.stage as unknown as Container);
+        return said;
+      };
       world.frame(2);
 
       // FOUNDRY and SLIPWAY are the tabs, in place of the one UNITS tab,
@@ -1806,7 +1825,11 @@ describe('the command card when it is offered more than it holds', () => {
       // suite pins §9's figures against `productionPageFor`; this pins the
       // card against the renderer's own `pageRoster`, so the two cannot drift
       // apart in silence.
-      for (const elsewhere of ['SCT ', 'CRV ', 'DRK ', 'BLW ']) {
+      // Foundry hulls that survived the old flat roster's yield, which is what
+      // makes them the ones worth asserting: a regression to flat puts them
+      // back on this card. A Slipway hull or the Derrick would be absent under
+      // that regression too, so they would prove nothing here.
+      for (const elsewhere of ['SCT ', 'CRV ']) {
         assert.ok(
           !strip().some((line) => line.startsWith(elsewhere)),
           `${elsewhere.trim()} is on the Bastion's page — the card is not paging`
@@ -1823,19 +1846,25 @@ describe('the command card when it is offered more than it holds', () => {
    * when the width runs out, but the strip has no such guard, so the question
    * is whether the widest strip can reach `MENU` at any width the console
    * itself survives — §11's 200% is where a HUD unit is most expensive.
+   *
+   * Five is the real worst case and it takes a mixed selection to reach: the
+   * structure branch of the auto-open wins, so a Bastion *and* a hull gives
+   * BUILD, both yards, the Bastion's own tab, and SQUAD.
    */
   it('keeps the widest tab strip clear of MENU at 200%', async () => {
     const world = await boot();
     try {
-      // Selecting the Bastion is the widest case: BUILD, both yards and the
-      // Bastion's own tab. Select at 100%, where the projection the click
-      // relies on is the one the other tests use, then scale — the strip is
-      // laid out per frame, so the scale is what is under test, not the click.
+      // Select at 100%, where the projection the click relies on is the one
+      // the other tests use, then scale — the strip is laid out per frame, so
+      // the scale is what is under test rather than the click.
       const bastion = cannedSnapshot().structures.find(
         (structure) => structure.kind === StructureKind.Bastion
       );
       assert.ok(bastion !== undefined, 'the canned match has no Bastion to select');
+      const hull = cannedSnapshot().units.find((unit) => unit.torpedoes !== undefined);
+      assert.ok(hull !== undefined, 'the canned match has no hull to add to the selection');
       selectHull(world, bastion);
+      selectHull(world, hull, true);
       world.chart.setUiScale(2);
       world.frame(2);
 
@@ -1852,7 +1881,7 @@ describe('the command card when it is offered more than it holds', () => {
 
       const menu = spans.get('MENU');
       assert.ok(menu !== undefined, 'the MENU door is not on the bar');
-      const tabs = ['BUILD', 'FOUNDRY', 'SLIPWAY', 'BASTION'].map((name) => {
+      const tabs = ['BUILD', 'FOUNDRY', 'SLIPWAY', 'BASTION', 'SQUAD'].map((name) => {
         const span = spans.get(name);
         assert.ok(span !== undefined, `${name} is not on the tab strip`);
         return { name, span };
