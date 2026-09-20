@@ -41,7 +41,7 @@ The build follows dream-loop's shape and #709's component list.
 | --- | --- | --- |
 | Task system (`/tasks/open.json`) | GitHub Issues, plus `work-issue`'s selection rule, self-assignment and open-PR cap | No — a JSON task file would be a second backlog, diverging from the first by Thursday |
 | Spec (`/spec/systems.md`) | `docs/` — the design bible, canonical, and the source of every SPEC constant | No — a second spec is the one thing `CLAUDE.md` is most emphatic against |
-| Invariants (`/spec/invariants.md`) | Was scattered — stated as an invariant in prose in one place, and asserted across the suites | **Yes** — `docs/invariants.md`, 31 rows over 67 holders (`npm run check:invariants` at `f3319a1`), each naming its source and the test that holds it, with that gate failing when a holder is gone |
+| Invariants (`/spec/invariants.md`) | Was scattered — stated as an invariant in prose in one place, and asserted across the suites | **Yes** — `docs/invariants.md`, 37 rows over 81 holders (`npm run check:invariants` at `2da92bc`), each naming its source and the test that holds it, with that gate failing when a holder is gone |
 | Acceptance tests (`/spec/acceptance_tests.md`) | `tools/echo-sim/scenarios/*.json` with committed `.expected.json`, plus the three suites | No — the scenarios already are this, in a form a harness runs |
 | Harness (`run_headless.py`) | `tools/echo-sim`, `tools/balance`, `tools/audio-meter`, `hull-intake`, and the `run-game` browser drive | No — five harnesses exist; what was missing was a rule for which to reach for, now the evidence table in `dev-loop` |
 | Verifier (`verifier.py`) | `npm run gates` — every blocking CI gate, one pass, one exit code | No — and a parallel verifier would drift from CI, which is the exact failure `tools/gates.mjs` was written to end |
@@ -154,9 +154,9 @@ it is allowed to select.
 - **The invariants contract is built** (`docs/invariants.md`), which was this list's
   largest gap. Each row names the property, the doc section or issue it descends
   from, and the file and test that hold it. The count is the gate's to print
-  rather than this file's to restate — `npm run check:invariants` reads 25
-  invariants and 50 holders on `4457538`, and fails when a row names a test
-  somebody renamed. It is
+  rather than this file's to restate twice — `npm run check:invariants` prints
+  today's, the table above stamps one reading of it, and the gate fails when a
+  row names a test somebody renamed. It is
   a liveness check rather than a correctness one, for the reason the file itself gives:
   verifying the assertion would mean re-implementing the suite, which is the second
   source of truth this repository keeps refusing to build. What is still owed on it is
