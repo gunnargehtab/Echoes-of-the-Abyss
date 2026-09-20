@@ -182,6 +182,7 @@ import {
 import { destroyHullTextures } from './hullTextures.ts';
 import { destroyStructureTextures } from './structureTextures.ts';
 import type { MapPayload, TerrainPayload } from '../net/GameClient.ts';
+import { FOCUS_STEP_M } from './PerspectiveView.ts';
 import type { PerspectiveView, ProjectedPoint } from './PerspectiveView.ts';
 import {
   COLUMN_RIBBONS,
@@ -1987,10 +1988,17 @@ export class EchoRenderer {
   private attachInput(): void {
     const canvas = this.app.canvas;
     // Two input dialects share this handler. Mouse keeps the classic RTS
-    // bindings (LMB select, RMB order, MMB pan, wheel zoom). Touch gets one
-    // vocabulary a phone can actually speak: tap = select-or-order, drag =
-    // pan, pinch = zoom; everything else lives on the command bar.
+    // bindings (LMB select, RMB order, MMB pan, wheel zoom) and adds the
+    // camera verbs docs/free-camera.md §4 spec'd: Shift + MMB orbits, Shift +
+    // wheel moves the focus through the column, Home puts the frame back.
+    // Touch gets one vocabulary a phone can actually speak: tap =
+    // select-or-order, drag = pan, pinch = zoom, twist = yaw; everything else
+    // lives on the command bar.
     let panning = false;
+    /** True while a middle drag is orbiting rather than panning — decided at
+     * press, because a modifier picked up mid-drag would swap the gesture
+     * under the player's hand. */
+    let orbiting = false;
     let lastX = 0;
     let lastY = 0;
 
@@ -2003,6 +2011,9 @@ export class EchoRenderer {
     /** Finger travel below this many CSS px still counts as a tap. */
     const TAP_SLOP_PX = 12;
     let pinchDistance = 0;
+    /** Bearing between the two live touches, for twist-to-yaw. NaN until two
+     * fingers are down, so the first frame of a pinch contributes no turn. */
+    let pinchAngle = Number.NaN;
 
     const onContextMenu = (e: Event) => e.preventDefault();
 
@@ -2033,6 +2044,8 @@ export class EchoRenderer {
       pinchDistance = 0;
       minimapDrag = false;
       panning = false;
+      orbiting = false;
+      pinchAngle = Number.NaN;
       this.marquee = null;
       if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
     };
@@ -2070,7 +2083,12 @@ export class EchoRenderer {
       }
 
       if (e.button === 1) {
-        panning = true;
+        // Shift makes the middle drag an orbit (§9). Held at press, read once:
+        // §9's rule is that a mouse interaction may not quietly change meaning
+        // mid-gesture, and a modifier sampled per move event would do exactly
+        // that to a player who reached for Shift to queue an order.
+        orbiting = e.shiftKey;
+        panning = !orbiting;
         lastX = e.clientX;
         lastY = e.clientY;
         capture(e.pointerId);
@@ -2148,7 +2166,31 @@ export class EchoRenderer {
             this.conn?.zoomAt((a!.x + b!.x) / 2, (a!.y + b!.y) / 2, distance / pinchDistance);
           }
           pinchDistance = distance;
+
+          // Twist yaws (docs/free-camera.md §4). The same two fingers already
+          // pinching: a phone has no Shift and no wheel, and the bearing
+          // between the touches is a turn the hand is already making.
+          const angle = Math.atan2(b!.y - a!.y, b!.x - a!.x);
+          if (Number.isFinite(pinchAngle)) {
+            // Shortest way round, so a twist across the atan2 seam does not
+            // spin the camera a full turn in one frame.
+            let delta = angle - pinchAngle;
+            if (delta > Math.PI) delta -= Math.PI * 2;
+            if (delta < -Math.PI) delta += Math.PI * 2;
+            // Negated: the fingers turn the water, and the camera turns the
+            // other way to make that true — the twist equivalent of the pan's
+            // ground-follows-the-hand rule.
+            this.conn?.yawBy(-delta);
+          }
+          pinchAngle = angle;
         }
+        return;
+      }
+
+      if (orbiting) {
+        this.conn?.orbitBy(e.clientX - lastX, e.clientY - lastY);
+        lastX = e.clientX;
+        lastY = e.clientY;
         return;
       }
 
@@ -2187,14 +2229,24 @@ export class EchoRenderer {
         return;
       }
 
-      if (panning && canvas.hasPointerCapture(e.pointerId)) {
+      if ((panning || orbiting) && canvas.hasPointerCapture(e.pointerId)) {
         canvas.releasePointerCapture(e.pointerId);
       }
       panning = false;
+      orbiting = false;
     };
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
+      // Shift + wheel moves the focus through the column instead of zooming
+      // (docs/free-camera.md §4, docs/ui-ux.md §9). This gesture zoomed before
+      // the camera was freed; the reassignment is deliberate, is written into
+      // §9's controls table, and leaves the unmodified wheel — the gesture
+      // nobody may lose — on zoom.
+      if (e.shiftKey) {
+        this.conn?.raiseFocusBy(e.deltaY < 0 ? FOCUS_STEP_M : -FOCUS_STEP_M);
+        return;
+      }
       this.conn?.zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.1 : 1 / 1.1);
     };
 
@@ -2241,6 +2293,17 @@ export class EchoRenderer {
       if (e.code.startsWith('Arrow')) {
         e.preventDefault();
         this.arrowsDown.add(e.code);
+        return;
+      }
+      // Home puts the camera back: north, 55°, focus on the seabed
+      // (docs/free-camera.md §4). Reserved with the arrows and for the same
+      // reason — a free camera's failure mode is a player who cannot find
+      // their fleet, and the way back may not be something a rebind can take.
+      // The dolly and the plan position stay, because being lost in angle is
+      // not being lost in place.
+      if (e.code === 'Home') {
+        e.preventDefault();
+        this.conn?.home();
         return;
       }
 
@@ -7505,11 +7568,14 @@ export class EchoRenderer {
       }
     }
 
-    // Camera viewport, so the scope doubles as a navigator. A trapezoid, not
-    // a rectangle: the conn camera is tilted, and its honest footprint on the
-    // ground has a near edge wider than its far one. Vertices clamp to the
-    // scope's square — a zoomed-out camera sees past the map's edge, and the
-    // box must not draw past its frame.
+    // Camera viewport, so the scope doubles as a navigator — and, since the
+    // camera was freed, as the compass (docs/free-camera.md §5, docs/ui-ux.md
+    // §5). A trapezoid, not a rectangle: the conn camera is tilted, and its
+    // honest footprint on the ground has a near edge wider than its far one.
+    // It needed no change to survive a free yaw, because it is unprojected
+    // from the screen corners rather than derived from a heading. Vertices
+    // clamp to the scope's square — a zoomed-out camera sees past the map's
+    // edge, and the box must not draw past its frame.
     const quad = this.conn?.groundQuad() ?? [];
     if (quad.length === 4) {
       const points: number[] = [];
@@ -7520,6 +7586,14 @@ export class EchoRenderer {
         );
       }
       og.poly(points).stroke({ width: 1, color: UI.text, alpha: 0.6 });
+      // The far edge, heavier. A rotating box in a north-up frame already
+      // says *where* the camera is looking; this is what makes it say which
+      // way round, which is the job the yaw lock used to do by making the
+      // answer permanent. `groundQuad` returns the corners from the top of
+      // the screen, so the first two are the far edge.
+      og.moveTo(points[0]!, points[1]!)
+        .lineTo(points[2]!, points[3]!)
+        .stroke({ width: 2, color: UI.text, alpha: 0.85 });
     }
   }
 

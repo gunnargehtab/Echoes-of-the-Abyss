@@ -78,6 +78,7 @@ import {
   buildHeightGrid,
   patchHeightGrid,
   type HeightGrid,
+  DEPTH_VISUAL_M_PER_M,
   depthToWorldY,
   rockTopDepthM,
   seabedDepthAtM,
@@ -130,10 +131,48 @@ const VEIL_TABLE = ((): Float32Array => {
 })();
 
 /**
- * SPEC — docs/art-direction.md "Camera & Projection", settled by the Phase-1
- * screenshot comparison and pinned at Phase 5: 55° below horizontal.
+ * SPEC — docs/art-direction.md "Camera & Projection": 55° below horizontal,
+ * settled by the Phase-1 screenshot comparison and pinned at Phase 5.
+ *
+ * Since docs/free-camera.md this is where the camera *opens* and what `home()`
+ * restores, not where it is held. The distinction is the whole revision: the
+ * frame the old no-rotation rule made permanent is still one press away, which
+ * is what lets the rest of the rig be free without stranding anyone.
  */
-export const PITCH_DEG = 55;
+export const HOME_PITCH_DEG = 55;
+
+/**
+ * SPEC — docs/free-camera.md §4: the band the player may pitch within.
+ *
+ * Neither end is taste. Below the floor the ground plane stops being a ground
+ * plane and the camera is simply in the water looking along it — the shot the
+ * revision exists to buy, and also where a range ring is most nearly edge-on,
+ * so the band stops where rings stop being *readable* rather than where they
+ * stop being correct. At exactly 90° the up vector degenerates and takes the
+ * yaw with it, so the ceiling stops short: two degrees of plan view is a
+ * cheaper thing to lose than the heading.
+ */
+const PITCH_MIN_DEG = 10;
+const PITCH_MAX_DEG = 88;
+
+/**
+ * SPEC — docs/free-camera.md §4, the one hard clamp on the rig: metres of
+ * water the eye keeps above the local floor. A camera below the seabed renders
+ * the inside of the terrain shell, which reads as a bug in every case and a
+ * feature in none. TUNABLE.
+ */
+const EYE_CLEARANCE_M = 25;
+
+/**
+ * TUNABLE — docs/free-camera.md §4: metres of column one focus notch moves.
+ * Exported so the input layer and the doc's table cannot drift apart.
+ */
+export const FOCUS_STEP_M = 150;
+
+/** Radians per pixel of orbit drag. TUNABLE — a full turn in about 640 px of
+ * yaw, and the pitch band crossed in about 280 px. */
+const ORBIT_YAW_PER_PX = (Math.PI * 2) / 640;
+const ORBIT_PITCH_PER_PX = ((PITCH_MAX_DEG - PITCH_MIN_DEG) * Math.PI) / 180 / 280;
 
 /** TUNABLE — vertical camera field of view, degrees. Narrow keeps the range-
  * ring foreshortening gentle; wide reads fisheye at RTS distance. */
@@ -206,6 +245,27 @@ const QUAD_CORNERS: ReadonlyArray<readonly [number, number]> = [
   [-1, -1],
 ];
 
+/**
+ * How far along a ray the ground plane is — or, when it is not there at all,
+ * far enough that the caller's own map clamp answers instead.
+ *
+ * A freely pitched camera can point a corner ray *above* the horizon, where
+ * the ground plane lies behind the eye and the intersection is negative. The
+ * honest answer is "this corner sees past the map", and the honest way to say
+ * it is a point far out along the ray's own heading, which every caller here
+ * clamps to the map edge. Answering with the eye's own position instead —
+ * what `Math.max(1, t)` used to do — drew a scope box collapsed to a dot at
+ * exactly the moment the player most needed to know where they were looking.
+ */
+function groundPlaneT(originY: number, directionY: number, groundY: number): number {
+  if (Math.abs(directionY) < 1e-6) return HORIZON_T;
+  const t = (groundY - originY) / directionY;
+  return t > 1 ? t : HORIZON_T;
+}
+
+/** Far enough to leave any map, near enough to stay in single precision. */
+const HORIZON_T = 1e6;
+
 interface EntityHandle {
   mesh: Mesh;
   /** Its slot in the batched depth cues — the plumb line and ground shadow
@@ -254,9 +314,27 @@ export class PerspectiveView {
   private host: HTMLElement | null = null;
   private resizeObserver: ResizeObserver | null = null;
 
-  /** Camera rig: a ground target, a dolly distance, a fixed pitch, no yaw. */
+  /**
+   * Camera rig — docs/free-camera.md §4: a focus in the water, a yaw, a pitch
+   * and a dolly distance.
+   *
+   * Only `x` and `z` of `target` are the focus's; its height is `focusY()`,
+   * because "on the seabed" has to keep meaning that as the focus pans over
+   * ground that changes under it.
+   */
   private readonly target = new Vector3();
   private distance = 4000;
+  /** Radians. 0 puts the eye south of the focus looking north — the home
+   * frame, and the only one the rig had before the camera was freed. */
+  private yaw = 0;
+  /** Radians below horizontal, always inside the spec'd band. */
+  private pitch = (HOME_PITCH_DEG * Math.PI) / 180;
+  /**
+   * Where the focus sits in the column, metres, or `null` for "the seabed
+   * here" — the home state, and the one that has to track the ground rather
+   * than sample it once.
+   */
+  private focusDepthM: number | null = null;
   /**
    * How much larger than true metre scale the fleet is currently drawn
    * (readability.ts). 1 at close zoom, and re-applied only when it actually
@@ -650,8 +728,10 @@ export class PerspectiveView {
     }
     const groundY = this.groundYAt(this.target.x, this.target.z);
     const direction = raycaster.ray.direction;
-    const t = Math.abs(direction.y) < 1e-6 ? 1e6 : (groundY - raycaster.ray.origin.y) / direction.y;
-    const point = DIR_TMP.copy(raycaster.ray.origin).addScaledVector(direction, Math.max(1, t));
+    const point = DIR_TMP.copy(raycaster.ray.origin).addScaledVector(
+      direction,
+      groundPlaneT(raycaster.ray.origin.y, direction.y, groundY)
+    );
     return {
       x: Math.min(terrain.cols * terrain.cellM, Math.max(0, point.x)),
       y: Math.min(terrain.rows * terrain.cellM, Math.max(0, point.z)),
@@ -707,19 +787,100 @@ export class PerspectiveView {
     return this.drawScale;
   }
 
-  /** Pan by a screen delta, WC3-hand: the ground follows the pointer. */
+  /**
+   * Pan by a screen delta, WC3-hand: the ground follows the pointer.
+   *
+   * Yaw-aware since docs/free-camera.md — the feel is unchanged and the maths
+   * is not. A drag is resolved against the camera's own screen axes rather
+   * than against world X and Z, so "drag right, the water goes right" stays
+   * true at every heading. With yaw 0 the two are the same expression, which
+   * is why the locked rig could get away with the simpler one.
+   */
   panBy(dxPx: number, dyPx: number): void {
     const canvas = this.renderer?.domElement;
     const height = canvas?.clientHeight ?? 900;
-    const pitch = (PITCH_DEG * Math.PI) / 180;
     const worldPerPx = (2 * this.distance * Math.tan(((FOV_DEG / 2) * Math.PI) / 180)) / height;
-    this.target.x -= dxPx * worldPerPx;
-    // Screen-vertical motion maps onto the ground plane through the pitch.
-    this.target.z -= (dyPx * worldPerPx) / Math.max(0.2, Math.sin(pitch));
+    const sinYaw = Math.sin(this.yaw);
+    const cosYaw = Math.cos(this.yaw);
+    // Screen-vertical motion maps onto the ground plane through the pitch, and
+    // the floor on the divisor is what stops a near-horizontal drag from
+    // flinging the focus across the map on a few pixels of travel.
+    const intoScreen = dyPx / Math.max(0.2, Math.sin(this.pitch));
+    // Screen right is (cos yaw, -sin yaw); screen "down the ground" is
+    // (-sin yaw, -cos yaw). Both negated, because the ground follows the hand.
+    this.target.x -= dxPx * cosYaw * worldPerPx + intoScreen * sinYaw * worldPerPx;
+    this.target.z -= -dxPx * sinYaw * worldPerPx + intoScreen * cosYaw * worldPerPx;
     this.clampTarget();
     // Applied now, not at the next frame: the overlay painter projects
     // through this camera on its own ticker, and a camera that moved between
     // the two draws would smear the HUD marks off the hulls they annotate.
+    this.applyCamera();
+  }
+
+  /**
+   * Turn and tilt the camera about its focus — docs/free-camera.md §4.
+   *
+   * Horizontal drag yaws, vertical yaws nothing and pitches instead. Yaw wraps
+   * because a heading has no ends; pitch clamps because its band has two, and
+   * both of them are spec'd rather than chosen here.
+   */
+  orbitBy(dxPx: number, dyPx: number): void {
+    this.yaw = (this.yaw + dxPx * ORBIT_YAW_PER_PX) % (Math.PI * 2);
+    // setPitch re-applies, so the yaw above rides along and the camera moves
+    // once per event rather than twice.
+    this.setPitch(this.pitch + dyPx * ORBIT_PITCH_PER_PX);
+  }
+
+  /**
+   * Turn the camera by an angle rather than by a drag — the touch twist,
+   * which arrives as radians off two fingers and has no business knowing what
+   * a pixel of orbit is worth.
+   */
+  yawBy(radians: number): void {
+    this.yaw = (this.yaw + radians) % (Math.PI * 2);
+    this.applyCamera();
+  }
+
+  /**
+   * Raise or sink the focus through the water column — docs/free-camera.md §4.
+   * Positive rises (toward the surface), because that is what a wheel pushed
+   * away from the player should do to a thing in front of them.
+   *
+   * The first call is what takes the focus off the seabed: until then it is
+   * `null`, and the step has to start from where the ground actually is or the
+   * focus would jump to 0 m on the first notch.
+   */
+  raiseFocusBy(metres: number): void {
+    const from = this.focusDepthM ?? this.seabedDepthAt(this.target.x, this.target.z);
+    this.focusDepthM = from - metres;
+    this.clampTarget();
+    this.applyCamera();
+  }
+
+  /**
+   * Home — docs/free-camera.md §4: north, 55°, focus back on the seabed.
+   *
+   * The dolly and the plan position are deliberately left alone. A player who
+   * presses this is lost in *angle*, and throwing away the zoom and the place
+   * they had navigated to would answer a question they did not ask.
+   */
+  home(): void {
+    this.yaw = 0;
+    this.pitch = (HOME_PITCH_DEG * Math.PI) / 180;
+    this.focusDepthM = null;
+    this.applyCamera();
+  }
+
+  /** The heading the camera is facing, radians clockwise from north. For the
+   * scope's camera box, which is the compass now (§5). */
+  get headingRad(): number {
+    return this.yaw;
+  }
+
+  private setPitch(radians: number): void {
+    const min = (PITCH_MIN_DEG * Math.PI) / 180;
+    const max = (PITCH_MAX_DEG * Math.PI) / 180;
+    this.pitch = Math.min(max, Math.max(min, radians));
     this.applyCamera();
   }
 
@@ -754,6 +915,10 @@ export class PerspectiveView {
     const widthM = terrain.cols * terrain.cellM;
     const heightM = terrain.rows * terrain.cellM;
     this.target.set(widthM / 2, 0, heightM / 2);
+    // Framing the map means framing the ground, so a focus the player had
+    // lifted into the column comes back down. The angles are theirs and are
+    // left alone — `home()` is the verb that takes those back.
+    this.focusDepthM = null;
     this.distance = Math.max(widthM, heightM) * 1.05;
     this.applyCamera();
   }
@@ -780,8 +945,7 @@ export class PerspectiveView {
     for (let i = 0; i < 4; i++) {
       const [nx, ny] = QUAD_CORNERS[i]!;
       const direction = DIR_TMP.set(nx, ny, 0.5).unproject(this.camera).sub(origin).normalize();
-      const t = Math.abs(direction.y) < 1e-6 ? 1e6 : (groundY - origin.y) / direction.y;
-      const scale = Math.max(1, t);
+      const scale = groundPlaneT(origin.y, direction.y, groundY);
       const px = origin.x + direction.x * scale;
       const pz = origin.z + direction.z * scale;
       const corner = out[i]!;
@@ -1473,21 +1637,48 @@ export class PerspectiveView {
     if (terrain === null) return;
     this.target.x = Math.min(terrain.cols * terrain.cellM, Math.max(0, this.target.x));
     this.target.z = Math.min(terrain.rows * terrain.cellM, Math.max(0, this.target.z));
+    // The focus stays in water (docs/free-camera.md §4). Re-clamped on every
+    // pan, not only when the player moves it: a focus held at 900 m that pans
+    // onto a 400 m plateau is asking to sit inside rock, and the answer is the
+    // same one terrain gives a hull — the ground raises it.
+    if (this.focusDepthM !== null) {
+      const seabed = this.seabedDepthAt(this.target.x, this.target.z);
+      this.focusDepthM = Math.min(seabed, Math.max(0, this.focusDepthM));
+    }
+  }
+
+  /**
+   * The focus's world height: the seabed under it, or the depth it was moved
+   * to. `null` means the ground, and has to be resolved per read rather than
+   * cached, because the ground moves under a pan.
+   */
+  private focusY(): number {
+    return this.focusDepthM === null
+      ? this.groundYAt(this.target.x, this.target.z)
+      : depthToWorldY(this.focusDepthM);
   }
 
   // ----------------------------------------------------------------- frame
 
   private applyCamera(): void {
-    const pitch = (PITCH_DEG * Math.PI) / 180;
-    const groundY = this.groundYAt(this.target.x, this.target.z);
-    const look = LOOK_TMP.set(this.target.x, groundY, this.target.z);
-    this.camera.position.set(
-      look.x,
-      look.y + Math.sin(pitch) * this.distance,
-      // South of the target, looking north: the viewport and the sonar scope
-      // must agree on north, which is the yaw lock's whole argument.
-      look.z + Math.cos(pitch) * this.distance
-    );
+    const look = LOOK_TMP.set(this.target.x, this.focusY(), this.target.z);
+    const reach = Math.cos(this.pitch) * this.distance;
+    // yaw 0 puts the eye south of the focus looking north. That was the whole
+    // rig once (the viewport and the scope had to agree on north); it is now
+    // just where the dial starts, and the scope's camera box carries the
+    // agreement instead — docs/free-camera.md §5.
+    const eyeX = look.x + Math.sin(this.yaw) * reach;
+    const eyeZ = look.z + Math.cos(this.yaw) * reach;
+    let eyeY = look.y + Math.sin(this.pitch) * this.distance;
+
+    // The rig's one hard clamp (§4). The eye is raised rather than the dolly
+    // shortened: the player keeps the framing they asked for, and the camera
+    // keeps looking at the thing they pointed it at — a shortened dolly would
+    // silently zoom them in every time they swung past a ridge.
+    const floorY = this.groundYAt(eyeX, eyeZ) + EYE_CLEARANCE_M * DEPTH_VISUAL_M_PER_M;
+    if (eyeY < floorY) eyeY = floorY;
+
+    this.camera.position.set(eyeX, eyeY, eyeZ);
     this.camera.lookAt(look);
     this.camera.updateMatrixWorld();
     this.cameraRevision++;
@@ -1623,14 +1814,30 @@ export class PerspectiveView {
     };
 
     // The harness's tripod: point the camera, nothing else. It moves only
-    // the view over the player's own resolved data — the same pan and zoom
-    // the pointer already commands — and can neither read nor order anything.
+    // the view over the player's own resolved data — the same pan, zoom, orbit
+    // and focus the pointer already commands — and can neither read nor order
+    // anything. The aim went on it with the free camera (docs/free-camera.md
+    // §8): gates 6 and 7 are now judged across the pitch band, and a band a
+    // screenshot harness cannot reach is a band nobody reviews.
     (
       window as unknown as {
-        __perspectiveCamera?: (x: number, z: number, distance?: number) => void;
+        __perspectiveCamera?: (
+          x: number,
+          z: number,
+          distance?: number,
+          aim?: { yawDeg?: number; pitchDeg?: number; focusDepthM?: number | null }
+        ) => void;
       }
-    ).__perspectiveCamera = (x: number, z: number, distance?: number) => {
+    ).__perspectiveCamera = (x, z, distance, aim) => {
       this.focusWorld(x, z, distance);
+      if (aim === undefined) return;
+      if (aim.yawDeg !== undefined) this.yaw = (aim.yawDeg * Math.PI) / 180;
+      if (aim.focusDepthM !== undefined) this.focusDepthM = aim.focusDepthM;
+      // Last, because it clamps and re-applies — and because the clamp has to
+      // see the focus the other two just set.
+      this.setPitch(aim.pitchDeg === undefined ? this.pitch : (aim.pitchDeg * Math.PI) / 180);
+      this.clampTarget();
+      this.applyCamera();
     };
   }
 
@@ -1652,7 +1859,25 @@ export class PerspectiveView {
     const elapsed = performance.now() - this.stationStartedAt;
     return {
       active: this.active,
-      pitchDeg: PITCH_DEG,
+      // The rig's whole state (docs/free-camera.md §4). `pitchDeg` was a
+      // constant when the camera was locked; a screenshot review that has to
+      // judge gates 6 and 7 across the pitch band needs it to be a reading.
+      pitchDeg: Number(((this.pitch * 180) / Math.PI).toFixed(1)),
+      yawDeg: Number((((this.yaw * 180) / Math.PI + 360) % 360).toFixed(1)),
+      // Where the camera is looking, and from where. A screenshot review
+      // judging gates 6 and 7 across the pitch band has to be able to caption
+      // the shot with the frame it was taken in; before the camera was freed
+      // there was only one frame and nothing to say.
+      focus: {
+        xM: Math.round(this.target.x),
+        zM: Math.round(this.target.z),
+        depthM: this.focusDepthM === null ? null : Math.round(this.focusDepthM),
+      },
+      eye: {
+        xM: Math.round(this.camera.position.x),
+        zM: Math.round(this.camera.position.z),
+        depthM: Math.round(-this.camera.position.y / DEPTH_VISUAL_M_PER_M),
+      },
       distance: Math.round(this.distance),
       hullScale: Number(this.drawScale.toFixed(2)),
       drawCalls: info?.render.calls ?? 0,
