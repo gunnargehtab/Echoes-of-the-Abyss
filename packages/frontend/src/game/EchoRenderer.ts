@@ -2741,7 +2741,10 @@ export class EchoRenderer {
   /** Auto-open the page that matches what was just selected. */
   private onSelectionChanged(): void {
     this.selectionSeq++;
-    const structure = this.structures.find((s) => this.selected.has(s.id));
+    const structure = [...this.selected]
+      .reverse()
+      .map((id) => this.structures.find((s) => s.id === id))
+      .find((s) => s !== undefined);
     if (structure !== undefined && (PRODUCIBLE[structure.kind]?.length ?? 0) > 0) {
       this.activeTab = 'units';
       // §9: "A page opens by selection: picking a yard shows that yard's."
