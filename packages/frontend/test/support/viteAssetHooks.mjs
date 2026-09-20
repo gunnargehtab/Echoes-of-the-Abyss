@@ -11,9 +11,13 @@
  *   * `import.meta.glob('.../*.glb', { eager: true })` — Vite expands the call
  *     at build time. Under Node it is a call to a property that does not exist,
  *     and the module throws while evaluating. `import.meta.env` is the same
- *     shape of problem one step earlier: `GameClient.ts` reads
- *     `import.meta.env.VITE_SERVER_URL` at module scope, and a property read on
- *     `undefined` throws before any test body runs.
+ *     transform one step later: `GameClient.ts` reads
+ *     `import.meta.env.VITE_SERVER_URL` inside `defaultEndpoint()` rather than
+ *     at module scope — a function on purpose, so the page's protocol is read
+ *     when a connection is made. Importing the module is therefore safe, and
+ *     the property read on `undefined` throws on the first call instead —
+ *     inside a test body rather than before one, since `defaultEndpoint` is the
+ *     default argument of `listMatches` and of the `GameClient` constructor.
  *
  * Both are answered here rather than by mocking the modules that use them:
  * the point of the smoke test is that it boots the *real* renderer, and a
