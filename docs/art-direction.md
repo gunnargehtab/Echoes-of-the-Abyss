@@ -308,15 +308,27 @@ Warcraft III's ~55° locked 3D pitch — and since the August 2026 presentation 
 world is a perspective view over a sculpted, visible seabed, and the chart survives as
 the instrument layer drawn over it.
 
-### The conn view: a locked perspective camera — SPEC
+### The conn view: a freely aimed perspective camera — SPEC
 
-The world renders in perspective at a pitch of **55° below horizontal** — settled by the
-Phase-1 screenshot comparison against 45° and 62°, and the same commitment WC3 made —
-with a 40° vertical field of view and yaw locked to north. The camera rig is a target on
-the ground and a dolly distance, nothing else: pan slides the target, zoom dollies about
-the cursor, and no verb tilts or turns it. One camera serves both canvases — the GL world
-and the Pixi mark layer project through it (`EchoRenderer.setConn`) — so the two painters
-cannot disagree about where the water is.
+The world renders in perspective through a 40° vertical field of view, from a rig that is
+a **focus point anywhere in the water column**, a yaw, a pitch and a dolly distance. Pan
+slides the focus across the plan, `Shift` + wheel raises and sinks it through the column,
+orbit turns and tilts the camera about it, and zoom dollies about the cursor. One camera
+serves both canvases — the GL world and the Pixi mark layer project through it
+(`EchoRenderer.setConn`) — so the two painters cannot disagree about where the water is.
+
+**55° below horizontal, yaw to north, focus on the seabed is the *home* frame**, not the
+only one: it is what every match opens on, what the Phase-1 screenshot comparison settled
+against 45° and 62°, and what the `Home` key restores in a single press. Yaw is free and
+continuous; pitch is free within **10°–88°**; the focus clamps to the water column and the
+eye clamps to **25 m of water** (TUNABLE) above the local floor, because a camera under
+the seabed renders the inside of the terrain shell. Nothing else is clamped — the player
+looking at a thing is not the player committing a hull to it, so none of the column's
+costs are the camera's to pay.
+
+The freedom is [free-camera.md](free-camera.md), which is also where the rule it replaced
+— "no camera rotation, ever" — is retired with the account of where each of its four
+protections went.
 
 The projection change moved the old plan-view protections; it did not drop them:
 
@@ -418,16 +430,25 @@ What the rule is careful about:
   Instrument ink drawn *about* a hull — selection ring, loudness ring, bars — scales with
   it, for the same reason a caption tracks its figure.
 
-### Rotation and zoom — SPEC
+### Orbit, pitch and zoom — SPEC
 
-- **No camera rotation, ever.** Rotation breaks the minimap correspondence (the sonar
-  scope and the viewport must agree on north) and the one-glance legibility of a fixed
-  frame. There is no "temporarily" here any more than in the server-authoritative rule.
-- **Zoom only, about the cursor** (wheel / pinch), taken from WC3 rather than C&C. The
-  dolly band is TUNABLE and lives in `PerspectiveView.ts`; whatever the band, every gate
-  in [graphics-standards.md](graphics-standards.md) is judged "at every zoom the camera
-  allows". UI scale is a separate control and never touches the world camera
+- **The camera is freely aimed, and always one key from home.** Yaw and pitch are the
+  player's, within the band above. What the old no-rotation rule protected is re-homed
+  rather than dropped ([free-camera.md](free-camera.md) §5): the sonar scope stays
+  north-up and its camera box — the view's true ground footprint, a trapezoid — rotates
+  with the camera, so the instrument that always agreed with the viewport about north now
+  *reports* the heading, with its far edge drawn heavier to say which way that is. `Home`
+  restores north, 55° and the seabed in one press, which is the frame the old rule made
+  permanent.
+- **Zoom about the cursor** (wheel / pinch), taken from WC3 rather than C&C. The dolly
+  band is TUNABLE and lives in `PerspectiveView.ts`; whatever the band, every gate in
+  [graphics-standards.md](graphics-standards.md) is judged "at every zoom the camera
+  allows" — and now at every **angle** it allows, which is the honest price of the
+  freedom. UI scale is a separate control and never touches the world camera
   ([ui-ux.md](ui-ux.md) §11).
+- **An atmosphere pass still may not rotate the projection.** The distinction is now
+  load-bearing rather than incidental: the *player* may turn the camera, an *effect* may
+  not. Sway stays translation only.
 
 ### Atmosphere rides on top, in screen space
 
@@ -471,6 +492,7 @@ Within it:
 ## Related
 
 - [three-layer-ocean.md](three-layer-ocean.md) — the presentation revision the camera spec above transcribes, phase by phase
+- [free-camera.md](free-camera.md) — the revision that freed that camera's yaw, pitch and focus, and retired the no-rotation rule
 - [graphics-standards.md](graphics-standards.md) — the acceptance bar that enforces this direction
 - [factions.md](factions.md) — full faction visual identity sheets
 - [style-neon-noir.md](style-neon-noir.md) — presentation-layer palette tokens and glow rules

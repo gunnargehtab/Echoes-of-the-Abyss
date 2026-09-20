@@ -25,6 +25,7 @@ import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
 import { Graphics, Text, type Container, type GraphicsPath } from 'pixi.js';
 import { Faction, MovementHoldReason, StructureKind } from '@echoes/shared';
+import { FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
 import {
   createHost,
   dispatchWindow,
@@ -1937,6 +1938,226 @@ describe('the command card when it is offered more than it holds', () => {
           `${name} runs into MENU at 200% — the strip has outgrown the bar`
         );
       }
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
+/**
+ * The free camera — docs/free-camera.md.
+ *
+ * The rig is the one piece of this renderer with no pixels in it: a focus, a
+ * yaw, a pitch and a dolly, resolved into a camera position by arithmetic.
+ * That makes it the part of the revision a headless test can hold whole, and
+ * the part it most needs to — the retired no-rotation rule was protecting real
+ * things, and what replaced each one is a property rather than a look.
+ */
+describe('renderer smoke test: the free camera', () => {
+  /** The rig's own state, off the harness probe. */
+  const rig = (): {
+    yawDeg: number;
+    pitchDeg: number;
+    distance: number;
+    focus: { xM: number; zM: number; depthM: number | null };
+    eye: { xM: number; zM: number; depthM: number };
+  } =>
+    (
+      globalThis as unknown as {
+        window: { __perspectiveProbe: () => Record<string, unknown> };
+      }
+    ).window.__perspectiveProbe() as never;
+
+  it('opens on the frame the yaw lock used to make permanent, and homes back to it', async () => {
+    const world = await boot();
+    try {
+      world.frame(3);
+      const opening = rig();
+      assert.equal(opening.yawDeg, 0, 'every match still opens looking north');
+      assert.equal(opening.pitchDeg, HOME_PITCH_DEG, 'at the pitch the screenshots settled');
+      assert.equal(opening.focus.depthM, null, 'with the focus on the seabed');
+
+      world.conn.orbitBy(300, -120);
+      world.conn.raiseFocusBy(600);
+      const turned = rig();
+      assert.notEqual(turned.yawDeg, 0, 'the camera turned');
+      assert.ok(turned.pitchDeg < HOME_PITCH_DEG, 'and tilted toward the horizontal');
+      assert.notEqual(turned.focus.depthM, null, 'and the focus left the seabed');
+
+      world.conn.home();
+      const homed = rig();
+      assert.equal(homed.yawDeg, 0, 'Home is north');
+      assert.equal(homed.pitchDeg, HOME_PITCH_DEG, 'Home is 55°');
+      assert.equal(homed.focus.depthM, null, 'Home is the seabed');
+      // The dolly and the plan position are deliberately not Home's business:
+      // a player who presses it is lost in angle, and throwing away the zoom
+      // and the place they navigated to would answer a question they did not
+      // ask (docs/free-camera.md §4).
+      assert.equal(homed.distance, turned.distance, 'and Home keeps the zoom');
+      assert.deepEqual(
+        { x: homed.focus.xM, z: homed.focus.zM },
+        { x: turned.focus.xM, z: turned.focus.zM },
+        'and keeps the place'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('holds the pitch inside the spec band however hard it is pushed', async () => {
+    const world = await boot();
+    try {
+      world.frame(3);
+      world.conn.orbitBy(0, -5000);
+      assert.equal(rig().pitchDeg, 10, 'the floor of the band, and not past it');
+      world.conn.orbitBy(0, 5000);
+      assert.equal(rig().pitchDeg, 88, 'the ceiling, two degrees short of the gimbal');
+
+      // Yaw has no ends, so it wraps rather than clamping: a heading is a
+      // direction, and there is no such thing as turning too far.
+      world.conn.home();
+      world.conn.orbitBy(640 * 3, 0);
+      assert.ok(rig().yawDeg >= 0 && rig().yawDeg < 360, 'three full turns is a heading');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('keeps the ground under the hand at every heading', async () => {
+    const world = await boot();
+    try {
+      world.frame(3);
+      world.conn.home();
+      world.conn.focusWorld(2000, 2000);
+
+      // At the home yaw, dragging right walks the focus west: the water
+      // follows the hand, which is the rule the locked rig implemented by
+      // subtracting from world X.
+      const start = rig().focus;
+      world.conn.panBy(120, 0);
+      const west = rig().focus;
+      assert.ok(west.xM < start.xM - 100, `the focus went west: ${start.xM} -> ${west.xM}`);
+      assert.ok(Math.abs(west.zM - start.zM) <= 1, 'and nowhere north or south');
+
+      // A quarter turn later the same drag walks it along the other axis,
+      // because "right" belongs to the camera rather than to the map. This is
+      // the whole of what freeing the yaw cost the pan, and the reason the
+      // locked rig's simpler expression could not survive it.
+      world.conn.home();
+      world.conn.focusWorld(2000, 2000);
+      world.conn.orbitBy(160, 0);
+      assert.equal(rig().yawDeg, 90, 'a quarter turn, in pixels of orbit drag');
+      const before = rig().focus;
+      world.conn.panBy(120, 0);
+      const after = rig().focus;
+      assert.ok(after.zM > before.zM + 100, `the focus went south: ${before.zM} -> ${after.zM}`);
+      assert.ok(Math.abs(after.xM - before.xM) <= 1, 'and nowhere east or west');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('never puts the eye inside the seabed, at any angle', async () => {
+    const world = await boot();
+    try {
+      world.frame(3);
+      let clamped = 0;
+      // The invariant over the whole rig, rather than at one flattering
+      // configuration: the eye keeps its clearance wherever it is aimed.
+      for (const yawPx of [0, 80, 160, 240, 320, 400, 480, 560]) {
+        for (const pitchPx of [-5000, -120, 0, 120, 5000]) {
+          for (const distance of [250, 900, 3000]) {
+            world.conn.home();
+            world.conn.focusWorld(2700, 2600, distance);
+            world.conn.orbitBy(yawPx, pitchPx);
+            const { eye, focus, pitchDeg } = rig();
+            const groundDepth = world.conn.seabedDepthAt(eye.xM, eye.zM);
+            assert.ok(
+              eye.depthM <= groundDepth - 24,
+              `eye at ${eye.depthM} m under ground at ${groundDepth} m ` +
+                `(yaw ${yawPx}px, pitch ${pitchDeg}°, dolly ${distance} m)`
+            );
+            const focusDepth = focus.depthM ?? world.conn.seabedDepthAt(focus.xM, focus.zM);
+            const unclamped = focusDepth - (Math.sin((pitchDeg * Math.PI) / 180) * distance) / 0.22;
+            if (eye.depthM < unclamped - 1) clamped += 1;
+          }
+        }
+      }
+      // And the clamp is load-bearing rather than decorative: the focus above
+      // sits in the canned trench, one cell from an 840 m wall of rock, so
+      // some of those aims put the eye through it.
+      assert.ok(clamped > 0, 'at least one aim was saved from the inside of the terrain shell');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('still answers with a footprint when the camera looks past the horizon', async () => {
+    const world = await boot();
+    try {
+      world.frame(3);
+      world.conn.home();
+      world.conn.orbitBy(0, -5000);
+
+      const quad = world.conn.groundQuad();
+      assert.equal(quad.length, 4, 'the scope still gets its four corners');
+      // At the bottom of the pitch band the top screen corners are above the
+      // horizon and meet the ground plane behind the eye. Answering with the
+      // eye's own position — which is what `Math.max(1, t)` did — collapsed
+      // the scope's camera box to a dot at exactly the pitch where a player
+      // most needs to know which way they are facing.
+      const spreadX = Math.max(...quad.map((c) => c.x)) - Math.min(...quad.map((c) => c.x));
+      const spreadY = Math.max(...quad.map((c) => c.y)) - Math.min(...quad.map((c) => c.y));
+      assert.ok(spreadX > CELL_M, `the box has width: ${spreadX.toFixed(0)} m`);
+      assert.ok(spreadY > CELL_M, `and depth: ${spreadY.toFixed(0)} m`);
+      for (const corner of quad) {
+        assert.ok(
+          Number.isFinite(corner.x) && Number.isFinite(corner.y),
+          'and no corner ran off to infinity'
+        );
+      }
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('lets the focus leave the seabed, and keeps it in water', async () => {
+    const world = await boot();
+    try {
+      world.frame(3);
+      world.conn.home();
+      world.conn.focusWorld(2000, 2000);
+      const seabed = world.conn.seabedDepthAt(2000, 2000);
+
+      world.conn.raiseFocusBy(FOCUS_STEP_M * 4);
+      assert.ok(
+        Math.abs((rig().focus.depthM ?? 0) - (seabed - FOCUS_STEP_M * 4)) <= 1,
+        'four notches up is four notches off the seabed'
+      );
+
+      // The column has two ends and the focus honours both. Nothing here is a
+      // cost — the Lid and the crush depth are a hull's problem, never the
+      // camera's (docs/free-camera.md §4) — it is only that water is where
+      // looking makes sense.
+      world.conn.raiseFocusBy(10_000);
+      assert.equal(rig().focus.depthM, 0, 'the focus stops at the surface');
+      world.conn.raiseFocusBy(-20_000);
+      assert.equal(rig().focus.depthM, Math.round(seabed), 'and on the seabed');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('turns on a twist without knowing what a pixel of drag is worth', async () => {
+    const world = await boot();
+    try {
+      world.frame(3);
+      world.conn.home();
+      // The touch dialect has no Shift and no wheel, so the yaw arrives as an
+      // angle off two fingers.
+      world.conn.yawBy(Math.PI / 2);
+      assert.equal(rig().yawDeg, 90, 'a quarter turn is a quarter turn');
+      assert.equal(rig().pitchDeg, HOME_PITCH_DEG, 'and a twist is not a tilt');
     } finally {
       world.teardown();
     }

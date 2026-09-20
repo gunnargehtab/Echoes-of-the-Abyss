@@ -167,9 +167,18 @@ cluster sits near screen centre (~720, 450). Three things make aiming less
 fragile than it sounds: selection picks the *nearest* owned entity on screen
 within a reach that never drops below 18 px, the minimap is a fixed
 bottom-left rectangle you can click or drag to jump the view, and
-`window.__perspectiveCamera(x, z, distance?)` points the camera at a world
+`window.__perspectiveCamera(x, z, distance?, aim?)` points the camera at a world
 position directly — pair it with `window.__perspectiveProbe().ownCentre` to
 frame the fleet before a screenshot.
+
+`aim` is `{ yawDeg?, pitchDeg?, focusDepthM? }`, and it is how a review reaches
+the rest of the camera (docs/free-camera.md). Pitch is clamped to 10°–88°, yaw
+wraps, and `focusDepthM: null` puts the focus back on the seabed. Since gates 6
+and 7 are judged across the pitch band rather than at one frame, a visual PR
+wants more than one angle: the 55° home frame, and a low one (10°–20°) with the
+focus lifted into the column, where far more of the map is in shot. The probe
+reports `pitchDeg`, `yawDeg`, `focus` and `eye` back, so a screenshot can be
+captioned with the frame it was taken in.
 
 Identifying *which* glyph is which is the genuine gap — the silhouettes are
 faction shapes, not labels. Select one and read the inspector panel that

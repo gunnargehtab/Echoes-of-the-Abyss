@@ -222,6 +222,7 @@ Not a map with markers on it. A scope.
 - **Terrain** — biome wash only, at the desaturated fills in `palette.ts`. No structures, no roads, no detail that competes with returns.
 - **Returns** — same tier fidelity as the world view, scaled down. A Tier-1 haze on the scope is a large soft smear, and a player must not be able to click one to select it.
 - **Echo Marks** — a separate dimmer layer, drawn beneath returns, in a colder hue. Past and present must never share an ink.
+- **The camera box is the compass.** The scope stays north-up, always; the world camera does not ([free-camera.md](free-camera.md)). So the box — the view's true ground footprint, a trapezoid — turns with the camera, and its far edge is drawn heavier to say which way that is. This is where the correspondence the old yaw lock enforced now lives: the player reads their heading off the instrument built for measuring, rather than off a frame that can no longer be assumed.
 - **No fog.** There is no explored/unexplored state anywhere in this game. Terrain is always fully drawn; what is hidden is *occupancy*, and occupancy is drawn only as returns. Any "unexplored black" would be the wrong game. §4.5's acoustic veil is not a counter-example and is not drawn here: it is present tense rather than memory, it drains the ground rather than withholding it, and it stays in the world view — this instrument's promise is own force at full clarity, and a mark's own size already says how much to trust it.
 
 Implemented: terrain wash, tier-fidelity returns, the sweep, the two range rings, and the
@@ -356,6 +357,9 @@ Implemented in the client scaffold today (`packages/frontend/src/game/EchoRender
 | Middle drag | Pan |
 | Arrows, screen edge | Pan. Edge scrolling is a setting (§14), because a trackpad makes the edge a place the pointer lands by accident |
 | Wheel | Zoom about the cursor |
+| `Shift` + middle drag | Orbit the camera — horizontal yaws, vertical pitches, within 10°–88° ([free-camera.md](free-camera.md) §4) |
+| `Shift` + wheel | Raise / sink the camera's focus through the water column, 150 m a notch. **This gesture zoomed before the camera was freed**, and the reassignment is written down here because a mouse interaction that silently changes meaning is the one thing §9 will not do |
+| `Home` | Home the camera — north, 55°, focus back on the seabed. The frame every match opens on, one press away from anywhere |
 | `Space` | Toggle Silent Running for the selection |
 | `Q` | Toggle Engine Off — cut the drive. Quieter than silence and stopped ([systems-echo.md](systems-echo.md) §6) |
 | `P` | Active sonar ping from the first selected unit |
@@ -372,13 +376,14 @@ not `F`, since that arms the Foundry.
 **Every key in that table is a default, not a fact.** §11 owes full rebinding, and the
 bindings are data (`packages/frontend/src/input/bindings.ts`) that the Controls screen
 edits — so the table above is what a player starts with rather than what they are stuck
-with. Four things are deliberately *not* rebindable, and each is the resolved half of a
-conflict this document settled:
+with. Five things are deliberately *not* rebindable, and each is the resolved half of a
+conflict this document settled — or, for `Home`, the recovery a freed camera owes:
 
 | Fixed | Why it cannot move |
 | --- | --- |
 | `0`–`9` | Control groups have no alternative route; production has the card's yard pages. `0` is the army |
 | Arrows | Pan, with the screen edge; a rebind that took an arrow would take half the camera |
+| `Home` | Homes the camera. A free camera's failure mode is a player who cannot find their fleet, and the way back may not be something they can lose |
 | `Shift` | Queues an order, and adds to a selection |
 | `Ctrl` | Subtracts from a selection, and assigns a control group |
 | `Esc` | Drops a pending build, and is handled before every other key; with nothing left to drop, it opens the esc menu (§9.5) |
@@ -1447,6 +1452,7 @@ renderer work rather than mixer work, so each names what it moves:
 - **[art-direction.md](art-direction.md)** — glass panels, palette, and the visual language
 - **[systems-combat.md](systems-combat.md)** — the fight this document's 5 Hz is the clock of; §9.5 counts the snapshots each band contains
 - **[systems-depth.md](systems-depth.md)** — depth bands and pressure, as surfaced in §8
+- **[free-camera.md](free-camera.md)** — the freed camera §9's three new verbs drive, and why §5's scope box became the compass
 - **[campaign.md](campaign.md)** — the twenty-nine missions §14's board is a rendering of
 - **[concept-art/hud-mockups/](concept-art/hud-mockups/README.md)** — three directions for the in-match interface, each measured against the rules above: what it keeps, what it breaks, and what the break buys
 - **[tech-stack.md](tech-stack.md)** — why the client is allowed so little

@@ -240,6 +240,7 @@ export const RESERVED_CODES: ReadonlyMap<string, string> = new Map([
   ['ArrowDown', 'pans the camera (§9)'],
   ['ArrowLeft', 'pans the camera (§9)'],
   ['ArrowRight', 'pans the camera (§9)'],
+  ['Home', 'homes the camera — the one way back from an angle (§9, docs/free-camera.md §4)'],
 ]);
 
 /**
@@ -262,6 +263,21 @@ export const FIXED_CONTROLS: readonly { label: string; keys: string; why: string
   { label: 'Add to selection', keys: 'Shift + click', why: 'Ctrl subtracts' },
   { label: 'Select by class', keys: 'Alt + click', why: 'Or double-click' },
   { label: 'Pan', keys: 'Middle drag', why: 'Wheel zooms about the cursor' },
+  {
+    label: 'Orbit the camera',
+    keys: 'Shift + middle drag',
+    why: 'Across yaws, up and down pitches — 10° to 88°',
+  },
+  {
+    label: 'Camera depth',
+    keys: 'Shift + wheel',
+    why: 'Raises and sinks the focus through the water column',
+  },
+  {
+    label: 'Home the camera',
+    keys: 'Home',
+    why: 'North, 55°, focus back on the seabed. Keeps your zoom and your place',
+  },
   {
     label: 'Pan',
     keys: 'Arrows / screen edge',

@@ -19,9 +19,9 @@ Status of each part:
 
 - **The perspective presentation (§4–§5) and band navigation UX (§6) are landed.** With
   Phase 5 the conn view *is* the game view, and [art-direction.md](art-direction.md)
-  "Camera & Projection" now carries the perspective spec — pitch 55°, SPEC — that §4
-  argued for. The plan-view world renderer is retired; the chart lives on in the sonar
-  scope.
+  "Camera & Projection" now carries the perspective spec that §4 argued for. The plan-view
+  world renderer is retired; the chart lives on in the sonar scope. §4's pitch is now the
+  camera's home rather than its lock — see [free-camera.md](free-camera.md).
 - **The Lid exposure mechanic (§7) is adopted** — the owner's yes came with Phase 3/4
   ("do them together", 2026-08-30). [world.md](world.md), [glossary.md](glossary.md) and
   [systems-depth.md](systems-depth.md) §2 now carry it as a rule of the water.
@@ -87,6 +87,12 @@ emotion is dread, which needs a *place*. The revision:
   keeps the viewport and the sonar scope in agreement, and nothing in the feedback asks for
   rotation. WC3 itself shipped effectively rotationless; the pitch is what it contributes here,
   not free-look.
+
+  *Superseded, September 2026.* Later feedback did ask for it — "the player's camera as
+  well" — and [free-camera.md](free-camera.md) retires the lock. What this bullet was right
+  about is kept: the viewport and the scope must agree, and they still do, by the scope
+  staying north-up while its camera box turns into the compass. The frame this bullet made
+  permanent is now the *home* frame, one `Home` press away.
 - **Zoom dollies along the view axis, about the cursor** — the existing zoom rule, re-based
   onto the new camera. The zoom band stays TUNABLE in the renderer, and every graphics gate is
   still judged at every zoom the camera allows.
@@ -236,7 +242,10 @@ Downstream:
   ([SETUP-ANDROID](../SETUP-ANDROID.md)), so the sprite path is retained as the documented
   low-spec fallback, which it already knows how to be.
 - **Gate 8 is rewritten to the new spec.** Fixed-pitch perspective, locked yaw, rings as
-  world-space decals, sonar scope stays plan view, atmosphere stays screen-space.
+  world-space decals, sonar scope stays plan view, atmosphere stays screen-space. (The
+  first two clauses were retired by [free-camera.md](free-camera.md); the rest stands, and
+  the rings conforming vertex-by-vertex is exactly why freeing the camera cost them
+  nothing.)
 - **Gate 5 and the review checklist survive untouched** — including the rule that every visual
   PR carries a run-game screenshot. A camera revision is reviewed by looking at it.
 
@@ -552,6 +561,8 @@ Parked here as plain text until decided; none blocks Phase 1.
   language everything else here inherits
 - **[graphics-standards.md](graphics-standards.md)** — the gates §8 rewrites and the ones it
   keeps
+- **[free-camera.md](free-camera.md)** — the revision that freed this camera's yaw, pitch and
+  focus, and the account of where the yaw lock's protections went
 - **[tech-stack.md](tech-stack.md)** — renderer choice and performance budgets
 - **[world.md](world.md)** — the Lid, the Collapse, and the writing rule §7 must not break
 - **[ui-ux.md](ui-ux.md)** — the depth controls §6 revises and the sonar scope that keeps the
