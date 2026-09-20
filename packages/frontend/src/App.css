@@ -2158,8 +2158,38 @@ button.objectives-row:hover {
   font-weight: 700;
 }
 
+/* #774's axis on this row, and #809. The pair above is about how wide a *box*
+   is; a word with no break opportunity in it is laid out on one line whatever
+   its box measures, so flooring the track stopped the counter being carried
+   out of the card and did nothing about its being covered where it sits.
+
+   The trap this row sets that the panel's does not: the card's track is twice
+   the panel's — 455.8 px against 218.7 at 1440x900 — and its type is 0.64rem,
+   so #774's 64-character fixture ported straight across **fits**, 431.5 px in
+   a 455.8 px cell, and a control written with it passes vacuously. Driven in
+   Chromium against `MissionResult`'s own markup and the shipped sheet, an
+   80-character token prints 349.3 px² of ink over the counter's own glyphs and
+   a 100-character one 443.8 px² and 90 px of the card's horizontal scroll. All
+   of them are 0 with this declaration in.
+
+   Scoped to the one cell a mission authors into, which is #774's correction
+   rather than tidiness: on the row's own item rule above it would reach
+   `.mission-result-status` too, and a templated word in a fixed track is
+   exactly what must not break — the argument `.mission-result-progress`
+   already wins with its own `white-space: nowrap`, since `4 of 3` over three
+   lines is the same illegibility one column along. The panel's own regression
+   had a driver this row does not have: there the track is
+   `calc(3.2rem * var(--panel-type, 1))` and *shrinks* above 100% while the
+   word's `0.58rem` does not, and here both are flat, so the scoping is owed to
+   the templated-word argument alone rather than to a measured break.
+
+   `break-word` rather than `anywhere`, for the reason `.objectives-text`
+   gives: this cell sits in the `minmax(0, …)` track, whose minimum is a length
+   rather than its contents, so the min-content contribution the two values
+   differ in cannot reach a track from here. */
 .mission-result-text {
   color: var(--text-bright);
+  overflow-wrap: break-word;
 }
 
 .mission-result-progress {

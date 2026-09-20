@@ -37,6 +37,7 @@ import {
   columnOf,
   parseCss,
   resolveBox,
+  wordBreaking,
   type Element,
 } from './support/cssBox.ts';
 import { MatchResult } from '../src/game/MatchResult.tsx';
@@ -509,6 +510,84 @@ describe('the mission result: a mission’s words cannot carry the counter out',
     // arithmetic is here so that a shape dropping out of `shapes()` fails
     // rather than quietly shrinking what this walks.
     assert.equal(checked, 15, 'every child of every shape was asked');
+  });
+
+  it('breaks a word a mission authors too long for its cell, so the counter still reads', async () => {
+    // The third axis, and #809: #774's on this row. The two floors above are
+    // about how wide a *box* is, and a word with no break opportunity in it is
+    // laid out on one line whatever its box measures — so flooring the track
+    // stopped the counter being carried out of the card and did nothing about
+    // its being covered where it sits.
+    //
+    // The fixture is where this row parts company with the panel's, and it is
+    // the whole reason the fault outlived #774. Driven in Chromium at
+    // 1440x900 against `MissionResult`'s own markup and the shipped sheet: the
+    // cell is 455.8 px here against the panel's 218.7 and the type is
+    // 0.64rem, so #774's 64-character token measures 431.5 px and **fits** —
+    // 0 ink on the counter, 0 scroll — and that control ported straight across
+    // passes vacuously, against a sheet it never changed. At 80 characters the
+    // token's glyphs cover 349.3 px² of the counter's own; at 100, 443.8 px²
+    // and 90 px of the card's horizontal scroll. Every one is 0 with the
+    // declaration in.
+    //
+    // Walked off the rendered tree and every child *classified* rather than
+    // filtered, for the reason the two tests above give: a cell added later
+    // that this does not recognise fails here instead of being skipped in
+    // silence.
+    const rules = parseCss(APP_CSS);
+    const rendered = await rows();
+
+    let authored = 0;
+    let counters = 0;
+    let templated = 0;
+    for (const { element, children } of rendered) {
+      for (const child of children) {
+        const cell = { ...child, ancestors: [...ANCESTORS, element] };
+        const verdict = wordBreaking(rules, cell);
+
+        // The mission's own words, rendered verbatim (ui-ux.md §10.5) and
+        // therefore unbounded — a mission's words, not a template's.
+        if (child.classes.includes('mission-result-text')) {
+          assert.equal(
+            verdict.kind,
+            'permits',
+            `a .${child.classes.join('.')} in a ${element.classes.join('.')} row cannot break a token it cannot fit`
+          );
+          authored += 1;
+          continue;
+        }
+
+        // The counter is the one cell that must *not* break. `4 of 3` split
+        // over three lines is the same illegibility one column along, and it
+        // is also what lets the third track be `auto` at all.
+        if (child.classes.includes('mission-result-progress')) {
+          assert.equal(verdict.kind, 'refuses', 'the counter may wrap');
+          counters += 1;
+          continue;
+        }
+
+        // The status word is templated (`STATUS_WORD`) and sits in a fixed
+        // `3.2rem` track, so it must not break either, for the counter's
+        // reason. Asserting it is what stops this declaration being written on
+        // `.mission-result-objective > *`, where it would reach this cell too
+        // — which is the shape #774 had to correct one panel along.
+        assert.deepEqual(
+          child.classes,
+          ['mission-result-status'],
+          `unclassified cell .${child.classes.join('.')}`
+        );
+        assert.equal(
+          verdict.kind,
+          'refuses',
+          'the status word may break, and it is a templated word in a fixed track'
+        );
+        templated += 1;
+      }
+    }
+    // A sentence and a status word in each of the six shapes, and a counter in
+    // three of them: the arithmetic is here so that a shape dropping out of
+    // `shapes()` fails rather than quietly shrinking what this walks.
+    assert.deepEqual({ authored, counters, templated }, { authored: 6, counters: 3, templated: 6 });
   });
 });
 
