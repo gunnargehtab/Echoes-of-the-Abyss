@@ -2126,7 +2126,11 @@ button.objectives-row:hover {
    the counter goes invisible rather than absent, §2's state. The pair
    `.objectives-row` and `.contact-log-row` carry, and for the same reason: the
    track's floor and the item's are two floors, and `minmax(0, …)` alone leaves
-   the span inside the track refusing to shrink (#773). */
+   the span inside the track refusing to shrink (#773).
+
+   Neither of those stops the token's own glyphs printing across the cells
+   beside it — that is #809, and it is the rule below rather than this one.
+   Both of these are about how wide a *box* is, and a box is not ink. */
 .mission-result-objective {
   display: grid;
   grid-template-columns: 3.2rem minmax(0, 1fr) auto;

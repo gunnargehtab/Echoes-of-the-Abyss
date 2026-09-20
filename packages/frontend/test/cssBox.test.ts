@@ -646,8 +646,8 @@ describe('cssBox: whether a word too long for its box may be broken', () => {
    * #809. Row 34 gave that row the two floors and said in terms what they do
    * not do; this is the part they left. It outlived #774 by *fitting* the
    * fixture that caught the panel — the cell is 455.8 px against the panel's
-   * 218.7, so a 64-character token measures 431.5 px there and wraps with room
-   * to spare. `resultCards.test.ts` carries that measurement.
+   * 218.7, so a 64-character token inks 394.3 px there and never reaches the
+   * counter at all. `resultCards.test.ts` carries that measurement.
    */
   const RESULT_ROW = { tag: 'li', classes: ['mission-result-objective', 'failed'] };
   const RESULT_ANCESTRY = [
