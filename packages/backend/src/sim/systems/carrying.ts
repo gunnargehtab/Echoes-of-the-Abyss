@@ -37,6 +37,8 @@ import { HOLD, HULL_EFFECTS, UnitKind, statsFor, unitRadiusM } from '@echoes/sha
 import {
   Acoustic,
   Carried,
+  Craft,
+  Flightdeck,
   DepthOrder,
   Embarking,
   Harvester,
@@ -77,6 +79,15 @@ export function canBoard(world: SimWorld, carrier: number, eid: number): boolean
   // Freighter would be a hull the Echo pass never sees carrying six more.
   if (!hasComponent(world, Unit, eid) || !hasComponent(world, MoveOrder, eid)) return false;
   if (!hasComponent(world, Position, eid) || hasComponent(world, Hold, eid)) return false;
+  // Nor a deck, for the mirror of that reason (docs/systems-combat.md §15): a
+  // carrier aboard a transport is a hull with no position still guiding craft
+  // that have one, tethered to a carrier the tether cannot measure. A deck
+  // does not fit in a hold.
+  if (hasComponent(world, Flightdeck, eid)) return false;
+  // And a craft is flown, not carried. It takes no order of its own
+  // (`Match.owns`), so nothing can reach this — it is here because the two
+  // mechanisms are opposites and somebody will eventually try.
+  if (hasComponent(world, Craft, eid)) return false;
   if (hasComponent(world, Carried, eid)) return false;
   if (Owner.slot[eid] !== Owner.slot[carrier]) return false;
   return fits(carrier, eid);

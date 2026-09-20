@@ -91,15 +91,19 @@ of a service (Cantus, Reciter).
 | **Ordnance** | *Broadside* — the torpedo salvo | *Weaver* — decoys, not mines | *Thurible* — depth charges from below | *Lance* — one torpedo, aimed by the cone |
 | **Siege** | *Furnace* — thermal cutters on a hull | *Blight* — a spore that eats plate | *Lure* — brings the Drift to a wall | *Tocsin* — the long gun that stands still |
 | **Transport** | *Freighter* — armoured, loud, six berths | *Drifter* — two berths, nearly silent | *Verger* — carries cohorts down | *Antiphon* — carries three, projects depth |
+| **Carrier** | *Gantry* — a flight that is louder than the fight | *Rootstock* — a flight nothing hears arrive | *Succentor* — a flight rated for the Hadal | *Offertory* — two craft, launched into the cone |
 | **Deep** | Abyssal Submersible (shared) | Abyssal Submersible (shared) | Abyssal Submersible (shared) | Abyssal Submersible (shared) |
 
-Eighteen sketched hulls — sixteen, and the two the mid-tier row added in the seventh wave
-(#531), which is the only row that is not four wide because only two navies have the gap. With
-the fifteen that exist that is thirty-three, and the Consortium's bar and the Order's each read
-one more than the other two's. Otherwise each navy's bar
-reads twelve: its nine (or eight, with the Chorister and the Clarion counting where they
-fall), the Submersible, the Harvester, and the common trio — which the last wave decided to
-keep (§8, #510), so twelve it is.
+Twenty-two sketched hulls — sixteen, the two the mid-tier row added in the seventh wave
+(#531), which is the only row that is not four wide because only two navies have the gap, and
+the four the Carrier row added in the eighth (#838). With the fifteen that exist that is
+thirty-seven, and the Consortium's bar and the Order's each read one more than the other
+two's. Otherwise each navy's bar
+reads thirteen: its ten (or nine, with the Chorister and the Clarion counting where they
+fall), the Submersible, the Harvester, and the common trio — which wave 6 decided to
+keep (§8, #510). Twelve until the carriers, and thirteen after them, which is why the eighth
+wave is also the wave that stopped a navy's roster fitting one page of the command card
+([ui-ux.md](ui-ux.md) §9).
 
 ### The arguments, cell by cell
 
@@ -214,6 +218,32 @@ emits nor hears, and a kill reveals nothing beyond the battle site. The SIG figu
   for 20 s — a Standing Wave's grant at a hull's scale, and the Order's way of arriving
   somewhere it has not built a Spire.
 
+**Carriers.** The row the plan did not have, added by #833 and argued the way every other
+cell is. A carrier launches a **flight** — small unmanned craft, built on its own deck — and
+carries no gun of its own, so what it does is move the *firing spike* off the hull that
+ordered it: in a game where a shot is the loudest thing a hull does
+([systems-echo.md](systems-echo.md) §6), a flight is a gun that is a kilometre from its
+owner. The depth argument is the price, and it is a hard rule rather than a stat: **a craft
+has no depth drive**, so it is launched into the band its carrier holds and stays there,
+which means a carrier that wants to strike deep has to descend itself and be heard doing it.
+The mechanism is [systems-combat.md](systems-combat.md) §15 and the stat blocks are
+[units.md](units.md), "The carriers".
+
+- *Gantry* (Consortium, Slipway). Two Sparks at SIG 62 under way — over the Klaxon's line, so
+  the flight carries the +12% and is the loudest thing on that water. A seeker takes the
+  loudest (§5), so what a torpedo aimed at a Gantry hits is a Spark. Locked: a flight whose
+  argument is being over 60 is unreadable outside the navy that is paid for it.
+- *Rootstock* (Commune, Slipway). Four Runners at SIG 4 idle and 9 under way — quieter than
+  anything else in the water, so the fight starts before the approach was heard. Each dies to
+  two Corvette shots. Locked: the SIG line is the Veil's economy written as a craft.
+- *Succentor* (Directorate, Slipway). Five Trebles, PR-4 like the hull that built them, so
+  this is the one flight that can be launched into the Hadal band and the Listening's answer
+  to water nobody else holds. Locked by the PR-4 rule: whatever reaches the band is theirs.
+- *Offertory* (Knights, Slipway). Two Versicles, the hardest craft in the roster and the
+  slowest deck, launched **only into the hull's own cone** — the Lance's gate spent on craft
+  instead of a torpedo, so an Offertory launching is an Offertory facing the fight at its
+  loudest. Locked: the cone is the Order's alone.
+
 **The Deep row stays shared.** The Abyssal Submersible is the crystal-locked hull, and
 [economy.md](economy.md) §8 makes the crystal the gate, not the flag. Nothing in the matrix
 replaces it.
@@ -235,6 +265,7 @@ is used four ways. Each wave is one pull request and one row in
 | 5 — line and anchor (done, #509) | Caisson, Reed, Bower | none | the Consortium and Commune doctrines stop buying Corvettes; the Bower is judged where the Slipway is reached (#518) |
 | 6 — the commons (done, #510) | none | none | a decision, from the harness: retire the Light Scout, Corvette and Cruiser from the bars, or keep them as the surplus market — **kept**, see §8 |
 | 7 — the mid-tier (#531) | Derrick, Responsory | guns that read SIG: acquire-by-loudness, and damage paid by the target's | the Cruiser's four dead entries become two hulls that are built, without the win rates spreading further than the composition bid already moved them |
+| 8 — the carriers (#838) | Gantry, Rootstock, Succentor, Offertory | a flight: craft built on a deck, launched into the carrier's band, fighting the carrier's target and dying with it | every navy fields a hull that never fires, and the flight's berths are paid by the deck rather than by the water |
 
 **Wave 0** is the part that is not glamorous and cannot be skipped. It is issue #498, and it
 settled four things:
@@ -930,6 +961,11 @@ argument to have once and reuse.
 5. **A song from a hull** (wave 4). The Chorus Call's fauna weighting, emitted from a
    `HullEffect` rather than a Cantor. The Cantus already sings for PR; the Lure sings for
    the Drift.
+6. **A flight from a deck** (wave 8). A hull that *builds* hulls: craft spawned into the
+   water at the carrier's own depth, holding the carrier's target, tethered to it, expiring
+   on their own endurance and dying with it. Carrying (1) is the nearest thing the sim has
+   and it is the opposite mechanism — a hold takes hulls *out* of the water, and a deck puts
+   them in.
 
 Noisemakers, depth charges, torpedoes with a magazine, stationary-to-work effects and PR
 grants from a hull all exist and are reused, which is most of the matrix.
@@ -947,7 +983,11 @@ grants from a hull all exist and are reused, which is most of the matrix.
 - **Balance churn.** Every wave moves the baseline, and #454 and #458 showed how far one
   economy lever moves four win rates. Each wave re-runs the baseline and the duels, and the
   guard-rails in [economy.md](economy.md) §9 are the floor a wave may not break.
-- **Nothing on the Echo pass.** Forty berths a commander is forty berths whatever fills them.
+- **Nothing on the Echo pass.** Forty berths a commander is forty berths whatever fills them
+  — and wave 8 is the first thing that could have broken that, because a flight puts hulls in
+  the water that no yard built. It does not, by construction: a carrier's berths are three
+  for the hull and one for every craft its deck can hold, charged when the carrier is queued,
+  so the worst board a commander can reach is still forty berths' worth of entities.
 
 ## 8. Open questions
 

@@ -143,6 +143,13 @@ const NAVIES: readonly Faction[] = [
  * faction-blind (docs/economy.md §6), so a Chorister under any flag is a hull
  * the yard would build.
  *
+ * The one hull class that is *not* a production order is excluded for the
+ * same rule rather than as an exception: a craft is built by a carrier's deck
+ * and by no yard at all (docs/units.md, "The craft"; #838), so a phantom
+ * claiming one would be claiming a hull that cannot exist without another
+ * hull beside it — the tell this list exists to avoid, and a leak besides,
+ * since a Spark in the water means a Gantry within 1,200 m of it.
+ *
  * In `UnitKind` order, which is stable across builds, so the kind die lands
  * on the same hull in a replay.
  */
@@ -150,7 +157,7 @@ const PHANTOM_HULLS_BY_NAVY: ReadonlyMap<Faction, readonly UnitKind[]> = new Map
   NAVIES.map((navy) => [
     navy,
     (Object.values(UNIT_STATS) as UnitStats[])
-      .filter((stats) => unitAvailableTo(stats.kind, navy))
+      .filter((stats) => stats.launchedFrom === undefined && unitAvailableTo(stats.kind, navy))
       .map((stats) => stats.kind),
   ])
 );

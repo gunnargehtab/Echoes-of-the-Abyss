@@ -185,7 +185,19 @@ describe('the roster’s prices', () => {
     const inBiomass = roster.filter((stats) => priceOf(stats).biomass > 0);
     assert.deepEqual(
       inBiomass.map((stats) => stats.name).sort(),
-      ['Acolyte', 'Chorister', 'Dredge', 'Lure', 'Precentor', 'Thurible', 'Verger'],
+      [
+        'Acolyte',
+        'Chorister',
+        'Dredge',
+        'Lure',
+        'Precentor',
+        // The carriers add the Succentor at 60 (#838): a Treble is a cohort
+        // that does not come home, so the deck that builds them is priced in
+        // the account cohorts are priced in.
+        'Succentor',
+        'Thurible',
+        'Verger',
+      ],
       'the Biomass column names the cohort programme’s hulls and nothing else'
     );
     for (const stats of inBiomass) {
@@ -206,6 +218,11 @@ describe('the roster’s prices', () => {
     const chorister = UNIT_STATS[UnitKind.Chorister];
     for (const stats of Object.values(UNIT_STATS)) {
       if (stats.kind === UnitKind.Chorister) continue;
+      // A craft has no price at all (#838) and 0 is not an undercut: nobody
+      // can buy one, the carrier's price is what paid for it, and it holds no
+      // cell for a commander to press. The claim §6 makes is about hulls a
+      // navy *buys*, so the comparison is over those.
+      if (stats.launchedFrom !== undefined) continue;
       assert.ok(
         priceOf(stats).nodules > priceOf(chorister).nodules,
         `${stats.name} (${stats.cost}) undercuts the cohort hull (${chorister.cost})`

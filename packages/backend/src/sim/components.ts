@@ -701,6 +701,56 @@ export const Embarking = defineComponent({
 });
 
 /**
+ * A carrier's deck — docs/systems-combat.md §15, docs/units.md "The carriers".
+ *
+ * The opposite of `Hold` in the one way that matters: a hold takes hulls out
+ * of the water and a deck puts them in. Carried only by the hulls whose stat
+ * block lists a `flight`, and those are also the only unarmed hulls
+ * `spawnUnit` gives a `Weapon` to — the deck is a carrier's fire control, and
+ * an attack order on a carrier is an order to its flight.
+ *
+ * `aboard` is what is in the shed. What is in the water is `world.flights`,
+ * and the stat block's `capacity` bounds the two **together**, so a full
+ * flight rebuilds nothing.
+ */
+export const Flightdeck = defineComponent({
+  /** Craft ready to launch. */
+  aboard: Types.ui8,
+  /** Seconds left on the current rebuild; 0 when the deck is at capacity. */
+  rebuildRemainingS: Types.f32,
+  /** Seconds until this deck may launch again (FLIGHT.LAUNCH_INTERVAL_S). */
+  launchRemainingS: Types.f32,
+  /**
+   * How many craft this deck has ever launched.
+   *
+   * The ring index, and the reason it is a counter rather than a random
+   * bearing: where a craft enters the water has to be a function of the
+   * simulation's own history or two runs of the same match diverge, which is
+   * what `stateHash.ts` exists to catch.
+   */
+  launched: Types.ui32,
+});
+
+/**
+ * A craft in the water — the other half of `Flightdeck`.
+ *
+ * A craft is an ordinary hull in every system: it has a Position, it is heard,
+ * it is shot at, it shoots. What this component adds is the three bounds
+ * §15 puts on it — the carrier it is guided by, the cell it runs on, and the
+ * place on its carrier's station ring it holds when there is nothing to do —
+ * and the fact of carrying it is what refuses the craft an order of its own
+ * (`Match.owns`) and a depth order of any kind (`Match.orderDepth`).
+ */
+export const Craft = defineComponent({
+  /** The carrier whose deck built it. Its death is this craft's death. */
+  carrier: Types.eid,
+  /** Seconds of cell left. At zero the craft stops — nobody killed it. */
+  enduranceRemainingS: Types.f32,
+  /** Which place on the carrier's station ring this craft holds; fixed at launch. */
+  station: Types.ui8,
+});
+
+/**
  * The Spire's grant on a clock — what an Antiphon lands, lands with +1 PR
  * for HULL_EFFECTS.ANTIPHON.GRANT_S (docs/units.md). Counted down by the
  * carrying system and read by auras into the same max-never-sum chain the

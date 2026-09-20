@@ -21,13 +21,23 @@
 import { UNIT_STATS } from '@echoes/shared';
 
 /**
- * The hull the floor is measured against: the roster's shortest, because the
- * scale has to keep the *smallest* thing on screen readable. Derived from the
- * unit table rather than written down a second time — a new light hull shorter
- * than the Light Scout must move this number, and a copy would not.
+ * The hull the floor is measured against: the shortest hull a yard builds,
+ * because the scale has to keep the *smallest thing a player commands*
+ * readable. Derived from the unit table rather than written down a second time
+ * — a new light hull shorter than the Chorister must move this number, and a
+ * copy would not.
+ *
+ * The filter is the carrier wave's craft (docs/units.md, "The craft"; #838),
+ * and it is the doc's rule rather than a convenience: a Runner is 14 m, and
+ * measuring the floor against one holds the whole fleet at 1.5× true scale
+ * from a 700 m dolly outward — which breaks "1 means true metre scale" at
+ * close zoom, the one promise the Phase-2 canonicalisation rests on, for a
+ * hull nobody commands and that is always drawn beside its carrier.
  */
 export const REFERENCE_HULL_M = Math.min(
-  ...Object.values(UNIT_STATS).map((stats) => stats.hullLengthM)
+  ...Object.values(UNIT_STATS)
+    .filter((stats) => stats.launchedFrom === undefined)
+    .map((stats) => stats.hullLengthM)
 );
 
 /**

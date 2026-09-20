@@ -33,9 +33,19 @@ const drawnPxAt = (distanceM: number): number =>
   REFERENCE_HULL_M * groundPxPerM(VIEW_H, FOV_DEG, distanceM) * scaleAt(distanceM);
 
 describe('far-zoom readability scale', () => {
-  it('measures against the roster’s shortest hull, derived not copied', () => {
-    const shortest = Math.min(...Object.values(UNIT_STATS).map((s) => s.hullLengthM));
-    assert.equal(REFERENCE_HULL_M, shortest);
+  it('measures against the shortest hull a yard builds, derived not copied', () => {
+    // The craft of the carrier wave are excluded, per docs/art-direction.md:
+    // a 14 m Runner as the reference would hold the whole fleet at 1.5× true
+    // scale from a 700 m dolly out, which is the next test's promise gone for
+    // the sake of a hull nobody commands (#838).
+    const built = Object.values(UNIT_STATS).filter((s) => s.launchedFrom === undefined);
+    assert.equal(REFERENCE_HULL_M, Math.min(...built.map((s) => s.hullLengthM)));
+    const craft = Object.values(UNIT_STATS).filter((s) => s.launchedFrom !== undefined);
+    assert.ok(craft.length > 0, 'the exclusion is exercised by a roster that has craft in it');
+    assert.ok(
+      Math.min(...craft.map((s) => s.hullLengthM)) < REFERENCE_HULL_M,
+      'a craft is shorter than the reference, which is why the filter is load-bearing'
+    );
   });
 
   it('is exactly 1 at close zoom, so true metre scale stays a fact', () => {

@@ -78,6 +78,7 @@ import {
   EngineOff,
   Carried,
   Countermeasure,
+  Craft,
   DepthOrder,
   Embarking,
   Fauna,
@@ -119,6 +120,7 @@ import {
   forgetCarried,
   landHold,
 } from './systems/carrying.ts';
+import { flightSystem, forgetCraft } from './systems/flight.ts';
 import { harvestSystem } from './systems/harvest.ts';
 import { hullEffectsSystem } from './systems/hullEffects.ts';
 import { movementSystem } from './systems/movement.ts';
@@ -1059,7 +1061,12 @@ export class Match {
     return (
       hasComponent(this.world, Owner, eid) &&
       Owner.slot[eid] === slot &&
-      !hasComponent(this.world, Carried, eid)
+      !hasComponent(this.world, Carried, eid) &&
+      // A craft is the player's and takes no order of its own either: it is
+      // flown from its carrier's deck, and the order that reaches it is the
+      // attack order given to the carrier (docs/systems-combat.md §15,
+      // systems/flight.ts). You order the carrier.
+      !hasComponent(this.world, Craft, eid)
     );
   }
 
@@ -2270,6 +2277,12 @@ export class Match {
     this.boardedScratch.length = 0;
     carryingSystem(this.world, this.boardedScratch);
     for (const eid of this.boardedScratch) this.echo.forget(eid);
+    // The deck beside the hold, and after it (docs/systems-combat.md §15): a
+    // launch is a hull entering the water, so it happens where a landing does
+    // — after movement has put the carrier where it is this tick, and before
+    // the auras and acoustics that have to hear the launch transient on this
+    // tick rather than the next.
+    flightSystem(this.world, this.destroyedScratch);
     // The rung's hull effects before auras: a Cantus that stopped this tick
     // is singing on this tick's grant pass, and a Tender's weld lands before
     // pressure bills for where the patient is standing.
@@ -2513,6 +2526,22 @@ export class Match {
       }
     }
 
+    // And the flight dies with its carrier, for the hold's reason at the other
+    // end of the same argument: guidance is the deck's, so a craft whose
+    // carrier is gone is not a hull anybody is flying
+    // (docs/systems-combat.md §15). By index, for the loop above's reason —
+    // the list grows under the walk — and a craft carries no deck of its own,
+    // so this cannot recurse.
+    for (let i = 0; i < this.destroyedScratch.length; i++) {
+      const flight = this.world.flights.get(this.destroyedScratch[i]!);
+      if (flight === undefined) continue;
+      for (const craft of flight) {
+        if (!hasComponent(this.world, Health, craft) || Health.hp[craft]! <= 0) continue;
+        Health.hp[craft] = 0;
+        this.destroyedScratch.push(craft);
+      }
+    }
+
     const lostBastions: number[] = [];
     let jellyDied = false;
     for (const eid of this.destroyedScratch) {
@@ -2569,6 +2598,11 @@ export class Match {
       // of ids waiting to come back attached to whatever inherits them.
       forgetCarried(this.world, eid);
       this.world.holds.delete(eid);
+      // The same pair for the deck: a dead craft leaves its carrier's flight,
+      // and a dead carrier's list goes with it rather than waiting to be
+      // inherited by whatever takes the id.
+      forgetCraft(this.world, eid);
+      this.world.flights.delete(eid);
       // Before the id goes back into bitecs's free list: anything keyed by eid
       // outside the ECS has to be dropped, or it comes back attached to
       // whatever inherits the id. A contact handle would name a hull the player
@@ -2785,6 +2819,11 @@ export class Match {
       this.world.rallies.delete(eid);
       forgetCarried(this.world, eid);
       this.world.holds.delete(eid);
+      // The same pair for the deck: a dead craft leaves its carrier's flight,
+      // and a dead carrier's list goes with it rather than waiting to be
+      // inherited by whatever takes the id.
+      forgetCraft(this.world, eid);
+      this.world.flights.delete(eid);
       this.echo.forget(eid);
       clearQueue(this.world, eid);
       this.world.paths.delete(eid);

@@ -787,6 +787,17 @@ const UNIT_SHORT: Record<UnitKind, string> = {
   // bar where a resource abbreviation already means something else.
   [UnitKind.Derrick]: 'DRK',
   [UnitKind.Responsory]: 'RSP',
+  // The carriers (#838). The craft have codes for the own-force readouts and
+  // for nothing else: no craft is ever a button, because no commander builds
+  // one (docs/units.md, "The craft").
+  [UnitKind.Gantry]: 'GTY',
+  [UnitKind.Rootstock]: 'RTS',
+  [UnitKind.Succentor]: 'SUC',
+  [UnitKind.Offertory]: 'OFF',
+  [UnitKind.Spark]: 'SPK',
+  [UnitKind.Runner]: 'RNR',
+  [UnitKind.Treble]: 'TRB',
+  [UnitKind.Versicle]: 'VRS',
 };
 
 /** Compact structure names for the build buttons. */

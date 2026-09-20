@@ -1128,6 +1128,183 @@ worth most against the quiet and nothing against the loud, so the navy that is a
 would have paid nothing for a "symmetric" effect — and louder water is worth more to the better
 listener, which the Consortium is not.
 
+The carriers — the eighth wave, and the hull that never fires
+
+Four hulls, one a navy, all four behind the rung, and **not one of them carries a gun**. What
+a carrier carries is a **flight**: two to five small unmanned craft, built on its own deck and
+launched into the water, which fight what the carrier is fighting and nothing else. The
+mechanism is one and is written once, in [systems-combat.md](systems-combat.md) §15; the four
+entries below differ in what they launch and in what the launching costs them.
+
+The argument is the one the Echo Layer makes about firing. A shot is the loudest thing a hull
+ever does — every gun in the roster adds its burst to the hull that fires it
+([systems-echo.md](systems-echo.md) §6) — so in this game *shooting is telling them where you
+are*. A flight separates those two facts: the craft emit the burst, and the hull that ordered
+it is a kilometre away being quiet. Nothing else in the roster does that. A torpedo comes
+closest and is spent on one target; a flight is a gun that is somewhere else.
+
+The price is depth, and it is paid by the carrier. **A craft has no depth drive.** It is
+launched into the band its carrier is holding and it stays in that band until it dies, so a
+carrier that wants its flight in the Abyssal is a carrier that has to descend — and descent
+is loud ([systems-depth.md](systems-depth.md) §2). A target that changes band walks out of
+the flight's reach, and getting it back costs the carrier the water column. That is the whole
+trade: the flight buys you distance on the map and sells you commitment in the column.
+
+Two consequences follow from a carrier having no gun of its own, and both are deliberate.
+It cannot defend itself — it has no countermeasure either, because a decoy in this roster is
+a thing an armed hull carries — so a carrier caught alone is a 3-berth hull dying quietly.
+And its **deck is its fire control**: an attack order given to a carrier is an order given to
+its flight, which is what the craft are for.
+
+Gantry (Slipway)
+
+- Role: The loud deck. A yard's gantry crane with a drive under it, launching Sparks that are
+  louder than anything else in the water and meant to be
+- SIG: 52 / 66, and **+35 at every launch** — the deck opening, §15's transient. The Klaxon's
+  line is 60 and this hull is over it under way, which is the Consortium being the Consortium
+- HYD: 45 — plate and a crane, not sensors
+- PR: 2 — the Consortium baseline
+- Cost: 520
+- Build time: 95s
+- Berths: 5 — three for the hull and one for each craft the deck holds
+- Speed: 38
+- HP: 1500
+- Flight: **two Sparks**, rebuilt one every 45s. The roster's smallest flight and its
+  heaviest craft: 120 HP each at SIG 62 under way, which is over the Klaxon's line, so a
+  Spark's gun carries the +12% and a Spark is the loudest thing on that piece of water
+- Effect: none beyond the flight, and the flight is the entry. Two of them shoot at 22
+  damage a 2s cycle, which is 22 damage a second against a Corvette's 27.8 — less gun than a
+  line hull, from a hull that is not there. What the noise buys is the other half
+  ([systems-combat.md](systems-combat.md) §5): a seeker takes the **loudest** thing in its
+  cone, so Sparks are what a torpedo aimed at a Gantry hits
+- Faction-locked: yes. A flight whose whole argument is being over 60 reads, to the other
+  three navies, as two small hulls that cannot stop announcing themselves
+
+Rootstock (Slipway)
+
+- Role: The strike nobody hears. A stolon with a drive: the Rootstock puts out Runners the
+  way a plant puts out daughter shoots, and at SIG 4 they are the quietest things in the game
+- SIG: 8 / 16, and **+35 at every launch**. The transient is the same for everybody, which is
+  the Commune's one loud moment and the tell this navy has to buy silence back from
+- HYD: 45
+- PR: 1 — the Commune baseline, and the ceiling of what its flight can be launched into
+- Cost: 340
+- Build time: 70s
+- Berths: 7 — the roster's largest, and four of it is the flight
+- Speed: 55
+- HP: 620
+- Flight: **four Runners**, rebuilt one every 30s. 70 HP each — a Corvette kills one in two
+  shots — at SIG 4 idle and 9 under way, which is under the Glider's floor and under every
+  threshold in [systems-echo.md](systems-echo.md) §3 at the ranges a fight happens at
+- Effect: none beyond the flight. Four Runners shoot at 14 damage a 2s cycle, 28 damage a
+  second together, and the four of them die to one Cruiser cycle. The argument is arrival:
+  the shooting starts before the shot at, because nothing heard the approach
+- Faction-locked: yes. A SIG-4 hull is the Veil's economy written as a craft, and a navy that
+  is not poor and unheard has bought four hulls that die to a stiff current
+
+Succentor (Slipway)
+
+- Role: The deep deck. The precentor's deputy, and the Listening's answer to water nobody
+  else can hold: a carrier that sits in the Abyssal and launches its flight into the band it
+  is already in
+- SIG: 20 / 30, and **+35 at every launch**
+- HYD: 60 — the ears the office implies, and the reason it is worth the Directorate's
+  listening in the deep rather than anyone else's
+- PR: 4 — the Hadal band, the Dredge's water and the doctrine's
+  ([systems-depth.md](systems-depth.md) §3). It is the second PR-4 hull in the roster and the
+  first whose *flight* is rated for the band with it
+- Cost: 300, and 60 Biomass — the cohort programme's account
+  ([economy.md](economy.md) §6), because a Treble is a cohort that does not come home
+- Build time: 84s
+- Berths: 8 — the largest package in the game: a hull and five craft
+- Speed: 34
+- HP: 900
+- Flight: **five Trebles**, rebuilt one every 24s. The roster's largest flight and its
+  weakest craft: 90 HP, 45 m/s, 12 damage a 2.2s cycle, PR-4 like the hull that built them —
+  very many, cheap and slow, which is the navy's whole line
+- Effect: none beyond the flight. Five of them make 27 damage a second, and the point is
+  where they make it: below the Shelf line a Succentor's flight is the only thing in the
+  roster shooting at all except a Dredge and whatever is renting a band
+- Faction-locked: yes, and it is the PR-4 rule rather than the price: whatever reaches the
+  Hadal band is the Directorate's, or the doctrine is being given away
+
+Offertory (Slipway)
+
+- Role: The two that are brought up. Very few, elite, and launched only at what the hull is
+  facing — the Lance's cone, spent on craft instead of a torpedo
+- SIG: 18 / 48 cone figures, as every Order entry's are
+  ([systems-echo.md](systems-echo.md) §8), and **+35 at every launch**
+- HYD: 50 — the baseline listener's. §8's term "changes what a Knight emits and never what a
+  Knight hears"
+- PR: 2
+- Cost: 420, and 40 Crystal
+- Build time: 88s
+- Berths: 5
+- Speed: 58
+- HP: 520
+- Flight: **two Versicles**, rebuilt one every 60s — the slowest deck in the roster and the
+  hardest craft in it: 150 HP, 80 m/s, 45 damage a 2.6s cycle on the energy class, so the
+  pair makes 34 damage a second and is the strongest flight there is
+- Effect: **the launch is cone-gated.** A craft leaves the deck only into the hull's own
+  forward cone ([systems-combat.md](systems-combat.md) §5, the Lance's rule), so an Offertory
+  launching is an Offertory facing the fight — at its loudest, in the quarter that matters.
+  A rebuild is 60s, so a Versicle lost is a minute of a hull that has nothing else
+- Faction-locked: yes. The cone is the Order's alone, and a launch gated on it is a rule no
+  other navy has the physics for
+
+The craft
+
+Nobody builds these: they have no price, no yard and no cell on the command card, and a
+commander never orders one. A deck builds them, a carrier launches them, and they take their
+orders from the hull that launched them ([systems-combat.md](systems-combat.md) §15).
+
+**The flight is paid for on the population cap, and it is paid for once, in advance.** A
+carrier's berths are three for the hull and one for every craft its deck can hold, so a
+Succentor is eight berths the day it is queued and a craft in the water is zero
+([economy.md](economy.md) §10). That keeps the promise
+[roster-plan.md](roster-plan.md) §7 makes about the Echo pass — forty berths a commander is
+forty entities' worth of water, whatever fills them — which a flight priced at nothing would
+have been the first thing in the roster to break.
+
+| Craft | Carrier | SIG (idle / cruise) | HYD | PR | HP | Speed | Gun | Length |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Spark | Gantry | 40 / 62 | 20 | 2 | 120 | 70 | 22 at 350 m, 2.0s | 20 m |
+| Runner | Rootstock | 4 / 9 | 20 | 1 | 70 | 95 | 14 at 300 m, 2.0s | 14 m |
+| Treble | Succentor | 8 / 14 | 30 | 4 | 90 | 45 | 12 at 320 m, 2.2s | 16 m |
+| Versicle | Offertory | 20 / 50 | 20 | 2 | 150 | 80 | 45 at 500 m, 2.6s | 22 m |
+
+Three readings the table does not make obvious. A craft **hears**, at 20 to 30, which is poor
+and is not nothing: a flight standing off a carrier is four listening posts its owner did not
+have, and that is as far as a carrier scouts — the tether is 1,200 m and a craft does not
+leave it. A craft's gun is short, 300 to 500 m against a line hull's 550, so a flight closes
+to inside the range of anything it attacks. And a craft's endurance is 120 s in the water,
+which is what stops a carrier accumulating a fleet: the cell runs out, the craft sinks, and
+the deck starts a rebuild it was already going to need.
+
+What the wave decided that the sketch had not. Three things, all of them the same decision
+made three times — that a carrier is a *place where shooting happens* and not a hull that
+also shoots.
+
+- **No gun on any of the four.** The first sketch gave each carrier a light gun for
+  self-defence, and it makes the flight decoration: a 3-berth hull with a gun and two craft
+  is a mid-tier with a bonus, and every one of the arguments above collapses into "more
+  damage per berth". A carrier that cannot fire is a carrier whose whole state is *where its
+  flight is*, which is the thing being designed.
+- **Capacity is what is in the water, not what is in the shed.** A deck holds its number
+  between what is aboard and what is flying, so a full flight rebuilds nothing and a craft
+  lost starts the clock. The endurance figure and the rebuild figures are sized against each
+  other: 120 s of endurance against a 24–60 s rebuild is a deck that can just sustain its own
+  capacity and can never exceed it.
+- **The flight takes no orders.** A craft is the player's, counts as theirs, and is refused
+  every order in the book — exactly as a hull in a hold is (`Match.owns`,
+  [systems-echo.md](systems-echo.md) §3). You order the carrier; the flight is what the
+  carrier does. The alternative is five more hulls a player micromanages, which is a
+  different hull entirely: a squadron with a tender attached, and nothing to do with where
+  the shooting is.
+- **The berths are paid in advance, by the carrier.** A craft costing a berth as it launches
+  would ground a flight whenever the army was full — the deck's own capacity is the honest
+  place to charge it, and charging it there is what keeps forty berths worth forty entities.
+
 Design notes
 
 - Numbers are prototyping intent. Exact costs and timings are tuneable.
@@ -1273,6 +1450,9 @@ Next steps
 - Done (#509): the two line hulls and the anchor above, the fifth wave — with which the Line
   row and the Heavy row are full, the matrix has no empty combat cell, and no navy opens in
   a hull nobody owns. The commons are wave 6's decision
+- Done (#838): the four carriers above and the flight they launch, the eighth wave — the
+  first hulls in the roster with no gun at all, and the first entities in the water that a
+  yard did not build. The commander is #839 and the models are #840
 - Done (#510): wave 6 read the harness and **kept** the Light Scout, the Corvette and the
   Cruiser. What a common hull means now is settled rather than open: it is the floor a
   production cycle falls through to when it cannot afford the doctrine's next entry, and the
@@ -1295,5 +1475,5 @@ Related
 - systems-echo.md — detection math and Echo Marks
 - systems-depth.md — PR and depth behaviour
 - systems-progression.md — refits bought on the Slipway's line, and the rank a hull earns
-- roster-plan.md — the second expansion: a role matrix per navy, in six waves
+- roster-plan.md — the second expansion: a role matrix per navy, in eight waves
 - glossary.md — authoritative definitions

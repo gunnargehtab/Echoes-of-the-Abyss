@@ -14,6 +14,31 @@
 import { Faction, UnitKind } from './types.js';
 import { FACTION_COMBAT, FACTION_PRESSURE_BASELINE, HULL_EFFECTS } from './constants.js';
 
+/**
+ * A carrier's deck — docs/systems-combat.md §15.
+ *
+ * SPEC: every figure is authored in docs/units.md's stat block for the hull
+ * that carries it, because what a deck holds and how fast it rebuilds *is* the
+ * difference between the four carriers. The shared figures are in `FLIGHT`.
+ */
+export interface FlightDeck {
+  /** The craft this deck builds, and the only kind it ever launches. */
+  craft: UnitKind;
+  /**
+   * Craft the deck holds, counted across both states at once: aboard, and
+   * alive in the water. A deck at capacity builds nothing.
+   */
+  capacity: number;
+  /** Seconds to rebuild one craft, run whenever the deck is short. */
+  rebuildS: number;
+  /**
+   * The launch is refused outside the hull's own forward cone — the
+   * Offertory alone, on the Lance's gate (docs/systems-combat.md §5). Absent
+   * on the other three decks, which launch at anything inside the tether.
+   */
+  coneGatedLaunch?: boolean;
+}
+
 export interface UnitStats {
   kind: UnitKind;
   name: string;
@@ -252,6 +277,34 @@ export interface UnitStats {
   loudTargetSigThreshold?: number;
   /** Multiplier applied above `loudTargetSigThreshold`. */
   loudTargetDamageMultiplier?: number;
+  /**
+   * The deck this hull carries — docs/units.md, "The carriers";
+   * docs/systems-combat.md §15 (wave 8 of docs/roster-plan.md, #838).
+   *
+   * A carrier's weapon is its flight, and the three figures here are what the
+   * four carriers differ in; everything a flight shares — the tether, the
+   * launch transient, the launch interval, the endurance — is `FLIGHT` in
+   * constants.ts. The hulls that carry this are the hulls `spawnUnit` gives a
+   * `Flightdeck`, and the ones it gives a `Weapon` to despite having no gun:
+   * a carrier's fire control is the only thing its weapon is for.
+   *
+   * `capacity` counts across **both** states a craft can be in, aboard and in
+   * the water, so a full flight rebuilds nothing and a craft lost starts the
+   * clock. `berths` is priced for it — three for the hull and one per craft —
+   * which is what keeps the population cap a bound on entities.
+   */
+  flight?: FlightDeck;
+  /**
+   * The carrier whose deck builds this hull — a **craft**, and nobody's to
+   * build (docs/units.md, "The craft").
+   *
+   * The one field that tells a craft from a hull, and every reader that walks
+   * the roster asks it: a craft is in no `PRODUCIBLE` row, holds no cell on
+   * the command card, takes no order of its own (`Match.owns`), and is refused
+   * a depth order because it has no depth drive. Its `cost` is 0 and means
+   * *unbuyable* rather than free — the carrier's price is what paid for it.
+   */
+  launchedFrom?: UnitKind;
 }
 
 /** Half a hull's length: the radius the simulation keeps clear around it. */
@@ -1607,6 +1660,231 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     /** The Klaxon's own threshold, read from the other side of the water. */
     loudTargetSigThreshold: FACTION_COMBAT.KLAXON.SIG_THRESHOLD,
     loudTargetDamageMultiplier: 1.5,
+    faction: Faction.Hadron,
+  },
+  [UnitKind.Gantry]: {
+    kind: UnitKind.Gantry,
+    name: 'Gantry',
+    /**
+     * SPEC — docs/units.md, Gantry: "52 / 66, and +35 at every launch". Over
+     * the Klaxon's line under way, which is where every Consortium hull that
+     * matters lives; the launch transient is `FLIGHT.LAUNCH_SIG` and is the
+     * same for all four decks.
+     */
+    sigIdle: 52,
+    sigCruise: 66,
+    /** No gun. The deck is what this hull fires (docs/systems-combat.md §15). */
+    sigFiringBurst: 0,
+    hyd: 45,
+    pressureRating: 2,
+    maxHp: 1500,
+    speed: 38,
+    hullLengthM: 140,
+    cost: 520,
+    buildTimeS: 95,
+    /** Three for the hull and one for each craft the deck holds. */
+    berths: 5,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+    flight: { craft: UnitKind.Spark, capacity: 2, rebuildS: 45 },
+    faction: Faction.Bathyarch,
+  },
+  [UnitKind.Rootstock]: {
+    kind: UnitKind.Rootstock,
+    name: 'Rootstock',
+    /** SPEC — docs/units.md, Rootstock: "8 / 16, and +35 at every launch". */
+    sigIdle: 8,
+    sigCruise: 16,
+    sigFiringBurst: 0,
+    hyd: 45,
+    /** The Commune baseline, and so the ceiling on the band its flight holds. */
+    pressureRating: 1,
+    maxHp: 620,
+    speed: 55,
+    hullLengthM: 115,
+    cost: 340,
+    buildTimeS: 70,
+    berths: 7,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+    flight: { craft: UnitKind.Runner, capacity: 4, rebuildS: 30 },
+    faction: Faction.Pelagia,
+  },
+  [UnitKind.Succentor]: {
+    kind: UnitKind.Succentor,
+    name: 'Succentor',
+    /** SPEC — docs/units.md, Succentor: "20 / 30, and +35 at every launch". */
+    sigIdle: 20,
+    sigCruise: 30,
+    sigFiringBurst: 0,
+    /** The office's ears, and the reason the deep is worth this navy holding. */
+    hyd: 60,
+    /**
+     * The Hadal band — the Dredge's water (docs/systems-depth.md §3). The
+     * second PR-4 hull in the roster and the first whose *flight* is rated for
+     * the band with it: a craft holds the band it was launched into, so a
+     * Treble that was not PR-4 would crush on the tick it left the deck.
+     */
+    pressureRating: 4,
+    maxHp: 900,
+    speed: 34,
+    hullLengthM: 130,
+    cost: 300,
+    /** A Treble is a cohort that does not come home (docs/economy.md §6). */
+    biomassCost: 60,
+    buildTimeS: 84,
+    berths: 8,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+    flight: { craft: UnitKind.Treble, capacity: 5, rebuildS: 24 },
+    faction: Faction.Directorate,
+  },
+  [UnitKind.Offertory]: {
+    kind: UnitKind.Offertory,
+    name: 'Offertory',
+    /**
+     * SPEC — docs/units.md, Offertory: "18 / 48 cone figures, as every Order
+     * entry's are" (docs/systems-echo.md §8).
+     */
+    sigIdle: 18,
+    sigCruise: 48,
+    sigFiringBurst: 0,
+    /** The baseline listener's: §8's term moves what a Knight emits, not hears. */
+    hyd: 50,
+    pressureRating: 2,
+    maxHp: 520,
+    speed: 58,
+    hullLengthM: 120,
+    cost: 420,
+    crystalCost: 40,
+    buildTimeS: 88,
+    berths: 5,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+    /**
+     * The Lance's gate spent on craft instead of a torpedo: a launch is
+     * refused outside the hull's own cone, so an Offertory launching is an
+     * Offertory facing the fight, at its loudest.
+     */
+    flight: { craft: UnitKind.Versicle, capacity: 2, rebuildS: 60, coneGatedLaunch: true },
+    faction: Faction.Hadron,
+  },
+  [UnitKind.Spark]: {
+    kind: UnitKind.Spark,
+    name: 'Spark',
+    /**
+     * SPEC — docs/units.md, "The craft": 40 / 62. Over the Klaxon's 60 under
+     * way, so a Spark's gun carries the +12% and a Spark is what a seeker
+     * aimed at its carrier takes instead (docs/systems-combat.md §5, §15).
+     */
+    sigIdle: 40,
+    sigCruise: 62,
+    sigFiringBurst: 12,
+    /** A craft hears poorly and hears for its owner: a flight is four listening
+     * posts inside the tether, and that is as far as a carrier ever scouts. */
+    hyd: 20,
+    pressureRating: 2,
+    maxHp: 120,
+    speed: 70,
+    hullLengthM: 20,
+    /** Unbuyable rather than free: the Gantry's 520 is what paid for it. */
+    cost: 0,
+    buildTimeS: 0,
+    /** The deck's berths are the carrier's, charged when the carrier is queued. */
+    berths: 0,
+    attackDamage: 22,
+    attackRangeM: 350,
+    attackCooldownS: 2.0,
+    carriesTorpedoes: false,
+    launchedFrom: UnitKind.Gantry,
+    faction: Faction.Bathyarch,
+  },
+  [UnitKind.Runner]: {
+    kind: UnitKind.Runner,
+    name: 'Runner',
+    /**
+     * SPEC — docs/units.md, "The craft": 4 / 9. Under the Glider's floor, and
+     * under every threshold in docs/systems-echo.md §3 at the ranges a fight
+     * happens at — the Veil's economy written as a craft.
+     */
+    sigIdle: 4,
+    sigCruise: 9,
+    sigFiringBurst: 10,
+    hyd: 20,
+    pressureRating: 1,
+    maxHp: 70,
+    speed: 95,
+    hullLengthM: 14,
+    cost: 0,
+    buildTimeS: 0,
+    berths: 0,
+    attackDamage: 14,
+    attackRangeM: 300,
+    attackCooldownS: 2.0,
+    carriesTorpedoes: false,
+    launchedFrom: UnitKind.Rootstock,
+    faction: Faction.Pelagia,
+  },
+  [UnitKind.Treble]: {
+    kind: UnitKind.Treble,
+    name: 'Treble',
+    /** SPEC — docs/units.md, "The craft": 8 / 14. */
+    sigIdle: 8,
+    sigCruise: 14,
+    sigFiringBurst: 10,
+    /** The Listening's, even in a craft: the flight is why the deep is worth holding. */
+    hyd: 30,
+    /** PR-4 like the hull that built it — a craft holds its carrier's band. */
+    pressureRating: 4,
+    maxHp: 90,
+    speed: 45,
+    hullLengthM: 16,
+    cost: 0,
+    buildTimeS: 0,
+    berths: 0,
+    attackDamage: 12,
+    attackRangeM: 320,
+    attackCooldownS: 2.2,
+    carriesTorpedoes: false,
+    launchedFrom: UnitKind.Succentor,
+    faction: Faction.Directorate,
+  },
+  [UnitKind.Versicle]: {
+    kind: UnitKind.Versicle,
+    name: 'Versicle',
+    /** SPEC — docs/units.md, "The craft": 20 / 50, cone figures like every
+     * Order entry's (docs/systems-echo.md §8). */
+    sigIdle: 20,
+    sigCruise: 50,
+    /**
+     * The Order's, not the hull's — energy replaces a burst outright rather
+     * than scaling it (`firingSigFor`), which is why the Clarion, the Reciter
+     * and the Responsory all read theirs from `FACTION_COMBAT` too.
+     */
+    sigFiringBurst: FACTION_COMBAT.ENERGY.FIRING_SIG,
+    hyd: 20,
+    pressureRating: 2,
+    maxHp: 150,
+    speed: 80,
+    hullLengthM: 22,
+    cost: 0,
+    buildTimeS: 0,
+    berths: 0,
+    /** 17.3 damage a second each, so the pair is the roster's strongest flight
+     * — bought with a 60 s rebuild and a deck that holds two. */
+    attackDamage: 45,
+    attackRangeM: 500,
+    attackCooldownS: 2.6,
+    carriesTorpedoes: false,
+    launchedFrom: UnitKind.Offertory,
     faction: Faction.Hadron,
   },
 };

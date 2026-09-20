@@ -473,6 +473,7 @@ them* — a tuning change that leaves these bands is a bug.
 | Corvette kills Derrick, guns alone | 34–38 s — *nearly* the anchor floor and deliberately under it: a mid-tier is what a line hull cannot chew through in a hurry, not what it cannot chew through at all |
 | Responsory kills Corvette | 12–14 s — the Clarion's own rate. Against anything under the line this hull is its navy's line hull with a longer reach |
 | Responsory kills Caisson | 12–14 s — **the same band**, against a third more plate, because a Caisson is never under 60. §11.5's rule stated as the one number that shows it: being loud costs exactly the plate the Klaxon bought |
+| A full flight kills a Corvette | 12–19 s by navy — the strongest is the Order's pair at 12 s and the weakest the Consortium's at 19 s, and in every case the carrier itself never fires (§15) |
 | Sentinel Turret kills Corvette | ~18 s — a turret deters and punishes; it does not delete |
 | Torpedo vs Corvette | survives one, wounded; dies to two |
 | Torpedo vs Cruiser | survives three, dies to four |
@@ -686,6 +687,104 @@ still telling on everyone who was in it.
 | A mine astern makes torpedoes pointless | It needs 480 m of separation and 3 s of construction-grade noise; from a launch inside that it fails, and from one outside it the torpedo was going to run dry on a running hull anyway. A mine spent on a torpedo is a mine not in the wall, and the drop tells everyone where you ran |
 | Point defence trivialises torpedoes | PD is a gun choosing targets; saturation volleys, simultaneous bearings, and every cycle it spends on ordnance is free for the launcher |
 | Noisemakers make seekers useless | A noisemaker is real SIG 70 at your real position: it saves the hull by feeding every other listener on the map |
+| A flight is free damage outside the population cap | It is not free and it is not outside it: a carrier's berths are three for the hull and one for every craft its deck can hold, charged when the carrier is queued ([economy.md](economy.md) §10), and the deck can never hold more than that number across both states |
+| A carrier fights from out of reach forever | The tether is 1,200 m, the craft are 300–500 m guns, and the carrier has none — so the hull is inside a Cruiser's reach of the fight, undefended, and the flight dies with it (§15) |
+
+---
+
+## 15. The Flight — a gun that is somewhere else
+
+A **carrier** is a hull with a deck and no gun; a **flight** is what the deck builds. The four
+carriers are [units.md](units.md), "The carriers"; this is the mechanism all four share, and
+every figure below that is not a hull's own is in `FLIGHT` in
+`packages/shared/src/constants.ts`.
+
+The argument is §12's, read backwards. Every discharge spikes the shooter's SIG and tells the
+Rift where the shooter was. A flight puts the discharge somewhere its owner is not — the
+craft take the burst and the residue, and the carrier is a kilometre away and quiet. Nothing
+else in the roster separates those two facts, and the price for it is the whole of §15's
+second half: a flight is short-ranged, expiring, tethered, band-locked, and dies with the
+hull that guides it.
+
+### The deck
+
+A deck holds **capacity** craft, counted across both states it can be in — aboard, and in the
+water. A full deck therefore builds nothing; a craft lost or expired starts a **rebuild** of
+that hull's own length (24–60 s), and a rebuilt craft sits aboard until there is a reason to
+launch it. Endurance is 120 s for every craft in the game, and the two figures are sized
+against each other on purpose: a deck can just sustain its capacity and can never exceed it.
+
+A carrier leaves the yard with its deck **full and nothing in the water**, the way a Spinner
+leaves with its four mines ([units.md](units.md), the Spinner).
+
+### Launching
+
+One craft leaves the deck at a time, at most one every 4 s, when all of these hold:
+
+- the carrier is alive, built, and not inside a hold;
+- a craft is aboard;
+- there is a live enemy within the **tether**, 1,200 m of the carrier — the same licence §4's
+  auto-acquire runs on, that at the ranges a gun reaches, in range implies heard;
+- the carrier is not running silent, **unless** the player ordered the attack. A launch is
+  loud and a silent hull volunteers nothing, which is §4's rule for guns applied to the one
+  hull that has no gun. An order overrides it, as an order always does;
+- for the Offertory alone, the enemy that triggered the launch is inside the hull's own
+  forward cone (§5, the Lance's gate).
+
+**A launch is heard.** The carrier takes a **+35 SIG transient** for the standard spike
+length — the deck opening, the craft clearing it — on the hull, never on the craft. It is
+additive over whatever the hull is already doing, exactly as a firing burst is, so a carrier
+replacing losses in the middle of a fight is audible doing it. That is the tell the flight is
+bought with: you cannot hear the flight, and you can hear the deck.
+
+The craft enters the water on a ring 2.5 hull-radii from the carrier, at **the carrier's own
+depth**.
+
+### What a craft does
+
+In order, every tick:
+
+1. **The carrier's target, if it has one.** An attack order given to a carrier is given to
+   its flight — the deck is the carrier's fire control, and it is the only thing a carrier's
+   `Weapon` is for. Every craft in the water takes that target and chases it the way any
+   ordered hull does.
+2. **Whatever it can reach, if the carrier has no target.** A craft is an armed hull and
+   auto-acquires like one (§4), inside its own 300–500 m.
+3. **Station, otherwise.** It holds a ring around its carrier and follows it there.
+
+**The flight takes no orders.** A craft is its owner's — it is on their side, it is in their
+own-force reports, it dies to their carelessness — and it is refused every order in the book,
+exactly as a hull in a hold is ([systems-echo.md](systems-echo.md) §3). You order the
+carrier.
+
+### The three bounds
+
+**The tether.** A craft beyond 1,200 m of its carrier drops what it is doing and comes back.
+A flight is not a raid: the carrier is committed to being within a Cruiser's gun range of the
+fight it is having, and the distance it buys is that kilometre and not the map.
+
+**The band.** A craft has **no depth drive**. It is launched into the band its carrier is
+holding, it holds that depth until it dies, and no depth order reaches it. This is the depth
+half of the carrier's argument and the one thing about the flight that is a hard rule rather
+than a number: a carrier that wants to strike in the Abyssal descends into the Abyssal, and
+descent is loud ([systems-depth.md](systems-depth.md) §2). A target that changes band is out
+of the flight's reach until the carrier follows it down.
+
+**The carrier.** Guidance is the deck's, so **the flight dies with its carrier**, on the tick
+the carrier dies — the hold's rule ([systems-echo.md](systems-echo.md) §3, "A hull in a
+hold"), for the same reason and in the same place in the code. A carrier is the softest
+capital hull in the game: no gun, no countermeasure, and four to five hulls' worth of value
+that stops existing when it does.
+
+### What the other player sees
+
+Nothing special, and that is deliberate. A craft is an entity with a position and a
+signature, so the Echo pass resolves it per observer like anything else: a flight of five
+reads as five faint contacts, not as one blurred one, and at Tier 3 they classify as what
+they are. There is no flight-shaped exception in the resolution ladder and there must not
+be one — the hidden information in a carrier is *where the carrier is*, which the flight
+does not answer, and a special case here would be the server inventing a fog its own model
+does not produce.
 
 ---
 
@@ -709,6 +808,7 @@ what exists or assumes what does not. The combat loop lives in
 | The beat (§9.5) | **Measured** | `test/combatBeat.test.ts` plays each gun band and the torpedo run out at 60 Hz and counts the Echo snapshots between first hit and kill; the mine astern is held in `test/mines.test.ts` against a live seeker, at 900 m and at 300 m, and the decoy in `test/countermeasures.test.ts` |
 | Retreat dynamics (§10) | Emergent | Falls out of the existing ascent/descent and Silent Running rules, now that seekers exist to be starved |
 | Faction kits (§11) | **Implemented** | `FACTION_COMBAT` in `packages/shared/src/constants.ts`, read through `packages/shared/src/combat.ts` |
+| The flight (§15) | **Implemented** | `Flightdeck` and `Craft` components driven by `sim/systems/flight.ts`; the flight dies with its carrier in `Match.reap`, beside the hold; `FLIGHT` in `packages/shared/src/constants.ts` carries the figures |
 
 ---
 
