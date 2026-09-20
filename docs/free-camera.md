@@ -232,6 +232,33 @@ shape. It is named here so the feedback's fourth goal has an address.
 Phases 1 and 2 are one increment in practice — a rig with no verb bound to it is not
 reviewable — and ship together.
 
+### Phases 1 and 2 — landed
+
+The rig is free: `PerspectiveView.ts` carries a focus with a depth, a yaw, a pitch inside
+the band, `home()`, and the eye clamp; `EchoRenderer.ts` carries the verbs. Review
+screenshots live in `docs/screenshots/issue-831/`.
+
+What the phase settled:
+
+- **The whole pitch band renders, and gate 6 holds across it.** The Ventfront base measured
+  34–52 draw calls and 141–148 k triangles from 10° to 88°, against the budget's 150 calls
+  and 250 k triangles. The low-pitch shot costs *fewer* draw calls than the home frame, not
+  more, because the foreshortened view holds less map rather than more — the widened
+  judgement §8 asks for turned out to be cheap here, and that is a measurement rather than a
+  prediction, so it is worth re-taking when the roster or the props grow.
+- **The rings conformed with no change at all**, exactly as §5 predicted. A 2,400 m ring
+  drawn at yaw 135° lies on the same water it lay on at yaw 0.
+- **The eye reaches the column.** At the shortest dolly the band allows (250 m) and 10° of
+  pitch, the eye sits at 403 m with the focus at 600 m — genuinely in the water, looking
+  level at a Bastion from its own depth. The dolly is in world units and the column is drawn
+  at 0.22 world-metres per metre, so a *long* dolly still lifts the eye clear of the surface;
+  the in-water shot is the close one, which is the right way round.
+- **What the low shot exposes is the water itself.** Above the seabed's horizon the scene is
+  black rather than water: the fog is depth-and-distance on the ground, and there is no
+  volumetric term for the column a near-horizontal camera now spends most of its frame
+  looking through. That is F1's remaining half, it is newly visible *because* the camera
+  moved, and it belongs to a later phase rather than to this one.
+
 ---
 
 ## Related
