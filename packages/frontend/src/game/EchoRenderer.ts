@@ -2741,10 +2741,12 @@ export class EchoRenderer {
   /** Auto-open the page that matches what was just selected. */
   private onSelectionChanged(): void {
     this.selectionSeq++;
-    const structure = [...this.selected]
-      .reverse()
-      .map((id) => this.structures.find((s) => s.id === id))
-      .find((s) => s !== undefined);
+    const structuresById = new Map(this.structures.map((s) => [s.id, s] as const));
+    let structure: (typeof this.structures)[number] | undefined;
+    for (const id of [...this.selected].reverse()) {
+      structure = structuresById.get(id);
+      if (structure !== undefined) break;
+    }
     if (structure !== undefined && (PRODUCIBLE[structure.kind]?.length ?? 0) > 0) {
       this.activeTab = 'units';
       // §9: "A page opens by selection: picking a yard shows that yard's."
