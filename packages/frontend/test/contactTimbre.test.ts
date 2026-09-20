@@ -369,9 +369,14 @@ function voiceIn(context: HeadlessAudioContext, destination: StubGainNode) {
  * still carries events the graph will never sound: a voice cancels its
  * committed train on every family change (`update`), and everything it had
  * placed up to `EVENT_HORIZON_S` ahead of that instant is gone. Replaying the
- * cancels is what turns the ledger into the train the player hears — and a
- * fixture that crosses the Tier-3 boundary reads the cancelled thumps as
- * clicks without it.
+ * cancels is what turns the ledger into the train the player hears.
+ *
+ * At the boundary this file crosses, what a cancel takes back is a **cohort's
+ * own clicks** and not the thump that replaces them — a swarm falling below
+ * Tier 3 leaves up to a horizon of committed clusters, which is invariant 25's
+ * subject. A fixture whose read window contains the cancel point counts those
+ * as clicks without this; the windows here are bounded either side of one, so
+ * only `reopens a cohort gathered` depends on it, and it says so.
  */
 function instantsOf(gain: StubGainNode): number[] {
   const kept: { method: string; at: number }[] = [];
@@ -470,9 +475,18 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
   it('places a family’s events at the same instants however often it is asked', () => {
     // The property the rest of this block rests on, and the one that makes
     // §8.1's separation a fact about the mix rather than about its driver. A
-    // mechanism's train is a function of absolute time, so a caller that runs
-    // at 5 Hz and one that runs at 60 hear the same clicks at the same
-    // moments — which is exactly what was not true before #731.
+    // mechanism's train is a function of its own start and of nothing the
+    // caller did, so a caller that runs at 5 Hz and one that runs at 60 hear
+    // the same clicks at the same moments — which is exactly what was not true
+    // before #731.
+    //
+    // "Of its own start" is load-bearing since the decision on #731, and this
+    // fixture is what makes the clause safe to drop elsewhere: the start is
+    // the caller's tick, and the swarm's layer spacing is now a function of
+    // the time since it, so two callers that began the train on different
+    // ticks would differ from the first cluster on. Both callers here open at
+    // Tier 3 on t = 0, so both trains start together and the property under
+    // test is the rate rather than the start.
     for (const [name, identity] of [
       ['the Directorate swarm', { faction: Faction.Directorate }],
       ['the Consortium beat', { faction: Faction.Bathyarch }],
@@ -1117,6 +1131,17 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
       fellOn.span > period * 0.5,
       `the cohort fell on a cluster spanning ${fellOn.span.toFixed(4)} s, which is near enough ` +
         'gathered that returning gathered would prove nothing'
+    );
+
+    // Nothing the cohort committed outlives the tier that earned it (invariant
+    // 25), observed here because it is also what makes `instantsOf`'s cancel
+    // replay load-bearing: the three clicks standing inside the horizon when
+    // it fell are in the stub's ledger and are not in the water.
+    const between = instantsOf(cohort.gain).filter((t) => t >= fellAt && t < roseAt);
+    assert.ok(
+      between.length < SWARM_LAYERS,
+      `the cohort placed ${between.length} events between falling and returning, which is a ` +
+        'cluster or more: its committed clicks outlived the tier that earned them'
     );
 
     const reopened = clustersFrom(cohort.gain, roseAt)[0]!;
