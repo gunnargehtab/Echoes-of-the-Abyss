@@ -150,7 +150,7 @@ build the unit and so need one.
 **There is nothing to select against, so commands go through the keyboard.**
 The page is two stacked canvases and about 17 DOM elements;
 `document.body.innerText` is empty, and the HUD you can see (the `BUILD` /
-`FOUNDRY` / `SQUAD` tabs, `SILENT`, `PING`, the build buttons) is drawn by Pixi,
+`FOUNDRY` / `SLIPWAY` / `SQUAD` tabs, `SILENT`, `PING`, the build buttons) is drawn by Pixi,
 not rendered as DOM. So `page.click('text=PING')` matches nothing, and every
 Playwright selector strategy is unavailable by construction.
 

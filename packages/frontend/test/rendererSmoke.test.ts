@@ -1801,6 +1801,68 @@ describe('the command card when it is offered more than it holds', () => {
         strip().includes('BASTION'),
         'the open page has no tab lit for it — the strip is lying about what the card shows'
       );
+
+      // The page really is one line's rather than the flat roster. The shared
+      // suite pins §9's figures against `productionPageFor`; this pins the
+      // card against the renderer's own `pageRoster`, so the two cannot drift
+      // apart in silence.
+      for (const elsewhere of ['SCT ', 'CRV ', 'DRK ', 'BLW ']) {
+        assert.ok(
+          !strip().some((line) => line.startsWith(elsewhere)),
+          `${elsewhere.trim()} is on the Bastion's page — the card is not paging`
+        );
+      }
+    } finally {
+      world.teardown();
+    }
+  });
+
+  /**
+   * The strip grew from three tabs to as many as five, and `MENU` is anchored
+   * to the right edge with nothing between them. §2 drops a console *block*
+   * when the width runs out, but the strip has no such guard, so the question
+   * is whether the widest strip can reach `MENU` at any width the console
+   * itself survives — §11's 200% is where a HUD unit is most expensive.
+   */
+  it('keeps the widest tab strip clear of MENU at 200%', async () => {
+    const world = await boot();
+    try {
+      // Selecting the Bastion is the widest case: BUILD, both yards and the
+      // Bastion's own tab. Select at 100%, where the projection the click
+      // relies on is the one the other tests use, then scale — the strip is
+      // laid out per frame, so the scale is what is under test, not the click.
+      const bastion = cannedSnapshot().structures.find(
+        (structure) => structure.kind === StructureKind.Bastion
+      );
+      assert.ok(bastion !== undefined, 'the canned match has no Bastion to select');
+      selectHull(world, bastion);
+      world.chart.setUiScale(2);
+      world.frame(2);
+
+      // Bar labels are the only ones anchored at their centre, and every name
+      // read below is one of them.
+      const spans = new Map<string, { left: number; right: number }>();
+      const walk = (node: Container): void => {
+        if (node instanceof Text && node.visible) {
+          spans.set(node.text, { left: node.x - node.width / 2, right: node.x + node.width / 2 });
+        }
+        for (const child of node.children) walk(child as Container);
+      };
+      walk(world.app.stage as unknown as Container);
+
+      const menu = spans.get('MENU');
+      assert.ok(menu !== undefined, 'the MENU door is not on the bar');
+      const tabs = ['BUILD', 'FOUNDRY', 'SLIPWAY', 'BASTION'].map((name) => {
+        const span = spans.get(name);
+        assert.ok(span !== undefined, `${name} is not on the tab strip`);
+        return { name, span };
+      });
+      for (const { name, span } of tabs) {
+        assert.ok(
+          span.right < menu.left,
+          `${name} runs into MENU at 200% — the strip has outgrown the bar`
+        );
+      }
     } finally {
       world.teardown();
     }

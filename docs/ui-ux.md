@@ -377,7 +377,7 @@ conflict this document settled:
 
 | Fixed | Why it cannot move |
 | --- | --- |
-| `0`–`9` | Control groups have no alternative route; production has the UNITS tab. `0` is the army |
+| `0`–`9` | Control groups have no alternative route; production has the card's yard pages. `0` is the army |
 | Arrows | Pan, with the screen edge; a rebind that took an arrow would take half the camera |
 | `Shift` | Queues an order, and adds to a selection |
 | `Ctrl` | Subtracts from a selection, and assigns a control group |
@@ -415,7 +415,7 @@ something the layout is hiding.
 a conflict.** Order queueing and the ping-cost preview were both assigned to `Shift`;
 queueing keeps it, as the RTS convention and by far the more frequent action, and the
 preview moved to `Alt`. Control groups and unit production were both assigned to the digits;
-control groups keep them, because production also has the command bar's UNITS tab and
+control groups keep them, because production also has the command bar's yard pages and
 control groups have no alternative route at all.
 
 Every added binding must respect §1.5 — no destructive-to-information action lands on a
@@ -451,10 +451,15 @@ stands, so it belongs to the page of the yard that never has to be built — whi
 Foundry's thirteen down to twelve. The **refits** sit on the Slipway's page because the Slipway's
 line is what they compete for ([systems-progression.md](systems-progression.md) §1).
 
-The Bastion's page is the Harvester by itself, and it is the one page with no tab: the
-Bastion is a depot rather than a yard, and it always stands, so selecting it is always a
-route to that page. FOUNDRY and SLIPWAY are the tabs, because they are the two a commander
-may not have.
+The Bastion's page is the Harvester by itself, and it is the one page with no *standing*
+tab: it is lit only while it is the open page, because a strip that lit nothing would be
+lying about which page the card is showing. FOUNDRY and SLIPWAY are the standing tabs,
+because they are the two a commander may not have.
+
+Selecting the Bastion is what opens its page, and that is always a route: losing the Bastion
+is elimination, so a commander with a yard to produce at has one. The alternative reading —
+the Harvester on *every* page, being the one hull no rung gates — was rejected because it
+leaves the Foundry at thirteen, which is the count this section exists to bring down.
 
 A page opens by selection: picking a yard shows that yard's. Both stay reachable without one,
 because a Slipway hull greyed for *no Slipway standing* is how a commander finds out what the rung

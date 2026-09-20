@@ -2822,9 +2822,14 @@ export class EchoRenderer {
           active: false,
           action: () => this.commandProduce(kind),
           // Greyed for a reason (§7): the account it fell short in, the
-          // berths it has not got, or the yard it has not got. The Bastion
-          // always stands and builds the Harvester, so the last only ever
-          // names a combat hull.
+          // berths it has not got, or the yard it has not got — and the last
+          // names *this page's* yard, since a Slipway hull greyed for a
+          // missing Foundry would be the bar inventing a rule.
+          //
+          // The Bastion's page never reaches that branch. Its one hull is the
+          // Harvester, and a commander reading this card has a Bastion:
+          // losing it is elimination in the same tick (`sim/match.ts`), and
+          // the opening kit places one.
           refusal:
             target === undefined
               ? `${stats.name}: no ${structureStatsFor(this.activePage).name} standing`
