@@ -25,6 +25,7 @@ import {
   ENVELOPE,
   RECIPROCATING,
   SWARM_LAYERS,
+  SWARM_ORGANISE_HZ,
   THUMP_PARTIALS,
   type VoiceInputs,
 } from '../src/audio/contactVoice.ts';
@@ -917,6 +918,156 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
       assert.ok(
         Math.min(...intervals(theirs.pulses)) > 1e-6,
         `${name} emits clicks on top of one another, which is the swarm's own shape`
+      );
+    }
+  });
+
+  it('gives each cohort its own organise cycle, so two swarms are not one swarm', () => {
+    // The decision on #731, option 2. `swarmSpread` used to read the audio
+    // clock, and a clock reads the same to everyone holding it: every
+    // Directorate contact in the water closed and scattered on the same
+    // instant, whenever it was classified and wherever it was. §8's cohorts
+    // are "many small things agreeing" — one contact's worth of them — so the
+    // thing that converges is a cohort and not the ocean.
+    //
+    // Driven at the one separation that can tell the two readings apart: half
+    // an organise cycle. Two voices a few clicks apart read almost the same
+    // absolute time and so looked almost alike under either rule, which is
+    // both why the fault survived and why a fixture standing them close
+    // together would pass on the code this replaces.
+    const cycleS = 1 / SWARM_ORGANISE_HZ;
+    const period = 1 / FACTION_TIMBRE[Faction.Directorate].rateHz;
+    const context = new HeadlessAudioContext();
+    const destination = context.createGain();
+
+    // Found through the edge the constructor builds, as `drive` does, but
+    // scoped to the nodes each voice made — three voices share this context.
+    const build = () => {
+      const from = context.nodes.length;
+      const voice = new ContactVoice(
+        context as unknown as AudioContext,
+        destination as unknown as AudioNode
+      );
+      const osc = context.nodes
+        .slice(from)
+        .find((n): n is StubOscillatorNode => n instanceof StubOscillatorNode)!;
+      return { voice, gain: osc.outputs[0] as StubGainNode };
+    };
+    const early = build();
+    const late = build();
+    const twin = build();
+
+    const inputs = (tier: ResolutionTier): VoiceInputs => ({
+      tier,
+      biome: Biome.OpenWater,
+      freshness: 1,
+      faction: Faction.Directorate,
+    });
+
+    // Counted in ticks rather than compared against a time, so the instant the
+    // late cohort is classified at is the one the loop observed and not a
+    // float that nearly matches it.
+    const promoteTick = Math.round(cycleS / 2 / ECHO_STEP_S);
+    let promotedAt = 0;
+    for (let k = 0; k * ECHO_STEP_S < SPAN_S; k++) {
+      const now = context.currentTime;
+      if (k === promoteTick) promotedAt = now;
+      early.voice.update(inputs(ResolutionTier.Classification), now);
+      twin.voice.update(inputs(ResolutionTier.Classification), now);
+      late.voice.update(
+        inputs(k >= promoteTick ? ResolutionTier.Classification : ResolutionTier.Bearing),
+        now
+      );
+      context.advance(ECHO_STEP_S);
+    }
+
+    const instants = (gain: StubGainNode) =>
+      gain.gain.writes.filter((w) => w.method === 'setValueAtTime').map((w) => w.at);
+    // Grouped from a known cluster boundary: `emit` writes a cluster's layers
+    // together and in order, so runs of `SWARM_LAYERS` are clusters — but only
+    // if the run starts where one does. The late voice's first swarm event is
+    // the one `update` places at the instant the family changed.
+    const clustersFrom = (gain: StubGainNode, from: number) => {
+      const at = instants(gain).filter((t) => t >= from);
+      const out: { at: number; span: number }[] = [];
+      for (let i = 0; i + SWARM_LAYERS <= at.length; i += SWARM_LAYERS) {
+        out.push({ at: at[i]!, span: at[i + SWARM_LAYERS - 1]! - at[i]! });
+      }
+      return out;
+    };
+
+    const lateFirst = clustersFrom(late.gain, promotedAt)[0]!;
+    assert.ok(
+      lateFirst.span < period * 0.02,
+      `a cohort classified half a cycle in opened with its layers ${lateFirst.span.toFixed(4)} s ` +
+        'apart rather than gathered: its cycle is the clock’s and not its own'
+    );
+
+    const earlyThen = clustersFrom(early.gain, 0).find((c) => c.at >= promotedAt)!;
+    assert.ok(
+      earlyThen.span > period * 0.5,
+      `at ${promotedAt.toFixed(2)} s the older cohort spans ${earlyThen.span.toFixed(4)} s while ` +
+        'the new one is gathered — the two must be at different points of the cycle, and under ' +
+        'absolute time they never were'
+    );
+
+    // The control, and the limit of what a per-train counter buys. The phase
+    // is a property of the train rather than a seed, so two cohorts whose
+    // trains start on the same tick *do* share it — exactly as two Consortium
+    // contacts classified together share `strokePhase`. What is gone is every
+    // swarm agreeing whatever its history.
+    assert.deepEqual(
+      instants(twin.gain),
+      instants(early.gain),
+      'two cohorts classified on the same tick landed different clicks, so the cycle is a seed ' +
+        'rather than a function of the train and nothing about it is reproducible'
+    );
+  });
+
+  it('organises at its own rate whether the contact is fresh or fading', () => {
+    // The cycle is walked by each event's own interval, decay included, which
+    // is what keeps `SWARM_ORGANISE_HZ` a figure in wall clock. §3 lengthens a
+    // fading contact's period, so a cycle counted in *events* would organise
+    // slower as the contact faded — a rate the decay chose rather than one §8
+    // did. Absolute time gave 0.19 Hz at every freshness and that is the rate
+    // this keeps: the decision on #731 changed whose cycle it is, not how fast
+    // it runs.
+    const cycleS = 1 / SWARM_ORGANISE_HZ;
+    const closings = (events: { at: number }[]) => {
+      const spans: { at: number; span: number }[] = [];
+      for (let i = 0; i + SWARM_LAYERS <= events.length; i += SWARM_LAYERS) {
+        spans.push({ at: events[i]!.at, span: events[i + SWARM_LAYERS - 1]!.at - events[i]!.at });
+      }
+      const widest = Math.max(...spans.map((s) => s.span));
+      const at: number[] = [];
+      for (let i = 1; i < spans.length; i++) {
+        if (spans[i]!.span < widest / 2 && spans[i - 1]!.span >= widest / 2) at.push(spans[i]!.at);
+      }
+      return at;
+    };
+    const meanGap = (at: number[]) => {
+      assert.ok(at.length >= 3, `only ${at.length} closings in ${SPAN_S} s: too few to measure`);
+      return (at[at.length - 1]! - at[0]!) / (at.length - 1);
+    };
+
+    const identity = { faction: Faction.Directorate };
+    const fresh = drive(identity, ResolutionTier.Classification, ECHO_STEP_S);
+    // Decayed hard enough to matter: `DECAY_PERIOD_STRETCH` is a fifth of the
+    // way to doubling the period at freshness 0, so a cycle counted in events
+    // would run visibly slow here and a cycle counted in seconds would not.
+    const fading = drive(identity, ResolutionTier.Classification, ECHO_STEP_S, (t) =>
+      Math.max(0.05, 1 - t / SPAN_S)
+    );
+
+    for (const [name, run] of [
+      ['a fresh contact', fresh],
+      ['a fading contact', fading],
+    ] as const) {
+      const gap = meanGap(closings(run.events));
+      assert.ok(
+        Math.abs(gap - cycleS) < cycleS * 0.1,
+        `${name} organises every ${gap.toFixed(2)} s against the ${cycleS.toFixed(2)} s ` +
+          'SWARM_ORGANISE_HZ names, so the rate is the driver’s or the decay’s rather than §8’s'
       );
     }
   });
