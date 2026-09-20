@@ -3352,4 +3352,121 @@ export function cornerDomes(root, put, lampM, { x, z, y, radii, h }) {
     put(root, `corner-dome-${tag}`, cyl(radii[0], radii[1], h, 8), lampM, [sx * x, y, sz * z]);
 }
 
+/* --------------------------------------------------------------------------
+ * The Bio-Reactor (#788, off #540 Phase 4). The bed and the three intake
+ * arms are the kit's (`reactorBed`, `reactorIntakeArm`) and identical on all
+ * four navies; what is a navy's is the vessel that stands on the slab and
+ * the outflow off it, which is these two builders.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The render vessel, Bathyarch Consortium: a riveted digester tank. A banded
+ * cylinder on the footprint slab, a bolted crown with a rank of rivets round
+ * its rim, a work hatch and the run mark laid on it, dark roof ports, and the
+ * vent stack standing off-centre — "a render vessel standing over the
+ * holdfast on a low footprint slab" (docs/asset-prompts-3d.md, STRUCTURE —
+ * Bio-Reactor), in the one navy whose answer to a vessel is plate rolled and
+ * welded.
+ *
+ * The stack is off-centre on purpose and the decision is older than this
+ * model: the procedural silhouette this replaces draws "the vent stack,
+ * off-centre: a reactor is not a symmetrical building"
+ * (packages/frontend/src/game/silhouettes.ts), and a script that centred it
+ * would lose the one thing the schematic said about the kind.
+ *
+ * `mark` is the vessel's one lamp. The roof ports and the stack mouth carry
+ * the amber lamp's *unlit* finish instead, because the block lights them
+ * only while crop is coming in (docs/models-plan.md §3.2 rule 2).
+ */
+export function reactorVessel(root, { black, grey, rust, lampM, unlit }, opts) {
+  const { tank, bands, crown, rivets, hatch, mark, ports, stack } = opts;
+  add(root, 'reactor_vessel', cyl(tank.r[0], tank.r[1], tank.h, tank.facets), black, [
+    0,
+    tank.y,
+    0,
+  ]);
+  bands.ys.forEach((y, i) =>
+    add(root, `vessel_band_${i}`, cyl(bands.r, bands.r, bands.h, tank.facets), grey, [0, y, 0])
+  );
+  add(root, 'vessel_crown', cyl(crown.r[0], crown.r[1], crown.h, tank.facets), grey, [
+    0,
+    crown.y,
+    0,
+  ]);
+  // A rank round the rim, not a scatter: the Klaxon repairs in straight
+  // lines even when the thing repaired is round (`mountDrum` above).
+  for (let i = 0; i < rivets.count; i++) {
+    const a = ((2 * Math.PI) / rivets.count) * i;
+    add(root, `crown_rivet_${i}`, box(...rivets.size), grey, polar(a, rivets.r, rivets.y), [
+      0,
+      -a,
+      0,
+    ]);
+  }
+  add(root, 'crown_hatch', box(...hatch.size), rust, hatch.at, [0, hatch.yaw, 0]);
+  add(root, 'crown_mark', box(...mark.size), lampM, mark.at, [0, mark.yaw ?? 0, 0]);
+  ports.at.forEach(([a, r], i) =>
+    add(root, `roof_port_${i}`, cyl(ports.r, ports.r, ports.t, 8), unlit, polar(a, r, ports.y))
+  );
+  add(root, 'vent_stack', cyl(stack.r[0], stack.r[1], stack.h, 8), black, stack.at);
+  const [sx, , sz] = stack.at;
+  add(root, 'stack_band', cyl(stack.band.r, stack.band.r, stack.band.h, 8), rust, [
+    sx,
+    stack.band.y,
+    sz,
+  ]);
+  add(root, 'stack_mouth', cyl(stack.mouth.r, stack.mouth.r, stack.mouth.t, 8), unlit, [
+    sx,
+    stack.mouth.y,
+    sz,
+  ]);
+}
+
+/**
+ * The Biomass outflow, Bathyarch Consortium: a flanged trunk off the tank on
+ * `bearing`, over a bolted dispatch hopper with its lip and the chute down
+ * into it — "the Biomass outflow off the vessel to a dispatch hopper". Bolted
+ * rather than grown, and square rather than round, which is the whole of this
+ * navy's argument about a container.
+ *
+ * Distances are metres out along the bearing, as the kit's
+ * `reactorIntakeArm` takes them; the chute is the amber lamp's unlit finish
+ * for the same reason the roof ports are.
+ */
+export function reactorOutflow(root, { black, grey, rust, unlit }, opts) {
+  const { bearing: a, trunk, flanges, hopper, lip, chute } = opts;
+  const laid = [0, -a, -Math.PI / 2];
+  add(
+    root,
+    'outflow_trunk',
+    cyl(trunk.r, trunk.r, trunk.to - trunk.from, 8),
+    grey,
+    polar(a, (trunk.from + trunk.to) / 2, trunk.y),
+    laid
+  );
+  flanges.at.forEach((d, i) =>
+    add(
+      root,
+      `outflow_flange_${i}`,
+      cyl(flanges.r, flanges.r, flanges.t, 8),
+      rust,
+      polar(a, d, trunk.y),
+      laid
+    )
+  );
+  add(root, 'outflow_hopper', box(...hopper.size), black, polar(a, hopper.at, hopper.y), [
+    0,
+    -a,
+    0,
+  ]);
+  add(root, 'hopper_lip', box(...lip.size), grey, polar(a, hopper.at, lip.y), [0, -a, 0]);
+  add(
+    root,
+    'hopper_chute',
+    cyl(chute.r[0], chute.r[1], chute.h, 8),
+    unlit,
+    polar(a, chute.at, chute.y)
+  );
+}
+
 export { THREE };

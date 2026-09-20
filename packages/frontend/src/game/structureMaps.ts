@@ -101,6 +101,18 @@ import ventTapDirEmissive from '../assets/structures/maps/vent-tap-directorate-e
 import ventTapHadAlbedo from '../assets/structures/maps/vent-tap-hadron-albedo.png';
 import ventTapHadHeight from '../assets/structures/maps/vent-tap-hadron-height.png';
 import ventTapHadEmissive from '../assets/structures/maps/vent-tap-hadron-emissive.png';
+import reactorAlbedo from '../assets/structures/maps/bio-reactor-albedo.png';
+import reactorHeight from '../assets/structures/maps/bio-reactor-height.png';
+import reactorEmissive from '../assets/structures/maps/bio-reactor-emissive.png';
+import reactorPelAlbedo from '../assets/structures/maps/bio-reactor-pelagia-albedo.png';
+import reactorPelHeight from '../assets/structures/maps/bio-reactor-pelagia-height.png';
+import reactorPelEmissive from '../assets/structures/maps/bio-reactor-pelagia-emissive.png';
+import reactorDirAlbedo from '../assets/structures/maps/bio-reactor-directorate-albedo.png';
+import reactorDirHeight from '../assets/structures/maps/bio-reactor-directorate-height.png';
+import reactorDirEmissive from '../assets/structures/maps/bio-reactor-directorate-emissive.png';
+import reactorHadAlbedo from '../assets/structures/maps/bio-reactor-hadron-albedo.png';
+import reactorHadHeight from '../assets/structures/maps/bio-reactor-hadron-height.png';
+import reactorHadEmissive from '../assets/structures/maps/bio-reactor-hadron-emissive.png';
 
 /**
  * Pixels per world metre the structure maps were baked at — the contract with
@@ -174,6 +186,13 @@ const MAP_URL: Partial<Record<StructureKind, MapUrls>> = {
     height: ventTapHeight,
     emissive: ventTapEmissive,
   },
+  // The Bio-Reactor (#788), the last kind to get one, on the same terms
+  // again. With it the Partial above covers every structure kind.
+  [StructureKind.BioReactor]: {
+    albedo: reactorAlbedo,
+    height: reactorHeight,
+    emissive: reactorEmissive,
+  },
 };
 
 /**
@@ -215,6 +234,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<StructureKind, Map
       height: ventTapPelHeight,
       emissive: ventTapPelEmissive,
     },
+    [StructureKind.BioReactor]: {
+      albedo: reactorPelAlbedo,
+      height: reactorPelHeight,
+      emissive: reactorPelEmissive,
+    },
   },
   [Faction.Directorate]: {
     [StructureKind.Bastion]: {
@@ -247,6 +271,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<StructureKind, Map
       height: ventTapDirHeight,
       emissive: ventTapDirEmissive,
     },
+    [StructureKind.BioReactor]: {
+      albedo: reactorDirAlbedo,
+      height: reactorDirHeight,
+      emissive: reactorDirEmissive,
+    },
   },
   [Faction.Hadron]: {
     [StructureKind.Bastion]: {
@@ -278,6 +307,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<StructureKind, Map
       albedo: ventTapHadAlbedo,
       height: ventTapHadHeight,
       emissive: ventTapHadEmissive,
+    },
+    [StructureKind.BioReactor]: {
+      albedo: reactorHadAlbedo,
+      height: reactorHadHeight,
+      emissive: reactorHadEmissive,
     },
   },
 };
