@@ -70,6 +70,19 @@ export interface Settings {
    */
   acousticVeil: number;
   /**
+   * How much the water hides with distance, 0-1 (docs/ui-ux.md §11 and
+   * docs/art-direction.md "Reading the Water").
+   *
+   * A control for the reason the veil above has one: distance fog is a
+   * contrast reduction, and §11 makes that a setting. It costs nothing to
+   * turn down for the same reason too — the water hides only *distance*, and
+   * the only things distance hides are the player's own hulls and the ground
+   * they stand on, both of which turning this down reveals more of. The depth
+   * ramp does not move with it: water at 2,000 m is the same colour at every
+   * setting, because "depth is luminance" is a reading rather than an effect.
+   */
+  waterDensity: number;
+  /**
    * Screen-edge scrolling (§9): the camera pans while the pointer rests on
    * an edge of the water. On by default, as every RTS has it; a toggle
    * because a trackpad or a small window makes the edge a place the pointer
@@ -117,6 +130,7 @@ export const DEFAULT_SETTINGS: Settings = {
   uiScale: 1,
   reducedMotion: false,
   acousticVeil: 1,
+  waterDensity: 1,
   edgeScroll: true,
   speakerProfile: false,
 };
@@ -178,6 +192,7 @@ function sanitise(raw: unknown): Settings {
     reducedMotion:
       typeof record.reducedMotion === 'boolean' ? record.reducedMotion : prefersReducedMotion(),
     acousticVeil: clamp01(record.acousticVeil, DEFAULT_SETTINGS.acousticVeil),
+    waterDensity: clamp01(record.waterDensity, DEFAULT_SETTINGS.waterDensity),
     edgeScroll: typeof record.edgeScroll === 'boolean' ? record.edgeScroll : true,
     speakerProfile:
       typeof record.speakerProfile === 'boolean' ? record.speakerProfile : prefersSpeakerProfile(),

@@ -783,6 +783,7 @@ Audio carries primary information, so accessibility here is a correctness requir
 - **Full rebinding**, including a one-handed layout, and no timing-critical chords.
 - **Motion and flash limits** — a reduced-motion mode replaces the sonar sweep, screen-edge exposure flash and meter pulse with static equivalents that carry the same information.
 - **The acoustic veil is a slider, 0–100%.** §4.5 drains contrast over the ground, and a contrast-reduced overlay owes a control the same way the colour-vision palettes do. It is the one setting here that can reach *off* without argument: the veil hides no information, so a player at 0% and a player at 100% are looking at the same facts.
+- **Water density is a slider, 0–100%.** The water is a medium now ([art-direction.md](art-direction.md), "Reading the Water"), and distance fading into it is a contrast reduction, so it owes a control on the same terms the veil does. It reaches *off* without argument for a stronger reason than the veil's: the only things distance hides are the player's own hulls and the ground they stand on, so turning it down can only ever show more. What does not move with it is the depth ramp — water at 2,000 m is the same colour at every setting, because depth-is-luminance is a reading rather than an effect.
 
 ### Audible cue to visual equivalent
 
@@ -1412,6 +1413,7 @@ the screen, not a technology.
 | UI scale | 75–200% | A transform on the HUD layer and the DOM panels, never on the world (§11) |
 | Reduced motion | toggle | Static equivalents for the scope sweep, the exposure flash and the crush badge — same information, no movement (§11) |
 | Acoustic veil | 0–100% | How cold the ground goes where nothing of yours is listening (§4.5). Reaches off, because the veil dims no mark and withholds nothing — a player who cannot read a drained chart gives up no information by turning it down |
+| Water density | 0–100% | How much the water hides with distance, and how much marine snow drifts through it (art-direction.md, "Reading the Water"). Reaches off, because distance hides only your own force and the ground it stands on — turning it down reveals, never withholds. The depth ramp does not move |
 | Edge scrolling | toggle | The camera pans while the pointer rests on an edge of the water (§9). On by default; off for the trackpad player whose pointer lands there by accident. The arrows and the middle button pan either way |
 
 User volume lives on trim nodes *beside* the ducking chain, never on the ducked gains —

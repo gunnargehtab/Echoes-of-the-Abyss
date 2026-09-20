@@ -228,9 +228,38 @@ shape. It is named here so the feedback's fourth goal has an address.
 | **2 — The verbs** | Input wiring — orbit, focus depth, reset, touch twist — the Controls screen rows, and the scope camera box's heavy far edge | frontend |
 | **3 — The angles** | Gates 6 and 7 re-measured across the pitch band; readability and draw-call budgets restated per angle if the numbers ask for it | frontend, docs |
 | **4 — Pitch on touch** | The two freedoms the twist gesture does not cover, on a surface with no `Shift` and no wheel | frontend |
+| **5 — The water** | F1's other half: a depth-graded medium where the frame used to be void — the ramp, the fog that reads it, the backdrop, marine snow, and the setting §11 owes a contrast reduction | frontend, docs |
 
 Phases 1 and 2 are one increment in practice — a rig with no verb bound to it is not
 reviewable — and ship together.
+
+### Phase 5 — landed
+
+The water is a medium: `packages/frontend/src/game/water.ts` carries the depth ramp, the
+shader-chunk patch that makes three's fog read it, the backdrop and the marine snow;
+[art-direction.md](art-direction.md) "Reading the Water" is the SPEC it transcribes.
+Review screenshots are in `docs/screenshots/issue-836/`, the same five frames as
+`issue-831/` so the pair can be read against each other.
+
+What the phase settled:
+
+- **F1 is delivered.** At 10° of pitch with the eye at 403 m the frame is water rather than
+  void: a column that darkens downward, particulate that parallaxes past the camera, and a
+  seabed that dissolves into the medium instead of ending at a line.
+- **The horizon stops existing, and for a stated reason.** The fog over geometry and the
+  backdrop grade the same ramp, so the far seabed fades toward the colour the water behind
+  it already is. That is the term that removes the edge, and it is the one term the issue's
+  three candidate approaches would each have got half of.
+- **The camera has no depth, and this is where that first mattered.** The column is drawn
+  at 0.22 world-metres per metre, so at the home dolly the eye sits 8,946 m *above* the
+  surface. Anything anchored to the eye's height reads that as a depth and lights the frame
+  from a surface that is not there; the water anchors to the focus, which §4 already clamps
+  to the column.
+- **Gate 6 holds, with two draw calls spent.** The Ventfront base measured 41–54 calls and
+  143–148 k triangles across the band, against the budget's 150 and 250 k — the same 34–52
+  the phase-1 drive recorded, plus the backdrop and the snow, which are one draw call each
+  and whose fog costs none at all because it is a patch on chunks that were already
+  compiled into every material.
 
 ### Phases 1 and 2 — landed
 
@@ -253,20 +282,20 @@ What the phase settled:
   level at a Bastion from its own depth. The dolly is in world units and the column is drawn
   at 0.22 world-metres per metre, so a *long* dolly still lifts the eye clear of the surface;
   the in-water shot is the close one, which is the right way round.
-- **What the low shot exposes is the water itself (#836).** Above the seabed's horizon the
-  scene is void rather than water. `scene.fog` is a linear *distance* fog over **geometry**,
-  so where there is no mesh there is no fog — only the clear colour — and the column between
-  the camera and what it is looking at neither darkens with depth nor reads as a medium. That
-  is F1's remaining half. It was invisible while the camera was pinned at 55°, because the
+- **What the low shot exposed was the water itself (#836).** Above the seabed's horizon the
+  scene was void rather than water. `scene.fog` was a linear *distance* fog over **geometry**,
+  so where there was no mesh there was no fog — only the clear colour — and the column between
+  the camera and what it was looking at neither darkened with depth nor read as a medium. That
+  was F1's remaining half. It was invisible while the camera was pinned at 55°, because the
   seabed filled the frame; freeing the camera is what exposed it, which is the ordinary way a
-  presentation revision finds the next one.
+  presentation revision finds the next one. Phase 5 below is that half, landed.
 
 ---
 
 ## Related
 
 - **[three-layer-ocean.md](three-layer-ocean.md)** — the revision this one continues: the camera that replaced the plan view, and the phases that landed it
-- **[art-direction.md](art-direction.md)** — "Camera & Projection", the SPEC §4 rewrites
+- **[art-direction.md](art-direction.md)** — "Camera & Projection", the SPEC §4 rewrites, and "Reading the Water", the medium phase 5 landed
 - **[graphics-standards.md](graphics-standards.md)** — gate 8, and the gates now judged at every angle
 - **[systems-depth.md](systems-depth.md)** — the column the camera is finally free to move through, and every cost that is a hull's rather than the camera's
 - **[ui-ux.md](ui-ux.md)** — §5's sonar scope, which becomes the compass, and §9's controls
