@@ -33,7 +33,7 @@ import {
   Color,
   DirectionalLight,
   DoubleSide,
-  Fog,
+  FogExp2,
   Group,
   LineBasicMaterial,
   LineLoop,
@@ -101,6 +101,15 @@ import { OwnMotion } from './ownMotion.ts';
 import { OrdnanceLayer } from './ordnanceLayer.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
 import { VeilField, veilShade, type VeilListener } from './acousticVeil.ts';
+import {
+  installWaterFog,
+  MarineSnow,
+  waterColorAt,
+  WaterBackdrop,
+  fogDensityFor,
+  waterReachM,
+  waterTransmittance,
+} from './water.ts';
 import { FrameCost, ms } from './frameCost.ts';
 
 /**
@@ -398,6 +407,25 @@ export class PerspectiveView {
     this.linearShadeAt(xM, yM, out);
   };
 
+  /**
+   * The water itself (water.ts, docs/art-direction.md "Reading the Water",
+   * issue #836) — two draw calls between them, and the fog they share is a
+   * shader-chunk patch that costs none.
+   *
+   * `backdrop` draws the medium where there is no geometry, which is most of
+   * a low-pitch frame and was flat void before it. `snow` is the particulate
+   * that gives the medium something to parallax.
+   */
+  private readonly backdrop = new WaterBackdrop();
+  private readonly snow = new MarineSnow();
+  /** The player's setting, 0-1 (docs/ui-ux.md §11). Scales how far the water
+   * hides, never what colour it is. */
+  private waterDensity = 1;
+  /** How far the water reaches this frame, in world units — one number, read
+   * by the fog, the backdrop, the snow and the embers, so the four cannot
+   * disagree about where the visible world ends. */
+  private waterReach = waterReachM(4000);
+
   private readonly unitGroup = new Group();
   private readonly structureGroup = new Group();
   /** Every plumb and every shadow, two draw calls in all (#434). */
@@ -483,15 +511,25 @@ export class PerspectiveView {
   private stationStartedAt = performance.now();
 
   constructor() {
+    // Before the first material compiles: the water's fog is a patch on
+    // three's global shader chunks, so a material built ahead of it would
+    // carry the old distance fog for the life of the scene (water.ts).
+    installWaterFog();
     this.scene.add(
+      this.backdrop.mesh,
       this.terrainDressing,
       this.environment.group,
       this.unitGroup,
       this.ordnanceLayer.group,
       this.structureGroup,
-      this.cues.group
+      this.cues.group,
+      this.snow.points
     );
-    this.scene.background = new Color(UI.background);
+    // The clear colour under the backdrop, and the deepest water there is —
+    // the ramp's bottom stop is `UI.background` exactly, so the abyss is the
+    // colour it always was and the change is all in the water above it.
+    const deepest = waterColorAt(DEPTH.MAX_M);
+    this.scene.background = new Color().setRGB(deepest.r, deepest.g, deepest.b);
 
     // Lights exist for the roster models alone: the terrain and fallback
     // sprites are unlit materials with their shading baked in, so these touch
@@ -559,6 +597,29 @@ export class PerspectiveView {
   /** ui-ux.md §11: the world's one animation is the kelp current; hold it. */
   setReducedMotion(reduced: boolean): void {
     this.environment.setReducedMotion(reduced);
+    this.snow.setReducedMotion(reduced);
+  }
+
+  /**
+   * How much the water hides, 0-1 (docs/ui-ux.md §11, docs/art-direction.md
+   * "Reading the Water").
+   *
+   * A setting for the reason the acoustic veil is one: distance fog reduces
+   * contrast, and §11 makes that a control rather than a preference. And it
+   * can be one without argument for the same reason — turning it down can
+   * only ever *reveal* more of the player's own force, never less, so a
+   * player at 0 has every bit of information a player at 1 has. What it does
+   * not touch is the ramp: the water is the same colour at the same depth at
+   * every setting, because "depth is luminance" is a reading and not an
+   * effect.
+   */
+  setWaterDensity(density: number): void {
+    const clamped = density < 0 ? 0 : density > 1 ? 1 : density;
+    if (clamped === this.waterDensity) return;
+    this.waterDensity = clamped;
+    if (this.scene.fog instanceof FogExp2) {
+      this.scene.fog.density = fogDensityFor(this.distance, clamped);
+    }
   }
 
   /**
@@ -684,6 +745,8 @@ export class PerspectiveView {
     this.environment.destroy();
     this.ordnanceLayer.dispose();
     this.cues.dispose();
+    this.backdrop.dispose();
+    this.snow.dispose();
     for (const texture of this.spriteTextures.values()) texture.dispose();
     this.renderer?.dispose();
     this.renderer?.domElement.remove();
@@ -1037,11 +1100,17 @@ export class PerspectiveView {
     this.seabedCanvas = canvas;
     this.seabedTexture = texture;
 
-    // Depth haze: the fog is the water. Scaled to the map so a small arena
-    // and a large one both fade at their own horizon, in the same abyss hue
-    // as the background — distance and depth read as one darkness.
-    const diagonal = Math.hypot(grid.widthM, grid.heightM);
-    this.scene.fog = new Fog(UI.background, diagonal * 0.55, diagonal * 2.1);
+    // The fog is the water (water.ts). Exponential rather than linear, and
+    // its density follows the dolly rather than the map: the colour is what
+    // the depth ramp says and the reach is what the frame needs, which is the
+    // split "Reading the Water" argues for. `colour` is unused by the patched
+    // chunk — the ramp supersedes it — but a scene whose fog reports a colour
+    // nothing draws would be a trap for the next reader, so it is the
+    // deepest water rather than an arbitrary one.
+    const deepest = waterColorAt(DEPTH.MAX_M);
+    const fog = new FogExp2(0x000000, fogDensityFor(this.distance, this.waterDensity));
+    fog.color.setRGB(deepest.r, deepest.g, deepest.b);
+    this.scene.fog = fog;
 
     this.rebuildDressing();
     this.syncEntities();
@@ -1171,11 +1240,12 @@ export class PerspectiveView {
       new BufferAttribute(new Float32Array(skirtPositions), 3)
     );
     skirtGeometry.setIndex(skirtIndices);
+    // Fogged, unlike before the water landed (#836): the skirt is the wall
+    // the world ends at, and a wall that stays crisp while the seabed in
+    // front of it dissolves is the hard edge this whole change exists to
+    // remove. It falls away into the same water everything else does.
     this.terrainDressing.add(
-      new Mesh(
-        skirtGeometry,
-        new MeshBasicMaterial({ color: 0x040a12, side: DoubleSide, fog: false })
-      )
+      new Mesh(skirtGeometry, new MeshBasicMaterial({ color: 0x040a12, side: DoubleSide }))
     );
   }
 
@@ -1210,6 +1280,12 @@ export class PerspectiveView {
         transparent: true,
         blending: AdditiveBlending,
         depthWrite: false,
+        // Out of the fog chunk on purpose: mixing an *additive* fragment
+        // toward the water colour makes a distant vent brighter the murkier
+        // the water gets. An emitter loses light to the swim and gains none,
+        // so the 5 Hz flicker multiplies by `waterTransmittance` instead
+        // (water.ts).
+        fog: false,
         // A point without a map rasterises as a square; an ember is a glow.
         map: this.emberSpriteTexture(),
       })
@@ -1684,6 +1760,36 @@ export class PerspectiveView {
     this.cameraRevision++;
   }
 
+  /**
+   * The two water layers that need to know where the camera ended up.
+   *
+   * Split from the reach at the top of the frame because these need the
+   * *applied* camera — the backdrop unprojects through it and the snow wraps
+   * its box around the eye — and the eye is not final until the floor clamp
+   * in `applyCamera` has had its say.
+   */
+  private syncWater(now: number): void {
+    // The focus, in metres of depth: the one anchor in the frame that is
+    // always in water. `focusY` resolves "on the seabed" against the ground
+    // under the focus, so this follows a pan across a trench the way the
+    // camera does.
+    const focusDepthM = -this.focusY() / DEPTH_VISUAL_M_PER_M;
+    this.backdrop.update(this.camera, focusDepthM);
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
+    const projectionScalePx =
+      (this.viewHeight * pixelRatio) / (2 * Math.tan(((FOV_DEG / 2) * Math.PI) / 180));
+    this.snow.update(
+      now,
+      this.camera.position,
+      this.target.x,
+      this.target.z,
+      this.waterReach,
+      this.waterDensity,
+      projectionScalePx,
+      pixelRatio
+    );
+  }
+
   /** See `cameraRevision`. */
   get viewRevision(): number {
     return this.cameraRevision;
@@ -1719,6 +1825,15 @@ export class PerspectiveView {
     this.hiddenSinceFrame = false;
     if (!hidden) this.frameCost.add(frameMs);
 
+    // How far the water reaches, before anything asks. It follows the dolly
+    // (water.ts), so a wheel notch moves it and it is cheapest to settle once
+    // a frame rather than to recompute it in each of the four places that
+    // read it.
+    this.waterReach = waterReachM(this.distance);
+    if (this.scene.fog instanceof FogExp2) {
+      this.scene.fog.density = fogDensityFor(this.distance, this.waterDensity);
+    }
+
     // Ember flicker steps on the 5 Hz sonar bucket, never smoothly — the
     // seabed's one light keeps the register (docs/art-direction.md).
     if (this.embers !== null) {
@@ -1727,13 +1842,26 @@ export class PerspectiveView {
         this.emberBucket = bucket;
         const colors = this.embers.geometry.getAttribute('color') as BufferAttribute;
         const ember = EMBER_COLOR;
+        const eye = this.camera.position;
+        const reach = this.waterReach;
         for (let i = 0; i < this.emberPhases.length; i++) {
           // A vent seen through water nobody is listening to is still a vent,
           // and still the seabed's one light — it just goes as cold as the
           // ground it burns on. An unveiled ember over veiled ground would be
           // the layer that got forgotten (docs/ui-ux.md §4.5).
+          //
+          // Then the swim: the far vent field fades out with everything else
+          // on the seabed rather than staying the one crisp thing at the map
+          // edge. Priced here, at 5 Hz, because the ember material is the one
+          // thing in the scene the fog chunk must not touch — see
+          // `buildEmbers`. The camera moves between buckets and the level does
+          // not, which is the same 200 ms the flicker already steps on.
+          const at = this.emberPositions[i]!;
+          const dx = at.xM - eye.x;
+          const dz = at.yM - eye.z;
+          const swim = waterTransmittance(Math.hypot(dx, dz), reach);
           const level =
-            0.55 * emberFlicker(i, bucket, this.emberPhases[i]!) * (this.emberVeil[i] ?? 1);
+            0.55 * emberFlicker(i, bucket, this.emberPhases[i]!) * (this.emberVeil[i] ?? 1) * swim;
           colors.setXYZ(i, ember.r * level, ember.g * level, ember.b * level);
         }
         colors.needsUpdate = true;
@@ -1744,6 +1872,7 @@ export class PerspectiveView {
     this.environment.tick(now);
 
     this.applyCamera();
+    this.syncWater(now);
     // The readability factor follows the dolly, so it is recomputed on the
     // frame rather than on the 5 Hz snapshot: a wheel zoom must not wait up to
     // 200 ms for the fleet to reach its drawn size. Re-syncing only on an
@@ -1879,6 +2008,12 @@ export class PerspectiveView {
         depthM: Math.round(-this.camera.position.y / DEPTH_VISUAL_M_PER_M),
       },
       distance: Math.round(this.distance),
+      // The water this frame (#836). A gate-6 or gate-7 shot judged across
+      // the pitch band has to be able to say how far the medium was reaching
+      // when it was taken, because the reach follows the dolly and two shots
+      // at different zooms are two different waters.
+      waterReachM: Math.round(this.waterReach),
+      waterDensity: Number(this.waterDensity.toFixed(2)),
       hullScale: Number(this.drawScale.toFixed(2)),
       drawCalls: info?.render.calls ?? 0,
       triangles: info?.render.triangles ?? 0,

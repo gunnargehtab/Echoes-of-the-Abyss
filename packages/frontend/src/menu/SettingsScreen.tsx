@@ -215,6 +215,27 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
             information.
           </p>
 
+          <label
+            className="menu-slider-row"
+            title="How much the water hides with distance. Depth still reads as darkness at every setting"
+          >
+            <span className="menu-slider-label">Water density</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={Math.round(settings.waterDensity * 100)}
+              onChange={(event) => patch({ waterDensity: Number(event.target.value) / 100 })}
+            />
+            <span className="menu-slider-value">{percent(settings.waterDensity)}</span>
+          </label>
+          <p className="menu-choice-note">
+            Distance fades into the water, and marine snow drifts through it. Turning it down only
+            ever shows you more of your own force, never less — the deep still reads as darker,
+            because that is the water's depth and not this setting.
+          </p>
+
           <label className="menu-toggle-row">
             <input
               type="checkbox"

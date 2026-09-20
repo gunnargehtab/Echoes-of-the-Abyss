@@ -286,6 +286,18 @@ number, not an impression, and a test sums the registry's worst case over the sh
 maps so the reservation cannot be exceeded by accretion. Terrain never rebuilds
 per frame: props rebuild only when the ground does.
 
+The water ([art-direction.md](art-direction.md), "Reading the Water") spends **two draw
+calls and no triangles**, and its largest term spends neither. The depth-graded fog is a
+patch on three.js's global fog shader chunks, so it rides materials that were already
+compiled and going to be drawn: a few instructions per fragment, no pass, no overlay
+geometry, no second draw of anything. The backdrop is one screen-filling pair of triangles
+that replaces a clear, and the marine snow is one `Points` cloud whose wrap, sink, fade and
+sizing all happen in its vertex shader — three uniform writes a frame rather than three
+thousand, which keeps it off the CPU half of the frame as well as this one. The Ventfront
+measurement across the pitch band is 41–54 calls and 143–148 k triangles (#836), against
+34–52 before it. A water term that grew a render target, or that re-shaded the scene in a
+second pass, would be the regression.
+
 The acoustic veil ([ui-ux.md](ui-ux.md) §4.5) is on this budget by costing nothing on it.
 The ground is already one unlit mesh carrying a baked map, so the veil rides it as a
 **vertex colour** and the props as an instance colour — no pass, no overlay geometry, no

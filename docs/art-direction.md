@@ -94,6 +94,80 @@ Three further layers of the same texture-not-information rule:
   occupancy, or anything else a player could read as a signal. The seafloor
   otherwise stays unlit.
 
+### Reading the Water
+
+The ground has a shape and now the water has a body. This section is the sibling of
+"Reading the Sea Floor" above and deliberately reads like it, because it is the *same
+rule* pointed at the other half of the frame: **depth is luminance**, applied to the
+medium rather than to the floor of it. The two agree, so a far ridge and the water in
+front of it are the same brightness family and the horizon stops being an edge.
+
+It exists because freeing the camera exposed that it did not ([free-camera.md](free-camera.md)
+§9). A pinned 55° filled the frame with seabed; a camera at 12° spends most of the frame
+looking through open water, and open water used to draw nothing at all — `scene.fog` was a
+*distance* fog over geometry, so where there was no mesh there was only the clear colour.
+
+Three terms, one table. `packages/frontend/src/game/water.ts` transcribes this section, and
+its `WATER_RAMP` is the table — SPEC by reference, the way the biome relief's numbers live
+in `seabed.ts`; the stops are TUNABLE, the shape is not.
+
+- **The column is a ramp, and only a ramp.** Depth 0 to 3,000 m maps to one blue that
+  changes brightness and never hue, because hue belongs to the biome and the biome is what
+  the Echo Layer prices sound by — water that carried a hue could be read as a propagation
+  factor. Three of its six stops are the column's own rather than an artist's: the **Lid**
+  at 150 m is the brightest water a hull can loiter in, the **thermocline** at 1,200 m is
+  where the ramp puts its knee because below the column's one physical boundary the light
+  story is over, and **3,000 m** is `UI.background` exactly — the deep end of the new ramp
+  is the flat colour the game already had. Nothing about the abyss changed. No line is
+  drawn at the thermocline: it is an inflection, not a boundary.
+- **Distance fades into the water the thing is standing in.** The fog over geometry takes
+  its colour from the *fragment's own depth*, so a trench and the shelf beside it are the
+  same distance away and fade to different darknesses. That is the luminance rule governing
+  the air between the camera and the ground as well as the ground itself. It deliberately
+  does not read the camera's depth: the column is drawn at 0.22 world-metres per metre, so
+  any dolly past a few hundred units lifts the eye clear of the surface and its height
+  stops being a depth at all.
+- **Where there is no geometry, the same water is drawn anyway.** One screen-filling pass
+  unprojects each pixel to a world-space ray, and grades the ramp from the **focus** — the
+  one depth in the frame that is the player's own statement and is always in water
+  ([free-camera.md](free-camera.md) §4 clamps it to the column). Looking down darkens,
+  looking up lightens, and both happen because the ray goes there rather than because the
+  screen has a top and a bottom. That is why it is a world-ray shader and not a vertical
+  screen gradient: a screen gradient would be an atmosphere pass that rotates with the
+  projection, and §5 of [free-camera.md](free-camera.md) keeps that prohibition verbatim —
+  the *player* may turn the camera, an *effect* may not.
+
+Beside the three, **marine snow**: particulate in the near column, and the only one of the
+four with structure to parallax, which is most of why a low shot feels like water rather
+than like a gradient. It **sinks, and only sinks**. A lateral drift would be prettier and is
+not available — a current is a real mechanic with an authored bearing published to the
+client ([hazards.md](hazards.md)), so moving particulate sideways states a direction, and
+would state the wrong one everywhere outside a current site. Falling states nothing, because
+everything falls. It fills the column as a slab rather than a box, because 3,000 m of water
+drawn at 0.22 is 660 world units thick against a map eight kilometres across. And it fades
+out as the camera climbs out of the column, which is a gate-7 requirement before it is an
+aesthetic one: at the home dolly the eye is nine kilometres of drawn column above the
+seabed, and every mote up there lands in front of lit ground and brightens it. The reward
+for going down into the water is that the water is there.
+
+**Texture, not information**, under the same law as the seabed relief: the simulation never
+reads any of it, no gameplay quantity derives from it, and nothing about it is state. The
+water never brightens with activity, occupancy or anything a player could read as a signal.
+
+**The colour is absolute; the reach is relative.** A metre of depth is the same colour at
+every zoom, so the luminance rule is never scaled or lied about. How far the medium reaches
+follows the dolly, because the alternative fails gate 7: a true clear-water visibility of a
+couple of kilometres makes the strategic dolly — which puts the eye twenty kilometres out —
+a uniform black wash with the player's own base inside it, and a chart nobody can read is
+not a view. So the reach breathes and the ramp does not. The falloff is exponential-squared,
+which keeps the subject of the frame crisp (about 9% fog one dolly out) and dissolves it
+from roughly three dollies.
+
+It is one setting, `waterDensity` ([ui-ux.md](ui-ux.md) §11). Distance fog reduces contrast,
+and §11 makes that a control rather than a preference — and it can be one without argument,
+because the only things distance hides are the player's own hulls and the ground they stand
+on, so turning it down can only ever reveal more. The ramp does not move with it.
+
 ### Environmental Shapes
 
 - Jagged rock formations
@@ -494,7 +568,9 @@ Within it:
 
 - Slight vignette to simulate depth
 - Slow camera sway (submarine feel) — translation only, per the projection rules
-- Fog layers for parallax depth
+- The water itself is a rendered medium rather than a parallax layer — see
+  [Reading the Water](#reading-the-water) above, which is where the old "fog layers for
+  parallax depth" line went and why it is not a *layer*
 
 ## Cutscene & Narrative Art Direction
 

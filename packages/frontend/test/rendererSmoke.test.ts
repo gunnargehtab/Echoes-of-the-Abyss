@@ -56,7 +56,7 @@ import {
 import { EchoRenderer, type RendererCallbacks } from '../src/game/EchoRenderer.ts';
 import type { ReadoutBox } from '../src/game/readouts.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
-import { BufferAttribute, Mesh, type Scene } from 'three';
+import { BufferAttribute, FogExp2, Mesh, Points, type Scene } from 'three';
 
 /** What the shell was told, in the order it was told. */
 interface CallbackLog {
@@ -892,6 +892,112 @@ describe('renderer smoke test: the conn view', () => {
         { x: 0, y: 0 },
         'a click resolves to the documented fallback rather than to an exception'
       );
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
+describe('renderer smoke test: the water', () => {
+  /** Every Points cloud in the conn scene, by how it is built: the embers
+   * carry a colour attribute the snow has no use for. */
+  function clouds(scene: Scene | null): { embers: Points | null; snow: Points | null } {
+    assert.ok(scene !== null, 'the conn rendered at least once');
+    let embers: Points | null = null;
+    let snow: Points | null = null;
+    scene.traverse((object) => {
+      if (!(object instanceof Points)) return;
+      if (object.geometry.getAttribute('snowSize') !== undefined) snow = object;
+      else embers = object;
+    });
+    return { embers, snow };
+  }
+
+  it('draws the medium where there is no geometry, on two draw calls', async () => {
+    const world = await boot();
+    try {
+      world.frame(3);
+      const scene = world.gl.lastScene;
+      const { embers, snow } = clouds(scene);
+      assert.ok(snow !== null, 'marine snow is in the scene');
+
+      // The backdrop is the term that removes the horizon, and it has to draw
+      // before everything and write no depth or it would be an occluder.
+      assert.ok(scene !== null);
+      const backdrop = scene.children.find(
+        (child) => child instanceof Mesh && child.renderOrder === -1
+      ) as Mesh | undefined;
+      assert.ok(backdrop !== undefined, 'the backdrop is in the scene');
+      const material = backdrop.material as { depthTest: boolean; depthWrite: boolean };
+      assert.equal(material.depthTest, false, 'the backdrop never occludes');
+      assert.equal(material.depthWrite, false);
+      assert.equal(backdrop.frustumCulled, false, 'a clip-space quad has no world bounds');
+
+      // The embers are the one thing in the scene the fog chunk must not
+      // touch: they are additive, and mixing an additive fragment toward the
+      // water colour makes a distant vent brighter the murkier the water is.
+      assert.ok(embers !== null, 'the vent embers are in the scene');
+      assert.equal(
+        (embers as unknown as { material: { fog: boolean } }).material.fog,
+        false,
+        'an emitter loses light to the swim and gains none'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('fogs exponentially, and reaches further the further the camera pulls back', async () => {
+    const world = await boot();
+    try {
+      world.frame(2);
+      const scene = world.gl.lastScene;
+      assert.ok(scene !== null);
+      const fog = scene.fog as FogExp2 | null;
+      assert.ok(fog instanceof FogExp2, 'the water is an exponential medium, not a linear one');
+
+      const close = fog.density;
+      world.conn.focusWorld(CELL_M * COLS * 0.5, CELL_M * COLS * 0.5, 9000);
+      world.frame(2);
+      assert.ok(fog.density < close, 'a longer dolly sees further into the water');
+
+      world.conn.focusWorld(CELL_M * COLS * 0.5, CELL_M * COLS * 0.5, 600);
+      world.frame(2);
+      assert.ok(fog.density > close, 'a shorter one sees less');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('hides nothing the player earned, at any density (#836)', async () => {
+    const world = await boot();
+    try {
+      world.frame(3);
+
+      // The same promise §11 makes of the acoustic veil, and it is a stronger
+      // one here: the water hides only *distance*, and the only things
+      // distance hides are the player's own hulls and the ground they stand
+      // on. Turning it down reveals; it can never withhold. The chart painter
+      // — which draws every mark the player earned — has no idea the water
+      // exists, and this is what holds that true.
+      const before = drawInstructions(world.app.stage);
+      world.conn.setWaterDensity(0);
+      world.frame(2);
+      assert.equal(
+        drawInstructions(world.app.stage),
+        before,
+        'no mark, ring or reading changes with the water'
+      );
+
+      const scene = world.gl.lastScene;
+      const fog = scene?.fog as FogExp2;
+      assert.equal(fog.density, 0, 'at zero there is no distance term at all');
+      const { snow } = clouds(scene);
+      assert.equal(snow?.visible, false, 'and no cloud to draw');
+
+      world.conn.setWaterDensity(1);
+      world.frame(2);
+      assert.ok(fog.density > 0, 'and it comes back');
     } finally {
       world.teardown();
     }
