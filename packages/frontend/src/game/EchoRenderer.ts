@@ -38,7 +38,7 @@
  * `inverseScale = 1 / pxPerM`.
  */
 
-import { Application, Container, Graphics, Text } from 'pixi.js';
+import { Application, Container, Graphics, Sprite, Text } from 'pixi.js';
 import {
   ACTIVE_SONAR,
   affords,
@@ -179,8 +179,14 @@ import {
   drawUnitSilhouette,
   HULL_LENGTH_M,
 } from './silhouettes.ts';
-import { destroyHullTextures } from './hullTextures.ts';
-import { destroyStructureTextures } from './structureTextures.ts';
+import { destroyHullTextures, hullSpriteSizeM, hullTexture, loadHullArt } from './hullTextures.ts';
+import {
+  destroyStructureTextures,
+  loadStructureArt,
+  structureSpriteSizeM,
+  structureTexture,
+} from './structureTextures.ts';
+import { contactFidelity } from './trackFidelity.ts';
 import type { MapPayload, TerrainPayload } from '../net/GameClient.ts';
 import { FOCUS_STEP_M } from './PerspectiveView.ts';
 import type { PerspectiveView, ProjectedPoint } from './PerspectiveView.ts';
@@ -433,6 +439,16 @@ const CIRCLE_SEGMENTS = 48;
 class SymbolPool {
   readonly layer = new Container();
   private readonly held = new Map<number, Graphics>();
+  /**
+   * The optional sprite body for a symbol — a Tier-4 track's baked hull
+   * (#834), and nothing else so far.
+   *
+   * A child of the symbol's own Graphics rather than a parallel pool, so it
+   * inherits the billboard position and the pixels-per-metre scale the caller
+   * has already set and cannot drift a frame away from the outline drawn
+   * around it.
+   */
+  private readonly sprites = new Map<number, Sprite>();
   private readonly used = new Set<number>();
 
   /** A cleared Graphics for this entity, positioned by the caller. */
@@ -445,16 +461,42 @@ class SymbolPool {
     }
     g.clear();
     g.visible = true;
+    // `clear()` empties the vector instructions but a child survives it, so a
+    // sprite is opt-in *per frame*: a caller that wants one says so by asking
+    // again, rather than every other caller having to remember to hide it.
+    const sprite = this.sprites.get(key);
+    if (sprite !== undefined) sprite.visible = false;
     this.used.add(key);
     return g;
+  }
+
+  /**
+   * The pooled sprite body for this entity, created on first ask and shown by
+   * it. `acquire` must have run for this key in this frame — it is what
+   * anchors the Graphics this rides on.
+   */
+  sprite(key: number): Sprite {
+    let sprite = this.sprites.get(key);
+    if (sprite === undefined) {
+      sprite = new Sprite();
+      sprite.anchor.set(0.5);
+      this.sprites.set(key, sprite);
+      this.held.get(key)?.addChild(sprite);
+    }
+    sprite.visible = true;
+    return sprite;
   }
 
   /** Drop every symbol not acquired since the last sweep. */
   sweep(): void {
     for (const [key, g] of this.held) {
       if (!this.used.has(key)) {
-        g.destroy();
+        // The sprite rides as a child, so it goes with its Graphics. Its
+        // *texture* does not: that is owned by the bake caches and freed by
+        // destroyHullTextures / destroyStructureTextures at teardown.
+        g.destroy({ children: true });
         this.held.delete(key);
+        this.sprites.delete(key);
       }
     }
     this.used.clear();
@@ -462,6 +504,7 @@ class SymbolPool {
 
   destroy(): void {
     this.held.clear();
+    this.sprites.clear();
     this.used.clear();
     this.layer.destroy({ children: true });
   }
@@ -4504,6 +4547,19 @@ export class EchoRenderer {
       ) {
         this.lockFlash.set(contact.id, now);
       }
+      // Tier 3 names the hull; Tier 4 draws it. Starting the decode on the
+      // tier *below* the one that needs it is the whole prefetch (#834): a
+      // classification is a tier of lead time, and a sprite still decoding
+      // when the track lands would show the outline for a beat and then pop.
+      // Both calls are memoised per kind and faction, so this is a map lookup
+      // five times a second and not a decode.
+      if (contact.faction !== undefined) {
+        if (contact.kind !== undefined) {
+          loadHullArt(contact.kind, contact.faction).catch(() => {});
+        } else if (contact.structure !== undefined) {
+          loadStructureArt(contact.structure, contact.faction).catch(() => {});
+        }
+      }
       this.tracked.set(contact.id, {
         contact,
         lastSeenMs: now,
@@ -5943,6 +5999,11 @@ export class EchoRenderer {
       // Ghosts fade rather than vanish; a stale contact is still information,
       // just less of it.
       const freshness = 1 - age / decayMs;
+      // What this contact has earned the right to be drawn as — gate 5, in
+      // one call (trackFidelity.ts). `age` is time since it was last
+      // *resolved*, so a track the player is still holding stays live however
+      // long they have held it.
+      const live = contactFidelity(contact.tier, age) === 'sprite';
       // ...and a *new* mark fades in, which is the Precedence Law's budget
       // rather than a flourish: a mark that pops instantly races the audio
       // device's own output latency and will sometimes win (§2). The two
@@ -5998,12 +6059,37 @@ export class EchoRenderer {
         }
         case ResolutionTier.Track: {
           const color = this.contactColor(contact, style.color);
-          // A track earns the resolved outline — the shape, its heading, its
-          // hull — but never the livery. Asymmetric Fidelity Law,
-          // docs/art-direction.md.
-          // Faction-colour fill (Tier 4 knows identity), threat-red outline
-          // so a track reads against any biome its faction happens to match.
+          // A track earns the hull: its shape, its heading, and since #834 the
+          // sprite baked from the model itself. docs/systems-echo.md §4 calls
+          // Tier 4 "full resolution" and the art side no longer caps it below
+          // that — see the Asymmetric Fidelity Law in docs/art-direction.md,
+          // which is now two rules and keeps only the ones with a reason: no
+          // sprite below Tier 4 anywhere, and no enemy *geometry* in the conn
+          // view at any tier.
+          //
+          // The sprite is drawn only while the track is live. A ghost is a
+          // last-known position, and a lit hull sitting on one would claim a
+          // present tense the Echo Layer never granted.
+          //
+          // The threat-red edge is drawn either way and is not decoration: a
+          // faction's livery can match the biome it is sitting in, and the
+          // stroke is what keeps the track readable when it does. Where the
+          // sprite stands, the outline gives up its *fill* so the two are not
+          // stacked (`SilhouetteStyle.fill`).
           if (contact.kind !== undefined && contact.faction !== undefined) {
+            const texture = live ? hullTexture(contact.kind, contact.faction) : null;
+            if (texture !== null) {
+              const size = hullSpriteSizeM(contact.kind, contact.faction);
+              const sprite = this.contactSymbols.sprite(id);
+              sprite.texture = texture;
+              sprite.rotation = contact.heading ?? 0;
+              // True metres, exactly like the outline it fills. The far-zoom
+              // readability factor is ink about an *own* entity by rule
+              // (`hullDrawScale`), and a contact is not one.
+              sprite.width = size.widthM;
+              sprite.height = size.heightM;
+              sprite.alpha = alpha;
+            }
             drawUnitSilhouette(
               sg,
               contact.kind,
@@ -6011,17 +6097,32 @@ export class EchoRenderer {
               0,
               0,
               contact.heading ?? 0,
-              { color, accent: UI.threat, alpha, detail: false },
+              { color, accent: UI.threat, alpha, detail: false, fill: texture === null },
               2 * inverseScale
             );
           } else if (contact.structure !== undefined) {
+            const texture =
+              live && contact.faction !== undefined
+                ? structureTexture(contact.structure, contact.faction)
+                : null;
+            if (texture !== null && contact.faction !== undefined) {
+              const size = structureSpriteSizeM(contact.structure, contact.faction);
+              const sprite = this.contactSymbols.sprite(id);
+              sprite.texture = texture;
+              // A structure has no heading to earn: the maps are baked in the
+              // one orientation every settlement is built in.
+              sprite.rotation = 0;
+              sprite.width = size.widthM;
+              sprite.height = size.heightM;
+              sprite.alpha = alpha;
+            }
             drawStructureSilhouette(
               sg,
               contact.structure,
               0,
               0,
               structureStatsFor(contact.structure).radiusM,
-              { color, accent: UI.threat, alpha, detail: false },
+              { color, accent: UI.threat, alpha, detail: false, fill: texture === null },
               2 * inverseScale
             );
           } else if (contact.fauna !== undefined) {

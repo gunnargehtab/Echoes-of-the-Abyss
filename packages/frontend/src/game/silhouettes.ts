@@ -1,13 +1,23 @@
 /**
- * Procedural hull and structure silhouettes. Own units now render as baked,
- * lit sprites (see hullTextures.ts), but this module remains load-bearing in
- * two places, both mandated by the Asymmetric Fidelity Law:
- *   - detail: false — a Tier-4 TRACK of an enemy: the resolved outline alone,
- *     flat, in whatever colour the tier styling dictates. A track earns the
- *     shape, never the livery — and NEVER the textured sprite.
+ * Procedural hull and structure silhouettes. Own units render as baked, lit
+ * sprites (see hullTextures.ts), and since #834 so does a live Tier-4 track —
+ * but this module remains load-bearing in three places, all mandated by the
+ * Asymmetric Fidelity Law:
+ *   - detail: false — an enemy contact the law still caps at a flat shape:
+ *     every tier below Track, and a Track whose sprite has not decoded. The
+ *     resolved outline alone, in whatever colour the tier styling dictates.
+ *   - detail: false, fill: false — a live Tier-4 track whose sprite *has*
+ *     decoded. The sprite is the body; what is drawn here is the threat-red
+ *     edge around it, which is what keeps the track readable when a faction's
+ *     livery matches the biome it is sitting in.
  *   - detail: true  — the fallback for the player's own force while the hull
  *     art is still decoding: body + faction accent marks in the faction's
  *     shape language.
+ *
+ * What the law still forbids here is a sprite below Tier 4: the server sends
+ * no `kind` under Tier 3 and no `hp`/`heading` under Tier 4, so there is
+ * nothing to bake from, and gate 5 of docs/graphics-standards.md says to keep
+ * it that way.
  *
  * HULL_OUTLINE is drawn two ways. A kind with an approved model takes its plan
  * outline *from* the model (hullOutlines.generated.ts, written by
@@ -30,6 +40,16 @@ export interface SilhouetteStyle {
   alpha: number;
   /** Own force renders accents; a track renders the outline alone. */
   detail: boolean;
+  /**
+   * Whether the shape is filled as well as stroked. Defaults to true.
+   *
+   * False for a Tier-4 track whose sprite has decoded (#834): the sprite is
+   * the body, and a filled outline beneath it would show through the sprite's
+   * own transparent margins as a solid slab of faction colour. The stroke
+   * stays either way — it is what keeps a track readable against a biome its
+   * livery happens to match.
+   */
+  fill?: boolean;
 }
 
 /** Hull length overall in metres, per kind. TUNABLE for readability. */
@@ -139,10 +159,12 @@ export function drawUnitSilhouette(
   strokeWidth: number
 ): void {
   const length = HULL_LENGTH_M[kind];
-  g.poly(placeOutline(HULL_OUTLINE[kind], x, y, heading, length)).fill({
-    color: style.color,
-    alpha: style.alpha,
-  });
+  if (style.fill !== false) {
+    g.poly(placeOutline(HULL_OUTLINE[kind], x, y, heading, length)).fill({
+      color: style.color,
+      alpha: style.alpha,
+    });
+  }
   g.poly(placeOutline(HULL_OUTLINE[kind], x, y, heading, length)).stroke({
     width: strokeWidth,
     color: style.accent,
@@ -265,7 +287,14 @@ export function drawStructureSilhouette(
   style: SilhouetteStyle,
   strokeWidth: number
 ): void {
-  const body = { color: style.color, alpha: style.alpha * (style.detail ? 0.55 : 0.9) };
+  // Every fill outside a `style.detail` branch below is this one, which is
+  // what lets a suppressed fill be an alpha rather than a flag threaded
+  // through eight cases. A track never asks for detail, so the accent marks
+  // those branches draw are not reachable when the sprite is there.
+  const body = {
+    color: style.color,
+    alpha: style.fill === false ? 0 : style.alpha * (style.detail ? 0.55 : 0.9),
+  };
   const edge = {
     width: strokeWidth,
     color: style.accent,
