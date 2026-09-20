@@ -23,8 +23,18 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    against itself. parts.mjs reads a file the way a script is
                    written — each node's transform, which primitive its buffer
                    is, which nodes share one — and is what a port transcribes
-                   from. Port is -z: the bow is on +X and Y is up, so +z is
-                   starboard (kit.mjs `bothSides`, #642).
+                   from. connectivity.mjs answers what none of them can see:
+                   whether the model is one connected body. It union-finds the
+                   parts whose bounds touch and reports what stands clear —
+                   which is how #788's cutter rakes were caught hanging a metre
+                   off the booms they cut for, having passed intake, the light
+                   audit and check.mjs alike. Not a gate: 50 of the 100
+                   committed models hold a second body on purpose, a hydrophone
+                   drum on a cable or an anchor in seabed the model does not
+                   contain, so --max-gap is the knob and an author names the
+                   clearance their own model is allowed. Its suite is npm run
+                   test:hull-models. Port is -z: the bow is on +X and Y is up,
+                   so +z is starboard (kit.mjs `bothSides`, #642).
 tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
                    the sprite maps (Chromium), outlines.mjs writes each modelled
                    kind's plan outline into packages/frontend/src/game/
