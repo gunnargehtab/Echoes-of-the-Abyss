@@ -1886,6 +1886,25 @@ export const PERSISTENCE = {
   /** Tier 1-2 contacts linger as ghost markers, then fade. */
   GHOST_MARKER_DECAY_S: 20,
   /**
+   * TUNABLE — how long after its last resolution a Tier-4 track still counts
+   * as *live*, and so still renders the hull's sprite rather than falling back
+   * to its outline (docs/graphics-standards.md gate 5, #834).
+   *
+   * Two Echo passes at SIM.ECHO_HZ 5, not a number picked for feel. One pass
+   * is the floor — a track is re-resolved every 200 ms — and sitting exactly
+   * on the floor would strobe the sprite off and on every time a snapshot
+   * arrived late, which is the same flicker the acquisition one-shot in
+   * EchoRenderer already guards the lock tone against. Two rides out a single
+   * dropped or jittered snapshot and still drops the sprite two orders of
+   * magnitude inside the ghost decay above, so a stale track is never lit.
+   *
+   * A literal rather than `2 / SIM.ECHO_HZ`: SIM is declared further down this
+   * file, and PERSISTENCE would read it in its own temporal dead zone. Same
+   * bargain EXPOSURE_SETTLE_S makes below — the derivation lives in the
+   * comment, and moving ECHO_HZ means revisiting both.
+   */
+  LIVE_TRACK_S: 0.4,
+  /**
    * TUNABLE — what one "engagement" is, for the under-fire alert
    * (docs/ui-ux.md §5, §11): a hull hit again within this many seconds is the
    * same fight, and raises nothing new. The log records the first blow of an

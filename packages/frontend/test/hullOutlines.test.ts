@@ -1,7 +1,8 @@
 /**
- * HULL_OUTLINE is what a Tier-4 TRACK renders under the Asymmetric Fidelity
- * Law (docs/art-direction.md), so every kind must have one and it must be a
- * real plan shape — for the modelled kinds, the one drawn from the model by
+ * HULL_OUTLINE is what a TRACK is drawn with under the Asymmetric Fidelity
+ * Law (docs/art-direction.md) — its threat-red edge always, and the whole
+ * shape whenever the sprite is not there to fill it (#834) — so every kind
+ * must have one and it must be a real plan shape — for the modelled kinds, the one drawn from the model by
  * tools/hull-maps/outlines.mjs, which `npm run check:models` holds to the
  * GLBs. What is asserted here is the contract the renderer and the sprite
  * baker rely on, not any particular shape: unit space with the bow at +0.5,

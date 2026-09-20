@@ -92,8 +92,9 @@ metres (a spine, a folded limb — a return is the mass of the hull, not its bri
 writes the result into `packages/frontend/src/game/hullOutlines.generated.ts`, which is
 committed and which the same round-trip check holds to the models. The runtime still reads
 an array for all thirty-six kinds — generated for the modelled ones, hand-drawn for the
-rest — and never a GLB, because the outline is what a Tier-4 TRACK renders under the
-Asymmetric Fidelity Law and has to be free.
+rest — and never a GLB, because the outline is what a TRACK is drawn with under the
+Asymmetric Fidelity Law — its threat-red edge always, and the whole shape whenever the
+sprite is not there to fill it — and has to be free.
 
 **Fallback:** a unit or structure with no approved model bakes procedurally — units from a
 distance-transform heightfield guessed from `HULL_OUTLINE`, clad in
@@ -145,8 +146,9 @@ Every shipped visual either bakes from an approved model in `docs/concept-art/mo
 uses the documented procedural fallback. No hand-painted one-off sprites, no
 per-unit special-case rendering code, no "temporary" art that bypasses the shared bake.
 Vector primitives are legal in exactly three places, all deliberate: the loading fallback,
-enemy contacts (capped by the Asymmetric Fidelity Law), and construction sites, which read
-as scaffolding on purpose until commissioned.
+enemy contacts still capped by the Asymmetric Fidelity Law (every tier below Track, and a
+Track gone to ghost — gate 5), and construction sites, which read as scaffolding on purpose
+until commissioned.
 
 The same law covers the ground. An environment visual is either an approved `env-*` model
 instanced by the environment registry, or the documented procedural seabed bake (relief,
@@ -231,14 +233,32 @@ carries the registry and the one-name-one-value rule.
 ### 5. The Asymmetric Fidelity Law is a rendering gate
 
 The player's own force renders at full fidelity. The enemy renders **only at the fidelity
-their detection earned**: a Tier-1 return is a smudge, a Tier-2 a blurred blob, and even a
-Tier-4 track is a resolved flat silhouette carrying `HULL_OUTLINE` — never the model-backed
-sprite with its fins and frills. That outline gap is correct asymmetry, not drift: a track
-is a sonar return the player earned, and it was never meant to carry the fins. Since the
-server only sends resolved contacts (see the server-authoritative rule in
-[tech-stack.md](tech-stack.md)), a renderer that draws unearned detail has nothing real to
-draw it *from* — keep it that way. No debug path that renders the full enemy sprite ships,
-ever.
+their detection earned** — no more, and since #834 no less: a Tier-1 return is a smudge, a
+Tier-2 a blurred blob, a Tier-3 a classified disc, and a Tier-4 track the model-backed
+sprite, stroked threat-red and drawn only while the track is live.
+
+The gate is **two independent rules**. Lifting one has never lifted the other:
+
+- **Below Tier 4, in every view.** The server attaches `kind` and `faction` no earlier than
+  Tier 3, and `hp`/`heading` no earlier than Tier 4
+  (`packages/backend/src/sim/systems/echoLayer.ts`, "Fields are attached strictly by
+  tier"). A renderer that draws unearned detail has nothing real to draw it *from* — keep
+  it that way. No debug path that renders a sprite for a sub-Track contact ships, ever.
+  This is the server-authoritative rule in [tech-stack.md](tech-stack.md) wearing a
+  renderer's clothes, and it is the half that is absolute.
+- **The conn view, at every tier.** Gate 6 spends its 150 draw calls and 250 k triangles on
+  the own force, which is what keeps the budget flat — "never an army of contacts". The
+  enemy is never geometry there. A billboarded sprite is not a mesh, so Tier 4 earning a
+  sprite in the overlay does not touch this; `packages/frontend/test/rendererSmoke.test.ts`
+  asserts the conn scene holds nothing about contacts, and that assertion does not move.
+
+**A live track, not a window.** Every contact decays on one twenty-second ghost clock
+(`PERSISTENCE.GHOST_MARKER_DECAY_S`). The sprite is drawn only while the track is live —
+`PERSISTENCE.LIVE_TRACK_S`, two Echo passes — and falls back to `HULL_OUTLINE` the moment
+it ghosts, because a lit hull on a last-known position claims a present tense the Echo
+Layer never granted ([ui-ux.md](ui-ux.md) §4). The threat-red stroke survives the change
+and is not decoration: a faction's livery can match the biome it is sitting in, and the
+edge is what keeps a track readable when it does.
 
 ### 6. Performance: one world scene, on measured budgets
 

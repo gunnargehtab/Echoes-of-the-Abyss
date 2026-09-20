@@ -193,7 +193,8 @@ guessed from the outline and clad in the plating of
 to slab-and-landmark architecture (the Bastion's dome, the Refinery's silo rank, the
 Foundry's recessed launch bay, the turret's mount and barrel). Everything is lit per
 pixel with rim light and glow marks in the faction's colours. Vector primitives remain in three deliberate places: the fallback while the art
-decodes, every enemy contact, which the law below caps at a flat silhouette, and
+decodes, every enemy contact the law below still caps at a flat silhouette — every tier
+below Track, and a Track that has gone to ghost — and
 **construction sites** — a half-built structure is schematic on purpose, and reads as
 scaffolding until it is commissioned. Cavitation trails run behind the player's own
 torpedoes in the conn view ("Own ordnance is geometry too", below); animated bases are
@@ -203,11 +204,33 @@ still to come.
 
 Detail is something you *own*, never something you are shown. The player's base and
 force render at full fidelity — lit, animated, alive. The enemy renders **only at the
-fidelity their detection earned**: a Tier-1 return is a smudge, a Tier-2 a blurred blob,
-and even a Tier-4 track is a resolved silhouette, never the full-detail sprite. A
-fully-lit battlefield where both sides gleam would be a lie the renderer tells against
-the Echo Layer; the contrast between the rich home base and the black ocean past the
-sonar line is where the dread lives.
+fidelity their detection earned** — no more, and since #834 no less: a Tier-1 return is a
+smudge, a Tier-2 a blurred blob, a Tier-3 a classified disc, and a Tier-4 track the hull's
+own sprite. [systems-echo.md](systems-echo.md) §4 calls Tier 4 "full resolution: exact
+unit, health, facing" and means it; the art side used to cap that same tier at a flat
+silhouette, which was one rule too many and is the half this law no longer holds.
+
+**It is two rules, and only one of them was ever about dread.** Below Tier 4 the law is
+*information safety*: the server attaches `kind` and `faction` no earlier than Tier 3, so
+a renderer reaching for a sprite under that has nothing real to reach for. In the conn
+view it is a *budget*: gate 6 of [graphics-standards.md](graphics-standards.md) spends its
+draw calls on the own force, so the enemy is never geometry there at any tier. A
+billboarded sprite is not a mesh, which is why lifting the first rule leaves the second
+standing — see "Dimensionality is the roster models, lit by the law", below.
+
+**A track is a return, not a window.** It decays on the same twenty-second ghost clock
+every other contact does, and the sprite is drawn only while the track is *live*: the
+moment it ghosts it falls back to the outline, because a lit hull sitting on a
+last-known position claims a present tense the Echo Layer never granted
+([ui-ux.md](ui-ux.md) §4). The threat-red stroke stays around it for the reason it was
+put there — a faction's livery can match the biome it is sitting in, and the edge is what
+keeps a track readable when it does.
+
+A fully-lit battlefield where both sides gleam would still be a lie the renderer tells
+against the Echo Layer. What buys the gleam is a live Tier-4 track: four times threshold,
+or a ping and the 2,400 m of self-reveal it costs. The contrast between the rich home base
+and the black ocean past the sonar line is where the dread lives, and past the sonar line
+is still black.
 
 ### Silhouette Rules
 
