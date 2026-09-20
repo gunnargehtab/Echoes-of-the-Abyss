@@ -69,6 +69,18 @@ Hold
 - The berths a transport carries other hulls in — the Freighter's six, the Verger's four, the Antiphon's three, the Drifter's two (units.md, "The transports"). A carried hull is not in the water: no position, no SIG, no ears, unresolvable at any tier; it keeps its commander's berths, takes the carrier's depth and PR, and dies with it (systems-echo.md §3, "A hull in a hold").
 - The load is audible only as SIG — +3 per berth carried, Silent Running included — and a kill reveals nothing beyond the battle site any hull's death leaves.
 
+Flight
+
+- The craft a carrier launches, and the roster's eighth wave (units.md, "The carriers"; systems-combat.md §15). Two to five small unmanned hulls, built on the carrier's own deck, which fight what the carrier is fighting and take no order of their own.
+- **A craft has no depth drive.** It is launched into the band the carrier is holding, holds that depth until it dies, and refuses every depth order — which is the depth half of a carrier's argument: to strike deep, the carrier descends, and descent is loud.
+- Tethered at 1,200 m, 120 s of endurance in the water, and it dies with its carrier on the tick the carrier dies — the hold's rule, for the hold's reason.
+- The berths are the carrier's: three for the hull and one for every craft the deck can hold, charged when the carrier is queued (economy.md §10). A craft in the water costs nothing further.
+
+Carrier
+
+- Unqualified, in this bible: a hull with a **deck** — the Gantry, the Rootstock, the Succentor, the Offertory — which carries no gun and fights by launching a flight (above). The hull that never fires.
+- In systems-echo.md §3 and in the carrying code, *carrier* also names the **transport** a hull is riding in, which is a different thing: a hold takes hulls out of the water and a deck puts them in. Where the two could be confused the hull with a hold is a **transport** and the hull with a deck is a **carrier**.
+
 Engine Off
 
 - The posture below Silent Running (systems-echo.md §6): no thrust, and SIG at half the hull's Silent Running figure, floored at 1. Silent Running trades weapons for quiet; this trades movement. Weapons still work, and firing costs the usual spike. A hull with its drive cut rides a cold shock current if one runs and travels no other way — except the Glider, which keeps steerage and coasts at a third of its speed (units.md, "The scouts").

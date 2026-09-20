@@ -437,8 +437,9 @@ they gave the order, not to a live feed of where it is now.
 
 Production's route is the console's command card, and that card is 4 × 3 (§2). A whole navy's
 roster does not fit in twelve cells: the Bathyarch Consortium, the Pelagia Commune and the Hadron
-Knights each offer eighteen hulls and a refit, and only the Abyssal Directorate's twelve fit as one
-list. Both of the usual escapes are already closed — §2 does not let a panel scroll, and the digits
+Knights each offer nineteen hulls and a refit, and since the carriers of
+[units.md](units.md)'s eighth wave the Abyssal Directorate's thirteen do not fit as one list
+either — it was the one navy whose roster ever did. Both of the usual escapes are already closed — §2 does not let a panel scroll, and the digits
 belong to control groups rather than to production (above).
 
 So the page is the unit of the answer, and the line is the page. Production is **one page per
@@ -449,7 +450,7 @@ fits what it holds:
 | --- | --- | --- | --- | --- |
 | BASTION | 1 | 1 | 1 | 1 |
 | FOUNDRY | 12 | 12 | 8 | 11 |
-| SLIPWAY, with the refits | 6 | 6 | 3 | 7 |
+| SLIPWAY, with the refits | 7 | 7 | 4 | 8 |
 
 Two placements make those figures fit rather than a wider grid, and both follow from what the yard
 is. The **Harvester** is on the Bastion's line as well as the Foundry's and the Bastion always

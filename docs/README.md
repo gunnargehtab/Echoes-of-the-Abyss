@@ -69,7 +69,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[systems-combat.md](systems-combat.md)** | The weapon triangle: guns, torpedoes, mines, firing solutions, TTK bands |
 | **[systems-progression.md](systems-progression.md)** | The decision on upgrades, research and veterancy: five crystal-priced refits on the Slipway's line, rank earned per hull and paid in exposure, no research tree |
 | **[units.md](units.md)** | Prototype roster, SIG/PR stats, playtest plan |
-| **[roster-plan.md](roster-plan.md)** | The roster's second expansion: a role matrix per navy, sixteen sketched hulls each argued from sound or depth, in six waves (#495) |
+| **[roster-plan.md](roster-plan.md)** | The roster's second expansion: a role matrix per navy, twenty-two sketched hulls each argued from sound or depth, in eight waves (#495) |
 
 ## Presentation
 
