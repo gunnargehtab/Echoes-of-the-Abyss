@@ -163,7 +163,7 @@ export const SWARM_LAYERS = 3;
  * 0.19 Hz the cycle is 5.3 seconds — spread, closing, together, opening again
  * — which is about the rate a held note is heard to phase against another.
  */
-const SWARM_ORGANISE_HZ = 0.19;
+export const SWARM_ORGANISE_HZ = 0.19;
 
 /**
  * How hard one layer of a fully scattered cluster lands, 0-1.
@@ -310,11 +310,22 @@ function periodAt(timbre: ContactTimbre | null, at: number): number | null {
  * single harder click at the family rate. That is the whole of "you hear them
  * organise", and it is in *when the clicks land* rather than in a level.
  *
- * A pure function of absolute time, like `periodAt`, so nothing about the
- * cluster depends on when the caller happened to ask.
+ * A pure function of the cluster's own cycle position rather than of the
+ * clock, which is the decision on #731: absolute time is the same number for
+ * every voice reading it, so every cohort in the water converged on the same
+ * instant forever. Two contacts 77 ms apart tracked each other's spread to
+ * within 3 ms, which is a synthesizer rather than a swarm. The phase is
+ * carried per voice and walked along that voice's own event train
+ * (`organisePhase`).
+ *
+ * Driver-independent on `strokePhase`'s own terms and no stronger: given the
+ * same train start, a 5 Hz and a 60 Hz caller get the same clusters. The start
+ * is still the caller's tick, so two callers that noticed the same promotion
+ * on different ticks differ from the first cluster on — which absolute time
+ * did not, and which is the price of the phase being the cohort's.
  */
-function swarmSpread(period: number, at: number): number {
-  const closed = (1 + Math.cos(2 * Math.PI * SWARM_ORGANISE_HZ * at)) / 2;
+function swarmSpread(period: number, phase: number): number {
+  const closed = (1 + Math.cos(2 * Math.PI * phase)) / 2;
   return ((1 - closed) * period) / SWARM_LAYERS;
 }
 
@@ -420,16 +431,34 @@ export class ContactVoice {
    * Which strike of a reciprocating cycle the next event is — 0 is the loaded
    * stroke (`RECIPROCATING`).
    *
-   * Counted along the train rather than read off the clock, unlike
-   * `swarmSpread`. Both are driver-independent, which is the property that
-   * matters: the train is a function of its own start and of nothing the
-   * caller did, so a 5 Hz and a 60 Hz caller walk the same strikes in the same
-   * order and get the same phase. What the counter buys over absolute time is
-   * that two Consortium contacts are *not* on the same crank — a function of
-   * absolute time alone would put every machine in the water in step, which is
-   * the open question #742 left on the swarm and not a thing to spread.
+   * Counted along the train rather than read off the clock, as
+   * `organisePhase` now is too. Both are driver-independent, which is the
+   * property that matters: the train is a function of its own start and of
+   * nothing the caller did, so a 5 Hz and a 60 Hz caller walk the same strikes
+   * in the same order and get the same phase. What the counter buys over
+   * absolute time is that two Consortium contacts are *not* on the same crank
+   * — a function of absolute time alone would put every machine in the water
+   * in step. That was the open question #742 left on the swarm, and the
+   * decision on #731 answered it the same way.
    */
   private strokePhase = 0;
+
+  /**
+   * How far through the organise cycle the swarm's next cluster is, 0-1.
+   *
+   * The swarm's counterpart to `strokePhase`, and per-voice for the same
+   * reason: §8's Directorate is "many small things agreeing", one contact's
+   * worth of them, so the thing that converges is a *cohort* rather than the
+   * ocean. Read off absolute time it was the ocean — every Directorate voice
+   * closed and scattered together, whatever it was or where.
+   *
+   * Walked by each event's own interval rather than counted in events, so the
+   * cycle stays `SWARM_ORGANISE_HZ` in wall clock and the 5.3 s its docblock
+   * claims survives §3's decay stretch, which lengthens a fading contact's
+   * period. That is exactly the rate absolute time gave, so this changes
+   * *whose* cycle it is and nothing about how fast it runs.
+   */
+  private organisePhase = 0;
   private stopped = false;
 
   constructor(context: AudioContext, destination: AudioNode) {
@@ -499,8 +528,11 @@ export class ContactVoice {
       this.nextEventAt = now;
       // The cycle restarts with the train it is counted along, so a contact
       // that becomes a Consortium hull opens on the loaded stroke rather than
-      // wherever the last family left the counter.
+      // wherever the last family left the counter. The swarm's cycle resets
+      // with it, for the same reason and with the same consequence: a cohort
+      // reopens gathered, never half-scattered by a family it was not.
       this.strokePhase = 0;
+      this.organisePhase = 0;
     }
 
     // --- Spatialisation: the rule at the top of this file -------------------
@@ -602,8 +634,11 @@ export class ContactVoice {
         this.nextEventAt = at + 1.5 * stretch;
         continue;
       }
-      this.emit(timbre, at, period);
-      this.nextEventAt = at + period * stretch;
+      // The interval is the event's own wait, decay included, and the swarm's
+      // cycle is walked by it — see `organisePhase`.
+      const interval = period * stretch;
+      this.emit(timbre, at, period, interval);
+      this.nextEventAt = at + interval;
     }
   }
 
@@ -625,7 +660,7 @@ export class ContactVoice {
    * *when* changes — even spacing is the choice `RECIPROCATING` argues, not
    * the only one §8.1 admits — so the cycle is in what each strike is.
    */
-  private emit(timbre: ContactTimbre | null, at: number, period: number): void {
+  private emit(timbre: ContactTimbre | null, at: number, period: number, interval: number): void {
     if (timbre !== null && timbre.mechanism === 'reciprocating') {
       const stroke = this.strokePhase;
       this.strokePhase = (stroke + 1) % RECIPROCATING.STROKES;
@@ -638,7 +673,12 @@ export class ContactVoice {
       return;
     }
     if (timbre !== null && timbre.mechanism === 'swarm') {
-      const spread = swarmSpread(period, at);
+      const phase = this.organisePhase;
+      // Read then advanced, as the reciprocating cycle's counter is: this
+      // cluster lands on the phase the last one left, and the next one gets
+      // its own event's worth of the cycle.
+      this.organisePhase = (phase + interval * SWARM_ORGANISE_HZ) % 1;
+      const spread = swarmSpread(period, phase);
       // 0 while the cluster is fully scattered, 1 as it closes — the same
       // number the spacing is made of, so the level cannot drift out of step
       // with what the player is actually hearing converge.

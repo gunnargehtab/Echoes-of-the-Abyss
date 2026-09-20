@@ -1840,6 +1840,51 @@ describe('the command card when it is offered more than it holds', () => {
     }
   });
 
+  it('opens the page of the production structure selected last', async () => {
+    const world = await boot();
+    try {
+      const strip = (): string[] => {
+        const said: string[] = [];
+        const walkVisible = (node: Container): void => {
+          if (!node.visible) return;
+          if (node instanceof Text) said.push(node.text.trim());
+          for (const child of node.children) walkVisible(child as Container);
+        };
+        walkVisible(world.app.stage as unknown as Container);
+        return said;
+      };
+      const snapshot = cannedSnapshot();
+      const bastion = snapshot.structures.find(
+        (structure) => structure.kind === StructureKind.Bastion
+      );
+      assert.ok(bastion !== undefined, 'the canned match has no Bastion to select');
+      const foundry = {
+        ...bastion,
+        id: 999_001,
+        kind: StructureKind.Foundry,
+        x: bastion.x + 100,
+      };
+      const withFoundry = { ...snapshot, structures: [...snapshot.structures, foundry] };
+      world.chart.applySnapshot(withFoundry);
+      world.conn.applySnapshot(withFoundry);
+      world.frame(2);
+
+      selectHull(world, bastion);
+      selectHull(world, foundry, true);
+
+      assert.ok(
+        strip().some((line) => line.startsWith('SCT ')),
+        'shift-selecting a Foundry after a Bastion did not open the Foundry page'
+      );
+      assert.ok(
+        !strip().some((line) => line.startsWith('HRV ')),
+        'the Bastion page stayed open after a later production structure was selected'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
   /**
    * The strip grew from three tabs to as many as five, and `MENU` is anchored
    * to the right edge with nothing between them. §2 drops a console *block*
