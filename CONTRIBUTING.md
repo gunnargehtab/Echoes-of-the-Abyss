@@ -95,6 +95,7 @@ Until then, `main` is the release, and the way to get a change to people is to m
 
 - One concern per PR, referencing the issue it closes (`Fixes #30`).
 - Fill in the template in [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md).
+  Issue templates are in `.github/ISSUE_TEMPLATE/`.
 - Keep the body under 300 words — ground rule 5. Say what changed and why, then stop.
   The merge commit inherits this body, so its length is permanent.
 - Run the CI gates locally first — the full sequence is cheap, and it is one command:
