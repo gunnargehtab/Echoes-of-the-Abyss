@@ -710,7 +710,7 @@ hull that guides it.
 
 A deck holds **capacity** craft, counted across both states it can be in — aboard, and in the
 water. A full deck therefore builds nothing; a craft lost or expired starts a **rebuild** of
-that hull's own length (26–60 s), and a rebuilt craft sits aboard until there is a reason to
+that hull's own length (24–60 s), and a rebuilt craft sits aboard until there is a reason to
 launch it. Endurance is 120 s for every craft in the game, and the two figures are sized
 against each other on purpose: a deck can just sustain its capacity and can never exceed it.
 

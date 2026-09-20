@@ -1219,7 +1219,7 @@ Succentor (Slipway)
 - Berths: 8 — the largest package in the game: a hull and five craft
 - Speed: 34
 - HP: 900
-- Flight: **five Trebles**, rebuilt one every 26s. The roster's largest flight and its
+- Flight: **five Trebles**, rebuilt one every 24s. The roster's largest flight and its
   weakest craft: 90 HP, 45 m/s, 12 damage a 2.2s cycle, PR-4 like the hull that built them —
   very many, cheap and slow, which is the navy's whole line
 - Effect: none beyond the flight. Five of them make 27 damage a second, and the point is
@@ -1293,7 +1293,7 @@ also shoots.
 - **Capacity is what is in the water, not what is in the shed.** A deck holds its number
   between what is aboard and what is flying, so a full flight rebuilds nothing and a craft
   lost starts the clock. The endurance figure and the rebuild figures are sized against each
-  other: 120 s of endurance against a 26–60 s rebuild is a deck that can just sustain its own
+  other: 120 s of endurance against a 24–60 s rebuild is a deck that can just sustain its own
   capacity and can never exceed it.
 - **The flight takes no orders.** A craft is the player's, counts as theirs, and is refused
   every order in the book — exactly as a hull in a hold is (`Match.owns`,

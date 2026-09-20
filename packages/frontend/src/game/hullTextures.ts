@@ -127,6 +127,19 @@ const HULL_ART_URL: Record<UnitKind, string> = {
   // where every Knight hull that is neither a scout nor a colossus sits.
   [UnitKind.Derrick]: cruiserUrl,
   [UnitKind.Responsory]: cruiserUrl,
+  // The carriers (#838), on the plate class their tonnage puts them in: a
+  // carrier is working iron with a well in it, so it wears the siege plate the
+  // Tender and the Freighter do, and the Offertory wears the Order's heavier
+  // class for the Clarion's reason. A craft is too small to wear a patch of
+  // anything and takes the raider crop, which is what the Light Scout wears.
+  [UnitKind.Gantry]: siegeUrl,
+  [UnitKind.Rootstock]: siegeUrl,
+  [UnitKind.Succentor]: siegeUrl,
+  [UnitKind.Offertory]: cruiserUrl,
+  [UnitKind.Spark]: raiderUrl,
+  [UnitKind.Runner]: raiderUrl,
+  [UnitKind.Treble]: raiderUrl,
+  [UnitKind.Versicle]: raiderUrl,
 };
 
 /** Sprite resolution. 3 px per world metre keeps even the scout's hull crisp. */

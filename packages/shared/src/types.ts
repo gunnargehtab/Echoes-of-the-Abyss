@@ -187,6 +187,35 @@ export enum UnitKind {
   Derrick = 34,
   /** Knights, Foundry: the gun paid by how loud its target is. */
   Responsory = 35,
+  /**
+   * The carriers and their craft — the eighth wave (docs/units.md, "The
+   * carriers"; docs/roster-plan.md wave 8, #838). Appended in the doc's own
+   * order, carriers first, for the Chorister's reason: the value crosses the
+   * wire and sits in replays, so renumbering would relabel every recorded
+   * hull.
+   *
+   * A carrier carries no gun; what it carries is a flight
+   * (docs/systems-combat.md §15). A craft is nobody's to build — it has no
+   * price, no yard and no cell on the command card — and carries
+   * `launchedFrom` instead, which is what every reader that walks the roster
+   * asks to tell the two apart.
+   */
+  /** Consortium, Slipway: the loud deck. */
+  Gantry = 36,
+  /** Commune, Slipway: the flight nothing hears arrive. */
+  Rootstock = 37,
+  /** Directorate, Slipway: the deck rated for the Hadal band. */
+  Succentor = 38,
+  /** Knights, Slipway: two craft, launched into the cone. */
+  Offertory = 39,
+  /** The Gantry's craft: over the Klaxon's line, and meant to be. */
+  Spark = 40,
+  /** The Rootstock's craft: SIG 4, and the quietest thing in the water. */
+  Runner = 41,
+  /** The Succentor's craft: PR-4, and the slowest gun in the game. */
+  Treble = 42,
+  /** The Offertory's craft: the hardest craft, on the energy class. */
+  Versicle = 43,
 }
 
 /** Prototype structure roster. Stats live in structures.ts. See docs/units.md. */

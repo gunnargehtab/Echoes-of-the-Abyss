@@ -482,6 +482,16 @@ export const PRODUCIBLE: Partial<Record<StructureKind, readonly UnitKind[]>> = {
     // The Commune's heavy, which is not a heavy (#509): the swarm's anchor,
     // behind the rung because a mobile Spore Veil is what the crystal buys.
     UnitKind.Bower,
+    // The carriers (docs/units.md, "The carriers"; #838). All four behind the
+    // rung, and at the Slipway for a reason the Foundry settles: three navies'
+    // Foundry pages already hold twelve, which is the card (docs/ui-ux.md §9).
+    // The argument agrees with the arithmetic — a hull that fights by building
+    // hulls is what a second yard is for. The craft are in no row at all: a
+    // deck builds them, and `launchedFrom` is what says so.
+    UnitKind.Gantry,
+    UnitKind.Rootstock,
+    UnitKind.Succentor,
+    UnitKind.Offertory,
   ],
 };
 

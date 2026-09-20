@@ -2635,6 +2635,71 @@ export const HOLD = {
 } as const;
 
 /**
+ * A flight, and the deck that builds it — docs/systems-combat.md §15,
+ * docs/units.md "The carriers" (wave 8 of docs/roster-plan.md, #838).
+ *
+ * The figures a *hull* owns — how many craft its deck holds, how long one
+ * takes to rebuild, and which craft it is — are in the stat block, because
+ * they are what the four carriers differ in. What is here is what they share,
+ * and what a flight is bounded by.
+ *
+ * The opposite of `HOLD` in every respect that matters: a hold takes hulls out
+ * of the water and a deck puts them in. The one rule the two share is the last
+ * one, and it is shared on purpose — the load dies with the carrier, and so
+ * does the flight, for the same reason and in the same place in `Match.reap`.
+ */
+export const FLIGHT = {
+  /**
+   * SPEC — §15: "a live enemy within the tether, 1,200 m of the carrier", and
+   * "a craft beyond 1,200 m of its carrier drops what it is doing and comes
+   * back". One figure doing both jobs, deliberately: the reach a deck launches
+   * over is the reach its craft may operate at, so a carrier can never put a
+   * craft somewhere it could not have launched at.
+   *
+   * A Cruiser's gun is 900 m and the Tocsin's is 1,400; a carrier is therefore
+   * inside the reach of the fight it is having, which is the whole of what
+   * stops a flight being a raid.
+   */
+  TETHER_M: 1200,
+  /**
+   * SPEC — §15: "a +35 SIG transient for the standard spike length — the deck
+   * opening, the craft clearing it — on the hull, never on the craft".
+   *
+   * Put through `applyFiringSpike`, which is what makes an ordered launch out
+   * of silence break that silence at the usual +40: a launch is the loudest
+   * thing a carrier does, and it is the only thing a carrier does at all.
+   */
+  LAUNCH_SIG: 35,
+  /** SPEC — §15: "at most one every 4 s". A deck is not a volley. */
+  LAUNCH_INTERVAL_S: 4,
+  /**
+   * SPEC — §15: "endurance is 120 s for every craft in the game".
+   *
+   * The bound that stops a carrier accumulating a fleet out of a deck that
+   * rebuilds for free, and it is sized against the rebuild figures rather than
+   * chosen: 120 s against a 24–60 s rebuild is a deck that can just sustain its
+   * own capacity. A craft that runs out is not killed — nothing is credited, no
+   * residue is laid, and the cell simply stops.
+   */
+  ENDURANCE_S: 120,
+  /**
+   * TUNABLE — the ring a craft is launched onto, as a multiple of the
+   * carrier's own radius. `HOLD.LANDING_RING_RADII`'s figure and its reason:
+   * far enough out that separation does not have to untangle the craft from
+   * the hull that launched it.
+   */
+  LAUNCH_RING_RADII: 2.5,
+  /**
+   * TUNABLE — how far off its carrier a craft with nothing to do stations.
+   *
+   * Well inside the tether, so ordinary station-keeping never trips the recall
+   * above, and outside the launch ring, so a flight reads as a screen around
+   * its carrier rather than as a stack on top of it.
+   */
+  STATION_RING_M: 260,
+} as const;
+
+/**
  * What the room will accept off the socket, before anything reads it — #628.
  *
  * Both numbers are bounds rather than balance: they say how much a *client*

@@ -424,8 +424,13 @@ pxPerM = viewHeightPx / 2 / (tan(FOV / 2) · dollyDistanceM)
 scale  = clamp(FLOOR_PX / (REFERENCE_HULL_M · pxPerM), 1, MAX_SCALE)
 ```
 
-`REFERENCE_HULL_M` is the roster's shortest hull, derived from the unit table rather than
-written down a second time — today the Light Scout's 60 m. `FLOOR_PX` (**TUNABLE**, 26)
+`REFERENCE_HULL_M` is the shortest hull **a yard builds**, derived from the unit table
+rather than written down a second time — today the Chorister's 50 m. The exclusion is the
+carrier wave's craft ([units.md](units.md), "The craft"): a Runner is 14 m, and measuring
+the floor against it would hold the *whole fleet* at 1.5× true scale from a 700 m dolly
+outward, trading away the "1 means true scale" promise below for the sake of a hull nobody
+commands. A craft is drawn beside its carrier and read as part of it, which is what makes
+that trade a bad one and not merely an expensive one. `FLOOR_PX` (**TUNABLE**, 26)
 is the drawn length below which that hull stops reading as a silhouette; `MAX_SCALE`
 (**TUNABLE**, 4) is where exaggeration stops, because a fleet drawn past it stops being a
 fleet on a map and becomes a row of icons overlapping each other. On a 900 px-tall

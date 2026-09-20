@@ -35,6 +35,7 @@ import {
   DIRECTIONAL_COMPASS_AVERAGE,
   DIRECTIONAL_SIGNATURE,
   FACTION_PRESSURE_BASELINE,
+  FLIGHT,
   FACTION_STRUCTURE,
   Faction,
   RefitKind,
@@ -271,6 +272,11 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
       UnitKind.Furnace,
       UnitKind.Caisson,
       UnitKind.Derrick,
+      // The eighth wave (#838): the carrier, and the craft its deck builds.
+      // A craft carries its navy's lock like any other hull of that navy's —
+      // what it does not carry is a yard, which the row below tests for.
+      UnitKind.Gantry,
+      UnitKind.Spark,
     ],
     [Faction.Pelagia]: [
       UnitKind.Spinner,
@@ -281,11 +287,22 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
       UnitKind.Blight,
       UnitKind.Reed,
       UnitKind.Bower,
+      UnitKind.Rootstock,
+      UnitKind.Runner,
     ],
     // The Verger, the Acolyte, the Thurible and the Lure are the Directorate's
     // by their price and carry no lock, as the Chorister is and does
     // (docs/units.md), so none of them is in this row.
-    [Faction.Directorate]: [UnitKind.Precentor, UnitKind.Dredge],
+    [Faction.Directorate]: [
+      UnitKind.Precentor,
+      UnitKind.Dredge,
+      // The Succentor is locked rather than priced: it is PR-4, and the rule
+      // below is that whatever reaches the Hadal band is this navy's. Its
+      // Trebles are rated for the band with it, so they are locked for the
+      // same reason and by the same rule.
+      UnitKind.Succentor,
+      UnitKind.Treble,
+    ],
     [Faction.Hadron]: [
       UnitKind.Clarion,
       UnitKind.Cantus,
@@ -295,6 +312,8 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
       UnitKind.Lance,
       UnitKind.Tocsin,
       UnitKind.Responsory,
+      UnitKind.Offertory,
+      UnitKind.Versicle,
     ],
   };
   const factions = [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron];
@@ -346,6 +365,15 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
       );
       for (const kind of row) {
         const yards = YARDS.filter((yard) => PRODUCIBLE[yard]!.includes(kind));
+        // A craft is built by a carrier's deck and by nothing else (#838), so
+        // the yard rule is the other way round for it: no yard, no page, no
+        // price. `launchedFrom` is the field that says which it is, and a
+        // craft that acquired a yard would be a hull a commander could queue
+        // outside the berths its carrier already paid.
+        if (statsFor(kind).launchedFrom !== undefined) {
+          assert.equal(yards.length, 0, `${statsFor(kind).name} is a craft and has a yard`);
+          continue;
+        }
         assert.equal(yards.length, 1, `${statsFor(kind).name} is built at one yard only`);
       }
     }
@@ -611,7 +639,7 @@ describe('the production card’s pages', () => {
       [
         [StructureKind.Bastion, 1],
         [StructureKind.Foundry, 12],
-        [StructureKind.Slipway, 6],
+        [StructureKind.Slipway, 7],
       ],
     ],
     [
@@ -619,7 +647,7 @@ describe('the production card’s pages', () => {
       [
         [StructureKind.Bastion, 1],
         [StructureKind.Foundry, 12],
-        [StructureKind.Slipway, 6],
+        [StructureKind.Slipway, 7],
       ],
     ],
     [
@@ -627,7 +655,7 @@ describe('the production card’s pages', () => {
       [
         [StructureKind.Bastion, 1],
         [StructureKind.Foundry, 8],
-        [StructureKind.Slipway, 3],
+        [StructureKind.Slipway, 4],
       ],
     ],
     [
@@ -635,7 +663,7 @@ describe('the production card’s pages', () => {
       [
         [StructureKind.Bastion, 1],
         [StructureKind.Foundry, 11],
-        [StructureKind.Slipway, 7],
+        [StructureKind.Slipway, 8],
       ],
     ],
   ]);
@@ -697,5 +725,147 @@ describe('the production card’s pages', () => {
       }
     }
     assert.ok(YARDS.includes(StructureKind.Slipway), 'the Slipway still has a tab of its own');
+  });
+});
+
+describe('the carriers — a deck, and what it may launch (#838)', () => {
+  const carriers = roster.filter((s) => s.flight !== undefined);
+  const craft = roster.filter((s) => s.launchedFrom !== undefined);
+
+  it('gives every navy one carrier, and every carrier one craft', () => {
+    // The wave's shape: one hull a navy, four hulls, four craft, and the two
+    // sets are disjoint — a carrier that was itself a craft would be a deck
+    // launching decks.
+    assert.equal(carriers.length, 4);
+    assert.equal(craft.length, 4);
+    assert.deepEqual(
+      carriers.map((s) => s.faction).sort(),
+      [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron].sort()
+    );
+    for (const carrier of carriers) {
+      const launched = statsFor(carrier.flight!.craft);
+      assert.equal(
+        launched.launchedFrom,
+        carrier.kind,
+        `${carrier.name}'s deck and ${launched.name}'s carrier disagree`
+      );
+      assert.equal(launched.flight, undefined, `${launched.name} carries a deck of its own`);
+      assert.equal(
+        launched.faction,
+        carrier.faction,
+        `${launched.name} flies a different flag from the hull that built it`
+      );
+    }
+  });
+
+  it('leaves every carrier unarmed, because the flight is the weapon', () => {
+    // docs/units.md, "The carriers": "not one of them carries a gun". The
+    // claim the whole row rests on — a carrier with a gun is a mid-tier with
+    // a bonus, and every argument in the section collapses into damage per
+    // berth. It has no torpedoes either, and `spawnUnit` gives it no
+    // countermeasure for the same reason: a decoy is a thing an armed hull
+    // carries.
+    for (const carrier of carriers) {
+      assert.equal(carrier.attackDamage, 0, `${carrier.name} has grown a gun`);
+      assert.equal(carrier.attackDamageStructure, undefined);
+      assert.equal(carrier.carriesTorpedoes, false);
+    }
+    // And every craft is armed, or the flight is decoration.
+    for (const c of craft) assert.ok(c.attackDamage > 0, `${c.name} cannot shoot`);
+  });
+
+  it('charges the flight to the carrier’s berths, three and one a craft', () => {
+    // docs/roster-plan.md §7's promise, kept: forty berths a commander is
+    // forty entities' worth of water. A flight is the only thing in the game
+    // that puts hulls in the water without a yard, so it is priced where the
+    // cap can see it — when the carrier is queued — and a craft in the water
+    // costs nothing more.
+    for (const carrier of carriers) {
+      assert.equal(
+        carrier.berths,
+        3 + carrier.flight!.capacity,
+        `${carrier.name}'s berths do not cover its own deck`
+      );
+    }
+    for (const c of craft) {
+      assert.equal(c.berths, 0, `${c.name} is charged twice`);
+      assert.equal(c.cost, 0, `${c.name} has a price, and nobody can buy one`);
+      assert.equal(priceOf(c).nodules + priceOf(c).crystal + priceOf(c).biomass, 0);
+    }
+  });
+
+  it('keeps a craft off every yard and every page', () => {
+    // A craft is built by a deck. If one ever reached `PRODUCIBLE` a commander
+    // could queue hulls outside the berths its carrier already paid for, which
+    // is the one way the row above can be broken from somewhere else.
+    for (const c of craft) {
+      assert.equal(productionPageFor(c.kind), undefined, `${c.name} has a production page`);
+      for (const line of PRODUCTION_LINES) {
+        assert.ok(!(PRODUCIBLE[line] ?? []).includes(c.kind), `${c.name} is on a yard's list`);
+      }
+    }
+    // The carriers themselves are behind the rung, all four of them: the
+    // Foundry page is full at twelve for three navies (docs/ui-ux.md §9), and
+    // a hull that fights by building hulls is what a second yard is for.
+    for (const carrier of carriers) {
+      assert.equal(productionPageFor(carrier.kind), StructureKind.Slipway, carrier.name);
+    }
+  });
+
+  it('rates a craft for the band it is launched into', () => {
+    // docs/systems-combat.md §15: a craft has no depth drive, so it holds the
+    // band its carrier was in. A craft rated shallower than its carrier would
+    // crush on the tick it left the deck — the one way this mechanism can
+    // kill a player's own units for free.
+    for (const carrier of carriers) {
+      const launched = statsFor(carrier.flight!.craft);
+      assert.ok(
+        launched.pressureRating >= carrier.pressureRating,
+        `${launched.name} (PR-${launched.pressureRating}) crushes in ${carrier.name}'s water`
+      );
+    }
+  });
+
+  it('sizes every deck so it can just sustain its own flight', () => {
+    // The endurance figure is what stops a carrier accumulating a fleet, and
+    // it is sized against the rebuilds rather than chosen: a craft lives
+    // `ENDURANCE_S` and a deck replaces one every `rebuildS`, so a deck holds
+    // its capacity when `capacity × rebuildS` fits inside the endurance — and
+    // can never exceed it, because capacity counts the water and the shed
+    // together.
+    for (const carrier of carriers) {
+      const deck = carrier.flight!;
+      assert.ok(
+        deck.capacity * deck.rebuildS <= FLIGHT.ENDURANCE_S,
+        `${carrier.name} cannot keep ${deck.capacity} craft alive: ` +
+          `${deck.capacity} × ${deck.rebuildS}s exceeds ${FLIGHT.ENDURANCE_S}s`
+      );
+      assert.ok(deck.capacity >= 2 && deck.rebuildS > 0);
+    }
+  });
+
+  it('gates one launch on a cone, and it is the Order’s', () => {
+    // The Lance's rule, spent on craft (docs/systems-combat.md §5, §15). Any
+    // other navy's deck launches at anything inside the tether: the cone is
+    // the Order's doctrine and not physics (docs/systems-echo.md §8).
+    const gated = carriers.filter((s) => s.flight!.coneGatedLaunch === true);
+    assert.deepEqual(
+      gated.map((s) => s.name),
+      ['Offertory']
+    );
+    assert.equal(gated[0]!.faction, Faction.Hadron);
+  });
+
+  it('keeps every craft shorter and shorter-ranged than a line hull', () => {
+    // Two readings docs/units.md's craft table makes in words. A flight closes
+    // to inside the range of what it attacks — a Corvette reaches 550 m and
+    // nothing in a flight does — and a craft is small enough that the
+    // broadphase bound is still a real hull's (`MAX_UNIT_RADIUS_M`).
+    const corvette = statsFor(UnitKind.Corvette);
+    for (const c of craft) {
+      assert.ok(c.attackRangeM < corvette.attackRangeM, `${c.name} outranges a line hull`);
+      assert.ok(c.hullLengthM < statsFor(c.launchedFrom!).hullLengthM / 4, c.name);
+      assert.ok(c.maxHp < corvette.maxHp / 2, `${c.name} is not expendable`);
+    }
   });
 });
