@@ -253,11 +253,13 @@ What the phase settled:
   level at a Bastion from its own depth. The dolly is in world units and the column is drawn
   at 0.22 world-metres per metre, so a *long* dolly still lifts the eye clear of the surface;
   the in-water shot is the close one, which is the right way round.
-- **What the low shot exposes is the water itself.** Above the seabed's horizon the scene is
-  black rather than water: the fog is depth-and-distance on the ground, and there is no
-  volumetric term for the column a near-horizontal camera now spends most of its frame
-  looking through. That is F1's remaining half, it is newly visible *because* the camera
-  moved, and it belongs to a later phase rather than to this one.
+- **What the low shot exposes is the water itself (#836).** Above the seabed's horizon the
+  scene is void rather than water. `scene.fog` is a linear *distance* fog over **geometry**,
+  so where there is no mesh there is no fog — only the clear colour — and the column between
+  the camera and what it is looking at neither darkens with depth nor reads as a medium. That
+  is F1's remaining half. It was invisible while the camera was pinned at 55°, because the
+  seabed filled the frame; freeing the camera is what exposed it, which is the ordinary way a
+  presentation revision finds the next one.
 
 ---
 
