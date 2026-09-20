@@ -410,17 +410,28 @@ fail the glance test and call the scale someone else's problem.
 ### 8. Projection discipline — one camera, honest geometry
 
 The camera spec in [art-direction.md](art-direction.md) ("Camera & Projection") is a gate,
-not a mood note. The world renders through one perspective camera — pitch locked at 55°,
-yaw locked to north — and everything that carries gameplay information projects through
-that same camera: the Pixi mark layer asks it (`projectPoint` / `resolveGround`) and never
-keeps a projection of its own. Measurements conform, symbols billboard — a range ring is
-sampled onto the terrain so equal metres read as the same water, while contact marks,
-bars and glyphs face the screen at local scale — and no drawing path may approximate a
-ring as a screen ellipse or flatten a measurement it should project. No camera rotation
-ships, and no atmosphere pass (vignette, sway, parallax fog, chromatic split) may tilt,
-shear or rotate the projection — sway is translation only. The sonar scope stays the flat
-chart, and its camera box is the view's true ground footprint: a trapezoid, because that
-is what a tilted camera honestly sees.
+not a mood note. The world renders through **one** perspective camera — freely aimed by the
+player within its spec'd bands ([free-camera.md](free-camera.md) §4) — and everything that
+carries gameplay information projects through that same camera: the Pixi mark layer asks it
+(`projectPoint` / `resolveGround`) and never keeps a projection of its own. Measurements
+conform, symbols billboard — a range ring is sampled onto the terrain so equal metres read
+as the same water, while contact marks, bars and glyphs face the screen at local scale —
+and no drawing path may approximate a ring as a screen ellipse or flatten a measurement it
+should project. The gate's content was always that nothing keeps a *second* projection, and
+that is what freeing the camera does not touch.
+
+What the freedom adds is a wider judgement: every gate judged "at every zoom the camera
+allows" is now judged at every **angle** it allows too. A fleet legible at 55° may not be
+legible at 12°, and a draw-call budget met looking down may not be met looking along, where
+half the map is in frame.
+
+An **atmosphere pass** (vignette, sway, parallax fog, chromatic split) still may not tilt,
+shear or rotate the projection — sway is translation only. The player may turn the camera;
+an effect may not, because an effect that bends a range ring has crossed from mood into
+misinformation. The sonar scope stays the flat chart, and its camera box is the view's true
+ground footprint: a trapezoid, because that is what a tilted camera honestly sees — and
+under a free yaw it is also the compass, its far edge drawn heavier to say which way the
+camera faces.
 
 ## What `npm test` holds, and what only a screenshot can
 
@@ -482,8 +493,10 @@ there is a picture to review.
   reports them), and the map density contracts (`4` / `1.5` px/m) are untouched or
   changed on both sides at once
 - [ ] World marks still project through the conn camera — measurements conform, symbols
-  billboard, no second projection, no rotation, atmosphere effects stay screen-space
-  (gate 8)
+  billboard, no second projection, atmosphere effects stay screen-space and rotate
+  nothing (gate 8)
+- [ ] Gates 6 and 7 still hold **across the pitch band**, not only at the 55° home frame —
+  a shot at 12° has far more map in it than a shot at 55° (gate 8)
 - [ ] `npm test` still passes, including the headless renderer smoke test — a change that
   boots, pools and tears down correctly is the floor a screenshot review starts from
 - [ ] Screenshot in the PR, taken via the **run-game** skill — a visual change is reviewed
