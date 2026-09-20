@@ -316,8 +316,13 @@ function periodAt(timbre: ContactTimbre | null, at: number): number | null {
  * instant forever. Two contacts 77 ms apart tracked each other's spread to
  * within 3 ms, which is a synthesizer rather than a swarm. The phase is
  * carried per voice and walked along that voice's own event train
- * (`organisePhase`), so this stays driver-independent — a 5 Hz and a 60 Hz
- * caller get the same cluster — while no two swarms share a cycle.
+ * (`organisePhase`).
+ *
+ * Driver-independent on `strokePhase`'s own terms and no stronger: given the
+ * same train start, a 5 Hz and a 60 Hz caller get the same clusters. The start
+ * is still the caller's tick, so two callers that noticed the same promotion
+ * on different ticks differ from the first cluster on — which absolute time
+ * did not, and which is the price of the phase being the cohort's.
  */
 function swarmSpread(period: number, phase: number): number {
   const closed = (1 + Math.cos(2 * Math.PI * phase)) / 2;

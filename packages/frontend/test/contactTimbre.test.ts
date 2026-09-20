@@ -343,6 +343,80 @@ describe('contact timbre', () => {
  * Consortium, at the ordnance screw's own shortest interval, which §8.1
  * forbids. The block below measures at the Echo rate for that reason.
  */
+/**
+ * Another voice inside a context that already holds one.
+ *
+ * `drive` finds its oscillator as the first in the context; a fixture standing
+ * several cohorts in one water has to find each through the edge its own
+ * constructor built, which is the same route and not the same index.
+ */
+function voiceIn(context: HeadlessAudioContext, destination: StubGainNode) {
+  const from = context.nodes.length;
+  const voice = new ContactVoice(
+    context as unknown as AudioContext,
+    destination as unknown as AudioNode
+  );
+  const osc = context.nodes
+    .slice(from)
+    .find((n): n is StubOscillatorNode => n instanceof StubOscillatorNode)!;
+  return { voice, gain: osc.outputs[0] as StubGainNode };
+}
+
+/**
+ * Every instant a voice bumped its oscillator and did not take back.
+ *
+ * The stub *records* a cancellation rather than applying it, so the ledger
+ * still carries events the graph will never sound: a voice cancels its
+ * committed train on every family change (`update`), and everything it had
+ * placed up to `EVENT_HORIZON_S` ahead of that instant is gone. Replaying the
+ * cancels is what turns the ledger into the train the player hears — and a
+ * fixture that crosses the Tier-3 boundary reads the cancelled thumps as
+ * clicks without it.
+ */
+function instantsOf(gain: StubGainNode): number[] {
+  const kept: { method: string; at: number }[] = [];
+  for (const write of gain.gain.writes) {
+    if (write.method === 'cancel') {
+      for (let i = kept.length - 1; i >= 0; i--) if (kept[i]!.at >= write.at) kept.splice(i, 1);
+      continue;
+    }
+    kept.push(write);
+  }
+  return kept.filter((w) => w.method === 'setValueAtTime').map((w) => w.at);
+}
+
+/**
+ * The swarm's clusters from a known cluster boundary, with each one's span.
+ *
+ * `emit` writes a cluster's layers together and in order, so runs of
+ * `SWARM_LAYERS` are clusters — but only if the run starts where one does. A
+ * voice promoted into the swarm starts its at the instant the family changed,
+ * and `to` is how a fixture that later *demotes* one stops the read before the
+ * thump that follows, which is not a cluster and is not a third of one.
+ */
+function clustersFrom(
+  gain: StubGainNode,
+  from: number,
+  to = Infinity
+): { at: number; span: number }[] {
+  const at = instantsOf(gain).filter((t) => t >= from && t < to);
+  // The stub keeps the writes a `cancelScheduledValues` cancelled, so a thump
+  // left in the window would shift every boundary by one and every span below
+  // would be between two clusters rather than inside one. Cheap to assert, and
+  // silent in exactly the way that would matter.
+  assert.equal(
+    at.length % SWARM_LAYERS,
+    0,
+    'the instants from this point are not a whole number of clusters, so the run does not start ' +
+      'on a cluster boundary and every span read from it is between two of them'
+  );
+  const out: { at: number; span: number }[] = [];
+  for (let i = 0; i + SWARM_LAYERS <= at.length; i += SWARM_LAYERS) {
+    out.push({ at: at[i]!, span: at[i + SWARM_LAYERS - 1]! - at[i]! });
+  }
+  return out;
+}
+
 const ECHO_STEP_S = 1 / SIM.ECHO_HZ;
 
 /** Every family with events, and the identity that reaches it. */
@@ -940,22 +1014,9 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
     const context = new HeadlessAudioContext();
     const destination = context.createGain();
 
-    // Found through the edge the constructor builds, as `drive` does, but
-    // scoped to the nodes each voice made — three voices share this context.
-    const build = () => {
-      const from = context.nodes.length;
-      const voice = new ContactVoice(
-        context as unknown as AudioContext,
-        destination as unknown as AudioNode
-      );
-      const osc = context.nodes
-        .slice(from)
-        .find((n): n is StubOscillatorNode => n instanceof StubOscillatorNode)!;
-      return { voice, gain: osc.outputs[0] as StubGainNode };
-    };
-    const early = build();
-    const late = build();
-    const twin = build();
+    const early = voiceIn(context, destination);
+    const late = voiceIn(context, destination);
+    const twin = voiceIn(context, destination);
 
     const inputs = (tier: ResolutionTier): VoiceInputs => ({
       tier,
@@ -981,21 +1042,6 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
       context.advance(ECHO_STEP_S);
     }
 
-    const instants = (gain: StubGainNode) =>
-      gain.gain.writes.filter((w) => w.method === 'setValueAtTime').map((w) => w.at);
-    // Grouped from a known cluster boundary: `emit` writes a cluster's layers
-    // together and in order, so runs of `SWARM_LAYERS` are clusters — but only
-    // if the run starts where one does. The late voice's first swarm event is
-    // the one `update` places at the instant the family changed.
-    const clustersFrom = (gain: StubGainNode, from: number) => {
-      const at = instants(gain).filter((t) => t >= from);
-      const out: { at: number; span: number }[] = [];
-      for (let i = 0; i + SWARM_LAYERS <= at.length; i += SWARM_LAYERS) {
-        out.push({ at: at[i]!, span: at[i + SWARM_LAYERS - 1]! - at[i]! });
-      }
-      return out;
-    };
-
     const lateFirst = clustersFrom(late.gain, promotedAt)[0]!;
     assert.ok(
       lateFirst.span < period * 0.02,
@@ -1017,10 +1063,67 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
     // contacts classified together share `strokePhase`. What is gone is every
     // swarm agreeing whatever its history.
     assert.deepEqual(
-      instants(twin.gain),
-      instants(early.gain),
+      instantsOf(twin.gain),
+      instantsOf(early.gain),
       'two cohorts classified on the same tick landed different clicks, so the cycle is a seed ' +
         'rather than a function of the train and nothing about it is reproducible'
+    );
+  });
+
+  it('reopens a cohort gathered after it falls below Tier 3 and returns', () => {
+    // Row 26's property for the other compound family. `strokePhase` resets
+    // with the event train on a family change, so a Consortium contact reopens
+    // on the loaded stroke; `organisePhase` resets beside it, so a cohort that
+    // flickers across the Tier-2 boundary reopens gathered rather than at
+    // whatever point of the cycle it fell at. The phase does not advance while
+    // the voice is sounding the thump — nothing there is a swarm event — so
+    // without the reset it survives the gap intact and the cohort returns
+    // mid-scatter, which is §3's refreshed contact arriving as the least
+    // distinct thing this mechanism can be.
+    const cycleS = 1 / SWARM_ORGANISE_HZ;
+    const period = 1 / FACTION_TIMBRE[Faction.Directorate].rateHz;
+    const context = new HeadlessAudioContext();
+    const destination = context.createGain();
+    const cohort = voiceIn(context, destination);
+
+    // It falls half a cycle in, where the cluster is at its widest. That is
+    // the guard row 26 spends its `sawMidCycle` on: a fixture that fell while
+    // the cohort was already gathered would pass with the reset deleted, and
+    // prove nothing.
+    const fallTick = Math.round(cycleS / 2 / ECHO_STEP_S);
+    const riseTick = fallTick + 3;
+    let fellAt = 0;
+    let roseAt = 0;
+    for (let k = 0; k * ECHO_STEP_S < SPAN_S; k++) {
+      const now = context.currentTime;
+      if (k === fallTick) fellAt = now;
+      if (k === riseTick) roseAt = now;
+      cohort.voice.update(
+        {
+          tier:
+            k >= fallTick && k < riseTick ? ResolutionTier.Bearing : ResolutionTier.Classification,
+          biome: Biome.OpenWater,
+          freshness: 1,
+          faction: Faction.Directorate,
+        },
+        now
+      );
+      context.advance(ECHO_STEP_S);
+    }
+
+    const before = clustersFrom(cohort.gain, 0, fellAt);
+    const fellOn = before[before.length - 1]!;
+    assert.ok(
+      fellOn.span > period * 0.5,
+      `the cohort fell on a cluster spanning ${fellOn.span.toFixed(4)} s, which is near enough ` +
+        'gathered that returning gathered would prove nothing'
+    );
+
+    const reopened = clustersFrom(cohort.gain, roseAt)[0]!;
+    assert.ok(
+      reopened.span < period * 0.02,
+      `the cohort reopened with its layers ${reopened.span.toFixed(4)} s apart, against ` +
+        `${fellOn.span.toFixed(4)} s when it fell: the cycle carried across a family it was not`
     );
   });
 
@@ -1052,9 +1155,9 @@ describe('contact mechanisms, at the rate the engine drives them', () => {
 
     const identity = { faction: Faction.Directorate };
     const fresh = drive(identity, ResolutionTier.Classification, ECHO_STEP_S);
-    // Decayed hard enough to matter: `DECAY_PERIOD_STRETCH` is a fifth of the
-    // way to doubling the period at freshness 0, so a cycle counted in events
-    // would run visibly slow here and a cycle counted in seconds would not.
+    // Decayed hard enough to matter: §3 lengthens a fading contact's period by
+    // up to 40%, so a cycle counted in events would run visibly slow here and
+    // a cycle counted in seconds would not.
     const fading = drive(identity, ResolutionTier.Classification, ECHO_STEP_S, (t) =>
       Math.max(0.05, 1 - t / SPAN_S)
     );
