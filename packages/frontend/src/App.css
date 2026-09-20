@@ -2165,8 +2165,8 @@ button.objectives-row:hover {
 
    The trap this row sets that the panel's does not: the card's track is twice
    the panel's — 455.8 px against 218.7 at 1440x900 — and its type is 0.64rem,
-   so #774's 64-character fixture ported straight across **fits**, 431.5 px in
-   a 455.8 px cell, and a control written with it passes vacuously. Driven in
+   so #774's 64-character fixture ported straight across **fits** — 394.3 px of
+   ink in a 455.8 px cell — and a control written with it passes vacuously. In
    Chromium against `MissionResult`'s own markup and the shipped sheet, an
    80-character token prints 349.3 px² of ink over the counter's own glyphs and
    a 100-character one 443.8 px² and 90 px of the card's horizontal scroll. All

@@ -523,7 +523,7 @@ describe('the mission result: a mission’s words cannot carry the counter out',
     // the whole reason the fault outlived #774. Driven in Chromium at
     // 1440x900 against `MissionResult`'s own markup and the shipped sheet: the
     // cell is 455.8 px here against the panel's 218.7 and the type is
-    // 0.64rem, so #774's 64-character token measures 431.5 px and **fits** —
+    // 0.64rem, so #774's 64-character token inks 394.3 px and **fits** —
     // 0 ink on the counter, 0 scroll — and that control ported straight across
     // passes vacuously, against a sheet it never changed. At 80 characters the
     // token's glyphs cover 349.3 px² of the counter's own; at 100, 443.8 px²
