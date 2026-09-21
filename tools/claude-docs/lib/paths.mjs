@@ -66,11 +66,14 @@ const GLOB_CHARS = /[*?{]/;
  * writes `packages/shared/dist` and `steward` writes `packages/shared/dist/`,
  * for the same directory and the same declared escape. So every comparison
  * between a named path and a declared one strips first, on BOTH sides.
- * `unusedAllowances` did that from the start and the other two did not — they
- * stripped the named side only, so an entry declared WITH a slash answered for
- * neither spelling and read as dead. It failed closed, which is the safe
- * direction and is why nothing caught it: a declared escape quietly stopped
- * working rather than quietly widening (#817).
+ * `unusedAllowances` stripped both sides from the start; the other two did
+ * not, and not in the same way. `makeResolver` stripped the named side and
+ * compared the declared entry raw; `unresolvedPaths` compared both raw. So an
+ * entry declared WITH a slash still answered for the slashed spelling and
+ * silently stopped answering for the bare one — which is the spelling
+ * `run-game` writes. It failed closed, and `unusedAllowances` never called it
+ * stale, so it read as a live escape that had quietly lost half its job. The
+ * live entry is written bare, so the fault was latent (#817).
  */
 const stripSlash = (path) => (path.endsWith('/') ? path.slice(0, -1) : path);
 

@@ -164,9 +164,10 @@ test('a declared build output resolves, and an absent one does not', () => {
 test('a declared entry answers for both spellings, whichever way it is written', () => {
   // The two live spans naming this build output disagree: run-game writes it
   // bare and steward with a trailing slash. One entry answers for both only if
-  // the slash is stripped from the DECLARED side too. It was stripped from the
-  // named side alone, so an entry written with a slash answered for neither
-  // spelling — failing closed, which is why nothing caught it. #817.
+  // the slash is stripped from the DECLARED side too. It never was, so an
+  // entry written with a slash answered for the slashed spelling only and the
+  // bare one went unanswered — failing closed, which is why nothing caught it.
+  // The first assertion below is the one that goes red without the fix. #817.
   const declaredWithSlash = makeResolver([], new Set(['packages/shared/dist/']));
   assert.ok(declaredWithSlash('packages/shared/dist'));
   assert.ok(declaredWithSlash('packages/shared/dist/'));
