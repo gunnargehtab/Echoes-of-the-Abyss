@@ -2104,38 +2104,47 @@ button.objectives-row:hover {
 
    It is also rendered verbatim (ui-ux.md §10.5) and therefore unbounded — a
    mission's words, not a template's — which is #829, the same exposure as the
-   objective row's one element up. The panel is a scroll container on both axes
-   (`overflow-y: auto` computes the other to `auto`), so an overrun is scrolled
-   out of a box nothing teaches the player to scroll: §2's "invisible rather
-   than absent".
+   objective row's one element down. The panel is a scroll container on both
+   axes (`overflow-y: auto` computes the other to `auto`), so an overrun is
+   scrolled out of a box nothing teaches the player to scroll: §2's "invisible
+   rather than absent". It splits either side, because the panel centres its
+   items, so half of it is off the left edge where no scrollbar reaches it.
 
    `anywhere` rather than `break-word`, and here that is the whole fix rather
-   than a preference. The rules above this one prefer the narrower value
-   because their cell sits in a `minmax(0, …)` track, whose minimum is a length
-   rather than its contents, so the min-content contribution the two values
-   differ in cannot reach a track from there. This element has no track. It is
-   a flex item of `.mission-result-panel`, which is `column` with
+   than a preference. The rules below prefer the narrower value because their
+   cell sits in a `minmax(0, …)` track, whose minimum is a length rather than
+   its contents, so the min-content contribution the two values differ in
+   cannot reach a track from there. This element has no track. It is a flex
+   item of `.mission-result-panel`, which is `column` with
    `align-items: center`, so its width is shrink-to-fit and *is* floored by its
    own min-content — and `break-word` leaves min-content alone. The box
    therefore grows to the token, the token never has to break, and the
    declaration does nothing at all.
 
-   Measured in Chromium at 1440x900 against `MissionResult`'s own markup and
-   the shipped sheet, with a token injected into Thin Water's Partial epilogue.
-   The panel's content box is 558 px. A 100-character token takes the
-   paragraph's box to 598.8 px and the card to 20 px of horizontal scroll;
-   at the widest glyph, 1109.9 px and 275 px. **`break-word` reproduces the
-   shipping numbers to the decimal in every one of those** — it is inert, not
-   merely weaker. With `anywhere` the box clamps to 560 px and the scroll is 0,
-   at 75%, 100% and 200% alike. Neither `--ui-scale` nor `--panel-type` reaches
-   this card, so those three are one reading rather than three.
+   Driven in Chromium against the shipped sheet and `MissionResult`'s own
+   rendered markup, with a token injected into Thin Water's Partial epilogue.
+   At 1440x900 the panel's content box is 559.8 px, and the paragraph's box
+   goes to 573.1 px at 80 characters (7 px of card scroll) and 716.3 px at 100
+   (78 px). The shell also runs on a phone (SETUP-ANDROID.md), and at 360 px
+   the content box is 306.8 px and the fault fires at 64 characters already:
+   458.5 px and 76 px of scroll, rising to 205 px at 100.
 
-   The overrun splits either side because the panel centres its items, so half
-   of it is off the left edge where no scrollbar can reach it at all.
+   **`break-word` reproduces every one of those figures to the decimal** — it
+   is inert, not merely weaker. With `anywhere` the box clamps to the content
+   box and the scroll is 0, at both widths and at 75%, 100% and 200% alike;
+   neither `--ui-scale` nor `--panel-type` reaches this card, so the scale
+   range is one reading here rather than three.
 
-   Latent, as #773 and #809 were: the longest unbreakable run in the 32
-   authored epilogues is 13 characters (`transmissions`), which wraps with the
-   measure to spare and is untouched by this declaration. */
+   Read the face before trusting any of that: `--font-data` is declared in
+   `index.css`, not here, and a harness that loads this sheet alone lays the
+   card out in Times New Roman — a proportional card no player sees, which
+   under-reports the overrun and hides that the face is monospace, where a
+   "widest glyph" reading does not exist at all.
+
+   Latent, as #773 and #809 were: the longest unbreakable run in the 87
+   authored epilogue readings is 14 characters (`Undermarshalcy`), the same
+   token the objective rows name, and it wraps with the measure to spare at
+   both widths. */
 .mission-result-line {
   margin: 0;
   font-size: 0.72rem;
