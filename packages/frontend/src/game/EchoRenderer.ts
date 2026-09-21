@@ -961,10 +961,24 @@ const SIG_METER = {
  * it through §11's palettes rather than leaving it dependent on them.
  */
 const LOUDNESS_COLLAR = {
-  /** Metres outside the drawn hull: §3.5's lane between crush (+4) and selection (+8). */
-  GAP_M: 6,
-  /** The same lane on a structure, whose selection ring is at +14. */
-  STRUCTURE_GAP_M: 10,
+  /**
+   * How far the collar clears the selection ring, as a share of the figure it
+   * captions — never a flat metre count, which is what this replaces.
+   *
+   * The renderer draws figures from a **7 m** half-extent (a 14 m craft, #838)
+   * to a **220 m** one (a Bastion's footprint), a range of 31x, and a flat gap
+   * cannot serve both ends of it. At +6 and +8 two lanes are 29% of a craft
+   * apart and **1.8% of a Bastion**, so on everything large the collar and the
+   * selection ring were the same circle: a selected structure lost its dial
+   * outright and its sweep read as a partly-coloured selection ring.
+   *
+   * A share holds the separation constant instead. The floor is for the other
+   * end — on a 7 m craft 12% is under a metre, and a mark still needs room a
+   * figure that small cannot give it proportionally.
+   */
+  CLEAR_SHARE: 0.12,
+  /** Metres, for the figures too small for the share to clear. */
+  CLEAR_FLOOR_M: 4,
   /** The dial the sweep is read against. Without it a sweep is a stray arc. */
   TRACK_ALPHA: 0.16,
   /** The sweep is the reading, so it is the one that is meant to be seen. */
@@ -973,6 +987,31 @@ const LOUDNESS_COLLAR = {
   TRACK_PX: 1,
   SWEEP_PX: 2.5,
 } as const;
+
+/**
+ * The selection ring's lane, per kind of figure — named because the collar has
+ * to clear it (docs/ui-ux.md §3.5) and a lane spelled out in two places is a
+ * collision waiting for the next figure that is bigger than both.
+ */
+export const SELECTION_GAP_M = { HULL: 8, STRUCTURE: 14 } as const;
+
+/**
+ * Where a figure's loudness collar sits: outside everything else about it.
+ *
+ * Outside rather than between, and that is the load-bearing half. A collar
+ * that crossed the selection ring as the figure grew would be exactly
+ * coincident with it at the size where it crossed — a rule that guarantees the
+ * collision it was written to remove.
+ *
+ * Pure and exported for the reason `contactVoice.ts` exports `panFor`: this is
+ * the whole of the rule, it is the rule that was wrong, and a separation is
+ * assertable over every figure the game draws without booting a renderer to
+ * ask about the two the fixture happens to carry.
+ */
+export function collarRadius(figureRadius: number, selectionGapM: number): number {
+  const clear = Math.max(LOUDNESS_COLLAR.CLEAR_FLOOR_M, figureRadius * LOUDNESS_COLLAR.CLEAR_SHARE);
+  return figureRadius + selectionGapM + clear;
+}
 
 /**
  * Alpha of a detection ring the player did not ask for by selecting its hull
@@ -5448,7 +5487,7 @@ export class EchoRenderer {
       const alpha = building ? 0.35 : 0.9;
 
       if (isSelected) {
-        g.circle(0, 0, radius + 14).stroke({
+        g.circle(0, 0, radius + SELECTION_GAP_M.STRUCTURE).stroke({
           width: 2 * inverseScale,
           color: UI.text,
           alpha: 0.8,
@@ -5495,7 +5534,12 @@ export class EchoRenderer {
       // reason. An anchored array is an emitter like any other, and it carried
       // an identical copy of the invented radius the hull's collar replaces —
       // leaving it would have left the HUD saying loudness two ways.
-      drawLoudnessCollar(g, radius + LOUDNESS_COLLAR.STRUCTURE_GAP_M, structure.sig, inverseScale);
+      drawLoudnessCollar(
+        g,
+        collarRadius(radius, SELECTION_GAP_M.STRUCTURE),
+        structure.sig,
+        inverseScale
+      );
 
       const barWidth = radius * 2;
       const barY = -radius - 14 * inverseScale;
@@ -6333,7 +6377,7 @@ export class EchoRenderer {
       const isSelected = this.selected.has(unit.id);
 
       if (isSelected) {
-        g.circle(0, 0, radius + 8).stroke({
+        g.circle(0, 0, radius + SELECTION_GAP_M.HULL).stroke({
           width: 2 * inverseScale,
           color: UI.text,
           alpha: 0.8,
@@ -6341,7 +6385,7 @@ export class EchoRenderer {
       }
 
       // §3.5's collar: this hull's own loudness, read off this hull.
-      drawLoudnessCollar(g, radius + LOUDNESS_COLLAR.GAP_M, unit.sig, inverseScale);
+      drawLoudnessCollar(g, collarRadius(radius, SELECTION_GAP_M.HULL), unit.sig, inverseScale);
 
       // Overreaching its rating is drawn on the hull itself, not only in the
       // selection card: a squad crushing at the bottom of a dive is something

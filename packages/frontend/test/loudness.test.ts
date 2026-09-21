@@ -23,7 +23,12 @@ import {
   pumpAnimationFrames,
 } from './support/headless.ts';
 import { cannedMap, cannedNodes, cannedSnapshot, cannedTerrain } from './support/cannedMatch.ts';
-import { EchoRenderer, type RendererCallbacks } from '../src/game/EchoRenderer.ts';
+import {
+  collarRadius,
+  EchoRenderer,
+  SELECTION_GAP_M,
+  type RendererCallbacks,
+} from '../src/game/EchoRenderer.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { UI } from '../src/game/palette.ts';
 
@@ -207,6 +212,65 @@ describe('the loudness collar (ui-ux.md §3.5)', () => {
       }
     } finally {
       world.teardown();
+    }
+  });
+});
+
+describe('the collar clears the selection ring (ui-ux.md §3.5)', () => {
+  /**
+   * The shipped rule, imported rather than restated — a second copy of it here
+   * would go on passing after the real one changed, which is the failure mode
+   * this whole file exists to catch.
+   *
+   * The property is separation, and it is the one a flat metre gap could not
+   * hold: the renderer draws figures from a 7 m half-extent (a 14 m craft) to
+   * a 220 m one (a Bastion's footprint), and at a flat +6 / +8 the collar and
+   * the selection ring were 1.8% of a Bastion apart — one circle on screen,
+   * which cost a selected structure its dial outright.
+   *
+   * The share is asserted as a floor on the *separation*, never read back off
+   * the constant: a test that recomputed the formula would agree with any
+   * formula at all.
+   */
+  const MIN_SHARE = 0.1;
+  const MIN_CLEAR_M = 4;
+  const SELECTION = SELECTION_GAP_M;
+
+  it('holds the separation across the whole range of figures the game draws', () => {
+    // Both ends and the middle, in figure half-extents: a craft, a light hull,
+    // a carrier, the smallest structure footprint, the largest.
+    for (const [r, gap] of [
+      [7, SELECTION.HULL],
+      [24, SELECTION.HULL],
+      [80, SELECTION.HULL],
+      [60, SELECTION.STRUCTURE],
+      [220, SELECTION.STRUCTURE],
+    ] as const) {
+      const selection = r + gap;
+      const collar = collarRadius(r, gap);
+      assert.ok(
+        collar > selection,
+        `a collar at ${collar} must sit outside a ring at ${selection}`
+      );
+      const share = (collar - selection) / r;
+      assert.ok(
+        share >= MIN_SHARE || collar - selection >= MIN_CLEAR_M - 1e-9,
+        `a figure of ${r} m separates its lanes by ${(share * 100).toFixed(1)}%, which is a collision`
+      );
+    }
+  });
+
+  it('never lets the collar cross the selection ring as a figure grows', () => {
+    // The reason the collar is outside rather than between: a rule that
+    // crossed would put the two marks exactly on top of each other at the size
+    // where it crossed, which is the collision it exists to remove.
+    for (const gap of [SELECTION.HULL, SELECTION.STRUCTURE]) {
+      for (let r = 5; r <= 240; r += 5) {
+        assert.ok(
+          collarRadius(r, gap) > r + gap,
+          `a figure of ${r} m puts its collar on its selection ring`
+        );
+      }
     }
   });
 });

@@ -120,12 +120,21 @@ that is where the question is asked.
 
 ### The collar
 
-A gauge ring hugging every own hull, at **6 m outside the hull's drawn radius** — the lane
-between the crush ring at +4 and the selection ring at +8.
+A gauge ring around every own hull, **outside every other mark about that figure** — past
+the crush ring and past the selection ring, clearing the latter by **12% of the figure's own
+radius**, never less than 4 m.
+
+A share and not a flat metre count, because the renderer draws figures from a **7 m**
+half-extent (a 14 m craft) to a **220 m** one (a Bastion's footprint), and no fixed gap
+serves a 31× range: at a flat +6 and +8 the collar and the selection ring sat 29% of a craft
+apart and **1.8% of a Bastion** apart, which on screen is one circle. Outside rather than
+between, for a second reason — a collar that crossed the selection ring as the figure grew
+would be exactly coincident with it at the size where it crossed, which is a rule that
+guarantees the collision it was written to remove.
 
 | Property | Spec |
 | --- | --- |
-| Track | The full circle, in chrome at low alpha. A gauge is unreadable without the dial it sweeps |
+| Track | The full circle, in chrome at low alpha. A gauge is unreadable without the dial it sweeps — and a dial drawn under the selection ring is a dial the player never sees |
 | Sweep | `SIG / 100` of a turn, from **12 o'clock, clockwise**. SIG 100 closes the circle |
 | Ink | §3's stops, snapping at 30 and 65 — the same ramp, so the hull and the meter never disagree about which band a hull is in |
 | Drawn for | Every own hull **and every own structure**, every zoom, selected or not. It is the permanent element §1.4 makes of the meter, per emitter |
@@ -150,7 +159,13 @@ without hue at all, which is what makes this mark survive §11's palettes rather
 on them — a player who cannot separate the amber stop from the red one still sees three
 quarters of a turn.
 
-**A structure wears the same collar as a hull**, at its own lane, because it is the same
+![A selected Bastion: its white selection ring and, clearly outside it, the collar's track
+with an amber sweep about a third of the way round, matching the card's SIG
+35](screenshots/issue-731/selected-structure.png)
+
+**A structure wears the same collar as a hull**, by the same rule rather than at a lane of
+its own — the share above is measured off whatever figure the collar captions, and only the
+selection ring it clears differs (a hull's is at +8, a structure's at +14). It is the same
 question about the same scale: an anchored array is an emitter, and a base is the loudest
 thing most players own. One mark for it and another for hulls would be the HUD saying
 loudness two ways. It is also the one figure §3's meter deliberately leaves out — the meter
