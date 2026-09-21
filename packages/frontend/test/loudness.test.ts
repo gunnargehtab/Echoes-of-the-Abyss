@@ -27,7 +27,9 @@ import {
   collarRadius,
   crackleAmplitude,
   EchoRenderer,
+  glowShare,
   SELECTION_GAP_M,
+  sigShare,
   type RendererCallbacks,
 } from '../src/game/EchoRenderer.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
@@ -39,6 +41,18 @@ const SIG_RAMP = new Set<number>([UI.sigLow, UI.sigMid, UI.sigHigh]);
 interface Stroke {
   color: number;
   alpha: number;
+  /**
+   * Whether this stroke was drawn in an emitter's own local space.
+   *
+   * The one honest way to tell a collar from a detection ring. A collar is
+   * drawn into a pooled symbol `Graphics` that the renderer has positioned at
+   * the emitter and scaled to px-per-metre; the rings all share one unscaled
+   * `Graphics` at the origin. Ink and alpha cannot do it since #731's glow
+   * started riding SIG — an inner halo passes through a ring's own 0.18
+   * somewhere around SIG 41, and a filter that reads one as the other would
+   * have gone on passing while counting the wrong marks.
+   */
+  local: boolean;
   /** Path steps under this stroke, in the order they were queued. */
   steps: Array<{ action: string; data: unknown }>;
 }
@@ -50,13 +64,15 @@ interface Stroke {
  * the ping preview is `UI.friendly` and `UI.threat`, a route is `UI.accent`, a
  * health bar is `UI.friendly`. `UI.threat` is `0xff3b30` and `UI.sigHigh` is
  * `0xe0452f` — near neighbours to the eye and different numbers here, which is
- * what keeps a red ring out of this set.
+ * what keeps a red ring out of this set. `local` then separates the two marks
+ * that share the ramp; see the field.
  */
 function sigStrokes(app: HeadlessApplication): Stroke[] {
   const found: Stroke[] = [];
   const walk = (node: Container): void => {
     for (const child of node.children) {
       if (child instanceof Graphics) {
+        const local = child.scale.x !== 1 || child.position.x !== 0 || child.position.y !== 0;
         for (const instruction of child.context.instructions) {
           if (instruction.action !== 'stroke') continue;
           const data = instruction.data as {
@@ -68,6 +84,7 @@ function sigStrokes(app: HeadlessApplication): Stroke[] {
           found.push({
             color,
             alpha: data.style?.alpha ?? 1,
+            local,
             steps: (data.path?.instructions ?? []) as Stroke['steps'],
           });
         }
@@ -95,7 +112,7 @@ function sigStrokes(app: HeadlessApplication): Stroke[] {
 function collars(app: HeadlessApplication): Array<{ radius: number; start: number; end: number }> {
   const out: Array<{ radius: number; start: number; end: number }> = [];
   for (const stroke of sigStrokes(app)) {
-    if (stroke.alpha !== 1) continue;
+    if (!stroke.local || stroke.alpha !== 1) continue;
     const points: Array<[number, number]> = [];
     for (const step of stroke.steps) {
       if (step.action !== 'moveTo' && step.action !== 'lineTo') continue;
@@ -127,16 +144,18 @@ function collars(app: HeadlessApplication): Array<{ radius: number; start: numbe
 const RING_ALPHA = { SELECTED: 0.35, GATED: 0.18 } as const;
 
 /**
- * A detection ring: a SIG-inked stroke at one of the two ring alphas.
+ * A detection ring: SIG-inked, on a shared unscaled layer, at a ring's alpha.
  *
- * Alpha is the whole of the filter since the collar's sweep became a polyline
- * too — a ring and a collar halo are the same shape of path now, and only the
- * ink tells them apart. The four collar alphas (track 0.16, halos 0.13 and
- * 0.44, core 1) are deliberately clear of both ring alphas.
+ * Both filters, each for what the other cannot do. `local` separates a ring
+ * from a collar, which alpha no longer can now that the glow rides SIG. Alpha
+ * separates it from a **nodule field's** ring, which `local` cannot: those are
+ * traced into the nodes layer, unscaled and at the origin exactly as these
+ * are, and `UI.sigMid` is `0xf2b233` — the same number as the Nodule's own
+ * ink, and as the Bathyarch primary.
  */
 function reachRings(app: HeadlessApplication): Stroke[] {
   const alphas: number[] = [RING_ALPHA.SELECTED, RING_ALPHA.GATED];
-  return sigStrokes(app).filter((stroke) => alphas.includes(stroke.alpha));
+  return sigStrokes(app).filter((stroke) => !stroke.local && alphas.includes(stroke.alpha));
 }
 
 async function boot(): Promise<{
@@ -254,7 +273,7 @@ describe('the loudness collar (ui-ux.md §3.5)', () => {
 function collarWobble(app: HeadlessApplication): number[] {
   const out: number[] = [];
   for (const stroke of sigStrokes(app)) {
-    if (stroke.alpha !== 1) continue;
+    if (!stroke.local || stroke.alpha !== 1) continue;
     const radii: number[] = [];
     for (const step of stroke.steps) {
       if (step.action !== 'moveTo' && step.action !== 'lineTo') continue;
@@ -308,7 +327,7 @@ describe('the crackle (style-neon-noir.md, Motion and FX timing)', () => {
       // and what is held here is that the crackle stays subordinate — a
       // wobble comparable to the radius would be a shape, not a texture.
       for (const stroke of sigStrokes(world.app)) {
-        if (stroke.alpha !== 1) continue;
+        if (!stroke.local || stroke.alpha !== 1) continue;
         const radii: number[] = [];
         for (const step of stroke.steps) {
           if (step.action !== 'moveTo' && step.action !== 'lineTo') continue;
@@ -332,7 +351,7 @@ describe('the crackle (style-neon-noir.md, Motion and FX timing)', () => {
     const world = await boot();
     try {
       for (const stroke of sigStrokes(world.app)) {
-        if (stroke.alpha !== 1) continue;
+        if (!stroke.local || stroke.alpha !== 1) continue;
         const radii: number[] = [];
         for (const step of stroke.steps) {
           if (step.action !== 'moveTo' && step.action !== 'lineTo') continue;
@@ -372,6 +391,58 @@ describe('the crackle (style-neon-noir.md, Motion and FX timing)', () => {
       // same vertices, where an unfrozen one advances with the Echo grid.
       world.frame(2);
       assert.deepEqual(collarWobble(world.app), still, 'a frozen crackle must not move');
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
+describe('the glow gate (style-neon-noir.md, "darken the neighbourhood")', () => {
+  it('rides SIG, so a silent fleet stops lighting the chart', () => {
+    let previous = -Infinity;
+    for (let sig = 0; sig <= 100; sig += 5) {
+      const share = glowShare(sig);
+      assert.ok(share > previous, `SIG ${sig} does not glow harder than ${sig - 5}`);
+      previous = share;
+    }
+    assert.equal(glowShare(100), 1, 'the loudest emitter gets the full weight');
+    // The gate is the whole point: a quiet emitter has to be most of the way
+    // dark, or a base full of them is the light show this replaced.
+    assert.ok(glowShare(0) < 0.2, `a silent emitter still carries ${glowShare(0)} of the halo`);
+    assert.ok(
+      glowShare(SIG_BANDS.RED) > glowShare(0) * 3,
+      'crossing into the red has to be visible as light, not only as hue'
+    );
+  });
+
+  it('is the same curve the crackle rides, normalised', () => {
+    // The claim is a relationship between the two exported effects rather
+    // than either against its own formula — recomputing a formula agrees with
+    // any formula at all. Each is rescaled onto 0..1 across its own ends, and
+    // the two must then land on the same number at every SIG: that is what
+    // "one curve" means, and what stops the glow and the crackle drifting
+    // into disagreeing about how loud a hull looks.
+    const norm = (v: number, lo: number, hi: number): number => (v - lo) / (hi - lo);
+    for (const sig of [0, 8, 12, 30, 35, 48, 62, 65, 95, 100]) {
+      const glow = norm(glowShare(sig), glowShare(0), glowShare(100));
+      const crackle = norm(crackleAmplitude(sig), crackleAmplitude(0), crackleAmplitude(100));
+      assert.ok(
+        Math.abs(glow - crackle) < 1e-9,
+        `at SIG ${sig} the glow sits at ${glow} and the crackle at ${crackle}`
+      );
+    }
+    // And `sigShare` is that curve: both ends, on the floor each was built on.
+    assert.equal(sigShare(100, 0.15), 1);
+    assert.equal(sigShare(0, 0.15), 0.15);
+  });
+
+  it('never gates the core, because the core is the reading', async () => {
+    const world = await boot();
+    try {
+      // Every collar's core is drawn at full alpha whatever its SIG: the halo
+      // is atmosphere and may fade, the reading may not.
+      const cores = sigStrokes(world.app).filter((stroke) => stroke.local && stroke.alpha === 1);
+      assert.equal(cores.length, COLLARED.length, 'an emitter lost its core to the gate');
     } finally {
       world.teardown();
     }

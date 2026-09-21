@@ -990,11 +990,26 @@ const LOUDNESS_COLLAR = {
    * Widths are screen pixels rather than metres for the reason every stroke on
    * this HUD is: a halo is a property of the instrument, not of the water.
    */
-  HALO_OUTER_PX: 20,
-  HALO_OUTER_ALPHA: 0.13,
-  HALO_INNER_PX: 8,
-  HALO_INNER_ALPHA: 0.44,
+  HALO_OUTER_PX: 10,
+  HALO_OUTER_ALPHA: 0.11,
+  HALO_INNER_PX: 5,
+  HALO_INNER_ALPHA: 0.36,
   CORE_PX: 1.6,
+  /**
+   * What is left of the halo at SIG 0, as a share of the widths above.
+   *
+   * The halo rides SIG like the crackle does, for a reason that section states
+   * outright: "bloom-everything is the failure mode of this style; when in
+   * doubt, **darken the neighbourhood instead of brightening the subject**."
+   * A halo of the same weight on every emitter is that failure — with a base
+   * and a handful of hulls on screen the chart became a light show, and the
+   * loudest hull was no easier to find for it. Gating the glow darkens the
+   * neighbourhood by itself: a fleet running silent is nearly dark, so the one
+   * hull that opened its drives is the only thing burning.
+   *
+   * The core is not gated. It is the reading, and a reading may not fade.
+   */
+  GLOW_FLOOR_SHARE: 0.15,
   /**
    * The crackle — docs/style-neon-noir.md, "Motion and FX timing".
    *
@@ -1046,6 +1061,25 @@ export function collarRadius(figureRadius: number, selectionGapM: number): numbe
 const LOUD_RING_ALPHA = 0.18;
 
 /**
+ * The one curve both of the collar's effects ride — docs/ui-ux.md §3.5.
+ *
+ * `floor` at SIG 0 rising to 1 at SIG 100, so an effect built on it is a
+ * second reading of loudness rather than a decoration laid over the first.
+ * Shared rather than written twice because the glow and the crackle make the
+ * same claim, and two copies of a curve are two chances for them to stop
+ * agreeing about what "loud" looks like.
+ */
+export function sigShare(sig: number, floor: number): number {
+  const fraction = Math.min(1, Math.max(0, sig / 100));
+  return floor + (1 - floor) * fraction;
+}
+
+/** How much halo an emitter of `sig` gets, as a share of the full weight. */
+export function glowShare(sig: number): number {
+  return sigShare(sig, LOUDNESS_COLLAR.GLOW_FLOOR_SHARE);
+}
+
+/**
  * How wide the sweep's crackle runs at a given SIG, in screen pixels.
  *
  * Pure and exported for `collarRadius`'s reason: this is the whole of what
@@ -1059,11 +1093,7 @@ const LOUD_RING_ALPHA = 0.18;
  * on it.
  */
 export function crackleAmplitude(sig: number): number {
-  const fraction = Math.min(1, Math.max(0, sig / 100));
-  return (
-    LOUDNESS_COLLAR.CRACKLE_PX *
-    (LOUDNESS_COLLAR.CRACKLE_FLOOR_SHARE + (1 - LOUDNESS_COLLAR.CRACKLE_FLOOR_SHARE) * fraction)
-  );
+  return LOUDNESS_COLLAR.CRACKLE_PX * sigShare(sig, LOUDNESS_COLLAR.CRACKLE_FLOOR_SHARE);
 }
 
 /**
@@ -1110,6 +1140,7 @@ function drawLoudnessCollar(
   const seed = still ? 0 : Math.floor(nowMs / (1000 / SIM.ECHO_HZ));
   const amplitude = crackleAmplitude(sig);
   const steps = Math.max(8, Math.ceil(sweep / LOUDNESS_COLLAR.CRACKLE_STEP_RAD));
+  const glow = glowShare(sig);
 
   // Traced three times rather than traced once and stroked three times: a Pixi
   // path is consumed by the stroke that closes it, so each layer needs its own.
@@ -1130,17 +1161,20 @@ function drawLoudnessCollar(
     }
   };
 
+  // Both halo layers narrow *and* dim with the gate, rather than only dimming:
+  // a wide halo held at low alpha still occupies its width, and width is what
+  // makes two neighbouring emitters bleed into one another.
   trace();
   g.stroke({
-    width: LOUDNESS_COLLAR.HALO_OUTER_PX * px,
+    width: LOUDNESS_COLLAR.HALO_OUTER_PX * px * glow,
     color: ink,
-    alpha: LOUDNESS_COLLAR.HALO_OUTER_ALPHA,
+    alpha: LOUDNESS_COLLAR.HALO_OUTER_ALPHA * glow,
   });
   trace();
   g.stroke({
-    width: LOUDNESS_COLLAR.HALO_INNER_PX * px,
+    width: LOUDNESS_COLLAR.HALO_INNER_PX * px * glow,
     color: ink,
-    alpha: LOUDNESS_COLLAR.HALO_INNER_ALPHA,
+    alpha: LOUDNESS_COLLAR.HALO_INNER_ALPHA * glow,
   });
   trace();
   g.stroke({ width: LOUDNESS_COLLAR.CORE_PX * px, color: ink, alpha: 1 });

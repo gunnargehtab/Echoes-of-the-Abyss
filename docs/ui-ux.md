@@ -136,6 +136,7 @@ guarantees the collision it was written to remove.
 | --- | --- |
 | Track | The full circle, in chrome at low alpha. A gauge is unreadable without the dial it sweeps — and a dial drawn under the selection ring is a dial the player never sees |
 | Ink | [style-neon-noir.md](style-neon-noir.md)'s glow recipe: a core at full opacity under two halo layers, which is that section's hard cap. Neon is edges and strokes, so the sweep is lit rather than filled |
+| Glow | **The halo rides SIG**, narrowing and dimming together, so a fleet running silent barely lights the chart and the hull that opened its drives is the only thing burning. The core never fades — the halo is atmosphere, the core is the reading. A halo of equal weight on every emitter turned a base into a light show and made the loudest hull no easier to find, which is that doc's own named failure mode |
 | Crackle | Radial noise on the sweep, on the 200 ms Echo grid, **its width riding SIG** — sub-pixel in Silent Running, widest at the top of the red band. It is in the mark because it reports loudness a second way, not because it is pretty; see that doc's "Motion and FX timing". Frozen, not removed, under reduced motion (§11) — the width is the information and the width does not move |
 | Sweep | `SIG / 100` of a turn, from **12 o'clock, clockwise**. SIG 100 closes the circle |
 | Ink | §3's stops, snapping at 30 and 65 — the same ramp, so the hull and the meter never disagree about which band a hull is in |

@@ -372,6 +372,13 @@ is: **if the motion is the message, it stays.**
   the game should look expensive.
 - **Damage**: chrome flicker (2–3 dropped frames of bevel glow), cavitation
   distortion per [art-direction.md](art-direction.md) UI FX.
+- **The loudness collar's glow** ([ui-ux.md](ui-ux.md) §3.5) is gated on SIG,
+  halo width and alpha together. This is "darken the neighbourhood instead of
+  brightening the subject" as a rule rather than as advice: the collar is on
+  *every* own hull and structure, so a halo of fixed weight is bloom-everything
+  by construction — a base and a handful of hulls lit the chart up and the
+  loudest of them was no easier to find for it. The core is never gated; it is
+  the reading.
 - **The loudness collar's crackle** ([ui-ux.md](ui-ux.md) §3.5): radial noise on
   the sweep, re-seeded on the 200 ms grid like everything else here. **Its
   amplitude rides SIG** — sub-pixel on a hull in Silent Running, widest at the
