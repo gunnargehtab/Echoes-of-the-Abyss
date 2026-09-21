@@ -726,6 +726,87 @@ describe('cssBox: whether a word too long for its box may be broken', () => {
     );
   });
 
+  /**
+   * The card's *other* authored cell, and the one neither rule above reaches:
+   * the epilogue is a `p` directly under the panel rather than a cell of the
+   * objective row, so #809's declaration and row 34's floors both miss it.
+   * #829.
+   *
+   * What this reader can say about it is narrower than it looks, and the gap
+   * is the whole point of the second assertion. `break-word` and `anywhere`
+   * are both `permits` here: they differ in *intrinsic sizing*, not in
+   * breaking, and this file models breaking. On the objective row that
+   * difference is unreachable — the cell sits in a `minmax(0, …)` track whose
+   * minimum is a length — which is why the narrower value is preferred there.
+   * On this element it is the entire fix. The epilogue is a shrink-to-fit flex
+   * item of `.mission-result-panel` (`column`, `align-items: center`), so its
+   * width *is* floored by its own min-content; `break-word` leaves min-content
+   * alone, so the box grows to the token and the token never has to break.
+   * Measured in Chromium, `break-word` reproduces the shipping numbers to the
+   * decimal — inert rather than weaker. So the test names the **value**, which
+   * is the one thing this reader holds that tells the two apart; the
+   * measurement behind it lives in `App.css`'s own comment and cannot be
+   * re-derived from here.
+   */
+  const EPILOGUE: Element = {
+    tag: 'p',
+    classes: ['mission-result-line'],
+    // The panel, not the list: this cell is a sibling of `ul`, not inside it.
+    ancestors: RESULT_ANCESTRY.slice(0, -1),
+  };
+
+  it('reads the card’s epilogue as it now ships', () => {
+    const verdict = wordBreaking(parseCss(APP_CSS), EPILOGUE);
+    assert.equal(
+      verdict.kind,
+      'permits',
+      '.mission-result-line cannot break a token it cannot fit'
+    );
+    assert.match(
+      (verdict as { by: string }).by,
+      /overflow-wrap:\s*anywhere/,
+      '`break-word` is inert on this element, so the value is load-bearing'
+    );
+  });
+
+  it('reproduces #829 when the declaration is taken away', () => {
+    // The negative control, read-only, and asserted to have bitten. Anchored
+    // on the whole rule body for the reason the #760, #773, #774 and #809
+    // controls give: a short anchor strips whichever rule happens to be
+    // written first and leaves this one's intact, which is a control aimed at
+    // the wrong element passing against a sheet it never changed. Replaced
+    // rather than removed, so the paragraph keeps the measure it had before
+    // this axis reached it.
+    const CELL =
+      '.mission-result-line {\n  margin: 0;\n  font-size: 0.72rem;\n  line-height: 1.75;\n' +
+      '  letter-spacing: 0.02em;\n  color: var(--text-bright);\n  overflow-wrap: anywhere;\n}\n';
+    const WITHOUT =
+      '.mission-result-line {\n  margin: 0;\n  font-size: 0.72rem;\n  line-height: 1.75;\n' +
+      '  letter-spacing: 0.02em;\n  color: var(--text-bright);\n}\n';
+    assert.equal(APP_CSS.split(CELL).length - 1, 1, 'the epilogue’s rule is unique');
+
+    const stripped = APP_CSS.replace(CELL, WITHOUT);
+    assert.ok(!stripped.includes(CELL), 'the strip reached the rule');
+    // And it reached *only* it. The objective row's own cell is #809's axis
+    // one element down, and a strip taking both could not say which fault it
+    // had caught.
+    assert.ok(
+      stripped.includes(
+        '.mission-result-text {\n  color: var(--text-bright);\n  overflow-wrap: break-word;\n}'
+      ),
+      'the strip left the objective cell’s declaration standing'
+    );
+    assert.ok(
+      stripped.includes('.objectives-text,\n.objectives-gloss {\n  overflow-wrap: break-word;\n}'),
+      'the strip left the panel’s own declaration standing'
+    );
+
+    assert.deepEqual(wordBreaking(parseCss(stripped), EPILOGUE), {
+      kind: 'refuses',
+      because: 'nothing sets `overflow-wrap` or `word-break`',
+    });
+  });
+
   it('reads an ancestor’s `white-space`, which is the one inherited axis here', () => {
     // Every property in `WRAP_PROPERTIES` is inherited, which is where this
     // reader parts company with the box one: `width` cannot reach a child from

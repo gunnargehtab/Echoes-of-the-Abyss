@@ -591,6 +591,148 @@ describe('the mission result: a mission’s words cannot carry the counter out',
   });
 });
 
+/**
+ * The card's other authored cell, and #829. The objective row's three axes
+ * (rows 33/34/35/38) all stop at the row; the epilogue is a `p` directly under
+ * the panel, so none of them reaches it and it carried no rule of its own.
+ *
+ * Why this is a fifth instance rather than #809 restated, and the reason it
+ * needed its own measurement: **the fix that works one element down is inert
+ * here.** The objective cell sits in a `minmax(0, …)` track whose minimum is a
+ * length, so `break-word` and `anywhere` are indistinguishable there and the
+ * narrower value is preferred. The epilogue sits in no track at all — it is a
+ * shrink-to-fit flex item of `.mission-result-panel`, which is `column` with
+ * `align-items: center`, so its width is floored by its own min-content.
+ * `break-word` does not change min-content, so the box simply grows to the
+ * token and the token never has to break. Driven in Chromium against the
+ * shipped sheet and this component's own rendered markup: at 1440x900 the
+ * panel's content box is 559.8 px and an 80-character token takes the
+ * paragraph to 573.1 px and the card to 7 px of scroll, 100 characters to
+ * 716.3 px and 78 px; at a 360 px phone width (SETUP-ANDROID.md) the content
+ * box is 306.8 px and 64 characters already overruns it by 76 px.
+ * `break-word` reproduces every one of those to the decimal, at 75%, 100% and
+ * 200% alike; `anywhere` takes the scroll to 0 at both widths.
+ *
+ * Read the face before trusting a figure: `--font-data` lives in `index.css`,
+ * not `App.css`, and a harness loading the sheet under test alone renders the
+ * card in Times New Roman — proportional, which under-reports the overrun.
+ * The shipped face is monospace, so a "widest glyph" reading does not exist.
+ *
+ * Latent in the way #773 and #809 were: the longest unbreakable run in the 87
+ * authored epilogue readings across 29 missions is 14 characters
+ * (`Undermarshalcy`), the same token rows 35 and 38 name.
+ */
+describe('the mission result: an epilogue cannot carry itself out of the card', () => {
+  /** Where the epilogue sits — a child of the panel, not of the list. */
+  const PANEL = [
+    { tag: 'div', classes: ['game-root'] },
+    { tag: 'div', classes: ['game-under'] },
+    { tag: 'div', classes: ['mission-result'] },
+    { tag: 'div', classes: ['mission-result-panel'] },
+  ];
+
+  it('breaks a word an epilogue authors too long for the card, and nothing templated', async () => {
+    // Every direct child of the panel is *classified* rather than filtered,
+    // for the reason the row's own tests give: a child added later that this
+    // does not recognise fails here instead of being skipped in silence. It is
+    // also what stops the declaration being written on `.mission-result-panel
+    // > *`, where it would reach the outcome heading — a templated word
+    // (`OUTCOME_HEADING`), which must not break for the reason
+    // `.mission-result-progress` must not. The count below is the arithmetic
+    // that enforces it: the hint paragraph under the buttons is a fifth child
+    // and was missed on the first draft of this walk, which is precisely the
+    // silence the classification is here to refuse.
+    const rules = parseCss(APP_CSS);
+    let authored = 0;
+    let templated = 0;
+    let lists = 0;
+    const headings = new Set<string>();
+
+    // Every outcome, not one. `OUTCOME_CLASS` gives the heading a different
+    // class per outcome, so a walk of a single payload asserts one of the
+    // three and leaves the other two held by nothing — and row 41 claims all
+    // of them. Row 38's convention one element down is the same: enumerate
+    // every shape the card can draw.
+    for (const outcome of [
+      MissionOutcome.Complete,
+      MissionOutcome.Partial,
+      MissionOutcome.Lost,
+    ] as const) {
+      const { view } = await missionResult(payload({ outcome }));
+      try {
+        const panel = view.byClass('mission-result-panel');
+        for (const child of panel.children) {
+          if (typeof child === 'string') continue;
+          const classes = String((child.props as { className?: string }).className ?? '')
+            .split(/\s+/)
+            .filter(Boolean);
+          const element: Element = { tag: String(child.type), classes, ancestors: PANEL };
+
+          if (classes.includes('mission-result-line')) {
+            assert.equal(
+              element.tag,
+              'p',
+              'the epilogue is no longer a `p`, so this guards nothing'
+            );
+            const verdict = wordBreaking(rules, element);
+            assert.equal(
+              verdict.kind,
+              'permits',
+              'the epilogue cannot break a token it cannot fit'
+            );
+            // The value, not merely the breaking: `break-word` is inert on
+            // this element and the header above says why.
+            assert.match(
+              (verdict as { by: string }).by,
+              /overflow-wrap:\s*anywhere/,
+              'the epilogue breaks by a declaration that does not float its own box'
+            );
+            authored += 1;
+            continue;
+          }
+
+          // The objectives list, whose own cells are #809's axis and are
+          // walked by the suite above rather than here.
+          if (classes.includes('mission-result-objectives')) {
+            lists += 1;
+            continue;
+          }
+
+          // The heading, the action row and the hint beneath it: all three are
+          // templated by the client (`OUTCOME_HEADING`, the three button
+          // labels, and "Same water, from the first tick."), so none of them
+          // may break.
+          if (element.tag === 'h2') headings.add(classes.join('.'));
+          assert.equal(
+            wordBreaking(rules, element).kind,
+            'refuses',
+            `a templated .${classes.join('.')} may break`
+          );
+          templated += 1;
+        }
+      } finally {
+        await view.unmount();
+      }
+    }
+
+    // The heading's three classes, so a fourth outcome — or a rename — fails
+    // here rather than quietly going unasserted.
+    assert.deepEqual(
+      [...headings].sort(),
+      ['mission-result-complete', 'mission-result-lost', 'mission-result-partial'],
+      'the heading was not walked in each of its three classes'
+    );
+    // Five children in each of three outcomes: the arithmetic is here so that
+    // a child dropping out of the card fails rather than quietly shrinking
+    // what this walks.
+    assert.deepEqual(
+      { authored, templated, lists },
+      { authored: 3, templated: 9, lists: 3 },
+      'the panel no longer draws the five children this classifies'
+    );
+  });
+});
+
 describe('the mission result: the three doors out of it', () => {
   it('opens the record, which is what sits between two missions', async () => {
     // docs/ui-ux.md §14, "The record" — the same leaving as Return to port
