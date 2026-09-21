@@ -880,6 +880,11 @@ export function drawInstructions(root: Container): number {
  * texture, so a budget counts it. That is the opposite of what
  * `textContents` below wants, and the two walkers are separate for exactly
  * this reason.
+ *
+ * The argument is about memory held, so it covers this, `treeSize`,
+ * `treeIdentities` and `drawInstructions`. It does *not* reach
+ * `textStyleKeys`, which counts work Pixi *performs* and skips for a hidden
+ * node. That one is unexamined and stayed on the whole-tree walk.
  */
 export function textCount(root: Container): number {
   let total = 0;
@@ -888,10 +893,16 @@ export function textCount(root: Container): number {
 }
 
 /**
- * Every display object the renderer would actually draw.
+ * Every display object not hidden by `visible`.
  *
- * An invisible node takes its whole subtree with it, as Pixi's own render
- * pass does — so a label inside a hidden panel is not reachable here either.
+ * An invisible node takes its whole subtree with it, which is what Pixi's own
+ * render pass does: a parent's `globalDisplayStatus` folds into each child's
+ * (`updateRenderGroupTransforms.mjs`) and the collect pass returns early below
+ * it. So a label inside a hidden panel is not reachable here either.
+ *
+ * Narrower than "would be drawn" on purpose — Pixi also prunes on
+ * `renderable`, on culling and on render-layer membership. `visible` is the
+ * whole of the question for the labels in this client; see `textContents`.
  */
 function* walkDrawn(root: Container): Generator<Container> {
   if (!root.visible) return;
@@ -915,9 +926,13 @@ function* walkDrawn(root: Container): Generator<Container> {
  * answering for a live one, and an assertion that a label is *present* after a
  * HUD state change could pass on a string the strip no longer draws — which is
  * how a tab-strip test in #825 passed with the behaviour it was written to
- * catch reverted. `visible` is the whole of the check because it is the only
- * one of Pixi's ways to hide a node that this client uses; nothing in
- * `packages/frontend/src` sets `renderable` or `alpha = 0`.
+ * catch reverted.
+ *
+ * `visible` is the whole of the check because no `Text`, and no container
+ * holding one, is ever given a `renderable` or an `alpha`. The only
+ * display-object `alpha` this client assigns is a contact sprite's
+ * (`EchoRenderer.ts:6102`, `:6128`), which reaches 0 inside the arrival fade
+ * (`markOpacity`) and carries no `Text` under it.
  */
 export function textContents(root: Container): string[] {
   const said: string[] = [];

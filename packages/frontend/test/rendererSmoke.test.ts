@@ -2040,8 +2040,12 @@ describe('the command card when it is offered more than it holds', () => {
       // Bar labels are the only ones anchored at their centre, and every name
       // read below is one of them.
       const spans = new Map<string, { left: number; right: number }>();
+      // Not `textContents`: this one wants each label's span, not its string.
+      // It prunes for the same reason (#826) — a hidden panel's labels are not
+      // on the bar, and checking only `node.visible` would walk into one.
       const walk = (node: Container): void => {
-        if (node instanceof Text && node.visible) {
+        if (!node.visible) return;
+        if (node instanceof Text) {
           spans.set(node.text, { left: node.x - node.width / 2, right: node.x + node.width / 2 });
         }
         for (const child of node.children) walk(child as Container);
