@@ -1008,6 +1008,17 @@ with the issue that fills it. `Exclude<>` and not the `Exact<>` that polices the
 the missing verb — and a build error that does not say which message is missing sends the next
 author to diff two lists by eye, which is how six of them got there.
 
+**The numbers in that sentence are checked as well, and were not until #703.** The assertions
+make the three unions a *partition* of the in-match set, so the variant count is that set less
+the named exceptions rather than a tally somebody kept —
+`packages/backend/test/aiVocabulary.test.ts` does that subtraction and holds it against every
+sentence in this repository that states one of the counts, this one included. There are six:
+`wire.ts`, `CLAUDE.md`, `ai/types.ts`, the [ROADMAP](ROADMAP.md) row for #703, and this
+document twice. The fault it catches is the workflow `AiUnbuilt` prescribes and the only way
+that list is meant to shrink — a verb built and its entry pruned moves two counts in one
+commit, and nothing would have caught the other five going stale behind it. That is #621's
+defect one level up: the partition was asserted, and the arithmetic over it was still prose.
+
 **The five are two different things, and they are two types.** `AiUnbuilt` holds the three
 nobody has written a rule for — `hold`, `rally`, `followFloor` — and the price of an entry
 there is the issue that fills it, because a list you may add to without a number is this same

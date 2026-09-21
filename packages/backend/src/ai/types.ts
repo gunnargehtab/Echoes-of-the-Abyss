@@ -32,6 +32,20 @@
  * beneath the union below. Adding a 28th in-match message now fails
  * `npm run type-check` until someone writes the verb or names it as a gap.
  *
+ * **The three numbers at the top of this comment are checked too, and were
+ * not until #703.** The assertions below prove a *partition*: every in-match
+ * verb is said or named, every variant is a real message, every name on
+ * either list is one too, nothing is both said and named, and nothing is on
+ * both lists. A partition is what makes the variant count arithmetic rather
+ * than a tally — it is the in-match set less the named gaps, so no list is
+ * counted by hand — and `test/aiVocabulary.test.ts` does that subtraction and
+ * holds it against every sentence in this tree that states one of the
+ * numbers. It states none of them itself, for the same reason: a count
+ * written twice is a count that can disagree with itself. Building a verb and
+ * pruning its entry, which is the workflow `AiUnbuilt` prescribes, moves two
+ * of them at once; before #703 nothing said so, and #621 was filed because a
+ * sentence in this header had been false for the life of the file.
+ *
  * A conventional RTS AI reads the world and nobody minds. Here that would not
  * be unfair so much as a *category error*: the game is the act of deciding
  * under partial acoustic information, so an opponent that knows where your
@@ -245,8 +259,17 @@ export type AiCommand =
  * It was the one that bought strength rather than tidiness, which is what
  * earned it a doctrine field and a measured range instead of a variant and a
  * reflex.
+ *
+ * **A tuple rather than a bare union, for `LOBBY_MSG`'s reason** (`wire.ts`):
+ * the length of this list is arithmetic somewhere else — the header's variant
+ * count subtracts it — and a type has no length at run time. The union is
+ * derived from the tuple rather than written beside it, so the two cannot
+ * disagree about what is on the list.
  */
-type AiUnbuilt = 'hold' | 'rally' | 'followFloor';
+export const AI_UNBUILT = ['hold', 'rally', 'followFloor'] as const;
+
+/** One of those three, where a type is what is wanted. */
+type AiUnbuilt = (typeof AI_UNBUILT)[number];
 
 /**
  * In-match verbs an AI seat has no use for, with the evidence that it never
@@ -269,8 +292,14 @@ type AiUnbuilt = 'hold' | 'rally' | 'followFloor';
  *   a room where the verb does anything.
  * - `sow` — docs/systems-flora.md §"the commander's opinion is two judgements
  *   and no more", and neither of the two is sowing.
+ *
+ * A tuple for the reason `AI_UNBUILT` is one: the count subtracts both lists,
+ * and it can only subtract what it can measure.
  */
-type AiExempt = 'ability' | 'sow';
+export const AI_EXEMPT = ['ability', 'sow'] as const;
+
+/** One of those two, where a type is what is wanted. */
+type AiExempt = (typeof AI_EXEMPT)[number];
 
 /**
  * A message a seated client may send that the commander can neither say nor
@@ -308,6 +337,37 @@ function _everyGapIsARealMessage(
   return verb;
 }
 void _everyGapIsARealMessage;
+
+/**
+ * A verb the commander can say that no seated client could send.
+ *
+ * The other half of "drawn from the same list of verbs a client may send",
+ * and nothing held it until #703. The seat calls `Match` methods directly
+ * rather than sending wire messages (`seat.ts`), so a variant named something
+ * no client message is named satisfies that switch's `never` and travels no
+ * further — the claim at the top of this file would be false and the build
+ * would be green. It is also what makes the variant count answerable without
+ * a second list: the count is the in-match set less the named gaps, which is
+ * the right answer only while every variant is in that set.
+ */
+function _everyVerbIsAMessage(kind: Exclude<AiCommand['kind'], InMatchClientMessageKey>): never {
+  return kind;
+}
+void _everyVerbIsAMessage;
+
+/**
+ * A verb listed as both a gap and an exemption.
+ *
+ * The two lists mean opposite things — one is meant to shrink and the other
+ * never — so a name on both is a contradiction rather than a duplicate, and
+ * the reviewer `AiExempt` describes could not tell which list they were being
+ * asked for. The concrete harm is that the subtraction counts it twice, which
+ * is why this is a build error rather than a note.
+ */
+function _noGapIsAlsoAnExemption(verb: Extract<AiUnbuilt, AiExempt>): never {
+  return verb;
+}
+void _noGapIsAlsoAnExemption;
 
 /** What a commander is: snapshot in, commands out, and nothing else. */
 export interface AiPlayer {
