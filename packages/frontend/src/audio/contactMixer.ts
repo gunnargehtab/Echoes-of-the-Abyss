@@ -93,6 +93,22 @@ export type Spatialisation = 'stereo' | 'mono';
 export class ContactMixer {
   private readonly live = new Map<number, VoiceLike>();
   private spatialisation: Spatialisation = 'stereo';
+  /**
+   * Whether a classified contact is heard as *what it is* — §8's families,
+   * off by default (#731, docs/audio-direction.md §8).
+   *
+   * Off is enforced by *withholding the identity*, not by asking the voice to
+   * ignore one, which is rule 1 at the top of this file pointed the other way:
+   * a voice told nothing about identity has nothing to say about identity, and
+   * `timbreFor(undefined)` already answers that with the tier's own thump
+   * (timbre.ts, "No defaulting branch"). So this needs no branch in
+   * `ContactVoice` and cannot drift out of step with one.
+   *
+   * Withholding is always the safe direction here. This is the one place a
+   * fidelity leak could be introduced (`inputsFor` below), and every leak it
+   * could introduce is the mix claiming *more* than the server sent.
+   */
+  private timbre = false;
 
   constructor(
     private readonly allocator: VoiceAllocator,
@@ -132,6 +148,15 @@ export class ContactMixer {
 
   setSpatialisation(mode: Spatialisation): void {
     this.spatialisation = mode;
+  }
+
+  /** §8's timbre families on or off (#731). Takes on the next tick's update. */
+  setTimbre(on: boolean): void {
+    this.timbre = on;
+  }
+
+  get timbreOn(): boolean {
+    return this.timbre;
   }
 
   /** Voices currently sounding. Exposed for the headless harness and tests. */
@@ -211,9 +236,11 @@ export class ContactMixer {
       biome: entry.biome,
       freshness: entry.freshness,
     };
-    if (entry.faction !== undefined) inputs.faction = entry.faction;
-    if (entry.fauna !== undefined) inputs.fauna = entry.fauna;
-    if (entry.ordnance !== undefined) inputs.ordnance = entry.ordnance;
+    if (this.timbre) {
+      if (entry.faction !== undefined) inputs.faction = entry.faction;
+      if (entry.fauna !== undefined) inputs.fauna = entry.fauna;
+      if (entry.ordnance !== undefined) inputs.ordnance = entry.ordnance;
+    }
     if (entry.rangeM !== undefined) inputs.rangeM = entry.rangeM;
     if (entry.bearing !== undefined && this.spatialisation === 'stereo') {
       inputs.bearing = entry.bearing;

@@ -158,6 +158,10 @@ A player must identify a faction at Tier 3 by ear alone, with no visual. Each fa
 
 The Knights' entry is the one that must not be softened. Their emissions are a cone ([factions.md](factions.md)), so the mix places them off-axis at up to −20 dB. A player who walks into the beam hears the volume change and that *is* the tell.
 
+**The families are built and are switched off** ([#731](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/731)). Two of the four mechanisms above — the Consortium's stroke and return, the Directorate's converging cluster — were transcribed from this table and, on the reporting phone, read as "alien sounds out of this world" rather than as steel or chitin. The section's own acceptance test is an ear on a device, so the gate is a player toggle rather than a flag: **Contact timbre**, off by default ([ui-ux.md](ui-ux.md) §14). Off, a classified contact keeps the unidentifying thump of the tiers below and every other thing its tier earned — pan authority, range, freshness, the Tier-4 lock tone. What it stops carrying is *identity*, which is the one part of it §11's parity table never left to the ear alone: the mark is faction-coloured and the log row names the class either way.
+
+Switching it off is **not** a verdict on this table. The mechanisms stay specified here and stay built, because the redesign is a listening exercise and a listening exercise needs something to audition. What it says is that a sound the player cannot name is worse than a sound the player does not get, and that the second is reversible in one checkbox.
+
 **Those decibels are now the model rather than a mix decision**, which is §1's second law working in the direction it was written for. [systems-echo.md](systems-echo.md) §8 spec's the directional term as ×1.00 in the cone, ×0.35 on the flank and ×0.10 in the wake — 0 dB, −9 dB and −20 dB — so the flank has a level of its own and the −20 dB is the wake specifically. The mix is not asked to invent an off-axis curve; it renders three sectors the server already resolved.
 
 ### 8.1 Non-Navy Families

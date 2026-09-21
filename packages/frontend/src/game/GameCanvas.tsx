@@ -608,6 +608,7 @@ export function GameCanvas({
         );
         audio.setSpatialisation(settings.mono ? 'mono' : 'stereo');
         audio.setSpeakerProfile(settings.speakerProfile);
+        audio.setContactTimbre(settings.contactTimbre);
         activeRenderer.setPrecedenceMode(settings.visualFirst ? 'visual-first' : 'ear-first');
         // §11's full rebinding. Applied through the same subscription as the
         // rest, so rebinding from the esc menu takes effect without leaving

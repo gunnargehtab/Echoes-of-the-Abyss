@@ -117,6 +117,25 @@ describe('the settings store', () => {
     assert.equal(loadSettings().busVolumes.speech, 1, 'but never above unity');
   });
 
+  it('loads the contact timbre off, from any record and from none', () => {
+    // The one setting that defaults to off (#731), and the only one whose
+    // default is an admission rather than a preference: §8's families are
+    // built and do not yet sound like the materials §8 names. A record written
+    // before the control existed loads it off, which is where a build that
+    // never offered it left the player anyway.
+    assert.equal(DEFAULT_SETTINGS.contactTimbre, false);
+    assert.equal(loadSettings().contactTimbre, false);
+    backing.set('echoes.settings', JSON.stringify({ version: 1, masterVolume: 0.5 }));
+    assert.equal(loadSettings().contactTimbre, false);
+    // Off is the default, never a floor: the point of the control is that the
+    // redesign can be auditioned on the device that judges it.
+    saveSettings({ contactTimbre: true });
+    assert.equal(loadSettings().contactTimbre, true);
+    // And a stored value that is not a boolean is off rather than truthy.
+    backing.set('echoes.settings', JSON.stringify({ version: 1, contactTimbre: 'yes' }));
+    assert.equal(loadSettings().contactTimbre, false);
+  });
+
   it('clamps the UI scale to the range §11 specifies', () => {
     for (const [stored, expected] of [
       [5, UI_SCALE_MAX],

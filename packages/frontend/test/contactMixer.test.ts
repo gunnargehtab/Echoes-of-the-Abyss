@@ -63,6 +63,11 @@ describe('contact mixer', () => {
 
   it('never lets a faction reach a voice below Tier 3', () => {
     const { mixer, built } = harness();
+    // The families are off by default (#731), and this test is about the
+    // *tier* gate rather than that one, so it is turned on here: with the
+    // setting off both entries would pass trivially and the property under
+    // test would be asserted by the wrong mechanism.
+    mixer.setTimbre(true);
     // A Tier-2 entry cannot carry a faction — the renderer would not have one
     // to give — but the guarantee that matters is that timbre identity and
     // classification are the same event, so assert on what arrives.
@@ -85,6 +90,62 @@ describe('contact mixer', () => {
 
     assert.equal(built[0]!.last.faction, undefined);
     assert.equal(built[1]!.last.faction, Faction.Hadron);
+  });
+
+  it('withholds identity entirely while the timbre families are off', () => {
+    const { mixer, built } = harness();
+    // The default, and the point of #731's gate: a classified contact still
+    // sounds and still reports what its tier earned — it stops saying what it
+    // *is*. Withheld rather than ignored, so the voice has no identity to
+    // start using by accident and `timbreFor(undefined)` answers it with the
+    // thump the tiers below already use.
+    assert.equal(mixer.timbreOn, false);
+    mixer.update(
+      {
+        tick: 0,
+        entries: [
+          entry({
+            id: 9,
+            tier: ResolutionTier.Track,
+            bearing: 0.4,
+            rangeM: 800,
+            faction: Faction.Bathyarch,
+          }),
+        ],
+      },
+      0
+    );
+
+    assert.equal(built[0]!.last.faction, undefined);
+    assert.equal(built[0]!.last.fauna, undefined);
+    assert.equal(built[0]!.last.ordnance, undefined);
+    // Everything the tier did earn is untouched: the gate costs identity and
+    // nothing else (docs/ui-ux.md §11's parity table).
+    assert.equal(built[0]!.last.tier, ResolutionTier.Track);
+    assert.equal(built[0]!.last.bearing, 0.4);
+    assert.equal(built[0]!.last.rangeM, 800);
+    assert.equal(built[0]!.last.freshness, 1);
+
+    // And it is a switch, not a build: turning it on mid-match reaches the
+    // next tick's update, which is what makes §8 auditionable on a device.
+    mixer.setTimbre(true);
+    mixer.update(
+      {
+        tick: 1,
+        entries: [
+          entry({
+            id: 9,
+            tier: ResolutionTier.Track,
+            bearing: 0.4,
+            rangeM: 800,
+            faction: Faction.Bathyarch,
+          }),
+        ],
+      },
+      0.2
+    );
+    assert.equal(built.length, 1);
+    assert.equal(built[0]!.last.faction, Faction.Bathyarch);
   });
 
   it('passes bearing straight through rather than re-deriving it', () => {

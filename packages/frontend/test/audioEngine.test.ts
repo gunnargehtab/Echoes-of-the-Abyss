@@ -175,6 +175,10 @@ describe('the audio engine: a drive signature that breathes, and stays put', () 
   it('does not ratchet a tracked contact upward, tick after tick', () => {
     const { engine, context } = boot();
     try {
+      // §8's families are off by default (#731), and a voice with no mechanism
+      // has no pulse to ratchet — so the fault this test was written for is
+      // only reachable with the timbre on. Off, it would pass vacuously.
+      engine.setContactTimbre(true);
       const beforeVoice = context.nodes.length;
       engine.applyContacts(heard(100));
       engine.onEchoTick();
@@ -209,6 +213,7 @@ describe('the audio engine: a drive signature that breathes, and stays put', () 
   it('sounds a drive signature on a contact that arrives already classified', () => {
     const { engine, context } = boot();
     try {
+      engine.setContactTimbre(true);
       const beforeVoice = context.nodes.length;
       engine.applyContacts(classified(100));
       engine.onEchoTick();
@@ -233,6 +238,111 @@ describe('the audio engine: a drive signature that breathes, and stays put', () 
         bumped > 0.4,
         `the drive signature bumped to ${bumped.toFixed(3)}, which is inaudible`
       );
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
+  /**
+   * The other half of #731's switch, at the engine rather than at the mixer.
+   *
+   * Off has to mean *no mechanism* rather than a quieter one: what the phone
+   * reported was a sound it could not name, and a named sound at -6 dB is the
+   * same sound. The contact still sounds — the tier's thump, panned, at its
+   * range — which is why this asserts on the bump and not on the voice.
+   *
+   * Tier 3 rather than the Track the fixtures above use, and that is the
+   * load-bearing part: Track also fires the acquisition lock tone, which sets
+   * a value outright at 0.56 and so answers a level test on its own. At Tier 3
+   * the mechanism's pulse is the *only* thing in a voice that writes a value
+   * rather than ramping to one, so the count of those writes is the mechanism
+   * itself rather than a proxy for it.
+   */
+  const atTierThree = (tick: number): ContactAudioFrame => ({
+    tick,
+    entries: [
+      {
+        id: 1,
+        tier: ResolutionTier.Classification,
+        biome: Biome.OpenWater,
+        faction: Faction.Directorate,
+        freshness: 1,
+        bearing: 0.5,
+        rangeM: 1800,
+      },
+    ],
+  });
+
+  function pulses(context: HeadlessAudioContext, from: number): number[] {
+    return voiceGains(context, from).flatMap((gain) =>
+      gain.gain.writes
+        .filter((write) => write.method === 'setValueAtTime')
+        .map((write) => write.value)
+    );
+  }
+
+  function runFiveTicks(engine: AudioEngine, context: HeadlessAudioContext): void {
+    engine.applyContacts(atTierThree(100));
+    engine.onEchoTick();
+    for (let tick = 1; tick <= 5; tick++) {
+      context.advance(1 / SIM.ECHO_HZ);
+      engine.applyContacts(atTierThree(100 + tick));
+      engine.onEchoTick();
+    }
+  }
+
+  /**
+   * `contactVoice.ts`'s two bump peaks, restated so a change to either fails
+   * here: `DRIVE_LEVEL.THUMP * BUMP` and `DRIVE_LEVEL.CLASSIFIED * BUMP`.
+   *
+   * Both tiers pulse — §3 gives the unclassified thump an "irregular period
+   * 1.2-2.5 s" of its own, and switching the families off must not take that
+   * away — so a pulse existing says nothing. What separates them is *which*
+   * level it is bumped from, and how often.
+   */
+  const THUMP_PEAK = 0.35 * 1.6;
+  const CLASSIFIED_PEAK = 0.5 * 1.6;
+
+  it('leaves a Tier-3 contact on the tier thump while the families are off', () => {
+    const { engine, context } = boot();
+    try {
+      assert.equal(engine.contactTimbreOn, false, 'off is the default (#731)');
+      const beforeVoice = context.nodes.length;
+      runFiveTicks(engine, context);
+
+      const fired = pulses(context, beforeVoice);
+      assert.ok(fired.length > 0, 'the contact still sounds: it is heard, just not identified');
+      assert.ok(
+        Math.max(...fired) <= THUMP_PEAK + 1e-9,
+        `a pulse reached ${Math.max(...fired).toFixed(3)}, above the unclassified thump's own peak`
+      );
+      // And at the thump's rate rather than the swarm's: one pulse every
+      // 1.2-2.5 s against nine cluster events a second, three clicks each.
+      assert.ok(fired.length < 5, `${fired.length} pulses in a second is a mechanism, not a thump`);
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
+  it('gives it the mechanism back the moment the families are switched on', () => {
+    const { engine, context } = boot();
+    try {
+      // The point of shipping this as a setting rather than as a build flag:
+      // §8's acceptance test is an ear on a device, so the redesign has to be
+      // auditionable against the current mix without a rebuild.
+      engine.setContactTimbre(true);
+      const beforeVoice = context.nodes.length;
+      runFiveTicks(engine, context);
+
+      const fired = pulses(context, beforeVoice);
+      assert.ok(
+        Math.max(...fired) > THUMP_PEAK,
+        `the drive signature bumped to ${Math.max(...fired).toFixed(3)}, no louder than a thump`
+      );
+      assert.ok(Math.max(...fired) <= CLASSIFIED_PEAK + 1e-9, 'and never past its own peak');
+      assert.ok(fired.length > 5, `${fired.length} pulses is the thump's rate, not the swarm's`);
     } finally {
       void engine.destroy();
       uninstallHeadlessAudio();
