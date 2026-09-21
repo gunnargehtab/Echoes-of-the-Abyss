@@ -392,7 +392,7 @@ The Echo Layer (see [systems-echo.md](systems-echo.md)) only works if it's reada
 
 - The minimap is a **sonar scope**, not a map — contacts render as returns with tier-appropriate fidelity
 - The player's own Acoustic Signature is a permanent HUD element: a horizontal meter, always visible, colour-shifting amber → red
-- Selected-unit detection radius renders as a soft ring on the terrain
+- Detection radius renders as a soft ring on the terrain — selected hulls, and loud ones
 - Ping cost is previewed before commit — hovering the ping button shows the 2,400 m reveal radius in threat-red
 - Audio mix is the primary channel: a Tier-1 contact should be *heard* before it is *seen* on the minimap
 

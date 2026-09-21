@@ -945,6 +945,77 @@ const SIG_METER = {
 } as const;
 
 /**
+ * The loudness collar — docs/ui-ux.md §3.5.
+ *
+ * §3's meter is a fleet instrument: it reports a peak, and a max cannot say
+ * which hull it is reading. The collar is that reading, per hull, on the hull.
+ *
+ * A *sweep* and not a radius, which is the whole of what changed from the tick
+ * it replaces. That tick grew a circle by 0.35 m per SIG point — a distance
+ * invented for a quantity that is not a distance, in a view where every other
+ * radius on the ground is a real measurement (the detection ring, the ping
+ * preview, §4.5's veil). What loudness actually reaches is the ring's to draw
+ * and the water's to price; what belongs on the hull is the number.
+ *
+ * Read as an arc length before it is read as a colour, which is what carries
+ * it through §11's palettes rather than leaving it dependent on them.
+ */
+const LOUDNESS_COLLAR = {
+  /** Metres outside the drawn hull: §3.5's lane between crush (+4) and selection (+8). */
+  GAP_M: 6,
+  /** The same lane on a structure, whose selection ring is at +14. */
+  STRUCTURE_GAP_M: 10,
+  /** The dial the sweep is read against. Without it a sweep is a stray arc. */
+  TRACK_ALPHA: 0.16,
+  /** The sweep is the reading, so it is the one that is meant to be seen. */
+  SWEEP_ALPHA: 0.85,
+  /** Screen pixels, like every stroke on an instrument (§11's UI scale). */
+  TRACK_PX: 1,
+  SWEEP_PX: 2.5,
+} as const;
+
+/**
+ * Alpha of a detection ring the player did not ask for by selecting its hull
+ * (docs/ui-ux.md §3.5).
+ *
+ * Half the selected ring's, so selection still reads as selection: the gate
+ * puts the ring on screen and selection is still what makes it the subject.
+ */
+const LOUD_RING_ALPHA = 0.18;
+
+/**
+ * One loudness collar, in local hull-space — docs/ui-ux.md §3.5.
+ *
+ * Shared between hulls and structures because it is the same mark answering
+ * the same question about the same scale, and two copies of it would be two
+ * chances for the HUD to say loudness two ways.
+ *
+ * `inverseScale` puts the strokes in screen pixels while the radius stays in
+ * the metres the caller drew its figure at: a line on an instrument takes
+ * §11's UI scale, and what it captions does not.
+ */
+function drawLoudnessCollar(g: Graphics, radius: number, sig: number, inverseScale: number): void {
+  // The dial first, so the sweep is read as a proportion rather than as a
+  // stray arc — and so an emitter at SIG 0 still shows where its gauge is.
+  g.circle(0, 0, radius).stroke({
+    width: LOUDNESS_COLLAR.TRACK_PX * inverseScale,
+    color: UI.text,
+    alpha: LOUDNESS_COLLAR.TRACK_ALPHA,
+  });
+  // Against `100` rather than a constant for the same reason `drawSigMeter`
+  // is: 100 is the definition of §3's scale — `SIG 042 / 100` — rather than a
+  // number anything is free to move.
+  const sweep = Math.min(1, Math.max(0, sig / 100)) * Math.PI * 2;
+  if (sweep <= 0) return;
+  // From 12 o'clock, clockwise, like every other gauge on this HUD.
+  g.arc(0, 0, radius, -Math.PI / 2, -Math.PI / 2 + sweep).stroke({
+    width: LOUDNESS_COLLAR.SWEEP_PX * inverseScale,
+    color: sigColor(sig),
+    alpha: LOUDNESS_COLLAR.SWEEP_ALPHA,
+  });
+}
+
+/**
  * The plate VI card, as numbers — docs/style-neon-noir.md "UI chrome".
  *
  * The section is an anatomy and the match HUD had never implemented it: panels
@@ -5420,12 +5491,11 @@ export class EchoRenderer {
         );
       }
 
-      // The structure's own loudness ring, same language as units.
-      g.circle(0, 0, radius + 10 + structure.sig * 0.35).stroke({
-        width: 1 * inverseScale,
-        color: sigColor(structure.sig),
-        alpha: 0.25,
-      });
+      // §3.5's collar, in the same language as a hull's and for the same
+      // reason. An anchored array is an emitter like any other, and it carried
+      // an identical copy of the invented radius the hull's collar replaces —
+      // leaving it would have left the HUD saying loudness two ways.
+      drawLoudnessCollar(g, radius + LOUDNESS_COLLAR.STRUCTURE_GAP_M, structure.sig, inverseScale);
 
       const barWidth = radius * 2;
       const barY = -radius - 14 * inverseScale;
@@ -5464,12 +5534,18 @@ export class EchoRenderer {
   }
 
   /**
-   * Detection rings for selected units — "selected-unit detection radius
-   * renders as a soft ring on the terrain" (docs/art-direction.md).
+   * Detection rings — "detection radius renders as a soft ring on the terrain"
+   * (docs/art-direction.md), for a selected hull and for a loud one.
    *
    * This is one of the few things the client may compute itself, because it is
    * a statement about the player's OWN units against a known terrain factor.
    * It reveals nothing about the enemy.
+   *
+   * The second gate is docs/ui-ux.md §3.5, and it is what makes a hull's reach
+   * answerable without first clicking the hull that has it. It is deliberately
+   * *not* a threat indicator: nothing about a ring says anybody is inside it.
+   * It is the reach of the player's own noise, and whether that reach is a
+   * mistake is theirs to judge.
    */
   private drawRings(): void {
     const g = this.ringLayer;
@@ -5477,7 +5553,16 @@ export class EchoRenderer {
     if (this.terrain === null) return;
 
     for (const unit of this.units) {
-      if (!this.selected.has(unit.id)) continue;
+      const isSelected = this.selected.has(unit.id);
+      // §3.5's gate. Below the amber stop a hull draws its collar and nothing
+      // on the ground, which is what makes a fleet in Silent Running draw no
+      // rings at all — §7 floors a silent hull at SIG 8, two stops under this.
+      //
+      // The clutter above it is the information rather than a cost of it: one
+      // circle per hull, overlapping, at the size the water gives each. A
+      // player who has opened every drive has put their whole exposure on the
+      // chart, and that is what it looks like.
+      if (!isSelected && unit.sig < SIG_BANDS.AMBER) continue;
 
       // The server prices detection along each emitter-listener path, so the
       // true audible region is anisotropic; a circle at local PF is the
@@ -5517,12 +5602,14 @@ export class EchoRenderer {
         g.stroke({
           width: 2 * this.uiScale,
           color: sigColor(unit.sig),
-          alpha: 0.35,
+          alpha: isSelected ? 0.35 : LOUD_RING_ALPHA,
         });
       }
 
       // Hold the preview key to see exactly how badly a ping would expose you.
-      if (this.previewPing) {
+      // Selection only, and not the §3.5 gate: a ping is an order, and the
+      // hulls an order would reach are the ones the player has in hand.
+      if (this.previewPing && isSelected) {
         if (this.traceCircle(g, d.x, d.y, ACTIVE_SONAR.REVEAL_RADIUS_M, null)) {
           g.stroke({ width: 2 * this.uiScale, color: UI.friendly, alpha: 0.5 });
         }
@@ -6253,12 +6340,8 @@ export class EchoRenderer {
         });
       }
 
-      // A small tick of the unit's own loudness, drawn on the unit itself.
-      g.circle(0, 0, radius + 6 + unit.sig * 0.35).stroke({
-        width: 1 * inverseScale,
-        color: sigColor(unit.sig),
-        alpha: 0.25,
-      });
+      // §3.5's collar: this hull's own loudness, read off this hull.
+      drawLoudnessCollar(g, radius + LOUDNESS_COLLAR.GAP_M, unit.sig, inverseScale);
 
       // Overreaching its rating is drawn on the hull itself, not only in the
       // selection card: a squad crushing at the bottom of a dive is something
