@@ -45,7 +45,7 @@ test('every token of a span is read, not just the first', () => {
   ]);
 });
 
-test('a span may wrap, and a blank line still ends one', () => {
+test('a span may wrap mid-path', () => {
   // These files are authored at 100 columns, so a backticked span wrapping
   // mid-path is routine. A regex stopping at the newline could not match one:
   // it paired that span's closing backtick with the next opening one and read
@@ -54,8 +54,25 @@ test('a span may wrap, and a blank line still ends one', () => {
     candidatePaths('A wrapped `span across\nlines` and then `docs/yes.md` is named.'),
     ['docs/yes.md']
   );
-  // Without the blank-line bound one stray backtick swallows the document.
-  assert.deepEqual(candidatePaths('stray ` backtick\n\nlater `docs/x.md` here'), []);
+});
+
+test('a stray backtick costs the spans after it nothing', () => {
+  // The bound has to terminate the span rather than filter the match. #813
+  // filtered, and the discarded match had already consumed its backticks, so
+  // one unpaired backtick re-paired every span after it and the extractor read
+  // the gaps between spans as code. The assertion here used to be `[]` — the
+  // bug, written down as the expectation — and it passed with the filter
+  // deleted, so it pinned nothing. #817.
+  assert.deepEqual(candidatePaths('stray ` backtick\n\nlater `docs/x.md` here'), ['docs/x.md']);
+  assert.deepEqual(
+    candidatePaths('stray ` here\n\n`docs/a.md`, then `docs/b.md` and `docs/c.md`.'),
+    ['docs/a.md', 'docs/b.md', 'docs/c.md']
+  );
+  // A line of spaces is still a blank line, so it still ends a span.
+  assert.deepEqual(candidatePaths('stray `\n \n`docs/d.md` here'), ['docs/d.md']);
+  // The bound itself, unchanged: a span cannot contain a blank line, so the
+  // prose across one is not read as code.
+  assert.deepEqual(candidatePaths('`docs/no.md is prose\n\nnot a span` here'), []);
 });
 
 test('an indented fence is still a fence', () => {
@@ -133,6 +150,26 @@ test('a declared build output resolves, and an absent one does not', () => {
   assert.ok(resolves('packages/shared/dist'));
   assert.ok(resolves('packages/shared/dist/'));
   assert.ok(!resolves('packages/shared/build'));
+});
+
+test('a declared entry answers for both spellings, whichever way it is written', () => {
+  // The two live spans naming this build output disagree: run-game writes it
+  // bare and steward with a trailing slash. One entry answers for both only if
+  // the slash is stripped from the DECLARED side too. It was stripped from the
+  // named side alone, so an entry written with a slash answered for neither
+  // spelling — failing closed, which is why nothing caught it. #817.
+  const declaredWithSlash = makeResolver([], new Set(['packages/shared/dist/']));
+  assert.ok(declaredWithSlash('packages/shared/dist'));
+  assert.ok(declaredWithSlash('packages/shared/dist/'));
+
+  const documents = [{ file: 'a.md', text: 'It names `docs/gone/` with a slash.' }];
+  const resolves = makeResolver([]);
+  assert.deepEqual(unresolvedPaths(documents, resolves, new Set(['docs/gone'])), []);
+  assert.deepEqual(unresolvedPaths(documents, resolves, new Set(['docs/gone/'])), []);
+  // Still fails closed on a path nothing declares.
+  assert.deepEqual(unresolvedPaths(documents, resolves, new Set(['docs/other'])), [
+    { file: 'a.md', path: 'docs/gone/' },
+  ]);
 });
 
 test('a broken path is reported with the file that names it', () => {

@@ -74,8 +74,8 @@ tools/claude-docs  markdownlint, a relative-link check, and a path check over
                    them is asserted against VENDORED-SKILLS.md's own table, so
                    the two cannot drift. lib/paths.mjs is the path check: a
                    backticked span under packages/, tools/, docs/, .claude/ or
-                   .github/ must resolve against git or be one of two declared
-                   build outputs, a glob must match something, and an exemption
+                   .github/ must resolve against git or be the one declared
+                   build output, a glob must match something, and an exemption
                    nothing names any more fails —
                    which is what a link checker cannot see, since prose names a
                    file far more often than it links one. Configs are
