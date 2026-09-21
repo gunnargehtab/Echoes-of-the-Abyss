@@ -20,15 +20,24 @@ export const PATH_PREFIXES = ['packages/', 'tools/', 'docs/', '.claude/', '.gith
 const PREFIX_RE = new RegExp(`^(${PATH_PREFIXES.map((p) => p.replace('.', '\\.')).join('|')})`);
 // CommonMark allows a fence to be indented up to three spaces, which is also
 // where a fence inside a single-level list item sits. Anchoring at column zero
-// left three real fences unseen (CONTRIBUTING.md:102 among them), so their
-// contents were read as prose. That was never harmless, and the comment here
-// used to say it was — on the grounds that none of the three held a backtick.
-// A fence DELIMITER is three backticks, so an unstripped fence puts six of
-// them into the prose whatever it contains, and every span after it pairs off
-// by one. Stripping the indented three moves 17 path mentions across the
-// gated set. Three is CommonMark's own bound: past it a block is an indented
-// code block rather than a fence. A fence nested deeper than that, inside a
-// nested list, would not be stripped; none exists here.
+// left three real fences unseen (CONTRIBUTING.md:103 among them), so their
+// contents were read as prose.
+//
+// This comment used to call that harmless because none of the three held a
+// backtick, which is the wrong test twice over. A fence DELIMITER is itself
+// three backticks, so an unstripped fence is paired over as prose whatever it
+// contains; and what decides whether that costs anything is whether the BODY
+// names a repository path. None of the three does, so the strip buys nothing
+// measurable here: anchored and indented stripping both extract 195 mentions
+// over the 23 gated documents, 0 of them differing. It is kept for the fence
+// that does name one — with a body of `rm docs/nope.md`, anchoring at column
+// zero reads docs/nope.md as a live claim about the tree, and the test beside
+// this file uses exactly that shape so the bound is pinned rather than argued
+// (#817).
+//
+// Three is CommonMark's own bound: past it a block is an indented code block
+// rather than a fence. A fence nested deeper than that, inside a nested list,
+// would not be stripped; none exists here.
 const FENCE_RE = /^ {0,3}```[\s\S]*?^ {0,3}```/gm;
 // A span may cross a newline. These files are authored at 100 columns, so a
 // backticked path wrapping mid-span is routine, and a regex that stopped at the

@@ -76,11 +76,20 @@ test('a stray backtick costs the spans after it nothing', () => {
 });
 
 test('an indented fence is still a fence', () => {
-  // The three real indented fences in the gated set are two-space, inside a
-  // list item — CONTRIBUTING.md:102 is one. Anchoring the pattern at column
-  // zero left all three unseen, so their contents were read as prose.
-  const body = 'Text:\n\n  ```bash\n  rm `docs/nope.md`\n  ```\n\nThen `docs/yes.md`.';
-  assert.deepEqual(candidatePaths(body), ['docs/yes.md']);
+  // The three real indented fences in the gated set sit in a list item at two
+  // and three spaces — CONTRIBUTING.md:103 is one. Anchoring the pattern at
+  // column zero left all three unseen, so their contents were read as prose.
+  //
+  // The body here holds NO backtick, and that is what makes the assertion
+  // discriminate. An unstripped fence's own delimiters pair around a
+  // backticked body and swallow it, so a fence holding `docs/nope.md` answers
+  // the same either way and pins nothing — which is what this test did until
+  // #817, against a bound that had been right since #813.
+  const bare = 'Text:\n\n  ```bash\n  rm docs/nope.md\n  ```\n\nThen `docs/yes.md`.';
+  assert.deepEqual(candidatePaths(bare), ['docs/yes.md']);
+  // The backticked shape too, since a fence usually does hold one.
+  const quoted = 'Text:\n\n  ```bash\n  rm `docs/nope.md`\n  ```\n\nThen `docs/yes.md`.';
+  assert.deepEqual(candidatePaths(quoted), ['docs/yes.md']);
 });
 
 test('trailing punctuation inside a span is trimmed', () => {
