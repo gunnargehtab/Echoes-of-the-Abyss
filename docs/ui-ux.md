@@ -131,6 +131,20 @@ between the crush ring at +4 and the selection ring at +8.
 | Drawn for | Every own hull **and every own structure**, every zoom, selected or not. It is the permanent element §1.4 makes of the meter, per emitter |
 | Never | Animated, and never a count of anything hostile |
 
+![Four hulls and two structures at the fleet's own base, each wearing a track circle with
+an amber sweep from twelve o'clock; the quiet scout on the left wears a short green
+one](screenshots/issue-731/collars.png)
+
+![The same fleet with one hull in Silent Running: its collar is a green sliver at twelve
+o'clock and the meter still reads the fleet's peak of 64](screenshots/issue-731/silent.png)
+
+![The same hull one ping later, its collar closed to a near-complete red circle with the
+meter at SIG 095](screenshots/issue-731/ping.png)
+
+Those three are one hull across three states, and they are the argument for the mark: §3's
+meter reads 64, 64 and 95 through all of them, because it is a peak and a peak is not an
+attribution. The collar says *which*.
+
 **The sweep is the information and the colour is the confirmation.** An arc length reads
 without hue at all, which is what makes this mark survive §11's palettes rather than depend
 on them — a player who cannot separate the amber stop from the red one still sees three
