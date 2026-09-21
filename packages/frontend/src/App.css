@@ -2100,13 +2100,49 @@ button.objectives-row:hover {
   color: var(--neon-red);
 }
 
-/* The authored reading. It is the report, so it gets the reading measure. */
+/* The authored reading. It is the report, so it gets the reading measure.
+
+   It is also rendered verbatim (ui-ux.md §10.5) and therefore unbounded — a
+   mission's words, not a template's — which is #829, the same exposure as the
+   objective row's one element up. The panel is a scroll container on both axes
+   (`overflow-y: auto` computes the other to `auto`), so an overrun is scrolled
+   out of a box nothing teaches the player to scroll: §2's "invisible rather
+   than absent".
+
+   `anywhere` rather than `break-word`, and here that is the whole fix rather
+   than a preference. The rules above this one prefer the narrower value
+   because their cell sits in a `minmax(0, …)` track, whose minimum is a length
+   rather than its contents, so the min-content contribution the two values
+   differ in cannot reach a track from there. This element has no track. It is
+   a flex item of `.mission-result-panel`, which is `column` with
+   `align-items: center`, so its width is shrink-to-fit and *is* floored by its
+   own min-content — and `break-word` leaves min-content alone. The box
+   therefore grows to the token, the token never has to break, and the
+   declaration does nothing at all.
+
+   Measured in Chromium at 1440x900 against `MissionResult`'s own markup and
+   the shipped sheet, with a token injected into Thin Water's Partial epilogue.
+   The panel's content box is 558 px. A 100-character token takes the
+   paragraph's box to 598.8 px and the card to 20 px of horizontal scroll;
+   at the widest glyph, 1109.9 px and 275 px. **`break-word` reproduces the
+   shipping numbers to the decimal in every one of those** — it is inert, not
+   merely weaker. With `anywhere` the box clamps to 560 px and the scroll is 0,
+   at 75%, 100% and 200% alike. Neither `--ui-scale` nor `--panel-type` reaches
+   this card, so those three are one reading rather than three.
+
+   The overrun splits either side because the panel centres its items, so half
+   of it is off the left edge where no scrollbar can reach it at all.
+
+   Latent, as #773 and #809 were: the longest unbreakable run in the 32
+   authored epilogues is 13 characters (`transmissions`), which wraps with the
+   measure to spare and is untouched by this declaration. */
 .mission-result-line {
   margin: 0;
   font-size: 0.72rem;
   line-height: 1.75;
   letter-spacing: 0.02em;
   color: var(--text-bright);
+  overflow-wrap: anywhere;
 }
 
 .mission-result-objectives {
