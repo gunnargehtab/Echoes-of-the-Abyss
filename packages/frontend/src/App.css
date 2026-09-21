@@ -2122,12 +2122,17 @@ button.objectives-row:hover {
    declaration does nothing at all.
 
    Driven in Chromium against the shipped sheet and `MissionResult`'s own
-   rendered markup, with a token injected into Thin Water's Partial epilogue.
-   At 1440x900 the panel's content box is 559.8 px, and the paragraph's box
-   goes to 573.1 px at 80 characters (7 px of card scroll) and 716.3 px at 100
-   (78 px). The shell also runs on a phone (SETUP-ANDROID.md), and at 360 px
-   the content box is 306.8 px and the fault fires at 64 characters already:
-   458.5 px and 76 px of scroll, rising to 205 px at 100.
+   rendered markup, with a token injected into an excerpt of Thin Water's
+   Partial reading. At 1440x900 the panel's content box is 560.0 px, and the
+   paragraph's box goes to 573.1 px at 80 characters (7 px of card scroll) and
+   716.3 px at 100 (78 px). The game also runs on a phone (SETUP-ANDROID.md),
+   and at 360 px the content box is 306.8 px and the fault fires at 64
+   characters already: 458.5 px and 76 px of scroll, rising to 205 px at 100.
+
+   Take that content box off the border box rather than off `clientWidth`,
+   which is an integer: at 1440 it rounds 611.1875 down to 611 and reports the
+   content box as 559.8, which is narrower than the paragraph's own 560 px box
+   sitting inside it.
 
    **`break-word` reproduces every one of those figures to the decimal** — it
    is inert, not merely weaker. With `anywhere` the box clamps to the content
@@ -2141,10 +2146,14 @@ button.objectives-row:hover {
    under-reports the overrun and hides that the face is monospace, where a
    "widest glyph" reading does not exist at all.
 
-   Latent, as #773 and #809 were: the longest unbreakable run in the 87
-   authored epilogue readings is 14 characters (`Undermarshalcy`), the same
-   token the objective rows name, and it wraps with the measure to spare at
-   both widths. */
+   Latent, as #773 and #809 were. Count the population this element actually
+   renders, though, which is not the epilogue blocks: `runtime.ts` builds the
+   payload as the reading plus the mission's filed reading plus a transcript of
+   every objective and attended emitter, so 250 authored strings can land here
+   rather than 87. The longest unbreakable run across all of them is still 14
+   characters — `Undermarshalcy`, the token the objective rows already name,
+   with `contradiction.` and `classification` beside it — and it wraps with the
+   measure to spare at both widths. */
 .mission-result-line {
   margin: 0;
   font-size: 0.72rem;
