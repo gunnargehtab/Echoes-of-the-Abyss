@@ -583,7 +583,8 @@ The Echo Layer only works if it's readable at a glance. See **[ui-ux.md](ui-ux.m
 
 - **The minimap is a sonar scope**, not a map. Contacts render as returns with tier-appropriate fidelity.
 - **Your own SIG is a permanent HUD element** — a horizontal meter, always visible, colour-shifting amber → red. Players must feel their own loudness.
-- **Selected-unit detection radius** renders as a soft ring on the terrain.
+- **Detection radius renders as a soft ring on the terrain** — for a selected hull, and for any hull loud enough to be worth warning about. A player must be able to see their own
+  reach without first clicking the hull that has it ([ui-ux.md](ui-ux.md) §3.5).
 - **Ping cost is previewed before commit** — hovering the ping button shows the 2,400 m reveal radius in threat-red. Never let a ping be an accident.
 - **The thermocline is on the depth ribbon.** §3 says crossing it is meant to be a moment, and a moment needs a pixel: the layer is drawn at 1,200 m with its duct shaded, in the cyan of a passive readout rather than the ink the band boundaries use — it is not a fourth band. What may be drawn is bounded by what a client is entitled to know: the boundary depth is a published constant and identical on every map, and a hull's own zone is its own state, but the **factor** may never be rendered, because 0.3 is the *across* value and asserting it would assert a listener's depth.
 - **The Fields' lie is drawn as a bound, never as a flag.** A contact reported from crystal carries a soft **scatter envelope** — the ±30° wedge and the 15% of range the lie can reach — computed on the client from what it already holds: its own hulls, the public map and the reported point. The envelope collapses when two of the player's own hulls in listening range of the point sit 30° apart from it, which is the client drawing the §3 rule it is entitled to know, not a disclosure. Whether a given contact *was* solved is never sent ([ui-ux.md](ui-ux.md) §4).

@@ -335,6 +335,8 @@ export class AudioEngine {
 
   readonly voices = new VoiceAllocator(MAX_CONTACT_VOICES);
   private mixer: ContactMixer | null = null;
+  /** §8's timbre families, off by default (#731). Buffered like the volumes. */
+  private contactTimbre = false;
   private selfMixer: SelfMixer | null = null;
   private selfBed: SelfBed | null = null;
   private sourBed: SourBed | null = null;
@@ -574,6 +576,7 @@ export class AudioEngine {
       notice: (at) => playNotice(context, ui, at),
     });
     this.mixer.setSpatialisation(this.spatialisation);
+    this.mixer.setTimbre(this.contactTimbre);
     this.duckGain = duck;
     this.contactAnalyser = analyser;
 
@@ -822,6 +825,28 @@ export class AudioEngine {
 
   get spatialisationMode(): Spatialisation {
     return this.spatialisation;
+  }
+
+  /**
+   * Whether a classified contact is heard as what it is — §8's families, off
+   * by default (#731, docs/audio-direction.md §8, docs/ui-ux.md §14).
+   *
+   * Buffered like the volumes, so the setting survives being written before
+   * the first gesture has built a graph to write it to.
+   *
+   * Off costs a convenience and no information: the tier still sounds, still
+   * pans, still reports range and freshness, and the class is on the mark and
+   * in the log either way (§11's parity table). It is a toggle rather than a
+   * build flag because §8's acceptance test is an ear on a device, and a
+   * redesign that cannot be A/B'd on the device cannot be judged at all.
+   */
+  setContactTimbre(on: boolean): void {
+    this.contactTimbre = on;
+    this.mixer?.setTimbre(on);
+  }
+
+  get contactTimbreOn(): boolean {
+    return this.contactTimbre;
   }
 
   /**

@@ -100,6 +100,20 @@ export interface Settings {
    * explicit `false` is honoured over the device.
    */
   speakerProfile: boolean;
+  /**
+   * Whether a classified contact is heard as *what it is* — §8's timbre
+   * families (docs/audio-direction.md §8, docs/ui-ux.md §14, #731).
+   *
+   * The one setting here that defaults to **off**, and the only one whose
+   * default is an admission rather than a preference: the families are built
+   * and do not yet sound like the materials §8 names them from. It is a
+   * setting rather than a build flag because §8's acceptance test is an ear on
+   * a device, so the redesign has to be auditionable where it is judged.
+   *
+   * Off costs no information. The tier still sounds, pans and reports range;
+   * the class is on the mark and in the contact log either way (§11).
+   */
+  contactTimbre: boolean;
 }
 
 /**
@@ -133,6 +147,7 @@ export const DEFAULT_SETTINGS: Settings = {
   waterDensity: 1,
   edgeScroll: true,
   speakerProfile: false,
+  contactTimbre: false,
 };
 
 const STORAGE_KEY = 'echoes.settings';
@@ -196,6 +211,10 @@ function sanitise(raw: unknown): Settings {
     edgeScroll: typeof record.edgeScroll === 'boolean' ? record.edgeScroll : true,
     speakerProfile:
       typeof record.speakerProfile === 'boolean' ? record.speakerProfile : prefersSpeakerProfile(),
+    // No device default to fall back on, unlike the two above: a record
+    // written before this field existed loads it off, which is where a build
+    // that has never offered the control would have left it anyway.
+    contactTimbre: record.contactTimbre === true,
   };
 }
 

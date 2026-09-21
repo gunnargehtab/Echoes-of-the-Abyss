@@ -108,6 +108,92 @@ When a unit crosses into the red band, the meter flashes once and the contact lo
 
 ---
 
+## 3.5 Loudness on the Hull
+
+§3 is a **fleet** instrument. It reports a peak, which is the right number for *"is my force
+loud"* and cannot answer either of the two questions a player asks next: **which** hull, and
+**how far does that carry**. A max says nothing about the hull under it, and SIG says nothing
+about the water around it.
+
+Two marks answer them, and both are drawn on the hull rather than in the corner, because
+that is where the question is asked.
+
+### The collar
+
+A gauge ring hugging every own hull, at **6 m outside the hull's drawn radius** — the lane
+between the crush ring at +4 and the selection ring at +8.
+
+| Property | Spec |
+| --- | --- |
+| Track | The full circle, in chrome at low alpha. A gauge is unreadable without the dial it sweeps |
+| Sweep | `SIG / 100` of a turn, from **12 o'clock, clockwise**. SIG 100 closes the circle |
+| Ink | §3's stops, snapping at 30 and 65 — the same ramp, so the hull and the meter never disagree about which band a hull is in |
+| Drawn for | Every own hull **and every own structure**, every zoom, selected or not. It is the permanent element §1.4 makes of the meter, per emitter |
+| Never | Animated, and never a count of anything hostile |
+
+![Four hulls and two structures at the fleet's own base, each wearing a track circle with
+an amber sweep from twelve o'clock; the quiet scout on the left wears a short green
+one](screenshots/issue-731/collars.png)
+
+![The same fleet with one hull in Silent Running: its collar is a green sliver at twelve
+o'clock and the meter still reads the fleet's peak of 64](screenshots/issue-731/silent.png)
+
+![The same hull one ping later, its collar closed to a near-complete red circle with the
+meter at SIG 095](screenshots/issue-731/ping.png)
+
+Those three are one hull across three states, and they are the argument for the mark: §3's
+meter reads 64, 64 and 95 through all of them, because it is a peak and a peak is not an
+attribution. The collar says *which*.
+
+**The sweep is the information and the colour is the confirmation.** An arc length reads
+without hue at all, which is what makes this mark survive §11's palettes rather than depend
+on them — a player who cannot separate the amber stop from the red one still sees three
+quarters of a turn.
+
+**A structure wears the same collar as a hull**, at its own lane, because it is the same
+question about the same scale: an anchored array is an emitter, and a base is the loudest
+thing most players own. One mark for it and another for hulls would be the HUD saying
+loudness two ways. It is also the one figure §3's meter deliberately leaves out — the meter
+is a peak across the player's **units**, structures excluded since #623 — so without the
+collar a base's loudness has no permanent readout at all.
+
+### The reach ring
+
+The audible circle already drawn for a **selected** hull is drawn for **any** hull at or
+above §3's amber stop, at lower ink.
+
+A fleet in Silent Running draws none at all: §7 floors a silent hull at SIG 8, two stops
+under the gate. A fleet that opened its drives draws one circle per hull, overlapping, and
+**the clutter is the point** — going loud puts your own exposure on the water, at the size
+the water gives it.
+
+| Property | Spec |
+| --- | --- |
+| Radius | `maxAudibleRangeM` at the hull's own SIG and local PF, against baseline HYD — the same figure, the same maths and the same isotropy compromise as the selected ring and as §4.5's veil |
+| Gate | SIG ≥ §3's amber stop. A hull below it draws the collar and nothing on the ground |
+| Not drawn for | Structures, at any loudness. A base is loud, anchored and permanent, so its ring would be a permanent circle that never says anything new; the collar is the whole of what a structure's loudness has to report |
+| Ink | §3's stops again, at lower alpha than a selected hull's, so selection still reads as selection |
+| Shape | Projected onto the terrain vertex by vertex, like every ring: a distance measured through water climbs a ridge |
+
+**Why a second mark and not a bigger collar.** The collar is a number *about the hull*; the
+ring is a distance *through the water*, and SIG alone does not give it. A hull at SIG 50 in
+a Thermal Vein that swallows sound at PF 0.45 and the same hull in an Abyssal Trench that
+carries it at 1.6 wear the identical collar and draw wildly different circles. §4.5 already
+settled this argument for the ground: a flat radius "would be **a lie the player could
+learn**", and a field priced against the actual propagation factor is wrong in neither
+biome. The same holds a ring.
+
+**It computes from own data only.** SIG, depth and the public biome map are all the radius
+takes, which is why the client is allowed to draw it at all — §12 below, and
+[systems-echo.md](systems-echo.md) §9. It asks nothing
+about the enemy and so can leak nothing about them — and it is deliberately **not** a threat
+indicator. Nothing about the ring says anyone is inside it. It is the reach of your own
+noise, and whether that reach is a mistake is the player's to judge.
+
+**Neither mark moves**, so §11's reduced-motion setting has nothing to replace here.
+
+---
+
 ## 4. Contacts
 
 The rendering contract, matching `TIER_STYLE` in the client scaffold:
@@ -818,6 +904,19 @@ The exposure strike is the harder of the two, and [audio-direction.md](audio-dir
 
 **Mono is a rendering choice, never a loss.** Collapsing every pan to centre costs the convenience of hearing where something is; bearing remains in the contact log and on the sonar scope, so nothing becomes unknowable.
 
+**A cue switched off does not break a row.** The rule runs one way — every audible fact owes
+a visual one — so silencing the Tier-3 timbre while §8's families are redesigned
+([#731](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/731), §14) costs a
+convenience and no information: the faction-coloured mark and the log row that names the
+class are what the row was always pointing at, and both are unchanged. The two rows that
+could not survive it are the exposure strike and the hull impact, which is why neither is
+switchable.
+
+**Own loudness is the one fact the screen carries twice**, and deliberately: §3's meter for
+the fleet and §3.5's collar for the hull. "Being loud makes you deaf"
+([audio-direction.md](audio-direction.md) §4) is a mix behaviour the player feels before
+they understand it, and a player at −18 dB of master has to be able to *read* it instead.
+
 ---
 
 ## 12. Latency and Feedback
@@ -883,14 +982,15 @@ What the current client implements against this spec, so nobody re-implements wh
 | `n units · m loud` (§3) | Implemented — *loud* is SIG over 60, counted from the player's own hulls |
 | §3's red-band crossing | Implemented (#623) — the meter flashes once on entry, with a static equivalent under reduced motion (§11), and the log records it: a `WentLoud` self-event, raised on the crossing edge by the loop that computes every hull's SIG and latched so a hull idling above the stop raises nothing after the first tick. Server-sent rather than derived on the client, because `peakSig` is a max and a second hull going loud under a louder one never moves it — the row names the hull that crossed, which the bar cannot |
 | Tier-graded contact rendering, ghost decay | Implemented |
-| Selected-unit detection ring | Implemented |
+| Detection ring, selected and loud (§3.5) | Implemented — `maxAudibleRangeM` at the hull's own SIG and local PF against baseline HYD, projected onto the terrain. Drawn for a selected hull at full ink and for any hull at or above §3's amber stop at half it, so a fleet in Silent Running draws none and a fleet that opened its drives draws one per hull |
+| The loudness collar (§3.5) | Implemented — a gauge on every own hull and every own structure, its track the full circle and its sweep `SIG / 100` of a turn from 12 o'clock, inked on §3's stops. It replaces a tick whose radius was `6 + sig × 0.35` metres on a hull and `10 + sig × 0.35` on a structure: a made-up distance in a view where every other radius is a real one, drawn at alpha 0.25 where nothing could read it, and a *radius* for a quantity that is not a distance at all |
 | Ping preview rings, ping commit | Implemented (hold `Alt`, `P`) |
 | Silent-running dimming | Implemented |
 | Depth ribbon, PR badge, unrecoverable-hull hatching | Implemented (`D` dive, `A` rise; hold `Alt` to preview the dive cost) |
 | Thermocline on the ribbon, duct as a depth rung | Implemented — cyan line at 1,200 m, duct shaded, `DUCT` / `UNDER` in the readout |
 | Sonar-scope minimap | Implemented — terrain, tier-fidelity returns, Echo Marks under them, sweep, range rings |
 | Contact log | Implemented — DOM, live region, click-to-focus, every row including `MARK` (#214) |
-| Contact voices, per-tier | Implemented — pan authority by tier, biome voicing, faction timbre at Tier 3+ |
+| Contact voices, per-tier | Implemented — pan authority by tier, biome voicing, faction timbre at Tier 3+. The **timbre is off by default** pending #731: the §8 families are built and do not yet sound like the materials §8 names, so a classified contact keeps the tier's thump and stops saying what it is. Everything the tiers carry besides identity — pan, range, freshness, the Tier-4 lock tone — is unchanged, and the class was never audio-only (§11's table) |
 | Self-noise bed, SIG band label, masking readout | Implemented — server-sent, never inferred |
 | Exposure strike and screen-edge flash | Implemented — fires from `EchoSnapshot.selfEvents`, bearing only |
 | Active sonar transmit, returns ordered by range | Implemented |
@@ -1416,6 +1516,7 @@ the screen, not a technology.
 | Acoustic veil | 0–100% | How cold the ground goes where nothing of yours is listening (§4.5). Reaches off, because the veil dims no mark and withholds nothing — a player who cannot read a drained chart gives up no information by turning it down |
 | Water density | 0–100% | How much the water hides with distance, and how much marine snow drifts through it (art-direction.md, "Reading the Water"). Reaches off, because distance hides only your own force and the ground it stands on — turning it down reveals, never withholds. The depth ramp does not move |
 | Edge scrolling | toggle | The camera pans while the pointer rests on an edge of the water (§9). On by default; off for the trackpad player whose pointer lands there by accident. The arrows and the middle button pan either way |
+| Contact timbre | toggle | Whether a classified contact is heard as *what it is* — [audio-direction.md](audio-direction.md) §8's families ([#731](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/731)). **Off by default** while those families are redesigned; the control exists so the redesign can be auditioned on a real speaker without a rebuild, which is the one way §8 can be judged. Off, a contact still sounds and still reports bearing, range and freshness — it stops carrying identity, which the mark and the log carry anyway |
 
 User volume lives on trim nodes *beside* the ducking chain, never on the ducked gains —
 the Precedence Law's ducking writes those every tick, and a user slider fighting it would

@@ -122,6 +122,21 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
           <label className="menu-toggle-row">
             <input
               type="checkbox"
+              checked={settings.contactTimbre}
+              onChange={(event) => patch({ contactTimbre: event.target.checked })}
+            />
+            <span className="menu-toggle-label">Contact timbre</span>
+            <span className="menu-toggle-note">
+              Whether a classified contact is heard as what it is — the Consortium&rsquo;s beat, the
+              Directorate&rsquo;s clicks. Off while those are being reworked: a contact still sounds
+              and still reports bearing and range, it just stops saying what it is. The mark and the
+              log say it either way.
+            </span>
+          </label>
+
+          <label className="menu-toggle-row">
+            <input
+              type="checkbox"
               checked={settings.speakerProfile}
               onChange={(event) => patch({ speakerProfile: event.target.checked })}
             />
