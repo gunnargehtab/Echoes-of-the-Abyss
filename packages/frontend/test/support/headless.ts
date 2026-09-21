@@ -873,7 +873,19 @@ export function drawInstructions(root: Container): number {
   return total;
 }
 
-/** How many `Text` objects the tree holds — the HUD's label budget. */
+/**
+ * How many `Text` objects the tree holds — the HUD's label budget.
+ *
+ * Drawn or retired: a pooled label that is currently hidden still holds its
+ * texture, so a budget counts it. That is the opposite of what
+ * `textContents` below wants, and the two walkers are separate for exactly
+ * this reason.
+ *
+ * The argument is about memory held, so it covers this, `treeSize`,
+ * `treeIdentities` and `drawInstructions`. It does *not* reach
+ * `textStyleKeys`, which counts work Pixi *performs* and skips for a hidden
+ * node. That one is unexamined and stayed on the whole-tree walk.
+ */
 export function textCount(root: Container): number {
   let total = 0;
   for (const node of walk(root)) if (node instanceof Text) total++;
@@ -881,17 +893,50 @@ export function textCount(root: Container): number {
 }
 
 /**
- * What every `Text` in the tree currently says.
+ * Every display object not hidden by `visible`.
+ *
+ * An invisible node takes its whole subtree with it, which is what Pixi's own
+ * render pass does: a parent's `globalDisplayStatus` folds into each child's
+ * (`updateRenderGroupTransforms.mjs`) and the collect pass returns early below
+ * it. So a label inside a hidden panel is not reachable here either.
+ *
+ * Narrower than "would be drawn" on purpose — Pixi also prunes on
+ * `renderable`, on culling and on render-layer membership. `visible` is the
+ * whole of the question for the labels in this client; see `textContents`.
+ */
+function* walkDrawn(root: Container): Generator<Container> {
+  if (!root.visible) return;
+  yield root;
+  for (const child of root.children) yield* walkDrawn(child as Container);
+}
+
+/**
+ * What every `Text` the player can actually read currently says.
  *
  * The counting walkers above answer "how much", and there was no way to ask
  * "what" — so a line the player reads, like the hint bar, could only be tested
  * by reaching into a private. The HUD's sentences are a contract
  * (docs/ui-ux.md §7: an action that will not happen says what it is waiting
  * on), and a contract wants an assertion rather than a count.
+ *
+ * Visibility is part of that contract, and this walked the whole tree until
+ * #826. Labels are pooled: `drawCommandBar` retires the surplus with
+ * `visible = false` and leaves the last string on it, and `productionTexts`
+ * and `fleetTexts` are retired the same way. So a retired label went on
+ * answering for a live one, and an assertion that a label is *present* after a
+ * HUD state change could pass on a string the strip no longer draws — which is
+ * how a tab-strip test in #825 passed with the behaviour it was written to
+ * catch reverted.
+ *
+ * `visible` is the whole of the check because no `Text`, and no container
+ * holding one, is ever given a `renderable` or an `alpha`. The only
+ * display-object `alpha` this client assigns is a contact sprite's
+ * (`EchoRenderer.ts:6102`, `:6128`), which reaches 0 inside the arrival fade
+ * (`markOpacity`) and carries no `Text` under it.
  */
 export function textContents(root: Container): string[] {
   const said: string[] = [];
-  for (const node of walk(root)) if (node instanceof Text) said.push(node.text);
+  for (const node of walkDrawn(root)) if (node instanceof Text) said.push(node.text);
   return said;
 }
 
