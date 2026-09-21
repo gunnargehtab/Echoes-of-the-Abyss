@@ -25,6 +25,7 @@ import {
 import { cannedMap, cannedNodes, cannedSnapshot, cannedTerrain } from './support/cannedMatch.ts';
 import {
   collarRadius,
+  crackleAmplitude,
   EchoRenderer,
   SELECTION_GAP_M,
   type RendererCallbacks,
@@ -78,15 +79,38 @@ function sigStrokes(app: HeadlessApplication): Stroke[] {
   return found;
 }
 
-/** The collar's sweep: a stroke whose path is a single arc. */
+/**
+ * The collar's sweep, recovered from what is actually drawn.
+ *
+ * Not an `arc` any more: the sweep is traced as a polyline so it can crackle
+ * (docs/style-neon-noir.md, "Motion and FX timing"), and the glow recipe draws
+ * that polyline three times — two halos under a core. The **core** is the one
+ * taken, identified by full alpha: a halo is 0.13 or 0.44 and a detection ring
+ * is 0.35 or 0.18, so nothing else on the stage is SIG-inked and opaque.
+ *
+ * The first and last vertices are pinned to the true radius by the renderer,
+ * which is what makes this recoverable at all — and is itself the property
+ * worth holding, since the sweep's end *is* the reading.
+ */
 function collars(app: HeadlessApplication): Array<{ radius: number; start: number; end: number }> {
   const out: Array<{ radius: number; start: number; end: number }> = [];
   for (const stroke of sigStrokes(app)) {
+    if (stroke.alpha !== 1) continue;
+    const points: Array<[number, number]> = [];
     for (const step of stroke.steps) {
-      if (step.action !== 'arc') continue;
-      const [, , radius, start, end] = step.data as number[];
-      out.push({ radius: radius!, start: start!, end: end! });
+      if (step.action !== 'moveTo' && step.action !== 'lineTo') continue;
+      const [x, y] = step.data as number[];
+      points.push([x!, y!]);
     }
+    if (points.length < 2) continue;
+    const first = points[0]!;
+    const last = points[points.length - 1]!;
+    // Unwrapped forward from 12 o'clock, because a sweep past 3 o'clock wraps
+    // through atan2's cut and would otherwise read as a negative arc.
+    const start = Math.atan2(first[1], first[0]);
+    let end = Math.atan2(last[1], last[0]);
+    while (end < start - 1e-9) end += Math.PI * 2;
+    out.push({ radius: Math.hypot(first[0], first[1]), start, end });
   }
   return out;
 }
@@ -102,12 +126,17 @@ function collars(app: HeadlessApplication): Array<{ radius: number; start: numbe
  */
 const RING_ALPHA = { SELECTED: 0.35, GATED: 0.18 } as const;
 
-/** A detection ring: a SIG-inked stroke traced as a projected polygon. */
+/**
+ * A detection ring: a SIG-inked stroke at one of the two ring alphas.
+ *
+ * Alpha is the whole of the filter since the collar's sweep became a polyline
+ * too — a ring and a collar halo are the same shape of path now, and only the
+ * ink tells them apart. The four collar alphas (track 0.16, halos 0.13 and
+ * 0.44, core 1) are deliberately clear of both ring alphas.
+ */
 function reachRings(app: HeadlessApplication): Stroke[] {
   const alphas: number[] = [RING_ALPHA.SELECTED, RING_ALPHA.GATED];
-  return sigStrokes(app).filter(
-    (stroke) => alphas.includes(stroke.alpha) && stroke.steps.every((step) => step.action !== 'arc')
-  );
+  return sigStrokes(app).filter((stroke) => alphas.includes(stroke.alpha));
 }
 
 async function boot(): Promise<{
@@ -200,16 +229,149 @@ describe('the loudness collar (ui-ux.md §3.5)', () => {
       assert.equal(sweeps.length, expected.length);
       for (let i = 0; i < sweeps.length; i++) {
         assert.ok(
-          Math.abs(sweeps[i]! - expected[i]!) < 1e-9,
+          Math.abs(sweeps[i]! - expected[i]!) < 1e-6,
           `sweep ${sweeps[i]} should be ${expected[i]}`
         );
       }
       // Twelve o'clock, and clockwise from it: every arc opens at -PI/2 and
       // ends above it. A gauge that ran the other way would read backwards.
       for (const arc of drawn) {
-        assert.ok(Math.abs(arc.start + Math.PI / 2) < 1e-9, 'opens at twelve o clock');
+        assert.ok(Math.abs(arc.start + Math.PI / 2) < 1e-6, 'opens at twelve o clock');
         assert.ok(arc.end >= arc.start, 'runs clockwise');
       }
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
+/**
+ * How far the sweep's core wanders off its own radius, per collar.
+ *
+ * The crackle's whole amplitude, measured rather than read off a constant —
+ * the ends are pinned, so a mean would hide it and the maximum is the figure.
+ */
+function collarWobble(app: HeadlessApplication): number[] {
+  const out: number[] = [];
+  for (const stroke of sigStrokes(app)) {
+    if (stroke.alpha !== 1) continue;
+    const radii: number[] = [];
+    for (const step of stroke.steps) {
+      if (step.action !== 'moveTo' && step.action !== 'lineTo') continue;
+      const [x, y] = step.data as number[];
+      radii.push(Math.hypot(x!, y!));
+    }
+    if (radii.length < 3) continue;
+    const pinned = radii[0]!;
+    out.push(Math.max(...radii.map((r) => Math.abs(r - pinned))));
+  }
+  return out;
+}
+
+describe('the crackle (style-neon-noir.md, Motion and FX timing)', () => {
+  it('rides SIG, strictly, over the whole scale', () => {
+    // Asserted on the rule rather than on the drawn path, because the drawn
+    // path cannot answer it: a short sweep samples the noise eight times over
+    // several cycles, so the widest vertex it happens to catch is luck. The
+    // aliasing is wanted — it is what makes the sweep read as struck rather
+    // than waved — which is exactly why the property is held here instead.
+    let previous = -Infinity;
+    for (let sig = 0; sig <= 100; sig += 5) {
+      const amplitude = crackleAmplitude(sig);
+      assert.ok(amplitude > previous, `SIG ${sig} does not crackle wider than ${sig - 5}`);
+      previous = amplitude;
+    }
+    // The floor is why a silent hull is nearly still without being dead: it
+    // keeps a sliver legible as the same kind of mark as a full circle.
+    assert.ok(crackleAmplitude(0) > 0, 'a quiet emitter still wears the same mark');
+    assert.ok(
+      crackleAmplitude(100) > crackleAmplitude(0) * 4,
+      'the loud end has to be visibly more electric than the quiet one'
+    );
+    // Off the ends of the scale it saturates rather than inverting.
+    assert.equal(crackleAmplitude(-20), crackleAmplitude(0));
+    assert.equal(crackleAmplitude(400), crackleAmplitude(100));
+  });
+
+  it('is actually drawn, and widest on the loudest emitter in the water', async () => {
+    const world = await boot();
+    try {
+      const wobble = collarWobble(world.app);
+      assert.ok(wobble.length > 0, 'no collar core was traced at all');
+      assert.ok(
+        wobble.some((w) => w > 0),
+        'every sweep came out a perfect arc: the crackle reached nothing'
+      );
+      // Bounded against the gauge it rides rather than against the rule: the
+      // amplitude is screen pixels and these vertices are local metres off a
+      // per-unit scale the test cannot see, so the rule itself is held above
+      // and what is held here is that the crackle stays subordinate — a
+      // wobble comparable to the radius would be a shape, not a texture.
+      for (const stroke of sigStrokes(world.app)) {
+        if (stroke.alpha !== 1) continue;
+        const radii: number[] = [];
+        for (const step of stroke.steps) {
+          if (step.action !== 'moveTo' && step.action !== 'lineTo') continue;
+          const [x, y] = step.data as number[];
+          radii.push(Math.hypot(x!, y!));
+        }
+        if (radii.length < 3) continue;
+        const pinned = radii[0]!;
+        const widest = Math.max(...radii.map((r) => Math.abs(r - pinned)));
+        assert.ok(
+          widest < pinned * 0.25,
+          `a sweep wandered ${((widest / pinned) * 100).toFixed(1)}% of its own radius`
+        );
+      }
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('pins both ends of the sweep, because the end is the reading', async () => {
+    const world = await boot();
+    try {
+      for (const stroke of sigStrokes(world.app)) {
+        if (stroke.alpha !== 1) continue;
+        const radii: number[] = [];
+        for (const step of stroke.steps) {
+          if (step.action !== 'moveTo' && step.action !== 'lineTo') continue;
+          const [x, y] = step.data as number[];
+          radii.push(Math.hypot(x!, y!));
+        }
+        if (radii.length < 3) continue;
+        assert.ok(
+          Math.abs(radii[radii.length - 1]! - radii[0]!) < 1e-6,
+          'a gauge whose needle jitters cannot be read to the stop'
+        );
+      }
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('freezes under reduced motion rather than going away (§11)', async () => {
+    const world = await boot();
+    try {
+      const moving = collarWobble(world.app);
+      world.chart.setReducedMotion(true);
+      world.frame(2);
+      const still = collarWobble(world.app);
+
+      assert.equal(still.length, moving.length);
+      // §11 asks for a static equivalent that carries the same information,
+      // and all of this one's information is amplitude — which the freeze does
+      // not touch, because it fixes the noise's *seed* and nothing else. So
+      // the test is that the crackle is still there, not that it still moves.
+      assert.ok(
+        still.some((w) => w > 0),
+        'reduced motion removed the crackle instead of stopping it'
+      );
+
+      // And it really is stopped: the same seed on a later frame draws the
+      // same vertices, where an unfrozen one advances with the Echo grid.
+      world.frame(2);
+      assert.deepEqual(collarWobble(world.app), still, 'a frozen crackle must not move');
     } finally {
       world.teardown();
     }

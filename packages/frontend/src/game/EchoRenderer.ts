@@ -981,11 +981,34 @@ const LOUDNESS_COLLAR = {
   CLEAR_FLOOR_M: 4,
   /** The dial the sweep is read against. Without it a sweep is a stray arc. */
   TRACK_ALPHA: 0.16,
-  /** The sweep is the reading, so it is the one that is meant to be seen. */
-  SWEEP_ALPHA: 0.85,
   /** Screen pixels, like every stroke on an instrument (§11's UI scale). */
   TRACK_PX: 1,
-  SWEEP_PX: 2.5,
+  /**
+   * The glow recipe — docs/style-neon-noir.md, "The glow recipe": a core at
+   * full opacity under two halo layers, which is that section's hard cap.
+   *
+   * Widths are screen pixels rather than metres for the reason every stroke on
+   * this HUD is: a halo is a property of the instrument, not of the water.
+   */
+  HALO_OUTER_PX: 20,
+  HALO_OUTER_ALPHA: 0.13,
+  HALO_INNER_PX: 8,
+  HALO_INNER_ALPHA: 0.44,
+  CORE_PX: 1.6,
+  /**
+   * The crackle — docs/style-neon-noir.md, "Motion and FX timing".
+   *
+   * Radial noise on the sweep, re-seeded on the 200 ms Echo grid like every
+   * other HUD animation. Its amplitude rides SIG, which is what earns it a
+   * place at all: a silent hull's sliver sits nearly still and a pinged hull
+   * is the most electric thing on the chart, so the effect reports loudness
+   * rather than decorating it. Deliberately sub-pixel at rest — the sweep's
+   * *end* is the reading, and noise on it is noise on the number.
+   */
+  CRACKLE_STEP_RAD: 0.13,
+  CRACKLE_PX: 0.55,
+  /** What is left of the amplitude at SIG 0, as a share of the above. */
+  CRACKLE_FLOOR_SHARE: 0.15,
 } as const;
 
 /**
@@ -1023,6 +1046,27 @@ export function collarRadius(figureRadius: number, selectionGapM: number): numbe
 const LOUD_RING_ALPHA = 0.18;
 
 /**
+ * How wide the sweep's crackle runs at a given SIG, in screen pixels.
+ *
+ * Pure and exported for `collarRadius`'s reason: this is the whole of what
+ * earns the effect a place in docs/style-neon-noir.md — that it reports
+ * loudness rather than decorating it — and a rule that matters that much
+ * should be assertable exactly. It cannot be read back off the drawn path,
+ * because what a *sample* of the noise happens to catch is not its amplitude:
+ * a short sweep carries eight samples of a signal several cycles long, so the
+ * measured maximum is luck. The rendering wants that aliasing — it is what
+ * makes the sweep look struck rather than waved — and a test must not depend
+ * on it.
+ */
+export function crackleAmplitude(sig: number): number {
+  const fraction = Math.min(1, Math.max(0, sig / 100));
+  return (
+    LOUDNESS_COLLAR.CRACKLE_PX *
+    (LOUDNESS_COLLAR.CRACKLE_FLOOR_SHARE + (1 - LOUDNESS_COLLAR.CRACKLE_FLOOR_SHARE) * fraction)
+  );
+}
+
+/**
  * One loudness collar, in local hull-space — docs/ui-ux.md §3.5.
  *
  * Shared between hulls and structures because it is the same mark answering
@@ -1033,25 +1077,73 @@ const LOUD_RING_ALPHA = 0.18;
  * the metres the caller drew its figure at: a line on an instrument takes
  * §11's UI scale, and what it captions does not.
  */
-function drawLoudnessCollar(g: Graphics, radius: number, sig: number, inverseScale: number): void {
+function drawLoudnessCollar(
+  g: Graphics,
+  radius: number,
+  sig: number,
+  inverseScale: number,
+  nowMs: number,
+  still: boolean
+): void {
+  const px = inverseScale;
   // The dial first, so the sweep is read as a proportion rather than as a
   // stray arc — and so an emitter at SIG 0 still shows where its gauge is.
   g.circle(0, 0, radius).stroke({
-    width: LOUDNESS_COLLAR.TRACK_PX * inverseScale,
+    width: LOUDNESS_COLLAR.TRACK_PX * px,
     color: UI.text,
     alpha: LOUDNESS_COLLAR.TRACK_ALPHA,
   });
   // Against `100` rather than a constant for the same reason `drawSigMeter`
   // is: 100 is the definition of §3's scale — `SIG 042 / 100` — rather than a
   // number anything is free to move.
-  const sweep = Math.min(1, Math.max(0, sig / 100)) * Math.PI * 2;
+  const fraction = Math.min(1, Math.max(0, sig / 100));
+  const sweep = fraction * Math.PI * 2;
   if (sweep <= 0) return;
-  // From 12 o'clock, clockwise, like every other gauge on this HUD.
-  g.arc(0, 0, radius, -Math.PI / 2, -Math.PI / 2 + sweep).stroke({
-    width: LOUDNESS_COLLAR.SWEEP_PX * inverseScale,
-    color: sigColor(sig),
-    alpha: LOUDNESS_COLLAR.SWEEP_ALPHA,
+
+  const ink = sigColor(sig);
+  const start = -Math.PI / 2;
+  // Quantised to the 200 ms Echo grid, and frozen outright under reduced
+  // motion. Frozen rather than removed: §11 asks for a static equivalent that
+  // carries the same information, and all of the information is in the
+  // *amplitude* rather than in the movement — a still crackle is as wide as a
+  // moving one, so the loud hull still reads as the ragged one.
+  const seed = still ? 0 : Math.floor(nowMs / (1000 / SIM.ECHO_HZ));
+  const amplitude = crackleAmplitude(sig);
+  const steps = Math.max(8, Math.ceil(sweep / LOUDNESS_COLLAR.CRACKLE_STEP_RAD));
+
+  // Traced three times rather than traced once and stroked three times: a Pixi
+  // path is consumed by the stroke that closes it, so each layer needs its own.
+  const trace = (): void => {
+    for (let i = 0; i <= steps; i++) {
+      const angle = start + (i / steps) * sweep;
+      // Both ends are pinned to the true radius. The first is 12 o'clock and
+      // the last is the reading itself, and neither may wander: a gauge whose
+      // needle jitters is a gauge that cannot be read to the stop.
+      const pinned = i === 0 || i === steps ? 0 : 1;
+      const noise =
+        Math.sin(angle * 23.7 + seed * 1.9) * Math.sin(angle * 11.3 - seed * 0.7) * pinned;
+      const r = radius + noise * amplitude * px;
+      const x = Math.cos(angle) * r;
+      const y = Math.sin(angle) * r;
+      if (i === 0) g.moveTo(x, y);
+      else g.lineTo(x, y);
+    }
+  };
+
+  trace();
+  g.stroke({
+    width: LOUDNESS_COLLAR.HALO_OUTER_PX * px,
+    color: ink,
+    alpha: LOUDNESS_COLLAR.HALO_OUTER_ALPHA,
   });
+  trace();
+  g.stroke({
+    width: LOUDNESS_COLLAR.HALO_INNER_PX * px,
+    color: ink,
+    alpha: LOUDNESS_COLLAR.HALO_INNER_ALPHA,
+  });
+  trace();
+  g.stroke({ width: LOUDNESS_COLLAR.CORE_PX * px, color: ink, alpha: 1 });
 }
 
 /**
@@ -5538,7 +5630,9 @@ export class EchoRenderer {
         g,
         collarRadius(radius, SELECTION_GAP_M.STRUCTURE),
         structure.sig,
-        inverseScale
+        inverseScale,
+        this.frameNowMs,
+        this.reducedMotion
       );
 
       const barWidth = radius * 2;
@@ -6385,7 +6479,14 @@ export class EchoRenderer {
       }
 
       // §3.5's collar: this hull's own loudness, read off this hull.
-      drawLoudnessCollar(g, collarRadius(radius, SELECTION_GAP_M.HULL), unit.sig, inverseScale);
+      drawLoudnessCollar(
+        g,
+        collarRadius(radius, SELECTION_GAP_M.HULL),
+        unit.sig,
+        inverseScale,
+        now,
+        this.reducedMotion
+      );
 
       // Overreaching its rating is drawn on the hull itself, not only in the
       // selection card: a squad crushing at the bottom of a dive is something

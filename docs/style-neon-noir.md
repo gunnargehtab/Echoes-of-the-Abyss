@@ -344,7 +344,7 @@ and the colour is what makes it findable.
 
 ## Reduced motion
 
-Three animations in the interface are decoration wrapped around information,
+Four animations in the interface are decoration wrapped around information,
 and [ui-ux.md](ui-ux.md) §11 requires each to have a static equivalent
 "that carries the same information":
 
@@ -352,6 +352,7 @@ and [ui-ux.md](ui-ux.md) §11 requires each to have a static equivalent
 | --- | --- | --- |
 | The scope sweep (4 s a revolution) | A fixed cyan cross-hair on the scope's anchor, drawn at the same alpha | The sweep never carried information — it is out of phase with the 5 Hz tick on purpose so nobody believes it finds things. The anchor it rotates about *is* information: it is where the ping rings are measured from |
 | Screen-edge exposure flash (2 s decay) | A steady wedge on the same bearing, held for the same two seconds, then gone | The bearing, and the fact that it is *live*. A hold-then-cut keeps both without a ramp |
+| The loudness collar's crackle (200 ms grid) | The same crackle at the same width, its seed frozen | The **amplitude**, which is the reading — a still crackle is exactly as wide as a moving one, so the loud hull is still the ragged one. Frozen rather than removed, because unlike the three below the movement was never the message: the width was |
 | The crush-depth badge pulse (~0.5 Hz) | A filled badge at constant full alpha, with a hairline rule under it | "This hull is below its Pressure Rating and losing tonnage that will not heal." The pulse said *unrecoverable*; the rule says it without moving |
 
 Reduced motion does **not** touch the ping wavefront, the acquisition brackets,
@@ -371,6 +372,16 @@ is: **if the motion is the message, it stays.**
   the game should look expensive.
 - **Damage**: chrome flicker (2–3 dropped frames of bevel glow), cavitation
   distortion per [art-direction.md](art-direction.md) UI FX.
+- **The loudness collar's crackle** ([ui-ux.md](ui-ux.md) §3.5): radial noise on
+  the sweep, re-seeded on the 200 ms grid like everything else here. **Its
+  amplitude rides SIG** — sub-pixel on a hull in Silent Running, widest at the
+  top of the red band — and that is the whole of why it is in this document. An
+  effect that crackled the same at every reading would be decoration on a
+  permanent instrument, which is what the Don'ts below exist to prevent; one
+  whose width *is* the reading is the glow recipe carrying information, like
+  the lamps in "World light" below. Both ends of the sweep stay pinned to the
+  true radius: twelve o'clock is the origin and the far end is the reading, and
+  a gauge whose needle jitters cannot be read to the stop.
 - **Camera**: keep the existing slow sway and vignette; add a barely-visible
   magenta/cyan chromatic split (≤ 1 px) at the frame edges only.
 
