@@ -606,10 +606,12 @@ describe('the mission result: a mission’s words cannot carry the counter out',
  * `break-word` does not change min-content, so the box simply grows to the
  * token and the token never has to break. Driven in Chromium against the
  * shipped sheet and this component's own rendered markup: at 1440x900 the
- * panel's content box is 559.8 px and an 80-character token takes the
+ * panel's content box is 560.0 px and an 80-character token takes the
  * paragraph to 573.1 px and the card to 7 px of scroll, 100 characters to
  * 716.3 px and 78 px; at a 360 px phone width (SETUP-ANDROID.md) the content
- * box is 306.8 px and 64 characters already overruns it by 76 px.
+ * box is 306.8 px and 64 characters already overruns it by 76 px. Take that
+ * content box off the border box: `clientWidth` is an integer and reports it
+ * 0.19 px narrow at 1440.
  * `break-word` reproduces every one of those to the decimal, at 75%, 100% and
  * 200% alike; `anywhere` takes the scroll to 0 at both widths.
  *
@@ -618,9 +620,11 @@ describe('the mission result: a mission’s words cannot carry the counter out',
  * card in Times New Roman — proportional, which under-reports the overrun.
  * The shipped face is monospace, so a "widest glyph" reading does not exist.
  *
- * Latent in the way #773 and #809 were: the longest unbreakable run in the 87
- * authored epilogue readings across 29 missions is 14 characters
- * (`Undermarshalcy`), the same token rows 35 and 38 name.
+ * Latent in the way #773 and #809 were. The population is not the 87 epilogue
+ * readings: `runtime.ts` appends the filed reading and a transcript line per
+ * objective and attended emitter, so 250 authored strings can land in this
+ * element. The longest unbreakable run across all of them is still 14
+ * characters (`Undermarshalcy`), the token rows 35 and 38 name.
  */
 describe('the mission result: an epilogue cannot carry itself out of the card', () => {
   /** Where the epilogue sits — a child of the panel, not of the list. */
