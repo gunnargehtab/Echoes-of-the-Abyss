@@ -23,7 +23,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
-import { Graphics, Text, type Container, type GraphicsPath } from 'pixi.js';
+import { Container, Graphics, Text, type GraphicsPath } from 'pixi.js';
 import { Faction, MovementHoldReason, StructureKind } from '@echoes/shared';
 import { FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
 import {
@@ -296,6 +296,43 @@ async function boot(options: { webgl?: boolean } = {}): Promise<Booted> {
     },
   };
 }
+
+/**
+ * The probes every test below reads the HUD through, held to the one promise
+ * that separates them (#826): a budget counts every label the client pays
+ * for, and a contract quotes only the ones on the glass. Hand-built rather
+ * than booted, so a failure here is the probe's and not the renderer's.
+ */
+describe('renderer smoke test: the scene-graph probes', () => {
+  it('quotes the labels that are drawn, and counts the ones that are not', () => {
+    const stage = new Container();
+    const drawn = new Text({ text: 'DRAWN' });
+    // A pooled label the strip has retired: `drawCommandBar` leaves the last
+    // string on it, which is what made it answer for a live one.
+    const retired = new Text({ text: 'RETIRED' });
+    retired.visible = false;
+    // And a label that is visible itself, inside a panel that is not. Pixi's
+    // render pass stops at the panel, so the walk has to as well.
+    const closedPanel = new Container();
+    closedPanel.visible = false;
+    closedPanel.addChild(new Text({ text: 'INSIDE A CLOSED PANEL' }));
+    stage.addChild(drawn, retired, closedPanel);
+
+    assert.deepEqual(textContents(stage), ['DRAWN']);
+    assert.equal(textSaying(stage, 'RETIRED'), null, 'a retired label answered for a live one');
+    assert.equal(
+      textSaying(stage, 'INSIDE A CLOSED PANEL'),
+      null,
+      'a label in a closed panel answered — the walk did not stop at the panel'
+    );
+
+    // The counters deliberately disagree with the quote above. A retired
+    // label still holds its texture whether or not the strip draws it, so a
+    // budget that stopped counting it would be understating what is spent.
+    assert.equal(textCount(stage), 3, 'the label budget stopped counting what it still pays for');
+    assert.equal(treeSize(stage), 5, 'the tree probe stopped seeing a node that is still there');
+  });
+});
 
 describe('renderer smoke test: the chart', () => {
   it('boots against a canned match and builds the layers it promises', async () => {
@@ -1885,21 +1922,10 @@ describe('the command card when it is offered more than it holds', () => {
   it('gives each yard a tab, and the Harvester the Bastion’s page', async () => {
     const world = await boot();
     try {
-      // Visible text only. Bar labels are pooled and a retired one keeps its
-      // last string with `visible = false` (see `barText`), so `textContents`
-      // — which does not look at visibility — reports tabs that are no longer
-      // drawn. Reading those made an earlier version of this test pass with
-      // the behaviour it was written to catch reverted.
-      const strip = (): string[] => {
-        const said: string[] = [];
-        const walkVisible = (node: Container): void => {
-          if (!node.visible) return;
-          if (node instanceof Text) said.push(node.text.trim());
-          for (const child of node.children) walkVisible(child as Container);
-        };
-        walkVisible(world.app.stage as unknown as Container);
-        return said;
-      };
+      // Trimmed, because the assertions below match a tab exactly. Retired
+      // tabs are already out: `textContents` walks visibility since #826,
+      // which is the rule this test copied by hand before it did.
+      const strip = (): string[] => textContents(world.app.stage).map((line) => line.trim());
       world.frame(2);
 
       // FOUNDRY and SLIPWAY are the tabs, in place of the one UNITS tab,
@@ -1950,16 +1976,7 @@ describe('the command card when it is offered more than it holds', () => {
   it('opens the page of the production structure selected last', async () => {
     const world = await boot();
     try {
-      const strip = (): string[] => {
-        const said: string[] = [];
-        const walkVisible = (node: Container): void => {
-          if (!node.visible) return;
-          if (node instanceof Text) said.push(node.text.trim());
-          for (const child of node.children) walkVisible(child as Container);
-        };
-        walkVisible(world.app.stage as unknown as Container);
-        return said;
-      };
+      const strip = (): string[] => textContents(world.app.stage).map((line) => line.trim());
       const snapshot = cannedSnapshot();
       const bastion = snapshot.structures.find(
         (structure) => structure.kind === StructureKind.Bastion

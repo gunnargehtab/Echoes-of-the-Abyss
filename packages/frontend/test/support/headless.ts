@@ -873,7 +873,14 @@ export function drawInstructions(root: Container): number {
   return total;
 }
 
-/** How many `Text` objects the tree holds — the HUD's label budget. */
+/**
+ * How many `Text` objects the tree holds — the HUD's label budget.
+ *
+ * Drawn or retired: a pooled label that is currently hidden still holds its
+ * texture, so a budget counts it. That is the opposite of what
+ * `textContents` below wants, and the two walkers are separate for exactly
+ * this reason.
+ */
 export function textCount(root: Container): number {
   let total = 0;
   for (const node of walk(root)) if (node instanceof Text) total++;
@@ -881,17 +888,40 @@ export function textCount(root: Container): number {
 }
 
 /**
- * What every `Text` in the tree currently says.
+ * Every display object the renderer would actually draw.
+ *
+ * An invisible node takes its whole subtree with it, as Pixi's own render
+ * pass does — so a label inside a hidden panel is not reachable here either.
+ */
+function* walkDrawn(root: Container): Generator<Container> {
+  if (!root.visible) return;
+  yield root;
+  for (const child of root.children) yield* walkDrawn(child as Container);
+}
+
+/**
+ * What every `Text` the player can actually read currently says.
  *
  * The counting walkers above answer "how much", and there was no way to ask
  * "what" — so a line the player reads, like the hint bar, could only be tested
  * by reaching into a private. The HUD's sentences are a contract
  * (docs/ui-ux.md §7: an action that will not happen says what it is waiting
  * on), and a contract wants an assertion rather than a count.
+ *
+ * Visibility is part of that contract, and this walked the whole tree until
+ * #826. Labels are pooled: `drawCommandBar` retires the surplus with
+ * `visible = false` and leaves the last string on it, and `productionTexts`
+ * and `fleetTexts` are retired the same way. So a retired label went on
+ * answering for a live one, and an assertion that a label is *present* after a
+ * HUD state change could pass on a string the strip no longer draws — which is
+ * how a tab-strip test in #825 passed with the behaviour it was written to
+ * catch reverted. `visible` is the whole of the check because it is the only
+ * one of Pixi's ways to hide a node that this client uses; nothing in
+ * `packages/frontend/src` sets `renderable` or `alpha = 0`.
  */
 export function textContents(root: Container): string[] {
   const said: string[] = [];
-  for (const node of walk(root)) if (node instanceof Text) said.push(node.text);
+  for (const node of walkDrawn(root)) if (node instanceof Text) said.push(node.text);
   return said;
 }
 
