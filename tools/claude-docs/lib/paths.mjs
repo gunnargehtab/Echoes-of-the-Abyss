@@ -20,23 +20,62 @@ export const PATH_PREFIXES = ['packages/', 'tools/', 'docs/', '.claude/', '.gith
 const PREFIX_RE = new RegExp(`^(${PATH_PREFIXES.map((p) => p.replace('.', '\\.')).join('|')})`);
 // CommonMark allows a fence to be indented up to three spaces, which is also
 // where a fence inside a single-level list item sits. Anchoring at column zero
-// left three real fences unseen (CONTRIBUTING.md:102 among them), so their
-// contents were read as prose — harmless only by the accident that none of
-// them contained a backtick. Three is CommonMark's own bound: past it a block
-// is an indented code block rather than a fence. A fence nested deeper than
-// that, inside a nested list, would not be stripped; none exists here.
+// left three real fences unseen (CONTRIBUTING.md:103 among them), so their
+// contents were read as prose.
+//
+// This comment used to call that harmless because none of the three held a
+// backtick, which is the wrong test twice over. A fence DELIMITER is itself
+// three backticks, so an unstripped fence is paired over as prose whatever it
+// contains; and what decides whether that costs anything is whether the BODY
+// names a repository path. None of the three does, so the strip buys nothing
+// measurable here: anchored and indented stripping both extract 195 mentions
+// over the 23 gated documents, 0 of them differing. It is kept for the fence
+// that does name one — with a body of `rm docs/nope.md`, anchoring at column
+// zero reads docs/nope.md as a live claim about the tree, and the test beside
+// this file uses exactly that shape so the bound is pinned rather than argued
+// (#817).
+//
+// Three is CommonMark's own bound: past it a block is an indented code block
+// rather than a fence. A fence nested deeper than that, inside a nested list,
+// would not be stripped; none exists here.
 const FENCE_RE = /^ {0,3}```[\s\S]*?^ {0,3}```/gm;
 // A span may cross a newline. These files are authored at 100 columns, so a
 // backticked path wrapping mid-span is routine, and a regex that stopped at the
 // newline could not match one — it paired that span's CLOSING backtick with the
 // next OPENING one and read the prose between them as code, inverting the
 // polarity of the rest of the line. Five such sites exist in the gated set, and
-// one of them hides `packages/frontend` in CLAUDE.md itself. A blank line still
-// ends a span, because an inline code span cannot contain one; without that
-// bound a single stray backtick would swallow the rest of the document.
-const INLINE_CODE_RE = /`([^`]+)`/g;
-const BLANK_LINE = /\n[ \t]*\n/;
+// one of them hides `packages/frontend` in `packages/frontend/CLAUDE.md`
+// itself — still true, and re-measured here rather than carried.
+//
+// A blank line ends a span, because an inline code span cannot contain one, and
+// the bound has to be part of the PATTERN rather than a filter over its matches.
+// #813 filtered, and a discarded match has still consumed its backticks: one
+// unpaired backtick in prose re-paired every span after it, so the extractor
+// read the gaps between spans as code and the spans themselves as prose. That
+// hid paths document-wide, where the pre-#813 regex lost a line (#817). The
+// lookahead refuses the newline instead, so the match simply fails and the
+// scan resumes at the next backtick — the stray one is skipped and the spans
+// after it pair with each other again.
+const INLINE_CODE_RE = /`((?:[^`\n]|\n(?![ \t]*\n))+)`/g;
 const GLOB_CHARS = /[*?{]/;
+
+/**
+ * A path without its trailing slash.
+ *
+ * Prose names a directory both ways, and this repository's does: `run-game`
+ * writes `packages/shared/dist` and `steward` writes `packages/shared/dist/`,
+ * for the same directory and the same declared escape. So every comparison
+ * between a named path and a declared one strips first, on BOTH sides.
+ * `unusedAllowances` stripped both sides from the start; the other two did
+ * not, and not in the same way. `makeResolver` stripped the named side and
+ * compared the declared entry raw; `unresolvedPaths` compared both raw. So an
+ * entry declared WITH a slash still answered for the slashed spelling and
+ * silently stopped answering for the bare one — which is the spelling
+ * `run-game` writes. It failed closed, and `unusedAllowances` never called it
+ * stale, so it read as a live escape that had quietly lost half its job. The
+ * live entry is written bare, so the fault was latent (#817).
+ */
+const stripSlash = (path) => (path.endsWith('/') ? path.slice(0, -1) : path);
 
 /**
  * Inline code spans, with fenced blocks removed first.
@@ -49,9 +88,7 @@ const GLOB_CHARS = /[*?{]/;
  */
 function inlineSpans(markdown) {
   const prose = markdown.replace(FENCE_RE, '');
-  return [...prose.matchAll(INLINE_CODE_RE)]
-    .map((m) => m[1])
-    .filter((span) => !BLANK_LINE.test(span));
+  return [...prose.matchAll(INLINE_CODE_RE)].map((m) => m[1]);
 }
 
 /**
@@ -160,9 +197,11 @@ export function makeResolver(trackedFiles, generated = new Set()) {
     for (let i = 1; i < parts.length; i++) directories.add(parts.slice(0, i).join('/'));
   }
 
+  const generatedBare = new Set([...generated].map(stripSlash));
+
   return function resolves(path) {
-    const bare = path.endsWith('/') ? path.slice(0, -1) : path;
-    if (generated.has(bare) || generated.has(path)) return true;
+    const bare = stripSlash(path);
+    if (generatedBare.has(bare)) return true;
     if (GLOB_CHARS.test(bare)) {
       const re = globToRegExp(bare);
       for (const file of files) if (re.test(file)) return true;
@@ -181,9 +220,10 @@ export function makeResolver(trackedFiles, generated = new Set()) {
  */
 export function unresolvedPaths(documents, resolves, allowed = new Set()) {
   const rows = [];
+  const allowedBare = new Set([...allowed].map(stripSlash));
   for (const { file, text } of documents) {
     for (const path of candidatePaths(text)) {
-      if (allowed.has(path)) continue;
+      if (allowedBare.has(stripSlash(path))) continue;
       if (!resolves(path)) rows.push({ file, path });
     }
   }
@@ -199,11 +239,12 @@ export function unresolvedPaths(documents, resolves, allowed = new Set()) {
  * check, one level down.
  */
 export function unusedAllowances(documents, allowed) {
-  // Both sides are compared without a trailing slash: two skills name the same
-  // build output, one with and one without, and a single declared entry should
-  // answer for both rather than reading as stale the moment one goes.
-  const strip = (path) => (path.endsWith('/') ? path.slice(0, -1) : path);
+  // Both sides are compared without a trailing slash, per `stripSlash` above:
+  // two skills name the same build output, one with and one without, and a
+  // single declared entry answers for both rather than reading as stale the
+  // moment one goes.
   const named = new Set();
-  for (const { text } of documents) for (const path of candidatePaths(text)) named.add(strip(path));
-  return [...allowed].filter((path) => !named.has(strip(path))).sort();
+  for (const { text } of documents)
+    for (const path of candidatePaths(text)) named.add(stripSlash(path));
+  return [...allowed].filter((path) => !named.has(stripSlash(path))).sort();
 }

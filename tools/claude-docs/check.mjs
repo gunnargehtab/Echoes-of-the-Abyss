@@ -173,8 +173,13 @@ const DECLARED_ABSENT = new Map([
  * `packages/backend/node_modules/anything` would have resolved too — prose
  * naming a build output the build does not emit would have passed unread.
  *
- * Two live spans need it. Two entries, declared, reviewed, and expiring
- * themselves through `unusedAllowances` exactly as `DECLARED_ABSENT` does.
+ * Two live spans need it and they are spelled differently — `run-game` writes
+ * it bare, `steward` with a trailing slash — so ONE entry answers for both,
+ * because every comparison against this map strips the slash from both sides
+ * (`stripSlash` in lib/paths.mjs). One entry, declared, reviewed, and expiring
+ * itself through `unusedAllowances` exactly as `DECLARED_ABSENT` does. This
+ * comment said "two entries" against a map that has had one since it was
+ * written (#817).
  */
 const DECLARED_GENERATED = new Map([
   [
