@@ -84,6 +84,7 @@ import {
   Fauna,
   Harvester,
   HarvestMode,
+  Heading,
   Health,
   Hold,
   LandingGrant,
@@ -3079,7 +3080,10 @@ export class Match {
         depth: Position.depth[at]!,
         hp: Health.hp[eid]!,
         maxHp: Health.max[eid]!,
-        heading: 0,
+        // The bow, which is the owner's own to know. This was a literal 0
+        // until #839, so every commander cone check — the Lance's torpedo,
+        // the Offertory's deck — was measured against due east.
+        heading: Heading.rad[at]!,
         sig: Acoustic.sig[eid]!,
         silentRunning: SilentRunning.active[eid] === 1,
         engineOff: EngineOff.active[eid] === 1,

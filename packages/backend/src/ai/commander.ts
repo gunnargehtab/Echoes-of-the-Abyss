@@ -740,9 +740,9 @@ const DECK = {
    *
    * It falls between the figures that bound it, which is why the doc's word
    * is usable as a number. Outside `RANGE.PUSH_ENGAGE_M`, the Cruiser's 900 m,
-   * and at the edge of the Reciter's 1,000 m, the two longest guns a line hull
-   * carries — a carrier has no gun and no countermeasure, so standing inside a
-   * gun's reach buys it nothing. And inside `FLIGHT.TETHER_M`, so the target
+   * and at the edge of the Reciter's 1,000 m, the two longest guns short of
+   * the Tocsin's 1,400 m siege gun — a carrier has no gun and no
+   * countermeasure, so standing inside a gun's reach buys it nothing. And inside `FLIGHT.TETHER_M`, so the target
    * stays inside the reach the deck launches over and the flight may operate
    * at.
    */
@@ -762,8 +762,11 @@ const DECK = {
    * The Offertory launches only into its own forward cone (§15, the Lance's
    * gate), and walking back to the standoff points its bow straight away from
    * the fight. `movementSystem` writes the bow from the ordered course on the
-   * first tick under way, so a step is all a turn costs, and a short one
-   * spends almost nothing of the band.
+   * first tick under way, so a step turns the hull — but only a step longer
+   * than `MOVEMENT.ARRIVAL_EPSILON_M`'s 5 m, which a shorter one is already
+   * inside and never takes. So the step is taken from the band's outer half,
+   * from `STANDOFF_M + FACE_M` at most down to the standoff, and a hull
+   * inside the standoff walks out to there first.
    */
   FACE_M: 25,
   /**
@@ -3698,11 +3701,12 @@ export class AiCommander implements AiPlayer {
           statsFor(carrier.kind).flight?.coneGatedLaunch === true &&
           !this.facing(carrier, target)
         ) {
-          // Come round without leaving the band: a step in, never past its
-          // near edge. At the edge itself there is no room, and the next
-          // observation that finds the target closer backs the hull off.
-          const step = Math.min(DECK.FACE_M, d - (DECK.STANDOFF_M - DECK.SLACK_M));
-          if (step >= 1) keep = d - step;
+          // Come round without leaving the band. From the outer half, a
+          // `DECK.FACE_M` step in, which lands no nearer than the standoff
+          // less that step. From the inner half, out to the standoff plus
+          // one step first: that walk points the bow away, and the step from
+          // there on the next decision brings it round.
+          keep = d > DECK.STANDOFF_M ? d - DECK.FACE_M : DECK.STANDOFF_M + DECK.FACE_M;
         }
         if (keep !== null) {
           const along = keep / (d || 1);
@@ -3744,9 +3748,10 @@ export class AiCommander implements AiPlayer {
    * (`worthLaunchingAt` in `flight.ts`) and an ordered launch skips that
    * filter, so a commander that named a mine would open the deck, +35 SIG, at
    * something the deck would not have opened for. Below Tier 3 a contact
-   * carries no `ordnance` to filter on, and an unclassified mine never
-   * reaches the home tier anyway: it does not move, and the watch there wants
-   * a contact to close on the Bastion.
+   * carries no `ordnance` to filter on, so the home tier can admit an
+   * unclassified mine — its reported position moves with whoever hears it,
+   * and can close on the Bastion — and the deck follows it there, exactly as
+   * the army's recall does.
    */
   private deckTarget(
     snapshot: EchoSnapshot,
