@@ -955,11 +955,12 @@ describe('the commander flies a cone-gated deck', () => {
   // due east read as "faced" whatever the bow did, and a target anywhere else
   // read as never faced. East is the case that hid it.
   //
-  // Neither is exactly on the carrier's axis. On it, a craft launched astern
-  // chases the target straight through its own carrier, separation has no
-  // side to push to, and the carrier is shoved into the Cruiser's gun and
-  // sunk — measured at 993 m to dead in eleven seconds, and filed against
-  // #746, because it is the flight's and not the order's.
+  // Neither is exactly on the world's x axis through the carrier. A craft is
+  // launched at a world-frame station (`flight.ts`, `launch()`), so on that
+  // axis one can enter the water astern, chase the target straight through
+  // its own carrier, and — separation having no side to push to — shove the
+  // carrier into the Cruiser's gun: measured at 993 m to sunk in eleven
+  // seconds. That is the flight's and not the order's, and it is #863.
   for (const [label, cruiserAt] of [
     ['off to the north-east', { x: 6150, y: 4680 }],
     ['to the east', { x: 6700, y: 4040 }],

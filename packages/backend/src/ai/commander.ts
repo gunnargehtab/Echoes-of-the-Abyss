@@ -742,9 +742,9 @@ const DECK = {
    * is usable as a number. Outside `RANGE.PUSH_ENGAGE_M`, the Cruiser's 900 m,
    * and at the edge of the Reciter's 1,000 m, the two longest guns short of
    * the Tocsin's 1,400 m siege gun — a carrier has no gun and no
-   * countermeasure, so standing inside a gun's reach buys it nothing. And inside `FLIGHT.TETHER_M`, so the target
-   * stays inside the reach the deck launches over and the flight may operate
-   * at.
+   * countermeasure, so standing inside a gun's reach buys it nothing. And
+   * inside `FLIGHT.TETHER_M`, so the target stays inside the reach the deck
+   * launches over and the flight may operate at.
    */
   STANDOFF_M: 1000,
   /**
@@ -764,9 +764,9 @@ const DECK = {
    * the fight. `movementSystem` writes the bow from the ordered course on the
    * first tick under way, so a step turns the hull — but only a step longer
    * than `MOVEMENT.ARRIVAL_EPSILON_M`'s 5 m, which a shorter one is already
-   * inside and never takes. So the step is taken from the band's outer half,
-   * from `STANDOFF_M + FACE_M` at most down to the standoff, and a hull
-   * inside the standoff walks out to there first.
+   * inside and never takes. So the step is taken only from the band's outer
+   * half, where `FACE_M` in lands no nearer than 975 m, and a hull inside the
+   * standoff first walks out to `STANDOFF_M + FACE_M`.
    */
   FACE_M: 25,
   /**
