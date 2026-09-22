@@ -711,7 +711,7 @@ describe('the commander flies its deck', () => {
     assert.deepEqual(off, [], 'off the cadence, nothing');
   });
 
-  it('never opens the deck on a mine, or on a contact the layer has not classified', () => {
+  it('never opens the deck on a classified mine, or on a smudge away from home', () => {
     const brief = briefing(Faction.Pelagia);
     const home = brief.spawns[brief.slot]!;
     const u = outward(brief);
@@ -736,8 +736,99 @@ describe('the commander flies its deck', () => {
     );
     assert.ok(
       !orders.some((c) => c.kind === 'attack'),
-      'the deck is not opened at either — its own trigger refuses the mine'
+      'the deck is not opened at either — its own trigger refuses the mine, and a smudge is not a fight'
     );
+  });
+
+  it('brings an Offertory round to face its target, without leaving the band', () => {
+    // The Offertory launches only into its own forward cone (§15). Backing
+    // off points its bow away from the fight, so inside the band a step in is
+    // what turns it; `movementSystem` writes the bow from the ordered course.
+    const brief = briefing(Faction.Hadron);
+    const home = brief.spawns[brief.slot]!;
+    const u = outward(brief);
+    const at = along(home, u, 4000);
+    const target = along(at, u, STANDOFF_M);
+    const bearing = Math.atan2(target.y - at.y, target.x - at.x);
+    const orders = (heading: number): AiCommand[] => {
+      const units = deployed(brief, at, home).map((unit) =>
+        unit.id === CARRIER_ID ? { ...unit, heading } : unit
+      );
+      return ordersTo(
+        new AiCommander(brief).observe(
+          snapshot(brief, 6000, { units, contacts: [classified(504, target)] })
+        ),
+        CARRIER_ID
+      );
+    };
+
+    const away = orders(bearing + Math.PI);
+    assert.deepEqual(
+      away.map((c) => c.kind),
+      ['move', 'attack'],
+      'facing away: a step, then the order'
+    );
+    const to = away[0] as { x: number; y: number };
+    const left = Math.hypot(to.x - target.x, to.y - target.y);
+    assert.ok(
+      left < STANDOFF_M && left >= STANDOFF_M - SLACK_M,
+      `a step in, inside the band (${left.toFixed(0)} m)`
+    );
+
+    assert.deepEqual(
+      orders(bearing).map((c) => c.kind),
+      ['attack'],
+      'facing it already: the order alone'
+    );
+  });
+
+  it("flies at the army's fight before a louder contact inside its own tether", () => {
+    // One tier at a time, as `commandArmy` reads them. A single ranked pool
+    // would send the flight at the Tier-4 hull beside the carrier, because
+    // `priority` ranks hulls by tier, while the army shoots the other one.
+    const brief = briefing(Faction.Bathyarch);
+    const home = brief.spawns[brief.slot]!;
+    const u = outward(brief);
+    const side = { x: -u.y, y: u.x };
+    const front = along(home, u, 5000);
+    const at = along(home, u, 3500);
+    const fought = classified(505, along(front, u, 800));
+    const beside: Contact = {
+      ...classified(506, along(at, side, 700)),
+      tier: ResolutionTier.Track,
+    };
+    const units = deployed(brief, at, front);
+    assert.ok(
+      Math.hypot(beside.x - front.x, beside.y - front.y) > 900,
+      "the premise: the loud one is outside the army's reach"
+    );
+    const attack = ordersTo(
+      new AiCommander(brief).observe(snapshot(brief, 6000, { units, contacts: [beside, fought] })),
+      CARRIER_ID
+    ).find((c) => c.kind === 'attack') as { contactId: number } | undefined;
+    assert.equal(attack?.contactId, 505, 'the flight goes where the army is fighting');
+  });
+
+  it('comes home for a raid on the Bastion, ahead of everything else', () => {
+    // The home tier: a classified contact inside `RANGE.DEFEND_URGENT_M` of
+    // the Bastion recalls the army at once, and the deck with it.
+    const brief = briefing(Faction.Directorate);
+    const home = brief.spawns[brief.slot]!;
+    const u = outward(brief);
+    const at = along(home, u, 4000);
+    const raid = classified(507, along(home, u, 600));
+    const local = { ...classified(508, along(at, u, 700)), tier: ResolutionTier.Track };
+    const units = deployed(brief, at, along(home, u, 5000));
+    const orders = ordersTo(
+      new AiCommander(brief).observe(snapshot(brief, 6000, { units, contacts: [local, raid] })),
+      CARRIER_ID
+    );
+    assert.deepEqual(
+      orders.map((c) => c.kind),
+      ['move', 'attack'],
+      'walked home, then ordered'
+    );
+    assert.equal((orders[1] as { contactId: number }).contactId, 507, 'onto the raid');
   });
 
   it('flies the deck in a real match: backed off, ordered on, and kept inside the tether', () => {
@@ -841,6 +932,56 @@ describe('the commander flies its deck', () => {
     assert.ok(
       widest <= FLIGHT.TETHER_M,
       `and never let the target out of the tether while ordered on it (widest ${widest.toFixed(0)} m)`
+    );
+  });
+});
+
+describe('the commander flies a cone-gated deck', () => {
+  it('backs an Offertory off, brings it round, and its deck opens', () => {
+    // Round 1's critic measured the failure this holds: backed straight off,
+    // an Offertory sat in the band with the target 180 degrees off its bow
+    // and launched nothing in 40 s, while the other three decks launched on
+    // the same geometry. End to end, because the bow is written by
+    // `movementSystem` and no snapshot fixture can show it turning.
+    const match = new Match(undefined, {
+      fauna: false,
+      seed: SEED,
+      terrain: new Terrain(12000, 12000, 250, { floorM: 3200 }),
+    });
+    match.addPlayer(0, Faction.Directorate);
+    match.addPlayer(1, Faction.Hadron);
+    const seat = new AiSeat(match, briefingFor(match, 1, Faction.Hadron, AiDifficulty.Veteran));
+    const carrier = spawnUnit(match.world, {
+      kind: UnitKind.Offertory,
+      slot: 1,
+      faction: Faction.Hadron,
+      x: 6000,
+      y: 4000,
+    });
+    const cruiser = spawnUnit(match.world, {
+      kind: UnitKind.Cruiser,
+      slot: 0,
+      faction: Faction.Directorate,
+      x: 6150,
+      y: 4680,
+    });
+    const gap = (): number =>
+      Math.hypot(
+        Position.x[cruiser]! - Position.x[carrier]!,
+        Position.y[cruiser]! - Position.y[carrier]!
+      );
+
+    let widest = 0;
+    for (let i = 0; i < SIM.TICK_HZ * 40; i++) {
+      const own = match.update(1000 / SIM.TICK_HZ)?.get(1);
+      if (own !== undefined) seat.observe(own);
+      widest = Math.max(widest, gap());
+    }
+    assert.ok(widest >= STANDOFF_M - SLACK_M, `it backed off (${widest.toFixed(0)} m at most)`);
+    assert.ok(Flightdeck.launched[carrier]! > 0, 'and the deck opened into its cone');
+    assert.ok(
+      gap() >= STANDOFF_M - SLACK_M && gap() <= STANDOFF_M + SLACK_M,
+      `still in the band (${gap().toFixed(0)} m)`
     );
   });
 });

@@ -738,21 +738,34 @@ const DECK = {
    * it. §15: "the carrier is a kilometre away and quiet"; docs/units.md: "the
    * hull that ordered it is a kilometre away being quiet".
    *
-   * It falls between the two figures that bound it, which is why the doc's
-   * word is usable as a number. Outside `RANGE.PUSH_ENGAGE_M`, the Cruiser's
-   * 900 m and the longest gun a line hull carries — a carrier has no gun and no
-   * countermeasure, so standing inside a gun's reach buys it nothing. And
-   * inside `FLIGHT.TETHER_M`, so the target stays inside the reach the deck
-   * launches over and the flight may operate at.
+   * It falls between the figures that bound it, which is why the doc's word
+   * is usable as a number. Outside `RANGE.PUSH_ENGAGE_M`, the Cruiser's 900 m,
+   * and at the edge of the Reciter's 1,000 m, the two longest guns a line hull
+   * carries — a carrier has no gun and no countermeasure, so standing inside a
+   * gun's reach buys it nothing. And inside `FLIGHT.TETHER_M`, so the target
+   * stays inside the reach the deck launches over and the flight may operate
+   * at.
    */
   STANDOFF_M: 1000,
   /**
    * How far off the standoff a carrier may drift before it is walked back.
    * The band it is left alone in is 900–1,100 m: the Cruiser's gun at the near
-   * edge, and a hundred metres short of the tether at the far one, so a target
-   * opening the range between two observations is still inside it.
+   * edge, and a hundred metres short of the tether at the far one. A target
+   * opening the range crosses those hundred metres between two of a Veteran's
+   * decisions (0.6 s) only above 160 m/s, and between two of a Recruit's (3 s)
+   * above 33 m/s, which a Corvette is.
    */
   SLACK_M: 100,
+  /**
+   * The step a cone-gated deck takes toward its target to come round.
+   *
+   * The Offertory launches only into its own forward cone (§15, the Lance's
+   * gate), and walking back to the standoff points its bow straight away from
+   * the fight. `movementSystem` writes the bow from the ordered course on the
+   * first tick under way, so a step is all a turn costs, and a short one
+   * spends almost nothing of the band.
+   */
+  FACE_M: 25,
   /**
    * How far behind its army's middle a carrier waits with nothing to fly at.
    *
@@ -2959,10 +2972,15 @@ export class AiCommander implements AiPlayer {
     // worth and not how many, so this builds the floor of one.
     //
     // **Below the Sower's and the Bower's wants**, by the owner's decision on
-    // #839. A purse that already covers a want is spent on the first one
-    // written here that it covers, so the order decides. Written above them,
-    // Pelagia on 360–400 nodules bought its 340 nodule Rootstock where it had
-    // bought the Bower or the Sower.
+    // #839, and what that buys is narrower than it reads. A purse that already
+    // covers a want is spent on the first one written here that it covers, so
+    // there the order decides: on 360–400 nodules the Commune buys its Bower
+    // or its Sower, where written above them it bought the Rootstock. A purse
+    // that covers none is held by `holdPurse` for the cheapest bid past its
+    // floor, whatever the order, so a Commune saving from below reaches the
+    // 340 nodule Rootstock before the 360 nodule Bower and buys it first.
+    // Whether "below" meant this position or the order of purchase is asked
+    // on #839.
     const ownCarrier = OWN_CARRIER[this.briefing.faction];
     if (escorted) {
       const decks =
@@ -3651,7 +3669,11 @@ export class AiCommander implements AiPlayer {
    *   a carrier that has drifted out of `DECK.SLACK_M` is walked back to
    *   `DECK.STANDOFF_M` off the target, the move written *before* the attack:
    *   a move clears an ordered target (`Match.applyMove`) and an attack leaves
-   *   a running move alone, so in that order the pair keeps both.
+   *   a running move alone, so in that order the pair keeps both. The one
+   *   exception is a phantom's handle, where the attack is itself a move to the
+   *   point the lie was shown at (`Match.orderAttackContact`), and the carrier
+   *   goes there and finds water like any hull that attacked one.
+   * - **Facing it**, for a cone-gated deck. See `DECK.FACE_M`.
    *
    * With nothing to fly at it waits behind the army (`deckStation`).
    */
@@ -3667,10 +3689,23 @@ export class AiCommander implements AiPlayer {
       const target = this.deckTarget(snapshot, carrier, army, raiders);
       if (target !== null) {
         const d = distance(carrier, target);
+        // On the line from the target through the carrier, so a carrier too
+        // close backs straight off and one too far closes straight in.
+        let keep: number | null = null;
         if (Math.abs(d - DECK.STANDOFF_M) > DECK.SLACK_M) {
-          // On the line from the target through the carrier, so a carrier
-          // too close backs straight off and one too far closes straight in.
-          const along = DECK.STANDOFF_M / (d || 1);
+          keep = DECK.STANDOFF_M;
+        } else if (
+          statsFor(carrier.kind).flight?.coneGatedLaunch === true &&
+          !this.facing(carrier, target)
+        ) {
+          // Come round without leaving the band: a step in, never past its
+          // near edge. At the edge itself there is no room, and the next
+          // observation that finds the target closer backs the hull off.
+          const step = Math.min(DECK.FACE_M, d - (DECK.STANDOFF_M - DECK.SLACK_M));
+          if (step >= 1) keep = d - step;
+        }
+        if (keep !== null) {
+          const along = keep / (d || 1);
           out.push({
             kind: 'move',
             unitIds: [carrier.id],
@@ -3699,16 +3734,19 @@ export class AiCommander implements AiPlayer {
   /**
    * What a deck flies at, or `null`: the army's fight, or its own.
    *
-   * In `commandArmy`'s order and on its terms. A contact closing on the
-   * Bastion first, unclassified allowed, because the army is recalled for it.
-   * Then a classified contact inside a gun's reach of the army — "a fight
-   * already happening". Then one inside the carrier's own tether, the water
-   * §15 lets a deck open over.
+   * In `commandArmy`'s order and on its terms, one tier at a time. A contact
+   * closing on the Bastion first, unclassified allowed, because the army is
+   * recalled for it. Then a classified contact inside a gun's reach of the
+   * army — "a fight already happening". Only then one inside the carrier's own
+   * tether, the water §15 lets a deck open over.
    *
-   * Never ordnance. The deck's own trigger refuses it (`worthLaunchingAt` in
-   * `flight.ts`) and an ordered launch skips that filter, so a commander that
-   * named a mine would open the deck, +35 SIG, at something the deck would
-   * not have opened for.
+   * Never ordnance the layer has classified. The deck's own trigger refuses it
+   * (`worthLaunchingAt` in `flight.ts`) and an ordered launch skips that
+   * filter, so a commander that named a mine would open the deck, +35 SIG, at
+   * something the deck would not have opened for. Below Tier 3 a contact
+   * carries no `ordnance` to filter on, and an unclassified mine never
+   * reaches the home tier anyway: it does not move, and the watch there wants
+   * a contact to close on the Bastion.
    */
   private deckTarget(
     snapshot: EchoSnapshot,
@@ -3721,14 +3759,21 @@ export class AiCommander implements AiPlayer {
       true
     );
     if (home !== null) return home;
-    return this.bestThreat(
-      snapshot.contacts.filter(
-        (c) =>
-          c.ordnance === undefined &&
-          (distance(carrier, c) <= FLIGHT.TETHER_M ||
-            (army.length > 0 && nearest(army, c) < RANGE.PUSH_ENGAGE_M))
-      )
-    );
+    const hulls = snapshot.contacts.filter((c) => c.ordnance === undefined);
+    const fight =
+      army.length === 0
+        ? null
+        : this.bestThreat(hulls.filter((c) => nearest(army, c) < RANGE.PUSH_ENGAGE_M));
+    if (fight !== null) return fight;
+    return this.bestThreat(hulls.filter((c) => distance(carrier, c) <= FLIGHT.TETHER_M));
+  }
+
+  /** Is `target` inside this hull's forward cone? The Lance's test (§5). */
+  private facing(hull: OwnUnit, target: { x: number; y: number }): boolean {
+    const bearing = Math.atan2(target.y - hull.y, target.x - hull.x);
+    let off = bearing - hull.heading;
+    off = Math.abs(Math.atan2(Math.sin(off), Math.cos(off)));
+    return off <= (DIRECTIONAL_SIGNATURE.CONE_HALF_ANGLE_DEG * Math.PI) / 180;
   }
 
   /**
