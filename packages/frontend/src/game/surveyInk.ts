@@ -47,7 +47,7 @@ import type { TerrainPayload } from '../net/GameClient.ts';
 export const SURVEY_INK_COLOR = 0x7a8c99;
 
 export const SURVEY_ALPHA = {
-  /** Every 100 m of floor. The quietest line on the map. */
+  /** Every 100 m of floor. The quietest ink line. */
   minor: 0.08,
   /** A depth-band boundary: the Shelf's foot and the Abyssal's lip. */
   major: 0.12,

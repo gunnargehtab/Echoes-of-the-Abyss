@@ -143,8 +143,10 @@ the least of them, over the darkest and the palest ground, in all four palettes.
 furniture gets quieter, the ink has to follow it down.
 
 **Phase 1 measures rung 4 under rung 5, and nothing more.** The other rungs are stated, not
-yet held; phase 2 audits them. The first place the stated order does not hold is rung 7's
-faintest mark, a fresh Tier-1 contact, and §11 records it.
+yet held; phase 2 audits them. Two places are known where the stated order does not hold, and
+§11 records both. Rung 6's unselected detection ring lifts less than the ink, and less than
+rung 5, in the standard and tritanopia palettes. Rung 7's faintest mark, a fresh Tier-1
+contact, lifts less than either in every palette.
 
 Two consequences worth naming:
 
@@ -285,6 +287,19 @@ quietest outline in three of the four palettes, and it is what holds the coast a
 is the ladder working: at the survey dolly the ink is quiet, because it has to be.
 
 ## 11. Open questions
+
+- **The unselected detection ring is quieter than the ink in two palettes.** A hull's ring
+  that the player has not selected is drawn at 0.18 in its SIG colour, half the selected
+  ring's alpha ([ui-ux.md](ui-ux.md) §3.5). In tritanopia at mid SIG it lifts black ground by
+  0.061 and the kelp fill by 0.044. The coast lifts them by 0.070 and 0.057, and the major
+  line by 0.065 and 0.053. The high-SIG ring over kelp lifts 0.053 in both the standard and
+  tritanopia palettes, under the coast. It is also under rung 5's floor. Both are lines, so
+  "a haze is not a line" does not cover it. There are two remedies, and both change what is
+  drawn:
+  - bring the coast, major and border ink to 0.099 or below, the bound tritanopia's mid-SIG
+    ring over kelp sets, and add the ring to the test's ceiling;
+  - raise the unselected ring's alpha, which moves the half-the-selected-ring ratio that
+    §3.5 of [ui-ux.md](ui-ux.md) fixes.
 
 - **A fresh Tier-1 contact is quieter than the ink, per pixel.** Tier 1 is its column and
   nothing else. The core composites to about 0.12 of the tier colour. It lifts black ground by
