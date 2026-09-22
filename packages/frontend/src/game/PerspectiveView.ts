@@ -31,6 +31,7 @@ import {
   BufferGeometry,
   CanvasTexture,
   Color,
+  DataTexture,
   DirectionalLight,
   DoubleSide,
   FogExp2,
@@ -101,6 +102,12 @@ import { OwnMotion } from './ownMotion.ts';
 import { OrdnanceLayer } from './ordnanceLayer.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
 import { VeilField, veilShade, type VeilListener } from './acousticVeil.ts';
+import {
+  installSurveyInk,
+  patchSurveyCellClasses,
+  surveyCellClasses,
+  surveyCellTexture,
+} from './surveyInk.ts';
 import {
   installWaterFog,
   MarineSnow,
@@ -376,6 +383,13 @@ export class PerspectiveView {
   private terrainGrid: HeightGrid | null = null;
   private seabedCanvas: HTMLCanvasElement | null = null;
   private seabedTexture: CanvasTexture | null = null;
+  /**
+   * The survey ink's cell classes (surveyInk.ts): the bytes, and the texture
+   * the terrain shader reads them through. Patched with the ground, like the
+   * canvas above.
+   */
+  private surveyClasses: Uint8Array<ArrayBuffer> | null = null;
+  private surveyCells: DataTexture | null = null;
   private readonly terrainDressing = new Group();
   /** Environment props (environmentLayer.ts) — rebuilt on the terrain cadence. */
   private readonly environment = new EnvironmentLayer();
@@ -1029,9 +1043,12 @@ export class PerspectiveView {
       this.terrainMesh.geometry.dispose();
       (this.terrainMesh.material as MeshBasicMaterial).map?.dispose();
       (this.terrainMesh.material as MeshBasicMaterial).dispose();
+      this.surveyCells?.dispose();
       this.terrainGrid = null;
       this.seabedCanvas = null;
       this.seabedTexture = null;
+      this.surveyClasses = null;
+      this.surveyCells = null;
     }
     if (this.embers !== null) {
       this.scene.remove(this.embers);
@@ -1082,6 +1099,10 @@ export class PerspectiveView {
     // is a chart, not a black tile.
     const shades = new Float32Array(grid.vertsX * grid.vertsZ * 3).fill(1);
     geometry.setAttribute('color', new BufferAttribute(shades, 3));
+    // The authored floor per vertex, for the survey ink's isobaths
+    // (docs/map-visuals.md §4). Shared with the grid rather than copied, so a
+    // ground delta that patches the grid has patched the attribute too.
+    geometry.setAttribute('surveyFloor', new BufferAttribute(grid.floor, 1));
     geometry.setIndex(new BufferAttribute(indices, 1));
 
     const canvas = bakeSeabed(terrain, this.groundSeed, this.seabedRange);
@@ -1091,14 +1112,19 @@ export class PerspectiveView {
     texture.flipY = false;
     texture.colorSpace = SRGBColorSpace;
     texture.anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
-    this.terrainMesh = new Mesh(
-      geometry,
-      new MeshBasicMaterial({ map: texture, vertexColors: true })
-    );
+    const material = new MeshBasicMaterial({ map: texture, vertexColors: true });
+    // The survey: isobaths and coastlines drawn in this material's own
+    // fragment shader, so the ground's silhouette costs no draw call.
+    const classes = surveyCellClasses(terrain);
+    const cells = surveyCellTexture(terrain, classes);
+    installSurveyInk(material, terrain, cells);
+    this.terrainMesh = new Mesh(geometry, material);
     this.scene.add(this.terrainMesh);
     this.terrainGrid = grid;
     this.seabedCanvas = canvas;
     this.seabedTexture = texture;
+    this.surveyClasses = classes;
+    this.surveyCells = cells;
 
     // The fog is the water (water.ts). Exponential rather than linear, and
     // its density follows the dolly rather than the map: the colour is what
@@ -1154,6 +1180,14 @@ export class PerspectiveView {
     const positions = mesh.geometry.getAttribute('position') as BufferAttribute;
     for (let i = span.first; i <= span.last; i++) positions.setY(i, grid.y[i]!);
     positions.needsUpdate = true;
+    // The floor attribute is the grid's own array, already patched; it only
+    // needs re-uploading. A delta can also turn water to rock or change a
+    // biome, which moves a coastline.
+    (mesh.geometry.getAttribute('surveyFloor') as BufferAttribute).needsUpdate = true;
+    if (this.surveyClasses !== null && this.surveyCells !== null) {
+      patchSurveyCellClasses(this.surveyClasses, terrain, touched);
+      this.surveyCells.needsUpdate = true;
+    }
     // The raycast `resolveGround` runs reads the mesh's bounds; a cut deeper
     // than the old floor would otherwise fall outside them.
     mesh.geometry.computeBoundingSphere();

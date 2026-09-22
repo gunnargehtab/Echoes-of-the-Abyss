@@ -313,6 +313,7 @@ it. Everything the player earned draws at full strength over it:
 | Own force, its rings, bars, routes and depth cues | Gate 5's Asymmetric Fidelity Law: the own force is never in question |
 | Hazard warnings and their countdowns | A hazard announces itself ([hazards.md](hazards.md)); dread requires seeing it coming |
 | The chart register — tunnel routes, map rim, skirt | Instrument lines drawn *on* the water rather than things standing in it. An instrument does not go quiet because you stopped listening |
+| Survey ink — isobaths and coastlines | Drawn in the seabed's own shader, but it is the survey both navies own rather than anything heard ([map-visuals.md](map-visuals.md) §4, rule 5) |
 | Every HUD element, the scope, the log | §3's rule: own loudness is always on screen |
 
 It is a fog of the **present tense**, and this is the load-bearing distinction. A hull that

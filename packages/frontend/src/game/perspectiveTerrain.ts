@@ -96,6 +96,39 @@ export function seabedDepthAtM(
   xM: number,
   yM: number
 ): number {
+  const homeIndex = homeCellIndex(terrain, xM, yM);
+  if (isRock(terrain, homeIndex)) return Math.max(0, rockTopM + rockDetailM(xM, yM, seed));
+
+  const floor = authoredFloorAtM(terrain, xM, yM);
+  const relief = BIOME_RELIEF[terrain.biomes[homeIndex] as Biome] ?? BIOME_RELIEF[Biome.OpenWater];
+  return floor + detailM(xM, yM, seed, relief.amplitudeM, relief.roughness, relief.blockiness);
+}
+
+/** The cell whose centre is nearest a world position, clamped onto the map. */
+function homeCellIndex(terrain: TerrainPayload, xM: number, yM: number): number {
+  const { cols, rows, cellM } = terrain;
+  const col = Math.min(cols - 1, Math.max(0, Math.round(xM / cellM - 0.5)));
+  const row = Math.min(rows - 1, Math.max(0, Math.round(yM / cellM - 0.5)));
+  return row * cols + col;
+}
+
+/**
+ * The authored floor at a world position, smoothed between cell centres and
+ * nothing else: `seabedDepthAtM` without the detail field. It is what the
+ * survey ink's isobaths contour (docs/map-visuals.md §4, rule 1) — a
+ * measurement of the ground the author wrote, never of the render-only noise
+ * laid over it.
+ *
+ * Rock has no floor, so a rock neighbour stands in with an open floor rather
+ * than its own: the home cell's where the home cell is open (exactly as the
+ * heightfield does it), and otherwise the mean of the open cells among the
+ * four. That second case is a vertex on a mesa's edge, and it feeds the
+ * triangles of the open cell beside it — so it must carry that cell's floor,
+ * or every isobath between the mesa's number and the plain's would be
+ * crushed into one false scarp at the foot of the wall. Wholly inside rock,
+ * where no open fragment ever reads it, it is 0.
+ */
+export function authoredFloorAtM(terrain: TerrainPayload, xM: number, yM: number): number {
   const { cols, rows, cellM } = terrain;
   const clampCol = (c: number) => Math.min(cols - 1, Math.max(0, c));
   const clampRow = (r: number) => Math.min(rows - 1, Math.max(0, r));
@@ -107,21 +140,31 @@ export function seabedDepthAtM(
   const fx = smooth(cx - c0);
   const fy = smooth(cy - r0);
 
-  const homeIndex = clampRow(Math.round(cy)) * cols + clampCol(Math.round(cx));
-  if (isRock(terrain, homeIndex)) return Math.max(0, rockTopM + rockDetailM(xM, yM, seed));
-
-  const floorAt = (r: number, c: number): number => {
-    const i = clampRow(r) * cols + clampCol(c);
-    return isRock(terrain, i) ? terrain.floor[homeIndex]! : terrain.floor[i]!;
-  };
-  const f00 = floorAt(r0, c0);
-  const f10 = floorAt(r0, c0 + 1);
-  const f01 = floorAt(r0 + 1, c0);
-  const f11 = floorAt(r0 + 1, c0 + 1);
-  const floor = f00 + (f10 - f00) * fx + (f01 + (f11 - f01) * fx - f00 - (f10 - f00) * fx) * fy;
-
-  const relief = BIOME_RELIEF[terrain.biomes[homeIndex] as Biome] ?? BIOME_RELIEF[Biome.OpenWater];
-  return floor + detailM(xM, yM, seed, relief.amplitudeM, relief.roughness, relief.blockiness);
+  const corners = [
+    clampRow(r0) * cols + clampCol(c0),
+    clampRow(r0) * cols + clampCol(c0 + 1),
+    clampRow(r0 + 1) * cols + clampCol(c0),
+    clampRow(r0 + 1) * cols + clampCol(c0 + 1),
+  ];
+  const homeIndex = homeCellIndex(terrain, xM, yM);
+  let stand: number;
+  if (!isRock(terrain, homeIndex)) {
+    stand = terrain.floor[homeIndex]!;
+  } else {
+    let sum = 0;
+    let open = 0;
+    for (const i of corners) {
+      if (isRock(terrain, i)) continue;
+      sum += terrain.floor[i]!;
+      open++;
+    }
+    if (open === 0) return 0;
+    stand = sum / open;
+  }
+  const [f00, f10, f01, f11] = corners.map((i) =>
+    isRock(terrain, i) ? stand : terrain.floor[i]!
+  ) as [number, number, number, number];
+  return f00 + (f10 - f00) * fx + (f01 + (f11 - f01) * fx - f00 - (f10 - f00) * fx) * fy;
 }
 
 export interface HeightGrid {
@@ -132,6 +175,13 @@ export interface HeightGrid {
   stepM: number;
   /** World Y per vertex, row-major, already through `depthToWorldY`. */
   y: Float32Array;
+  /**
+   * The authored floor per vertex, in metres of depth — `authoredFloorAtM`,
+   * the surface the survey ink contours. Metres rather than world Y because
+   * an isobath is a statement about depth, and the vertical compression is
+   * a look (the rule above).
+   */
+  floor: Float32Array;
   widthM: number;
   heightM: number;
 }
@@ -150,11 +200,13 @@ export function buildHeightGrid(
   const vertsZ = terrain.rows * VERTS_PER_CELL + 1;
   const stepM = terrain.cellM / VERTS_PER_CELL;
   const y = new Float32Array(vertsX * vertsZ);
+  const floor = new Float32Array(vertsX * vertsZ);
   for (let iz = 0; iz < vertsZ; iz++) {
     for (let ix = 0; ix < vertsX; ix++) {
       y[iz * vertsX + ix] = depthToWorldY(
         seabedDepthAtM(terrain, seed, rockTop, ix * stepM, iz * stepM)
       );
+      floor[iz * vertsX + ix] = authoredFloorAtM(terrain, ix * stepM, iz * stepM);
     }
   }
   return {
@@ -162,6 +214,7 @@ export function buildHeightGrid(
     vertsZ,
     stepM,
     y,
+    floor,
     widthM: terrain.cols * terrain.cellM,
     heightM: terrain.rows * terrain.cellM,
   };
@@ -194,6 +247,11 @@ export function patchHeightGrid(
     for (let ix = ix0; ix <= ix1; ix++) {
       grid.y[iz * grid.vertsX + ix] = depthToWorldY(
         seabedDepthAtM(terrain, seed, rockTop, ix * grid.stepM, iz * grid.stepM)
+      );
+      grid.floor[iz * grid.vertsX + ix] = authoredFloorAtM(
+        terrain,
+        ix * grid.stepM,
+        iz * grid.stepM
       );
     }
   }

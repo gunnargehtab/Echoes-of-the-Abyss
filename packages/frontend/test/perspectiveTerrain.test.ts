@@ -13,8 +13,9 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { Biome } from '@echoes/shared';
-import { BIOME_RELIEF, ROCK_RELIEF, seabedSeed } from '../src/game/seabed.ts';
+import { BIOME_RELIEF, detailM, ROCK_RELIEF, seabedSeed } from '../src/game/seabed.ts';
 import {
+  authoredFloorAtM,
   buildHeightGrid,
   patchHeightGrid,
   DEPTH_VISUAL_M_PER_M,
@@ -111,6 +112,7 @@ describe('perspective heightfield', () => {
     });
     const fresh = buildHeightGrid(after, seed, rockTop);
     assert.deepEqual([...grid.y], [...fresh.y]);
+    assert.deepEqual([...grid.floor], [...fresh.floor]);
     assert.ok(span.first < span.last, 'the changed span is a real range of vertices');
 
     // The ring is enough: with the same seed and rock top, nothing outside it
@@ -124,6 +126,80 @@ describe('perspective heightfield', () => {
         if (inRing) continue;
         assert.equal(fresh.y[iz * fresh.vertsX + ix], untouched.y[iz * fresh.vertsX + ix]);
       }
+    }
+  });
+});
+
+/**
+ * The surface the survey ink contours (docs/map-visuals.md §4). Rule 1 is the
+ * one that matters: an isobath is a measurement, so it may read the floor the
+ * author wrote and never the render-only detail field over it.
+ */
+describe('authored floor for the survey ink', () => {
+  it('is the heightfield without the detail field, wherever the ground is open', () => {
+    const terrain = demoTerrain();
+    const seed = seabedSeed(terrain);
+    const rockTop = rockTopDepthM(terrain);
+    const relief = BIOME_RELIEF[Biome.OpenWater];
+    // Every open-homed vertex of the demo map: the mesh depth minus the
+    // detail field at the same point is the authored floor, exactly.
+    const grid = buildHeightGrid(terrain, seed, rockTop);
+    let checked = 0;
+    for (let iz = 0; iz < grid.vertsZ; iz++) {
+      for (let ix = 0; ix < grid.vertsX; ix++) {
+        const x = ix * grid.stepM;
+        const y = iz * grid.stepM;
+        const col = Math.min(3, Math.max(0, Math.round(x / 250 - 0.5)));
+        const row = Math.min(3, Math.max(0, Math.round(y / 250 - 0.5)));
+        if (terrain.ceiling[row * 4 + col]! > terrain.floor[row * 4 + col]!) continue;
+        const detail = detailM(x, y, seed, relief.amplitudeM, relief.roughness, relief.blockiness);
+        const mesh = seabedDepthAtM(terrain, seed, rockTop, x, y);
+        assert.ok(Math.abs(mesh - detail - grid.floor[iz * grid.vertsX + ix]!) < 1e-6);
+        checked++;
+      }
+    }
+    assert.ok(checked > 200, 'the comparison walked the open ground');
+  });
+
+  it('reads the authored floor at every open cell centre', () => {
+    const terrain = demoTerrain();
+    for (let row = 0; row < 4; row++) {
+      for (let col = 0; col < 4; col++) {
+        const i = row * 4 + col;
+        if (terrain.ceiling[i]! > terrain.floor[i]!) continue;
+        assert.equal(
+          authoredFloorAtM(terrain, (col + 0.5) * 250, (row + 0.5) * 250),
+          terrain.floor[i]
+        );
+      }
+    }
+  });
+
+  it('carries the open floor, not a false scarp, onto the edge of a mesa', () => {
+    // A strip of rock down column 1 of an otherwise flat 1,500 m plain. The
+    // vertices on the rock's west edge are rock-homed, and they feed the
+    // open triangles beside it: if they carried anything but 1,500 m, every
+    // isobath between that number and the plain's would crowd into the foot
+    // of the wall.
+    const cols = 4;
+    const rows = 4;
+    const floor = new Array(cols * rows).fill(1500);
+    const ceiling = new Array(cols * rows).fill(0);
+    for (let row = 0; row < rows; row++) {
+      ceiling[row * cols + 1] = 3000;
+      floor[row * cols + 1] = 100; // rock's own number, which must not leak
+    }
+    const terrain: TerrainPayload = {
+      cols,
+      rows,
+      cellM: 250,
+      biomes: new Array(cols * rows).fill(Biome.OpenWater),
+      floor,
+      ceiling,
+    };
+    for (const y of [0, 125, 250, 400, 625, 1000]) {
+      assert.equal(authoredFloorAtM(terrain, 250, y), 1500, `west edge at y=${y}`);
+      assert.equal(authoredFloorAtM(terrain, 500, y), 1500, `east edge at y=${y}`);
     }
   });
 });

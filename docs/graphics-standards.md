@@ -442,6 +442,10 @@ player has already learned would read as a broken renderer rather than as dread
 explored/unexplored state" by another route. The review question is one question: **can
 you still route through the cold corner?** If not, the floor is too deep.
 
+The ground is held to it at the survey dolly as well. Its shape there comes from survey ink
+([map-visuals.md](map-visuals.md) §4), not from brighter fills, and the question is again one
+question: **from the ink alone, can you name the plateau, the trench and the rock?**
+
 "At every zoom" is load-bearing, and true metre scale cannot satisfy it on its own: a 60 m
 hull against kilometres of ground is a speck at survey distance. The conn view answers with
 the far-zoom readability scale specified in [art-direction.md](art-direction.md) ("Camera &
@@ -557,3 +561,5 @@ there is a picture to review.
   consistency checklist
 - [units.md](units.md) — the SIG numbers glow is set from
 - [tech-stack.md](tech-stack.md) — the performance budgets gates 5–6 live inside
+- [map-visuals.md](map-visuals.md) — survey ink, the loudness ladder, and the gate-7
+  question asked at the survey dolly
