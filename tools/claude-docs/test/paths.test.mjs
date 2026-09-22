@@ -76,10 +76,13 @@ test('a stray backtick costs the spans after it nothing', () => {
 });
 
 test('the blank-line bound fires on CRLF too', () => {
-  // `check.mjs` reads every gated document with `readFileSync(…, 'utf8')`, so
-  // the line endings are whatever git's core.autocrlf handed the checkout —
-  // the input is the platform's to choose and not this file's. The bound was
-  // spelled `[ \t]*\n`, which on CRLF inspects a newline followed by `\r`,
+  // `.gitattributes` pins `eol=lf`, so no checkout of this repository is CRLF.
+  // The gate does not read a checkout: `check.mjs:363` reads the working TREE
+  // with `readFileSync(…, 'utf8')`, so a document an editor has just written
+  // back with CRLF is read that way until it round-trips through git.
+  //
+  // The bound was spelled `[ \t]*\n`, which on CRLF inspects a newline
+  // followed by `\r`,
   // concludes there is no blank line, and lets the span cross it. That
   // inverted the check's answer in BOTH directions, so each assertion here is
   // the CRLF twin of one in the two tests above and each went the other way

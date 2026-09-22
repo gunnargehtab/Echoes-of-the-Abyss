@@ -98,9 +98,12 @@ const stripSlash = (path) => (path.endsWith('/') ? path.slice(0, -1) : path);
  * answer in both directions: `` `docs/no.md is prose\r\n\r\nnot a span` ``
  * yielded `docs/no.md`, prose across a paragraph break read as a live claim
  * about the tree, and a stray backtick a paragraph above a real span hid it
- * again. No gated document is CRLF today, but `check.mjs` reads them with
- * `readFileSync(…, 'utf8')` and git hands a checkout whatever `core.autocrlf`
- * says, so the input is the platform's to choose and not this file's (#844).
+ * again. No *checkout* is CRLF — `.gitattributes` pins `* text=auto eol=lf`,
+ * which outranks `core.autocrlf` on every clone, and its own header says why.
+ * But `check.mjs:363` reads the working **tree**, not the index, and that is
+ * what `npm run docs:claude` runs against: a document an editor has just
+ * written back with CRLF is read as CRLF until it round-trips through git. So
+ * the line ending is still not this file's to assume (#844).
  *
  * Normalising rather than teaching that one lookahead to spell `\r?` is the
  * cheaper bargain: every pattern here — the fence bound, the span bound, and
