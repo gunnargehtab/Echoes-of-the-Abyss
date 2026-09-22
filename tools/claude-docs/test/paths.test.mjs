@@ -75,6 +75,42 @@ test('a stray backtick costs the spans after it nothing', () => {
   assert.deepEqual(candidatePaths('`docs/no.md is prose\n\nnot a span` here'), []);
 });
 
+test('the blank-line bound fires on CRLF too', () => {
+  // `check.mjs` reads every gated document with `readFileSync(…, 'utf8')`, so
+  // the line endings are whatever git's core.autocrlf handed the checkout —
+  // the input is the platform's to choose and not this file's. The bound was
+  // spelled `[ \t]*\n`, which on CRLF inspects a newline followed by `\r`,
+  // concludes there is no blank line, and lets the span cross it. That
+  // inverted the check's answer in BOTH directions, so each assertion here is
+  // the CRLF twin of one in the two tests above and each went the other way
+  // before #844.
+  assert.deepEqual(candidatePaths('stray ` backtick\r\n\r\nlater `docs/x.md` here'), ['docs/x.md']);
+  // Prose across a paragraph break, read as a live claim about the tree.
+  assert.deepEqual(candidatePaths('`docs/no.md is prose\r\n\r\nnot a span` here'), []);
+  assert.deepEqual(candidatePaths('stray `\r\n \r\n`docs/d.md` here'), ['docs/d.md']);
+  // A lone CR is a line ending in CommonMark, and a `\r\n`-only normalisation
+  // would miss it — so the pattern is `\r\n?` and this is what pins it.
+  assert.deepEqual(candidatePaths('stray `\r\rlater `docs/x.md` here'), ['docs/x.md']);
+});
+
+test('CRLF changes nothing a span already did', () => {
+  // The positive controls, and they are not ceremony. The normalisation sits
+  // at the head of the extractor, which is the one place every rule below it
+  // can be broken at once: a fence that stopped being stripped, or a span that
+  // stopped wrapping, would be this fix's own cost and nothing else in this
+  // suite would be looking.
+  assert.deepEqual(candidatePaths('See `docs/economy.md:12-18` and `tools/balance`.\r\n'), [
+    'docs/economy.md',
+    'tools/balance',
+  ]);
+  assert.deepEqual(
+    candidatePaths('A wrapped `span across\r\nlines` and then `docs/yes.md` is named.'),
+    ['docs/yes.md']
+  );
+  const fenced = 'Text:\r\n\r\n  ```bash\r\n  rm `docs/nope.md`\r\n  ```\r\n\r\nThen `docs/yes.md`.';
+  assert.deepEqual(candidatePaths(fenced), ['docs/yes.md']);
+});
+
 test('an indented fence is still a fence', () => {
   // The three real indented fences in the gated set sit in a list item at two
   // and three spaces — CONTRIBUTING.md:103 is one. Anchoring the pattern at
