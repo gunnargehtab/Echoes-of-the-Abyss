@@ -23,7 +23,17 @@ import {
   pumpAnimationFrames,
 } from './support/headless.ts';
 import { cannedMap, cannedNodes, cannedSnapshot, cannedTerrain } from './support/cannedMatch.ts';
-import { EchoRenderer, type RendererCallbacks } from '../src/game/EchoRenderer.ts';
+import {
+  collarRadius,
+  crackleAmplitude,
+  EchoRenderer,
+  glowShare,
+  insideAnotherReach,
+  SELECTION_GAP_M,
+  sigShare,
+  type ReachDisc,
+  type RendererCallbacks,
+} from '../src/game/EchoRenderer.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { UI } from '../src/game/palette.ts';
 
@@ -33,6 +43,18 @@ const SIG_RAMP = new Set<number>([UI.sigLow, UI.sigMid, UI.sigHigh]);
 interface Stroke {
   color: number;
   alpha: number;
+  /**
+   * Whether this stroke was drawn in an emitter's own local space.
+   *
+   * The one honest way to tell a collar from a detection ring. A collar is
+   * drawn into a pooled symbol `Graphics` that the renderer has positioned at
+   * the emitter and scaled to px-per-metre; the rings all share one unscaled
+   * `Graphics` at the origin. Ink and alpha cannot do it since #731's glow
+   * started riding SIG — an inner halo passes through a ring's own 0.18
+   * somewhere around SIG 41, and a filter that reads one as the other would
+   * have gone on passing while counting the wrong marks.
+   */
+  local: boolean;
   /** Path steps under this stroke, in the order they were queued. */
   steps: Array<{ action: string; data: unknown }>;
 }
@@ -44,13 +66,15 @@ interface Stroke {
  * the ping preview is `UI.friendly` and `UI.threat`, a route is `UI.accent`, a
  * health bar is `UI.friendly`. `UI.threat` is `0xff3b30` and `UI.sigHigh` is
  * `0xe0452f` — near neighbours to the eye and different numbers here, which is
- * what keeps a red ring out of this set.
+ * what keeps a red ring out of this set. `local` then separates the two marks
+ * that share the ramp; see the field.
  */
 function sigStrokes(app: HeadlessApplication): Stroke[] {
   const found: Stroke[] = [];
   const walk = (node: Container): void => {
     for (const child of node.children) {
       if (child instanceof Graphics) {
+        const local = child.scale.x !== 1 || child.position.x !== 0 || child.position.y !== 0;
         for (const instruction of child.context.instructions) {
           if (instruction.action !== 'stroke') continue;
           const data = instruction.data as {
@@ -62,6 +86,7 @@ function sigStrokes(app: HeadlessApplication): Stroke[] {
           found.push({
             color,
             alpha: data.style?.alpha ?? 1,
+            local,
             steps: (data.path?.instructions ?? []) as Stroke['steps'],
           });
         }
@@ -73,15 +98,38 @@ function sigStrokes(app: HeadlessApplication): Stroke[] {
   return found;
 }
 
-/** The collar's sweep: a stroke whose path is a single arc. */
+/**
+ * The collar's sweep, recovered from what is actually drawn.
+ *
+ * Not an `arc` any more: the sweep is traced as a polyline so it can crackle
+ * (docs/style-neon-noir.md, "Motion and FX timing"), and the glow recipe draws
+ * that polyline three times — two halos under a core. The **core** is the one
+ * taken, identified by full alpha: a halo is 0.13 or 0.44 and a detection ring
+ * is 0.35 or 0.18, so nothing else on the stage is SIG-inked and opaque.
+ *
+ * The first and last vertices are pinned to the true radius by the renderer,
+ * which is what makes this recoverable at all — and is itself the property
+ * worth holding, since the sweep's end *is* the reading.
+ */
 function collars(app: HeadlessApplication): Array<{ radius: number; start: number; end: number }> {
   const out: Array<{ radius: number; start: number; end: number }> = [];
   for (const stroke of sigStrokes(app)) {
+    if (!stroke.local || stroke.alpha !== 1) continue;
+    const points: Array<[number, number]> = [];
     for (const step of stroke.steps) {
-      if (step.action !== 'arc') continue;
-      const [, , radius, start, end] = step.data as number[];
-      out.push({ radius: radius!, start: start!, end: end! });
+      if (step.action !== 'moveTo' && step.action !== 'lineTo') continue;
+      const [x, y] = step.data as number[];
+      points.push([x!, y!]);
     }
+    if (points.length < 2) continue;
+    const first = points[0]!;
+    const last = points[points.length - 1]!;
+    // Unwrapped forward from 12 o'clock, because a sweep past 3 o'clock wraps
+    // through atan2's cut and would otherwise read as a negative arc.
+    const start = Math.atan2(first[1], first[0]);
+    let end = Math.atan2(last[1], last[0]);
+    while (end < start - 1e-9) end += Math.PI * 2;
+    out.push({ radius: Math.hypot(first[0], first[1]), start, end });
   }
   return out;
 }
@@ -97,12 +145,19 @@ function collars(app: HeadlessApplication): Array<{ radius: number; start: numbe
  */
 const RING_ALPHA = { SELECTED: 0.35, GATED: 0.18 } as const;
 
-/** A detection ring: a SIG-inked stroke traced as a projected polygon. */
+/**
+ * A detection ring: SIG-inked, on a shared unscaled layer, at a ring's alpha.
+ *
+ * Both filters, each for what the other cannot do. `local` separates a ring
+ * from a collar, which alpha no longer can now that the glow rides SIG. Alpha
+ * separates it from a **nodule field's** ring, which `local` cannot: those are
+ * traced into the nodes layer, unscaled and at the origin exactly as these
+ * are, and `UI.sigMid` is `0xf2b233` — the same number as the Nodule's own
+ * ink, and as the Bathyarch primary.
+ */
 function reachRings(app: HeadlessApplication): Stroke[] {
   const alphas: number[] = [RING_ALPHA.SELECTED, RING_ALPHA.GATED];
-  return sigStrokes(app).filter(
-    (stroke) => alphas.includes(stroke.alpha) && stroke.steps.every((step) => step.action !== 'arc')
-  );
+  return sigStrokes(app).filter((stroke) => !stroke.local && alphas.includes(stroke.alpha));
 }
 
 async function boot(): Promise<{
@@ -195,16 +250,433 @@ describe('the loudness collar (ui-ux.md §3.5)', () => {
       assert.equal(sweeps.length, expected.length);
       for (let i = 0; i < sweeps.length; i++) {
         assert.ok(
-          Math.abs(sweeps[i]! - expected[i]!) < 1e-9,
+          Math.abs(sweeps[i]! - expected[i]!) < 1e-6,
           `sweep ${sweeps[i]} should be ${expected[i]}`
         );
       }
       // Twelve o'clock, and clockwise from it: every arc opens at -PI/2 and
       // ends above it. A gauge that ran the other way would read backwards.
       for (const arc of drawn) {
-        assert.ok(Math.abs(arc.start + Math.PI / 2) < 1e-9, 'opens at twelve o clock');
+        assert.ok(Math.abs(arc.start + Math.PI / 2) < 1e-6, 'opens at twelve o clock');
         assert.ok(arc.end >= arc.start, 'runs clockwise');
       }
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
+/**
+ * How far the sweep's core wanders off its own radius, per collar.
+ *
+ * The crackle's whole amplitude, measured rather than read off a constant —
+ * the ends are pinned, so a mean would hide it and the maximum is the figure.
+ */
+function collarWobble(app: HeadlessApplication): number[] {
+  const out: number[] = [];
+  for (const stroke of sigStrokes(app)) {
+    if (!stroke.local || stroke.alpha !== 1) continue;
+    const radii: number[] = [];
+    for (const step of stroke.steps) {
+      if (step.action !== 'moveTo' && step.action !== 'lineTo') continue;
+      const [x, y] = step.data as number[];
+      radii.push(Math.hypot(x!, y!));
+    }
+    if (radii.length < 3) continue;
+    const pinned = radii[0]!;
+    out.push(Math.max(...radii.map((r) => Math.abs(r - pinned))));
+  }
+  return out;
+}
+
+describe('the crackle (style-neon-noir.md, Motion and FX timing)', () => {
+  it('rides SIG, strictly, over the whole scale', () => {
+    // Asserted on the rule rather than on the drawn path, because the drawn
+    // path cannot answer it: a short sweep samples the noise eight times over
+    // several cycles, so the widest vertex it happens to catch is luck. The
+    // aliasing is wanted — it is what makes the sweep read as struck rather
+    // than waved — which is exactly why the property is held here instead.
+    let previous = -Infinity;
+    for (let sig = 0; sig <= 100; sig += 5) {
+      const amplitude = crackleAmplitude(sig);
+      assert.ok(amplitude > previous, `SIG ${sig} does not crackle wider than ${sig - 5}`);
+      previous = amplitude;
+    }
+    // The floor is why a silent hull is nearly still without being dead: it
+    // keeps a sliver legible as the same kind of mark as a full circle.
+    assert.ok(crackleAmplitude(0) > 0, 'a quiet emitter still wears the same mark');
+    assert.ok(
+      crackleAmplitude(100) > crackleAmplitude(0) * 4,
+      'the loud end has to be visibly more electric than the quiet one'
+    );
+    // Off the ends of the scale it saturates rather than inverting.
+    assert.equal(crackleAmplitude(-20), crackleAmplitude(0));
+    assert.equal(crackleAmplitude(400), crackleAmplitude(100));
+  });
+
+  it('is actually drawn, and widest on the loudest emitter in the water', async () => {
+    const world = await boot();
+    try {
+      const wobble = collarWobble(world.app);
+      assert.ok(wobble.length > 0, 'no collar core was traced at all');
+      assert.ok(
+        wobble.some((w) => w > 0),
+        'every sweep came out a perfect arc: the crackle reached nothing'
+      );
+      // Bounded against the gauge it rides rather than against the rule: the
+      // amplitude is screen pixels and these vertices are local metres off a
+      // per-unit scale the test cannot see, so the rule itself is held above
+      // and what is held here is that the crackle stays subordinate — a
+      // wobble comparable to the radius would be a shape, not a texture.
+      for (const stroke of sigStrokes(world.app)) {
+        if (!stroke.local || stroke.alpha !== 1) continue;
+        const radii: number[] = [];
+        for (const step of stroke.steps) {
+          if (step.action !== 'moveTo' && step.action !== 'lineTo') continue;
+          const [x, y] = step.data as number[];
+          radii.push(Math.hypot(x!, y!));
+        }
+        if (radii.length < 3) continue;
+        const pinned = radii[0]!;
+        const widest = Math.max(...radii.map((r) => Math.abs(r - pinned)));
+        assert.ok(
+          widest < pinned * 0.25,
+          `a sweep wandered ${((widest / pinned) * 100).toFixed(1)}% of its own radius`
+        );
+      }
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('pins both ends of the sweep, because the end is the reading', async () => {
+    const world = await boot();
+    try {
+      for (const stroke of sigStrokes(world.app)) {
+        if (!stroke.local || stroke.alpha !== 1) continue;
+        const radii: number[] = [];
+        for (const step of stroke.steps) {
+          if (step.action !== 'moveTo' && step.action !== 'lineTo') continue;
+          const [x, y] = step.data as number[];
+          radii.push(Math.hypot(x!, y!));
+        }
+        if (radii.length < 3) continue;
+        assert.ok(
+          Math.abs(radii[radii.length - 1]! - radii[0]!) < 1e-6,
+          'a gauge whose needle jitters cannot be read to the stop'
+        );
+      }
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('freezes under reduced motion rather than going away (§11)', async () => {
+    const world = await boot();
+    try {
+      const moving = collarWobble(world.app);
+      world.chart.setReducedMotion(true);
+      world.frame(2);
+      const still = collarWobble(world.app);
+
+      assert.equal(still.length, moving.length);
+      // §11 asks for a static equivalent that carries the same information,
+      // and all of this one's information is amplitude — which the freeze does
+      // not touch, because it fixes the noise's *seed* and nothing else. So
+      // the test is that the crackle is still there, not that it still moves.
+      assert.ok(
+        still.some((w) => w > 0),
+        'reduced motion removed the crackle instead of stopping it'
+      );
+
+      // And it really is stopped: the same seed on a later frame draws the
+      // same vertices, where an unfrozen one advances with the Echo grid.
+      world.frame(2);
+      assert.deepEqual(collarWobble(world.app), still, 'a frozen crackle must not move');
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
+describe('the glow gate (style-neon-noir.md, "darken the neighbourhood")', () => {
+  it('rides SIG, so a silent fleet stops lighting the chart', () => {
+    let previous = -Infinity;
+    for (let sig = 0; sig <= 100; sig += 5) {
+      const share = glowShare(sig);
+      assert.ok(share > previous, `SIG ${sig} does not glow harder than ${sig - 5}`);
+      previous = share;
+    }
+    assert.equal(glowShare(100), 1, 'the loudest emitter gets the full weight');
+    // The gate is the whole point: a quiet emitter has to be most of the way
+    // dark, or a base full of them is the light show this replaced.
+    assert.ok(glowShare(0) < 0.2, `a silent emitter still carries ${glowShare(0)} of the halo`);
+    assert.ok(
+      glowShare(SIG_BANDS.RED) > glowShare(0) * 3,
+      'crossing into the red has to be visible as light, not only as hue'
+    );
+  });
+
+  it('is the same curve the crackle rides, normalised', () => {
+    // The claim is a relationship between the two exported effects rather
+    // than either against its own formula — recomputing a formula agrees with
+    // any formula at all. Each is rescaled onto 0..1 across its own ends, and
+    // the two must then land on the same number at every SIG: that is what
+    // "one curve" means, and what stops the glow and the crackle drifting
+    // into disagreeing about how loud a hull looks.
+    const norm = (v: number, lo: number, hi: number): number => (v - lo) / (hi - lo);
+    for (const sig of [0, 8, 12, 30, 35, 48, 62, 65, 95, 100]) {
+      const glow = norm(glowShare(sig), glowShare(0), glowShare(100));
+      const crackle = norm(crackleAmplitude(sig), crackleAmplitude(0), crackleAmplitude(100));
+      assert.ok(
+        Math.abs(glow - crackle) < 1e-9,
+        `at SIG ${sig} the glow sits at ${glow} and the crackle at ${crackle}`
+      );
+    }
+    // And `sigShare` is that curve: both ends, on the floor each was built on.
+    assert.equal(sigShare(100, 0.15), 1);
+    assert.equal(sigShare(0, 0.15), 0.15);
+  });
+
+  it('never gates the core, because the core is the reading', async () => {
+    const world = await boot();
+    try {
+      // Every collar's core is drawn at full alpha whatever its SIG: the halo
+      // is atmosphere and may fade, the reading may not.
+      const cores = sigStrokes(world.app).filter((stroke) => stroke.local && stroke.alpha === 1);
+      assert.equal(cores.length, COLLARED.length, 'an emitter lost its core to the gate');
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
+describe('the collar clears the selection ring (ui-ux.md §3.5)', () => {
+  /**
+   * The shipped rule, imported rather than restated — a second copy of it here
+   * would go on passing after the real one changed, which is the failure mode
+   * this whole file exists to catch.
+   *
+   * The property is separation, and it is the one a flat metre gap could not
+   * hold: the renderer draws figures from a 7 m half-extent (a 14 m craft) to
+   * a 220 m one (a Bastion's footprint), and at a flat +6 / +8 the collar and
+   * the selection ring were 1.8% of a Bastion apart — one circle on screen,
+   * which cost a selected structure its dial outright.
+   *
+   * The share is asserted as a floor on the *separation*, never read back off
+   * the constant: a test that recomputed the formula would agree with any
+   * formula at all.
+   */
+  const MIN_SHARE = 0.1;
+  const MIN_CLEAR_M = 4;
+  const SELECTION = SELECTION_GAP_M;
+
+  it('holds the separation across the whole range of figures the game draws', () => {
+    // Both ends and the middle, in figure half-extents: a craft, a light hull,
+    // a carrier, the smallest structure footprint, the largest.
+    for (const [r, gap] of [
+      [7, SELECTION.HULL],
+      [24, SELECTION.HULL],
+      [80, SELECTION.HULL],
+      [60, SELECTION.STRUCTURE],
+      [220, SELECTION.STRUCTURE],
+    ] as const) {
+      const selection = r + gap;
+      const collar = collarRadius(r, gap);
+      assert.ok(
+        collar > selection,
+        `a collar at ${collar} must sit outside a ring at ${selection}`
+      );
+      const share = (collar - selection) / r;
+      assert.ok(
+        share >= MIN_SHARE || collar - selection >= MIN_CLEAR_M - 1e-9,
+        `a figure of ${r} m separates its lanes by ${(share * 100).toFixed(1)}%, which is a collision`
+      );
+    }
+  });
+
+  it('never lets the collar cross the selection ring as a figure grows', () => {
+    // The reason the collar is outside rather than between: a rule that
+    // crossed would put the two marks exactly on top of each other at the size
+    // where it crossed, which is the collision it exists to remove.
+    for (const gap of [SELECTION.HULL, SELECTION.STRUCTURE]) {
+      for (let r = 5; r <= 240; r += 5) {
+        assert.ok(
+          collarRadius(r, gap) > r + gap,
+          `a figure of ${r} m puts its collar on its selection ring`
+        );
+      }
+    }
+  });
+});
+
+describe('the reach envelope (ui-ux.md §3.5)', () => {
+  const disc = (x: number, y: number, radiusM: number): ReachDisc => ({ x, y, radiusM });
+
+  it('never lets a disc cover its own boundary', () => {
+    // The rule is about *other* hulls. A circle that erased itself would draw
+    // nothing at all, whatever else was on the chart.
+    const one = [disc(0, 0, 1000)];
+    for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {
+      assert.equal(insideAnotherReach(Math.cos(a) * 1000, Math.sin(a) * 1000, one, 0), false);
+    }
+  });
+
+  it('leaves two identical discs both drawn', () => {
+    // The arrangement the epsilon exists for: without it each erases the other
+    // and the envelope vanishes where it most needs to be right.
+    const pair = [disc(0, 0, 1000), disc(0, 0, 1000)];
+    for (const self of [0, 1]) {
+      assert.equal(insideAnotherReach(1000, 0, pair, self), false, 'a twin erased its twin');
+    }
+  });
+
+  it('drops the arc of a hull whose reach is inside another', () => {
+    // Nested: the small disc's whole boundary is interior to the big one.
+    const nested = [disc(0, 0, 400), disc(100, 0, 2000)];
+    const SAMPLES = 64;
+    const at = (i: number): number => (i / SAMPLES) * Math.PI * 2;
+    let kept = 0;
+    for (let i = 0; i < SAMPLES; i++) {
+      if (!insideAnotherReach(Math.cos(at(i)) * 400, Math.sin(at(i)) * 400, nested, 0)) kept++;
+    }
+    assert.equal(kept, 0, 'a fully covered ring must add no line at all');
+    // And the covering disc keeps all of its own.
+    let outer = 0;
+    for (let i = 0; i < SAMPLES; i++) {
+      const x = 100 + Math.cos(at(i)) * 2000;
+      const y = Math.sin(at(i)) * 2000;
+      if (!insideAnotherReach(x, y, nested, 1)) outer++;
+    }
+    assert.equal(outer, SAMPLES, 'the disc that bounds the union keeps its whole boundary');
+  });
+
+  it('keeps both boundaries where two discs only overlap', () => {
+    // Neither contains the other, so each contributes the arc outside the
+    // other — the union's boundary, which is the whole point of the rule.
+    const overlap = [disc(0, 0, 1000), disc(1200, 0, 1000)];
+    for (const self of [0, 1]) {
+      const SAMPLES = 64;
+      let kept = 0;
+      for (let i = 0; i < SAMPLES; i++) {
+        const a = (i / SAMPLES) * Math.PI * 2;
+        const centre = overlap[self]!;
+        const x = centre.x + Math.cos(a) * 1000;
+        const y = centre.y + Math.sin(a) * 1000;
+        if (!insideAnotherReach(x, y, overlap, self)) kept++;
+      }
+      assert.ok(kept > 0 && kept < SAMPLES, `overlapping disc ${self} kept ${kept} of ${SAMPLES}`);
+    }
+  });
+
+  it('leaves disjoint discs whole', () => {
+    const apart = [disc(0, 0, 500), disc(9000, 0, 500)];
+    for (const self of [0, 1]) {
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 16) {
+        const centre = apart[self]!;
+        const x = centre.x + Math.cos(a) * 500;
+        const y = centre.y + Math.sin(a) * 500;
+        assert.equal(insideAnotherReach(x, y, apart, self), false);
+      }
+    }
+  });
+
+  it("collapses the fixture's nested rings and keeps the one that is apart", async () => {
+    const world = await boot();
+    try {
+      // The fixture's own geometry, and the reason the rule exists. Three
+      // hulls clear §3's amber stop: 11 at SIG 48, 13 at 62, and 14 at exactly
+      // 30. Hull 11 sits inside hull 13's reach — same base, and 4 km of reach
+      // against 300 m of spacing — so it bounds nothing. Hull 14 is 3.7 km
+      // away across the map and bounds its own water.
+      const gated = CANNED_SIGS.filter((sig) => sig >= SIG_BANDS.AMBER).length;
+      assert.equal(gated, 3, 'the fixture has to keep three hulls over the stop');
+      assert.equal(
+        reachRings(world.app).length,
+        2,
+        'the nested pair must merge and the distant hull must keep its own boundary'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('draws nothing at all for a fleet under the stop', async () => {
+    const world = await boot();
+    try {
+      // Silent Running floors a hull at SIG 8 (§7), two stops under the gate,
+      // so a fleet that has gone quiet takes its whole exposure off the water.
+      const base = cannedSnapshot(301);
+      const quiet = { ...base, units: base.units.map((unit) => ({ ...unit, sig: 8 })) };
+      world.chart.applySnapshot(quiet);
+      world.conn.applySnapshot(quiet);
+      world.frame(2);
+      assert.deepEqual(reachRings(world.app), []);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('collapses a squad to one contour rather than a circle each', async () => {
+    const world = await boot();
+    try {
+      // The case the rule exists for, at the scale the fixture cannot reach.
+      // Twenty hulls at one SIG, 200 m apart: equal discs never *contain* each
+      // other, so every one still contributes — but only the sliver of itself
+      // outside all the others, and those slivers are one closed contour. The
+      // measure is therefore drawn vertices, not strokes: the count of arcs
+      // says nothing, the length of ink says everything.
+      const base = cannedSnapshot(303);
+      const seed = base.units[0]!;
+      const squad = {
+        ...base,
+        structures: [],
+        units: Array.from({ length: 20 }, (_, i) => ({
+          ...seed,
+          id: 500 + i,
+          x: 1600 + (i % 5) * 200,
+          y: 1600 + Math.floor(i / 5) * 200,
+          sig: 50,
+        })),
+      };
+      world.chart.applySnapshot(squad);
+      world.conn.applySnapshot(squad);
+      world.frame(2);
+
+      const drawn = reachRings(world.app).reduce(
+        (total, ring) => total + ring.steps.filter((step) => step.action !== 'stroke').length,
+        0
+      );
+      // `CIRCLE_SEGMENTS` is 48, so twenty whole circles would be 980 vertices.
+      // The union of twenty discs 200 m apart with ~3.9 km of reach is barely
+      // larger than one of them, so the boundary has to cost a small multiple
+      // of a single circle rather than twenty.
+      const oneCircle = 49;
+      assert.ok(drawn > 0, 'the squad drew no boundary at all');
+      assert.ok(
+        drawn < oneCircle * 4,
+        `a twenty-hull squad drew ${drawn} vertices, against ${oneCircle * 20} for a circle each`
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('draws exactly one for a lone loud hull', async () => {
+    const world = await boot();
+    try {
+      // One emitter has nothing to be covered by, so the envelope is its own
+      // circle — the rule costs a solitary hull nothing.
+      const base = cannedSnapshot(302);
+      const lone = {
+        ...base,
+        units: base.units.slice(0, 1).map((unit) => ({ ...unit, sig: 70 })),
+        structures: [],
+      };
+      world.chart.applySnapshot(lone);
+      world.conn.applySnapshot(lone);
+      world.frame(2);
+      assert.equal(reachRings(world.app).length, 1);
     } finally {
       world.teardown();
     }
@@ -224,11 +696,14 @@ describe('the reach ring (ui-ux.md §3.5)', () => {
         CANNED_STRUCTURE_SIGS.some((sig) => sig >= SIG_BANDS.AMBER),
         'a structure over the stop is what makes the next assertion mean something'
       );
-      assert.equal(
-        reachRings(world.app).length,
-        loud,
-        'a hull under the amber stop draws its collar and nothing on the ground'
+      // At most one per gated hull, and fewer once they nest — the envelope's
+      // own test above pins which. The bound is what this one is for: nothing
+      // outside the gate may put a line on the ground.
+      assert.ok(
+        reachRings(world.app).length <= loud,
+        'something under the amber stop drew on the ground'
       );
+      assert.ok(reachRings(world.app).length > 0, 'the gated hulls drew nothing at all');
     } finally {
       world.teardown();
     }

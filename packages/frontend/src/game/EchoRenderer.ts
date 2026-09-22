@@ -961,18 +961,153 @@ const SIG_METER = {
  * it through §11's palettes rather than leaving it dependent on them.
  */
 const LOUDNESS_COLLAR = {
-  /** Metres outside the drawn hull: §3.5's lane between crush (+4) and selection (+8). */
-  GAP_M: 6,
-  /** The same lane on a structure, whose selection ring is at +14. */
-  STRUCTURE_GAP_M: 10,
+  /**
+   * How far the collar clears the selection ring, as a share of the figure it
+   * captions — never a flat metre count, which is what this replaces.
+   *
+   * The renderer draws figures from a **7 m** half-extent (a 14 m craft, #838)
+   * to a **220 m** one (a Bastion's footprint), a range of 31x, and a flat gap
+   * cannot serve both ends of it. At +6 and +8 two lanes are 29% of a craft
+   * apart and **1.8% of a Bastion**, so on everything large the collar and the
+   * selection ring were the same circle: a selected structure lost its dial
+   * outright and its sweep read as a partly-coloured selection ring.
+   *
+   * A share holds the separation constant instead. The floor is for the other
+   * end — on a 7 m craft 12% is under a metre, and a mark still needs room a
+   * figure that small cannot give it proportionally.
+   */
+  CLEAR_SHARE: 0.12,
+  /** Metres, for the figures too small for the share to clear. */
+  CLEAR_FLOOR_M: 4,
   /** The dial the sweep is read against. Without it a sweep is a stray arc. */
   TRACK_ALPHA: 0.16,
-  /** The sweep is the reading, so it is the one that is meant to be seen. */
-  SWEEP_ALPHA: 0.85,
   /** Screen pixels, like every stroke on an instrument (§11's UI scale). */
   TRACK_PX: 1,
-  SWEEP_PX: 2.5,
+  /**
+   * The glow recipe — docs/style-neon-noir.md, "The glow recipe": a core at
+   * full opacity under two halo layers, which is that section's hard cap.
+   *
+   * Widths are screen pixels rather than metres for the reason every stroke on
+   * this HUD is: a halo is a property of the instrument, not of the water.
+   */
+  HALO_OUTER_PX: 10,
+  HALO_OUTER_ALPHA: 0.11,
+  HALO_INNER_PX: 5,
+  HALO_INNER_ALPHA: 0.36,
+  CORE_PX: 1.6,
+  /**
+   * What is left of the halo at SIG 0, as a share of the widths above.
+   *
+   * The halo rides SIG like the crackle does, for a reason that section states
+   * outright: "bloom-everything is the failure mode of this style; when in
+   * doubt, **darken the neighbourhood instead of brightening the subject**."
+   * A halo of the same weight on every emitter is that failure — with a base
+   * and a handful of hulls on screen the chart became a light show, and the
+   * loudest hull was no easier to find for it. Gating the glow darkens the
+   * neighbourhood by itself: a fleet running silent is nearly dark, so the one
+   * hull that opened its drives is the only thing burning.
+   *
+   * The core is not gated. It is the reading, and a reading may not fade.
+   */
+  GLOW_FLOOR_SHARE: 0.15,
+  /**
+   * The crackle — docs/style-neon-noir.md, "Motion and FX timing".
+   *
+   * Radial noise on the sweep, re-seeded on the 200 ms Echo grid like every
+   * other HUD animation. Its amplitude rides SIG, which is what earns it a
+   * place at all: a silent hull's sliver sits nearly still and a pinged hull
+   * is the most electric thing on the chart, so the effect reports loudness
+   * rather than decorating it. Deliberately sub-pixel at rest — the sweep's
+   * *end* is the reading, and noise on it is noise on the number.
+   */
+  CRACKLE_STEP_RAD: 0.13,
+  CRACKLE_PX: 0.55,
+  /** What is left of the amplitude at SIG 0, as a share of the above. */
+  CRACKLE_FLOOR_SHARE: 0.15,
 } as const;
+
+/**
+ * The selection ring's lane, per kind of figure — named because the collar has
+ * to clear it (docs/ui-ux.md §3.5) and a lane spelled out in two places is a
+ * collision waiting for the next figure that is bigger than both.
+ */
+export const SELECTION_GAP_M = { HULL: 8, STRUCTURE: 14 } as const;
+
+/**
+ * Where a figure's loudness collar sits: outside everything else about it.
+ *
+ * Outside rather than between, and that is the load-bearing half. A collar
+ * that crossed the selection ring as the figure grew would be exactly
+ * coincident with it at the size where it crossed — a rule that guarantees the
+ * collision it was written to remove.
+ *
+ * Pure and exported for the reason `contactVoice.ts` exports `panFor`: this is
+ * the whole of the rule, it is the rule that was wrong, and a separation is
+ * assertable over every figure the game draws without booting a renderer to
+ * ask about the two the fixture happens to carry.
+ */
+export function collarRadius(figureRadius: number, selectionGapM: number): number {
+  const clear = Math.max(LOUDNESS_COLLAR.CLEAR_FLOOR_M, figureRadius * LOUDNESS_COLLAR.CLEAR_SHARE);
+  return figureRadius + selectionGapM + clear;
+}
+
+/**
+ * One own emitter's audible reach, as the ground sees it.
+ *
+ * The centre is the hull's *drawn* position and the radius its `maxAudibleRangeM`
+ * at the local propagation factor, so a disc is exactly the water that hull can
+ * be heard in — the same figure §3.5's ring has always been.
+ */
+export interface ReachDisc {
+  x: number;
+  y: number;
+  radiusM: number;
+}
+
+/**
+ * Two rings whose edges coincide, in metres, are not taken to cover each other.
+ *
+ * Without it a pair of identical discs each erase the other and the fleet's
+ * envelope disappears at the one arrangement it most needs to be right about.
+ * A strict `<` against the radius less this makes the test antisymmetric for
+ * free, so no tie-break by id is needed.
+ */
+const REACH_MERGE_EPSILON_M = 2;
+
+/**
+ * Is this point already inside some *other* hull's reach?
+ *
+ * The whole of §3.5's envelope rule, and pure so it can be held exactly. Drawn
+ * per vertex it turns N overlapping circles into the boundary of their union:
+ * an arc survives only where it bounds water no other own hull can already
+ * hear into, so **a ring is drawn exactly where it adds exposure** and a hull
+ * whose reach sits wholly inside another's draws nothing at all.
+ *
+ * That is not a rare case, which is why this exists. Reach is kilometres — a
+ * hull at SIG 62 carries 4.4 km through open water — and a fleet's spacing is
+ * hundreds of metres, so hulls near each other have nested reach almost
+ * always. On the renderer's own fixture two of three rings are fully inside
+ * the third. Drawn in full that is twenty circles for a twenty-hull squad, of
+ * which one or two bound anything; drawn as an envelope it is one shape, and
+ * the shape is the answer to the question the mark asks.
+ */
+export function insideAnotherReach(
+  x: number,
+  y: number,
+  discs: readonly ReachDisc[],
+  self: number
+): boolean {
+  for (let i = 0; i < discs.length; i++) {
+    if (i === self) continue;
+    const disc = discs[i]!;
+    const limit = disc.radiusM - REACH_MERGE_EPSILON_M;
+    if (limit <= 0) continue;
+    const dx = x - disc.x;
+    const dy = y - disc.y;
+    if (dx * dx + dy * dy < limit * limit) return true;
+  }
+  return false;
+}
 
 /**
  * Alpha of a detection ring the player did not ask for by selecting its hull
@@ -982,6 +1117,42 @@ const LOUDNESS_COLLAR = {
  * puts the ring on screen and selection is still what makes it the subject.
  */
 const LOUD_RING_ALPHA = 0.18;
+
+/**
+ * The one curve both of the collar's effects ride — docs/ui-ux.md §3.5.
+ *
+ * `floor` at SIG 0 rising to 1 at SIG 100, so an effect built on it is a
+ * second reading of loudness rather than a decoration laid over the first.
+ * Shared rather than written twice because the glow and the crackle make the
+ * same claim, and two copies of a curve are two chances for them to stop
+ * agreeing about what "loud" looks like.
+ */
+export function sigShare(sig: number, floor: number): number {
+  const fraction = Math.min(1, Math.max(0, sig / 100));
+  return floor + (1 - floor) * fraction;
+}
+
+/** How much halo an emitter of `sig` gets, as a share of the full weight. */
+export function glowShare(sig: number): number {
+  return sigShare(sig, LOUDNESS_COLLAR.GLOW_FLOOR_SHARE);
+}
+
+/**
+ * How wide the sweep's crackle runs at a given SIG, in screen pixels.
+ *
+ * Pure and exported for `collarRadius`'s reason: this is the whole of what
+ * earns the effect a place in docs/style-neon-noir.md — that it reports
+ * loudness rather than decorating it — and a rule that matters that much
+ * should be assertable exactly. It cannot be read back off the drawn path,
+ * because what a *sample* of the noise happens to catch is not its amplitude:
+ * a short sweep carries eight samples of a signal several cycles long, so the
+ * measured maximum is luck. The rendering wants that aliasing — it is what
+ * makes the sweep look struck rather than waved — and a test must not depend
+ * on it.
+ */
+export function crackleAmplitude(sig: number): number {
+  return LOUDNESS_COLLAR.CRACKLE_PX * sigShare(sig, LOUDNESS_COLLAR.CRACKLE_FLOOR_SHARE);
+}
 
 /**
  * One loudness collar, in local hull-space — docs/ui-ux.md §3.5.
@@ -994,25 +1165,77 @@ const LOUD_RING_ALPHA = 0.18;
  * the metres the caller drew its figure at: a line on an instrument takes
  * §11's UI scale, and what it captions does not.
  */
-function drawLoudnessCollar(g: Graphics, radius: number, sig: number, inverseScale: number): void {
+function drawLoudnessCollar(
+  g: Graphics,
+  radius: number,
+  sig: number,
+  inverseScale: number,
+  nowMs: number,
+  still: boolean
+): void {
+  const px = inverseScale;
   // The dial first, so the sweep is read as a proportion rather than as a
   // stray arc — and so an emitter at SIG 0 still shows where its gauge is.
   g.circle(0, 0, radius).stroke({
-    width: LOUDNESS_COLLAR.TRACK_PX * inverseScale,
+    width: LOUDNESS_COLLAR.TRACK_PX * px,
     color: UI.text,
     alpha: LOUDNESS_COLLAR.TRACK_ALPHA,
   });
   // Against `100` rather than a constant for the same reason `drawSigMeter`
   // is: 100 is the definition of §3's scale — `SIG 042 / 100` — rather than a
   // number anything is free to move.
-  const sweep = Math.min(1, Math.max(0, sig / 100)) * Math.PI * 2;
+  const fraction = Math.min(1, Math.max(0, sig / 100));
+  const sweep = fraction * Math.PI * 2;
   if (sweep <= 0) return;
-  // From 12 o'clock, clockwise, like every other gauge on this HUD.
-  g.arc(0, 0, radius, -Math.PI / 2, -Math.PI / 2 + sweep).stroke({
-    width: LOUDNESS_COLLAR.SWEEP_PX * inverseScale,
-    color: sigColor(sig),
-    alpha: LOUDNESS_COLLAR.SWEEP_ALPHA,
+
+  const ink = sigColor(sig);
+  const start = -Math.PI / 2;
+  // Quantised to the 200 ms Echo grid, and frozen outright under reduced
+  // motion. Frozen rather than removed: §11 asks for a static equivalent that
+  // carries the same information, and all of the information is in the
+  // *amplitude* rather than in the movement — a still crackle is as wide as a
+  // moving one, so the loud hull still reads as the ragged one.
+  const seed = still ? 0 : Math.floor(nowMs / (1000 / SIM.ECHO_HZ));
+  const amplitude = crackleAmplitude(sig);
+  const steps = Math.max(8, Math.ceil(sweep / LOUDNESS_COLLAR.CRACKLE_STEP_RAD));
+  const glow = glowShare(sig);
+
+  // Traced three times rather than traced once and stroked three times: a Pixi
+  // path is consumed by the stroke that closes it, so each layer needs its own.
+  const trace = (): void => {
+    for (let i = 0; i <= steps; i++) {
+      const angle = start + (i / steps) * sweep;
+      // Both ends are pinned to the true radius. The first is 12 o'clock and
+      // the last is the reading itself, and neither may wander: a gauge whose
+      // needle jitters is a gauge that cannot be read to the stop.
+      const pinned = i === 0 || i === steps ? 0 : 1;
+      const noise =
+        Math.sin(angle * 23.7 + seed * 1.9) * Math.sin(angle * 11.3 - seed * 0.7) * pinned;
+      const r = radius + noise * amplitude * px;
+      const x = Math.cos(angle) * r;
+      const y = Math.sin(angle) * r;
+      if (i === 0) g.moveTo(x, y);
+      else g.lineTo(x, y);
+    }
+  };
+
+  // Both halo layers narrow *and* dim with the gate, rather than only dimming:
+  // a wide halo held at low alpha still occupies its width, and width is what
+  // makes two neighbouring emitters bleed into one another.
+  trace();
+  g.stroke({
+    width: LOUDNESS_COLLAR.HALO_OUTER_PX * px * glow,
+    color: ink,
+    alpha: LOUDNESS_COLLAR.HALO_OUTER_ALPHA * glow,
   });
+  trace();
+  g.stroke({
+    width: LOUDNESS_COLLAR.HALO_INNER_PX * px * glow,
+    color: ink,
+    alpha: LOUDNESS_COLLAR.HALO_INNER_ALPHA * glow,
+  });
+  trace();
+  g.stroke({ width: LOUDNESS_COLLAR.CORE_PX * px, color: ink, alpha: 1 });
 }
 
 /**
@@ -2021,17 +2244,24 @@ export class EchoRenderer {
     cx: number,
     cy: number,
     radiusM: number,
-    depthM: number | null
+    depthM: number | null,
+    // Drop a vertex in *world* space, before it is projected — §3.5's envelope
+    // (`insideAnotherReach`). It breaks the run exactly as an off-frustum
+    // vertex does, which is why a circle can already come back as several arcs
+    // and nothing downstream had to learn anything new.
+    skip?: (x: number, y: number) => boolean
   ): boolean {
     let open = false;
     let any = false;
     for (let i = 0; i <= CIRCLE_SEGMENTS; i++) {
       const angle = (i / CIRCLE_SEGMENTS) * Math.PI * 2;
-      const p = this.project(
-        cx + Math.cos(angle) * radiusM,
-        cy + Math.sin(angle) * radiusM,
-        depthM
-      );
+      const x = cx + Math.cos(angle) * radiusM;
+      const y = cy + Math.sin(angle) * radiusM;
+      if (skip?.(x, y) === true) {
+        open = false;
+        continue;
+      }
+      const p = this.project(x, y, depthM);
       if (p === null) return false;
       if (!p.visible) {
         open = false;
@@ -5448,7 +5678,7 @@ export class EchoRenderer {
       const alpha = building ? 0.35 : 0.9;
 
       if (isSelected) {
-        g.circle(0, 0, radius + 14).stroke({
+        g.circle(0, 0, radius + SELECTION_GAP_M.STRUCTURE).stroke({
           width: 2 * inverseScale,
           color: UI.text,
           alpha: 0.8,
@@ -5495,7 +5725,14 @@ export class EchoRenderer {
       // reason. An anchored array is an emitter like any other, and it carried
       // an identical copy of the invented radius the hull's collar replaces —
       // leaving it would have left the HUD saying loudness two ways.
-      drawLoudnessCollar(g, radius + LOUDNESS_COLLAR.STRUCTURE_GAP_M, structure.sig, inverseScale);
+      drawLoudnessCollar(
+        g,
+        collarRadius(radius, SELECTION_GAP_M.STRUCTURE),
+        structure.sig,
+        inverseScale,
+        this.frameNowMs,
+        this.reducedMotion
+      );
 
       const barWidth = radius * 2;
       const barY = -radius - 14 * inverseScale;
@@ -5552,16 +5789,16 @@ export class EchoRenderer {
     g.clear();
     if (this.terrain === null) return;
 
+    // Two passes, because §3.5's envelope needs every disc before it can draw
+    // any of them: an arc is kept only where no *other* own hull already hears
+    // into that water, so the whole set is the input to each ring.
+    const ringed: Array<{ unit: OwnUnit; selected: boolean; disc: ReachDisc }> = [];
+
     for (const unit of this.units) {
       const isSelected = this.selected.has(unit.id);
       // §3.5's gate. Below the amber stop a hull draws its collar and nothing
       // on the ground, which is what makes a fleet in Silent Running draw no
       // rings at all — §7 floors a silent hull at SIG 8, two stops under this.
-      //
-      // The clutter above it is the information rather than a cost of it: one
-      // circle per hull, overlapping, at the size the water gives each. A
-      // player who has opened every drive has put their whole exposure on the
-      // chart, and that is what it looks like.
       if (!isSelected && unit.sig < SIG_BANDS.AMBER) continue;
 
       // The server prices detection along each emitter-listener path, so the
@@ -5591,24 +5828,17 @@ export class EchoRenderer {
         PROPAGATION_MODEL.BASELINE_HYD
       );
 
-      // These rings' *radii* must stay world-space — 2,400 m is a fact about
-      // the water, not about the interface — which is why they are projected
-      // vertex by vertex onto the ground: a ring climbing a ridge is the
-      // honest shape of a distance measured through the water. Their stroke
-      // is the opposite: a line on an instrument, drawn in screen pixels and
-      // carrying the UI scale (§11 names the ping preview as one of the two
-      // things to scale first).
-      if (this.traceCircle(g, d.x, d.y, range, null)) {
-        g.stroke({
-          width: 2 * this.uiScale,
-          color: sigColor(unit.sig),
-          alpha: isSelected ? 0.35 : LOUD_RING_ALPHA,
-        });
-      }
+      ringed.push({ unit, selected: isSelected, disc: { x: d.x, y: d.y, radiusM: range } });
 
       // Hold the preview key to see exactly how badly a ping would expose you.
       // Selection only, and not the §3.5 gate: a ping is an order, and the
       // hulls an order would reach are the ones the player has in hand.
+      //
+      // Outside the envelope too, and deliberately: a ping's radius is a fixed
+      // fact about the transmission rather than this hull's own reach, so it
+      // is not one of the discs the union is taken over and is not hidden by
+      // one. It is also the answer to a question the player asked by holding
+      // a key, which is the one thing that always earns its own line.
       if (this.previewPing && isSelected) {
         if (this.traceCircle(g, d.x, d.y, ACTIVE_SONAR.REVEAL_RADIUS_M, null)) {
           g.stroke({ width: 2 * this.uiScale, color: UI.friendly, alpha: 0.5 });
@@ -5617,6 +5847,30 @@ export class EchoRenderer {
           g.stroke({ width: 3 * this.uiScale, color: UI.threat, alpha: 0.8 });
         }
       }
+    }
+
+    // These rings' *radii* must stay world-space — 2,400 m is a fact about the
+    // water, not about the interface — which is why they are projected vertex
+    // by vertex onto the ground: a ring climbing a ridge is the honest shape of
+    // a distance measured through the water. Their stroke is the opposite: a
+    // line on an instrument, drawn in screen pixels and carrying the UI scale
+    // (§11 names the ping preview as one of the two things to scale first).
+    const discs = ringed.map((entry) => entry.disc);
+    for (let i = 0; i < ringed.length; i++) {
+      const { unit, selected, disc } = ringed[i]!;
+      const traced = this.traceCircle(g, disc.x, disc.y, disc.radiusM, null, (x, y) =>
+        insideAnotherReach(x, y, discs, i)
+      );
+      // Nothing survived: every metre of this hull's reach is water another of
+      // the player's own hulls already hears into, so its ring adds no exposure
+      // and is not drawn. The hull still wears its collar, and the water it is
+      // audible in is inside the envelope the others draw.
+      if (!traced) continue;
+      g.stroke({
+        width: 2 * this.uiScale,
+        color: sigColor(unit.sig),
+        alpha: selected ? 0.35 : LOUD_RING_ALPHA,
+      });
     }
   }
 
@@ -6333,7 +6587,7 @@ export class EchoRenderer {
       const isSelected = this.selected.has(unit.id);
 
       if (isSelected) {
-        g.circle(0, 0, radius + 8).stroke({
+        g.circle(0, 0, radius + SELECTION_GAP_M.HULL).stroke({
           width: 2 * inverseScale,
           color: UI.text,
           alpha: 0.8,
@@ -6341,7 +6595,14 @@ export class EchoRenderer {
       }
 
       // §3.5's collar: this hull's own loudness, read off this hull.
-      drawLoudnessCollar(g, radius + LOUDNESS_COLLAR.GAP_M, unit.sig, inverseScale);
+      drawLoudnessCollar(
+        g,
+        collarRadius(radius, SELECTION_GAP_M.HULL),
+        unit.sig,
+        inverseScale,
+        now,
+        this.reducedMotion
+      );
 
       // Overreaching its rating is drawn on the hull itself, not only in the
       // selection card: a squad crushing at the bottom of a dive is something
