@@ -9,6 +9,7 @@
  */
 
 import { firstFiled, formatSpan, span } from './dates.mjs';
+import { DIVE, gaugeMarkup, oceanScript, oceanStyle } from './ocean.mjs';
 
 export const escape = (text) =>
   String(text)
@@ -620,10 +621,13 @@ footer .note { color: var(--text-bright); font-family: var(--display); font-size
 .sheet figcaption { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); padding: 0.7rem 0.3rem 0.1rem; }
 .backlog { font-size: 0.8rem; margin-top: -0.8rem; }
 .backlog a { color: var(--neon-amber); }
-</style>
+${oceanStyle}</style>
 </head>
 <body>
 <a class="sr" href="#play" >Skip to what you can play</a>
+<canvas class="ocean" aria-hidden="true"></canvas>
+<canvas class="ocean-hud" aria-hidden="true"></canvas>
+${gaugeMarkup(DIVE)}
 <nav class="nav" aria-label="Sections">
   <div class="wrap">
     <a class="wordmark" href="#top" aria-label="Echoes of the Abyss — top of page">
@@ -864,6 +868,9 @@ ${sprints}
   const openHash = () => { const el = document.querySelector(location.hash || '#none'); if (el?.classList.contains('phase')) el.open = true; };
   addEventListener('hashchange', openHash); openHash();
 })();
+</script>
+<script>
+${oceanScript(DIVE)}
 </script>
 </body>
 </html>

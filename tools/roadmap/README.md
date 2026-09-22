@@ -18,6 +18,16 @@ neon-noir register of `docs/style-neon-noir.md` under the Mouth lockup from `doc
   throat answers, and one echo comes back out. The bands' resting order never changes —
   the mark still brightens downward, always — and the whole animation is off under
   `prefers-reduced-motion`.
+- **The water** (`lib/ocean.mjs`) — the page is a dive. Scrolling descends from the Lid to
+  the Mouth's floor at 4,410 m, each section starting at a depth the docs name: the Shelf's
+  edge, the thermocline, the Abyssal line, the Lip. A gauge reads the depth and the water
+  darkens downward. Five species of the Drift live at their working depths: lampfry scatter
+  from the pointer and tetherjelly breathe in plain sight, while a Draymaw pack, two
+  Hollows and a Sounder stay dark until a ping resolves them. The gauge's button, or a
+  click on open water, pings: 900 m in cyan, the 2,400 m self-reveal in red. A Sounder
+  answers a ping, a Hollow strikes at one close enough, and over the Mouth the echo comes
+  back before the ping goes out. Sound is off until asked for. Under
+  `prefers-reduced-motion` the water is drawn still and no ping is offered.
 - **The game in numbers** — campaign missions, navies, maps (all counted from the
   repository at build time), roadmap percentage, phases finished.
 - **What kind of game this is** — the five rules everything descends from.
@@ -92,6 +102,7 @@ Each thing on the page has one owner, and each owner has a check:
 | Open or done per row | the GitHub API at build time | `pages.yml` rebuilds when an issue is opened, closed, reopened or edited, and daily as a backstop |
 | Player-facing words | `lib/content.mjs` | the test fails if any row, phase, group, status row or sprint of the real doc has no copy |
 | Mission, map, navy counts | counted from the repository at build time | nothing to drift — they are not typed anywhere |
+| The dive: depths, ping radii, the Drift | `lib/ocean.mjs`, transcribed from `docs/` | `test/ocean.test.mjs` reads `systems-depth.md`, `systems-echo.md`, `bestiary.md` and `glossary.md` back and fails on any moved number |
 | The roster sheet | newest `docs/screenshots/issue-<N>/rung-roster-sprites.png` | `pages.yml` rebuilds when one lands; the test fails if none exists |
 | The dates each phase ran | issue `created_at` / `closed_at`, at build time | nothing to drift — no date is typed anywhere, and a phase with open rows says *since* rather than guessing an end |
 | Open issues with no row | the GitHub API against the doc | the build log names them, and the page counts them; epics and `routine-log` ledgers are not counted, being containers and records rather than missing work |
@@ -139,8 +150,9 @@ deploy says why in its log.
 Only what is already in `docs/ROADMAP.md`, the titles, numbers and open/close dates of the
 issues it links,
 the player-facing copy in `lib/content.mjs` (itself transcribed from the design docs), the
-mission and map counts, the roster contact sheet, a count of open issues not yet on the
-roadmap, the logo, and the display font. No source, no design bible, no
+mission and map counts, the dive's depths and the five species it draws (from
+`lib/ocean.mjs`, likewise transcribed), the roster contact sheet, a count of open issues not
+yet on the roadmap, the logo, and the display font. No source, no design bible, no
 internal notes. Worth re-reading before enabling, because that is the moment it becomes
 public.
 
