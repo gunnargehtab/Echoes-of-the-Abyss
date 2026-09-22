@@ -42,6 +42,7 @@ from it.
 ```text
 node tools/hull-models/hulls/<hull>.mjs → docs/concept-art/models/<hull>-<navy>.glb → intake
 node tools/hull-models/structures/<kind>-<navy>.mjs → docs/concept-art/models/<kind>-<navy>.glb → intake
+node tools/hull-models/props/<thing>.mjs → docs/concept-art/models/env-<thing>.glb → intake --category env
 ```
 
 A structure is the same path with a different vocabulary. A navy's module holds a
@@ -51,6 +52,11 @@ Two things differ from a hull and both come from the kind rather than the script
 scale is held on the footprint diameter (`lengthM` in `tools/hull-maps/models.mjs` is
 2 × `radiusM`), and no plan outline is generated, because a structure renders from its
 map rather than from a polygon under the Asymmetric Fidelity Law.
+
+An environment prop is the same path again (#869), with `seabed.mjs` where a navy's module
+would be, since a prop belongs to nobody. Scale is held on the registry `footprintM`,
+the larger horizontal axis, with no yaw and no outline, which is "The environment branch"
+below.
 
 This changes where a GLB comes from, never whether it is checked: the script's output goes
 through `hull-intake` and gates 2–5 exactly as a hand-exported one does, and a warning-free
@@ -115,6 +121,7 @@ GLB export → hull-intake bake     .claude/skills/hull-intake --category env
         │                         (validates scale, tris, materials, licensed light)
         ▼
 Approved model committed          docs/concept-art/models/env-*.glb
+                                  (written by tools/hull-models/props/, #869)
         │
         ▼
 Runtime instancing                packages/frontend/src/game/environment registry
@@ -127,16 +134,20 @@ render-only by the same law as the seabed's detail relief, and the scope stays t
 chart. Their procedural fallback is the seabed bake itself — a biome with no approved
 props reads through relief and mottle alone.
 
-The front door admits one author. Every `env-*.glb` in `docs/concept-art/models/` is a
+The front door admits one design. Every `env-*.glb` in `docs/concept-art/models/` is a
 Claude Design model from the Block 4 batch, intaken with `--category env` against its
 row's footprint, cap and licensed light and committed slug for slug; the registry, the
-placement rules and the kelp sway read the file, never its author. A deterministic
-generator stood in for that batch while the runtime was ahead of it, and was retired
-when the last row landed: a row with no approved model is not a generated stand-in but
-an absence, and the biome reads through relief and mottle alone, which is the fallback
-above. Replacing a model is a file swap under the same gate — intake, commit over the
-current file, update the registry row's triangle count — and the run-game screenshot in
-the PR is its review.
+placement rules and the kelp sway read the file, never its author. Since #869 each file
+is written by a script under `tools/hull-models/props/` that ports its approved model
+part for part, as Phase 3 of #540 ported the roster, so `npm run check:models` holds the
+script and the file together and `diff.mjs` reads a port against the Claude Design
+binary in git history. A deterministic generator stood in for that batch while the
+runtime was ahead of it, and was retired when the last row landed. A port is not that
+generator come back: it writes the approved model, not a stand-in. A row with no
+approved model is an absence, and the biome reads through relief and mottle alone,
+which is the fallback above. Replacing a model goes through its script: port the new
+export into it, run it, intake, commit the GLB with the script, and update the registry
+row's triangle count. The run-game screenshot in the PR is its review.
 
 ## The gates
 

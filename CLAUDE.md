@@ -85,7 +85,7 @@ runtime resolution failures across both. Every root script that needs it runs
 packages/shared    @echoes/shared — types, tuning constants, Echo Layer math.
 packages/backend   Colyseus server. Owns the simulation. Node + esbuild bundle.
 packages/frontend  React shell, three.js under PixiJS. A terminal, not a sim.
-tools/hull-models  Kit, faction, hull and structure scripts; they build the GLBs.
+tools/hull-models  Kit, faction, hull, structure and prop scripts; they build the GLBs.
 tools/hull-maps    The sprite maps and plan outlines those models bake to.
 tools/hull-renders One beauty frame per hull, in its navy's water.
 tools/audio-meter  What the mix measures: LUFS, true peak, band split.

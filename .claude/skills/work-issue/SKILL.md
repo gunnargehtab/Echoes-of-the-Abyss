@@ -209,8 +209,8 @@ different reasons:
   about the work, so it is a person's, like `needs-hardware`. Note in your run
   summary if the backlog is mostly `fable-5.1`, because that is a fact about the
   loop's remaining supply of work rather than about any one issue: #540 carries
-  the label across every model still to be built — all nineteen of Phase 4's
-  unmodelled hulls and its one structure, the BioReactor — so they are a
+  the label across what is left of it — Phase 6's pristine pass, now that every
+  hull, structure and environment prop is built by a script — so it is a
   Fable-routed session's, never a firing's.
 - `wontfix` is parked work, in the sense `docs/ROADMAP.md` gives the word: the
   investigation is written down and the next move is one the build cannot make
