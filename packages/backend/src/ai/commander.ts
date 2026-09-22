@@ -757,26 +757,37 @@ function joinsTheArmy(kind: UnitKind): boolean {
  * transports", docs/systems-echo.md §3). A plan in two phases, kept in
  * `lift`:
  *
- * - **Loading.** The carrier waits at the rally point, where the force
+ * - **Loading.** The transport waits at the rally point, where the force
  *   masses anyway, and the army hulls that have gathered there are ordered
  *   aboard until the hold is full. A hull ordered aboard leaves the army the
  *   push branch commands (`observe` filters on `embarking` and `aboard`), so
  *   the boarding is not overridden by the next move-to-rally.
  * - **Sailing.** With a full hold — or something aboard and the push already
  *   committed, or something aboard and nothing more to wait for — the
- *   carrier sails for the drop point: the objective, pulled back by a gun's
+ *   transport sails for the drop point: the objective, pulled back by a gun's
  *   reach, at the doctrine's depth. It lands its hold there, and the landing
  *   commits the push, so the force it carried walks into the base rather
  *   than back to the rally it came from.
  *
- * What the carrier's doctrine argues is sound: the Freighter arrives loud
+ * What the transport's doctrine argues is sound: the Freighter arrives loud
  * and survives it; the Verger takes a cohort under the layer at PR-3 for one
  * descent instead of four. The commander cannot see any of that better than
  * a player can — a full hold is +18 SIG on its own scope too — so the plan
  * is the same for both and the numbers do the talking.
+ *
+ * **Transport, not carrier, throughout this file since #839.** The word meant
+ * the hull with a hold here, and wave 8 gave the roster four hulls with a
+ * deck; `docs/glossary.md` settles which keeps the name — "the hull with a
+ * hold is a **transport** and the hull with a deck is a **carrier**" — so the
+ * locals, the prose and this commander's own `lift.transportId` moved. The
+ * `embark` command's `carrierId` did not. That field is `AiCommand`'s
+ * (`ai/types.ts`), read by `seat.ts` and backend-internal, so renaming it is
+ * not a protocol edit; it is left because it mirrors the `embark` message's
+ * `carrierId` (`wire.ts`), which is the wire's spelling, and the two want
+ * renaming together, in a change that is not this one.
  */
 const LIFT = {
-  /** How near the carrier a hull must be gathered to be ordered aboard. */
+  /** How near the transport a hull must be gathered to be ordered aboard. */
   GATHER_M: RANGE.ARRIVE_M * 2,
   /** A load that has waited this long sails with what it has. */
   PATIENCE_S: 90,
@@ -788,7 +799,7 @@ const LIFT = {
    * 0% baseline: two navies' worth of patience on one income.
    */
   SAVE_S: 45,
-  /** The carrier stops short of the objective by a gun's reach, and lands there. */
+  /** The transport stops short of the objective by a gun's reach, and lands there. */
   STANDOFF_M: RANGE.PUSH_ENGAGE_M,
 } as const;
 
@@ -1147,8 +1158,8 @@ export class AiCommander implements AiPlayer {
    * increment would change no command this commander issues.
    */
   private readonly ordnanceWantTally: OrdnanceWantTally = emptyOrdnanceWantTally();
-  /** The transport plan, if the navy has a carrier afloat (see `LIFT`). */
-  private lift: { carrierId: number; phase: 'loading' | 'sailing'; sinceTick: number } | null =
+  /** The transport plan, if the navy has a transport afloat (see `LIFT`). */
+  private lift: { transportId: number; phase: 'loading' | 'sailing'; sinceTick: number } | null =
     null;
   /**
    * Enemy starts this commander has stood on and heard nothing at, by index
@@ -1285,11 +1296,32 @@ export class AiCommander implements AiPlayer {
     const commands: AiCommand[] = [];
     const harvesters = snapshot.units.filter((u) => u.kind === UnitKind.Harvester);
     const scout = this.designateScout(snapshot.units);
-    // The army is what is in the water: a hull aboard a carrier, or ordered
+    // The army is what is in the water: a hull aboard a transport, or ordered
     // aboard one, is the lift's until it lands (docs/systems-echo.md §3).
+    //
+    // **A craft is not a hull, and the gun is why it looks like one** (#839).
+    // Every craft is armed — a Spark 22, a Versicle 45 — so the damage test
+    // below admits the whole flight, and a flight is up to five entities
+    // (docs/units.md, "The craft"). No commander owns a deck yet: the want
+    // that buys one waits for the order that uses it (#839), and this guard
+    // lands ahead of both. What it would cost without it: `army.length` is the
+    // composition cycle's index, so each craft that launches or expires moves
+    // the index and re-phases the navy's build order, and the flight inflates
+    // `escorted`, `atTarget`, the massing high-water mark and
+    // `commandGardens`' spare. Five Trebles against the Directorate's massing
+    // size of seven is most of an army made of hulls that take no order and
+    // sink on their own.
+    //
+    // `launchedFrom` is the test because it is the roster's own: `units.ts`
+    // calls it the one field that tells a craft from a hull, and the Echo
+    // pass and the client's readability pass both already ask it. The
+    // commander cannot see a `Craft` component from here — it reads a
+    // snapshot, not the world — so asking the roster is also the only test
+    // available.
     const army = snapshot.units.filter(
       (u) =>
         statsFor(u.kind).attackDamage > 0 &&
+        statsFor(u.kind).launchedFrom === undefined &&
         u.id !== scout?.id &&
         u.aboard === undefined &&
         u.embarking === undefined
@@ -2838,7 +2870,7 @@ export class AiCommander implements AiPlayer {
     // The transport, on the Spinner's terms: unarmed, so a want of its own;
     // one, because a hold is reused and a second would carry nothing the
     // first could not on its next trip; and not before the escort, because a
-    // carrier with nothing to carry is 260 nodules the opening did not spend
+    // transport with nothing to carry is 260 nodules the opening did not spend
     // on the hulls that make the hold matter. The escort here is the whole
     // push (`attackAtArmySize`), not the Spinner's half of it: a hold is for
     // a force, and the harness showed a Consortium at half strength never
@@ -2853,18 +2885,18 @@ export class AiCommander implements AiPlayer {
     // the Antiphon behind the rung.
     const transport = this.doctrine.composition.find((kind) => TRANSPORTS.includes(kind));
     if (transport !== undefined) {
-      const carriers =
+      const transports =
         snapshot.units.reduce((n, u) => n + (u.hold !== undefined ? 1 : 0), 0) +
         queuedOf(transport);
       const pushAfloat = army.length + queuedArmy >= this.doctrine.attackAtArmySize;
-      if (carriers < 1 && pushAfloat) {
+      if (transports < 1 && pushAfloat) {
         const yard = this.freeYard(snapshot.structures, transport);
         if (yard !== null) {
           if (this.affordUnit(transport, purse)) {
             buy(transport, yard);
             return;
           }
-          // Its own window, shorter than the rung's, because a carrier is the
+          // Its own window, shorter than the rung's, because a transport is the
           // cheapest of these wants and the one whose moment passes soonest.
           bids.push({ kind: transport, windowS: LIFT.SAVE_S });
         }
@@ -3350,6 +3382,16 @@ export class AiCommander implements AiPlayer {
         if (spent.has(hull.id)) continue;
         if (hull.decoyCooldownS !== undefined) continue;
         if (statsFor(hull.kind).attackDamage <= 0) continue;
+        // Not the flight (#839). A craft is armed, so the damage test admits
+        // it; its suite is ready, so `decoyCooldownS` is absent and it passes
+        // that too; and it keeps station on its carrier, so the movement gate
+        // passes it whenever the carrier is under way. But "a commander never
+        // orders one" (docs/units.md, "The craft") and `Match.owns` refuses
+        // every order to a craft, so the order is recorded and then dropped —
+        // and worse, this loop picks one hull per torpedo, so a craft picked
+        // here takes the torpedo's one answer and leaves the escort that could
+        // have decoyed doing nothing.
+        if (statsFor(hull.kind).launchedFrom !== undefined) continue;
         const stood = this.stoodAt.get(hull.id);
         if (stood === undefined || distance(hull, stood) < UNDER_WAY_M) continue;
         const d = distance(hull, torpedo);
@@ -4016,47 +4058,47 @@ export class AiCommander implements AiPlayer {
     out: AiCommand[]
   ): Set<number> {
     const claimed = new Set<number>();
-    const carrier = snapshot.units
+    const transport = snapshot.units
       .filter((u) => u.hold !== undefined)
       .sort((a, b) => a.id - b.id)[0];
-    if (carrier === undefined) {
+    if (transport === undefined) {
       this.lift = null;
       return claimed;
     }
-    if (this.lift === null || this.lift.carrierId !== carrier.id) {
-      this.lift = { carrierId: carrier.id, phase: 'loading', sinceTick: snapshot.tick };
+    if (this.lift === null || this.lift.transportId !== transport.id) {
+      this.lift = { transportId: transport.id, phase: 'loading', sinceTick: snapshot.tick };
     }
-    const hold = carrier.hold!;
+    const hold = transport.hold!;
     const tick = snapshot.tick;
 
-    // A raid at home is the army's problem and the carrier stays out of it:
+    // A raid at home is the army's problem and the transport stays out of it:
     // it neither loads under fire nor sails off with the defence aboard.
     if (this.bestThreat(raiders, true) !== null) return claimed;
-    // Something heard within a gun's reach of the carrier. While loading it
+    // Something heard within a gun's reach of the transport. While loading it
     // pauses the lift — a fight at the rally is the army's, and it fights
     // afloat; a hold that filled and emptied every time a scout drifted past
     // the rally was the harness's first reading of this branch. Underway, it
-    // is where the hold lands: a carrier under fire puts what it has in the
+    // is where the hold lands: a transport under fire puts what it has in the
     // water rather than sailing on with it.
     const rally = this.rallyPoint();
     const found = snapshot.contacts.some(
-      (c) => c.fauna === undefined && distance(carrier, c) < RANGE.PUSH_ENGAGE_M
+      (c) => c.fauna === undefined && distance(transport, c) < RANGE.PUSH_ENGAGE_M
     );
 
     if (this.lift.phase === 'loading') {
       if (found) return claimed;
-      if (distance(carrier, rally) > RANGE.ARRIVE_M) {
-        this.walk(carrier, rally, tick, out);
+      if (distance(transport, rally) > RANGE.ARRIVE_M) {
+        this.walk(transport, rally, tick, out);
         return claimed;
       }
       // Gathered hulls first by id, so the same hulls are asked every time
       // and a half-issued load does not reshuffle. What is already closing
-      // on the carrier has its berths spoken for.
-      const closing = snapshot.units.filter((u) => u.embarking === carrier.id);
+      // on the transport has its berths spoken for.
+      const closing = snapshot.units.filter((u) => u.embarking === transport.id);
       let room = hold.berths - hold.used - closing.reduce((n, u) => n + statsFor(u.kind).berths, 0);
       const boarding: number[] = [];
       for (const unit of [...army].sort((a, b) => a.id - b.id)) {
-        if (distance(unit, carrier) > LIFT.GATHER_M) continue;
+        if (distance(unit, transport) > LIFT.GATHER_M) continue;
         const berths = statsFor(unit.kind).berths;
         if (berths > room) continue;
         room -= berths;
@@ -4064,7 +4106,7 @@ export class AiCommander implements AiPlayer {
         claimed.add(unit.id);
       }
       if (boarding.length > 0) {
-        out.push({ kind: 'embark', unitIds: boarding, carrierId: carrier.id });
+        out.push({ kind: 'embark', unitIds: boarding, carrierId: transport.id });
         return claimed;
       }
       // Sail when the hold is full; with something aboard, when the push has
@@ -4073,9 +4115,9 @@ export class AiCommander implements AiPlayer {
       const committed = tick < this.commitUntilTick;
       const waited = (tick - this.lift.sinceTick) / SIM.TICK_HZ >= LIFT.PATIENCE_S;
       if (hold.used > 0 && closing.length === 0 && (full || committed || waited)) {
-        this.lift = { carrierId: carrier.id, phase: 'sailing', sinceTick: tick };
+        this.lift = { transportId: transport.id, phase: 'sailing', sinceTick: tick };
         if (this.doctrine.approachesSilently && this.tuning.usesSilentRunning) {
-          out.push({ kind: 'silent', unitIds: [carrier.id], active: true });
+          out.push({ kind: 'silent', unitIds: [transport.id], active: true });
         }
       } else {
         return claimed;
@@ -4084,33 +4126,33 @@ export class AiCommander implements AiPlayer {
 
     // Sailing. The objective is the army's — something classified, else the
     // next start to look at, else home — and the drop point is a gun's reach
-    // short of it, so the carrier never lands its hold inside one.
+    // short of it, so the transport never lands its hold inside one.
     const known = this.remembered !== null && this.remembered.classified ? this.remembered : null;
     const objective = known ?? this.nextStart() ?? this.home;
-    const dx = objective.x - carrier.x;
-    const dy = objective.y - carrier.y;
+    const dx = objective.x - transport.x;
+    const dy = objective.y - transport.y;
     const span = Math.hypot(dx, dy);
     const drop =
       span <= LIFT.STANDOFF_M
-        ? { x: carrier.x, y: carrier.y }
+        ? { x: transport.x, y: transport.y }
         : {
             x: objective.x - (dx / span) * LIFT.STANDOFF_M,
             y: objective.y - (dy / span) * LIFT.STANDOFF_M,
           };
-    this.setCrossed([carrier], this.doctrine.crossesTheLayer, out);
+    this.setCrossed([transport], this.doctrine.crossesTheLayer, out);
     // Landed if it is there, or if it has been found once clear of the
     // rally — found *at* the rally is the pause above, not a landing.
-    const underway = distance(carrier, rally) > LIFT.GATHER_M;
-    if (distance(carrier, drop) <= RANGE.ARRIVE_M || (found && underway)) {
-      out.push({ kind: 'disembark', unitIds: [carrier.id] });
-      out.push({ kind: 'silent', unitIds: [carrier.id], active: false });
+    const underway = distance(transport, rally) > LIFT.GATHER_M;
+    if (distance(transport, drop) <= RANGE.ARRIVE_M || (found && underway)) {
+      out.push({ kind: 'disembark', unitIds: [transport.id] });
+      out.push({ kind: 'silent', unitIds: [transport.id], active: false });
       // The landing is the push: what came out of the hold walks in, and the
       // rest of the army comes after it rather than calling it back.
       this.commit(tick);
-      this.lift = { carrierId: carrier.id, phase: 'loading', sinceTick: tick };
+      this.lift = { transportId: transport.id, phase: 'loading', sinceTick: tick };
       return claimed;
     }
-    this.walk(carrier, drop, tick, out);
+    this.walk(transport, drop, tick, out);
     return claimed;
   }
 

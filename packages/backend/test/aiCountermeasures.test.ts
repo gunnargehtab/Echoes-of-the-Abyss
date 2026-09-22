@@ -284,6 +284,38 @@ describe('answering a torpedo with a decoy (#621)', () => {
     assert.equal(far.length, 0, 'a torpedo 2.5 km out bought a decoy it would outlive');
   });
 
+  it('does not spend the torpedo answer on a craft that cannot give it (#839)', () => {
+    // A craft passes all three of `commandCountermeasures`' per-hull gates by
+    // accident: it is armed, so the damage test admits it; its suite is never
+    // on cooldown, so `decoyCooldownS` is absent; and it keeps station on its
+    // carrier, so it is under way whenever the carrier is. But docs/units.md
+    // "The craft" says a commander never orders one, and `Match.owns` refuses
+    // every order to a craft — so the command would be recorded and dropped.
+    //
+    // The cost is not the wasted line. The commander picks one hull per
+    // torpedo, so a craft picked here takes the answer and the Corvette beside
+    // it — which could have decoyed — is never asked. Unreachable until a
+    // commander owns a deck; the guard lands ahead of the want that will buy
+    // one (#839).
+    const { brief, base } = rig(Faction.Bathyarch);
+    const deck = statsFor(UnitKind.Gantry).flight!;
+    const spark = statsFor(deck.craft);
+    assert.ok(spark.attackDamage > 0, 'the premise: a craft is armed, which is why it got in');
+    assert.equal(spark.launchedFrom, UnitKind.Gantry, 'the premise: the craft names its deck');
+
+    // The craft is the *nearer* of the two, so the old code picks it.
+    const force = [hull(941, 6000, 6000), { ...hull(942, 6300, 6000), kind: deck.craft }];
+    const ordered = decoysOrdered(brief, base, force, movedEast(force), [
+      torpedo(1, 6500, 6000, base.tick),
+    ]);
+
+    assert.deepEqual(
+      ordered.map((c) => (c as { unitId: number }).unitId),
+      [941],
+      'the decoy went to the hull that can drop one, not to the flight standing in front of it'
+    );
+  });
+
   it('will not answer a contact it has not classified', () => {
     // §1 requires a torpedo to be audible its whole run, not identifiable for
     // it: below Tier 3 a closing contact could be ordnance or a scout, and the
