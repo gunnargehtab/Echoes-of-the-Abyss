@@ -34,6 +34,7 @@ import {
   ECONOMY,
   EchoMarkKind,
   FACTION_STRUCTURE,
+  FLIGHT,
   Faction,
   HAZARDS,
   BLOOM_SHARE,
@@ -702,6 +703,83 @@ const OWN_SIEGE: Record<Faction, UnitKind> = {
  */
 const SIEGE_STANDOFF_M = 180;
 
+/**
+ * Each navy's carrier (#839, wave 8's hulls from #838), on `OWN_SCOUT`'s,
+ * `OWN_ORDNANCE`'s and `OWN_SIEGE`'s terms: a roster fact, kept off the
+ * composition so it cannot re-phase the cycle.
+ *
+ * **A table rather than a composition entry, and #839 asked for the entry.**
+ * A carrier has `attackDamage: 0`, so `joinsTheArmy` is false for all four and
+ * the cycle would skip every entry it was given — the fate `joinsTheArmy`'s
+ * own note gives the Tender, the Precentor and the Cantus. And the cycle
+ * indexes on `army.length` modulo the list's own length, so one more entry on
+ * each list would re-phase every selection all four navies make, which is a
+ * build-list weight `CLAUDE.md` freezes by name. A declaratory entry, on the
+ * Sower's and the Bower's model, is not a third option: an entry that is never
+ * selected re-phases the cycle exactly as much as one that is.
+ *
+ * All four are behind the rung (`PRODUCIBLE[Slipway]`), so `freeYard` supplies
+ * that half of the gate and this table does not restate it.
+ */
+const OWN_CARRIER: Record<Faction, UnitKind> = {
+  [Faction.Bathyarch]: UnitKind.Gantry,
+  [Faction.Pelagia]: UnitKind.Rootstock,
+  [Faction.Directorate]: UnitKind.Succentor,
+  [Faction.Hadron]: UnitKind.Offertory,
+};
+
+/**
+ * How a commander flies a deck (#839) — docs/systems-combat.md §15. TUNABLE,
+ * like `RANGE`.
+ */
+const DECK = {
+  /**
+   * How far off the fight a carrier is walked to: the kilometre both docs give
+   * it. §15: "the carrier is a kilometre away and quiet"; docs/units.md: "the
+   * hull that ordered it is a kilometre away being quiet".
+   *
+   * It falls between the figures that bound it, which is why the doc's word
+   * is usable as a number. Outside `RANGE.PUSH_ENGAGE_M`, the Cruiser's 900 m,
+   * and at the edge of the Reciter's 1,000 m, the two longest guns a line hull
+   * carries — a carrier has no gun and no countermeasure, so standing inside a
+   * gun's reach buys it nothing. And inside `FLIGHT.TETHER_M`, so the target
+   * stays inside the reach the deck launches over and the flight may operate
+   * at.
+   */
+  STANDOFF_M: 1000,
+  /**
+   * How far off the standoff a carrier may drift before it is walked back.
+   * The band it is left alone in is 900–1,100 m: the Cruiser's gun at the near
+   * edge, and a hundred metres short of the tether at the far one. A target
+   * opening the range crosses those hundred metres between two of a Veteran's
+   * decisions (0.6 s) only above 160 m/s, and between two of a Recruit's (3 s)
+   * above 33 m/s, which a Corvette is.
+   */
+  SLACK_M: 100,
+  /**
+   * The step a cone-gated deck takes toward its target to come round.
+   *
+   * The Offertory launches only into its own forward cone (§15, the Lance's
+   * gate), and walking back to the standoff points its bow straight away from
+   * the fight. `movementSystem` writes the bow from the ordered course on the
+   * first tick under way, so a step is all a turn costs, and a short one
+   * spends almost nothing of the band.
+   */
+  FACE_M: 25,
+  /**
+   * How far behind its army's middle a carrier waits with nothing to fly at.
+   *
+   * The tether less a gun's reach: the most it can trail the middle and still
+   * have a contact `RANGE.PUSH_ENGAGE_M` beyond that middle inside its own
+   * `FLIGHT.TETHER_M`. A contact a gun's reach off the army's *front* can still
+   * be outside it, and walking to the standoff is what closes that. Behind
+   * rather than beside, because the front is where a hull with no gun is found
+   * first — "a carrier caught alone is a 3-berth hull dying quietly"
+   * (docs/units.md).
+   */
+  TRAIL_M: FLIGHT.TETHER_M - RANGE.PUSH_ENGAGE_M,
+} as const;
+
 const WANTED_SEPARATELY: readonly UnitKind[] = [
   UnitKind.Spinner,
   UnitKind.Sower,
@@ -731,6 +809,12 @@ const WANTED_SEPARATELY: readonly UnitKind[] = [
   // all, and a hull whose whole job is to stop. Bought by the want beside the
   // Sower's and walked by `commandAnchor`.
   UnitKind.Bower,
+  // The carriers (#839), a sixth time, and the scouts' case exactly: not one
+  // of the four carries a gun, so none of them ever joins the army the cycle
+  // counts. Being here is what keeps a queued Gantry out of `queuedArmy` too —
+  // a deck counted toward the army's target would stop a navy one Corvette
+  // short of its own massing size while the yard worked.
+  ...Object.values(OWN_CARRIER),
 ];
 
 /**
@@ -1302,9 +1386,8 @@ export class AiCommander implements AiPlayer {
     // **A craft is not a hull, and the gun is why it looks like one** (#839).
     // Every craft is armed — a Spark 22, a Versicle 45 — so the damage test
     // below admits the whole flight, and a flight is up to five entities
-    // (docs/units.md, "The craft"). No commander owns a deck yet: the want
-    // that buys one waits for the order that uses it (#839), and this guard
-    // lands ahead of both. What it would cost without it: `army.length` is the
+    // (docs/units.md, "The craft"), in the snapshot of every commander that
+    // fields its carrier. What it would cost without it: `army.length` is the
     // composition cycle's index, so each craft that launches or expires moves
     // the index and re-phases the navy's build order, and the flight inflates
     // `escorted`, `atTarget`, the massing high-water mark and
@@ -1374,6 +1457,10 @@ export class AiCommander implements AiPlayer {
     const lifted = this.commandTransports(snapshot, free, raiders, commands);
     const afloat = lifted.size === 0 ? free : free.filter((u) => !lifted.has(u.id));
     this.commandArmy(snapshot, afloat, raiders, commands);
+    // After the army, because the deck flies at what the army is fighting and
+    // waits where the army is. A carrier is in none of the lists above — it
+    // has no gun, so it is not in `army` — and nothing else ever orders one.
+    this.commandCarriers(snapshot, afloat, raiders, commands);
     this.commandSonar(snapshot, army, raiders, commands);
 
     // Last, and after every pass that reads it: this is where the hulls were
@@ -2867,6 +2954,50 @@ export class AiCommander implements AiPlayer {
       }
     }
 
+    // The navy's carrier (#839), on the siege hull's terms: behind the escort,
+    // one only, and it bids on a window like the heavy, the ordnance hull and
+    // the siege hull — not unconditionally like the Sower and the Bower, since
+    // an unconditional bid is the one kind `RUNG.SAVE_FROM` does not floor.
+    //
+    // **Behind the escort**, because a carrier is the roster's softest hull:
+    // no gun, no countermeasure, and "a carrier caught alone is a 3-berth hull
+    // dying quietly" (docs/units.md). `commandCarriers` trails it behind the
+    // army, which needs an army to trail.
+    //
+    // **One**, on the ordnance hull's reasoning: the flight is paid on the
+    // population cap (docs/economy.md §10) in advance — three berths for the
+    // hull and one for every craft the deck holds (docs/units.md, "The
+    // carriers") — so a second Succentor is sixteen of the forty berths a
+    // commander may hold, on two decks. The docs argue what a carrier is
+    // worth and not how many, so this builds the floor of one.
+    //
+    // **Below the Sower's and the Bower's wants**, by the owner's decision on
+    // #839, and what that buys is narrower than it reads. A purse that already
+    // covers a want is spent on the first one written here that it covers, so
+    // there the order decides: on 360–400 nodules the Commune buys its Bower
+    // or its Sower, where written above them it bought the Rootstock. A purse
+    // that covers none is held by `holdPurse` for the cheapest bid past its
+    // floor, whatever the order, so a Commune saving from below reaches the
+    // 340 nodule Rootstock before the 360 nodule Bower and buys it first.
+    // Whether "below" meant this position or the order of purchase is asked
+    // on #839.
+    const ownCarrier = OWN_CARRIER[this.briefing.faction];
+    if (escorted) {
+      const decks =
+        snapshot.units.reduce((n, u) => n + (u.kind === ownCarrier ? 1 : 0), 0) +
+        queuedOf(ownCarrier);
+      if (decks < 1) {
+        const yard = this.freeYard(snapshot.structures, ownCarrier);
+        if (yard !== null) {
+          if (this.affordUnit(ownCarrier, purse)) {
+            buy(ownCarrier, yard);
+            return;
+          }
+          bids.push({ kind: ownCarrier, windowS: RUNG.SAVE_S });
+        }
+      }
+    }
+
     // The transport, on the Spinner's terms: unarmed, so a want of its own;
     // one, because a hold is reused and a second would carry nothing the
     // first could not on its next trip; and not before the escort, because a
@@ -3518,6 +3649,145 @@ export class AiCommander implements AiPlayer {
       x: wall.x - (dx / d) * standoff,
       y: wall.y - (dy / d) * standoff,
     });
+  }
+
+  /**
+   * Fly each deck — docs/systems-combat.md §15, #839's second bullet.
+   *
+   * A carrier has no gun, so it is in no list the army pass sees, and bought
+   * and left alone it sits at the Slipway launching only at what wanders
+   * inside its tether. Two orders make it worth its berths, and neither is
+   * the army's attack-move, which would walk it into a base at the front of a
+   * line it cannot fight in.
+   *
+   * - **Onto a target.** "An attack order given to a carrier is given to its
+   *   flight" (§15): every craft in the water chases that contact, and an
+   *   ordered launch opens the deck even out of Silent Running.
+   * - **Inside its tether.** The order does not move the hull — `combatSystem`
+   *   skips a weapon with no damage, so nothing chases for it — and a target
+   *   left beyond `FLIGHT.TETHER_M` of its carrier is one the flight drops. So
+   *   a carrier that has drifted out of `DECK.SLACK_M` is walked back to
+   *   `DECK.STANDOFF_M` off the target, the move written *before* the attack:
+   *   a move clears an ordered target (`Match.applyMove`) and an attack leaves
+   *   a running move alone, so in that order the pair keeps both. The one
+   *   exception is a phantom's handle, where the attack is itself a move to the
+   *   point the lie was shown at (`Match.orderAttackContact`), and the carrier
+   *   goes there and finds water like any hull that attacked one.
+   * - **Facing it**, for a cone-gated deck. See `DECK.FACE_M`.
+   *
+   * With nothing to fly at it waits behind the army (`deckStation`).
+   */
+  private commandCarriers(
+    snapshot: EchoSnapshot,
+    army: readonly OwnUnit[],
+    raiders: readonly Contact[],
+    out: AiCommand[]
+  ): void {
+    for (const carrier of snapshot.units) {
+      if (statsFor(carrier.kind).flight === undefined) continue;
+
+      const target = this.deckTarget(snapshot, carrier, army, raiders);
+      if (target !== null) {
+        const d = distance(carrier, target);
+        // On the line from the target through the carrier, so a carrier too
+        // close backs straight off and one too far closes straight in.
+        let keep: number | null = null;
+        if (Math.abs(d - DECK.STANDOFF_M) > DECK.SLACK_M) {
+          keep = DECK.STANDOFF_M;
+        } else if (
+          statsFor(carrier.kind).flight?.coneGatedLaunch === true &&
+          !this.facing(carrier, target)
+        ) {
+          // Come round without leaving the band: a step in, never past its
+          // near edge. At the edge itself there is no room, and the next
+          // observation that finds the target closer backs the hull off.
+          const step = Math.min(DECK.FACE_M, d - (DECK.STANDOFF_M - DECK.SLACK_M));
+          if (step >= 1) keep = d - step;
+        }
+        if (keep !== null) {
+          const along = keep / (d || 1);
+          out.push({
+            kind: 'move',
+            unitIds: [carrier.id],
+            x: target.x + (carrier.x - target.x) * along,
+            y: target.y + (carrier.y - target.y) * along,
+          });
+        }
+        out.push({ kind: 'attack', unitIds: [carrier.id], contactId: target.id });
+        continue;
+      }
+
+      // On `walkToWall`'s cadence, because the station drifts with the army
+      // every observation and every move re-plans the route. The attack
+      // branch above has no such gate and needs none: an attack order drops
+      // the route itself (`Match.orderAttackContact`), so a move beside it
+      // costs nothing more, and it is the half that keeps the target inside
+      // the tether.
+      if (snapshot.tick % (TICKS_PER_OBSERVATION * 25) >= TICKS_PER_OBSERVATION) continue;
+      const station = this.deckStation(army);
+      if (distance(carrier, station) > DECK.SLACK_M) {
+        out.push({ kind: 'move', unitIds: [carrier.id], x: station.x, y: station.y });
+      }
+    }
+  }
+
+  /**
+   * What a deck flies at, or `null`: the army's fight, or its own.
+   *
+   * In `commandArmy`'s order and on its terms, one tier at a time. A contact
+   * closing on the Bastion first, unclassified allowed, because the army is
+   * recalled for it. Then a classified contact inside a gun's reach of the
+   * army — "a fight already happening". Only then one inside the carrier's own
+   * tether, the water §15 lets a deck open over.
+   *
+   * Never ordnance the layer has classified. The deck's own trigger refuses it
+   * (`worthLaunchingAt` in `flight.ts`) and an ordered launch skips that
+   * filter, so a commander that named a mine would open the deck, +35 SIG, at
+   * something the deck would not have opened for. Below Tier 3 a contact
+   * carries no `ordnance` to filter on, and an unclassified mine never
+   * reaches the home tier anyway: it does not move, and the watch there wants
+   * a contact to close on the Bastion.
+   */
+  private deckTarget(
+    snapshot: EchoSnapshot,
+    carrier: OwnUnit,
+    army: readonly OwnUnit[],
+    raiders: readonly Contact[]
+  ): Contact | null {
+    const home = this.bestThreat(
+      raiders.filter((c) => c.ordnance === undefined),
+      true
+    );
+    if (home !== null) return home;
+    const hulls = snapshot.contacts.filter((c) => c.ordnance === undefined);
+    const fight =
+      army.length === 0
+        ? null
+        : this.bestThreat(hulls.filter((c) => nearest(army, c) < RANGE.PUSH_ENGAGE_M));
+    if (fight !== null) return fight;
+    return this.bestThreat(hulls.filter((c) => distance(carrier, c) <= FLIGHT.TETHER_M));
+  }
+
+  /** Is `target` inside this hull's forward cone? The Lance's test (§5). */
+  private facing(hull: OwnUnit, target: { x: number; y: number }): boolean {
+    const bearing = Math.atan2(target.y - hull.y, target.x - hull.x);
+    let off = bearing - hull.heading;
+    off = Math.abs(Math.atan2(Math.sin(off), Math.cos(off)));
+    return off <= (DIRECTIONAL_SIGNATURE.CONE_HALF_ANGLE_DEG * Math.PI) / 180;
+  }
+
+  /**
+   * Where a deck waits with nothing to fly at: `DECK.TRAIL_M` behind the
+   * army's middle, toward home. With no army, behind the rally point, which is
+   * where the next one masses. With the middle that close to home, the middle.
+   */
+  private deckStation(army: readonly OwnUnit[]): { x: number; y: number } {
+    const middle = army.length > 0 ? centroid(army) : this.rallyPoint();
+    const dx = this.home.x - middle.x;
+    const dy = this.home.y - middle.y;
+    const d = Math.hypot(dx, dy);
+    if (d <= DECK.TRAIL_M) return middle;
+    return { x: middle.x + (dx / d) * DECK.TRAIL_M, y: middle.y + (dy / d) * DECK.TRAIL_M };
   }
 
   /** Enemy starts first — the one place an enemy is guaranteed to have been. */
