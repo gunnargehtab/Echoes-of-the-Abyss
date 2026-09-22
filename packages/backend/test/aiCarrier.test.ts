@@ -79,6 +79,24 @@ function carrierOf(faction: Faction): UnitKind {
   return decks[0]!;
 }
 
+/**
+ * The craft this navy's deck builds, read off the roster the same way: the
+ * hull whose `launchedFrom` names the carrier. Nobody builds these — they have
+ * no price and no yard — which is exactly why the commander must not count
+ * them (docs/units.md, "The craft").
+ */
+function craftOf(faction: Faction): UnitKind {
+  const carrier = carrierOf(faction);
+  const craft = statsFor(carrier).flight?.craft;
+  assert.ok(craft !== undefined, `${Faction[faction]}'s carrier has a deck`);
+  assert.equal(
+    statsFor(craft).launchedFrom,
+    carrier,
+    `${Faction[faction]}'s craft names the deck that builds it`
+  );
+  return craft;
+}
+
 /** The hull the commander finds as this navy's heavy, or `null` if it has none. */
 function heavyOf(faction: Faction): UnitKind | null {
   const rung = PRODUCIBLE[StructureKind.Slipway]!;
@@ -315,13 +333,8 @@ describe('the commander fields its navy carrier', () => {
       );
     });
 
-    it(`${name} counts a queued ${UnitKind[carrier]} as a deck and not as the army`, () => {
+    it(`${name} sees a queued ${UnitKind[carrier]} and does not order a second`, () => {
       const brief = briefing(faction);
-      // One already on the ways. Two things have to hold at once: the want is
-      // satisfied by the queue (no second is ordered), and the hull does not
-      // count toward `queuedArmy` — which is what `WANTED_SEPARATELY` is for,
-      // and what would otherwise let a navy read itself as escorted by a hull
-      // that has no gun.
       const home = brief.spawns[brief.slot]!;
       const bought = hullsBoughtOver(brief, 60, {
         ...purseFor(carrier),
@@ -336,6 +349,74 @@ describe('the commander fields its navy carrier', () => {
         bought.filter((k) => k === carrier).length,
         0,
         `${name} sees the hull on the ways and does not order a second`
+      );
+    });
+
+    it(`${name} does not let a queued ${UnitKind[carrier]} escort it`, () => {
+      // The other half of putting the carriers in `WANTED_SEPARATELY`, and the
+      // half the subtest above cannot see: `queuedArmy` filters on that list
+      // rather than on `joinsTheArmy`, so a deck on the ways would count
+      // toward the army's own size. Measured on the unescorted fixture, where
+      // one extra body is the difference — if the queued deck counted, the
+      // navy would read itself as escorted and buy its ordnance hull.
+      const brief = briefing(faction);
+      const home = brief.spawns[brief.slot]!;
+      const ordnance = OWN_ORDNANCE[faction];
+      const bought = hullsBoughtOver(brief, 60, {
+        ...force(brief, { escort: false }),
+        // The ordnance hull's price exactly, in the accounts it is written in,
+        // and not a nodule more. A fat purse does not make this test stronger,
+        // it makes it vacuous: `commandRefit` and `commandConstruction` both
+        // run ahead of `commandProduction` and both `return` once they spend,
+        // so a navy handed spare crystal buys a refit every observation and
+        // never reaches the want under test at all.
+        ...purseFor(ordnance),
+        structures: [
+          structure(20, StructureKind.Bastion, home),
+          structure(21, StructureKind.Foundry, { x: home.x + 200, y: home.y }),
+          structure(22, StructureKind.Refinery, { x: home.x - 200, y: home.y }),
+          structure(23, StructureKind.Slipway, { x: home.x - 400, y: home.y }, [carrier]),
+        ],
+      });
+      assert.equal(
+        bought.filter((k) => k === ordnance).length,
+        0,
+        `${name}'s escort-gated want stays shut behind a hull that has no gun`
+      );
+    });
+
+    it(`${name} does not count its ${UnitKind[craftOf(faction)]} flight as the army`, () => {
+      // #839's own defect, and the one this change makes reachable: a craft is
+      // an ordinary unit in the owner's snapshot and every craft is armed, so
+      // `observe`'s damage test admits the whole flight. `launchedFrom` is what
+      // tells a craft from a hull (`packages/shared/src/units.ts`).
+      //
+      // Measured the same way as the queued deck above: on the unescorted
+      // fixture, plus a full flight. If the craft counted, the navy would clear
+      // its escort floor on them alone and buy its ordnance hull.
+      const brief = briefing(faction);
+      const craft = craftOf(faction);
+      const deck = statsFor(carrier).flight!;
+      const ordnance = OWN_ORDNANCE[faction];
+      const unescorted = force(brief, {
+        escort: false,
+        extra: [carrier, ...Array.from<UnitKind>({ length: deck.capacity }).fill(craft)],
+      });
+      // The premise: the flight alone would carry this navy over the floor.
+      const armed = unescorted.units.filter(
+        (u) => statsFor(u.kind).attackDamage > 0 && u.kind !== OWN_SCOUT[faction]
+      ).length;
+      assert.ok(
+        armed >= escortFloor(faction),
+        `${name}'s fixture only measures something if the craft would clear the floor ` +
+          `(${armed} >= ${escortFloor(faction)})`
+      );
+
+      const bought = hullsBoughtOver(brief, 60, { ...unescorted, ...purseFor(ordnance) });
+      assert.equal(
+        bought.filter((k) => k === ordnance).length,
+        0,
+        `${name} is not escorted by hulls that take no order and sink on their own cell`
       );
     });
   }
