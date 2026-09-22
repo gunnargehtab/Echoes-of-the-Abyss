@@ -503,7 +503,7 @@ it is the phase the build is in, not because the audit found them.
 | --- | --- |
 | Consortium beat the Directorate 90–10 — superseded by #520, #530, #535 | [#458](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/458) |
 | AI verb parity, enforced by type | [#621](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/621) |
-| Three verbs the commander still lacks | [#703](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/703) |
+| Three verbs the commander still lacks — a vocabulary of 22 of 27 | [#703](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/703) |
 | The escort gate starves the smallest navy of ordnance | [#698](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/698) |
 | The Commune’s own hulls in the AI’s hands | [#467](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/467) |
 | Knights won 83% of decided matches — fixed | [#454](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/454) |
