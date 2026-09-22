@@ -31,8 +31,9 @@ neon-noir register of `docs/style-neon-noir.md` under the Mouth lockup from `doc
 - **The game in numbers** — campaign missions, navies, maps (all counted from the
   repository at build time), roadmap percentage, phases finished.
 - **What kind of game this is** — the five rules everything descends from.
-- **Four navies, one argument** — a card per faction, in its own accent colour, then
-  **the fleet, as it renders today** — the roster contact sheet, the one picture on the page.
+- **Four navies, one argument** — a card per faction, in its own accent colour, each led by
+  that navy's Cruiser photographed in the water it lives in, then **the fleet, as it renders
+  today** — the roster contact sheet.
 - **What you can play today**, then **Known rough edges** — the doc's status table, each
   row in player terms and linked to the issue that tracks it, with that issue's live state.
   A rough edge whose issue has closed reads as fixed, never as current.
@@ -59,7 +60,7 @@ footer says when the first issue on the whole roadmap was filed.
 
 ## Whose words these are
 
-Four sources, and the split is the design:
+Five sources, and the split is the design:
 
 - **`docs/ROADMAP.md` owns the structure.** Which phases exist, which issues sit in each,
   the status rows, the sprints. **Adding a row to a phase table is how you add an item to
@@ -73,11 +74,16 @@ Four sources, and the split is the design:
   number moves in a doc, it moves here. A row with no sentence renders in the doc's own
   words and the build says so by name, and `test/parse.test.mjs` fails if any row of the
   real roadmap is uncovered — so a new row cannot reach the public page in engineering-speak.
-- **`docs/screenshots/` owns the picture.** Every roster PR bakes a contact sheet of the
+- **`docs/screenshots/` owns the roster sheet.** Every roster PR bakes a contact sheet of the
   whole roster and commits it as `docs/screenshots/issue-<N>/rung-roster-sprites.png` beside
   its other review screenshots. The site takes the newest by issue number (`lib/sheet.mjs`)
   and ships it as `roster-contact-sheet.png`, so a re-bake changes the page without anyone
   touching this tool. Keep the filename; the number in the directory is what says "newest".
+- **`docs/concept-art/renders/` owns the portraits.** `tools/hull-renders` commits one beauty
+  frame per hull per navy as `<kind>-<navy>.png`. The site takes one kind for all four navies
+  (`portraitKind` in `lib/content.mjs`), copies those four frames as they are, and captions
+  each from `tools/hull-renders/shots.mjs` — the table the renderer read — so the caption
+  names the water the frame was shot in. A re-render changes the page with no edit here.
 
 The parser (`lib/parse.mjs`) is small and strict on purpose: it reads exactly the shapes
 the doc already uses — `## Phase N — Title` headings with `[#123](url)` table rows, a bold
@@ -102,6 +108,7 @@ Each thing on the page has one owner, and each owner has a check:
 | Open or done per row | the GitHub API at build time | `pages.yml` rebuilds when an issue is opened, closed, reopened or edited, and daily as a backstop |
 | Player-facing words | `lib/content.mjs` | the test fails if any row, phase, group, status row or sprint of the real doc has no copy |
 | Mission, map, navy counts | counted from the repository at build time | nothing to drift — they are not typed anywhere |
+| The navy portraits | `docs/concept-art/renders/<kind>-<navy>.png`, captioned from `tools/hull-renders/shots.mjs` | `pages.yml` rebuilds when a render or the shot table changes; the test fails if any navy's frame is missing |
 | The dive: depths, ping radii, the Drift | `lib/ocean.mjs`, transcribed from `docs/` | `test/ocean.test.mjs` reads `systems-depth.md`, `systems-echo.md`, `bestiary.md` and `glossary.md` back and fails on any moved number |
 | The roster sheet | newest `docs/screenshots/issue-<N>/rung-roster-sprites.png` | `pages.yml` rebuilds when one lands; the test fails if none exists |
 | The dates each phase ran | issue `created_at` / `closed_at`, at build time | nothing to drift — no date is typed anywhere, and a phase with open rows says *since* rather than guessing an end |
@@ -151,8 +158,8 @@ Only what is already in `docs/ROADMAP.md`, the titles, numbers and open/close da
 issues it links,
 the player-facing copy in `lib/content.mjs` (itself transcribed from the design docs), the
 mission and map counts, the dive's depths and the five species it draws (from
-`lib/ocean.mjs`, likewise transcribed), the roster contact sheet, a count of open issues not
-yet on the roadmap, the logo, and the display font. No source, no design bible, no
+`lib/ocean.mjs`, likewise transcribed), the roster contact sheet, one hull portrait per
+navy, a count of open issues not yet on the roadmap, the logo, and the display font. No source, no design bible, no
 internal notes. Worth re-reading before enabling, because that is the moment it becomes
 public.
 
@@ -163,6 +170,10 @@ the repository, and the sheet shows only what a player sees of their own force a
 Asymmetric Fidelity Law ([docs/graphics-standards.md](../../docs/graphics-standards.md))
 is about what an *opponent* is shown in a match, and it is not weakened by a fan knowing
 what a Bulwark looks like.
+
+**So are the four portraits**, by the owner's decision when they were added. They are the
+same approved models, rendered: the page ships four frames, one Cruiser per navy, and not the
+other sixteen renders beside them or the scene that made them.
 
 Gameplay footage and lore are for later; the page's footer says so, and the sections are
 laid out so they can take them.
