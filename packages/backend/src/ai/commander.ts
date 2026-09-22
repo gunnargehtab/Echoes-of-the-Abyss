@@ -710,14 +710,15 @@ const SIEGE_STANDOFF_M = 180;
  * **A table rather than a composition entry, and #839 asked for the entry.**
  * The issue's first bullet reads "a carrier on each navy's `composition` …
  * at the weight its doctrine argues for", and this is the same declaration
- * made where it costs nothing. Two reasons, both already written down one
- * screen up. A carrier has `attackDamage: 0`, so `joinsTheArmy` is false for
- * all four and the cycle would skip every entry it was given — a composition
- * entry buys no carrier at all, exactly as `OWN_SCOUT`'s note predicted for
- * the scouts. And the cycle indexes on `army.length` modulo the list's own
- * length, so one more entry on each of the four lists would re-phase every
- * selection all four navies make — "a balance change nobody asked for dressed
- * as a roster edit", and `CLAUDE.md` freezes build-list weights by name.
+ * made where it costs nothing. Two reasons, both already written down in this
+ * file. A carrier has `attackDamage: 0`, so `joinsTheArmy` is false for all
+ * four and the cycle would skip every entry it was given — a composition entry
+ * buys no carrier at all, the fate `joinsTheArmy`'s own note gives the Tender,
+ * the Precentor and the Cantus. And the cycle indexes on `army.length` modulo
+ * the list's own length, as `OWN_SCOUT`'s note says one screen up, so one
+ * more entry on each of the four lists would re-phase every selection all
+ * four navies make — "a balance change nobody asked for dressed as a roster
+ * edit", and `CLAUDE.md` freezes build-list weights by name.
  * Declaring here and buying by the want below fields the hull and moves no
  * existing number.
  *
@@ -825,9 +826,11 @@ function joinsTheArmy(kind: UnitKind): boolean {
  * deck; `docs/glossary.md` settles which keeps the name — "the hull with a
  * hold is a **transport** and the hull with a deck is a **carrier**" — so the
  * locals, the prose and this commander's own `lift.transportId` moved. The
- * `embark` message's `carrierId` did not: that one is the wire's spelling
- * (`wire.ts`), so renaming it is a protocol edit and a different change from
- * this one.
+ * `embark` command's `carrierId` did not. That field is `AiCommand`'s
+ * (`ai/types.ts`), read by `seat.ts` and backend-internal, so renaming it is
+ * not a protocol edit; it is left because it mirrors the `embark` message's
+ * `carrierId` (`wire.ts`), which is the wire's spelling, and the two want
+ * renaming together, in a change that is not this one.
  */
 const LIFT = {
   /** How near the transport a hull must be gathered to be ordered aboard. */
@@ -1346,7 +1349,7 @@ export class AiCommander implements AiPlayer {
     // Every craft is armed — a Spark 22, a Versicle 45 — so the damage test
     // above admits the whole flight, and a flight is up to five entities
     // (docs/units.md, "The craft"). That was unreachable while no commander
-    // owned a deck; the want one screen down ends that. What it would have
+    // owned a deck; the want in `commandProduction` ends that. What it would have
     // cost: `army.length` is the composition cycle's index, so a flight
     // launching and expiring on its 120 s cell re-phases the navy's build
     // order twice a match a hull — the exact re-phasing `OWN_CARRIER` is a
@@ -2849,10 +2852,14 @@ export class AiCommander implements AiPlayer {
     // worth and do not argue how many, so the floor of one is what this builds
     // and a number nobody has written down is not invented here.
     //
-    // It is **not** gated on the heavy or the siege hull being in the water,
-    // and does not need to be: `holdPurse` takes the nearest bid, so the three
-    // rung wants queue behind one another by price rather than by the order
-    // they are written in (#518).
+    // It is **not** gated on the heavy or the siege hull being in the water.
+    // While the purse covers none of the rung wants, `holdPurse` takes the
+    // nearest bid, so they are saved for by price (#518). A purse that already
+    // covers one is spent on the first want written here that it covers, so
+    // the order *does* decide, and this want sits above the Sower's and the
+    // Bower's. Pelagia, rung up and escorted on 360–400 nodules, buys the
+    // Rootstock (340) where it bought the Bower (360) or the Sower (380)
+    // before #839; they follow once the deck is queued.
     const ownCarrier = OWN_CARRIER[this.briefing.faction];
     if (escorted) {
       const decks =
