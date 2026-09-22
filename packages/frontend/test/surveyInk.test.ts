@@ -106,7 +106,7 @@ describe('the loudness ladder, rung 4 under rung 5', () => {
     }
   });
 
-  it('lifts every ground less than an unselected detection ring, in every SIG colour', () => {
+  it('lifts every ground less than an unselected detection ring, in both its colours', () => {
     // §5. The ring is the player's own exposure (ui-ux.md §3.5), and a line
     // of seabed ink that out-shouted it would bury the one reading a quiet
     // navy lives by. The owner chose the ink coming down over the ring going

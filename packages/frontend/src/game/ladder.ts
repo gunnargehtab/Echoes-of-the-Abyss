@@ -3,11 +3,12 @@
  *
  * Every mark on the map sits on one rung, and each rung is quieter than every
  * rung above it. This module holds the part of that which can be measured
- * without a GPU: the floor of rung 5 (map furniture), which is the ceiling of
- * rung 4 (survey ink). The draw sites import their alphas from here, so the
- * number the ink is held under is the number the furniture is drawn at — a
- * rim made quieter moves the ceiling with it, and the ink tests fail until
- * the ink follows it down.
+ * without a GPU: the floor of rung 5 (map furniture) and rung 6's unselected
+ * detection ring. The lesser of the two is the ceiling of rung 4 (survey
+ * ink); in three palettes that is the ring. The draw sites import their
+ * alphas from here, so the number the ink is held under is the number the
+ * marks are drawn at — a rim or ring made quieter moves the ceiling with it,
+ * and the ink tests fail until the ink follows it down.
  *
  * Measured the way a screenshot is: Rec. 709 luminance on encoded bytes, and
  * a stroke's weight as how far it lifts the pixel under it. Both the mark
@@ -56,11 +57,11 @@ export const FURNITURE_OUTLINE_ALPHA = {
  * Rung 6's quietest outline: a hull's detection ring while the player has not
  * selected it (EchoRenderer `drawRings`, docs/ui-ux.md §3.5), half
  * the selected ring's alpha. It is the player's own exposure, so the ink sits
- * under it in every SIG colour (docs/map-visuals.md §5).
+ * under it in both colours it is drawn in (docs/map-visuals.md §5).
  *
- * Rung 6 is not yet held above rung 5: in the standard and tritanopia
- * palettes this ring lifts the ground less than rung 5's floor. That is the
- * ladder audit's to settle (#866), not the ink's.
+ * Rung 6 is not yet held above rung 5: in the standard, protanopia and
+ * tritanopia palettes this ring lifts the ground less than rung 5's floor.
+ * That is the ladder audit's to settle (#866), not the ink's.
  */
 export const INSTRUMENT_OUTLINE_ALPHA = {
   unselectedRing: 0.18,
@@ -83,11 +84,16 @@ export function strokeLift(color: number, alpha: number, ground: number): number
   return alpha * (encodedLuminance(color) - encodedLuminance(ground));
 }
 
-/** The unselected detection ring's least lift over one ground, across the SIG colours. */
+/**
+ * The unselected detection ring's least lift over one ground, across the two
+ * colours it is drawn in. §3.5's gate draws an unselected ring only at SIG at
+ * or above the amber stop, so it is never in `sigLow` — which is the colour a
+ * hull below amber would wear, and such a hull draws no ring at all.
+ */
 export function unselectedRingLift(palette: Palette, ground: number): number {
-  const { sigLow, sigMid, sigHigh } = palette.ui;
+  const { sigMid, sigHigh } = palette.ui;
   return Math.min(
-    ...[sigLow, sigMid, sigHigh].map((color) =>
+    ...[sigMid, sigHigh].map((color) =>
       strokeLift(color, INSTRUMENT_OUTLINE_ALPHA.unselectedRing, ground)
     )
   );

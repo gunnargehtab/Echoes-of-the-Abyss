@@ -133,8 +133,9 @@ ladder that weighed them would rank the grain of a mark rather than the mark.
 **An edgeless haze is not weighed per pixel against a line.** Below Tier 3 a contact is its
 column and nothing else: nested ribbons with no edge anywhere
 ([art-direction.md](art-direction.md) "Camera & Projection"). A fresh Tier-1 column's core is
-about 0.12 of its tier colour, so per pixel it lifts the ground less than the ink does, in every
-palette. It is a different kind of mark, not a quieter one. A haze spans hundreds of metres of
+about 0.12 of its tier colour, so per pixel it lifts the ground about as much as a line of ink
+does: 0.044–0.053 over black, against the ink's 0.043–0.051. It is a different kind of mark,
+and the metric cannot rank the two. A haze spans hundreds of metres of
 water and a line is a pixel or two wide, so the eye reads a haze by its extent and a line by its
 edge. The per-pixel metric compares lines with lines; a haze answers to gate 7's glance test.
 The owner settled this on #865.
@@ -157,11 +158,13 @@ line of seabed that out-shouted it would bury the one reading a quiet navy lives
 tritanopia at mid SIG it lifts the kelp fill by 0.044, which caps the coast near 9.9%; it is
 drawn at 9.5%.
 `ladder.ts` holds its alpha, the draw site takes it from there, and the tests hold every ink
-stroke under it in every SIG colour. The owner chose this on #865, over raising the ring.
+stroke under it in both colours it is drawn in. The owner chose this on #865, over raising the
+ring.
 
 **Phase 1 measures rung 4 under rung 5 and under that ring, and nothing more.** The other
 rungs are stated, not yet held; phase 2 audits them. One break is known: the unselected ring
-lifts the ground less than rung 5's floor in the standard and tritanopia palettes, so rung 6
+lifts the ground less than rung 5's floor in the standard, protanopia and tritanopia palettes,
+so rung 6
 is not yet above rung 5. That is #866's to settle.
 
 Two consequences worth naming:
@@ -287,7 +290,7 @@ Phases D and 1 ship together, because a direction nobody can look at is not revi
 ### Phases D and 1 — landed
 
 `surveyInk.ts` draws §4 in the terrain's own shader, and `ladder.ts` holds §5's rung-5
-floor. The Ventfront at the survey dolly [before](screenshots/issue-807/01-before-survey-55.png)
+floor and the unselected ring. The Ventfront at the survey dolly [before](screenshots/issue-807/01-before-survey-55.png)
 and [after](screenshots/issue-807/02-after-survey-55.png): the plateaus, the trench and the
 tunnel blocks read as shapes. At 18° [before](screenshots/issue-807/03-before-low-18.png) and
 [after](screenshots/issue-807/04-after-low-18.png), the ground reads as a sounding. The home
