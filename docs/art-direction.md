@@ -56,6 +56,11 @@ The order matters. Terrain must stay quieter than contacts — "RTS readability 
 so none of this may compete with a return for attention. If a player cannot find the enemy
 because the seabed is shouting, the seabed is wrong.
 
+What gives the ground its shape at the survey dolly is not on this list, because it is not
+ground: **survey ink** — isobaths and coastlines, hue-neutral and a constant pixel wide —
+is specified in [map-visuals.md](map-visuals.md) §4, with the ladder that keeps it below
+every piece of map furniture in §5.
+
 Within a region, the ground is allowed **texture, not information**. The renderer lays a
 deterministic detail relief under the authored floor and lights it with the shared key
 light, so a vent field reads as broken ground, the trench floor as pressure-eroded stone,
@@ -604,3 +609,4 @@ Within it:
 - [asset-prompts-3d.md](asset-prompts-3d.md) — prompt kit that transcribes this doc for 3D model generation
 - [ui-ux.md](ui-ux.md) — the Echo Layer HUD this direction serves
 - [habitats-art-brief.md](habitats-art-brief.md) — the inhabited places as art briefs: what is beautiful about each, and how it appears inside these rules
+- [map-visuals.md](map-visuals.md) — the map revision: survey ink on the seabed, the loudness ladder every layer sits on, and stipple life in the water

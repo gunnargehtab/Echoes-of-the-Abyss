@@ -129,6 +129,7 @@ import {
   sigColor,
   type PaletteName,
 } from './palette.ts';
+import { FURNITURE_FLOOR_ALPHA } from './ladder.ts';
 import {
   actionFor,
   BUILD_ACTION_KIND,
@@ -5947,7 +5948,7 @@ export class EchoRenderer {
           g.stroke({
             width: gripping ? 2 : 1,
             color,
-            alpha: gripping ? 0.3 : 0.14,
+            alpha: gripping ? 0.3 : FURNITURE_FLOOR_ALPHA.kelpRimIdle,
           });
         }
         continue;
@@ -6141,7 +6142,7 @@ export class EchoRenderer {
         alpha: 0.07,
       });
       if (this.traceCircle(g, jelly.x, jelly.y, DRIFT.JELLY_RADIUS_M, null)) {
-        g.stroke({ width: 1, color: FAUNA_COLOR, alpha: 0.18 });
+        g.stroke({ width: 1, color: FAUNA_COLOR, alpha: FURNITURE_FLOOR_ALPHA.jellyRim });
       }
     }
   }
