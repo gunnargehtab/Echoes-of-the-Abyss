@@ -958,13 +958,34 @@ export function textSaying(root: Container, needle: string): string | null {
  * counted rather than assumed.
  *
  * Drawn only, unlike `textCount` above, and that is the whole of #846: a
- * hidden label costs nothing to change. `RenderGroup.updateRenderable`
- * (`RenderGroup.mjs:156`, pixi.js 8.19.0) returns on `globalDisplayStatus < 7`
- * before it reaches the pipe, so the glyph canvas is never regenerated and
- * the texture is never re-uploaded. The clock is the live instance:
- * `EchoRenderer.ts:7398` stamps `clockLabel.text` every frame and `:7399`
- * then hides the clock when the strip is too narrow for it, which on a
- * whole-tree walk ticked ten phantom rasterisations into a 600-frame budget.
+ * hidden label is never rasterised. The guard is in the collect pass, not in
+ * the per-renderable one — a changed `styleKey` makes
+ * `CanvasTextPipe.validateRenderable` return true (`CanvasTextPipe.mjs:24`,
+ * pixi.js 8.19.0), which sets `structureDidChange` and sends the frame down
+ * `_buildInstructions` (`RenderGroupSystem.mjs:96-104`) rather than down
+ * `updateRenderable` at all. `collectRenderables` then returns on
+ * `globalDisplayStatus < 7` (`collectRenderablesMixin.mjs:4`), so
+ * `CanvasTextPipe.addRenderable` — the only caller of `_updateGpuText` — is
+ * never reached, and no glyph canvas is regenerated and no texture uploaded.
+ *
+ * Unrasterised is not the same as free, and this probe is not a licence to
+ * read it that way. Two costs survive hiding. The *first* change after the
+ * label is hidden forces one instruction-set rebuild, because
+ * `validateRenderable` reads the moved key before the collect pass gets to
+ * skip the node; later changes force none, since `didViewUpdate` latches true
+ * with nothing to clear it while the label is undrawn. And measuring never
+ * stops at all: `ViewContainer.onViewUpdate` marks the bounds dirty at
+ * `:83`, *before* the `didViewUpdate` return at `:84`, so anything that reads
+ * a hidden label's size pays one `CanvasTextMetrics.measureText` for every
+ * changed string.
+ *
+ * The clock is the live instance of all of it. `EchoRenderer.ts:7398` stamps
+ * `clockLabel.text`, `:7399` reads `clockLabel.width` on the very next line
+ * and hides the clock when the strip is too narrow for it. So a hidden clock
+ * goes on measuring once a second, and on a whole-tree walk it also ticked
+ * ten phantom rasterisations into a 600-frame budget. What this probe counts
+ * is the glyph canvas and the upload — the cost the `BitmapText` argument is
+ * about — and those, and only those, a hidden label does not pay.
  *
  * Counted work again, for the reason this whole file gives: the wall-clock
  * price of a rasterisation belongs to whatever machine ran it, while the
@@ -983,11 +1004,14 @@ export function textStyleKeys(root: Container): Map<number, string> {
  * Dropping the hidden nodes from the sample is not enough on its own, and the
  * difference is a whole rasterisation. Pixi keeps the key it last drew a label
  * with on the batchable (`CanvasTextPipe`, `batchableText.currentKey`) and
- * compares against it when the label comes back — `_didTextUpdate` stays true
- * across the hidden frames, because the early return above never clears it.
- * So a label rasterised under `A`, hidden, changed to `B`, and then shown
- * again is one re-render at the moment it reappears, however many frames it
- * spent hidden and however many times `B` changed on the way.
+ * compares against it when the label comes back. `_didTextUpdate` is still
+ * true then, because `addRenderable` is the only thing that clears it
+ * (`CanvasTextPipe.mjs:37`) and a hidden node never reaches it; and showing
+ * the label sets `structureDidChange` (`Container.mjs:1064`), so the frame it
+ * returns on is a rebuild and does reach it. So a label rasterised under `A`,
+ * hidden, changed to `B`, and then shown again is one re-render at the moment
+ * it reappears, however many frames it spent hidden and however many times
+ * `B` changed on the way.
  *
  * Carrying the hidden entries forward is what holds that: the sample says
  * what is on the glass now, and this map says what the glass was last painted
