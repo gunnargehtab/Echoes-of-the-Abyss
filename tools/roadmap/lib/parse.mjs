@@ -11,8 +11,13 @@
  * - `## Phase N — Title`, then rows of `| description | [#123](url) |`. A
  *   `**Group label**` paragraph between two tables inside a phase names the
  *   group the rows after it belong to (Phase 10 uses this).
- * - `**Closed.**` / `**Three of four closed.**` as the first bold words of a
- *   phase's opening paragraph, kept as the phase's own verdict on itself.
+ * - `## Later — Title`: the same shape, for work nothing schedules. It is
+ *   not a phase in the sequence, so it has no number and no dates.
+ * - `**Closed.**` / `**Now.**` / `**Next.**` / `**Later.**` as the first bold
+ *   words of a phase's opening paragraph, kept as the phase's own verdict on
+ *   itself.
+ * - `**Done when:** …` — the test that closes a phase. One phase runs at a
+ *   time, and this is how the doc says when it stops.
  * - `## Where the build actually stands`: a `| Question | Reading | Tracked |`
  *   table, and the `- **Lead** — rest` bullets that list what is built.
  * - `## Completed — Sprint N (date)`: heading plus its first paragraph.
@@ -69,15 +74,22 @@ function paragraphs(lines) {
 }
 
 function parsePhase(section) {
-  const heading = /^(Phase\s+\d+)\s+—\s+(.+)$/.exec(section.heading);
+  const heading = /^(Phase\s+\d+|Later)\s+—\s+(.+)$/.exec(section.heading);
   if (heading === null) return null;
 
+  const later = heading[1] === 'Later';
+  const number = later ? null : Number(heading[1].replace(/\D/g, ''));
   const phase = {
     id: heading[1],
-    number: Number(heading[1].replace(/\D/g, '')),
+    number,
+    // What content.mjs and the page's anchors key a phase by: its number, or
+    // `later` for the one section that has none.
+    key: later ? 'later' : number,
+    later,
     title: heading[2],
     verdict: null,
     summary: null,
+    done: null,
     groups: [],
     items: [],
   };
@@ -106,16 +118,22 @@ function parsePhase(section) {
   // are the verdict the doc passes on the phase.
   const tableAt = section.lines.findIndex((line) => cells(line) !== null);
   const preface = paragraphs(tableAt === -1 ? section.lines : section.lines.slice(0, tableAt));
+  const test = preface.find((p) => /^\*\*Done when:\*\*/.test(p));
+  if (test) phase.done = test.replace(/^\*\*Done when:\*\*\s*/, '');
   // A bold-only paragraph is a group label unless it ends in a full stop,
   // in which case it is the verdict standing alone ("**Closed.**").
-  const opening = preface.find((p) => !/^\*\*[^*]+\*\*$/.test(p) || /\.\*\*$/.test(p)) ?? null;
+  const opening =
+    preface.find(
+      (p) => p !== test && (!/^\*\*[^*]+\*\*$/.test(p) || /\.\*\*$/.test(p))
+    ) ?? null;
   if (opening !== null) {
     const verdict = /^\*\*([^*]+?)\*\*\s*(.*)$/.exec(opening);
     if (verdict !== null && /\.$/.test(verdict[1])) {
       phase.verdict = verdict[1].replace(/\.$/, '');
       phase.summary =
         verdict[2] === ''
-          ? (preface.find((p) => p !== opening && !/^\*\*[^*]+\*\*$/.test(p)) ?? null)
+          ? (preface.find((p) => p !== opening && p !== test && !/^\*\*[^*]+\*\*$/.test(p)) ??
+            null)
           : verdict[2];
     } else {
       phase.summary = opening;

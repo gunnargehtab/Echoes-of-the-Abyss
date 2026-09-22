@@ -11,6 +11,13 @@
  *   is the whole of the work when it is not.
  * - **unmentioned** — the subset that `docs/ROADMAP.md` does not refer to at
  *   all, not even in prose. Those are the ones that need a sentence.
+ * - **unrecorded** — the same question asked of closed work: done, and on no
+ *   row. The history phases are a record, and a record that silently misses
+ *   half the work is not one, so the page says how much it misses.
+ *
+ * An epic's row stands for its sub-issues (the roadmap's own rule: an epic
+ * gets a row, its sub-issues do not), so an issue counts as placed when it or
+ * any issue above it has a row.
  *
  * Epics are left out on purpose: an epic is the container for rows that are
  * on the page, not a piece of work the page is missing. So are ledgers — a
@@ -44,14 +51,40 @@ export function placedIssues(roadmap) {
   ]);
 }
 
-/** `{ unplaced, unmentioned }` — arrays of `{number, title, url, labels}`. */
-export function driftReport({ markdown, roadmap, openIssues }) {
+/** Closed issues that were never work done: a duplicate, or decided against. */
+const NOT_DONE = ['duplicate', 'wontfix', 'invalid'];
+
+/**
+ * `{ unplaced, unmentioned, unrecorded }` — arrays of issues. `closedIssues`
+ * is optional; without it nothing is unrecorded, because nothing was asked.
+ */
+export function driftReport({ markdown, roadmap, openIssues, closedIssues = [] }) {
   const placed = placedIssues(roadmap);
   const mentioned = mentionedIssues(markdown);
+  const byNumber = new Map([...openIssues, ...closedIssues].map((i) => [i.number, i]));
+  // Walk the numbers, not the issue objects: a parent with a row is placed
+  // whether or not it was in the list this report was handed.
+  const covered = (issue) => {
+    const seen = new Set();
+    for (let n = issue.number; n !== null && n !== undefined && !seen.has(n);) {
+      if (placed.has(n)) return true;
+      seen.add(n);
+      n = byNumber.get(n)?.parent ?? null;
+    }
+    return false;
+  };
+  const isWork = (issue) => !issue.labels.some((label) => NOT_WORK.includes(label));
+  const byNumberAsc = (a, b) => a.number - b.number;
   const unplaced = openIssues
-    .filter((issue) => !issue.labels.some((label) => NOT_WORK.includes(label)))
-    .filter((issue) => !placed.has(issue.number))
-    .sort((a, b) => a.number - b.number);
+    .filter(isWork)
+    .filter((issue) => !covered(issue))
+    .sort(byNumberAsc);
   const unmentioned = unplaced.filter((issue) => !mentioned.has(issue.number));
-  return { unplaced, unmentioned };
+  const unrecorded = closedIssues
+    .filter(isWork)
+    .filter((issue) => !issue.labels.some((label) => NOT_DONE.includes(label)))
+    .filter((issue) => issue.stateReason !== 'not_planned')
+    .filter((issue) => !covered(issue))
+    .sort(byNumberAsc);
+  return { unplaced, unmentioned, unrecorded };
 }

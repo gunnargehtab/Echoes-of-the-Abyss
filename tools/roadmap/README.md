@@ -37,8 +37,9 @@ neon-noir register of `docs/style-neon-noir.md` under the Mouth lockup from `doc
 - **What you can play today**, then **Known rough edges** — the doc's status table, each
   row in player terms and linked to the issue that tracks it, with that issue's live state.
   A rough edge whose issue has closed reads as fixed, never as current.
-- **What is next** — every phase with something still open, as a collapsible card with a
-  player-facing title, **the dates it ran**, its live count and **the rows still open**;
+- **What is next** — the phase the doc marks **Now** and the one marked **Next**, each with
+  its **Done when** test, as a collapsible card with a player-facing title, its dates (Now
+  only: Next has not started), its live count and **the rows still open**;
   group labels become sub-headings. The rows already done are rolled up behind a
   *"N already done"* line rather than listed, and a group with nothing left open becomes
   that one line carrying its own name — a section headed "what is next" that opened with
@@ -48,6 +49,8 @@ neon-noir register of `docs/style-neon-noir.md` under the Mouth lockup from `doc
   search, expand all; `#phase-N` deep-links open the phase. Above the phases, one line
   counts the open issues the roadmap has not placed in any row yet, so the page never
   presents the rows as the whole of the work when they are not.
+- **Later** — the doc's `## Later` section: parked and unscheduled work, grouped, and undated
+  by definition, because a "since" date there would claim work that is not happening.
 - **The road so far** — the finished phases, folded, then the milestone record. Nothing is
   rolled up here: every row a finished phase has *is* the record, and the card is folded
   already. Phase 0 is the first week of the project, and the sprint cards carry their real
@@ -86,8 +89,10 @@ Five sources, and the split is the design:
   names the water the frame was shot in. A re-render changes the page with no edit here.
 
 The parser (`lib/parse.mjs`) is small and strict on purpose: it reads exactly the shapes
-the doc already uses — `## Phase N — Title` headings with `[#123](url)` table rows, a bold
-`**Group label**` line between two tables, the `**Closed.**` verdict a phase opens with,
+the doc already uses — `## Phase N — Title` headings with `[#123](url)` table rows, the one
+`## Later — Title` section, a bold `**Group label**` line between two tables, the
+`**Closed.**` / `**Now.**` / `**Next.**` / `**Later.**` verdict a phase opens with, its
+`**Done when:**` test,
 the `| Question | Reading | Tracked |` table and the `- **lead** — detail` bullets under
 "Where the build actually stands", `## Completed — Sprint N (when)` headings, and the
 numbered sequencing notes — and ignores anything it does not recognise rather than
@@ -112,7 +117,8 @@ Each thing on the page has one owner, and each owner has a check:
 | The dive: depths, ping radii, the Drift | `lib/ocean.mjs`, transcribed from `docs/` | `test/ocean.test.mjs` reads `systems-depth.md`, `systems-echo.md`, `bestiary.md` and `glossary.md` back and fails on any moved number |
 | The roster sheet | newest `docs/screenshots/issue-<N>/rung-roster-sprites.png` | `pages.yml` rebuilds when one lands; the test fails if none exists |
 | The dates each phase ran | issue `created_at` / `closed_at`, at build time | nothing to drift — no date is typed anywhere, and a phase with open rows says *since* rather than guessing an end |
-| Open issues with no row | the GitHub API against the doc | the build log names them, and the page counts them; epics and `routine-log` ledgers are not counted, being containers and records rather than missing work |
+| Open issues with no row | the GitHub API against the doc | the build log names them, and the page counts them; epics and `routine-log` ledgers are not counted, being containers and records rather than missing work. An issue under an epic that has a row counts as placed — the doc gives an epic one row, not one per sub-issue |
+| Closed work with no row | the same, for closed issues | the build log names them and "The road so far" counts them, so the record says how much it leaves out; duplicates and issues closed as not planned are not work done |
 
 Two things stay on people. **A new issue is not a row until somebody adds one** — the build
 names every open issue the doc does not place, and the ones it does not mention at all are

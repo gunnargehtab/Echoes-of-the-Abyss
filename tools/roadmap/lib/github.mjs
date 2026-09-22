@@ -46,29 +46,36 @@ export async function fetchIssueStates(repo, numbers, token) {
 }
 
 /**
- * Every open issue in the repository — `[{number, title, url, labels}]`,
- * pull requests dropped (the issues endpoint lists them too). One page of a
- * hundred per call, so the whole backlog is a request or two rather than
- * one per number. Empty without a token, like everything else here.
+ * Every issue in the repository, open and closed —
+ * `[{number, title, url, state, stateReason, labels, parent}]`, pull requests
+ * dropped (the issues endpoint lists them too). `parent` is the number of the
+ * issue this one is a sub-issue of, or null: an epic's row stands for its
+ * sub-issues, so the drift check walks up to it. One page of a hundred per
+ * call, so the whole tracker is a handful of requests rather than one per
+ * number. Empty without a token, like everything else here.
  */
-export async function fetchOpenIssues(repo, token) {
+export async function fetchAllIssues(repo, token) {
   const issues = [];
   if (!token) return issues;
-  for (let page = 1; page < 20; page++) {
+  for (let page = 1; page < 50; page++) {
     const batch = await getJson(
-      `${API}/repos/${repo}/issues?state=open&per_page=100&page=${page}`,
+      `${API}/repos/${repo}/issues?state=all&per_page=100&page=${page}`,
       token
     );
     if (!Array.isArray(batch)) break;
     for (const issue of batch) {
       if (issue.pull_request) continue;
+      const parent = /\/issues\/(\d+)$/.exec(issue.parent_issue_url ?? '');
       issues.push({
         number: issue.number,
         title: issue.title,
         url: issue.html_url,
+        state: issue.state,
+        stateReason: issue.state_reason ?? null,
         labels: (issue.labels ?? []).map((label) =>
           typeof label === 'string' ? label : label.name
         ),
+        parent: parent === null ? null : Number(parent[1]),
       });
     }
     if (batch.length < 100) break;
