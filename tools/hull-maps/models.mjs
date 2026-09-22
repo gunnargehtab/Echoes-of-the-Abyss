@@ -153,6 +153,20 @@ export const UNITS = [
   { slug: 'caisson', model: 'caisson-bathyarch.glb', lengthM: 90, sig: 64 },
   { slug: 'reed', model: 'reed-pelagia.glb', lengthM: 70, sig: 12 },
   { slug: 'bower', model: 'bower-pelagia.glb', lengthM: 105, sig: 10 },
+  // The carriers and their craft (docs/units.md "The carriers" and "The
+  // craft", #840): one pair a navy, all eight faction-locked, so each model is
+  // the kind's canonical one. Every deck is built empty — a craft aboard is
+  // the deck's count, and one modelled aboard would be drawn twice while the
+  // flight is out. The Order's two are cone figures like the Lance's: the
+  // Offertory's 18 bakes at 8.1 and the Versicle's 20 at 9, lit forward.
+  { slug: 'gantry', model: 'gantry-bathyarch.glb', lengthM: 140, sig: 52 },
+  { slug: 'rootstock', model: 'rootstock-pelagia.glb', lengthM: 115, sig: 8 },
+  { slug: 'succentor', model: 'succentor-directorate.glb', lengthM: 130, sig: 20 },
+  { slug: 'offertory', model: 'offertory-hadron.glb', lengthM: 120, sig: 8.1 },
+  { slug: 'spark', model: 'spark-bathyarch.glb', lengthM: 20, sig: 40 },
+  { slug: 'runner', model: 'runner-pelagia.glb', lengthM: 14, sig: 4 },
+  { slug: 'treble', model: 'treble-directorate.glb', lengthM: 16, sig: 8 },
+  { slug: 'versicle', model: 'versicle-hadron.glb', lengthM: 22, sig: 9 },
 ];
 
 /**

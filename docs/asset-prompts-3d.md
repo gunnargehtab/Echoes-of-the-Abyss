@@ -215,13 +215,13 @@ Lamp bases are the near-black a `lamp()` puts in `color` for its emissive to sit
 | Consortium | emissive | `#B07A1E` `amber_vent` · `#F28A1E` `amber_vent` (cruiser) · `#FFD070` `amber_flood` |
 | Consortium | cladding | `#1C1F22` `baffle-foam` (the Baffle Barge) · `#1A1408` `amber_lamp_unlit` (the lamp's base worn as cladding by a part the block lights only in a later band — the Furnace's burner nozzles, bow floods, ladder strips and manifold strip, all of them lit only cutting) |
 | Consortium | lamp base | `#1A1408` · `#120E06` · `#2A2210` · `#1A1206` |
-| Commune | cladding | `#14332A` / `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` / `#14664C` `algae_hull` · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` · `#061206` `bio_vein_unlit` (the vein's base worn as cladding by a part the block lights only in a later band — the Glider's tail veins, dark with the drive cut, and the Weaver's and the Blight's stem veins) |
+| Commune | cladding | `#14332A` / `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` / `#14664C` `algae_hull` · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` · `#061206` `bio_vein_unlit` (the vein's base worn as cladding by a part the block lights only in a later band — the Glider's tail veins, dark with the drive cut, the Weaver's and the Blight's stem veins, and the Rootstock's node-to-node vein, lit under way) |
 | Commune | emissive | `#5FAE42` `bio_vein` (at strength 1 on the Sower and the Spinner, 0.2 on the Drifter's seams and the Glider's wing vein — a strength survives the recolour as a finish does) · `#E8F0A3` `forge_light` / `floodlight_pale` (the spore token as a light) |
 | Commune | lamp base | `#061206` · `#0A1A08` · `#123018` · `#14301A` · `#14351A` · `#0F2A12` · `#2E3A16` · `#3A3F1E` · `#2A4A20` · `#3F6B2E` |
 | Directorate | cladding | `#3A3F4A` / `#27313B` `weld_steel` · `#4E1220` `chitin_red_dark` · `#1A0810` `biolight_unlit` (the lamp base worn as cladding by a part the block lights only in a later band — the Verger's bay doors, and the Lure's fan ribs and tergite-edge rows) |
 | Directorate | emissive | `#E0506A` `gullet_glow` · `#E07A8C` `forge_light` / `floodlight_hot` |
 | Directorate | lamp base | `#1A0810` / `#2C0A12` / `#3A0D16` `biolight_crimson` · `#2A0C14` `gullet_glow` · `#40141C` `forge_light` / `floodlight_hot` |
-| Knights | cladding | `#1C2230` `dark_steel` · `#2C2244` `shadow_indigo` · `#8A8FA3` `alloy_dim` · `#E6E9F2` `alloy_white` (the token's hex under a second name) · `#1A1030` `crystal_seam_unlit` (the seam's lamp base worn as cladding by a part the block lights only in a later band — the Herald's tine seams, the Lance's guard edges and rail, and the Tocsin's rail, crown seams and crystal spine, lit under way or firing, and its drive prism, lit under way and dark in the firing state it is built in) |
+| Knights | cladding | `#1C2230` `dark_steel` (the Offertory's cradle floors, its first hull) · `#2C2244` `shadow_indigo` · `#8A8FA3` `alloy_dim` · `#E6E9F2` `alloy_white` (the token's hex under a second name) · `#1A1030` `crystal_seam_unlit` (the seam's lamp base worn as cladding by a part the block lights only in a later band — the Herald's tine seams, the Lance's guard edges and rail, and the Tocsin's rail, crown seams and crystal spine, lit under way or firing, and its drive prism, lit under way and dark in the firing state it is built in; the Offertory's fore inlay and guard edges, and the Versicle's guard edges, lit under way) |
 | Knights | emissive | `#9B6CF9` `crystal_panel_glow` · `#A77CFF` `resonance_node` |
 | Knights | lamp base | `#1A1030` · `#1E1038` · `#241744` · `#2A1A50` · `#2A1650` · `#3A2560` |
 
@@ -866,6 +866,232 @@ lines lit around the gills, the stalk tips lit, the brood nubs faint along
 the flanks — and all of it seen through its own haze, because the 45 is
 heard as 18 and the cloud is what does that: fog over the light, never
 less light, and the haze is drawn around the hull and not on it.
+```
+
+### The carriers — one a navy, and a deck built empty
+
+The four carriers of [units.md](units.md) "The carriers" and their four craft, "The craft"
+(wave 8 of [roster-plan.md](roster-plan.md), #838; built in #840). No carrier carries a gun,
+so what its silhouette has to say at RTS distance is *where its flight comes from*: the deck,
+which has to read from straight above at 1 px/m. Every deck is built empty, for a mechanical
+reason rather than a doctrinal one. A craft aboard is the deck's count and not an entity
+([systems-combat.md](systems-combat.md) §15), and a craft in the water is drawn as itself,
+so a craft modelled aboard would be drawn twice whenever the flight is out. Each cradle is
+cut to its craft instead, and the craft is drawn by the space it leaves. Three navies' modules
+hold the craft's plan once, read by both scripts; the Commune's sheaths are sized to a Runner
+with its leaves folded. A craft is a hull nobody crews: no bridge, no hatch, no port. The
+lighting clauses are the idle/cruise pair as ever. The +35 of a launch is the one transient
+every carrier shares, and the Order's two are cone figures, lit ahead and dark astern.
+
+These eight were authored outside rule 3's model of record, by the owner's decision on #840.
+They are a series break like any built hull, and answer to their blocks and the round trip.
+
+```text
+UNIT — Gantry (pair with Consortium): the loud deck, 140 m — a yard's
+gantry crane with a drive under it, the Slipway's line carried to sea, and
+no gun at all: its deck builds two Sparks and launches them out of its
+stern, louder than anything else in the water and meant to be (SIG 52
+idle, 66 cruise, +35 at every launch; no weapon; HYD 45; a flight of two
+Sparks, rebuilt one every 45 s; 1,500 hull; 38 m/s; PR 2). A riveted box
+hull, the drive, with a yard deck laid across its after three quarters
+and carried out 5 m past both flanks on knees, so the plan is a narrow
+chamfered bow and a broad square back. Down the middle of the deck runs
+the slip, open at the stern: two long riveted shops flank it — the
+Slipway's halls afloat, pilastered, ridged, a hazard stripe along each
+inner eave, one banded stack and a rank of louvres over each engine room
+aft — and a bridge house spans its head, with a stores hatch and a dogged
+crew hatch on the foredeck ahead of it. The two berths lie on the slip in
+tandem, both bow-aft to the mouth: each a rim of hazard paint cut to a
+Spark's plan, the craft's two ways and four corner chocks inside it, a
+stop across its stern end, and nothing on it, because a Spark aboard is
+counted and not drawn; the after berth's ways run on to a lit launch sill
+and a gate across the mouth hinged at its foot. Over the slip, parked
+between the berths and the tallest thing on the hull, the gantry: an
+A-frame leg a side on a bogie riding a rail along each deck edge, a box
+girder across the whole beam, the trolley under it with its fall and a
+lifting beam as long as a Spark's corner posts are apart, the operator's
+cab slung off its starboard end. Twin prop tunnels notched into the stern
+either side of the mouth, ballast blisters under the deck's overhang,
+plate patchworked older-under-newer. No turret, no tube, no mount, no
+hydrophone: nothing on this hull points at anything, and the deck is what
+it fires. Sustained glow at rest — the line lights down both edges of the
+slip, the girder's worklight, the launch sill and the engine-room louvres,
+the light the chart reads — with the stack throats, the bridge ports and
+the cab's ports for the eye that gets closer; burning bright under way on
+the same lamps, because 66 is over the Klaxon's line; the gate drops and
+the slip floods for the instant of a launch, and the deck is back to its
+glow after.
+```
+
+```text
+UNIT — Spark (pair with Consortium): the Gantry's craft, 20 m — a cell
+with a screw and a gun, built on the Gantry's slip and launched out of its
+stern, crewed by nobody, and over the Klaxon's line under way, so its gun
+carries the +12% and it is what a torpedo aimed at its carrier hits (SIG
+40 idle, 62 cruise; 22 at 350 m on a 2.0 s cycle; 120 hull; 70 m/s; PR 2,
+and no depth drive — it holds the band it was launched into; 120 s in the
+water before the cell runs out). The Consortium's two shapes and nothing
+else: a banded pressure cell lying fore-and-aft, dished at both heads, in
+a riveted lifting frame — a rail down each side, a skid under each rail
+that sits the Gantry's ways, a post at each corner with a hazard cap and a
+lifting eye on its head for the gantry's lifting beam — so the plan is a
+rectangle round a cylinder, and the rectangle is the berth's; a square
+wedge of a nose bolted to the frame, a bumper plate across its tip with
+the hazard band on it; one short thick gun on an open ring on the cell's
+crown forward, no shield; a riveted drive box aft with the exhaust louvres
+laid on its roof and an open four-bladed screw behind it, no shroud and no
+cowl. No dive planes and no ballast, because nothing on it changes depth;
+no bridge, no hatch, no port, because nobody rides it. Sustained glow from
+the exhaust louvres, the brightest thing on it, and one mark on the nose;
+burning bright under way on the same lamps; the muzzle flares for the
+instant of a shot.
+```
+
+```text
+UNIT — Rootstock (pair with Pelagia): the strike nobody hears, 115 m — a
+stolon with a drive, putting out Runners the way a plant puts out daughter
+shoots: four craft at SIG 4 and no gun on the hull at all (SIG 8 idle, 16
+cruise, +35 at every launch — its one loud moment; no gun; HYD 45; 620 hull;
+55 m/s; PR 1; 340 nodules; a flight of four Runners, rebuilt one every 30 s).
+A long slim grown stem swelling at four nodes, a growth ring girdling each,
+closing forward to a rounded growing tip with a fifth ring forming behind it,
+and drawn out astern to a peduncle and a short flat muscle-drive fluke, its
+port lobe the shorter. At each node, a side at a time — starboard, port,
+starboard, port — a budding sheath springs from a knuckle on the flank and
+reaches forward and out: a boat-shaped bract of membrane split open along
+its top, a broad rounded lip round a deep dark hollow the length and girth
+of a Runner, pointed at the end the craft's nose lay in, with one pale scar
+at its root where the daughter was attached. Four sheaths, each its own size
+and angle, none opposite another, and all four empty: the sheaths are the
+count, and a craft aboard is not drawn. From straight above the hull is a
+dark stem carrying four pale rims round four dark slots. No gun, no mast, no
+dome: nothing on it points at anything. Nearly black at rest, navigation
+marks only — one on the crown behind the tip, one on the fluke; under way a
+dim vein along the stem from node to node; a sheath's lips flare for the
+instant a Runner clears them, and the deck is dark again.
+```
+
+```text
+UNIT — Runner (pair with Pelagia): the daughter shoot, 14 m — the craft a
+Rootstock puts out, the smallest hull the renderer draws and the quietest
+thing in the water: nobody builds it, nobody orders it and nobody crews it
+(SIG 4 idle, 9 cruise, +10 firing; a gun, 14 at 300 m on a 2.0 s cycle; HYD
+20; 70 hull; 95 m/s; PR 1 and no depth drive; 120 s in the water). A
+seedling that swims: a small grown seed body, fullest a little forward and
+closing to a point at the bow, one growth ring at the node its two seed
+leaves spring from — a pair of small membrane leaves swept aft, opposite and
+unequal, the starboard the larger — and a narrow deep muscle-drive fluke on
+edge astern, the drive of a 95 m/s hull. Its gun is one hollow lipped node
+grown under the chin to starboard with a pale seed in it. No cabin, no
+hatch, no dome, no mast: nothing on it is for a crew. Aboard it lies in its
+carrier's sheath with its leaves folded along its body — the sheath is its
+length and girth — and the model is the craft in the water, leaves spread,
+the one state in which it is drawn. Nearly black at rest and under way
+alike: one navigation mark on the crown and nothing else lit; the node's lip
+flares for the instant it fires and is dark again.
+```
+
+```text
+UNIT — Succentor (pair with Directorate): the deep deck, 130 m — the
+precentor's deputy, a carrier that sits in the Abyssal and launches its
+flight into the band it is already in. It has no gun of its own; its gun
+is five Trebles, somewhere else (SIG 20 idle, 30 cruise, +35 at every
+launch; no gun; HYD 60; PR 4, the Dredge's water; 900 hull; 34 m/s; 300
+nodules and 60 Biomass). The Dredge's deep carapace drawn out round a
+deck. Aft, two small tail plates with the Dredge's raised ridge and a
+spine each, a telson and two tail spines. Amidships, five broad low deck
+plates, the flattest back the navy grows, with no lip between them. At
+the bow, a ridged head plate carrying the Precentor's studded listening
+dome at four fifths of its size, with its violet aft dome off the
+centreline, and a rostrum. On each deck plate sits one cradle,
+alternating sides from the bow as a Dredge's spines alternate: three to
+starboard and two to port, the starboard rank one longer. Each cradle is
+laid with its bow 30° outboard, so from above the five are ribs swept
+forward off a spine, and the count reads at 1 px/m. Each cradle is cut
+to the Treble that is not in it: a dark floor in the craft's own plan
+with a margin all round, and a steel coaming round it from the stern,
+open at the mouth. Past the mouth the floor runs on as a tongue between
+two launch mandibles, with a sill across the opening and two clasps
+standing open at the craft's waist. The deck is built empty: a craft
+aboard is the deck's count, and a craft in the water is drawn as its
+own. Spines stand off the deck's rim between the mouths, so each flank
+reads mouth, spine, mouth. Walking limbs fold under the deck. Dim: a row
+of photophores down each flank of the deck, never answering across the
+keel, and a sill lit across every cradle's mouth. Each mouth floods for
+the instant of a launch and is dim again after.
+```
+
+```text
+UNIT — Treble (pair with Directorate): the Succentor's craft, 16 m — a
+cohort that does not come home. Very many, cheap and slow, crewed by
+nobody, built on a deck and launched into its carrier's band, which it
+never leaves (SIG 8 idle, 14 cruise; a 12-damage gun at 320 m on a 2.2 s
+cycle; HYD 30; PR 4 like the hull that built it; 90 hull; 45 m/s; no
+price and no yard). The Chorister's cohort plan cut down to a craft:
+three overlapping tergites, the middle one widest, each with the
+Dredge's raised ridge, its carrier's deep armour. A short rostrum, and a
+telson closing a blunt transom. One small spine-gun off the centreline
+on the fore plate, two dorsal spines on alternate sides, and a steel
+clasp lug either side of the waist where a cradle's clasps close. No
+bladder dome, no limbs, no listening dome, no hatch: nothing a crew
+would need. Its plan is the cradle's, because the Succentor's berths
+are cut to this outline. Nearly black: two navigation marks, one on
+each side and never opposite, barely visible.
+```
+
+```text
+UNIT — Offertory (pair with Hadron Knights): the carrier, 120 m — the two
+that are brought up: a deck and no gun, whose two craft leave over the bow
+or not at all, so an Offertory launching is an Offertory facing the fight
+(SIG 18 idle; 48 cruise ahead, 16.8 on the beam, 4.8 astern; +35 on the
+hull at every launch; no gun at all; 520 hull; 58 m/s; PR 2; 420 nodules
+and 40 Resonance Crystal; a flight of two Versicles). A deck, a guard and a
+grip in plan, bilaterally symmetric. The deck is a flight deck laid over
+the fore half of the crown, with two cradles let into it side by side, each
+an empty well cut to a Versicle's own plan — point forward, a straight
+blade, the swept guard, a narrow grip — with a dark floor and a pale alloy
+coaming round it, so the craft that fits the cradle is drawn by the space
+it leaves; the deck's prow is chamfered either side of a flat nose, a
+launch sill lies along each chamfer ahead of its cradle, and a plain alloy
+point stands out ahead of the nose, because there is no gun to put there.
+Between the cradles a spine runs forward to the prow with a crystal inlay
+let into it. The guard is two crystal-edged blades swept out from under
+the deck's after corners, their leading edges at 45° to the keel — the
+cone's own 90°, and the craft launch only into it — and the widest thing
+on the hull. The grip is a narrow faceted shaft aft, a spine along it and
+a dorsal fin over it, to the drive prism in the spine, whose base is the
+stern: nothing behind the guard to hear. The cradles are built empty: a
+craft aboard is the deck's count and not a hull, and a craft in the water
+is drawn as itself. Dim at rest but for the two launch sills, a mark on
+the deck's nose and one mark astern; under way, sustained glow up the
+spine's inlay to the prow and along the guard's leading edges, thrown
+forward, faint on the beam and dark astern but for that mark; each cradle
+floods for the instant a craft clears it and is dark again — the deck
+opening is the one loud thing this hull does, and it does it facing you.
+```
+
+```text
+UNIT — Versicle (pair with Hadron Knights): the craft, 22 m — the
+Offertory's, and the hardest craft in the roster: built by a deck, ordered
+by nobody, crewed by nobody, and launched only at what its carrier faces
+(SIG 20 idle; 50 cruise ahead, 17.5 on the beam, 5 astern; the energy
+class's +10 discharge; 45 at 500 m on a 2.6 s cycle; 150 hull; 80 m/s; PR 2
+and no depth drive). A dagger in plan, bilaterally symmetric: a point, a
+blade, a guard and a grip. The point is the emitter crystal, standing on
+the blade's nose as the bow. The blade is a faceted spar drawn to it along
+straight flanks from the guard, a pale alloy ridge down its back with a
+crystal fuller let into the ridge. The guard is two swept alloy bars,
+crystal-edged, their leading edges at 45° to the keel — the Lance's
+crossguard at a fifth of its span — each drawn to a point, and the widest
+thing on the craft. The grip is the same spar drawn in behind the guard to
+the drive prism, whose base is the flat stern and a hand wider than the
+grip, with a small dorsal fin over it and a keel blade under the guard. No
+canopy, no hatch, no ports, no marks: nothing on it a crew would need. Its
+plan is the Offertory's cradle exactly, less a hand's clearance all round.
+Dim at rest but for the emitter crystal at the point; under way, sustained
+glow along the guard's leading edges, thrown forward, and dark astern with
+no mark; a discharge is a pulse out of the crystal and gone, never a
+muzzle flare.
 ```
 
 ## Block 3b — STRUCTURE (one per generation)

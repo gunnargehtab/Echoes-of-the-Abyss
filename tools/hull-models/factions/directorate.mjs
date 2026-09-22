@@ -43,6 +43,14 @@
  *              _rib) · edge_row_6_s0..2 / p0..2 · edge_row_5_s0..3 / p0..2 ·
  *              edge_row_4_s0..2 / p0..1 · photophore_s0..2 / p0..2 ·
  *              photophore_tail_s0..1 / p0..1 — built (#786), the fourth
+ *   Succentor  tergite_0..7 · tergite_ridge_0..1, 7 · tergite_spine_0..1 · rostrum ·
+ *              telson · tail_spine_s/p · dome · dome_spine_0..5 · dome_aft ·
+ *              cradle_s0..2 / p0..1 (_floor, _coaming, _sill, _mandible_0..1,
+ *              _clasp_0..1) · rim_spine_s0..1 / p0..2 · limb_s0..3 / p0..3 ·
+ *              photophore_rim_s0..7 / p0..5 — built (#840), with its craft
+ *   Treble     tergite_0..2 · tergite_ridge_0..2 · rostrum · telson · spine_gun ·
+ *              spine_gun_mount · dorsal_spine_0..1 · clasp_lug_s/p ·
+ *              photophore_s0 / p0 — whose body (`trebleBody`) both are cut from
  *
  * Three rules fall out of those, and they are what this module holds rather
  * than any one hull:
@@ -2997,4 +3005,371 @@ export function reactorOutflow(root, { red, black, steel, unlit }, opts) {
   add(root, 'outflow_hopper', box(...bin.size), black, polar(a, bin.at, bin.y), yaw);
   add(root, 'hopper_rim', box(...rim.size), steel, polar(a, bin.at, rim.y), yaw);
   add(root, 'hopper_throat', box(...throat.size), unlit, polar(a, bin.at, throat.y), yaw);
+}
+
+/* --------------------------------------------------------------------------
+ * The Succentor and the Treble (#840): the deep deck and the craft it
+ * launches, the Directorate's pair of the carrier wave. What the pair adds
+ * is what a carrier needs and no hull before it had — a berth a craft
+ * leaves from, cut to the craft that fits it — and the craft's own body,
+ * stated once here because two scripts build from it: the Treble is drawn
+ * from it, and the Succentor's cradles are cut to it, so the one cannot be
+ * re-proportioned without the other moving with it.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The Treble's body: three tergites stern first as `tergites` takes them,
+ * `[x, half-length, half-height, half-beam]`, the ridge they carry, and the
+ * rostrum and telson that close it — metres, bow at +8 and stern at −8, the
+ * 16 m of `hullLengthM`. The Dredge's ridge rather than the Chorister's
+ * seam, because the craft is PR-4 like the hull that built it and wears the
+ * deep armour its carrier's head and tail wear, drawn at a craft's `lift`:
+ * the Dredge's half-metre is a quarter of this plate's height.
+ *
+ * The widest plate is the middle one and the fore plate the shortest, so
+ * the plan is a stubby lozenge with a point — "stubby for the Directorate",
+ * which is what the hand-drawn outline this retires already said — and a
+ * spine-gun off the centreline to port of the fore plate, `gun`, which the
+ * plan below counts because its muzzle stands a hand outside the plate's
+ * taper. `lugs` is the waist station where a cradle's clasps close.
+ */
+export const trebleBody = {
+  segments: [
+    [-3.6, 3, 1.8, 2.7],
+    [0, 3.4, 2.2, 3.4],
+    [3.4, 2.8, 1.9, 2.8],
+  ],
+  ridge: { at: -0.75, size: [0.25, 1.1, 0.92], lift: 0.15 },
+  rostrum: { tip: 8, r: 1.3, length: 5, facets: 6 },
+  telson: { tip: -8, r: 1.1, length: 3, facets: 6 },
+  gun: { x: 3.9, z: -0.8, r: [0.3, 0.22], length: 4.4 },
+  lugs: { x: 0, z: 3.3, size: [1.4, 0.8, 0.7] },
+};
+
+/**
+ * A body's half-beam at station `x` in plan: the widest of its plates, its
+ * ridges, its rostrum and telson cones and its gun there, or 0 where
+ * nothing is. The plates are taken at their full scale — a low-facet orb
+ * reaches a little less, so the figure errs outboard, which is the side a
+ * berth cut to it should err on. Port and starboard are one figure: the
+ * gun is to port and counts on both sides, because a cradle is cut to the
+ * craft whichever way round it is laid in.
+ */
+export function bodyHalfBeam(body, x) {
+  const { segments, ridge, rostrum: ro, telson: te, gun } = body;
+  const cap = (u, s) => (Math.abs(u) < 1 ? s * Math.sqrt(1 - u * u) : 0);
+  let h = 0;
+  for (const [cx, sx, , sz] of segments) {
+    h = Math.max(h, cap((x - cx) / sx, sz));
+    if (ridge) {
+      const u = (x - cx - ridge.at * sx) / (ridge.size[0] * sx);
+      h = Math.max(h, cap(u, ridge.size[2] * sz));
+    }
+  }
+  if (ro && x >= ro.tip - ro.length && x <= ro.tip)
+    h = Math.max(h, (ro.r * (ro.tip - x)) / ro.length);
+  if (te && x >= te.tip && x <= te.tip + te.length)
+    h = Math.max(h, te.r * (1 - (x - te.tip) / te.length));
+  if (gun && Math.abs(x - gun.x) <= gun.length / 2) h = Math.max(h, Math.abs(gun.z) + gun.r[0]);
+  return h;
+}
+
+/**
+ * A body's envelope in plan, grown `grow` metres outboard all round:
+ * returns the half-beam at a station as a function of `x`. The plan is
+ * swept by a disc of `grow + smooth` — a true offset, which rounds the
+ * transom's corners and carries the bow point forward — and then drawn in
+ * by `smooth`, which closes every notch narrower than about twice
+ * `smooth`: the step where the telson leaves the last plate, the flare of
+ * each ridge past its plate. A berth is cut to the craft's envelope, not
+ * to its notches; at `smooth` 0 it is the plain offset.
+ */
+export function bodyEnvelope(body, grow = 0, smooth = 0) {
+  const bow = body.rostrum.tip;
+  const stern = body.telson.tip;
+  const g = grow + smooth;
+  const fine = 0.1;
+  const raw = [];
+  for (let x = stern; x <= bow + 1e-9; x += fine) raw.push([x, bodyHalfBeam(body, x)]);
+  return (x) => {
+    let h = -Infinity;
+    for (const [xp, hp] of raw) {
+      const d = Math.abs(x - xp);
+      if (d <= g) h = Math.max(h, hp + Math.sqrt(g * g - d * d));
+    }
+    return Math.max(h - smooth, 0);
+  };
+}
+
+/**
+ * A body's plan as a closed `[x, z]` polygon for the kit's `plan`, off
+ * `bodyEnvelope` at `grow` and `smooth`: the transom `grow` astern of the
+ * telson's base ring, the starboard side forward at `step`, the bow point
+ * `grow` ahead of the rostrum's, and the port side aft. `to` cuts it
+ * square at a station short of the bow — the cradle's coaming stops at its
+ * mouth — and `side` returns one side only, stern first, for a builder
+ * stitching two contours into one outline.
+ */
+export function bodyPlan(body, grow = 0, { step = 1, to, side, smooth = 0 } = {}) {
+  const bow = body.rostrum.tip + grow;
+  const stern = body.telson.tip - grow;
+  const end = to ?? bow;
+  const hb = bodyEnvelope(body, grow, smooth);
+  const starboard = [];
+  for (let x = stern; x < end - 1e-6; x += step) starboard.push([+x.toFixed(4), hb(x)]);
+  starboard.push([end, to === undefined ? 0 : hb(end)]);
+  if (side === 's') return starboard;
+  if (side === 'p') return starboard.map(([x, z]) => [x, -z]);
+  // Bow to stern down the starboard side, then stern to bow up the port.
+  const port = starboard.filter(([, z]) => z > 1e-6).map(([x, z]) => [x, -z]);
+  return [...[...starboard].reverse(), ...port];
+}
+
+/**
+ * The craft's spine-gun: the Chorister's barrel at a craft's scale, and the
+ * one part of `spineGun` a craft cannot take — its mount, which is 2.4 m of
+ * block on a 50 m hull and would be a third of a Treble's beam. So the
+ * mount's size and seat are given, and the names are the Chorister's.
+ */
+export function craftGun(root, { steel, black }, { x, y, z, r, length, mount }) {
+  const [breech, muzzle] = r;
+  add(root, 'spine_gun', cyl(muzzle, breech, length, 6), steel, [x, y, z], [0, 0, -Math.PI / 2]);
+  add(root, 'spine_gun_mount', box(...mount.size), black, mount.at);
+}
+
+/**
+ * The clasp lugs: two steel blocks at a craft's waist, `x`, standing
+ * `size[2]` out of the flank at half-beam `z`, on the hull axis — where a
+ * cradle's clasps close on a craft that is aboard. Machinery and unlit, so
+ * a matched pair, as `limbs` is.
+ */
+export function claspLugs(root, steel, { x, y = 0, z, size }) {
+  bothSides((side, sgn) =>
+    add(root, `clasp_lug_${side}`, box(...size), steel, [x, y, sgn * (z + size[2] / 2 - 0.3)])
+  );
+}
+
+/** Is `[x, z]` inside the closed polygon `poly`? Even-odd, for sampling a footprint. */
+function inside([x, z], poly) {
+  let hit = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, zi] = poly[i];
+    const [xj, zj] = poly[j];
+    if (zi > z !== zj > z && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) hit = !hit;
+  }
+  return hit;
+}
+
+/**
+ * The cradles: berths on a carapace's back, each cut to `craft` — the
+ * body a flight is built from (`trebleBody`) — and built empty, because a
+ * craft aboard is not an entity and a craft in the water is drawn as its
+ * own (docs/systems-combat.md §15): modelled in, it would be drawn twice
+ * whenever the flight is out. The berth says what fits it instead.
+ *
+ * `cradles` is `[{ side, x, z }]`, `z` unsigned and the side signing it
+ * (port −z, #642), each laid with the craft's bow `cant` radians outboard
+ * of dead ahead on its own side, so that a rank reads as ribs swept
+ * forward; a mirrored pair across the keel is refused. Each is a frame of
+ * its own, `cradle_${side}${i}`, and the frame is the **seat**: its origin
+ * is where the craft's own origin goes when it is aboard — the centre of
+ * its length, on its hull axis — its +X the craft's bow and its +Y the
+ * deck's normal, so a craft's GLB placed at the node's transform sits in
+ * the berth (the floor is `seat` under the origin, the craft's belly and a
+ * hand of water). No runtime reads that today; it is what a renderer that
+ * one day draws the deck's count would read, and it costs nothing.
+ *
+ * Seated on the shell, which is a dome and not a deck: the berth's plane is
+ * the least-squares fit of `crown(x, z)` over its footprint, lifted until
+ * no sample of the shell stands within `margin` of the floor's top, so the
+ * shell never shows through the floor from above — the rack's lesson
+ * (`chargeRack`, #785). The floor and the coaming then run down into the
+ * shell past the deepest point of the footprint by `bury`, so the conn
+ * view's 55° sees a wall and never a gap. A berth that overhangs the shell
+ * anywhere is refused.
+ *
+ * In the frame, seven parts: three, and two pairs. A `_floor`, the craft's
+ * plan grown `clearance` all round and closed over its notches by `smooth`
+ * (`bodyPlan`, `bodyEnvelope`), in `black` — the dark the chart sees,
+ * shaped like the craft that is not in it, and running out ahead of the
+ * mouth as a tongue to the rostrum's point. A `_coaming`, a
+ * steel U of `coaming.w` round the floor from the mouth aft, standing
+ * `coaming.proud` above it and open at the mouth, `mouth` metres forward
+ * of the craft's origin — the Slipway's slip, open at the end a hull
+ * leaves by. A `_sill` lying on the floor across the mouth in `lamp`, the
+ * Slipway's lit launch sill and the berth's one resting light. Two
+ * `_mandible_k`, steel cones at the ends of the U's arms laid forward and
+ * yawed `mandibles.yaw` outboard, the Slipway's launch mandibles at a
+ * berth's scale. Two `_clasp_k`, black spikes standing on the coaming at
+ * the craft's waist (`craft.lugs.x`), leaned `clasps.lean` outboard: open,
+ * with nothing aboard to close on — the Slipway's gantry claws.
+ *
+ * The launch itself — the deck opening, the craft clearing it, +35 for
+ * the spike — is a transient and is not modelled (docs/models-plan.md
+ * §3.2, rule 3); the sill is lit at every posture and is what the chart
+ * counts. Returns each berth's seat, `[{ name, at, rot, lift, gap }]`.
+ */
+export function cradles(root, { black, steel, lamp: lampMat }, opts) {
+  const {
+    crown,
+    craft,
+    cradles: list,
+    cant = 0.5,
+    clearance = 0.6,
+    seat: seatGap = 0.1,
+    margin = 0.25,
+    bury = 1,
+    step = 1,
+    smooth = 1.2,
+    mouth = 4.5,
+    coaming = { w: 1.3, proud: 1.3 },
+    sill = { d: 0.7, h: 0.3 },
+    mandibles = { r: 0.7, length: 4.5, yaw: 0.3 },
+    clasps = { r: 0.5, length: 4, lean: 0.75, sink: 0.4 },
+  } = opts;
+  // The craft's belly: the lowest of its plates and ridges under its axis.
+  const { ridge } = craft;
+  const belly = Math.max(
+    ...craft.segments.map(([, , sy]) => sy),
+    ...(ridge ? craft.segments.map(([, , sy]) => ridge.size[1] * sy - ridge.lift) : [])
+  );
+  const seat = belly + seatGap;
+  const floorPlan = bodyPlan(craft, clearance, { step, smooth });
+  const outer = bodyPlan(craft, clearance + coaming.w, { step, smooth, to: mouth, side: 's' });
+  const inner = bodyPlan(craft, clearance, { step, smooth, to: mouth, side: 's' });
+  // The U: the outer contour from the mouth aft round the transom and
+  // forward to the mouth on the other side, then the inner the other way.
+  const flip = (pts) => pts.map(([x, z]) => [x, -z]);
+  const U = [
+    ...[...outer].reverse(),
+    ...flip(outer),
+    ...[...flip(inner)].reverse(),
+    ...inner,
+  ];
+  const footprint = [...floorPlan];
+  const hbAt = (x, grow) => bodyEnvelope(craft, grow, smooth)(x);
+  // Samples of the footprint in the craft's own frame: every vertex of the
+  // floor and of the U, and a metre grid inside the U's outer contour.
+  const outerAll = bodyPlan(craft, clearance + coaming.w, { step, smooth });
+  const samples = [...floorPlan, ...U];
+  const xs = outerAll.map(([x]) => x);
+  const zs = outerAll.map(([, z]) => z);
+  for (let x = Math.min(...xs); x <= Math.max(...xs); x += 1)
+    for (let z = Math.min(...zs); z <= Math.max(...zs); z += 1)
+      if (inside([x, z], outerAll)) samples.push([x, z]);
+
+  const count = { p: 0, s: 0 };
+  const placed = list.map(({ side, x: xc, z }) => {
+    if (side !== 'p' && side !== 's')
+      throw new Error(
+        `cradle_${side}: side is '${side}' — 'p' (port, -z) or 's' (starboard, +z)`
+      );
+    const i = count[side]++;
+    const sgn = side === 'p' ? -1 : 1;
+    const zc = sgn * z;
+    const name = `cradle_${side}${i}`;
+    const a = sgn * cant;
+    const d = new THREE.Vector3(Math.cos(a), 0, Math.sin(a));
+    const across = new THREE.Vector3(-Math.sin(a), 0, Math.cos(a));
+    const world = ([u, w]) => [xc + u * d.x + w * across.x, zc + u * d.z + w * across.z];
+    // Fit the deck's plane over the footprint, as the shell has it.
+    const pts = samples.map((s) => {
+      const [wx, wz] = world(s);
+      const y = crown(wx, wz);
+      if (!Number.isFinite(y))
+        throw new Error(
+          `${name}: no shell under the berth at x = ${wx.toFixed(1)}, z = ${wz.toFixed(1)}`
+        );
+      return [wx, wz, y];
+    });
+    const n = pts.length;
+    const mx = pts.reduce((s, p) => s + p[0], 0) / n;
+    const mz = pts.reduce((s, p) => s + p[1], 0) / n;
+    const my = pts.reduce((s, p) => s + p[2], 0) / n;
+    let sxx = 0;
+    let sxz = 0;
+    let szz = 0;
+    let sxy = 0;
+    let szy = 0;
+    for (const [px, pz, py] of pts) {
+      const dx = px - mx;
+      const dz = pz - mz;
+      const dy = py - my;
+      sxx += dx * dx;
+      sxz += dx * dz;
+      szz += dz * dz;
+      sxy += dx * dy;
+      szy += dz * dy;
+    }
+    const det = sxx * szz - sxz * sxz;
+    const gx = (sxy * szz - szy * sxz) / det;
+    const gz = (szy * sxx - sxy * sxz) / det;
+    const plane = (px, pz) => my + gx * (px - mx) + gz * (pz - mz);
+    const rise = Math.max(...pts.map(([px, pz, py]) => py - plane(px, pz)));
+    const lift = rise + margin;
+    const gap = Math.max(...pts.map(([px, pz, py]) => plane(px, pz) + lift - py));
+    // The seat's frame: +Y the plane's normal, +X the craft's bow laid on
+    // the plane, +Z their cross — starboard of the craft, as the kit's is.
+    const up = new THREE.Vector3(-gx, 1, -gz).normalize();
+    const bowAxis = d.clone().sub(up.clone().multiplyScalar(d.dot(up))).normalize();
+    const beamAxis = new THREE.Vector3().crossVectors(bowAxis, up);
+    const e = new THREE.Euler().setFromRotationMatrix(
+      new THREE.Matrix4().makeBasis(bowAxis, up, beamAxis),
+      'XYZ'
+    );
+    const floorTop = [xc, plane(xc, zc) + lift, zc];
+    const at = [floorTop[0] + up.x * seat, floorTop[1] + up.y * seat, floorTop[2] + up.z * seat];
+    return { name, side, at, rot: [e.x, e.y, e.z], lift, gap, zc, xc };
+  });
+  refuseMirror('cradle', placed.map(({ name, xc, zc }) => [name, xc, 0, zc]), 2);
+
+  const floorT = (gap) => gap + bury;
+  placed.forEach(({ name, at, rot, gap }) => {
+    const frame = group(root, name, { at, rot });
+    const T = floorT(gap);
+    add(frame, `${name}_floor`, plan(footprint, T), black, [0, -seat - T / 2, 0]);
+    const Tc = T + coaming.proud;
+    add(frame, `${name}_coaming`, plan(U, Tc), steel, [0, -seat + coaming.proud - Tc / 2, 0]);
+    const width = 2 * hbAt(mouth, clearance);
+    add(frame, `${name}_sill`, box(sill.d, sill.h, width), lampMat, [
+      mouth - sill.d / 2,
+      -seat + sill.h / 2 - 0.05,
+      0,
+    ]);
+    // The mandibles: a cone's apex is +Y, rolled onto +X by −π/2 about Z
+    // (`rostrum`), then yawed outboard — −yaw about Y turns +X toward +Z.
+    const armZ = hbAt(mouth, clearance + coaming.w / 2);
+    [1, -1].forEach((s, k) => {
+      const dir = [Math.cos(mandibles.yaw), 0, s * Math.sin(mandibles.yaw)];
+      const half = mandibles.length / 2;
+      add(
+        frame,
+        `${name}_mandible_${k}`,
+        spike(mandibles.r, mandibles.length),
+        steel,
+        [mouth + dir[0] * half, -seat + coaming.proud / 2, s * armZ + dir[2] * half],
+        [0, -s * mandibles.yaw, -Math.PI / 2]
+      );
+    });
+    // The clasps: standing on the coaming's crest at the craft's waist and
+    // leaned outboard about X — open, with nothing aboard to close on.
+    const waist = craft.lugs?.x ?? 0;
+    const clampZ = hbAt(waist, clearance + coaming.w / 2);
+    [1, -1].forEach((s, k) => {
+      const reach = clasps.length / 2 - clasps.sink;
+      add(
+        frame,
+        `${name}_clasp_${k}`,
+        spike(clasps.r, clasps.length, 5),
+        black,
+        [
+          waist,
+          -seat + coaming.proud + Math.cos(clasps.lean) * reach,
+          s * (clampZ + Math.sin(clasps.lean) * reach),
+        ],
+        [s * clasps.lean, 0, 0]
+      );
+    });
+  });
+  return placed.map(({ name, at, rot, lift, gap }) => ({ name, at, rot, lift, gap }));
 }

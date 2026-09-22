@@ -9,9 +9,11 @@
 
 **Status:** done — the transports (#783), the scouts (#784), the ordnance hulls (#785), the
 siege hulls (#786), the line hulls and the anchor (#787) and the Bio-Reactor (#788) are all
-built. Every one of the 36 unit kinds has a model, so each takes its plan outline from its
-GLB and `HAND_DRAWN_OUTLINE` in `silhouettes.ts` is empty; with #788 every one of the eleven
-structure kinds has one too, and nothing in the roster bakes procedurally any more. The
+built. Every one of the 36 unit kinds then had a model. The carrier wave (#838) added eight
+more on the procedural bake, and #840 built them on the same path (§5, "The carriers"), so
+all 44 have a model again: each takes its plan outline from its GLB and `HAND_DRAWN_OUTLINE`
+in `silhouettes.ts` is empty. With #788 every one of the eleven structure kinds has one too,
+and nothing in the roster bakes procedurally any more. The
 tracking issue is #540, Phase 4, and its six boxes are filed as issues #783 (the
 transports), #784 (the scouts), #785 (the ordnance hulls), #786 (the siege hulls), #787 (the
 line hulls and the anchor) and #788 (the Bio-Reactor). Every figure below is read from the
@@ -138,7 +140,8 @@ Every Order hull's SIG is a cone figure ([units.md](units.md), each block), and 
 table bakes the compass average — 0.45 of it, one quarter at 1.00, two at 0.35, one at 0.10
 ([systems-echo.md](systems-echo.md) §8) — as the Clarion's row bakes 27.9 against a listed
 62. So the Antiphon's idle 12 bakes at 5.4, the Herald's 14 at 6.3, the Lance's 20 at 9,
-the Tocsin's 22 at 9.9. The light is *placed* forward, where the cone is loud, as the
+the Tocsin's 22 at 9.9; after Phase 4, the Offertory's 18 at 8.1 and the Versicle's 20 at 9.
+The light is *placed* forward, where the cone is loud, as the
 Clarion's and Responsory's rows already say.
 
 ### 3.4 Four kinds carry no lock
@@ -160,7 +163,9 @@ open; the Acolyte with its limbs planted; the Furnace with its ladders run out; 
 with its husk open and the arm presented; the Lure with its fan spread and the plectrum
 raised; the Tocsin braced, blades out and locked; the Bower grown out. The Broadside and
 the Lance are a cycle made into geometry and are built loaded — doors shut, torpedo in the
-rail — because a spent one is the same hull with its doors open.
+rail — because a spent one is the same hull with its doors open. The four carriers (§5)
+are built with their decks empty: a craft aboard is the deck's count and not an entity, so
+one modelled aboard would be drawn twice whenever the flight is out.
 
 ### 3.6 Plans that are not mirrored
 
@@ -470,9 +475,105 @@ worse.
 ## 5. After Phase 4
 
 Every unit kind has a generated outline and `HAND_DRAWN_OUTLINE` is empty; every structure
-kind has a model; `npm run check:models` covers 86 scripts. Phase 5 is the fourteen
+kind has a model; `npm run check:models` covers 94 scripts. Phase 5 is the fourteen
 environment props under the same kit, and Phase 6 the pristine pass that this whole path
 was built to make cheap: facet counts, panel density, light placement, one edit a navy.
+
+### The carriers — #840
+
+[asset-prompts-3d.md](asset-prompts-3d.md) "The carriers"; wave 8, #838. The deck is the
+shape problem: a carrier reads as one only if the deck it launches from reads from straight
+above at 1 px/m. Every deck is built empty (§3.5), each cradle cut to its craft. The same
+path as Phase 4, one `hull-designer` a navy and one `hull-reviewer` a navy, outside rule 3's
+model of record by the owner's decision on #840.
+
+| hull | navy | length | bake SIG | built | model |
+| --- | --- | ---: | ---: | --- | --- |
+| Gantry | Consortium | 140 m | 52 | deck empty, gate shut | `gantry-bathyarch.glb` |
+| Rootstock | Commune | 115 m | 8 | deck empty | `rootstock-pelagia.glb` |
+| Succentor | Directorate | 130 m | 20 | deck empty, clasps open | `succentor-directorate.glb` |
+| Offertory | Knights | 120 m | 8.1 | cradles empty | `offertory-hadron.glb` |
+| Spark | Consortium | 20 m | 40 | — | `spark-bathyarch.glb` |
+| Runner | Commune | 14 m | 4 | — | `runner-pelagia.glb` |
+| Treble | Directorate | 16 m | 8 | — | `treble-directorate.glb` |
+| Versicle | Knights | 22 m | 9 | — | `versicle-hadron.glb` |
+
+- **Gantry.** From `bathyarch`: the Tender's `boxHull` for the drive with `bowPlate`, a
+  `citadel` as the bridge house across the slip's head, two `propTunnel`s notched into the
+  stern either side of the mouth, `ballastBlisters` under the yard's overhang,
+  `exhaustLouvres` in the vent, a `stackBand` throat on each shop's stack, `cargoHatch`,
+  `doggedHatch`, `repairPatches`, `rivetRows`, `bowStencil`, `bowLamp`; and the Slipway's own
+  words at a hull's numbers — kit.mjs `slipwayBed` for the yard deck, the slip floor, its two
+  line lights and the launch sill, kit.mjs `slipwayGantry` for the crane, `slipwayHall` for
+  the two shops. New: `deckKnees` under the yard, `craneRails`, `craneLeg` (an A-frame a side)
+  and `craneBogie` handed to `slipwayGantry`, `liftingBeam`, `craneCab`, `craftBerth` (a
+  berth cut to `sparkPlan`, built empty) and `launchGate`. Built with the deck empty, the gate
+  shut and the gantry parked between the berths. Resting lamps: the slip's line lights, the
+  girder's worklight, the launch sill and the engine-room louvres (the chart's light), the
+  stack throats, the citadel, bridge and cab ports, the bow lamp. Nothing is clad unlit: the
+  under-way clause brightens the same lamps. The gate's flood at a launch is a transient.
+- **Spark.** From `bathyarch`: the Caisson's `plantCylinder` as the cell, `squareWedge` for
+  the nose with `bowPlate` as its bumper, `repairPatches`, `rivetRows`, `bowStencil`,
+  `bowLamp`. New: `sparkPlan` (the craft's plan, which the Gantry's berths are cut to),
+  `liftFrame` (rails, end bars, skids, four corner posts with hazard caps and lifting eyes),
+  `craftDrive` (the drive box, the kit's `louvres` on its roof, an open screw on a hub drawn
+  in astern) and `craftGun` (the Derrick's barbette at a craft's scale). Resting lamps: the
+  two drive louvres and the nose mark. Nothing is clad unlit. The muzzle flare is a transient.
+- **Rootstock.** `stem` on its own profile, swelling at four nodes and closed to a rounded
+  growing tip at the bow, with no `nose`: a cone read as a ram on a hull that has nothing
+  to ram with. Also `growthRings` at the four nodes plus a fifth behind the tip, a flat
+  `driveFluke` with its port lobe the shorter, `sweptVein` and `navMarks`. New:
+  `buddingSheaths`, the deck. Four sites, placed a side at a time, starboard first and
+  alternating. Each is a `bud_site_<i>` frame yawed 16–19° forward-outboard from its node.
+  It holds a ridge knuckle, the bract, the chitin lining of the hollow and a spore-pale
+  scar at the root. The bract is an open U of membrane, swept along a pointed girth through
+  kit.mjs `sweep`, with a lip 1.8 m broad. The deck is built empty (§3.5). Each hollow is sized to the
+  Runner: 15.2–15.9 m long, 4.2–4.4 m across and 2.2–2.3 m deep. Resting lamps: two
+  navigation marks, one on the crown behind the tip and one on the fluke. The
+  node-to-node vein lights only under way, so it is clad in `bio_vein_unlit`. The lips'
+  flare is the launch's +35 and carries no lamp.
+- **Runner.** `podBody` closed at the bow, one `growthRings` ring at the leaf node, and two
+  `leafWing` blades named `seed_leaf` off that one node, opposite and unequal, with no ring
+  and no vein. Also one `seedNodes` node under the chin to starboard, a `standingFluke`
+  astern, and `navMarks`. No new builder. It is built in the water with its leaves spread,
+  the only state in which it is drawn. Resting lamp: one mark on the crown. The lip's
+  flare is the firing transient and carries no lamp.
+- **Succentor.** `tergites` in three calls through `first`. The tail is two plates with the
+  Dredge's `ridge` and a `spines` spine each. The deck is five lipless plates on a 14 m pitch,
+  0.3 as tall as they are wide and 32 m long each, so the creases under a berth are shallow.
+  The head is one plate with the ridge again. Then `rostrum`, `telson` with the Dredge's tail
+  spines, and the Precentor's `listeningDome` at four fifths with its `aft` dome. `rimSpines`
+  sit between the cradle mouths (starboard +18 and −10, port +32, +4 and −24), with `limbs`
+  folded under the deck. New: `cradles`, one to a deck plate, alternating sides from the bow,
+  three starboard and two port, each laid 30° outboard. Each cradle is a seat frame on the
+  shell's least-squares plane, lifted clear of it. It holds a black floor cut to `trebleBody`
+  through `bodyPlan`/`bodyEnvelope`, a steel coaming U open at the mouth, a lit sill across
+  it, two launch mandibles and two open clasps. It is built empty. Resting lamps: the two
+  `rimPhotophores` rows down the deck's flanks, starboard eight at 9 m and port six at
+  11.5 m, plus the five sills. The launch flood is a transient; the dome and floors are dark.
+- **Treble.** `tergites` with the Dredge's ridge at a craft's lift, `rostrum`, `telson`,
+  two `dorsalSpines` (port on the stern plate, starboard on the middle one), and the marks
+  laid on the slope by `rimPhotophores`. New: `trebleBody`, the craft's stations stated once
+  in the module because the Succentor's cradles are cut from them; `craftGun`, the
+  Chorister's spine-gun on a mount a craft's size; `claspLugs` at the waist. Resting lamps:
+  two 0.6 m marks, one a side, never opposite; nothing else.
+- **Offertory.** `bladeBody` on the Antiphon's section, 0.55 by 1.6. `spine` twice: the
+  fore ridge stands on the deck between the coamings, its inlay in `crystalSeamUnlit`, and
+  the after ridge runs down the grip. `bowPrism`, with its mark moved onto the deck's nose.
+  `wings` under the Lance's names as a crossguard at the deck's heel, `edge.mat` unlit.
+  Then `finAndKeel` and a crystal `drive` with the stern mark. New: `cradleDeck`, the
+  flight deck over the fore half of the crown. It has two wells cut to `VERSICLE_PLAN`
+  grown by 0.8 m of clearance, a dark-steel floor under each, a pale coaming round each,
+  and a lit launch sill along each prow chamfer. Built empty. Resting lamps: the two
+  sills, the bow mark and one stern mark. The fore inlay and the guard edges light under
+  way and are clad. The launch flood is a transient.
+- **Versicle.** `bladeBody` drawn straight from the guard to the nose, and `spine` with its
+  inlay. `wings` as the Lance's crossguard at 22 m, `edge.mat` unlit. `point` as the
+  emitter, one whole lamp, which is the Herald's and the Lance's idiom and not `bowArray`.
+  Then `finAndKeel` and a crystal `drive` as the pommel, with no mark. New:
+  `VERSICLE_PLAN`, the craft's plan held in the module so that craft and cradle are one
+  outline. The script asserts its built bounds against it. Resting lamps: the emitter
+  crystal. The guard edges light under way and are clad. No marks.
 
 ## 6. Out of scope
 

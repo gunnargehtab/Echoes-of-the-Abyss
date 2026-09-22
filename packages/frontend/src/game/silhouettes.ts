@@ -116,134 +116,15 @@ export const HULL_LENGTH_M: Record<UnitKind, number> = {
  * Silhouette-first, per docs/art-direction.md: each kind must read at a
  * glance from shape alone.
  *
- * Hand-drawn for the kinds without a model, which since #838 are the eight of
- * the carrier wave; every other outline the runtime reads is cut from a GLB by
- * tools/hull-maps/outlines.mjs. The type is the completeness check: a kind
- * whose model is withdrawn reappears here as a missing key until someone draws
- * it, and a kind absent from both fails HULL_OUTLINE below.
- *
- * These eight are the sanctioned fallback of docs/graphics-standards.md gate 1
- * and nothing more — a deck read as a flat-sided box with a well cut out of
- * it, a craft as a stub — and #840 replaces every one of them with an outline
- * cut from an approved model. They are drawn to read apart at a glance
- * (docs/art-direction.md): a carrier is broad and square-sterned, and a craft
- * is a wedge too small to be mistaken for a hull anybody crews.
+ * Hand-drawn for the kinds without a model — and since #840 there are none
+ * again. #838's carrier wave arrived with eight gate 1 fallbacks here, and #840
+ * cut each from its approved model, so this is empty and every outline the
+ * runtime reads is cut from a GLB by tools/hull-maps/outlines.mjs. The type is
+ * still the completeness check and resolves to `Record<never, number[][]>`: a
+ * kind whose model is withdrawn reappears here as a missing key until someone
+ * draws it, and a kind absent from both fails HULL_OUTLINE below.
  */
-const HAND_DRAWN_OUTLINE: Record<Exclude<UnitKind, ModelledUnitKind>, number[][]> = {
-  // A launching deck: a broad hull with the well open along the port quarter.
-  [UnitKind.Gantry]: [
-    [0.5, -0.04],
-    [0.42, 0.1],
-    [0.18, 0.15],
-    [0.16, 0.24],
-    [-0.16, 0.24],
-    [-0.18, 0.15],
-    [-0.44, 0.13],
-    [-0.5, 0.04],
-    [-0.5, -0.04],
-    [-0.44, -0.13],
-    [-0.18, -0.15],
-    [-0.16, -0.2],
-    [0.16, -0.2],
-    [0.18, -0.15],
-    [0.42, -0.1],
-  ],
-  // The same deck grown rather than built: a tapered stolon, wells either side.
-  [UnitKind.Rootstock]: [
-    [0.5, 0],
-    [0.34, 0.08],
-    [0.1, 0.12],
-    [0.06, 0.21],
-    [-0.14, 0.21],
-    [-0.2, 0.12],
-    [-0.42, 0.1],
-    [-0.5, 0.03],
-    [-0.5, -0.03],
-    [-0.42, -0.1],
-    [-0.2, -0.12],
-    [-0.14, -0.21],
-    [0.06, -0.21],
-    [0.1, -0.12],
-    [0.34, -0.08],
-  ],
-  // A deep hull: heavy, slab-sided, and the well is a slot down the spine.
-  [UnitKind.Succentor]: [
-    [0.5, -0.05],
-    [0.4, 0.11],
-    [0.06, 0.16],
-    [0.04, 0.07],
-    [-0.28, 0.07],
-    [-0.3, 0.16],
-    [-0.46, 0.14],
-    [-0.5, 0.05],
-    [-0.5, -0.05],
-    [-0.46, -0.14],
-    [-0.3, -0.16],
-    [-0.28, -0.07],
-    [0.04, -0.07],
-    [0.06, -0.16],
-    [0.4, -0.11],
-  ],
-  // The Order's: a long bow, and two cradles forward, because the launch is
-  // cone-gated and a Versicle leaves over the bow or not at all.
-  [UnitKind.Offertory]: [
-    [0.5, 0],
-    [0.36, 0.06],
-    [0.3, 0.16],
-    [0.16, 0.16],
-    [0.1, 0.09],
-    [-0.24, 0.11],
-    [-0.4, 0.09],
-    [-0.5, 0.02],
-    [-0.5, -0.02],
-    [-0.4, -0.09],
-    [-0.24, -0.11],
-    [0.1, -0.09],
-    [0.16, -0.16],
-    [0.3, -0.16],
-    [0.36, -0.06],
-  ],
-  // The craft: a stub with a blunt stern, one per navy's register — squared
-  // for the Consortium, tapered for the Commune, stubby for the Directorate,
-  // and pointed for the Order.
-  [UnitKind.Spark]: [
-    [0.5, -0.06],
-    [0.38, 0.14],
-    [-0.3, 0.16],
-    [-0.5, 0.1],
-    [-0.5, -0.1],
-    [-0.3, -0.16],
-    [0.38, -0.14],
-  ],
-  [UnitKind.Runner]: [
-    [0.5, 0],
-    [0.26, 0.1],
-    [-0.28, 0.12],
-    [-0.5, 0.05],
-    [-0.5, -0.05],
-    [-0.28, -0.12],
-    [0.26, -0.1],
-  ],
-  [UnitKind.Treble]: [
-    [0.5, -0.04],
-    [0.34, 0.16],
-    [-0.34, 0.18],
-    [-0.5, 0.12],
-    [-0.5, -0.12],
-    [-0.34, -0.18],
-    [0.34, -0.16],
-  ],
-  [UnitKind.Versicle]: [
-    [0.5, 0],
-    [0.3, 0.08],
-    [-0.16, 0.14],
-    [-0.44, 0.08],
-    [-0.5, 0],
-    [-0.44, -0.08],
-    [-0.16, -0.14],
-    [0.3, -0.08],
-  ],
-};
+const HAND_DRAWN_OUTLINE: Record<Exclude<UnitKind, ModelledUnitKind>, number[][]> = {};
 
 export const HULL_OUTLINE: Record<UnitKind, number[][]> = {
   ...HAND_DRAWN_OUTLINE,

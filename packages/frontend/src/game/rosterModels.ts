@@ -178,10 +178,9 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   // sanctioned state until one clears intake, and the slug is where it lands.
   [UnitKind.Derrick]: 'derrick',
   [UnitKind.Responsory]: 'responsory',
-  // The carriers and their craft (#838). No models yet; the procedural bake is
-  // gate 1's sanctioned state until one clears intake (#840), and these are
-  // the slugs they land on. All eight are faction-locked, so none takes the
-  // Chorister's rule and no navy resolves a variant that does not exist.
+  // The carriers and their craft (#838), script-built in #840: one pair a
+  // navy. All eight are faction-locked, so none takes the Chorister's rule and
+  // no navy resolves a variant that does not exist.
   [UnitKind.Gantry]: 'gantry',
   [UnitKind.Rootstock]: 'rootstock',
   [UnitKind.Succentor]: 'succentor',

@@ -3469,4 +3469,370 @@ export function reactorOutflow(root, { black, grey, rust, unlit }, opts) {
   );
 }
 
+/* --------------------------------------------------------------------------
+ * The Gantry and the Spark (#840, off #838): the Consortium's carrier and
+ * the craft its deck builds. The carrier is the Slipway's line carried to
+ * sea, and it is built from the Slipway's own words — kit.mjs `slipwayBed`
+ * for the slip and its line lights, `slipwayGantry` for the crane, and
+ * `slipwayHall` above for the two shops that flank the slip — at a hull's
+ * numbers. What is here is only what a yard on a drive needs that a yard on
+ * the seabed does not: the knees under a deck laid wider than its hull, the
+ * rails the gantry walks on, an A-frame leg and the bogie under it, the
+ * lifting beam and the cab, the berths cut to the craft, and the gate across
+ * the mouth. The craft is the navy's two shapes and nothing else: a banded
+ * cell (`plantCylinder`, the Caisson's plant) in a riveted lifting frame, a
+ * square wedge of a nose, a drive box with its louvres and an open screw,
+ * and one gun on a ring. Built, not ported: every number is a hull script's
+ * or the craft's plan below.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The Spark in plan, which two scripts read: hulls/spark.mjs builds the
+ * craft to it and hulls/gantry.mjs cuts the berths to it, so a cradle and
+ * the thing it holds cannot drift apart. The craft's own frame, metres, bow
+ * on +X and the hull axis at y 0: the stations of the frame's corner posts
+ * and their beam (the cradle's chocks stand outboard of them, and the
+ * gantry's lifting beam is as long as they are apart); the skids under the
+ * frame rails, which sit the cradle's ways, and how far below the axis
+ * their soles are; and the outline the berth's rim is painted round — the
+ * craft's plan with about a metre's margin, bow first down the starboard
+ * side, a chamfered nose and a square stern.
+ */
+export const sparkPlan = {
+  length: 20,
+  posts: { x: [5.6, -8.0], z: 3.0 },
+  skids: { from: -8.6, to: 6.0, z: 2.8, sole: -3.0 },
+  rim: [
+    [10.9, 2.2],
+    [6.4, 4.5],
+    [-9.0, 4.5],
+    [-10.9, 3.0],
+    [-10.9, -3.0],
+    [-9.0, -4.5],
+    [6.4, -4.5],
+    [10.9, -2.2],
+  ],
+};
+
+/**
+ * The knees under a deck laid wider than the hull it stands on: at each
+ * station a strut up and out from the hull's flank to the deck's underside
+ * at its edge, the starboard rank then the port (`deck_knee_s0.. ·
+ * deck_knee_p0..`). They are what says, from the beam, that the deck is
+ * carried on the hull rather than being the hull — the Gantry's yard, a
+ * yard's worth of deck on a drive's worth of hull.
+ */
+export function deckKnees(root, mat, { x: stations, foot, head, t }) {
+  bothSides((side, sgn) =>
+    stations.forEach((x, i) =>
+      strut(root, `deck_knee_${side}${i}`, [x, foot.y, sgn * foot.z], [x, head.y, sgn * head.z], mat, t)
+    )
+  );
+}
+
+/**
+ * The rails a gantry walks on, one along each deck edge, starboard first
+ * (`crane_rail_s · crane_rail_p`) — the Freighter's `deckGantries` rails on
+ * a deck whose crane straddles it rather than standing inside it.
+ */
+export function craneRails(root, rust, { x, y, z, size }) {
+  bothSides((side, sgn) => add(root, `crane_rail_${side}`, box(...size), rust, [x, y, sgn * z]));
+}
+
+/**
+ * A gantry leg for a crane that has to read as a crane from the beam: an
+ * A-frame a side where the Slipway stands one square column — two posts
+ * from the bogie's ends, `foot.dx` either way of the frame's station, up to
+ * the girder's underside `head.dx` either way of it, and a tie across the
+ * two at `tie.y` (`gantry_leg_s_f · gantry_leg_s_a · gantry_tie_s`).
+ * Returns the `(parent, { tag, sgn, x })` builder kit.mjs `slipwayGantry`
+ * calls once a side, as `sidedPost` returns one.
+ */
+export const craneLeg =
+  ({ mat, spread, foot, head, t, tie }) =>
+  (parent, { tag, sgn, x }) => {
+    for (const [end, s] of [
+      ['f', 1],
+      ['a', -1],
+    ])
+      strut(
+        parent,
+        `gantry_leg_${tag}_${end}`,
+        [x + s * foot.dx, foot.y, sgn * spread],
+        [x + s * head.dx, head.y, sgn * spread],
+        mat,
+        t
+      );
+    const k = (tie.y - foot.y) / (head.y - foot.y);
+    const dx = foot.dx + (head.dx - foot.dx) * k;
+    add(parent, `gantry_tie_${tag}`, box(2 * dx + t, tie.h, t), mat, [x, tie.y, sgn * spread]);
+  };
+
+/** The bogie a leg stands on, riding the rail (`gantry_bogie_s`) — `slipwayGantry`'s ornament. */
+export const craneBogie = ({ mat, size, y, spread }) =>
+  sidedPost({ name: 'gantry_bogie', geo: () => box(...size), mat, y, spread });
+
+/**
+ * The lifting beam hung on the gantry's fall: a bar along the keel as long
+ * as the craft's corner posts are apart, a cross-head at each end as wide as
+ * they are, and a hook under each corner — the spreader that takes a craft
+ * by its four lifting eyes (`spreader_beam · spreader_head_f · _a ·
+ * spreader_hook_0..3`). `craft` is the craft's plan (`sparkPlan`); the beam
+ * is centred on the fall, so it is the posts' spacing and not their
+ * stations that it carries.
+ */
+export function liftingBeam(root, { grey, rust }, { x, y, craft, bar, hook }) {
+  const [xf, xa] = craft.posts.x;
+  const half = (xf - xa) / 2;
+  const across = 2 * craft.posts.z + bar.t;
+  add(root, 'spreader_beam', box(2 * half + bar.t, bar.t, bar.t), grey, [x, y, 0]);
+  for (const [end, s] of [
+    ['f', 1],
+    ['a', -1],
+  ])
+    add(root, `spreader_head_${end}`, box(bar.t, bar.t, across), grey, [x + s * half, y, 0]);
+  let n = 0;
+  for (const s of [1, -1])
+    bothSides((side, sgn) =>
+      add(root, `spreader_hook_${n++}`, box(...hook.size), rust, [
+        x + s * half,
+        y - bar.t / 2 - hook.size[1] / 2,
+        sgn * craft.posts.z,
+      ])
+    );
+}
+
+/**
+ * The operator's cab slung off the girder, against one of its faces: the
+ * cab, its roof, and a rank of ports along its inboard face, each standing
+ * proud of the face so its top shows from above (`crane_cab · cab_roof ·
+ * cab_port_0..n`). The cab is
+ * crewed where the craft is not; its ports are the one lit window over the
+ * slip.
+ */
+export function craneCab(root, { black, grey, lampM }, { at, size, roof, ports }) {
+  add(root, 'crane_cab', box(...size), black, at);
+  add(root, 'cab_roof', box(size[0] + roof.over, roof.h, size[2] + roof.over), grey, [
+    at[0],
+    at[1] + size[1] / 2 + roof.h / 2,
+    at[2],
+  ]);
+  ports.x.forEach((dx, i) =>
+    add(root, `cab_port_${i}`, box(...ports.size), lampM, [at[0] + dx, ports.y, ports.z])
+  );
+}
+
+/**
+ * A berth on the slip, empty, cut to the craft it holds (`craft`, the
+ * craft's plan — `sparkPlan`) and turned by `facing` (−1 lays the craft
+ * bow-aft, toward the mouth it leaves by). In the file's order: the rim
+ * painted round the craft's plan in hazard amber, a strip an edge, lying on
+ * the slip floor at `y`; the two ways its skids sit on, run on `runOut`
+ * metres past its bow end where the berth launches, so the after berth's
+ * ways reach the sill; the four chocks the frame's corner posts stand
+ * inboard of, starboard pair then port; and the stop across the stern end
+ * (`berth_rim_<tag>0.. · berth_way_<tag>_s · _p · berth_chock_<tag>_s0 ..
+ * · berth_stop_<tag>`).
+ *
+ * The deck is built empty, because a craft aboard is counted and not drawn
+ * (docs/systems-combat.md §15) and a craft in the water is its own entity:
+ * modelled into the berth, it would be drawn twice whenever the flight was
+ * out. What the berth shows is where a craft goes and which way it leaves.
+ */
+export function craftBerth(root, { amber, grey, rust, black }, opts) {
+  const { tag, x: cx, y, facing = 1, craft, rim, ways, chocks, stop, runOut = 0 } = opts;
+  const X = (lx) => cx + facing * lx;
+  craft.rim.forEach(([ax, az], i) => {
+    const [bx, bz] = craft.rim[(i + 1) % craft.rim.length];
+    const A = [X(ax), az];
+    const B = [X(bx), bz];
+    const dx = B[0] - A[0];
+    const dz = B[1] - A[1];
+    add(
+      root,
+      `berth_rim_${tag}${i}`,
+      box(Math.hypot(dx, dz) + rim.w, rim.h, rim.w),
+      amber,
+      [(A[0] + B[0]) / 2, y + rim.h / 2, (A[1] + B[1]) / 2],
+      [0, Math.atan2(-dz, dx), 0]
+    );
+  });
+  const { from, to, z } = craft.skids;
+  const aft = X(from - ways.over);
+  const bow = X(to + ways.over + runOut);
+  bothSides((side, sgn) =>
+    add(root, `berth_way_${tag}_${side}`, box(Math.abs(bow - aft), ways.h, ways.w), grey, [
+      (aft + bow) / 2,
+      y + ways.h / 2,
+      sgn * z,
+    ])
+  );
+  bothSides((side, sgn) =>
+    craft.posts.x.forEach((px, i) =>
+      add(root, `berth_chock_${tag}_${side}${i}`, box(...chocks.size), rust, [
+        X(px),
+        y + chocks.size[1] / 2,
+        sgn * (craft.posts.z + chocks.out),
+      ])
+    )
+  );
+  add(root, `berth_stop_${tag}`, box(...stop.size), black, [X(stop.x), y + stop.size[1] / 2, 0]);
+}
+
+/**
+ * The gate across the slip's mouth, hinged at its foot so it drops outboard
+ * as the ramp a craft leaves by — the Freighter's hold door (`holdDoors`)
+ * turned athwartships. The gate, standing shut on the slip floor; the
+ * hazard stripe along its top edge, where the chart sees it; the hinge rail
+ * along its foot on the outboard face and the knuckles on it; and the
+ * dogging wheels on its inboard face, a rim and a hub each (`launch_gate ·
+ * gate_stripe · gate_hinge · gate_knuckle_0.. · gate_wheel_0.. ·
+ * gate_hub_0..`). Cladding throughout: the gate drops and the slip floods
+ * only for the instant of a launch, which is a transient and not a lamp
+ * (docs/models-plan.md §3.2 rule 3).
+ */
+export function launchGate(root, { grey, rust, amber }, opts) {
+  const { x, y, size, stripe, hinge, wheels } = opts;
+  const [t, h, w] = size;
+  add(root, 'launch_gate', box(t, h, w), grey, [x, y + h / 2, 0]);
+  add(root, 'gate_stripe', box(t + stripe.over, stripe.h, w), amber, [x, y + h + stripe.h / 2, 0]);
+  const outboard = x - t / 2 - hinge.r;
+  add(root, 'gate_hinge', cyl(hinge.r, hinge.r, w, 8), rust, [outboard, y + hinge.r, 0], ATHWART);
+  hinge.knuckles.forEach((kz, i) =>
+    add(
+      root,
+      `gate_knuckle_${i}`,
+      cyl(hinge.knuckle.r, hinge.knuckle.r, hinge.knuckle.length, 8),
+      grey,
+      [outboard, y + hinge.r, kz],
+      ATHWART
+    )
+  );
+  const inboard = x + t / 2;
+  wheels.z.forEach((wz, i) => {
+    add(root, `gate_wheel_${i}`, torus(wheels.R, wheels.rim, 5, 10), grey, [
+      inboard + wheels.stand,
+      wheels.y,
+      wz,
+    ], [0, Math.PI / 2, 0]);
+    add(root, `gate_hub_${i}`, cyl(wheels.hub.r, wheels.hub.r, wheels.hub.length, 8), rust, [
+      inboard + wheels.hub.length / 2,
+      wheels.y,
+      wz,
+    ], [0, 0, Math.PI / 2]);
+  });
+}
+
+/**
+ * The craft's lifting frame — "a riveted lifting frame" (UNIT — Spark): a
+ * rail down each side, a crossbar at each end on the corner posts'
+ * stations, a skid under each rail that sits the carrier's way, and at each
+ * corner a post with a hazard cap on its head and the eye the gantry's
+ * spreader takes standing on the cap (`frame_rail_s · _p · frame_bar_f ·
+ * _a · skid_s · _p · frame_post_s0 · post_cap_s0 · lift_eye_s0 · … ·
+ * frame_post_p1 · post_cap_p1 · lift_eye_p1`). `craft` is the plan
+ * (`sparkPlan`): the posts' stations and beam, the skids' run and beam, and
+ * the skids' sole, which is the craft's lowest point and the height the
+ * cradle's ways meet it at.
+ */
+export function liftFrame(root, { grey, rust, amber }, { craft, rail, bar, skid, post, cap, eye }) {
+  const [xf, xa] = craft.posts.x;
+  const zr = craft.posts.z;
+  bothSides((side, sgn) =>
+    add(root, `frame_rail_${side}`, box(rail.to - rail.from, rail.h, rail.w), grey, [
+      (rail.from + rail.to) / 2,
+      rail.y,
+      sgn * zr,
+    ])
+  );
+  for (const [end, x] of [
+    ['f', xf],
+    ['a', xa],
+  ])
+    add(root, `frame_bar_${end}`, box(bar.t, rail.h, 2 * zr + rail.w), grey, [x, rail.y, 0]);
+  const { from, to, z, sole } = craft.skids;
+  bothSides((side, sgn) =>
+    add(root, `skid_${side}`, box(to - from, skid.h, skid.w), rust, [
+      (from + to) / 2,
+      sole + skid.h / 2,
+      sgn * z,
+    ])
+  );
+  bothSides((side, sgn) =>
+    craft.posts.x.forEach((x, i) => {
+      add(root, `frame_post_${side}${i}`, box(post.t, post.top - post.foot, post.t), grey, [
+        x,
+        (post.top + post.foot) / 2,
+        sgn * zr,
+      ]);
+      add(root, `post_cap_${side}${i}`, box(cap.size, cap.h, cap.size), amber, [
+        x,
+        post.top + cap.h / 2,
+        sgn * zr,
+      ]);
+      add(root, `lift_eye_${side}${i}`, torus(eye.R, eye.t, 5, 10), rust, [
+        x,
+        post.top + cap.h + eye.R,
+        sgn * zr,
+      ]);
+    })
+  );
+}
+
+/**
+ * The craft's drive — "a riveted drive box aft with the exhaust louvres
+ * laid on its roof and an open four-bladed screw behind it, no shroud and no
+ * cowl" (UNIT — Spark): the box, its roof, the louvres on the roof in the
+ * vent — the kit's `louvres`, laid on a roof where the chart counts them —
+ * the shaft out of the box's after face, the hub, and the blades, plates
+ * through the hub a half-turn apart over `blades.count`, so two plates are
+ * four blades (`drive_box · drive_roof · drive_louvre_0.. · screw_shaft ·
+ * screw_hub · screw_blade_0 · _1`). No ring round the screw: "no shroud" is
+ * the loud kind, on a craft whose argument is being heard.
+ */
+export function craftDrive(root, { black, grey, rust, vent }, opts) {
+  const { box: body, roof, louvres: lv, shaft, hub, blades } = opts;
+  const onX = [0, 0, Math.PI / 2];
+  add(root, 'drive_box', box(...body.size), black, body.at);
+  add(root, 'drive_roof', box(...roof.size), grey, roof.at);
+  louvres(root, 'drive_louvre', vent, lv);
+  add(root, 'screw_shaft', cyl(shaft.r, shaft.r, shaft.length, 8), rust, shaft.at, onX);
+  // Laid on X by a quarter turn about Z, a cylinder's top lands on −X: the
+  // hub's tip radius is the geometry's `rTop`, so it draws in astern.
+  add(root, 'screw_hub', cyl(hub.rTip, hub.r, hub.length, 8), grey, hub.at, onX);
+  for (let i = 0; i < blades.count; i++)
+    add(root, `screw_blade_${i}`, box(...blades.size), grey, blades.at, [(i * Math.PI) / blades.count, 0, 0]);
+}
+
+/**
+ * One short thick gun on an open ring, no shield — the Derrick's `barbette`
+ * at a craft's scale, which that builder cannot reach because its cradle and
+ * barrel are the Derrick's to the metre: the seat plate on the crown, the
+ * ring it trains on in hazard amber, the drum, the cradle, the barrel laid
+ * forward and drawn in toward its mouth, and the collar at the muzzle
+ * (`gun_seat · gun_ring · gun_drum · gun_cradle · gun_barrel · gun_muzzle`).
+ * Nothing on it is lit: the muzzle flares for the instant of a shot, a
+ * transient and not a lamp.
+ */
+export function craftGun(root, { black, grey, rust, amber }, opts) {
+  const { x, seat, ring, drum, cradle, barrel, muzzle } = opts;
+  const onX = [0, 0, Math.PI / 2];
+  add(root, 'gun_seat', box(...seat.size), grey, [x, seat.y, 0]);
+  add(root, 'gun_ring', cyl(ring.r, ring.r, ring.h, 12), amber, [x, ring.y, 0]);
+  add(root, 'gun_drum', cyl(drum.rTop, drum.r, drum.h, 12), grey, [x, drum.y, 0]);
+  add(root, 'gun_cradle', box(...cradle.size), black, [x + cradle.dx, cradle.y, 0]);
+  // Rolled onto its side by a quarter turn about Z, a cylinder's top lands
+  // on −X, so the breech radius is the geometry's `rTop`.
+  add(root, 'gun_barrel', cyl(barrel.rBreech, barrel.rMuzzle, barrel.length, 10), grey, [
+    barrel.breech + barrel.length / 2,
+    barrel.y,
+    0,
+  ], onX);
+  add(root, 'gun_muzzle', cyl(muzzle.r, muzzle.r, muzzle.length, 10), rust, [
+    barrel.breech + barrel.length + muzzle.length / 2 - muzzle.sink,
+    barrel.y,
+    0,
+  ], onX);
+}
+
 export { THREE };
