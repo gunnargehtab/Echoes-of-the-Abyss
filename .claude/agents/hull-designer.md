@@ -1,6 +1,6 @@
 ---
 name: hull-designer
-description: Design a hull's look and author its shape — the STYLE+FACTION+UNIT block in docs/asset-prompts-3d.md, the authored HULL_LENGTH_M, the plan outline, and the hull script under tools/hull-models/ that builds the GLB. Use this for any issue labelled fable-5.1 (#540 — porting a modelled hull to a script, or authoring an unmodelled one). It does not write stat blocks, sim mechanisms, doctrine or tests, and it does not review its own bake — hull-reviewer is the gate.
+description: Design a hull's look and author its shape — the STYLE+FACTION+UNIT block in docs/asset-prompts-3d.md, the plan outline, and the hull, structure or prop script under tools/hull-models/ that builds the GLB. Use this for any issue labelled fable-5.1 (#540 — porting a modelled hull or prop to a script, or authoring an unmodelled one). It does not write stat blocks, sim mechanisms, doctrine or tests, and it does not review its own bake — hull-reviewer is the gate.
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: fable
 ---
@@ -38,11 +38,15 @@ the brief; the numbers are constraints, not suggestions.
    `UNIT — <Name> (pair with <Faction>): <role>, <length> m — <the argument>`, then the
    SIG figures in parentheses, then the silhouette in concrete nouns, then the lighting
    clause last. Study the transports subsection before writing; match its register.
-2. **`HULL_LENGTH_M`** in `packages/frontend/src/game/silhouettes.ts` — the authored design
-   length. It is the number `hull-intake` rescales the export to, so it is a design
-   decision with downstream teeth. Cite it in the UNIT block too; the two must agree.
+2. **The design length, read rather than written.** `HULL_LENGTH_M` in
+   `packages/frontend/src/game/silhouettes.ts` is `UNIT_STATS[kind].hullLengthM` from
+   `packages/shared/src/units.ts`, a stat-block field and so not yours (see "Staying in
+   your lane"). It is the number `hull-intake` rescales the export to: build at it, and
+   cite it in the UNIT block, since the two must agree. If the design wants another
+   length, say so in your report and leave the field alone.
 3. **The plan outline**, drawn *once* and in one of two places — never both. A kind with
-   no approved model carries a hand-drawn `HULL_OUTLINE` in `silhouettes.ts`: draw it to
+   no approved model carries a hand-drawn entry in `HAND_DRAWN_OUTLINE` in
+   `silhouettes.ts`, which has been empty since #862 modelled the last kind: draw it to
    read as the navy's grammar at RTS distance, and check it against its neighbours in the
    same file. A kind that has a model does **not**: its outline is cut from the GLB by
    `node tools/hull-maps/outlines.mjs` into `hullOutlines.generated.ts`, which is
@@ -52,7 +56,9 @@ the brief; the numbers are constraints, not suggestions.
 4. **A plate class** in `packages/frontend/src/game/hullTextures.ts`, if the hull needs one
    the existing classes do not cover.
 5. **The hull script** — `tools/hull-models/hulls/<hull>.mjs`, or
-   `structures/<kind>-<navy>.mjs` for a structure. This is where the GLB comes from now:
+   `structures/<kind>-<navy>.mjs` for a structure, or `props/<thing>.mjs` for an
+   environment prop (`env-<thing>.glb`, composed from `seabed.mjs` rather than a navy's
+   module, since a prop belongs to nobody). This is where the GLB comes from now:
    the Derrick and the Responsory were built rather than generated in the Claude Design
    picker, and `docs/asset-prompts-3d.md` rule 3 and
    `docs/graphics-standards.md` § "Where the GLB comes from" both describe that path.

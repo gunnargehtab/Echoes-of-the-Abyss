@@ -16,10 +16,10 @@
  * A script and its binary can disagree silently — edit a faction module,
  * forget to re-run one of its hulls, and nothing downstream notices, because
  * intake and the map bake read the file and never the script. This is what
- * notices. It walks both script directories — `hulls/` and, since #553,
- * `structures/` — because a faction module now feeds both, and a structure
- * script left un-run is exactly the silent disagreement this exists to
- * catch. Each script runs as its own process with `HULL_MODELS_OUT` pointing
+ * notices. It walks every script directory — `hulls/`, `structures/` since
+ * #553 and `props/` since #869 — because a shared module feeds more than one
+ * of them, and a script left un-run is exactly the silent disagreement this
+ * exists to catch. Each script runs as its own process with `HULL_MODELS_OUT` pointing
  * at a scratch directory (kit.mjs `outputPath`), so the committed files are
  * never touched; the scratch GLB and the committed one are then read back
  * (glb.mjs) and compared part by part — name, material, triangle count and
@@ -80,7 +80,7 @@ const scratch = mkdtempSync(join(tmpdir(), 'hull-models-'));
 let failed = 0;
 try {
   const only = process.argv.slice(2);
-  const scripts = ['hulls', 'structures'].flatMap((dir) =>
+  const scripts = ['hulls', 'structures', 'props'].flatMap((dir) =>
     readdirSync(join(here, dir))
       .filter((f) => f.endsWith('.mjs'))
       .filter((f) => only.length === 0 || only.some((word) => f.includes(word)))
@@ -88,7 +88,7 @@ try {
       .map((file) => [dir, file])
   );
   if (only.length && scripts.length === 0) {
-    console.error(`no script under hulls/ or structures/ matches ${only.join(', ')}`);
+    console.error(`no script under hulls/, structures/ or props/ matches ${only.join(', ')}`);
     process.exit(2);
   }
   for (const [dir, script] of scripts) {
