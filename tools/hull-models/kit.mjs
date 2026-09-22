@@ -24,6 +24,12 @@
  *   hulls/*.mjs    one hull, composed from its navy's vocabulary. Holds only
  *                  what is unique to that hull.
  *
+ * `structures/*.mjs` is one structure kind in one navy, the same way. The
+ * environment props (#869) are the same split with the ground for a navy:
+ * `seabed.mjs` is their shape language — the Block 4 materials and the
+ * table builders, since a prop belongs to nobody — and `props/*.mjs` one
+ * prop each, writing `env-<thing>.glb`.
+ *
  * Conventions the intake harness and the runtime both rely on:
  *
  * - **Metres, and metre-true.** Build at the design `hullLengthM`; intake warns
@@ -1909,3 +1915,89 @@ export function reactorIntakeArm(
       yaw
     );
 }
+
+/* --------------------------------------------------------------------------
+ * Tables — the Block 4 props' ports (#869, off #540 Phase 5).
+ *
+ * The fourteen environment props are Claude Design exports of another kind
+ * from the roster's: no part of a stone prop is a primitive as three built
+ * it. A crag's peak is a six-facet drum whose every vertex the generator
+ * pushed by hand — not by a formula the kit could carry but by a random it
+ * did not keep — and pushed by *index*, so the seam vertex three doubles at
+ * θ = 0 and 2π went two ways and the drum tore along it, and a cylinder's
+ * cap centres, one a segment in three's layout, each took a y of their own.
+ * A trench slab is a polyhedron the generator stitched itself, five prisms
+ * and chunks in one buffer with their caps five metres off plane.
+ * `parts.mjs` prints both as "non-indexed, N triangles — an extrusion, a
+ * sweep or a table", and a table is what each is.
+ *
+ * Two builders, then, for the two kinds of table a port transcribes:
+ * `tabled` for a buffer that is a constructor's *topology* under the
+ * export's own vertices, and `faceted` for one that is nobody's. Both write
+ * what the files carry — non-indexed, flat-shaded, position and normal and
+ * nothing else. No UVs on purpose: the runtime merges every mesh under one
+ * material into one geometry and refuses a bucket whose members disagree on
+ * attributes (environmentModels.ts, hull-intake's bake), and the approved
+ * files carry none. `factions/pelagia.mjs` `grownBody` is the precedent for
+ * a table under a constructor and folds its seam; these do not, because
+ * these exports tore theirs.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The finish every buffer in the Block 4 files has: non-indexed, one
+ * normal a triangle, no UVs. A part the generator left as three built it —
+ * a crag's ledge is a plain box — still carries this, because the whole
+ * scene went through it on the way out.
+ */
+export function flatShaded(geo) {
+  const flat = geo.index ? geo.toNonIndexed() : geo;
+  flat.deleteAttribute('uv');
+  flat.computeVertexNormals();
+  return flat;
+}
+
+/**
+ * A constructor's topology under the export's own vertices: `geo` is the
+ * three primitive with the right segment counts — its radii and lengths are
+ * overwritten — and `table` one `[x, y, z]` per *indexed* vertex in three's
+ * own order, seam duplicates and cap centres included, which is the order
+ * `tools/hull-models/parts.mjs` and a port's extraction both read. A row
+ * count that is not the constructor's is a transcription slip and fails
+ * here rather than in the maps. The result is the file's buffer: torn where
+ * the export tore, and `flatShaded`.
+ */
+export function tabled(geo, table) {
+  const pos = geo.attributes.position;
+  if (table.length !== pos.count)
+    throw new Error(`tabled: ${table.length} rows for a constructor of ${pos.count} vertices`);
+  table.forEach((p, i) => pos.setXYZ(i, p[0], p[1], p[2]));
+  return flatShaded(geo);
+}
+
+/**
+ * A buffer from a point table and triangle triples, in the file's own
+ * triangle order and winding — the hand-stitched polyhedra of the trench
+ * props, which no constructor accounts for. Flat-shaded and non-indexed, as
+ * `tabled` writes and as the files carry it; an index off the table fails
+ * here.
+ */
+export function faceted(points, triangles) {
+  const v = [];
+  triangles.forEach((t, i) => {
+    for (const k of t) {
+      if (!points[k])
+        throw new Error(`faceted: triangle ${i} names point ${k} of ${points.length}`);
+      v.push(...points[k]);
+    }
+  });
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
+  geo.computeVertexNormals();
+  return geo;
+}
+
+/**
+ * `n` copies of one row — a cap's centre, which three repeats once a
+ * segment and an export that left it alone leaves alike.
+ */
+export const rep = (n, row) => Array.from({ length: n }, () => row);
