@@ -52,6 +52,20 @@ export const FURNITURE_OUTLINE_ALPHA = {
   inertSiteRim: 0.28,
 } as const;
 
+/**
+ * Rung 6's quietest outline: a hull's detection ring while the player has not
+ * selected it (EchoRenderer `drawRings`, docs/ui-ux.md §3.5), half
+ * the selected ring's alpha. It is the player's own exposure, so the ink sits
+ * under it in every SIG colour (docs/map-visuals.md §5).
+ *
+ * Rung 6 is not yet held above rung 5: in the standard and tritanopia
+ * palettes this ring lifts the ground less than rung 5's floor. That is the
+ * ladder audit's to settle (#866), not the ink's.
+ */
+export const INSTRUMENT_OUTLINE_ALPHA = {
+  unselectedRing: 0.18,
+} as const;
+
 /** Rec. 709 on the encoded bytes — how the palette tests and a screenshot measure. */
 export function encodedLuminance(color: number): number {
   return (
@@ -67,6 +81,16 @@ export function encodedLuminance(color: number): number {
  */
 export function strokeLift(color: number, alpha: number, ground: number): number {
   return alpha * (encodedLuminance(color) - encodedLuminance(ground));
+}
+
+/** The unselected detection ring's least lift over one ground, across the SIG colours. */
+export function unselectedRingLift(palette: Palette, ground: number): number {
+  const { sigLow, sigMid, sigHigh } = palette.ui;
+  return Math.min(
+    ...[sigLow, sigMid, sigHigh].map((color) =>
+      strokeLift(color, INSTRUMENT_OUTLINE_ALPHA.unselectedRing, ground)
+    )
+  );
 }
 
 /** Rung 5's floor over one ground: the least lift any of its quiet outlines gives. */

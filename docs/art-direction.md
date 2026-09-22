@@ -59,7 +59,7 @@ because the seabed is shouting, the seabed is wrong.
 What gives the ground its shape at the survey dolly is not on this list, because it is not
 ground: **survey ink** — isobaths and coastlines, hue-neutral and a constant pixel wide —
 is specified in [map-visuals.md](map-visuals.md) §4, with the ladder that keeps it below
-the quietest map-furniture outline in §5.
+the quietest map-furniture outline and below your own unselected detection ring in §5.
 
 Within a region, the ground is allowed **texture, not information**. The renderer lays a
 deterministic detail relief under the authored floor and lights it with the shared key

@@ -151,10 +151,18 @@ palette. The draw sites take their alphas from there. The tests hold every ink s
 the least of them, over the darkest and the palest ground, in all four palettes. When
 furniture gets quieter, the ink has to follow it down.
 
-**Phase 1 measures rung 4 under rung 5, and nothing more.** The other rungs are stated, not
-yet held; phase 2 audits them. One place is known where the stated order does not hold, and
-§11 records it: rung 6's unselected detection ring lifts less than the ink, and less than
-rung 5, in the standard and tritanopia palettes.
+**The ink also sits under your own detection ring.** A hull's ring while you have not selected
+it is rung 6's quietest outline ([ui-ux.md](ui-ux.md) §3.5), and it is your own exposure: a
+line of seabed that out-shouted it would bury the one reading a quiet navy lives by. In
+tritanopia at mid SIG it lifts the kelp fill by 0.044, which caps the coast near 9.9%; it is
+drawn at 9.5%.
+`ladder.ts` holds its alpha, the draw site takes it from there, and the tests hold every ink
+stroke under it in every SIG colour. The owner chose this on #865, over raising the ring.
+
+**Phase 1 measures rung 4 under rung 5 and under that ring, and nothing more.** The other
+rungs are stated, not yet held; phase 2 audits them. One break is known: the unselected ring
+lifts the ground less than rung 5's floor in the standard and tritanopia palettes, so rung 6
+is not yet above rung 5. That is #866's to settle.
 
 Two consequences worth naming:
 
@@ -291,22 +299,11 @@ Two things the first draft got wrong. It drew the ink as absolute colours, and a
 line is loudest over the darkest ground: over a black trench its coast out-shouted a kelp rim.
 Blending the ink at an alpha in encoded space, as the mark layer does, is what made §5 a
 comparison the tests can hold. And it weighed only two rims. The dormant hazard rim is the
-quietest outline in three of the four palettes, and it is what holds the coast at 13%. That
-is the ladder working: at the survey dolly the ink is quiet, because it has to be.
+quietest outline in three of the four palettes. Then the unselected detection ring was found
+under the ink, and the owner chose to bring the ink down: the coast is 9.5% and the band lines
+9%. That is the ladder working: at the survey dolly the ink is quiet, because it has to be.
 
 ## 11. Open questions
-
-- **The unselected detection ring is quieter than the ink in two palettes.** A hull's ring
-  that the player has not selected is drawn at 0.18 in its SIG colour, half the selected
-  ring's alpha ([ui-ux.md](ui-ux.md) §3.5). In tritanopia at mid SIG it lifts black ground by
-  0.061 and the kelp fill by 0.044. The coast lifts them by 0.070 and 0.057, and the major
-  line by 0.065 and 0.053. The high-SIG ring over kelp lifts 0.053 in both the standard and
-  tritanopia palettes, under the coast. It is also under rung 5's floor. Both are lines, so
-  §5's haze rule does not cover it. There are two remedies, and both change what is drawn:
-  - bring the coast, major and border ink to 0.099 or below, the bound tritanopia's mid-SIG
-    ring over kelp sets, and add the ring to the test's ceiling;
-  - raise the unselected ring's alpha, which moves the half-the-selected-ring ratio that
-    §3.5 of [ui-ux.md](ui-ux.md) fixes.
 
 - **The thermocline isobath.** The 1,200 m layer decides who can hear whom, which makes it the
   most tactical depth on the map. "Reading the Water" draws no line at it *in the water*, and

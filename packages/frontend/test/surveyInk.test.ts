@@ -12,7 +12,12 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { Biome, DEPTH, DEPTH_BANDS } from '@echoes/shared';
 import { BIOME_COLOR, PALETTE_NAMES, PALETTES, ROCK_FACE } from '../src/game/palette.ts';
-import { encodedLuminance, furnitureFloorLift, strokeLift } from '../src/game/ladder.ts';
+import {
+  encodedLuminance,
+  furnitureFloorLift,
+  strokeLift,
+  unselectedRingLift,
+} from '../src/game/ladder.ts';
 import {
   MAJOR_ISOBATHS_M,
   MINOR_ISOBATH_M,
@@ -98,6 +103,26 @@ describe('the loudness ladder, rung 4 under rung 5', () => {
     // the palest fill means positive over every fill.
     for (const [kind, alpha] of Object.entries(SURVEY_ALPHA)) {
       assert.ok(strokeLift(SURVEY_INK_COLOR, alpha, PALEST_GROUND) > 0, `${kind} vanishes`);
+    }
+  });
+
+  it('lifts every ground less than an unselected detection ring, in every SIG colour', () => {
+    // §5. The ring is the player's own exposure (ui-ux.md §3.5), and a line
+    // of seabed ink that out-shouted it would bury the one reading a quiet
+    // navy lives by. The owner chose the ink coming down over the ring going
+    // up (#865).
+    for (const name of PALETTE_NAMES) {
+      for (const ground of [DARKEST_GROUND, PALEST_GROUND]) {
+        const ceiling = unselectedRingLift(PALETTES[name], ground);
+        for (const [kind, alpha] of Object.entries(SURVEY_ALPHA)) {
+          const lift = strokeLift(SURVEY_INK_COLOR, alpha, ground);
+          assert.ok(
+            lift < ceiling,
+            `${name}: ${kind} ink lifts ${ground.toString(16)} by ${lift.toFixed(4)}, ` +
+              `the unselected ring only by ${ceiling.toFixed(4)}`
+          );
+        }
+      }
     }
   });
 

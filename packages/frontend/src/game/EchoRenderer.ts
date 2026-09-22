@@ -129,7 +129,7 @@ import {
   sigColor,
   type PaletteName,
 } from './palette.ts';
-import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
+import { FURNITURE_OUTLINE_ALPHA, INSTRUMENT_OUTLINE_ALPHA } from './ladder.ts';
 import {
   actionFor,
   BUILD_ACTION_KIND,
@@ -1117,7 +1117,7 @@ export function insideAnotherReach(
  * Half the selected ring's, so selection still reads as selection: the gate
  * puts the ring on screen and selection is still what makes it the subject.
  */
-const LOUD_RING_ALPHA = 0.18;
+const LOUD_RING_ALPHA = INSTRUMENT_OUTLINE_ALPHA.unselectedRing;
 
 /**
  * The one curve both of the collar's effects ride — docs/ui-ux.md §3.5.

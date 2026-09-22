@@ -50,11 +50,15 @@ export const SURVEY_ALPHA = {
   /** Every 100 m of floor. The quietest ink line. */
   minor: 0.08,
   /** A depth-band boundary: the Shelf's foot and the Abyssal's lip. */
-  major: 0.12,
+  major: 0.09,
   /** A cell edge between two biomes — a propagation-factor boundary. Dashed. */
-  border: 0.12,
-  /** A cell edge between water and rock. Solid, and the loudest ink. */
-  coast: 0.13,
+  border: 0.09,
+  /**
+   * A cell edge between water and rock. Solid, and the loudest ink — held
+   * under the unselected detection ring, which binds at about 0.099
+   * (tritanopia, mid SIG, over the kelp fill).
+   */
+  coast: 0.095,
 } as const;
 
 /** TUNABLE — line widths in device pixels, constant at every zoom (rule 4). */
