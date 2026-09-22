@@ -130,6 +130,15 @@ light"): points and seams only, the ember as the ceiling, static or on the 5 Hz 
 inert hazard site's hatching are texture inside a mark whose rim already speaks for it. A
 ladder that weighed them would rank the grain of a mark rather than the mark.
 
+**An edgeless haze is not weighed per pixel against a line.** Below Tier 3 a contact is its
+column and nothing else: nested ribbons with no edge anywhere
+([art-direction.md](art-direction.md) "Camera & Projection"). A fresh Tier-1 column's core is
+about 0.12 of its tier colour, so per pixel it lifts the ground less than the ink does, in every
+palette. It is a different kind of mark, not a quieter one. A haze spans hundreds of metres of
+water and a line is a pixel or two wide, so the eye reads a haze by its extent and a line by its
+edge. The per-pixel metric compares lines with lines; a haze answers to gate 7's glance test.
+The owner settled this on #865.
+
 The ladder is measured, not just stated. A stroke's weight is how far it lifts the pixel
 under it, in encoded luminance, which is how a screenshot measures it. The ink blends in
 encoded space, the way the mark layer's strokes do, so an ink line and a furniture rim over
@@ -143,10 +152,9 @@ the least of them, over the darkest and the palest ground, in all four palettes.
 furniture gets quieter, the ink has to follow it down.
 
 **Phase 1 measures rung 4 under rung 5, and nothing more.** The other rungs are stated, not
-yet held; phase 2 audits them. Two places are known where the stated order does not hold, and
-§11 records both. Rung 6's unselected detection ring lifts less than the ink, and less than
-rung 5, in the standard and tritanopia palettes. Rung 7's faintest mark, a fresh Tier-1
-contact, lifts less than either in every palette.
+yet held; phase 2 audits them. One place is known where the stated order does not hold, and
+§11 records it: rung 6's unselected detection ring lifts less than the ink, and less than
+rung 5, in the standard and tritanopia palettes.
 
 Two consequences worth naming:
 
@@ -294,23 +302,11 @@ is the ladder working: at the survey dolly the ink is quiet, because it has to b
   0.061 and the kelp fill by 0.044. The coast lifts them by 0.070 and 0.057, and the major
   line by 0.065 and 0.053. The high-SIG ring over kelp lifts 0.053 in both the standard and
   tritanopia palettes, under the coast. It is also under rung 5's floor. Both are lines, so
-  "a haze is not a line" does not cover it. There are two remedies, and both change what is
-  drawn:
+  §5's haze rule does not cover it. There are two remedies, and both change what is drawn:
   - bring the coast, major and border ink to 0.099 or below, the bound tritanopia's mid-SIG
     ring over kelp sets, and add the ring to the test's ceiling;
   - raise the unselected ring's alpha, which moves the half-the-selected-ring ratio that
     §3.5 of [ui-ux.md](ui-ux.md) fixes.
-
-- **A fresh Tier-1 contact is quieter than the ink, per pixel.** Tier 1 is its column and
-  nothing else. The core composites to about 0.12 of the tier colour. It lifts black ground by
-  0.044–0.053 and the kelp fill by 0.032–0.041, depending on the palette. The coast lifts
-  them by 0.070 and 0.057. In tritanopia over kelp the minor isobath (0.035) out-lifts it too.
-  Rung 5 was already louder than Tier 1 before survey ink landed.
-  [Art-direction.md](art-direction.md) "Reading the Sea Floor" says nothing on the ground may
-  compete with a return. There are three readings, and choosing is a design call:
-  - an edgeless haze is an area and a line is not, so the two are not weighed per pixel;
-  - Tier 1 stands outside the ladder, as world light does;
-  - the ink comes down under Tier 1, which would put the coast below today's minor line.
 
 - **The thermocline isobath.** The 1,200 m layer decides who can hear whom, which makes it the
   most tactical depth on the map. "Reading the Water" draws no line at it *in the water*, and
