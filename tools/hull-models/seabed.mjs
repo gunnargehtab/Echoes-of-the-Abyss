@@ -23,8 +23,8 @@
  *   export's own vertices (kit.mjs `tabled`, `drum` below), a trench slab
  *   is a polyhedron stitched by hand (kit.mjs `faceted`, `prism` and
  *   `chunk`), and a script transcribes rather than fits — "a formula that
- *   nearly fits is a different prop". The three parts of the five stone
- *   props that *are* a formula (a crag's three ledges, the boulder's crack)
+ *   nearly fits is a different prop". The four parts of the five stone
+ *   props that *are* a formula (crag A's three ledges, the boulder's crack)
  *   are written as one.
  * - **Two names carry two finishes.** `coral_stone` is #3A2B24 at roughness
  *   0.95 on the coral growth, the ruin block and the dome shard and #171D19
@@ -45,10 +45,19 @@
  *   bake's and no file uses them. They are cited as the hex the file
  *   carries (kit.mjs `hex`, #630), not given a token they do not have.
  *
- * Every file is X-long or square in plan and every node's transform is an
+ * A prop is never yawed, so a script places its parts with kit.mjs `add`
+ * and the file's own numbers and never `drawn`. Not because the files are
+ * X-long — crag B, the spire and the vent chimney are longer on Z by
+ * intake's measure — but because the environment branch never turns one:
+ * env intake skips the length-on-X yaw (hull-intake's page.html, "props
+ * skip the yaw — they have no bow") and the runtime scatters each instance
+ * at a random yaw of its own (environmentModels.ts, environment.ts). A
+ * port that turned a Z-long prop onto X would bake and draw turned, and
+ * `diff.mjs` would not say so: it yaws each Z-long file onto X on its own
+ * before comparing, so a before file it turned and an after file the port
+ * had already turned read as the same shape. Every node's transform is an
  * XYZ Euler the generator set (the crag's `peak_fourth` prints as
- * (−π, 1.34, −π), which is a yaw of 1.8), so a prop places its parts with
- * kit.mjs `add` and the file's own numbers, no `drawn`.
+ * (−π, 1.34, −π), which is a yaw of 1.8).
  */
 import { THREE, clad, lamp, hex, box, flatShaded, tabled } from './kit.mjs';
 
@@ -130,9 +139,10 @@ export const block = (w, h, d) => flatShaded(box(w, h, d));
 
 /**
  * A wedge: a box `w × h × d` whose top face is pinched to `pinch` of its
- * depth — the boulder's crack line, a slab with a knife edge up. The one
- * stone part in the five that is a formula rather than a table, and exact:
- * the file's top corners sit at 0.15 · 0.225 to the float.
+ * depth — the boulder's crack line, a slab with a knife edge up. With crag
+ * A's three ledges, one of the four stone parts in the five that is a
+ * formula rather than a table, and exact: the file's top corners sit at
+ * 0.15 · 0.225 to the float.
  */
 export function wedge(w, h, d, pinch) {
   const geo = box(w, h, d);
@@ -206,33 +216,50 @@ export function column(rings) {
 }
 
 /**
- * Where a prop stands: on the ground, and footprint-true.
+ * Where a prop stands: footprint-true, and on the ground where its file
+ * puts it there.
  *
- * Grounded first — the root lifted so the lowest vertex sits on y = 0 —
- * because that is what every approved root carries: the crags' 0.14956 and
- * 3.64956 and the boulder's 0.25210 are each the negative of
- * `Box3.setFromObject`'s floor over the parts, to the last digit, and
- * derived here the same way rather than typed. Then held at `footprintM`
- * by the measure intake and the runtime take — three's `Box3.setFromObject`
- * over the whole root, the larger of its X and Z extents, no yaw, since a
- * prop has no bow (hull-intake's page.html, environmentModels.ts) — by
- * multiplying whatever scale the root already carries and its lift with
- * it, so the ground stays at y = 0. The approved trench slab measured
- * 24.47 against its 25 and baked with a rescale warning; a port lands
- * intake's factor on ×1.000, which is kit.mjs `fitFootprint`'s argument
- * for a structure. A root that is already true to a picometre (the
- * boulder's, whose export carried its own fit) is left exactly as it is.
+ * Held at `footprintM` by the measure intake takes — three's
+ * `Box3.setFromObject` over the whole root, each part's local box through
+ * its transform, the larger of its X and Z extents, no yaw (hull-intake's
+ * page.html) — by multiplying whatever scale the root already carries and
+ * its lift with it, so a floor at y = 0 stays there. The approved trench
+ * slab measured 24.47 against its 25 and baked with a rescale warning; a
+ * port lands intake's factor on ×1.000, which is kit.mjs `fitFootprint`'s
+ * argument for a structure. A root that is already true to a picometre
+ * (the boulder's, whose export carried its own fit) is left exactly as it
+ * is. The runtime's measure is not this one: environmentModels.ts merges
+ * the parts and measures the vertices, which a rotated part's box
+ * overhangs, so a prop with leaning parts draws larger than intake
+ * reviewed it (the crags by 10–16 %, the boulder by 23 %); that gap
+ * predates the ports and has its own issue.
+ *
+ * `ground` lifts the root first so the measure's floor sits on y = 0 —
+ * `Box3`'s floor over the parts' boxes, not the lowest vertex: the two are
+ * the same on an upright box and differ on a leaning one (the coral tower's
+ * box floor is −0.67 to its vertices' −0.42). It is opt-in because it is
+ * what three of the fourteen approved roots carry and eleven do not: the
+ * crags' 0.14956 and 3.64956 and the boulder's 0.25210 are each the
+ * negative of that floor to the last digit and are derived here rather
+ * than typed, while the coral tower and the kelp cluster sit below y = 0
+ * on identity roots and stay there. A lift a file does not carry is a
+ * change to what intake bakes, and `diff.mjs` reports one only as a
+ * "shift" line it then divides out — so a port passes `ground` when its
+ * file's root has a lift and not otherwise.
  *
  * `drawn` is the footprint the script's header states the export measured
  * before the fit, checked to `tolerance` so a mistyped row fails here and
  * not in the maps (kit.mjs `metreTrue` makes the same bargain). Returns the
  * measure and the factor, for the record.
  */
-export function stand(root, footprintM, { drawn: expected, tolerance = 1e-3 } = {}) {
-  root.position.set(0, 0, 0);
+export function stand(
+  root,
+  footprintM,
+  { ground = false, drawn: expected, tolerance = 1e-3 } = {}
+) {
   root.updateMatrixWorld(true);
   const bb = new THREE.Box3().setFromObject(root);
-  root.position.y = -bb.min.y;
+  if (ground) root.position.y -= bb.min.y;
   const size = bb.getSize(new THREE.Vector3());
   const drawn = Math.max(size.x, size.z);
   if (expected !== undefined && Math.abs(drawn - expected) > tolerance)

@@ -1934,20 +1934,36 @@ export function reactorIntakeArm(
  * Two builders, then, for the two kinds of table a port transcribes:
  * `tabled` for a buffer that is a constructor's *topology* under the
  * export's own vertices, and `faceted` for one that is nobody's. Both write
- * what the files carry — non-indexed, flat-shaded, position and normal and
- * nothing else. No UVs on purpose: the runtime merges every mesh under one
- * material into one geometry and refuses a bucket whose members disagree on
- * attributes (environmentModels.ts, hull-intake's bake), and the approved
- * files carry none. `factions/pelagia.mjs` `grownBody` is the precedent for
- * a table under a constructor and folds its seam; these do not, because
- * these exports tore theirs.
+ * what the five stone files carry — the two crags, the boulder and the
+ * trench pair, whose every buffer is non-indexed and flat-shaded, position
+ * and normal and nothing else. No UVs on purpose: the runtime merges every
+ * mesh under one material into one geometry and refuses a bucket whose
+ * members disagree on attributes (environmentModels.ts, hull-intake's
+ * bake), and the approved files carry none.
+ *
+ * THAT IS THE STONE FILES ONLY. The other nine are not all so: the coral
+ * growth's four `branch_*` and the coral tower's `plate_1..5` are indexed
+ * and smooth-shaded (normals 20–45° off their faces), and the ruin block
+ * and the dome shard carry indexed boxes. `tabled` and `faceted` always
+ * flatten, and neither `check.mjs` nor `diff.mjs` reads a normal, so a
+ * port that fed a smooth part through either would pass every gate and
+ * ship a faceted part. A port reproduces the file's index and its normals
+ * as the file has them, and compares the NORMAL accessor itself, since no
+ * tool here does. `parts.mjs --table <part>` prints an indexed part's
+ * normals beside its positions for that reason.
+ *
+ * `factions/pelagia.mjs` `grownBody` is the precedent for a table under a
+ * constructor and folds its seam; these do not, because these exports tore
+ * theirs.
  * ------------------------------------------------------------------------ */
 
 /**
- * The finish every buffer in the Block 4 files has: non-indexed, one
+ * The finish every buffer in the five stone files has: non-indexed, one
  * normal a triangle, no UVs. A part the generator left as three built it —
  * a crag's ledge is a plain box — still carries this, because the whole
- * scene went through it on the way out.
+ * scene went through it on the way out. Not for a part whose file is
+ * indexed or smooth (the section header says which): this throws the
+ * file's normals away and computes flat ones.
  */
 export function flatShaded(geo) {
   const flat = geo.index ? geo.toNonIndexed() : geo;
@@ -1960,11 +1976,13 @@ export function flatShaded(geo) {
  * A constructor's topology under the export's own vertices: `geo` is the
  * three primitive with the right segment counts — its radii and lengths are
  * overwritten — and `table` one `[x, y, z]` per *indexed* vertex in three's
- * own order, seam duplicates and cap centres included, which is the order
- * `tools/hull-models/parts.mjs` and a port's extraction both read. A row
- * count that is not the constructor's is a transcription slip and fails
- * here rather than in the maps. The result is the file's buffer: torn where
- * the export tore, and `flatShaded`.
+ * own order, seam duplicates and cap centres included. That is the order
+ * `node tools/hull-models/parts.mjs <model.glb> --table <part> --as
+ * cylinder:9,1` prints, with the sections named and a topology that does
+ * not fit refused, so a table here is re-derivable from the file it
+ * transcribes. A row count that is not the constructor's is a
+ * transcription slip and fails here rather than in the maps. The result is
+ * the file's buffer: torn where the export tore, and `flatShaded`.
  */
 export function tabled(geo, table) {
   const pos = geo.attributes.position;
@@ -1978,8 +1996,11 @@ export function tabled(geo, table) {
  * A buffer from a point table and triangle triples, in the file's own
  * triangle order and winding — the hand-stitched polyhedra of the trench
  * props, which no constructor accounts for. Flat-shaded and non-indexed, as
- * `tabled` writes and as the files carry it; an index off the table fails
- * here.
+ * `tabled` writes and as the two trench files carry it; an index off the
+ * table fails here. `parts.mjs --table <part>` prints a buffer's points in
+ * order of first appearance and its triangles over them, which is the
+ * table this takes; a script may renumber the points (the spire's rings)
+ * so long as the triangle sequence it emits is the file's.
  */
 export function faceted(points, triangles) {
   const v = [];

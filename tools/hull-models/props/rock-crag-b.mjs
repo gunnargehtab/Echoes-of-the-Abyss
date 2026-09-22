@@ -29,7 +29,8 @@
  * the port, held at 30 m by the measure intake takes: the export measured
  * 28.9229 on Z, its longer plan axis, and baked at ×1.037 with a rescale
  * warning, so the root carries that one factor (seabed.mjs `stand`).
- * `diff.mjs env-rock-crag-b HEAD` divides it out and lists nothing else.
+ * `diff.mjs env-rock-crag-b dce68ef` — the pre-port binary, which is also
+ * the default rev — divides it out and lists nothing else.
  */
 import { THREE, add, group, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
@@ -393,7 +394,7 @@ const SHOULDER_D = [
 ];
 add(crag, 'shoulder_d', seabed.lump(SHOULDER_D), stone, [7.5, 1, -6], [0.1, 0.8, 0.1]);
 
-const { drawn, k } = seabed.stand(crag, FOOTPRINT, { drawn: DRAWN });
+const { drawn, k } = seabed.stand(crag, FOOTPRINT, { ground: true, drawn: DRAWN });
 console.log(
   `env_rock_crag_b: drawn ${drawn.toFixed(4)} across, held at ${FOOTPRINT} m (×${k.toFixed(5)})`
 );

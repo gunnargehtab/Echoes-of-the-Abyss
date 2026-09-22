@@ -17,28 +17,31 @@
  * the ring heights are the orb's own, and the underside is flattened to
  * 0.7 of the top's 3.5 m — so a table in three's own vertex order under
  * seabed.mjs `orb` (kit.mjs `tabled` says how the pole rows and the torn
- * seam read); a `crack` across its crown, the one part of the five stone
- * props that is a formula rather than a table: a 5.5 × 1.2 × 0.45 box with
- * its top face pinched to 0.15 of its depth (`wedge`), yawed 0.9 and
- * tipped a few degrees; and a `silt_skirt` round its foot, a twelve-facet
- * drum 0.55 m thick torn the same way as the crags' base.
+ * seam read); a `crack` across its crown, which with crag A's three ledges
+ * is one of the four parts of the five stone props that is a formula
+ * rather than a table: a 5.5 × 1.2 × 0.45 box with its top face pinched to
+ * 0.15 of its depth (`wedge`), yawed 0.9 and tipped a few degrees; and a
+ * `silt_skirt` round its foot, a twelve-facet drum 0.55 m thick torn the
+ * same way as the crags' base.
  *
  * The root is the export's — `env_open_boulder`, and unlike the other
  * four it carries a non-uniform scale: (0.91879, 1.00840, 0.91879) with a
  * lift of 0.25210, which is the raw model held to 12 m across its longer
  * plan axis and to the table's 6 m tall, then sat on y = 0. Every one of
- * those digits is `Box3.setFromObject` over the raw parts (13.0607 by
- * 5.9500 by 11.0183), so they are derived below rather than typed, and
- * seabed.mjs `stand` finds the result already footprint-true and leaves it
- * exactly as it is: intake reported ×1.000 on this one file before the
- * port, and reports it after.
+ * those digits is `Box3.setFromObject` over the raw parts — `RAW` below,
+ * 13.0607 by 5.9500 by 11.0183, which the script measures and refuses to
+ * differ from, since a fit to 12 m would hide a mistyped row — so they are
+ * derived rather than typed, and seabed.mjs `stand` finds the result
+ * already footprint-true and leaves it exactly as it is: intake reported
+ * ×1.000 on this one file before the port, and reports it after.
  */
 import { THREE, add, exportGlb, rep } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
 
 const FOOTPRINT = 12;
 const HEIGHT = 6;
-const DRAWN = 12;
+/** The raw model's extents before the export's own fit, x by y by z. */
+const RAW = [13.0607, 5.95, 11.0183];
 
 const silt = seabed.ground.stoneSilt();
 
@@ -194,13 +197,21 @@ const SILT_SKIRT = [
 add(boulder, 'silt_skirt', seabed.drum(SILT_SKIRT, 12, 1), silt, [0, 0.275, 0], [0, 0.35, 0]);
 
 // The export's own root fit, derived as the header says: the raw model
-// held to 12 m across and 6 m tall by the boxes of its parts.
+// held to 12 m across and 6 m tall by the boxes of its parts. The raw
+// extents are checked against `RAW` first, because after the fit the
+// footprint is 12 whatever the table says.
 boulder.updateMatrixWorld(true);
 const raw = new THREE.Box3().setFromObject(boulder).getSize(new THREE.Vector3());
+raw.toArray().forEach((v, i) => {
+  if (Math.abs(v - RAW[i]) > 1e-3)
+    throw new Error(
+      `env_open_boulder: raw ${'xyz'[i]} extent ${v.toFixed(4)}; the header says ${RAW[i]}`
+    );
+});
 const across = FOOTPRINT / Math.max(raw.x, raw.z);
 boulder.scale.set(across, HEIGHT / raw.y, across);
 
-const { drawn, k } = seabed.stand(boulder, FOOTPRINT, { drawn: DRAWN });
+const { drawn, k } = seabed.stand(boulder, FOOTPRINT, { ground: true });
 console.log(
   `env_open_boulder: drawn ${drawn.toFixed(4)} across, held at ${FOOTPRINT} m (×${k.toFixed(5)})`
 );

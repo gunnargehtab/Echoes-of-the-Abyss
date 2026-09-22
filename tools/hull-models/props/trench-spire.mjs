@@ -30,8 +30,10 @@
  * has it, at the origin with the buffer already sitting on y = 0 — and,
  * new in the port, held at 20 m by the measure intake takes: the export
  * measured 20.1012 on Z, its longer plan axis, and baked at ×0.995, so
- * the root carries that one factor (seabed.mjs `stand`).
- * `diff.mjs env-trench-spire HEAD` divides it out and lists nothing else.
+ * the root carries that one factor (seabed.mjs `stand`, with no lift,
+ * since the file's root has none). `diff.mjs env-trench-spire dce68ef` —
+ * the pre-port binary, which is also the default rev — divides it out and
+ * lists nothing else.
  */
 import { THREE, add, faceted, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
