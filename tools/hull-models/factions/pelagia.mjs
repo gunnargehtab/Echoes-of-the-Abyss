@@ -53,6 +53,7 @@ import {
   plan,
   loft,
   sweep,
+  uvAlike,
   bothSides,
   polar,
   part,
@@ -3093,21 +3094,6 @@ const LINING_SECTION = [
   [0.485, 0.24],
   [0.525, 0.55],
 ];
-
-/**
- * A swept geometry given the UV set every lathe and orb in this module
- * carries — factions/hadron.mjs `uvAlike`, the same four lines for the same
- * reason: the runtime merges one material's meshes into a draw, three's
- * `mergeGeometries` refuses a bucket whose members disagree on attributes,
- * hull-intake warns on exactly that, and kit.mjs `sweep` writes positions
- * and normals only. Nothing samples a texture, so the values are zero and
- * the attribute's presence is the point.
- */
-function uvAlike(geo) {
-  const n = geo.attributes.position.count;
-  geo.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(2 * n), 2));
-  return geo;
-}
 
 /** The lining's floor, in unit half-height: where a scar sits in it. */
 const LINING_FLOOR = -0.4;
