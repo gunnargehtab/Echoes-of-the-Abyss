@@ -968,19 +968,24 @@ export function textSaying(root: Container, needle: string): string | null {
  * `CanvasTextPipe.addRenderable` — the only caller of `_updateGpuText` — is
  * never reached, and no glyph canvas is regenerated and no texture uploaded.
  *
- * Not quite free, and the difference is one frame's worth: the *first* change
- * after the label is hidden does force an instruction-set rebuild, because
+ * Unrasterised is not the same as free, and this probe is not a licence to
+ * read it that way. Two costs survive hiding. The *first* change after the
+ * label is hidden forces one instruction-set rebuild, because
  * `validateRenderable` reads the moved key before the collect pass gets to
- * skip the node. Only the first — `didViewUpdate` latches true, nothing
- * clears it while the label is undrawn, and `onViewUpdate` returns on it
- * (`ViewContainer.mjs:84`), so every later change while hidden is free. What
- * this probe counts is the glyph canvas and the upload, which is the cost the
- * `BitmapText` argument is about.
+ * skip the node; later changes force none, since `didViewUpdate` latches true
+ * with nothing to clear it while the label is undrawn. And measuring never
+ * stops at all: `ViewContainer.onViewUpdate` marks the bounds dirty at
+ * `:83`, *before* the `didViewUpdate` return at `:84`, so anything that reads
+ * a hidden label's size pays one `CanvasTextMetrics.measureText` for every
+ * changed string.
  *
- * The clock is the live instance: `EchoRenderer.ts:7398` stamps
- * `clockLabel.text` and `:7399` then hides the clock when the strip is too
- * narrow for it, which on a whole-tree walk ticked ten phantom rasterisations
- * into a 600-frame budget.
+ * The clock is the live instance of all of it. `EchoRenderer.ts:7398` stamps
+ * `clockLabel.text`, `:7399` reads `clockLabel.width` on the very next line
+ * and hides the clock when the strip is too narrow for it. So a hidden clock
+ * goes on measuring once a second, and on a whole-tree walk it also ticked
+ * ten phantom rasterisations into a 600-frame budget. What this probe counts
+ * is the glyph canvas and the upload — the cost the `BitmapText` argument is
+ * about — and those, and only those, a hidden label does not pay.
  *
  * Counted work again, for the reason this whole file gives: the wall-clock
  * price of a rasterisation belongs to whatever machine ran it, while the

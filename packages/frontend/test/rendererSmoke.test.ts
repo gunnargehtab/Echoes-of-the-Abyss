@@ -491,7 +491,11 @@ describe('renderer smoke test: the chart', () => {
       // retired-inclusive denominator and loosen the budget by the difference.
       const labels = textContents(world.app.stage).length;
       let rasters = 0;
-      keys = textStyleKeys(world.app.stage);
+      // `keys` carries over from the still window rather than being re-sampled.
+      // A fresh sample is drawn-only, so a label that hid during that window
+      // would lose the key it was last painted with, and its repaint here
+      // would read as a first build and go uncounted — the same blind spot the
+      // fold above exists to close, one seam along.
       for (let frame = 0; frame < 600; frame++) {
         if (frame % 12 === 0) {
           const snapshot = cannedSnapshot(600 + frame);
