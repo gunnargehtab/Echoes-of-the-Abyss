@@ -60,11 +60,11 @@ function progress(items, states) {
   };
 }
 
-function itemRow(item, states, repo, content) {
+function itemRow(item, states, repo, content, openLabel = 'planned') {
   const known = states.get(item.number);
   const state = known?.state ?? 'unknown';
   const href = known?.url ?? `https://github.com/${repo}/issues/${item.number}`;
-  const label = { closed: 'done', open: 'planned', unknown: 'unknown' }[state];
+  const label = { closed: 'done', open: openLabel, unknown: 'unknown' }[state];
   const copy = content.items[item.number];
   return `<li class="item ${state}" data-state="${state}">
   <span class="mark" aria-hidden="true"></span>
@@ -85,8 +85,8 @@ function itemRow(item, states, repo, content) {
  * claim on the first screen. A finished phase rolls nothing up: every row it
  * has is the record, and the whole card is already folded.
  */
-function rowRun(items, states, repo, content, roll, label = null) {
-  const row = (i) => itemRow(i, states, repo, content);
+function rowRun(items, states, repo, content, roll, label = null, openLabel = 'planned') {
+  const row = (i) => itemRow(i, states, repo, content, openLabel);
   const live = roll ? items.filter((i) => states.get(i.number)?.state !== 'closed') : items;
   const done = roll ? items.filter((i) => states.get(i.number)?.state === 'closed') : [];
   const list = live.length === 0 ? '' : `<ul class="items">${live.map(row).join('')}</ul>`;
@@ -104,14 +104,41 @@ function rowRun(items, states, repo, content, roll, label = null) {
   }</div>`;
 }
 
+/**
+ * What the doc says a phase is. `Now` is the one being worked and `Next` the
+ * one queued behind it; `Later` is not in the sequence at all. The rest are
+ * history, and read their state off their rows.
+ */
+function kindOf(phase) {
+  if (phase.later) return 'later';
+  if (phase.verdict === 'Now') return 'now';
+  if (phase.verdict === 'Next') return 'next';
+  return null;
+}
+
 function phaseCard(phase, states, repo, content, open) {
   const p = progress(phase.items, states);
-  const when = formatSpan(span(phase.items, states));
-  const status = p.complete ? 'complete' : p.closed > 0 ? 'active' : 'pending';
-  const copy = content.phases[phase.number] ?? {};
+  const kind = kindOf(phase);
+  // Only a phase that has started has dates. Next has not, and Later is
+  // unscheduled by definition, so a "since" date on either would claim work
+  // that is not happening.
+  const when = kind === 'next' || kind === 'later' ? null : formatSpan(span(phase.items, states));
+  const status =
+    kind === 'later'
+      ? 'later'
+      : kind === 'now'
+        ? 'active'
+        : p.complete
+          ? 'complete'
+          : p.closed > 0
+            ? 'active'
+            : 'pending';
+  const copy = content.phases[phase.key] ?? {};
   const title = copy.title ?? phase.title;
   const roll = !p.complete;
-  const run = (items, label) => rowRun(items, states, repo, content, roll, label);
+  // An open row under Later is parked, not planned, and says so.
+  const openLabel = kind === 'later' ? 'later' : 'planned';
+  const run = (items, label) => rowRun(items, states, repo, content, roll, label, openLabel);
   const groups =
     phase.groups.length === 0
       ? run(phase.items)
@@ -124,9 +151,14 @@ function phaseCard(phase, states, repo, content, open) {
           )
           .join('') +
         (phase.items.some((i) => i.group === null) ? run(phase.items.filter((i) => i.group === null)) : '');
-  const verdict = p.complete ? 'done' : p.closed > 0 ? 'in progress' : 'planned';
+  const verdict = kind ?? (p.complete ? 'done' : p.closed > 0 ? 'in progress' : 'planned');
+  const test = copy.done ?? (phase.done === null ? null : inline(phase.done, repo));
+  const doneWhen =
+    test === null
+      ? ''
+      : `<p class="done-when"><b>Done when</b> ${copy.done ? escape(copy.done) : test}</p>`;
 
-  return `<details class="phase ${status}" id="phase-${phase.number}"${open ? ' open' : ''}>
+  return `<details class="phase ${status}" id="phase-${phase.key}"${open ? ' open' : ''}>
   <summary>
     <span class="node" aria-hidden="true"></span>
     <span class="phase-eyebrow">
@@ -143,6 +175,7 @@ function phaseCard(phase, states, repo, content, open) {
   </summary>
   <div class="phase-body">
     ${copy.blurb ? `<p class="summary">${escape(copy.blurb)}</p>` : ''}
+    ${doneWhen}
     ${groups}
   </div>
 </details>`;
@@ -161,18 +194,25 @@ export function render({
   fontHref,
   sheet = null,
   unplaced = 0,
+  unrecorded = 0,
   portraits = {},
 }) {
   const all = roadmap.phases.flatMap((phase) => phase.items);
   const overall = progress(all, states);
-  const done = roadmap.phases.filter((p) => progress(p.items, states).complete);
-  const live = roadmap.phases.filter((p) => !progress(p.items, states).complete);
   const haveState = states.size > 0;
+  // Later is not a phase in the sequence: it is never "finished", never
+  // "next", and has a section of its own.
+  const sequence = roadmap.phases.filter((p) => !p.later);
+  const later = roadmap.phases.filter((p) => p.later);
+  const done = sequence.filter((p) => progress(p.items, states).complete);
 
-  // Without state nothing is "complete", so every phase would land under
-  // "what is next"; fall back to the newest phase there and the rest as past.
-  const next = haveState ? live : roadmap.phases.slice(-1);
-  const past = haveState ? done : roadmap.phases.slice(0, -1);
+  // Ahead is what the doc calls Now and Next, plus any older phase the
+  // tracker says has reopened. Without state nothing is complete, so only
+  // the doc's own word decides.
+  const ahead = (p) =>
+    kindOf(p) !== null || (haveState && !progress(p.items, states).complete);
+  const next = sequence.filter(ahead);
+  const past = sequence.filter((p) => !ahead(p));
 
   const pillars = content.pillars
     .map(
@@ -239,6 +279,7 @@ export function render({
     .join('\n');
 
   const nextPhases = next.map((phase) => phaseCard(phase, states, repo, content, true)).join('\n');
+  const laterPhases = later.map((phase) => phaseCard(phase, states, repo, content, true)).join('\n');
   const pastPhases = past.map((phase) => phaseCard(phase, states, repo, content, false)).join('\n');
 
   const began = haveState ? firstFiled(states) : null;
@@ -268,6 +309,14 @@ export function render({
       ? ''
       : `      <p class="lede backlog"><a href="https://github.com/${repo}/issues?q=is%3Aissue+is%3Aopen">${unplaced === 1 ? 'One more open item in the tracker is' : `${unplaced} more open items in the tracker are`} not yet placed on this roadmap.</a></p>`;
 
+  // The same honesty for the record: closed work that no row and no epic row
+  // stands for. The history below is what the rows say, and this is how much
+  // they leave out.
+  const unrecordedLine =
+    unrecorded === 0
+      ? ''
+      : `      <p class="lede backlog"><a href="https://github.com/${repo}/issues?q=is%3Aissue+is%3Aclosed">${unrecorded === 1 ? 'One closed issue is' : `${unrecorded} closed issues are`} recorded on no row here, and under no epic that has one.</a></p>`;
+
   const stats = [
     { n: counts.missions, cls: 'cool', label: 'Campaign missions', sub: 'playable today' },
     { n: counts.factions, cls: 'cool', label: 'Navies', sub: 'each a different answer to noise' },
@@ -283,7 +332,7 @@ export function render({
       n: done.length,
       cls: 'hot',
       label: 'Phases finished',
-      sub: `of ${roadmap.phases.length} on the roadmap`,
+      sub: `of ${sequence.length} on the roadmap`,
     },
   ]
     .filter((t) => typeof t.n === 'number')
@@ -547,6 +596,14 @@ section { padding: 4.5rem 0 1rem; }
 .phase.complete .bar.rail span { background: linear-gradient(90deg, var(--neon-teal), var(--neon-cyan)); }
 .phase.active .bar.rail span { background: linear-gradient(90deg, var(--neon-amber), var(--neon-magenta)); }
 .phase-body { padding: 0 1.15rem 1rem; border-top: 1px solid rgba(53, 224, 255, 0.1); }
+/* The test that closes a phase. Cyan, because it tells you. */
+.done-when { font-size: 0.82rem; margin: 0.2rem 0 0.6rem; max-width: 80ch; padding-left: 0.7rem; border-left: 1px solid rgba(53, 224, 255, 0.45); }
+.done-when b { display: block; font-size: 0.64rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-cyan); font-weight: 500; }
+/* Later is parked: no node colour, no bar colour, nothing that reads as live. */
+.phase.later { border-color: rgba(111, 138, 156, 0.22); }
+.phase.later .node { border-style: dashed; }
+.phase.later .verdict { color: var(--text-dim); border-style: dashed; }
+.phase.later .item.open { color: var(--text-dim); }
 .summary { font-size: 0.86rem; margin: 0.9rem 0 0.4rem; max-width: 80ch; }
 .group h4 { font-size: 0.68rem; letter-spacing: 0.2em; color: var(--text-cyan); margin: 1rem 0 0.2rem; }
 .items { list-style: none; margin: 0.4rem 0 0; padding: 0; }
@@ -664,7 +721,7 @@ ${gaugeMarkup(DIVE)}
       <li><a href="#navies">Navies</a></li>
       <li><a href="#play">Play</a></li>
       <li><a href="#next">Next</a></li>
-      <li><a href="#past">So far</a></li>
+${later.length > 0 ? '      <li><a href="#later">Later</a></li>\n' : ''}      <li><a href="#past">So far</a></li>
     </ul>
     <span class="pill" title="${escape(provenance)}"><b>${overall.pct}%</b> · ${overall.closed} of ${overall.total}</span>
   </div>
@@ -761,7 +818,7 @@ ${roughEdges}
   <section id="next">
     <div class="wrap">
       <div class="section-head"><h2>What is next</h2><span class="kicker">progress read live from the project tracker</span></div>
-      <p class="lede">Not a wish list: every line is tracked, and a phase is dated from the day its first issue was filed to the day its last one closed.</p>
+      <p class="lede">One phase at a time. The one being worked closes when its test passes, and the next takes its place. Every line is tracked.</p>
 ${backlog}
       <div class="controls" role="group" aria-label="Filter items">
         <button class="chip" type="button" data-filter="all" aria-pressed="true">All</button>
@@ -776,9 +833,23 @@ ${nextPhases}
     </div>
   </section>
 
-  <section id="past">
+${
+  later.length === 0
+    ? ''
+    : `  <section id="later">
+    <div class="wrap">
+      <div class="section-head"><h2>Later</h2><span class="kicker">parked or unscheduled, so undated</span></div>
+      <div class="timeline">
+${laterPhases}
+      </div>
+    </div>
+  </section>
+
+`
+}  <section id="past">
     <div class="wrap">
       <div class="section-head"><h2>The road so far</h2><span class="kicker">${past.length} phases finished</span></div>
+${unrecordedLine}
       <div class="timeline">
 ${pastPhases}
       </div>

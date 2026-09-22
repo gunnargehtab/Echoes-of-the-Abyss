@@ -298,7 +298,7 @@ test('content: every row of the real roadmap has a player-facing sentence', () =
     .map((i) => `#${i.number}`);
   assert.deepEqual(missing, [], `rows without copy in lib/content.mjs: ${missing.join(', ')}`);
   for (const phase of roadmap.phases) {
-    assert.ok(content.phases[phase.number]?.title, `${phase.id} has a player-facing title`);
+    assert.ok(content.phases[phase.key]?.title, `${phase.id} has a player-facing title`);
   }
   for (const group of roadmap.phases.flatMap((p) => p.groups)) {
     assert.ok(content.groups[group], `group "${group}" has a player-facing label`);

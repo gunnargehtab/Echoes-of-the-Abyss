@@ -34,7 +34,7 @@ import { fileURLToPath } from 'node:url';
 
 import * as content from './lib/content.mjs';
 import { driftReport } from './lib/drift.mjs';
-import { fetchIssueStates, fetchOpenIssues } from './lib/github.mjs';
+import { fetchAllIssues, fetchIssueStates } from './lib/github.mjs';
 import { parseRoadmap } from './lib/parse.mjs';
 import { render } from './lib/render.mjs';
 import { findPortraits } from './lib/portraits.mjs';
@@ -97,11 +97,25 @@ if (TOKEN === '') {
 // about the doc; this asks the doc about the tracker, so an issue filed since
 // the roadmap was last written is counted on the page and named in the log
 // rather than silently absent from both.
-const drift = driftReport({ markdown, roadmap, openIssues: await fetchOpenIssues(REPO, TOKEN) });
+// Closed work too: the history phases are a record, and the page says how
+// much of what was done no row records.
+const tracker = await fetchAllIssues(REPO, TOKEN);
+const drift = driftReport({
+  markdown,
+  roadmap,
+  openIssues: tracker.filter((i) => i.state === 'open'),
+  closedIssues: tracker.filter((i) => i.state === 'closed'),
+});
 if (drift.unplaced.length > 0) {
   console.error(
     `Open issues with no row in docs/ROADMAP.md (${drift.unplaced.length}): ` +
       drift.unplaced.map((i) => `#${i.number} ${i.title}`).join('; ')
+  );
+}
+if (drift.unrecorded.length > 0) {
+  console.error(
+    `Closed issues on no row, and under no issue that has one (${drift.unrecorded.length}): ` +
+      drift.unrecorded.map((i) => `#${i.number}`).join(', ')
   );
 }
 if (drift.unmentioned.length > 0) {
@@ -166,6 +180,7 @@ const html = render({
   fontHref: 'fonts/big-shoulders-display-latin.woff2',
   sheet,
   unplaced: drift.unplaced.length,
+  unrecorded: drift.unrecorded.length,
   portraits: portraits.found,
 });
 
@@ -184,6 +199,7 @@ console.error(
   `Wrote ${join(target, 'index.html')} — ${roadmap.phases.length} phases, ${numbers.length} items, ` +
     `${states.size} states resolved, ${counts.missions} missions, ${counts.maps} maps, ` +
     `${roadmap.sprints.length} sprints, ${drift.unplaced.length} open issues unplaced, ` +
+    `${drift.unrecorded.length} closed issues unrecorded, ` +
     `roster sheet ${sheetFile === null ? 'missing' : `from #${sheetFile.issue}`}, ` +
     `${Object.keys(portraits.found).length} of ${content.factions.length} navy portraits.`
 );
