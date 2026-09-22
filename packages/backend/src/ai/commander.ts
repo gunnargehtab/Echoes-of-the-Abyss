@@ -1301,13 +1301,13 @@ export class AiCommander implements AiPlayer {
     //
     // **A craft is not a hull, and the gun is why it looks like one** (#839).
     // Every craft is armed — a Spark 22, a Versicle 45 — so the damage test
-    // above admits the whole flight, and a flight is up to five entities
+    // below admits the whole flight, and a flight is up to five entities
     // (docs/units.md, "The craft"). No commander owns a deck yet: the want
     // that buys one waits for the order that uses it (#839), and this guard
     // lands ahead of both. What it would cost without it: `army.length` is the
-    // composition cycle's index, so a flight launching and expiring on its
-    // 120 s cell re-phases the navy's build order twice a match a hull, and it
-    // inflates `escorted`, `atTarget`, the massing high-water mark and
+    // composition cycle's index, so each craft that launches or expires moves
+    // the index and re-phases the navy's build order, and the flight inflates
+    // `escorted`, `atTarget`, the massing high-water mark and
     // `commandGardens`' spare. Five Trebles against the Directorate's massing
     // size of seven is most of an army made of hulls that take no order and
     // sink on their own.
@@ -3384,12 +3384,13 @@ export class AiCommander implements AiPlayer {
         if (statsFor(hull.kind).attackDamage <= 0) continue;
         // Not the flight (#839). A craft is armed, so the damage test admits
         // it; its suite is ready, so `decoyCooldownS` is absent and it passes
-        // that too; and it is always under way, so the movement gate never
-        // stops it either. But "a commander never orders one" (docs/units.md,
-        // "The craft") and `Match.owns` refuses every order to a craft, so the
-        // order is recorded and then dropped — and worse, `spent` above has
-        // already spent this torpedo's one answer on a hull that could not
-        // give it, leaving the escort that could have decoyed doing nothing.
+        // that too; and it keeps station on its carrier, so the movement gate
+        // passes it whenever the carrier is under way. But "a commander never
+        // orders one" (docs/units.md, "The craft") and `Match.owns` refuses
+        // every order to a craft, so the order is recorded and then dropped —
+        // and worse, this loop picks one hull per torpedo, so a craft picked
+        // here takes the torpedo's one answer and leaves the escort that could
+        // have decoyed doing nothing.
         if (statsFor(hull.kind).launchedFrom !== undefined) continue;
         const stood = this.stoodAt.get(hull.id);
         if (stood === undefined || distance(hull, stood) < UNDER_WAY_M) continue;

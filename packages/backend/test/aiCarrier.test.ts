@@ -61,7 +61,7 @@ function briefing(faction: Faction): AiBriefing {
  * The navy's carrier, read off the roster: the Slipway hull locked to this
  * faction that has a deck.
  *
- * Derived rather than listed, for `atTheRung`'s reason one file over — a
+ * Derived rather than listed, for `atTheRung`'s reason in `commander.ts` — a
  * second list here would be a copy of `PRODUCIBLE` free to drift, in the file
  * least likely to be edited when a wave moves a hull between yards.
  */
@@ -284,9 +284,9 @@ describe('the commander and its navy carrier', () => {
       // `observe`'s damage test admits the whole flight. `launchedFrom` is what
       // tells a craft from a hull (`packages/shared/src/units.ts`).
       //
-      // Measured on the unescorted fixture, plus a carrier and a full flight.
-      // If the craft counted, the navy would clear its escort floor on them
-      // alone and buy its ordnance hull.
+      // Measured on the unescorted fixture, one armed hull short of the floor,
+      // plus a carrier and a full flight. If the craft counted, the navy would
+      // clear its escort floor with them and buy its ordnance hull.
       const brief = briefing(faction);
       const craft = craftOf(faction);
       const deck = statsFor(carrier).flight!;
@@ -295,7 +295,7 @@ describe('the commander and its navy carrier', () => {
         escort: false,
         extra: [carrier, ...Array.from<UnitKind>({ length: deck.capacity }).fill(craft)],
       });
-      // The premise: the flight alone would carry this navy over the floor.
+      // The premise: counted, the flight would carry this navy over the floor.
       const armed = unescorted.units.filter(
         (u) => statsFor(u.kind).attackDamage > 0 && u.kind !== OWN_SCOUT[faction]
       ).length;

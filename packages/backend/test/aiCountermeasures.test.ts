@@ -285,16 +285,18 @@ describe('answering a torpedo with a decoy (#621)', () => {
   });
 
   it('does not spend the torpedo answer on a craft that cannot give it (#839)', () => {
-    // A craft passes all three of the gates above by accident: it is armed, so
-    // the damage test admits it; its suite is never on cooldown, so
-    // `decoyCooldownS` is absent; and it is always under way. But docs/units.md
+    // A craft passes all three of `commandCountermeasures`' per-hull gates by
+    // accident: it is armed, so the damage test admits it; its suite is never
+    // on cooldown, so `decoyCooldownS` is absent; and it keeps station on its
+    // carrier, so it is under way whenever the carrier is. But docs/units.md
     // "The craft" says a commander never orders one, and `Match.owns` refuses
     // every order to a craft — so the command would be recorded and dropped.
     //
-    // The cost is not the wasted line. `spent` claims a hull per torpedo, so a
-    // craft picked here spends the answer and the Corvette beside it — which
-    // could have decoyed — is never asked. Unreachable until a commander owns
-    // a deck; the guard lands ahead of the want that will buy one (#839).
+    // The cost is not the wasted line. The commander picks one hull per
+    // torpedo, so a craft picked here takes the answer and the Corvette beside
+    // it — which could have decoyed — is never asked. Unreachable until a
+    // commander owns a deck; the guard lands ahead of the want that will buy
+    // one (#839).
     const { brief, base } = rig(Faction.Bathyarch);
     const deck = statsFor(UnitKind.Gantry).flight!;
     const spark = statsFor(deck.craft);
