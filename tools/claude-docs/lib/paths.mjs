@@ -56,8 +56,13 @@ const FENCE_RE = /^ {0,3}```[\s\S]*?^ {0,3}```/gm;
 // lookahead refuses the newline instead, so the match simply fails and the
 // scan resumes at the next backtick — the stray one is skipped and the spans
 // after it pair with each other again.
+//
+// That lookahead is written for `\n` alone, and stays that way: `inlineSpans`
+// normalises line endings before any pattern here sees the text (#844).
 const INLINE_CODE_RE = /`((?:[^`\n]|\n(?![ \t]*\n))+)`/g;
 const GLOB_CHARS = /[*?{]/;
+// CommonMark's line endings, the two this file's patterns cannot spell.
+const LINE_ENDING_RE = /\r\n?/g;
 
 /**
  * A path without its trailing slash.
@@ -85,9 +90,38 @@ const stripSlash = (path) => (path.endsWith('/') ? path.slice(0, -1) : path);
  * [tools/echo-sim/scenarios/<name>.json]` names an argument shape, and a shell
  * line is free to reference a file it is about to create. Prose names a path in
  * an inline span, which is the thing this checks.
+ *
+ * **Line endings are normalised first, and that is the bound's real fix.**
+ * `INLINE_CODE_RE`'s blank-line lookahead spelled the bound `[ \t]*\n`, so on
+ * CRLF the newline it was inspecting was followed by `\r`, the lookahead failed
+ * to see the blank line, and the span crossed it — which inverts the check's
+ * answer in both directions: `` `docs/no.md is prose\r\n\r\nnot a span` ``
+ * yielded `docs/no.md`, prose across a paragraph break read as a live claim
+ * about the tree, and a stray backtick a paragraph above a real span hid it
+ * again. No *checkout* is CRLF — `.gitattributes` pins `* text=auto eol=lf`,
+ * which outranks `core.autocrlf` on every clone, and its own header says why.
+ * But `check.mjs:363` reads the working **tree**, not the index, and that is
+ * what `npm run docs:claude` runs against: a document an editor has just
+ * written back with CRLF is read as CRLF until it round-trips through git. So
+ * the line ending is still not this file's to assume (#844).
+ *
+ * Normalising rather than teaching that one lookahead to spell `\r?` is the
+ * cheaper bargain: every pattern here — the fence bound, the span bound, and
+ * whichever is added next — gets to assume `\n` means end of line, which is
+ * the assumption they were all written under anyway. It also answers the lone
+ * `\r`, which CommonMark counts as a line ending and `\r\n` alone would miss.
+ *
+ * **The gated set does not measure this, and saying so is the point.** All 23
+ * documents converted to CRLF extract the same 195 mentions as their LF
+ * selves, on `main` as well as here: every backtick in them is paired and no
+ * span crosses a blank line, so the bound never fires either way. The fault
+ * needs an unpaired backtick or a paragraph break inside a span — the shapes
+ * the tests beside this file construct — which is the same bargain the fence
+ * strip above records. LF extraction is unchanged by this fix: 0 of 23
+ * documents differ from `main`.
  */
 function inlineSpans(markdown) {
-  const prose = markdown.replace(FENCE_RE, '');
+  const prose = markdown.replace(LINE_ENDING_RE, '\n').replace(FENCE_RE, '');
   return [...prose.matchAll(INLINE_CODE_RE)].map((m) => m[1]);
 }
 
