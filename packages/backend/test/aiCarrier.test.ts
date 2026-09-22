@@ -1,25 +1,20 @@
 /**
- * The commander fields the navy's carrier (#839).
+ * The commander and its navy's carrier (#839), ahead of the buy.
  *
  * `docs/roster-plan.md` §2: "a hull the commander in `packages/backend/src/ai/`
  * never buys or never uses well does not exist in the baseline". #838 shipped
- * the four carriers and touched no doctrine, so all four were exactly that —
+ * the four carriers and touched no doctrine, so all four are exactly that —
  * in the roster, on the Slipway's page, and never in the water.
  *
- * What is asserted here is the *buy*, and the gates either side of it:
+ * The buy waits for the order that uses the deck. Nothing orders a carrier
+ * yet, so a bought one would sit at the Slipway, launching only at what comes
+ * inside its tether. What is asserted here is what lands first:
  *
- *   - every navy reaches its own carrier once the rung stands, the escort is
- *     met and the price is in the bank;
- *   - **one**, because the flight is paid on the population cap in advance
- *     (docs/economy.md §10) and a second deck is a second package of berths;
- *   - **not before the escort**, because a carrier has no gun and no
- *     countermeasure — docs/units.md's own sentence is "a carrier caught alone
- *     is a 3-berth hull dying quietly";
- *   - and the composition cycle is **untouched**, which is the half of this
- *     change that is easiest to break by accident. A carrier declared on a
- *     `composition` would be skipped by the cycle for having no gun and would
- *     re-phase every selection its navy makes; the commander declares it in a
- *     table beside `OWN_SCOUT` instead, and this file holds that.
+ *   - a navy's **flight is not its army**. Every craft is armed, so `observe`
+ *     would count the whole flight without its `launchedFrom` guard;
+ *   - and **no composition names a carrier**. A carrier has no gun, so the
+ *     cycle would skip the entry, and the entry would still change the list's
+ *     length and re-phase every selection its navy makes.
  *
  * The tables below are restated from the roster rather than imported from the
  * commander's own, on `aiRung.test.ts`'s terms: a test that imported them
@@ -66,7 +61,7 @@ function briefing(faction: Faction): AiBriefing {
  * The navy's carrier, read off the roster: the Slipway hull locked to this
  * faction that has a deck.
  *
- * Derived rather than listed, for `atTheRung`'s reason one file over — a
+ * Derived rather than listed, for `atTheRung`'s reason in `commander.ts` — a
  * second list here would be a copy of `PRODUCIBLE` free to drift, in the file
  * least likely to be edited when a wave moves a hull between yards.
  */
@@ -179,23 +174,20 @@ function escortFloor(faction: Faction): number {
 }
 
 /**
- * A navy with nothing left to want but the deck.
+ * The navy under test, as the hulls it has in the water.
  *
- * Every want in `commandProduction` bids into the same purse, and any one of
- * them still open would answer this file's question for it — so the economy is
- * staffed to the doctrine's target and the scout, the ordnance hull, the heavy
- * and the siege hull are all in the water. The Corvettes on the end are the
- * escort: the carrier's want is behind `attackAtArmySize * MASSING.MIN_FRACTION`
- * like the ordnance hull's.
+ * The default is a navy whose rung wants are all met — the economy staffed to
+ * the doctrine's target, and the scout, the ordnance hull, the heavy and the
+ * siege hull all in the water. It is only `snapshot()`'s filler; the flight
+ * test below replaces it.
  *
- * `escort: false` is the same navy one hull short of that floor, and it is
+ * `escort: false` is the fixture that test runs on: the same navy one armed
+ * hull short of the escort floor (`attackAtArmySize * MASSING.MIN_FRACTION`),
  * built rather than cut down to, because "no army" would answer the wrong
- * question. The heavy is kept — its want is the one in front of the carrier's
- * that is *not* escort-gated, so a fixture without it would see the heavy
- * bought and return before the carrier's want was ever read, and the test
- * would pass on a gate it never reached. The ordnance and siege hulls are
- * dropped instead: both wants are behind the same escort, so neither can mask
- * anything while it is shut.
+ * question. The heavy stays and counts toward it. The ordnance hull is dropped
+ * because its want is the probe: open, and shut only by the escort. The siege
+ * hull goes too: its want is behind the same escort, so it can mask nothing
+ * while that is shut.
  */
 function force(
   brief: AiBriefing,
@@ -280,120 +272,20 @@ function hullsBoughtOver(
   return bought;
 }
 
-describe('the commander fields its navy carrier', () => {
+describe('the commander and its navy carrier', () => {
   for (const faction of NAVIES) {
     const name = Faction[faction];
     const carrier = carrierOf(faction);
 
-    it(`${name} buys its ${UnitKind[carrier]} once the rung, the escort and the price are there`, () => {
-      const brief = briefing(faction);
-      const bought = new AiCommander(brief)
-        .observe(snapshot(brief, 6000, purseFor(carrier)))
-        .filter((c) => c.kind === 'produce')
-        .map((c) => (c as { unit: UnitKind }).unit);
-
-      assert.deepEqual(bought, [carrier], `${name} queues its carrier and nothing else`);
-    });
-
-    it(`${name} buys one ${UnitKind[carrier]} and not a second`, () => {
-      const brief = briefing(faction);
-      // Two minutes of standing still with the price in the bank, against a
-      // navy that already has one in the water. A want that counted wrongly
-      // would queue a deck every observation it could pay for.
-      const bought = hullsBoughtOver(brief, 120, {
-        ...purseFor(carrier),
-        ...force(brief, { extra: [carrier] }),
-      });
-      assert.equal(
-        bought.filter((k) => k === carrier).length,
-        0,
-        `${name} already holds a deck, so the want is closed`
-      );
-    });
-
-    it(`${name} does not buy its ${UnitKind[carrier]} before the escort`, () => {
-      const brief = briefing(faction);
-      const unescorted = force(brief, { escort: false });
-      // The premise, asserted rather than assumed: a fixture that happened to
-      // clear the floor would pass this test while measuring nothing. The army
-      // is what `observe` counts — armed, and not the navy's own scout.
-      const armed = unescorted.units.filter(
-        (u) => statsFor(u.kind).attackDamage > 0 && u.kind !== OWN_SCOUT[faction]
-      ).length;
-      assert.ok(
-        armed < escortFloor(faction),
-        `${name}'s fixture is below its own escort floor (${armed} < ${escortFloor(faction)})`
-      );
-
-      const bought = hullsBoughtOver(brief, 30, { ...purseFor(carrier), ...unescorted });
-      assert.equal(
-        bought.filter((k) => k === carrier).length,
-        0,
-        `${name} has no line to hold the water the deck would open in`
-      );
-    });
-
-    it(`${name} sees a queued ${UnitKind[carrier]} and does not order a second`, () => {
-      const brief = briefing(faction);
-      const home = brief.spawns[brief.slot]!;
-      const bought = hullsBoughtOver(brief, 60, {
-        ...purseFor(carrier),
-        structures: [
-          structure(20, StructureKind.Bastion, home),
-          structure(21, StructureKind.Foundry, { x: home.x + 200, y: home.y }),
-          structure(22, StructureKind.Refinery, { x: home.x - 200, y: home.y }),
-          structure(23, StructureKind.Slipway, { x: home.x - 400, y: home.y }, [carrier]),
-        ],
-      });
-      assert.equal(
-        bought.filter((k) => k === carrier).length,
-        0,
-        `${name} sees the hull on the ways and does not order a second`
-      );
-    });
-
-    it(`${name} does not let a queued ${UnitKind[carrier]} escort it`, () => {
-      // The other half of putting the carriers in `WANTED_SEPARATELY`, and the
-      // half the subtest above cannot see: `queuedArmy` filters on that list
-      // rather than on `joinsTheArmy`, so a deck on the ways would count
-      // toward the army's own size. Measured on the unescorted fixture, where
-      // one extra body is the difference — if the queued deck counted, the
-      // navy would read itself as escorted and buy its ordnance hull.
-      const brief = briefing(faction);
-      const home = brief.spawns[brief.slot]!;
-      const ordnance = OWN_ORDNANCE[faction];
-      const bought = hullsBoughtOver(brief, 60, {
-        ...force(brief, { escort: false }),
-        // The ordnance hull's price exactly, in the accounts it is written in,
-        // and not a nodule more. A fat purse does not make this test stronger,
-        // it makes it vacuous: `commandRefit` and `commandConstruction` both
-        // run ahead of `commandProduction` and both `return` once they spend,
-        // so a navy handed spare crystal buys a refit every observation and
-        // never reaches the want under test at all.
-        ...purseFor(ordnance),
-        structures: [
-          structure(20, StructureKind.Bastion, home),
-          structure(21, StructureKind.Foundry, { x: home.x + 200, y: home.y }),
-          structure(22, StructureKind.Refinery, { x: home.x - 200, y: home.y }),
-          structure(23, StructureKind.Slipway, { x: home.x - 400, y: home.y }, [carrier]),
-        ],
-      });
-      assert.equal(
-        bought.filter((k) => k === ordnance).length,
-        0,
-        `${name}'s escort-gated want stays shut behind a hull that has no gun`
-      );
-    });
-
     it(`${name} does not count its ${UnitKind[craftOf(faction)]} flight as the army`, () => {
-      // #839's own defect, and the one this change makes reachable: a craft is
-      // an ordinary unit in the owner's snapshot and every craft is armed, so
+      // #839's own defect, reachable once the want lands: a craft is an
+      // ordinary unit in the owner's snapshot and every craft is armed, so
       // `observe`'s damage test admits the whole flight. `launchedFrom` is what
       // tells a craft from a hull (`packages/shared/src/units.ts`).
       //
-      // Measured the same way as the queued deck above: on the unescorted
-      // fixture, plus a full flight. If the craft counted, the navy would clear
-      // its escort floor on them alone and buy its ordnance hull.
+      // Measured on the unescorted fixture, one armed hull short of the floor,
+      // plus a carrier and a full flight. If the craft counted, the navy would
+      // clear its escort floor with them and buy its ordnance hull.
       const brief = briefing(faction);
       const craft = craftOf(faction);
       const deck = statsFor(carrier).flight!;
@@ -402,7 +294,7 @@ describe('the commander fields its navy carrier', () => {
         escort: false,
         extra: [carrier, ...Array.from<UnitKind>({ length: deck.capacity }).fill(craft)],
       });
-      // The premise: the flight alone would carry this navy over the floor.
+      // The premise: counted, the flight would carry this navy over the floor.
       const armed = unescorted.units.filter(
         (u) => statsFor(u.kind).attackDamage > 0 && u.kind !== OWN_SCOUT[faction]
       ).length;
@@ -422,10 +314,10 @@ describe('the commander fields its navy carrier', () => {
   }
 
   it('leaves every composition alone, so no cycle is re-phased', () => {
-    // The other half of #839's first bullet, and the reason it is a table.
-    // A carrier on a composition would be skipped by the cycle anyway —
-    // `joinsTheArmy` is false for all four — while still changing the list's
-    // length, which is what the index is taken modulo.
+    // #839's first bullet asks for a composition entry; this is why the buy
+    // will be a want instead. A carrier on a composition would be skipped by
+    // the cycle anyway — `joinsTheArmy` is false for all four — while still
+    // changing the list's length, which is what the index is taken modulo.
     for (const faction of NAVIES) {
       const carrier = carrierOf(faction);
       assert.ok(
