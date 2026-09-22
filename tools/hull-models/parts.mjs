@@ -4,6 +4,10 @@
  *
  *   node tools/hull-models/parts.mjs <model.glb>              # every node
  *   node tools/hull-models/parts.mjs <model.glb> --contour <part>   # an extrusion's outline
+ *   node tools/hull-models/parts.mjs <model.glb> --table <part>     # a buffer as a table
+ *   node tools/hull-models/parts.mjs <model.glb> --table <part> --as cylinder:9,1
+ *   node tools/hull-models/parts.mjs <model.glb> --table <part> --as torus:5,8
+ *   node tools/hull-models/parts.mjs <model.glb> --table <part> --as dodecahedron
  *
  * `glb.mjs` reads a file as the bake sees it: world-space triangles, one
  * flat list. A port needs the other reading — the export's own frame: each
@@ -29,6 +33,31 @@
  * (`check.mjs` to the centimetre, `diff.mjs` to the triangle) — and a buffer
  * no constructor accounts for is printed as what it is: a table of points
  * the export pushed by hand, which is how the Commune scout's hull was found.
+ *
+ * `--table` prints such a buffer the way a script carries one, to five
+ * decimals, so a transcription is re-derivable from its file (#869, the
+ * Block 4 props). On its own it prints the distinct points in order of
+ * first appearance and the triangles over them, which is what kit.mjs
+ * `faceted` takes. With `--as <constructor>` — `cylinder:<facets>[,<rows>]`,
+ * `box[:<w>,<h>,<d>]`, `sphere:<w>,<h>`, `torus:<radial>,<tubular>` or
+ * `dodecahedron` — it prints one row per vertex of that three constructor
+ * in its own index order, sections named (a drum's torso rows then each
+ * cap's centres and ring; a box's six faces +x −x +y −y +z −z; an orb's
+ * rows from the top pole; a torus's sections round the tube, each a ring
+ * round the torus closed on its first corner, the last section the first
+ * again; a dodecahedron's twenty corners in the order three's buffer first
+ * reaches them, which is seabed.mjs `dodecahedronOf`'s order), a run of
+ * identical rows folded to `...rep(n, row)`, which is what kit.mjs `tabled`
+ * takes; it refuses a constructor whose index layout the buffer does not
+ * follow (two references to one vertex at two positions), so a table
+ * printed is a topology proved — and since a nine-facet drum with both
+ * caps and a dodecahedron are both 108 vertices over 36 triangles, the
+ * refusal is what tells the resonance pair's mounds from their boulders.
+ * seabed.mjs `drumOf`'s compact form is read off the `cylinder` rows by
+ * dropping each ring's closing copy and taking a cap's centre once. An
+ * indexed buffer is printed in the file's own vertex order with its index
+ * and its NORMAL rows beside the positions, because a smooth-shaded part's
+ * normals are the file's and no gate compares them.
  */
 import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
@@ -183,12 +212,193 @@ function contour(pos) {
   return pts;
 }
 
+/**
+ * A three constructor named on the command line, with the sections its
+ * index layout falls into — the order `--table --as` prints and kit.mjs
+ * `tabled` reads. `order` is the constructor's index: one entry per
+ * non-indexed buffer vertex naming the constructor vertex it is a copy of,
+ * and `count` how many of those there are.
+ */
+function constructorOf(spec) {
+  const [kind, args = ''] = spec.split(':');
+  const n = args ? args.split(',').map(Number) : [];
+  const indexed = (geo, sections) => ({
+    order: Array.from(geo.index.array),
+    count: geo.attributes.position.count,
+    sections,
+  });
+  if (kind === 'cylinder' && n.length >= 1) {
+    const [r, h = 1] = n;
+    const sections = [];
+    for (let y = 0; y <= h; y++) sections.push([`torso row ${y}`, r + 1]);
+    sections.push(['top cap centres', r], ['top cap ring', r + 1]);
+    sections.push(['bottom cap centres', r], ['bottom cap ring', r + 1]);
+    return indexed(new THREE.CylinderGeometry(1, 1, 1, r, h), sections);
+  }
+  if (kind === 'box') {
+    const [w = 1, h = 1, d = 1] = n;
+    const sections = [
+      ['+x face', (h + 1) * (d + 1)],
+      ['-x face', (h + 1) * (d + 1)],
+      ['+y face', (w + 1) * (d + 1)],
+      ['-y face', (w + 1) * (d + 1)],
+      ['+z face', (w + 1) * (h + 1)],
+      ['-z face', (w + 1) * (h + 1)],
+    ];
+    return indexed(new THREE.BoxGeometry(1, 1, 1, w, h, d), sections);
+  }
+  if (kind === 'sphere' && n.length === 2) {
+    const [w, h] = n;
+    const sections = [];
+    for (let iy = 0; iy <= h; iy++)
+      sections.push([
+        iy === 0 ? 'top pole row' : iy === h ? 'bottom pole row' : `ring ${iy}`,
+        w + 1,
+      ]);
+    return indexed(new THREE.SphereGeometry(1, w, h), sections);
+  }
+  // A torus: (radial + 1) sections round the tube, three's first section
+  // first, each (tubular + 1) corners round the torus from θ = 0 with the
+  // 2π copy last; the last section is the first again. seabed.mjs `torusOf`
+  // takes the sections without either closing copy.
+  if (kind === 'torus' && n.length === 2) {
+    const [radial, tubular] = n;
+    const sections = [];
+    for (let j = 0; j <= radial; j++)
+      sections.push([
+        j === radial
+          ? `tube section ${j} — section 0 again, closing the tube`
+          : `tube section ${j}`,
+        tubular + 1,
+      ]);
+    return indexed(new THREE.TorusGeometry(1, 0.3, radial, tubular), sections);
+  }
+  // A dodecahedron: non-indexed as PolyhedronGeometry writes it at detail
+  // 0, 108 vertices that are twenty corners three faces each. Its "index"
+  // is the map from each buffer vertex to the corner it copies, numbered in
+  // order of first appearance — seabed.mjs `dodecahedronOf`'s order, read
+  // off the constructor here the same way.
+  if (kind === 'dodecahedron') {
+    const pos = new THREE.DodecahedronGeometry(1, 0).attributes.position;
+    const seen = new Map();
+    const order = [];
+    for (let i = 0; i < pos.count; i++) {
+      const key = [pos.getX(i), pos.getY(i), pos.getZ(i)].map((v) => v.toFixed(5)).join();
+      if (!seen.has(key)) seen.set(key, seen.size);
+      order.push(seen.get(key));
+    }
+    return {
+      order,
+      count: seen.size,
+      sections: [['corners, in order of first appearance', seen.size]],
+      nonIndexed: true,
+    };
+  }
+  throw new Error(
+    `--as ${spec}: want cylinder:<facets>[,<rows>], box[:<w>,<h>,<d>], sphere:<w>,<h>, ` +
+      'torus:<radial>,<tubular> or dodecahedron'
+  );
+}
+
+/**
+ * A buffer as a script's table. `pos` and `nor` are the accessors' floats,
+ * `idx` the file's index or null. Without a constructor: distinct points in
+ * order of first appearance and the triangles over them (an indexed file
+ * keeps its own vertex order and index, and prints its normals). With one:
+ * one row per constructor vertex, mapped back through its index from the
+ * file's non-indexed buffer, every reference checked to agree.
+ */
+function table(name, pos, idx, nor, spec) {
+  const row = (p) => `[${p.map(f5).join(', ')}]`;
+  if (!spec) {
+    if (idx) {
+      console.log(`// ${name}: indexed, ${pos.length / 3} vertices in the file's order`);
+      console.log('// positions');
+      for (let i = 0; i < pos.length; i += 3)
+        console.log(`${row([pos[i], pos[i + 1], pos[i + 2]])}, // ${i / 3}`);
+      if (nor) {
+        console.log('// normals — the file\'s own, and a smooth part\'s are not the triangles\'');
+        for (let i = 0; i < nor.length; i += 3)
+          console.log(`${row([nor[i], nor[i + 1], nor[i + 2]])}, // ${i / 3}`);
+      }
+      console.log('// triangles');
+      const tris = [];
+      for (let t = 0; t < idx.length; t += 3)
+        tris.push(`[${idx[t]}, ${idx[t + 1]}, ${idx[t + 2]}]`);
+      console.log(tris.join(', '));
+      return;
+    }
+    const uniq = new Map();
+    const ids = [];
+    for (let i = 0; i < pos.length; i += 3) {
+      const key = [pos[i], pos[i + 1], pos[i + 2]].map(f5).join(',');
+      if (!uniq.has(key)) uniq.set(key, uniq.size);
+      ids.push(uniq.get(key));
+    }
+    console.log(
+      `// ${name}: ${uniq.size} points, ${ids.length / 3} triangles — kit.mjs \`faceted\``
+    );
+    console.log('// points, in order of first appearance');
+    [...uniq.keys()].forEach((k, i) => console.log(`${row(k.split(',').map(Number))}, // ${i}`));
+    console.log('// triangles');
+    const tris = [];
+    for (let t = 0; t < ids.length; t += 3) tris.push(`[${ids[t]}, ${ids[t + 1]}, ${ids[t + 2]}]`);
+    console.log(tris.join(', '));
+    return;
+  }
+  const { order, count, sections, nonIndexed } = constructorOf(spec);
+  const rows = new Array(count).fill(null);
+  let disagree = 0;
+  if (idx) {
+    if (nonIndexed || idx.length !== order.length || order.some((v, k) => v !== idx[k]))
+      throw new Error(`${name}: the file's index is not ${spec}'s`);
+    for (let i = 0; i < count; i++) rows[i] = [pos[3 * i], pos[3 * i + 1], pos[3 * i + 2]];
+  } else {
+    if (order.length !== pos.length / 3)
+      throw new Error(
+        `${name}: ${spec} references ${order.length} vertices, the buffer has ${pos.length / 3}`
+      );
+    order.forEach((i, k) => {
+      const v = [pos[3 * k], pos[3 * k + 1], pos[3 * k + 2]];
+      if (!rows[i]) rows[i] = v;
+      else if (rows[i].some((c, d) => c !== v[d])) disagree++;
+    });
+    if (disagree)
+      throw new Error(
+        `${name}: not ${spec} — ${disagree} references to one vertex land at two positions`
+      );
+  }
+  const orphans = rows.filter((r) => !r).length;
+  console.log(
+    `// ${name}: ${spec}, ${count} rows in three's index order — kit.mjs \`tabled\`` +
+      (orphans ? ` (${orphans} unreferenced, written as their row)` : '')
+  );
+  let at = 0;
+  for (const [label, n] of sections) {
+    const part = rows.slice(at, at + n);
+    const seen = part.filter(Boolean);
+    const alike = seen.every((r) => r.every((c, d) => c === seen[0][d]));
+    console.log(`  // ${label}`);
+    if (alike && n > 1) console.log(`  ...rep(${n}, ${row(seen[0])}),`);
+    else for (const r of part) console.log(`  ${row(r ?? seen[0])},${r ? '' : ' // unreferenced'}`);
+    at += n;
+  }
+}
+
 const [path, ...rest] = process.argv.slice(2);
 if (!path) {
-  console.error('usage: node tools/hull-models/parts.mjs <model.glb> [--contour <part>]');
+  console.error(
+    'usage: node tools/hull-models/parts.mjs <model.glb> ' +
+      '[--contour <part> | --table <part> [--as <constructor>]]'
+  );
   process.exit(2);
 }
-const want = rest[0] === '--contour' ? rest[1] : null;
+const flag = (name) => {
+  const i = rest.indexOf(name);
+  return i >= 0 ? rest[i + 1] : null;
+};
+const want = flag('--contour');
+const tabled = flag('--table');
 const { json, bin } = chunks(path);
 const accessor = (i) => {
   const a = json.accessors[i];
@@ -201,11 +411,27 @@ const accessor = (i) => {
   return { data: new Ctor(bin.buffer, start, a.count * n), count: a.count, min: a.min, max: a.max };
 };
 
-if (want) {
-  const node = json.nodes.find((n) => n.name === want && n.mesh !== undefined);
-  if (!node) throw new Error(`${want}: no mesh node of that name`);
-  const pos = accessor(json.meshes[node.mesh].primitives[0].attributes.POSITION).data;
-  for (const p of contour(pos)) console.log(vec(p));
+if (want || tabled) {
+  const name = want ?? tabled;
+  try {
+    const node = json.nodes.find((n) => n.name === name && n.mesh !== undefined);
+    if (!node) throw new Error(`${name}: no mesh node of that name`);
+    const prim = json.meshes[node.mesh].primitives[0];
+    const pos = accessor(prim.attributes.POSITION).data;
+    if (want) for (const p of contour(pos)) console.log(vec(p));
+    else
+      table(
+        name,
+        pos,
+        prim.indices !== undefined ? accessor(prim.indices).data : null,
+        prim.attributes.NORMAL !== undefined ? accessor(prim.attributes.NORMAL).data : null,
+        flag('--as')
+      );
+  } catch (err) {
+    // A port's author runs this; a stack trace says nothing they can act on.
+    console.error(`parts.mjs: ${err.message}`);
+    process.exit(2);
+  }
   process.exit(0);
 }
 

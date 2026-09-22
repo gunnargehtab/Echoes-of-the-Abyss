@@ -11,10 +11,13 @@ than settles, and `hull-renders` and `audio-meter` say so in their own lines.
 tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    (buildability), factions/*.mjs (one navy's shape language),
                    hulls/*.mjs (one hull), structures/*.mjs (one structure kind
-                   in one navy). Not an npm workspace; run a script directly and
-                   it writes into docs/concept-art/models/, which then goes
-                   through hull-intake like any other export. check.mjs rebuilds
-                   every script in both directories in a scratch directory and
+                   in one navy), and for the environment props seabed.mjs (the
+                   ground's shape language, since a prop belongs to no navy)
+                   and props/*.mjs (one env-*.glb each, #869). Not an npm
+                   workspace; run a script directly and it writes into
+                   docs/concept-art/models/, which then goes through
+                   hull-intake like any other export. check.mjs rebuilds every
+                   script in all three directories in a scratch directory and
                    fails on any drift from the committed GLB; CI runs it in the
                    build job. diff.mjs answers the one thing check.mjs cannot —
                    what a port changed about a shape — by reading the pre-port

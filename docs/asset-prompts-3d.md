@@ -1267,11 +1267,14 @@ contract.
 
 Every row of this table is filled by a Claude Design model from the Block 4 batch; the
 deterministic generator that stood in for the batch was retired when the last row
-landed ([graphics-standards.md](graphics-standards.md), "The environment branch"). A
-model generated from the prompts above replaces its row's file directly: run intake with
-the row's footprint, cap and light, commit the GLB over the current one, and update the
-registry row's triangle count from the intake report. The environment registry, the
-placement rules and the kelp sway read the file, not its author.
+landed ([graphics-standards.md](graphics-standards.md), "The environment branch").
+Each file is now written by a script under `tools/hull-models/props/` (#869) that ports
+that model part for part, composed from `tools/hull-models/seabed.mjs`, and held at the
+row's footprint. A model generated from the prompts above replaces its row through that
+script: port the export into it, run it, run intake with the row's footprint, cap and
+light, commit the GLB with the script, and update the registry row's triangle count from
+the intake report. The environment registry, the placement rules and the kelp sway read
+the file, not its author.
 
 Two things the first batch taught about Claude Design's export, both mechanical and
 both fixed by intake's `prep-env-glb.mjs` rather than by re-prompting: it hands back one
