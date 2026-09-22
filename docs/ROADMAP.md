@@ -4,10 +4,15 @@ The repo-side companion to the backlog on GitHub. Two development epics are clos
 phases are kept below as the record of how the build got here: the first
 (<https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/97>), and the September 2026
 audit (<https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/428>), which closed with
-twenty-eight of its thirty findings landed. The two it did not close outlived it and stand on
-their own: the duel balance reading, parked with its evidence in Phase 10, and competitive
-play — never really one finding so much as a whole mode the game does not have, which is
-Phase 11 below.
+twenty-eight of its thirty findings landed. The two it did not close outlived it: the duel
+balance reading and competitive play. Both sit under Later below.
+
+**How the phases work.** Phases 0 to 10 are history. Each is the batch one epic or audit
+filed, and their dates show most of them ran at once, so their order is the order they were
+written. From Phase 11 the order is a plan: one phase runs at a time (**Now**), one waits
+behind it (**Next**), and each has a **Done when** line that says what closes it. When that
+test passes, Next becomes Now. Anything nothing schedules sits under **Later**, undated. An
+epic gets one row; its sub-issues do not.
 
 This document is also what the roadmap site renders (`tools/roadmap/build.mjs`). The site
 reads the phase tables, asks GitHub whether each issue is open, and draws that — so a table
@@ -32,7 +37,7 @@ cannot; the kinds are the part that keeps.
 
 - **What the audit still owes** — the findings it filed that have not landed. The epic
   itself is closed, and what is left of it no longer hangs under anything: one parked
-  balance reading, and the mode that became Phase 11. It is the only kind that shrinks by
+  balance reading, and the mode that now sits under Later. It is the only kind that shrinks by
   being worked rather than by being re-read.
 - **Older than the audit** — issues filed before it and not superseded by it: the world
   epic, and the debts a presentation or platform decision left behind rather than paid.
@@ -135,7 +140,8 @@ deterministic replays with a state hash, a benchmarked Echo pass, a test suite p
 cases, and a green CI in about two minutes. The audit's headline was that the discipline is
 production-grade and the *game* around the core mechanic is still a prototype: a six-hull
 roster shared across factions, no pathfinding, no competitive mode, matches that do not end,
-and nothing about shipping in place. Phase 10 is that list.
+and nothing about shipping in place. Phase 10 was that list; Phase 11 is what is being worked
+now.
 
 ---
 
@@ -314,6 +320,9 @@ either.
 | Box select, control groups, order queue | [#111](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/111) |
 | Sonar-scope minimap and contact log | [#112](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/112) |
 | Unit separation and obstacles | [#113](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/113) |
+| Epic — the combat design | [#161](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/161) |
+| Epic — the game menu | [#186](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/186) |
+| Epic — the in-game interface | [#187](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/187) |
 
 **The AI's information restriction is a design test, not an implementation detail.** An
 opponent that reads world state is playing a different game from the one the player is
@@ -384,6 +393,7 @@ question exposed was that nobody had audited those few hundred lines.
 | Kelp entanglement | [#152](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/152) |
 | Sounder transit collision | [#153](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/153) |
 | Directorate shallow-water penalty | [#154](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/154) |
+| Epic — a solid physics engine | [#121](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/121) |
 
 The first row was different in kind from the other five. #149 was defects — a hull
 overlapping three neighbours separated from one of them, a stacked-hull tie-break seeded from
@@ -422,6 +432,8 @@ briefing text.
 | Work | Issue |
 | --- | --- |
 | Mission runtime, proven on *Sorrowgate* | [#190](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/190) |
+| Epic — the twenty-eight missions after the prologue | [#212](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/212) |
+| Epic — the storyline and the game world | [#224](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/224) |
 
 **Two things were deliberately outside it**, and the bet paid. The other twenty-eight
 missions are all built on the machinery *Sorrowgate* proved, and between them they asked the
@@ -442,18 +454,17 @@ chooses.
 
 ## Phase 9 — What the switch left owed
 
-**Three of four closed.** The presentation revision
+**Closed.** The presentation revision
 ([three-layer-ocean.md](three-layer-ocean.md)) landed in five phases, and each phase's record
 named the debts it chose to carry rather than hide. With the switch merged (#281), those
 debts were the open work — none discovered late; every one written into the record of the
-phase that created it.
+phase that created it. The last, the frame-time measurement, moved to Phase 12.
 
 | Work | Issue |
 | --- | --- |
 | Column glyph for contacts below Tier 3 | [#283](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/283) |
 | Far-zoom readability scale | [#284](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/284) |
 | Audio cue for sour exposure | [#285](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/285) |
-| Frame time on a real GPU and on Termux | [#286](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/286) |
 
 **Three kinds of debt, worth keeping distinct.** The first two were honesty of presentation,
 and both are settled. The third was the parity rule — the Lid bleeds unrecoverable hull, and
@@ -470,25 +481,23 @@ take it.
 
 ## Phase 10 — What the audit found
 
-The September 2026 audit (epic
+**Closed.** The September 2026 audit (epic
 [#428](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/428)) read the backend
 simulation, the frontend renderer and netcode, the design bible against the RTS genre, and
 the engineering around all of it. Each finding is one issue with the evidence behind it and
 a concrete change, so an unattended run can take them one at a time. The epic ranked them by
 impact; this table groups them by what they are, and the ranking is on the issue. The epic is
 closed — twenty-eight of the thirty landed — and the rows below are what it leaves behind,
-read live from the tracker rather than from its checkboxes.
+read live from the tracker rather than from its checkboxes. What was still open moved to
+Phases 11 and 12, and to Later, when the roadmap was re-planned on 22 September.
 
 Half the groups below are not the audit's, and that is the shape of a healthy backlog rather
 than drift. **The opponent** is where the harness's own findings went once matches started
 ending. **The roster, wave by wave** and **the fleet as buildable source** are the two halves
 of what a navy is — the hulls it fields and where their shapes come from — and both were
 opened by working the audit's own design rows. **The Biomass account** is one finding read
-three times before anybody named it, which is why its rows point at each other. **The world,
-drawn** and **defects the loop finds** are the open epics
-[#833](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/833) and
-[#746](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/746). And **filed since the
-audit** holds the rest of what has been opened since. They sit in this phase because
+three times before anybody named it, which is why its rows point at each other. And **filed
+since the audit** holds the rest of what was opened before the re-plan. They sit in this phase because
 it is the phase the build is in, not because the audit found them.
 
 **The match that does not end**
@@ -503,13 +512,11 @@ it is the phase the build is in, not because the audit found them.
 | --- | --- |
 | Consortium beat the Directorate 90–10 — superseded by #520, #530, #535 | [#458](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/458) |
 | AI verb parity, enforced by type | [#621](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/621) |
-| Three verbs the commander still lacks — a vocabulary of 22 of 27 | [#703](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/703) |
 | The escort gate starves the smallest navy of ordnance | [#698](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/698) |
 | The Commune’s own hulls in the AI’s hands | [#467](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/467) |
 | Knights won 83% of decided matches — fixed | [#454](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/454) |
 | No commander built a Slipway in duels | [#518](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/518) |
 | The Directorate cannot pay for its rung hulls | [#520](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/520) |
-| The rung costs a third of a navy’s match income | [#706](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/706) |
 
 **Performance and netcode**
 
@@ -557,22 +564,17 @@ it is the phase the build is in, not because the audit found them.
 | The Knights’ build named a stale Corvette | [#529](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/529) |
 | Wave 7 — mid-tier, guns aimed by loudness | [#531](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/531) |
 | Pressure Refit — the Consortium’s route deep | [#517](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/517) |
-| Wave 8 — the commander flies its carriers | [#839](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/839) |
 
 **The fleet as buildable source**
 
 | Work | Issue |
 | --- | --- |
-| Every model built from a script | [#540](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/540) |
 | The Sower and Spinner ported | [#546](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/546) |
 | Sentinel Turret variants as scripts | [#553](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/553) |
 | The Clarion’s horn seams spiral | [#640](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/640) |
 | Known defects the ports reproduce | [#645](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/645) |
 | Dredge and Precentor sides swapped in the docs | [#650](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/650) |
 | The last twenty structures as scripts | [#652](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/652) |
-| The fourteen environment props as scripts | [#869](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/869) |
-| Two Order hulls have faces wound inward | [#871](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/871) |
-| Props render up to 1.23× their reviewed size | [#876](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/876) |
 
 **The Biomass account**
 
@@ -599,6 +601,7 @@ it is the phase the build is in, not because the audit found them.
 | Wire message shapes checked on arrival | [#628](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/628) |
 | This roadmap cited closed work as live | [#445](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/445) |
 | This roadmap asserted live state in prose | [#504](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/504) |
+| Epic — `CLAUDE.md` cut down and deduplicated | [#790](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/790) |
 
 **Filed since the audit**
 
@@ -609,32 +612,12 @@ it is the phase the build is in, not because the audit found them.
 | Tetherjelly re-homed per map | [#480](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/480) |
 | No navy can reach the crystal tier | [#491](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/491) |
 | Test gaps — screen accessibility | [#494](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/494) |
-| An independent read of the story | [#469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/469) |
 | The campaign read in play order | [#534](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/534) |
 | The SIG meter counted structures, not the fleet | [#623](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/623) |
 | The map containment guard is only syntactic | [#636](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/636) |
 | Drift Health bands read non-monotone | [#655](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/655) |
 | The mix is too loud on a phone | [#663](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/663) |
-| Directorate wins 75% — parked under the balance freeze | [#654](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/654) |
-| `units.md` calls the Spark the “heaviest craft” | [#872](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/872) |
-
-**The world, drawn**
-
-| Work | Issue |
-| --- | --- |
-| A visual direction for the 3D ocean | [#807](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/807) |
-| Ladder audit — every map layer names its rung | [#866](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/866) |
-| Tetherjelly and Lampfry as stipple | [#867](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/867) |
-| Classified fauna as stipple, denser at Tier 4 | [#868](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/868) |
-
-**Defects the loop finds**
-
-| Work | Issue |
-| --- | --- |
-| The AI ignores the berth cap | [#854](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/854) |
-| A hidden clock re-measured every second | [#857](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/857) |
-| `headless.ts` names the wrong cause for a rebuild | [#858](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/858) |
-| A craft launched astern shoves its own carrier | [#863](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/863) |
+| Epic — the prologue, reworked after playing it | [#720](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/720) |
 
 **Why match resolution stands alone at the top.** Every other row is an improvement to a
 game; the first row is whether there is one. The balance guard-rails are the only instrument
@@ -658,62 +641,131 @@ now because the Echo budget puts a number on what a cap can be.
 
 ---
 
-## Phase 11 — Competitive play
+## Phase 11 — The carriers, and the fleet as source
 
-The audit filed competitive play as one document to write
-([#439](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/439)), which undersold it.
-[maps.md](maps.md) labels three archetypes "balanced competitive 1v1" and two "2v2 team
-battles", and none of the apparatus behind those words exists in any document: the words
-ladder, ranked and rating appear nowhere in [tech-stack.md](tech-stack.md), matchmaking is
-`joinOrCreate` filtered by map, progression is `localStorage` with no account behind it,
-[ui-ux.md](ui-ux.md) §5 states there are no allies in the water to signal, and the result
-screen reports one fact. That is a mode the game does not have, not a finding about the game
-it does — so it outlived the epic that filed it and gets a phase of its own.
+**Now.** The one phase being worked. The eighth roster wave shipped the carriers and their
+craft ([#838](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/838), [#840](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/840)); what is left is a commander that flies them, and the
+craft's own bugs. The fleet's last models still need their scripts. The loop's defects ride
+along, because most are found working these two.
 
-The hard part is the observer, and it is hard for the reason the rest of the game is
-interesting. A spectator handed unresolved state is a maphack, which is why spectators are
-deliberately absent today; the consequence is no casting, no tournament production and no
-coaching. Whatever gets written has to resolve a watcher's view the way the server already
-resolves a player's — delayed, per-side, or from a designated listener set — or the mode
-contradicts the one rule the architecture will not bend.
+**Done when:** the commander builds and flies a carrier in the baseline, every model under
+`docs/concept-art/models/` is script output that `npm run check:models` rebuilds, and no row
+below is open.
+
+**The carriers**
+
+| Work | Issue |
+| --- | --- |
+| Wave 8 — the commander flies its carriers | [#839](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/839) |
+| A craft launched astern shoves its own carrier | [#863](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/863) |
+| The AI ignores the berth cap | [#854](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/854) |
+| `units.md` calls the Spark the “heaviest craft” | [#872](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/872) |
+
+**The fleet as buildable source**
+
+| Work | Issue |
+| --- | --- |
+| Every model built from a script | [#540](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/540) |
+| The fourteen environment props as scripts | [#869](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/869) |
+| Two Order hulls have faces wound inward | [#871](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/871) |
+| Props render up to 1.23× their reviewed size | [#876](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/876) |
+| Three props have faces wound inward | [#878](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/878) |
+| Block 4 and the approved props disagree | [#879](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/879) |
+
+**Defects the loop finds**
+
+| Work | Issue |
+| --- | --- |
+| A hidden clock re-measured every second | [#857](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/857) |
+| `headless.ts` names the wrong cause for a rebuild | [#858](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/858) |
+
+---
+
+## Phase 12 — An ocean you can read
+
+**Next.** Starts when Phase 11's test passes. The map-visuals plan in its own order — the
+loudness ladder, then public fauna as stipple, then classified fauna — and then the frame time
+measured on the hardware the game promises, because the visual pass is what changes it.
+
+**Done when:** every map layer names its loudness rung with a test holding it, public and
+classified fauna draw as stipple, and the composited frame is timed on a real GPU and on
+Termux.
+
+| Work | Issue |
+| --- | --- |
+| A visual direction for the 3D ocean | [#807](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/807) |
+| Ladder audit — every map layer names its rung | [#866](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/866) |
+| Tetherjelly and Lampfry as stipple | [#867](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/867) |
+| Classified fauna as stipple, denser at Tier 4 | [#868](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/868) |
+| Frame time on a real GPU and on Termux | [#286](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/286) |
+
+---
+
+## Later — Parked and unscheduled
+
+**Later.** Nothing here is scheduled, so nothing here is dated. A row moves up when a Next
+phase is planned around it.
+
+**Standing epics**
+
+| Work | Issue |
+| --- | --- |
+| Epic — defects the loop finds | [#746](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/746) |
+| Epic — feature and improvement ideas | [#833](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/833) |
+
+Both stay open by design: each is where a new issue lands when it has no other home. Their
+sub-issues get rows in the phase that schedules them.
+
+**Parked under the balance freeze**
+
+| Work | Issue |
+| --- | --- |
+| Directorate wins 75% — parked under the balance freeze | [#654](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/654) |
+| The rung costs a third of a navy’s match income | [#706](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/706) |
+
+`CLAUDE.md` freezes balance work while the systems still change shape. Both readings are
+recorded and left.
+
+**Held for a person**
+
+| Work | Issue |
+| --- | --- |
+| An independent read of the story | [#469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/469) |
+
+A reading of the world is worth less done by the hands that wrote it, so no unattended run
+takes this one.
+
+**Built when a branch wants it**
+
+| Work | Issue |
+| --- | --- |
+| Three verbs the commander still lacks — a vocabulary of 22 of 27 | [#703](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/703) |
+
+A verb gets built when a commander branch needs it, not to round a count up.
+
+**Competitive play**
 
 | Work | Issue |
 | --- | --- |
 | A competitive-mode document | [#439](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/439) |
 
-**This phase is where the mode is written down, not a claim that it is next.** A ladder
-measures skill against a game whose matches decide and whose navies are not 90/10, and the
-first two rows of "Where the build actually stands" are still the ones being worked. Three of
-the maps the pool would draw on are archetypes rather than built maps, which is its own
-prerequisite.
+The audit filed this as one document, which undersold it. A ladder, ratings, accounts, team
+rules and an observer are a whole mode the game does not have. The hard part is the observer:
+a spectator handed unresolved state is a maphack, so a watcher's view has to be resolved the
+way a player's is — delayed, per side, or from a designated listener set. It waits because a
+ladder measures skill against a game whose matches decide and whose navies are balanced, and
+three of the maps a pool would draw on are archetypes rather than built maps.
 
----
-
-## Phase 12 — After the game ships
-
-The first thing on this roadmap deliberately placed after release, and it is here because a
-decision was made rather than because work started. Wave 6 of the roster plan
-([#510](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/510)) asked whether the three hulls every navy shares should be retired, and the
-harness said keep them: the Light Scout is the floor a production cycle falls through to,
-the Cruiser holds a mid-tier gap open for two navies with no hull of their own for it, and
-the Corvette is what the Directorate reaches for while its own line hull is priced in an
-account that yields two a match. What that reading could not answer is the fiction:
-[roster-plan.md](roster-plan.md) §8 records, in as many words, that nothing prices them at a
-premium and no yard sells them. Four navies at war build the same three hulls from nobody.
-
-So the commons get an owner, later — a **fifth navy of mercenaries**, with its own roster and
-its own storyline, outside the campaign and in multiplayer only. It is a faction whose
-contacts cannot be identified by their silhouette, which is an argument about sound and
-therefore allowed to exist; and it is a fifth seat's worth of entities in a detection pass
-that already breaks its budget at about 160, which is why it waits.
+**After the game ships**
 
 | Work | Issue |
 | --- | --- |
 | A fifth navy of mercenaries, after release | [#543](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/543) |
 
-**Nothing in this phase is scheduled.** It carries the decision so that the next person to
-read the commons does not re-open the question, and it is placed after release so that
-reading it is not mistaken for planning it.
+Wave 6 ([#510](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/510)) kept the three hulls every navy shares and left their fiction open: four
+navies at war build the same three hulls from nobody. The answer is a fifth navy that sells
+them — multiplayer only, with its own roster and storyline. It waits because it is a fifth
+seat's worth of entities in a detection pass that already breaks its budget at about 160.
 
 ---
 
@@ -742,6 +794,8 @@ depth HUD and the crystal. Three new ones survive any reordering of Phase 10:
 
 ## Ground rules
 
+- **One phase at a time.** Now closes when its Done-when test passes, and Next takes its
+  place. Later is undated. An epic gets a row; its sub-issues do not.
 - **Docs are canonical.** Change the doc first, then the constant, and cite the section in
   the comment. See `CLAUDE.md`, "Constants live in exactly one place".
 - **Server-authoritative is a hard rule.** Nothing unresolved crosses the wire — not
@@ -764,7 +818,8 @@ depth HUD and the crystal. Three new ones survive any reordering of Phase 10:
 ## Completed — Sprint 4 (5–8 September 2026)
 
 Phase 10's middle. The audit epic closed with twenty-eight of its thirty findings landed, and
-the one that was never really a finding — competitive play — outlived it as Phase 11. The
+the one that was never really a finding — competitive play — outlived it, and sits under
+Later now. The
 roster went from six hulls shared across four navies to a full line per navy in seven waves,
 and the harness was taught to see the rung it had never once measured. The Consortium finally
 got the thing its own doctrine line promises to sell it.

@@ -234,17 +234,27 @@ export const phases = {
     blurb: 'The 3D presentation landed; these were the promises it made on the way.',
   },
   10: {
-    title: 'What is next',
+    title: 'What the audit found',
     blurb: 'A full review in September 2026 produced this list. First on it: matches that end.',
   },
+  // From here the phases are a plan rather than a record: one runs at a
+  // time, and `done` is the player's reading of the doc's Done-when test.
   11: {
-    title: 'Playing it against other people',
+    title: 'Carriers, and ships built from scripts',
     blurb:
-      'Ranked matches, teams, and watching a game you are not in — without handing the audience a map the players cannot see.',
+      'The phase being worked now: the computer opponent flying its new carriers, and the last models rebuilt from scripts.',
+    done: 'The computer opponent builds and flies a carrier, and every ship and prop is built from a script.',
   },
   12: {
-    title: 'After the game ships',
-    blurb: 'A fifth navy of mercenaries, selling the hulls every side already builds.',
+    title: 'An ocean you can read',
+    blurb:
+      'Starts when the current phase is done: a clearer map and sea life, then the game timed on real hardware.',
+    done: 'Every layer of the map is drawn at a brightness it has earned, sea life is drawn in dots, and the game has been timed on a real PC and a phone.',
+  },
+  later: {
+    title: 'Parked and unscheduled',
+    blurb:
+      'Nothing here has a date. Some of it waits for the systems to settle, some for a person, some for the game to ship.',
   },
 };
 
@@ -264,8 +274,14 @@ export const groups = {
   'The fleet as buildable source': 'How the ships get made',
   'The Biomass account': 'Kelp, herds, and what they pay',
   'Filed since the audit': 'Since then',
-  'The world, drawn': 'How the ocean looks',
   'Defects the loop finds': 'Small fixes',
+  'The carriers': 'Carriers and their craft',
+  'Standing epics': 'Always open',
+  'Parked under the balance freeze': 'Waiting for the systems to settle',
+  'Held for a person': 'Waiting on a person',
+  'Built when a branch wants it': 'Built when needed',
+  'Competitive play': 'Playing it against other people',
+  'After the game ships': 'After the game ships',
 };
 
 export const items = {
@@ -416,12 +432,25 @@ export const items = {
   655: 'The sea-life health bands, which read as recovering slightly at their very worst',
   663: 'The mix is still too loud on a phone: finding which layer of it is the loud one',
   654: 'The Directorate wins three decided matches in four — measured and recorded, and left alone until the systems around it stop moving',
+  // Epics: one row each, standing for their sub-issues
+  121: 'A physics engine held to the design',
+  161: 'Combat, designed in full: guns, torpedoes, mines and countermeasures',
+  186: 'The game menu',
+  187: 'The in-game interface',
+  212: 'The twenty-eight missions after the prologue',
+  224: 'The storyline and the world, written through',
+  720: 'The prologue, reworked after playing it',
+  790: 'The contributor guide cut down and kept accurate',
+  746: 'Small defects the automated loop finds and fixes',
+  833: 'Ideas for new features and improvements, gathered in one place',
   // Filed 13–22 September, placed when the roadmap caught up with them
   706: 'Top-tier hulls that cost a third of everything a navy earns in a match',
   839: 'The computer opponent building carriers and flying their craft',
   869: 'The seabed’s rocks, vents and kelp rebuilt from scripts',
   871: 'Two Knights hulls with a few faces pointing the wrong way',
   876: 'Seabed props drawn bigger than the size they were checked at',
+  878: 'Three seabed props with faces pointing the wrong way',
+  879: 'Seabed props that disagree with their written descriptions',
   872: 'A roster description that disagrees with its own table',
   807: 'A clearer, more beautiful look for the ocean you fight in',
   866: 'Every layer of the map drawn at a brightness it has earned',

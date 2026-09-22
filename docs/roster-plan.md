@@ -1021,7 +1021,7 @@ Three that were, one of them by wave 6 itself:
   could not read is the fiction — four navies at war building the same three hulls from
   nobody — and the owner's answer is a fifth navy of mercenaries, with its own roster and
   storyline, in multiplayer and never in the campaign. It is filed as #543 and placed after
-  release ([ROADMAP.md](ROADMAP.md) Phase 12), so nothing in this plan waits on it and no
+  release ([ROADMAP.md](ROADMAP.md), under Later), so nothing in this plan waits on it and no
   price here moves for it.
 
 And one the second half of #520 leaves open:
