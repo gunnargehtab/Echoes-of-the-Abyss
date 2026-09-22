@@ -30,6 +30,7 @@ import {
   createHost,
   dispatchWindow,
   drawInstructions,
+  carryRasterised,
   fireResizeObservers,
   HeadlessApplication,
   HeadlessWebGLRenderer,
@@ -332,6 +333,55 @@ describe('renderer smoke test: the scene-graph probes', () => {
     assert.equal(textCount(stage), 3, 'the label budget stopped counting what it still pays for');
     assert.equal(treeSize(stage), 5, 'the tree probe stopped seeing a node that is still there');
   });
+
+  it('bills a repaint only while the label is on the glass, and once when it returns', () => {
+    // The clock is the live instance of this (#846): `EchoRenderer.ts:7398`
+    // stamps `clockLabel.text` every frame and `:7399` then hides the clock
+    // when the top strip is too narrow for it. Hand-built rather than booted
+    // so the sequence is the one under test rather than whatever width the
+    // canned host happens to be.
+    const stage = new Container();
+    const onGlass = new Text({ text: 'T+00:00' });
+    const clock = new Text({ text: 'T+00:00' });
+    stage.addChild(onGlass, clock);
+
+    let carried = textStyleKeys(stage);
+    const frame = (): number => {
+      const sample = textStyleKeys(stage);
+      const rasters = textRasterisations(carried, sample);
+      carried = carryRasterised(carried, sample);
+      return rasters;
+    };
+
+    // The control, so a probe that counts nothing at all cannot pass this.
+    onGlass.text = 'T+00:01';
+    assert.equal(frame(), 1, 'a drawn label that changed was not counted');
+
+    // Under the width threshold, still stamping. Pixi regenerates no glyph
+    // canvas for any of these: `RenderGroup.updateRenderable` returns on
+    // `globalDisplayStatus < 7` before it reaches `CanvasTextPipe`.
+    clock.visible = false;
+    for (let second = 1; second <= 10; second++) {
+      clock.text = `T+00:${String(second).padStart(2, '0')}`;
+      assert.equal(frame(), 0, 'a hidden label billed for a canvas Pixi never regenerated');
+    }
+
+    // And back. One repaint for all ten changes, at the frame it reappears —
+    // Pixi compares against `batchableText.currentKey`, not against the last
+    // value the label held while nobody was looking at it.
+    clock.visible = true;
+    assert.equal(frame(), 1, 'the label returned repainted and nothing counted it');
+    assert.equal(frame(), 0, 'and it was billed again while nothing had changed');
+
+    // A label that returns saying exactly what it last said is free, because
+    // the key Pixi holds for it still matches.
+    clock.visible = false;
+    clock.text = 'T+00:99';
+    assert.equal(frame(), 0, 'hidden churn was billed');
+    clock.text = 'T+00:10';
+    clock.visible = true;
+    assert.equal(frame(), 0, 'a label that came back unchanged was billed for a repaint');
+  });
 });
 
 describe('renderer smoke test: the chart', () => {
@@ -423,7 +473,11 @@ describe('renderer smoke test: the chart', () => {
       // And a match that is moving: sixty frames a second with a fresh Echo
       // pass every twelfth, which is the 5 Hz the room resolves at, and the
       // two readouts that move on every pass actually moving.
-      const labels = textCount(world.app.stage);
+      // Drawn labels, not every label the tree holds. The premise below is
+      // what a HUD *pays*, and Pixi pays nothing for a hidden one (#846) — so
+      // a whole-tree `textCount` here would divide a drawn numerator by a
+      // retired-inclusive denominator and loosen the budget by the difference.
+      const labels = textContents(world.app.stage).length;
       let rasters = 0;
       keys = textStyleKeys(world.app.stage);
       for (let frame = 0; frame < 600; frame++) {
@@ -437,7 +491,9 @@ describe('renderer smoke test: the chart', () => {
         world.frame();
         const next = textStyleKeys(world.app.stage);
         rasters += textRasterisations(keys, next);
-        keys = next;
+        // Carried, not replaced: a label that hides keeps the key it was last
+        // painted with, so the repaint when it comes back is still counted.
+        keys = carryRasterised(keys, next);
       }
 
       // Each of those is one glyph canvas re-rendered and one texture

@@ -884,7 +884,9 @@ export function drawInstructions(root: Container): number {
  * The argument is about memory held, so it covers this, `treeSize`,
  * `treeIdentities` and `drawInstructions`. It does *not* reach
  * `textStyleKeys`, which counts work Pixi *performs* and skips for a hidden
- * node. That one is unexamined and stayed on the whole-tree walk.
+ * node. That one walks the drawn tree instead (#846), and a work budget that
+ * divides by this count is comparing the two arguments — see the denominator
+ * in `rendererSmoke.test.ts`.
  */
 export function textCount(root: Container): number {
   let total = 0;
@@ -946,14 +948,23 @@ export function textSaying(root: Container, needle: string): string | null {
 }
 
 /**
- * Every `Text` in the tree by uid, against the key Pixi rasterises it under.
+ * Every **drawn** `Text` by uid, against the key Pixi would rasterise it under.
  *
  * `styleKey` is `text:style:resolution` (pixi.js 8.19, `AbstractText`), and
  * `CanvasTextPipe.addRenderable` regenerates the glyph canvas and re-uploads
- * the texture exactly when it changes. So a *transition* in this map is one
- * canvas re-render plus one GPU upload — the cost
+ * the texture exactly when it changes. So a *transition* here is one canvas
+ * re-render plus one GPU upload — the cost
  * `.claude/skills/pixijs-performance` argues `BitmapText` exists to avoid,
  * counted rather than assumed.
+ *
+ * Drawn only, unlike `textCount` above, and that is the whole of #846: a
+ * hidden label costs nothing to change. `RenderGroup.updateRenderable`
+ * (`RenderGroup.mjs:156`, pixi.js 8.19.0) returns on `globalDisplayStatus < 7`
+ * before it reaches the pipe, so the glyph canvas is never regenerated and
+ * the texture is never re-uploaded. The clock is the live instance:
+ * `EchoRenderer.ts:7398` stamps `clockLabel.text` every frame and `:7399`
+ * then hides the clock when the strip is too narrow for it, which on a
+ * whole-tree walk ticked ten phantom rasterisations into a 600-frame budget.
  *
  * Counted work again, for the reason this whole file gives: the wall-clock
  * price of a rasterisation belongs to whatever machine ran it, while the
@@ -961,11 +972,45 @@ export function textSaying(root: Container, needle: string): string | null {
  */
 export function textStyleKeys(root: Container): Map<number, string> {
   const keys = new Map<number, string>();
-  for (const node of walk(root)) if (node instanceof Text) keys.set(node.uid, node.styleKey);
+  for (const node of walkDrawn(root)) if (node instanceof Text) keys.set(node.uid, node.styleKey);
   return keys;
 }
 
-/** How many of those keys moved between two samples. */
+/**
+ * Fold a sample into the record of what each label was **last rasterised**
+ * under, which is the `before` every `textRasterisations` call wants.
+ *
+ * Dropping the hidden nodes from the sample is not enough on its own, and the
+ * difference is a whole rasterisation. Pixi keeps the key it last drew a label
+ * with on the batchable (`CanvasTextPipe`, `batchableText.currentKey`) and
+ * compares against it when the label comes back — `_didTextUpdate` stays true
+ * across the hidden frames, because the early return above never clears it.
+ * So a label rasterised under `A`, hidden, changed to `B`, and then shown
+ * again is one re-render at the moment it reappears, however many frames it
+ * spent hidden and however many times `B` changed on the way.
+ *
+ * Carrying the hidden entries forward is what holds that: the sample says
+ * what is on the glass now, and this map says what the glass was last painted
+ * with. Replacing the map with the bare sample instead loses the `A`, and the
+ * reappearance reads as a first build and is not counted at all.
+ */
+export function carryRasterised(
+  carried: Map<number, string>,
+  sample: Map<number, string>
+): Map<number, string> {
+  const next = new Map(carried);
+  for (const [uid, key] of sample) next.set(uid, key);
+  return next;
+}
+
+/**
+ * How many labels the sample `after` repaints, against what `before` says
+ * they were last painted with.
+ *
+ * `before` is a `carryRasterised` record rather than the previous sample; a
+ * uid missing from it is a label being built for the first time, which is not
+ * a re-render and is not counted.
+ */
 export function textRasterisations(
   before: Map<number, string>,
   after: Map<number, string>
