@@ -52,6 +52,7 @@ import {
   torus,
   plan,
   loft,
+  sweep,
   bothSides,
   polar,
   part,
@@ -2998,4 +2999,220 @@ export function reactorOutflow(root, { ridge, membrane, unlit }, opts) {
     0,
   ]);
   add(root, 'sac_mouth', cyl(mouth.r, mouth.r, mouth.t, 8), unlit, polar(a, sac.at, mouth.y));
+}
+
+/* --------------------------------------------------------------------------
+ * The carriers (#840): the Rootstock's budding sheaths.
+ *
+ * Built to its block, as every Phase 4 builder above was: nothing here
+ * answers to a binary in docs/concept-art/models/. X-long in the kit's
+ * frame, yawing nothing but what a site's own `yaw` turns. Every site is
+ * placed a side at a time at its own signed z, never through `bothSides`
+ * (docs/models-plan.md §3.6). hulls/rootstock.mjs is the consumer; the
+ * Runner that fits the sheath is built from the module's existing
+ * vocabulary alone (hulls/runner.mjs).
+ * ------------------------------------------------------------------------ */
+
+/**
+ * A sheath's section: an open U with a broad rounded lip, in unit half-beam
+ * `u` and half-height `v`, listed once round the solid — from the lip down
+ * the inside, across the floor, up the far inside, over the far lip, down
+ * the outside, under the keel and back up. A lathe cannot draw this: it is
+ * round in section and closed over the top, and a bract that has shed its
+ * bud is open.
+ *
+ * WHICH WAY ROUND IS LOAD-BEARING. kit.mjs `sweep` winds its faces from the
+ * section's order *and* the stations' order, and this builder runs its
+ * stations root to tip, +x-ward. Listed that way the section above faces
+ * every triangle out of the wall; listed the other way — `CHINE`'s way —
+ * the lip's top faces down, a single-sided bake culls it, and the top-down
+ * height pass sees the inside of the sheath's keel through it, a hollow
+ * with its rim *under* its floor. The first draft shipped that and only the
+ * height probe caught it; the albedo looked right. (`CHINE` has no
+ * consumer; the Tocsin's crystal spine, `sweep`'s one other caller, runs
+ * its stations the other way and faces out — factions/hadron.mjs `bell`.)
+ * The lip is 0.46 of a half-beam wide, 1.8 m on a 4 m sheath, because at
+ * the 1 px/m the issue sets for reading a deck a rim narrower than two
+ * pixels is not there.
+ */
+const SHEATH_SECTION = [
+  [0.88, 0.6],
+  [0.7, 0.64],
+  [0.54, 0.57],
+  [0.5, 0.24],
+  [0.43, -0.12],
+  [0.25, -0.37],
+  [0, -0.45],
+  [-0.25, -0.37],
+  [-0.43, -0.12],
+  [-0.5, 0.24],
+  [-0.54, 0.57],
+  [-0.7, 0.64],
+  [-0.88, 0.6],
+  [-1.0, 0.46],
+  [-1.03, 0.14],
+  [-0.94, -0.26],
+  [-0.72, -0.63],
+  [-0.38, -0.9],
+  [0, -1],
+  [0.38, -0.9],
+  [0.72, -0.63],
+  [0.94, -0.26],
+  [1.03, 0.14],
+  [1.0, 0.46],
+];
+
+/**
+ * The lining's section: a thin crescent laid a few centimetres inside the
+ * sheath's inner skin, listed the same way round, so its upper face is the
+ * floor a top-down bake sees. Separate from the sheath because it is a
+ * different tissue: the sheath is membrane, as every Commune leaf, vane and
+ * fluke is, and the hollow it opens on is the hull's own dark chitin — the
+ * place a bud lay, bared. That difference is a *value* step, the one kind
+ * of difference both renderers keep (docs/asset-prompts-3d.md, Block 2b
+ * rule 2), and it is what makes an empty sheath read from straight above as
+ * a dark slot in a pale rim rather than as one more pale leaf.
+ */
+const LINING_SECTION = [
+  [0.495, 0.55],
+  [0.458, 0.245],
+  [0.392, -0.095],
+  [0.226, -0.325],
+  [0, -0.4],
+  [-0.226, -0.325],
+  [-0.392, -0.095],
+  [-0.458, 0.245],
+  [-0.495, 0.55],
+  [-0.525, 0.55],
+  [-0.485, 0.24],
+  [-0.415, -0.11],
+  [-0.24, -0.35],
+  [0, -0.43],
+  [0.24, -0.35],
+  [0.415, -0.11],
+  [0.485, 0.24],
+  [0.525, 0.55],
+];
+
+/**
+ * A swept geometry given the UV set every lathe and orb in this module
+ * carries — factions/hadron.mjs `uvAlike`, the same four lines for the same
+ * reason: the runtime merges one material's meshes into a draw, three's
+ * `mergeGeometries` refuses a bucket whose members disagree on attributes,
+ * hull-intake warns on exactly that, and kit.mjs `sweep` writes positions
+ * and normals only. Nothing samples a texture, so the values are zero and
+ * the attribute's presence is the point.
+ */
+function uvAlike(geo) {
+  const n = geo.attributes.position.count;
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(2 * n), 2));
+  return geo;
+}
+
+/** The lining's floor, in unit half-height: where a scar sits in it. */
+const LINING_FLOOR = -0.4;
+
+/**
+ * A sheath's girth along its length, `[f, beam, height]` as fractions of
+ * its length and of its `halfBeam` and `halfHeight`: closed to a point at
+ * both ends, blunt at the root (f = 0, the node) and drawn out long to the
+ * tip it opens toward — the shape of what it held, which is a seed body
+ * pointed at its nose.
+ */
+const SHEATH_GIRTH = [
+  [0, 0, 0],
+  [0.035, 0.5, 0.52],
+  [0.1, 0.78, 0.8],
+  [0.2, 0.93, 0.94],
+  [0.34, 1.0, 1.0],
+  [0.5, 1.0, 1.0],
+  [0.64, 0.93, 0.94],
+  [0.77, 0.78, 0.82],
+  [0.88, 0.55, 0.6],
+  [0.96, 0.27, 0.32],
+  [1, 0, 0],
+];
+
+/**
+ * The budding sites along a stolon — the carrier's deck, grown: at each
+ * node the bract a daughter shoot budded in, split open and *empty*. A
+ * craft aboard is not an entity (docs/systems-combat.md §15, the deck
+ * counts it) and a craft in the water is drawn as its own, so a Runner
+ * modelled into a sheath would be drawn twice whenever the flight was out.
+ * What the sheath says instead is the shape of what left it: a trough the
+ * craft's length and girth, pointed at the end its nose lay in.
+ *
+ * Four parts a site, in a frame of its own (`bud_site_<i>`, kit.mjs
+ * `group`) at the site's `at` — the sheath's root, where it leaves the
+ * stem — yawed `yaw` radians off the keel toward its own flank so the open
+ * end reaches forward and out (a lateral shoot grows toward the tip of the
+ * axis that bears it) and rolled `roll` so the mouth tips a little
+ * outboard:
+ *
+ * - `bud_node_<i>`, the node: a squashed orb in `knuckle` at `node.at` in
+ *   the site's frame, covering the join of sheath and stem.
+ * - `bud_sheath_<i>`, the bract: `SHEATH_SECTION` swept along `girth`
+ *   (kit.mjs `sweep`) to `length`, `halfBeam` and `halfHeight`, in
+ *   `sheath`.
+ * - `sheath_lining_<i>`, the hollow: `LINING_SECTION` on the same girth, in
+ *   `lining`.
+ * - `bud_scar_<i>`, where the daughter was attached: a squashed orb in
+ *   `scar` half-sunk in the floor at `scar.at` of the length from the root —
+ *   the one pale fleck in a dark slot.
+ *
+ * No lamp on any of it. A launch is the hull's one loud moment and it is a
+ * transient (docs/models-plan.md §3.2 rule 3); at rest the deck is dark,
+ * and it reads by value and relief alone. Each site is its own size and
+ * its own angle and a matched pair is refused — the navy grows each side
+ * its own way. The sweep carries `uvAlike`'s zero UVs, or hull-intake warns
+ * that its material cannot merge into one draw.
+ */
+export function buddingSheaths(root, { sheath, lining, scar, knuckle }, opts) {
+  const { sites, girth = SHEATH_GIRTH } = opts;
+  refuseMirror(
+    'bud_sheath',
+    sites,
+    (s) => `${s.length}|${s.halfBeam}|${s.halfHeight}|${s.yaw}|${s.roll ?? 0}`
+  );
+  sites.forEach((site, i) => {
+    const { at, yaw, roll = 0, length, halfBeam, halfHeight } = site;
+    const { node, scar: bud } = site;
+    const z = at[2];
+    if (!z) throw new Error(`bud_sheath_${i}: a site on the keel line has no flank`);
+    const sgn = Math.sign(z);
+    const frame = group(root, `bud_site_${i}`, { at, rot: [sgn * roll, -sgn * yaw, 0] });
+    const stations = girth.map(([f, b, h]) => [f * length, b * halfBeam, h * halfHeight, 0]);
+    add(
+      frame,
+      `bud_node_${i}`,
+      orb(...(node.facets ?? [10, 6])),
+      knuckle,
+      node.at,
+      [0, 0, 0],
+      [node.r, node.r * (node.squash ?? 0.7), node.r]
+    );
+    add(frame, `bud_sheath_${i}`, uvAlike(sweep(stations, SHEATH_SECTION)), sheath);
+    add(frame, `sheath_lining_${i}`, uvAlike(sweep(stations, LINING_SECTION)), lining);
+    // The floor's height at the scar's station, off the girth: a scar sits
+    // in the hollow's floor, not on the sheath's keel under it.
+    const fx = bud.at;
+    let h = 0;
+    for (let k = 1; k < girth.length; k++)
+      if (fx <= girth[k][0]) {
+        const [f0, , h0] = girth[k - 1];
+        const [f1, , h1] = girth[k];
+        h = h0 + ((h1 - h0) * (fx - f0)) / (f1 - f0);
+        break;
+      }
+    const floor = LINING_FLOOR * h * halfHeight;
+    add(
+      frame,
+      `bud_scar_${i}`,
+      orb(...(bud.facets ?? [8, 5])),
+      scar,
+      [fx * length, floor - (bud.sink ?? 0.2) * bud.r, 0],
+      [0, 0, 0],
+      [bud.r, bud.r * (bud.squash ?? 0.6), bud.r]
+    );
+  });
 }
