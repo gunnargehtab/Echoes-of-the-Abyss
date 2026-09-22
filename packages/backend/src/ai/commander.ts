@@ -723,10 +723,13 @@ const SIEGE_STANDOFF_M = 180;
  *
  * A declaratory entry, on the Sower's and the Bower's model, is not a third
  * option: the cycle's index is taken modulo the list's *length*, so an entry
- * that is never selected re-phases it exactly as much as one that is. And
- * `ownHeavy` below is the composition's first rung hull that is not
- * `WANTED_SEPARATELY`, so a carrier placed ahead of the heavy would have
- * replaced it.
+ * that is never selected re-phases it exactly as much as one that is.
+ *
+ * And the other kind of entry — one on a composition and *not* in
+ * `WANTED_SEPARATELY` — costs the navy its heavy. `ownHeavy` below is the
+ * composition's first rung hull that passes that same filter, so a carrier
+ * written ahead of the heavy would be found as the heavy, and the navy would
+ * buy a deck where it meant to buy a Bulwark.
  *
  * All four are behind the rung (`PRODUCIBLE[Slipway]`), so `freeYard` supplies
  * that half of the gate and this table does not restate it.
@@ -821,9 +824,10 @@ function joinsTheArmy(kind: UnitKind): boolean {
  * the hull with a hold here, and wave 8 gave the roster four hulls with a
  * deck; `docs/glossary.md` settles which keeps the name — "the hull with a
  * hold is a **transport** and the hull with a deck is a **carrier**" — so the
- * locals and the prose moved and `lift.carrierId` and the `embark` message's
- * `carrierId` did not. Those two are the wire's own spelling and renaming
- * them is a protocol edit, which is a different change from this one.
+ * locals, the prose and this commander's own `lift.transportId` moved. The
+ * `embark` message's `carrierId` did not: that one is the wire's spelling
+ * (`wire.ts`), so renaming it is a protocol edit and a different change from
+ * this one.
  */
 const LIFT = {
   /** How near the transport a hull must be gathered to be ordered aboard. */
@@ -1198,7 +1202,7 @@ export class AiCommander implements AiPlayer {
    */
   private readonly ordnanceWantTally: OrdnanceWantTally = emptyOrdnanceWantTally();
   /** The transport plan, if the navy has a transport afloat (see `LIFT`). */
-  private lift: { carrierId: number; phase: 'loading' | 'sailing'; sinceTick: number } | null =
+  private lift: { transportId: number; phase: 'loading' | 'sailing'; sinceTick: number } | null =
     null;
   /**
    * Enemy starts this commander has stood on and heard nothing at, by index
@@ -3464,6 +3468,15 @@ export class AiCommander implements AiPlayer {
         if (spent.has(hull.id)) continue;
         if (hull.decoyCooldownS !== undefined) continue;
         if (statsFor(hull.kind).attackDamage <= 0) continue;
+        // Not the flight (#839). A craft is armed, so the damage test admits
+        // it; its suite is ready, so `decoyCooldownS` is absent and it passes
+        // that too; and it is always under way, so the movement gate never
+        // stops it either. But "a commander never orders one" (docs/units.md,
+        // "The craft") and `Match.owns` refuses every order to a craft, so the
+        // order is recorded and then dropped — and worse, `spent` above has
+        // already spent this torpedo's one answer on a hull that could not
+        // give it, leaving the escort that could have decoyed doing nothing.
+        if (statsFor(hull.kind).launchedFrom !== undefined) continue;
         const stood = this.stoodAt.get(hull.id);
         if (stood === undefined || distance(hull, stood) < UNDER_WAY_M) continue;
         const d = distance(hull, torpedo);
@@ -4137,8 +4150,8 @@ export class AiCommander implements AiPlayer {
       this.lift = null;
       return claimed;
     }
-    if (this.lift === null || this.lift.carrierId !== transport.id) {
-      this.lift = { carrierId: transport.id, phase: 'loading', sinceTick: snapshot.tick };
+    if (this.lift === null || this.lift.transportId !== transport.id) {
+      this.lift = { transportId: transport.id, phase: 'loading', sinceTick: snapshot.tick };
     }
     const hold = transport.hold!;
     const tick = snapshot.tick;
@@ -4187,7 +4200,7 @@ export class AiCommander implements AiPlayer {
       const committed = tick < this.commitUntilTick;
       const waited = (tick - this.lift.sinceTick) / SIM.TICK_HZ >= LIFT.PATIENCE_S;
       if (hold.used > 0 && closing.length === 0 && (full || committed || waited)) {
-        this.lift = { carrierId: transport.id, phase: 'sailing', sinceTick: tick };
+        this.lift = { transportId: transport.id, phase: 'sailing', sinceTick: tick };
         if (this.doctrine.approachesSilently && this.tuning.usesSilentRunning) {
           out.push({ kind: 'silent', unitIds: [transport.id], active: true });
         }
@@ -4221,7 +4234,7 @@ export class AiCommander implements AiPlayer {
       // The landing is the push: what came out of the hold walks in, and the
       // rest of the army comes after it rather than calling it back.
       this.commit(tick);
-      this.lift = { carrierId: transport.id, phase: 'loading', sinceTick: tick };
+      this.lift = { transportId: transport.id, phase: 'loading', sinceTick: tick };
       return claimed;
     }
     this.walk(transport, drop, tick, out);
