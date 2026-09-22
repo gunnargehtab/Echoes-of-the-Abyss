@@ -189,6 +189,30 @@ import reedEmissive from '../assets/hulls/maps/reed-emissive.png';
 import bowerAlbedo from '../assets/hulls/maps/bower-albedo.png';
 import bowerHeight from '../assets/hulls/maps/bower-height.png';
 import bowerEmissive from '../assets/hulls/maps/bower-emissive.png';
+import gantryAlbedo from '../assets/hulls/maps/gantry-albedo.png';
+import gantryHeight from '../assets/hulls/maps/gantry-height.png';
+import gantryEmissive from '../assets/hulls/maps/gantry-emissive.png';
+import rootstockAlbedo from '../assets/hulls/maps/rootstock-albedo.png';
+import rootstockHeight from '../assets/hulls/maps/rootstock-height.png';
+import rootstockEmissive from '../assets/hulls/maps/rootstock-emissive.png';
+import succentorAlbedo from '../assets/hulls/maps/succentor-albedo.png';
+import succentorHeight from '../assets/hulls/maps/succentor-height.png';
+import succentorEmissive from '../assets/hulls/maps/succentor-emissive.png';
+import offertoryAlbedo from '../assets/hulls/maps/offertory-albedo.png';
+import offertoryHeight from '../assets/hulls/maps/offertory-height.png';
+import offertoryEmissive from '../assets/hulls/maps/offertory-emissive.png';
+import sparkAlbedo from '../assets/hulls/maps/spark-albedo.png';
+import sparkHeight from '../assets/hulls/maps/spark-height.png';
+import sparkEmissive from '../assets/hulls/maps/spark-emissive.png';
+import runnerAlbedo from '../assets/hulls/maps/runner-albedo.png';
+import runnerHeight from '../assets/hulls/maps/runner-height.png';
+import runnerEmissive from '../assets/hulls/maps/runner-emissive.png';
+import trebleAlbedo from '../assets/hulls/maps/treble-albedo.png';
+import trebleHeight from '../assets/hulls/maps/treble-height.png';
+import trebleEmissive from '../assets/hulls/maps/treble-emissive.png';
+import versicleAlbedo from '../assets/hulls/maps/versicle-albedo.png';
+import versicleHeight from '../assets/hulls/maps/versicle-height.png';
+import versicleEmissive from '../assets/hulls/maps/versicle-emissive.png';
 
 /**
  * Pixels per world metre the maps were baked at. The maps carry no metadata,
@@ -415,6 +439,50 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
     albedo: bowerAlbedo,
     height: bowerHeight,
     emissive: bowerEmissive,
+  },
+  // The carriers and their craft (#840): one pair a navy, all eight
+  // faction-locked, so each model is the kind's canonical one and none takes
+  // the Chorister's rule. Every deck is baked empty; a craft is drawn as
+  // itself, from its own maps, wherever it is in the water.
+  [UnitKind.Gantry]: {
+    albedo: gantryAlbedo,
+    height: gantryHeight,
+    emissive: gantryEmissive,
+  },
+  [UnitKind.Rootstock]: {
+    albedo: rootstockAlbedo,
+    height: rootstockHeight,
+    emissive: rootstockEmissive,
+  },
+  [UnitKind.Succentor]: {
+    albedo: succentorAlbedo,
+    height: succentorHeight,
+    emissive: succentorEmissive,
+  },
+  [UnitKind.Offertory]: {
+    albedo: offertoryAlbedo,
+    height: offertoryHeight,
+    emissive: offertoryEmissive,
+  },
+  [UnitKind.Spark]: {
+    albedo: sparkAlbedo,
+    height: sparkHeight,
+    emissive: sparkEmissive,
+  },
+  [UnitKind.Runner]: {
+    albedo: runnerAlbedo,
+    height: runnerHeight,
+    emissive: runnerEmissive,
+  },
+  [UnitKind.Treble]: {
+    albedo: trebleAlbedo,
+    height: trebleHeight,
+    emissive: trebleEmissive,
+  },
+  [UnitKind.Versicle]: {
+    albedo: versicleAlbedo,
+    height: versicleHeight,
+    emissive: versicleEmissive,
   },
 };
 
