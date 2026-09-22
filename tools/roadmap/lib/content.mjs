@@ -264,6 +264,8 @@ export const groups = {
   'The fleet as buildable source': 'How the ships get made',
   'The Biomass account': 'Kelp, herds, and what they pay',
   'Filed since the audit': 'Since then',
+  'The world, drawn': 'How the ocean looks',
+  'Defects the loop finds': 'Small fixes',
 };
 
 export const items = {
@@ -414,6 +416,21 @@ export const items = {
   655: 'The sea-life health bands, which read as recovering slightly at their very worst',
   663: 'The mix is still too loud on a phone: finding which layer of it is the loud one',
   654: 'The Directorate wins three decided matches in four — measured and recorded, and left alone until the systems around it stop moving',
+  // Filed 13–22 September, placed when the roadmap caught up with them
+  706: 'Top-tier hulls that cost a third of everything a navy earns in a match',
+  839: 'The computer opponent building carriers and flying their craft',
+  869: 'The seabed’s rocks, vents and kelp rebuilt from scripts',
+  871: 'Two Knights hulls with a few faces pointing the wrong way',
+  876: 'Seabed props drawn bigger than the size they were checked at',
+  872: 'A roster description that disagrees with its own table',
+  807: 'A clearer, more beautiful look for the ocean you fight in',
+  866: 'Every layer of the map drawn at a brightness it has earned',
+  867: 'Jellyfish fields and fry shoals drawn as clouds of dots',
+  868: 'Identified sea life drawn in dots, denser the better you know it',
+  854: 'The computer opponent ordering ships past the fleet limit',
+  857: 'A hidden clock that kept measuring itself every second',
+  858: 'A test note that blamed the wrong cause for a redraw',
+  863: 'Small craft that shove their own carrier into enemy guns',
 };
 
 export const sprints = {

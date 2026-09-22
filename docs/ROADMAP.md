@@ -54,9 +54,9 @@ the bar `CONTRIBUTING.md` sets for the first tag.
 
 | Question | Reading | Tracked |
 | --- | --- | --- |
-| Does a skirmish finish? | **29 of 30** baseline matches — four AI seats, Veteran, the Ventfront Divide, seeds 4000–4029, a 25-minute cap — now decide, at a median 1,003 s against the 1,500 s cap, and all five guard-rails read for the first time. From one decided match before the commander's construction livelock, its uncommitted full-strength army, its walk at smudges and its chase after Tier-1 contacts inside a gun's reach were found (#452, #453). What the harness can now see is the balance: the Knights win 83% of decided matches | [#440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/440) |
-| Does the Echo pass hold its budget? | The 2 ms budget (`SIM.ECHO_BUDGET_MS`) breaks at about 160 entities: a median 0.99 ms at ~84, 2.44 ms at ~164, 7.16 ms at ~324 on a CI-class container. The worst case is tracked (`Match.worstEchoPassMs`) and never enforced or degraded | [#430](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/430) |
-| Is the frame time real? | Every conn-view frame-time number on record prices SwiftShader in a container. Nothing has been timed on a real GPU or on the Termux floor the game promises | [#286](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/286) |
+| Does a skirmish finish? | **29 of 30** baseline matches decide, at a median 1,003 s | [#440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/440) |
+| Does the Echo pass hold its budget? | The 2 ms budget breaks at about 160 entities | [#430](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/430) |
+| Is the frame time real? | Nothing timed on a real GPU or on Termux yet | [#286](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/286) |
 
 The first row is the one that matters. A game "you can sit down and play alone" — the phrase
 earlier revisions of this document used — is a game whose matches end, and the harness's own
@@ -181,36 +181,36 @@ were written.
 
 | Work | Issue |
 | --- | --- |
-| [glossary.md](glossary.md) — the authoritative terms, written before the systems that use them | [#6](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/6) |
-| The glossary reviewed and finalised, which is what made it authoritative rather than a draft | [#20](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/20) |
-| Glossary cross-links, so a term defined once is linked from every document that uses it | [#21](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/21) |
-| [units.md](units.md) — the first roster | [#7](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/7) |
-| The roster expanded with per-unit stats and a playtest plan | [#22](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/22) |
-| A unit playtest checklist and the data capture behind it ([playtest-checklist.md](playtest-checklist.md)) | [#23](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/23) |
-| This document, in its first form | [#8](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/8) |
+| Glossary — the authoritative terms | [#6](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/6) |
+| Glossary finalised | [#20](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/20) |
+| Glossary cross-links | [#21](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/21) |
+| `units.md` — the first roster | [#7](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/7) |
+| Per-unit stats and a playtest plan | [#22](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/22) |
+| Unit playtest checklist | [#23](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/23) |
+| This roadmap, first form | [#8](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/8) |
 
 **The scaffold**
 
 | Work | Issue |
 | --- | --- |
-| The frontend starter — a client that builds and runs | [#9](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/9) |
-| The Echo Layer prototype: the detection model as runnable code before there was a game around it | [#10](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/10) |
-| An example scene and input handling in the client | [#24](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/24) |
-| `tools/echo-sim` scenarios and datasets — deterministic Echo cases outside the game | [#26](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/26) |
-| echo-sim documented and converted to a module, so tests can require it | [#27](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/27) |
+| Frontend starter | [#9](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/9) |
+| Echo Layer prototype | [#10](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/10) |
+| Example scene and input handling | [#24](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/24) |
+| `echo-sim` scenarios and datasets | [#26](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/26) |
+| `echo-sim` as a module | [#27](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/27) |
 
 **The gates**
 
 | Work | Issue |
 | --- | --- |
-| CI and linting, from the first week | [#11](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/11) |
-| The client build in CI, so a client that does not build fails the build | [#25](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/25) |
-| ESLint and Prettier, enforced rather than suggested | [#28](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/28) |
-| markdownlint and the link check over `docs/` | [#29](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/29) |
-| The README's developer quickstart | [#12](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/12) |
-| The quickstart refined against somebody actually following it | [#30](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/30) |
-| `CONTRIBUTING.md` and the contributor quickstart | [#16](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/16) |
-| GitHub labels, and the issue and pull-request templates | [#17](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/17) |
+| CI and linting | [#11](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/11) |
+| Client build in CI | [#25](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/25) |
+| ESLint and Prettier, enforced | [#28](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/28) |
+| markdownlint and a link check over `docs/` | [#29](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/29) |
+| Developer quickstart | [#12](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/12) |
+| Quickstart refined | [#30](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/30) |
+| `CONTRIBUTING.md` | [#16](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/16) |
+| Labels and templates | [#17](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/17) |
 | Branch and commit conventions | [#18](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/18) |
 
 **How the project runs**
@@ -218,20 +218,20 @@ were written.
 | Work | Issue |
 | --- | --- |
 | Owners and roles | [#14](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/14) |
-| The project board | [#15](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/15) |
-| A channel to talk in, and the kickoff | [#19](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/19) |
-| Graphics standards, repo conventions and an Android smoke test — the first version of the acceptance bar in [graphics-standards.md](graphics-standards.md) | [#57](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/57) |
+| Project board | [#15](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/15) |
+| A channel and the kickoff | [#19](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/19) |
+| Graphics standards and an Android smoke test | [#57](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/57) |
 
 **What the first read-through found**
 
 | Work | Issue |
 | --- | --- |
-| The resolution tiers contradicted themselves across the docs and the tools — 0–4 in one place, 0–5 in another | [#34](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/34) |
-| Per-unit HYD values were invented by the code; [units.md](units.md) had never authored them | [#35](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/35) |
-| `tools/echo-sim` implemented a different detection formula from `@echoes/shared` | [#36](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/36) |
-| PropagationFactor was sampled at the emitter instead of integrated along the path — the model the whole game rests on, wrong in the one place it is computed | [#37](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/37) |
-| markdownlint reported about 270 issues in `docs/`, and the gate was reporting-only | [#38](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/38) |
-| Seven documents were linked and never written, and that gate was reporting-only too | [#39](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/39) |
+| Resolution tiers contradicted themselves: 0–4 vs 0–5 | [#34](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/34) |
+| HYD values invented by the code | [#35](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/35) |
+| `echo-sim` used a different detection formula | [#36](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/36) |
+| PropagationFactor sampled at the emitter, not along the path | [#37](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/37) |
+| About 270 markdownlint faults; the gate only reported | [#38](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/38) |
+| Seven linked docs never written | [#39](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/39) |
 
 **Six findings on a five-day-old repository is the whole argument for the rule this project
 runs on.** Every one of them is the same shape — the documents say one thing and the code
@@ -250,9 +250,9 @@ reason to exist.
 
 | Work | Issue |
 | --- | --- |
-| Depth orders — descent SIG, silent ascent, server-side validation | [#98](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/98) |
-| Depth HUD — depth ribbon, PR badge, crush hatching ([ui-ux.md](ui-ux.md) §8) | [#99](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/99) |
-| Resonance Crystal in the Abyssal band, and a tech gate on it | [#100](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/100) |
+| Depth orders — loud descent, silent ascent | [#98](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/98) |
+| Depth HUD — ribbon, PR badge, crush hatching | [#99](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/99) |
+| Resonance Crystal and its tech gate | [#100](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/100) |
 
 **Why it went first.** Everything downstream — deep raids, the Directorate's birthright, the
 Consortium's paid refits, [economy.md](economy.md) §7 in its entirety — was inert until a
@@ -267,9 +267,9 @@ sonification by tier, and the player's own loudness in the mix.
 
 | Work | Issue |
 | --- | --- |
-| Audio engine — bus graph, 24-voice budget, tick-aligned contact state | [#101](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/101) |
-| Contact sonification — tier timbre, panning as information, biome filtering | [#102](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/102) |
-| Own loudness — self bus, the exposure cue, active sonar, silent running | [#103](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/103) |
+| Audio engine — bus graph, 24-voice budget | [#101](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/101) |
+| Contacts sonified by tier | [#102](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/102) |
+| Own loudness, exposure cue, sonar modes | [#103](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/103) |
 
 **Two rules held across the phase and still hold.** Audio is presentation only: no audio
 state may feed back into the simulation, and the mix must never be why two clients disagree.
@@ -285,11 +285,11 @@ equivalent.
 
 | Work | Issue |
 | --- | --- |
-| The Drift — fauna as listeners and as contacts, plus Biomass and Drift Health | [#104](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/104) |
-| Hazard framework, proven by vent eruptions and resonance storms | [#105](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/105) |
-| Echo Marks — the persistent acoustic residue layer, and industrial hum | [#106](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/106) |
-| Authored map archetypes from [maps.md](maps.md), replacing `Terrain.demo()` | [#107](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/107) |
-| Thermal Draw — the resource that is a rate, not a stockpile | [#108](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/108) |
+| The Drift — fauna as listeners and contacts | [#104](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/104) |
+| Hazards — vent eruptions and resonance storms | [#105](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/105) |
+| Echo Marks and industrial hum | [#106](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/106) |
+| Authored map archetypes | [#107](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/107) |
+| Thermal Draw — a rate, not a stockpile | [#108](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/108) |
 
 **Why this phase mattered more than it looked.** Fauna make every Tier-1 smear ambiguous,
 which is the difference between hidden information and merely absent information. Echo
@@ -309,11 +309,11 @@ either.
 
 | Work | Issue |
 | --- | --- |
-| Skirmish AI — restricted to the same `EchoSnapshot` a human receives | [#109](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/109) |
-| Match lifecycle — lobby, faction choice, reconnection, result, rematch | [#110](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/110) |
-| Control surface — box select, control groups, order queue | [#111](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/111) |
+| Skirmish AI on the same snapshot a player gets | [#109](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/109) |
+| Match lifecycle — lobby to rematch | [#110](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/110) |
+| Box select, control groups, order queue | [#111](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/111) |
 | Sonar-scope minimap and contact log | [#112](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/112) |
-| Unit separation, structure obstacles, terrain passability | [#113](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/113) |
+| Unit separation and obstacles | [#113](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/113) |
 
 **The AI's information restriction is a design test, not an implementation detail.** An
 opponent that reads world state is playing a different game from the one the player is
@@ -332,9 +332,9 @@ guard-rail tables into a command you can run.
 
 | Work | Issue |
 | --- | --- |
-| Echo pass scaling beyond ~150 entities | [#90](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/90) |
-| Seeded RNG, replay capture, determinism test | [#114](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/114) |
-| Headless balance harness and match telemetry | [#115](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/115) |
+| Echo pass scaling past ~150 entities | [#90](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/90) |
+| Seeded RNG, replays, determinism test | [#114](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/114) |
+| Headless balance harness | [#115](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/115) |
 
 **The first row did not stay won.** #90 brought the pass inside 2 ms at the entity counts of
 the day, and the detection kernel it pruned is still well pruned. What the September bench
@@ -353,8 +353,8 @@ specified and the code did not have.
 
 | Work | Issue |
 | --- | --- |
-| Industrial hum lives 5 s, so a working economy does not hum ([economy.md](economy.md) §5) | [#136](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/136) |
-| The Hadron tithe is specified in [economy.md](economy.md) §6 and implemented nowhere | [#140](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/140) |
+| Industrial hum lasted 5 s, so economies were silent | [#136](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/136) |
+| The Hadron tithe, specified but not built | [#140](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/140) |
 
 **Both were found the same way**, and it is the way this phase was meant to work: a
 guard-rail read as breached, the number underneath it pointed at a specific doc section, and
@@ -378,12 +378,12 @@ question exposed was that nobody had audited those few hundred lines.
 
 | Work | Issue |
 | --- | --- |
-| Separation correctness, world-bounds authority, derived constants, 60 Hz instrumentation | [#149](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/149) |
-| Terrain passability — the unshipped third of [#113](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/113) | [#150](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/150) |
-| Cold shock currents ([hazards.md](hazards.md) §8), the first simulated current | [#151](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/151) |
-| Kelp entanglement fields ([hazards.md](hazards.md) §4) | [#152](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/152) |
-| Sounder transit collision ([bestiary.md](bestiary.md), [hazards.md](hazards.md) §6) | [#153](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/153) |
-| Directorate shallow-water penalty ([factions.md](factions.md), [systems-depth.md](systems-depth.md) §6) | [#154](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/154) |
+| Separation, world bounds, 60 Hz instrumentation | [#149](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/149) |
+| Terrain passability | [#150](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/150) |
+| Cold shock currents | [#151](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/151) |
+| Kelp entanglement | [#152](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/152) |
+| Sounder transit collision | [#153](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/153) |
+| Directorate shallow-water penalty | [#154](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/154) |
 
 The first row was different in kind from the other five. #149 was defects — a hull
 overlapping three neighbours separated from one of them, a stacked-hull tie-break seeded from
@@ -421,7 +421,7 @@ briefing text.
 
 | Work | Issue |
 | --- | --- |
-| Mission runtime — seated parties, beat schedule, objective predicates — proven by the Prologue, *Sorrowgate* ([mission-sorrowgate.md](mission-sorrowgate.md)) | [#190](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/190) |
+| Mission runtime, proven on *Sorrowgate* | [#190](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/190) |
 
 **Two things were deliberately outside it**, and the bet paid. The other twenty-eight
 missions are all built on the machinery *Sorrowgate* proved, and between them they asked the
@@ -450,10 +450,10 @@ phase that created it.
 
 | Work | Issue |
 | --- | --- |
-| The honest column glyph — contacts below Tier 3 hovered at a 600 m reference nobody earned; the mark is the water column now | [#283](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/283) |
-| A far-zoom readability scale — hulls at true metre scale vanished at survey zoom (gate 7); settled in [art-direction.md](art-direction.md) | [#284](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/284) |
-| An audio cue for sour exposure — [audio-direction.md](audio-direction.md) decided the channel first | [#285](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/285) |
-| Wall-clock validation of the composited frame on a real GPU and the Termux floor | [#286](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/286) |
+| Column glyph for contacts below Tier 3 | [#283](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/283) |
+| Far-zoom readability scale | [#284](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/284) |
+| Audio cue for sour exposure | [#285](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/285) |
+| Frame time on a real GPU and on Termux | [#286](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/286) |
 
 **Three kinds of debt, worth keeping distinct.** The first two were honesty of presentation,
 and both are settled. The third was the parity rule — the Lid bleeds unrecoverable hull, and
@@ -484,132 +484,157 @@ than drift. **The opponent** is where the harness's own findings went once match
 ending. **The roster, wave by wave** and **the fleet as buildable source** are the two halves
 of what a navy is — the hulls it fields and where their shapes come from — and both were
 opened by working the audit's own design rows. **The Biomass account** is one finding read
-three times before anybody named it, which is why its rows point at each other. And **filed
-since the audit** holds the rest of what has been opened since. They sit in this phase because
+three times before anybody named it, which is why its rows point at each other. **The world,
+drawn** and **defects the loop finds** are the open epics
+[#833](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/833) and
+[#746](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/746). And **filed since the
+audit** holds the rest of what has been opened since. They sit in this phase because
 it is the phase the build is in, not because the audit found them.
 
 **The match that does not end**
 
 | Work | Issue |
 | --- | --- |
-| Match resolution — done: 29 of 30 baseline skirmishes decide, and every guard-rail reads. The number the harness surfaced next is the Knights' 83% win rate among decided matches, which is a balance issue and not a resolution one | [#440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/440) |
+| Match resolution — 29 of 30 skirmishes decide | [#440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/440) |
 
 **The opponent**
 
 | Work | Issue |
 | --- | --- |
-| The Consortium beats the Directorate 90 in 10 in duels — closed as superseded, not as fixed. Three rounds of evidence agreed that no doctrine knob moves it and that the cause is an account rather than a doctrine: a Biomass income the Directorate cannot spend, out of a map that holds 916 of it once. The reading stands and the work moved to [#520](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/520), [#530](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/530) and [#535](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/535) | [#458](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/458) |
-| `AiCommand` carried 21 verbs against the 27 a seated commander can send, with the parity claim checked only in the direction that cannot fail — fixed. `LOBBY_MSG` makes the in-match set a type rather than a comment banner, and an `Exclude<>` assertion in `ai/types.ts` quotes the offending verb by name, so a 28th client message fails `npm run type-check` until someone writes it or lists it. Of the six gaps, `ability` and `sow` proved permanent exemptions, `noisemaker` became `commandCountermeasures`, and the last three are [#703](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/703) | [#621](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/621) |
-| Three in-match verbs the commander still cannot say — `hold`, `rally`, `followFloor`. Nothing is broken for a player; what is open is a vocabulary of 22 of 27, and the standing rule is that a verb gets built when a commander branch wants it rather than to round a count up — a variant with no caller is not the fix | [#703](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/703) |
-| The escort gate on the ordnance want is `ceil(attackAtArmySize / 2)`, so the navy that fields fewest hulls is charged the highest bar: the Order sits at exactly two armed hulls for 46% of a match against a threshold of three, and its Lance is built zero times in ten. Measured per navy, 82% of its ordnance want is lost to that gate against 14% to the rung and 3% to money — and the blockers differ for the other three | [#698](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/698) |
-| The Commune's own hulls in the commander's hands — the mine command and a Spinner doctrine landed; the Sower half waits on whether the Commune is meant to reach crystal at all | [#467](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/467) |
-| The Knights win 83% of decided four-faction matches — fixed, and neither cause was a Hadron hull. The tithe had been calibrated in a baseline where nobody's haulers survived long enough to matter, and the two quiet navies throttled themselves to Trickle for most of a match against a Refinery bearing no throttle quiets. Halving the Order's nodule cut per load ([economy.md](economy.md) §6) and teaching the watch to refuse a bet it cannot win took the baseline from 63/0/0/38 to 31/12/15/42 on the same seeds | [#454](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/454) |
-| No commander builds a Slipway in a duel, so the rung's hulls are invisible to their own gate — not one of the six duels loses a hull from that yard, and waves 3 through 5 put most of their roster behind it. A structures-built column was the instrument that was actually missing; the saving rule and the duel's own length are the two causes it could reach | [#518](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/518) |
-| The Directorate cannot pay for either hull its rung exists to produce — 0.0 crystal and 10 Biomass a match against prices of 40 and 60. It reaches the rung more reliably than any other navy and then builds neither hull, in thirty matches: the one navy [economy.md](economy.md) §7 makes at home at 2,400 m banks less crystal than the two that have to raid for it | [#520](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/520) |
+| Consortium beat the Directorate 90–10 — superseded by #520, #530, #535 | [#458](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/458) |
+| AI verb parity, enforced by type | [#621](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/621) |
+| Three verbs the commander still lacks | [#703](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/703) |
+| The escort gate starves the smallest navy of ordnance | [#698](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/698) |
+| The Commune’s own hulls in the AI’s hands | [#467](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/467) |
+| Knights won 83% of decided matches — fixed | [#454](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/454) |
+| No commander built a Slipway in duels | [#518](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/518) |
+| The Directorate cannot pay for its rung hulls | [#520](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/520) |
+| The rung costs a third of a navy’s match income | [#706](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/706) |
 
 **Performance and netcode**
 
 | Work | Issue |
 | --- | --- |
-| Echo pass scaling — replace the full entity-id walks in `Match` with queries, share the public payloads across slots, re-run the bench | [#430](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/430) |
-| Interpolate own-force positions between Echo snapshots and echo orders locally — own hulls only; [ui-ux.md](ui-ux.md) §4 forbids it for contacts | [#429](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/429) |
-| The Pixi overlay repaints everything at display rate from 5 Hz data | [#432](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/432) |
-| Delta-encode the per-player Echo snapshot | [#433](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/433) |
-| Draw calls — batch plumb lines and shadow discs; rebuild terrain partially on ground change | [#434](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/434) |
-| Backend hot spots — structure separation broadphase, handle reverse index, terrain-history hashing, replay changelog | [#444](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/444) |
+| Echo pass scaling — queries and shared payloads | [#430](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/430) |
+| Interpolate own hulls between snapshots | [#429](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/429) |
+| The overlay repaints every frame from 5 Hz data | [#432](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/432) |
+| Delta-encode the Echo snapshot | [#433](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/433) |
+| Fewer draw calls; partial terrain rebuilds | [#434](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/434) |
+| Backend hot spots | [#444](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/444) |
 
 **Controls**
 
 | Work | Issue |
 | --- | --- |
-| Pathfinding — navigate hulls around blocked ground instead of steering straight and sliding | [#431](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/431) |
-| RTS control conventions — attack-move, rally points, stop and hold, edge scroll, a production queue | [#435](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/435) |
-| Mouse and keyboard on a PC — done, and by the control conventions rather than by a separate input pass: left-drag select, right-click order, middle-drag pan, wheel zoom about the cursor, shift to queue and ctrl to subtract, alt or double-click for the class, groups on 1–9, the army on 0, arrows and the screen edge to scroll, and every fleet action rebindable on the controls screen | [#294](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/294) |
+| Pathfinding around blocked ground | [#431](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/431) |
+| Attack-move, rally, stop and hold, edge scroll, a queue | [#435](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/435) |
+| Mouse and keyboard on a PC — done | [#294](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/294) |
 
 **Design**
 
 | Work | Issue |
 | --- | --- |
-| Two exclusive hulls per faction, and one tech rung above crystal | [#436](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/436) |
-| Whether the game has upgrades, research or veterancy at all, and how loud each is — answered in [systems-progression.md](systems-progression.md): five fleet-wide refits (§2) and a rank a hull earns by surviving (§3), under §1's rule that nothing tech-ups quietly | [#462](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/462) |
-| A population cap, resolved against the Echo budget and the Directorate swarm doctrine | [#437](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/437) |
-| Bound scattered water so it is learnable, and redesign the superweapons before they are built | [#438](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/438) |
-| Combat depth — how many Echo snapshots a decided fight spans and what the losing side can still do inside one; answered by lengthening the TTK bands and giving the defender a mine astern | [#463](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/463) |
+| Two exclusive hulls per navy, and a tech rung | [#436](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/436) |
+| Upgrades and veterancy, and how loud each is | [#462](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/462) |
+| A population cap | [#437](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/437) |
+| Learnable scatter water; superweapons redesigned | [#438](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/438) |
+| Combat depth — longer fights, a mine astern | [#463](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/463) |
 
 **The roster, wave by wave**
 
 | Work | Issue |
 | --- | --- |
-| A full line per navy — sixteen hulls across a role matrix, planned in [roster-plan.md](roster-plan.md); follows #436. Seven waves have landed, and the rows below are the record of each. What the plan costs, in its own words: every hull the commander cannot use is a hull the baseline never sees | [#495](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/495) |
-| The rung's roster transcribed out of [units.md](units.md) into shared and the simulation — the Slipway and the eight faction hulls | [#461](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/461) |
-| Approved models for those nine, through the intake gates | [#466](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/466) |
-| Wave 0 — the ground the rest stand on: per-kind loss rows in the balance report, the harness around them, the opening kit and the phantom rule | [#498](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/498) |
-| Wave 1 — the four transports, and a force carried in a hold where nothing can hear it | [#501](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/501) |
-| Wave 2 — the four scouts, engine off and the cadence ping | [#506](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/506) |
-| Wave 3 — the four ordnance hulls, a laid screen and a committed shot | [#507](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/507) |
-| Wave 4 — the four siege hulls, and damage that reads its target | [#508](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/508) |
-| Wave 5 — the line hulls, the Commune's anchor, and an opening kit that is a shape rather than a tonnage | [#509](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/509) |
-| Wave 6 — a decision wave: no new hull, no new mechanism, no code. The three commons are **kept**, and not because they are loved. Read over the baseline and all six duels there are four leanings on a common hull, and only one is a common hull doing a job nothing else could — the Light Scout, the floor a production cycle falls through to when it cannot afford the doctrine's next entry. The other three were findings about the roster, filed as #529, #530 and #531 | [#510](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/510) |
-| The Knights' composition still named a Corvette long after the Clarion existed — stale rather than load-bearing, and the substitution is one for one at 5.6 a match with no fall-through | [#529](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/529) |
-| Wave 7 — the mid-tier, and the first two guns in the game aimed by Acoustic Signature rather than by range: the Derrick auto-acquires the loudest live enemy in range instead of the nearest, and the Responsory deals ×1.5 against a target whose *perceived* loudness is over 60. Two hulls rather than four, because only the Consortium and the Order have the gap — and the four dead Cruiser entries they replace had stopped being free, costing the Order thirty points of win rate once the cycle learned to save | [#531](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/531) |
-| The Consortium's route to the deep — [factions.md](factions.md)'s depth row reads *buys access* and there was nothing to buy. The Pressure Refit is the first of [systems-progression.md](systems-progression.md) §2's five: fleet-wide, +1 PR to every hull afloat and every hull launched after, +2 SIG at idle and cruise and at no other state, run on the Slipway's line at the cost of the yard-time it spends | [#517](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/517) |
+| A full line per navy — sixteen hulls | [#495](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/495) |
+| The rung’s roster in code | [#461](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/461) |
+| Models for the rung’s nine | [#466](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/466) |
+| Wave 0 — harness and opening kit | [#498](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/498) |
+| Wave 1 — transports | [#501](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/501) |
+| Wave 2 — scouts | [#506](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/506) |
+| Wave 3 — ordnance | [#507](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/507) |
+| Wave 4 — siege | [#508](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/508) |
+| Wave 5 — line hulls | [#509](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/509) |
+| Wave 6 — the three common hulls kept | [#510](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/510) |
+| The Knights’ build named a stale Corvette | [#529](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/529) |
+| Wave 7 — mid-tier, guns aimed by loudness | [#531](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/531) |
+| Pressure Refit — the Consortium’s route deep | [#517](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/517) |
+| Wave 8 — the commander flies its carriers | [#839](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/839) |
 
 **The fleet as buildable source**
 
 | Work | Issue |
 | --- | --- |
-| Every hull, structure and prop built from a committed script rather than an opaque binary, so re-proportioning a navy is one file edited rather than seventeen binaries re-authored. Legitimate because every approved model already *is* exporter output — named primitive series, no sculpts and no textures — and the gates do not move: intake still checks scale, triangles, materials and licensed light, and the glow calibration still grades whatever comes out. Both missing shape languages are written, the kit carries a round-trip check that fails on any drift between a script and its committed GLB, and a modelled kind's plan outline is generated from the model instead of hand-drawn a second time | [#540](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/540) |
-| The Commune's own two hulls ported — the Sower and the Spinner, which is what finally exercised a shape language that had landed with no consumers. Building them found three things the unexercised vocabulary had wrong: a pod profile fuller amidships than the hull it was read off and asymmetric by a station, a fin primitive that drew symmetric trapezoids when not one approved fin is symmetric, and a bloom bed that could only be cut with a hard rim. The committed GLBs are the scripts' own output now, and the port reproduces the approved models' defects faithfully rather than quietly correcting them — the Sower's buried lights are reported, not raised, because a visual change is its own PR | [#546](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/546) |
-| The first structures under `tools/hull-models/` — the Sentinel Turret's four faction variants | [#553](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/553) |
-| The Clarion's six horn seams spiral in the approved binary, against the Order's bilateral symmetry | [#640](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/640) |
-| Approved-model defects the #638 / #639 restorations reproduce on purpose — buried lights, root-outboard limbs, a staggered gun. A port transcribes a shape; correcting one is its own PR, and this is the list | [#645](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/645) |
-| Under #642's port convention the approved Dredge and Precentor sat the other way about from their UNIT blocks — the claw to port, the longer rank to starboard. The blocks had been written to the old reading and were amended to the models; no model moved | [#650](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/650) |
-| Phase 3's last twenty models — the Foundry, Refinery, Slipway and Bastion in four navies, and the four signature structures | [#652](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/652) |
+| Every model built from a script | [#540](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/540) |
+| The Sower and Spinner ported | [#546](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/546) |
+| Sentinel Turret variants as scripts | [#553](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/553) |
+| The Clarion’s horn seams spiral | [#640](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/640) |
+| Known defects the ports reproduce | [#645](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/645) |
+| Dredge and Precentor sides swapped in the docs | [#650](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/650) |
+| The last twenty structures as scripts | [#652](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/652) |
+| The fourteen environment props as scripts | [#869](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/869) |
+| Two Order hulls have faces wound inward | [#871](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/871) |
+| Props render up to 1.23× their reviewed size | [#876](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/876) |
 
 **The Biomass account**
 
 | Work | Issue |
 | --- | --- |
-| The Chorister is not the Directorate's line hull in practice — 20 Biomass buys 1.1 a match. Closed into the account underneath it rather than fixed: the price is right and the doctrine claim is right, and neither can be read while Biomass is a fixed 916 spent once | [#530](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/530) |
-| Biomass is a stock, not an income — nothing respawns, nothing is harvested, and it is paid to whoever stands nearest. The finding under #520 and #530, and the reason the Directorate cannot pay for its own roster | [#535](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/535) |
-| The flora economy — Biomass grows on kelp beds whose standing crop *is* the map's cover, so an economy here spends concealment rather than only making noise. Specified whole in [systems-flora.md](systems-flora.md), in seven waves; bloom-share folds into the account, and all three of #535's faults are answered by the one mechanism rather than separately | [#547](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/547) |
-| Flora wave 1 — a bed carries a standing crop, and that one number is the canopy, read as masking and as grip and never bookkept twice: PF ramps from the biome's own 0.55 at full cover to 0.90 over bare plateau, and drag and drag-SIG thin with it. A stripped bed is bare ground rather than a weak hazard. Nothing consumes crop yet, so no figure in the stored baseline moves | [#549](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/549) |
-| Flora wave 2 — regrowth, and fauna that repopulate, both on [bestiary.md](bestiary.md) §6's Drift Health bands: one instrument read the same way everywhere, where the band that stops fauna spawning is the band that stops kelp growing. This is the wave that turned the account from a stock into an income, and the re-run baseline says it worked on the navy it was for — Directorate Biomass 4.1 to 6.3 a minute, its Corvette substitution falling from 9.2 a match to 7.7 as it started fielding what its doctrine names, and its win rate falling 67% to 61% while doing it. Median match length fell 1,238 s to 1,018 s and the undecided count 9 of 30 to 7. Drift Health ended *higher*, at a median 74 against 73, which is the reading worth keeping: a map that restocks is not a map being stripped faster, because what wears a region is kills and noise and neither went up | [#554](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/554) |
-| Flora wave 3 — the bio-reactor, the first thing in the game that can take crop: 400 m, 12 Biomass a minute at SIG 50, eating its own cover nearest-first, on the Vent Tap's own placement rule, and costing its region health at a rate derived from the seeding roster rather than chosen. Building it corrected the design rather than the code. [systems-flora.md](systems-flora.md) §7 had justified the rate as *twenty minutes to a bed*, which ignored regrowth putting back 9.6 of every 12 taken — so in Healthy water four fifths of what a reactor takes is interest and the canopy barely moves. What opens the hole is not the crop but the **health** spent taking it: every Biomass rendered wears the region, and once the water is Strained regrowth falls to 60% and the yield with it. Measured over one match on a full bed — crop 100% to 51%, Drift Health 88 to 55, PF 0.55 to 0.73, 255 banked — so §2's picture is right and arrives on a fuse lit in the water rather than in the crop, half done by the cap rather than finished. Whether 12 and 4% should be retuned is a balance question with a measurement behind it now. The stored baseline came back bit-identical, which was the check | [#557](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/557) |
-| Flora wave 4 — the fauna windfall credited to the killer, and the last of #535's three faults. Half of [systems-flora.md](systems-flora.md) §5 is already built: a death the map caused pays nobody while still charging the region. What is left is attribution, and `payBiomass` argues against itself — it credits the nearest hull on the grounds that the nearest hull is the shooter, which is exactly what #535 measured as false. Every path that can wound a creature already carries its owner, and the Spore's `slot` is the precedent, so this is a record to write rather than a fact to discover: last hit wins, an unattributed death pays nobody. The baseline is *meant* to move here — the Consortium banks 2.7 Biomass a minute against the Directorate's 6.3 on a doctrine that says it should earn almost none, and this is the wave that finally points the account at the navy [bestiary.md](bestiary.md) §5 says owns it | [#560](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/560) |
+| The Chorister unaffordable — folded into #535 | [#530](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/530) |
+| Biomass is a stock, not an income | [#535](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/535) |
+| The flora economy | [#547](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/547) |
+| Flora wave 1 — the crop is the canopy | [#549](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/549) |
+| Flora wave 2 — regrowth and repopulation | [#554](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/554) |
+| Flora wave 3 — the bio-reactor | [#557](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/557) |
+| Flora wave 4 — the windfall goes to the killer | [#560](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/560) |
 
 **Shipping and hygiene**
 
 | Work | Issue |
 | --- | --- |
-| Deployment config, origin lock, and the unused pg and redis dependencies | [#441](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/441) |
-| Frontend housekeeping — dead dependencies, code splitting, on-demand art loading, production sourcemaps | [#442](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/442) |
-| Test gaps — an untested renderer and client, no counted-work budget for the 60 Hz step, unhashed Echo Marks | [#443](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/443) |
-| Test gaps, part two — the shell, the wire and the audio graph, now held against a stub room, a stubbed `AudioContext` and a renderer that needs no DOM rather than against a browser | [#487](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/487) |
-| The room's message names and payloads lived in two packages and were checked by neither — a name renamed on one side alone used to compile, travel, and be silently dropped. Declared once in `wire.ts` now, with assertions that fail the build if a message is added to one half and not the other | [#489](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/489) |
-| The esc menu's focus rules — jsdom implements neither `inert` nor sequential focus navigation, so the half it can answer is held in the screen tests and the other half is a browser drive rather than a pretend one | [#515](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/515) |
-| The wire table carries name and payload but not shape, so every handler validates by hand — 39 checks across 32 handlers, not uniform, which is how #609's two holes arose | [#628](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/628) |
-| This document — it cited closed issues as live work and omitted the balance finding | [#445](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/445) |
-| This document again, twenty-three hours later — the prose that replaced those rows asserted live tracker state, which goes false on its own with nobody touching the file. The standing section names the kinds and lets the site read every state from the tracker on each build | [#504](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/504) |
+| Deployment config and unused dependencies | [#441](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/441) |
+| Frontend housekeeping and code splitting | [#442](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/442) |
+| Test gaps — renderer, client, step budget | [#443](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/443) |
+| Test gaps — shell, wire, audio graph | [#487](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/487) |
+| Wire messages declared once | [#489](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/489) |
+| The esc menu’s focus rules | [#515](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/515) |
+| Wire message shapes checked on arrival | [#628](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/628) |
+| This roadmap cited closed work as live | [#445](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/445) |
+| This roadmap asserted live state in prose | [#504](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/504) |
 
 **Filed since the audit**
 
 | Work | Issue |
 | --- | --- |
-| A fog of war for the chart — the world going vague where no hull of yours is listening, which is the Echo Layer's own rule drawn on the map. **Decided: presentation only, and shipped** as the acoustic veil ([ui-ux.md](ui-ux.md) §4.5). The client already holds nothing it did not resolve, so the vagueness is a drawing rule over data the server has always sent, and no new state crosses the wire to make it. It is the water that goes cold rather than the ground that blurs — the chart is public, and both navies have it — and the field is the propagation model solved for loudness rather than a listening radius, so the biome is visibly the lever | [#472](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/472) |
-| Harvesters that would not move in the Prologue, found by playing it | [#478](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/478) |
-| The Tetherjelly's second home — settled in [bestiary.md](bestiary.md) §4 as **one animal re-homed per map** rather than a second species: a canopy cluster is the same SIG 1 and the same −0.10 PF as a duct one, so the only thing that differs is depth, and depth is a property of the ground. `marr-plateau` names the Kelp Forest band in its `ambientBands`, and *Tend* seeds its own lane | [#480](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/480) |
-| The crystal tier no navy can reach — the round trip is longer than the match, the field sits 500 m inside two eruption plumes, and only the Directorate can work it without paying crush. Found by teaching the commander to raid for it (#467) | [#491](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/491) |
-| Test gaps, part three — the screens implement [ui-ux.md](ui-ux.md) §11's accessibility commitments, which that document calls a correctness requirement rather than a feature tier, and nothing checks them | [#494](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/494) |
-| The story as a player receives it — #224 established that the world's facts agree with each other and with the code; nothing had yet judged whether they *arrive*. Deliberately held open for an independent reader and assigned so that an unattended run does not take it: a reading of the world is worth less done by the hands that wrote what is being read | [#469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/469) |
-| The campaign read in play order — the twenty-nine briefings, the board's slot lines and the record's six era pages, taken at three checkpoints, in [campaign-read.md](campaign-read.md). Output is findings and not fixes, and there are eight: the variant system has exactly one scene and all three missions that touch it are the same navy's, and the board's *Attending* line states the secret that campaign spends seven missions not saying | [#534](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/534) |
-| Biomass is a stock, not an income — nothing respawns, nothing is harvested, and it is paid to whoever stands nearest. The finding under #520 and #530, and the reason the Directorate cannot pay for its own roster | [#535](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/535) |
-| The flora economy — Biomass grows on kelp beds whose standing crop *is* the map's cover, so an economy here spends concealment rather than only making noise. Specified whole in [systems-flora.md](systems-flora.md); bloom-share folds into the account | [#547](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/547) |
-| The permanent SIG meter maxes over the player's structures as well as their units, so the Prologue teaches SIG on a number a flight of four cannot move | [#623](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/623) |
-| The containment guard #622 added is syntactic — a floorless rectangle satisfies it, and 21 of 23 maps satisfy it trivially | [#636](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/636) |
-| [bestiary.md](bestiary.md) §6's Drift Health bands are non-monotone read literally: Failing admits no spawns, Collapsing admits scavengers again | [#655](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/655) |
-| The mix is still uncomfortably loud on a phone after #661's two fixes, which are themselves confirmed — read at the bus rather than at the output, since a figure at the output says only that the mix is hot | [#663](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/663) |
-| The Directorate wins 75% of decided matches, and "one navy is simply stronger" is the one guard-rail reading breached. **Parked**, not deferred by accident: balance work is frozen while the systems are still changing shape (`CLAUDE.md`), so the reading is recorded and left | [#654](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/654) |
+| The acoustic veil — fog of war for the chart | [#472](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/472) |
+| Prologue harvesters would not move | [#478](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/478) |
+| Tetherjelly re-homed per map | [#480](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/480) |
+| No navy can reach the crystal tier | [#491](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/491) |
+| Test gaps — screen accessibility | [#494](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/494) |
+| An independent read of the story | [#469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/469) |
+| The campaign read in play order | [#534](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/534) |
+| The SIG meter counted structures, not the fleet | [#623](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/623) |
+| The map containment guard is only syntactic | [#636](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/636) |
+| Drift Health bands read non-monotone | [#655](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/655) |
+| The mix is too loud on a phone | [#663](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/663) |
+| Directorate wins 75% — parked under the balance freeze | [#654](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/654) |
+| `units.md` calls the Spark the “heaviest craft” | [#872](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/872) |
+
+**The world, drawn**
+
+| Work | Issue |
+| --- | --- |
+| A visual direction for the 3D ocean | [#807](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/807) |
+| Ladder audit — every map layer names its rung | [#866](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/866) |
+| Tetherjelly and Lampfry as stipple | [#867](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/867) |
+| Classified fauna as stipple, denser at Tier 4 | [#868](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/868) |
+
+**Defects the loop finds**
+
+| Work | Issue |
+| --- | --- |
+| The AI ignores the berth cap | [#854](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/854) |
+| A hidden clock re-measured every second | [#857](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/857) |
+| `headless.ts` names the wrong cause for a rebuild | [#858](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/858) |
+| A craft launched astern shoves its own carrier | [#863](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/863) |
 
 **Why match resolution stands alone at the top.** Every other row is an improvement to a
 game; the first row is whether there is one. The balance guard-rails are the only instrument
@@ -654,7 +679,7 @@ contradicts the one rule the architecture will not bend.
 
 | Work | Issue |
 | --- | --- |
-| A competitive-mode document — a 1v1 map pool of built maps, rating and ladder, server-side accounts, team-mode rules, a post-game that stays inside the hidden-information rule, and an observer mode that is not a maphack | [#439](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/439) |
+| A competitive-mode document | [#439](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/439) |
 
 **This phase is where the mode is written down, not a claim that it is next.** A ladder
 measures skill against a game whose matches decide and whose navies are not 90/10, and the
@@ -684,7 +709,7 @@ that already breaks its budget at about 160, which is why it waits.
 
 | Work | Issue |
 | --- | --- |
-| A fifth navy of mercenaries — the commons given an owner, a doctrine anchored to sound, a roster across the role matrix and a storyline the twenty-nine missions never mention. Multiplayer only, after release | [#543](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/543) |
+| A fifth navy of mercenaries, after release | [#543](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/543) |
 
 **Nothing in this phase is scheduled.** It carries the decision so that the next person to
 read the commons does not re-open the question, and it is placed after release so that
