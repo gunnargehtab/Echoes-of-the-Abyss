@@ -37,6 +37,7 @@ import { driftReport } from './lib/drift.mjs';
 import { fetchIssueStates, fetchOpenIssues } from './lib/github.mjs';
 import { parseRoadmap } from './lib/parse.mjs';
 import { render } from './lib/render.mjs';
+import { findPortraits } from './lib/portraits.mjs';
 import { findContactSheet, pngSize } from './lib/sheet.mjs';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -120,6 +121,19 @@ if (sheetFile === null) console.error('No rung-roster-sprites.png under docs/scr
 else if (sheetSize === null) console.error(`${sheetFile.path} is not a PNG; leaving it off.`);
 else ASSETS.push({ from: sheetFile.path, to: sheet.href });
 
+// Each navy's portrait: one hull kind in every navy's water, from the renders
+// tools/hull-renders committed. A missing one leaves its card without a
+// picture and says so here.
+const portraits = findPortraits(
+  join(repoRoot, 'docs', 'concept-art', 'renders'),
+  content.factions,
+  content.portraitKind
+);
+if (portraits.missing.length > 0) {
+  console.error(`No hull render for: ${portraits.missing.join(', ')}`);
+}
+for (const p of Object.values(portraits.found)) ASSETS.push({ from: p.path, to: p.href });
+
 // The numbers on the stat tiles are counted from the repository rather than
 // typed in, so a new mission or map shows up without anyone editing the site.
 const counts = {
@@ -152,12 +166,14 @@ const html = render({
   fontHref: 'fonts/big-shoulders-display-latin.woff2',
   sheet,
   unplaced: drift.unplaced.length,
+  portraits: portraits.found,
 });
 
 // Respect an absolute --out. Joining it to the repo root silently wrote the
 // site *inside the working tree* at a path that looked absolute in the log.
 const target = isAbsolute(out) ? out : join(repoRoot, out);
 mkdirSync(join(target, 'fonts'), { recursive: true });
+mkdirSync(join(target, 'renders'), { recursive: true });
 writeFileSync(join(target, 'index.html'), html);
 for (const asset of ASSETS) copyFileSync(asset.from, join(target, asset.to));
 // GitHub Pages runs Jekyll over the artifact unless told not to, and Jekyll
@@ -168,5 +184,6 @@ console.error(
   `Wrote ${join(target, 'index.html')} — ${roadmap.phases.length} phases, ${numbers.length} items, ` +
     `${states.size} states resolved, ${counts.missions} missions, ${counts.maps} maps, ` +
     `${roadmap.sprints.length} sprints, ${drift.unplaced.length} open issues unplaced, ` +
-    `roster sheet ${sheetFile === null ? 'missing' : `from #${sheetFile.issue}`}.`
+    `roster sheet ${sheetFile === null ? 'missing' : `from #${sheetFile.issue}`}, ` +
+    `${Object.keys(portraits.found).length} of ${content.factions.length} navy portraits.`
 );
