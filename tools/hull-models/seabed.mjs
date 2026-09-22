@@ -323,3 +323,107 @@ export function kept(geo) {
   geo.deleteAttribute('uv');
   return geo;
 }
+
+/* --------------------------------------------------------------------------
+ * The resonance pair — env-resonance-crystal and env-resonance-pylon (#869,
+ * off #540 Phase 5).
+ *
+ * The Resonance Field's two files are tables of a third kind. The stone
+ * props' generator jittered by index and tore its seams; this one jittered
+ * each *corner* once, so every duplicate three carries — the θ = 2π copy of
+ * a ring's first corner, a torus's closing ring, a cap's centre once a
+ * segment — is the first corner to the bit, and a cap's ring is the torso's
+ * end row again. So a part here is its constructor's topology under a table
+ * with no duplicates in it, a ring a row and a centre a point, and the three
+ * builders below expand one to three's layout for kit.mjs `tabled` rather
+ * than have a script type the copies out.
+ *
+ * One reading to distrust: parts.mjs prints every 36-triangle buffer as
+ * "≈ dodecahedron", and the boulders and the rubble are — twenty corners
+ * shared three faces each, exactly as three lays them — but the crystal's
+ * `base_mound` and the pylon's `crust_mound` are nine-facet drums, one
+ * height row and both caps, which is the same count. Only the sharing
+ * pattern tells them apart, and a port checks it before choosing.
+ *
+ * Both roots are the exports' own: identity, the mound's foot already on
+ * y = 0. `stand` above would ground one, which is a lift the files do not
+ * carry, so the pair is held at its footprint by `held` — kit.mjs
+ * `fitFootprint`, the one uniform factor and nothing else, checked against
+ * the header's measure the way `stand` checks its own.
+ * ------------------------------------------------------------------------ */
+
+// Imported here rather than on the module's first line, which four parallel
+// ports were told not to touch; an import declaration is hoisted wherever
+// it sits.
+import { fitFootprint } from './kit.mjs';
+
+/** A ring closed on itself: the corner three doubles at θ = 2π. */
+const closed = (ring) => [...ring, ring[0]];
+
+/**
+ * A drum from its rings, seam untorn — three's CylinderGeometry on
+ * `rings[0].length` facets and `rings.length − 1` height rows: `rings` from
+ * the top row down, each in three's order round from θ = 0; `caps` the top
+ * and bottom centres, one point each, or absent for a tube open at both
+ * ends. The mounds and the pylon's shaft, closed; the crystal's shard
+ * bodies, open.
+ */
+export function drumOf(rings, caps) {
+  const facets = rings[0].length;
+  const heights = rings.length - 1;
+  const rows = rings.flatMap(closed);
+  if (caps) {
+    const [top, bottom] = caps;
+    rows.push(...Array(facets).fill(top), ...closed(rings[0]));
+    rows.push(...Array(facets).fill(bottom), ...closed(rings[heights]));
+  }
+  return tabled(new THREE.CylinderGeometry(1, 1, 1, facets, heights, !caps), rows);
+}
+
+/**
+ * A ring of rings — three's TorusGeometry on `rings.length` radial by
+ * `rings[0].length` tubular segments — under a table: `rings[j]` is the
+ * j-th section round the tube from three's first, each running round the
+ * torus from its first corner. The pylon's three ridges.
+ */
+export function torusOf(rings) {
+  const rows = [...rings, rings[0]].flatMap(closed);
+  return tabled(new THREE.TorusGeometry(1, 0.3, rings.length, rings[0].length), rows);
+}
+
+/**
+ * A dodecahedron — three's DodecahedronGeometry at detail 0 — under a table
+ * of its twenty corners in the order three's buffer first reaches them, a
+ * map read off the constructor here rather than typed. The crystal's four
+ * boulders and the pylon's four rubble stones, each pushed corner by corner
+ * and still flat-faced because a corner's three copies moved together.
+ */
+export function dodecahedronOf(corners) {
+  const geo = new THREE.DodecahedronGeometry(1, 0);
+  const pos = geo.attributes.position;
+  const seen = new Map();
+  const rows = [];
+  for (let i = 0; i < pos.count; i++) {
+    const key = [pos.getX(i), pos.getY(i), pos.getZ(i)].map((v) => v.toFixed(5)).join();
+    if (!seen.has(key)) seen.set(key, seen.size);
+    rows.push(corners[seen.get(key)]);
+  }
+  if (seen.size !== corners.length)
+    throw new Error(`dodecahedronOf: ${corners.length} corners for a solid of ${seen.size}`);
+  return tabled(geo, rows);
+}
+
+/**
+ * Where a prop that already stands is held: at `footprintM` by intake's
+ * measure (kit.mjs `fitFootprint`), the root's translation left as the
+ * file has it. `drawn` is the measure the script's header states, checked
+ * to `tolerance` as `stand` checks its own; returns the measure and the
+ * factor, for the record.
+ */
+export function held(root, footprintM, { drawn: expected, tolerance = 1e-3 } = {}) {
+  const size = fitFootprint(root, footprintM);
+  const drawn = Math.max(size.x, size.z);
+  if (expected !== undefined && Math.abs(drawn - expected) > tolerance)
+    throw new Error(`${root.name}: drawn ${drawn.toFixed(4)} across; the header says ${expected}`);
+  return { drawn, k: footprintM / drawn };
+}
