@@ -271,3 +271,55 @@ export function stand(
   }
   return { drawn, k };
 }
+
+/* --------------------------------------------------------------------------
+ * The kelp cluster, the coral tower and the coral growth (#869, Phase 5):
+ * what the three living props are made of that the five stone props were
+ * not. Two of the lessons the stone ports recorded above stop at the stone.
+ * The kelp's holdfasts, the tower's fourteen lobes and the growth's lobes
+ * and plates are three's polyhedra *untouched* — no jitter, no torn seam —
+ * under a scale triple the generator baked into the buffer. And the tower's
+ * five plates and the growth's four branches are three's cylinder and cone
+ * kept *indexed and smooth-shaded*, three's own normals still on them
+ * (21–24° and about 44° between neighbouring facets'), so a port that ran
+ * them through `flatShaded` would pass every gate — none of `check.mjs`,
+ * `diff.mjs` or the bake reads a normal — and still be wrong. Nor is any of
+ * the three grounded by its root: each carries an identity root, the tower's
+ * and the kelp's with their lowest vertex below y = 0 and the growth's with
+ * its lift baked into the buffers, so their scripts hold the footprint with
+ * kit.mjs `fitFootprint` (scale only) rather than `stand`.
+ * ------------------------------------------------------------------------ */
+
+const triple = (s) => (typeof s === 'number' ? [s, s, s] : s);
+
+/**
+ * One of three's polyhedra at radius 1, detail 0, under the file's own
+ * scale triple, in the files' flat finish. The files carry the *products*
+ * — a lobe 4.2 by 2.94 by 3.99 — and no radius, so that is what a script
+ * cites. A scalar is a uniform scale (the biolight's 0.42).
+ */
+const solid = (Geometry, s) => {
+  const [x, y, z] = triple(s);
+  return flatShaded(new Geometry(1, 0).scale(x, y, z));
+};
+
+/** An icosahedron: the kelp's two holdfasts, the coral growth's six lobes. */
+export const ico = (s) => solid(THREE.IcosahedronGeometry, s);
+/** A dodecahedron: the coral tower's base, lobes, crown and shelves. */
+export const dodeca = (s) => solid(THREE.DodecahedronGeometry, s);
+/** An octahedron: the coral growth's three plates. Not kit.mjs `octa`, which keeps its UVs. */
+export const octa = (s) => solid(THREE.OctahedronGeometry, s);
+/** A tetrahedron: the kelp's three biolight tips. */
+export const tetra = (s) => solid(THREE.TetrahedronGeometry, s);
+
+/**
+ * A primitive as three built it and the generator left it — indexed, with
+ * three's own normals, so a cylinder's torso shades round — minus the UVs
+ * no Block 4 file carries. The coral tower's plates, the coral growth's
+ * masonry boxes and its branches. Not `flatShaded`, on purpose: see the
+ * section note.
+ */
+export function kept(geo) {
+  geo.deleteAttribute('uv');
+  return geo;
+}
