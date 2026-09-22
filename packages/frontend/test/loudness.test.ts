@@ -28,8 +28,10 @@ import {
   crackleAmplitude,
   EchoRenderer,
   glowShare,
+  insideAnotherReach,
   SELECTION_GAP_M,
   sigShare,
+  type ReachDisc,
   type RendererCallbacks,
 } from '../src/game/EchoRenderer.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
@@ -508,6 +510,179 @@ describe('the collar clears the selection ring (ui-ux.md §3.5)', () => {
   });
 });
 
+describe('the reach envelope (ui-ux.md §3.5)', () => {
+  const disc = (x: number, y: number, radiusM: number): ReachDisc => ({ x, y, radiusM });
+
+  it('never lets a disc cover its own boundary', () => {
+    // The rule is about *other* hulls. A circle that erased itself would draw
+    // nothing at all, whatever else was on the chart.
+    const one = [disc(0, 0, 1000)];
+    for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {
+      assert.equal(insideAnotherReach(Math.cos(a) * 1000, Math.sin(a) * 1000, one, 0), false);
+    }
+  });
+
+  it('leaves two identical discs both drawn', () => {
+    // The arrangement the epsilon exists for: without it each erases the other
+    // and the envelope vanishes where it most needs to be right.
+    const pair = [disc(0, 0, 1000), disc(0, 0, 1000)];
+    for (const self of [0, 1]) {
+      assert.equal(insideAnotherReach(1000, 0, pair, self), false, 'a twin erased its twin');
+    }
+  });
+
+  it('drops the arc of a hull whose reach is inside another', () => {
+    // Nested: the small disc's whole boundary is interior to the big one.
+    const nested = [disc(0, 0, 400), disc(100, 0, 2000)];
+    const SAMPLES = 64;
+    const at = (i: number): number => (i / SAMPLES) * Math.PI * 2;
+    let kept = 0;
+    for (let i = 0; i < SAMPLES; i++) {
+      if (!insideAnotherReach(Math.cos(at(i)) * 400, Math.sin(at(i)) * 400, nested, 0)) kept++;
+    }
+    assert.equal(kept, 0, 'a fully covered ring must add no line at all');
+    // And the covering disc keeps all of its own.
+    let outer = 0;
+    for (let i = 0; i < SAMPLES; i++) {
+      const x = 100 + Math.cos(at(i)) * 2000;
+      const y = Math.sin(at(i)) * 2000;
+      if (!insideAnotherReach(x, y, nested, 1)) outer++;
+    }
+    assert.equal(outer, SAMPLES, 'the disc that bounds the union keeps its whole boundary');
+  });
+
+  it('keeps both boundaries where two discs only overlap', () => {
+    // Neither contains the other, so each contributes the arc outside the
+    // other — the union's boundary, which is the whole point of the rule.
+    const overlap = [disc(0, 0, 1000), disc(1200, 0, 1000)];
+    for (const self of [0, 1]) {
+      const SAMPLES = 64;
+      let kept = 0;
+      for (let i = 0; i < SAMPLES; i++) {
+        const a = (i / SAMPLES) * Math.PI * 2;
+        const centre = overlap[self]!;
+        const x = centre.x + Math.cos(a) * 1000;
+        const y = centre.y + Math.sin(a) * 1000;
+        if (!insideAnotherReach(x, y, overlap, self)) kept++;
+      }
+      assert.ok(kept > 0 && kept < SAMPLES, `overlapping disc ${self} kept ${kept} of ${SAMPLES}`);
+    }
+  });
+
+  it('leaves disjoint discs whole', () => {
+    const apart = [disc(0, 0, 500), disc(9000, 0, 500)];
+    for (const self of [0, 1]) {
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 16) {
+        const centre = apart[self]!;
+        const x = centre.x + Math.cos(a) * 500;
+        const y = centre.y + Math.sin(a) * 500;
+        assert.equal(insideAnotherReach(x, y, apart, self), false);
+      }
+    }
+  });
+
+  it("collapses the fixture's nested rings and keeps the one that is apart", async () => {
+    const world = await boot();
+    try {
+      // The fixture's own geometry, and the reason the rule exists. Three
+      // hulls clear §3's amber stop: 11 at SIG 48, 13 at 62, and 14 at exactly
+      // 30. Hull 11 sits inside hull 13's reach — same base, and 4 km of reach
+      // against 300 m of spacing — so it bounds nothing. Hull 14 is 3.7 km
+      // away across the map and bounds its own water.
+      const gated = CANNED_SIGS.filter((sig) => sig >= SIG_BANDS.AMBER).length;
+      assert.equal(gated, 3, 'the fixture has to keep three hulls over the stop');
+      assert.equal(
+        reachRings(world.app).length,
+        2,
+        'the nested pair must merge and the distant hull must keep its own boundary'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('draws nothing at all for a fleet under the stop', async () => {
+    const world = await boot();
+    try {
+      // Silent Running floors a hull at SIG 8 (§7), two stops under the gate,
+      // so a fleet that has gone quiet takes its whole exposure off the water.
+      const base = cannedSnapshot(301);
+      const quiet = { ...base, units: base.units.map((unit) => ({ ...unit, sig: 8 })) };
+      world.chart.applySnapshot(quiet);
+      world.conn.applySnapshot(quiet);
+      world.frame(2);
+      assert.deepEqual(reachRings(world.app), []);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('collapses a squad to one contour rather than a circle each', async () => {
+    const world = await boot();
+    try {
+      // The case the rule exists for, at the scale the fixture cannot reach.
+      // Twenty hulls at one SIG, 200 m apart: equal discs never *contain* each
+      // other, so every one still contributes — but only the sliver of itself
+      // outside all the others, and those slivers are one closed contour. The
+      // measure is therefore drawn vertices, not strokes: the count of arcs
+      // says nothing, the length of ink says everything.
+      const base = cannedSnapshot(303);
+      const seed = base.units[0]!;
+      const squad = {
+        ...base,
+        structures: [],
+        units: Array.from({ length: 20 }, (_, i) => ({
+          ...seed,
+          id: 500 + i,
+          x: 1600 + (i % 5) * 200,
+          y: 1600 + Math.floor(i / 5) * 200,
+          sig: 50,
+        })),
+      };
+      world.chart.applySnapshot(squad);
+      world.conn.applySnapshot(squad);
+      world.frame(2);
+
+      const drawn = reachRings(world.app).reduce(
+        (total, ring) => total + ring.steps.filter((step) => step.action !== 'stroke').length,
+        0
+      );
+      // `CIRCLE_SEGMENTS` is 48, so twenty whole circles would be 980 vertices.
+      // The union of twenty discs 200 m apart with ~3.9 km of reach is barely
+      // larger than one of them, so the boundary has to cost a small multiple
+      // of a single circle rather than twenty.
+      const oneCircle = 49;
+      assert.ok(drawn > 0, 'the squad drew no boundary at all');
+      assert.ok(
+        drawn < oneCircle * 4,
+        `a twenty-hull squad drew ${drawn} vertices, against ${oneCircle * 20} for a circle each`
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('draws exactly one for a lone loud hull', async () => {
+    const world = await boot();
+    try {
+      // One emitter has nothing to be covered by, so the envelope is its own
+      // circle — the rule costs a solitary hull nothing.
+      const base = cannedSnapshot(302);
+      const lone = {
+        ...base,
+        units: base.units.slice(0, 1).map((unit) => ({ ...unit, sig: 70 })),
+        structures: [],
+      };
+      world.chart.applySnapshot(lone);
+      world.conn.applySnapshot(lone);
+      world.frame(2);
+      assert.equal(reachRings(world.app).length, 1);
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
 describe('the reach ring (ui-ux.md §3.5)', () => {
   it('draws for a hull at or above the amber stop and for no quieter one', async () => {
     const world = await boot();
@@ -521,11 +696,14 @@ describe('the reach ring (ui-ux.md §3.5)', () => {
         CANNED_STRUCTURE_SIGS.some((sig) => sig >= SIG_BANDS.AMBER),
         'a structure over the stop is what makes the next assertion mean something'
       );
-      assert.equal(
-        reachRings(world.app).length,
-        loud,
-        'a hull under the amber stop draws its collar and nothing on the ground'
+      // At most one per gated hull, and fewer once they nest — the envelope's
+      // own test above pins which. The bound is what this one is for: nothing
+      // outside the gate may put a line on the ground.
+      assert.ok(
+        reachRings(world.app).length <= loud,
+        'something under the amber stop drew on the ground'
       );
+      assert.ok(reachRings(world.app).length > 0, 'the gated hulls drew nothing at all');
     } finally {
       world.teardown();
     }

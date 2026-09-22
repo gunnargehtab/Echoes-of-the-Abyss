@@ -189,9 +189,25 @@ the water gives it.
 | --- | --- |
 | Radius | `maxAudibleRangeM` at the hull's own SIG and local PF, against baseline HYD — the same figure, the same maths and the same isotropy compromise as the selected ring and as §4.5's veil |
 | Gate | SIG ≥ §3's amber stop. A hull below it draws the collar and nothing on the ground |
+| Envelope | **One boundary for the fleet, not one circle per hull.** An arc is drawn only where it bounds water no *other* own hull can already hear into, so a hull whose reach sits wholly inside another's draws nothing |
 | Not drawn for | Structures, at any loudness. A base is loud, anchored and permanent, so its ring would be a permanent circle that never says anything new; the collar is the whole of what a structure's loudness has to report |
 | Ink | §3's stops again, at lower alpha than a selected hull's, so selection still reads as selection |
 | Shape | Projected onto the terrain vertex by vertex, like every ring: a distance measured through water climbs a ridge |
+
+**A ring is drawn exactly where it adds exposure.** Reach is kilometres and a fleet's
+spacing is hundreds of metres, so hulls near each other have nested reach almost always —
+on the renderer's own fixture, one of the three hulls over the stop is entirely inside
+another's. Drawn in full that is a circle per hull of which one or two bound anything, and
+twenty of them for a squad under way; drawn as an envelope it is one shape at any fleet
+size, and the shape is the answer to the question the mark asks. Nothing is lost with the
+interior arcs: a hull that bounds no water adds no exposure, it keeps its collar, and the
+water it is audible in is inside the envelope the others draw.
+
+The union is taken over **every** ring, selected hulls included. Selection sets the ink
+rather than the membership — exempting it would put the clutter back at select-all, which
+is the most ordinary thing a player does. The **ping preview** is outside the rule and stays
+a circle of its own: its radius is a fact about the transmission rather than about this
+hull's reach, and it is an answer to a question the player asked by holding a key.
 
 **Why a second mark and not a bigger collar.** The collar is a number *about the hull*; the
 ring is a distance *through the water*, and SIG alone does not give it. A hull at SIG 50 in
@@ -1000,7 +1016,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | `n units · m loud` (§3) | Implemented — *loud* is SIG over 60, counted from the player's own hulls |
 | §3's red-band crossing | Implemented (#623) — the meter flashes once on entry, with a static equivalent under reduced motion (§11), and the log records it: a `WentLoud` self-event, raised on the crossing edge by the loop that computes every hull's SIG and latched so a hull idling above the stop raises nothing after the first tick. Server-sent rather than derived on the client, because `peakSig` is a max and a second hull going loud under a louder one never moves it — the row names the hull that crossed, which the bar cannot |
 | Tier-graded contact rendering, ghost decay | Implemented |
-| Detection ring, selected and loud (§3.5) | Implemented — `maxAudibleRangeM` at the hull's own SIG and local PF against baseline HYD, projected onto the terrain. Drawn for a selected hull at full ink and for any hull at or above §3's amber stop at half it, so a fleet in Silent Running draws none and a fleet that opened its drives draws one per hull |
+| Detection ring, selected and loud (§3.5) | Implemented — `maxAudibleRangeM` at the hull's own SIG and local PF against baseline HYD, projected onto the terrain. Drawn for a selected hull at full ink and for any hull at or above §3's amber stop at half it, so a fleet in Silent Running draws none. Merged into **one envelope**: an arc survives only where no other own hull's reach already covers it, which is what keeps a twenty-hull squad from drawing twenty circles of which one or two bound anything (`insideAnotherReach`) |
 | The loudness collar (§3.5) | Implemented — a gauge on every own hull and every own structure, its track the full circle and its sweep `SIG / 100` of a turn from 12 o'clock, inked on §3's stops. It replaces a tick whose radius was `6 + sig × 0.35` metres on a hull and `10 + sig × 0.35` on a structure: a made-up distance in a view where every other radius is a real one, drawn at alpha 0.25 where nothing could read it, and a *radius* for a quantity that is not a distance at all |
 | Ping preview rings, ping commit | Implemented (hold `Alt`, `P`) |
 | Silent-running dimming | Implemented |

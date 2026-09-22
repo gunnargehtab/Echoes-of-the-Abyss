@@ -1052,6 +1052,64 @@ export function collarRadius(figureRadius: number, selectionGapM: number): numbe
 }
 
 /**
+ * One own emitter's audible reach, as the ground sees it.
+ *
+ * The centre is the hull's *drawn* position and the radius its `maxAudibleRangeM`
+ * at the local propagation factor, so a disc is exactly the water that hull can
+ * be heard in — the same figure §3.5's ring has always been.
+ */
+export interface ReachDisc {
+  x: number;
+  y: number;
+  radiusM: number;
+}
+
+/**
+ * Two rings whose edges coincide, in metres, are not taken to cover each other.
+ *
+ * Without it a pair of identical discs each erase the other and the fleet's
+ * envelope disappears at the one arrangement it most needs to be right about.
+ * A strict `<` against the radius less this makes the test antisymmetric for
+ * free, so no tie-break by id is needed.
+ */
+const REACH_MERGE_EPSILON_M = 2;
+
+/**
+ * Is this point already inside some *other* hull's reach?
+ *
+ * The whole of §3.5's envelope rule, and pure so it can be held exactly. Drawn
+ * per vertex it turns N overlapping circles into the boundary of their union:
+ * an arc survives only where it bounds water no other own hull can already
+ * hear into, so **a ring is drawn exactly where it adds exposure** and a hull
+ * whose reach sits wholly inside another's draws nothing at all.
+ *
+ * That is not a rare case, which is why this exists. Reach is kilometres — a
+ * hull at SIG 62 carries 4.4 km through open water — and a fleet's spacing is
+ * hundreds of metres, so hulls near each other have nested reach almost
+ * always. On the renderer's own fixture two of three rings are fully inside
+ * the third. Drawn in full that is twenty circles for a twenty-hull squad, of
+ * which one or two bound anything; drawn as an envelope it is one shape, and
+ * the shape is the answer to the question the mark asks.
+ */
+export function insideAnotherReach(
+  x: number,
+  y: number,
+  discs: readonly ReachDisc[],
+  self: number
+): boolean {
+  for (let i = 0; i < discs.length; i++) {
+    if (i === self) continue;
+    const disc = discs[i]!;
+    const limit = disc.radiusM - REACH_MERGE_EPSILON_M;
+    if (limit <= 0) continue;
+    const dx = x - disc.x;
+    const dy = y - disc.y;
+    if (dx * dx + dy * dy < limit * limit) return true;
+  }
+  return false;
+}
+
+/**
  * Alpha of a detection ring the player did not ask for by selecting its hull
  * (docs/ui-ux.md §3.5).
  *
@@ -2186,17 +2244,24 @@ export class EchoRenderer {
     cx: number,
     cy: number,
     radiusM: number,
-    depthM: number | null
+    depthM: number | null,
+    // Drop a vertex in *world* space, before it is projected — §3.5's envelope
+    // (`insideAnotherReach`). It breaks the run exactly as an off-frustum
+    // vertex does, which is why a circle can already come back as several arcs
+    // and nothing downstream had to learn anything new.
+    skip?: (x: number, y: number) => boolean
   ): boolean {
     let open = false;
     let any = false;
     for (let i = 0; i <= CIRCLE_SEGMENTS; i++) {
       const angle = (i / CIRCLE_SEGMENTS) * Math.PI * 2;
-      const p = this.project(
-        cx + Math.cos(angle) * radiusM,
-        cy + Math.sin(angle) * radiusM,
-        depthM
-      );
+      const x = cx + Math.cos(angle) * radiusM;
+      const y = cy + Math.sin(angle) * radiusM;
+      if (skip?.(x, y) === true) {
+        open = false;
+        continue;
+      }
+      const p = this.project(x, y, depthM);
       if (p === null) return false;
       if (!p.visible) {
         open = false;
@@ -5724,16 +5789,16 @@ export class EchoRenderer {
     g.clear();
     if (this.terrain === null) return;
 
+    // Two passes, because §3.5's envelope needs every disc before it can draw
+    // any of them: an arc is kept only where no *other* own hull already hears
+    // into that water, so the whole set is the input to each ring.
+    const ringed: Array<{ unit: OwnUnit; selected: boolean; disc: ReachDisc }> = [];
+
     for (const unit of this.units) {
       const isSelected = this.selected.has(unit.id);
       // §3.5's gate. Below the amber stop a hull draws its collar and nothing
       // on the ground, which is what makes a fleet in Silent Running draw no
       // rings at all — §7 floors a silent hull at SIG 8, two stops under this.
-      //
-      // The clutter above it is the information rather than a cost of it: one
-      // circle per hull, overlapping, at the size the water gives each. A
-      // player who has opened every drive has put their whole exposure on the
-      // chart, and that is what it looks like.
       if (!isSelected && unit.sig < SIG_BANDS.AMBER) continue;
 
       // The server prices detection along each emitter-listener path, so the
@@ -5763,24 +5828,17 @@ export class EchoRenderer {
         PROPAGATION_MODEL.BASELINE_HYD
       );
 
-      // These rings' *radii* must stay world-space — 2,400 m is a fact about
-      // the water, not about the interface — which is why they are projected
-      // vertex by vertex onto the ground: a ring climbing a ridge is the
-      // honest shape of a distance measured through the water. Their stroke
-      // is the opposite: a line on an instrument, drawn in screen pixels and
-      // carrying the UI scale (§11 names the ping preview as one of the two
-      // things to scale first).
-      if (this.traceCircle(g, d.x, d.y, range, null)) {
-        g.stroke({
-          width: 2 * this.uiScale,
-          color: sigColor(unit.sig),
-          alpha: isSelected ? 0.35 : LOUD_RING_ALPHA,
-        });
-      }
+      ringed.push({ unit, selected: isSelected, disc: { x: d.x, y: d.y, radiusM: range } });
 
       // Hold the preview key to see exactly how badly a ping would expose you.
       // Selection only, and not the §3.5 gate: a ping is an order, and the
       // hulls an order would reach are the ones the player has in hand.
+      //
+      // Outside the envelope too, and deliberately: a ping's radius is a fixed
+      // fact about the transmission rather than this hull's own reach, so it
+      // is not one of the discs the union is taken over and is not hidden by
+      // one. It is also the answer to a question the player asked by holding
+      // a key, which is the one thing that always earns its own line.
       if (this.previewPing && isSelected) {
         if (this.traceCircle(g, d.x, d.y, ACTIVE_SONAR.REVEAL_RADIUS_M, null)) {
           g.stroke({ width: 2 * this.uiScale, color: UI.friendly, alpha: 0.5 });
@@ -5789,6 +5847,30 @@ export class EchoRenderer {
           g.stroke({ width: 3 * this.uiScale, color: UI.threat, alpha: 0.8 });
         }
       }
+    }
+
+    // These rings' *radii* must stay world-space — 2,400 m is a fact about the
+    // water, not about the interface — which is why they are projected vertex
+    // by vertex onto the ground: a ring climbing a ridge is the honest shape of
+    // a distance measured through the water. Their stroke is the opposite: a
+    // line on an instrument, drawn in screen pixels and carrying the UI scale
+    // (§11 names the ping preview as one of the two things to scale first).
+    const discs = ringed.map((entry) => entry.disc);
+    for (let i = 0; i < ringed.length; i++) {
+      const { unit, selected, disc } = ringed[i]!;
+      const traced = this.traceCircle(g, disc.x, disc.y, disc.radiusM, null, (x, y) =>
+        insideAnotherReach(x, y, discs, i)
+      );
+      // Nothing survived: every metre of this hull's reach is water another of
+      // the player's own hulls already hears into, so its ring adds no exposure
+      // and is not drawn. The hull still wears its collar, and the water it is
+      // audible in is inside the envelope the others draw.
+      if (!traced) continue;
+      g.stroke({
+        width: 2 * this.uiScale,
+        color: sigColor(unit.sig),
+        alpha: selected ? 0.35 : LOUD_RING_ALPHA,
+      });
     }
   }
 
