@@ -18,15 +18,28 @@
 import type { Palette } from './palette.ts';
 
 /**
- * The quietest strokes rung 5 draws. Which one is quietest depends on the
- * palette — the Tetherjelly rim is under the kelp rim in tritanopia, over it
- * in the standard palette — so the ceiling is the least of them.
+ * The quietest outlines rung 5 draws. Which one is quietest depends on the
+ * palette — the dormant eruption rim in three of the four, the Tetherjelly
+ * rim in protanopia, whose threat red is brighter — so the ceiling is the
+ * least of them.
+ *
+ * A mark is weighed by its outline, never by its interior. A field's faint
+ * fill and an inert site's hatching are texture inside a mark whose rim
+ * already speaks for it (an inert site's rim is `UI.threat` at 0.28), and a
+ * ladder that weighed them would be ranking the grain of a mark rather than
+ * the mark (docs/map-visuals.md §5).
  */
 export const FURNITURE_FLOOR_ALPHA = {
   /** A kelp field's rim while it is not gripping (EchoRenderer `drawHazards`). */
   kelpRimIdle: 0.14,
   /** A Tetherjelly field's rim (EchoRenderer `drawJellies`). */
   jellyRim: 0.18,
+  /**
+   * A simulated hazard's rim while dormant (EchoRenderer `HAZARD_STYLE`).
+   * Weighed in `UI.threat`, the eruption's colour, because it is the quieter
+   * of the two the rim is drawn in.
+   */
+  hazardRimDormant: 0.22,
 } as const;
 
 /** Rec. 709 on the encoded bytes — how the palette tests and a screenshot measure. */
@@ -46,10 +59,11 @@ export function strokeLift(color: number, alpha: number, ground: number): number
   return alpha * (encodedLuminance(color) - encodedLuminance(ground));
 }
 
-/** Rung 5's floor over one ground: the least lift any of its quiet strokes gives. */
+/** Rung 5's floor over one ground: the least lift any of its quiet outlines gives. */
 export function furnitureFloorLift(palette: Palette, ground: number): number {
   return Math.min(
     strokeLift(palette.ui.accent, FURNITURE_FLOOR_ALPHA.kelpRimIdle, ground),
-    strokeLift(palette.fauna, FURNITURE_FLOOR_ALPHA.jellyRim, ground)
+    strokeLift(palette.fauna, FURNITURE_FLOOR_ALPHA.jellyRim, ground),
+    strokeLift(palette.ui.threat, FURNITURE_FLOOR_ALPHA.hazardRimDormant, ground)
   );
 }

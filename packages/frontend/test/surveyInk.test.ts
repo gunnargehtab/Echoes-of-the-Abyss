@@ -75,7 +75,7 @@ describe('survey ink colour', () => {
 });
 
 describe('the loudness ladder, rung 4 under rung 5', () => {
-  it('lifts every ground less than the quietest furniture stroke, in every palette', () => {
+  it('lifts every ground less than the quietest furniture outline, in every palette', () => {
     // §5. Both lifts are linear in the ground's luminance, so the darkest
     // and the palest ground bound every ground between.
     for (const name of PALETTE_NAMES) {

@@ -115,20 +115,30 @@ quieter than every rung above it. A new layer names its rung before it lands.
 | --- | --- | --- |
 | 1 — Water | The depth ramp, marine snow | Luminance only, one blue ([art-direction.md](art-direction.md) "Reading the Water") |
 | 2 — Stone | Rock faces, cliff shadows | `rock-face` / `rock-shadow`, below every biome fill |
-| 3 — Ground | Biome fills, relief, mottle, props, world light | 5–10% luminance, hue by biome; world light as points and seams only |
+| 3 — Ground | Biome fills, relief, mottle, props | 5–10% luminance, hue by biome |
 | 4 — Survey ink | Isobaths, coastlines | Hue-neutral, thin, constant width (§4) |
 | 5 — Map furniture | Hazard sites, resource fields, currents, tunnel routes, Tetherjelly fields, Lampfry shoals, the map rim | Public, conforming, each in its own token |
 | 6 — Instruments | Range rings, ping preview, blocked ground, selection, the loudness collar | The interface voice: cyan tells, magenta asks, red warns |
 | 7 — Agents | Own hulls and structures, contacts at every tier, ordnance | Loudest; glow is loudness (gate 3) |
 
+**World light stands outside the ladder.** A vent ember is a point of additive light, and it
+outshines any line on the map by design: a vent field with no embers is not a vent field. It
+is capped by its own five rules instead ([style-neon-noir.md](style-neon-noir.md) "World
+light"): points and seams only, the ember as the ceiling, static or on the 5 Hz grid.
+
+**A mark is weighed by its outline, never by its interior.** A kelp field's faint fill and an
+inert hazard site's hatching are texture inside a mark whose rim already speaks for it. A
+ladder that weighed them would rank the grain of a mark rather than the mark.
+
 The ladder is measured, not just stated. A stroke's weight is how far it lifts the pixel
 under it, in encoded luminance, which is how a screenshot measures it. The ink blends in
 encoded space, the way the mark layer's strokes do, so an ink line and a furniture rim over
-the same ground compare exactly. `packages/frontend/src/game/ladder.ts` holds rung 5's
-quietest strokes: a kelp field's rim while it is not gripping, and a Tetherjelly field's rim.
-Which is quieter depends on the palette. The draw sites take their alphas from there. The
-tests hold every ink stroke below the lesser of the two, over the darkest and the palest
-ground, in all four palettes. When furniture gets quieter, the ink has to follow it down.
+the same ground compare exactly. `packages/frontend/src/game/ladder.ts` holds rung 5's three
+quietest outlines: a kelp field's rim while it is not gripping, a Tetherjelly field's rim, and
+a simulated hazard's rim while it is dormant. Which is quietest depends on the palette. The
+draw sites take their alphas from there. The tests hold every ink stroke below the least of
+the three, over the darkest and the palest ground, in all four palettes. When furniture gets
+quieter, the ink has to follow it down.
 
 Two consequences worth naming:
 
@@ -150,9 +160,11 @@ V3 is mostly already law. This section collects it, so that the next revision ci
   families, statically or on the 5 Hz grid.
 - **Ink is knowledge.** It draws what the survey knows — public map data — and nothing the Echo
   Layer resolved.
-- **Nothing on the ground responds to the game.** Not to activity, occupancy, proximity or
-  time. A thing on the map that brightens when somebody is near it is an instrument, and
-  instruments live on the HUD.
+- **The ground answers only your own ears.** The acoustic veil drains it where your hulls
+  cannot hear and gives it back where they can ([ui-ux.md](ui-ux.md) §4.5). World light steps
+  on the 5 Hz grid. Nothing else moves it. It never answers another navy's activity, occupancy
+  or presence: a thing on the map that brightens when somebody else is near it is an
+  instrument, and instruments live on the HUD.
 
 What must never leak: an unresolved contact, a depth below Tier 3, an animal below Tier 3
 (bestiary §3), and anything the veil's field is computed from. None of the ground's layers
@@ -164,18 +176,24 @@ V4's answer. Every biome supplies the same six things, and a new biome is not dr
 it supplies all six. The Crystal Convergence and the Sunken Metropolis are made from these
 biomes, so they need no new row: their silhouettes come from their floors and their coasts.
 
-| Biome | PF | Fill (`BIOME_COLOR`) | Relief character | World light | Props | Public life |
+| Biome | PF | Fill (`BIOME_COLOR`) | Relief character | World light | Props | Admits public life |
 | --- | --- | --- | --- | --- | --- | --- |
-| Open Water | 1.0 | `#07131E` | Gentle, 40 m | None | Boulders | — |
-| Thermal Vein | 0.45 | `#2C130A` | Broken, 95 m | Vent ember | Chimneys, basalt | — |
-| Kelp Forest | 0.55 | `#0A1E18` | Rolling, 65 m | Flora biolight | Kelp, coral towers, growth | Tetherjelly, Lampfry |
-| Abyssal Trench | 1.6 | `#040609` | Pressure-smoothed, 40 m | None | Spires, slabs | — |
-| Resonance Field | 0.7 | `#1A132A` | Faceted, 60 m | Crystal seam | Crystals, pylons | — |
-| Coral Ruins | 0.8 | `#111A1E` | Terraced, 60 m | Flora biolight | Ruin blocks, dome shards, growth | Lampfry |
+| Open Water | 1.0 | `#07131E` | Gentle, 40 m | None | Boulders | Yes |
+| Thermal Vein | 0.45 | `#2C130A` | Broken, 95 m | Vent ember | Chimneys, basalt | No — the Ashgrazer's ground alone |
+| Kelp Forest | 0.55 | `#0A1E18` | Rolling, 65 m | Flora biolight | Kelp, coral towers, growth | Yes |
+| Abyssal Trench | 1.6 | `#040609` | Pressure-smoothed, 40 m | None | Spires, slabs | Yes |
+| Resonance Field | 0.7 | `#1A132A` | Faceted, 60 m | Crystal seam | Crystals, pylons | Yes |
+| Coral Ruins | 0.8 | `#111A1E` | Terraced, 60 m | Flora biolight | Ruin blocks, dome shards, growth | Yes |
 
 The relief numbers are `BIOME_RELIEF` in `seabed.ts`. PF is `PROPAGATION_FACTOR` in shared
 constants. The table restates neither as a source. It collects them so a new row can be
 checked against its neighbours.
+
+"Public life" is the Tetherjelly and the Lampfry, the two species drawn as chart data. The
+bestiary names their habitats ([bestiary.md](bestiary.md) §4), but the seeder does not place
+by habitat. It admits either one on any ground that is not a Thermal Vein and is deep enough
+for its working depth (`faunaGroundAdmits` in `packages/backend/src/sim/match.ts`). So what a
+biome decides is only whether it admits them.
 
 The six things a new biome supplies:
 
@@ -187,7 +205,7 @@ The six things a new biome supplies:
    [style-neon-noir.md](style-neon-noir.md) first.
 5. **A prop set** from the environment branch of the pipeline of record
    ([graphics-standards.md](graphics-standards.md) gate 1).
-6. **Its public life, or an explicit "none"** (§8).
+6. **Whether it admits public life** (§8), which the seeder is told, not the renderer.
 
 A new *map* supplies nothing visual. Its look is its floors, ceilings and biomes, because
 the survey ink draws the shape the author wrote. An authored layout is legible by
@@ -248,14 +266,17 @@ Phases D and 1 ship together, because a direction nobody can look at is not revi
 floor. The Ventfront at the survey dolly [before](screenshots/issue-807/01-before-survey-55.png)
 and [after](screenshots/issue-807/02-after-survey-55.png): the plateaus, the trench and the
 tunnel blocks read as shapes. At 18° [before](screenshots/issue-807/03-before-low-18.png) and
-[after](screenshots/issue-807/04-after-low-18.png), the ground reads as a sounding. The Rift
-Corridor [at 18°](screenshots/issue-807/05-after-rift-low-18.png) and the Kelp Labyrinth
+[after](screenshots/issue-807/04-after-low-18.png), the ground reads as a sounding. The home
+frame [after](screenshots/issue-807/07-after-home-55.png), the Rift Corridor
+[at 18°](screenshots/issue-807/05-after-rift-low-18.png) and the Kelp Labyrinth
 [from above](screenshots/issue-807/06-after-kelp-top-85.png) complete the set.
 
-One thing the first draft got wrong: it drew the ink as absolute colours. An absolute line is
-loudest over the darkest ground, and over a black trench its coast out-shouted a kelp rim.
+Two things the first draft got wrong. It drew the ink as absolute colours, and an absolute
+line is loudest over the darkest ground: over a black trench its coast out-shouted a kelp rim.
 Blending the ink at an alpha in encoded space, as the mark layer does, is what made §5 a
-comparison the tests can hold.
+comparison the tests can hold. And it weighed only two rims. The dormant hazard rim is the
+quietest outline in three of the four palettes, and it is what holds the coast at 13%. That
+is the ladder working: at the survey dolly the ink is quiet, because it has to be.
 
 ## 11. Open questions
 

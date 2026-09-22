@@ -37,10 +37,10 @@ import type { TerrainPayload } from '../net/GameClient.ts';
  *
  * Strengths are alphas, blended in encoded space, which is how the mark
  * layer lays its strokes over the same ground. That is what makes the ladder
- * (§5, `ladder.ts`) a comparison rather than an estimate: a line and a kelp
- * rim over the same pixel lift it by `alpha × (colour − ground)` each, so
- * the tests can hold every ink stroke below the quietest furniture stroke
- * over every ground the map draws. An absolute colour could not promise
+ * (§5, `ladder.ts`) a comparison rather than an estimate: a line and a
+ * hazard rim over the same pixel lift it by `alpha × (colour − ground)`
+ * each, so the tests can hold every ink stroke below the quietest furniture
+ * outline over every ground the map draws. An absolute colour could not promise
  * that: it is loudest over the darkest ground, which is most of an abyssal
  * map.
  */
@@ -50,11 +50,11 @@ export const SURVEY_ALPHA = {
   /** Every 100 m of floor. The quietest line on the map. */
   minor: 0.08,
   /** A depth-band boundary: the Shelf's foot and the Abyssal's lip. */
-  major: 0.13,
+  major: 0.12,
   /** A cell edge between two biomes — a propagation-factor boundary. Dashed. */
-  border: 0.13,
+  border: 0.12,
   /** A cell edge between water and rock. Solid, and the loudest ink. */
-  coast: 0.15,
+  coast: 0.13,
 } as const;
 
 /** TUNABLE — line widths in device pixels, constant at every zoom (rule 4). */

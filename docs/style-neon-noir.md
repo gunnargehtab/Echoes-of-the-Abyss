@@ -85,11 +85,11 @@ token, laid at four strengths rather than in four colours
 
 | Token | Hex | Use |
 | --- | --- | --- |
-| `survey-ink` | `#7A8C99` | Every isobath and coastline, blended in encoded space at 8–15% |
+| `survey-ink` | `#7A8C99` | Every isobath and coastline, blended in encoded space at 8–13% |
 
 It is neutral for the stone ramp's reason, and no more saturated than `rock-face`: a
 tinted line would be read as a biome. It is not a neon and not light. At its strongest it
-lifts the ground less than the quietest piece of map furniture does, and
+lifts the ground less than the quietest map-furniture outline does, and
 [map-visuals.md](map-visuals.md) §5 is the ladder that holds it there.
 `packages/frontend/src/game/surveyInk.ts` transcribes it.
 

@@ -384,7 +384,7 @@ const LOCK_FLASH_MS = 700;
  * phase exists to prevent.
  */
 const HAZARD_STYLE: Record<HazardPhase, { width: number; alpha: number }> = {
-  [HazardPhase.Dormant]: { width: 2, alpha: 0.22 },
+  [HazardPhase.Dormant]: { width: 2, alpha: FURNITURE_FLOOR_ALPHA.hazardRimDormant },
   [HazardPhase.Warning]: { width: 3, alpha: 0.7 },
   [HazardPhase.Active]: { width: 4, alpha: 0.95 },
   [HazardPhase.Decay]: { width: 3, alpha: 0.5 },
