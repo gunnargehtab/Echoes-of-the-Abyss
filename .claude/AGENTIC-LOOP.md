@@ -165,7 +165,7 @@ it is allowed to select.
 - **The scheduled firing already exists, and needs nothing.** This list used to
   say the Routine was owed as account configuration. It is not: `Work one issue
   from the backlog` (`trig_0188TRMLkmwkoArLR7DZ3RGR`) has fired since 27 August
-  under `claude-opus-5`, in a fresh session per firing — every four hours on
+  in a fresh session per firing — every four hours on
   `13 */4 * * *` until 15 September, and every six on `13 */6 * * *` since. The
   cadence moved because the loop's open-PR cap now binds on review throughput
   rather than on backlog supply: the 04:15 firing on 15 September was the first
@@ -186,6 +186,15 @@ it is allowed to select.
   the cap" says how to stop there, and carries the cost side — what rounds four
   to seven have actually found in the runs on record. The Routine itself needed
   no edit, for the reason the paragraph below gives.
+
+  **It runs `claude-opus-5-5` at medium effort since 22 September**, set by the
+  repository owner; it ran `claude-opus-5` before. The two live in different
+  places. The model is the trigger's, the one field its form carries. The effort
+  is `.claude/settings.json`'s `modelSettings`, because a trigger has no effort
+  field and a firing reads the settings from its clone of `main`. That file is
+  every session's, so an interactive `claude-opus-5-5` session here also starts
+  at medium, and `/effort` still moves it for that session. Both are a person's
+  settings, like the round cap.
 
   Its prompt is deliberately thin, and it says so itself — "the rules live in
   that file and not in this prompt ... if the two ever disagree, the file wins" —
