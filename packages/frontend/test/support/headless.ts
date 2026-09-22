@@ -958,13 +958,29 @@ export function textSaying(root: Container, needle: string): string | null {
  * counted rather than assumed.
  *
  * Drawn only, unlike `textCount` above, and that is the whole of #846: a
- * hidden label costs nothing to change. `RenderGroup.updateRenderable`
- * (`RenderGroup.mjs:156`, pixi.js 8.19.0) returns on `globalDisplayStatus < 7`
- * before it reaches the pipe, so the glyph canvas is never regenerated and
- * the texture is never re-uploaded. The clock is the live instance:
- * `EchoRenderer.ts:7398` stamps `clockLabel.text` every frame and `:7399`
- * then hides the clock when the strip is too narrow for it, which on a
- * whole-tree walk ticked ten phantom rasterisations into a 600-frame budget.
+ * hidden label is never rasterised. The guard is in the collect pass, not in
+ * the per-renderable one — a changed `styleKey` makes
+ * `CanvasTextPipe.validateRenderable` return true (`CanvasTextPipe.mjs:24`,
+ * pixi.js 8.19.0), which sets `structureDidChange` and sends the frame down
+ * `_buildInstructions` (`RenderGroupSystem.mjs:96-104`) rather than down
+ * `updateRenderable` at all. `collectRenderables` then returns on
+ * `globalDisplayStatus < 7` (`collectRenderablesMixin.mjs:4`), so
+ * `CanvasTextPipe.addRenderable` — the only caller of `_updateGpuText` — is
+ * never reached, and no glyph canvas is regenerated and no texture uploaded.
+ *
+ * Not quite free, and the difference is one frame's worth: the *first* change
+ * after the label is hidden does force an instruction-set rebuild, because
+ * `validateRenderable` reads the moved key before the collect pass gets to
+ * skip the node. Only the first — `didViewUpdate` latches true, nothing
+ * clears it while the label is undrawn, and `onViewUpdate` returns on it
+ * (`ViewContainer.mjs:84`), so every later change while hidden is free. What
+ * this probe counts is the glyph canvas and the upload, which is the cost the
+ * `BitmapText` argument is about.
+ *
+ * The clock is the live instance: `EchoRenderer.ts:7398` stamps
+ * `clockLabel.text` and `:7399` then hides the clock when the strip is too
+ * narrow for it, which on a whole-tree walk ticked ten phantom rasterisations
+ * into a 600-frame budget.
  *
  * Counted work again, for the reason this whole file gives: the wall-clock
  * price of a rasterisation belongs to whatever machine ran it, while the
@@ -983,11 +999,14 @@ export function textStyleKeys(root: Container): Map<number, string> {
  * Dropping the hidden nodes from the sample is not enough on its own, and the
  * difference is a whole rasterisation. Pixi keeps the key it last drew a label
  * with on the batchable (`CanvasTextPipe`, `batchableText.currentKey`) and
- * compares against it when the label comes back — `_didTextUpdate` stays true
- * across the hidden frames, because the early return above never clears it.
- * So a label rasterised under `A`, hidden, changed to `B`, and then shown
- * again is one re-render at the moment it reappears, however many frames it
- * spent hidden and however many times `B` changed on the way.
+ * compares against it when the label comes back. `_didTextUpdate` is still
+ * true then, because `addRenderable` is the only thing that clears it
+ * (`CanvasTextPipe.mjs:37`) and a hidden node never reaches it; and showing
+ * the label sets `structureDidChange` (`Container.mjs:1064`), so the frame it
+ * returns on is a rebuild and does reach it. So a label rasterised under `A`,
+ * hidden, changed to `B`, and then shown again is one re-render at the moment
+ * it reappears, however many frames it spent hidden and however many times
+ * `B` changed on the way.
  *
  * Carrying the hidden entries forward is what holds that: the sample says
  * what is on the glass now, and this map says what the glass was last painted

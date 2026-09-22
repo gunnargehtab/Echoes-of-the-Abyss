@@ -358,17 +358,21 @@ describe('renderer smoke test: the scene-graph probes', () => {
     assert.equal(frame(), 1, 'a drawn label that changed was not counted');
 
     // Under the width threshold, still stamping. Pixi regenerates no glyph
-    // canvas for any of these: `RenderGroup.updateRenderable` returns on
-    // `globalDisplayStatus < 7` before it reaches `CanvasTextPipe`.
+    // canvas for any of these: `collectRenderables` returns on
+    // `globalDisplayStatus < 7` (`collectRenderablesMixin.mjs:4`), so
+    // `CanvasTextPipe.addRenderable` never runs for the node and the texture
+    // is never rebuilt.
     clock.visible = false;
     for (let second = 1; second <= 10; second++) {
       clock.text = `T+00:${String(second).padStart(2, '0')}`;
       assert.equal(frame(), 0, 'a hidden label billed for a canvas Pixi never regenerated');
     }
 
-    // And back. One repaint for all ten changes, at the frame it reappears —
-    // Pixi compares against `batchableText.currentKey`, not against the last
-    // value the label held while nobody was looking at it.
+    // And back. One repaint for all ten changes, at the frame it reappears:
+    // showing the label sets `structureDidChange`, so that frame rebuilds and
+    // does reach `addRenderable`, which compares against
+    // `batchableText.currentKey` — not against the last value the label held
+    // while nobody was looking at it.
     clock.visible = true;
     assert.equal(frame(), 1, 'the label returned repainted and nothing counted it');
     assert.equal(frame(), 0, 'and it was billed again while nothing had changed');
@@ -462,13 +466,21 @@ describe('renderer smoke test: the chart', () => {
       // costs nothing, because pixi.js 8.19 guards both setters: `set text`
       // returns on an equal string (`AbstractText`), `set fill` on an equal
       // value (`TextStyle`).
+      //
+      // Frame by frame with the same fold as the moving loop below, rather
+      // than one sample either end of the window. A label that hides and
+      // returns inside the window has no entry in a drawn-only `before`, so a
+      // two-sample compare would read the repaint as a first build and this
+      // assertion — which asserts zero — could only be loosened by it.
       let keys = textStyleKeys(world.app.stage);
-      world.frame(60);
-      assert.equal(
-        textRasterisations(keys, textStyleKeys(world.app.stage)),
-        0,
-        'a second of frames over a still match rasterised no text at all'
-      );
+      let still = 0;
+      for (let frame = 0; frame < 60; frame++) {
+        world.frame();
+        const next = textStyleKeys(world.app.stage);
+        still += textRasterisations(keys, next);
+        keys = carryRasterised(keys, next);
+      }
+      assert.equal(still, 0, 'a second of frames over a still match rasterised no text at all');
 
       // And a match that is moving: sixty frames a second with a fresh Echo
       // pass every twelfth, which is the 5 Hz the room resolves at, and the
