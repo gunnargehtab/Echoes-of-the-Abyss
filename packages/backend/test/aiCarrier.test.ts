@@ -7,8 +7,8 @@
  * in the roster, on the Slipway's page, and never in the water.
  *
  * The buy waits for the order that uses the deck. Nothing orders a carrier
- * yet, so a bought one would sit at the Slipway, paid for and idle. What is
- * asserted here is what lands first:
+ * yet, so a bought one would sit at the Slipway, launching only at what comes
+ * inside its tether. What is asserted here is what lands first:
  *
  *   - a navy's **flight is not its army**. Every craft is armed, so `observe`
  *     would count the whole flight without its `launchedFrom` guard;
@@ -174,17 +174,16 @@ function escortFloor(faction: Faction): number {
 }
 
 /**
- * A navy whose rung wants are all met.
+ * The navy under test, as the hulls it has in the water.
  *
- * Every want in `commandProduction` bids into the same purse, and any one of
- * them still open would answer this file's question for it — so the economy is
- * staffed to the doctrine's target and the scout, the ordnance hull, the heavy
- * and the siege hull are all in the water. The Corvettes on the end are the
- * escort the ordnance hull's want waits behind
- * (`attackAtArmySize * MASSING.MIN_FRACTION`).
+ * The default is a navy whose rung wants are all met — the economy staffed to
+ * the doctrine's target, and the scout, the ordnance hull, the heavy and the
+ * siege hull all in the water. It is only `snapshot()`'s filler; the flight
+ * test below replaces it.
  *
- * `escort: false` is the same navy one armed hull short of that floor, and it
- * is built rather than cut down to, because "no army" would answer the wrong
+ * `escort: false` is the fixture that test runs on: the same navy one armed
+ * hull short of the escort floor (`attackAtArmySize * MASSING.MIN_FRACTION`),
+ * built rather than cut down to, because "no army" would answer the wrong
  * question. The heavy stays and counts toward it. The ordnance hull is dropped
  * because its want is the probe: open, and shut only by the escort. The siege
  * hull goes too: its want is behind the same escort, so it can mask nothing
