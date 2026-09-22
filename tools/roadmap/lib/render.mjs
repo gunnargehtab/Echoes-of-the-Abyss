@@ -161,6 +161,7 @@ export function render({
   fontHref,
   sheet = null,
   unplaced = 0,
+  portraits = {},
 }) {
   const all = roadmap.phases.flatMap((phase) => phase.items);
   const overall = progress(all, states);
@@ -180,9 +181,21 @@ export function render({
     )
     .join('\n');
 
+  // Each navy's hull in its own water, at the head of its card. Width and
+  // height go into the markup so the box is held before the bytes arrive; the
+  // crop onto the hull is the stylesheet's, so the file stays the render's own.
+  const portrait = (f) => {
+    const p = portraits[f.navy];
+    if (!p) return '';
+    return `<figure class="portrait">
+    <a href="${escape(p.href)}"><img src="${escape(p.href)}" width="${p.width}" height="${p.height}" loading="lazy" decoding="async" alt="${escape(f.portrait)}"></a>
+    <figcaption>${escape(p.caption)}</figcaption>
+  </figure>`;
+  };
   const factions = content.factions
     .map(
       (f) => `<article class="card faction" style="--accent:${escape(f.accent)}">
+  ${portrait(f)}
   <h3>${escape(f.name)}</h3>
   <p class="line">${escape(f.line)}</p>
   <p>${escape(f.text)}</p>
@@ -234,7 +247,7 @@ export function render({
       (began === null ? '' : ` The first issue on this roadmap was filed ${escape(began)}.`)
     : `This copy of the page was built without access to the issue tracker, so every item shows as unknown.`;
 
-  // The one picture on the page. Width and height are written into the
+  // The whole fleet in one picture. Width and height are written into the
   // markup so the box is reserved before the bytes arrive; without a sheet
   // the section simply ends at the navies, and the build has already said so.
   const roster =
@@ -606,6 +619,18 @@ footer p { margin: 0.3rem 0; }
 .faction h3 { color: var(--accent); }
 .faction .line { font-family: var(--display); font-size: 1.05rem; letter-spacing: 0.03em; color: var(--text-bright); margin-bottom: 0.5rem; }
 .faction .plays { margin-top: 0.7rem; font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); }
+/* Four navies as two pairs rather than three and an orphan, once there is room
+   for a picture to be worth its width. */
+@media (min-width: 48rem) { .grid.navies { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* The portrait: the render cropped onto its hull, which sits a little above
+   the frame's centre in every shot, and a caption on the water under it. The
+   frame is black at its edges already, so the card needs no mat. */
+.portrait { position: relative; margin: -1.1rem -1.2rem 1rem; aspect-ratio: 2 / 1; overflow: hidden; background: #000; border-bottom: 1px solid rgba(53, 224, 255, 0.12); }
+.portrait a { display: block; width: 100%; height: 100%; }
+.portrait img { display: block; width: 100%; height: 100%; object-fit: cover; transform: scale(1.45); transform-origin: 48% 38%; transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.faction:hover .portrait img, .portrait a:focus-visible img { transform: scale(1.55); }
+.portrait figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 1.4rem 1.2rem 0.55rem; font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-cyan); background: linear-gradient(transparent, rgba(3, 8, 14, 0.9)); pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .portrait img { transition: none; } .faction:hover .portrait img, .portrait a:focus-visible img { transform: scale(1.45); } }
 .play { padding-left: 2.4rem; }
 .play .tick { position: absolute; left: 1rem; top: 1.25rem; width: 10px; height: 10px; border-radius: 50%; background: var(--neon-teal); box-shadow: 0 0 8px rgba(95, 208, 192, 0.7); }
 .play h3 { color: var(--text-bright); }
@@ -713,7 +738,7 @@ ${pillars}
     <div class="wrap">
       <div class="section-head"><h2>Four navies, one argument</h2><span class="kicker">each a different answer to the same problem: noise</span></div>
       <p class="lede">No faction is written as the villain. All four campaign endings are coherent, costly, and irreconcilable.</p>
-      <div class="grid">
+      <div class="grid navies">
 ${factions}
       </div>
 ${roster}

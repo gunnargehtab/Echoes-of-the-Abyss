@@ -33,6 +33,10 @@ on:
       # The roster contact sheet: the page shows the newest one an art PR
       # committed (tools/roadmap/lib/sheet.mjs), so a re-bake is a page change.
       - 'docs/screenshots/**/rung-roster-sprites.png'
+      # Each navy card's portrait, and the shot table its caption is read from
+      # (tools/roadmap/lib/portraits.mjs).
+      - 'docs/concept-art/renders/**'
+      - 'tools/hull-renders/shots.mjs'
       - '.github/workflows/pages.yml'
   # Issue state is half the page, and it changes without any push at all.
   # `opened` too: the page counts the open issues the roadmap has not placed,

@@ -58,39 +58,64 @@ export const pillars = [
   },
 ];
 
+/**
+ * `navy` is the key tools/hull-renders/shots.mjs files each navy's water
+ * under, and so the name of its portrait; `portrait` is that picture's alt
+ * text, written from the frame itself.
+ */
 export const factions = [
   {
     name: 'Bathyarch Consortium',
+    navy: 'bathyarch',
     accent: '#f2b233',
     line: 'The loudest thing in the Rift, and proud of it.',
     text: 'An industrial megacorporation that became a government by accident. It runs the heat, the freight, and — through debt — half the population.',
     plays: 'Wins by attrition. Fears insolvency.',
+    portrait:
+      'The Consortium’s Cruiser in a vent field: a stepped, blocky industrial hull with two lattice masts, lined with amber work-lamp strips.',
   },
   {
     name: 'Pelagia Commune',
+    navy: 'pelagia',
     accent: '#8fe36b',
     line: 'Grown, not built.',
     text: 'Farmers who feed the Rift, in ships closer to animals than machines: chitin hulls, muscle-driven propulsion, sensor organisms.',
     plays: 'Wins by map control. Fears being made to fight.',
+    portrait:
+      'The Commune’s Cruiser among glowing kelp: a ribbed, grown hull with fins and a tail, wrapped in soft green veins of light.',
   },
   {
     name: 'Abyssal Directorate',
+    navy: 'directorate',
     accent: '#c2465e',
     line: 'They listen better than anyone.',
     text: 'Eight generations of engineered trench-dwellers who can walk out of an airlock at 3,000 metres. No debt, no wage, universal everything — and nobody in it chose any of it.',
     plays: 'Wins by information and numbers. Fears being wrong about what is below.',
+    portrait:
+      'The Directorate’s Cruiser in an unlit trench: a long dark hull bristling with antennae, marked only by small crimson lights.',
   },
   {
     name: 'Hadron Knights',
+    navy: 'hadron',
     accent: '#c9a6ff',
     line: 'Sound as a weapon.',
     text: 'Thirty thousand crystal-workers in a techno-order that recruits by acoustic aptitude at age nine. The only faction that cannot grow.',
     plays: 'Wins by positioning and burst. Fears extinction by arithmetic.',
+    portrait:
+      'The Knights’ Cruiser over a resonance field: a thin, blade-like hull traced with straight violet lines and two tall pylons.',
   },
 ];
 
 /**
- * The roster contact sheet — the one picture on the page. The image itself is
+ * The hull each navy's card is photographed in. One kind for all four, so the
+ * cards compare like with like, and the Cruiser because every navy builds it
+ * (docs/units.md lists it with no navy against it) and it is the loudest hull
+ * in the roster, so it burns brightest in its frame.
+ */
+export const portraitKind = { slug: 'cruiser', label: 'Cruiser' };
+
+/**
+ * The roster contact sheet — the whole fleet in one picture. The image itself is
  * the newest `rung-roster-sprites.png` an art PR committed under
  * docs/screenshots (see lib/sheet.mjs); these are the words around it. The
  * facts are graphics-standards.md's: baked from the approved models, glow set
