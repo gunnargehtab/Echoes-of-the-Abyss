@@ -293,8 +293,8 @@ describe('answering a torpedo with a decoy (#621)', () => {
     //
     // The cost is not the wasted line. `spent` claims a hull per torpedo, so a
     // craft picked here spends the answer and the Corvette beside it — which
-    // could have decoyed — is never asked. Unreachable until the commander
-    // owned a deck, which is what #839's want gave it.
+    // could have decoyed — is never asked. Unreachable until a commander owns
+    // a deck; the guard lands ahead of the want that will buy one (#839).
     const { brief, base } = rig(Faction.Bathyarch);
     const deck = statsFor(UnitKind.Gantry).flight!;
     const spark = statsFor(deck.craft);

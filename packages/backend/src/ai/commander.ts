@@ -702,46 +702,6 @@ const OWN_SIEGE: Record<Faction, UnitKind> = {
  */
 const SIEGE_STANDOFF_M = 180;
 
-/**
- * Each navy's carrier (#839, wave 8's hulls from #838), on `OWN_SCOUT`'s,
- * `OWN_ORDNANCE`'s and `OWN_SIEGE`'s terms: a roster fact, kept off the
- * composition so it cannot re-phase the cycle.
- *
- * **A table rather than a composition entry, and #839 asked for the entry.**
- * The issue's first bullet reads "a carrier on each navy's `composition` …
- * at the weight its doctrine argues for", and this is the same declaration
- * made where it costs nothing. Two reasons, both already written down in this
- * file. A carrier has `attackDamage: 0`, so `joinsTheArmy` is false for all
- * four and the cycle would skip every entry it was given — a composition entry
- * buys no carrier at all, the fate `joinsTheArmy`'s own note gives the Tender,
- * the Precentor and the Cantus. And the cycle indexes on `army.length` modulo
- * the list's own length, as `OWN_SCOUT`'s note says one screen up, so one
- * more entry on each of the four lists would re-phase every selection all
- * four navies make — "a balance change nobody asked for dressed as a roster
- * edit", and `CLAUDE.md` freezes build-list weights by name.
- * Declaring here and buying by the want below fields the hull and moves no
- * existing number.
- *
- * A declaratory entry, on the Sower's and the Bower's model, is not a third
- * option: the cycle's index is taken modulo the list's *length*, so an entry
- * that is never selected re-phases it exactly as much as one that is.
- *
- * And the other kind of entry — one on a composition and *not* in
- * `WANTED_SEPARATELY` — costs the navy its heavy. `ownHeavy` below is the
- * composition's first rung hull that passes that same filter, so a carrier
- * written ahead of the heavy would be found as the heavy, and the navy would
- * buy a deck where it meant to buy a Bulwark.
- *
- * All four are behind the rung (`PRODUCIBLE[Slipway]`), so `freeYard` supplies
- * that half of the gate and this table does not restate it.
- */
-const OWN_CARRIER: Record<Faction, UnitKind> = {
-  [Faction.Bathyarch]: UnitKind.Gantry,
-  [Faction.Pelagia]: UnitKind.Rootstock,
-  [Faction.Directorate]: UnitKind.Succentor,
-  [Faction.Hadron]: UnitKind.Offertory,
-};
-
 const WANTED_SEPARATELY: readonly UnitKind[] = [
   UnitKind.Spinner,
   UnitKind.Sower,
@@ -771,12 +731,6 @@ const WANTED_SEPARATELY: readonly UnitKind[] = [
   // all, and a hull whose whole job is to stop. Bought by the want beside the
   // Sower's and walked by `commandAnchor`.
   UnitKind.Bower,
-  // The carriers (#839), a sixth time, and the scouts' case exactly: not one
-  // of the four carries a gun, so none of them ever joins the army the cycle
-  // counts. Being here is what keeps a queued Gantry out of `queuedArmy` too —
-  // a deck counted toward the army's target would stop a navy one Corvette
-  // short of its own massing size while the yard worked.
-  ...Object.values(OWN_CARRIER),
 ];
 
 /**
@@ -1348,15 +1302,15 @@ export class AiCommander implements AiPlayer {
     // **A craft is not a hull, and the gun is why it looks like one** (#839).
     // Every craft is armed — a Spark 22, a Versicle 45 — so the damage test
     // above admits the whole flight, and a flight is up to five entities
-    // (docs/units.md, "The craft"). That was unreachable while no commander
-    // owned a deck; the want in `commandProduction` ends that. What it would have
-    // cost: `army.length` is the composition cycle's index, so a flight
-    // launching and expiring on its 120 s cell re-phases the navy's build
-    // order twice a match a hull — the exact re-phasing `OWN_CARRIER` is a
-    // table to avoid — and it inflates `escorted`, `atTarget`, the massing
-    // high-water mark and `commandGardens`' spare. Five Trebles against the
-    // Directorate's massing size of seven is most of an army made of hulls
-    // that take no order and sink on their own.
+    // (docs/units.md, "The craft"). No commander owns a deck yet: the want
+    // that buys one waits for the order that uses it (#839), and this guard
+    // lands ahead of both. What it would cost without it: `army.length` is the
+    // composition cycle's index, so a flight launching and expiring on its
+    // 120 s cell re-phases the navy's build order twice a match a hull, and it
+    // inflates `escorted`, `atTarget`, the massing high-water mark and
+    // `commandGardens`' spare. Five Trebles against the Directorate's massing
+    // size of seven is most of an army made of hulls that take no order and
+    // sink on their own.
     //
     // `launchedFrom` is the test because it is the roster's own: `units.ts`
     // calls it the one field that tells a craft from a hull, and the Echo
@@ -2826,53 +2780,6 @@ export class AiCommander implements AiPlayer {
             return;
           }
           bids.push({ kind: ownSiege, windowS: RUNG.SAVE_S });
-        }
-      }
-    }
-
-    // The navy's carrier (#839), on the siege hull's terms: behind the escort,
-    // one only, and it bids on a window like the heavy, the ordnance hull and
-    // the siege hull. Not like *every* hull behind the rung — the Sower and
-    // the Bower hold unconditionally, for the Sower's own reason below, and an
-    // unconditional bid is the one kind `RUNG.SAVE_FROM` does not floor.
-    //
-    // **Behind the escort**, because a carrier is the roster's softest hull and
-    // the one that least survives being found alone — no gun, no countermeasure,
-    // and docs/units.md's own sentence for it is "a carrier caught alone is a
-    // 3-berth hull dying quietly". It is also the want with the least to do
-    // before there is a fight: the deck opens on a live enemy inside
-    // `FLIGHT.TETHER_M` (docs/systems-combat.md §15), so a Gantry bought into
-    // empty water is 520 nodules holding station.
-    //
-    // **One**, on the ordnance hull's reasoning rather than the scout's: the
-    // flight is paid for on the population cap in advance — three berths for
-    // the hull and one for every craft the deck holds (docs/economy.md §10) —
-    // so a second Succentor is sixteen of a commander's forty berths spent on
-    // two decks before a single line hull. The docs argue what a carrier is
-    // worth and do not argue how many, so the floor of one is what this builds
-    // and a number nobody has written down is not invented here.
-    //
-    // It is **not** gated on the heavy or the siege hull being in the water.
-    // While the purse covers none of the rung wants, `holdPurse` takes the
-    // nearest bid, so they are saved for by price (#518). A purse that already
-    // covers one is spent on the first want written here that it covers, so
-    // the order *does* decide, and this want sits above the Sower's and the
-    // Bower's. Pelagia, rung up and escorted on 360–400 nodules, buys the
-    // Rootstock (340) where it bought the Bower (360) or the Sower (380)
-    // before #839; they follow once the deck is queued.
-    const ownCarrier = OWN_CARRIER[this.briefing.faction];
-    if (escorted) {
-      const decks =
-        snapshot.units.reduce((n, u) => n + (u.kind === ownCarrier ? 1 : 0), 0) +
-        queuedOf(ownCarrier);
-      if (decks < 1) {
-        const yard = this.freeYard(snapshot.structures, ownCarrier);
-        if (yard !== null) {
-          if (this.affordUnit(ownCarrier, purse)) {
-            buy(ownCarrier, yard);
-            return;
-          }
-          bids.push({ kind: ownCarrier, windowS: RUNG.SAVE_S });
         }
       }
     }

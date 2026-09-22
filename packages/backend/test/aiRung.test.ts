@@ -71,20 +71,6 @@ function briefing(faction: Faction): AiBriefing {
   return briefingFor(match, 0, faction, AiDifficulty.Veteran);
 }
 
-/**
- * The navy's carrier (#839) — the Slipway hull it alone can build that has a
- * deck. Derived rather than listed, for the reason the tables below are
- * restated: a second copy of `PRODUCIBLE` here would be free to drift.
- */
-function carrierOf(faction: Faction): UnitKind {
-  const rung = PRODUCIBLE[StructureKind.Slipway]!;
-  const deck = rung.find(
-    (kind) => statsFor(kind).flight !== undefined && statsFor(kind).faction === faction
-  );
-  assert.ok(deck !== undefined, `${Faction[faction]} has a carrier behind the rung`);
-  return deck;
-}
-
 /** The navy's heavy — its composition's Slipway hull, as the commander finds it. */
 function heavyOf(faction: Faction): UnitKind {
   const rung = PRODUCIBLE[StructureKind.Slipway]!;
@@ -152,15 +138,6 @@ function hull(
  * heavy and was never reached — so a fixture that left it out happened to
  * measure the right thing for the wrong reason, and stopped the moment every
  * want was read on every observation.
- *
- * The **carrier** joined it with #839, for the same reason one wave later, and
- * it is the case that shows why this list has to grow with the commander. A
- * Consortium sitting on two fifths of a 700 nodule Bulwark is below that
- * hull's own `SAVE_FROM` floor and above a 520 nodule Gantry's, so the moment
- * the deck became a want the "nowhere near the price" control started holding
- * — for a different hull, correctly, and the test read it as the floor having
- * stopped working. One carrier in the water closes that want and the control
- * measures the Bulwark again.
  */
 function force(brief: AiBriefing): EchoSnapshot['units'] {
   const doctrine = DOCTRINE[brief.faction];
@@ -171,7 +148,6 @@ function force(brief: AiBriefing): EchoSnapshot['units'] {
     OWN_SCOUT[brief.faction],
     OWN_ORDNANCE[brief.faction],
     OWN_SIEGE[brief.faction],
-    carrierOf(brief.faction),
     // Two, against an army target of `attackAtArmySize * patience + 2`: short
     // enough that the composition cycle is still buying, which is the thing
     // the hold has to be seen to interrupt.
