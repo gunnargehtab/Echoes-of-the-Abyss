@@ -1942,12 +1942,13 @@ export function reactorIntakeArm(
  * bake), and the approved files carry none.
  *
  * THAT IS THE STONE FILES ONLY. The other nine are not all so: the coral
- * growth's four `branch_*` and the coral tower's `plate_1..5` are indexed
- * and smooth-shaded (normals 20–45° off their faces), and the ruin block
- * and the dome shard carry indexed boxes. `tabled` and `faceted` always
- * flatten, and neither `check.mjs` nor `diff.mjs` reads a normal, so a
- * port that fed a smooth part through either would pass every gate and
- * ship a faceted part. A port reproduces the file's index and its normals
+ * growth's `masonry_block`, `masonry_lip` and four `branch_*` and the coral
+ * tower's `plate_1..5` are indexed, the branches and plates smooth-shaded
+ * (a vertex normal 21–24° off its own face on a plate, 44° on a branch),
+ * and the ruin block and the dome shard carry indexed boxes. `tabled` and
+ * `faceted` always flatten, and neither `check.mjs` nor `diff.mjs` reads a
+ * normal, so a port that fed a smooth part through either would pass every
+ * gate and ship a faceted part. A port reproduces the file's index and its normals
  * as the file has them, and compares the NORMAL accessor itself, since no
  * tool here does. `parts.mjs --table <part>` prints an indexed part's
  * normals beside its positions for that reason.

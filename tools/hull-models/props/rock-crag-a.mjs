@@ -8,7 +8,9 @@
  * map" (docs/asset-prompts-3d.md, Block 4), under ENV STYLE: "Natural or
  * ruined form — stone ... pressure-scarred and ancient; nothing
  * manufactured ... low-poly with crisp facets, at most two materials", and
- * no light of any kind. One material, 228 triangles, 46 m tall.
+ * no light of any kind. One material, 228 triangles, 44.29 m tall at its
+ * 30 m by intake's measure (`sizeM.height`); 46 m raw, which is the frame
+ * every figure below is in, before the root's fit.
  *
  * A port of the approved export (docs/concept-art/models/env-rock-crag-a.glb
  * as committed before #869), part for part in its order, every number the

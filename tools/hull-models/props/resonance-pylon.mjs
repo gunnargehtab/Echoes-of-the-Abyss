@@ -8,7 +8,10 @@
  * instruments" (docs/asset-prompts-3d.md, Block 4), under ENV STYLE:
  * "Natural or ruined form — stone, coral, kelp, crystal ... nothing
  * manufactured ... low-poly with crisp facets, at most two materials", and
- * no light of any kind. One material, 484 triangles, 25.4 m tall.
+ * no light of any kind. One material, 484 triangles, 31.37 m tall at its
+ * 10 m by intake's measure (`sizeM.height`), against Block 4's 25 m;
+ * 25.4 m raw, which is the frame every figure below is in, before the
+ * root's fit.
  *
  * A port of the approved export
  * (docs/concept-art/models/env-resonance-pylon.glb as committed before
@@ -29,9 +32,10 @@
  * foot already on y = 0 — and, new in the port, held at 10 m by the
  * measure intake takes: the export measured 8.0884 on X, its longer plan
  * axis, and baked at ×1.236 with a rescale warning, so the root carries
- * that one factor and no lift (seabed.mjs `held`, not `stand`).
- * `diff.mjs env-resonance-pylon HEAD` divides it out and lists nothing
- * else.
+ * that one factor and no lift (seabed.mjs `stand`, with no lift, since the
+ * file's root has none). `diff.mjs env-resonance-pylon a1c694f` — the
+ * pre-port binary, which is also the default rev — divides it out and
+ * lists nothing else.
  */
 import { THREE, add, group, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
@@ -401,7 +405,7 @@ const RIDGES = [
 ];
 RIDGES.forEach((rings, i) => add(instrument, `ridge_${i + 1}`, seabed.torusOf(rings), stone));
 
-const { drawn, k } = seabed.held(pylon, FOOTPRINT, { drawn: DRAWN });
+const { drawn, k } = seabed.stand(pylon, FOOTPRINT, { drawn: DRAWN });
 console.log(
   `env_resonance_pylon: drawn ${drawn.toFixed(4)} across, held at ${FOOTPRINT} m (×${k.toFixed(5)})`
 );

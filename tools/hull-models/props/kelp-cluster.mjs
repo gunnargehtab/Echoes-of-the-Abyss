@@ -9,7 +9,9 @@
  * STYLE: "Natural or ruined form — stone, coral, kelp ... nothing
  * manufactured ... low-poly with crisp facets, at most two materials", the
  * one licensed light being `flora-biolight` at the tips. Two materials, 388
- * triangles, 78 m tall.
+ * triangles, 64.5 m tall at its 18 m by intake's measure (`sizeM.height`)
+ * and 65.3 m by the runtime's, which measures vertices (#876); 78 m raw,
+ * which is the frame every figure below is in, before the root's fit.
  *
  * A port of the approved export (docs/concept-art/models/env-kelp-cluster.glb
  * as committed before #869), part for part in its order, every number the
@@ -47,11 +49,12 @@
  * there — and, new in the port, held at 18 m by the measure intake takes:
  * three's loose `Box3.setFromObject`, which took the export at 21.8766
  * across and baked it at ×0.823 with a rescale warning, so the root carries
- * that one factor and nothing else (kit.mjs `fitFootprint`; not seabed.mjs
- * `stand`, whose lift the file does not carry). `diff.mjs env-kelp-cluster
- * HEAD` divides the factor out and lists nothing else.
+ * that one factor and nothing else (seabed.mjs `stand`, with no lift, since
+ * the file's root has none). `diff.mjs env-kelp-cluster 1856135` — the
+ * pre-port binary, which is also the default rev — divides the factor out
+ * and lists nothing else.
  */
-import { THREE, add, faceted, fitFootprint, exportGlb } from '../kit.mjs';
+import { THREE, add, faceted, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
 
 const FOOTPRINT = 18;
@@ -422,11 +425,8 @@ const TIPS = [
 TIPS.forEach((at, i) => add(cluster, `biolight_${i + 1}`, seabed.tetra(0.42), biolight, at));
 
 // Held at 18 m by intake's measure; the root is otherwise the file's identity.
-const size = fitFootprint(cluster, FOOTPRINT);
-const drawn = Math.max(size.x, size.z);
-if (Math.abs(drawn - DRAWN) > 1e-3)
-  throw new Error(`env_kelp_cluster: drawn ${drawn.toFixed(4)} across; the header says ${DRAWN}`);
+const { drawn, k } = seabed.stand(cluster, FOOTPRINT, { drawn: DRAWN });
 console.log(
-  `env_kelp_cluster: drawn ${drawn.toFixed(4)} across, held at ${FOOTPRINT} m (×${cluster.scale.x.toFixed(5)})`
+  `env_kelp_cluster: drawn ${drawn.toFixed(4)} across, held at ${FOOTPRINT} m (×${k.toFixed(5)})`
 );
 await exportGlb(cluster, 'env-kelp-cluster.glb');

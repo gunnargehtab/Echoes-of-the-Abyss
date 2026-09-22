@@ -9,7 +9,10 @@
  * ENV STYLE: "Natural or ruined form — stone, coral, kelp, crystal ...
  * low-poly with crisp facets, at most two materials" — the one prop of the
  * fourteen whose light is `crystal-seam`, at 1.2 on its plates and nowhere
- * else. Two materials, 330 triangles, 28.6 m tall.
+ * else. Two materials, 330 triangles, 27.27 m tall at its 12 m by intake's
+ * measure (`sizeM.height`, the loose box, which the tilted shard frames'
+ * boxes overhang; the vertices reach 27.07); 28.6 m raw, which is the
+ * frame every figure below is in, before the root's fit.
  *
  * A port of the approved export
  * (docs/concept-art/models/env-resonance-crystal.glb as committed before
@@ -40,8 +43,12 @@
  * its node and so reaches 6.47 on +x where the farthest corner is 6.42.
  * The export measured 12.6845 on X that way and baked at ×0.946 with a
  * rescale warning, so the root carries that one factor and no lift
- * (seabed.mjs `held`, not `stand`). `diff.mjs env-resonance-crystal HEAD`
- * divides it out and lists nothing else.
+ * (seabed.mjs `stand`, with no lift, since the file's root has none).
+ * `diff.mjs env-resonance-crystal a1c694f` — the pre-port binary, which is
+ * also the default rev — divides it out and lists nothing else. The kit's
+ * light audit warns that `shard_2_seam_1` shows 0.19 m² from above; that
+ * is the approved file's own — a plate tilted (0.54, 0.4, 0.25) on the
+ * shard that leans hardest — and not the port's.
  */
 import { THREE, add, group, flatShaded, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
@@ -323,7 +330,10 @@ add(
 );
 add(shard3, 'shard_3_tip', tip(1, 10, 2.4), stone);
 
-// Shard 4: R = 1.35, broken 6 m up, one seam.
+// Shard 4: R = 1.35, broken 6 m up, one seam. Its break ring runs
+// 5.66–6.84 m, so H is not a number read off the file: 6 is one of the
+// several values with an exact half that put the foot on zero, as
+// `brokenShard` says, and any of them gives the same bytes.
 const shard4 = group(crystal, 'shard_4', {
   at: [-1.8, 1.4, -2.9],
   rot: [-0.16003, -0.11405, 0.33264],
@@ -348,7 +358,7 @@ add(
   stone
 );
 
-const { drawn, k } = seabed.held(crystal, FOOTPRINT, { drawn: DRAWN });
+const { drawn, k } = seabed.stand(crystal, FOOTPRINT, { drawn: DRAWN });
 console.log(
   `env_resonance_crystal: drawn ${drawn.toFixed(4)} across, held at ${FOOTPRINT} m (×${k.toFixed(5)})`
 );

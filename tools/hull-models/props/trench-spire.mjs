@@ -8,7 +8,9 @@
  * (docs/asset-prompts-3d.md, Block 4), under ENV STYLE: "Natural or ruined
  * form — stone ... pressure-scarred and ancient; nothing manufactured ...
  * low-poly with crisp facets, at most two materials", and no light of any
- * kind. One material, 146 triangles, 54 m tall.
+ * kind. One material, 146 triangles, 53.73 m tall at its 20 m by intake's
+ * measure (`sizeM.height`); 54 m raw, which is the frame every figure
+ * below is in, before the root's fit.
  *
  * A port of the approved export (docs/concept-art/models/env-trench-spire.glb
  * as committed before #869), every number the export's own. The file is

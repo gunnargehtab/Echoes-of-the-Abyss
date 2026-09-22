@@ -8,7 +8,9 @@
  * (docs/asset-prompts-3d.md, Block 4), under ENV STYLE: "Natural or ruined
  * form — stone ... pressure-scarred and ancient; nothing manufactured ...
  * low-poly with crisp facets, at most two materials", and no light of any
- * kind. One material, 270 triangles, 8.8 m tall.
+ * kind. One material, 270 triangles, 8.03 m tall at its 15 m by intake's
+ * measure (`sizeM.height`); 8.8 m raw, which is the frame every figure
+ * below is in, before the root's fit.
  *
  * A port of the approved export (docs/concept-art/models/env-vent-basalt.glb
  * as committed before #869), every number the export's own. The file is one
@@ -16,8 +18,8 @@
  * #14171A (seabed.mjs `ground.basaltVent`) — on an identity node under an
  * identity root, and the part is one buffer the generator stitched by hand
  * (kit.mjs `faceted`), twenty-three bodies with no constructor behind any:
- * a mound of three ten-cornered rings from a 16.5 m foot at y = 0 up to a
- * rim between 4 and 7.5 m, stitched corner by corner rather than band by
+ * a mound of three ten-cornered rings from a foot at y = 0 spanning
+ * 14.93 m on X up to a rim between 4 and 7.5 m, stitched corner by corner rather than band by
  * band and fanned to a crown at (0, 5.95, 0), with no cap below; and stood
  * in it twenty-two pillars, the columnar basalt, each a square-topped
  * four-walled chunk open at the foot where it sinks into the mound. The
@@ -27,15 +29,21 @@
  * four feet were pushed off the square by hand, so a pillar is its eight
  * points, top four then feet, in the file's order. Both stitches are the
  * file's own (`mound` and `pillar` below) and give its 270 triangles in
- * its order.
+ * its order. Every ring and every pillar's square runs from +x toward +z,
+ * clockwise seen from above, so the band rule that faces the spire
+ * outward faces the mound inward, every pillar's walls face into the
+ * pillar and every pillar's top faces down. The file is inside out, and
+ * the port reproduces that (#878).
  *
  * The root is the export's — `env_vent_basalt`, at the origin with the
  * mound's foot already on y = 0 — and, new in the port, held at 15 m by the
- * measure intake takes: the export measured 16.5047 on X, the mound's
- * −x rim to the far pillar's foot on +x, and baked at ×0.909 with a
- * rescale warning, so the root carries that one factor (seabed.mjs
- * `stand`). `diff.mjs env-vent-basalt HEAD` divides it out and lists
- * nothing else.
+ * measure intake takes: the export measured 16.5047 on X, the whole pile —
+ * from ring 1's −x corner at (−8.6678, 1.84, −0.03), the mound's widest
+ * point, which the rim above it at −7.71 does not reach, to pillar 19's +x
+ * foot at 7.8369 — and baked at ×0.909 with a rescale warning, so the root
+ * carries that one factor (seabed.mjs `stand`). `diff.mjs env-vent-basalt
+ * 7445218` — the pre-port binary, which is also the default rev — divides
+ * it out and lists nothing else.
  */
 import { THREE, add, faceted, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';

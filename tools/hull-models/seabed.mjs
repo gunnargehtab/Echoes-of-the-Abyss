@@ -71,7 +71,11 @@ import { THREE, clad, lamp, hex, box, flatShaded, tabled } from './kit.mjs';
 export const ground = {
   /**
    * Dark stone: the two crags, the coral growth and the ruin block; two-sided
-   * on the dome shard, whose file flags it so (a shard is seen from inside).
+   * on the dome shard, whose file flags it so. Not because a dome is seen
+   * from inside — nothing inside a closed double-walled shell can be seen —
+   * but because 64 of the shell's 256 triangles are wound against their
+   * skins (ruin-dome-shard.mjs `lattice`, #878), and `doubleSided` is what
+   * hides that: a single-sided `stone_dark` would open the crown at runtime.
    */
   stoneDark: ({ twoSided = false } = {}) => {
     const m = clad('stone_dark', hex('#15181B'), 0, 1);
@@ -232,7 +236,7 @@ export function column(rings) {
  * the parts and measures the vertices, which a rotated part's box
  * overhangs, so a prop with leaning parts draws larger than intake
  * reviewed it (the crags by 10–16 %, the boulder by 23 %); that gap
- * predates the ports and has its own issue.
+ * predates the ports and is #876.
  *
  * `ground` lifts the root first so the measure's floor sits on y = 0 —
  * `Box3`'s floor over the parts' boxes, not the lowest vertex: the two are
@@ -251,6 +255,11 @@ export function column(rings) {
  * before the fit, checked to `tolerance` so a mistyped row fails here and
  * not in the maps (kit.mjs `metreTrue` makes the same bargain). Returns the
  * measure and the factor, for the record.
+ *
+ * This is the one way a prop holds its footprint. On an identity root —
+ * the eleven files with no lift — it is kit.mjs `fitFootprint` to the
+ * byte: the same factor on the scale, and a translation of zero scaled
+ * stays zero.
  */
 export function stand(
   root,
@@ -276,18 +285,18 @@ export function stand(
  * The kelp cluster, the coral tower and the coral growth (#869, Phase 5):
  * what the three living props are made of that the five stone props were
  * not. Two of the lessons the stone ports recorded above stop at the stone.
- * The kelp's holdfasts, the tower's fourteen lobes and the growth's lobes
- * and plates are three's polyhedra *untouched* — no jitter, no torn seam —
- * under a scale triple the generator baked into the buffer. And the tower's
- * five plates and the growth's four branches are three's cylinder and cone
- * kept *indexed and smooth-shaded*, three's own normals still on them
- * (21–24° and about 44° between neighbouring facets'), so a port that ran
- * them through `flatShaded` would pass every gate — none of `check.mjs`,
- * `diff.mjs` or the bake reads a normal — and still be wrong. Nor is any of
- * the three grounded by its root: each carries an identity root, the tower's
- * and the kelp's with their lowest vertex below y = 0 and the growth's with
- * its lift baked into the buffers, so their scripts hold the footprint with
- * kit.mjs `fitFootprint` (scale only) rather than `stand`.
+ * The kelp's holdfasts, the tower's thirteen dodecahedra (six of them
+ * lobes) and the growth's lobes and plates are three's polyhedra
+ * *untouched* — no jitter, no torn seam — under a scale triple the
+ * generator baked into the buffer. And the tower's five plates and the
+ * growth's four branches are three's cylinder and cone kept *indexed and
+ * smooth-shaded*, three's own normals still on them — each vertex normal
+ * 21–24° off its own face on a plate and 44° on a branch, where the
+ * neighbouring facets' normals are 42.5–47.7° and 88.3–88.8° apart — so a
+ * port that ran them through `flatShaded` would pass every gate and still
+ * be wrong: no tool here *compares* a normal (`check.mjs` and `diff.mjs`
+ * read none; the bake renders them, hull-intake's page.html `normal` pass,
+ * and fails nothing on them).
  * ------------------------------------------------------------------------ */
 
 const triple = (s = 1) => (typeof s === 'number' ? [s, s, s] : s);
@@ -344,19 +353,10 @@ export function kept(geo) {
  * shared three faces each, exactly as three lays them — but the crystal's
  * `base_mound` and the pylon's `crust_mound` are nine-facet drums, one
  * height row and both caps, which is the same count. Only the sharing
- * pattern tells them apart, and a port checks it before choosing.
- *
- * Both roots are the exports' own: identity, the mound's foot already on
- * y = 0. `stand` above would ground one, which is a lift the files do not
- * carry, so the pair is held at its footprint by `held` — kit.mjs
- * `fitFootprint`, the one uniform factor and nothing else, checked against
- * the header's measure the way `stand` checks its own.
+ * pattern tells them apart, and a port checks it before choosing:
+ * `parts.mjs --table <part> --as dodecahedron` refuses a drum, and
+ * `--as cylinder:9,1` refuses a dodecahedron.
  * ------------------------------------------------------------------------ */
-
-// Imported here rather than on the module's first line, which four parallel
-// ports were told not to touch; an import declaration is hoisted wherever
-// it sits.
-import { fitFootprint } from './kit.mjs';
 
 /** A ring closed on itself: the corner three doubles at θ = 2π. */
 const closed = (ring) => [...ring, ring[0]];
@@ -414,21 +414,6 @@ export function dodecahedronOf(corners) {
   return tabled(geo, rows);
 }
 
-/**
- * Where a prop that already stands is held: at `footprintM` by intake's
- * measure (kit.mjs `fitFootprint`), the root's translation left as the
- * file has it. `drawn` is the measure the script's header states, checked
- * to `tolerance` as `stand` checks its own; returns the measure and the
- * factor, for the record.
- */
-export function held(root, footprintM, { drawn: expected, tolerance = 1e-3 } = {}) {
-  const size = fitFootprint(root, footprintM);
-  const drawn = Math.max(size.x, size.z);
-  if (expected !== undefined && Math.abs(drawn - expected) > tolerance)
-    throw new Error(`${root.name}: drawn ${drawn.toFixed(4)} across; the header says ${expected}`);
-  return { drawn, k: footprintM / drawn };
-}
-
 /* --------------------------------------------------------------------------
  * The ruins — env-ruin-block and env-ruin-dome-shard (#869, off #540 Phase 5).
  *
@@ -448,14 +433,8 @@ export function held(root, footprintM, { drawn: expected, tolerance = 1e-3 } = {
  * a ruin box keeps the index and the normal buffer three built and `kept`
  * above takes only the UVs off. The polyhedra — icosahedra, octahedra and
  * tetrahedra, the coral crusts and the block's shards — are three's own,
- * non-indexed as PolyhedronGeometry writes them at detail 0: `ico` and
- * `tetra` above, their size on the node.
- *
- * Neither root is lifted or scaled in its file: both models sit with
- * their lowest vertex on y = 0 in the buffers themselves, and the dome is
- * centred on its plan box to the bit as well, so neither is grounded.
- * `held` above holds the footprint factor only, by the measure intake
- * takes, and puts nothing else on the node.
+ * non-indexed as PolyhedronGeometry writes them at detail 0: `ico`, `octa`
+ * and `tetra` above, their size on the node.
  * ------------------------------------------------------------------------ */
 
 /**

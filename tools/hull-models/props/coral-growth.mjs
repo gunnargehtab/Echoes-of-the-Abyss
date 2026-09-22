@@ -10,8 +10,10 @@
  * over them" (docs/asset-prompts-3d.md, Block 4), under ENV STYLE:
  * "Natural or ruined form — stone, coral ... pressure-scarred and ancient;
  * nothing manufactured ... low-poly with crisp facets, at most two
- * materials", and no light of any kind. Two materials, 184 triangles, 8 m
- * tall.
+ * materials", and no light of any kind. Two materials, 184 triangles,
+ * 9.45 m tall at its 12 m by intake's measure (`sizeM.height`) — 18 % over
+ * Block 4's 8 m; 8 m raw, which is the frame every figure below is in,
+ * before `K` and the root's fit.
  *
  * A port of the approved export (docs/concept-art/models/env-coral-growth.glb
  * as committed before #869), part for part in its order, every number the
@@ -22,9 +24,10 @@
  * that are icosahedra under scale triples (`ico`), three plates that are
  * flattened octahedra (`octa`), and four branches that are three's
  * four-facet cone open at the foot, kept indexed and *smooth-shaded* with
- * three's own normals about 44° apart — which is why `parts.mjs` prints
- * them as "10 v 4 t" with no constructor: an open cone to a point drops
- * its four apex triangles.
+ * three's own normals, each 44° off its own face where the neighbouring
+ * facets are 88° apart — which is why `parts.mjs` prints them as "10 v
+ * 4 t" with no constructor: an open cone to a point drops its four apex
+ * triangles.
  *
  * Every node in the file is an identity, and every buffer carries its
  * part's whole transform: the generator placed the fifteen parts at the
@@ -41,10 +44,11 @@
  * already in the buffers — and, new in the port, held at 12 m by the
  * measure intake takes: the export measured 10.1139 across and baked at
  * ×1.186 with a rescale warning, so the root carries that one factor and
- * nothing else (kit.mjs `fitFootprint`). `diff.mjs env-coral-growth HEAD`
- * divides it out and lists nothing else.
+ * nothing else (seabed.mjs `stand`, with no lift, since the file's root
+ * has none). `diff.mjs env-coral-growth 1856135` — the pre-port binary,
+ * which is also the default rev — divides it out and lists nothing else.
  */
-import { THREE, add, box, fitFootprint, exportGlb } from '../kit.mjs';
+import { THREE, add, box, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
 
 const FOOTPRINT = 12;
@@ -99,7 +103,7 @@ add(
 add(growth, 'plate_02', seabed.octa([2.47, 0.38, 2.28]), coral, [-2.2, 4.4, 1.2], [-0.2, 0.9, 0.3]);
 add(growth, 'plate_03', seabed.octa([1.92, 0.32, 1.6]), coral, [3.6, 3.7, 0.6], [0.35, 0.2, -0.3]);
 
-// Four branches standing off the top, the tallest to 8 m.
+// Four branches standing off the top, the tallest to 8 m raw.
 add(growth, 'branch_01', branch(0.7, 3.4), coral, [-0.4, 7.1, 0.2], [0.12, 0.3, -0.08]);
 add(growth, 'branch_02', branch(0.55, 2.6), coral, [1.4, 6.3, 1.1], [0.35, 0, 0.2]);
 add(growth, 'branch_03', branch(0.5, 2.2), coral, [-1.9, 5.8, -0.9], [-0.25, 0.6, -0.3]);
@@ -107,26 +111,17 @@ add(growth, 'branch_04', branch(0.45, 1.8), coral, [0.9, 5.6, -2.1], [-0.4, 0.2,
 
 // The generator's last step, and the file's: the lot scaled by K, sat on
 // the ground by its vertex floor, and baked into the buffers under identity
-// nodes. `applyMatrix4` carries the normals through the normal matrix,
-// which is what keeps the branches' smooth shading the file's.
+// nodes, the root's included (seabed.mjs `bake`). `applyMatrix4` carries
+// the normals through the normal matrix, which is what keeps the branches'
+// smooth shading the file's.
 growth.scale.setScalar(K);
 growth.updateMatrixWorld(true);
 growth.position.y = -new THREE.Box3().setFromObject(growth, true).min.y;
-growth.updateMatrixWorld(true);
-for (const mesh of growth.children) {
-  mesh.geometry.applyMatrix4(mesh.matrixWorld);
-  mesh.position.set(0, 0, 0);
-  mesh.rotation.set(0, 0, 0);
-  mesh.scale.set(1, 1, 1);
-}
-growth.position.set(0, 0, 0);
+seabed.bake(growth);
 
 // Held at 12 m by intake's measure; the root is otherwise the file's identity.
-const size = fitFootprint(growth, FOOTPRINT);
-const drawn = Math.max(size.x, size.z);
-if (Math.abs(drawn - DRAWN) > 1e-3)
-  throw new Error(`env_coral_growth: drawn ${drawn.toFixed(4)} across; the header says ${DRAWN}`);
+const { drawn, k } = seabed.stand(growth, FOOTPRINT, { drawn: DRAWN });
 console.log(
-  `env_coral_growth: drawn ${drawn.toFixed(4)} across, held at ${FOOTPRINT} m (×${growth.scale.x.toFixed(5)})`
+  `env_coral_growth: drawn ${drawn.toFixed(4)} across, held at ${FOOTPRINT} m (×${k.toFixed(5)})`
 );
 await exportGlb(growth, 'env-coral-growth.glb');

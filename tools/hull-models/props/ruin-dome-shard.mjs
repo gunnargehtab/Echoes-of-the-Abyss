@@ -10,8 +10,10 @@
  * "Natural or ruined form — stone, coral ... pressure-scarred and ancient;
  * nothing manufactured ... low-poly with crisp facets, at most two
  * materials", and no light of any kind. Two materials, 544 triangles,
- * 14.1 m tall by 39.6 across — the table's 20 m of height is not in the
- * file, which is a finding for the docs, not for a port.
+ * 14.26 m tall by 40 by 28.9 across at its 40 m by intake's measure
+ * (`sizeM`); 14.1 m tall by 39.6 across raw, which is the frame every
+ * figure below is in, before the root's fit. The table's 20 m of height
+ * is not in the file, which is a finding for the docs, not for a port.
  *
  * A port of the approved export
  * (docs/concept-art/models/env-ruin-dome-shard.glb as committed before
@@ -24,7 +26,11 @@
  * is baked into every buffer as the export baked it (seabed.mjs, "The
  * ruins"). What the file is made of:
  *
- * - `shell`, in `stone_dark` two-sided because a dome is seen from inside:
+ * - `shell`, in `stone_dark` two-sided — not because a dome is seen from
+ *   inside, since nothing inside a closed double-walled shell can be seen,
+ *   but because 64 of its 256 triangles are wound against their skins
+ *   (`lattice` below, #878) and `doubleSided` is what hides that; a
+ *   single-sided `stone_dark` would open the crown at runtime:
  *   not a shard of a dome but a whole one, double-walled, an outer skin
  *   and an inner one 0.9 of its radius, each an apex over four rings of
  *   sixteen meridians, stitched into 256 triangles by one rule column by
@@ -36,9 +42,12 @@
  *   ring by ring from the apex down, outer skin then inner, as the crags'
  *   drums are tables (kit.mjs `faceted`).
  * - Nine `rib_i_j` and six `band_i`, in `stone_dark`: three ribs down each
- *   of three meridians, a course of six bands round one latitude, all
- *   boxes 1.9 by 1.1 in section (1.5 by 0.9 for the bands) laid along the
- *   dome. The generator laid them by a basis it built from the lattice
+ *   of three meridians, a course of six bands round one latitude, boxes
+ *   laid along the dome — every rib 1.667 by 1.079 in section and every
+ *   band 1.47 by 0.88, in the un-stretched frame the table below is
+ *   written in; in the file's frame the stretch makes a section depend on
+ *   its bearing, ribs 0 and 1 1.91 wide and the three `rib_2_*` across it
+ *   2.34. The generator laid them by a basis it built from the lattice
  *   and never orthogonalised, so each is a parallelepiped rigid to a part
  *   in ten thousand and no further: its centre and three edge vectors
  *   (seabed.mjs `skewed`), the file's own.
@@ -51,10 +60,11 @@
  * bit, which the table carries — and, new in the port, held at 40 m by the
  * measure intake takes: the export measured 39.5714 across on X and baked
  * at ×1.011 with a rescale warning, so the root carries that one factor
- * and no lift (seabed.mjs `held`). `diff.mjs env-ruin-dome-shard HEAD`
- * divides it out and lists nothing else.
+ * and no lift (seabed.mjs `stand`, with no lift, since the file's root has
+ * none). `diff.mjs env-ruin-dome-shard 400797b` — the pre-port binary,
+ * which is also the default rev — divides it out and lists nothing else.
  */
-import { THREE, add, octa, faceted, exportGlb } from '../kit.mjs';
+import { THREE, add, faceted, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
 
 const FOOTPRINT = 40;
@@ -219,9 +229,14 @@ const INNER = [
  * column, the outer apex triangle, the inner one, then band by band the
  * outer quad and the inner quad, then the quad across the foot between the
  * skins — sixteen triangles a column, 256 in the file's own order. The
- * outer quads are cut on seabed.mjs `column`'s diagonal and wound outward;
- * the inner quads and the foot are the same two triangles wound the other
- * way, so the inner skin faces in.
+ * outer quads are cut on seabed.mjs `column`'s diagonal and wound outward,
+ * and the inner quads are the same two triangles wound the other way, so
+ * the inner skin faces in — 192 triangles the right way round. The other
+ * 64 are wound against their skins: the outer crown fan (16, facing down
+ * into the dome), the inner crown fan (16, facing up into the wall) and
+ * the foot ring between the skins (32, facing up). The file carries them
+ * so and the port reproduces it (#878); the material's `doubleSided` is
+ * what keeps the crown closed at runtime.
  */
 function lattice(outer, inner) {
   const N = 16;
@@ -373,7 +388,7 @@ const CORAL = [
   ],
   [
     'coral_02',
-    octa,
+    seabed.octa,
     [2.47107, 0.95313, 1.76505],
     [2.23227, 3.61662, 13.40213],
     [-1.65915, -0.84139, -2.86063],
@@ -387,28 +402,28 @@ const CORAL = [
   ],
   [
     'coral_04',
-    octa,
+    seabed.octa,
     [2.23573, 1.11786, 2.23573],
     [-11.46836, 3.2196, -7.20216],
     [1.50165, -0.35795, 2.11944],
   ],
   [
     'coral_05',
-    octa,
+    seabed.octa,
     [2.3534, 0.65895, 1.56893],
     [2.35972, 3.2196, -12.83297],
     [1.99912, -0.67154, -2.89125],
   ],
   [
     'coral_06',
-    octa,
+    seabed.octa,
     [1.76505, 0.70602, 1.76505],
     [10.76151, 3.51769, -7.08828],
     [2.83623, -0.48762, -2.016],
   ],
   [
     'coral_07',
-    octa,
+    seabed.octa,
     [1.78466, 0.65895, 1.5101],
     [-8.27547, 10.91147, 5.58604],
     [-2.81936, -0.17385, 2.5663],
@@ -422,14 +437,13 @@ const CORAL = [
   ],
   [
     'coral_09',
-    octa,
+    seabed.octa,
     [1.40223, 0.68837, 1.78466],
     [-2.71149, 7.84866, -11.71426],
     [2.21159, 0.23321, 2.97628],
   ],
 ];
-for (const [name, shape, size, at, tilt] of CORAL)
-  add(shard, name, seabed.kept(shape === octa ? octa(1) : shape()), coral, at, tilt, size);
+for (const [name, shape, size, at, tilt] of CORAL) add(shard, name, shape(), coral, at, tilt, size);
 
 // The stretch on the root, baked with each placement into its buffer. The
 // export was then centred on its plan box and grounded, and the table
@@ -442,7 +456,7 @@ if (Math.abs(bb.min.x + bb.max.x) > 1e-4 || Math.abs(bb.min.z + bb.max.z) > 1e-4
     `env_ruin_dome_shard: not centred and grounded as the file is: ${JSON.stringify(bb)}`
   );
 
-const { drawn, k } = seabed.held(shard, FOOTPRINT, { drawn: DRAWN });
+const { drawn, k } = seabed.stand(shard, FOOTPRINT, { drawn: DRAWN });
 console.log(
   `env_ruin_dome_shard: drawn ${drawn.toFixed(4)} across, held at ${FOOTPRINT} m (×${k.toFixed(5)})`
 );

@@ -10,7 +10,9 @@
  * manufactured ... low-poly with crisp facets, at most two materials", the
  * light `vent-ember` #E06A2B at 0.7 (docs/style-neon-noir.md "World light",
  * seabed.mjs `ground.ember`) and nothing else lit. Two materials, 434
- * triangles, 35.1 m tall.
+ * triangles, 34.91 m tall at its 12 m by intake's measure (`sizeM.height`);
+ * 35.1 m raw, which is the frame every figure below is in, before the
+ * root's fit.
  *
  * A port of the approved export (docs/concept-art/models/env-vent-chimney.glb
  * as committed before #869), part for part in its order, every number the
@@ -29,7 +31,10 @@
  * separate two-triangle quads stood on the lip, the magma glass the row's
  * light comes from, single-sided as the file flags them. The stitch on all
  * four basalt parts is seabed.mjs `column`'s band with no foot cap, which
- * is `tube` below.
+ * is `tube` below — but every ring here runs from +x toward +z, clockwise
+ * seen from above, where the spire's run the other way, so the band that
+ * faces the spire outward faces all four of these tubes inward. The file
+ * is inside out, and the port reproduces that (#878).
  *
  * Every ring is a table: the generator kept no radius and no formula, every
  * corner has a height of its own, and each ring is transcribed in the order
@@ -41,7 +46,8 @@
  * measure intake takes: the export measured 12.0613 on Z, the first spout's
  * lip against the stack's far wall, and baked at ×0.995 with a rescale
  * warning, so the root carries that one factor (seabed.mjs `stand`).
- * `diff.mjs env-vent-chimney HEAD` divides it out and lists nothing else.
+ * `diff.mjs env-vent-chimney 7445218` — the pre-port binary, which is also
+ * the default rev — divides it out and lists nothing else.
  */
 import { THREE, add, faceted, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
