@@ -232,6 +232,15 @@ export function loft(profile, facets = 10, phase = 0) {
  * with a real edge where the topsides meet the bottom. A hull with a chine
  * reads as built where a lathed one reads as blown, which is the Klaxon's
  * whole argument in one line.
+ *
+ * Winding is the caller's, and the albedo will not tell you it is wrong: the
+ * sides face out only when the section's rotation agrees with the stations'
+ * direction. `CHINE` as listed — deck, starboard, keel — wants the stations
+ * bow first; listed stern first, every side faces in, which the bake culls,
+ * and only a height pass shows the part reading under its own floor (#840).
+ * The end caps wind the other way in both cases, so a flat end faces in
+ * whenever the sides face out. Close both ends to a point, a zero station,
+ * and there is no cap to get wrong.
  */
 export function sweep(stations, section) {
   const ring = (st) => {
@@ -287,6 +296,21 @@ export const CHINE = [
   [-1, 0.2],
   [-0.88, 0.92],
 ];
+
+/**
+ * A swept geometry given the UV set every lathe, box and orb carries. The
+ * runtime merges one material's meshes into a draw, three's
+ * `mergeGeometries` refuses a bucket whose members disagree on attributes —
+ * hull-intake warns on exactly that — and `sweep` writes positions and
+ * normals only. Nothing samples a texture, so the values are zero and the
+ * attribute's presence is the point. Two navies had the same four lines
+ * (#840), which is when a builder moves here (models-plan.md §3.7).
+ */
+export function uvAlike(geo) {
+  const n = geo.attributes.position.count;
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(2 * n), 2));
+  return geo;
+}
 
 /**
  * Stations for a run of overlapping segments between `stern` and `bow`:

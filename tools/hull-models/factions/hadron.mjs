@@ -46,6 +46,7 @@ import {
   plan,
   loft,
   sweep,
+  uvAlike,
   bothSides,
   polar,
   part,
@@ -876,20 +877,6 @@ function radiusAt(stations, x) {
     if (x <= x1) return r0 + ((r1 - r0) * (x - x0)) / (x1 - x0);
   }
   return pts[pts.length - 1][1];
-}
-
-/**
- * A swept geometry given the UV set every lathe and box in this module
- * carries. The runtime merges one material's meshes into a draw and three's
- * `mergeGeometries` refuses a bucket whose members disagree on attributes —
- * hull-intake warns on exactly that — and kit.mjs `sweep` writes positions
- * and normals only. Nothing here samples a texture, so the values are zero
- * and the attribute's presence is the point.
- */
-function uvAlike(geo) {
-  const n = geo.attributes.position.count;
-  geo.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(2 * n), 2));
-  return geo;
 }
 
 /**
