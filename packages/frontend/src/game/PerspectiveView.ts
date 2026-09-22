@@ -702,9 +702,9 @@ export class PerspectiveView {
     const arrivedAt = performance.now();
     this.motion.record(snapshot.units, arrivedAt);
     this.ordnanceMotion.record(snapshot.ordnance, arrivedAt);
-    // Headings from motion, exactly as the chart derived them: the server
-    // sends none for own units, and a hull snapping to 0° when it stops
-    // would read as broken here too.
+    // Headings from motion, exactly as the chart derived them. Since #839 the
+    // snapshot carries each own hull's ordered bow (`OwnUnit.heading`), but
+    // this view keeps deriving its own from where the hull actually went.
     for (const unit of snapshot.units) {
       const prev = this.lastPositions.get(unit.id);
       if (prev !== undefined) {

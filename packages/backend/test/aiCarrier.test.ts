@@ -48,7 +48,7 @@ import { AiCommander } from '../src/ai/commander.ts';
 import { DOCTRINE } from '../src/ai/doctrine.ts';
 import { AiSeat, briefingFor } from '../src/ai/seat.ts';
 import type { AiBriefing, AiCommand } from '../src/ai/types.ts';
-import { Flightdeck, Position, Weapon } from '../src/sim/components.ts';
+import { Flightdeck, Heading, Position, Weapon } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnUnit } from '../src/sim/world.ts';
@@ -743,16 +743,17 @@ describe('the commander flies its deck', () => {
   it('brings an Offertory round to face its target, without leaving the band', () => {
     // The Offertory launches only into its own forward cone (§15). Backing
     // off points its bow away from the fight, so inside the band a step in is
-    // what turns it; `movementSystem` writes the bow from the ordered course.
+    // what turns it; `movementSystem` writes the bow from the ordered course,
+    // but only for a move longer than its 5 m arrival radius.
     const brief = briefing(Faction.Hadron);
     const home = brief.spawns[brief.slot]!;
     const u = outward(brief);
     const at = along(home, u, 4000);
-    const target = along(at, u, STANDOFF_M);
-    const bearing = Math.atan2(target.y - at.y, target.x - at.x);
-    const orders = (heading: number): AiCommand[] => {
+    const orders = (range: number, facing: boolean): AiCommand[] => {
+      const target = along(at, u, range);
+      const bearing = Math.atan2(target.y - at.y, target.x - at.x);
       const units = deployed(brief, at, home).map((unit) =>
-        unit.id === CARRIER_ID ? { ...unit, heading } : unit
+        unit.id === CARRIER_ID ? { ...unit, heading: facing ? bearing : bearing + Math.PI } : unit
       );
       return ordersTo(
         new AiCommander(brief).observe(
@@ -761,25 +762,37 @@ describe('the commander flies its deck', () => {
         CARRIER_ID
       );
     };
+    const leftBy = (range: number, command: AiCommand): number => {
+      const target = along(at, u, range);
+      const to = command as { x: number; y: number };
+      return Math.hypot(to.x - target.x, to.y - target.y);
+    };
 
-    const away = orders(bearing + Math.PI);
+    // The outer half: a step in, and a real one.
+    const outer = orders(STANDOFF_M + 60, false);
     assert.deepEqual(
-      away.map((c) => c.kind),
+      outer.map((c) => c.kind),
       ['move', 'attack'],
-      'facing away: a step, then the order'
+      'facing away, outer half: a step, then the order'
     );
-    const to = away[0] as { x: number; y: number };
-    const left = Math.hypot(to.x - target.x, to.y - target.y);
-    assert.ok(
-      left < STANDOFF_M && left >= STANDOFF_M - SLACK_M,
-      `a step in, inside the band (${left.toFixed(0)} m)`
-    );
+    assert.ok(Math.abs(leftBy(STANDOFF_M + 60, outer[0]!) - (STANDOFF_M + 35)) < 1, '25 m in');
 
+    // The inner half: out to the standoff plus a step, so there is room for one.
+    const inner = orders(STANDOFF_M - 60, false);
     assert.deepEqual(
-      orders(bearing).map((c) => c.kind),
-      ['attack'],
-      'facing it already: the order alone'
+      inner.map((c) => c.kind),
+      ['move', 'attack'],
+      'facing away, inner half: out first, then the order'
     );
+    assert.ok(Math.abs(leftBy(STANDOFF_M - 60, inner[0]!) - (STANDOFF_M + 25)) < 1, 'to 1,025 m');
+
+    for (const range of [STANDOFF_M - 60, STANDOFF_M + 60]) {
+      assert.deepEqual(
+        orders(range, true).map((c) => c.kind),
+        ['attack'],
+        `facing it already at ${range} m: the order alone`
+      );
+    }
   });
 
   it("flies at the army's fight before a louder contact inside its own tether", () => {
@@ -937,12 +950,75 @@ describe('the commander flies its deck', () => {
 });
 
 describe('the commander flies a cone-gated deck', () => {
-  it('backs an Offertory off, brings it round, and its deck opens', () => {
-    // Round 1's critic measured the failure this holds: backed straight off,
-    // an Offertory sat in the band with the target 180 degrees off its bow
-    // and launched nothing in 40 s, while the other three decks launched on
-    // the same geometry. End to end, because the bow is written by
-    // `movementSystem` and no snapshot fixture can show it turning.
+  // Two bearings, because the first version of this was measured against a
+  // snapshot whose `heading` was a literal 0: a target within 45 degrees of
+  // due east read as "faced" whatever the bow did, and a target anywhere else
+  // read as never faced. East is the case that hid it.
+  //
+  // Neither is exactly on the world's x axis through the carrier. A craft is
+  // launched at a world-frame station (`flight.ts`, `launch()`), so on that
+  // axis one can enter the water astern, chase the target straight through
+  // its own carrier, and — separation having no side to push to — shove the
+  // carrier into the Cruiser's gun: measured at 993 m to sunk in eleven
+  // seconds. That is the flight's and not the order's, and it is #863.
+  for (const [label, cruiserAt] of [
+    ['off to the north-east', { x: 6150, y: 4680 }],
+    ['to the east', { x: 6700, y: 4040 }],
+  ] as const) {
+    it(`backs an Offertory off a Cruiser ${label}, brings it round, and its deck opens`, () => {
+      const match = new Match(undefined, {
+        fauna: false,
+        seed: SEED,
+        terrain: new Terrain(12000, 12000, 250, { floorM: 3200 }),
+      });
+      match.addPlayer(0, Faction.Directorate);
+      match.addPlayer(1, Faction.Hadron);
+      const seat = new AiSeat(match, briefingFor(match, 1, Faction.Hadron, AiDifficulty.Veteran));
+      const carrier = spawnUnit(match.world, {
+        kind: UnitKind.Offertory,
+        slot: 1,
+        faction: Faction.Hadron,
+        x: 6000,
+        y: 4000,
+      });
+      const cruiser = spawnUnit(match.world, {
+        kind: UnitKind.Cruiser,
+        slot: 0,
+        faction: Faction.Directorate,
+        ...cruiserAt,
+      });
+      const gap = (): number =>
+        Math.hypot(
+          Position.x[cruiser]! - Position.x[carrier]!,
+          Position.y[cruiser]! - Position.y[carrier]!
+        );
+
+      // Launches counted from the moment it is backed off, so a craft that
+      // left the deck off the spawn bow before the walk does not count.
+      let launchedWhenBack = -1;
+      for (let i = 0; i < SIM.TICK_HZ * 40; i++) {
+        const own = match.update(1000 / SIM.TICK_HZ)?.get(1);
+        if (own !== undefined) seat.observe(own);
+        if (launchedWhenBack < 0 && gap() >= STANDOFF_M - SLACK_M) {
+          launchedWhenBack = Flightdeck.launched[carrier]!;
+        }
+      }
+      assert.ok(launchedWhenBack >= 0, 'it backed off out of the Cruiser gun');
+      assert.ok(
+        Flightdeck.launched[carrier]! > launchedWhenBack,
+        `and the deck opened after it did (${launchedWhenBack} then ${Flightdeck.launched[carrier]})`
+      );
+      // The band, not the kilometre: a craft passing close can nudge the
+      // carrier tens of metres, and inside the band nothing walks it back.
+      assert.ok(
+        gap() >= STANDOFF_M - SLACK_M && gap() <= STANDOFF_M + SLACK_M,
+        `still in the band (${gap().toFixed(0)} m)`
+      );
+    });
+  }
+
+  it("carries the hull's own bow in its owner's snapshot", () => {
+    // What every commander cone check reads. A literal 0 until #839.
     const match = new Match(undefined, {
       fauna: false,
       seed: SEED,
@@ -950,38 +1026,27 @@ describe('the commander flies a cone-gated deck', () => {
     });
     match.addPlayer(0, Faction.Directorate);
     match.addPlayer(1, Faction.Hadron);
-    const seat = new AiSeat(match, briefingFor(match, 1, Faction.Hadron, AiDifficulty.Veteran));
-    const carrier = spawnUnit(match.world, {
-      kind: UnitKind.Offertory,
+    const hull = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
       slot: 1,
       faction: Faction.Hadron,
       x: 6000,
-      y: 4000,
+      y: 6000,
     });
-    const cruiser = spawnUnit(match.world, {
-      kind: UnitKind.Cruiser,
-      slot: 0,
-      faction: Faction.Directorate,
-      x: 6150,
-      y: 4680,
-    });
-    const gap = (): number =>
-      Math.hypot(
-        Position.x[cruiser]! - Position.x[carrier]!,
-        Position.y[cruiser]! - Position.y[carrier]!
-      );
-
-    let widest = 0;
-    for (let i = 0; i < SIM.TICK_HZ * 40; i++) {
+    match.orderMove(1, hull, 5000, 7000);
+    let seen: number | undefined;
+    for (let i = 0; i < SIM.TICK_HZ * 2; i++) {
       const own = match.update(1000 / SIM.TICK_HZ)?.get(1);
-      if (own !== undefined) seat.observe(own);
-      widest = Math.max(widest, gap());
+      const row = own?.units.find((u) => u.id === hull);
+      if (row !== undefined) seen = row.heading;
     }
-    assert.ok(widest >= STANDOFF_M - SLACK_M, `it backed off (${widest.toFixed(0)} m at most)`);
-    assert.ok(Flightdeck.launched[carrier]! > 0, 'and the deck opened into its cone');
     assert.ok(
-      gap() >= STANDOFF_M - SLACK_M && gap() <= STANDOFF_M + SLACK_M,
-      `still in the band (${gap().toFixed(0)} m)`
+      Math.abs(Heading.rad[hull]! - (3 * Math.PI) / 4) < 1e-3,
+      'the premise: it turned north-west'
+    );
+    assert.ok(
+      seen !== undefined && Math.abs(seen - Heading.rad[hull]!) < 1e-6,
+      `the snapshot says so (${seen})`
     );
   });
 });
