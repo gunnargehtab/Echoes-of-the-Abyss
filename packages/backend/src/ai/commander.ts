@@ -702,6 +702,35 @@ const OWN_SIEGE: Record<Faction, UnitKind> = {
  */
 const SIEGE_STANDOFF_M = 180;
 
+/**
+ * Each navy's carrier (#839, wave 8's hulls from #838), on `OWN_SCOUT`'s,
+ * `OWN_ORDNANCE`'s and `OWN_SIEGE`'s terms: a roster fact, kept off the
+ * composition so it cannot re-phase the cycle.
+ *
+ * **A table rather than a composition entry, and #839 asked for the entry.**
+ * The issue's first bullet reads "a carrier on each navy's `composition` …
+ * at the weight its doctrine argues for", and this is the same declaration
+ * made where it costs nothing. Two reasons, both already written down one
+ * screen up. A carrier has `attackDamage: 0`, so `joinsTheArmy` is false for
+ * all four and the cycle would skip every entry it was given — a composition
+ * entry buys no carrier at all, exactly as `OWN_SCOUT`'s note predicted for
+ * the scouts. And the cycle indexes on `army.length` modulo the list's own
+ * length, so a fifth, sixth, seventh and eighth entry would re-phase every
+ * selection all four navies make — "a balance change nobody asked for dressed
+ * as a roster edit", and `CLAUDE.md` freezes build-list weights by name.
+ * Declaring here and buying by the want below fields the hull and moves no
+ * existing number.
+ *
+ * All four are behind the rung (`PRODUCIBLE[Slipway]`), so `freeYard` supplies
+ * that half of the gate and this table does not restate it.
+ */
+const OWN_CARRIER: Record<Faction, UnitKind> = {
+  [Faction.Bathyarch]: UnitKind.Gantry,
+  [Faction.Pelagia]: UnitKind.Rootstock,
+  [Faction.Directorate]: UnitKind.Succentor,
+  [Faction.Hadron]: UnitKind.Offertory,
+};
+
 const WANTED_SEPARATELY: readonly UnitKind[] = [
   UnitKind.Spinner,
   UnitKind.Sower,
@@ -731,6 +760,12 @@ const WANTED_SEPARATELY: readonly UnitKind[] = [
   // all, and a hull whose whole job is to stop. Bought by the want beside the
   // Sower's and walked by `commandAnchor`.
   UnitKind.Bower,
+  // The carriers (#839), a sixth time, and the scouts' case exactly: not one
+  // of the four carries a gun, so none of them ever joins the army the cycle
+  // counts. Being here is what keeps a queued Gantry out of `queuedArmy` too —
+  // a deck counted toward the army's target would stop a navy one Corvette
+  // short of its own massing size while the yard worked.
+  ...Object.values(OWN_CARRIER),
 ];
 
 /**
@@ -2748,6 +2783,46 @@ export class AiCommander implements AiPlayer {
             return;
           }
           bids.push({ kind: ownSiege, windowS: RUNG.SAVE_S });
+        }
+      }
+    }
+
+    // The navy's carrier (#839), on the siege hull's terms: behind the escort,
+    // one only, and it bids like every other hull behind the rung.
+    //
+    // **Behind the escort**, because a carrier is the roster's softest hull and
+    // the one that least survives being found alone — no gun, no countermeasure,
+    // and docs/units.md's own sentence for it is "a carrier caught alone is a
+    // 3-berth hull dying quietly". It is also the want with the least to do
+    // before there is a fight: the deck opens on a live enemy inside
+    // `FLIGHT.TETHER_M` (docs/systems-combat.md §15), so a Gantry bought into
+    // empty water is 520 nodules holding station.
+    //
+    // **One**, on the ordnance hull's reasoning rather than the scout's: the
+    // flight is paid for on the population cap in advance — three berths for
+    // the hull and one for every craft the deck holds (docs/economy.md §10) —
+    // so a second Succentor is sixteen of a commander's forty berths spent on
+    // two decks before a single line hull. The docs argue what a carrier is
+    // worth and do not argue how many, so the floor of one is what this builds
+    // and a number nobody has written down is not invented here.
+    //
+    // It is **not** gated on the heavy or the siege hull being in the water,
+    // and does not need to be: `holdPurse` takes the nearest bid, so the three
+    // rung wants queue behind one another by price rather than by the order
+    // they are written in (#518).
+    const ownCarrier = OWN_CARRIER[this.briefing.faction];
+    if (escorted) {
+      const decks =
+        snapshot.units.reduce((n, u) => n + (u.kind === ownCarrier ? 1 : 0), 0) +
+        queuedOf(ownCarrier);
+      if (decks < 1) {
+        const yard = this.freeYard(snapshot.structures, ownCarrier);
+        if (yard !== null) {
+          if (this.affordUnit(ownCarrier, purse)) {
+            buy(ownCarrier, yard);
+            return;
+          }
+          bids.push({ kind: ownCarrier, windowS: RUNG.SAVE_S });
         }
       }
     }
