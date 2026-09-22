@@ -290,13 +290,14 @@ export function stand(
  * kit.mjs `fitFootprint` (scale only) rather than `stand`.
  * ------------------------------------------------------------------------ */
 
-const triple = (s) => (typeof s === 'number' ? [s, s, s] : s);
+const triple = (s = 1) => (typeof s === 'number' ? [s, s, s] : s);
 
 /**
  * One of three's polyhedra at radius 1, detail 0, under the file's own
  * scale triple, in the files' flat finish. The files carry the *products*
  * — a lobe 4.2 by 2.94 by 3.99 — and no radius, so that is what a script
- * cites. A scalar is a uniform scale (the biolight's 0.42).
+ * cites. A scalar is a uniform scale (the biolight's 0.42), and none is
+ * the unit solid, the ruins' crusts, whose size is on the node.
  */
 const solid = (Geometry, s) => {
   const [x, y, z] = triple(s);
@@ -426,4 +427,68 @@ export function held(root, footprintM, { drawn: expected, tolerance = 1e-3 } = {
   if (expected !== undefined && Math.abs(drawn - expected) > tolerance)
     throw new Error(`${root.name}: drawn ${drawn.toFixed(4)} across; the header says ${expected}`);
   return { drawn, k: footprintM / drawn };
+}
+
+/* --------------------------------------------------------------------------
+ * The ruins — env-ruin-block and env-ruin-dome-shard (#869, off #540 Phase 5).
+ *
+ * The two Coral Ruins files are exports of a third kind, and what the
+ * header above says of the stone five is not true of them. Every node in
+ * both is an identity — no translation, no rotation, no scale, on the root
+ * too — and a part's placement is in its buffer: the generator built its
+ * scene with node transforms and baked each mesh's world matrix into its
+ * geometry on the way out, which is what `bake` does here. And the boxes
+ * are *indexed*: three's 24-vertex BoxGeometry under its own 36-index
+ * list and per-face normals, the UVs stripped — not the non-indexed
+ * finish the stone five carry, so `flatShaded` and `tabled` are the wrong
+ * builders for them, and nothing downstream would say so: neither
+ * check.mjs nor diff.mjs reads an index or a normal, and the runtime
+ * merges every mesh under one material into one geometry and refuses a
+ * bucket whose members disagree on attributes (environmentModels.ts). So
+ * a ruin box keeps the index and the normal buffer three built and `kept`
+ * above takes only the UVs off. The polyhedra — icosahedra, octahedra and
+ * tetrahedra, the coral crusts and the block's shards — are three's own,
+ * non-indexed as PolyhedronGeometry writes them at detail 0: `ico` and
+ * `tetra` above, their size on the node.
+ *
+ * Neither root is lifted or scaled in its file: both models sit with
+ * their lowest vertex on y = 0 in the buffers themselves, and the dome is
+ * centred on its plan box to the bit as well, so neither is grounded.
+ * `held` above holds the footprint factor only, by the measure intake
+ * takes, and puts nothing else on the node.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * A unit box under an affine map — its centre and the three edge vectors
+ * the file's corners span, in that order — for a box the generator laid
+ * along a curve by a basis it never orthogonalised: the dome shard's ribs
+ * and bands are rigid to a part in ten thousand and no further. Positions
+ * and normals go through three's `applyMatrix4`, as the file's did.
+ */
+export function skewed(centre, ex, ey, ez) {
+  const m = new THREE.Matrix4()
+    .makeBasis(new THREE.Vector3(...ex), new THREE.Vector3(...ey), new THREE.Vector3(...ez))
+    .setPosition(new THREE.Vector3(...centre));
+  return kept(box(1, 1, 1).applyMatrix4(m));
+}
+
+/**
+ * Bake every mesh's world matrix into its buffer and leave every node an
+ * identity, the root's scale included — the one step both ruin files went
+ * through on the way out. One `applyMatrix4` per mesh, so each vertex is
+ * rounded to float32 once, as the exports were.
+ */
+export function bake(root) {
+  root.updateMatrixWorld(true);
+  root.traverse((o) => {
+    if (!o.isMesh) return;
+    o.geometry.applyMatrix4(o.matrixWorld);
+    o.position.set(0, 0, 0);
+    o.rotation.set(0, 0, 0);
+    o.scale.set(1, 1, 1);
+  });
+  root.position.set(0, 0, 0);
+  root.rotation.set(0, 0, 0);
+  root.scale.set(1, 1, 1);
+  root.updateMatrixWorld(true);
 }
