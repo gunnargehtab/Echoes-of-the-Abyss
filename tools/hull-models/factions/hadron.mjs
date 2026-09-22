@@ -1125,6 +1125,135 @@ export function braceBlades(root, { alloy, crystal, shadow }, opts) {
 }
 
 /* --------------------------------------------------------------------------
+ * The carrier and its craft (#840): the Offertory, whose deck launches only
+ * into its own cone, and the Versicle it launches. The craft is a hull of
+ * its own, drawn as its own entity whenever it is in the water, and a craft
+ * aboard is not an entity at all (docs/systems-combat.md §15, "The deck"), so
+ * the carrier is built with its cradles empty — a Versicle modelled into
+ * one would be drawn twice whenever the flight is out. What the cradle
+ * carries instead is the craft's *shape*: each is cut to the Versicle's own
+ * plan with a hand's clearance, so the craft that fits it is legible from
+ * the empty cradle, and the two scripts are held to one outline here rather
+ * than to two copies of it.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The Versicle in plan — the widest thing at every station, as
+ * hulls/versicle.mjs draws it: the starboard half, `[x, z]` about the
+ * craft's own midship, bow first. The emitter crystal's point at x 11, its
+ * base across the nose, the blade's straight flank out to where the guard's
+ * leading edge leaves it at 45°, the guard's tip and its bevel, the trailing
+ * edge home to the flank, the grip, and the drive prism's base across the
+ * flat stern at −11, a hand wider than the grip ahead of it. The Versicle's script asserts its built bounds against this, and the
+ * Offertory's cradles (`cradleDeck`) are cut to it, so a craft that grows a
+ * metre grows its cradle with it or fails its own build.
+ */
+export const VERSICLE_PLAN = Object.freeze([
+  [11, 0],
+  [8.9, 0.45],
+  [7, 0.8],
+  [3, 1.38],
+  [-1.4, 1.9],
+  [-3.7, 4.2],
+  [-4.7, 3.9],
+  [-3.66, 1.81],
+  [-5.5, 1.27],
+  [-8.5, 1.06],
+  [-10.2, 0.8],
+  [-11, 1.1],
+  [-11, 0],
+]);
+
+/** A starboard half-outline, bow first and closing on the axis at both ends, mirrored into the whole plan. */
+function mirrorPlan(half) {
+  const port = half.slice(1, -1).map(([x, z]) => [x, -z]);
+  return [...half, ...port.reverse()];
+}
+
+/**
+ * A closed plan grown outward by `d` metres: each edge moved out along its
+ * own normal and each corner put where its two neighbours meet, the mitre
+ * held to `mitre` times `d` so a sharp nose grows a hand and not a spike.
+ * Winding-agnostic. The cradle is the craft's plan grown by its clearance,
+ * and the coaming the cradle grown by its own width.
+ */
+function growPlan(outline, d, mitre = 2) {
+  const n = outline.length;
+  let area = 0;
+  for (let i = 0; i < n; i++) {
+    const [x0, z0] = outline[i];
+    const [x1, z1] = outline[(i + 1) % n];
+    area += x0 * z1 - x1 * z0;
+  }
+  const s = Math.sign(area);
+  const out = (a, b) => {
+    const dx = b[0] - a[0];
+    const dz = b[1] - a[1];
+    const len = Math.hypot(dx, dz);
+    return [(s * dz) / len, (-s * dx) / len];
+  };
+  return outline.map((p, i) => {
+    const n1 = out(outline[(i + n - 1) % n], p);
+    const n2 = out(p, outline[(i + 1) % n]);
+    const bis = [n1[0] + n2[0], n1[1] + n2[1]];
+    const len = Math.hypot(...bis);
+    const k = Math.min(d / (len / 2), mitre * d);
+    return [p[0] + (bis[0] / len) * k, p[1] + (bis[1] / len) * k];
+  });
+}
+
+/**
+ * The flight deck — the Offertory's (#840): "a flight deck laid over the
+ * fore half of the crown, with two cradles let into it side by side, each
+ * an empty well cut to a Versicle's own plan" (docs/asset-prompts-3d.md,
+ * Block 3, the carriers). The Antiphon's `landingDeck` is the idiom — one
+ * faceted plate over the crown with wells cut clean through it and a floor
+ * under each — and not the builder: its bays are rectangles, and a cradle
+ * is the shape of the thing it holds.
+ *
+ * `outline` is the deck's whole plan, `[x, z]`, `t` thick with its top at
+ * `y`, in the navy's shadow indigo. `plan` is the craft's starboard
+ * half-outline (`VERSICLE_PLAN`), and each cradle is that plan mirrored,
+ * grown by `clearance` and set at `cradle.x`, `±cradle.z`, bow forward — a
+ * well cut through the deck to a `floor` plate `floor.t` thick whose top is
+ * `depth` under the deck's. The floor is `floorMat`, darker than the deck,
+ * because an empty well has to read as empty by value from straight above
+ * (Block 2b, rule 2): a floor the value of the craft would draw a craft on
+ * the deck whenever the flight is out. Round each well a coaming `rim.width`
+ * wide and `rim.t` tall stands on the deck in pale alloy — the cradle's
+ * frame, the craft's outline drawn in the one value on the hull that reads
+ * at a pixel a metre.
+ *
+ * `sill` is the launch sill ahead of each cradle: a strip `sill.width` wide
+ * hugging the deck's edge from `sill.a` to `sill.b` (the starboard one,
+ * mirrored), inboard of it, `sill.t` thick and bedded in the deck's top. It
+ * is a lamp — the Slipway's launch sill, lit at rest as that block lights
+ * its own — and it faces straight up over nothing, which is what makes it
+ * the unoccluded upward emitter every hull needs (models-plan.md §3.2,
+ * rule 5).
+ *
+ * The deck, then each side starboard first: floor, coaming, sill.
+ */
+export function cradleDeck(root, { shadow, alloy, floor: floorMat, seam }, opts) {
+  const { outline, y, t, plan: half, cradle, clearance, depth, floor, rim, sill } = opts;
+  const craft = mirrorPlan(half);
+  const at = (pts, sgn) => pts.map(([x, z]) => [cradle.x + x, sgn * cradle.z + z]);
+  const well = growPlan(craft, clearance);
+  const coaming = growPlan(craft, clearance + rim.width);
+  const wells = { s: at(well, 1), p: at(well, -1) };
+  add(root, 'flight_deck', wellPlate(outline, [wells.s, wells.p], t), shadow, [0, y - t / 2, 0]);
+  const toward = [cradle.x, cradle.z];
+  const sillOutline = strip(sill.a, sill.b, sill.width, toward);
+  bothSides((side, sgn) => {
+    const floorY = y - depth - floor.t / 2;
+    add(root, `cradle_floor_${side}`, plan(wells[side], floor.t), floorMat, [0, floorY, 0]);
+    const frame = wellPlate(at(coaming, sgn), [wells[side]], rim.t);
+    add(root, `cradle_rim_${side}`, frame, alloy, [0, y + rim.t / 2, 0]);
+    plane(root, `launch_sill_${side}`, seam, { outline: sillOutline, t: sill.t, y }, sgn);
+  });
+}
+
+/* --------------------------------------------------------------------------
  * Structures. A settlement is the same architecture grown four ways, so the
  * base / mount / head / barrel family lives here beside the hull vocabulary
  * rather than in any one structure script (#553, off #540 Phase 3).
