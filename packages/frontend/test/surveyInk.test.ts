@@ -5,7 +5,7 @@
  * graphics-standards checklist. What these hold is everything the shader is
  * handed: which depths get a major line, what a coastline compares, and the
  * ladder — that every ink stroke lifts the ground less than the quietest
- * piece of map furniture does, over every ground and in every palette.
+ * map-furniture outline does, over every ground and in every palette.
  */
 
 import assert from 'node:assert/strict';

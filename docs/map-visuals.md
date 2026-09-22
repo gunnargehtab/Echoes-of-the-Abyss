@@ -133,12 +133,18 @@ ladder that weighed them would rank the grain of a mark rather than the mark.
 The ladder is measured, not just stated. A stroke's weight is how far it lifts the pixel
 under it, in encoded luminance, which is how a screenshot measures it. The ink blends in
 encoded space, the way the mark layer's strokes do, so an ink line and a furniture rim over
-the same ground compare exactly. `packages/frontend/src/game/ladder.ts` holds rung 5's three
-quietest outlines: a kelp field's rim while it is not gripping, a Tetherjelly field's rim, and
-a simulated hazard's rim while it is dormant. Which is quietest depends on the palette. The
-draw sites take their alphas from there. The tests hold every ink stroke below the least of
-the three, over the darkest and the palest ground, in all four palettes. When furniture gets
-quieter, the ink has to follow it down.
+the same ground compare exactly. `packages/frontend/src/game/ladder.ts` holds the quietest
+outline rung 5 draws in each of its three quiet colours: a kelp field's rim while it is not
+gripping, a Tetherjelly field's rim, and a simulated hazard's rim while it is dormant. It also
+holds an inert hazard site's rim, which the outline rule above leans on. Every other rung-5
+outline lifts more than the least of them in every palette. Which is quietest depends on the
+palette. The draw sites take their alphas from there. The tests hold every ink stroke below
+the least of them, over the darkest and the palest ground, in all four palettes. When
+furniture gets quieter, the ink has to follow it down.
+
+**Phase 1 measures rung 4 under rung 5, and nothing more.** The other rungs are stated, not
+yet held; phase 2 audits them. The first place the stated order does not hold is rung 7's
+faintest mark, a fresh Tier-1 contact, and §11 records it.
 
 Two consequences worth naming:
 
@@ -254,7 +260,7 @@ GPU. The bestiary's silhouettes stay the fallback until the stipple lands.
 | --- | --- | --- |
 | **D — Docs** | This document, and the rows in [README.md](README.md) and the docs it relates | docs |
 | **1 — Survey ink** | §4: isobaths and coastlines in the terrain shader, with the ladder test of §5 | frontend |
-| **2 — The ladder audit** | §5 applied to every existing layer: each draw site names its rung, and the rest of the rung-5 alphas join the two already in `ladder.ts` | frontend |
+| **2 — The ladder audit** | §5 applied to every existing layer: each draw site names its rung, and the rest of the rung-5 outline alphas join the four already in `ladder.ts` | frontend |
 | **3 — Public stipple** | §8's furniture: Tetherjelly fields and Lampfry shoals as stipple in the water column | frontend |
 | **4 — Classified stipple** | §8's agents: Tier 3 and Tier 4 fauna as stipple shapes | frontend |
 
@@ -279,6 +285,17 @@ quietest outline in three of the four palettes, and it is what holds the coast a
 is the ladder working: at the survey dolly the ink is quiet, because it has to be.
 
 ## 11. Open questions
+
+- **A fresh Tier-1 contact is quieter than the ink, per pixel.** Tier 1 is its column and
+  nothing else. The core composites to about 0.12 of the tier colour. It lifts black ground by
+  0.044–0.053 and the kelp fill by 0.032–0.041, depending on the palette. The coast lifts
+  them by 0.070 and 0.057. In tritanopia over kelp the minor isobath (0.035) out-lifts it too.
+  Rung 5 was already louder than Tier 1 before survey ink landed.
+  [Art-direction.md](art-direction.md) "Reading the Sea Floor" says nothing on the ground may
+  compete with a return. There are three readings, and choosing is a design call:
+  - an edgeless haze is an area and a line is not, so the two are not weighed per pixel;
+  - Tier 1 stands outside the ladder, as world light does;
+  - the ink comes down under Tier 1, which would put the coast below today's minor line.
 
 - **The thermocline isobath.** The 1,200 m layer decides who can hear whom, which makes it the
   most tactical depth on the map. "Reading the Water" draws no line at it *in the water*, and

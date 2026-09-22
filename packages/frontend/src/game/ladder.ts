@@ -18,18 +18,22 @@
 import type { Palette } from './palette.ts';
 
 /**
- * The quietest outlines rung 5 draws. Which one is quietest depends on the
- * palette — the dormant eruption rim in three of the four, the Tetherjelly
- * rim in protanopia, whose threat red is brighter — so the ceiling is the
- * least of them.
+ * The rung-5 outlines the ladder weighs: the quietest one rung 5 draws in
+ * each of its three quiet colours — accent, fauna, threat — and the inert
+ * hazard site's rim. Every other rung-5 outline lifts more than the least of
+ * these in every palette; that was checked by hand at #865, and #866 turns
+ * it into a test. Which of these is quietest depends on the palette — the
+ * dormant eruption rim in three of the four, the Tetherjelly rim in
+ * protanopia, whose threat red is brighter — so the ceiling is the least of
+ * them.
  *
  * A mark is weighed by its outline, never by its interior. A field's faint
  * fill and an inert site's hatching are texture inside a mark whose rim
- * already speaks for it (an inert site's rim is `UI.threat` at 0.28), and a
- * ladder that weighed them would be ranking the grain of a mark rather than
- * the mark (docs/map-visuals.md §5).
+ * already speaks for it (`inertSiteRim`, below), and a ladder that weighed
+ * them would be ranking the grain of a mark rather than the mark
+ * (docs/map-visuals.md §5).
  */
-export const FURNITURE_FLOOR_ALPHA = {
+export const FURNITURE_OUTLINE_ALPHA = {
   /** A kelp field's rim while it is not gripping (EchoRenderer `drawHazards`). */
   kelpRimIdle: 0.14,
   /** A Tetherjelly field's rim (EchoRenderer `drawJellies`). */
@@ -40,6 +44,12 @@ export const FURNITURE_FLOOR_ALPHA = {
    * of the two the rim is drawn in.
    */
   hazardRimDormant: 0.22,
+  /**
+   * An inert hazard site's rim (EchoRenderer `drawStaticHazardSites`), the
+   * outline around its hatching. Held here because the outline rule leans on
+   * it: the hatching goes unweighed only while this rim speaks for the mark.
+   */
+  inertSiteRim: 0.28,
 } as const;
 
 /** Rec. 709 on the encoded bytes — how the palette tests and a screenshot measure. */
@@ -62,8 +72,9 @@ export function strokeLift(color: number, alpha: number, ground: number): number
 /** Rung 5's floor over one ground: the least lift any of its quiet outlines gives. */
 export function furnitureFloorLift(palette: Palette, ground: number): number {
   return Math.min(
-    strokeLift(palette.ui.accent, FURNITURE_FLOOR_ALPHA.kelpRimIdle, ground),
-    strokeLift(palette.fauna, FURNITURE_FLOOR_ALPHA.jellyRim, ground),
-    strokeLift(palette.ui.threat, FURNITURE_FLOOR_ALPHA.hazardRimDormant, ground)
+    strokeLift(palette.ui.accent, FURNITURE_OUTLINE_ALPHA.kelpRimIdle, ground),
+    strokeLift(palette.fauna, FURNITURE_OUTLINE_ALPHA.jellyRim, ground),
+    strokeLift(palette.ui.threat, FURNITURE_OUTLINE_ALPHA.hazardRimDormant, ground),
+    strokeLift(palette.ui.threat, FURNITURE_OUTLINE_ALPHA.inertSiteRim, ground)
   );
 }

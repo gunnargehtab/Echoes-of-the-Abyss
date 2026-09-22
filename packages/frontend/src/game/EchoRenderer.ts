@@ -129,7 +129,7 @@ import {
   sigColor,
   type PaletteName,
 } from './palette.ts';
-import { FURNITURE_FLOOR_ALPHA } from './ladder.ts';
+import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 import {
   actionFor,
   BUILD_ACTION_KIND,
@@ -384,7 +384,7 @@ const LOCK_FLASH_MS = 700;
  * phase exists to prevent.
  */
 const HAZARD_STYLE: Record<HazardPhase, { width: number; alpha: number }> = {
-  [HazardPhase.Dormant]: { width: 2, alpha: FURNITURE_FLOOR_ALPHA.hazardRimDormant },
+  [HazardPhase.Dormant]: { width: 2, alpha: FURNITURE_OUTLINE_ALPHA.hazardRimDormant },
   [HazardPhase.Warning]: { width: 3, alpha: 0.7 },
   [HazardPhase.Active]: { width: 4, alpha: 0.95 },
   [HazardPhase.Decay]: { width: 3, alpha: 0.5 },
@@ -5899,7 +5899,7 @@ export class EchoRenderer {
       // Simulated hazards are drawn live, with a phase and a countdown.
       if (site.simulated) continue;
       if (this.traceCircle(g, site.x, site.y, site.radiusM, null)) {
-        g.stroke({ width: 3, color: UI.threat, alpha: 0.28 });
+        g.stroke({ width: 3, color: UI.threat, alpha: FURNITURE_OUTLINE_ALPHA.inertSiteRim });
       }
       const step = Math.max(60, site.radiusM / 4);
       for (let offset = -site.radiusM; offset <= site.radiusM; offset += step) {
@@ -5948,7 +5948,7 @@ export class EchoRenderer {
           g.stroke({
             width: gripping ? 2 : 1,
             color,
-            alpha: gripping ? 0.3 : FURNITURE_FLOOR_ALPHA.kelpRimIdle,
+            alpha: gripping ? 0.3 : FURNITURE_OUTLINE_ALPHA.kelpRimIdle,
           });
         }
         continue;
@@ -6142,7 +6142,7 @@ export class EchoRenderer {
         alpha: 0.07,
       });
       if (this.traceCircle(g, jelly.x, jelly.y, DRIFT.JELLY_RADIUS_M, null)) {
-        g.stroke({ width: 1, color: FAUNA_COLOR, alpha: FURNITURE_FLOOR_ALPHA.jellyRim });
+        g.stroke({ width: 1, color: FAUNA_COLOR, alpha: FURNITURE_OUTLINE_ALPHA.jellyRim });
       }
     }
   }
