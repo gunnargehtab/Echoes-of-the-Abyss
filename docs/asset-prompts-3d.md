@@ -285,14 +285,17 @@ lit ports — this is a loud ship and it looks it.
 ```text
 UNIT — Abyssal Submersible (pair with Directorate): mid-size deep-raiding
 hull born to crush depth (Pressure Rating 3, SIG 22 idle). Heavy segmented
-pressure carapace, folded manipulator limbs, dim red photophores.
+pressure carapace, folded manipulator limbs, dim red photophores, and a
+fainter red along the plate rims, the tail joints, the rostrum and the
+claws.
 ```
 
 ```text
 UNIT — Harvester (any faction): industrial nodule-mining vessel (SIG 18
 idle; mining follows the throttle, up to 68 at Overdrive). Wide cargo body,
-external intake dredge gear; dim at rest, with floodlit mining machinery
-that reads as its loud state.
+external intake dredge gear; dim at rest — running lights and marks along
+the hull, the dredge gear dark or marked no brighter — floodlit when it
+mines, the same lamps brighter, which reads as its loud state.
 ```
 
 ```text
@@ -1129,7 +1132,10 @@ surfaces, visible machinery light.
 ```text
 STRUCTURE — Foundry (any faction): unit production hall with a recessed
 launch bay and gantry cranes (SIG 25 idle, 55 with the line running). Dim
-at rest; interior forge light spilling from the bay when producing.
+at rest: the forge light along the bay floor and at the launch mouth, the
+bay's guide lights or rim strips, the gantries' lamps, and the navy's own
+lamps along the halls — running lights, photophores, veins, seams or
+ridges; the same forge light flooding from the bay when producing.
 ```
 
 ```text
@@ -1149,21 +1155,25 @@ STRUCTURE — Spore Veil (pair with Pelagia): the Veil Mother — a low,
 breathing spore bed grown into the seabed: broad overlapping lobes, paired
 gill organs with vent slits exhaling a faint haze, slender spore stalks
 swaying above (SIG 20 idle — the cloud itself is silent). Nearly dark;
-faint bioluminescent breathing lines around the gills and dim lit tips on
-the stalks only.
+faint bioluminescent breathing lines around the gills, a faint glow in the
+haze they exhale, faint vein rings round the lobes and dim lit tips on the
+stalks only.
 ```
 
 ```text
 STRUCTURE — Cantor (pair with Directorate): listening dome — a grown,
 chitinous hemispherical shell studded with hydrophone spines (SIG 35 idle).
-Dim red photophore constellation across the dome.
+Dim red photophore constellation across the dome, and a lamp at the tip of
+the quill off its apex.
 ```
 
 ```text
 STRUCTURE — Sounding Spire (pair with Hadron Knights): tall crystalline
 resonance spire, bilaterally symmetrical, pale alloy frame around a violet
-crystal core (SIG 80 when active, directional). Burning bright along the
-crystal when active; heat-shimmer distortion.
+crystal core (SIG 80 when active, directional). Dim at rest: the crystal
+glowing low from core to apex, the horn tips with it, and running lights
+up the frame; burning bright along the crystal when active; heat-shimmer
+distortion.
 ```
 
 ```text

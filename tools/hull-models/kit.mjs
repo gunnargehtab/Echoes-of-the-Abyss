@@ -1324,11 +1324,12 @@ function sharer(share) {
  * never seen from above: the flank plates and lobes lean in over both
  * lips (to x 0.72–1.24 on the +x side), the two crane beams cross the bay
  * at z −2.6 and 2.9, and the stern carapace and pod roof the bay's aft
- * 1.5. The guides are carried lit as every approved Foundry lights them —
- * the block's "Dim at rest" names no lamp, so it licenses neither them nor
- * the forge line, and naming the Foundry's resting lamps is follow-up
- * #893 (#890, review rulings, rulings 2 and 3) — and a lit fixture the
- * bake cannot see moves (docs/models-plan.md §3.2 rule 5): to x ±0.75, the
+ * 1.5. The guides and the forge line are the block's resting lamps — "the
+ * forge light along the bay floor" and "the bay's guide lights or rim
+ * strips" since #893 amended the clause; #890 carried them as every
+ * approved Foundry lit them while the block still named no lamp at rest
+ * (#890, review rulings, rulings 2 and 3) — and a lit fixture the bake
+ * cannot see moves (docs/models-plan.md §3.2 rule 5): to x ±0.75, the
  * one column clear of the plates and the lobes' skirts on both files. The
  * hull in progress, whose plan reaches x 0.69, still covers 38 % of the
  * port rank's third guide on the Directorate's file and 37 % on the
@@ -1458,31 +1459,52 @@ export function gantryCrane(root, mats, opts) {
 
 /**
  * The launch mouth at the bay's open end: a torus for the mouth, squashed
- * by its node, and the glow drum lying in it, a thin drum clad at rest
- * (below) — "interior forge light spilling from the bay when producing"
- * (the Foundry block). The Directorate's and the Commune's files carry it
- * at one set of numbers, the defaults; the Order's gate is its own.
+ * by its node, and the glow drum lying flat in it at the floor's level, a
+ * thin drum lit at rest — the forge light "along the bay floor and at the
+ * launch mouth" of the Foundry block's resting clause, the same light
+ * "flooding from the bay when producing" (docs/asset-prompts-3d.md,
+ * STRUCTURE — Foundry, as #893 amended it). The Directorate's and the
+ * Commune's files carry it at one set of numbers, the defaults; the
+ * Order's gate is its own (`factions/hadron.mjs` `launchGate`), and its
+ * `gate_threshold` is this drum's reading there.
  *
- * The glow drum is the light "spilling from the bay when producing": the
- * block names it in that band and nowhere at rest, so `glow` is the
- * navy's rule-2 finish (asset-prompts-3d.md Block 2b: `biolight_unlit`,
- * `bio_vein_unlit`) and the drum is clad, not lit (docs/models-plan.md
- * §3.2 rule 2; #890). Neither navy records an unlit finish for the forge
- * family, so the drum wears another lamp family's — a #891 question, noted
- * in both files' headers. It lies under the mouth's ring, where the
- * approved files put it and where the top-down bake never saw it lit; a
- * clad part under a ring is nothing the audit reads. The forge line inside
- * the bay (`foundryBay`) is not read the same way: it is carried lit as
- * every approved Foundry lights it (#890, review rulings, rulings 2 and
- * 3: the block's "Dim at rest" names no lamp, and naming the Foundry's
- * resting lamps is follow-up #893). Both files that call this pass the
- * same role, so the one decision holds for both.
+ * `glow` is the navy's `forge_light`, the forge line's own, which both
+ * approved files gave the drum. #890 clad it in the navy's rule-2 finish,
+ * reading the block as it then stood — "Dim at rest; interior forge light
+ * spilling from the bay when producing" named the glow in the producing
+ * band and nowhere at rest (docs/models-plan.md §3.2 rule 2; #890, review
+ * rulings, ruling 3) — and left the block's resting set to #893, which
+ * settled it the other way: more lights, not fewer, and every lamp the
+ * block now names lit and facing up. The approved files stood the drum on
+ * edge inside the ring, a disc facing the bow at (0.1, 1.45, 6.62) with
+ * its top edge inside the ring's tube, where the top-down bake saw 0 m²
+ * of it. Since #893 it lies flat, its axis up, centred on the floor's end
+ * at z 6.0 and y 0.5 (rule 5). Not at the ring's own station: a disc of
+ * r 1.35 centred there would reach z 7.97, past both files' bow extents
+ * (7.66 and 7.39 in the export's units, a mandible's and a root anchor's
+ * boxes), and `metreTrue` refuses a drawn length that is not the header's
+ * — rightly, since a longer one rescales every part and moves every map.
+ * At 6.0 the forward edge is 7.35, inside the Commune's 7.39 as well as
+ * the Directorate's. Its underside is 0.02 over the crown of the ring's
+ * bottom tube (0.38) where it passes through the ring; its top is 0.05
+ * proud of the bay floor (0.55) over the floor's last 1.35 and 0.07 under
+ * the forge line's (0.67), so the line's last 1.05 runs into the pool
+ * with its own top showing; and the fifth guide each side (r 0.1 at
+ * y 0.62, z 5.9, inside the disc's plan) stands proud of it. The Order's
+ * threshold lies at y 0.5 beyond its floor's end the same way. The ring's
+ * top tube covers the band z 6.4..7.0 of the disc from above, the forge
+ * line's end its middle aft of 5.7, and each navy's fourth flank plate or
+ * lobe its outboard edge; what shows is 841 m² on the Directorate's file
+ * and 850 m² on the Commune's at 320 m, against 2,350 and 2,450 m² of
+ * forge line, and neither bake moved past ×0.06 of gain. Nothing else
+ * moved. Both files that call this pass the same role, so the one
+ * decision holds for both.
  */
 export function launchMouth(root, { mouth: mouthMat, glow: glowMat }, opts = {}) {
   const {
     frame = zLong,
     mouth = { R: 1.7, tube: 0.3, facets: [5, 10], at: [0.1, 1.5, 6.7], scale: [1.15, 0.8, 1] },
-    glow = { r: 1.35, h: 0.2, facets: 9, at: [0.1, 1.45, 6.62], rot: [Math.PI / 2, 0, 0] },
+    glow = { r: 1.35, h: 0.2, facets: 9, at: [0.1, 0.5, 6.0], rot: [0, 0, 0] },
   } = opts;
   const ring = torus(mouth.R, mouth.tube, ...mouth.facets);
   frame.part(root, 'launch_mouth', ring, mouthMat, mouth.at, [0, 0, 0], mouth.scale);

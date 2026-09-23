@@ -4,7 +4,8 @@
  *
  * "Listening dome — a grown, chitinous hemispherical shell studded with
  * hydrophone spines (SIG 35 idle). Dim red photophore constellation across
- * the dome" (docs/asset-prompts-3d.md, STRUCTURE — Cantor). The
+ * the dome, and a lamp at the tip of the quill off its apex"
+ * (docs/asset-prompts-3d.md, STRUCTURE — Cantor, as #893 amended it). The
  * Directorate's own, no other navy's: two carapace tiers turned 0.16 and
  * 0.42 rad under a weld collar; a red half-orb of a dome with three violet
  * shell plates grown over it a millimetre proud; forty-two hydrophone
@@ -65,9 +66,10 @@
  * its material and has its radius scaled by `GROWN`, the same factor on
  * each, so the pattern is the file's own at a larger stud. The quill's tip
  * light — the brightest lamp on the file, and its own fixture rather than
- * one of the constellation — is carried unread at the file's radius: it is
- * the approved model's resting set, which this issue does not re-read
- * (#890 review, ruling 2); #893 holds the question.
+ * one of the constellation — is carried at the file's radius: "a lamp at
+ * the tip of the quill off its apex", the block's resting clause since
+ * #893 (#890 carried it unread as the approved model's resting set,
+ * ruling 2, and asked; #893 settled it by naming it).
  *
  * THE FRAME is the one every Z-long export here shares (hulls/light-scout-
  * pelagia.mjs, structures/sentinel-turret-directorate.mjs): the export is

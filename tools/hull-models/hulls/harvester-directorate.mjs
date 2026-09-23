@@ -5,8 +5,10 @@
  *
  * "Industrial nodule-mining vessel (SIG 18 idle; mining follows the
  * throttle, up to 68 at Overdrive). Wide cargo body, external intake
- * dredge gear; dim at rest, with floodlit mining machinery that reads as
- * its loud state" — said the Directorate's way: "spiked, insectoid,
+ * dredge gear; dim at rest — running lights and marks along the hull, the
+ * dredge gear dark or marked no brighter — floodlit when it mines, the
+ * same lamps brighter, which reads as its loud state" (as #893 amended
+ * it) — said the Directorate's way: "spiked, insectoid,
  * segmented crustacean forms — asymmetric, yet regimented". A cargo gut —
  * one wide orb of a belly, 44 units long and 23 across, banded three times
  * in violet; five plates of carapace laid over it, violet and chitin turn
@@ -41,9 +43,9 @@
  * nothing of them: the light audit named those three, and the approved
  * bake never saw them. They stay lit where the file has them (#890 review,
  * rulings 1 and 2): the approved model lights them at rest, and "floodlit
- * mining machinery that reads as its loud state" on lamps already lit at
- * rest is the one-glow-factor reading — the same lamps, scaled — not a
- * later band that clads them. No upward face of a band exists to carry
+ * when it mines, the same lamps brighter" is the one-glow-factor reading
+ * of the working band — the same lamps, scaled — not a later band that
+ * clads them. No upward face of a band exists to carry
  * them: each band is a box across the cargo gut whose ends stand a little
  * proud of the gut's flank at its own station — 10.75 of half-width
  * against the gut's 10.18 at band a, 11.25 against 10.69 at b, 9.75
@@ -53,10 +55,12 @@
  * 13.15 either side of the keel over the bands, and the gut's crown is
  * under the carapace on every band's length. RESIDUAL AUDIT LINES:
  * `seam_strip_bow`, `seam_strip_mid`, `seam_strip_aft` show nothing from
- * above, under the carapace, and the export warns on each. Whether a belly
- * seam belongs to the machinery band at all is a question about the
- * approved model's resting set, which this issue does not re-read; #893
- * holds it. Nothing moved.
+ * above, under the carapace, and the export warns on each. #890 asked
+ * whether a belly seam belongs to the resting set at all; #893 settled it
+ * by naming the set — "running lights and marks along the hull, the
+ * dredge gear dark or marked no brighter" — the seam strips and the flank
+ * strips among the marks along the hull, the maw's bar and ring the marks
+ * on the gear, the three domes the running lights. Nothing moved.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds: drawn along Z, 80.81 units long tip to tip, hull axis at
