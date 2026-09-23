@@ -62,15 +62,15 @@
  * - The trolley sits 6 to starboard on the outer gantries and 8 to port
  *   on the middle one; the worklight hangs a metre beyond the beam's +x
  *   face.
- * - `line_cross_5`, which the light audit named and #645 carried: the
- *   1.6 × 36 m lit cross at x 90 lay under gantry 2's beam and trolley,
- *   so the top-down bake never saw it. The crosses are the resting
- *   clause's "line lights along the slip floor", so they stay lit and the
- *   whole rank slides 8 m aft, to −148 at the same 46, so that no rung
- *   lies under a gantry's beam or trolley (kit.mjs `slipwayBed`, one
- *   decision for all four yards; docs/models-plan.md §3.2 rule 5; #890).
- *   `diff.mjs` lists the seven crosses, moved by that 8 m and nothing
- *   else.
+ * - `line_cross_5`, which the light audit named and #645 carried: the lit
+ *   cross 1.6 × 36 drawn units at x 90 lay under gantry 2's beam and
+ *   trolley, so the top-down bake never saw it. The crosses are the
+ *   resting clause's "line lights along the slip floor", so they stay lit
+ *   and the whole rank slides 8 drawn units aft — 7.5 m at this file's
+ *   ×0.938 root scale — to −148 at the same 46, so that no rung lies under
+ *   a gantry's beam or trolley (kit.mjs `slipwayBed`, one decision for all
+ *   four yards; docs/models-plan.md §3.2 rule 5; #890). `diff.mjs` lists
+ *   the seven crosses, moved by that 7.5 m and nothing else.
  */
 import {
   THREE,

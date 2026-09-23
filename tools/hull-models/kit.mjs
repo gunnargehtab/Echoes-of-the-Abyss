@@ -791,8 +791,10 @@ export const sidedPost =
  * −2 under gantry 1's, so the top-down bake never saw the one and saw a
  * sliver of the other (#890, after #645 carried the warning). The crosses
  * are the resting clause's "line lights along the slip floor", so they
- * stay lit and the rank slides 8 m aft as one — a rung moved alone would
- * break the pitch — to −148, −102, −56, −10, 36, 82 and 128, each clear of
+ * stay lit and the rank slides 8 aft as one (drawn units: 7.9 m at three
+ * yards' ×0.988 root scale, 7.5 m at the Directorate's ×0.938) — a rung
+ * moved alone would break the pitch — to −148, −102, −56, −10, 36, 82 and
+ * 128, each clear of
  * the beams at −90, 0 and 90 and of the trolleys 8 m wide on them
  * (docs/models-plan.md §3.2 rule 5). The keel blocks and the hull on them
  * still cover the middle of three rungs, as they did before.
@@ -1297,9 +1299,10 @@ function sharer(share) {
 /**
  * The Foundry's bay: "a recessed launch bay" (docs/asset-prompts-3d.md,
  * STRUCTURE — Foundry) — the floor, the forge line lit along it, the hull
- * in progress lying on it, and a lip either side carrying a rank of guide
- * lights. In the files' order: floor, forge line, hull, then each side's
- * lip and its guides.
+ * in progress lying on it, a lip either side, and a rank of guide lights
+ * either side of the forge line, inboard of the lips (on the lips' tops
+ * until #890). In the files' order: floor, forge line, hull, then each
+ * side's lip and its guides.
  *
  * `hull.geo` is the navy's — a capsule on the Directorate's and the
  * Commune's files (the default), an octahedron on the Order's — placed by
@@ -1319,15 +1322,18 @@ function sharer(share) {
  * approved Directorate and Commune files set them on the lips' tops at
  * x ±1.75, z −5 to 5, where ten of the nineteen — five on each file — were
  * never seen from above: the flank plates and lobes lean in over both
- * lips (to x 1.25 on the +x side), the two crane beams cross the bay at
- * z −2.6 and 2.9, and the stern carapace and pod roof the bay's aft 1.5.
- * The guides are carried lit as every approved Foundry lights them — the
- * block's "Dim at rest" names no lamp, so it licenses neither them nor the
- * forge line, and naming the Foundry's resting lamps is follow-up #893
- * (the #890 review's ruling) — and a lit fixture the bake cannot see
- * moves (docs/models-plan.md §3.2 rule 5): to x ±0.75, the one column
- * clear of the plates, the lobes' skirts and the hull in progress on both
- * files. The floor's own edges at ±1.7 are under the plates; at ±0.75 the
+ * lips (to x 0.72–1.24 on the +x side), the two crane beams cross the bay
+ * at z −2.6 and 2.9, and the stern carapace and pod roof the bay's aft
+ * 1.5. The guides are carried lit as every approved Foundry lights them —
+ * the block's "Dim at rest" names no lamp, so it licenses neither them nor
+ * the forge line, and naming the Foundry's resting lamps is follow-up
+ * #893 (#890, review rulings, rulings 2 and 3) — and a lit fixture the
+ * bake cannot see moves (docs/models-plan.md §3.2 rule 5): to x ±0.75, the
+ * one column clear of the plates and the lobes' skirts on both files. The
+ * hull in progress, whose plan reaches x 0.69, still covers 38 % of the
+ * port rank's third guide on the Directorate's file and 37 % on the
+ * Commune's (4.94 and 5.25 m² against 6.8 to 8.2 for their siblings). The
+ * floor's own edges at ±1.7 are under the plates; at ±0.75 the
  * port rank overlaps the forge line's edge by 0.05 (0.9 m), the line
  * running 0.15 off centre, and the starboard rank clears it by 0.25. The
  * stations z −4.1, −1.6, 0.9, 3.4 and 5.9 are the same pitch slid 0.9
@@ -1452,10 +1458,10 @@ export function gantryCrane(root, mats, opts) {
 
 /**
  * The launch mouth at the bay's open end: a torus for the mouth, squashed
- * by its node, and the forge glow lying in it as a thin drum — "interior
- * forge light spilling from the bay when producing" (the Foundry block).
- * The Directorate's and the Commune's files carry it at one set of numbers,
- * the defaults; the Order's gate is its own.
+ * by its node, and the glow drum lying in it, a thin drum clad at rest
+ * (below) — "interior forge light spilling from the bay when producing"
+ * (the Foundry block). The Directorate's and the Commune's files carry it
+ * at one set of numbers, the defaults; the Order's gate is its own.
  *
  * The glow drum is the light "spilling from the bay when producing": the
  * block names it in that band and nowhere at rest, so `glow` is the
@@ -1467,9 +1473,9 @@ export function gantryCrane(root, mats, opts) {
  * approved files put it and where the top-down bake never saw it lit; a
  * clad part under a ring is nothing the audit reads. The forge line inside
  * the bay (`foundryBay`) is not read the same way: it is carried lit as
- * every approved Foundry lights it, on the #890 review's ruling that the
- * block's "Dim at rest" names no lamp and that naming the Foundry's
- * resting lamps is follow-up #893. Both files that call this pass the
+ * every approved Foundry lights it (#890, review rulings, rulings 2 and
+ * 3: the block's "Dim at rest" names no lamp, and naming the Foundry's
+ * resting lamps is follow-up #893). Both files that call this pass the
  * same role, so the one decision holds for both.
  */
 export function launchMouth(root, { mouth: mouthMat, glow: glowMat }, opts = {}) {

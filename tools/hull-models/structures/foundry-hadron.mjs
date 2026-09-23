@@ -77,11 +77,13 @@
  * shift but for the eighteen parts below — every other part is where it
  * was.
  *
- * LIGHT (#890). The block's resting clause is "dim at rest": the running
- * lights on the halls and, on every navy's Foundry, the bay guides and the
- * forge line (#890 review, one reading for all four). Eighteen lamps were
- * hidden from above on every build from #652 to #890, and models-plan.md
- * §3.2 decides each:
+ * LIGHT (#890). The block's resting clause is "dim at rest", which names
+ * no lamp: the running lights on the halls, the bay guides and the forge
+ * line are carried lit as this and every approved Foundry lights them
+ * (#890, review rulings, rulings 2 and 3 — one reading for all four), and
+ * the block naming its resting lamps is follow-up #893. Eighteen lamps
+ * were hidden from above on every build from #652 to #890, and
+ * models-plan.md §3.2 decides each:
  * - `wing_portlight_r_0..2` and `_l_0..2`, the running lights — kept lit.
  *   The file set them into each wing's outboard flank at x 5.75, y 2.3,
  *   under the shoulder facet that runs from (5.865, 2.925) up to the crown

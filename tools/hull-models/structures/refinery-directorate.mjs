@@ -16,7 +16,8 @@
  * in ranks with holes in them; the crusher house with a chitin cowl over
  * it and a floodlit apron at the foot of its face — `crusher_maw`, the
  * export's name for the slab it stood on that face — three black teeth
- * hung over the apron's inner end; two
+ * hung point-down along the face's line, one over the apron's inner end
+ * and two inside the house behind it; two
  * exhaust stacks with hot tips; the conveyor gantry running down to the
  * intake hopper, five nodules riding its belt, red rails, eight gantry
  * lights and three legs; the hopper with its lit mouth and five teeth
@@ -63,9 +64,12 @@
  *   machinery light" — so the slab is a resting lamp and stays lit
  *   (docs/models-plan.md §3.2 rule 5). It lies down: the same 1.7 along
  *   the face and 1.3 out from it, 0.3 thick, on the ground at the face's
- *   foot, its inner edge on the face where the export's slab stood and its
- *   outer two thirds past the cowl's plan, the teeth over its inner end
- *   and the belt's high end over the ground beside it. Laid flat it is one
+ *   foot, its inner edge on the face where the export's slab stood and all
+ *   but 3 % of it clear of the cowl's plan (its rim covers 9.7 of the
+ *   apron's 325 m²); `maw_tooth_2` hangs over its inner end, `_0` and
+ *   `_1` sit inside `crusher_house` behind the face where the export put
+ *   them, and the belt's high end stands over the ground beside it. Laid
+ *   flat it is one
  *   of the block's floodlit working surfaces — the crusher's apron — and
  *   not an aperture: a plate on the outside of a wall wearing a mouth's
  *   name is the failure docs/style-neon-noir.md names ("The Directorate's
@@ -217,7 +221,8 @@ directorate.silos(
 // The crusher at the kit's defaults — this file's numbers — but
 // `crusher_maw`, laid down as a floodlit apron at the foot of the house's
 // face since #890 (the header), turned with the house; its three teeth
-// hung point-down over the apron's inner end, and the two stacks.
+// hung point-down where the export hung them — `_2` over the apron's inner
+// end, `_0` and `_1` inside the house — and the two stacks.
 crusher(
   root,
   { house: steel, cowl: red, maw: flood },

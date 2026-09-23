@@ -13,9 +13,10 @@
  * with three knuckles a flank where they meet; two outrigger lobes off the
  * corners, the big one ringed and the small one budded; a stern pod with
  * its ring and bud closing the blind end; the bay itself — floor, forge
- * line, the hull in progress, a lip either side with its rank of five
- * biolight guides — and two gantry cranes over it, without finials; the
- * launch mouth with the forge glow lying in it; four lit veins climbing the
+ * line, the hull in progress, a lip either side and a rank of five
+ * biolight guides either side of the forge line — and two gantry cranes
+ * over it, without finials; the launch mouth with the glow drum lying in
+ * it, clad; four lit veins climbing the
  * flanks; two ballast tanks and two graft pipes with their flanges along
  * the −x flank; and five root anchors into the seabed.
  *
@@ -66,17 +67,20 @@
  *   above on the approved binary. The block's lighting clause is "Dim at
  *   rest; interior forge light spilling from the bay when producing":
  *   "dim at rest" names no lamp, so the block licenses no resting lamp
- *   here, and the review settled one reading for all four Foundries — the
- *   bay guides and the forge line are carried lit as every approved
- *   Foundry lights them (docs/models-plan.md §3.2, the one-glow-factor
- *   paragraph after the rules), the launch glow is clad, and the block
- *   naming its resting lamps is follow-up #893. Under that:
+ *   here, and the review settled one reading for all four Foundries
+ *   (#890, review rulings, ruling 3) — the bay guides and the forge line
+ *   are carried lit as every approved Foundry lights them
+ *   (docs/models-plan.md §3.2, the one-glow-factor paragraph after the
+ *   rules; ruling 2), the launch glow is clad, and the block naming its
+ *   resting lamps is follow-up #893. Under that:
  *   · `bay_guide_0_0` to `_0_3` and `_1_1`, on the lips' tops under the
  *     lobes' skirts and the crane beams, stay lit and the whole rank
  *     moves, both lips, to either side of the forge line at x ±0.75 — the
- *     one column the lobes, the hull in progress and the Directorate's
- *     plates all leave clear; the floor's own edges at ±1.7 are under the
- *     lobes. The port rank overlaps the forge line's edge by 0.9 m, the
+ *     one column the lobes and the Directorate's plates leave clear; the
+ *     floor's own edges at ±1.7 are under the lobes. The hull in progress,
+ *     whose plan reaches x 0.69, still covers 37 % of `bay_guide_0_2` at
+ *     z 0.9, which shows 5.25 m² where its siblings show 7.1 to 8.2. The
+ *     port rank overlaps the forge line's edge by 0.9 m, the
  *     line running 0.15 off centre; the starboard rank clears it. And to
  *     z −4.1 at the same 2.5 pitch, off the beams and off the second
  *     lobe's skirt at z 2 and the fourth's at 5 (rule 5). The kit's

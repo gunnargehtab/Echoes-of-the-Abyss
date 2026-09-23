@@ -81,15 +81,17 @@
  * the same face, so there is no ground at the foot to lay the maw on, as
  * the Directorate's file does. The block lights "visible machinery light"
  * in one band, so the maw is a resting lamp and stays lit
- * (docs/models-plan.md §3.2 rule 5), carried up as a strip along the
- * cowl's crown — its 2.2 along the ridge, 0.3 thick, and 1.0 across it,
- * narrowed from the face slab's 1.2 to sit on the two crown facets either
- * side of the ridge (their midpoints at x ±0.44, their outer vertices at
- * ±0.85, each 15° off level) with its underside 0.02 clear of them at its
- * edges rather than cut into them — set into the crown with its top 0.03
- * proud of the ridge and flush with the cowl's forward end, over the face
- * the blades still flank. That narrowing is the −13.7 % of area `diff.mjs`
- * reads on the part; it lists `crusher_maw` and no other.
+ * (docs/models-plan.md §3.2 rule 5), carried up as a strip set into the
+ * cowl's crown — the face slab's own 2.2 × 1.2 × 0.3, its 2.2 along the
+ * ridge and its 1.2 across it, at y 4.78. The ridge stands at 4.9 and the
+ * two crown facets fall from it at 15° to their outer vertices at x ±0.85,
+ * so the slab's underside at 4.63 lies 0.27 under the ridge and 0.11 into
+ * the facets at its edges (x ±0.6, where they are at 4.739): the crown
+ * passes through the slab's lower part, and its top at 4.93 stands 0.03
+ * over the ridge, so the whole 1.2 × 2.2 shows from above. It is flush
+ * with the cowl's forward end, over the face the blades still flank.
+ * `diff.mjs` lists `crusher_maw` and no other part: the same box, its
+ * three sides reordered, so the same area.
  */
 import {
   THREE,
@@ -145,7 +147,7 @@ crusher(
       at: [0, 3.2, -4.8],
       rot: [Math.PI / 2, Math.PI / 2, 0],
     },
-    maw: { size: [1.0, 0.3, 2.2], at: [0, 4.78, -3.2] },
+    maw: { size: [1.2, 0.3, 2.2], at: [0, 4.78, -3.2] },
   }
 );
 hadron.mawBlades(root, shadow, { r: 0.16, length: 1.1, at: [0.75, 2.5, -3] });
