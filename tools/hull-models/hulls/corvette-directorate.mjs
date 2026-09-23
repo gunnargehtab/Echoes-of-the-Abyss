@@ -241,10 +241,10 @@ directorate.spikes(root, red, {
 });
 
 // "Dim accent running lights along the hull line": five marks along the
-// port deck edge, three along the starboard, each a pad seated on the top
-// face of its own plate at the edge — the plate's top at that edge, with
-// its roll (#890, the header) — and one on the tail plate's top, ahead of
-// the telson blades; a pattern that repeats on neither side.
+// port deck edge, three along the starboard, each a level pad whose seat
+// is the height of its own plate's top at that edge, the plate's roll
+// counted in (#890, the header) — and one on the tail plate's top, ahead
+// of the telson blades; a pattern that repeats on neither side.
 directorate.photophoreMarks(root, photophore, {
   size: [0.9, 0.25, 1.6],
   marks: [

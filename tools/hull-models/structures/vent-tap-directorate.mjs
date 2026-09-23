@@ -17,22 +17,24 @@
  * Directorate's ink: trench black for the rock, weld steel for the pipework,
  * a red platform, crimson lamps and the gullet glow for the floods. What is
  * the Directorate's is the exchanger: a carapace alternating violet and red
- * arm to arm, its seam, three spines, four photophore studs and a claw, from
+ * arm to arm, its seam, three spines, four photophores and a claw, from
  * `factions/directorate.mjs`.
  *
  * THE LIGHT the top-down maps could not see. The export lit the sixteen
- * exchanger photophores, and set fourteen of them inside their carapace
- * orbs — the light audit named all fourteen at nothing from above, and only
- * `photophore_3` on the first two arms ever showed. The block's resting
- * clause lights three things — "the vent's ember mouth under the manifold,
- * floodlit working platforms around the wellhead, lamps along every pipe
- * run" — and the studs on the exchangers are none of them: the pipe runs
- * end at the risers, and the pipe lamps are the kit's. A lamp the clause
- * does not name is not lit (docs/models-plan.md §3.2 rule 1), so under
- * #890 all sixteen are built where the file has them and clad in
- * `biolight_unlit`, the navy's unlit finish for the photophore family —
- * including the two that showed, so the four exchangers stay one rule.
- * Nothing moved; the navy still reads from the carapace, spines and claws.
+ * exchanger photophores at y 8 and 9, inside their carapace orbs — the
+ * light audit named fourteen at nothing from above, and only `photophore_3`
+ * on the first two arms ever showed, and that one because it hung in the
+ * air past the shell's nose. They are the last lamps of each pipe run —
+ * "lamps along every pipe run", one reading for all four navies, as the
+ * Knights' `exchanger_seam` (#890 review, ruling 5) — so all sixteen stay
+ * lit in `biolight_crimson` and every one now sits on its carapace's upper
+ * face: each rank keeps the file's stagger, 8 either side of the arm in
+ * global z, and its stations along the arm, and `carapaceHead` seats each
+ * stud on the shell's surface at that station, laid to the surface's
+ * slope. Two stations on each of the first two arms fall beyond the shell's
+ * plan — one over the seam, one past the nose — and are drawn back along
+ * the arm onto the shell; the other fourteen keep their plan positions to
+ * the centimetre. Every stud shows from above.
  *
  * The frame is the approved export's own: drawn 142.84 across by the measure
  * the bake takes — a yawed orb measures wider than its vertices (kit.mjs
@@ -63,9 +65,6 @@ const black = directorate.ink.trenchBlack();
 const steel = directorate.ink.weldSteel();
 const crimson = directorate.ink.biolightCrimson();
 const gullet = directorate.ink.gulletGlow();
-// The exchanger studs' finish: unlit, the block's clause not naming them
-// (#890, the header).
-const unlit = directorate.ink.biolightUnlit();
 
 const root = new THREE.Group();
 root.name = 'vent_tap_directorate';
@@ -75,7 +74,8 @@ ventWellhead(root, { rock: black, mouth: gullet, steel });
 
 // Four arms on the diagonals, each with a carapace on its end — violet on the
 // even arms, red on the odd, as the tergites alternate along a hull; the
-// carapace's photophore studs clad, not lit (#890, the header).
+// carapace's four photophores on its upper face, the run's last lamps (#890,
+// the header).
 radialSeries({ count: 4, phase: Math.PI / 4 }, (a, i) => {
   ventDrawArm(
     root,
@@ -84,14 +84,14 @@ radialSeries({ count: 4, phase: Math.PI / 4 }, (a, i) => {
   );
   directorate.carapaceHead(
     root,
-    { skin: i % 2 ? red : violet, black, steel, crimson: unlit },
+    { skin: i % 2 ? red : violet, black, steel, crimson },
     {
       bearing: a,
       at: 74,
       carapace: { y: 5, r: [15, 8, 12] },
       seam: { at: 62, y: 5, r: [4, 7.5, 11] },
       spines: { from: -6, pitch: 6, y: 14, r: 1.2, lengths: [8, 10, 12], stagger: [-3, 4, -3], rake: -0.3 },
-      photophores: { from: -8, pitch: 5.5, ys: [8, 9, 8, 9], stagger: 8, size: 1.6, h: 0.5 },
+      photophores: { from: -8, pitch: 5.5, count: 4, stagger: 8, size: 1.6, h: 0.5 },
       claw: { at: 88, y: 0, r: 2.4, length: 16, raise: 0.8 },
     }
   );

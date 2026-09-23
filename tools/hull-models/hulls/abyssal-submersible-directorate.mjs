@@ -56,12 +56,20 @@
  *   six hidden, so the limbs stay one family.
  * - `photophore_port_5` and `photophore_starboard_3` are the clause's and
  *   stay lit. Each sat on the fifth plate's flank at its widest line,
- *   under the plate's own upper surface; each is lifted onto that surface,
- *   a few hundredths inboard and up, the same bud at the same station.
+ *   under the plate's own upper surface; each is lifted 0.04 inboard and
+ *   0.17 / 0.205 up, the same bud at the same station, and what it rests
+ *   on there is the crest of `plate_rim_4` — the fourth plate's open rim,
+ *   which stands proud of the fifth plate's shell at those stations — not
+ *   the shell of `carapace_5`.
  * - `photophore_jaw` is the clause's and stays lit. It sat under the jaw
  *   directly beneath the rostrum's base; it is under the jaw still, moved
  *   0.2 across the keel to the starboard side of the rostrum, between it
  *   and the starboard mandible, where nothing stands over it.
+ * - FOLLOW-UP #893, not touched: the five rims, the four tail joints and
+ *   the rostrum glow in `edge_red` and the clause names none of them; they
+ *   were never hidden and are the approved model's resting set, which this
+ *   issue does not re-read (#890 review, ruling 2). They stay lit as the
+ *   file has them, unread; #893 holds the question.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds: drawn along Z, 4.53 units long tip to tip, hull axis at

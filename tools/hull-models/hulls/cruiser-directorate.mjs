@@ -16,8 +16,8 @@
  * it; two eyes of different sizes; four antennae, two forward and two aft,
  * each aimed at the lamp at its tip; nine whiskers, four forward to port
  * and five aft to starboard, each with its lamp; twelve darts, seven to
- * port and five to starboard; a keel with two spurs, and a light organ
- * along the crown; three tail plates with their lips, a telson of
+ * port and five to starboard; a keel with a light organ along its
+ * underside and two spurs; three tail plates with their lips, a telson of
  * six blades fanned about one point and its spike; and the sustained glow
  * — a light band down each flank ribbed three times, seven light domes
  * along the back, four to port and three to starboard, four gills on the
@@ -46,10 +46,10 @@
  * its light organ strip lay under the keel and its head and tail marks
  * were cubes on the shield and the last plate: fifteen lamps under a
  * quarter of a square metre from above, which the light audit named and
- * the approved bake never saw. #890 re-seats them, each against the
- * block's resting clause — "sustained glow from vents, sensor arrays and
- * lit ports" — under docs/models-plan.md §3.2 rule 5, every one keeping
- * its name, its material and its count:
+ * the approved bake never saw. #890 re-seats fourteen and keeps one where
+ * it is, each against the block's resting clause — "sustained glow from
+ * vents, sensor arrays and lit ports" — under docs/models-plan.md §3.2
+ * rule 5, every one keeping its name, its material and its count:
  *
  * - The thirteen antenna and whisker lamps (`antenna_tip_fp`, `_fs`, `_as`
  *   and the nine `whisker_tip_*`; `_ap` sat at the floor exactly) are the
@@ -62,11 +62,16 @@
  *   the point (`aimedSpikes` `inset`) so the point stands through it and
  *   the fore-port pad reaches no further forward than the cube did, which
  *   is what holds `DRAWN`.
- * - The light organ strip is the clause's "lit ports" and stays lit. Under
- *   the keel it lay under the body core, where no upward face could carry
- *   it; it runs the crown now, between the dorsal spike ranks, 1.2 wide
- *   and 1.4 tall with its top at 13.6, clear of the tallest plate (13.31)
- *   — a strip on the crown instead of under the waist.
+ * - The light organ strip is the clause's "lit ports" and stays lit where
+ *   the file has it, under the keel, under the body core, where no upward
+ *   face can carry it. RESIDUAL AUDIT LINE: `light_organ_strip` shows
+ *   nothing from above, and the export warns on it. A ventral light organ
+ *   carried to the back is a different fixture, and a straight centreline
+ *   bar is not this navy's asymmetric grammar; a move is licensed by a
+ *   hidden lamp and never by gate 3's headroom, which this hull, never
+ *   capped, has no claim on (#890 review, rulings 1 and 6). The maps see
+ *   the light band down each flank instead, and the conn view sees the
+ *   strip.
  * - The head mark is a lit port on the head and stays lit: a pad the
  *   crest's width and 1.6 long, seated on the crest's top where the cube
  *   sat under the crest's rising forward end. The tail mark likewise: a
@@ -274,12 +279,11 @@ directorate.darts(
   }
 );
 
-// The keel and two spurs off it leaned aft, neither where the other is;
-// and the light organ strip — "lit ports" — along the crown between the
-// dorsal spike ranks, the keel's own length and yaw, its top clear of the
-// tallest plate (#890, the header).
+// The keel, the light organ strip along its underside — "lit ports", where
+// the file has it, a residual audit line (#890, the header) — and two
+// spurs off it leaned aft, neither where the other is.
 bar('ventral_keel', violet, [5.5, 2.4, 62], [0.2, 1.9, -2], [0, 0.01, 0]);
-bar('light_organ_strip', photophore, [1.2, 1.4, 56], [0.2, 12.9, -2], [0, 0.01, 0]);
+bar('light_organ_strip', photophore, [2.4, 0.6, 56], [0.2, 0.72, -2], [0, 0.01, 0]);
 directorate.spikes(root, red, {
   spikes: [
     { name: 'keel_spur_a', radii: [0.02, 0.8], length: 4.4, ...drawn([1.6, 1.4, 20], [2.6, 0, 0]) },

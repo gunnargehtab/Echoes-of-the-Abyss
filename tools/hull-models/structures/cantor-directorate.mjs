@@ -64,7 +64,10 @@
  * grows: every one of the twenty-two studs keeps its centre, its name and
  * its material and has its radius scaled by `GROWN`, the same factor on
  * each, so the pattern is the file's own at a larger stud. The quill's tip
- * light is not in the clause's words and is left at the file's radius.
+ * light — the brightest lamp on the file, and its own fixture rather than
+ * one of the constellation — is carried unread at the file's radius: it is
+ * the approved model's resting set, which this issue does not re-read
+ * (#890 review, ruling 2); #893 holds the question.
  *
  * THE FRAME is the one every Z-long export here shares (hulls/light-scout-
  * pelagia.mjs, structures/sentinel-turret-directorate.mjs): the export is

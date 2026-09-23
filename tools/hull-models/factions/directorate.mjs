@@ -252,8 +252,9 @@ export const ink = {
   // 0.15 / 0.5), a photophore polished to 0.35 burning at 2.2, and
   // `edge_red`, a *lit cladding* — abyssal red at metalness 0.15 with its
   // own colour as emissive, at 0.12 on the file — so the plate rims, the
-  // tail joints, the rostrum and the limb claws all glow faintly. One model
-  // each; the values are the export's own (#649).
+  // tail joints and the rostrum all glow faintly (the limb claws wore it
+  // too, until #890 clad them in `abyssal_red`). One model each; the
+  // values are the export's own (#649).
   chitinTrench: () => clad('chitin_trench', hex('#0A0710'), 0.25, 0.38),
   plateViolet: () => clad('plate_violet', hex('#2D1B3D'), 0.22, 0.32),
   edgeRed: (intensity = 1) => {
@@ -1618,22 +1619,32 @@ export function plectrumLimb(root, { steel, black }, opts) {
 /**
  * The exchanger on the end of a Vent Tap's draw arm, on `bearing` (#608),
  * grown as a carapace: a squashed orb in `skin`, the dark seam orb where it
- * meets the pipe, three spines raked off its back, four photophore studs in
- * `crimson` lying on it, and the claw that grips the ground beyond. The
- * script passes `skin` violet on the even arms and red on the odd, as the
- * tergites alternate along a hull. Distances are metres out along the
- * bearing, as the kit's `ventDrawArm` takes them.
+ * meets the pipe, three spines raked off its back, four photophores in
+ * `crimson` lying on its upper face, and the claw that grips the ground
+ * beyond. The script passes `skin` violet on the even arms and red on the
+ * odd, as the tergites alternate along a hull. Distances are metres out
+ * along the bearing, as the kit's `ventDrawArm` takes them.
  *
- * Three things are the approved file's and are carried across rather than
+ * Two things are the approved file's and are carried across rather than
  * corrected (#540): the spines rake toward *global* +x on every arm, not out
- * along their own; the spines and the photophores stagger either side of
- * their rank in global z; and three of the four photophores lie under the
- * shell of the carapace or its seam, where the top-down bake has never seen
- * them. The Vent Tap block's resting clause never named them, so since #890
- * the script passes the navy's `biolight_unlit` as `crimson` and they are
- * studs, not lamps, where the file has them (models-plan.md §3.2 rule 1).
- * The photophores are `photophores` below, yawed with the arm, so the
- * no-mirrored-pair rule holds on the tap as it does on a hull.
+ * along their own; and the spines and the photophores stagger either side of
+ * their rank in global z, so no two arms carry the same pattern. The file's
+ * third oddity is not: it set the photophores at y 8 and 9, inside the
+ * shell, where the top-down bake never saw them. They are the last lamps
+ * of the pipe run — "lamps along every pipe run", one reading for all
+ * four navies (#890 review, ruling 5) — so each stud now sits on the
+ * carapace's surface at its own station: `count` studs at `from` and
+ * `pitch` along the arm, staggered `stagger` in global z as the file has
+ * them, each seated on whichever of the two orbs — the carapace or the
+ * seam — stands higher where its plan position meets them, and laid to
+ * that surface's slope there, half its height proud along the normal. A
+ * station neither orb covers — the first two arms' global-z stagger
+ * carries one stud past the nose — is drawn back along the arm to `reach`
+ * of the carapace's extent at that beam, and says nothing else; the same
+ * stagger carries one stud onto the seam, and it sits there, on the run's
+ * side of the shell. The photophores are `photophores` below, each with
+ * its own rotation, so the no-mirrored-pair rule holds on the tap as it
+ * does on a hull.
  */
 export function carapaceHead(root, { skin, black, steel, crimson }, opts) {
   const { bearing: a, at, carapace, seam, spines, photophores: rank, claw } = opts;
@@ -1647,15 +1658,51 @@ export function carapaceHead(root, { skin, black, steel, crimson }, opts) {
       spines.rake,
     ]);
   });
-  photophores(root, crimson, {
-    size: rank.size,
-    h: rank.h,
-    yaw: -a,
-    spots: rank.ys.map((y, i) => {
-      const [x, , z] = polar(a, at + (rank.from + rank.pitch * i), y);
-      return [`photophore_${i}`, x, y, z + (i % 2 ? rank.stagger : -rank.stagger)];
-    }),
-  });
+  const { count = 4, from, pitch, stagger, size, h, reach = 0.8 } = rank;
+  const along = new THREE.Vector3(Math.cos(a), 0, Math.sin(a));
+  const across = new THREE.Vector3(-Math.sin(a), 0, Math.cos(a));
+  const up = new THREE.Vector3(0, 1, 0);
+  const yawQ = new THREE.Quaternion().setFromAxisAngle(up, -a);
+  // The two orbs in the arm's frame: the carapace at the origin, the seam
+  // `seam.at - at` back along it.
+  const orbs = [
+    { u0: 0, y0: carapace.y, r: carapace.r },
+    { u0: seam.at - at, y0: seam.y, r: seam.r },
+  ];
+  // Where an orb stands at a station: its height there and its normal, or
+  // nothing where the station lies outside its plan.
+  const meet = ({ u0, y0, r: [A, B, C] }, u, v) => {
+    const s = 1 - ((u - u0) / A) ** 2 - (v / C) ** 2;
+    if (s <= 0) return null;
+    const w = Math.sqrt(s);
+    return { y: y0 + B * w, n: new THREE.Vector3((u - u0) / A ** 2, w / B, v / C ** 2).normalize() };
+  };
+  const spots = [];
+  for (let i = 0; i < count; i++) {
+    // The station in the shell's frame: along the arm, and across it from
+    // the file's global-z stagger.
+    const d = new THREE.Vector3(...polar(a, at + from + pitch * i, 0))
+      .sub(new THREE.Vector3(...polar(a, at, 0)))
+      .add(new THREE.Vector3(0, 0, i % 2 ? stagger : -stagger));
+    const v = d.dot(across);
+    let u = d.dot(along);
+    let seat = orbs.map((o) => meet(o, u, v)).reduce((hi, m) => (m && (!hi || m.y > hi.y) ? m : hi), null);
+    if (!seat) {
+      const [A, , C] = carapace.r;
+      const extent = reach * A * Math.sqrt(Math.max(0, 1 - (v / C) ** 2));
+      u = Math.max(-extent, Math.min(extent, u));
+      seat = meet(orbs[0], u, v);
+    }
+    const q = yawQ.clone().multiply(new THREE.Quaternion().setFromUnitVectors(up, seat.n));
+    const e = new THREE.Euler().setFromQuaternion(q);
+    const p = new THREE.Vector3(...polar(a, at, 0))
+      .addScaledVector(along, u)
+      .addScaledVector(across, v)
+      .addScaledVector(up, seat.y)
+      .addScaledVector(seat.n.clone().applyQuaternion(yawQ), h / 2);
+    spots.push([`photophore_${i}`, p.x, p.y, p.z, [e.x, e.y, e.z]]);
+  }
+  photophores(root, crimson, { size, h, spots });
   // Laid along the arm as the draw pipe is, then raised `claw.raise` radians
   // toward vertical: the approved file's lean is π/2 − 0.8 to the bit.
   add(root, 'anchor_claw', spike(claw.r, claw.length, 5), steel, polar(a, claw.at, claw.y), [

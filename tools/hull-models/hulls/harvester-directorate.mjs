@@ -16,11 +16,11 @@
  * outer edge; at the bow the mill — a housing, an eight-sided mouth and
  * six teeth in a ring — with a jointed claw either side of it, the port a
  * fifth larger than the starboard; three tail plates, the first with its
- * lip, and four paddles fanned about the stern; three seam strips along
- * the belly's bands, unlit; and the light — a strip down each flank (the
- * port the longer), a bar over the maw and a ring round it, and three
- * domes at the bow, the port flank and the tail — the dim resting light of
- * a hull that idles at SIG 18. Nothing on it mirrors.
+ * lip, and four paddles fanned about the stern; and the light — three seam
+ * strips along the belly's bands, a strip down each flank (the port the
+ * longer), a bar over the maw and a ring round it, and three domes at the
+ * bow, the port flank and the tail — the floodlit mining machinery of a
+ * hull that idles at SIG 18. Nothing on it mirrors.
  *
  * A port of the approved export
  * (docs/concept-art/models/harvester-directorate.glb at 3e15409), part for
@@ -39,14 +39,19 @@
  * THE LIGHT the top-down maps could not see. The export lit three seam
  * strips along the belly's bands, *under* the carapace, where the maps see
  * nothing of them: the light audit named those three, and the approved
- * bake never saw them. The block's resting clause is "dim at rest", and
- * the floodlit mining machinery is the loud state, a later band; the
- * strips are neither the hull-line running lights the clause's SIG band
- * names (the flank strips are those) nor anything the clause lights, and
- * a seam on the cargo belly lit only when the mill runs is the machinery
- * band's. So under docs/models-plan.md §3.2 rule 2 (#890) the three are
- * built and clad, not lit — `biolight_unlit`, the navy's unlit finish for
- * the photophore family — at their own places and sizes. Nothing moved.
+ * bake never saw them. They stay lit where the file has them (#890 review,
+ * rulings 1 and 2): the approved model lights them at rest, and "floodlit
+ * mining machinery that reads as its loud state" on lamps already lit at
+ * rest is the one-glow-factor reading — the same lamps, scaled — not a
+ * later band that clads them. No upward face of a band exists to carry
+ * them: each band is a box inside the cargo gut's orb (10.75 of half-width
+ * against the gut's 11.45 at the band's height), and the gut's crown is
+ * under the carapace on every band's length. RESIDUAL AUDIT LINES:
+ * `seam_strip_bow`, `seam_strip_mid`, `seam_strip_aft` show nothing from
+ * above, under the carapace, and the export warns on each. Whether a belly
+ * seam belongs to the machinery band at all is a question about the
+ * approved model's resting set, which this issue does not re-read; #893
+ * holds it. Nothing moved.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds: drawn along Z, 80.81 units long tip to tip, hull axis at
@@ -69,8 +74,6 @@ const violet = directorate.ink.bruiseViolet();
 const red = directorate.ink.abyssalRed();
 const chitin = directorate.ink.trenchChitin();
 const photophore = directorate.ink.redPhotophore(2.4);
-// The seam strips' finish: the photophore family's unlit (#890, the header).
-const unlit = directorate.ink.biolightUnlit();
 
 const root = new THREE.Group();
 root.name = 'directorate_harvester';
@@ -233,14 +236,14 @@ directorate.telsonFan(root, [chitin, violet], {
   ],
 });
 
-// A seam strip along each of the gut's three bands, clad and dark — the
-// machinery band's, not the resting light's (#890, the header); then "dim
-// at rest": a strip down each flank — 22 to port, 15 to starboard, neither
-// where the other is — a bar over the maw and a ring round its mouth, and
-// three domes: bow, port flank, tail.
-bar('seam_strip_bow', unlit, [20.8, 0.45, 0.5], [0.2, 3.85, 4], [0, 0.02, 0]);
-bar('seam_strip_mid', unlit, [21.8, 0.45, 0.5], [0.2, 3.75, -8], [0, -0.015, 0]);
-bar('seam_strip_aft', unlit, [18.8, 0.45, 0.5], [0.2, 3.95, -18], [0, 0.02, 0]);
+// "Floodlit mining machinery that reads as its loud state": a seam strip
+// along each of the gut's three bands — under the carapace, residual audit
+// lines (#890, the header) — a strip down each flank — 22 to port, 15 to
+// starboard, neither where the other is — a bar over the maw and a ring
+// round its mouth, and three domes: bow, port flank, tail.
+bar('seam_strip_bow', photophore, [20.8, 0.45, 0.5], [0.2, 3.85, 4], [0, 0.02, 0]);
+bar('seam_strip_mid', photophore, [21.8, 0.45, 0.5], [0.2, 3.75, -8], [0, -0.015, 0]);
+bar('seam_strip_aft', photophore, [18.8, 0.45, 0.5], [0.2, 3.95, -18], [0, 0.02, 0]);
 bar('flank_strip_p', photophore, [0.5, 0.5, 22], [12.6, 7.9, -2], [0, 0.03, 0]);
 bar('flank_strip_s', photophore, [0.5, 0.5, 15], [-12.7, 7.6, -9], [0, -0.03, 0]);
 bar('maw_bar', photophore, [8.2, 1.1, 0.6], [0.2, 8.6, 25.6], [0, 0.02, 0]);
