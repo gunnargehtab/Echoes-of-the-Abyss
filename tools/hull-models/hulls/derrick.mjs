@@ -27,8 +27,8 @@
  *   clad the same.
  *
  * The cradle lamp, the stack throat, the frame floods and the roof gratings
- * face up and were not on the list; the block puts the first two under way,
- * and that is a question for the block, not for this change.
+ * face up and were not on the list; they are carried as the approved file
+ * lights them, and whether the block should name them at rest is #893.
  *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.

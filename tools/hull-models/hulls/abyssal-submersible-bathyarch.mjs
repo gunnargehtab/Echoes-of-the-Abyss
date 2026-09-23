@@ -57,8 +57,10 @@
  *     the hull, and its plan shadow covers the starboard hull line for the
  *     whole bay between the fourth and fifth bands, so no lift on the
  *     rank's bearing (75°) clears it. The light keeps its station and its
- *     radius and sits at 45°, a rivet's width above the fin's root — the
- *     lamp moved up when the repair went in.
+ *     radius and sits at 49° from the crown, a rivet's width above the
+ *     fin's root and clear of the tower base's starboard corner (at 45° a
+ *     sliver of it lay under that corner) — the lamp moved up when the
+ *     repair went in.
  *   - `tower-light-strip`: the same strip laid along the tower cap's
  *     starboard edge on its top face, its 0.08 across and 0.06 tall.
  *   - `aft-beacon`: on the crown of the after end cap's core, abaft the
@@ -209,7 +211,7 @@ bathyarch.skids(
 // the tower, the aft beacon — and the two point lights either beam that the
 // export carries beside its meshes.
 // The three the file hid are placed by hand (header, #890): the fourth
-// starboard light at the rank's r 1.06 but 45° from the crown, above
+// starboard light at the rank's r 1.06 but 49° from the crown, above
 // `patch-1`'s root; the strip on the cap's top (2.31); the beacon on the
 // core's crown (0.72).
 bathyarch.hullLights(root, lampM, {
@@ -218,7 +220,7 @@ bathyarch.hullLights(root, lampM, {
     stations: [-1.9, -0.75, 0.4, 1.55],
     y: 0.28,
     z: 1.02,
-    at: { 'stb-4': [1.55, 0.75, 0.75] },
+    at: { 'stb-4': [1.55, 0.695, 0.8] },
   },
   strip: { size: [0.9, 0.06, 0.08], at: [0.7, 2.34, 0.54] },
   beacon: { rTop: 0.12, r: 0.14, h: 0.12, at: [-3.13, 0.79, 0] },

@@ -56,9 +56,9 @@
  *   from the bay when producing" — and a seam that leaks forge light and a
  *   crane's work flood are the producing band's (docs/models-plan.md §3.2
  *   rule 2). `roof_seam_p/s` and `crane_fwd/aft_floodpatch` are still
- *   parts. The six that face up are the model's reading of "Dim at rest"
- *   and were not on the list; whether the block should name them is a
- *   question for the block.
+ *   parts. The six that face up were not on the list and are carried as
+ *   the approved file lights them; whether the block should name them at
+ *   rest is #893.
  *
  * THE FRAME: a Z-long export (the step's 66 along z against 59.5 across
  * x, pipe end to pipe end), so every number goes through kit.mjs `drawn`

@@ -86,32 +86,23 @@ the louder it is in the Echo Layer. Set each unit's glow from its idle/cruise SI
 
 **Where the light sits matters as much as how much of it there is**, and the 36–60 row is
 where that first bit. "Lit ports" asks for exactly what the phrase says — a window in a
-wall — and a window in a wall is a vertical face. The Consortium's Tender honoured it with
-ten `port_*` panels down its deckhouse and two `engine_vent_*` astern; the ports sat under
-the roof's eaves and the vents under the deck, so the chart's straight-down bake saw
-neither (#890 boxed the ports out past the eave and let the vents into the stern deck, and
-its block below says so). The hull was not wrong and neither was its prompt. What was wrong
-is the UNIT block reading as a light budget when it is a description of a hull.
+wall — and a window in a wall is a vertical face; the Consortium's Tender carries ten down
+its deckhouse, each boxed out past the eave so that it also shows a top face. A UNIT block
+is a description of a hull, not a light budget, and two renderers read it:
 
-The two renderers see different halves of a model, and a light budget has to satisfy both:
-
-- **The conn view draws the mesh**, at a 55° tilt, so vertical and tucked-under faces read.
-  Ports, hull-side running lights and stern vents all do their job here, and this is where
-  most of a player's time is spent.
+- **The conn view draws the mesh**, at a 55° tilt, so a vertical face reads there too, and
+  this is where most of a player's time is spent.
 - **The chart's sprite bake is straight down**, so only unoccluded upward-facing area
   reaches it. A hull whose light budget is all vertical reads as unlit on the chart — the
   layer that tells a player how loud something is at a glance.
 
-The Tender passed, but not on the three things its block named. What the bake actually
-counted was 202 m² of upward area: the two `weld_bay_*` floodlights at 112 m², the
-`roof_skylight` at 80, the derrick floods and the bow lamp for the rest. The skylight alone
-was more than a third of it and the block did not mention it, while two of the three sources
-the block did name were invisible from above. Both halves were true of the hull; neither
-half was the whole picture.
-
-So write a UNIT block to name the light the **chart** reads first, and the rest as the bonus
-the conn view collects. Every hull needs at least one unoccluded upward emitter — a deck
-flood, a vent grille in the top plate, a lit hatch — whatever else it carries.
+So write a UNIT block to name the light the **chart** reads first, and build every lamp it
+names where the chart can see it. A lamp the chart cannot see is a light-audit warning
+(`lightAudit` in `tools/hull-models/kit.mjs`), and a named lamp that cannot face up — a
+keel run, a lamp sealed inside another part — is recorded in its script's header as a
+residual audit line, with the reason. Every hull needs at least one unoccluded upward
+emitter — a deck flood, a vent grille in the top plate, a lit hatch — whatever else it
+carries.
 
 ## Block 1 — STYLE (every prompt starts with this)
 

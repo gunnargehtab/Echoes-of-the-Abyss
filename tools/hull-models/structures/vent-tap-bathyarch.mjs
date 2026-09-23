@@ -19,15 +19,16 @@
  * with a hazard band, a stack, a vent grating, an anchor foot and a rank of
  * rivets, from `factions/bathyarch.mjs`.
  *
- * The four `exchanger_vent` gratings sit inside the hazard band's slab on
+ * The four `exchanger_vent` gratings sat inside the hazard band's slab on
  * each exchanger's roof, where no bake sees them, and the audit warned on
- * all four; #890 clad them in `amber_lamp_unlit`, in place and at size,
- * because the block's resting clause — "the vent's ember mouth under the
- * manifold, floodlit working platforms around the wellhead, lamps along
- * every pipe run" — names the exchangers nowhere, and the resting clause
- * is what the model lights (docs/models-plan.md §3.2 rule 1). The mouth,
- * the platform floods, the pipe lamps and the wellhead floods are lit and
- * face up.
+ * all four. An exchanger's lamp is the last lamp of its pipe run — "lamps
+ * along every pipe run", the block's resting clause, read the same way on
+ * all four navies' taps (#890 review, ruling 5) — so each stays lit in its
+ * `amber_vent` and stands on the hazard band's top face at the same
+ * station, as the Order's `exchanger_seam` stands on its frame's top; the
+ * fin at that station pokes a tenth up through it. The mouth, the platform
+ * floods, the pipe lamps and the wellhead floods were already lit and
+ * facing up.
  *
  * The frame is the approved export's own: drawn 137.18 across, hazard band
  * corner to hazard band corner, and priced at 180 m by the table, so the root
@@ -55,9 +56,8 @@ const grey = bathyarch.ink.ironGrey();
 const rust = bathyarch.ink.oxideRust();
 const amber = bathyarch.ink.hazardAmber();
 const lamp = bathyarch.ink.amberLamp();
+const vent = bathyarch.ink.amberVent();
 const flood = bathyarch.ink.amberFlood();
-// The exchanger gratings' finish: named in no band, so unlit (header).
-const unlit = bathyarch.ink.amberLampUnlit();
 
 const root = new THREE.Group();
 root.name = 'vent_tap_bathyarch';
@@ -70,7 +70,7 @@ radialSeries({ count: 4, phase: Math.PI / 4 }, (a) => {
   ventDrawArm(root, { rock: rust, steel: grey, deck: black, lamp, flood }, { bearing: a });
   bathyarch.exchangerHead(
     root,
-    { black, grey, rust, amber, vent: unlit },
+    { black, grey, rust, amber, vent },
     {
       bearing: a,
       at: 74,
@@ -79,7 +79,8 @@ radialSeries({ count: 4, phase: Math.PI / 4 }, (a) => {
       fins: { count: 5, from: 66, pitch: 4, size: [1.2, 16, 20], y: 7 },
       band: { size: [27, 0.8, 19], y: 14.5 },
       stack: { at: 80, r: [2, 2.4], h: 14, y: 20, band: { r: 2.6, h: 1, y: 25 } },
-      grating: { at: 70, size: [6, 0.4, 6], y: 14.3 },
+      // On the band's top (14.9), where the file had it at 14.3 inside the band (header).
+      grating: { at: 70, size: [6, 0.4, 6], y: 15.1 },
       foot: { at: 88, size: [8, 4, 8], y: 0 },
       rivets: { count: 4, from: -10, pitch: 6.5, stagger: 7, size: [1.2, 0.8, 1.2], y: 14.2 },
     }

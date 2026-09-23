@@ -39,8 +39,8 @@
  *   model lights (docs/models-plan.md §3.2 rule 1). Both families wear
  *   `amber_lamp_unlit`, the navy's unlit finish for its lamps, in their
  *   places and at their sizes: `engine_vent_0..5` are still six boxes in
- *   the transom and `bow_lamp` is still under the plough. If the loudest
- *   hull's stern should glow, that is a line for the block first.
+ *   the transom and `bow_lamp` is still under the plough. Whether the
+ *   loudest hull's block should name its stern vents and bow lamp is #893.
  *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.

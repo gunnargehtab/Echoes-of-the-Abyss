@@ -378,7 +378,7 @@ export function barbette(root, { black, grey, rust, amber }, { x, deck, r, barre
 /**
  * Deck floods, facing up — the light gate 3 actually measures. `deck` is the
  * face they stand a tenth above, and it has to be the slab's *top*: the
- * Derrick passed its mid-slab datum for two years and its six floods sat
+ * Derrick passed its mid-slab datum since #531 and its six floods sat
  * inside `hull_slab`, which is the case `lightAudit` was written on (#890).
  */
 export function deckFloods(root, lampMat, { deck, spots }) {
@@ -1658,15 +1658,16 @@ export function exhaustLouvres(root, { black, flood }, opts) {
  * anchor foot beyond, and a rank of four rivets. Distances are metres out
  * along the bearing, as the kit's `ventDrawArm` takes them.
  *
- * Two things are the approved file's and are carried across rather than
- * corrected (#540). The rivets stagger `rivets.stagger` either side of their
+ * One thing is the approved file's and is carried across rather than
+ * corrected (#540): the rivets stagger `rivets.stagger` either side of their
  * rank in *global* z on every arm, not across the arm, so the rank leans one
- * way on two arms and the other way on the other two. And the grating sits
- * inside the hazard band, under its roof, where the top-down bake has never
- * seen it. `vent` is the grating's finish: the Klaxon's tap passes the lamp
- * family's unlit cladding, because its block's resting clause names the
- * mouth, the platforms and the pipe lamps and never the exchangers (#890);
- * the Order's tap passes its own.
+ * way on two arms and the other way on the other two. The grating is the
+ * exchanger's lamp, the last lamp of its pipe run ("lamps along every pipe
+ * run"), in `vent`, at `grating.y`: the export set it inside the hazard
+ * band's slab, where the top-down bake never saw it, and since #890 the
+ * Klaxon's tap stands it on the band's top face, as the Order's
+ * `exchanger_seam` stands on its frame's. The Klaxon's tap is this
+ * builder's one caller; the Order's calls `hadron.exchangerHead`.
  */
 export function exchangerHead(root, { black, grey, rust, amber, vent }, opts) {
   const { bearing: a, at, y, size, fins, band, stack, grating, foot, rivets } = opts;
@@ -3115,7 +3116,9 @@ export function ribbedDome(root, put, { black, grey, rust, lampM }, opts) {
  * eight face 0.62 to 1.27 radians off their bearings. Carried across, not
  * squared up (#540). `bearings` re-cuts a port by its number — `{ 5: π }` —
  * for the one the quarters module was built over (#890): it keeps its
- * radius, height and turn, and takes the bearing given.
+ * radius and height and takes the bearing given, and its turn follows the
+ * bearing by the file's rule, `π/2 − a`, so at π the disc's axis is (1, 0,
+ * 0) and that port alone faces square out along its radial.
  */
 export function portholes(root, put, glow, { count, phase, r, y, disc, bearings = {} }) {
   for (let i = 0; i < count; i++) {

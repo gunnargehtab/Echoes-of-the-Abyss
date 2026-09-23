@@ -61,8 +61,11 @@
  *   working lights" (docs/models-plan.md §3.2 rule 5):
  *   - `porthole_5`: re-cut on the skirt at bearing π, between the quarters
  *     module's after face (2.9 rad at the skirt) and the sixth port
- *     (3.45), at the file's radius, height and turn; the other nine keep
- *     their tenth-of-a-turn stations.
+ *     (3.45), at the file's radius and height; its turn follows the
+ *     bearing by the file's rule, `π/2 − a`, which at π is −π/2 and stands
+ *     the disc's axis on (1, 0, 0) — so this port alone faces square out
+ *     along its radial, where the other nine face 0.62 to 1.27 off theirs
+ *     and keep their tenth-of-a-turn stations.
  *   - `perimeter_post_4` and `_8`: each post made taller on its own foot,
  *     0.52 and 0.82, so it stands up through its module's roof (1.5 and
  *     1.8) and the lamp sits on the stub above it; the ring of eight stays
