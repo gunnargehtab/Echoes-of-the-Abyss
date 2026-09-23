@@ -337,8 +337,9 @@ describe('renderer smoke test: the scene-graph probes', () => {
   it('bills a repaint only while the label is on the glass, and once when it returns', () => {
     // The clock was the live instance of this (#846): `EchoRenderer.drawHud`
     // stamped `clockLabel.text` every frame and then hid the clock when the
-    // top strip was too narrow for it. A dropped clock keeps its last stamp
-    // since #857, but the property is Pixi's and holds for any label.
+    // top strip was too narrow for it. Since #857 a dropped clock keeps its
+    // last stamp unless the stamp changes length, but the property is Pixi's
+    // and holds for any label.
     // Hand-built rather than booted so the sequence is the one under test
     // rather than whatever width the canned host happens to be.
     const stage = new Container();

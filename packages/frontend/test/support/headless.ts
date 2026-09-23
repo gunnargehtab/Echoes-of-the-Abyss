@@ -979,15 +979,15 @@ export function textSaying(root: Container, needle: string): string | null {
  * a hidden label's size pays one `CanvasTextMetrics.measureText` for every
  * changed string.
  *
- * The clock was the live instance of all of it until #857. `drawHud` stamped
+ * The clock is the live instance of all of it. Until #857 `drawHud` stamped
  * `clockLabel.text`, read `clockLabel.width` on the very next line and hid
  * the clock when the strip was too narrow for it. So a hidden clock went on
  * measuring once a second, and on a whole-tree walk it also ticked ten
- * phantom rasterisations into a 600-frame budget. A dropped clock now keeps
- * its last stamp until it returns, so while hidden it is measured only when
- * the stamp changes length. What this probe counts
- * is the glyph canvas and the upload — the cost the `BitmapText` argument is
- * about — and those, and only those, a hidden label does not pay.
+ * phantom rasterisations into a 600-frame budget. Since #857 a dropped clock
+ * is re-stamped, and so measured, only when its stamp changes length. What
+ * this probe counts is the glyph canvas and the upload — the cost the
+ * `BitmapText` argument is about — and those, and only those, a hidden label
+ * does not pay.
  *
  * Counted work again, for the reason this whole file gives: the wall-clock
  * price of a rasterisation belongs to whatever machine ran it, while the
