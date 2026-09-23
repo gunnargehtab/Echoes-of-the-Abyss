@@ -72,11 +72,13 @@ import {
  * and `tools/hull-models/finishes.mjs hadron` is the check.
  *
  * Every value is a hull's where a hull carries the name: the Clarion's own
- * materials for the six the hulls share — the four tokens of
+ * materials for the five the hulls share — the four tokens of
  * docs/art-direction.md, and where the approved model needed a colour the
- * docs do not name, that model's own hex, exactly (kit.mjs `hex`). The
- * structures' names carry the approved structure's value, since no hull
- * has them. Strength (`intensity`, the glTF emissive strength) is not part
+ * docs do not name, that model's own hex, exactly (kit.mjs `hex`) — and the
+ * seam's base worn as cladding, derived from the fifth. The structures'
+ * names carry the approved structure's value; the one a hull carries too,
+ * `dark_steel` on the Offertory's cradle floors, is the structures' to the
+ * value. Strength (`intensity`, the glTF emissive strength) is not part
  * of a value: it is each model's resting loudness, approved at intake
  * against its SIG band and carried into the conn view exactly, so every
  * lamp factory takes it and each script passes its own; the default of 1
@@ -104,10 +106,12 @@ export const ink = {
    * the kit's roughness. Until #888 the four Z-long shared kinds — the Light
    * Scout, the Corvette, the Harvester and the Abyssal Submersible — carried
    * it as their approved exports had it, the token through and through
-   * (#C9A6FF under #C9A6FF at roughness 0.3): a lamp base as bright as the
-   * pale alloy beside it. They are on this base now; the emissive did not
-   * move, so their strengths — 1.6 on the three, 1.1 on the Submersible —
-   * are what they were, passed by each script.
+   * (#C9A6FF under #C9A6FF at roughness 0.3): a lamp base at 0.469 linear
+   * luminance against the 0.815 of the pale alloy beside it, well up a
+   * register whose floor is where a base belongs. They are on this base
+   * now, at 0.008 to that 0.815; the emissive did not move, so their
+   * strengths — 1.6 on the three, 1.1 on the Submersible — are what they
+   * were, passed by each script.
    */
   crystalSeam: (intensity = 1) =>
     lamp('crystal_seam', hex('#C9A6FF'), hex('#1A1030'), 0.4, intensity),
@@ -145,10 +149,11 @@ export const ink = {
   alloyWhite: () => clad('alloy_white', hex('#E6E9F2'), 0.35, 0.28),
 
   /*
-   * The structures' lamps, polished to 0.15 and 0.3 where the hulls' are the
-   * kit's 0.4. Each script passes its file's own strength — the floats the
-   * files carry, not the round numbers they plainly started as (#639
-   * review, N1).
+   * The structures' lamps, each polished past the hulls' kit 0.4: 0.15 on
+   * the turret's crystal, 0.3 on its marks, 0.2 on the settlement's three
+   * glows and 0.1 on the Spire's sheath. Each script passes its file's own
+   * strength — the floats the files carry, not the round numbers they
+   * plainly started as (#639 review, N1).
    */
   /**
    * The crystal-violet token burning as a structure's lamp: the Sentinel
@@ -199,9 +204,10 @@ export const ink = {
    * on the eight facet panels along the flanks. "Sustained glow from vents,
    * sensor arrays and lit ports — this is a loud ship and it looks it" (the
    * Cruiser block); these are the strongest lamps on any Order hull, and the
-   * bake caps both at 1 (kit.mjs `lamp`). Their bases are the last in the
-   * navy that are not near-black: one model's, and no split, so #888 left
-   * them as the approved export has them.
+   * bake caps both at 1 (kit.mjs `lamp`). Their bases, with the Spire's
+   * `heat_shimmer` sheath above, are the three in the navy that are not
+   * near-black: each one model's, and no split, so #888 left them as the
+   * approved exports have them.
    */
   crystalCoreGlow: (intensity = 1) =>
     lamp('crystal_core_glow', hex('#C9A6FF'), hex('#C9A6FF'), 0.3, intensity),
