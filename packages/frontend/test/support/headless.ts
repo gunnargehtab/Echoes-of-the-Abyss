@@ -977,14 +977,16 @@ export function textSaying(root: Container, needle: string): string | null {
  * (`Container.mjs:1064`), so that frame skips `validateRenderables` and
  * clears the queue (`RenderGroupSystem.mjs:96-99`), and a change stamped on
  * it rides the hide's own rebuild. Either way the first change latches
- * `didViewUpdate` true (`ViewContainer.mjs:85`), nothing clears it while the
- * label is undrawn (`:120`, `RenderGroup.mjs:158`), and every later change
- * returns at `:84` before it is queued. So a hide episode costs at most one
- * rebuild beyond the hide's, whichever frame its first change lands on. And
- * measuring never stops at all: `ViewContainer.onViewUpdate` marks the bounds
- * dirty at `:83`, *before* the `didViewUpdate` return at `:84`, so anything
- * that reads a hidden label's size pays one `CanvasTextMetrics.measureText`
- * for every changed string.
+ * `didViewUpdate` true (`ViewContainer.mjs:85`). Its only two clearers, `:120`
+ * and `RenderGroup.mjs:158`, sit behind display-status guards
+ * (`collectRenderablesMixin.mjs:4`, `RenderGroup.mjs:156`), so while the
+ * label is undrawn every later change returns at `ViewContainer.mjs:84`
+ * before it is queued. While the label stays hidden, then, its changes cost
+ * at most one rebuild beyond the hide's own, whichever frame the first lands
+ * on. And measuring never stops at all: `ViewContainer.onViewUpdate` marks
+ * the bounds dirty at `:83`, *before* the `didViewUpdate` return at `:84`, so
+ * anything that reads a hidden label's size pays one
+ * `CanvasTextMetrics.measureText` for every changed string.
  *
  * The clock is the live instance of all of it. Until #857 `drawHud` stamped
  * `clockLabel.text`, read `clockLabel.width` on the very next line and hid
