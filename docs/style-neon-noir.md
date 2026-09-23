@@ -77,6 +77,49 @@ speaks louder than ground you cannot. Relief and mottle on rock follow the same
 darken-only law as everywhere else ([art-direction.md](art-direction.md) "Reading
 the Sea Floor"); `packages/frontend/src/game/seabed.ts` transcribes the ramp.
 
+### The props (the seabed's furniture)
+
+The fourteen environment models of [asset-prompts-3d.md](asset-prompts-3d.md) Block 4 take
+their base colours from this table. Each token is named for the glTF material that carries
+it, hyphenated. `basalt` and `coral_stone` each carry two values, so their tokens take a
+suffix saying which. Metalness is 0 on every one; roughness is the material's own:
+
+| Token | Hex | Roughness | Material | Props |
+| --- | --- | --- | --- | --- |
+| `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard (two-sided) |
+| `stone-silt` | `#17150F` | 1 | `stone_silt` | Open boulder |
+| `basalt-trench` | `#14171A` | 0.96 | `basalt` | Trench slab, trench spire |
+| `basalt-vent` | `#121517` | 0.96 | `basalt` | Vent chimney, vent basalt |
+| `abyss-stone` | `#10161D` | 0.96 | `abyss_stone` | Resonance crystal, resonance pylon |
+| `coral-stone-ruin` | `#3A2B24` | 0.95 | `coral_stone` | Coral growth, ruin block, dome shard |
+| `coral-stone-living` | `#171D19` | 1 | `coral_stone` | Coral tower |
+| `kelp` | `#2A2916` | 0.96 | `kelp` | Kelp cluster (two-sided) |
+| `ember-base` | `#0B0806` | 1 | `ember` | Vent chimney, under `vent-ember` |
+| `biolight-base` | `#0B1D19` | 1 | `biolight` | Kelp cluster, under `flora-biolight` |
+| `violet-seam-base` | `#06050A` | 0.9 | `violet_seam` | Resonance crystal, under `crystal-seam` |
+
+Three rules ride with the table:
+
+- **The runtime owns value.** `packages/frontend/src/game/environmentModels.ts`
+  (`ENV_LUMINANCE_CEILING`) scales every prop so its brightest material sits at a 0.06
+  linear diffuse luminance, and its other materials keep their ratio to it. So a token pins
+  hue, saturation and the ratio between one prop's materials. Its lightness is not what
+  draws, and on a one-material prop it is not read at all.
+- **Stone is neutral, and growth is not.** The four stones — `stone-dark`, both basalts,
+  `abyss-stone` — sit at hue 204–212°, the stone ramp's own blue-grey, under its rule.
+  `coral-stone-ruin`, `coral-stone-living`, `kelp` and `stone-silt` carry a warm or green
+  cast on purpose. They are growth and sediment, not bare rock. Coral stands where coral
+  grows (Coral Ruins, Kelp Forest), kelp in the Kelp Forest and silt in Open Water, so each
+  cast belongs to the ground it stands on (`ENVIRONMENT_PROPS`,
+  `packages/frontend/src/game/environment.ts`).
+- **A lamp's base is near-black.** The three `-base` tokens sit under the
+  [World light](#world-light--the-terrain-carve-outs) families. The emissive is what reads,
+  and the base does not compete with it.
+
+A new prop takes an existing token, or a new row here first.
+`tools/hull-models/seabed.mjs` `ground` transcribes the table. No prop uses `rock-face` or
+`rock-shadow`, which stay the terrain bake's.
+
 ### The ink (the survey)
 
 The lines a survey drew on the ground — isobaths and coastlines — take one hue-neutral

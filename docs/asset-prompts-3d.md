@@ -1231,9 +1231,10 @@ surface — this stands on the seabed, deep underwater.
 The prop table — one row per asset, with the numbers intake and the registry check.
 `Footprint` is the canonical scale hull-intake sizes against (`--footprint-m`) and the
 runtime draws at, taken over the parts' own boxes rather than their vertices (#876);
-`Height` is the vertical silhouette the 55° camera actually reads; `Tris` is the
-per-instance budget; `Light` names the licensed world-light family, `none` meaning any
-emissive fails intake:
+`Height` is the vertical silhouette the 55° camera actually reads, by intake's measure
+(`sizeM.height`) at the row's footprint — a single figure is the approved model's to the
+metre, a range the band a generated one lands in; `Tris` is the per-instance budget;
+`Light` names the licensed world-light family, `none` meaning any emissive fails intake:
 
 | Biome | Slug | Footprint | Height | Tris | Light |
 | --- | --- | --- | --- | --- | --- |
@@ -1242,14 +1243,26 @@ emissive fails intake:
 | Kelp Forest | `env-kelp-cluster` | 18 m | 60–80 m | ≤ 400 | `flora-biolight`, tip points |
 | Kelp Forest | `env-coral-tower` | 15 m | 25–35 m | ≤ 600 | none |
 | Abyssal Trench | `env-trench-spire` | 20 m | 40–60 m | ≤ 600 | none |
-| Abyssal Trench | `env-trench-slab` | 25 m | 10 m | ≤ 300 | none |
+| Abyssal Trench | `env-trench-slab` | 25 m | 14 m | ≤ 300 | none |
 | Resonance Field | `env-resonance-crystal` | 12 m | 18–30 m | ≤ 600 | `crystal-seam` |
-| Resonance Field | `env-resonance-pylon` | 10 m | 25 m | ≤ 500 | none |
+| Resonance Field | `env-resonance-pylon` | 10 m | 31 m | ≤ 500 | none |
 | Coral Ruins | `env-ruin-block` | 25 m | 15–25 m | ≤ 400 | none |
-| Coral Ruins | `env-ruin-dome-shard` | 40 m | 20 m | ≤ 600 | none |
-| Coral Ruins | `env-coral-growth` | 12 m | 8 m | ≤ 400 | none |
+| Coral Ruins | `env-ruin-dome-shard` | 40 m | 14 m | ≤ 600 | none |
+| Coral Ruins | `env-coral-growth` | 12 m | 9 m | ≤ 400 | none |
 | Rock (any biome) | `env-rock-crag-a` / `-b` | 30 m | 30–50 m | ≤ 500 | none |
 | Open Water | `env-open-boulder` | 12 m | 6 m | ≤ 300 | none |
+
+Four heights moved to their approved models (#879): the trench slab from 10 m, the
+resonance pylon from 25 m, the dome shard from 20 m and the coral growth from 8 m. The
+footprint is the scale, and the height follows it. The pylon and the growth were drawn to
+the old figures, and the fit to their footprints stretched them (`seabed.mjs` `stand`).
+Since #876 the runtime draws at intake's measure, so a row's height is what the game
+draws before the registry's scale jitter.
+
+`env-ruin-dome-shard` is not yet a shard. The file is a whole closed dome, sixteen
+meridians round, which its slug and the checklist's "nothing that could be mistaken for a
+structure" both refuse. #883 re-authors it as a broken piece of a dome at this footprint,
+and sets its row's height from the result.
 
 Shape cues, so the prompts land in each biome's materials brief
 ([environments.md](environments.md)): vent props are basalt and magma glass, cracked
@@ -1291,6 +1304,8 @@ low-luminance" line in ENV STYLE is a hue-and-saturation brief, not a brightness
 target — an export at any brightness lands in the same register. What survives from the
 export is the ratio between its materials (stone under coral growth, basalt under an
 ember mouth) and the emissive, which is licensed at intake and passes through untouched.
+Every base colour a prop carries is a token in [style-neon-noir.md](style-neon-noir.md)
+"The props", which is also where a new one is added first.
 
 ## Consistency checklist (before accepting a model)
 

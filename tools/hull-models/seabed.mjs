@@ -32,18 +32,20 @@
  *   #121517 on the vent pair. A port reproduces its own file's value and
  *   `check.mjs`, the bake and `diff.mjs` all match a material by *name*, so
  *   both are here under names that say which is which, and a script takes
- *   the one its file carries. Nothing was resolved: which value is right is
- *   a finding for the docs, not for a port.
- * - **No stone hex is a doc token.** The three lights are
+ *   the one its file carries. #879 kept both values rather than pick one:
+ *   the docs give each its own token (`basalt-trench` and `basalt-vent`,
+ *   `coral-stone-ruin` and `coral-stone-living`) and the files keep their
+ *   material names.
+ * - **Every hex is a doc token.** The three lights are
  *   docs/style-neon-noir.md "World light" to the digit (`vent-ember`
  *   #E06A2B, `flora-biolight` #2E8C74, `crystal-seam` #5B4A8C, at the
  *   strengths the doc's luminance figures were taken from). Every base
- *   colour — the stones, the kelp, the three lamps' near-black bases — is
- *   the Claude Design batch's own and appears in no table in
- *   docs/style-neon-noir.md, docs/environments.md or Block 4; the stone
- *   ramp's `rock-face` #11161C and `rock-shadow` #080C12 are the terrain
- *   bake's and no file uses them. They are cited as the hex the file
- *   carries (kit.mjs `hex`, #630), not given a token they do not have.
+ *   colour — the stones, the kelp, the three lamps' near-black bases — was
+ *   the Claude Design batch's own, and since #879 is a row of that doc's
+ *   "The props", which this palette transcribes: each entry below names
+ *   its token. The stone ramp's `rock-face` #11161C and `rock-shadow`
+ *   #080C12 are the terrain bake's and no file uses them. A script still
+ *   cites the hex the file carries (kit.mjs `hex`, #630).
  *
  * A prop is never yawed, so a script places its parts with kit.mjs `add`
  * and the file's own numbers and never `drawn`. Not because the files are
@@ -63,50 +65,51 @@ import { THREE, clad, lamp, hex, box, flatShaded, tabled } from './kit.mjs';
 
 /**
  * The palette, as the fourteen files carry it: eight stones and three
- * lights. Metalness is 0 on every material in the set — "nothing
- * manufactured" (ENV STYLE) — and roughness the file's own. A lamp is
- * kit.mjs `lamp`: the file's near-black base, its emissive at the doc's
- * world-light token, its `KHR_materials_emissive_strength`.
+ * lights, each named by its docs/style-neon-noir.md "The props" token.
+ * Metalness is 0 on every material in the set — "nothing manufactured"
+ * (ENV STYLE) — and roughness the file's own. A lamp is kit.mjs `lamp`:
+ * the file's near-black base, its emissive at the doc's world-light token,
+ * its `KHR_materials_emissive_strength`.
  */
 export const ground = {
   /**
-   * Dark stone: the two crags, the coral growth and the ruin block; two-sided
-   * on the dome shard, whose file flags it so. Not because a dome is seen
-   * from inside — nothing inside a closed double-walled shell can be seen.
-   * The flag once did a job: 64 of the shell's 256 triangles were wound
-   * against their skins and `doubleSided` kept the crown closed at runtime,
-   * until #878 turned them round (ruin-dome-shard.mjs `lattice`). It stays
-   * as the file's own value; dropping it is a material change, not a
-   * winding fix.
+   * Dark stone, `stone-dark`: the two crags, the coral growth and the ruin
+   * block; two-sided on the dome shard, whose file flags it so. Not because
+   * a dome is seen from inside — nothing inside a closed double-walled shell
+   * can be seen. The flag once did a job: 64 of the shell's 256 triangles
+   * were wound against their skins and `doubleSided` kept the crown closed
+   * at runtime, until #878 turned them round (ruin-dome-shard.mjs
+   * `lattice`). It stays as the file's own value; dropping it is a material
+   * change, not a winding fix.
    */
   stoneDark: ({ twoSided = false } = {}) => {
     const m = clad('stone_dark', hex('#15181B'), 0, 1);
     if (twoSided) m.side = THREE.DoubleSide;
     return m;
   },
-  /** Silted stone: the open-water boulder. */
+  /** Silted stone, `stone-silt`: the open-water boulder. */
   stoneSilt: () => clad('stone_silt', hex('#17150F'), 0, 1),
-  /** Trench basalt, the slab's and the spire's `basalt`. */
+  /** Trench basalt, `basalt-trench`: the slab's and the spire's `basalt`. */
   basaltTrench: () => clad('basalt', hex('#14171A'), 0, 0.96),
-  /** Vent basalt, the chimney's and the basalt pile's `basalt` — the same name, its own value. */
+  /** Vent basalt, `basalt-vent`: the chimney's and the basalt pile's `basalt`, its own value. */
   basaltVent: () => clad('basalt', hex('#121517'), 0, 0.96),
-  /** Coral stone over ruins: the coral growth, the ruin block, the dome shard. */
+  /** Ruin coral stone, `coral-stone-ruin`: the coral growth, the ruin block, the dome shard. */
   coralStoneRuin: () => clad('coral_stone', hex('#3A2B24'), 0, 0.95),
-  /** Coral stone, living: the coral tower's `coral_stone` — the same name, its own value. */
+  /** Coral stone, living, `coral-stone-living`: the coral tower's `coral_stone`, its own value. */
   coralStoneLiving: () => clad('coral_stone', hex('#171D19'), 0, 1),
-  /** Abyss stone: the resonance crystal's matrix and the resonance pylon. */
+  /** Abyss stone, `abyss-stone`: the resonance crystal's matrix and the resonance pylon. */
   abyssStone: () => clad('abyss_stone', hex('#10161D'), 0, 0.96),
-  /** Kelp: two-sided, as the file has it — a frond is seen from both faces. */
+  /** Kelp, `kelp`: two-sided, as the file has it — a frond is seen from both faces. */
   kelp: () => {
     const m = clad('kelp', hex('#2A2916'), 0, 0.96);
     m.side = THREE.DoubleSide;
     return m;
   },
-  /** `vent-ember` at 0.7, the chimney's mouth. */
+  /** `vent-ember` at 0.7 over `ember-base`, the chimney's mouth. */
   ember: () => lamp('ember', hex('#E06A2B'), hex('#0B0806'), 1, 0.7),
-  /** `flora-biolight` at 0.55, the kelp cluster's tips. */
+  /** `flora-biolight` at 0.55 over `biolight-base`, the kelp cluster's tips. */
   biolight: () => lamp('biolight', hex('#2E8C74'), hex('#0B1D19'), 1, 0.55),
-  /** `crystal-seam` at 1.2, the resonance crystal's seam. */
+  /** `crystal-seam` at 1.2 over `violet-seam-base`, the resonance crystal's seam. */
   violetSeam: () => lamp('violet_seam', hex('#5B4A8C'), hex('#06050A'), 0.9, 1.2),
 };
 

@@ -4,16 +4,17 @@
  * Ruins that also stands in the Kelp Forest: a civilisation's worth of
  * coral over a block of its masonry.
  *
- * "Coral Ruins | env-coral-growth | 12 m | 8 m | ≤ 400 | none ... ruin
+ * "Coral Ruins | env-coral-growth | 12 m | 9 m | ≤ 400 | none ... ruin
  * props carry the geometric patterns of art-direction.md's "Environmental
  * Shapes" — right angles, terraces, a civilisation's worth of coral growth
  * over them" (docs/asset-prompts-3d.md, Block 4), under ENV STYLE:
  * "Natural or ruined form — stone, coral ... pressure-scarred and ancient;
  * nothing manufactured ... low-poly with crisp facets, at most two
  * materials", and no light of any kind. Two materials, 184 triangles,
- * 9.45 m tall at its 12 m by intake's measure (`sizeM.height`) — 18 % over
- * Block 4's 8 m; 8 m raw, which is the frame every figure below is in,
- * before `K` and the root's fit.
+ * 9.45 m tall at its 12 m by intake's measure (`sizeM.height`), which the
+ * row has carried since #879 moved it from 8 m; 8 m raw, the old row's
+ * figure and the frame every figure below is in, before `K` and the root's
+ * fit.
  *
  * A port of the approved export (docs/concept-art/models/env-coral-growth.glb
  * as committed before #869), part for part in its order, every number the
