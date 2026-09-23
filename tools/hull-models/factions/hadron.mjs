@@ -732,10 +732,15 @@ function plane(root, name, mat, { outline, t, y, seated = false }, sgn) {
  * (`[height, width]`) on an ellipse `halfHeight` by `halfBeam` about the
  * horn's axis at `x`, `y`. Seam 0 sits `phase` radians round from the crown
  * toward starboard and the rest follow at equal steps the other way — the order
- * the approved Clarion numbers its own. Each is rolled to lie flat on its
- * facet and runs straight along it, so a ring set on mirrored bearings
- * mirrors across the centre plane: the seam at bearing `a` is the seam at
- * `-a` rolled the other way, and one on the crown or the keel is its own
+ * the approved Clarion numbers its own. Each is rolled by its own bearing —
+ * tangent to the horn's unpressed circle there, which on the pressed horn
+ * lies flat on a facet only where that facet's normal is the bearing: the
+ * Clarion's upper facets face 22° off the crown, so its seams at ±20° sit
+ * 2° off theirs and those at ±40° 18° off, and a ridge seam straddles two
+ * facets and lies flat on neither, as the approved ring's always did — and
+ * runs straight along the horn, so a set on mirrored bearings mirrors
+ * across the centre plane: the seam at bearing `a` is the seam at `-a`
+ * rolled the other way, and one on the crown or the keel is its own
  * mirror. The approved Clarion turned every seam a further 0.17 rad about its
  * own radial axis, the same way round, so the ring spiralled and no seam had
  * a partner — the one part of the three ported Order hulls that broke Block
@@ -2142,21 +2147,14 @@ export function anchorLegs(root, { alloy, steel }, { leg, claw }) {
 
 /**
  * The crystal core — "a violet crystal core", "burning bright along the
- * crystal when active" (the Sounding Spire block): three octahedra on the
- * axis, each drawn tall by its node — the `core` in `crystal`, the `throat`
- * inside it, standing a millimetre off the axis in z (the file's z-fight
- * nudge), and the `apex` above in `glow`. The throat takes `throat.mat`
- * when given and `glow` otherwise.
- *
- * The block lights the crystal *when active*, and the resting bake is the
- * state the chart shows (models-plan.md §3.2, rule 2), so the Spire passes
- * the crystal token as cladding for the core and the throat (#890): a lamp
- * sealed under the apex and the sheath showed nothing from above on every
- * build since #652, and the audit named both.
+ * crystal" (the Sounding Spire block): three octahedra on the axis, each
+ * drawn tall by its node — the `core` in resonance crystal, the `throat`
+ * inside it in the brighter glow, standing a millimetre off the axis in z
+ * (the file's z-fight nudge), and the `apex` above in the same glow.
  */
 export function crystalCore(root, { crystal: lit, glow }, { core, throat, apex }) {
   crystal(root, 'crystal_core', lit, core);
-  crystal(root, 'crystal_throat', throat.mat ?? glow, throat);
+  crystal(root, 'crystal_throat', glow, throat);
   crystal(root, 'crystal_apex', glow, apex);
 }
 

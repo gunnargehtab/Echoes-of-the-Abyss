@@ -6,8 +6,9 @@
  * widest aft, bilaterally symmetric, flaring at the bow into a six-facet horn
  * with an emitter crystal standing in its mouth; canards at the bow, swept
  * guard wings with crystal edges aft, a crystal inlay along the spine. Lit at
- * the horn's lip and along six seams over its back and shoulders, dark
- * astern but for one mark — louder than a Corvette in front, quieter behind."
+ * the horn's lip and along six seams over the horn's back and shoulders,
+ * dark astern but for one mark — louder than a Corvette in front, quieter
+ * behind."
  * (docs/asset-prompts-3d.md, Block 3.)
  *
  * The approved model is the one `factions/hadron.mjs` was read off, and this
@@ -52,9 +53,13 @@
  *   is now three mirrored pairs over the horn's upper half (`hornSeams`
  *   `bearings`): seams 0 and 2 on the shoulder ridges at ±60° where they
  *   were, 1 and 4 flanking the crown at ±20°, 3 and 5 at ∓40° between.
- *   `diff.mjs` lists 1, 3, 4 and 5 and nothing else; every seam shows
- *   1.6–3.1 m², and the block reads "six seams over its back and shoulders"
- *   since the same change, where it read "its ridge seams".
+ *   Seam 1 left the crown because the crown and the keel are the only two
+ *   bearings that mirror onto themselves: six seams in mirrored pairs with
+ *   none on the keel leave none for the crown either, so the keel's seam
+ *   pairs with the crown's and the two flank the crown. `diff.mjs` lists
+ *   1, 3, 4 and 5 and nothing else; every seam shows 1.6–3.1 m², and the
+ *   block reads "six seams over the horn's back and shoulders" since the
+ *   same change, where it read "its ridge seams".
  *
  * The glow bakes at 27.9 — the compass average of the listed 62
  * (tools/hull-maps/models.mjs), not `sigIdle` — and every lit part but the
