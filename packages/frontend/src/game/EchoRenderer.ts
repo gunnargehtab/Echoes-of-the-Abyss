@@ -7396,8 +7396,23 @@ export class EchoRenderer {
     // fact about how wide the stockpiles happen to be, so it lives in
     // docs/ui-ux.md §13 with the fixture it was swept on. The yield order
     // above is unchanged; only the measurement was wrong.
-    this.clockLabel.text = stamp(this.lastTick);
+    //
+    // A dropped clock is not re-stamped every second (#857). Reading `width`
+    // after a new stamp costs a `CanvasTextMetrics.measureText`, drawn or
+    // not, because `ViewContainer.onViewUpdate` marks the bounds dirty on
+    // every change (`ViewContainer.mjs:83`, pixi.js 8.19.0) — so a clock
+    // stamped behind a full strip went on measuring, once a second, for a
+    // label nothing drew. Asking whether the last stamp still fits costs
+    // nothing, and it is the current stamp's answer too: the data face is
+    // monospace and the stamp zero-padded, §3's rule, so its width follows
+    // from its length. Hence the one exception, a stamp that gains or loses
+    // a digit — the hundredth minute, or a rematch after one.
+    const clock = stamp(this.lastTick);
+    if (this.clockLabel.visible || clock.length !== this.clockLabel.text.length) {
+      this.clockLabel.text = clock;
+    }
     this.clockLabel.visible = this.statusLabel.x - 16 - firstRowEdge >= this.clockLabel.width + 16;
+    if (this.clockLabel.visible) this.clockLabel.text = clock;
     const rightEdge = this.clockLabel.visible
       ? this.statusLabel.x - this.clockLabel.width - 16
       : this.statusLabel.x;
