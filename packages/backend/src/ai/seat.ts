@@ -16,7 +16,7 @@
 import type { EchoSnapshot } from '@echoes/shared';
 import type { Match } from '../sim/match.ts';
 import { AiCommander } from './commander.ts';
-import type { AiBriefing, AiCommand, OrdnanceWantTally } from './types.ts';
+import type { AiBriefing, AiCommand, WantTally } from './types.ts';
 
 export class AiSeat {
   readonly slot: number;
@@ -42,8 +42,13 @@ export class AiSeat {
    * has, and a diagnostic about a *decision* has nowhere else to come from —
    * it is not in any snapshot, because it is not a fact about the world.
    */
-  get ordnanceWant(): OrdnanceWantTally {
+  get ordnanceWant(): WantTally {
     return this.commander.ordnanceWant;
+  }
+
+  /** The carrier want's block reasons (#839), passed through the same way. */
+  get carrierWant(): WantTally {
+    return this.commander.carrierWant;
   }
 
   /** One Echo tick: observe, then apply whatever came back. */

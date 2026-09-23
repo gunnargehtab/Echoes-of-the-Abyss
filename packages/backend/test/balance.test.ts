@@ -239,6 +239,51 @@ describe('telemetry measures what it says it measures', () => {
     }
   });
 
+  it('carries the carrier want from the commander to the report (#839)', () => {
+    // The carrier's tally rides the ordnance tally's channel — seat, runner,
+    // `finish` — and this holds the channel, not the branches:
+    // `aiCarrier.test.ts` drives each of the five reasons on its own.
+    const result = runMatch({ seats: DUEL, seed: 60, maxMinutes: 2, fauna: false });
+    for (const player of result.players) {
+      const t = player.carrierWant;
+      assert.ok(t.reached > 0, `slot ${player.slot} reached the carrier want at all`);
+      assert.equal(
+        t.notEscorted + t.alreadyHas + t.noYard + t.cannotAfford + t.bought,
+        t.reached,
+        `slot ${player.slot}: the five reasons have to add up to the observations`
+      );
+    }
+    const summary = summarise([result]);
+    const markdown = toMarkdown(summary, 'Test run');
+    assert.match(markdown, /^## The carrier want — where it was stopped$/m);
+    // And the numbers under that heading are the carrier's. A table handed the
+    // ordnance tally would print a well-formed miscount, so the row is checked
+    // against the carrier tally, on a row where the two tallies differ.
+    const carrierTable = markdown.slice(markdown.indexOf('## The carrier want'));
+    assert.match(carrierTable, /^\| Hull wanted \| Gantry \| Rootstock \|$/m);
+    assert.ok(
+      summary.factions.some((f) => f.carrierWant.noYard !== f.ordnanceWant.noYard),
+      'the premise: on this seed the two wants find no free yard a different number of times'
+    );
+    const noYard = summary.factions.map((f) => `${f.carrierWant.noYard} \\(\\d+%\\)`).join(' \\| ');
+    assert.match(carrierTable, new RegExp(`^\\| Blocked: no free yard \\| ${noYard} \\|$`, 'm'));
+
+    // A result stored before the column existed has no `carrierWant` at all.
+    // It is summarised as an empty tally, and the table is left out rather
+    // than printed as a row of dashes that would read as "never wanted".
+    const stored = {
+      ...result,
+      players: result.players.map((player) => {
+        const old: Partial<typeof player> = { ...player };
+        delete old.carrierWant;
+        return old;
+      }),
+    } as unknown as MatchTelemetryResult;
+    const old = toMarkdown(summarise([stored]), 'Test run');
+    assert.doesNotMatch(old, /The carrier want/);
+    assert.match(old, /The ordnance want/, 'and the table beside it still prints');
+  });
+
   it('accumulates hull-time by depth band rather than sampling it', () => {
     const result = runMatch({ seats: DUEL, seed: 58, maxMinutes: 2, fauna: false });
     const player = result.players[0]!;

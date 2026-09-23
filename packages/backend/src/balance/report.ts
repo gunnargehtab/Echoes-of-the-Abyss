@@ -32,8 +32,8 @@ import {
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
-import { OWN_ORDNANCE } from '../ai/commander.ts';
-import { emptyOrdnanceWantTally, type OrdnanceWantTally } from '../ai/types.ts';
+import { OWN_CARRIER, OWN_ORDNANCE } from '../ai/commander.ts';
+import { emptyWantTally, type WantTally } from '../ai/types.ts';
 import type { MatchTelemetryResult, PlayerTelemetry } from './telemetry.ts';
 
 const FACTION_NAME: Record<Faction, string> = {
@@ -153,7 +153,14 @@ export interface FactionSummary {
    * different gates, and until now telling which one shut required
    * instrumenting the commander by hand.
    */
-  ordnanceWant: OrdnanceWantTally;
+  ordnanceWant: WantTally;
+  /**
+   * Why this navy's carrier was or was not bought (#839), summed over the batch
+   * on `ordnanceWant`'s terms. A deck the build column never shows is a hull
+   * the baseline does not have (`docs/roster-plan.md` §2), and this says which
+   * gate kept it out.
+   */
+  carrierWant: WantTally;
   /**
    * The bank against the rung (#518) — what a navy was ever, at one instant,
    * holding, and what it was holding once its yard was standing.
@@ -594,6 +601,21 @@ function perMatchByKind<Kind extends number>(
 const mean = (values: number[]): number =>
   values.length === 0 ? 0 : values.reduce((a, b) => a + b, 0) / values.length;
 
+/** Want tallies summed counter by counter, so the partition survives the sum. */
+function sumWants(tallies: readonly WantTally[]): WantTally {
+  return tallies.reduce<WantTally>(
+    (total, t) => ({
+      reached: total.reached + t.reached,
+      notEscorted: total.notEscorted + t.notEscorted,
+      alreadyHas: total.alreadyHas + t.alreadyHas,
+      noYard: total.noYard + t.noYard,
+      cannotAfford: total.cannotAfford + t.cannotAfford,
+      bought: total.bought + t.bought,
+    }),
+    emptyWantTally()
+  );
+}
+
 /**
  * Minutes this player was actually in the match.
  *
@@ -682,24 +704,16 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
         rows.map((r) => r.player),
         (p) => p.structuresBuiltByKind
       ),
-      ordnanceWant: rows.reduce<OrdnanceWantTally>((total, r) => {
-        // `?? empty` is load-bearing rather than defensive. `batch.ts` casts a
-        // worker's JSON straight to `MatchTelemetryResult`, which is where the
-        // type checker stops protecting this field, so a result written before
-        // this column existed arrives with `ordnanceWant` undefined. Reading it
-        // unguarded threw a TypeError here — *before* the render guard below
-        // could decide not to print the table, which is the whole robustness
-        // this was supposed to have.
-        const t = r.player.ordnanceWant ?? emptyOrdnanceWantTally();
-        return {
-          reached: total.reached + t.reached,
-          notEscorted: total.notEscorted + t.notEscorted,
-          alreadyHas: total.alreadyHas + t.alreadyHas,
-          noYard: total.noYard + t.noYard,
-          cannotAfford: total.cannotAfford + t.cannotAfford,
-          bought: total.bought + t.bought,
-        };
-      }, emptyOrdnanceWantTally()),
+      // `?? empty` is load-bearing rather than defensive. `batch.ts` casts a
+      // worker's JSON straight to `MatchTelemetryResult`, which is where the
+      // type checker stops protecting these fields, so a result written before
+      // a column existed arrives with it undefined. Reading it unguarded threw
+      // a TypeError here — *before* the render guard below could decide not to
+      // print the table, which is the whole robustness this was supposed to
+      // have. `carrierWant` (#839) is newer still, and every stored result
+      // before it is exactly that case.
+      ordnanceWant: sumWants(rows.map((r) => r.player.ordnanceWant ?? emptyWantTally())),
+      carrierWant: sumWants(rows.map((r) => r.player.carrierWant ?? emptyWantTally())),
       peakBank: distribution(rows.map((r) => r.player.peakNodules)).median,
       peakBankBest: Math.max(0, ...rows.map((r) => r.player.peakNodules)),
       peakBankEarned: Math.max(
@@ -1211,28 +1225,34 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
   // reducer above reads as an empty tally — has every counter at zero, and a
   // table of dashes would read as "no navy ever wanted ordnance" rather than as
   // "nothing here measured it".
-  if (summary.factions.some((f) => f.ordnanceWant.reached > 0)) {
-    lines.push('## The ordnance want — where it was stopped');
+  //
+  // The carrier's table (#839) follows it on the same terms, and is printed
+  // under the same rule.
+  const wantTable = (
+    heading: string,
+    hullOf: Record<Faction, UnitKind>,
+    tallyOf: (f: FactionSummary) => WantTally,
+    footnote: string
+  ): void => {
+    lines.push(heading);
     lines.push('');
     lines.push(`| Reason | ${summary.factions.map((f) => FACTION_NAME[f.faction]).join(' | ')} |`);
     lines.push(`| --- |${summary.factions.map(() => ' --- |').join('')}`);
     lines.push(
-      `| Hull wanted | ${summary.factions
-        .map((f) => UNIT_STATS[OWN_ORDNANCE[f.faction]].name)
-        .join(' | ')} |`
+      `| Hull wanted | ${summary.factions.map((f) => UNIT_STATS[hullOf[f.faction]].name).join(' | ')} |`
     );
     lines.push(
       `| Observations reaching the want | ${summary.factions
-        .map((f) => f.ordnanceWant.reached.toString())
+        .map((f) => tallyOf(f).reached.toString())
         .join(' | ')} |`
     );
     // Count and share, because neither alone is the reading. A share says which
     // gate dominates and is comparable between navies that lived different
     // lengths; the count is what makes a share of a handful of observations
     // visible as the noise it is.
-    const wantRow = (label: string, pick: (t: OrdnanceWantTally) => number): void => {
+    const wantRow = (label: string, pick: (t: WantTally) => number): void => {
       const cells = summary.factions.map((f) => {
-        const t = f.ordnanceWant;
+        const t = tallyOf(f);
         if (t.reached === 0) return '—';
         return `${pick(t)} (${Math.round((pick(t) / t.reached) * 100)}%)`;
       });
@@ -1244,14 +1264,32 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
     wantRow('Already has one', (t) => t.alreadyHas);
     wantRow('**Bought**', (t) => t.bought);
     lines.push('');
-    lines.push(
+    lines.push(footnote);
+    lines.push('');
+  };
+  if (summary.factions.some((f) => f.ordnanceWant.reached > 0)) {
+    wantTable(
+      '## The ordnance want — where it was stopped',
+      OWN_ORDNANCE,
+      (f) => f.ordnanceWant,
       '_The five reasons partition the want: every observation that reaches it ' +
         'increments exactly one, so the five sum to the row above them. A navy ' +
         'whose **bought** cell is 0 never put its own declared ordnance hull in ' +
         'the water, and the largest blocked row says which gate to argue with ' +
         '(#698)._'
     );
-    lines.push('');
+  }
+  if (summary.factions.some((f) => f.carrierWant.reached > 0)) {
+    wantTable(
+      '## The carrier want — where it was stopped',
+      OWN_CARRIER,
+      (f) => f.carrierWant,
+      '_The same five reasons, partitioning the same way. A navy whose **bought** ' +
+        'cell is 0 never put its deck in the water. Every carrier is a Slipway ' +
+        'hull, so a free yard is one that has risen, and "no free yard" counts ' +
+        'the escorted observations before the rung stood as well as those at a ' +
+        'busy yard (#839)._'
+    );
   }
   // The bank against the rung. Read beside the two tables above, and it is what
   // turns "never built" into a reason: a navy whose peak with a yard standing

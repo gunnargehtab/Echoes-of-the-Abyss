@@ -376,12 +376,20 @@ export interface AiPlayer {
 }
 
 /**
- * Why a navy's ordnance hull is or is not in the water (#698).
+ * Why a navy's ordnance hull, or its carrier, is or is not in the water (#698,
+ * #839).
  *
- * Five counters that **partition** the observations reaching the ordnance want
- * in `commandProduction`: every such observation increments exactly one of
- * them, so the five sum to `reached` and a column that does not is a bug in the
+ * Five counters that **partition** the observations reaching one want in
+ * `commandProduction`: every such observation increments exactly one of them,
+ * so the five sum to `reached` and a column that does not is a bug in the
  * instrumentation rather than a finding about a navy.
+ *
+ * One shape for two wants, because the two are gated alike: behind the
+ * escort, one only, at a yard, out of the purse. The ordnance want was
+ * instrumented first and the paragraph below is its argument. The carrier's
+ * is the same argument a second time (#839): a navy that never fields its
+ * deck reads the same in the build column whichever gate shut, so a baseline
+ * with a zero there says nothing about why.
  *
  * It exists because the fault it measures is invisible in every other column.
  * The report can already say a hull was never built (`buildsPerMatchByKind`,
@@ -399,12 +407,19 @@ export interface AiPlayer {
  * `MatchTelemetry.finish`. Nothing in the simulation reads it and no command
  * depends on it; a commander that is never asked for it behaves identically.
  */
-export interface OrdnanceWantTally {
+export interface WantTally {
   /** Observations that reached the want at all. Equals the sum of the rest. */
   reached: number;
-  /** The escort gate was shut: fewer armed hulls than the doctrine's floor. */
+  /** The escort gate was shut, and the navy has none: fewer armed hulls than the floor. */
   notEscorted: number;
-  /** Escorted, and the navy already has one. The want was satisfied. */
+  /**
+   * The navy already has one, afloat or on the ways. The want was satisfied.
+   *
+   * Counted **before** the escort, escorted or not: a navy holding the hull
+   * while its army dips below the floor has a satisfied want, not a blocked
+   * one. The note at the ordnance branch in `commandProduction` measures what
+   * the other order cost.
+   */
   alreadyHas: number;
   /** Escorted and wanted, but no yard of the right kind was free. */
   noYard: number;
@@ -415,7 +430,7 @@ export interface OrdnanceWantTally {
 }
 
 /** A tally with every counter at zero — a commander that has not observed yet. */
-export function emptyOrdnanceWantTally(): OrdnanceWantTally {
+export function emptyWantTally(): WantTally {
   return {
     reached: 0,
     notEscorted: 0,

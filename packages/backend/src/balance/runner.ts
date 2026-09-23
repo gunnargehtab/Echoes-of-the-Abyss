@@ -99,13 +99,16 @@ export function runMatch(options: RunOptions): MatchTelemetryResult {
   // sampled: the counters are cumulative over the match already, and sampling
   // them would only add a second, lossier copy.
   const ordnanceWant = new Map(seats.map((seat) => [seat.slot, seat.ordnanceWant]));
+  // The carrier want's reasons (#839), read off the seats the same way.
+  const carrierWant = new Map(seats.map((seat) => [seat.slot, seat.carrierWant]));
 
   return telemetry.finish(
     match.tick,
     match.result?.winnerSlot ?? null,
     timedOut,
     match.faunaComplement,
-    ordnanceWant
+    ordnanceWant,
+    carrierWant
   );
 }
 

@@ -82,8 +82,15 @@ declares; the largest blocked row above it says which gate to argue with. This i
 *decisions* rather than of the water, so unlike every other series here it comes from the
 commander rather than from a snapshot — see `MatchTelemetry.finish`.
 
+**The carrier want — where it was stopped.** The same five reasons for each navy's carrier
+(#839), since its want is gated the same way: behind the escort, one only, at a yard, out of
+the purse. `docs/roster-plan.md` §2 says a hull the commander never buys does not exist in the
+baseline, and this table says which gate kept it out. Every carrier is a Slipway hull, so *no
+free yard* counts the escorted observations before the rung stood as well as those at a busy
+yard.
+
 **The bank against the rung.** The most nodules a navy ever held at one instant, and the most
-it held once a Slipway was standing. The four tables above are rates and counts, and none of
+it held once a Slipway was standing. The tables above are rates and counts, and none of
 them can say whether a hull was ever *affordable* — which is a maximum, and a maximum a
 ten-second sample misses, because a bank rises to a price and is spent inside one interval.
 Issue #518 spent five sessions reading the arbitration between a commander's wants before
