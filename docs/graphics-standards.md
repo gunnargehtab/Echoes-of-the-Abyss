@@ -75,9 +75,10 @@ rebuilds every hull and every structure in a scratch directory and fails on any 
 differs from the committed GLB, its material's values included, so a faction module cannot
 be edited without the models it moves being re-run and committed with it. It also reads the
 committed files as a set and fails on a material name that carries two values inside one
-navy — [asset-prompts-3d.md](asset-prompts-3d.md) Block 2b's "one name, one value" — which
-`node tools/hull-models/finishes.mjs` lists on its own, and on a model file whose name places
-it in no navy. Each navy's module holds one `ink`
+navy — [asset-prompts-3d.md](asset-prompts-3d.md) Block 2b's "one name, one value", which
+`node tools/hull-models/finishes.mjs` lists on its own. And since that tool places a model
+by its `-<navy>.glb` suffix, the check fails on a model file whose name places it in no
+navy, which the tool would otherwise skip unread. Each navy's module holds one `ink`
 table for the same reason, so re-finishing a fleet is one edit (#888).
 
 **Neither holds a port to the model it ported.** A port replaces the hand-exported binary

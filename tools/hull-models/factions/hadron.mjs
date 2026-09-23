@@ -89,8 +89,9 @@ export const ink = {
    * The token, at the hulls' 0.35. Until #888 the Bastion, the Foundry, the
    * Refinery and the Sounding Spire carried it at the turret's metalness of
    * 0.25, and the Sentinel Turret at #2C2244 / 0.25 — a shade darker and
-   * duller, the approved turret's own (#639), the split Block 2b's table
-   * names and calls the hull value canonical over. All five are here now.
+   * duller, the approved turret's own (#639), one of the splits Block 2b
+   * ("One name, one value — held since #888") records, settled on its rule
+   * that the hull value is canonical. All five are here now.
    */
   shadowIndigo: () => clad('shadow_indigo', hex('#3B2E5A'), 0.35, 0.45),
   paleAlloy: () => clad('pale_alloy', hex('#E6E9F2'), 0.85, 0.22),

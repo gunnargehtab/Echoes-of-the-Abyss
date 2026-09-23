@@ -178,8 +178,8 @@ export const ink = {
    * #3A3F4A, the hulls' value, on every model since #888. The r184
    * structure passes carried #27313B — the turret first (#639), then the
    * Bastion, the Cantor, the Foundry and the Refinery copying it (#652) —
-   * the same finish a shade darker, which Block 2b's split table recorded
-   * and #888 brought onto the hull's. The turret's own value was the one
+   * the same finish a shade darker, which Block 2b ("One name, one value —
+   * held since #888") records and #888 brought onto the hull's. The turret's own value was the one
    * material of its five that set its register: with `chitin_red_dark` at
    * #4E1220 the steel is its brightest colour, so the whole turret sits a
    * step lower in the conn view now than its export did — and that is the
