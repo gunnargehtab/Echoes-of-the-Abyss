@@ -77,9 +77,9 @@ Commune by the purse in 36% — one zero in the build column, three different re
 denominator is the row the table prints, *observations reaching the want*, and not the
 commander's observations: most of those return earlier, at the harvester or the scout. The six reasons partition
 the want, so they sum to the observations that reached it and each cell carries its share of
-them. *No berth* is a yard free and the population cap full (`docs/economy.md` §10, #854).
-Before #854 that observation read *bought* when the purse could pay, although the server
-refused the order. A `Bought` cell at zero means that navy never once ordered the hull its own doctrine
+them. *No berth* is a yard free and too few berths left to crew the hull (`docs/economy.md`
+§10, #854). Before #854 that observation read *bought* when the purse could pay, although the
+server refused the order. A `Bought` cell at zero means that navy never once ordered the hull its own doctrine
 declares; the largest blocked row above it says which gate to argue with. This is a count of
 *decisions* rather than of the water, so unlike every other series here it comes from the
 commander rather than from a snapshot — see `MatchTelemetry.finish`.
