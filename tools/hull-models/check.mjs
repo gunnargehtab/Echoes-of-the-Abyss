@@ -30,7 +30,10 @@
  * The finish is the material's values under its name, in `finishFields`'
  * printed precision. Until #888 only the name was compared, so an ink edited
  * in a faction module and never re-run passed: the one edit Phase 6 of #540
- * exists to make was the one edit this could not see.
+ * exists to make was the one edit this could not see. Last, the committed
+ * files are read as a set, and a name carrying two values inside one navy
+ * fails (finishes.mjs) — every file can agree with its script while two of
+ * them disagree with each other.
  *
  * The fix for drift is always the same and the report says so: re-run the
  * script (or outlines.mjs) and commit what it wrote. Light-audit warnings
@@ -44,6 +47,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readGlb, boundsOf, finishFields } from './glb.mjs';
 import { OUTLINE_FILE, renderSource } from '../hull-maps/outlines.mjs';
+import { NAVIES, splitsIn } from './finishes.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
@@ -181,12 +185,33 @@ try {
   } else {
     console.log(`✓ ${OUTLINE_FILE.slice(repo.length + 1)} agrees with the models`);
   }
+
+  // One name, one value, across a navy (asset-prompts-3d.md Block 2b rule 3).
+  // Every script can agree with its own file while two files give one name
+  // two values, which is how the ports left 19 names split until #888; so this
+  // reads the committed files as a set, and runs whatever the filter.
+  for (const navy of NAVIES) {
+    const splits = splitsIn(navy, models);
+    if (!splits.length) {
+      console.log(`✓ ${navy}: one value a name`);
+      continue;
+    }
+    failed++;
+    const lines = splits.map(
+      ({ name, values }) =>
+        `\`${name}\`: ${values.map(({ value, slugs }) => `${value} (${slugs.join(', ')})`).join('\n      or ')}`
+    );
+    console.error(
+      `✗ ${navy} gives ${splits.length} name${splits.length > 1 ? 's' : ''} two values:\n    ${lines.join('\n    ')}\n` +
+        `  bring each onto the navy's one \`ink\` value (node tools/hull-models/finishes.mjs ${navy})`
+    );
+  }
 } finally {
   rmSync(scratch, { recursive: true, force: true });
 }
 
 if (failed) {
-  console.error(`\n${failed} drifted`);
+  console.error(`\n${failed} drifted or split`);
   process.exit(1);
 }
 console.log('\nevery script matches its file');

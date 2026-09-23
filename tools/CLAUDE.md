@@ -18,8 +18,10 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    docs/concept-art/models/, which then goes through
                    hull-intake like any other export. check.mjs rebuilds every
                    script in all three directories in a scratch directory and
-                   fails on any drift from the committed GLB; CI runs it in the
-                   build job. diff.mjs answers the one thing check.mjs cannot —
+                   fails on any drift from the committed GLB, a material's
+                   values included, and on any name finishes.mjs finds at two
+                   values inside one navy (#888); CI runs it in the build job.
+                   diff.mjs answers the one thing check.mjs cannot —
                    what a port changed about a shape — by reading the pre-port
                    binary out of git history, since after a port the committed
                    file is the script's own output and the check is comparing it

@@ -212,46 +212,51 @@ Lamp bases are the near-black a `lamp()` puts in `color` for its emissive to sit
 
 | Navy | Role | Values |
 | --- | --- | --- |
-| Consortium | emissive | `#B07A1E` `amber_vent` · `#F28A1E` `amber_vent` (cruiser) · `#FFD070` `amber_flood` |
+| Consortium | emissive | `#B07A1E` `amber_vent` · `#FFD070` `amber_flood` |
 | Consortium | cladding | `#1C1F22` `baffle-foam` (the Baffle Barge) · `#1A1408` `amber_lamp_unlit` (the lamp's base worn as cladding by a part the block lights only in a later band — the Furnace's burner nozzles, bow floods, ladder strips and manifold strip, all of them lit only cutting) |
 | Consortium | lamp base | `#1A1408` · `#120E06` · `#2A2210` · `#1A1206` |
-| Commune | cladding | `#14332A` / `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` / `#14664C` `algae_hull` · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` · `#061206` `bio_vein_unlit` (the vein's base worn as cladding by a part the block lights only in a later band — the Glider's tail veins, dark with the drive cut, the Weaver's and the Blight's stem veins, and the Rootstock's node-to-node vein, lit under way) |
+| Commune | cladding | `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` `algae_hull` (the token's hex under a second name) · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` · `#061206` `bio_vein_unlit` (the vein's base worn as cladding by a part the block lights only in a later band — the Glider's tail veins, dark with the drive cut, the Weaver's and the Blight's stem veins, and the Rootstock's node-to-node vein, lit under way) |
 | Commune | emissive | `#5FAE42` `bio_vein` (at strength 1 on the Sower and the Spinner, 0.2 on the Drifter's seams and the Glider's wing vein — a strength survives the recolour as a finish does) · `#E8F0A3` `forge_light` / `floodlight_pale` (the spore token as a light) |
-| Commune | lamp base | `#061206` · `#0A1A08` · `#123018` · `#14301A` · `#14351A` · `#0F2A12` · `#2E3A16` · `#3A3F1E` · `#2A4A20` · `#3F6B2E` |
-| Directorate | cladding | `#3A3F4A` / `#27313B` `weld_steel` · `#4E1220` `chitin_red_dark` · `#1A0810` `biolight_unlit` (the lamp base worn as cladding by a part the block lights only in a later band — the Verger's bay doors, and the Lure's fan ribs and tergite-edge rows) |
+| Commune | lamp base | `#061206` · `#0A1A08` · `#14301A` · `#14351A` · `#0F2A12` · `#2E3A16` · `#3A3F1E` · `#2A4A20` · `#3F6B2E` |
+| Directorate | cladding | `#3A3F4A` `weld_steel` · `#4E1220` `chitin_red_dark` · `#1A0810` `biolight_unlit` (the lamp base worn as cladding by a part the block lights only in a later band — the Verger's bay doors, and the Lure's fan ribs and tergite-edge rows) |
 | Directorate | emissive | `#E0506A` `gullet_glow` · `#E07A8C` `forge_light` / `floodlight_hot` |
-| Directorate | lamp base | `#1A0810` / `#2C0A12` / `#3A0D16` `biolight_crimson` · `#2A0C14` `gullet_glow` · `#40141C` `forge_light` / `floodlight_hot` |
-| Knights | cladding | `#1C2230` `dark_steel` (the Offertory's cradle floors, its first hull) · `#2C2244` `shadow_indigo` · `#8A8FA3` `alloy_dim` · `#E6E9F2` `alloy_white` (the token's hex under a second name) · `#1A1030` `crystal_seam_unlit` (the seam's lamp base worn as cladding by a part the block lights only in a later band — the Herald's tine seams, the Lance's guard edges and rail, and the Tocsin's rail, crown seams and crystal spine, lit under way or firing, and its drive prism, lit under way and dark in the firing state it is built in; the Offertory's fore inlay and guard edges, and the Versicle's guard edges, lit under way) |
+| Directorate | lamp base | `#1A0810` `biolight_crimson` · `#2A0C14` `gullet_glow` · `#40141C` `forge_light` / `floodlight_hot` |
+| Knights | cladding | `#1C2230` `dark_steel` (the Offertory's cradle floors, its first hull) · `#8A8FA3` `alloy_dim` · `#E6E9F2` `alloy_white` (the token's hex under a second name) · `#1A1030` `crystal_seam_unlit` (the seam's lamp base worn as cladding by a part the block lights only in a later band — the Herald's tine seams, the Lance's guard edges and rail, and the Tocsin's rail, crown seams and crystal spine, lit under way or firing, and its drive prism, lit under way and dark in the firing state it is built in; the Offertory's fore inlay and guard edges, and the Versicle's guard edges, lit under way) |
 | Knights | emissive | `#9B6CF9` `crystal_panel_glow` · `#A77CFF` `resonance_node` |
-| Knights | lamp base | `#1A1030` · `#1E1038` · `#241744` · `#2A1A50` · `#2A1650` · `#3A2560` |
+| Knights | lamp base | `#1A1030` · `#1E1038` · `#241744` · `#2A1A50` · `#3A2560` |
 
-Five names carry more than one value, which rule 3 forbids and which the approved binaries
-nonetheless contain. They are recorded here rather than corrected, because correcting one
-means re-exporting a model and that is a change of shape, not of prose:
+### One name, one value — held since #888
 
-| Name | Values | Where they split |
-| --- | --- | --- |
-| `growth_ridge` | `#14332A` · `#14382C` | the Commune's scout against its Sower |
-| `algae_hull` | `#1FA67A` · `#14664C` | the Commune's Bastion, Foundry and Refinery against its Sentinel Turret |
-| `weld_steel` | `#27313B` · `#3A3F4A` | the Directorate's Sentinel Turret, Bastion, Cantor, Foundry and Refinery against its Dredge and Precentor |
-| `biolight_crimson` base | `#2C0A12` · `#1A0810` · `#3A0D16` | the same turret against the hulls, and the r184 settlement pass (Bastion, Cantor, Foundry, Refinery) against both |
-| `shadow_indigo` | `#2C2244` · `#3B2E5A` | the Knights' Sentinel Turret against the hulls, and `#3B2E5A` is the Block 2 token |
+Until #888 the approved binaries broke rule 3 nineteen times inside their own navies: five
+names split on a cladding's hex (`growth_ridge`, `algae_hull`, `weld_steel`,
+`biolight_crimson`'s base, `shadow_indigo`), and fourteen more on metalness and roughness,
+on a lamp's base or light, or on two-sidedness. Nearly every split ran the same way, a
+structure pass or the four shared kinds' older series against the hulls of its own navy,
+which says those passes were authored without the hull modules open rather than that
+anyone disagreed. The ports had to keep them, since a port matches its approved binary
+finish for finish.
 
-The split runs the same way in every row but one — a structure against the hulls of its
-own navy — which says the structure passes were authored without the hull modules open
-rather than that anyone disagreed. The hull value is canonical in all five cases, and
-`#3B2E5A` doubly so, being the token. A model PR that *authors* one of these should bring
-the structure onto the hull's value on its way past; a *port* may not, because a port
-matches its approved binary part for part and finish for finish (rule 3), and the #652
-ports kept every split above. None of them is worth a PR of its own, because none of them
-is visible until two of the parts are on screen together.
+Phase 6 of #540 took them all. Each navy's module holds one `ink` table, so re-finishing a
+fleet is one edit; each name carries its hulls' value, or where no hull carries it the value
+most of its structures do; and a lamp sits on its navy's near-black base. Where one name
+was two things it became two names: the Cantor's three open shell plates are
+`chitin_violet_open`, double-sided, and the Knights' lit settlement crystal joined
+`resonance_crystal_dim`. `npm run check:models` fails on a name at two values inside a navy,
+and `node tools/hull-models/finishes.mjs` lists them.
 
-The same hex can also split on *finish*: the Consortium's `hull_black`, `iron_grey` and
-`oxide_rust` carry one value each at three metalness / roughness pairs across its Foundry
-(the hull finishes), its Refinery, Bastion and turret (the structure finishes) and its
-Baffle Barge, and the Knights' `shadow_indigo` carries the token's hex at 0.35 on the
-hulls and at 0.25 / 0.45 on its Bastion and Spire. Metalness and roughness survive the
-recolour where a hue does not, so these are the visible ones.
+A value is everything a finish carries **except its emissive strength**. Strength is a
+lamp's resting loudness, each model's own, approved against its SIG band and carried into
+the conn view as it stands (`rosterModels.ts`), so `red_photophore` at 2.4 on one hull and 6
+on another is one fixture at two loudnesses. Where a lamp's light moved onto its name's
+value, its strength moved the other way so the resting luminance held: the Consortium
+Cruiser's `amber_vent` burns at 3.516 on `#B07A1E` where it burned at 2.2 on `#F28A1E`.
+Metalness and roughness survive the recolour where a hue does not, so the finish moves are
+the visible ones, in the conn view; the chart's bake reads base colour and light alone.
+
+The rule is by name, so two names for one fixture pass it: the hyphenated names on the
+Submersibles, the Baffle Barge and the Spore Veil (`hull-black`, `algae-teal`) beside
+underscore names that share their hex at other finishes, and the Commune's `bio_light`
+beside `biolight_green`. Folding a pair is a finish decision of its own, not a correction.
 
 One correction landed with the #649 ports and belongs here rather than in a module comment:
 `#5FAE42` was described as the biolight token at half strength. It is not a scaling of
