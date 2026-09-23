@@ -124,8 +124,9 @@ import {
  * as a port must, which is how `weld_steel` came to be #27313B on the r184
  * structure passes against #3A3F4A here, and `biolight_crimson`'s base
  * #2C0A12 on the turret and #3A0D16 on the settlement pass against #1A0810
- * here. The hull value is canonical (Block 2b, under the split table), every
- * name below carries it, and what a name replaced is said at the name.
+ * here. The hull value is canonical (Block 2b, "One name, one value — held
+ * since #888"), every name below carries it, and what a name replaced is
+ * said at the name.
  *
  * A lamp's strength is not part of its value: it is that model's resting
  * loudness, approved at intake against its SIG band and carried straight

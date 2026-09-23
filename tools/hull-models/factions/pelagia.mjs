@@ -84,7 +84,8 @@ import {
  *
  * The values are the hulls' — the Sower's pass, which fourteen models
  * carried — and where a name was split the other passes were brought onto
- * them (Block 2b: "the hull value is canonical"):
+ * them (Block 2b, "One name, one value — held since #888": "the hull value
+ * is canonical"):
  *
  * - `chitin_hull`, `growth_ridge`, `algae_membrane`: the Corvette, the
  *   Cruiser and the Harvester carried a glossier r184 finish — chitin at

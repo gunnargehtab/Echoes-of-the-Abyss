@@ -46,8 +46,9 @@ const L = 120;
 const DRAWN = 11.7165;
 
 // The navy's `shadow_indigo` — the token at the hulls' 0.35 — since #888.
-// The approved export had a shade darker and duller, #2C2244 at 0.25, the
-// split Block 2b's table names and calls the hull value canonical over.
+// The approved export had a shade darker and duller, #2C2244 at 0.25, one
+// of the splits Block 2b ("One name, one value — held since #888") records,
+// settled on its rule that the hull value is canonical.
 const shadow = hadron.ink.shadowIndigo();
 const steel = hadron.ink.darkSteel();
 const dim = hadron.ink.alloyDim();

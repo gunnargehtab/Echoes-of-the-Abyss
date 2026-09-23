@@ -58,9 +58,9 @@ import {
  * approved export's finishes to the value, which is how `hull_black` came
  * to be carried at 0.25/0.85 on nineteen models and 0.3/0.45 on three.
  * Re-finishing the navy is now one edit here. Where a name was split, the
- * hulls' value won — "the hull value is canonical" (Block 2b, under the
- * five-split table) — and the factory's docstring says what it replaced
- * and on which models.
+ * hulls' value won — "the hull value is canonical" (Block 2b, "One name,
+ * one value — held since #888") — and the factory's docstring says what it
+ * replaced and on which models.
  *
  * A lamp's `intensity` is the glTF emissive strength: how loud the fixture
  * is at rest, each model's own, approved at intake against its SIG band

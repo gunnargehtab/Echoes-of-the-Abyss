@@ -227,23 +227,25 @@ Lamp bases are the near-black a `lamp()` puts in `color` for its emissive to sit
 
 ### One name, one value — held since #888
 
-Until #888 the approved binaries broke rule 3 nineteen times inside their own navies: five
+Until #888 the approved binaries broke rule 3 nineteen times inside their own navies: four
 names split on a cladding's hex (`growth_ridge`, `algae_hull`, `weld_steel`,
-`biolight_crimson`'s base, `shadow_indigo`), and fourteen more on metalness and roughness,
-on a lamp's base or light, or on two-sidedness. Nearly every split ran the same way, a
+`shadow_indigo`), and fifteen more on metalness and roughness, on a lamp's base or light
+(`biolight_crimson`'s and `biolight_green`'s bases among them), or on two-sidedness. Nearly every split ran the same way, a
 structure pass or the four shared kinds' older series against the hulls of its own navy,
 which says those passes were authored without the hull modules open rather than that
 anyone disagreed. The ports had to keep them, since a port matches its approved binary
 finish for finish.
 
-Phase 6 of #540 took them all. Each navy's module holds one `ink` table, so re-finishing a
-fleet is one edit; each name carries its hulls' value, or where no hull carries it the value
-most of its structures do; and where a lamp's name split with one value sitting on its own
-token, lit through and through, it went onto the name's near-black base. Where one name was
+Phase 6 of #540 took them all, on the rule that settles every split: **the hull value is
+canonical.** A name carries the value its hulls carry, and where no hull carries it, the
+value most of its structures do. Each navy's module holds one `ink` table, so re-finishing a
+fleet is one edit; and where a lamp's name split with one value sitting on its own token,
+lit through and through, it went onto the name's near-black base. Where one name was
 two things it became two names: the Cantor's three open shell plates are
 `chitin_violet_open`, double-sided, and the Knights' lit settlement crystal joined
 `resonance_crystal_dim`. `npm run check:models` fails on a name at two values inside a navy,
-and `node tools/hull-models/finishes.mjs` lists them.
+and on a model file whose `-<navy>.glb` suffix names no navy to read it in;
+`node tools/hull-models/finishes.mjs` lists the splits.
 
 A value is everything a finish carries **except its emissive strength**. Strength is a
 lamp's resting loudness, each model's own, approved against its SIG band and carried into
