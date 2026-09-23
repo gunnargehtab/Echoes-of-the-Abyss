@@ -1287,7 +1287,8 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
       '_The same five reasons, partitioning the same way. A navy whose **bought** ' +
         'cell is 0 never put its deck in the water. Every carrier is a Slipway ' +
         'hull, so a free yard is one that has risen, and "no free yard" counts ' +
-        'the observations before the rung stood as well as a busy one (#839)._'
+        'the escorted observations before the rung stood as well as those at a ' +
+        'busy yard (#839)._'
     );
   }
   // The bank against the rung. Read beside the two tables above, and it is what

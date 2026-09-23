@@ -86,7 +86,8 @@ commander rather than from a snapshot — see `MatchTelemetry.finish`.
 (#839), since its want is gated the same way: behind the escort, one only, at a yard, out of
 the purse. `docs/roster-plan.md` §2 says a hull the commander never buys does not exist in the
 baseline, and this table says which gate kept it out. Every carrier is a Slipway hull, so *no
-free yard* counts the observations before the rung stood as well as those at a busy yard.
+free yard* counts the escorted observations before the rung stood as well as those at a busy
+yard.
 
 **The bank against the rung.** The most nodules a navy ever held at one instant, and the most
 it held once a Slipway was standing. The tables above are rates and counts, and none of

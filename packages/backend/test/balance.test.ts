@@ -273,7 +273,11 @@ describe('telemetry measures what it says it measures', () => {
     // than printed as a row of dashes that would read as "never wanted".
     const stored = {
       ...result,
-      players: result.players.map(({ carrierWant: _, ...player }) => player),
+      players: result.players.map((player) => {
+        const old: Partial<typeof player> = { ...player };
+        delete old.carrierWant;
+        return old;
+      }),
     } as unknown as MatchTelemetryResult;
     const old = toMarkdown(summarise([stored]), 'Test run');
     assert.doesNotMatch(old, /The carrier want/);
