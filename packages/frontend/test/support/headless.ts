@@ -969,15 +969,22 @@ export function textSaying(root: Container, needle: string): string | null {
  * never reached, and no glyph canvas is regenerated and no texture uploaded.
  *
  * Unrasterised is not the same as free, and this probe is not a licence to
- * read it that way. Two costs survive hiding. The *first* change after the
- * label is hidden forces one instruction-set rebuild, because
+ * read it that way. Two costs survive hiding. The *first* change to a hidden
+ * label forces one instruction-set rebuild of its own, because
  * `validateRenderable` reads the moved key before the collect pass gets to
- * skip the node; later changes force none, since `didViewUpdate` latches true
- * with nothing to clear it while the label is undrawn. And measuring never
- * stops at all: `ViewContainer.onViewUpdate` marks the bounds dirty at
- * `:83`, *before* the `didViewUpdate` return at `:84`, so anything that reads
- * a hidden label's size pays one `CanvasTextMetrics.measureText` for every
- * changed string.
+ * skip the node — unless its frame is already rebuilding, and the frame that
+ * hides the label always is. The hide sets `structureDidChange`
+ * (`Container.mjs:1064`), so that frame skips `validateRenderables` and
+ * clears the queue (`RenderGroupSystem.mjs:96-99`), and a change stamped on
+ * it rides the hide's own rebuild. Either way the first change latches
+ * `didViewUpdate` true (`ViewContainer.mjs:85`), nothing clears it while the
+ * label is undrawn (`:120`, `RenderGroup.mjs:158`), and every later change
+ * returns at `:84` before it is queued. So a hide episode costs at most one
+ * rebuild beyond the hide's, whichever frame its first change lands on. And
+ * measuring never stops at all: `ViewContainer.onViewUpdate` marks the bounds
+ * dirty at `:83`, *before* the `didViewUpdate` return at `:84`, so anything
+ * that reads a hidden label's size pays one `CanvasTextMetrics.measureText`
+ * for every changed string.
  *
  * The clock is the live instance of all of it. Until #857 `drawHud` stamped
  * `clockLabel.text`, read `clockLabel.width` on the very next line and hid
