@@ -56,10 +56,10 @@ const L = 75;
 const DRAWN = 81.0323;
 const DATUM = 3.6;
 
-const violet = directorate.scoutInk.bruiseViolet();
-const red = directorate.scoutInk.abyssalRed();
-const chitin = directorate.scoutInk.trenchChitin();
-const photophore = directorate.scoutInk.redPhotophore(2.4);
+const violet = directorate.ink.bruiseViolet();
+const red = directorate.ink.abyssalRed();
+const chitin = directorate.ink.trenchChitin();
+const photophore = directorate.ink.redPhotophore(2.4);
 
 const root = new THREE.Group();
 root.name = 'directorate_harvester';

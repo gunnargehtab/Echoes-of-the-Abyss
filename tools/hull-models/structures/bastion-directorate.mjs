@@ -45,9 +45,12 @@
  * - Every spine and claw leans out along its own bearing by the minimal
  *   rotation from +Y (`leaning`), the crown spines by `atan(0.8)` and the
  *   rib spikes by `atan(1 / 1.35)` — the file's numbers, recovered exactly.
- * - The lamp is `biolight_crimson` on a third base, #3A0D16, burning at
- *   3.3230551162025397; the steel is the turret's #27313B; the reds, violets
- *   and blacks are the hull inks.
+ * - The lamp is `biolight_crimson` burning at 3.3230551162025397, the
+ *   file's own strength; the reds, violets and blacks are the hull inks.
+ *   The export's lamp base (#3A0D16) and steel (#27313B) were a settlement
+ *   pass's own values under the hulls' names, and #888 brought both onto
+ *   the navy's ink (#1A0810 and #3A3F4A; docs/asset-prompts-3d.md Block 2b,
+ *   rule 3). Nothing else on the file moved.
  * - Not one buffer is shared: the eighteen rib plates, the four mandibles
  *   and the sixteen photophores are a buffer each in the file and are a
  *   geometry each here.
@@ -80,8 +83,8 @@ const FLAT = [Math.PI / 2, 0, 0];
 const red = directorate.ink.chitinRed();
 const violet = directorate.ink.chitinViolet();
 const black = directorate.ink.trenchBlack();
-const steel = directorate.structureInk.weldSteel();
-const crimson = directorate.settlementInk.biolightCrimson(3.3230551162025397);
+const steel = directorate.ink.weldSteel();
+const crimson = directorate.ink.biolightCrimson(3.3230551162025397);
 
 const root = new THREE.Group();
 root.name = 'bastion_directorate';

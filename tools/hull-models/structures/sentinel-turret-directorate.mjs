@@ -22,8 +22,12 @@
  * where the export is odd the script is odd with it: the counter-spike is
  * grown after the stinger, the claws' points rise out and up from bases
  * near the mound, two of the three nav marks sit low on the flank rather
- * than on the crown, the turret's steel and lamp carry the hull palette's
- * names at their own values, and the lamp burns at 0.905 of full strength.
+ * than on the crown, and the lamp burns at 0.905 of full strength. The
+ * export's steel (#27313B) and lamp base (#2C0A12) carried the hull
+ * palette's names at values of their own; #888 brought both onto the
+ * navy's ink (#3A3F4A and #1A0810; docs/asset-prompts-3d.md Block 2b, rule
+ * 3), and since the steel was this file's brightest colour, the turret's
+ * register in the conn view is set a step lower now than the export's was.
  *
  * The one (#645, off #540 Phase 6): the two flank marks ride their scutes.
  * The export put `nav_mark_0` at y 0.75 and `nav_mark_1` at 1.15, on the
@@ -78,9 +82,9 @@ const PLATE = [1.2, 0.5, 0.9];
 
 const violet = directorate.ink.chitinViolet();
 const black = directorate.ink.trenchBlack();
-const steel = directorate.structureInk.weldSteel();
-const red = directorate.structureInk.chitinRedDark();
-const crimson = directorate.structureInk.biolightCrimson(0.9050991089119129);
+const steel = directorate.ink.weldSteel();
+const red = directorate.ink.chitinRedDark();
+const crimson = directorate.ink.biolightCrimson(0.9050991089119129);
 
 const root = new THREE.Group();
 root.name = 'sentinel_turret_directorate';

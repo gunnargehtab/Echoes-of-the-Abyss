@@ -48,10 +48,12 @@
  * - `conveyor_rail_r` and `_l` are the gantry's own `r`/`l`, the export's
  *   (kit.mjs `bothSides` says the same of the turrets'), inside a frame
  *   yawed 0.72π, and keep their names.
- * - The six materials are four the Dredge and the turret carry at those
- *   values — `chitin_red`, `chitin_violet`, `trench_black` and the turret's
- *   `weld_steel` — and two of this file's own: `floodlight_hot` at 3.476
- *   and a `biolight_crimson` on a #3A0D16 base at 2.6 (`worksInk`).
+ * - The six materials are the navy's `ink`: `chitin_red`, `chitin_violet`,
+ *   `trench_black`, `weld_steel`, `biolight_crimson` at this file's 2.6,
+ *   and `floodlight_hot` at its 3.476. The export carried the turret's
+ *   `weld_steel` (#27313B) and a `biolight_crimson` on a #3A0D16 base, the
+ *   settlement pass's own values under the hulls' names; #888 brought both
+ *   onto the navy's (#3A3F4A and #1A0810). Nothing else on the file moved.
  * - The light audit names one lamp hidden from above: `crusher_maw`, the
  *   lit slab standing on the crusher's face, edge-on to a top-down map. The
  *   approved binary earns the same one.
@@ -88,11 +90,11 @@ const DRAWN = 23.0714565339591;
 const DATUM = 0;
 
 const red = directorate.ink.chitinRed();
-const steel = directorate.structureInk.weldSteel();
+const steel = directorate.ink.weldSteel();
 const violet = directorate.ink.chitinViolet();
 const black = directorate.ink.trenchBlack();
-const crimson = directorate.worksInk.biolightCrimson(2.6);
-const flood = directorate.worksInk.floodlightHot(3.475863563109638);
+const crimson = directorate.ink.biolightCrimson(2.6);
+const flood = directorate.ink.floodlightHot(3.475863563109638);
 
 const root = new THREE.Group();
 root.name = 'nodule_refinery_directorate';

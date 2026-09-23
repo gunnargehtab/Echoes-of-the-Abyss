@@ -63,10 +63,10 @@ const L = 130;
 const DRAWN = 146.2887;
 const DATUM = 6.2;
 
-const violet = directorate.scoutInk.bruiseViolet();
-const red = directorate.scoutInk.abyssalRed();
-const chitin = directorate.scoutInk.trenchChitin();
-const photophore = directorate.scoutInk.redPhotophore(6);
+const violet = directorate.ink.bruiseViolet();
+const red = directorate.ink.abyssalRed();
+const chitin = directorate.ink.trenchChitin();
+const photophore = directorate.ink.redPhotophore(6);
 
 const root = new THREE.Group();
 root.name = 'directorate_cruiser';

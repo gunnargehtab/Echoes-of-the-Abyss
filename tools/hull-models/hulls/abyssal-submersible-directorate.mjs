@@ -24,7 +24,8 @@
  * (docs/concept-art/models/abyssal-submersible-directorate.glb at 3e15409),
  * part for part in its order, every number the export's own. Every part
  * comes from `factions/directorate.mjs` or is a kit box, and the model
- * carries its own four materials, `submersibleInk`. Nothing here is a
+ * carries four materials of its own name in the navy's one `ink` (#888),
+ * at the export's values. Nothing here is a
  * shape decision; where the export is odd the script is odd with it: the
  * `port` parts sit at the export's +x, which is the kit's -z once the file
  * is turned onto its length, and -z is port (#642), so the names are
@@ -60,10 +61,11 @@ const DATUM = 0.8;
 // `refuseMirror`'s half a metre, in this export's units.
 const HALF_METRE = (0.5 * DRAWN) / L;
 
-const chitin = directorate.submersibleInk.chitinTrench();
-const violet = directorate.submersibleInk.plateViolet();
-const edge = directorate.submersibleInk.edgeRed();
-const photophore = directorate.submersibleInk.photophore();
+const chitin = directorate.ink.chitinTrench();
+const violet = directorate.ink.plateViolet();
+// The file's own strengths: the rims' faint 0.12, the photophores' 2.2.
+const edge = directorate.ink.edgeRed(0.12);
+const photophore = directorate.ink.photophore(2.2);
 
 const root = new THREE.Group();
 root.name = 'abyssal_raider';

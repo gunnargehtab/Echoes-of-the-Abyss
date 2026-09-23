@@ -103,22 +103,93 @@ import {
 } from '../kit.mjs';
 
 /**
- * The Directorate's palette, as the Dredge's own materials carry it: the four
- * tokens of docs/art-direction.md, and — where the approved model needed a
- * colour the docs do not name — that model's own hex, exactly (kit.mjs `hex`).
+ * The Directorate's palette: one table, one factory a material *name*, so
+ * that re-finishing the navy is one edit here (#888, Phase 6 of #540).
  *
- * Exactly, because the first transcription rounded each linear channel to two
+ * The values are the Dredge's own materials — the four tokens of
+ * docs/art-direction.md, and, where an approved model needed a colour the
+ * docs do not name, that model's hex, exactly (kit.mjs `hex`). Exactly,
+ * because the first transcription rounded each linear channel to two
  * decimals and trench black came out `[0, 0, 0.01]`: red and green zeroed,
- * blue doubled, a 3.4× drop in the luminance the bake ships (#630, F2). It
- * clads the ridges, the spines, the mandible roots and the hopper.
+ * blue doubled, a 3.4× drop in the luminance the bake ships (#630, F2).
+ *
+ * One name, one value, across the navy (docs/asset-prompts-3d.md Block 2b,
+ * rule 3). The recolour discards every hue and keeps the *ratio* between a
+ * model's materials (rosterModels.ts `recolor`), so a name at two values is
+ * two greys on two models a player sees side by side. Until #888 this module
+ * held a table per approved export — `structureInk`, `settlementInk`,
+ * `scoutInk`, `submersibleInk`, `worksInk` — each copying its file's values
+ * as a port must, which is how `weld_steel` came to be #27313B on the r184
+ * structure passes against #3A3F4A here, and `biolight_crimson`'s base
+ * #2C0A12 on the turret and #3A0D16 on the settlement pass against #1A0810
+ * here. The hull value is canonical (Block 2b, under the split table), every
+ * name below carries it, and what a name replaced is said at the name.
+ *
+ * A lamp's strength is not part of its value: it is that model's resting
+ * loudness, approved at intake against its SIG band and carried straight
+ * into the conn view (`recolor` keeps emissive luminance × strength exactly).
+ * So every lamp factory takes `intensity` and each script passes its
+ * model's own; the default is the kit's 1, which the tergite hulls burn at.
  */
 export const ink = {
+  // --- The carapace: the Dredge's, which every hull and structure built
+  // from the tergite vocabulary wears. `trench_black` clads the ridges, the
+  // spines, the mandible roots and the hopper.
   chitinViolet: () => clad('chitin_violet', hex('#2D1B3D'), 0.1, 0.62),
+  /**
+   * The same violet for an *open sheet*: the Cantor's three shell plates,
+   * patches of a sphere seen from both faces, which a single-sided material
+   * draws with holes (#878). Two-sided is part of a finish (`diff.mjs`,
+   * #646), so the sheet takes a name of its own rather than making
+   * `chitin_violet` two-sided navy-wide — every other violet part in the
+   * navy is a closed orb, cone or frustum with no second face to show, and
+   * paying the culling on all of them for three plates on one structure is
+   * the wrong trade. The Cantor's export had turned the one material
+   * two-sided for its base tier and twenty-seven spines as well; #888 put
+   * those closed parts back on `chitin_violet`.
+   */
+  chitinVioletOpen: () => {
+    const m = clad('chitin_violet_open', hex('#2D1B3D'), 0.1, 0.62);
+    m.side = THREE.DoubleSide;
+    return m;
+  },
   chitinRed: () => clad('chitin_red', hex('#7A1B2E'), 0.14, 0.52),
+  /**
+   * The Sentinel Turret's red. A turret is "nearly black — an ambush
+   * predator, navigation marks only until it fires" (docs/asset-prompts-3d.md,
+   * the Sentinel Turret block), and `chitin_red` at #7A1B2E is not that. A
+   * name of its own rather than a dimming factor on `chitinRed`, because the
+   * four navies dim differently — the Order dulls a metal, this navy darkens
+   * a body colour, the Consortium's `work_lamp` is another fixture — and one
+   * factor would be overridden three times in four (factions/hadron.mjs
+   * makes the same argument). The approved turret's own value (#639).
+   */
+  chitinRedDark: () => clad('chitin_red_dark', hex('#4E1220'), 0.14, 0.55),
   trenchBlack: () => clad('trench_black', hex('#0A0710'), 0.32, 0.42),
+  /**
+   * #3A3F4A, the hulls' value, on every model since #888. The r184
+   * structure passes carried #27313B — the turret first (#639), then the
+   * Bastion, the Cantor, the Foundry and the Refinery copying it (#652) —
+   * the same finish a shade darker, which Block 2b's split table recorded
+   * and #888 brought onto the hull's. The turret's own value was the one
+   * material of its five that set its register: with `chitin_red_dark` at
+   * #4E1220 the steel is its brightest colour, so the whole turret sits a
+   * step lower in the conn view now than its export did.
+   */
   weldSteel: () => clad('weld_steel', hex('#3A3F4A'), 0.38, 0.44),
-  biolightCrimson: () => lamp('biolight_crimson', hex('#C2465E'), hex('#1A0810')),
-  gulletGlow: () => lamp('gullet_glow', hex('#E0506A'), hex('#2A0C14')),
+  /**
+   * The photophore: the crimson token in `emissive` over a near-black base,
+   * #1A0810, the hulls' value on every model since #888. The turret's base
+   * was #2C0A12 (#639) and the settlement pass's — the Bastion, the Cantor,
+   * the Foundry, the Refinery — #3A0D16 (#652): three values under one
+   * name, the split Block 2b records, and a base is the part of a lamp the
+   * recolour reads as cladding, so the three were three greys. The emissive
+   * colour was #C2465E on all of them and did not move, so no strength
+   * moved with it: the Bastion still burns at 3.323, the Cantor at 3.6, the
+   * Foundry at 2.277, the Refinery at 2.6, the turret at 0.905.
+   */
+  biolightCrimson: (intensity = 1) =>
+    lamp('biolight_crimson', hex('#C2465E'), hex('#1A0810'), 0.4, intensity),
   /**
    * The photophore family's *unlit* finish: `biolight_crimson`'s base, at the
    * hulls' value, with no emissive and the lamp's own finish (metalness 0,
@@ -129,6 +200,57 @@ export const ink = {
    * Block 2b, rule 3); it recolours to near-black under any flag.
    */
   biolightUnlit: () => clad('biolight_unlit', hex('#1A0810'), 0, 0.4),
+  gulletGlow: (intensity = 1) =>
+    lamp('gullet_glow', hex('#E0506A'), hex('#2A0C14'), 0.4, intensity),
+  /**
+   * The works' lights, one model each: `forge_light` is the Foundry's line
+   * and launch glow, "interior forge light spilling from the bay when
+   * producing"; `floodlight_hot` the Refinery's maw, stack tips, gantry
+   * lights, intake mouth and flood lamps, "floodlit working surfaces,
+   * visible machinery light" — one lamp colour on one base, polished to
+   * 0.3, each at its file's own strength (3.698 and 3.476). The approved
+   * files' own values (#652).
+   */
+  forgeLight: (intensity = 1) =>
+    lamp('forge_light', hex('#E07A8C'), hex('#40141C'), 0.3, intensity),
+  floodlightHot: (intensity = 1) =>
+    lamp('floodlight_hot', hex('#E07A8C'), hex('#40141C'), 0.3, intensity),
+
+  // --- The shared kinds' earlier authoring pass (#649): the Light Scout,
+  // the Corvette, the Harvester and the Cruiser name the tokens as
+  // docs/art-direction.md names them — bruise violet, abyssal red, trench
+  // chitin — at a finish of their own, and their photophore is the crimson
+  // token through and through, burning at each file's strength (2.6, 2.6,
+  // 2.4 and 6). Not a split: the four agree on everything but strength.
+  // The bright base is the one thing the rule leaves alone here — it is
+  // these four models' brightest colour and so their register anchor, and
+  // moving it is a re-finish of four approved exports, not a merge. The
+  // names are what the models *are* and stay; the values are the exports'.
+  bruiseViolet: () => clad('bruise_violet', hex('#2D1B3D'), 0.15, 0.5),
+  abyssalRed: () => clad('abyssal_red', hex('#7A1B2E'), 0.12, 0.48),
+  trenchChitin: () => clad('trench_chitin', hex('#0A0710'), 0.18, 0.42),
+  redPhotophore: (intensity = 1) =>
+    lamp('red_photophore', hex('#C2465E'), hex('#C2465E'), 0.4, intensity),
+
+  // --- The Abyssal Submersible's, from the same pass and finished its own
+  // way: a harder, glossier chitin for the one PR-3 hull of the shared
+  // kinds (0.25 / 0.38 and 0.22 / 0.32 against the scout's 0.18 / 0.42 and
+  // 0.15 / 0.5), a photophore polished to 0.35 burning at 2.2, and
+  // `edge_red`, a *lit cladding* — abyssal red at metalness 0.15 with its
+  // own colour as emissive, at 0.12 on the file — so the plate rims, the
+  // tail joints, the rostrum and the limb claws all glow faintly. One model
+  // each; the values are the export's own (#649).
+  chitinTrench: () => clad('chitin_trench', hex('#0A0710'), 0.25, 0.38),
+  plateViolet: () => clad('plate_violet', hex('#2D1B3D'), 0.22, 0.32),
+  edgeRed: (intensity = 1) => {
+    // `lamp` sets metalness 0; this one is a metal that glows.
+    const m = clad('edge_red', hex('#7A1B2E'), 0.15, 0.42);
+    m.emissive = new THREE.Color(...hex('#7A1B2E'));
+    m.emissiveIntensity = intensity;
+    return m;
+  },
+  photophore: (intensity = 1) =>
+    lamp('photophore', hex('#C2465E'), hex('#C2465E'), 0.35, intensity),
 };
 
 /** A carapace orb: a low-facet sphere the caller squashes into a plate. */
@@ -1407,30 +1529,6 @@ export function plectrumLimb(root, { steel, black }, opts) {
  * ------------------------------------------------------------------------ */
 
 /**
- * The structure palette: what a turret needs that no hull did.
- *
- * A Sentinel Turret is "nearly black — an ambush predator, navigation marks
- * only until it fires" (docs/asset-prompts-3d.md, the Sentinel Turret block),
- * and `chitin_red` at #7A1B2E is not that. The structures carry
- * their own names rather than a shared dimming factor applied to `ink` — see
- * `structureInk` in factions/hadron.mjs for the argument. The values are the
- * approved turret's own — including two that share a *name* with the hull
- * palette's and not its value: the turret's `weld_steel` is #27313B where the
- * Dredge's is #3A3F4A, and its `biolight_crimson` sits on a #2C0A12 base
- * where the Dredge's is #1A0810. A part is compared by its material's name,
- * but the conn view renders its finish, so the turret cites its own file.
- * `biolightCrimson` takes the emissive strength a file carries: the approved
- * turret's lamp burns at 0.905 (`KHR_materials_emissive_strength`), which the
- * bake multiplies in (hull-intake's page.html); the default is full strength.
- */
-export const structureInk = {
-  chitinRedDark: () => clad('chitin_red_dark', hex('#4E1220'), 0.14, 0.55),
-  weldSteel: () => clad('weld_steel', hex('#27313B'), 0.38, 0.44),
-  biolightCrimson: (intensity = 1) =>
-    lamp('biolight_crimson', hex('#C2465E'), hex('#2C0A12'), 0.4, intensity),
-};
-
-/**
  * The exchanger on the end of a Vent Tap's draw arm, on `bearing` (#608),
  * grown as a carapace: a squashed orb in `skin`, the dark seam orb where it
  * meets the pipe, three spines raked off its back, four photophores lying on
@@ -1826,34 +1924,6 @@ export function slipwayHall(hall, { violet, red, black, steel, crimson }, opts) 
  * ------------------------------------------------------------------------ */
 
 /**
- * The settlement palette: the two finishes the Bastion and the Cantor carry
- * that no ink above does.
- *
- * `biolight_crimson` on the r184 settlement exports (the Bastion, the
- * Cantor, and the Foundry and Refinery beside them) sits on a **third** base,
- * #3A0D16, where the hulls' is #1A0810 and the turret's #2C0A12 — the same
- * name, three values, which docs/asset-prompts-3d.md § "What the approved
- * models derived" already records for two of them. Its strength is the
- * file's own: 3.323 on the Bastion, 3.6 on the Cantor.
- *
- * `chitin_violet` on the Cantor is the hull ink's value **double-sided**,
- * because the three shell plates are open patches of a sphere and the pass
- * that authored them turned the one material two-sided for every violet
- * part on the file — the base tier and twenty-one hydrophone spines with
- * them. `diff.mjs` reads `two-sided` as part of a finish (#646), so a port
- * carries it.
- */
-export const settlementInk = {
-  chitinVioletOpen: () => {
-    const m = clad('chitin_violet', hex('#2D1B3D'), 0.1, 0.62);
-    m.side = THREE.DoubleSide;
-    return m;
-  },
-  biolightCrimson: (intensity = 1) =>
-    lamp('biolight_crimson', hex('#C2465E'), hex('#3A0D16'), 0.4, intensity),
-};
-
-/**
  * A placement in an X-long export's own frame — the file's translation, XYZ
  * Euler and scale, no yaw — as `drawn` is one in a Z-long export's. The
  * Bastion is the first r184 structure exported bow-on-X, and the builders
@@ -1945,7 +2015,8 @@ export function carapaceTiers(root, { tiers }) {
  * and, on the Cantor, three `shell_plate`s: patches of a slightly larger
  * sphere (5.53, 5.531 and 5.532 — a millimetre apart each, so none fights
  * the one under it) at the same centre, each a window `phi` and `theta`
- * [start, length] wide, 16 × 3, in the two-sided violet.
+ * [start, length] wide, 16 × 3, in `chitin_violet_open` — the two-sided
+ * violet an open patch needs (`ink`, #878).
  */
 export function domeShell(root, { shell: shellMat, plate: plateMat }, opts) {
   const { name = 'dome_shell', r, facets, plates = [], ...placement } = opts;
@@ -2162,28 +2233,6 @@ export function primaryQuill(root, { skins, light }, opts) {
  * ------------------------------------------------------------------------ */
 
 /**
- * The Light Scout's palette: an earlier authoring pass than the Dredge's,
- * naming the tokens as docs/art-direction.md names them — bruise violet,
- * abyssal red, trench chitin — with its own finish, and a photophore that is
- * the crimson token through and through, burning at 2.6. Values are the
- * approved export's own; the names are what the model *is* and stay.
- *
- * The Corvette, the Harvester and the Cruiser carry the same four names
- * and finishes, and only the photophore's strength differs — 2.6, 2.4 and
- * 6 (`KHR_materials_emissive_strength`; the bake caps it at 1, so it moves
- * nothing on a map): `redPhotophore` takes the figure a file carries, as
- * `structureInk.biolightCrimson` does, and the scout's 2.6 stays the
- * default (#649).
- */
-export const scoutInk = {
-  bruiseViolet: () => clad('bruise_violet', hex('#2D1B3D'), 0.15, 0.5),
-  abyssalRed: () => clad('abyssal_red', hex('#7A1B2E'), 0.12, 0.48),
-  trenchChitin: () => clad('trench_chitin', hex('#0A0710'), 0.18, 0.42),
-  redPhotophore: (intensity = 2.6) =>
-    lamp('red_photophore', hex('#C2465E'), hex('#C2465E'), 0.4, intensity),
-};
-
-/**
  * Plate segments: the scout's carapace, boxes butted along the keel, each
  * in its own `skin` and each trailed by a red lip — a thin box `lip.ratio`
  * of the plate's width and height, `lip.thickness` thick, set `lip.inset`
@@ -2339,30 +2388,6 @@ export function photophoreDomes(root, light, opts) {
  * a spike aimed at its lamp, a tooth's station round the mill — are the
  * files' own, read off them and checked by `diff.mjs` against them.
  * ------------------------------------------------------------------------ */
-
-/**
- * The Abyssal Submersible's palette: its own four names, from the same
- * authoring pass as the scout's and finished its own way — a harder,
- * glossier chitin for the one PR-3 hull of the shared kinds (0.25 / 0.38
- * and 0.22 / 0.32 against the scout's 0.18 / 0.42 and 0.15 / 0.5), a
- * photophore polished to 0.35 and burning at 2.2, and `edge_red`, which is
- * a *lit cladding*: abyssal red with metalness 0.15 and its own colour as
- * emissive at 0.12 — the plate rims, the tail joints, the rostrum and the
- * limb claws all glow faintly. Values are the approved export's own; the
- * names are what the model is and stay (#649).
- */
-export const submersibleInk = {
-  chitinTrench: () => clad('chitin_trench', hex('#0A0710'), 0.25, 0.38),
-  plateViolet: () => clad('plate_violet', hex('#2D1B3D'), 0.22, 0.32),
-  edgeRed: () => {
-    // `lamp` sets metalness 0; this one is a metal that glows.
-    const m = clad('edge_red', hex('#7A1B2E'), 0.15, 0.42);
-    m.emissive = new THREE.Color(...hex('#7A1B2E'));
-    m.emissiveIntensity = 0.12;
-    return m;
-  },
-  photophore: () => lamp('photophore', hex('#C2465E'), hex('#C2465E'), 0.35, 2.2),
-};
 
 /**
  * A jointed limb: the boxes and the one cone of a folded manipulator, each
@@ -2642,30 +2667,6 @@ export function walkingLimbs(root, { chitin, red }, opts) {
  * has it), which is what the two approved files are (#652) — and the rule
  * each holds is the file's, read off it and checked against it.
  * ------------------------------------------------------------------------ */
-
-/**
- * The works' palette: what the Foundry and the Refinery carry that no hull
- * or turret did. Four of their six materials are the Dredge's `ink` and the
- * turret's `structureInk` at those exact values; these are the other two,
- * plus a third `biolight_crimson` — the same name as the Dredge's and the
- * turret's on a third base, #3A0D16, burning at 2.277 on the Foundry and
- * 2.6 on the Refinery (`KHR_materials_emissive_strength`; the bake caps it
- * at 1). `forge_light` is the Foundry's line and launch glow, "interior
- * forge light spilling from the bay when producing"; `floodlight_hot` the
- * Refinery's maw, stack tips, gantry lights, intake mouth and flood lamps,
- * "floodlit working surfaces, visible machinery light" — one lamp colour on
- * one base, polished to 0.3, at each file's own strength. Values are the
- * approved files' own; the names are what the models are and stay.
- */
-export const worksInk = {
-  forgeLight: (intensity = 3.697972238428193) =>
-    lamp('forge_light', hex('#E07A8C'), hex('#40141C'), 0.3, intensity),
-  floodlightHot: (intensity = 3.475863563109638) =>
-    lamp('floodlight_hot', hex('#E07A8C'), hex('#40141C'), 0.3, intensity),
-  // The same third base the Bastion and the Cantor carry (`settlementInk`),
-  // at the Foundry's own strength; one entry, so the value cannot split.
-  biolightCrimson: (intensity = 2.276723666358973) => settlementInk.biolightCrimson(intensity),
-};
 
 /**
  * The tergite flanks either side of the Foundry's bay: on each flank
