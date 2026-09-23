@@ -103,10 +103,11 @@ import {
  *   #8FE36B at 0.35, which made a lamp's *base* the brightest colour on the
  *   Harvester and the Scout and so the anchor the conn view set their
  *   whole cladding register by; the membrane is now, as on the Spinner,
- *   the Glider, the Drifter and the Weaver — the four hulls with no spore
- *   pod, whose register the two now match exactly (the Sower and the rest
- *   anchor on `spore_pod`). The light is untouched: same emissive, each
- *   model's own strength.
+ *   the Glider, the Drifter and the Weaver, the other four hulls with no
+ *   spore pod, whose register the two now match exactly (the Sower and
+ *   eight more hulls anchor on `spore_pod`, the Submersible on
+ *   `spore-pale`, the same #E8F0A3). The light is untouched: same
+ *   emissive, each model's own strength.
  * - `algae_hull` and `biolight_green` are structure names on no hull. The
  *   Bastion, the Foundry and the Refinery carry the algae token #1FA67A at
  *   0.08 and 0.6 and the lamp on a #14351A base; the Sentinel Turret
