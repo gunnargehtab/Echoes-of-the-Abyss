@@ -33,7 +33,8 @@ const models = resolve(here, '../../docs/concept-art/models');
 
 /** A finish as the rule compares it: every field but the strength. */
 function valueOf(finish) {
-  const { strength: _loudness, ...value } = finishFields(finish);
+  const value = finishFields(finish);
+  delete value.strength;
   return Object.entries(value)
     .map(([k, v]) => `${k} ${v}`)
     .join(', ');
