@@ -77,8 +77,12 @@
  *   The slits stay where the file has them.
  *
  * `spore-haze` is the one lamp left the clause does not name, and it is
- * left: making it dark would need a translucent unlit finish the navy
- * does not carry, and finish is #888's. Nothing here moves the footprint.
+ * left as the approved file lights it: whether the block should name it,
+ * and whether a translucent unlit finish exists for it if not, is #893's
+ * question (every "block names fewer lamps than the model lights" case
+ * on #890 went there), and finish is #888's. The vein rings' reading
+ * above is the same class of question and is recorded there too.
+ * Nothing here moves the footprint.
  */
 import { THREE, exportGlb, fitFootprint } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';

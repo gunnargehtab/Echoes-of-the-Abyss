@@ -68,20 +68,29 @@
  * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
  * two buds as showing under a cell from above. The block's one band is
  * "navigation marks only", and the five buds are the marks, so both stay
- * lit at their names, material and count and move:
+ * lit at their names, material and count:
  *
- * - `throat_light`: from under the chin, (0, −0.28, 1.3), to the tip of
- *   the jaw, (0, 0.01, 1.9) — the nose's pole is at 1.876 on the axis, so
- *   the bud sits half in it with its forward half past the plan outline
- *   and its crown above the skin. Under the chin it was a mark no
- *   top-down map could see; at the jaw's tip it is still the lowest,
- *   forward-most mark on the hull, below the feeler's root.
- * - `tail_light`: a hair to starboard, (−0.06, 0.12, −2.5) from
- *   (0, 0.12, −2.5), off the plane of the upper fluke, whose edge stood
- *   over it on the keel line.
+ * - `throat_light`, (0, −0.28, 1.3): RESIDUAL AUDIT LINE, kept where the
+ *   file has it. It is the ventral mark under the chin, and this hull has
+ *   no upward face it could sit on and still be a throat light — the one
+ *   station the maps see forward of the flank marks is the nose's pole,
+ *   and a bud there is a bow mark beside the feeler-tip mark, a different
+ *   fixture (review, F1; #890 rulings 1 and 6). The audit will name it;
+ *   gate 3 meets its target with it hidden, as it did before.
+ * - `tail_light`: from (0, 0.12, −2.5), where it hung between the flukes
+ *   under the upper one's edge, touching nothing, to (0.02, 0.213, −2.27)
+ *   — seated on the peduncle's aft crown line, sunk 0.02 into it, at the
+ *   upper fluke's root and above its leading edge, which at that station
+ *   is still down at the peduncle's back. On the crown line both halves
+ *   of the bud stand clear of the peduncle's fall-off; a hair to one side
+ *   the inboard half sat under it. It is 0.035 across, the flank marks'
+ *   size, where the file had it 0.03: the file's bud is an octagon 0.67 m
+ *   wide that the audit's quarter-metre cells read as four cells, the
+ *   floor exactly, and at the flank marks' size it reads six. (The first
+ *   cut only slid it 0.06 across and left it 0.45 m off the fluke;
+ *   review, F2.)
  *
- * The jaw light's forward half lies 0.024 past the nose's pole and the
- * feeler's tip light still sets the length, so `DRAWN` holds.
+ * Nothing here reaches the length or the beam.
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -362,15 +371,16 @@ pelagia.membranes(root, membrane, {
 });
 
 // "Nearly black, navigation marks only": five buds, and that is the whole
-// resting light of a hull that idles at SIG 6 — the throat's at the jaw's
-// tip and the tail's a hair to starboard (#890; see the header).
+// resting light of a hull that idles at SIG 6 — the throat's under the
+// chin, where no map sees it, and the tail's on the peduncle's aft crown
+// (#890; see the header).
 pelagia.lightBuds(root, light, {
   buds: [
     ['feeler_tip_light', 0.045, drawn([0.24, 0.34, 2.2])],
     ['flank_light_port', 0.035, drawn([0.44, 0.1, 0.9])],
     ['flank_light_starboard', 0.035, drawn([-0.42, 0.06, 0.85])],
-    ['throat_light', 0.035, drawn([0, 0.01, 1.9])],
-    ['tail_light', 0.03, drawn([-0.06, 0.12, -2.5])],
+    ['throat_light', 0.035, drawn([0, -0.28, 1.3])],
+    ['tail_light', 0.035, drawn([0.02, 0.213, -2.27])],
   ],
 });
 

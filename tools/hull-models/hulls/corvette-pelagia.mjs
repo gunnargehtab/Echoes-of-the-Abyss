@@ -55,9 +55,13 @@
  *   (−0.37, 0.08, −0.5), each of which sat inside the beam under the
  *   skin's overhang. The other two of the row already sit on the shoulder
  *   and stay.
- * - `tail_light`: a hair to starboard, (−0.06, 0.1, −2.85) from
- *   (0, 0.1, −2.85), off the plane of the upper fluke, whose edge stood
- *   over it on the keel line. The bow light is a hair to port.
+ * - `tail_light`: from (0, 0.1, −2.85), where it hung in the fork of the
+ *   tail under the upper fluke's edge, touching nothing, to
+ *   (−0.05, 0.21, −2.68) — seated on the peduncle's aft crown, sunk 0.02
+ *   into it a hair to starboard of the fluke's root, whose plane at x 0
+ *   it clears by its own radius. The bow light is a hair to port. (The
+ *   first cut only slid it 0.06 across and left it floating in the fork;
+ *   review, F1.)
  *
  * Nothing here reaches the length or the beam.
  */
@@ -390,8 +394,8 @@ pelagia.membranes(root, membrane, {
 
 // "Dim accent running lights along the hull line": a bud at the bow, three
 // down the port shoulder and two down the starboard — no two answering
-// each other across the keel — and one at the tail, a hair to starboard
-// (#890; see the header).
+// each other across the keel — and one on the peduncle's aft crown, a
+// hair to starboard of the fluke's root (#890; see the header).
 pelagia.lightBuds(root, light, {
   buds: [
     ['bow_light', 0.04, drawn([0.06, 0.08, 2.2])],
@@ -400,7 +404,7 @@ pelagia.lightBuds(root, light, {
     ['hullline_port_3', 0.032, drawn([0.26, 0.26, -1.1])],
     ['hullline_starboard_1', 0.032, drawn([-0.34, 0.12, 0.9])],
     ['hullline_starboard_2', 0.032, drawn([-0.29, 0.33, -0.4])],
-    ['tail_light', 0.03, drawn([-0.06, 0.1, -2.85])],
+    ['tail_light', 0.03, drawn([-0.05, 0.21, -2.68])],
   ],
 });
 

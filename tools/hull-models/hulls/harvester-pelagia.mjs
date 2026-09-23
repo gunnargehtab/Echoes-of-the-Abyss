@@ -438,8 +438,9 @@ pelagia.membranes(root, membrane, {
 });
 
 // "Dim at rest": a bud on the brow, one on each shoulder at different
-// heights, one on the port cargo lobe's outboard equator where the hold is
-// worked, one at the tail (#890; see the header).
+// heights, one on the port cargo lobe's outboard equator — the hold's own
+// mark, on the one line of the hold the hull does not overhang — and one
+// at the tail (#890; see the header).
 pelagia.lightBuds(root, light, {
   buds: [
     ['brow_light', 0.05, drawn([0, 0.55, 1.35])],

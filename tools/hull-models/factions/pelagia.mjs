@@ -1722,13 +1722,17 @@ export function sternPod(root, { skin, ring: ringMat, bud: budMat }, opts) {
  * sits at mid-height under the next ring up — two of the Refinery's four
  * showed under a cell from above, the other two a few square metres.
  * `vein.lay: 'flat'` lays it round the silo instead: a hoop of `vein.hug`
- * times the wall's radius at `vein.at` of the height — 1.09, the ratio the
- * upright vein's 0.92 R had to the wall where it crossed it — centred on
+ * times the wall's corner radius at `vein.at` of the height, centred on
  * the leaned axis there, tilted `vein.tilt` off level with its `arc` on
  * the rising side and yawed the silo's own way, so what the block calls
  * "visible machinery light" is a band a top-down map sees whole. The
- * caller puts `at` above the highest ring, where nothing wider stands
- * over it. Upright stays the default, as the file has it.
+ * drum is a nine-sided prism whose flats lie at 0.94 of its corner
+ * radius, so a `hug` a little under 1 — the Refinery's 0.97 — runs the
+ * wall through the tube's core at corners and flats alike; a hug over 1
+ * leaves the tube floating off the drum, which is what the first cut did
+ * at 1.09 (review, F1). The caller puts `at` above the highest ring,
+ * where nothing wider stands over it. Upright stays the default, as the
+ * file has it.
  */
 export function silos(root, mats, opts) {
   const { skin: skinMat, cap: capMat, ring: ringMat, bud: budMat, vein: veinMat } = mats;
@@ -1787,10 +1791,13 @@ export function silos(root, mats, opts) {
         z,
       ]);
     if (vein.lay === 'flat') {
-      const wall = R * (1 - (1 - taper) * vein.at);
+      // A silo may carry its hoop at its own height (`s.vein.at`): where
+      // its rings stop is where the band above them starts.
+      const at = s.vein.at ?? vein.at;
+      const wall = R * (1 - (1 - taper) * at);
       // The drum turns about its middle, so at `at` of the height its axis
       // stands (at − ½)·h up the leaned stance from there.
-      const off = new THREE.Vector3(0, (vein.at - 0.5) * h, 0).applyEuler(
+      const off = new THREE.Vector3(0, (at - 0.5) * h, 0).applyEuler(
         new THREE.Euler(...stance, 'XYZ')
       );
       frame.part(

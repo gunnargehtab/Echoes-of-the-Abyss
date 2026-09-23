@@ -63,11 +63,19 @@
  * on 0 and 2 a few square metres clear. The block's one band lights
  * "visible machinery light", and a vein on a silo is that, so all four
  * stay lit in `biolight_green` and move onto an upward face together
- * (`silos` `vein.lay: 'flat'`): each a hoop round its own silo at 0.92 of
- * its height, above its highest ring and under its cap, 1.09 times the
- * wall's radius there, tilted 0.18 off level with its arc rising and
- * yawed the silo's own way as before. Same names, tube, facets and arc;
- * the four move as one series. Nothing here reaches the footprint.
+ * (`silos` `vein.lay: 'flat'`): each a hoop round its own silo in the
+ * band above its highest ring and under its cap, seated in the nine-sided
+ * wall — its ring at 0.97 of the wall's corner radius there, so the 0.06
+ * tube straddles the drum's corners and flats alike — tilted 0.18 off
+ * level with its arc rising and yawed the silo's own way as before. Silos
+ * 0 and 2, whose rings stop at 0.57 of their height, carry it at 0.8,
+ * where the wall stands 0.036 R past the cap's rim; silos 1 and 3, whose
+ * rings climb to 0.87, carry it at 0.9, where the wall and the rim are
+ * within 0.01 R and the band shows past the rim's flats. The first cut
+ * put every ring at 0.92 and 1.09 of the wall, which left the tube 0.37
+ * to 0.94 m off the drum touching nothing (review, F1). Same names, tube,
+ * facets and arc; the four move as one series. Nothing here reaches the
+ * footprint.
  *
  * THE FRAME is the export's own: an X-long file, 22.7246 units long for a
  * 280 m footprint (hull-intake's `rawSize.x` on the approved file, which
@@ -118,11 +126,11 @@ pelagia.silos(
   {
     vein: {
       lay: 'flat',
-      hug: 1.09,
+      hug: 0.97,
       tube: 0.06,
       facets: [4, 14],
       arc: Math.PI * 0.65,
-      at: 0.92,
+      at: 0.9,
       tilt: 0.18,
     },
     silos: [
@@ -138,7 +146,7 @@ pelagia.silos(
           { y: 4.79132507031, R: 1.557005852, tube: 0.1200238764 },
         ],
         bud: true,
-        vein: { yaw: -0.0552587636465 },
+        vein: { yaw: -0.0552587636465, at: 0.8 },
       },
       {
         n: 1,
@@ -153,7 +161,7 @@ pelagia.silos(
           { y: 8.74072221032, R: 1.609345749, tube: 0.1559746712 },
         ],
         bud: true,
-        vein: { yaw: -1.45421398587 },
+        vein: { yaw: -1.45421398587, at: 0.9 },
       },
       {
         n: 2,
@@ -166,7 +174,7 @@ pelagia.silos(
           { y: 2.06128180915, R: 1.55849281, tube: 0.1585938632 },
           { y: 4.21222719012, R: 1.431700289, tube: 0.1266850829 },
         ],
-        vein: { yaw: 3.43184193495 },
+        vein: { yaw: 3.43184193495, at: 0.8 },
       },
       {
         n: 3,
@@ -181,7 +189,7 @@ pelagia.silos(
           { y: 3.72972657205, R: 1.285763025, tube: 0.148888588 },
           { y: 5.24991696079, R: 1.186215073, tube: 0.1522943676 },
         ],
-        vein: { yaw: -0.426394027628 },
+        vein: { yaw: -0.426394027628, at: 0.9 },
       },
     ],
   }
