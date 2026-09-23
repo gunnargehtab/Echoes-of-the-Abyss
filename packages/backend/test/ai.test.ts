@@ -19,6 +19,7 @@ import {
   CONSTRUCTION,
   ACTIVE_SONAR,
   AiDifficulty,
+  BERTHS,
   DEPTH,
   Faction,
   HARVEST_THROTTLE,
@@ -200,11 +201,22 @@ describe('production does not deadlock', () => {
       unhealableDamage: 0,
       ...(kind === UnitKind.Harvester ? { cargo: 0, throttle: HarvestThrottle.Standard } : {}),
     });
+    const units = [
+      ...[1, 2, 3, 4].map((id) => hull(id, UnitKind.Harvester)),
+      ...[5, 6, 7].map((id) => hull(id, UnitKind.Corvette)),
+      hull(8, UnitKind.Herald),
+    ];
     return {
       ...base,
       tick: 6000,
       nodules,
       exposure: { tier: ResolutionTier.Silent, trackedCount: 0 },
+      // Berths to spare, so the price is the only thing these tests ask. The
+      // base snapshot grants none, and a commander reads the grant (#854).
+      berths: {
+        used: units.reduce((n, u) => n + statsFor(u.kind).berths, 0),
+        granted: BERTHS.CEILING,
+      },
       // Four harvesters, so nothing is wanted there, and three armed hulls —
       // the opening escort, and the army length that selects a Cruiser.
       //
@@ -214,11 +226,7 @@ describe('production does not deadlock', () => {
       // afloat the next want is the Cruiser, and "takes its first choice"
       // stays a claim about doctrine rather than one a 100-nodule hull could
       // satisfy by being the cheapest thing on the bar.
-      units: [
-        ...[1, 2, 3, 4].map((id) => hull(id, UnitKind.Harvester)),
-        ...[5, 6, 7].map((id) => hull(id, UnitKind.Corvette)),
-        hull(8, UnitKind.Herald),
-      ],
+      units,
       structures: [
         {
           id: 20,
