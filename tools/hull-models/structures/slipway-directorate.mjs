@@ -40,8 +40,8 @@
  * table, so the root carries that one scale, as the Vent Taps do, and
  * intake reports ×1.000 where the approved bake reported ×0.938.
  *
- * Nothing here is a shape decision; where the export is odd the script is
- * odd with it:
+ * Nothing here is a shape decision but the crosses' station (#890, the last
+ * bullet); where the export is odd the script is odd with it:
  *
  * - RELABELLED, as #642 relabelled the eleven `bothSides` hulls and the
  *   Choristers' ports relabelled them again: the file's `line_light_p`,
@@ -62,6 +62,15 @@
  * - The trolley sits 6 to starboard on the outer gantries and 8 to port
  *   on the middle one; the worklight hangs a metre beyond the beam's +x
  *   face.
+ * - `line_cross_5`, which the light audit named and #645 carried: the
+ *   1.6 × 36 m lit cross at x 90 lay under gantry 2's beam and trolley,
+ *   so the top-down bake never saw it. The crosses are the resting
+ *   clause's "line lights along the slip floor", so they stay lit and the
+ *   whole rank slides 8 m aft, to −148 at the same 46, so that no rung
+ *   lies under a gantry's beam or trolley (kit.mjs `slipwayBed`, one
+ *   decision for all four yards; docs/models-plan.md §3.2 rule 5; #890).
+ *   `diff.mjs` lists the seven crosses, moved by that 8 m and nothing
+ *   else.
  */
 import {
   THREE,
