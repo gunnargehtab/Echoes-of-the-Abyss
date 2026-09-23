@@ -14,7 +14,7 @@
  * cone of a head with a four-sided rostrum and two mandibles of different
  * lengths; four dorsal spikes alternating sides and five flank spikes,
  * three to port and two to starboard; seven walking limbs, four to port
- * and three to starboard, each a femur and a red claw; four tail
+ * and three to starboard, each a femur and a glowing claw; four tail
  * segments, each with its lit joint; a telson of three plates; and ten
  * photophores — five to port, three to starboard, one under the jaw, one
  * on the tail — the dim red resting light of a hull that idles at SIG 22.
@@ -25,14 +25,14 @@
  * part for part in its order, every number the export's own. Every part
  * comes from `factions/directorate.mjs` or is a kit box, and the model
  * carries four materials of its own name in the navy's one `ink` (#888),
- * at the export's values, and since #890 the navy's `abyssal_red` on the
- * claws. Nothing here is a shape decision but the lamps #890 re-seated,
- * below; where the export is odd the script is odd with it: the
+ * at the export's values. Nothing here is a shape decision but the lamps
+ * #890 re-seated, below; where the export is odd the script is odd with
+ * it: the
  * `port` parts sit at the export's +x, which is the kit's -z once the file
  * is turned onto its length, and -z is port (#642), so the names are
  * right; `edge_red` is a cladding that glows — metalness 0.15 with its own
  * red as emissive at 0.12 — so the light audit reads the five rims, the
- * four joints and the rostrum as lamps;
+ * four joints, the rostrum and the seven claws as lamps;
  * the rims and the joints are *open* frusta, two rows at ±h/2 with the
  * smaller radius on top (`parts.mjs` reads them so first, and offers a
  * displaced 3 × 4 orb second, which the buffer is not); the head is a
@@ -47,13 +47,16 @@
  * — and the approved bake never saw them. #890 decides each against the
  * block's resting clause, "dim red photophores" (docs/models-plan.md §3.2):
  *
- * - The seven claws (`limb_*_claw`) are not photophores and the clause
- *   does not light them; they glowed only because the export's `edge_red`
- *   glows, folded under the belly where no chart sees them. Rule 1: they
- *   carry no lamp, and are clad in `abyssal_red` — the navy's unlit red at
- *   `edge_red`'s own #7A1B2E, the shared kinds' — all seven under the one
- *   rule `walkingLimbs` holds, the visible first starboard claw with the
- *   six hidden, so the limbs stay one family.
+ * - The seven claws (`limb_*_claw`) glow in the export's `edge_red`, the
+ *   approved model's resting set, which this issue does not re-read (#890
+ *   review, ruling 2; #893 holds the question, below). Six lie folded under
+ *   the belly, where no chart sees them, and a claw lifted clear of the
+ *   belly to face a map is a different fixture (ruling 6), so they stay
+ *   where the file has them. RESIDUAL AUDIT LINES: `limb_port_1_claw`,
+ *   `limb_port_2_claw`, `limb_port_3_claw`, `limb_port_4_claw`,
+ *   `limb_starboard_2_claw` and `limb_starboard_3_claw` show nothing from
+ *   above, and the export warns on each; `limb_starboard_1_claw` was never
+ *   hidden.
  * - `photophore_port_5` and `photophore_starboard_3` are the clause's and
  *   stay lit. Each sat on the fifth plate's flank at its widest line,
  *   under the plate's own upper surface; each is lifted 0.04 inboard and
@@ -65,9 +68,9 @@
  *   directly beneath the rostrum's base; it is under the jaw still, moved
  *   0.2 across the keel to the starboard side of the rostrum, between it
  *   and the starboard mandible, where nothing stands over it.
- * - FOLLOW-UP #893, not touched: the five rims, the four tail joints and
- *   the rostrum glow in `edge_red` and the clause names none of them; they
- *   were never hidden and are the approved model's resting set, which this
+ * - FOLLOW-UP #893, not touched: the five rims, the four tail joints, the
+ *   rostrum and the seven claws glow in `edge_red` and the clause names
+ *   none of them; they are the approved model's resting set, which this
  *   issue does not re-read (#890 review, ruling 2). They stay lit as the
  *   file has them, unread; #893 holds the question.
  *
@@ -94,9 +97,6 @@ const violet = directorate.ink.plateViolet();
 // The file's own strengths: the rims' faint 0.12, the photophores' 2.2.
 const edge = directorate.ink.edgeRed(0.12);
 const photophore = directorate.ink.photophore(2.2);
-// The claws' red, unlit: the block lights photophores at rest, not claws
-// (#890, the header).
-const clawRed = directorate.ink.abyssalRed();
 
 const root = new THREE.Group();
 root.name = 'abyssal_raider';
@@ -239,10 +239,11 @@ directorate.spikes(root, chitin, {
 
 // "Folded manipulator limbs": seven, four to port at a 0.4 pitch and three
 // to starboard at 0.44, each its own length, every one folded by the one
-// rule `walkingLimbs` holds; the claws clad, not lit (#890, the header).
+// rule `walkingLimbs` holds; six of the claws are residual audit lines
+// (#890, the header).
 directorate.walkingLimbs(
   root,
-  { chitin, red: clawRed },
+  { chitin, red: edge },
   {
     limbs: [
       { side: 'port', n: 1, length: 0.34, at: [0.34, 0.42, 0.85] },

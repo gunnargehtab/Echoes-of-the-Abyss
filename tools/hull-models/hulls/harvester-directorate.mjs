@@ -44,8 +44,13 @@
  * mining machinery that reads as its loud state" on lamps already lit at
  * rest is the one-glow-factor reading — the same lamps, scaled — not a
  * later band that clads them. No upward face of a band exists to carry
- * them: each band is a box inside the cargo gut's orb (10.75 of half-width
- * against the gut's 11.45 at the band's height), and the gut's crown is
+ * them: each band is a box across the cargo gut whose ends stand a little
+ * proud of the gut's flank at its own station — 10.75 of half-width
+ * against the gut's 10.18 at band a, 11.25 against 10.69 at b, 9.75
+ * against 8.10 at c, the gut measured on its built ten-meridian orb where
+ * it meets each band's plane (the ideal orb is 10.71, 11.31 and 8.87
+ * there) — but under the carapace's overhang, whose plates reach 11.5 to
+ * 13.15 either side of the keel over the bands, and the gut's crown is
  * under the carapace on every band's length. RESIDUAL AUDIT LINES:
  * `seam_strip_bow`, `seam_strip_mid`, `seam_strip_aft` show nothing from
  * above, under the carapace, and the export warns on each. Whether a belly

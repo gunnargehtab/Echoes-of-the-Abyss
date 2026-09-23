@@ -252,9 +252,8 @@ export const ink = {
   // 0.15 / 0.5), a photophore polished to 0.35 burning at 2.2, and
   // `edge_red`, a *lit cladding* — abyssal red at metalness 0.15 with its
   // own colour as emissive, at 0.12 on the file — so the plate rims, the
-  // tail joints and the rostrum all glow faintly (the limb claws wore it
-  // too, until #890 clad them in `abyssal_red`). One model each; the
-  // values are the export's own (#649).
+  // tail joints, the rostrum and the limb claws all glow faintly. One model
+  // each; the values are the export's own (#649).
   chitinTrench: () => clad('chitin_trench', hex('#0A0710'), 0.25, 0.38),
   plateViolet: () => clad('plate_violet', hex('#2D1B3D'), 0.22, 0.32),
   edgeRed: (intensity = 1) => {
@@ -1642,14 +1641,25 @@ export function plectrumLimb(root, { steel, black }, opts) {
  * carries one stud past the nose — is drawn back along the arm to `reach`
  * of the carapace's extent at that beam, and says nothing else; the same
  * stagger carries one stud onto the seam, and it sits there, on the run's
- * side of the shell. The photophores are `photophores` below, each with
- * its own rotation, so the no-mirrored-pair rule holds on the tap as it
- * does on a hull.
+ * side of the shell. The seat is the *built* face, not the ideal orb: the
+ * shells are low-facet (`scute(12, 6)` and `scute(8, 6)`), their faces lie
+ * inside the ellipsoid by up to a third of a stud's height, and a stud
+ * set on the ellipsoid floats (#890 round 3, F1). So each station is ray
+ * cast straight down onto the two meshes as built, and the stud is laid
+ * on the face the ray hits, its underside in that face's plane, tilted to
+ * the face's own normal — taken from the face's three vertices in world
+ * space, since a scaled orb's `face.normal` is in its own frame and the
+ * scale is not uniform. The lift along the normal moves a centre a few
+ * tenths of a metre in plan where the face slopes. The photophores are
+ * `photophores` below, each with its own rotation, so the no-mirrored-pair
+ * rule holds on the tap as it does on a hull.
  */
 export function carapaceHead(root, { skin, black, steel, crimson }, opts) {
   const { bearing: a, at, carapace, seam, spines, photophores: rank, claw } = opts;
-  add(root, 'carapace', scute(12, 6), skin, polar(a, at, carapace.y), [0, -a, 0], carapace.r);
-  add(root, 'carapace_seam', scute(8, 6), black, polar(a, seam.at, seam.y), [0, -a, 0], seam.r);
+  const shells = [
+    add(root, 'carapace', scute(12, 6), skin, polar(a, at, carapace.y), [0, -a, 0], carapace.r),
+    add(root, 'carapace_seam', scute(8, 6), black, polar(a, seam.at, seam.y), [0, -a, 0], seam.r),
+  ];
   spines.lengths.forEach((length, i) => {
     const [x, y, z] = polar(a, at + (spines.from + spines.pitch * i), spines.y);
     add(root, `spine_${i}`, spike(spines.r, length, 5), black, [x, y, z + spines.stagger[i]], [
@@ -1658,48 +1668,51 @@ export function carapaceHead(root, { skin, black, steel, crimson }, opts) {
       spines.rake,
     ]);
   });
-  const { count = 4, from, pitch, stagger, size, h, reach = 0.8 } = rank;
+  // `reach` 0.75 lands the drawn-back stud mid-facet on a 12 × 6 scute
+  // (0.8 put it on a facet corner, and a corner of it hung 0.9 m over the
+  // neighbouring face).
+  const { count = 4, from, pitch, stagger, size, h, reach = 0.75 } = rank;
   const along = new THREE.Vector3(Math.cos(a), 0, Math.sin(a));
   const across = new THREE.Vector3(-Math.sin(a), 0, Math.cos(a));
   const up = new THREE.Vector3(0, 1, 0);
   const yawQ = new THREE.Quaternion().setFromAxisAngle(up, -a);
-  // The two orbs in the arm's frame: the carapace at the origin, the seam
-  // `seam.at - at` back along it.
-  const orbs = [
-    { u0: 0, y0: carapace.y, r: carapace.r },
-    { u0: seam.at - at, y0: seam.y, r: seam.r },
-  ];
-  // Where an orb stands at a station: its height there and its normal, or
-  // nothing where the station lies outside its plan.
-  const meet = ({ u0, y0, r: [A, B, C] }, u, v) => {
-    const s = 1 - ((u - u0) / A) ** 2 - (v / C) ** 2;
-    if (s <= 0) return null;
-    const w = Math.sqrt(s);
-    return { y: y0 + B * w, n: new THREE.Vector3((u - u0) / A ** 2, w / B, v / C ** 2).normalize() };
+  const origin = new THREE.Vector3(...polar(a, at, 0));
+  // The built face under a station: the highest hit of a ray straight down
+  // onto the two shells as they stand, and that face's normal from its own
+  // three vertices. Nothing where neither shell is under the station.
+  root.updateMatrixWorld(true);
+  const caster = new THREE.Raycaster();
+  const seatAt = (u, v) => {
+    const s = origin.clone().addScaledVector(along, u).addScaledVector(across, v);
+    caster.set(new THREE.Vector3(s.x, 1e3, s.z), new THREE.Vector3(0, -1, 0));
+    const hit = caster.intersectObjects(shells, false)[0];
+    if (!hit) return null;
+    const pos = hit.object.geometry.attributes.position;
+    const [p0, p1, p2] = [hit.face.a, hit.face.b, hit.face.c].map((k) =>
+      new THREE.Vector3().fromBufferAttribute(pos, k).applyMatrix4(hit.object.matrixWorld)
+    );
+    const n = p1.sub(p0).cross(p2.sub(p0)).normalize();
+    return { point: hit.point, n: n.y < 0 ? n.negate() : n };
   };
   const spots = [];
   for (let i = 0; i < count; i++) {
     // The station in the shell's frame: along the arm, and across it from
     // the file's global-z stagger.
     const d = new THREE.Vector3(...polar(a, at + from + pitch * i, 0))
-      .sub(new THREE.Vector3(...polar(a, at, 0)))
+      .sub(origin)
       .add(new THREE.Vector3(0, 0, i % 2 ? stagger : -stagger));
     const v = d.dot(across);
     let u = d.dot(along);
-    let seat = orbs.map((o) => meet(o, u, v)).reduce((hi, m) => (m && (!hi || m.y > hi.y) ? m : hi), null);
+    let seat = seatAt(u, v);
     if (!seat) {
       const [A, , C] = carapace.r;
       const extent = reach * A * Math.sqrt(Math.max(0, 1 - (v / C) ** 2));
       u = Math.max(-extent, Math.min(extent, u));
-      seat = meet(orbs[0], u, v);
+      seat = seatAt(u, v);
     }
-    const q = yawQ.clone().multiply(new THREE.Quaternion().setFromUnitVectors(up, seat.n));
+    const q = new THREE.Quaternion().setFromUnitVectors(up, seat.n).multiply(yawQ);
     const e = new THREE.Euler().setFromQuaternion(q);
-    const p = new THREE.Vector3(...polar(a, at, 0))
-      .addScaledVector(along, u)
-      .addScaledVector(across, v)
-      .addScaledVector(up, seat.y)
-      .addScaledVector(seat.n.clone().applyQuaternion(yawQ), h / 2);
+    const p = seat.point.clone().addScaledVector(seat.n, h / 2);
     spots.push([`photophore_${i}`, p.x, p.y, p.z, [e.x, e.y, e.z]]);
   }
   photophores(root, crimson, { size, h, spots });
@@ -2741,9 +2754,7 @@ export function aimedSpikes(root, { spike: spikeMat, tip: tipMat }, { spikes: li
 /**
  * Walking limbs: the Submersible's "folded manipulator limbs" — seven,
  * four to port and three to starboard, `limb_${side}_${n}`, each a femur
- * box and a claw box in `red` — the export's `edge_red`, which glowed,
- * until #890 clad the claws in the navy's unlit `abyssal_red`: the block
- * lights photophores at rest, not claws (models-plan.md §3.2). One rule
+ * box and a claw box in `edge_red` so the claws glow faintly. One rule
  * places all seven, read off the file: the femur is `femur` [wide, thick]
  * by the limb's own `length`, at `at` in the export's frame, folded
  * `fold.femur` (pitched 0.35, rolled 1.15 outboard); the claw is `claw`
