@@ -139,7 +139,7 @@ export const ink = {
    * polished `pale_alloy` is the opposite of that, so the structures carry
    * names of their own rather than a dimming factor on the hull's: the
    * Order dulls a *metal*, where the Directorate darkens a body colour and
-   * the Consortium's `work_lamp` is a different fixture, and one factor
+   * the Consortium's turret banks its one `amber_lamp` to 2.4, and one factor
    * would be overridden three times in four. Values are the approved
    * turret's (#639) and the r184 settlement pass's (#652).
    */

@@ -168,7 +168,7 @@ export const ink = {
    * the Sentinel Turret block), and `chitin_red` at #7A1B2E is not that. A
    * name of its own rather than a dimming factor on `chitinRed`, because the
    * four navies dim differently — the Order dulls a metal, this navy darkens
-   * a body colour, the Consortium's `work_lamp` is another fixture — and one
+   * a body colour, the Consortium banks its one `amber_lamp` to 2.4 — and one
    * factor would be overridden three times in four (factions/hadron.mjs
    * makes the same argument). The approved turret's own value (#639).
    */

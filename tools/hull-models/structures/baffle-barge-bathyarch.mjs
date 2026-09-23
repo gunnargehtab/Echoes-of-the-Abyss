@@ -19,9 +19,10 @@
  * stacks, two capstans and the deck pipe; a mooring chain and anchor block
  * at each corner; three running lights a side, a dome on each pontoon, and
  * two `KHR_lights_punctual` point lights either beam. Its six materials
- * are `ink`'s hyphenated set: the Submersible's four to the value and the
- * name — `amber-running-light` on #1A1206, at the export's 2.6 — and the
- * foam and the hazard paint of its own (`bargeInk` until #888). Nothing here
+ * are `ink`'s: the hull names since #891 — `hull_black`, `iron_grey`,
+ * `oxide_rust`, `hazard_amber` and `amber_lamp` at the export's 2.6, which
+ * the export carried hyphenated at finishes of its own — and `baffle_foam`,
+ * the foam of its vanes and pads (`bargeInk` until #888). Nothing here
  * is a shape decision; where the export is odd the script is odd with it:
  *
  * - Port is −z already: `gunwale-port` at −1.4, `pad-flank-p` at −1.58,
@@ -39,7 +40,7 @@
  *   anchor blocks are all yawed 0.4 the same way, not mirrored.
  * - The flank pads are not a pair: port 1.6 by 0.9 at x 0.8, starboard
  *   1.3 by 0.8 at −1.2; the second deck pad is yawed a tenth; the third
- *   patch plate is hazard paint on the port bow, below the waterline.
+ *   patch plate is hazard amber on the port bow, below the waterline.
  * - The mast collar sits at 1.75, below the trunk's middle at 2.15.
  * - The two point lights are #F2B233 at intensity 4 and range 4, with no
  *   mesh; the port writes them back as the file has them, last.
@@ -64,12 +65,12 @@ import * as bathyarch from '../factions/bathyarch.mjs';
 const L = 180;
 const DRAWN = 8.3863;
 
-const black = bathyarch.ink.hullBlackHeavy();
-const brown = bathyarch.ink.oxideBrown();
-const grey = bathyarch.ink.ironGreyHeavy();
+const black = bathyarch.ink.hullBlack();
+const brown = bathyarch.ink.oxideRust();
+const grey = bathyarch.ink.ironGrey();
 const foam = bathyarch.ink.baffleFoam();
-const paint = bathyarch.ink.hazardPaint();
-const lampM = bathyarch.ink.runningLight(2.6);
+const paint = bathyarch.ink.hazardAmber();
+const lampM = bathyarch.ink.amberLamp(2.6);
 const put = bathyarch.inFrame;
 
 const root = new THREE.Group();
