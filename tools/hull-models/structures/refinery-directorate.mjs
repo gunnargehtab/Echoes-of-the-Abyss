@@ -14,8 +14,9 @@
  * further round than the one under it, a steel seam between them, a black
  * cap and a crimson tip light on each, and violet spikes off their flanks
  * in ranks with holes in them; the crusher house with a chitin cowl over
- * it and a lit maw at the foot of its face, three black teeth hung over
- * the maw; two
+ * it and a floodlit apron at the foot of its face — `crusher_maw`, the
+ * export's name for the slab it stood on that face — three black teeth
+ * hung over the apron's inner end; two
  * exhaust stacks with hot tips; the conveyor gantry running down to the
  * intake hopper, five nodules riding its belt, red rails, eight gantry
  * lights and three legs; the hopper with its lit mouth and five teeth
@@ -57,15 +58,20 @@
  *   onto the navy's (#3A3F4A and #1A0810). Nothing else on the file moved.
  * - `crusher_maw` (#890): the export stood the lit slab on the house's
  *   face, 0.33 into it near its +z end, edge-on to a top-down map and under
- *   the cowl's rim besides, so the audit read 0 m² of the "visible
- *   machinery light" the block lights at rest — one band, so the maw is a
- *   resting lamp and stays lit (docs/models-plan.md §3.2 rule 5). It lies
- *   down: the same 1.7 along the face and 1.3 out from it, 0.3 thick, a
- *   tongue on the ground at the face's foot, its inner edge on the face
- *   where the export's slab stood and its outer two thirds past the cowl's
- *   plan, where the teeth hang over its inner end and the belt's high end
- *   stands over the ground beside it. `diff.mjs` lists the maw and no
- *   other part.
+ *   the cowl's rim besides, so the audit read 0 m² of it. The block lights
+ *   the Refinery in one band — "floodlit working surfaces, visible
+ *   machinery light" — so the slab is a resting lamp and stays lit
+ *   (docs/models-plan.md §3.2 rule 5). It lies down: the same 1.7 along
+ *   the face and 1.3 out from it, 0.3 thick, on the ground at the face's
+ *   foot, its inner edge on the face where the export's slab stood and its
+ *   outer two thirds past the cowl's plan, the teeth over its inner end
+ *   and the belt's high end over the ground beside it. Laid flat it is one
+ *   of the block's floodlit working surfaces — the crusher's apron — and
+ *   not an aperture: a plate on the outside of a wall wearing a mouth's
+ *   name is the failure docs/style-neon-noir.md names ("The Directorate's
+ *   one area glow: a maw is not livery"), so this header calls it an apron
+ *   and the part keeps the export's name. `diff.mjs` lists `crusher_maw`
+ *   and no other part.
  *
  * THE FRAME is the export's own: an X-long file, 23.0715 units long for a
  * 280 m footprint (hull-intake's `rawSize.x` on the approved file, which
@@ -208,10 +214,10 @@ directorate.silos(
   }
 );
 
-// The crusher at the kit's defaults — this file's numbers — but its maw,
-// laid down as a lit tongue at the foot of the house's face since #890 (the
-// header), turned with the house; its three teeth hung point-down over the
-// tongue's inner end, and the two stacks.
+// The crusher at the kit's defaults — this file's numbers — but
+// `crusher_maw`, laid down as a floodlit apron at the foot of the house's
+// face since #890 (the header), turned with the house; its three teeth
+// hung point-down over the apron's inner end, and the two stacks.
 crusher(
   root,
   { house: steel, cowl: red, maw: flood },

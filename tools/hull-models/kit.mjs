@@ -1314,20 +1314,27 @@ function sharer(share) {
  * `0`; the Order's file says `_r` and `_l` and a port carries those.
  *
  * The guides stand at `sgn · guide.x` — their own station, not the lip's,
- * since #890 — on the bay floor's edge inboard of each lip, at `guide.y`
- * over the floor, from `guide.from` at `guide.pitch`. The approved
- * Directorate and Commune files set them on the lips' tops at x ±1.75,
- * z −5 to 5, where eleven of the nineteen were never seen from above: the
- * flank plates and lobes lean in over both lips (to x 1.25 on the +x
- * side), the two crane beams cross the bay at z −2.6 and 2.9, and the
- * stern carapace and pod roof the bay's last metre and a half. The guides
- * are what "dim at rest" lights, so they stay lit and move (docs/models-plan.md
- * §3.2 rule 5): to x ±0.75, the one column clear of the plates, the lobes'
- * skirts and the hull in progress on both files, and to z −4.1, −1.6, 0.9,
- * 3.4 and 5.9, the same pitch slid 0.9 forward so no station falls under a
- * beam, under the Commune's second lobe's skirt at z 2, or under its
- * fourth's at 5. A file that sets `guide` without `x` keeps its guides on
- * its lips, as the Order's does.
+ * since #890 — either side of the forge line, inboard of each lip, at
+ * `guide.y` over the floor, from `guide.from` at `guide.pitch`. The
+ * approved Directorate and Commune files set them on the lips' tops at
+ * x ±1.75, z −5 to 5, where ten of the nineteen — five on each file — were
+ * never seen from above: the flank plates and lobes lean in over both
+ * lips (to x 1.25 on the +x side), the two crane beams cross the bay at
+ * z −2.6 and 2.9, and the stern carapace and pod roof the bay's aft 1.5.
+ * The guides are carried lit as every approved Foundry lights them — the
+ * block's "Dim at rest" names no lamp, so it licenses neither them nor the
+ * forge line, and naming the Foundry's resting lamps is follow-up #893
+ * (the #890 review's ruling) — and a lit fixture the bake cannot see
+ * moves (docs/models-plan.md §3.2 rule 5): to x ±0.75, the one column
+ * clear of the plates, the lobes' skirts and the hull in progress on both
+ * files. The floor's own edges at ±1.7 are under the plates; at ±0.75 the
+ * port rank overlaps the forge line's edge by 0.05 (0.9 m), the line
+ * running 0.15 off centre, and the starboard rank clears it by 0.25. The
+ * stations z −4.1, −1.6, 0.9, 3.4 and 5.9 are the same pitch slid 0.9
+ * forward so none falls under a beam, under the Commune's second lobe's
+ * skirt at z 2, or under its fourth's at 5. A file that sets `guide`
+ * without `x` keeps its guides on its lips; the Order's passes `x` at the
+ * same station.
  */
 export function foundryBay(root, mats, opts = {}) {
   const {
@@ -1450,14 +1457,20 @@ export function gantryCrane(root, mats, opts) {
  * The Directorate's and the Commune's files carry it at one set of numbers,
  * the defaults; the Order's gate is its own.
  *
- * The glow drum is a part the block lights only when producing — it is
- * the light spilling *out of* the bay, the working band, where the resting
- * clause says "dim" — so `glow` is the navy's unlit lamp finish and the
- * drum is clad, not lit (docs/models-plan.md §3.2 rule 2; #890). It lies
- * under the mouth's ring, where the approved files put it and where the
- * top-down bake never saw it lit; a clad part under a ring is nothing the
- * audit reads. Both files that call this pass the same role, so the one
- * decision holds for both.
+ * The glow drum is the light "spilling from the bay when producing": the
+ * block names it in that band and nowhere at rest, so `glow` is the
+ * navy's rule-2 finish (asset-prompts-3d.md Block 2b: `biolight_unlit`,
+ * `bio_vein_unlit`) and the drum is clad, not lit (docs/models-plan.md
+ * §3.2 rule 2; #890). Neither navy records an unlit finish for the forge
+ * family, so the drum wears another lamp family's — a #891 question, noted
+ * in both files' headers. It lies under the mouth's ring, where the
+ * approved files put it and where the top-down bake never saw it lit; a
+ * clad part under a ring is nothing the audit reads. The forge line inside
+ * the bay (`foundryBay`) is not read the same way: it is carried lit as
+ * every approved Foundry lights it, on the #890 review's ruling that the
+ * block's "Dim at rest" names no lamp and that naming the Foundry's
+ * resting lamps is follow-up #893. Both files that call this pass the
+ * same role, so the one decision holds for both.
  */
 export function launchMouth(root, { mouth: mouthMat, glow: glowMat }, opts = {}) {
   const {

@@ -82,10 +82,14 @@
  * the Directorate's file does. The block lights "visible machinery light"
  * in one band, so the maw is a resting lamp and stays lit
  * (docs/models-plan.md §3.2 rule 5), carried up as a strip along the
- * cowl's crown — 1.0 across the ridge, its 2.2 along it, 0.3 thick, set
- * into the crown with its top 0.03 proud of the ridge and flush with the
- * cowl's forward end, over the face the blades still flank. `diff.mjs`
- * lists the maw and no other part.
+ * cowl's crown — its 2.2 along the ridge, 0.3 thick, and 1.0 across it,
+ * narrowed from the face slab's 1.2 to sit on the two crown facets either
+ * side of the ridge (their midpoints at x ±0.44, their outer vertices at
+ * ±0.85, each 15° off level) with its underside 0.02 clear of them at its
+ * edges rather than cut into them — set into the crown with its top 0.03
+ * proud of the ridge and flush with the cowl's forward end, over the face
+ * the blades still flank. That narrowing is the −13.7 % of area `diff.mjs`
+ * reads on the part; it lists `crusher_maw` and no other.
  */
 import {
   THREE,

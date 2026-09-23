@@ -59,25 +59,35 @@
  * - The seven materials are the navy's `ink`: the Bastion's five with
  *   `biolight_green` at this file's 3.0999, `forge_light`, the spore token
  *   on a #2E3A16 base at 3.8398, on the forge line, and since #890
- *   `bio_vein_unlit`, the vein family's unlit finish, on the launch glow
- *   (below). No value moved with #890: a clad part takes a name the navy
- *   already carries.
+ *   `bio_vein_unlit`, the navy's rule-2 finish (asset-prompts-3d.md Block
+ *   2b), on the launch glow (below). No value moved with #890: a clad part
+ *   takes a name the navy already carries.
  * - #890, light placement. The light audit named six lamps hidden from
- *   above on the approved binary, and the block's lighting clause — "Dim
- *   at rest; interior forge light spilling from the bay when producing" —
- *   decides each (docs/models-plan.md §3.2):
+ *   above on the approved binary. The block's lighting clause is "Dim at
+ *   rest; interior forge light spilling from the bay when producing":
+ *   "dim at rest" names no lamp, so the block licenses no resting lamp
+ *   here, and the review settled one reading for all four Foundries — the
+ *   bay guides and the forge line are carried lit as every approved
+ *   Foundry lights them (docs/models-plan.md §3.2, the one-glow-factor
+ *   paragraph after the rules), the launch glow is clad, and the block
+ *   naming its resting lamps is follow-up #893. Under that:
  *   · `bay_guide_0_0` to `_0_3` and `_1_1`, on the lips' tops under the
- *     lobes' skirts and the crane beams, are what "dim at rest" lights, so
- *     they stay lit and the whole rank moves, both lips, onto the bay
- *     floor's edges at x ±0.75 — the one column the lobes, the hull in
- *     progress and the Directorate's plates all leave clear — and to
+ *     lobes' skirts and the crane beams, stay lit and the whole rank
+ *     moves, both lips, to either side of the forge line at x ±0.75 — the
+ *     one column the lobes, the hull in progress and the Directorate's
+ *     plates all leave clear; the floor's own edges at ±1.7 are under the
+ *     lobes. The port rank overlaps the forge line's edge by 0.9 m, the
+ *     line running 0.15 off centre; the starboard rank clears it. And to
  *     z −4.1 at the same 2.5 pitch, off the beams and off the second
  *     lobe's skirt at z 2 and the fourth's at 5 (rule 5). The kit's
  *     `foundryBay` default, so the Directorate's file moves with this one.
  *   · `launch_glow`, the drum under the mouth's ring, is the forge light
- *     "spilling from the bay when producing": a later band, so it is built
- *     and clad, never lit (rule 2). The `forge_line` inside the bay is not
- *     hidden and is not touched; it is the rest band's "dim".
+ *     "spilling from the bay when producing": named in that band and
+ *     nowhere at rest, so it is built and clad, never lit (rule 2), in
+ *     `bio_vein_unlit`, the navy's rule-2 finish (asset-prompts-3d.md
+ *     Block 2b). The navy records no unlit finish for the forge family, so
+ *     the drum wears the vein family's — a #891 question. The `forge_line`
+ *     inside the bay is not hidden and is not touched.
  *   Beyond the relabel above, `diff.mjs` lists all ten guides, since the
  *   rank moves as one, the launch glow's material, and no other part.
  *
@@ -287,9 +297,9 @@ pelagia.sternPod(
 );
 
 // The bay at the kit's defaults — the Directorate file's numbers, which
-// this file carries too, five guides a lip on the floor's edges since #890
-// — and the two cranes over it, each without finials, its trolley where
-// the file has it.
+// this file carries too, five guides a lip either side of the forge line
+// since #890 — and the two cranes over it, each without finials, its
+// trolley where the file has it.
 foundryBay(root, { floor: chitin, forge, hull: steel, guide: bio });
 const crane = { steel, trolley: chitin, cable: steel, load: steel, warnlight: bio };
 gantryCrane(root, crane, {
@@ -307,8 +317,9 @@ gantryCrane(root, crane, {
 });
 
 // The launch mouth and its glow drum, at the kit's defaults, the drum clad
-// in the vein family's unlit finish — the block lights the mouth only
-// "when producing" (the header; docs/models-plan.md §3.2 rule 2).
+// in `bio_vein_unlit`, the navy's rule-2 finish — the block lights the glow
+// only "when producing" and nowhere at rest (the header;
+// docs/models-plan.md §3.2 rule 2).
 launchMouth(root, { mouth: chitin, glow: unlit });
 
 // Four lit veins climbing the flanks, two a side, each its own radius and
