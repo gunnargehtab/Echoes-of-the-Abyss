@@ -9,9 +9,9 @@
  * STYLE: "Natural or ruined form — stone, coral, kelp ... nothing
  * manufactured ... low-poly with crisp facets, at most two materials", the
  * one licensed light being `flora-biolight` at the tips. Two materials, 388
- * triangles, 64.5 m tall at its 18 m by intake's measure (`sizeM.height`)
- * and 65.3 m by the runtime's, which measures vertices (#876); 78 m raw,
- * which is the frame every figure below is in, before the root's fit.
+ * triangles, 64.5 m tall at its 18 m (intake's `sizeM.height`, and what the
+ * runtime draws since #876); 78 m raw, which is the frame every figure
+ * below is in, before the root's fit.
  *
  * A port of the approved export (docs/concept-art/models/env-kelp-cluster.glb
  * as committed before #869), part for part in its order, every number the

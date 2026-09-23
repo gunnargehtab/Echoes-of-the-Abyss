@@ -56,7 +56,8 @@ map rather than from a polygon under the Asymmetric Fidelity Law.
 An environment prop is the same path again (#869), with `seabed.mjs` where a navy's module
 would be, since a prop belongs to nobody. Scale is held on the registry `footprintM`,
 the larger horizontal axis, with no yaw and no outline, which is "The environment branch"
-below.
+below. Intake, the scripts, the renders and the runtime take that axis by one measure,
+the parts' own boxes through their transforms, which `PropSpec.footprintM` names (#876).
 
 This changes where a GLB comes from, never whether it is checked: the script's output goes
 through `hull-intake` and gates 2–5 exactly as a hand-exported one does, and a warning-free

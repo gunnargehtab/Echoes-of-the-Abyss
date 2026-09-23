@@ -1229,7 +1229,8 @@ surface — this stands on the seabed, deep underwater.
 ```
 
 The prop table — one row per asset, with the numbers intake and the registry check.
-`Footprint` is the canonical scale hull-intake sizes against (`--footprint-m`);
+`Footprint` is the canonical scale hull-intake sizes against (`--footprint-m`) and the
+runtime draws at, taken over the parts' own boxes rather than their vertices (#876);
 `Height` is the vertical silhouette the 55° camera actually reads; `Tris` is the
 per-instance budget; `Light` names the licensed world-light family, `none` meaning any
 emissive fails intake:

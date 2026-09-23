@@ -232,11 +232,10 @@ export function column(rings) {
  * port lands intake's factor on ×1.000, which is kit.mjs `fitFootprint`'s
  * argument for a structure. A root that is already true to a picometre
  * (the boulder's, whose export carried its own fit) is left exactly as it
- * is. The runtime's measure is not this one: environmentModels.ts merges
- * the parts and measures the vertices, which a rotated part's box
- * overhangs, so a prop with leaning parts draws larger than intake
- * reviewed it (the crags by 10–16 %, the boulder by 23 %); that gap
- * predates the ports and is #876.
+ * is. The runtime takes the same measure before it merges the parts
+ * (environmentModels.ts `propFootprint`). Until #876 it measured the
+ * merged vertices, which a rotated part's box overhangs, and drew the
+ * crags 10–16 % and the boulder 23 % larger than intake reviewed them.
  *
  * `ground` lifts the root first so the measure's floor sits on y = 0 —
  * `Box3`'s floor over the parts' boxes, not the lowest vertex: the two are
