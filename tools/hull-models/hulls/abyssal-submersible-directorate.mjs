@@ -14,7 +14,7 @@
  * cone of a head with a four-sided rostrum and two mandibles of different
  * lengths; four dorsal spikes alternating sides and five flank spikes,
  * three to port and two to starboard; seven walking limbs, four to port
- * and three to starboard, each a femur and a glowing claw; four tail
+ * and three to starboard, each a femur and a red claw; four tail
  * segments, each with its lit joint; a telson of three plates; and ten
  * photophores — five to port, three to starboard, one under the jaw, one
  * on the tail — the dim red resting light of a hull that idles at SIG 22.
@@ -25,16 +25,14 @@
  * part for part in its order, every number the export's own. Every part
  * comes from `factions/directorate.mjs` or is a kit box, and the model
  * carries four materials of its own name in the navy's one `ink` (#888),
- * at the export's values. Nothing here is a
- * shape decision; where the export is odd the script is odd with it: the
+ * at the export's values, and since #890 the navy's `abyssal_red` on the
+ * claws. Nothing here is a shape decision but the lamps #890 re-seated,
+ * below; where the export is odd the script is odd with it: the
  * `port` parts sit at the export's +x, which is the kit's -z once the file
  * is turned onto its length, and -z is port (#642), so the names are
  * right; `edge_red` is a cladding that glows — metalness 0.15 with its own
  * red as emissive at 0.12 — so the light audit reads the five rims, the
- * four joints, the rostrum and the seven claws as lamps, and names six of
- * the claws (all but the first starboard one) and three of the ten
- * photophores (port_5, starboard_3, the jaw) as under a quarter of a
- * square metre from above, which the approved bake never saw either;
+ * four joints and the rostrum as lamps;
  * the rims and the joints are *open* frusta, two rows at ±h/2 with the
  * smaller radius on top (`parts.mjs` reads them so first, and offers a
  * displaced 3 × 4 orb second, which the buffer is not); the head is a
@@ -42,6 +40,28 @@
  * units for 95 m — twenty-one metres to the unit — so the navy's
  * half-metre against a mirrored pair is passed to `photophoreDomes` in
  * units.
+ *
+ * THE LIGHT the top-down maps could not see. The light audit named nine
+ * lamps under a quarter of a square metre from above — six of the seven
+ * claws (all but the first starboard one) and three of the ten photophores
+ * — and the approved bake never saw them. #890 decides each against the
+ * block's resting clause, "dim red photophores" (docs/models-plan.md §3.2):
+ *
+ * - The seven claws (`limb_*_claw`) are not photophores and the clause
+ *   does not light them; they glowed only because the export's `edge_red`
+ *   glows, folded under the belly where no chart sees them. Rule 1: they
+ *   carry no lamp, and are clad in `abyssal_red` — the navy's unlit red at
+ *   `edge_red`'s own #7A1B2E, the shared kinds' — all seven under the one
+ *   rule `walkingLimbs` holds, the visible first starboard claw with the
+ *   six hidden, so the limbs stay one family.
+ * - `photophore_port_5` and `photophore_starboard_3` are the clause's and
+ *   stay lit. Each sat on the fifth plate's flank at its widest line,
+ *   under the plate's own upper surface; each is lifted onto that surface,
+ *   a few hundredths inboard and up, the same bud at the same station.
+ * - `photophore_jaw` is the clause's and stays lit. It sat under the jaw
+ *   directly beneath the rostrum's base; it is under the jaw still, moved
+ *   0.2 across the keel to the starboard side of the rostrum, between it
+ *   and the starboard mandible, where nothing stands over it.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds: drawn along Z, 4.53 units long tip to tip, hull axis at
@@ -66,6 +86,9 @@ const violet = directorate.ink.plateViolet();
 // The file's own strengths: the rims' faint 0.12, the photophores' 2.2.
 const edge = directorate.ink.edgeRed(0.12);
 const photophore = directorate.ink.photophore(2.2);
+// The claws' red, unlit: the block lights photophores at rest, not claws
+// (#890, the header).
+const clawRed = directorate.ink.abyssalRed();
 
 const root = new THREE.Group();
 root.name = 'abyssal_raider';
@@ -208,10 +231,10 @@ directorate.spikes(root, chitin, {
 
 // "Folded manipulator limbs": seven, four to port at a 0.4 pitch and three
 // to starboard at 0.44, each its own length, every one folded by the one
-// rule `walkingLimbs` holds.
+// rule `walkingLimbs` holds; the claws clad, not lit (#890, the header).
 directorate.walkingLimbs(
   root,
-  { chitin, red: edge },
+  { chitin, red: clawRed },
   {
     limbs: [
       { side: 'port', n: 1, length: 0.34, at: [0.34, 0.42, 0.85] },
@@ -273,7 +296,9 @@ bar('telson_starboard', violet, [0.26, 0.02, 0.32], [-0.18, 0.68, -1.84], [0.1, 
 
 // "Dim red photophores": ten buds, each its own size, five down the port
 // flank and three down the starboard, one under the jaw and one on the
-// tail — a pattern that repeats on neither side.
+// tail — a pattern that repeats on neither side. The last of each flank
+// rank sits on the fifth plate's upper surface and the jaw bud to
+// starboard of the rostrum, where the maps see them (#890, the header).
 directorate.photophoreDomes(root, photophore, {
   facets: [6, 4],
   tolerance: HALF_METRE,
@@ -282,11 +307,11 @@ directorate.photophoreDomes(root, photophore, {
     ['photophore_port_2', 0.03, drawn([0.66, 0.8, 0.62])],
     ['photophore_port_3', 0.035, drawn([0.68, 0.9, 0.3])],
     ['photophore_port_4', 0.028, drawn([0.62, 0.76, -0.14])],
-    ['photophore_port_5', 0.03, drawn([0.5, 0.86, -0.52])],
+    ['photophore_port_5', 0.03, drawn([0.46, 1.03, -0.52])],
     ['photophore_starboard_1', 0.03, drawn([-0.64, 0.86, 0.8])],
     ['photophore_starboard_2', 0.028, drawn([-0.66, 0.76, 0.1])],
-    ['photophore_starboard_3', 0.03, drawn([-0.52, 0.84, -0.48])],
-    ['photophore_jaw', 0.04, drawn([0.12, 0.58, 1.98])],
+    ['photophore_starboard_3', 0.03, drawn([-0.48, 1.045, -0.48])],
+    ['photophore_jaw', 0.04, drawn([-0.08, 0.58, 2])],
     ['photophore_tail', 0.032, drawn([0.02, 0.68, -2.06])],
   ],
 });

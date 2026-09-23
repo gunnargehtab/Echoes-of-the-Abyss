@@ -55,6 +55,17 @@
  *   three identical base ones, are a buffer each in the file and a geometry
  *   each here.
  *
+ * THE LIGHT, grown (#890). The light audit named no lamp on this file, but
+ * gate 3 capped its bake: 35.7 m² of lit plan on a 160 m footprint reached
+ * E 4.50 against a target of 5.48 at the ×64 ceiling, and past the ceiling
+ * the only lever is lit area, never strength (docs/graphics-standards.md
+ * §3; docs/models-plan.md §3.2). The block's resting clause is "dim red
+ * photophore constellation across the dome", so the constellation is what
+ * grows: every one of the twenty-two studs keeps its centre, its name and
+ * its material and has its radius scaled by `GROWN`, the same factor on
+ * each, so the pattern is the file's own at a larger stud. The quill's tip
+ * light is not in the clause's words and is left at the file's radius.
+ *
  * THE FRAME is the one every Z-long export here shares (hulls/light-scout-
  * pelagia.mjs, structures/sentinel-turret-directorate.mjs): the export is
  * drawn along Z, 18.0617 by 17.8315 by the measure intake takes — three's
@@ -68,8 +79,9 @@
  * margin, so intake's own rescale is exactly 1 with no rotation warning and
  * the maps stay where the approved bake put them.
  *
- * `node tools/hull-models/diff.mjs cantor-directorate f7cce0f` reads
- * "unchanged beyond the root scale and shift".
+ * `node tools/hull-models/diff.mjs cantor-directorate f7cce0f` reads the
+ * twenty-two photophores grown, and nothing else beyond the root scale and
+ * shift.
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -207,33 +219,37 @@ directorate.apexBoss(
 
 // "Dim red photophore constellation across the dome": nineteen in three
 // runs down the dome and three round the foot, an orb each of its own
-// radius. SIG 35, and the quill's tip is the brightest of them.
+// radius, every radius grown by the one factor so gate 3 reaches its target
+// under the cap (#890, the header). SIG 35, and the quill's tip is the
+// brightest of them.
+const GROWN = 1.5;
+const stud = (name, r, at) => [name, r * GROWN, drawn(at)];
 directorate.photophoreDomes(root, crimson, {
   facets: [6, 5],
   tolerance: HALF_METRE,
   domes: [
-    ['photophore_0', 0.09078078717, drawn([2.001284611, 6.985964502, 1.837688805])],
-    ['photophore_1', 0.08538412303, drawn([1.914786467, 6.692183827, 2.532231356])],
-    ['photophore_2', 0.08118531108, drawn([1.625590504, 6.451906005, 3.084321877])],
-    ['photophore_3', 0.08169715852, drawn([1.599583013, 6.006233881, 3.625416006])],
-    ['photophore_4', 0.07280962169, drawn([0.9472713914, 5.669727916, 4.149667203])],
-    ['photophore_5', 0.09718167037, drawn([0.248562712, 5.244272103, 4.558963824])],
-    ['photophore_6', 0.1082593203, drawn([-0.5297866068, 4.920685586, 4.732691058])],
-    ['photophore_7', 0.07086584717, drawn([-1.510153764, 4.545578134, 4.718194214])],
-    ['photophore_8', 0.1116483137, drawn([-4.107400971, 5.708303903, -0.9904500883])],
-    ['photophore_9', 0.09248419851, drawn([-4.254564679, 5.222079226, -1.696179372])],
-    ['photophore_10', 0.08923465014, drawn([-3.738495442, 4.961820269, -2.912264181])],
-    ['photophore_11', 0.0928516835, drawn([-3.698069757, 4.253378239, -3.48171735])],
-    ['photophore_12', 0.09674041718, drawn([-2.974549956, 3.9315604, -4.258639123])],
-    ['photophore_13', 0.09870610386, drawn([-1.914142805, 3.370215204, -4.989266])],
-    ['photophore_14', 0.1136349589, drawn([0.5334387293, 7.215821276, -2.206277901])],
-    ['photophore_15', 0.0729990676, drawn([1.03470971, 6.879713621, -2.70309593])],
-    ['photophore_16', 0.07442957163, drawn([1.670438087, 6.75908503, -2.586385275])],
-    ['photophore_17', 0.1023402661, drawn([2.490058274, 6.429079775, -2.479213995])],
-    ['photophore_18', 0.1013723612, drawn([3.441314567, 5.941913658, -2.082961256])],
-    ['photophore_base_0', 0.09, drawn([6.7, 1, 1.9])],
-    ['photophore_base_1', 0.09, drawn([-5.9, 1.75, 3.4])],
-    ['photophore_base_2', 0.09, drawn([2.2, 0.7, -6.9])],
+    stud('photophore_0', 0.09078078717, [2.001284611, 6.985964502, 1.837688805]),
+    stud('photophore_1', 0.08538412303, [1.914786467, 6.692183827, 2.532231356]),
+    stud('photophore_2', 0.08118531108, [1.625590504, 6.451906005, 3.084321877]),
+    stud('photophore_3', 0.08169715852, [1.599583013, 6.006233881, 3.625416006]),
+    stud('photophore_4', 0.07280962169, [0.9472713914, 5.669727916, 4.149667203]),
+    stud('photophore_5', 0.09718167037, [0.248562712, 5.244272103, 4.558963824]),
+    stud('photophore_6', 0.1082593203, [-0.5297866068, 4.920685586, 4.732691058]),
+    stud('photophore_7', 0.07086584717, [-1.510153764, 4.545578134, 4.718194214]),
+    stud('photophore_8', 0.1116483137, [-4.107400971, 5.708303903, -0.9904500883]),
+    stud('photophore_9', 0.09248419851, [-4.254564679, 5.222079226, -1.696179372]),
+    stud('photophore_10', 0.08923465014, [-3.738495442, 4.961820269, -2.912264181]),
+    stud('photophore_11', 0.0928516835, [-3.698069757, 4.253378239, -3.48171735]),
+    stud('photophore_12', 0.09674041718, [-2.974549956, 3.9315604, -4.258639123]),
+    stud('photophore_13', 0.09870610386, [-1.914142805, 3.370215204, -4.989266]),
+    stud('photophore_14', 0.1136349589, [0.5334387293, 7.215821276, -2.206277901]),
+    stud('photophore_15', 0.0729990676, [1.03470971, 6.879713621, -2.70309593]),
+    stud('photophore_16', 0.07442957163, [1.670438087, 6.75908503, -2.586385275]),
+    stud('photophore_17', 0.1023402661, [2.490058274, 6.429079775, -2.479213995]),
+    stud('photophore_18', 0.1013723612, [3.441314567, 5.941913658, -2.082961256]),
+    stud('photophore_base_0', 0.09, [6.7, 1, 1.9]),
+    stud('photophore_base_1', 0.09, [-5.9, 1.75, 3.4]),
+    stud('photophore_base_2', 0.09, [2.2, 0.7, -6.9]),
   ],
 });
 

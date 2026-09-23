@@ -29,12 +29,19 @@
  *   figure in the roster, and the hull spends it on twenty-one plate-edge
  *   photophores, five dorsal marks, the gullet and the hopper throat. They lie
  *   flat on upward faces, because the maps are top-down and a lamp on a flank
- *   is a lamp gate 3 cannot see — with three exceptions the approved model
- *   made and this script keeps: the last lamp of plate 0's starboard rank, of
- *   its port rank, and of plate 1's starboard rank sit under the raised ridge of
- *   the plate ahead, and the export warns on each. The approved bake never
- *   saw them either, and a rank re-laid to clear three lamps moves twenty-one
- *   (#630 F1). The gullet is the one lamp moved, and it is declared below.
+ *   is a lamp gate 3 cannot see. The approved model made three exceptions —
+ *   the last lamp of plate 0's starboard rank, of its port rank, and of plate
+ *   1's starboard rank (`photophore_s_02`, `_p_01`, `_s_12`) sat under the
+ *   raised ridge of the plate ahead, the export warned on each, and the
+ *   approved bake never saw them — and until #890 this script kept them,
+ *   since a rank re-laid to clear three lamps moves twenty-one (#630 F1).
+ *   They are the block's resting clause — "rows of photophores along every
+ *   plate edge" — so #890 keeps all three lit and moves only them, by a rule
+ *   `plateEdgePhotophores` now holds rather than by hand: a lamp whose station
+ *   falls under the ridge ahead rides on that ridge's crown at its own beam
+ *   (docs/models-plan.md §3.2 rule 5). The other eighteen do not move, and the
+ *   three keep their names, size and material. The gullet is the other lamp
+ *   moved, and it is declared below.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -184,11 +191,11 @@ directorate.hopper(root, { black, steel, gullet }, { x: -6, y: 8, z: 2 });
 // "Rows of photophores along every plate edge": three a plate to starboard on
 // all five, two to port on every other one. Twenty-one lights that follow a
 // rule and never once answer each other across the keel. The rule is the
-// module's own and the approved model's exactly, and it leaves
-// photophore_s_02, _p_01 and _s_12 under the ridge of the plate ahead: the
-// export warns on those three, and they stay, because the approved bake never
-// saw them either and a rank re-laid to clear them is a shape decision
-// (#630 F1).
+// module's own and the approved model's exactly, but for `ridge`: the rank
+// as laid left photophore_s_02, _p_01 and _s_12 under the ridge of the plate
+// ahead, and with the ridge given the builder seats those three on its crown
+// instead, where the maps see them (#890, the header). The other eighteen
+// are where the file has them.
 directorate.plateEdgePhotophores(root, crimson, {
   segments: SEGMENTS,
   starboard: { count: 3, start: -0.5, pitch: 0.45 },
@@ -196,6 +203,7 @@ directorate.plateEdgePhotophores(root, crimson, {
   y: 0.72,
   z: 0.66,
   size: 1.4,
+  ridge: directorate.TERGITE_RIDGE,
 });
 
 // Five marks down the spine, one a plate, side alternating with the tergite

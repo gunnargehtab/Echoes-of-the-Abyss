@@ -17,8 +17,22 @@
  * Directorate's ink: trench black for the rock, weld steel for the pipework,
  * a red platform, crimson lamps and the gullet glow for the floods. What is
  * the Directorate's is the exchanger: a carapace alternating violet and red
- * arm to arm, its seam, three spines, four photophores and a claw, from
+ * arm to arm, its seam, three spines, four photophore studs and a claw, from
  * `factions/directorate.mjs`.
+ *
+ * THE LIGHT the top-down maps could not see. The export lit the sixteen
+ * exchanger photophores, and set fourteen of them inside their carapace
+ * orbs — the light audit named all fourteen at nothing from above, and only
+ * `photophore_3` on the first two arms ever showed. The block's resting
+ * clause lights three things — "the vent's ember mouth under the manifold,
+ * floodlit working platforms around the wellhead, lamps along every pipe
+ * run" — and the studs on the exchangers are none of them: the pipe runs
+ * end at the risers, and the pipe lamps are the kit's. A lamp the clause
+ * does not name is not lit (docs/models-plan.md §3.2 rule 1), so under
+ * #890 all sixteen are built where the file has them and clad in
+ * `biolight_unlit`, the navy's unlit finish for the photophore family —
+ * including the two that showed, so the four exchangers stay one rule.
+ * Nothing moved; the navy still reads from the carapace, spines and claws.
  *
  * The frame is the approved export's own: drawn 142.84 across by the measure
  * the bake takes — a yawed orb measures wider than its vertices (kit.mjs
@@ -49,6 +63,9 @@ const black = directorate.ink.trenchBlack();
 const steel = directorate.ink.weldSteel();
 const crimson = directorate.ink.biolightCrimson();
 const gullet = directorate.ink.gulletGlow();
+// The exchanger studs' finish: unlit, the block's clause not naming them
+// (#890, the header).
+const unlit = directorate.ink.biolightUnlit();
 
 const root = new THREE.Group();
 root.name = 'vent_tap_directorate';
@@ -57,7 +74,8 @@ root.name = 'vent_tap_directorate';
 ventWellhead(root, { rock: black, mouth: gullet, steel });
 
 // Four arms on the diagonals, each with a carapace on its end — violet on the
-// even arms, red on the odd, as the tergites alternate along a hull.
+// even arms, red on the odd, as the tergites alternate along a hull; the
+// carapace's photophore studs clad, not lit (#890, the header).
 radialSeries({ count: 4, phase: Math.PI / 4 }, (a, i) => {
   ventDrawArm(
     root,
@@ -66,7 +84,7 @@ radialSeries({ count: 4, phase: Math.PI / 4 }, (a, i) => {
   );
   directorate.carapaceHead(
     root,
-    { skin: i % 2 ? red : violet, black, steel, crimson },
+    { skin: i % 2 ? red : violet, black, steel, crimson: unlit },
     {
       bearing: a,
       at: 74,

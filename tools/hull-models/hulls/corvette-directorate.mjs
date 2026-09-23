@@ -30,10 +30,22 @@
  * turned onto its length, and -z is port (#642), so the names are right;
  * the telson's blades are one buffer each in the file and share one
  * geometry here, and the darts' sockets, the ridges and the tail lips are
- * a buffer each; and the photophore marks stand on the flanks and the tail
- * mark on the last plate's side, where the top-down maps see under a
- * quarter of a square metre of each — the light audit names all nine, and
- * the approved bake never saw them either.
+ * a buffer each.
+ *
+ * THE LIGHT the top-down maps could not see. The export stood its eight
+ * hull-line marks on the flanks, a quarter-unit oblong each at 7.6 and
+ * 6.2, and its tail mark on the last plate's aft end under the telson
+ * blades' pitched tops: all nine under a quarter of a square metre from
+ * above, which the light audit named and the approved bake never saw.
+ * They are the block's whole resting light — "dim accent running lights
+ * along the hull line" — so #890 keeps every one lit and re-seats it on an
+ * upward face (docs/models-plan.md §3.2 rule 5), name, material and count
+ * unchanged: the eight hull-line marks are pads 0.9 across and 1.6 along,
+ * each on the top face of its own plate at that plate's edge — the deck
+ * edge rather than the flank, still along the hull line, five to port and
+ * three to starboard at the stations the file gave them — and the tail
+ * mark is a pad 1.2 square on the last tail plate's top at its centre, 2.3
+ * forward of where the cube was and clear of the blades.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds: drawn along Z, 94.31 units long tip to tip, hull axis at
@@ -228,19 +240,27 @@ directorate.spikes(root, red, {
   ],
 });
 
-// "Dim accent running lights along the hull line": five marks down the
-// port flank at 7.6, three down the starboard at 6.2, and one on the tail
-// — a pattern that repeats on neither side.
+// "Dim accent running lights along the hull line": five marks along the
+// port deck edge, three along the starboard, each a pad seated on the top
+// face of its own plate at the edge — the plate's top at that edge, with
+// its roll (#890, the header) — and one on the tail plate's top, ahead of
+// the telson blades; a pattern that repeats on neither side.
 directorate.photophoreMarks(root, photophore, {
-  size: [0.26, 0.26, 0.7],
+  size: [0.9, 0.25, 1.6],
   marks: [
-    ...[22, 12, 3, -9, -20].map((z, k) => [`photophore_p${k}`, drawn([5.18, 7.6, z])]),
-    ...[17, 1, -15].map((z, k) => [`photophore_s${k}`, drawn([-5.18, 6.2, z])]),
+    ['photophore_p0', drawn([4, 8.6, 22])],
+    ['photophore_p1', drawn([4.6, 8.95, 12])],
+    ['photophore_p2', drawn([4.3, 9.15, 3])],
+    ['photophore_p3', drawn([4.5, 8.37, -9])],
+    ['photophore_p4', drawn([3.2, 7.8, -20])],
+    ['photophore_s0', drawn([-4, 8.47, 17])],
+    ['photophore_s1', drawn([-4.7, 8.9, 1])],
+    ['photophore_s2', drawn([-3.7, 8.49, -15])],
   ],
 });
 directorate.photophoreMarks(root, photophore, {
-  size: [0.3, 0.3, 0.3],
-  marks: [['photophore_tail', drawn([0.35, 4.9, -47.8])]],
+  size: [1.2, 0.25, 1.2],
+  marks: [['photophore_tail', drawn([0.35, 4.78, -45.5])]],
 });
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
