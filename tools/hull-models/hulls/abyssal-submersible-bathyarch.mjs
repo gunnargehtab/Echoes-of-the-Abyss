@@ -25,8 +25,7 @@
  * section — its finishes `ink`'s hyphenated set, named as the file names
  * them, the running light at the export's 2.6 — or is a kit box (the
  * finishes were `submersibleInk` until #888). Nothing here is a shape
- * decision; where the
- * export is odd the script is odd with it:
+ * decision; where the export is odd the script is odd with it:
  *
  * - The sides are already nautical: `-port` at −z and `-stb` at +z (#642),
  *   so every name stays. The ballast tanks, dive planes, skids and running

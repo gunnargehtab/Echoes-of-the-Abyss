@@ -24,9 +24,13 @@
  * five materials are `ink`'s — the four claddings and `amber_lamp` at the
  * export's 3.5. They were `scoutInk`'s until #888, the Light Scout's
  * authoring pass, whose `amber_lamp` was the token through and through;
- * the base is the navy's near-black now and the 3.5 stays, the light
- * itself unmoved. Nothing here is a shape decision; where the export is
- * odd the script is odd with it:
+ * the base is the navy's near-black now and the 3.5 stays, the emissive
+ * unmoved. What moved is the base's value: the forge floor and the bay
+ * strips bake near-black rather than as the brightest cladding on the
+ * hall, so the bay reads "Dim at rest" as the block asks, and the name and
+ * base are now the Slipway's, whose gantry work lights carry both (the
+ * note on `ink.amberLamp`). Nothing here is a shape decision; where the
+ * export is odd the script is odd with it:
  *
  * - Port is the export's +x, which `drawn` lands on −z (#642): every `_p`
  *   — pylons, ribs, patches, bay walls, aprons, rails, legs, tanks, the

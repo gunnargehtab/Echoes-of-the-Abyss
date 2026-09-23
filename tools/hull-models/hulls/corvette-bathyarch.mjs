@@ -57,7 +57,8 @@ const DATUM = 4.5;
 
 // `scoutInk` until #888: the same four claddings, and an `amber_lamp` that
 // was the token through and through. The base is the navy's near-black now
-// and the export's 3.5 stays, the light itself unmoved.
+// and the export's 3.5 stays, the emissive unmoved; the base's value did
+// move, and the lamps read dark when SIG dims them (`ink.amberLamp`).
 const black = bathyarch.ink.hullBlack();
 const grey = bathyarch.ink.ironGrey();
 const rust = bathyarch.ink.oxideRust();
