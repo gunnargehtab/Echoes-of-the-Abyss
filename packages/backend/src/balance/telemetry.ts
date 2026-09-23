@@ -46,7 +46,7 @@ import {
   type Faction,
   type FaunaSpecies,
 } from '@echoes/shared';
-import { emptyOrdnanceWantTally, type OrdnanceWantTally } from '../ai/types.ts';
+import { emptyWantTally, type WantTally } from '../ai/types.ts';
 
 /** How often a series is sampled, in seconds of simulated time. */
 export const SAMPLE_INTERVAL_S = 10;
@@ -230,7 +230,13 @@ export interface PlayerTelemetry {
    * Directorate by the yard, the Commune by the purse. One zero, three
    * remedies, and before this there was no column that could tell them apart.
    */
-  ordnanceWant: OrdnanceWantTally;
+  ordnanceWant: WantTally;
+  /**
+   * Why this navy's carrier was or was not bought (#839), on `ordnanceWant`'s
+   * terms and through the same channel: from the commander, at the end of the
+   * match, and all zeroes for a seat nobody instrumented.
+   */
+  carrierWant: WantTally;
   /**
    * Gross income: every rise in the stockpile, summed.
    *
@@ -404,7 +410,8 @@ export class MatchTelemetry {
         crystalEarned: 0,
         biomassEarned: 0,
         eliminatedTick: null,
-        ordnanceWant: emptyOrdnanceWantTally(),
+        ordnanceWant: emptyWantTally(),
+        carrierWant: emptyWantTally(),
       });
       this.lastUnits.set(slot, new Map());
       this.lastStructures.set(slot, new Map());
@@ -674,16 +681,19 @@ export class MatchTelemetry {
    *
    * A slot with no entry gets an empty tally, which is what a human seat would
    * produce — a player is not instrumented and has no ordnance want to block.
+   * `carrierWant` is the same channel a second time (#839).
    */
   finish(
     finalTick: number,
     winnerSlot: number | null,
     timedOut: boolean,
     faunaComplement: readonly FaunaComplement[] = [],
-    ordnanceWant: ReadonlyMap<number, OrdnanceWantTally> = new Map()
+    ordnanceWant: ReadonlyMap<number, WantTally> = new Map(),
+    carrierWant: ReadonlyMap<number, WantTally> = new Map()
   ): MatchTelemetryResult {
     for (const player of this.players.values()) {
-      player.ordnanceWant = ordnanceWant.get(player.slot) ?? emptyOrdnanceWantTally();
+      player.ordnanceWant = ordnanceWant.get(player.slot) ?? emptyWantTally();
+      player.carrierWant = carrierWant.get(player.slot) ?? emptyWantTally();
     }
     return {
       seed: this.seed,

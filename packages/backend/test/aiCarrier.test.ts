@@ -47,7 +47,12 @@ import {
 import { AiCommander } from '../src/ai/commander.ts';
 import { DOCTRINE } from '../src/ai/doctrine.ts';
 import { AiSeat, briefingFor } from '../src/ai/seat.ts';
-import type { AiBriefing, AiCommand } from '../src/ai/types.ts';
+import {
+  emptyWantTally,
+  type AiBriefing,
+  type AiCommand,
+  type WantTally,
+} from '../src/ai/types.ts';
 import { Flightdeck, Heading, Position, Weapon } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
@@ -500,6 +505,72 @@ describe('the commander fields its navy carrier', () => {
         lengths[faction],
         `${Faction[faction]}'s cycle is the length it was`
       );
+    }
+  });
+});
+
+describe('the commander counts why it did or did not buy its carrier', () => {
+  // #839's third bullet. The build column can say a navy never fielded its
+  // deck; this says which gate shut, one reason per observation, and the five
+  // sum to `reached` (docs/invariants.md row 14). Each case is one observation
+  // on a fresh commander — a Veteran decides on its first — so the tally after
+  // it is exactly one reason, and a case that never reached the want at all
+  // fails on `reached` rather than passing as a zero.
+  it('counts one reason for every observation that reaches the carrier want', () => {
+    for (const faction of NAVIES) {
+      const name = Faction[faction];
+      const carrier = carrierOf(faction);
+      const brief = briefing(faction);
+      const home = brief.spawns[brief.slot]!;
+      const tallyAfter = (overrides: Partial<EchoSnapshot>): WantTally => {
+        const commander = new AiCommander(brief);
+        commander.observe(snapshot(brief, 6000, overrides));
+        return commander.carrierWant;
+      };
+      const only = (reason: Exclude<keyof WantTally, 'reached'>): WantTally => ({
+        ...emptyWantTally(),
+        reached: 1,
+        [reason]: 1,
+      });
+      const slipway = (
+        over: Partial<EchoSnapshot['structures'][number]>
+      ): Partial<EchoSnapshot> => ({
+        structures: [
+          structure(20, StructureKind.Bastion, home),
+          structure(21, StructureKind.Foundry, { x: home.x + 200, y: home.y }),
+          structure(22, StructureKind.Refinery, { x: home.x - 200, y: home.y }),
+          { ...structure(23, StructureKind.Slipway, { x: home.x - 400, y: home.y }), ...over },
+        ],
+      });
+
+      // Every case but the purchase holds an empty purse, so no want written
+      // ahead of the carrier's can spend and return before it is read — the
+      // trap `purseFor` exists for, from the other side.
+      const cases: [string, Partial<EchoSnapshot>, WantTally][] = [
+        ['the price in the bank', purseFor(carrier), only('bought')],
+        ['an empty purse', {}, only('cannotAfford')],
+        ['the Slipway still rising', slipway({ buildProgress: 0.5 }), only('noYard')],
+        // `freeYard` reads a queue's length and not what is on it.
+        [
+          'the Slipway two deep',
+          slipway({ queue: [UnitKind.Corvette, UnitKind.Corvette] }),
+          only('noYard'),
+        ],
+        ['an army short of the escort', force(brief, { escort: false }), only('notEscorted')],
+        ['a deck already afloat', force(brief, { extra: [carrier] }), only('alreadyHas')],
+        // The order, held: a navy holding its deck while its army is below the
+        // floor has a satisfied want, not a blocked one. Asking the escort
+        // first files this under `notEscorted`, which is the fault the note on
+        // the ordnance branch measured.
+        [
+          'a deck afloat and the army short of the escort',
+          force(brief, { escort: false, extra: [carrier] }),
+          only('alreadyHas'),
+        ],
+      ];
+      for (const [label, overrides, expected] of cases) {
+        assert.deepEqual(tallyAfter(overrides), expected, `${name}, ${label}`);
+      }
     }
   });
 });

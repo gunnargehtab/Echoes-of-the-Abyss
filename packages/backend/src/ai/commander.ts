@@ -86,8 +86,8 @@ import {
   type Doctrine,
   type ExposureResponse,
 } from './doctrine.ts';
-import { emptyOrdnanceWantTally } from './types.ts';
-import type { AiBriefing, AiCommand, AiPlayer, OrdnanceWantTally } from './types.ts';
+import { emptyWantTally } from './types.ts';
+import type { AiBriefing, AiCommand, AiPlayer, WantTally } from './types.ts';
 
 /**
  * Ranges the commander reasons with, in metres. TUNABLE throughout — these are
@@ -720,8 +720,11 @@ const SIEGE_STANDOFF_M = 180;
  *
  * All four are behind the rung (`PRODUCIBLE[Slipway]`), so `freeYard` supplies
  * that half of the gate and this table does not restate it.
+ *
+ * Exported for the report's carrier block-reason table, on `OWN_ORDNANCE`'s
+ * terms: that table names the hull each navy's column is about.
  */
-const OWN_CARRIER: Record<Faction, UnitKind> = {
+export const OWN_CARRIER: Record<Faction, UnitKind> = {
   [Faction.Bathyarch]: UnitKind.Gantry,
   [Faction.Pelagia]: UnitKind.Rootstock,
   [Faction.Directorate]: UnitKind.Succentor,
@@ -1244,7 +1247,13 @@ export class AiCommander implements AiPlayer {
    * balance harness, not state: no branch here consults it, so deleting every
    * increment would change no command this commander issues.
    */
-  private readonly ordnanceWantTally: OrdnanceWantTally = emptyOrdnanceWantTally();
+  private readonly ordnanceWantTally: WantTally = emptyWantTally();
+  /**
+   * Why the carrier want came to nothing, counted (#839), on the ordnance
+   * tally's terms: written only in the carrier branch of `commandProduction`,
+   * read by nothing in the simulation.
+   */
+  private readonly carrierWantTally: WantTally = emptyWantTally();
   /** The transport plan, if the navy has a transport afloat (see `LIFT`). */
   private lift: { transportId: number; phase: 'loading' | 'sailing'; sinceTick: number } | null =
     null;
@@ -1368,8 +1377,13 @@ export class AiCommander implements AiPlayer {
    * the end of a run and by the tests that hold the partition; nothing in the
    * simulation reads it at all.
    */
-  get ordnanceWant(): OrdnanceWantTally {
+  get ordnanceWant(): WantTally {
     return { ...this.ordnanceWantTally };
+  }
+
+  /** The carrier want's block reasons so far this match (#839), as a copy. */
+  get carrierWant(): WantTally {
+    return { ...this.carrierWantTally };
   }
 
   observe(snapshot: EchoSnapshot): AiCommand[] {
@@ -2748,7 +2762,7 @@ export class AiCommander implements AiPlayer {
     // different causes that no other column in the report can tell apart, and
     // the one that turned out to be true for the Order (the escort gate, 82% of
     // the observations that reached this want) is the one nothing could see.
-    // `OrdnanceWantTally` carries the rest of that argument. The tallies are
+    // `WantTally` carries the rest of that argument. The tallies are
     // writes to a plain object; they are not on the 60 Hz step path at all —
     // `commandProduction` runs on the Echo tick, behind `observe`.
     //
@@ -2984,18 +2998,33 @@ export class AiCommander implements AiPlayer {
     // 340 nodule Rootstock before the 360 nodule Bower and buys it first.
     // Whether "below" meant this position or the order of purchase is asked
     // on #839.
+    //
+    // Counted on the ordnance want's terms, so the report can say which gate
+    // shut when a navy fields no deck: five reasons that sum to `reached`, and
+    // `alreadyHas` asked before the escort, for the reason the note on the
+    // ordnance branch measured. The gates are the same conjunction in the same
+    // order; only `decks` is read earlier, so the count has it.
     const ownCarrier = OWN_CARRIER[this.briefing.faction];
+    const decks =
+      snapshot.units.reduce((n, u) => n + (u.kind === ownCarrier ? 1 : 0), 0) +
+      queuedOf(ownCarrier);
+    const deckTally = this.carrierWantTally;
+    deckTally.reached++;
+    if (decks >= 1) deckTally.alreadyHas++;
+    else if (!escorted) deckTally.notEscorted++;
     if (escorted) {
-      const decks =
-        snapshot.units.reduce((n, u) => n + (u.kind === ownCarrier ? 1 : 0), 0) +
-        queuedOf(ownCarrier);
       if (decks < 1) {
         const yard = this.freeYard(snapshot.structures, ownCarrier);
+        if (yard === null) deckTally.noYard++;
         if (yard !== null) {
           if (this.affordUnit(ownCarrier, purse)) {
+            deckTally.bought++;
             buy(ownCarrier, yard);
             return;
           }
+          // A bid saves; it never buys, so this is counted once per
+          // observation that could not pay, as the ordnance want counts it.
+          deckTally.cannotAfford++;
           bids.push({ kind: ownCarrier, windowS: RUNG.SAVE_S });
         }
       }
