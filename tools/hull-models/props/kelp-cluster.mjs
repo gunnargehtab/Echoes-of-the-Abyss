@@ -9,13 +9,13 @@
  * STYLE: "Natural or ruined form — stone, coral, kelp ... nothing
  * manufactured ... low-poly with crisp facets, at most two materials", the
  * one licensed light being `flora-biolight` at the tips. Two materials, 388
- * triangles, 64.5 m tall at its 18 m (intake's `sizeM.height`, and what the
+ * triangles, 64.6 m tall at its 18 m (intake's `sizeM.height`, and what the
  * runtime draws since #876); 78 m raw, which is the frame every figure
  * below is in, before the root's fit.
  *
  * A port of the approved export (docs/concept-art/models/env-kelp-cluster.glb
  * as committed before #869), part for part in its order, every number the
- * export's own. What the file is made of, in `kelp` (two-sided, as the file
+ * export's own but the tips' size (#890, below). What the file is made of, in `kelp` (two-sided, as the file
  * flags it — a frond is seen from both faces): two holdfasts, icosahedra
  * under scale triples (seabed.mjs `ico`), 4.86 by 2.232 by 3.96 and 2.64 by
  * 1.21 by 2.2, each yawed on its node and sitting with its lowest vertex on
@@ -29,11 +29,29 @@
  * `faceted`; and twelve blades, each five points cut as a quad fanned from
  * its first corner and a tip triangle off the quad's far edge, a leaf 2 to
  * 10 m long standing off a stipe. Then in `biolight`, three tips: three's
- * tetrahedron at 0.42 (`tetra`), one at the head of each of the three
+ * tetrahedron (`tetra`, at `TIP`), one at the head of each of the three
  * tallest stipes, at 78, 70 and 63 m on the stipe's own axis — the axis the
  * generator bent the stipe along and jittered the rings about, so the tip
  * sits a few centimetres off the ring's centroid and its position is the
  * file's own number.
+ *
+ * The light audit (#890, kit.mjs `lightAudit`). Block 4 licenses
+ * `flora-biolight` at the "tip points" and docs/style-neon-noir.md "World
+ * light" has them as "dim tips on kelp stalks — points and short lines", so
+ * all three tips stay lit and there is no lamp to clad. The export's tips
+ * were tetrahedra at 0.42, and at that size a tip is a sub-cell dot: a
+ * tetrahedron's plan is a square of side 1.155 r, 0.16 m² true after the
+ * root's ×0.823, and the audit's four-cells-a-metre raster read the three
+ * at 0.13, 0.25 and 0.06 m² — biolight_2 clearing the 0.25 m² floor by
+ * where the grid fell on it, not by its size. `TIP` is 0.8: a tip is then
+ * 0.58 m² true and reads 0.56, 0.75 and 0.56. All three grow together
+ * because they are one fixture at one size, as the generator made them; a
+ * set at two sizes would be a shape decision nothing in the row licenses.
+ * A tip at 0.8 is 1.07 m on an edge in the file, on a stipe head half a
+ * metre across and 64 m up — a point still, at the row's "tip points" and
+ * nowhere near a canopy. Nothing else moved: the tips sit inside the plan
+ * the stipes and blades draw, so `DRAWN` and the root's factor are the
+ * export's, and the height at 18 m is 64.6 m for 64.5.
  *
  * `biolight` is `flora-biolight` #2E8C74 at `KHR_materials_emissive_strength`
  * 0.55 over a #0B1D19 base at roughness 1 (seabed.mjs `ground.biolight`),
@@ -52,13 +70,16 @@
  * that one factor and nothing else (seabed.mjs `stand`, with no lift, since
  * the file's root has none). `diff.mjs env-kelp-cluster 1856135` — the
  * pre-port binary, which is also the default rev — divides the factor out
- * and lists nothing else.
+ * and lists the three tips, grown as above, and nothing else.
  */
 import { THREE, add, faceted, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
 
 const FOOTPRINT = 18;
 const DRAWN = 21.8766;
+// A tip's tetrahedron, at the radius three takes: 0.42 in the export, 0.8
+// since #890 so that each shows over the audit's 0.25 m² from above.
+const TIP = 0.8;
 
 const kelp = seabed.ground.kelp();
 const biolight = seabed.ground.biolight();
@@ -422,7 +443,7 @@ const TIPS = [
   [8.09186, 70, 3.12847],
   [11.26238, 63, -0.07226],
 ];
-TIPS.forEach((at, i) => add(cluster, `biolight_${i + 1}`, seabed.tetra(0.42), biolight, at));
+TIPS.forEach((at, i) => add(cluster, `biolight_${i + 1}`, seabed.tetra(TIP), biolight, at));
 
 // Held at 18 m by intake's measure; the root is otherwise the file's identity.
 const { drawn, k } = seabed.stand(cluster, FOOTPRINT, { drawn: DRAWN });

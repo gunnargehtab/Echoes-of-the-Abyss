@@ -16,7 +16,7 @@
  *
  * A port of the approved export (docs/concept-art/models/env-vent-chimney.glb
  * as committed before #869), part for part in its order, every number the
- * export's own. Five parts on identity nodes under an identity root, every
+ * export's own but the cracks' feet (#890, below). Five parts on identity nodes under an identity root, every
  * placement baked into its buffer, and not one buffer a three constructor
  * accounts for: each is a polyhedron the generator stitched by hand (kit.mjs
  * `faceted`). What the file is made of — the `stack` in `basalt`, the vent
@@ -28,8 +28,9 @@
  * the same basalt, the same tube on six seven-cornered rings, each rooted
  * inside the stack's wall and reaching out and up to a lip and throat of
  * its own (15, 18 and 23 m). And the `ember_cracks` in `ember`: four
- * separate two-triangle quads stood on the lip, the magma glass the row's
- * light comes from, single-sided as the file flags them. The stitch on all
+ * separate two-triangle quads hung from the lip's inner face into the
+ * mouth, the magma glass the row's light comes from, single-sided as the
+ * file flags them. The stitch on all
  * four basalt parts is seabed.mjs `column`'s band with no foot cap, turned
  * round: every ring here runs from +x toward +z, clockwise seen from
  * above, where the spire's run the other way, so the band that faces the
@@ -50,8 +51,25 @@
  * lip against the stack's far wall, and baked at ×0.995 with a rescale
  * warning, so the root carries that one factor (seabed.mjs `stand`).
  * `diff.mjs env-vent-chimney 7445218` — the pre-port binary — divides it
- * out and lists one thing else: every part with all of its triangles in the
- * opposite order, which is the #878 fix and nothing moved.
+ * out and lists two things else: every part with all of its triangles in
+ * the opposite order, which is the #878 fix and nothing moved, and
+ * `ember_cracks` moved, which is #890's.
+ *
+ * The light audit (#890, kit.mjs `lightAudit`). Block 4 licenses
+ * `vent-ember` "tip only" and docs/style-neon-noir.md "World light" has it
+ * as "sparse ember points", so the cracks stay lit, in the mouth, and
+ * nothing is clad. The export stood them near-vertical on the funnel from
+ * the lip down to the throat, flush with its wall — heads 1.2 to 1.5 m from
+ * the mouth's centre at y 34.3 to 34.5, feet 0.9 to 1.1 m out at y 33.1, on
+ * a wall that drops 2.3 m over half a metre — so from above the wall
+ * covered them but for 0.19 m². Each quad keeps its head where the file
+ * put it and hinges inward: its two feet are drawn to 0.7 m from the
+ * mouth's centre on their own bearings, at y 33.5 (`MOUTH`, `FOOT`), which
+ * tilts the four to 51–59° from horizontal, facing into the mouth and up —
+ * the fan's winding is unchanged and every normal now carries 0.45 to 0.62
+ * of world y. They read 1.0 m² from above and still stand in the throat:
+ * the feet overhang the throat ring's 0.8 to 1.0 m radius by a hand and sit
+ * 0.9 m above it, and the mouth stays open between them.
  */
 import { THREE, add, faceted, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
@@ -97,8 +115,8 @@ const ringsOf = (table, n) =>
  * (q0, q3, q2) — seabed.mjs `fan`'s rule. The file carried the other
  * winding on all four, each quad facing into the lip's wall, which is why
  * intake's single-sided bake saw no ember from above (#878). The kit's
- * light audit reads plan area, not winding (glb.mjs `topDown`), so its
- * 0.2 m² warning on these near-vertical quads is the same before and after.
+ * light audit reads plan area, not winding (glb.mjs `topDown`): its floor
+ * is what the feet below are drawn in for (#890).
  */
 const crack = (q) => seabed.fan([q]);
 
@@ -406,9 +424,10 @@ add(chimney, 'spout_1', faceted(SPOUT_1, tube(ringsOf(SPOUT_1, 7))), basalt);
 add(chimney, 'spout_2', faceted(SPOUT_2, tube(ringsOf(SPOUT_2, 7))), basalt);
 add(chimney, 'spout_3', faceted(SPOUT_3, tube(ringsOf(SPOUT_3, 7))), basalt);
 
-// The ember cracks: four quads a metre and a half tall stood in the mouth
-// between the lip and the throat, y = 33.1 to 34.5, each its own four
-// corners in the file's order.
+// The ember cracks as the file has them: four quads a metre and a half tall
+// stood in the mouth between the lip and the throat, y = 33.1 to 34.5, each
+// its own four corners in the file's order — the two at the head first,
+// then the two at the foot. The heads are kept; the feet are redrawn below.
 const EMBER_CRACKS = [
   // crack 0
   [4.3213, 34.3108, 0.39006],
@@ -432,11 +451,23 @@ const EMBER_CRACKS = [
   [3.58838, 33.13584, -0.94329],
 ];
 
+// Where the feet go (#890, the header's last paragraph): each on the bearing
+// the file gave it from the mouth's centre — the lip ring's and the throat
+// ring's mean centre, to the centimetre — 0.7 m out and at y 33.5, so the
+// quad hinges on its head into the mouth and faces up.
+const MOUTH = [3.17, -0.03];
+const FOOT = { r: 0.7, y: 33.5 };
+const foot = ([x, , z]) => {
+  const bearing = Math.atan2(z - MOUTH[1], x - MOUTH[0]);
+  return [MOUTH[0] + FOOT.r * Math.cos(bearing), FOOT.y, MOUTH[1] + FOOT.r * Math.sin(bearing)];
+};
+const cracks = EMBER_CRACKS.map((p, i) => (i % 4 < 2 ? p : foot(p)));
+
 add(
   chimney,
   'ember_cracks',
   faceted(
-    EMBER_CRACKS,
+    cracks,
     [0, 4, 8, 12].flatMap((q) => crack([q, q + 1, q + 2, q + 3]))
   ),
   ember
