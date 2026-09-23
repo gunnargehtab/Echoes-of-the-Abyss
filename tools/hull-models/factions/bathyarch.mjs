@@ -133,15 +133,15 @@ export const ink = {
    * cladding by a part the block lights only in a later band
    * (docs/models-plan.md §3.2 rule 2): the Furnace's burner nozzles, bow
    * floods, ladder strips and manifold strip, every one of them lit only
-   * cutting and built dark; since #890 also the Derrick's louvres and
-   * bridge ports, the Bulwark's transom vents and bow lamp, and the
-   * Foundry's roof seams and crane floods — lamps a block lights in a
-   * later band or in none, and the audit could not see from above. The
-   * Directorate's `biolight_unlit`, the
-   * Commune's `bio_vein_unlit` and the Order's `crystal_seam_unlit` are the
-   * same rule in the other three navies. One name, one value
-   * (asset-prompts-3d.md Block 2b, rule 3); it recolours to near-black under
-   * any flag.
+   * cutting and built dark. The Derrick's louvres and bridge ports, the
+   * Bulwark's transom vents and bow lamp and the Foundry's roof seams and
+   * crane floods wore it from #890 to #893 — lamps the audit could not see
+   * from above, clad rather than moved; #893 relit every one of them where
+   * the chart can see it and named them in their blocks. The Directorate's
+   * `biolight_unlit`, the Commune's `bio_vein_unlit` and the Order's
+   * `crystal_seam_unlit` are the same rule in the other three navies. One
+   * name, one value (asset-prompts-3d.md Block 2b, rule 3); it recolours to
+   * near-black under any flag.
    */
   amberLampUnlit: () => clad('amber_lamp_unlit', hex('#1A1408'), 0, 0.4),
   /**
@@ -286,11 +286,22 @@ export function propTunnels(root, { grey, rust }, { x, z, r }) {
 
 /**
  * A riveted machinery house: louvred sides, a lit roof grating, and a stack
- * lit at the throat. The grating is the light that the top-down bake can see —
- * the louvres are vertical faces and contribute nothing to gate 3.
+ * lit at the throat.
+ *
+ * The louvres are a bank a side of `louvres.count` slats, each a blade
+ * `blade[1]` wide and `blade[0]` thick running the house's length, canted
+ * up `tilt` radians — its outer edge the high one — and **stepped out from
+ * the wall** as the bank goes down: slat `i` stands at `y + i · pitch` and
+ * `(count − 1 − i) · step` further outboard than the top one, whose centre
+ * is `z`. A vertical louvre panel shows nothing from above, and the
+ * Derrick's slats were five bars flat on the wall under the roof's eave
+ * from #531 to #890, which clad them; stepped, every slat shows its `step`
+ * of plan width past the slat above, and the top one shows what stands
+ * past the eave, so the chart reads the bank as five bright lines down
+ * each flank (#893). The gratings on the roof are the rest of the light.
  */
-export function machineryHouse(root, { black, grey, rust, amber, vent, flood, louvre = vent }, opts) {
-  const { x, y, length, height, beam, louvres = 5, gratings = 6, stack } = opts;
+export function machineryHouse(root, { black, grey, rust, amber, vent, flood }, opts) {
+  const { x, y, length, height, beam, louvres, gratings = 6, stack } = opts;
   add(root, 'machinery_house', box(length, height, beam), black, [x, y, 0]);
   add(root, 'house_roof', box(length + 1, 1, beam + 1), grey, [x, y + height / 2 + 0.3, 0]);
   for (let i = 0; i < gratings; i++)
@@ -299,16 +310,19 @@ export function machineryHouse(root, { black, grey, rust, amber, vent, flood, lo
       y + height / 2 + 1,
       0,
     ]);
-  // `louvre` is the slats' finish: the vent by default, or the lamp family's
-  // unlit cladding on a hull whose block lights its louvres only under way
-  // (the Derrick, docs/models-plan.md §3.2 rule 2, #890).
+  // Canting a blade about X drops its +z edge, so starboard (+z) takes the
+  // negative angle and port the positive one: the outer edge rises on both.
+  const { count = 5, y: ly, pitch, z: lz, step, tilt, blade } = louvres;
   bothSides((side, sgn) => {
-    for (let i = 0; i < louvres; i++)
-      add(root, `louvre_${side}${i}`, box(length * 0.73, 0.7, 0.6), louvre, [
-        x,
-        y - height / 2 + 2.3 + i * 1.6,
-        sgn * (beam / 2 + 0.3),
-      ]);
+    for (let i = 0; i < count; i++)
+      add(
+        root,
+        `louvre_${side}${i}`,
+        box(length * 0.73, blade[0], blade[1]),
+        vent,
+        [x, ly + i * pitch, sgn * (lz + (count - 1 - i) * step)],
+        [-sgn * tilt, 0, 0]
+      );
   });
   if (stack) {
     add(root, 'stack', cyl(2.4, 2.8, 12, 12), rust, [stack.x, stack.y, stack.z]);
@@ -516,10 +530,11 @@ export function stackBand(root, mat, { name, at, r, h }) {
  * A rank of engine vents across the transom: boxes in `vent`, numbered
  * (`engine_vent_0..n`). Given `at`, a list of the export's own positions, it
  * is the Cruiser's four through kit.mjs `drawn` — two a side in the quarter,
- * not a rank across the stern (#649). `vent` is whatever the hull's block
- * makes of them: the Cruiser's are gratings let into its lower deck, lit
- * ("sustained glow from vents"); the Bulwark's six stand in the transom in
- * `amberLampUnlit`, since its block names no vent in any band (#890).
+ * not a rank across the stern (#649). `vent` is the hull's vent lamp: the
+ * Cruiser's are gratings let into its lower deck, lit ("sustained glow from
+ * vents"); the Bulwark's six stand in the transom with their tops a metre
+ * proud of the after deck, where the chart can see them — they sat buried
+ * in the slab until #890 clad them, and #893 raised and relit them.
  */
 export function engineVents(root, vent, { x, y, z, size, at }) {
   if (at) {
@@ -682,9 +697,10 @@ export function rivetRow(root, mat, opts) {
 
 /**
  * The bow stencil, painted flat on the foredeck, and the bow lamp —
- * separate, because the two hulls write them in opposite orders. `lampM` is
- * the lamp's finish as the hull's block has it: the Bulwark's sits under
- * the plough and is named in no band, so it passes `amberLampUnlit` (#890).
+ * separate, because the two hulls write them in opposite orders. Every
+ * hull's bow lamp stands on the foredeck where the chart can see it; the
+ * Bulwark's sat inside the bow under the plough until #890 clad it, and
+ * #893 lifted it onto the deck over the plough and relit it.
  */
 export function bowStencil(root, amber, { at, size }) {
   add(root, 'stencil_bow', box(...size), amber, at);
@@ -2804,7 +2820,7 @@ export function repairPatches(root, put, mats, { patches }) {
  * the scout's; the forge floor faces up and is most of what the bake sees
  * of SIG 25.
  */
-export function launchBay(root, put, { grey, black, amber, lampM, seam = lampM }, opts) {
+export function launchBay(root, put, { grey, black, amber, lampM }, opts) {
   const { walls, aft, sill, aprons, stripes, floor, backwall, rim, seams, gableStrip } = opts;
   flanks((side, sgn) =>
     put(root, `bay_wall_${side}`, box(...walls.size), grey, [sgn * walls.x, walls.y, walls.z])
@@ -2831,11 +2847,12 @@ export function launchBay(root, put, { grey, black, amber, lampM, seam = lampM }
     ])
   );
   put(root, 'bay_rim_strip_fwd', box(...rim.fwd.size), lampM, rim.fwd.at);
-  // The roof seams lie inside the roof slab, where no bake sees them; they
-  // are the producing band's spill, so the Klaxon's Foundry passes the lamp
-  // family's unlit cladding as `seam` (docs/models-plan.md §3.2 rule 2, #890).
+  // The seams run along the eaves, flush against the roof slab's edge at its
+  // own height, where the chart sees their whole length. The approved file
+  // had them inside the slab, where no bake sees them, and #890 clad them;
+  // #893 moved them to the eave and relit them.
   flanks((side, sgn) =>
-    put(root, `roof_seam_${side}`, box(...seams.size), seam, [sgn * seams.x, seams.y, seams.z])
+    put(root, `roof_seam_${side}`, box(...seams.size), lampM, [sgn * seams.x, seams.y, seams.z])
   );
   put(root, 'gable_strip', box(...gableStrip.size), lampM, gableStrip.at);
 }
@@ -2850,7 +2867,7 @@ export function launchBay(root, put, { grey, black, amber, lampM, seam = lampM }
  * run out to starboard and the after one to port, as the file has them.
  * `derrickRig` above is the Tender's swung boom; a gantry bridges.
  */
-export function gantryCranes(root, put, { grey, black, rust, amber, lampM, flood: floodM = lampM }, opts) {
+export function gantryCranes(root, put, { grey, black, rust, amber, lampM }, opts) {
   const { rails, cranes, legs, bridge, chord, trolley, hook, stripe, flood } = opts;
   flanks((side, sgn) =>
     put(root, `crane_rail_${side}`, box(...rails.size), grey, [sgn * rails.x, rails.y, rails.z])
@@ -2864,10 +2881,11 @@ export function gantryCranes(root, put, { grey, black, rust, amber, lampM, flood
     put(root, `crane_${tag}_trolley`, box(...trolley.size), black, [tx, trolley.y, z]);
     put(root, `crane_${tag}_hook`, box(...hook.size), rust, [tx, hook.y, z]);
     put(root, `crane_${tag}_stripe`, box(...stripe.size), amber, [0, stripe.y, z + stripe.proud]);
-    // The flood patch hangs under the bridge, a work light for the line
-    // running; the Klaxon's Foundry passes `flood` as the lamp family's
-    // unlit cladding, since "Dim at rest" lights no crane (#890).
-    put(root, `crane_${tag}_floodpatch`, box(...flood.size), floodM, [0, flood.y, z]);
+    // The flood patch is the crane's lamp: a lit bar the bridge's length
+    // laid along the top of its chord, where the chart sees it. The
+    // approved file hung it under the bridge, where nothing did, and #890
+    // clad it; #893 raised it onto the chord and relit it.
+    put(root, `crane_${tag}_floodpatch`, box(...flood.size), lampM, [0, flood.y, z]);
   }
 }
 

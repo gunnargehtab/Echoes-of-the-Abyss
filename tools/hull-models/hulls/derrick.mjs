@@ -10,25 +10,41 @@
  * The frame is the hull's argument and has to read at distance as the biggest
  * thing on it, because this is the gun that aims by ear.
  *
- * The light, against the block's resting clause — "Dim at rest — deck floods
- * only, the drums dark — and burning under way, the louvres bright, the
- * stack lit at the throat, and a hard lamp in the cradle" — as #890 settled
- * the nineteen lamps the audit could not see (docs/models-plan.md §3.2):
+ * LIGHT — the block's resting clause names every lamp this file lights
+ * (docs/asset-prompts-3d.md, UNIT — Derrick; docs/models-plan.md §3.2 rule
+ * 1), since #893 rewrote it for a SIG 58 idle that sits in the 36–60
+ * "sustained glow" band: the six deck floods, the six work floods along the
+ * frame's top beams, the six roof gratings, the louvre bank down each side
+ * of the machinery house, the stack's throat, the four bridge ports in the
+ * house's forward face and the cradle lamp; the drums dark. Under way the
+ * same lamps burn over the Klaxon's line (the one-glow-factor reading, §3.2).
+ * Twenty lamps sat where the top-down bake could not see them (nineteen on
+ * the audit's list; `louvre_p4` showed a tenth of a metre past the roof):
+ * #890 raised the six deck floods and clad the other fourteen, and #893
+ * relit those fourteen and moved them:
  *
- * - `deck_flood_0..5` are the resting clause's own and stay lit. The export
- *   placed them at `DECK` + 0.4, and `DECK` is the slab's mid-height, not
- *   its top: kit `plate` stands its slab from y 0 to `DEPTH`, so the six
- *   sat inside `hull_slab`, the case `lightAudit` was first written on.
+ * - `deck_flood_0..5` (#890): the export placed them at `DECK` + 0.4, and
+ *   `DECK` is the slab's mid-height, not its top — kit `plate` stands its
+ *   slab from half a thickness to one and a half above the origin, so the
+ *   six sat inside `hull_slab`, the case `lightAudit` was first written on.
  *   They stand on the slab's top now, at the same six stations.
- * - `louvre_s0..4`, `louvre_p0..4` are lit "under way" — rule 2, clad in
- *   `amber_lamp_unlit`. `louvre_p4` was not on the audit's list, its outer
- *   tenth of a metre showing past the roof, but it is the same clause.
- * - `bridge_port_s0..1`, `bridge_port_p0..1` are named in no band — rule 1,
- *   clad the same.
+ * - `louvre_s0..4`, `louvre_p0..4` (#893): five bars flat on each wall of
+ *   the house under the roof's eave, the lower two below the deck line, in
+ *   `amber_vent` until #890 clad them. `amber_vent` again, and a bank now:
+ *   five blades canted up 35° and stepped half a metre further out from the
+ *   wall each step down, the top one tucked under the eave with its outer
+ *   edge 0.4 m past it and the bottom one 2.4 m proud, all five on the
+ *   3.3 m of wall the deck leaves showing. From above each blade shows its
+ *   half-metre step past the one over it (`machineryHouse`).
+ * - `bridge_port_s0..1`, `bridge_port_p0..1` (#893): `amber_lamp` again,
+ *   named in no band before #893 and clad by #890. They were 0.4 m panels
+ *   on the house's forward face with their sills at the deck line, under
+ *   the roof's half-metre eave; they are port boxes now, 1.1 m deep from the
+ *   wall so the outer 0.6 m stands past the eave — the Tender's ports under
+ *   its deckhouse eaves — a metre and a half up the wall.
  *
  * The cradle lamp, the stack throat, the frame floods and the roof gratings
- * face up and were not on the list; they are carried as the approved file
- * lights them, and whether the block should name them at rest is #893.
+ * face up and never moved; the block names them since #893.
  *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.
@@ -57,7 +73,6 @@ const amber = bathyarch.ink.hazardAmber();
 const lampM = bathyarch.ink.amberLamp();
 const vent = bathyarch.ink.amberVent();
 const flood = bathyarch.ink.amberFlood();
-const unlit = bathyarch.ink.amberLampUnlit();
 
 const root = new THREE.Group();
 root.name = 'consortium_derrick';
@@ -107,22 +122,27 @@ add(root, 'cradle_lamp', box(14, 1.0, 5), flood, [5, frame.top + 1.7, 0]);
 add(root, 'cradle_lamp_stay', box(0.6, 1.8, 0.6), grey, [5, frame.top + 0.9, 0]);
 
 // The machinery house aft of the frame, and the pile hammer stowed against a leg.
-// The louvres are clad: the block lights them under way (header).
-bathyarch.machineryHouse(root, { black, grey, rust, amber, vent, flood, louvre: unlit }, {
+// The house stands 9 m tall from y 5.5, so the slab (top at DEPTH) buries all
+// but 3.5 m of it and the roof's underside is at 14.3. The louvre bank sits on
+// that exposed wall: the top blade's centre on the eave line (beam/2 + 0.5)
+// so its outer edge shows past it, each blade below half a metre further out.
+bathyarch.machineryHouse(root, { black, grey, rust, amber, vent, flood }, {
   x: -24, y: 10, length: 22, height: 9, beam: 26, stack: { x: -30, y: 20, z: 6 },
+  louvres: { count: 5, y: DEPTH + 0.4, pitch: 0.6, z: 13.5, step: 0.5, tilt: 0.611, blade: [0.15, 0.9] },
 });
 add(root, 'hammer_shaft', box(1.2, 18, 1.2), grey, [-6.5, 15, 30]);
 add(root, 'hammer_head', box(3.6, 3, 3.6), rust, [-6.5, 7.5, 30]);
 
-// "Deck floods only": on the slab's top, which is DEPTH and not DECK (header).
+// The deck floods: on the slab's top, which is DEPTH and not DECK (header).
 bathyarch.deckFloods(root, lampM, {
   deck: DEPTH,
   spots: [[24, 16], [24, -16], [-42, 16], [-42, -16], [48, 14], [48, -14]],
 });
-// The bridge ports are clad: the block names them in no band (header).
+// The bridge ports: boxes from the house's forward face (x -13) out past the
+// roof's eave (x -12.5) by 0.6, a metre and a half up the exposed wall (header).
 bothSides((side, sgn) => {
   for (let i = 0; i < 2; i++)
-    add(root, `bridge_port_${side}${i}`, box(0.4, 1.2, 2.2), unlit, [-12.8, 11, sgn * (2.5 + i * 5)]);
+    add(root, `bridge_port_${side}${i}`, box(1.1, 1.2, 2.2), lampM, [-12.45, 12.6, sgn * (2.5 + i * 5)]);
 });
 
 await exportGlb(root, 'derrick-bathyarch.glb');

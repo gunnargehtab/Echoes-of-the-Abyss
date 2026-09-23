@@ -47,18 +47,21 @@
  * - The rivets are one box under thirty-two nodes, numbered straight
  *   through four ranks: port low, starboard low, port high, starboard
  *   high, eight a rank at four-unit stations from −32.
- * - Of the ten lamps, the forge floor, the forge back wall's top, the
- *   three rim strips and the gable strip face up. The two roof seams lie
- *   inside the roof slab and the two crane flood patches under their
- *   bridges, so the audit warned on those four; #890 clad them in
- *   `amber_lamp_unlit`, in place and at size, because the block lights
- *   nothing by name at rest — "Dim at rest; interior forge light spilling
- *   from the bay when producing" — and a seam that leaks forge light and a
- *   crane's work flood are the producing band's (docs/models-plan.md §3.2
- *   rule 2). `roof_seam_p/s` and `crane_fwd/aft_floodpatch` are still
- *   parts. The six that face up were not on the list and are carried as
- *   the approved file lights them; whether the block should name them at
- *   rest is #893.
+ * - LIGHT — ten lamps, every one `amber_lamp` at 3.5 and every one lit,
+ *   as the block's resting clause names them since #893 (docs/models-plan.md
+ *   §3.2 rule 1; the Foundry block is one text for four navies, so it names
+ *   the forge line, the bay guides and the crane lamps generically): the
+ *   forge floor and the forge back wall's top, the three bay rim strips and
+ *   the gable strip, which face up and never moved; and the two roof seams
+ *   and the two crane flood patches, which #893 moved. The approved file
+ *   had `roof_seam_p/s` inside the roof slab (x ±19.6 in a slab to ±20, y
+ *   20.4 in a slab to 21) and `crane_fwd/aft_floodpatch` under their
+ *   bridges (y 15.05 under a bridge from 15.2), so the audit warned on
+ *   those four and #890 clad them in `amber_lamp_unlit` in place. Each is
+ *   lit again at its size: a seam runs flush along its eave's outer edge at
+ *   the slab's own height (x ±20.35, y 20.2), and a flood patch lies along
+ *   the top of its bridge's chord (y 18.85 on a chord to 18.65), the crane's
+ *   lamp. Both moves stay inside the step's plan.
  *
  * THE FRAME: a Z-long export (the step's 66 along z against 59.5 across
  * x, pipe end to pipe end), so every number goes through kit.mjs `drawn`
@@ -80,9 +83,6 @@ const rust = bathyarch.ink.oxideRust();
 const grey = bathyarch.ink.ironGrey();
 const amber = bathyarch.ink.hazardAmber();
 const lampM = bathyarch.ink.amberLamp(3.5);
-// The roof seams' and crane floods' finish: the producing band's, so unlit
-// (header).
-const unlit = bathyarch.ink.amberLampUnlit();
 const put = bathyarch.alongZ;
 
 const root = new THREE.Group();
@@ -155,11 +155,11 @@ bathyarch.repairPatches(
 
 // "A recessed launch bay": the walls, sill and aprons, and the forge light
 // spilling from it — the floor, the back wall, the rim strips, the roof
-// seams and the gable strip.
+// seams along the eaves and the gable strip.
 bathyarch.launchBay(
   root,
   put,
-  { grey, black, amber, lampM, seam: unlit },
+  { grey, black, amber, lampM },
   {
     walls: { size: [2.6, 5.6, 27], x: 12.3, y: 4.4, z: 12.5 },
     aft: { size: [22, 5.6, 2.2], at: [0, 4.4, -0.2] },
@@ -172,16 +172,17 @@ bathyarch.launchBay(
       side: { size: [0.9, 0.5, 27], x: 11.4, y: 7.35, z: 12.5 },
       fwd: { size: [23.7, 0.5, 0.9], at: [0, 7.35, 25.5] },
     },
-    seams: { size: [0.7, 0.7, 31], x: 19.6, y: 20.4, z: -18 },
+    seams: { size: [0.7, 0.7, 31], x: 20.35, y: 20.2, z: -18 },
     gableStrip: { size: [26, 0.9, 0.7], at: [0, 13.8, -0.9] },
   }
 );
 
-// "Gantry cranes": a rail a side, the forward crane and the after one.
+// "Gantry cranes": a rail a side, the forward crane and the after one, each
+// with its lamp along the top of its chord.
 bathyarch.gantryCranes(
   root,
   put,
-  { grey, black, rust, amber, lampM, flood: unlit },
+  { grey, black, rust, amber, lampM },
   {
     rails: { size: [1.6, 1, 28], x: 13.9, y: 8.2, z: 12 },
     cranes: [
@@ -194,7 +195,7 @@ bathyarch.gantryCranes(
     trolley: { size: [3.6, 2, 4], y: 14.2 },
     hook: { size: [1.1, 3.4, 1.1], y: 11.2 },
     stripe: { size: [31, 0.6, 0.2], y: 16.5, proud: 1.71 },
-    flood: { size: [14, 0.4, 1.6], y: 15.05 },
+    flood: { size: [14, 0.4, 1.6], y: 18.85 },
   }
 );
 

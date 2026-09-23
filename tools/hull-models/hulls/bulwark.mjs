@@ -30,20 +30,23 @@
  * - **The light is where it can be counted.** SIG 70 goes on three flat
  *   flood patches on the tiers and a lit strip with eight lamps along each
  *   deck edge, all facing up, and the citadel's fourteen ports show their
- *   top edges. The six engine vents in the transom and the bow lamp under
- *   the plough sat where the top-down bake cannot see them, and the audit
- *   warned on all seven; #890 clad them, because the block's one clause —
- *   "Burning bright: floodlit deck surfaces and rows of floods along both
- *   deck edges — the loud state is the resting state" — names neither a
- *   vent nor a bow lamp in any band, and the resting clause is what the
- *   model lights (docs/models-plan.md §3.2 rule 1). Both families wear
- *   `amber_lamp_unlit`, the navy's unlit finish for its lamps, in their
- *   places and at their sizes: `engine_vent_0..5` are still six boxes in
- *   the transom and `bow_lamp` is still under the plough. The citadel's
- *   fourteen ports (`citadel_port_*`, `bridge_port_*`) are named in no band
- *   either and were not on the list; they are carried as the approved file
- *   lights them. Whether the loudest hull's block should name its ports,
- *   its stern vents and its bow lamp at rest is #893.
+ *   top edges. LIGHT — the block's resting clause names all of it since
+ *   #893 (docs/asset-prompts-3d.md, UNIT — Bulwark; docs/models-plan.md
+ *   §3.2 rule 1): the flood patches and the deck-edge floods, the citadel's
+ *   ten flank ports and four bridge ports, the six vents across the
+ *   transom's top edge and the bow lamp on the foredeck. The last two
+ *   families are #893's: the approved file had `engine_vent_0..5` at y 0,
+ *   wholly inside the slab (its cap at x −75, its waist at −76, the vents'
+ *   after face at −74.6), and `bow_lamp` at y 3 inside the bow under the
+ *   plough, so the audit warned on all seven and #890 clad them in
+ *   `amber_lamp_unlit`, the block naming neither. They are lit again in
+ *   their pre-#890 materials — `amber_vent` and `amber_lamp` — and moved
+ *   straight up: the vents to y 5.5, so their top metre stands proud of the
+ *   after deck (the slab's top cap is at y 7) at the same six stations and
+ *   at their size, a rank of vent hoods along the transom's lip; the bow
+ *   lamp to y 7.5, standing on the foredeck at the bow's lip over the
+ *   plough, at its station and size. Neither family moves in plan, so the
+ *   outline is where it was.
  *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.
@@ -70,9 +73,8 @@ const grey = bathyarch.ink.ironGrey();
 const rust = bathyarch.ink.oxideRust();
 const amber = bathyarch.ink.hazardAmber();
 const lampM = bathyarch.ink.amberLamp();
+const vent = bathyarch.ink.amberVent();
 const flood = bathyarch.ink.amberFlood();
-// The vents' and the bow lamp's finish: named in no band, so unlit (header).
-const unlit = bathyarch.ink.amberLampUnlit();
 
 const root = new THREE.Group();
 root.name = 'consortium_bulwark';
@@ -137,8 +139,10 @@ bathyarch.citadel(root, { black, grey, rust, lampM }, {
   bathyarch.stack(root, black, { name: `stack_${i}`, at: [x, 20, z], r: 2.8, rTop: 2.4, height: 12 });
   bathyarch.stackBand(root, amber, { name: `stack_band_${i}`, at: [x, 24, z], r: 3, h: 1 });
 });
-bathyarch.engineVents(root, unlit, {
-  x: -73.5, y: 0, z: [-17.5, -10.5, -3.5, 3.5, 10.5, 17.5], size: [2.2, 5, 4],
+// Six vents across the transom, their tops a metre proud of the after deck
+// at y 7 (header).
+bathyarch.engineVents(root, vent, {
+  x: -73.5, y: 5.5, z: [-17.5, -10.5, -3.5, 3.5, 10.5, 17.5], size: [2.2, 5, 4],
 });
 
 // The resting light: three flat flood patches, one a tier, and the strip and
@@ -177,6 +181,7 @@ bathyarch.rudder(root, grey, { at: [-78, -8, 0], size: [8, 10, 1.5] });
 bathyarch.rivetRows(root, grey, { from: -50, to: 50, count: 20, y: 9.1, z: 27.2, size: [1, 0.6, 1] });
 bathyarch.rivetRows(root, black, { from: -44, to: 38, count: 12, y: 12.1, z: 20.5, size: [0.9, 0.54, 0.9] });
 bathyarch.bowStencil(root, amber, { at: [58, 9.2, 0], size: [10, 0.3, 2] });
-bathyarch.bowLamp(root, unlit, { at: [74.5, 3, 0], size: [1.5, 1, 4] });
+// The bow lamp stands on the foredeck at the bow's lip, over the plough (header).
+bathyarch.bowLamp(root, lampM, { at: [74.5, 7.5, 0], size: [1.5, 1, 4] });
 
 await exportGlb(root, 'bulwark-bathyarch.glb');
