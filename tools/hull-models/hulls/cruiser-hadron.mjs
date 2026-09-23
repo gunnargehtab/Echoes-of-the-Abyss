@@ -29,11 +29,14 @@
  * and its lateral fin. Nothing here is a shape decision; where the export
  * is odd the script is odd with it:
  *
- * - The lamps are the Cruiser's own (`ink.crystalCoreGlow` and
- *   `ink.crystalPanelGlow`, on no other Order model): a core glow at 4.5 on
- *   the two spines, the four fork crystals and the drive, and a panel glow
- *   at 3.2 on the eight facet panels. The drive prism is a lamp — the one
- *   Z-long Order drive that is.
+ * - The lamps: the core glow at 4.5 on the two spines, the four fork
+ *   crystals and the drive, and a panel glow at 3.2 on the eight facet
+ *   panels. The export drew both on the crystal-glow token as their base,
+ *   under names of its own (`crystal_core_glow`, `crystal_panel_glow`);
+ *   since #891 the core glow is `crystal_seam`, the hulls' lamp, and the
+ *   panel glow keeps its name for its own light, both on the seam's
+ *   near-black base (the module's `crystalSeam` and `crystalPanelGlow`).
+ *   The drive prism is a lamp — the one Z-long Order drive that is.
  * - The guard wings and their edges are struts between two points in the
  *   export's frame — the wing from (3.5, 8, -44) at the blade to (19, 9.4,
  *   -54) at its tip, the edge from (9, 8.6, -47.5) to (20, 9.5, -55) — so
@@ -80,7 +83,7 @@ const DATUM = 8;
 
 const shadow = hadron.ink.shadowIndigo();
 const alloy = hadron.ink.paleAlloy();
-const core = hadron.ink.crystalCoreGlow(4.5);
+const core = hadron.ink.crystalSeam(4.5);
 const panel = hadron.ink.crystalPanelGlow(3.2);
 
 const root = new THREE.Group();
