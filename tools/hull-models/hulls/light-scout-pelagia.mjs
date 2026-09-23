@@ -75,18 +75,19 @@
  *   no upward face it could sit on and still be a throat light — the one
  *   station the maps see forward of the flank marks is the nose's pole,
  *   and a bud there is a bow mark beside the feeler-tip mark, a different
- *   fixture (review, F1; #890 rulings 1 and 6). The audit will name it;
- *   gate 3 meets its target with it hidden, as it did before.
+ *   fixture (review, F1; #890, review rulings, rulings 1 and 6). The
+ *   audit will name it; gate 3 meets its target with it hidden, as it did
+ *   before.
  * - `tail_light`: from (0, 0.12, −2.5), where it hung between the flukes
  *   under the upper one's edge, touching nothing, to (0.02, 0.213, −2.27)
  *   — seated on the peduncle's aft crown line, sunk 0.02 into it, at the
  *   upper fluke's root and above its leading edge, which at that station
  *   is still down at the peduncle's back. On the crown line both halves
  *   of the bud stand clear of the peduncle's fall-off; a hair to one side
- *   the inboard half sat under it. It is 0.035 across, the flank marks'
+ *   the inboard half sat under it. Its radius is 0.035, the flank marks'
  *   size, where the file had it 0.03: the file's bud is an octagon 0.67 m
  *   wide that the audit's quarter-metre cells read as four cells, the
- *   floor exactly, and at the flank marks' size it reads six. (The first
+ *   floor exactly, and at the flank marks' radius it reads six. (The first
  *   cut only slid it 0.06 across and left it 0.45 m off the fluke;
  *   review, F2.)
  *

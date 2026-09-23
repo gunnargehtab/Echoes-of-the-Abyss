@@ -64,10 +64,13 @@
  * stalks only" — one decision a series:
  *
  * - `vein-ring-core`, `-core-2`, `-west`, `-east` (31 segments): clad in
- *   `bio_vein_unlit`, the navy's unlit vein finish. They ring the lobes,
- *   not the gills, and the clause's "only" calls them dark
- *   (docs/models-plan.md §3.2 rule 4). Same names, same geometry, in
- *   place.
+ *   `bio_vein_unlit`, the navy's recorded rule-2 finish (#890, review
+ *   rulings, ruling 4). They ring the lobes, not the gills, and no band
+ *   of the block names them: the resting clause is what the model lights
+ *   (docs/models-plan.md §3.2 rule 1), and #890's practice for a hidden
+ *   lamp named in no band is its family's unlit finish, as on the Bulwark
+ *   and the Derrick's bridge ports. Same names, same geometry, in place.
+ *   The block's wording is #893.
  * - `gill-breath-line-port-1..4`, `-stb-1..4`: the clause names them, so
  *   they stay lit in `bio-vein` and move onto an upward face — each
  *   organ's four now stand round its mound's outboard shoulder at 0.64
@@ -80,9 +83,9 @@
  * left as the approved file lights it: whether the block should name it,
  * and whether a translucent unlit finish exists for it if not, is #893's
  * question (every "block names fewer lamps than the model lights" case
- * on #890 went there), and finish is #888's. The vein rings' reading
- * above is the same class of question and is recorded there too.
- * Nothing here moves the footprint.
+ * on #890 went there), and finish is #888's. The vein rings above are
+ * the same class of question: the block's wording is #893. Nothing here
+ * moves the footprint.
  */
 import { THREE, exportGlb, fitFootprint } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';

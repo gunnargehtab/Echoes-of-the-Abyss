@@ -69,15 +69,27 @@
  *   it drooping at −0.45 (the same node written plainly, roll flipped),
  *   so its tip stands out of the hull's bow as its two port fellows do at
  *   0.5 and 0.2. Its size and station are the file's.
- * - `flank_light_port_fwd`, `flank_light_starboard_fwd`: each up the
- *   flank to the shoulder and sunk 0.03 into the skin there, each on bare
- *   skin between the rings and clear of the frills and the dorsal veins —
- *   (0.78, 0.69, 0.45) and (−0.82, 0.6, 0.5) from (0.95, 0.3, 1) and
- *   (−0.95, 0.25, 0.6). The after pair sit at the beam's edge, which the
- *   skin does not overhang, and stay. (The first cut put the port one at
- *   0.85, on the fifth ring's crossing beside the second frill, where it
- *   baked as a knot on the ring, and the starboard one 0.11 m above the
- *   skin against the starboard dorsal vein; review notes.)
+ * - `flank_light_port_fwd`: (0.95, 0.3, 1) → (1.05, 0.06, 1.08) — a
+ *   hair ahead of the file's own station, brought out to the beam's
+ *   edge, which the skin does not overhang, and down below the port
+ *   flank vein, which at that station rides the beam's shoulder at y
+ *   0.25 with the file's bud buried 0.08 inboard of it. Bare skin: clear
+ *   of the vein by 3 m, of the forward launcher's tip by 2 m, and of the
+ *   fifth ring, whose yaw carries its tube out to z 1.015 at the port
+ *   beam, by 0.3 m — at the file's z 1 the bud's after side was in that
+ *   tube. The after pair sit at the beam's edge the same way and stay.
+ * - `flank_light_starboard_fwd`: (−0.95, 0.25, 0.6) → (−0.82, 0.6, 0.5) —
+ *   up the flank to the shoulder and sunk 0.03 into bare skin there, in
+ *   the bay between the fourth and fifth rings; the beam's edge at its
+ *   own station is under the fifth ring's lean.
+ *   The forward pair keep the file's stagger, port 0.58 ahead of
+ *   starboard (10 m) where the file had 0.4 (6.9 m), and its two heights,
+ *   so in plan they read as two lights grown each its own way and not as
+ *   a pair. (The first cut
+ *   put the port one at 0.85, on the fifth ring's crossing beside the
+ *   second frill, where it baked as a knot on the ring, then at 0.45 in
+ *   the same bay as the starboard one, 0.86 m from mirroring it; review
+ *   notes, rounds 1 and 2.)
  *
  * Nothing here reaches the length or the beam.
  */
@@ -604,12 +616,12 @@ pelagia.membranes(root, membrane, {
 });
 
 // "Lit ports": a bud at the bow, two down each flank at different heights
-// — the forward pair up on the shoulder, the after pair at the beam's
-// edge (#890; see the header) — one on the crest, one at the tail.
+// and stations — three at the beam's edge, the forward starboard one up on
+// the shoulder (#890; see the header) — one on the crest, one at the tail.
 pelagia.lightBuds(root, light, {
   buds: [
     ['bow_light', 0.06, drawn([0, 0.35, 2.95])],
-    ['flank_light_port_fwd', 0.045, drawn([0.78, 0.69, 0.45])],
+    ['flank_light_port_fwd', 0.045, drawn([1.05, 0.06, 1.08])],
     ['flank_light_port_aft', 0.045, drawn([1, 0.2, -0.9])],
     ['flank_light_starboard_fwd', 0.045, drawn([-0.82, 0.6, 0.5])],
     ['flank_light_starboard_aft', 0.045, drawn([-0.9, 0.15, -1.2])],

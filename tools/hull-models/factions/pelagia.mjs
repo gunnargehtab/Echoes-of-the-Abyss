@@ -1474,12 +1474,14 @@ export function gillOrgan(root, mats, opts) {
  * The first port read these as the block's "faint bioluminescent
  * breathing lines" and lit them; they are not (#890, the light axis of
  * #540). The Veil's lighting clause names "breathing lines around the
- * gills and dim lit tips on the stalks only", and these ring the lobes —
- * every one of the thirty-one lies inside the lobe it circles, on the
- * approved file's own numbers — so the block's "only" calls them dark and
- * the caller hands in the vein family's unlit finish (docs/models-plan.md
- * §3.2 rule 4). The rings are still built: they are parts, and the
- * breathing lines are `gillOrgan`'s.
+ * gills and dim lit tips on the stalks", and these ring the lobes — every
+ * one of the thirty-one lies inside the lobe it circles, on the approved
+ * file's own numbers — so no band names them, and a hidden lamp named in
+ * no band is clad in its family's unlit finish, which the caller hands in
+ * (docs/models-plan.md §3.2 rule 1; #890, review rulings, ruling 4 for
+ * the finish). The rings are still built: they are parts, and the
+ * breathing lines are `gillOrgan`'s. Whether the block should name them
+ * is #893.
  */
 export function veinRing(root, mat, opts) {
   const { name, at, r, centre, span, count, section = [0.045, 0.06], overlap = 1.08 } = opts;
