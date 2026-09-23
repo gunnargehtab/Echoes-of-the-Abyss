@@ -21,9 +21,8 @@
  * two `KHR_lights_punctual` point lights either beam. Its six materials
  * are `ink`'s hyphenated set: the Submersible's four to the value and the
  * name — `amber-running-light` on #1A1206, at the export's 2.6 — and the
- * foam and the hazard paint of its own (`bargeInk` until #888). Nothing
- * here is a shape decision; where the export is odd the script is odd with
- * it:
+ * foam and the hazard paint of its own (`bargeInk` until #888). Nothing here
+ * is a shape decision; where the export is odd the script is odd with it:
  *
  * - Port is −z already: `gunwale-port` at −1.4, `pad-flank-p` at −1.58,
  *   `pontoon-ap` at −1.85, the port vanes at −1.92, `glow-port` at −1.6

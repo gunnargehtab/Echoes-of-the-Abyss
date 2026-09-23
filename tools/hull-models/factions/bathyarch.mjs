@@ -84,14 +84,13 @@ export const ink = {
   oxideRust: () => clad('oxide_rust', hex('#3D2B1F'), 0.1, 0.95),
   hazardAmber: () => clad('hazard_amber', hex('#F2B233'), 0.15, 0.6),
   /**
-   * The amber lamp: the token in `emissive` on the kit's near-black base. On
-   * a hull a mast lamp, a running light, a nav dome or strip; on a structure
-   * the Slipway's gantry work lights, the Bio-Reactor's slab run lights and
-   * crown mark, the Vent Tap's pipe lamps, and the Foundry's forge floor and
-   * bay strips. The Light Scout, the Corvette, the Cruiser, the Harvester
-   * and the Foundry carried it amber through and through — the token in
-   * `color` as well — at 3.5 (#588, #649); #888 brought the base onto this
-   * one and left the 3.5, the emissive unmoved.
+   * The amber lamp: the token in `emissive` on the kit's near-black base —
+   * the navy's plain amber fixture, on nineteen models, hull or structure:
+   * ports, floods, seams, strips, mast and running lights. The Light Scout,
+   * the Corvette, the Cruiser, the Harvester and the Foundry carried it
+   * amber through and through — the token in `color` as well — at 3.5
+   * (#588, #649); #888 brought the base onto this one and left the 3.5, the
+   * emissive unmoved.
    *
    * That is the one change of the re-finish a player can see, and it is
    * meant. A base's hue never reaches a pixel; its value does. The chart
@@ -99,17 +98,18 @@ export const ink = {
    * 0.244 — the Foundry's whole forge floor from the brightest cladding on
    * the hall to near-black — and the conn view's cladding target from 0.160
    * to 0.069 (rosterModels.ts `recolor`), which shows whenever live SIG
-   * dims the lamps towards `GLOW_FACTOR_MIN`. A near-black base is what the
-   * kit's `lamp` is for: a dimmed lamp reads dark, so the hull still reads
-   * as a black shape against black water when running silent — the
+   * dims the lamps towards `GLOW_FACTOR_MIN`. A near-black base is the
+   * kit's convention (kit.mjs `lamp`), and here is why it is right: a
+   * dimmed lamp reads dark, so the hull still reads as a black shape
+   * against black water when running silent — the
    * consistency checklist's fourth row — and the Foundry's bay reads "Dim at
    * rest", as its STRUCTURE block asks. The strength stayed because it is
    * the lit state, and the lit state did not move.
    *
    * Not renamed to `work_lamp`. That would have parted the Foundry from its
    * sibling the Slipway, whose gantry work lights already carry this name on
-   * this base; and `work_lamp` is the token-through orb at 0.35 rough, so the
-   * split would only have moved onto that name. Every one of the five
+   * this base; and `work_lamp` is token-through at 0.35 rough, so the split
+   * would only have moved onto that name. Every one of the five
    * carries `hazard_amber` at the same #F2B233, so the brightest colour the
    * recolour sets its register by is where it was.
    */
@@ -141,14 +141,13 @@ export const ink = {
    */
   amberLampUnlit: () => clad('amber_lamp_unlit', hex('#1A1408'), 0, 0.4),
   /**
-   * The work lamp orb a static mount hangs — the Sentinel Turret's
-   * `base_lamp`, the orbs on the Bastion's posts and collars and the
-   * Refinery's silos and apron — amber through and through: the same
-   * #F2B233 as `amber_lamp` in `emissive`, and the token in `color` too
-   * rather than a near-black, so it reads as a fixture in the albedo map
-   * (#639). All three pass 2.4 — quieter than the 3.5 the shared kinds'
-   * `amber_lamp` burns at, not louder. One value on the three models that
-   * carry it, so not a split, and left as approved.
+   * The work lamp of a static mount — every `work_lamp` on the Sentinel
+   * Turret, the Bastion and the Refinery — amber through and through: the
+   * same #F2B233 as `amber_lamp` in `emissive`, and the token in `color`
+   * too rather than a near-black, at 0.35 rough, so it reads as a fixture
+   * in the albedo map (#639). All three pass 2.4 — quieter than the 3.5 the
+   * shared kinds' `amber_lamp` burns at, not louder. One value on the three
+   * models that carry it, so not a split, and left as approved.
    */
   workLamp: (intensity = 1) =>
     lamp('work_lamp', hex('#F2B233'), hex('#F2B233'), 0.35, intensity),
@@ -1624,10 +1623,10 @@ export function exhaustLouvres(root, { black, flood }, opts) {
 /*
  * The structures' palette was `structureInk` until #888: the turret's own
  * three claddings, less rough than the hulls', and `work_lamp`. The lamp is
- * `ink.workLamp` now — the hanging orb the approved turret named, the token
- * through and through where `amber_lamp` sits on a near-black base; the
- * same amber, at 2.4 — and the three claddings are `ink`'s, at the hulls'
- * finish, one value a name.
+ * `ink.workLamp` now — the fixture the approved turret named, the token
+ * through and through at 0.35 rough where `amber_lamp` sits on a near-black
+ * base; the same amber, at 2.4 — and the three claddings are `ink`'s, at
+ * the hulls' finish, one value a name.
  */
 
 /**
