@@ -92,19 +92,19 @@ export const ink = {
    * (#588, #649); #888 brought the base onto this one and left the 3.5, the
    * emissive unmoved.
    *
-   * That is the one change of the re-finish a player can see, and it is
-   * meant. A base's hue never reaches a pixel; its value does. The chart
-   * bakes v = 0.22 + 0.3 · luma (bake.ts), so these parts fell from 0.435 to
-   * 0.244 — the Foundry's whole forge floor from the brightest cladding on
-   * the hall to near-black — and the conn view's cladding target from 0.160
-   * to 0.069 (rosterModels.ts `recolor`), which shows whenever live SIG
-   * dims the lamps towards `GLOW_FACTOR_MIN`. A near-black base is the
-   * kit's convention (kit.mjs `lamp`), and here is why it is right: a
-   * dimmed lamp reads dark, so the hull still reads as a black shape
-   * against black water when running silent — the
-   * consistency checklist's fourth row — and the Foundry's bay reads "Dim at
-   * rest", as its STRUCTURE block asks. The strength stayed because it is
-   * the lit state, and the lit state did not move.
+   * That is the change of the re-finish that shows on the chart as well as
+   * the conn view, and it is meant. A base's hue never reaches a pixel; its
+   * value does. The chart bakes v = 0.22 + 0.3 · luma (bake.ts), so these
+   * parts fell from 0.435 to 0.244 — the Foundry's whole forge floor from
+   * the brightest cladding on the hall to near-black — and the conn view's
+   * cladding target from 0.160 to 0.069 (rosterModels.ts `recolor`), which
+   * shows whenever live SIG dims the lamps towards `GLOW_FACTOR_MIN`. A
+   * near-black base is the kit's convention (kit.mjs `lamp`), and here is
+   * why it is right: a dimmed lamp reads dark, so the hull still reads as a
+   * black shape against black water when running silent — the consistency
+   * checklist's fourth row — and the Foundry's bay reads "Dim at rest", as
+   * its STRUCTURE block asks. The strength stayed because it is the lit
+   * state, and the lit state did not move.
    *
    * Not renamed to `work_lamp`. That would have parted the Foundry from its
    * sibling the Slipway, whose gantry work lights already carry this name on
