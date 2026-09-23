@@ -3,7 +3,7 @@
  * packages/frontend/src/game/environment.ts), the largest thing standing
  * in the Coral Ruins.
  *
- * "Coral Ruins | env-ruin-dome-shard | 40 m | 20 m | ≤ 600 | none ... ruin
+ * "Coral Ruins | env-ruin-dome-shard | 40 m | 14 m | ≤ 600 | none ... ruin
  * props carry the geometric patterns of art-direction.md's 'Environmental
  * Shapes' — right angles, terraces, a civilisation's worth of coral growth
  * over them" (docs/asset-prompts-3d.md, Block 4), under ENV STYLE:
@@ -12,8 +12,9 @@
  * materials", and no light of any kind. Two materials, 544 triangles,
  * 14.26 m tall by 40 by 28.9 across at its 40 m by intake's measure
  * (`sizeM`); 14.1 m tall by 39.6 across raw, which is the frame every
- * figure below is in, before the root's fit. The table's 20 m of height
- * is not in the file, which is a finding for the docs, not for a port.
+ * figure below is in, before the root's fit. #879 moved the row's height
+ * from 20 m to the file's, and left the shape to #883, which re-authors
+ * this whole dome as the shard its slug names.
  *
  * A port of the approved export
  * (docs/concept-art/models/env-ruin-dome-shard.glb as committed before

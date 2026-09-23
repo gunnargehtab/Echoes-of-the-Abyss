@@ -3,15 +3,15 @@
  * packages/frontend/src/game/environment.ts), the tall prop of the
  * Resonance Field.
  *
- * "Resonance Field | env-resonance-pylon | 10 m | 25 m | ≤ 500 | none ...
+ * "Resonance Field | env-resonance-pylon | 10 m | 31 m | ≤ 500 | none ...
  * resonance props are faceted crystal and the toppled remains of older
  * instruments" (docs/asset-prompts-3d.md, Block 4), under ENV STYLE:
  * "Natural or ruined form — stone, coral, kelp, crystal ... nothing
  * manufactured ... low-poly with crisp facets, at most two materials", and
  * no light of any kind. One material, 484 triangles, 31.37 m tall at its
- * 10 m by intake's measure (`sizeM.height`), against Block 4's 25 m;
- * 25.4 m raw, which is the frame every figure below is in, before the
- * root's fit.
+ * 10 m by intake's measure (`sizeM.height`), which the row has carried
+ * since #879 moved it from 25 m; 25.4 m raw, drawn to the old row and the
+ * frame every figure below is in, before the root's fit.
  *
  * A port of the approved export
  * (docs/concept-art/models/env-resonance-pylon.glb as committed before

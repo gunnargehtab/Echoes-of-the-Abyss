@@ -3,14 +3,15 @@
  * packages/frontend/src/game/environment.ts), the low prop of the Abyssal
  * Trench floor.
  *
- * "Abyssal Trench | env-trench-slab | 25 m | 10 m | ≤ 300 | none ...
+ * "Abyssal Trench | env-trench-slab | 25 m | 14 m | ≤ 300 | none ...
  * trench props are blackened, pressure-eroded, knife-edged"
  * (docs/asset-prompts-3d.md, Block 4), under ENV STYLE: "Natural or ruined
  * form — stone ... pressure-scarred and ancient; nothing manufactured ...
  * low-poly with crisp facets, at most two materials", and no light of any
  * kind. One material, 72 triangles, 13.59 m tall at its 25 m by intake's
- * measure (`sizeM.height`); 13.3 m raw, which is the frame every figure
- * below is in, before the root's fit.
+ * measure (`sizeM.height`), which the row has carried since #879 moved it
+ * from 10 m; 13.3 m raw, which is the frame every figure below is in,
+ * before the root's fit.
  *
  * A port of the approved export (docs/concept-art/models/env-trench-slab.glb
  * as committed before #869), every number the export's own. The file is
