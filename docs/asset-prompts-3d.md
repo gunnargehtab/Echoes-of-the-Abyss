@@ -244,7 +244,7 @@ lit through and through, it went onto the name's near-black base. Where one name
 two things it became two names: the Cantor's three open shell plates are
 `chitin_violet_open`, double-sided, and the Knights' lit settlement crystal joined
 `resonance_crystal_dim`. `npm run check:models` fails on a name at two values inside a navy,
-and on a model file whose `-<navy>.glb` suffix names no navy to read it in;
+and on a model file that is neither an `env-` prop nor named `-<navy>.glb`;
 `node tools/hull-models/finishes.mjs` lists the splits.
 
 A value is everything a finish carries **except its emissive strength**. Strength is a

@@ -175,20 +175,20 @@ export const ink = {
   chitinRedDark: () => clad('chitin_red_dark', hex('#4E1220'), 0.14, 0.55),
   trenchBlack: () => clad('trench_black', hex('#0A0710'), 0.32, 0.42),
   /**
-   * #3A3F4A, the hulls' value, on every model since #888. The r184
-   * structure passes carried #27313B — the turret first (#639), then the
-   * Bastion, the Cantor, the Foundry and the Refinery copying it (#652) —
-   * the same finish a shade darker, which Block 2b ("One name, one value —
-   * held since #888") records and #888 brought onto the hull's. The turret's own value was the one
-   * material of its five that set its register: with `chitin_red_dark` at
+   * #3A3F4A, the hulls' value, on every model since #888. The r184 structure
+   * passes carried #27313B — the turret first (#639), then the Bastion, the
+   * Cantor, the Foundry and the Refinery copying it (#652) — the same finish
+   * a shade darker, which Block 2b ("One name, one value — held since #888")
+   * records and #888 brought onto the hull's. The turret's own value was the
+   * one material of its five that set its register: with `chitin_red_dark` at
    * #4E1220 the steel is its brightest colour, so the whole turret sits a
    * step lower in the conn view now than its export did — and that is the
-   * right step. With the navy's steel as its anchor the turret's shared
-   * names render within 2% of the same names everywhere else in the navy
-   * (violet 0.0987 against 0.0976, the crimson base 0.0753 against 0.0750),
-   * where before they rendered brighter than on every other model. Only its
-   * own `chitin_red_dark` drops (0.1352 → 0.1076), which is nearer its
-   * block's "nearly black".
+   * right step. With the navy's steel as its anchor the turret's shared names
+   * render within 2% of the same names everywhere else in the navy (violet
+   * 0.0987 against 0.0976, the crimson base 0.0753 against 0.0750), where
+   * before they rendered brighter than on every other model. Only its own
+   * `chitin_red_dark` drops (0.1352 → 0.1076), which is nearer its block's
+   * "nearly black".
    */
   weldSteel: () => clad('weld_steel', hex('#3A3F4A'), 0.38, 0.44),
   /**
