@@ -95,8 +95,11 @@ const HALF_METRE = (0.5 * DRAWN) / L;
 const chitin = directorate.ink.chitinTrench();
 const violet = directorate.ink.plateViolet();
 // The file's own strengths: the rims' faint 0.12, the photophores' 2.2.
+// The photophores are `biolight_crimson` since #891: the file's
+// `photophore` was the token in `color` too, and anchored the register
+// (the module's `biolightCrimson`).
 const edge = directorate.ink.edgeRed(0.12);
-const photophore = directorate.ink.photophore(2.2);
+const photophore = directorate.ink.biolightCrimson(2.2);
 
 const root = new THREE.Group();
 root.name = 'abyssal_raider';
