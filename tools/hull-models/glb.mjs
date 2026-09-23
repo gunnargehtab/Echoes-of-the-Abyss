@@ -40,6 +40,7 @@ function finishOf(m) {
     emissive: m.emissiveFactor ?? [0, 0, 0],
     strength: m.extensions?.KHR_materials_emissive_strength?.emissiveStrength ?? 1,
     doubleSided: m.doubleSided === true,
+    alpha: m.alphaMode ?? 'OPAQUE',
   };
 }
 
@@ -181,6 +182,7 @@ export function finishFields(f) {
     strength: f.strength.toFixed(3),
     opacity: f.opacity.toFixed(3),
     'two-sided': String(f.doubleSided),
+    alpha: f.alpha,
   };
 }
 
@@ -219,6 +221,8 @@ export function sceneParts(root) {
             emissive: mat.emissive?.toArray() ?? [0, 0, 0],
             strength: mat.emissiveIntensity ?? 1,
             doubleSided: mat.side === 2,
+            // GLTFExporter's own mapping: transparent is BLEND, a cutout MASK.
+            alpha: mat.transparent ? 'BLEND' : mat.alphaTest > 0 ? 'MASK' : 'OPAQUE',
           }
         : null,
       tris: count / 3,

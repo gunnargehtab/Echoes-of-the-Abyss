@@ -190,6 +190,19 @@ try {
   // Every script can agree with its own file while two files give one name
   // two values, which is how the ports left 19 names split until #888; so this
   // reads the committed files as a set, and runs whatever the filter.
+  // finishes.mjs places a model in a navy by its `-<navy>.glb` suffix, so a
+  // file with none would be read by no navy and pass unread: every model names
+  // one, or is an `env-` prop, which belongs to none.
+  const unplaced = readdirSync(models).filter(
+    (f) => f.endsWith('.glb') && !f.startsWith('env-') && !NAVIES.some((n) => f.endsWith(`-${n}.glb`))
+  );
+  if (unplaced.length) {
+    failed++;
+    console.error(
+      `✗ ${unplaced.join(', ')} name${unplaced.length > 1 ? '' : 's'} no navy, so no split check reads ${unplaced.length > 1 ? 'them' : 'it'}\n` +
+        `  name a model <slug>-<${NAVIES.join('|')}>.glb, or env-<thing>.glb for a prop`
+    );
+  }
   for (const navy of NAVIES) {
     const splits = splitsIn(navy, models);
     if (!splits.length) {
