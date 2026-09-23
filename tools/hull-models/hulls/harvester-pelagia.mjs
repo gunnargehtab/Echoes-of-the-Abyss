@@ -59,10 +59,17 @@ const L = 75;
 const DRAWN = 4.7903;
 const DATUM = 0;
 
-const chitin = pelagia.fleetInk.chitinHull();
-const ridge = pelagia.fleetInk.growthRidge();
-const membrane = pelagia.fleetInk.algaeMembrane();
-const light = pelagia.fleetInk.bioLight(0.9);
+// The navy's ink (#888). The export carried the r184 pass's glossier
+// finish — chitin at 0.2 metal and 0.28 rough, the ridge #14332A at 0.12
+// and 0.45, the membrane two-sided at 0.15 and 0.32, the lamp on the token
+// as its own base — and `ink` in factions/pelagia.mjs says where each
+// went. With the lamp on a near-black base the membrane is this hull's
+// brightest colour, as it is on the Sower, and the conn view sets its
+// register by that. The strength is this file's own, 0.9.
+const chitin = pelagia.ink.chitinHull();
+const ridge = pelagia.ink.growthRidge();
+const membrane = pelagia.ink.algaeMembrane();
+const light = pelagia.ink.bioLight(0.9);
 
 const root = new THREE.Group();
 root.name = 'harvester';

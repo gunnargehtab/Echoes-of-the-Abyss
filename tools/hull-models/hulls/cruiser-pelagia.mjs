@@ -57,13 +57,19 @@ const L = 130;
 const DRAWN = 7.5452;
 const DATUM = 0;
 
-const chitin = pelagia.fleetInk.chitinHull();
-const ridge = pelagia.fleetInk.growthRidge();
-const spore = pelagia.fleetInk.sporePod();
-const membrane = pelagia.fleetInk.algaeMembrane();
-const light = pelagia.fleetInk.bioLight(1.6);
-const vein = pelagia.fleetInk.bioVeinLit();
-const frill = pelagia.fleetInk.sensorFrillLit();
+// The navy's ink (#888). The export carried the r184 pass's glossier
+// finish — chitin at 0.2 metal and 0.28 rough, the ridge #14332A at 0.12
+// and 0.45, the membrane two-sided at 0.15 and 0.32, the lamp on the token
+// as its own base — and `ink` in factions/pelagia.mjs says where each
+// went. The strengths are this file's own: 1.6 on the buds, 1.5 on the lit
+// rings and flank veins, 0.9 on the hydrophone frills.
+const chitin = pelagia.ink.chitinHull();
+const ridge = pelagia.ink.growthRidge();
+const spore = pelagia.ink.sporePod();
+const membrane = pelagia.ink.algaeMembrane();
+const light = pelagia.ink.bioLight(1.6);
+const vein = pelagia.ink.bioVeinLit(1.5);
+const frill = pelagia.ink.sensorFrillLit(0.9);
 
 const root = new THREE.Group();
 root.name = 'cruiser';

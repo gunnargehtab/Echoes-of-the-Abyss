@@ -49,9 +49,9 @@
  * - Three of the six anchors and the third silo's vein the file writes in
  *   three's (±π, b, c − π) form of the XYZ Euler, written here as the plain
  *   (0, π − b, c) of the same matrix.
- * - The six materials are the Bastion's five (`bastionInk`) with
+ * - The six materials are the navy's `ink`: the Bastion's five with
  *   `biolight_green` at 2.6, and `floodlight_pale`, the spore token on a
- *   #3A3F1E base at 3.2587 (`worksInk`).
+ *   #3A3F1E base at 3.2587.
  * - The light audit names two lamps hidden from above, `silo_vein_1` and
  *   `silo_vein_3`, under their silos' rings and caps; the maw, edge-on on
  *   the Directorate's file, shows here past the roof's overhang. The
@@ -87,12 +87,12 @@ const L = 280;
 const DRAWN = 22.724610351326202;
 const DATUM = 0;
 
-const algae = pelagia.bastionInk.algaeHull();
-const chitin = pelagia.bastionInk.deepChlorophyll();
-const spore = pelagia.bastionInk.sporePale();
-const bio = pelagia.bastionInk.biolightGreen(2.6);
-const steel = pelagia.bastionInk.grownSteel();
-const flood = pelagia.worksInk.floodlightPale(3.258717662091468);
+const algae = pelagia.ink.algaeHull();
+const chitin = pelagia.ink.deepChlorophyll();
+const spore = pelagia.ink.sporePale();
+const bio = pelagia.ink.biolightGreen(2.6);
+const steel = pelagia.ink.grownSteel();
+const flood = pelagia.ink.floodlightPale(3.258717662091468);
 
 const root = new THREE.Group();
 root.name = 'nodule_refinery';

@@ -62,11 +62,14 @@ const L = 95;
 const DRAWN = 7.05;
 const DATUM = 0;
 
-const chitin = pelagia.submersibleInk.chitinHull();
-const teal = pelagia.submersibleInk.algaeTeal();
-const dark = pelagia.submersibleInk.growthRingDark();
-const pale = pelagia.submersibleInk.sporePale();
-const vein = pelagia.submersibleInk.biolumVein();
+// The navy's ink (#888), under the file's own hyphenated names; this hull
+// is where `algae-teal` and `spore-pale` take their value from. The vein's
+// strength is this file's own, 2.2.
+const chitin = pelagia.ink['chitin-hull']();
+const teal = pelagia.ink['algae-teal']();
+const dark = pelagia.ink['growth-ring-dark']();
+const pale = pelagia.ink['spore-pale']();
+const vein = pelagia.ink['biolum-vein'](2.2);
 const { verbatim } = pelagia;
 
 const root = new THREE.Group();

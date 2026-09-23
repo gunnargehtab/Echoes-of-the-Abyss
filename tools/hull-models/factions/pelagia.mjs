@@ -68,32 +68,106 @@ import {
 } from '../kit.mjs';
 
 /**
- * The Commune's palette, as the Sower's own materials carry it: the four
- * tokens of docs/art-direction.md, and — where the approved model needed a
- * colour the docs do not name — that model's own hex, exactly (kit.mjs `hex`).
- * The vein's `#5FAE42` is the Sower's own — a hue of its own, not the
- * biolight token dimmed (its linear channels are 0.42, 0.55 and 0.37 of the
- * bud's) — which is the difference between a thread along a rib and a bud.
+ * The Commune's palette: one factory a material name, for every model of
+ * the navy (#888, Phase 6 of #540). The recolour throws a model's hue away
+ * and keeps the ratio between its materials and the metalness and
+ * roughness they were authored at (rosterModels.ts `recolor`, gate 4), so
+ * one name at two finishes is two different surfaces on two hulls a player
+ * sees side by side — "one name, one value, across a navy",
+ * docs/asset-prompts-3d.md Block 2b rule 3, which finishes.mjs measures
+ * over the committed files. Until #888 this module held a table per
+ * authoring pass — `scoutInk`, `fleetInk`, `structureInk`, `bastionInk`,
+ * `worksInk`, `veilInk`, `submersibleInk` — each a copy of its export's own
+ * values, and eight names split. Re-finishing the navy is one edit here
+ * now, and check.mjs compares the finish under the name, so an edit here
+ * that is not re-run through every script fails.
  *
- * The two lamps take an `intensity`, the `KHR_materials_emissive_strength`
- * the file carries, at 1 unless said — the Sower's and the Spinner's — and
- * it is the one knob that reaches the conn view: the bake calibrates a
- * map's energy onto E(SIG) whatever the file says, but the conn view keeps
- * a lamp's authored strength as its resting one (rosterModels.ts
- * `applyLiveGlow`), so a hull the block calls *faint* has to be faint in
- * the file. The Drifter's seams burn at 0.2 (hulls/drifter.mjs); the
- * fleet passes below take theirs the same way.
- * The Glider's wing vein burns at the Drifter's 0.2 (hulls/glider.mjs).
+ * The values are the hulls' — the Sower's pass, which fourteen models
+ * carried — and where a name was split the other passes were brought onto
+ * them (Block 2b: "the hull value is canonical"):
  *
- * `bioVeinUnlit` is the vein family's *unlit* finish: `bio_vein`'s base
- * worn as cladding, at the lamp's own roughness, by a part the block
+ * - `chitin_hull`, `growth_ridge`, `algae_membrane`: the Corvette, the
+ *   Cruiser and the Harvester carried a glossier r184 finish — chitin at
+ *   0.2 metal and 0.28 rough, the ridge #14332A at 0.12 and 0.45, the
+ *   membrane at 0.15 and 0.32 — and the Light Scout a third: 0.05 and
+ *   0.55, #14332A at 0.03 and 0.7, 0.04 and 0.5. All four now carry the
+ *   Sower's.
+ * - `algae_membrane` is single-sided. Those four had it two-sided, and no
+ *   membrane part on any of them is an open sheet: every blade, pectoral,
+ *   paddle and fluke is a `membranes` extrusion, 0.03 units thick with both
+ *   caps, so one side shows no hole (#878 is the open-sheet case). The
+ *   fourteen others were single-sided already, so the value the hulls
+ *   carry is also the one the geometry needs.
+ * - `bio_light` sits on the navy's near-black base, #0A1A08 at 0.4 rough
+ *   (kit.mjs `lamp`). Those four carried the token as its own base,
+ *   #8FE36B at 0.35, which made a lamp's *base* the brightest colour on the
+ *   Harvester and the Scout and so the anchor the conn view set their
+ *   whole cladding register by; the membrane is now, as on the Sower. The
+ *   light is untouched: same emissive, each model's own strength.
+ * - `algae_hull` and `biolight_green` are structure names on no hull. The
+ *   Bastion, the Foundry and the Refinery carry the algae token #1FA67A at
+ *   0.08 and 0.6 and the lamp on a #14351A base; the Sentinel Turret
+ *   carried #14664C at 0.62, a shade the docs do not name, and a #123018
+ *   base. Three models against one and the token against a derived shade:
+ *   the turret moved.
+ * - `algae-teal` and `spore-pale` are two of the ten hyphenated names the
+ *   r184 pass gave the Abyssal Submersible and the Spore Veil. The
+ *   Submersible is the hull, so its 0.1 / 0.7 and 0.05 / 0.65 are the
+ *   values and the Veil moved from 0.05 / 0.75 and 0 / 0.65. They keep
+ *   their names rather than fold into `algae_membrane` and `spore_pod`:
+ *   `bio-vein` is not `bio_vein` (the token against the Sower's #5FAE42)
+ *   and `chitin-hull` is a matte chitin, so folding the two that happened
+ *   to split would leave the family of ten less regular, not more, and a
+ *   rename across two approved models is a change of its own.
+ *
+ * No lamp changed colour, so no strength moved. Every lamp takes
+ * `intensity`, the `KHR_materials_emissive_strength` the file carries, and
+ * each script passes its model's own: it is the one knob that reaches the
+ * conn view — the bake calibrates a map's energy onto E(SIG) whatever the
+ * file says, but the conn view keeps a lamp's authored strength as its
+ * resting one (rosterModels.ts `applyLiveGlow`) — so a hull the block calls
+ * *faint* has to be faint in the file. The default is the kit's 1, which
+ * the Sower's pass burns at; the Drifter's seams and the Glider's wing vein
+ * burn at 0.2, the shared kinds at 0.9 to 1.6, the Submersible at 2.2 and
+ * the structures at 0.35 (the Veil's haze) to 3.84 (the Foundry's forge).
+ *
+ * The four tokens are docs/art-direction.md's; where a model needed a
+ * colour the docs do not name, that model's own hex, exactly (kit.mjs
+ * `hex`). `bio_vein`'s #5FAE42 is the Sower's own — a hue of its own, not
+ * the biolight token dimmed (its linear channels are 0.42, 0.55 and 0.37
+ * of the bud's) — which is the difference between a thread along a rib and
+ * a bud. `bio_vein_unlit` is the vein family's *unlit* finish: `bio_vein`'s
+ * base worn as cladding, at the lamp's own roughness, by a part the block
  * lights only in a later band — the Glider's tail veins, which light only
  * while the drive turns and are built with it cut. A lamp dark at rest is
  * a lamp this pipeline never shows (docs/models-plan.md §3.2), so the part
  * carries the family's base and no emissive, as the Directorate's
  * `biolight_unlit` does on the Verger's bay doors (#783).
+ *
+ * The structures carry their own names rather than a dimming factor on
+ * the hulls', because "nearly black — an ambush predator, navigation marks
+ * only until it fires" (the Sentinel Turret block) is not the same
+ * darkening in each navy: `deep_chlorophyll` is the chitin hex at 0.1 and
+ * 0.65, `grown_steel` the fitted things — collars, pipes, tanks — and
+ * `spore_pale` the spore token at the Sower's finish under the
+ * Submersible's name without its hyphen. The works' two lamps of the spore
+ * token, `forge_light` ("interior forge light spilling from the bay") and
+ * `floodlight_pale` ("floodlit working surfaces"), are polished to 0.3.
+ * The Cruiser's `bio_vein_lit` and `sensor_frill_lit` are its own, the
+ * frill two-sided like a membrane; the Veil's `spore-haze` is the one
+ * translucent material on any Commune model — the token as its own base at
+ * 0.16 opacity, blended, rough 1, "exhaling a faint haze" — and keeps that
+ * base, being a glow with nothing under it rather than a lamp on a base.
+ *
+ * The r184 pass's hyphenated names are keyed by the name the file carries,
+ * because four of them — `chitin-hull`, `deep-chlorophyll`, `bio-vein`,
+ * `spore-pale` — collide with an underscore name in camel case and are not
+ * that finish: matte as a deep hull and a bed on the seabed are, chitin at
+ * 0.75 and 0.85 rough, the dark ring at 0.85, and the Veil's vein the token
+ * where the Sower's is its own green.
  */
 export const ink = {
+  // The hulls — the Sower's pass, on eighteen models.
   chitinHull: () => clad('chitin_hull', hex('#0B241E'), 0.08, 0.6),
   growthRidge: () => clad('growth_ridge', hex('#14382C'), 0.1, 0.65),
   algaeMembrane: () => clad('algae_membrane', hex('#1FA67A'), 0.05, 0.55),
@@ -101,6 +175,43 @@ export const ink = {
   bioVein: (intensity = 1) => lamp('bio_vein', hex('#5FAE42'), hex('#061206'), 0.4, intensity),
   bioVeinUnlit: () => clad('bio_vein_unlit', hex('#061206'), 0, 0.4),
   bioLight: (intensity = 1) => lamp('bio_light', hex('#8FE36B'), hex('#0A1A08'), 0.4, intensity),
+  // The Cruiser's own.
+  bioVeinLit: (intensity = 1) =>
+    lamp('bio_vein_lit', hex('#8FE36B'), hex('#2A4A20'), 0.4, intensity),
+  sensorFrillLit: (intensity = 1) => {
+    const m = lamp('sensor_frill_lit', hex('#8FE36B'), hex('#3F6B2E'), 0.4, intensity);
+    m.side = THREE.DoubleSide;
+    return m;
+  },
+  // The structures: the turret, the Bastion and the two works.
+  deepChlorophyll: () => clad('deep_chlorophyll', hex('#0B241E'), 0.1, 0.65),
+  grownSteel: () => clad('grown_steel', hex('#22302C'), 0.35, 0.45),
+  algaeHull: () => clad('algae_hull', hex('#1FA67A'), 0.08, 0.6),
+  sporePale: () => clad('spore_pale', hex('#E8F0A3'), 0.05, 0.5),
+  biolightGreen: (intensity = 1) =>
+    lamp('biolight_green', hex('#8FE36B'), hex('#14351A'), 0.35, intensity),
+  forgeLight: (intensity = 1) =>
+    lamp('forge_light', hex('#E8F0A3'), hex('#2E3A16'), 0.3, intensity),
+  floodlightPale: (intensity = 1) =>
+    lamp('floodlight_pale', hex('#E8F0A3'), hex('#3A3F1E'), 0.3, intensity),
+  // The r184 pass's names: the Abyssal Submersible's and the Spore Veil's.
+  'chitin-hull': () => clad('chitin-hull', hex('#0B241E'), 0.15, 0.75),
+  'algae-teal': () => clad('algae-teal', hex('#1FA67A'), 0.1, 0.7),
+  'growth-ring-dark': () => clad('growth-ring-dark', hex('#123C2E'), 0.1, 0.85),
+  'spore-pale': () => clad('spore-pale', hex('#E8F0A3'), 0.05, 0.65),
+  'biolum-vein': (intensity = 1) =>
+    lamp('biolum-vein', hex('#8FE36B'), hex('#14301A'), 0.4, intensity),
+  'deep-chlorophyll': () => clad('deep-chlorophyll', hex('#0B241E'), 0.05, 0.85),
+  'algae-teal-dark': () => clad('algae-teal-dark', hex('#11563F'), 0.05, 0.8),
+  'bio-vein': (intensity = 1) => lamp('bio-vein', hex('#8FE36B'), hex('#0F2A12'), 0.45, intensity),
+  'bio-vein-dim': (intensity = 1) =>
+    lamp('bio-vein-dim', hex('#8FE36B'), hex('#0F2A12'), 0.5, intensity),
+  'spore-haze': (intensity = 1) => {
+    const m = lamp('spore-haze', hex('#8FE36B'), hex('#8FE36B'), 1, intensity);
+    m.transparent = true;
+    m.opacity = 0.16;
+    return m;
+  },
 };
 
 /** A grown orb: few facets, and squashed by the caller — never round in section. */
@@ -675,28 +786,6 @@ export function tendrils(root, ridge, opts) {
  * ------------------------------------------------------------------------ */
 
 /**
- * The structure palette: the Commune's ink, grown dark.
- *
- * A Sentinel Turret is "nearly black — an ambush predator, navigation marks
- * only until it fires" (docs/asset-prompts-3d.md, the Sentinel Turret block).
- * The structures carry their own names rather than a shared dimming factor
- * applied to `ink`, because the dimming is not uniform across the four
- * navies — see `structureInk` in factions/hadron.mjs for the argument. Values
- * are the approved turret's own. `biolightGreen` takes the emissive strength
- * a file carries: the approved turret's lamp burns at 0.953
- * (`KHR_materials_emissive_strength`), which the bake multiplies in
- * (hull-intake's page.html) and the conn view shows; the default is the full
- * strength every other lamp here has.
- */
-export const structureInk = {
-  deepChlorophyll: () => clad('deep_chlorophyll', hex('#0B241E'), 0.1, 0.65),
-  grownSteel: () => clad('grown_steel', hex('#22302C'), 0.35, 0.45),
-  algaeHull: () => clad('algae_hull', hex('#14664C'), 0.08, 0.62),
-  biolightGreen: (intensity = 1) =>
-    lamp('biolight_green', hex('#8FE36B'), hex('#123018'), 0.35, intensity),
-};
-
-/**
  * A grown shell: an orb of `r` and `facets` [round, down] that may stop
  * short of a full turn (`round`, the fraction of one it goes round) or short
  * of the bottom pole (`down`, the fraction of a half-turn it comes down from
@@ -1099,55 +1188,6 @@ export function slipwayHall(hall, { chitin, ridge, membrane, spore, vein }, opts
  * ------------------------------------------------------------------------ */
 
 /**
- * The Bastion's palette: the structure names with the approved export's own
- * finishes. `deep_chlorophyll` and `grown_steel` are the turret's, from
- * `structureInk`. `algae_hull` is the membrane token #1FA67A at 0.08 metal
- * and 0.6 rough where the turret's `algae_hull` is #14664C at 0.62 — one
- * name, two values across the navy's structures, recorded rather than
- * corrected (docs/asset-prompts-3d.md § "What the approved models derived").
- * `spore_pale` is the spore token at the Sower's finish under the
- * Submersible's name without its hyphen. `biolight_green` is the biolight
- * token on a base of its own, #14351A, burning at 2.9447 — the strongest
- * lamp on any Commune model, for "the one building that can never run
- * silent".
- */
-export const bastionInk = {
-  deepChlorophyll: structureInk.deepChlorophyll,
-  grownSteel: structureInk.grownSteel,
-  algaeHull: () => clad('algae_hull', hex('#1FA67A'), 0.08, 0.6),
-  sporePale: () => clad('spore_pale', hex('#E8F0A3'), 0.05, 0.5),
-  biolightGreen: (intensity = 1) =>
-    lamp('biolight_green', hex('#8FE36B'), hex('#14351A'), 0.35, intensity),
-};
-
-/**
- * The Spore Veil's palette, hyphenated as its export names it like the
- * Submersible's, and matte as a bed on the seabed is: chitin as
- * `deep-chlorophyll` at 0.05 metal and 0.85 rough, `algae-teal` the membrane
- * token at 0.75 rough, `algae-teal-dark` a shade of it the docs do not name
- * (#11563F), `spore-pale` at no metal; and three lamps of the biolight
- * token — `bio-vein` at 2.2 on a base of #0F2A12, `bio-vein-dim` the same
- * base at 0.9, and `spore-haze`, the one translucent material on any
- * Commune model: the token as its own base at 0.16 opacity, blended, rough
- * 1, burning at 0.35 — "exhaling a faint haze". Values are the approved
- * export's own.
- */
-export const veilInk = {
-  deepChlorophyll: () => clad('deep-chlorophyll', hex('#0B241E'), 0.05, 0.85),
-  algaeTealDark: () => clad('algae-teal-dark', hex('#11563F'), 0.05, 0.8),
-  algaeTeal: () => clad('algae-teal', hex('#1FA67A'), 0.05, 0.75),
-  bioVein: () => lamp('bio-vein', hex('#8FE36B'), hex('#0F2A12'), 0.45, 2.2),
-  sporeHaze: () => {
-    const m = lamp('spore-haze', hex('#8FE36B'), hex('#8FE36B'), 1, 0.35);
-    m.transparent = true;
-    m.opacity = 0.16;
-    return m;
-  },
-  bioVeinDim: () => lamp('bio-vein-dim', hex('#8FE36B'), hex('#0F2A12'), 0.5, 0.9),
-  sporePale: () => clad('spore-pale', hex('#E8F0A3'), 0, 0.65),
-};
-
-/**
  * A grown dome: a `shell` stopped `down` of a half-turn short of its pole,
  * placed by `frame` (kit.mjs `xLong` or `zLong`) from the export's own
  * `at`, `rot` and `scale`. The Bastion's `pressure_dome` is an 18 × 10 orb
@@ -1490,22 +1530,6 @@ export function rootFlares(root, mat, opts) {
 }
 
 /**
- * The works' palette — what the Foundry and the Refinery carry that no
- * other Commune model does: two lamps of the spore token, `forge_light` on
- * a base of #2E3A16 burning at 3.8398 ("interior forge light spilling from
- * the bay") and `floodlight_pale` on #3A3F1E at 3.2587 ("floodlit working
- * surfaces"), both at 0.3 rough. Their claddings and their `biolight_green`
- * are `bastionInk`'s at the Bastion's values, the lamp at the Foundry's
- * 3.0999 and the Refinery's 2.6. Values are the approved exports' own.
- */
-export const worksInk = {
-  forgeLight: (intensity = 3.8397711422314402) =>
-    lamp('forge_light', hex('#E8F0A3'), hex('#2E3A16'), 0.3, intensity),
-  floodlightPale: (intensity = 3.258717662091468) =>
-    lamp('floodlight_pale', hex('#E8F0A3'), hex('#3A3F1E'), 0.3, intensity),
-};
-
-/**
  * The husk flanks either side of the Foundry's bay — the Commune's "unit
  * production hall", grown: on each flank (`{ name, n, lobes }`,
  * `husk_lobe_${name}_${i}`) a rank of lobes, each an orb of `facets`
@@ -1709,27 +1733,6 @@ export function silos(root, mats, opts) {
  * ------------------------------------------------------------------------ */
 
 /**
- * The Light Scout's palette: an earlier authoring pass than the Sower's,
- * the same four names with their own finish, and a lamp that is the
- * biolight token through and through, burning at 1.6. Values are the
- * approved export's own. `ink` above is the Sower's, and the two are not
- * interchangeable: a part is compared by its material's *name*, but the
- * conn view renders its finish.
- */
-export const scoutInk = {
-  chitinHull: () => clad('chitin_hull', hex('#0B241E'), 0.05, 0.55),
-  growthRidge: () => clad('growth_ridge', hex('#14332A'), 0.03, 0.7),
-  algaeMembrane: () => {
-    // Two-sided, as the export has it: a membrane is a leaf, and a leaf is
-    // seen from both faces.
-    const m = clad('algae_membrane', hex('#1FA67A'), 0.04, 0.5);
-    m.side = THREE.DoubleSide;
-    return m;
-  },
-  bioLight: () => lamp('bio_light', hex('#8FE36B'), hex('#8FE36B'), 0.35, 1.6),
-};
-
-/**
  * A grown body: a low-facet orb whose every vertex the approved export
  * pushed by hand — the one part of the four scouts that is a table rather
  * than a construction. `buffer` is the export's own local buffer, its unique
@@ -1903,52 +1906,6 @@ export function lightBuds(root, light, { buds, facets = [8, 6] }) {
  * cruiser-, abyssal-submersible- and chorister-pelagia.mjs are the
  * consumers, and each states where its export is odd.
  * ------------------------------------------------------------------------ */
-
-/**
- * The Corvette's, the Harvester's and the Cruiser's palette: the scout's
- * four names with a third finish — chitin at 0.2 metal and 0.28 rough, a
- * ridge at 0.12 and 0.45, the membrane two-sided at 0.15 and 0.32 — and a
- * lamp that is the biolight token through and through at 0.35 rough,
- * burning at the strength each file carries: 1.3 on the Corvette, 0.9 on
- * the Harvester, 1.6 on the Cruiser (`KHR_materials_emissive_strength`).
- * The Cruiser adds two of its own, `bio_vein_lit` for the lit rings and the
- * four veins along its flanks and `sensor_frill_lit` for its three
- * hydrophone frills, a lamp two-sided like a membrane. Values are the
- * approved exports' own; `ink` and `scoutInk` above are other passes and
- * not interchangeable with this one.
- */
-export const fleetInk = {
-  chitinHull: () => clad('chitin_hull', hex('#0B241E'), 0.2, 0.28),
-  growthRidge: () => clad('growth_ridge', hex('#14332A'), 0.12, 0.45),
-  sporePod: () => clad('spore_pod', hex('#E8F0A3'), 0.05, 0.5),
-  algaeMembrane: () => {
-    const m = clad('algae_membrane', hex('#1FA67A'), 0.15, 0.32);
-    m.side = THREE.DoubleSide;
-    return m;
-  },
-  bioLight: (intensity) => lamp('bio_light', hex('#8FE36B'), hex('#8FE36B'), 0.35, intensity),
-  bioVeinLit: () => lamp('bio_vein_lit', hex('#8FE36B'), hex('#2A4A20'), 0.4, 1.5),
-  sensorFrillLit: () => {
-    const m = lamp('sensor_frill_lit', hex('#8FE36B'), hex('#3F6B2E'), 0.4, 0.9);
-    m.side = THREE.DoubleSide;
-    return m;
-  },
-};
-
-/**
- * The Abyssal Submersible's palette, hyphenated as its export names it and
- * matte as a deep hull is — chitin at 0.75 rough, the dark ring at 0.85 —
- * with the one lamp, `biolum-vein`, a near-black base under the biolight
- * token burning at 2.2, the strongest on any Commune hull. Values are the
- * approved export's own (hulls/abyssal-submersible-pelagia.mjs).
- */
-export const submersibleInk = {
-  chitinHull: () => clad('chitin-hull', hex('#0B241E'), 0.15, 0.75),
-  algaeTeal: () => clad('algae-teal', hex('#1FA67A'), 0.1, 0.7),
-  growthRingDark: () => clad('growth-ring-dark', hex('#123C2E'), 0.1, 0.85),
-  sporePale: () => clad('spore-pale', hex('#E8F0A3'), 0.05, 0.65),
-  biolumVein: () => lamp('biolum-vein', hex('#8FE36B'), hex('#14301A'), 0.4, 2.2),
-};
 
 /**
  * A point of glow inside the hull: the `KHR_lights_punctual` point light
