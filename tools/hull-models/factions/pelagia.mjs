@@ -1496,43 +1496,77 @@ function skinReader(meshes) {
  * which put all thirty-one segments inside the lobe they circle — a lamp
  * no map sees — and #890 clad them for it, reading a ring no band named as
  * dark; #893 settled it the other way, more lights, with the block naming
- * them among the resting lamps. So the skin is read straight down off the
- * meshes in `on` — the lobes and the growth rings, as they stand
- * (`skinReader`) — at the segment's centre, both ends of its long axis and
- * both edges of its width; the box is pitched to the fall between its
- * ends, rolled to the slope across its width, and set with its centre line
- * `sink` under the highest of the three along it, so a segment stands a
- * vein's height proud where the skin is straight and is never buried where
- * it is concave. Where a ring runs off one lobe onto another, or through
- * the cleft between two, the segments follow the skin down and up again:
- * the ring is the bed's, not the lobe's. The box's +x is the tangent and
- * its +z the inward radial, so the roll is about its own length and the
- * pitch about its own width, composed Y-Z-X and written as the XYZ Euler
- * `add` takes.
+ * them among the resting lamps. So each is laid as a plank on rough
+ * ground. The skin is read straight down off the meshes in `on` — the
+ * lobes and the growth rings, as they stand (`skinReader`) — on a grid of
+ * `stations` along the bar's footprint by three across it, and the bar
+ * takes the pitch and roll of the plane those readings stray least from
+ * (every degree of each tried). Then the skin is read again under the
+ * bar's own top and bottom faces so set, and its height is two rules: the
+ * highest reading under its top runs `sink` under its centre line — a
+ * vein's height proud of the high spots — and no reading under its bottom
+ * stands clear of the bar by more than `sink`. On a skin rougher than the
+ * section can hold, the two disagree, and the second wins: the bar never
+ * floats, and the skin comes up through its top by the difference — a
+ * vein sinking under the skin rather than a bar standing off it. That
+ * happens where a ring runs off one lobe onto another or through the
+ * cleft between two (the Veil's four such segments are named in
+ * structures/spore-veil-pelagia.mjs); everywhere else the two rules agree
+ * and the bar is seated. The box's +x is the tangent and its +z the
+ * inward radial, so the roll is about its own length and the pitch about
+ * its own width, composed Y-Z-X and written as the XYZ Euler `add` takes.
  */
 export function veinRing(root, mat, opts) {
   const { name, at, r, centre, span, count, section = [0.045, 0.06], overlap = 1.08 } = opts;
-  const { on, sink = 0.01 } = opts;
+  const { on, sink = 0.01, stations = 9 } = opts;
   const [cx, cz] = at;
   const [tall, wide] = section;
   const frame = group(root, name);
   const step = span / count;
   const length = r * step * overlap;
   const skin = skinReader(on);
+  const footprint = [];
+  for (let i = 0; i < stations; i++)
+    for (const v of [-wide / 2, 0, wide / 2])
+      footprint.push([-length / 2 + (length * i) / (stations - 1), v]);
+  const rad = (deg) => (deg * Math.PI) / 180;
   for (let k = 0; k < count; k++) {
     const a = centre - span / 2 + (k + 0.5) * step;
     const seg = `${name}-seg-${k + 1}`;
     const x = cx + r * Math.cos(a);
     const z = cz + r * Math.sin(a);
-    const tangent = [-Math.sin(a), Math.cos(a)];
-    const inward = [-Math.cos(a), -Math.sin(a)];
-    const h = (d, [ux, uz]) => skin(x + d * ux, z + d * uz, seg);
-    const along = [-length / 2, 0, length / 2].map((d) => h(d, tangent));
-    const [outboard, inboard] = [-wide / 2, wide / 2].map((d) => h(d, inward));
-    const pitch = Math.atan2(along[2] - along[0], length);
-    const roll = Math.atan2(outboard - inboard, wide);
-    const y = Math.max(...along.map((s, i) => s - (i - 1) * (length / 2) * Math.tan(pitch))) - sink;
-    const e = new THREE.Euler(roll, -(a + Math.PI / 2), pitch, 'YZX').reorder('XYZ');
+    // The footprint in plan: u along the tangent (−sin a, cos a), v along
+    // the inward radial (−cos a, −sin a), and the skin under each station.
+    const plan = footprint.map(([u, v]) => [
+      u,
+      v,
+      skin(x - u * Math.sin(a) - v * Math.cos(a), z + u * Math.cos(a) - v * Math.sin(a), seg),
+    ]);
+    let fit = null;
+    for (let p = -60; p <= 60; p++)
+      for (let q = -80; q <= 80; q++) {
+        const mu = Math.tan(rad(p));
+        const nv = Math.tan(rad(q));
+        let hi = -Infinity;
+        let lo = Infinity;
+        for (const [u, v, s] of plan) {
+          const d = s - mu * u - nv * v;
+          if (d > hi) hi = d;
+          if (d < lo) lo = d;
+        }
+        if (!fit || hi - lo < fit.stray) fit = { pitch: rad(p), roll: -rad(q), stray: hi - lo };
+      }
+    const e = new THREE.Euler(fit.roll, -(a + Math.PI / 2), fit.pitch, 'YZX').reorder('XYZ');
+    const turn = new THREE.Quaternion().setFromEuler(e);
+    let seated = -Infinity;
+    let floor = Infinity;
+    for (const [u, v] of footprint) {
+      const top = new THREE.Vector3(u, tall / 2, v).applyQuaternion(turn);
+      const bottom = new THREE.Vector3(u, -tall / 2, v).applyQuaternion(turn);
+      seated = Math.max(seated, skin(x + top.x, z + top.z, seg) - top.y + (tall / 2 - sink));
+      floor = Math.min(floor, skin(x + bottom.x, z + bottom.z, seg) - bottom.y + sink);
+    }
+    const y = Math.min(seated, floor);
     placed(frame, seg, box(length, tall, wide), mat, verbatim([x, y, z], [e.x, e.y, e.z]));
   }
   return frame;
