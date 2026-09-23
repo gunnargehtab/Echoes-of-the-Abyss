@@ -294,7 +294,7 @@ export function sweep(stations, section) {
     }
   };
   // The first ring's fan turns with the sides' rotation and the last ring's
-  // against it, which is what puts each end's face on the outside.
+  // against it, which puts each end's face on the same side as the sides.
   cap(rings[0], stations[0], false);
   cap(rings[rings.length - 1], stations[stations.length - 1], true);
   const geo = new THREE.BufferGeometry();
