@@ -23,8 +23,8 @@
 
 import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
-import { Container, Graphics, Text, type GraphicsPath } from 'pixi.js';
-import { Faction, MovementHoldReason, StructureKind } from '@echoes/shared';
+import { CanvasTextMetrics, Container, Graphics, Text, type GraphicsPath } from 'pixi.js';
+import { Faction, MovementHoldReason, SIM, StructureKind } from '@echoes/shared';
 import { FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
 import {
   createHost,
@@ -335,11 +335,12 @@ describe('renderer smoke test: the scene-graph probes', () => {
   });
 
   it('bills a repaint only while the label is on the glass, and once when it returns', () => {
-    // The clock is the live instance of this (#846): `EchoRenderer.ts:7398`
-    // stamps `clockLabel.text` every frame and `:7399` then hides the clock
-    // when the top strip is too narrow for it. Hand-built rather than booted
-    // so the sequence is the one under test rather than whatever width the
-    // canned host happens to be.
+    // The clock was the live instance of this (#846): `EchoRenderer.drawHud`
+    // stamped `clockLabel.text` every frame and then hid the clock when the
+    // top strip was too narrow for it. A dropped clock keeps its last stamp
+    // since #857, but the property is Pixi's and holds for any label.
+    // Hand-built rather than booted so the sequence is the one under test
+    // rather than whatever width the canned host happens to be.
     const stage = new Container();
     const onGlass = new Text({ text: 'T+00:00' });
     const clock = new Text({ text: 'T+00:00' });
@@ -1847,6 +1848,60 @@ describe('renderer smoke test: the strip explains itself', () => {
     // return, and this row has found room for one of the two.
 
     booted.teardown();
+  });
+
+  it('stops measuring the clock while the strip has dropped it (#857)', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    // Counted at the call a label's size costs: `Text.updateBounds` asks
+    // `CanvasTextMetrics.measureText` once for every changed string, and the
+    // clock is the only label on the canvas whose text starts `T+`.
+    const measure = mock.method(CanvasTextMetrics, 'measureText');
+    const clockMeasures = (): number =>
+      measure.mock.calls.filter((call) => String(call.arguments[0]).startsWith('T+')).length;
+    const at = (second: number, snapshot = cannedSnapshot(second * SIM.TICK_HZ)): void => {
+      booted.chart.applySnapshot(snapshot);
+      booted.frame();
+    };
+
+    try {
+      // The control, at 100% where the row has room: a drawn clock is measured
+      // as it moves, so a probe that counts nothing cannot pass the rest.
+      booted.frame(3);
+      let before = clockMeasures();
+      for (let second = 10; second < 20; second++) at(second);
+      assert.ok(clockMeasures() - before >= 10, 'a drawn clock moved ten times unmeasured');
+      assert.equal(textSaying(booted.app.stage, 'T+'), 'T+00:19', 'the drawn clock stopped');
+
+      // Dropped, as the test above drops it: 135% on a full first row. A
+      // minute of match time on, nothing has been measured for it.
+      booted.chart.setUiScale(1.35);
+      booted.frame(3);
+      assert.equal(textSaying(booted.app.stage, 'T+'), null, 'the clock was not dropped');
+      before = clockMeasures();
+      for (let second = 20; second < 80; second++) at(second);
+      assert.equal(clockMeasures() - before, 0, 'a clock nothing draws went on measuring itself');
+
+      // Its width is its length's, so a stamp that grows a digit is the one
+      // change a dropped clock still pays for — once, and not every second.
+      before = clockMeasures();
+      for (let second = 5995; second < 6005; second++) at(second);
+      assert.equal(clockMeasures() - before, 1, 'a hundredth minute was not measured once');
+
+      // And back, when the row it is on has room again: it returns saying the
+      // current second rather than the last one it was stamped with — on the
+      // frame it returns, since the frame after would re-stamp it regardless.
+      const light = { capacity: 4, demand: 3, satisfaction: 1 };
+      at(6010, { ...cannedSnapshot(6010 * SIM.TICK_HZ), draw: light });
+      assert.equal(
+        textSaying(booted.app.stage, 'T+'),
+        'T+100:10',
+        'the clock came back with a stale stamp'
+      );
+    } finally {
+      measure.mock.restore();
+      booted.teardown();
+    }
   });
 
   it('never prints the two droppable readouts over another number, across §11’s range', async () => {
