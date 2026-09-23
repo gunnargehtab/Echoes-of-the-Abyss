@@ -2,13 +2,16 @@
  * The Bulwark — the Consortium's heavy, 150 m (docs/units.md, "The rung, and
  * two hulls a navy").
  *
- * "The loudest hull in the game (SIG 70 idle, 75 cruise) and the widest beam
- * in the roster. A slab: blunt ram bow with a plough plate and teeth, blunt
- * stern, three stepped armour tiers, flank plates patchworked
- * older-under-newer, one enormous forward twin turret (an 800 m gun), a
- * bridge citadel aft, four stacks and three prop shrouds. Burning bright:
- * floodlit deck surfaces and rows of floods along both deck edges — the loud
- * state is the resting state."
+ * "The heavy, 150 m — the loudest hull in the game (SIG 70 idle, 75 cruise)
+ * and the widest beam of the rung. A slab: blunt ram bow with a plough
+ * plate and teeth, blunt stern, three stepped armour tiers, flank plates
+ * patchworked older-under-newer, one enormous forward twin turret (an 800 m
+ * gun), a bridge citadel aft, four stacks and three prop shrouds. Burning
+ * bright: floodlit deck surfaces and rows of floods along both deck edges,
+ * lit ports down the citadel's flanks and across its bridge, six raised
+ * vent gratings lit along the transom's lip and a bow lamp on the foredeck
+ * over the plough — the loud state is the resting state" (the Bulwark block
+ * of docs/asset-prompts-3d.md, as #893 amended it).
  *
  * This is the hull #540 opened with — `hull_slab` + `armour_tier_1..3` +
  * `flank_plate_p0..3`, "those repeating series are loops" — and the port

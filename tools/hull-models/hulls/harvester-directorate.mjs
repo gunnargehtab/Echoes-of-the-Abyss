@@ -5,7 +5,7 @@
  *
  * "Industrial nodule-mining vessel (SIG 18 idle; mining follows the
  * throttle, up to 68 at Overdrive). Wide cargo body, external intake
- * dredge gear; dim at rest — running lights and marks along the hull, the
+ * dredge gear; dim at rest — running lights or marks along the hull, the
  * dredge gear dark or marked no brighter — floodlit when it mines, the
  * same lamps brighter, which reads as its loud state" (as #893 amended
  * it) — said the Directorate's way: "spiked, insectoid,
@@ -21,8 +21,8 @@
  * lip, and four paddles fanned about the stern; and the light — three seam
  * strips along the belly's bands, a strip down each flank (the port the
  * longer), a bar over the maw and a ring round it, and three domes at the
- * bow, the port flank and the tail — the floodlit mining machinery of a
- * hull that idles at SIG 18. Nothing on it mirrors.
+ * bow, the port flank and the tail — the running lights and marks of a
+ * hull that idles at SIG 18, floodlit when it mines. Nothing on it mirrors.
  *
  * A port of the approved export
  * (docs/concept-art/models/harvester-directorate.glb at 3e15409), part for
@@ -57,7 +57,7 @@
  * `seam_strip_bow`, `seam_strip_mid`, `seam_strip_aft` show nothing from
  * above, under the carapace, and the export warns on each. #890 asked
  * whether a belly seam belongs to the resting set at all; #893 settled it
- * by naming the set — "running lights and marks along the hull, the
+ * by naming the set — "running lights or marks along the hull, the
  * dredge gear dark or marked no brighter" — the seam strips and the flank
  * strips among the marks along the hull, the maw's bar and ring the marks
  * on the gear, the three domes the running lights. Nothing moved.
@@ -245,11 +245,12 @@ directorate.telsonFan(root, [chitin, violet], {
   ],
 });
 
-// "Floodlit mining machinery that reads as its loud state": a seam strip
-// along each of the gut's three bands — under the carapace, residual audit
-// lines (#890, the header) — a strip down each flank — 22 to port, 15 to
-// starboard, neither where the other is — a bar over the maw and a ring
-// round its mouth, and three domes: bow, port flank, tail.
+// "Running lights or marks along the hull, the dredge gear ... marked no
+// brighter", floodlit when it mines: a seam strip along each of the gut's
+// three bands — under the carapace, residual audit lines (#890, the
+// header) — a strip down each flank — 22 to port, 15 to starboard, neither
+// where the other is — a bar over the maw and a ring round its mouth, the
+// gear's marks, and three domes: bow, port flank, tail.
 bar('seam_strip_bow', photophore, [20.8, 0.45, 0.5], [0.2, 3.85, 4], [0, 0.02, 0]);
 bar('seam_strip_mid', photophore, [21.8, 0.45, 0.5], [0.2, 3.75, -8], [0, -0.015, 0]);
 bar('seam_strip_aft', photophore, [18.8, 0.45, 0.5], [0.2, 3.95, -18], [0, 0.02, 0]);

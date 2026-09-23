@@ -2842,8 +2842,8 @@ export function repairPatches(root, put, mats, { patches }) {
 }
 
 /**
- * "A recessed launch bay … interior forge light spilling from the bay when
- * producing": the bay walls a side and the wall closing it aft, the sill
+ * "A recessed launch bay … the forge light across the bay and at its
+ * mouth": the bay walls a side and the wall closing it aft, the sill
  * across its mouth, an apron a side with a hazard stripe along it, the lit
  * forge floor and back wall, a lit rim strip along each wall and one across
  * the front, a lit seam down each eave of the hall roof, and the strip

@@ -3,10 +3,14 @@
  * tools/hull-maps/models.mjs), SIG 25 idle, 55 with the line running.
  *
  * "Unit production hall with a recessed launch bay and gantry cranes (SIG
- * 25 idle, 55 with the line running). Dim at rest; interior forge light
- * spilling from the bay when producing" (docs/asset-prompts-3d.md,
- * STRUCTURE — Foundry). One prompt block, four scripts; the per-navy
- * difference is docs/art-direction.md's.
+ * 25 idle, 55 with the line running). Dim at rest: the forge light across
+ * the bay and at its mouth, the bay's guide lights or rim strips, the
+ * gantries' lamps, and the navy's own lamps on the halls and the mouth —
+ * running lights, photophores, veins, seams, ridges or crystals; the same
+ * forge light flooding from the bay when producing"
+ * (docs/asset-prompts-3d.md, STRUCTURE — Foundry, as #893 amended it).
+ * One prompt block, four scripts; the per-navy difference is
+ * docs/art-direction.md's.
  *
  * The Commune's is a husk grown either side of the bay: four lobes a flank,
  * each ringed where it grew — two or three growth rings, no two alike —
@@ -73,13 +77,11 @@
  *   the one-glow-factor paragraph after the rules; ruling 2), the launch
  *   glow clad, and the block naming its resting lamps left to #893, which
  *   settled it the other way — more lights, not fewer. The clause now
- *   names them: "Dim at rest: the forge light along the bay floor and at
- *   the launch mouth, the bay's guide lights or rim strips, the gantries'
- *   lamps, and the navy's own lamps along the halls — running lights,
- *   photophores, veins, seams or ridges; the same forge light flooding
- *   from the bay when producing". So the forge line, the launch glow, the
- *   ten guides, the two warning lights and the four hull veins are all
- *   the resting clause's, lit, and the working band is the same lamps
+ *   names them (quoted at the head of this file): the forge line is "the
+ *   forge light across the bay", the launch glow that light "at its
+ *   mouth", the ten guides "the bay's guide lights", the two warning
+ *   lights "the gantries' lamps" and the four hull veins "the navy's own
+ *   lamps on the halls" — all lit, and the working band is the same lamps
  *   brighter. Under that:
  *   · `bay_guide_0_0` to `_0_3` and `_1_1`, on the lips' tops under the
  *     lobes' skirts and the crane beams, stay lit and the whole rank
@@ -95,7 +97,7 @@
  *     `foundryBay` default, so the Directorate's file moves with this one.
  *   · `launch_glow`, the drum the export stood on edge inside the mouth's
  *     ring (a disc facing the bow, 0 m² from above), is the forge light
- *     "at the launch mouth": lit at rest in `forge_light`, the forge
+ *     "at its mouth": lit at rest in `forge_light`, the forge
  *     line's own and the material the export gave it, which #890 had
  *     swapped for `bio_vein_unlit` on the block as it then read (rule 2).
  *     Since #893 it lies flat, its face up at y 0.5, centred on the
@@ -339,13 +341,13 @@ gantryCrane(root, crane, {
 
 // The launch mouth and its glow drum, at the kit's defaults — the drum
 // lying flat at the floor's level since #893, lit in `forge_light`, the
-// forge line's own: the block's forge light "at the launch mouth" (the
-// header).
+// forge line's own: the block's forge light "at its mouth" (the header).
 launchMouth(root, { mouth: chitin, glow: forge });
 
 // Four lit veins climbing the flanks, two a side, each its own radius and
-// arc, yawed −0.4 and rolled its own way — "the navy's own lamps along the
-// halls — ... veins" of the block's resting clause since #893 (the header).
+// arc, yawed −0.4 and rolled its own way — "the navy's own lamps on the
+// halls and the mouth — ... veins" of the block's resting clause since
+// #893 (the header).
 pelagia.domeArcs(root, bio, {
   name: 'hull_vein',
   frame: zLong,

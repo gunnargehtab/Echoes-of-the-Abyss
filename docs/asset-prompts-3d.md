@@ -293,7 +293,7 @@ claws.
 ```text
 UNIT — Harvester (any faction): industrial nodule-mining vessel (SIG 18
 idle; mining follows the throttle, up to 68 at Overdrive). Wide cargo body,
-external intake dredge gear; dim at rest — running lights and marks along
+external intake dredge gear; dim at rest — running lights or marks along
 the hull, the dredge gear dark or marked no brighter — floodlit when it
 mines, the same lamps brighter, which reads as its loud state.
 ```
@@ -1133,10 +1133,10 @@ surfaces, visible machinery light.
 ```text
 STRUCTURE — Foundry (any faction): unit production hall with a recessed
 launch bay and gantry cranes (SIG 25 idle, 55 with the line running). Dim
-at rest: the forge light along the bay floor and at the launch mouth, the
-bay's guide lights or rim strips, the gantries' lamps, and the navy's own
-lamps along the halls — running lights, photophores, veins, seams or
-ridges; the same forge light flooding from the bay when producing.
+at rest: the forge light across the bay and at its mouth, the bay's guide
+lights or rim strips, the gantries' lamps, and the navy's own lamps on the
+halls and the mouth — running lights, photophores, veins, seams, ridges or
+crystals; the same forge light flooding from the bay when producing.
 ```
 
 ```text

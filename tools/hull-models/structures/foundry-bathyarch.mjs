@@ -3,9 +3,13 @@
  * 160, packages/shared/src/structures.ts), SIG 25 idle.
  *
  * "Unit production hall with a recessed launch bay and gantry cranes (SIG
- * 25 idle, 55 with the line running). Dim at rest; interior forge light
- * spilling from the bay when producing" (docs/asset-prompts-3d.md,
- * STRUCTURE — Foundry). One prompt block, four scripts; the Klaxon's is
+ * 25 idle, 55 with the line running). Dim at rest: the forge light across
+ * the bay and at its mouth, the bay's guide lights or rim strips, the
+ * gantries' lamps, and the navy's own lamps on the halls and the mouth —
+ * running lights, photophores, veins, seams, ridges or crystals; the same
+ * forge light flooding from the bay when producing"
+ * (docs/asset-prompts-3d.md, STRUCTURE — Foundry, as #893 amended it).
+ * One prompt block, four scripts; the Klaxon's is
  * from the earlier authoring pass its Sentinel Turret came from and shares
  * nothing with the other three navies' Foundries, so it ports from
  * `factions/bathyarch.mjs` alone, as the turret did (#639) — "boxy,
@@ -51,11 +55,12 @@
  *   as the block's resting clause names them since #893 (docs/models-plan.md
  *   §3.2 rule 1). The Foundry block is one text for four navies and names
  *   its lamps in words each navy's model answers in its own: "the forge
- *   light along the bay floor and at the launch mouth" is the forge floor,
- *   the forge back wall's top and the gable strip over the bay mouth; "the
- *   bay's guide lights or rim strips" the three rim strips; "the gantries'
- *   lamps" the two crane flood patches; and "the navy's own lamps along the
- *   halls — … seams" the two roof seams. Six face up and never moved; the
+ *   light across the bay and at its mouth" is the forge floor, the forge
+ *   back wall's top and the gable strip over the bay mouth; "the bay's
+ *   guide lights or rim strips" the three rim strips; "the gantries'
+ *   lamps" the two crane flood patches; and "the navy's own lamps on the
+ *   halls and the mouth — … seams" the two roof seams. Six face up and
+ *   never moved; the
  *   other four #893 moved. The approved file had `roof_seam_p/s` inside the
  *   roof slab (x ±19.6 in a slab to ±20, y 20.4 in a slab to 21) and
  *   `crane_fwd/aft_floodpatch` under their bridges (y 15.05 under a bridge
@@ -158,9 +163,11 @@ bathyarch.repairPatches(
   }
 );
 
-// "A recessed launch bay": the walls, sill and aprons, and the forge light
-// spilling from it — the floor, the back wall, the rim strips, the roof
-// seams along the eaves and the gable strip.
+// "A recessed launch bay": the walls, sill and aprons; "the forge light
+// across the bay and at its mouth" — the floor, the back wall and the rim
+// strips, the forward one across the mouth; and "the navy's own lamps on
+// the halls — ... seams" — the roof seams along the eaves and the gable
+// strip.
 bathyarch.launchBay(
   root,
   put,

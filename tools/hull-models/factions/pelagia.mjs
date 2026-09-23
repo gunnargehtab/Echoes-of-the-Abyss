@@ -156,7 +156,7 @@ import {
  * 0.65, `grown_steel` the fitted things — collars, pipes, tanks — and
  * `spore_pale` the spore token at the Sower's finish under the
  * Submersible's name without its hyphen. The works' two lamps of the spore
- * token, `forge_light` ("interior forge light spilling from the bay") and
+ * token, `forge_light` ("the forge light across the bay and at its mouth") and
  * `floodlight_pale` ("floodlit working surfaces"), are polished to 0.3.
  * The Cruiser's `bio_vein_lit` and `sensor_frill_lit` are its own, the
  * frill two-sided like a membrane; the Veil's `spore-haze` is the one

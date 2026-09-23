@@ -61,7 +61,8 @@
  * E 4.50 against a target of 5.48 at the ×64 ceiling, and past the ceiling
  * the only lever is lit area, never strength (docs/graphics-standards.md
  * §3; docs/models-plan.md §3.2). The block's resting clause is "dim red
- * photophore constellation across the dome", so the constellation is what
+ * photophore constellation across the dome, and a lamp at the tip of the
+ * quill off its apex" (as #893 amended it), and the constellation is what
  * grows: every one of the twenty-two studs keeps its centre, its name and
  * its material and has its radius scaled by `GROWN`, the same factor on
  * each, so the pattern is the file's own at a larger stud. The quill's tip

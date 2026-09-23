@@ -4,8 +4,10 @@
  *
  * "Industrial nodule-mining vessel (SIG 18 idle; mining follows the
  * throttle, up to 68 at Overdrive). Wide cargo body, external intake dredge
- * gear; dim at rest, with floodlit mining machinery that reads as its loud
- * state" — said the Commune's way: a grazing thing. A pod of a hull pushed
+ * gear; dim at rest — running lights or marks along the hull, the dredge
+ * gear dark or marked no brighter — floodlit when it mines, the same lamps
+ * brighter, which reads as its loud state" (as #893 amended it) — said the
+ * Commune's way: a grazing thing. A pod of a hull pushed
  * out of round as it grew, the widest body in the navy's shared kinds; two
  * cargo lobes slung under the flanks, different sizes at different heights,
  * each rolled its own way; five growth rings leaned each its own way; an

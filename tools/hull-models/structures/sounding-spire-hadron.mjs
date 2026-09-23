@@ -69,11 +69,14 @@
  * and shift but for the four parts below — every other part is where it
  * was (a square plan, compared as it stands).
  *
- * LIGHT (#890, #893). The block's resting clause names every lamp on the
- * file since #893: "the crystal glowing low from core to apex" is the
+ * LIGHT (#890, #893). The block names every lamp on the file. Its resting
+ * clause since #893: "the crystal glowing low from core to apex" is the
  * core, the throat and the apex, "the horn tips with it" the two tips,
- * and "running lights up the frame" the ten; "burning bright along the
- * crystal when active" is the same lamps scaled, the one-glow-factor
+ * and "running lights up the frame" the ten; and its "heat-shimmer
+ * distortion" is `heat_shimmer_sheath`, translucent and emissive at 0.55,
+ * which the audit reads as a lamp of 974 m² over everything it wraps.
+ * "Burning bright along the crystal when active" is the same lamps
+ * scaled, the one-glow-factor
  * reading (models-plan.md §3.2, the paragraph after the rules), as the
  * approved model and #652 have it. When #890 placed them the clause named
  * only the active band, and the resting set was carried as the approved

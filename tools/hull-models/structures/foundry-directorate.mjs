@@ -3,10 +3,14 @@
  * tools/hull-maps/models.mjs), SIG 25 idle, 55 with the line running.
  *
  * "Unit production hall with a recessed launch bay and gantry cranes (SIG
- * 25 idle, 55 with the line running). Dim at rest; interior forge light
- * spilling from the bay when producing" (docs/asset-prompts-3d.md,
- * STRUCTURE — Foundry). One prompt block, four scripts; the per-navy
- * difference is docs/art-direction.md's.
+ * 25 idle, 55 with the line running). Dim at rest: the forge light across
+ * the bay and at its mouth, the bay's guide lights or rim strips, the
+ * gantries' lamps, and the navy's own lamps on the halls and the mouth —
+ * running lights, photophores, veins, seams, ridges or crystals; the same
+ * forge light flooding from the bay when producing"
+ * (docs/asset-prompts-3d.md, STRUCTURE — Foundry, as #893 amended it).
+ * One prompt block, four scripts; the per-navy difference is
+ * docs/art-direction.md's.
  *
  * The Directorate's is a carapace laid down either side of the bay: four
  * tergites a flank, each with its steel seam and — all but the bow plate —
@@ -75,14 +79,12 @@
  *   the one-glow-factor paragraph after the rules; ruling 2), the launch
  *   glow clad, and the block naming its resting lamps left to #893, which
  *   settled it the other way — more lights, not fewer. The clause now
- *   names them: "Dim at rest: the forge light along the bay floor and at
- *   the launch mouth, the bay's guide lights or rim strips, the gantries'
- *   lamps, and the navy's own lamps along the halls — running lights,
- *   photophores, veins, seams or ridges; the same forge light flooding
- *   from the bay when producing". So the forge line, the launch glow, the
- *   nine guides, the two warning lights and the ten flank photophores are
- *   all the resting clause's, lit, and the working band is the same lamps
- *   brighter. Under that:
+ *   names them (quoted at the head of this file): the forge line is "the
+ *   forge light across the bay", the launch glow that light "at its
+ *   mouth", the nine guides "the bay's guide lights", the two warning
+ *   lights "the gantries' lamps" and the ten flank photophores "the
+ *   navy's own lamps on the halls" — all lit, and the working band is the
+ *   same lamps brighter. Under that:
  *   · `bay_guide_0_0`, `_0_1`, `_0_3`, `_0_4` and `_1_1`, on the lips' tops
  *     under the tergites' rims and the crane beams, stay lit and the whole
  *     rank moves, both lips, to either side of the forge line at x ±0.75 —
@@ -97,7 +99,7 @@
  *     `foundryBay` default, so the Commune's file moves with this one.
  *   · `launch_glow`, the drum the export stood on edge inside the mouth's
  *     ring (a disc facing the bow, 0 m² from above), is the forge light
- *     "at the launch mouth": lit at rest in `forge_light`, the forge
+ *     "at its mouth": lit at rest in `forge_light`, the forge
  *     line's own and the material the export gave it, which #890 had
  *     swapped for `biolight_unlit` on the block as it then read (rule 2).
  *     Since #893 it lies flat, its face up at y 0.5, centred on the
@@ -299,8 +301,8 @@ gantryCrane(root, crane, {
 
 // The launch mouth and its glow drum, at the kit's defaults — the drum
 // lying flat at the floor's level since #893, lit in `forge_light`, the
-// forge line's own: the block's forge light "at the launch mouth" (the
-// header) — and the mandibles.
+// forge line's own: the block's forge light "at its mouth" (the header) —
+// and the mandibles.
 launchMouth(root, { mouth: black, glow: forge });
 directorate.launchMandibles(root, violet, {
   r: 0.18,
@@ -312,9 +314,9 @@ directorate.launchMandibles(root, violet, {
 });
 
 // Ten flank photophores, seven on the +x flank and three on the −x, each
-// its own radius, none mirroring another — "the navy's own lamps along
-// the halls — ... photophores" of the block's resting clause since #893
-// (the header), lit as the approved file lights them. Nine of
+// its own radius, none mirroring another — "the navy's own lamps on the
+// halls and the mouth — ... photophores" of the block's resting clause
+// since #893 (the header), lit as the approved file lights them. Nine of
 // them the export drew inside the tergite shells — `_0` just under its
 // plate's surface, the rest deep — so each of those keeps its station in
 // plan and takes its plate's surface height there, read off the built

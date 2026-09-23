@@ -1325,8 +1325,8 @@ function sharer(share) {
  * lips (to x 0.72–1.24 on the +x side), the two crane beams cross the bay
  * at z −2.6 and 2.9, and the stern carapace and pod roof the bay's aft
  * 1.5. The guides and the forge line are the block's resting lamps — "the
- * forge light along the bay floor" and "the bay's guide lights or rim
- * strips" since #893 amended the clause; #890 carried them as every
+ * forge light across the bay" and "the bay's guide lights or rim strips"
+ * since #893 amended the clause; #890 carried them as every
  * approved Foundry lit them while the block still named no lamp at rest
  * (#890, review rulings, rulings 2 and 3) — and a lit fixture the bake
  * cannot see moves (docs/models-plan.md §3.2 rule 5): to x ±0.75, the
@@ -1460,10 +1460,10 @@ export function gantryCrane(root, mats, opts) {
 /**
  * The launch mouth at the bay's open end: a torus for the mouth, squashed
  * by its node, and the glow drum lying flat in it at the floor's level, a
- * thin drum lit at rest — the forge light "along the bay floor and at the
- * launch mouth" of the Foundry block's resting clause, the same light
- * "flooding from the bay when producing" (docs/asset-prompts-3d.md,
- * STRUCTURE — Foundry, as #893 amended it). The Directorate's and the
+ * thin drum lit at rest — the forge light "across the bay and at its
+ * mouth" of the Foundry block's resting clause, the same light "flooding
+ * from the bay when producing" (docs/asset-prompts-3d.md, STRUCTURE —
+ * Foundry, as #893 amended it). The Directorate's and the
  * Commune's files carry it at one set of numbers, the defaults; the
  * Order's gate is its own (`factions/hadron.mjs` `launchGate`), and its
  * `gate_threshold` is this drum's reading there.
@@ -1485,11 +1485,14 @@ export function gantryCrane(root, mats, opts) {
  * boxes), and `metreTrue` refuses a drawn length that is not the header's
  * — rightly, since a longer one rescales every part and moves every map.
  * At 6.0 the forward edge is 7.35, inside the Commune's 7.39 as well as
- * the Directorate's. Its underside is 0.02 over the crown of the ring's
- * bottom tube (0.38) where it passes through the ring; its top is 0.05
- * proud of the bay floor (0.55) over the floor's last 1.35 and 0.07 under
- * the forge line's (0.67), so the line's last 1.05 runs into the pool
- * with its own top showing; and the fifth guide each side (r 0.1 at
+ * the Directorate's. Its underside is 0.009 over the crown of the ring's
+ * bottom tube where it passes through the ring — 0.391 on the faceted
+ * ring, a five-sided tube on ten segments, against 0.38 for a round one;
+ * its top is 0.05 proud of the bay floor (0.55) over the floor's last
+ * 1.27 — the nine-sided disc's aft side is a flat at 1.269 from its
+ * centre, its bow a vertex at 1.35 — and 0.07 under the forge line's
+ * (0.67), so the line's last 0.97 runs into the pool with its own top
+ * showing; and the fifth guide each side (r 0.1 at
  * y 0.62, z 5.9, inside the disc's plan) stands proud of it. The Order's
  * threshold lies at y 0.5 beyond its floor's end the same way. The ring's
  * top tube covers the band z 6.4..7.0 of the disc from above, the forge

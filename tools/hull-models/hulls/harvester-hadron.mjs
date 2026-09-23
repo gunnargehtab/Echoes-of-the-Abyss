@@ -4,8 +4,10 @@
  *
  * "Industrial nodule-mining vessel (SIG 18 idle; mining follows the
  * throttle, up to 68 at Overdrive). Wide cargo body, external intake dredge
- * gear; dim at rest, with floodlit mining machinery that reads as its loud
- * state" — said the Order's way: "precise bilateral symmetry; blade-like,
+ * gear; dim at rest — running lights or marks along the hull, the dredge
+ * gear dark or marked no brighter — floodlit when it mines, the same lamps
+ * brighter, which reads as its loud state" (as #893 amended it) — said the
+ * Order's way: "precise bilateral symmetry; blade-like,
  * crystalline silhouettes". A cargo body of shadow indigo, a box 22 wide on
  * 52 long, rimmed in alloy down each flank, decked over and plated under; a
  * bow wedge and a stern wedge, four-sided prisms pressed wide and flat and
@@ -37,8 +39,9 @@
  *   reflection every Z-long Order hull has (#588 review, F1).
  * - The nine teeth are one prism at nine stations 2.05 apart, each its own
  *   buffer, as the file has them.
- * - The seams beside the control prism are the only lamps; the "floodlit
- *   mining machinery" of the loud state is not modelled, and the teeth are
+ * - The seams beside the control prism are the only lamps — the "marks
+ *   along the hull" of the resting clause, the dredge gear "dark" — and
+ *   the loud state is those two, "the same lamps brighter"; the teeth are
  *   unlit crystal.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
