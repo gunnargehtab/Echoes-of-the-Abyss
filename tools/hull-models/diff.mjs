@@ -116,7 +116,7 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readGlb, boundsOf } from './glb.mjs';
+import { readGlb, boundsOf, finishFields } from './glb.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
@@ -265,40 +265,6 @@ function triangleDiff(p, q, scale, shift) {
     else if (beforeTris.get(t.set) !== t.even) reversed++;
   }
   return { recut, reversed, total: b.length / 9, minSep, floor: TOL };
-}
-
-/**
- * A linear colour as the sRGB hex a person authored. glTF carries colour
- * linear, `kit.mjs`'s `hex()` converts on the way in, and a reviewer holding
- * the design doc is looking for `#2C2244` — so the report converts back
- * rather than printing five decimals of linear.
- */
-function srgbHex(rgb) {
-  const channel = (c) => {
-    const v = c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
-    return Math.round(Math.min(1, Math.max(0, v)) * 255)
-      .toString(16)
-      .padStart(2, '0');
-  };
-  return `#${rgb.map(channel).join('').toUpperCase()}`;
-}
-
-/**
- * A finish rendered the way it is reported — and compared in exactly that
- * form, so that every line printed shows a difference the reader can see and
- * nothing below the printed precision is reported at all. A float that
- * survived a JSON round-trip a bit-width apart is not a material change.
- */
-function finishFields(f) {
-  return {
-    colour: srgbHex(f.colour),
-    metalness: f.metalness.toFixed(3),
-    roughness: f.roughness.toFixed(3),
-    emissive: srgbHex(f.emissive),
-    strength: f.strength.toFixed(3),
-    opacity: f.opacity.toFixed(3),
-    'two-sided': String(f.doubleSided),
-  };
 }
 
 /**

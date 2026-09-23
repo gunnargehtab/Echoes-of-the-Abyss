@@ -112,7 +112,7 @@ const node = hadron.ink.resonanceNode();
 // The cradle floor: the navy's dark steel (Block 2b's registry, the
 // structures' `dark_steel` to the value), darker than the shadow-indigo deck
 // so an empty cradle reads as a void from straight above.
-const floor = hadron.structureInk.darkSteel();
+const floor = hadron.ink.darkSteel();
 
 const root = new THREE.Group();
 root.name = 'hadron_offertory';

@@ -29,7 +29,8 @@
  * and its lateral fin. Nothing here is a shape decision; where the export
  * is odd the script is odd with it:
  *
- * - The lamps are the Cruiser's own (`cruiserInk`): a core glow at 4.5 on
+ * - The lamps are the Cruiser's own (`ink.crystalCoreGlow` and
+ *   `ink.crystalPanelGlow`, on no other Order model): a core glow at 4.5 on
  *   the two spines, the four fork crystals and the drive, and a panel glow
  *   at 3.2 on the eight facet panels. The drive prism is a lamp — the one
  *   Z-long Order drive that is — and the ventral spine lies under the hull,
@@ -65,10 +66,10 @@ const L = 130;
 const DRAWN = 140;
 const DATUM = 8;
 
-const shadow = hadron.cruiserInk.shadowIndigo();
-const alloy = hadron.cruiserInk.paleAlloy();
-const core = hadron.cruiserInk.crystalCoreGlow();
-const panel = hadron.cruiserInk.crystalPanelGlow();
+const shadow = hadron.ink.shadowIndigo();
+const alloy = hadron.ink.paleAlloy();
+const core = hadron.ink.crystalCoreGlow(4.5);
+const panel = hadron.ink.crystalPanelGlow(3.2);
 
 const root = new THREE.Group();
 root.name = 'hadron_cruiser';

@@ -45,14 +45,18 @@ import * as hadron from '../factions/hadron.mjs';
 const L = 120;
 const DRAWN = 11.7165;
 
-const shadow = hadron.structureInk.shadowIndigo();
-const steel = hadron.structureInk.darkSteel();
-const dim = hadron.structureInk.alloyDim();
+// The navy's `shadow_indigo` — the token at the hulls' 0.35 — since #888.
+// The approved export had a shade darker and duller, #2C2244 at 0.25, one
+// of the splits Block 2b ("One name, one value — held since #888") records,
+// settled on its rule that the hull value is canonical.
+const shadow = hadron.ink.shadowIndigo();
+const steel = hadron.ink.darkSteel();
+const dim = hadron.ink.alloyDim();
 // The two emissive strengths are the approved export's own floats, not the
 // round 0.8 and 0.9 they plainly started as: the file carries them through a
 // float path, and a port types what the file has (#639 review, N1).
-const crystal = hadron.structureInk.crystalDim(0.800134217970087);
-const navLight = hadron.structureInk.navLight(0.9002684359401738);
+const crystal = hadron.ink.resonanceCrystalDim(0.800134217970087);
+const navLight = hadron.ink.navLight(0.9002684359401738);
 
 const root = new THREE.Group();
 root.name = 'sentinel_turret_hadron';

@@ -103,12 +103,18 @@ import * as hadron from '../factions/hadron.mjs';
 const L = 440;
 const DRAWN = 20.9;
 
-const alloy = hadron.bastionInk.alloyWhite();
+const alloy = hadron.ink.alloyWhite();
 // The two strengths are the approved export's own floats (#639 review, N1).
-const crystal = hadron.bastionInk.resonanceCrystal(2.000036651280468);
-const glow = hadron.bastionInk.crystalGlow(2.6000523589720967);
-const shadow = hadron.bastionInk.shadowIndigo();
-const steel = hadron.bastionInk.darkSteel();
+// The lit crystal is `resonance_crystal_dim`, the turret's fixture, since
+// #888: the approved export lit it under the cladding's name
+// `resonance_crystal`, over #2A1650 at metalness 0.1, and a name that is a
+// cladding on the hulls and a lamp here is two names. The emissive did not
+// move, so the strength is the file's. `shadow_indigo` is at the hulls'
+// metalness of 0.35 for the same reason; the export had the turret's 0.25.
+const crystal = hadron.ink.resonanceCrystalDim(2.000036651280468);
+const glow = hadron.ink.crystalGlow(2.6000523589720967);
+const shadow = hadron.ink.shadowIndigo();
+const steel = hadron.ink.darkSteel();
 
 const root = new THREE.Group();
 root.name = 'bastion_hadron';

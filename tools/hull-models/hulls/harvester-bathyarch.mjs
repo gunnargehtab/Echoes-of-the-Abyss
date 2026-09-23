@@ -60,11 +60,15 @@ const L = 75;
 const DRAWN = 69.11;
 const DATUM = 4.5;
 
-const grey = bathyarch.scoutInk.ironGrey();
-const black = bathyarch.scoutInk.hullBlack();
-const amber = bathyarch.scoutInk.hazardAmber();
-const rust = bathyarch.scoutInk.oxideRust();
-const lamp = bathyarch.scoutInk.amberLamp();
+// `scoutInk` until #888: the same four claddings, and an `amber_lamp` that
+// was the token through and through. The base is the navy's near-black now
+// and the export's 3.5 stays, the emissive unmoved; the base's value did
+// move, and the lamps read dark when SIG dims them (`ink.amberLamp`).
+const grey = bathyarch.ink.ironGrey();
+const black = bathyarch.ink.hullBlack();
+const amber = bathyarch.ink.hazardAmber();
+const rust = bathyarch.ink.oxideRust();
+const lamp = bathyarch.ink.amberLamp(3.5);
 
 const root = new THREE.Group();
 root.name = 'consortium_harvester';

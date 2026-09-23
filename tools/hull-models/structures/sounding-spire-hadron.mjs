@@ -76,13 +76,19 @@ import * as hadron from '../factions/hadron.mjs';
 const L = 140;
 const DRAWN = 9.66856606468874;
 
-const steel = hadron.spireInk.darkSteel();
-const shadow = hadron.spireInk.shadowIndigo();
-const alloy = hadron.spireInk.alloyWhite();
+const steel = hadron.ink.darkSteel();
+// At the hulls' metalness of 0.35 since #888; the export had the turret's 0.25.
+const shadow = hadron.ink.shadowIndigo();
+const alloy = hadron.ink.alloyWhite();
 // The two strengths are the approved export's own floats (#639 review, N1).
-const crystal = hadron.spireInk.resonanceCrystal(2.1000000006830546);
-const glow = hadron.spireInk.crystalGlow(3.000000001062529);
-const shimmer = hadron.spireInk.heatShimmer();
+// The lit crystal is `resonance_crystal_dim`, the turret's fixture, since
+// #888: the approved export lit it under the cladding's name
+// `resonance_crystal`, over #2A1650 at metalness 0.1, and a name that is a
+// cladding on the hulls and a lamp here is two names. The emissive did not
+// move, so the strength is the file's.
+const crystal = hadron.ink.resonanceCrystalDim(2.1000000006830546);
+const glow = hadron.ink.crystalGlow(3.000000001062529);
+const shimmer = hadron.ink.heatShimmer(0.55);
 
 const root = new THREE.Group();
 root.name = 'sounding_spire';

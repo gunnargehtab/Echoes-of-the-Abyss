@@ -47,7 +47,13 @@
  *   their y and whose x is each one's own, transcribed (`rakedBlades`).
  * - The two lamps burn at 2.996320537090334 and 4.392641074180667, the
  *   file's floats; `floodlight_glow` is `crystal_glow`'s finish under this
- *   file's name (`worksInk`).
+ *   file's name. The lit crystal is `resonance_crystal_dim`, the turret's
+ *   fixture, since #888: the file lit it under the cladding's name
+ *   `resonance_crystal`, over #2A1650 at metalness 0.1, and a name that is
+ *   a cladding on the hulls and a lamp here is two names. `shadow_indigo`
+ *   is at the hulls' metalness of 0.35 for the same reason; the file had
+ *   the turret's 0.25. Neither emissive moved, so the strengths are the
+ *   file's.
  *
  * SIDES. Every pair is the export's `_r`/`_l` (`hadron.pair`) and mirrors
  * across the export's x, the `_r` at +x — which on an unyawed X-long file
@@ -90,12 +96,12 @@ const L = 280;
 const DRAWN = 19.799999904632568;
 const DATUM = 0;
 
-const alloy = hadron.worksInk.alloyWhite();
+const alloy = hadron.ink.alloyWhite();
 // The two strengths are the approved export's own floats (#639 review, N1).
-const crystal = hadron.worksInk.resonanceCrystal(2.996320537090334);
-const steel = hadron.worksInk.darkSteel();
-const shadow = hadron.worksInk.shadowIndigo();
-const glow = hadron.worksInk.floodlightGlow(4.392641074180667);
+const crystal = hadron.ink.resonanceCrystalDim(2.996320537090334);
+const steel = hadron.ink.darkSteel();
+const shadow = hadron.ink.shadowIndigo();
+const glow = hadron.ink.floodlightGlow(4.392641074180667);
 
 const root = new THREE.Group();
 root.name = 'nodule_refinery_hadron';

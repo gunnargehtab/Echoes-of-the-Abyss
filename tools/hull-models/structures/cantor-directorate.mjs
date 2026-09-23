@@ -20,10 +20,17 @@
  * from `factions/directorate.mjs`. Nothing here is a shape decision; where
  * the export is odd the script is odd with it:
  *
- * - `chitin_violet` is two-sided on this file — the shell plates are open
- *   patches of a sphere, and the pass that authored them made the one
- *   material two-sided for the base tier and twenty-one spines with them
- *   (`settlementInk.chitinVioletOpen`).
+ * - The three shell plates are open patches of a sphere that the export
+ *   drew two-sided, and wear `chitin_violet_open`, the navy's two-sided
+ *   violet (`ink.chitinVioletOpen`), kept so that the approved render
+ *   holds rather than deciding a finish here: they span 30–49° from the
+ *   zenith, so at the conn view's 55° pitch every face points at the
+ *   camera, and the back face shows only at grazing angles below about
+ *   49° of pitch. The export had made its one violet two-sided for the
+ *   base tier and twenty-seven spines as well — closed parts with no
+ *   second face to show — and #888 put those back on `chitin_violet` so
+ *   the name carries one value across the navy (docs/asset-prompts-3d.md
+ *   Block 2b, rule 3).
  * - The three plates are patches of three spheres, 5.53, 5.531 and 5.532,
  *   a millimetre apart, at the dome's own centre; each fills its own window
  *   of the sphere.
@@ -39,9 +46,11 @@
  * - The ballast pipes lean 0.12 fore and 0.28 / 0.42 across, and their
  *   flanges lean with them (a pitch of π/2 + 0.12 and the same roll), where
  *   the Bastion's flanges lie flat.
- * - The lamp is `biolight_crimson` on the settlement base #3A0D16 burning at
- *   3.6; the steel is the turret's #27313B; the red and black are the hull
- *   inks.
+ * - The lamp is `biolight_crimson` burning at 3.6, the file's own strength;
+ *   the red and black are the hull inks. The export's lamp base (#3A0D16)
+ *   and steel (#27313B) were the settlement pass's own values under the
+ *   hulls' names, and #888 brought both onto the navy's ink (#1A0810 and
+ *   #3A3F4A). Nothing else on the file moved.
  * - Not one buffer is shared: the twenty-two photophores, including the
  *   three identical base ones, are a buffer each in the file and a geometry
  *   each here.
@@ -78,11 +87,13 @@ const HALF_METRE = (0.5 * DRAWN) / L;
 // A torus is born in the XY plane; the collar lies flat.
 const FLAT = [Math.PI / 2, 0, 0];
 
-const violet = directorate.settlementInk.chitinVioletOpen();
+const violet = directorate.ink.chitinViolet();
+// The shell plates alone: open patches, in the two-sided violet the export drew.
+const plate = directorate.ink.chitinVioletOpen();
 const red = directorate.ink.chitinRed();
 const black = directorate.ink.trenchBlack();
-const steel = directorate.structureInk.weldSteel();
-const crimson = directorate.settlementInk.biolightCrimson(3.6);
+const steel = directorate.ink.weldSteel();
+const crimson = directorate.ink.biolightCrimson(3.6);
 
 const root = new THREE.Group();
 root.name = 'cantor_listening_dome';
@@ -107,7 +118,7 @@ directorate.carapaceTiers(root, {
 // The dome and its three shell plates, all centred 2.25 up.
 directorate.domeShell(
   root,
-  { shell: red, plate: violet },
+  { shell: red, plate },
   {
     r: 5.4,
     facets: [16, 9],

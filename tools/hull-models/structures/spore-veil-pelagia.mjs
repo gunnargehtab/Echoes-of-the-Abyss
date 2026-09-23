@@ -63,13 +63,19 @@ import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 170;
 
-const chitin = pelagia.veilInk.deepChlorophyll();
-const tealDark = pelagia.veilInk.algaeTealDark();
-const teal = pelagia.veilInk.algaeTeal();
-const vein = pelagia.veilInk.bioVein();
-const haze = pelagia.veilInk.sporeHaze();
-const dim = pelagia.veilInk.bioVeinDim();
-const spore = pelagia.veilInk.sporePale();
+// The navy's ink (#888), under the file's own hyphenated names. The export
+// carried `algae-teal` at 0.05 metal and 0.75 rough and `spore-pale` at no
+// metal, a step from the Abyssal Submersible's 0.1 / 0.7 and 0.05 / 0.65
+// under the same names; the hull's value is canonical, so both moved. The
+// strengths are this file's own: 2.2 on the crown vein, 0.9 on the dim
+// rings and stalk tips, 0.35 on the haze.
+const chitin = pelagia.ink['deep-chlorophyll']();
+const tealDark = pelagia.ink['algae-teal-dark']();
+const teal = pelagia.ink['algae-teal']();
+const vein = pelagia.ink['bio-vein'](2.2);
+const haze = pelagia.ink['spore-haze'](0.35);
+const dim = pelagia.ink['bio-vein-dim'](0.9);
+const spore = pelagia.ink['spore-pale']();
 
 const root = new THREE.Group();
 root.name = 'pelagia-spore-veil';

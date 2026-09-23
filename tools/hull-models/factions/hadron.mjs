@@ -59,18 +59,67 @@ import {
 } from '../kit.mjs';
 
 /**
- * The Order's palette, as the Clarion's own materials carry it: the four
- * tokens of docs/art-direction.md, and — where the approved model needed a
- * colour the docs do not name — that model's own hex, exactly (kit.mjs `hex`).
+ * The Order's palette — one table, one factory a material name (#888).
+ *
+ * The recolour keeps only the ratio between a model's materials, so a name
+ * is a claim that two parts on two models are the same surface, and a name
+ * at two values is two greys on two hulls a player sees side by side
+ * (docs/asset-prompts-3d.md Block 2b, rule 3: one name, one value, across a
+ * navy). Until #888 this module held a table per approved export a port had
+ * copied — `structureInk`, `scoutInk`, `submersibleInk`, `cruiserInk`,
+ * `bastionInk`, `spireInk`, `worksInk` — and three names came to carry two
+ * or three values between them. Re-finishing the navy is now one edit here,
+ * and `tools/hull-models/finishes.mjs hadron` is the check.
+ *
+ * Every value is a hull's where a hull carries the name: the Clarion's own
+ * materials for the five the hulls share — the four tokens of
+ * docs/art-direction.md, and where the approved model needed a colour the
+ * docs do not name, that model's own hex, exactly (kit.mjs `hex`) — and the
+ * seam's base worn as cladding, derived from the fifth. The structures'
+ * names carry the approved structure's value; the one a hull carries too,
+ * `dark_steel` on the Offertory's cradle floors, is the structures' to the
+ * value. Strength (`intensity`, the glTF emissive strength) is not part
+ * of a value: it is each model's resting loudness, approved at intake
+ * against its SIG band and carried into the conn view exactly, so every
+ * lamp factory takes it and each script passes its own; the default of 1
+ * writes none, as the hulls have always carried (kit.mjs `lamp`).
  */
 export const ink = {
+  /**
+   * The token, at the hulls' 0.35. Until #888 the Bastion, the Foundry, the
+   * Refinery and the Sounding Spire carried it at the turret's metalness of
+   * 0.25, and the Sentinel Turret at #2C2244 / 0.25 — a shade darker and
+   * duller, the approved turret's own (#639), one of the splits Block 2b
+   * ("One name, one value — held since #888") records, settled on its rule
+   * that the hull value is canonical. All five are here now.
+   */
   shadowIndigo: () => clad('shadow_indigo', hex('#3B2E5A'), 0.35, 0.45),
   paleAlloy: () => clad('pale_alloy', hex('#E6E9F2'), 0.85, 0.22),
+  /**
+   * The crystal-violet token as cladding, every hull's. The four settlement
+   * structures lit their crystal under this name until #888; that is
+   * `resonanceCrystalDim` now, because a name that is a cladding on
+   * eighteen models and a lamp on four is two names.
+   */
   resonanceCrystal: () => clad('resonance_crystal', hex('#8B5CF6'), 0.4, 0.18),
-  crystalSeam: () => lamp('crystal_seam', hex('#C9A6FF'), hex('#1A1030')),
+  /**
+   * The lit seam: the crystal-glow token over the navy's near-black base at
+   * the kit's roughness. Until #888 the four Z-long shared kinds — the Light
+   * Scout, the Corvette, the Harvester and the Abyssal Submersible — carried
+   * it as their approved exports had it, the token through and through
+   * (#C9A6FF under #C9A6FF at roughness 0.3): a lamp base at 0.469 linear
+   * luminance against the 0.815 of the pale alloy beside it, well up a
+   * register whose floor is where a base belongs. They are on this base
+   * now, at 0.008 to that 0.815; the emissive did not move, so their
+   * strengths — 1.6 on the three, 1.1 on the Submersible — are what they
+   * were, passed by each script.
+   */
+  crystalSeam: (intensity = 1) =>
+    lamp('crystal_seam', hex('#C9A6FF'), hex('#1A1030'), 0.4, intensity),
   // The node's glow is not the crystal-glow token: it is the Clarion's own,
   // a shade bluer, and every Order hull since has carried it.
-  resonanceNode: () => lamp('resonance_node', hex('#A77CFF'), hex('#2A1A50')),
+  resonanceNode: (intensity = 1) =>
+    lamp('resonance_node', hex('#A77CFF'), hex('#2A1A50'), 0.4, intensity),
   /**
    * The seam's base worn as cladding: a part the block lights only in a
    * later band — the Herald's tine seams, lit under way and dark at rest —
@@ -82,6 +131,89 @@ export const ink = {
    * rule 3); it recolours to near-black under any flag.
    */
   crystalSeamUnlit: () => clad('crystal_seam_unlit', hex('#1A1030'), 0, 0.4),
+
+  /*
+   * The structures' claddings. A Sentinel Turret is "nearly black — an
+   * ambush predator, navigation marks only until it fires"
+   * (docs/asset-prompts-3d.md, the Sentinel Turret block), and the Clarion's
+   * polished `pale_alloy` is the opposite of that, so the structures carry
+   * names of their own rather than a dimming factor on the hull's: the
+   * Order dulls a *metal*, where the Directorate darkens a body colour and
+   * the Consortium's `work_lamp` is a different fixture, and one factor
+   * would be overridden three times in four. Values are the approved
+   * turret's (#639) and the r184 settlement pass's (#652).
+   */
+  darkSteel: () => clad('dark_steel', hex('#1C2230'), 0.4, 0.4),
+  alloyDim: () => clad('alloy_dim', hex('#8A8FA3'), 0.35, 0.32),
+  // `pale_alloy`'s hex dulled to 0.35 / 0.28 under a name of its own — the
+  // Bastion's, the Spire's, the Foundry's and the Refinery's cladding.
+  alloyWhite: () => clad('alloy_white', hex('#E6E9F2'), 0.35, 0.28),
+
+  /*
+   * The structures' lamps, each polished past the hulls' kit 0.4: 0.15 on
+   * the turret's crystal, 0.3 on its marks, 0.2 on the settlement's three
+   * glows and 0.1 on the Spire's sheath. Each script passes its file's own
+   * strength — the floats the files carry, not the round numbers they
+   * plainly started as (#639 review, N1).
+   */
+  /**
+   * The crystal-violet token burning as a structure's lamp: the Sentinel
+   * Turret's fixture, banked there at 0.8 (#639). The Bastion, the Sounding
+   * Spire, the Foundry and the Refinery lit their crystal under the
+   * cladding's name `resonance_crystal` until #888 — the same emissive at
+   * the same roughness, over #2A1650 at a metalness of 0.1 that `lamp`
+   * cannot write and was set after — and took this name, the navy's own for
+   * exactly that fixture, at the value the name already had: the kit's lamp
+   * convention (metalness 0) over #1E1038. Neither base is a token, and
+   * neither is the register's anchor on any of the five (`alloy_dim` and
+   * `alloy_white` are), so what moved is a near-black under a lit face.
+   * Their strengths are the files' floats, unchanged.
+   */
+  resonanceCrystalDim: (intensity = 1) =>
+    lamp('resonance_crystal_dim', hex('#8B5CF6'), hex('#1E1038'), 0.15, intensity),
+  navLight: (intensity = 1) => lamp('nav_light', hex('#C9A6FF'), hex('#241744'), 0.3, intensity),
+  // The Bastion's and the Spire's second lamp (#652): the crystal-glow token
+  // over #3A2560. `forge_light` and `floodlight_glow` are the same finish
+  // under the Foundry's and the Refinery's own names — the names every
+  // navy's works carry, so they stay names.
+  crystalGlow: (intensity = 1) =>
+    lamp('crystal_glow', hex('#C9A6FF'), hex('#3A2560'), 0.2, intensity),
+  forgeLight: (intensity = 1) =>
+    lamp('forge_light', hex('#C9A6FF'), hex('#3A2560'), 0.2, intensity),
+  floodlightGlow: (intensity = 1) =>
+    lamp('floodlight_glow', hex('#C9A6FF'), hex('#3A2560'), 0.2, intensity),
+  /**
+   * The Spire's "heat-shimmer distortion" (docs/asset-prompts-3d.md,
+   * STRUCTURE — Sounding Spire) as a material: a sheath over the core whose
+   * *base* is the crystal-glow token #C9A6FF, six percent opaque and
+   * alpha-blended, with the crystal-violet emissive under it. The one
+   * translucent material on any approved Order model; kit.mjs `lamp` has no
+   * opacity, so it is set after, to the file's own float rather than the
+   * 0.06 it was typed as (#652 review).
+   */
+  heatShimmer: (intensity = 1) => {
+    const m = lamp('heat_shimmer', hex('#8B5CF6'), hex('#C9A6FF'), 0.1, intensity);
+    m.transparent = true;
+    m.opacity = 0.06000000004553697;
+    return m;
+  },
+
+  /*
+   * The Cruiser's two (#649): a core glow that is the crystal-glow token
+   * through and through on the dorsal and ventral spines, the fork crystals
+   * of the hydrophone masts and the drive, and a panel glow a shade deeper
+   * on the eight facet panels along the flanks. "Sustained glow from vents,
+   * sensor arrays and lit ports — this is a loud ship and it looks it" (the
+   * Cruiser block); these are the strongest lamps on any Order hull, and the
+   * bake caps both at 1 (kit.mjs `lamp`). Their bases, with the Spire's
+   * `heat_shimmer` sheath above, are the three in the navy that are not
+   * near-black: each one model's, and no split, so #888 left them as the
+   * approved exports have them.
+   */
+  crystalCoreGlow: (intensity = 1) =>
+    lamp('crystal_core_glow', hex('#C9A6FF'), hex('#C9A6FF'), 0.3, intensity),
+  crystalPanelGlow: (intensity = 1) =>
+    lamp('crystal_panel_glow', hex('#9B6CF9'), hex('#C9A6FF'), 0.3, intensity),
 };
 
 /**
@@ -1251,32 +1383,6 @@ export function cradleDeck(root, { shadow, alloy, floor: floorMat, seam }, opts)
  * ------------------------------------------------------------------------ */
 
 /**
- * The structure palette: the Order's hull ink, dimmed.
- *
- * A Sentinel Turret is "nearly black — an ambush predator, navigation marks
- * only until it fires" (docs/asset-prompts-3d.md, the Sentinel Turret block),
- * and the Clarion's polished `pale_alloy` is the opposite of that. So the
- * structures carry their own names rather than a shared dimming factor
- * applied to `ink`: the dimming is not uniform across the four navies — the
- * Order dulls a *metal*, the Directorate darkens a *body* colour, and the
- * Consortium's `work_lamp` is a different fixture rather than a dimmed
- * `amber_lamp` — so one factor would have to be overridden three times in
- * four. Values are the approved turret's own — its `shadow_indigo` included,
- * which is not the Clarion's `ink.shadowIndigo` but a shade darker and duller
- * (#2C2244 at 0.25 against #3B2E5A at 0.35), and the emissive strength of its
- * two lamps, banked below the token at 0.8 and 0.9 (`intensity`; the default
- * of 1 writes no strength, as before) (#639).
- */
-export const structureInk = {
-  shadowIndigo: () => clad('shadow_indigo', hex('#2C2244'), 0.25, 0.45),
-  darkSteel: () => clad('dark_steel', hex('#1C2230'), 0.4, 0.4),
-  alloyDim: () => clad('alloy_dim', hex('#8A8FA3'), 0.35, 0.32),
-  crystalDim: (intensity = 1) =>
-    lamp('resonance_crystal_dim', hex('#8B5CF6'), hex('#1E1038'), 0.15, intensity),
-  navLight: (intensity = 1) => lamp('nav_light', hex('#C9A6FF'), hex('#241744'), 0.3, intensity),
-};
-
-/**
  * The exchanger on the end of a Vent Tap's draw arm, on `bearing` (#608): a
  * crystal prism square in section with pyramid ends, the alloy frame bar
  * over it, the lit seam between them, the crystal spine — a slim pyramid —
@@ -1613,18 +1719,6 @@ export function slipwayHall(hall, { shadow, alloy, crystal, seam }, opts) {
  * ------------------------------------------------------------------------ */
 
 /**
- * The Light Scout's palette: the Clarion's three claddings to the value, and
- * a seam that is the crystal-glow token through and through, burning at 1.6
- * — not `ink`'s near-black-based lamp. Values are the approved export's own.
- */
-export const scoutInk = {
-  shadowIndigo: () => clad('shadow_indigo', hex('#3B2E5A'), 0.35, 0.45),
-  paleAlloy: () => clad('pale_alloy', hex('#E6E9F2'), 0.85, 0.22),
-  resonanceCrystal: () => clad('resonance_crystal', hex('#8B5CF6'), 0.4, 0.18),
-  crystalSeam: () => lamp('crystal_seam', hex('#C9A6FF'), hex('#C9A6FF'), 0.3, 1.6),
-};
-
-/**
  * A crystal prism: a four-sided spar along the length, `fore` and `aft` its
  * two end radii — a blade when one end is drawn to a point, a fin when it is
  * short and stood on end, a nozzle when it tapers astern — squashed flat by
@@ -1648,36 +1742,6 @@ export function prism(root, mat, opts) {
   const geo = cyl(fore, aft, length, facets);
   return part(root, name, upright ? geo : geo.rotateX(Math.PI / 2), mat, placement);
 }
-
-/**
- * The Submersible's palette: the scout's three claddings to the value, and
- * the same crystal-glow seam banked to 1.1 — the one resting light on a hull
- * that idles at SIG 22 and is "born to crush depth" (docs/asset-prompts-3d.md,
- * the Abyssal Submersible block, read with the Hadron FACTION block). Values
- * are the approved export's own (abyssal-submersible-hadron.glb, #649).
- */
-export const submersibleInk = {
-  ...scoutInk,
-  crystalSeam: () => lamp('crystal_seam', hex('#C9A6FF'), hex('#C9A6FF'), 0.3, 1.1),
-};
-
-/**
- * The Cruiser's palette: the scout's two claddings, and two lamps of its own
- * on the crystal-glow base — a core glow that is the token through and
- * through at 4.5, on the dorsal and ventral spines, the fork crystals of
- * the hydrophone masts and the drive, and a panel glow a shade deeper
- * (#9B6CF9) at 3.2 on the eight facet panels along the flanks. "Sustained
- * glow from vents, sensor arrays and lit ports — this is a loud ship and it
- * looks it" (the Cruiser block); these are the strongest lamps on any Order
- * hull, and the bake caps both at 1 (kit.mjs `lamp`). Values are the
- * approved export's own (cruiser-hadron.glb, #649).
- */
-export const cruiserInk = {
-  shadowIndigo: scoutInk.shadowIndigo,
-  paleAlloy: scoutInk.paleAlloy,
-  crystalCoreGlow: () => lamp('crystal_core_glow', hex('#C9A6FF'), hex('#C9A6FF'), 0.3, 4.5),
-  crystalPanelGlow: () => lamp('crystal_panel_glow', hex('#9B6CF9'), hex('#C9A6FF'), 0.3, 3.2),
-};
 
 /**
  * The mirrored pair as the four Z-long shared-kind exports draw one — `_p`
@@ -1729,55 +1793,6 @@ export function cage(root, alloy, { r, length, at, lean }) {
  * different planes, and on an unyawed X-long file a `_r` at +x is on the
  * bow axis and on neither beam.
  * ------------------------------------------------------------------------ */
-
-/**
- * The Bastion's palette, which the Sounding Spire carries too — the same
- * five names at the same finishes, the two lamps at each file's own
- * strength. Values are the approved files' own (bastion-hadron.glb and
- * sounding-spire-hadron.glb at f7cce0f), and three of the five are a third
- * reading of a name this module already holds twice: `shadow_indigo` is the
- * Block 2 token #3B2E5A, the hulls' colour, at the turret's metalness of
- * 0.25 — neither `ink`'s (0.35) nor `structureInk`'s (#2C2244); `alloy_white`
- * is `pale_alloy`'s hex #E6E9F2 dulled to 0.35 / 0.28 under a name of its
- * own; and `resonance_crystal`, a cladding on every hull, is a lamp here —
- * the crystal-violet token burning over a #2A1650 base at metalness 0.1,
- * which kit.mjs `lamp` cannot say (it writes 0) and which is set after.
- * `dark_steel` is `structureInk`'s to the value. The strengths are the
- * files' floats — 2.000036651280468 and 2.6000523589720967 on the Bastion,
- * 2.1000000006830546 and 3.000000001062529 on the Spire — as the turret's
- * are (#639 review, N1). Neither lamp base (#2A1650, #3A2560) is in a
- * palette table: derived, in Block 2b's sense, and reported on #641.
- */
-export const bastionInk = {
-  alloyWhite: () => clad('alloy_white', hex('#E6E9F2'), 0.35, 0.28),
-  shadowIndigo: () => clad('shadow_indigo', hex('#3B2E5A'), 0.25, 0.45),
-  darkSteel: structureInk.darkSteel,
-  resonanceCrystal: (intensity) => {
-    const m = lamp('resonance_crystal', hex('#8B5CF6'), hex('#2A1650'), 0.15, intensity);
-    m.metalness = 0.1;
-    return m;
-  },
-  crystalGlow: (intensity) => lamp('crystal_glow', hex('#C9A6FF'), hex('#3A2560'), 0.2, intensity),
-};
-
-/**
- * The Spire's: the Bastion's five and the heat shimmer — "heat-shimmer
- * distortion" (docs/asset-prompts-3d.md, STRUCTURE — Sounding Spire) as a
- * material: a sheath over the core whose *base* is the crystal-glow token
- * #C9A6FF, six percent opaque and alpha-blended, with the crystal-violet
- * emissive under it at 0.55. The one translucent material on any approved
- * Order model; kit.mjs `lamp` has no opacity, so it is set after.
- */
-export const spireInk = {
-  ...bastionInk,
-  heatShimmer: () => {
-    const m = lamp('heat_shimmer', hex('#8B5CF6'), hex('#C9A6FF'), 0.1, 0.55);
-    m.transparent = true;
-    // The file's own float, not the 0.06 it was typed as (#652 review).
-    m.opacity = 0.06000000004553697;
-    return m;
-  },
-};
 
 /**
  * A torus drawn part way round: `angle` radians of a ring of radius `r` and
@@ -2283,22 +2298,6 @@ export function shimmerSheath(root, mat, { r, at, scale }) {
  * kit's `frame` (`zLong` for the Foundry, which is a Z-long export, `xLong`
  * for the Refinery), and every number is the export's own.
  * ------------------------------------------------------------------------ */
-
-/**
- * The works' palette: the Bastion's five and two lamps of the Foundry's and
- * the Refinery's own — `forge_light` and `floodlight_glow`, which are
- * `crystal_glow`'s finish to the value (the crystal-glow token over #3A2560
- * at roughness 0.2) under a name each, at the files' strengths:
- * 3.7930280838563952 on the Foundry, 4.392641074180667 on the Refinery
- * (#639 review, N1). `resonance_crystal` burns at 2.118362294686672 and
- * 2.996320537090334 on the two, through the same `intensity`.
- */
-export const worksInk = {
-  ...bastionInk,
-  forgeLight: (intensity) => lamp('forge_light', hex('#C9A6FF'), hex('#3A2560'), 0.2, intensity),
-  floodlightGlow: (intensity) =>
-    lamp('floodlight_glow', hex('#C9A6FF'), hex('#3A2560'), 0.2, intensity),
-};
 
 /**
  * The export's own `_r` placement mirrored across its x for the `_l`, on

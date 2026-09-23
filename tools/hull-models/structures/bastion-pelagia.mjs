@@ -58,11 +58,14 @@ import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 440;
 
-const algae = pelagia.bastionInk.algaeHull();
-const chitin = pelagia.bastionInk.deepChlorophyll();
-const spore = pelagia.bastionInk.sporePale();
-const bio = pelagia.bastionInk.biolightGreen(2.944720997756152);
-const steel = pelagia.bastionInk.grownSteel();
+// The navy's ink (#888); the lamp burns at this file's own 2.9447, second
+// only to the Foundry's 3.0999 among the Commune's `biolight_green`, for
+// "the one building that can never run silent".
+const algae = pelagia.ink.algaeHull();
+const chitin = pelagia.ink.deepChlorophyll();
+const spore = pelagia.ink.sporePale();
+const bio = pelagia.ink.biolightGreen(2.944720997756152);
+const steel = pelagia.ink.grownSteel();
 
 const root = new THREE.Group();
 root.name = 'bastion_pelagia';

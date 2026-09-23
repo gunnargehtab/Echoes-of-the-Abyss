@@ -72,8 +72,15 @@ intake can: on every export it rasterises the scene from above at the maps' own 
 names each lit part that shows less than a cell of plan area — a lamp on a vertical face,
 a glow inside a horn, a flood under a deck. And `npm run check:models` (CI's `build` job)
 rebuilds every hull and every structure in a scratch directory and fails on any part that
-differs from the committed GLB, so a faction module cannot be edited without the models it
-moves being re-run and committed with it.
+differs from the committed GLB, its material's values included, so a faction module cannot
+be edited without the models it moves being re-run and committed with it. It also reads the
+committed files as a set and fails on a material name that carries two values inside one
+navy — [asset-prompts-3d.md](asset-prompts-3d.md) Block 2b's "one name, one value", which
+`node tools/hull-models/finishes.mjs` lists on its own. And since that tool places a model
+by its `-<navy>.glb` suffix, the check fails on a model file whose name places it in no
+navy and is not an `env-` prop (a prop belongs to none), which the tool would otherwise
+skip unread. Each navy's module holds one `ink` table for the same reason, so re-finishing
+a fleet is one edit (#888).
 
 **Neither holds a port to the model it ported.** A port replaces the hand-exported binary
 with the script's own output, so from that commit on the round-trip check is comparing the

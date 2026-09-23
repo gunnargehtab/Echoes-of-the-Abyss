@@ -55,10 +55,12 @@
  *   photophores are each their own radius (0.083 to 0.109) and height, and
  *   `photophoreDomes` refuses a mirrored pair among them as it does on a
  *   hull.
- * - The six materials are four the Dredge and the turret carry at those
- *   values — `chitin_red`, `chitin_violet`, `trench_black` and the turret's
- *   `weld_steel` — and two of this file's own: `forge_light` at 3.698 and a
- *   `biolight_crimson` on a #3A0D16 base at 2.277 (`worksInk`).
+ * - The six materials are the navy's `ink`: `chitin_red`, `chitin_violet`,
+ *   `trench_black`, `weld_steel`, `biolight_crimson` at this file's 2.277,
+ *   and `forge_light` at its 3.698. The export carried the turret's
+ *   `weld_steel` (#27313B) and a `biolight_crimson` on a #3A0D16 base, the
+ *   settlement pass's own values under the hulls' names; #888 brought both
+ *   onto the navy's (#3A3F4A and #1A0810). Nothing else on the file moved.
  * - The light audit names fourteen lamps hidden from above: five bay guides
  *   (`bay_guide_0_0`, `_0_1`, `_0_3`, `_0_4`, `_1_1`) and the launch glow
  *   under the tergites' overhang and the crane beams, and eight of the ten
@@ -98,11 +100,11 @@ const DRAWN = 17.518382244244393;
 const DATUM = 0;
 
 const red = directorate.ink.chitinRed();
-const steel = directorate.structureInk.weldSteel();
+const steel = directorate.ink.weldSteel();
 const black = directorate.ink.trenchBlack();
 const violet = directorate.ink.chitinViolet();
-const forge = directorate.worksInk.forgeLight(3.697972238428193);
-const crimson = directorate.worksInk.biolightCrimson(2.276723666358973);
+const forge = directorate.ink.forgeLight(3.697972238428193);
+const crimson = directorate.ink.biolightCrimson(2.276723666358973);
 
 const root = new THREE.Group();
 root.name = 'foundry_directorate';

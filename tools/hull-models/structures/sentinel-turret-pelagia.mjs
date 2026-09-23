@@ -71,10 +71,16 @@ const FLAT = [Math.PI / 2, 0, 0];
 // The roots lie 0.13 rad short of flat, each yawed its own way.
 const LAID = Math.PI / 2 - 0.13;
 
-const body = pelagia.structureInk.deepChlorophyll();
-const steel = pelagia.structureInk.grownSteel();
-const algae = pelagia.structureInk.algaeHull();
-const bio = pelagia.structureInk.biolightGreen(0.9533138767058983);
+// The navy's ink (#888). The export carried `algae_hull` at #14664C and
+// 0.62 rough — 35 % as bright as the Bastion, Foundry and Refinery's
+// #1FA67A at 0.6 under the same name (linear luminance 0.1017 against
+// 0.2897) — and `biolight_green` on a #123018 base, a little under their
+// #14351A; three models against one, so the turret moved. The lamp's
+// strength is this file's own, 0.953.
+const body = pelagia.ink.deepChlorophyll();
+const steel = pelagia.ink.grownSteel();
+const algae = pelagia.ink.algaeHull();
+const bio = pelagia.ink.biolightGreen(0.9533138767058983);
 
 const root = new THREE.Group();
 root.name = 'sentinel_turret';

@@ -31,10 +31,14 @@ const L = 60;
 const DRAWN = 23.95;
 const DATUM = 2.6;
 
-const shadow = hadron.scoutInk.shadowIndigo();
-const alloy = hadron.scoutInk.paleAlloy();
-const crystal = hadron.scoutInk.resonanceCrystal();
-const seam = hadron.scoutInk.crystalSeam();
+const shadow = hadron.ink.shadowIndigo();
+const alloy = hadron.ink.paleAlloy();
+const crystal = hadron.ink.resonanceCrystal();
+// The seam at the file's 1.6, on the navy's near-black base since #888: the
+// approved export had it as the crystal-glow token through and through
+// (#C9A6FF under #C9A6FF at roughness 0.3), one name at two values across
+// the navy. The emissive did not move, so the strength is the file's.
+const seam = hadron.ink.crystalSeam(1.6);
 
 const root = new THREE.Group();
 root.name = 'hadron_light_scout';

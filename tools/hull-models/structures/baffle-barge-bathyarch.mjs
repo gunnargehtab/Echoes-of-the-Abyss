@@ -19,10 +19,10 @@
  * stacks, two capstans and the deck pipe; a mooring chain and anchor block
  * at each corner; three running lights a side, a dome on each pontoon, and
  * two `KHR_lights_punctual` point lights either beam. Its six materials
- * are `bargeInk`: the Submersible's four to the value and the name —
- * hyphenated, `amber-running-light` on #1A1206 at 2.6 — and the foam and
- * the hazard paint of its own. Nothing here is a shape decision; where the
- * export is odd the script is odd with it:
+ * are `ink`'s hyphenated set: the Submersible's four to the value and the
+ * name — `amber-running-light` on #1A1206, at the export's 2.6 — and the
+ * foam and the hazard paint of its own (`bargeInk` until #888). Nothing here
+ * is a shape decision; where the export is odd the script is odd with it:
  *
  * - Port is −z already: `gunwale-port` at −1.4, `pad-flank-p` at −1.58,
  *   `pontoon-ap` at −1.85, the port vanes at −1.92, `glow-port` at −1.6
@@ -64,12 +64,12 @@ import * as bathyarch from '../factions/bathyarch.mjs';
 const L = 180;
 const DRAWN = 8.3863;
 
-const black = bathyarch.bargeInk.hullBlack();
-const brown = bathyarch.bargeInk.oxideBrown();
-const grey = bathyarch.bargeInk.ironGrey();
-const foam = bathyarch.bargeInk.baffleFoam();
-const paint = bathyarch.bargeInk.hazardPaint();
-const lampM = bathyarch.bargeInk.runningLight();
+const black = bathyarch.ink.hullBlackHeavy();
+const brown = bathyarch.ink.oxideBrown();
+const grey = bathyarch.ink.ironGreyHeavy();
+const foam = bathyarch.ink.baffleFoam();
+const paint = bathyarch.ink.hazardPaint();
+const lampM = bathyarch.ink.runningLight(2.6);
 const put = bathyarch.inFrame;
 
 const root = new THREE.Group();

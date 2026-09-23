@@ -29,8 +29,12 @@
  *   to 0.14 of it — but the edges stand 1.06 tall to the blades' 1, so the
  *   edge is a hair proud all round rather than a rim. Both pairs sit on one
  *   node placement, rolled 0.22 outboard and pitched half a radian.
- * - The seam burns at 1.1, not the scout's 1.6 (`submersibleInk`), and it
- *   is the only lamp: the bow tip is unlit crystal.
+ * - The seam burns at 1.1, not the scout's 1.6, and it is the only lamp:
+ *   the bow tip is unlit crystal. It is the navy's `crystal_seam` — the
+ *   near-black-based lamp every Order hull carries — since #888; the
+ *   approved export had it as the crystal-glow token through and through
+ *   (#C9A6FF under #C9A6FF at roughness 0.3), one name at two values
+ *   across the navy. The emissive did not move, so the 1.1 is the file's.
  * - The drive prism's node carries a reflection — a scale of -1 in x beside
  *   a half turn and three eighths — and is written as the file decomposes
  *   it, not as the rotation it is equivalent to (#588 review, F1).
@@ -50,10 +54,10 @@ const L = 95;
 const DRAWN = 107.5;
 const DATUM = 6;
 
-const alloy = hadron.submersibleInk.paleAlloy();
-const shadow = hadron.submersibleInk.shadowIndigo();
-const crystal = hadron.submersibleInk.resonanceCrystal();
-const seam = hadron.submersibleInk.crystalSeam();
+const alloy = hadron.ink.paleAlloy();
+const shadow = hadron.ink.shadowIndigo();
+const crystal = hadron.ink.resonanceCrystal();
+const seam = hadron.ink.crystalSeam(1.1);
 
 const root = new THREE.Group();
 root.name = 'hadron_submersible';

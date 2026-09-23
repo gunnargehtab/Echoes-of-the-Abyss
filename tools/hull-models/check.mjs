@@ -22,10 +22,18 @@
  * exists to catch. Each script runs as its own process with `HULL_MODELS_OUT` pointing
  * at a scratch directory (kit.mjs `outputPath`), so the committed files are
  * never touched; the scratch GLB and the committed one are then read back
- * (glb.mjs) and compared part by part — name, material, triangle count and
- * bounds to the centimetre — which is close enough to catch any edit that
- * moves a vertex and loose enough not to care which three.js wrote the
- * bytes.
+ * (glb.mjs) and compared part by part — name, material, finish, triangle
+ * count and bounds to the centimetre — which is close enough to catch any
+ * edit that moves a vertex and loose enough not to care which three.js wrote
+ * the bytes.
+ *
+ * The finish is the material's values under its name, in `finishFields`'
+ * printed precision. Until #888 only the name was compared, so an ink edited
+ * in a faction module and never re-run passed: the one edit Phase 6 of #540
+ * exists to make was the one edit this could not see. Last, the committed
+ * files are read as a set, and a name carrying two values inside one navy
+ * fails (finishes.mjs) — every file can agree with its script while two of
+ * them disagree with each other.
  *
  * The fix for drift is always the same and the report says so: re-run the
  * script (or outlines.mjs) and commit what it wrote. Light-audit warnings
@@ -37,8 +45,9 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readGlb, boundsOf } from './glb.mjs';
+import { readGlb, boundsOf, finishFields } from './glb.mjs';
 import { OUTLINE_FILE, renderSource } from '../hull-maps/outlines.mjs';
+import { NAVIES, splitsIn } from './finishes.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
@@ -48,12 +57,23 @@ const cm = (v) => Math.round(v * 100) / 100;
 const summarise = (parts) =>
   parts.map((p) => {
     const { min, max } = boundsOf(p);
-    return { name: p.name, material: p.material, tris: p.tris, min: min.map(cm), max: max.map(cm) };
+    const finish = p.finish ? finishFields(p.finish) : null;
+    return {
+      name: p.name,
+      material: p.material,
+      finish,
+      tris: p.tris,
+      min: min.map(cm),
+      max: max.map(cm),
+    };
   });
 
 /** Lines describing how `built` differs from `committed`; empty when they agree. */
 export function diffParts(built, committed) {
   const out = [];
+  // A finish lives on a material, not a part, so it is reported once a name:
+  // an ink edited under forty parts is one line, not forty.
+  const refinished = new Set();
   const n = Math.max(built.length, committed.length);
   if (built.length !== committed.length)
     out.push(`${committed.length} parts committed, ${built.length} built`);
@@ -72,6 +92,19 @@ export function diffParts(built, committed) {
       out.push(
         `\`${a.name}\`: bounds [${b.min}]..[${b.max}] → [${a.min}]..[${a.max}]`
       );
+    // Beside the chain rather than in it, so a part whose finish moved still
+    // has its triangles and bounds read.
+    if (
+      a.material === b.material &&
+      !refinished.has(a.material) &&
+      JSON.stringify(a.finish) !== JSON.stringify(b.finish)
+    ) {
+      refinished.add(a.material);
+      const moved = Object.keys({ ...a.finish, ...b.finish })
+        .filter((k) => a.finish?.[k] !== b.finish?.[k])
+        .map((k) => `${k} ${b.finish?.[k]} → ${a.finish?.[k]}`);
+      out.push(`\`${a.material}\` (first on \`${a.name}\`): ${moved.join(', ')}`);
+    }
   }
   return out;
 }
@@ -152,12 +185,46 @@ try {
   } else {
     console.log(`✓ ${OUTLINE_FILE.slice(repo.length + 1)} agrees with the models`);
   }
+
+  // One name, one value, across a navy (asset-prompts-3d.md Block 2b rule 3).
+  // Every script can agree with its own file while two files give one name
+  // two values, which is how the ports left 19 names split until #888; so this
+  // reads the committed files as a set, and runs whatever the filter.
+  // finishes.mjs places a model in a navy by its `-<navy>.glb` suffix, so a
+  // file with none would be read by no navy and pass unread: every model names
+  // one, or is an `env-` prop, which belongs to none.
+  const unplaced = readdirSync(models).filter(
+    (f) => f.endsWith('.glb') && !f.startsWith('env-') && !NAVIES.some((n) => f.endsWith(`-${n}.glb`))
+  );
+  if (unplaced.length) {
+    failed++;
+    console.error(
+      `✗ ${unplaced.join(', ')} name${unplaced.length > 1 ? '' : 's'} no navy, so no split check reads ${unplaced.length > 1 ? 'them' : 'it'}\n` +
+        `  name a model <slug>-<${NAVIES.join('|')}>.glb, or env-<thing>.glb for a prop`
+    );
+  }
+  for (const navy of NAVIES) {
+    const splits = splitsIn(navy, models);
+    if (!splits.length) {
+      console.log(`✓ ${navy}: one value a name`);
+      continue;
+    }
+    failed++;
+    const lines = splits.map(
+      ({ name, values }) =>
+        `\`${name}\`: ${values.map(({ value, slugs }) => `${value} (${slugs.join(', ')})`).join('\n      or ')}`
+    );
+    console.error(
+      `✗ ${navy} gives ${splits.length} name${splits.length > 1 ? 's' : ''} two values:\n    ${lines.join('\n    ')}\n` +
+        `  bring each onto the navy's one \`ink\` value (node tools/hull-models/finishes.mjs ${navy})`
+    );
+  }
 } finally {
   rmSync(scratch, { recursive: true, force: true });
 }
 
 if (failed) {
-  console.error(`\n${failed} drifted`);
+  console.error(`\n${failed} drifted or split`);
   process.exit(1);
 }
 console.log('\nevery script matches its file');

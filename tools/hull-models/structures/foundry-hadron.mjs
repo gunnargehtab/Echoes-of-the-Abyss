@@ -41,7 +41,13 @@
  *   alloy, shadow.
  * - The two lamps burn at 2.118362294686672 and 3.7930280838563952, the
  *   file's floats; `forge_light` is `crystal_glow`'s finish under this
- *   file's name (`worksInk`).
+ *   file's name. The lit crystal is `resonance_crystal_dim`, the turret's
+ *   fixture, since #888: the file lit it under the cladding's name
+ *   `resonance_crystal`, over #2A1650 at metalness 0.1, and a name that is
+ *   a cladding on the hulls and a lamp here is two names. `shadow_indigo`
+ *   is at the hulls' metalness of 0.35 for the same reason; the file had
+ *   the turret's 0.25. Neither emissive moved, so the strengths are the
+ *   file's.
  *
  * SIDES. Every pair is the export's `_r`/`_l` (`hadron.pair`), mirrored
  * across the export's x, the `_r` at +x. This is a Z-long export, so the
@@ -90,12 +96,12 @@ const L = 320;
 const DRAWN = 19.300000047683717;
 const DATUM = 0;
 
-const shadow = hadron.worksInk.shadowIndigo();
-const alloy = hadron.worksInk.alloyWhite();
+const shadow = hadron.ink.shadowIndigo();
+const alloy = hadron.ink.alloyWhite();
 // The two strengths are the approved export's own floats (#639 review, N1).
-const crystal = hadron.worksInk.resonanceCrystal(2.118362294686672);
-const forge = hadron.worksInk.forgeLight(3.7930280838563952);
-const steel = hadron.worksInk.darkSteel();
+const crystal = hadron.ink.resonanceCrystalDim(2.118362294686672);
+const forge = hadron.ink.forgeLight(3.7930280838563952);
+const steel = hadron.ink.darkSteel();
 
 const root = new THREE.Group();
 root.name = 'foundry_hadron';

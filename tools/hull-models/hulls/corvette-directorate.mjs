@@ -52,10 +52,11 @@ const L = 80;
 const DRAWN = 94.4009;
 const DATUM = 5.5;
 
-const violet = directorate.scoutInk.bruiseViolet();
-const red = directorate.scoutInk.abyssalRed();
-const chitin = directorate.scoutInk.trenchChitin();
-const photophore = directorate.scoutInk.redPhotophore();
+const violet = directorate.ink.bruiseViolet();
+const red = directorate.ink.abyssalRed();
+const chitin = directorate.ink.trenchChitin();
+// The file's own strength, the scout's 2.6.
+const photophore = directorate.ink.redPhotophore(2.6);
 
 const root = new THREE.Group();
 root.name = 'directorate_corvette';

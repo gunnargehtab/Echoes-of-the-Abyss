@@ -55,9 +55,9 @@
  *   own way; the −x pair the file writes in three's (−π, b, c) form of the
  *   XYZ Euler, written here as the plain (0, π + 0.4, c + π) of the same
  *   matrix. Three of the five anchors are written the same way.
- * - The six materials are the Bastion's five (`bastionInk`) with
+ * - The six materials are the navy's `ink`: the Bastion's five with
  *   `biolight_green` at this file's 3.0999, and `forge_light`, the spore
- *   token on a #2E3A16 base at 3.8398 (`worksInk`).
+ *   token on a #2E3A16 base at 3.8398.
  * - The light audit names six lamps hidden from above: five bay guides
  *   (`bay_guide_0_0` to `_0_3` and `_1_1`) under the crane beams and the
  *   lobes' overhang, and the launch glow under the mouth. The approved
@@ -94,12 +94,12 @@ const L = 320;
 const DRAWN = 17.243808807368453;
 const DATUM = 0;
 
-const algae = pelagia.bastionInk.algaeHull();
-const chitin = pelagia.bastionInk.deepChlorophyll();
-const spore = pelagia.bastionInk.sporePale();
-const forge = pelagia.worksInk.forgeLight(3.8397711422314402);
-const steel = pelagia.bastionInk.grownSteel();
-const bio = pelagia.bastionInk.biolightGreen(3.0999400442394323);
+const algae = pelagia.ink.algaeHull();
+const chitin = pelagia.ink.deepChlorophyll();
+const spore = pelagia.ink.sporePale();
+const forge = pelagia.ink.forgeLight(3.8397711422314402);
+const steel = pelagia.ink.grownSteel();
+const bio = pelagia.ink.biolightGreen(3.0999400442394323);
 
 const root = new THREE.Group();
 root.name = 'foundry_pelagia';
