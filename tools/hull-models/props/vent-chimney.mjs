@@ -76,15 +76,31 @@
  * are weights on the facet's three corners (`TO_THE_LIP`, `TO_THE_RIM`),
  * never within 5 % of an edge, lifted 2 cm along the facet's normal
  * (`seat`), so it is flat on the rock to the centimetre and tilted as the
- * facet is — 66°, 66°, 51° and 64° from horizontal, and planar, so per
- * triangle the same. Three keep the file's bearings round the mouth to
- * within 13° (30° → 21°, 147° → 134°, −52° → −47°); the fourth, at −131°,
- * had no facet that faces up on its side — the lip overhangs the rim there
- * — and takes the crown's best facet, at 109°. Each sliver runs its
- * facet's height and tapers toward the facet's point: 0.18 to 0.32 m² of
- * glass, two fifths of facets of 0.44 to 0.80; the fan's winding is the
- * facet's outward normal on all eight triangles. They read 0.44 m² from
- * above, seven of the raster's cells.
+ * facet is — 66°, 76°, 51° and 64° from horizontal, and planar, so per
+ * triangle the same. Bearings are taken from the mouth's centre, the lip
+ * and throat rings' mean centre (3.17, −0.03), to each sliver's centroid.
+ * Three keep the file's bearings round the mouth to within 9° (30° → 20°,
+ * 147° → 148°, −52° → −46°). The fourth, at −131°, takes the crown's best
+ * facet, at 110°: its own side has two facets that do face up, crown(5,
+ * false) at −129° and crown(6, false) at −88°, but only just, 0.10 and
+ * 0.14 on y, and both sit under the lip seen from above, so a sliver on
+ * either adds no cell to the audit; and the file's crack left in the
+ * mouth there puts the part under the floor at 19 of 64 grid alignments
+ * (the review's sweep). Round the mouth the four now sit at −46°, 20°,
+ * 110° and 148°, arcs of 67°, 89°, 38° and 166° between neighbours, and
+ * their nearest corners 1.15, 1.58, 0.62 and 2.72 m apart — the review's
+ * first crown cut had crack 1 on crown(3, true) at 134°, a quarter of a
+ * metre from crack 2 across the rim–lip edge they shared and half the
+ * mouth dark behind them. Each sliver runs its facet's height and tapers
+ * toward the facet's point, at two fifths of the facet: 0.18 to 0.32 m² of
+ * glass on facets of 0.44 to 0.80. Two fifths because that is where the
+ * four together clear the floor with a margin — a fifth of each facet read
+ * 0.25 exactly, a quarter to a third 0.38 — while a sliver still reads as
+ * a vein in the rock and not a glazed facet; and the glass in total is
+ * 0.94 m² against the file's 2.56, so the ember is sparser than the
+ * approved file's, not more of it (world light rule 1: points, never area
+ * glow). The fan's winding is the facet's outward normal on all eight
+ * triangles. They read 0.38 m² from above, six of the raster's cells.
  */
 import { THREE, add, faceted, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
@@ -498,11 +514,12 @@ function seat(facet, weights) {
 }
 
 // The four, in the file's order round the mouth: the file's bearings were
-// 30°, 147°, −131° and −52°; the crown faces up at 21°, 134° and −47°, and
-// on the −131° side not at all, so that one takes the band's best facet.
+// 30°, 147°, −131° and −52°; the crown faces up at 21°, 144° and −46°, and
+// on the −131° side only under the lip, so that one takes the band's best
+// facet (the header's last paragraph).
 const CRACKS = [
   [0, true, TO_THE_RIM],
-  [3, true, TO_THE_RIM],
+  [3, false, TO_THE_LIP],
   [2, false, TO_THE_LIP],
   [7, false, TO_THE_LIP],
 ];

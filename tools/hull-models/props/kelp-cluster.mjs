@@ -49,12 +49,16 @@
  * it, not by its size. `TIP` is 0.6, the smallest radius that clears the
  * floor with a margin on every tip: 0.48 m² raw and 0.325 m² measured, a
  * third over the floor, on a plan square of 0.693 m raw (0.57 m in the
- * file) that holds four of the raster's 0.25 m cells at any alignment, so
- * no grid can read a tip under 0.25. On this file's grid they read 0.38,
- * 0.25 and 0.56 m², biolight_2 at the floor exactly — two cells a side —
- * and passing. (A reading over the floor on every grid needs three cells
- * a side, a square over 0.75 m in the file and a radius of 0.79, which is
- * the knob 0.8 was and the review sent back.) All three grow together
+ * file). On this file's grid they read 0.38, 0.25 and 0.56 m², biolight_2
+ * at the floor exactly — two cells a side — and passing. That reading is
+ * the grid's as much as the tip's: a 0.57 m square holds two cells a side
+ * wherever it falls, but a stipe's open head rises above its tip's low
+ * corners and can take a corner cell, so a model change that moved the
+ * grid — anything that moves the plan's extents — could read a tip under
+ * the floor (the review's sweep of 256 alignments found 2, 2 and 1 that
+ * read 0.19 m²), and the export's audit would then say so. (Three cells a
+ * side, a square over 0.75 m in the file, is a radius of 0.79 — the knob
+ * 0.8 was, which the review sent back.) All three grow together
  * because they are one fixture at one size, as the generator made them; a
  * set at two sizes would be a shape decision nothing in the row licenses.
  * A tip at 0.6 is 0.98 m on an edge raw, 0.81 m in the file, on a stipe
