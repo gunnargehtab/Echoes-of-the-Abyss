@@ -49,8 +49,8 @@
  * - The bow and drive prisms are born apex-up and laid forward by -π/2
  *   (`point`, `tipUp`): the drive's point faces forward into the hull.
  * - The seam is `ink.crystalSeam`, the Clarion's near-black-based lamp at
- *   strength 1 — not the scout's token-through-and-through seam at 1.6 —
- *   and all three lamps sit on the centreline. The Chorister block asks for
+ *   strength 1 — the scout's is the same lamp at 1.6 since #888 — and all
+ *   three lamps sit on the centreline. The Chorister block asks for
  *   photophores "in a pattern that repeats on neither side"; the FACTION
  *   block says the Order is "the only faction with" exact bilateral
  *   symmetry, and the approved model follows the faction. The spine-gun is
