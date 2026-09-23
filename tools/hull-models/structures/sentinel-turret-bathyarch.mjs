@@ -64,10 +64,14 @@ const L = 120;
 const DRAWN = 3.9425;
 const BEARING = 0.5;
 
-const black = bathyarch.structureInk.hullBlack();
-const grey = bathyarch.structureInk.ironGrey();
-const rust = bathyarch.structureInk.oxideRust();
-const work = bathyarch.structureInk.workLamp(2.4);
+// The three claddings were this turret's own `structureInk` until #888 —
+// the hulls' hexes at 0.3/0.45, 0.3/0.52 and 0.1/0.75, an earlier pass's
+// finish — and are `ink`'s now, the hulls' 0.25/0.85, 0.32/0.72 and
+// 0.1/0.95, one value a name. The work lamp is as approved, at 2.4.
+const black = bathyarch.ink.hullBlack();
+const grey = bathyarch.ink.ironGrey();
+const rust = bathyarch.ink.oxideRust();
+const work = bathyarch.ink.workLamp(2.4);
 
 const root = new THREE.Group();
 root.name = 'bathyarch_sentinel_turret';

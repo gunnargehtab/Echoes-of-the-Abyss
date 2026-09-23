@@ -19,11 +19,12 @@
  * the second; the crusher hall with its roof, lit intake, two ranks of
  * teeth, a leaning stack and its lamp; two conveyors with a lit line down
  * each, on three legs; four flood masts; a banded ballast tank; three
- * pipes; and five apron lamps. Its five materials are the turret's
- * `structureInk` — the three claddings and `work_lamp` at 2.4 to the value
- * — and `port_glow`, the same amber banked to 1.1, which the Bastion
- * carries too. Nothing here is a shape decision; where the export is odd
- * the script is odd with it:
+ * pipes; and five apron lamps. Its five materials are `ink`'s: the three
+ * claddings, `work_lamp` at 2.4 and `port_glow`, the same amber banked to
+ * 1.1, which the Bastion carries too. The claddings were the turret's
+ * `structureInk` until #888 — the same hexes at 0.3/0.45, 0.3/0.52 and
+ * 0.1/0.75 — and are the hulls' finish now, one value a name. Nothing here
+ * is a shape decision; where the export is odd the script is odd with it:
  *
  * - The silos alternate short, tall, short, tall (2.6, 2.9, 2.6, 2.9) on
  *   one base; each cap is centred 0.22 above its silo's top, so its base
@@ -65,11 +66,11 @@ import * as bathyarch from '../factions/bathyarch.mjs';
 const L = 280;
 const DRAWN = 7.35;
 
-const black = bathyarch.structureInk.hullBlack();
-const rust = bathyarch.structureInk.oxideRust();
-const grey = bathyarch.structureInk.ironGrey();
-const lampM = bathyarch.structureInk.workLamp(2.4);
-const glow = bathyarch.structureInk.portGlow(1.1);
+const black = bathyarch.ink.hullBlack();
+const rust = bathyarch.ink.oxideRust();
+const grey = bathyarch.ink.ironGrey();
+const lampM = bathyarch.ink.workLamp(2.4);
+const glow = bathyarch.ink.portGlow(1.1);
 const put = bathyarch.inFrame;
 
 const root = new THREE.Group();

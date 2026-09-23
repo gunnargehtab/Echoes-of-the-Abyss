@@ -22,8 +22,10 @@
  * (docs/concept-art/models/abyssal-submersible-bathyarch.glb at 3e15409),
  * part for part in its order, every number the export's own, read off
  * parts.mjs. Every part comes from `factions/bathyarch.mjs`'s Submersible
- * section — its own finishes, `submersibleInk`, hyphenated as the file
- * names them — or is a kit box. Nothing here is a shape decision; where the
+ * section — its finishes `ink`'s hyphenated set, named as the file names
+ * them, the running light at the export's 2.6 — or is a kit box (the
+ * finishes were `submersibleInk` until #888). Nothing here is a shape
+ * decision; where the
  * export is odd the script is odd with it:
  *
  * - The sides are already nautical: `-port` at −z and `-stb` at +z (#642),
@@ -66,10 +68,10 @@ const L = 95;
 const DRAWN = 7.19;
 const DATUM = 0;
 
-const black = bathyarch.submersibleInk.hullBlack();
-const grey = bathyarch.submersibleInk.ironGrey();
-const brown = bathyarch.submersibleInk.oxideBrown();
-const lampM = bathyarch.submersibleInk.runningLight();
+const black = bathyarch.ink.hullBlackHeavy();
+const grey = bathyarch.ink.ironGreyHeavy();
+const brown = bathyarch.ink.oxideBrown();
+const lampM = bathyarch.ink.runningLight(2.6);
 
 const root = new THREE.Group();
 root.name = 'bathyarch-abyssal-submersible';

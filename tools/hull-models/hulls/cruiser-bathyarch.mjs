@@ -40,8 +40,11 @@
  *   y 5.4 from 12 to 30, six to starboard at 4.6 from 0 to 18, four to port
  *   aft at 6.2, four to starboard at 5.8.
  * - The four engine vents sit two a side in the quarter, not in a rank
- *   across the transom; they are the one part in `cruiserInk.amberVent`,
- *   the export's own vent at 2.2, which is not `ink.amberVent`.
+ *   across the transom. They were the one part in `cruiserInk.amberVent`
+ *   until #888 — #F28A1E on an amber-through base, 0.5 rough, at 2.2, the
+ *   export's own — and are `ink.amberVent` now, #B07A1E on #120E06 like
+ *   every other vent in the navy, at 3.516 so that luminance × strength
+ *   holds at 0.817 and the conn view's resting glow is the export's.
  * - The dish is pitched 2.2 rad on its boom, so its face looks forward and
  *   down. Both hubs taper forward, narrow end to the bow; each screw's three
  *   blades are three boxes in the file, not one shared.
@@ -66,12 +69,16 @@ const L = 130;
 const DRAWN = 107.5;
 const DATUM = 5;
 
-const black = bathyarch.scoutInk.hullBlack();
-const rust = bathyarch.scoutInk.oxideRust();
-const grey = bathyarch.scoutInk.ironGrey();
-const amber = bathyarch.scoutInk.hazardAmber();
-const lamp = bathyarch.scoutInk.amberLamp();
-const vent = bathyarch.cruiserInk.amberVent();
+// `scoutInk` until #888: the same four claddings, and an `amber_lamp` that
+// was the token through and through. The base is the navy's near-black now
+// and the export's 3.5 stays, the light itself unmoved. The vent's 3.516 is
+// 2.2 × 0.371479 / 0.232429, the linear luminances of #F28A1E and #B07A1E.
+const black = bathyarch.ink.hullBlack();
+const rust = bathyarch.ink.oxideRust();
+const grey = bathyarch.ink.ironGrey();
+const amber = bathyarch.ink.hazardAmber();
+const lamp = bathyarch.ink.amberLamp(3.5);
+const vent = bathyarch.ink.amberVent(3.516);
 
 const root = new THREE.Group();
 root.name = 'consortium_cruiser';

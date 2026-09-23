@@ -20,11 +20,13 @@
  * bay — walls, sill, aprons and their stripes, the lit forge floor and
  * back wall, three lit rim strips, two lit roof seams and the gable strip;
  * two gantry cranes on a rail a side; three tanks and two straps; two pipe
- * runs, a down pipe and its elbow; and thirty-two rivets on one box. Every
- * material is `scoutInk`'s to the value — the five finishes of this
- * authoring pass are the Light Scout's, `amber_lamp` amber through and
- * through at 3.5, not the turret's `structureInk`. Nothing here is a shape
- * decision; where the export is odd the script is odd with it:
+ * runs, a down pipe and its elbow; and thirty-two rivets on one box. Its
+ * five materials are `ink`'s — the four claddings and `amber_lamp` at the
+ * export's 3.5. They were `scoutInk`'s until #888, the Light Scout's
+ * authoring pass, whose `amber_lamp` was the token through and through;
+ * the base is the navy's near-black now and the 3.5 stays, the light
+ * itself unmoved. Nothing here is a shape decision; where the export is
+ * odd the script is odd with it:
  *
  * - Port is the export's +x, which `drawn` lands on −z (#642): every `_p`
  *   — pylons, ribs, patches, bay walls, aprons, rails, legs, tanks, the
@@ -62,11 +64,11 @@ import * as bathyarch from '../factions/bathyarch.mjs';
 const L = 320;
 const DRAWN = 66;
 
-const black = bathyarch.scoutInk.hullBlack();
-const rust = bathyarch.scoutInk.oxideRust();
-const grey = bathyarch.scoutInk.ironGrey();
-const amber = bathyarch.scoutInk.hazardAmber();
-const lampM = bathyarch.scoutInk.amberLamp();
+const black = bathyarch.ink.hullBlack();
+const rust = bathyarch.ink.oxideRust();
+const grey = bathyarch.ink.ironGrey();
+const amber = bathyarch.ink.hazardAmber();
+const lampM = bathyarch.ink.amberLamp(3.5);
 const put = bathyarch.alongZ;
 
 const root = new THREE.Group();

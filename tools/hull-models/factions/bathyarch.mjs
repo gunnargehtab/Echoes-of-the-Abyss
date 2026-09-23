@@ -45,19 +45,73 @@ import {
 } from '../kit.mjs';
 
 /**
- * The Klaxon's palette, as the Bulwark's own materials carry it: the four
- * tokens of docs/art-direction.md, and — where the approved model needed a
- * colour the docs do not name — that model's own hex, exactly (kit.mjs `hex`).
- * The vent is the amber banked down, the flood is it thrown wide open.
+ * The Klaxon's palette — every material name the navy's twenty-four models
+ * carry, one factory a name and one value a name (docs/asset-prompts-3d.md
+ * Block 2b, rule 3). The four tokens of docs/art-direction.md as the
+ * Bulwark's own materials carry them, and — where an approved model needed
+ * a colour the docs do not name — that model's own hex, exactly (kit.mjs
+ * `hex`). The vent is the amber banked down, the flood is it thrown wide
+ * open.
+ *
+ * Until #888 this module held a table per authoring pass — `structureInk`,
+ * `scoutInk`, `cruiserInk`, `submersibleInk`, `bargeInk` — each copying its
+ * approved export's finishes to the value, which is how `hull_black` came
+ * to be carried at 0.25/0.85 on nineteen models and 0.3/0.45 on three.
+ * Re-finishing the navy is now one edit here. Where a name was split, the
+ * hulls' value won — "the hull value is canonical" (Block 2b, under the
+ * five-split table) — and the factory's docstring says what it replaced
+ * and on which models.
+ *
+ * A lamp's `intensity` is the glTF emissive strength: how loud the fixture
+ * is at rest, each model's own, approved at intake against its SIG band
+ * and carried straight into the conn view (rosterModels.ts `recolor`). It
+ * is not part of the value — finishes.mjs compares every field but it — so
+ * every lamp factory takes it and a script passes its model's own. The
+ * default of 1 writes no strength, as the kit's `lamp` does.
  */
 export const ink = {
+  /*
+   * The three claddings, at the hulls' finish. The Sentinel Turret, the
+   * Bastion and the Refinery carried the same three hexes a shade more
+   * metal and a good deal less rough — 0.3/0.45, 0.3/0.52 and 0.1/0.75, an
+   * earlier authoring pass's, kept to the value by their ports (#639,
+   * #652) — and #888 brought them onto these. Metalness and roughness
+   * survive the recolour where a hue does not, so that was the one split in
+   * this navy a player could have seen.
+   */
   hullBlack: () => clad('hull_black', hex('#0E1418'), 0.25, 0.85),
   ironGrey: () => clad('iron_grey', hex('#8C8378'), 0.32, 0.72),
   oxideRust: () => clad('oxide_rust', hex('#3D2B1F'), 0.1, 0.95),
   hazardAmber: () => clad('hazard_amber', hex('#F2B233'), 0.15, 0.6),
-  amberLamp: () => lamp('amber_lamp', hex('#F2B233'), hex('#1A1408')),
-  amberVent: () => lamp('amber_vent', hex('#B07A1E'), hex('#120E06')),
-  amberFlood: () => lamp('amber_flood', hex('#FFD070'), hex('#2A2210')),
+  /**
+   * The navigation light of a moving hull — a mast lamp, a running light, a
+   * nav dome or strip — and the Foundry's forge light: the token in
+   * `emissive` on the kit's near-black base. The Light Scout, the Corvette,
+   * the Cruiser, the Harvester and the Foundry carried it amber through and
+   * through, the token in `color` as well, at 3.5 (#588, #649); #888 brought
+   * the base onto this one and left the 3.5 — the emissive did not move, so
+   * the resting glow the conn view reads did not either. The other way out,
+   * renaming those five to `work_lamp`, was not taken: that is a static
+   * mount's hanging fixture at 0.35 rough, not a mast lamp, and it would
+   * only have moved the split onto that name. The token in `color` never
+   * reached a pixel in any case; every one of the five carries
+   * `hazard_amber` at the same hex, so the brightest colour the recolour
+   * sets its register by is unchanged on all of them.
+   */
+  amberLamp: (intensity = 1) =>
+    lamp('amber_lamp', hex('#F2B233'), hex('#1A1408'), 0.4, intensity),
+  /**
+   * The vent: the amber banked down to #B07A1E, on #120E06. The Cruiser's
+   * four engine vents carried #F28A1E on an amber-through base, 0.5 rough,
+   * at 2.2 (#649); #888 brought them here. The light moved, so the strength
+   * moves with it — the Cruiser passes 3.516, which is 2.2 × 0.371479 /
+   * 0.232429, the linear luminances of the two emissives — and luminance
+   * × strength holds at 0.817, the resting glow the conn view keeps.
+   */
+  amberVent: (intensity = 1) =>
+    lamp('amber_vent', hex('#B07A1E'), hex('#120E06'), 0.4, intensity),
+  amberFlood: (intensity = 1) =>
+    lamp('amber_flood', hex('#FFD070'), hex('#2A2210'), 0.4, intensity),
   /**
    * The lamp family's *unlit* finish: `amber_lamp`'s base, #1A1408, at the
    * lamp's own metalness and roughness and with no emissive — worn as
@@ -71,6 +125,48 @@ export const ink = {
    * any flag.
    */
   amberLampUnlit: () => clad('amber_lamp_unlit', hex('#1A1408'), 0, 0.4),
+  /**
+   * The work lamp a static mount hangs — the Sentinel Turret's `base_lamp`
+   * and the orbs on the Bastion's posts and collars and the Refinery's silos
+   * and apron — brighter than the navigation light and amber through and
+   * through: its base is the token, not a near-black, so it reads as a
+   * fixture in the albedo map too (#639). All three pass 2.4. One value on
+   * the three models that carry it, so not a split, and left as approved.
+   */
+  workLamp: (intensity = 1) =>
+    lamp('work_lamp', hex('#F2B233'), hex('#F2B233'), 0.35, intensity),
+  /**
+   * The Refinery's and the Bastion's second lamp (#652): the token through
+   * and through like the work lamp, a shade rougher at 0.4 — the lit ports
+   * of a dome that "can never run silent", the belt lines on the conveyors,
+   * the crusher's intake. Both pass 1.1. One value on both, and left.
+   */
+  portGlow: (intensity = 1) =>
+    lamp('port_glow', hex('#F2B233'), hex('#F2B233'), 0.4, intensity),
+  /*
+   * The Abyssal Submersible's and the Baffle Barge's finishes, hyphenated as
+   * those two exports name them (#649, #652): the three tokens in a heavier
+   * finish than the hulls' — the black 0.55/0.82 against 0.25/0.85, the
+   * grey 0.6/0.7 against 0.32/0.72, the brown named for what it is at
+   * 0.25/0.95 — and a running light on the near-black #1A1206, at 2.6 on
+   * both. The same hex under a second name at a second finish is not a
+   * split rule 3 can see, since the rule is keyed on the name, and #888 left
+   * it: bringing `hull-black` onto `hull_black` is a finish move on two
+   * models that no name asked for, and a decision for its own change.
+   */
+  hullBlackHeavy: () => clad('hull-black', hex('#0E1418'), 0.55, 0.82),
+  ironGreyHeavy: () => clad('iron-grey', hex('#8C8378'), 0.6, 0.7),
+  oxideBrown: () => clad('oxide-brown', hex('#3D2B1F'), 0.25, 0.95),
+  runningLight: (intensity = 1) =>
+    lamp('amber-running-light', hex('#F2B233'), hex('#1A1206'), 0.4, intensity),
+  /*
+   * The Baffle Barge's own two (#652): the acoustic foam of its vanes and
+   * pads, #1C1F22, a near-black nothing in the docs names, rougher than
+   * anything else in the navy; and the hazard amber as paint rather than
+   * plate, at 0.4 metal.
+   */
+  baffleFoam: () => clad('baffle-foam', hex('#1C1F22'), 0.1, 0.98),
+  hazardPaint: () => clad('hazard-amber-paint', hex('#F2B233'), 0.4, 0.6),
 };
 
 /** The body: a flat-sided slab from a plan outline, with a bow face and transom. */
@@ -1506,36 +1602,14 @@ export function exhaustLouvres(root, { black, flood }, opts) {
  * is a separate PR with its own screenshot (#540).
  * ------------------------------------------------------------------------ */
 
-/**
- * The structure palette: the one fixture a turret needs that no hull did, and
- * the turret's own three claddings.
- *
- * `amber_lamp` is a navigation light on a moving hull; a static mount carries
- * a work lamp, brighter and warmer, and the approved turret names it. The
- * structures carry their own names rather than a shared dimming factor
- * applied to `ink` — see `structureInk` in factions/hadron.mjs for the
- * argument. The values are the approved turret's own: its plate is the
- * Bulwark's to the hex but not to the value — a shade more metal and a good
- * deal less rough, the black 0.3/0.45 against `ink`'s 0.25/0.85 — and its
- * lamp burns at an emissive strength of 2.4 (`intensity`; the default of 1
- * writes no strength, as before) (#639).
+/*
+ * The structures' palette was `structureInk` until #888: the turret's own
+ * three claddings, less rough than the hulls', and `work_lamp`. The lamp is
+ * `ink.workLamp` now — `amber_lamp` is a navigation light on a moving hull;
+ * a static mount carries a work lamp, brighter and warmer, and the approved
+ * turret names it — and the three claddings are `ink`'s, at the hulls'
+ * finish, one value a name.
  */
-export const structureInk = {
-  hullBlack: () => clad('hull_black', hex('#0E1418'), 0.3, 0.45),
-  ironGrey: () => clad('iron_grey', hex('#8C8378'), 0.3, 0.52),
-  oxideRust: () => clad('oxide_rust', hex('#3D2B1F'), 0.1, 0.75),
-  // The approved turret's lamp is amber through and through — its base is the
-  // token, not a near-black — so it reads as a fixture in the albedo map too.
-  workLamp: (intensity = 1) =>
-    lamp('work_lamp', hex('#F2B233'), hex('#F2B233'), 0.35, intensity),
-  // The Refinery's and the Bastion's second lamp (#652): the token through
-  // and through like the work lamp, a shade rougher at 0.4 and banked to
-  // 1.1 — the lit ports of a dome that "can never run silent", the belt
-  // lines on the conveyors, the crusher's intake. Values the approved
-  // exports' own.
-  portGlow: (intensity = 1.1) =>
-    lamp('port_glow', hex('#F2B233'), hex('#F2B233'), 0.4, intensity),
-};
 
 /**
  * The heat exchanger on the end of a Vent Tap's draw arm, on `bearing`
@@ -1869,19 +1943,13 @@ export function slipwayHall(hall, { black, grey, rust, amber, flood }, opts) {
  * follow.
  * ------------------------------------------------------------------------ */
 
-/**
- * The Light Scout's palette: the Bulwark's four claddings to the value, and
- * a lamp that is the hazard-amber token through and through, burning at
- * 3.5 — the fixture `structureInk.workLamp` also is, not `ink`'s
- * near-black-based navigation light. Values are the approved export's own.
+/*
+ * The shared kinds' palette was `scoutInk` until #888: the Bulwark's four
+ * claddings to the value, and an `amber_lamp` that was the token through
+ * and through at 3.5. The five scripts that read it — the Light Scout, the
+ * Corvette, the Cruiser, the Harvester and the Foundry — read `ink` now and
+ * pass the 3.5; the base moved to the navy's near-black (`ink.amberLamp`).
  */
-export const scoutInk = {
-  hullBlack: () => clad('hull_black', hex('#0E1418'), 0.25, 0.85),
-  ironGrey: () => clad('iron_grey', hex('#8C8378'), 0.32, 0.72),
-  oxideRust: () => clad('oxide_rust', hex('#3D2B1F'), 0.1, 0.95),
-  hazardAmber: () => clad('hazard_amber', hex('#F2B233'), 0.15, 0.6),
-  amberLamp: () => lamp('amber_lamp', hex('#F2B233'), hex('#F2B233'), 0.4, 3.5),
-};
 
 /**
  * A drum: a closed cylinder, `radii` [top, bottom] as drawn and laid along
@@ -2004,15 +2072,12 @@ export const ALONG_KEEL = [Math.PI / 2, 0, 0];
 // Z-long pair is written in — is the kit's `flanks` (#649); the Order's
 // module grew the same helper, and one copy is the rule.
 
-/**
- * The Cruiser's vent: `scoutInk`'s amber-through lamp base with the light
- * itself banked to #F28A1E, burning at 2.2 and a shade rougher — not
- * `ink.amberVent`, the Bulwark's near-black-based fixture at 1. Values the
- * approved export's own; the other five of its materials are `scoutInk`'s.
+/*
+ * The Cruiser's vent was `cruiserInk.amberVent` until #888: #F28A1E on an
+ * amber-through base, 0.5 rough, at 2.2, the approved export's own. It is
+ * `ink.amberVent` now, at 3.516 for the luminance the light lost on the way
+ * (the arithmetic is on the factory).
  */
-export const cruiserInk = {
-  amberVent: () => lamp('amber_vent', hex('#F28A1E'), hex('#F2B233'), 0.5, 2.2),
-};
 
 /**
  * Running lights along the hull line — "dim accent running lights along the
@@ -2218,21 +2283,10 @@ export function lightLines(root, lampM, { lines, stern }) {
  * manipulator arms in frames of their own, and running lights. The export
  * is X-long, hyphenates every name and carries its own finishes, so its
  * builders place with kit `add` in the file's own frame — nothing is yawed —
- * and its palette is the set below.
+ * and its palette is `ink`'s hyphenated set (`hullBlackHeavy`,
+ * `ironGreyHeavy`, `oxideBrown`, `runningLight`), which was `submersibleInk`
+ * until #888.
  * ------------------------------------------------------------------------ */
-
-/**
- * The Submersible's palette: the Klaxon's three tokens in a heavier finish
- * than `ink` — the black 0.55/0.82 against 0.25/0.85, the grey 0.6/0.7, the
- * brown named for what it is at 0.25/0.95 — and a running light on the
- * near-black base #1A1206 burning at 2.6. Values the approved export's own.
- */
-export const submersibleInk = {
-  hullBlack: () => clad('hull-black', hex('#0E1418'), 0.55, 0.82),
-  ironGrey: () => clad('iron-grey', hex('#8C8378'), 0.6, 0.7),
-  oxideBrown: () => clad('oxide-brown', hex('#3D2B1F'), 0.25, 0.95),
-  runningLight: () => lamp('amber-running-light', hex('#F2B233'), hex('#1A1206'), 0.4, 2.6),
-};
 
 /**
  * Every drum on the Submersible is born on Y and laid along the keel by a
@@ -2559,23 +2613,11 @@ export const inFrame = (root, name, geo, mat, t, e, s) => add(root, name, geo, m
 /** The work lamp these three structures hang everywhere: a six-by-four orb, as the turret's `base_lamp` is. */
 const lampOrb = (r) => new THREE.SphereGeometry(r, 6, 4);
 
-/**
- * The Baffle Barge's palette: the Submersible's four finishes to the value
- * and the name — hyphenated, the heavier black, the brown named for what it
- * is, the running light on #1A1206 at 2.6 — and two of its own: the
- * acoustic foam of its vanes and pads, #1C1F22, a near-black nothing in the
- * docs names, rougher than anything else in the navy; and the hazard amber
- * as paint rather than plate, at 0.4 metal. Values the approved export's
- * own.
+/*
+ * The Baffle Barge's palette was `bargeInk` until #888: the Submersible's
+ * four hyphenated finishes and two of its own, the foam and the hazard
+ * paint. All six are `ink`'s now (`baffleFoam`, `hazardPaint`).
  */
-export const bargeInk = {
-  hullBlack: () => submersibleInk.hullBlack(),
-  ironGrey: () => submersibleInk.ironGrey(),
-  oxideBrown: () => submersibleInk.oxideBrown(),
-  runningLight: () => submersibleInk.runningLight(),
-  baffleFoam: () => clad('baffle-foam', hex('#1C1F22'), 0.1, 0.98),
-  hazardPaint: () => clad('hazard-amber-paint', hex('#F2B233'), 0.4, 0.6),
-};
 
 /**
  * A pipe stood between two points of the export's frame: at their

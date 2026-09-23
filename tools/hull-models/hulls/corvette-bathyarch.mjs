@@ -55,11 +55,14 @@ const L = 80;
 const DRAWN = 78.4;
 const DATUM = 4.5;
 
-const black = bathyarch.scoutInk.hullBlack();
-const grey = bathyarch.scoutInk.ironGrey();
-const rust = bathyarch.scoutInk.oxideRust();
-const amber = bathyarch.scoutInk.hazardAmber();
-const lamp = bathyarch.scoutInk.amberLamp();
+// `scoutInk` until #888: the same four claddings, and an `amber_lamp` that
+// was the token through and through. The base is the navy's near-black now
+// and the export's 3.5 stays, the light itself unmoved.
+const black = bathyarch.ink.hullBlack();
+const grey = bathyarch.ink.ironGrey();
+const rust = bathyarch.ink.oxideRust();
+const amber = bathyarch.ink.hazardAmber();
+const lamp = bathyarch.ink.amberLamp(3.5);
 
 const root = new THREE.Group();
 root.name = 'consortium_corvette';

@@ -21,10 +21,12 @@
  * beacon; ten portholes round the skirt; three docking collars, each with
  * its ring and its lamp; three modules with two patches and four windows;
  * the jib crane; two ballast tanks, one banded; four pipes; and eight
- * perimeter posts with a lamp each. Its five materials are the turret's
- * `structureInk` — the three claddings and `work_lamp` at 2.4 — and
- * `port_glow` at 1.1, the Refinery's. Nothing here is a shape decision;
- * where the export is odd the script is odd with it:
+ * perimeter posts with a lamp each. Its five materials are `ink`'s: the
+ * three claddings, `work_lamp` at 2.4 and `port_glow` at 1.1, the
+ * Refinery's. The claddings were the turret's `structureInk` until #888 —
+ * the same hexes at 0.3/0.45, 0.3/0.52 and 0.1/0.75 — and are the hulls'
+ * finish now, one value a name. Nothing here is a shape decision; where
+ * the export is odd the script is odd with it:
  *
  * - The portholes are placed round the skirt at 2.74 from 0.31 radians,
  *   a tenth of a turn apart, and each is turned `[π/2, 0, π/2 − a]` in
@@ -72,11 +74,11 @@ import * as bathyarch from '../factions/bathyarch.mjs';
 const L = 440;
 const DRAWN = 8.7012;
 
-const black = bathyarch.structureInk.hullBlack();
-const grey = bathyarch.structureInk.ironGrey();
-const rust = bathyarch.structureInk.oxideRust();
-const lampM = bathyarch.structureInk.workLamp(2.4);
-const glow = bathyarch.structureInk.portGlow(1.1);
+const black = bathyarch.ink.hullBlack();
+const grey = bathyarch.ink.ironGrey();
+const rust = bathyarch.ink.oxideRust();
+const lampM = bathyarch.ink.workLamp(2.4);
+const glow = bathyarch.ink.portGlow(1.1);
 const put = bathyarch.alongZ;
 
 const root = new THREE.Group();
