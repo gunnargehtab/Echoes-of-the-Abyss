@@ -253,9 +253,20 @@ describe('telemetry measures what it says it measures', () => {
         `slot ${player.slot}: the five reasons have to add up to the observations`
       );
     }
-    const markdown = toMarkdown(summarise([result]), 'Test run');
+    const summary = summarise([result]);
+    const markdown = toMarkdown(summary, 'Test run');
     assert.match(markdown, /^## The carrier want — where it was stopped$/m);
-    assert.match(markdown, /^\| Hull wanted \| Gantry \| Rootstock \|$/m);
+    // And the numbers under that heading are the carrier's. A table handed the
+    // ordnance tally would print a well-formed miscount, so the row is checked
+    // against the carrier tally, on a row where the two tallies differ.
+    const carrierTable = markdown.slice(markdown.indexOf('## The carrier want'));
+    assert.match(carrierTable, /^\| Hull wanted \| Gantry \| Rootstock \|$/m);
+    assert.ok(
+      summary.factions.some((f) => f.carrierWant.noYard !== f.ordnanceWant.noYard),
+      'the premise: on this seed the two wants find no free yard a different number of times'
+    );
+    const noYard = summary.factions.map((f) => `${f.carrierWant.noYard} \\(\\d+%\\)`).join(' \\| ');
+    assert.match(carrierTable, new RegExp(`^\\| Blocked: no free yard \\| ${noYard} \\|$`, 'm'));
 
     // A result stored before the column existed has no `carrierWant` at all.
     // It is summarised as an empty tally, and the table is left out rather

@@ -89,7 +89,7 @@ baseline, and this table says which gate kept it out. Every carrier is a Slipway
 free yard* counts the observations before the rung stood as well as those at a busy yard.
 
 **The bank against the rung.** The most nodules a navy ever held at one instant, and the most
-it held once a Slipway was standing. The four tables above are rates and counts, and none of
+it held once a Slipway was standing. The tables above are rates and counts, and none of
 them can say whether a hull was ever *affordable* — which is a maximum, and a maximum a
 ten-second sample misses, because a bank rises to a price and is spent inside one interval.
 Issue #518 spent five sessions reading the arbitration between a commander's wants before

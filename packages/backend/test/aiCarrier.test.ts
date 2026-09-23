@@ -512,10 +512,11 @@ describe('the commander fields its navy carrier', () => {
 describe('the commander counts why it did or did not buy its carrier', () => {
   // #839's third bullet. The build column can say a navy never fielded its
   // deck; this says which gate shut, one reason per observation, and the five
-  // sum to `reached` (docs/invariants.md row 14). Each case is one observation
-  // on a fresh commander — a Veteran decides on its first — so the tally after
-  // it is exactly one reason, and a case that never reached the want at all
-  // fails on `reached` rather than passing as a zero.
+  // sum to `reached` — the partition docs/invariants.md holds for both wants.
+  // Each case is one observation on a fresh commander — a Veteran decides on
+  // its first — so the tally after it is exactly one reason, and a case that
+  // never reached the want at all fails on `reached` rather than passing as a
+  // zero.
   it('counts one reason for every observation that reaches the carrier want', () => {
     for (const faction of NAVIES) {
       const name = Faction[faction];
