@@ -75,8 +75,9 @@
  * above; two move, and two stay lit where they are as residual audit lines
  * the audit names on every build:
  * - `crystal_core` stays. Its only occluder from above is
- *   `heat_shimmer_sheath`, alpha-blended at six percent, which kit.mjs
- *   `topDown` treats as opaque; nothing solid stands over it, and a lamp
+ *   `heat_shimmer_sheath`, alpha-blended at six percent, which glb.mjs
+ *   `topDown` — what kit.mjs `lightAudit` calls — treats as opaque;
+ *   nothing solid stands over it, and a lamp
  *   the block lights at rest is never clad to quiet the audit (#890
  *   review). Residual.
  * - `crystal_throat` stays. It is sealed inside the core — the file's
@@ -86,10 +87,10 @@
  *   frame, sat at x ±0.9 under the sheath's bulge (its middle facet at 12.4
  *   over a crown at 11.9) and showed 0.06 m² each. Each moves outboard
  *   along its blade to x ±1.15 at the same y and z — beside the blade
- *   still, which spans 0.52..1.64 there, and out from under the sheath —
- *   rule 5 — and shows 5.1 m². `diff.mjs` lists the two (3.62 m at 140 m)
- *   and nothing else. Round one of #890 clad the core and the throat for a
- *   build; both are the file's lamps again.
+ *   still, which spans 0.74..1.97 there (0.64..2.07 with its bevel; the
+ *   blade stands on y 1.7), and out from under the sheath — rule 5 — and
+ *   shows 5.1 m². `diff.mjs` lists the two (3.62 m at 140 m) and nothing
+ *   else.
  */
 import { THREE, fitFootprint, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';

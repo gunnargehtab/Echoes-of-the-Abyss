@@ -99,10 +99,19 @@
  *   5.1–5.4 m² each. `diff.mjs` lists the ten (16.6 m at 320 m).
  * - `gantry_load_0` and `_1`, the octahedra under the trolleys — clad in
  *   `dark_steel`, the cable's and the trolley's, which is what each hangs
- *   from. The block names no crane load, and the other three navies' loads
- *   are unlit steel: a part that was never a lamp in the block's terms
- *   takes the cladding it sits on (#890 review), not a lamp family's unlit
- *   finish. `diff.mjs` lists the two materials, and nothing else.
+ *   from. The block names no crane load; the Directorate's and the
+ *   Commune's loads hang in their own claddings (`weld_steel`,
+ *   `grown_steel`), and the Consortium's cranes carry a hook in
+ *   `oxide_rust` and no load at all. A part that was never a lamp in the
+ *   block's terms takes the cladding it sits on (#890 review), not a lamp
+ *   family's unlit finish. `diff.mjs` lists the two materials, and nothing
+ *   else.
+ * - `gate_threshold` is not this issue's: it stays lit in `forge_light`
+ *   (218 m², never hidden). It is the Order's reading of the kit's
+ *   `launchMouth`, whose `launch_glow` the Directorate's and the Commune's
+ *   Foundries clad under #890 as the light "spilling from the bay when
+ *   producing"; whether the Order's threshold is that glow under another
+ *   name is a follow-up under #893.
  */
 import {
   THREE,

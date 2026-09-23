@@ -31,7 +31,7 @@
  *
  * - The lamps are the Cruiser's own (`ink.crystalCoreGlow` and
  *   `ink.crystalPanelGlow`, on no other Order model): a core glow at 4.5 on
- *   the dorsal spine, the four fork crystals and the drive, and a panel glow
+ *   the two spines, the four fork crystals and the drive, and a panel glow
  *   at 3.2 on the eight facet panels. The drive prism is a lamp — the one
  *   Z-long Order drive that is.
  * - The guard wings and their edges are struts between two points in the
@@ -58,8 +58,10 @@
  *   spine's fixture carried under the keel; a keel run can be put on no
  *   upward face, so it stays lit in the core glow where it is (#890 review:
  *   a lamp the block lights at rest is never clad to quiet the audit). It
- *   is the conn view's light, 48–89 m² from the side and below. Round one
- *   of #890 clad it for a build; nothing else on the hull moved.
+ *   is the conn view's light: 67 m² from either beam and 89 m² from below,
+ *   by glb.mjs `topDown` with the parts turned onto each axis — a turn
+ *   onto the starboard beam can read 48 m², the same 0.93 m face falling a
+ *   0.25 m raster row short on that phase.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds: drawn along Z, 140.00 units long from the drive prism's
