@@ -23,11 +23,21 @@
  * - **The rivets are numbered by their place in the file.** `rivet_72` is
  *   the 73rd part, the approved export's own convention; `rivetRows` does
  *   the same, so the run lands at 72 … 99 without a constant.
- * - **The light is where it can be counted.** The two welding bays, the
- *   skylight, the derrick floods and the bow lamp face up. The ten workshop
- *   ports sit under the roof's eaves and the two engine vents under the deck,
- *   where the top-down bake cannot see them, as in the approved bake; the
- *   export's light audit says so, and moving them would be a redesign.
+ * - **The light is where it can be counted — since #890, all of it.** The
+ *   two welding bays, the skylight, the derrick floods and the bow lamp
+ *   faced up in the approved file. Its ten workshop ports were 0.4 m panels
+ *   under the roof's eave and the hazard band's, and its two engine vents
+ *   sat inside the hull box beside the prop tunnels, so the audit warned on
+ *   twelve; the block names both at rest ("lit ports … and vents"), so
+ *   #890 moved them rather than clad them (docs/models-plan.md §3.2 rule
+ *   5), and they are the one departure from the file:
+ *   - `port_s0..4`, `port_p0..4`: the same rank of five a side, each port a
+ *     box 1.2 m deep from the wall, standing 0.6 m proud of the band's
+ *     eave so its top face reaches the bake.
+ *   - `engine_vent_s`, `engine_vent_p`: gratings let into the stern deck
+ *     over the prop tunnels, one a quarter, where the file had them at
+ *     y 1.5 inside the hull.
+ *   The block's lighting clause was amended with them.
  *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.
@@ -88,7 +98,9 @@ bathyarch.workshop(root, { black, grey, rust, amber, lampM, vent }, {
     p: { at: [0, 8.5, -10.2], size: [5, 3, 0.5] },
   },
   band: { at: [-6, 11, 0], size: [27, 0.6, 21.2] },
-  ports: { count: 5, x: -16, pitch: 5, y: 8.4, z: 10.3, size: [2.2, 1.4, 0.4] },
+  // Each port runs from the wall (z 10) out past the band's eave (10.6) to
+  // 11.2; the file's were 10.1..10.5, under it (header, #890).
+  ports: { count: 5, x: -16, pitch: 5, y: 8.4, z: 10.6, size: [2.2, 1.4, 1.2] },
   skylight: { at: [-6, 12.2, 0], size: [10, 0.3, 8] },
 });
 
@@ -127,12 +139,14 @@ bathyarch.stackBand(root, amber, { name: 'stack_a_band', at: [-20, 17, 3], r: 1.
 bathyarch.stackBand(root, amber, { name: 'stack_b_band', at: [-20, 17, -3], r: 1.9, h: 0.8 });
 
 // A prop tunnel a side, notched into the stern, each with its three blades
-// showing and its engine vent beside it.
+// showing and its engine vent over it: a grating on the deck (top 4.7) at
+// the quarter, inside the deck's outline there (z 3.4..15.7 at x −35.5),
+// where the file's [−35.5, 1.5, ±12] sat inside the hull (header, #890).
 bothSides((side, sgn) =>
   bathyarch.propTunnel(root, { grey, black, vent }, {
     name: side, at: [-40, -2, sgn * 10], r: 4.2, length: 5, hub: { r: 1.2, length: 5.5 },
     blades: { count: 3, dx: -0.5, size: [1, 3.4, 0.6] },
-    vent: { at: [-35.5, 1.5, sgn * 12], size: [1.5, 2.2, 6] },
+    vent: { at: [-35.5, 4.85, sgn * 11.5], size: [1.5, 0.3, 6] },
   })
 );
 

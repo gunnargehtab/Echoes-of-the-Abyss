@@ -36,10 +36,24 @@
  * - The screw's hub tapers forward, narrow end to the bow, as the scout's
  *   does; its three blades are three boxes in the file, not one shared.
  * - The mast lamp, the running lights and the stern and bow lights are the
- *   lamps; the two bow stencils and the tower stencil are paint. Only the
- *   mast lamp reaches the audit's floor from above: the running lights sit
- *   on the flanks and the stern and bow lights are 0.15 m² in plan, so the
- *   export warns on all fourteen, as the approved bake never saw them either.
+ *   lamps; the two bow stencils and the tower stencil are paint. The export
+ *   hung the twelve running lights on the flanks under the deck plate's
+ *   edge and drew the stern and bow lights 0.15 m² in plan, so only the
+ *   mast lamp reached the audit's floor; #890 moved those fourteen, and
+ *   they are the one departure from the file (docs/models-plan.md §3.2
+ *   rule 5). All fourteen are the resting clause's — "dim accent running
+ *   lights along the hull line" — so each keeps its name, its material and
+ *   its place in the rank and shows a top face to the bake:
+ *   - `runlight_p0..5`, `runlight_s0..5`: one pad a station on the deck
+ *     plate's outer edge, outboard of the deck pipes, 0.32 across, 0.28
+ *     tall and 2 long, where the file's 0.28 × 0.28 × 0.6 dot sat on the
+ *     flank at y 7.1.
+ *   - `sternlight`: a bar across the pressure cylinder's crown, which
+ *     stands 0.6 proud of the after hull box abaft the deck plate, just
+ *     forward of the rudder — where the file had it buried in the rudder's
+ *     root.
+ *   - `bowlight`: a block let into the bow wedge's upper face, 3 m short of
+ *     the ram, where the file had a dot floating over the wedge's tip.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds: drawn along Z, 78.40 units long — the ram's face to the
@@ -233,18 +247,20 @@ bar('stencil_bow_s', amber, [0.1, 1, 2.6], [-4.12, 4.6, 30]);
 bar('stencil_tower', amber, [2.2, 0.6, 0.1], [0, 9.4, 8.3]);
 
 // "Dim accent running lights along the hull line": six a side, a stern light
-// and a bow light.
+// and a bow light — on the deck edge, the after deck and the wedge's face
+// since #890 (header). The pads sit on the deck plate (top 7.95) between the
+// deck pipes' outer flank (4.88) and the plate's edge (5.2).
 const RUN = [-17, -10, -3, 4, 11, 18];
 bathyarch.runningLights(root, lamp, {
-  size: [0.28, 0.28, 0.6],
-  y: 7.1,
+  size: [0.32, 0.28, 2],
+  y: 8.09,
   rows: [
-    { side: 'p', z: -5.12, stations: RUN },
-    { side: 's', z: 5.12, stations: RUN },
+    { side: 'p', z: -5.04, stations: RUN },
+    { side: 's', z: 5.04, stations: RUN },
   ],
 });
-bar('sternlight', lamp, [0.5, 0.3, 0.3], [0, 8.3, -27.9]);
-bar('bowlight', lamp, [0.3, 0.3, 0.5], [0, 6.2, 44.2]);
+bar('sternlight', lamp, [1.6, 0.3, 0.6], [0, 8, -26]);
+bar('bowlight', lamp, [1.2, 0.5, 1.6], [0, 5.79, 43]);
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
 await exportGlb(root, 'corvette-bathyarch.glb');

@@ -48,10 +48,17 @@
  *   through four ranks: port low, starboard low, port high, starboard
  *   high, eight a rank at four-unit stations from −32.
  * - Of the ten lamps, the forge floor, the forge back wall's top, the
- *   three rim strips and the gable strip face up; the two roof seams lie
- *   under the roof's overhang and the two crane flood patches under their
- *   bridges, so the export warns on those four, as the approved bake never
- *   saw them either.
+ *   three rim strips and the gable strip face up. The two roof seams lie
+ *   inside the roof slab and the two crane flood patches under their
+ *   bridges, so the audit warned on those four; #890 clad them in
+ *   `amber_lamp_unlit`, in place and at size, because the block lights
+ *   nothing by name at rest — "Dim at rest; interior forge light spilling
+ *   from the bay when producing" — and a seam that leaks forge light and a
+ *   crane's work flood are the producing band's (docs/models-plan.md §3.2
+ *   rule 2). `roof_seam_p/s` and `crane_fwd/aft_floodpatch` are still
+ *   parts. The six that face up are the model's reading of "Dim at rest"
+ *   and were not on the list; whether the block should name them is a
+ *   question for the block.
  *
  * THE FRAME: a Z-long export (the step's 66 along z against 59.5 across
  * x, pipe end to pipe end), so every number goes through kit.mjs `drawn`
@@ -73,6 +80,9 @@ const rust = bathyarch.ink.oxideRust();
 const grey = bathyarch.ink.ironGrey();
 const amber = bathyarch.ink.hazardAmber();
 const lampM = bathyarch.ink.amberLamp(3.5);
+// The roof seams' and crane floods' finish: the producing band's, so unlit
+// (header).
+const unlit = bathyarch.ink.amberLampUnlit();
 const put = bathyarch.alongZ;
 
 const root = new THREE.Group();
@@ -149,7 +159,7 @@ bathyarch.repairPatches(
 bathyarch.launchBay(
   root,
   put,
-  { grey, black, amber, lampM },
+  { grey, black, amber, lampM, seam: unlit },
   {
     walls: { size: [2.6, 5.6, 27], x: 12.3, y: 4.4, z: 12.5 },
     aft: { size: [22, 5.6, 2.2], at: [0, 4.4, -0.2] },
@@ -171,7 +181,7 @@ bathyarch.launchBay(
 bathyarch.gantryCranes(
   root,
   put,
-  { grey, black, rust, amber, lampM },
+  { grey, black, rust, amber, lampM, flood: unlit },
   {
     rails: { size: [1.6, 1, 28], x: 13.9, y: 8.2, z: 12 },
     cranes: [

@@ -87,10 +87,11 @@ the louder it is in the Echo Layer. Set each unit's glow from its idle/cruise SI
 **Where the light sits matters as much as how much of it there is**, and the 36–60 row is
 where that first bit. "Lit ports" asks for exactly what the phrase says — a window in a
 wall — and a window in a wall is a vertical face. The Consortium's Tender honoured it with
-ten `port_*` panels down its deckhouse and two `engine_vent_*` astern; the ports sit under
-the roof's eaves and the vents under the deck, so the chart's straight-down bake sees
-neither. The hull is not wrong and neither is its prompt. What is wrong is the UNIT block
-reading as a light budget when it is a description of a hull.
+ten `port_*` panels down its deckhouse and two `engine_vent_*` astern; the ports sat under
+the roof's eaves and the vents under the deck, so the chart's straight-down bake saw
+neither (#890 boxed the ports out past the eave and let the vents into the stern deck, and
+its block below says so). The hull was not wrong and neither was its prompt. What was wrong
+is the UNIT block reading as a light budget when it is a description of a hull.
 
 The two renderers see different halves of a model, and a light budget has to satisfy both:
 
@@ -101,12 +102,12 @@ The two renderers see different halves of a model, and a light budget has to sat
   reaches it. A hull whose light budget is all vertical reads as unlit on the chart — the
   layer that tells a player how loud something is at a glance.
 
-The Tender passes, but not on the three things its block names. What the bake actually
-counts is 202 m² of upward area: the two `weld_bay_*` floodlights at 112 m², the
+The Tender passed, but not on the three things its block named. What the bake actually
+counted was 202 m² of upward area: the two `weld_bay_*` floodlights at 112 m², the
 `roof_skylight` at 80, the derrick floods and the bow lamp for the rest. The skylight alone
-is more than a third of it and the block does not mention it, while two of the three sources
-the block does name are invisible from above. Both halves are true of the hull; neither
-half is the whole picture.
+was more than a third of it and the block did not mention it, while two of the three sources
+the block did name were invisible from above. Both halves were true of the hull; neither
+half was the whole picture.
 
 So write a UNIT block to name the light the **chart** reads first, and the rest as the bonus
 the conn view collects. Every hull needs at least one unoccluded upward emitter — a deck
@@ -344,9 +345,10 @@ workshop, not a warship (SIG 48 idle, +12 while welding; no weapon). Box
 hull with an open work deck forward under two derricks, a riveted workshop
 deckhouse amidships, spare-plate racks, gas bottles, pump houses and pipe
 runs, twin prop tunnels notched into the stern. Sustained glow from the two
-welding bays and a long roof skylight over the workshop — the light the chart
-reads — with lit ports under the deckhouse eaves and vents tucked under the
-stern for the eye that gets closer; floodlit when it works.
+welding bays and a long roof skylight over the workshop, ten lit port boxes
+standing proud of the deckhouse walls under the eaves, and a vent grating let
+into each stern quarter of the deck over the prop tunnels; floodlit when it
+works.
 ```
 
 ```text

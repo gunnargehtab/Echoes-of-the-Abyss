@@ -133,7 +133,11 @@ export const ink = {
    * cladding by a part the block lights only in a later band
    * (docs/models-plan.md §3.2 rule 2): the Furnace's burner nozzles, bow
    * floods, ladder strips and manifold strip, every one of them lit only
-   * cutting and built dark. The Directorate's `biolight_unlit`, the
+   * cutting and built dark; since #890 also the Derrick's louvres and
+   * bridge ports, the Bulwark's transom vents and bow lamp, the Vent Tap's
+   * exchanger gratings and the Foundry's roof seams and crane floods —
+   * lamps a block lights in a later band or in none, and the audit could
+   * not see from above. The Directorate's `biolight_unlit`, the
    * Commune's `bio_vein_unlit` and the Order's `crystal_seam_unlit` are the
    * same rule in the other three navies. One name, one value
    * (asset-prompts-3d.md Block 2b, rule 3); it recolours to near-black under
@@ -285,7 +289,7 @@ export function propTunnels(root, { grey, rust }, { x, z, r }) {
  * lit at the throat. The grating is the light that the top-down bake can see —
  * the louvres are vertical faces and contribute nothing to gate 3.
  */
-export function machineryHouse(root, { black, grey, rust, amber, vent, flood }, opts) {
+export function machineryHouse(root, { black, grey, rust, amber, vent, flood, louvre = vent }, opts) {
   const { x, y, length, height, beam, louvres = 5, gratings = 6, stack } = opts;
   add(root, 'machinery_house', box(length, height, beam), black, [x, y, 0]);
   add(root, 'house_roof', box(length + 1, 1, beam + 1), grey, [x, y + height / 2 + 0.3, 0]);
@@ -295,9 +299,12 @@ export function machineryHouse(root, { black, grey, rust, amber, vent, flood }, 
       y + height / 2 + 1,
       0,
     ]);
+  // `louvre` is the slats' finish: the vent by default, or the lamp family's
+  // unlit cladding on a hull whose block lights its louvres only under way
+  // (the Derrick, docs/models-plan.md §3.2 rule 2, #890).
   bothSides((side, sgn) => {
     for (let i = 0; i < louvres; i++)
-      add(root, `louvre_${side}${i}`, box(length * 0.73, 0.7, 0.6), vent, [
+      add(root, `louvre_${side}${i}`, box(length * 0.73, 0.7, 0.6), louvre, [
         x,
         y - height / 2 + 2.3 + i * 1.6,
         sgn * (beam / 2 + 0.3),
@@ -368,7 +375,12 @@ export function barbette(root, { black, grey, rust, amber }, { x, deck, r, barre
   add(root, 'deck_scuff', cyl(r * 1.36, r * 1.36, 0.3, 24), rust, [x, deck + 0.2, 0]);
 }
 
-/** Deck floods, facing up — the light gate 3 actually measures. */
+/**
+ * Deck floods, facing up — the light gate 3 actually measures. `deck` is the
+ * face they stand a tenth above, and it has to be the slab's *top*: the
+ * Derrick passed its mid-slab datum for two years and its six floods sat
+ * inside `hull_slab`, which is the case `lightAudit` was written on (#890).
+ */
 export function deckFloods(root, lampMat, { deck, spots }) {
   spots.forEach(([x, z], i) =>
     add(root, `deck_flood_${i}`, box(7, 0.6, 2.6), lampMat, [x, deck + 0.4, z])
@@ -501,10 +513,13 @@ export function stackBand(root, mat, { name, at, r, h }) {
 }
 
 /**
- * A rank of engine vents across the transom: lit boxes, numbered
+ * A rank of engine vents across the transom: boxes in `vent`, numbered
  * (`engine_vent_0..n`). Given `at`, a list of the export's own positions, it
  * is the Cruiser's four through kit.mjs `drawn` — two a side in the quarter,
- * not a rank across the stern (#649).
+ * not a rank across the stern (#649). `vent` is whatever the hull's block
+ * makes of them: the Cruiser's are gratings let into its lower deck, lit
+ * ("sustained glow from vents"); the Bulwark's six stand in the transom in
+ * `amberLampUnlit`, since its block names no vent in any band (#890).
  */
 export function engineVents(root, vent, { x, y, z, size, at }) {
   if (at) {
@@ -665,7 +680,12 @@ export function rivetRow(root, mat, opts) {
     ]);
 }
 
-/** The bow stencil, painted flat on the foredeck, and the bow lamp — separate, because the two hulls write them in opposite orders. */
+/**
+ * The bow stencil, painted flat on the foredeck, and the bow lamp —
+ * separate, because the two hulls write them in opposite orders. `lampM` is
+ * the lamp's finish as the hull's block has it: the Bulwark's sits under
+ * the plough and is named in no band, so it passes `amberLampUnlit` (#890).
+ */
 export function bowStencil(root, amber, { at, size }) {
   add(root, 'stencil_bow', box(...size), amber, at);
 }
@@ -695,10 +715,12 @@ export function boxHull(root, { black, grey, rust }, { hull, deck, strakes }) {
  * house, its roof and ridge, one patch of repair a side — older plate to
  * starboard and newer to port, and not the same size, because the Klaxon
  * repairs what broke rather than what would match — the hazard band under
- * the eaves, a rank of lit ports a side, and the skylight in the roof, which
- * is the one of those lights the top-down bake can see. `machineryHouse`
- * above is the Derrick's louvred engine house; a workshop carries a
- * workshop's fittings.
+ * the eaves, a rank of lit ports a side, and the skylight in the roof. The
+ * ports are boxes, `ports.size` deep: the Tender's stand 0.6 m proud of the
+ * hazard band's eave so their top faces reach the top-down bake, where the
+ * approved export's 0.4 m panels sat under it (#890). `machineryHouse` above
+ * is the Derrick's louvred engine house; a workshop carries a workshop's
+ * fittings.
  */
 export function workshop(root, { black, grey, rust, amber, lampM, vent }, opts) {
   const { house, roof, ridge, patches, band, ports, skylight } = opts;
@@ -1641,7 +1663,10 @@ export function exhaustLouvres(root, { black, flood }, opts) {
  * rank in *global* z on every arm, not across the arm, so the rank leans one
  * way on two arms and the other way on the other two. And the grating sits
  * inside the hazard band, under its roof, where the top-down bake has never
- * seen it; `exportGlb`'s light audit says so on every arm.
+ * seen it. `vent` is the grating's finish: the Klaxon's tap passes the lamp
+ * family's unlit cladding, because its block's resting clause names the
+ * mouth, the platforms and the pipe lamps and never the exchangers (#890);
+ * the Order's tap passes its own.
  */
 export function exchangerHead(root, { black, grey, rust, amber, vent }, opts) {
   const { bearing: a, at, y, size, fins, band, stack, grating, foot, rivets } = opts;
@@ -2102,7 +2127,10 @@ export const ALONG_KEEL = [Math.PI / 2, 0, 0];
  * hull line" (docs/asset-prompts-3d.md, UNIT — Corvette): the same rank as
  * `flankRivets`, one shared box a side at fixed stations, in a lamp. Named
  * `runlight_<side><i>` on the Corvette and `marker_<side><i>` on the
- * Harvester.
+ * Harvester. Since #890 both ranks are pads on the deck edge rather than
+ * dots on the flank — the Corvette's on its deck plate outboard of the deck
+ * pipes, the Harvester's on its gunwale tops — so each shows its top face to
+ * the bake (docs/models-plan.md §3.2 rule 5).
  */
 export function runningLights(root, lampM, { name = 'runlight', ...opts }) {
   flankRivets(root, lampM, { name, ...opts });
@@ -2279,9 +2307,12 @@ export function sensorTower(root, { grey, rust, lampM }, { tag, z, legs, braces,
 /**
  * Light lines — "sustained glow from vents, sensor arrays and lit ports —
  * this is a loud ship and it looks it" (UNIT — Cruiser): a lit strip the
- * length of each hull tier along the flank, the port run written first and
- * the starboard run sharing its boxes, then the one across the stern
- * (`lightline_low_p · _mid_p · _up_p · _low_s … · lightline_stern`).
+ * length of each hull tier, the port run written first and the starboard
+ * run sharing its boxes, then the one across the stern (`lightline_low_p ·
+ * _mid_p · _up_p · _low_s … · lightline_stern`). The export hung each
+ * strip on the tier's flank under its deck plate, where the bake saw
+ * nothing; since #890 the same box lies flat on the deck plate's outer
+ * edge, its 0.5 across and 0.18 tall, and the strip is the tier's lit rim.
  */
 export function lightLines(root, lampM, { lines, stern }) {
   const strips = lines.map((l) => box(...l.size));
@@ -2517,12 +2548,22 @@ export function skids(root, { brown, black }, { z, skid, legs }) {
  * dome, the whole light of a hull that idles at SIG 22.
  */
 export function hullLights(root, lampM, { running, strip, beacon }) {
+  // `running.at` names a light out of its rank — `{ 'stb-4': [x, y, z] }` —
+  // for the one the Submersible remounts over a repair patch (#890); the
+  // rank itself is unmoved and the Barge passes none.
+  const moved = running.at ?? {};
   for (const [side, sgn] of [
     ['port', -1],
     ['stb', 1],
   ])
     running.stations.forEach((x, i) =>
-      add(root, `running-light-${side}-${i + 1}`, box(...running.size), lampM, [x, running.y, sgn * running.z])
+      add(
+        root,
+        `running-light-${side}-${i + 1}`,
+        box(...running.size),
+        lampM,
+        moved[`${side}-${i + 1}`] ?? [x, running.y, sgn * running.z]
+      )
     );
   // The Baffle Barge's six running lights are this rank in this order and
   // nothing else of it (#652), so the strip and the beacon are optional.
@@ -2762,7 +2803,7 @@ export function repairPatches(root, put, mats, { patches }) {
  * the scout's; the forge floor faces up and is most of what the bake sees
  * of SIG 25.
  */
-export function launchBay(root, put, { grey, black, amber, lampM }, opts) {
+export function launchBay(root, put, { grey, black, amber, lampM, seam = lampM }, opts) {
   const { walls, aft, sill, aprons, stripes, floor, backwall, rim, seams, gableStrip } = opts;
   flanks((side, sgn) =>
     put(root, `bay_wall_${side}`, box(...walls.size), grey, [sgn * walls.x, walls.y, walls.z])
@@ -2789,8 +2830,11 @@ export function launchBay(root, put, { grey, black, amber, lampM }, opts) {
     ])
   );
   put(root, 'bay_rim_strip_fwd', box(...rim.fwd.size), lampM, rim.fwd.at);
+  // The roof seams lie inside the roof slab, where no bake sees them; they
+  // are the producing band's spill, so the Klaxon's Foundry passes the lamp
+  // family's unlit cladding as `seam` (docs/models-plan.md §3.2 rule 2, #890).
   flanks((side, sgn) =>
-    put(root, `roof_seam_${side}`, box(...seams.size), lampM, [sgn * seams.x, seams.y, seams.z])
+    put(root, `roof_seam_${side}`, box(...seams.size), seam, [sgn * seams.x, seams.y, seams.z])
   );
   put(root, 'gable_strip', box(...gableStrip.size), lampM, gableStrip.at);
 }
@@ -2805,7 +2849,7 @@ export function launchBay(root, put, { grey, black, amber, lampM }, opts) {
  * run out to starboard and the after one to port, as the file has them.
  * `derrickRig` above is the Tender's swung boom; a gantry bridges.
  */
-export function gantryCranes(root, put, { grey, black, rust, amber, lampM }, opts) {
+export function gantryCranes(root, put, { grey, black, rust, amber, lampM, flood: floodM = lampM }, opts) {
   const { rails, cranes, legs, bridge, chord, trolley, hook, stripe, flood } = opts;
   flanks((side, sgn) =>
     put(root, `crane_rail_${side}`, box(...rails.size), grey, [sgn * rails.x, rails.y, rails.z])
@@ -2819,7 +2863,10 @@ export function gantryCranes(root, put, { grey, black, rust, amber, lampM }, opt
     put(root, `crane_${tag}_trolley`, box(...trolley.size), black, [tx, trolley.y, z]);
     put(root, `crane_${tag}_hook`, box(...hook.size), rust, [tx, hook.y, z]);
     put(root, `crane_${tag}_stripe`, box(...stripe.size), amber, [0, stripe.y, z + stripe.proud]);
-    put(root, `crane_${tag}_floodpatch`, box(...flood.size), lampM, [0, flood.y, z]);
+    // The flood patch hangs under the bridge, a work light for the line
+    // running; the Klaxon's Foundry passes `flood` as the lamp family's
+    // unlit cladding, since "Dim at rest" lights no crane (#890).
+    put(root, `crane_${tag}_floodpatch`, box(...flood.size), floodM, [0, flood.y, z]);
   }
 }
 
@@ -2922,7 +2969,9 @@ export function siloRank(root, put, { grey, black, rust, lampM }, opts) {
  * `stack.lean` off plumb — a seven-facet frustum — and the lamp at its
  * throat (`crusher_hall · crusher_roof · crusher_intake · crusher_teeth_top
  * · crusher_teeth_bot · crusher_stack · crusher_stack_lamp`). The intake is
- * `port_glow` on a vertical face; the bake has never seen it.
+ * `port_glow`, `intake.size` deep from the hall's face: the export drew it
+ * a tenth deep, a panel the bake never saw, and the Refinery draws it 0.4
+ * since #890, a lit throat whose top face shows past the upper teeth.
  */
 export function crusherHall(root, put, { black, rust, glow, grey, lampM }, opts) {
   const { hall, roof, intake, teeth, stack, lamp } = opts;
@@ -3064,11 +3113,13 @@ export function ribbedDome(root, put, { black, grey, rust, lampM }, opts) {
  * sin a), the radial mirrored across z, which is 2a off the radial folded
  * into a right angle — so the two ports nearest ±z face out and the other
  * eight face 0.62 to 1.27 radians off their bearings. Carried across, not
- * squared up (#540).
+ * squared up (#540). `bearings` re-cuts a port by its number — `{ 5: π }` —
+ * for the one the quarters module was built over (#890): it keeps its
+ * radius, height and turn, and takes the bearing given.
  */
-export function portholes(root, put, glow, { count, phase, r, y, disc }) {
+export function portholes(root, put, glow, { count, phase, r, y, disc, bearings = {} }) {
   for (let i = 0; i < count; i++) {
-    const a = phase + (i * 2 * Math.PI) / count;
+    const a = bearings[i + 1] ?? phase + (i * 2 * Math.PI) / count;
     put(root, `porthole_${i + 1}`, cyl(disc.r, disc.r, disc.h, 6), glow, polar(a, r, y), [
       Math.PI / 2,
       0,
@@ -3147,19 +3198,24 @@ export function jibCrane(root, put, { grey, rust, black, lampM }, opts) {
  * The perimeter: `count` posts round the foundation's edge at radius `r`
  * from `phase` radians, each a five-facet post with a work lamp on it,
  * post then lamp (`perimeter_post_1 · perimeter_lamp_1 · …_8`) — the ring
- * of light the settlement's "constant hum" shows from above.
+ * of light the settlement's "constant hum" shows from above. `lift` makes a
+ * post taller by its number — `{ 4: 0.52, 8: 0.82 }` — foot where it was,
+ * lamp raised by the same: the two the modules were built over stand up
+ * through their roofs, and the lamp shows where the post does not (#890).
  */
-export function perimeterPosts(root, put, { black, lampM }, { count, phase, r, post, lamp }) {
+export function perimeterPosts(root, put, { black, lampM }, opts) {
+  const { count, phase, r, post, lamp, lift = {} } = opts;
   for (let i = 0; i < count; i++) {
     const a = phase + (i * 2 * Math.PI) / count;
+    const up = lift[i + 1] ?? 0;
     put(
       root,
       `perimeter_post_${i + 1}`,
-      cyl(post.radii[0], post.radii[1], post.h, 5),
+      cyl(post.radii[0], post.radii[1], post.h + up, 5),
       black,
-      polar(a, r, post.y)
+      polar(a, r, post.y + up / 2)
     );
-    put(root, `perimeter_lamp_${i + 1}`, lampOrb(lamp.r), lampM, polar(a, r, lamp.y));
+    put(root, `perimeter_lamp_${i + 1}`, lampOrb(lamp.r), lampM, polar(a, r, lamp.y + up));
   }
 }
 

@@ -49,10 +49,23 @@
  *   down. Both hubs taper forward, narrow end to the bow; each screw's three
  *   blades are three boxes in the file, not one shared.
  * - Of the lamps, the two tower floodlights, the stern line and the mast
- *   lamp face up; the bridge band is under the citadel top, the four engine
- *   vents are on the quarters' vertical faces and the six flank light lines
- *   under their deck plates, so the export warns on those eleven, as the
- *   approved bake never saw them either.
+ *   lamp faced up in the export; it wrapped the bridge band round the
+ *   citadel's waist 0.02 proud of its walls, stood the four engine vents
+ *   on the quarters' vertical faces under the lower deck plate, and hung
+ *   the six flank light lines under their deck plates, so the audit warned
+ *   on those eleven and the bake capped at ×64 with 37 m² of lamp on a 130
+ *   m hull. #890 moved the eleven — the one departure from the file — and
+ *   every one is the resting clause's, "sustained glow from vents, sensor
+ *   arrays and lit ports", so each keeps its name, its material and its
+ *   count and shows a top face to the bake (docs/models-plan.md §3.2):
+ *   - `bridge_band`: the same box lifted to the citadel's crown, ringing
+ *     the foot of `citadel_top` and showing round the visor's overhang.
+ *   - `engine_vent_0..3`: gratings let into the lower deck plate at the
+ *     quarters, between the middle tier's wall and the tier's light line,
+ *     aft of the low pipe runs; the file's two-a-side order kept.
+ *   - `lightline_low/mid/up_p/s`: each strip turned flat onto its deck
+ *     plate's outer edge — 0.5 across and 0.18 tall, the file's section on
+ *     its side — so each tier carries a lit rim.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds: drawn along Z, 107.50 units long — the ram's face to the
@@ -207,7 +220,9 @@ bathyarch.drum(root, black, {
 bar('citadel', grey, [7.5, 4, 12], [0, 19.8, -4]);
 bar('citadel_top', black, [5.5, 2.6, 8], [0, 23.1, -5]);
 bar('citadel_visor', grey, [6.1, 0.6, 9], [0, 24.7, -5]);
-bar('bridge_band', lamp, [7.54, 0.9, 10], [0, 20.6, -4]);
+// The band rings the citadel top's foot on the citadel's roof (21.8), not
+// the citadel's waist at 20.6 where the file had it (header, #890).
+bar('bridge_band', lamp, [7.54, 0.9, 10], [0, 22.25, -4]);
 
 // "Prominent sensor arrays and fixed hydrophone masts": a lattice tower
 // forward with the dish on its boom, and one aft with three hydrophones in
@@ -303,24 +318,32 @@ for (const [side, x] of [
   });
 }
 bar('stern_block', black, [13, 5.5, 6], [0, 5.4, -46]);
+// Gratings on the lower deck plate (top 8.85) at the quarters, between the
+// middle tier's wall (x 7) and the tier's light line (8.2), abaft the low
+// pipe runs (which end at −34); the file's [±8.55, 6.2, −36/−42] were on
+// the quarters' faces under the plate (header, #890).
 bathyarch.engineVents(root, vent, {
-  size: [0.5, 2.8, 3.2],
+  size: [1.1, 0.3, 3.2],
   at: [
-    [8.55, 6.2, -36],
-    [8.55, 6.2, -42],
-    [-8.55, 6.2, -36],
-    [-8.55, 6.2, -42],
+    [7.6, 9, -37],
+    [7.6, 9, -43],
+    [-7.6, 9, -37],
+    [-7.6, 9, -43],
   ],
 });
 bar('rudder', grey, [0.5, 5.5, 4.4], [0, 9.5, -49]);
 
 // "This is a loud ship and it looks it": a lit line along each tier a side
-// and one across the stern.
+// and one across the stern. Each flank line lies flat on its deck plate's
+// outer edge — the plates' tops are 8.85, 13.75 and 17.85 and their edges
+// 8.7, 7.2 and 5.45 — where the file hung the same box on its side on the
+// flank under the plate, at x 8.53/7.03/5.28 and y 7.3/12.4/16.6 (header,
+// #890). The stern line is the file's.
 bathyarch.lightLines(root, lamp, {
   lines: [
-    { tag: 'low', x: 8.53, y: 7.3, z: -6, size: [0.18, 0.5, 76] },
-    { tag: 'mid', x: 7.03, y: 12.4, z: -8, size: [0.18, 0.5, 54] },
-    { tag: 'up', x: 5.28, y: 16.6, z: -10, size: [0.18, 0.5, 32] },
+    { tag: 'low', x: 8.45, y: 8.94, z: -6, size: [0.5, 0.18, 76] },
+    { tag: 'mid', x: 6.95, y: 13.84, z: -8, size: [0.5, 0.18, 54] },
+    { tag: 'up', x: 5.2, y: 17.94, z: -10, size: [0.5, 0.18, 32] },
   ],
   stern: { size: [11, 0.5, 0.18], at: [0, 7.3, -48.95] },
 });

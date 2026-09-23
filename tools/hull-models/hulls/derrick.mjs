@@ -10,6 +10,26 @@
  * The frame is the hull's argument and has to read at distance as the biggest
  * thing on it, because this is the gun that aims by ear.
  *
+ * The light, against the block's resting clause — "Dim at rest — deck floods
+ * only, the drums dark — and burning under way, the louvres bright, the
+ * stack lit at the throat, and a hard lamp in the cradle" — as #890 settled
+ * the nineteen lamps the audit could not see (docs/models-plan.md §3.2):
+ *
+ * - `deck_flood_0..5` are the resting clause's own and stay lit. The export
+ *   placed them at `DECK` + 0.4, and `DECK` is the slab's mid-height, not
+ *   its top: kit `plate` stands its slab from y 0 to `DEPTH`, so the six
+ *   sat inside `hull_slab`, the case `lightAudit` was first written on.
+ *   They stand on the slab's top now, at the same six stations.
+ * - `louvre_s0..4`, `louvre_p0..4` are lit "under way" — rule 2, clad in
+ *   `amber_lamp_unlit`. `louvre_p4` was not on the audit's list, its outer
+ *   tenth of a metre showing past the roof, but it is the same clause.
+ * - `bridge_port_s0..1`, `bridge_port_p0..1` are named in no band — rule 1,
+ *   clad the same.
+ *
+ * The cradle lamp, the stack throat, the frame floods and the roof gratings
+ * face up and were not on the list; the block puts the first two under way,
+ * and that is a question for the block, not for this change.
+ *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.
  */
@@ -37,6 +57,7 @@ const amber = bathyarch.ink.hazardAmber();
 const lampM = bathyarch.ink.amberLamp();
 const vent = bathyarch.ink.amberVent();
 const flood = bathyarch.ink.amberFlood();
+const unlit = bathyarch.ink.amberLampUnlit();
 
 const root = new THREE.Group();
 root.name = 'consortium_derrick';
@@ -86,19 +107,22 @@ add(root, 'cradle_lamp', box(14, 1.0, 5), flood, [5, frame.top + 1.7, 0]);
 add(root, 'cradle_lamp_stay', box(0.6, 1.8, 0.6), grey, [5, frame.top + 0.9, 0]);
 
 // The machinery house aft of the frame, and the pile hammer stowed against a leg.
-bathyarch.machineryHouse(root, { black, grey, rust, amber, vent, flood }, {
+// The louvres are clad: the block lights them under way (header).
+bathyarch.machineryHouse(root, { black, grey, rust, amber, vent, flood, louvre: unlit }, {
   x: -24, y: 10, length: 22, height: 9, beam: 26, stack: { x: -30, y: 20, z: 6 },
 });
 add(root, 'hammer_shaft', box(1.2, 18, 1.2), grey, [-6.5, 15, 30]);
 add(root, 'hammer_head', box(3.6, 3, 3.6), rust, [-6.5, 7.5, 30]);
 
+// "Deck floods only": on the slab's top, which is DEPTH and not DECK (header).
 bathyarch.deckFloods(root, lampM, {
-  deck: DECK,
+  deck: DEPTH,
   spots: [[24, 16], [24, -16], [-42, 16], [-42, -16], [48, 14], [48, -14]],
 });
+// The bridge ports are clad: the block names them in no band (header).
 bothSides((side, sgn) => {
   for (let i = 0; i < 2; i++)
-    add(root, `bridge_port_${side}${i}`, box(0.4, 1.2, 2.2), lampM, [-12.8, 11, sgn * (2.5 + i * 5)]);
+    add(root, `bridge_port_${side}${i}`, box(0.4, 1.2, 2.2), unlit, [-12.8, 11, sgn * (2.5 + i * 5)]);
 });
 
 await exportGlb(root, 'derrick-bathyarch.glb');

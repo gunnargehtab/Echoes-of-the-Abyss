@@ -40,11 +40,27 @@
  * - The rivets are hull black, eleven a rank on the gunwale and nine a rank
  *   on the hull. The eight buckets are eight boxes in the file, not one
  *   shared.
- * - The mast lamp is the one lamp the audit sees whole from above. The six
- *   flank markers sit under the gunwales' plan and the bow marker under the
- *   apron's, and the stern marker is a third of a metre deep on the transom,
- *   under the audit's cell; so the export warns on all eight, as the approved
- *   bake never saw them either.
+ * - The mast lamp is the one lamp the export showed whole from above. It
+ *   hung the six flank markers on the hull just under the gunwales' outer
+ *   lip, floated the bow marker over the apron's tip, and stood the stern
+ *   marker as a third-of-a-metre dot on the after gunwale, so the audit
+ *   warned on all eight; #890 moved them, and they are the one departure
+ *   from the file (docs/models-plan.md §3.2 rule 5). All eight are the
+ *   resting clause's — "dim at rest", the SIG 18 band's running marks — so
+ *   each keeps its name, its material and its station and shows a top face
+ *   to the bake:
+ *   - `marker_p0..2`, `marker_s0..2`: a pad each on the gunwale's top,
+ *     0.8 across, 0.32 tall and 1.2 long, at the file's three stations.
+ *   - `marker_bow`: a pad laid on the apron's upper face at its tip,
+ *     pitched to the face's 42° slope.
+ *   - `marker_stern`: a pad on the after gunwale's top, its after face
+ *     where the file's dot had it, 0.06 past the gunwale — that face is
+ *     the drawn length's after end (`DRAWN` below), and holding it keeps
+ *     the file metre-true at the same 69.11 and the outline's stern where
+ *     it was.
+ *
+ *   The Harvester baked capped at ×64 before this — 1.2 m² of lamp on a
+ *   75 m hull could not reach E(18) — and bakes under it now.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds: drawn along Z, 69.11 units long — the first bucket's face
@@ -243,19 +259,24 @@ bathyarch.flankRivets(root, black, {
 });
 
 // "Dim at rest": three markers a side along the gunwale, one at the bow and
-// one at the stern.
+// one at the stern — pads on the gunwale tops, the apron's face and the
+// after gunwale since #890 (header). The gunwales' tops are at 9.4 and run
+// x 10 to 11.2; the apron's upper face falls 0.912 a unit toward the tip,
+// and the bow pad lies on it pitched atan(0.912), its centre half a pad's
+// thickness up the face's normal from the surface point at z 24.05.
 const MARKS = [-26, -10, 6];
 bathyarch.runningLights(root, lamp, {
   name: 'marker',
-  size: [0.32, 0.32, 0.7],
-  y: 7.6,
+  size: [0.8, 0.32, 1.2],
+  y: 9.56,
   rows: [
-    { side: 'p', z: -11.15, stations: MARKS },
-    { side: 's', z: 11.15, stations: MARKS },
+    { side: 'p', z: -10.6, stations: MARKS },
+    { side: 's', z: 10.6, stations: MARKS },
   ],
 });
-bar('marker_bow', lamp, [0.7, 0.32, 0.32], [0, 8.5, 24.2]);
-bar('marker_stern', lamp, [0.7, 0.32, 0.32], [0, 9.7, -34]);
+const APRON_PITCH = Math.atan(0.912);
+bar('marker_bow', lamp, [1.6, 0.32, 0.8], [0, 5.9, 24.16], [APRON_PITCH, 0, 0]);
+bar('marker_stern', lamp, [1.6, 0.32, 0.8], [0, 9.56, -33.76]);
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
 await exportGlb(root, 'harvester-bathyarch.glb');
