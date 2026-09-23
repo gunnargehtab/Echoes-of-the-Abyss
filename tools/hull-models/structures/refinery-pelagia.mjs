@@ -52,10 +52,30 @@
  * - The six materials are the navy's `ink`: the Bastion's five with
  *   `biolight_green` at 2.6, and `floodlight_pale`, the spore token on a
  *   #3A3F1E base at 3.2587.
- * - The light audit names two lamps hidden from above, `silo_vein_1` and
- *   `silo_vein_3`, under their silos' rings and caps; the maw, edge-on on
- *   the Directorate's file, shows here past the roof's overhang. The
- *   approved binary earns the same two.
+ * - The maw, edge-on on the Directorate's file, shows here past the roof's
+ *   overhang.
+ *
+ * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
+ * `silo_vein_1` and `silo_vein_3` as showing under a cell from above. The
+ * file's vein is an upright arc through the silo's axis at 0.55 of its
+ * height: all but its last few degrees run inside the drum, and the nub
+ * that emerges sits under the next ring up — on silos 1 and 3 squarely,
+ * on 0 and 2 a few square metres clear. The block's one band lights
+ * "visible machinery light", and a vein on a silo is that, so all four
+ * stay lit in `biolight_green` and move onto an upward face together
+ * (`silos` `vein.lay: 'flat'`): each a hoop round its own silo in the
+ * band above its highest ring and under its cap, seated in the nine-sided
+ * wall — its ring at 0.97 of the wall's corner radius there, so the 0.06
+ * tube straddles the drum's corners and flats alike — tilted 0.18 off
+ * level with its arc rising and yawed the silo's own way as before. Silos
+ * 0 and 2, whose rings stop at 0.57 of their height, carry it at 0.8,
+ * where the wall stands 0.036 R past the cap's rim; silos 1 and 3, whose
+ * rings climb to 0.87, carry it at 0.9, where the wall and the rim are
+ * within 0.01 R and the band shows past the rim's flats. The first cut
+ * put every ring at 0.92 and 1.09 of the wall, which left the tube 0.37
+ * to 0.94 m off the drum touching nothing (review, F1). Same names, tube,
+ * facets and arc; the four move as one series. Nothing here reaches the
+ * footprint.
  *
  * THE FRAME is the export's own: an X-long file, 22.7246 units long for a
  * 280 m footprint (hull-intake's `rawSize.x` on the approved file, which
@@ -98,11 +118,21 @@ const root = new THREE.Group();
 root.name = 'nodule_refinery';
 
 // "A rank of upright silos": four, each its own foot, radius, height, lean
-// and yaw, its rings where they grew, and a bud on the first two only.
+// and yaw, its rings where they grew, a bud on the first two only, and a
+// lit hoop of a vein just under each cap (#890; see the header).
 pelagia.silos(
   root,
   { skin: algae, cap: algae, ring: chitin, bud: spore, vein: bio },
   {
+    vein: {
+      lay: 'flat',
+      hug: 0.97,
+      tube: 0.06,
+      facets: [4, 14],
+      arc: Math.PI * 0.65,
+      at: 0.9,
+      tilt: 0.18,
+    },
     silos: [
       {
         n: 0,
@@ -116,7 +146,7 @@ pelagia.silos(
           { y: 4.79132507031, R: 1.557005852, tube: 0.1200238764 },
         ],
         bud: true,
-        vein: { yaw: -0.0552587636465 },
+        vein: { yaw: -0.0552587636465, at: 0.8 },
       },
       {
         n: 1,
@@ -131,7 +161,7 @@ pelagia.silos(
           { y: 8.74072221032, R: 1.609345749, tube: 0.1559746712 },
         ],
         bud: true,
-        vein: { yaw: -1.45421398587 },
+        vein: { yaw: -1.45421398587, at: 0.9 },
       },
       {
         n: 2,
@@ -144,7 +174,7 @@ pelagia.silos(
           { y: 2.06128180915, R: 1.55849281, tube: 0.1585938632 },
           { y: 4.21222719012, R: 1.431700289, tube: 0.1266850829 },
         ],
-        vein: { yaw: 3.43184193495 },
+        vein: { yaw: 3.43184193495, at: 0.8 },
       },
       {
         n: 3,
@@ -159,7 +189,7 @@ pelagia.silos(
           { y: 3.72972657205, R: 1.285763025, tube: 0.148888588 },
           { y: 5.24991696079, R: 1.186215073, tube: 0.1522943676 },
         ],
-        vein: { yaw: -0.426394027628 },
+        vein: { yaw: -0.426394027628, at: 0.9 },
       },
     ],
   }

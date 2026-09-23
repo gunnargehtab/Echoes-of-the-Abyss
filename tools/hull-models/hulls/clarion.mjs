@@ -6,8 +6,9 @@
  * widest aft, bilaterally symmetric, flaring at the bow into a six-facet horn
  * with an emitter crystal standing in its mouth; canards at the bow, swept
  * guard wings with crystal edges aft, a crystal inlay along the spine. Lit at
- * the horn's lip and along its ridge seams, dark astern but for one mark —
- * louder than a Corvette in front, quieter behind."
+ * the horn's lip and along six seams over the horn's back and shoulders,
+ * dark astern but for one mark — louder than a Corvette in front, quieter
+ * behind."
  * (docs/asset-prompts-3d.md, Block 3.)
  *
  * The approved model is the one `factions/hadron.mjs` was read off, and this
@@ -20,14 +21,14 @@
  * went into the module as options and builders rather than being drawn here,
  * because the Cantus and the Reciter are cut the same way.
  *
- * Two things a reader will want to check are the approved model's, not this
- * script's, and a third is this script's own since #640:
+ * Three things a reader will want to check; the second is the approved
+ * model's, the first and the third this script's own since #890 and #640:
  *
- * - The horn's seams are 14 m boxes rolled onto the horn's six edges at the
- *   radius the horn has at x 35.3, so the flare buries the forward two-thirds
- *   of each in the horn and the ring reads as diving toward the lip. Three of
- *   the six sit under the horn, and the export's light audit says so; they
- *   are left where they are.
+ * - The horn's seams are 14 m boxes at the radius the horn has at x 35.3, so
+ *   the flare buries the forward two-thirds of each in the horn and the run
+ *   reads as diving toward the lip. The approved file rolled them onto the
+ *   horn's six edges as a ring, three of them under the horn, and the light
+ *   audit named those three on every build from #586 to #890 — see LIGHT.
  * - The canard is drawn inside each wing's group, because the approved file
  *   writes the +z three (`wing_s wing_edge_s canard_s`, since #642) before the
  *   port three and
@@ -43,6 +44,22 @@
  *   a bearing is the seam at its mirror bearing rolled the other way, the
  *   crown's and the keel's are their own mirrors, and nothing else on the
  *   hull moves.
+ *
+ * LIGHT (#890). The block's resting clause lights the lip and the six seams,
+ * so every seam stays lit, and rule 5 of models-plan.md §3.2 puts each on an
+ * upward face:
+ * - `horn_seam_3`, `horn_seam_4` and `horn_seam_5` rode the ridges at −120°,
+ *   180° and 120°, under the horn, and showed nothing from above. The ring
+ *   is now three mirrored pairs over the horn's upper half (`hornSeams`
+ *   `bearings`): seams 0 and 2 on the shoulder ridges at ±60° where they
+ *   were, 1 and 4 flanking the crown at ±20°, 3 and 5 at ∓40° between.
+ *   Seam 1 left the crown because the crown and the keel are the only two
+ *   bearings that mirror onto themselves: six seams in mirrored pairs with
+ *   none on the keel leave none for the crown either, so the keel's seam
+ *   pairs with the crown's and the two flank the crown. `diff.mjs` lists
+ *   1, 3, 4 and 5 and nothing else; every seam shows 1.6–3.1 m², and the
+ *   block reads "six seams over the horn's back and shoulders" since the
+ *   same change, where it read "its ridge seams".
  *
  * The glow bakes at 27.9 — the compass average of the listed 62
  * (tools/hull-maps/models.mjs), not `sigIdle` — and every lit part but the
@@ -123,8 +140,9 @@ hadron.spine(
 
 // The bow array, and with it the whole of a cone hull's resting light: the
 // horn and its lit lip (six facets, a vertex on the crown, pressed to 0.7),
-// the emitter crystal and its core as points, then the six seams ringing the
-// horn, numbered from the starboard shoulder round the way the approved file does.
+// the emitter crystal and its core as points, then the six seams over the
+// horn's back and shoulders, numbered as the approved file numbered its ring
+// (see LIGHT).
 hadron.bowArray(
   root,
   { alloy, crystal, seam, node },
@@ -160,8 +178,7 @@ hadron.hornSeams(root, seam, {
   section: [0.45, 0.3],
   halfHeight: 2.52,
   halfBeam: 3.6,
-  count: 6,
-  phase: Math.PI / 3,
+  bearings: [60, 20, -60, -40, -20, 40].map((deg) => (deg * Math.PI) / 180),
 });
 
 // Beam is wing, as it is on every Order hull: 34 m of it, 0.9 m thick, the

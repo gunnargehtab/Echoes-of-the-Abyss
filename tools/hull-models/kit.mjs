@@ -784,6 +784,20 @@ export const sidedPost =
  * a metre under the floor. The outline walks from the −x, +z corner as
  * the approved contour does, which is what lands its lids on the same
  * diagonals.
+ *
+ * The seven crosses are the rungs of the line, 46 m apart from −148: the
+ * approved files ran them from −140, which put `line_cross_5` at x 90
+ * under the middle of gantry 2's beam and trolley and `line_cross_3` at
+ * −2 under gantry 1's, so the top-down bake never saw the one and saw a
+ * sliver of the other (#890, after #645 carried the warning). The crosses
+ * are the resting clause's "line lights along the slip floor", so they
+ * stay lit and the rank slides 8 aft as one (drawn units: 7.9 m at three
+ * yards' ×0.988 root scale, 7.5 m at the Directorate's ×0.938) — a rung
+ * moved alone would break the pitch — to −148, −102, −56, −10, 36, 82 and
+ * 128, each clear of
+ * the beams at −90, 0 and 90 and of the trolleys 8 m wide on them
+ * (docs/models-plan.md §3.2 rule 5). The keel blocks and the hull on them
+ * still cover the middle of three rungs, as they did before.
  */
 export function slipwayBed(root, { slab, floor, line, keel }, opts = {}) {
   const {
@@ -804,7 +818,7 @@ export function slipwayBed(root, { slab, floor, line, keel }, opts = {}) {
     },
     slip = { size: [340, 1.5, 46], y: -0.5 },
     lines = { size: [310, 0.4, 2.2], y: 0.5, z: 19 },
-    crosses = { count: 7, from: -140, pitch: 46, size: [1.6, 0.4, 36], y: 0.5 },
+    crosses = { count: 7, from: -148, pitch: 46, size: [1.6, 0.4, 36], y: 0.5 },
     blocks = { count: 5, from: -70, pitch: 22, size: [6, 4, 14], y: 2 },
     hull,
     sill = { size: [4, 0.6, 42], at: [-160, 0.6, 0] },
@@ -1285,9 +1299,10 @@ function sharer(share) {
 /**
  * The Foundry's bay: "a recessed launch bay" (docs/asset-prompts-3d.md,
  * STRUCTURE — Foundry) — the floor, the forge line lit along it, the hull
- * in progress lying on it, and a lip either side carrying a rank of guide
- * lights. In the files' order: floor, forge line, hull, then each side's
- * lip and its guides.
+ * in progress lying on it, a lip either side, and a rank of guide lights
+ * either side of the forge line, inboard of the lips (on the lips' tops
+ * until #890). In the files' order: floor, forge line, hull, then each
+ * side's lip and its guides.
  *
  * `hull.geo` is the navy's — a capsule on the Directorate's and the
  * Commune's files (the default), an octahedron on the Order's — placed by
@@ -1300,6 +1315,32 @@ function sharer(share) {
  * port, so the lip the Directorate's and the Commune's files call
  * `bay_lip_starboard` is written `bay_lip_port` and the guides keep their
  * `0`; the Order's file says `_r` and `_l` and a port carries those.
+ *
+ * The guides stand at `sgn · guide.x` — their own station, not the lip's,
+ * since #890 — either side of the forge line, inboard of each lip, at
+ * `guide.y` over the floor, from `guide.from` at `guide.pitch`. The
+ * approved Directorate and Commune files set them on the lips' tops at
+ * x ±1.75, z −5 to 5, where ten of the nineteen — five on each file — were
+ * never seen from above: the flank plates and lobes lean in over both
+ * lips (to x 0.72–1.24 on the +x side), the two crane beams cross the bay
+ * at z −2.6 and 2.9, and the stern carapace and pod roof the bay's aft
+ * 1.5. The guides are carried lit as every approved Foundry lights them —
+ * the block's "Dim at rest" names no lamp, so it licenses neither them nor
+ * the forge line, and naming the Foundry's resting lamps is follow-up
+ * #893 (#890, review rulings, rulings 2 and 3) — and a lit fixture the
+ * bake cannot see moves (docs/models-plan.md §3.2 rule 5): to x ±0.75, the
+ * one column clear of the plates and the lobes' skirts on both files. The
+ * hull in progress, whose plan reaches x 0.69, still covers 38 % of the
+ * port rank's third guide on the Directorate's file and 37 % on the
+ * Commune's (4.94 and 5.25 m² against 6.8 to 8.2 for their siblings). The
+ * floor's own edges at ±1.7 are under the plates; at ±0.75 the
+ * port rank overlaps the forge line's edge by 0.05 (0.9 m), the line
+ * running 0.15 off centre, and the starboard rank clears it by 0.25. The
+ * stations z −4.1, −1.6, 0.9, 3.4 and 5.9 are the same pitch slid 0.9
+ * forward so none falls under a beam, under the Commune's second lobe's
+ * skirt at z 2, or under its fourth's at 5. A file that sets `guide`
+ * without `x` keeps its guides on its lips; the Order's passes `x` at the
+ * same station.
  */
 export function foundryBay(root, mats, opts = {}) {
   const {
@@ -1308,7 +1349,7 @@ export function foundryBay(root, mats, opts = {}) {
     forge = { size: [1.1, 0.18, 10.6], at: [0.15, 0.58, 0.4] },
     hull = { geo: capsule(0.65, 2.2, 3, 7), at: [0.1, 1.15, 2.1], rot: [Math.PI / 2, 0, 0.06] },
     lip = { size: [0.5, 1.5, 12.2], x: 1.75, y: 0.9 },
-    guide = { r: 0.1, facets: [5, 4], y: 1.72, from: -5, pitch: 2.5, count: 5 },
+    guide = { r: 0.1, facets: [5, 4], x: 0.75, y: 0.62, from: -4.1, pitch: 2.5, count: 5 },
     sides = [
       { lip: 'port', guides: '0', sgn: 1 },
       { lip: 'starboard', guides: '1', sgn: -1 },
@@ -1322,6 +1363,7 @@ export function foundryBay(root, mats, opts = {}) {
   for (const side of sides) {
     const x = side.sgn * lip.x;
     frame.part(root, `bay_lip_${side.lip}`, box(...lip.size), lipMat, [x, lip.y, 0]);
+    const gx = side.sgn * (guide.x ?? lip.x);
     const rank = side.only ?? Array.from({ length: guide.count }, (_, i) => i);
     for (const i of rank)
       frame.part(
@@ -1329,7 +1371,7 @@ export function foundryBay(root, mats, opts = {}) {
         `bay_guide_${side.guides}_${i}`,
         new THREE.SphereGeometry(guide.r, ...guide.facets),
         guideMat,
-        [x, guide.y, guide.from + guide.pitch * i]
+        [gx, guide.y, guide.from + guide.pitch * i]
       );
   }
 }
@@ -1416,10 +1458,25 @@ export function gantryCrane(root, mats, opts) {
 
 /**
  * The launch mouth at the bay's open end: a torus for the mouth, squashed
- * by its node, and the forge glow lying in it as a thin drum — "interior
- * forge light spilling from the bay when producing" (the Foundry block).
- * The Directorate's and the Commune's files carry it at one set of numbers,
- * the defaults; the Order's gate is its own.
+ * by its node, and the glow drum lying in it, a thin drum clad at rest
+ * (below) — "interior forge light spilling from the bay when producing"
+ * (the Foundry block). The Directorate's and the Commune's files carry it
+ * at one set of numbers, the defaults; the Order's gate is its own.
+ *
+ * The glow drum is the light "spilling from the bay when producing": the
+ * block names it in that band and nowhere at rest, so `glow` is the
+ * navy's rule-2 finish (asset-prompts-3d.md Block 2b: `biolight_unlit`,
+ * `bio_vein_unlit`) and the drum is clad, not lit (docs/models-plan.md
+ * §3.2 rule 2; #890). Neither navy records an unlit finish for the forge
+ * family, so the drum wears another lamp family's — a #891 question, noted
+ * in both files' headers. It lies under the mouth's ring, where the
+ * approved files put it and where the top-down bake never saw it lit; a
+ * clad part under a ring is nothing the audit reads. The forge line inside
+ * the bay (`foundryBay`) is not read the same way: it is carried lit as
+ * every approved Foundry lights it (#890, review rulings, rulings 2 and
+ * 3: the block's "Dim at rest" names no lamp, and naming the Foundry's
+ * resting lamps is follow-up #893). Both files that call this pass the
+ * same role, so the one decision holds for both.
  */
 export function launchMouth(root, { mouth: mouthMat, glow: glowMat }, opts = {}) {
   const {
@@ -1523,11 +1580,21 @@ export function flangedPipes(root, { pipe: pipeMat, flange: flangeMat }, opts = 
 /**
  * The crusher: "crusher machinery" (docs/asset-prompts-3d.md, STRUCTURE —
  * Nodule Refinery) — the house, a box turned on its station; the cowl over
- * it; and the maw, a lit slab on its face. The cowl is the navy's: on the
+ * it; and the maw, a lit slab. The cowl is the navy's: on the
  * Directorate's file a shell of a sphere half a turn round and 0.55 of a
  * half-turn deep, squashed by its node (the default, `cowl.geo`); on the
  * Order's and the Commune's a half drum, the Commune's named
  * `crusher_roof` (`cowl.name`).
+ *
+ * The default `maw` stands the slab on the house's face, which is where the
+ * three approved files that use it drew theirs — edge-on to a top-down
+ * bake, and on two of them under the cowl's rim as well, so the audit read
+ * 0 m² for the "visible machinery light" the block lights at rest. The
+ * Commune's file still takes the default (its roof stops short of the maw,
+ * which shows 0.63 m² past it); the Directorate's and the Order's pass a
+ * `maw` of their own since #890, laid on an upward face each — see their
+ * headers — so that the default stayed where a file outside that change
+ * relies on it.
  */
 export function crusher(root, mats, opts = {}) {
   const {

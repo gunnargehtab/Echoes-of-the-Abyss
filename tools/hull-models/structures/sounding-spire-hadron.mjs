@@ -64,11 +64,33 @@
  *   own. As the file has them.
  *
  * `diff.mjs sounding-spire-hadron f7cce0f`: unchanged beyond the root scale
- * and shift — every part is where it was (a square plan, compared as it
- * stands). Light audit: `exportGlb` names `crystal_core` and
- * `crystal_throat`, under the apex and the sheath from above, and the
- * `running_light_3` pair up the frame, as showing under a cell; the approved
- * binary earns the same four, and they stay.
+ * and shift but for the four parts below — every other part is where it
+ * was (a square plan, compared as it stands).
+ *
+ * LIGHT (#890). "Burning bright along the crystal when active" is one
+ * clause over one fixture the model lights at rest — the core, the throat,
+ * the apex and the horn tips — so it is the one-glow-factor reading: the
+ * same lamps, scaled (models-plan.md §3.2, the paragraph after the rules),
+ * as the approved model and #652 have it. Four lamps were hidden from
+ * above; two move, and two stay lit where they are as residual audit lines
+ * the audit names on every build:
+ * - `crystal_core` stays. Its only occluder from above is
+ *   `heat_shimmer_sheath`, alpha-blended at six percent, which glb.mjs
+ *   `topDown` — what kit.mjs `lightAudit` calls — treats as opaque;
+ *   nothing solid stands over it, and a lamp
+ *   the block lights at rest is never clad to quiet the audit (#890
+ *   review). Residual.
+ * - `crystal_throat` stays. It is sealed inside the core — the file's
+ *   z-fight nudge is the millimetre between them — and no upward face can
+ *   carry it. Residual, for the same reason.
+ * - `running_light_3_r` and `running_light_3_l`, the pair 11.8 up the
+ *   frame, sat at x ±0.9 under the sheath's bulge (its middle facet at 12.4
+ *   over a crown at 11.9) and showed 0.06 m² each. Each moves outboard
+ *   along its blade to x ±1.15 at the same y and z — beside the blade
+ *   still, which spans 0.74..1.97 there (0.64..2.07 with its bevel; the
+ *   blade stands on y 1.7), and out from under the sheath — rule 5 — and
+ *   shows 5.1 m². `diff.mjs` lists the two (3.62 m at 140 m) and nothing
+ *   else.
  */
 import { THREE, fitFootprint, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -107,7 +129,7 @@ hadron.anchorLegs(
   }
 );
 
-// The core, its throat and its apex — the crystal that burns.
+// The core, its throat and its apex — the crystal that burns (see LIGHT).
 hadron.crystalCore(
   root,
   { crystal, glow },
@@ -173,7 +195,8 @@ hadron.ballastPipes(
 );
 hadron.ballastTanks(root, shadow, { r: 0.62, waist: 1.6, at: [2.3, 1.35, -1.5] });
 
-// Ten running lights, two pairs at the foot and three up the frame.
+// Ten running lights, two pairs at the foot and three up the frame — the
+// third of those outboard of the sheath since #890 (see LIGHT).
 hadron.lightPairs(root, glow, {
   name: 'running_light',
   r: 0.1,
@@ -181,7 +204,7 @@ hadron.lightPairs(root, glow, {
     [2.6, 1.85, 1.4],
     [2.6, 1.85, -1.4],
     [1.35, 6.4, 0.9],
-    [0.9, 11.8, 0.55],
+    [1.15, 11.8, 0.55],
     [1.7, 16.2, 0],
   ],
 });

@@ -64,6 +64,34 @@
  *   so their `DRAWN` is their vertex extent; the Directorate's rostrum,
  *   yawed 0.04, overhangs its bow by 0.04 units. `DATUM` is the height the
  *   export drew its hull axis at: 0 here, 2.6 on the other three.
+ *
+ * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
+ * two buds as showing under a cell from above. The block's one band is
+ * "navigation marks only", and the five buds are the marks, so both stay
+ * lit at their names, material and count:
+ *
+ * - `throat_light`, (0, −0.28, 1.3): RESIDUAL AUDIT LINE, kept where the
+ *   file has it. It is the ventral mark under the chin, and this hull has
+ *   no upward face it could sit on and still be a throat light — the one
+ *   station the maps see forward of the flank marks is the nose's pole,
+ *   and a bud there is a bow mark beside the feeler-tip mark, a different
+ *   fixture (review, F1; #890, review rulings, rulings 1 and 6). The
+ *   audit will name it; gate 3 meets its target with it hidden, as it did
+ *   before.
+ * - `tail_light`: from (0, 0.12, −2.5), where it hung between the flukes
+ *   under the upper one's edge, touching nothing, to (0.02, 0.213, −2.27)
+ *   — seated on the peduncle's aft crown line, sunk 0.02 into it, at the
+ *   upper fluke's root and above its leading edge, which at that station
+ *   is still down at the peduncle's back. On the crown line both halves
+ *   of the bud stand clear of the peduncle's fall-off; a hair to one side
+ *   the inboard half sat under it. Its radius is 0.035, the flank marks'
+ *   size, where the file had it 0.03: the file's bud is an octagon 0.67 m
+ *   wide that the audit's quarter-metre cells read as four cells, the
+ *   floor exactly, and at the flank marks' radius it reads six. (The first
+ *   cut only slid it 0.06 across and left it 0.45 m off the fluke;
+ *   review, F2.)
+ *
+ * Nothing here reaches the length or the beam.
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -344,14 +372,16 @@ pelagia.membranes(root, membrane, {
 });
 
 // "Nearly black, navigation marks only": five buds, and that is the whole
-// resting light of a hull that idles at SIG 6.
+// resting light of a hull that idles at SIG 6 — the throat's under the
+// chin, where no map sees it, and the tail's on the peduncle's aft crown
+// (#890; see the header).
 pelagia.lightBuds(root, light, {
   buds: [
     ['feeler_tip_light', 0.045, drawn([0.24, 0.34, 2.2])],
     ['flank_light_port', 0.035, drawn([0.44, 0.1, 0.9])],
     ['flank_light_starboard', 0.035, drawn([-0.42, 0.06, 0.85])],
     ['throat_light', 0.035, drawn([0, -0.28, 1.3])],
-    ['tail_light', 0.03, drawn([0, 0.12, -2.5])],
+    ['tail_light', 0.035, drawn([0.02, 0.213, -2.27])],
   ],
 });
 

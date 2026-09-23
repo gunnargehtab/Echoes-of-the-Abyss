@@ -46,8 +46,14 @@
  *   (−2.6, 2.4, −1.2) to (−2.6, 1.1, 0.6).
  * - Of the nineteen lamps, the two apron stripes, the four silo lamps, the
  *   stack lamp, the two belt lines, the four flood banks and the five
- *   apron lamps face up; the crusher intake is a vertical face, so the
- *   export warns on it, as the approved bake never saw it either.
+ *   apron lamps face up. The crusher intake was a 0.1-deep panel on the
+ *   hall's front face between the two ranks of teeth, so the audit warned
+ *   on it, and with it the Refinery baked capped at ×64 — E 41.46 against
+ *   E(65) 46.73. #890 made it a throat: the same 1.1 × 0.8 face carried 0.4
+ *   out from the wall as a lit block, the upper teeth biting its root and
+ *   its top face showing past them — "visible machinery light", the
+ *   resting clause's (docs/models-plan.md §3.2 rule 5). That is the one
+ *   departure from the file, and it is what brings the bake under the cap.
  *
  * THE FRAME: an X-long export (7.35 along x, the skirt's edge to the
  * ballast tank's end, against 6.9 across z), so nothing is yawed: every
@@ -115,7 +121,9 @@ bathyarch.siloRank(
 );
 
 // "Crusher machinery": the hall, its lit intake between two ranks of
-// teeth, the leaning stack and its lamp.
+// teeth — a throat standing 0.4 out from the hall's front face (z 1.8),
+// where the file had a 0.1 panel on it (header, #890) — the leaning stack
+// and its lamp.
 bathyarch.crusherHall(
   root,
   put,
@@ -123,7 +131,7 @@ bathyarch.crusherHall(
   {
     hall: { size: [2.2, 1.7, 1.8], at: [-1.6, 1.35, 0.9] },
     roof: { size: [2.4, 0.18, 2], at: [-1.6, 2.3, 0.9] },
-    intake: { size: [1.1, 0.8, 0.1], at: [-1.6, 1.15, 1.82] },
+    intake: { size: [1.1, 0.8, 0.4], at: [-1.6, 1.15, 2] },
     teeth: { size: [1.2, 0.14, 0.14], x: -1.6, top: 1.62, bot: 0.68, z: 1.84 },
     stack: { radii: [0.18, 0.22], h: 1.2, at: [-2.3, 2.9, 0.5], lean: 0.12 },
     lamp: { r: 0.06, at: [-2.37, 3.55, 0.5] },

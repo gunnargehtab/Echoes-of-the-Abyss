@@ -16,7 +16,8 @@
  *
  * A port of the approved export
  * (docs/concept-art/models/env-resonance-crystal.glb as committed before
- * #869), part for part in its order, every number the export's own. What
+ * #869), part for part in its order, every number the export's own but one
+ * seam's place on its shard (#890, below). What
  * the file is made of: a `base_mound` in `abyss_stone`, a nine-facet drum
  * 2.9 m high whose twenty corners the generator pushed one by one with the
  * seams held (seabed.mjs `drumOf`); four boulders on it, dodecahedra
@@ -45,10 +46,30 @@
  * rescale warning, so the root carries that one factor and no lift
  * (seabed.mjs `stand`, with no lift, since the file's root has none).
  * `diff.mjs env-resonance-crystal a1c694f` — the pre-port binary, which is
- * also the default rev — divides it out and lists nothing else. The kit's
- * light audit warns that `shard_2_seam_1` shows 0.19 m² from above; that
- * is the approved file's own — a plate tilted (0.54, 0.4, 0.25) on the
- * shard that leans hardest — and not the port's.
+ * also the default rev — divides it out and lists one part, the seam below.
+ *
+ * The light audit (#890, kit.mjs `lightAudit`). Block 4 licenses
+ * `crystal-seam` on this prop and docs/style-neon-noir.md "World light" has
+ * it as "a dull internal seam in the crystal props", so all four seams stay
+ * lit and none is clad. The export's plate on shard 2 sat on the shard's
+ * axis, and at R = 1.25 a 1.84 R by 1.5 R plate is all but inside a
+ * six-facet body of that radius: the audit read 0.19 m² of it from above,
+ * the corners that break the facets, where shard 1's and shard 4's larger
+ * plates read 0.31 to 0.63. Its tilt already faced up — 0.81 of its normal
+ * on world y — so the fix is a move and not a turn (#890, review rulings,
+ * ruling 1: a licensed seam is never clad): `shard_2_seam_1` sits 0.15 m
+ * along the shard's own x and 0.2 m along its z. That is toward the flank
+ * of the shard that faces up: the shard leans to +x −z in the world, so
+ * its −x +z flank is the upward one, which is (0.77, 0.64) in the shard's
+ * own x and z. The plate surfaces there as a ledge and reads 0.44 m². How
+ * far it stands off the shard — the farthest of the plate's four corners
+ * from the nearest facet of the body — is 0.52 m in the shard's frame,
+ * 0.49 m in the file, which is inside what the other three already do:
+ * 0.45, 0.55 and 0.47 m raw (0.42, 0.52 and 0.45 in the file) for shard
+ * 1's two and shard 4's. The review's first cut sat at (0.25, 0.2), which
+ * read 0.50 m² but stood 0.6 m off, past every sibling. Its tilt, height,
+ * size and material are the export's, and the shard's extents are nowhere
+ * near the root's, so `DRAWN` is unchanged.
  */
 import { THREE, add, group, flatShaded, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
@@ -269,7 +290,8 @@ add(shard1, 'shard_1_tip', tip(1.7, 23, 4.5), stone);
 add(shard1, 'shard_1_seam_1', plate(1.7), seam, [0, 6.5, 0], [0.36, 0.4, 0.25]);
 add(shard1, 'shard_1_seam_2', plate(1.7), seam, [0, 13, 0], [-0.48, 0.8, 0.25]);
 
-// Shard 2: R = 1.25, 14.5 m to the tip's base, one seam.
+// Shard 2: R = 1.25, 14.5 m to the tip's base, one seam — off the axis
+// toward the flank that faces up (#890, the header's last paragraph).
 const shard2 = group(crystal, 'shard_2', {
   at: [-2.4, 1.5, 1],
   rot: [-0.93563, -1.32146, -0.67662],
@@ -298,7 +320,7 @@ add(
   stone
 );
 add(shard2, 'shard_2_tip', tip(1.25, 14.5, 3.2), stone);
-add(shard2, 'shard_2_seam_1', plate(1.25), seam, [0, 7.5, 0], [0.54, 0.4, 0.25]);
+add(shard2, 'shard_2_seam_1', plate(1.25), seam, [0.15, 7.5, 0.2], [0.54, 0.4, 0.25]);
 
 // Shard 3: R = 1, 10 m to the tip's base, unlit.
 const shard3 = group(crystal, 'shard_3', {

@@ -48,10 +48,25 @@
  * the bake takes — three's `Box3` over the parts' own boxes, which the
  * leaned roots' and yawed pipes' boxes overhang — priced at 440 m by the
  * table, so the root carries that one scale through kit.mjs `fitFootprint`,
- * as the Vent Taps do, and no yaw. The light audit names both docking
- * mouths as showing under a cell from above — each faces out along its
- * collar, so a top-down map sees only its rim; the approved binary earns
- * the same.
+ * as the Vent Taps do, and no yaw.
+ *
+ * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
+ * both docking mouths as showing under a cell from above: each was a thin
+ * disc a tenth inside its collar's end, facing out along it, so the
+ * collar's own wall stood over it. The block lights "ports and working
+ * lights" at rest and a dock's mouth is a working light, so both stay lit
+ * in `biolight_green` and are drawn as what they are, a lit throat:
+ *
+ * - `docking_mouth_main`: the same drum, 0.53 long instead of 0.2, its
+ *   after face where the file had it and its fore face 0.1 proud of the
+ *   lip's outer edge — through the lip's hole, whose 1.32 clears the
+ *   throat's 1.15 — so the maps see a 0.1-wide band of its rim.
+ * - `docking_mouth_small`: the same, 0.47 long instead of 0.16, 0.13
+ *   proud of its lip.
+ *
+ * Both lips set the footprint's x extremes, so each throat stops short of
+ * its lip's own reach: the model's `Box3`, its scale and its vertex
+ * extents are the file's to the centimetre.
  */
 import { THREE, xLong, ballastTanks, flangedPipes, exportGlb, fitFootprint } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -230,7 +245,11 @@ pelagia.rootButtresses(root, [algae, chitin], {
 });
 
 // Two docking collars with lit mouths: the main one off the +x flank, the
-// small one aft and to starboard.
+// small one aft and to starboard. Each mouth is a throat drum reaching
+// from the file's own after face out past its lip (#890; see the header):
+// the main's axis runs (cos 0.4, 0, sin 0.4) from its collar, the small's
+// (−cos 0.75, 0, sin 0.75), and each drum's centre has moved half its
+// added length out along that axis.
 pelagia.dockingCollar(
   root,
   { collar: algae, lip: chitin, mouth: bio },
@@ -239,7 +258,11 @@ pelagia.dockingCollar(
     yaw: -0.4,
     collar: { radii: [1.5, 1.9], length: 2.6, facets: 9, at: [7.2, 1.5, 1.8] },
     lip: { R: 1.6, tube: 0.28, facets: [5, 12], at: [8.35, 1.5, 2.3] },
-    mouth: { r: 1.15, t: 0.2, at: [8.3, 1.5, 2.28] },
+    mouth: {
+      r: 1.15,
+      t: 0.53,
+      at: [8.3 + 0.165 * Math.cos(0.4), 1.5, 2.28 + 0.165 * Math.sin(0.4)],
+    },
   }
 );
 pelagia.dockingCollar(
@@ -250,7 +273,11 @@ pelagia.dockingCollar(
     yaw: 0.75,
     collar: { radii: [0.95, 1.25], length: 2, facets: 8, at: [-5.6, 1.2, 4.9] },
     lip: { R: 1.02, tube: 0.2, facets: [5, 11], at: [-6.4, 1.2, 5.6] },
-    mouth: { r: 0.72, t: 0.16, at: [-6.35, 1.2, 5.56] },
+    mouth: {
+      r: 0.72,
+      t: 0.47,
+      at: [-6.35 - 0.155 * Math.cos(0.75), 1.2, 5.56 + 0.155 * Math.sin(0.75)],
+    },
   }
 );
 

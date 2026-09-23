@@ -51,6 +51,25 @@
  * span 4.7026 units, the middle feed tendril's end forward to the upper
  * fluke's trailing tip, and the flukes' boxes make the measure 4.7903,
  * 1.9 % more. `DATUM` is 0.
+ *
+ * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
+ * three buds as showing under a cell from above. The block's "dim at
+ * rest" names no lamp; the five buds are carried as the approved file
+ * lights them (#890, review rulings, ruling 2), and whether the block
+ * should name its resting lamps is #893's question. So all three stay lit
+ * at their names, material and count and move:
+ *
+ * - `flank_light_port`, `flank_light_starboard`: each up the flank to the
+ *   shoulder, where the skin's own top is level with it — (0.8, 0.53, 0.1)
+ *   and (−0.75, 0.5, 0.05) from (0.9, 0.15, 0.1) and (−0.85, 0.1, 0.05),
+ *   which sat inside the widest beam in the navy's shared kinds under its
+ *   overhang.
+ * - `cargo_light`: from under the port cargo lobe to its outboard
+ *   equator, (1.04, −0.23, −0.35) from (0.6, −0.5, −0.7) — the one line
+ *   of that lobe the hull's flank does not stand over. It is the hold's
+ *   light still, on the hold.
+ *
+ * Nothing here reaches the length or the beam.
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -420,14 +439,16 @@ pelagia.membranes(root, membrane, {
   ],
 });
 
-// "Dim at rest": a bud on the brow, one on each flank at different heights,
-// one under the port cargo lobe where the hold is worked, one at the tail.
+// "Dim at rest": a bud on the brow, one on each shoulder at different
+// heights, one on the port cargo lobe's outboard equator — the hold's own
+// mark, on the one line of the hold the hull does not overhang — and one
+// at the tail (#890; see the header).
 pelagia.lightBuds(root, light, {
   buds: [
     ['brow_light', 0.05, drawn([0, 0.55, 1.35])],
-    ['flank_light_port', 0.04, drawn([0.9, 0.15, 0.1])],
-    ['flank_light_starboard', 0.04, drawn([-0.85, 0.1, 0.05])],
-    ['cargo_light', 0.04, drawn([0.6, -0.5, -0.7])],
+    ['flank_light_port', 0.04, drawn([0.8, 0.53, 0.1])],
+    ['flank_light_starboard', 0.04, drawn([-0.75, 0.5, 0.05])],
+    ['cargo_light', 0.04, drawn([1.04, -0.23, -0.35])],
     ['tail_light', 0.035, drawn([0, 0.1, -2.35])],
   ],
 });

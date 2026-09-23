@@ -13,9 +13,10 @@
  * with three knuckles a flank where they meet; two outrigger lobes off the
  * corners, the big one ringed and the small one budded; a stern pod with
  * its ring and bud closing the blind end; the bay itself — floor, forge
- * line, the hull in progress, a lip either side with its rank of five
- * biolight guides — and two gantry cranes over it, without finials; the
- * launch mouth with the forge glow lying in it; four lit veins climbing the
+ * line, the hull in progress, a lip either side and a rank of five
+ * biolight guides either side of the forge line — and two gantry cranes
+ * over it, without finials; the launch mouth with the glow drum lying in
+ * it, clad; four lit veins climbing the
  * flanks; two ballast tanks and two graft pipes with their flanges along
  * the −x flank; and five root anchors into the seabed.
  *
@@ -28,7 +29,8 @@
  * Directorate's numbers for all of them but the cranes' trolleys, the
  * second crane's load and the missing finials; the rest is
  * `factions/pelagia.mjs`'s Bastion-and-works block. Nothing here is a
- * shape decision; where the export is odd the script is odd with it:
+ * shape decision but #890's light placement, the last bullet; where the
+ * export is odd the script is odd with it:
  *
  * - RELABELLED, as #642 relabelled the eleven `bothSides` hulls and the
  *   Directorate's Foundry was: the export is Z-long, its +x lands on the
@@ -55,13 +57,43 @@
  *   own way; the −x pair the file writes in three's (−π, b, c) form of the
  *   XYZ Euler, written here as the plain (0, π + 0.4, c + π) of the same
  *   matrix. Three of the five anchors are written the same way.
- * - The six materials are the navy's `ink`: the Bastion's five with
- *   `biolight_green` at this file's 3.0999, and `forge_light`, the spore
- *   token on a #2E3A16 base at 3.8398.
- * - The light audit names six lamps hidden from above: five bay guides
- *   (`bay_guide_0_0` to `_0_3` and `_1_1`) under the crane beams and the
- *   lobes' overhang, and the launch glow under the mouth. The approved
- *   binary earns the same six.
+ * - The seven materials are the navy's `ink`: the Bastion's five with
+ *   `biolight_green` at this file's 3.0999, `forge_light`, the spore token
+ *   on a #2E3A16 base at 3.8398, on the forge line, and since #890
+ *   `bio_vein_unlit`, the navy's rule-2 finish (asset-prompts-3d.md Block
+ *   2b), on the launch glow (below). No value moved with #890: a clad part
+ *   takes a name the navy already carries.
+ * - #890, light placement. The light audit named six lamps hidden from
+ *   above on the approved binary. The block's lighting clause is "Dim at
+ *   rest; interior forge light spilling from the bay when producing":
+ *   "dim at rest" names no lamp, so the block licenses no resting lamp
+ *   here, and the review settled one reading for all four Foundries
+ *   (#890, review rulings, ruling 3) — the bay guides and the forge line
+ *   are carried lit as every approved Foundry lights them
+ *   (docs/models-plan.md §3.2, the one-glow-factor paragraph after the
+ *   rules; ruling 2), the launch glow is clad, and the block naming its
+ *   resting lamps is follow-up #893. Under that:
+ *   · `bay_guide_0_0` to `_0_3` and `_1_1`, on the lips' tops under the
+ *     lobes' skirts and the crane beams, stay lit and the whole rank
+ *     moves, both lips, to either side of the forge line at x ±0.75 — the
+ *     one column the lobes and the Directorate's plates leave clear; the
+ *     floor's own edges at ±1.7 are under the lobes. The hull in progress,
+ *     whose plan reaches x 0.69, still covers 37 % of `bay_guide_0_2` at
+ *     z 0.9, which shows 5.25 m² where its siblings show 7.1 to 8.2. The
+ *     port rank overlaps the forge line's edge by 0.9 m, the
+ *     line running 0.15 off centre; the starboard rank clears it. And to
+ *     z −4.1 at the same 2.5 pitch, off the beams and off the second
+ *     lobe's skirt at z 2 and the fourth's at 5 (rule 5). The kit's
+ *     `foundryBay` default, so the Directorate's file moves with this one.
+ *   · `launch_glow`, the drum under the mouth's ring, is the forge light
+ *     "spilling from the bay when producing": named in that band and
+ *     nowhere at rest, so it is built and clad, never lit (rule 2), in
+ *     `bio_vein_unlit`, the navy's rule-2 finish (asset-prompts-3d.md
+ *     Block 2b). The navy records no unlit finish for the forge family, so
+ *     the drum wears the vein family's — a #891 question. The `forge_line`
+ *     inside the bay is not hidden and is not touched.
+ *   Beyond the relabel above, `diff.mjs` lists all ten guides, since the
+ *   rank moves as one, the launch glow's material, and no other part.
  *
  * THE FRAME is the one the Light Scouts state for the shared kinds
  * (hulls/light-scout-pelagia.mjs) and the turrets follow: the export is
@@ -100,6 +132,7 @@ const spore = pelagia.ink.sporePale();
 const forge = pelagia.ink.forgeLight(3.8397711422314402);
 const steel = pelagia.ink.grownSteel();
 const bio = pelagia.ink.biolightGreen(3.0999400442394323);
+const unlit = pelagia.ink.bioVeinUnlit();
 
 const root = new THREE.Group();
 root.name = 'foundry_pelagia';
@@ -268,8 +301,9 @@ pelagia.sternPod(
 );
 
 // The bay at the kit's defaults — the Directorate file's numbers, which
-// this file carries too, five guides a lip — and the two cranes over it,
-// each without finials, its trolley where the file has it.
+// this file carries too, five guides a lip either side of the forge line
+// since #890 — and the two cranes over it, each without finials, its
+// trolley where the file has it.
 foundryBay(root, { floor: chitin, forge, hull: steel, guide: bio });
 const crane = { steel, trolley: chitin, cable: steel, load: steel, warnlight: bio };
 gantryCrane(root, crane, {
@@ -286,8 +320,11 @@ gantryCrane(root, crane, {
   load: { y: 3.6, size: [0.55, 0.4, 0.5] },
 });
 
-// The launch mouth and its glow, at the kit's defaults.
-launchMouth(root, { mouth: chitin, glow: forge });
+// The launch mouth and its glow drum, at the kit's defaults, the drum clad
+// in `bio_vein_unlit`, the navy's rule-2 finish — the block lights the glow
+// only "when producing" and nowhere at rest (the header;
+// docs/models-plan.md §3.2 rule 2).
+launchMouth(root, { mouth: chitin, glow: unlit });
 
 // Four lit veins climbing the flanks, two a side, each its own radius and
 // arc, yawed −0.4 and rolled its own way.

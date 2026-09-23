@@ -17,8 +17,8 @@
  * prism for a rostrum and a drive prism for a telson, four-sided points
  * both; a guard plate and a canard each side, thin alloy plans, for the
  * limbs; a dorsal fin; and the spine-gun — a rail each side of the spine
- * with the lit seam between them — with a navigation mark at the bow and
- * a stern mark, three dim lamps in all.
+ * with the lit seam between them — with a navigation mark and a stern mark
+ * riding the spine's two ends, three dim lamps in all.
  *
  * A port of the approved export (docs/concept-art/models/chorister-hadron.glb
  * at 3e15409), part for part in its order, every number the export's own,
@@ -55,6 +55,16 @@
  *   block says the Order is "the only faction with" exact bilateral
  *   symmetry, and the approved model follows the faction. The spine-gun is
  *   on the centreline for the same reason.
+ *
+ * LIGHT (#890). "Dim" is the block's resting clause, and the three lamps are
+ * its photophores said the Order's way, so all three stay lit; two were
+ * hidden from above, and rule 5 of models-plan.md §3.2 moves them:
+ * - `nav_bow` and `stern_mark` sat at y 1.4, buried in the bow and drive
+ *   prisms under the spine's tapering ends, and showed 0.13 m² each from
+ *   #649 to #890. Each is lifted to y 3.03 at its own x, its underside on
+ *   the spine's flat top at x ±24 (2.83 there, 0.03 either way along the
+ *   taper) — the hull's crown, an upward face — and shows 0.56 m².
+ *   `diff.mjs` lists the two (1.34 m at 50 m) and nothing else.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds, applied to a file that already lies along X: 61 units long
@@ -160,12 +170,13 @@ hadron.finAndKeel(root, alloy, {
 });
 
 // The spine-gun: a rail each side of the spine forward — starboard first,
-// as above — and the lit seam between them; then the marks at bow and
-// stern. "Dim": three lamps, and that is the whole resting light.
+// as above — and the lit seam between them; then the marks on the spine's
+// two ends (see LIGHT). "Dim": three lamps, and that is the whole resting
+// light.
 bothSides((side, sgn) => add(root, `rail_${side}`, box(12, 0.5, 0.5), alloy, [18, 2.8, sgn * 1.6]));
 add(root, 'rail_seam', box(8, 0.3, 0.4), seam, [18, 3.15, 0]);
-add(root, 'nav_bow', box(0.9, 0.4, 0.8), seam, [24, 1.4, 0]);
-add(root, 'stern_mark', box(0.9, 0.4, 0.8), seam, [-24, 1.4, 0]);
+add(root, 'nav_bow', box(0.9, 0.4, 0.8), seam, [24, 3.03, 0]);
+add(root, 'stern_mark', box(0.9, 0.4, 0.8), seam, [-24, 3.03, 0]);
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
 await exportGlb(root, 'chorister-hadron.glb');

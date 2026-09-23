@@ -52,10 +52,24 @@
  *   0.9) to (2.2, 1.3, 1.8).
  * - Of the twenty-seven lamps, the beacon, the dock and crane lamps, the
  *   windows and most of the portholes and perimeter lamps show a face or
- *   an edge from above; the fifth porthole and the fourth and eighth
- *   perimeter lamps sit under the quarters and refinery modules' overhang,
- *   so the export warns on those three, as the approved bake never saw
- *   them either.
+ *   an edge from above. The export buried the fifth porthole and the
+ *   fourth perimeter post and lamp inside the quarters module and the
+ *   eighth post and lamp inside the refinery module — each module is
+ *   docked into the skirt and stands out past the foundation's edge — so
+ *   the audit warned on those three; #890 moved them, the one departure
+ *   from the file, since all three are the resting clause's "ports and
+ *   working lights" (docs/models-plan.md §3.2 rule 5):
+ *   - `porthole_5`: re-cut on the skirt at bearing π, between the quarters
+ *     module's after face (2.9 rad at the skirt) and the sixth port
+ *     (3.45), at the file's radius and height; its turn follows the
+ *     bearing by the file's rule, `π/2 − a`, which at π is −π/2 and stands
+ *     the disc's axis on (1, 0, 0) — so the port faces square out along
+ *     its radial, as ports 3 and 8 do; the other seven face 0.62 to 1.27
+ *     off theirs, and all nine keep their tenth-of-a-turn stations.
+ *   - `perimeter_post_4` and `_8`: each post made taller on its own foot,
+ *     0.52 and 0.82, so it stands up through its module's roof (1.5 and
+ *     1.8) and the lamp sits on the stub above it; the ring of eight stays
+ *     evenly spaced.
  *
  * THE FRAME: a Z-long export by the measure the bake takes — 8.7012 along
  * z, the third dock ring's yawed box to the jib's tip, against 7.7194
@@ -100,13 +114,15 @@ bathyarch.ribbedDome(
   }
 );
 
-// "Sustained glow from ports": ten round the skirt.
+// "Sustained glow from ports": ten round the skirt, the fifth re-cut clear
+// of the quarters module (header, #890).
 bathyarch.portholes(root, put, glow, {
   count: 10,
   phase: 0.31,
   r: 2.74,
   y: 1.15,
   disc: { r: 0.14, h: 0.1 },
+  bearings: { 5: Math.PI },
 });
 
 // "Docking collars": three, each with its ring and its lamp.
@@ -223,7 +239,9 @@ bathyarch.pipeBetween(root, put, rust, {
   r: 0.07,
 });
 
-// "Working lights": eight posts round the foundation's edge, a lamp each.
+// "Working lights": eight posts round the foundation's edge, a lamp each;
+// the fourth and eighth stand up through the modules built over them
+// (header, #890).
 bathyarch.perimeterPosts(
   root,
   put,
@@ -234,6 +252,7 @@ bathyarch.perimeterPosts(
     r: 3.65,
     post: { radii: [0.04, 0.05], h: 0.55, y: 0.78 },
     lamp: { r: 0.07, y: 1.1 },
+    lift: { 4: 0.52, 8: 0.82 },
   }
 );
 

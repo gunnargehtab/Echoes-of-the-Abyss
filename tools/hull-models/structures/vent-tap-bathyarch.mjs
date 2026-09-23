@@ -19,6 +19,17 @@
  * with a hazard band, a stack, a vent grating, an anchor foot and a rank of
  * rivets, from `factions/bathyarch.mjs`.
  *
+ * The four `exchanger_vent` gratings sat inside the hazard band's slab on
+ * each exchanger's roof, where no bake sees them, and the audit warned on
+ * all four. An exchanger's lamp is the last lamp of its pipe run — "lamps
+ * along every pipe run", the block's resting clause, read the same way on
+ * all four navies' taps (#890, review rulings, ruling 5) — so each stays lit in its
+ * `amber_vent` and stands on the hazard band's top face at the same
+ * station, as the Order's `exchanger_seam` stands on its frame's top; the
+ * fin at that station pokes a tenth up through it. The mouth, the platform
+ * floods, the pipe lamps and the wellhead floods were already lit and
+ * facing up.
+ *
  * The frame is the approved export's own: drawn 137.18 across, hazard band
  * corner to hazard band corner, and priced at 180 m by the table, so the root
  * carries that one scale (as hulls/sower.mjs does) — taken by the measure the
@@ -68,7 +79,8 @@ radialSeries({ count: 4, phase: Math.PI / 4 }, (a) => {
       fins: { count: 5, from: 66, pitch: 4, size: [1.2, 16, 20], y: 7 },
       band: { size: [27, 0.8, 19], y: 14.5 },
       stack: { at: 80, r: [2, 2.4], h: 14, y: 20, band: { r: 2.6, h: 1, y: 25 } },
-      grating: { at: 70, size: [6, 0.4, 6], y: 14.3 },
+      // On the band's top (14.9), where the file had it at 14.3 inside the band (header).
+      grating: { at: 70, size: [6, 0.4, 6], y: 15.1 },
       foot: { at: 88, size: [8, 4, 8], y: 0 },
       rivets: { count: 4, from: -10, pitch: 6.5, stagger: 7, size: [1.2, 0.8, 1.2], y: 14.2 },
     }

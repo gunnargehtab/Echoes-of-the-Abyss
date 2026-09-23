@@ -13,9 +13,10 @@
  * a black spine raked the one way; two outrigger pods off the corners and
  * a spike off the big one; a stern carapace with its seam ring and spike
  * closing the blind end; the bay itself — floor, forge line, the hull in
- * progress, a lip either side with its rank of crimson guides — and two
- * gantry cranes over it; the launch mouth with the forge glow lying in it
- * and a mandible either side; ten flank photophores, seven on one flank and
+ * progress, a lip either side and a rank of crimson guides either side of
+ * the forge line — and two gantry cranes over it; the launch mouth with
+ * the glow drum lying in it, clad, and a mandible either side; ten flank
+ * photophores, seven on one flank and
  * three on the other; two ballast tanks and two graft pipes with their
  * flanges along the other flank; and five anchor claws into the seabed.
  *
@@ -26,8 +27,8 @@
  * kit's Foundry vocabulary (kit.mjs `foundryBay`, `gantryCrane`,
  * `launchMouth`, `ballastTanks`, `flangedPipes`), whose defaults are this
  * file's numbers; the rest is `factions/directorate.mjs`'s works section.
- * Nothing here is a shape decision; where the export is odd the script is
- * odd with it:
+ * Nothing here is a shape decision but #890's light placement, the last
+ * bullet; where the export is odd the script is odd with it:
  *
  * - RELABELLED, as #642 relabelled the eleven `bothSides` hulls and #649
  *   the Commune Harvester's tendrils: the export is Z-long, its +x lands on
@@ -40,8 +41,8 @@
  *   `1` (−x), which are indices, not sides. `diff.mjs` matches by name and
  *   so lists those ten as moved: each `_starboard_i` to where its `_port_i`
  *   was and back, to the millimetre, which is the relabel and nothing else.
- * - The −x lip carries four guides, `bay_guide_1_0`, `_1`, `_3`, `_4`: there
- *   is no `bay_guide_1_2` in the file, and there is none here.
+ * - The −x rank carries four guides, `bay_guide_1_0`, `_1`, `_3`, `_4`:
+ *   there is no `bay_guide_1_2` in the file, and there is none here.
  * - The bow plate on each flank has no spine: three `spine_spike` a flank
  *   over four tergites. All six spines rake along (±0.35, 1, 0.1) and each
  *   stands where the file put it, its node transcribed to nine places.
@@ -55,18 +56,59 @@
  *   photophores are each their own radius (0.083 to 0.109) and height, and
  *   `photophoreDomes` refuses a mirrored pair among them as it does on a
  *   hull.
- * - The six materials are the navy's `ink`: `chitin_red`, `chitin_violet`,
+ * - The seven materials are the navy's `ink`: `chitin_red`, `chitin_violet`,
  *   `trench_black`, `weld_steel`, `biolight_crimson` at this file's 2.277,
- *   and `forge_light` at its 3.698. The export carried the turret's
+ *   `forge_light` at its 3.698 on the forge line, and since #890
+ *   `biolight_unlit`, the navy's rule-2 finish (asset-prompts-3d.md Block
+ *   2b), on the launch glow (below). The export carried the turret's
  *   `weld_steel` (#27313B) and a `biolight_crimson` on a #3A0D16 base, the
  *   settlement pass's own values under the hulls' names; #888 brought both
- *   onto the navy's (#3A3F4A and #1A0810). Nothing else on the file moved.
- * - The light audit names fourteen lamps hidden from above: five bay guides
- *   (`bay_guide_0_0`, `_0_1`, `_0_3`, `_0_4`, `_1_1`) and the launch glow
- *   under the tergites' overhang and the crane beams, and eight of the ten
- *   flank photophores (all but `_0` and `_7`) under the plates they lie on.
- *   The approved binary earns the same fourteen (kit.mjs `lightAudit` run
- *   on it after the bake's own yaw and scale).
+ *   onto the navy's (#3A3F4A and #1A0810). No value moved with #890: a
+ *   clad part takes a name the navy already carries.
+ * - #890, light placement. The light audit named fourteen lamps hidden
+ *   from above on the approved binary. The block's lighting clause is
+ *   "Dim at rest; interior forge light spilling from the bay when
+ *   producing": "dim at rest" names no lamp, so the block licenses no
+ *   resting lamp here, and the review settled one reading for all four
+ *   Foundries (#890, review rulings, ruling 3) — the bay guides and the
+ *   forge line are carried lit as every approved Foundry lights them
+ *   (docs/models-plan.md §3.2, the one-glow-factor paragraph after the
+ *   rules; ruling 2), the launch glow is clad, and the block naming its
+ *   resting lamps is follow-up #893. The ten flank photophores, which the
+ *   block names no more than it names the guides, are carried lit the same
+ *   way, as this file's approved export lights them (ruling 2; #893).
+ *   Under that:
+ *   · `bay_guide_0_0`, `_0_1`, `_0_3`, `_0_4` and `_1_1`, on the lips' tops
+ *     under the tergites' rims and the crane beams, stay lit and the whole
+ *     rank moves, both lips, to either side of the forge line at x ±0.75 —
+ *     the one column the plates and the Commune's lobes leave clear; the
+ *     floor's own edges at ±1.7 are under the plates. The hull in
+ *     progress, whose plan reaches x 0.69, still covers 38 % of
+ *     `bay_guide_0_2` at z 0.9, which shows 4.94 m² where its siblings
+ *     show 6.8 to 8.1. The port rank overlaps the forge line's edge by
+ *     0.9 m, the line running 0.15 off centre; the starboard rank clears
+ *     it. And to
+ *     z −4.1 at the same 2.5 pitch, off the beams (rule 5). The kit's
+ *     `foundryBay` default, so the Commune's file moves with this one.
+ *   · `launch_glow`, the drum under the mouth's ring, is the forge light
+ *     "spilling from the bay when producing": named in that band and
+ *     nowhere at rest, so it is built and clad, never lit (rule 2), in
+ *     `biolight_unlit`, the navy's rule-2 finish (asset-prompts-3d.md
+ *     Block 2b). The navy records no unlit finish for the forge family, so
+ *     the drum wears the photophore family's — a #891 question. The
+ *     `forge_line` inside the bay is not hidden and is not touched.
+ *   · `flank_photophore_1` to `_6`, `_8` and `_9` the export drew inside
+ *     the tergite shells they lie on — up to 1.51 under a plate's surface,
+ *     `_2` at 1.470 under a plate at 2.979 and `_5` 1.45 under its — so no
+ *     view ever saw them, not only the top-down one — and `_0`, not
+ *     among the fourteen, sat 0.06 under its plate and showed 3.5 m² of a
+ *     dome its siblings show 6 to 8 of. Each keeps its station in plan
+ *     and rises to its plate's own surface height there, plus the lift a
+ *     guide sat proud of its lip (rule 5). `_7` breaks its plate's surface
+ *     on its own and stays.
+ *   `diff.mjs` lists nineteen parts and no other: all nine guides, since
+ *   the rank moves as one, the launch glow's material, and the nine
+ *   photophores.
  *
  * THE FRAME is the one the Light Scouts state for the shared kinds
  * (hulls/light-scout-pelagia.mjs) and the turrets follow: the export is
@@ -105,6 +147,7 @@ const black = directorate.ink.trenchBlack();
 const violet = directorate.ink.chitinViolet();
 const forge = directorate.ink.forgeLight(3.697972238428193);
 const crimson = directorate.ink.biolightCrimson(2.276723666358973);
+const unlit = directorate.ink.biolightUnlit();
 
 const root = new THREE.Group();
 root.name = 'foundry_directorate';
@@ -208,8 +251,9 @@ directorate.sternCarapace(
   }
 );
 
-// The bay, at the kit's defaults — this file's numbers — with the −x lip
-// one guide short; and the two cranes over it.
+// The bay, at the kit's defaults — this file's numbers, the guides either
+// side of the forge line since #890 — with the −x lip one guide short; and
+// the two cranes over it.
 foundryBay(
   root,
   { floor: black, forge, hull: violet, guide: crimson },
@@ -240,8 +284,11 @@ gantryCrane(root, crane, {
   load: { y: 3.6, size: [0.55, 0.4, 0.5] },
 });
 
-// The launch mouth and its glow, at the kit's defaults, and the mandibles.
-launchMouth(root, { mouth: black, glow: forge });
+// The launch mouth and its glow drum, at the kit's defaults, the drum clad
+// in `biolight_unlit`, the navy's rule-2 finish — the block lights the
+// glow only "when producing" and nowhere at rest (the header;
+// docs/models-plan.md §3.2 rule 2) — and the mandibles.
+launchMouth(root, { mouth: black, glow: unlit });
 directorate.launchMandibles(root, violet, {
   r: 0.18,
   length: 1.5,
@@ -251,21 +298,28 @@ directorate.launchMandibles(root, violet, {
   ],
 });
 
-// "Dim at rest": ten flank photophores, seven on the +x flank and three on
-// the −x, each its own radius, none mirroring another.
+// Ten flank photophores, seven on the +x flank and three on the −x, each
+// its own radius, none mirroring another, carried lit as the approved file
+// lights them (the header; #890 review rulings, ruling 2; #893). Nine of
+// them the export drew inside the tergite shells — `_0` just under its
+// plate's surface, the rest deep — so each of those keeps its station in
+// plan and takes its plate's surface height there, read off the built
+// file from above at eight cells a metre with the dome itself left out,
+// plus `LIFT`, the 0.07 a guide sat proud of its lip (#890).
+const LIFT = 0.07;
 directorate.photophoreDomes(root, crimson, {
   facets: [5, 4],
   domes: [
-    ['flank_photophore_0', 0.0918777, drawn([2.6, 2.415796903, -3.2])],
-    ['flank_photophore_1', 0.0865724, drawn([3.35, 1.877575341, -2.7])],
-    ['flank_photophore_2', 0.0933471, drawn([4.1, 1.470264061, -2.2])],
-    ['flank_photophore_3', 0.0834194, drawn([2.6, 2.567482053, 1.5])],
-    ['flank_photophore_4', 0.0967476, drawn([3.35, 1.987180635, 2])],
-    ['flank_photophore_5', 0.0894588, drawn([4.1, 1.322248565, 2.5])],
-    ['flank_photophore_6', 0.0875567, drawn([4.85, 0.75484821, 3])],
+    ['flank_photophore_0', 0.0918777, drawn([2.6, 2.476 + LIFT, -3.2])],
+    ['flank_photophore_1', 0.0865724, drawn([3.35, 2.943 + LIFT, -2.7])],
+    ['flank_photophore_2', 0.0933471, drawn([4.1, 2.979 + LIFT, -2.2])],
+    ['flank_photophore_3', 0.0834194, drawn([2.6, 2.887 + LIFT, 1.5])],
+    ['flank_photophore_4', 0.0967476, drawn([3.35, 3.0 + LIFT, 2])],
+    ['flank_photophore_5', 0.0894588, drawn([4.1, 2.775 + LIFT, 2.5])],
+    ['flank_photophore_6', 0.0875567, drawn([4.85, 1.98 + LIFT, 3])],
     ['flank_photophore_7', 0.1091392, drawn([-2.6, 2.528785505, -0.8])],
-    ['flank_photophore_8', 0.0965313, drawn([-3.35, 1.856181161, -0.3])],
-    ['flank_photophore_9', 0.0934656, drawn([-4.1, 1.487668524, 0.2])],
+    ['flank_photophore_8', 0.0965313, drawn([-3.35, 2.638 + LIFT, -0.3])],
+    ['flank_photophore_9', 0.0934656, drawn([-4.1, 2.357 + LIFT, 0.2])],
   ],
 });
 

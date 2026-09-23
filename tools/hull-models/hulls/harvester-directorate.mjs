@@ -34,10 +34,29 @@
  * the second and third tail plates carry none; the three light domes are
  * one buffer in the file and share one geometry here, the skirts, their
  * tips and the teeth are a buffer each, and the four paddles are a buffer
- * each in the file but share one geometry here; and the three seam
- * strips lie *under* the carapace on the belly's bands, where the top-down
- * maps see nothing of them — the light audit names those three, and the
- * approved bake never saw them either.
+ * each in the file but share one geometry here.
+ *
+ * THE LIGHT the top-down maps could not see. The export lit three seam
+ * strips along the belly's bands, *under* the carapace, where the maps see
+ * nothing of them: the light audit named those three, and the approved
+ * bake never saw them. They stay lit where the file has them (#890 review,
+ * rulings 1 and 2): the approved model lights them at rest, and "floodlit
+ * mining machinery that reads as its loud state" on lamps already lit at
+ * rest is the one-glow-factor reading — the same lamps, scaled — not a
+ * later band that clads them. No upward face of a band exists to carry
+ * them: each band is a box across the cargo gut whose ends stand a little
+ * proud of the gut's flank at its own station — 10.75 of half-width
+ * against the gut's 10.18 at band a, 11.25 against 10.69 at b, 9.75
+ * against 8.10 at c, the gut measured on its built ten-meridian orb where
+ * it meets each band's plane (the ideal orb is 10.71, 11.31 and 8.87
+ * there) — but under the carapace's overhang, whose plates reach 11.5 to
+ * 13.15 either side of the keel over the bands, and the gut's crown is
+ * under the carapace on every band's length. RESIDUAL AUDIT LINES:
+ * `seam_strip_bow`, `seam_strip_mid`, `seam_strip_aft` show nothing from
+ * above, under the carapace, and the export warns on each. Whether a belly
+ * seam belongs to the machinery band at all is a question about the
+ * approved model's resting set, which this issue does not re-read; #893
+ * holds it. Nothing moved.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds: drawn along Z, 80.81 units long tip to tip, hull axis at
@@ -223,9 +242,10 @@ directorate.telsonFan(root, [chitin, violet], {
 });
 
 // "Floodlit mining machinery that reads as its loud state": a seam strip
-// along each of the gut's three bands, a strip down each flank — 22 to
-// port, 15 to starboard, neither where the other is — a bar over the maw
-// and a ring round its mouth, and three domes: bow, port flank, tail.
+// along each of the gut's three bands — under the carapace, residual audit
+// lines (#890, the header) — a strip down each flank — 22 to port, 15 to
+// starboard, neither where the other is — a bar over the maw and a ring
+// round its mouth, and three domes: bow, port flank, tail.
 bar('seam_strip_bow', photophore, [20.8, 0.45, 0.5], [0.2, 3.85, 4], [0, 0.02, 0]);
 bar('seam_strip_mid', photophore, [21.8, 0.45, 0.5], [0.2, 3.75, -8], [0, -0.015, 0]);
 bar('seam_strip_aft', photophore, [18.8, 0.45, 0.5], [0.2, 3.95, -18], [0, 0.02, 0]);

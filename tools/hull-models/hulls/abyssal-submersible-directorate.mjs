@@ -25,16 +25,14 @@
  * part for part in its order, every number the export's own. Every part
  * comes from `factions/directorate.mjs` or is a kit box, and the model
  * carries four materials of its own name in the navy's one `ink` (#888),
- * at the export's values. Nothing here is a
- * shape decision; where the export is odd the script is odd with it: the
+ * at the export's values. Nothing here is a shape decision but the lamps
+ * #890 re-seated, below; where the export is odd the script is odd with
+ * it: the
  * `port` parts sit at the export's +x, which is the kit's -z once the file
  * is turned onto its length, and -z is port (#642), so the names are
  * right; `edge_red` is a cladding that glows — metalness 0.15 with its own
  * red as emissive at 0.12 — so the light audit reads the five rims, the
- * four joints, the rostrum and the seven claws as lamps, and names six of
- * the claws (all but the first starboard one) and three of the ten
- * photophores (port_5, starboard_3, the jaw) as under a quarter of a
- * square metre from above, which the approved bake never saw either;
+ * four joints, the rostrum and the seven claws as lamps;
  * the rims and the joints are *open* frusta, two rows at ±h/2 with the
  * smaller radius on top (`parts.mjs` reads them so first, and offers a
  * displaced 3 × 4 orb second, which the buffer is not); the head is a
@@ -42,6 +40,39 @@
  * units for 95 m — twenty-one metres to the unit — so the navy's
  * half-metre against a mirrored pair is passed to `photophoreDomes` in
  * units.
+ *
+ * THE LIGHT the top-down maps could not see. The light audit named nine
+ * lamps under a quarter of a square metre from above — six of the seven
+ * claws (all but the first starboard one) and three of the ten photophores
+ * — and the approved bake never saw them. #890 decides each against the
+ * block's resting clause, "dim red photophores" (docs/models-plan.md §3.2):
+ *
+ * - The seven claws (`limb_*_claw`) glow in the export's `edge_red`, the
+ *   approved model's resting set, which this issue does not re-read (#890
+ *   review, ruling 2; #893 holds the question, below). Six lie folded under
+ *   the belly, where no chart sees them, and a claw lifted clear of the
+ *   belly to face a map is a different fixture (ruling 6), so they stay
+ *   where the file has them. RESIDUAL AUDIT LINES: `limb_port_1_claw`,
+ *   `limb_port_2_claw`, `limb_port_3_claw`, `limb_port_4_claw`,
+ *   `limb_starboard_2_claw` and `limb_starboard_3_claw` show nothing from
+ *   above, and the export warns on each; `limb_starboard_1_claw` was never
+ *   hidden.
+ * - `photophore_port_5` and `photophore_starboard_3` are the clause's and
+ *   stay lit. Each sat on the fifth plate's flank at its widest line,
+ *   under the plate's own upper surface; each is lifted 0.04 inboard and
+ *   0.17 / 0.205 up, the same bud at the same station, and what it rests
+ *   on there is the crest of `plate_rim_4` — the fourth plate's open rim,
+ *   which stands proud of the fifth plate's shell at those stations — not
+ *   the shell of `carapace_5`.
+ * - `photophore_jaw` is the clause's and stays lit. It sat under the jaw
+ *   directly beneath the rostrum's base; it is under the jaw still, moved
+ *   0.2 across the keel to the starboard side of the rostrum, between it
+ *   and the starboard mandible, where nothing stands over it.
+ * - FOLLOW-UP #893, not touched: the five rims, the four tail joints, the
+ *   rostrum and the seven claws glow in `edge_red` and the clause names
+ *   none of them; they are the approved model's resting set, which this
+ *   issue does not re-read (#890 review, ruling 2). They stay lit as the
+ *   file has them, unread; #893 holds the question.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds: drawn along Z, 4.53 units long tip to tip, hull axis at
@@ -208,7 +239,8 @@ directorate.spikes(root, chitin, {
 
 // "Folded manipulator limbs": seven, four to port at a 0.4 pitch and three
 // to starboard at 0.44, each its own length, every one folded by the one
-// rule `walkingLimbs` holds.
+// rule `walkingLimbs` holds; six of the claws are residual audit lines
+// (#890, the header).
 directorate.walkingLimbs(
   root,
   { chitin, red: edge },
@@ -273,7 +305,9 @@ bar('telson_starboard', violet, [0.26, 0.02, 0.32], [-0.18, 0.68, -1.84], [0.1, 
 
 // "Dim red photophores": ten buds, each its own size, five down the port
 // flank and three down the starboard, one under the jaw and one on the
-// tail — a pattern that repeats on neither side.
+// tail — a pattern that repeats on neither side. The last of each flank
+// rank sits on the fifth plate's upper surface and the jaw bud to
+// starboard of the rostrum, where the maps see them (#890, the header).
 directorate.photophoreDomes(root, photophore, {
   facets: [6, 4],
   tolerance: HALF_METRE,
@@ -282,11 +316,11 @@ directorate.photophoreDomes(root, photophore, {
     ['photophore_port_2', 0.03, drawn([0.66, 0.8, 0.62])],
     ['photophore_port_3', 0.035, drawn([0.68, 0.9, 0.3])],
     ['photophore_port_4', 0.028, drawn([0.62, 0.76, -0.14])],
-    ['photophore_port_5', 0.03, drawn([0.5, 0.86, -0.52])],
+    ['photophore_port_5', 0.03, drawn([0.46, 1.03, -0.52])],
     ['photophore_starboard_1', 0.03, drawn([-0.64, 0.86, 0.8])],
     ['photophore_starboard_2', 0.028, drawn([-0.66, 0.76, 0.1])],
-    ['photophore_starboard_3', 0.03, drawn([-0.52, 0.84, -0.48])],
-    ['photophore_jaw', 0.04, drawn([0.12, 0.58, 1.98])],
+    ['photophore_starboard_3', 0.03, drawn([-0.48, 1.045, -0.48])],
+    ['photophore_jaw', 0.04, drawn([-0.08, 0.58, 2])],
     ['photophore_tail', 0.032, drawn([0.02, 0.68, -2.06])],
   ],
 });

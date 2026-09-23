@@ -12,8 +12,9 @@
  * The Order's is five silos in an exact bilateral rank — one on the
  * centreline and two mirrored pairs, six-facet frustums with a crystal
  * seam, a steel collar, an octahedral tip and a tip light each — the
- * crusher house under a half-drum cowl with a lit maw and a blade hung
- * either side of it, two exhaust stacks with lit tips, two conveyor
+ * crusher house under a half-drum cowl with a lit maw along the cowl's
+ * crown and a blade hung either side of its face, two exhaust stacks with
+ * lit tips, two conveyor
  * gantries mirrored about the centreline, each with four nodules riding
  * its belt (the second in crystal), two rails, a row of four lights and
  * three legs, running down to an intake hopper each with a lit mouth, two
@@ -28,8 +29,9 @@
  * `exhaustStacks`, `conveyorGantry`, `intakeHopper`, `flangedPipes`,
  * `floodMasts`) at this file's numbers; the silos, the maw blades and the
  * anchor blades are `factions/hadron.mjs`'s works section (`silos`,
- * `mawBlades`, `rakedBlades`). Nothing here is a shape decision; where the
- * export is odd the script is odd with it:
+ * `mawBlades`, `rakedBlades`). Nothing here is a shape decision but the
+ * maw's (#890, the foot of this header); where the export is odd the
+ * script is odd with it:
  *
  * - Every pair is written kind by kind (`exhaust_stack_r`, `_l`,
  *   `exhaust_tip_r` …) on one buffer a kind (the kit's `order: 'kind'` and
@@ -73,10 +75,23 @@
  * (280 × 249.2 m).
  *
  * `diff.mjs refinery-hadron f7cce0f`: unchanged beyond the root scale and
- * shift — every part is where it was. Light audit: one lamp hidden from
- * above, `crusher_maw`, the lit slab on the crusher's face, edge-on to a
- * top-down map, as on the Directorate's; the approved binary earns the
- * same one.
+ * shift but for `crusher_maw` (#890). The export stood the lit slab on
+ * the house's +z face, edge-on to a top-down map and roofed by the cowl,
+ * which overhangs that face by 1.0; the centre silo's foot stands 0.6 off
+ * the same face, so there is no ground at the foot to lay the maw on, as
+ * the Directorate's file does. The block lights "visible machinery light"
+ * in one band, so the maw is a resting lamp and stays lit
+ * (docs/models-plan.md §3.2 rule 5), carried up as a strip set into the
+ * cowl's crown — the face slab's own 2.2 × 1.2 × 0.3, its 2.2 along the
+ * ridge and its 1.2 across it, at y 4.78. The ridge stands at 4.9 and the
+ * two crown facets fall from it at 15° to their outer vertices at x ±0.85,
+ * so the slab's underside at 4.63 lies 0.27 under the ridge and 0.11 into
+ * the facets at its edges (x ±0.6, where they are at 4.739): the crown
+ * passes through the slab's lower part, and its top at 4.93 stands 0.03
+ * over the ridge, so the whole 1.2 × 2.2 shows from above. It is flush
+ * with the cowl's forward end, over the face the blades still flank.
+ * `diff.mjs` lists `crusher_maw` and no other part: the same box, its
+ * three sides reordered, so the same area.
  */
 import {
   THREE,
@@ -119,8 +134,9 @@ hadron.silos(
   }
 );
 
-// The crusher under a half-drum cowl, the blades hung either side of its
-// maw, and the two stacks, kind by kind.
+// The crusher under a half-drum cowl, the lit maw a strip along the cowl's
+// crown since #890 (the header), the blades hung either side of its face,
+// and the two stacks, kind by kind.
 crusher(
   root,
   { house: steel, cowl: alloy, maw: glow },
@@ -131,7 +147,7 @@ crusher(
       at: [0, 3.2, -4.8],
       rot: [Math.PI / 2, Math.PI / 2, 0],
     },
-    maw: { size: [2.2, 1.2, 0.3], at: [0, 1.5, -3.05] },
+    maw: { size: [1.2, 0.3, 2.2], at: [0, 4.78, -3.2] },
   }
 );
 hadron.mawBlades(root, shadow, { r: 0.16, length: 1.1, at: [0.75, 2.5, -3] });

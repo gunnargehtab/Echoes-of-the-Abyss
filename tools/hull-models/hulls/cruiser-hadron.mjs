@@ -33,9 +33,7 @@
  *   `ink.crystalPanelGlow`, on no other Order model): a core glow at 4.5 on
  *   the two spines, the four fork crystals and the drive, and a panel glow
  *   at 3.2 on the eight facet panels. The drive prism is a lamp — the one
- *   Z-long Order drive that is — and the ventral spine lies under the hull,
- *   where the top-down bake has never seen it; `exportGlb`'s light audit
- *   says so, and it stays.
+ *   Z-long Order drive that is.
  * - The guard wings and their edges are struts between two points in the
  *   export's frame — the wing from (3.5, 8, -44) at the blade to (19, 9.4,
  *   -54) at its tip, the edge from (9, 8.6, -47.5) to (20, 9.5, -55) — so
@@ -50,6 +48,20 @@
  * - The three stern fins are pitched and yawed each its own amount — the
  *   dorsal 0.42, the ventral 0.46, the laterals 0.4 — where the Corvette's
  *   are all 0.45 and 0.5. The file's.
+ *
+ * LIGHT (#890). One lamp is hidden from above and stays where it is — the
+ * one residual audit line on this hull, and the audit names it on every
+ * build:
+ * - `crystal_spine_ventral`, the run under the keel, shows nothing from
+ *   above. The block's resting clause lights fixtures — "vents, sensor
+ *   arrays and lit ports" — not places, and the ventral spine is the dorsal
+ *   spine's fixture carried under the keel; a keel run can be put on no
+ *   upward face, so it stays lit in the core glow where it is (#890 review:
+ *   a lamp the block lights at rest is never clad to quiet the audit). It
+ *   is the conn view's light: 67 m² from either beam and 89 m² from below,
+ *   by glb.mjs `topDown` with the parts turned onto each axis — a turn
+ *   onto the starboard beam can read 48 m², the same 0.93 m face falling a
+ *   0.25 m raster row short on that phase.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds: drawn along Z, 140.00 units long from the drive prism's
@@ -109,7 +121,7 @@ hadron.prism(root, alloy, {
 });
 
 // The spines: a lit crystal run the length of the back, and a second under
-// the keel, where nothing from above can see it.
+// the keel, where nothing from above can see it (see LIGHT).
 bar('crystal_spine', core, [1.6, 1.4, 124], drawn([0, 12.15, 1]));
 bar('crystal_spine_ventral', core, [1.3, 1, 96], drawn([0, 3.6, -6]));
 

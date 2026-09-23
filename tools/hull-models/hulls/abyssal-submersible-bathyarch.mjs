@@ -44,11 +44,27 @@
  *   back as the file has them.
  * - Every part is a buffer of its own — the twenty-four bolts, the eight
  *   running lights, the four blades — as the export carries them.
- * - Of the lamps, the fourth starboard running light lies under `patch-1`'s
- *   plan, the tower strip under the tower cap's and the aft beacon under
- *   the after end cap's, so the export warns on those three, as the approved
- *   bake never saw them either; the viewport, the dome and the other seven
- *   running lights face up.
+ * - Of the lamps, the viewport, the dome and seven of the eight running
+ *   lights faced up in the export. It set the fourth starboard running
+ *   light in the plane of `patch-1`'s outer face, the tower strip on the
+ *   tower's flank under the cap's eave, and the aft beacon inside the after
+ *   end cap's core, so the audit warned on those three; #890 moved them —
+ *   the one departure from the file — since all three are the resting
+ *   clause's "dim photophores", amber here (docs/models-plan.md §3.2 rule
+ *   5). Each keeps its name, material and size:
+ *   - `running-light-stb-4`: remounted above the patch. `patch-1` stands
+ *     on edge (below), a fin at 57° from the crown reaching 0.47 out of
+ *     the hull, and its plan shadow covers the starboard hull line for the
+ *     whole bay between the fourth and fifth bands, so no lift on the
+ *     rank's bearing (75°) clears it. The light keeps its station and its
+ *     radius and sits at 49° from the crown, a rivet's width above the
+ *     fin's root and clear of the tower base's starboard corner (at 45° a
+ *     sliver of it lay under that corner) — the lamp moved up when the
+ *     repair went in.
+ *   - `tower-light-strip`: the same strip laid along the tower cap's
+ *     starboard edge on its top face, its 0.08 across and 0.06 tall.
+ *   - `aft-beacon`: on the crown of the after end cap's core, abaft the
+ *     cap and clear of the screw shroud's ring.
  *
  * THE FILE IS X-LONG, so nothing here is yawed: unlike the Corvette, the
  * Harvester and the Cruiser, this export already lies along +X with its bow
@@ -194,10 +210,20 @@ bathyarch.skids(
 // "Dim photophores", amber here: four running lights a side, the strip on
 // the tower, the aft beacon — and the two point lights either beam that the
 // export carries beside its meshes.
+// The three the file hid are placed by hand (header, #890): the fourth
+// starboard light at the rank's r 1.06 but 49° from the crown, above
+// `patch-1`'s root; the strip on the cap's top (2.31); the beacon on the
+// core's crown (0.72).
 bathyarch.hullLights(root, lampM, {
-  running: { size: [0.5, 0.09, 0.07], stations: [-1.9, -0.75, 0.4, 1.55], y: 0.28, z: 1.02 },
-  strip: { size: [0.9, 0.08, 0.06], at: [0.7, 1.75, 0.56] },
-  beacon: { rTop: 0.12, r: 0.14, h: 0.12, at: [-3.08, 0.6, 0] },
+  running: {
+    size: [0.5, 0.09, 0.07],
+    stations: [-1.9, -0.75, 0.4, 1.55],
+    y: 0.28,
+    z: 1.02,
+    at: { 'stb-4': [1.55, 0.695, 0.8] },
+  },
+  strip: { size: [0.9, 0.06, 0.08], at: [0.7, 2.34, 0.54] },
+  beacon: { rTop: 0.12, r: 0.14, h: 0.12, at: [-3.13, 0.79, 0] },
 });
 bathyarch.glowLamps(root, {
   color: hex('#F2B233'),

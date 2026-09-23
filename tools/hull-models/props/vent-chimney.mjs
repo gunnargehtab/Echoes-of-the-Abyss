@@ -16,7 +16,8 @@
  *
  * A port of the approved export (docs/concept-art/models/env-vent-chimney.glb
  * as committed before #869), part for part in its order, every number the
- * export's own. Five parts on identity nodes under an identity root, every
+ * export's own but the cracks (#890, below). Five parts on identity nodes
+ * under an identity root, every
  * placement baked into its buffer, and not one buffer a three constructor
  * accounts for: each is a polyhedron the generator stitched by hand (kit.mjs
  * `faceted`). What the file is made of — the `stack` in `basalt`, the vent
@@ -28,8 +29,9 @@
  * the same basalt, the same tube on six seven-cornered rings, each rooted
  * inside the stack's wall and reaching out and up to a lip and throat of
  * its own (15, 18 and 23 m). And the `ember_cracks` in `ember`: four
- * separate two-triangle quads stood on the lip, the magma glass the row's
- * light comes from, single-sided as the file flags them. The stitch on all
+ * separate two-triangle quads seated on the crown band's facets, the magma
+ * glass the row's light comes from, single-sided as the file flags them.
+ * The stitch on all
  * four basalt parts is seabed.mjs `column`'s band with no foot cap, turned
  * round: every ring here runs from +x toward +z, clockwise seen from
  * above, where the spire's run the other way, so the band that faces the
@@ -41,8 +43,9 @@
  *
  * Every ring is a table: the generator kept no radius and no formula, every
  * corner has a height of its own, and each ring is transcribed in the order
- * the file stitches it. The cracks are sixteen points, and not one of the
- * four quads is a parallelogram, so none is a plane under a transform.
+ * the file stitches it. The file's cracks were sixteen points of their own,
+ * not one quad a parallelogram; since #890 they are weights on the crown's
+ * corners, so a crack is a plane on the facet it sits on.
  *
  * The root is the export's — `env_vent_chimney`, at the origin with the
  * stack's foot already on y = 0 — and, new in the port, held at 12 m by the
@@ -50,8 +53,54 @@
  * lip against the stack's far wall, and baked at ×0.995 with a rescale
  * warning, so the root carries that one factor (seabed.mjs `stand`).
  * `diff.mjs env-vent-chimney 7445218` — the pre-port binary — divides it
- * out and lists one thing else: every part with all of its triangles in the
- * opposite order, which is the #878 fix and nothing moved.
+ * out and lists two things else: every part with all of its triangles in
+ * the opposite order, which is the #878 fix and nothing moved, and
+ * `ember_cracks` moved, which is #890's.
+ *
+ * The light audit (#890, kit.mjs `lightAudit`). Block 4 licenses
+ * `vent-ember` "tip only" and docs/style-neon-noir.md "World light" has it
+ * as "sparse ember points in the cracked ground", so the cracks stay lit
+ * and nothing is clad (#890, review rulings, ruling 1). The export stood
+ * them near-vertical on the funnel inside the mouth, flush with its wall —
+ * heads 1.2 to 1.5 m from the mouth's centre at y 34.3 to 34.5, feet 0.9
+ * to 1.1 m out at y 33.1, on a wall that drops 2.3 m over half a metre and
+ * carries 0.11 to 0.38 of its normals on world y — so from above the wall
+ * covered them but for 0.19 m², and nothing inside the mouth faces up
+ * enough to carry them. The review's first cut hinged each quad on its
+ * head into the mouth, which read 1.0 m² and was sent back: a foot in open
+ * water is a lit flap, not a crack in rock, which is ruling 6's case. So
+ * the cracks moved to the one part of the tip that does face up: the crown
+ * band, the facets from ring 10, the rim, to ring 11, the lip, which reach
+ * 0.62 on y where the lip stands inside the rim (and face down where it
+ * overhangs). Each crack is a sliver seated on one facet: its four corners
+ * are weights on the facet's three corners (`TO_THE_LIP`, `TO_THE_RIM`),
+ * never within 5 % of an edge, lifted 2 cm along the facet's normal
+ * (`seat`), so it is flat on the rock to the centimetre and tilted as the
+ * facet is — 66°, 76°, 51° and 64° from horizontal, and planar, so per
+ * triangle the same. Bearings are taken from the mouth's centre, the lip
+ * and throat rings' mean centre (3.17, −0.03), to each sliver's centroid.
+ * Three keep the file's bearings round the mouth to within 9° (30° → 20°,
+ * 147° → 148°, −52° → −46°). The fourth, at −131°, takes the crown's best
+ * facet, at 110°: its own side has two facets that do face up, crown(5,
+ * false) at −129° and crown(6, false) at −88°, but only just, 0.10 and
+ * 0.14 on y, and both sit under the lip seen from above, so a sliver on
+ * either adds no cell to the audit; and the file's crack left in the
+ * mouth there puts the part under the floor at 19 of 64 grid alignments
+ * (the review's sweep). Round the mouth the four now sit at −46°, 20°,
+ * 110° and 148°, arcs of 67°, 89°, 38° and 166° between neighbours, and
+ * their nearest corners 1.15, 1.58, 0.62 and 2.72 m apart — the review's
+ * first crown cut had crack 1 on crown(3, true) at 134°, a quarter of a
+ * metre from crack 2 across the rim–lip edge they shared and half the
+ * mouth dark behind them. Each sliver runs its facet's height and tapers
+ * toward the facet's point, at two fifths of the facet: 0.18 to 0.32 m² of
+ * glass on facets of 0.44 to 0.80. Two fifths because that is where the
+ * four together clear the floor with a margin — a fifth of each facet read
+ * 0.25 exactly, a quarter to a third 0.38 — while a sliver still reads as
+ * a vein in the rock and not a glazed facet; and the glass in total is
+ * 0.94 m² against the file's 2.56, so the ember is sparser than the
+ * approved file's, not more of it (world light rule 1: points, never area
+ * glow). The fan's winding is the facet's outward normal on all eight
+ * triangles. They read 0.38 m² from above, six of the raster's cells.
  */
 import { THREE, add, faceted, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
@@ -97,8 +146,8 @@ const ringsOf = (table, n) =>
  * (q0, q3, q2) — seabed.mjs `fan`'s rule. The file carried the other
  * winding on all four, each quad facing into the lip's wall, which is why
  * intake's single-sided bake saw no ember from above (#878). The kit's
- * light audit reads plan area, not winding (glb.mjs `topDown`), so its
- * 0.2 m² warning on these near-vertical quads is the same before and after.
+ * light audit reads plan area, not winding (glb.mjs `topDown`): its floor
+ * is why the cracks sit on the crown (#890).
  */
 const crack = (q) => seabed.fan([q]);
 
@@ -406,37 +455,80 @@ add(chimney, 'spout_1', faceted(SPOUT_1, tube(ringsOf(SPOUT_1, 7))), basalt);
 add(chimney, 'spout_2', faceted(SPOUT_2, tube(ringsOf(SPOUT_2, 7))), basalt);
 add(chimney, 'spout_3', faceted(SPOUT_3, tube(ringsOf(SPOUT_3, 7))), basalt);
 
-// The ember cracks: four quads a metre and a half tall stood in the mouth
-// between the lip and the throat, y = 33.1 to 34.5, each its own four
-// corners in the file's order.
-const EMBER_CRACKS = [
-  // crack 0
-  [4.3213, 34.3108, 0.39006],
-  [4.18917, 34.28917, 0.94475],
-  [4.07308, 33.05807, 0.60561],
-  [4.16907, 33.10704, 0.24735],
-  // crack 1
-  [2.27331, 34.40169, 0.82787],
-  [1.95314, 34.2702, 0.37154],
-  [2.36246, 33.10826, 0.4106],
-  [2.55454, 33.07118, 0.65781],
-  // crack 2
-  [1.98567, 34.48007, -0.94235],
-  [2.49406, 34.49968, -1.40375],
-  [2.5754, 33.12118, -0.83296],
-  [2.27937, 33.12045, -0.62217],
-  // crack 3
-  [3.84561, 34.52242, -1.28777],
-  [4.10605, 34.4781, -0.74325],
-  [3.88289, 33.18935, -0.74456],
-  [3.58838, 33.13584, -0.94329],
+// The ember cracks (#890, the header's last paragraph): four slivers of
+// magma glass, each seated on one facet of the crown band — the band from
+// ring 10, the rim, to ring 11, the lip.
+
+/** A ring of the stack, as points. */
+const ring = (r) => STACK.slice(r * 9, r * 9 + 9);
+
+/**
+ * The crown band's two facets over rim corner `i`, as `tube` cuts them: the
+ * first, (rim_i, lip_j, rim_j), comes to a point at the lip; the second,
+ * (rim_i, lip_i, lip_j), to a point at the rim.
+ */
+function crown(i, second) {
+  const j = (i + 1) % 9;
+  const [rim, lip] = [ring(10), ring(11)];
+  return second ? [rim[i], lip[i], lip[j]] : [rim[i], lip[j], rim[j]];
+}
+
+// A sliver's four corners as weights on its facet's three, in the order
+// `crack` winds outward, running the facet's height and tapering toward its
+// point: `TO_THE_LIP` on a facet pointed at the lip (wide on the rim edge,
+// narrow under the lip corner), `TO_THE_RIM` on one pointed at the rim
+// (wide along the lip edge, narrow over the rim corner). No weight under
+// 0.05, so no corner is nearer an edge than a twentieth of the facet.
+const TO_THE_LIP = [
+  [0.05, 0.78, 0.17],
+  [0.17, 0.78, 0.05],
+  [0.69, 0.06, 0.25],
+  [0.25, 0.06, 0.69],
+];
+const TO_THE_RIM = [
+  [0.06, 0.25, 0.69],
+  [0.06, 0.69, 0.25],
+  [0.78, 0.17, 0.05],
+  [0.78, 0.05, 0.17],
+];
+
+/** How far a crack stands proud of its facet, along the facet's normal. */
+const PROUD = 0.02;
+
+/** A sliver's corners on a facet: the weights mixed, then lifted `PROUD`. */
+function seat(facet, weights) {
+  const [a, b, c] = facet.map((p) => new THREE.Vector3(...p));
+  const n = new THREE.Vector3().subVectors(b, a).cross(new THREE.Vector3().subVectors(c, a));
+  n.normalize();
+  return weights.map((w) => {
+    if (Math.min(...w) < 0.05 || Math.abs(w[0] + w[1] + w[2] - 1) > 1e-9)
+      throw new Error(`ember_cracks: weights ${w} leave the facet`);
+    return a
+      .clone()
+      .multiplyScalar(w[0])
+      .addScaledVector(b, w[1])
+      .addScaledVector(c, w[2])
+      .addScaledVector(n, PROUD)
+      .toArray();
+  });
+}
+
+// The four, in the file's order round the mouth: the file's bearings were
+// 30°, 147°, −131° and −52°; the crown faces up at 21°, 144° and −46°, and
+// on the −131° side only under the lip, so that one takes the band's best
+// facet (the header's last paragraph).
+const CRACKS = [
+  [0, true, TO_THE_RIM],
+  [3, false, TO_THE_LIP],
+  [2, false, TO_THE_LIP],
+  [7, false, TO_THE_LIP],
 ];
 
 add(
   chimney,
   'ember_cracks',
   faceted(
-    EMBER_CRACKS,
+    CRACKS.flatMap(([i, second, weights]) => seat(crown(i, second), weights)),
     [0, 4, 8, 12].flatMap((q) => crack([q, q + 1, q + 2, q + 3]))
   ),
   ember

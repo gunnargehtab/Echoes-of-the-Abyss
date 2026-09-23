@@ -347,10 +347,23 @@ export const segmentSeries = (opts) => series({ section: [0.6, 1.5], ...opts });
  * and every fraction hung on it then comes out a few percent long (#630,
  * the second pass).
  */
+/**
+ * The tergite ridge as the Dredge draws it: an orb `at` of the plate's
+ * half-length from its centre, `size` of the plate's [sx, sy, sz], stood
+ * `lift` up. One value, read by `tergites` to build the ridge and by
+ * `plateEdgePhotophores` to keep a lamp out from under it (#890).
+ */
+export const TERGITE_RIDGE = { at: -0.75, size: [0.25, 1.125, 0.92], lift: 0.5, facets: [10, 6] };
+
 export function tergites(root, { violet, red, black }, opts) {
   const { segments, lip = 'seam', seam = {}, ridge = {}, spines, facets = [12, 6], first = 0 } = opts;
   const { at: seamAt = 0.85, size: seamSize = [0.3, 0.95, 0.9], tallOf = 'height' } = seam;
-  const { at: ridgeAt = -0.75, size: ridgeSize = [0.25, 1.125, 0.92], lift: ridgeLift = 0.5 } = ridge;
+  const {
+    at: ridgeAt,
+    size: ridgeSize,
+    lift: ridgeLift,
+    facets: ridgeFacets,
+  } = { ...TERGITE_RIDGE, ...ridge };
   if (tallOf !== 'height' && tallOf !== 'beam')
     throw new Error(`tergites: seam.tallOf is '${tallOf}' — 'height' (sy) or 'beam' (sz)`);
   segments.forEach(([x, sx, sy, sz], k) => {
@@ -363,7 +376,7 @@ export function tergites(root, { violet, red, black }, opts) {
         seamSize[2] * sz,
       ]);
     else if (lip === 'ridge')
-      add(root, `tergite_ridge_${i}`, orb(10, 6), black, [x + ridgeAt * sx, ridgeLift, 0], [0, 0, 0], [
+      add(root, `tergite_ridge_${i}`, orb(...ridgeFacets), black, [x + ridgeAt * sx, ridgeLift, 0], [0, 0, 0], [
         ridgeSize[0] * sx,
         ridgeSize[1] * sy,
         ridgeSize[2] * sz,
@@ -499,6 +512,28 @@ export function photophores(root, crimson, { spots, size = 1.1, h = 0.4, depth, 
  * the plate's height and `z` of its beam — on the shell where it faces up.
  * Starboard carries `starboard.count` on every plate; port `port.count` on
  * every `port.every`-th plate only. Regimented, and never symmetric.
+ *
+ * Plates overlap, and the plate ahead carries a raised ridge over its aft
+ * end that can stand over the last lamp of the rank behind it — three of
+ * the Dredge's twenty-one sat so, and a top-down map never saw them.
+ * `ridge` is that ridge as `tergites` draws it (`TERGITE_RIDGE`, any field
+ * overridable): given it, a lamp whose station falls under the ridge ahead
+ * rides on that ridge's crown instead, at the lamp's own beam, so the row
+ * still runs the plate's edge and every lamp in it faces up
+ * (docs/models-plan.md §3.2 rule 5, #890). The test is the ridge's own
+ * ellipsoid at the lamp's station; the lamp keeps its name and its size.
+ * Without `ridge` the rank is laid as the file laid it, lamps under ridges
+ * and all.
+ *
+ * A lamp that rides seats on the ridge's *facet*, not its ideal surface:
+ * the ridge is a low-facet orb, and at the lamp's beam — which falls
+ * between two of its ten meridians, on the crown line where cos φ = 0 —
+ * the mesh is the chord between them, sin 72° of the ellipse in the
+ * athwart direction, and straight between rings. On the Dredge's widest
+ * plate that chord runs half a metre under the ellipsoid where a lamp
+ * would sit on it, so a lamp set on the ideal surface floats. The lamp is
+ * laid on the chord it stands on, rolled to that chord's slope, half its
+ * height proud of it.
  */
 export function plateEdgePhotophores(root, crimson, opts) {
   const {
@@ -508,15 +543,53 @@ export function plateEdgePhotophores(root, crimson, opts) {
     y = 0.72,
     z = 0.66,
     size = 1.4,
+    ridge,
   } = opts;
+  const h = 0.4;
+  const ahead = ridge && { ...TERGITE_RIDGE, ...ridge };
+  // The crown line of a (w, n) orb between its meridians: ring j stands at
+  // polar angle jπ/n, its chord at cos(π/w) of the ring's radius; and the
+  // facet between rings j and j+1 is straight in (y, z). Returns the mesh
+  // height and slope dy/dz on the crown line at |z|.
+  const facetAt = (b, c, zAbs) => {
+    const [w, n] = ahead.facets;
+    const chord = Math.cos(Math.PI / w);
+    for (let j = 0; j < n; j++) {
+      const [t0, t1] = [(j * Math.PI) / n, ((j + 1) * Math.PI) / n];
+      const [z0, z1] = [chord * c * Math.sin(t0), chord * c * Math.sin(t1)];
+      if (zAbs > z1) continue;
+      const [y0, y1] = [b * Math.cos(t0), b * Math.cos(t1)];
+      const slope = (y1 - y0) / (z1 - z0);
+      return { y: y0 + slope * (zAbs - z0), slope };
+    }
+    return null;
+  };
   segments.forEach(([x, sx, sy, sz], i) => {
     const rank = (side, sgn, { count, start, pitch }) => {
-      for (let j = 0; j < count; j++)
-        add(root, `photophore_${side}_${i}${j}`, box(size, 0.4, size), crimson, [
-          x + (start + pitch * j) * sx,
-          y * sy,
-          sgn * z * sz,
-        ]);
+      for (let j = 0; j < count; j++) {
+        let at = [x + (start + pitch * j) * sx, y * sy, sgn * z * sz];
+        let rot = [0, 0, 0];
+        if (ahead && i + 1 < segments.length) {
+          const [nx, nsx, nsy, nsz] = segments[i + 1];
+          const cx = nx + ahead.at * nsx;
+          const [a, b, c] = [ahead.size[0] * nsx, ahead.size[1] * nsy, ahead.size[2] * nsz];
+          const u = ((at[0] - cx) / a) ** 2 + (at[2] / c) ** 2;
+          const facet = u < 1 && facetAt(b, c, Math.abs(at[2]));
+          if (facet && ahead.lift + b * Math.sqrt(1 - u) > at[1] - h / 2) {
+            // Outboard the facet falls away (slope < 0 read outboard), so
+            // its normal leans outboard: a roll of atan(-slope) about the
+            // hull's axis, signed by the side.
+            const roll = sgn * Math.atan(-facet.slope);
+            at = [
+              cx,
+              ahead.lift + facet.y + (h / 2) * Math.cos(roll),
+              at[2] + (h / 2) * Math.sin(roll),
+            ];
+            rot = [roll, 0, 0];
+          }
+        }
+        add(root, `photophore_${side}_${i}${j}`, box(size, h, size), crimson, at, rot);
+      }
     };
     rank('s', 1, starboard);
     if (i % (port.every ?? 1) === 0) rank('p', -1, port);
@@ -1545,25 +1618,48 @@ export function plectrumLimb(root, { steel, black }, opts) {
 /**
  * The exchanger on the end of a Vent Tap's draw arm, on `bearing` (#608),
  * grown as a carapace: a squashed orb in `skin`, the dark seam orb where it
- * meets the pipe, three spines raked off its back, four photophores lying on
- * it, and the claw that grips the ground beyond. The script passes `skin`
- * violet on the even arms and red on the odd, as the tergites alternate
- * along a hull. Distances are metres out along the bearing, as the kit's
- * `ventDrawArm` takes them.
+ * meets the pipe, three spines raked off its back, four photophores in
+ * `crimson` lying on its upper face, and the claw that grips the ground
+ * beyond. The script passes `skin` violet on the even arms and red on the
+ * odd, as the tergites alternate along a hull. Distances are metres out
+ * along the bearing, as the kit's `ventDrawArm` takes them.
  *
- * Three things are the approved file's and are carried across rather than
+ * Two things are the approved file's and are carried across rather than
  * corrected (#540): the spines rake toward *global* +x on every arm, not out
- * along their own; the spines and the photophores stagger either side of
- * their rank in global z; and three of the four photophores lie under the
- * shell of the carapace or its seam, where the top-down bake has never seen
- * them. `exportGlb`'s light audit names them on every arm. The photophores
- * are `photophores` below, yawed with the arm, so the no-mirrored-pair rule
- * holds on the tap as it does on a hull.
+ * along their own; and the spines and the photophores stagger either side of
+ * their rank in global z, so no two arms carry the same pattern. The file's
+ * third oddity is not: it set the photophores at y 8 and 9, inside the
+ * shell, where the top-down bake never saw them. They are the last lamps
+ * of the pipe run — "lamps along every pipe run", one reading for all
+ * four navies (#890 review, ruling 5) — so each stud now sits on the
+ * carapace's surface at its own station: `count` studs at `from` and
+ * `pitch` along the arm, staggered `stagger` in global z as the file has
+ * them, each seated on whichever of the two orbs — the carapace or the
+ * seam — stands higher where its plan position meets them, and laid to
+ * that surface's slope there, half its height proud along the normal. A
+ * station neither orb covers — the first two arms' global-z stagger
+ * carries one stud past the nose — is drawn back along the arm to `reach`
+ * of the carapace's extent at that beam, and says nothing else; the same
+ * stagger carries one stud onto the seam, and it sits there, on the run's
+ * side of the shell. The seat is the *built* face, not the ideal orb: the
+ * shells are low-facet (`scute(12, 6)` and `scute(8, 6)`), their faces lie
+ * inside the ellipsoid by up to a third of a stud's height, and a stud
+ * set on the ellipsoid floats (#890 round 3, F1). So each station is ray
+ * cast straight down onto the two meshes as built, and the stud is laid
+ * on the face the ray hits, its underside in that face's plane, tilted to
+ * the face's own normal — taken from the face's three vertices in world
+ * space, since a scaled orb's `face.normal` is in its own frame and the
+ * scale is not uniform. The lift along the normal moves a centre a few
+ * tenths of a metre in plan where the face slopes. The photophores are
+ * `photophores` below, each with its own rotation, so the no-mirrored-pair
+ * rule holds on the tap as it does on a hull.
  */
 export function carapaceHead(root, { skin, black, steel, crimson }, opts) {
   const { bearing: a, at, carapace, seam, spines, photophores: rank, claw } = opts;
-  add(root, 'carapace', scute(12, 6), skin, polar(a, at, carapace.y), [0, -a, 0], carapace.r);
-  add(root, 'carapace_seam', scute(8, 6), black, polar(a, seam.at, seam.y), [0, -a, 0], seam.r);
+  const shells = [
+    add(root, 'carapace', scute(12, 6), skin, polar(a, at, carapace.y), [0, -a, 0], carapace.r),
+    add(root, 'carapace_seam', scute(8, 6), black, polar(a, seam.at, seam.y), [0, -a, 0], seam.r),
+  ];
   spines.lengths.forEach((length, i) => {
     const [x, y, z] = polar(a, at + (spines.from + spines.pitch * i), spines.y);
     add(root, `spine_${i}`, spike(spines.r, length, 5), black, [x, y, z + spines.stagger[i]], [
@@ -1572,15 +1668,54 @@ export function carapaceHead(root, { skin, black, steel, crimson }, opts) {
       spines.rake,
     ]);
   });
-  photophores(root, crimson, {
-    size: rank.size,
-    h: rank.h,
-    yaw: -a,
-    spots: rank.ys.map((y, i) => {
-      const [x, , z] = polar(a, at + (rank.from + rank.pitch * i), y);
-      return [`photophore_${i}`, x, y, z + (i % 2 ? rank.stagger : -rank.stagger)];
-    }),
-  });
+  // `reach` 0.75 lands the drawn-back stud mid-facet on a 12 × 6 scute
+  // (0.8 put it on a facet corner, and a corner of it hung 0.9 m over the
+  // neighbouring face).
+  const { count = 4, from, pitch, stagger, size, h, reach = 0.75 } = rank;
+  const along = new THREE.Vector3(Math.cos(a), 0, Math.sin(a));
+  const across = new THREE.Vector3(-Math.sin(a), 0, Math.cos(a));
+  const up = new THREE.Vector3(0, 1, 0);
+  const yawQ = new THREE.Quaternion().setFromAxisAngle(up, -a);
+  const origin = new THREE.Vector3(...polar(a, at, 0));
+  // The built face under a station: the highest hit of a ray straight down
+  // onto the two shells as they stand, and that face's normal from its own
+  // three vertices. Nothing where neither shell is under the station.
+  root.updateMatrixWorld(true);
+  const caster = new THREE.Raycaster();
+  const seatAt = (u, v) => {
+    const s = origin.clone().addScaledVector(along, u).addScaledVector(across, v);
+    caster.set(new THREE.Vector3(s.x, 1e3, s.z), new THREE.Vector3(0, -1, 0));
+    const hit = caster.intersectObjects(shells, false)[0];
+    if (!hit) return null;
+    const pos = hit.object.geometry.attributes.position;
+    const [p0, p1, p2] = [hit.face.a, hit.face.b, hit.face.c].map((k) =>
+      new THREE.Vector3().fromBufferAttribute(pos, k).applyMatrix4(hit.object.matrixWorld)
+    );
+    const n = p1.sub(p0).cross(p2.sub(p0)).normalize();
+    return { point: hit.point, n: n.y < 0 ? n.negate() : n };
+  };
+  const spots = [];
+  for (let i = 0; i < count; i++) {
+    // The station in the shell's frame: along the arm, and across it from
+    // the file's global-z stagger.
+    const d = new THREE.Vector3(...polar(a, at + from + pitch * i, 0))
+      .sub(origin)
+      .add(new THREE.Vector3(0, 0, i % 2 ? stagger : -stagger));
+    const v = d.dot(across);
+    let u = d.dot(along);
+    let seat = seatAt(u, v);
+    if (!seat) {
+      const [A, , C] = carapace.r;
+      const extent = reach * A * Math.sqrt(Math.max(0, 1 - (v / C) ** 2));
+      u = Math.max(-extent, Math.min(extent, u));
+      seat = seatAt(u, v);
+    }
+    const q = new THREE.Quaternion().setFromUnitVectors(up, seat.n).multiply(yawQ);
+    const e = new THREE.Euler().setFromQuaternion(q);
+    const p = seat.point.clone().addScaledVector(seat.n, h / 2);
+    spots.push([`photophore_${i}`, p.x, p.y, p.z, [e.x, e.y, e.z]]);
+  }
+  photophores(root, crimson, { size, h, spots });
   // Laid along the arm as the draw pipe is, then raised `claw.raise` radians
   // toward vertical: the approved file's lean is π/2 − 0.8 to the bit.
   add(root, 'anchor_claw', spike(claw.r, claw.length, 5), steel, polar(a, claw.at, claw.y), [
@@ -2580,6 +2715,15 @@ export function drums(root, mat, { drums: list }) {
  * given its own `skin` wears it in place of the call's — the aft antennae
  * are chitin where the fore are violet, and the four are one call because
  * of that shared lamp.
+ *
+ * A lamp's `size` is one number for the cube the file carries, or
+ * `[w, h, d]` for a pad — a lamp at the end of a thin spike is a dot from
+ * above, and the maps are top-down (docs/models-plan.md §3.2 rule 5, #890).
+ * `inset` pulls the lamp's centre back from the point along the spike, so a
+ * pad sits under the point with the point standing through it, and reaches
+ * no further out than the cube did: the fore-port antenna's cube sets the
+ * Cruiser's bow, and `metreTrue` holds it. Both default to the file's own
+ * cube at the point.
  */
 export function aimedSpikes(root, { spike: spikeMat, tip: tipMat }, { spikes: list }) {
   const tips = new Map();
@@ -2594,9 +2738,15 @@ export function aimedSpikes(root, { spike: spikeMat, tip: tipMat }, { spikes: li
     const placement = drawn(mid, [e.x, e.y, e.z]);
     part(root, name, cyl(radii[0], radii[1], d.length(), facets), skin, placement);
     if (tip) {
-      const geo = tip.buffer ? tips.get(tip.buffer) : box(tip.size, tip.size, tip.size);
+      const { size, inset = 0 } = tip;
+      const geo = tip.buffer
+        ? tips.get(tip.buffer)
+        : Array.isArray(size)
+          ? box(...size)
+          : box(size, size, size);
       tips.set(tip.name, geo);
-      part(root, tip.name, geo, tipMat, drawn(to));
+      const at = inset ? B.clone().addScaledVector(d.clone().normalize(), -inset).toArray() : to;
+      part(root, tip.name, geo, tipMat, drawn(at));
     }
   });
 }

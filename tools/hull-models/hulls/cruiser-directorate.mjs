@@ -28,7 +28,8 @@
  * (docs/concept-art/models/cruiser-directorate.glb at 3e15409), part for
  * part in its order, every number the export's own. Every part comes from
  * `factions/directorate.mjs` or is a kit box. Nothing here is a shape
- * decision; where the export is odd the script is odd with it: the `_p`
+ * decision but the lamps #890 re-seated, listed below; where the export is
+ * odd the script is odd with it: the `_p`
  * parts sit at the export's +x, which is the kit's -z once the file is
  * turned onto its length, and -z is port (#642), so the names are right;
  * the antennae and whiskers are *aimed* — each from a round-numbered root
@@ -38,14 +39,45 @@
  * aft-starboard antenna lamps are one buffer in the file where the other
  * two are one each; the twelve darts share one buffer, the seven light
  * domes are one each, and the six telson blades and the four gills are a
- * buffer each in the file but share one geometry here; and the antenna and
- * whisker lamps are cubes a third of a unit across at the spikes' tips,
- * the light organ strip lies under the keel and the head and tail marks
- * are cubes on the shield and the last plate, where the top-down maps see
- * under a quarter of a square metre of each — the light audit names those
- * fifteen (the fore-port, fore-starboard and aft-starboard antenna lamps,
- * the nine whisker lamps, the strip, the head and the tail), and the
- * approved bake never saw them either.
+ * buffer each in the file but share one geometry here.
+ *
+ * THE LIGHT the top-down maps could not see. The export's antenna and
+ * whisker lamps were cubes a third of a unit across at the spikes' tips,
+ * its light organ strip lay under the keel and its head and tail marks
+ * were cubes on the shield and the last plate: fifteen lamps under a
+ * quarter of a square metre from above, which the light audit named and
+ * the approved bake never saw. #890 re-seats fourteen and keeps one where
+ * it is, each against the block's resting clause — "sustained glow from
+ * vents, sensor arrays and lit ports" — under docs/models-plan.md §3.2
+ * rule 5, every one keeping its name, its material and its count:
+ *
+ * - The thirteen antenna and whisker lamps (`antenna_tip_fp`, `_fs`, `_as`
+ *   and the nine `whisker_tip_*`; `_ap` sat at the floor exactly) are the
+ *   sensor arrays' — the antennae and the whisker ranks are the block's
+ *   "prominent sensor arrays and fixed hydrophone masts", and the clause
+ *   lights sensor arrays — so each stays lit and is a pad rather than a
+ *   cube: 1.1 square and 0.3 tall on the fore-port and aft-starboard
+ *   antennae (one buffer, as the file has it), 1.0 on the other two, 0.9
+ *   and 0.25 on the whiskers, each seated its own half-width back from
+ *   the point (`aimedSpikes` `inset`) so the point stands through it and
+ *   the fore-port pad reaches no further forward than the cube did, which
+ *   is what holds `DRAWN`.
+ * - The light organ strip is the clause's "lit ports" and stays lit where
+ *   the file has it, under the keel, under the body core, where no upward
+ *   face can carry it. RESIDUAL AUDIT LINE: `light_organ_strip` shows
+ *   nothing from above, and the export warns on it. A ventral light organ
+ *   carried to the back is a different fixture, and a straight centreline
+ *   bar is not this navy's asymmetric grammar; a move is licensed by a
+ *   hidden lamp and never by gate 3's headroom, which this hull, never
+ *   capped, has no claim on (#890 review, rulings 1 and 6). The maps see
+ *   the light band down each flank instead, and the conn view sees the
+ *   strip.
+ * - The head mark is a lit port on the head and stays lit: a pad the
+ *   crest's width and 1.6 long, seated on the crest's top where the cube
+ *   sat under the crest's rising forward end. The tail mark likewise: a
+ *   pad 1.6 square on the last tail plate's top, moved 3.5 forward of the
+ *   plate's aft face to stand clear of the telson blades, whose pitched
+ *   tops reach forward over where the cube was.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds: drawn along Z, 146.28 units long tip to tip, hull axis at
@@ -156,7 +188,11 @@ directorate.eyes(root, red, {
 // the fore pair in violet and the aft in chitin, each run from a root on
 // the carapace to the lamp at its tip — the port ones the longer at each
 // end — and nine whiskers off the back, four forward to port at a 1.3
-// pitch and five aft to starboard at the same, each to its own lamp.
+// pitch and five aft to starboard at the same, each to its own lamp. The
+// lamps are pads under the points (#890, the header): a lit sensor head
+// the maps can see, its own half-width back from the point.
+const ANTENNA_PAD = [1.1, 0.3, 1.1];
+const ANTENNA_PAD_SMALL = [1, 0.3, 1];
 directorate.aimedSpikes(
   root,
   { spike: violet, tip: photophore },
@@ -167,14 +203,14 @@ directorate.aimedSpikes(
         radii: [0.09, 0.32],
         from: [5.2, 9.5, 50],
         to: [13.5, 14.5, 68],
-        tip: { name: 'antenna_tip_fp', size: 0.4 },
+        tip: { name: 'antenna_tip_fp', size: ANTENNA_PAD, inset: 0.55 },
       },
       {
         name: 'antenna_fore_s',
         radii: [0.09, 0.3],
         from: [-4.6, 9.2, 51],
         to: [-10.5, 13, 66],
-        tip: { name: 'antenna_tip_fs', size: 0.34 },
+        tip: { name: 'antenna_tip_fs', size: ANTENNA_PAD_SMALL, inset: 0.5 },
       },
       {
         name: 'antenna_aft_p',
@@ -182,7 +218,7 @@ directorate.aimedSpikes(
         radii: [0.08, 0.28],
         from: [4.2, 8.8, -48],
         to: [9.5, 12.5, -66],
-        tip: { name: 'antenna_tip_ap', size: 0.34 },
+        tip: { name: 'antenna_tip_ap', size: ANTENNA_PAD_SMALL, inset: 0.5 },
       },
       {
         name: 'antenna_aft_s',
@@ -190,17 +226,18 @@ directorate.aimedSpikes(
         radii: [0.09, 0.3],
         from: [-3.6, 8.6, -49],
         to: [-12, 13.5, -69],
-        tip: { name: 'antenna_tip_as', buffer: 'antenna_tip_fp' },
+        tip: { name: 'antenna_tip_as', buffer: 'antenna_tip_fp', inset: 0.55 },
       },
     ],
   }
 );
+const WHISKER_PAD = [0.9, 0.25, 0.9];
 const whisker = (name, from, to) => ({
   name: `whisker_${name}`,
   radii: [0.06, 0.22],
   from,
   to,
-  tip: { name: `whisker_tip_${name}`, size: 0.3 },
+  tip: { name: `whisker_tip_${name}`, size: WHISKER_PAD, inset: 0.45 },
 });
 directorate.aimedSpikes(
   root,
@@ -242,8 +279,9 @@ directorate.darts(
   }
 );
 
-// The keel, the light organ strip along its underside — "lit ports" — and
-// two spurs off it leaned aft, neither where the other is.
+// The keel, the light organ strip along its underside — "lit ports", where
+// the file has it, a residual audit line (#890, the header) — and two
+// spurs off it leaned aft, neither where the other is.
 bar('ventral_keel', violet, [5.5, 2.4, 62], [0.2, 1.9, -2], [0, 0.01, 0]);
 bar('light_organ_strip', photophore, [2.4, 0.6, 56], [0.2, 0.72, -2], [0, 0.01, 0]);
 directorate.spikes(root, red, {
@@ -299,7 +337,8 @@ directorate.spikes(root, red, {
 // each a unit orb squashed its own way by its node, four to port and three
 // to starboard at a 20 pitch, offset by 10; four gills on the flanks, two
 // a side, each leaned its own way; and a mark on the head and one on the
-// tail.
+// tail — pads on the crest's top and the last plate's top (#890, the
+// header).
 bar('light_band_p', photophore, [0.7, 1.6, 78], [10.3, 8.3, 0], [0, 0.012, 0]);
 bar('light_band_s', photophore, [0.7, 1.6, 78], [-10.3, 8.1, -1], [0, -0.01, 0]);
 bar('band_rib_p0', chitin, [2.6, 0.9, 1.1], [9.2, 8.3, 32]);
@@ -329,8 +368,8 @@ directorate.photophoreMarks(root, photophore, {
     ['gill_s1', drawn([-9.65, 8.2, -21], [0.35, 0, -0.1])],
   ],
 });
-bar('photophore_head', photophore, [0.6, 0.6, 0.6], [0.3, 12.9, 47.5]);
-bar('photophore_tail', photophore, [0.5, 0.5, 0.5], [0.1, 7.6, -67.5]);
+bar('photophore_head', photophore, [1.1, 0.4, 1.6], [0.3, 13.5, 47.5], [0, 0.025, 0]);
+bar('photophore_tail', photophore, [1.6, 0.4, 1.6], [0.1, 7.2, -64], [0, -0.06, 0]);
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
 await exportGlb(root, 'cruiser-directorate.glb');
