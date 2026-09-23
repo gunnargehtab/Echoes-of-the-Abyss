@@ -134,10 +134,10 @@ export const ink = {
    * (docs/models-plan.md §3.2 rule 2): the Furnace's burner nozzles, bow
    * floods, ladder strips and manifold strip, every one of them lit only
    * cutting and built dark; since #890 also the Derrick's louvres and
-   * bridge ports, the Bulwark's transom vents and bow lamp, the Vent Tap's
-   * exchanger gratings and the Foundry's roof seams and crane floods —
-   * lamps a block lights in a later band or in none, and the audit could
-   * not see from above. The Directorate's `biolight_unlit`, the
+   * bridge ports, the Bulwark's transom vents and bow lamp, and the
+   * Foundry's roof seams and crane floods — lamps a block lights in a
+   * later band or in none, and the audit could not see from above. The
+   * Directorate's `biolight_unlit`, the
    * Commune's `bio_vein_unlit` and the Order's `crystal_seam_unlit` are the
    * same rule in the other three navies. One name, one value
    * (asset-prompts-3d.md Block 2b, rule 3); it recolours to near-black under
@@ -378,8 +378,8 @@ export function barbette(root, { black, grey, rust, amber }, { x, deck, r, barre
 /**
  * Deck floods, facing up — the light gate 3 actually measures. `deck` is the
  * face they stand a tenth above, and it has to be the slab's *top*: the
- * Derrick passed its mid-slab datum since #531 and its six floods sat
- * inside `hull_slab`, which is the case `lightAudit` was written on (#890).
+ * Derrick passed its mid-slab datum from #531 until #890 and its six floods
+ * sat inside `hull_slab`, which is the case `lightAudit` was written on.
  */
 export function deckFloods(root, lampMat, { deck, spots }) {
   spots.forEach(([x, z], i) =>
@@ -3118,7 +3118,8 @@ export function ribbedDome(root, put, { black, grey, rust, lampM }, opts) {
  * for the one the quarters module was built over (#890): it keeps its
  * radius and height and takes the bearing given, and its turn follows the
  * bearing by the file's rule, `π/2 − a`, so at π the disc's axis is (1, 0,
- * 0) and that port alone faces square out along its radial.
+ * 0) and the port faces square out along its radial, as ports 3 and 8 do;
+ * the other seven face 0.62 to 1.27 off theirs.
  */
 export function portholes(root, put, glow, { count, phase, r, y, disc, bearings = {} }) {
   for (let i = 0; i < count; i++) {

@@ -23,7 +23,7 @@
  * each exchanger's roof, where no bake sees them, and the audit warned on
  * all four. An exchanger's lamp is the last lamp of its pipe run — "lamps
  * along every pipe run", the block's resting clause, read the same way on
- * all four navies' taps (#890 review, ruling 5) — so each stays lit in its
+ * all four navies' taps (#890, review rulings, ruling 5) — so each stays lit in its
  * `amber_vent` and stands on the hazard band's top face at the same
  * station, as the Order's `exchanger_seam` stands on its frame's top; the
  * fin at that station pokes a tenth up through it. The mouth, the platform

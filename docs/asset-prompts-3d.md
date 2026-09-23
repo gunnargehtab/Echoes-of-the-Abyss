@@ -88,7 +88,7 @@ the louder it is in the Echo Layer. Set each unit's glow from its idle/cruise SI
 where that first bit. "Lit ports" asks for exactly what the phrase says — a window in a
 wall — and a window in a wall is a vertical face; the Consortium's Tender carries ten down
 its deckhouse, each boxed out past the eave so that it also shows a top face. A UNIT block
-is a description of a hull, not a light budget, and two renderers read it:
+is a description of a hull, not a light budget, and two renderers draw the hull:
 
 - **The conn view draws the mesh**, at a 55° tilt, so a vertical face reads there too, and
   this is where most of a player's time is spent.
@@ -205,7 +205,7 @@ Lamp bases are the near-black a `lamp()` puts in `color` for its emissive to sit
 | Navy | Role | Values |
 | --- | --- | --- |
 | Consortium | emissive | `#B07A1E` `amber_vent` · `#FFD070` `amber_flood` |
-| Consortium | cladding | `#1C1F22` `baffle-foam` (the Baffle Barge) · `#1A1408` `amber_lamp_unlit` (the lamp's base worn as cladding by a part the block lights only in a later band — the Furnace's burner nozzles, bow floods, ladder strips and manifold strip, all of them lit only cutting) |
+| Consortium | cladding | `#1C1F22` `baffle-foam` (the Baffle Barge) · `#1A1408` `amber_lamp_unlit` (the lamp's base worn as cladding by a part the block lights only in a later band or in none — the Furnace's burner nozzles, bow floods, ladder strips and manifold strip, lit only cutting; the Derrick's louvres and the Foundry's roof seams and crane floods, lit only under way or producing; and, named in no band, the Derrick's bridge ports and the Bulwark's transom vents and bow lamp) |
 | Consortium | lamp base | `#1A1408` · `#120E06` · `#2A2210` · `#1A1206` |
 | Commune | cladding | `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` `algae_hull` (the token's hex under a second name) · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` · `#061206` `bio_vein_unlit` (the vein's base worn as cladding by a part the block lights only in a later band — the Glider's tail veins, dark with the drive cut, the Weaver's and the Blight's stem veins, and the Rootstock's node-to-node vein, lit under way) |
 | Commune | emissive | `#5FAE42` `bio_vein` (at strength 1 on the Sower and the Spinner, 0.2 on the Drifter's seams and the Glider's wing vein — a strength survives the recolour as a finish does) · `#E8F0A3` `forge_light` / `floodlight_pale` (the spore token as a light) |
