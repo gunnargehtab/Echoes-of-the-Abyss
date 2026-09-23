@@ -9,10 +9,10 @@
  * Block 4), under ENV STYLE: "Natural or ruined form — stone, coral ...
  * pressure-scarred and ancient; nothing manufactured ... low-poly with
  * crisp facets, at most two materials", and no light of any kind. One
- * material, 588 triangles, 27.41 m tall at its 15 m by intake's measure
- * (`sizeM.height`) and 32.0 m by the runtime's, which measures vertices
- * (#876); 32 m raw, which is the frame every figure below is in, before
- * the root's fit.
+ * material, 588 triangles, 27.41 m tall at its 15 m by intake's box
+ * (`sizeM.height`) and 27.06 m by its vertices, which is what the runtime
+ * draws (#876); 32 m raw, which is the frame every figure below is in,
+ * before the root's fit.
  *
  * A port of the approved export (docs/concept-art/models/env-coral-tower.glb
  * as committed before #869), part for part in its order, every number the

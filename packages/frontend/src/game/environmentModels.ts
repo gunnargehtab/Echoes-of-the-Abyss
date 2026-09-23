@@ -17,7 +17,8 @@
  * - **Transforms are baked into the geometry.** Instancing wants metre-true
  *   geometry under simple TRS instance matrices, so canonicalisation (scale
  *   to `footprintM`, centre XZ, base at Y=0 — props *stand*, hulls float)
- *   is applied to the vertices once at template build.
+ *   is applied to the vertices once at template build. The scale is read
+ *   before the merge, by the measure intake reviews (`propFootprint`, #876).
  * - **Sway is a vertex shader, never a matrix.** A prop with `swayM > 0`
  *   (kelp) bends in the current through a per-vertex weight and a time
  *   uniform patched into its materials; the instance matrices, the
@@ -35,6 +36,7 @@ import {
   Mesh,
   MeshStandardMaterial,
   Vector3,
+  type Object3D,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeByMaterial } from './rosterModels.ts';
@@ -151,7 +153,22 @@ function patchSway(material: Material, uniforms: SwayUniforms): void {
   material.needsUpdate = true;
 }
 
-function buildTemplate(scene: Group, footprintM: number, swayM: number): EnvTemplate {
+/**
+ * A prop's footprint by the measure `PropSpec.footprintM` names: three's
+ * loose `Box3.setFromObject` over the parts as the file delivers them, the
+ * larger of X and Z. It must be taken before `mergeByMaterial`, which bakes
+ * each part's transform into its vertices and so turns this into the vertex
+ * extent — the measure the runtime held until #876, under which the
+ * boulder drew 1.23× the size intake reviewed.
+ */
+export function propFootprint(root: Object3D): number {
+  root.updateMatrixWorld(true);
+  const size = new Box3().setFromObject(root).getSize(new Vector3());
+  return Math.max(size.x, size.z);
+}
+
+/** One prop's template from its parsed file; exported for the test that holds it to intake. */
+export function buildTemplate(scene: Group, footprintM: number, swayM: number): EnvTemplate {
   // Clone materials through an identity map (rosterModels' argument: shared
   // materials must keep sharing their clone or the merge silently fails).
   const materialClones = new Map<Material, Material>();
@@ -173,15 +190,19 @@ function buildTemplate(scene: Group, footprintM: number, swayM: number): EnvTemp
   });
   normaliseLuminance(materialClones.values());
 
+  // Scale first, on the parts as delivered: the larger horizontal axis to
+  // footprintM (no length-on-X — a prop stands at a random yaw).
+  const footprint = propFootprint(copy);
+  const scale = footprint > 0 ? footprintM / footprint : 1;
+
   const merged = mergeByMaterial(copy);
 
-  // Canonicalise: larger footprint axis to footprintM (no length-on-X — a
-  // prop stands at a random yaw), centre XZ, base at Y=0, baked into the
-  // vertices so instance matrices stay plain TRS.
+  // Then place on the merged vertices — centre XZ, base at Y=0 — baked in
+  // so instance matrices stay plain TRS. The base is the lowest vertex, not
+  // the floor of the parts' boxes: a prop stands on its rock, not on a box
+  // a leaning part overhangs (0.21 m under the coral tower's, in game).
   const box = new Box3().setFromObject(merged);
   const size = box.getSize(new Vector3());
-  const footprint = Math.max(size.x, size.z);
-  const scale = footprint > 0 ? footprintM / footprint : 1;
   const centre = box.getCenter(new Vector3());
   merged.updateMatrixWorld(true);
   const heightM = size.y * scale;

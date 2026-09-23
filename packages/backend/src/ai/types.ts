@@ -379,13 +379,13 @@ export interface AiPlayer {
  * Why a navy's ordnance hull, or its carrier, is or is not in the water (#698,
  * #839).
  *
- * Five counters that **partition** the observations reaching one want in
+ * Six counters that **partition** the observations reaching one want in
  * `commandProduction`: every such observation increments exactly one of them,
- * so the five sum to `reached` and a column that does not is a bug in the
+ * so the six sum to `reached` and a column that does not is a bug in the
  * instrumentation rather than a finding about a navy.
  *
  * One shape for two wants, because the two are gated alike: behind the
- * escort, one only, at a yard, out of the purse. The ordnance want was
+ * escort, one only, at a yard, in the berths, out of the purse. The ordnance want was
  * instrumented first and the paragraph below is its argument. The carrier's
  * is the same argument a second time (#839): a navy that never fields its
  * deck reads the same in the build column whichever gate shut, so a baseline
@@ -423,9 +423,18 @@ export interface WantTally {
   alreadyHas: number;
   /** Escorted and wanted, but no yard of the right kind was free. */
   noYard: number;
-  /** Escorted, wanted, a yard free — and the purse could not pay. */
+  /**
+   * Escorted, wanted, a yard free — and the berths could not crew it
+   * (docs/economy.md §10, #854).
+   *
+   * Asked after the yard and before the price, the order `Match.produce`
+   * refuses in. Before this was counted, an observation that could pay landed
+   * in `bought` although the server refused the order.
+   */
+  noBerth: number;
+  /** Escorted, wanted, a yard free, the berths to crew it — and the purse could not pay. */
   cannotAfford: number;
-  /** Escorted, wanted, a yard free, and paid for. A hull was ordered. */
+  /** Escorted, wanted, a yard free, crewed, and paid for. A hull was ordered. */
   bought: number;
 }
 
@@ -436,6 +445,7 @@ export function emptyWantTally(): WantTally {
     notEscorted: 0,
     alreadyHas: 0,
     noYard: 0,
+    noBerth: 0,
     cannotAfford: 0,
     bought: 0,
   };

@@ -511,7 +511,7 @@ describe('the commander fields its navy carrier', () => {
 
 describe('the commander counts why it did or did not buy its carrier', () => {
   // #839's third bullet. The build column can say a navy never fielded its
-  // deck; this says which gate shut, one reason per observation, and the five
+  // deck; this says which gate shut, one reason per observation, and the six
   // sum to `reached` — the partition docs/invariants.md holds for both wants.
   // Each case is one observation on a fresh commander — a Veteran decides on
   // its first — so the tally after it is exactly one reason, and a case that
@@ -544,6 +544,8 @@ describe('the commander counts why it did or did not buy its carrier', () => {
         ],
       });
 
+      const oneShort = { used: 40 - statsFor(carrier).berths + 1, granted: 40 };
+
       // Every case but the purchase holds an empty purse, so no want written
       // ahead of the carrier's can spend and return before it is read — the
       // trap `purseFor` exists for, from the other side.
@@ -555,6 +557,24 @@ describe('the commander counts why it did or did not buy its carrier', () => {
         [
           'the Slipway two deep',
           slipway({ queue: [UnitKind.Corvette, UnitKind.Corvette] }),
+          only('noYard'),
+        ],
+        // One berth short of the deck (#854). With the price in the bank too,
+        // because that is the case that used to read `bought` while the
+        // server refused the order.
+        ['the berths one short', { berths: oneShort }, only('noBerth')],
+        [
+          'the berths one short, with the price in the bank',
+          { ...purseFor(carrier), berths: oneShort },
+          only('noBerth'),
+        ],
+        // The yard is asked first, in `Match.produce`'s own order.
+        [
+          'the Slipway two deep and the berths full',
+          {
+            ...slipway({ queue: [UnitKind.Corvette, UnitKind.Corvette] }),
+            berths: { used: 40, granted: 40 },
+          },
           only('noYard'),
         ],
         ['an army short of the escort', force(brief, { escort: false }), only('notEscorted')],

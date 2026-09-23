@@ -166,8 +166,8 @@ describe('telemetry measures what it says it measures', () => {
   });
 
   it('partitions the ordnance want into the reason it was stopped', () => {
-    // The invariant the whole column rests on (#698). Five reasons, one
-    // increment per observation that reaches the want, so the five sum to
+    // The invariant the whole column rests on (#698). Six reasons, one
+    // increment per observation that reaches the want, so the six sum to
     // `reached` — and a column that does not sum is an instrumentation bug
     // rather than a finding about a navy. Held here because the failure mode
     // is silent: a miscounted branch produces a table that still looks like a
@@ -188,9 +188,9 @@ describe('telemetry measures what it says it measures', () => {
       const t = player.ordnanceWant;
       assert.ok(t.reached > 0, `slot ${player.slot} reached the ordnance want at all`);
       assert.equal(
-        t.notEscorted + t.alreadyHas + t.noYard + t.cannotAfford + t.bought,
+        t.notEscorted + t.alreadyHas + t.noYard + t.noBerth + t.cannotAfford + t.bought,
         t.reached,
-        `slot ${player.slot}: the five reasons have to add up to the observations`
+        `slot ${player.slot}: the six reasons have to add up to the observations`
       );
     }
 
@@ -198,6 +198,9 @@ describe('telemetry measures what it says it measures', () => {
     // rather than per seat, because which navy reaches which gate is a fact
     // about doctrine and would make this a change detector; that *all five* are
     // reachable is a fact about the instrumentation, which is what is held here.
+    // Five of the six: this duel never fills a navy's berths, so `noBerth` is
+    // zero here, and `aiBerths.test.ts` drives it in a real match instead
+    // (#854).
     //
     // What this does **not** hold, said plainly so the next reader does not
     // assume it does: the counting *order*. `alreadyHas` is counted before the
@@ -242,15 +245,15 @@ describe('telemetry measures what it says it measures', () => {
   it('carries the carrier want from the commander to the report (#839)', () => {
     // The carrier's tally rides the ordnance tally's channel — seat, runner,
     // `finish` — and this holds the channel, not the branches:
-    // `aiCarrier.test.ts` drives each of the five reasons on its own.
+    // `aiCarrier.test.ts` drives each of the six reasons on its own.
     const result = runMatch({ seats: DUEL, seed: 60, maxMinutes: 2, fauna: false });
     for (const player of result.players) {
       const t = player.carrierWant;
       assert.ok(t.reached > 0, `slot ${player.slot} reached the carrier want at all`);
       assert.equal(
-        t.notEscorted + t.alreadyHas + t.noYard + t.cannotAfford + t.bought,
+        t.notEscorted + t.alreadyHas + t.noYard + t.noBerth + t.cannotAfford + t.bought,
         t.reached,
-        `slot ${player.slot}: the five reasons have to add up to the observations`
+        `slot ${player.slot}: the six reasons have to add up to the observations`
       );
     }
     const summary = summarise([result]);

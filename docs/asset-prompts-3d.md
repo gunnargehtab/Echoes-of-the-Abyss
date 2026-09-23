@@ -1229,7 +1229,8 @@ surface — this stands on the seabed, deep underwater.
 ```
 
 The prop table — one row per asset, with the numbers intake and the registry check.
-`Footprint` is the canonical scale hull-intake sizes against (`--footprint-m`);
+`Footprint` is the canonical scale hull-intake sizes against (`--footprint-m`) and the
+runtime draws at, taken over the parts' own boxes rather than their vertices (#876);
 `Height` is the vertical silhouette the 55° camera actually reads, by intake's measure
 (`sizeM.height`) at the row's footprint — a single figure is the approved model's to the
 metre, a range the band a generated one lands in; `Tris` is the per-instance budget;
@@ -1255,8 +1256,8 @@ Four heights moved to their approved models (#879): the trench slab from 10 m, t
 resonance pylon from 25 m, the dome shard from 20 m and the coral growth from 8 m. The
 footprint is the scale, and the height follows it. The pylon and the growth were drawn to
 the old figures, and the fit to their footprints stretched them (`seabed.mjs` `stand`).
-The runtime draws some props larger than intake measures them until #876 settles one
-measure.
+Since #876 the runtime draws at intake's measure, so a row's height is what the game
+draws before the registry's scale jitter.
 
 `env-ruin-dome-shard` is not yet a shard. The file is a whole closed dome, sixteen
 meridians round, which its slug and the checklist's "nothing that could be mistaken for a

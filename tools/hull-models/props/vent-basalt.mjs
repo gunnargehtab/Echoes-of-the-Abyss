@@ -29,11 +29,12 @@
  * four feet were pushed off the square by hand, so a pillar is its eight
  * points, top four then feet, in the file's order. Both stitches are the
  * file's own (`mound` and `pillar` below) and give its 270 triangles in
- * its order. Every ring and every pillar's square runs from +x toward +z,
- * clockwise seen from above, so the band rule that faces the spire
- * outward faces the mound inward, every pillar's walls face into the
- * pillar and every pillar's top faces down. The file is inside out, and
- * the port reproduces that (#878).
+ * its order, each turned round on its own three corners (#878): every ring
+ * and every pillar's square runs from +x toward +z, clockwise seen from
+ * above, so the band rule that faces the spire outward faced the mound
+ * inward, every pillar's walls faced into the pillar and every top and the
+ * crown faced down. The file was inside out, with no facet of the crown or
+ * a pillar top pointing up, and the port reproduced that until #878.
  *
  * The root is the export's — `env_vent_basalt`, at the origin with the
  * mound's foot already on y = 0 — and, new in the port, held at 15 m by the
@@ -42,8 +43,9 @@
  * point, which the rim above it at −7.71 does not reach, to pillar 19's +x
  * foot at 7.8369 — and baked at ×0.909 with a rescale warning, so the root
  * carries that one factor (seabed.mjs `stand`). `diff.mjs env-vent-basalt
- * 7445218` — the pre-port binary, which is also the default rev — divides
- * it out and lists nothing else.
+ * 7445218` — the pre-port binary — divides it out and lists one thing
+ * else: `slab` with all 270 triangles in the opposite order, which is the
+ * #878 fix and nothing moved.
  */
 import { THREE, add, faceted, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
@@ -56,11 +58,14 @@ const basalt = seabed.ground.basaltVent();
 /**
  * The mound's stitch: `rings` are equal-length index rings from the foot
  * up, `crown` the index of the cap's centre. Each band's quad [l_i, l_i+1,
- * u_i+1, u_i] is cut (l_i, l_i+1, u_i+1), (l_i, u_i+1, u_i) — seabed.mjs
- * `column`'s band — but corner by corner, one corner's whole column of
- * quads before the next corner's, which is the other loop order from
- * `column`'s and the one the file has; then the top ring fanned to the
- * crown, (t_i, t_i+1, crown). No foot cap: the foot is in the ground.
+ * u_i+1, u_i] is cut (l_i, u_i+1, l_i+1), (l_i, u_i, u_i+1) — seabed.mjs
+ * `column`'s band on its diagonal, each triangle's last two corners
+ * swapped because these rings run the way that faces `column`'s order
+ * inward (#878) — and corner by corner, one corner's whole column of quads
+ * before the next corner's, which is the other loop order from `column`'s
+ * and the one the file has; then the top ring fanned to the crown,
+ * (t_i, crown, t_i+1), so the crown faces up. No foot cap: the foot is in
+ * the ground.
  */
 function mound(rings, crown) {
   const out = [];
@@ -70,28 +75,27 @@ function mound(rings, crown) {
     for (let b = 0; b + 1 < rings.length; b++) {
       const l = rings[b];
       const u = rings[b + 1];
-      out.push([l[i], l[j], u[j]], [l[i], u[j], u[i]]);
+      out.push([l[i], u[j], l[j]], [l[i], u[i], u[j]]);
     }
   }
   const top = rings[rings.length - 1];
-  for (let i = 0; i < n; i++) out.push([top[i], top[(i + 1) % n], crown]);
+  for (let i = 0; i < n; i++) out.push([top[i], crown, top[(i + 1) % n]]);
   return out;
 }
 
 /**
  * A pillar's stitch: `t` its four top corners and `b` its four feet, the
- * same sense round. The top cut from its first corner, (t0, t1, t2),
- * (t0, t2, t3), then the four walls [b_k, b_k+1, t_k+1, t_k] on `column`'s
- * band. Open at the foot, which is inside the mound.
+ * same sense round. The top cut from its first corner, (t0, t2, t1),
+ * (t0, t3, t2) — seabed.mjs `fan`'s rule — then the four walls [b_k, b_k+1,
+ * t_k+1, t_k] on `mound`'s band. The file had each triangle the other way
+ * round, the walls facing in and the top down (#878). Open at the foot,
+ * which is inside the mound.
  */
 function pillar(t, b) {
-  const out = [
-    [t[0], t[1], t[2]],
-    [t[0], t[2], t[3]],
-  ];
+  const out = seabed.fan([t]);
   for (let k = 0; k < 4; k++) {
     const j = (k + 1) % 4;
-    out.push([b[k], b[j], t[j]], [b[k], t[j], t[k]]);
+    out.push([b[k], t[j], b[j]], [b[k], t[k], t[j]]);
   }
   return out;
 }

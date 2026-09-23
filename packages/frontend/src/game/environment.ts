@@ -46,7 +46,14 @@ export interface PropSpec {
   /** `env-<biome-word>-<thing>` — resolves `<slug>.glb` in the models dir. */
   slug: string;
   /** Canonical scale: the model's larger footprint axis is held to this,
-   * exactly as hulls are held to HULL_LENGTH_M (`--footprint-m` at intake). */
+   * exactly as hulls are held to HULL_LENGTH_M (`--footprint-m` at intake).
+   * One measure, everywhere: three's loose `Box3.setFromObject` over the
+   * parts as the file delivers them — each part's own box through its
+   * transform — the larger of X and Z. Intake (page.html), the prop
+   * scripts (seabed.mjs `stand`), the renders and the runtime
+   * (environmentModels.ts `propFootprint`) all take it. A leaning part's
+   * box overhangs its vertices, so the vertex extent is smaller: 9.77 m on
+   * the boulder's 12 (#876). */
   footprintM: number;
   /** Triangles one instance costs — the count hull-intake reported for the
    * committed model, spent against the gate-6 reservation below. A heavier
