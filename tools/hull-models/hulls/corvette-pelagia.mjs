@@ -42,6 +42,24 @@
  * the raked tail flukes' boxes overhang astern: tip to tip the vertices
  * span 5.5919 units, the bow light to the upper fluke's trailing tip, and
  * the flukes' boxes make the measure 5.6912, 1.8 % more. `DATUM` is 0.
+ *
+ * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
+ * four buds as showing under a cell from above. The block's one band is
+ * "dim accent running lights along the hull line", which is all seven, so
+ * all four stay lit at their names, material and count and move:
+ *
+ * - `hullline_port_2`, `hullline_port_3`, `hullline_starboard_2`: each up
+ *   the flank to the shoulder — the hull line — where the skin's own top
+ *   is level with it: (0.35, 0.34, 0), (0.26, 0.26, −1.1) and
+ *   (−0.29, 0.33, −0.4) from (0.42, 0.14, 0), (0.34, 0.1, −1.1) and
+ *   (−0.37, 0.08, −0.5), each of which sat inside the beam under the
+ *   skin's overhang. The other two of the row already sit on the shoulder
+ *   and stay.
+ * - `tail_light`: a hair to starboard, (−0.06, 0.1, −2.85) from
+ *   (0, 0.1, −2.85), off the plane of the upper fluke, whose edge stood
+ *   over it on the keel line. The bow light is a hair to port.
+ *
+ * Nothing here reaches the length or the beam.
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -371,17 +389,18 @@ pelagia.membranes(root, membrane, {
 });
 
 // "Dim accent running lights along the hull line": a bud at the bow, three
-// down the port line and two down the starboard — no two answering each
-// other across the keel — and one at the tail.
+// down the port shoulder and two down the starboard — no two answering
+// each other across the keel — and one at the tail, a hair to starboard
+// (#890; see the header).
 pelagia.lightBuds(root, light, {
   buds: [
     ['bow_light', 0.04, drawn([0.06, 0.08, 2.2])],
     ['hullline_port_1', 0.032, drawn([0.36, 0.16, 1.15])],
-    ['hullline_port_2', 0.032, drawn([0.42, 0.14, 0])],
-    ['hullline_port_3', 0.032, drawn([0.34, 0.1, -1.1])],
+    ['hullline_port_2', 0.032, drawn([0.35, 0.34, 0])],
+    ['hullline_port_3', 0.032, drawn([0.26, 0.26, -1.1])],
     ['hullline_starboard_1', 0.032, drawn([-0.34, 0.12, 0.9])],
-    ['hullline_starboard_2', 0.032, drawn([-0.37, 0.08, -0.5])],
-    ['tail_light', 0.03, drawn([0, 0.1, -2.85])],
+    ['hullline_starboard_2', 0.032, drawn([-0.29, 0.33, -0.4])],
+    ['tail_light', 0.03, drawn([-0.06, 0.1, -2.85])],
   ],
 });
 

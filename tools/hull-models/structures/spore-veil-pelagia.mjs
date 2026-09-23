@@ -12,11 +12,12 @@
  * Six lobes — a core and five grown against it, west, east, north, south
  * and a runt — each its own size and set its own way, in two skins; three
  * growth rings round the crown; two gill organs, port and starboard, each a
- * mound with four vent slits and a lit breathing line beside each, under a
- * cone of haze; four vein rings of lit segments, one bright round the crown
- * and three dim; six spore stalks of six heights, each leaned its own way,
- * with a pale pod and a dim lit tip; seven root flares round the bed's edge;
- * and two points of glow inside, one in the core and one among the stalks.
+ * mound with four vent slits under a cone of haze and four lit breathing
+ * lines standing round its outboard shoulder; four vein rings of segments
+ * round the crown and the west and east lobes, clad; six spore stalks of
+ * six heights, each leaned its own way, with a pale pod and a dim lit tip;
+ * seven root flares round the bed's edge; and two points of glow inside,
+ * one in the core and one among the stalks.
  *
  * A port of the approved export (docs/concept-art/models/spore-veil-
  * pelagia.glb at f7cce0f), part for part in its order, every number the
@@ -51,12 +52,33 @@
  * the bake takes — three's `Box3` over the parts' own boxes, which the
  * leaned stalks' boxes overhang — priced at 170 m by the table, so the root
  * carries that one scale through kit.mjs `fitFootprint`, as the Vent Taps
- * do, and no yaw. The light audit names thirty of the thirty-one vein-ring
- * segments (all but `vein-ring-core-2-seg-5`) and seven of the eight
- * breathing lines as showing under a cell from above
- * — a segment is 0.045 tall on 0.06 wide and a breathing line stands on
- * edge under the haze cone — so the resting glow gate 3 sees is the pod
- * tips and the haze; the approved binary earns the same.
+ * do, and no yaw.
+ *
+ * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
+ * thirty of the thirty-one vein-ring segments and seven of the eight
+ * breathing lines as showing under a cell from above: every segment lies
+ * inside the lobe it rings, and every slit and line sits below its
+ * mound's skin under the haze cone, on the file's own numbers. Decided
+ * against the block's lighting clause — "Nearly dark; faint
+ * bioluminescent breathing lines around the gills and dim lit tips on the
+ * stalks only" — one decision a series:
+ *
+ * - `vein-ring-core`, `-core-2`, `-west`, `-east` (31 segments): clad in
+ *   `bio_vein_unlit`, the navy's unlit vein finish. They ring the lobes,
+ *   not the gills, and the clause's "only" calls them dark
+ *   (docs/models-plan.md §3.2 rule 4). Same names, same geometry, in
+ *   place.
+ * - `gill-breath-line-port-1..4`, `-stb-1..4`: the clause names them, so
+ *   they stay lit in `bio-vein` and move onto an upward face — each
+ *   organ's four now stand round its mound's outboard shoulder at 0.64
+ *   and 0.66 from the crown, past the haze cone's 0.55 top radius, laid
+ *   tangent, sunk 0.02 and leaned 0.5 outward (`gillOrgan` `lines`), on
+ *   bearings that are the organ's own and not the other's turned round.
+ *   The slits stay where the file has them.
+ *
+ * `spore-haze` is the one lamp left the clause does not name, and it is
+ * left: making it dark would need a translucent unlit finish the navy
+ * does not carry, and finish is #888's. Nothing here moves the footprint.
  */
 import { THREE, exportGlb, fitFootprint } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -67,12 +89,14 @@ const L = 170;
 // carried `algae-teal` at 0.05 metal and 0.75 rough and `spore-pale` at no
 // metal, a step from the Abyssal Submersible's 0.1 / 0.7 and 0.05 / 0.65
 // under the same names; the hull's value is canonical, so both moved. The
-// strengths are this file's own: 2.2 on the crown vein, 0.9 on the dim
-// rings and stalk tips, 0.35 on the haze.
+// strengths are this file's own: 2.2 on the breathing lines, 0.9 on the
+// stalk tips, 0.35 on the haze. The vein rings wear the vein family's
+// unlit finish (#890; see the header).
 const chitin = pelagia.ink['deep-chlorophyll']();
 const tealDark = pelagia.ink['algae-teal-dark']();
 const teal = pelagia.ink['algae-teal']();
 const vein = pelagia.ink['bio-vein'](2.2);
+const veinUnlit = pelagia.ink.bioVeinUnlit();
 const haze = pelagia.ink['spore-haze'](0.35);
 const dim = pelagia.ink['bio-vein-dim'](0.9);
 const spore = pelagia.ink['spore-pale']();
@@ -137,11 +161,20 @@ pelagia.grownHoops(root, {
   ],
 });
 
-// Two gill organs, port and starboard, each a mound with four slits and
-// their breathing lines under a cone of haze, rolled its own way.
-for (const [side, at, yaw, sgn] of [
-  ['port', [-0.95, 0.55, -0.35], -0.5, -1],
-  ['stb', [0.95, 0.55, 0.35], 0.5, 1],
+// Two gill organs, port and starboard, each a mound with four slits under
+// a cone of haze, rolled its own way, and its four breathing lines standing
+// round the shoulder that faces away from the bed — the starboard organ's
+// +x and +z quadrant, the port's −x and −z, which in each frame is the
+// side its roll lifts and the side its haze leans away from (#890).
+for (const [side, at, yaw, sgn, lines] of [
+  [
+    'port',
+    [-0.95, 0.55, -0.35],
+    -0.5,
+    -1,
+    { bearings: [Math.PI + 0.75, Math.PI + 1.05, Math.PI + 1.35, Math.PI + 1.65], reach: 0.64 },
+  ],
+  ['stb', [0.95, 0.55, 0.35], 0.5, 1, { bearings: [0.7, 1.0, 1.3, 1.6], reach: 0.66 }],
 ])
   pelagia.gillOrgan(
     root,
@@ -158,13 +191,15 @@ for (const [side, at, yaw, sgn] of [
         slit: [0.09, 0.3, 0.62],
         breath: [0.035, 0.26, 0.56],
       },
+      lines: { ...lines, sink: 0.02, lean: 0.5 },
       haze: { radii: [0.55, 0.2], h: 1.1, facets: 7, y: 0.95, roll: sgn * 0.15 },
     }
   );
 
-// Four vein rings: one bright round the crown, a second dim and wider on the
-// far side, and one dim round each of the west and east lobes.
-pelagia.veinRing(root, vein, {
+// Four vein rings, clad: one round the crown, a second wider on the far
+// side, and one round each of the west and east lobes — parts the block's
+// "only" calls dark, every segment inside its lobe (#890; see the header).
+pelagia.veinRing(root, veinUnlit, {
   name: 'vein-ring-core',
   at: [0, 0.42, 0],
   r: 1.35,
@@ -172,7 +207,7 @@ pelagia.veinRing(root, vein, {
   span: 2.2,
   count: 9,
 });
-pelagia.veinRing(root, dim, {
+pelagia.veinRing(root, veinUnlit, {
   name: 'vein-ring-core-2',
   at: [0, 0.18, 0],
   r: 1.75,
@@ -180,7 +215,7 @@ pelagia.veinRing(root, dim, {
   span: 2,
   count: 8,
 });
-pelagia.veinRing(root, dim, {
+pelagia.veinRing(root, veinUnlit, {
   name: 'vein-ring-west',
   at: [-1.7, 0.3, -0.5],
   r: 0.95,
@@ -188,7 +223,7 @@ pelagia.veinRing(root, dim, {
   span: 2.2,
   count: 7,
 });
-pelagia.veinRing(root, dim, {
+pelagia.veinRing(root, veinUnlit, {
   name: 'vein-ring-east',
   at: [1.6, 0.32, 0.4],
   r: 0.9,

@@ -51,6 +51,14 @@
  * rostrum's apex at x 30.5 to the tail cone's base at −30.5, as intake
  * measures it — nothing overhangs at either end, both cones being turned a
  * quarter with exact boxes — and `DATUM` is 0.
+ *
+ * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
+ * `nav_bow` as showing under a cell from above: at (23, 1.5, 0) it lies
+ * inside the rostrum, whose top facet is at 1.72 there. The block's
+ * resting band is "dim", the two nav marks and the vein, so it stays lit
+ * at its name, material and size and moves up onto the rostrum's crest,
+ * (23, 1.85, 0), its foot sunk 0.07 into the facet as the dorsal mark's
+ * is into the leaf. Nothing here reaches the length.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -167,9 +175,10 @@ pelagia.nose(root, ridge, {
 });
 
 // "Dim": a vein along the middle lobe's crest, and two nav marks — the bow
-// and the dorsal, the dorsal a hair narrower.
+// on the rostrum's crest (#890; see the header) and the dorsal, the dorsal
+// a hair narrower.
 pelagia.vein(root, vein, { from: -6, to: 6, y: 5.45, z: 0.6, w: 0.4 });
-pelagia.navMarks(root, light, { marks: [['nav_bow', 23, 1.5, 0]], w: 1, h: 0.4, d: 0.8 });
+pelagia.navMarks(root, light, { marks: [['nav_bow', 23, 1.85, 0]], w: 1, h: 0.4, d: 0.8 });
 pelagia.navMarks(root, light, { marks: [['nav_dorsal', -8, 8.1, 0]], w: 0.9, h: 0.4, d: 0.8 });
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });

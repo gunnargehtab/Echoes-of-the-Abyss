@@ -64,6 +64,24 @@
  *   so their `DRAWN` is their vertex extent; the Directorate's rostrum,
  *   yawed 0.04, overhangs its bow by 0.04 units. `DATUM` is the height the
  *   export drew its hull axis at: 0 here, 2.6 on the other three.
+ *
+ * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
+ * two buds as showing under a cell from above. The block's one band is
+ * "navigation marks only", and the five buds are the marks, so both stay
+ * lit at their names, material and count and move:
+ *
+ * - `throat_light`: from under the chin, (0, −0.28, 1.3), to the tip of
+ *   the jaw, (0, 0.01, 1.9) — the nose's pole is at 1.876 on the axis, so
+ *   the bud sits half in it with its forward half past the plan outline
+ *   and its crown above the skin. Under the chin it was a mark no
+ *   top-down map could see; at the jaw's tip it is still the lowest,
+ *   forward-most mark on the hull, below the feeler's root.
+ * - `tail_light`: a hair to starboard, (−0.06, 0.12, −2.5) from
+ *   (0, 0.12, −2.5), off the plane of the upper fluke, whose edge stood
+ *   over it on the keel line.
+ *
+ * The jaw light's forward half lies 0.024 past the nose's pole and the
+ * feeler's tip light still sets the length, so `DRAWN` holds.
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -344,14 +362,15 @@ pelagia.membranes(root, membrane, {
 });
 
 // "Nearly black, navigation marks only": five buds, and that is the whole
-// resting light of a hull that idles at SIG 6.
+// resting light of a hull that idles at SIG 6 — the throat's at the jaw's
+// tip and the tail's a hair to starboard (#890; see the header).
 pelagia.lightBuds(root, light, {
   buds: [
     ['feeler_tip_light', 0.045, drawn([0.24, 0.34, 2.2])],
     ['flank_light_port', 0.035, drawn([0.44, 0.1, 0.9])],
     ['flank_light_starboard', 0.035, drawn([-0.42, 0.06, 0.85])],
-    ['throat_light', 0.035, drawn([0, -0.28, 1.3])],
-    ['tail_light', 0.03, drawn([0, 0.12, -2.5])],
+    ['throat_light', 0.035, drawn([0, 0.01, 1.9])],
+    ['tail_light', 0.03, drawn([-0.06, 0.12, -2.5])],
   ],
 });
 

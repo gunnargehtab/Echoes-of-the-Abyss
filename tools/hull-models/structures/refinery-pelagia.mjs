@@ -52,10 +52,22 @@
  * - The six materials are the navy's `ink`: the Bastion's five with
  *   `biolight_green` at 2.6, and `floodlight_pale`, the spore token on a
  *   #3A3F1E base at 3.2587.
- * - The light audit names two lamps hidden from above, `silo_vein_1` and
- *   `silo_vein_3`, under their silos' rings and caps; the maw, edge-on on
- *   the Directorate's file, shows here past the roof's overhang. The
- *   approved binary earns the same two.
+ * - The maw, edge-on on the Directorate's file, shows here past the roof's
+ *   overhang.
+ *
+ * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
+ * `silo_vein_1` and `silo_vein_3` as showing under a cell from above. The
+ * file's vein is an upright arc through the silo's axis at 0.55 of its
+ * height: all but its last few degrees run inside the drum, and the nub
+ * that emerges sits under the next ring up — on silos 1 and 3 squarely,
+ * on 0 and 2 a few square metres clear. The block's one band lights
+ * "visible machinery light", and a vein on a silo is that, so all four
+ * stay lit in `biolight_green` and move onto an upward face together
+ * (`silos` `vein.lay: 'flat'`): each a hoop round its own silo at 0.92 of
+ * its height, above its highest ring and under its cap, 1.09 times the
+ * wall's radius there, tilted 0.18 off level with its arc rising and
+ * yawed the silo's own way as before. Same names, tube, facets and arc;
+ * the four move as one series. Nothing here reaches the footprint.
  *
  * THE FRAME is the export's own: an X-long file, 22.7246 units long for a
  * 280 m footprint (hull-intake's `rawSize.x` on the approved file, which
@@ -98,11 +110,21 @@ const root = new THREE.Group();
 root.name = 'nodule_refinery';
 
 // "A rank of upright silos": four, each its own foot, radius, height, lean
-// and yaw, its rings where they grew, and a bud on the first two only.
+// and yaw, its rings where they grew, a bud on the first two only, and a
+// lit hoop of a vein just under each cap (#890; see the header).
 pelagia.silos(
   root,
   { skin: algae, cap: algae, ring: chitin, bud: spore, vein: bio },
   {
+    vein: {
+      lay: 'flat',
+      hug: 1.09,
+      tube: 0.06,
+      facets: [4, 14],
+      arc: Math.PI * 0.65,
+      at: 0.92,
+      tilt: 0.18,
+    },
     silos: [
       {
         n: 0,

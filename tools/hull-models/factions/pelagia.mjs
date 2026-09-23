@@ -1366,10 +1366,28 @@ export function dockingCollar(root, mats, opts) {
  * `gill-organ-port`, `gill-mound-port`, `gill-slit-port-1`,
  * `gill-breath-line-port-1` and `gill-haze-port` exactly as the approved
  * export has them.
+ *
+ * `lines` places the breathing lines by their own rule instead of beside
+ * their slits (#890, the light axis of #540). Beside the slits they are
+ * inside the mound and under the haze cone — every slit and line the
+ * approved Veil carries sits below the mound's skin, and the cone's top
+ * disc owns every top-down cell beneath it — so a line there is a lamp no
+ * map sees. "Breathing lines *around* the gills" is the block's phrase,
+ * and this rule draws that: the k-th line stands on the mound's upper skin
+ * at plan bearing `bearings[k]` (yawed about the organ's crown, +z at 0)
+ * and plan reach `reach` from it, its long axis laid tangent round the
+ * mound, sunk `sink` below the skin at its middle and leaned `lean`
+ * radians outward about that axis so its foot is in the mound and its head
+ * in the open — a broken ring of light round the gill's shoulder, outside
+ * the haze's footprint where the caller puts the reach past the cone's
+ * top radius. The skin height is the rolled mound's own, solved on the
+ * ellipsoid, so a line follows the mound whatever its squash and roll. The
+ * Veil's eight are the only caller; the Bower passes none and its lines
+ * stay beside their slits, clad (hulls/bower.mjs).
  */
 export function gillOrgan(root, mats, opts) {
   const { mound: moundMat, slit: slitMat, breath: breathMat, haze: hazeMat } = mats;
-  const { side, at, yaw, mound, slits, haze, prefix = 'gill', sep = '-' } = opts;
+  const { side, at, yaw, mound, slits, haze, lines, prefix = 'gill', sep = '-' } = opts;
   const n = (...w) => [prefix, ...w].join(sep);
   const organ = group(root, n('organ', side), verbatim(at, [0, yaw, 0]));
   placed(
@@ -1381,6 +1399,20 @@ export function gillOrgan(root, mats, opts) {
   );
   const { count = 4, yaw0 = -0.5, pitch = 0.34, tilt = 0.5, slit, breath } = slits;
   const { y = [0.28, 0.3], reach = [0.72, 0.78], lift = 0.28, sink = 0.14 } = slits;
+  // The mound's upper skin at plan (x, z): the unit orb scaled `mound.scale`
+  // and rolled `mound.roll` about z, un-rolled and solved for y — the upper
+  // root of the quadratic the ellipsoid gives.
+  const skin = (x, z) => {
+    const [sx, sy, sz] = mound.scale;
+    const c = Math.cos(mound.roll);
+    const s = Math.sin(mound.roll);
+    const A = (s / sx) ** 2 + (c / sy) ** 2;
+    const B = 2 * x * c * s * (1 / sx ** 2 - 1 / sy ** 2);
+    const C = ((x * c) / sx) ** 2 + ((x * s) / sy) ** 2 + (z / sz) ** 2 - 1;
+    const D = B * B - 4 * A * C;
+    if (D < 0) throw new Error(`${n('breath', 'line', side)}: (${x}, ${z}) is off the mound`);
+    return (-B + Math.sqrt(D)) / (2 * A);
+  };
   for (let k = 0; k < count; k++) {
     const a = yaw0 + pitch * k;
     const z = lift * Math.cos(a) - sink;
@@ -1391,13 +1423,28 @@ export function gillOrgan(root, mats, opts) {
       slitMat,
       verbatim([reach[0] * Math.sin(a), y[0], z], [tilt, a, 0])
     );
-    placed(
-      organ,
-      n('breath', 'line', side, k + 1),
-      box(...breath),
-      breathMat,
-      verbatim([reach[1] * Math.sin(a), y[1], z], [tilt, a, 0])
-    );
+    if (lines) {
+      const b = lines.bearings[k];
+      const lx = lines.reach * Math.sin(b);
+      const lz = lines.reach * Math.cos(b);
+      placed(
+        organ,
+        n('breath', 'line', side, k + 1),
+        box(...breath),
+        breathMat,
+        // XYZ: the roll about the box's own long axis first, then the yaw
+        // that lays that axis tangent at bearing `b` — which carries the
+        // box's local −x, the way the roll tipped its head, onto +radial.
+        verbatim([lx, skin(lx, lz) - lines.sink, lz], [0, b + Math.PI / 2, lines.lean])
+      );
+    } else
+      placed(
+        organ,
+        n('breath', 'line', side, k + 1),
+        box(...breath),
+        breathMat,
+        verbatim([reach[1] * Math.sin(a), y[1], z], [tilt, a, 0])
+      );
   }
   if (haze)
     placed(
@@ -1411,19 +1458,28 @@ export function gillOrgan(root, mats, opts) {
 }
 
 /**
- * A vein ring — "faint bioluminescent breathing lines" round a lobe: a
- * frame of the file's name at the origin holding `count` lit boxes, the
- * k-th at bearing `centre − span/2 + (k + ½)·span/count` on a circle of `r`
- * about `at` = [cx, y, cz], laid tangent (yawed −(bearing + π/2)) and cut
- * r·(span/count)·`overlap` long by `section` [tall, wide] — the segments
- * overlap by 8 % so the arc reads as one line. The Veil's four: `vein-
- * ring-core`, nine on 1.35 about the crown over 2.2 rad centred on 1.5;
- * `vein-ring-core-2`, eight on 1.75 over 2.0 on 4.3, dim; `vein-ring-west`,
- * seven on 0.95 about the west lobe over 2.2 on 2.3; `vein-ring-east`,
- * seven on 0.9 about the east over 2.1 on −0.75. The rule reproduces all
- * thirty-one nodes to the double; sixteen of them the file writes in
- * three's (π, b, π) form of the XYZ Euler, the plain yaw of the same
- * matrix here.
+ * A vein ring round a lobe: a frame of the file's name at the origin
+ * holding `count` boxes, the k-th at bearing `centre − span/2 +
+ * (k + ½)·span/count` on a circle of `r` about `at` = [cx, y, cz], laid
+ * tangent (yawed −(bearing + π/2)) and cut r·(span/count)·`overlap` long
+ * by `section` [tall, wide] — the segments overlap by 8 % so the arc reads
+ * as one line. The Veil's four: `vein-ring-core`, nine on 1.35 about the
+ * crown over 2.2 rad centred on 1.5; `vein-ring-core-2`, eight on 1.75
+ * over 2.0 on 4.3; `vein-ring-west`, seven on 0.95 about the west lobe
+ * over 2.2 on 2.3; `vein-ring-east`, seven on 0.9 about the east over 2.1
+ * on −0.75. The rule reproduces all thirty-one nodes to the double;
+ * sixteen of them the file writes in three's (π, b, π) form of the XYZ
+ * Euler, the plain yaw of the same matrix here.
+ *
+ * The first port read these as the block's "faint bioluminescent
+ * breathing lines" and lit them; they are not (#890, the light axis of
+ * #540). The Veil's lighting clause names "breathing lines around the
+ * gills and dim lit tips on the stalks only", and these ring the lobes —
+ * every one of the thirty-one lies inside the lobe it circles, on the
+ * approved file's own numbers — so the block's "only" calls them dark and
+ * the caller hands in the vein family's unlit finish (docs/models-plan.md
+ * §3.2 rule 4). The rings are still built: they are parts, and the
+ * breathing lines are `gillOrgan`'s.
  */
 export function veinRing(root, mat, opts) {
   const { name, at, r, centre, span, count, section = [0.045, 0.06], overlap = 1.08 } = opts;
@@ -1659,6 +1715,20 @@ export function sternPod(root, { skin, ring: ringMat, bud: budMat }, opts) {
  * the file's order: silo, cap, rings, bud, vein. The drum wears `skin`
  * unless the silo says otherwise (the Refinery's fourth is chitin where
  * the rest are algae); the cap is always `cap`'s.
+ *
+ * That upright vein is a lamp the maps barely see (#890, the light axis
+ * of #540): its plane holds the silo's axis, so all but the last few
+ * degrees of its arc run inside the drum, and the nub that does emerge
+ * sits at mid-height under the next ring up — two of the Refinery's four
+ * showed under a cell from above, the other two a few square metres.
+ * `vein.lay: 'flat'` lays it round the silo instead: a hoop of `vein.hug`
+ * times the wall's radius at `vein.at` of the height — 1.09, the ratio the
+ * upright vein's 0.92 R had to the wall where it crossed it — centred on
+ * the leaned axis there, tilted `vein.tilt` off level with its `arc` on
+ * the rising side and yawed the silo's own way, so what the block calls
+ * "visible machinery light" is a band a top-down map sees whole. The
+ * caller puts `at` above the highest ring, where nothing wider stands
+ * over it. Upright stays the default, as the file has it.
  */
 export function silos(root, mats, opts) {
   const { skin: skinMat, cap: capMat, ring: ringMat, bud: budMat, vein: veinMat } = mats;
@@ -1682,13 +1752,14 @@ export function silos(root, mats, opts) {
   for (const s of list) {
     const { n, R, h, lean, yaw } = s;
     const [x, z] = s.at;
+    const stance = eulerXYZ([lean, yaw, lean], 'YXZ');
     frame.part(
       root,
       `silo_${n}`,
       cyl(taper * R, R, h, facets),
       s.skin ?? skinMat,
       [x, h / 2, z],
-      eulerXYZ([lean, yaw, lean], 'YXZ')
+      stance
     );
     frame.part(
       root,
@@ -1715,6 +1786,27 @@ export function silos(root, mats, opts) {
         h + bud.lift * R,
         z,
       ]);
+    if (vein.lay === 'flat') {
+      const wall = R * (1 - (1 - taper) * vein.at);
+      // The drum turns about its middle, so at `at` of the height its axis
+      // stands (at − ½)·h up the leaned stance from there.
+      const off = new THREE.Vector3(0, (vein.at - 0.5) * h, 0).applyEuler(
+        new THREE.Euler(...stance, 'XYZ')
+      );
+      frame.part(
+        root,
+        `silo_vein_${n}`,
+        new THREE.TorusGeometry(vein.hug * wall, vein.tube, ...vein.facets, vein.arc),
+        veinMat,
+        [x + off.x, h / 2 + off.y, z + off.z],
+        // YXZ, as the x, y, z fields of a three Euler (the silo's stance is
+        // written the same way): the torus is born about z; π/2 − tilt
+        // about x lays it flat with its arc's first half-turn rising, then
+        // the silo's own yaw about y.
+        eulerXYZ([Math.PI / 2 - vein.tilt, s.vein.yaw, 0], 'YXZ')
+      );
+      continue;
+    }
     frame.part(
       root,
       `silo_vein_${n}`,

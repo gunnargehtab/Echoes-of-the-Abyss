@@ -54,6 +54,16 @@
  * three's `Box3` over the parts' own boxes, which nothing overhangs at
  * either end: the throat is a drum turned a quarter and its box is exact.
  * `DATUM` is 0.
+ *
+ * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
+ * `vein-ring-e` as showing under a cell from above: at 1.1 it lies inside
+ * the seed's skin, which stands 1.29 tall at its station where the other
+ * four rings crest the skin. The block's resting band is its "dim
+ * photophores", which in green are these rings, so it stays lit at its
+ * name, material, tube, facets, arc and turn and grows to 1.32, standing
+ * off the crown as its four fellows do — between growth rings 5 and 6,
+ * whose 1.42 and 1.1 it now sits between. Nothing here reaches the
+ * length.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -210,9 +220,10 @@ pelagia.grownHoops(root, {
       verbatim([0.85, 0, 0], [-0.5, Math.PI / 2, 0], [1.1, 1, 1]),
     ],
     [
+      // 1.1 in the file, inside the skin; grown to stand off it (#890).
       'vein-ring-e',
       vein,
-      1.1,
+      1.32,
       0.045,
       [4, 28],
       3.8,

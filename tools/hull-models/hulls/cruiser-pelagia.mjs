@@ -49,6 +49,33 @@
  * the raked tail flukes' boxes overhang astern: tip to tip the vertices
  * span 7.4193 units, the bow light to the upper fluke's trailing tip, and
  * the flukes' boxes make the measure 7.5452, 1.7 % more. `DATUM` is 0.
+ *
+ * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
+ * seven lamps as showing under a cell from above. The block's one band
+ * lights "vents, sensor arrays and lit ports", which is every one of
+ * them, so all seven stay lit at their names, materials and counts and
+ * move onto an upward face:
+ *
+ * - `vein_ring_1`, `_2`, `_4`, `_5` (and `_3`, `_6` with them, one rule
+ *   for the series): the vein riding each ring is now scaled to the
+ *   ridge's own envelope over the crown — its major radius times 1 + the
+ *   ridge's tube, so the thread sits half in the crest and stands 2 %
+ *   proud of it — and to that envelope less its own 2 % tube across the
+ *   beam, so its outer edge there is the ridge's own and the plan outline
+ *   holds. The file's veins were 10 % and 17 % proud of the hull where
+ *   the ridges are 6 % and 12 % plus a tube of 6 to 10 %, so the four
+ *   thick ridges swallowed theirs at the crown.
+ * - `hydrophone_frill_starboard`: hung rising at 0.45 where the file hung
+ *   it drooping at −0.45 (the same node written plainly, roll flipped),
+ *   so its tip stands out of the hull's bow as its two port fellows do at
+ *   0.5 and 0.2. Its size and station are the file's.
+ * - `flank_light_port_fwd`, `flank_light_starboard_fwd`: each up the
+ *   flank to the shoulder, where the skin's own top is level with it —
+ *   (0.78, 0.66, 0.85) and (−0.78, 0.7, 0.5) from (0.95, 0.3, 1) and
+ *   (−0.95, 0.25, 0.6). The after pair sit at the beam's edge, which the
+ *   skin does not overhang, and stay.
+ *
+ * Nothing here reaches the length or the beam.
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -364,20 +391,29 @@ pelagia.lobe(root, chitin, {
 // Six growth rings on the hull's own profile — 6 % proud of it across and
 // 12 % over, each 1.7 deep along the keel, each leaned its own way off
 // square and each tube its own thickness, by the scout's own wobble — and a
-// lit vein riding every one, 10 % and 17 % proud, a shade wider than the
-// ridge it lights. "Sustained glow from vents": the rings are the vents.
+// lit vein riding every one on the ridge's own envelope over the crown,
+// where the thread stands proud, and flush with it across the beam, where
+// the vein's 0.022 tube is taken off its scale so its outer edge is the
+// ridge's (#890; see the header). "Sustained glow from vents": the rings
+// are the vents.
 const profile = (z) => Math.sqrt(1 - (z / 2.9) ** 2);
+const VEIN_TUBE = 0.022;
 const ring = (tube, at, lean) => {
   const p = profile(at[2]);
+  const crest = 1 + tube;
   return {
     tube,
-    vein: drawn([0, 0, 0], [0, 0, 0], [1.05 * 1.1 * p, 0.85 * 1.17 * p, 1.7]).scale,
+    vein: drawn(
+      [0, 0, 0],
+      [0, 0, 0],
+      [(1.05 * 1.06 * p * crest) / (1 + VEIN_TUBE), 0.85 * 1.12 * p * crest, 1.7]
+    ).scale,
     ...drawn(at, [...lean, 0], [1.05 * 1.06 * p, 0.85 * 1.12 * p, 1.7]),
   };
 };
 pelagia.grownRings(root, ridge, {
   facets: [5, 24],
-  lit: { mat: vein, tube: 0.022, facets: [5, 26] },
+  lit: { mat: vein, tube: VEIN_TUBE, facets: [5, 26] },
   rings: [
     ring(0.10104, [0, -0.03, -2.1], [0.04794, 0.07]),
     ring(0.08104, [0.02137, -0.03, -1.4], [0.08085, -0.04664]),
@@ -452,10 +488,13 @@ pelagia.membranes(root, frill, {
       ...drawn([0.62, 0.4, 1.05], [0.2, 0.8, 0.2]),
     },
     {
+      // The file writes this node (0.2 − π, 0.9, π − 0.45), which is
+      // (0.2, π − 0.9, −0.45) plainly: hung drooping into the hull. Hung
+      // rising, at 0.45, so it stands out of the bow (#890).
       name: 'hydrophone_frill_starboard',
       span: 0.4,
       depth: 0.16,
-      ...drawn([-0.5, 0.5, 1.2], [0.2 - Math.PI, 0.9, Math.PI - 0.45]),
+      ...drawn([-0.5, 0.5, 1.2], [0.2, Math.PI - 0.9, 0.45]),
     },
   ],
 });
@@ -560,14 +599,15 @@ pelagia.membranes(root, membrane, {
   ],
 });
 
-// "Lit ports": a bud at the bow, two down each flank at different heights,
-// one on the crest, one at the tail.
+// "Lit ports": a bud at the bow, two down each flank at different heights
+// — the forward pair up on the shoulder, the after pair at the beam's
+// edge (#890; see the header) — one on the crest, one at the tail.
 pelagia.lightBuds(root, light, {
   buds: [
     ['bow_light', 0.06, drawn([0, 0.35, 2.95])],
-    ['flank_light_port_fwd', 0.045, drawn([0.95, 0.3, 1])],
+    ['flank_light_port_fwd', 0.045, drawn([0.78, 0.66, 0.85])],
     ['flank_light_port_aft', 0.045, drawn([1, 0.2, -0.9])],
-    ['flank_light_starboard_fwd', 0.045, drawn([-0.95, 0.25, 0.6])],
+    ['flank_light_starboard_fwd', 0.045, drawn([-0.78, 0.7, 0.5])],
     ['flank_light_starboard_aft', 0.045, drawn([-0.9, 0.15, -1.2])],
     ['crest_light', 0.045, drawn([0.03, 0.95, -0.35])],
     ['tail_light', 0.04, drawn([0, 0.12, -3.75])],
