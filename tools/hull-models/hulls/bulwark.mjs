@@ -43,7 +43,8 @@
  *   their pre-#890 materials — `amber_vent` and `amber_lamp` — and moved
  *   straight up: the vents to y 5.5, so their top metre stands proud of the
  *   after deck (the slab's top cap is at y 7) at the same six stations and
- *   at their size, a rank of vent hoods along the transom's lip; the bow
+ *   at their size, a rank of raised vent gratings along the transom's lip
+ *   — the Tender's and the Cruiser's word for a vent lit on top; the bow
  *   lamp to y 7.5, standing on the foredeck at the bow's lip over the
  *   plough, at its station and size. Neither family moves in plan, so the
  *   outline is where it was.

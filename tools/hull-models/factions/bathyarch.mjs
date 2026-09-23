@@ -288,17 +288,26 @@ export function propTunnels(root, { grey, rust }, { x, z, r }) {
  * A riveted machinery house: louvred sides, a lit roof grating, and a stack
  * lit at the throat.
  *
- * The louvres are a bank a side of `louvres.count` slats, each a blade
- * `blade[1]` wide and `blade[0]` thick running the house's length, canted
- * up `tilt` radians — its outer edge the high one — and **stepped out from
- * the wall** as the bank goes down: slat `i` stands at `y + i · pitch` and
- * `(count − 1 − i) · step` further outboard than the top one, whose centre
- * is `z`. A vertical louvre panel shows nothing from above, and the
+ * The louvred side is a raked hood: a well of hull black leaning from the
+ * deck up to the wall (`louvre_well_s/p`), and `louvres.count` blades
+ * stepped down its face, each `blade[1]` wide and `blade[0]` thick running
+ * the house's length, canted up `tilt` radians — its outer edge the high
+ * one — with its inner edge in the well. Blade `i` stands at `y + i ·
+ * pitch` and `(count − 1 − i) · step` further outboard than the top one,
+ * whose centre is `z`; the well's top face is the line through the blades'
+ * inner edges, slope `pitch / step`, from where it meets the deck (`deck`)
+ * to where it meets the wall, and the well is `well.t` thick under that
+ * face, so its ends and its underside are buried in the slab and the
+ * house. The form is `exhaustLouvres` below — slats over a well of hull
+ * black — stood against a wall rather than laid on a deck, and the well is
+ * what makes it a louvred side rather than a slat screen in the air (#893
+ * round 2). A vertical louvre panel shows nothing from above, and the
  * Derrick's slats were five bars flat on the wall under the roof's eave
- * from #531 to #890, which clad them; stepped, every slat shows its `step`
- * of plan width past the slat above, and the top one shows what stands
- * past the eave, so the chart reads the bank as five bright lines down
- * each flank (#893). The gratings on the roof are the rest of the light.
+ * from #531 to #890, which clad them; stepped, every blade shows its `step`
+ * of plan width past the one over it and the top one what stands past the
+ * eave, and since the step is the whole of what shows, the chart reads the
+ * hood as one lit band down each flank, `count · step` wide. The gratings
+ * on the roof are the rest of the light.
  */
 export function machineryHouse(root, { black, grey, rust, amber, vent, flood }, opts) {
   const { x, y, length, height, beam, louvres, gratings = 6, stack } = opts;
@@ -310,15 +319,40 @@ export function machineryHouse(root, { black, grey, rust, amber, vent, flood }, 
       y + height / 2 + 1,
       0,
     ]);
+  const { count = 5, y: ly, pitch, z: lz, step, tilt, blade, deck, well } = louvres;
+  const [bt, bw] = blade;
+  // The well, in section (z out, y up) on the starboard side. Blade 0 is the
+  // lowest and outermost; its inner edge and the slope give the face's line,
+  // cut at the deck (A) and the wall (B). The box is centred half its
+  // thickness under the face's midpoint along the outward-up normal `n`,
+  // and turned about X so its local +y lies on `n`; a tenth of a metre of
+  // extra length sinks each end past the deck and into the wall.
+  const ez = lz + (count - 1) * step - (bw / 2) * Math.cos(tilt);
+  const ey = ly - (bw / 2) * Math.sin(tilt);
+  const slope = pitch / step;
+  const A = [ez + (ey - deck) / slope, deck];
+  const B = [beam / 2, ey + slope * (ez - beam / 2)];
+  const run = Math.hypot(B[0] - A[0], B[1] - A[1]);
+  const n = [(B[1] - A[1]) / run, (A[0] - B[0]) / run];
+  const C = [(A[0] + B[0]) / 2 - (n[0] * well.t) / 2, (A[1] + B[1]) / 2 - (n[1] * well.t) / 2];
+  const rake = Math.atan2(n[0], n[1]);
   // Canting a blade about X drops its +z edge, so starboard (+z) takes the
   // negative angle and port the positive one: the outer edge rises on both.
-  const { count = 5, y: ly, pitch, z: lz, step, tilt, blade } = louvres;
+  // The well's rake goes the other way for the same reason.
   bothSides((side, sgn) => {
+    add(
+      root,
+      `louvre_well_${side}`,
+      box(length * 0.73, well.t, run + 0.1),
+      black,
+      [x, C[1], sgn * C[0]],
+      [sgn * rake, 0, 0]
+    );
     for (let i = 0; i < count; i++)
       add(
         root,
         `louvre_${side}${i}`,
-        box(length * 0.73, blade[0], blade[1]),
+        box(length * 0.73, bt, bw),
         vent,
         [x, ly + i * pitch, sgn * (lz + (count - 1 - i) * step)],
         [-sgn * tilt, 0, 0]
@@ -1625,9 +1659,10 @@ export function plantCylinder(root, { black, grey, rust }, opts) {
  * the pair is here, and the port rank's tilt mirrors the starboard rank's,
  * as every pair on this hull mirrors: §3.6's one-side-at-a-time rule is
  * the Commune's and the Directorate's, and a plate navy is not it. Every slat presents `slat·cos(tilt)` of plan width, which is
- * why this is the one light on the hull that the top-down bake sees whole;
- * `machineryHouse` above hangs the Derrick's on a vertical wall, where gate
- * 3 counts none of it (kit.mjs `louvres`).
+ * why this is the one light on the hull that the top-down bake sees whole
+ * (kit.mjs `louvres`). `machineryHouse` above is the same form stood
+ * against a wall: the Derrick's well is raked from the deck up to the
+ * house side and its blades step down the rake (#893).
  */
 export function exhaustLouvres(root, { black, flood }, opts) {
   const { x, y, z, length, well, slats } = opts;

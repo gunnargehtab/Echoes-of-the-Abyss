@@ -49,19 +49,24 @@
  *   high, eight a rank at four-unit stations from −32.
  * - LIGHT — ten lamps, every one `amber_lamp` at 3.5 and every one lit,
  *   as the block's resting clause names them since #893 (docs/models-plan.md
- *   §3.2 rule 1; the Foundry block is one text for four navies, so it names
- *   the forge line, the bay guides and the crane lamps generically): the
- *   forge floor and the forge back wall's top, the three bay rim strips and
- *   the gable strip, which face up and never moved; and the two roof seams
- *   and the two crane flood patches, which #893 moved. The approved file
- *   had `roof_seam_p/s` inside the roof slab (x ±19.6 in a slab to ±20, y
- *   20.4 in a slab to 21) and `crane_fwd/aft_floodpatch` under their
- *   bridges (y 15.05 under a bridge from 15.2), so the audit warned on
- *   those four and #890 clad them in `amber_lamp_unlit` in place. Each is
- *   lit again at its size: a seam runs flush along its eave's outer edge at
- *   the slab's own height (x ±20.35, y 20.2), and a flood patch lies along
- *   the top of its bridge's chord (y 18.85 on a chord to 18.65), the crane's
- *   lamp. Both moves stay inside the step's plan.
+ *   §3.2 rule 1). The Foundry block is one text for four navies and names
+ *   its lamps in words each navy's model answers in its own: "the forge
+ *   light along the bay floor and at the launch mouth" is the forge floor,
+ *   the forge back wall's top and the gable strip over the bay mouth; "the
+ *   bay's guide lights or rim strips" the three rim strips; "the gantries'
+ *   lamps" the two crane flood patches; and "the navy's own lamps along the
+ *   halls — … seams" the two roof seams. Six face up and never moved; the
+ *   other four #893 moved. The approved file had `roof_seam_p/s` inside the
+ *   roof slab (x ±19.6 in a slab to ±20, y 20.4 in a slab to 21) and
+ *   `crane_fwd/aft_floodpatch` under their bridges (y 15.05 under a bridge
+ *   from 15.2), so the audit warned on those four and #890 clad them in
+ *   `amber_lamp_unlit` in place. Each is lit again at its size: a seam runs
+ *   flush along its eave's outer edge at the slab's own height (x ±20.35,
+ *   y 20.2) — it reads as a lit strip along the eave, the seam of light
+ *   where the roof meets the hall, kept there rather than let into the
+ *   roof's top face because a seam is an edge — and a flood patch lies
+ *   along the top of its bridge's chord (y 18.85 on a chord to 18.65), the
+ *   gantry's lamp. Both moves stay inside the step's plan.
  *
  * THE FRAME: a Z-long export (the step's 66 along z against 59.5 across
  * x, pipe end to pipe end), so every number goes through kit.mjs `drawn`

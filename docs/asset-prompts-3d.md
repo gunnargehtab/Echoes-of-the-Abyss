@@ -353,8 +353,9 @@ stepped armour tiers, flank plates patchworked older-under-newer, one
 enormous forward twin turret (an 800 m gun), a bridge citadel aft, four
 stacks and three prop shrouds. Burning bright: floodlit deck surfaces and
 rows of floods along both deck edges, lit ports down the citadel's flanks
-and across its bridge, six vent hoods lit along the transom's lip and a bow
-lamp on the foredeck over the plough — the loud state is the resting state.
+and across its bridge, six raised vent gratings lit along the transom's lip
+and a bow lamp on the foredeck over the plough — the loud state is the
+resting state.
 ```
 
 ```text
@@ -1373,9 +1374,11 @@ not sculpts — so the Derrick and the Responsory were authored as such, from th
 and went through the same door as every other export: both cleared `hull-intake` with no
 warnings, metre-true, and calibrated onto gate 3's curve with headroom — the Derrick at E 28.3
 on its idle 58, the Responsory at E 3.1 on its compass 27. The one thing the bake taught that
-the prompts did not say: the maps are top-down, so a louvre on a hull's side has no plan area
-and a lit feature has to face *up* to count — the Derrick's light is on its frame beams, its
-cradle lamp and a lit roof grating, and the Responsory's rides the top of its horn.
+the prompts did not say: the maps are top-down, so a louvre flat on a hull's side has no plan
+area and a lit feature has to face *up* to count — the Derrick's light is on its deck floods,
+its frame beams, its cradle lamp, its roof gratings and, since #893, the louvres of a raked
+hood down each side of its machinery house, stepped so that every blade shows from above; the
+Responsory's rides the top of its horn.
 
 ```text
 UNIT — Derrick (pair with Consortium): the gun that aims by ear, 120 m —
@@ -1397,13 +1400,13 @@ with louvred sides and one stack; a pile hammer stowed vertical against
 the after leg, head down; deck plating scuffed bare in a ring around the
 gun. No baffle, no cowl, no cone: this navy does not hide and does not
 point. Sustained glow at rest — six deck floods, work floods along the
-frame's top beams, the roof gratings and a bank of louvres canted up and
-stepped out from each side of the house, the stack lit at the throat, four
-bridge ports boxed out past the house's forward eave, and a hard lamp in
-the cradle throwing the lattice's shadow across the deck; the drums dark —
-and burning bright the moment the drive turns, the same lamps over the
-Klaxon's line, because the loud state is the state this hull is bought to
-be in.
+frame's top beams, the roof gratings and the louvres of the raked hood
+down each side of the house, the stack lit at the throat, four bridge
+ports boxed out past the house's forward eave, and a hard lamp in the
+cradle throwing the lattice's shadow across the deck; the drums dark — and
+burning bright on the same lamps the moment the drive turns, because 66 is
+over the Klaxon's line and the loud state is the state this hull is bought
+to be in.
 ```
 
 ```text

@@ -14,10 +14,11 @@
  * (docs/asset-prompts-3d.md, UNIT — Derrick; docs/models-plan.md §3.2 rule
  * 1), since #893 rewrote it for a SIG 58 idle that sits in the 36–60
  * "sustained glow" band: the six deck floods, the six work floods along the
- * frame's top beams, the six roof gratings, the louvre bank down each side
- * of the machinery house, the stack's throat, the four bridge ports in the
- * house's forward face and the cradle lamp; the drums dark. Under way the
- * same lamps burn over the Klaxon's line (the one-glow-factor reading, §3.2).
+ * frame's top beams, the six roof gratings, the louvres of the raked hood
+ * down each side of the machinery house, the stack's throat, the four
+ * bridge ports in the house's forward face and the cradle lamp; the drums
+ * dark. Under way the same lamps burn brighter, because 66 is over the
+ * Klaxon's line (the one-glow-factor reading, §3.2).
  * Twenty lamps sat where the top-down bake could not see them (nineteen on
  * the audit's list; `louvre_p4` showed a tenth of a metre past the roof):
  * #890 raised the six deck floods and clad the other fourteen, and #893
@@ -30,12 +31,21 @@
  *   They stand on the slab's top now, at the same six stations.
  * - `louvre_s0..4`, `louvre_p0..4` (#893): five bars flat on each wall of
  *   the house under the roof's eave, the lower two below the deck line, in
- *   `amber_vent` until #890 clad them. `amber_vent` again, and a bank now:
- *   five blades canted up 35° and stepped half a metre further out from the
- *   wall each step down, the top one tucked under the eave with its outer
- *   edge 0.4 m past it and the bottom one 2.4 m proud, all five on the
- *   3.3 m of wall the deck leaves showing. From above each blade shows its
- *   half-metre step past the one over it (`machineryHouse`).
+ *   `amber_vent` until #890 clad them. `amber_vent` again, and a raked
+ *   hood a side now: a well of hull black (`louvre_well_s/p`) leaning from
+ *   the deck 2.25 m out from the wall (z ±15.25, y 11) up to the wall 2.7 m
+ *   above it (z ±13, y 13.7, under the roof's underside at 14.3), and five
+ *   blades stepped down its face, each canted up 35° with its inner edge
+ *   in the well and its outer edge half a metre out from the blade above's
+ *   — the top one under the eave with its outer edge 0.4 m past it, the
+ *   bottom one at the deck. The form is the Caisson's and the Gantry's
+ *   `exhaustLouvres`, slats over a well, stood against a wall. From above
+ *   each blade shows its half-metre step past the one over it, so the
+ *   chart reads one lit band 2.5 m wide down each flank (`machineryHouse`).
+ *   The two wells are the one shape decision in this file: two unlit parts
+ *   the approved model did not have, added in #893's second round because
+ *   a blade with nothing under it is a slat screen hanging in the air, not
+ *   a louvred side (ruling 6's different-fixture case).
  * - `bridge_port_s0..1`, `bridge_port_p0..1` (#893): `amber_lamp` again,
  *   named in no band before #893 and clad by #890. They were 0.4 m panels
  *   on the house's forward face with their sills at the deck line, under
@@ -123,12 +133,17 @@ add(root, 'cradle_lamp_stay', box(0.6, 1.8, 0.6), grey, [5, frame.top + 0.9, 0])
 
 // The machinery house aft of the frame, and the pile hammer stowed against a leg.
 // The house stands 9 m tall from y 5.5, so the slab (top at DEPTH) buries all
-// but 3.5 m of it and the roof's underside is at 14.3. The louvre bank sits on
-// that exposed wall: the top blade's centre on the eave line (beam/2 + 0.5)
-// so its outer edge shows past it, each blade below half a metre further out.
+// but 3.5 m of it and the roof's underside is at 14.3. The louvred hood a side
+// stands on that exposed wall: the top blade's centre on the eave line
+// (beam/2 + 0.5) so its outer edge shows past it, each blade below half a
+// metre further out, and the well raked from the deck up to the wall under
+// them, a metre thick (header).
 bathyarch.machineryHouse(root, { black, grey, rust, amber, vent, flood }, {
   x: -24, y: 10, length: 22, height: 9, beam: 26, stack: { x: -30, y: 20, z: 6 },
-  louvres: { count: 5, y: DEPTH + 0.4, pitch: 0.6, z: 13.5, step: 0.5, tilt: 0.611, blade: [0.15, 0.9] },
+  louvres: {
+    count: 5, y: DEPTH + 0.4, pitch: 0.6, z: 13.5, step: 0.5, tilt: 0.611, blade: [0.15, 0.9],
+    deck: DEPTH, well: { t: 1 },
+  },
 });
 add(root, 'hammer_shaft', box(1.2, 18, 1.2), grey, [-6.5, 15, 30]);
 add(root, 'hammer_head', box(3.6, 3, 3.6), rust, [-6.5, 7.5, 30]);
