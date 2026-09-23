@@ -238,8 +238,8 @@ finish for finish.
 
 Phase 6 of #540 took them all. Each navy's module holds one `ink` table, so re-finishing a
 fleet is one edit; each name carries its hulls' value, or where no hull carries it the value
-most of its structures do; and a lamp sits on its navy's near-black base. Where one name
-was two things it became two names: the Cantor's three open shell plates are
+most of its structures do; and a lamp whose base split went to its navy's near-black. Where
+one name was two things it became two names: the Cantor's three open shell plates are
 `chitin_violet_open`, double-sided, and the Knights' lit settlement crystal joined
 `resonance_crystal_dim`. `npm run check:models` fails on a name at two values inside a navy,
 and `node tools/hull-models/finishes.mjs` lists them.
