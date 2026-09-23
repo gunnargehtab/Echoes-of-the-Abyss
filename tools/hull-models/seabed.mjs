@@ -73,20 +73,17 @@ import { THREE, clad, lamp, hex, box, flatShaded, tabled } from './kit.mjs';
  */
 export const ground = {
   /**
-   * Dark stone, `stone-dark`: the two crags, the coral growth and the ruin
-   * block; two-sided on the dome shard, whose file flags it so. Not because
-   * a dome is seen from inside — nothing inside a closed double-walled shell
-   * can be seen. The flag once did a job: 64 of the shell's 256 triangles
-   * were wound against their skins and `doubleSided` kept the crown closed
-   * at runtime, until #878 turned them round (ruin-dome-shard.mjs
-   * `lattice`). It stays as the file's own value; dropping it is a material
-   * change, not a winding fix.
+   * Dark stone, `stone-dark`: the two crags, the coral growth, the ruin
+   * block and the dome shard, one-sided on all five. The shard's file
+   * flagged it two-sided until #883, and the flag had a job: 64 of the old
+   * shell's 256 triangles were wound against their skins, and `doubleSided`
+   * kept the crown closed at runtime until #878 turned them round. The
+   * shard authored under #883 checks every face of its shell against the
+   * dome it was cut from before it writes, and a flag that hides a
+   * wrong-facing triangle at runtime hides it from the screenshot review
+   * too; intake's bake is single-sided and never hid one.
    */
-  stoneDark: ({ twoSided = false } = {}) => {
-    const m = clad('stone_dark', hex('#15181B'), 0, 1);
-    if (twoSided) m.side = THREE.DoubleSide;
-    return m;
-  },
+  stoneDark: () => clad('stone_dark', hex('#15181B'), 0, 1),
   /** Silted stone, `stone-silt`: the open-water boulder. */
   stoneSilt: () => clad('stone_silt', hex('#17150F'), 0, 1),
   /** Trench basalt, `basalt-trench`: the slab's and the spire's `basalt`. */
@@ -425,41 +422,35 @@ export function dodecahedronOf(corners) {
 }
 
 /* --------------------------------------------------------------------------
- * The ruins — env-ruin-block and env-ruin-dome-shard (#869, off #540 Phase 5).
+ * The ruins — env-ruin-block (#869, off #540 Phase 5) and, since #883,
+ * env-ruin-dome-shard, authored rather than ported.
  *
- * The two Coral Ruins files are exports of a third kind, and what the
- * header above says of the stone five is not true of them. Every node in
- * both is an identity — no translation, no rotation, no scale, on the root
- * too — and a part's placement is in its buffer: the generator built its
- * scene with node transforms and baked each mesh's world matrix into its
- * geometry on the way out, which is what `bake` does here. And the boxes
- * are *indexed*: three's 24-vertex BoxGeometry under its own 36-index
- * list and per-face normals, the UVs stripped — not the non-indexed
- * finish the stone five carry, so `flatShaded` and `tabled` are the wrong
- * builders for them, and nothing downstream would say so: neither
- * check.mjs nor diff.mjs reads an index or a normal, and the runtime
- * merges every mesh under one material into one geometry and refuses a
- * bucket whose members disagree on attributes (environmentModels.ts). So
- * a ruin box keeps the index and the normal buffer three built and `kept`
- * above takes only the UVs off. The polyhedra — icosahedra, octahedra and
- * tetrahedra, the coral crusts and the block's shards — are three's own,
- * non-indexed as PolyhedronGeometry writes them at detail 0: `ico`, `octa`
- * and `tetra` above, their size on the node.
+ * The ruin block's file is an export of a third kind, and what the header
+ * above says of the stone five is not true of it. Every node is an
+ * identity — no translation, no rotation, no scale, on the root too — and
+ * a part's placement is in its buffer: the generator built its scene with
+ * node transforms and baked each mesh's world matrix into its geometry on
+ * the way out, which is what `bake` does here. And the boxes are
+ * *indexed*: three's 24-vertex BoxGeometry under its own 36-index list and
+ * per-face normals, the UVs stripped — not the non-indexed finish the
+ * stone five carry, so `flatShaded` and `tabled` are the wrong builders
+ * for them, and nothing downstream would say so: neither check.mjs nor
+ * diff.mjs reads an index or a normal, and the runtime merges every mesh
+ * under one material into one geometry and refuses a bucket whose members
+ * disagree on attributes (environmentModels.ts). So a ruin box keeps the
+ * index and the normal buffer three built and `kept` above takes only the
+ * UVs off. The polyhedra — icosahedra, octahedra and tetrahedra, the coral
+ * crusts and the block's shards — are three's own, non-indexed as
+ * PolyhedronGeometry writes them at detail 0: `ico`, `octa` and `tetra`
+ * above, their size on the node.
+ *
+ * The dome shard goes out the same way — every placement baked, the root
+ * an identity — but nothing in it is a file's: its shell and its stone
+ * courses are kit.mjs `faceted` over points the script computes from the
+ * dome it is cut from (ruin-dome-shard.mjs `cap`, `bar`), non-indexed and
+ * flat like the stone five, and its crusts and shards are the polyhedra
+ * above.
  * ------------------------------------------------------------------------ */
-
-/**
- * A unit box under an affine map — its centre and the three edge vectors
- * the file's corners span, in that order — for a box the generator laid
- * along a curve by a basis it never orthogonalised: the dome shard's ribs
- * and bands are rigid to a part in ten thousand and no further. Positions
- * and normals go through three's `applyMatrix4`, as the file's did.
- */
-export function skewed(centre, ex, ey, ez) {
-  const m = new THREE.Matrix4()
-    .makeBasis(new THREE.Vector3(...ex), new THREE.Vector3(...ey), new THREE.Vector3(...ez))
-    .setPosition(new THREE.Vector3(...centre));
-  return kept(box(1, 1, 1).applyMatrix4(m));
-}
 
 /**
  * Bake every mesh's world matrix into its buffer and leave every node an

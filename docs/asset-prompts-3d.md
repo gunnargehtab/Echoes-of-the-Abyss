@@ -1248,7 +1248,7 @@ metre, a range the band a generated one lands in; `Tris` is the per-instance bud
 | Resonance Field | `env-resonance-crystal` | 12 m | 18–30 m | ≤ 600 | `crystal-seam` |
 | Resonance Field | `env-resonance-pylon` | 10 m | 31 m | ≤ 500 | none |
 | Coral Ruins | `env-ruin-block` | 25 m | 15–25 m | ≤ 400 | none |
-| Coral Ruins | `env-ruin-dome-shard` | 40 m | 14 m | ≤ 600 | none |
+| Coral Ruins | `env-ruin-dome-shard` | 40 m | 16 m | ≤ 600 | none |
 | Coral Ruins | `env-coral-growth` | 12 m | 9 m | ≤ 400 | none |
 | Rock (any biome) | `env-rock-crag-a` / `-b` | 30 m | 30–50 m | ≤ 500 | none |
 | Open Water | `env-open-boulder` | 12 m | 6 m | ≤ 300 | none |
@@ -1260,10 +1260,12 @@ the old figures, and the fit to their footprints stretched them (`seabed.mjs` `s
 Since #876 the runtime draws at intake's measure, so a row's height is what the game
 draws before the registry's scale jitter.
 
-`env-ruin-dome-shard` is not yet a shard. The file is a whole closed dome, sixteen
-meridians round, which its slug and the checklist's "nothing that could be mistaken for a
-structure" both refuse. #883 re-authors it as a broken piece of a dome at this footprint,
-and sets its row's height from the result.
+`env-ruin-dome-shard` was a whole closed dome until #883, sixteen meridians round, which
+its slug and the checklist's "nothing that could be mistaken for a structure" both refuse.
+It is now a broken piece of one: 130° of a 44 m dome's foot, the shell torn to a jagged
+top, four ribs that each stop under, past or short of the tear, and its fallen pieces
+inside the arc. It is authored as a formula in `tools/hull-models/props/ruin-dome-shard.mjs`
+rather than ported from an export, and its row's height is what that file measures.
 
 Shape cues, so the prompts land in each biome's materials brief
 ([environments.md](environments.md)): vent props are basalt and magma glass, cracked
@@ -1280,12 +1282,12 @@ roster. Props ship as meshes, not baked maps, so the sprite-density contract
 (4 / 1.5 px/m) does not apply to them — the triangle column above is their density
 contract.
 
-Every row of this table is filled by a Claude Design model from the Block 4 batch; the
+Every row of this table was filled by a Claude Design model from the Block 4 batch; the
 deterministic generator that stood in for the batch was retired when the last row
 landed ([graphics-standards.md](graphics-standards.md), "The environment branch").
 Each file is now written by a script under `tools/hull-models/props/` (#869) that ports
-that model part for part, composed from `tools/hull-models/seabed.mjs`, and held at the
-row's footprint. A model generated from the prompts above replaces its row through that
+that model part for part — or, for the dome shard, replaces it (#883) — composed from
+`tools/hull-models/seabed.mjs`, and held at the row's footprint. A model generated from the prompts above replaces its row through that
 script: port the export into it, run it, run intake with the row's footprint, cap and
 light, commit the GLB with the script, and update the registry row's triangle count from
 the intake report. The environment registry, the placement rules and the kelp sway read

@@ -86,7 +86,7 @@ suffix saying which. Metalness is 0 on every one; roughness is the material's ow
 
 | Token | Hex | Roughness | Material | Props |
 | --- | --- | --- | --- | --- |
-| `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard (two-sided) |
+| `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard |
 | `stone-silt` | `#17150F` | 1 | `stone_silt` | Open boulder |
 | `basalt-trench` | `#14171A` | 0.96 | `basalt` | Trench slab, trench spire |
 | `basalt-vent` | `#121517` | 0.96 | `basalt` | Vent chimney, vent basalt |
