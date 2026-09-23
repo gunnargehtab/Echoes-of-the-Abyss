@@ -94,16 +94,19 @@ import {
  *   Sower's.
  * - `algae_membrane` is single-sided. Those four had it two-sided, and no
  *   membrane part on any of them is an open sheet: every blade, pectoral,
- *   paddle and fluke is a `membranes` extrusion, 0.03 units thick with both
- *   caps, so one side shows no hole (#878 is the open-sheet case). The
- *   fourteen others were single-sided already, so the value the hulls
- *   carry is also the one the geometry needs.
+ *   paddle and fluke is a `membranes` extrusion, 0.028 to 0.035 units thick
+ *   with both caps, so one side shows no hole (#878 is the open-sheet
+ *   case). The fourteen others were single-sided already, so the value the
+ *   hulls carry is also the one the geometry needs.
  * - `bio_light` sits on the navy's near-black base, #0A1A08 at 0.4 rough
  *   (kit.mjs `lamp`). Those four carried the token as its own base,
  *   #8FE36B at 0.35, which made a lamp's *base* the brightest colour on the
  *   Harvester and the Scout and so the anchor the conn view set their
- *   whole cladding register by; the membrane is now, as on the Sower. The
- *   light is untouched: same emissive, each model's own strength.
+ *   whole cladding register by; the membrane is now, as on the Spinner,
+ *   the Glider, the Drifter and the Weaver — the four hulls with no spore
+ *   pod, whose register the two now match exactly (the Sower and the rest
+ *   anchor on `spore_pod`). The light is untouched: same emissive, each
+ *   model's own strength.
  * - `algae_hull` and `biolight_green` are structure names on no hull. The
  *   Bastion, the Foundry and the Refinery carry the algae token #1FA67A at
  *   0.08 and 0.6 and the lamp on a #14351A base; the Sentinel Turret

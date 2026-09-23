@@ -77,8 +77,9 @@ const DATUM = 0;
 // the membrane two-sided at 0.04 and 0.5, the lamp on the token as its own
 // base — and `ink` in factions/pelagia.mjs says where each went. With the
 // lamp on a near-black base the membrane is this hull's brightest colour,
-// as it is on the Sower, and the conn view sets its register by that. The
-// strength is this file's own, 1.6.
+// as it is on the Spinner, the Glider, the Drifter and the Weaver, and the
+// conn view sets its register by that — the same register as those four,
+// exactly. The strength is this file's own, 1.6.
 const chitin = pelagia.ink.chitinHull();
 const ridge = pelagia.ink.growthRidge();
 const membrane = pelagia.ink.algaeMembrane();

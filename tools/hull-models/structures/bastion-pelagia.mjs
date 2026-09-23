@@ -58,9 +58,9 @@ import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 440;
 
-// The navy's ink (#888); the lamp burns at this file's own 2.9447, the
-// strongest `biolight_green` on any Commune model, for "the one building
-// that can never run silent".
+// The navy's ink (#888); the lamp burns at this file's own 2.9447, second
+// only to the Foundry's 3.0999 among the Commune's `biolight_green`, for
+// "the one building that can never run silent".
 const algae = pelagia.ink.algaeHull();
 const chitin = pelagia.ink.deepChlorophyll();
 const spore = pelagia.ink.sporePale();
