@@ -22,10 +22,15 @@
  * exists to catch. Each script runs as its own process with `HULL_MODELS_OUT` pointing
  * at a scratch directory (kit.mjs `outputPath`), so the committed files are
  * never touched; the scratch GLB and the committed one are then read back
- * (glb.mjs) and compared part by part — name, material, triangle count and
- * bounds to the centimetre — which is close enough to catch any edit that
- * moves a vertex and loose enough not to care which three.js wrote the
- * bytes.
+ * (glb.mjs) and compared part by part — name, material, finish, triangle
+ * count and bounds to the centimetre — which is close enough to catch any
+ * edit that moves a vertex and loose enough not to care which three.js wrote
+ * the bytes.
+ *
+ * The finish is the material's values under its name, in `finishFields`'
+ * printed precision. Until #888 only the name was compared, so an ink edited
+ * in a faction module and never re-run passed: the one edit Phase 6 of #540
+ * exists to make was the one edit this could not see.
  *
  * The fix for drift is always the same and the report says so: re-run the
  * script (or outlines.mjs) and commit what it wrote. Light-audit warnings
@@ -37,7 +42,7 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readGlb, boundsOf } from './glb.mjs';
+import { readGlb, boundsOf, finishFields } from './glb.mjs';
 import { OUTLINE_FILE, renderSource } from '../hull-maps/outlines.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -48,12 +53,23 @@ const cm = (v) => Math.round(v * 100) / 100;
 const summarise = (parts) =>
   parts.map((p) => {
     const { min, max } = boundsOf(p);
-    return { name: p.name, material: p.material, tris: p.tris, min: min.map(cm), max: max.map(cm) };
+    const finish = p.finish ? finishFields(p.finish) : null;
+    return {
+      name: p.name,
+      material: p.material,
+      finish,
+      tris: p.tris,
+      min: min.map(cm),
+      max: max.map(cm),
+    };
   });
 
 /** Lines describing how `built` differs from `committed`; empty when they agree. */
 export function diffParts(built, committed) {
   const out = [];
+  // A finish lives on a material, not a part, so it is reported once a name:
+  // an ink edited under forty parts is one line, not forty.
+  const refinished = new Set();
   const n = Math.max(built.length, committed.length);
   if (built.length !== committed.length)
     out.push(`${committed.length} parts committed, ${built.length} built`);
@@ -72,6 +88,19 @@ export function diffParts(built, committed) {
       out.push(
         `\`${a.name}\`: bounds [${b.min}]..[${b.max}] → [${a.min}]..[${a.max}]`
       );
+    // Beside the chain rather than in it, so a part whose finish moved still
+    // has its triangles and bounds read.
+    if (
+      a.material === b.material &&
+      !refinished.has(a.material) &&
+      JSON.stringify(a.finish) !== JSON.stringify(b.finish)
+    ) {
+      refinished.add(a.material);
+      const moved = Object.keys({ ...a.finish, ...b.finish })
+        .filter((k) => a.finish?.[k] !== b.finish?.[k])
+        .map((k) => `${k} ${b.finish?.[k]} → ${a.finish?.[k]}`);
+      out.push(`\`${a.material}\` (first on \`${a.name}\`): ${moved.join(', ')}`);
+    }
   }
   return out;
 }
