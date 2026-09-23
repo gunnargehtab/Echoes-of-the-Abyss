@@ -76,7 +76,8 @@ export const ground = {
    * The flag once did a job: 64 of the shell's 256 triangles were wound
    * against their skins and `doubleSided` kept the crown closed at runtime,
    * until #878 turned them round (ruin-dome-shard.mjs `lattice`). It stays
-   * as the file's own value; dropping it is a material change, not a port's.
+   * as the file's own value; dropping it is a material change, not a
+   * winding fix.
    */
   stoneDark: ({ twoSided = false } = {}) => {
     const m = clad('stone_dark', hex('#15181B'), 0, 1);

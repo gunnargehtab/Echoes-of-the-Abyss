@@ -235,12 +235,14 @@ const INNER = [
  * and the inner quads are the same two triangles wound the other way, so
  * the inner skin faces in — 192 triangles the file had the right way
  * round. The other 64 it wound against their skins: the outer crown fan
- * (16, facing down into the dome), the inner crown fan (16, facing up into
- * the wall) and the foot ring between the skins (32, facing up), which a
- * single-sided bake shows as a see-through ring round the crown. #878
- * turned each of the three groups round on its own corners — the outer fan
- * up, the inner fan down, the foot ring down — so the shell is a closed
- * solid wall, and `diff.mjs` reads the 64 as reversed at the same vertices.
+ * (16, facing down into the dome) and the inner crown fan (16, facing up
+ * into the wall), which a single-sided bake shows as a see-through ring
+ * round the crown, between the two apex rings; and the foot ring between
+ * the skins (32, facing up), under the outer skin where no bake sees it.
+ * #878 turned each of the three groups round on its own corners — the
+ * outer fan up, the inner fan down, the foot ring down — so the shell is a
+ * closed solid wall, and `diff.mjs` reads the 64 as reversed at the same
+ * vertices.
  */
 function lattice(outer, inner) {
   const N = 16;

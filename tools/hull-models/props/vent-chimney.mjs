@@ -96,7 +96,9 @@ const ringsOf = (table, n) =>
  * A crack's two triangles, cut from the quad's first corner (q0, q2, q1),
  * (q0, q3, q2) — seabed.mjs `fan`'s rule. The file carried the other
  * winding on all four, each quad facing into the lip's wall, which is why
- * the export's light audit saw no ember from above (#878).
+ * intake's single-sided bake saw no ember from above (#878). The kit's
+ * light audit reads plan area, not winding (glb.mjs `topDown`), so its
+ * 0.2 m² warning on these near-vertical quads is the same before and after.
  */
 const crack = (q) => seabed.fan([q]);
 
