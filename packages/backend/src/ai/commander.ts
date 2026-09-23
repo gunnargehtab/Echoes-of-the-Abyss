@@ -2669,6 +2669,25 @@ export class AiCommander implements AiPlayer {
       out.push({ kind: 'produce', structureId: yard.id, unit: kind });
     };
 
+    // **The berths, asked beside the yard and before the price** (#854). A
+    // hull counts against them from the moment it is queued, and
+    // `Match.produce` refuses one the base has no crew for before it looks at
+    // the price: docs/economy.md §10 puts the cap on the price's own server
+    // path. This commander asked only the price. At the cap, a want that
+    // could pay queued a hull the server refused, and returned, so the
+    // observation ended on an order that did nothing and no want behind it
+    // was read. Before this, 12 of the four-faction baseline's 30 seeds sent
+    // orders the server refused for berths, 306 in all. On seed 4024 it
+    // refused 81 of the Directorate's 102, every one a Light Scout off its
+    // composition cycle.
+    //
+    // A hull that does not fit is treated as one with no free yard: not
+    // bought, and **not bid for**. Saving closes a nodule gap and nothing
+    // else, as `holdPurse` says of crystal and Biomass, so a hold for a hull
+    // with no berth is one the bank cannot close, and it would keep the cycle
+    // from buying a smaller hull that does fit. Every branch below returns on
+    // the one hull it queues, so the room is read once and never charged.
+
     // Harvesters first, always. An army built on four harvesters is a one-shot
     // army, and this game rewards the long economy.
     //
@@ -2685,7 +2704,11 @@ export class AiCommander implements AiPlayer {
       queuedOf(UnitKind.Harvester);
     if (wantHarvesters > 0) {
       const yard = this.freeYard(snapshot.structures, UnitKind.Harvester);
-      if (yard !== null && this.affordUnit(UnitKind.Harvester, purse)) {
+      if (
+        yard !== null &&
+        this.berthed(snapshot, UnitKind.Harvester) &&
+        this.affordUnit(UnitKind.Harvester, purse)
+      ) {
         out.push({ kind: 'produce', structureId: yard.id, unit: UnitKind.Harvester });
         return;
       }
@@ -2741,7 +2764,7 @@ export class AiCommander implements AiPlayer {
       snapshot.units.reduce((n, u) => n + (u.kind === ownScout ? 1 : 0), 0) + queuedOf(ownScout);
     if (scouts < 1) {
       const yard = this.freeYard(snapshot.structures, ownScout);
-      if (yard !== null && this.affordUnit(ownScout, purse)) {
+      if (yard !== null && this.berthed(snapshot, ownScout) && this.affordUnit(ownScout, purse)) {
         out.push({ kind: 'produce', structureId: yard.id, unit: ownScout });
         return;
       }
@@ -2757,8 +2780,8 @@ export class AiCommander implements AiPlayer {
     // second would double a cost the commander has no second plan for.
     //
     // Every path out of this branch is counted (#698). The counters partition
-    // it — one increment per observation that gets here, five reasons, and the
-    // five sum to `reached` — because "the Lance is never built" has three
+    // it — one increment per observation that gets here, six reasons, and the
+    // six sum to `reached` — because "the Lance is never built" has three
     // different causes that no other column in the report can tell apart, and
     // the one that turned out to be true for the Order (the escort gate, 82% of
     // the observations that reached this want) is the one nothing could see.
@@ -2799,8 +2822,10 @@ export class AiCommander implements AiPlayer {
     if (escorted) {
       if (carried < 1) {
         const yard = this.freeYard(snapshot.structures, ownOrdnance);
+        const crewed = this.berthed(snapshot, ownOrdnance);
         if (yard === null) tally.noYard++;
-        if (yard !== null) {
+        else if (!crewed) tally.noBerth++;
+        if (yard !== null && crewed) {
           if (this.affordUnit(ownOrdnance, purse)) {
             tally.bought++;
             buy(ownOrdnance, yard);
@@ -2852,7 +2877,7 @@ export class AiCommander implements AiPlayer {
         snapshot.units.reduce((n, u) => n + (u.kind === ownHeavy ? 1 : 0), 0) + queuedOf(ownHeavy);
       if (heavies < 1) {
         const yard = this.freeYard(snapshot.structures, ownHeavy);
-        if (yard !== null) {
+        if (yard !== null && this.berthed(snapshot, ownHeavy)) {
           if (this.affordUnit(ownHeavy, purse)) {
             buy(ownHeavy, yard);
             return;
@@ -2878,7 +2903,7 @@ export class AiCommander implements AiPlayer {
         snapshot.units.reduce((n, u) => n + (u.kind === ownSiege ? 1 : 0), 0) + queuedOf(ownSiege);
       if (engines < 1) {
         const yard = this.freeYard(snapshot.structures, ownSiege);
-        if (yard !== null) {
+        if (yard !== null && this.berthed(snapshot, ownSiege)) {
           if (this.affordUnit(ownSiege, purse)) {
             buy(ownSiege, yard);
             return;
@@ -2894,7 +2919,11 @@ export class AiCommander implements AiPlayer {
         queuedOf(UnitKind.Spinner);
       if (layers < MINE_WALL.SPINNERS && escorted) {
         const yard = this.freeYard(snapshot.structures, UnitKind.Spinner);
-        if (yard !== null && this.affordUnit(UnitKind.Spinner, purse)) {
+        if (
+          yard !== null &&
+          this.berthed(snapshot, UnitKind.Spinner) &&
+          this.affordUnit(UnitKind.Spinner, purse)
+        ) {
           out.push({ kind: 'produce', structureId: yard.id, unit: UnitKind.Spinner });
           return;
         }
@@ -2937,7 +2966,7 @@ export class AiCommander implements AiPlayer {
         snapshot.units.reduce((n, u) => n + (u.kind === UnitKind.Sower ? 1 : 0), 0) +
         queuedOf(UnitKind.Sower);
       const yard = this.freeYard(snapshot.structures, UnitKind.Sower);
-      if (seeders < 1 && yard !== null) {
+      if (seeders < 1 && yard !== null && this.berthed(snapshot, UnitKind.Sower)) {
         if (this.affordUnit(UnitKind.Sower, purse)) {
           buy(UnitKind.Sower, yard);
           return;
@@ -2962,7 +2991,7 @@ export class AiCommander implements AiPlayer {
         snapshot.units.reduce((n, u) => n + (u.kind === UnitKind.Bower ? 1 : 0), 0) +
         queuedOf(UnitKind.Bower);
       const yard = this.freeYard(snapshot.structures, UnitKind.Bower);
-      if (anchors < 1 && yard !== null) {
+      if (anchors < 1 && yard !== null && this.berthed(snapshot, UnitKind.Bower)) {
         if (this.affordUnit(UnitKind.Bower, purse)) {
           buy(UnitKind.Bower, yard);
           return;
@@ -3000,7 +3029,7 @@ export class AiCommander implements AiPlayer {
     // on #839.
     //
     // Counted on the ordnance want's terms, so the report can say which gate
-    // shut when a navy fields no deck: five reasons that sum to `reached`, and
+    // shut when a navy fields no deck: six reasons that sum to `reached`, and
     // `alreadyHas` asked before the escort, for the reason the note on the
     // ordnance branch measured. The gates are the same conjunction in the same
     // order; only `decks` is read earlier, so the count has it.
@@ -3015,8 +3044,10 @@ export class AiCommander implements AiPlayer {
     if (escorted) {
       if (decks < 1) {
         const yard = this.freeYard(snapshot.structures, ownCarrier);
+        const crewed = this.berthed(snapshot, ownCarrier);
         if (yard === null) deckTally.noYard++;
-        if (yard !== null) {
+        else if (!crewed) deckTally.noBerth++;
+        if (yard !== null && crewed) {
           if (this.affordUnit(ownCarrier, purse)) {
             deckTally.bought++;
             buy(ownCarrier, yard);
@@ -3054,7 +3085,7 @@ export class AiCommander implements AiPlayer {
       const pushAfloat = army.length + queuedArmy >= this.doctrine.attackAtArmySize;
       if (transports < 1 && pushAfloat) {
         const yard = this.freeYard(snapshot.structures, transport);
-        if (yard !== null) {
+        if (yard !== null && this.berthed(snapshot, transport)) {
           if (this.affordUnit(transport, purse)) {
             buy(transport, yard);
             return;
@@ -3147,6 +3178,7 @@ export class AiCommander implements AiPlayer {
       if (WANTED_SEPARATELY.includes(wanted) || !joinsTheArmy(wanted)) continue;
       const yard = this.freeYard(snapshot.structures, wanted);
       if (yard === null) continue;
+      if (!this.berthed(snapshot, wanted)) continue;
       if (!this.affordUnit(wanted, purse)) continue;
       out.push({ kind: 'produce', structureId: yard.id, unit: wanted });
       return;
@@ -3174,12 +3206,15 @@ export class AiCommander implements AiPlayer {
    * A yard is required and a hull bought by its own want is skipped, for the
    * cycle's own reasons (see `WANTED_SEPARATELY`): saving toward a hull with
    * no yard standing is the circle #491 was about, and saving toward one that
-   * a want above already bids for would be two holds on one purse.
+   * a want above already bids for would be two holds on one purse. The
+   * berths are required for the yard's reason, and so that this and the
+   * cycle skip the same hulls (#854).
    */
   private nextInComposition(snapshot: EchoSnapshot, army: readonly OwnUnit[]): UnitKind | null {
     for (const wanted of this.rotatedComposition(army)) {
       if (WANTED_SEPARATELY.includes(wanted) || !joinsTheArmy(wanted)) continue;
       if (this.freeYard(snapshot.structures, wanted) === null) continue;
+      if (!this.berthed(snapshot, wanted)) continue;
       return wanted;
     }
     return null;
@@ -3265,6 +3300,15 @@ export class AiCommander implements AiPlayer {
     if (!affords(purse, price)) return false;
     charge(purse, price);
     return true;
+  }
+
+  /**
+   * Whether the berths can crew this hull (docs/economy.md §10): hulls afloat
+   * and queued, plus this one, against what the standing base grants. The sum
+   * `Match.produce` refuses on and the command bar greys on (#854).
+   */
+  private berthed(snapshot: EchoSnapshot, kind: UnitKind): boolean {
+    return snapshot.berths.used + statsFor(kind).berths <= snapshot.berths.granted;
   }
 
   /** A structure that can build this hull and is not already backed up. */

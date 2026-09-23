@@ -609,6 +609,7 @@ function sumWants(tallies: readonly WantTally[]): WantTally {
       notEscorted: total.notEscorted + t.notEscorted,
       alreadyHas: total.alreadyHas + t.alreadyHas,
       noYard: total.noYard + t.noYard,
+      noBerth: total.noBerth + t.noBerth,
       cannotAfford: total.cannotAfford + t.cannotAfford,
       bought: total.bought + t.bought,
     }),
@@ -1260,6 +1261,7 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
     };
     wantRow('Blocked: not escorted', (t) => t.notEscorted);
     wantRow('Blocked: no free yard', (t) => t.noYard);
+    wantRow('Blocked: no berth', (t) => t.noBerth);
     wantRow('Blocked: cannot afford', (t) => t.cannotAfford);
     wantRow('Already has one', (t) => t.alreadyHas);
     wantRow('**Bought**', (t) => t.bought);
@@ -1272,8 +1274,8 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
       '## The ordnance want — where it was stopped',
       OWN_ORDNANCE,
       (f) => f.ordnanceWant,
-      '_The five reasons partition the want: every observation that reaches it ' +
-        'increments exactly one, so the five sum to the row above them. A navy ' +
+      '_The six reasons partition the want: every observation that reaches it ' +
+        'increments exactly one, so the six sum to the row above them. A navy ' +
         'whose **bought** cell is 0 never put its own declared ordnance hull in ' +
         'the water, and the largest blocked row says which gate to argue with ' +
         '(#698)._'
@@ -1284,7 +1286,7 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
       '## The carrier want — where it was stopped',
       OWN_CARRIER,
       (f) => f.carrierWant,
-      '_The same five reasons, partitioning the same way. A navy whose **bought** ' +
+      '_The same six reasons, partitioning the same way. A navy whose **bought** ' +
         'cell is 0 never put its deck in the water. Every carrier is a Slipway ' +
         'hull, so a free yard is one that has risen, and "no free yard" counts ' +
         'the escorted observations before the rung stood as well as those at a ' +

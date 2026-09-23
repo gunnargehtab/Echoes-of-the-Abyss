@@ -75,16 +75,18 @@ per navy: measured on ten seeds for #698, the Order is stopped by the escort gat
 observations that reached this want, the Directorate by the yard in 67% of its own, and the
 Commune by the purse in 36% — one zero in the build column, three different remedies. The
 denominator is the row the table prints, *observations reaching the want*, and not the
-commander's observations: most of those return earlier, at the harvester or the scout. The five reasons partition
+commander's observations: most of those return earlier, at the harvester or the scout. The six reasons partition
 the want, so they sum to the observations that reached it and each cell carries its share of
-them. A `Bought` cell at zero means that navy never once ordered the hull its own doctrine
+them. *No berth* is a yard free and too few berths left to crew the hull (`docs/economy.md`
+§10, #854). Before #854 that observation read *bought* when the purse could pay, although the
+server refused the order. A `Bought` cell at zero means that navy never once ordered the hull its own doctrine
 declares; the largest blocked row above it says which gate to argue with. This is a count of
 *decisions* rather than of the water, so unlike every other series here it comes from the
 commander rather than from a snapshot — see `MatchTelemetry.finish`.
 
-**The carrier want — where it was stopped.** The same five reasons for each navy's carrier
-(#839), since its want is gated the same way: behind the escort, one only, at a yard, out of
-the purse. `docs/roster-plan.md` §2 says a hull the commander never buys does not exist in the
+**The carrier want — where it was stopped.** The same six reasons for each navy's carrier
+(#839), since its want is gated the same way: behind the escort, one only, at a yard, in the
+berths, out of the purse. `docs/roster-plan.md` §2 says a hull the commander never buys does not exist in the
 baseline, and this table says which gate kept it out. Every carrier is a Slipway hull, so *no
 free yard* counts the escorted observations before the rung stood as well as those at a busy
 yard.

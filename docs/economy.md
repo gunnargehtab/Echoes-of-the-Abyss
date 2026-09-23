@@ -381,7 +381,7 @@ decision that has to be paid for in that pass first; a smaller one is free.
 | --- | --- | --- |
 | Berths per hull | **Implemented** — `berths` on every stat block in `packages/shared/src/units.ts` | Transcribed from [units.md](units.md); a hull without the field cannot be built |
 | Grant and ceiling | **Implemented** — `BERTHS` in `packages/shared/src/constants.ts` | SPEC, this section. Bastion 16, Foundry +8, ceiling 40 |
-| Enforcement | **Implemented** — `Match.produce` refuses past the grant; queued hulls count | The command bar greys the button with the reason, and the HUD's top bar reads the count |
+| Enforcement | **Implemented** — `Match.produce` refuses past the grant; queued hulls count | The command bar greys the button with the reason, and the HUD's top bar reads the count. The commander reads the same sum before it queues a hull, and neither buys nor saves for one the berths cannot crew (#854) |
 | Loss of a Foundry | **Implemented** — the grant is recounted every pass from what is standing | A commissioned Foundry only; a site still under construction grants nothing |
 
 ---
