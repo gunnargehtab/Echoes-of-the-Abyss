@@ -238,11 +238,12 @@ finish for finish.
 
 Phase 6 of #540 took them all. Each navy's module holds one `ink` table, so re-finishing a
 fleet is one edit; each name carries its hulls' value, or where no hull carries it the value
-most of its structures do; and a lamp that sat on its own token, lit through and through,
-went onto its name's near-black base. Where one name was two things it became two names:
-the Cantor's three open shell plates are `chitin_violet_open`, double-sided, and the
-Knights' lit settlement crystal joined `resonance_crystal_dim`. `npm run check:models` fails
-on a name at two values inside a navy, and `node tools/hull-models/finishes.mjs` lists them.
+most of its structures do; and where a lamp's name split with one value sitting on its own
+token, lit through and through, it went onto the name's near-black base. Where one name was
+two things it became two names: the Cantor's three open shell plates are
+`chitin_violet_open`, double-sided, and the Knights' lit settlement crystal joined
+`resonance_crystal_dim`. `npm run check:models` fails on a name at two values inside a navy,
+and `node tools/hull-models/finishes.mjs` lists them.
 
 A value is everything a finish carries **except its emissive strength**. Strength is a
 lamp's resting loudness, each model's own, approved against its SIG band and carried into
