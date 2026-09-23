@@ -30,11 +30,14 @@
  * its own (15, 18 and 23 m). And the `ember_cracks` in `ember`: four
  * separate two-triangle quads stood on the lip, the magma glass the row's
  * light comes from, single-sided as the file flags them. The stitch on all
- * four basalt parts is seabed.mjs `column`'s band with no foot cap, which
- * is `tube` below — but every ring here runs from +x toward +z, clockwise
- * seen from above, where the spire's run the other way, so the band that
- * faces the spire outward faces all four of these tubes inward. The file
- * is inside out, and the port reproduces that (#878).
+ * four basalt parts is seabed.mjs `column`'s band with no foot cap, turned
+ * round: every ring here runs from +x toward +z, clockwise seen from
+ * above, where the spire's run the other way, so the band that faces the
+ * spire outward faced all four of these tubes inward, and the four cracks
+ * faced into the lip's wall. The file was inside out — every triangle of
+ * every part, the vent pair the only props with negative signed volume —
+ * and the port reproduced it until #878 turned each triangle round on its
+ * own three corners (`tube` and `crack` below).
  *
  * Every ring is a table: the generator kept no radius and no formula, every
  * corner has a height of its own, and each ring is transcribed in the order
@@ -46,8 +49,9 @@
  * measure intake takes: the export measured 12.0613 on Z, the first spout's
  * lip against the stack's far wall, and baked at ×0.995 with a rescale
  * warning, so the root carries that one factor (seabed.mjs `stand`).
- * `diff.mjs env-vent-chimney 7445218` — the pre-port binary, which is also
- * the default rev — divides it out and lists nothing else.
+ * `diff.mjs env-vent-chimney 7445218` — the pre-port binary — divides it
+ * out and lists one thing else: every part with all of its triangles in the
+ * opposite order, which is the #878 fix and nothing moved.
  */
 import { THREE, add, faceted, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
@@ -60,11 +64,14 @@ const ember = seabed.ground.ember();
 
 /**
  * A tube: a column of equal-length index rings stitched into bands and
- * nothing else — seabed.mjs `column`'s band, each quad [l_i, l_i+1, u_i+1,
- * u_i] cut (l_i, l_i+1, u_i+1), (l_i, u_i+1, u_i), without its foot cap,
- * because the stack's foot is in the ground, a spout's root is inside the
- * stack's wall, and every mouth is a throat. Here rather than in seabed.mjs
- * because one prop needs it; `column` is `fan` of the foot and then this.
+ * nothing else — seabed.mjs `column`'s band on the same diagonal, each quad
+ * [l_i, l_i+1, u_i+1, u_i] cut (l_i, u_i+1, l_i+1), (l_i, u_i, u_i+1),
+ * without its foot cap, because the stack's foot is in the ground, a
+ * spout's root is inside the stack's wall, and every mouth is a throat.
+ * Each triangle is `column`'s with its last two corners swapped: `column`
+ * faces outward on rings that run from +x toward −z, the spire's way, and
+ * these rings run the other way, so `column`'s order faced every band here
+ * inward (#878). Here rather than in seabed.mjs because one prop needs it.
  */
 function tube(rings) {
   const out = [];
@@ -73,7 +80,7 @@ function tube(rings) {
     const u = rings[b + 1];
     for (let i = 0; i < l.length; i++) {
       const j = (i + 1) % l.length;
-      out.push([l[i], l[j], u[j]], [l[i], u[j], u[i]]);
+      out.push([l[i], u[j], l[j]], [l[i], u[i], u[j]]);
     }
   }
   return out;
@@ -86,14 +93,14 @@ const ringsOf = (table, n) =>
   );
 
 /**
- * A crack's two triangles, cut from the quad's first corner (q0, q1, q2),
- * (q0, q2, q3) — `fan`'s rule with the other winding, which is what the
- * file carries on all four.
+ * A crack's two triangles, cut from the quad's first corner (q0, q2, q1),
+ * (q0, q3, q2) — seabed.mjs `fan`'s rule. The file carried the other
+ * winding on all four, each quad facing into the lip's wall, which is why
+ * intake's single-sided bake saw no ember from above (#878). The kit's
+ * light audit reads plan area, not winding (glb.mjs `topDown`), so its
+ * 0.2 m² warning on these near-vertical quads is the same before and after.
  */
-const crack = (q) => [
-  [q[0], q[1], q[2]],
-  [q[0], q[2], q[3]],
-];
+const crack = (q) => seabed.fan([q]);
 
 const chimney = new THREE.Group();
 chimney.name = 'env_vent_chimney';

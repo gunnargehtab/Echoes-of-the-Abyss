@@ -26,21 +26,22 @@
  * is baked into every buffer as the export baked it (seabed.mjs, "The
  * ruins"). What the file is made of:
  *
- * - `shell`, in `stone_dark` two-sided — not because a dome is seen from
- *   inside, since nothing inside a closed double-walled shell can be seen,
- *   but because 64 of its 256 triangles are wound against their skins
- *   (`lattice` below, #878) and `doubleSided` is what hides that; a
- *   single-sided `stone_dark` would open the crown at runtime:
- *   not a shard of a dome but a whole one, double-walled, an outer skin
- *   and an inner one 0.9 of its radius, each an apex over four rings of
- *   sixteen meridians, stitched into 256 triangles by one rule column by
- *   column (`lattice` below). The lattice is a formula the generator then
- *   pushed about — ten of the sixteen meridians hold their rings' heights
- *   to the float and six sag toward the crown, every vertex has its own
- *   bearing and radius, and the two apexes sit 0.47 m off the axis
- *   together — and kept no random for, so its 130 vertices are a table,
- *   ring by ring from the apex down, outer skin then inner, as the crags'
- *   drums are tables (kit.mjs `faceted`).
+ * - `shell`, in `stone_dark` two-sided as the file flags it — not because
+ *   a dome is seen from inside, since nothing inside a closed double-walled
+ *   shell can be seen. The flag had a job: 64 of the file's 256 triangles
+ *   were wound against their skins and `doubleSided` kept the crown closed
+ *   at runtime, until #878 turned them round (`lattice` below); it stays as
+ *   the file's own value, since dropping it is a material change and not a
+ *   winding fix. The shell is not a shard of a dome but a whole one,
+ *   double-walled, an outer skin and an inner one 0.9 of its radius, each
+ *   an apex over four rings of sixteen meridians, stitched into 256
+ *   triangles by one rule column by column (`lattice` below). The lattice
+ *   is a formula the generator then pushed about — ten of the sixteen
+ *   meridians hold their rings' heights to the float and six sag toward
+ *   the crown, every vertex has its own bearing and radius, and the two
+ *   apexes sit 0.47 m off the axis together — and kept no random for, so
+ *   its 130 vertices are a table, ring by ring from the apex down, outer
+ *   skin then inner, as the crags' drums are tables (kit.mjs `faceted`).
  * - Nine `rib_i_j` and six `band_i`, in `stone_dark`: three ribs down each
  *   of three meridians, a course of six bands round one latitude, boxes
  *   laid along the dome — every rib 1.667 by 1.079 in section and every
@@ -61,8 +62,9 @@
  * measure intake takes: the export measured 39.5714 across on X and baked
  * at ×1.011 with a rescale warning, so the root carries that one factor
  * and no lift (seabed.mjs `stand`, with no lift, since the file's root has
- * none). `diff.mjs env-ruin-dome-shard 400797b` — the pre-port binary,
- * which is also the default rev — divides it out and lists nothing else.
+ * none). `diff.mjs env-ruin-dome-shard 400797b` — the pre-port binary —
+ * divides it out and lists one thing else: `shell` with 64 of its 256
+ * triangles in the opposite order, which is the #878 fix and nothing moved.
  */
 import { THREE, add, faceted, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
@@ -231,12 +233,16 @@ const INNER = [
  * skins — sixteen triangles a column, 256 in the file's own order. The
  * outer quads are cut on seabed.mjs `column`'s diagonal and wound outward,
  * and the inner quads are the same two triangles wound the other way, so
- * the inner skin faces in — 192 triangles the right way round. The other
- * 64 are wound against their skins: the outer crown fan (16, facing down
- * into the dome), the inner crown fan (16, facing up into the wall) and
- * the foot ring between the skins (32, facing up). The file carries them
- * so and the port reproduces it (#878); the material's `doubleSided` is
- * what keeps the crown closed at runtime.
+ * the inner skin faces in — 192 triangles the file had the right way
+ * round. The other 64 it wound against their skins: the outer crown fan
+ * (16, facing down into the dome) and the inner crown fan (16, facing up
+ * into the wall), which a single-sided bake shows as a see-through ring
+ * round the crown, between the two apex rings; and the foot ring between
+ * the skins (32, facing up), under the outer skin where no bake sees it.
+ * #878 turned each of the three groups round on its own corners — the
+ * outer fan up, the inner fan down, the foot ring down — so the shell is a
+ * closed solid wall, and `diff.mjs` reads the 64 as reversed at the same
+ * vertices.
  */
 function lattice(outer, inner) {
   const N = 16;
@@ -246,7 +252,7 @@ function lattice(outer, inner) {
   const i = (k, j) => I + 1 + k * N + (j % N);
   const tris = [];
   for (let j = 0; j < N; j++) {
-    tris.push([O, o(0, j), o(0, j + 1)], [I, i(0, j + 1), i(0, j)]);
+    tris.push([O, o(0, j + 1), o(0, j)], [I, i(0, j), i(0, j + 1)]);
     for (let k = 0; k < 3; k++)
       tris.push(
         [o(k, j), o(k, j + 1), o(k + 1, j + 1)],
@@ -254,7 +260,7 @@ function lattice(outer, inner) {
         [i(k, j), i(k + 1, j), i(k + 1, j + 1)],
         [i(k, j), i(k + 1, j + 1), i(k, j + 1)]
       );
-    tris.push([o(3, j), i(3, j), i(3, j + 1)], [o(3, j), i(3, j + 1), o(3, j + 1)]);
+    tris.push([o(3, j), i(3, j + 1), i(3, j)], [o(3, j), o(3, j + 1), i(3, j + 1)]);
   }
   return faceted([...outer, ...inner], tris);
 }
