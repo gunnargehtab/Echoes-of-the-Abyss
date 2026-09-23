@@ -72,10 +72,11 @@ export const ground = {
   /**
    * Dark stone: the two crags, the coral growth and the ruin block; two-sided
    * on the dome shard, whose file flags it so. Not because a dome is seen
-   * from inside — nothing inside a closed double-walled shell can be seen —
-   * but because 64 of the shell's 256 triangles are wound against their
-   * skins (ruin-dome-shard.mjs `lattice`, #878), and `doubleSided` is what
-   * hides that: a single-sided `stone_dark` would open the crown at runtime.
+   * from inside — nothing inside a closed double-walled shell can be seen.
+   * The flag once did a job: 64 of the shell's 256 triangles were wound
+   * against their skins and `doubleSided` kept the crown closed at runtime,
+   * until #878 turned them round (ruin-dome-shard.mjs `lattice`). It stays
+   * as the file's own value; dropping it is a material change, not a port's.
    */
   stoneDark: ({ twoSided = false } = {}) => {
     const m = clad('stone_dark', hex('#15181B'), 0, 1);
@@ -204,7 +205,11 @@ export const chunk = (b, t) => [
  * corner-index rings from the foot up; the foot is capped by `fan`'s rule
  * and each band's quad `[l_i, l_i+1, u_i+1, u_i]` is cut (l_i, l_i+1, u_i+1),
  * (l_i, u_i+1, u_i) — the other diagonal from the slab's. The spire's
- * nine rings, open at the top for its tip.
+ * nine rings, open at the top for its tip. The band faces outward only on
+ * rings that run from +x toward −z, anticlockwise seen from above, as the
+ * spire's do; the vent pair's rings run the other way, and on them this
+ * order faced every band inward (#878), so vent-chimney.mjs `tube` and
+ * vent-basalt.mjs `mound` swap each triangle's last two corners.
  */
 export function column(rings) {
   const out = fan([rings[0]]);
