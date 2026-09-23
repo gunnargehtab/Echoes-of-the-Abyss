@@ -217,6 +217,14 @@ export function plan(points, thicknessM, bevelM = 0) {
  * is scaled, and a six-facet one carries a vertex on the crown. The Order's
  * blades and horn are cut that way (factions/hadron.mjs `spar`), and so is its
  * exchanger prism on the Vent Tap (a square with a flat face up, at π/4).
+ *
+ * Stations run toward +x. A lathe's faces are wound one way whatever its
+ * profile does, so a profile listed toward −x faces in — the Antiphon's
+ * after spine did until #871, drawn from under the deck down to the drive,
+ * and nothing measured it: the bake culls a face wound in, and `check.mjs`
+ * reads name, count and bounds, which a flipped face keeps. Drawing toward
+ * −x is for a bore, which factions/hadron.mjs `bell` does on purpose so the
+ * mouth's inside faces in.
  */
 export function loft(profile, facets = 10, phase = 0) {
   const pts = profile.map(([x, r]) => new THREE.Vector2(Math.max(r, 0.001), x));
@@ -244,9 +252,13 @@ export function loft(profile, facets = 10, phase = 0) {
  * direction. `CHINE` as listed — deck, starboard, keel — wants the stations
  * bow first; listed stern first, every side faces in, which the bake culls,
  * and only a height pass shows the part reading under its own floor (#840).
- * The end caps wind the other way in both cases, so a flat end faces in
- * whenever the sides face out. Close both ends to a point, a zero station,
- * and there is no cap to get wrong.
+ * The end caps follow the sides: a flat end faces the way its sides do,
+ * whichever way that is. Until #871 they wound against them in both cases,
+ * so the Tocsin's crystal spine shipped with its sides out and both caps
+ * in — a fault no bake shows, since a cap on an x-long run is a vertical
+ * face, and `check.mjs` cannot see, since a flipped face keeps its name,
+ * count and bounds. Close both ends to a point, a zero station, and there
+ * is no cap at all.
  */
 export function sweep(stations, section) {
   const ring = (st) => {
@@ -281,8 +293,10 @@ export function sweep(stations, section) {
       else push(c, R[j], R[k]);
     }
   };
-  cap(rings[0], stations[0], true);
-  cap(rings[rings.length - 1], stations[stations.length - 1], false);
+  // The first ring's fan turns with the sides' rotation and the last ring's
+  // against it, which puts each end's face on the same side as the sides.
+  cap(rings[0], stations[0], false);
+  cap(rings[rings.length - 1], stations[stations.length - 1], true);
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
   geo.computeVertexNormals();

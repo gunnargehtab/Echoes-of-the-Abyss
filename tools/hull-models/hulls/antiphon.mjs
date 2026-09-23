@@ -163,17 +163,19 @@ hadron.spine(
     },
   }
 );
-// The after spine, from under the deck's tail down onto the drive's back.
+// The after spine, from under the deck's tail down onto the drive's back —
+// listed stern first, toward +x, as every lathe here is: drawn the other
+// way it faced in, and the ridge was missing from its own bake (#871).
 hadron.spine(
   root,
   { alloy, crystal, seam },
   {
     name: 'blade_spine_aft',
     profile: [
-      [-26, 0.5],
-      [-31, 2.0],
-      [-42, 2.0],
       [-49, 0.6],
+      [-42, 2.0],
+      [-31, 2.0],
+      [-26, 0.5],
     ],
     y: 1.3,
     flat: [0.7, 1],
