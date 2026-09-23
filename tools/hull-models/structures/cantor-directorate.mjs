@@ -20,13 +20,17 @@
  * from `factions/directorate.mjs`. Nothing here is a shape decision; where
  * the export is odd the script is odd with it:
  *
- * - The three shell plates are open patches of a sphere, seen from both
- *   faces, and wear `chitin_violet_open`, the navy's two-sided violet
- *   (`ink.chitinVioletOpen`, #878). The export had made its one violet
- *   two-sided for the base tier and twenty-seven spines as well — closed
- *   parts with no second face to show — and #888 put those back on
- *   `chitin_violet` so the name carries one value across the navy
- *   (docs/asset-prompts-3d.md Block 2b, rule 3).
+ * - The three shell plates are open patches of a sphere that the export
+ *   drew two-sided, and wear `chitin_violet_open`, the navy's two-sided
+ *   violet (`ink.chitinVioletOpen`), kept so that the approved render
+ *   holds rather than deciding a finish here: they span 30–49° from the
+ *   zenith, so at the conn view's 55° pitch every face points at the
+ *   camera, and the back face shows only at grazing angles below about
+ *   49° of pitch. The export had made its one violet two-sided for the
+ *   base tier and twenty-seven spines as well — closed parts with no
+ *   second face to show — and #888 put those back on `chitin_violet` so
+ *   the name carries one value across the navy (docs/asset-prompts-3d.md
+ *   Block 2b, rule 3).
  * - The three plates are patches of three spheres, 5.53, 5.531 and 5.532,
  *   a millimetre apart, at the dome's own centre; each fills its own window
  *   of the sphere.
@@ -84,7 +88,7 @@ const HALF_METRE = (0.5 * DRAWN) / L;
 const FLAT = [Math.PI / 2, 0, 0];
 
 const violet = directorate.ink.chitinViolet();
-// The shell plates alone: open sheets, so the two-sided violet.
+// The shell plates alone: open patches, in the two-sided violet the export drew.
 const plate = directorate.ink.chitinVioletOpen();
 const red = directorate.ink.chitinRed();
 const black = directorate.ink.trenchBlack();

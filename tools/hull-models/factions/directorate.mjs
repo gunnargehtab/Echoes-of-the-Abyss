@@ -106,9 +106,11 @@ import {
  * The Directorate's palette: one table, one factory a material *name*, so
  * that re-finishing the navy is one edit here (#888, Phase 6 of #540).
  *
- * The values are the Dredge's own materials — the four tokens of
- * docs/art-direction.md, and, where an approved model needed a colour the
- * docs do not name, that model's hex, exactly (kit.mjs `hex`). Exactly,
+ * The carapace section's values are the Dredge's own materials — the four
+ * tokens of docs/art-direction.md, and, where an approved model needed a
+ * colour the docs do not name, that model's hex, exactly (kit.mjs `hex`);
+ * the shared kinds' and the Submersible's sections below carry their own
+ * exports' values under names of their own. Exactly,
  * because the first transcription rounded each linear channel to two
  * decimals and trench black came out `[0, 0, 0.01]`: red and green zeroed,
  * blue doubled, a 3.4× drop in the luminance the bake ships (#630, F2).
@@ -137,16 +139,21 @@ export const ink = {
   // spines, the mandible roots and the hopper.
   chitinViolet: () => clad('chitin_violet', hex('#2D1B3D'), 0.1, 0.62),
   /**
-   * The same violet for an *open sheet*: the Cantor's three shell plates,
-   * patches of a sphere seen from both faces, which a single-sided material
-   * draws with holes (#878). Two-sided is part of a finish (`diff.mjs`,
-   * #646), so the sheet takes a name of its own rather than making
-   * `chitin_violet` two-sided navy-wide — every other violet part in the
-   * navy is a closed orb, cone or frustum with no second face to show, and
-   * paying the culling on all of them for three plates on one structure is
-   * the wrong trade. The Cantor's export had turned the one material
-   * two-sided for its base tier and twenty-seven spines as well; #888 put
-   * those closed parts back on `chitin_violet`.
+   * The same violet for an *open patch*: the Cantor's three shell plates,
+   * windows of a sphere that the approved export drew two-sided, kept so
+   * here so that the approved render holds rather than deciding a finish
+   * in a port. Not because a single side would show holes: the plates
+   * span 30–49° from the zenith, so at the conn view's 55° pitch every
+   * plate face points at the camera, and a scratch bake with them
+   * single-sided gave byte-identical maps; the back face shows only at
+   * grazing angles below about 49° of pitch. Two-sided is part of a finish
+   * (`diff.mjs`, #646), so the patch takes a name of its own rather than
+   * making `chitin_violet` two-sided navy-wide — every other violet part in
+   * the navy is a closed orb, cone or frustum with no second face to show,
+   * and paying the culling on all of them for three plates on one
+   * structure is the wrong trade. The Cantor's export had turned the one
+   * material two-sided for its base tier and twenty-seven spines as well;
+   * #888 put those closed parts back on `chitin_violet`.
    */
   chitinVioletOpen: () => {
     const m = clad('chitin_violet_open', hex('#2D1B3D'), 0.1, 0.62);
@@ -174,7 +181,13 @@ export const ink = {
    * and #888 brought onto the hull's. The turret's own value was the one
    * material of its five that set its register: with `chitin_red_dark` at
    * #4E1220 the steel is its brightest colour, so the whole turret sits a
-   * step lower in the conn view now than its export did.
+   * step lower in the conn view now than its export did — and that is the
+   * right step. With the navy's steel as its anchor the turret's shared
+   * names render within 2% of the same names everywhere else in the navy
+   * (violet 0.0987 against 0.0976, the crimson base 0.0753 against 0.0750),
+   * where before they rendered brighter than on every other model. Only its
+   * own `chitin_red_dark` drops (0.1352 → 0.1076), which is nearer its
+   * block's "nearly black".
    */
   weldSteel: () => clad('weld_steel', hex('#3A3F4A'), 0.38, 0.44),
   /**
@@ -2016,7 +2029,7 @@ export function carapaceTiers(root, { tiers }) {
  * sphere (5.53, 5.531 and 5.532 — a millimetre apart each, so none fights
  * the one under it) at the same centre, each a window `phi` and `theta`
  * [start, length] wide, 16 × 3, in `chitin_violet_open` — the two-sided
- * violet an open patch needs (`ink`, #878).
+ * violet the approved export drew them in (`ink` says why it stays).
  */
 export function domeShell(root, { shell: shellMat, plate: plateMat }, opts) {
   const { name = 'dome_shell', r, facets, plates = [], ...placement } = opts;
@@ -2106,7 +2119,7 @@ export function reinforceRibs(root, mats, opts) {
  * of 0.08), and the Bastion's `crown_spine`s at seven stations of 2π/7 from
  * a phase of 0.5 rad round the apex, the fifth never grown. Every spine is
  * `{ n, skin, r, length, ...placement }`: its own number, its own skin (the
- * Cantor's twenty-one violet and twenty-one black fall by no rule a count
+ * Cantor's twenty-seven violet and fifteen black fall by no rule a count
  * recovers), its own length, and a `leaning` placement.
  */
 export function shellSpines(root, { name, facets = 5, spines }) {

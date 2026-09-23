@@ -28,6 +28,12 @@
  * navy's ink (#3A3F4A and #1A0810; docs/asset-prompts-3d.md Block 2b, rule
  * 3), and since the steel was this file's brightest colour, the turret's
  * register in the conn view is set a step lower now than the export's was.
+ * The right step: anchored on the navy's steel, the turret's shared names
+ * render within 2% of the same names on every other model (violet 0.0987
+ * against 0.0976, the crimson base 0.0753 against 0.0750), where before
+ * they rendered brighter than anywhere else in the navy. Only its own
+ * `chitin_red_dark` drops (0.1352 → 0.1076), nearer the block's "nearly
+ * black".
  *
  * The one (#645, off #540 Phase 6): the two flank marks ride their scutes.
  * The export put `nav_mark_0` at y 0.75 and `nav_mark_1` at 1.15, on the
