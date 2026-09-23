@@ -56,12 +56,18 @@
  * six-facet body of that radius: the audit read 0.19 m² of it from above,
  * the corners that break the facets, where shard 1's and shard 4's larger
  * plates read 0.31 to 0.63. Its tilt already faced up — 0.81 of its normal
- * on world y — so the fix is a move and not a turn: `shard_2_seam_1` sits
- * 0.25 m along the shard's own x and 0.2 m along its z. That is the flank
+ * on world y — so the fix is a move and not a turn (#890, review rulings,
+ * ruling 1: a licensed seam is never clad): `shard_2_seam_1` sits 0.15 m
+ * along the shard's own x and 0.2 m along its z. That is toward the flank
  * of the shard that faces up: the shard leans to +x −z in the world, so
  * its −x +z flank is the upward one, which is (0.77, 0.64) in the shard's
- * own x and z. The plate surfaces there as a ledge a hand deep, the way the
- * other three seams do on theirs, and reads 0.50 m². Its tilt, height,
+ * own x and z. The plate surfaces there as a ledge and reads 0.44 m². How
+ * far it stands off the shard — the farthest of the plate's four corners
+ * from the nearest facet of the body — is 0.52 m in the shard's frame,
+ * 0.49 m in the file, which is inside what the other three already do:
+ * 0.45, 0.55 and 0.47 m raw (0.42, 0.52 and 0.45 in the file) for shard
+ * 1's two and shard 4's. The review's first cut sat at (0.25, 0.2), which
+ * read 0.50 m² but stood 0.6 m off, past every sibling. Its tilt, height,
  * size and material are the export's, and the shard's extents are nowhere
  * near the root's, so `DRAWN` is unchanged.
  */
@@ -314,7 +320,7 @@ add(
   stone
 );
 add(shard2, 'shard_2_tip', tip(1.25, 14.5, 3.2), stone);
-add(shard2, 'shard_2_seam_1', plate(1.25), seam, [0.25, 7.5, 0.2], [0.54, 0.4, 0.25]);
+add(shard2, 'shard_2_seam_1', plate(1.25), seam, [0.15, 7.5, 0.2], [0.54, 0.4, 0.25]);
 
 // Shard 3: R = 1, 10 m to the tip's base, unlit.
 const shard3 = group(crystal, 'shard_3', {
