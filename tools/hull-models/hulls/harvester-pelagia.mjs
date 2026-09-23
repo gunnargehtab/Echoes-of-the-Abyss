@@ -53,11 +53,12 @@
  * 1.9 % more. `DATUM` is 0.
  *
  * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
- * three buds as showing under a cell from above. The block's "dim at
- * rest" names no lamp; the five buds are carried as the approved file
- * lights them (#890, review rulings, ruling 2), and whether the block
- * should name its resting lamps is #893's question. So all three stay lit
- * at their names, material and count and move:
+ * three buds as showing under a cell from above. The block names the
+ * running lights and marks its four models carry at rest (#893, settled
+ * on the side of more lights, not fewer; until then it said only "dim at
+ * rest", and #890 carried the five buds as the approved file lights them,
+ * review rulings, ruling 2). So all three stay lit at their names,
+ * material and count and move:
  *
  * - `flank_light_port`, `flank_light_starboard`: each up the flank to the
  *   shoulder, where the skin's own top is level with it — (0.8, 0.53, 0.1)

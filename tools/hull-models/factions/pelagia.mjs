@@ -1458,45 +1458,82 @@ export function gillOrgan(root, mats, opts) {
 }
 
 /**
- * A vein ring round a lobe: a frame of the file's name at the origin
- * holding `count` boxes, the k-th at bearing `centre − span/2 +
- * (k + ½)·span/count` on a circle of `r` about `at` = [cx, y, cz], laid
- * tangent (yawed −(bearing + π/2)) and cut r·(span/count)·`overlap` long
- * by `section` [tall, wide] — the segments overlap by 8 % so the arc reads
- * as one line. The Veil's four: `vein-ring-core`, nine on 1.35 about the
- * crown over 2.2 rad centred on 1.5; `vein-ring-core-2`, eight on 1.75
- * over 2.0 on 4.3; `vein-ring-west`, seven on 0.95 about the west lobe
- * over 2.2 on 2.3; `vein-ring-east`, seven on 0.9 about the east over 2.1
- * on −0.75. The rule reproduces all thirty-one nodes to the double;
- * sixteen of them the file writes in three's (π, b, π) form of the XYZ
- * Euler, the plain yaw of the same matrix here.
+ * The bed's skin under a plan point: the highest hit of a ray straight down
+ * onto `meshes` as they stand, with their frames brought up to date first
+ * (the Directorate's `carapaceRank` seats its studs on a shell the same
+ * way). Throws where nothing is under the point, since a vein laid on
+ * nothing is a bug in the caller's numbers and not a place.
+ */
+function skinReader(meshes) {
+  let top = meshes[0];
+  while (top.parent) top = top.parent;
+  top.updateMatrixWorld(true);
+  const caster = new THREE.Raycaster();
+  const down = new THREE.Vector3(0, -1, 0);
+  return (x, z, what) => {
+    caster.set(new THREE.Vector3(x, 1e3, z), down);
+    const hit = caster.intersectObjects(meshes, false)[0];
+    if (!hit) throw new Error(`${what}: nothing under (${x.toFixed(3)}, ${z.toFixed(3)})`);
+    return hit.point.y;
+  };
+}
+
+/**
+ * A vein ring round a lobe — "faint vein rings round the lobes", the
+ * Veil's: a frame of the file's name at the origin holding `count` boxes,
+ * the k-th at bearing `centre − span/2 + (k + ½)·span/count` on a circle
+ * of `r` about `at` = [cx, cz] in plan, laid tangent (yawed −(bearing +
+ * π/2)) and cut r·(span/count)·`overlap` long by `section` [tall, wide] —
+ * the segments overlap by 8 % so the arc reads as one line. The Veil's
+ * four: `vein-ring-core`, nine on 1.35 about the crown over 2.2 rad
+ * centred on 1.5; `vein-ring-core-2`, eight on 1.75 over 2.0 on 4.3;
+ * `vein-ring-west`, seven on 0.95 about the west lobe over 2.2 on 2.3;
+ * `vein-ring-east`, seven on 0.9 about the east over 2.1 on −0.75. The
+ * plan stations are the approved file's own, to the double.
  *
- * The first port read these as the block's "faint bioluminescent
- * breathing lines" and lit them; they are not (#890, the light axis of
- * #540). The Veil's lighting clause names "breathing lines around the
- * gills and dim lit tips on the stalks", and these ring the lobes — every
- * one of the thirty-one lies inside the lobe it circles, on the approved
- * file's own numbers — so no band names them, and a hidden lamp named in
- * no band is clad in its family's unlit finish, which the caller hands in
- * (docs/models-plan.md §3.2 rule 1; #890, review rulings, ruling 4 for
- * the finish). The rings are still built: they are parts, and the
- * breathing lines are `gillOrgan`'s. Whether the block should name them
- * is #893.
+ * Each segment lies *on* the bed (#893, the light axis of #540). The
+ * approved file laid every ring flat at one height on its lobe's waist,
+ * which put all thirty-one segments inside the lobe they circle — a lamp
+ * no map sees — and #890 clad them for it, reading a ring no band named as
+ * dark; #893 settled it the other way, more lights, with the block naming
+ * them among the resting lamps. So the skin is read straight down off the
+ * meshes in `on` — the lobes and the growth rings, as they stand
+ * (`skinReader`) — at the segment's centre, both ends of its long axis and
+ * both edges of its width; the box is pitched to the fall between its
+ * ends, rolled to the slope across its width, and set with its centre line
+ * `sink` under the highest of the three along it, so a segment stands a
+ * vein's height proud where the skin is straight and is never buried where
+ * it is concave. Where a ring runs off one lobe onto another, or through
+ * the cleft between two, the segments follow the skin down and up again:
+ * the ring is the bed's, not the lobe's. The box's +x is the tangent and
+ * its +z the inward radial, so the roll is about its own length and the
+ * pitch about its own width, composed Y-Z-X and written as the XYZ Euler
+ * `add` takes.
  */
 export function veinRing(root, mat, opts) {
   const { name, at, r, centre, span, count, section = [0.045, 0.06], overlap = 1.08 } = opts;
-  const [cx, y, cz] = at;
+  const { on, sink = 0.01 } = opts;
+  const [cx, cz] = at;
+  const [tall, wide] = section;
   const frame = group(root, name);
   const step = span / count;
+  const length = r * step * overlap;
+  const skin = skinReader(on);
   for (let k = 0; k < count; k++) {
     const a = centre - span / 2 + (k + 0.5) * step;
-    placed(
-      frame,
-      `${name}-seg-${k + 1}`,
-      box(r * step * overlap, ...section),
-      mat,
-      verbatim([cx + r * Math.cos(a), y, cz + r * Math.sin(a)], [0, -(a + Math.PI / 2), 0])
-    );
+    const seg = `${name}-seg-${k + 1}`;
+    const x = cx + r * Math.cos(a);
+    const z = cz + r * Math.sin(a);
+    const tangent = [-Math.sin(a), Math.cos(a)];
+    const inward = [-Math.cos(a), -Math.sin(a)];
+    const h = (d, [ux, uz]) => skin(x + d * ux, z + d * uz, seg);
+    const along = [-length / 2, 0, length / 2].map((d) => h(d, tangent));
+    const [outboard, inboard] = [-wide / 2, wide / 2].map((d) => h(d, inward));
+    const pitch = Math.atan2(along[2] - along[0], length);
+    const roll = Math.atan2(outboard - inboard, wide);
+    const y = Math.max(...along.map((s, i) => s - (i - 1) * (length / 2) * Math.tan(pitch))) - sink;
+    const e = new THREE.Euler(roll, -(a + Math.PI / 2), pitch, 'YZX').reorder('XYZ');
+    placed(frame, seg, box(length, tall, wide), mat, verbatim([x, y, z], [e.x, e.y, e.z]));
   }
   return frame;
 }
