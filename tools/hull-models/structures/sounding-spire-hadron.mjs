@@ -64,11 +64,28 @@
  *   own. As the file has them.
  *
  * `diff.mjs sounding-spire-hadron f7cce0f`: unchanged beyond the root scale
- * and shift — every part is where it was (a square plan, compared as it
- * stands). Light audit: `exportGlb` names `crystal_core` and
- * `crystal_throat`, under the apex and the sheath from above, and the
- * `running_light_3` pair up the frame, as showing under a cell; the approved
- * binary earns the same four, and they stay.
+ * and shift but for the four parts below — every other part is where it
+ * was (a square plan, compared as it stands).
+ *
+ * LIGHT (#890). The block lights the crystal "when active" and names no
+ * lamp at rest; at SIG 30 idle the resting light is the band's "dim
+ * running lights" (docs/asset-prompts-3d.md, the glow table), the ten orbs.
+ * Four lamps were hidden from above, and models-plan.md §3.2 decides each:
+ * - `crystal_core` and `crystal_throat`, one sealed in the other under the
+ *   apex and the sheath, showed nothing from above from #652 to #890, and
+ *   the audit named both on every build. The block lights the crystal only
+ *   active — rule 2 — so both carry the crystal token as cladding
+ *   (`ink.resonanceCrystal`, every hull's), the core through
+ *   `crystalCore`'s `crystal` and the throat through `throat.mat`. The apex
+ *   and the horn tips burn the same glow and were never hidden; they stay
+ *   as the file has them, a reading left to the reviewer.
+ * - `running_light_3_r` and `running_light_3_l`, the pair 11.8 up the
+ *   frame, sat at x ±0.9 under the sheath's bulge (its middle facet at 12.4
+ *   over a crown at 11.9) and showed 0.06 m² each. Each moves outboard
+ *   along its blade to x ±1.15 at the same y and z — beside the blade
+ *   still, which spans 0.52..1.64 there, and out from under the sheath —
+ *   rule 5 — and shows 5.1 m². `diff.mjs` lists the two (3.62 m at 140 m)
+ *   and the two materials, and nothing else.
  */
 import { THREE, fitFootprint, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -88,6 +105,7 @@ const alloy = hadron.ink.alloyWhite();
 // move, so the strength is the file's.
 const crystal = hadron.ink.resonanceCrystalDim(2.1000000006830546);
 const glow = hadron.ink.crystalGlow(3.000000001062529);
+const crystalClad = hadron.ink.resonanceCrystal();
 const shimmer = hadron.ink.heatShimmer(0.55);
 
 const root = new THREE.Group();
@@ -107,13 +125,13 @@ hadron.anchorLegs(
   }
 );
 
-// The core, its throat and its apex — the crystal that burns.
+// The core and its throat, clad (see LIGHT), and the apex in the glow.
 hadron.crystalCore(
   root,
-  { crystal, glow },
+  { crystal: crystalClad, glow },
   {
     core: { r: 1.5, at: [0, 9.2, 0], scale: [0.85, 4.6, 0.85] },
-    throat: { r: 1, at: [0, 9.2, 0.001], scale: [0.55, 3, 0.55] },
+    throat: { r: 1, at: [0, 9.2, 0.001], scale: [0.55, 3, 0.55], mat: crystalClad },
     apex: { r: 0.55, at: [0, 16.6, 0], scale: [0.6, 2.6, 0.6] },
   }
 );
@@ -173,7 +191,8 @@ hadron.ballastPipes(
 );
 hadron.ballastTanks(root, shadow, { r: 0.62, waist: 1.6, at: [2.3, 1.35, -1.5] });
 
-// Ten running lights, two pairs at the foot and three up the frame.
+// Ten running lights, two pairs at the foot and three up the frame — the
+// third of those outboard of the sheath since #890 (see LIGHT).
 hadron.lightPairs(root, glow, {
   name: 'running_light',
   r: 0.1,
@@ -181,7 +200,7 @@ hadron.lightPairs(root, glow, {
     [2.6, 1.85, 1.4],
     [2.6, 1.85, -1.4],
     [1.35, 6.4, 0.9],
-    [0.9, 11.8, 0.55],
+    [1.15, 11.8, 0.55],
     [1.7, 16.2, 0],
   ],
 });

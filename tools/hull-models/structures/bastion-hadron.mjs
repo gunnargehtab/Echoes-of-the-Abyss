@@ -92,10 +92,19 @@
  *   a pair. As the file has them.
  *
  * `diff.mjs bastion-hadron f7cce0f`: unchanged beyond the root scale and
- * shift — every part is where it was. Light audit: `port_light_0_r` and
- * `port_light_0_l`, the equator pair tucked furthest under the dome's skirt,
- * show under a cell from above and `exportGlb` says so; the approved binary
- * earns the same two, and they stay.
+ * shift but for the pair below — every other part is where it was.
+ *
+ * LIGHT (#890). "Sustained glow from ports and working lights" is the
+ * block's resting clause, so every port light stays lit; one pair was
+ * hidden from above, and rule 5 of models-plan.md §3.2 moves it:
+ * - `port_light_0_r` and `port_light_0_l`, the equator pair 5.92 out, sat
+ *   half in the dome at y 2.5 with the equator band's upper facets over
+ *   them (the band's ridge at 2.72 against their crown at 2.62), showed
+ *   nothing from above from #652 to #890, and the audit named both on every
+ *   build. Each is lifted 0.35 to y 2.85 at its own x and z — set into the
+ *   dome's slope just over the band, as the three pairs up the dome are —
+ *   and shows 15.25 m². `diff.mjs` lists the two (7.37 m at 440 m) and
+ *   nothing else.
  */
 import { THREE, fitFootprint, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -167,13 +176,13 @@ hadron.ring(root, 'plinth_band', alloy, {
   at: [0, 1.25, 0],
 });
 
-// Twelve port lights — "sustained glow from ports" — three pairs on the
-// equator and three up the dome.
+// Twelve port lights — "sustained glow from ports" — two pairs on the
+// equator, one just over its band (see LIGHT), and three up the dome.
 hadron.lightPairs(root, glow, {
   name: 'port_light',
   r: 0.12,
   at: [
-    [5.7, 2.5, 1.6],
+    [5.7, 2.85, 1.6],
     [4.9, 2.5, 3.4],
     [5.95, 2.5, -0.9],
     [3.9, 5.5, 2.2],

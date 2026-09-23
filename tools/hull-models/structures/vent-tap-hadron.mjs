@@ -17,7 +17,19 @@
  * Order's ink: shadow indigo for the rock, pale alloy for the pipework and the
  * decks, crystal-seam lamps and the resonance node for the floods. What is
  * the Order's is the exchanger: a crystal prism under an alloy frame, a lit
- * seam, a crystal spine and a buttress blade, from `factions/hadron.mjs`.
+ * seam along the frame's top, a crystal spine and a buttress blade, from
+ * `factions/hadron.mjs`.
+ *
+ * LIGHT (#890). The block burns the whole structure at rest — one band, SIG
+ * 55 idle, "lamps along every pipe run" — so every lamp stays lit; four
+ * were hidden from above, and rule 5 of models-plan.md §3.2 moves them:
+ * - `exchanger_seam`, one an arm: the approved file set it at y 16.2,
+ *   inside the frame's section under its top face (14.88..19.12), where it
+ *   showed nothing from above from #608 to #890 and the audit named it on
+ *   every arm. It is lifted to y 19.32, its underside on the frame's flat
+ *   top — the run's lamps carried to the exchanger at the run's end — and
+ *   shows 23.6 m² an arm either side of the spine. `diff.mjs` lists the
+ *   four (4.21 m at 180 m) and nothing else.
  *
  * The frame is the approved export's own — drawn 133.45 across by the measure
  * the bake takes (the prisms are yawed, and a yawed part measures wider than
@@ -92,7 +104,7 @@ radialSeries({ count: 4, phase: Math.PI / 4 }, (a) => {
         ],
         y: 17,
       },
-      seam: { size: [18, 0.4, 0.9], y: 16.2 },
+      seam: { size: [18, 0.4, 0.9], y: 19.32 },
       spine: { r: 2.2, h: 14, y: 24 },
       buttress: { at: 84, halfBase: 6, reach: 14, t: 4, y: -2 },
     }

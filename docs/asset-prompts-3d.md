@@ -325,8 +325,8 @@ astern; an energy weapon). A faceted blade hull, widest aft, bilaterally
 symmetric, flaring at the bow into a six-facet horn with an emitter crystal
 standing in its mouth; canards at the bow, swept guard wings with crystal
 edges aft, a crystal inlay along the spine. Lit at the horn's lip and along
-its ridge seams, dark astern but for one mark — louder than a Corvette in
-front, quieter behind.
+six seams over its back and shoulders, dark astern but for one mark —
+louder than a Corvette in front, quieter behind.
 ```
 
 ### The rung's roster — one hull a navy at the Foundry, one behind the Slipway

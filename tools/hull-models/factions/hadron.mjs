@@ -306,8 +306,8 @@ export function bowArray(root, { alloy, crystal, seam, node }, opts) {
   const L = to - from;
   // The Clarion's array is the Responsory's said in the rung's forms: a horn
   // and a lip that are six-facet lathes on their own stations with a vertex on
-  // the crown (`spar`), a lip that is lit, no ridges — its ring of `hornSeams`
-  // is drawn after this — and an emitter that is a crystal `point` rather
+  // the crown (`spar`), a lip that is lit, no ridges — its `hornSeams` are
+  // drawn after this — and an emitter that is a crystal `point` rather
   // than a stood-up octahedron. Each is an option so that, given none, the
   // Responsory's array is exactly what it was.
   if (horn) spar(root, 'array_horn', alloy, { facets: 6, y, ...horn });
@@ -742,11 +742,20 @@ function plane(root, name, mat, { outline, t, y, seated = false }, sgn) {
  * 2's "precise bilateral symmetry" (#640). The prose is canonical, so that
  * yaw is not an option here on purpose: this module is the Order's, and a
  * ring is a thing it cannot draw unmirrored.
+ *
+ * `bearings` places the seams explicitly instead — radians from the crown,
+ * starboard positive, in the order the caller numbers them — for a horn
+ * whose seams are not a ring. The Clarion's six ride the horn's upper half
+ * since #890, three mirrored pairs at ±20°, ±40° and ±60°: a ring of six
+ * round a six-facet horn puts three under it, where the top-down chart
+ * never sees them (models-plan.md §3.2, rule 5), and the block's resting
+ * clause lights every one. Left unset, the ring is what it always was.
  */
 export function hornSeams(root, mat, opts) {
   const { x, y = 0, length, section, halfHeight, halfBeam, count = 6, phase = 0 } = opts;
-  for (let i = 0; i < count; i++) {
-    const a = phase - (i * 2 * Math.PI) / count;
+  const { bearings = null } = opts;
+  const ring = Array.from({ length: count }, (_, i) => phase - (i * 2 * Math.PI) / count);
+  (bearings ?? ring).forEach((a, i) => {
     add(
       root,
       `horn_seam_${i}`,
@@ -755,7 +764,7 @@ export function hornSeams(root, mat, opts) {
       [x, y + halfHeight * Math.cos(a), halfBeam * Math.sin(a)],
       [a, 0, 0]
     );
-  }
+  });
 }
 
 /** The inlay alone: the crystal run let into the spine's top, a four-facet lathe like the spine it rides. */
@@ -1385,17 +1394,21 @@ export function cradleDeck(root, { shadow, alloy, floor: floorMat, seam }, opts)
 /**
  * The exchanger on the end of a Vent Tap's draw arm, on `bearing` (#608): a
  * crystal prism square in section with pyramid ends, the alloy frame bar
- * over it, the lit seam between them, the crystal spine — a slim pyramid —
- * standing off the top, and the buttress blade wedged between the platform and the exchanger
- * — an instrument, not a vessel, and the one head of the four whose every
- * part is a straight edge. Distances are metres out along the bearing, as
- * the kit's `ventDrawArm` takes them.
+ * over it, the lit seam along the frame's top, the crystal spine — a slim
+ * pyramid — standing off the top through it, and the buttress blade wedged
+ * between the platform and the exchanger — an instrument, not a vessel, and
+ * the one head of the four whose every part is a straight edge. Distances
+ * are metres out along the bearing, as the kit's `ventDrawArm` takes them.
  *
  * The prism and the frame are four-facet lofts turned an eighth about their
  * axis, so a flat face is up rather than an edge (kit.mjs `loft`). The
- * approved seam lies inside the frame's section, under its top face, where
- * the top-down bake has never seen it; `exportGlb`'s light audit says so on
- * every arm, and it is carried across rather than lifted (#540).
+ * approved seam lay inside the frame's section, under its top face, where
+ * the top-down bake never saw it, and the audit named it on every arm from
+ * #608 to #890, which lifted it onto the frame's top face by `seam.y`: the
+ * block burns the whole structure at rest — one band, SIG 55 idle, "lamps
+ * along every pipe run" to the exchanger at the run's end — and a lamp
+ * under a face is a lamp the chart never shows (models-plan.md §3.2, rule
+ * 5).
  */
 export function exchangerHead(root, { crystal, alloy, seam }, opts) {
   const { bearing: a, at, prism, frame, seam: strip, spine: crest, buttress: blade } = opts;
@@ -2129,14 +2142,21 @@ export function anchorLegs(root, { alloy, steel }, { leg, claw }) {
 
 /**
  * The crystal core — "a violet crystal core", "burning bright along the
- * crystal" (the Sounding Spire block): three octahedra on the axis, each
- * drawn tall by its node — the `core` in resonance crystal, the `throat`
- * inside it in the brighter glow, standing a millimetre off the axis in z
- * (the file's z-fight nudge), and the `apex` above in the same glow.
+ * crystal when active" (the Sounding Spire block): three octahedra on the
+ * axis, each drawn tall by its node — the `core` in `crystal`, the `throat`
+ * inside it, standing a millimetre off the axis in z (the file's z-fight
+ * nudge), and the `apex` above in `glow`. The throat takes `throat.mat`
+ * when given and `glow` otherwise.
+ *
+ * The block lights the crystal *when active*, and the resting bake is the
+ * state the chart shows (models-plan.md §3.2, rule 2), so the Spire passes
+ * the crystal token as cladding for the core and the throat (#890): a lamp
+ * sealed under the apex and the sheath showed nothing from above on every
+ * build since #652, and the audit named both.
  */
 export function crystalCore(root, { crystal: lit, glow }, { core, throat, apex }) {
   crystal(root, 'crystal_core', lit, core);
-  crystal(root, 'crystal_throat', glow, throat);
+  crystal(root, 'crystal_throat', throat.mat ?? glow, throat);
   crystal(root, 'crystal_apex', glow, apex);
 }
 
@@ -2318,11 +2338,19 @@ const mirrored = (sgn, [x, y, z], [a = 0, b = 0, c = 0] = []) => [
  * `crest.roll` in toward the bay, a crystal ridge of `ridge.size` along its
  * inboard edge, a six-facet point of `ends.r` by `ends.length` at each end
  * — the bow's apex forward at +`ends.z`, the stern's aft — under the same
- * press, and three port lights of `lights.r` down its outboard flank at
- * `lights.zs`. A wing at a time, `_r` first at the export's +x, then `_l`
- * its mirror; every part its own buffer, as the file has it. On a Z-long
- * export the `_r` wing lands on the kit's −z, port (kit.mjs `drawn`, #642),
- * as the Sentinel Turret's `_r` does (#639): the export's own name, carried.
+ * press, and three port lights of `lights.r` at `lights.x`, `lights.y`,
+ * down its length at `lights.zs`. A wing at a time, `_r` first at the
+ * export's +x, then `_l` its mirror; every part its own buffer, as the file
+ * has it. On a Z-long export the `_r` wing lands on the kit's −z, port
+ * (kit.mjs `drawn`, #642), as the Sentinel Turret's `_r` does (#639): the
+ * export's own name, carried.
+ *
+ * The file set the port lights into each wing's outboard flank under the
+ * shoulder facet, where the top-down bake never saw them and the audit
+ * named all six on every build; since #890 the Foundry passes the shoulder
+ * facet itself, outboard of the crest, because the block's "dim at rest"
+ * is the running lights and a lamp under a face is a lamp the chart never
+ * shows (models-plan.md §3.2, rule 5).
  */
 export function hallWings(root, { shadow, alloy, crystal: ridgeMat, light }, opts) {
   const { frame = zLong, hull, crest, ridge, ends, lights } = opts;

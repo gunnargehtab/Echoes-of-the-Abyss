@@ -9,8 +9,8 @@
  * symmetry; blade-like, crystalline silhouettes". The Corvette's blades at
  * 130 m: a fore blade and an aft blade of shadow indigo, four-sided prisms
  * drawn to a point each way, edged in pale alloy, the bow's point capped in
- * alloy; a lit crystal spine the length of the back and a second under the
- * keel; five pairs of armour plates along the shoulders, rolled outboard,
+ * alloy; a lit crystal spine the length of the back and an unlit second
+ * under the keel; five pairs of armour plates along the shoulders, rolled outboard,
  * and four ribs across the spine between them, which are the layers; eight
  * lit facet panels down the flanks, four a side, which are the lit ports;
  * two hydrophone masts, a pylon each side of the spine carrying a fork of
@@ -31,11 +31,9 @@
  *
  * - The lamps are the Cruiser's own (`ink.crystalCoreGlow` and
  *   `ink.crystalPanelGlow`, on no other Order model): a core glow at 4.5 on
- *   the two spines, the four fork crystals and the drive, and a panel glow
+ *   the dorsal spine, the four fork crystals and the drive, and a panel glow
  *   at 3.2 on the eight facet panels. The drive prism is a lamp — the one
- *   Z-long Order drive that is — and the ventral spine lies under the hull,
- *   where the top-down bake has never seen it; `exportGlb`'s light audit
- *   says so, and it stays.
+ *   Z-long Order drive that is.
  * - The guard wings and their edges are struts between two points in the
  *   export's frame — the wing from (3.5, 8, -44) at the blade to (19, 9.4,
  *   -54) at its tip, the edge from (9, 8.6, -47.5) to (20, 9.5, -55) — so
@@ -50,6 +48,17 @@
  * - The three stern fins are pitched and yawed each its own amount — the
  *   dorsal 0.42, the ventral 0.46, the laterals 0.4 — where the Corvette's
  *   are all 0.45 and 0.5. The file's.
+ *
+ * LIGHT (#890). One lamp was hidden from above, and it goes clad:
+ * - `crystal_spine_ventral` lay under the keel in the core glow, where the
+ *   top-down bake never saw it, and the audit named it from #649 to #890.
+ *   The block's resting clause lights "vents, sensor arrays and lit ports" —
+ *   the dorsal spine and the drive, the fork crystals, the facet panels —
+ *   and names nothing under the hull; a run under the keel is on no upward
+ *   face and can be moved to none without becoming a second dorsal spine,
+ *   so it carries the crystal token as cladding (`ink.resonanceCrystal`,
+ *   the Clarion's own inlay finish): models-plan.md §3.2, rule 5, and the
+ *   block's silence. `diff.mjs` lists that material and nothing else.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds: drawn along Z, 140.00 units long from the drive prism's
@@ -70,6 +79,7 @@ const shadow = hadron.ink.shadowIndigo();
 const alloy = hadron.ink.paleAlloy();
 const core = hadron.ink.crystalCoreGlow(4.5);
 const panel = hadron.ink.crystalPanelGlow(3.2);
+const crystal = hadron.ink.resonanceCrystal();
 
 const root = new THREE.Group();
 root.name = 'hadron_cruiser';
@@ -108,10 +118,10 @@ hadron.prism(root, alloy, {
   ...drawn([0, 8, -30], [0, 0, 0], [2.28, 0.17, 1]),
 });
 
-// The spines: a lit crystal run the length of the back, and a second under
-// the keel, where nothing from above can see it.
+// The spines: a lit crystal run the length of the back, and a clad second
+// under the keel (see LIGHT).
 bar('crystal_spine', core, [1.6, 1.4, 124], drawn([0, 12.15, 1]));
-bar('crystal_spine_ventral', core, [1.3, 1, 96], drawn([0, 3.6, -6]));
+bar('crystal_spine_ventral', crystal, [1.3, 1, 96], drawn([0, 3.6, -6]));
 
 // The layers: five pairs of armour plates along the shoulders, each its own
 // size and station, rolled 0.14 outboard, `_p` then `_s` a pair at a time;

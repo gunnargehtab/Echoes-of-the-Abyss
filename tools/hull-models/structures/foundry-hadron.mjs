@@ -10,7 +10,7 @@
  *
  * The Order's is two wing halls either side of the bay — a six-facet drum
  * each, pointed at both ends, crested in alloy, ridged in crystal, three
- * port lights down its flank — the bay between them with its forge line,
+ * port lights on its shoulder — the bay between them with its forge line,
  * an octahedron of a hull in progress and a lip either side carrying five
  * crystal guides, two gantry cranes over it with crystal loads, a launch
  * gate of two pylons, a lit threshold, a crossbeam and a gate crystal, two
@@ -73,12 +73,26 @@
  * script asserts after the fit, the plan being nearly square.
  *
  * `diff.mjs foundry-hadron f7cce0f`: unchanged beyond the root scale and
- * shift — every part is where it was. Light audit: `exportGlb` names
- * eighteen lamps hidden from above — the six wing port lights on the wings'
- * outboard flanks under their crests, the ten bay guides on the lips under
- * the crane beams, and the two crystal loads under their trolleys; the
- * approved binary earns the same eighteen (kit.mjs `lightAudit` on it after
- * the bake's own yaw and scale).
+ * shift but for the eighteen parts below — every other part is where it
+ * was.
+ *
+ * LIGHT (#890). The block's resting clause is "dim at rest" — the band's
+ * running lights (docs/asset-prompts-3d.md, the glow table) — and it puts
+ * the bay's light in the producing band: "interior forge light spilling
+ * from the bay when producing". Eighteen lamps were hidden from above on
+ * every build from #652 to #890, and models-plan.md §3.2 decides each:
+ * - `wing_portlight_r_0..2` and `_l_0..2`, the running lights — kept lit.
+ *   The file set them into each wing's outboard flank at x 5.75, y 2.3,
+ *   under the shoulder facet that runs from (5.865, 2.925) up to the crown
+ *   at (3.7, 3.95). Each moves onto that facet at x 5.4, y 3.2 — its centre
+ *   a twentieth proud of the slope, outboard of the crest (3.33..5.07) —
+ *   rule 5, and shows 7.8 m². `diff.mjs` lists the six (14.9 m at 320 m).
+ * - `bay_guide_r_0..4` and `_l_0..4`, the lips' guides, and `gantry_load_0`
+ *   and `_1`, the crystals under the trolleys — clad. They are the bay's
+ *   interior light, which the block lights only producing — rule 2 — so
+ *   they carry the crystal token as cladding (`ink.resonanceCrystal`, every
+ *   hull's) through `foundryBay`'s `guide` and `gantryCrane`'s `load`.
+ *   `diff.mjs` lists the twelve materials, and nothing else.
  */
 import {
   THREE,
@@ -102,6 +116,7 @@ const alloy = hadron.ink.alloyWhite();
 const crystal = hadron.ink.resonanceCrystalDim(2.118362294686672);
 const forge = hadron.ink.forgeLight(3.7930280838563952);
 const steel = hadron.ink.darkSteel();
+const crystalClad = hadron.ink.resonanceCrystal();
 
 const root = new THREE.Group();
 root.name = 'foundry_hadron';
@@ -115,15 +130,15 @@ hadron.hallWings(
     crest: { size: [1.7, 0.35, 11.96], x: 4.2, y: 3.75, roll: -0.28 },
     ridge: { size: [0.2, 0.2, 11.18], x: 2.1, y: 3.45 },
     ends: { r: 2.05, length: 3.2, z: 8.05 },
-    lights: { r: 0.11, x: 5.75, y: 2.3, zs: [-3.6, 0, 3.6] },
+    lights: { r: 0.11, x: 5.4, y: 3.2, zs: [-3.6, 0, 3.6] },
   }
 );
 
 // The bay: floor, forge line, the hull in progress — an octahedron — and a
-// lip either side with five crystal guides, `_r` then `_l`.
+// lip either side with five crystal guides, clad (see LIGHT), `_r` then `_l`.
 foundryBay(
   root,
-  { floor: steel, forge, hull: alloy, guide: crystal },
+  { floor: steel, forge, hull: alloy, guide: crystalClad },
   {
     floor: { size: [3.2, 0.4, 12], at: [0, 0.35, 0] },
     forge: { size: [1.0, 0.18, 10.6], at: [0, 0.58, 0] },
@@ -138,13 +153,14 @@ foundryBay(
 );
 
 // Two cranes over the bay, smaller than the Directorate's in every
-// dimension, trolleys on the centreline, crystal loads 1.1 apart.
+// dimension, trolleys on the centreline, clad crystal loads (see LIGHT) 1.1
+// apart.
 const crane = {
   steel: alloy,
   finial: shadow,
   trolley: steel,
   cable: steel,
-  load: crystal,
+  load: crystalClad,
   warnlight: forge,
 };
 const order = {
