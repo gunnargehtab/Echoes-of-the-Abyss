@@ -240,8 +240,8 @@ function structure(
  *
  * No Refinery either, as in `ai.test.ts`'s `broke()`. With one standing, the
  * Directorate on 100 nodules queues nothing at all whatever the berths —
- * measured — because `commandConstruction` spends from the same purse first,
- * and the case below could not tell that from a hold.
+ * measured — because `commandConstruction` saves toward the Slipway out of
+ * the same purse first, and the case below could not tell that from a hold.
  */
 function noArmy(
   brief: AiBriefing,
@@ -300,12 +300,13 @@ function queued(
 
 describe('the commander builds its army inside its berths (#854)', () => {
   it('buys nothing for the army that the berths cannot crew, however rich', () => {
-    // The composition cycle is the want every refusal in a real match came
-    // from: on seed 4000 seated Knights, Commune, Directorate, Consortium, the
-    // Directorate's 115 refused orders were all Corvettes off its cycle. Every
-    // doctrine here opens on a hull of two berths or more except the
-    // Commune's, so a cycle that did not ask queues one into the one free
-    // berth.
+    // Most refusals in a real match came from the composition cycle. Over the
+    // four-faction baseline's 30 seeds, 275 of the 306 orders the server
+    // refused for berths were the Directorate's Corvettes and Light Scouts,
+    // both on its cycle; the other 31 were the Commune's Harvesters, which the
+    // real-match case above holds. Every doctrine here opens on a hull of two
+    // berths or more except the Commune's, so a cycle that did not ask queues
+    // one into the one free berth.
     const rich = { nodules: 100_000, crystal: 100_000, biomass: 100_000 };
     const fitted: UnitKind[] = [];
     for (const faction of NAVIES) {
@@ -326,8 +327,10 @@ describe('the commander builds its army inside its berths (#854)', () => {
     // The Directorate, because its doctrine opens on two Corvettes (two
     // berths, 120 nodules) and carries a Light Scout (one berth, 50). On 100
     // nodules the Corvette is over `RUNG.SAVE_FROM`, so a bid for it opens a
-    // hold and the navy buys nothing while the window runs. The bid is for the
-    // first entry that fits instead, and the Light Scout is bought.
+    // hold and the navy buys nothing while the window runs. Reading the
+    // berths, the first army hull that fits is the Light Scout — the Precentor
+    // before it has no gun, so the cycle never names it — and 100 nodules
+    // already pays for the scout, so nothing is held and the cycle buys it.
     const brief = briefing(Faction.Directorate);
     const [first] = DOCTRINE[Faction.Directorate].composition;
     assert.equal(first, UnitKind.Corvette, 'the case is argued from the doctrine it reads');

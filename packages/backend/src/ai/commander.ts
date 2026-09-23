@@ -2676,10 +2676,10 @@ export class AiCommander implements AiPlayer {
     // path. This commander asked only the price. At the cap, a want that
     // could pay queued a hull the server refused, and returned, so the
     // observation ended on an order that did nothing and no want behind it
-    // was read. The four-faction baseline's own seeds never reach the cap;
-    // seated Knights, Commune, Directorate, Consortium on seed 4000, the
-    // Directorate sat at 24 of 24 and the server refused 115 of its 146
-    // orders, every one a Corvette off its composition cycle.
+    // was read. Before this, 12 of the four-faction baseline's 30 seeds sent
+    // orders the server refused for berths, 306 in all. On seed 4024 it
+    // refused 81 of the Directorate's 102, every one a Light Scout off its
+    // composition cycle.
     //
     // A hull that does not fit is treated as one with no free yard: not
     // bought, and **not bid for**. Saving closes a nodule gap and nothing
