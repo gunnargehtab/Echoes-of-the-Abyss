@@ -234,8 +234,10 @@ export function column(rings) {
  * (the boulder's, whose export carried its own fit) is left exactly as it
  * is. The runtime takes the same measure before it merges the parts
  * (environmentModels.ts `propFootprint`). Until #876 it measured the
- * merged vertices, which a rotated part's box overhangs, and drew the
- * crags 10–16 % and the boulder 23 % larger than intake reviewed them.
+ * merged vertices, which a rotated part's box overhangs, and drew six
+ * props larger than intake reviewed them: the boulder by 23 %, the coral
+ * tower by 18 %, the crags by 10–16 %, the kelp and the crystal by 1 % or
+ * less.
  *
  * `ground` lifts the root first so the measure's floor sits on y = 0 —
  * `Box3`'s floor over the parts' boxes, not the lowest vertex: the two are
