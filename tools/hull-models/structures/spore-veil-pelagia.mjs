@@ -72,14 +72,15 @@
  *   and the Derrick's bridge ports. Same names, same geometry, in place.
  *   The block's wording is #893.
  * - `gill-breath-line-port-1..4`, `-stb-1..4`: the clause names them, so
- *   they stay lit in `bio-vein` and move onto an upward face — each
+ *   they stay lit in `bio_light` (`bio-vein` until #891) and move onto an
+ *   upward face — each
  *   organ's four now stand round its mound's outboard shoulder at 0.64
  *   and 0.66 from the crown, past the haze cone's 0.55 top radius, laid
  *   tangent, sunk 0.02 and leaned 0.5 outward (`gillOrgan` `lines`), on
  *   bearings that are the organ's own and not the other's turned round.
  *   The slits stay where the file has them.
  *
- * `spore-haze` is the one lamp left the clause does not name, and it is
+ * `spore_haze` is the one lamp left the clause does not name, and it is
  * left as the approved file lights it: whether the block should name it,
  * and whether a translucent unlit finish exists for it if not, is #893's
  * question (every "block names fewer lamps than the model lights" case
@@ -92,21 +93,26 @@ import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 170;
 
-// The navy's ink (#888), under the file's own hyphenated names. The export
-// carried `algae-teal` at 0.05 metal and 0.75 rough and `spore-pale` at no
-// metal, a step from the Abyssal Submersible's 0.1 / 0.7 and 0.05 / 0.65
-// under the same names; the hull's value is canonical, so both moved. The
-// strengths are this file's own: 2.2 on the breathing lines, 0.9 on the
-// stalk tips, 0.35 on the haze. The vein rings wear the vein family's
-// unlit finish (#890; see the header).
-const chitin = pelagia.ink['deep-chlorophyll']();
-const tealDark = pelagia.ink['algae-teal-dark']();
-const teal = pelagia.ink['algae-teal']();
-const vein = pelagia.ink['bio-vein'](2.2);
+// The navy's ink, under the navy's names since #891. The export's
+// `deep-chlorophyll`, `algae-teal` and `spore-pale` are the structures'
+// `deep_chlorophyll` and `algae_hull` and the hulls' `spore_pod`; its
+// `bio-vein` and `bio-vein-dim` — the token on a #0F2A12 base at 0.45 and
+// 0.5 rough, one light under two names — are `bio_light`, the token's one
+// lamp; `algae_teal_dark` and `spore_haze` are the Veil's own hexes at
+// their values, hyphens gone. (#888 had already brought `algae-teal` and
+// `spore-pale` from the export's 0.05 / 0.75 and 0 / 0.65 onto the
+// Submersible's 0.1 / 0.7 and 0.05 / 0.65; the hull names sit at 0.08 /
+// 0.6 and 0.05 / 0.5.) The strengths are this file's own: 2.2 on the
+// breathing lines, 0.9 on the stalk tips, 0.35 on the haze. The vein
+// rings wear the vein family's unlit finish (#890; see the header).
+const chitin = pelagia.ink.deepChlorophyll();
+const tealDark = pelagia.ink.algaeTealDark();
+const teal = pelagia.ink.algaeHull();
+const vein = pelagia.ink.bioLight(2.2);
 const veinUnlit = pelagia.ink.bioVeinUnlit();
-const haze = pelagia.ink['spore-haze'](0.35);
-const dim = pelagia.ink['bio-vein-dim'](0.9);
-const spore = pelagia.ink['spore-pale']();
+const haze = pelagia.ink.sporeHaze(0.35);
+const dim = pelagia.ink.bioLight(0.9);
+const spore = pelagia.ink.sporePod();
 
 const root = new THREE.Group();
 root.name = 'pelagia-spore-veil';

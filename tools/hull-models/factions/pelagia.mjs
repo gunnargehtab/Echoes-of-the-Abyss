@@ -106,24 +106,39 @@ import {
  *   whole cladding register by; the membrane is now, as on the Spinner,
  *   the Glider, the Drifter and the Weaver, the other four hulls with no
  *   spore pod, whose register the two now match exactly (the Sower and
- *   eight more hulls anchor on `spore_pod`, the Submersible on
- *   `spore-pale`, the same #E8F0A3). The light is untouched: same
- *   emissive, each model's own strength.
- * - `algae_hull` and `biolight_green` are structure names on no hull. The
- *   Bastion, the Foundry and the Refinery carry the algae token #1FA67A at
- *   0.08 and 0.6 and the lamp on a #14351A base; the Sentinel Turret
- *   carried #14664C at 0.62, a shade the docs do not name, and a #123018
- *   base. Three models against one and the token against a derived shade:
- *   the turret moved.
- * - `algae-teal` and `spore-pale` are two of the ten hyphenated names the
- *   r184 pass gave the Abyssal Submersible and the Spore Veil. The
- *   Submersible is the hull, so its 0.1 / 0.7 and 0.05 / 0.65 are the
- *   values and the Veil moved from 0.05 / 0.75 and 0 / 0.65. They keep
- *   their names rather than fold into `algae_membrane` and `spore_pod`:
- *   `bio-vein` is not `bio_vein` (the token against the Sower's #5FAE42)
- *   and `chitin-hull` is a matte chitin, so folding the two that happened
- *   to split would leave the family of ten less regular, not more, and a
- *   rename across two approved models is a change of its own.
+ *   eight more hulls anchor on `spore_pod`, and the Submersible with them
+ *   since #891). The light is untouched: same emissive, each model's own
+ *   strength. Since #891 it is the token's one lamp on every model: the
+ *   structures' `biolight_green` (#14351A at 0.35), the Submersible's
+ *   `biolum-vein` (#14301A) and the Veil's `bio-vein` and `bio-vein-dim`
+ *   (#0F2A12 at 0.45 and 0.5) were one light on four near-blacks under
+ *   four names, and are this one on its hull base, each file's strength
+ *   kept — the Veil carries it at 2.2 on the breathing lines and 0.9 on
+ *   the stalk tips, one fixture at two loudnesses.
+ * - `algae_hull` is a structure name on no hull. The Bastion, the Foundry
+ *   and the Refinery carry the algae token #1FA67A at 0.08 and 0.6; the
+ *   Sentinel Turret carried #14664C at 0.62, a shade the docs do not name.
+ *   Three models against one and the token against a derived shade: the
+ *   turret moved. Their lamp, `biolight_green`, was the same story on a
+ *   #14351A base against the turret's #123018, settled the same way; it
+ *   is `bio_light` since #891 (above).
+ * - `algae-teal` and `spore-pale` were two of the ten hyphenated names
+ *   the r184 pass gave the Abyssal Submersible and the Spore Veil, and the
+ *   two that split: #888 brought the Veil onto the Submersible's 0.1 / 0.7
+ *   and 0.05 / 0.65 and left the ten their names, a fold being a finish
+ *   decision of its own. #891 made it. Every one of the ten that shares
+ *   its hex with a name of the navy's is that name, at the hulls' value:
+ *   the Submersible's `chitin-hull`, `algae-teal`, `spore-pale` and
+ *   `biolum-vein` are `chitin_hull`, `algae_membrane`, `spore_pod` and
+ *   `bio_light`; the Veil's `deep-chlorophyll` and `algae-teal` are the
+ *   structures' `deep_chlorophyll` and `algae_hull`, its `spore-pale` is
+ *   `spore_pod`, and its `bio-vein` and `bio-vein-dim` are `bio_light`
+ *   (`bio-vein` was never `bio_vein`, the token against the Sower's
+ *   #5FAE42 — it was `bio_light` under another name). The three that
+ *   share their hex with nothing keep their value and lose the hyphen:
+ *   `growth_ring_dark`, `algae_teal_dark`, `spore_haze`. In the same
+ *   change `spore_pale`, the structures' name for the spore token at
+ *   exactly `spore_pod`'s value, folded onto it.
  *
  * No lamp changed colour, so no strength moved. Every lamp takes
  * `intensity`, the `KHR_materials_emissive_strength` the file carries, and
@@ -153,23 +168,17 @@ import {
  * the hulls', because "nearly black — an ambush predator, navigation marks
  * only until it fires" (the Sentinel Turret block) is not the same
  * darkening in each navy: `deep_chlorophyll` is the chitin hex at 0.1 and
- * 0.65, `grown_steel` the fitted things — collars, pipes, tanks — and
- * `spore_pale` the spore token at the Sower's finish under the
- * Submersible's name without its hyphen. The works' two lamps of the spore
- * token, `forge_light` ("interior forge light spilling from the bay") and
- * `floodlight_pale` ("floodlit working surfaces"), are polished to 0.3.
- * The Cruiser's `bio_vein_lit` and `sensor_frill_lit` are its own, the
- * frill two-sided like a membrane; the Veil's `spore-haze` is the one
- * translucent material on any Commune model — the token as its own base at
- * 0.16 opacity, blended, rough 1, "exhaling a faint haze" — and keeps that
- * base, being a glow with nothing under it rather than a lamp on a base.
- *
- * The r184 pass's hyphenated names are keyed by the name the file carries,
- * because four of them — `chitin-hull`, `deep-chlorophyll`, `bio-vein`,
- * `spore-pale` — collide with an underscore name in camel case and are not
- * that finish: matte as a deep hull and a bed on the seabed are, chitin at
- * 0.75 and 0.85 rough, the dark ring at 0.85, and the Veil's vein the token
- * where the Sower's is its own green.
+ * 0.65 and `grown_steel` the fitted things — collars, pipes, tanks. The
+ * works' two lamps of the spore token, `forge_light` ("interior forge
+ * light spilling from the bay") and `floodlight_pale` ("floodlit working
+ * surfaces"), are polished to 0.3. The Cruiser's `bio_vein_lit` and
+ * `sensor_frill_lit` are its own, the frill two-sided like a membrane; the
+ * Veil's `spore_haze` is the one translucent material on any Commune
+ * model — the token as its own base at 0.16 opacity, blended, rough 1,
+ * "exhaling a faint haze" — and keeps that base, being a glow with nothing
+ * under it rather than a lamp on a base: the one base in the navy that is
+ * not near-black, and left so on purpose where #891 moved the other
+ * navies' (Block 2b records it).
  */
 export const ink = {
   // The hulls — the Sower's pass, on eighteen models.
@@ -179,6 +188,7 @@ export const ink = {
   sporePod: () => clad('spore_pod', hex('#E8F0A3'), 0.05, 0.5),
   bioVein: (intensity = 1) => lamp('bio_vein', hex('#5FAE42'), hex('#061206'), 0.4, intensity),
   bioVeinUnlit: () => clad('bio_vein_unlit', hex('#061206'), 0, 0.4),
+  // The token's one lamp, on every model since #891 (the header).
   bioLight: (intensity = 1) => lamp('bio_light', hex('#8FE36B'), hex('#0A1A08'), 0.4, intensity),
   // The Cruiser's own.
   bioVeinLit: (intensity = 1) =>
@@ -192,27 +202,18 @@ export const ink = {
   deepChlorophyll: () => clad('deep_chlorophyll', hex('#0B241E'), 0.1, 0.65),
   grownSteel: () => clad('grown_steel', hex('#22302C'), 0.35, 0.45),
   algaeHull: () => clad('algae_hull', hex('#1FA67A'), 0.08, 0.6),
-  sporePale: () => clad('spore_pale', hex('#E8F0A3'), 0.05, 0.5),
-  biolightGreen: (intensity = 1) =>
-    lamp('biolight_green', hex('#8FE36B'), hex('#14351A'), 0.35, intensity),
   forgeLight: (intensity = 1) =>
     lamp('forge_light', hex('#E8F0A3'), hex('#2E3A16'), 0.3, intensity),
   floodlightPale: (intensity = 1) =>
     lamp('floodlight_pale', hex('#E8F0A3'), hex('#3A3F1E'), 0.3, intensity),
-  // The r184 pass's names: the Abyssal Submersible's and the Spore Veil's.
-  'chitin-hull': () => clad('chitin-hull', hex('#0B241E'), 0.15, 0.75),
-  'algae-teal': () => clad('algae-teal', hex('#1FA67A'), 0.1, 0.7),
-  'growth-ring-dark': () => clad('growth-ring-dark', hex('#123C2E'), 0.1, 0.85),
-  'spore-pale': () => clad('spore-pale', hex('#E8F0A3'), 0.05, 0.65),
-  'biolum-vein': (intensity = 1) =>
-    lamp('biolum-vein', hex('#8FE36B'), hex('#14301A'), 0.4, intensity),
-  'deep-chlorophyll': () => clad('deep-chlorophyll', hex('#0B241E'), 0.05, 0.85),
-  'algae-teal-dark': () => clad('algae-teal-dark', hex('#11563F'), 0.05, 0.8),
-  'bio-vein': (intensity = 1) => lamp('bio-vein', hex('#8FE36B'), hex('#0F2A12'), 0.45, intensity),
-  'bio-vein-dim': (intensity = 1) =>
-    lamp('bio-vein-dim', hex('#8FE36B'), hex('#0F2A12'), 0.5, intensity),
-  'spore-haze': (intensity = 1) => {
-    const m = lamp('spore-haze', hex('#8FE36B'), hex('#8FE36B'), 1, intensity);
+  // What the r184 pass's names left once #891 folded the rest (the
+  // header): the Abyssal Submersible's dark growth rings and the Spore
+  // Veil's dark teal and its haze — hexes nothing else in the navy carries,
+  // at the files' values, without the hyphens.
+  growthRingDark: () => clad('growth_ring_dark', hex('#123C2E'), 0.1, 0.85),
+  algaeTealDark: () => clad('algae_teal_dark', hex('#11563F'), 0.05, 0.8),
+  sporeHaze: (intensity = 1) => {
+    const m = lamp('spore_haze', hex('#8FE36B'), hex('#8FE36B'), 1, intensity);
     m.transparent = true;
     m.opacity = 0.16;
     return m;

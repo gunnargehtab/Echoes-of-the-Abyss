@@ -38,7 +38,8 @@
  * - Its sides are already nautical: `fin-port` at z −1.55, `tendril-port-*`
  *   at −z, `fin-stb` and `tendril-stb-*` at +z, and −z is port (#642).
  *   The names stay.
- * - The names are hyphenated throughout, as the file has them.
+ * - The part names are hyphenated throughout, as the file has them; the
+ *   material names took the navy's with #891 (below).
  * - Four of the six growth rings carry their yaw as (−π, θ, −π) in XYZ,
  *   which is the same quarter-turn-and-a-bit about Y written the long way;
  *   they are given as the file prints them.
@@ -72,14 +73,18 @@ const L = 95;
 const DRAWN = 7.05;
 const DATUM = 0;
 
-// The navy's ink (#888), under the file's own hyphenated names; this hull
-// is where `algae-teal` and `spore-pale` take their value from. The vein's
-// strength is this file's own, 2.2.
-const chitin = pelagia.ink['chitin-hull']();
-const teal = pelagia.ink['algae-teal']();
-const dark = pelagia.ink['growth-ring-dark']();
-const pale = pelagia.ink['spore-pale']();
-const vein = pelagia.ink['biolum-vein'](2.2);
+// The navy's ink, under the hull names since #891: the export's
+// `chitin-hull`, `algae-teal`, `spore-pale` and `biolum-vein` shared their
+// hexes with `chitin_hull`, `algae_membrane`, `spore_pod` and `bio_light`
+// at finishes of their own (0.15/0.75, 0.1/0.7, 0.05/0.65, a #14301A base;
+// `ink` kept them under the hyphens until then) and are those names at
+// the hulls' value; the dark rings' hex is this hull's alone and keeps its
+// value, hyphen gone. The vein's strength is this file's own, 2.2.
+const chitin = pelagia.ink.chitinHull();
+const teal = pelagia.ink.algaeMembrane();
+const dark = pelagia.ink.growthRingDark();
+const pale = pelagia.ink.sporePod();
+const vein = pelagia.ink.bioLight(2.2);
 const { verbatim } = pelagia;
 
 const root = new THREE.Group();

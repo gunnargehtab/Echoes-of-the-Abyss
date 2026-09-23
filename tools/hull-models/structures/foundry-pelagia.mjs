@@ -58,7 +58,8 @@
  *   XYZ Euler, written here as the plain (0, π + 0.4, c + π) of the same
  *   matrix. Three of the five anchors are written the same way.
  * - The seven materials are the navy's `ink`: the Bastion's five with
- *   `biolight_green` at this file's 3.0999, `forge_light`, the spore token
+ *   `bio_light` at this file's 3.0999 (`biolight_green` until #891, and
+ *   `spore_pale` is `spore_pod` since then), `forge_light`, the spore token
  *   on a #2E3A16 base at 3.8398, on the forge line, and since #890
  *   `bio_vein_unlit`, the navy's rule-2 finish (asset-prompts-3d.md Block
  *   2b), on the launch glow (below). No value moved with #890: a clad part
@@ -128,10 +129,10 @@ const DATUM = 0;
 
 const algae = pelagia.ink.algaeHull();
 const chitin = pelagia.ink.deepChlorophyll();
-const spore = pelagia.ink.sporePale();
+const spore = pelagia.ink.sporePod();
 const forge = pelagia.ink.forgeLight(3.8397711422314402);
 const steel = pelagia.ink.grownSteel();
-const bio = pelagia.ink.biolightGreen(3.0999400442394323);
+const bio = pelagia.ink.bioLight(3.0999400442394323);
 const unlit = pelagia.ink.bioVeinUnlit();
 
 const root = new THREE.Group();
