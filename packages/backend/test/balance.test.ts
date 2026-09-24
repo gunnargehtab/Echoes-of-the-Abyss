@@ -245,15 +245,15 @@ describe('telemetry measures what it says it measures', () => {
   it('carries the carrier want from the commander to the report (#839)', () => {
     // The carrier's tally rides the ordnance tally's channel — seat, runner,
     // `finish` — and this holds the channel, not the branches:
-    // `aiCarrier.test.ts` drives each of the six reasons on its own.
+    // `aiCarrier.test.ts` drives each of the seven reasons on its own.
     const result = runMatch({ seats: DUEL, seed: 60, maxMinutes: 2, fauna: false });
     for (const player of result.players) {
       const t = player.carrierWant;
       assert.ok(t.reached > 0, `slot ${player.slot} reached the carrier want at all`);
       assert.equal(
-        t.notEscorted + t.alreadyHas + t.noYard + t.noBerth + t.cannotAfford + t.bought,
+        t.notEscorted + t.alreadyHas + t.noYard + t.noBerth + t.yielded + t.cannotAfford + t.bought,
         t.reached,
-        `slot ${player.slot}: the six reasons have to add up to the observations`
+        `slot ${player.slot}: the seven reasons have to add up to the observations`
       );
     }
     const summary = summarise([result]);
@@ -270,6 +270,41 @@ describe('telemetry measures what it says it measures', () => {
     );
     const noYard = summary.factions.map((f) => `${f.carrierWant.noYard} \\(\\d+%\\)`).join(' \\| ');
     assert.match(carrierTable, new RegExp(`^\\| Blocked: no free yard \\| ${noYard} \\|$`, 'm'));
+    // The seventh reason's row, where its gate is asked: after the berths and
+    // before the purse. The ordnance table has no such row, because the
+    // ordnance want has no such gate.
+    const yielded = summary.factions
+      .map((f) => `${f.carrierWant.yielded} \\(\\d+%\\)`)
+      .join(' \\| ');
+    assert.match(
+      carrierTable,
+      new RegExp(
+        `^\\| Blocked: no berth \\|.*\\n\\| Yielded to the Sower or the Bower \\| ${yielded} \\|\\n` +
+          `\\| Blocked: cannot afford \\|`,
+        'm'
+      )
+    );
+    const ordnanceTable = markdown.slice(
+      markdown.indexOf('## The ordnance want'),
+      markdown.indexOf('## The carrier want')
+    );
+    assert.doesNotMatch(ordnanceTable, /Yielded/);
+
+    // A result stored between #880 and the ruling has the carrier's six
+    // reasons and not its seventh. It is read as a zero, never summed in as
+    // `undefined`, which would print `NaN` in a well-formed cell.
+    const sixReasons = {
+      ...result,
+      players: result.players.map((player) => {
+        const { yielded: _, ...six } = player.carrierWant;
+        return { ...player, carrierWant: six };
+      }),
+    } as unknown as MatchTelemetryResult;
+    const six = summarise([sixReasons]);
+    for (const f of six.factions) {
+      assert.equal(f.carrierWant.yielded, 0, `${f.faction}: an absent reason reads as zero`);
+    }
+    assert.doesNotMatch(toMarkdown(six, 'Test run'), /NaN/);
 
     // A result stored before the column existed has no `carrierWant` at all.
     // It is summarised as an empty tally, and the table is left out rather

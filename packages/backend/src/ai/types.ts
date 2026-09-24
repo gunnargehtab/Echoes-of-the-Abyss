@@ -389,7 +389,9 @@ export interface AiPlayer {
  * instrumented first and the paragraph below is its argument. The carrier's
  * is the same argument a second time (#839): a navy that never fields its
  * deck reads the same in the build column whichever gate shut, so a baseline
- * with a zero there says nothing about why.
+ * with a zero there says nothing about why. The carrier's want has one gate
+ * the ordnance want does not, so it counts one reason more: see
+ * `CarrierWantTally`.
  *
  * It exists because the fault it measures is invisible in every other column.
  * The report can already say a hull was never built (`buildsPerMatchByKind`,
@@ -438,6 +440,28 @@ export interface WantTally {
   bought: number;
 }
 
+/**
+ * The carrier want's tally (#839): `WantTally`'s six reasons and a seventh,
+ * still a partition, so the seven sum to `reached`.
+ *
+ * The seventh is the owner's ruling on #839. The carrier's want sits below the
+ * Sower's and the Bower's in the order of purchase, so while either of those
+ * is open it neither buys nor bids. Without its own counter an observation it
+ * yielded would read *cannot afford*, and a baseline could not say that the
+ * deck waited on the Commune's own two hulls rather than on the bank.
+ */
+export interface CarrierWantTally extends WantTally {
+  /**
+   * Escorted, wanted, a yard free, the berths to crew it — and the Sower's or
+   * the Bower's want was open, so the deck neither bought nor bid.
+   *
+   * Asked after the berths and before the price, because the ruling is about
+   * the purse: which want is served out of it first. Only a navy whose
+   * composition names the Sower or the Bower can count it.
+   */
+  yielded: number;
+}
+
 /** A tally with every counter at zero — a commander that has not observed yet. */
 export function emptyWantTally(): WantTally {
   return {
@@ -449,4 +473,9 @@ export function emptyWantTally(): WantTally {
     cannotAfford: 0,
     bought: 0,
   };
+}
+
+/** `emptyWantTally`, with the carrier's seventh reason at zero too. */
+export function emptyCarrierWantTally(): CarrierWantTally {
+  return { ...emptyWantTally(), yielded: 0 };
 }

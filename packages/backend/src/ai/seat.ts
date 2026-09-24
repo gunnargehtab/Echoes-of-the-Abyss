@@ -16,7 +16,7 @@
 import type { EchoSnapshot } from '@echoes/shared';
 import type { Match } from '../sim/match.ts';
 import { AiCommander } from './commander.ts';
-import type { AiBriefing, AiCommand, WantTally } from './types.ts';
+import type { AiBriefing, AiCommand, CarrierWantTally, WantTally } from './types.ts';
 
 export class AiSeat {
   readonly slot: number;
@@ -47,7 +47,7 @@ export class AiSeat {
   }
 
   /** The carrier want's block reasons (#839), passed through the same way. */
-  get carrierWant(): WantTally {
+  get carrierWant(): CarrierWantTally {
     return this.commander.carrierWant;
   }
 

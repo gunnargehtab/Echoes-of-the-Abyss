@@ -33,7 +33,12 @@ import {
   type UnitKind,
 } from '@echoes/shared';
 import { OWN_CARRIER, OWN_ORDNANCE } from '../ai/commander.ts';
-import { emptyWantTally, type WantTally } from '../ai/types.ts';
+import {
+  emptyCarrierWantTally,
+  emptyWantTally,
+  type CarrierWantTally,
+  type WantTally,
+} from '../ai/types.ts';
 import type { MatchTelemetryResult, PlayerTelemetry } from './telemetry.ts';
 
 const FACTION_NAME: Record<Faction, string> = {
@@ -158,9 +163,9 @@ export interface FactionSummary {
    * Why this navy's carrier was or was not bought (#839), summed over the batch
    * on `ordnanceWant`'s terms. A deck the build column never shows is a hull
    * the baseline does not have (`docs/roster-plan.md` §2), and this says which
-   * gate kept it out.
+   * gate kept it out — including the Commune's own two hulls, as `yielded`.
    */
-  carrierWant: WantTally;
+  carrierWant: CarrierWantTally;
   /**
    * The bank against the rung (#518) — what a navy was ever, at one instant,
    * holding, and what it was holding once its yard was standing.
@@ -618,6 +623,20 @@ function sumWants(tallies: readonly WantTally[]): WantTally {
 }
 
 /**
+ * Carrier tallies summed the same way, `yielded` included.
+ *
+ * Each tally is laid over an empty one first, because a result stored between
+ * #880 and the ruling that added `yielded` has the other six and not it — and
+ * an `undefined` summed in is `NaN`, which prints as a well-formed cell. The
+ * six it has still sum to its `reached`, so reading its seventh as zero keeps
+ * the partition.
+ */
+function sumCarrierWants(tallies: readonly Partial<CarrierWantTally>[]): CarrierWantTally {
+  const whole = tallies.map((t) => ({ ...emptyCarrierWantTally(), ...t }));
+  return { ...sumWants(whole), yielded: whole.reduce((n, t) => n + t.yielded, 0) };
+}
+
+/**
  * Minutes this player was actually in the match.
  *
  * Not the match length, which is the bug this replaces. A commander eliminated
@@ -712,9 +731,10 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
       // a TypeError here — *before* the render guard below could decide not to
       // print the table, which is the whole robustness this was supposed to
       // have. `carrierWant` (#839) is newer still, and every stored result
-      // before it is exactly that case.
+      // before it is exactly that case; `sumCarrierWants` covers the one
+      // stored with it and without its seventh reason.
       ordnanceWant: sumWants(rows.map((r) => r.player.ordnanceWant ?? emptyWantTally())),
-      carrierWant: sumWants(rows.map((r) => r.player.carrierWant ?? emptyWantTally())),
+      carrierWant: sumCarrierWants(rows.map((r) => r.player.carrierWant ?? {})),
       peakBank: distribution(rows.map((r) => r.player.peakNodules)).median,
       peakBankBest: Math.max(0, ...rows.map((r) => r.player.peakNodules)),
       peakBankEarned: Math.max(
@@ -1228,12 +1248,14 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
   // "nothing here measured it".
   //
   // The carrier's table (#839) follows it on the same terms, and is printed
-  // under the same rule.
-  const wantTable = (
+  // under the same rule. It carries one row more, `yielded`, in the place its
+  // gate is asked: after the berths and before the purse.
+  const wantTable = <T extends WantTally>(
     heading: string,
     hullOf: Record<Faction, UnitKind>,
-    tallyOf: (f: FactionSummary) => WantTally,
-    footnote: string
+    tallyOf: (f: FactionSummary) => T,
+    footnote: string,
+    beforeThePurse: readonly (readonly [label: string, pick: (t: T) => number])[] = []
   ): void => {
     lines.push(heading);
     lines.push('');
@@ -1251,7 +1273,7 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
     // gate dominates and is comparable between navies that lived different
     // lengths; the count is what makes a share of a handful of observations
     // visible as the noise it is.
-    const wantRow = (label: string, pick: (t: WantTally) => number): void => {
+    const wantRow = (label: string, pick: (t: T) => number): void => {
       const cells = summary.factions.map((f) => {
         const t = tallyOf(f);
         if (t.reached === 0) return '—';
@@ -1262,6 +1284,7 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
     wantRow('Blocked: not escorted', (t) => t.notEscorted);
     wantRow('Blocked: no free yard', (t) => t.noYard);
     wantRow('Blocked: no berth', (t) => t.noBerth);
+    for (const [label, pick] of beforeThePurse) wantRow(label, pick);
     wantRow('Blocked: cannot afford', (t) => t.cannotAfford);
     wantRow('Already has one', (t) => t.alreadyHas);
     wantRow('**Bought**', (t) => t.bought);
@@ -1286,11 +1309,15 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
       '## The carrier want — where it was stopped',
       OWN_CARRIER,
       (f) => f.carrierWant,
-      '_The same six reasons, partitioning the same way. A navy whose **bought** ' +
-        'cell is 0 never put its deck in the water. Every carrier is a Slipway ' +
-        'hull, so a free yard is one that has risen, and "no free yard" counts ' +
-        'the escorted observations before the rung stood as well as those at a ' +
-        'busy yard (#839)._'
+      '_The same six reasons and a seventh, partitioning the same way. A navy ' +
+        'whose **bought** cell is 0 never put its deck in the water. Every ' +
+        'carrier is a Slipway hull, so a free yard is one that has risen, and ' +
+        '"no free yard" counts the escorted observations before the rung stood as ' +
+        'well as those at a busy yard. "Yielded" is an observation at which the ' +
+        "Sower's or the Bower's want was open, so the deck neither bought nor bid: " +
+        'below them in the order of purchase, by the ruling on #839. Only the ' +
+        'Commune names either hull._',
+      [['Yielded to the Sower or the Bower', (t) => t.yielded]]
     );
   }
   // The bank against the rung. Read beside the two tables above, and it is what

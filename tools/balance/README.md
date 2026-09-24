@@ -89,7 +89,10 @@ commander rather than from a snapshot — see `MatchTelemetry.finish`.
 berths, out of the purse. `docs/roster-plan.md` §2 says a hull the commander never buys does not exist in the
 baseline, and this table says which gate kept it out. Every carrier is a Slipway hull, so *no
 free yard* counts the escorted observations before the rung stood as well as those at a busy
-yard.
+yard. A seventh reason, *yielded to the Sower or the Bower*, is the owner's ruling on #839: the
+carrier's want sits below those two in the order of purchase, so while either is open it
+neither buys nor bids. Only the Commune names either hull, so the row reads zero for the other
+three.
 
 **The bank against the rung.** The most nodules a navy ever held at one instant, and the most
 it held once a Slipway was standing. The tables above are rates and counts, and none of
