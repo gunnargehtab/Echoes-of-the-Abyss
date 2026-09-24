@@ -333,8 +333,8 @@ Green leaves entirely. Pelagia's biolight becomes a sky blue and the Commune's
 goes neutral, and the reason is worth stating plainly: the standard palette's
 cold organic green sits about 16 ΔE from Pelagia's algae teal to a *normal* eye
 and 5–7 ΔE under either red-green deficiency. A colourblind player has never
-been able to tell an animal from a Commune hull by colour at all — only by the
-organic outline, which is the identifier the bestiary always intended. These
+been able to tell an animal from a Commune hull by colour at all — only by its
+shape, which is the identifier the bestiary always intended. These
 palettes put the colour back to work; they do not change the standard one,
 because that is an art-direction decision and this is an accessibility issue. Bathyarch keeps amber, because
 hazard amber is doctrine and amber is the one hue these deficiencies keep, and
@@ -383,9 +383,10 @@ made of it should read as the same substance.
 Fauna is the hard case here and the table shows it honestly. Tritanopia's usable
 hues are red-warm, green-cool and neutral; the Commune already owns green and
 the tier ramp already owns teal, so the animals take a cool neutral rather than
-a fifth green that would be indistinguishable from both. They are only ever
-drawn from Tier 3 and always as organic outlines, so the shape is the identifier
-and the colour is what makes it findable.
+a fifth green that would be indistinguishable from both. A classified animal is
+only ever drawn from Tier 3 and always as its species' shape in dots
+([map-visuals.md](map-visuals.md) §8), so the shape is the identifier and the
+colour is what makes it findable.
 
 ### What a palette may not do
 

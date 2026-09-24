@@ -47,7 +47,7 @@ screenshot from the survey dolly.
 | V2 — the gap | The order is right but unwritten, so nothing stops a new layer landing on the wrong rung | — |
 | V3 | Depth is luminance on the ground and in the water. Hue belongs to the biome. Three world-light families. The veil is a drain, not a blackout | [art-direction.md](art-direction.md), [style-neon-noir.md](style-neon-noir.md) "World light" |
 | V4 | Six biomes, each with a fill, a relief row, a prop set and at most one light family, spread across four docs and three files | §7 below collects them |
-| V5 | Tetherjelly fields and Lampfry shoals are public chart data, drawn as discs and motes until Phase 3 (§10). Classified fauna are glyphs | `EchoRenderer.ts` `drawJellies`, `drawShoals`, `drawFaunaSilhouette` |
+| V5 | Tetherjelly fields and Lampfry shoals are public chart data, drawn as stipple in the water since Phase 3 (§10). Classified fauna are stipple shapes since Phase 4 | `faunaStipple.ts`, `faunaAgentStipple.ts` |
 
 The one-line version: *the ground has a shape and a skin, but no survey on it.*
 
@@ -269,9 +269,11 @@ the Echo Layer knows.
 - **Fauna colours stay the palette's.** `FAUNA_COLOR` in all four palettes. The reference's
   cyan and ember options do not transfer: cyan is the interface's voice and ember is the vents'.
 
-The budget is gate 6's. One Points draw per kind, a dot cap per field, and the pulse on the
-GPU. Public life landed as stipple in Phase 3 (§10). The bestiary's silhouettes stay the
-fallback for classified animals until Phase 4 lands.
+The budget is gate 6's, and the two kinds spend it differently. Public life is conn geometry:
+one Points draw per kind, a dot cap per field, and the pulse on the GPU. Classified animals are
+overlay ink, because gate 5 keeps the enemy out of the conn scene at every tier: no draw call
+and no triangle, a fixed dot count per species and tier, and nothing built per frame. Public
+life landed as stipple in Phase 3 and classified animals in Phase 4 (§10).
 
 ## 9. Gates — what changes, what does not
 
@@ -390,6 +392,81 @@ Four choices a reviewer should see:
   everything else in the water, and the water setting can only reveal them. The veil leaves
   them alone, because it touches ground only ([ui-ux.md](ui-ux.md) §4.5).
 - **Reduced motion holds the pulse** and keeps the dots ([ui-ux.md](ui-ux.md) §11).
+
+### Phase 4 — landed
+
+`faunaAgentStipple.ts` draws §8's agents in the overlay's contact symbols, rung 7. Each
+species has one template of dots, made from the parts of the silhouette it replaces at the
+same `lengthM / 2`. Tier 3 draws the first half and Tier 4 all of it. The first half is every
+part's first dots, so a Tier-3 creature is the whole shape, sparse:
+
+| Species | Tier 3 | Tier 4 |
+| --- | ---: | ---: |
+| Ashgrazer | 20 | 40 |
+| Draymaw | 12 | 24 |
+| Sounder | 36 | 72 |
+| Rasp | 16 | 32 |
+| Lampfry | 12 | 24 |
+| Tetherjelly | 16 | 32 |
+| Hollow | 16 | 32 |
+
+A full roster tracked at Tier 4 is 1,536 dots. The count is fixed per species and tier: no
+hp thins a creature, and a Rasp's dots are not a count of the swarm. A dot is 3 CSS px, hard,
+solid, blended normally and still, tinted `FAUNA_COLOR` at the contact's own alpha. Below
+Tier 3 nothing is drawn, and a test forges a Tier-1 and a Tier-2 payload carrying `fauna` to
+show each draws exactly what a hull at its tier draws.
+
+The patterns are shared, built once per species, tier and zoom bucket, so a dot stays about
+3 px at every zoom. A frame picks one and writes a tint and an alpha. The conn scene gains
+nothing: with 48 creatures tracked at Tier 4 it draws the same calls and triangles as with
+none. The five-station drive reads the same calls and triangles before and after, but its
+fight station stages no classified animal, so that test is the counted proof. Real-GPU
+milliseconds are still owed.
+
+The six review frames are in [one sheet](screenshots/issue-868/classified-stipple-frames.png),
+taken on the Ventfront Divide: a Tier-4 Tetherjelly after a ping, on its own field; one Lampfry
+at Tier 3 from passive listening and at Tier 4 after a ping, from the same camera; the home
+frame; the survey dolly; and a low angle at 14°.
+
+**Weighed under the owner's rulings on #866.** A rung is weighed floor against floor, a fading
+mark at its steady peak, and a rimless mark by its loudest crisp element. So rung 7's stipple
+is weighed by one Tier-3 dot, fresh and fully arrived. It lifts both grounds by at least
+twice rung 5's floor and twice rung 6's, in all four palettes, with the unselected ring at
+0.18 or at the 0.27 #866 moves it to. The least margin is in deuteranopia and protanopia over
+the palest ground: 0.232 against 0.112.
+
+**Recorded, not held: a public dot can out-lift an agent's.** A formed shoal's brightest dot
+is additive light, and at its peak it adds nearly its own colour to any ground. It lifts
+0.561 in the standard palette, 0.496 in deuteranopia and protanopia, and 0.459 in
+tritanopia. A Tier-4 agent dot lifts 0.531, 0.470 and 0.434 over black, and 0.441, 0.380
+and 0.345 over the palest ground. A Tier-3 dot lifts 0.324, 0.287 and 0.265 over black.
+Floor against floor allows this, because rung 5's floor is its quiet rims and not its
+loudest dot. Both kinds are `FAUNA_COLOR` in all four palettes, so what keeps them apart is
+form, and a test holds five axes of it:
+
+- **Size.** An agent dot is 3 px; a public dot is at most 2.4.
+- **Edge.** An agent dot is hard; a public dot is soft at its rim.
+- **Blend.** An agent dot is blended normally; a public dot adds light.
+- **Motion.** An agent dot is still; a public dot pulses.
+- **Scale.** A Tetherjelly is 16 m long and a Lampfry 14 m, beside a bell of 22 m radius and
+  a shoal of 40 m.
+
+Four choices a reviewer should see:
+
+- **The overlay, not the conn scene.** Gate 5 says the enemy is never geometry in the conn
+  view, and the smoke test's assertion on that does not move. §8's budget sentence named one
+  Points draw per kind and a dot cap per field. It was read as written for public life, the
+  only thing with a field, and is now scoped to say so.
+- **A ghost keeps its density.** Density follows the tier, which is knowledge, and brightness
+  follows the ghost clock. A ghosted Tier-4 creature keeps its Tier-4 dots and dims. The
+  dots carry no light, so gate 5's rule that a lit sprite claims a present tense does not
+  bite.
+- **The shapes face screen-right**, as the silhouettes did. A fauna contact never carries a
+  heading, so the Draymaw's wedge and the Hollow's gape point nowhere in particular. No shape
+  shows a behaviour, because none crosses the wire.
+- **No screen-size floor.** The shapes are true metres and the dots a constant 3 px. At the
+  opening 4,000 m dolly on a 900 px view a Draymaw is under 4 px across, so Tier 3 and Tier 4
+  look alike there. The silhouettes had no floor either.
 
 ## 11. Open questions
 
