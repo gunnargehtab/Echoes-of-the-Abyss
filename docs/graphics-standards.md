@@ -80,7 +80,11 @@ navy — [asset-prompts-3d.md](asset-prompts-3d.md) Block 2b's "one name, one va
 by its `-<navy>.glb` suffix, the check fails on a model file whose name places it in no
 navy and is not an `env-` prop (a prop belongs to none), which the tool would otherwise
 skip unread. Each navy's module holds one `ink` table for the same reason, so re-finishing
-a fleet is one edit (#888).
+a fleet is one edit (#888). The same module holds the navy's chord rule and panel band,
+`facets` and `panels` ([asset-prompts-3d.md](asset-prompts-3d.md) Block 2c, #919), which
+`node tools/hull-models/facets.mjs` reads the committed files against: it names each ring
+off the rule and each model outside its band, and fails nothing yet, since the pass that
+brings the fleet onto them is still to run.
 
 **Neither holds a port to the model it ported.** A port replaces the hand-exported binary
 with the script's own output, so from that commit on the round-trip check is comparing the

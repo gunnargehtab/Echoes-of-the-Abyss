@@ -31,7 +31,15 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    written — each node's transform, which primitive its buffer
                    is, which nodes share one — and is what a port transcribes
                    from. Port is -z: the bow is on +X and Y is up, so +z is
-                   starboard (kit.mjs `bothSides`, #642).
+                   starboard (kit.mjs `bothSides`, #642). facets.mjs is
+                   Phase 6's last axis (#919): it reads each round part's
+                   section count a turn and each model's panel edge off the
+                   committed files, against the chord rule and panel band
+                   each faction module exports (`facets`, `panels`; kit.mjs
+                   `facetsFor` applies the rule), and names what is off
+                   them. Not a gate until the pass that brings the fleet
+                   onto the rule lands; test/facets.test.mjs is its suite,
+                   npm run test:hull-models.
 tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
                    the sprite maps (Chromium), outlines.mjs writes each modelled
                    kind's plan outline into packages/frontend/src/game/
