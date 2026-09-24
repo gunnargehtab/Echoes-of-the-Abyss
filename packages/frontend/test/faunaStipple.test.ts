@@ -6,12 +6,14 @@
  * about it: a field stays inside its true 250 m at its public working depth, it
  * pulses in place and never travels, it is drawn in `FAUNA_COLOR` in all four
  * palettes, and it costs gate 6 one `Points` draw per kind, a fixed dot count
- * per field, and nothing per frame but uniforms.
+ * per field, and nothing per frame but uniforms. And that every dot lands the
+ * way the ladder weighs it (§5): a cloud is a mark of its own, weighed by its
+ * loudest dot at its peak, and ladder.test.ts holds that weight on rung 5.
  */
 
 import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
-import { BufferAttribute, Color, ShaderMaterial, Vector3 } from 'three';
+import { AdditiveBlending, BufferAttribute, Color, ShaderMaterial, Vector3 } from 'three';
 import { DRIFT } from '@echoes/shared';
 import type { JellyCluster, ShoalTell } from '@echoes/shared';
 import {
@@ -30,6 +32,7 @@ import {
   SHOAL_TWINKLE_S,
   type StippleFrame,
 } from '../src/game/faunaStipple.ts';
+import { FURNITURE_DOT_GAIN } from '../src/game/ladder.ts';
 import { PALETTE_NAMES, PALETTES, setActivePalette } from '../src/game/palette.ts';
 import { DEPTH_VISUAL_M_PER_M } from '../src/game/perspectiveTerrain.ts';
 
@@ -408,6 +411,77 @@ describe('fauna stipple: colour and motion', () => {
       stipple.update(frame(16, { waterDensity: 0 }));
       assert.ok(stipple.jellies.uniforms.uClearness.value < murky);
       assert.equal(stipple.jellies.uniforms.uClearness.value, 0, 'no water, no fade');
+    } finally {
+      stipple.dispose();
+    }
+  });
+});
+
+describe('fauna stipple: as the ladder weighs it (§5)', () => {
+  it('adds each dot, in encoded space, at no more than its peak gain', () => {
+    // ladder.ts weighs a cloud by its loudest dot at its peak: the fauna
+    // colour decoded to linear, times the dot's gain, encoded and added. Each
+    // line below is one factor of that, pinned, so a change to how a dot lands
+    // fails here before the ladder can weigh the wrong thing.
+    const stipple = new FaunaStipple();
+    try {
+      for (const [cloud, lift] of [
+        [stipple.jellies, FURNITURE_DOT_GAIN.jellyBeatLift],
+        [stipple.shoals, 0],
+      ] as const) {
+        const material = cloud.points.material as ShaderMaterial;
+        assert.equal(material.blending, AdditiveBlending, `${cloud.kind} adds`);
+        assert.equal(material.premultipliedAlpha, false, 'and scales the source by its alpha, 1');
+        // The fragment: the colour, times the dot's alpha and its round sprite,
+        // at alpha 1, then encoded. The sprite peaks at 1 at the dot's centre.
+        assert.match(
+          material.fragmentShader,
+          /^\s*gl_FragColor = vec4\( uColor \* vAlpha \* sprite, 1\.0 \);\n\s*#include <colorspace_fragment>$/m
+        );
+        assert.match(material.fragmentShader, /float sprite = smoothstep\( 0\.5, 0\.1, r \);/);
+        // The vertex: the seed, the water's extinction (1 unfogged), the
+        // twinkle (1 at its crest) and the beat's lift (1 + lift at its peak).
+        assert.match(
+          material.vertexShader,
+          new RegExp(
+            `^\\s*vAlpha = aSeed\\.y \\* trans \\* twinkle \\* \\( 1\\.0 \\+ ${lift.toFixed(6).replace('.', '\\.')} \\* beat \\);$`,
+            'm'
+          )
+        );
+        assert.match(material.vertexShader, /float trans = exp\( - t \* t \);/);
+        assert.match(
+          material.vertexShader,
+          /float twinkle = 1\.0 - [\d.]+ \* \( 0\.5 \+ 0\.5 \* sin/
+        );
+      }
+
+      // The seeds: none brighter than its kind's gain, and the brightest
+      // within a few percent of it, which is where the ladder weighs.
+      const formed: ShoalTell = { id: 61, x: 2500, y: 3400, depth: 250, scattered: false };
+      const cases = [
+        {
+          life: () => stipple.setLife(JELLIES, []),
+          cloud: stipple.jellies,
+          gain: FURNITURE_DOT_GAIN.jelly,
+        },
+        {
+          life: () => stipple.setLife([], [formed]),
+          cloud: stipple.shoals,
+          gain: FURNITURE_DOT_GAIN.shoalFormed,
+        },
+        {
+          life: () => stipple.setLife([], [{ ...formed, scattered: true }]),
+          cloud: stipple.shoals,
+          gain: FURNITURE_DOT_GAIN.shoalScattered,
+        },
+      ];
+      for (const { life, cloud, gain } of cases) {
+        life();
+        const seeds = dots(cloud).map((d) => d.seed[1]);
+        const brightest = Math.max(...seeds);
+        assert.ok(brightest <= gain, `${cloud.kind} writes a dot at ${brightest}, over ${gain}`);
+        assert.ok(brightest >= gain * 0.95, `${cloud.kind}'s brightest dot is ${brightest}`);
+      }
     } finally {
       stipple.dispose();
     }
