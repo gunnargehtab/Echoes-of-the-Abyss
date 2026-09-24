@@ -6150,52 +6150,30 @@ export class EchoRenderer {
   /**
    * Lampfry shoals — docs/bestiary.md §4, the scatter tell.
    *
-   * Drawn for every player from the public shoal layer. A formed shoal is a
-   * tight cluster of glowing motes — a landmark to learn, quiet like chart
-   * data. A scattered one is the same motes flung wide and dimmed, plus the
-   * 300 m trigger ring: the tell says *something is inside this circle*, and
-   * the ring is that sentence drawn rather than implied. Fauna light is not
-   * world light (docs/style-neon-noir.md), so this lives in the HUD layer
-   * with the other overlays.
+   * Drawn for every player from the public shoal layer. The shoal itself is a
+   * stipple mote cloud in the water column at its public depth, tight while
+   * formed and flung wide and dim while scattered — the conn view draws that
+   * (faunaStipple.ts, docs/map-visuals.md §8). What stays here is the one
+   * outline a shoal has: a scattered shoal's 300 m trigger ring. The tell says
+   * *something is inside this circle*, and the ring is that sentence drawn
+   * rather than implied.
    *
    * Rung 5, map furniture (docs/map-visuals.md §5). Only the trigger ring is
-   * an outline, so only a scattered shoal is weighed. A formed shoal is motes
-   * and a halo with no rim, and §5's outline rule presumes one, so how it is
+   * an outline, so only a scattered shoal is weighed. A formed shoal is a mote
+   * cloud with no rim, and §5's outline rule presumes one, so how it is
    * weighed is the owner's call, left open in §10.
    */
   private drawShoals(g: Graphics): void {
-    const motes = 5;
     for (const shoal of this.shoals) {
-      // Deterministic per-shoal phase so the clusters differ without a frame
-      // of animation state to carry.
-      const phase = (shoal.id % 7) * 0.9;
-      const spread = shoal.scattered ? 90 : 26;
-      const alpha = shoal.scattered ? 0.35 : 0.8;
-      for (let i = 0; i < motes; i++) {
-        const angle = phase + (i / motes) * Math.PI * 2;
-        const reach = spread * (0.5 + ((i * 53 + shoal.id * 29) % 10) / 18);
-        this.fillCircle(
-          g,
-          shoal.x + Math.cos(angle) * reach,
-          shoal.y + Math.sin(angle) * reach,
-          shoal.scattered ? 5 : 7,
-          null,
-          { color: FAUNA_COLOR, alpha }
-        );
-      }
-      if (shoal.scattered) {
-        // The disclosure, drawn at its true size: something is within 300 m
-        // of the glow — never what, whose, or exactly where.
-        if (this.traceCircle(g, shoal.x, shoal.y, DRIFT.LAMPFRY_SCATTER_RADIUS_M, null)) {
-          g.stroke({
-            width: 1.5,
-            color: FAUNA_COLOR,
-            alpha: FURNITURE_OUTLINE_ALPHA.shoalScatterRing,
-          });
-        }
-      } else {
-        // A soft halo, so a formed shoal reads as one glow at survey zoom.
-        this.fillCircle(g, shoal.x, shoal.y, 40, null, { color: FAUNA_COLOR, alpha: 0.12 });
+      if (!shoal.scattered) continue;
+      // The disclosure, drawn at its true size: something is within 300 m of
+      // the glow — never what, whose, or exactly where.
+      if (this.traceCircle(g, shoal.x, shoal.y, DRIFT.LAMPFRY_SCATTER_RADIUS_M, null)) {
+        g.stroke({
+          width: 1.5,
+          color: FAUNA_COLOR,
+          alpha: FURNITURE_OUTLINE_ALPHA.shoalScatterRing,
+        });
       }
     }
   }
@@ -6203,20 +6181,19 @@ export class EchoRenderer {
   /**
    * Tetherjelly fields — living terrain (docs/bestiary.md §4).
    *
-   * Chart data, so much quieter than a contact or a hazard: a filled disc at
-   * the cluster's true 250 m masking radius and a faint rim. A player reads
-   * the overlap density as how quiet the water is, and a burned lane reads as
-   * the discs that are no longer there.
+   * Chart data, so much quieter than a contact or a hazard. The colony itself
+   * is stipple bells in the water column at its public working depth, drawn
+   * by the conn view (faunaStipple.ts, docs/map-visuals.md §8); what stays
+   * here is the faint rim at the cluster's true 250 m masking radius, lying on
+   * the ground like any other footprint. A player reads the overlap as how
+   * quiet the water is, and a burned lane reads as the rims and bells that are
+   * no longer there.
    *
    * Rung 5, map furniture (docs/map-visuals.md §5): a public field, never an
    * agent. The rim is one of the four outlines rung 5's floor is taken from.
    */
   private drawJellies(g: Graphics): void {
     for (const jelly of this.jellies) {
-      this.fillCircle(g, jelly.x, jelly.y, DRIFT.JELLY_RADIUS_M, null, {
-        color: FAUNA_COLOR,
-        alpha: 0.07,
-      });
       if (this.traceCircle(g, jelly.x, jelly.y, DRIFT.JELLY_RADIUS_M, null)) {
         g.stroke({ width: 1, color: FAUNA_COLOR, alpha: FURNITURE_OUTLINE_ALPHA.jellyRim });
       }
