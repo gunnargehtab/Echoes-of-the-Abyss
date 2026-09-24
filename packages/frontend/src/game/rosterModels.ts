@@ -220,7 +220,9 @@ const FACTION_SLUG: Record<Faction, string> = {
 export type RosterModelKey =
   { unit: UnitKind; faction: Faction } | { structure: StructureKind; faction: Faction };
 
-function slugFor(key: RosterModelKey): string {
+/** The committed file a key resolves, without its `.glb`. Exported for the
+ * test that holds every roster model to intake's scale. */
+export function slugFor(key: RosterModelKey): string {
   const base = 'unit' in key ? UNIT_SLUG[key.unit] : STRUCTURE_SLUG[key.structure];
   return `${base}-${FACTION_SLUG[key.faction]}`;
 }
@@ -243,7 +245,8 @@ export interface RosterModelInstance {
   baseScale: number;
 }
 
-interface Template {
+/** A slug's recoloured, canonicalised model, which every instance clones. */
+export interface Template {
   root: Group;
   lengthM: number;
   beamM: number;
@@ -384,26 +387,72 @@ function designLengthM(key: RosterModelKey): number {
  * (the Bastion arrives fifty times under scale), and the offline maps were
  * always rendered through this same correction, which is why the chart never
  * showed it. Centre last, so yaw and scale are inside the measurement.
+ *
+ * Every measure is intake's: three's loose `Box3.setFromObject`, each part's
+ * own box through its transform, over the parts as the file delivers them. So
+ * it is taken before `mergeByMaterial`, which bakes those transforms into the
+ * vertices and turns the same call into the vertex extent — tighter wherever a
+ * part is yawed or leaned. Until #882 that drew the Pelagia Spore Veil 1.145×
+ * the size intake reviewed and turned the Pelagia Vent Tap a quarter off its
+ * maps, as environmentModels.ts `propFootprint` found for props (#876). The
+ * extents returned are the merged vertices', which is what draws.
  */
 function normalise(scene: Group, key: RosterModelKey): Template {
   const raw = new Box3().setFromObject(scene).getSize(new Vector3());
   if (raw.z > raw.x) scene.rotation.y = Math.PI / 2;
 
-  const root = new Group();
-  root.add(scene);
-  const yawedBox = new Box3().setFromObject(root);
-  const yawedSize = yawedBox.getSize(new Vector3());
-  scene.position.sub(yawedBox.getCenter(new Vector3()));
+  const yawed = new Group();
+  yawed.add(scene);
+  const parts = new Box3().setFromObject(yawed);
+  const partsSize = parts.getSize(new Vector3());
+  const scale = partsSize.x > 0 ? designLengthM(key) / partsSize.x : 1;
 
-  const scale = yawedSize.x > 0 ? designLengthM(key) / yawedSize.x : 1;
+  const merged = mergeByMaterial(yawed);
+  const drawn = new Box3().setFromObject(merged, true).getSize(new Vector3());
+  merged.position.sub(parts.getCenter(new Vector3()));
+
+  const root = new Group();
+  root.add(merged);
   root.scale.setScalar(scale);
   return {
     root,
-    lengthM: yawedSize.x * scale,
-    beamM: yawedSize.z * scale,
-    heightM: yawedSize.y * scale,
+    lengthM: drawn.x * scale,
+    beamM: drawn.z * scale,
+    heightM: drawn.y * scale,
     baseScale: scale,
   };
+}
+
+/**
+ * One slug's template from its parsed file, in the active palette. Exported for
+ * the test that holds every committed roster model to intake's scale; the
+ * parsed scene itself is left untouched.
+ */
+export function buildTemplate(raw: Group, key: RosterModelKey): Template {
+  // Clone before recolouring: the parse cache stays hue-neutral so a
+  // palette switch can recolour fresh rather than compounding tints.
+  const copy = raw.clone(true);
+  // Clone materials through an identity map: parts sharing a glTF
+  // material must keep sharing its clone, or mergeByMaterial sees one
+  // bucket per part and the whole draw-call collapse silently fails.
+  const materialClones = new Map<Material, Material>();
+  const cloneOf = (material: Material): Material => {
+    let clone = materialClones.get(material);
+    if (clone === undefined) {
+      clone = material.clone();
+      materialClones.set(material, clone);
+    }
+    return clone;
+  };
+  copy.traverse((child) => {
+    if (child instanceof Mesh) {
+      child.material = Array.isArray(child.material)
+        ? child.material.map(cloneOf)
+        : cloneOf(child.material);
+    }
+  });
+  recolor(copy, key.faction);
+  return normalise(copy, key);
 }
 
 function loadTemplate(
@@ -422,30 +471,7 @@ function loadTemplate(
   }
   scene
     .then((raw) => {
-      // Clone before recolouring: the parse cache stays hue-neutral so a
-      // palette switch can recolour fresh rather than compounding tints.
-      const copy = raw.clone(true);
-      // Clone materials through an identity map: parts sharing a glTF
-      // material must keep sharing its clone, or mergeByMaterial sees one
-      // bucket per part and the whole draw-call collapse silently fails.
-      const materialClones = new Map<Material, Material>();
-      const cloneOf = (material: Material): Material => {
-        let clone = materialClones.get(material);
-        if (clone === undefined) {
-          clone = material.clone();
-          materialClones.set(material, clone);
-        }
-        return clone;
-      };
-      copy.traverse((child) => {
-        if (child instanceof Mesh) {
-          child.material = Array.isArray(child.material)
-            ? child.material.map(cloneOf)
-            : cloneOf(child.material);
-        }
-      });
-      recolor(copy, key.faction);
-      templates.set(templateKey, normalise(mergeByMaterial(copy), key));
+      templates.set(templateKey, buildTemplate(raw, key));
     })
     .catch(() => {
       // A model that fails to decode is a missing model: the entry stays
