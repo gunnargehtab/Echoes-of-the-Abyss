@@ -3,9 +3,13 @@
  * 160, packages/shared/src/structures.ts), SIG 25 idle.
  *
  * "Unit production hall with a recessed launch bay and gantry cranes (SIG
- * 25 idle, 55 with the line running). Dim at rest; interior forge light
- * spilling from the bay when producing" (docs/asset-prompts-3d.md,
- * STRUCTURE — Foundry). One prompt block, four scripts; the Klaxon's is
+ * 25 idle, 55 with the line running). Dim at rest: the forge light across
+ * the bay and at its mouth, the bay's guide lights or rim strips, the
+ * gantries' lamps, and the navy's own lamps on the halls and the mouth —
+ * running lights, photophores, veins, seams, ridges or crystals; the same
+ * forge light flooding from the bay when producing"
+ * (docs/asset-prompts-3d.md, STRUCTURE — Foundry, as #893 amended it).
+ * One prompt block, four scripts; the Klaxon's is
  * from the earlier authoring pass its Sentinel Turret came from and shares
  * nothing with the other three navies' Foundries, so it ports from
  * `factions/bathyarch.mjs` alone, as the turret did (#639) — "boxy,
@@ -29,8 +33,8 @@
  * rather than on the brightest cladding on the hall, so the bay reads "Dim
  * at rest" as the block asks, and the name and base are now the Slipway's,
  * whose gantry work lights carry both (the note on `ink.amberLamp`).
- * Nothing here is a shape decision; where the export is odd the script is
- * odd with it:
+ * Nothing here is a shape decision but the four lamps #893 moved (LIGHT
+ * below); where the export is odd the script is odd with it:
  *
  * - Port is the export's +x, which `drawn` lands on −z (#642): every `_p`
  *   — pylons, ribs, patches, bay walls, aprons, rails, legs, tanks, the
@@ -47,18 +51,27 @@
  * - The rivets are one box under thirty-two nodes, numbered straight
  *   through four ranks: port low, starboard low, port high, starboard
  *   high, eight a rank at four-unit stations from −32.
- * - Of the ten lamps, the forge floor, the forge back wall's top, the
- *   three rim strips and the gable strip face up. The two roof seams lie
- *   inside the roof slab and the two crane flood patches under their
- *   bridges, so the audit warned on those four; #890 clad them in
- *   `amber_lamp_unlit`, in place and at size, because the block lights
- *   nothing by name at rest — "Dim at rest; interior forge light spilling
- *   from the bay when producing" — and a seam that leaks forge light and a
- *   crane's work flood are the producing band's (docs/models-plan.md §3.2
- *   rule 2). `roof_seam_p/s` and `crane_fwd/aft_floodpatch` are still
- *   parts. The six that face up were not on the list and are carried as
- *   the approved file lights them; whether the block should name them at
- *   rest is #893.
+ * - LIGHT — ten lamps, every one `amber_lamp` at 3.5 and every one lit,
+ *   as the block's resting clause names them since #893 (docs/models-plan.md
+ *   §3.2 rule 1). The Foundry block is one text for four navies and names
+ *   its lamps in words each navy's model answers in its own: "the forge
+ *   light across the bay and at its mouth" is the forge floor, which runs
+ *   to the sill, and the forge back wall's top; "the bay's guide lights or
+ *   rim strips" the three rim strips; "the gantries' lamps" the two crane
+ *   flood patches; and "the navy's own lamps on the halls and the mouth —
+ *   … seams" the two roof seams and the gable strip, which sits over the
+ *   bay's aft end, 125 m from the mouth. Six face up and never moved; the
+ *   other four #893 moved. The approved file had `roof_seam_p/s` inside the
+ *   roof slab (x ±19.6 in a slab to ±20, y 20.4 in a slab to 21) and
+ *   `crane_fwd/aft_floodpatch` under their bridges (y 15.05 under a bridge
+ *   from 15.2), so the audit warned on those four and #890 clad them in
+ *   `amber_lamp_unlit` in place. Each is lit again at its size: a seam runs
+ *   flush along its eave's outer edge at the slab's own height (x ±20.35,
+ *   y 20.2) — it reads as a lit strip along the eave, the seam of light
+ *   where the roof meets the hall, kept there rather than let into the
+ *   roof's top face because a seam is an edge — and a flood patch lies
+ *   along the top of its bridge's chord (y 18.85 on a chord to 18.65), the
+ *   gantry's lamp. Both moves stay inside the step's plan.
  *
  * THE FRAME: a Z-long export (the step's 66 along z against 59.5 across
  * x, pipe end to pipe end), so every number goes through kit.mjs `drawn`
@@ -80,9 +93,6 @@ const rust = bathyarch.ink.oxideRust();
 const grey = bathyarch.ink.ironGrey();
 const amber = bathyarch.ink.hazardAmber();
 const lampM = bathyarch.ink.amberLamp(3.5);
-// The roof seams' and crane floods' finish: the producing band's, so unlit
-// (header).
-const unlit = bathyarch.ink.amberLampUnlit();
 const put = bathyarch.alongZ;
 
 const root = new THREE.Group();
@@ -153,13 +163,16 @@ bathyarch.repairPatches(
   }
 );
 
-// "A recessed launch bay": the walls, sill and aprons, and the forge light
-// spilling from it — the floor, the back wall, the rim strips, the roof
-// seams and the gable strip.
+// "A recessed launch bay": the walls, sill and aprons; "the forge light
+// across the bay and at its mouth" — the floor, running to the sill, and
+// the back wall; "the bay's guide lights or rim strips" — the three rim
+// strips; and "the navy's own lamps on the halls and the mouth — … seams"
+// — the roof seams along the eaves and the gable strip over the bay's aft
+// end (header).
 bathyarch.launchBay(
   root,
   put,
-  { grey, black, amber, lampM, seam: unlit },
+  { grey, black, amber, lampM },
   {
     walls: { size: [2.6, 5.6, 27], x: 12.3, y: 4.4, z: 12.5 },
     aft: { size: [22, 5.6, 2.2], at: [0, 4.4, -0.2] },
@@ -172,16 +185,17 @@ bathyarch.launchBay(
       side: { size: [0.9, 0.5, 27], x: 11.4, y: 7.35, z: 12.5 },
       fwd: { size: [23.7, 0.5, 0.9], at: [0, 7.35, 25.5] },
     },
-    seams: { size: [0.7, 0.7, 31], x: 19.6, y: 20.4, z: -18 },
+    seams: { size: [0.7, 0.7, 31], x: 20.35, y: 20.2, z: -18 },
     gableStrip: { size: [26, 0.9, 0.7], at: [0, 13.8, -0.9] },
   }
 );
 
-// "Gantry cranes": a rail a side, the forward crane and the after one.
+// "Gantry cranes": a rail a side, the forward crane and the after one, each
+// with its lamp along the top of its chord.
 bathyarch.gantryCranes(
   root,
   put,
-  { grey, black, rust, amber, lampM, flood: unlit },
+  { grey, black, rust, amber, lampM },
   {
     rails: { size: [1.6, 1, 28], x: 13.9, y: 8.2, z: 12 },
     cranes: [
@@ -194,7 +208,7 @@ bathyarch.gantryCranes(
     trolley: { size: [3.6, 2, 4], y: 14.2 },
     hook: { size: [1.1, 3.4, 1.1], y: 11.2 },
     stripe: { size: [31, 0.6, 0.2], y: 16.5, proud: 1.71 },
-    flood: { size: [14, 0.4, 1.6], y: 15.05 },
+    flood: { size: [14, 0.4, 1.6], y: 18.85 },
   }
 );
 

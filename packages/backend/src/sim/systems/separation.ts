@@ -9,7 +9,8 @@
  *
  * Deliberately steering rather than physics. There is no momentum, no
  * restitution and no solver — overlapping hulls are pushed apart along the
- * axis between them, a fraction of the overlap per tick. The result reads as
+ * axis between them, a fraction of the overlap per tick (a craft and its own
+ * carrier excepted: only the craft moves, and in one step). The result reads as
  * a fleet keeping station, which is all the design asks for, and it cannot
  * inject energy into the simulation the way an impulse model can.
  *
@@ -18,7 +19,7 @@
  * pairs, and does no square roots on pairs that are not actually overlapping.
  */
 
-import { defineQuery } from 'bitecs';
+import { defineQuery, hasComponent } from 'bitecs';
 import {
   MAX_STRUCTURE_RADIUS_M,
   MAX_UNIT_RADIUS_M,
@@ -28,7 +29,7 @@ import {
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
-import { Position, Structure, Unit } from '../components.ts';
+import { Craft, Position, Structure, Unit } from '../components.ts';
 import { localIdOf, type SimWorld } from '../world.ts';
 import type { Terrain } from '../terrain.ts';
 
@@ -103,7 +104,8 @@ function separateHulls(world: SimWorld, units: ArrayLike<number>): void {
 
     for (let j = 0; j < neighbours.length; j++) {
       const b = neighbours[j]!;
-      // Each pair is resolved once, by the lower id, and both hulls move.
+      // Each pair is resolved once, by the lower id, and both hulls move —
+      // except a craft and its own carrier, below, where only the craft does.
       // Without this the pair would be pushed apart twice per tick, at double
       // the intended stiffness.
       if (b <= a) continue;
@@ -150,11 +152,39 @@ function separateHulls(world: SimWorld, units: ArrayLike<number>): void {
         overlap = minD - d;
       }
 
+      // A craft and the carrier that launched it: the carrier does not move.
+      // Split evenly, a craft driving into its carrier shoved it along the
+      // craft's course — into the gun it was a kilometre from (#863;
+      // docs/systems-combat.md §15). `movementSystem` steers a craft round its
+      // own carrier; this is the half that holds when the carrier is the one
+      // under way. The craft is put clear in one step, a structure's rule and
+      // for its reason: only one of the pair moves, so there is nothing to
+      // oscillate against.
+      const craft = ownCraftOf(world, a, b);
+      if (craft === b) {
+        settle(terrain, b, bx + nx * overlap, by + ny * overlap);
+        continue;
+      }
+      if (craft === a) {
+        settle(terrain, a, ax - nx * overlap, ay - ny * overlap);
+        continue;
+      }
+
       const push = overlap * SEPARATION.STIFFNESS * 0.5;
       settle(terrain, a, ax - nx * push, ay - ny * push);
       settle(terrain, b, bx + nx * push, by + ny * push);
     }
   }
+}
+
+/**
+ * Whichever of an overlapping pair is a craft launched by the other, or 0.
+ * Asked only of pairs that overlap, so it costs nothing on the rest.
+ */
+function ownCraftOf(world: SimWorld, a: number, b: number): number {
+  if (hasComponent(world, Craft, b) && Craft.carrier[b] === a) return b;
+  if (hasComponent(world, Craft, a) && Craft.carrier[a] === b) return a;
+  return 0;
 }
 
 /**

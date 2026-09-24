@@ -3,468 +3,481 @@
  * packages/frontend/src/game/environment.ts), the largest thing standing
  * in the Coral Ruins.
  *
- * "Coral Ruins | env-ruin-dome-shard | 40 m | 14 m | ≤ 600 | none ... ruin
+ * "Coral Ruins | env-ruin-dome-shard | 40 m | 16 m | ≤ 600 | none ... ruin
  * props carry the geometric patterns of art-direction.md's 'Environmental
  * Shapes' — right angles, terraces, a civilisation's worth of coral growth
- * over them" (docs/asset-prompts-3d.md, Block 4), under ENV STYLE:
- * "Natural or ruined form — stone, coral ... pressure-scarred and ancient;
- * nothing manufactured ... low-poly with crisp facets, at most two
- * materials", and no light of any kind. Two materials, 544 triangles,
- * 14.26 m tall by 40 by 28.9 across at its 40 m by intake's measure
- * (`sizeM`); 14.1 m tall by 39.6 across raw, which is the frame every
- * figure below is in, before the root's fit. #879 moved the row's height
- * from 20 m to the file's, and left the shape to #883, which re-authors
- * this whole dome as the shard its slug names.
+ * over them" (docs/asset-prompts-3d.md, Block 4), under ENV STYLE: "Natural
+ * or ruined form — stone, coral ... pressure-scarred and ancient; nothing
+ * manufactured ... low-poly with crisp facets, at most two materials", no
+ * light of any kind, and the checklist's "nothing that could be mistaken
+ * for a structure". Two materials, 508 triangles, 15.78 m tall by 40 by
+ * 15.6 across at its 40 m by intake's measure (`sizeM`); the row's height
+ * is this file's (#883).
  *
- * A port of the approved export
- * (docs/concept-art/models/env-ruin-dome-shard.glb as committed before
- * #869), part for part in its order, every number the export's own. The
- * whole file is a design drawn round a dome and then stretched 1.42 times
- * along X — the one factor under which every coral crust in it is an
- * icosahedron or an octahedron scaled and turned and nothing else, exact
- * to the float — so the design is written here un-stretched, x the file's
- * over 1.42 and y and z the file's, and the stretch goes on the root and
- * is baked into every buffer as the export baked it (seabed.mjs, "The
- * ruins"). What the file is made of:
+ * Authored here rather than ported (#883, decided on #879). The approved
+ * export was a whole closed dome, sixteen meridians all the way round and
+ * double-walled, which the slug and the checklist both refuse: a Bastion
+ * is "a large pressure dome", and an intact one on the seabed is a
+ * structure until proved otherwise. What stands now is a broken piece of
+ * one, and no part of it is a table: every number below is a formula of
+ * the dome it was cut from, so the piece can be re-cut by editing `TEAR`.
  *
- * - `shell`, in `stone_dark` two-sided as the file flags it — not because
- *   a dome is seen from inside, since nothing inside a closed double-walled
- *   shell can be seen. The flag had a job: 64 of the file's 256 triangles
- *   were wound against their skins and `doubleSided` kept the crown closed
- *   at runtime, until #878 turned them round (`lattice` below); it stays as
- *   the file's own value, since dropping it is a material change and not a
- *   winding fix. The shell is not a shard of a dome but a whole one,
- *   double-walled, an outer skin and an inner one 0.9 of its radius, each
- *   an apex over four rings of sixteen meridians, stitched into 256
- *   triangles by one rule column by column (`lattice` below). The lattice
- *   is a formula the generator then pushed about — ten of the sixteen
- *   meridians hold their rings' heights to the float and six sag toward
- *   the crown, every vertex has its own bearing and radius, and the two
- *   apexes sit 0.47 m off the axis together — and kept no random for, so
- *   its 130 vertices are a table, ring by ring from the apex down, outer
- *   skin then inner, as the crags' drums are tables (kit.mjs `faceted`).
- * - Nine `rib_i_j` and six `band_i`, in `stone_dark`: three ribs down each
- *   of three meridians, a course of six bands round one latitude, boxes
- *   laid along the dome — every rib 1.667 by 1.079 in section and every
- *   band 1.47 by 0.88, in the un-stretched frame the table below is
- *   written in; in the file's frame the stretch makes a section depend on
- *   its bearing, ribs 0 and 1 1.91 wide and the three `rib_2_*` across it
- *   2.34. The generator laid them by a basis it built from the lattice
- *   and never orthogonalised, so each is a parallelepiped rigid to a part
- *   in ten thousand and no further: its centre and three edge vectors
- *   (seabed.mjs `skewed`), the file's own.
+ * - The dome: a spheroid of radius 22.07 m at the foot and 15.9 m at the
+ *   crown (0.72 of the radius), a 44 m dome, of which the shard keeps 130°
+ *   of the foot, ±65° about its middle. The chord of that arc is the
+ *   footprint, 40 m to the float, so the two ends of the arc are the widest
+ *   thing in the file and `stand` finds ×1.000. The dome's axis sits 22 m
+ *   behind the middle of the foot, 15 m behind the plan box's centre, and
+ *   the shell leans in toward it as it rises, so at the 55° camera the
+ *   piece reads as a bowl fragment — convex outside, concave in — and never
+ *   as a wall. From over the concave side the overhang hides the upper
+ *   half of the inner skin, and it reads as a rim with the fallen pieces
+ *   inside it.
+ * - `shell`, in `stone_dark`: a closed solid 1.3 m thick — an outer skin,
+ *   an inner skin 1.3 m inside it, the torn top between the two, the two
+ *   cut ends of the arc, and the foot facing down. Thirteen meridians 10.8°
+ *   apart, rings every fifth of the way to the crown (`LEVEL`), and the
+ *   tear is one height a meridian (`TEAR`, as a fraction of the way to the
+ *   crown): 0.74 at the fifth meridian, down to 0.17 and 0.12 at the two
+ *   ends, a notch at the seventh and a tooth at the eleventh. A column's
+ *   skin between two full rings is two triangles; above the last ring both
+ *   its meridians share it is one polygon fanned from the lower meridian's
+ *   torn top (`cap`), so a tear that climbs three rings inside one column
+ *   is three facets and not a sliver. Above the foot every ring is pushed
+ *   in or out by up to 0.35 m a meridian (`SCAR`), the pressure scarring;
+ *   the foot is the spheroid's own, and the four rib meridians are left
+ *   unpushed so a rib lies flat on its skin.
+ * - Four `rib_*` and one `band`, in `stone_dark`: stone courses 2.2 by 1.3 m
+ *   in section lofted up a meridian, 1.7 by 1.1 m round the parallel at
+ *   0.43, each one bar of stations stitched into four walls and two caps
+ *   (`bar`) and buried a quarter metre in the skin, so a course follows its
+ *   curve without a step at a joint. Each rib stops its own way, which is
+ *   what says "broken" at the camera's distance: `rib_a` (−43°) half a
+ *   ring under the tear, which falls steeply across it toward the arc's
+ *   end, `rib_b` (−11°) two metres past it, standing proud of the torn
+ *   edge, `rib_c` (+33°) broken off a fifth of the way up with bare shell
+ *   above it, `rib_d` (+11°) three-quarters of a ring short. The band
+ *   runs from the third column to halfway across the eighth and ends short
+ *   of the shell at both ends.
+ * - The fallen pieces, in `stone_dark`: two chunks of shell and a length of
+ *   rib inside the arc, one chunk outside it — each a box lying flat on
+ *   the ground at its own bearing (`fallen`) — and two tetrahedral shards
+ *   resting on a face. Flat rather than tipped: the runtime seats a prop
+ *   by its lowest vertex (environmentModels.ts), so a piece balanced on a
+ *   corner lifts nothing and only floats its far end.
  * - Nine `coral_NN`, in `coral_stone`: four icosahedra and five octahedra
- *   squashed flat and turned, six round the foot at y = 3.2, three on the
- *   skin — a unit polyhedron with its size, tilt and place on the node.
+ *   squashed flat and laid on a surface with their flat axis along its
+ *   normal (`crust`): four round the foot outside, two on the torn edge,
+ *   one on `rib_b`, one on the inner skin, one on the largest fallen chunk.
+ *   A crust on the outer skin sits a tenth of a metre inside the spheroid,
+ *   because a facet lies inside the curve it stands in for by up to 0.35 m
+ *   and a crust lifted off the curve would float over the facet. The inner
+ *   skin's facets lie the other way, out in the hollow, so its crust sits
+ *   0.15 m off the curve toward the axis instead; the same lift into the
+ *   wall buried it whole.
  *
- * The root is the export's — `env_ruin_dome_shard`, an identity: the file
- * is centred on its plan box and grounded on y = 0 in the buffers, to the
- * bit, which the table carries — and, new in the port, held at 40 m by the
- * measure intake takes: the export measured 39.5714 across on X and baked
- * at ×1.011 with a rescale warning, so the root carries that one factor
- * and no lift (seabed.mjs `stand`, with no lift, since the file's root has
- * none). `diff.mjs env-ruin-dome-shard 400797b` — the pre-port binary —
- * divides it out and lists one thing else: `shell` with 64 of its 256
- * triangles in the opposite order, which is the #878 fix and nothing moved.
+ * Every face faces its surface — the outer skin out, the inner in, the tear
+ * up its meridian, the ends along the arc, the foot down, every brick and
+ * shard a positive volume — and the script checks each triangle of the
+ * shell against the dome it was cut from before it writes anything.
+ * Intake's bake is single-sided, and #878 found 64 wrong-facing triangles
+ * in the old file that its two-sided `stone_dark` had hidden at runtime;
+ * the material is one-sided here for that reason (seabed.mjs `stoneDark`),
+ * so a fault the check misses shows in the maps rather than in nothing.
+ *
+ * The root is `env_ruin_dome_shard`, an identity: every placement is baked
+ * into its buffer as the ruin exports were (seabed.mjs `bake`), the whole
+ * centred on its plan box and standing on y = 0, then held at 40 m
+ * (seabed.mjs `stand`, with nothing to do). `diff.mjs env-ruin-dome-shard`
+ * against the pre-#883 binary lists every part, which is the point.
  */
 import { THREE, add, faceted, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
 
 const FOOTPRINT = 40;
-const DRAWN = 39.5714;
-const STRETCH = 1.42;
+const DRAWN = 40;
+const MAX_TRIS = 600;
 
-const stone = seabed.ground.stoneDark({ twoSided: true });
+const stone = seabed.ground.stoneDark();
 const coral = seabed.ground.coralStoneRuin();
 
 const shard = new THREE.Group();
 shard.name = 'env_ruin_dome_shard';
 
-// The two skins: apex, then four rings of sixteen, from the crown down.
-// The un-pushed rings sit at y = 12.29733, 9.44401, 5.15255 and 0.04791
-// outside and 11.02448, 8.45649, 4.59417 and 0 inside; the six pushed
-// meridians are columns 2, 3, 7, 8, 11 and 14 of each ring.
-const OUTER = [
-  [-0.34077, 13.29696, 0.33003],
-  // ring 1
-  [4.80152, 12.29733, 0.39174],
-  [4.42602, 12.29733, 2.25996],
-  [2.92634, 12.48942, 3.62337],
-  [1.46897, 12.38514, 4.9048],
-  [-0.27905, 12.29733, 5.47231],
-  [-2.34672, 12.29733, 5.06533],
-  [-3.9626, 12.29733, 3.98095],
-  [-4.49023, 12.54903, 1.99074],
-  [-5.14785, 12.42759, 0.40695],
-  [-5.08405, 12.29733, -1.65697],
-  [-3.94797, 12.29733, -3.33536],
-  [-2.21165, 12.44844, -4.0377],
-  [-0.25849, 12.29733, -4.81197],
-  [1.60822, 12.29733, -4.429],
-  [3.20555, 12.36355, -3.16],
-  [4.39453, 12.29733, -1.67593],
-  // ring 2
-  [9.19493, 9.44401, 0.44446],
-  [8.49861, 9.44401, 3.90884],
-  [5.80907, 10.16179, 6.52926],
-  [3.03831, 9.77081, 8.87187],
-  [-0.22633, 9.44401, 9.86572],
-  [-4.06055, 9.44401, 9.11101],
-  [-7.05698, 9.44401, 7.10018],
-  [-8.18755, 10.38674, 3.47049],
-  [-9.34609, 9.92957, 0.47412],
-  [-9.13656, 9.44401, -3.3546],
-  [-7.02984, 9.44401, -6.46694],
-  [-3.85126, 10.00778, -7.86549],
-  [-0.18819, 9.44401, -9.20513],
-  [3.27338, 9.44401, -8.49497],
-  [6.26963, 9.69026, -6.17544],
-  [8.44022, 9.44401, -3.38975],
-  // ring 3
-  [12.19963, 5.15255, 0.48052],
-  [11.28391, 5.15255, 5.03653],
-  [7.96829, 6.58792, 8.70582],
-  [4.15877, 5.80126, 11.70425],
-  [-0.19027, 5.15255, 12.87042],
-  [-5.23265, 5.15255, 11.87791],
-  [-9.17326, 5.15255, 9.23346],
-  [-11.02986, 7.04569, 4.60806],
-  [-12.40376, 6.11931, 0.52305],
-  [-11.90812, 5.15255, -4.51563],
-  [-9.13757, 5.15255, -8.60867],
-  [-5.05691, 6.27667, -10.68018],
-  [-0.14011, 5.15255, -12.20966],
-  [4.4122, 5.15255, -11.27572],
-  [8.43479, 5.64061, -8.30624],
-  [11.20711, 5.15255, -4.56186],
-  // ring 4, the foot
-  [13.37804, 0.04791, 0.49466],
-  [12.37627, 0.04791, 5.47879],
-  [9.14997, 2.18826, 9.89699],
-  [4.68151, 1.00379, 13.02569],
-  [-0.17613, 0.04791, 14.04883],
-  [-5.69234, 0.04791, 12.96305],
-  [-10.00324, 0.04791, 10.07011],
-  [-12.70747, 2.88995, 5.27947],
-  [-13.93358, 1.47939, 0.54753],
-  [-12.9951, 0.04791, -4.97097],
-  [-9.9642, 0.04791, -9.44863],
-  [-5.67957, 1.71636, -12.13382],
-  [-0.12126, 0.04791, -13.38801],
-  [4.85883, 0.04791, -12.36631],
-  [9.40662, 0.76529, -9.26264],
-  [12.29226, 0.04791, -5.02155],
-];
-const INNER = [
-  [-0.34077, 11.92414, 0.33003],
-  // ring 1
-  [4.28729, 11.02448, 0.38556],
-  [3.94934, 11.02448, 2.06697],
-  [2.59963, 11.19735, 3.29404],
-  [1.288, 11.10351, 4.44733],
-  [-0.28523, 11.02448, 4.95808],
-  [-2.14613, 11.02448, 4.5918],
-  [-3.60042, 11.02448, 3.61586],
-  [-4.07528, 11.25101, 1.82467],
-  [-4.66714, 11.14171, 0.39925],
-  [-4.60972, 11.02448, -1.45827],
-  [-3.58725, 11.02448, -2.96882],
-  [-2.02456, 11.16048, -3.60093],
-  [-0.26671, 11.02448, -4.29777],
-  [1.41333, 11.02448, -3.9531],
-  [2.85092, 11.08408, -2.811],
-  [3.92101, 11.02448, -1.47533],
-  // ring 2
-  [8.24136, 8.45649, 0.43302],
-  [7.61468, 8.45649, 3.55096],
-  [5.19409, 9.10249, 5.90934],
-  [2.7004, 8.75061, 8.01769],
-  [-0.23777, 8.45649, 8.91215],
-  [-3.68857, 8.45649, 8.23291],
-  [-6.38536, 8.45649, 6.42317],
-  [-7.40287, 9.30494, 3.15645],
-  [-8.44556, 8.8935, 0.45971],
-  [-8.25698, 8.45649, -2.98614],
-  [-6.36093, 8.45649, -5.78724],
-  [-3.50021, 8.96388, -7.04594],
-  [-0.20345, 8.45649, -8.25162],
-  [2.91196, 8.45649, -7.61247],
-  [5.60859, 8.67812, -5.52489],
-  [7.56212, 8.45649, -3.01778],
-  // ring 3
-  [10.94559, 4.59417, 0.46547],
-  [10.12144, 4.59417, 4.56588],
-  [7.13738, 5.886, 7.86824],
-  [3.70881, 5.17801, 10.56683],
-  [-0.20532, 4.59417, 11.61638],
-  [-4.74346, 4.59417, 10.72312],
-  [-8.29001, 4.59417, 8.34312],
-  [-9.96095, 6.29801, 4.18025],
-  [-11.19746, 5.46426, 0.50375],
-  [-10.75138, 4.59417, -4.03106],
-  [-8.25789, 4.59417, -7.7148],
-  [-4.5853, 5.60589, -9.57916],
-  [-0.16018, 4.59417, -10.95569],
-  [3.9369, 4.59417, -10.11515],
-  [7.55724, 5.03343, -7.44261],
-  [10.05233, 4.59417, -4.07267],
-  // ring 4, the foot, on the ground
-  [12.00616, 0, 0.4782],
-  [11.10456, 0, 4.96392],
-  [8.20089, 1.92631, 8.94029],
-  [4.17929, 0.86029, 11.75612],
-  [-0.19259, 0, 12.67695],
-  [-5.15718, 0, 11.69975],
-  [-9.03699, 0, 9.0961],
-  [-11.47079, 2.55783, 4.78453],
-  [-12.5743, 1.28834, 0.52578],
-  [-11.72966, 0, -4.44087],
-  [-9.00186, 0, -8.47077],
-  [-5.14569, 1.50161, -10.88743],
-  [-0.14321, 0, -12.01621],
-  [4.33887, 0, -11.09668],
-  [8.43188, 0.64564, -8.30337],
-  [11.02896, 0, -4.48639],
-];
+// The dome the shard is a piece of, with its axis on the origin and the
+// piece on +z, and the piece: the arc, the rings, the tear, the scarring.
+const ARC_DEG = 65;
+const R = FOOTPRINT / 2 / Math.sin((ARC_DEG * Math.PI) / 180);
+const H = 0.72 * R;
+const T = 1.3;
+const M = 12;
+const LEVEL = 0.2;
+const TEAR = [0.17, 0.31, 0.52, 0.67, 0.74, 0.69, 0.57, 0.65, 0.47, 0.36, 0.45, 0.28, 0.12];
+const SCAR = [0.15, -0.3, 0, 0.35, -0.2, 0, 0.3, 0, -0.35, 0, 0.25, -0.15, 0.1];
+
+const v3 = (p) => new THREE.Vector3(...p);
+/** Bearing of column `j` (fractions allowed), from the middle of the arc. */
+const theta = (j) => ((-ARC_DEG + (2 * ARC_DEG * j) / M) * Math.PI) / 180;
+/** The scarring at (j, u): a meridian's push, ramped in over the first quarter of the height. */
+function scar(j, u) {
+  const a = Math.floor(j);
+  const f = j - a;
+  const s = f === 0 ? SCAR[a] : SCAR[a] * (1 - f) + SCAR[a + 1] * f;
+  return s * Math.min(1, u / 0.25);
+}
+/** A point on a skin at bearing `j` and height fraction `u`: `inset` 0 for the outer, T for the inner. */
+function skin(j, u, inset = 0) {
+  const phi = (u * Math.PI) / 2;
+  const r = (R - inset) * Math.cos(phi) + scar(j, u);
+  const y = (H - inset) * Math.sin(phi);
+  return [r * Math.sin(theta(j)), y, r * Math.cos(theta(j))];
+}
+/** The spheroid's outward normal at (j, u). */
+function normal(j, u) {
+  const [x, y, z] = skin(j, u);
+  return new THREE.Vector3(x / (R * R), y / (H * H), z / (R * R)).normalize();
+}
+/** Up the meridian at (j, u), toward the crown. */
+function upward(j, u) {
+  const phi = (u * Math.PI) / 2;
+  const t = theta(j);
+  return new THREE.Vector3(
+    -R * Math.sin(phi) * Math.sin(t),
+    H * Math.cos(phi),
+    -R * Math.sin(phi) * Math.cos(t)
+  ).normalize();
+}
+/** Along the parallel at bearing `j`, toward +j. */
+const along = (j) => new THREE.Vector3(Math.cos(theta(j)), 0, -Math.sin(theta(j)));
+
+// ---------------------------------------------------------------------------
+// The shell: a point per meridian per ring on each skin, then the stitch.
+// ---------------------------------------------------------------------------
+const pts = [];
+const P = (p) => pts.push(p) - 1;
+const kmax = TEAR.map((t) => Math.floor(t / LEVEL));
+const O = [];
+const I = [];
+const TO = [];
+const TI = [];
+for (let j = 0; j <= M; j++) {
+  O[j] = [];
+  I[j] = [];
+  for (let k = 0; k <= kmax[j]; k++) {
+    O[j][k] = P(skin(j, k * LEVEL));
+    I[j][k] = P(skin(j, k * LEVEL, T));
+  }
+  TO[j] = P(skin(j, TEAR[j]));
+  TI[j] = P(skin(j, TEAR[j], T));
+}
+
+const tris = [];
+const group = [];
+const emit = (name, list) => {
+  for (const t of list) {
+    tris.push(t);
+    group.push(name);
+  }
+};
+const flip = ([a, b, c]) => [a, c, b];
 
 /**
- * The generator's stitch, meridian by meridian round the dome: for each
- * column, the outer apex triangle, the inner one, then band by band the
- * outer quad and the inner quad, then the quad across the foot between the
- * skins — sixteen triangles a column, 256 in the file's own order. The
- * outer quads are cut on seabed.mjs `column`'s diagonal and wound outward,
- * and the inner quads are the same two triangles wound the other way, so
- * the inner skin faces in — 192 triangles the file had the right way
- * round. The other 64 it wound against their skins: the outer crown fan
- * (16, facing down into the dome) and the inner crown fan (16, facing up
- * into the wall), which a single-sided bake shows as a see-through ring
- * round the crown, between the two apex rings; and the foot ring between
- * the skins (32, facing up), under the outer skin where no bake sees it.
- * #878 turned each of the three groups round on its own corners — the
- * outer fan up, the inner fan down, the foot ring down — so the shell is a
- * closed solid wall, and `diff.mjs` reads the 64 as reversed at the same
- * vertices.
+ * A column's skin above the last ring both its meridians share, as one
+ * polygon — anticlockwise in (bearing, height) — fanned from the torn top
+ * of the lower meridian, the one corner no other corner is in line with.
  */
-function lattice(outer, inner) {
-  const N = 16;
-  const O = 0;
-  const I = outer.length;
-  const o = (k, j) => 1 + k * N + (j % N);
-  const i = (k, j) => I + 1 + k * N + (j % N);
-  const tris = [];
-  for (let j = 0; j < N; j++) {
-    tris.push([O, o(0, j + 1), o(0, j)], [I, i(0, j), i(0, j + 1)]);
-    for (let k = 0; k < 3; k++)
-      tris.push(
-        [o(k, j), o(k, j + 1), o(k + 1, j + 1)],
-        [o(k, j), o(k + 1, j + 1), o(k + 1, j)],
-        [i(k, j), i(k + 1, j), i(k + 1, j + 1)],
-        [i(k, j), i(k + 1, j + 1), i(k, j + 1)]
-      );
-    tris.push([o(3, j), i(3, j + 1), i(3, j)], [o(3, j), o(3, j + 1), i(3, j + 1)]);
-  }
-  return faceted([...outer, ...inner], tris);
+function cap(j, S, TT) {
+  const m = Math.min(kmax[j], kmax[j + 1]);
+  const poly = [S[j][m], S[j + 1][m]];
+  for (let k = m + 1; k <= kmax[j + 1]; k++) poly.push(S[j + 1][k]);
+  poly.push(TT[j + 1], TT[j]);
+  for (let k = kmax[j]; k > m; k--) poly.push(S[j][k]);
+  const apex = poly.indexOf(kmax[j] <= kmax[j + 1] ? TT[j] : TT[j + 1]);
+  const out = [];
+  const n = poly.length;
+  for (let i = 1; i + 1 < n; i++)
+    out.push([poly[apex], poly[(apex + i) % n], poly[(apex + i + 1) % n]]);
+  return out;
 }
-add(shard, 'shell', lattice(OUTER, INNER), stone);
 
-// The ribs and bands: centre, then the edge vectors along the box's own x,
-// y and z — its width across the meridian, its thickness off the skin and
-// its length along the dome. Ribs 0 and 1 run down the +z face of the
-// dome either side of x = 0, ribs 2 down its −z face; the bands sit round
-// y = 11.19 at six of eight bearings.
-const LAID = [
-  [
-    'rib_0_0',
-    [4.11926, 12.58061, 3.29723],
-    [0.92452, 0.00189, -1.387],
-    [0.34311, 0.9964, 0.23],
-    [3.89951, -1.94231, 2.59666],
-  ],
-  [
-    'rib_0_1',
-    [7.66862, 9.83815, 5.65859],
-    [0.92538, 0.00102, -1.3863],
-    [0.61462, 0.78543, 0.41063],
-    [3.07224, -3.47573, 2.04862],
-  ],
-  [
-    'rib_0_2',
-    [10.17859, 5.76302, 7.32845],
-    [0.92587, -0.00028, -1.38583],
-    [0.80618, 0.47267, 0.53808],
-    [1.84622, -4.55764, 1.23566],
-  ],
-  [
-    'rib_1_0',
-    [-4.71758, 12.62411, 3.22927],
-    [0.92172, -0.00191, 1.38886],
-    [-0.33674, 0.99976, 0.2248],
-    [-3.74041, -1.81759, 2.47989],
-  ],
-  [
-    'rib_1_1',
-    [-8.1477, 10.07175, 5.5014],
-    [0.92256, -0.0011, 1.38818],
-    [-0.59915, 0.80338, 0.39862],
-    [-3.00425, -3.2306, 1.99436],
-  ],
-  [
-    'rib_1_2',
-    [-10.6535, 6.27588, 7.16126],
-    [0.92307, 0.00011, 1.38771],
-    [-0.79045, 0.51201, 0.52534],
-    [-1.91234, -4.26071, 1.27349],
-  ],
-  [
-    'rib_2_0',
-    [-1.43685, 12.44485, -5.23856],
-    [-1.63563, 0.00034, 0.3217],
-    [-0.08424, 0.98592, -0.42933],
-    [-1.01671, -2.33682, -5.1668],
-  ],
-  [
-    'rib_2_1',
-    [-2.33988, 9.1006, -9.82633],
-    [-1.63565, 0.00014, 0.32153],
-    [-0.15333, 0.72868, -0.78037],
-    [-0.75103, -4.24774, -3.81869],
-  ],
-  [
-    'rib_2_2',
-    [-2.90925, 4.16547, -12.71899],
-    [-1.63564, -0.00014, 0.32147],
-    [-0.1968, 0.34982, -1.00116],
-    [-0.35985, -5.44969, -1.83326],
-  ],
-  [
-    'band_0',
-    [3.94391, 11.19384, 6.89705],
-    [-0.66477, 0.82549, -1.01965],
-    [0.27009, 0.73042, 0.41517],
-    [5.15219, 0.003, -3.35668],
-  ],
-  [
-    'band_1',
-    [-1.95463, 11.19384, 8.00333],
-    [0.25045, 0.82554, -1.1913],
-    [-0.10172, 0.73041, 0.48477],
-    [6.01838, -0.00105, 1.26453],
-  ],
-  [
-    'band_2',
-    [-6.90779, 11.19384, 4.6147],
-    [1.0193, 0.82536, -0.66556],
-    [-0.41409, 0.73044, 0.2716],
-    [3.36539, -0.00545, 5.14703],
-  ],
-  [
-    'band_3',
-    [-8.01407, 11.19384, -1.28384],
-    [1.1919, 0.82459, 0.2489],
-    [-0.48471, 0.73058, -0.09917],
-    [-1.24918, -0.0124, 6.02147],
-  ],
-  [
-    'band_4',
-    [-4.62544, 11.19384, -6.237],
-    [0.66497, 0.82549, 1.01965],
-    [-0.27009, 0.73042, -0.41517],
-    [-5.15219, 0.003, 3.35754],
-  ],
-  [
-    'band_5',
-    [1.2731, 11.19384, -7.34328],
-    [-0.25042, 0.82554, 1.1913],
-    [0.10172, 0.73041, -0.48477],
-    [-6.01838, -0.00105, -1.26441],
-  ],
-];
-for (const [name, centre, ex, ey, ez] of LAID)
-  add(shard, name, seabed.skewed(centre, ex, ey, ez), stone);
+// Column by column: the outer skin's quads (foot to the last shared ring,
+// wound outward, anticlockwise seen from above along the arc), the inner
+// skin's the other way, each skin's cap, the torn top between the skins,
+// and the foot between them facing down.
+for (let j = 0; j < M; j++) {
+  const m = Math.min(kmax[j], kmax[j + 1]);
+  for (let k = 0; k < m; k++) {
+    emit('outer', [
+      [O[j][k], O[j + 1][k], O[j + 1][k + 1]],
+      [O[j][k], O[j + 1][k + 1], O[j][k + 1]],
+    ]);
+    emit('inner', [
+      flip([I[j][k], I[j + 1][k], I[j + 1][k + 1]]),
+      flip([I[j][k], I[j + 1][k + 1], I[j][k + 1]]),
+    ]);
+  }
+  emit('outer', cap(j, O, TO));
+  emit('inner', cap(j, I, TI).map(flip));
+  emit('tear', [
+    [TO[j], TO[j + 1], TI[j + 1]],
+    [TO[j], TI[j + 1], TI[j]],
+  ]);
+  emit('foot', [
+    [O[j][0], I[j + 1][0], O[j + 1][0]],
+    [O[j][0], I[j][0], I[j + 1][0]],
+  ]);
+}
+// The two cut ends of the arc, ring by ring up to the torn top; the first
+// faces back along the arc and the last forward.
+function end(j, outward) {
+  const co = [...O[j], TO[j]];
+  const ci = [...I[j], TI[j]];
+  const out = [];
+  for (let k = 0; k + 1 < co.length; k++) {
+    const a = [co[k], co[k + 1], ci[k + 1]];
+    const b = [co[k], ci[k + 1], ci[k]];
+    out.push(outward ? a : flip(a), outward ? b : flip(b));
+  }
+  return out;
+}
+emit('end0', end(0, true));
+emit('endM', end(M, false));
 
-// The coral crusts: a unit polyhedron, its size, its place and its XYZ
-// tilt on the node. Six at the foot on y = 3.22, one on a band, one on
-// the crown by rib_0_0, one on the −z face by rib_2_1.
-const CORAL = [
-  [
-    'coral_01',
-    seabed.ico,
-    [2.80447, 0.90606, 2.37301],
-    [12.83293, 3.2196, 2.97784],
-    [-1.05749, -0.32784, -1.60771],
-  ],
-  [
-    'coral_02',
-    seabed.octa,
-    [2.47107, 0.95313, 1.76505],
-    [2.23227, 3.61662, 13.40213],
-    [-1.65915, -0.84139, -2.86063],
-  ],
-  [
-    'coral_03',
-    seabed.ico,
-    [2.15728, 0.70602, 2.74563],
-    [-9.80418, 3.2196, 9.86946],
-    [2.20148, -0.73612, 1.16071],
-  ],
-  [
-    'coral_04',
-    seabed.octa,
-    [2.23573, 1.11786, 2.23573],
-    [-11.46836, 3.2196, -7.20216],
-    [1.50165, -0.35795, 2.11944],
-  ],
-  [
-    'coral_05',
-    seabed.octa,
-    [2.3534, 0.65895, 1.56893],
-    [2.35972, 3.2196, -12.83297],
-    [1.99912, -0.67154, -2.89125],
-  ],
-  [
-    'coral_06',
-    seabed.octa,
-    [1.76505, 0.70602, 1.76505],
-    [10.76151, 3.51769, -7.08828],
-    [2.83623, -0.48762, -2.016],
-  ],
-  [
-    'coral_07',
-    seabed.octa,
-    [1.78466, 0.65895, 1.5101],
-    [-8.27547, 10.91147, 5.58604],
-    [-2.81936, -0.17385, 2.5663],
-  ],
-  [
-    'coral_08',
-    seabed.ico,
-    [1.52971, 0.45891, 1.65718],
-    [4.67341, 13.09549, 3.66591],
-    [-2.96623, 0.18239, -2.79004],
-  ],
-  [
-    'coral_09',
-    seabed.octa,
-    [1.40223, 0.68837, 1.78466],
-    [-2.71149, 7.84866, -11.71426],
-    [2.21159, 0.23321, 2.97628],
-  ],
-];
-for (const [name, shape, size, at, tilt] of CORAL) add(shard, name, shape(), coral, at, tilt, size);
+add(shard, 'shell', faceted(pts, tris), stone);
 
-// The stretch on the root, baked with each placement into its buffer. The
-// export was then centred on its plan box and grounded, and the table
-// carries both; a slip in it fails here rather than in the maps.
-shard.scale.set(STRETCH, 1, 1);
+// ---------------------------------------------------------------------------
+// Bars and bricks: the ribs, the band and the fallen pieces.
+// ---------------------------------------------------------------------------
+/**
+ * A bar lofted along its stations — each a centre and the two full-width
+ * section vectors, `ex` across and `ey` through — stitched by seabed.mjs
+ * `chunk`'s faces: four walls a segment and a cap at each end. The
+ * stations' frames are right-handed with the bar's direction, which is
+ * what `chunk`'s winding assumes, and the volume check below holds it to.
+ */
+function bar(stations) {
+  const corners = [];
+  for (const [c, ex, ey] of stations) {
+    const C = v3(c);
+    const X = v3(ex);
+    const Y = v3(ey);
+    // Round the section the way `chunk` reads a ring: clockwise seen from
+    // the bar's far end.
+    for (const [sx, sy] of [
+      [-1, -1],
+      [-1, 1],
+      [1, 1],
+      [1, -1],
+    ])
+      corners.push(
+        C.clone()
+          .addScaledVector(X, sx / 2)
+          .addScaledVector(Y, sy / 2)
+          .toArray()
+      );
+  }
+  const ring = (i) => [4 * i, 4 * i + 1, 4 * i + 2, 4 * i + 3];
+  const faces = [];
+  for (let s = 0; s + 1 < stations.length; s++) {
+    const f = seabed.chunk(ring(s), ring(s + 1));
+    if (s === 0) faces.push(f[2]);
+    faces.push(f[0], f[1], f[4], f[5]);
+    if (s + 2 === stations.length) faces.push(f[3]);
+  }
+  return faceted(corners, seabed.fan(faces));
+}
+/** A rib's stations up meridian `j` at heights `us`, laid on the outer skin. */
+function rib(name, j, us, { w = 2.2, th = 1.3, bury = 0.25 } = {}) {
+  const stations = us.map((u) => {
+    const n = normal(j, u);
+    const c = v3(skin(j, u)).addScaledVector(n, th / 2 - bury);
+    const ex = n.clone().cross(upward(j, u)).normalize().multiplyScalar(w);
+    return [c.toArray(), ex.toArray(), n.clone().multiplyScalar(th).toArray()];
+  });
+  add(shard, name, bar(stations), stone);
+}
+/** A band's stations along the parallel at `u` through columns `js`. */
+function band(name, js, u, { w = 1.7, th = 1.1, bury = 0.25 } = {}) {
+  const stations = js.map((j) => {
+    const n = normal(j, u);
+    const c = v3(skin(j, u)).addScaledVector(n, th / 2 - bury);
+    const ex = n.clone().cross(along(j)).normalize().multiplyScalar(w);
+    return [c.toArray(), ex.toArray(), n.clone().multiplyScalar(th).toArray()];
+  });
+  add(shard, name, bar(stations), stone);
+}
+/** A box fallen flat on the ground: its size, where in plan, and its bearing. */
+function fallen(name, [w, h, d], [x, z], bearing) {
+  const m = new THREE.Matrix4().makeRotationY(bearing);
+  const ex = new THREE.Vector3(w, 0, 0).applyMatrix4(m);
+  const ey = new THREE.Vector3(0, h, 0);
+  const ez = new THREE.Vector3(0, 0, d).applyMatrix4(m);
+  const centre = new THREE.Vector3(x, h / 2, z);
+  add(
+    shard,
+    name,
+    bar([
+      [centre.clone().addScaledVector(ez, -0.5).toArray(), ex.toArray(), ey.toArray()],
+      [centre.clone().addScaledVector(ez, 0.5).toArray(), ex.toArray(), ey.toArray()],
+    ]),
+    stone
+  );
+  return { centre, ex, ey, ez };
+}
+/**
+ * A tetrahedral shard resting on a face: three's tetrahedron has a corner
+ * on (1, 1, 1), so turning that corner up puts the face opposite it flat
+ * on the ground; then a spin about the vertical, and the face on y = 0.
+ */
+function shardPiece(name, size, [x, z], spin) {
+  const q = new THREE.Quaternion().setFromUnitVectors(
+    new THREE.Vector3(1, 1, 1).normalize(),
+    new THREE.Vector3(0, 1, 0)
+  );
+  q.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), spin));
+  const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+  const mesh = add(shard, name, seabed.tetra(size), stone, [x, 0, z], [e.x, e.y, e.z]);
+  mesh.updateMatrixWorld(true);
+  mesh.position.y -= new THREE.Box3().setFromObject(mesh, true).min.y;
+}
+
+rib('rib_a', 2, [0.02, 0.16, 0.3, 0.42]);
+rib('rib_b', 5, [0.02, 0.2, 0.39, 0.58, 0.76]);
+rib('rib_c', 9, [0.02, 0.21]);
+rib('rib_d', 7, [0.02, 0.18, 0.34, 0.5]);
+band('band', [2.3, 3.5, 4.8, 6.2, 7.5], 0.43);
+
+const chunkA = fallen('chunk_a', [5.6, 1.3, 4.2], [-7.5, 14.5], 0.6);
+fallen('chunk_b', [3.6, 1.2, 2.8], [6, 16.5], -0.4);
+fallen('chunk_c', [2.8, 1.1, 2.2], [13.5, 20.5], 0.9);
+fallen('rib_fallen', [1.9, 1.2, 5.4], [11.5, 13], 1.1);
+shardPiece('shard_a', 1.5, [-13, 12.5], 0.3);
+shardPiece('shard_b', 1.1, [2, 12], 1.9);
+
+// ---------------------------------------------------------------------------
+// The coral crusts: a unit polyhedron, squashed flat, laid on a surface with
+// its flat axis along the surface's normal and spun about it. On the outer
+// skin the lift is negative — a tenth of a metre into the spheroid — since
+// the facet under the crust sits inside the curve by up to 0.35 m; on the
+// inner skin the facets sit out in the hollow, so the lift there is toward
+// the axis.
+// ---------------------------------------------------------------------------
+function crust(name, shape, size, at, n, spin) {
+  const q = new THREE.Quaternion().setFromUnitVectors(
+    new THREE.Vector3(0, 1, 0),
+    n.clone().normalize()
+  );
+  q.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), spin));
+  const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+  add(shard, name, shape(), coral, at.toArray(), [e.x, e.y, e.z], size);
+}
+const onOuter = (j, u, lift = -0.1) => v3(skin(j, u)).addScaledVector(normal(j, u), lift);
+const onInner = (j, u, lift = 0.15) => v3(skin(j, u, T)).addScaledVector(normal(j, u), -lift);
+const onTear = (j) =>
+  v3(skin(j, TEAR[j]))
+    .add(v3(skin(j, TEAR[j], T)))
+    .multiplyScalar(0.5);
+
+crust('coral_01', seabed.ico, [1.6, 0.45, 1.3], onOuter(1.4, 0.12), normal(1.4, 0.12), 0.4);
+crust('coral_02', seabed.octa, [1.4, 0.5, 1.0], onOuter(3.6, 0.15), normal(3.6, 0.15), 1.2);
+crust('coral_03', seabed.ico, [1.3, 0.4, 1.5], onOuter(8.4, 0.11), normal(8.4, 0.11), 2.1);
+crust('coral_04', seabed.octa, [1.3, 0.55, 1.3], onOuter(10.7, 0.13), normal(10.7, 0.13), 0.7);
+crust('coral_05', seabed.octa, [1.3, 0.4, 0.9], onTear(4), upward(4, TEAR[4]), 0.3);
+crust('coral_06', seabed.octa, [1.0, 0.4, 1.0], onTear(9), upward(9, TEAR[9]), 1.9);
+crust('coral_07', seabed.octa, [1.0, 0.35, 0.85], onOuter(5, 0.31, 1.0), normal(5, 0.31), 2.6);
+crust('coral_08', seabed.ico, [0.9, 0.3, 1.0], onInner(5.5, 0.16), normal(5.5, 0.16).negate(), 1.4);
+crust(
+  'coral_09',
+  seabed.ico,
+  [0.9, 0.3, 1.1],
+  chunkA.centre
+    .clone()
+    .addScaledVector(chunkA.ey, 0.5)
+    .addScaledVector(chunkA.ey.clone().normalize(), 0.1),
+  chunkA.ey,
+  0.9
+);
+
+// ---------------------------------------------------------------------------
+// Bake, centre on the plan box, check every face, hold the footprint.
+// ---------------------------------------------------------------------------
 seabed.bake(shard);
-const bb = new THREE.Box3().setFromObject(shard);
-if (Math.abs(bb.min.x + bb.max.x) > 1e-4 || Math.abs(bb.min.z + bb.max.z) > 1e-4 || bb.min.y !== 0)
+const planBox = new THREE.Box3().setFromObject(shard);
+const axis = planBox.getCenter(new THREE.Vector3()); // the dome's axis lands at (−axis.x, ·, −axis.z)
+shard.traverse((o) => o.isMesh && o.geometry.translate(-axis.x, 0, -axis.z));
+if (Math.abs(planBox.min.y) > 1e-4)
   throw new Error(
-    `env_ruin_dome_shard: not centred and grounded as the file is: ${JSON.stringify(bb)}`
+    `env_ruin_dome_shard: the lowest point sits at y = ${planBox.min.y}, not the ground`
   );
 
+// Every face of the shell against the dome it was cut from, by group.
+{
+  const shell = shard.getObjectByName('shell').geometry.attributes.position;
+  let bad = 0;
+  let volume = 0;
+  for (let t = 0; t < tris.length; t++) {
+    const a = new THREE.Vector3().fromBufferAttribute(shell, 3 * t);
+    const b = new THREE.Vector3().fromBufferAttribute(shell, 3 * t + 1);
+    const c = new THREE.Vector3().fromBufferAttribute(shell, 3 * t + 2);
+    volume += a.dot(b.clone().cross(c)) / 6;
+    const n = b.clone().sub(a).cross(c.clone().sub(a)).normalize();
+    const ctr = a
+      .clone()
+      .add(b)
+      .add(c)
+      .multiplyScalar(1 / 3);
+    const x = ctr.x + axis.x; // back in the dome's frame, axis on the origin
+    const z = ctr.z + axis.z;
+    const th = Math.atan2(x, z);
+    const N = new THREE.Vector3(x / (R * R), ctr.y / (H * H), z / (R * R)).normalize();
+    const phi = Math.asin(Math.min(1, ctr.y / H));
+    const up = new THREE.Vector3(
+      -R * Math.sin(phi) * Math.sin(th),
+      H * Math.cos(phi),
+      -R * Math.sin(phi) * Math.cos(th)
+    ).normalize();
+    const arc = new THREE.Vector3(Math.cos(th), 0, -Math.sin(th));
+    const ok = {
+      outer: n.dot(N) > 0,
+      inner: n.dot(N) < 0,
+      tear: n.dot(up) > 0,
+      foot: n.y < 0,
+      end0: n.dot(arc) < 0,
+      endM: n.dot(arc) > 0,
+    }[group[t]];
+    if (!ok) {
+      bad++;
+      console.error(`  shell triangle ${t} (${group[t]}) faces the wrong way`);
+    }
+  }
+  if (bad || volume <= 0)
+    throw new Error(`env_ruin_dome_shard: ${bad} shell triangles wrong-facing, volume ${volume}`);
+  console.log(`env_ruin_dome_shard: shell ${tris.length} tris, ${volume.toFixed(1)} m³ enclosed`);
+}
+// Every bar and shard is a convex solid wound outward: a positive volume.
+shard.traverse((o) => {
+  if (!o.isMesh || o.name === 'shell' || o.material === coral) return;
+  const p = o.geometry.attributes.position;
+  let volume = 0;
+  for (let t = 0; t < p.count / 3; t++) {
+    const a = new THREE.Vector3().fromBufferAttribute(p, 3 * t);
+    const b = new THREE.Vector3().fromBufferAttribute(p, 3 * t + 1);
+    const c = new THREE.Vector3().fromBufferAttribute(p, 3 * t + 2);
+    volume += a.dot(b.clone().cross(c)) / 6;
+  }
+  if (volume <= 0)
+    throw new Error(`env_ruin_dome_shard: ${o.name} is wound inside out (${volume})`);
+});
+
+let total = 0;
+shard.traverse((o) => o.isMesh && (total += o.geometry.attributes.position.count / 3));
+if (total > MAX_TRIS)
+  throw new Error(`env_ruin_dome_shard: ${total} tris over the row's ${MAX_TRIS}`);
+
 const { drawn, k } = seabed.stand(shard, FOOTPRINT, { drawn: DRAWN });
+const size = new THREE.Box3().setFromObject(shard).getSize(new THREE.Vector3());
 console.log(
-  `env_ruin_dome_shard: drawn ${drawn.toFixed(4)} across, held at ${FOOTPRINT} m (×${k.toFixed(5)})`
+  `env_ruin_dome_shard: drawn ${drawn.toFixed(4)} across, held at ${FOOTPRINT} m (×${k.toFixed(5)}), ` +
+    `${size.y.toFixed(2)} m tall, ${size.z.toFixed(2)} m deep, ${total} tris`
 );
 await exportGlb(shard, 'env-ruin-dome-shard.glb');

@@ -962,10 +962,9 @@ describe('the commander flies its deck', () => {
       kind: UnitKind.Cruiser,
       slot: 0,
       faction: Faction.Directorate,
-      // Off the carrier's axis. On it, a craft launched astern chases the
-      // Cruiser straight through its own carrier and separation, having no
-      // side to push to, shoves the carrier 140 m toward the gun — measured,
-      // and a fact about exact collinearity rather than about the order.
+      // Off the carrier's axis. The on-axis case, where a craft launched
+      // astern has to go round its own carrier, is #863's and is held in
+      // `flight.test.ts` and in the cone-gated set below.
       x: 6150,
       y: 4680,
     });
@@ -1047,15 +1046,16 @@ describe('the commander flies a cone-gated deck', () => {
   // due east read as "faced" whatever the bow did, and a target anywhere else
   // read as never faced. East is the case that hid it.
   //
-  // Neither is exactly on the world's x axis through the carrier. A craft is
+  // And a third exactly on the world's x axis through the carrier. A craft is
   // launched at a world-frame station (`flight.ts`, `launch()`), so on that
-  // axis one can enter the water astern, chase the target straight through
-  // its own carrier, and — separation having no side to push to — shove the
-  // carrier into the Cruiser's gun: measured at 993 m to sunk in eleven
-  // seconds. That is the flight's and not the order's, and it is #863.
+  // axis the second enters the water dead astern with the target dead ahead.
+  // Before #863 it chased straight through its own carrier and separation
+  // shoved the carrier into the Cruiser's gun: 993 m to sunk in eleven
+  // seconds. It goes round now (`movement.ts`, `roundOwnCarrier`).
   for (const [label, cruiserAt] of [
     ['off to the north-east', { x: 6150, y: 4680 }],
     ['to the east', { x: 6700, y: 4040 }],
+    ['dead ahead on its axis', { x: 6700, y: 4000 }],
   ] as const) {
     it(`backs an Offertory off a Cruiser ${label}, brings it round, and its deck opens`, () => {
       const match = new Match(undefined, {
@@ -1100,8 +1100,8 @@ describe('the commander flies a cone-gated deck', () => {
         Flightdeck.launched[carrier]! > launchedWhenBack,
         `and the deck opened after it did (${launchedWhenBack} then ${Flightdeck.launched[carrier]})`
       );
-      // The band, not the kilometre: a craft passing close can nudge the
-      // carrier tens of metres, and inside the band nothing walks it back.
+      // The band, not the kilometre: the commander walks the carrier back
+      // only once it is out of the band, so inside it nothing does.
       assert.ok(
         gap() >= STANDOFF_M - SLACK_M && gap() <= STANDOFF_M + SLACK_M,
         `still in the band (${gap().toFixed(0)} m)`

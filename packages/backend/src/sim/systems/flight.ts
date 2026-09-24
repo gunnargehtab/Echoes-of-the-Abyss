@@ -14,9 +14,12 @@
  * puts them in.** A carried hull loses its `Position`, which is what removes
  * it from every system; a craft has one from the moment it launches and is an
  * ordinary hull to every system there is. It is heard by the Echo pass, shot
- * at by guns, eaten by fauna and spaced by separation, with no special case
- * anywhere — and §15 says why that must stay true: the hidden information a
- * carrier holds is *where the carrier is*, which its flight does not answer.
+ * at by guns and eaten by fauna with no special case anywhere — and §15 says
+ * why that must stay true: the hidden information a carrier holds is *where
+ * the carrier is*, which its flight does not answer. The one pair that is
+ * special is a craft and its own carrier, and only in water rather than in
+ * sound (#863): a craft steers round that hull in `movementSystem`, and
+ * `separationSystem` moves only the craft when the two overlap.
  *
  * What this system does not do, deliberately:
  *
@@ -25,7 +28,10 @@
  *   carrier's ordered target, which is what "they attack the carrier's target"
  *   means in a simulation that already has ordered targets.
  * - **Move it in any special way.** A craft takes plain `MoveOrder`s and is
- *   routed and heard like anything else under way.
+ *   routed and heard like anything else under way. Going round its own
+ *   carrier is the exception, above, and it lives in the two systems that
+ *   move hulls rather than here: the launch ring below is world-frame, so a
+ *   craft launched astern would otherwise shove the carrier into the gun.
  * - **Refuse it orders.** `Match.owns` does that, by the component: a craft
  *   takes no order of its own, exactly as a hull in a hold does not.
  */

@@ -4,8 +4,10 @@
  *
  * "Industrial nodule-mining vessel (SIG 18 idle; mining follows the
  * throttle, up to 68 at Overdrive). Wide cargo body, external intake dredge
- * gear; dim at rest, with floodlit mining machinery that reads as its loud
- * state" — said the Klaxon's way: "boxy, riveted, over-engineered
+ * gear; dim at rest — running lights or marks along the hull, the dredge
+ * gear dark or marked no brighter — floodlit when it mines, the same lamps
+ * brighter, which reads as its loud state" (as #893 amended it) — said the
+ * Klaxon's way: "boxy, riveted, over-engineered
  * rectangles and cylinders". A barge of a hull with a gunwale a side and
  * one across the stern, a deck plate and a skid a side; a square apron of a
  * bow drawn wide; two cargo holds of four walls with a hazard stripe down
