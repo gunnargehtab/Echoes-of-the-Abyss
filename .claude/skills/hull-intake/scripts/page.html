@@ -131,10 +131,30 @@
           .map(([name, signatures]) => ({ name, attributeSets: [...signatures] }));
         const original = new Map(meshes.map((m) => [m, m.material]));
         const restore = () => meshes.forEach((m) => (m.material = original.get(m)));
+        // Every pass swaps the material and keeps its blending: a part the
+        // file alpha-blends — the Sounding Spire's heat-shimmer sheath at
+        // six percent, the Spore Veil's gill haze at sixteen — is drawn over
+        // what is under it at that opacity, in every channel, as the conn
+        // view draws it. Until #894 the albedo and emissive swaps dropped the
+        // blend and the normal and height passes used an override material,
+        // which blends nothing, so the sheath baked as a solid over the
+        // Spire's crystal core — its largest light — and the core never
+        // reached the chart. GLTFLoader sets depthWrite off for BLEND, and
+        // the swap carries that too, so a translucent part does not hide
+        // what it is drawn over. tools/hull-models/glb.mjs `occludes` is the
+        // same rule for the readers that cannot blend.
         const swap = (fn) =>
           meshes.forEach((mesh) => {
             const mats = original.get(mesh);
-            mesh.material = Array.isArray(mats) ? mats.map(fn) : fn(mats);
+            const blended = (m) => {
+              const out = fn(m);
+              out.transparent = m.transparent;
+              out.opacity = m.opacity;
+              out.depthWrite = m.depthWrite;
+              out.side = m.side;
+              return out;
+            };
+            mesh.material = Array.isArray(mats) ? mats.map(blended) : blended(mats);
           });
 
         const passes = {
@@ -146,7 +166,7 @@
           // World-space normals; lighting downstream is relit per faction.
           normal() {
             renderer.setClearColor(0x000000, 0);
-            scene.overrideMaterial = new THREE.MeshNormalMaterial();
+            swap(() => new THREE.MeshNormalMaterial());
           },
           // Emissive channel only — the glow layer. Black means silent.
           emissive() {
@@ -160,7 +180,7 @@
           // Depth from above = heightfield; near (top of hull) renders bright.
           height() {
             renderer.setClearColor(0x000000, 1);
-            scene.overrideMaterial = new THREE.MeshDepthMaterial();
+            swap(() => new THREE.MeshDepthMaterial());
           },
         };
 
@@ -170,7 +190,6 @@
           setup();
           renderer.render(scene, camera);
           const url = renderer.domElement.toDataURL('image/png');
-          scene.overrideMaterial = null;
           restore();
           return url;
         };
@@ -185,7 +204,6 @@
           c.height = renderer.domElement.height;
           const ctx = c.getContext('2d');
           ctx.drawImage(renderer.domElement, 0, 0);
-          scene.overrideMaterial = null;
           restore();
           return { canvas: c, ctx, image: ctx.getImageData(0, 0, c.width, c.height) };
         };

@@ -104,6 +104,13 @@ residual audit line, with the reason. Every hull needs at least one unoccluded u
 emitter — a deck flood, a vent grille in the top plate, a lit hatch — whatever else it
 carries.
 
+A lamp also has to *rest on the hull*. The conn view draws the mesh, so a bud hung a metre
+off a flank or a photophore standing half a metre over its plate is a light in the water,
+and the same audit names every lit part more than 0.2 m from any other solid part of the
+model. The kit's `seat` is the placement that answers it: the lamp on the nearest skin, or
+on the plate straight under its station. A haze is not a surface — a part blended at
+under half opacity neither hides a lamp from the chart nor holds one up.
+
 ## Block 1 — STYLE (every prompt starts with this)
 
 ```text

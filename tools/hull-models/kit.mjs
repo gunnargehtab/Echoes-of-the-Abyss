@@ -47,6 +47,12 @@
  *   that shows less than a cell of plan area. Its first run found the
  *   Derrick's six deck floods sitting *inside* the hull slab (see `plan`
  *   below for why) — parts the approved bake had never seen.
+ * - **A lamp rests on something.** The same audit measures each lit part's
+ *   gap to the nearest other solid part and names one standing off
+ *   everything by more than a fifth of a metre: a fixture in the water
+ *   rather than on the hull, which the conn view draws exactly so (#894).
+ *   `seat` is the placement that answers it — the nearest surface, the
+ *   lamp stood on it — and a haze is not a surface (glb.mjs `occludes`).
  * - **A script and its GLB agree, or the build fails.** `check.mjs` rebuilds
  *   every hull under `HULL_MODELS_OUT` and diffs the parts against the
  *   committed file; a change to a faction module is not done until the hulls
@@ -75,7 +81,15 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
-import { sceneParts, topDown, boundsOf } from './glb.mjs';
+import {
+  sceneParts,
+  topDown,
+  boundsOf,
+  closestPoint,
+  topAt,
+  gapBetween,
+  occludes,
+} from './glb.mjs';
 export { THREE };
 
 /**
@@ -501,33 +515,121 @@ export function bounds(root) {
  * covers. A part below `minM2` is one gate 3 cannot see: a lamp on a
  * vertical face, a glow inside a horn, a port under a deck.
  *
- * Returns `{ lit: [{ name, m2 }], totalM2, hidden: [names] }`; the export
- * prints it and warns on `hidden`, because a warning-free bake is the bar
- * and this is the warning intake cannot give (it sees only the maps).
+ * The second measure is whether the lamp rests on anything. A lamp is a
+ * fixture on a hull, and one standing off every other part is a light in
+ * the water: #890's reviews found eighteen of the Dredge's twenty-one
+ * plate-edge photophores 0.45 to 1.67 m above their plates and the
+ * Commune Cruiser's bow light 2.34 m ahead of its nose, in approved models
+ * no gate had measured (#894). For every lit part, `gap` is how far its
+ * surface stands from every other solid part's (glb.mjs `gapBetween`) —
+ * nothing for a bud sunk in a skin, a box laid on a plate or a throat
+ * sealed in a crystal, and the whole gap for one that floats. Over
+ * `minGapM`, a fifth of a metre, it is `floating`. `seat` is the builder's
+ * answer.
+ *
+ * A lit part that does not occlude — the Spire's sheath, the Veil's haze —
+ * is a glow and not a lamp: it owns no cell from above and rests on
+ * nothing by nature, so it is left out of both lists rather than named by
+ * both. The bake blends it at its own opacity, which is all the chart ever
+ * sees of it.
+ *
+ * Returns `{ lit: [{ name, m2, gap }], totalM2, hidden: [names],
+ * floating: [names] }`; the export prints it and warns on `hidden` and
+ * `floating`, because a warning-free bake is the bar and these are the
+ * warnings intake cannot give (it sees only the maps).
  */
-export function lightAudit(root, { ppm = 4, minM2 = 0.25 } = {}) {
+export function lightAudit(root, { ppm = 4, minM2 = 0.25, minGapM = 0.2 } = {}) {
   const { parts } = sceneParts(root);
   const isLit = (o) => o.isMesh && o.material?.emissive && o.material.emissive.getHex() !== 0;
   const litIndex = new Set();
   let i = 0;
   root.traverse((o) => {
     if (!o.isMesh) return;
-    if (isLit(o)) litIndex.add(i);
+    if (isLit(o) && occludes(parts[i].finish)) litIndex.add(i);
     i++;
   });
-  if (litIndex.size === 0) return { lit: [], totalM2: 0, hidden: [] };
+  if (litIndex.size === 0) return { lit: [], totalM2: 0, hidden: [], floating: [] };
   const td = topDown(parts, ppm);
   const cells = new Map();
   for (const o of td.owner) if (litIndex.has(o)) cells.set(o, (cells.get(o) ?? 0) + 1);
   const lit = [...litIndex].map((k) => ({
     name: parts[k].name,
     m2: +((cells.get(k) ?? 0) * td.cellArea).toFixed(2),
+    gap: +gapBetween(parts[k], parts).toFixed(2),
   }));
   return {
     lit,
     totalM2: +lit.reduce((s, l) => s + l.m2, 0).toFixed(1),
     hidden: lit.filter((l) => l.m2 < minM2).map((l) => l.name),
+    floating: lit.filter((l) => l.gap > minGapM).map((l) => l.name),
   };
+}
+
+/**
+ * Where a part rests: the placement that seats it on the nearest solid
+ * surface among the parts named in `on` — a lamp on the plate under its
+ * station, a bud on the skin beside it — rather than where a file left it
+ * hanging (#894). From `centre`, the seed, the nearest point of those parts
+ * is found and the part's centre is stood `stand` off it along the
+ * surface's outward normal, less `sink`: a bud of radius r seats with
+ * `stand: r` and sinks half of it; a box `h` tall lies on a plate with
+ * `stand: h / 2` and its bottom face on the plate. The part's +y is turned
+ * onto the normal, so a box lies on a sloped facet tilted with it, which is
+ * what the Dredge's ridge lamps did by hand (#890); a bud is round and the
+ * turn is nothing.
+ *
+ * Two ways of finding the surface, for two kinds of fixture:
+ *
+ * - **Nearest** (the default) seats a bud where the skin is closest to it,
+ *   so one rule seats a flank light on the beam's edge and a crest light on
+ *   a crest, and pulls a lamp the file buried inside a plate out onto it.
+ *   The seed decides which face wins where two are near — a seed over a
+ *   peduncle's crown seats on the crown, one behind its cap on the cap — so
+ *   a script seeds where the lamp belongs and lets the surface settle the
+ *   last half-metre.
+ * - **`drop: true`** keeps the seed's station and takes the surface
+ *   straight under it (glb.mjs `topAt`), which is what a lamp laid on a
+ *   plate wants: from a station a metre over a shoulder the nearest facet
+ *   is downhill of it, and a rank of plate-edge lamps would slide outboard
+ *   by as much. A station over none of the named parts is an error.
+ *
+ * The named parts must already be in `root`; a seed that reaches none of
+ * them is an error, not a lamp left where it was.
+ *
+ * Everything is in `root`'s own frame — the seed, `stand`, `sink` and the
+ * placement returned — so a script hands over the numbers it would have
+ * handed `add`, on a root the Dredge scales before it builds and a
+ * Z-long port scales after, alike. `yaw` turns the part about its own
+ * axis before it is laid on the surface, for a slab whose long side runs
+ * with a house that is not square to the frame. Returns `{ at, rot,
+ * normal, gap }` — `rot` an XYZ Euler for `add`, `normal` and `gap` in
+ * metres, the surface's direction and how far the seed stood from it, for
+ * the record.
+ */
+export function seat(root, on, centre, { stand = 0, sink = 0, drop = false, yaw = 0 } = {}) {
+  const names = Array.isArray(on) ? on : [on];
+  const { parts } = sceneParts(root);
+  const surfaces = parts.filter((p) => names.includes(p.name));
+  if (surfaces.length !== names.length) {
+    const missing = names.filter((n) => !surfaces.some((p) => p.name === n));
+    throw new Error(`seat: ${missing} not in ${root.name}`);
+  }
+  // The root's frame, once: a uniform scale is the one thing a model root
+  // carries here, and `stand` is in its units as the part's height is.
+  const scale = root.getWorldScale(new THREE.Vector3()).x;
+  const seed = root.localToWorld(new THREE.Vector3(...centre));
+  const hit = drop ? topAt(surfaces, seed.x, seed.z) : closestPoint(surfaces, seed.toArray());
+  if (!hit)
+    throw new Error(`seat: nothing solid among ${names}${drop ? ' under the station' : ''}`);
+  const n = new THREE.Vector3(...hit.normal);
+  const off = (stand - sink) * scale;
+  const at = root.worldToLocal(new THREE.Vector3(...hit.point).addScaledVector(n, off));
+  const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), n);
+  q.premultiply(root.getWorldQuaternion(new THREE.Quaternion()).invert());
+  q.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw));
+  const rot = new THREE.Euler().setFromQuaternion(q).toArray().slice(0, 3);
+  const gap = drop ? Math.abs(seed.y - hit.point[1]) : hit.distance;
+  return { at: at.toArray(), rot, normal: n.toArray(), gap };
 }
 
 /* --------------------------------------------------------------------------
@@ -952,6 +1054,10 @@ export async function exportGlb(root, filename) {
     console.warn(
       `  WARNING: ${name} shows under 0.25 m² from above — the maps are top-down, and gate 3 cannot see it`
     );
+  for (const name of light.floating) {
+    const { gap } = light.lit.find((l) => l.name === name);
+    console.warn(`  WARNING: ${name} rests on nothing — ${gap} m from the nearest other part`);
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -1594,21 +1700,39 @@ export function flangedPipes(root, { pipe: pipeMat, flange: flangeMat }, opts = 
 /**
  * The crusher: "crusher machinery" (docs/asset-prompts-3d.md, STRUCTURE —
  * Nodule Refinery) — the house, a box turned on its station; the cowl over
- * it; and the maw, a lit slab. The cowl is the navy's: on the
+ * it; and the maw, the crusher's lit slab. The cowl is the navy's: on the
  * Directorate's file a shell of a sphere half a turn round and 0.55 of a
  * half-turn deep, squashed by its node (the default, `cowl.geo`); on the
  * Order's and the Commune's a half drum, the Commune's named
  * `crusher_roof` (`cowl.name`).
  *
- * The default `maw` stands the slab on the house's face, which is where the
- * three approved files that use it drew theirs — edge-on to a top-down
- * bake, and on two of them under the cowl's rim as well, so the audit read
- * 0 m² for the "visible machinery light" the block lights at rest. The
- * Commune's file still takes the default (its roof stops short of the maw,
- * which shows 0.63 m² past it); the Directorate's and the Order's pass a
- * `maw` of their own since #890, laid on an upward face each — see their
- * headers — so that the default stayed where a file outside that change
- * relies on it.
+ * THE MAW IS ONE FIXTURE ON THE THREE FILES, since #894: the slab, at each
+ * navy's own numbers, set into the crown of the cowl over the house, where
+ * the chart sees the "visible machinery light" the block lights at rest.
+ * The three approved exports stood it on the house's face — edge-on to a
+ * top-down bake and on two of them under the cowl's rim, 0 m² — and #890's
+ * three answers were three fixtures under one name: a floodlit apron on
+ * the ground at the face's foot on the Directorate's, a strip along the
+ * cowl's ridge on the Order's, and the face slab left as it was on the
+ * Commune's, a 0.63 m² dot past its roof. One name is one fixture, so the
+ * crown strip — the Order's answer, the one a house with a silo at its
+ * foot could take — is now all three's:
+ *
+ * - On a drum cowl (the Order's, the Commune's) the slab lies level along
+ *   the ridge, flush with the cowl's end over the face, its underside a
+ *   little under the ridge and its top a hair proud, so the crown passes
+ *   through it and the whole slab shows from above (the Order's numbers
+ *   in structures/refinery-hadron.mjs; the Commune's are in its file).
+ *   That is `maw.at` and `maw.rot`, the file's own.
+ * - On the dome (the Directorate's) the crown is a near-flat fan, a
+ *   tenth of a unit lower at its rim than at the pole, and the cut edge of
+ *   the half-shell runs across the house through the pole. The slab lies
+ *   on that fan from the cut edge toward the face, pitched with it and
+ *   sunk half its depth (kit `seat`, `drop`, with the house's yaw), which
+ *   is `maw.on` and `maw.seed`: the default, the Directorate's numbers.
+ *
+ * The teeth are the navy's (directorate.mjs `mawTeeth`, hadron.mjs
+ * `mawBlades`) and hang where the exports hung them.
  */
 export function crusher(root, mats, opts = {}) {
   const {
@@ -1620,11 +1744,27 @@ export function crusher(root, mats, opts = {}) {
       rot: [0, Math.PI / 2 - 0.25, 0],
       scale: [1.05, 0.75, 0.85],
     },
-    maw = { size: [1.7, 1.3, 0.3], at: [6.9, 1.6, -0.9], rot: [0, Math.PI / 2 - 0.6, 0] },
+    maw = {
+      size: [1.3, 0.3, 1.7],
+      on: 'crusher_cowl',
+      // 0.65 of a unit out from the pole along the house's own axis: the
+      // slab's inner edge on the shell's cut edge, its outer over the face.
+      seed: [5.2 + 0.65 * Math.cos(0.25), 5.3, -2.2 + 0.65 * Math.sin(0.25)],
+      yaw: -0.25,
+      sink: 0.15,
+    },
   } = opts;
   frame.part(root, 'crusher_house', box(...house.size), mats.house, house.at, house.rot);
   frame.part(root, cowl.name ?? 'crusher_cowl', cowl.geo, mats.cowl, cowl.at, cowl.rot, cowl.scale);
-  frame.part(root, 'crusher_maw', box(...maw.size), mats.maw, maw.at, maw.rot);
+  const laid = maw.on
+    ? seat(root, maw.on, maw.seed, {
+        stand: maw.size[1] / 2,
+        sink: maw.sink ?? 0,
+        drop: true,
+        yaw: maw.yaw ?? 0,
+      })
+    : maw;
+  frame.part(root, 'crusher_maw', box(...maw.size), mats.maw, laid.at, laid.rot);
 }
 
 /**
