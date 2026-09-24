@@ -118,6 +118,7 @@ import {
   waterTransmittance,
 } from './water.ts';
 import { FrameCost, ms } from './frameCost.ts';
+import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 
 /**
  * Steps in the veil's shade table. 64 is finer than an 8-bit colour channel
@@ -529,6 +530,16 @@ export class PerspectiveView {
     // three's global shader chunks, so a material built ahead of it would
     // carry the old distance fog for the life of the scene (water.ts).
     installWaterFog();
+    // Each group's rung on the loudness ladder (docs/map-visuals.md §5):
+    // - the backdrop and the snow: rung 1, the water.
+    // - the terrain dressing: rung 5's tunnel routes and map rim, and a
+    //   skirt that is rung 1, deep water where the map ends.
+    // - the environment props: rung 3, ground.
+    // - units, ordnance, structures and their depth cues: rung 7, the
+    //   player's own agents; a hull's plumb and shadow are how its figure
+    //   says its depth (docs/ui-ux.md §12), not a separate instrument.
+    // The seabed mesh (rungs 2 to 4) and the embers (world light, outside
+    // the ladder) join the scene with the terrain.
     this.scene.add(
       this.backdrop.mesh,
       this.terrainDressing,
@@ -1060,6 +1071,11 @@ export class PerspectiveView {
     // The grid gives the ground its shape; the seabed bake gives it its skin.
     // One texture, one geometry, one draw call — the lighting is already in
     // the bake, so the material is deliberately unlit.
+    //
+    // Three rungs in one mesh (docs/map-visuals.md §5): the bake's rock faces
+    // and cliff shadows are rung 2, its biome fills, relief and mottle rung
+    // 3, and the survey ink its shader draws rung 4. The veil below is a
+    // drain on this ground, not a mark on it.
     const grid = buildHeightGrid(terrain, this.groundSeed, this.groundRockTopM);
     const positions = new Float32Array(grid.vertsX * grid.vertsZ * 3);
     const uvs = new Float32Array(grid.vertsX * grid.vertsZ * 2);
@@ -1157,7 +1173,8 @@ export class PerspectiveView {
     this.buildTerrainDressing(terrain);
     this.buildEmbers(terrain);
     // Props stand on the drawn ground — the same heights the mesh has, crag
-    // included — and rebuild only here, never per frame (gate 6).
+    // included — and rebuild only here, never per frame (gate 6). Rung 3,
+    // ground (docs/map-visuals.md §5).
     this.environment.rebuild(terrain, (xM, yM) => this.groundYAt(xM, yM));
   }
 
@@ -1218,6 +1235,7 @@ export class PerspectiveView {
     // Tunnel routes: a line across each roofed cell, lifted just off the
     // ground. The mouth is invisible from above by construction; the line is
     // what a player needs (docs/art-direction.md, "Reading the Sea Floor").
+    // Rung 5, map furniture (docs/map-visuals.md §5), at the ladder's alpha.
     const routePoints: number[] = [];
     for (let row = 0; row < terrain.rows; row++) {
       for (let col = 0; col < terrain.cols; col++) {
@@ -1235,7 +1253,11 @@ export class PerspectiveView {
       this.terrainDressing.add(
         new LineSegments(
           routeGeometry,
-          new LineBasicMaterial({ color: UI.accent, transparent: true, opacity: 0.3 })
+          new LineBasicMaterial({
+            color: UI.accent,
+            transparent: true,
+            opacity: FURNITURE_OUTLINE_ALPHA.tunnelRoute,
+          })
         )
       );
     }
@@ -1250,11 +1272,17 @@ export class PerspectiveView {
     for (let x = widthM - step; x >= 0; x -= step) perimeter.push({ x, y: heightM });
     for (let y = heightM - step; y >= step; y -= step) perimeter.push({ x: 0, y });
 
+    // The rim is rung 5 too, at the ladder's alpha; the skirt below it is
+    // rung 1, the deep water the world ends in.
     const rim = perimeter.map((p) => new Vector3(p.x, groundY(p.x, p.y) + 4, p.y));
     this.terrainDressing.add(
       new LineLoop(
         new BufferGeometry().setFromPoints(rim),
-        new LineBasicMaterial({ color: UI.glassStroke, transparent: true, opacity: 0.5 })
+        new LineBasicMaterial({
+          color: UI.glassStroke,
+          transparent: true,
+          opacity: FURNITURE_OUTLINE_ALPHA.mapRim,
+        })
       )
     );
 
@@ -1285,7 +1313,10 @@ export class PerspectiveView {
 
   /** Vent embers as one Points cloud: per-ember flicker rides the colour
    * attribute under additive blending, so 400 embers stay one draw call.
-   * The 5 Hz step and the SPEC ember hue are seabed.ts's, unchanged. */
+   * The 5 Hz step and the SPEC ember hue are seabed.ts's, unchanged.
+   *
+   * World light, which stands outside the loudness ladder by design
+   * (docs/map-visuals.md §5) and answers to its own five rules instead. */
   private buildEmbers(terrain: TerrainPayload): void {
     const embers = ventEmbers(terrain, this.groundSeed);
     this.emberPhases = embers.map((e) => e.phase);
@@ -1508,6 +1539,9 @@ export class PerspectiveView {
    * Build or update one own entity: the approved model once it is loaded, the
    * flat baked sprite until then (and for kinds that have none), plus the
    * plumb line and ground shadow either way.
+   *
+   * Rung 7, agents (docs/map-visuals.md §5): own hulls and structures, cues
+   * included. Its glow is its loudness, and gate 3 holds that, not the ladder.
    */
   private syncEntity(
     handles: Map<number, EntityHandle>,
@@ -1717,6 +1751,7 @@ export class PerspectiveView {
   /**
    * The player's own ordnance, drawn where it is between ticks. Runs with
    * the entity sync (a zoom, a snapshot) and per frame while anything moves.
+   * Rung 7, agents (docs/map-visuals.md §5).
    */
   private syncOrdnance(nowMs: number): void {
     const ink = FACTION_PALETTE[this.faction];
@@ -1801,6 +1836,8 @@ export class PerspectiveView {
    * *applied* camera — the backdrop unprojects through it and the snow wraps
    * its box around the eye — and the eye is not final until the floor clamp
    * in `applyCamera` has had its say.
+   *
+   * Rung 1, the water: the depth ramp and marine snow (docs/map-visuals.md §5).
    */
   private syncWater(now: number): void {
     // The focus, in metres of depth: the one anchor in the frame that is
