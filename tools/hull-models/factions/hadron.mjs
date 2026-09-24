@@ -113,6 +113,17 @@ export const ink = {
    * now, at 0.008 to that 0.815; the emissive did not move, so their
    * strengths — 1.6 on the three, 1.1 on the Submersible — are what they
    * were, passed by each script.
+   *
+   * The Cruiser's `crystal_core_glow` — the same token through and
+   * through at 0.3 rough, on the two spines, the four fork crystals and
+   * the drive, at 4.5 — is this lamp since #891. Its base sat at the same
+   * 0.469 under `pale_alloy`'s 0.815: not the anchor, but a lamp base
+   * rendering at 0.121 in the conn view (rosterModels.ts `recolor`, the
+   * ceiling 0.160) where a base belongs at the floor — 0.068 now, level
+   * with the indigo body at 0.071 — and the brightest
+   * patch of albedo on the Cruiser's chart sprite after the alloy. A
+   * roughness under an emissive is not a second fixture, so it folded
+   * here; the emissive did not move, and the 4.5 is the file's still.
    */
   crystalSeam: (intensity = 1) =>
     lamp('crystal_seam', hex('#C9A6FF'), hex('#1A1030'), 0.4, intensity),
@@ -139,7 +150,7 @@ export const ink = {
    * polished `pale_alloy` is the opposite of that, so the structures carry
    * names of their own rather than a dimming factor on the hull's: the
    * Order dulls a *metal*, where the Directorate darkens a body colour and
-   * the Consortium's `work_lamp` is a different fixture, and one factor
+   * the Consortium's turret banks its one `amber_lamp` to 2.4, and one factor
    * would be overridden three times in four. Values are the approved
    * turret's (#639) and the r184 settlement pass's (#652).
    */
@@ -174,8 +185,14 @@ export const ink = {
   navLight: (intensity = 1) => lamp('nav_light', hex('#C9A6FF'), hex('#241744'), 0.3, intensity),
   // The Bastion's and the Spire's second lamp (#652): the crystal-glow token
   // over #3A2560. `forge_light` and `floodlight_glow` are the same finish
-  // under the Foundry's and the Refinery's own names — the names every
-  // navy's works carry, so they stay names.
+  // under the Foundry's and the Refinery's own names — `forge_light` is the
+  // Foundry's name in three navies and `floodlight_<own>` the Refinery's in
+  // each — and this is the settlement's. One value under three names, and
+  // #891 left it so: the works' names onto this one would part the Order's
+  // Foundry from every other navy's, and this one onto a works' name would
+  // misname the Bastion's and the Spire's lamp. With `nav_light` these are
+  // a family polished past the hulls' kit 0.4, as `alloy_white` is to
+  // `pale_alloy`.
   crystalGlow: (intensity = 1) =>
     lamp('crystal_glow', hex('#C9A6FF'), hex('#3A2560'), 0.2, intensity),
   forgeLight: (intensity = 1) =>
@@ -184,36 +201,42 @@ export const ink = {
     lamp('floodlight_glow', hex('#C9A6FF'), hex('#3A2560'), 0.2, intensity),
   /**
    * The Spire's "heat-shimmer distortion" (docs/asset-prompts-3d.md,
-   * STRUCTURE — Sounding Spire) as a material: a sheath over the core whose
-   * *base* is the crystal-glow token #C9A6FF, six percent opaque and
-   * alpha-blended, with the crystal-violet emissive under it. The one
-   * translucent material on any approved Order model; kit.mjs `lamp` has no
-   * opacity, so it is set after, to the file's own float rather than the
-   * 0.06 it was typed as (#652 review).
+   * STRUCTURE — Sounding Spire) as a material: a sheath over the core, six
+   * percent opaque and alpha-blended, with the crystal-violet emissive
+   * under it. The one translucent material on any approved Order model;
+   * kit.mjs `lamp` has no opacity, so it is set after, to the file's own
+   * float rather than the 0.06 it was typed as (#652 review). Its base was
+   * the crystal-glow token #C9A6FF, the export's; #891 put it on the seam's
+   * near-black with the Cruiser's two, the last bases in the navy that were
+   * not. Under `alloy_white` it never anchored the Spire, and at six
+   * percent the move is a tint the conn view can barely show. On the chart
+   * it is the largest of the three: the albedo pass renders every material
+   * opaque (hull-intake's page.html), so the sheath bakes as a solid disc
+   * over the crown, the token before and near-black now. A lamp base is
+   * near-black by the kit's convention (kit.mjs `lamp`), and the rule is
+   * cheaper held everywhere than argued at one sheath.
    */
   heatShimmer: (intensity = 1) => {
-    const m = lamp('heat_shimmer', hex('#8B5CF6'), hex('#C9A6FF'), 0.1, intensity);
+    const m = lamp('heat_shimmer', hex('#8B5CF6'), hex('#1A1030'), 0.1, intensity);
     m.transparent = true;
     m.opacity = 0.06000000004553697;
     return m;
   },
 
-  /*
-   * The Cruiser's two (#649): a core glow that is the crystal-glow token
-   * through and through on the dorsal and ventral spines, the fork crystals
-   * of the hydrophone masts and the drive, and a panel glow a shade deeper
-   * on the eight facet panels along the flanks. "Sustained glow from vents,
-   * sensor arrays and lit ports — this is a loud ship and it looks it" (the
-   * Cruiser block); these are the strongest lamps on any Order hull, and the
-   * bake caps both at 1 (kit.mjs `lamp`). Their bases, with the Spire's
-   * `heat_shimmer` sheath above, are the three in the navy that are not
-   * near-black: each one model's, and no split, so #888 left them as the
-   * approved exports have them.
+  /**
+   * The Cruiser's panel glow (#649): a light a shade deeper than the token,
+   * #9B6CF9, on the eight facet panels along the flanks, at 3.2. "Sustained
+   * glow from vents, sensor arrays and lit ports — this is a loud ship and
+   * it looks it" (the Cruiser block); with the core glow, now `crystal_seam`
+   * (above), the strongest lamps on any Order hull, and the bake caps them
+   * at 1 (kit.mjs `lamp`). Its base was the crystal-glow token, the
+   * export's own, which #888 left as one model's; #891 put it on the
+   * seam's near-black with the core glow's and the Spire's sheath's, the
+   * three bases in the navy that were not near-black. A light of its own,
+   * so a name of its own; polished to the file's 0.3.
    */
-  crystalCoreGlow: (intensity = 1) =>
-    lamp('crystal_core_glow', hex('#C9A6FF'), hex('#C9A6FF'), 0.3, intensity),
   crystalPanelGlow: (intensity = 1) =>
-    lamp('crystal_panel_glow', hex('#9B6CF9'), hex('#C9A6FF'), 0.3, intensity),
+    lamp('crystal_panel_glow', hex('#9B6CF9'), hex('#1A1030'), 0.3, intensity),
 };
 
 /**

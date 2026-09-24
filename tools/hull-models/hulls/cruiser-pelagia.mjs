@@ -124,13 +124,16 @@ const DATUM = 0;
 // and 0.45, the membrane two-sided at 0.15 and 0.32, the lamp on the token
 // as its own base — and `ink` in factions/pelagia.mjs says where each
 // went. The strengths are this file's own: 1.6 on the buds, 1.5 on the lit
-// rings and flank veins, 0.9 on the hydrophone frills.
+// rings and flank veins, 0.9 on the hydrophone frills. The rings and veins
+// are `bio_light` since #891 — the export's `bio_vein_lit` was the same
+// light on a #2A4A20 base, a green where a lamp base is near-black — so
+// this file carries `bio_light` at two loudnesses (the module's header).
 const chitin = pelagia.ink.chitinHull();
 const ridge = pelagia.ink.growthRidge();
 const spore = pelagia.ink.sporePod();
 const membrane = pelagia.ink.algaeMembrane();
 const light = pelagia.ink.bioLight(1.6);
-const vein = pelagia.ink.bioVeinLit(1.5);
+const vein = pelagia.ink.bioLight(1.5);
 const frill = pelagia.ink.sensorFrillLit(0.9);
 
 const root = new THREE.Group();

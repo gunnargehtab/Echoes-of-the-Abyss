@@ -333,7 +333,7 @@ the Blight's, and §3.2 says which one the model lights.
   `amber_lamp_unlit` (§3.2 rule 2).
 - **Blight.** `podBody` with `growthRings`, widest a little forward of amidships and never
   wider at the bow than at the waist, the nose shut blunt inside the cleft; the spore sac is
-  `bladder` in the spore-pale finish, given a `name` and a `z` for it, sunk into the back
+  `bladder` in the `spore_pod` finish, given a `name` and a `z` for it, sunk into the back
   amidships as a paler dome, ringless; `trimVanes`, one a side and not a pair, their tips at
   the waist's half-beam and not over it; `driveFluke` off the peduncle. New: `huskLobes`, the
   husk parted at the bow into two rounded lobes, each its own lathe at its own signed z with
@@ -525,7 +525,7 @@ model of record by the owner's decision on #840.
   `driveFluke` with its port lobe the shorter, `sweptVein` and `navMarks`. New:
   `buddingSheaths`, the deck. Four sites, placed a side at a time, starboard first and
   alternating. Each is a `bud_site_<i>` frame yawed 16–19° forward-outboard from its node.
-  It holds a ridge knuckle, the bract, the chitin lining of the hollow and a spore-pale
+  It holds a ridge knuckle, the bract, the chitin lining of the hollow and a `spore_pod`
   scar at the root. The bract is an open U of membrane, swept along a pointed girth through
   kit.mjs `sweep`, with a lip 1.8 m broad. The deck is built empty (§3.5). Each hollow is sized to the
   Runner: 15.2–15.9 m long, 4.2–4.4 m across and 2.2–2.3 m deep. Resting lamps: two

@@ -75,12 +75,13 @@ const LAID = Math.PI / 2 - 0.13;
 // 0.62 rough — 35 % as bright as the Bastion, Foundry and Refinery's
 // #1FA67A at 0.6 under the same name (linear luminance 0.1017 against
 // 0.2897) — and `biolight_green` on a #123018 base, a little under their
-// #14351A; three models against one, so the turret moved. The lamp's
+// #14351A; three models against one, so the turret moved. Since #891 the
+// lamp is `bio_light`, the token's one lamp on its hull base. The lamp's
 // strength is this file's own, 0.953.
 const body = pelagia.ink.deepChlorophyll();
 const steel = pelagia.ink.grownSteel();
 const algae = pelagia.ink.algaeHull();
-const bio = pelagia.ink.biolightGreen(0.9533138767058983);
+const bio = pelagia.ink.bioLight(0.9533138767058983);
 
 const root = new THREE.Group();
 root.name = 'sentinel_turret';

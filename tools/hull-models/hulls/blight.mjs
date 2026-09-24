@@ -81,7 +81,7 @@
  *   seven-sided and r 0.55 to 0.42, rises 7.3 m forward to an elbow orb of
  *   r 0.85 at (35.2, 4.4, −0.15); the second, r 0.42 to 0.32, folds 3.3 m
  *   back to a wrist at (32.6, 6.3, 0.4), and the head sits there: a sac
- *   of r 1.7 in the spore-pale finish, 3.4 m across, under a membrane hood
+ *   of r 1.7 in the `spore_pod` finish, 3.4 m across, under a membrane hood
  *   of r 1.94 covering its crown and its back through 198° and open
  *   forward and below, pitched 0.3 rad nose-up so the sac presents forward
  *   and up (`seedingArm`). The elbow's front at x 36.05 is the arm's

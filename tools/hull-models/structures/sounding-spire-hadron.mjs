@@ -130,6 +130,8 @@ const alloy = hadron.ink.alloyWhite();
 // move, so the strength is the file's.
 const crystal = hadron.ink.resonanceCrystalDim(2.1000000006830546);
 const glow = hadron.ink.crystalGlow(3.000000001062529);
+// The sheath's base is the seam's near-black since #891; the export had the
+// crystal-glow token under its six percent (the module's `heatShimmer`).
 const shimmer = hadron.ink.heatShimmer(0.55);
 
 const root = new THREE.Group();

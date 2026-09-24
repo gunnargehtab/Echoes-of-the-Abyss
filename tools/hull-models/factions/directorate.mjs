@@ -169,7 +169,7 @@ export const ink = {
    * the Sentinel Turret block), and `chitin_red` at #7A1B2E is not that. A
    * name of its own rather than a dimming factor on `chitinRed`, because the
    * four navies dim differently — the Order dulls a metal, this navy darkens
-   * a body colour, the Consortium's `work_lamp` is another fixture — and one
+   * a body colour, the Consortium banks its one `amber_lamp` to 2.4 — and one
    * factor would be overridden three times in four (factions/hadron.mjs
    * makes the same argument). The approved turret's own value (#639).
    */
@@ -202,6 +202,25 @@ export const ink = {
    * colour was #C2465E on all of them and did not move, so no strength
    * moved with it: the Bastion still burns at 3.323, the Cantor at 3.6, the
    * Foundry at 2.277, the Refinery at 2.6, the turret at 0.905.
+   *
+   * The shared kinds' `red_photophore` — the Light Scout's, the Corvette's,
+   * the Harvester's and the Cruiser's — and the Submersible's `photophore`
+   * are this lamp since #891. Both carried the token in `color` too, and
+   * the recolour sets a model's register by its brightest material, lamp
+   * bases included (rosterModels.ts `recolor`), so that base — 0.1666
+   * linear against `abyssal_red`'s 0.0512 — was the anchor on all five:
+   * the red rendered at 0.096 where the tergite hulls, whose brightest
+   * colour is `chitin_red` at the same 0.0512, put theirs at the 0.160
+   * ceiling, and the violet at 0.077 for their 0.098. The five sit where
+   * the tergite hulls do now, the Submersible anchored on `edge_red`, the
+   * same 0.0512. What the two names had left on this base was 0.35 rough
+   * on the Submersible's, which under an emissive is not a second
+   * fixture, so both folded here rather than onto a second near-black. On
+   * the chart the photophores go near-black, as the Consortium's and the
+   * Commune's shared-kind lamps and the Order's four `crystal_seam` hulls
+   * did with #888; the Order's Cruiser and the two Submersibles that
+   * still sat on a token moved with this one. The emissive did not move
+   * and no strength did: 2.6, 2.6, 2.4, 6 and 2.2, each file's own.
    */
   biolightCrimson: (intensity = 1) =>
     lamp('biolight_crimson', hex('#C2465E'), hex('#1A0810'), 0.4, intensity),
@@ -235,27 +254,25 @@ export const ink = {
   // --- The shared kinds' earlier authoring pass (#649): the Light Scout,
   // the Corvette, the Harvester and the Cruiser name the tokens as
   // docs/art-direction.md names them — bruise violet, abyssal red, trench
-  // chitin — at a finish of their own, and their photophore is the crimson
-  // token through and through, burning at each file's strength (2.6, 2.6,
-  // 2.4 and 6). Not a split: the four agree on everything but strength.
-  // The bright base is the one thing the rule leaves alone here — it is
-  // these four models' brightest colour and so their register anchor, and
-  // moving it is a re-finish of four approved exports, not a merge. The
-  // names are what the models *are* and stay; the values are the exports'.
+  // chitin — at a finish of their own. Not a split: the four agree on
+  // everything. Their photophore was the crimson token through and
+  // through under a name of its own, `red_photophore`, and #888 left it
+  // as the four exports' brightest colour; #891 put it on
+  // `biolight_crimson` (above). The cladding names are what the models
+  // *are* and stay; the values are the exports'.
   bruiseViolet: () => clad('bruise_violet', hex('#2D1B3D'), 0.15, 0.5),
   abyssalRed: () => clad('abyssal_red', hex('#7A1B2E'), 0.12, 0.48),
   trenchChitin: () => clad('trench_chitin', hex('#0A0710'), 0.18, 0.42),
-  redPhotophore: (intensity = 1) =>
-    lamp('red_photophore', hex('#C2465E'), hex('#C2465E'), 0.4, intensity),
 
   // --- The Abyssal Submersible's, from the same pass and finished its own
   // way: a harder, glossier chitin for the one PR-3 hull of the shared
   // kinds (0.25 / 0.38 and 0.22 / 0.32 against the scout's 0.18 / 0.42 and
-  // 0.15 / 0.5), a photophore polished to 0.35 burning at 2.2, and
-  // `edge_red`, a *lit cladding* — abyssal red at metalness 0.15 with its
-  // own colour as emissive, at 0.12 on the file — so the plate rims, the
-  // tail joints, the rostrum and the limb claws all glow faintly. One model
-  // each; the values are the export's own (#649).
+  // 0.15 / 0.5), and `edge_red`, a *lit cladding* — abyssal red at
+  // metalness 0.15 with its own colour as emissive, at 0.12 on the file —
+  // so the plate rims, the tail joints, the rostrum and the limb claws all
+  // glow faintly. Its `photophore`, the token through and through polished
+  // to 0.35 and burning at 2.2, is `biolight_crimson` since #891 (above).
+  // One model each; the values are the export's own (#649).
   chitinTrench: () => clad('chitin_trench', hex('#0A0710'), 0.25, 0.38),
   plateViolet: () => clad('plate_violet', hex('#2D1B3D'), 0.22, 0.32),
   edgeRed: (intensity = 1) => {
@@ -265,8 +282,6 @@ export const ink = {
     m.emissiveIntensity = intensity;
     return m;
   },
-  photophore: (intensity = 1) =>
-    lamp('photophore', hex('#C2465E'), hex('#C2465E'), 0.35, intensity),
 };
 
 /** A carapace orb: a low-facet sphere the caller squashes into a plate. */

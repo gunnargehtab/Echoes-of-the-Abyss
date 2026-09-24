@@ -69,15 +69,16 @@
  * side of more lights, not fewer. One decision a series:
  *
  * - `gill-breath-line-port-1..4`, `-stb-1..4` (#890): the clause names
- *   them, so they stay lit in `bio-vein` and move onto an upward face —
- *   each organ's four stand round its mound's outboard shoulder at 0.64
+ *   them, so they stay lit in `bio_light` (`bio-vein` until #891) and
+ *   move onto an upward face — each organ's four stand round its mound's outboard shoulder at 0.64
  *   and 0.66 from the crown, past the haze cone's 0.55 top radius, laid
  *   tangent, sunk 0.02 and leaned 0.5 outward (`gillOrgan` `lines`), on
  *   bearings that are the organ's own and not the other's turned round.
  *   The slits stay where the file has them.
- * - `vein-ring-core` (9, `bio-vein` at 2.2), `-core-2`, `-west`, `-east`
- *   (8, 7 and 7, `bio-vein-dim` at 0.9) (#893): lit again in the inks and
- *   at the strengths the approved file gave them — #890 had clad all 31
+ * - `vein-ring-core` (9, `bio_light` at 2.2), `-core-2`, `-west`, `-east`
+ *   (8, 7 and 7, `bio_light` at 0.9; `bio-vein` and `bio-vein-dim` until
+ *   #891) (#893): lit again in the light and at the strengths the approved
+ *   file gave them — #890 had clad all 31
  *   in `bio_vein_unlit` — and lifted out of the lobes onto the bed's
  *   skin, "faint vein rings round the lobes": each segment at the file's
  *   own plan station, laid on the skin of the lobes and growth rings
@@ -149,21 +150,26 @@ import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 170;
 
-// The navy's ink (#888), under the file's own hyphenated names. The export
-// carried `algae-teal` at 0.05 metal and 0.75 rough and `spore-pale` at no
-// metal, a step from the Abyssal Submersible's 0.1 / 0.7 and 0.05 / 0.65
-// under the same names; the hull's value is canonical, so both moved. The
-// strengths are this file's own: 2.2 on the breathing lines and the crown's
-// vein ring, 0.9 on the stalk tips and the other three rings, 0.35 on the
-// haze — the rings back in the inks the file gave them (#893; see the
-// header).
-const chitin = pelagia.ink['deep-chlorophyll']();
-const tealDark = pelagia.ink['algae-teal-dark']();
-const teal = pelagia.ink['algae-teal']();
-const vein = pelagia.ink['bio-vein'](2.2);
-const haze = pelagia.ink['spore-haze'](0.35);
-const dim = pelagia.ink['bio-vein-dim'](0.9);
-const spore = pelagia.ink['spore-pale']();
+// The navy's ink, under the navy's names since #891. The export's
+// `deep-chlorophyll`, `algae-teal` and `spore-pale` are the structures'
+// `deep_chlorophyll` and `algae_hull` and the hulls' `spore_pod`; its
+// `bio-vein` and `bio-vein-dim` — the token on a #0F2A12 base at 0.45 and
+// 0.5 rough, one light under two names — are `bio_light`, the token's one
+// lamp; `algae_teal_dark` is the Veil's own hex and `spore_haze` a fixture
+// of its own, both at their values, hyphens gone. (#888 had already
+// brought `algae-teal` and `spore-pale` from the export's 0.05 / 0.75 and
+// 0 / 0.65 onto the Submersible's 0.1 / 0.7 and 0.05 / 0.65; `algae_hull`
+// sits at 0.08 / 0.6 and `spore_pod` at 0.05 / 0.5.) The strengths are
+// this file's own: 2.2 on the breathing lines and the crown's vein ring,
+// 0.9 on the stalk tips and the other three rings, 0.35 on the haze — the
+// rings back in the light the file gave them (#893; see the header).
+const chitin = pelagia.ink.deepChlorophyll();
+const tealDark = pelagia.ink.algaeTealDark();
+const teal = pelagia.ink.algaeHull();
+const vein = pelagia.ink.bioLight(2.2);
+const haze = pelagia.ink.sporeHaze(0.35);
+const dim = pelagia.ink.bioLight(0.9);
+const spore = pelagia.ink.sporePod();
 
 const root = new THREE.Group();
 root.name = 'pelagia-spore-veil';
