@@ -218,8 +218,8 @@ export interface FactionSummary {
    * nodule terms docs/economy.md §6 gives that navy — `banked ≈ delivered ×
    * HADRON.NODULE_YIELD_MULTIPLIER + HADRON.TITHE_PER_S × seconds`. Both, since
    * the printed gap is the *difference* of the two: over the thirty stored
-   * seeds the multiplier takes 1,476 off and the tithe puts 1,077 back, leaving
-   * 399; the 405 the table shows is that plus the same ~7 nodules of
+   * seeds the multiplier takes 1,452 off and the tithe puts 1,018 back, leaving
+   * 434; the 440 the table shows is that plus the same ~6 nodules of
    * purchase-netting every other row carries.
    *
    * For the other three the two sides are meant to agree, but **as a magnitude

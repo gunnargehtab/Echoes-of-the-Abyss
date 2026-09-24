@@ -132,10 +132,10 @@ export interface PlayerTelemetry {
    *   `banked ≈ delivered × HADRON.NODULE_YIELD_MULTIPLIER + HADRON.TITHE_PER_S
    *   × seconds`. Both terms, because the printed gap is their *difference* and
    *   neither alone predicts it: over the thirty stored seeds the multiplier
-   *   takes 1,476 off and the tithe puts 1,077 back, leaving 399 — and the 405
-   *   the baseline prints is that plus the same ~7 nodules of purchase-netting
+   *   takes 1,452 off and the tithe puts 1,018 back, leaving 434 — and the 440
+   *   the baseline prints is that plus the same ~6 nodules of purchase-netting
    *   the other three rows carry. Name only the multiplier and a reader expects
-   *   1,476 and finds 2,546 — a thousand-nodule excess that is the doctrine,
+   *   1,452 and finds 2,464 — a thousand-nodule excess that is the doctrine,
    *   not a fault.
    * - `nodulesLostInTransit` — cargo aboard a harvester the observation before
    *   it stopped existing. Ore that was cut, was never banked, and is
