@@ -2562,8 +2562,8 @@ export function spikes(root, mat, { spikes: list }) {
  * the head. The cone is turned by the one rotation that carries its old
  * axis onto the new, which keeps its roll about that axis and so the
  * facet the file put on the crown. Hung with its rotation kept instead,
- * the rostrum's tip swung 3.4 m off the centreline and the outline's bow
- * point with it (#907, as first hung).
+ * the rostrum's tip swung 3.4 m to starboard of the head's point and the
+ * outline's bow point with it (#907, as first hung).
  */
 function hangOn(root, mesh, length, name) {
   const host = root.getObjectByName(name);

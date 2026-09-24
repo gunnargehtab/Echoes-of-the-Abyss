@@ -122,8 +122,8 @@
  *   only the root swings, 3.5 m onto the head. The cone is turned by the
  *   one rotation that carries its old axis onto the new, which keeps the
  *   facet on its crown, and it reads 0 m from the head. (Hung with the
- *   file's rotation kept, as first hung, the tip swung 3.4 m off the
- *   centreline and the outline's bow with it.) Its box reaches
+ *   file's rotation kept, as first hung, the tip swung 3.4 m to
+ *   starboard of the head's point and the outline's bow with it.) Its box reaches
  *   0.024 units less far forward, which is THE SCALE below. `diff.mjs`
  *   lists the rostrum at 2.1 m and the seven claws at 1.5 to 1.8, and no
  *   other part.
