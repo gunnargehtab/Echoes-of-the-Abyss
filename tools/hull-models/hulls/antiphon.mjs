@@ -254,6 +254,15 @@ hadron.wings(
     },
   }
 );
+// The fin and the keel, alloy like the ridge the fin stands on. The fin
+// stands inside the ridge's pale plan — 2.0 to 2.5 m wide through its
+// stations against its own 0.8 — so the albedo map shows it as ridge, and
+// the height map alone shows it as a fin, 235 against 167 a metre beside
+// it. That is the family's read and not this hull's: every Order fin stands
+// inside its spine's pale plan (`finAndKeel`), the Offertory's on an after
+// ridge like this one. Until #896 the albedo showed a pale fin line on the
+// indigo blade because the ridge under it was culled (#871) — an artefact,
+// never the design — and the fin keeps the family's finish (#898).
 hadron.finAndKeel(root, alloy, {
   fin: { x: -39, y: 3.0, length: 12, height: 5 },
   keel: { x: -12, y: -3.7, length: 24, height: 3 },

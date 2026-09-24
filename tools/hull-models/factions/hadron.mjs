@@ -476,6 +476,17 @@ export function canards(root, alloy, { from, to, inner, outer, t = 0.7 }) {
  * early pass's Chorister raised its fin from a plan rather than boxing it,
  * twelve unshared triangles where a box has twelve indexed, and a port keeps
  * the buffer (chorister-hadron.glb, #649).
+ *
+ * The fin takes the spine's alloy, and on every Order hull it stands inside
+ * the spine's pale plan — 0.5 to 2.5 m wide through the fin's stations,
+ * under a fin 0.25 to 0.8 m wide — so the albedo map shows it as spine and
+ * the height map alone shows it as a fin, 46 to 100 levels of 255 above the
+ * spine a metre beside it. The approved exports read the same way (the
+ * Chorister's 0.66 m fin on a 1.0 m spine; the Responsory's runs 4.5 m past
+ * its box spine, the one stretch of fin an albedo shows), so a fin that
+ * reads only in relief is the family and not a finding. The Antiphon's read
+ * by value only while its after ridge was culled (#871), and keeps the
+ * family's finish (#898).
  */
 export function finAndKeel(root, alloy, { fin, keel = null, t = 0.6 }) {
   if (fin.outline) {
