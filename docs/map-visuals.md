@@ -153,29 +153,29 @@ break-silence ring and an order's acknowledgement are weighed at their peak alph
 **A rimless mark is weighed by its loudest crisp element**, a dot, a hatch line or a dash, at
 its peak, as if it were an outline. Soft fills stay unweighed, as the haze does. Blocked
 ground is weighed by its hatch. A Tetherjelly field's bells are a mark of their own rather
-than its rim's interior, and so is a Lampfry shoal's mote cloud, formed or scattered. Residue's
-dashed arc is its outline, weighed at its peak; its three soft rings are fills. The owner
-settled both rules on #866. Which peak weighs residue is still open, because the server gives it
-no single one (§10).
+than its rim's interior, and so is a Lampfry shoal's mote cloud, formed or scattered. A
+classified animal is its species' shape in dots (§8), weighed by one dot. Residue's dashed arc
+is its outline, weighed at its peak; its three soft rings are fills. The owner settled both
+rules on #866. Which peak weighs residue is still open, because the server gives it no single
+one (§10).
 
-The ladder is measured, not just stated. A stroke's weight is how far it lifts the pixel
-under it, in encoded luminance, which is how a screenshot measures it. The ink blends in
-encoded space, the way the mark layer's strokes do, so an ink line and a furniture rim over
-the same ground compare exactly. The stipple adds instead: a dot is the fauna colour in linear
-light times its gain, encoded and added to the pixel, so it lifts every ground alike.
-`packages/frontend/src/game/ladder.ts` weighs both. It holds every outline rungs 5 and 6 draw,
-and every one rung 7 draws on the chart. Four of rung 5's are its floor: the quietest outline
-in each of its three quiet colours — a kelp field's rim while it is not gripping, a
-Tetherjelly field's rim, and a simulated hazard's rim while it is dormant — and an inert hazard
-site's rim, which the outline rule above leans on. Every other rung-5 mark, the stipple
-included, lifts more than the least of them in every palette, and a test holds that near the
-eye: the conn view's tunnel routes and map rim fade with the water's fog, so a far one lifts
-less. Which is quietest depends on the palette. The draw sites take their alphas from there.
-The tests hold every ink stroke below the least of them, over the darkest and the palest
-ground, in all four palettes. When furniture gets quieter, the ink has to follow it down.
-Residue's arc is the one exception, and the tests record it rather than move the ink: it clears
-the four at the scale's ceiling, and falls under them and under the ink at a faint mark's own
-peak (§10).
+The ladder is measured, not just stated. A stroke's weight is how far it lifts the pixel under
+it, in encoded luminance, which is how a screenshot measures it. The ink blends in encoded
+space, the way the mark layer's strokes do, so an ink line and a furniture rim over the same
+ground compare exactly. So do a classified animal's dots. Public life's stipple adds instead: a
+dot is the fauna colour in linear light times its gain, encoded and added to the pixel, so it
+lifts every ground alike. `packages/frontend/src/game/ladder.ts` weighs both. It holds every
+outline rungs 5 and 6 draw, and every one rung 7 draws on the chart. Four of rung 5's are its
+floor: the quietest outline in each of its three quiet colours — a kelp field's rim while it is
+not gripping, a Tetherjelly field's rim, and a simulated hazard's rim while it is dormant — and
+an inert hazard site's rim, which the outline rule above leans on. Every other rung-5 mark, the
+stipple included, lifts more than the least of them in every palette, and a test holds that near
+the eye: the conn view's tunnel routes and map rim fade with the water's fog, so a far one lifts
+less. Which is quietest depends on the palette. The draw sites take their alphas from there. The
+tests hold every ink stroke below the least of them, over the darkest and the palest ground, in
+all four palettes. When furniture gets quieter, the ink has to follow it down. Residue's arc is
+the one exception, and the tests record it rather than move the ink: it clears the four at the
+scale's ceiling, and falls under them and under the ink at a faint mark's own peak (§10).
 
 **The ink also sits under your own detection ring.** A hull's ring while you have not selected
 it is your own exposure ([ui-ux.md](ui-ux.md) §3.5): a line of seabed that out-shouted it
@@ -204,7 +204,9 @@ Two consequences worth naming:
   terrain it lies on.
 - **Fauna splits across two rungs.** A public field is furniture (rung 5); a classified animal
   is an agent (rung 7). They must never share a look, or a Tetherjelly field would read as a
-  contact.
+  contact. Both are stipple in `FAUNA_COLOR`, so form holds them apart: an agent's dot is
+  larger, hard, blended normally and still, where a public dot is soft, additive and pulsing
+  (§10, Phase 4).
 
 ## 6. Colour, light and depth — one grammar
 
