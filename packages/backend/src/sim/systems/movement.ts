@@ -167,9 +167,10 @@ function steerPoint(
  * apart at, the craft steers along the tangent on the side the aim lies —
  * counter-clockwise when the three points are exactly in line, which is the
  * case that found this and the one a ring angle of pi lands on to the metre.
- * A craft already touching its carrier (the carrier backed into it) slides
- * round it instead. An aim inside the disk is left alone: nothing sends a
- * craft there on purpose, and orbiting it would never arrive.
+ * A craft already touching its carrier (the carrier drove into it) slides
+ * round it instead, and `separationSystem` puts it clear without moving the
+ * carrier. An aim inside the disk is left alone: nothing sends a craft there
+ * on purpose, and orbiting it would never arrive.
  *
  * Only the craft's own carrier, and deliberately: any other hull a craft meets
  * is separation's ordinary business, and a craft brushing an escort aside is
