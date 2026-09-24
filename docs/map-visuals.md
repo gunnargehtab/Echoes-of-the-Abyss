@@ -482,15 +482,17 @@ at Tier 3 from passive listening and at Tier 4 after a ping, from the same camer
 frame; the survey dolly; and a low angle at 14°.
 
 **Weighed under the owner's rulings on #866.** A rung is weighed floor against floor, a fading
-mark at its steady peak, and a rimless mark by its loudest crisp element. So rung 7's stipple
-is weighed by one Tier-3 dot, fresh and fully arrived. It lifts both grounds by at least
-twice rung 5's floor and twice rung 6's, in all four palettes, with the unselected ring at
-0.18 or at the 0.27 #866 moves it to. The least margin is in deuteranopia and protanopia over
-the palest ground: 0.232 against 0.112.
+mark at its steady peak, and a rimless mark by its loudest crisp element. So a classified
+animal is weighed by one dot, fresh and fully arrived, at its tier's alpha in `FAUNA_COLOR`,
+blended normally as it is drawn. `ladder.ts` weighs that dot at Tier 3 and Tier 4 with the
+rest of rung 7, in place of the silhouette's edge, halo, tethers, ring and motes (Phase 2).
+The Tier-3 dot, the quieter, lifts both grounds by at least twice rung 5's floor and twice
+rung 6's, in all four palettes. The least margin is in deuteranopia and protanopia over the
+palest ground: 0.232 against rung 6's 0.103, blocked ground's hatch.
 
 **Recorded, not held: a public dot can out-lift an agent's.** A formed shoal's brightest dot
 is additive light, and at its peak it adds nearly its own colour to any ground. It lifts
-0.561 in the standard palette, 0.496 in deuteranopia and protanopia, and 0.459 in
+0.562 in the standard palette, 0.497 in deuteranopia and protanopia, and 0.459 in
 tritanopia. A Tier-4 agent dot lifts 0.531, 0.470 and 0.434 over black, and 0.441, 0.380
 and 0.345 over the palest ground. A Tier-3 dot lifts 0.324, 0.287 and 0.265 over black.
 Floor against floor allows this, because rung 5's floor is its quiet rims and not its

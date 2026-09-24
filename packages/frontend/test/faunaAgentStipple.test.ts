@@ -14,29 +14,32 @@
  * rung below. A fading mark is weighed at its steady peak, a fresh and fully
  * arrived contact. A rimless mark is weighed by its loudest crisp element as
  * if it were an outline, here a dot at its peak. So rung 7's stipple is
- * weighed by one Tier-3 dot, fresh, at `TIER_STYLE`'s 0.55 in `FAUNA_COLOR`,
- * blended source-over in encoded space the way the overlay composites over
- * the GL canvas. It clears rung 5's floor and rung 6's floor over both grounds
- * in all four palettes, with the unselected ring at 0.18 as merged and at the
- * 0.27 #866 moves it to.
+ * weighed by one dot, fresh, at its tier's alpha in `FAUNA_COLOR`, blended
+ * source-over in encoded space the way the overlay composites over the GL
+ * canvas. That dot is `faunaDotTier3` and `faunaDotTier4` in ladder.ts, and
+ * ladder.test.ts holds it over rung 6's floor with the rest of rung 7. The
+ * last block here holds that the ladder's dot is the dot drawn, and that the
+ * quieter of the two clears rung 5's floor, the furniture it must not be
+ * mistaken for.
  *
  * **Recorded, not held: a furniture dot can out-lift an agent dot.** A formed
  * Lampfry shoal's brightest dot is additive at up to `SHOAL_FORMED_GAIN` in
- * linear light, so what it adds to the canvas is roughly the sRGB encoding of
- * 0.9 x linear `FAUNA_COLOR`: 0x5aa083 for the standard 0x5fa88a, near the
- * colour itself. Over black it lifts 0.561 in the standard palette against a
- * Tier-4 agent dot's 0.531 and a Tier-3 dot's 0.324; over the palest ground,
- * 0.561 against 0.441 and 0.270, because an added light lifts every ground
- * alike and a blended dot lifts a pale one less. The other three palettes
- * keep the order (the table in the last test). Floor against floor allows it:
- * rung 5's floor is its quiet rims, not its loudest dot. Both are `FAUNA_COLOR` in all four palettes, so what keeps the two
- * apart is form, and the block before the ladder holds that: size, edge,
- * blend, motion and scale.
+ * linear light, so what it adds to the canvas is the sRGB encoding of 0.9 x
+ * linear `FAUNA_COLOR`: 0x5aa083 for the standard 0x5fa88a, near the colour
+ * itself. Over black it lifts 0.562 in the standard palette against a Tier-4
+ * agent dot's 0.531 and a Tier-3 dot's 0.324; over the palest ground, 0.562
+ * against 0.441 and 0.270, because an added light lifts every ground alike
+ * and a blended dot lifts a pale one less. The other three palettes keep the
+ * order (the table in the last test). Both are weighed by ladder.ts, the
+ * shoal as `shoalMotesFormed`. Floor against floor allows it: rung 5's floor
+ * is its quiet rims, not its loudest dot. Both are `FAUNA_COLOR` in all four
+ * palettes, so what keeps the two apart is form, and the block before the
+ * ladder holds that: size, edge, blend, motion and scale.
  */
 
 import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
-import { AdditiveBlending, Color, ShaderMaterial, Vector3 } from 'three';
+import { AdditiveBlending, ShaderMaterial, Vector3 } from 'three';
 import { Polygon, Texture, type GraphicsContext } from 'pixi.js';
 import { DRIFT_ROSTER, FaunaSpecies, faunaStatsFor, ResolutionTier } from '@echoes/shared';
 import {
@@ -62,12 +65,14 @@ import {
   SHOAL_FORMED_RADIUS_M,
 } from '../src/game/faunaStipple.ts';
 import {
+  AGENT_OUTLINES,
   encodedLuminance,
+  FURNITURE_DOT_PEAK,
+  FURNITURE_OUTLINES,
   furnitureFloorLift,
-  INSTRUMENT_OUTLINES,
-  instrumentFloorLift,
-  quietestLift,
-  strokeLift,
+  liftOf,
+  strokesOf,
+  type WeighedOutline,
 } from '../src/game/ladder.ts';
 import { BIOME_COLOR, PALETTE_NAMES, PALETTES, setActivePalette } from '../src/game/palette.ts';
 import type { Palette, PaletteName } from '../src/game/palette.ts';
@@ -95,10 +100,6 @@ const PALEST_GROUND = Object.values(BIOME_COLOR).reduce((a, b) =>
 );
 const DARKEST_GROUND = 0x000000;
 const GROUNDS = [DARKEST_GROUND, PALEST_GROUND];
-
-/** The unselected detection ring as #866 moves it. The owner ruled the move;
- * until that branch lands, a claim here holds at both values. */
-const UNSELECTED_RING_ON_866 = 0.27;
 
 /** Where each dot of a pattern is: the centre of each hexagon it filled. */
 function centres(context: GraphicsContext): Array<[number, number]> {
@@ -346,49 +347,51 @@ describe('fauna agent stipple: never furniture’s look (§5)', () => {
   });
 });
 
-/** Rung 6's floor with the unselected ring at `ring` instead of as merged. */
-function instrumentFloorWithRing(palette: Palette, ground: number, ring: number): number {
-  return Math.min(
-    ...Object.entries(INSTRUMENT_OUTLINES).map(([kind, outline]) =>
-      quietestLift(
-        kind === 'unselectedRing' ? { ...outline, quietest: ring, loudest: ring } : outline,
-        palette,
-        ground
-      )
-    )
-  );
-}
+/** The ladder's dot for each tier a classified animal is drawn at. */
+const AGENT_DOT = [
+  { tier: ResolutionTier.Classification, kind: 'faunaDotTier3' },
+  { tier: ResolutionTier.Track, kind: 'faunaDotTier4' },
+] as const;
 
-/** One agent dot's lift at `alpha`: source-over, in encoded space. */
-const agentLift = (palette: Palette, alpha: number, ground: number): number =>
-  strokeLift(palette.fauna, alpha, ground);
-
-/** A furniture dot's lift at `alpha` in linear light, added to `ground` the
- * way three.js writes it: the colour encoded after the multiply. */
-function furnitureLift(palette: Palette, alpha: number, ground: number): number {
-  const added = new Color(palette.fauna).multiplyScalar(alpha).getHex();
-  let sum = 0;
-  for (const shift of [16, 8, 0]) {
-    sum |= Math.min(255, ((ground >> shift) & 0xff) + ((added >> shift) & 0xff)) << shift;
-  }
-  return encodedLuminance(sum) - encodedLuminance(ground);
+/**
+ * How far one of the ladder's marks lifts `ground` at its peak. Every mark
+ * weighed here is one alpha in one colour, so its quietest and its loudest are
+ * the same stroke.
+ */
+function peakLift(outline: WeighedOutline, palette: Palette, ground: number): number {
+  const [stroke, ...rest] = strokesOf(outline, palette, 'loudest');
+  assert.ok(stroke !== undefined && rest.length === 0, 'one stroke');
+  return liftOf(stroke, ground);
 }
 
 describe('fauna agent stipple: the ladder (§5, rulings on #866)', () => {
-  it('lifts every ground more than rung 5’s floor and rung 6’s, at its quietest', () => {
+  it('weighs the dot that is drawn: its tier’s alpha, FAUNA_COLOR, blended normally', () => {
+    // A fresh, arrived contact is drawn at its tier's alpha (EchoRenderer
+    // `drawContacts`), and `paintAgentStipple` gives the body that alpha
+    // whole, over a white fill tinted `FAUNA_COLOR` (the form block above).
+    for (const { tier, kind } of AGENT_DOT) {
+      const dot = AGENT_OUTLINES[kind];
+      assert.ok(dot !== undefined, `the ladder weighs ${kind}`);
+      assert.equal(dot.blend ?? 'normal', 'normal', 'source-over, as the body is');
+      for (const name of PALETTE_NAMES) {
+        const palette = PALETTES[name];
+        assert.equal(dot.quietest, palette.tier[tier].alpha, `${name}: at the tier's alpha`);
+        assert.equal(dot.loudest, dot.quietest, 'still: no pulse to weigh at a peak');
+        assert.deepEqual(dot.colors(palette), [palette.fauna], `${name}: in the fauna colour`);
+      }
+    }
+  });
+
+  it('lifts every ground more than rung 5’s floor, at its quietest', () => {
+    // Tier 3 is the quieter dot, so it is the one that could fall to the
+    // furniture it must not be read as. Rung 6's floor is ladder.test.ts's.
     for (const name of PALETTE_NAMES) {
       const palette = PALETTES[name];
-      // The quietest steady moment: Tier 3, fresh and fully arrived. Tier 4
-      // is the same dot at 0.9.
-      const alpha = palette.tier[ResolutionTier.Classification].alpha;
       for (const ground of GROUNDS) {
-        const dot = agentLift(palette, alpha, ground);
-        const at = `${name} over ${ground.toString(16)}`;
-        assert.ok(dot > furnitureFloorLift(palette, ground), `${at}: under rung 5's floor`);
-        assert.ok(dot > instrumentFloorLift(palette, ground), `${at}: under rung 6's floor`);
+        const dot = peakLift(AGENT_OUTLINES.faunaDotTier3!, palette, ground);
         assert.ok(
-          dot > instrumentFloorWithRing(palette, ground, UNSELECTED_RING_ON_866),
-          `${at}: under rung 6's floor with the ring at 0.27`
+          dot > furnitureFloorLift(palette, ground),
+          `${name} over ${ground.toString(16)}: under rung 5's floor`
         );
       }
     }
@@ -398,21 +401,23 @@ describe('fauna agent stipple: the ladder (§5, rulings on #866)', () => {
     // Not a hold. Floor against floor allows a furniture dot to out-lift an
     // agent dot, and this pins by how much so a change to either is written
     // down: the header and docs/map-visuals.md §10 carry the same figures.
+    const shoal = FURNITURE_OUTLINES.shoalMotesFormed!;
+    assert.equal(FURNITURE_DOT_PEAK.shoalFormed, SHOAL_FORMED_GAIN, 'the gain the shoal draws');
     const RECORDED: Record<
       PaletteName,
       { furniture: number; track: number; classified: number }[]
     > = {
       standard: [
-        { furniture: 0.561, track: 0.531, classified: 0.324 },
-        { furniture: 0.561, track: 0.441, classified: 0.27 },
+        { furniture: 0.562, track: 0.531, classified: 0.324 },
+        { furniture: 0.562, track: 0.441, classified: 0.27 },
       ],
       deuteranopia: [
-        { furniture: 0.496, track: 0.47, classified: 0.287 },
-        { furniture: 0.496, track: 0.38, classified: 0.232 },
+        { furniture: 0.497, track: 0.47, classified: 0.287 },
+        { furniture: 0.497, track: 0.38, classified: 0.232 },
       ],
       protanopia: [
-        { furniture: 0.496, track: 0.47, classified: 0.287 },
-        { furniture: 0.496, track: 0.38, classified: 0.232 },
+        { furniture: 0.497, track: 0.47, classified: 0.287 },
+        { furniture: 0.497, track: 0.38, classified: 0.232 },
       ],
       tritanopia: [
         { furniture: 0.459, track: 0.434, classified: 0.265 },
@@ -423,9 +428,9 @@ describe('fauna agent stipple: the ladder (§5, rulings on #866)', () => {
       const palette = PALETTES[name];
       GROUNDS.forEach((ground, i) => {
         const measured = {
-          furniture: furnitureLift(palette, SHOAL_FORMED_GAIN, ground),
-          track: agentLift(palette, palette.tier[ResolutionTier.Track].alpha, ground),
-          classified: agentLift(palette, palette.tier[ResolutionTier.Classification].alpha, ground),
+          furniture: peakLift(shoal, palette, ground),
+          track: peakLift(AGENT_OUTLINES.faunaDotTier4!, palette, ground),
+          classified: peakLift(AGENT_OUTLINES.faunaDotTier3!, palette, ground),
         };
         const want = RECORDED[name][i]!;
         for (const key of ['furniture', 'track', 'classified'] as const) {
