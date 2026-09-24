@@ -82,7 +82,9 @@
  * the Directorate's file does. The block lights "visible machinery light"
  * in one band, so the maw is a resting lamp and stays lit
  * (docs/models-plan.md §3.2 rule 5), carried up as a strip set into the
- * cowl's crown — the face slab's own 2.2 × 1.2 × 0.3, its 2.2 along the
+ * cowl's crown — since #894 the one fixture the three files' maws are
+ * (kit.mjs `crusher`), and this file's is unchanged by it — the face
+ * slab's own 2.2 × 1.2 × 0.3, its 2.2 along the
  * ridge and its 1.2 across it, at y 4.78. The ridge stands at 4.9 and the
  * two crown facets fall from it at 15° to their outer vertices at x ±0.85,
  * so the slab's underside at 4.63 lies 0.27 under the ridge and 0.11 into

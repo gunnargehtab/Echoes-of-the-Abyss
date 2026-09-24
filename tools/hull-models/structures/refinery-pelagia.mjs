@@ -52,8 +52,18 @@
  * - The six materials are the navy's `ink`: the Bastion's five with
  *   `biolight_green` at 2.6, and `floodlight_pale`, the spore token on a
  *   #3A3F1E base at 3.2587.
- * - The maw, edge-on on the Directorate's file, shows here past the roof's
- *   overhang.
+ * - `crusher_maw` (#894): the export stood the lit slab on the house's
+ *   face, and it showed 0.63 m² past the roof's overhang — a dot on the
+ *   chart for the block's "visible machinery light", and the third
+ *   fixture under the one name across the three files. It is the one
+ *   fixture kit.mjs `crusher` now describes, and the Order's numbers
+ *   turned to this roof: the same 1.7 × 1.3 × 0.3 slab, level along the
+ *   ridge and flush with the roof's forward end over the face, its
+ *   underside 0.27 under the ridge — the ridge stands at 5.25 and the two
+ *   crown facets fall from it at 15°, so at the slab's edges (0.65 out)
+ *   they are at 5.075 and the underside at 4.98 is 0.095 into them — and
+ *   its top at 5.28, 0.03 proud, so the whole slab shows from above.
+ *   `diff.mjs` lists `crusher_maw` and no other part.
  *
  * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
  * `silo_vein_1` and `silo_vein_3` as showing under a cell from above. The
@@ -196,7 +206,8 @@ pelagia.silos(
 );
 
 // The crusher at the kit's defaults but its roof — a half drum laid on its
-// side — and the two stacks.
+// side — and the maw, the slab set into that roof's ridge at its forward
+// end since #894 (the header); and the two stacks.
 crusher(
   root,
   { house: steel, cowl: chitin, maw: flood },
@@ -206,6 +217,11 @@ crusher(
       geo: new THREE.CylinderGeometry(1.85, 1.85, 4.7, 6, 1, false, 0, Math.PI),
       at: [5.2, 3.4, -2.2],
       rot: [0, -0.25, Math.PI / 2],
+    },
+    maw: {
+      size: [1.7, 0.3, 1.3],
+      at: [5.2 + 1.5 * Math.cos(0.25), 5.13, -2.2 + 1.5 * Math.sin(0.25)],
+      rot: [0, -0.25, 0],
     },
   }
 );

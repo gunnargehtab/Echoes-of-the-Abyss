@@ -57,24 +57,26 @@
  *   `weld_steel` (#27313B) and a `biolight_crimson` on a #3A0D16 base, the
  *   settlement pass's own values under the hulls' names; #888 brought both
  *   onto the navy's (#3A3F4A and #1A0810). Nothing else on the file moved.
- * - `crusher_maw` (#890): the export stood the lit slab on the house's
- *   face, 0.33 into it near its +z end, edge-on to a top-down map and under
- *   the cowl's rim besides, so the audit read 0 m² of it. The block lights
- *   the Refinery in one band — "floodlit working surfaces, visible
- *   machinery light" — so the slab is a resting lamp and stays lit
- *   (docs/models-plan.md §3.2 rule 5). It lies down: the same 1.7 along
- *   the face and 1.3 out from it, 0.3 thick, on the ground at the face's
- *   foot, its inner edge on the face where the export's slab stood and all
- *   but 3 % of it clear of the cowl's plan (its rim covers 9.7 of the
- *   apron's 325 m²); `maw_tooth_2` hangs over its inner end, `_0` and
- *   `_1` sit inside `crusher_house` behind the face where the export put
- *   them, and the belt's high end stands over the ground beside it. Laid
- *   flat it is one
- *   of the block's floodlit working surfaces — the crusher's apron — and
- *   not an aperture: a plate on the outside of a wall wearing a mouth's
- *   name is the failure docs/style-neon-noir.md names ("The Directorate's
- *   one area glow: a maw is not livery"), so this header calls it an apron
- *   and the part keeps the export's name. `diff.mjs` lists `crusher_maw`
+ * - `crusher_maw` (#890, #894): the export stood the lit slab on the
+ *   house's face, 0.33 into it near its +z end, edge-on to a top-down map
+ *   and under the cowl's rim besides, so the audit read 0 m² of it. The
+ *   block lights the Refinery in one band — "floodlit working surfaces,
+ *   visible machinery light" — so the slab is a resting lamp and stays lit
+ *   (docs/models-plan.md §3.2 rule 5). #890 laid it on the ground at the
+ *   face's foot as a floodlit apron, which left the three files' maws
+ *   three fixtures under one name (#894); since #894 it is the one fixture
+ *   kit.mjs `crusher` describes, the crusher's lit slab set into its
+ *   cowl's crown. Here the crown is the half-shell's near-flat fan: the
+ *   same 1.7 × 1.3 × 0.3 slab lies on it from the shell's cut edge over
+ *   the house's centre toward the face, pitched the fan's nine degrees and
+ *   sunk half its depth (kit `seat`), so the whole slab shows from above
+ *   and its top stands a few centimetres over the pole. Read against
+ *   docs/style-neon-noir.md ("The Directorate's one area glow: a maw is
+ *   not livery"): it is a lit working slab on the crusher's crown, not an
+ *   aperture cut into anything and not a plate on a flank wearing a
+ *   mouth's name, and the part keeps the export's name. `maw_tooth_2`
+ *   hangs at the face's foot where the export hung it, `_0` and `_1` sit
+ *   inside `crusher_house` behind the face. `diff.mjs` lists `crusher_maw`
  *   and no other part.
  *
  * THE FRAME is the export's own: an X-long file, 23.0715 units long for a
@@ -218,16 +220,11 @@ directorate.silos(
   }
 );
 
-// The crusher at the kit's defaults — this file's numbers — but
-// `crusher_maw`, laid down as a floodlit apron at the foot of the house's
-// face since #890 (the header), turned with the house; its three teeth
-// hung point-down where the export hung them — `_2` over the apron's inner
-// end, `_0` and `_1` inside the house — and the two stacks.
-crusher(
-  root,
-  { house: steel, cowl: red, maw: flood },
-  { maw: { size: [1.3, 0.3, 1.7], at: [7.85, 0.15, -0.66], rot: [0, -0.25, 0] } }
-);
+// The crusher at the kit's defaults — this file's numbers, `crusher_maw`
+// laid on the cowl's crown since #894 (the header); its three teeth hung
+// point-down where the export hung them — `_2` at the face's foot, `_0`
+// and `_1` inside the house — and the two stacks.
+crusher(root, { house: steel, cowl: red, maw: flood });
 directorate.mawTeeth(root, black, {
   teeth: [
     { n: 0, at: [6.527034019, 2.5, -1.369996146] },
