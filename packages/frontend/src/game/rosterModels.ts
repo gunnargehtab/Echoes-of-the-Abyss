@@ -393,9 +393,9 @@ function designLengthM(key: RosterModelKey): number {
  * it is taken before `mergeByMaterial`, which bakes those transforms into the
  * vertices and turns the same call into the vertex extent — tighter wherever a
  * part is yawed or leaned. Until #882 that drew the Pelagia Spore Veil 1.145×
- * the size intake reviewed and turned the Pelagia Vent Tap a quarter off its
- * maps, as environmentModels.ts `propFootprint` found for props (#876). The
- * extents returned are the merged vertices', which is what draws.
+ * the size intake reviewed, as environmentModels.ts `propFootprint` found for
+ * props (#876). The extents returned are the merged vertices', which is what
+ * draws.
  */
 function normalise(scene: Group, key: RosterModelKey): Template {
   const raw = new Box3().setFromObject(scene).getSize(new Vector3());
