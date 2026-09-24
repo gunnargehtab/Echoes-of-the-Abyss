@@ -343,9 +343,10 @@ under the ink, and the owner chose to bring the ink down: the coast is 9.5% and 
 
 Every draw site in `EchoRenderer.ts` and `PerspectiveView.ts` names its rung, or records that
 §5 gives it none. `ladder.ts` holds the alpha of every outline rungs 5 and 6 draw, the
-stipple's dot gains, and the shares rung 7's chart outlines take, and the draw sites take them
-from there. The audit first moved no alpha: it pinned two breaks and left three questions
-open. The owner ruled on all five on #866, and one alpha moved.
+public stipple's dot gains, the share a Tier-3 contact's ring takes and a construction
+scaffold's alpha, and the draw sites take them from there. The audit first moved no alpha: it
+pinned two breaks and left three questions open. The owner ruled on all five on #866, and one
+alpha moved.
 
 The rulings:
 
@@ -385,10 +386,11 @@ What stays recorded, for the owner. The tests pin each break and fail if it move
   Hadron's deep blue and dark teal, sit at 0.17–0.19 luminance. At 0.33 the ring lifts the kelp
   fill by 0.024–0.030: under rung 6's floor there (0.065–0.103), and under the survey ink's
   coast (0.042). A Tier-4 contact's glyph and health bar fall under rung 6's floor too in the
-  three palettes that draw the Hadron dark, in tritanopia by less than 0.0001. So does a Tier-3
-  Sounder's halo in the two red-green palettes, where rung 6's floor is blocked ground's hatch.
-  Ordnance's disc does not: the server names no navy for ordnance, so it wears the Track tier's
-  colour.
+  three palettes that draw the Hadron dark, in tritanopia by less than 0.0001. Ordnance's disc
+  does not: the server names no navy for ordnance, so it wears the Track tier's colour. Nor
+  does a classified animal. Phase 4 made it dots, weighed by one dot at its tier's alpha, and
+  that clears rung 6's floor in every palette. A Tier-3 Sounder's halo fell under it in the two
+  red-green palettes until then, and went with the halo.
 - **Rung 7 in the conn view is not weighed.** Own hulls and structures are lit models, or
   baked sprites until the model loads, and own ordnance is a lit body with a lamp. What lands
   on a pixel depends on the lights, the texture and the view, and no number for it can be

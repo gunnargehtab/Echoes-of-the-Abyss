@@ -6370,9 +6370,9 @@ export class EchoRenderer {
    * it arrives and out as a ghost, so it is weighed fresh, at its tier's
    * alpha (#866). The ladder weighs every outline from Tier 3, and §10
    * records the ones that sit under rung 6's floor (ladder.ts). A classified
-   * animal's stipple is rung 7 too (`drawFaunaStipple`), and its dots never
-   * share a look with rung 5's public stipple (faunaAgentStipple.ts says how
-   * they are held apart).
+   * animal's stipple is rung 7 too (`drawFaunaStipple`), weighed by one dot,
+   * and its dots never share a look with rung 5's public stipple
+   * (faunaAgentStipple.ts says how they are held apart).
    */
   private drawContacts(): void {
     const g = this.contactLayer;

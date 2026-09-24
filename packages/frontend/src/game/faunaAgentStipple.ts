@@ -399,7 +399,9 @@ export function agentStippleGraphics(context: GraphicsContext): Graphics {
  * palette's colour in all four. `alpha` is the contact's own — tier, ghost
  * freshness and arrival — so the dots fade exactly as every other contact
  * mark does. Density follows the tier and brightness follows the clock: a
- * ghosted Tier-4 creature keeps its Tier-4 dots and dims.
+ * ghosted Tier-4 creature keeps its Tier-4 dots and dims. The ladder weighs
+ * one dot at that alpha fresh, blended normally (ladder.ts `faunaDotTier3`,
+ * `faunaDotTier4`).
  */
 export function paintAgentStipple(dots: Graphics, alpha: number): void {
   dots.tint = FAUNA_COLOR;

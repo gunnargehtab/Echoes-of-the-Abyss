@@ -274,24 +274,18 @@ export const INSTRUMENT_OUTLINE_ALPHA = {
 } as const;
 
 /**
- * The shares rung 7's chart outlines take of the alpha their contact is drawn
- * at (EchoRenderer `drawContacts`, `drawFaunaSilhouette`), and the alpha of a
- * construction site's scaffold (EchoRenderer `drawStructures`).
+ * The share a Tier-3 contact's ring takes of the alpha its contact is drawn
+ * at (EchoRenderer `drawContacts`), and the alpha of a construction site's
+ * scaffold (EchoRenderer `drawStructures`).
  *
  * A contact's own alpha is its tier's (`Palette.tier`), weighed fresh — the
- * moment it is fully present, neither fading in nor fading out as a ghost.
+ * moment it is fully present, neither fading in nor fading out as a ghost. A
+ * classified animal's dots are drawn at that alpha whole, so they take no
+ * share (faunaAgentStipple.ts `paintAgentStipple`).
  */
 export const AGENT_OUTLINE_ALPHA = {
   /** A Tier-3 contact's ring at 1.6 radii, round its disc. */
   countRingShare: 0.6,
-  /** A classified animal's body fill. Interior to its edge, except a Lampfry's rimless motes. */
-  faunaBodyShare: 0.75,
-  /** The Sounder's resonance halo, round its body. */
-  sounderHaloShare: 0.4,
-  /** A Tetherjelly contact's trailing tethers. */
-  tetherShare: 0.6,
-  /** The ring round a Rasp swarm's motes. */
-  raspRingShare: 0.5,
   /** A construction site's scaffold: the dashed vectors over the conn view's ghost. */
   scaffold: 0.35,
 } as const;
@@ -301,9 +295,9 @@ export const AGENT_OUTLINE_ALPHA = {
  *
  * - `normal` — the mark layer's strokes and the survey ink: `alpha` of the
  *   colour over `1 − alpha` of the ground, in encoded space.
- * - `additive` — the stipple (three.js `AdditiveBlending` with the fragment's
- *   alpha at 1): the colour, decoded to linear light by three's colour
- *   management, times `alpha`, encoded to sRGB by the fragment's
+ * - `additive` — public life's stipple (three.js `AdditiveBlending` with the
+ *   fragment's alpha at 1): the colour, decoded to linear light by three's
+ *   colour management, times `alpha`, encoded to sRGB by the fragment's
  *   `colorspace_fragment`, and **added** to the encoded pixel. It lifts every
  *   ground by the same amount until a channel clips.
  */
@@ -346,9 +340,10 @@ export function steady(
 export const atPeak = steady;
 
 /**
- * A stipple dot as the ladder weighs it: additive, at its peak gain, in the
- * colours it is drawn in. The rimless rule's unit for a cloud of dots, public
- * or classified.
+ * A public stipple dot as the ladder weighs it: additive, at its peak gain, in
+ * the colours it is drawn in. The rimless rule's unit for a cloud of public
+ * life's dots. A classified animal's dot is blended normally, so it is weighed
+ * with `atPeak` instead.
  */
 export function stippleDot(peakGain: number, colors: WeighedOutline['colors']): WeighedOutline {
   return steady(peakGain, colors, 'additive');
@@ -464,20 +459,18 @@ const fauna = (p: Palette) => [p.fauna];
 /**
  * A contact's chart outlines at one tier, at its fresh alpha. Each outline is
  * weighed on its own, as rung 5's crystal depth ring is weighed beside its
- * rim. The disc inside a Tier-3 ring, a Tier-4 hull's fill and its sprite,
- * and an animal's body inside its edge are interior. A glyph and a health bar
- * are drawn in the contact's colour and fade with it, so they are weighed as
- * its outlines too; the bar is rimless and weighed by its value fill.
+ * rim. The disc inside a Tier-3 ring and a Tier-4 hull's fill and its sprite
+ * are interior. A glyph and a health bar are drawn in the contact's colour and
+ * fade with it, so they are weighed as its outlines too; the bar is rimless
+ * and weighed by its value fill.
  */
 function contactTier(tier: ChartTier, alpha: number, label: string) {
   const own: Record<string, WeighedOutline> = {
-    // An animal's edge: every species but the Lampfry draws one.
-    [`faunaEdge${label}`]: steady(alpha, fauna),
-    [`sounderHalo${label}`]: steady(alpha * A.sounderHaloShare, fauna),
-    [`tethers${label}`]: steady(alpha * A.tetherShare, fauna),
-    [`raspRing${label}`]: steady(alpha * A.raspRingShare, fauna),
-    // The Lampfry is motes and no closed body: rimless, weighed by a mote.
-    [`lampfryMote${label}`]: atPeak(alpha * A.faunaBodyShare, fauna),
+    // A classified animal is its species' shape in dots (faunaAgentStipple.ts):
+    // rimless, so weighed by one dot at the contact's alpha, in the fauna
+    // colour, blended normally. Every species and both densities draw the
+    // same dot.
+    [`faunaDot${label}`]: atPeak(alpha, fauna),
     [`glyph${label}`]: steady(alpha, primaries),
   };
   if (tier === ResolutionTier.Classification) {
