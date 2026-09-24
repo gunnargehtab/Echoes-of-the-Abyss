@@ -704,10 +704,38 @@ export function navMarkPair(root, seam, { x, y, z, size = [1.6, 0.3, 0.5] }) {
  * node carries the station (chorister-hadron.glb, #649). `z` is for a spar
  * off the centreline — the Slipway's two blade halls stand 54 m out either
  * side of the slip (#652); every hull leaves it at 0.
+ *
+ * A station may carry a third number, the height of the spar's axis there
+ * in metres above `y`, and the lathe is sheared to follow it: each ring is
+ * lifted whole, so every face is still a plane and the section is still the
+ * section. It is how a ridge runs down a crown that falls — the Antiphon's
+ * after spine, from under its deck's tail down onto its drive (#897) — where
+ * a level axis leaves the ridge under the skin at one end or floating over
+ * it at the other. Left off, the axis is level at `y`, as every other spar's.
  */
 export function spar(root, name, mat, { profile, facets = 4, x = 0, y = 0, z = 0, flat = [1, 1] }) {
   const geo = loft(profile, facets, Math.PI / facets);
+  if (profile.some((station) => station.length > 2)) shear(geo, profile, flat[0]);
   return add(root, name, geo, mat, [x, y, z], [0, 0, 0], [1, flat[0], flat[1]]);
+}
+
+/**
+ * Lift each ring of a lathe by its station's axis height. A lathe's vertices
+ * lie on its stations (kit.mjs `loft` puts a station's x on X), so a ring is
+ * its station's x; the lift is divided by the press the node's scale applies,
+ * so a profile reads in metres either way. The normals are recomputed because
+ * three's are the level lathe's, and a face that tilts takes its normal with it.
+ */
+function shear(geo, profile, press) {
+  const pos = geo.getAttribute('position');
+  for (let i = 0; i < pos.count; i++) {
+    const at = pos.getX(i);
+    const station = profile.find(([x]) => Math.abs(x - at) < 1e-4);
+    if (!station) throw new Error(`spar: a ring at x ${at} is on no station`);
+    pos.setY(i, pos.getY(i) + (station[2] ?? 0) / press);
+  }
+  pos.needsUpdate = true;
+  geo.computeVertexNormals();
 }
 
 /**
