@@ -65,6 +65,12 @@
  * off the crown as its four fellows do — between growth rings 5 and 6,
  * whose 1.42 and 1.1 it now sits between. Nothing here reaches the
  * length.
+ *
+ * `eye-sac-3` (#907, from #894's resting measure): the file hung the third
+ * sac 0.55 m off its neighbour and 1.25 off the hull. It grows from the
+ * seed hull now, seated on the nearest skin from its own station and half
+ * its radius in (`grownOrbs` `on`, kit.mjs `seat`), still clustered with
+ * the other two on the starboard bow. `diff.mjs` lists it and nothing else.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -256,7 +262,7 @@ pelagia.grownOrbs(root, {
   orbs: [
     ['eye-sac-1', vein, 0.16, [8, 6], verbatim([2.35, 0.55, 0.45])],
     ['eye-sac-2', vein, 0.11, [8, 6], verbatim([2.1, 0.72, 0.6])],
-    ['eye-sac-3', vein, 0.09, [8, 6], verbatim([2.5, 0.38, 0.62])],
+    ['eye-sac-3', vein, 0.09, [8, 6], { ...verbatim([2.5, 0.38, 0.62]), on: 'seed-hull' }],
   ],
 });
 

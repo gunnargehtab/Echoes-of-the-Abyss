@@ -180,13 +180,21 @@
  *   plectrum limb's shadow: the first run seated a port mark at −13 under
  *   the femur, and the audit read it at 0.44 m² where its neighbours were
  *   1.25. Nothing else is lit: not the ribs, not the dome, not the file,
- *   and nothing on the fan.
+ *   and nothing on the fan. The six carapace marks rest on the facets
+ *   under them since #907 (`rimPhotophores` `rest`): seated on the ideal
+ *   crown, five of them stood 0.31 to 0.45 m over the 12 × 6 orb's chord
+ *   by #894's resting measure, and the rank is dropped from its crown
+ *   stations onto `tergite_4..6` and their seams, 0.15 m in as the rule
+ *   always meant — each mark moves 0.4 to 0.76 m, and the stations, the
+ *   beams and the two pitches are as they were. The tail rank rested and
+ *   is not dropped; `diff.mjs` lists the six and no other part.
  *
  * The light budget, measured (`lightAudit`, printed by `exportGlb`): ten
- * lit parts, the marks, 18.3 m² facing up — the carapace's six at 1.88 to
+ * lit parts, the marks, 18.0 m² facing up — the carapace's six at 1.88 to
  * 2.25 m² each, the abdomen's four at 1.25 to 1.5 — on a plan of 10,198
- * mask pixels at 2 px/m, some 2,550 m². The bake at E(14) = 1.22 reads
- * raw E = 5.44 and dims by ×0.225: the Thurible's band (×0.224 at E(16))
+ * mask pixels at 2 px/m, some 2,550 m² (18.3 m² before #907 laid the six
+ * on their facets). The bake at E(14) = 1.22 read raw E = 5.44 on that
+ * 18.3 and dimmed by ×0.225: the Thurible's band (×0.224 at E(16))
  * and the Verger's (×0.195 at E(14)), and fourteen times clear of the
  * ×1/64 floor the quiet end must not touch (§3.2). The bake is
  * warning-free — no rescale, no rotate, 100.0 × 47.6 m.
@@ -422,7 +430,8 @@ directorate.rimPhotophores(root, unlit, {
 // side": ten marks on the shell's shoulders at 0.7 of the half-beam, laid
 // on the slope — six on the carapace and four down the abdomen, the ranks
 // keeping clear of the seam ribs, the ridge lips, the bladder's dome and
-// the plectrum limb's shadow (the header).
+// the plectrum limb's shadow (the header); the carapace's six dropped onto
+// the facets under them (`rest`, #907).
 directorate.rimPhotophores(root, crimson, {
   rim,
   crown,
@@ -430,6 +439,7 @@ directorate.rimPhotophores(root, crimson, {
   ranks: { s: { from: 35, pitch: 15, count: 3 }, p: { from: 37, pitch: 18.5, count: 3 } },
   at: 0.7,
   size: 1.4,
+  rest: [4, 5, 6].flatMap((i) => [`tergite_${i}`, `tergite_seam_${i}`]),
 });
 directorate.rimPhotophores(root, crimson, {
   rim,

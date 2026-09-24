@@ -29,6 +29,15 @@
  * (tools/hull-maps/models.mjs), not `sigIdle` — and the light is on the lance:
  * the rail, the two seams and the muzzle. The wing lamps and the drive seam
  * are navigation lights, and are 3 m and 2 m long for that reason.
+ *
+ * LAMPS THAT FLOAT (#907, from #894's measure). `drive_seam`, the one mark
+ * astern, hung 0.93 m over the hull's back at x −46 — abaft the spine's
+ * end at −44 and 2 m ahead of the prism's tip, at the height a seam sits
+ * over a spine, with no spine under it. It lies on the back now, dropped
+ * from its own station with its underside on the top flat and pitched
+ * with the flat's fall toward the stern (`drive` `mark.on`, kit.mjs
+ * `seat`), 1.1 m lower and showing from above. Same name, size and
+ * material; `diff.mjs reciter-hadron` lists it and no other part.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -163,8 +172,9 @@ hadron.finAndKeel(root, alloy, {
   t: 0.8,
 });
 
-// The crystal point astern and the one seam abaft it; everything else lit on
-// this hull is forward of the waist, which is where the 90 is.
+// The crystal point astern and the one seam abaft it, on the hull's back
+// under its station (the header); everything else lit on this hull is
+// forward of the waist, which is where the 90 is.
 hadron.drive(
   root,
   { shadow, crystal, node },
@@ -176,7 +186,7 @@ hadron.drive(
     length: 6,
     mat: crystal,
     ring: false,
-    mark: { name: 'drive_seam', mat: seam, size: [2, 0.4, 0.8], x: -46, y: 1.8 },
+    mark: { name: 'drive_seam', mat: seam, size: [2, 0.4, 0.8], x: -46, y: 1.8, on: 'blade_hull' },
   }
 );
 

@@ -67,6 +67,13 @@
  *     starboard edge on its top face, its 0.08 across and 0.06 tall.
  *   - `aft-beacon`: on the crown of the after end cap's core, abaft the
  *     cap and clear of the screw shroud's ring.
+ * - `running-light-port-4` and `running-light-stb-4` (#907, from #894's
+ *   resting measure): the fourth light a side stood off the pressure hull
+ *   — 0.5 m to port, 0.24 to starboard — where the other six sit into it.
+ *   Each is laid on the hull's skin from its own station, half its height
+ *   proud and tilted with the facet (`hullLights` `on`, kit.mjs `seat`);
+ *   the starboard one keeps its remount over the patch, at 49° from the
+ *   crown still. `diff.mjs` lists the two and nothing else.
  *
  * THE FILE IS X-LONG, so nothing here is yawed: unlike the Corvette, the
  * Harvester and the Cruiser, this export already lies along +X with its bow
@@ -223,6 +230,7 @@ bathyarch.hullLights(root, lampM, {
     y: 0.28,
     z: 1.02,
     at: { 'stb-4': [1.55, 0.695, 0.8] },
+    on: { 'port-4': 'pressure-hull', 'stb-4': 'pressure-hull' },
   },
   strip: { size: [0.9, 0.06, 0.08], at: [0.7, 2.34, 0.54] },
   beacon: { rTop: 0.12, r: 0.14, h: 0.12, at: [-3.13, 0.79, 0] },

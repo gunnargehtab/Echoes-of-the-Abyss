@@ -56,7 +56,38 @@
  *   geometry each here.
  * - The two dock mouths are discs standing on edge (the throat lies along
  *   the flank); at 0.18 units they are 4.4 m thick, so the top-down maps
- *   still see a bar of each and the light audit names nothing on this file.
+ *   still see a bar of each. Each sat a hundredth past its throat's end —
+ *   0.25 m of water on the main collar by #894's resting measure; the
+ *   small one rested on `rib_plate_1_0` through the same gap — and both
+ *   rest on the throat's end since #907 (`dockingCollar`).
+ *
+ * THE LAMPS THAT FLOATED (#907, from #894's resting measure). Nine of the
+ * sixteen photophores stood off the tiers they climb — `photophore_0`
+ * 2.4 m, `_2` 0.8, `_3` 4.5, `_5` 6.1, `_6` 2.1, `_9` 3.7, `_10` 5.6,
+ * `_13` 6.6, `_15` 0.9 — stations read off ideal cones where the tiers
+ * are ten-sided frusta. Seven grow from the nearest of the four tiers and
+ * the crown from their own stations, half their radius in
+ * (`photophoreDomes` `on`, kit.mjs `seat`). Two would not: `_3` and `_13`
+ * seated from their own stations came to rest on a wall under the seam
+ * ring above it — a ring stands at 0.88 of the foot plus its 0.14 tube
+ * over a wall that has narrowed to 0.86 of the foot, and overhangs it by
+ * up to 0.3 units — and the audit read both hidden, the issue's own case
+ * of a lamp whose seat would hide it. Each takes a station first. `_3`
+ * comes down its own tier's wall at the file's bearing and radius, from
+ * y 3.16 to 2.8 (`lower`), out from under `seam_ring_1`: it shows
+ * 12.1 m² there (15.2 in the file) and stays between `_2` and `_4` in
+ * its climb. `_13` has no such station — on `carapace_tier_0` a bud
+ * seeded above y 1.2 shows under 0.25 m² under `seam_ring_0`, and the
+ * stations that do show (0.4 to 4.9 m², from y 1.2 down to 1.06) seat
+ * level with `_12`, not above it in the run — so it is seeded in
+ * the weld's corner instead (`corner`), on `carapace_tier_1`'s wall at
+ * the file's bearing a radius above the ring, resting on both, the
+ * Cruiser's answer for its tail light (#894): 13 m² from above, level
+ * with `_14` (53.9 against 53.6 m up) rather than 14 m under it, so the
+ * -z foot's run ends in a pair. `diff.mjs` lists the nine, `_13` at
+ * 14.6 m and `_3` at 9.8 the largest and the seven others 1.6 to 7.1,
+ * with the two mouths at 0.2 m; the seven other lamps rested where the
+ * file had them and stay.
  *
  * THE FRAME is the export's own. It is X-long — 17.8096 by 16.9464 by the
  * measure intake takes, three's `Box3` over the parts' own boxes — and the
@@ -67,8 +98,9 @@
  * which is what makes intake's own rescale exactly 1 and leaves the maps
  * where the approved bake put them. Ground is y = 0, the base tier's foot.
  *
- * `node tools/hull-models/diff.mjs bastion-directorate f7cce0f` reads
- * "unchanged beyond the root scale and shift".
+ * `node tools/hull-models/diff.mjs bastion-directorate f7cce0f` reads the
+ * nine lamps and the two mouths above, and nothing else beyond the root
+ * scale and shift.
  */
 import { THREE, exportGlb, fitFootprint } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -92,7 +124,14 @@ root.name = 'bastion_directorate';
 // Four tiers stepping in, red and violet turn about, each narrowing to 0.86
 // of its foot and turned 0.22 rad further than the one below, with a steel
 // seam ring on its top edge at 0.88 of the foot.
-const tier = (i, name, skin, foot, length, y) => ({
+const RING_TUBE = 0.14;
+const TIERS = [
+  { name: 'carapace_tier_0', skin: red, foot: 6.4, length: 2, y: 1 },
+  { name: 'carapace_tier_1', skin: violet, foot: 5.7, length: 1.8, y: 2.85 },
+  { name: 'carapace_tier_2', skin: red, foot: 4.8, length: 1.6, y: 4.5 },
+  { name: 'carapace_tier_3', skin: violet, foot: 3.7, length: 1.4, y: 5.95 },
+];
+const tier = ({ name, skin, foot, length, y }, i) => ({
   name,
   skin,
   radii: [0.86 * foot, foot],
@@ -103,19 +142,12 @@ const tier = (i, name, skin, foot, length, y) => ({
     name: `seam_ring_${i}`,
     skin: steel,
     R: 0.88 * foot,
-    tube: 0.14,
+    tube: RING_TUBE,
     facets: [5, 20],
     ...laid([0, y + length / 2, 0], FLAT),
   },
 });
-directorate.carapaceTiers(root, {
-  tiers: [
-    tier(0, 'carapace_tier_0', red, 6.4, 2, 1),
-    tier(1, 'carapace_tier_1', violet, 5.7, 1.8, 2.85),
-    tier(2, 'carapace_tier_2', red, 4.8, 1.6, 4.5),
-    tier(3, 'carapace_tier_3', violet, 3.7, 1.4, 5.95),
-  ],
-});
+directorate.carapaceTiers(root, { tiers: TIERS.map(tier) });
 
 // The crown: a half-orb on the top tier, squashed to 0.8 in height.
 directorate.domeShell(
@@ -239,26 +271,42 @@ directorate.clawGrips(root, [red, black], {
 
 // Sixteen photophores climbing the tiers in three runs — seven up the +z
 // flank, five up the -x, four along the -z foot — an orb each of its own
-// radius. "Sustained glow from ports and working lights": SIG 35.
+// radius, nine of them grown from the tier they climb (`on`, #907; the
+// header). "Sustained glow from ports and working lights": SIG 35.
+const DOME = TIERS.map((t) => t.name).concat('carapace_crown');
+const on = (at) => ({ ...laid(at), on: DOME });
+// Two lamps seeded off their own stations (the header, THE LAMPS THAT
+// FLOATED): `lower` keeps the file's bearing and radius and brings the
+// seed down its tier's wall to `y`, under the seam ring's overhang;
+// `corner` seeds on tier `i`'s wall at the file's bearing, a radius above
+// the seam ring under it, where no lower station on the tier shows.
+const lower = ([x, , z], y) => on([x, y, z]);
+const corner = ([x, , z], i, r) => {
+  const a = Math.atan2(z, x);
+  const { foot } = TIERS[i];
+  const below = TIERS[i - 1];
+  const y = below.y + below.length / 2 + RING_TUBE + r;
+  return on([foot * Math.cos(a), y, foot * Math.sin(a)]);
+};
 directorate.photophoreDomes(root, crimson, {
   facets: [6, 5],
   domes: [
-    ['photophore_0', 0.1469616145, laid([5.580291581, 1.421189459, 2.073583992])],
+    ['photophore_0', 0.1469616145, on([5.580291581, 1.421189459, 2.073583992])],
     ['photophore_1', 0.1434205025, laid([4.884848655, 1.843210097, 3.08199889])],
-    ['photophore_2', 0.102385737, laid([3.878459379, 2.46997304, 3.9174528])],
-    ['photophore_3', 0.1021963134, laid([2.459903688, 3.158942005, 4.607727799])],
+    ['photophore_2', 0.102385737, on([3.878459379, 2.46997304, 3.9174528])],
+    ['photophore_3', 0.1021963134, lower([2.459903688, 3.158942005, 4.607727799], 2.8)],
     ['photophore_4', 0.1277387589, laid([1.840131535, 3.631424866, 4.675740221])],
-    ['photophore_5', 0.1476596892, laid([0.7185694396, 4.464471434, 4.619367234])],
-    ['photophore_6', 0.1411419511, laid([-0.6710058168, 5.009296906, 4.395169463])],
+    ['photophore_5', 0.1476596892, on([0.7185694396, 4.464471434, 4.619367234])],
+    ['photophore_6', 0.1411419511, on([-0.6710058168, 5.009296906, 4.395169463])],
     ['photophore_7', 0.09141562134, laid([-5.563735404, 2.309025739, -0.4284658226])],
     ['photophore_8', 0.1488719881, laid([-5.088318711, 3.272992157, -0.945087779])],
-    ['photophore_9', 0.1191934049, laid([-4.39122562, 4.104702698, -2.001912477])],
-    ['photophore_10', 0.1251562387, laid([-3.511139819, 4.737823037, -2.909731917])],
+    ['photophore_9', 0.1191934049, on([-4.39122562, 4.104702698, -2.001912477])],
+    ['photophore_10', 0.1251562387, on([-3.511139819, 4.737823037, -2.909731917])],
     ['photophore_11', 0.1451682299, laid([-2.543776346, 5.618331569, -3.329838164])],
     ['photophore_12', 0.1259391606, laid([0.1301090398, 1.056657064, -6.104817715])],
-    ['photophore_13', 0.0983306095, laid([2.028866691, 1.589346455, -5.521522078])],
+    ['photophore_13', 0.0983306095, corner([2.028866691, 1.589346455, -5.521522078], 1, 0.0983306095)],
     ['photophore_14', 0.143074587, laid([3.21955778, 2.171257775, -4.628423121])],
-    ['photophore_15', 0.115572989, laid([4.420805579, 2.717578857, -3.116025447])],
+    ['photophore_15', 0.115572989, on([4.420805579, 2.717578857, -3.116025447])],
   ],
 });
 

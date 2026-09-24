@@ -56,6 +56,7 @@ import {
   sidedPost,
   zLong,
   xLong,
+  seat,
 } from '../kit.mjs';
 
 /**
@@ -510,6 +511,15 @@ export function finAndKeel(root, alloy, { fin, keel = null, t = 0.6 }) {
  * lip where the mark sits, and a level box there is buried at one end and
  * floating at the other; every other Order hull's crown is level under its
  * mark and leaves it at 0, which writes the rotation it always had.
+ *
+ * `mark.on` names the part the mark lies on — the drive prism, the hull's
+ * back — and the mark is dropped onto it from its own station, its
+ * underside on the facet under it and tilted with it (kit.mjs `seat`,
+ * `drop`), so the facet's slope is its pitch and `mark.pitch` is not
+ * read. The Reciter's seam hung 0.93 m over its hull abaft the spine's
+ * end and the Responsory's mark 1.28 m over its prism, and the resting
+ * measure named both (#907); the Tocsin lays its mark by `pitch` and
+ * passes no `on`, as every drive did before.
  */
 export function drive(root, { shadow, crystal, node }, opts) {
   const { x, r, facets = 6, taper = 0.34, length = r * 3.4, mat = shadow, ring = true } = opts;
@@ -526,8 +536,11 @@ export function drive(root, { shadow, crystal, node }, opts) {
     );
   if (mark) {
     const { name = 'stern_mark', mat: lit = node, size = [0.6, 0.6, 1.4], pitch = 0 } = mark;
-    const { x: markX = x - r * 0.6, y: markY = r * 1.4 } = mark;
-    add(root, name, box(...size), lit, [markX, markY, 0], [0, 0, pitch]);
+    const { x: markX = x - r * 0.6, y: markY = r * 1.4, on = null } = mark;
+    const laid = on
+      ? seat(root, on, [markX, markY, 0], { stand: size[1] / 2, drop: true })
+      : { at: [markX, markY, 0], rot: [0, 0, pitch] };
+    add(root, name, box(...size), lit, laid.at, laid.rot);
   }
 }
 
@@ -914,6 +927,16 @@ const QUADRANTS = [
  * and then dipped `pitch` (Y then X), which is not a diagonal either; and the
  * aft pair carries that pitch with its sign reversed, so where the forward
  * ridges fall outboard from the apex the aft ones *rise* toward the flank.
+ *
+ * `spineSeams.on` is a seam's rest by name — `{ fore: parts }`, `{ aft:
+ * parts }`, or both — and a seam named there is dropped onto those parts
+ * from its own station, its underside on the spine's facet and tilted
+ * with it (kit.mjs `seat`, `drop`); one not named keeps the file's
+ * station. By name rather than for both, because the Cantus's two do not
+ * rest alike: its forward seam hung 0.39 m over the spine and its after
+ * seam passes through the dorsal fin, which the resting measure reads as
+ * resting (#907), and a rule that seats both would move the one that
+ * already rests.
  */
 export function resonanceNode(root, ink, { lower, upper, apex, cradle, spineSeams, ridges }) {
   spar(root, 'node_lower', ink.crystal, lower);
@@ -934,17 +957,24 @@ export function resonanceNode(root, ink, { lower, upper, apex, cradle, spineSeam
       sz * cradle.foot.at[2],
     ]);
   });
-  for (const [name, sgn] of [
-    ['seam_fore', 1],
-    ['seam_aft', -1],
-  ])
+  for (const [end, sgn] of [
+    ['fore', 1],
+    ['aft', -1],
+  ]) {
+    const station = [sgn * spineSeams.x, spineSeams.y, 0];
+    const on = spineSeams.on?.[end];
+    const laid = on
+      ? seat(root, on, station, { stand: spineSeams.section[0] / 2, drop: true })
+      : { at: station };
     add(
       root,
-      name,
+      `seam_${end}`,
       box(spineSeams.length, spineSeams.section[0], spineSeams.section[1]),
       ink.seam,
-      [sgn * spineSeams.x, spineSeams.y, 0]
+      laid.at,
+      laid.rot
     );
+  }
   QUADRANTS.forEach(([sx, sz], i) => {
     const ridge = add(root, `node_ridge_${i}`, box(...ridges.size), ink.node, [
       sx * ridges.at[0],
@@ -956,10 +986,24 @@ export function resonanceNode(root, ink, { lower, upper, apex, cradle, spineSeam
   });
 }
 
-/** The Cantus's bow: a plain alloy point where the Clarion has its horn, and one navigation mark abaft it. */
+/**
+ * The Cantus's bow: a plain alloy point where the Clarion has its horn, and
+ * one navigation mark abaft it. `mark.on` names what the mark lies on, and
+ * the mark is dropped onto it from its own station, its underside on the
+ * facet under it and tilted with it (kit.mjs `seat`, `drop`); without it
+ * the mark is at the file's `[x, y]`. The Cantus passes its hull: the
+ * mark's station is abaft the prism's base, over the hull's back, and the
+ * prism's own section is a diamond with a ridge on the crown, where a box
+ * dropped takes one facet's 45° of roll — the one thing a centreline mark
+ * on an Order hull cannot do (#907).
+ */
 export function bowPrism(root, { alloy, seam }, { x, r, length, mark }) {
   point(root, 'bow_prism', alloy, { x, r, length });
-  add(root, 'nav_bow', box(...mark.size), seam, [mark.x, mark.y, 0]);
+  const station = [mark.x, mark.y, 0];
+  const laid = mark.on
+    ? seat(root, mark.on, station, { stand: mark.size[1] / 2, drop: true })
+    : { at: station };
+  add(root, 'nav_bow', box(...mark.size), seam, laid.at, laid.rot);
 }
 
 /**
@@ -1684,12 +1728,20 @@ export function magazine(root, steel, { pods, pipe }) {
  * in mirrored pairs and a bare index would hide which pair is which. They are
  * the approved turret's spheres of `r` on five by four segments at the
  * export's own `[x, y, z]`, the `_r` at +x (#639).
+ *
+ * Given `on` — the part or parts the marks sit on — each is a bud on the
+ * nearest skin among them from its own station, stood its radius off and
+ * sunk half of it (kit.mjs `seat`), where the file left it hanging: the
+ * Order's four stood 1.4 to 6 m off its emplacement, the resting measure
+ * found (#907). Without `on` every mark is at the export's station.
  */
-export function navMarks(root, light, { marks, r }) {
+export function navMarks(root, light, { marks, r, on = null }) {
   for (const [name, x, y, z] of marks)
-    pair((tag, sgn) =>
-      part(root, `nav_mark_${name}_${tag}`, new THREE.SphereGeometry(r, 5, 4), light, sided(sgn, [x, y, z]))
-    );
+    pair((tag, sgn) => {
+      const station = sided(sgn, [x, y, z]);
+      const placement = on ? { at: seat(root, on, station.at, { stand: r, sink: r / 2 }).at } : station;
+      part(root, `nav_mark_${name}_${tag}`, new THREE.SphereGeometry(r, 5, 4), light, placement);
+    });
 }
 
 /* --------------------------------------------------------------------------
@@ -2028,11 +2080,26 @@ export function reinforceRibs(root, { alloy, shadow }, opts) {
  * +x — the bow axis on these X-long files, neither beam. A twin of
  * `navMarks` (the turret's five-by-four orbs through `drawn`) for files that
  * are not yawed; every node shares the one buffer, as both files do.
+ *
+ * A row may carry a fourth entry, `on`: the part or parts the pair sits
+ * on, or a function of the side's tag giving them — `frame_blade_r` for
+ * the `_r`, `frame_blade_l` for the `_l` — where each side has its own. A
+ * pair given `on` is a bud on the nearest skin among them from its own
+ * station, stood its radius off and sunk half of it (kit.mjs `seat`), the
+ * `_r`'s seed at +x and the `_l`'s at −x as ever; a row without one is at
+ * the file's own station. The Bastion's equator pair stood 0.31 m off its
+ * band and 2.6 m off its dome, and eight of the Spire's ten 0.4 to 6.5 m
+ * off what they run beside, the resting measure found (#907).
  */
 export function lightPairs(root, light, { name, r, at }) {
   const orb = new THREE.SphereGeometry(r, 6, 5);
-  at.forEach(([x, y, z], i) =>
-    pair((tag, sgn) => add(root, `${name}_${i}_${tag}`, orb, light, [-sgn * x, y, z]))
+  at.forEach(([x, y, z, on = null], i) =>
+    pair((tag, sgn) => {
+      const station = [-sgn * x, y, z];
+      const rests = typeof on === 'function' ? on(tag) : on;
+      const centre = rests ? seat(root, rests, station, { stand: r, sink: r / 2 }).at : station;
+      add(root, `${name}_${i}_${tag}`, orb, light, centre);
+    })
   );
 }
 
@@ -2053,17 +2120,23 @@ export function lightPairs(root, light, { name, r, at }) {
  * in the frame's xy-plane — edge-on to the throat, a ring the throat runs
  * through — rather than laid round the mouth. A collar's lip wants the
  * quarter turn about x the export never gave it; a port keeps the buffer
- * where it is. The mouth is a thin drum of `mouth.r` by `mouth.t` at
- * `mouth.y`, lit; the fins are four-sided pyramids of `fins.r` by
- * `fins.length` at `fins.y` and ±`fins.z`, canted ±`fins.cant` about x so
- * each leans outboard, `_0` at +z first.
+ * where it is. The mouth is a thin drum of `mouth.r` by `mouth.t`, lit, on
+ * the throat's outer end: its underside on the throat's end face, so its
+ * station up the frame is the throat's half-length and half its own
+ * thickness. The file had it at 1.4, a hundredth past a throat that ends
+ * at 1.3 — the lit disc a hair off the alloy, 0.21 m at 440 m, and the
+ * resting measure named both docks' (#907); the end face is the station
+ * now and the number is not taken. The fins are four-sided pyramids of
+ * `fins.r` by `fins.length` at `fins.y` and ±`fins.z`, canted ±`fins.cant`
+ * about x so each leans outboard, `_0` at +z first.
  */
 export function dockingCollar(root, { alloy, shadow, crystal: lit }, opts) {
   const { name, at, roll, throat, lip, mouth, fins } = opts;
   const dock = group(root, `dock_${name}`, { at, rot: [0, 0, roll] });
   add(dock, `dock_${name}_throat`, cyl(throat.rTop, throat.r, throat.h, 8), alloy);
   add(dock, `dock_${name}_lip`, torus(lip.r, lip.t, 4, 8), shadow, [0, lip.y, 0]);
-  add(dock, `dock_${name}_mouth`, cyl(mouth.r, mouth.r, mouth.t, 8), lit, [0, mouth.y, 0]);
+  const mouthY = throat.h / 2 + mouth.t / 2;
+  add(dock, `dock_${name}_mouth`, cyl(mouth.r, mouth.r, mouth.t, 8), lit, [0, mouthY, 0]);
   [1, -1].forEach((sgn, i) =>
     add(
       dock,
@@ -2311,6 +2384,16 @@ export function resonanceCollars(root, { alloy, shadow }, { rings, t, vane }) {
  * yawed ±`tip.yaw` — an eighth, so a flat faces the beam — and rolled with
  * its horn; and the brace between them, a box of `brace.size` at `brace.y`.
  * Both horns, both tips, the brace; the horns one buffer, the tips one.
+ *
+ * Given `tip.on`, each tip stands on its horn's top end instead, and
+ * `tip.reach` and `tip.y` are not read: the horn's end is found from its
+ * own transform — its half-length up its axis, leaned `horn.lean` in —
+ * and the tip is dropped onto the horn there, its base on the end face
+ * and its axis along the face's normal, which is the horn's lean, with
+ * its own yaw about that axis first (kit.mjs `seat`, `drop`, `yaw`). One
+ * rule, both sides, for a tip that grows from its horn: the Spire's file
+ * stood each at its own numbers, its base 0.46 outboard of the horn's end
+ * and 1.37 m off it by the resting measure (#907).
  */
 export function tuningHorns(root, { alloy, glow, steel }, { horn, tip, brace }) {
   const bar = box(...horn.size);
@@ -2325,16 +2408,18 @@ export function tuningHorns(root, { alloy, glow, steel }, { horn, tip, brace }) 
     )
   );
   const spike = cyl(0, tip.r, tip.length, 4);
-  pair((tag, sgn) =>
-    add(
-      root,
-      `tuning_horn_tip_${tag}`,
-      spike,
-      glow,
-      [-sgn * tip.reach, tip.y, 0],
-      [0, -sgn * tip.yaw, -sgn * horn.lean]
-    )
-  );
+  const half = horn.size[1] / 2;
+  const end = [horn.reach - half * Math.sin(horn.lean), horn.y + half * Math.cos(horn.lean)];
+  pair((tag, sgn) => {
+    const stood = tip.on
+      ? seat(root, `tuning_horn_${tag}`, [-sgn * end[0], end[1], 0], {
+          stand: tip.length / 2,
+          drop: true,
+          yaw: -sgn * tip.yaw,
+        })
+      : { at: [-sgn * tip.reach, tip.y, 0], rot: [0, -sgn * tip.yaw, -sgn * horn.lean] };
+    add(root, `tuning_horn_tip_${tag}`, spike, glow, stood.at, stood.rot);
+  });
   add(root, 'horn_brace', box(...brace.size), steel, [0, brace.y, 0]);
 }
 
@@ -2411,6 +2496,13 @@ const mirrored = (sgn, [x, y, z], [a = 0, b = 0, c = 0] = []) => [
 ];
 
 /**
+ * A point of the export's frame where `frame.part` would put it, in the
+ * root's — the seed kit.mjs `seat` takes, since it works in the root's
+ * frame and a Z-long file's numbers reach it through `drawn` (#907).
+ */
+const inKit = (frame, t) => (frame === xLong ? t : drawn(t).at);
+
+/**
  * The Foundry's halls — "unit production hall" (docs/asset-prompts-3d.md,
  * STRUCTURE — Foundry) said the Order's way: a wing either side of the bay,
  * each a six-facet drum of `hull.r` by `hull.length` laid along the bay by
@@ -2432,6 +2524,12 @@ const mirrored = (sgn, [x, y, z], [a = 0, b = 0, c = 0] = []) => [
  * facet itself, outboard of the crest, because the block's "dim at rest"
  * is the running lights and a lamp under a face is a lamp the chart never
  * shows (models-plan.md §3.2, rule 5).
+ *
+ * Given `ridge.on`, each ridge lies on its own `wing_hull_<tag>`: dropped
+ * onto the drum from its station, its underside on the inboard shoulder
+ * facet and rolled with it (kit.mjs `seat`, `drop`), where the file hung
+ * it level over the slope — 1.65 m off the drum at 320 m by the resting
+ * measure (#907). Without it the ridge is at the file's `[x, y]`.
  */
 export function hallWings(root, { shadow, alloy, crystal: ridgeMat, light }, opts) {
   const { frame = zLong, hull, crest, ridge, ends, lights } = opts;
@@ -2450,7 +2548,13 @@ export function hallWings(root, { shadow, alloy, crystal: ridgeMat, light }, opt
     const [crestAt, crestRot] = mirrored(sgn, [crest.x, crest.y, 0], [0, 0, crest.roll]);
     frame.part(root, `wing_crest_${tag}`, box(...crest.size), alloy, crestAt, crestRot);
     const [ridgeAt] = mirrored(sgn, [ridge.x, ridge.y, 0]);
-    frame.part(root, `wing_ridge_${tag}`, box(...ridge.size), ridgeMat, ridgeAt);
+    if (ridge.on) {
+      const laid = seat(root, `wing_hull_${tag}`, inKit(frame, ridgeAt), {
+        stand: ridge.size[1] / 2,
+        drop: true,
+      });
+      frame.place(root, `wing_ridge_${tag}`, box(...ridge.size), ridgeMat, laid);
+    } else frame.part(root, `wing_ridge_${tag}`, box(...ridge.size), ridgeMat, ridgeAt);
     for (const [end, dir] of [
       ['bow', 1],
       ['stern', -1],

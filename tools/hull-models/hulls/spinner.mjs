@@ -16,6 +16,12 @@
  * hull is a mine the hull was carrying, and a rank of four matched tubes would
  * be an Order weapon fit rather than a Commune one. `mineSacs` refuses a
  * matched pair for that reason and would throw here if two were sized alike.
+ *
+ * `nav_bow` (#907, from #894's resting measure): the bow mark's height was
+ * read off the pod's ideal section, and on the pod's eighteen facets it
+ * stood 0.26 m over the crown. It is dropped onto the pod at its own
+ * station now, its underside on the facet (`navMarks` `on`, kit.mjs
+ * `seat`); `diff.mjs` lists it and nothing else.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -128,7 +134,7 @@ pelagia.nose(root, ridge, { name: 'spinneret', tip: 34, r: 1.2, length: 8, facet
 
 // "Nearly black": two nav marks and a vein, and that is the whole light budget
 // of a hull quieter at rest than a Light Scout.
-pelagia.navMarks(root, light, { marks: [['nav_bow', 25, 1.5]] });
+pelagia.navMarks(root, light, { marks: [['nav_bow', 25, 1.5]], on: 'pod_body' });
 pelagia.navMarks(root, light, { marks: [['nav_dorsal', -8, 8.6]], w: 1.0, h: 0.4, d: 0.8 });
 pelagia.vein(root, vein, { from: 1, to: 15, y: 5.95, w: 0.35 });
 

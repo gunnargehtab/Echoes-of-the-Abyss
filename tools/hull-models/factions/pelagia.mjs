@@ -646,8 +646,17 @@ export function dorsalBlade(root, mat, opts) {
  * `w` by `h` by `d`. The Spinner's bow mark is the default half-metre tall;
  * its dorsal mark and the Sower's stem light are 0.4.
  */
-export function navMarks(root, light, { marks, w = 1.2, h = 0.5, d = 0.9 }) {
-  marks.forEach(([name, x, y, z = 0]) => add(root, name, box(w, h, d), light, [x, y, z]));
+export function navMarks(root, light, { marks, w = 1.2, h = 0.5, d = 0.9, on = null }) {
+  // `on` names the part the marks lie on: each is dropped onto it at its own
+  // station, its underside on the crown and tilted with the facet (kit.mjs
+  // `seat`, `drop`), so a mark whose height was read off the body's ideal
+  // section rather than its faceted crown comes down onto the shell — the
+  // Spinner's bow mark, 0.26 m over the pod's eighteen facets (#907).
+  // Without it a mark lies where its numbers say, as every rank before did.
+  marks.forEach(([name, x, y, z = 0]) => {
+    const rest = on && seat(root, on, [x, y, z], { stand: h / 2, drop: true });
+    add(root, name, box(w, h, d), light, rest ? rest.at : [x, y, z], rest ? rest.rot : [0, 0, 0]);
+  });
 }
 
 /**
@@ -2344,8 +2353,12 @@ const placed = (root, name, geo, mat, placement = {}) => {
  * placement]` each (hulls/abyssal-submersible-pelagia.mjs).
  */
 export function grownOrbs(root, { orbs }) {
+  // A placement carrying `on` is a seed, as `lightBuds` reads one (`rested`,
+  // #894): the orb grows from the nearest of the parts it names, half its
+  // radius in — the Submersible's third eye sac, which the file hung 0.55 m
+  // off the hull beside its siblings (#907).
   orbs.forEach(([name, mat, r, facets, placement]) =>
-    placed(root, name, new THREE.SphereGeometry(r, ...facets), mat, placement)
+    placed(root, name, new THREE.SphereGeometry(r, ...facets), mat, rested(root, r, placement))
   );
 }
 

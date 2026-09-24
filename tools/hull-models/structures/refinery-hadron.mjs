@@ -95,12 +95,19 @@
  * `diff.mjs` lists `crusher_maw` and no other part: the same box, its
  * three sides reordered, so the same area.
  *
- * RESIDUAL AUDIT LINES (#894's resting measure): `gantry_light_0_0`,
- * `_0_3`, `_1_0` and `_1_3` rest on nothing, 0.9 and 0.25 m off the
- * nodules under them — the file's own one light row on each gantry's
- * centreline, over the belt rather than on a rail, and a lamp re-hung on
- * a belt is a shape decision this port does not take. They are carried
- * as the file has them and named in #907.
+ * THE LIGHT ROWS (#907, from #894's resting measure). The file hung each
+ * gantry's one row of four lights on the centreline over the belt, where
+ * two of each four touched a nodule riding under them and the other two
+ * — `gantry_light_0_0`, `_0_3`, `_1_0`, `_1_3` — stood 0.9 and 0.25 m off
+ * anything: a string of lamps over the cargo, resting on it where the
+ * cargo happened to be. A lamp seated where it hung would sit on the
+ * belt, or on a nodule, so the row takes the station a row of gantry
+ * lights has on the other two files' gantries — the rail's: each light is
+ * dropped onto the second rail (`conveyor_rail_${row}_1`, the one the row
+ * follows in the file's order) at its own x, half its radius in (kit.mjs
+ * `conveyorGantry`, `on`). Same names, radii, order and material; the row
+ * moves 0.78 of a unit outboard, 11 m, on both gantries, and `diff.mjs`
+ * lists those eight and no other part.
  */
 import {
   THREE,
@@ -199,7 +206,11 @@ const gantry = (suffix, row, sgn) =>
       y: 0.5,
       sides: [
         { name: `conveyor_rail_${row}_0`, z: 0.78 },
-        { name: `conveyor_rail_${row}_1`, z: -0.78, lights: { row, z: 0 } },
+        {
+          name: `conveyor_rail_${row}_1`,
+          z: -0.78,
+          lights: { row, z: -0.78, on: `conveyor_rail_${row}_1` },
+        },
       ],
     },
     lights: { r: 0.08, facets: [5, 4], y: 0.66, xs: [-2.85, -0.85, 1.15, 3.15] },

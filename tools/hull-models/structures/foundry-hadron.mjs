@@ -80,12 +80,13 @@
  * script asserts after the fit, the plan being nearly square.
  *
  * `diff.mjs foundry-hadron f7cce0f`: unchanged beyond the root scale and
- * shift but for twenty-one parts — the eighteen lamps below, and
- * `wing_ridge_r`, `wing_ridge_l` and `gate_crystal` at 0.000 m, which is
- * #888's rename of the lit crystal from `resonance_crystal` to
+ * shift but for twenty-four parts — the eighteen lamps below, the two
+ * ridges, the threshold and the two crane lights seated since #907 (the
+ * last three bullets), and `gate_crystal` at 0.000 m, which is #888's
+ * rename of the lit crystal from `resonance_crystal` to
  * `resonance_crystal_dim` (the materials bullet above) and no move; the
- * ten guides and the two loads carry the same rename beside their moves.
- * Every other part is where it was.
+ * ten guides, the two loads and the two ridges carry the same rename
+ * beside their moves. Every other part is where it was.
  *
  * LIGHT (#890, #893). When #890 placed the lamps the block's resting
  * clause was "dim at rest", which named none: the running lights on the
@@ -143,14 +144,37 @@
  *   swallowed 0.18 of cable the same way. Load 1's foot at 2.98 clears
  *   the hull in progress (1.66). `diff.mjs` lists the two, grown and
  *   relit, and nothing else.
- * - `gate_threshold` stays lit in `forge_light` (218 m², never hidden). It
- *   is the Order's reading of the kit's `launchMouth` drum — the forge
- *   light "at its mouth", which #893 relights on the Directorate's
- *   and the Commune's Foundries — under its own name and shape, a sill
- *   across the gate at y 0.5 beyond the floor's end, where the drum now
- *   lies at the same height on the other two files (#890 had clad the
- *   drum and left the threshold lit, and asked here whether the two were
- *   one fixture: they are, settled by #893).
+ * - `gate_threshold` stays lit in `forge_light`, never hidden. It is the
+ *   Order's reading of the kit's `launchMouth` drum — the forge light "at
+ *   its mouth", which #893 relights on the Directorate's and the Commune's
+ *   Foundries — under its own name and shape, a sill across the gate
+ *   (#890 had clad the drum and left the threshold lit, and asked here
+ *   whether the two were one fixture: they are, settled by #893). The
+ *   file laid it at y 0.5, z 7, between the pylons and 0.7 beyond the
+ *   floor's end at 6 with nothing under it — 3.59 m from the nearest part
+ *   at 320 m, the resting measure found (#894, #907). It is centred on the
+ *   floor's end now, z 6.0 at the same height, the drum's own station on
+ *   the other two files (kit.mjs `launchMouth`, "centred on the floor's
+ *   end at z 6.0 and y 0.5"): its after half in the floor's last 0.3 with
+ *   its top 0.06 proud of the floor, its forward half beyond, the lips'
+ *   ends over its outboard 0.45 a side and the fifth guides standing in
+ *   it. A station rather than a seat — a sill rests by meeting the floor,
+ *   as the drum does, and the measure reads 0 once they meet. 1.1 short of
+ *   the pylons, and still the mouth's light — more of it: at z 7 the
+ *   crossbeam covered two thirds of the sill from above and 218 m²
+ *   showed; 474 m² does now. `diff.mjs` lists it.
+ * - `wing_ridge_r` and `wing_ridge_l`, the crystal ridge along each hall's
+ *   inboard edge, lit — hung level at x ±2.1, y 3.45 over the drum's
+ *   inboard shoulder facet, which falls 25° from the crown at (3.7, 3.95)
+ *   to (1.535, 2.925): 1.65 m off it at 320 m by the resting measure
+ *   (#894, #907). Each lies on its own drum now, dropped from its station
+ *   with its underside on the facet and rolled 25° with it (`hallWings`
+ *   `ridge.on`, kit.mjs `seat`), 0.17 lower and 0.04 inboard; rolled, a
+ *   ridge shows its top and its inboard side, 754 and 712 m² where the
+ *   level pair showed 586 and 544. `diff.mjs` lists the two.
+ * - `gantry_warnlight_0` and `_1` stood 0.8 m over their beams; each is
+ *   on its beam's crown since #907, the kit's rule for all three navies'
+ *   cranes (kit.mjs `gantryCrane`). `diff.mjs` lists both.
  */
 import {
   THREE,
@@ -185,7 +209,8 @@ hadron.hallWings(
   {
     hull: { r: 2.5, length: 13, x: 3.7, y: 1.9, squash: 0.82 },
     crest: { size: [1.7, 0.35, 11.96], x: 4.2, y: 3.75, roll: -0.28 },
-    ridge: { size: [0.2, 0.2, 11.18], x: 2.1, y: 3.45 },
+    // The ridge on the drum's inboard shoulder facet (LIGHT).
+    ridge: { size: [0.2, 0.2, 11.18], x: 2.1, y: 3.45, on: true },
     ends: { r: 2.05, length: 3.2, z: 8.05 },
     lights: { r: 0.11, x: 5.4, y: 3.2, zs: [-3.6, 0, 3.6] },
   }
@@ -233,13 +258,15 @@ const load = (y) => ({ y, geo: octa(0.42), scale: [1.05, 1.35, 1.05] });
 gantryCrane(root, crane, { ...order, n: 0, at: [0, 0, -2.7], load: load(2.45) });
 gantryCrane(root, crane, { ...order, n: 1, at: [0, 0, 2.7], load: load(3.55) });
 
-// The launch gate: pylons, lit threshold, crossbeam, gate crystal.
+// The launch gate: pylons, lit threshold, crossbeam, gate crystal. The
+// threshold is centred on the bay floor's end, z 6.0, as the kit's drum is
+// on the other two files — the file had it at 7, in the water (LIGHT).
 hadron.launchGate(
   root,
   { alloy, glow: forge, shadow, crystal },
   {
     pylon: { r: 0.35, length: 3.4, at: [2, 2.6, 7.1] },
-    threshold: { size: [3.8, 0.22, 0.6], at: [0, 0.5, 7] },
+    threshold: { size: [3.8, 0.22, 0.6], at: [0, 0.5, 6] },
     crossbeam: { size: [4.4, 0.35, 0.4], at: [0, 4.15, 7.1] },
     crystal: { r: 0.45, at: [0, 4.75, 7.1], scale: [0.6, 1.4, 0.6] },
   }

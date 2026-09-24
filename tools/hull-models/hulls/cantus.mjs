@@ -31,6 +31,22 @@
  * SIG 10 in `units.ts` and in the bake table alike, the quietest figure in the
  * navy: the light budget is the apex, the two spine seams, the four ridges and
  * the bow mark — nothing on the flanks and nothing astern.
+ *
+ * LAMPS THAT FLOAT (#907, from #894's measure). Two of the eight rested on
+ * nothing: `seam_fore` hung 0.39 m over the spine's top flat, and `nav_bow`
+ * 0.44 m abaft the prism's base with the spine's tip 0.5 m over one end of
+ * it and the hull's back 0.7 m under it. Each lies on what was under it
+ * now, dropped from its own station with its underside on the facet and
+ * pitched with it (kit.mjs `seat`, `drop`): the forward seam on the spine
+ * (`resonanceNode` `spineSeams.on`, by name — `seam_aft` passes through the
+ * dorsal fin, rests by the measure, and is not moved), and the mark on the
+ * hull's back (`bowPrism` `mark.on`), where its 8° of pitch is the back's
+ * own fall toward the prism. Not on the prism: the prism's section is a
+ * diamond with a ridge on the crown, and a box dropped on a ridge takes
+ * one facet's 45° of roll, which no centreline mark on a bilateral hull can
+ * carry; and "abaft it" is the block's word for where the mark is. Same
+ * names, sizes and material; `diff.mjs cantus-hadron` lists the two and no
+ * other part.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -122,7 +138,9 @@ hadron.resonanceNode(
       lean: 0.45,
       foot: { at: [12.15, 2.8, 12.15], size: [3, 1.5, 3] },
     },
-    spineSeams: { x: 26, y: 3.3, length: 14, section: [0.3, 0.5] },
+    // The forward seam on the spine's flat; the after one through the fin,
+    // where the file has it (the header).
+    spineSeams: { x: 26, y: 3.3, length: 14, section: [0.3, 0.5], on: { fore: 'blade_spine' } },
     ridges: { at: [5.8, 6.2, 5.1], size: [0.7, 0.4, 12.6], pitch: 0.55, yaw: Math.atan2(12.5, 11) },
   }
 );
@@ -164,12 +182,12 @@ hadron.drive(
 );
 // The bow: a plain alloy point where the Clarion has its horn, and one mark
 // abaft it — the hull saying it has no array, in the place a Knight would look
-// for one.
+// for one — lying on the hull's back under its station (the header).
 hadron.bowPrism(root, { alloy, seam }, {
   x: 42,
   r: 2.0,
   length: 8,
-  mark: { size: [1, 0.4, 0.8], x: 37, y: 1.6 },
+  mark: { size: [1, 0.4, 0.8], x: 37, y: 1.6, on: 'blade_hull' },
 });
 
 await exportGlb(root, 'cantus-hadron.glb');

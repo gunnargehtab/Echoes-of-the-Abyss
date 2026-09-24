@@ -84,15 +84,22 @@
  *   one reading the Refinery block licenses. A Directorate maw that is
  *   one fixture with the other two is an aperture, a hole in the cowl,
  *   and that is a decision put to the owner on #907 (kit.mjs `crusher`).
- * - RESIDUAL AUDIT LINES (#894's resting measure): `photophore_1`, `_2`
- *   and `_3` rest on nothing, 2.2, 0.3 and 1.9 m off the silos they mark,
- *   where the export hung them. Seating each on its silo's wall (kit.mjs
- *   `seat`) puts it under the segment above — the segments twist a little
- *   further round as they rise and overhang the one below — so the bud
- *   the chart saw floating it would not see at all, and the audit named
- *   two of the three hidden. Where a photophore rests on a stacked silo
- *   and shows is a shape decision this issue does not take; they are
- *   carried as the file has them and named in #907.
+ * - RESTING ON THE SILOS (#907, from #894's resting measure):
+ *   `photophore_1`, `_2` and `_3` hung 2.2, 0.3 and 1.9 m off the silos
+ *   they mark, where the export put them, each beside a lower segment;
+ *   and a bud seated on a lower segment's wall is under the segment
+ *   above, whose foot overhangs the crown below it by 0.2 to 0.25 units,
+ *   so the bud the chart saw floating it would not have seen at all — the
+ *   issue's own case of a lamp whose seat would hide it. Each has a
+ *   station first: on its silo's top segment, at the lamp's own bearing,
+ *   a bud's diameter above that segment's foot (`SILOS`, `shoulder`), and
+ *   is seated on that wall from there, half its radius in
+ *   (`photophoreDomes` `on`, kit.mjs `seat`) — `_1` on `silo_1_seg_3`,
+ *   `_2` on `silo_2_seg_2`, `_3` on `silo_3_seg_3` — where the cap and the
+ *   top seam are narrower than the wall and nothing stands over it. They
+ *   climb 14, 16 and 32 m to get there; `diff.mjs` lists the three and no
+ *   other part, and the audit names nothing on this file as hidden or
+ *   floating. `photophore_0` rested on its silo and stays.
  *
  * THE FRAME is the export's own: an X-long file, 23.0715 units long for a
  * 280 m footprint (hull-intake's `rawSize.x` on the approved file, which
@@ -138,11 +145,7 @@ root.name = 'nodule_refinery_directorate';
 // "A rank of upright silos": four, each its own foot, radius, height and
 // segment count, starting half a radian further round than the last, with
 // its spikes — the holes in the ranks are the file's.
-directorate.silos(
-  root,
-  { red, violet, steel, black, light: crimson },
-  {
-    silos: [
+const SILOS = [
       {
         n: 0,
         at: [-5.6, -2.6],
@@ -231,9 +234,8 @@ directorate.silos(
           },
         ],
       },
-    ],
-  }
-);
+];
+directorate.silos(root, { red, violet, steel, black, light: crimson }, { silos: SILOS });
 
 // The crusher at the kit's defaults — this file's numbers — but
 // `crusher_maw`, laid down as a floodlit apron at the foot of the house's
@@ -382,16 +384,22 @@ directorate.anchorClaws(root, [red, black], {
 
 // "Floodlit working surfaces": two flood masts at the kit's defaults, and
 // four photophores, each its own buffer, none mirroring another — three of
-// them off their silos where the file hung them (the header).
+// them on their silos' top segments (the header).
 floodMasts(root, { steel, lamp: flood });
+// A silo's photophore on its top segment: seeded at the lamp's own bearing
+// a diameter above that segment's foot, and seated on its wall from there
+// (the header, RESTING ON THE SILOS).
+const top = (k) => `silo_${k}_seg_${SILOS[k].segments - 1}`;
+const shoulder = (k, r) => SILOS[k].height * (1 - 1 / SILOS[k].segments) + 2 * r;
+const onSilo = (k, r, [x, z]) => ({ at: [x, shoulder(k, r), z], on: top(k) });
 directorate.photophoreDomes(root, crimson, {
   frame: xLong,
   facets: [6, 5],
   domes: [
     ['photophore_0', 0.09, { at: [-6.9, 3.2, -1.8] }],
-    ['photophore_1', 0.09, { at: [-0.4, 6.8, -2.1] }],
-    ['photophore_2', 0.09, { at: [2.9, 3.9, 1.1] }],
-    ['photophore_3', 0.09, { at: [-3.1, 2.2, 3] }],
+    ['photophore_1', 0.09, onSilo(1, 0.09, [-0.4, -2.1])],
+    ['photophore_2', 0.09, onSilo(2, 0.09, [2.9, 1.1])],
+    ['photophore_3', 0.09, onSilo(3, 0.09, [-3.1, 3])],
   ],
 });
 

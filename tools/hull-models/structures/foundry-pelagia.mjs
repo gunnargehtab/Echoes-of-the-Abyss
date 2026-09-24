@@ -56,11 +56,19 @@
  *   off the beam's centre; the second crane's load hangs 1.1 higher than
  *   the first's. Every other number of both cranes, of the bay, the launch
  *   mouth, the tanks and the pipes is the Directorate file's.
- * - The four veins are arcs of torus each its own radius (2.23 to 2.35)
+ * - The four veins are arcs of torus each its own radius (2.10 to 2.35)
  *   and arc (1.057 to 1.366), two a flank, yawed −0.4 and rolled each its
  *   own way; the −x pair the file writes in three's (−π, b, c) form of the
  *   XYZ Euler, written here as the plain (0, π + 0.4, c + π) of the same
  *   matrix. Three of the five anchors are written the same way.
+ *   `hull_vein_0` is R 2.10, not the file's 2.3445 (#907, from #894's
+ *   resting measure): the −x flank's first lobe is that flank's smallest,
+ *   2.2 tall against the 2.5 of the lobe `hull_vein_2` lies on, and the
+ *   file gave the vein over it the larger radius, so the arc stood 3.8 m
+ *   off the skin while its three siblings lie on theirs. Every other
+ *   number of the vein is the file's; the radius was swept rather than
+ *   guessed — 2.15 leaves 0.26 m, 2.12 meets, 2.10 lies on — and at 2.10
+ *   it rests as they do. `diff.mjs` lists it beyond the relabel.
  * - The six materials are the navy's `ink`: the Bastion's five with
  *   `bio_light` at this file's 3.0999 (`biolight_green` until #891, and
  *   `spore_pale` is `spore_pod` since then), and `forge_light`, the spore
@@ -356,8 +364,9 @@ pelagia.domeArcs(root, bio, {
   tube: 0.06,
   facets: [4, 12],
   arcs: [
+    // R 2.10, not the file's 2.344514791 — the veins bullet in the header.
     {
-      R: 2.344514791,
+      R: 2.1,
       arc: 1.05722491759,
       at: [-3.7, 0.3, -3.5],
       rot: [0, Math.PI + 0.4, 0.827962757369],

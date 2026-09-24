@@ -45,7 +45,12 @@
  * - The two point lights are #F2B233 at intensity 4 and range 4, with no
  *   mesh; the port writes them back as the file has them, last.
  * - Of the eleven lamps, the beacon, the six running lights and the four
- *   corner domes all face up; the export warns on none.
+ *   corner domes all face up; the export warns on none. By the resting
+ *   measure (#894) the beacon stood 0.64 m over the emitter drum and the
+ *   four corner domes 0.21 over their pontoon caps; since #907 each is
+ *   dropped onto its fitting at the file's station, its foot on the top
+ *   (`emitterMast` `on`, `cornerDomes` `on`, kit.mjs `seat`). `diff.mjs`
+ *   lists the five and nothing else.
  *
  * THE FRAME: an X-long export (8.3863 along x, anchor block to anchor
  * block by their yawed boxes, against 6.1863 across z), so nothing is
@@ -160,7 +165,7 @@ bathyarch.emitterMast(
     collar: { r: 0.3, h: 0.2, y: 1.75 },
     drum: { r: 0.55, h: 0.5, y: 3.05 },
     fins: { r: 0.75, y: 3.05, size: [0.5, 0.4, 0.08] },
-    beacon: { radii: [0.14, 0.17], h: 0.16, y: 3.41 },
+    beacon: { radii: [0.14, 0.17], h: 0.16, y: 3.41, on: 'emitter-drum' },
   }
 );
 
@@ -216,6 +221,7 @@ bathyarch.cornerDomes(root, put, lampM, {
   y: 1.14,
   radii: [0.11, 0.13],
   h: 0.12,
+  on: 'pontoon-cap',
 });
 bathyarch.glowLamps(root, {
   color: hex('#F2B233'),

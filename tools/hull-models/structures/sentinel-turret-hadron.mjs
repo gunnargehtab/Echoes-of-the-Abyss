@@ -38,6 +38,20 @@
  * is the export's, through kit.mjs `drawn`; `metreTrue` measures the same
  * way, so intake reports ×1.000 and the maps land where the approved
  * export's did.
+ *
+ * LAMPS THAT FLOAT (#907, from #894's measure). All four marks rested on
+ * nothing: the file hung `nav_mark_fore_r` and `_l` 1.4 m off the first
+ * skirt blades and 3 m off the frustum's flank at 120 m, and
+ * `nav_mark_aft_r` and `_l` at the frustum's rim height, 6 m outside it,
+ * over the ammo pods' after ends. Each is a bud on the frustum now, seated
+ * on the nearest of its facets from its own station and sunk half its
+ * radius (`navMarks` `on`, kit.mjs `seat`): the fore pair on the flank at
+ * bearing 27°, 2 m in from where it hung, at the foot of the first blades
+ * and 1.1 m from them; the aft pair on the flank at −50°, 4.3 m in, a
+ * third of a unit under the rim, 4.9 m inboard of the pods and clear of
+ * them from above. "Flat on an upward face": the flank rises 56° and each
+ * mark shows 1.6 m² from above. Same names, radius and material; `diff.mjs
+ * sentinel-turret-hadron` lists the four and no other part.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -117,10 +131,12 @@ hadron.railGun(
   }
 );
 
-// The whole resting light budget: four marks on the emplacement. Everything
-// else stays dark until it fires.
+// The whole resting light budget: four marks on the emplacement, each a bud
+// on the frustum's flank seated from the file's station (the header).
+// Everything else stays dark until it fires.
 hadron.navMarks(root, navLight, {
   r: 0.08,
+  on: 'base_frustum',
   marks: [
     ['fore', 2.6, 0.9, 1.4],
     ['aft', 1.9, 1.5, -2.2],

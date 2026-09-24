@@ -70,7 +70,14 @@
  *   ×0.938 root scale — to −148 at the same 46, so that no rung lies under
  *   a gantry's beam or trolley (kit.mjs `slipwayBed`, one decision for all
  *   four yards; docs/models-plan.md §3.2 rule 5; #890). `diff.mjs` lists
- *   the seven crosses, moved by that 7.5 m and nothing else.
+ *   the seven crosses, moved by that 7.5 m.
+ * - The eight plate photophores, four a hall, hung 0.47 m over the
+ *   tergites they mark by #894's resting measure: the station's crown was
+ *   read off the ideal orb, and the plate is a 14 × 7 one. Each is dropped
+ *   onto its tergite from its station since #907, its underside on the
+ *   facet and tilted with it (`slipwayHall`, kit.mjs `seat`). `diff.mjs`
+ *   lists the eight at 0.7 m, and beyond them, the crosses and the
+ *   relabel, nothing.
  */
 import {
   THREE,

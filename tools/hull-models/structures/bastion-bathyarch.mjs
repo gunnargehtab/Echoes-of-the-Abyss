@@ -70,6 +70,16 @@
  *     the disc's axis on (1, 0, 0) — so the port faces square out along
  *     its radial, as ports 3 and 8 do; the other seven face 0.62 to 1.27
  *     off theirs, and all nine keep their tenth-of-a-turn stations.
+ *   - Five portholes and the crane lamp (#907, from #894's resting
+ *     measure): `porthole_1`, `_3`, `_5`, `_6` and `_8` stood off the
+ *     skirt — 0.55, 0.9, 6.87, 0.55 and 0.9 m — where the file's turn
+ *     happened not to meet it, the fifth furthest for facing square out.
+ *     Each is seated on the skirt from its own station, the disc laid
+ *     flat on the frustum's face (`portholes` `on`, kit.mjs `seat`); the
+ *     other five keep the file's turn, touching the skirt edge-on.
+ *     `crane_lamp` hung 2.3 m under the jib's end and is dropped onto the
+ *     jib's top at the file's station, half in (`jibCrane` `on`).
+ *     `diff.mjs` lists the six and nothing else.
  *   - `perimeter_post_4` and `_8`: each post made taller on its own foot,
  *     0.52 and 0.82, so it stands up through its module's roof (1.5 and
  *     1.8) and the lamp sits on the stub above it; the ring of eight stays
@@ -127,6 +137,7 @@ bathyarch.portholes(root, put, glow, {
   y: 1.15,
   disc: { r: 0.14, h: 0.1 },
   bearings: { 5: Math.PI },
+  on: { 1: 'dome_skirt', 3: 'dome_skirt', 5: 'dome_skirt', 6: 'dome_skirt', 8: 'dome_skirt' },
 });
 
 // "Docking collars": three, each with its ring and its lamp.
@@ -192,7 +203,7 @@ bathyarch.jibCrane(
     counter: { size: [0.4, 0.3, 0.6], at: [1.9, 3.6, 1.9] },
     cable: { r: 0.02, h: 1.7, at: [1.9, 2.9, 4.55] },
     hook: { size: [0.3, 0.24, 0.3], at: [1.9, 2, 4.55] },
-    lamp: { r: 0.07, at: [1.9, 3.85, 4.7] },
+    lamp: { r: 0.07, at: [1.9, 3.85, 4.7], on: 'crane_jib' },
   }
 );
 

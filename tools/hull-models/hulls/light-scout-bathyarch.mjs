@@ -27,8 +27,15 @@
  * shared kinds: drawn along Z, 23.20 units long, hull axis at y = 2.6; built
  * here metre-true at 60 m along +X, centred on its length, the axis at
  * y = 0. Every number below is the export's, through kit.mjs `drawn`.
+ *
+ * LAMPS THAT FLOAT (#907, from #894's resting measure). `nav_dome_mast`
+ * stood 0.27 m over the sensor head and its brow, and `nav_strip_stern`
+ * 0.29 m over the after cap. The dome grows from the nearer of the two,
+ * half its radius in (`domes` `on`); the strip is dropped onto the cap at
+ * its station (kit.mjs `seat`). Same names, sizes and material; `diff.mjs`
+ * lists the two and nothing else.
  */
-import { THREE, box, part, drawn, metreTrue, exportGlb } from '../kit.mjs';
+import { THREE, box, part, drawn, seat, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
 
 const L = 60;
@@ -129,13 +136,18 @@ bar('stencil_fin', amber, [0.27, 0.5, 0.5], [0, 5.2, -7.3]);
 bathyarch.domes(root, lamp, {
   r: 0.34,
   domes: [
-    ['nav_dome_mast', drawn([0, 5.9, 6.2])],
+    ['nav_dome_mast', { ...drawn([0, 5.9, 6.2]), on: ['sensor_brow', 'sensor_head'] }],
     ['nav_dome_p', drawn([1.55, 3.3, 3.2])],
     ['nav_dome_s', drawn([-1.55, 3.3, 3.2])],
   ],
 });
 bar('nav_strip_spine', lamp, [0.5, 0.22, 3.2], [0, 4.36, -1]);
-bar('nav_strip_stern', lamp, [1.4, 0.28, 0.24], [0, 3.8, -8.9]);
+// The stern strip lies on the after cap under its station (kit.mjs `seat`,
+// `drop`): the file hung it 0.29 m over it (#907).
+{
+  const { at, rot } = seat(root, 'hull_cap_aft', drawn([0, 3.8, -8.9]).at, { stand: 0.14, drop: true });
+  part(root, 'nav_strip_stern', box(1.4, 0.28, 0.24), lamp, { at, rot });
+}
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
 await exportGlb(root, 'light-scout-bathyarch.glb');
