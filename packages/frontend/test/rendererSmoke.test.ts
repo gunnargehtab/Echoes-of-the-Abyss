@@ -24,7 +24,16 @@
 import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
 import { CanvasTextMetrics, Container, Graphics, Text, type GraphicsPath } from 'pixi.js';
-import { Faction, MovementHoldReason, SIM, StructureKind } from '@echoes/shared';
+import {
+  DRIFT_ROSTER,
+  Faction,
+  FaunaSpecies,
+  MovementHoldReason,
+  ResolutionTier,
+  SIM,
+  StructureKind,
+  type Contact,
+} from '@echoes/shared';
 import { FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
 import {
   createHost,
@@ -57,6 +66,8 @@ import {
 import { EchoRenderer, type RendererCallbacks } from '../src/game/EchoRenderer.ts';
 import type { ReadoutBox } from '../src/game/readouts.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
+import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
+import { FAUNA_COLOR, TIER_STYLE } from '../src/game/palette.ts';
 import { BufferAttribute, FogExp2, Mesh, Points, type Scene } from 'three';
 
 /** What the shell was told, in the order it was told. */
@@ -1150,6 +1161,272 @@ describe('renderer smoke test: the water', () => {
       world.conn.setWaterDensity(1);
       world.frame(2);
       assert.ok(fog.density > 0, 'and it comes back');
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
+/**
+ * The overlay's contact symbols, in the order they were first drawn: the
+ * canned match's seven first, then whatever a test forges, in its order.
+ */
+function contactSymbols(app: HeadlessApplication): Graphics[] {
+  const overlay = app.stage.children[0] as Container;
+  return (overlay.children[5] as Container).children as Graphics[];
+}
+
+/** A symbol's stipple body, if it has one, and whether it is on the glass. */
+function stippleOf(symbol: Graphics): Graphics | null {
+  const found = symbol.children.find((child) => child.label === AGENT_STIPPLE_LABEL);
+  return (found as Graphics | undefined) ?? null;
+}
+
+const showsStipple = (symbol: Graphics): boolean => stippleOf(symbol)?.visible === true;
+
+/**
+ * Everything a symbol puts on screen, as one string: where it stands, the
+ * ink it queued, and which children it shows. Two contacts that draw the same
+ * thing give the same string, whatever their ids.
+ */
+function inkOf(symbol: Graphics): string {
+  return JSON.stringify({
+    visible: symbol.visible,
+    at: [symbol.position.x, symbol.position.y, symbol.scale.x],
+    ink: symbol.context.instructions.map((instruction) => {
+      const style = instruction.data.style as { color: number; alpha: number };
+      const path = (instruction.data as { path?: GraphicsPath }).path;
+      return {
+        action: instruction.action,
+        color: style.color,
+        alpha: style.alpha,
+        shapes: path?.shapePath.shapePrimitives.map(({ shape }) => shape),
+      };
+    }),
+    shows: symbol.children.filter((child) => child.visible).map((child) => child.label),
+  });
+}
+
+/** How many of public life's stipple clouds the conn scene holds. */
+function publicStippleClouds(scene: Scene | null): number {
+  assert.ok(scene !== null, 'the conn rendered at least once');
+  let found = 0;
+  scene.traverse((object) => {
+    if (object instanceof Points && object.geometry.getAttribute('aDot') !== undefined) found++;
+  });
+  return found;
+}
+
+describe('renderer smoke test: classified fauna (#868)', () => {
+  // docs/map-visuals.md §8: at Tier 3 a fauna contact is its species' shape in
+  // dots and at Tier 4 the same shape denser, drawn in the overlay's contact
+  // symbols (rung 7). The pure half — the shapes, the counts, the look — is
+  // faunaAgentStipple.test.ts. This half is the renderer's: the gate below
+  // Tier 3, the conn scene left alone, and a frame that allocates nothing.
+
+  it('draws a sub-Tier-3 fauna contact exactly as it draws a hull', async () => {
+    // The server never attaches `fauna` below Tier 3, so a real snapshot
+    // proves nothing about this gate. The payload is forged: an animal at
+    // Tier 1 and Tier 2, each beside a hull at the same tier and the same
+    // place, which it must be indistinguishable from (docs/bestiary.md §3).
+    const world = await boot();
+    try {
+      world.frame(3);
+      const forged = cannedSnapshot(360);
+      const tick = forged.tick;
+      forged.contacts = [
+        {
+          id: 901,
+          tier: ResolutionTier.Contact,
+          x: 1400,
+          y: 1300,
+          fauna: FaunaSpecies.Ashgrazer,
+          tick,
+        },
+        { id: 902, tier: ResolutionTier.Contact, x: 1400, y: 1300, tick },
+        {
+          id: 903,
+          tier: ResolutionTier.Bearing,
+          x: 2200,
+          y: 2000,
+          depth: 1500,
+          fauna: FaunaSpecies.Sounder,
+          tick,
+        },
+        { id: 904, tier: ResolutionTier.Bearing, x: 2200, y: 2000, depth: 1500, tick },
+      ];
+      world.chart.applySnapshot(forged);
+      world.conn.applySnapshot(forged);
+      world.frame(2);
+
+      const [faunaT1, hullT1, faunaT2, hullT2] = contactSymbols(world.app).slice(-4);
+      assert.ok(faunaT1 && hullT1 && faunaT2 && hullT2, 'four forged symbols drawn');
+      assert.ok(faunaT1.context.instructions.length > 0, 'the Tier-1 animal is its column');
+      assert.equal(inkOf(faunaT1), inkOf(hullT1), 'a Tier-1 animal draws what a Tier-1 hull does');
+      assert.ok(faunaT2.context.instructions.length > 0, 'the Tier-2 animal is its blob');
+      assert.equal(inkOf(faunaT2), inkOf(hullT2), 'a Tier-2 animal draws what a Tier-2 hull does');
+      for (const symbol of [faunaT1, faunaT2]) {
+        assert.ok(stippleOf(symbol) === null, 'no dots were ever made for it');
+      }
+
+      // The positive control: the canned match's Tier-3 Draymaw, a ghost now,
+      // is its shape in dots, so the probe above can see a stipple at all.
+      const draymaw = contactSymbols(world.app)[5]!;
+      assert.ok(showsStipple(draymaw), 'a Tier-3 animal is drawn as stipple');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('hides a creature’s dots the frame it is demoted below Tier 3', async () => {
+    const world = await boot();
+    const real = performance.now.bind(performance);
+    let skew = 0;
+    const clock = mock.method(performance, 'now', () => real() + skew);
+    try {
+      world.frame(3);
+      const at = (tier: ResolutionTier, tick: number) => {
+        const snapshot = cannedSnapshot(tick);
+        const hollow: Contact = { id: 905, tier, x: 2000, y: 2000, depth: 1800, tick };
+        if (tier >= ResolutionTier.Classification) hollow.fauna = FaunaSpecies.Hollow;
+        snapshot.contacts = [hollow];
+        world.chart.applySnapshot(snapshot);
+        world.conn.applySnapshot(snapshot);
+      };
+
+      at(ResolutionTier.Classification, 360);
+      // A second past its arrival, so the mark is faded in and a twentieth
+      // of the way to a ghost.
+      skew += 1000;
+      world.frame(1);
+      const hollow = contactSymbols(world.app).at(-1)!;
+      const dots = stippleOf(hollow);
+      assert.ok(dots !== null && dots.visible, 'classified: the shape in dots');
+      assert.equal(dots.tint, FAUNA_COLOR, 'in the palette’s fauna colour');
+      const alpha = TIER_STYLE[ResolutionTier.Classification].alpha;
+      assert.ok(
+        Math.abs(dots.alpha - alpha * 0.95) < 0.01,
+        `at the contact's own alpha, saw ${dots.alpha}`
+      );
+
+      // The server now resolves it only to a bearing, and drops `fauna`.
+      at(ResolutionTier.Bearing, 365);
+      world.frame(1);
+      assert.equal(showsStipple(hollow), false, 'demoted: the dots go the same frame');
+
+      at(ResolutionTier.Classification, 370);
+      world.frame(1);
+      // Identity as a boolean: a failed `equal` on two Pixi objects has the
+      // reporter inspect both whole scene graphs, which never finishes.
+      assert.ok(stippleOf(hollow) === dots, 'and the same body comes back when it is earned');
+      assert.ok(dots.visible);
+    } finally {
+      clock.mock.restore();
+      world.teardown();
+    }
+  });
+
+  it('draws a whole roster at Tier 4 without touching the conn scene', async () => {
+    const world = await boot();
+    try {
+      // The whole map in shot, so every creature below is on the glass.
+      world.conn.focusWorld(CELL_M * COLS * 0.5, CELL_M * COLS * 0.5, 9000);
+      const bare = cannedSnapshot(360);
+      bare.contacts = bare.contacts.filter((contact) => contact.fauna === undefined);
+      world.chart.applySnapshot(bare);
+      world.conn.applySnapshot(bare);
+      world.frame(5);
+      const calls = world.gl.ledger.calls;
+      const triangles = world.gl.ledger.triangles;
+      assert.equal(publicStippleClouds(world.gl.lastScene), 2);
+
+      // Every creature a full map seeds, of the roster's mix, all tracked.
+      const species = DRIFT_ROSTER.flatMap((row) =>
+        new Array<FaunaSpecies>(row.count).fill(row.species)
+      );
+      assert.equal(species.length, 48);
+      const teeming = cannedSnapshot(365);
+      teeming.contacts = [
+        ...bare.contacts,
+        ...species.map((fauna, i): Contact => ({
+          id: 2000 + i,
+          tier: ResolutionTier.Track,
+          x: 500 + (i % 8) * 430,
+          y: 500 + Math.floor(i / 8) * 520,
+          depth: 900,
+          hp: 40,
+          maxHp: 100,
+          fauna,
+          tick: 365,
+        })),
+      ];
+      world.chart.applySnapshot(teeming);
+      world.conn.applySnapshot(teeming);
+      world.frame(5);
+
+      const creatures = contactSymbols(world.app).slice(-48);
+      assert.equal(creatures.filter(showsStipple).length, 48, 'every creature is its dots');
+      // Gate 6's counted half, and gate 5's conn half: the animals are overlay
+      // ink, so the conn scene draws exactly what it drew without them. The
+      // public clouds are still the two, and no probe key names a contact.
+      assert.equal(world.gl.ledger.calls, calls, 'no draw call for any creature');
+      assert.equal(world.gl.ledger.triangles, triangles, 'and no triangle');
+      assert.equal(publicStippleClouds(world.gl.lastScene), 2, 'public life is still two draws');
+      const probe = (
+        globalThis as unknown as { window: { __perspectiveProbe: () => Record<string, unknown> } }
+      ).window.__perspectiveProbe();
+      assert.equal(
+        Object.keys(probe).some((key) => key.includes('contact')),
+        false
+      );
+
+      // A held camera: thirty frames build nothing and swap no pattern. A
+      // frame picks a shared pattern and writes a tint and an alpha.
+      const identities = treeIdentities(world.app.stage);
+      const patterns = creatures.map((symbol) => stippleOf(symbol)!.context);
+      world.frame(30);
+      assert.deepEqual(treeIdentities(world.app.stage), identities, 'no display object allocated');
+      assert.ok(
+        creatures.every((symbol, i) => stippleOf(symbol)!.context === patterns[i]),
+        'every body kept its pattern'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('recycles a swept creature’s body rather than destroying it', async () => {
+    // A body draws a shared pattern and Pixi's destroy leaves it subscribed to
+    // it, so the pool keeps swept bodies for the next creature instead.
+    const world = await boot();
+    try {
+      world.frame(3);
+      const draymaw = contactSymbols(world.app)[5]!;
+      const body = stippleOf(draymaw)!;
+      assert.ok(body.visible);
+
+      // The contact ghosts out: twenty seconds of wall clock, forged.
+      const real = performance.now.bind(performance);
+      const clock = mock.method(performance, 'now', () => real() + 21_000);
+      try {
+        const gone = cannedSnapshot(360);
+        gone.contacts = [];
+        world.chart.applySnapshot(gone);
+        world.frame(2);
+        assert.equal(body.destroyed, false, 'the body outlives its symbol');
+        assert.ok(body.parent === null, 'but leaves the tree with it');
+
+        const back = cannedSnapshot(420);
+        world.chart.applySnapshot(back);
+        world.frame(2);
+      } finally {
+        clock.mock.restore();
+      }
+      const returned = contactSymbols(world.app).find((symbol) => stippleOf(symbol) !== null);
+      assert.ok(
+        returned !== undefined && stippleOf(returned) === body,
+        'the next creature wears it'
+      );
     } finally {
       world.teardown();
     }

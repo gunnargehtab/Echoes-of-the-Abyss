@@ -47,7 +47,7 @@ screenshot from the survey dolly.
 | V2 — the gap | The order is right but unwritten, so nothing stops a new layer landing on the wrong rung | — |
 | V3 | Depth is luminance on the ground and in the water. Hue belongs to the biome. Three world-light families. The veil is a drain, not a blackout | [art-direction.md](art-direction.md), [style-neon-noir.md](style-neon-noir.md) "World light" |
 | V4 | Six biomes, each with a fill, a relief row, a prop set and at most one light family, spread across four docs and three files | §7 below collects them |
-| V5 | Tetherjelly fields and Lampfry shoals are public chart data, drawn as discs and motes until Phase 3 (§10). Classified fauna are glyphs | `EchoRenderer.ts` `drawJellies`, `drawShoals`, `drawFaunaSilhouette` |
+| V5 | Tetherjelly fields and Lampfry shoals are public chart data, drawn as stipple in the water since Phase 3 (§10). Classified fauna are stipple shapes since Phase 4 | `faunaStipple.ts`, `faunaAgentStipple.ts` |
 
 The one-line version: *the ground has a shape and a skin, but no survey on it.*
 
@@ -153,29 +153,29 @@ break-silence ring and an order's acknowledgement are weighed at their peak alph
 **A rimless mark is weighed by its loudest crisp element**, a dot, a hatch line or a dash, at
 its peak, as if it were an outline. Soft fills stay unweighed, as the haze does. Blocked
 ground is weighed by its hatch. A Tetherjelly field's bells are a mark of their own rather
-than its rim's interior, and so is a Lampfry shoal's mote cloud, formed or scattered. Residue's
-dashed arc is its outline, weighed at its peak; its three soft rings are fills. The owner
-settled both rules on #866. Which peak weighs residue is still open, because the server gives it
-no single one (§10).
+than its rim's interior, and so is a Lampfry shoal's mote cloud, formed or scattered. A
+classified animal is its species' shape in dots (§8), weighed by one dot. Residue's dashed arc
+is its outline, weighed at its peak; its three soft rings are fills. The owner settled both
+rules on #866. Which peak weighs residue is still open, because the server gives it no single
+one (§10).
 
-The ladder is measured, not just stated. A stroke's weight is how far it lifts the pixel
-under it, in encoded luminance, which is how a screenshot measures it. The ink blends in
-encoded space, the way the mark layer's strokes do, so an ink line and a furniture rim over
-the same ground compare exactly. The stipple adds instead: a dot is the fauna colour in linear
-light times its gain, encoded and added to the pixel, so it lifts every ground alike.
-`packages/frontend/src/game/ladder.ts` weighs both. It holds every outline rungs 5 and 6 draw,
-and every one rung 7 draws on the chart. Four of rung 5's are its floor: the quietest outline
-in each of its three quiet colours — a kelp field's rim while it is not gripping, a
-Tetherjelly field's rim, and a simulated hazard's rim while it is dormant — and an inert hazard
-site's rim, which the outline rule above leans on. Every other rung-5 mark, the stipple
-included, lifts more than the least of them in every palette, and a test holds that near the
-eye: the conn view's tunnel routes and map rim fade with the water's fog, so a far one lifts
-less. Which is quietest depends on the palette. The draw sites take their alphas from there.
-The tests hold every ink stroke below the least of them, over the darkest and the palest
-ground, in all four palettes. When furniture gets quieter, the ink has to follow it down.
-Residue's arc is the one exception, and the tests record it rather than move the ink: it clears
-the four at the scale's ceiling, and falls under them and under the ink at a faint mark's own
-peak (§10).
+The ladder is measured, not just stated. A stroke's weight is how far it lifts the pixel under
+it, in encoded luminance, which is how a screenshot measures it. The ink blends in encoded
+space, the way the mark layer's strokes do, so an ink line and a furniture rim over the same
+ground compare exactly. So do a classified animal's dots. Public life's stipple adds instead: a
+dot is the fauna colour in linear light times its gain, encoded and added to the pixel, so it
+lifts every ground alike. `packages/frontend/src/game/ladder.ts` weighs both. It holds every
+outline rungs 5 and 6 draw, and every one rung 7 draws on the chart. Four of rung 5's are its
+floor: the quietest outline in each of its three quiet colours — a kelp field's rim while it is
+not gripping, a Tetherjelly field's rim, and a simulated hazard's rim while it is dormant — and
+an inert hazard site's rim, which the outline rule above leans on. Every other rung-5 mark, the
+stipple included, lifts more than the least of them in every palette, and a test holds that near
+the eye: the conn view's tunnel routes and map rim fade with the water's fog, so a far one lifts
+less. Which is quietest depends on the palette. The draw sites take their alphas from there. The
+tests hold every ink stroke below the least of them, over the darkest and the palest ground, in
+all four palettes. When furniture gets quieter, the ink has to follow it down. Residue's arc is
+the one exception, and the tests record it rather than move the ink: it clears the four at the
+scale's ceiling, and falls under them and under the ink at a faint mark's own peak (§10).
 
 **The ink also sits under your own detection ring.** A hull's ring while you have not selected
 it is your own exposure ([ui-ux.md](ui-ux.md) §3.5): a line of seabed that out-shouted it
@@ -204,7 +204,9 @@ Two consequences worth naming:
   terrain it lies on.
 - **Fauna splits across two rungs.** A public field is furniture (rung 5); a classified animal
   is an agent (rung 7). They must never share a look, or a Tetherjelly field would read as a
-  contact.
+  contact. Both are stipple in `FAUNA_COLOR`, so form holds them apart: an agent's dot is
+  larger, hard, blended normally and still, where a public dot is soft, additive and pulsing
+  (§10, Phase 4).
 
 ## 6. Colour, light and depth — one grammar
 
@@ -291,9 +293,11 @@ the Echo Layer knows.
 - **Fauna colours stay the palette's.** `FAUNA_COLOR` in all four palettes. The reference's
   cyan and ember options do not transfer: cyan is the interface's voice and ember is the vents'.
 
-The budget is gate 6's. One Points draw per kind, a dot cap per field, and the pulse on the
-GPU. Public life landed as stipple in Phase 3 (§10). The bestiary's silhouettes stay the
-fallback for classified animals until Phase 4 lands.
+The budget is gate 6's, and the two kinds spend it differently. Public life is conn geometry:
+one Points draw per kind, a dot cap per field, and the pulse on the GPU. Classified animals are
+overlay ink, because gate 5 keeps the enemy out of the conn scene at every tier: no draw call
+and no triangle, a fixed dot count per species and tier, and nothing built per frame. Public
+life landed as stipple in Phase 3 and classified animals in Phase 4 (§10).
 
 ## 9. Gates — what changes, what does not
 
@@ -341,9 +345,10 @@ under the ink, and the owner chose to bring the ink down: the coast is 9.5% and 
 
 Every draw site in `EchoRenderer.ts` and `PerspectiveView.ts` names its rung, or records that
 §5 gives it none. `ladder.ts` holds the alpha of every outline rungs 5 and 6 draw, the
-stipple's dot gains, and the shares rung 7's chart outlines take, and the draw sites take them
-from there. The audit first moved no alpha: it pinned two breaks and left three questions
-open. The owner ruled on all five on #866, and one alpha moved.
+public stipple's dot gains, the share a Tier-3 contact's ring takes and a construction
+scaffold's alpha, and the draw sites take them from there. The audit first moved no alpha: it
+pinned two breaks and left three questions open. The owner ruled on all five on #866, and one
+alpha moved.
 
 The rulings:
 
@@ -383,10 +388,11 @@ What stays recorded, for the owner. The tests pin each break and fail if it move
   Hadron's deep blue and dark teal, sit at 0.17–0.19 luminance. At 0.33 the ring lifts the kelp
   fill by 0.024–0.030: under rung 6's floor there (0.065–0.103), and under the survey ink's
   coast (0.042). A Tier-4 contact's glyph and health bar fall under rung 6's floor too in the
-  three palettes that draw the Hadron dark, in tritanopia by less than 0.0001. So does a Tier-3
-  Sounder's halo in the two red-green palettes, where rung 6's floor is blocked ground's hatch.
-  Ordnance's disc does not: the server names no navy for ordnance, so it wears the Track tier's
-  colour.
+  three palettes that draw the Hadron dark, in tritanopia by less than 0.0001. Ordnance's disc
+  does not: the server names no navy for ordnance, so it wears the Track tier's colour. Nor
+  does a classified animal. Phase 4 made it dots, weighed by one dot at its tier's alpha, and
+  that clears rung 6's floor in every palette. A Tier-3 Sounder's halo fell under it in the two
+  red-green palettes until then; the break went with the halo.
 - **Rung 7 in the conn view is not weighed.** Own hulls and structures are lit models, or
   baked sprites until the model loads, and own ordnance is a lit body with a lamp. What lands
   on a pixel depends on the lights, the texture and the view, and no number for it can be
@@ -441,6 +447,83 @@ Four choices a reviewer should see:
   everything else in the water, and the water setting can only reveal them. The veil leaves
   them alone, because it touches ground only ([ui-ux.md](ui-ux.md) §4.5).
 - **Reduced motion holds the pulse** and keeps the dots ([ui-ux.md](ui-ux.md) §11).
+
+### Phase 4 — landed
+
+`faunaAgentStipple.ts` draws §8's agents in the overlay's contact symbols, rung 7. Each
+species has one template of dots, made from the parts of the silhouette it replaces at the
+same `lengthM / 2`. Tier 3 draws the first half and Tier 4 all of it. The first half is every
+part's first dots, so a Tier-3 creature is the whole shape, sparse:
+
+| Species | Tier 3 | Tier 4 |
+| --- | ---: | ---: |
+| Ashgrazer | 20 | 40 |
+| Draymaw | 12 | 24 |
+| Sounder | 36 | 72 |
+| Rasp | 16 | 32 |
+| Lampfry | 12 | 24 |
+| Tetherjelly | 16 | 32 |
+| Hollow | 16 | 32 |
+
+A full roster tracked at Tier 4 is 1,536 dots. The count is fixed per species and tier: no
+hp thins a creature, and a Rasp's dots are not a count of the swarm. A dot is 3 CSS px, hard,
+solid, blended normally and still, tinted `FAUNA_COLOR` at the contact's own alpha. Below
+Tier 3 nothing is drawn, and a test forges a Tier-1 and a Tier-2 payload carrying `fauna` to
+show each draws exactly what a hull at its tier draws.
+
+The patterns are shared, built once per species, tier and zoom bucket, so a dot stays about
+3 px at every zoom. A frame picks one and writes a tint and an alpha. The conn scene gains
+nothing: with 48 creatures tracked at Tier 4 it draws the same calls and triangles as with
+none. The five-station drive reads the same calls and triangles before and after, but its
+fight station stages no classified animal, so that test is the counted proof. Real-GPU
+milliseconds are still owed.
+
+The six review frames are in [one sheet](screenshots/issue-868/classified-stipple-frames.png),
+taken on the Ventfront Divide: a Tier-4 Tetherjelly after a ping, on its own field; one Lampfry
+at Tier 3 from passive listening and at Tier 4 after a ping, from the same camera; the home
+frame; the survey dolly; and a low angle at 14°.
+
+**Weighed under the owner's rulings on #866.** A rung is weighed floor against floor, a fading
+mark at its steady peak, and a rimless mark by its loudest crisp element. So a classified
+animal is weighed by one dot, fresh and fully arrived, at its tier's alpha in `FAUNA_COLOR`,
+blended normally as it is drawn. `ladder.ts` weighs that dot at Tier 3 and Tier 4 with the
+rest of rung 7, in place of the silhouette's edge, halo, tethers, ring and motes (Phase 2).
+The Tier-3 dot, the quieter, lifts both grounds by at least twice rung 5's floor and twice
+rung 6's, in all four palettes. The least margin is in deuteranopia and protanopia over the
+palest ground: 0.232 against rung 6's 0.103, blocked ground's hatch.
+
+**Recorded, not held: a public dot can out-lift an agent's.** A formed shoal's brightest dot
+is additive light, and at its peak it adds nearly its own colour to any ground. It lifts
+0.562 in the standard palette, 0.497 in deuteranopia and protanopia, and 0.459 in
+tritanopia. A Tier-4 agent dot lifts 0.531, 0.470 and 0.434 over black, and 0.441, 0.380
+and 0.345 over the palest ground. A Tier-3 dot lifts 0.324, 0.287 and 0.265 over black.
+Floor against floor allows this, because rung 5's floor is its quiet rims and not its
+loudest dot. Both kinds are `FAUNA_COLOR` in all four palettes, so what keeps them apart is
+form, and a test holds five axes of it:
+
+- **Size.** An agent dot is 3 px; a public dot is at most 2.4.
+- **Edge.** An agent dot is hard; a public dot is soft at its rim.
+- **Blend.** An agent dot is blended normally; a public dot adds light.
+- **Motion.** An agent dot is still; a public dot pulses.
+- **Scale.** A Tetherjelly is 16 m long and a Lampfry 14 m, beside a bell of 22 m radius and
+  a shoal of 40 m.
+
+Four choices a reviewer should see:
+
+- **The overlay, not the conn scene.** Gate 5 says the enemy is never geometry in the conn
+  view, and the smoke test's assertion on that does not move. §8's budget sentence named one
+  Points draw per kind and a dot cap per field. It was read as written for public life, the
+  only thing with a field, and is now scoped to say so.
+- **A ghost keeps its density.** Density follows the tier, which is knowledge, and brightness
+  follows the ghost clock. A ghosted Tier-4 creature keeps its Tier-4 dots and dims. The
+  dots carry no light, so gate 5's rule that a lit sprite claims a present tense does not
+  bite.
+- **The shapes face screen-right**, as the silhouettes did. A fauna contact never carries a
+  heading, so the Draymaw's wedge and the Hollow's gape point nowhere in particular. No shape
+  shows a behaviour, because none crosses the wire.
+- **No screen-size floor.** The shapes are true metres and the dots a constant 3 px. At the
+  opening 4,000 m dolly on a 900 px view a Draymaw is under 4 px across, so Tier 3 and Tier 4
+  look alike there. The silhouettes had no floor either.
 
 ## 11. Open questions
 

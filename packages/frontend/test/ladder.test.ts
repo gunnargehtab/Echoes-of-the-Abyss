@@ -134,19 +134,15 @@ const RUNG_6_FLOOR_UNDER_RUNG_5_FLOOR: readonly PaletteName[] = [];
  *   the Hadron dark. In tritanopia they miss the ring by less than 0.0001
  *   over the palest ground. Ordnance's disc is not among them: the server names no
  *   navy for ordnance, so it is drawn in the Track tier's colour.
- * - A Tier-3 Sounder's halo, in the two red-green palettes, where fauna is a
- *   grey-green and rung 6's floor is the hatch.
+ *
+ * A classified animal's dot is not among them either. It is the fauna colour
+ * at its tier's whole alpha, and clears rung 6's floor over both grounds in
+ * every palette (faunaAgentStipple.test.ts weighs it against rung 5's too).
  */
 const RUNG_7_UNDER_RUNG_6_FLOOR: Record<PaletteName, readonly string[]> = {
   standard: ['countRingTier3', 'glyphTier3'],
-  deuteranopia: [
-    'countRingTier3',
-    'glyphTier3',
-    'glyphTier4',
-    'healthBarTier4',
-    'sounderHaloTier3',
-  ],
-  protanopia: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4', 'sounderHaloTier3'],
+  deuteranopia: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4'],
+  protanopia: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4'],
   tritanopia: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4'],
 };
 

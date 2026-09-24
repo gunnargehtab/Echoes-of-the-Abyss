@@ -254,7 +254,9 @@ carries the registry and the one-name-one-value rule.
 The player's own force renders at full fidelity. The enemy renders **only at the fidelity
 their detection earned** — no more, and since #834 no less: a Tier-1 return is a smudge, a
 Tier-2 a blurred blob, a Tier-3 a classified disc, and a Tier-4 track the model-backed
-sprite, stroked threat-red and drawn only while the track is live.
+sprite, stroked threat-red and drawn only while the track is live. A classified animal is
+its species' shape in dots instead, denser at Tier 4, and below Tier 3 it is the same
+smudge and blob as a hull ([map-visuals.md](map-visuals.md) §8).
 
 The gate is **two independent rules**. Lifting one has never lifted the other:
 
@@ -343,6 +345,10 @@ is where the difference shows. And a ground delta no longer rebuilds the world: 
 collapsed span moves the vertices within a cell of itself and re-shades those cells
 and a ring on the seabed canvas the join baked, on the seed and the depth ramp the join
 set — so the arch falls and nothing else on the map re-textures.
+
+A classified animal drawn as stipple ([map-visuals.md](map-visuals.md) §8) is overlay
+ink, not conn geometry: it spends no draw call and no triangle here, it is priced in
+milliseconds with the rest of the overlay, and nothing about it is tessellated per frame.
 
 #### The wall-clock half: the review drive
 

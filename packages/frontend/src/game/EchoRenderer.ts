@@ -38,7 +38,7 @@
  * `inverseScale = 1 / pxPerM`.
  */
 
-import { Application, Container, Graphics, Sprite, Text } from 'pixi.js';
+import { Application, Container, Graphics, Sprite, Text, type GraphicsContext } from 'pixi.js';
 import {
   ACTIVE_SONAR,
   affords,
@@ -53,7 +53,6 @@ import {
   effectivePressureRating,
   Faction,
   FACTION_STRUCTURE,
-  FaunaSpecies,
   faunaStatsFor,
   HarvestIdleReason,
   HarvestThrottle,
@@ -192,6 +191,12 @@ import {
   structureTexture,
 } from './structureTextures.ts';
 import { contactFidelity } from './trackFidelity.ts';
+import {
+  agentStippleContext,
+  agentStippleGraphics,
+  destroyAgentStippleContexts,
+  paintAgentStipple,
+} from './faunaAgentStipple.ts';
 import type { MapPayload, TerrainPayload } from '../net/GameClient.ts';
 import { FOCUS_STEP_M } from './PerspectiveView.ts';
 import type { PerspectiveView, ProjectedPoint } from './PerspectiveView.ts';
@@ -457,6 +462,20 @@ class SymbolPool {
    * around it.
    */
   private readonly sprites = new Map<number, Sprite>();
+  /**
+   * The optional stipple body for a symbol — a classified creature's dots
+   * (faunaAgentStipple.ts, #868), and nothing else. A child for the same
+   * reason the sprite is.
+   */
+  private readonly stipples = new Map<number, Graphics>();
+  /**
+   * Stipple bodies whose symbol was swept, kept for the next creature rather
+   * than destroyed. A body draws a *shared* context, and Pixi's `destroy`
+   * leaves a Graphics subscribed to its context's events, so every destroyed
+   * body would stay reachable from a pattern that lives all match. Recycled,
+   * they number the most creatures ever on the chart at once.
+   */
+  private readonly spareStipples: Graphics[] = [];
   private readonly used = new Set<number>();
 
   /** A cleared Graphics for this entity, positioned by the caller. */
@@ -474,6 +493,10 @@ class SymbolPool {
     // again, rather than every other caller having to remember to hide it.
     const sprite = this.sprites.get(key);
     if (sprite !== undefined) sprite.visible = false;
+    // The stipple likewise, which is what keeps a contact demoted below
+    // Tier 3 from wearing last frame's species (docs/bestiary.md §3).
+    const stipple = this.stipples.get(key);
+    if (stipple !== undefined) stipple.visible = false;
     this.used.add(key);
     return g;
   }
@@ -495,10 +518,38 @@ class SymbolPool {
     return sprite;
   }
 
+  /**
+   * The pooled stipple body for this entity, drawing `context` and shown by
+   * this call. `acquire` must have run for this key in this frame. The
+   * context is shared and never owned here: swapping it is a pointer write,
+   * and the body is recycled rather than destroyed (`spareStipples`).
+   */
+  stipple(key: number, context: GraphicsContext): Graphics {
+    let dots = this.stipples.get(key);
+    if (dots === undefined) {
+      dots = this.spareStipples.pop() ?? agentStippleGraphics(context);
+      this.stipples.set(key, dots);
+      this.held.get(key)?.addChild(dots);
+    }
+    // A no-op when it is already this one (Pixi's setter checks).
+    dots.context = context;
+    dots.visible = true;
+    return dots;
+  }
+
   /** Drop every symbol not acquired since the last sweep. */
   sweep(): void {
     for (const [key, g] of this.held) {
       if (!this.used.has(key)) {
+        // The stipple body comes off first and waits for the next creature,
+        // so the destroy below never reaches it.
+        const dots = this.stipples.get(key);
+        if (dots !== undefined) {
+          g.removeChild(dots);
+          dots.visible = false;
+          this.spareStipples.push(dots);
+          this.stipples.delete(key);
+        }
         // The sprite rides as a child, so it goes with its Graphics. Its
         // *texture* does not: that is owned by the bake caches and freed by
         // destroyHullTextures / destroyStructureTextures at teardown.
@@ -513,7 +564,16 @@ class SymbolPool {
   destroy(): void {
     this.held.clear();
     this.sprites.clear();
+    this.stipples.clear();
     this.used.clear();
+    // A body drew a shared context and never owned it, so this leaves the
+    // patterns alone: destroyAgentStippleContexts frees them at teardown.
+    // Nothing calls this today (nor on the tree before #868): EchoRenderer's
+    // own destroy drops the whole stage instead. The spares are off that
+    // stage, so what releases them is the context destroy, whose
+    // removeAllListeners cuts the only reference a pattern kept to them.
+    for (const dots of this.spareStipples) dots.destroy();
+    this.spareStipples.length = 0;
     this.layer.destroy({ children: true });
   }
 }
@@ -572,110 +632,6 @@ function worldFadeMs(timing: PrecedenceTiming): { start: number; full: number } 
     start: timing.WORLD_FADE_START,
     full: timing.WORLD_FADE_START + (timing.MINIMAP_FADE_FULL - timing.MINIMAP_FADE_START),
   };
-}
-
-/**
- * A classified creature — docs/bestiary.md §3.
- *
- * Drawn in a colour of its own, and only ever at Tier 3 or above. Below that a
- * fauna contact goes through exactly the same haze and blob as a hull, which
- * is the whole mechanic: "at Tier 1 and Tier 2 there is no marker, colour, or
- * sound that distinguishes fauna from an army".
- *
- * Organic outlines rather than hull shapes, so classification is legible at a
- * glance — the relief (or the problem) should not need reading.
- *
- * Rung 7. The ladder weighs every outline here — the edge, the Sounder's
- * halo, the tethers, the Rasp's ring — and a Lampfry's rimless motes by a
- * mote; the shares are its (ladder.ts).
- */
-function drawFaunaSilhouette(
-  g: Graphics,
-  species: FaunaSpecies,
-  x: number,
-  y: number,
-  alpha: number,
-  inverseScale: number
-): void {
-  const stats = faunaStatsFor(species);
-  const r = stats.lengthM / 2;
-  const body = { color: FAUNA_COLOR, alpha: alpha * AGENT_OUTLINE_ALPHA.faunaBodyShare };
-  const edge = { width: 1.5 * inverseScale, color: FAUNA_COLOR, alpha };
-
-  switch (species) {
-    case FaunaSpecies.Ashgrazer: {
-      // Broad and armoured: a flattened shell.
-      g.ellipse(x, y, r, r * 0.6).fill(body);
-      g.ellipse(x, y, r, r * 0.6).stroke(edge);
-      break;
-    }
-    case FaunaSpecies.Draymaw: {
-      // A lean wedge, pack-shaped.
-      g.poly([x - r, y - r * 0.5, x + r, y, x - r, y + r * 0.5]).fill(body);
-      g.poly([x - r, y - r * 0.5, x + r, y, x - r, y + r * 0.5]).stroke(edge);
-      break;
-    }
-    case FaunaSpecies.Sounder: {
-      // The colossus, drawn as a long body with a resonance halo. Big enough
-      // that finding one at Tier 3 is unmistakably a different kind of news.
-      g.ellipse(x, y, r, r * 0.35).fill(body);
-      g.ellipse(x, y, r, r * 0.35).stroke(edge);
-      g.circle(x, y, r * 1.4).stroke({
-        width: 1 * inverseScale,
-        color: FAUNA_COLOR,
-        alpha: alpha * AGENT_OUTLINE_ALPHA.sounderHaloShare,
-      });
-      break;
-    }
-    case FaunaSpecies.Lampfry: {
-      // Rarely earned — a SIG-4 shoal is nearly inaudible — but a contact
-      // that classifies as Lampfry should echo the public glow's language:
-      // small motes, no closed body.
-      g.circle(x - r * 0.5, y, r * 0.3).fill(body);
-      g.circle(x + r * 0.4, y - r * 0.35, r * 0.3).fill(body);
-      g.circle(x + r * 0.2, y + r * 0.45, r * 0.3).fill(body);
-      break;
-    }
-    case FaunaSpecies.Hollow: {
-      // A gape: an open crescent rather than a closed body, because what was
-      // classified is mostly mouth. Finding one at Tier 3 is the problem case.
-      g.moveTo(x + r * 0.8, y - r * 0.7)
-        .quadraticCurveTo(x - r, y, x + r * 0.8, y + r * 0.7)
-        .quadraticCurveTo(x - r * 0.2, y, x + r * 0.8, y - r * 0.7)
-        .fill(body);
-      g.moveTo(x + r * 0.8, y - r * 0.7)
-        .quadraticCurveTo(x - r, y, x + r * 0.8, y + r * 0.7)
-        .stroke(edge);
-      break;
-    }
-    case FaunaSpecies.Tetherjelly: {
-      // A soft bell over trailing tethers — closed body up top, strands below.
-      g.ellipse(x, y - r * 0.3, r * 0.7, r * 0.45).fill(body);
-      g.ellipse(x, y - r * 0.3, r * 0.7, r * 0.45).stroke(edge);
-      g.moveTo(x - r * 0.4, y).lineTo(x - r * 0.5, y + r * 0.8);
-      g.moveTo(x, y).lineTo(x, y + r * 0.9);
-      g.moveTo(x + r * 0.4, y).lineTo(x + r * 0.5, y + r * 0.8);
-      g.stroke({
-        width: 1 * inverseScale,
-        color: FAUNA_COLOR,
-        alpha: alpha * AGENT_OUTLINE_ALPHA.tetherShare,
-      });
-      break;
-    }
-    case FaunaSpecies.Rasp: {
-      // A swarm is a cloud, not a body: three offset motes reading as "many
-      // small things", against the roster's single closed outlines.
-      g.circle(x - r * 0.6, y - r * 0.3, r * 0.45).fill(body);
-      g.circle(x + r * 0.5, y - r * 0.4, r * 0.35).fill(body);
-      g.circle(x, y + r * 0.5, r * 0.4).fill(body);
-      g.circle(x, y, r * 1.1).stroke({
-        width: 1 * inverseScale,
-        color: FAUNA_COLOR,
-        alpha: alpha * AGENT_OUTLINE_ALPHA.raspRingShare,
-      });
-      break;
-    }
-  }
 }
 
 /**
@@ -2026,7 +1982,8 @@ export class EchoRenderer {
     // - structure, unit and ordnance symbols: rung 6, the ink about own
     //   entities the conn view draws at rung 7 (a site's scaffold aside).
     // - contact layer: rung 5's hazards, fauna fields and acoustic residue.
-    // - contact symbols: rung 7, contacts at every tier.
+    // - contact symbols: rung 7, contacts at every tier, a classified
+    //   animal's stipple among them.
     // `hud` is screen space rather than the map, and outside the ladder.
     this.overlay.addChild(
       this.groundLayer,
@@ -6412,7 +6369,10 @@ export class EchoRenderer {
    * drawn onto a contact is rung 6 (`drawLockFlash`). A contact fades in as
    * it arrives and out as a ghost, so it is weighed fresh, at its tier's
    * alpha (#866). The ladder weighs every outline from Tier 3, and §10
-   * records the ones that sit under rung 6's floor (ladder.ts).
+   * records the ones that sit under rung 6's floor (ladder.ts). A classified
+   * animal's stipple is rung 7 too (`drawFaunaStipple`), weighed by one dot,
+   * and its dots never share a look with rung 5's public stipple
+   * (faunaAgentStipple.ts says how they are held apart).
    */
   private drawContacts(): void {
     const g = this.contactLayer;
@@ -6524,7 +6484,7 @@ export class EchoRenderer {
         case ResolutionTier.Classification: {
           const color = this.contactColor(contact, style.color);
           if (contact.fauna !== undefined) {
-            drawFaunaSilhouette(sg, contact.fauna, 0, 0, alpha, inverseScale);
+            this.drawFaunaStipple(id, contact, alpha, anchor.pxPerM);
             break;
           }
           sg.circle(0, 0, style.radius).fill({ color, alpha });
@@ -6605,7 +6565,9 @@ export class EchoRenderer {
               2 * inverseScale
             );
           } else if (contact.fauna !== undefined) {
-            drawFaunaSilhouette(sg, contact.fauna, 0, 0, alpha, inverseScale);
+            // The same shape as Tier 3, twice the dots, ghost or live: density
+            // is what the Echo Layer knows, and the clock only dims it.
+            this.drawFaunaStipple(id, contact, alpha, anchor.pxPerM);
           } else {
             sg.circle(0, 0, style.radius).fill({ color, alpha });
           }
@@ -6630,6 +6592,29 @@ export class EchoRenderer {
       }
     }
     this.contactSymbols.sweep();
+  }
+
+  /**
+   * A classified creature as its species' shape in dots — rung 7,
+   * docs/map-visuals.md §8 (faunaAgentStipple.ts). Tier 3 draws the shape and
+   * Tier 4 the same shape denser.
+   *
+   * Never below Tier 3, whatever the payload carries. The server attaches
+   * `fauna` no earlier than Tier 3, and this gate does not lean on that: at
+   * Tier 1 and Tier 2 "there is no marker, colour, or sound that distinguishes
+   * fauna from an army" (docs/bestiary.md §3), so a fauna contact there is the
+   * column or blob a hull is, and nothing else. The audio gate in
+   * `contactAudioFrame` is the same rule one layer further from the wire.
+   *
+   * The dots ride the symbol, which already carries the billboard position
+   * and pixels-per-metre scale. A frame picks a shared pattern and writes a
+   * tint and an alpha; nothing is tessellated here.
+   */
+  private drawFaunaStipple(id: number, contact: Contact, alpha: number, pxPerM: number): void {
+    if (contact.fauna === undefined || contact.tier < ResolutionTier.Classification) return;
+    const context = agentStippleContext(contact.fauna, contact.tier, pxPerM);
+    if (context === null) return;
+    paintAgentStipple(this.contactSymbols.stipple(id, context), alpha);
   }
 
   /** Faction colour, but only once the tier is high enough to know it. */
@@ -8578,5 +8563,9 @@ export class EchoRenderer {
     if (this.app.renderer !== null && this.app.renderer !== undefined) {
       this.app.destroy(true, { children: true });
     }
+    // After the stage, not before: the stipple bodies draw these shared
+    // patterns and never own them, so the bodies go first and the patterns
+    // are freed once nothing draws them.
+    destroyAgentStippleContexts();
   }
 }
