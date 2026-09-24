@@ -241,6 +241,39 @@ export const ink = {
 };
 
 /**
+ * The Order's chord rule and panel band (docs/asset-prompts-3d.md Block 2c,
+ * #919), read off the approved models by `tools/hull-models/facets.mjs` at
+ * 9502d0e. Once Phase 6's last pass runs, every round builder takes its
+ * count from kit.mjs `facetsFor` with this; until then the models carry the
+ * counts their exports gave them, and `facets.mjs hadron` lists each ring
+ * off the rule.
+ *
+ * The edge is the chord the navy's 1.5–4 m bodies, rings and drums
+ * already cut, 2.5 m at the median — the coarsest of the four: mirror
+ * facets, and a blade body at ten facets on four metres of half-section
+ * (`bladeBody`). The floor is a square, the ceiling that ten, and the
+ * step two, because the only navy with bilateral symmetry has a flat to
+ * each beam on everything it turns. Four and six are shapes here and stay:
+ * the four-sided spar every blade, strut, finial and prism is (`spar`, the
+ * issue's own example — a four-sided spar is a square), and the six-sided
+ * crystal a horn, a bell or a dome is cut as (`bell`, `bowPrism`,
+ * `pressureDome`).
+ *
+ * The panels are the plates a chart reads from above — a wing, a fin, a
+ * canard, a prism: 3.9 m on the median hull, the largest of the four, and
+ * a hull holds to within a factor of two of it either way. A settlement's
+ * are two and a half times that.
+ */
+export const facets = {
+  edge: 2.5,
+  floor: 4,
+  ceiling: 10,
+  step: 2,
+  sections: { 4: 'a spar, a blade, a strut, a finial', 6: 'a horn, a bell, a dome' },
+};
+export const panels = { hulls: [1.95, 7.8], structures: [4.7, 18.8] };
+
+/**
  * The blade hull: a faceted spar, full forward and narrowing aft to almost
  * nothing. `maxR` is the half-section amidships — keep it near a tenth of the
  * length, as the Clarion's 4 m on 75 m is.

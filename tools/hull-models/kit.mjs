@@ -155,6 +155,31 @@ export const torus = (r, t, rs = 8, ts = 24) => new THREE.TorusGeometry(r, t, rs
 export const octa = (r) => new THREE.OctahedronGeometry(r, 0);
 
 /**
+ * The section count a navy's chord rule gives a ring of radius `r` metres
+ * (docs/asset-prompts-3d.md Block 2c, #919): as many facets as the navy's
+ * `edge` goes into the circumference, rounded to its `step`, never under
+ * its `floor` or over its `ceiling`. Each faction module holds its rule as
+ * `facets`, and this is the one place a count comes from once Phase 6's
+ * last pass has every round builder ask; `tools/hull-models/facets.mjs`
+ * reads the committed files back and names each ring off it. A part that
+ * is a shape rather than a round thing approximated — a four-sided spar,
+ * a five-sided spine — keeps its count and never asks; the module's
+ * `sections` say which counts those are.
+ *
+ * `arc` is for a ring drawn part way round — a hemisphere's meridians, a
+ * torus arc, a rib hugging a dome. The count a turn is the same, since the
+ * chord is what the rule is about, and the segments are the arc's share of
+ * it, at least one.
+ */
+export function facetsFor({ edge, floor, ceiling, step }, r, arc = Math.PI * 2) {
+  const turn = Math.min(
+    ceiling,
+    Math.max(floor, Math.round((2 * Math.PI * r) / edge / step) * step)
+  );
+  return arc >= Math.PI * 2 ? turn : Math.max(1, Math.round((turn * arc) / (Math.PI * 2)));
+}
+
+/**
  * A thin plate from a plan outline — points are absolute metres in the
  * horizontal plane, `[x, z]`, and the plate is `thicknessM` in Y.
  *

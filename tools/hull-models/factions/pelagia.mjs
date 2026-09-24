@@ -227,6 +227,37 @@ export const ink = {
   },
 };
 
+/**
+ * The Veil's chord rule and panel band (docs/asset-prompts-3d.md Block 2c,
+ * #919), read off the approved models by `tools/hull-models/facets.mjs` at
+ * 9502d0e. Once Phase 6's last pass runs, every round builder takes its
+ * count from kit.mjs `facetsFor` with this; until then the models carry the
+ * counts their exports gave them, and `facets.mjs pelagia` lists each ring
+ * off the rule.
+ *
+ * The edge is the chord the navy's 1.5–4 m pods, buds and rings already
+ * cut, 1.9 m at the median. The floor is five, because a grown thing is
+ * never a diamond in section; the ceiling is the fourteen the pods and
+ * ridge rings carry, held low on purpose — "Pod and ring facet counts ...
+ * stay low" above — so a pod at any size reads grown and faceted rather
+ * than turned; and the step is one, since an odd count is nothing to a
+ * navy where nothing is quite regular. Three and four are shapes here and
+ * stay: the tripod of a root grip (`rootGrips`), and the four-sided tube
+ * of a seam or a vein (`veinRing`, `growthRings`).
+ *
+ * The panels are the plates a chart reads from above — a rib, a lobe, a
+ * ring, a fin: 2.9 m on the median hull, and a hull holds to within a
+ * factor of two of it either way. A settlement's are three times that.
+ */
+export const facets = {
+  edge: 1.9,
+  floor: 5,
+  ceiling: 14,
+  step: 1,
+  sections: { 3: 'a root grip', 4: 'a seam, a vein' },
+};
+export const panels = { hulls: [1.45, 5.8], structures: [4.0, 16.0] };
+
 /** A grown orb: few facets, and squashed by the caller — never round in section. */
 const orb = (w = 12, h = 6) => new THREE.SphereGeometry(1, w, h);
 

@@ -61,12 +61,16 @@ export const occludes = (finish) =>
   !(finish && finish.alpha === 'BLEND' && finish.opacity < TRANSLUCENT);
 
 /**
- * A part: `{ name, material, finish, tris, positions, mirrored }` —
- * `material` the name, `finish` the values behind it — positions 9 floats a
- * triangle, world space; `mirrored` when the node's transform has a
- * negative determinant (a reflection, the Spire's `frame_blade_l`), which
+ * A part: `{ name, material, finish, tris, positions, mirrored, matrix,
+ * local }` — `material` the name, `finish` the values behind it — positions
+ * 9 floats a triangle, world space; `mirrored` when the node's transform has
+ * a negative determinant (a reflection, the Spire's `frame_blade_l`), which
  * turns every triangle's winding round, so a reader taking a normal off the
- * winding has to turn it back.
+ * winding has to turn it back. `matrix` is the node's world matrix,
+ * column-major, and `local` the first primitive's own buffer as the file
+ * carries it — `{ positions, index }`, index null when it has none — which
+ * is the reading facets.mjs needs: a ring is a row of that buffer, and the
+ * flat world-space triangle list has forgotten the rows.
  */
 export function readGlb(path) {
   const buf = readFileSync(path);
@@ -137,11 +141,13 @@ export function readGlb(path) {
     const out = [];
     let material = null;
     let finish = null;
+    let local = null;
     for (const prim of mesh.primitives) {
       if (prim.mode !== undefined && prim.mode !== 4)
         throw new Error(`${path}: ${node.name} is not a triangle list`);
       const pos = accessor(prim.attributes.POSITION);
       const idx = prim.indices !== undefined ? accessor(prim.indices).data : null;
+      if (!local) local = { positions: pos.data, index: idx };
       const count = idx ? idx.length : pos.count;
       for (let k = 0; k < count; k++) {
         const v = idx ? idx[k] : k;
@@ -164,6 +170,8 @@ export function readGlb(path) {
       tris: out.length / 9,
       positions: Float32Array.from(out),
       mirrored: det3(m) < 0,
+      matrix: m,
+      local,
     });
   });
   return { name: json.nodes[json.scenes[json.scene ?? 0].nodes[0]]?.name ?? null, parts };

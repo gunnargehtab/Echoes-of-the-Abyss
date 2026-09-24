@@ -182,6 +182,36 @@ export const ink = {
   baffleFoam: () => clad('baffle_foam', hex('#1C1F22'), 0.1, 0.98),
 };
 
+/**
+ * The Klaxon's chord rule and panel band (docs/asset-prompts-3d.md Block
+ * 2c, #919), read off the approved models by `tools/hull-models/facets.mjs`
+ * at 9502d0e. Once Phase 6's last pass runs, every round builder takes its
+ * count from kit.mjs `facetsFor` with this; until then the models carry the
+ * counts their exports gave them, and `facets.mjs bathyarch` lists each
+ * ring off the rule.
+ *
+ * The edge is the chord the navy's 1.5–4 m drums, bands and shrouds already
+ * cut, 1.4 m at the median — the finest of the four, on the hull whose
+ * plates are the smallest. The floor is a square, because a four-sided
+ * pipe is a Consortium pipe ("no curve unless a pressure vessel demanded
+ * it"), the ceiling the prop shrouds' 28, and the step two: a drum built
+ * in a yard has a flat to each beam. Four is also a shape here and stays
+ * — the wedge the Klaxon's nose is cut to (`cyl` at π/4), a cable's
+ * section (kit.mjs `cable`).
+ *
+ * The panels are the plates, rivets and strakes the chart reads from
+ * above: 1.1 m on the median hull, and a hull holds to within a factor of
+ * two of it either way. A settlement's plates are eight times that.
+ */
+export const facets = {
+  edge: 1.4,
+  floor: 4,
+  ceiling: 28,
+  step: 2,
+  sections: { 4: 'a wedge, a cable' },
+};
+export const panels = { hulls: [0.55, 2.2], structures: [4.1, 16.4] };
+
 /** The body: a flat-sided slab from a plan outline, with a bow face and transom. */
 export function hullSlab(root, { black, grey, amber }, { outline, lengthM, depth, bow, stern }) {
   add(

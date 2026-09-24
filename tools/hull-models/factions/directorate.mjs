@@ -284,6 +284,38 @@ export const ink = {
   },
 };
 
+/**
+ * The Listening's chord rule and panel band (docs/asset-prompts-3d.md Block
+ * 2c, #919), read off the approved models by `tools/hull-models/facets.mjs`
+ * at 9502d0e. Once Phase 6's last pass runs, every round builder takes its
+ * count from kit.mjs `facetsFor` with this; until then the models carry the
+ * counts their exports gave them, and `facets.mjs directorate` lists each
+ * ring off the rule.
+ *
+ * The edge is the chord the navy's 1.5–4 m tergites, domes and limbs
+ * already cut, 1.8 m at the median. The floor is six — a hexagon is the
+ * least a shell reads as a shell — the ceiling the fourteen its domes
+ * carry, and the step one: regimented, never symmetric, so an odd count is
+ * as regular as an even one. Four and five are shapes here and stay: a
+ * four-sided spike, tooth or mandible (`spikes`, `pressureHatches`' dogs),
+ * and the five-sided spine, claw and tine that the whole navy is bristled
+ * with (`dorsalSpines`, `rimSpines`, `clawGrips`, `shellSpines`, and the
+ * rake tines of kit.mjs `reactorIntakeArm`).
+ *
+ * The panels are the plates a chart reads from above — a tergite, a
+ * ridge, a seam, a limb: 1.8 m on the median hull, and a hull holds to
+ * within a factor of two of it either way. A settlement's are four times
+ * that.
+ */
+export const facets = {
+  edge: 1.8,
+  floor: 6,
+  ceiling: 14,
+  step: 1,
+  sections: { 4: 'a spike, a tooth, a mandible', 5: 'a spine, a claw, a tine' },
+};
+export const panels = { hulls: [0.9, 3.6], structures: [3.6, 14.4] };
+
 /** A carapace orb: a low-facet sphere the caller squashes into a plate. */
 const orb = (w = 12, h = 6) => new THREE.SphereGeometry(1, w, h);
 /** A spine: a faceted cone, apex at +Y until the caller rakes it. */
