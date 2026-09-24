@@ -62,6 +62,13 @@
  * strips among the marks along the hull, the maw's bar and ring the marks
  * on the gear, the three domes the running lights. Nothing moved.
  *
+ * THE BOW DOME (#907, from #894's resting measure). `dome_bow` hung 1.28 m
+ * over the first carapace plate — the file's node at y 12.5 over a plate
+ * whose upper face is at 10.3. It is seated on `carapace_0` from its own
+ * station, half its radius in (`photophoreDomes` `on`, kit.mjs `seat`):
+ * the same bud on the plate's upper face, 1.65 m lower, and `diff.mjs`
+ * lists it and no other part. The flank and tail domes rested and stay.
+ *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds: drawn along Z, 80.81 units long tip to tip, hull axis at
  * y = 3.6 (the cargo gut's); built here metre-true at 75 m along +X,
@@ -252,7 +259,8 @@ directorate.telsonFan(root, [chitin, violet], {
 // three bands — under the carapace, residual audit lines (#890, the
 // header) — a strip down each flank — 22 to port, 15 to starboard, neither
 // where the other is — a bar over the maw and a ring round its mouth, the
-// gear's marks, and three domes: bow, port flank, tail.
+// gear's marks, and three domes: bow, port flank, tail — the bow one on
+// its plate (`on`, #907; the header).
 bar('seam_strip_bow', photophore, [20.8, 0.45, 0.5], [0.2, 3.85, 4], [0, 0.02, 0]);
 bar('seam_strip_mid', photophore, [21.8, 0.45, 0.5], [0.2, 3.75, -8], [0, -0.015, 0]);
 bar('seam_strip_aft', photophore, [18.8, 0.45, 0.5], [0.2, 3.95, -18], [0, 0.02, 0]);
@@ -274,7 +282,7 @@ directorate.photophoreDomes(root, photophore, {
   r: 0.8,
   facets: [8, 6],
   domes: [
-    ['dome_bow', drawn([0.2, 12.5, 16])],
+    ['dome_bow', { ...drawn([0.2, 12.5, 16]), on: 'carapace_0' }],
     ['dome_flank_p', drawn([13.2, 7.2, 8])],
     ['dome_tail', drawn([0.3, 6.4, -33.2])],
   ],

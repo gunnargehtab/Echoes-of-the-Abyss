@@ -49,7 +49,8 @@
  * photophores the file has at +z as `_p` are written `_s`, and the one
  * tail spine, three limbs and one photophore at −z as `_p`. Nothing is
  * mirrored to make a name true; `diff.mjs` lists exactly those pairs as
- * moved, swapping z, and nothing else. Under the settled convention the
+ * moved, swapping z, and beyond them only the port limbs (#645) and the
+ * five photophores (#907), both below. Under the settled convention the
  * hull reads with its four-lamp row to starboard and its spine-gun to
  * port — its block names neither side, so it does not read against it.
  *
@@ -59,6 +60,17 @@
  * builder mirrors since #645, so `limb_p0..2` are the three parts
  * `diff.mjs` lists against the file beyond the relabel: the same lines in
  * plan, 0.15 m of taper the other way along them.
+ *
+ * THE LAMPS THAT FLOATED (#907, from #894's resting measure). Three of
+ * the five photophores stood off the shell — `photophore_p0` 0.49 m,
+ * `_s1` 0.5, `_s3` 0.35 — laid flat at stations read off the ideal
+ * ellipsoids where the plates are 12 × 6 orbs. The rank rests on the
+ * shell now: every mark dropped from its station onto the facet under it,
+ * its underside on the facet and tilted with it (`photophores` `rest`,
+ * kit.mjs `seat`), so `_s0` and `_s2`, which rested by a corner, lie flat
+ * on their facets too. `diff.mjs` lists the five — `_p0` at 2.4 m, `_s1`
+ * 1.5, `_s3` 1.2, `_s2` 0.6, `_s0` 0.5 — and the audit names none as
+ * floating or hidden: 0.69 to 1.0 m² each from above.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -147,8 +159,9 @@ directorate.spineGun(
 
 // "A short row of photophores along one flank and one on the other": four
 // down the starboard flank at 5.5 and 6.3 turn about, and one to port at
-// 6.2 — in the file's order, the row first. `photophores` refuses a
-// mirrored pair; this four-to-one is not one.
+// 6.2 — in the file's order, the row first, each dropped onto its plate
+// (`rest`, #907; the header). `photophores` refuses a mirrored pair; this
+// four-to-one is not one.
 directorate.photophores(root, crimson, {
   spots: [
     ['photophore_s0', -14, 3, 5.5],
@@ -157,6 +170,7 @@ directorate.photophores(root, crimson, {
     ['photophore_s3', 13, 3, 6.3],
     ['photophore_p0', 6, 3.6, -6.2],
   ],
+  rest: [0, 1, 2].flatMap((i) => [`tergite_${i}`, `tergite_seam_${i}`]),
 });
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });

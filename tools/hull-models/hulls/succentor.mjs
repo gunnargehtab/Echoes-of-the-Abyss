@@ -88,13 +88,27 @@
  *   reads on the chart's loudness layer. A launch floods the mouth for the
  *   instant of the +35: a transient, not a lamp (docs/models-plan.md
  *   §3.2, rule 3). The dome, the floors and everything astern carry none.
+ *   The fourteen rim marks rest on the facets under them since #907
+ *   (`rimPhotophores` `rest`): seated on the ideal crown, four of them
+ *   stood 0.21 to 0.47 m over the 12 × 6 orb's chord by #894's resting
+ *   measure, and the rank is dropped from its crown stations onto
+ *   `tergite_2..6`, 0.15 m in as the rule always meant — every mark
+ *   moves, 0.4 to 1.6 m, `photophore_rim_s0` the most where the head
+ *   plate's nose sags furthest under its crown, and the stations, the
+ *   beams and the two pitches are as they were. `diff.mjs` lists the
+ *   fourteen and no other part.
  *
  * The light budget, measured (`lightAudit`, printed by `exportGlb`):
- * nineteen lit parts, 51.3 m² facing up — the five sills 22.6 m² (4.4 to
- * 4.6 each) and the fourteen rim marks 28.7 m² — and nothing hidden. The
- * bake at E(20) = 1.88 reads raw E = 7.6 at intake's 2 px/m and 7.8 at the
- * maps' 4, and dims by ×0.25 and ×0.24: a fourfold surplus, fifteen times
- * clear of the ×1/64 floor.
+ * nineteen lit parts, 42.8 m² facing up — the five sills 22.6 m² (4.4 to
+ * 4.6 each) and the fourteen rim marks 20.2 m², 1.25 to 1.69 each — and
+ * nothing hidden. On the crown the marks read 28.7 m² and the hull 51.3:
+ * a mark laid on its facet takes the facet's slope, which between the
+ * orb's rings and meridians is steeper than the crown's, and shows less
+ * of itself from above. The bake at E(20) = 1.88 read raw E = 7.6 at
+ * intake's 2 px/m and 7.8 at the maps' 4 on that 51.3 and dimmed by
+ * ×0.25 and ×0.24 — a fourfold surplus, fifteen times clear of the ×1/64
+ * floor — and loses a sixth of it with the marks, still three times the
+ * target.
  *
  * `cradles`, `bodyPlan`, `bodyEnvelope`, `bodyHalfBeam` and `trebleBody`
  * were written for this hull and the Treble and run here for the first
@@ -241,7 +255,8 @@ directorate.limbs(root, steel, {
 
 // "Dim running lights along the hull line": a row down each flank of the
 // deck, laid on the shell's slope, starboard eight at 9 m and port six at
-// 11.5 m, so the rows never answer each other across the keel.
+// 11.5 m, so the rows never answer each other across the keel; each mark
+// dropped onto the deck plate under it (`rest`, #907; the header).
 directorate.rimPhotophores(root, crimson, {
   rim,
   crown,
@@ -252,6 +267,7 @@ directorate.rimPhotophores(root, crimson, {
   },
   at: 0.86,
   size: 1.3,
+  rest: [2, 3, 4, 5, 6].map((i) => `tergite_${i}`),
 });
 
 // Built in metres from the start; this guards the length and centres it.

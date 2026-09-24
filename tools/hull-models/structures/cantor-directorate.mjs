@@ -75,6 +75,21 @@
  * #893 (#890 carried it unread as the approved model's resting set,
  * ruling 2, and asked; #893 settled it by naming it).
  *
+ * FIVE LAMPS THAT FLOATED (#907, from #894's resting measure).
+ * `quill_tip_light` stood 2.16 m past the third segment's end,
+ * `photophore_base_1` 3.0 m and `_base_2` 1.2 m off the tiers at the foot,
+ * `photophore_4` and `_7` 0.3 m off the dome — the file's studs read off
+ * the ideal sphere and cones, where the dome is a 16 × 9 orb and the tiers
+ * are twelve-sided. Each grows from what it stood beside now, seated from
+ * its own station and sunk half its radius (`photophoreDomes` `on`,
+ * kit.mjs `seat`; `primaryQuill` seats the tip on the last segment's end
+ * cap inside the quill's own frame, so its pitch and roll carry it): `_4`
+ * and `_7` on `dome_shell`, `_base_1` on `base_tier_high`, `_base_2` on
+ * `base_tier_low`, the tip on `quill_seg_2`. `diff.mjs` lists the five —
+ * the tip at 2.9 m, the base studs at 2.2 and 1.4, the dome studs at 0.6 —
+ * and no other part; the seventeen other studs rested and stay, and the
+ * audit names nothing on this file.
+ *
  * THE FRAME is the one every Z-long export here shares (hulls/light-scout-
  * pelagia.mjs, structures/sentinel-turret-directorate.mjs): the export is
  * drawn along Z, 18.0617 by 17.8315 by the measure intake takes — three's
@@ -89,8 +104,8 @@
  * the maps stay where the approved bake put them.
  *
  * `node tools/hull-models/diff.mjs cantor-directorate f7cce0f` reads the
- * twenty-two photophores grown, and nothing else beyond the root scale and
- * shift.
+ * twenty-two photophores grown and the five lamps seated (#907), and
+ * nothing else beyond the root scale and shift.
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -204,7 +219,8 @@ directorate.shellSpines(root, {
 });
 
 // The primary quill off the apex, pitched -0.1 and rolled 0.17: three
-// segments, black, red, black, and the lit tip.
+// segments, black, red, black, and the lit tip, resting on the third
+// segment's end (#907; the header).
 directorate.primaryQuill(
   root,
   { skins: [black, red], light: crimson },
@@ -231,9 +247,12 @@ directorate.apexBoss(
 // each of its own radius, every radius grown by the one factor so gate 3
 // reaches its target
 // under the cap (#890, the header). SIG 35, and the quill's tip is the
-// brightest of them.
+// brightest of them. Four grow from the shell or the foot they stood off
+// (`on`, #907; the header).
 const GROWN = 1.5;
-const stud = (name, r, at) => [name, r * GROWN, drawn(at)];
+const stud = (name, r, at, on) => [name, r * GROWN, on ? { ...drawn(at), on } : drawn(at)];
+const SHELL = ['dome_shell', 'shell_plate_0', 'shell_plate_1', 'shell_plate_2'];
+const FOOT = ['base_tier_low', 'base_tier_high'];
 directorate.photophoreDomes(root, crimson, {
   facets: [6, 5],
   tolerance: HALF_METRE,
@@ -242,10 +261,10 @@ directorate.photophoreDomes(root, crimson, {
     stud('photophore_1', 0.08538412303, [1.914786467, 6.692183827, 2.532231356]),
     stud('photophore_2', 0.08118531108, [1.625590504, 6.451906005, 3.084321877]),
     stud('photophore_3', 0.08169715852, [1.599583013, 6.006233881, 3.625416006]),
-    stud('photophore_4', 0.07280962169, [0.9472713914, 5.669727916, 4.149667203]),
+    stud('photophore_4', 0.07280962169, [0.9472713914, 5.669727916, 4.149667203], SHELL),
     stud('photophore_5', 0.09718167037, [0.248562712, 5.244272103, 4.558963824]),
     stud('photophore_6', 0.1082593203, [-0.5297866068, 4.920685586, 4.732691058]),
-    stud('photophore_7', 0.07086584717, [-1.510153764, 4.545578134, 4.718194214]),
+    stud('photophore_7', 0.07086584717, [-1.510153764, 4.545578134, 4.718194214], SHELL),
     stud('photophore_8', 0.1116483137, [-4.107400971, 5.708303903, -0.9904500883]),
     stud('photophore_9', 0.09248419851, [-4.254564679, 5.222079226, -1.696179372]),
     stud('photophore_10', 0.08923465014, [-3.738495442, 4.961820269, -2.912264181]),
@@ -258,8 +277,8 @@ directorate.photophoreDomes(root, crimson, {
     stud('photophore_17', 0.1023402661, [2.490058274, 6.429079775, -2.479213995]),
     stud('photophore_18', 0.1013723612, [3.441314567, 5.941913658, -2.082961256]),
     stud('photophore_base_0', 0.09, [6.7, 1, 1.9]),
-    stud('photophore_base_1', 0.09, [-5.9, 1.75, 3.4]),
-    stud('photophore_base_2', 0.09, [2.2, 0.7, -6.9]),
+    stud('photophore_base_1', 0.09, [-5.9, 1.75, 3.4], FOOT),
+    stud('photophore_base_2', 0.09, [2.2, 0.7, -6.9], FOOT),
   ],
 });
 

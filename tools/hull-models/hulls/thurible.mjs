@@ -114,15 +114,27 @@
  *   outside the fore plate's — a mark on that line bakes half under the
  *   plate that emerges through it, which the first run showed. Nothing
  *   else is lit: not the cells (§3.2 rule 4), not the gun, not the keel,
- *   and nothing astern.
+ *   and nothing astern. The nine shield marks rest on the facets under
+ *   them since #907 (`rimPhotophores` `rest`): seated on the ideal crown,
+ *   three of them stood 0.26 to 0.56 m over the 12 × 6 orb's chord by
+ *   #894's resting measure, and the rank is dropped from its crown
+ *   stations onto the two shield plates and the trailing lip, 0.15 m in
+ *   as the rule always meant — each mark moves 0.16 to 1.9 m,
+ *   `photophore_rim_s0` the most where the fore plate's nose sags furthest
+ *   under its crown, and the stations and the two pitches are as they
+ *   were. The tail rank rested and is not dropped; `diff.mjs` lists the
+ *   nine and no other part.
  *
  * The light budget, measured (`lightAudit`, printed by `exportGlb`):
- * fifteen lit parts, the rim marks, 25.9 m² facing up on a plan of
- * 12,563 mask pixels at 2 px/m, some 3,140 m² — and the bake at
- * E(16) = 1.41 reads raw E = 6.26 and dims by ×0.224: in the Verger's
- * band (×0.195 at E(14)) and fourteen times clear of the ×1/64 floor the
- * quiet end must not touch (§3.2). Marks 1.4 m square on the shield and
- * 1.1 on the tail, the two scales again, and nothing larger anywhere,
+ * fifteen lit parts, the rim marks, 23.9 m² facing up — the shield's nine
+ * at 1.44 to 2.25 m² each on their facets, the tail's six at 1.0 to 1.25 —
+ * on a plan of 12,563 mask pixels at 2 px/m, some 3,140 m². The bake at
+ * E(16) = 1.41 read raw E = 6.26 on the 25.9 m² the marks showed on the
+ * crown and dimmed by ×0.224: in the Verger's band (×0.195 at E(14)) and
+ * fourteen times clear of the ×1/64 floor the quiet end must not touch
+ * (§3.2); a twelfth less lit plan since #907 leaves it there. Marks 1.4 m
+ * square on the shield and 1.1 on the tail, the two scales again, and
+ * nothing larger anywhere,
  * because "dim" is the block's first word for the light.
  *
  * The hand-drawn outline this model retires (silhouettes.ts, "a shield
@@ -290,7 +302,8 @@ directorate.keel(root, black, {
 // "Rows of photophores along the shield's rim and down the abdomen in a
 // pattern that repeats on neither side": two rims, one rule, fifteen
 // marks, each seated on the shell at 0.84 of the rim's half-beam (the
-// header). `photophores` under it refuses a mirrored pair.
+// header), the shield's nine dropped onto the facets under them (`rest`,
+// #907). `photophores` under it refuses a mirrored pair.
 directorate.rimPhotophores(root, crimson, {
   rim,
   crown,
@@ -301,6 +314,7 @@ directorate.rimPhotophores(root, crimson, {
   },
   at: 0.84,
   size: 1.4,
+  rest: ['tergite_4', 'tergite_ridge_4', 'tergite_5'],
 });
 directorate.rimPhotophores(root, crimson, {
   rim,

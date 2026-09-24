@@ -54,18 +54,23 @@
  *
  * - The seven claws (`limb_*_claw`) glow in the export's `edge_red` — "a
  *   fainter red along ... the claws", the block's since #893 (#890 carried
- *   them unread as the approved model's resting set, ruling 2). Six lie
+ *   them unread as the approved model's resting set, ruling 2). They lie
  *   folded under the belly, where no chart sees them, and a claw lifted
  *   clear of the belly to face a map is a different fixture (ruling 6), so
- *   they stay where the file has them. RESIDUAL AUDIT LINES: `limb_port_1_claw`,
- *   `limb_port_2_claw`, `limb_port_3_claw`, `limb_port_4_claw`,
- *   `limb_starboard_2_claw` and `limb_starboard_3_claw` show nothing from
- *   above, and the export warns on each; `limb_starboard_1_claw` was never
- *   hidden. The seven claws and the rostrum also rest on nothing by the
- *   audit's second measure (#894) — the file folds each claw a metre off
- *   its femur and stands the rostrum two off the head — and #907 lists
- *   them for the same reason: a claw or a rostrum re-hung is a limb
- *   decision, not a lamp seated.
+ *   they stay folded. Each hangs from its femur's end since #907: the file
+ *   set every claw's centre at one offset from its femur's, which left
+ *   each claw's root 0.86 to 1.15 m clear of the femur by #894's resting
+ *   measure — a manipulator in two pieces — and `walkingLimbs` computes
+ *   the knee from the femur's centre, length and fold and stands the
+ *   claw's root on it, the claw's own fold kept (the module says how).
+ *   Each moves 1.5 to 1.8 m and reads 0 m from its femur. RESIDUAL AUDIT
+ *   LINES: all seven claws show nothing from above — `limb_port_1_claw`
+ *   to `_4`, `limb_starboard_1_claw` to `_3` — and the export warns on
+ *   each. Six were hidden before; `limb_starboard_1_claw` showed 0.5 m²
+ *   where the file's offset had carried it past the second plate's rim,
+ *   and rooted on its femur it lies under the plates with the rest
+ *   (0.06 m²). That is the rule's consequence and not a choice: the fold
+ *   is the file's, and only the joint moved.
  * - `photophore_port_5` and `photophore_starboard_3` are the clause's and
  *   stay lit. Each sat on the fifth plate's flank at its widest line,
  *   under the plate's own upper surface; each is lifted 0.04 inboard and
@@ -97,22 +102,36 @@
  *   the plate rims, the tail joints, the rostrum and the claws", the
  *   block's resting clause since #893 (#890 carried them unread as the
  *   approved model's resting set, ruling 2, and asked; #893 settled it by
- *   naming them). They stay lit as the file has them; nothing moved.
+ *   naming them). They stay lit as the file has them. One moved: the
+ *   rostrum stood 1.96 m off the head by #894's resting measure, and the
+ *   gap is sideways, not ahead — the file's node runs it 10° across the
+ *   head's axis from 3 m to port and 1.7 m above the apex, its base
+ *   0.75 m ahead of the apex's station and already at the closest its
+ *   own axis comes to the apex, so no move along that axis meets the head
+ *   short of its port cheek, 6.6 m from the point. It hangs from the apex
+ *   since #907 (`spikes` `rootOn`): its base centre on the head's point,
+ *   its rotation the file's, 3.5 m from where the node had it, and it
+ *   reads 0 m from the head. Its tip stands 0.036 units less far forward,
+ *   which is THE SCALE below. `diff.mjs` lists the rostrum at 3.0 m and
+ *   the seven claws at 1.5 to 1.8, and no other part.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
- * shared kinds: drawn along Z, 4.53 units long tip to tip, hull axis at
- * y = 0.8 (the head's, the rims' and the plates', which sit 0.03 over it);
- * built here metre-true at 95 m along +X, centred on its length, the axis
- * at y = 0. `DRAWN` is the length as intake measures it — the parts' boxes
- * — which the rostrum's box, rolled 0.3 with its node, and the port
- * mandible's, rolled 0.2, overhang at the bow: 4.5501 over the vertices'
- * 4.53. Every number below is the export's, through kit.mjs `drawn`.
+ * shared kinds: drawn along Z, hull axis at y = 0.8 (the head's, the
+ * rims' and the plates', which sit 0.03 over it); built here metre-true
+ * at 95 m along +X, centred on its length, the axis at y = 0. `DRAWN` is
+ * the length as intake measures it — the parts' boxes — which the
+ * rostrum's box, rolled 0.3 with its node, overhangs at the bow: 4.5145
+ * over the vertices' 4.50 since #907 hung the rostrum from the head's
+ * apex. The file measured 4.5501 over 4.53, its rostrum 0.036 units
+ * further forward, so the hull is 0.8 % larger on the chart than the
+ * approved bake drew it. Every number below is the export's, through
+ * kit.mjs `drawn`.
  */
 import { THREE, box, part, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
 
 const L = 95;
-const DRAWN = 4.5501;
+const DRAWN = 4.5145;
 const DATUM = 0.8;
 // `refuseMirror`'s half a metre, in this export's units.
 const HALF_METRE = (0.5 * DRAWN) / L;
@@ -197,9 +216,9 @@ directorate.carapaceOrbs(
 );
 
 // The head: a six-sided cone to a point, squashed 1.25 × 0.62 by its node
-// and rolled 0.12; the rostrum, four-sided and lit, rolled 0.3; and two
-// mandibles under it, the port one the longer, each leaned down its own
-// way.
+// and rolled 0.12; the rostrum, four-sided and lit, rolled 0.3 and hung
+// from the head's apex (`rootOn`, #907; the header); and two mandibles
+// under it, the port one the longer, each leaned down its own way.
 directorate.spikes(root, violet, {
   spikes: [
     {
@@ -218,6 +237,7 @@ directorate.spikes(root, edge, {
       radii: [0, 0.06],
       length: 0.55,
       facets: 4,
+      rootOn: 'head',
       ...drawn([0.05, 0.88, 2.18], ALONG_KEEL(0.3)),
     },
   ],
@@ -267,8 +287,8 @@ directorate.spikes(root, chitin, {
 
 // "Folded manipulator limbs": seven, four to port at a 0.4 pitch and three
 // to starboard at 0.44, each its own length, every one folded by the one
-// rule `walkingLimbs` holds; six of the claws are residual audit lines
-// (#890, the header).
+// rule `walkingLimbs` holds, each claw hung from its femur's end (#907);
+// the seven claws are residual audit lines (the header).
 directorate.walkingLimbs(
   root,
   { chitin, red: edge },

@@ -521,13 +521,17 @@ export function dorsalSpines(root, black, { spines, r = 0.7, rake = -0.3, facets
  * (x, z), its bottom face on the facet and tilted with it (kit.mjs `seat`,
  * `drop`), so a mark whose file put it a metre and a half over its plate
  * comes down onto the plate (#894). A spot's own Euler is then the facet's.
- * Without `rest` the marks lie where the spots say, as every rank before
- * the Dredge's still does.
+ * `sink` runs the mark's underside that far into the facet — the rim
+ * rule's 0.15, which `rimPhotophores` passes with `rest` (#907) — and is
+ * nothing by default, the Dredge's lamps lying on their plates. Without
+ * `rest` the marks lie where the spots say, as every rank before the
+ * Dredge's still does.
  */
-export function photophores(root, crimson, { spots, size = 1.1, h = 0.4, depth, yaw = 0, rest }) {
+export function photophores(root, crimson, opts) {
+  const { spots, size = 1.1, h = 0.4, depth, yaw = 0, rest, sink = 0 } = opts;
   refuseMirror('photophore', spots);
   spots.forEach(([name, x, y, z, rot]) => {
-    const on = rest && seat(root, rest, [x, y, z], { stand: h / 2, drop: true });
+    const on = rest && seat(root, rest, [x, y, z], { stand: h / 2, sink, drop: true });
     add(
       root,
       name,
@@ -1286,9 +1290,23 @@ export function rimSpines(root, black, opts) {
  * is under the shell at one station and a metre above it at the next —
  * so the rank here is along the hull rather than per plate, and the shell
  * is asked where it is (#785).
+ *
+ * The crown asked is the ideal ellipsoid, and the plate is a low-facet
+ * orb inside it: between meridians the shell falls short of the crown by
+ * up to half a metre on a plate 50 m across, so a mark seated on the
+ * crown by this rule stood off its facet by whatever the chord sagged
+ * there — the Thurible's by 0.26 to 0.56 m, the Succentor's by 0.21 to
+ * 0.47, the Lure's by 0.31 to 0.45 (#894's resting measure; #907). `rest`
+ * names the shell parts the rank lies on, and with it every mark in the
+ * rank is dropped from its crown station onto the facet under it, its
+ * underside `sink` into that facet as the rule always meant (`photophores`
+ * `rest`, kit.mjs `seat`): the same stations, the same beams, the facet's
+ * slope in place of the crown's. Without `rest` the rank lies on the
+ * crown, as the Treble's and the Lure's dark edge rows still do.
  */
 export function rimPhotophores(root, crimson, opts) {
   const { rim, crown, ranks, name = 'photophore', at = 0.84, size = 1.2, h = 0.4, sink = 0.15 } = opts;
+  const { rest } = opts;
   const up = new THREE.Vector3(0, 1, 0);
   const step = 0.3;
   const spots = [];
@@ -1324,7 +1342,7 @@ export function rimPhotophores(root, crimson, opts) {
       ]);
     }
   }
-  photophores(root, crimson, { spots, size, h });
+  photophores(root, crimson, { spots, size, h, rest, sink });
 }
 
 /**
@@ -1981,6 +1999,14 @@ export function slipwayHull(root, { hull: red, deck: violet }, opts = {}) {
  * anchor claws along the outer wall, and the steel mandible at the mouth,
  * laid along the slip and yawed `sgn` outward.
  *
+ * The plate photophore is dropped onto its tergite from its station —
+ * `dx` along the plate and `z` across, `y` the seed's height for the
+ * record — its underside on the facet under it and tilted with it (kit.mjs
+ * `seat`, `drop`, inside the hall's frame; #907). The file hung all eight,
+ * four a hall, 0.47 m over the shoulder they mark by #894's resting
+ * measure: the plate is a 14 × 7 orb and the station's crown was read off
+ * the ideal one. Same name, size and skin, and the facet decides the rest.
+ *
  * The claws are the approved file's own and are carried across rather
  * than mirrored (#540): each is a cone laid across by π/2 about X and
  * then turned `sgn · raise`, which on the +z hall hangs it point-down and
@@ -2030,8 +2056,12 @@ export function slipwayHall(hall, { violet, red, black, steel, crimson }, opts) 
       [x + spines.dx, spines.y, sgn * (z + spines.out + spines.step * (i % 3))],
       [sgn * spines.lean, 0, spines.rake]
     );
-    if (i % 2 === 0)
-      add(hall, `photophore_${i}`, box(...dots.size), crimson, [x + dots.dx, dots.y, sgn * dots.z]);
+    if (i % 2 === 0) {
+      const station = [x + dots.dx, dots.y, sgn * dots.z];
+      const lie = { stand: dots.size[1] / 2, drop: true };
+      const { at, rot } = seat(hall, `tergite_${i}`, station, lie);
+      add(hall, `photophore_${i}`, box(...dots.size), crimson, at, rot);
+    }
   }
   add(hall, 'slip_lip', box(...lip.size), black, [0, lip.y, sgn * lip.z]);
   for (let i = 0; i < lipLights.count; i++)
@@ -2298,10 +2328,10 @@ export function shellSpines(root, { name, facets = 5, spines }) {
  * `dock_small` the same the other way), holding a `throat` — a frustum of
  * `r` at the mouth and 1.25 `r` at the root, 2.4 long, eight-sided, violet
  * — a `lip`, a steel torus of 1.05 `r` and a 0.2 tube, 5 × 10, at 1.25 up
- * the throat; a `mouth`, the lit disc of 0.72 `r` at 1.3; and two
- * `mandible`s, four-sided black cones 1.3 long at ±1.15 `r` across the
- * mouth, each rolled 0.35 in toward it. The ratios are the file's, exact
- * on both collars (1.4 and 0.9).
+ * the throat; a `mouth`, the lit disc of 0.72 `r`, 0.18 thick, resting on
+ * the throat's end; and two `mandible`s, four-sided black cones 1.3 long
+ * at ±1.15 `r` across the mouth, each rolled 0.35 in toward it. The ratios
+ * are the file's, exact on both collars (1.4 and 0.9).
  *
  * Two things are the file's and stay: the lip's torus lies in the frame's
  * XY plane, which after the quarter-turn roll is a plane *containing* the
@@ -2309,13 +2339,30 @@ export function shellSpines(root, { name, facets = 5, spines }) {
  * and the mouth and the mandibles sit at the throat's +Y end, which the
  * roll puts at the tier's flank, so the collar's light faces the hull and
  * the throat stands out from it. `frame` is `laid` on the Bastion.
+ *
+ * One is not: the file wrote the mouth at 1.3, a hundredth past the
+ * throat's end at 1.2 plus the disc's half-thickness, and on the Bastion's
+ * scale that hundredth is 0.25 m of water between the disc and the
+ * throat it is the light of (#894's resting measure; #907). The disc sits
+ * on the end now, half its thickness proud — 1.29 on both collars, since
+ * the throat's length and the disc's thickness are the same on both — and
+ * the small collar's, which rested on a rib plate through the gap, moves
+ * with it.
  */
 export function dockingCollar(root, { violet, steel, crimson, black }, opts) {
   const { name, r, frame = drawn, ...placement } = opts;
   const dock = group(root, name, placement);
-  place(dock, `${name}_throat`, cyl(r, 1.25 * r, 2.4, 8), violet, frame());
+  const throat = 2.4;
+  const disc = 0.18;
+  place(dock, `${name}_throat`, cyl(r, 1.25 * r, throat, 8), violet, frame());
   place(dock, `${name}_lip`, torus(1.05 * r, 0.2, 5, 10), steel, frame([0, 1.25, 0]));
-  place(dock, `${name}_mouth`, cyl(0.72 * r, 0.72 * r, 0.18, 8), crimson, frame([0, 1.3, 0]));
+  place(
+    dock,
+    `${name}_mouth`,
+    cyl(0.72 * r, 0.72 * r, disc, 8),
+    crimson,
+    frame([0, throat / 2 + disc / 2, 0])
+  );
   [1, -1].forEach((sgn, i) =>
     place(
       dock,
@@ -2384,6 +2431,14 @@ export function ballastTanks(root, steel, { tanks }) {
  * the tip — the Cantor's brightest point, 8 × 6 where its photophores are
  * 6 × 5. As `stingerBarrel` is the turret's gun, this is the dome's
  * listening mast.
+ *
+ * The tip light rests on the last segment's end, half its radius sunk
+ * into it — a bud on a skin (kit.mjs `seat`, nearest, inside the quill's
+ * own frame, so the quill's pitch and roll carry it; #907). `tip.at` is
+ * the seed: the Cantor's file stood the orb 0.24 units past the third
+ * segment's end, 2.16 m of water between a lamp and its mast by #894's
+ * resting measure, and the seed from there finds the end cap. Only the
+ * station moves; the orb is round and keeps the file's rotation.
  */
 export function primaryQuill(root, { skins, light }, opts) {
   const { segments, tip, ...placement } = opts;
@@ -2392,7 +2447,9 @@ export function primaryQuill(root, { skins, light }, opts) {
     place(quill, `quill_seg_${i}`, cyl(radii[0], radii[1], length, facets), skins[i % skins.length], sp)
   );
   const { r, facets, ...tp } = tip;
-  place(quill, 'quill_tip_light', new THREE.SphereGeometry(r, ...facets), light, tp);
+  const last = `quill_seg_${segments.length - 1}`;
+  const { at } = seat(quill, last, tp.at, { stand: r, sink: r / 2 });
+  place(quill, 'quill_tip_light', new THREE.SphereGeometry(r, ...facets), light, { ...tp, at });
 }
 
 /* --------------------------------------------------------------------------
@@ -2472,11 +2529,38 @@ export function eyes(root, mat, { eyes: list, facets = [6, 4] }) {
  * sides, each placed by its own node — the antennae (five-sided, raked back
  * off the head), the dorsal ridges (four-sided, leaned) and the telson's
  * spike. Drawn as the export drew them, tip up, and laid over by the node.
+ *
+ * A spike given `rootOn`, the name of a cone already in the scene, is
+ * re-hung with its base centre on that cone's apex — its +Y end, read off
+ * the geometry's height through the node's scale and rotation — keeping
+ * its own rotation, so it grows from the other's point as a claw grows
+ * from its femur's end (`walkingLimbs`; #907). The Submersible's rostrum
+ * stood 1.96 m off its head by #894's resting measure, and the gap is
+ * sideways, not ahead: the file's node runs it 10° across the head's
+ * axis from 3 m to port and 1.7 m above the apex, its base 0.75 m past
+ * the apex's station and already at the closest its own axis comes to
+ * the apex, so no station along that axis meets the head short of its
+ * port cheek. Hung from the apex it is the head's point carried on,
+ * which is what a rostrum is; a cone that is not in the scene, or a
+ * host that is not a cone, is an error.
  */
 export function spikes(root, mat, { spikes: list }) {
-  list.forEach(({ name, radii, length, facets = 5, ...placement }) =>
-    part(root, name, cyl(radii[0], radii[1], length, facets), mat, placement)
-  );
+  list.forEach(({ name, radii, length, facets = 5, rootOn, ...placement }) => {
+    const mesh = part(root, name, cyl(radii[0], radii[1], length, facets), mat, placement);
+    if (rootOn) hangOn(root, mesh, length, rootOn);
+  });
+}
+
+/** Move `mesh`, a cone of `length` on its own Y, so its base centre sits on cone `name`'s apex. */
+function hangOn(root, mesh, length, name) {
+  const host = root.getObjectByName(name);
+  const height = host?.geometry?.parameters?.height;
+  if (!height) throw new Error(`spikes: no cone ${name} in ${root.name} for ${mesh.name}`);
+  root.updateMatrixWorld(true);
+  const apex = host.localToWorld(new THREE.Vector3(0, height / 2, 0));
+  const base = mesh.localToWorld(new THREE.Vector3(0, -length / 2, 0));
+  const frame = mesh.parent;
+  mesh.position.add(frame.worldToLocal(apex.clone()).sub(frame.worldToLocal(base.clone())));
 }
 
 /**
@@ -2796,39 +2880,51 @@ export function aimedSpikes(root, { spike: spikeMat, tip: tipMat }, { spikes: li
  * places all seven, read off the file: the femur is `femur` [wide, thick]
  * by the limb's own `length`, at `at` in the export's frame, folded
  * `fold.femur` (pitched 0.35, rolled 1.15 outboard); the claw is `claw`
- * [wide, thick] by `clawRatio` of that length, `offset` outboard, down and
- * forward of the femur, folded `fold.claw` (pitched back 2.1, yawed 0.25
- * and rolled 0.35 outboard). Outboard is +x to port on this export, so a
- * starboard limb's roll, yaw and outboard offset change sign. The lengths
- * and the femur stations are each limb's own.
+ * [wide, thick] by `clawRatio` of that length, folded `fold.claw`
+ * (pitched back 2.1, yawed 0.25 and rolled 0.35 outboard), and hung from
+ * the femur's outboard end. Outboard is +x to port on this export, so a
+ * starboard limb's roll and yaw change sign. The lengths and the femur
+ * stations are each limb's own.
+ *
+ * Where the claw hangs is the joint, not a number (#907). The file set
+ * each claw's centre at one offset from its femur's — 0.16 outboard, 0.08
+ * down, 0.14 forward — which on every limb left the claw's root 0.86 to
+ * 1.15 m clear of the femur's end, a manipulator in two pieces by #894's
+ * resting measure. The femur's fold carries its −Y end outboard, down and
+ * a little aft, and the claw's fold carries its +Y end inboard, down and
+ * aft: that end is the one the file's offset put nearest the femur, and
+ * it is the claw's root. So the knee is the femur's −Y end, computed from
+ * its centre, length and fold, and the claw's centre stands half its
+ * length back along its own axis from the knee, so its root meets the
+ * femur's end and its fold is the file's. The rule moves each claw 1.5 to
+ * 1.8 m, and all seven lie under the belly, where the file folded them
+ * (hulls/abyssal-submersible-directorate.mjs, the header).
  */
 export function walkingLimbs(root, { chitin, red }, opts) {
   const {
     femur = [0.07, 0.06],
     claw = [0.045, 0.04],
     clawRatio = 0.6,
-    offset = [0.16, -0.08, 0.14],
     fold = { femur: [0.35, 1.15], claw: [-2.1, 0.25, 0.35] },
     limbs: list,
   } = opts;
-  list.forEach(({ side, n, length, at: [x, y, z] }) => {
+  // A box's +Y axis under an XYZ Euler, in the export's frame; `drawn`
+  // carries the frame, so a point found here lands where the file's would.
+  const along = (e) => new THREE.Vector3(0, 1, 0).applyEuler(new THREE.Euler(...e, 'XYZ'));
+  list.forEach(({ side, n, length, at }) => {
     const sgn = side === 'port' ? 1 : -1;
-    part(
-      root,
-      `limb_${side}_${n}_femur`,
-      box(femur[0], length, femur[1]),
-      chitin,
-      drawn([x, y, z], [fold.femur[0], 0, sgn * fold.femur[1]])
-    );
+    const femurRot = [fold.femur[0], 0, sgn * fold.femur[1]];
+    const clawRot = [fold.claw[0], sgn * fold.claw[1], sgn * fold.claw[2]];
+    const femurGeo = box(femur[0], length, femur[1]);
+    part(root, `limb_${side}_${n}_femur`, femurGeo, chitin, drawn(at, femurRot));
+    const knee = new THREE.Vector3(...at).addScaledVector(along(femurRot), -length / 2);
+    const clawAt = knee.addScaledVector(along(clawRot), -(length * clawRatio) / 2);
     part(
       root,
       `limb_${side}_${n}_claw`,
       box(claw[0], length * clawRatio, claw[1]),
       red,
-      drawn(
-        [x + sgn * offset[0], y + offset[1], z + offset[2]],
-        [fold.claw[0], sgn * fold.claw[1], sgn * fold.claw[2]]
-      )
+      drawn(clawAt.toArray(), clawRot)
     );
   });
 }

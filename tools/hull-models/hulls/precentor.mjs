@@ -40,8 +40,24 @@
  * One thing below is not the binary's: the port limbs' taper runs
  * root-inboard, the starboard rank's mirror, where the approved model ran
  * it the other way (#645, the one Phase 6 correction this file carries).
- * `diff.mjs` against the file as #642 left it lists `limb_p0..2` and
- * nothing else.
+ * `diff.mjs` against the file as #642 left it lists `limb_p0..2` and,
+ * since #907, the four photophores below, and nothing else.
+ *
+ * THE FOUR PHOTOPHORES (#907, from #894's resting measure). Three stood
+ * off the shell — `photophore_1` 1.0 m, `_2` 1.2, `_3` 2.3 — and `_0`
+ * rested on the fourth dorsal spine's shaft rather than on its plate. The
+ * stations were read off the ideal ellipsoids, and the plates are 12 × 6
+ * orbs; `_3` sat at z = −6 besides, 0.4 m outboard of the third plate's
+ * rim over open water, its nearest thing the first port hydrophone. The
+ * rank rests on the shell now: each mark dropped from its station onto
+ * the facet under it, its underside on the facet and tilted with it
+ * (`photophores` `rest`, kit.mjs `seat`). `_3` needed a station first,
+ * since a drop from over the water finds nothing under it: it is seeded
+ * at 0.7 of the plate's half-beam at its own x (`tergiteFlank`) — the
+ * Lure's shoulder rule for a shell this round in section — 2.4 m inboard
+ * of the file's spot, and lies on the third plate's port shoulder.
+ * `diff.mjs` lists the four — `_1` at 4.5 m, `_3` 2.1, `_2` 1.5, `_0`
+ * 1.4 — and every one shows 0.88 to 1.31 m² from above.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -94,10 +110,8 @@ root.scale.setScalar(L / DRAWN);
 // centred 0.8 forward, and 0.7 of the half-beam tall — `tallOf: 'beam'`, so
 // it stands a little proud of its plate above and below instead of sinking
 // under the one ahead, and stays that whatever a station's height becomes.
-directorate.tergites(root, { violet, red, black }, {
-  segments: SEGMENTS,
-  seam: { at: 0.8, size: [0.35, 0.7, 0.9], tallOf: 'beam' },
-});
+const SEAM = { at: 0.8, size: [0.35, 0.7, 0.9], tallOf: 'beam' };
+directorate.tergites(root, { violet, red, black }, { segments: SEGMENTS, seam: SEAM });
 directorate.rostrum(root, red, { tip: 30, r: 3.2, length: 12, facets: 8 });
 directorate.telson(root, { violet, black }, { tip: -34, r: 2.5, length: 8 });
 
@@ -157,14 +171,17 @@ directorate.dorsalSpines(root, black, {
 directorate.limbs(root, steel, { xs: [-14, -4, 6], y: -1, z: 7.5, r: [0.7, 0.5], length: 7, fold: 0.4 });
 
 // "Nearly black": four photophores, and that is the whole light budget of a
-// hull that idles at SIG 12. None of them answers another across the keel.
+// hull that idles at SIG 12. None of them answers another across the keel;
+// each lies on its plate, the last from the shoulder rather than its own
+// spot (`rest`, #907; the header).
 directorate.photophores(root, crimson, {
   spots: [
     ['photophore_0', 12, 3.8, 3],
     ['photophore_1', -8, 5.2, -4.5],
     ['photophore_2', -20, 3.9, 2],
-    ['photophore_3', 4, 4.6, -6],
+    ['photophore_3', 4, 4.6, -0.7 * directorate.tergiteFlank(SEGMENTS, 4, 0, SEAM)],
   ],
+  rest: [0, 1, 2, 3].flatMap((i) => [`tergite_${i}`, `tergite_seam_${i}`]),
 });
 
 await exportGlb(root, 'precentor-directorate.glb');
