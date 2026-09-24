@@ -84,8 +84,12 @@
  * and whether a translucent unlit finish exists for it if not, is #893's
  * question (every "block names fewer lamps than the model lights" case
  * on #890 went there), and finish is #888's. The vein rings above are
- * the same class of question: the block's wording is #893. Nothing here
- * moves the footprint.
+ * the same class of question: the block's wording is #893. Since #894 the
+ * two haze cones are a glow and not a lamp to the audit and the bake
+ * alike — blended at sixteen percent, they occlude nothing and own no
+ * cell from above (glb.mjs `occludes`), and the chart sees the mound and
+ * the slits through them where it saw a solid cone. Nothing here moves
+ * the footprint.
  */
 import { THREE, exportGlb, fitFootprint } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';

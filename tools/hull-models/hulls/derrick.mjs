@@ -30,6 +30,21 @@
  * face up and were not on the list; they are carried as the approved file
  * lights them, and whether the block should name them at rest is #893.
  *
+ * THE DECK DATUM buried more than the floods (#894, from #890's review).
+ * `DECK` is the slab's mid-height, and the first cut hung the gun off it:
+ * `barbette_ring` (y 5.3–7.5), `barbette` (6.0–9.2) and `deck_scuff`
+ * (5.55–5.85) sat inside `hull_slab` (0–11), so the block's open barbette
+ * and its ring of scuffed plating were on no chart. The barbette stands on
+ * the slab's top now, `DEPTH`, and the cradle, barrel and muzzle rise the
+ * same 5.5 m with it; the pile hammer's head, buried the same way (6–9),
+ * stands on the deck and the shaft rises from it to where it always
+ * reached, 10 m of shaft where 5 of the 18 were in the slab. The frame's
+ * six work floods hung a quarter of a metre over the beams and are on them
+ * (`lattice`). The machinery house keeps its floor at `DECK`, half its
+ * louvres in the slab: lifting it carries the stack over the frame's top,
+ * and the frame reading as the biggest thing on the hull is the block's
+ * one hard line, so that is a decision and not this fix.
+ *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.
  */
@@ -76,9 +91,9 @@ bathyarch.ballastAndKeel(root, { black, rust }, {
   z: 21, x: -6, length: 60, r: 3, keel: { x: -4, y: -6.2, length: 100 },
 });
 
-// The gun, forward of the frame.
+// The gun, forward of the frame, on the slab's top — DEPTH, not DECK (header).
 bathyarch.barbette(root, { black, grey, rust, amber }, {
-  x: 34, deck: DECK, r: 7, barrel: { x: 44.5, length: 12 },
+  x: 34, deck: DEPTH, r: 7, barrel: { x: 44.5, length: 12 },
 });
 
 // The derrick: the frame, its X-bracing, and the listening array slung beneath.
@@ -111,8 +126,10 @@ add(root, 'cradle_lamp_stay', box(0.6, 1.8, 0.6), grey, [5, frame.top + 0.9, 0])
 bathyarch.machineryHouse(root, { black, grey, rust, amber, vent, flood, louvre: unlit }, {
   x: -24, y: 10, length: 22, height: 9, beam: 26, stack: { x: -30, y: 20, z: 6 },
 });
-add(root, 'hammer_shaft', box(1.2, 18, 1.2), grey, [-6.5, 15, 30]);
-add(root, 'hammer_head', box(3.6, 3, 3.6), rust, [-6.5, 7.5, 30]);
+// "Head down": the head stands on the slab's top and the shaft rises from
+// it to where it always reached (header).
+add(root, 'hammer_shaft', box(1.2, 10, 1.2), grey, [-6.5, 19, 30]);
+add(root, 'hammer_head', box(3.6, 3, 3.6), rust, [-6.5, DEPTH + 1.5, 30]);
 
 // "Deck floods only": on the slab's top, which is DEPTH and not DECK (header).
 bathyarch.deckFloods(root, lampM, {

@@ -74,15 +74,25 @@
  * as the approved model and #652 have it. Four lamps were hidden from
  * above; two move, and two stay lit where they are as residual audit lines
  * the audit names on every build:
- * - `crystal_core` stays. Its only occluder from above is
- *   `heat_shimmer_sheath`, alpha-blended at six percent, which glb.mjs
- *   `topDown` — what kit.mjs `lightAudit` calls — treats as opaque;
- *   nothing solid stands over it, and a lamp
- *   the block lights at rest is never clad to quiet the audit (#890
- *   review). Residual.
+ * - `crystal_core` stays, and the audit sees it since #894. Its only
+ *   occluder from above is `heat_shimmer_sheath`, alpha-blended at six
+ *   percent; until #894 glb.mjs `topDown` — what kit.mjs `lightAudit`
+ *   calls — and the bake's material swap both treated the sheath as solid,
+ *   so the core, the Spire's largest light in the conn view, read as
+ *   hidden and baked dark under a solid sheath. A part blended at under
+ *   half opacity occludes nothing now (glb.mjs `occludes`) and the bake
+ *   blends it at its own opacity, so the core is on the chart and the
+ *   sheath is the six-percent haze over it the block asks for. No part
+ *   moved.
  * - `crystal_throat` stays. It is sealed inside the core — the file's
  *   z-fight nudge is the millimetre between them — and no upward face can
- *   carry it. Residual, for the same reason.
+ *   carry it. Residual.
+ * - The ten running lights stand off the frame by the audit's second
+ *   measure (#894): the file hung them 0.4 to 6.5 m from the blades they
+ *   run beside, the horn tips 1.4 m over their horns. The issue names none
+ *   of them, and a light re-hung on a blade is a shape decision this port
+ *   does not take; they are carried as the file has them and named in the
+ *   follow-up the audit's sweep filed.
  * - `running_light_3_r` and `running_light_3_l`, the pair 11.8 up the
  *   frame, sat at x ±0.9 under the sheath's bulge (its middle facet at 12.4
  *   over a crown at 11.9) and showed 0.06 m² each. Each moves outboard
