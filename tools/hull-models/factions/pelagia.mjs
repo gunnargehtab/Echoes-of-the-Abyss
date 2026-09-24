@@ -227,6 +227,31 @@ export const ink = {
   },
 };
 
+/**
+ * The Veil's facet rule and panel bands (docs/asset-prompts-3d.md Block 2c,
+ * #919; `tools/hull-models/facets.mjs` is the measure). A grown thing adds
+ * the same increment whatever its size — a growth ring is the width it is on
+ * a bud and on a bladder — which is what a chord rule says, so this is the
+ * navy where the rule is most literally the law. The increment is a metre
+ * and a half: the Sower's ribs, bud, stem and seed pods and the Spinner's
+ * sacs are cut between one and two metres a facet; its bladder and pod carry
+ * the same counts on a bigger body, at two to three and a half, which is the
+ * count language the rule replaces. Any count — no jig closes a grown ring
+ * in pairs, and the Bower's and the Blight's stalks are seven-sided on
+ * purpose. Five is the floor, the living number: five petals, five arms, the
+ * Harvester's tendrils. Thirty is the ceiling, 12° between faces — the
+ * softest edge the style still calls crisp, and under three's own 32, which
+ * is the smooth render the header above refuses. No sections: nothing grown
+ * is a prism, and a quill is a thorn cut on the floor.
+ *
+ * Panels: a Commune hull is few, large parts — a leaf is one plate, a pod one
+ * orb, a fin one membrane — so its median part from above is bigger than its
+ * facet says, a metre and a half to five. A structure's band is the hull's at
+ * the chart's ratio of densities, 4 to 1.5 px/m, rounded to the half metre.
+ */
+export const facets = { chordM: 1.5, min: 5, max: 30, step: 1, sections: [] };
+export const panels = { hull: [1.5, 5], structure: [4, 13.5] };
+
 /** A grown orb: few facets, and squashed by the caller — never round in section. */
 const orb = (w = 12, h = 6) => new THREE.SphereGeometry(1, w, h);
 
