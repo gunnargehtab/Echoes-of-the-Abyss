@@ -100,6 +100,7 @@ import {
   eulerXYZ,
   zLong,
   xLong,
+  seat,
 } from '../kit.mjs';
 
 /**
@@ -497,12 +498,29 @@ export function dorsalSpines(root, black, { spines, r = 0.7, rake = -0.3, facets
  * the rank's `yaw` — for a mark laid on a slope rather than a crown, as
  * `rimPhotophores` lays the Thurible's on its shield's flank (#785). A
  * spot without one lies flat, as every rank before it did.
+ *
+ * `rest` names the parts the marks lie on — the Dredge's plates and
+ * ridges — and with it each spot's height is a seed rather than a station:
+ * the mark is dropped onto whichever of those parts is on top under its
+ * (x, z), its bottom face on the facet and tilted with it (kit.mjs `seat`,
+ * `drop`), so a mark whose file put it a metre and a half over its plate
+ * comes down onto the plate (#894). A spot's own Euler is then the facet's.
+ * Without `rest` the marks lie where the spots say, as every rank before
+ * the Dredge's still does.
  */
-export function photophores(root, crimson, { spots, size = 1.1, h = 0.4, depth, yaw = 0 }) {
+export function photophores(root, crimson, { spots, size = 1.1, h = 0.4, depth, yaw = 0, rest }) {
   refuseMirror('photophore', spots);
-  spots.forEach(([name, x, y, z, rot]) =>
-    add(root, name, box(size, h, depth ?? size), crimson, [x, y, z], rot ?? [0, yaw, 0])
-  );
+  spots.forEach(([name, x, y, z, rot]) => {
+    const on = rest && seat(root, rest, [x, y, z], { stand: h / 2, drop: true });
+    add(
+      root,
+      name,
+      box(size, h, depth ?? size),
+      crimson,
+      on ? on.at : [x, y, z],
+      on ? on.rot : (rot ?? [0, yaw, 0])
+    );
+  });
 }
 
 /**
@@ -513,6 +531,21 @@ export function photophores(root, crimson, { spots, size = 1.1, h = 0.4, depth, 
  * Starboard carries `starboard.count` on every plate; port `port.count` on
  * every `port.every`-th plate only. Regimented, and never symmetric.
  *
+ * The station is where a lamp is *sought*, not where it is put. The plate
+ * is a low-facet orb, and `y` of its height at `z` of its beam is on its
+ * ideal ellipsoid only at one station along it — the approved file laid
+ * every lamp at those fractions and eighteen of the twenty-one stood 0.45
+ * to 1.67 m above their plates, or inside them, since the shell falls
+ * away from the ellipsoid toward each plate's ends (#894, from #890's
+ * review). So each lamp is dropped onto the shell at its station: the
+ * facet straight under it, of whichever plate or ridge is on top there
+ * (`first` numbers them as `tergites` does), the lamp's bottom face laid
+ * on that facet and tilted with it, half its height proud (kit.mjs
+ * `seat`, `drop`). The rank still runs the plate's edge at the file's
+ * stations and beams, and every lamp in it rests on the shell — the
+ * first of plate 4's starboard rank on plate 3, which stands over that
+ * station.
+ *
  * Plates overlap, and the plate ahead carries a raised ridge over its aft
  * end that can stand over the last lamp of the rank behind it — three of
  * the Dredge's twenty-one sat so, and a top-down map never saw them.
@@ -521,19 +554,12 @@ export function photophores(root, crimson, { spots, size = 1.1, h = 0.4, depth, 
  * rides on that ridge's crown instead, at the lamp's own beam, so the row
  * still runs the plate's edge and every lamp in it faces up
  * (docs/models-plan.md §3.2 rule 5, #890). The test is the ridge's own
- * ellipsoid at the lamp's station; the lamp keeps its name and its size.
- * Without `ridge` the rank is laid as the file laid it, lamps under ridges
+ * ellipsoid at the lamp's station; the lamp keeps its name and its size,
+ * and is seated on `tergite_ridge_{i+1}` the same way — on the facet it
+ * stands on, since the ridge is a low-facet orb too and a lamp set on its
+ * ideal surface floats half a metre over the chord (#890). Without `ridge`
+ * the rank is laid on the plates as the file laid it, lamps under ridges
  * and all.
- *
- * A lamp that rides seats on the ridge's *facet*, not its ideal surface:
- * the ridge is a low-facet orb, and at the lamp's beam — which falls
- * between two of its ten meridians, on the crown line where cos φ = 0 —
- * the mesh is the chord between them, sin 72° of the ellipse in the
- * athwart direction, and straight between rings. On the Dredge's widest
- * plate that chord runs half a metre under the ellipsoid where a lamp
- * would sit on it, so a lamp set on the ideal surface floats. The lamp is
- * laid on the chord it stands on, rolled to that chord's slope, half its
- * height proud of it.
  */
 export function plateEdgePhotophores(root, crimson, opts) {
   const {
@@ -544,50 +570,34 @@ export function plateEdgePhotophores(root, crimson, opts) {
     z = 0.66,
     size = 1.4,
     ridge,
+    first = 0,
   } = opts;
   const h = 0.4;
   const ahead = ridge && { ...TERGITE_RIDGE, ...ridge };
-  // The crown line of a (w, n) orb between its meridians: ring j stands at
-  // polar angle jπ/n, its chord at cos(π/w) of the ring's radius; and the
-  // facet between rings j and j+1 is straight in (y, z). Returns the mesh
-  // height and slope dy/dz on the crown line at |z|.
-  const facetAt = (b, c, zAbs) => {
-    const [w, n] = ahead.facets;
-    const chord = Math.cos(Math.PI / w);
-    for (let j = 0; j < n; j++) {
-      const [t0, t1] = [(j * Math.PI) / n, ((j + 1) * Math.PI) / n];
-      const [z0, z1] = [chord * c * Math.sin(t0), chord * c * Math.sin(t1)];
-      if (zAbs > z1) continue;
-      const [y0, y1] = [b * Math.cos(t0), b * Math.cos(t1)];
-      const slope = (y1 - y0) / (z1 - z0);
-      return { y: y0 + slope * (zAbs - z0), slope };
-    }
-    return null;
-  };
-  segments.forEach(([x, sx, sy, sz], i) => {
+  // The carapace as a whole: plates overlap, and at a station where the
+  // plate behind stands over this one's aft end the lamp rests on the one
+  // that is on top, still at its own station.
+  const shell = segments.flatMap((_, k) => [
+    `tergite_${first + k}`,
+    ...(ahead ? [`tergite_ridge_${first + k}`] : []),
+  ]);
+  segments.forEach(([x, sx, sy, sz], k) => {
+    const i = first + k;
     const rank = (side, sgn, { count, start, pitch }) => {
       for (let j = 0; j < count; j++) {
-        let at = [x + (start + pitch * j) * sx, y * sy, sgn * z * sz];
-        let rot = [0, 0, 0];
-        if (ahead && i + 1 < segments.length) {
-          const [nx, nsx, nsy, nsz] = segments[i + 1];
+        let seed = [x + (start + pitch * j) * sx, y * sy, sgn * z * sz];
+        let on = shell;
+        if (ahead && k + 1 < segments.length) {
+          const [nx, nsx, nsy, nsz] = segments[k + 1];
           const cx = nx + ahead.at * nsx;
           const [a, b, c] = [ahead.size[0] * nsx, ahead.size[1] * nsy, ahead.size[2] * nsz];
-          const u = ((at[0] - cx) / a) ** 2 + (at[2] / c) ** 2;
-          const facet = u < 1 && facetAt(b, c, Math.abs(at[2]));
-          if (facet && ahead.lift + b * Math.sqrt(1 - u) > at[1] - h / 2) {
-            // Outboard the facet falls away (slope < 0 read outboard), so
-            // its normal leans outboard: a roll of atan(-slope) about the
-            // hull's axis, signed by the side.
-            const roll = sgn * Math.atan(-facet.slope);
-            at = [
-              cx,
-              ahead.lift + facet.y + (h / 2) * Math.cos(roll),
-              at[2] + (h / 2) * Math.sin(roll),
-            ];
-            rot = [roll, 0, 0];
+          const u = ((seed[0] - cx) / a) ** 2 + (seed[2] / c) ** 2;
+          if (u < 1 && ahead.lift + b * Math.sqrt(1 - u) > seed[1] - h / 2) {
+            seed = [cx, seed[1], seed[2]];
+            on = `tergite_ridge_${i + 1}`;
           }
         }
+        const { at, rot } = seat(root, on, seed, { stand: h / 2, drop: true });
         add(root, `photophore_${side}_${i}${j}`, box(size, h, size), crimson, at, rot);
       }
     };
@@ -2490,10 +2500,21 @@ export function photophoreDomes(root, light, opts) {
     tolerance
   );
   const dome = new THREE.SphereGeometry(r, ...facets);
+  // A placement carrying `on` is a seed: the bud is seated on the nearest
+  // of the parts it names, half its radius into the shell, where the file
+  // left it standing off (kit.mjs `seat`, #894). Without it the placement
+  // is the file's own.
+  const rested = (radius, placement) =>
+    placement.on
+      ? {
+          ...placement,
+          at: seat(root, placement.on, placement.at, { stand: radius, sink: radius / 2 }).at,
+        }
+      : placement;
   domes.forEach((d) =>
     d.length === 3
-      ? put(root, d[0], new THREE.SphereGeometry(d[1], ...facets), light, d[2])
-      : put(root, d[0], dome, light, d[1])
+      ? put(root, d[0], new THREE.SphereGeometry(d[1], ...facets), light, rested(d[1], d[2]))
+      : put(root, d[0], dome, light, rested(r, d[1]))
   );
 }
 

@@ -47,8 +47,12 @@
  * 130 m along +X, centred on its length. `DRAWN` is the export's length as
  * intake measures it — three's `Box3` over the parts' own boxes — which
  * the raked tail flukes' boxes overhang astern: tip to tip the vertices
- * span 7.4193 units, the bow light to the upper fluke's trailing tip, and
- * the flukes' boxes make the measure 7.5452, 1.7 % more. `DATUM` is 0.
+ * span 7.2881 units, the nose to the upper fluke's trailing tip, and the
+ * flukes' boxes make the measure 7.4140, 1.7 % more. Until #894 the bow
+ * light hung 2.34 m ahead of the nose and was the forward extreme, at
+ * 7.5452; seated on the nose it is not, so the hull itself fills its
+ * 130 m and is 1.8 % larger on the chart than the approved bake drew it.
+ * `DATUM` is 0.
  *
  * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
  * seven lamps as showing under a cell from above. The block's one band
@@ -91,13 +95,26 @@
  *   the same bay as the starboard one, 0.86 m from mirroring it; review
  *   notes, rounds 1 and 2.)
  *
- * Nothing here reaches the length or the beam.
+ * LAMPS THAT FLOAT (#894, from #890's review). Four of the seven buds
+ * touched nothing: `bow_light` hung 2.34 m ahead of the nose, `crest_light`
+ * 0.95 m over the second crest, `tail_light` 1.04 m from the upper fluke in
+ * the fork of the tail, `flank_light_port_aft` 0.22 m off the flank. Each
+ * grows from what it hung beside now, seated on it from its own station
+ * and sunk half its radius (`lightBuds` `on`, kit.mjs `seat`): the bow
+ * and the after port bud on the skin, the crest bud straddling the second
+ * crest's edge, and the tail bud on the peduncle's aft crown a hair to
+ * starboard of the fluke's root — the Corvette's answer for its tail
+ * light (#890) — seeded over the crown at (−0.06, 0.5, −3.4) rather than
+ * behind the cap, which is why `diff.mjs` lists it at 5.8 m and the other
+ * three at their gaps. Same names, radii and material; the audit names no
+ * lamp on this hull as hidden or floating. The bow light was the hull's
+ * forward extreme, so its move changes the scale (THE SCALE above).
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 130;
-const DRAWN = 7.5452;
+const DRAWN = 7.414;
 const DATUM = 0;
 
 // The navy's ink (#888). The export carried the r184 pass's glossier
@@ -618,15 +635,18 @@ pelagia.membranes(root, membrane, {
 // "Lit ports": a bud at the bow, two down each flank at different heights
 // and stations — three at the beam's edge, the forward starboard one up on
 // the shoulder (#890; see the header) — one on the crest, one at the tail.
+// Four of them grow from what the file hung them beside (`on`, #894; the
+// header): the bow and the after port bud from the skin, the crest bud
+// from the second crest, the tail bud from the peduncle's aft crown.
 pelagia.lightBuds(root, light, {
   buds: [
-    ['bow_light', 0.06, drawn([0, 0.35, 2.95])],
+    ['bow_light', 0.06, { ...drawn([0, 0.35, 2.95]), on: 'hull' }],
     ['flank_light_port_fwd', 0.045, drawn([1.05, 0.06, 1.08])],
-    ['flank_light_port_aft', 0.045, drawn([1, 0.2, -0.9])],
+    ['flank_light_port_aft', 0.045, { ...drawn([1, 0.2, -0.9]), on: 'hull' }],
     ['flank_light_starboard_fwd', 0.045, drawn([-0.82, 0.6, 0.5])],
     ['flank_light_starboard_aft', 0.045, drawn([-0.9, 0.15, -1.2])],
-    ['crest_light', 0.045, drawn([0.03, 0.95, -0.35])],
-    ['tail_light', 0.04, drawn([0, 0.12, -3.75])],
+    ['crest_light', 0.045, { ...drawn([0.03, 0.95, -0.35]), on: 'dorsal_crest_2' }],
+    ['tail_light', 0.04, { ...drawn([-0.06, 0.5, -3.4]), on: 'tail_peduncle' }],
   ],
 });
 

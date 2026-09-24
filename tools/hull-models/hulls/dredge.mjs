@@ -39,9 +39,23 @@
  *   plate edge" — so #890 keeps all three lit and moves only them, by a rule
  *   `plateEdgePhotophores` now holds rather than by hand: a lamp whose station
  *   falls under the ridge ahead rides on that ridge's crown at its own beam
- *   (docs/models-plan.md §3.2 rule 5). The other eighteen do not move, and the
- *   three keep their names, size and material. The gullet is the other lamp
- *   moved, and it is declared below.
+ *   (docs/models-plan.md §3.2 rule 5). The three keep their names, size and
+ *   material. The gullet is the other lamp moved, and it is declared below.
+ *
+ *   The other eighteen did not move in #890, and its review found them in
+ *   the water: the file laid every one at 0.72 of its plate's height and
+ *   0.66 of its beam, which is on the plate's ellipsoid at one station
+ *   only, and the eighteen stood 0.45 to 1.67 m above their plates — or
+ *   inside them — since a low-facet orb falls away from its ellipsoid
+ *   toward its ends (#894). So does the rule now rest every lamp on the
+ *   shell: each is dropped at its own station onto whichever plate or
+ *   ridge is on top there, its bottom face on the facet and tilted with
+ *   it (kit.mjs `seat`), and the three ridge riders come out where #890
+ *   put them by hand. Five of the dorsal marks were laid the same way,
+ *   `photophore_dorsal_2` and `_4` 1.2 and 1.7 m over their plates
+ *   (`photophores` `rest`). Twenty-three lamps move, none by more than
+ *   two metres, none across the keel; `diff.mjs` lists them and nothing
+ *   else, and the audit names no lamp on this hull as hidden or floating.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -207,8 +221,9 @@ directorate.plateEdgePhotophores(root, crimson, {
 });
 
 // Five marks down the spine, one a plate, side alternating with the tergite
-// spines they sit between. `photophores` refuses a mirrored pair, so this rank
-// cannot quietly become symmetrical.
+// spines they sit between, each seated on the plate or ridge under its
+// station (#894; the header). `photophores` refuses a mirrored pair, so
+// this rank cannot quietly become symmetrical.
 directorate.photophores(root, crimson, {
   spots: [
     ['photophore_dorsal_0', -34, 9.5, -8],
@@ -219,6 +234,7 @@ directorate.photophores(root, crimson, {
   ],
   size: 1.2,
   depth: 2.4,
+  rest: SEGMENTS.flatMap((_, i) => [`tergite_${i}`, `tergite_ridge_${i}`]),
 });
 
 await exportGlb(root, 'dredge-directorate.glb');

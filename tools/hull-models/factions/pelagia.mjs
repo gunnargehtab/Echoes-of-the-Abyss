@@ -65,6 +65,7 @@ import {
   xLong,
   zLong,
   eulerXYZ,
+  seat,
 } from '../kit.mjs';
 
 /**
@@ -1998,9 +1999,22 @@ export function stalk(root, mat, opts) {
  */
 export function lightBuds(root, light, { buds, facets = [8, 6] }) {
   buds.forEach(([name, r, placement]) =>
-    part(root, name, new THREE.SphereGeometry(r, ...facets), light, placement)
+    part(root, name, new THREE.SphereGeometry(r, ...facets), light, rested(root, r, placement))
   );
 }
+
+/**
+ * A bud's placement with `on` honoured: a placement carrying `on` — the
+ * name or names of the parts the bud grows from — is a seed, and the bud
+ * is seated on the nearest of them, half its radius into the skin, where a
+ * file left it hanging in the water (kit.mjs `seat`, #894: the Cruiser's
+ * bow light 2.34 m ahead of its nose). Without `on` the placement is the
+ * file's own, as every bud before it.
+ */
+const rested = (root, r, placement) =>
+  placement.on
+    ? { ...placement, at: seat(root, placement.on, placement.at, { stand: r, sink: r / 2 }).at }
+    : placement;
 
 /* --------------------------------------------------------------------------
  * The other five shared kinds (#649, off #540 Phase 3): the Corvette, the

@@ -68,6 +68,11 @@
  *   equator, (1.04, −0.23, −0.35) from (0.6, −0.5, −0.7) — the one line
  *   of that lobe the hull's flank does not stand over. It is the hold's
  *   light still, on the hold.
+ * - `brow_light` (#894, from #890's review): the file hung it 1.25 m off
+ *   the brow. It grows from the skin now, seated on it from its own
+ *   station and sunk half its radius (`lightBuds` `on`, kit.mjs `seat`);
+ *   `diff.mjs` lists it at 1.4 m and no other part, and the audit names no
+ *   lamp on this hull as hidden or floating.
  *
  * Nothing here reaches the length or the beam.
  */
@@ -445,7 +450,7 @@ pelagia.membranes(root, membrane, {
 // at the tail (#890; see the header).
 pelagia.lightBuds(root, light, {
   buds: [
-    ['brow_light', 0.05, drawn([0, 0.55, 1.35])],
+    ['brow_light', 0.05, { ...drawn([0, 0.55, 1.35]), on: 'hull' }],
     ['flank_light_port', 0.04, drawn([0.8, 0.53, 0.1])],
     ['flank_light_starboard', 0.04, drawn([-0.75, 0.5, 0.05])],
     ['cargo_light', 0.04, drawn([1.04, -0.23, -0.35])],
