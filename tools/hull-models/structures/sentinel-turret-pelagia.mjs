@@ -36,6 +36,13 @@
  * tools/hull-models/diff.mjs sentinel-turret-pelagia HEAD` lists that part
  * and nothing else.
  *
+ * `nav_mark_2` (#907, from #894's resting measure): the export set the
+ * third bud 1.28 m off the head pod it sits over — the cowl is grown over
+ * the pod's other side, so the pod is what it rests on. It is seated on
+ * the pod from its own station, half its radius in (`lightBuds` `on`,
+ * kit.mjs `seat`), and `diff.mjs` against the branch base lists it beside
+ * nothing else.
+ *
  * THE FRAME is the one every turret here shares, and the one the Light Scouts
  * state for the shared kinds (hulls/light-scout-pelagia.mjs): the export is
  * drawn along Z, 7.73 units long for a 120 m footprint, ground at y = 0; it
@@ -174,7 +181,7 @@ pelagia.lightBuds(root, bio, {
   buds: [
     ['nav_mark_0', 0.08, drawn([2.9, 0.95, 1.1])],
     ['nav_mark_1', 0.08, drawn([-2.3, 1.15, -1.6])],
-    ['nav_mark_2', 0.08, drawn([0.4, 3.55, -1.35])],
+    ['nav_mark_2', 0.08, { ...drawn([0.4, 3.55, -1.35]), on: 'head_pod' }],
   ],
 });
 

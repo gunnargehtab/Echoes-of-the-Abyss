@@ -42,6 +42,9 @@ import {
   pointLight,
   sidedPost,
   strut,
+  seat,
+  zLong,
+  xLong,
 } from '../kit.mjs';
 
 /**
@@ -599,14 +602,20 @@ export function floodDecks(root, flood, { patches }) {
  * its lamps before port's (`flood_strip_s · flood_lamp_s0..7 · …`).
  */
 export function floodStrips(root, { flood, lampM }, { strip, lamps }) {
+  // `lamps.on` names, by index, a housing dropped onto the part named at
+  // its station rather than laid at the rank's height (kit.mjs `seat`):
+  // the Bulwark's last housing a side stands past its strip's end, 0.23 m
+  // over the armour tier the strip lies on, where the other seven sit into
+  // the strip (#907). The rank's numbers are the file's; only the housing
+  // named comes down.
+  const on = lamps.on ?? {};
   bothSides((side, sgn) => {
     add(root, `flood_strip_${side}`, box(...strip.size), flood, [strip.x, strip.y, sgn * strip.z]);
-    for (let i = 0; i < lamps.count; i++)
-      add(root, `flood_lamp_${side}${i}`, box(...lamps.size), lampM, [
-        lamps.x + i * lamps.pitch,
-        lamps.y,
-        sgn * lamps.z,
-      ]);
+    for (let i = 0; i < lamps.count; i++) {
+      const at = [lamps.x + i * lamps.pitch, lamps.y, sgn * lamps.z];
+      const rest = on[i] && seat(root, on[i], at, { stand: lamps.size[1] / 2, drop: true });
+      add(root, `flood_lamp_${side}${i}`, box(...lamps.size), lampM, rest ? rest.at : at, rest ? rest.rot : [0, 0, 0]);
+    }
   });
 }
 
@@ -1514,9 +1523,17 @@ export function gasRacks(root, { grey, rust, amber, lampM }, opts) {
     ])
       add(root, `rack_post_${tag}_${end}`, box(...posts.size), grey, [x, posts.y, z]);
     add(root, `rack_rail_${tag}`, box(...rail.size), grey, [rail.x, rail.y, z]);
-    lamps.x.forEach((x, i) =>
-      add(root, `rack_lamp_${tag}${i}`, box(...lamps.size), lampM, [x, lamps.y, z])
-    );
+    // "The lamp housings on the rack rails": each housing is dropped onto the
+    // rail at its station, its underside on the rail's top (kit.mjs `seat`).
+    // The Furnace's numbers stood all six 0.36 m over their rails (#907);
+    // `lamps.y` is the station's height for the record, and the rail decides.
+    lamps.x.forEach((x, i) => {
+      const { at, rot } = seat(root, `rack_rail_${tag}`, [x, lamps.y, z], {
+        stand: lamps.size[1] / 2,
+        drop: true,
+      });
+      add(root, `rack_lamp_${tag}${i}`, box(...lamps.size), lampM, at, rot);
+    });
   }
 }
 
@@ -2149,7 +2166,15 @@ export function screwBlades(root, mat, opts) {
  */
 export function domes(root, light, { r, facets = [8, 6], domes: list }) {
   const dome = new THREE.SphereGeometry(r, ...facets);
-  list.forEach(([name, placement]) => part(root, name, dome, light, placement));
+  // A placement carrying `on` is a seed: the dome grows from the nearest of
+  // the parts it names, half its radius in (kit.mjs `seat`), where the file
+  // hung it off — the Klaxon scout's mast dome, 0.27 m over the sensor head
+  // and its brow (#907). Without it the placement is the file's own.
+  const rested = (placement) =>
+    placement.on
+      ? { ...placement, at: seat(root, placement.on, placement.at, { stand: r, sink: r / 2 }).at }
+      : placement;
+  list.forEach(([name, placement]) => part(root, name, dome, light, rested(placement)));
 }
 
 /* --------------------------------------------------------------------------
@@ -2613,19 +2638,29 @@ export function hullLights(root, lampM, { running, strip, beacon }) {
   // for the one the Submersible remounts over a repair patch (#890); the
   // rank itself is unmoved and the Barge passes none.
   const moved = running.at ?? {};
+  // `running.on` names, the same way, a light seated on the skin it was hung
+  // beside: the box is laid on the nearest of the parts named, half its
+  // height proud and tilted with the facet (kit.mjs `seat`) — the
+  // Submersible's fourth light a side, 0.5 and 0.24 m off the pressure hull
+  // where the other six sit into it (#907).
+  const rested = running.on ?? {};
   for (const [side, sgn] of [
     ['port', -1],
     ['stb', 1],
   ])
-    running.stations.forEach((x, i) =>
+    running.stations.forEach((x, i) => {
+      const tag = `${side}-${i + 1}`;
+      const at = moved[tag] ?? [x, running.y, sgn * running.z];
+      const rest = rested[tag] && seat(root, rested[tag], at, { stand: running.size[1] / 2 });
       add(
         root,
-        `running-light-${side}-${i + 1}`,
+        `running-light-${tag}`,
         box(...running.size),
         lampM,
-        moved[`${side}-${i + 1}`] ?? [x, running.y, sgn * running.z]
-      )
-    );
+        rest ? rest.at : at,
+        rest ? rest.rot : [0, 0, 0]
+      );
+    });
   // The Baffle Barge's six running lights are this rank in this order and
   // nothing else of it (#652), so the strip and the beacon are optional.
   if (strip) add(root, 'tower-light-strip', box(...strip.size), lampM, strip.at);
@@ -2729,6 +2764,27 @@ export function spineGun(root, { grey, black }, { mount, gun }) {
  */
 export const alongZ = (root, name, geo, mat, t, e, s) => part(root, name, geo, mat, drawn(t, e, s));
 export const inFrame = (root, name, geo, mat, t, e, s) => add(root, name, geo, mat, t, e, s);
+// Each placer knows its frame, for a lamp seated rather than placed: `kit`
+// turns the file's translation into the kit's, which is the frame `seat`
+// works in, and `frame.place` lays the seated placement down through the
+// same `part` or `add` the placer itself uses (kit.mjs `zLong`, `xLong`).
+alongZ.kit = (t) => drawn(t).at;
+alongZ.frame = zLong;
+inFrame.kit = (t) => t;
+inFrame.frame = xLong;
+
+/**
+ * A lamp seated through a placer: the file's station `t` becomes the seed,
+ * `seat` finds the surface among `on`, and the part is laid down in the
+ * placer's frame with the placement it returns (#907). `opts` are `seat`'s
+ * — `drop` for a fixture dropped onto what is under its station, nearest
+ * otherwise. What every structure lamp below that was hung a few
+ * centimetres off its fitting goes through.
+ */
+function putSeated(root, put, name, geo, mat, on, t, opts) {
+  const { at, rot } = seat(root, on, put.kit(t), opts);
+  return put.frame.place(root, name, geo, mat, { at, rot });
+}
 
 /** The lamp these three structures hang everywhere: a six-by-four orb, as the turret's `base_lamp` is. */
 const lampOrb = (r) => new THREE.SphereGeometry(r, 6, 4);
@@ -3121,9 +3177,15 @@ export function floodMast(root, put, { black, lampM }, opts) {
 }
 
 /** A row of work lamps along a line: `count` orbs of `r` from `from` at `pitch` along x (`apron_lamp_1..5`). */
-export function lampRow(root, put, lampM, { name, r, from, pitch, count, y, z }) {
-  for (let i = 0; i < count; i++)
-    put(root, `${name}_${i + 1}`, lampOrb(r), lampM, [from + pitch * i, y, z]);
+export function lampRow(root, put, lampM, { name, r, from, pitch, count, y, z, on = null }) {
+  // With `on`, each orb is dropped onto the part named at its station, half
+  // its radius in (`putSeated`): the Refinery's five apron lamps stood 0.03 of a
+  // unit — 1.1 m at its scale — over the apron they light (#907).
+  for (let i = 0; i < count; i++) {
+    const t = [from + pitch * i, y, z];
+    if (on) putSeated(root, put, `${name}_${i + 1}`, lampOrb(r), lampM, on, t, { stand: r, sink: r / 2, drop: true });
+    else put(root, `${name}_${i + 1}`, lampOrb(r), lampM, t);
+  }
 }
 
 /* -- The Bastion: "a large pressure dome with visible reinforcement ribs,
@@ -3187,14 +3249,19 @@ export function ribbedDome(root, put, { black, grey, rust, lampM }, opts) {
  * 0) and the port faces square out along its radial, as ports 3 and 8 do;
  * the other seven face 0.62 to 1.27 off theirs.
  */
-export function portholes(root, put, glow, { count, phase, r, y, disc, bearings = {} }) {
+export function portholes(root, put, glow, { count, phase, r, y, disc, bearings = {}, on = {} }) {
+  // `on` seats a port by its number — `{ 5: 'dome_skirt' }` — on the nearest
+  // face of the part named, the disc laid flat on it (`putSeated`): the file's
+  // Euler leaves five of the Bastion's ten standing off the skirt, 0.55 to
+  // 6.87 m (#907), the other five touching it edge-on where their turn
+  // happens to meet it. A port not named keeps the file's turn.
   for (let i = 0; i < count; i++) {
     const a = bearings[i + 1] ?? phase + (i * 2 * Math.PI) / count;
-    put(root, `porthole_${i + 1}`, cyl(disc.r, disc.r, disc.h, 6), glow, polar(a, r, y), [
-      Math.PI / 2,
-      0,
-      Math.PI / 2 - a,
-    ]);
+    const geo = cyl(disc.r, disc.r, disc.h, 6);
+    if (on[i + 1])
+      putSeated(root, put, `porthole_${i + 1}`, geo, glow, on[i + 1], polar(a, r, y), { stand: disc.h / 2 });
+    else
+      put(root, `porthole_${i + 1}`, geo, glow, polar(a, r, y), [Math.PI / 2, 0, Math.PI / 2 - a]);
   }
 }
 
@@ -3261,7 +3328,11 @@ export function jibCrane(root, put, { grey, rust, black, lampM }, opts) {
   put(root, 'crane_counter', box(...counter.size), rust, counter.at);
   put(root, 'crane_cable', cyl(cable.r, cable.r, cable.h, 4), black, cable.at);
   put(root, 'crane_hook', box(...hook.size), rust, hook.at);
-  put(root, 'crane_lamp', lampOrb(lamp.r), lampM, lamp.at);
+  // On the jib's head with `lamp.on`: dropped onto the jib at the file's
+  // station, half in (`putSeated`) — the file hung it 2.3 m under the jib's
+  // end (#907).
+  if (lamp.on) putSeated(root, put, 'crane_lamp', lampOrb(lamp.r), lampM, lamp.on, lamp.at, { stand: lamp.r, sink: lamp.r / 2, drop: true });
+  else put(root, 'crane_lamp', lampOrb(lamp.r), lampM, lamp.at);
 }
 
 /**
@@ -3438,11 +3509,13 @@ export function emitterMast(root, put, { grey, brown, black, foam, lampM }, opts
       [0, -a, 0]
     );
   }
-  put(root, 'mast-beacon', cyl(beacon.radii[0], beacon.radii[1], beacon.h, 8), lampM, [
-    x,
-    beacon.y,
-    0,
-  ]);
+  // The beacon stands on the drum with `beacon.on`: dropped onto it at the
+  // mast's station, its foot on the drum's top (`putSeated`) — the file stood
+  // it 0.64 m over (#907).
+  const beaconGeo = cyl(beacon.radii[0], beacon.radii[1], beacon.h, 8);
+  if (beacon.on)
+    putSeated(root, put, 'mast-beacon', beaconGeo, lampM, beacon.on, [x, beacon.y, 0], { stand: beacon.h / 2, drop: true });
+  else put(root, 'mast-beacon', beaconGeo, lampM, [x, beacon.y, 0]);
 }
 
 /**
@@ -3533,9 +3606,15 @@ export function moorings(root, put, { brown, black }, { chain, block }) {
  * six running lights and the beacon, the "dim amber running lights" of a
  * barge that idles at SIG 30.
  */
-export function cornerDomes(root, put, lampM, { x, z, y, radii, h }) {
-  for (const [tag, sx, sz] of CORNERS)
-    put(root, `corner-dome-${tag}`, cyl(radii[0], radii[1], h, 8), lampM, [sx * x, y, sz * z]);
+export function cornerDomes(root, put, lampM, { x, z, y, radii, h, on = null }) {
+  // `on` is the cap's stem — `'pontoon-cap'` — and each dome is dropped onto
+  // its own corner's cap, its foot on the cap's top (`putSeated`): the file
+  // stood all four 0.21 m over (#907).
+  for (const [tag, sx, sz] of CORNERS) {
+    const geo = cyl(radii[0], radii[1], h, 8);
+    if (on) putSeated(root, put, `corner-dome-${tag}`, geo, lampM, `${on}-${tag}`, [sx * x, y, sz * z], { stand: h / 2, drop: true });
+    else put(root, `corner-dome-${tag}`, geo, lampM, [sx * x, y, sz * z]);
+  }
 }
 
 /* --------------------------------------------------------------------------

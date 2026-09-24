@@ -33,7 +33,12 @@
  * - **The light is where it can be counted.** SIG 70 goes on three flat
  *   flood patches on the tiers and a lit strip with eight lamps along each
  *   deck edge, all facing up, and the citadel's fourteen ports show their
- *   top edges. LIGHT — the block's resting clause names all of it since
+ *   top edges. The last housing of each deck-edge rank stood past its
+ *   strip's end, 0.23 m over `armour_tier_1` (#894's resting measure);
+ *   since #907 the two are dropped onto the tier at their stations
+ *   (`floodStrips` `on`, kit.mjs `seat`), the other fourteen sitting into
+ *   their strips as the file has them, and `diff.mjs` lists the two.
+ *   LIGHT — the block's resting clause names all of it since
  *   #893 (docs/asset-prompts-3d.md, UNIT — Bulwark; docs/models-plan.md
  *   §3.2 rule 1): the flood patches and the deck-edge floods, the citadel's
  *   ten flank ports and four bridge ports, the six vents across the
@@ -160,7 +165,7 @@ bathyarch.floodDecks(root, flood, {
 });
 bathyarch.floodStrips(root, { flood, lampM }, {
   strip: { x: 0, y: 9.2, z: 24.5, size: [96, 0.3, 3] },
-  lamps: { count: 8, x: -48, pitch: 14, y: 10, z: 26.5, size: [2, 1.5, 2] },
+  lamps: { count: 8, x: -48, pitch: 14, y: 10, z: 26.5, size: [2, 1.5, 2], on: { 7: 'armour_tier_1' } },
 });
 
 // Ballast, keel skid and pipe run a side, then the two risers off the pipes.

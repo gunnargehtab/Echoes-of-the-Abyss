@@ -58,6 +58,11 @@
  *   its top face showing past them — "visible machinery light", the
  *   resting clause's (docs/models-plan.md §3.2 rule 5). That is the one
  *   departure from the file, and it is what brings the bake under the cap.
+ *   The five apron lamps are the other (#907): the file stood each 0.03 of
+ *   a unit — 1.1 m at this scale — over the apron, which #894's resting
+ *   measure found; each is dropped onto the apron at its station now,
+ *   half its radius in (`lampRow` `on`, kit.mjs `seat`). `diff.mjs` lists
+ *   the five and nothing else.
  *
  * THE FRAME: an X-long export (7.35 along x, the skirt's edge to the
  * ballast tank's end, against 6.9 across z), so nothing is yawed: every
@@ -243,6 +248,7 @@ bathyarch.lampRow(root, put, lampM, {
   count: 5,
   y: 0.45,
   z: 3.82,
+  on: 'apron',
 });
 
 const size = fitFootprint(root, L);

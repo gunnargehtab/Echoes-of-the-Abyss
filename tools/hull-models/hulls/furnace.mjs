@@ -86,7 +86,11 @@
  *   Six of them are the chart's light (§3.2 rule 5), as the Broadside's
  *   hoops are its: the bridge ports and the stern vents the block names
  *   are vertical faces, and a lit rack is what a gas plant looks like
- *   worked at night.
+ *   worked at night. Each housing is dropped onto its rail (`gasRacks`,
+ *   kit.mjs `seat`): the first cut's numbers stood all six 0.36 m over
+ *   the rails, which #894's resting measure found (#907), and the rail
+ *   decides their height now. `diff.mjs` lists the six, 0.1 m each, and
+ *   nothing else.
  * - **The ladders are lattice at one height, through the frame.** "One on
  *   the keel and one either side" is read in plan: the keel ladder is the
  *   centreline's, and all three run out level at y 9.8, 4.2 m over the

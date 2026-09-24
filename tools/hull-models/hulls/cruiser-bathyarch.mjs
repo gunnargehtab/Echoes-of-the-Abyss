@@ -48,6 +48,10 @@
  * - The dish is pitched 2.2 rad on its boom, so its face looks forward and
  *   down. Both hubs taper forward, narrow end to the bow; each screw's three
  *   blades are three boxes in the file, not one shared.
+ * - `mast_lamp` (#907, from #894's resting measure): the file hung the lamp
+ *   0.37 m over the dish's rim. It is dropped onto the dish at its own
+ *   station, its underside on the dish (kit.mjs `seat`, `drop`);
+ *   `diff.mjs` lists it and nothing else.
  * - Of the lamps, the two tower floodlights, the stern line and the mast
  *   lamp faced up in the export; it wrapped the bridge band round the
  *   citadel's waist 0.02 proud of its walls, stood the four engine vents
@@ -75,7 +79,7 @@
  * on its length, the axis at y = 0. Every number below is the export's,
  * through kit.mjs `drawn`.
  */
-import { THREE, box, part, drawn, metreTrue, exportGlb } from '../kit.mjs';
+import { THREE, box, part, drawn, seat, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
 
 const L = 130;
@@ -365,7 +369,12 @@ bathyarch.flankRivets(root, black, {
 bar('stencil_bow_p', amber, [0.1, 1.4, 3.4], [6.55, 5.6, 34]);
 bar('stencil_bow_s', amber, [0.1, 1.4, 3.4], [-6.55, 5.6, 34]);
 bar('stencil_stern', amber, [3.4, 1.2, 0.1], [0, 4.4, -49.05]);
-bar('mast_lamp', lamp, [0.6, 0.6, 0.6], [0, 30.2, 9.6]);
+// The mast lamp rests on the dish under its station (kit.mjs `seat`,
+// `drop`): the file hung it 0.37 m over the dish's rim (#907).
+{
+  const { at, rot } = seat(root, 'dish', drawn([0, 30.2, 9.6]).at, { stand: 0.3, drop: true });
+  part(root, 'mast_lamp', box(0.6, 0.6, 0.6), lamp, { at, rot });
+}
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
 await exportGlb(root, 'cruiser-bathyarch.glb');
