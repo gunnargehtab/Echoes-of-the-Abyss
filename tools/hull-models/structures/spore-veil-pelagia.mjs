@@ -81,36 +81,42 @@
  *   in `bio_vein_unlit` — and lifted out of the lobes onto the bed's
  *   skin, "faint vein rings round the lobes": each segment at the file's
  *   own plan station, laid on the skin of the lobes and growth rings
- *   beneath it as a plank on rough ground — pitched and rolled to the
- *   plane its skin readings stray least from, the high spots 0.01 under
- *   its centre line, its bottom nowhere clear of the skin by more than
- *   0.01 (`veinRing` `on`, `sink`). The file laid each ring flat at one
- *   height on its lobe's waist: the core ring at 0.42, where the crown's
- *   skin is 0.62–0.68, so it rides the crown now, rolled 23–25° to the
- *   crown's fall; core-2 at 0.18, where the bed under its 1.75 radius is
- *   the west lobe's crown at 0.59–0.46, then the cleft between the west
- *   and north lobes, where the core's shoulder shows and the segments
- *   follow it down to 0.33 and 0.24 rolled 59° and 54° onto its flank,
- *   the fifth across `growth-ring-3`'s tube where that pokes out, then
- *   the north lobe's crown at 0.38–0.44; the west ring at 0.3 and the
- *   east at 0.32, each of whose first two segments come down the core's
- *   flank at 0.60 and 0.47 (0.58 and 0.47), pitched 21–26°, onto their
- *   own lobe's crown at 0.38–0.43 (0.41–0.45). Twenty-seven of the
- *   thirty-one are seated: bottom in the skin, top 0.013 proud. Four
- *   cross from one lobe to another, and they are where the plank rule's
- *   second clause acts: `vein-ring-core-2-seg-4` (off the west lobe's
- *   edge onto the core's shoulder, whose hump and twist stray 0.09 from
- *   any one plane) and `-seg-5` (the cleft's floor onto the north lobe,
- *   0.094) sit with their bottom clear by the rule's 0.01 at most and the
- *   skin up through their top by 0.004, and at seg-5's north-lobe corner
- *   0.021 — the section is 0.045 and holds 0.055 of stray, so that much
- *   remains; `vein-ring-west-seg-2` and `vein-ring-east-seg-2` (each the
- *   core's flank onto its own lobe's crown, 0.06 of stray) sit within
- *   both clauses, bottom clear 0.01 at most and top clear. (The first
- *   cut set each bar by three readings along its centre line and stood
- *   seg-4's end 0.048 off the bed; review, round 1.) Names, count,
- *   section and the 8 % overlap are the file's; nothing here moves the
- *   footprint, since no segment's plan station moved.
+ *   beneath it as a plank on rough ground, by two clauses read under its
+ *   own faces — its mid-plane 0.01 under the skin's high spot, so that
+ *   its top stands 0.0125 proud of it; its bottom nowhere clear of the
+ *   skin by more than 0.01 — in the pose in which the two disagree least
+ *   (`veinRing` `on`, `sink`). The file laid each ring flat at one height
+ *   on its lobe's waist: the core ring at 0.42, where the crown's skin is
+ *   0.62–0.68, so it rides the crown now, rolled 23–25° to the crown's
+ *   fall; core-2 at 0.18, where the bed under its 1.75 radius is the west
+ *   lobe's crown at 0.59–0.46, then the cleft between the west and north
+ *   lobes, where the core's shoulder shows and the segments follow it
+ *   down to 0.34 and 0.26 rolled 55° and 34° onto its flank, the fifth
+ *   across `growth-ring-3`'s tube where that pokes out, then the north
+ *   lobe's crown at 0.38–0.44; the west ring at 0.3 and the east at 0.32,
+ *   each of whose first two segments come down the core's flank at 0.60
+ *   and 0.47 (0.58 and 0.46), pitched 21–28°, onto their own lobe's crown
+ *   at 0.38–0.43 (0.41–0.45). Probed on 81 × 13 and again on 97 × 17 of
+ *   each face, straight down and along the skin's normal: twenty-seven
+ *   of the thirty-one are seated, bottom in the skin and never clear of
+ *   it, top 0.0123–0.0126 proud of the high spot. Four cross from one
+ *   lobe to another, and there the second clause binds, the bottom clear
+ *   by 0.0100–0.0103 (0.0080–0.0095 along the normal) at the tightest
+ *   read: `vein-ring-core-2-seg-5` (the cleft's floor onto the north
+ *   lobe), `vein-ring-west-seg-2` and `vein-ring-east-seg-2` (each the
+ *   core's flank onto its own lobe's crown) sit within both clauses even
+ *   so, their tops 0.0009, 0.0009 and 0.0028 proud at the tightest point;
+ *   `vein-ring-core-2-seg-4` (off the west lobe's edge onto the core's
+ *   shoulder, a hump with a twist that no rigid bar lies flat on) alone
+ *   has skin over its top — 0.0024 (0.06 m) of the core's shoulder at one
+ *   spot, the least any pose of it leaves. (The first cut set each bar by
+ *   three readings along its centre line and stood seg-4's end 0.048 off
+ *   the bed; the second, by the plane 9 × 3 readings strayed least from,
+ *   held the bottom at its readings and let it stand 0.018 clear between
+ *   them, and left 0.021 of the north lobe over seg-5's corner for want
+ *   of the vertical room a rolled section has; review, rounds 1 and 2.)
+ *   Names, count, section and the 8 % overlap are the file's; nothing
+ *   here moves the footprint, since no segment's plan station moved.
  * - `gill-haze-port`, `-stb` (#893): the clause now names the glow in the
  *   haze; as the approved file lights them, unmoved, 0.35 on the
  *   translucent ink.
@@ -126,8 +132,8 @@
  * not make. The second segment shows its outer end past the mound, 4.7
  * m²; and on the port side `vein-ring-core-2-seg-1` and `-seg-2` run
  * half into `gill-mound-port` the same way — 18 and 13 of their 36
- * vertices inside it — showing 6.0 and 8.9 m² past it. The other thirty
- * show 2.0–17.1 m² each, two of them (`west` 1 and 5) shaded by stalk-4's
+ * vertices inside it — showing 5.9 and 8.9 m² past it. The other thirty
+ * show 2.0–16.9 m² each, two of them (`west` 1 and 5) shaded by stalk-4's
  * pod and stalk-6's stem, which lean over the west ring where the file
  * grew them.
  */

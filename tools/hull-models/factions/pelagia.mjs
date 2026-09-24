@@ -1458,23 +1458,66 @@ export function gillOrgan(root, mats, opts) {
 }
 
 /**
- * The bed's skin under a plan point: the highest hit of a ray straight down
- * onto `meshes` as they stand, with their frames brought up to date first
- * (the Directorate's `carapaceRank` seats its studs on a shell the same
- * way). Throws where nothing is under the point, since a vein laid on
- * nothing is a bug in the caller's numbers and not a place.
+ * The bed's skin under a plan point: the height of the highest of the
+ * bed's triangles over it — the barycentric test glb.mjs `topDown`
+ * rasterises a whole model with, run for one point — over `meshes` as they
+ * stand, with their frames brought up to date first. The triangles are
+ * read into world space once and bucketed by their plan boxes, so a read
+ * costs a dozen triangle tests and a bar's pose search (`veinRing`) can
+ * afford a quarter of a million of them; three's Raycaster, which the
+ * first cut read with, costs fifty times that a read — the Directorate's
+ * `carapaceRank` seats four studs with it and can afford to. Throws where
+ * nothing is under the point, since a vein laid on nothing is a bug in
+ * the caller's numbers and not a place.
  */
 function skinReader(meshes) {
   let top = meshes[0];
   while (top.parent) top = top.parent;
   top.updateMatrixWorld(true);
-  const caster = new THREE.Raycaster();
-  const down = new THREE.Vector3(0, -1, 0);
+  const cell = 0.05;
+  const key = (x, z) => Math.floor(x / cell) * 65536 + Math.floor(z / cell);
+  const buckets = new Map();
+  for (const mesh of meshes) {
+    const { position } = mesh.geometry.attributes;
+    const { index } = mesh.geometry;
+    const n = index ? index.count : position.count;
+    for (let k = 0; k < n; k += 3) {
+      const tri = [0, 1, 2].map((j) =>
+        new THREE.Vector3()
+          .fromBufferAttribute(position, index ? index.getX(k + j) : k + j)
+          .applyMatrix4(mesh.matrixWorld)
+      );
+      const xs = tri.map((p) => p.x);
+      const zs = tri.map((p) => p.z);
+      for (let i = Math.floor(Math.min(...xs) / cell); i <= Math.floor(Math.max(...xs) / cell); i++)
+        for (
+          let j = Math.floor(Math.min(...zs) / cell);
+          j <= Math.floor(Math.max(...zs) / cell);
+          j++
+        ) {
+          const b = i * 65536 + j;
+          if (!buckets.has(b)) buckets.set(b, []);
+          buckets.get(b).push(tri);
+        }
+    }
+  }
   return (x, z, what) => {
-    caster.set(new THREE.Vector3(x, 1e3, z), down);
-    const hit = caster.intersectObjects(meshes, false)[0];
-    if (!hit) throw new Error(`${what}: nothing under (${x.toFixed(3)}, ${z.toFixed(3)})`);
-    return hit.point.y;
+    let y = -Infinity;
+    for (const [p0, p1, p2] of buckets.get(key(x, z)) ?? []) {
+      // The weights as `topDown` has them since #639, when the two were
+      // found swapped there: on vertex 1, cross(P − P0, P2 − P0) / det; on
+      // vertex 2, cross(P1 − P0, P − P0) / det.
+      const det = (p1.x - p0.x) * (p2.z - p0.z) - (p2.x - p0.x) * (p1.z - p0.z);
+      if (Math.abs(det) < 1e-12) continue;
+      const l1 = ((x - p0.x) * (p2.z - p0.z) - (p2.x - p0.x) * (z - p0.z)) / det;
+      const l2 = ((p1.x - p0.x) * (z - p0.z) - (x - p0.x) * (p1.z - p0.z)) / det;
+      const l0 = 1 - l1 - l2;
+      if (l0 < -1e-9 || l1 < -1e-9 || l2 < -1e-9) continue;
+      y = Math.max(y, l0 * p0.y + l1 * p1.y + l2 * p2.y);
+    }
+    if (y === -Infinity)
+      throw new Error(`${what}: nothing under (${x.toFixed(3)}, ${z.toFixed(3)})`);
+    return y;
   };
 }
 
@@ -1497,76 +1540,109 @@ function skinReader(meshes) {
  * no map sees — and #890 clad them for it, reading a ring no band named as
  * dark; #893 settled it the other way, more lights, with the block naming
  * them among the resting lamps. So each is laid as a plank on rough
- * ground. The skin is read straight down off the meshes in `on` — the
- * lobes and the growth rings, as they stand (`skinReader`) — on a grid of
- * `stations` along the bar's footprint by three across it, and the bar
- * takes the pitch and roll of the plane those readings stray least from
- * (every degree of each tried). Then the skin is read again under the
- * bar's own top and bottom faces so set, and its height is two rules: the
- * highest reading under its top runs `sink` under its centre line — a
- * vein's height proud of the high spots — and no reading under its bottom
- * stands clear of the bar by more than `sink`. On a skin rougher than the
- * section can hold, the two disagree, and the second wins: the bar never
- * floats, and the skin comes up through its top by the difference — a
- * vein sinking under the skin rather than a bar standing off it. That
- * happens where a ring runs off one lobe onto another or through the
- * cleft between two (the Veil's four such segments are named in
- * structures/spore-veil-pelagia.mjs); everywhere else the two rules agree
- * and the bar is seated. The box's +x is the tangent and its +z the
- * inward radial, so the roll is about its own length and the pitch about
- * its own width, composed Y-Z-X and written as the XYZ Euler `add` takes.
+ * ground, by two clauses read under its own faces, on the skin the meshes
+ * in `on` — the lobes and the growth rings, as they stand — present
+ * straight down (`skinReader`). A pose puts the bar's top face in the
+ * plane y = μu + νv over its footprint (u along the tangent, v across it,
+ * inward), its length along the tangent within that plane and its width
+ * across it, so the plane's slopes are the face's, exactly. In a pose the
+ * first clause sets the height that puts the bar's mid-plane `sink` under
+ * the highest reading beneath its top — the top a quarter of the section,
+ * 0.0125, proud of the high spot — and the second the height above which
+ * some reading beneath its bottom is clear of the bar by more than
+ * `sink`. The bar takes the pose in which the two disagree least: on a
+ * skin the section holds, the pose with the most to spare between them,
+ * which is the one lying snuggest; on one it cannot hold, the pose that
+ * leaves the least of the skin above the top once the bottom is held —
+ * and there the second clause wins, the bar never floats, its top gives
+ * up its 0.0125 over the high spot, and past that the skin comes up
+ * through it: a vein sinking under the skin rather than a bar standing
+ * off it. The search is every 3° of pitch over ±45° and of roll over
+ * ±75° on a 17 × 3 grid of each face, then every ½° over ±4° of the best
+ * on 33 × 5; the two clauses are then read on 81 × 13, so they hold
+ * between the search's points and not only at them. That is where a ring
+ * runs off one lobe onto another or through the cleft between two (the
+ * Veil's four such segments are named, with what remains,
+ * in structures/spore-veil-pelagia.mjs); everywhere else the two clauses
+ * agree and the bar is seated. The pose's axes and the yaw that lays the
+ * tangent round the ring compose one matrix, written as the XYZ Euler
+ * `add` takes.
  */
 export function veinRing(root, mat, opts) {
   const { name, at, r, centre, span, count, section = [0.045, 0.06], overlap = 1.08 } = opts;
-  const { on, sink = 0.01, stations = 9 } = opts;
+  const { on, sink = 0.01 } = opts;
   const [cx, cz] = at;
   const [tall, wide] = section;
   const frame = group(root, name);
   const step = span / count;
   const length = r * step * overlap;
   const skin = skinReader(on);
-  const footprint = [];
-  for (let i = 0; i < stations; i++)
-    for (const v of [-wide / 2, 0, wide / 2])
-      footprint.push([-length / 2 + (length * i) / (stations - 1), v]);
+  // The bar's footprint as a grid, `nu` stations along it by `nv` across.
+  const grid = (nu, nv) => {
+    const g = [];
+    for (let i = 0; i < nu; i++)
+      for (let j = 0; j < nv; j++)
+        g.push([-length / 2 + (length * i) / (nu - 1), -wide / 2 + (wide * j) / (nv - 1)]);
+    return g;
+  };
+  const coarse = grid(17, 3);
+  const fine = grid(33, 5);
+  const dense = grid(81, 13);
   const rad = (deg) => (deg * Math.PI) / 180;
   for (let k = 0; k < count; k++) {
     const a = centre - span / 2 + (k + 0.5) * step;
     const seg = `${name}-seg-${k + 1}`;
     const x = cx + r * Math.cos(a);
     const z = cz + r * Math.sin(a);
-    // The footprint in plan: u along the tangent (−sin a, cos a), v along
-    // the inward radial (−cos a, −sin a), and the skin under each station.
-    const plan = footprint.map(([u, v]) => [
-      u,
-      v,
-      skin(x - u * Math.sin(a) - v * Math.cos(a), z + u * Math.cos(a) - v * Math.sin(a), seg),
-    ]);
-    let fit = null;
-    for (let p = -60; p <= 60; p++)
-      for (let q = -80; q <= 80; q++) {
-        const mu = Math.tan(rad(p));
-        const nv = Math.tan(rad(q));
-        let hi = -Infinity;
-        let lo = Infinity;
-        for (const [u, v, s] of plan) {
-          const d = s - mu * u - nv * v;
-          if (d > hi) hi = d;
-          if (d < lo) lo = d;
+    // A pose's axes in the unyawed frame — x along the tangent, y up, z
+    // inward: the length along the tangent lifted into the plane, the
+    // plane's normal, and the width across it in the plane.
+    const pose = (mu, nv) => {
+      const ex = new THREE.Vector3(1, mu, 0).normalize();
+      const n = new THREE.Vector3(-mu, 1, -nv).normalize();
+      return { ex, n, ez: ex.clone().cross(n) };
+    };
+    // The two clauses in a pose, read on grid `g` of each face: `seated`,
+    // the height that puts the mid-plane `sink` under the highest reading
+    // beneath the top; `floor`, the height above which some reading
+    // beneath the bottom is clear of it by more than `sink`.
+    const clauses = ({ ex, n, ez }, g) => {
+      let seated = -Infinity;
+      let floor = Infinity;
+      for (const [u, v] of g)
+        for (const h of [tall / 2, -tall / 2]) {
+          const X = u * ex.x + h * n.x + v * ez.x;
+          const Y = u * ex.y + h * n.y + v * ez.y;
+          const Z = u * ex.z + h * n.z + v * ez.z;
+          const s = skin(
+            x - X * Math.sin(a) - Z * Math.cos(a),
+            z + X * Math.cos(a) - Z * Math.sin(a),
+            seg
+          );
+          if (h > 0) seated = Math.max(seated, s - Y + (tall / 2 - sink));
+          else floor = Math.min(floor, s - Y + sink);
         }
-        if (!fit || hi - lo < fit.stray) fit = { pitch: rad(p), roll: -rad(q), stray: hi - lo };
-      }
-    const e = new THREE.Euler(fit.roll, -(a + Math.PI / 2), fit.pitch, 'YZX').reorder('XYZ');
-    const turn = new THREE.Quaternion().setFromEuler(e);
-    let seated = -Infinity;
-    let floor = Infinity;
-    for (const [u, v] of footprint) {
-      const top = new THREE.Vector3(u, tall / 2, v).applyQuaternion(turn);
-      const bottom = new THREE.Vector3(u, -tall / 2, v).applyQuaternion(turn);
-      seated = Math.max(seated, skin(x + top.x, z + top.z, seg) - top.y + (tall / 2 - sink));
-      floor = Math.min(floor, skin(x + bottom.x, z + bottom.z, seg) - bottom.y + sink);
-    }
+      return [seated, floor];
+    };
+    let best;
+    const consider = (p, q, g) => {
+      const [seated, floor] = clauses(pose(Math.tan(rad(p)), Math.tan(rad(q))), g);
+      if (!best || seated - floor < best.excess) best = { p, q, excess: seated - floor };
+    };
+    for (let p = -45; p <= 45; p += 3) for (let q = -75; q <= 75; q += 3) consider(p, q, coarse);
+    const { p: p0, q: q0 } = best;
+    best = undefined;
+    for (let p = p0 - 4; p <= p0 + 4; p += 0.5)
+      for (let q = q0 - 4; q <= q0 + 4; q += 0.5) consider(p, q, fine);
+    const axes = pose(Math.tan(rad(best.p)), Math.tan(rad(best.q)));
+    const [seated, floor] = clauses(axes, dense);
     const y = Math.min(seated, floor);
+    const e = new THREE.Euler().setFromRotationMatrix(
+      new THREE.Matrix4()
+        .makeRotationY(-(a + Math.PI / 2))
+        .multiply(new THREE.Matrix4().makeBasis(axes.ex, axes.n, axes.ez)),
+      'XYZ'
+    );
     placed(frame, seg, box(length, tall, wide), mat, verbatim([x, y, z], [e.x, e.y, e.z]));
   }
   return frame;
