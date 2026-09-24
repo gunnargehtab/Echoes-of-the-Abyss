@@ -226,7 +226,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
   {
     slug: 'env-ruin-dome-shard',
     footprintM: 40,
-    triBudget: 544,
+    triBudget: 508,
     density: 0.03,
     stands: [Biome.CoralRuins],
     nearRock: 'any',

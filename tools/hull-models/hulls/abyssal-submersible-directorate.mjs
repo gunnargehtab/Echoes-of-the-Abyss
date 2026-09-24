@@ -5,7 +5,9 @@
  *
  * "Mid-size deep-raiding hull born to crush depth (Pressure Rating 3, SIG
  * 22 idle). Heavy segmented pressure carapace, folded manipulator limbs,
- * dim red photophores" — and it is the navy's whole grammar in one hull:
+ * dim red photophores, and a fainter red along the plate rims, the tail
+ * joints, the rostrum and the claws" (as #893 amended it) — and it is the
+ * navy's whole grammar in one hull:
  * "spiked, insectoid, segmented crustacean forms — asymmetric, yet
  * regimented". A keel, a seven-sided spar under the belly; five plates of
  * pressure carapace, orbs of seven meridians and four stacks squashed to
@@ -44,22 +46,24 @@
  * THE LIGHT the top-down maps could not see. The light audit named nine
  * lamps under a quarter of a square metre from above — six of the seven
  * claws (all but the first starboard one) and three of the ten photophores
- * — and the approved bake never saw them. #890 decides each against the
- * block's resting clause, "dim red photophores" (docs/models-plan.md §3.2):
+ * — and the approved bake never saw them. #890 decided each against the
+ * block's resting clause as it then read, "dim red photophores"
+ * (docs/models-plan.md §3.2); #893 amended the clause to name the rest of
+ * the resting set, and nothing here moved with it:
  *
- * - The seven claws (`limb_*_claw`) glow in the export's `edge_red`, the
- *   approved model's resting set, which this issue does not re-read (#890
- *   review, ruling 2; #893 holds the question, below). Six lie folded under
- *   the belly, where no chart sees them, and a claw lifted clear of the
- *   belly to face a map is a different fixture (ruling 6), so they stay
- *   where the file has them. RESIDUAL AUDIT LINES: `limb_port_1_claw`,
+ * - The seven claws (`limb_*_claw`) glow in the export's `edge_red` — "a
+ *   fainter red along ... the claws", the block's since #893 (#890 carried
+ *   them unread as the approved model's resting set, ruling 2). Six lie
+ *   folded under the belly, where no chart sees them, and a claw lifted
+ *   clear of the belly to face a map is a different fixture (ruling 6), so
+ *   they stay where the file has them. RESIDUAL AUDIT LINES: `limb_port_1_claw`,
  *   `limb_port_2_claw`, `limb_port_3_claw`, `limb_port_4_claw`,
  *   `limb_starboard_2_claw` and `limb_starboard_3_claw` show nothing from
  *   above, and the export warns on each; `limb_starboard_1_claw` was never
  *   hidden. The seven claws and the rostrum also rest on nothing by the
  *   audit's second measure (#894) — the file folds each claw a metre off
- *   its femur and stands the rostrum two off the head — and they are
- *   #893's for the same reason: a claw or a rostrum re-hung is a limb
+ *   its femur and stands the rostrum two off the head — and #907 lists
+ *   them for the same reason: a claw or a rostrum re-hung is a limb
  *   decision, not a lamp seated.
  * - `photophore_port_5` and `photophore_starboard_3` are the clause's and
  *   stay lit. Each sat on the fifth plate's flank at its widest line,
@@ -87,11 +91,12 @@
  *   `photophore_starboard_3` and `photophore_tail` already rested and stay.
  *   `diff.mjs` lists the six, the jaw's 1.6 m the largest, and no other
  *   part.
- * - FOLLOW-UP #893, not touched: the five rims, the four tail joints, the
- *   rostrum and the seven claws glow in `edge_red` and the clause names
- *   none of them; they are the approved model's resting set, which this
- *   issue does not re-read (#890 review, ruling 2). They stay lit as the
- *   file has them, unread; #893 holds the question.
+ * - The five rims, the four tail joints, the rostrum and the seven claws
+ *   glow in `edge_red` at the file's faint 0.12 — "a fainter red along
+ *   the plate rims, the tail joints, the rostrum and the claws", the
+ *   block's resting clause since #893 (#890 carried them unread as the
+ *   approved model's resting set, ruling 2, and asked; #893 settled it by
+ *   naming them). They stay lit as the file has them; nothing moved.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds: drawn along Z, 4.53 units long tip to tip, hull axis at

@@ -143,29 +143,37 @@ The owner settled this on #865.
 The ladder is measured, not just stated. A stroke's weight is how far it lifts the pixel
 under it, in encoded luminance, which is how a screenshot measures it. The ink blends in
 encoded space, the way the mark layer's strokes do, so an ink line and a furniture rim over
-the same ground compare exactly. `packages/frontend/src/game/ladder.ts` holds the quietest
-outline rung 5 draws in each of its three quiet colours: a kelp field's rim while it is not
-gripping, a Tetherjelly field's rim, and a simulated hazard's rim while it is dormant. It also
-holds an inert hazard site's rim, which the outline rule above leans on. Every other rung-5
-outline lifts more than the least of them in every palette. Which is quietest depends on the
-palette. The draw sites take their alphas from there. The tests hold every ink stroke below
-the least of them, over the darkest and the palest ground, in all four palettes. When
-furniture gets quieter, the ink has to follow it down.
+the same ground compare exactly. `packages/frontend/src/game/ladder.ts` holds every outline
+rung 5 draws, and four of them are its floor: the quietest outline in each of its three quiet
+colours — a kelp field's rim while it is not gripping, a Tetherjelly field's rim, and a
+simulated hazard's rim while it is dormant — and an inert hazard site's rim, which the outline
+rule above leans on. Every other rung-5 outline lifts more than the least of them in every
+palette, and a test holds that near the eye: the conn view's tunnel routes and map rim fade
+with the water's fog, so a far one lifts less. Which is quietest depends on the palette. The
+draw sites take their alphas from there. The tests hold every ink stroke below the least of them, over the
+darkest and the palest ground, in all four palettes. When furniture gets quieter, the ink has
+to follow it down.
 
 **The ink also sits under your own detection ring.** A hull's ring while you have not selected
-it is rung 6's quietest outline ([ui-ux.md](ui-ux.md) §3.5), and it is your own exposure: a
-line of seabed that out-shouted it would bury the one reading a quiet navy lives by. In
+it is rung 6's quietest steady outline ([ui-ux.md](ui-ux.md) §3.5), and it is your own
+exposure: a line of seabed that out-shouted it would bury the one reading a quiet navy lives
+by. In
 tritanopia at mid SIG it lifts the kelp fill by 0.044, which caps the coast near 9.9%; it is
 drawn at 9.5%.
 `ladder.ts` holds its alpha, the draw site takes it from there, and the tests hold every ink
 stroke under it in both colours it is drawn in. The owner chose this on #865, over raising the
 ring.
 
-**Phase 1 measures rung 4 under rung 5 and under that ring, and nothing more.** The other
-rungs are stated, not yet held; phase 2 audits them. One break is known: the unselected ring
-lifts the ground less than rung 5's floor in the standard, protanopia and tritanopia palettes,
-so rung 6
-is not yet above rung 5. That is #866's to settle.
+**The tests hold rungs 4 to 6, and record where rung 6 breaks.** Rung 4 sits under rung 5's
+floor and under that ring. Rung 5's floor is its floor, and the floor of rung 6's steady
+outlines is the unselected ring. Rung 6 is not above rung 5, and the tests pin two breaks
+rather than hold the order. The
+unselected ring lifts the ground less than rung 5's floor in the standard, protanopia and
+tritanopia palettes. And at its loudest, in its loudest colour, every rung-5 outline lifts some
+ground more than that ring in all four palettes: a live hazard's rim, a resource field's and
+the map's are all louder than it. Which side moves is the owner's call, and §10 records it
+with the audit's other findings. Rungs 1 to 3 are the ground every lift is measured over. Rung
+6 against rung 7 is not weighed yet, and §10 says why.
 
 Two consequences worth naming:
 
@@ -305,6 +313,41 @@ comparison the tests can hold. And it weighed only two rims. The dormant hazard 
 quietest outline in three of the four palettes. Then the unselected detection ring was found
 under the ink, and the owner chose to bring the ink down: the coast is 9.5% and the band lines
 9%. That is the ladder working: at the survey dolly the ink is quiet, because it has to be.
+
+### Phase 2 — landed
+
+Every draw site in `EchoRenderer.ts` and `PerspectiveView.ts` names its rung, or records that
+§5 gives it none. `ladder.ts` holds the alpha of every rung-5 outline and both detection rings.
+No alpha moved: the audit records, and §5 says what its tests hold and which two breaks they
+pin.
+
+What it leaves for the owner:
+
+- **Rung 6 sits under rung 5's floor** in the standard, protanopia and tritanopia palettes.
+  Either the unselected ring comes up, or the floor comes down.
+- **Rung 6 sits under every rung-5 outline at its loudest over black ground**, in all four
+  palettes. The ring cannot clear that at any alpha: a live hazard's rim at its loudest lifts
+  black ground by 0.719, and the ring's quieter colour at full alpha by 0.341–0.514. Taking a
+  live hazard's rims and countdown off rung 5 still leaves the other ten over the ring as
+  drawn, over black — up to 0.382, the crystal's depth ring in tritanopia, against the ring's
+  0.061–0.093. What remains is rung 5 coming down, or §5's "quieter" meaning floor against
+  floor.
+- **Marks that fade by design are unweighed.** A contact fades in as it arrives and out as a
+  ghost, and the lock brackets, the break-silence ring and an order's acknowledgement fade to
+  nothing, so rung 6's floor is taken over its steady outlines. Weighing rung 7 against rung 6
+  needs a rule for which moment of a fading mark counts, and a measurement rule in §5 is the
+  owner's to write, as the outline and haze rules were on #865. Own hulls are models, and gate
+  3 sets a quiet one near black.
+- **Acoustic residue has no rung.** §5's table does not name it, and no row's words fit: it is
+  the player's own intel, not public furniture, and it must never read as a contact.
+- **Two marks have no rim.** Blocked ground is a hatch and a fill, and a formed Lampfry shoal
+  is motes and a halo. §5's outline rule presumes a rim, so how a rimless mark is weighed is
+  open, and neither is weighed yet. Phase 3 redraws the shoal.
+- **Some placements are the audit's, not §5's.** §5's rows do not name these, and each draw
+  site says why it was placed where it is. On rung 6: order routes and their markers, the
+  lock flash, the crush and break-silence rings, the ink about own ordnance, a yard's rally
+  course, and the health and build bars. On rung 7: a contact's glyph and health bar, a
+  construction scaffold, and own depth cues. On rung 1: the skirt at the map's edge.
 
 ## 11. Open questions
 

@@ -5,8 +5,10 @@
  *
  * "Tall crystalline resonance spire, bilaterally symmetrical, pale alloy
  * frame around a violet crystal core (SIG 80 when active, directional).
- * Burning bright along the crystal when active; heat-shimmer distortion"
- * (docs/asset-prompts-3d.md, STRUCTURE — Sounding Spire).
+ * Dim at rest: the crystal glowing low from core to apex, the horn tips
+ * with it, and running lights up the frame; burning bright along the
+ * crystal when active; heat-shimmer distortion" (docs/asset-prompts-3d.md,
+ * STRUCTURE — Sounding Spire, as #893 amended it).
  *
  * A port of the approved export
  * (docs/concept-art/models/sounding-spire-hadron.glb at f7cce0f), part for
@@ -67,23 +69,30 @@
  * and shift — every part is where it was (a square plan, compared as it
  * stands). #890 moved two running lights; #894 put them back, below.
  *
- * LIGHT (#890, #894). "Burning bright along the crystal when active" is one
- * clause over one fixture the model lights at rest — the core, the throat,
- * the apex and the horn tips — so it is the one-glow-factor reading: the
- * same lamps, scaled (models-plan.md §3.2, the paragraph after the rules),
- * as the approved model and #652 have it. Four lamps read as hidden from
- * above until #894; one still does, as the residual audit line the audit
- * names on every build:
+ * LIGHT (#890, #893, #894). The block names every lamp on the file. Its
+ * resting clause since #893: "the crystal glowing low from core to apex"
+ * is the core, the throat and the apex, "the horn tips with it" the two
+ * tips, and "running lights up the frame" the ten; and its "heat-shimmer
+ * distortion" is `heat_shimmer_sheath`, translucent and emissive at 0.55.
+ * "Burning bright along the crystal when active" is the same lamps
+ * scaled, the one-glow-factor reading (models-plan.md §3.2, the paragraph
+ * after the rules), as the approved model and #652 have it. When #890
+ * placed them the clause named only the active band, and the resting set
+ * was carried as the approved file lights it (#890, review rulings,
+ * ruling 2); #893 settled it by naming the set. Four lamps read as hidden
+ * from above until #894; one still does, as the residual audit line the
+ * audit names on every build:
  * - `crystal_core` stays, and the audit sees it since #894. Its only
  *   occluder from above is `heat_shimmer_sheath`, alpha-blended at six
  *   percent; until #894 glb.mjs `topDown` — what kit.mjs `lightAudit`
  *   calls — and the bake's material swap both treated the sheath as solid,
  *   so the core, the Spire's largest light in the conn view, read as
- *   hidden and baked dark under a solid sheath. A part blended at under
- *   half opacity occludes nothing now (glb.mjs `occludes`) and the bake
- *   blends it at its own opacity, so the core is on the chart and the
- *   sheath is the six-percent haze over it the block asks for. No part
- *   moved.
+ *   hidden and baked dark under a solid sheath, and the sheath itself
+ *   counted as a lamp of 974 m² over everything it wraps. A part blended
+ *   at under half opacity occludes nothing now and is no lamp to the
+ *   audit (glb.mjs `occludes`), and the bake blends it at its own
+ *   opacity, so the core is on the chart and the sheath is the
+ *   six-percent haze over it the block asks for. No part moved.
  * - `crystal_throat` stays. It is sealed inside the core — the file's
  *   z-fight nudge is the millimetre between them — and no upward face can
  *   carry it. Residual.

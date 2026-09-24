@@ -17,7 +17,7 @@
  * is then resolved against the water column and slides along ground it grazes.
  */
 
-import { defineQuery } from 'bitecs';
+import { defineQuery, hasComponent } from 'bitecs';
 import {
   DIRECTORATE_SHALLOW,
   Faction,
@@ -25,9 +25,11 @@ import {
   SILENT_RUNNING,
   inDirectorateShallows,
   statsFor,
+  unitRadiusM,
   type UnitKind,
 } from '@echoes/shared';
 import {
+  Craft,
   Heading,
   MoveOrder,
   Owner,
@@ -149,6 +151,80 @@ function steerPoint(
   }
 }
 
+/**
+ * A craft goes round its own carrier, never through it (#863;
+ * docs/systems-combat.md §15).
+ *
+ * A craft enters the water on a world-frame ring, so it can launch astern of
+ * a carrier whose target is ahead, and its course to that target then runs
+ * through the hull that launched it. Separation resolved the overlap by moving
+ * both, which put the carrier on the craft's course: measured, an Offertory
+ * holding 993 m off a Cruiser was shoved inside the 900 m gun and sunk. §15's
+ * carrier is "a kilometre away and quiet", and a flight that delivers it to
+ * the gun is the one outcome the whole mechanism is priced against.
+ *
+ * So when the leg to `aim` crosses the disk separation would push the pair
+ * apart at, the craft steers along the tangent on the side the aim lies —
+ * counter-clockwise when the three points are exactly in line, which is the
+ * case that found this and the one a ring angle of pi lands on to the metre.
+ * A craft already touching its carrier (the carrier drove into it) slides
+ * round it instead, and `separationSystem` puts it clear without moving the
+ * carrier. An aim inside the disk is left alone: nothing sends a craft there
+ * on purpose, and orbiting it would never arrive.
+ *
+ * Only the craft's own carrier, and deliberately: any other hull a craft meets
+ * is separation's ordinary business, and a craft brushing an escort aside is
+ * the fleet keeping station, not a flight moving the hull it exists to hide.
+ */
+function roundOwnCarrier(world: SimWorld, eid: number, px: number, py: number): void {
+  const carrier = Craft.carrier[eid]!;
+  if (!hasComponent(world, Position, carrier)) return;
+  const cx = Position.x[carrier]! - px;
+  const cy = Position.y[carrier]! - py;
+  const ax = aim.x - px;
+  const ay = aim.y - py;
+  const leg = Math.hypot(ax, ay);
+  if (leg === 0) return;
+
+  const clear =
+    unitRadiusM(Unit.kind[carrier] as UnitKind) + unitRadiusM(Unit.kind[eid] as UnitKind);
+  const clear2 = clear * clear;
+  // Aim inside the disk: see above.
+  if ((aim.x - Position.x[carrier]!) ** 2 + (aim.y - Position.y[carrier]!) ** 2 < clear2) return;
+
+  // How far along the leg the carrier's centre falls. Behind the craft, the
+  // leg leads away from it and there is nothing to go round.
+  const along = (cx * ax + cy * ay) / leg;
+  if (along <= 0) return;
+
+  const d2 = cx * cx + cy * cy;
+  // Left or right of the leg, and which side of the carrier to pass.
+  const cross = cx * ay - cy * ax;
+  const side = cross < 0 ? -1 : 1;
+
+  let dirX: number;
+  let dirY: number;
+  if (d2 <= clear2) {
+    // Touching: slide along the hull, perpendicular to the line of centres
+    // and on the same side the tangent below would take.
+    const d = Math.sqrt(d2);
+    if (d === 0) return;
+    dirX = (-cy / d) * side;
+    dirY = (cx / d) * side;
+  } else {
+    // Clear of it: does the leg pass inside the disk before the aim?
+    if (along >= leg) return;
+    const miss2 = d2 - along * along;
+    if (miss2 >= clear2) return;
+    const d = Math.sqrt(d2);
+    const bearing = Math.atan2(cy, cx) + side * Math.asin(clear / d);
+    dirX = Math.cos(bearing);
+    dirY = Math.sin(bearing);
+  }
+  aim.x = px + dirX * leg;
+  aim.y = py + dirY * leg;
+}
+
 function speedMultiplier(world: SimWorld, eid: number): number {
   // Storm interference stacks with silent running rather than replacing it
   // (docs/hazards.md §5, "Bathyarch machinery malfunctions"): a Consortium
@@ -264,6 +340,7 @@ export function movementSystem(world: SimWorld): void {
       MoveOrder.y[eid]!,
       Position.depth[eid]!
     );
+    if (hasComponent(world, Craft, eid)) roundOwnCarrier(world, eid, fromX, fromY);
     const ax = aim.x - fromX;
     const ay = aim.y - fromY;
     const leg = Math.hypot(ax, ay);

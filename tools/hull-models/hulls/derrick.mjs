@@ -10,25 +10,59 @@
  * The frame is the hull's argument and has to read at distance as the biggest
  * thing on it, because this is the gun that aims by ear.
  *
- * The light, against the block's resting clause — "Dim at rest — deck floods
- * only, the drums dark — and burning under way, the louvres bright, the
- * stack lit at the throat, and a hard lamp in the cradle" — as #890 settled
- * the nineteen lamps the audit could not see (docs/models-plan.md §3.2):
+ * LIGHT — the block's resting clause names every lamp this file lights
+ * (docs/asset-prompts-3d.md, UNIT — Derrick; docs/models-plan.md §3.2 rule
+ * 1), since #893 rewrote it for a SIG 58 idle that sits in the 36–60
+ * "sustained glow" band: the six deck floods, the six work floods along the
+ * frame's top beams, the six roof gratings, the louvres of the raked hood
+ * down each side of the machinery house, the stack's throat, the four
+ * bridge ports in the house's forward face and the cradle lamp; the drums
+ * dark. Under way the same lamps burn brighter, because 66 is over the
+ * Klaxon's line (the one-glow-factor reading, §3.2).
+ * Twenty lamps sat where the top-down bake could not see them (nineteen on
+ * the audit's list; `louvre_p4` showed a tenth of a metre past the roof):
+ * #890 raised the six deck floods and clad the other fourteen, and #893
+ * relit those fourteen and moved them:
  *
- * - `deck_flood_0..5` are the resting clause's own and stay lit. The export
- *   placed them at `DECK` + 0.4, and `DECK` is the slab's mid-height, not
- *   its top: kit `plate` stands its slab from y 0 to `DEPTH`, so the six
- *   sat inside `hull_slab`, the case `lightAudit` was first written on.
+ * - `deck_flood_0..5` (#890): the export placed them at `DECK` + 0.4, and
+ *   `DECK` is the slab's mid-height, not its top — kit `plate` stands its
+ *   slab from half a thickness to one and a half above the origin, so the
+ *   six sat inside `hull_slab`, the case `lightAudit` was first written on.
  *   They stand on the slab's top now, at the same six stations.
- * - `louvre_s0..4`, `louvre_p0..4` are lit "under way" — rule 2, clad in
- *   `amber_lamp_unlit`. `louvre_p4` was not on the audit's list, its outer
- *   tenth of a metre showing past the roof, but it is the same clause.
- * - `bridge_port_s0..1`, `bridge_port_p0..1` are named in no band — rule 1,
- *   clad the same.
+ * - `louvre_s0..4`, `louvre_p0..4` (#893): five bars flat on each wall of
+ *   the house under the roof's eave, the lower two below the deck line, in
+ *   `amber_vent` until #890 clad them. `amber_vent` again, and a raked
+ *   hood a side now: a well of hull black (`louvre_well_s/p`) leaning from
+ *   the deck 2.25 m out from the wall (z ±15.25, y 11) up to the wall 2.7 m
+ *   above it (z ±13, y 13.7, under the roof's underside at 14.3), and five
+ *   blades stepped down its face, each canted up 35° with its inner edge
+ *   in the well and its outer edge half a metre out from the blade above's
+ *   — the top one under the eave with its outer edge 0.4 m past it, the
+ *   bottom one at the deck. The form is the Caisson's and the Gantry's
+ *   `exhaustLouvres`, slats over a well, stood against a wall. From above
+ *   each blade shows its half-metre step past the one over it, so the
+ *   chart reads one lit band 2.4 m wide down each flank, from the eave at
+ *   z 13.5 to the bottom blade's outer edge at 15.91 (`machineryHouse`).
+ *   The well is 1.8 m thick because the corner where the deck meets the
+ *   wall lies 1.73 m under its face: a metre of well left a hollow of
+ *   triangular section under the whole hood, open at both ends. The two
+ *   wells are the one part added in this file — two unlit parts the
+ *   approved model did not have; the blades and the ports below are moved
+ *   and reshaped, and `diff.mjs` lists all sixteen — added in #893's second
+ *   round because a blade with nothing under it is a slat screen hanging
+ *   in the air, not the louvred side the block names. Only a hidden lamp
+ *   licenses a move, and a move may not make the lamp a different fixture
+ *   (#890 ruling 6, and the #893 brief's gloss on rulings 1 and 6); the
+ *   well is what keeps the moved blades the fixture they were.
+ * - `bridge_port_s0..1`, `bridge_port_p0..1` (#893): `amber_lamp` again,
+ *   named in no band before #893 and clad by #890. They were 0.4 m panels
+ *   on the house's forward face with their sills at the deck line, under
+ *   the roof's half-metre eave; they are port boxes now, 1.1 m deep from the
+ *   wall so the outer 0.6 m stands past the eave — the Tender's ports under
+ *   its deckhouse eaves — a metre and a half up the wall.
  *
  * The cradle lamp, the stack throat, the frame floods and the roof gratings
- * face up and were not on the list; they are carried as the approved file
- * lights them, and whether the block should name them at rest is #893.
+ * face up and never moved; the block names them since #893.
  *
  * THE DECK DATUM buried more than the floods (#894, from #890's review).
  * `DECK` is the slab's mid-height, and the first cut hung the gun off it:
@@ -44,11 +78,11 @@
  * 1.6 m of water under its foot and now runs from the rail to the lamp.
  * The rail itself hangs 0.9 m under the two cross beams and stops a metre
  * short of each, unlit and so outside the audit's measure; hanging it is
- * #907's. The machinery house keeps its floor at `DECK`, half its
- * louvres in the slab: lifting it carries the stack over the frame's top,
- * and the frame reading as the biggest thing on the hull is the block's
- * one hard line, so that is a decision #907 puts to the owner and not
- * this fix.
+ * #907's. The machinery house keeps its floor at `DECK`, the slab burying
+ * all but 3.5 m of it (its louvred hoods stand on that exposed wall since
+ * #893): lifting it carries the stack over the frame's top, and the frame
+ * reading as the biggest thing on the hull is the block's one hard line,
+ * so that is a decision #907 puts to the owner and not this fix.
  *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.
@@ -77,7 +111,6 @@ const amber = bathyarch.ink.hazardAmber();
 const lampM = bathyarch.ink.amberLamp();
 const vent = bathyarch.ink.amberVent();
 const flood = bathyarch.ink.amberFlood();
-const unlit = bathyarch.ink.amberLampUnlit();
 
 const root = new THREE.Group();
 root.name = 'consortium_derrick';
@@ -130,24 +163,35 @@ add(root, 'cradle_lamp', box(14, 1.0, 5), flood, [5, frame.top + 1.7, 0]);
 add(root, 'cradle_lamp_stay', box(0.6, 2.8, 0.6), grey, [5, frame.top - 0.2, 0]);
 
 // The machinery house aft of the frame, and the pile hammer stowed against a leg.
-// The louvres are clad: the block lights them under way (header).
-bathyarch.machineryHouse(root, { black, grey, rust, amber, vent, flood, louvre: unlit }, {
+// The house stands 9 m tall from y 5.5, so the slab (top at DEPTH) buries all
+// but 3.5 m of it and the roof's underside is at 14.3. The louvred hood a side
+// stands on that exposed wall: the top blade's centre on the eave line
+// (beam/2 + 0.5) so its outer edge shows past it, each blade below half a
+// metre further out, and the well raked from the deck up to the wall under
+// them, 1.8 m thick so it reaches the deck/wall corner 1.73 m under its
+// face (header).
+bathyarch.machineryHouse(root, { black, grey, rust, amber, vent, flood }, {
   x: -24, y: 10, length: 22, height: 9, beam: 26, stack: { x: -30, y: 20, z: 6 },
+  louvres: {
+    count: 5, y: DEPTH + 0.4, pitch: 0.6, z: 13.5, step: 0.5, tilt: 0.611, blade: [0.15, 0.9],
+    deck: DEPTH, well: { t: 1.8 },
+  },
 });
 // "Head down": the head stands on the slab's top and the shaft rises from
 // it to where it always reached (header).
 add(root, 'hammer_shaft', box(1.2, 10, 1.2), grey, [-6.5, 19, 30]);
 add(root, 'hammer_head', box(3.6, 3, 3.6), rust, [-6.5, DEPTH + 1.5, 30]);
 
-// "Deck floods only": on the slab's top, which is DEPTH and not DECK (header).
+// The deck floods: on the slab's top, which is DEPTH and not DECK (header).
 bathyarch.deckFloods(root, lampM, {
   deck: DEPTH,
   spots: [[24, 16], [24, -16], [-42, 16], [-42, -16], [48, 14], [48, -14]],
 });
-// The bridge ports are clad: the block names them in no band (header).
+// The bridge ports: boxes from the house's forward face (x -13) out past the
+// roof's eave (x -12.5) by 0.6, a metre and a half up the exposed wall (header).
 bothSides((side, sgn) => {
   for (let i = 0; i < 2; i++)
-    add(root, `bridge_port_${side}${i}`, box(0.4, 1.2, 2.2), unlit, [-12.8, 11, sgn * (2.5 + i * 5)]);
+    add(root, `bridge_port_${side}${i}`, box(1.1, 1.2, 2.2), lampM, [-12.45, 12.6, sgn * (2.5 + i * 5)]);
 });
 
 await exportGlb(root, 'derrick-bathyarch.glb');

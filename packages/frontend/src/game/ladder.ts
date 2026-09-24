@@ -3,36 +3,48 @@
  *
  * Every mark on the map sits on one rung, and each rung is quieter than every
  * rung above it. This module holds the part of that which can be measured
- * without a GPU: the floor of rung 5 (map furniture) and rung 6's unselected
- * detection ring. The lesser of the two is the ceiling of rung 4 (survey
+ * without a GPU: every outline rung 5 (map furniture) draws, and rung 6's two
+ * detection rings. Four of the rung-5 outlines are its floor, and the lesser
+ * of that floor and the unselected ring is the ceiling of rung 4 (survey
  * ink); in three palettes that is the ring. The draw sites import their
- * alphas from here, so the number the ink is held under is the number the
- * marks are drawn at — a rim or ring made quieter moves the ceiling with it,
- * and the ink tests fail until the ink follows it down.
+ * alphas from here, so the number the tests weigh is the number the mark is
+ * drawn at — a rim or ring made quieter moves the ceiling with it, and the
+ * ink tests fail until the ink follows it down.
  *
  * Measured the way a screenshot is: Rec. 709 luminance on encoded bytes, and
  * a stroke's weight as how far it lifts the pixel under it. Both the mark
  * layer and the survey ink blend in encoded space, so two strokes over the
- * same ground compare exactly.
+ * same ground compare exactly. So do the conn view's lines — the canvas is
+ * sRGB and nothing renders through a linear target — except that the water's
+ * fog fades a far one, and the ground under it, toward the water colour, which
+ * scales its lift down. They are weighed unfogged, near the eye. That is their
+ * loudest, so it is the right end to hold under the rung above; it is the
+ * wrong end for rung 5's floor, which the overlay's unfogged rims set, and a
+ * far route or rim lifts less than that floor. The floor test does not reach
+ * the far end.
  */
 
+import { ResourceKind } from '@echoes/shared';
 import type { Palette } from './palette.ts';
 
 /**
- * The rung-5 outlines the ladder weighs: the quietest one rung 5 draws in
- * each of its three quiet colours — accent, fauna, threat — and the inert
- * hazard site's rim. Every other rung-5 outline lifts more than the least of
- * these in every palette; that was checked by hand at #865, and #866 turns
- * it into a test. Which of these is quietest depends on the palette — the
- * dormant eruption rim in three of the four, the Tetherjelly rim in
- * protanopia, whose threat red is brighter — so the ceiling is the least of
- * them.
+ * The alpha of every outline rung 5 draws, by draw site.
+ *
+ * The first four are the rung's floor: the quietest outline it draws in each
+ * of its three quiet colours — accent, fauna, threat — and the inert hazard
+ * site's rim (`furnitureFloorLift`, below). Which of them is quietest depends
+ * on the palette — the dormant eruption rim in three of the four, the
+ * Tetherjelly rim in protanopia, whose threat red is brighter — so the floor
+ * is the least of them. Every other outline here lifts more than that floor
+ * in every palette, which ladder.test.ts holds, near the eye (see the fog,
+ * above).
  *
  * A mark is weighed by its outline, never by its interior. A field's faint
- * fill and an inert site's hatching are texture inside a mark whose rim
- * already speaks for it (`inertSiteRim`, below), and a ladder that weighed
- * them would be ranking the grain of a mark rather than the mark
- * (docs/map-visuals.md §5).
+ * fill, an inert site's hatching, a live hazard's two inner rings, a current's
+ * streaks and a nodule field's grains are texture inside a mark whose rim
+ * already speaks for it, and a ladder that weighed them would be ranking the
+ * grain of a mark rather than the mark (docs/map-visuals.md §5). A live
+ * hazard's third ring is drawn on the rim itself, so it is weighed with it.
  */
 export const FURNITURE_OUTLINE_ALPHA = {
   /** A kelp field's rim while it is not gripping (EchoRenderer `drawHazards`). */
@@ -51,21 +63,152 @@ export const FURNITURE_OUTLINE_ALPHA = {
    * it: the hatching goes unweighed only while this rim speaks for the mark.
    */
   inertSiteRim: 0.28,
+  /** A kelp field's rim while it grips (EchoRenderer `drawHazards`). */
+  kelpRimGripping: 0.3,
+  /** A simulated hazard's rim in its warning phase (EchoRenderer `HAZARD_STYLE`). */
+  hazardRimWarning: 0.7,
+  /** A simulated hazard's rim while it fires (EchoRenderer `HAZARD_STYLE`). */
+  hazardRimActive: 0.95,
+  /** A simulated hazard's rim as it dies down (EchoRenderer `HAZARD_STYLE`). */
+  hazardRimDecay: 0.5,
+  /**
+   * A live hazard's three rings at full heat, fading with it (EchoRenderer
+   * `drawHazards`). Every hazard but a current and kelp draws them. The two
+   * inside are interior; the third falls on the rim and stacks on it, so the
+   * active and decay rims are weighed with it at their loudest.
+   */
+  hazardInnerRing: 0.3,
+  /**
+   * The warning's countdown ring as it opens (EchoRenderer `drawHazards`). It
+   * gains `hazardCountdownGain` as it closes on the rim, so it meets the rim
+   * at 0.85, the loudest it gets, and stacks on it there: the warning rim is
+   * weighed with it at its loudest.
+   */
+  hazardCountdownStart: 0.35,
+  hazardCountdownGain: 0.5,
+  /** A resource field's rim, nodule or crystal (EchoRenderer `drawNodes`). */
+  resourceRim: 0.3,
+  /** The dashed ring that says a crystal field is at depth (EchoRenderer `drawNodes`). */
+  crystalDepthRing: 0.55,
+  /** A roofed passage's route line (PerspectiveView `buildTerrainDressing`). */
+  tunnelRoute: 0.3,
+  /** The map's border (PerspectiveView `buildTerrainDressing`). */
+  mapRim: 0.5,
+  /** A scattered Lampfry shoal's 300 m trigger ring (EchoRenderer `drawShoals`). */
+  shoalScatterRing: 0.4,
 } as const;
 
 /**
- * Rung 6's quietest outline: a hull's detection ring while the player has not
- * selected it (EchoRenderer `drawRings`, docs/ui-ux.md §3.5), half
- * the selected ring's alpha. It is the player's own exposure, so the ink sits
- * under it in both colours it is drawn in (docs/map-visuals.md §5).
+ * Rung 6's weighed outlines: a hull's detection ring (EchoRenderer
+ * `drawRings`, docs/ui-ux.md §3.5), unselected and selected.
  *
- * Rung 6 is not yet held above rung 5: in the standard, protanopia and
- * tritanopia palettes this ring lifts the ground less than rung 5's floor.
- * That is the ladder audit's to settle (#866), not the ink's.
+ * The unselected ring is the rung's quietest steady outline, half the
+ * selected ring's alpha. It is the player's own exposure, so the ink sits
+ * under it in both colours it is drawn in (docs/map-visuals.md §5). Three
+ * rung-6 marks fade to nothing by design — the lock brackets, the
+ * break-silence ring and an order's acknowledgement — and are not weighed.
+ *
+ * Rung 6 is not yet held above rung 5. In the standard, protanopia and
+ * tritanopia palettes the unselected ring lifts the ground less than rung 5's
+ * floor, and in every palette it lifts black ground less than every rung-5
+ * outline at its loudest does. ladder.test.ts records both. Settling them is the owner's call, and
+ * docs/map-visuals.md §10 records it.
  */
 export const INSTRUMENT_OUTLINE_ALPHA = {
   unselectedRing: 0.18,
+  selectedRing: 0.35,
 } as const;
+
+/** One colour at one alpha. Its lift is linear in the ground's luminance. */
+export interface Stroke {
+  readonly color: number;
+  readonly alpha: number;
+}
+
+/**
+ * One outline as the ladder weighs it: its alpha at its quietest and at its
+ * loudest, and every colour it is drawn in. The floor asks about the quietest
+ * alpha in the quietest colour; the rung above asks about the loudest alpha
+ * in the loudest.
+ */
+export interface WeighedOutline {
+  readonly quietest: number;
+  readonly loudest: number;
+  readonly colors: (palette: Palette) => readonly number[];
+}
+
+function steady(alpha: number, colors: WeighedOutline['colors']): WeighedOutline {
+  return { quietest: alpha, loudest: alpha, colors };
+}
+
+/**
+ * Two strokes of one colour, one over the other, as the single alpha the
+ * pixel ends up at. Exact in encoded space, where both layers blend.
+ */
+function stacked(below: number, above: number): number {
+  return 1 - (1 - below) * (1 - above);
+}
+
+const F = FURNITURE_OUTLINE_ALPHA;
+/** Red warns and cyan tells: an eruption is drawn in threat, every other hazard in accent. */
+const hazardColors = (p: Palette) => [p.ui.threat, p.ui.accent];
+
+/** Every outline rung 5 draws, weighed. */
+export const FURNITURE_OUTLINES: Readonly<Record<string, WeighedOutline>> = {
+  kelpRimIdle: steady(F.kelpRimIdle, (p) => [p.ui.accent]),
+  kelpRimGripping: steady(F.kelpRimGripping, (p) => [p.ui.accent]),
+  jellyRim: steady(F.jellyRim, (p) => [p.fauna]),
+  hazardRimDormant: steady(F.hazardRimDormant, hazardColors),
+  // The countdown ring closes onto the warning rim at its loudest.
+  hazardRimWarning: {
+    quietest: F.hazardRimWarning,
+    loudest: stacked(F.hazardRimWarning, F.hazardCountdownStart + F.hazardCountdownGain),
+    colors: hazardColors,
+  },
+  // A current draws no rings, so its rim is the quietest; the rest carry the
+  // third ring on theirs, at full heat when the phase begins.
+  hazardRimActive: {
+    quietest: F.hazardRimActive,
+    loudest: stacked(F.hazardRimActive, F.hazardInnerRing),
+    colors: hazardColors,
+  },
+  hazardRimDecay: {
+    quietest: F.hazardRimDecay,
+    loudest: stacked(F.hazardRimDecay, F.hazardInnerRing),
+    colors: hazardColors,
+  },
+  hazardCountdown: {
+    quietest: F.hazardCountdownStart,
+    loudest: F.hazardCountdownStart + F.hazardCountdownGain,
+    colors: hazardColors,
+  },
+  inertSiteRim: steady(F.inertSiteRim, (p) => [p.ui.threat]),
+  resourceRim: steady(F.resourceRim, (p) => [
+    p.resource[ResourceKind.Nodule],
+    p.resource[ResourceKind.ResonanceCrystal],
+  ]),
+  crystalDepthRing: steady(F.crystalDepthRing, (p) => [p.resource[ResourceKind.ResonanceCrystal]]),
+  tunnelRoute: steady(F.tunnelRoute, (p) => [p.ui.accent]),
+  mapRim: steady(F.mapRim, (p) => [p.ui.glassStroke]),
+  shoalScatterRing: steady(F.shoalScatterRing, (p) => [p.fauna]),
+};
+
+/**
+ * Rung 6's outlines, weighed. §3.5's gate draws an unselected ring only at
+ * SIG at or above the amber stop, so it is never in `sigLow`; a selected hull
+ * draws its ring at any SIG, so the selected ring can wear all three.
+ */
+export const INSTRUMENT_OUTLINES: Readonly<Record<string, WeighedOutline>> = {
+  unselectedRing: steady(INSTRUMENT_OUTLINE_ALPHA.unselectedRing, (p) => [
+    p.ui.sigMid,
+    p.ui.sigHigh,
+  ]),
+  selectedRing: steady(INSTRUMENT_OUTLINE_ALPHA.selectedRing, (p) => [
+    p.ui.sigLow,
+    p.ui.sigMid,
+    p.ui.sigHigh,
+  ]),
+};
 
 /** Rec. 709 on the encoded bytes — how the palette tests and a screenshot measure. */
 export function encodedLuminance(color: number): number {
@@ -84,27 +227,57 @@ export function strokeLift(color: number, alpha: number, ground: number): number
   return alpha * (encodedLuminance(color) - encodedLuminance(ground));
 }
 
-/**
- * The unselected detection ring's least lift over one ground, across the two
- * colours it is drawn in. §3.5's gate draws an unselected ring only at SIG at
- * or above the amber stop, so it is never in `sigLow` — which is the colour a
- * hull below amber would wear, and such a hull draws no ring at all.
- */
-export function unselectedRingLift(palette: Palette, ground: number): number {
-  const { sigMid, sigHigh } = palette.ui;
+/** An outline's strokes at its quietest or its loudest alpha, one per colour. */
+export function strokesOf(
+  outline: WeighedOutline,
+  palette: Palette,
+  at: 'quietest' | 'loudest'
+): Stroke[] {
+  return outline.colors(palette).map((color) => ({ color, alpha: outline[at] }));
+}
+
+/** The least an outline lifts `ground`: its quietest alpha, in its quietest colour. */
+export function quietestLift(outline: WeighedOutline, palette: Palette, ground: number): number {
   return Math.min(
-    ...[sigMid, sigHigh].map((color) =>
-      strokeLift(color, INSTRUMENT_OUTLINE_ALPHA.unselectedRing, ground)
-    )
+    ...strokesOf(outline, palette, 'quietest').map((s) => strokeLift(s.color, s.alpha, ground))
   );
 }
 
-/** Rung 5's floor over one ground: the least lift any of its quiet outlines gives. */
+/** The most an outline lifts `ground`: its loudest alpha, in its loudest colour. */
+export function loudestLift(outline: WeighedOutline, palette: Palette, ground: number): number {
+  return Math.max(
+    ...strokesOf(outline, palette, 'loudest').map((s) => strokeLift(s.color, s.alpha, ground))
+  );
+}
+
+/**
+ * The unselected detection ring's least lift over one ground, across the two
+ * colours it is drawn in.
+ */
+export function unselectedRingLift(palette: Palette, ground: number): number {
+  return quietestLift(INSTRUMENT_OUTLINES.unselectedRing!, palette, ground);
+}
+
+/** Rung 6's floor over one ground: the least lift any of its steady outlines gives. */
+export function instrumentFloorLift(palette: Palette, ground: number): number {
+  return Math.min(
+    ...Object.values(INSTRUMENT_OUTLINES).map((outline) => quietestLift(outline, palette, ground))
+  );
+}
+
+/** The four strokes rung 5's floor is taken from. */
+export function furnitureFloorStrokes(palette: Palette): Stroke[] {
+  return [
+    { color: palette.ui.accent, alpha: FURNITURE_OUTLINE_ALPHA.kelpRimIdle },
+    { color: palette.fauna, alpha: FURNITURE_OUTLINE_ALPHA.jellyRim },
+    { color: palette.ui.threat, alpha: FURNITURE_OUTLINE_ALPHA.hazardRimDormant },
+    { color: palette.ui.threat, alpha: FURNITURE_OUTLINE_ALPHA.inertSiteRim },
+  ];
+}
+
+/** Rung 5's floor over one ground: the least lift any of its four quiet outlines gives. */
 export function furnitureFloorLift(palette: Palette, ground: number): number {
   return Math.min(
-    strokeLift(palette.ui.accent, FURNITURE_OUTLINE_ALPHA.kelpRimIdle, ground),
-    strokeLift(palette.fauna, FURNITURE_OUTLINE_ALPHA.jellyRim, ground),
-    strokeLift(palette.ui.threat, FURNITURE_OUTLINE_ALPHA.hazardRimDormant, ground),
-    strokeLift(palette.ui.threat, FURNITURE_OUTLINE_ALPHA.inertSiteRim, ground)
+    ...furnitureFloorStrokes(palette).map((s) => strokeLift(s.color, s.alpha, ground))
   );
 }
