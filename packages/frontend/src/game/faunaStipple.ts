@@ -13,14 +13,13 @@
  * off `snapshot.jellies` and `snapshot.shoals`, the public layers every player
  * already receives, and nothing else: a field's true 250 m radius, a shoal's
  * formed or scattered state, both at the depth the server published. The
- * outlines the ladder weighs stay on the chart painter (`EchoRenderer`): the
- * field's rim, one of rung 5's four floor outlines, and a scattered shoal's
- * 300 m trigger ring. The dots are not weighed. §5 weighs a mark by its
- * outline and never by its interior, but a field's bells and a scattered
- * shoal's motes hang at their depth while the rim and the ring lie on the
- * ground, so from an oblique camera each cloud stands above its outline rather
- * than inside it. Whether that still counts as the outline's interior, and how
- * a formed shoal with no rim is weighed, are the owner's calls (§10).
+ * outlines stay on the chart painter (`EchoRenderer`): the field's rim, one of
+ * rung 5's four floor outlines, and a scattered shoal's 300 m trigger ring.
+ * The clouds are marks of their own, not those outlines' interiors — a bloom
+ * hangs at its depth while its rim lies on the ground — and each is weighed
+ * by its loudest dot at its peak (#866). The ladder holds each kind's dot
+ * gain (`FURNITURE_DOT_GAIN`, ladder.ts), and weighs a dot as the blend below
+ * lands it: additively, in encoded space.
  *
  * **Pulse in place; never drift sideways.** A bell contracts and relaxes about
  * its own axis and its tentacles trail with it; a shoal breathes and its motes
@@ -53,6 +52,7 @@ import {
 } from 'three';
 import { DRIFT } from '@echoes/shared';
 import type { JellyCluster, ShoalTell } from '@echoes/shared';
+import { FURNITURE_DOT_GAIN } from './ladder.ts';
 import { FAUNA_COLOR } from './palette.ts';
 import { depthToWorldY } from './perspectiveTerrain.ts';
 
@@ -107,8 +107,9 @@ const TENTACLE_SQUEEZE = 0.35;
 /** TUNABLE — radians of lag from the bell to a tentacle's tip, so the trail
  * visibly follows rather than moving as one rigid figure. */
 const TENTACLE_LAG = 1.4;
-/** TUNABLE — a field's dot brightness, and how much a contraction lifts it. */
-const JELLY_GAIN = 0.5;
+/** TUNABLE — a field's dot brightness, and how much a contraction lifts it.
+ * Both are the ladder's (ladder.ts), which weighs the bells by them. */
+const JELLY_GAIN = FURNITURE_DOT_GAIN.jelly;
 
 // ------------------------------------------------------------ the shoal
 
@@ -123,8 +124,8 @@ const SHOAL_FORMED_HEIGHT_M = 14;
  * its true size, because the ring and not the cloud is the disclosure. */
 export const SHOAL_SCATTERED_RADIUS_M = 120;
 const SHOAL_SCATTERED_HEIGHT_M = 40;
-export const SHOAL_FORMED_GAIN = 0.9;
-export const SHOAL_SCATTERED_GAIN = 0.6;
+export const SHOAL_FORMED_GAIN = FURNITURE_DOT_GAIN.shoalFormed;
+export const SHOAL_SCATTERED_GAIN = FURNITURE_DOT_GAIN.shoalScattered;
 /** TUNABLE — a shoal breathes faster than a field, and its motes twinkle
  * three times a breath. */
 export const SHOAL_PULSE_S = 4;
@@ -352,7 +353,7 @@ export class FaunaStipple {
     trailLag: TENTACLE_LAG,
     twinkle: 0,
     twinkleS: JELLY_PULSE_S,
-    lift: 0.3,
+    lift: FURNITURE_DOT_GAIN.jellyBeatLift,
   });
   readonly shoals = new StippleCloud('shoal', {
     periodS: SHOAL_PULSE_S,

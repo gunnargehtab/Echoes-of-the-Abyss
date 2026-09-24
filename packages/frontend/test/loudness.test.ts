@@ -50,9 +50,9 @@ interface Stroke {
    * drawn into a pooled symbol `Graphics` that the renderer has positioned at
    * the emitter and scaled to px-per-metre; the rings all share one unscaled
    * `Graphics` at the origin. Ink and alpha cannot do it since #731's glow
-   * started riding SIG — an inner halo passes through a ring's own 0.18
-   * somewhere around SIG 41, and a filter that reads one as the other would
-   * have gone on passing while counting the wrong marks.
+   * started riding SIG — an inner halo passes through a ring's own alpha on
+   * its way up the scale, and a filter that reads one as the other would have
+   * gone on passing while counting the wrong marks.
    */
   local: boolean;
   /** Path steps under this stroke, in the order they were queued. */
@@ -105,7 +105,7 @@ function sigStrokes(app: HeadlessApplication): Stroke[] {
  * (docs/style-neon-noir.md, "Motion and FX timing"), and the glow recipe draws
  * that polyline three times — two halos under a core. The **core** is the one
  * taken, identified by full alpha: a halo is 0.13 or 0.44 and a detection ring
- * is 0.35 or 0.18, so nothing else on the stage is SIG-inked and opaque.
+ * is 0.35 or 0.27, so nothing else on the stage is SIG-inked and opaque.
  *
  * The first and last vertices are pinned to the true radius by the renderer,
  * which is what makes this recoverable at all — and is itself the property
@@ -142,8 +142,10 @@ function collars(app: HeadlessApplication): Array<{ radius: number; start: numbe
  * Bathyarch primary, and so is a nodule field's ring — which `drawNodes` also
  * traces as a projected circle, two vertices short of identical. The pair
  * (ramp ink, one of these two alphas) is what no other stroke on the stage has.
+ * The gated ring came up from 0.18 to 0.27 on #866, to clear rung 5's floor
+ * (docs/map-visuals.md §5).
  */
-const RING_ALPHA = { SELECTED: 0.35, GATED: 0.18 } as const;
+const RING_ALPHA = { SELECTED: 0.35, GATED: 0.27 } as const;
 
 /**
  * A detection ring: SIG-inked, on a shared unscaled layer, at a ring's alpha.

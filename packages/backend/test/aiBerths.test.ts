@@ -167,15 +167,19 @@ describe('the commander reads its berths before it queues a hull (#854)', () => 
         const label = `${Faction[faction]}, ${want}`;
         assert.ok(tally.noBerth > 0, `${label}: read no berth ${tally.noBerth} times`);
         assert.equal(tally.bought, 0, `${label}: never counted bought`);
+        // The carrier's seventh reason, `yielded`, is asked after the berths,
+        // so a want the berths refuse never reaches it; it is summed in all
+        // the same, because the partition is what this holds.
         assert.equal(
           tally.notEscorted +
             tally.alreadyHas +
             tally.noYard +
             tally.noBerth +
+            ('yielded' in tally ? tally.yielded : 0) +
             tally.cannotAfford +
             tally.bought,
           tally.reached,
-          `${label}: the six reasons sum to the observations`
+          `${label}: the reasons sum to the observations`
         );
       }
     }

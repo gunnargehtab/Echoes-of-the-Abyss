@@ -4,8 +4,9 @@
  * The shader itself needs a GL context and is reviewed by screenshot, per the
  * graphics-standards checklist. What these hold is everything the shader is
  * handed: which depths get a major line, what a coastline compares, and the
- * ladder — that every ink stroke lifts the ground less than the quietest
- * map-furniture outline does, over every ground and in every palette.
+ * ladder — that every ink stroke lifts the ground less than rung 5's quiet
+ * rims and the unselected detection ring do, over the darkest and the palest
+ * ground and in every palette.
  */
 
 import assert from 'node:assert/strict';
@@ -38,7 +39,10 @@ const saturation = (c: number) => {
   return max === 0 ? 0 : (max - Math.min(r, g, b)) / max;
 };
 
-/** The palest ground the map can draw: fills only ever darken (palette.ts). */
+/**
+ * The palest biome fill, where the owner measured the ring's 0.266. A paler
+ * fogged ground exists and is recorded in docs/map-visuals.md §10, not reached.
+ */
 const PALEST_GROUND = Object.values(BIOME_COLOR).reduce((a, b) =>
   encodedLuminance(a) >= encodedLuminance(b) ? a : b
 );
@@ -82,7 +86,10 @@ describe('survey ink colour', () => {
 describe('the loudness ladder, rung 4 under rung 5', () => {
   it('lifts every ground less than the quietest furniture outline, in every palette', () => {
     // §5. Both lifts are linear in the ground's luminance, so the darkest
-    // and the palest ground bound every ground between.
+    // and the palest ground bound every ground between. The quietest outline
+    // is the least of rung 5's four rims. Residue's arc at a faint mark's own
+    // peak is quieter than the ink, and ladder.test.ts records it rather than
+    // taking the ink down to follow it (§10).
     for (const name of PALETTE_NAMES) {
       for (const ground of [DARKEST_GROUND, PALEST_GROUND]) {
         const ceiling = furnitureFloorLift(PALETTES[name], ground);
@@ -110,7 +117,8 @@ describe('the loudness ladder, rung 4 under rung 5', () => {
     // §5. The ring is the player's own exposure (ui-ux.md §3.5), and a line
     // of seabed ink that out-shouted it would bury the one reading a quiet
     // navy lives by. The owner chose the ink coming down over the ring going
-    // up (#865).
+    // up (#865); the ring came up later, to clear rung 5's floor (#866), and
+    // the ink stayed where it was.
     for (const name of PALETTE_NAMES) {
       for (const ground of [DARKEST_GROUND, PALEST_GROUND]) {
         const ceiling = unselectedRingLift(PALETTES[name], ground);

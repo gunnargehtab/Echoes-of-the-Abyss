@@ -66,7 +66,7 @@ export interface UiInk {
   threat: number;
 }
 
-type ContactTier = Exclude<ResolutionTier, ResolutionTier.Silent>;
+export type ContactTier = Exclude<ResolutionTier, ResolutionTier.Silent>;
 
 export interface TierStyle {
   color: number;
@@ -99,7 +99,7 @@ export interface Palette {
  * the Asymmetric Fidelity Law rather than recolouring it, so they live here,
  * once, and the tables supply only ink.
  */
-const TIER_SHAPE: Record<ContactTier, Omit<TierStyle, 'color'>> = {
+export const TIER_SHAPE: Record<ContactTier, Omit<TierStyle, 'color'>> = {
   [ResolutionTier.Contact]: { alpha: 0.18, radius: 90, label: 'contact' },
   [ResolutionTier.Bearing]: { alpha: 0.32, radius: 46, label: 'bearing' },
   [ResolutionTier.Classification]: { alpha: 0.55, radius: 26, label: 'classified' },

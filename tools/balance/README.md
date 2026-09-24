@@ -89,7 +89,10 @@ commander rather than from a snapshot — see `MatchTelemetry.finish`.
 berths, out of the purse. `docs/roster-plan.md` §2 says a hull the commander never buys does not exist in the
 baseline, and this table says which gate kept it out. Every carrier is a Slipway hull, so *no
 free yard* counts the escorted observations before the rung stood as well as those at a busy
-yard.
+yard. A seventh reason, *yielded to the Sower or the Bower*, is the owner's ruling on #839: the
+carrier's want sits below those two in the order of purchase, so while either is open it
+neither buys nor bids. Only the Commune names either hull, so the row reads zero for the other
+three.
 
 **The bank against the rung.** The most nodules a navy ever held at one instant, and the most
 it held once a Slipway was standing. The tables above are rates and counts, and none of
@@ -121,12 +124,12 @@ banked  ≈  delivered × HADRON.NODULE_YIELD_MULTIPLIER  +  HADRON.TITHE_PER_S 
 
 **Both terms, because the printed gap is their difference and neither alone predicts it.** The
 half-yield pulls banked down and the tithe pushes it back up, and over the thirty stored seeds
-the half-yield is the larger by some four hundred nodules: it takes **1,476** off a delivered
-column of 2,951 and the tithe puts **1,077** back over a mean 1,077 s alive, leaving **399** —
-and the **405** the table prints is that plus the same ~7 nodules of purchase-netting the other
+the half-yield is the larger by some four hundred nodules: it takes **1,452** off a delivered
+column of 2,904 and the tithe puts **1,018** back over a mean 1,018 s alive, leaving **434** —
+and the **440** the table prints is that plus the same ~6 nodules of purchase-netting the other
 three rows carry, the first bias in the table below. Name only the multiplier and a reader
-expects 1,476 and finds
-2,546 — a thousand-nodule excess that is the doctrine rather than a fault. What the control
+expects 1,452 and finds
+2,464 — a thousand-nodule excess that is the doctrine rather than a fault. What the control
 actually buys is this: an instrument that had quietly ended up reading the bank twice would
 report the Knights' two columns *equal*.
 
@@ -135,7 +138,7 @@ sit between them, all one-directional, and the largest is on the banked side:
 
 | Bias | Direction | Size |
 | --- | --- | --- |
-| A purchase inside the same 200 ms pass as a deposit nets against `nodulesEarned` | banked down | up to a whole hold per delivery. Over the thirty stored seeds it means 0.31% of the delivered column for the Consortium, 0.34% for the Commune and 0.46% for the Directorate; the largest in any single match is 150 nodules, three holds, in a 12.5-minute one |
+| A purchase inside the same 200 ms pass as a deposit nets against `nodulesEarned` | banked down | up to a whole hold per delivery. Over the thirty stored seeds it means 0.20% of the delivered column for the Consortium, 0.31% for the Commune and 0.32% for the Directorate; the largest in any single match is 100 nodules, two holds, in a 22-minute one |
 | A hold is recorded as the harvester was last seen carrying it | delivered down | up to one observation's mining, 2 nodules |
 | A hold whose hull dies in the pass it empties in is counted as lost | delivered down, lost up | one hold per death |
 

@@ -46,7 +46,12 @@ import {
   type Faction,
   type FaunaSpecies,
 } from '@echoes/shared';
-import { emptyWantTally, type WantTally } from '../ai/types.ts';
+import {
+  emptyCarrierWantTally,
+  emptyWantTally,
+  type CarrierWantTally,
+  type WantTally,
+} from '../ai/types.ts';
 
 /** How often a series is sampled, in seconds of simulated time. */
 export const SAMPLE_INTERVAL_S = 10;
@@ -127,10 +132,10 @@ export interface PlayerTelemetry {
    *   `banked ≈ delivered × HADRON.NODULE_YIELD_MULTIPLIER + HADRON.TITHE_PER_S
    *   × seconds`. Both terms, because the printed gap is their *difference* and
    *   neither alone predicts it: over the thirty stored seeds the multiplier
-   *   takes 1,476 off and the tithe puts 1,077 back, leaving 399 — and the 405
-   *   the baseline prints is that plus the same ~7 nodules of purchase-netting
+   *   takes 1,452 off and the tithe puts 1,018 back, leaving 434 — and the 440
+   *   the baseline prints is that plus the same ~6 nodules of purchase-netting
    *   the other three rows carry. Name only the multiplier and a reader expects
-   *   1,476 and finds 2,546 — a thousand-nodule excess that is the doctrine,
+   *   1,452 and finds 2,464 — a thousand-nodule excess that is the doctrine,
    *   not a fault.
    * - `nodulesLostInTransit` — cargo aboard a harvester the observation before
    *   it stopped existing. Ore that was cut, was never banked, and is
@@ -234,9 +239,10 @@ export interface PlayerTelemetry {
   /**
    * Why this navy's carrier was or was not bought (#839), on `ordnanceWant`'s
    * terms and through the same channel: from the commander, at the end of the
-   * match, and all zeroes for a seat nobody instrumented.
+   * match, and all zeroes for a seat nobody instrumented. One reason more than
+   * that tally, `yielded`: see `CarrierWantTally`.
    */
-  carrierWant: WantTally;
+  carrierWant: CarrierWantTally;
   /**
    * Gross income: every rise in the stockpile, summed.
    *
@@ -411,7 +417,7 @@ export class MatchTelemetry {
         biomassEarned: 0,
         eliminatedTick: null,
         ordnanceWant: emptyWantTally(),
-        carrierWant: emptyWantTally(),
+        carrierWant: emptyCarrierWantTally(),
       });
       this.lastUnits.set(slot, new Map());
       this.lastStructures.set(slot, new Map());
@@ -689,11 +695,11 @@ export class MatchTelemetry {
     timedOut: boolean,
     faunaComplement: readonly FaunaComplement[] = [],
     ordnanceWant: ReadonlyMap<number, WantTally> = new Map(),
-    carrierWant: ReadonlyMap<number, WantTally> = new Map()
+    carrierWant: ReadonlyMap<number, CarrierWantTally> = new Map()
   ): MatchTelemetryResult {
     for (const player of this.players.values()) {
       player.ordnanceWant = ordnanceWant.get(player.slot) ?? emptyWantTally();
-      player.carrierWant = carrierWant.get(player.slot) ?? emptyWantTally();
+      player.carrierWant = carrierWant.get(player.slot) ?? emptyCarrierWantTally();
     }
     return {
       seed: this.seed,
