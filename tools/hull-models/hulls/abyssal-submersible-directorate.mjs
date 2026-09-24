@@ -69,8 +69,12 @@
  *   each. Six were hidden before; `limb_starboard_1_claw` showed 0.5 m²
  *   where the file's offset had carried it past the second plate's rim,
  *   and rooted on its femur it lies under the plates with the rest
- *   (0.06 m²). That is the rule's consequence and not a choice: the fold
- *   is the file's, and only the joint moved.
+ *   (0.06 m²). The root is the claw's +Y end — the end the file left 0.1
+ *   units from the knee, against 0.26 for the other — so the fold is the
+ *   file's and only the joint moved; rooting by the other end would fold
+ *   every claw the other way, and #890's ruling 6 rules out the one
+ *   station on the plates that would show this one. A seventh hidden
+ *   claw is put to the owner on #907 beside the decisions there.
  * - `photophore_port_5` and `photophore_starboard_3` are the clause's and
  *   stay lit. Each sat on the fifth plate's flank at its widest line,
  *   under the plate's own upper surface; each is lifted 0.04 inboard and
@@ -109,29 +113,35 @@
  *   0.75 m ahead of the apex's station and already at the closest its
  *   own axis comes to the apex, so no move along that axis meets the head
  *   short of its port cheek, 6.6 m from the point. It hangs from the apex
- *   since #907 (`spikes` `rootOn`): its base centre on the head's point,
- *   its rotation the file's, 3.5 m from where the node had it, and it
- *   reads 0 m from the head. Its tip stands 0.036 units less far forward,
- *   which is THE SCALE below. `diff.mjs` lists the rostrum at 3.0 m and
- *   the seven claws at 1.5 to 1.8, and no other part.
+ *   since #907 (`spikes` `rootOn`): its base centre on the head's point
+ *   and its axis aimed at where the file's tip was, so the bow point the
+ *   chart's outline reads stays where the file had it, 0.4 m to port of
+ *   the axis, and only the root swings, 3.5 m onto the head; the cone is
+ *   turned by the one rotation that carries its old axis onto the new,
+ *   which keeps the facet on its crown, and it reads 0 m from the head.
+ *   (Hung with the file's rotation kept, in round 1, the tip swung 3.4 m
+ *   off the centreline and the outline's bow with it.) Its box reaches
+ *   0.024 units less far forward, which is THE SCALE below. `diff.mjs`
+ *   lists the rostrum at 2.1 m and the seven claws at 1.5 to 1.8, and no
+ *   other part.
  *
  * THE SCALE is the one hulls/light-scout-pelagia.mjs states for all six
  * shared kinds: drawn along Z, hull axis at y = 0.8 (the head's, the
  * rims' and the plates', which sit 0.03 over it); built here metre-true
  * at 95 m along +X, centred on its length, the axis at y = 0. `DRAWN` is
  * the length as intake measures it — the parts' boxes — which the
- * rostrum's box, rolled 0.3 with its node, overhangs at the bow: 4.5145
- * over the vertices' 4.50 since #907 hung the rostrum from the head's
- * apex. The file measured 4.5501 over 4.53, its rostrum 0.036 units
- * further forward, so the hull is 0.8 % larger on the chart than the
- * approved bake drew it. Every number below is the export's, through
+ * rostrum's box overhangs at the bow: 4.5261 over the vertices' 4.53
+ * since #907 hung the rostrum from the head's apex aimed at its own tip.
+ * The file measured 4.5501 over 4.53, its rostrum's box 0.024 units
+ * further forward at the file's tilt, so the hull is 0.5 % larger on the
+ * chart than the approved bake drew it. Every number below is the export's, through
  * kit.mjs `drawn`.
  */
 import { THREE, box, part, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
 
 const L = 95;
-const DRAWN = 4.5145;
+const DRAWN = 4.5261;
 const DATUM = 0.8;
 // `refuseMirror`'s half a metre, in this export's units.
 const HALF_METRE = (0.5 * DRAWN) / L;
@@ -216,8 +226,8 @@ directorate.carapaceOrbs(
 );
 
 // The head: a six-sided cone to a point, squashed 1.25 × 0.62 by its node
-// and rolled 0.12; the rostrum, four-sided and lit, rolled 0.3 and hung
-// from the head's apex (`rootOn`, #907; the header); and two mandibles
+// and rolled 0.12; the rostrum, four-sided and lit, hung from the head's
+// apex and aimed at its own tip (`rootOn`, #907; the header); and two mandibles
 // under it, the port one the longer, each leaned down its own way.
 directorate.spikes(root, violet, {
   spikes: [

@@ -72,13 +72,19 @@
  * ring above it — a ring stands at 0.88 of the foot plus its 0.14 tube
  * over a wall that has narrowed to 0.86 of the foot, and overhangs it by
  * up to 0.3 units — and the audit read both hidden, the issue's own case
- * of a lamp whose seat would hide it. Each is seeded in the weld's corner
- * instead (`corner`): on the next tier's wall at the file's bearing, a
- * radius above the ring below it — `_3` on `carapace_tier_2` over
- * `seam_ring_1`, `_13` on `carapace_tier_1` over `seam_ring_0`, resting on
- * both — the Cruiser's answer for its tail light (#894). Both show 13 to
- * 15 m² from above, as they did. `diff.mjs` lists the nine, `_3` at
- * 19.5 m and `_13` at 14.6 the largest and the seven others 1.6 to 7.1,
+ * of a lamp whose seat would hide it. Each takes a station first. `_3`
+ * comes down its own tier's wall at the file's bearing and radius, from
+ * y 3.16 to 2.8 (`lower`), out from under `seam_ring_1`: it shows
+ * 14.3 m² there, as it did, and stays between `_2` and `_4` in its
+ * climb. `_13` has no such station — on `carapace_tier_0` above `_12`
+ * (y 1.06) the wall is under `seam_ring_0` the whole way, 0.13 m² at
+ * y 1.3, and only below `_12` does a bud clear it — so it is seeded in
+ * the weld's corner instead (`corner`), on `carapace_tier_1`'s wall at
+ * the file's bearing a radius above the ring, resting on both, the
+ * Cruiser's answer for its tail light (#894): 13 m² from above, level
+ * with `_14` (53.9 against 53.6 m up) rather than 14 m under it, so the
+ * -z foot's run ends in a pair. `diff.mjs` lists the nine, `_13` at
+ * 14.6 m and `_3` at 9.8 the largest and the seven others 1.6 to 7.1,
  * with the two mouths at 0.2 m; the seven other lamps rested where the
  * file had them and stay.
  *
@@ -268,9 +274,12 @@ directorate.clawGrips(root, [red, black], {
 // header). "Sustained glow from ports and working lights": SIG 35.
 const DOME = TIERS.map((t) => t.name).concat('carapace_crown');
 const on = (at) => ({ ...laid(at), on: DOME });
-// A lamp seeded in the weld's corner instead of from its own station: on
-// tier `i`'s wall at the file's bearing, a radius above the seam ring
-// under it (the header, THE TWO THE RINGS HID).
+// Two lamps seeded off their own stations (the header, THE LAMPS THAT
+// FLOATED): `lower` keeps the file's bearing and radius and brings the
+// seed down its tier's wall to `y`, under the seam ring's overhang;
+// `corner` seeds on tier `i`'s wall at the file's bearing, a radius above
+// the seam ring under it, where no lower station on the tier shows.
+const lower = ([x, , z], y) => on([x, y, z]);
 const corner = ([x, , z], i, r) => {
   const a = Math.atan2(z, x);
   const { foot } = TIERS[i];
@@ -284,7 +293,7 @@ directorate.photophoreDomes(root, crimson, {
     ['photophore_0', 0.1469616145, on([5.580291581, 1.421189459, 2.073583992])],
     ['photophore_1', 0.1434205025, laid([4.884848655, 1.843210097, 3.08199889])],
     ['photophore_2', 0.102385737, on([3.878459379, 2.46997304, 3.9174528])],
-    ['photophore_3', 0.1021963134, corner([2.459903688, 3.158942005, 4.607727799], 2, 0.1021963134)],
+    ['photophore_3', 0.1021963134, lower([2.459903688, 3.158942005, 4.607727799], 2.8)],
     ['photophore_4', 0.1277387589, laid([1.840131535, 3.631424866, 4.675740221])],
     ['photophore_5', 0.1476596892, on([0.7185694396, 4.464471434, 4.619367234])],
     ['photophore_6', 0.1411419511, on([-0.6710058168, 5.009296906, 4.395169463])],

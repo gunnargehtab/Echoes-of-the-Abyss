@@ -1525,7 +1525,8 @@ export function gasRacks(root, { grey, rust, amber, lampM }, opts) {
     add(root, `rack_rail_${tag}`, box(...rail.size), grey, [rail.x, rail.y, z]);
     // "The lamp housings on the rack rails": each housing is dropped onto the
     // rail at its station, its underside on the rail's top (kit.mjs `seat`).
-    // The Furnace's numbers stood all six 0.36 m over their rails (#907);
+    // The Furnace's numbers stood all six 0.1 m over their rails, 0.36 by
+    // the resting measure's corner-to-edge reading (#907);
     // `lamps.y` is the station's height for the record, and the rail decides.
     lamps.x.forEach((x, i) => {
       const { at, rot } = seat(root, `rack_rail_${tag}`, [x, lamps.y, z], {

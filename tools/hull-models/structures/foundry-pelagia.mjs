@@ -56,7 +56,7 @@
  *   off the beam's centre; the second crane's load hangs 1.1 higher than
  *   the first's. Every other number of both cranes, of the bay, the launch
  *   mouth, the tanks and the pipes is the Directorate file's.
- * - The four veins are arcs of torus each its own radius (2.23 to 2.35)
+ * - The four veins are arcs of torus each its own radius (2.10 to 2.35)
  *   and arc (1.057 to 1.366), two a flank, yawed −0.4 and rolled each its
  *   own way; the −x pair the file writes in three's (−π, b, c) form of the
  *   XYZ Euler, written here as the plain (0, π + 0.4, c + π) of the same
@@ -364,7 +364,7 @@ pelagia.domeArcs(root, bio, {
   tube: 0.06,
   facets: [4, 12],
   arcs: [
-    // R 2.10, not the file's 2.344514791 — see LAMPS THAT FLOAT in the header.
+    // R 2.10, not the file's 2.344514791 — the veins bullet in the header.
     {
       R: 2.1,
       arc: 1.05722491759,

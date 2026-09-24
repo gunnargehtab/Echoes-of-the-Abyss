@@ -2551,16 +2551,32 @@ export function spikes(root, mat, { spikes: list }) {
   });
 }
 
-/** Move `mesh`, a cone of `length` on its own Y, so its base centre sits on cone `name`'s apex. */
+/**
+ * Hang `mesh`, a cone of `length` on its own Y, from cone `name`'s apex:
+ * its base centre on the apex and its axis aimed at where its tip already
+ * was, so the tip — the point the chart's outline reads, on the Submersible
+ * the bow itself — keeps the file's station and only the root moves onto
+ * the head. The cone is turned by the one rotation that carries its old
+ * axis onto the new, which keeps its roll about that axis and so the
+ * facet the file put on the crown. Hung with its rotation kept instead,
+ * the rostrum's tip swung 3.4 m off the centreline and the outline's bow
+ * point with it (#907, round 1).
+ */
 function hangOn(root, mesh, length, name) {
   const host = root.getObjectByName(name);
   const height = host?.geometry?.parameters?.height;
   if (!height) throw new Error(`spikes: no cone ${name} in ${root.name} for ${mesh.name}`);
   root.updateMatrixWorld(true);
   const apex = host.localToWorld(new THREE.Vector3(0, height / 2, 0));
-  const base = mesh.localToWorld(new THREE.Vector3(0, -length / 2, 0));
+  const tip = mesh.localToWorld(new THREE.Vector3(0, length / 2, 0));
+  const worldQ = mesh.getWorldQuaternion(new THREE.Quaternion());
+  const was = new THREE.Vector3(0, 1, 0).applyQuaternion(worldQ);
+  const axis = tip.clone().sub(apex).normalize();
+  const turn = new THREE.Quaternion().setFromUnitVectors(was, axis);
   const frame = mesh.parent;
-  mesh.position.add(frame.worldToLocal(apex.clone()).sub(frame.worldToLocal(base.clone())));
+  const parentQ = frame.getWorldQuaternion(new THREE.Quaternion());
+  mesh.quaternion.copy(parentQ.invert().multiply(turn.multiply(worldQ)));
+  mesh.position.copy(frame.worldToLocal(apex.clone().addScaledVector(axis, length / 2)));
 }
 
 /**

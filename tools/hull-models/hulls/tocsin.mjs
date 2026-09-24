@@ -56,7 +56,7 @@
  *   family's unlit finish (`ink.crystalSeamUnlit`) for the reason below.
  *   A breech collar caps the crown's open apex where the barrel enters it:
  *   a six-facet ring 3 m long, 8.3 m across, in shadow indigo. The muzzle
- *   collar is the Lance's exactly — a six-facet crystal ring lathed bore
+ *   collar is the Lance's but for its bore — a six-facet crystal ring lathed bore
  *   and all, 2.2 m long from x 50.3 to the bow, r 3.4 aft to 3.9 at the
  *   lip on a bore of 1.96, a vertex on the crown pressed to 0.9 — 6.8 m
  *   across and 7.0 m tall at the lip, wider than the barrel by a third so
