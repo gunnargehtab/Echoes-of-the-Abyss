@@ -274,7 +274,9 @@ function triangleDiff(p, q, scale, shift) {
  * it is recorded rather than silently resolved to the first. Strength is
  * not part of a value — it is the fixture's loudness, and since #891 a file
  * carries one name at two loudnesses (the Bastion's `amber_lamp` at 2.4 and
- * 1.1) — so it is left out of the comparison, as finishes.mjs leaves it out.
+ * 1.1) — so it is left out of the one-name-two-finishes check, as
+ * finishes.mjs leaves it out, and compared as the set of loudnesses the name
+ * carries, so a lamp banked or raised still shows as a change in value.
  */
 function finishesByName(parts) {
   const byName = new Map();

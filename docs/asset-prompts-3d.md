@@ -275,9 +275,11 @@ and a name is the family's where the value is:
   Refinery's `amber_lamp` at 2.4 and 1.1, the Veil's `bio_light` at 2.2 and 0.9 and the
   Commune Cruiser's at 1.6 and 1.5: one fixture at two loudnesses, which every consumer groups by material rather than by name
   (`recolor`, `mergeByMaterial`, `check.mjs`), and which `parts.mjs` cannot tell apart.
-  The Submersibles' and the Barge's heavier finishes went with their names, so the conn
-  view shows the Consortium Submersible's grey ×1.70 brighter and its black ×1.67, from
-  metalness alone.
+  The Submersibles' and the Barge's heavier finishes went with their names: the Consortium
+  Submersible's grey keeps 0.68 of its colour as diffuse where it kept 0.40, its black 0.75
+  where it kept 0.45, and the specular a lower metalness loses gives most of that back — the
+  Barge, carrying the same move, reads about five percent lighter in the conn view
+  (`891-structures-before-after.png`, the 55° row).
 - **The hyphenated names folded.** The Submersibles', the Baffle Barge's and the Spore
   Veil's r184 names went onto the names that share their hex, at the hulls' value or the
   structures' where the structures have a name of their own —
