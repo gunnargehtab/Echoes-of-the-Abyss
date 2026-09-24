@@ -382,12 +382,15 @@ const LOCK_FLASH_MS = 700;
  * Dormant is faint but never invisible: a hazard the player forgets is a
  * hazard that will surprise them, and surprise is the failure mode the warning
  * phase exists to prevent.
+ *
+ * Rung 5 in every phase, because a hazard site is map furniture
+ * (docs/map-visuals.md §5); the alphas are the ladder's.
  */
 const HAZARD_STYLE: Record<HazardPhase, { width: number; alpha: number }> = {
   [HazardPhase.Dormant]: { width: 2, alpha: FURNITURE_OUTLINE_ALPHA.hazardRimDormant },
-  [HazardPhase.Warning]: { width: 3, alpha: 0.7 },
-  [HazardPhase.Active]: { width: 4, alpha: 0.95 },
-  [HazardPhase.Decay]: { width: 3, alpha: 0.5 },
+  [HazardPhase.Warning]: { width: 3, alpha: FURNITURE_OUTLINE_ALPHA.hazardRimWarning },
+  [HazardPhase.Active]: { width: 4, alpha: FURNITURE_OUTLINE_ALPHA.hazardRimActive },
+  [HazardPhase.Decay]: { width: 3, alpha: FURNITURE_OUTLINE_ALPHA.hazardRimDecay },
 };
 
 /**
@@ -1993,6 +1996,18 @@ export class EchoRenderer {
     // base perimeter is the most urgent pixel on the screen, and must never
     // hide behind your own Bastion's marks. (The Bastion itself is the GL
     // canvas below everything here.)
+    //
+    // Each layer's rung on the loudness ladder (docs/map-visuals.md §5), which
+    // ranks loudness, not draw order; each draw site names its own:
+    // - ground: rung 6, blocked ground.
+    // - nodes: rung 5, the resource fields.
+    // - rings: rung 6, detection rings, the ping preview and order routes.
+    // - structure, unit and ordnance symbols: rung 6, the ink about own
+    //   entities the conn view draws at rung 7 (a site's scaffold aside).
+    // - contact layer: rung 5's hazards and fauna fields, and the acoustic
+    //   residue §5 does not place yet.
+    // - contact symbols: rung 7, contacts at every tier.
+    // `hud` is screen space rather than the map, and outside the ladder.
     this.overlay.addChild(
       this.groundLayer,
       this.nodeLayer,
@@ -5525,6 +5540,9 @@ export class EchoRenderer {
       this.drawUnits();
       this.drawOrderPlans();
     }
+    // The map ends here. Every pass below paints screen space — panels, the
+    // edge flash, the drag box — and sits outside the loudness ladder, which
+    // ranks marks on the map (docs/map-visuals.md §5).
     this.drawHud();
     // After the HUD, so the flash sits over the panels it warns through.
     this.drawExposureFlashes();
@@ -5558,6 +5576,11 @@ export class EchoRenderer {
    * The deepest hull in the selection decides. A mixed group moving together
    * is limited by the one that fits through least, and showing the optimistic
    * answer would draw a route half the group cannot take.
+   *
+   * Rung 6, instruments (docs/map-visuals.md §5 names blocked ground). It has
+   * no rim — a hatch and a faint fill, nothing round the edge — and §5's
+   * outline rule presumes one, so how it is weighed is the owner's call, left
+   * open in §10. The ladder does not weigh it yet.
    */
   private drawBlockedGround(): void {
     const g = this.groundLayer;
@@ -5610,6 +5633,10 @@ export class EchoRenderer {
   /**
    * Nodule fields — public survey-chart data, laid on the seabed. Deliberately
    * dim: they are geography, not intel.
+   *
+   * Rung 5, map furniture (docs/map-visuals.md §5). The rim and the crystal's
+   * depth ring are the outlines the ladder weighs; the fill and the grains
+   * are interior.
    */
   private drawNodes(): void {
     const g = this.nodeLayer;
@@ -5620,7 +5647,7 @@ export class EchoRenderer {
       const radius = 60 + (node.initialAmount / 3000) * 40;
       this.fillCircle(g, node.x, node.y, radius, null, { color, alpha: 0.1 });
       if (this.traceCircle(g, node.x, node.y, radius, null)) {
-        g.stroke({ width: 2, color, alpha: 0.3 });
+        g.stroke({ width: 2, color, alpha: FURNITURE_OUTLINE_ALPHA.resourceRim });
       }
       // A scatter of ore, deterministic per node so the map is stable. Each
       // grain is metres across — a screen dot at its projected point says the
@@ -5649,13 +5676,21 @@ export class EchoRenderer {
               null
             )
           ) {
-            g.stroke({ width: 2, color, alpha: 0.55 });
+            g.stroke({ width: 2, color, alpha: FURNITURE_OUTLINE_ALPHA.crystalDepthRing });
           }
         }
       }
     }
   }
 
+  /**
+   * The ink about own structures. Rung 6, instruments: docs/map-visuals.md
+   * §5 names the selection ring and the loudness collar. It does not name the
+   * yard's rally course or the build and health bars, which are placed by the
+   * row's voice — cyan tells — as readings, not marks about the sea. Nor does
+   * it name a construction site's scaffold, placed on rung 7 because it
+   * stands in for the structure the conn view will draw there.
+   */
   private drawStructures(): void {
     const palette = FACTION_PALETTE[this.faction];
 
@@ -5784,6 +5819,10 @@ export class EchoRenderer {
    * *not* a threat indicator: nothing about a ring says anybody is inside it.
    * It is the reach of the player's own noise, and whether that reach is a
    * mistake is theirs to judge.
+   *
+   * Rung 6, instruments (docs/map-visuals.md §5): range rings and the ping
+   * preview. The unselected ring is the rung's quietest steady outline, and
+   * both detection rings take their alphas from the ladder.
    */
   private drawRings(): void {
     const g = this.ringLayer;
@@ -5870,7 +5909,7 @@ export class EchoRenderer {
       g.stroke({
         width: 2 * this.uiScale,
         color: sigColor(unit.sig),
-        alpha: selected ? 0.35 : LOUD_RING_ALPHA,
+        alpha: selected ? INSTRUMENT_OUTLINE_ALPHA.selectedRing : LOUD_RING_ALPHA,
       });
     }
   }
@@ -5893,6 +5932,9 @@ export class EchoRenderer {
    * draws every frame like the rest of the ground language, hatched rather
    * than filled — the sites carry no behaviour yet, and a solid marker would
    * imply an effect that does not exist.
+   *
+   * Rung 5, map furniture (docs/map-visuals.md §5). The rim is weighed; the
+   * hatching is interior, unweighed only while the rim speaks for it.
    */
   private drawStaticHazardSites(g: Graphics): void {
     for (const site of this.map?.hazards ?? []) {
@@ -5921,6 +5963,13 @@ export class EchoRenderer {
     }
   }
 
+  /**
+   * Rung 5, map furniture, in every phase (docs/map-visuals.md §5). The rim
+   * and the warning's countdown ring are the outlines the ladder weighs. The
+   * fills, a current's streaks and the two inner rings every other live
+   * hazard draws are interior. Its third ring falls on the rim and stacks on
+   * it, so the ladder weighs the two together.
+   */
   private drawHazards(g: Graphics): void {
     for (const hazard of this.hazards) {
       const style = HAZARD_STYLE[hazard.phase];
@@ -5948,7 +5997,9 @@ export class EchoRenderer {
           g.stroke({
             width: gripping ? 2 : 1,
             color,
-            alpha: gripping ? 0.3 : FURNITURE_OUTLINE_ALPHA.kelpRimIdle,
+            alpha: gripping
+              ? FURNITURE_OUTLINE_ALPHA.kelpRimGripping
+              : FURNITURE_OUTLINE_ALPHA.kelpRimIdle,
           });
         }
         continue;
@@ -5964,7 +6015,13 @@ export class EchoRenderer {
         // have to be learned twice.
         const closing = hazard.radiusM * (1.9 - 0.9 * hazard.progress);
         if (this.traceCircle(g, hazard.x, hazard.y, closing, null)) {
-          g.stroke({ width: 2, color, alpha: 0.35 + hazard.progress * 0.5 });
+          g.stroke({
+            width: 2,
+            color,
+            alpha:
+              FURNITURE_OUTLINE_ALPHA.hazardCountdownStart +
+              hazard.progress * FURNITURE_OUTLINE_ALPHA.hazardCountdownGain,
+          });
         }
       }
 
@@ -5985,7 +6042,11 @@ export class EchoRenderer {
         } else {
           for (let ring = 1; ring <= 3; ring++) {
             if (this.traceCircle(g, hazard.x, hazard.y, hazard.radiusM * (ring / 3), null)) {
-              g.stroke({ width: 1.5, color, alpha: 0.3 * heat });
+              g.stroke({
+                width: 1.5,
+                color,
+                alpha: FURNITURE_OUTLINE_ALPHA.hazardInnerRing * heat,
+              });
             }
           }
         }
@@ -6001,6 +6062,9 @@ export class EchoRenderer {
    * hazard keeps one silhouette. Nothing here is animated: the renderer draws
    * simulation state, and a current's state is its direction, not a phase the
    * client invents.
+   *
+   * Rung 5 with the current they sit inside, and interior to it, so the
+   * ladder weighs the current's rim rather than these (docs/map-visuals.md §5).
    */
   private drawFlowStreaks(g: Graphics, hazard: HazardState, heat: number): void {
     const flow = hazard.flowRad ?? 0;
@@ -6093,6 +6157,11 @@ export class EchoRenderer {
    * the ring is that sentence drawn rather than implied. Fauna light is not
    * world light (docs/style-neon-noir.md), so this lives in the HUD layer
    * with the other overlays.
+   *
+   * Rung 5, map furniture (docs/map-visuals.md §5). Only the trigger ring is
+   * an outline, so only a scattered shoal is weighed. A formed shoal is motes
+   * and a halo with no rim, and §5's outline rule presumes one, so how it is
+   * weighed is the owner's call, left open in §10.
    */
   private drawShoals(g: Graphics): void {
     const motes = 5;
@@ -6118,7 +6187,11 @@ export class EchoRenderer {
         // The disclosure, drawn at its true size: something is within 300 m
         // of the glow — never what, whose, or exactly where.
         if (this.traceCircle(g, shoal.x, shoal.y, DRIFT.LAMPFRY_SCATTER_RADIUS_M, null)) {
-          g.stroke({ width: 1.5, color: FAUNA_COLOR, alpha: 0.4 });
+          g.stroke({
+            width: 1.5,
+            color: FAUNA_COLOR,
+            alpha: FURNITURE_OUTLINE_ALPHA.shoalScatterRing,
+          });
         }
       } else {
         // A soft halo, so a formed shoal reads as one glow at survey zoom.
@@ -6134,6 +6207,9 @@ export class EchoRenderer {
    * the cluster's true 250 m masking radius and a faint rim. A player reads
    * the overlap density as how quiet the water is, and a burned lane reads as
    * the discs that are no longer there.
+   *
+   * Rung 5, map furniture (docs/map-visuals.md §5): a public field, never an
+   * agent. The rim is one of the four outlines rung 5's floor is taken from.
    */
   private drawJellies(g: Graphics): void {
     for (const jelly of this.jellies) {
@@ -6147,6 +6223,14 @@ export class EchoRenderer {
     }
   }
 
+  /**
+   * Acoustic residue has no rung yet. docs/map-visuals.md §5's table does not
+   * place it, and no row's words fit it: it is drawn over the ground in its
+   * own colours rather than being ground (rungs 1 to 4), it is the player's
+   * own intel rather than public furniture (rung 5), it is no instrument
+   * (rung 6), and it must never read as a contact (rung 7). Left for the
+   * owner to place, and docs/map-visuals.md §10 records it.
+   */
   private drawEchoMarks(g: Graphics): void {
     for (const mark of this.marks) {
       const style = MARK_STYLE[mark.kind];
@@ -6242,6 +6326,12 @@ export class EchoRenderer {
    * "this became exact" — and a pulse would read as a standing state. It
    * decays to nothing on its own, so a player who looks away and back sees a
    * track, not a permanent decoration still claiming to be news.
+   *
+   * Rung 6, instruments. §5's row does not name acquisition brackets; they
+   * are placed by its voice — red warns — and because they are a statement
+   * about the player's fire control rather than the contact they close on.
+   * They fade to nothing by design, so the ladder does not weigh them
+   * (docs/map-visuals.md §10).
    */
   private drawLockFlash(
     g: Graphics,
@@ -6289,13 +6379,24 @@ export class EchoRenderer {
     return PROPAGATION_FACTOR[this.biomeAt(x, y)] ?? 1;
   }
 
+  /**
+   * Contacts at every tier: rung 7, agents (docs/map-visuals.md §5). Their
+   * glyphs and health bars are not named there; they are placed with the
+   * contact because they fade with the mark they caption. A
+   * Tier-1 or Tier-2 column is an edgeless haze, which §5 does not weigh per
+   * pixel against a line; it answers to gate 7's glance test. The lock flash
+   * drawn onto a contact is rung 6 (`drawLockFlash`). A contact fades in as
+   * it arrives and out as a ghost, so rung 7 is not weighed against rung 6
+   * yet (docs/map-visuals.md §10).
+   */
   private drawContacts(): void {
     const g = this.contactLayer;
     g.clear();
 
     const now = performance.now();
     const decayMs = PERSISTENCE.GHOST_MARKER_DECAY_S * 1000;
-    // Ground language first, into the polyline layer under the marks.
+    // Ground language first, into the polyline layer under the marks. Rung 5
+    // throughout, but for the residue, which §5 does not place yet.
     this.drawStaticHazardSites(g);
     this.drawHazards(g);
     this.drawJellies(g);
@@ -6566,7 +6667,11 @@ export class EchoRenderer {
     for (const unit of this.units) {
       // The hull itself — model, heading, silent-running dimming — is the
       // conn view's. What this pass owns is the instrument ink *about* the
-      // hull, billboarded at its drawn depth.
+      // hull, billboarded at its drawn depth: rung 6 (docs/map-visuals.md
+      // §5), which names selection and the loudness collar. The crush ring,
+      // the break-silence ring and the health bar are unnamed there and
+      // placed by its voice: red warns, and the bar is a reading. The
+      // break-silence ring fades to nothing by design and is not weighed.
       const d = this.drawnPosition(unit);
       const p = this.project(d.x, d.y, d.depth);
       if (p === null) break;
@@ -6664,7 +6769,9 @@ export class EchoRenderer {
     for (const shot of this.ordnance) {
       // The shot itself — spindle, trail, lamp — is the conn view's
       // (ordnanceLayer.ts). This is the instrument ink about it, in the own
-      // voice: what it is and, for a torpedo, how much run it has left.
+      // voice: what it is and, for a torpedo, how much run it has left. Rung
+      // 6, placed like the ink about a hull: §5 names the shot (rung 7), not
+      // the reading about it.
       const conn = this.conn;
       const d =
         conn === null ? shot : conn.ordnanceMotion.at(shot, this.frameNowMs, this.drawnScratch);
@@ -7565,6 +7672,13 @@ export class EchoRenderer {
     }
   }
 
+  /**
+   * Order routes and the click's acknowledgement. Rung 6, instruments: §5's
+   * row does not name them, and they are placed by its voice — cyan tells,
+   * red warns — and because an order is the player's own interface, not a
+   * mark about the sea. The acknowledgement fades to nothing by design, so
+   * the ladder does not weigh it (docs/map-visuals.md §10).
+   */
   private drawOrderPlans(): void {
     const g = this.ringLayer;
     const now = this.frameNowMs;
