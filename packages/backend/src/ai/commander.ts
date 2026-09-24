@@ -86,8 +86,8 @@ import {
   type Doctrine,
   type ExposureResponse,
 } from './doctrine.ts';
-import { emptyWantTally } from './types.ts';
-import type { AiBriefing, AiCommand, AiPlayer, WantTally } from './types.ts';
+import { emptyCarrierWantTally, emptyWantTally } from './types.ts';
+import type { AiBriefing, AiCommand, AiPlayer, CarrierWantTally, WantTally } from './types.ts';
 
 /**
  * Ranges the commander reasons with, in metres. TUNABLE throughout — these are
@@ -1250,10 +1250,10 @@ export class AiCommander implements AiPlayer {
   private readonly ordnanceWantTally: WantTally = emptyWantTally();
   /**
    * Why the carrier want came to nothing, counted (#839), on the ordnance
-   * tally's terms: written only in the carrier branch of `commandProduction`,
-   * read by nothing in the simulation.
+   * tally's terms and with one reason more, `yielded`: written only in the
+   * carrier branch of `commandProduction`, read by nothing in the simulation.
    */
-  private readonly carrierWantTally: WantTally = emptyWantTally();
+  private readonly carrierWantTally: CarrierWantTally = emptyCarrierWantTally();
   /** The transport plan, if the navy has a transport afloat (see `LIFT`). */
   private lift: { transportId: number; phase: 'loading' | 'sailing'; sinceTick: number } | null =
     null;
@@ -1382,7 +1382,7 @@ export class AiCommander implements AiPlayer {
   }
 
   /** The carrier want's block reasons so far this match (#839), as a copy. */
-  get carrierWant(): WantTally {
+  get carrierWant(): CarrierWantTally {
     return { ...this.carrierWantTally };
   }
 
@@ -2961,12 +2961,18 @@ export class AiCommander implements AiPlayer {
     // fleet while it saves. Measured with the guard on: the Commune's army
     // oscillates either side of the floor, so every dip reopened the tap and
     // the bank topped out at 320 against a 380 price, in 11,902 observations.
+    //
+    // `sowerOrBowerOpen` is what the carrier's want reads further down: set
+    // where this want or the Bower's reaches its buy or its bid, and nowhere
+    // else.
+    let sowerOrBowerOpen = false;
     if (this.doctrine.composition.includes(UnitKind.Sower) && this.crystalField !== null) {
       const seeders =
         snapshot.units.reduce((n, u) => n + (u.kind === UnitKind.Sower ? 1 : 0), 0) +
         queuedOf(UnitKind.Sower);
       const yard = this.freeYard(snapshot.structures, UnitKind.Sower);
       if (seeders < 1 && yard !== null && this.berthed(snapshot, UnitKind.Sower)) {
+        sowerOrBowerOpen = true;
         if (this.affordUnit(UnitKind.Sower, purse)) {
           buy(UnitKind.Sower, yard);
           return;
@@ -2992,6 +2998,7 @@ export class AiCommander implements AiPlayer {
         queuedOf(UnitKind.Bower);
       const yard = this.freeYard(snapshot.structures, UnitKind.Bower);
       if (anchors < 1 && yard !== null && this.berthed(snapshot, UnitKind.Bower)) {
+        sowerOrBowerOpen = true;
         if (this.affordUnit(UnitKind.Bower, purse)) {
           buy(UnitKind.Bower, yard);
           return;
@@ -3017,22 +3024,34 @@ export class AiCommander implements AiPlayer {
     // commander may hold, on two decks. The docs argue what a carrier is
     // worth and not how many, so this builds the floor of one.
     //
-    // **Below the Sower's and the Bower's wants**, by the owner's decision on
-    // #839, and what that buys is narrower than it reads. A purse that already
-    // covers a want is spent on the first one written here that it covers, so
-    // there the order decides: on 360–400 nodules the Commune buys its Bower
-    // or its Sower, where written above them it bought the Rootstock. A purse
-    // that covers none is held by `holdPurse` for the cheapest bid past its
-    // floor, whatever the order, so a Commune saving from below reaches the
-    // 340 nodule Rootstock before the 360 nodule Bower and buys it first.
-    // Whether "below" meant this position or the order of purchase is asked
-    // on #839.
+    // **Below the Sower's and the Bower's wants, in the order of purchase**:
+    // the owner's ruling on #839. While either of those wants is open, the
+    // carrier's neither buys nor bids. Open means it reached its buy or its
+    // bid this observation: named by the composition, none afloat or queued,
+    // a free yard, the berths, and for the Sower a crystal field.
+    //
+    // The reason for "below" was that Pelagia bought the Rootstock instead of
+    // the Bower or the Sower. Written position alone settled that only for a
+    // purse that already covered one of them. `holdPurse` saves for the
+    // cheapest bid past its floor, whatever the order, so a Commune saving
+    // from below still reached the 340 nodule Rootstock before the 360 nodule
+    // Bower and bought it first. What the ruling buys: the Commune's bank is
+    // saved for its Bower and its Sower first, and the deck bids only once
+    // both are closed. The other three navies name neither hull, so for them
+    // nothing here changes.
+    //
+    // The yard and the berths cannot let the deck past a want they shut. All
+    // three are Slipway hulls (`PRODUCIBLE`), and `freeYard` asks only the
+    // yard, so no free yard for one is none for all three. The berths shut in
+    // the same order: the Rootstock needs 7, the Bower 3 and the Sower 2, so
+    // berths too few for either are too few for the deck. What leaves the
+    // deck free is a want already satisfied, or a Sower with no field.
     //
     // Counted on the ordnance want's terms, so the report can say which gate
-    // shut when a navy fields no deck: six reasons that sum to `reached`, and
-    // `alreadyHas` asked before the escort, for the reason the note on the
-    // ordnance branch measured. The gates are the same conjunction in the same
-    // order; only `decks` is read earlier, so the count has it.
+    // shut when a navy fields no deck: those six reasons and `yielded`, seven
+    // that sum to `reached`, and `alreadyHas` asked before the escort, for the
+    // reason the note on the ordnance branch measured. `yielded` is asked
+    // after the berths, where the purse is the next question.
     const ownCarrier = OWN_CARRIER[this.briefing.faction];
     const decks =
       snapshot.units.reduce((n, u) => n + (u.kind === ownCarrier ? 1 : 0), 0) +
@@ -3047,7 +3066,8 @@ export class AiCommander implements AiPlayer {
         const crewed = this.berthed(snapshot, ownCarrier);
         if (yard === null) deckTally.noYard++;
         else if (!crewed) deckTally.noBerth++;
-        if (yard !== null && crewed) {
+        else if (sowerOrBowerOpen) deckTally.yielded++;
+        if (yard !== null && crewed && !sowerOrBowerOpen) {
           if (this.affordUnit(ownCarrier, purse)) {
             deckTally.bought++;
             buy(ownCarrier, yard);

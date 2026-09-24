@@ -2721,7 +2721,7 @@ export const WIRE = {
    * bound on the *selection* rather than on the roster — but the roster is
    * what a select-all can name, and `tools/balance/baselines/
    * four-faction-baseline.md` puts the busiest navy's whole match at about
-   * thirty hulls built against as many lost. 256 is several times the largest
+   * forty hulls built against as many lost. 256 is several times the largest
    * fleet that has ever existed in a measured match, which is what makes it a
    * bound on abuse rather than on play. A message that exceeds it is refused
    * whole rather than truncated — a half-applied order is a worse answer than

@@ -10,7 +10,8 @@
  *
  *   - the **buy**: every navy reaches its own carrier once the rung stands,
  *     the escort is met and the price is in the bank — one, not before the
- *     escort, and below the Sower's and the Bower's wants;
+ *     escort, and for the Commune only once its Sower's and Bower's wants are
+ *     closed: below them in the order of purchase, the owner's ruling;
  *   - the **order**: a carrier is put onto a target and walked to the
  *     kilometre §15 gives it, inside its tether and outside the Cruiser's gun,
  *     and with nothing to fly at it waits behind the army. Against synthetic
@@ -36,6 +37,7 @@ import {
   OrdnanceKind,
   PRODUCIBLE,
   ResolutionTier,
+  ResourceKind,
   SIM,
   StructureKind,
   UnitKind,
@@ -48,10 +50,10 @@ import { AiCommander } from '../src/ai/commander.ts';
 import { DOCTRINE } from '../src/ai/doctrine.ts';
 import { AiSeat, briefingFor } from '../src/ai/seat.ts';
 import {
-  emptyWantTally,
+  emptyCarrierWantTally,
   type AiBriefing,
   type AiCommand,
-  type WantTally,
+  type CarrierWantTally,
 } from '../src/ai/types.ts';
 import { Flightdeck, Heading, Position, Weapon } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
@@ -180,6 +182,13 @@ const OWN_SIEGE: Record<Faction, UnitKind> = {
   [Faction.Hadron]: UnitKind.Tocsin,
 };
 
+/**
+ * The two wants the carrier's yields to while either is open (the owner's
+ * ruling on #839). A navy has them when its composition names them, which
+ * today is the Commune alone.
+ */
+const SOWER_AND_BOWER: readonly UnitKind[] = [UnitKind.Sower, UnitKind.Bower];
+
 /** The army size at which the escort-gated wants open. */
 function escortFloor(faction: Faction): number {
   // `MASSING.MIN_FRACTION` is 0.5, restated here rather than imported for the
@@ -195,10 +204,13 @@ function escortFloor(faction: Faction): number {
  * them still open would answer this file's question for it — so the economy is
  * staffed to the doctrine's target and the scout, the ordnance hull, the heavy
  * and the siege hull are all in the water, with the mine wall's two Spinners
- * (`MINE_WALL.SPINNERS`) for a navy that lays one. The Corvettes on the end are the
+ * (`MINE_WALL.SPINNERS`) for a navy that lays one. The Corvettes are the
  * escort: the carrier's want is behind `attackAtArmySize * MASSING.MIN_FRACTION`
- * like the ordnance hull's. The Commune's Sower and Bower are left out, so
- * both of its wants are open; the Commune's own subtest below is about them.
+ * like the ordnance hull's. The Commune's Sower and Bower are in the water
+ * too, after the Corvettes so no armed hull's id moves. While either of their
+ * wants is open the carrier's neither buys nor bids (the owner's ruling on
+ * #839), so a fixture without them would test that rule and not this one.
+ * `sowerAndBower: false` leaves both out, for the Commune's own subtests below.
  *
  * `escort: false` is the same navy one armed hull short of that floor, and it
  * is built rather than cut down to, because "no army" would answer the wrong
@@ -212,7 +224,7 @@ function escortFloor(faction: Faction): number {
  */
 function force(
   brief: AiBriefing,
-  opts: { escort?: boolean; extra?: UnitKind[] } = {}
+  opts: { escort?: boolean; sowerAndBower?: boolean; extra?: UnitKind[] } = {}
 ): {
   units: EchoSnapshot['units'];
 } {
@@ -233,6 +245,9 @@ function force(
       ? [UnitKind.Spinner, UnitKind.Spinner]
       : []),
     ...Array.from<UnitKind>({ length: line }).fill(UnitKind.Corvette),
+    ...(opts.sowerAndBower === false
+      ? []
+      : SOWER_AND_BOWER.filter((kind) => doctrine.composition.includes(kind))),
     ...(opts.extra ?? []),
   ];
   return { units: roster.map((kind, i) => hull(i + 1, kind, at(i))) };
@@ -277,6 +292,95 @@ function snapshot(
 function purseFor(kind: UnitKind): Pick<EchoSnapshot, 'nodules' | 'crystal' | 'biomass'> {
   const price = priceOf(statsFor(kind));
   return { nodules: price.nodules, crystal: price.crystal, biomass: price.biomass };
+}
+
+/** One observation of `saveFromBelow`: what the commander saw, and what it did. */
+interface Saving {
+  /** The bank the commander was handed. */
+  nodules: number;
+  /** Whether the Sower's or the Bower's want was open at it, as the ruling defines open. */
+  open: boolean;
+  /** What the carrier tally gained at it. */
+  counted: CarrierWantTally;
+  /** The hulls it ordered. */
+  bought: UnitKind[];
+}
+
+/**
+ * A navy saving from below (#839): the bank starts empty and climbs by `step`
+ * nodules an observation, each hull ordered is charged to it and put in the
+ * water at once, and the carrier tally is read after every observation.
+ *
+ * The rest is `force`'s navy at the cycle's target — `attackAtArmySize` times
+ * the Veteran's patience of 1, plus 2 — with its transport afloat, so no line
+ * hull and no transport bids against the bank. What is left open is the deck
+ * and, with `sowerAndBower: false`, the Commune's two, so what the bank buys
+ * first is the order the rule sets and nothing else. The Slipway's queue
+ * stays empty and the berths never fill, so "open" is read off the water: the
+ * composition names the hull, none is afloat, and for the Sower the map has a
+ * crystal field.
+ */
+function saveFromBelow(
+  brief: AiBriefing,
+  opts: { sowerAndBower?: boolean },
+  step: number,
+  observations: number
+): Saving[] {
+  const doctrine = DOCTRINE[brief.faction];
+  const home = brief.spawns[brief.slot]!;
+  const transport = doctrine.composition.find((kind) => statsFor(kind).holdBerths !== undefined);
+  const units = [
+    ...force(brief, {
+      sowerAndBower: opts.sowerAndBower,
+      extra: [UnitKind.Corvette, UnitKind.Corvette],
+    }).units,
+    ...(transport === undefined
+      ? []
+      : [
+          {
+            ...hull(80, transport, home),
+            hold: { berths: statsFor(transport).holdBerths!, used: 0 },
+          },
+        ]),
+  ];
+  const field = brief.nodes.some((node) => node.kind === ResourceKind.ResonanceCrystal);
+  const price = priceOf(statsFor(carrierOf(brief.faction)));
+  const commander = new AiCommander(brief);
+  const out: Saving[] = [];
+  let nodules = 0;
+  for (let i = 0; i < observations; i++) {
+    nodules += step;
+    const open = SOWER_AND_BOWER.some(
+      (kind) =>
+        doctrine.composition.includes(kind) &&
+        !units.some((u) => u.kind === kind) &&
+        (kind !== UnitKind.Sower || field)
+    );
+    const handed = nodules;
+    const before = commander.carrierWant;
+    const commands = commander.observe(
+      snapshot(brief, 6000 + i * ECHO_TICKS, {
+        units: [...units],
+        nodules: handed,
+        crystal: price.crystal,
+        biomass: price.biomass,
+      })
+    );
+    const after = commander.carrierWant;
+    const counted = { ...after };
+    for (const key of Object.keys(after) as (keyof CarrierWantTally)[]) {
+      counted[key] = after[key] - before[key];
+    }
+    const bought: UnitKind[] = [];
+    for (const command of commands) {
+      if (command.kind !== 'produce') continue;
+      bought.push(command.unit);
+      nodules -= priceOf(statsFor(command.unit)).nodules;
+      units.push(hull(100 + units.length, command.unit, home));
+    }
+    out.push({ nodules: handed, open, counted, bought });
+  }
+  return out;
 }
 
 /** Hulls a commander queues over `seconds` of standing still with this purse. */
@@ -444,6 +548,7 @@ describe('the commander fields its navy carrier', () => {
     // bought the Rootstock where it had bought the Bower or the Sower.
     const brief = briefing(Faction.Pelagia);
     const rootstock = carrierOf(Faction.Pelagia);
+    const open = force(brief, { sowerAndBower: false });
     for (const other of [UnitKind.Bower, UnitKind.Sower]) {
       const a = priceOf(statsFor(other));
       const b = priceOf(statsFor(rootstock));
@@ -453,7 +558,7 @@ describe('the commander fields its navy carrier', () => {
         biomass: Math.max(a.biomass, b.biomass),
       };
       const bought = new AiCommander(brief)
-        .observe(snapshot(brief, 6000, purse))
+        .observe(snapshot(brief, 6000, { ...purse, ...open }))
         .filter((c) => c.kind === 'produce')
         .map((c) => (c as { unit: UnitKind }).unit);
       assert.equal(bought.length, 1, `one hull bought on the purse for the ${UnitKind[other]}`);
@@ -465,6 +570,90 @@ describe('the commander fields its navy carrier', () => {
       assert.ok(
         bought[0] === UnitKind.Bower || bought[0] === UnitKind.Sower,
         `and to one of them: ${UnitKind[bought[0]!]}`
+      );
+    }
+  });
+
+  it('saves the Commune from below for its Bower and its Sower before its Rootstock', () => {
+    // The owner's ruling on #839: "below" is the order of purchase. The test
+    // above is the half written position already settled, a purse that covers
+    // a want. This is the other half, the one that asked the question: a
+    // Commune saving from nothing, which on 22 Sept bought the 340 nodule
+    // Rootstock before the 360 nodule Bower in 10 of 10 runs, because
+    // `holdPurse` saves for the cheapest bid past its floor. Two nodules an
+    // observation, so the bank is handed every even figure through the
+    // 340–360 band and the commander decides on several of them.
+    const brief = briefing(Faction.Pelagia);
+    const rootstock = carrierOf(Faction.Pelagia);
+    const run = saveFromBelow(brief, { sowerAndBower: false }, 2, 800);
+
+    // The premise: the bank sat in the band with a want open, at a decision.
+    const band = run.filter((s) => s.open && s.nodules >= 340 && s.nodules < 360);
+    assert.ok(
+      band.some((s) => s.counted.reached === 1),
+      'the commander decided with 340–359 nodules in the bank and the Bower unbought'
+    );
+
+    const slipway = run
+      .flatMap((s) => s.bought)
+      .filter((kind) => kind === rootstock || SOWER_AND_BOWER.includes(kind));
+    assert.deepEqual(
+      slipway.map((kind) => UnitKind[kind]),
+      ['Bower', 'Sower', 'Rootstock'],
+      'the nearer of the two first, then the other, and the deck last'
+    );
+
+    for (const [i, s] of run.entries()) {
+      const counted = Object.values(s.counted).reduce((n, v) => n + v, 0) - s.counted.reached;
+      assert.equal(counted, s.counted.reached, `observation ${i}: one reason, or none`);
+      if (s.open) {
+        // Neither buys nor bids: a bid is counted `cannotAfford`, a buy `bought`.
+        assert.equal(s.counted.bought, 0, `observation ${i}: no deck while a want is open`);
+        assert.equal(s.counted.cannotAfford, 0, `observation ${i}: no bid while a want is open`);
+        assert.ok(!s.bought.includes(rootstock), `observation ${i}: no Rootstock ordered`);
+      } else {
+        assert.equal(s.counted.yielded, 0, `observation ${i}: nothing to yield to`);
+      }
+    }
+    // And the tally says why the deck waited.
+    assert.ok(
+      run.some((s) => s.counted.yielded === 1),
+      'the observations it yielded are counted as yielded'
+    );
+  });
+
+  it('leaves every other saving alone: the deck bought at the first decision that can pay', () => {
+    // The control. The three navies that name neither hull, and a Commune with
+    // both already in the water, save for the deck exactly as before the
+    // ruling: it bids from the floor up, is bought at the first decision the
+    // bank covers it, and is never counted as yielded.
+    const cases: [string, Faction, boolean][] = [
+      ...NAVIES.filter((f) => !yields(f)).map((f): [string, Faction, boolean] => [
+        Faction[f],
+        f,
+        false,
+      ]),
+      ['Pelagia, with its Sower and Bower afloat', Faction.Pelagia, true],
+    ];
+    for (const [label, faction, sowerAndBower] of cases) {
+      const brief = briefing(faction);
+      const carrier = carrierOf(faction);
+      const price = priceOf(statsFor(carrier)).nodules;
+      const run = saveFromBelow(brief, { sowerAndBower }, 2, 400);
+      const at = run.findIndex((s) => s.bought.includes(carrier));
+      assert.ok(at >= 0, `${label}: the deck was bought`);
+      assert.ok(run[at]!.nodules >= price, `${label}: out of a bank that covered it`);
+      assert.ok(
+        run.slice(0, at).every((s) => s.counted.reached === 0 || s.nodules < price),
+        `${label}: at the first decision that could pay`
+      );
+      assert.ok(
+        run.every((s) => !s.open && s.counted.yielded === 0),
+        `${label}: no want open, and nothing counted as yielded`
+      );
+      assert.ok(
+        run.slice(0, at).some((s) => s.counted.cannotAfford === 1),
+        `${label}: and it bid while it saved`
       );
     }
   });
@@ -509,9 +698,74 @@ describe('the commander fields its navy carrier', () => {
   });
 });
 
+/** Whether this navy's composition names the Sower or the Bower, so its deck can yield. */
+function yields(faction: Faction): boolean {
+  return SOWER_AND_BOWER.some((kind) => DOCTRINE[faction].composition.includes(kind));
+}
+
+/**
+ * The carrier tally's seventh reason, for a navy that has it: a deck with its
+ * escort, its yard and its berths, yielding to whichever of the two wants is
+ * open — and the gates asked before it still asked first.
+ */
+function yieldCases(
+  brief: AiBriefing,
+  carrier: UnitKind,
+  oneShort: EchoSnapshot['berths'],
+  slipway: (over: Partial<EchoSnapshot['structures'][number]>) => Partial<EchoSnapshot>,
+  only: (reason: Exclude<keyof CarrierWantTally, 'reached'>) => CarrierWantTally
+): [string, Partial<EchoSnapshot>, CarrierWantTally][] {
+  const bothOpen = force(brief, { sowerAndBower: false });
+  const bowerOpen = force(brief, { sowerAndBower: false, extra: [UnitKind.Sower] });
+  // Room for the Sower and not the Bower, with the Sower already afloat: the
+  // Bower's want is the one left, and the berths shut it.
+  const bowerShut = {
+    ...bowerOpen,
+    berths: { used: 40 - statsFor(UnitKind.Bower).berths + 1, granted: 40 },
+  };
+  return [
+    ['both wants open', bothOpen, only('yielded')],
+    // The case the ruling is about: the deck's price in the bank, and the
+    // Bower's not. Before the ruling this bought the Rootstock.
+    [
+      'both wants open, with the price in the bank',
+      { ...purseFor(carrier), ...bothOpen },
+      only('yielded'),
+    ],
+    ["the Bower's want open alone", bowerOpen, only('yielded')],
+    [
+      "the Sower's want open alone",
+      force(brief, { sowerAndBower: false, extra: [UnitKind.Bower] }),
+      only('yielded'),
+    ],
+    // The gates asked before it are still asked first, in `Match.produce`'s
+    // order: a deck the berths or the yard refuse is filed there, open want or
+    // not.
+    [
+      'both wants open, the berths one short of the deck',
+      { ...bothOpen, berths: oneShort },
+      only('noBerth'),
+    ],
+    [
+      'no Sower or Bower in the water, the Slipway two deep',
+      { ...bothOpen, ...slipway({ queue: [UnitKind.Corvette, UnitKind.Corvette] }) },
+      only('noYard'),
+    ],
+    // A want the berths shut does not let the deck through. One berth short of
+    // the Bower is short of the deck too, which holds while the deck needs at
+    // least as many berths as the Bower; the note at the carrier's want in
+    // `commandProduction` rests on it.
+    [
+      "the Bower's want shut by the berths, with the price in the bank",
+      { ...purseFor(carrier), ...bowerShut },
+      only('noBerth'),
+    ],
+  ];
+}
+
 describe('the commander counts why it did or did not buy its carrier', () => {
   // #839's third bullet. The build column can say a navy never fielded its
-  // deck; this says which gate shut, one reason per observation, and the six
+  // deck; this says which gate shut, one reason per observation, and the seven
   // sum to `reached` — the partition docs/invariants.md holds for both wants.
   // Each case is one observation on a fresh commander — a Veteran decides on
   // its first — so the tally after it is exactly one reason, and a case that
@@ -523,13 +777,13 @@ describe('the commander counts why it did or did not buy its carrier', () => {
       const carrier = carrierOf(faction);
       const brief = briefing(faction);
       const home = brief.spawns[brief.slot]!;
-      const tallyAfter = (overrides: Partial<EchoSnapshot>): WantTally => {
+      const tallyAfter = (overrides: Partial<EchoSnapshot>): CarrierWantTally => {
         const commander = new AiCommander(brief);
         commander.observe(snapshot(brief, 6000, overrides));
         return commander.carrierWant;
       };
-      const only = (reason: Exclude<keyof WantTally, 'reached'>): WantTally => ({
-        ...emptyWantTally(),
+      const only = (reason: Exclude<keyof CarrierWantTally, 'reached'>): CarrierWantTally => ({
+        ...emptyCarrierWantTally(),
         reached: 1,
         [reason]: 1,
       });
@@ -549,7 +803,7 @@ describe('the commander counts why it did or did not buy its carrier', () => {
       // Every case but the purchase holds an empty purse, so no want written
       // ahead of the carrier's can spend and return before it is read — the
       // trap `purseFor` exists for, from the other side.
-      const cases: [string, Partial<EchoSnapshot>, WantTally][] = [
+      const cases: [string, Partial<EchoSnapshot>, CarrierWantTally][] = [
         ['the price in the bank', purseFor(carrier), only('bought')],
         ['an empty purse', {}, only('cannotAfford')],
         ['the Slipway still rising', slipway({ buildProgress: 0.5 }), only('noYard')],
@@ -588,6 +842,25 @@ describe('the commander counts why it did or did not buy its carrier', () => {
           force(brief, { escort: false, extra: [carrier] }),
           only('alreadyHas'),
         ],
+        // The seventh reason (the owner's ruling on #839), and its control. A
+        // navy whose composition names neither hull has neither want, so
+        // leaving them out of the water changes nothing for it: the purse is
+        // still the gate. The Commune's cases follow.
+        ...(yields(faction)
+          ? []
+          : ([
+              [
+                'no Sower or Bower in the water',
+                force(brief, { sowerAndBower: false }),
+                only('cannotAfford'),
+              ],
+              [
+                'no Sower or Bower in the water, with the price in the bank',
+                { ...purseFor(carrier), ...force(brief, { sowerAndBower: false }) },
+                only('bought'),
+              ],
+            ] as [string, Partial<EchoSnapshot>, CarrierWantTally][])),
+        ...(yields(faction) ? yieldCases(brief, carrier, oneShort, slipway, only) : []),
       ];
       for (const [label, overrides, expected] of cases) {
         assert.deepEqual(tallyAfter(overrides), expected, `${name}, ${label}`);
