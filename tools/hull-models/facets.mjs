@@ -18,9 +18,9 @@
  *
  * **A ring** is any closed run of facets round an axis: a cylinder's or a
  * lathe's rim, a sphere's parallels and meridians, a torus's ring and its
- * tube, a tube's section. Each is read in world metres through its node's
- * transform, so the root scale a metre-true port carries is inside the
- * figure. Its size is the radius of the circle its widest facet is a chord
+ * tube, a tube's section, the kit's capsule's rows and caps. Each is read in
+ * world metres through its node's transform, so the root scale a metre-true
+ * port carries is inside the figure. Its size is the radius of the circle its widest facet is a chord
  * of, `r = c / (2 sin(θ / 2N))`, which is exact for a round part and the
  * major radius for one scaled flat; its count is the facets it would carry
  * round a whole turn, so a half-cylinder's six is a twelve.
@@ -136,6 +136,32 @@ export function ringsOf(mesh) {
   const g = mesh.geometry;
   const p = g.parameters;
   if (!p) return [];
+  // The kit's capsule is a plain buffer in r184's layout (kit.mjs `capsule`):
+  // rows up from the bottom pole, `radialSegments + 1` a row. Its round rings
+  // are the rows; its meridian is the two caps' quarter turns, a half turn in
+  // all, and the straight side between them is no ring at all.
+  if (p.capSegments !== undefined) {
+    const n = p.radialSegments;
+    const cap = p.capSegments;
+    const rows = 2 * cap + p.heightSegments;
+    const at = (iy, ix) => iy * (n + 1) + ix;
+    const round = widest(mesh, rows + 1, n, at);
+    const capRows = [
+      ...Array(cap).keys(),
+      ...Array.from({ length: cap }, (_, k) => rows - cap + k),
+    ];
+    let meridian = 0;
+    for (const iy of capRows)
+      for (let ix = 0; ix <= n; ix++)
+        meridian = Math.max(
+          meridian,
+          dist(worldAt(mesh, at(iy, ix)), worldAt(mesh, at(iy + 1, ix)))
+        );
+    return [
+      ring('capsule round', n, TAU, round),
+      ring('capsule meridian', 2 * cap, Math.PI, meridian),
+    ].filter(Boolean);
+  }
   switch (g.type) {
     case 'CylinderGeometry':
     case 'ConeGeometry': {
@@ -270,15 +296,19 @@ async function rulesOf(navy) {
   return { facets: mod.facets ?? null, panels: mod.panels ?? null };
 }
 
+const ORBS = new Set(['sphere round', 'sphere meridian', 'capsule round', 'capsule meridian']);
+
 /**
  * Whether a ring keeps its navy's rule. A section count is its own shape and
- * always does. A ring over part of a turn is held to the rule's count for a
- * whole turn, prorated over its arc: a sphere's meridian closes in half a
- * turn, so its facets a turn are always even, and an odd rule judged a turn
- * at a time would call half of every navy's orbs wrong forever.
+ * always does — on a spar, a pipe, a ring's tube, never on an orb: a sphere
+ * or a capsule is round by what it is, so a six-round lamp bud is a coarse
+ * circle and not a hexagon. A ring over part of a turn is held to the rule's
+ * count for a whole turn, prorated over its arc: a sphere's meridian closes
+ * in half a turn, so its facets a turn are always even, and an odd rule
+ * judged a turn at a time would call half of every navy's orbs wrong forever.
  */
 export function keeps(rule, r) {
-  if (rule.sections?.includes(r.turn)) return true;
+  if (!ORBS.has(r.kind) && rule.sections?.includes(r.turn)) return true;
   return r.n === Math.max(1, Math.round((facetsFor(rule, r.radiusM) * r.arc) / TAU));
 }
 

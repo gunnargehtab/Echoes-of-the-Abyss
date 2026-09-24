@@ -1322,6 +1322,9 @@ export function capsule(radius, length, capSegments = 4, radialSegments = 8, hei
   geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geo.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
   geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  // Its counts, where three's own primitives keep theirs, so facets.mjs can
+  // read its rings (#919). The exporter never writes `parameters`.
+  geo.parameters = { radius, length, capSegments, radialSegments, heightSegments };
   return geo;
 }
 
