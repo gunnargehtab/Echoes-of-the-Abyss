@@ -564,6 +564,10 @@ class SymbolPool {
     this.used.clear();
     // A body drew a shared context and never owned it, so this leaves the
     // patterns alone: destroyAgentStippleContexts frees them at teardown.
+    // Nothing calls this today (nor on the tree before #868): EchoRenderer's
+    // own destroy drops the whole stage instead. The spares are off that
+    // stage, so what releases them is the context destroy, whose
+    // removeAllListeners cuts the only reference a pattern kept to them.
     for (const dots of this.spareStipples) dots.destroy();
     this.spareStipples.length = 0;
     this.layer.destroy({ children: true });
