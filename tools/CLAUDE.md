@@ -31,7 +31,12 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    written — each node's transform, which primitive its buffer
                    is, which nodes share one — and is what a port transcribes
                    from. Port is -z: the bow is on +X and Y is up, so +z is
-                   starboard (kit.mjs `bothSides`, #642).
+                   starboard (kit.mjs `bothSides`, #642). facets.mjs runs
+                   every script and reads each round part's facets off the
+                   live scene, since a GLB cannot say whether twelve sides
+                   were a circle or a prism, and each model's panel edge from
+                   above; it judges both against the navy's `facets` and
+                   `panels` tables and is advisory, not a gate (#919).
 tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
                    the sprite maps (Chromium), outlines.mjs writes each modelled
                    kind's plan outline into packages/frontend/src/game/

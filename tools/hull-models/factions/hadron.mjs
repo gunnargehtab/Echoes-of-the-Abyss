@@ -241,6 +241,32 @@ export const ink = {
 };
 
 /**
+ * The Order's facet rule and panel bands (docs/asset-prompts-3d.md Block 2c,
+ * #919; `tools/hull-models/facets.mjs` is the measure). A mirror facet is a
+ * plane wide enough to hold one specular, and the Order cuts it at three
+ * metres: the Responsory's blade lathes ten facets of 2.8 m at 4.6 m of
+ * radius, the Clarion's drive and emitter are cut at 2.8–3.1, and the median
+ * unlit part on an Order hull is 3.9 m on a side. Even counts only: every
+ * facet has its mirror across the centre plane and the crown's facet has its
+ * mirror on the keel — an odd spar has a face on one and an edge on the
+ * other, the one asymmetry this navy cannot have. Four is the floor, the
+ * blade's diamond; four and six are the sections, the two crystal habits the
+ * Order cuts at any size — the four-facet spar and the six-facet horn
+ * (`spar`, `bowArray`), which is how the Clarion's horn carries 5.5 m faces
+ * and keeps. Twelve is the ceiling, 30° between faces, at which a specular
+ * is still a glint on one face rather than a band across several; past it a
+ * ring is a wheel, and the Responsory's twenty-eight-facet resonator rings —
+ * the one round thing in the navy that is round — are the pass's first cut.
+ *
+ * Panels: planes — a wing, a fin, a spar — and the seams "the Order builds
+ * nothing bare" adds, two to six metres, centred on the Clarion's 3.9. A
+ * structure's band is the hull's at the chart's ratio of densities, 4 to
+ * 1.5 px/m, rounded to the half metre.
+ */
+export const facets = { chordM: 3, min: 4, max: 12, step: 2, sections: [4, 6] };
+export const panels = { hull: [2, 6], structure: [5.5, 16] };
+
+/**
  * The blade hull: a faceted spar, full forward and narrowing aft to almost
  * nothing. `maxR` is the half-section amidships — keep it near a tenth of the
  * length, as the Clarion's 4 m on 75 m is.

@@ -286,6 +286,36 @@ export const ink = {
   },
 };
 
+/**
+ * The Listening's facet rule and panel bands (docs/asset-prompts-3d.md Block
+ * 2c, #919; `tools/hull-models/facets.mjs` is the measure). A facet is a
+ * segment of shell, two metres: the Dredge's mandibles and claw and the
+ * Precentor's dome are cut at 1.7–2.2 m a facet, and the median unlit part
+ * on a hull here is 2.0 m on a side. Odd counts only — step two from one: a
+ * regular polygon with an odd count has no facet opposite a facet and no
+ * vertex opposite a vertex, regular and never mirrored, "asymmetric, yet
+ * regimented" in one shape — and both approved hulls with a dorsal rank cut
+ * every spine five-sided (`dorsalSpines`). So five is the floor and nineteen
+ * the ceiling, the odd lattice's nearest to the 18° between faces a shell's
+ * edge wants: chitin is harder than a pod and softer than a plate. Five and
+ * four are the sections. The spine is five-sided at any size, the way the
+ * Order's spar is a diamond at any size, where the lattice alone would round
+ * a wide one to seven; and the square-section spike the rostrum, the
+ * mandibles and the hatch dogs are (kit.mjs `cyl`, "the Directorate's
+ * rostrum") is the one even shape the navy cuts, a prism rather than a
+ * circle, which is what a section is. The keels' seven is a builder's
+ * default on four hulls and not a section, and the pass re-cuts it to the
+ * rule; so are the plates' twelve, one count on every size of tergite, and
+ * an even one.
+ *
+ * Panels: "many-limbed", "rows of small points" — the median unlit part is a
+ * spine or a limb, one to three metres, and a hull whose median part is over
+ * three is plates with nothing on them. A structure's band is the hull's at
+ * the chart's ratio of densities, 4 to 1.5 px/m, rounded to the half metre.
+ */
+export const facets = { chordM: 2, min: 5, max: 19, step: 2, offset: 1, sections: [4, 5] };
+export const panels = { hull: [1, 3], structure: [2.5, 8] };
+
 /** A carapace orb: a low-facet sphere the caller squashes into a plate. */
 const orb = (w = 12, h = 6) => new THREE.SphereGeometry(1, w, h);
 /** A spine: a faceted cone, apex at +Y until the caller rakes it. */

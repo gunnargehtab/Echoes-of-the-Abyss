@@ -332,6 +332,186 @@ One correction landed with the #649 ports and belongs here rather than in a modu
 `#8FE36B` at all — its linear channels are 0.42, 0.55 and 0.37 of it — but a hue of its
 own, the Sower's.
 
+## Block 2c — facets and panels, one rule a navy
+
+Block 1 asks for "low-to-mid poly with crisp facets", and until #919 no navy could say what
+that meant in a number. Every round part carried whatever count its first author picked —
+Phase 3 ported each faithfully and Phase 4 built beside it — so on `9502d0e` a Consortium
+cylinder ran from four sides to twenty-eight and a Commune ring from four to a hundred and
+twenty-six, with no rule a reader could state. This section is the rule: **one facet edge
+a navy**, so that a part's count falls out of its size and re-faceting a fleet is one
+number in its module. `tools/hull-models/facets.mjs` is the measure, and its header says
+how a ring is read; each navy's module exports `facets` and `panels` beside its `ink` table,
+and the measure names every ring off the rule and every model outside its band.
+
+**The chord rule.** A round part of radius *r* carries
+`n = offset + step · round((2πr / edge − offset) / step)` facets, held between a floor and a
+ceiling: the count whose facet is nearest the navy's edge, on the lattice `offset + k · step`
+— every count at step 1, the even ones at step 2, the odd ones at step 2 from 1. A *ring* is
+any closed run of facets round an axis — a cylinder's or a lathe's rim, a torus's ring and
+its tube, and a sphere's parallels **and its meridians**, which are rings under the same
+rule. A ring that closes in a fraction of a turn is held to that fraction of the rule's
+count, so a sphere is `(n, round(n / 2))` — never the `(32, 16)` three.js defaults to — and
+an odd rule does not call every orb wrong for closing its meridians in half a turn. A part
+scaled flat is read at the radius its widest facet is a chord of, so a squashed tergite is
+judged as the wide thing it is. **A section count is
+not a circle.** A four-sided spar is a square, a five-sided spine a pentagon, a six-sided
+horn a hexagonal crystal: each is a shape the navy cuts at any size, listed in its
+`sections`, and the rule never rounds it. Everything else round is a circle the navy
+approximates, and the rule says how coarsely.
+
+**Panels** are the other axis: how finely the chart sees a surface divided from above. The
+measure takes every unlit part that owns at least a quarter of a square metre of plan at the
+maps' four cells a metre and reports the edge of the median one, `√(median area)`; a lamp is
+light, not panel. The edge rather than a count per area, because a count per area is a
+statement about size — the Consortium's 20 m Spark reads 28.7 panels a hundred square metres
+and its Bastion 0.03, for the same riveted plate — where the median edge holds across a
+hull's length and reads as its navy. Each navy bands it twice, hulls and structures,
+because a structure's pads are not a hull's plates: the structure band is the hull band at
+the chart's ratio of densities, 4 px/m to 1.5 px/m ([graphics-standards.md](graphics-standards.md)
+§6) — the same grain on the chart — rounded to the half metre.
+
+| Navy | Facet edge | Floor | Ceiling | Step | Sections | Hull panel | Structure panel |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Consortium | 1.0 m | 6 | 24 | 2 | 4 | 0.5–2 m | 1.5–5.5 m |
+| Commune | 1.5 m | 5 | 30 | 1 | — | 1.5–5 m | 4–13.5 m |
+| Directorate | 2.0 m | 5 | 19 | 2 from 1 | 4, 5 | 1–3 m | 2.5–8 m |
+| Knights | 3.0 m | 4 | 12 | 2 | 4, 6 | 2–6 m | 5.5–16 m |
+
+What the rule yields, facets a turn at the radii a hull is made of:
+
+| Radius | 0.5 m | 1 m | 1.5 m | 2 m | 3 m | 4 m | 5 m | 6 m | 10 m |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Consortium | 6 | 6 | 10 | 12 | 18 | 24 | 24 | 24 | 24 |
+| Commune | 5 | 5 | 6 | 8 | 13 | 17 | 21 | 25 | 30 |
+| Directorate | 5 | 5 | 5 | 7 | 9 | 13 | 15 | 19 | 19 |
+| Knights | 4 | 4 | 4 | 4 | 6 | 8 | 10 | 12 | 12 |
+
+Read across, the table is four languages. The edges are a ladder — a metre, a metre and a
+half, two, three — that runs from the navy that rivets to the navy that polishes. The
+steps are four lattices: the Consortium and the Order build in pairs, on a jig or against
+a mirror, and carry even counts only; the Commune grows, and a grown ring has however many
+segments it grew; the Directorate grows regimented, and carries odd counts only — the one
+lattice on which no facet has a facet opposite it. The ceilings are dihedrals the law
+names — 30° a glint, 19° a shell's edge, 15° a plate seam, 12° a grown curve — and every
+one sits under three's default of 32 radial segments, which is the smooth render Block 1
+refuses.
+The floors are what the smallest parts land on, since at a metre of edge or more the
+chord rule rounds everything under half a metre of radius to the floor: a six-plate drum,
+a five-fold stalk, a five-sided spine, a four-facet blade.
+
+**Consortium.** The one curve the Klaxon allows is the one "a pressure vessel demanded"
+([factions.md](factions.md)), and a pressure vessel is rolled plate: its facets are its
+plates, so the facet edge is a plate's width, and a plate is a metre — the Bulwark's guns
+and the Tender's stacks are ten facets at 1.7–1.8 m of radius, the shared kinds' pressure
+cylinders twenty-eight at 3.5–4.4, and the median unlit part on a Consortium hull is 1.1 m
+on a side from above. Six plates is the least a drum reads as a drum rather than a box,
+and the Klaxon's boxes are boxes; the one section it cuts round is the four-sided wedge of
+its noses. Twenty-four is where a plate's edge stops drawing on the chart's relief, 15°
+between faces, so on a 20 m silo the plate grows to five metres rather than the silo going
+smooth. Plates go on in pairs — a drum closed on an even count lies level on a plate with
+its two flanks alike, which is 6, 8, 10 and 12 on both approved hulls and 7 and 9 on nothing
+built in the navy — so the step is two. The same two hulls' ballast drums, shrouds and
+turret rings carry the same *counts* on twice the radius, two to five metres a plate; that
+is the count language the rule replaces. Panels run from a rivet head — half a metre, two
+cells of the chart, the smallest part it draws — to a plate two metres on a side: "riveted,
+patchworked" is half the unlit parts on a hull being fittings under two metres, rivets and
+knuckles and dogging wheels and seams and ports, and "over-engineered" is the plates over
+them being small too.
+
+**Commune.** "Grown, so nothing is quite regular" (`factions/pelagia.mjs`); "organic,
+curved"; "growth rings". A grown thing adds the same increment whatever its size — a growth
+ring is the width it is on a bud and on a bladder — which is exactly what a chord rule says,
+so this is the navy where the rule is most literally the law. The increment is a metre and
+a half, between the Consortium's plate and the Directorate's segment because a pod is
+rounder than a carapace: the Sower's ribs, bud, stem and seed pods and the Spinner's sacs
+are cut between one and two metres a facet, and its bladder and pod carry the same counts
+on a bigger body at two to three and a half, which is the count language the rule replaces.
+Any count, so the step is one: no jig closes a grown ring in pairs, and the Bower's and the
+Blight's stalks are seven-sided on purpose. Five is the floor, the living number — five
+petals, five arms, the Harvester's tendrils — the least a grown thing carries and the one
+count the rounder navies never fall to. Thirty is the ceiling, 12° between faces: the
+softest edge the style still calls crisp, "grown and faceted, not a smooth render". No
+sections, because nothing grown is a prism; a quill is a thorn, cut on the floor. Panels
+run a metre and a half to five: a Commune hull is few, large parts — a leaf is one plate, a
+pod one orb, a fin one membrane — so its median part from above is bigger than its facet
+says. The two grown navies swap places between the facet column and the panel column, and
+that is the difference between a pod and a crab.
+
+**Directorate.** "Spiked, insectoid, segmented crustacean forms"; "nothing is symmetrical;
+everything is regimented" ([factions.md](factions.md)). The facet is a segment of shell,
+two metres: the Dredge's mandibles and claw and the Precentor's dome are cut at 1.7–2.2 m a
+facet, and the median unlit part on a Directorate hull is 2.0 m on a side. Odd counts
+only, so the step is two from one: a regular polygon with an odd count has no facet
+opposite a facet and no vertex opposite a vertex — regular and never mirrored, "asymmetric,
+yet regimented" in one shape — and both approved hulls with a dorsal rank cut every spine
+five-sided. So five is the floor and nineteen the ceiling, the odd lattice's nearest to the
+18° between faces a shell's edge wants, because chitin is harder than a pod and softer than
+a plate. Five and four are the sections. The spine is five-sided at any size, the way the
+Order's spar is a diamond at any size, where the lattice alone would round a wide one to
+seven; and the square-section spike the rostrum, the mandibles and the hatch dogs are
+(`kit.mjs` `cyl`, "the Directorate's rostrum") is the one even shape the navy cuts — a
+prism rather than a circle, which is what a section is. The keels' seven is a builder's
+default on four hulls and not a section; the plates' twelve is one count on every size of
+tergite, and an even one; both are the rule's to re-cut. Panels run one to
+three metres — "many-limbed", "rows of small points" — because the median unlit part on
+this navy is a spine or a limb, and a hull whose median part is over three metres is plates
+with nothing on them.
+
+**Knights.** "Hard geometric facets and mirror-finish surfaces that catch light no other
+faction produces"; "crystalline"; "the only faction with true bilateral symmetry"
+([art-direction.md](art-direction.md)). A mirror facet is a plane wide enough to hold one
+specular, and the Order cuts it at three metres: the Responsory's blade lathes ten facets of
+2.8 m at 4.6 m of radius, the Clarion's drive and emitter are cut at 2.8–3.1, and the median
+unlit part on an Order hull is 3.9 m on a side. Even counts only, so the step is two: every
+facet has its mirror across the centre plane and the crown's facet has its mirror on the
+keel — an odd spar has a face on one and an edge on the other, the one asymmetry this navy
+cannot have. Four is the floor, the blade's diamond; four and six are the sections, the two
+crystal habits the Order cuts at any size — the four-facet spar and the six-facet horn,
+which is how the Clarion's horn carries 5.5 m faces and keeps. Twelve is the ceiling, 30°
+between faces, at which a specular is still a glint on one face rather than a band across
+several; past it a ring is a wheel, and the Responsory's twenty-eight-facet resonator rings
+— the one round thing in the navy that is round — are the pass's first cut. Panels run two
+to six metres: planes — a wing, a fin, a spar — and the seams "the Order builds nothing
+bare" adds, centred on the Clarion's 3.9.
+
+**What the chart sees.** The maps bake at 4 px/m for units and 1.5 px/m for structures
+([graphics-standards.md](graphics-standards.md) §6), and a facet reaches the chart as a
+band of its own shade in the height map's relief. On a hull a facet under half a metre is
+two pixels and a gradient, so no edge in the table is under a metre and the floors are
+where the small parts land. On a structure only a facet over about 1.3 m registers, which
+on a Consortium structure is the ceiling's plates on its drums and domes — the pipes' metre
+plates are the conn view's alone. The edge is still one number a navy: the chart's density
+is what a structure's *panel* band answers to, not its facet.
+
+**The baseline, and the pass.** Measured by `node tools/hull-models/facets.mjs` on
+`699b79f`, before any of it is applied:
+
+| Navy | Rings | Distinct counts a turn | 1.5–4 m radius: median (range) | Hull panel edge | Structure panel edge |
+| --- | --- | --- | --- | --- | --- |
+| Consortium | 1,119 | 15 | 10 (4–28) | 1.1 m | 8.2 m |
+| Commune | 1,182 | 35 | 8 (4–22) | 2.9 m | 8.0 m |
+| Directorate | 1,404 | 24 | 6 (4–14) | 2.0 m | 7.2 m |
+| Knights | 598 | 16 | 4 (4–10) | 3.9 m | 9.4 m |
+
+The table above was derived from the law and the reference hulls, never from that baseline,
+and where the two disagree the law wins. So the rule names 833 of the Consortium's 1,119
+rings off it — 515 of the 787 on hulls, the drums that carry one count on every radius —
+1,049 of the Commune's 1,182, 934 of the Directorate's 1,404, and 218 of the Order's 598,
+twelve of them on hulls, since an Order hull is sections almost through. Outside the
+bands: seven Consortium hulls (the five shared kinds, the Chorister and the Tender, at
+2.3–3.9 m) and five structures; two Commune hulls (the Bower at 0.8 m, the Submersible at
+7.3) and three structures; three Directorate hulls (the Verger, the Submersible and the
+Dredge, 4.0–5.2 m) and four structures; five Order hulls (the Versicle at 1.5 m; the
+Reciter, the Responsory, the Antiphon and the Offertory at 6.1–7.2) and three structures —
+every Bastion among them, and three of the four Foundries. The pass that applies the table
+— the second half of #919 — is what brings those to zero, one navy at a time, each under a
+`hull-reviewer` pass of its own; the table itself moves no GLB.
+
+The environment props (Block 4) carry no rule: "nothing manufactured" is the whole of their
+law, a crag's drum is a table under its export's own jittered vertices, and a chord is a
+gauge. The measure reads the fourteen and judges none.
+
 ## Block 3 — UNIT (one per generation)
 
 Stats cited from [units.md](units.md). The Light Scout and Abyssal Submersible are
