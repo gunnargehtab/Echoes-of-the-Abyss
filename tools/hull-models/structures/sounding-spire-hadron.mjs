@@ -87,9 +87,10 @@
  * - `crystal_throat` stays. It is sealed inside the core — the file's
  *   z-fight nudge is the millimetre between them — and no upward face can
  *   carry it. Residual.
- * - The ten running lights stand off the frame by the audit's second
- *   measure (#894): the file hung them 0.4 to 6.5 m from the blades they
- *   run beside, the horn tips 1.4 m over their horns. The issue names none
+ * - Eight of the ten running lights (all but the `running_light_1` pair)
+ *   and both horn tips stand off the frame by the audit's second measure
+ *   (#894): the file hung the lights 0.4 to 6.5 m from the blades they run
+ *   beside, the tips 1.4 m over their horns. The issue names none
  *   of them, and a light re-hung on a blade is a shape decision this port
  *   does not take; they are carried as the file has them and named in
  *   #907.

@@ -83,7 +83,7 @@
  *   the plate on the outside the style doc names, and the apron is the
  *   one reading the Refinery block licenses. A Directorate maw that is
  *   one fixture with the other two is an aperture, a hole in the cowl,
- *   and that is a decision put to the owner on #894 (kit.mjs `crusher`).
+ *   and that is a decision put to the owner on #907 (kit.mjs `crusher`).
  * - RESIDUAL AUDIT LINES (#894's resting measure): `photophore_1`, `_2`
  *   and `_3` rest on nothing, 2.2, 0.3 and 1.9 m off the silos they mark,
  *   where the export hung them. Seating each on its silo's wall (kit.mjs

@@ -1723,7 +1723,7 @@ export function flangedPipes(root, { pipe: pipeMat, flange: flangeMat }, opts = 
  * plate wearing a mouth's name that docs/style-neon-noir.md refuses ("a
  * maw is not livery"), and the apron is the reading the Refinery block's
  * "floodlit working surfaces" licenses — so its maw stays its own fixture
- * until the owner decides whether it becomes an aperture (#894).
+ * until the owner decides whether it becomes an aperture (#907).
  *
  * The teeth are the navy's (directorate.mjs `mawTeeth`, hadron.mjs
  * `mawBlades`) and hang where the exports hung them.

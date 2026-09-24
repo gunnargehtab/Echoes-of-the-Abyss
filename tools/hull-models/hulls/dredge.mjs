@@ -45,13 +45,15 @@
  *   The other eighteen did not move in #890, and its review found them in
  *   the water: the file laid every one at 0.72 of its plate's height and
  *   0.66 of its beam, which is on the plate's ellipsoid at one station
- *   only, and the eighteen stood 0.45 to 1.67 m above their plates — or
- *   inside them — since a low-facet orb falls away from its ellipsoid
- *   toward its ends (#894). So does the rule now rest every lamp on the
- *   shell: each is dropped at its own station onto whichever plate or
- *   ridge is on top there, its bottom face on the facet and tilted with
- *   it (kit.mjs `seat`), and the three ridge riders come out where #890
- *   put them by hand. The five dorsal marks were laid the same way
+ *   only: twelve of the eighteen stood 0.17 to 1.71 m over the facet
+ *   under them (seven far enough from any skin for the audit to name
+ *   them) and six were sunk up to a decimetre into it, since a low-facet
+ *   orb falls away from its ellipsoid toward its ends (#894). So does the
+ *   rule now rest every lamp on the shell: each is dropped at its own
+ *   station onto whichever plate or ridge is on top there, its bottom
+ *   face on the facet and tilted with it (kit.mjs `seat`), and the three
+ *   ridge riders come out where #890 put them by hand. The five dorsal
+ *   marks were laid the same way
  *   (`photophores` `rest`): `photophore_dorsal_2` and `_4` stood 1.2 and
  *   1.7 m over their plates and `_3` 0.4 m; `_0` and `_1` were sunk in
  *   theirs, showing 0.75 and 0.25 m² from above, and come up 0.4 and

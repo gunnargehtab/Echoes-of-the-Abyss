@@ -75,9 +75,10 @@
  *   review found (#894). It is seated on the nearer of the head and the
  *   starboard mandible from that station, half its radius in
  *   (`photophoreDomes` `on`, kit.mjs `seat`), and the mandible is the
- *   nearer: it grows from the mandible's upper flank, 0.4 m from centre to
- *   skin, still under the jaw to starboard of the rostrum and still clear
- *   from above.
+ *   nearer: it grows from the mandible's lower inboard face near its tip,
+ *   0.4 m from centre to skin, where it reaches inboard past the mandible
+ *   — still under the jaw to starboard of the rostrum, and clear from
+ *   above (1.6 m²).
  * - Five more of the file's flank buds stood off the shell the same way,
  *   0.4 to 1.0 m — `photophore_port_1`, `_2`, `_4`, `photophore_starboard_1`
  *   and `_2` — the review's measure finding them once it had a lamp to

@@ -534,13 +534,14 @@ export function photophores(root, crimson, { spots, size = 1.1, h = 0.4, depth, 
  * The station is where a lamp is *sought*, not where it is put. The plate
  * is a low-facet orb, and `y` of its height at `z` of its beam is on its
  * ideal ellipsoid only at one station along it — the approved file laid
- * every lamp at those fractions and eighteen of the twenty-one stood 0.45
- * to 1.67 m above their plates, or inside them, since the shell falls
- * away from the ellipsoid toward each plate's ends (#894, from #890's
- * review). So each lamp is dropped onto the shell at its station: the
- * facet straight under it, of whichever plate or ridge is on top there
- * (`first` numbers them as `tergites` does), the lamp's bottom face laid
- * on that facet and tilted with it, half its height proud (kit.mjs
+ * every lamp at those fractions, and of the eighteen the ridge rule left
+ * alone, twelve stood 0.17 to 1.71 m over the facet under them and six
+ * were sunk up to a decimetre into it, since the shell falls away from
+ * the ellipsoid toward each plate's ends (#894, from #890's review). So
+ * each lamp is dropped onto the shell at its station: the facet straight
+ * under it, of whichever plate or ridge is on top there (`first` numbers
+ * them as `tergites` does), the lamp's bottom face laid on that facet
+ * and tilted with it, half its height proud (kit.mjs
  * `seat`, `drop`). The rank still runs the plate's edge at the file's
  * stations and beams, and every lamp in it rests on the shell — the
  * first of plate 4's starboard rank on plate 3, which stands over that
