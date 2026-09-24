@@ -148,8 +148,9 @@ rung 5 draws, and four of them are its floor: the quietest outline in each of it
 colours — a kelp field's rim while it is not gripping, a Tetherjelly field's rim, and a
 simulated hazard's rim while it is dormant — and an inert hazard site's rim, which the outline
 rule above leans on. Every other rung-5 outline lifts more than the least of them in every
-palette, and a test holds that. Which is quietest depends on the palette. The draw sites take
-their alphas from there. The tests hold every ink stroke below the least of them, over the
+palette, and a test holds that near the eye: the conn view's tunnel routes and map rim fade
+with the water's fog, so a far one lifts less. Which is quietest depends on the palette. The
+draw sites take their alphas from there. The tests hold every ink stroke below the least of them, over the
 darkest and the palest ground, in all four palettes. When furniture gets quieter, the ink has
 to follow it down.
 
@@ -169,8 +170,8 @@ unselected ring lifts the ground less than rung 5's floor in the standard, prota
 tritanopia palettes. And at its loudest, in its loudest colour, every rung-5 outline lifts some
 ground more than that ring in all four palettes: a live hazard's rim, a resource field's and
 the map's are all louder than it. Which side moves is the owner's call, and §10 records it
-with the audit's other findings. Rungs 1 to 3 are the ground every lift is measured over, and
-rung 7 answers to gate 3's glow curve instead.
+with the audit's other findings. Rungs 1 to 3 are the ground every lift is measured over. Rung
+6 against rung 7 is not weighed yet, and §10 says why.
 
 Two consequences worth naming:
 
@@ -313,20 +314,31 @@ under the ink, and the owner chose to bring the ink down: the coast is 9.5% and 
 
 ### Phase 2 — landed
 
-Every draw site in `EchoRenderer.ts` and `PerspectiveView.ts` names its rung, and `ladder.ts`
-holds the alpha of every rung-5 outline and both detection rings. No alpha moved: the audit
-records, and §5 says what its tests hold and which two breaks they pin.
+Every draw site in `EchoRenderer.ts` and `PerspectiveView.ts` names its rung, or records that
+§5 gives it none. `ladder.ts` holds the alpha of every rung-5 outline and both detection rings.
+No alpha moved: the audit records, and §5 says what its tests hold and which two breaks they
+pin.
 
-The audit also found marks the ladder cannot yet weigh or place:
+What it leaves for the owner:
 
+- **Rung 6 is not above rung 5.** The unselected ring sits under rung 5's floor in three
+  palettes, and under every rung-5 outline at its loudest in all four. Either the ring comes up,
+  or rung 5's outlines come down, or the loudest of them — a live hazard's rims — are not
+  furniture.
+- **Rung 6 against rung 7 is unweighed.** A contact's Tier-3 ring and Tier-4 edge are strokes
+  the test could weigh, but a ghost fades to nothing by design, so rung 7's floor is zero until
+  the owner says which contact the ladder weighs. Own hulls are models, and gate 3 sets a quiet
+  one near black.
 - **Acoustic residue has no rung.** §5's table does not name it, and no row's words fit: it is
   the player's own intel, not public furniture, and it must never read as a contact.
-- **Two marks have no outline to weigh.** Blocked ground is a hatch and a fill, and a formed
-  Lampfry shoal is motes and a halo. The outline rule leaves both unweighed. Phase 3 redraws
-  the shoal.
-- **Some marks are placed by voice, not by name.** Order routes, the lock flash, the crush
-  ring and the break-silence ring are rung 6 because they speak in the interface voice, though
-  §5's row does not list them.
+- **Two marks have no rim.** Blocked ground is a hatch and a fill, and a formed Lampfry shoal
+  is motes and a halo. §5's outline rule presumes a rim, so how a rimless mark is weighed is
+  open, and neither is weighed yet. Phase 3 redraws the shoal.
+- **Some placements are the audit's, not §5's.** §5's rows do not name these, and each draw
+  site says why it was placed where it is. On rung 6: order routes and their markers, the
+  lock flash, the crush and break-silence rings, the ink about own ordnance, a yard's rally
+  course, and the health and build bars. On rung 7: a contact's glyph and health bar, a
+  construction scaffold, and own depth cues. On rung 1: the skirt at the map's edge.
 
 ## 11. Open questions
 

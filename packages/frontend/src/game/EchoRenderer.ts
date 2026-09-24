@@ -2003,7 +2003,7 @@ export class EchoRenderer {
     // - nodes: rung 5, the resource fields.
     // - rings: rung 6, detection rings, the ping preview and order routes.
     // - structure, unit and ordnance symbols: rung 6, the ink about own
-    //   entities the conn view draws at rung 7.
+    //   entities the conn view draws at rung 7 (a site's scaffold aside).
     // - contact layer: rung 5's hazards and fauna fields, and the acoustic
     //   residue §5 does not place yet.
     // - contact symbols: rung 7, contacts at every tier.
@@ -5578,8 +5578,9 @@ export class EchoRenderer {
    * answer would draw a route half the group cannot take.
    *
    * Rung 6, instruments (docs/map-visuals.md §5 names blocked ground). It has
-   * no outline — a hatch and a faint fill, nothing round the edge — so the
-   * ladder, which weighs a mark by its outline, has nothing of it to weigh.
+   * no rim — a hatch and a faint fill, nothing round the edge — and §5's
+   * outline rule presumes one, so how it is weighed is the owner's call, left
+   * open in §10. The ladder does not weigh it yet.
    */
   private drawBlockedGround(): void {
     const g = this.groundLayer;
@@ -5683,11 +5684,12 @@ export class EchoRenderer {
   }
 
   /**
-   * The ink about own structures. Rung 6, instruments (docs/map-visuals.md
-   * §5): the selection ring, the loudness collar, the yard's rally course and
-   * the build and health bars. The one exception is a construction site's
-   * scaffold, which stands in for the structure itself and so is rung 7 with
-   * the commissioned model the conn view draws.
+   * The ink about own structures. Rung 6, instruments: docs/map-visuals.md
+   * §5 names the selection ring and the loudness collar. It does not name the
+   * yard's rally course or the build and health bars, which are placed by the
+   * row's voice — cyan tells — as readings, not marks about the sea. Nor does
+   * it name a construction site's scaffold, placed on rung 7 because it
+   * stands in for the structure the conn view will draw there.
    */
   private drawStructures(): void {
     const palette = FACTION_PALETTE[this.faction];
@@ -5963,8 +5965,10 @@ export class EchoRenderer {
 
   /**
    * Rung 5, map furniture, in every phase (docs/map-visuals.md §5). The rim
-   * and the warning's countdown ring are the outlines the ladder weighs; the
-   * fills, the eruption's inner rings and the current's streaks are interior.
+   * and the warning's countdown ring are the outlines the ladder weighs. The
+   * fills, a current's streaks and the two inner rings every other live
+   * hazard draws are interior. Its third ring falls on the rim and stacks on
+   * it, so the ladder weighs the two together.
    */
   private drawHazards(g: Graphics): void {
     for (const hazard of this.hazards) {
@@ -6038,7 +6042,11 @@ export class EchoRenderer {
         } else {
           for (let ring = 1; ring <= 3; ring++) {
             if (this.traceCircle(g, hazard.x, hazard.y, hazard.radiusM * (ring / 3), null)) {
-              g.stroke({ width: 1.5, color, alpha: 0.3 * heat });
+              g.stroke({
+                width: 1.5,
+                color,
+                alpha: FURNITURE_OUTLINE_ALPHA.hazardInnerRing * heat,
+              });
             }
           }
         }
@@ -6152,8 +6160,8 @@ export class EchoRenderer {
    *
    * Rung 5, map furniture (docs/map-visuals.md §5). Only the trigger ring is
    * an outline, so only a scattered shoal is weighed. A formed shoal is motes
-   * and a halo with nothing round its edge, and the ladder, which weighs a
-   * mark by its outline, has nothing of it to weigh.
+   * and a halo with no rim, and §5's outline rule presumes one, so how it is
+   * weighed is the owner's call, left open in §10.
    */
   private drawShoals(g: Graphics): void {
     const motes = 5;
@@ -6370,8 +6378,9 @@ export class EchoRenderer {
   }
 
   /**
-   * Contacts at every tier: rung 7, agents (docs/map-visuals.md §5), with
-   * their glyphs and health bars, which fade with the mark they caption. A
+   * Contacts at every tier: rung 7, agents (docs/map-visuals.md §5). Their
+   * glyphs and health bars are not named there; they are placed with the
+   * contact because they fade with the mark they caption. A
    * Tier-1 or Tier-2 column is an edgeless haze, which §5 does not weigh per
    * pixel against a line; it answers to gate 7's glance test. The lock flash
    * drawn onto a contact is rung 6 (`drawLockFlash`).
@@ -6756,7 +6765,8 @@ export class EchoRenderer {
       // The shot itself — spindle, trail, lamp — is the conn view's
       // (ordnanceLayer.ts). This is the instrument ink about it, in the own
       // voice: what it is and, for a torpedo, how much run it has left. Rung
-      // 6, as the ink about a hull is; the shot is rung 7.
+      // 6, placed like the ink about a hull: §5 names the shot (rung 7), not
+      // the reading about it.
       const conn = this.conn;
       const d =
         conn === null ? shot : conn.ordnanceMotion.at(shot, this.frameNowMs, this.drawnScratch);

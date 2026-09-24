@@ -8,10 +8,15 @@
  * exactly where it breaks, and fails when the break moves in either direction
  * — a fix and a new break both have to be written down.
  *
- * The ladder stops at rung 6 here. Rungs 1 to 3 are the ground every lift is
- * measured over, not strokes on it. Rung 7 is models the GPU draws and
- * contacts whose low tiers are hazes §5 does not weigh per pixel; it answers
- * to gate 3's glow curve (docs/graphics-standards.md) instead.
+ * Rungs 1 to 3 are the ground every lift is measured over, not strokes on it.
+ * Rung 6 against rung 7 is not weighed here: docs/map-visuals.md §10 records
+ * why, as a question for the owner.
+ *
+ * Every lift is linear in the ground's luminance, so one stroke against
+ * another is settled by the darkest and the palest ground: if it is above at
+ * both, it is above at every ground between. A floor is the least of several
+ * strokes, which is not a line, so each claim below is made stroke against
+ * stroke and never read off a floor at two points alone.
  */
 
 import assert from 'node:assert/strict';
@@ -22,10 +27,13 @@ import {
   encodedLuminance,
   FURNITURE_OUTLINES,
   furnitureFloorLift,
+  furnitureFloorStrokes,
+  INSTRUMENT_OUTLINES,
   instrumentFloorLift,
   loudestLift,
-  quietestLift,
-  unselectedRingLift,
+  strokeLift,
+  strokesOf,
+  type Stroke,
 } from '../src/game/ladder.ts';
 
 /** The palest ground the map can draw: fills only ever darken (palette.ts). */
@@ -36,8 +44,18 @@ const PALEST_GROUND = Object.values(BIOME_COLOR).reduce((a, b) =>
 const DARKEST_GROUND = 0x000000;
 const GROUNDS = [DARKEST_GROUND, PALEST_GROUND];
 
+const lift = (s: Stroke, ground: number) => strokeLift(s.color, s.alpha, ground);
+/** `a` lifts every ground at least as much as `b` does. */
+const atLeast = (a: Stroke, b: Stroke) => GROUNDS.every((g) => lift(a, g) >= lift(b, g));
+/** `a` lifts every ground more than `b` does. */
+const above = (a: Stroke, b: Stroke) => GROUNDS.every((g) => lift(a, g) > lift(b, g));
+
+/** Rung 6's strokes at their quietest: the ones its floor is the least of. */
+const instrumentStrokes = (name: PaletteName) =>
+  Object.values(INSTRUMENT_OUTLINES).flatMap((o) => strokesOf(o, PALETTES[name], 'quietest'));
+
 /**
- * The palettes where rung 6's floor lifts the ground no more than rung 5's —
+ * The palettes where rung 6's floor lifts some ground no more than rung 5's —
  * the break #865 found. Deuteranopia holds. Recorded, not tuned: which of the
  * ring or the furniture moves is the owner's call (docs/map-visuals.md §10).
  */
@@ -74,17 +92,17 @@ const RUNG_5_OVER_RUNG_6_FLOOR: readonly string[] = [
 describe('the loudness ladder, rung 5', () => {
   it('lifts no ground less than its floor, in any outline or palette', () => {
     // The claim ladder.ts makes about the four it names: every other rung-5
-    // outline lifts more. Checked by hand at #865; held here. Both lifts are
-    // linear in the ground's luminance, so two grounds bound every ground.
+    // outline lifts more. Checked by hand at #865; held here, near the eye
+    // (ladder.ts, on the fog). An outline at least as loud as any one of the
+    // four at both ends is at least as loud as the least of them everywhere.
     for (const name of PALETTE_NAMES) {
-      for (const ground of GROUNDS) {
-        const floor = furnitureFloorLift(PALETTES[name], ground);
-        for (const [kind, outline] of Object.entries(FURNITURE_OUTLINES)) {
-          const lift = quietestLift(outline, PALETTES[name], ground);
+      const floor = furnitureFloorStrokes(PALETTES[name]);
+      for (const [kind, outline] of Object.entries(FURNITURE_OUTLINES)) {
+        for (const stroke of strokesOf(outline, PALETTES[name], 'quietest')) {
           assert.ok(
-            lift >= floor,
-            `${name}: ${kind} lifts ${ground.toString(16)} by ${lift.toFixed(4)}, ` +
-              `under the floor's ${floor.toFixed(4)}`
+            floor.some((f) => atLeast(stroke, f)),
+            `${name}: ${kind} in ${stroke.color.toString(16)} does not clear any floor stroke ` +
+              `over both grounds (floor over black ${furnitureFloorLift(PALETTES[name], 0).toFixed(4)})`
           );
         }
       }
@@ -94,41 +112,54 @@ describe('the loudness ladder, rung 5', () => {
 
 describe('the loudness ladder, rung 6', () => {
   it('has the unselected detection ring as its floor, in every palette', () => {
-    // §5: the ring you have not selected is rung 6's quietest outline, and
-    // it is the one the survey ink is held under.
+    // §5: the ring you have not selected is rung 6's quietest outline, and it
+    // is the one the survey ink is held under. Every selected-ring stroke is
+    // at least as loud as an unselected one at both ends, so everywhere.
     for (const name of PALETTE_NAMES) {
-      for (const ground of GROUNDS) {
-        assert.equal(
-          instrumentFloorLift(PALETTES[name], ground),
-          unselectedRingLift(PALETTES[name], ground),
-          `${name}: the selected ring lifts ${ground.toString(16)} less than the unselected`
+      const unselected = strokesOf(INSTRUMENT_OUTLINES.unselectedRing!, PALETTES[name], 'quietest');
+      for (const stroke of strokesOf(
+        INSTRUMENT_OUTLINES.selectedRing!,
+        PALETTES[name],
+        'quietest'
+      )) {
+        assert.ok(
+          unselected.some((u) => atLeast(stroke, u)),
+          `${name}: the selected ring in ${stroke.color.toString(16)} is quieter than the unselected`
         );
       }
     }
   });
 
   it('records where its floor sits under the floor of rung 5', () => {
-    const found = PALETTE_NAMES.filter((name) =>
-      GROUNDS.some(
-        (ground) =>
-          instrumentFloorLift(PALETTES[name], ground) <= furnitureFloorLift(PALETTES[name], ground)
-      )
-    );
+    // A break is shown by a ground where it happens. A palette holds when
+    // every rung-6 stroke is above some one rung-5 floor stroke at both
+    // ends, so everywhere; one that is neither is a gap in this test.
+    const broken: PaletteName[] = [];
+    for (const name of PALETTE_NAMES) {
+      const breaks = GROUNDS.some(
+        (g) => instrumentFloorLift(PALETTES[name], g) <= furnitureFloorLift(PALETTES[name], g)
+      );
+      const floor = furnitureFloorStrokes(PALETTES[name]);
+      const holds = instrumentStrokes(name).every((s) => floor.some((f) => above(s, f)));
+      assert.ok(breaks !== holds, `${name}: neither a break nor a hold is shown`);
+      if (breaks) broken.push(name);
+    }
     assert.deepEqual(
-      found,
+      broken,
       [...RUNG_6_FLOOR_UNDER_RUNG_5_FLOOR],
-      'the break moved: update the record here and in docs/map-visuals.md §5'
+      'the break moved: update the record here and in docs/map-visuals.md'
     );
   });
 
   it('records every rung-5 outline that out-lifts its floor', () => {
+    // Exact at two grounds: a stroke under every rung-6 stroke at both ends
+    // is under the least of them everywhere, and one that is not is over it
+    // at a ground the test names.
     for (const name of PALETTE_NAMES) {
       const found = Object.entries(FURNITURE_OUTLINES)
         .filter(([, outline]) =>
           GROUNDS.some(
-            (ground) =>
-              loudestLift(outline, PALETTES[name], ground) >=
-              instrumentFloorLift(PALETTES[name], ground)
+            (g) => loudestLift(outline, PALETTES[name], g) >= instrumentFloorLift(PALETTES[name], g)
           )
         )
         .map(([kind]) => kind)
@@ -136,7 +167,7 @@ describe('the loudness ladder, rung 6', () => {
       assert.deepEqual(
         found,
         [...RUNG_5_OVER_RUNG_6_FLOOR],
-        `${name}: the break moved: update the record here and in docs/map-visuals.md §5`
+        `${name}: the break moved: update the record here and in docs/map-visuals.md`
       );
     }
   });

@@ -532,12 +532,14 @@ export class PerspectiveView {
     installWaterFog();
     // Each group's rung on the loudness ladder (docs/map-visuals.md §5):
     // - the backdrop and the snow: rung 1, the water.
-    // - the terrain dressing: rung 5's tunnel routes and map rim, and a
-    //   skirt that is rung 1, deep water where the map ends.
+    // - the terrain dressing: rung 5's tunnel routes and map rim, and the
+    //   skirt, which §5 does not name: placed on rung 1 because it is drawn
+    //   as the deep water the map ends in.
     // - the environment props: rung 3, ground.
-    // - units, ordnance, structures and their depth cues: rung 7, the
-    //   player's own agents; a hull's plumb and shadow are how its figure
-    //   says its depth (docs/ui-ux.md §12), not a separate instrument.
+    // - units, ordnance and structures: rung 7, the player's own agents.
+    //   Their depth cues are not named in §5; they are placed with them,
+    //   because a hull's plumb and shadow are how its figure says its depth
+    //   (docs/art-direction.md, "Depth is drawn, not implied").
     // The seabed mesh (rungs 2 to 4) and the embers (world light, outside
     // the ladder) join the scene with the terrain.
     this.scene.add(
@@ -1272,8 +1274,8 @@ export class PerspectiveView {
     for (let x = widthM - step; x >= 0; x -= step) perimeter.push({ x, y: heightM });
     for (let y = heightM - step; y >= step; y -= step) perimeter.push({ x: 0, y });
 
-    // The rim is rung 5 too, at the ladder's alpha; the skirt below it is
-    // rung 1, the deep water the world ends in.
+    // The rim is rung 5 too, at the ladder's alpha. The skirt below it is
+    // unnamed in §5 and placed on rung 1, the deep water the world ends in.
     const rim = perimeter.map((p) => new Vector3(p.x, groundY(p.x, p.y) + 4, p.y));
     this.terrainDressing.add(
       new LineLoop(
@@ -1371,10 +1373,10 @@ export class PerspectiveView {
    * would price the same information twice, and §4 and §12 already forbid the
    * renderer editing what the server resolved.
    *
-   * The chart register is absent for the other reason: the tunnel routes, the
-   * map rim and the skirt are instrument lines drawn on the water rather than
-   * things standing in it, and an instrument does not go quiet because you
-   * stopped listening.
+   * The chart register is absent for the other reason: the tunnel routes and
+   * the map rim are public chart furniture and the skirt is the water the map
+   * ends in, drawn on the water rather than standing in it, and a chart does
+   * not go quiet because you stopped listening.
    */
   private refreshVeil(): void {
     const terrain = this.terrain;
@@ -1540,8 +1542,9 @@ export class PerspectiveView {
    * flat baked sprite until then (and for kinds that have none), plus the
    * plumb line and ground shadow either way.
    *
-   * Rung 7, agents (docs/map-visuals.md §5): own hulls and structures, cues
-   * included. Its glow is its loudness, and gate 3 holds that, not the ladder.
+   * Rung 7, agents (docs/map-visuals.md §5): own hulls and structures, with
+   * the cues placed alongside them. The ladder does not weigh rung 7 yet, and
+   * §10 says why.
    */
   private syncEntity(
     handles: Map<number, EntityHandle>,

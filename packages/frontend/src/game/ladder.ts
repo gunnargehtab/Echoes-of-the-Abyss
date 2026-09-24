@@ -16,8 +16,12 @@
  * layer and the survey ink blend in encoded space, so two strokes over the
  * same ground compare exactly. So do the conn view's lines — the canvas is
  * sRGB and nothing renders through a linear target — except that the water's
- * fog pulls a far one toward the water colour. They are weighed unfogged,
- * which is where they stand out most.
+ * fog fades a far one, and the ground under it, toward the water colour, which
+ * scales its lift down. They are weighed unfogged, near the eye. That is their
+ * loudest, so it is the right end to hold under the rung above; it is the
+ * wrong end for rung 5's floor, which the overlay's unfogged rims set, and a
+ * far route or rim lifts less than that floor. The floor test does not reach
+ * the far end.
  */
 
 import { ResourceKind } from '@echoes/shared';
@@ -32,13 +36,15 @@ import type { Palette } from './palette.ts';
  * on the palette — the dormant eruption rim in three of the four, the
  * Tetherjelly rim in protanopia, whose threat red is brighter — so the floor
  * is the least of them. Every other outline here lifts more than that floor
- * in every palette, which ladder.test.ts holds.
+ * in every palette, which ladder.test.ts holds, near the eye (see the fog,
+ * above).
  *
  * A mark is weighed by its outline, never by its interior. A field's faint
- * fill, an inert site's hatching, an erupting vent's inner rings, a current's
+ * fill, an inert site's hatching, a live hazard's two inner rings, a current's
  * streaks and a nodule field's grains are texture inside a mark whose rim
  * already speaks for it, and a ladder that weighed them would be ranking the
- * grain of a mark rather than the mark (docs/map-visuals.md §5).
+ * grain of a mark rather than the mark (docs/map-visuals.md §5). A live
+ * hazard's third ring is drawn on the rim itself, so it is weighed with it.
  */
 export const FURNITURE_OUTLINE_ALPHA = {
   /** A kelp field's rim while it is not gripping (EchoRenderer `drawHazards`). */
@@ -65,6 +71,13 @@ export const FURNITURE_OUTLINE_ALPHA = {
   hazardRimActive: 0.95,
   /** A simulated hazard's rim as it dies down (EchoRenderer `HAZARD_STYLE`). */
   hazardRimDecay: 0.5,
+  /**
+   * A live hazard's three rings at full heat, fading with it (EchoRenderer
+   * `drawHazards`). Every hazard but a current and kelp draws them. The two
+   * inside are interior; the third falls on the rim and stacks on it, so the
+   * active and decay rims are weighed with it at their loudest.
+   */
+  hazardInnerRing: 0.3,
   /**
    * The warning's countdown ring as it opens (EchoRenderer `drawHazards`). It
    * gains `hazardCountdownGain` as it closes on the rim, so it meets the rim
@@ -103,6 +116,12 @@ export const INSTRUMENT_OUTLINE_ALPHA = {
   selectedRing: 0.35,
 } as const;
 
+/** One colour at one alpha. Its lift is linear in the ground's luminance. */
+export interface Stroke {
+  readonly color: number;
+  readonly alpha: number;
+}
+
 /**
  * One outline as the ladder weighs it: its alpha at its quietest and at its
  * loudest, and every colour it is drawn in. The floor asks about the quietest
@@ -119,6 +138,14 @@ function steady(alpha: number, colors: WeighedOutline['colors']): WeighedOutline
   return { quietest: alpha, loudest: alpha, colors };
 }
 
+/**
+ * Two strokes of one colour, one over the other, as the single alpha the
+ * pixel ends up at. Exact in encoded space, where both layers blend.
+ */
+function stacked(below: number, above: number): number {
+  return 1 - (1 - below) * (1 - above);
+}
+
 const F = FURNITURE_OUTLINE_ALPHA;
 /** Red warns and cyan tells: an eruption is drawn in threat, every other hazard in accent. */
 const hazardColors = (p: Palette) => [p.ui.threat, p.ui.accent];
@@ -130,8 +157,18 @@ export const FURNITURE_OUTLINES: Readonly<Record<string, WeighedOutline>> = {
   jellyRim: steady(F.jellyRim, (p) => [p.fauna]),
   hazardRimDormant: steady(F.hazardRimDormant, hazardColors),
   hazardRimWarning: steady(F.hazardRimWarning, hazardColors),
-  hazardRimActive: steady(F.hazardRimActive, hazardColors),
-  hazardRimDecay: steady(F.hazardRimDecay, hazardColors),
+  // A current draws no rings, so its rim is the quietest; the rest carry the
+  // third ring on theirs, at full heat when the phase begins.
+  hazardRimActive: {
+    quietest: F.hazardRimActive,
+    loudest: stacked(F.hazardRimActive, F.hazardInnerRing),
+    colors: hazardColors,
+  },
+  hazardRimDecay: {
+    quietest: F.hazardRimDecay,
+    loudest: stacked(F.hazardRimDecay, F.hazardInnerRing),
+    colors: hazardColors,
+  },
   hazardCountdown: {
     quietest: F.hazardCountdownStart,
     loudest: F.hazardCountdownStart + F.hazardCountdownGain,
@@ -182,17 +219,26 @@ export function strokeLift(color: number, alpha: number, ground: number): number
   return alpha * (encodedLuminance(color) - encodedLuminance(ground));
 }
 
+/** An outline's strokes at its quietest or its loudest alpha, one per colour. */
+export function strokesOf(
+  outline: WeighedOutline,
+  palette: Palette,
+  at: 'quietest' | 'loudest'
+): Stroke[] {
+  return outline.colors(palette).map((color) => ({ color, alpha: outline[at] }));
+}
+
 /** The least an outline lifts `ground`: its quietest alpha, in its quietest colour. */
 export function quietestLift(outline: WeighedOutline, palette: Palette, ground: number): number {
   return Math.min(
-    ...outline.colors(palette).map((color) => strokeLift(color, outline.quietest, ground))
+    ...strokesOf(outline, palette, 'quietest').map((s) => strokeLift(s.color, s.alpha, ground))
   );
 }
 
 /** The most an outline lifts `ground`: its loudest alpha, in its loudest colour. */
 export function loudestLift(outline: WeighedOutline, palette: Palette, ground: number): number {
   return Math.max(
-    ...outline.colors(palette).map((color) => strokeLift(color, outline.loudest, ground))
+    ...strokesOf(outline, palette, 'loudest').map((s) => strokeLift(s.color, s.alpha, ground))
   );
 }
 
@@ -211,12 +257,19 @@ export function instrumentFloorLift(palette: Palette, ground: number): number {
   );
 }
 
+/** The four strokes rung 5's floor is taken from. */
+export function furnitureFloorStrokes(palette: Palette): Stroke[] {
+  return [
+    { color: palette.ui.accent, alpha: FURNITURE_OUTLINE_ALPHA.kelpRimIdle },
+    { color: palette.fauna, alpha: FURNITURE_OUTLINE_ALPHA.jellyRim },
+    { color: palette.ui.threat, alpha: FURNITURE_OUTLINE_ALPHA.hazardRimDormant },
+    { color: palette.ui.threat, alpha: FURNITURE_OUTLINE_ALPHA.inertSiteRim },
+  ];
+}
+
 /** Rung 5's floor over one ground: the least lift any of its four quiet outlines gives. */
 export function furnitureFloorLift(palette: Palette, ground: number): number {
   return Math.min(
-    strokeLift(palette.ui.accent, FURNITURE_OUTLINE_ALPHA.kelpRimIdle, ground),
-    strokeLift(palette.fauna, FURNITURE_OUTLINE_ALPHA.jellyRim, ground),
-    strokeLift(palette.ui.threat, FURNITURE_OUTLINE_ALPHA.hazardRimDormant, ground),
-    strokeLift(palette.ui.threat, FURNITURE_OUTLINE_ALPHA.inertSiteRim, ground)
+    ...furnitureFloorStrokes(palette).map((s) => strokeLift(s.color, s.alpha, ground))
   );
 }
