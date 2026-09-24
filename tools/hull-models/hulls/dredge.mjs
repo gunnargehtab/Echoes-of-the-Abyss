@@ -51,11 +51,14 @@
  *   shell: each is dropped at its own station onto whichever plate or
  *   ridge is on top there, its bottom face on the facet and tilted with
  *   it (kit.mjs `seat`), and the three ridge riders come out where #890
- *   put them by hand. Five of the dorsal marks were laid the same way,
- *   `photophore_dorsal_2` and `_4` 1.2 and 1.7 m over their plates
- *   (`photophores` `rest`). Twenty-three lamps move, none by more than
- *   two metres, none across the keel; `diff.mjs` lists them and nothing
- *   else, and the audit names no lamp on this hull as hidden or floating.
+ *   put them by hand. The five dorsal marks were laid the same way
+ *   (`photophores` `rest`): `photophore_dorsal_2` and `_4` stood 1.2 and
+ *   1.7 m over their plates and `_3` 0.4 m; `_0` and `_1` were sunk in
+ *   theirs, showing 0.75 and 0.25 m² from above, and come up 0.4 and
+ *   1.2 m onto the shell, where each shows 2 m². Twenty-three lamps move,
+ *   none by more than two metres, none across the keel; `diff.mjs` lists
+ *   them and nothing else, and the audit names no lamp on this hull as
+ *   hidden or floating.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -209,7 +212,7 @@ directorate.hopper(root, { black, steel, gullet }, { x: -6, y: 8, z: 2 });
 // as laid left photophore_s_02, _p_01 and _s_12 under the ridge of the plate
 // ahead, and with the ridge given the builder seats those three on its crown
 // instead, where the maps see them (#890, the header). The other eighteen
-// are where the file has them.
+// rest on the shell at the file's stations (#894, the header).
 directorate.plateEdgePhotophores(root, crimson, {
   segments: SEGMENTS,
   starboard: { count: 3, start: -0.5, pitch: 0.45 },

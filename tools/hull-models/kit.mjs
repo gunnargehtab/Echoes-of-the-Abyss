@@ -1706,30 +1706,24 @@ export function flangedPipes(root, { pipe: pipeMat, flange: flangeMat }, opts = 
  * Order's and the Commune's a half drum, the Commune's named
  * `crusher_roof` (`cowl.name`).
  *
- * THE MAW IS ONE FIXTURE ON THE THREE FILES, since #894: the slab, at each
- * navy's own numbers, set into the crown of the cowl over the house, where
- * the chart sees the "visible machinery light" the block lights at rest.
- * The three approved exports stood it on the house's face — edge-on to a
- * top-down bake and on two of them under the cowl's rim, 0 m² — and #890's
- * three answers were three fixtures under one name: a floodlit apron on
- * the ground at the face's foot on the Directorate's, a strip along the
- * cowl's ridge on the Order's, and the face slab left as it was on the
- * Commune's, a 0.63 m² dot past its roof. One name is one fixture, so the
- * crown strip — the Order's answer, the one a house with a silo at its
- * foot could take — is now all three's:
- *
- * - On a drum cowl (the Order's, the Commune's) the slab lies level along
- *   the ridge, flush with the cowl's end over the face, its underside a
- *   little under the ridge and its top a hair proud, so the crown passes
- *   through it and the whole slab shows from above (the Order's numbers
- *   in structures/refinery-hadron.mjs; the Commune's are in its file).
- *   That is `maw.at` and `maw.rot`, the file's own.
- * - On the dome (the Directorate's) the crown is a near-flat fan, a
- *   tenth of a unit lower at its rim than at the pole, and the cut edge of
- *   the half-shell runs across the house through the pole. The slab lies
- *   on that fan from the cut edge toward the face, pitched with it and
- *   sunk half its depth (kit `seat`, `drop`, with the house's yaw), which
- *   is `maw.on` and `maw.seed`: the default, the Directorate's numbers.
+ * THE MAW. The three approved exports stood the lit slab on the house's
+ * face — edge-on to a top-down bake and on two of them under the cowl's
+ * rim, 0 m² for the "visible machinery light" the block lights at rest —
+ * and #890 answered on two files: a floodlit apron on the ground at the
+ * face's foot on the Directorate's, a strip set into the cowl's ridge on
+ * the Order's, while the Commune's kept the face slab, a 0.63 m² dot past
+ * its roof. #894 found three fixtures under one name and made the crown
+ * strip the drum cowls' one fixture: on the Order's and the Commune's the
+ * slab lies level along the ridge, flush with the cowl's end over the
+ * face, its underside a little under the ridge and its top a hair proud,
+ * so the crown passes through it and the whole slab shows from above.
+ * That is `maw.at` and `maw.rot`, each file's own; the default is the
+ * Commune's, on its `crusher_roof`. The Directorate's keeps its apron:
+ * on a Directorate model a lit slab on the outside of the cowl is the
+ * plate wearing a mouth's name that docs/style-neon-noir.md refuses ("a
+ * maw is not livery"), and the apron is the reading the Refinery block's
+ * "floodlit working surfaces" licenses — so its maw stays its own fixture
+ * until the owner decides whether it becomes an aperture (#894).
  *
  * The teeth are the navy's (directorate.mjs `mawTeeth`, hadron.mjs
  * `mawBlades`) and hang where the exports hung them.
@@ -1744,27 +1738,17 @@ export function crusher(root, mats, opts = {}) {
       rot: [0, Math.PI / 2 - 0.25, 0],
       scale: [1.05, 0.75, 0.85],
     },
+    // The Commune's: 1.5 of a unit along the house's own axis from its
+    // centre, so the slab ends flush with the roof's forward end.
     maw = {
-      size: [1.3, 0.3, 1.7],
-      on: 'crusher_cowl',
-      // 0.65 of a unit out from the pole along the house's own axis: the
-      // slab's inner edge on the shell's cut edge, its outer over the face.
-      seed: [5.2 + 0.65 * Math.cos(0.25), 5.3, -2.2 + 0.65 * Math.sin(0.25)],
-      yaw: -0.25,
-      sink: 0.15,
+      size: [1.7, 0.3, 1.3],
+      at: [5.2 + 1.5 * Math.cos(0.25), 5.13, -2.2 + 1.5 * Math.sin(0.25)],
+      rot: [0, -0.25, 0],
     },
   } = opts;
   frame.part(root, 'crusher_house', box(...house.size), mats.house, house.at, house.rot);
   frame.part(root, cowl.name ?? 'crusher_cowl', cowl.geo, mats.cowl, cowl.at, cowl.rot, cowl.scale);
-  const laid = maw.on
-    ? seat(root, maw.on, maw.seed, {
-        stand: maw.size[1] / 2,
-        sink: maw.sink ?? 0,
-        drop: true,
-        yaw: maw.yaw ?? 0,
-      })
-    : maw;
-  frame.part(root, 'crusher_maw', box(...maw.size), mats.maw, laid.at, laid.rot);
+  frame.part(root, 'crusher_maw', box(...maw.size), mats.maw, maw.at, maw.rot);
 }
 
 /**

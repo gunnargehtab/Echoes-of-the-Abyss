@@ -64,16 +64,16 @@
  *   own. As the file has them.
  *
  * `diff.mjs sounding-spire-hadron f7cce0f`: unchanged beyond the root scale
- * and shift but for the four parts below — every other part is where it
- * was (a square plan, compared as it stands).
+ * and shift — every part is where it was (a square plan, compared as it
+ * stands). #890 moved two running lights; #894 put them back, below.
  *
- * LIGHT (#890). "Burning bright along the crystal when active" is one
+ * LIGHT (#890, #894). "Burning bright along the crystal when active" is one
  * clause over one fixture the model lights at rest — the core, the throat,
  * the apex and the horn tips — so it is the one-glow-factor reading: the
  * same lamps, scaled (models-plan.md §3.2, the paragraph after the rules),
- * as the approved model and #652 have it. Four lamps were hidden from
- * above; two move, and two stay lit where they are as residual audit lines
- * the audit names on every build:
+ * as the approved model and #652 have it. Four lamps read as hidden from
+ * above until #894; one still does, as the residual audit line the audit
+ * names on every build:
  * - `crystal_core` stays, and the audit sees it since #894. Its only
  *   occluder from above is `heat_shimmer_sheath`, alpha-blended at six
  *   percent; until #894 glb.mjs `topDown` — what kit.mjs `lightAudit`
@@ -91,16 +91,16 @@
  *   measure (#894): the file hung them 0.4 to 6.5 m from the blades they
  *   run beside, the horn tips 1.4 m over their horns. The issue names none
  *   of them, and a light re-hung on a blade is a shape decision this port
- *   does not take; they are carried as the file has them and named in the
- *   follow-up the audit's sweep filed.
+ *   does not take; they are carried as the file has them and named in
+ *   #907.
  * - `running_light_3_r` and `running_light_3_l`, the pair 11.8 up the
- *   frame, sat at x ±0.9 under the sheath's bulge (its middle facet at 12.4
- *   over a crown at 11.9) and showed 0.06 m² each. Each moves outboard
- *   along its blade to x ±1.15 at the same y and z — beside the blade
- *   still, which spans 0.74..1.97 there (0.64..2.07 with its bevel; the
- *   blade stands on y 1.7), and out from under the sheath — rule 5 — and
- *   shows 5.1 m². `diff.mjs` lists the two (3.62 m at 140 m) and nothing
- *   else.
+ *   frame, sit at x ±0.9 where the export put them, under the sheath's
+ *   bulge (its middle facet at 12.4 over a crown at 11.9). #890 moved them
+ *   outboard to x ±1.15 because the audit read 0.06 m² of each under a
+ *   sheath it took for solid; with the sheath read as the six-percent
+ *   haze it is (#894) the export's station shows 5.1 m² from above, the
+ *   move has no reason left, and the pair is back where the file has it.
+ *   `diff.mjs sounding-spire-hadron f7cce0f` lists no part.
  */
 import { THREE, fitFootprint, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -206,7 +206,7 @@ hadron.ballastPipes(
 hadron.ballastTanks(root, shadow, { r: 0.62, waist: 1.6, at: [2.3, 1.35, -1.5] });
 
 // Ten running lights, two pairs at the foot and three up the frame — the
-// third of those outboard of the sheath since #890 (see LIGHT).
+// third of those under the sheath where the export has them (see LIGHT).
 hadron.lightPairs(root, glow, {
   name: 'running_light',
   r: 0.1,
@@ -214,7 +214,7 @@ hadron.lightPairs(root, glow, {
     [2.6, 1.85, 1.4],
     [2.6, 1.85, -1.4],
     [1.35, 6.4, 0.9],
-    [1.15, 11.8, 0.55],
+    [0.9, 11.8, 0.55],
     [1.7, 16.2, 0],
   ],
 });

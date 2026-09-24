@@ -55,8 +55,9 @@
  * - `crusher_maw` (#894): the export stood the lit slab on the house's
  *   face, and it showed 0.63 m² past the roof's overhang — a dot on the
  *   chart for the block's "visible machinery light", and the third
- *   fixture under the one name across the three files. It is the one
- *   fixture kit.mjs `crusher` now describes, and the Order's numbers
+ *   fixture under the one name across the three files. It is the drum
+ *   cowls' one fixture kit.mjs `crusher` now describes (the Directorate's
+ *   dome keeps its apron, and the kit says why), the Order's construction
  *   turned to this roof: the same 1.7 × 1.3 × 0.3 slab, level along the
  *   ridge and flush with the roof's forward end over the face, its
  *   underside 0.27 under the ridge — the ridge stands at 5.25 and the two
@@ -205,9 +206,9 @@ pelagia.silos(
   }
 );
 
-// The crusher at the kit's defaults but its roof — a half drum laid on its
-// side — and the maw, the slab set into that roof's ridge at its forward
-// end since #894 (the header); and the two stacks.
+// The crusher at the kit's defaults — the maw's are this file's, the slab
+// set into the roof's ridge at its forward end since #894 (the header) —
+// but its roof, a half drum laid on its side; and the two stacks.
 crusher(
   root,
   { house: steel, cowl: chitin, maw: flood },
@@ -217,11 +218,6 @@ crusher(
       geo: new THREE.CylinderGeometry(1.85, 1.85, 4.7, 6, 1, false, 0, Math.PI),
       at: [5.2, 3.4, -2.2],
       rot: [0, -0.25, Math.PI / 2],
-    },
-    maw: {
-      size: [1.7, 0.3, 1.3],
-      at: [5.2 + 1.5 * Math.cos(0.25), 5.13, -2.2 + 1.5 * Math.sin(0.25)],
-      rot: [0, -0.25, 0],
     },
   }
 );

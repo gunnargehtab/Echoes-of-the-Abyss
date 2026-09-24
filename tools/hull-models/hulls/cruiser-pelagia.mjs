@@ -105,10 +105,12 @@
  * crest's edge, and the tail bud on the peduncle's aft crown a hair to
  * starboard of the fluke's root — the Corvette's answer for its tail
  * light (#890) — seeded over the crown at (−0.06, 0.5, −3.4) rather than
- * behind the cap, which is why `diff.mjs` lists it at 5.8 m and the other
- * three at their gaps. Same names, radii and material; the audit names no
- * lamp on this hull as hidden or floating. The bow light was the hull's
- * forward extreme, so its move changes the scale (THE SCALE above).
+ * from its own spot, where the nearest skin is the upper fluke's underside
+ * and the bud would have seated there facing down; which is why `diff.mjs`
+ * lists it at 5.8 m and the other three at their gaps. Same names, radii
+ * and material; the audit names no lamp on this hull as hidden or
+ * floating. The bow light was the hull's forward extreme, so its move
+ * changes the scale (THE SCALE above).
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';

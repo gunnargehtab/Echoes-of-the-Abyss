@@ -72,10 +72,12 @@
  *   directly beneath the rostrum's base; #890 moved it 0.2 across the keel
  *   to the starboard side of the rostrum, between it and the starboard
  *   mandible, where nothing stands over it — and 1.29 m from anything, the
- *   review found (#894). It grows from the head now, seated on the nearer
- *   of the head and the starboard mandible from that station, half its
- *   radius in (`photophoreDomes` `on`, kit.mjs `seat`), still under the jaw
- *   to starboard of the rostrum and still clear from above.
+ *   review found (#894). It is seated on the nearer of the head and the
+ *   starboard mandible from that station, half its radius in
+ *   (`photophoreDomes` `on`, kit.mjs `seat`), and the mandible is the
+ *   nearer: it grows from the mandible's upper flank, 0.4 m from centre to
+ *   skin, still under the jaw to starboard of the rostrum and still clear
+ *   from above.
  * - Five more of the file's flank buds stood off the shell the same way,
  *   0.4 to 1.0 m — `photophore_port_1`, `_2`, `_4`, `photophore_starboard_1`
  *   and `_2` — the review's measure finding them once it had a lamp to

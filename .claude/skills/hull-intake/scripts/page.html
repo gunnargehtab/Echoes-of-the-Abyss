@@ -141,8 +141,10 @@
         // Spire's crystal core — its largest light — and the core never
         // reached the chart. GLTFLoader sets depthWrite off for BLEND, and
         // the swap carries that too, so a translucent part does not hide
-        // what it is drawn over. tools/hull-models/glb.mjs `occludes` is the
-        // same rule for the readers that cannot blend.
+        // what it is drawn over; `side` rides along so a two-sided membrane
+        // draws both faces in every pass as it does in the conn view (the
+        // shipped maps did not move for it). tools/hull-models/glb.mjs
+        // `occludes` is the same rule for the readers that cannot blend.
         const swap = (fn) =>
           meshes.forEach((mesh) => {
             const mats = original.get(mesh);
