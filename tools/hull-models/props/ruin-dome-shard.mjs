@@ -26,10 +26,13 @@
  *   crown (0.72 of the radius), a 44 m dome, of which the shard keeps 130°
  *   of the foot, ±65° about its middle. The chord of that arc is the
  *   footprint, 40 m to the float, so the two ends of the arc are the widest
- *   thing in the file and `stand` finds ×1.000. The dome's axis sits 15.6 m
- *   behind the middle of the foot and the shell leans in toward it as it
- *   rises, so at the 55° camera the piece reads as a bowl fragment from any
- *   yaw — convex outside, concave in — and never as a wall.
+ *   thing in the file and `stand` finds ×1.000. The dome's axis sits 22 m
+ *   behind the middle of the foot, 15 m behind the plan box's centre, and
+ *   the shell leans in toward it as it rises, so at the 55° camera the
+ *   piece reads as a bowl fragment — convex outside, concave in — and never
+ *   as a wall. From over the concave side the overhang hides the upper
+ *   half of the inner skin, and it reads as a rim with the fallen pieces
+ *   inside it.
  * - `shell`, in `stone_dark`: a closed solid 1.3 m thick — an outer skin,
  *   an inner skin 1.3 m inside it, the torn top between the two, the two
  *   cut ends of the arc, and the foot facing down. Thirteen meridians 10.8°
@@ -49,20 +52,26 @@
  *   0.43, each one bar of stations stitched into four walls and two caps
  *   (`bar`) and buried a quarter metre in the skin, so a course follows its
  *   curve without a step at a joint. Each rib stops its own way, which is
- *   what says "broken" at the camera's distance: `rib_a` (−43°) a ring
- *   under the tear, `rib_b` (−11°) two metres past it, standing proud of
- *   the torn edge, `rib_c` (+33°) broken off a fifth of the way up with
- *   bare shell above it, `rib_d` (+11°) a ring and a half short. The band
+ *   what says "broken" at the camera's distance: `rib_a` (−43°) half a
+ *   ring under the tear, which falls steeply across it toward the arc's
+ *   end, `rib_b` (−11°) two metres past it, standing proud of the torn
+ *   edge, `rib_c` (+33°) broken off a fifth of the way up with bare shell
+ *   above it, `rib_d` (+11°) three-quarters of a ring short. The band
  *   runs from the third column to halfway across the eighth and ends short
  *   of the shell at both ends.
  * - The fallen pieces, in `stone_dark`: two chunks of shell and a length of
- *   rib inside the arc, one chunk outside it — a box tipped on the ground
- *   and grounded on its lowest corner (`fallen`) — and two tetrahedral
- *   shards grounded the same way.
+ *   rib inside the arc, one chunk outside it — each a box lying flat on
+ *   the ground at its own bearing (`fallen`) — and two tetrahedral shards
+ *   resting on a face. Flat rather than tipped: the runtime seats a prop
+ *   by its lowest vertex (environmentModels.ts), so a piece balanced on a
+ *   corner lifts nothing and only floats its far end.
  * - Nine `coral_NN`, in `coral_stone`: four icosahedra and five octahedra
  *   squashed flat and laid on a surface with their flat axis along its
  *   normal (`crust`): four round the foot outside, two on the torn edge,
  *   one on `rib_b`, one on the inner skin, one on the largest fallen chunk.
+ *   A crust on a skin sits a tenth of a metre inside the spheroid, because
+ *   a facet lies inside the curve it stands in for by up to 0.35 m and a
+ *   crust lifted off the curve would float over the facet.
  *
  * Every face faces its surface — the outer skin out, the inner in, the tear
  * up its meridian, the ends along the arc, the foot down, every brick and
@@ -294,14 +303,13 @@ function band(name, js, u, { w = 1.7, th = 1.1, bury = 0.25 } = {}) {
   });
   add(shard, name, bar(stations), stone);
 }
-/** A box fallen on the ground: its size, where in plan, its tilt; its lowest corner on y = 0. */
-function fallen(name, [w, h, d], [x, z], euler) {
-  const m = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(...euler));
+/** A box fallen flat on the ground: its size, where in plan, and its bearing. */
+function fallen(name, [w, h, d], [x, z], bearing) {
+  const m = new THREE.Matrix4().makeRotationY(bearing);
   const ex = new THREE.Vector3(w, 0, 0).applyMatrix4(m);
-  const ey = new THREE.Vector3(0, h, 0).applyMatrix4(m);
+  const ey = new THREE.Vector3(0, h, 0);
   const ez = new THREE.Vector3(0, 0, d).applyMatrix4(m);
-  const drop = (Math.abs(ex.y) + Math.abs(ey.y) + Math.abs(ez.y)) / 2;
-  const centre = new THREE.Vector3(x, drop, z);
+  const centre = new THREE.Vector3(x, h / 2, z);
   add(
     shard,
     name,
@@ -313,29 +321,41 @@ function fallen(name, [w, h, d], [x, z], euler) {
   );
   return { centre, ex, ey, ez };
 }
-/** A tetrahedral shard, grounded on its lowest corner. */
-function shardPiece(name, size, [x, z], tilt) {
-  const mesh = add(shard, name, seabed.tetra(size), stone, [x, 0, z], tilt);
+/**
+ * A tetrahedral shard resting on a face: three's tetrahedron has a corner
+ * on (1, 1, 1), so turning that corner up puts the face opposite it flat
+ * on the ground; then a spin about the vertical, and the face on y = 0.
+ */
+function shardPiece(name, size, [x, z], spin) {
+  const q = new THREE.Quaternion().setFromUnitVectors(
+    new THREE.Vector3(1, 1, 1).normalize(),
+    new THREE.Vector3(0, 1, 0)
+  );
+  q.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), spin));
+  const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+  const mesh = add(shard, name, seabed.tetra(size), stone, [x, 0, z], [e.x, e.y, e.z]);
   mesh.updateMatrixWorld(true);
   mesh.position.y -= new THREE.Box3().setFromObject(mesh, true).min.y;
 }
 
-rib('rib_a', 2, [0.02, 0.18, 0.34, 0.49]);
+rib('rib_a', 2, [0.02, 0.16, 0.3, 0.42]);
 rib('rib_b', 5, [0.02, 0.2, 0.39, 0.58, 0.76]);
 rib('rib_c', 9, [0.02, 0.21]);
 rib('rib_d', 7, [0.02, 0.18, 0.34, 0.5]);
 band('band', [2.3, 3.5, 4.8, 6.2, 7.5], 0.43);
 
-const chunkA = fallen('chunk_a', [5.6, 1.3, 4.2], [-7.5, 14.5], [0.18, 0.6, -0.12]);
-fallen('chunk_b', [3.6, 1.2, 2.8], [6, 16.5], [-0.1, -0.4, 0.25]);
-fallen('chunk_c', [2.8, 1.1, 2.2], [13.5, 20.5], [0.14, 0.9, -0.2]);
-fallen('rib_fallen', [1.9, 1.2, 5.4], [11.5, 13], [0.08, 1.1, 0.05]);
-shardPiece('shard_a', 1.5, [-13, 12.5], [0.4, 0.3, 0.9]);
-shardPiece('shard_b', 1.1, [2, 12], [1.1, 0.2, 0.3]);
+const chunkA = fallen('chunk_a', [5.6, 1.3, 4.2], [-7.5, 14.5], 0.6);
+fallen('chunk_b', [3.6, 1.2, 2.8], [6, 16.5], -0.4);
+fallen('chunk_c', [2.8, 1.1, 2.2], [13.5, 20.5], 0.9);
+fallen('rib_fallen', [1.9, 1.2, 5.4], [11.5, 13], 1.1);
+shardPiece('shard_a', 1.5, [-13, 12.5], 0.3);
+shardPiece('shard_b', 1.1, [2, 12], 1.9);
 
 // ---------------------------------------------------------------------------
 // The coral crusts: a unit polyhedron, squashed flat, laid on a surface with
-// its flat axis along the surface's normal and spun about it.
+// its flat axis along the surface's normal and spun about it. On a skin the
+// lift is negative — a tenth of a metre into the spheroid — since the facet
+// under the crust sits inside the curve by up to 0.35 m.
 // ---------------------------------------------------------------------------
 function crust(name, shape, size, at, n, spin) {
   const q = new THREE.Quaternion().setFromUnitVectors(
@@ -346,8 +366,8 @@ function crust(name, shape, size, at, n, spin) {
   const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
   add(shard, name, shape(), coral, at.toArray(), [e.x, e.y, e.z], size);
 }
-const onOuter = (j, u, lift = 0.15) => v3(skin(j, u)).addScaledVector(normal(j, u), lift);
-const onInner = (j, u, lift = 0.15) => v3(skin(j, u, T)).addScaledVector(normal(j, u), -lift);
+const onOuter = (j, u, lift = -0.1) => v3(skin(j, u)).addScaledVector(normal(j, u), lift);
+const onInner = (j, u, lift = -0.1) => v3(skin(j, u, T)).addScaledVector(normal(j, u), -lift);
 const onTear = (j) =>
   v3(skin(j, TEAR[j]))
     .add(v3(skin(j, TEAR[j], T)))
@@ -359,7 +379,7 @@ crust('coral_03', seabed.ico, [1.3, 0.4, 1.5], onOuter(8.4, 0.11), normal(8.4, 0
 crust('coral_04', seabed.octa, [1.3, 0.55, 1.3], onOuter(10.7, 0.13), normal(10.7, 0.13), 0.7);
 crust('coral_05', seabed.octa, [1.3, 0.4, 0.9], onTear(4), upward(4, TEAR[4]), 0.3);
 crust('coral_06', seabed.octa, [1.0, 0.4, 1.0], onTear(9), upward(9, TEAR[9]), 1.9);
-crust('coral_07', seabed.octa, [1.0, 0.35, 0.85], onOuter(5, 0.31, 1.15), normal(5, 0.31), 2.6);
+crust('coral_07', seabed.octa, [1.0, 0.35, 0.85], onOuter(5, 0.31, 1.0), normal(5, 0.31), 2.6);
 crust('coral_08', seabed.ico, [0.9, 0.3, 1.0], onInner(5.5, 0.16), normal(5.5, 0.16).negate(), 1.4);
 crust(
   'coral_09',

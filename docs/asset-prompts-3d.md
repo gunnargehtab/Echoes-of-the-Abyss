@@ -1254,7 +1254,8 @@ metre, a range the band a generated one lands in; `Tris` is the per-instance bud
 | Open Water | `env-open-boulder` | 12 m | 6 m | ≤ 300 | none |
 
 Four heights moved to their approved models (#879): the trench slab from 10 m, the
-resonance pylon from 25 m, the dome shard from 20 m and the coral growth from 8 m. The
+resonance pylon from 25 m, the dome shard from 20 m to 14 m and the coral growth from
+8 m; #883 then moved the shard's again, to its new file's. The
 footprint is the scale, and the height follows it. The pylon and the growth were drawn to
 the old figures, and the fit to their footprints stretched them (`seabed.mjs` `stand`).
 Since #876 the runtime draws at intake's measure, so a row's height is what the game
@@ -1264,8 +1265,9 @@ draws before the registry's scale jitter.
 its slug and the checklist's "nothing that could be mistaken for a structure" both refuse.
 It is now a broken piece of one: 130° of a 44 m dome's foot, the shell torn to a jagged
 top, four ribs that each stop under, past or short of the tear, and its fallen pieces
-inside the arc. It is authored as a formula in `tools/hull-models/props/ruin-dome-shard.mjs`
-rather than ported from an export, and its row's height is what that file measures.
+inside the arc. It is authored as a formula in
+`tools/hull-models/props/ruin-dome-shard.mjs` rather than ported from an export, and its
+row's height is what that file measures.
 
 Shape cues, so the prompts land in each biome's materials brief
 ([environments.md](environments.md)): vent props are basalt and magma glass, cracked
