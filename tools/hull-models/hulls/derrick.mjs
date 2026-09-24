@@ -64,6 +64,26 @@
  * The cradle lamp, the stack throat, the frame floods and the roof gratings
  * face up and never moved; the block names them since #893.
  *
+ * THE DECK DATUM buried more than the floods (#894, from #890's review).
+ * `DECK` is the slab's mid-height, and the first cut hung the gun off it:
+ * `barbette_ring` (y 5.3–7.5), `barbette` (6.0–9.2) and `deck_scuff`
+ * (5.55–5.85) sat inside `hull_slab` (0–11), so the block's open barbette
+ * and its ring of scuffed plating were on no chart. The barbette stands on
+ * the slab's top now, `DEPTH`, and the cradle, barrel and muzzle rise the
+ * same 5.5 m with it; the pile hammer's head, buried the same way (6–9),
+ * stands on the deck and the shaft rises from it to where it always
+ * reached, 10 m of shaft where 5 of the 18 were in the slab. The frame's
+ * six work floods hung a quarter of a metre over the beams and are on them
+ * (`lattice`); the cradle lamp's stay stopped at the frame's top with
+ * 1.6 m of water under its foot and now runs from the rail to the lamp.
+ * The rail itself hangs 0.9 m under the two cross beams and stops a metre
+ * short of each, unlit and so outside the audit's measure; hanging it is
+ * #907's. The machinery house keeps its floor at `DECK`, the slab burying
+ * all but 3.5 m of it (its louvred hoods stand on that exposed wall since
+ * #893): lifting it carries the stack over the frame's top, and the frame
+ * reading as the biggest thing on the hull is the block's one hard line,
+ * so that is a decision #907 puts to the owner and not this fix.
+ *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.
  */
@@ -109,9 +129,9 @@ bathyarch.ballastAndKeel(root, { black, rust }, {
   z: 21, x: -6, length: 60, r: 3, keel: { x: -4, y: -6.2, length: 100 },
 });
 
-// The gun, forward of the frame.
+// The gun, forward of the frame, on the slab's top — DEPTH, not DECK (header).
 bathyarch.barbette(root, { black, grey, rust, amber }, {
-  x: 34, deck: DECK, r: 7, barrel: { x: 44.5, length: 12 },
+  x: 34, deck: DEPTH, r: 7, barrel: { x: 44.5, length: 12 },
 });
 
 // The derrick: the frame, its X-bracing, and the listening array slung beneath.
@@ -136,8 +156,11 @@ for (let i = 0; i < 8; i++) {
   add(root, `hydrophone_drum_${i}`, cyl(1.5, 1.5, 3.2, 10), rust, [5, frame.top - 2 - drop - 1.6, z]);
 }
 // The cradle lamp rides *above* the rail: a top-down bake sees plan area only.
+// Its stay runs from the rail's top (frame.top − 1.6) to the lamp's
+// underside (frame.top + 1.2); the first cut's stopped at frame.top, with
+// 1.6 m of water under its foot (#894).
 add(root, 'cradle_lamp', box(14, 1.0, 5), flood, [5, frame.top + 1.7, 0]);
-add(root, 'cradle_lamp_stay', box(0.6, 1.8, 0.6), grey, [5, frame.top + 0.9, 0]);
+add(root, 'cradle_lamp_stay', box(0.6, 2.8, 0.6), grey, [5, frame.top - 0.2, 0]);
 
 // The machinery house aft of the frame, and the pile hammer stowed against a leg.
 // The house stands 9 m tall from y 5.5, so the slab (top at DEPTH) buries all
@@ -154,8 +177,10 @@ bathyarch.machineryHouse(root, { black, grey, rust, amber, vent, flood }, {
     deck: DEPTH, well: { t: 1.8 },
   },
 });
-add(root, 'hammer_shaft', box(1.2, 18, 1.2), grey, [-6.5, 15, 30]);
-add(root, 'hammer_head', box(3.6, 3, 3.6), rust, [-6.5, 7.5, 30]);
+// "Head down": the head stands on the slab's top and the shaft rises from
+// it to where it always reached (header).
+add(root, 'hammer_shaft', box(1.2, 10, 1.2), grey, [-6.5, 19, 30]);
+add(root, 'hammer_head', box(3.6, 3, 3.6), rust, [-6.5, DEPTH + 1.5, 30]);
 
 // The deck floods: on the slab's top, which is DEPTH and not DECK (header).
 bathyarch.deckFloods(root, lampM, {

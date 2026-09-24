@@ -40,8 +40,11 @@
  * 80 m along +X, centred on its length. `DRAWN` is the export's length as
  * intake measures it — three's `Box3` over the parts' own boxes — which
  * the raked tail flukes' boxes overhang astern: tip to tip the vertices
- * span 5.5919 units, the bow light to the upper fluke's trailing tip, and
- * the flukes' boxes make the measure 5.6912, 1.8 % more. `DATUM` is 0.
+ * span 5.5463 units, the jaw lobe to the upper fluke's trailing tip, and
+ * the flukes' boxes make the measure 5.6605, 2.1 % more. Until #894 the
+ * bow light hung 0.87 m ahead of the nose and was the forward extreme, at
+ * 5.6912; seated on the nose it is not, and the hull is 0.5 % larger on
+ * the chart for it. `DATUM` is 0.
  *
  * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
  * four buds as showing under a cell from above. The block's one band is
@@ -63,13 +66,20 @@
  *   first cut only slid it 0.06 across and left it floating in the fork;
  *   review, F1.)
  *
- * Nothing here reaches the length or the beam.
+ * LAMPS THAT FLOAT (#894, from #890's review). `bow_light` hung 0.87 m
+ * ahead of the nose, and `hullline_port_1` — which #890 read as already on
+ * the shoulder — 0.65 m off it by the audit's measure. Each grows from
+ * the skin now, seated on it from its own station and sunk half its
+ * radius (`lightBuds` `on`, kit.mjs `seat`); same names, radii and
+ * material, and the audit names no lamp on this hull as hidden or
+ * floating. The bow light was the hull's forward extreme, so its move
+ * changes the scale (THE SCALE above).
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 80;
-const DRAWN = 5.6912;
+const DRAWN = 5.6605;
 const DATUM = 0;
 
 // The navy's ink (#888). The export carried the r184 pass's glossier
@@ -398,8 +408,8 @@ pelagia.membranes(root, membrane, {
 // hair to starboard of the fluke's root (#890; see the header).
 pelagia.lightBuds(root, light, {
   buds: [
-    ['bow_light', 0.04, drawn([0.06, 0.08, 2.2])],
-    ['hullline_port_1', 0.032, drawn([0.36, 0.16, 1.15])],
+    ['bow_light', 0.04, { ...drawn([0.06, 0.08, 2.2]), on: 'hull' }],
+    ['hullline_port_1', 0.032, { ...drawn([0.36, 0.16, 1.15]), on: 'hull' }],
     ['hullline_port_2', 0.032, drawn([0.35, 0.34, 0])],
     ['hullline_port_3', 0.032, drawn([0.26, 0.26, -1.1])],
     ['hullline_starboard_1', 0.032, drawn([-0.34, 0.12, 0.9])],

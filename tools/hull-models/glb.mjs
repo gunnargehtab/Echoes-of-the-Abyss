@@ -45,9 +45,28 @@ function finishOf(m) {
 }
 
 /**
- * A part: `{ name, material, finish, tris, positions }` — `material` the
- * name, `finish` the values behind it — positions 9 floats a triangle, world
- * space.
+ * Whether a finish hides what is under it. A part alpha-blended at under
+ * half opacity is more see-through than not — the Sounding Spire's
+ * `heat_shimmer_sheath` at six percent, the Spore Veil's gill haze at
+ * sixteen — and a top-down reading that counts it solid reports the lamp
+ * under it as hidden when the chart shows the lamp through it (#894: the
+ * Spire's `crystal_core`, its largest light in the conn view, read as 0 m²
+ * from above). The bake blends such a part at its own opacity; this is the
+ * same rule for the readers that cannot blend, `topDown` and the resting
+ * measure in kit.mjs `lightAudit`, and it lives here so the two agree. A
+ * MASK cutout is solid where it is drawn, so only BLEND is read.
+ */
+const TRANSLUCENT = 0.5;
+export const occludes = (finish) =>
+  !(finish && finish.alpha === 'BLEND' && finish.opacity < TRANSLUCENT);
+
+/**
+ * A part: `{ name, material, finish, tris, positions, mirrored }` —
+ * `material` the name, `finish` the values behind it — positions 9 floats a
+ * triangle, world space; `mirrored` when the node's transform has a
+ * negative determinant (a reflection, the Spire's `frame_blade_l`), which
+ * turns every triangle's winding round, so a reader taking a normal off the
+ * winding has to turn it back.
  */
 export function readGlb(path) {
   const buf = readFileSync(path);
@@ -144,10 +163,17 @@ export function readGlb(path) {
       finish,
       tris: out.length / 9,
       positions: Float32Array.from(out),
+      mirrored: det3(m) < 0,
     });
   });
   return { name: json.nodes[json.scenes[json.scene ?? 0].nodes[0]]?.name ?? null, parts };
 }
+
+/** The determinant of a column-major 4×4's upper 3×3: the sign of its handedness. */
+const det3 = (m) =>
+  m[0] * (m[5] * m[10] - m[9] * m[6]) -
+  m[4] * (m[1] * m[10] - m[9] * m[2]) +
+  m[8] * (m[1] * m[6] - m[5] * m[2]);
 
 /**
  * A linear colour as the sRGB hex a person authored. glTF carries colour
@@ -227,9 +253,241 @@ export function sceneParts(root) {
         : null,
       tris: count / 3,
       positions: out,
+      mirrored: o.matrixWorld.determinant() < 0,
     });
   });
   return { name: root.name, parts };
+}
+
+/**
+ * The nearest point on any of `parts` to `point`: `{ point, normal,
+ * distance, part }`, the normal the triangle's own by its winding, turned
+ * back on a mirrored part, so it faces out of a closed primitive whatever
+ * side of the surface `point` is on. A part `occludes` reads false on is
+ * skipped, as `topDown` skips it: a bud cannot rest on a haze.
+ *
+ * Ericson, *Real-Time Collision Detection* §5.1.5, region by region. Every
+ * triangle is tried; a lamp's fifty vertices against a hull's ten
+ * thousand triangles is a few million tests and well under a second, and a
+ * builder seating one lamp asks once.
+ */
+export function closestPoint(parts, [px, py, pz], { skip = null } = {}) {
+  let best = Infinity;
+  let hit = null;
+  for (const part of Array.isArray(parts) ? parts : [parts]) {
+    if (part === skip || !occludes(part.finish)) continue;
+    const a = part.positions;
+    for (let t = 0; t < a.length; t += 9) {
+      // The triangle's box first: a corner further than the best so far on
+      // any axis cannot hold a nearer point.
+      const r = Math.sqrt(best);
+      if (
+        Math.min(a[t], a[t + 3], a[t + 6]) > px + r ||
+        Math.max(a[t], a[t + 3], a[t + 6]) < px - r ||
+        Math.min(a[t + 1], a[t + 4], a[t + 7]) > py + r ||
+        Math.max(a[t + 1], a[t + 4], a[t + 7]) < py - r ||
+        Math.min(a[t + 2], a[t + 5], a[t + 8]) > pz + r ||
+        Math.max(a[t + 2], a[t + 5], a[t + 8]) < pz - r
+      )
+        continue;
+      const q = closestOnTriangle(px, py, pz, a, t);
+      const d = (px - q[0]) ** 2 + (py - q[1]) ** 2 + (pz - q[2]) ** 2;
+      if (d < best) {
+        best = d;
+        hit = { point: q, part, t };
+      }
+    }
+  }
+  if (!hit) return null;
+  const { part, t } = hit;
+  return { point: hit.point, normal: windingNormal(part, t), distance: Math.sqrt(best), part };
+}
+
+/**
+ * The highest point of any of `parts` straight under (x, z), as `topDown`
+ * would read the cell — `{ point, normal, part }` with the triangle's
+ * outward normal as `closestPoint` gives it — or null when nothing lies at
+ * that station. What a lamp laid on a plate rests on: the plate's facet
+ * under its own station, not the nearest facet, which from a station a
+ * metre over a slope is downhill of it.
+ */
+export function topAt(parts, x, z) {
+  let best = -Infinity;
+  let hit = null;
+  for (const part of Array.isArray(parts) ? parts : [parts]) {
+    if (!occludes(part.finish)) continue;
+    const a = part.positions;
+    for (let t = 0; t < a.length; t += 9) {
+      const x0 = a[t], y0 = a[t + 1], z0 = a[t + 2];
+      const x1 = a[t + 3], y1 = a[t + 4], z1 = a[t + 5];
+      const x2 = a[t + 6], y2 = a[t + 7], z2 = a[t + 8];
+      const det = (x1 - x0) * (z2 - z0) - (x2 - x0) * (z1 - z0);
+      if (Math.abs(det) < 1e-12) continue;
+      const l1 = ((x - x0) * (z2 - z0) - (x2 - x0) * (z - z0)) / det;
+      const l2 = ((x1 - x0) * (z - z0) - (x - x0) * (z1 - z0)) / det;
+      const l0 = 1 - l1 - l2;
+      if (l0 < -1e-9 || l1 < -1e-9 || l2 < -1e-9) continue;
+      const y = l0 * y0 + l1 * y1 + l2 * y2;
+      if (y > best) {
+        best = y;
+        hit = { part, t, point: [x, y, z] };
+      }
+    }
+  }
+  if (!hit) return null;
+  return { point: hit.point, normal: windingNormal(hit.part, hit.t), part: hit.part };
+}
+
+/** A triangle's unit normal by its winding, turned back on a mirrored part. */
+function windingNormal(part, t) {
+  const a = part.positions;
+  const ux = a[t + 3] - a[t], uy = a[t + 4] - a[t + 1], uz = a[t + 5] - a[t + 2];
+  const vx = a[t + 6] - a[t], vy = a[t + 7] - a[t + 1], vz = a[t + 8] - a[t + 2];
+  const n = [uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx];
+  const len = Math.hypot(...n) || 1;
+  const sgn = part.mirrored ? -1 : 1;
+  return n.map((c) => (sgn * c) / len);
+}
+
+/**
+ * How far `part` stands from the rest of the model: the least distance
+ * between its surface and any other solid part's, and nothing at all when
+ * the two meet — an edge of one crossing a face of the other, or a vertex
+ * of `part` inside the other (a throat sealed in a crystal, a cone's base
+ * sunk in its horn). The distance between two triangle meshes that do not
+ * meet is taken at a vertex against a face, either way round; the
+ * edge-against-edge case a box corner over a plate's rim can make is not
+ * tried, so a gap can read a little long there and never short, which is
+ * the safe way round for a warning.
+ *
+ * The inside test is ray parity straight up, which is right for a closed
+ * primitive and undefined for an open shell — a cowl, an open rim — where
+ * a vertex under it counts as inside and its lamp as resting. That is the
+ * lamp-under-a-deck case, which `topDown` already names.
+ */
+export function gapBetween(part, parts, { skip = part } = {}) {
+  const { min, max } = boundsOf(part);
+  const a = part.positions;
+  let best = Infinity;
+  for (const q of Array.isArray(parts) ? parts : [parts]) {
+    if (q === skip || !occludes(q.finish)) continue;
+    const qb = boundsOf(q);
+    const r = Math.sqrt(best);
+    if (qb.min.some((c, i) => c > max[i] + r) || qb.max.some((c, i) => c < min[i] - r)) continue;
+    const b = q.positions;
+    // A vertex of the part inside the other: the part is sunk in it.
+    for (let i = 0; i < a.length; i += 3)
+      if (
+        a[i] >= qb.min[0] && a[i] <= qb.max[0] &&
+        a[i + 2] >= qb.min[2] && a[i + 2] <= qb.max[2] &&
+        a[i + 1] >= qb.min[1] && a[i + 1] <= qb.max[1] &&
+        inside(b, a[i], a[i + 1], a[i + 2])
+      )
+        return 0;
+    // An edge of either crossing a face of the other: the two meet.
+    for (let t = 0; t < a.length; t += 9)
+      for (let u = 0; u < b.length; u += 9)
+        if (
+          Math.min(a[t], a[t + 3], a[t + 6]) <= Math.max(b[u], b[u + 3], b[u + 6]) &&
+          Math.max(a[t], a[t + 3], a[t + 6]) >= Math.min(b[u], b[u + 3], b[u + 6]) &&
+          Math.min(a[t + 1], a[t + 4], a[t + 7]) <= Math.max(b[u + 1], b[u + 4], b[u + 7]) &&
+          Math.max(a[t + 1], a[t + 4], a[t + 7]) >= Math.min(b[u + 1], b[u + 4], b[u + 7]) &&
+          Math.min(a[t + 2], a[t + 5], a[t + 8]) <= Math.max(b[u + 2], b[u + 5], b[u + 8]) &&
+          Math.max(a[t + 2], a[t + 5], a[t + 8]) >= Math.min(b[u + 2], b[u + 5], b[u + 8]) &&
+          (edgesCross(a, t, b, u) || edgesCross(b, u, a, t))
+        )
+          return 0;
+    // Apart: the nearest vertex to a face, either way round.
+    const near = (from, to) => {
+      for (let i = 0; i < from.length; i += 3) {
+        const hit = closestPoint({ positions: to, finish: null, mirrored: false }, [
+          from[i],
+          from[i + 1],
+          from[i + 2],
+        ]);
+        if (hit && hit.distance ** 2 < best) best = hit.distance ** 2;
+      }
+    };
+    near(a, b);
+    near(b, a);
+  }
+  return Math.sqrt(best);
+}
+
+/** Whether any edge of triangle `t` of `a` passes through triangle `u` of `b`. */
+function edgesCross(a, t, b, u) {
+  for (let e = 0; e < 3; e++) {
+    const i = t + e * 3;
+    const j = t + ((e + 1) % 3) * 3;
+    if (segmentHits(a[i], a[i + 1], a[i + 2], a[j], a[j + 1], a[j + 2], b, u)) return true;
+  }
+  return false;
+}
+
+/** Möller–Trumbore, the segment from p to q against triangle `u` of `b`. */
+function segmentHits(px, py, pz, qx, qy, qz, b, u) {
+  const dx = qx - px, dy = qy - py, dz = qz - pz;
+  const e1x = b[u + 3] - b[u], e1y = b[u + 4] - b[u + 1], e1z = b[u + 5] - b[u + 2];
+  const e2x = b[u + 6] - b[u], e2y = b[u + 7] - b[u + 1], e2z = b[u + 8] - b[u + 2];
+  const hx = dy * e2z - dz * e2y, hy = dz * e2x - dx * e2z, hz = dx * e2y - dy * e2x;
+  const det = e1x * hx + e1y * hy + e1z * hz;
+  if (Math.abs(det) < 1e-12) return false;
+  const inv = 1 / det;
+  const sx = px - b[u], sy = py - b[u + 1], sz = pz - b[u + 2];
+  const v = (sx * hx + sy * hy + sz * hz) * inv;
+  if (v < 0 || v > 1) return false;
+  const cx = sy * e1z - sz * e1y, cy = sz * e1x - sx * e1z, cz = sx * e1y - sy * e1x;
+  const w = (dx * cx + dy * cy + dz * cz) * inv;
+  if (w < 0 || v + w > 1) return false;
+  const s = (e2x * cx + e2y * cy + e2z * cz) * inv;
+  return s >= 0 && s <= 1;
+}
+
+/** Ray parity straight up from (x, y, z) through the triangles of `b`. */
+function inside(b, x, y, z) {
+  let crossings = 0;
+  for (let u = 0; u < b.length; u += 9) {
+    // Barycentrics in plan, as `topDown` takes them.
+    const x0 = b[u], y0 = b[u + 1], z0 = b[u + 2];
+    const x1 = b[u + 3], y1 = b[u + 4], z1 = b[u + 5];
+    const x2 = b[u + 6], y2 = b[u + 7], z2 = b[u + 8];
+    const det = (x1 - x0) * (z2 - z0) - (x2 - x0) * (z1 - z0);
+    if (Math.abs(det) < 1e-12) continue;
+    const l1 = ((x - x0) * (z2 - z0) - (x2 - x0) * (z - z0)) / det;
+    const l2 = ((x1 - x0) * (z - z0) - (x - x0) * (z1 - z0)) / det;
+    const l0 = 1 - l1 - l2;
+    if (l0 < 0 || l1 < 0 || l2 < 0) continue;
+    if (l0 * y0 + l1 * y1 + l2 * y2 > y) crossings++;
+  }
+  return crossings % 2 === 1;
+}
+
+function closestOnTriangle(px, py, pz, a, t) {
+  const A = [a[t], a[t + 1], a[t + 2]];
+  const B = [a[t + 3], a[t + 4], a[t + 5]];
+  const C = [a[t + 6], a[t + 7], a[t + 8]];
+  const ab = [B[0] - A[0], B[1] - A[1], B[2] - A[2]];
+  const ac = [C[0] - A[0], C[1] - A[1], C[2] - A[2]];
+  const dot = (u, v) => u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
+  const along = (P, e, s) => [P[0] + e[0] * s, P[1] + e[1] * s, P[2] + e[2] * s];
+  const ap = [px - A[0], py - A[1], pz - A[2]];
+  const d1 = dot(ab, ap), d2 = dot(ac, ap);
+  if (d1 <= 0 && d2 <= 0) return A;
+  const bp = [px - B[0], py - B[1], pz - B[2]];
+  const d3 = dot(ab, bp), d4 = dot(ac, bp);
+  if (d3 >= 0 && d4 <= d3) return B;
+  const vc = d1 * d4 - d3 * d2;
+  if (vc <= 0 && d1 >= 0 && d3 <= 0) return along(A, ab, d1 / (d1 - d3));
+  const cp = [px - C[0], py - C[1], pz - C[2]];
+  const d5 = dot(ab, cp), d6 = dot(ac, cp);
+  if (d6 >= 0 && d5 <= d6) return C;
+  const vb = d5 * d2 - d1 * d6;
+  if (vb <= 0 && d2 >= 0 && d6 <= 0) return along(A, ac, d2 / (d2 - d6));
+  const va = d3 * d6 - d5 * d4;
+  if (va <= 0 && d4 - d3 >= 0 && d5 - d6 >= 0)
+    return along(B, [C[0] - B[0], C[1] - B[1], C[2] - B[2]], (d4 - d3) / (d4 - d3 + (d5 - d6)));
+  const denom = 1 / (va + vb + vc);
+  return along(along(A, ab, vb * denom), ac, vc * denom);
 }
 
 /** Axis-aligned bounds of a part or a whole model, `{ min: [x,y,z], max: [x,y,z] }`. */
@@ -251,8 +509,10 @@ export function boundsOf(parts) {
  * Rasterise a model from above at `ppm` cells a metre: which part is on top
  * at every cell, and how high. This is the bake's camera without the
  * browser — a top-down orthographic view where a vertical face has no area
- * and a lamp under a deck does not exist — and it is what both the light
- * audit and the plan outline read off.
+ * and a lamp under a deck does not exist — and it is what the light audit
+ * reads off. A part `occludes` reads false on owns no cell: the bake draws
+ * the Spire's sheath at six percent over its core, so the core is what is
+ * on top here too (#894).
  */
 export function topDown(parts, ppm = 4) {
   const { min, max } = boundsOf(parts);
@@ -261,6 +521,7 @@ export function topDown(parts, ppm = 4) {
   const height = new Float32Array(w * h).fill(-Infinity);
   const owner = new Int32Array(w * h).fill(-1);
   parts.forEach((part, pi) => {
+    if (!occludes(part.finish)) return;
     const a = part.positions;
     for (let t = 0; t < a.length; t += 9) {
       const x0 = a[t], y0 = a[t + 1], z0 = a[t + 2];

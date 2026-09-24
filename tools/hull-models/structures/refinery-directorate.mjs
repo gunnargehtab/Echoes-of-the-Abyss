@@ -77,6 +77,23 @@
  *   and the part keeps the export's name. `diff.mjs` lists `crusher_maw`
  *   and no other part.
  *
+ *   #894 found the three files' maws three fixtures under one name and
+ *   made the Order's — a lit slab set into the cowl's crown — the
+ *   Commune's too. Not this one's: on a Directorate model that slab is
+ *   the plate on the outside the style doc names, and the apron is the
+ *   one reading the Refinery block licenses. A Directorate maw that is
+ *   one fixture with the other two is an aperture, a hole in the cowl,
+ *   and that is a decision put to the owner on #907 (kit.mjs `crusher`).
+ * - RESIDUAL AUDIT LINES (#894's resting measure): `photophore_1`, `_2`
+ *   and `_3` rest on nothing, 2.2, 0.3 and 1.9 m off the silos they mark,
+ *   where the export hung them. Seating each on its silo's wall (kit.mjs
+ *   `seat`) puts it under the segment above — the segments twist a little
+ *   further round as they rise and overhang the one below — so the bud
+ *   the chart saw floating it would not see at all, and the audit named
+ *   two of the three hidden. Where a photophore rests on a stacked silo
+ *   and shows is a shape decision this issue does not take; they are
+ *   carried as the file has them and named in #907.
+ *
  * THE FRAME is the export's own: an X-long file, 23.0715 units long for a
  * 280 m footprint (hull-intake's `rawSize.x` on the approved file, which
  * did not yaw it), ground at y = 0; built here in that frame with no yaw —
@@ -364,7 +381,8 @@ directorate.anchorClaws(root, [red, black], {
 });
 
 // "Floodlit working surfaces": two flood masts at the kit's defaults, and
-// four photophores, each its own buffer, none mirroring another.
+// four photophores, each its own buffer, none mirroring another — three of
+// them off their silos where the file hung them (the header).
 floodMasts(root, { steel, lamp: flood });
 directorate.photophoreDomes(root, crimson, {
   frame: xLong,

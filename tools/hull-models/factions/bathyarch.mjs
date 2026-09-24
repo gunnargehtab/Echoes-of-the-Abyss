@@ -390,10 +390,13 @@ export function lattice(root, { grey, rust, flood }, { fwd, aft, z, deck, height
       top,
       sgn * z,
     ]);
+    // On the beam: the beam's top face is 0.7 over `top`, and the flood's
+    // underside meets it. The first cut had them a quarter of a metre over
+    // it, which is a flood in the water (#894).
     for (let i = 0; i < floods; i++)
       add(root, `work_flood_${side}${i}`, box(4.5, 0.5, 2.2), flood, [
         aft + 2 + ((fwd - aft - 4) * i) / (floods - 1),
-        top + 1.2,
+        top + 0.95,
         sgn * z,
       ]);
   });

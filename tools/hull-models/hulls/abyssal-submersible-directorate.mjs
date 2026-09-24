@@ -61,7 +61,11 @@
  *   `limb_port_2_claw`, `limb_port_3_claw`, `limb_port_4_claw`,
  *   `limb_starboard_2_claw` and `limb_starboard_3_claw` show nothing from
  *   above, and the export warns on each; `limb_starboard_1_claw` was never
- *   hidden.
+ *   hidden. The seven claws and the rostrum also rest on nothing by the
+ *   audit's second measure (#894) — the file folds each claw a metre off
+ *   its femur and stands the rostrum two off the head — and #907 lists
+ *   them for the same reason: a claw or a rostrum re-hung is a limb
+ *   decision, not a lamp seated.
  * - `photophore_port_5` and `photophore_starboard_3` are the clause's and
  *   stay lit. Each sat on the fifth plate's flank at its widest line,
  *   under the plate's own upper surface; each is lifted 0.04 inboard and
@@ -70,9 +74,24 @@
  *   which stands proud of the fifth plate's shell at those stations — not
  *   the shell of `carapace_5`.
  * - `photophore_jaw` is the clause's and stays lit. It sat under the jaw
- *   directly beneath the rostrum's base; it is under the jaw still, moved
- *   0.2 across the keel to the starboard side of the rostrum, between it
- *   and the starboard mandible, where nothing stands over it.
+ *   directly beneath the rostrum's base; #890 moved it 0.2 across the keel
+ *   to the starboard side of the rostrum, between it and the starboard
+ *   mandible, where nothing stands over it — and 1.29 m from anything, the
+ *   review found (#894). It is seated on the nearer of the head and the
+ *   starboard mandible from that station, half its radius in
+ *   (`photophoreDomes` `on`, kit.mjs `seat`), and the mandible is the
+ *   nearer: it grows from the mandible's lower inboard face near its tip,
+ *   0.4 m from centre to skin, where it reaches inboard past the mandible
+ *   — still under the jaw to starboard of the rostrum, and clear from
+ *   above (1.6 m²).
+ * - Five more of the file's flank buds stood off the shell the same way,
+ *   0.4 to 1.0 m — `photophore_port_1`, `_2`, `_4`, `photophore_starboard_1`
+ *   and `_2` — the review's measure finding them once it had a lamp to
+ *   measure (#894). Each is seated on the nearest of the five plates and
+ *   their rims from its own station, half in; `photophore_port_3`, `_5`,
+ *   `photophore_starboard_3` and `photophore_tail` already rested and stay.
+ *   `diff.mjs` lists the six, the jaw's 1.6 m the largest, and no other
+ *   part.
  * - The five rims, the four tail joints, the rostrum and the seven claws
  *   glow in `edge_red` at the file's faint 0.12 — "a fainter red along
  *   the plate rims, the tail joints, the rostrum and the claws", the
@@ -317,19 +336,23 @@ bar('telson_starboard', violet, [0.26, 0.02, 0.32], [-0.18, 0.68, -1.84], [0.1, 
 // tail — a pattern that repeats on neither side. The last of each flank
 // rank sits on the fifth plate's upper surface and the jaw bud to
 // starboard of the rostrum, where the maps see them (#890, the header).
+// Six of them grow from the shell the file hung them beside (`on`, #894;
+// the header): the plates and their rims for the flank buds, the head and
+// the starboard mandible for the jaw's.
+const SHELL = [1, 2, 3, 4, 5].flatMap((n) => [`carapace_${n}`, `plate_rim_${n}`]);
 directorate.photophoreDomes(root, photophore, {
   facets: [6, 4],
   tolerance: HALF_METRE,
   domes: [
-    ['photophore_port_1', 0.035, drawn([0.6, 0.94, 1.1])],
-    ['photophore_port_2', 0.03, drawn([0.66, 0.8, 0.62])],
+    ['photophore_port_1', 0.035, { ...drawn([0.6, 0.94, 1.1]), on: SHELL }],
+    ['photophore_port_2', 0.03, { ...drawn([0.66, 0.8, 0.62]), on: SHELL }],
     ['photophore_port_3', 0.035, drawn([0.68, 0.9, 0.3])],
-    ['photophore_port_4', 0.028, drawn([0.62, 0.76, -0.14])],
+    ['photophore_port_4', 0.028, { ...drawn([0.62, 0.76, -0.14]), on: SHELL }],
     ['photophore_port_5', 0.03, drawn([0.46, 1.03, -0.52])],
-    ['photophore_starboard_1', 0.03, drawn([-0.64, 0.86, 0.8])],
-    ['photophore_starboard_2', 0.028, drawn([-0.66, 0.76, 0.1])],
+    ['photophore_starboard_1', 0.03, { ...drawn([-0.64, 0.86, 0.8]), on: SHELL }],
+    ['photophore_starboard_2', 0.028, { ...drawn([-0.66, 0.76, 0.1]), on: SHELL }],
     ['photophore_starboard_3', 0.03, drawn([-0.48, 1.045, -0.48])],
-    ['photophore_jaw', 0.04, drawn([-0.08, 0.58, 2])],
+    ['photophore_jaw', 0.04, { ...drawn([-0.08, 0.58, 2]), on: ['head', 'mandible_starboard'] }],
     ['photophore_tail', 0.032, drawn([0.02, 0.68, -2.06])],
   ],
 });

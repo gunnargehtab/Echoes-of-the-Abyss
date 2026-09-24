@@ -137,6 +137,13 @@
  * show 2.0–16.9 m² each, two of them (`west` 1 and 5) shaded by stalk-4's
  * pod and stalk-6's stem, which lean over the west ring where the file
  * grew them.
+ *
+ * Since #894 the two haze cones (`spore-haze`, the glow #893 named) are a
+ * glow and not a lamp to the audit and the bake alike — blended at sixteen
+ * percent, they occlude nothing, own no cell from above and count as no
+ * lamp (glb.mjs `occludes`) — and the chart sees the mound and the slits
+ * through them where it saw a solid cone. Nothing here moves the
+ * footprint.
  */
 import { THREE, exportGlb, fitFootprint } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';

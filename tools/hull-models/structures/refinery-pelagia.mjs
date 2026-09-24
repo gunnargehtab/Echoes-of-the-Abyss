@@ -53,8 +53,19 @@
  *   `bio_light` at 2.6 (`biolight_green` until #891; `spore_pale` is
  *   `spore_pod` since then, the same value), and `floodlight_pale`, the
  *   spore token on a #3A3F1E base at 3.2587.
- * - The maw, edge-on on the Directorate's file, shows here past the roof's
- *   overhang.
+ * - `crusher_maw` (#894): the export stood the lit slab on the house's
+ *   face, and it showed 0.63 m² past the roof's overhang — a dot on the
+ *   chart for the block's "visible machinery light", and the third
+ *   fixture under the one name across the three files. It is the drum
+ *   cowls' one fixture kit.mjs `crusher` now describes (the Directorate's
+ *   dome keeps its apron, and the kit says why), the Order's construction
+ *   turned to this roof: the same 1.7 × 1.3 × 0.3 slab, level along the
+ *   ridge and flush with the roof's forward end over the face, its
+ *   underside 0.27 under the ridge — the ridge stands at 5.25 and the two
+ *   crown facets fall from it at 15°, so at the slab's edges (0.65 out)
+ *   they are at 5.075 and the underside at 4.98 is 0.095 into them — and
+ *   its top at 5.28, 0.03 proud, so the whole slab shows from above.
+ *   `diff.mjs` lists `crusher_maw` and no other part.
  *
  * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
  * `silo_vein_1` and `silo_vein_3` as showing under a cell from above. The
@@ -196,8 +207,9 @@ pelagia.silos(
   }
 );
 
-// The crusher at the kit's defaults but its roof — a half drum laid on its
-// side — and the two stacks.
+// The crusher at the kit's defaults — the maw's are this file's, the slab
+// set into the roof's ridge at its forward end since #894 (the header) —
+// but its roof, a half drum laid on its side; and the two stacks.
 crusher(
   root,
   { house: steel, cowl: chitin, maw: flood },

@@ -39,9 +39,28 @@
  *   plate edge" — so #890 keeps all three lit and moves only them, by a rule
  *   `plateEdgePhotophores` now holds rather than by hand: a lamp whose station
  *   falls under the ridge ahead rides on that ridge's crown at its own beam
- *   (docs/models-plan.md §3.2 rule 5). The other eighteen do not move, and the
- *   three keep their names, size and material. The gullet is the other lamp
- *   moved, and it is declared below.
+ *   (docs/models-plan.md §3.2 rule 5). The three keep their names, size and
+ *   material. The gullet is the other lamp moved, and it is declared below.
+ *
+ *   The other eighteen did not move in #890, and its review found them in
+ *   the water: the file laid every one at 0.72 of its plate's height and
+ *   0.66 of its beam, which is on the plate's ellipsoid at one station
+ *   only: twelve of the eighteen stood 0.17 to 1.71 m over the facet
+ *   under them (seven far enough from any skin for the audit to name
+ *   them) and six were sunk up to a decimetre into it, since a low-facet
+ *   orb falls away from its ellipsoid toward its ends (#894). So does the
+ *   rule now rest every lamp on the shell: each is dropped at its own
+ *   station onto whichever plate or ridge is on top there, its bottom
+ *   face on the facet and tilted with it (kit.mjs `seat`), and the three
+ *   ridge riders come out where #890 put them by hand. The five dorsal
+ *   marks were laid the same way
+ *   (`photophores` `rest`): `photophore_dorsal_2` and `_4` stood 1.2 and
+ *   1.7 m over their plates and `_3` 0.4 m; `_0` and `_1` were sunk in
+ *   theirs, showing 0.75 and 0.25 m² from above, and come up 0.4 and
+ *   1.2 m onto the shell, where each shows 2 m². Twenty-three lamps move,
+ *   none by more than two metres, none across the keel; `diff.mjs` lists
+ *   them and nothing else, and the audit names no lamp on this hull as
+ *   hidden or floating.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -195,7 +214,7 @@ directorate.hopper(root, { black, steel, gullet }, { x: -6, y: 8, z: 2 });
 // as laid left photophore_s_02, _p_01 and _s_12 under the ridge of the plate
 // ahead, and with the ridge given the builder seats those three on its crown
 // instead, where the maps see them (#890, the header). The other eighteen
-// are where the file has them.
+// rest on the shell at the file's stations (#894, the header).
 directorate.plateEdgePhotophores(root, crimson, {
   segments: SEGMENTS,
   starboard: { count: 3, start: -0.5, pitch: 0.45 },
@@ -207,8 +226,9 @@ directorate.plateEdgePhotophores(root, crimson, {
 });
 
 // Five marks down the spine, one a plate, side alternating with the tergite
-// spines they sit between. `photophores` refuses a mirrored pair, so this rank
-// cannot quietly become symmetrical.
+// spines they sit between, each seated on the plate or ridge under its
+// station (#894; the header). `photophores` refuses a mirrored pair, so
+// this rank cannot quietly become symmetrical.
 directorate.photophores(root, crimson, {
   spots: [
     ['photophore_dorsal_0', -34, 9.5, -8],
@@ -219,6 +239,7 @@ directorate.photophores(root, crimson, {
   ],
   size: 1.2,
   depth: 2.4,
+  rest: SEGMENTS.flatMap((_, i) => [`tergite_${i}`, `tergite_ridge_${i}`]),
 });
 
 await exportGlb(root, 'dredge-directorate.glb');

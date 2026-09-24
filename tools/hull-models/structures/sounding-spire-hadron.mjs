@@ -66,41 +66,51 @@
  *   own. As the file has them.
  *
  * `diff.mjs sounding-spire-hadron f7cce0f`: unchanged beyond the root scale
- * and shift but for the four parts below — every other part is where it
- * was (a square plan, compared as it stands).
+ * and shift — every part is where it was (a square plan, compared as it
+ * stands). #890 moved two running lights; #894 put them back, below.
  *
- * LIGHT (#890, #893). The block names every lamp on the file. Its resting
- * clause since #893: "the crystal glowing low from core to apex" is the
- * core, the throat and the apex, "the horn tips with it" the two tips,
- * and "running lights up the frame" the ten; and its "heat-shimmer
- * distortion" is `heat_shimmer_sheath`, translucent and emissive at 0.55,
- * which the audit reads as a lamp of 974 m² over everything it wraps.
+ * LIGHT (#890, #893, #894). The block names every lamp on the file. Its
+ * resting clause since #893: "the crystal glowing low from core to apex"
+ * is the core, the throat and the apex, "the horn tips with it" the two
+ * tips, and "running lights up the frame" the ten; and its "heat-shimmer
+ * distortion" is `heat_shimmer_sheath`, translucent and emissive at 0.55.
  * "Burning bright along the crystal when active" is the same lamps
- * scaled, the one-glow-factor
- * reading (models-plan.md §3.2, the paragraph after the rules), as the
- * approved model and #652 have it. When #890 placed them the clause named
- * only the active band, and the resting set was carried as the approved
- * file lights it (#890, review rulings, ruling 2); #893 settled it by
- * naming the set. Four lamps were hidden from above; two move, and two
- * stay lit where they are as residual audit lines the audit names on
- * every build:
- * - `crystal_core` stays. Its only occluder from above is
- *   `heat_shimmer_sheath`, alpha-blended at six percent, which glb.mjs
- *   `topDown` — what kit.mjs `lightAudit` calls — treats as opaque;
- *   nothing solid stands over it, and a lamp
- *   the block lights at rest is never clad to quiet the audit (#890
- *   review). Residual.
+ * scaled, the one-glow-factor reading (models-plan.md §3.2, the paragraph
+ * after the rules), as the approved model and #652 have it. When #890
+ * placed them the clause named only the active band, and the resting set
+ * was carried as the approved file lights it (#890, review rulings,
+ * ruling 2); #893 settled it by naming the set. Four lamps read as hidden
+ * from above until #894; one still does, as the residual audit line the
+ * audit names on every build:
+ * - `crystal_core` stays, and the audit sees it since #894. Its only
+ *   occluder from above is `heat_shimmer_sheath`, alpha-blended at six
+ *   percent; until #894 glb.mjs `topDown` — what kit.mjs `lightAudit`
+ *   calls — and the bake's material swap both treated the sheath as solid,
+ *   so the core, the Spire's largest light in the conn view, read as
+ *   hidden and baked dark under a solid sheath, and the sheath itself
+ *   counted as a lamp of 974 m² over everything it wraps. A part blended
+ *   at under half opacity occludes nothing now and is no lamp to the
+ *   audit (glb.mjs `occludes`), and the bake blends it at its own
+ *   opacity, so the core is on the chart and the sheath is the
+ *   six-percent haze over it the block asks for. No part moved.
  * - `crystal_throat` stays. It is sealed inside the core — the file's
  *   z-fight nudge is the millimetre between them — and no upward face can
- *   carry it. Residual, for the same reason.
+ *   carry it. Residual.
+ * - Eight of the ten running lights (all but the `running_light_1` pair)
+ *   and both horn tips stand off the frame by the audit's second measure
+ *   (#894): the file hung the lights 0.4 to 6.5 m from the blades they run
+ *   beside, the tips 1.4 m over their horns. The issue names none
+ *   of them, and a light re-hung on a blade is a shape decision this port
+ *   does not take; they are carried as the file has them and named in
+ *   #907.
  * - `running_light_3_r` and `running_light_3_l`, the pair 11.8 up the
- *   frame, sat at x ±0.9 under the sheath's bulge (its middle facet at 12.4
- *   over a crown at 11.9) and showed 0.06 m² each. Each moves outboard
- *   along its blade to x ±1.15 at the same y and z — beside the blade
- *   still, which spans 0.74..1.97 there (0.64..2.07 with its bevel; the
- *   blade stands on y 1.7), and out from under the sheath — rule 5 — and
- *   shows 5.1 m². `diff.mjs` lists the two (3.62 m at 140 m) and nothing
- *   else.
+ *   frame, sit at x ±0.9 where the export put them, under the sheath's
+ *   bulge (its middle facet at 12.4 over a crown at 11.9). #890 moved them
+ *   outboard to x ±1.15 because the audit read 0.06 m² of each under a
+ *   sheath it took for solid; with the sheath read as the six-percent
+ *   haze it is (#894) the export's station shows 5.1 m² from above, the
+ *   move has no reason left, and the pair is back where the file has it.
+ *   `diff.mjs sounding-spire-hadron f7cce0f` lists no part.
  */
 import { THREE, fitFootprint, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -208,7 +218,7 @@ hadron.ballastPipes(
 hadron.ballastTanks(root, shadow, { r: 0.62, waist: 1.6, at: [2.3, 1.35, -1.5] });
 
 // Ten running lights, two pairs at the foot and three up the frame — the
-// third of those outboard of the sheath since #890 (see LIGHT).
+// third of those under the sheath where the export has them (see LIGHT).
 hadron.lightPairs(root, glow, {
   name: 'running_light',
   r: 0.1,
@@ -216,7 +226,7 @@ hadron.lightPairs(root, glow, {
     [2.6, 1.85, 1.4],
     [2.6, 1.85, -1.4],
     [1.35, 6.4, 0.9],
-    [1.15, 11.8, 0.55],
+    [0.9, 11.8, 0.55],
     [1.7, 16.2, 0],
   ],
 });

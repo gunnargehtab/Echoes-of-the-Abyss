@@ -108,6 +108,11 @@ export const KINDS = [
   { slug: 'corvette', lengthM: 80, sig: 28 },
   { slug: 'abyssal-submersible', lengthM: 95, sig: 22 },
   { slug: 'cruiser', lengthM: 130, sig: 55 },
+  // Two hulls of one navy each, for #894's before-and-after frames: the
+  // Dredge is the Directorate's alone and the Derrick the Consortium's, so
+  // a run names the navy (`--kinds dredge --navies directorate`).
+  { slug: 'dredge', lengthM: 120, sig: 40 },
+  { slug: 'derrick', lengthM: 120, sig: 58 },
 ];
 
 /** The kinds #649 built — the ones a bare run photographs. */
