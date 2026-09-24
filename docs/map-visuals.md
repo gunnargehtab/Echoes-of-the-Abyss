@@ -154,8 +154,9 @@ break-silence ring and an order's acknowledgement are weighed at their peak alph
 its peak, as if it were an outline. Soft fills stay unweighed, as the haze does. Blocked
 ground is weighed by its hatch. A Tetherjelly field's bells are a mark of their own rather
 than its rim's interior, and so is a Lampfry shoal's mote cloud, formed or scattered. Residue's
-dashed arc is its outline, weighed at full intensity; its three soft rings are fills. The owner
-settled both rules on #866.
+dashed arc is its outline, weighed at its peak; its three soft rings are fills. The owner
+settled both rules on #866. Which peak weighs residue is still open, because the server gives it
+no single one (§10).
 
 The ladder is measured, not just stated. A stroke's weight is how far it lifts the pixel
 under it, in encoded luminance, which is how a screenshot measures it. The ink blends in
@@ -166,13 +167,15 @@ light times its gain, encoded and added to the pixel, so it lifts every ground a
 and every one rung 7 draws on the chart. Four of rung 5's are its floor: the quietest outline
 in each of its three quiet colours — a kelp field's rim while it is not gripping, a
 Tetherjelly field's rim, and a simulated hazard's rim while it is dormant — and an inert hazard
-site's rim, which the outline rule above leans on. Every other rung-5 mark, residue and the
-stipple included, lifts more than the least of them in every palette, and a test holds that
-near the eye: the conn view's tunnel routes and map rim fade with the water's fog, so a far one
-lifts less. Which is quietest depends on the palette. The draw sites take their alphas from
-there. The tests hold every ink stroke below the least of them, over the darkest and the
-palest ground, in all four palettes. When furniture gets quieter, the ink has to follow it
-down.
+site's rim, which the outline rule above leans on. Every other rung-5 mark, the stipple
+included, lifts more than the least of them in every palette, and a test holds that near the
+eye: the conn view's tunnel routes and map rim fade with the water's fog, so a far one lifts
+less. Which is quietest depends on the palette. The draw sites take their alphas from there.
+The tests hold every ink stroke below the least of them, over the darkest and the palest
+ground, in all four palettes. When furniture gets quieter, the ink has to follow it down.
+Residue's arc is the one exception, and the tests record it rather than move the ink: it clears
+the four at the scale's ceiling, and falls under them and under the ink at a faint mark's own
+peak (§10).
 
 **The ink also sits under your own detection ring.** A hull's ring while you have not selected
 it is your own exposure ([ui-ux.md](ui-ux.md) §3.5): a line of seabed that out-shouted it
@@ -183,15 +186,16 @@ anyway on #866, from 0.18 to 0.27, to clear rung 5's floor, and the coast stayed
 tritanopia at mid SIG the ring now lifts the kelp fill by 0.065, which would cap the coast near
 14.9%. Rung 5's floor binds first, near 13.3%, in deuteranopia over the same fill.
 
-**The tests hold rungs 4 to 6, and record where rung 7 breaks.** Rung 4 sits under rung 5's
-floor and under that ring. Rung 5's floor is the least of its four quiet outlines. Rung 6's
-floor is the unselected ring in the standard and tritanopia palettes, and blocked ground's
-hatch in the two red-green palettes, whose mid-SIG ring is amber. It lifts every ground more
-than rung 5's floor in all four. Rung 7's floor on the chart does not clear rung 6's: a Tier-3
-contact's ring and glyph, in its navy's colour, lift some ground less than rung 6's floor in
-every palette. The tests pin where, and §10 records it. Rungs 1 to 3 are the ground every lift
-is measured over. What rung 7 draws in the conn view cannot be weighed without a GPU, and §10
-says why.
+**The tests hold rungs 4 to 6, and record where rungs 5 and 7 break.** Rung 4 sits under rung
+5's floor and under that ring. Rung 5's floor is the least of its four quiet outlines, unless
+residue is weighed at a faint mark's own peak, which would put rung 5's floor under rung 4's.
+Rung 6's floor is the unselected ring in the standard and tritanopia palettes, and blocked
+ground's hatch in the two red-green palettes, whose mid-SIG ring is amber. It lifts every
+ground more than rung 5's four quiet outlines in all four. Rung 7's floor on the chart does not
+clear rung 6's: a Tier-3 contact's ring and glyph, in its navy's colour, lift some ground less
+than rung 6's floor in every palette. The tests pin where, and §10 records it. Rungs 1 to 3 are
+the ground every lift is measured over. What rung 7 draws in the conn view cannot be weighed
+without a GPU, and §10 says why.
 
 Two consequences worth naming:
 
@@ -353,21 +357,36 @@ The rulings:
 - **A fading mark is weighed at its steady peak** (§5). A contact fresh; the lock brackets,
   the break-silence ring and an order's acknowledgement at their peak.
 - **Acoustic residue is rung 5**, your own heard residue beside the furniture. Its dashed arc
-  is weighed at intensity 1, the ceiling the server clamps a mark to.
+  is its outline, weighed at its peak, and its three soft rings are fills. Which peak is open,
+  below.
 - **A rimless mark is weighed by its loudest crisp element** (§5). Blocked ground by its
-  hatch, and the bells and each shoal cloud as marks of their own, by their loudest dot. Every
-  one of them clears its rung's floor.
+  hatch, and the bells and each shoal cloud as marks of their own, by their loudest dot. The
+  bells and both clouds lift the ground more than four times as much as rung 5's floor. The
+  hatch clears that floor too, and is rung 6's floor in the two red-green palettes.
 
 What stays recorded, for the owner. The tests pin each break and fail if it moves.
 
+- **Residue has no one peak.** The owner ruled its arc weighed at its peak, and the server
+  gives it none. A mark is born at its event's intensity, a merge adds the next event's, and
+  the sum is capped at 1. A lone torpedo wake is born at 0.05, a lone shot's battle site at
+  0.09, a detonation's at 0.35 and a destroyed structure at 1. A hum is born at what its
+  delivery carried, so a partial load's can be as faint as the 0.02 below which the server
+  drops a mark. Read as the scale's ceiling, the arc clears rung 5's floor in every palette.
+  Read as a mark's own peak, a lone wake or shot lifts black by 0.017–0.018, under the minor
+  isobath's 0.043. A detonation's lifts it by 0.071: over the ink, and still under rung 5's
+  floor there (0.080–0.094). In battle red, the quietest of its four colours, the arc clears
+  the coast only from intensity 0.27, and rung 5's floor only from 0.40–0.50 by palette. Under
+  that reading rung 5's floor is residue's, and it sits under rung 4's. The tests weigh the arc
+  at the ceiling and at 0.02, and pin the break. Neither the arc nor the ink moved.
 - **Rung 7 sits under rung 6 on the chart**, in every palette. A Tier-3 contact's ring and
   glyph wear its navy's colour, and the darkest primaries, the Directorate's crimson and the
   Hadron's deep blue and dark teal, sit at 0.17–0.19 luminance. At 0.33 the ring lifts the kelp
   fill by 0.024–0.030: under rung 6's floor there (0.065–0.103), and under the survey ink's
-  coast (0.042). A Tier-4 contact's glyph, health bar and ordnance disc fall under rung 6's
-  floor too in the three palettes that draw the Hadron dark, in tritanopia by less than 0.0001.
-  So does a Tier-3 Sounder's halo in the two red-green palettes, where rung 6's floor is
-  blocked ground's hatch.
+  coast (0.042). A Tier-4 contact's glyph and health bar fall under rung 6's floor too in the
+  three palettes that draw the Hadron dark, in tritanopia by less than 0.0001. So does a Tier-3
+  Sounder's halo in the two red-green palettes, where rung 6's floor is blocked ground's hatch.
+  Ordnance's disc does not: the server names no navy for ordnance, so it wears the Track tier's
+  colour.
 - **Rung 7 in the conn view is not weighed.** Own hulls and structures are lit models, or
   baked sprites until the model loads, and own ordnance is a lit body with a lamp. What lands
   on a pixel depends on the lights, the texture and the view, and no number for it can be
