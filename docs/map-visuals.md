@@ -325,12 +325,13 @@ What it leaves for the owner:
 
 - **Rung 6 sits under rung 5's floor** in the standard, protanopia and tritanopia palettes.
   Either the unselected ring comes up, or the floor comes down.
-- **Rung 6 sits under every rung-5 outline at its loudest**, in all four palettes. The ring
-  cannot clear that at any alpha: a live hazard's rim at its loudest lifts black ground by
-  0.719, and the ring's quieter colour at full alpha by 0.341–0.514. Taking a live hazard's
-  rims and countdown off rung 5 still leaves the other ten over the ring as drawn — up to
-  0.382, the crystal's depth ring in tritanopia, against the ring's 0.061–0.093. What remains
-  is rung 5 coming down, or §5's "quieter" meaning floor against floor.
+- **Rung 6 sits under every rung-5 outline at its loudest over black ground**, in all four
+  palettes. The ring cannot clear that at any alpha: a live hazard's rim at its loudest lifts
+  black ground by 0.719, and the ring's quieter colour at full alpha by 0.341–0.514. Taking a
+  live hazard's rims and countdown off rung 5 still leaves the other ten over the ring as
+  drawn, over black — up to 0.382, the crystal's depth ring in tritanopia, against the ring's
+  0.061–0.093. What remains is rung 5 coming down, or §5's "quieter" meaning floor against
+  floor.
 - **Marks that fade by design are unweighed.** A contact fades in as it arrives and out as a
   ghost, and the lock brackets, the break-silence ring and an order's acknowledgement fade to
   nothing, so rung 6's floor is taken over its steady outlines. Weighing rung 7 against rung 6
