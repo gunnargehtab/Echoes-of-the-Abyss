@@ -69,8 +69,23 @@
  * into. 43 parts and 2,256 triangles become 42 and 2,244; `diff.mjs
  * responsory-hadron 7fbb9ba` lists the one removal and no movement, and the
  * outline does not change.
+ *
+ * LAMPS THAT FLOAT (#907, from #894's measure). The three marks rested on
+ * nothing: `stern_mark` hung 1.28 m over the drive prism's top flat, and
+ * `nav_mark_s` and `nav_mark_p` 1.72 m over the hull's shoulder at
+ * (−16, 4.9, ±3.4). The stern mark lies on the prism now, dropped from its
+ * own station with its underside on the top flat and pitched with the
+ * prism's taper (`drive` `mark.on`, kit.mjs `seat`). Each nav mark is
+ * seated on the hull's skin nearest its own station, stood half its
+ * thickness off (kit.mjs `seat`), and the nearest is the shoulder — the
+ * second facet of the ten-facet body, from the top flat's edge at z 1.28
+ * down to z 3.36 — so each lies on it at z ±2.3, rolled 36° outboard with
+ * the facet and showing from above. Not dropped from its station: straight
+ * under z 3.4 is the third facet, 72° from level, where a box would stand
+ * nearly on edge and show under a cell. Same names, sizes and material;
+ * `diff.mjs responsory-hadron` lists the three and no other part.
  */
-import { THREE, bothSides, add, box, exportGlb } from '../kit.mjs';
+import { THREE, bothSides, add, box, seat, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
 
 const L = 95;
@@ -119,12 +134,16 @@ hadron.finAndKeel(root, alloy, {
   fin: { x: -33, y: 6.4, length: 11, height: 5.4 },
   keel: { x: -20, y: -4.6, length: 20, height: 3.2 },
 });
-hadron.drive(root, { shadow, crystal, node }, { x: -43.6, r: 2.3 });
+// The drive, and its mark on the prism's top flat (the header).
+hadron.drive(root, { shadow, crystal, node }, { x: -43.6, r: 2.3, mark: { on: 'drive_prism' } });
 hadron.panelSeams(root, alloy, { from: -26, to: 22, count: 4, halfBeam: 4.2 });
 
 // Two navigation marks abaft the rings — with the drive's stern mark, the
-// only light that is not forward.
-bothSides((side, sgn) =>
-  add(root, `nav_mark_${side}`, box(1.6, 0.3, 0.5), seam, [-16, 4.9, sgn * 3.4]));
+// only light that is not forward — each on the hull's shoulder facet,
+// seated from the file's station at z ±3.4 (the header).
+bothSides((side, sgn) => {
+  const laid = seat(root, 'blade_hull', [-16, 4.9, sgn * 3.4], { stand: 0.15 });
+  add(root, `nav_mark_${side}`, box(1.6, 0.3, 0.5), seam, laid.at, laid.rot);
+});
 
 await exportGlb(root, 'responsory-hadron.glb');

@@ -92,7 +92,8 @@
  *   a pair. As the file has them.
  *
  * `diff.mjs bastion-hadron f7cce0f`: unchanged beyond the root scale and
- * shift but for the pair below — every other part is where it was.
+ * shift but for the pair below and the four lamps of LAMPS THAT FLOAT —
+ * every other part is where it was.
  *
  * LIGHT (#890). "Sustained glow from ports and working lights" is the
  * block's resting clause, so every port light stays lit; one pair was
@@ -105,6 +106,23 @@
  *   dome's slope just over the band, as the three pairs up the dome are —
  *   and shows 15.25 m². `diff.mjs` lists the two (7.37 m at 440 m) and
  *   nothing else.
+ *
+ * LAMPS THAT FLOAT (#907, from #894's measure). Four lit parts rested on
+ * nothing by the audit's second measure:
+ * - `port_light_0_r` and `port_light_0_l`, the pair #890 lifted, stood
+ *   0.31 m off the equator band and 2.6 m off the dome's facet at 440 m —
+ *   set into the dome's *sphere*, which its twelve-by-six facets lie
+ *   inside of. Each grows from the dome now: seated on it from its own
+ *   station, its radius off the facet and sunk half of it (`lightPairs`
+ *   `on`, kit.mjs `seat`), 3.7 m in along the facet's normal and a hair
+ *   lower, still over the band's ridge and showing from above. `diff.mjs`
+ *   lists the two.
+ * - `dock_starboard_mouth` and `dock_port_mouth`, each a lit disc 0.21 m
+ *   off the end of its throat: the file stood the mouth at 1.4 up a frame
+ *   whose throat ends at 1.3, with the disc 0.18 thick. The throat's end
+ *   is the station now — half the throat's length and half the disc's
+ *   thickness, a rule in `dockingCollar` — so the disc's underside is on
+ *   the end face, 0.21 m inboard of where it was. `diff.mjs` lists both.
  */
 import { THREE, fitFootprint, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -177,12 +195,13 @@ hadron.ring(root, 'plinth_band', alloy, {
 });
 
 // Twelve port lights — "sustained glow from ports" — two pairs on the
-// equator, one just over its band (see LIGHT), and three up the dome.
+// equator, one just over its band and grown from the dome (see LIGHT,
+// LAMPS THAT FLOAT), and three up the dome.
 hadron.lightPairs(root, glow, {
   name: 'port_light',
   r: 0.12,
   at: [
-    [5.7, 2.85, 1.6],
+    [5.7, 2.85, 1.6, 'pressure_dome'],
     [4.9, 2.5, 3.4],
     [5.95, 2.5, -0.9],
     [3.9, 5.5, 2.2],
@@ -192,7 +211,8 @@ hadron.lightPairs(root, glow, {
 });
 
 // The two docks, `starboard` at +x and `port` at −x (see the header), each
-// rolled so its throat points outboard.
+// rolled so its throat points outboard; the lit mouth stands on the
+// throat's end, the builder's rule (LAMPS THAT FLOAT).
 for (const [name, x, roll] of [
   ['starboard', 7.5, -Math.PI / 2],
   ['port', -7.5, Math.PI / 2],
@@ -206,7 +226,7 @@ for (const [name, x, roll] of [
       roll,
       throat: { rTop: 1.3, r: 1.7, h: 2.6 },
       lip: { r: 1.38, t: 0.22, y: 1.35 },
-      mouth: { r: 1, t: 0.18, y: 1.4 },
+      mouth: { r: 1, t: 0.18 },
       fins: { r: 0.18, length: 1.5, y: 0.5, z: 1.85, cant: 0.4 },
     }
   );

@@ -66,8 +66,10 @@
  *   own. As the file has them.
  *
  * `diff.mjs sounding-spire-hadron f7cce0f`: unchanged beyond the root scale
- * and shift — every part is where it was (a square plan, compared as it
- * stands). #890 moved two running lights; #894 put them back, below.
+ * and shift but for the eight running lights and two horn tips seated
+ * since #907 (LIGHT, below) — every other part is where it was (a square
+ * plan, compared as it stands). #890 moved two running lights; #894 put
+ * them back, below.
  *
  * LIGHT (#890, #893, #894). The block names every lamp on the file. Its
  * resting clause since #893: "the crystal glowing low from core to apex"
@@ -96,21 +98,35 @@
  * - `crystal_throat` stays. It is sealed inside the core — the file's
  *   z-fight nudge is the millimetre between them — and no upward face can
  *   carry it. Residual.
- * - Eight of the ten running lights (all but the `running_light_1` pair)
- *   and both horn tips stand off the frame by the audit's second measure
- *   (#894): the file hung the lights 0.4 to 6.5 m from the blades they run
- *   beside, the tips 1.4 m over their horns. The issue names none
- *   of them, and a light re-hung on a blade is a shape decision this port
- *   does not take; they are carried as the file has them and named in
- *   #907.
+ * - Eight of the ten running lights (all but the `running_light_1` pair,
+ *   which lies on the ballast tanks) and both horn tips stood off the
+ *   frame by the audit's second measure (#894): the file hung the lights
+ *   0.4 to 6.5 m from what they run beside, the tips 1.4 m over their
+ *   horns. #907 seats each on what it hung beside, from its own station,
+ *   a bud sunk half its radius (`lightPairs` `on`, kit.mjs `seat`):
+ *   `running_light_0_r` and `_l`, 5.7 m off the plinth cap at the foot
+ *   with no tank under them where their `_1` twins have one, on the cap's
+ *   slope at their own bearing; `running_light_2` and `_3`, 6.5 m and
+ *   1.4 m off the blades' +z faces, on those faces; `running_light_4`,
+ *   0.4 m off the horns' outboard faces, on them. Not the blades for the
+ *   `_0` and `_4` pairs: those stand 19 m and 9 m from them, and a lamp
+ *   carried that far is a new fixture, not a seat. Each tip stands on its
+ *   horn's top end (`tuningHorns` `tip.on`): dropped onto the end face,
+ *   found from the horn's own transform, with its base on the face and
+ *   its axis along the horn's lean, its own eighth of yaw about that axis
+ *   kept — where the file stood each at its own numbers, its base 0.46
+ *   outboard of the horn's end. Each tip's apex is a tenth higher for it,
+ *   265 m up where the file's reached 264; the footprint, which is the
+ *   plan, holds. `diff.mjs sounding-spire-hadron f7cce0f` lists the ten.
  * - `running_light_3_r` and `running_light_3_l`, the pair 11.8 up the
  *   frame, sit at x ±0.9 where the export put them, under the sheath's
  *   bulge (its middle facet at 12.4 over a crown at 11.9). #890 moved them
  *   outboard to x ±1.15 because the audit read 0.06 m² of each under a
  *   sheath it took for solid; with the sheath read as the six-percent
  *   haze it is (#894) the export's station shows 5.1 m² from above, the
- *   move has no reason left, and the pair is back where the file has it.
- *   `diff.mjs sounding-spire-hadron f7cce0f` lists no part.
+ *   move has no reason left, and #894 put the pair back at the file's x
+ *   and y. Its z is the blade's face since #907, 0.13 inboard of the
+ *   file's 0.55 (the bullet above).
  */
 import { THREE, fitFootprint, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -195,13 +211,14 @@ hadron.resonanceCollars(
   }
 );
 
-// The tuning horns, their lit tips, and the brace.
+// The tuning horns, their lit tips standing on the horns' ends (see
+// LIGHT), and the brace.
 hadron.tuningHorns(
   root,
   { alloy, glow, steel },
   {
     horn: { size: [0.3, 6.2, 0.62], reach: 1.55, y: 13.4, lean: 0.045 },
-    tip: { r: 0.28, length: 1.8, reach: 1.83, y: 17.3, yaw: Math.PI / 4 },
+    tip: { r: 0.28, length: 1.8, yaw: Math.PI / 4, on: true },
     brace: { size: [3.3, 0.3, 0.4], y: 12 },
   }
 );
@@ -218,16 +235,19 @@ hadron.ballastPipes(
 hadron.ballastTanks(root, shadow, { r: 0.62, waist: 1.6, at: [2.3, 1.35, -1.5] });
 
 // Ten running lights, two pairs at the foot and three up the frame — the
-// third of those under the sheath where the export has them (see LIGHT).
+// third of those under the sheath where the export has them — each but the
+// `_1` pair, which lies on the tanks, seated on what it hung beside: the
+// plinth cap, the blade's face, the horn's (see LIGHT).
+const own = (stem) => (tag) => `${stem}_${tag}`;
 hadron.lightPairs(root, glow, {
   name: 'running_light',
   r: 0.1,
   at: [
-    [2.6, 1.85, 1.4],
+    [2.6, 1.85, 1.4, 'plinth_cap'],
     [2.6, 1.85, -1.4],
-    [1.35, 6.4, 0.9],
-    [0.9, 11.8, 0.55],
-    [1.7, 16.2, 0],
+    [1.35, 6.4, 0.9, own('frame_blade')],
+    [0.9, 11.8, 0.55, own('frame_blade')],
+    [1.7, 16.2, 0, own('tuning_horn')],
   ],
 });
 

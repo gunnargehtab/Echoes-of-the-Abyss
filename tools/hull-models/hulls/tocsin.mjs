@@ -58,9 +58,11 @@
  *   a six-facet ring 3 m long, 8.3 m across, in shadow indigo. The muzzle
  *   collar is the Lance's exactly — a six-facet crystal ring lathed bore
  *   and all, 2.2 m long from x 50.3 to the bow, r 3.4 aft to 3.9 at the
- *   lip on a bore of 2.8, a vertex on the crown pressed to 0.9 — 6.8 m
+ *   lip on a bore of 1.96, a vertex on the crown pressed to 0.9 — 6.8 m
  *   across and 7.0 m tall at the lip, wider than the barrel by a third so
- *   the bow reads as a mouth, and the barrel's end stands 1.3 m inside it.
+ *   the bow reads as a mouth, and the barrel's end stands 1.3 m inside it,
+ *   filling the bore's width (LAMPS THAT FLOAT, below: #786 cut the bore
+ *   at the Lance's 2.8, round a barrel it never met).
  * - **The bell** (`bell`, new) is two six-facet lathes pressed to 0.3 by 1
  *   that share a ring at the shoulders, x 10, so the skin is unbroken
  *   across it. The skirt runs 62.5 m from the lip at r 27.7 — 48.0 m in
@@ -162,6 +164,21 @@
  *   thinnest at the bow and widest at the very stern, and the pointed end
  *   still leads.
  *
+ * LAMPS THAT FLOAT (#907, from #894's measure). The collar stood 0.59 m
+ * off the barrel: #786 gave it the Lance's bore of 2.8 round a barrel
+ * whose end is 3.4 wide and 1.3 tall, so the crystal ring hung in the
+ * water about the muzzle with nothing meeting it. The bore is 1.96 now —
+ * its six flats 1.70 from the axis, the barrel's own half-width at its
+ * last station (r 2.0 on four facets pressed 1.2 wide) — so the barrel's
+ * flanks, tapering in from 2.05 at the collar's after face, pass through
+ * the bore's flats and the collar grows from the barrel's end. Same
+ * stations, same outer radii, same forward face at the bow: nothing on
+ * the collar's outside moves, `DRAWN` holds, and the bake reads the same
+ * crown; only the bore, seen from dead ahead, closes onto the barrel.
+ * `diff.mjs tocsin-hadron` lists the collar and no other part — the same
+ * bounds, its surface 7.6 % larger for the deeper flats of the bore and
+ * its centroid 7 mm forward.
+ *
  * Resting light, on the axis and forward, and the kit's audit clean: the
  * muzzle collar, 14.2 m² facing up, and the stern mark on the spine,
  * 0.75 m² — nothing on the flanks, nothing on the skirt, nothing on the
@@ -185,6 +202,13 @@ const STERN = -L / 2;
 
 /** The bell's pressing: a six-facet lathe at 0.3 tall by 1 wide, flatter than the rung's blade. */
 const BELL = [0.3, 1];
+/**
+ * The muzzle collar's bore: a six-facet ring whose flats are 1.70 from the
+ * axis, where the barrel's end is — r 2.0 on four facets pressed 1.2 wide
+ * is a flat 1.697 out — so the ring grows from the barrel rather than
+ * hanging round it (the header, LAMPS THAT FLOAT).
+ */
+const MUZZLE_BORE = 1.96;
 
 const shadow = hadron.ink.shadowIndigo();
 const alloy = hadron.ink.paleAlloy();
@@ -280,11 +304,11 @@ hadron.emitterRail(
     },
     collar: {
       profile: [
-        [50.3, 2.8],
+        [50.3, MUZZLE_BORE],
         [50.3, 3.4],
         [BOW, 3.9],
-        [BOW, 2.8],
-        [50.3, 2.8],
+        [BOW, MUZZLE_BORE],
+        [50.3, MUZZLE_BORE],
       ],
       flat: [0.9, 1],
     },
