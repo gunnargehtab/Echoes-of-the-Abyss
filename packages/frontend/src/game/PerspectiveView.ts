@@ -1559,8 +1559,9 @@ export class PerspectiveView {
    * plumb line and ground shadow either way.
    *
    * Rung 7, agents (docs/map-visuals.md §5): own hulls and structures, with
-   * the cues placed alongside them. The ladder does not weigh rung 7 yet, and
-   * §10 says why.
+   * the cues placed alongside them. A lit model, or its baked sprite, lands on
+   * a pixel by the lights, the texture and the view, so the ladder cannot
+   * weigh it without a GPU; §10 says so.
    */
   private syncEntity(
     handles: Map<number, EntityHandle>,
@@ -1770,7 +1771,8 @@ export class PerspectiveView {
   /**
    * The player's own ordnance, drawn where it is between ticks. Runs with
    * the entity sync (a zoom, a snapshot) and per frame while anything moves.
-   * Rung 7, agents (docs/map-visuals.md §5).
+   * Rung 7, agents (docs/map-visuals.md §5). A lit body with a lamp, so the
+   * ladder cannot weigh it without a GPU; §10 says so.
    */
   private syncOrdnance(nowMs: number): void {
     const ink = FACTION_PALETTE[this.faction];

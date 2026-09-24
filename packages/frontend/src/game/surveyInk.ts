@@ -55,8 +55,9 @@ export const SURVEY_ALPHA = {
   border: 0.09,
   /**
    * A cell edge between water and rock. Solid, and the loudest ink — held
-   * under the unselected detection ring, which binds at about 0.099
-   * (tritanopia, mid SIG, over the kelp fill).
+   * under rung 5's floor and the unselected detection ring. Since the ring
+   * came up on #866 the floor binds first, at about 0.133 (deuteranopia, the
+   * dormant eruption rim, over the kelp fill); the ring binds at about 0.149.
    */
   coast: 0.095,
 } as const;

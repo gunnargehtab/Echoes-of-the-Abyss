@@ -110,7 +110,8 @@ describe('the loudness ladder, rung 4 under rung 5', () => {
     // §5. The ring is the player's own exposure (ui-ux.md §3.5), and a line
     // of seabed ink that out-shouted it would bury the one reading a quiet
     // navy lives by. The owner chose the ink coming down over the ring going
-    // up (#865).
+    // up (#865); the ring came up later, to clear rung 5's floor (#866), and
+    // the ink stayed where it was.
     for (const name of PALETTE_NAMES) {
       for (const ground of [DARKEST_GROUND, PALEST_GROUND]) {
         const ceiling = unselectedRingLift(PALETTES[name], ground);

@@ -129,7 +129,11 @@ import {
   sigColor,
   type PaletteName,
 } from './palette.ts';
-import { FURNITURE_OUTLINE_ALPHA, INSTRUMENT_OUTLINE_ALPHA } from './ladder.ts';
+import {
+  AGENT_OUTLINE_ALPHA,
+  FURNITURE_OUTLINE_ALPHA,
+  INSTRUMENT_OUTLINE_ALPHA,
+} from './ladder.ts';
 import {
   actionFor,
   BUILD_ACTION_KIND,
@@ -580,6 +584,10 @@ function worldFadeMs(timing: PrecedenceTiming): { start: number; full: number } 
  *
  * Organic outlines rather than hull shapes, so classification is legible at a
  * glance — the relief (or the problem) should not need reading.
+ *
+ * Rung 7. The ladder weighs every outline here — the edge, the Sounder's
+ * halo, the tethers, the Rasp's ring — and a Lampfry's rimless motes by a
+ * mote; the shares are its (ladder.ts).
  */
 function drawFaunaSilhouette(
   g: Graphics,
@@ -591,7 +599,7 @@ function drawFaunaSilhouette(
 ): void {
   const stats = faunaStatsFor(species);
   const r = stats.lengthM / 2;
-  const body = { color: FAUNA_COLOR, alpha: alpha * 0.75 };
+  const body = { color: FAUNA_COLOR, alpha: alpha * AGENT_OUTLINE_ALPHA.faunaBodyShare };
   const edge = { width: 1.5 * inverseScale, color: FAUNA_COLOR, alpha };
 
   switch (species) {
@@ -615,7 +623,7 @@ function drawFaunaSilhouette(
       g.circle(x, y, r * 1.4).stroke({
         width: 1 * inverseScale,
         color: FAUNA_COLOR,
-        alpha: alpha * 0.4,
+        alpha: alpha * AGENT_OUTLINE_ALPHA.sounderHaloShare,
       });
       break;
     }
@@ -647,7 +655,11 @@ function drawFaunaSilhouette(
       g.moveTo(x - r * 0.4, y).lineTo(x - r * 0.5, y + r * 0.8);
       g.moveTo(x, y).lineTo(x, y + r * 0.9);
       g.moveTo(x + r * 0.4, y).lineTo(x + r * 0.5, y + r * 0.8);
-      g.stroke({ width: 1 * inverseScale, color: FAUNA_COLOR, alpha: alpha * 0.6 });
+      g.stroke({
+        width: 1 * inverseScale,
+        color: FAUNA_COLOR,
+        alpha: alpha * AGENT_OUTLINE_ALPHA.tetherShare,
+      });
       break;
     }
     case FaunaSpecies.Rasp: {
@@ -659,7 +671,7 @@ function drawFaunaSilhouette(
       g.circle(x, y, r * 1.1).stroke({
         width: 1 * inverseScale,
         color: FAUNA_COLOR,
-        alpha: alpha * 0.5,
+        alpha: alpha * AGENT_OUTLINE_ALPHA.raspRingShare,
       });
       break;
     }
@@ -983,8 +995,11 @@ const LOUDNESS_COLLAR = {
   CLEAR_SHARE: 0.12,
   /** Metres, for the figures too small for the share to clear. */
   CLEAR_FLOOR_M: 4,
-  /** The dial the sweep is read against. Without it a sweep is a stray arc. */
-  TRACK_ALPHA: 0.16,
+  /**
+   * The dial the sweep is read against. Without it a sweep is a stray arc.
+   * Rung 6's, so the ladder holds it (ladder.ts).
+   */
+  TRACK_ALPHA: INSTRUMENT_OUTLINE_ALPHA.collarTrack,
   /** Screen pixels, like every stroke on an instrument (§11's UI scale). */
   TRACK_PX: 1,
   /**
@@ -1117,8 +1132,10 @@ export function insideAnotherReach(
  * Alpha of a detection ring the player did not ask for by selecting its hull
  * (docs/ui-ux.md §3.5).
  *
- * Half the selected ring's, so selection still reads as selection: the gate
+ * Under the selected ring's, so selection still reads as selection: the gate
  * puts the ring on screen and selection is still what makes it the subject.
+ * It is rung 6's floor where §3.5's mid-SIG colour is dark, and came up from
+ * 0.18 to 0.27 on #866 to clear rung 5's (ladder.ts).
  */
 const LOUD_RING_ALPHA = INSTRUMENT_OUTLINE_ALPHA.unselectedRing;
 
@@ -1239,7 +1256,11 @@ function drawLoudnessCollar(
     alpha: LOUDNESS_COLLAR.HALO_INNER_ALPHA * glow,
   });
   trace();
-  g.stroke({ width: LOUDNESS_COLLAR.CORE_PX * px, color: ink, alpha: 1 });
+  g.stroke({
+    width: LOUDNESS_COLLAR.CORE_PX * px,
+    color: ink,
+    alpha: INSTRUMENT_OUTLINE_ALPHA.collarCore,
+  });
 }
 
 /**
@@ -2004,8 +2025,7 @@ export class EchoRenderer {
     // - rings: rung 6, detection rings, the ping preview and order routes.
     // - structure, unit and ordnance symbols: rung 6, the ink about own
     //   entities the conn view draws at rung 7 (a site's scaffold aside).
-    // - contact layer: rung 5's hazards and fauna fields, and the acoustic
-    //   residue §5 does not place yet.
+    // - contact layer: rung 5's hazards, fauna fields and acoustic residue.
     // - contact symbols: rung 7, contacts at every tier.
     // `hud` is screen space rather than the map, and outside the ladder.
     this.overlay.addChild(
@@ -5578,9 +5598,10 @@ export class EchoRenderer {
    * answer would draw a route half the group cannot take.
    *
    * Rung 6, instruments (docs/map-visuals.md §5 names blocked ground). It has
-   * no rim — a hatch and a faint fill, nothing round the edge — and §5's
-   * outline rule presumes one, so how it is weighed is the owner's call, left
-   * open in §10. The ladder does not weigh it yet.
+   * no rim — a hatch and a faint fill, nothing round the edge — so it is
+   * weighed by its hatch lines, its loudest crisp element (#866). The fill is
+   * a soft fill and is not weighed. In the two red-green palettes the hatch is
+   * rung 6's floor (ladder.ts).
    */
   private drawBlockedGround(): void {
     const g = this.groundLayer;
@@ -5625,7 +5646,7 @@ export class EchoRenderer {
         });
         g.moveTo(p01.x, p01.y)
           .lineTo(p10.x, p10.y)
-          .stroke({ width: 1, color: UI.accent, alpha: 0.16 });
+          .stroke({ width: 1, color: UI.accent, alpha: INSTRUMENT_OUTLINE_ALPHA.blockedHatch });
       }
     }
   }
@@ -5689,7 +5710,8 @@ export class EchoRenderer {
    * yard's rally course or the build and health bars, which are placed by the
    * row's voice — cyan tells — as readings, not marks about the sea. Nor does
    * it name a construction site's scaffold, placed on rung 7 because it
-   * stands in for the structure the conn view will draw there.
+   * stands in for the structure the conn view will draw there. Every alpha
+   * here is the ladder's (ladder.ts); a bar is weighed by its value fill.
    */
   private drawStructures(): void {
     const palette = FACTION_PALETTE[this.faction];
@@ -5711,13 +5733,13 @@ export class EchoRenderer {
       const radius = structureStatsFor(structure.kind).radiusM * this.hullDrawScale();
       const isSelected = this.selected.has(structure.id);
       const building = structure.buildProgress < 1;
-      const alpha = building ? 0.35 : 0.9;
+      const alpha = building ? AGENT_OUTLINE_ALPHA.scaffold : 0.9;
 
       if (isSelected) {
         g.circle(0, 0, radius + SELECTION_GAP_M.STRUCTURE).stroke({
           width: 2 * inverseScale,
           color: UI.text,
-          alpha: 0.8,
+          alpha: INSTRUMENT_OUTLINE_ALPHA.selectionRing,
         });
         // The yard's rally point, drawn only while the yard is selected: a
         // course from the apron to the point, and a glyph at the point.
@@ -5726,7 +5748,7 @@ export class EchoRenderer {
           if (
             this.traceLine(rg, structure.x, structure.y, structure.rally.x, structure.rally.y, null)
           ) {
-            rg.stroke({ width: 1, color: UI.accent, alpha: 0.35 });
+            rg.stroke({ width: 1, color: UI.accent, alpha: INSTRUMENT_OUTLINE_ALPHA.rallyCourse });
           }
           const rp = this.project(structure.rally.x, structure.rally.y, null);
           if (rp !== null && rp.visible) {
@@ -5736,7 +5758,11 @@ export class EchoRenderer {
               .lineTo(rp.x, rp.y + arm)
               .lineTo(rp.x - arm, rp.y)
               .closePath()
-              .stroke({ width: 1.5 * this.uiScale, color: UI.accent, alpha: 0.8 });
+              .stroke({
+                width: 1.5 * this.uiScale,
+                color: UI.accent,
+                alpha: INSTRUMENT_OUTLINE_ALPHA.rallyMarker,
+              });
           }
         }
       }
@@ -5779,6 +5805,7 @@ export class EchoRenderer {
         });
         g.rect(-radius, barY, barWidth * structure.buildProgress, 6 * inverseScale).fill({
           color: UI.sigMid,
+          alpha: INSTRUMENT_OUTLINE_ALPHA.readingBar,
         });
       } else if (structure.queue.length > 0) {
         // Production progress plus how deep the queue runs.
@@ -5788,6 +5815,7 @@ export class EchoRenderer {
         });
         g.rect(-radius, barY, barWidth * structure.queueProgress, 6 * inverseScale).fill({
           color: UI.friendly,
+          alpha: INSTRUMENT_OUTLINE_ALPHA.readingBar,
         });
       }
 
@@ -5800,6 +5828,7 @@ export class EchoRenderer {
         });
         g.rect(-radius, hpY, barWidth * fraction, 4 * inverseScale).fill({
           color: UI.friendly,
+          alpha: INSTRUMENT_OUTLINE_ALPHA.readingBar,
         });
       }
     }
@@ -5821,8 +5850,8 @@ export class EchoRenderer {
    * mistake is theirs to judge.
    *
    * Rung 6, instruments (docs/map-visuals.md §5): range rings and the ping
-   * preview. The unselected ring is the rung's quietest steady outline, and
-   * both detection rings take their alphas from the ladder.
+   * preview. The unselected ring is the rung's floor in the standard and
+   * tritanopia palettes, and every ring here takes its alpha from the ladder.
    */
   private drawRings(): void {
     const g = this.ringLayer;
@@ -5881,10 +5910,18 @@ export class EchoRenderer {
       // a key, which is the one thing that always earns its own line.
       if (this.previewPing && isSelected) {
         if (this.traceCircle(g, d.x, d.y, ACTIVE_SONAR.REVEAL_RADIUS_M, null)) {
-          g.stroke({ width: 2 * this.uiScale, color: UI.friendly, alpha: 0.5 });
+          g.stroke({
+            width: 2 * this.uiScale,
+            color: UI.friendly,
+            alpha: INSTRUMENT_OUTLINE_ALPHA.pingReveal,
+          });
         }
         if (this.traceCircle(g, d.x, d.y, ACTIVE_SONAR.SELF_REVEAL_RADIUS_M, null)) {
-          g.stroke({ width: 3 * this.uiScale, color: UI.threat, alpha: 0.8 });
+          g.stroke({
+            width: 3 * this.uiScale,
+            color: UI.threat,
+            alpha: INSTRUMENT_OUTLINE_ALPHA.pingSelfReveal,
+          });
         }
       }
     }
@@ -6158,12 +6195,10 @@ export class EchoRenderer {
    * *something is inside this circle*, and the ring is that sentence drawn
    * rather than implied.
    *
-   * Rung 5, map furniture (docs/map-visuals.md §5). Only the trigger ring is
-   * an outline, so only the ring is weighed. A scattered shoal's cloud hangs at
-   * the shoal's depth while the ring lies on the ground, so from an oblique
-   * camera it stands above the ring rather than inside it; and a formed shoal
-   * is a mote cloud with no rim at all. §5's outline rule presumes a rim, so
-   * how either cloud is weighed is the owner's call, left open in §10.
+   * Rung 5, map furniture (docs/map-visuals.md §5). The trigger ring is an
+   * outline and is weighed as one. The cloud, formed or scattered, is a mark
+   * of its own rather than the ring's interior, and is weighed by its loudest
+   * mote at its peak (#866; ladder.ts).
    */
   private drawShoals(g: Graphics): void {
     for (const shoal of this.shoals) {
@@ -6193,6 +6228,8 @@ export class EchoRenderer {
    *
    * Rung 5, map furniture (docs/map-visuals.md §5): a public field, never an
    * agent. The rim is one of the four outlines rung 5's floor is taken from.
+   * The bells are a mark of their own, not the rim's interior, weighed by
+   * their loudest dot at its peak (#866; ladder.ts).
    */
   private drawJellies(g: Graphics): void {
     for (const jelly of this.jellies) {
@@ -6203,12 +6240,13 @@ export class EchoRenderer {
   }
 
   /**
-   * Acoustic residue has no rung yet. docs/map-visuals.md §5's table does not
-   * place it, and no row's words fit it: it is drawn over the ground in its
-   * own colours rather than being ground (rungs 1 to 4), it is the player's
-   * own intel rather than public furniture (rung 5), it is no instrument
-   * (rung 6), and it must never read as a contact (rung 7). Left for the
-   * owner to place, and docs/map-visuals.md §10 records it.
+   * Acoustic residue. Rung 5, map furniture: your own heard residue, beside
+   * the public furniture (docs/map-visuals.md §5, #866). It must never read
+   * as a contact (docs/audio-direction.md §6).
+   *
+   * The dashed arc is its outline, and is weighed at its peak — intensity 1,
+   * the ceiling the server clamps every mark to (ladder.ts). The three soft
+   * rings are soft fills and are not weighed.
    */
   private drawEchoMarks(g: Graphics): void {
     for (const mark of this.marks) {
@@ -6241,7 +6279,11 @@ export class EchoRenderer {
             null
           )
         ) {
-          g.stroke({ width: 1, color: style.color, alpha: mark.intensity * 0.5 });
+          g.stroke({
+            width: 1,
+            color: style.color,
+            alpha: mark.intensity * FURNITURE_OUTLINE_ALPHA.residueArc,
+          });
         }
       }
     }
@@ -6309,8 +6351,8 @@ export class EchoRenderer {
    * Rung 6, instruments. §5's row does not name acquisition brackets; they
    * are placed by its voice — red warns — and because they are a statement
    * about the player's fire control rather than the contact they close on.
-   * They fade to nothing by design, so the ladder does not weigh them
-   * (docs/map-visuals.md §10).
+   * They fade to nothing by design, so the ladder weighs them at their peak,
+   * the moment they appear (#866; ladder.ts).
    */
   private drawLockFlash(
     g: Graphics,
@@ -6333,7 +6375,7 @@ export class EchoRenderer {
     const hull = contact.kind !== undefined ? HULL_LENGTH_M[contact.kind] : 140;
     const spread = hull * (2.2 - 1.2 * t);
     const arm = hull * 0.5;
-    const alpha = 1 - t;
+    const alpha = INSTRUMENT_OUTLINE_ALPHA.lockBracketsPeak * (1 - t);
     for (const sx of [-1, 1]) {
       for (const sy of [-1, 1]) {
         const cx = sx * spread;
@@ -6365,8 +6407,9 @@ export class EchoRenderer {
    * Tier-1 or Tier-2 column is an edgeless haze, which §5 does not weigh per
    * pixel against a line; it answers to gate 7's glance test. The lock flash
    * drawn onto a contact is rung 6 (`drawLockFlash`). A contact fades in as
-   * it arrives and out as a ghost, so rung 7 is not weighed against rung 6
-   * yet (docs/map-visuals.md §10).
+   * it arrives and out as a ghost, so it is weighed fresh, at its tier's
+   * alpha (#866). The ladder weighs every outline from Tier 3, and §10
+   * records the ones that sit under rung 6's floor (ladder.ts).
    */
   private drawContacts(): void {
     const g = this.contactLayer;
@@ -6375,7 +6418,7 @@ export class EchoRenderer {
     const now = performance.now();
     const decayMs = PERSISTENCE.GHOST_MARKER_DECAY_S * 1000;
     // Ground language first, into the polyline layer under the marks. Rung 5
-    // throughout, but for the residue, which §5 does not place yet.
+    // throughout, residue included.
     this.drawStaticHazardSites(g);
     this.drawHazards(g);
     this.drawJellies(g);
@@ -6485,7 +6528,7 @@ export class EchoRenderer {
           sg.circle(0, 0, style.radius * 1.6).stroke({
             width: 1 * inverseScale,
             color,
-            alpha: alpha * 0.6,
+            alpha: alpha * AGENT_OUTLINE_ALPHA.countRingShare,
           });
           this.drawGlyph(sg, contact, color, alpha, style.radius, inverseScale);
           break;
@@ -6650,7 +6693,8 @@ export class EchoRenderer {
       // §5), which names selection and the loudness collar. The crush ring,
       // the break-silence ring and the health bar are unnamed there and
       // placed by its voice: red warns, and the bar is a reading. The
-      // break-silence ring fades to nothing by design and is not weighed.
+      // break-silence ring fades to nothing by design and is weighed at its
+      // peak (#866). Every alpha here is the ladder's (ladder.ts).
       const d = this.drawnPosition(unit);
       const p = this.project(d.x, d.y, d.depth);
       if (p === null) break;
@@ -6675,7 +6719,7 @@ export class EchoRenderer {
         g.circle(0, 0, radius + SELECTION_GAP_M.HULL).stroke({
           width: 2 * inverseScale,
           color: UI.text,
-          alpha: 0.8,
+          alpha: INSTRUMENT_OUTLINE_ALPHA.selectionRing,
         });
       }
 
@@ -6696,7 +6740,7 @@ export class EchoRenderer {
         g.circle(0, 0, radius + 4).stroke({
           width: 2 * inverseScale,
           color: UI.threat,
-          alpha: 0.9,
+          alpha: INSTRUMENT_OUTLINE_ALPHA.crushRing,
         });
       }
 
@@ -6715,7 +6759,7 @@ export class EchoRenderer {
         g.circle(0, 0, radius * 2 * (1 + t * 3)).stroke({
           width: 2 * inverseScale,
           color: UI.threat,
-          alpha: (1 - t) * 0.8,
+          alpha: (1 - t) * INSTRUMENT_OUTLINE_ALPHA.breakSilencePeak,
         });
       }
 
@@ -6730,6 +6774,7 @@ export class EchoRenderer {
         });
         g.rect(barX, barY, width * fraction, 3 * inverseScale).fill({
           color: UI.friendly,
+          alpha: INSTRUMENT_OUTLINE_ALPHA.readingBar,
         });
         // The unrecoverable stub, in threat red at the far end — hull the deep
         // kept, whether by crushing the boat or by poisoning it in the
@@ -6770,16 +6815,24 @@ export class EchoRenderer {
         case OrdnanceKind.Torpedo: {
           // The run left, as an arc closing from the bow's twelve o'clock.
           const left = Math.max(0, Math.min(1, shot.remainingS / ORDNANCE.TORPEDO.RUN_TIME_S));
-          g.circle(0, 0, r).stroke({ width, color: UI.accent, alpha: 0.3 });
+          g.circle(0, 0, r).stroke({
+            width,
+            color: UI.accent,
+            alpha: INSTRUMENT_OUTLINE_ALPHA.torpedoDial,
+          });
           g.arc(0, 0, r, -Math.PI / 2, -Math.PI / 2 + left * Math.PI * 2).stroke({
             width: 2 * inverseScale,
             color: UI.accent,
-            alpha: 0.85,
+            alpha: INSTRUMENT_OUTLINE_ALPHA.torpedoRun,
           });
           break;
         }
         case OrdnanceKind.Mine:
-          g.poly([0, -r, r, 0, 0, r, -r, 0]).stroke({ width, color: UI.accent, alpha: 0.7 });
+          g.poly([0, -r, r, 0, 0, r, -r, 0]).stroke({
+            width,
+            color: UI.accent,
+            alpha: INSTRUMENT_OUTLINE_ALPHA.ordnanceMark,
+          });
           break;
         case OrdnanceKind.Noisemaker: {
           // A decoy is noise: its mark breathes for the eight seconds it lives.
@@ -6787,7 +6840,9 @@ export class EchoRenderer {
           g.circle(0, 0, r * (0.8 + 0.4 * pulse)).stroke({
             width,
             color: UI.accent,
-            alpha: 0.4 + 0.5 * pulse,
+            alpha:
+              INSTRUMENT_OUTLINE_ALPHA.noisemakerTrough +
+              INSTRUMENT_OUTLINE_ALPHA.noisemakerSwing * pulse,
           });
           break;
         }
@@ -6795,7 +6850,7 @@ export class EchoRenderer {
           g.poly([-r * 0.7, -r * 0.6, r * 0.7, -r * 0.6, 0, r * 0.8]).stroke({
             width,
             color: UI.accent,
-            alpha: 0.7,
+            alpha: INSTRUMENT_OUTLINE_ALPHA.ordnanceMark,
           });
           break;
       }
@@ -7655,8 +7710,8 @@ export class EchoRenderer {
    * Order routes and the click's acknowledgement. Rung 6, instruments: §5's
    * row does not name them, and they are placed by its voice — cyan tells,
    * red warns — and because an order is the player's own interface, not a
-   * mark about the sea. The acknowledgement fades to nothing by design, so
-   * the ladder does not weigh it (docs/map-visuals.md §10).
+   * mark about the sea. The acknowledgement fades to nothing by design and is
+   * weighed at its peak (#866). Every alpha here is the ladder's (ladder.ts).
    */
   private drawOrderPlans(): void {
     const g = this.ringLayer;
@@ -7686,7 +7741,7 @@ export class EchoRenderer {
       for (let i = 0; i < legs.length + (pending?.length ?? 0); i++) {
         const order = i < legs.length ? legs[i]! : pending![i - legs.length]!;
         if (this.traceLine(g, fromX, fromY, order.x, order.y, null)) {
-          g.stroke({ width: 1.5, color: UI.accent, alpha: 0.45 });
+          g.stroke({ width: 1.5, color: UI.accent, alpha: INSTRUMENT_OUTLINE_ALPHA.orderRoute });
         }
         const p = this.project(order.x, order.y, null);
         if (p !== null && p.visible) {
@@ -7695,7 +7750,7 @@ export class EchoRenderer {
           g.circle(p.x, p.y, marker).stroke({
             width: 1.5,
             color: hostile ? UI.threat : UI.accent,
-            alpha: 0.8,
+            alpha: INSTRUMENT_OUTLINE_ALPHA.orderMarker,
           });
         }
         fromX = order.x;
@@ -7718,7 +7773,7 @@ export class EchoRenderer {
       g.circle(p.x, p.y, radius * this.uiScale).stroke({
         width: 1.5 * this.uiScale,
         color: marker.kind === 'attack' || marker.kind === 'attackMove' ? UI.threat : UI.accent,
-        alpha: 0.9 * (1 - t),
+        alpha: INSTRUMENT_OUTLINE_ALPHA.orderAckPeak * (1 - t),
       });
     }
     this.orderMarkers.length = keep;
