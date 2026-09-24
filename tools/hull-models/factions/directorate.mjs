@@ -218,8 +218,9 @@ export const ink = {
     lamp('gullet_glow', hex('#E0506A'), hex('#2A0C14'), 0.4, intensity),
   /**
    * The works' lights, one model each: `forge_light` is the Foundry's line
-   * and launch glow, "interior forge light spilling from the bay when
-   * producing"; `floodlight_hot` the Refinery's maw, stack tips, gantry
+   * and launch glow, "the forge light across the bay and at its mouth",
+   * "flooding from the bay when producing"; `floodlight_hot` the
+   * Refinery's maw, stack tips, gantry
    * lights, intake mouth and flood lamps, "floodlit working surfaces,
    * visible machinery light" — one lamp colour on one base, polished to
    * 0.3, each at its file's own strength (3.698 and 3.476). The approved

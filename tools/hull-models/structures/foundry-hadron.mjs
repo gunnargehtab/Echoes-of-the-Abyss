@@ -3,17 +3,21 @@
  * tools/hull-maps/models.mjs), SIG 25 idle, 55 with the line running.
  *
  * "Unit production hall with a recessed launch bay and gantry cranes (SIG
- * 25 idle, 55 with the line running). Dim at rest; interior forge light
- * spilling from the bay when producing" (docs/asset-prompts-3d.md,
- * STRUCTURE — Foundry). One prompt block, four scripts; the per-navy
- * difference is docs/art-direction.md's.
+ * 25 idle, 55 with the line running). Dim at rest: the forge light across
+ * the bay and at its mouth, the bay's guide lights or rim strips, the
+ * gantries' lamps, and the navy's own lamps on the halls and the mouth —
+ * running lights, photophores, veins, seams, ridges or crystals; the same
+ * forge light flooding from the bay when producing"
+ * (docs/asset-prompts-3d.md, STRUCTURE — Foundry, as #893 amended it).
+ * One prompt block, four scripts; the per-navy difference is
+ * docs/art-direction.md's.
  *
  * The Order's is two wing halls either side of the bay — a six-facet drum
  * each, pointed at both ends, crested in alloy, ridged in crystal, three
  * port lights on its shoulder — the bay between them with its forge line,
  * an octahedron of a hull in progress, a lip either side and a rank of five
  * crystal guides along the floor inboard of each, two gantry cranes over it
- * with octahedral loads in dark steel, a launch
+ * with lit octahedral loads of crystal, a launch
  * gate of two pylons, a lit threshold, a crossbeam and a gate crystal, two
  * ballast tanks and two standpipes with flanges astern, and three mirrored
  * pairs of anchor blades raked out from the flanks.
@@ -28,12 +32,14 @@
  * `rakedBlades`). The kit's `launchMouth` does not reach the gate: it draws
  * a torus and a drum under fixed names, and the Order's gate is four other
  * shapes under four other names, so it is the module's. Nothing here is a
- * shape decision; where the export is odd the script is odd with it:
+ * shape decision but #890's light placement and #893's grown loads (LIGHT,
+ * below); where the export is odd the script is odd with it:
  *
  * - The lips and their guides are `_r` and `_l` (the kit's `sides`, named
  *   as the file names them), the trolleys sit on the centreline, the loads
- *   are octahedra pressed to [0.7, 0.9, 0.7] and hang 1.1 apart, and the
- *   cable keeps the kit's 0.2 above each.
+ *   are octahedra pressed to [0.7, 0.9, 0.7] in the file — half again as
+ *   large since #893, LIGHT below — and hang 1.1 apart, and the cable
+ *   keeps the kit's 0.2 above each.
  * - The wings' 0.82 press is on their own z, which after the quarter turn
  *   is the world's height; the six port lights are six buffers where the
  *   pylons, the tanks and the standpipes share one a pair.
@@ -74,16 +80,30 @@
  * script asserts after the fit, the plan being nearly square.
  *
  * `diff.mjs foundry-hadron f7cce0f`: unchanged beyond the root scale and
- * shift but for the eighteen parts below — every other part is where it
- * was.
+ * shift but for twenty-one parts — the eighteen lamps below, and
+ * `wing_ridge_r`, `wing_ridge_l` and `gate_crystal` at 0.000 m, which is
+ * #888's rename of the lit crystal from `resonance_crystal` to
+ * `resonance_crystal_dim` (the materials bullet above) and no move; the
+ * ten guides and the two loads carry the same rename beside their moves.
+ * Every other part is where it was.
  *
- * LIGHT (#890). The block's resting clause is "dim at rest", which names
- * no lamp: the running lights on the halls, the bay guides and the forge
- * line are carried lit as this and every approved Foundry lights them
- * (#890, review rulings, rulings 2 and 3 — one reading for all four), and
- * the block naming its resting lamps is follow-up #893. Eighteen lamps
- * were hidden from above on every build from #652 to #890, and
- * models-plan.md §3.2 decides each:
+ * LIGHT (#890, #893). When #890 placed the lamps the block's resting
+ * clause was "dim at rest", which named none: the running lights on the
+ * halls, the bay guides and the forge line were carried lit as this and
+ * every approved Foundry lights them (#890, review rulings, rulings 2 and
+ * 3 — one reading for all four), and the block naming its resting lamps
+ * was left to #893, which settled it the other way — more lights, not
+ * fewer. The clause now names them (quoted at the head of this file), and
+ * every lamp on this file is the resting clause's: the forge line is
+ * "the forge light across the bay" and the gate threshold that light "at
+ * its mouth", the ten guides "the bay's guide lights", the two warning
+ * lights and the two crystal loads "the gantries' lamps", and "the navy's
+ * own lamps on the halls and the mouth — running lights, photophores,
+ * veins, seams, ridges or crystals" the six port lights and the two wing
+ * ridges on the halls and the gate crystal on the crossbeam, on the mouth
+ * — all lit, and the working band is the same lamps brighter. Eighteen
+ * lamps were hidden from above on
+ * every build from #652 to #890, and models-plan.md §3.2 decides each:
  * - `wing_portlight_r_0..2` and `_l_0..2`, the running lights — kept lit.
  *   The file set them into each wing's outboard flank at x 5.75, y 2.3,
  *   under the shoulder facet that runs from (5.865, 2.925) up to the crown
@@ -99,21 +119,38 @@
  *   `guide.x`), inboard of the halls' bulge and clear of the forge line
  *   (±0.5), the hull in progress (±0.6) and both beams — rule 5, and shows
  *   5.1–5.4 m² each. `diff.mjs` lists the ten (16.6 m at 320 m).
- * - `gantry_load_0` and `_1`, the octahedra under the trolleys — clad in
- *   `dark_steel`, the cable's and the trolley's, which is what each hangs
- *   from. The block names no crane load; the Directorate's and the
- *   Commune's loads hang in their own claddings (`weld_steel`,
- *   `grown_steel`), and the Consortium's cranes carry a hook in
- *   `oxide_rust` and no load at all. A part that was never a lamp in the
- *   block's terms takes the cladding it sits on (#890 review), not a lamp
- *   family's unlit finish. `diff.mjs` lists the two materials, and nothing
- *   else.
- * - `gate_threshold` is not this issue's: it stays lit in `forge_light`
- *   (218 m², never hidden). It is the Order's reading of the kit's
- *   `launchMouth`, whose `launch_glow` the Directorate's and the Commune's
- *   Foundries clad under #890 as the light "spilling from the bay when
- *   producing"; whether the Order's threshold is that glow under another
- *   name is a follow-up under #893.
+ * - `gantry_load_0` and `_1`, the octahedra under the trolleys — lit in
+ *   `resonance_crystal_dim`, the guides' and the ridges' fixture and the
+ *   material the export gave them. #890 clad them in `dark_steel`, the
+ *   cable's and the trolley's, as loads the block did not name; since
+ *   #893 they are among "the gantries' lamps" and take the export's
+ *   material back. Each hangs on the crane's centreline under its trolley
+ *   (0.75 by 0.65 in plan) and the beam (0.55 across), where the file's
+ *   crystal, 0.294 to a corner in plan, showed nothing from above; a load
+ *   lifted out from under its crane is a different fixture (ruling 6), so
+ *   each keeps its station and grows instead — [1.05, 1.35, 1.05] from
+ *   [0.7, 0.9, 0.7] on the same octahedron, the file's proportions at
+ *   half again the size, 0.441 to a corner — and its two corners across
+ *   the beam show past the trolley's 0.325, rule 5: 7.5 m² each at 320 m,
+ *   a tip 1.9 m tall on a 3.9 m base either side. Half again rather than
+ *   the ×1.2 that would already clear the audit's 0.25 m²: at ×1.2 a tip
+ *   is 0.028 units, 0.46 m, under one cell of the chart's 1.5 px/m, so
+ *   the bake would draw nothing of it; at ×1.5 each tip is about 8 px.
+ *   Load 0's tips lie over the forge line and take 7.5 m² from it, so the
+ *   file's lit plan grows by 7.5 m² net, not 15. The cables end at 2.65
+ *   and 3.75 (`cable.hang` 0.2 over each load's centre) and run 0.37 into
+ *   the loads, whose tops are at 3.02 and 4.12 — the file's own loads
+ *   swallowed 0.18 of cable the same way. Load 1's foot at 2.98 clears
+ *   the hull in progress (1.66). `diff.mjs` lists the two, grown and
+ *   relit, and nothing else.
+ * - `gate_threshold` stays lit in `forge_light` (218 m², never hidden). It
+ *   is the Order's reading of the kit's `launchMouth` drum — the forge
+ *   light "at its mouth", which #893 relights on the Directorate's
+ *   and the Commune's Foundries — under its own name and shape, a sill
+ *   across the gate at y 0.5 beyond the floor's end, where the drum now
+ *   lies at the same height on the other two files (#890 had clad the
+ *   drum and left the threshold lit, and asked here whether the two were
+ *   one fixture: they are, settled by #893).
  */
 import {
   THREE,
@@ -174,14 +211,14 @@ foundryBay(
 );
 
 // Two cranes over the bay, smaller than the Directorate's in every
-// dimension, trolleys on the centreline, dark-steel loads (see LIGHT) 1.1
-// apart.
+// dimension, trolleys on the centreline, lit crystal loads (see LIGHT) 1.1
+// apart, each grown by half so its corners show past the trolley.
 const crane = {
   steel: alloy,
   finial: shadow,
   trolley: steel,
   cable: steel,
-  load: steel,
+  load: crystal,
   warnlight: forge,
 };
 const order = {
@@ -192,7 +229,7 @@ const order = {
   cable: { r: 0.05, facets: 5, hang: 0.2 },
   warnlight: { y: 5.95, r: 0.09, facets: [5, 4] },
 };
-const load = (y) => ({ y, geo: octa(0.42), scale: [0.7, 0.9, 0.7] });
+const load = (y) => ({ y, geo: octa(0.42), scale: [1.05, 1.35, 1.05] });
 gantryCrane(root, crane, { ...order, n: 0, at: [0, 0, -2.7], load: load(2.45) });
 gantryCrane(root, crane, { ...order, n: 1, at: [0, 0, 2.7], load: load(3.55) });
 

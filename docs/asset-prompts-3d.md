@@ -205,7 +205,7 @@ Lamp bases are the near-black a `lamp()` puts in `color` for its emissive to sit
 | Navy | Role | Values |
 | --- | --- | --- |
 | Consortium | emissive | `#B07A1E` `amber_vent` · `#FFD070` `amber_flood` |
-| Consortium | cladding | `#1C1F22` `baffle-foam` (the Baffle Barge) · `#1A1408` `amber_lamp_unlit` (the lamp's base worn as cladding by a part the block lights only in a later band or in none — the Furnace's burner nozzles, bow floods, ladder strips and manifold strip, lit only cutting; the Derrick's louvres and the Foundry's roof seams and crane floods, lit only under way or producing; and, named in no band, the Derrick's bridge ports and the Bulwark's transom vents and bow lamp) |
+| Consortium | cladding | `#1C1F22` `baffle-foam` (the Baffle Barge) · `#1A1408` `amber_lamp_unlit` (the lamp's base worn as cladding by a part the block lights only in a later band — the Furnace's burner nozzles, bow floods, ladder strips and manifold strip, lit only cutting) |
 | Consortium | lamp base | `#1A1408` · `#120E06` · `#2A2210` · `#1A1206` |
 | Commune | cladding | `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` `algae_hull` (the token's hex under a second name) · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` · `#061206` `bio_vein_unlit` (the vein's base worn as cladding by a part the block lights only in a later band — the Glider's tail veins, dark with the drive cut, the Weaver's and the Blight's stem veins, and the Rootstock's node-to-node vein, lit under way) |
 | Commune | emissive | `#5FAE42` `bio_vein` (at strength 1 on the Sower and the Spinner, 0.2 on the Drifter's seams and the Glider's wing vein — a strength survives the recolour as a finish does) · `#E8F0A3` `forge_light` / `floodlight_pale` (the spore token as a light) |
@@ -285,14 +285,17 @@ lit ports — this is a loud ship and it looks it.
 ```text
 UNIT — Abyssal Submersible (pair with Directorate): mid-size deep-raiding
 hull born to crush depth (Pressure Rating 3, SIG 22 idle). Heavy segmented
-pressure carapace, folded manipulator limbs, dim red photophores.
+pressure carapace, folded manipulator limbs, dim red photophores, and a
+fainter red along the plate rims, the tail joints, the rostrum and the
+claws.
 ```
 
 ```text
 UNIT — Harvester (any faction): industrial nodule-mining vessel (SIG 18
 idle; mining follows the throttle, up to 68 at Overdrive). Wide cargo body,
-external intake dredge gear; dim at rest, with floodlit mining machinery
-that reads as its loud state.
+external intake dredge gear; dim at rest — running lights or marks along
+the hull, the dredge gear dark or marked no brighter — floodlit when it
+mines, the same lamps brighter, which reads as its loud state.
 ```
 
 ```text
@@ -349,7 +352,10 @@ slab: blunt ram bow with a plough plate and teeth, blunt stern, three
 stepped armour tiers, flank plates patchworked older-under-newer, one
 enormous forward twin turret (an 800 m gun), a bridge citadel aft, four
 stacks and three prop shrouds. Burning bright: floodlit deck surfaces and
-rows of floods along both deck edges — the loud state is the resting state.
+rows of floods along both deck edges, lit ports down the citadel's flanks
+and across its bridge, six raised vent gratings lit along the transom's lip
+and a bow lamp on the foredeck over the plough — the loud state is the
+resting state.
 ```
 
 ```text
@@ -1127,7 +1133,10 @@ surfaces, visible machinery light.
 ```text
 STRUCTURE — Foundry (any faction): unit production hall with a recessed
 launch bay and gantry cranes (SIG 25 idle, 55 with the line running). Dim
-at rest; interior forge light spilling from the bay when producing.
+at rest: the forge light across the bay and at its mouth, the bay's guide
+lights or rim strips, the gantries' lamps, and the navy's own lamps on the
+halls and the mouth — running lights, photophores, veins, seams, ridges or
+crystals; the same forge light flooding from the bay when producing.
 ```
 
 ```text
@@ -1147,21 +1156,25 @@ STRUCTURE — Spore Veil (pair with Pelagia): the Veil Mother — a low,
 breathing spore bed grown into the seabed: broad overlapping lobes, paired
 gill organs with vent slits exhaling a faint haze, slender spore stalks
 swaying above (SIG 20 idle — the cloud itself is silent). Nearly dark;
-faint bioluminescent breathing lines around the gills and dim lit tips on
-the stalks only.
+faint bioluminescent breathing lines around the gills, a faint glow in the
+haze they exhale, faint vein rings round the lobes and dim lit tips on the
+stalks only.
 ```
 
 ```text
 STRUCTURE — Cantor (pair with Directorate): listening dome — a grown,
 chitinous hemispherical shell studded with hydrophone spines (SIG 35 idle).
-Dim red photophore constellation across the dome.
+Dim red photophore constellation across the dome and round its foot, and a
+lamp at the tip of the quill off its apex.
 ```
 
 ```text
 STRUCTURE — Sounding Spire (pair with Hadron Knights): tall crystalline
 resonance spire, bilaterally symmetrical, pale alloy frame around a violet
-crystal core (SIG 80 when active, directional). Burning bright along the
-crystal when active; heat-shimmer distortion.
+crystal core (SIG 80 when active, directional). Dim at rest: the crystal
+glowing low from core to apex, the horn tips with it, and running lights
+up the frame; burning bright along the crystal when active; heat-shimmer
+distortion.
 ```
 
 ```text
@@ -1361,9 +1374,12 @@ not sculpts — so the Derrick and the Responsory were authored as such, from th
 and went through the same door as every other export: both cleared `hull-intake` with no
 warnings, metre-true, and calibrated onto gate 3's curve with headroom — the Derrick at E 28.3
 on its idle 58, the Responsory at E 3.1 on its compass 27. The one thing the bake taught that
-the prompts did not say: the maps are top-down, so a louvre on a hull's side has no plan area
-and a lit feature has to face *up* to count — the Derrick's light is on its frame beams, its
-cradle lamp and a lit roof grating, and the Responsory's rides the top of its horn.
+the prompts did not say: the maps are top-down, so a louvre flat on a hull's side has no plan
+area and a lit feature has to face *up* to count — the Derrick's light is on its deck floods,
+its frame beams, its cradle lamp, its stack throat, its roof gratings and, since #893, the
+louvres of a raked hood down each side of its machinery house, stepped so that every blade
+shows from above, and four bridge ports boxed out past the house's forward eave; the
+Responsory's rides the top of its horn.
 
 ```text
 UNIT — Derrick (pair with Consortium): the gun that aims by ear, 120 m —
@@ -1384,10 +1400,14 @@ short and thick, no shield. Behind the frame a riveted machinery house
 with louvred sides and one stack; a pile hammer stowed vertical against
 the after leg, head down; deck plating scuffed bare in a ring around the
 gun. No baffle, no cowl, no cone: this navy does not hide and does not
-point. Dim at rest — deck floods only, the drums dark — and burning under
-way, the louvres bright, the stack lit at the throat, and a hard lamp in
-the cradle throwing the lattice's shadow across the deck, because the loud
-state is the state this hull is bought to be in.
+point. Sustained glow at rest — six deck floods, work floods along the
+frame's top beams, the roof gratings and the louvres of the raked hood
+down each side of the house, the stack lit at the throat, four bridge
+ports boxed out past the house's forward eave, and a hard lamp in the
+cradle throwing the lattice's shadow across the deck; the drums dark — and
+burning bright on the same lamps the moment the drive turns, because 66 is
+over the Klaxon's line and the loud state is the state this hull is bought
+to be in.
 ```
 
 ```text
