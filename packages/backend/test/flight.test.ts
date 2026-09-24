@@ -25,6 +25,7 @@ import {
   SIM,
   UnitKind,
   statsFor,
+  unitRadiusM,
   type EchoSnapshot,
   type UnitStats,
 } from '@echoes/shared';
@@ -370,6 +371,114 @@ describe('the flight and its carrier', () => {
     match.orderEmbark(0, gantry, freighter);
     advance(match, 8);
     assert.ok(hasComponent(match.world, Position, gantry), 'the carrier is still in the water');
+  });
+
+  /**
+   * One carrier ordered onto a Corvette 1,000 m out on `bearing`, plus
+   * `sideways` metres across that line. Held in place, or with `crossing`
+   * sent 600 m across the line instead.
+   *
+   * Reads the three things #863 is about: how far the carrier was moved, the
+   * deepest any of its own craft ever sat inside it, and whether the craft on
+   * its second station got round it to the target.
+   */
+  function flown(
+    carrier: UnitStats,
+    bearing: number,
+    sideways: number,
+    crossing = false
+  ): { drift: number; deepest: number; launched: boolean; roundIt: boolean } {
+    const faction = carrier.faction!;
+    const enemyFaction = faction === Faction.Bathyarch ? Faction.Pelagia : Faction.Bathyarch;
+    const match = water(faction, enemyFaction);
+    const eid = hull(match, 0, faction, carrier.kind, 6000, 6000);
+    const across = { x: -Math.sin(bearing), y: Math.cos(bearing) };
+    const enemy = hull(
+      match,
+      1,
+      enemyFaction,
+      UnitKind.Corvette,
+      6000 + Math.cos(bearing) * 1000 + across.x * sideways,
+      6000 + Math.sin(bearing) * 1000 + across.y * sideways
+    );
+    if (crossing) match.orderMove(0, eid, 6000 + across.x * 600, 6000 + across.y * 600);
+    else match.orderHold(0, eid, true);
+    const handle = handleFor(match, enemy);
+    assert.notEqual(handle, 0, `${carrier.name}: the Corvette resolved`);
+    match.orderAttackContact(0, eid, handle);
+
+    const clear = unitRadiusM(carrier.kind) + unitRadiusM(carrier.flight!.craft);
+    const gap = (a: number): number =>
+      Math.hypot(Position.x[enemy]! - Position.x[a]!, Position.y[enemy]! - Position.y[a]!);
+    let second = 0;
+    let roundIt = false;
+    let drift = 0;
+    let deepest = 0;
+    for (let i = 0; i < SIM.TICK_HZ * 20; i++) {
+      match.update(STEP_MS);
+      drift = Math.max(drift, Math.hypot(Position.x[eid]! - 6000, Position.y[eid]! - 6000));
+      for (const craft of flightOf(match, eid)) {
+        const d = Math.hypot(
+          Position.x[craft]! - Position.x[eid]!,
+          Position.y[craft]! - Position.y[eid]!
+        );
+        deepest = Math.max(deepest, clear - d);
+        if (second === 0 && Craft.station[craft] === 1) second = craft;
+      }
+      if (second !== 0 && hasComponent(match.world, Position, second) && gap(second) < gap(eid)) {
+        roundIt = true;
+      }
+    }
+    return { drift, deepest, launched: second !== 0, roundIt };
+  }
+
+  it('goes round its carrier to the target, and never moves it (#863)', () => {
+    // Before #863 a craft launched astern chased straight through, and
+    // separation — which moves both hulls of an overlapping pair — shoved the
+    // carrier along the craft's course: an Offertory holding 993 m off a
+    // Cruiser was pushed inside the 900 m gun and sunk. §15's carrier is a
+    // kilometre away and quiet.
+    //
+    // Every carrier, holding position, with its target on the bearing
+    // exactly opposite its second station — so its second craft is launched
+    // astern with the target on the far side of the hull that launched it.
+    // Dead in line is the one geometry with no side to slide to; 40 m off it
+    // is the issue's second case, where the craft slid past on its own but
+    // nudged the carrier on the way.
+    for (const carrier of CARRIERS) {
+      const bearing = (1 / carrier.flight!.capacity) * Math.PI * 2 + Math.PI;
+      for (const sideways of [0, 40, -40]) {
+        const at = `${carrier.name}, ${sideways} m off the line`;
+        const run = flown(carrier, bearing, sideways);
+        assert.ok(run.launched, `${at}: a craft was launched astern`);
+        assert.ok(run.drift < 1, `${at}: the carrier did not move (${run.drift.toFixed(1)} m)`);
+        assert.ok(run.roundIt, `${at}: and the craft got round it to the target`);
+      }
+    }
+  });
+
+  it('never sits inside its carrier when the carrier is the one under way (#863)', () => {
+    // Steering round a carrier is the craft's half. The carrier's half is a
+    // carrier driving across its own flight's course, where only separation
+    // decides who moves: the craft does, always, and in one step. Leftover
+    // overlap is under 0.5 mm, the f32 spacing at x = 6,000; the centimetre is
+    // margin over that, not room for a slow push.
+    //
+    // Every bearing, because which ones meet depends on speeds and stations:
+    // before this rule, 8 to 14 of these 24 bearings per carrier overlapped by
+    // 0.55–1.10 m. Not the Offertory: its deck opens only on what its bow
+    // faces (§15), and a hull driving across the line faces neither end of it.
+    for (const carrier of CARRIERS.filter((c) => c.flight!.coneGatedLaunch !== true)) {
+      for (let degrees = 0; degrees < 360; degrees += 15) {
+        const at = `${carrier.name}, bearing ${degrees}`;
+        const run = flown(carrier, (degrees * Math.PI) / 180, 0, true);
+        assert.ok(run.drift > 500, `${at}: the carrier went across (${run.drift.toFixed(0)} m)`);
+        assert.ok(
+          run.deepest < 0.01,
+          `${at}: no craft sat inside it (deepest ${run.deepest.toFixed(3)} m)`
+        );
+      }
+    }
   });
 
   it('leaves the same fingerprint twice, flight and all', () => {

@@ -752,6 +752,12 @@ In order, every tick:
    auto-acquires like one (§4), inside its own 300–500 m.
 3. **Station, otherwise.** It holds a ring around its carrier and follows it there.
 
+**A craft goes round its carrier, never through it.** The launch ring is fixed to the map, not
+to the target, so a craft can enter the water astern with its target on the far side of the
+hull that launched it. It steers round that hull, and where the two touch it is the craft that
+gives way: a flight that shoved its carrier toward the fight would undo the kilometre it
+exists to buy.
+
 **The flight takes no orders.** A craft is its owner's — it is on their side, it is in their
 own-force reports, it dies to their carelessness — and it is refused every order in the book,
 exactly as a hull in a hold is ([systems-echo.md](systems-echo.md) §3). You order the
@@ -808,7 +814,7 @@ what exists or assumes what does not. The combat loop lives in
 | The beat (§9.5) | **Measured** | `test/combatBeat.test.ts` plays each gun band and the torpedo run out at 60 Hz and counts the Echo snapshots between first hit and kill; the mine astern is held in `test/mines.test.ts` against a live seeker, at 900 m and at 300 m, and the decoy in `test/countermeasures.test.ts` |
 | Retreat dynamics (§10) | Emergent | Falls out of the existing ascent/descent and Silent Running rules, now that seekers exist to be starved |
 | Faction kits (§11) | **Implemented** | `FACTION_COMBAT` in `packages/shared/src/constants.ts`, read through `packages/shared/src/combat.ts` |
-| The flight (§15) | **Implemented** | `Flightdeck` and `Craft` components driven by `sim/systems/flight.ts`; the flight dies with its carrier in `Match.reap`, beside the hold; `FLIGHT` in `packages/shared/src/constants.ts` carries the figures |
+| The flight (§15) | **Implemented** | `Flightdeck` and `Craft` components driven by `sim/systems/flight.ts`; a craft goes round its own carrier in `sim/systems/movement.ts` and gives way to it in `sim/systems/separation.ts`; the flight dies with its carrier in `Match.reap`, beside the hold; `FLIGHT` in `packages/shared/src/constants.ts` carries the figures |
 
 ---
 
