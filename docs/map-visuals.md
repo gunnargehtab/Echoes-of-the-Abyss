@@ -341,12 +341,13 @@ What it leaves for the owner:
   3 sets a quiet one near black.
 - **Acoustic residue has no rung.** §5's table does not name it, and no row's words fit: it is
   the player's own intel, not public furniture, and it must never read as a contact.
-- **Three marks go unweighed.** Blocked ground is a hatch and a fill, and a formed Lampfry
+- **Some marks go unweighed.** Blocked ground is a hatch and a fill, and a formed Lampfry
   shoal is a mote cloud (Phase 3). §5's outline rule presumes a rim, so how a rimless mark is
   weighed is open. A Tetherjelly field's rim is weighed, but its bells hang at the working
   depth while the rim lies on the ground (Phase 3), so from an oblique camera the bloom stands
-  above its rim rather than inside it. Whether a bloom over its footprint is still the rim's
-  interior is the owner's call. None of the three is weighed yet.
+  above its rim rather than inside it. A scattered shoal's cloud stands over its 300 m ring
+  the same way. Whether a cloud over its outline is still that outline's interior is the
+  owner's call. None of these clouds, and not the blocked ground, is weighed yet.
 - **Some placements are the audit's, not §5's.** §5's rows do not name these, and each draw
   site says why it was placed where it is. On rung 6: order routes and their markers, the
   lock flash, the crush and break-silence rings, the ink about own ordnance, a yard's rally

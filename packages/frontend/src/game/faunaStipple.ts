@@ -16,11 +16,11 @@
  * outlines the ladder weighs stay on the chart painter (`EchoRenderer`): the
  * field's rim, one of rung 5's four floor outlines, and a scattered shoal's
  * 300 m trigger ring. The dots are not weighed. §5 weighs a mark by its
- * outline and never by its interior, but a field's bells hang at its working
- * depth while its rim lies on the ground, so from an oblique camera the bloom
- * stands above its footprint rather than inside it. Whether that still counts
- * as the rim's interior, and how a formed shoal with no rim is weighed, are
- * the owner's calls (§10).
+ * outline and never by its interior, but a field's bells and a scattered
+ * shoal's motes hang at their depth while the rim and the ring lie on the
+ * ground, so from an oblique camera each cloud stands above its outline rather
+ * than inside it. Whether that still counts as the outline's interior, and how
+ * a formed shoal with no rim is weighed, are the owner's calls (§10).
  *
  * **Pulse in place; never drift sideways.** A bell contracts and relaxes about
  * its own axis and its tentacles trail with it; a shoal breathes and its motes

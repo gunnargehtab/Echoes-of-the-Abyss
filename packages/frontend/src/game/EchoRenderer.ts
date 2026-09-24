@@ -6159,9 +6159,11 @@ export class EchoRenderer {
    * rather than implied.
    *
    * Rung 5, map furniture (docs/map-visuals.md §5). Only the trigger ring is
-   * an outline, so only a scattered shoal is weighed. A formed shoal is a mote
-   * cloud with no rim, and §5's outline rule presumes one, so how it is
-   * weighed is the owner's call, left open in §10.
+   * an outline, so only the ring is weighed. A scattered shoal's cloud hangs at
+   * the shoal's depth while the ring lies on the ground, so from an oblique
+   * camera it stands above the ring rather than inside it; and a formed shoal
+   * is a mote cloud with no rim at all. §5's outline rule presumes a rim, so
+   * how either cloud is weighed is the owner's call, left open in §10.
    */
   private drawShoals(g: Graphics): void {
     for (const shoal of this.shoals) {

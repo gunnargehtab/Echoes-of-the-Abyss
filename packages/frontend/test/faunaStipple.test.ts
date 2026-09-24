@@ -257,8 +257,10 @@ describe('fauna stipple: what a field says (§8)', () => {
         const shader = (cloud.points.material as ShaderMaterial).vertexShader;
         assert.match(shader, /vec3 world = position \+ vec3\( aDot\.x \* squeeze/);
         assert.equal(shader.match(/\bworld(\.[xyzw]+)?\s*[-+*/]?=(?!=)/g)?.length, 1);
-        assert.match(shader, /mvPosition = modelViewMatrix \* vec4\( world, 1\.0 \)/);
-        assert.match(shader, /gl_Position = projectionMatrix \* mvPosition/);
+        assert.equal(shader.match(/\bmvPosition(\.[xyzw]+)?\s*[-+*/]?=(?!=)/g)?.length, 1);
+        assert.equal(shader.match(/\bgl_Position(\.[xyzw]+)?\s*[-+*/]?=(?!=)/g)?.length, 1);
+        assert.match(shader, /^\s*vec4 mvPosition = modelViewMatrix \* vec4\( world, 1\.0 \);$/m);
+        assert.match(shader, /^\s*gl_Position = projectionMatrix \* mvPosition;$/m);
         const clocked = shader.split('\n').filter((line) => line.includes('uTime'));
         const allowed = /^\s*(uniform float uTime;|float (beat|trail|twinkle) = )/;
         for (const line of clocked) {

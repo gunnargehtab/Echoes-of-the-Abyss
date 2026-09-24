@@ -737,8 +737,8 @@ export class PerspectiveView {
     this.units = snapshot.units;
     this.structures = snapshot.structures;
     this.ordnance = snapshot.ordnance;
-    // Rewritten only when the public layers changed: a field died, a shoal
-    // scattered or reformed. A still sea costs the snapshot nothing here.
+    // Rewritten only when a public layer changed: a field or shoal was born or
+    // died, or a shoal scattered or reformed. A still sea costs nothing here.
     this.life.setLife(snapshot.jellies, snapshot.shoals);
     const arrivedAt = performance.now();
     this.motion.record(snapshot.units, arrivedAt);
