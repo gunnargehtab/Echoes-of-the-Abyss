@@ -168,9 +168,9 @@ Rung 6 is not above rung 5, and the tests pin two breaks rather than hold the or
 unselected ring lifts the ground less than rung 5's floor in the standard, protanopia and
 tritanopia palettes. And at its loudest, in its loudest colour, every rung-5 outline lifts some
 ground more than that ring in all four palettes: a live hazard's rim, a resource field's and
-the map's are all louder than it. Which side moves is the owner's call, recorded on #866.
-Rungs 1 to 3 are the ground every lift is measured over, and rung 7 answers to gate 3's glow
-curve instead.
+the map's are all louder than it. Which side moves is the owner's call, and §10 records it
+with the audit's other findings. Rungs 1 to 3 are the ground every lift is measured over, and
+rung 7 answers to gate 3's glow curve instead.
 
 Two consequences worth naming:
 

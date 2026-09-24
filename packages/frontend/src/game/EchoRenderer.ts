@@ -6221,7 +6221,7 @@ export class EchoRenderer {
    * own colours rather than being ground (rungs 1 to 4), it is the player's
    * own intel rather than public furniture (rung 5), it is no instrument
    * (rung 6), and it must never read as a contact (rung 7). Left for the
-   * owner to place (#866).
+   * owner to place, and docs/map-visuals.md §10 records it.
    */
   private drawEchoMarks(g: Graphics): void {
     for (const mark of this.marks) {

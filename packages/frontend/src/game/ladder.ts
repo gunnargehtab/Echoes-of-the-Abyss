@@ -95,7 +95,8 @@ export const FURNITURE_OUTLINE_ALPHA = {
  * Rung 6 is not yet held above rung 5. In the standard, protanopia and
  * tritanopia palettes the unselected ring lifts the ground less than rung 5's
  * floor, and in every palette it lifts less than most of rung 5's outlines.
- * ladder.test.ts records both; settling them is the owner's call (#866).
+ * ladder.test.ts records both. Settling them is the owner's call, and
+ * docs/map-visuals.md §10 records it.
  */
 export const INSTRUMENT_OUTLINE_ALPHA = {
   unselectedRing: 0.18,
@@ -195,7 +196,10 @@ export function loudestLift(outline: WeighedOutline, palette: Palette, ground: n
   );
 }
 
-/** The unselected detection ring's least lift over one ground, across the two colours it is drawn in. */
+/**
+ * The unselected detection ring's least lift over one ground, across the two
+ * colours it is drawn in.
+ */
 export function unselectedRingLift(palette: Palette, ground: number): number {
   return quietestLift(INSTRUMENT_OUTLINES.unselectedRing!, palette, ground);
 }

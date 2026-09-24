@@ -39,7 +39,7 @@ const GROUNDS = [DARKEST_GROUND, PALEST_GROUND];
 /**
  * The palettes where rung 6's floor lifts the ground no more than rung 5's —
  * the break #865 found. Deuteranopia holds. Recorded, not tuned: which of the
- * ring or the furniture moves is the owner's call (#866).
+ * ring or the furniture moves is the owner's call (docs/map-visuals.md §10).
  */
 const RUNG_6_FLOOR_UNDER_RUNG_5_FLOOR: readonly PaletteName[] = [
   'standard',
