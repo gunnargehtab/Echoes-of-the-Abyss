@@ -75,10 +75,11 @@
  * of a lamp whose seat would hide it. Each takes a station first. `_3`
  * comes down its own tier's wall at the file's bearing and radius, from
  * y 3.16 to 2.8 (`lower`), out from under `seam_ring_1`: it shows
- * 14.3 m² there, as it did, and stays between `_2` and `_4` in its
- * climb. `_13` has no such station — on `carapace_tier_0` above `_12`
- * (y 1.06) the wall is under `seam_ring_0` the whole way, 0.13 m² at
- * y 1.3, and only below `_12` does a bud clear it — so it is seeded in
+ * 12.1 m² there (15.2 in the file) and stays between `_2` and `_4` in
+ * its climb. `_13` has no such station — on `carapace_tier_0` a bud
+ * seeded above y 1.2 shows under 0.25 m² under `seam_ring_0`, and the
+ * stations that do show (0.4 to 4.9 m², from y 1.2 down to 1.06) seat
+ * level with `_12`, not above it in the run — so it is seeded in
  * the weld's corner instead (`corner`), on `carapace_tier_1`'s wall at
  * the file's bearing a radius above the ring, resting on both, the
  * Cruiser's answer for its tail light (#894): 13 m² from above, level

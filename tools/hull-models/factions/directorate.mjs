@@ -2532,9 +2532,10 @@ export function eyes(root, mat, { eyes: list, facets = [6, 4] }) {
  *
  * A spike given `rootOn`, the name of a cone already in the scene, is
  * re-hung with its base centre on that cone's apex — its +Y end, read off
- * the geometry's height through the node's scale and rotation — keeping
- * its own rotation, so it grows from the other's point as a claw grows
- * from its femur's end (`walkingLimbs`; #907). The Submersible's rostrum
+ * the geometry's height through the node's scale and rotation — and
+ * turned to aim at where its tip was (`hangOn`), so it grows from the
+ * other's point as a claw grows from its femur's end (`walkingLimbs`;
+ * #907). The Submersible's rostrum
  * stood 1.96 m off its head by #894's resting measure, and the gap is
  * sideways, not ahead: the file's node runs it 10° across the head's
  * axis from 3 m to port and 1.7 m above the apex, its base 0.75 m past
@@ -2555,12 +2556,14 @@ export function spikes(root, mat, { spikes: list }) {
  * Hang `mesh`, a cone of `length` on its own Y, from cone `name`'s apex:
  * its base centre on the apex and its axis aimed at where its tip already
  * was, so the tip — the point the chart's outline reads, on the Submersible
- * the bow itself — keeps the file's station and only the root moves onto
+ * the bow itself — lands on the line to the file's tip, `length` from the
+ * apex (0.36 m short of it on the Submersible, whose apex stands 0.567
+ * units from that tip against a 0.55 cone), and only the root moves onto
  * the head. The cone is turned by the one rotation that carries its old
  * axis onto the new, which keeps its roll about that axis and so the
  * facet the file put on the crown. Hung with its rotation kept instead,
  * the rostrum's tip swung 3.4 m off the centreline and the outline's bow
- * point with it (#907, round 1).
+ * point with it (#907, as first hung).
  */
 function hangOn(root, mesh, length, name) {
   const host = root.getObjectByName(name);

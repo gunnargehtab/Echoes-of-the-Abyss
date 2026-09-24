@@ -69,12 +69,12 @@
  *   each. Six were hidden before; `limb_starboard_1_claw` showed 0.5 m²
  *   where the file's offset had carried it past the second plate's rim,
  *   and rooted on its femur it lies under the plates with the rest
- *   (0.06 m²). The root is the claw's +Y end — the end the file left 0.1
+ *   (0.00 m² at 4 px/m). The root is the claw's +Y end — the end the file left 0.1
  *   units from the knee, against 0.26 for the other — so the fold is the
  *   file's and only the joint moved; rooting by the other end would fold
  *   every claw the other way, and #890's ruling 6 rules out the one
  *   station on the plates that would show this one. A seventh hidden
- *   claw is put to the owner on #907 beside the decisions there.
+ *   claw is put to the owner in #917 beside the decisions #907 holds.
  * - `photophore_port_5` and `photophore_starboard_3` are the clause's and
  *   stay lit. Each sat on the fifth plate's flank at its widest line,
  *   under the plate's own upper surface; each is lifted 0.04 inboard and
@@ -114,13 +114,16 @@
  *   own axis comes to the apex, so no move along that axis meets the head
  *   short of its port cheek, 6.6 m from the point. It hangs from the apex
  *   since #907 (`spikes` `rootOn`): its base centre on the head's point
- *   and its axis aimed at where the file's tip was, so the bow point the
- *   chart's outline reads stays where the file had it, 0.4 m to port of
- *   the axis, and only the root swings, 3.5 m onto the head; the cone is
- *   turned by the one rotation that carries its old axis onto the new,
- *   which keeps the facet on its crown, and it reads 0 m from the head.
- *   (Hung with the file's rotation kept, in round 1, the tip swung 3.4 m
- *   off the centreline and the outline's bow with it.) Its box reaches
+ *   and its axis aimed at where the file's tip was, so the tip lands on
+ *   the line to that point, the cone's 0.55 units from the apex where
+ *   the file's tip stood 0.567 — 0.36 m short of it, the nearest any
+ *   seat on the head comes — and the bow point the chart's outline reads
+ *   stays where the file had it, 0.4 m to starboard of the head's point;
+ *   only the root swings, 3.5 m onto the head. The cone is turned by the
+ *   one rotation that carries its old axis onto the new, which keeps the
+ *   facet on its crown, and it reads 0 m from the head. (Hung with the
+ *   file's rotation kept, as first hung, the tip swung 3.4 m off the
+ *   centreline and the outline's bow with it.) Its box reaches
  *   0.024 units less far forward, which is THE SCALE below. `diff.mjs`
  *   lists the rostrum at 2.1 m and the seven claws at 1.5 to 1.8, and no
  *   other part.
@@ -130,7 +133,7 @@
  * rims' and the plates', which sit 0.03 over it); built here metre-true
  * at 95 m along +X, centred on its length, the axis at y = 0. `DRAWN` is
  * the length as intake measures it — the parts' boxes — which the
- * rostrum's box overhangs at the bow: 4.5261 over the vertices' 4.53
+ * rostrum's box overhangs at the bow: 4.5261 over the vertices' 4.515
  * since #907 hung the rostrum from the head's apex aimed at its own tip.
  * The file measured 4.5501 over 4.53, its rostrum's box 0.024 units
  * further forward at the file's tilt, so the hull is 0.5 % larger on the
