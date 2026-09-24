@@ -9,7 +9,8 @@
  *
  * Deliberately steering rather than physics. There is no momentum, no
  * restitution and no solver — overlapping hulls are pushed apart along the
- * axis between them, a fraction of the overlap per tick. The result reads as
+ * axis between them, a fraction of the overlap per tick (a craft and its own
+ * carrier excepted: only the craft moves, and in one step). The result reads as
  * a fleet keeping station, which is all the design asks for, and it cannot
  * inject energy into the simulation the way an impulse model can.
  *
@@ -103,7 +104,8 @@ function separateHulls(world: SimWorld, units: ArrayLike<number>): void {
 
     for (let j = 0; j < neighbours.length; j++) {
       const b = neighbours[j]!;
-      // Each pair is resolved once, by the lower id, and both hulls move.
+      // Each pair is resolved once, by the lower id, and both hulls move —
+      // except a craft and its own carrier, below, where only the craft does.
       // Without this the pair would be pushed apart twice per tick, at double
       // the intended stiffness.
       if (b <= a) continue;

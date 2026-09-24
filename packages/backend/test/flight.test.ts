@@ -460,9 +460,9 @@ describe('the flight and its carrier', () => {
   it('never sits inside its carrier when the carrier is the one under way (#863)', () => {
     // Steering round a carrier is the craft's half. The carrier's half is a
     // carrier driving across its own flight's course, where only separation
-    // decides who moves: the craft does, always, and in one step. The
-    // centimetre is f32 position rounding at x = 6,000, not a tolerance.
-    //
+    // decides who moves: the craft does, always, and in one step. Leftover
+    // overlap is under 0.5 mm, the f32 spacing at x = 6,000; the centimetre is
+    // margin over that, not room for a slow push.
     //
     // Every bearing, because which ones meet depends on speeds and stations:
     // before this rule, 8 to 14 of these 24 bearings per carrier overlapped by
