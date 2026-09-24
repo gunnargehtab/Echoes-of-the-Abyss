@@ -33,8 +33,8 @@
  * rather than on the brightest cladding on the hall, so the bay reads "Dim
  * at rest" as the block asks, and the name and base are now the Slipway's,
  * whose gantry work lights carry both (the note on `ink.amberLamp`).
- * Nothing here is a shape decision; where the export is odd the script is
- * odd with it:
+ * Nothing here is a shape decision but the four lamps #893 moved (LIGHT
+ * below); where the export is odd the script is odd with it:
  *
  * - Port is the export's +x, which `drawn` lands on −z (#642): every `_p`
  *   — pylons, ribs, patches, bay walls, aprons, rails, legs, tanks, the
@@ -55,12 +55,12 @@
  *   as the block's resting clause names them since #893 (docs/models-plan.md
  *   §3.2 rule 1). The Foundry block is one text for four navies and names
  *   its lamps in words each navy's model answers in its own: "the forge
- *   light across the bay and at its mouth" is the forge floor, the forge
- *   back wall's top and the gable strip over the bay mouth; "the bay's
- *   guide lights or rim strips" the three rim strips; "the gantries'
- *   lamps" the two crane flood patches; and "the navy's own lamps on the
- *   halls and the mouth — … seams" the two roof seams. Six face up and
- *   never moved; the
+ *   light across the bay and at its mouth" is the forge floor, which runs
+ *   to the sill, and the forge back wall's top; "the bay's guide lights or
+ *   rim strips" the three rim strips; "the gantries' lamps" the two crane
+ *   flood patches; and "the navy's own lamps on the halls and the mouth —
+ *   … seams" the two roof seams and the gable strip, which sits over the
+ *   bay's aft end, 125 m from the mouth. Six face up and never moved; the
  *   other four #893 moved. The approved file had `roof_seam_p/s` inside the
  *   roof slab (x ±19.6 in a slab to ±20, y 20.4 in a slab to 21) and
  *   `crane_fwd/aft_floodpatch` under their bridges (y 15.05 under a bridge
@@ -164,10 +164,11 @@ bathyarch.repairPatches(
 );
 
 // "A recessed launch bay": the walls, sill and aprons; "the forge light
-// across the bay and at its mouth" — the floor, the back wall and the rim
-// strips, the forward one across the mouth; and "the navy's own lamps on
-// the halls — ... seams" — the roof seams along the eaves and the gable
-// strip.
+// across the bay and at its mouth" — the floor, running to the sill, and
+// the back wall; "the bay's guide lights or rim strips" — the three rim
+// strips; and "the navy's own lamps on the halls and the mouth — … seams"
+// — the roof seams along the eaves and the gable strip over the bay's aft
+// end (header).
 bathyarch.launchBay(
   root,
   put,

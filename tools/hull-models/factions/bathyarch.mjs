@@ -297,16 +297,22 @@ export function propTunnels(root, { grey, rust }, { x, z, r }) {
  * whose centre is `z`; the well's top face is the line through the blades'
  * inner edges, slope `pitch / step`, from where it meets the deck (`deck`)
  * to where it meets the wall, and the well is `well.t` thick under that
- * face, so its ends and its underside are buried in the slab and the
- * house. The form is `exhaustLouvres` below — slats over a well of hull
- * black — stood against a wall rather than laid on a deck, and the well is
- * what makes it a louvred side rather than a slat screen in the air (#893
- * round 2). A vertical louvre panel shows nothing from above, and the
- * Derrick's slats were five bars flat on the wall under the roof's eave
- * from #531 to #890, which clad them; stepped, every blade shows its `step`
- * of plan width past the one over it and the top one what stands past the
- * eave, and since the step is the whole of what shows, the chart reads the
- * hood as one lit band down each flank, `count · step` wide. The gratings
+ * face. Its ends are buried in the slab and the house whatever the
+ * thickness; its underside is buried only if `well.t` reaches the corner
+ * where the deck meets the wall, which lies under the face's midpoint —
+ * 1.73 m on the Derrick, so a 1 m well left a hollow of triangular
+ * section open at both ends under the whole hood (#893 round 3) — and the
+ * builder throws on a thickness that would leave that hollow. The form is
+ * `exhaustLouvres` below — slats over a well of hull black — stood against
+ * a wall rather than laid on a deck, and the well is what makes it a
+ * louvred side rather than a slat screen in the air (#893 round 2). A
+ * vertical louvre panel shows nothing from above, and the Derrick's slats
+ * were five bars flat on the wall under the roof's eave from #531 to
+ * #890, which clad them; stepped, every blade shows its `step` of plan
+ * width past the one over it and the top one what stands past the eave,
+ * and since the step is the whole of what shows, the chart reads the hood
+ * as one lit band down each flank, `(count − 1) · step` plus the top
+ * blade's reach past the eave wide — 2.4 m on the Derrick. The gratings
  * on the roof are the rest of the light.
  */
 export function machineryHouse(root, { black, grey, rust, amber, vent, flood }, opts) {
@@ -334,6 +340,15 @@ export function machineryHouse(root, { black, grey, rust, amber, vent, flood }, 
   const B = [beam / 2, ey + slope * (ez - beam / 2)];
   const run = Math.hypot(B[0] - A[0], B[1] - A[1]);
   const n = [(B[1] - A[1]) / run, (A[0] - B[0]) / run];
+  // The deck/wall corner's depth under the face: the well must be at least
+  // this thick or its underside stands clear of both, a hollow the conn
+  // view sees end-on (docstring).
+  const hollow = (beam / 2 - A[0]) * n[0] + (deck - A[1]) * n[1];
+  if (well.t < -hollow)
+    throw new Error(
+      `machineryHouse: well.t ${well.t} leaves a hollow under the hood; the deck/wall ` +
+        `corner lies ${(-hollow).toFixed(2)} m under the face`
+    );
   const C = [(A[0] + B[0]) / 2 - (n[0] * well.t) / 2, (A[1] + B[1]) / 2 - (n[1] * well.t) / 2];
   const rake = Math.atan2(n[0], n[1]);
   // Canting a blade about X drops its +z edge, so starboard (+z) takes the

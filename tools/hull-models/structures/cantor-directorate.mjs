@@ -4,8 +4,9 @@
  *
  * "Listening dome — a grown, chitinous hemispherical shell studded with
  * hydrophone spines (SIG 35 idle). Dim red photophore constellation across
- * the dome, and a lamp at the tip of the quill off its apex"
- * (docs/asset-prompts-3d.md, STRUCTURE — Cantor, as #893 amended it). The
+ * the dome and round its foot, and a lamp at the tip of the quill off its
+ * apex" (docs/asset-prompts-3d.md, STRUCTURE — Cantor, as #893 amended
+ * it). The
  * Directorate's own, no other navy's: two carapace tiers turned 0.16 and
  * 0.42 rad under a weld collar; a red half-orb of a dome with three violet
  * shell plates grown over it a millimetre proud; forty-two hydrophone
@@ -61,9 +62,11 @@
  * E 4.50 against a target of 5.48 at the ×64 ceiling, and past the ceiling
  * the only lever is lit area, never strength (docs/graphics-standards.md
  * §3; docs/models-plan.md §3.2). The block's resting clause is "dim red
- * photophore constellation across the dome, and a lamp at the tip of the
- * quill off its apex" (as #893 amended it), and the constellation is what
- * grows: every one of the twenty-two studs keeps its centre, its name and
+ * photophore constellation across the dome and round its foot, and a lamp
+ * at the tip of the quill off its apex" (as #893 amended it), and the
+ * constellation is what grows: every one of the twenty-two studs — the
+ * nineteen on the dome and the three round the foot — keeps its centre,
+ * its name and
  * its material and has its radius scaled by `GROWN`, the same factor on
  * each, so the pattern is the file's own at a larger stud. The quill's tip
  * light — the brightest lamp on the file, and its own fixture rather than
@@ -223,9 +226,10 @@ directorate.apexBoss(
   { boss: { r: 1.05, facets: [8, 5], ...drawn([0.45, 7.15, -0.3]) } }
 );
 
-// "Dim red photophore constellation across the dome": nineteen in three
-// runs down the dome and three round the foot, an orb each of its own
-// radius, every radius grown by the one factor so gate 3 reaches its target
+// "Dim red photophore constellation across the dome and round its foot":
+// nineteen in three runs down the dome and three round the foot, an orb
+// each of its own radius, every radius grown by the one factor so gate 3
+// reaches its target
 // under the cap (#890, the header). SIG 35, and the quill's tip is the
 // brightest of them.
 const GROWN = 1.5;

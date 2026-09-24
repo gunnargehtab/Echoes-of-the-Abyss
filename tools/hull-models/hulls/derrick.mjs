@@ -41,11 +41,19 @@
  *   bottom one at the deck. The form is the Caisson's and the Gantry's
  *   `exhaustLouvres`, slats over a well, stood against a wall. From above
  *   each blade shows its half-metre step past the one over it, so the
- *   chart reads one lit band 2.5 m wide down each flank (`machineryHouse`).
- *   The two wells are the one shape decision in this file: two unlit parts
- *   the approved model did not have, added in #893's second round because
- *   a blade with nothing under it is a slat screen hanging in the air, not
- *   a louvred side (ruling 6's different-fixture case).
+ *   chart reads one lit band 2.4 m wide down each flank, from the eave at
+ *   z 13.5 to the bottom blade's outer edge at 15.91 (`machineryHouse`).
+ *   The well is 1.8 m thick because the corner where the deck meets the
+ *   wall lies 1.73 m under its face: a metre of well left a hollow of
+ *   triangular section under the whole hood, open at both ends. The two
+ *   wells are the one part added in this file — two unlit parts the
+ *   approved model did not have; the blades and the ports below are moved
+ *   and reshaped, and `diff.mjs` lists all sixteen — added in #893's second
+ *   round because a blade with nothing under it is a slat screen hanging
+ *   in the air, not the louvred side the block names. Only a hidden lamp
+ *   licenses a move, and a move may not make the lamp a different fixture
+ *   (#890 ruling 6, and the #893 brief's gloss on rulings 1 and 6); the
+ *   well is what keeps the moved blades the fixture they were.
  * - `bridge_port_s0..1`, `bridge_port_p0..1` (#893): `amber_lamp` again,
  *   named in no band before #893 and clad by #890. They were 0.4 m panels
  *   on the house's forward face with their sills at the deck line, under
@@ -137,12 +145,13 @@ add(root, 'cradle_lamp_stay', box(0.6, 1.8, 0.6), grey, [5, frame.top + 0.9, 0])
 // stands on that exposed wall: the top blade's centre on the eave line
 // (beam/2 + 0.5) so its outer edge shows past it, each blade below half a
 // metre further out, and the well raked from the deck up to the wall under
-// them, a metre thick (header).
+// them, 1.8 m thick so it reaches the deck/wall corner 1.73 m under its
+// face (header).
 bathyarch.machineryHouse(root, { black, grey, rust, amber, vent, flood }, {
   x: -24, y: 10, length: 22, height: 9, beam: 26, stack: { x: -30, y: 20, z: 6 },
   louvres: {
     count: 5, y: DEPTH + 0.4, pitch: 0.6, z: 13.5, step: 0.5, tilt: 0.611, blade: [0.15, 0.9],
-    deck: DEPTH, well: { t: 1 },
+    deck: DEPTH, well: { t: 1.8 },
   },
 });
 add(root, 'hammer_shaft', box(1.2, 18, 1.2), grey, [-6.5, 15, 30]);

@@ -103,8 +103,9 @@
  *     line's own and the material the export gave it, which #890 had
  *     swapped for `biolight_unlit` on the block as it then read (rule 2).
  *     Since #893 it lies flat, its face up at y 0.5, centred on the
- *     floor's end at z 6.0 rather than in the ring — a flat disc at the
- *     ring's station would run past the bow extent (`DRAWN`) and rescale
+ *     floor's end at z 6.0 rather than in the ring — a flat disc where
+ *     the export stood it, at z 6.62, would reach 7.97, past this file's
+ *     bow extent (`DRAWN`: `tergite_port_3`'s box at 7.66) and rescale
  *     the file — on the crown of the ring's bottom tube, a twentieth
  *     proud of the floor, under the forge line's top, the fifth guide
  *     each side standing proud of it (rule 5; the numbers in kit.mjs

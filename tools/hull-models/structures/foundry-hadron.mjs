@@ -80,8 +80,12 @@
  * script asserts after the fit, the plan being nearly square.
  *
  * `diff.mjs foundry-hadron f7cce0f`: unchanged beyond the root scale and
- * shift but for the eighteen parts below — every other part is where it
- * was.
+ * shift but for twenty-one parts — the eighteen lamps below, and
+ * `wing_ridge_r`, `wing_ridge_l` and `gate_crystal` at 0.000 m, which is
+ * #888's rename of the lit crystal from `resonance_crystal` to
+ * `resonance_crystal_dim` (the materials bullet above) and no move; the
+ * ten guides and the two loads carry the same rename beside their moves.
+ * Every other part is where it was.
  *
  * LIGHT (#890, #893). When #890 placed the lamps the block's resting
  * clause was "dim at rest", which named none: the running lights on the
@@ -93,11 +97,12 @@
  * every lamp on this file is the resting clause's: the forge line is
  * "the forge light across the bay" and the gate threshold that light "at
  * its mouth", the ten guides "the bay's guide lights", the two warning
- * lights and the two crystal loads "the gantries' lamps", the six port
- * lights and the two wing ridges "the navy's own lamps on the halls —
- * running lights, ... ridges", and the gate crystal on the crossbeam the
- * "crystals" among those lamps, on the mouth — all lit, and the working
- * band is the same lamps brighter. Eighteen lamps were hidden from above on
+ * lights and the two crystal loads "the gantries' lamps", and "the navy's
+ * own lamps on the halls and the mouth — running lights, photophores,
+ * veins, seams, ridges or crystals" the six port lights and the two wing
+ * ridges on the halls and the gate crystal on the crossbeam, on the mouth
+ * — all lit, and the working band is the same lamps brighter. Eighteen
+ * lamps were hidden from above on
  * every build from #652 to #890, and models-plan.md §3.2 decides each:
  * - `wing_portlight_r_0..2` and `_l_0..2`, the running lights — kept lit.
  *   The file set them into each wing's outboard flank at x 5.75, y 2.3,

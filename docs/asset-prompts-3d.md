@@ -1164,8 +1164,8 @@ stalks only.
 ```text
 STRUCTURE — Cantor (pair with Directorate): listening dome — a grown,
 chitinous hemispherical shell studded with hydrophone spines (SIG 35 idle).
-Dim red photophore constellation across the dome, and a lamp at the tip of
-the quill off its apex.
+Dim red photophore constellation across the dome and round its foot, and a
+lamp at the tip of the quill off its apex.
 ```
 
 ```text
@@ -1376,8 +1376,9 @@ warnings, metre-true, and calibrated onto gate 3's curve with headroom — the D
 on its idle 58, the Responsory at E 3.1 on its compass 27. The one thing the bake taught that
 the prompts did not say: the maps are top-down, so a louvre flat on a hull's side has no plan
 area and a lit feature has to face *up* to count — the Derrick's light is on its deck floods,
-its frame beams, its cradle lamp, its roof gratings and, since #893, the louvres of a raked
-hood down each side of its machinery house, stepped so that every blade shows from above; the
+its frame beams, its cradle lamp, its stack throat, its roof gratings and, since #893, the
+louvres of a raked hood down each side of its machinery house, stepped so that every blade
+shows from above, and four bridge ports boxed out past the house's forward eave; the
 Responsory's rides the top of its horn.
 
 ```text
