@@ -24,6 +24,12 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --ma
 > The ruling changes no match here. The Commune raises no Slipway in any of the 30 seeds, so
 > every match is identical to `main` at `afb9753` but for the new *yielded* row, which reads 0.
 > No navy buys its carrier.
+>
+> Against the previous file: 18 matches are decided, not 14. The Knights-starve rail reads
+> **held** (82%, n=14 long) where it read **no data**: the median match now ends at 1331 s,
+> before the 1500 s cap, so longer-than-median matches exist. Win rates move: the Directorate
+> from 79% to 67%, the Commune from 14% to 22%, the Knights from 7% to 11%. The Consortium stays
+> at 0%.
 
 30 matches on `ventfront-divide`, seeds 4000–4029. 12 ended without a winner inside the time budget, on a median 2 of the 3 eliminations a win needs.
 
