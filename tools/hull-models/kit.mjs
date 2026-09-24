@@ -780,7 +780,7 @@ export function ventDrawArm(root, { rock, steel, deck, lamp, flood }, opts) {
     bearing: a,
     pipe = { from: 18, to: 62, r: 2.6, y: 20 },
     valve = { at: 30, block: 6, stem: { r: 0.8, h: 6, y: 25 } },
-    lamps = { from: 24, pitch: 12, count: 3, size: [2, 0.6, 2], y: 22.9 },
+    lamps = { from: 24, pitch: 12, count: 3, size: [2, 0.6, 2], sink: 0.05 },
     riser = { at: 64, r: 2.4, h: 20, y: 10 },
     platform = { at: 40, size: [14, 1.2, 10], y: 8, flood: { size: [12, 0.4, 8], y: 8.9 } },
     legs = { spread: 6, r: [0.9, 1.1], h: 10, y: 2.5 },
@@ -798,8 +798,19 @@ export function ventDrawArm(root, { rock, steel, deck, lamp, flood }, opts) {
   );
   add(root, 'valve_block', box(valve.block, valve.block, valve.block), rock, polar(a, valve.at, pipe.y), yaw);
   add(root, 'valve_stem', cyl(valve.stem.r, valve.stem.r, valve.stem.h, 6), rock, polar(a, valve.at, valve.stem.y));
+  // A lamp housing saddled on the pipe: its underside `sink` into the
+  // crown rather than tangent to it. The approved files laid each housing
+  // exactly on the pipe's top edge, an edge along a face with no vertex of
+  // either on the other, which the resting measure cannot see (glb.mjs
+  // `gapBetween` tries a vertex against a face and an edge through a face,
+  // never two coplanar) — and the Order's file, yawed a quarter turn on its
+  // root, rounded the two a hair apart and read every pipe lamp as 0.5 m
+  // off its pipe while the other three read 0 by the opposite rounding
+  // (#907). A housing that straddles the crown by five centimetres is what
+  // a fixture on a pipe is, and reads the same on all four.
+  const lampY = pipe.y + pipe.r + lamps.size[1] / 2 - lamps.sink;
   for (let i = 0; i < lamps.count; i++)
-    add(root, `pipe_lamp_${i}`, box(...lamps.size), lamp, polar(a, lamps.from + lamps.pitch * i, lamps.y), yaw);
+    add(root, `pipe_lamp_${i}`, box(...lamps.size), lamp, polar(a, lamps.from + lamps.pitch * i, lampY), yaw);
   add(root, 'riser', cyl(riser.r, riser.r, riser.h, 8), steel, polar(a, riser.at, riser.y));
   add(root, 'platform', box(...platform.size), deck, polar(a, platform.at, platform.y), yaw);
   add(root, 'platform_flood', box(...platform.flood.size), flood, polar(a, platform.at, platform.flood.y), yaw);
@@ -820,12 +831,23 @@ export function ventDrawArm(root, { rock, steel, deck, lamp, flood }, opts) {
  * The floods round the wellhead: `count` lamps on the manifold at radius `r`,
  * each turned to face out along its bearing — the ring of light the bake sees
  * first on a structure that is never quiet.
+ *
+ * On the manifold, since #907: each flood is dropped onto the ring named in
+ * `on` at its station, its underside on the ring's upper facet and tilted
+ * with it (kit `seat`, `drop`). The approved files hung the eight at radius
+ * 22 and y 31.8 — 2.5 m outside the manifold's crown, which stands at 19.5,
+ * and 0.7 m off it by the resting measure, a ring of light in the water
+ * round the ring of steel. At 17 a flood's 5 m along its bearing spans the
+ * upper facet from crown to rim, so the whole slab rests, and the facet's
+ * 13.5° of fall turns it a little outward, which is the way it faces. The
+ * four files call this at the defaults, so the one decision holds for all.
  */
 export function wellheadFloods(root, flood, opts = {}) {
-  const { count = 8, r = 22, y = 31.8, size = [5, 0.5, 3.2] } = opts;
-  radialSeries({ count }, (a, i) =>
-    add(root, `wellhead_flood_${i}`, box(...size), flood, polar(a, r, y), [0, -a, 0])
-  );
+  const { count = 8, r = 17, y = 31.8, size = [5, 0.5, 3.2], on = 'manifold_ring' } = opts;
+  radialSeries({ count }, (a, i) => {
+    const { at, rot } = seat(root, on, polar(a, r, y), { stand: size[1] / 2, drop: true, yaw: -a });
+    add(root, `wellhead_flood_${i}`, box(...size), flood, at, rot);
+  });
 }
 
 /* --------------------------------------------------------------------------
@@ -1567,12 +1589,23 @@ export function gantryCrane(root, mats, opts) {
     [0, 0, 0],
     load.scale
   );
-  frame.part(
+  // On the beam's crown, half its radius in, like a bud on a skin (kit
+  // `seat`, `drop` from the file's own station): the three files stood the
+  // light a few centimetres over the beam — 0.25 m on the Directorate's
+  // and the Commune's at their scale, 0.8 on the Order's — and the resting
+  // measure named all six (#907). `warnlight.y` is the station's height
+  // for the record; the crown decides where the light sits.
+  const bulb = seat(crane, `gantry_beam_${n}`, [0, warnlight.y, 0], {
+    stand: warnlight.r,
+    sink: warnlight.r / 2,
+    drop: true,
+  });
+  frame.place(
     crane,
     `gantry_warnlight_${n}`,
     new THREE.SphereGeometry(warnlight.r, ...warnlight.facets),
     mats.warnlight,
-    [0, warnlight.y, 0]
+    { at: bulb.at, rot: bulb.rot }
   );
   return crane;
 }
@@ -1883,15 +1916,24 @@ export function conveyorGantry(root, mats, opts = {}) {
   for (const side of rails.sides) {
     frame.part(gantry, side.name, box(...rails.size), mats.rail, [0, rails.y, side.z]);
     if (side.lights)
-      lights.xs.forEach((x, i) =>
-        frame.part(
+      lights.xs.forEach((x, i) => {
+        const station = [x, lights.y, side.lights.z];
+        // A row given `on` rests on the rail it names: each light dropped
+        // onto it at its station, half its radius in (kit `seat`). The
+        // Directorate's and the Commune's rows lie on their rails at the
+        // files' own numbers and pass nothing; the Order's row hung over
+        // the belt and takes its second rail (#907, refinery-hadron.mjs).
+        const placement = side.lights.on
+          ? seat(gantry, side.lights.on, station, { stand: lights.r, sink: lights.r / 2, drop: true })
+          : { at: station };
+        frame.place(
           gantry,
           `gantry_light_${side.lights.row}_${i}`,
           new THREE.SphereGeometry(lights.r, ...lights.facets),
           mats.light,
-          [x, lights.y, side.lights.z]
-        )
-      );
+          placement
+        );
+      });
   }
   for (const leg of legs.legs) {
     const post = cyl(legs.radii[0], legs.radii[1], leg.h, legs.facets);
