@@ -715,10 +715,59 @@ export function navMarkPair(root, seam, { x, y, z, size = [1.6, 0.3, 0.5] }) {
  * node carries the station (chorister-hadron.glb, #649). `z` is for a spar
  * off the centreline — the Slipway's two blade halls stand 54 m out either
  * side of the slip (#652); every hull leaves it at 0.
+ *
+ * A station may carry a third number, the height of the spar's axis there
+ * in metres above `y`, and the lathe is sheared to follow it: each ring is
+ * lifted whole, so every face is still a plane and the section is still the
+ * section. It is how a ridge runs down a crown that falls — the Antiphon's
+ * after spine, from under its deck's tail down onto its drive (#897) — where
+ * a level axis leaves the ridge under the skin at one end or floating over
+ * it at the other. Left off, the axis is level at `y`, as every other spar's.
  */
 export function spar(root, name, mat, { profile, facets = 4, x = 0, y = 0, z = 0, flat = [1, 1] }) {
   const geo = loft(profile, facets, Math.PI / facets);
+  if (profile.some((station) => station.length > 2)) shear(geo, profile, flat[0]);
   return add(root, name, geo, mat, [x, y, z], [0, 0, 0], [1, flat[0], flat[1]]);
+}
+
+/**
+ * Lift each ring of a lathe by its station's axis height, and carry three's
+ * own normals through the shear. A lathe's vertices lie on its stations
+ * (kit.mjs `loft` puts a station's x on X), so a ring is its station's x; the
+ * lift is divided by the press the node's scale applies, so a profile reads
+ * in metres either way. A shear's normals go by its inverse transpose —
+ * n.x − s·n.y at the ring's slope s, then unit length — and at an interior
+ * station s is the chord's, from the station before to the one after: three
+ * blends an interior normal from its two segments' by their length, which is
+ * the chord's normal, so the chord's slope is what turns it into the sheared
+ * chord's exactly (a mean of the two grades is 7.5° off on a kinked axis, at
+ * review). Recomputing them from the faces is not the same
+ * thing: on an indexed lathe the triangles a vertex touches depend on which
+ * diagonal each quad was split along, so the two sides come out different
+ * and the ridge lights lopsided under the conn view's key light, against
+ * the one rule this navy has before any other (#897, at review).
+ */
+function shear(geo, profile, press) {
+  const pos = geo.getAttribute('position');
+  const nor = geo.getAttribute('normal');
+  const lift = (k) => (profile[k][2] ?? 0) / press;
+  const grade = (a, b) => (lift(b) - lift(a)) / (profile[b][0] - profile[a][0]);
+  const last = profile.length - 1;
+  const slope = (k) =>
+    k === 0 ? grade(0, 1) : k === last ? grade(last - 1, last) : grade(k - 1, k + 1);
+  for (let i = 0; i < pos.count; i++) {
+    const at = pos.getX(i);
+    const k = profile.findIndex(([x]) => Math.abs(x - at) < 1e-4);
+    if (k < 0) throw new Error(`spar: a ring at x ${at} is on no station`);
+    pos.setY(i, pos.getY(i) + lift(k));
+    const nx = nor.getX(i) - slope(k) * nor.getY(i);
+    const ny = nor.getY(i);
+    const nz = nor.getZ(i);
+    const l = Math.hypot(nx, ny, nz) || 1;
+    nor.setXYZ(i, nx / l, ny / l, nz / l);
+  }
+  pos.needsUpdate = true;
+  nor.needsUpdate = true;
 }
 
 /**
