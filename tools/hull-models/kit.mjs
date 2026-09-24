@@ -1482,9 +1482,11 @@ export function gantryCrane(root, mats, opts) {
  * navy's rule-2 finish (asset-prompts-3d.md Block 2b: `biolight_unlit`,
  * `bio_vein_unlit`) and the drum is clad, not lit (docs/models-plan.md
  * §3.2 rule 2; #890). Neither navy records an unlit finish for the forge
- * family, so the drum wears another lamp family's — a #891 question, noted
- * in both files' headers. It lies under the mouth's ring, where the
- * approved files put it and where the top-down bake never saw it lit; a
+ * family, so the drum wears another lamp family's, and #891 left it so:
+ * the drum lies under the mouth's ring, where the approved files put it
+ * and where the top-down bake never saw it lit, so a `forge_light_unlit`
+ * would be a registry row for a value no map and no camera reads, and
+ * Block 2b's registry exists to be copied from, not to be complete. A
  * clad part under a ring is nothing the audit reads. The forge line inside
  * the bay (`foundryBay`) is not read the same way: it is carried lit as
  * every approved Foundry lights it (#890, review rulings, rulings 2 and

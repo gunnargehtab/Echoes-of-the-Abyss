@@ -95,8 +95,9 @@
  *     nowhere at rest, so it is built and clad, never lit (rule 2), in
  *     `biolight_unlit`, the navy's rule-2 finish (asset-prompts-3d.md
  *     Block 2b). The navy records no unlit finish for the forge family, so
- *     the drum wears the photophore family's — a #891 question. The
- *     `forge_line` inside the bay is not hidden and is not touched.
+ *     the drum wears the photophore family's, and #891 left it there
+ *     (kit.mjs `launchMouth` says why). The `forge_line` inside the bay is
+ *     not hidden and is not touched.
  *   · `flank_photophore_1` to `_6`, `_8` and `_9` the export drew inside
  *     the tergite shells they lie on — up to 1.51 under a plate's surface,
  *     `_2` at 1.470 under a plate at 2.979 and `_5` 1.45 under its — so no

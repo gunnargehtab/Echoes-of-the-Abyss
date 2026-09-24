@@ -91,8 +91,9 @@
  *     nowhere at rest, so it is built and clad, never lit (rule 2), in
  *     `bio_vein_unlit`, the navy's rule-2 finish (asset-prompts-3d.md
  *     Block 2b). The navy records no unlit finish for the forge family, so
- *     the drum wears the vein family's — a #891 question. The `forge_line`
- *     inside the bay is not hidden and is not touched.
+ *     the drum wears the vein family's, and #891 left it there (kit.mjs
+ *     `launchMouth` says why). The `forge_line` inside the bay is not
+ *     hidden and is not touched.
  *   Beyond the relabel above, `diff.mjs` lists all ten guides, since the
  *   rank moves as one, the launch glow's material, and no other part.
  *
