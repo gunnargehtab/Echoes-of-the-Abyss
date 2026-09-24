@@ -345,48 +345,60 @@ is the thing) — the approved models read, at `9502d0e`:
 
 | navy | rings | distinct counts a turn | 1.5–4 m radius: median (range) | hull panel edge | structure panel edge |
 | --- | ---: | ---: | --- | ---: | ---: |
-| Consortium | 1,119 | 15 | 10 (4–28) | 1.1 m | 8.2 m |
-| Commune | 1,206 | 35 | 8 (4–20) | 2.9 m | 8.0 m |
-| Directorate | 1,420 | 24 | 6 (4–14) | 1.8 m | 7.2 m |
-| Knights | 610 | 16 | 4 (4–12) | 3.9 m | 9.4 m |
+| Consortium | 1,119 | 15 | 10 (4–28) | 1.1 m | 8.0 m |
+| Commune | 1,206 | 35 | 8 (4–20) | 2.9 m | 8.1 m |
+| Directorate | 1,420 | 24 | 6 (4–14) | 1.8 m | 7.3 m |
+| Knights | 610 | 16 | 4 (4–12) | 3.9 m | 9.3 m |
 
 A panel is an unlit part read from above the way the chart's bake reads it (`topDown` in
-`tools/hull-models/glb.mjs`, at the unit maps' own 4 px/m), and a model's panel edge is the
-square root of the median plan area of the panels it shows. A navy's is the median over its
-hulls, and over its structures apart, because a settlement's plates are several times a
-hull's. The edge holds across a hull's length where a count per square metre does not — the
-Spark and the Bulwark read 0.9 m and 1.0 m on 20 m and 150 m of hull — which is why it is
-the measure.
+`tools/hull-models/glb.mjs`, at the maps' own resolution: 4 px/m for a hull, 1.5 px/m for a
+structure), and a model's panel edge is the square root of the median plan area of the
+panels it shows. A navy's is the median over its hulls, and over its structures apart,
+because a settlement's plates are several times a hull's. The edge holds across a hull's
+length where a count per square metre does not — the Spark and the Bulwark read 0.9 m and
+1.0 m on 20 m and 150 m of hull — which is why it is the measure.
 
 The rule that replaces the exports' counts is **one chord a navy**. Each faction module
 exports it as `facets`: `edge`, the facet's chord in metres; `floor` and `ceiling`, the
 least and the most a turn; `step`, the multiple a count rounds to; and `sections`, the
 counts that are shapes rather than round things approximated, which stay whatever the
-radius. `facetsFor` in `tools/hull-models/kit.mjs` turns a radius into a count from it:
-as many facets as the edge goes into the circumference, to the step, between the floor and
-the ceiling. Each module also exports `panels`, the band a hull's panel edge holds to and a
-structure's, each the measured median to within a factor of two either way. The edge is the
-chord the navy's 1.5–4 m rings already cut at the median, lamps and sections aside; the
-ceiling is what its largest round things carry; the floor and the step are the navy's
-language, and each module's docstring says why.
+radius — a count, and where shapes and round things share one (the Order's six-sided horn
+beside its six-sided silo) the parts that carry it as a shape. `facetsFor` in
+`tools/hull-models/kit.mjs` turns a radius into a count from it: as many facets as the edge
+goes into the circumference, rounded to the nearest multiple of the step, and never under
+the floor or over the ceiling. A ring drawn part way round — a hemisphere's meridians, a
+torus arc, a rib hugging a dome — takes its share of that count, at least one segment, and
+is read back the same way, its segments against its arc, because a share rounded to whole
+segments does not read back as the count it came from. Each module also exports `panels`,
+the band a hull's panel edge holds to and a structure's, each the measured median to within
+a factor of two either way. The edge is the chord the navy's 1.5–4 m rings already cut at
+the median, lamps and sections aside (`facets.mjs --chords` prints it); the ceiling is the
+count a named round part of the navy carries — the Consortium's pressure cylinders' 28,
+the Commune's pods' 14, the Directorate's domes' 14, the Knights' blade bodies' 10; the
+floor and the step are the navy's language, and each module's docstring says why.
 
 | navy | edge | floor | ceiling | step | sections | hull band | structure band |
 | --- | ---: | ---: | ---: | ---: | --- | --- | --- |
-| Consortium | 1.4 m | 4 | 28 | 2 | 4 — a wedge, a cable | 0.55–2.2 m | 4.1–16.4 m |
-| Commune | 1.9 m | 5 | 14 | 1 | 3 — a root grip; 4 — a seam, a vein | 1.45–5.8 m | 4.0–16.0 m |
-| Directorate | 1.8 m | 6 | 14 | 1 | 4 — a spike, a tooth, a mandible; 5 — a spine, a claw, a tine | 0.9–3.6 m | 3.6–14.4 m |
-| Knights | 2.5 m | 4 | 10 | 2 | 4 — a spar, a blade, a strut, a finial; 6 — a horn, a bell, a dome | 1.95–7.8 m | 4.7–18.8 m |
+| Consortium | 1.4 m | 4 | 28 | 2 | 4 — a wedge, a gantry cable | 0.55–2.2 m | 4.0–16.0 m |
+| Commune | 1.9 m | 5 | 14 | 1 | 4 — a ring's or a rib's square tube, a quill | 1.45–5.8 m | 4.05–16.2 m |
+| Directorate | 1.8 m | 6 | 14 | 1 | 4 — a spike, a tooth, a mandible, a dog, a seam's tube; 5 — a spine, a claw, a tine, a rib's tube | 0.9–3.6 m | 3.65–14.6 m |
+| Knights | 2.5 m | 4 | 10 | 2 | 4 — a spar, a rib's tube; 6 on the horn, the lip, the bell, the prism, the collar, the pin and the wedge — a hexagonal crystal | 1.95–7.8 m | 4.65–18.6 m |
 
 Three things the rule leaves alone. **A section count stays**: a four-sided spar is a
-square, a five-sided spine is the Directorate's, and `facets.mjs` never names one. **A
-lamp's count stays**, because lamps are #907's axis and not this one. And **nothing moves
-yet**: this block is the table, and the pass that has every round builder take its count
-from `facetsFor` and brings every model inside its band is #919's second half, one
-`hull-designer` and one `hull-reviewer` a navy. Until it lands,
+square, a five-sided spine is the Directorate's, and `facets.mjs` never names one — it
+prints what the sections keep beside what is off, so nothing the exemption holds is out of
+the pass's sight. **A lamp's count stays**, because lamps are #907's axis and not this one.
+And **nothing moves yet**: this block is the table, and the pass that has every round
+builder take its count from `facetsFor` and brings every model inside its band is #919's
+second half, one `hull-designer` and one `hull-reviewer` a navy. Until it lands,
 `node tools/hull-models/facets.mjs <navy>` lists what it will move — at `9502d0e`, 949
-rings on 784 Consortium parts, 767 on 473 Commune, 538 on 337 Directorate and 145 on 105
+rings on 784 Consortium parts, 739 on 471 Commune, 529 on 337 Directorate and 191 on 134
 Knights, and 21 of the 94 models outside their band — and `npm run check:models` does not
-read it, since a gate on a rule no model yet meets would only be red.
+read it, since a gate on a rule no model yet meets would only be red. One reading in that
+list is the owner's before the pass: the ceilings cut every structure-scale ring, the
+Commune Bastion's hull pipe from 112 a turn to 14 on a 163 m radius and the Knights
+Bastion's dome from 12 to 10 on 121 m, and whether that is silhouette is a call the pass
+should not make.
 
 ## Block 3 — UNIT (one per generation)
 

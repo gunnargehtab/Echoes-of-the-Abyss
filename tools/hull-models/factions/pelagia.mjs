@@ -236,27 +236,31 @@ export const ink = {
  * off the rule.
  *
  * The edge is the chord the navy's 1.5–4 m pods, buds and rings already
- * cut, 1.9 m at the median. The floor is five, because a grown thing is
- * never a diamond in section; the ceiling is the fourteen the pods and
- * ridge rings carry, held low on purpose — "Pod and ring facet counts ...
- * stay low" above — so a pod at any size reads grown and faceted rather
- * than turned; and the step is one, since an odd count is nothing to a
- * navy where nothing is quite regular. Three and four are shapes here and
- * stay: the tripod of a root grip (`rootGrips`), and the four-sided tube
- * of a seam or a vein (`veinRing`, `growthRings`).
+ * cut, 1.9 m at the median with lamps and sections aside. The floor is
+ * five, because a grown thing is never a diamond in section; the ceiling
+ * is the fourteen the pods and ridge rings carry, held low on purpose —
+ * "Pod and ring facet counts ... stay low" above — so a pod at any size
+ * reads grown and faceted rather than turned; and the step is one, since
+ * an odd count is nothing to a navy where nothing is quite regular. Four
+ * is a shape here and stays: the square tube a settlement's rings and ribs
+ * are drawn on (`torus` at four — the Foundry's lobe rings, the Refinery's
+ * silo rings, the Bastion's reinforce ribs), and the Sentinel Turret's
+ * cowl quills. Nothing in the navy carries three: a root grip's `[3, 6]`
+ * is three rings up each cap of a six-sided capsule (kit.mjs `capsule`).
  *
  * The panels are the plates a chart reads from above — a rib, a lobe, a
  * ring, a fin: 2.9 m on the median hull, and a hull holds to within a
- * factor of two of it either way. A settlement's are three times that.
+ * factor of two of it either way. A settlement's, read at the structure
+ * maps' 1.5 px/m, are three times that.
  */
 export const facets = {
   edge: 1.9,
   floor: 5,
   ceiling: 14,
   step: 1,
-  sections: { 3: 'a root grip', 4: 'a seam, a vein' },
+  sections: { 4: "a ring's or a rib's square tube, and a quill" },
 };
-export const panels = { hulls: [1.45, 5.8], structures: [4.0, 16.0] };
+export const panels = { hulls: [1.45, 5.8], structures: [4.05, 16.2] };
 
 /** A grown orb: few facets, and squashed by the caller — never round in section. */
 const orb = (w = 12, h = 6) => new THREE.SphereGeometry(1, w, h);

@@ -9,7 +9,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { ringsOf, gridOf, turnOf, RULES } from '../facets.mjs';
+import { ringsOf, gridOf, turnOf, offOf, isSection, RULES } from '../facets.mjs';
 import { facetsFor, capsule } from '../kit.mjs';
 
 /** A part as readGlb hands one over, from a live geometry under a transform. */
@@ -183,4 +183,63 @@ test('facetsFor cuts the chord, holds the floor and ceiling, and steps', () => {
     for (const count of Object.keys(facets.sections)) assert.ok(Number(count) >= 3, navy);
     for (const band of [panels.hulls, panels.structures]) assert.ok(band[0] < band[1], navy);
   }
+});
+
+test('a part built from its navy\'s rule reads as on it, arcs included', () => {
+  // facetsFor rounds an arc's share of the turn to whole segments, and a
+  // count read back off those segments does not invert the rounding — a
+  // Commune orb of five a turn takes three meridian segments over π, which
+  // read as six. So the check holds an arc's segments against the same
+  // call the builder made, and every one of these comes back on the rule.
+  const cases = (f) => {
+    const dome = (r, theta) =>
+      new THREE.SphereGeometry(r, facetsFor(f, r), facetsFor(f, r, theta), 0, Math.PI * 2, 0, theta);
+    return [
+      ['orb', new THREE.SphereGeometry(2.5, facetsFor(f, 2.5), facetsFor(f, 2.5, Math.PI))],
+      ['bud', new THREE.SphereGeometry(1.56, facetsFor(f, 1.56), facetsFor(f, 1.56, Math.PI))],
+      ['cap', dome(3, Math.PI / 2)],
+      ['pressure_dome', dome(121.47, 0.52 * Math.PI)],
+      ['ring', new THREE.TorusGeometry(3, 0.5, facetsFor(f, 0.5), facetsFor(f, 3))],
+      [
+        'half_ring',
+        new THREE.TorusGeometry(3, 0.5, facetsFor(f, 0.5), facetsFor(f, 3, Math.PI), Math.PI),
+      ],
+      ['drum', new THREE.CylinderGeometry(2, 2, 1, facetsFor(f, 2))],
+      [
+        'half_drum',
+        new THREE.CylinderGeometry(2, 2, 1, facetsFor(f, 2, Math.PI), 1, false, 0, Math.PI),
+      ],
+      ['tank', new THREE.CylinderGeometry(6, 6, 20, facetsFor(f, 6))],
+    ];
+  };
+  for (const [navy, { facets }] of Object.entries(RULES)) {
+    for (const [name, geo] of cases(facets)) {
+      const read = ringsOf(partOf(geo, { name }));
+      assert.ok(read, `${navy}: ${name} has rings`);
+      for (const ring of read.rings) {
+        const off = offOf(facets, { ...ring, part: name });
+        assert.equal(off, null, `${navy}: ${name} ${ring.role} off ${JSON.stringify(off)}`);
+      }
+    }
+  }
+  // And one built a segment over is named, on its segments over its arc.
+  const f = RULES.pelagia.facets;
+  const over = new THREE.SphereGeometry(1.56, facetsFor(f, 1.56), facetsFor(f, 1.56, Math.PI) + 1);
+  const { meridians } = byRole(ringsOf(partOf(over, { name: 'bud' })).rings);
+  assert.deepEqual(offOf(f, { ...meridians, part: 'bud' }), {
+    have: facetsFor(f, 1.56, Math.PI) + 1,
+    want: facetsFor(f, 1.56, Math.PI),
+  });
+});
+
+test('a section is a count, narrowed to the parts named where the module names them', () => {
+  const knights = RULES.hadron.facets;
+  assert.equal(isSection(knights, { count: 4, part: 'gantry_leg_2' }), true);
+  assert.equal(isSection(knights, { count: 6, part: 'bell_skirt' }), true);
+  assert.equal(isSection(knights, { count: 6, part: 'array_horn' }), true);
+  assert.equal(isSection(knights, { count: 6, part: 'silo_0' }), false);
+  assert.equal(isSection(knights, { count: 6, part: 'bellows' }), false);
+  assert.equal(isSection(knights, { count: 8, part: 'bell_skirt' }), false);
+  assert.equal(offOf(knights, { count: 6, segs: 6, arc: Math.PI * 2, radius: 20, part: 'silo_0' })?.want, 10);
+  assert.equal(offOf(knights, { count: 6, segs: 6, arc: Math.PI * 2, radius: 20, part: 'bell_skirt' }), null);
 });

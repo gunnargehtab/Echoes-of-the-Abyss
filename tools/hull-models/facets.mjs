@@ -26,33 +26,42 @@
  * - a torus's **ring** and **tube**: two counts, at the ring's and the
  *   tube's radius.
  *
- * Each of those is a *ring* here — a section count a turn, and a radius in
- * metres. A count is what a full turn would carry, so a half torus of nine
- * segments is 18 a turn: the chord is what the rule is about, and a chord
- * does not care how far round it goes. The radius is measured in world
- * space through the node's transform, which is why a squashed pod's rim
- * reads at its mean radius rather than at the unit orb it was built from.
- * A part with no grid — a box, a plate, an extrusion, a hand-pushed table
- * — carries no ring, and a Consortium rivet at 0.45 m carries one.
+ * Each of those is a *ring* here — a section count a turn, a radius in
+ * metres, and the arc it is drawn over. A count is what a full turn would
+ * carry, so a half torus of nine segments is 18 a turn: the chord is what
+ * the rule is about, and a chord does not care how far round it goes. The
+ * radius is measured in world space through the node's transform, which is
+ * why a squashed pod's rim reads at its mean radius rather than at the unit
+ * orb it was built from. A part with no grid — a box, a plate, an
+ * extrusion, a hand-pushed table — carries no ring, and a Consortium rivet
+ * at 0.45 m carries one.
  *
  * Panel density is the other measure. A panel is an unlit part, read from
- * above the way the chart's bake reads it: `topDown` at the unit maps' own
- * 4 px/m, which is where a hull's texture is a player's to see. A part that
- * shows no cell from above — a keel, a part sealed under a deck — is no
- * panel there. A model's **panel edge** is the square root of the median
- * plan area of the panels it shows, and a navy's is the median over its
- * hulls, and separately over its structures, because a settlement's plates
- * are several times a hull's. The edge holds across a hull's length where
- * a count per square metre does not: the Spark and the Bulwark, 20 m and
+ * above the way the chart's bake reads it: `topDown` at the maps' own
+ * resolution, 4 px/m for a hull and 1.5 px/m for a structure, which is
+ * where a model's plates are a player's to see. A part that shows no cell
+ * from above — a keel, a part sealed under a deck — is no panel there. A
+ * model's **panel edge** is the square root of the median plan area of the
+ * panels it shows, and a navy's is the median over its hulls, and
+ * separately over its structures, because a settlement's plates are
+ * several times a hull's. The edge holds across a hull's length where a
+ * count per square metre does not: the Spark and the Bulwark, 20 m and
  * 150 m of hull, read 0.9 m and 1.0 m.
  *
  * The rule is each faction module's `facets` and `panels`, applied by
- * kit.mjs `facetsFor`. A ring is off it when its count a turn is not what
- * `facetsFor` gives its radius, unless the count is one of the navy's
- * `sections` — a shape, not a round thing approximated, which stays — or
- * the part is a lamp, which #919 leaves to #907's axis. A model is outside
- * its band when its panel edge is. The per-navy report groups a series
- * (`rivet_0..54`) on one line.
+ * kit.mjs `facetsFor`. A ring is off it when its count is not what
+ * `facetsFor` gives its radius — a full turn against the count a turn, an
+ * arc against its segments over that arc, because `facetsFor` rounds an
+ * arc's share to whole segments and a rounding read back as a turn does
+ * not invert — unless it is one of the navy's `sections`, a shape rather
+ * than a round thing approximated, which stays: a count, and where a count
+ * is shared by shapes and round things (the Order's six-sided horn beside
+ * its six-sided silo) the parts that carry it as a shape. A lamp's count is
+ * not read, since #919 leaves lamps to #907's axis. A model is outside its
+ * band when its panel edge is. The per-navy report groups a series
+ * (`rivet_0..54`) on one line, and prints what the sections keep as well
+ * as what is off, so nothing the exemption holds is out of the pass's
+ * sight.
  *
  * `--chords` prints the chord — 2πr ÷ count — each navy's rings imply, by
  * radius, which is what Block 2c's `edge` was read off. A count with no
@@ -82,8 +91,13 @@ export const RULES = {
 const here = dirname(fileURLToPath(import.meta.url));
 const models = resolve(here, '../../docs/concept-art/models');
 
-/** The maps' own resolution, and so the smallest panel the chart can show. */
-export const PANEL_PPM = 4;
+/**
+ * The maps' own resolution, and so the smallest panel the chart can show:
+ * `MAP_PPM` and `STRUCT_PPM` in tools/hull-maps/build.mjs, mirrored here
+ * because that file is the bake and runs on import. A panel is read at the
+ * resolution its model is drawn at.
+ */
+export const PANEL_PPM = { hulls: 4, structures: 1.5 };
 /** The radius band the table's median is read in: the fleet's drums, domes and pods. */
 export const BAND_M = [1.5, 4];
 
@@ -149,7 +163,7 @@ export function gridOf(positions, index) {
 
 /**
  * One sequence of the grid read as a turn: `{ kind, centre, radius, segs,
- * count, wobble }` with `kind` one of `pole` (every point the same),
+ * count, arc, wobble }` with `kind` one of `pole` (every point the same),
  * `closed` (first is last: a ring of `segs` distinct points), `arc` (open,
  * on one circle, `count` what a full turn would carry) or `profile` (open
  * and not on a circle — a lathe's outline, a cone's slant, a capsule's
@@ -218,7 +232,16 @@ export function turnOf(pts) {
       return { kind: 'profile' };
   }
   const count = closed ? segs : Math.round((2 * Math.PI * segs) / angle);
-  return { kind: closed ? 'closed' : 'arc', centre, radius, segs, count, wobble, points: pts };
+  return {
+    kind: closed ? 'closed' : 'arc',
+    centre,
+    radius,
+    segs,
+    count,
+    arc: closed ? 2 * Math.PI : angle,
+    wobble,
+    points: pts,
+  };
 }
 
 /** A local point through a column-major world matrix. */
@@ -237,9 +260,10 @@ function metres(part, turn) {
 
 /**
  * The rings of one part — `{ kind, rings }`, `kind` one of `cylinder`,
- * `cone`, `sphere` or `torus` and each ring `{ role, count, radius, segs }`
- * with `role` one of `rim`, `parallels`, `meridians`, `ring`, `tube` — or
- * null for a part with no round grid in it. The header says what each is.
+ * `cone`, `sphere` or `torus` and each ring `{ role, count, segs, arc,
+ * radius }` with `role` one of `rim`, `parallels`, `meridians`, `ring`,
+ * `tube`, `arc` the radians it is drawn over (2π when closed) — or null for
+ * a part with no round grid in it. The header says what each is.
  */
 export function ringsOf(part) {
   const { positions: pos, index } = part.local;
@@ -269,7 +293,7 @@ export function ringsOf(part) {
   const poles = rows.some((t) => t.kind === 'pole') || cols.some((t) => t.kind === 'pole');
   const ring = (role, turns) => {
     const t = turns.reduce((a, b) => (b.radius > a.radius ? b : a));
-    return { role, count: t.count, segs: t.segs, radius: metres(part, t) };
+    return { role, count: t.count, segs: t.segs, arc: t.arc, radius: metres(part, t) };
   };
   const mean = (turns) => {
     const rs = turns.map((t) => metres(part, t));
@@ -289,11 +313,12 @@ export function ringsOf(part) {
     if (arcs && (poles || swells(arcs === a ? b : a))) {
       const parallels = arcs === a ? b : a;
       const t = ring('parallels', parallels);
+      const m = arcs[0];
       return {
         kind: 'sphere',
         rings: [
-          { ...t, radius: mean([arcs[0]]) },
-          { role: 'meridians', count: arcs[0].count, segs: arcs[0].segs, radius: mean([arcs[0]]) },
+          { ...t, radius: mean([m]) },
+          { role: 'meridians', count: m.count, segs: m.segs, arc: m.arc, radius: mean([m]) },
         ],
       };
     }
@@ -306,11 +331,12 @@ export function ringsOf(part) {
     };
     const big = middle(a) >= middle(b) ? a : b;
     const small = big === a ? b : a;
+    const [B, S] = [big[0], small[0]];
     return {
       kind: 'torus',
       rings: [
-        { role: 'ring', count: big[0].count, segs: big[0].segs, radius: middle(big) },
-        { role: 'tube', count: small[0].count, segs: small[0].segs, radius: mean(small) },
+        { role: 'ring', count: B.count, segs: B.segs, arc: B.arc, radius: middle(big) },
+        { role: 'tube', count: S.count, segs: S.segs, arc: S.arc, radius: mean(small) },
       ],
     };
   }
@@ -332,11 +358,12 @@ export function modelRings(parts) {
 
 /**
  * A model's panels: every unlit part's plan area from above, in m², for
- * the parts that show any at `PANEL_PPM`, and the model's panel edge — the
- * square root of their median. A lit part is a lamp, not a panel.
+ * the parts that show any at `ppm` (`PANEL_PPM` for the model's kind), and
+ * the model's panel edge — the square root of their median. A lit part is
+ * a lamp, not a panel.
  */
-export function panelsOf(parts) {
-  const td = topDown(parts, PANEL_PPM);
+export function panelsOf(parts, ppm = PANEL_PPM.hulls) {
+  const td = topDown(parts, ppm);
   const owned = new Map();
   for (let i = 0; i < td.owner.length; i++)
     if (td.owner[i] >= 0) owned.set(td.owner[i], (owned.get(td.owner[i]) ?? 0) + td.cellArea);
@@ -374,7 +401,7 @@ export function measure(navy, dir = models) {
   const structures = [];
   for (const { slug, structure, parts } of modelsIn(navy, dir)) {
     for (const r of modelRings(parts)) rings.push({ ...r, slug });
-    const { panels, edge } = panelsOf(parts);
+    const { panels, edge } = panelsOf(parts, structure ? PANEL_PPM.structures : PANEL_PPM.hulls);
     (structure ? structures : hulls).push({ slug, edge, panels: panels.length });
   }
   const inBand = rings.filter((r) => r.radius >= BAND_M[0] && r.radius <= BAND_M[1]);
@@ -388,32 +415,87 @@ export function measure(navy, dir = models) {
   };
 }
 
+/** A part's name with its series index and side stripped: `rivet_s_12` → `rivet`. */
+export const stem = (name) => name.replace(/(_(\d+|[sp]|port|starboard|stb|[lrabf]))+$/, '');
+
+/**
+ * Whether a ring is one of its navy's `sections` — a shape rather than a
+ * round thing approximated, which keeps its count whatever its radius. A
+ * section is a count; where the module narrows the count to the parts
+ * that carry it as a shape (`{ why, parts }`), it is that count on a part
+ * whose name is one of them or begins with one and a separator.
+ */
+export function isSection(facets, ring) {
+  const section = facets.sections[ring.count];
+  if (section === undefined) return false;
+  if (typeof section === 'string') return true;
+  return section.parts.some(
+    (p) => ring.part === p || ring.part.startsWith(`${p}_`) || ring.part.startsWith(`${p}-`)
+  );
+}
+
+const FULL = 2 * Math.PI - 1e-6;
+
+/**
+ * Whether one ring is off its navy's rule: `{ have, want }` when it is,
+ * null when it is not or is a section. A closed ring's count a turn is
+ * held against `facetsFor` at its radius; an arc's segments against
+ * `facetsFor` at its radius over its arc — the same call a builder makes,
+ * so that a part built from the rule reads as on it.
+ *
+ * The radius and the arc are measured off the file, so a share that sits
+ * on an exact half — fourteen a turn over a quarter turn is 3.5 segments
+ * — rounds by its last bit, up in the builder and down in the reader as
+ * easily as not. A half accepts either side; `want` reports the nominal.
+ */
+export function offOf(facets, ring) {
+  if (isSection(facets, ring)) return null;
+  const { edge, floor, ceiling, step } = facets;
+  const full = ring.arc >= FULL;
+  const have = full ? ring.count : ring.segs;
+  const want = full ? facetsFor(facets, ring.radius) : facetsFor(facets, ring.radius, ring.arc);
+  if (have === want) return null;
+  const halves = (x) =>
+    Math.abs(x - Math.floor(x) - 0.5) < 1e-6 ? [Math.floor(x), Math.ceil(x)] : [Math.round(x)];
+  const q = (2 * Math.PI * ring.radius) / edge / step;
+  for (const t of halves(q)) {
+    const turn = Math.min(ceiling, Math.max(floor, t * step));
+    if (full) {
+      if (have === turn) return null;
+      continue;
+    }
+    const share = (turn * ring.arc) / (2 * Math.PI);
+    if (halves(share).some((sg) => Math.max(1, sg) === have)) return null;
+  }
+  return { have, want };
+}
+
 /**
  * What is off a navy's rule in the committed files: `{ rings, models,
- * kept, lamps }` — each ring `{ slug, part, role, count, want, radius }`
- * whose count is not what `facetsFor` gives its radius, each model
- * `{ slug, structure, edge, band }` whose panel edge is outside its band,
- * `kept` the rings whose count is one of the navy's `sections` (a shape,
- * and never asked), and `lamps` the rings on lit parts, which this axis
+ * kept, lamps }` — each ring `{ slug, part, role, count, segs, arc, radius,
+ * have, want }` whose count is not what `facetsFor` gives it (`offOf`),
+ * each model `{ slug, structure, edge, band }` whose panel edge is outside
+ * its band, `kept` the rings the navy's `sections` hold (a shape, and never
+ * asked), and `lamps` the count of rings on lit parts, which this axis
  * does not touch (#919: "Not: silhouette, finish, lamps").
  */
 export function offRule(navy, dir = models) {
   const { facets, panels } = RULES[navy];
   const m = measure(navy, dir);
   const rings = [];
-  let kept = 0;
+  const kept = [];
   let lamps = 0;
   for (const r of m.rings) {
     if (r.lit) {
       lamps++;
       continue;
     }
-    if (r.count in facets.sections) {
-      kept++;
+    if (isSection(facets, r)) {
+      kept.push(r);
       continue;
     }
-    const want = facetsFor(facets, r.radius);
-    if (want !== r.count) rings.push({ ...r, want });
+    const off = offOf(facets, r);
+    if (off) rings.push({ ...r, ...off });
   }
   const outside = (list, band, structure) =>
     list
@@ -433,41 +515,54 @@ export function offRule(navy, dir = models) {
 
 const f1 = (x) => (Number.isFinite(x) ? x.toFixed(1) : '—');
 const n = (x) => x.toLocaleString('en');
+const deg = (arc) => `${Math.round((arc * 180) / Math.PI)}°`;
 
-/** A part's name with its series index and side stripped: `rivet_s_12` → `rivet`. */
-const stem = (name) => name.replace(/(_(\d+|[sp]|port|starboard|stb|[lrabf]))+$/, '');
+/** Rings grouped by model, then by part stem and reading, each line with its radius range. */
+function printGrouped(rings, label, line) {
+  const byModel = new Map();
+  for (const r of rings) {
+    const lines = byModel.get(r.slug) ?? new Map();
+    byModel.set(r.slug, lines);
+    const key = line(r);
+    const l = lines.get(key) ?? { n: 0, lo: Infinity, hi: 0 };
+    l.n++;
+    l.lo = Math.min(l.lo, r.radius);
+    l.hi = Math.max(l.hi, r.radius);
+    lines.set(key, l);
+  }
+  for (const [slug, lines] of byModel) {
+    const total = [...lines.values()].reduce((s, l) => s + l.n, 0);
+    console.log(`  ${slug}: ${total} ${label}`);
+    for (const [key, l] of lines) {
+      const r = l.hi - l.lo > 0.05 ? `${l.lo.toFixed(1)}–${l.hi.toFixed(1)}` : l.lo.toFixed(1);
+      console.log(`    ${key}${l.n > 1 ? ` ×${l.n}` : ''} (r ${r} m)`);
+    }
+  }
+}
 
 function printOff(navy) {
   const { measured, rings, models: outside, kept, lamps } = offRule(navy);
   const { facets, panels } = RULES[navy];
   const unlit = measured.rings.length - lamps;
   const parts = new Set(rings.map((r) => `${r.slug}:${r.part}`)).size;
+  const sections = Object.entries(facets.sections)
+    .map(([c, s]) => (typeof s === 'string' ? c : `${c} on ${s.parts.join(', ')}`))
+    .join('; ');
   console.log(
     `${navy}: edge ${facets.edge} m, floor ${facets.floor}, ceiling ${facets.ceiling}, step ${facets.step}; ` +
-      `sections ${Object.keys(facets.sections).join(', ')}; panels ${panels.hulls.join('–')} m on a hull, ${panels.structures.join('–')} m on a structure`
+      `sections ${sections}; panels ${panels.hulls.join('–')} m on a hull, ${panels.structures.join('–')} m on a structure`
   );
   console.log(
-    `  ${n(rings.length)} of ${n(unlit)} unlit rings off the rule, on ${n(parts)} parts; ${n(kept)} sections kept, ${n(lamps)} lamps not read`
+    `  ${n(rings.length)} of ${n(unlit)} unlit rings off the rule, on ${n(parts)} parts; ${n(kept.length)} kept as sections, ${n(lamps)} lamps not read`
   );
-  const byModel = new Map();
-  for (const r of rings) {
-    const lines = byModel.get(r.slug) ?? new Map();
-    byModel.set(r.slug, lines);
-    const key = `${stem(r.part)} ${r.role} ${r.count} → ${r.want}`;
-    const line = lines.get(key) ?? { n: 0, lo: Infinity, hi: 0 };
-    line.n++;
-    line.lo = Math.min(line.lo, r.radius);
-    line.hi = Math.max(line.hi, r.radius);
-    lines.set(key, line);
-  }
-  for (const [slug, lines] of byModel) {
-    const total = [...lines.values()].reduce((s, l) => s + l.n, 0);
-    console.log(`  ${slug}: ${total} off`);
-    for (const [key, l] of lines) {
-      const r = l.hi - l.lo > 0.05 ? `${l.lo.toFixed(1)}–${l.hi.toFixed(1)}` : l.lo.toFixed(1);
-      console.log(`    ${key}${l.n > 1 ? ` ×${l.n}` : ''} (r ${r} m)`);
-    }
-  }
+  printGrouped(
+    rings,
+    'off',
+    (r) =>
+      `${stem(r.part)} ${r.role} ${r.have} → ${r.want}` +
+      (r.arc >= FULL ? '' : ` segs over ${deg(r.arc)}`)
+  );
+  printGrouped(kept, 'kept', (r) => `${stem(r.part)} ${r.role} ${r.count}`);
   const hulls = outside.filter((o) => !o.structure);
   const structures = outside.filter((o) => o.structure);
   console.log(
@@ -509,8 +604,11 @@ function printRings(slug) {
 
 function printPanels(slug) {
   const { parts } = readGlb(join(models, `${slug}.glb`));
-  const { panels, edge } = panelsOf(parts);
-  console.log(`${slug}: ${panels.length} panels showing from above, edge ${edge.toFixed(2)} m`);
+  const ppm = isStructure(slug) ? PANEL_PPM.structures : PANEL_PPM.hulls;
+  const { panels, edge } = panelsOf(parts, ppm);
+  console.log(
+    `${slug}: ${panels.length} panels showing from above at ${ppm} px/m, edge ${edge.toFixed(2)} m`
+  );
   for (const p of [...panels].sort((a, b) => a.area - b.area))
     console.log(`  ${p.part.padEnd(32)} ${p.area.toFixed(2).padStart(9)} m²  edge ${Math.sqrt(p.area).toFixed(2)} m`);
 }
@@ -518,6 +616,7 @@ function printPanels(slug) {
 function printChords(navies) {
   for (const navy of navies) {
     const { rings } = measure(navy);
+    const { facets } = RULES[navy];
     const bands = [
       [0, 0.5],
       [0.5, 1.5],
@@ -529,18 +628,23 @@ function printChords(navies) {
     for (const [lo, hi] of bands) {
       const rs = rings.filter((r) => r.radius >= lo && r.radius < hi);
       if (!rs.length) continue;
-      const chords = rs.map((r) => (2 * Math.PI * r.radius) / r.count);
-      const q = (p) => {
-        const s = [...chords].sort((a, b) => a - b);
+      const chord = (r) => (2 * Math.PI * r.radius) / r.count;
+      const q = (list, p) => {
+        const s = list.map(chord).sort((a, b) => a - b);
         return s[Math.min(s.length - 1, Math.floor(p * s.length))].toFixed(2);
       };
+      // The edge is read off the second figure: the rule's own rings, lamps
+      // and sections aside, since neither is asked.
+      const ruled = rs.filter((r) => !r.lit && !isSection(facets, r));
       const counts = {};
       for (const r of rs) counts[r.count] = (counts[r.count] ?? 0) + 1;
       console.log(
-        `  r ${lo}–${hi === Infinity ? '' : hi} m: ${String(rs.length).padStart(4)} rings, chord median ${q(0.5)} m (quartiles ${q(0.25)}–${q(0.75)}); counts ${Object.entries(counts)
-          .sort((a, b) => a[0] - b[0])
-          .map(([c, n]) => `${c}×${n}`)
-          .join(' ')}`
+        `  r ${lo}–${hi === Infinity ? '' : hi} m: ${String(rs.length).padStart(4)} rings, chord median ${q(rs, 0.5)} m ` +
+          `(quartiles ${q(rs, 0.25)}–${q(rs, 0.75)}); lamps and sections aside ${ruled.length ? `${q(ruled, 0.5)} m over ${ruled.length}` : '—'}; ` +
+          `counts ${Object.entries(counts)
+            .sort((a, b) => a[0] - b[0])
+            .map(([c, n]) => `${c}×${n}`)
+            .join(' ')}`
       );
     }
   }

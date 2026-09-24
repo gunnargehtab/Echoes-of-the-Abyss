@@ -191,26 +191,29 @@ export const ink = {
  * ring off the rule.
  *
  * The edge is the chord the navy's 1.5–4 m drums, bands and shrouds already
- * cut, 1.4 m at the median — the finest of the four, on the hull whose
- * plates are the smallest. The floor is a square, because a four-sided
- * pipe is a Consortium pipe ("no curve unless a pressure vessel demanded
- * it"), the ceiling the prop shrouds' 28, and the step two: a drum built
- * in a yard has a flat to each beam. Four is also a shape here and stays
- * — the wedge the Klaxon's nose is cut to (`cyl` at π/4), a cable's
- * section (kit.mjs `cable`).
+ * cut, 1.4 m at the median with lamps and sections aside — the finest of
+ * the four, on the hull whose plates are the smallest. The floor is a
+ * square, because a four-sided pipe is a Consortium pipe ("no curve unless
+ * a pressure vessel demanded it"); the ceiling is the 28 the one curve the
+ * navy allows already carries, the Corvette's and the Cruiser's pressure
+ * cylinders and caps; and the step is two, since a drum built in a yard has
+ * a flat to each beam. Four is also a shape here and stays: the wedge the
+ * Klaxon's nose, a bow and the Harvester's apron are cut to (`cyl` at
+ * π/4), and a gantry's cable.
  *
  * The panels are the plates, rivets and strakes the chart reads from
  * above: 1.1 m on the median hull, and a hull holds to within a factor of
- * two of it either way. A settlement's plates are eight times that.
+ * two of it either way. A settlement's plates, read at the structure
+ * maps' 1.5 px/m, are seven times that.
  */
 export const facets = {
   edge: 1.4,
   floor: 4,
   ceiling: 28,
   step: 2,
-  sections: { 4: 'a wedge, a cable' },
+  sections: { 4: 'a wedge — a nose, a bow, an apron — and a gantry cable' },
 };
-export const panels = { hulls: [0.55, 2.2], structures: [4.1, 16.4] };
+export const panels = { hulls: [0.55, 2.2], structures: [4.0, 16.0] };
 
 /** The body: a flat-sided slab from a plan outline, with a bow face and transom. */
 export function hullSlab(root, { black, grey, amber }, { outline, lengthM, depth, bow, stern }) {

@@ -37,9 +37,10 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    committed files, against the chord rule and panel band
                    each faction module exports (`facets`, `panels`; kit.mjs
                    `facetsFor` applies the rule), and names what is off
-                   them. Not a gate until the pass that brings the fleet
-                   onto the rule lands; test/facets.test.mjs is its suite,
-                   npm run test:hull-models.
+                   them and what the sections keep. Not a gate until the
+                   pass that brings the fleet onto the rule lands;
+                   test/facets.test.mjs is its suite, npm run
+                   test:hull-models.
 tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
                    the sprite maps (Chromium), outlines.mjs writes each modelled
                    kind's plan outline into packages/frontend/src/game/
