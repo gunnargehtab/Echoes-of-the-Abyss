@@ -14,10 +14,10 @@
  * further round than the one under it, a steel seam between them, a black
  * cap and a crimson tip light on each, and violet spikes off their flanks
  * in ranks with holes in them; the crusher house with a chitin cowl over
- * it and a floodlit apron at the foot of its face — `crusher_maw`, the
- * export's name for the slab it stood on that face — three black teeth
- * hung point-down along the face's line, one over the apron's inner end
- * and two inside the house behind it; two
+ * it and the crusher's maw cut into the cowl — a hole in the dome with
+ * `crusher_maw`, the export's name, as its lit floor — three black teeth
+ * hung point-down along the face's line, one at the face's foot and two
+ * inside the house behind it; two
  * exhaust stacks with hot tips; the conveyor gantry running down to the
  * intake hopper, five nodules riding its belt, red rails, eight gantry
  * lights and three legs; the hopper with its lit mouth and five teeth
@@ -32,8 +32,9 @@
  * `exhaustStacks`, `conveyorGantry`, `intakeHopper`, `flangedPipes`,
  * `floodMasts`), whose defaults are this file's numbers; the silos, the
  * teeth, the claws and the photophores are `factions/directorate.mjs`'s
- * works section. Nothing here is a shape decision but the maw's (#890, the
- * last bullet); where the export is odd the script is odd with it:
+ * works section. Nothing here is a shape decision but the maw's (#890 and
+ * #907, the `crusher_maw` bullet) and the photophores' seats (#907, the
+ * last); where the export is odd the script is odd with it:
  *
  * - The silos' spike ranks run 1; 0, 2; 0, 1; 0, 1, 2 — three holes — and
  *   the anchor claws 0, 1, 2, 3, 5: there is no `silo_spike_0_0`,
@@ -51,39 +52,40 @@
  * - `conveyor_rail_r` and `_l` are the gantry's own `r`/`l`, the export's
  *   (kit.mjs `bothSides` says the same of the turrets'), inside a frame
  *   yawed 0.72π, and keep their names.
- * - The six materials are the navy's `ink`: `chitin_red`, `chitin_violet`,
- *   `trench_black`, `weld_steel`, `biolight_crimson` at this file's 2.6,
- *   and `floodlight_hot` at its 3.476. The export carried the turret's
+ * - The seven materials are the navy's `ink`: `chitin_red`,
+ *   `chitin_violet`, `trench_black`, `weld_steel`, `biolight_crimson` at
+ *   this file's 2.6, `floodlight_hot` at its 3.476, and since #907
+ *   `gullet_glow`, the maw's. The export carried the turret's
  *   `weld_steel` (#27313B) and a `biolight_crimson` on a #3A0D16 base, the
  *   settlement pass's own values under the hulls' names; #888 brought both
  *   onto the navy's (#3A3F4A and #1A0810). Nothing else on the file moved.
- * - `crusher_maw` (#890): the export stood the lit slab on the house's
- *   face, 0.33 into it near its +z end, edge-on to a top-down map and under
- *   the cowl's rim besides, so the audit read 0 m² of it. The block lights
- *   the Refinery in one band — "floodlit working surfaces, visible
- *   machinery light" — so the slab is a resting lamp and stays lit
- *   (docs/models-plan.md §3.2 rule 5). It lies down: the same 1.7 along
- *   the face and 1.3 out from it, 0.3 thick, on the ground at the face's
- *   foot, its inner edge on the face where the export's slab stood and all
- *   but 3 % of it clear of the cowl's plan (its rim covers 9.7 of the
- *   apron's 325 m²); `maw_tooth_2` hangs over its inner end, `_0` and
- *   `_1` sit inside `crusher_house` behind the face where the export put
- *   them, and the belt's high end stands over the ground beside it. Laid
- *   flat it is one
- *   of the block's floodlit working surfaces — the crusher's apron — and
- *   not an aperture: a plate on the outside of a wall wearing a mouth's
- *   name is the failure docs/style-neon-noir.md names ("The Directorate's
- *   one area glow: a maw is not livery"), so this header calls it an apron
- *   and the part keeps the export's name. `diff.mjs` lists `crusher_maw`
- *   and no other part.
- *
- *   #894 found the three files' maws three fixtures under one name and
- *   made the Order's — a lit slab set into the cowl's crown — the
- *   Commune's too. Not this one's: on a Directorate model that slab is
- *   the plate on the outside the style doc names, and the apron is the
- *   one reading the Refinery block licenses. A Directorate maw that is
- *   one fixture with the other two is an aperture, a hole in the cowl,
- *   and that is a decision put to the owner on #907 (kit.mjs `crusher`).
+ * - `crusher_maw` (#890, #907): the export stood the lit slab on the
+ *   house's face, 0.33 into it near its +z end, edge-on to a top-down map
+ *   and under the cowl's rim besides, so the audit read 0 m² of it. #890
+ *   laid it down as a floodlit apron on the ground at the face's foot, 325
+ *   m² of the block's "floodlit working surfaces"; #894 found the three
+ *   files' maws three fixtures under one name and made the Order's — a
+ *   lit slab set into the cowl's crown — the Commune's too, and left this
+ *   one, since on a Directorate model a lit slab on the cowl is the plate
+ *   wearing a mouth's name that docs/style-neon-noir.md refuses. #907
+ *   makes it the aperture that doc allows ("The Directorate's one area
+ *   glow: a maw is not livery"): the cowl loses four cells of its sphere
+ *   on the shoulder that faces the belt's high end (rings 1 and 2 of 5,
+ *   quads 2 and 3 of 9, eight triangles), the maw is those cells 0.35
+ *   nearer the centre — 3.5 m under the shell, once the node's squash
+ *   and the 12.14 m a unit are on it — in the navy's throat
+ *   token, `gullet_glow`, and `crusher_maw_throat` is the rim dropped to
+ *   the floor in the cowl's chitin, so the mouth is sealed on every side
+ *   (`directorate.crusherMaw`). Not a slab, because a flat one cannot
+ *   fit: a plane across a 40° × 40° cut of a sphere has its corners
+ *   outside the sphere, and the first draft's showed through the cowl as
+ *   lit chips beside the mouth. The floor shows 173 m² from above where
+ *   the apron showed 309, all of it inside the cowl's plan, and the mouth
+ *   is about 20 m across. `maw_tooth_2` hangs at the face's foot where
+ *   the apron's inner end was, `_0` and `_1` inside the house behind the
+ *   face, all three as the export hung them. `diff.mjs` lists
+ *   `crusher_maw`, `crusher_cowl` and the throat as added, and no other
+ *   part.
  * - RESTING ON THE SILOS (#907, from #894's resting measure):
  *   `photophore_1`, `_2` and `_3` hung 2.2, 0.3 and 1.9 m off the silos
  *   they mark, where the export put them, each beside a lower segment;
@@ -138,6 +140,7 @@ const violet = directorate.ink.chitinViolet();
 const black = directorate.ink.trenchBlack();
 const crimson = directorate.ink.biolightCrimson(2.6);
 const flood = directorate.ink.floodlightHot(3.475863563109638);
+const gullet = directorate.ink.gulletGlow();
 
 const root = new THREE.Group();
 root.name = 'nodule_refinery_directorate';
@@ -237,16 +240,27 @@ const SILOS = [
 ];
 directorate.silos(root, { red, violet, steel, black, light: crimson }, { silos: SILOS });
 
-// The crusher at the kit's defaults — this file's numbers — but
-// `crusher_maw`, laid down as a floodlit apron at the foot of the house's
-// face since #890 (the header), turned with the house; its three teeth
-// hung point-down where the export hung them — `_2` over the apron's inner
-// end, `_0` and `_1` inside the house — and the two stacks.
-crusher(
-  root,
-  { house: steel, cowl: red, maw: flood },
-  { maw: { size: [1.3, 0.3, 1.7], at: [7.85, 0.15, -0.66], rot: [0, -0.25, 0] } }
-);
+// The crusher at the kit's defaults — this file's numbers — but the cowl
+// and `crusher_maw` are the aperture (the header, #907): the cowl with a
+// hole of two rings by two quads cut on the shoulder that faces the belt's
+// high end, the maw its lit floor 0.35 under the shell, and the throat
+// between them; its three teeth hung point-down where the export hung
+// them — `_2` at the face's foot, `_0` and `_1` inside the house — and the
+// two stacks.
+const mouth = directorate.crusherMaw({
+  cowl: {
+    r: 2.9,
+    facets: [9, 5],
+    phi: Math.PI,
+    theta: Math.PI * 0.55,
+    at: [5.2, 3.1, -2.2],
+    rot: [0, Math.PI / 2 - 0.25, 0],
+    scale: [1.05, 0.75, 0.85],
+  },
+  hole: { rings: [1, 3], quads: [2, 4] },
+});
+crusher(root, { house: steel, cowl: red, maw: gullet }, { cowl: mouth.cowl, maw: mouth.maw });
+xLong.place(root, 'crusher_maw_throat', mouth.throat.geo, red, mouth.throat);
 directorate.mawTeeth(root, black, {
   teeth: [
     { n: 0, at: [6.527034019, 2.5, -1.369996146] },

@@ -258,8 +258,11 @@ the rule keeps its teeth and gains a boundary rather than an exception:
    ([graphics-standards.md](graphics-standards.md)), so a maw dims with SIG exactly as the
    eye-lines do. A hull running silent closes its mouth.
 
-The Dredge passes on all four. No other approved hull has an aperture, and the rule above
-is what the next one is measured against.
+The Dredge passes on all four. The Directorate's Nodule Refinery is the second approved
+model with one (#907): its crusher's maw is a hole cut through the crusher's dome — two of
+the dome's own cells by two, about 20 m across — with its lit floor three and a half metres
+down and the throat between them in the dome's chitin. The rule above is what the next one
+is measured against.
 
 ## Colour-vision palettes
 

@@ -1779,12 +1779,14 @@ export function flangedPipes(root, { pipe: pipeMat, flange: flangeMat }, opts = 
  * face, its underside a little under the ridge and its top a hair proud,
  * so the crown passes through it and the whole slab shows from above.
  * That is `maw.at` and `maw.rot`, each file's own; the default is the
- * Commune's, on its `crusher_roof`. The Directorate's keeps its apron:
- * on a Directorate model a lit slab on the outside of the cowl is the
- * plate wearing a mouth's name that docs/style-neon-noir.md refuses ("a
- * maw is not livery"), and the apron is the reading the Refinery block's
- * "floodlit working surfaces" licenses — so its maw stays its own fixture
- * until the owner decides whether it becomes an aperture (#907).
+ * Commune's, on its `crusher_roof`. The Directorate's is not a slab at
+ * all: on a Directorate model a lit slab on the outside of the cowl is
+ * the plate wearing a mouth's name that docs/style-neon-noir.md refuses
+ * ("a maw is not livery"), so #890 laid its slab down as a floodlit apron
+ * at the face's foot, and #907 made it the aperture the style doc allows —
+ * a hole cut in the dome with a lit floor sunk in it, the cowl's own cells
+ * (directorate.mjs `crusherMaw`), which comes in as `cowl.geo` and
+ * `maw.geo` with the maw on the cowl's own node.
  *
  * The teeth are the navy's (directorate.mjs `mawTeeth`, hadron.mjs
  * `mawBlades`) and hang where the exports hung them.
@@ -1809,7 +1811,7 @@ export function crusher(root, mats, opts = {}) {
   } = opts;
   frame.part(root, 'crusher_house', box(...house.size), mats.house, house.at, house.rot);
   frame.part(root, cowl.name ?? 'crusher_cowl', cowl.geo, mats.cowl, cowl.at, cowl.rot, cowl.scale);
-  frame.part(root, 'crusher_maw', box(...maw.size), mats.maw, maw.at, maw.rot);
+  frame.part(root, 'crusher_maw', maw.geo ?? box(...maw.size), mats.maw, maw.at, maw.rot, maw.scale);
 }
 
 /**
@@ -2256,6 +2258,33 @@ export function reactorIntakeArm(
  * constructor and folds its seam; these do not, because these exports tore
  * theirs.
  * ------------------------------------------------------------------------ */
+
+/**
+ * A primitive with cells cut out of it: every triangle of an indexed `geo`
+ * whose centroid `keep` refuses is dropped and the rest kept as they were —
+ * vertices, normals and the index's order — so a hole in a lathe is the
+ * lathe's own cells missing rather than a second shape standing in for
+ * one. `keep` sees the centroid in the geometry's own frame, before the
+ * node's transform. The first use is the Directorate Refinery's maw, an
+ * aperture in the crusher's dome (factions/directorate.mjs `crusherMaw`,
+ * #907): docs/style-neon-noir.md asks that an aperture be a hole, and
+ * nothing short of taking the shell's cells out makes one.
+ */
+export function pierced(geo, keep) {
+  const idx = geo.index;
+  const pos = geo.attributes.position;
+  if (!idx) throw new Error('pierced: an indexed geometry');
+  const kept = [];
+  for (let t = 0; t < idx.count; t += 3) {
+    const [a, b, c] = [idx.getX(t), idx.getX(t + 1), idx.getX(t + 2)];
+    const cx = (pos.getX(a) + pos.getX(b) + pos.getX(c)) / 3;
+    const cy = (pos.getY(a) + pos.getY(b) + pos.getY(c)) / 3;
+    const cz = (pos.getZ(a) + pos.getZ(b) + pos.getZ(c)) / 3;
+    if (keep(cx, cy, cz)) kept.push(a, b, c);
+  }
+  geo.setIndex(kept);
+  return geo;
+}
 
 /**
  * The finish every buffer in the five stone files has: non-indexed, one
