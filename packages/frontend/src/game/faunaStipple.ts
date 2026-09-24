@@ -15,10 +15,12 @@
  * formed or scattered state, both at the depth the server published. The
  * outlines the ladder weighs stay on the chart painter (`EchoRenderer`): the
  * field's rim, one of rung 5's four floor outlines, and a scattered shoal's
- * 300 m trigger ring. The stipple is texture inside a mark whose rim already
- * speaks for it, and §5 weighs a mark by its outline and never by its
- * interior. A formed shoal has no rim either way; how a rimless mark is
- * weighed is still the owner's call (§10).
+ * 300 m trigger ring. The dots are not weighed. §5 weighs a mark by its
+ * outline and never by its interior, but a field's bells hang at its working
+ * depth while its rim lies on the ground, so from an oblique camera the bloom
+ * stands above its footprint rather than inside it. Whether that still counts
+ * as the rim's interior, and how a formed shoal with no rim is weighed, are
+ * the owner's calls (§10).
  *
  * **Pulse in place; never drift sideways.** A bell contracts and relaxes about
  * its own axis and its tentacles trail with it; a shoal breathes and its motes
@@ -30,12 +32,12 @@
  *
  * **Gate 6's budget, as §8 sets it.** One `Points` draw per kind, a fixed dot
  * count per field, and the pulse in the vertex shader: a frame costs a handful
- * of uniform writes, and the buffers are rewritten only when the public layer
- * itself changes — a field dies, a shoal scatters or reforms.
+ * of uniform writes, and the buffers are rewritten only when a public layer
+ * changes — a field or shoal is born or dies, or a shoal scatters or reforms.
  *
  * Rung 5, map furniture (docs/map-visuals.md §5): public, and never an agent.
- * Chart furniture, so the acoustic veil leaves it alone — a chart does not go
- * quiet because you stopped listening (`PerspectiveView.refreshVeil`).
+ * The acoustic veil leaves it alone, because the veil touches ground only
+ * (docs/ui-ux.md §4.5) and this is life in the water.
  */
 
 import {
@@ -79,10 +81,11 @@ const BELL_RADIUS_M = 22;
 const BELL_HEIGHT_M = 16;
 const TENTACLE_M = 44;
 /**
- * TUNABLE — how far a bell's centre may sit above or below the field's working
- * depth, in metres of depth. Well inside the ±100 m the seeder already spreads
- * clusters across (docs/bestiary.md §4), so the bloom has a body in the column
- * without drawing a band the server never published.
+ * TUNABLE, render-only — how far a bell's centre may sit above or below the
+ * depth the server published, in metres of depth, so the bloom has a body in
+ * the column rather than lying in one plane. It is not a band anyone
+ * published: a bell may be drawn up to this far past the edge of the band its
+ * cluster was seeded across (docs/bestiary.md §4).
  */
 const BELL_DEPTH_JITTER_M = 40;
 /**
@@ -475,8 +478,9 @@ function writeField(
 /**
  * One bell at rest, about its own axis: a dome, a rim, and tentacles hanging
  * from under the rim. Returned as `[x, y, z, trail]` per dot, re-centred on the
- * plan so the bell's dots average to its axis — which is what makes a
- * contraction a scale about a point that does not move.
+ * plan so each group of dots the shader scales together — the body, and each
+ * step down the tentacles — averages to the axis. That is what makes every
+ * phase of a contraction a scale about a point that does not move.
  */
 function bellOffsets(rng: () => number): Float32Array {
   const out = new Float32Array(DOTS_PER_BELL * 4);
@@ -578,18 +582,24 @@ function writeShoal(
   }
 }
 
-/** Shift a set of `[x, y, z, w]` offsets so their mean on the plan is zero. */
+/**
+ * Shift a set of `[x, y, z, w]` offsets so that the dots sharing each `w` have
+ * a mean of zero on the plan. The shader scales dots by their `w`, so one
+ * mean over the whole set would still let the centre wander mid-pulse.
+ */
 function recentre(offsets: Float32Array, count: number): void {
-  let sx = 0;
-  let sz = 0;
+  const groups = new Map<number, { x: number; z: number; n: number }>();
   for (let k = 0; k < count; k++) {
-    sx += offsets[k * 4]!;
-    sz += offsets[k * 4 + 2]!;
+    const w = offsets[k * 4 + 3]!;
+    const g = groups.get(w) ?? { x: 0, z: 0, n: 0 };
+    g.x += offsets[k * 4]!;
+    g.z += offsets[k * 4 + 2]!;
+    g.n++;
+    groups.set(w, g);
   }
-  sx /= count;
-  sz /= count;
   for (let k = 0; k < count; k++) {
-    offsets[k * 4] = offsets[k * 4]! - sx;
-    offsets[k * 4 + 2] = offsets[k * 4 + 2]! - sz;
+    const g = groups.get(offsets[k * 4 + 3]!)!;
+    offsets[k * 4] = offsets[k * 4]! - g.x / g.n;
+    offsets[k * 4 + 2] = offsets[k * 4 + 2]! - g.z / g.n;
   }
 }

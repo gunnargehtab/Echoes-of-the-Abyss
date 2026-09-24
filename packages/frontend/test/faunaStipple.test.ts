@@ -224,13 +224,14 @@ describe('fauna stipple: what a field says (§8)', () => {
     const stipple = new FaunaStipple();
     try {
       stipple.setLife(JELLIES, SHOALS);
-      // Every motion in the shader is a scale about the anchor. Dots whose
-      // offsets average to zero on the plan therefore keep their centre where
-      // the anchor is, at every phase: a bell contracts, and goes nowhere.
+      // Every motion in the shader is a scale about the anchor, one scale per
+      // `w` (the body, and each step down a tentacle). Each such group whose
+      // offsets average to zero on the plan keeps its centre on the anchor at
+      // every phase, so the whole bell does too: it contracts, and goes nowhere.
       for (const cloud of [stipple.jellies, stipple.shoals]) {
         const groups = new Map<string, { x: number; z: number; n: number }>();
         for (const dot of dots(cloud)) {
-          const key = dot.anchor.join(',');
+          const key = `${dot.anchor.join(',')} w=${dot.offset[3]}`;
           const g = groups.get(key) ?? { x: 0, z: 0, n: 0 };
           g.x += dot.offset[0];
           g.z += dot.offset[2];
@@ -248,11 +249,21 @@ describe('fauna stipple: what a field says (§8)', () => {
           );
         }
       }
-      // And nothing in the shader adds time to a position.
+      // And nothing in the shader moves a dot but that scale. `world` is
+      // written once, as the anchor plus the scaled offset, and it is what
+      // reaches `gl_Position`; the clock reaches the three pulse terms and
+      // nothing else.
       for (const cloud of [stipple.jellies, stipple.shoals]) {
         const shader = (cloud.points.material as ShaderMaterial).vertexShader;
         assert.match(shader, /vec3 world = position \+ vec3\( aDot\.x \* squeeze/);
-        assert.doesNotMatch(shader, /position\.[xz]\s*[+-]\s*uTime/);
+        assert.equal(shader.match(/\bworld(\.[xyzw]+)?\s*[-+*/]?=(?!=)/g)?.length, 1);
+        assert.match(shader, /mvPosition = modelViewMatrix \* vec4\( world, 1\.0 \)/);
+        assert.match(shader, /gl_Position = projectionMatrix \* mvPosition/);
+        const clocked = shader.split('\n').filter((line) => line.includes('uTime'));
+        const allowed = /^\s*(uniform float uTime;|float (beat|trail|twinkle) = )/;
+        for (const line of clocked) {
+          assert.match(line, allowed, `the clock reaches more than the pulse: ${line.trim()}`);
+        }
       }
     } finally {
       stipple.dispose();
@@ -267,8 +278,8 @@ describe('fauna stipple: what a field says (§8)', () => {
       for (let f = 0; f < JELLIES.length; f++) {
         for (const dot of fields.slice(f * JELLY_DOTS_PER_FIELD, (f + 1) * JELLY_DOTS_PER_FIELD)) {
           const depthM = -dot.anchor[1] / DEPTH_VISUAL_M_PER_M;
-          // Well inside the ±100 m the seeder spreads clusters across
-          // (docs/bestiary.md §4): a body in the column, not a new band.
+          // The published depth, give or take the render-only ±40 m body the
+          // bells are drawn with: a thickness in the column, not a band.
           assert.ok(
             Math.abs(depthM - JELLIES[f]!.depth) <= 40 + 1e-6,
             `a bell of field ${JELLIES[f]!.id} hangs at ${depthM.toFixed(0)} m`
