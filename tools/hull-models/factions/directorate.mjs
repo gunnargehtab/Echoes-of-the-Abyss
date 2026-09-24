@@ -3010,10 +3010,10 @@ export function walkingLimbs(root, { chitin, red }, opts) {
  * at the shell plus a margin, so a slanted view saw no gap at the rim,
  * its corners stood outside the shell and showed through the cowl as lit
  * chips beside the mouth. Rule 2 is met by construction; rule 3's place
- * is where the structure eats (whether the hopper's lit `intake_mouth`,
- * a floodlit surface and no hole, counts against it is the owner's,
- * #907); rule 4's token is the navy's throat, `gullet_glow`, the
- * Dredge's, the Slipway's and the Vent Tap's.
+ * is where the structure eats; rule 4's token is the navy's throat,
+ * `gullet_glow`, the Dredge's, the Slipway's and the Vent Tap's. Whether
+ * the hopper's lit `intake_mouth`, a floodlit surface and no hole, stands
+ * against rules 2 and 3 is the owner's (#907).
  *
  * Every number is in the cowl's own frame — `cowl` is the kit's
  * `crusher` cowl, `{ r, facets, phi, theta, at, rot, scale }` — and all
