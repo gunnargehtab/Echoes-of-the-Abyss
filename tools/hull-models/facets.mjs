@@ -63,13 +63,15 @@ const here = dirname(fileURLToPath(import.meta.url));
 
 /**
  * A navy's facet count for a round part of radius `radiusM`: the count whose
- * facet edge is nearest `chordM`, in multiples of `step`, held between `min`
- * and `max`. Every round primitive a navy's module builds takes its count
- * from here once the pass lands, which is what makes re-faceting a fleet one
- * edit.
+ * facet edge is nearest `chordM`, on the lattice `offset + k·step`, held
+ * between `min` and `max`. `offset` is what says "odd counts only" — step 2
+ * from 1 — which step alone cannot. Every round primitive a navy's module
+ * builds takes its count from here once the pass lands, which is what makes
+ * re-faceting a fleet one edit.
  */
-export function facetsFor({ chordM, min, max, step = 1 }, radiusM) {
-  const n = step * Math.round((2 * Math.PI * radiusM) / chordM / step);
+export function facetsFor({ chordM, min, max, step = 1, offset = 0 }, radiusM) {
+  const x = (2 * Math.PI * radiusM) / chordM;
+  const n = step * Math.round((x - offset) / step) + offset;
   return Math.min(max, Math.max(min, n));
 }
 
@@ -122,6 +124,7 @@ function ring(kind, n, arc, chord) {
   return {
     kind,
     n,
+    arc,
     turn: Math.round((n * TAU) / arc),
     radiusM: chord / (2 * Math.sin(arc / (2 * n))),
     chordM: chord,
@@ -267,10 +270,16 @@ async function rulesOf(navy) {
   return { facets: mod.facets ?? null, panels: mod.panels ?? null };
 }
 
-/** Whether a ring keeps its navy's rule; a section count is its own shape and always does. */
+/**
+ * Whether a ring keeps its navy's rule. A section count is its own shape and
+ * always does. A ring over part of a turn is held to the rule's count for a
+ * whole turn, prorated over its arc: a sphere's meridian closes in half a
+ * turn, so its facets a turn are always even, and an odd rule judged a turn
+ * at a time would call half of every navy's orbs wrong forever.
+ */
 export function keeps(rule, r) {
   if (rule.sections?.includes(r.turn)) return true;
-  return r.turn === facetsFor(rule, r.radiusM);
+  return r.n === Math.max(1, Math.round((facetsFor(rule, r.radiusM) * r.arc) / TAU));
 }
 
 const BANDS = [
@@ -311,7 +320,8 @@ function report(navy, models, rules, listParts) {
     const off = rings.filter((r) => !keeps(facets, r));
     const sections = facets.sections?.length ? `, sections ${facets.sections.join('/')}` : '';
     console.log(
-      `  rule: ${facets.chordM} m a facet, ${facets.min}–${facets.max}, step ${facets.step ?? 1}${sections}` +
+      `  rule: ${facets.chordM} m a facet, ${facets.min}–${facets.max}, step ${facets.step ?? 1}` +
+        `${facets.offset ? ` from ${facets.offset}` : ''}${sections}` +
         ` — ${off.length} of ${rings.length} rings off it`
     );
     if (listParts)
