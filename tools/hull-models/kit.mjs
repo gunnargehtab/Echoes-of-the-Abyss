@@ -2078,7 +2078,7 @@ export function reactorIntakeArm(
  * growth's `masonry_block`, `masonry_lip` and four `branch_*` and the coral
  * tower's `plate_1..5` are indexed, the branches and plates smooth-shaded
  * (a vertex normal 21–24° off its own face on a plate, 44° on a branch),
- * and the ruin block and the dome shard carry indexed boxes. `tabled` and
+ * and the ruin block carries indexed boxes. `tabled` and
  * `faceted` always flatten, and neither `check.mjs` nor `diff.mjs` reads a
  * normal, so a port that fed a smooth part through either would pass every
  * gate and ship a faceted part. A port reproduces the file's index and its normals
