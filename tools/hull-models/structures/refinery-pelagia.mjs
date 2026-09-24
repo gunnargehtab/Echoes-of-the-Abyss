@@ -58,7 +58,8 @@
  *   chart for the block's "visible machinery light", and the third
  *   fixture under the one name across the three files. It is the drum
  *   cowls' one fixture kit.mjs `crusher` now describes (the Directorate's
- *   dome keeps its apron, and the kit says why), the Order's construction
+ *   dome kept its apron until #907 cut its maw into it; the kit says
+ *   why), the Order's construction
  *   turned to this roof: the same 1.7 × 1.3 × 0.3 slab, level along the
  *   ridge and flush with the roof's forward end over the face, its
  *   underside 0.27 under the ridge — the ridge stands at 5.25 and the two

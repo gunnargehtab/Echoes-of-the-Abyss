@@ -101,6 +101,7 @@ import {
   zLong,
   xLong,
   seat,
+  pierced,
 } from '../kit.mjs';
 
 /**
@@ -240,11 +241,12 @@ export const ink = {
    * The works' lights, one model each: `forge_light` is the Foundry's line
    * and launch glow, "the forge light across the bay and at its mouth",
    * "flooding from the bay when producing"; `floodlight_hot` the
-   * Refinery's maw, stack tips, gantry
-   * lights, intake mouth and flood lamps, "floodlit working surfaces,
-   * visible machinery light" — one lamp colour on one base, polished to
-   * 0.3, each at its file's own strength (3.698 and 3.476). The approved
-   * files' own values (#652).
+   * Refinery's stack tips, gantry lights, intake mouth and flood lamps,
+   * "floodlit working surfaces, visible machinery light" — one lamp
+   * colour on one base, polished to 0.3, each at its file's own strength
+   * (3.698 and 3.476). The approved files' own values (#652). The
+   * Refinery's maw wore it too until #907 made the maw an aperture on
+   * `gullet_glow` (`crusherMaw`).
    */
   forgeLight: (intensity = 1) =>
     lamp('forge_light', hex('#E07A8C'), hex('#40141C'), 0.3, intensity),
@@ -2984,6 +2986,104 @@ export function walkingLimbs(root, { chitin, red }, opts) {
  * has it), which is what the two approved files are (#652) — and the rule
  * each holds is the file's, read off it and checked against it.
  * ------------------------------------------------------------------------ */
+
+/**
+ * The Refinery's maw as an aperture (#907): the crusher's mouth cut into
+ * its dome. #890 read the block's "visible machinery light" as a floodlit
+ * apron at the foot of the crusher's face and #894 made the Order's and
+ * the Commune's maws one fixture, a lit slab set into the cowl's crown;
+ * on a Directorate dome that slab is a lit plate on the outside, which
+ * docs/style-neon-noir.md refuses ("An aperture may glow as area, and an
+ * aperture is a hole ... recessed, bounded by unlit chitin on every side,
+ * and shaped by the geometry it sits in rather than applied to a face").
+ * So the Directorate's is a hole, and every piece of it is the cowl's
+ * own sphere: `hole.rings` and `hole.quads` name the cells — rings down
+ * from the pole, quads round from its −x edge — cut out of the shell
+ * (kit `pierced`), on the shoulder that faces the belt's high end, where
+ * the nodules come off; the floor is those same cells `recess` nearer
+ * the centre, lit; and the throat is the hole's rim dropped to the
+ * floor's, a quad a rim segment, in the cowl's chitin. Rim, throat and
+ * floor share their vertices, so the mouth is sealed on every side and
+ * what shows through it is its lit floor and the throat's walls, nothing
+ * beside them — and nothing of the floor stands outside the shell, which
+ * the first draft's flat slab did not manage: sized to the hole's chords
+ * at the shell plus a margin, so a slanted view saw no gap at the rim,
+ * its corners stood outside the shell and showed through the cowl as lit
+ * chips beside the mouth. Rule 2 is met by construction; rule 3's place
+ * is where the structure eats; rule 4's token is the navy's throat,
+ * `gullet_glow`, the Dredge's, the Slipway's and the Vent Tap's. Whether
+ * the hopper's lit `intake_mouth`, a floodlit surface and no hole, stands
+ * against rules 2 and 3 is the owner's (#907).
+ *
+ * Every number is in the cowl's own frame — `cowl` is the kit's
+ * `crusher` cowl, `{ r, facets, phi, theta, at, rot, scale }` — and all
+ * three pieces sit on the cowl's node, so they squash as it does. Returns
+ * what `crusher` takes for its `cowl` and `maw`, and the throat to add
+ * after them.
+ */
+export function crusherMaw({ cowl, hole, recess = 0.35 }) {
+  const { r, facets: [round, down], phi: phiLength, theta: thetaLength, at, rot, scale } = cowl;
+  const dPhi = phiLength / round;
+  const dTheta = thetaLength / down;
+  // Which cell a centroid is in, on three's sphere: y is cos θ, and φ runs
+  // from −x round through +z.
+  const cell = (x, y, z) => {
+    const rr = Math.hypot(x, y, z);
+    return [Math.floor(Math.acos(y / rr) / dTheta), Math.floor(Math.atan2(z, -x) / dPhi)];
+  };
+  const inHole = (x, y, z) => {
+    const [ring, quad] = cell(x, y, z);
+    return ring >= hole.rings[0] && ring < hole.rings[1] && quad >= hole.quads[0] && quad < hole.quads[1];
+  };
+  const sphere = (radius) => new THREE.SphereGeometry(radius, round, down, 0, phiLength, 0, thetaLength);
+  const cowlGeo = pierced(sphere(r), (x, y, z) => !inHole(x, y, z));
+  const floorGeo = pierced(sphere(r - recess), inHole);
+
+  // The throat: the rim's vertices, three's own formula for them so they
+  // land on the shell's, walked round the hole and dropped to the floor's.
+  const vertex = (radius, theta, phi) => [
+    -radius * Math.cos(phi) * Math.sin(theta),
+    radius * Math.cos(theta),
+    radius * Math.sin(phi) * Math.sin(theta),
+  ];
+  const rim = [];
+  const [r0, r1] = hole.rings;
+  const [q0, q1] = hole.quads;
+  for (let q = q0; q < q1; q++) rim.push([r0 * dTheta, q * dPhi]);
+  for (let ring = r0; ring < r1; ring++) rim.push([ring * dTheta, q1 * dPhi]);
+  for (let q = q1; q > q0; q--) rim.push([r1 * dTheta, q * dPhi]);
+  for (let ring = r1; ring > r0; ring--) rim.push([ring * dTheta, q0 * dPhi]);
+  const centre = new THREE.Vector3(...vertex(r - recess / 2, ((r0 + r1) / 2) * dTheta, ((q0 + q1) / 2) * dPhi));
+  const tris = [];
+  const uvs = [];
+  for (let i = 0; i < rim.length; i++) {
+    const a = rim[i];
+    const b = rim[(i + 1) % rim.length];
+    const ao = vertex(r, ...a);
+    const bo = vertex(r, ...b);
+    const ai = vertex(r - recess, ...a);
+    const bi = vertex(r - recess, ...b);
+    // Wound to face the mouth's axis, whichever way the walk went.
+    const va = new THREE.Vector3(...ao);
+    const n = new THREE.Vector3(...bo).sub(va).cross(new THREE.Vector3(...ai).sub(va));
+    const inward = n.dot(centre.clone().sub(va)) > 0;
+    const quad = inward ? [ao, bo, bi, ai] : [ao, ai, bi, bo];
+    const uvQuad = inward ? [a, b, b, a] : [a, a, b, b];
+    for (const k of [0, 1, 2, 0, 2, 3]) {
+      tris.push(...quad[k]);
+      // The sphere's own uv rule, so the throat carries the attributes the
+      // shell does and the bake merges them into one draw.
+      uvs.push(uvQuad[k][1] / phiLength, 1 - uvQuad[k][0] / thetaLength);
+    }
+  }
+  const throatGeo = new THREE.BufferGeometry();
+  throatGeo.setAttribute('position', new THREE.Float32BufferAttribute(tris, 3));
+  throatGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  throatGeo.computeVertexNormals();
+
+  const placed = (geo) => ({ geo, at, rot, scale });
+  return { cowl: placed(cowlGeo), maw: placed(floorGeo), throat: placed(throatGeo) };
+}
 
 /**
  * The tergite flanks either side of the Foundry's bay: on each flank
