@@ -292,28 +292,48 @@ export const ink = {
  * segment of shell, two metres: the Dredge's mandibles and claw and the
  * Precentor's dome are cut at 1.7–2.2 m a facet, and the median unlit part
  * on a hull here is 2.0 m on a side. Odd counts only — step two from one: a
- * regular polygon with an odd count has no facet opposite a facet and no
- * vertex opposite a vertex, regular and never mirrored, "asymmetric, yet
- * regimented" in one shape — and both approved hulls with a dorsal rank cut
- * every spine five-sided (`dorsalSpines`). So five is the floor and nineteen
- * the ceiling, the odd lattice's nearest to the 18° between faces a shell's
- * edge wants: chitin is harder than a pod and softer than a plate. Five and
- * four are the sections. The spine is five-sided at any size, the way the
- * Order's spar is a diamond at any size, where the lattice alone would round
- * a wide one to seven; and the square-section spike the rostrum, the
- * mandibles and the hatch dogs are (kit.mjs `cyl`, "the Directorate's
- * rostrum") is the one even shape the navy cuts, a prism rather than a
- * circle, which is what a section is. The keels' seven is a builder's
- * default on four hulls and not a section, and the pass re-cuts it to the
- * rule; so are the plates' twelve, one count on every size of tergite, and
- * an even one.
+ * regular polygon with an odd count has no facet opposite a facet and mirror
+ * lines only through a vertex and the far edge's middle, so laid on the
+ * hull's axis with a vertex to starboard, as the kit's `cyl` lays it, it
+ * mirrors crown to keel and never port to starboard, the law's own axis —
+ * "asymmetric, yet regimented" in one shape (the pass lays every odd ring so,
+ * never turned a quarter facet, which would put a vertex on the crown and
+ * mirror it across the keel line) — and both approved hulls with a dorsal
+ * rank cut every spine five-sided (`dorsalSpines`). Five is the floor.
+ * Twenty-one is the ceiling: a judgement on silhouette, set between the
+ * Consortium's sixteen and the Commune's twenty-four because a chitin shell
+ * is rounder at the rim than rolled plate and harder than a pod, on the odd
+ * lattice. The one section is five, and a section keeps a count and not a
+ * shape: it keeps every five-sided spike at any size — the spine is a
+ * pentagon the way the Order's spar is a diamond, where the lattice alone
+ * would cut the Bastion's anchor claws at seven metres of base to twenty-one
+ * — and with them nine pentagonal torus rings and tubes on the structures
+ * (the Bastion's seam rings, lips and pipes, the Turret's collar, the
+ * Foundry's launch mouth), which pass as pentagons. Four is not a section
+ * any more: what it kept was two dozen square-section torus seams and cables
+ * on the r184 structures and the shared kinds' rostra, none of them this
+ * module's — its own rostrum is six-sided — and the Verger's hatch dogs and
+ * the Lure's plectrum re-cut to five are more the navy than they were. The
+ * keels' seven is a builder's default on four hulls and not a section, and
+ * the pass re-cuts it to the rule; so are the plates' twelve, one count on
+ * every size of tergite, and an even one.
  *
- * Panels: "many-limbed", "rows of small points" — the median unlit part is a
- * spine or a limb, one to three metres, and a hull whose median part is over
- * three is plates with nothing on them. A structure's band is the hull's at
- * the chart's ratio of densities, 4 to 1.5 px/m, rounded to the half metre.
+ * Panels: one to three metres, from what the measure counts, which is unlit
+ * parts. The navy's unlit vocabulary is plates and seams — wide — and
+ * spines, limbs, dogs and teeth — a spine 2–3 m on a side from above, a limb
+ * about two — and "spiked, insectoid, many-limbed" is three words of the
+ * law's four for the small parts against one, "segmented", for the wide. A
+ * hull whose median unlit part is under three metres carries at least as
+ * many spikes and limbs as plates and seams; one whose median is a plate is
+ * the segmented half of the law without the spiked half. The Dredge, this
+ * rule's own facet reference, reads 5.2 m: its block asks for five wide
+ * tergites and it has them, with five spines, a claw and a boom and no
+ * limbs, so under Block 2 it gains limbs or spines at the pass — its lit
+ * points are livery, which the metric drops. A structure's band is the
+ * hull's at the chart's ratio of densities, 4 to 1.5 px/m, rounded to the
+ * half metre — a judgement, and Block 2c says what it rests on.
  */
-export const facets = { chordM: 2, min: 5, max: 19, step: 2, offset: 1, sections: [4, 5] };
+export const facets = { chordM: 2, min: 5, max: 21, step: 2, offset: 1, sections: [5] };
 export const panels = { hull: [1, 3], structure: [2.5, 8] };
 
 /** A carapace orb: a low-facet sphere the caller squashes into a plate. */
