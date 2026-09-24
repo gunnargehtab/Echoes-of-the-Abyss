@@ -392,7 +392,7 @@ What stays recorded, for the owner. The tests pin each break and fail if it move
   does not: the server names no navy for ordnance, so it wears the Track tier's colour. Nor
   does a classified animal. Phase 4 made it dots, weighed by one dot at its tier's alpha, and
   that clears rung 6's floor in every palette. A Tier-3 Sounder's halo fell under it in the two
-  red-green palettes until then, and went with the halo.
+  red-green palettes until then; the break went with the halo.
 - **Rung 7 in the conn view is not weighed.** Own hulls and structures are lit models, or
   baked sprites until the model loads, and own ordnance is a lit body with a lamp. What lands
   on a pixel depends on the lights, the texture and the view, and no number for it can be
