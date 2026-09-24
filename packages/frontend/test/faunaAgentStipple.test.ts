@@ -27,11 +27,11 @@
  * colour itself. Over black it lifts 0.561 in the standard palette against a
  * Tier-4 agent dot's 0.531 and a Tier-3 dot's 0.324; over the palest ground,
  * 0.561 against 0.441 and 0.270, because an added light lifts every ground
- * alike and a blended dot lifts a pale one less.
- * The other three palettes keep the order (the table in the last test). Floor
- * against floor allows it: rung 5's floor is its quiet rims, not its loudest
- * dot. What keeps the two apart is form, and the block before the ladder
- * holds that: size, edge, blend, motion, scale and palette.
+ * alike and a blended dot lifts a pale one less. The other three palettes
+ * keep the order (the table in the last test). Floor against floor allows it:
+ * rung 5's floor is its quiet rims, not its loudest dot. Both are `FAUNA_COLOR` in all four palettes, so what keeps the two
+ * apart is form, and the block before the ladder holds that: size, edge,
+ * blend, motion and scale.
  */
 
 import assert from 'node:assert/strict';
@@ -258,9 +258,9 @@ describe('fauna agent stipple: the budget (gate 6)', () => {
 describe('fauna agent stipple: never furniture’s look (§5)', () => {
   // docs/map-visuals.md §5: a public field is rung 5 and a classified animal
   // rung 7, and "they must never share a look, or a Tetherjelly field would
-  // read as a contact". Both are FAUNA_COLOR by §8, so hue cannot do it. Every
-  // axis below survives reduced motion but the last-but-one, and that one
-  // only ever stills the furniture.
+  // read as a contact". Both are FAUNA_COLOR by §8, so hue cannot do it; the
+  // last test here holds that they share it. Reduced motion stills the
+  // furniture's pulse, so every axis but motion survives it.
 
   it('is a bigger dot than any furniture dot', () => {
     assert.ok(AGENT_DOT_DIAMETER_PX > DOT_MAX_PX, 'diameter against diameter, both CSS px');

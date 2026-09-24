@@ -81,8 +81,10 @@ export interface Palette {
   tier: Record<ContactTier, TierStyle>;
   resource: Record<ResourceKind, number>;
   /**
-   * A classified creature. Only ever drawn from Tier 3, and always as an
-   * organic silhouette — the colour makes it findable, the shape identifies it.
+   * Life in the water. A classified creature wears it only from Tier 3, and
+   * always as its species' shape in dots (faunaAgentStipple.ts) — the colour
+   * makes it findable, the shape identifies it. Public life, a Tetherjelly
+   * field or a Lampfry shoal, is drawn in it too (faunaStipple.ts).
    */
   fauna: number;
   ui: UiInk;
@@ -343,7 +345,8 @@ export let TIER_STYLE: Record<ContactTier, TierStyle> = STANDARD.tier;
 export let RESOURCE_COLOR: Record<ResourceKind, number> = STANDARD.resource;
 
 /**
- * Fauna get a colour of their own, but only from Tier 3.
+ * Fauna get a colour of their own: a contact only from Tier 3, and public life
+ * always, because every player already holds it (docs/map-visuals.md §8).
  *
  * Distinct from every faction palette and from the threat red a track wears:
  * once you know it is an animal, you should know instantly, and you should

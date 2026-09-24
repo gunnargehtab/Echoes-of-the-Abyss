@@ -232,7 +232,8 @@ export const FAUNA_STATS: Record<FaunaSpecies, FaunaStats> = {
     attackRangeM: 0,
     // One entity is one shoal, like the Rasp's swarm.
     groupSize: 1,
-    // The glow the renderer draws — the shoal cloud, not a fry.
+    // The shoal, not a fry: the span of a classified contact's motes. The
+    // public cloud has a footprint of its own in the renderer.
     lengthM: 14,
   },
   [FaunaSpecies.Tetherjelly]: {
