@@ -89,17 +89,20 @@
  * it climbs from 0.47 at x −49 to 2.49 at the deck's tail, and the first
  * cut's level axis at 1.3 stood 1.1 m proud at −42 and was under the skin
  * from −30, 6 m short of the tail this paragraph named (#897, off #896's
- * height map). Neither reading of that was a comment fix: extended on the
- * level, the crown still outclimbs it; lifted whole to the fore ridge's
- * 2.2, its stern end floats 1.4 m over the blade. So the axis is a straight
- * line from 0.85 inside the drive's base to 2.47 under the deck's tail,
- * 0.06 a metre, and the ridge stands 0.6 to 1.0 m proud the whole way, the
- * fore ridge's 0.5 to 0.8: out from under the tail at 0.2 m, as the fore
- * ridge is from under the nose, and up out of the drive's back between −48
- * and −47. Its width is the fore ridge's 1.6 too, where the first cut had
- * 2.0 — one spine cut by a deck is one width. No ring, no stern mark: the
- * block says dark astern and stops, where the Clarion's says "dark astern
- * but for one mark", and 3.5 is the quietest quarter in the navy.
+ * height map). #897 offered amending this paragraph to say the ridge shows
+ * from −30; the paragraph stands, because the deck cuts one spine and the
+ * fore ridge already reaches its side of it. Nor was extending or lifting
+ * alone enough: extended on the level, the crown still outclimbs it;
+ * lifted whole to the fore ridge's 2.2, its stern end floats 1.4 m over
+ * the blade. So the axis is a straight line from 0.85 inside the drive's
+ * base to 2.47 under the deck's tail, 0.06 a metre, and the ridge stands
+ * 0.6 to 1.0 m proud the whole way, the fore ridge's 0.7 to 1.0: out from
+ * under the tail at 0.2 m, as the fore ridge is from under the nose at 0.1,
+ * and up out of the drive's back between −48 and −47. Its width is the
+ * fore ridge's 1.6 too, where the first cut had 2.0 — one spine cut by a
+ * deck is one width. No ring, no stern mark: the block says dark astern
+ * and stops, where the Clarion's says "dark astern but for one mark", and
+ * 3.5 is the quietest quarter in the navy.
  *
  * Resting light, all of it forward, and the kit's audit clean: the bow
  * mark, 1.0 m² facing up, and one navigation mark each side on the deck's

@@ -720,22 +720,40 @@ export function spar(root, name, mat, { profile, facets = 4, x = 0, y = 0, z = 0
 }
 
 /**
- * Lift each ring of a lathe by its station's axis height. A lathe's vertices
- * lie on its stations (kit.mjs `loft` puts a station's x on X), so a ring is
- * its station's x; the lift is divided by the press the node's scale applies,
- * so a profile reads in metres either way. The normals are recomputed because
- * three's are the level lathe's, and a face that tilts takes its normal with it.
+ * Lift each ring of a lathe by its station's axis height, and carry three's
+ * own normals through the shear. A lathe's vertices lie on its stations
+ * (kit.mjs `loft` puts a station's x on X), so a ring is its station's x; the
+ * lift is divided by the press the node's scale applies, so a profile reads
+ * in metres either way. A shear's normals go by its inverse transpose —
+ * n.x − s·n.y at the ring's slope s, then unit length — and at an interior
+ * station s is the mean of its two segments', as the lathe's own normals are
+ * already a blend of both. Recomputing them from the faces is not the same
+ * thing: on an indexed lathe the triangles a vertex touches depend on which
+ * diagonal each quad was split along, so the two sides come out different
+ * and the ridge lights lopsided under the conn view's key light, against
+ * the one rule this navy has before any other (#897, at review).
  */
 function shear(geo, profile, press) {
   const pos = geo.getAttribute('position');
+  const nor = geo.getAttribute('normal');
+  const lift = (k) => (profile[k][2] ?? 0) / press;
+  const grade = (a, b) => (lift(b) - lift(a)) / (profile[b][0] - profile[a][0]);
+  const last = profile.length - 1;
+  const slope = (k) =>
+    k === 0 ? grade(0, 1) : k === last ? grade(last - 1, last) : (grade(k - 1, k) + grade(k, k + 1)) / 2;
   for (let i = 0; i < pos.count; i++) {
     const at = pos.getX(i);
-    const station = profile.find(([x]) => Math.abs(x - at) < 1e-4);
-    if (!station) throw new Error(`spar: a ring at x ${at} is on no station`);
-    pos.setY(i, pos.getY(i) + (station[2] ?? 0) / press);
+    const k = profile.findIndex(([x]) => Math.abs(x - at) < 1e-4);
+    if (k < 0) throw new Error(`spar: a ring at x ${at} is on no station`);
+    pos.setY(i, pos.getY(i) + lift(k));
+    const nx = nor.getX(i) - slope(k) * nor.getY(i);
+    const ny = nor.getY(i);
+    const nz = nor.getZ(i);
+    const l = Math.hypot(nx, ny, nz) || 1;
+    nor.setXYZ(i, nx / l, ny / l, nz / l);
   }
   pos.needsUpdate = true;
-  geo.computeVertexNormals();
+  nor.needsUpdate = true;
 }
 
 /**
