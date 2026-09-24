@@ -61,10 +61,10 @@ import { depthToWorldY } from './perspectiveTerrain.ts';
  * the survey dolly. */
 export const JELLY_BELLS_PER_FIELD = 9;
 /** TUNABLE — dots in one bell: the dome, its rim, and the tentacles. */
-const BELL_DOME_DOTS = 10;
-const BELL_RIM_DOTS = 8;
-const TENTACLES = 5;
-const DOTS_PER_TENTACLE = 2;
+const BELL_DOME_DOTS = 18;
+const BELL_RIM_DOTS = 12;
+const TENTACLES = 6;
+const DOTS_PER_TENTACLE = 3;
 const DOTS_PER_BELL = BELL_DOME_DOTS + BELL_RIM_DOTS + TENTACLES * DOTS_PER_TENTACLE;
 /** §8's dot cap per field, whatever the field is doing. */
 export const JELLY_DOTS_PER_FIELD = JELLY_BELLS_PER_FIELD * DOTS_PER_BELL;
@@ -110,7 +110,7 @@ const JELLY_GAIN = 0.5;
 // ------------------------------------------------------------ the shoal
 
 /** §8's dot cap per shoal, formed or scattered. */
-export const SHOAL_DOTS = 56;
+export const SHOAL_DOTS = 72;
 /** TUNABLE — a formed shoal's cloud on the plan, and its height, in world
  * units. The old motes sat within ~40 m; the cloud keeps that footprint. */
 export const SHOAL_FORMED_RADIUS_M = 40;
@@ -120,8 +120,8 @@ const SHOAL_FORMED_HEIGHT_M = 14;
  * its true size, because the ring and not the cloud is the disclosure. */
 export const SHOAL_SCATTERED_RADIUS_M = 120;
 const SHOAL_SCATTERED_HEIGHT_M = 40;
-export const SHOAL_FORMED_GAIN = 0.85;
-export const SHOAL_SCATTERED_GAIN = 0.4;
+export const SHOAL_FORMED_GAIN = 0.9;
+export const SHOAL_SCATTERED_GAIN = 0.6;
 /** TUNABLE — a shoal breathes faster than a field, and its motes twinkle
  * three times a breath. */
 export const SHOAL_PULSE_S = 4;

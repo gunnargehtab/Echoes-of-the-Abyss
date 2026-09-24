@@ -47,7 +47,7 @@ screenshot from the survey dolly.
 | V2 — the gap | The order is right but unwritten, so nothing stops a new layer landing on the wrong rung | — |
 | V3 | Depth is luminance on the ground and in the water. Hue belongs to the biome. Three world-light families. The veil is a drain, not a blackout | [art-direction.md](art-direction.md), [style-neon-noir.md](style-neon-noir.md) "World light" |
 | V4 | Six biomes, each with a fill, a relief row, a prop set and at most one light family, spread across four docs and three files | §7 below collects them |
-| V5 | Tetherjelly fields and Lampfry shoals are public chart data, drawn as discs and motes. Classified fauna are glyphs | `EchoRenderer.ts` `drawJellies`, `drawShoals`, `drawFaunaSilhouette` |
+| V5 | Tetherjelly fields and Lampfry shoals are public chart data, drawn as discs and motes until Phase 3 (§10). Classified fauna are glyphs | `EchoRenderer.ts` `drawJellies`, `drawShoals`, `drawFaunaSilhouette` |
 
 The one-line version: *the ground has a shape and a skin, but no survey on it.*
 
@@ -255,8 +255,8 @@ the Echo Layer knows.
 
 - **Public life is stipple furniture (rung 5).** A Tetherjelly field is drawn as a slow
   drifting bloom of stipple bells at its public position, inside its true 250 m radius and at
-  its public working depth. A Lampfry shoal is a stipple mote cloud. Both are public now as
-  discs and motes. Stipple changes how they look, never what they say.
+  its public working depth. A Lampfry shoal is a stipple mote cloud. Both were public as discs
+  and motes before Phase 3. Stipple changed how they look, never what they say.
 - **Pulse in place; never drift sideways.** A bell may contract and relax, and tentacles may
   trail with it. A field may not travel across the chart. Lateral motion states a current, and
   a current is a real mechanic ([hazards.md](hazards.md)). This is the marine-snow argument
@@ -270,7 +270,8 @@ the Echo Layer knows.
   cyan and ember options do not transfer: cyan is the interface's voice and ember is the vents'.
 
 The budget is gate 6's. One Points draw per kind, a dot cap per field, and the pulse on the
-GPU. The bestiary's silhouettes stay the fallback until the stipple lands.
+GPU. Public life landed as stipple in Phase 3 (§10). The bestiary's silhouettes stay the
+fallback for classified animals until Phase 4 lands.
 
 ## 9. Gates — what changes, what does not
 
@@ -341,13 +342,44 @@ What it leaves for the owner:
 - **Acoustic residue has no rung.** §5's table does not name it, and no row's words fit: it is
   the player's own intel, not public furniture, and it must never read as a contact.
 - **Two marks have no rim.** Blocked ground is a hatch and a fill, and a formed Lampfry shoal
-  is motes and a halo. §5's outline rule presumes a rim, so how a rimless mark is weighed is
-  open, and neither is weighed yet. Phase 3 redraws the shoal.
+  is a mote cloud (Phase 3). §5's outline rule presumes a rim, so how a rimless mark is
+  weighed is open, and neither is weighed yet.
 - **Some placements are the audit's, not §5's.** §5's rows do not name these, and each draw
   site says why it was placed where it is. On rung 6: order routes and their markers, the
   lock flash, the crush and break-silence rings, the ink about own ordnance, a yard's rally
   course, and the health and build bars. On rung 7: a contact's glyph and health bar, a
   construction scaffold, and own depth cues. On rung 1: the skirt at the map's edge.
+
+### Phase 3 — landed
+
+`faunaStipple.ts` draws §8's furniture in the conn view. A Tetherjelly field is nine bells,
+each a dome, a rim and trailing tentacles in dots, spread over the field's true 250 m and
+hung at its public working depth. A Lampfry shoal is a mote cloud at its public depth: tight
+while formed, flung to 120 m and dimmed while scattered. Two `Points` draws in all, a fixed
+dot count per field, and the pulse in the vertex shader. A frame writes uniforms and never a
+buffer. The buffers are rewritten only when a field dies or a shoal scatters or reforms.
+
+The six review frames are in [one sheet](screenshots/issue-867/stipple-six-frames.png): the
+home frame, the survey dolly, a low angle at 12°, a close look at the bells, and one shoal
+formed and then scattered.
+
+What stayed on the chart painter is what §5 weighs: the field's rim, one of rung 5's floor
+outlines, and a scattered shoal's 300 m ring. The disc, the five motes and the halo went. The
+rim still lies on the ground while the bells hang in the water. The −0.10 PF is a plan
+radius, so the rim is the field's footprint and the bells are the life above it. From an
+oblique camera the bloom stands above its rim, not inside it.
+
+Four choices a reviewer should see:
+
+- **A bell is a figure, not a measurement.** It is drawn at its own shape in world units, like
+  a hull model, not squashed by the column's 0.22. Its *position* says the depth.
+- **Every motion is a scale about a fixed axis.** A bell contracts and relaxes, its tentacles
+  follow with a lag, and a shoal breathes and twinkles. Each bell's dots average to its axis,
+  and no term exceeds 1 on the plan, so nothing travels and no dot passes the 250 m.
+- **The water fades it, and the veil does not.** Dots dim with distance by the same reach as
+  everything else in the water, and the water setting can only reveal them. The veil leaves
+  them alone, because a chart does not go quiet when you stop listening.
+- **Reduced motion holds the pulse** and keeps the dots ([ui-ux.md](ui-ux.md) §11).
 
 ## 11. Open questions
 

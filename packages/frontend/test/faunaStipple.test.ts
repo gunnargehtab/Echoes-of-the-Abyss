@@ -11,7 +11,7 @@
 
 import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
-import { BufferAttribute, Color, Vector3 } from 'three';
+import { BufferAttribute, Color, ShaderMaterial, Vector3 } from 'three';
 import { DRIFT } from '@echoes/shared';
 import type { JellyCluster, ShoalTell } from '@echoes/shared';
 import {
@@ -194,7 +194,7 @@ describe('fauna stipple: what a field says (§8)', () => {
       // At rest is the widest a dot ever stands: every term of the pulse on
       // the plan is `1 - squeeze × beat`, a scale about the axis that never
       // exceeds one. The shader is the one place that could break this.
-      const shader = (stipple.jellies.points.material as { vertexShader: string }).vertexShader;
+      const shader = (stipple.jellies.points.material as ShaderMaterial).vertexShader;
       assert.match(shader, /float squeeze = mix\( 1\.0 - [\d.]+ \* trail, 1\.0 - [\d.]+ \* beat/);
       assert.match(shader, /aDot\.x \* squeeze, aDot\.y \* stretch, aDot\.z \* squeeze/);
     } finally {
@@ -250,7 +250,7 @@ describe('fauna stipple: what a field says (§8)', () => {
       }
       // And nothing in the shader adds time to a position.
       for (const cloud of [stipple.jellies, stipple.shoals]) {
-        const shader = (cloud.points.material as { vertexShader: string }).vertexShader;
+        const shader = (cloud.points.material as ShaderMaterial).vertexShader;
         assert.match(shader, /vec3 world = position \+ vec3\( aDot\.x \* squeeze/);
         assert.doesNotMatch(shader, /position\.[xz]\s*[+-]\s*uTime/);
       }
