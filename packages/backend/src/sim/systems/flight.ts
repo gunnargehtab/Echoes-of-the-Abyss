@@ -25,7 +25,10 @@
  *   carrier's ordered target, which is what "they attack the carrier's target"
  *   means in a simulation that already has ordered targets.
  * - **Move it in any special way.** A craft takes plain `MoveOrder`s and is
- *   routed and heard like anything else under way.
+ *   routed and heard like anything else under way. The one exception is in
+ *   `movementSystem`, not here: a craft steers round its own carrier rather
+ *   than through it, because the ring below is world-frame and a craft
+ *   launched astern would otherwise shove the carrier into the gun (#863).
  * - **Refuse it orders.** `Match.owns` does that, by the component: a craft
  *   takes no order of its own, exactly as a hull in a hold does not.
  */

@@ -372,6 +372,57 @@ describe('the flight and its carrier', () => {
     assert.ok(hasComponent(match.world, Position, gantry), 'the carrier is still in the water');
   });
 
+  it('goes round its carrier to the target, and never moves it (#863)', () => {
+    // A craft enters the water on a world-frame ring, so one launched astern
+    // has its target on the far side of the hull that launched it. Before
+    // #863 it chased straight through, and separation — which moves both hulls
+    // of an overlapping pair — shoved the carrier along the craft's course:
+    // an Offertory holding 993 m off a Cruiser was pushed inside the 900 m gun
+    // and sunk. §15's carrier is a kilometre away and quiet.
+    //
+    // Every carrier, holding position, with its target placed exactly
+    // opposite its second station: the second craft is launched dead astern
+    // and dead in line, which is the one geometry with no side to slide to.
+    for (const carrier of CARRIERS) {
+      const faction = carrier.faction!;
+      const enemyFaction = faction === Faction.Bathyarch ? Faction.Pelagia : Faction.Bathyarch;
+      const match = water(faction, enemyFaction);
+      const eid = hull(match, 0, faction, carrier.kind, 6000, 6000);
+      const bearing = (1 / carrier.flight!.capacity) * Math.PI * 2 + Math.PI;
+      const enemy = hull(
+        match,
+        1,
+        enemyFaction,
+        UnitKind.Corvette,
+        6000 + Math.cos(bearing) * 1000,
+        6000 + Math.sin(bearing) * 1000
+      );
+      match.orderHold(0, eid, true);
+      const handle = handleFor(match, enemy);
+      assert.notEqual(handle, 0, `${carrier.name}: the Corvette resolved`);
+      match.orderAttackContact(0, eid, handle);
+
+      const gap = (a: number): number =>
+        Math.hypot(Position.x[enemy]! - Position.x[a]!, Position.y[enemy]! - Position.y[a]!);
+      let astern = 0;
+      let roundIt = false;
+      let drift = 0;
+      for (let i = 0; i < SIM.TICK_HZ * 20; i++) {
+        match.update(STEP_MS);
+        drift = Math.max(drift, Math.hypot(Position.x[eid]! - 6000, Position.y[eid]! - 6000));
+        if (astern === 0) {
+          astern = flightOf(match, eid).find((c) => Craft.station[c] === 1) ?? 0;
+        }
+        if (astern !== 0 && hasComponent(match.world, Position, astern) && gap(astern) < gap(eid)) {
+          roundIt = true;
+        }
+      }
+      assert.notEqual(astern, 0, `${carrier.name}: a craft was launched astern`);
+      assert.ok(drift < 1, `${carrier.name}: the carrier did not move (${drift.toFixed(1)} m)`);
+      assert.ok(roundIt, `${carrier.name}: and the craft got round it to the target`);
+    }
+  });
+
   it('leaves the same fingerprint twice, flight and all', () => {
     // A launch ring taken from a random bearing would pass every test above
     // and diverge a replay, which is the failure `stateHash` exists to catch.
