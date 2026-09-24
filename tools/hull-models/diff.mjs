@@ -281,11 +281,20 @@ function finishesByName(parts) {
   const split = new Set();
   for (const p of parts) {
     if (!p.material || !p.finish) continue;
-    const fields = finishFields(p.finish);
+    const { strength, ...fields } = finishFields(p.finish);
     const seen = byName.get(p.material);
-    if (!seen) byName.set(p.material, fields);
-    else if (Object.keys(fields).some((k) => k !== 'strength' && seen[k] !== fields[k]))
-      split.add(p.material);
+    if (!seen) byName.set(p.material, { ...fields, strengths: new Set([strength]) });
+    else {
+      if (Object.keys(fields).some((k) => seen[k] !== fields[k])) split.add(p.material);
+      seen.strengths.add(strength);
+    }
+  }
+  // A name's strengths as one printed value, so the comparison below reads
+  // the Bastion's `amber_lamp` at 2.4 and 1.1 as what it is rather than as
+  // whichever of the two a part happened to carry first.
+  for (const fields of byName.values()) {
+    fields.strength = [...fields.strengths].sort().join('/');
+    delete fields.strengths;
   }
   return { byName, split };
 }

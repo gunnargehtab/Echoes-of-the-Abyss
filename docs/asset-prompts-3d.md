@@ -164,7 +164,7 @@ shadow indigo #3B2E5A, crystal glow #C9A6FF.
 Block 2's four values a navy are the brief. Counted the way
 `node tools/hull-models/finishes.mjs --hexes` counts them — every base colour and every
 emissive on a model named for a navy, as sRGB hex, the environment props aside — the
-approved models carry 49 distinct values between them, and 33 of those appear in no table
+approved models carry 48 distinct values between them, and 32 of those appear in no table
 in this repository; the other sixteen are Block 2's tokens, every one of which appears.
 That looks like a breach of gate 4 in [graphics-standards.md](graphics-standards.md) —
 "never introduce an unlisted hex value" — and it is not one. The reason is worth stating once, because it
@@ -257,7 +257,7 @@ The rule is by name, so two names for one fixture passed it, and #888 left them 
 finish decision of their own. #891 made it, on the same rule — the hull value is canonical,
 and a name is the family's where the value is:
 
-- **No lamp sits on its token.** `recolor` (`rosterModels.ts`) sets a model's register
+- **No lamp but the Veil's haze sits on its token.** `recolor` (`rosterModels.ts`) sets a model's register
   by its brightest material, lamp bases included, and seven lamps carried a token as their
   base — five the same token as their light, and the Knights' panel glow and sheath the
   crystal-glow token under lights of their own. On the Consortium's Bastion, Refinery and Turret
@@ -272,8 +272,8 @@ and a name is the family's where the value is:
   name took it: `amber_lamp`, `biolight_crimson`, `crystal_seam`. The panel glow keeps its
   name for its own light, the sheath for its six percent. No strength moved — which puts
   one name on two materials inside a file for the first time, the Bastion's and the
-  Refinery's `amber_lamp` at 2.4 and 1.1 and the Veil's `bio_light` at 2.2 and 0.9: one
-  fixture at two loudnesses, which every consumer groups by material rather than by name
+  Refinery's `amber_lamp` at 2.4 and 1.1, the Veil's `bio_light` at 2.2 and 0.9 and the
+  Commune Cruiser's at 1.6 and 1.5: one fixture at two loudnesses, which every consumer groups by material rather than by name
   (`recolor`, `mergeByMaterial`, `check.mjs`), and which `parts.mjs` cannot tell apart.
   The Submersibles' and the Barge's heavier finishes went with their names, so the conn
   view shows the Consortium Submersible's grey ×1.70 brighter and its black ×1.67, from
@@ -284,7 +284,7 @@ and a name is the family's where the value is:
   `hull-black` onto `hull_black` and so on down the Consortium's five (the running light
   shared `amber_lamp`'s emissive and took its base), `chitin-hull` onto
   `chitin_hull`, `spore-pale` onto `spore_pod`, `algae-teal` onto `algae_membrane` on the
-  hull and `algae_hull` on the structure, `biolum-vein`, `bio-vein` and `bio-vein-dim`
+  hull and `algae_hull` on the structure, `deep-chlorophyll` onto `deep_chlorophyll`, `biolum-vein`, `bio-vein` and `bio-vein-dim`
   onto `bio_light` — and four kept their value and lost the hyphen only: `baffle_foam`,
   `growth_ring_dark` and `algae_teal_dark`, hexes of their own, and `spore_haze`, a fixture
   of its own.
@@ -294,11 +294,12 @@ and a name is the family's where the value is:
 
 What stayed, and why. The Knights' structures light a polished fixture of their own, the
 crystal-glow token over `#3A2560` at 0.2, under three names — `forge_light` and
-`floodlight_glow` because every navy names its Foundry's light `forge_light` and its
-Refinery's `floodlight_<own>`, and `crystal_glow` on the Bastion and the Spire — with the
+`floodlight_glow` because three navies name their Foundry's light `forge_light` and their
+Refinery's `floodlight_<own>` (the Consortium's works light `amber_lamp`), and `crystal_glow`
+on the Bastion and the Spire — with the
 turret's `nav_light` over `#241744` at 0.3: a family polished past the hulls' 0.4, as
 `alloy_white` is to `pale_alloy`, and one value under three names because the works' names
-onto `crystal_glow` would part the Order's Foundry from every other navy's and `crystal_glow`
+onto `crystal_glow` would part the Order's Foundry from the other two and `crystal_glow`
 onto a works' name would misname the settlement's lamp. `growth_ring_dark` (`#123C2E`) sits a
 shade off `growth_ridge` (`#14382C`) and stays, the rule being by hex. `deep_chlorophyll`
 and `algae_hull` are the Commune's

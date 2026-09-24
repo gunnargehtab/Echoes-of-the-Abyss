@@ -98,8 +98,8 @@ const L = 170;
 // `deep_chlorophyll` and `algae_hull` and the hulls' `spore_pod`; its
 // `bio-vein` and `bio-vein-dim` — the token on a #0F2A12 base at 0.45 and
 // 0.5 rough, one light under two names — are `bio_light`, the token's one
-// lamp; `algae_teal_dark` and `spore_haze` are the Veil's own hexes at
-// their values, hyphens gone. (#888 had already brought `algae-teal` and
+// lamp; `algae_teal_dark` is the Veil's own hex and `spore_haze` a fixture
+// of its own, both at their values, hyphens gone. (#888 had already brought `algae-teal` and
 // `spore-pale` from the export's 0.05 / 0.75 and 0 / 0.65 onto the
 // Submersible's 0.1 / 0.7 and 0.05 / 0.65; `algae_hull` sits at 0.08 /
 // 0.6 and `spore_pod` at 0.05 / 0.5.) The strengths are this file's own: 2.2 on the
