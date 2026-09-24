@@ -241,11 +241,12 @@ export const ink = {
    * The works' lights, one model each: `forge_light` is the Foundry's line
    * and launch glow, "the forge light across the bay and at its mouth",
    * "flooding from the bay when producing"; `floodlight_hot` the
-   * Refinery's maw, stack tips, gantry
-   * lights, intake mouth and flood lamps, "floodlit working surfaces,
-   * visible machinery light" — one lamp colour on one base, polished to
-   * 0.3, each at its file's own strength (3.698 and 3.476). The approved
-   * files' own values (#652).
+   * Refinery's stack tips, gantry lights, intake mouth and flood lamps,
+   * "floodlit working surfaces, visible machinery light" — one lamp
+   * colour on one base, polished to 0.3, each at its file's own strength
+   * (3.698 and 3.476). The approved files' own values (#652). The
+   * Refinery's maw wore it too until #907 made the maw an aperture on
+   * `gullet_glow` (`crusherMaw`).
    */
   forgeLight: (intensity = 1) =>
     lamp('forge_light', hex('#E07A8C'), hex('#40141C'), 0.3, intensity),
@@ -3005,12 +3006,14 @@ export function walkingLimbs(root, { chitin, red }, opts) {
  * floor share their vertices, so the mouth is sealed on every side and
  * what shows through it is its lit floor and the throat's walls, nothing
  * beside them — and nothing of the floor stands outside the shell, which
- * a flat slab under a hole this wide could not manage: a plane across a
- * 40° × 40° cut of a sphere has its corners outside the sphere before
- * any margin is added, and the first draft's showed through the cowl as
- * lit chips beside the mouth. Rule 3's one aperture, where the structure
- * eats; rule 4's token is the navy's throat, `gullet_glow`, the Dredge's,
- * the Slipway's and the Vent Tap's.
+ * the first draft's flat slab did not manage: sized to the hole's chords
+ * at the shell plus a margin, so a slanted view saw no gap at the rim,
+ * its corners stood outside the shell and showed through the cowl as lit
+ * chips beside the mouth. Rule 2 is met by construction; rule 3's place
+ * is where the structure eats (whether the hopper's lit `intake_mouth`,
+ * a floodlit surface and no hole, counts against it is the owner's,
+ * #907); rule 4's token is the navy's throat, `gullet_glow`, the
+ * Dredge's, the Slipway's and the Vent Tap's.
  *
  * Every number is in the cowl's own frame — `cowl` is the kit's
  * `crusher` cowl, `{ r, facets, phi, theta, at, rot, scale }` — and all

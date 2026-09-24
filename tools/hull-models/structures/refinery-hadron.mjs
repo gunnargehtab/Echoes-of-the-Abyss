@@ -79,7 +79,8 @@
  * the house's +z face, edge-on to a top-down map and roofed by the cowl,
  * which overhangs that face by 1.0; the centre silo's foot stands 0.6 off
  * the same face, so there is no ground at the foot to lay the maw on, as
- * the Directorate's file does. The block lights "visible machinery light"
+ * the Directorate's file did until #907 cut its maw into the dome. The
+ * block lights "visible machinery light"
  * in one band, so the maw is a resting lamp and stays lit
  * (docs/models-plan.md §3.2 rule 5), carried up as a strip set into the
  * cowl's crown — since #894 the drum cowls' one fixture, the Commune's

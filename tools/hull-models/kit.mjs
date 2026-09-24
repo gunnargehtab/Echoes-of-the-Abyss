@@ -1761,11 +1761,12 @@ export function flangedPipes(root, { pipe: pipeMat, flange: flangeMat }, opts = 
 /**
  * The crusher: "crusher machinery" (docs/asset-prompts-3d.md, STRUCTURE —
  * Nodule Refinery) — the house, a box turned on its station; the cowl over
- * it; and the maw, the crusher's lit slab. The cowl is the navy's: on the
- * Directorate's file a shell of a sphere half a turn round and 0.55 of a
- * half-turn deep, squashed by its node (the default, `cowl.geo`); on the
- * Order's and the Commune's a half drum, the Commune's named
- * `crusher_roof` (`cowl.name`).
+ * it; and the maw, the crusher's lit fixture. The cowl is the navy's: on
+ * the Directorate's file a shell of a sphere half a turn round and 0.55
+ * of a half-turn deep, squashed by its node — `crusherDome`, the default
+ * `cowl` and what directorate.mjs `crusherMaw` cuts the aperture from, so
+ * the dome's numbers live once; on the Order's and the Commune's a half
+ * drum, the Commune's named `crusher_roof` (`cowl.name`).
  *
  * THE MAW. The three approved exports stood the lit slab on the house's
  * face — edge-on to a top-down bake and on two of them under the cowl's
@@ -1791,15 +1792,31 @@ export function flangedPipes(root, { pipe: pipeMat, flange: flangeMat }, opts = 
  * The teeth are the navy's (directorate.mjs `mawTeeth`, hadron.mjs
  * `mawBlades`) and hang where the exports hung them.
  */
+export const crusherDome = {
+  r: 2.9,
+  facets: [9, 5],
+  phi: Math.PI,
+  theta: Math.PI * 0.55,
+  at: [5.2, 3.1, -2.2],
+  rot: [0, Math.PI / 2 - 0.25, 0],
+  scale: [1.05, 0.75, 0.85],
+};
 export function crusher(root, mats, opts = {}) {
   const {
     frame = xLong,
     house = { size: [4.6, 3.4, 3.6], at: [5.2, 1.7, -2.2], rot: [0, -0.25, 0] },
     cowl = {
-      geo: new THREE.SphereGeometry(2.9, 9, 5, 0, Math.PI, 0, Math.PI * 0.55),
-      at: [5.2, 3.1, -2.2],
-      rot: [0, Math.PI / 2 - 0.25, 0],
-      scale: [1.05, 0.75, 0.85],
+      geo: new THREE.SphereGeometry(
+        crusherDome.r,
+        ...crusherDome.facets,
+        0,
+        crusherDome.phi,
+        0,
+        crusherDome.theta
+      ),
+      at: crusherDome.at,
+      rot: crusherDome.rot,
+      scale: crusherDome.scale,
     },
     // The Commune's: 1.5 of a unit along the house's own axis from its
     // centre, so the slab ends flush with the roof's forward end.
@@ -2262,13 +2279,16 @@ export function reactorIntakeArm(
 /**
  * A primitive with cells cut out of it: every triangle of an indexed `geo`
  * whose centroid `keep` refuses is dropped and the rest kept as they were —
- * vertices, normals and the index's order — so a hole in a lathe is the
- * lathe's own cells missing rather than a second shape standing in for
- * one. `keep` sees the centroid in the geometry's own frame, before the
- * node's transform. The first use is the Directorate Refinery's maw, an
- * aperture in the crusher's dome (factions/directorate.mjs `crusherMaw`,
- * #907): docs/style-neon-noir.md asks that an aperture be a hole, and
- * nothing short of taking the shell's cells out makes one.
+ * the vertices in three's own order, their normals and uvs, the index's
+ * order — so a hole in a lathe is the lathe's own cells missing rather
+ * than a second shape standing in for one. A vertex no kept triangle
+ * names goes too, so a part that is four cells of a sphere carries four
+ * cells' vertices and `parts.mjs` reads its size as the part's, not the
+ * sphere's. `keep` sees the centroid in the geometry's own frame, before
+ * the node's transform. The first use is the Directorate Refinery's maw,
+ * an aperture in the crusher's dome (factions/directorate.mjs
+ * `crusherMaw`, #907): docs/style-neon-noir.md asks that an aperture be a
+ * hole, and nothing short of taking the shell's cells out makes one.
  */
 export function pierced(geo, keep) {
   const idx = geo.index;
@@ -2282,7 +2302,15 @@ export function pierced(geo, keep) {
     const cz = (pos.getZ(a) + pos.getZ(b) + pos.getZ(c)) / 3;
     if (keep(cx, cy, cz)) kept.push(a, b, c);
   }
-  geo.setIndex(kept);
+  const used = [...new Set(kept)].sort((a, b) => a - b);
+  const to = new Map(used.map((v, i) => [v, i]));
+  for (const [name, attr] of Object.entries(geo.attributes)) {
+    const n = attr.itemSize;
+    const out = new attr.array.constructor(used.length * n);
+    used.forEach((v, i) => out.set(attr.array.subarray(v * n, v * n + n), i * n));
+    geo.setAttribute(name, new THREE.BufferAttribute(out, n));
+  }
+  geo.setIndex(kept.map((v) => to.get(v)));
   return geo;
 }
 

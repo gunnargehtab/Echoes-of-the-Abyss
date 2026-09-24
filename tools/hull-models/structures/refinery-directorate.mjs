@@ -16,8 +16,8 @@
  * in ranks with holes in them; the crusher house with a chitin cowl over
  * it and the crusher's maw cut into the cowl — a hole in the dome with
  * `crusher_maw`, the export's name, as its lit floor — three black teeth
- * hung point-down along the face's line, one at the face's foot and two
- * inside the house behind it; two
+ * hung point-down along the face's line, one on the face and two inside
+ * the house behind it; two
  * exhaust stacks with hot tips; the conveyor gantry running down to the
  * intake hopper, five nodules riding its belt, red rails, eight gantry
  * lights and three legs; the hopper with its lit mouth and five teeth
@@ -72,20 +72,24 @@
  *   glow: a maw is not livery"): the cowl loses four cells of its sphere
  *   on the shoulder that faces the belt's high end (rings 1 and 2 of 5,
  *   quads 2 and 3 of 9, eight triangles), the maw is those cells 0.35
- *   nearer the centre — 3.5 m under the shell, once the node's squash
- *   and the 12.14 m a unit are on it — in the navy's throat
+ *   nearer the centre — 3.2 to 3.9 m under the shell across it, once
+ *   the node's squash and the 12.14 m a unit are on it — in the navy's
+ *   throat
  *   token, `gullet_glow`, and `crusher_maw_throat` is the rim dropped to
  *   the floor in the cowl's chitin, so the mouth is sealed on every side
- *   (`directorate.crusherMaw`). Not a slab, because a flat one cannot
- *   fit: a plane across a 40° × 40° cut of a sphere has its corners
- *   outside the sphere, and the first draft's showed through the cowl as
- *   lit chips beside the mouth. The floor shows 173 m² from above where
+ *   (`directorate.crusherMaw`). Not a slab: the first draft's was one,
+ *   sized to the hole's chords at the shell plus a margin so a slanted
+ *   view saw no gap at the rim, and at that size its corners stood
+ *   outside the shell and showed through the cowl as lit chips beside
+ *   the mouth. The floor shows 173 m² from above where
  *   the apron showed 309, all of it inside the cowl's plan, and the mouth
- *   is about 20 m across. `maw_tooth_2` hangs at the face's foot where
- *   the apron's inner end was, `_0` and `_1` inside the house behind the
- *   face, all three as the export hung them. `diff.mjs` lists
- *   `crusher_maw`, `crusher_cowl` and the throat as added, and no other
- *   part.
+ *   is about 20 m across. `maw_tooth_2` hangs on the face 25 m up, over
+ *   where the apron's inner end lay, `_0` and `_1` inside the house
+ *   behind the face, all three as the export hung them and none of them
+ *   at the mouth; whether they move to its lip is the owner's (#907).
+ *   `diff.mjs` lists
+ *   `crusher_maw_throat` added, `crusher_maw` and `crusher_cowl` changed,
+ *   and no other part.
  * - RESTING ON THE SILOS (#907, from #894's resting measure):
  *   `photophore_1`, `_2` and `_3` hung 2.2, 0.3 and 1.9 m off the silos
  *   they mark, where the export put them, each beside a lower segment;
@@ -119,6 +123,7 @@ import {
   THREE,
   xLong,
   crusher,
+  crusherDome,
   exhaustStacks,
   conveyorGantry,
   intakeHopper,
@@ -245,20 +250,9 @@ directorate.silos(root, { red, violet, steel, black, light: crimson }, { silos: 
 // hole of two rings by two quads cut on the shoulder that faces the belt's
 // high end, the maw its lit floor 0.35 under the shell, and the throat
 // between them; its three teeth hung point-down where the export hung
-// them — `_2` at the face's foot, `_0` and `_1` inside the house — and the
-// two stacks.
-const mouth = directorate.crusherMaw({
-  cowl: {
-    r: 2.9,
-    facets: [9, 5],
-    phi: Math.PI,
-    theta: Math.PI * 0.55,
-    at: [5.2, 3.1, -2.2],
-    rot: [0, Math.PI / 2 - 0.25, 0],
-    scale: [1.05, 0.75, 0.85],
-  },
-  hole: { rings: [1, 3], quads: [2, 4] },
-});
+// them — `_2` on the face, `_0` and `_1` inside the house — and the two
+// stacks.
+const mouth = directorate.crusherMaw({ cowl: crusherDome, hole: { rings: [1, 3], quads: [2, 4] } });
 crusher(root, { house: steel, cowl: red, maw: gullet }, { cowl: mouth.cowl, maw: mouth.maw });
 xLong.place(root, 'crusher_maw_throat', mouth.throat.geo, red, mouth.throat);
 directorate.mawTeeth(root, black, {
