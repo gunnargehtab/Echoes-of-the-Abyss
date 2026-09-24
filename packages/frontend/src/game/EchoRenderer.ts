@@ -6244,9 +6244,12 @@ export class EchoRenderer {
    * the public furniture (docs/map-visuals.md §5, #866). It must never read
    * as a contact (docs/audio-direction.md §6).
    *
-   * The dashed arc is its outline, and is weighed at its peak — intensity 1,
-   * the ceiling the server clamps every mark to (ladder.ts). The three soft
-   * rings are soft fills and are not weighed.
+   * The dashed arc is its outline, weighed at its peak, and the server gives
+   * residue no single peak (ladder.ts `RESIDUE_PEAK`). At the scale's ceiling
+   * the arc clears rung 5's floor; at a faint mark's own peak it falls under
+   * the floor and the survey ink, which is recorded for the owner rather than
+   * tuned (docs/map-visuals.md §10). The three soft rings are soft fills and
+   * are not weighed.
    */
   private drawEchoMarks(g: Graphics): void {
     for (const mark of this.marks) {

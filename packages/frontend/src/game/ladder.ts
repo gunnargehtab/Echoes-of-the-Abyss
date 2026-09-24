@@ -13,10 +13,12 @@
  * every outline rung 5 (map furniture) and rung 6 (instruments) draws, and the
  * outlines rung 7 (agents) draws on the chart. Four of the rung-5 outlines are
  * its floor, and the lesser of that floor and the unselected detection ring is
- * the ceiling of rung 4 (survey ink). The draw sites import their alphas from
- * here, so the number the tests weigh is the number the mark is drawn at — a
- * rim or ring made quieter moves the ceiling with it, and the ink tests fail
- * until the ink follows it down.
+ * the ceiling of rung 4 (survey ink). Residue's arc is the one rung-5 outline
+ * that can fall under them, depending on which peak it is weighed at
+ * (`RESIDUE_PEAK`). The draw sites import their alphas from here, so the
+ * number the tests weigh is the number the mark is drawn at — a rim or ring
+ * made quieter moves the ceiling with it, and the ink tests fail until the ink
+ * follows it down.
  *
  * Four measurement rules ride with it, each the owner's (§5):
  *
@@ -50,7 +52,7 @@
  * Two blends are modelled, because the map draws with two (`Blend`).
  */
 
-import { Faction, ResolutionTier, ResourceKind } from '@echoes/shared';
+import { ECHO_MARKS, Faction, ResolutionTier, ResourceKind } from '@echoes/shared';
 import { MARK_STYLE } from './echoMarks.ts';
 import { TIER_SHAPE, type Palette } from './palette.ts';
 
@@ -64,7 +66,7 @@ import { TIER_SHAPE, type Palette } from './palette.ts';
  * Tetherjelly rim in protanopia, whose threat red is brighter — so the floor
  * is the least of them. Every other outline here lifts more than that floor
  * in every palette, which ladder.test.ts holds, near the eye (see the fog,
- * above).
+ * above) — all but residue's arc at a faint mark's own peak, which it records.
  *
  * A mark is weighed by its outline, never by its interior. A field's faint
  * fill, an inert site's hatching, a live hazard's two inner rings, a current's
@@ -128,10 +130,34 @@ export const FURNITURE_OUTLINE_ALPHA = {
    * Acoustic residue's dashed arc, per unit of intensity (EchoRenderer
    * `drawEchoMarks`). Residue is rung 5, your own heard residue beside the
    * public furniture (#866), and the arc is its outline. Its intensity decays
-   * by design, so it is weighed at its peak: 1, the ceiling the server clamps
-   * every mark to (`EchoMarkLayer.add`).
+   * by design, so it is weighed at its peak, and `RESIDUE_PEAK` says why that
+   * is two numbers rather than one.
    */
   residueArc: 0.5,
+} as const;
+
+/**
+ * Residue's intensity at its peak, read two ways: the scale's ceiling, or a
+ * mark's own peak. The owner has not chosen between them (docs/map-visuals.md
+ * §10).
+ *
+ * The owner ruled residue weighed at its peak (#866), and the server gives it
+ * no single one. A mark is born at its event's intensity, a merge adds the
+ * next event's, and `EchoMarkLayer.add` caps the sum at 1: a lone torpedo wake
+ * is born at 0.05 (`ORDNANCE.TORPEDO.WAKE_MARK_INTENSITY`), a lone shot's
+ * battle site at 0.09 (combat.ts), a detonation's at 0.35 (ordnance.ts), a
+ * Standard hold's hum at 0.5, and a destroyed structure at 1. A hum is born at
+ * what arrived, so a sliver of a partial load is fainter still, down to the
+ * level at which the server drops a mark before any client sees it.
+ *
+ * `FURNITURE_OUTLINES.residueArc` carries both: its loudest alpha is the
+ * ceiling's, and its quietest the least peak's.
+ */
+export const RESIDUE_PEAK = {
+  /** The scale's ceiling, the most any mark holds. */
+  ceiling: 1,
+  /** A mark's own peak, at its least. No mark reaches a client below it. */
+  least: ECHO_MARKS.MIN_AUDIBLE_INTENSITY,
 } as const;
 
 /**
@@ -381,8 +407,14 @@ export const FURNITURE_OUTLINES: Readonly<Record<string, WeighedOutline>> = {
   tunnelRoute: steady(F.tunnelRoute, (p) => [p.ui.accent]),
   mapRim: steady(F.mapRim, (p) => [p.ui.glassStroke]),
   shoalScatterRing: steady(F.shoalScatterRing, (p) => [p.fauna]),
-  // Residue's colours are its own, in every palette (echoMarks.ts).
-  residueArc: atPeak(F.residueArc, () => Object.values(MARK_STYLE).map((s) => s.color)),
+  // At its peak, both readings at once (`RESIDUE_PEAK`): a faint mark's own
+  // peak at its quietest, the scale's ceiling at its loudest. Its colours are
+  // its own, in every palette (echoMarks.ts).
+  residueArc: {
+    quietest: F.residueArc * RESIDUE_PEAK.least,
+    loudest: F.residueArc * RESIDUE_PEAK.ceiling,
+    colors: () => Object.values(MARK_STYLE).map((s) => s.color),
+  },
   jellyBells: stippleDot(FURNITURE_DOT_PEAK.jellyBells, (p) => [p.fauna]),
   shoalMotesFormed: stippleDot(FURNITURE_DOT_PEAK.shoalFormed, (p) => [p.fauna]),
   shoalMotesScattered: stippleDot(FURNITURE_DOT_PEAK.shoalScattered, (p) => [p.fauna]),
@@ -454,8 +486,9 @@ function contactTier(tier: ChartTier, alpha: number, label: string) {
     // The threat-red edge every Tier-4 hull and structure is drawn with.
     own[`edge${label}`] = steady(alpha, (p) => [p.ui.threat]);
     own[`healthBar${label}`] = atPeak(alpha, contactColors(tier));
-    // A track with no hull, structure or animal to draw — ordnance — is a disc.
-    own[`disc${label}`] = atPeak(alpha, contactColors(tier));
+    // A track with no hull, structure or animal to draw — ordnance — is a
+    // disc, in the tier's colour: the server names no navy for ordnance.
+    own[`disc${label}`] = atPeak(alpha, (p) => [p.tier[tier].color]);
   }
   return own;
 }
@@ -595,7 +628,12 @@ export function agentFloorLift(palette: Palette, ground: number): number {
   return floorLift(AGENT_OUTLINES, palette, ground);
 }
 
-/** The four strokes rung 5's floor is taken from. */
+/**
+ * The four strokes rung 5's floor is taken from: its quiet rims. The floor the
+ * ink is held under, and the one rung 6 clears. Residue's arc at a faint
+ * mark's own peak lifts less, and ladder.test.ts records it rather than
+ * lowering this floor (docs/map-visuals.md §10).
+ */
 export function furnitureFloorStrokes(palette: Palette): Stroke[] {
   return [
     { color: palette.ui.accent, alpha: FURNITURE_OUTLINE_ALPHA.kelpRimIdle },
