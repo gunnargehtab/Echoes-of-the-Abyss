@@ -119,6 +119,7 @@ import {
 } from './water.ts';
 import { FrameCost, ms } from './frameCost.ts';
 import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
+import { FaunaStipple } from './faunaStipple.ts';
 
 /**
  * Steps in the veil's shade table. 64 is finer than an 8-bit colour channel
@@ -433,6 +434,13 @@ export class PerspectiveView {
    */
   private readonly backdrop = new WaterBackdrop();
   private readonly snow = new MarineSnow();
+  /**
+   * Tetherjelly fields and Lampfry shoals as stipple in the water column
+   * (faunaStipple.ts, docs/map-visuals.md §8): two draw calls, the pulse on
+   * the GPU. Public chart data, so it takes the snapshot's public layers and
+   * nothing the Echo Layer resolved.
+   */
+  private readonly life = new FaunaStipple();
   /** The player's setting, 0-1 (docs/ui-ux.md §11). Scales how far the water
    * hides, never what colour it is. */
   private waterDensity = 1;
@@ -536,6 +544,7 @@ export class PerspectiveView {
     //   skirt, which §5 does not name: placed on rung 1 because it is drawn
     //   as the deep water the map ends in.
     // - the environment props: rung 3, ground.
+    // - the fauna stipple: rung 5, the public fields and shoals (§8).
     // - units, ordnance and structures: rung 7, the player's own agents.
     //   Their depth cues are not named in §5; they are placed with them,
     //   because a hull's plumb and shadow are how its figure says its depth
@@ -546,6 +555,7 @@ export class PerspectiveView {
       this.backdrop.mesh,
       this.terrainDressing,
       this.environment.group,
+      this.life.group,
       this.unitGroup,
       this.ordnanceLayer.group,
       this.structureGroup,
@@ -625,6 +635,7 @@ export class PerspectiveView {
   setReducedMotion(reduced: boolean): void {
     this.environment.setReducedMotion(reduced);
     this.snow.setReducedMotion(reduced);
+    this.life.setReducedMotion(reduced);
   }
 
   /**
@@ -726,6 +737,9 @@ export class PerspectiveView {
     this.units = snapshot.units;
     this.structures = snapshot.structures;
     this.ordnance = snapshot.ordnance;
+    // Rewritten only when a public layer changed: a field or shoal was born or
+    // died, or a shoal scattered or reformed. A still sea costs nothing here.
+    this.life.setLife(snapshot.jellies, snapshot.shoals);
     const arrivedAt = performance.now();
     this.motion.record(snapshot.units, arrivedAt);
     this.ordnanceMotion.record(snapshot.ordnance, arrivedAt);
@@ -754,6 +768,7 @@ export class PerspectiveView {
     this.units = [];
     this.structures = [];
     this.ordnance = [];
+    this.life.setLife([], []);
     this.headings.clear();
     this.lastPositions.clear();
     this.motion.reset();
@@ -774,6 +789,7 @@ export class PerspectiveView {
     this.cues.dispose();
     this.backdrop.dispose();
     this.snow.dispose();
+    this.life.dispose();
     for (const texture of this.spriteTextures.values()) texture.dispose();
     this.renderer?.dispose();
     this.renderer?.domElement.remove();
@@ -1862,6 +1878,16 @@ export class PerspectiveView {
       projectionScalePx,
       pixelRatio
     );
+    // Not the water, but it swims in it: the stipple fades with the same
+    // reach and sizes its dots on the same projection scale as the snow.
+    this.life.update({
+      now,
+      eye: this.camera.position,
+      reachM: this.waterReach,
+      waterDensity: this.waterDensity,
+      projectionScalePx,
+      pixelRatio,
+    });
   }
 
   /** See `cameraRevision`. */

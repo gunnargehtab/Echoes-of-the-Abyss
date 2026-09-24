@@ -1010,18 +1010,25 @@ describe('renderer smoke test: the conn view', () => {
 });
 
 describe('renderer smoke test: the water', () => {
-  /** Every Points cloud in the conn scene, by how it is built: the embers
-   * carry a colour attribute the snow has no use for. */
-  function clouds(scene: Scene | null): { embers: Points | null; snow: Points | null } {
+  /** Every Points cloud in the conn scene, by how it is built: the snow sizes
+   * its motes, the fauna stipple offsets its dots from an anchor, and the
+   * embers carry neither. */
+  function clouds(scene: Scene | null): {
+    embers: Points | null;
+    snow: Points | null;
+    stipple: Points[];
+  } {
     assert.ok(scene !== null, 'the conn rendered at least once');
     let embers: Points | null = null;
     let snow: Points | null = null;
+    const stipple: Points[] = [];
     scene.traverse((object) => {
       if (!(object instanceof Points)) return;
       if (object.geometry.getAttribute('snowSize') !== undefined) snow = object;
+      else if (object.geometry.getAttribute('aDot') !== undefined) stipple.push(object);
       else embers = object;
     });
-    return { embers, snow };
+    return { embers, snow, stipple };
   }
 
   it('draws the medium where there is no geometry, on two draw calls', async () => {
@@ -1053,6 +1060,40 @@ describe('renderer smoke test: the water', () => {
         false,
         'an emitter loses light to the swim and gains none'
       );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('draws public life as stipple in the water, on one draw per kind (#867)', async () => {
+    const world = await boot();
+    try {
+      world.frame(3);
+      const { stipple } = clouds(world.gl.lastScene);
+      // docs/map-visuals.md §8: the canned match's two fields and two shoals
+      // reach the conn view from the public layers, and cost two draws.
+      assert.equal(stipple.length, 2, 'one Points per kind');
+      for (const cloud of stipple) {
+        assert.ok(cloud.visible && cloud.geometry.drawRange.count > 0, 'each kind has dots');
+      }
+      const withLife = world.gl.ledger.calls;
+
+      // A sea with no public life in it draws neither, and the frame is two
+      // calls lighter for it — the cost is the stipple's and nothing else's.
+      const blank = cannedSnapshot(500);
+      blank.shoals = [];
+      blank.jellies = [];
+      world.chart.applySnapshot(blank);
+      world.conn.applySnapshot(blank);
+      world.frame(3);
+      assert.equal(world.gl.ledger.calls, withLife - 2);
+      assert.ok(clouds(world.gl.lastScene).stipple.every((cloud) => !cloud.visible));
+
+      // Between matches the colony goes with the rest of the world.
+      world.conn.applySnapshot(cannedSnapshot(600));
+      world.conn.resetForNewMatch();
+      world.frame(1);
+      assert.ok(clouds(world.gl.lastScene).stipple.every((cloud) => !cloud.visible));
     } finally {
       world.teardown();
     }
