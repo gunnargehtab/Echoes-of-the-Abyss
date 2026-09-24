@@ -81,7 +81,8 @@ export const FURNITURE_OUTLINE_ALPHA = {
   /**
    * The warning's countdown ring as it opens (EchoRenderer `drawHazards`). It
    * gains `hazardCountdownGain` as it closes on the rim, so it meets the rim
-   * at 0.85, the loudest it gets.
+   * at 0.85, the loudest it gets, and stacks on it there: the warning rim is
+   * weighed with it at its loudest.
    */
   hazardCountdownStart: 0.35,
   hazardCountdownGain: 0.5,
@@ -101,13 +102,16 @@ export const FURNITURE_OUTLINE_ALPHA = {
  * Rung 6's weighed outlines: a hull's detection ring (EchoRenderer
  * `drawRings`, docs/ui-ux.md §3.5), unselected and selected.
  *
- * The unselected ring is the rung's quietest outline, half the selected
- * ring's alpha. It is the player's own exposure, so the ink sits under it in
- * both colours it is drawn in (docs/map-visuals.md §5).
+ * The unselected ring is the rung's quietest steady outline, half the
+ * selected ring's alpha. It is the player's own exposure, so the ink sits
+ * under it in both colours it is drawn in (docs/map-visuals.md §5). Three
+ * rung-6 marks fade to nothing by design — the lock brackets, the
+ * break-silence ring and an order's acknowledgement — and are not weighed.
  *
  * Rung 6 is not yet held above rung 5. In the standard, protanopia and
  * tritanopia palettes the unselected ring lifts the ground less than rung 5's
- * floor, and in every palette it lifts less than most of rung 5's outlines.
+ * floor, and in every palette it lifts less than every rung-5 outline at its
+ * loudest.
  * ladder.test.ts records both. Settling them is the owner's call, and
  * docs/map-visuals.md §10 records it.
  */
@@ -156,7 +160,12 @@ export const FURNITURE_OUTLINES: Readonly<Record<string, WeighedOutline>> = {
   kelpRimGripping: steady(F.kelpRimGripping, (p) => [p.ui.accent]),
   jellyRim: steady(F.jellyRim, (p) => [p.fauna]),
   hazardRimDormant: steady(F.hazardRimDormant, hazardColors),
-  hazardRimWarning: steady(F.hazardRimWarning, hazardColors),
+  // The countdown ring closes onto the warning rim at its loudest.
+  hazardRimWarning: {
+    quietest: F.hazardRimWarning,
+    loudest: stacked(F.hazardRimWarning, F.hazardCountdownStart + F.hazardCountdownGain),
+    colors: hazardColors,
+  },
   // A current draws no rings, so its rim is the quietest; the rest carry the
   // third ring on theirs, at full heat when the phase begins.
   hazardRimActive: {
@@ -250,7 +259,7 @@ export function unselectedRingLift(palette: Palette, ground: number): number {
   return quietestLift(INSTRUMENT_OUTLINES.unselectedRing!, palette, ground);
 }
 
-/** Rung 6's floor over one ground: the least lift any of its weighed outlines gives. */
+/** Rung 6's floor over one ground: the least lift any of its steady outlines gives. */
 export function instrumentFloorLift(palette: Palette, ground: number): number {
   return Math.min(
     ...Object.values(INSTRUMENT_OUTLINES).map((outline) => quietestLift(outline, palette, ground))

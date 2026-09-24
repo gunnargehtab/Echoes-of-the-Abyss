@@ -3,14 +3,16 @@
  *
  * surveyInk.test.ts holds rung 4 under both. This file holds what the ladder
  * audit (#866) adds: that rung 5's floor is what `ladder.ts` says it is, that
- * rung 6's is the unselected detection ring, and where rung 6 stands against
- * rung 5. That last does not hold, so it is recorded instead: the test pins
- * exactly where it breaks, and fails when the break moves in either direction
- * — a fix and a new break both have to be written down.
+ * the floor of rung 6's steady outlines is the unselected detection ring, and
+ * where rung 6 stands against rung 5. That last does not hold, so it is
+ * recorded instead: the test pins exactly where it breaks, and fails when the
+ * break moves in either direction — a fix and a new break both have to be
+ * written down.
  *
  * Rungs 1 to 3 are the ground every lift is measured over, not strokes on it.
- * Rung 6 against rung 7 is not weighed here: docs/map-visuals.md §10 records
- * why, as a question for the owner.
+ * Marks that fade to nothing by design are not weighed, on rung 6 or rung 7,
+ * so rung 6 against rung 7 is not weighed either: docs/map-visuals.md §10
+ * records why, as a question for the owner.
  *
  * Every lift is linear in the ground's luminance, so one stroke against
  * another is settled by the darkest and the palest ground: if it is above at
@@ -50,7 +52,7 @@ const atLeast = (a: Stroke, b: Stroke) => GROUNDS.every((g) => lift(a, g) >= lif
 /** `a` lifts every ground more than `b` does. */
 const above = (a: Stroke, b: Stroke) => GROUNDS.every((g) => lift(a, g) > lift(b, g));
 
-/** Rung 6's strokes at their quietest: the ones its floor is the least of. */
+/** Rung 6's steady strokes at their quietest: the ones its floor is the least of. */
 const instrumentStrokes = (name: PaletteName) =>
   Object.values(INSTRUMENT_OUTLINES).flatMap((o) => strokesOf(o, PALETTES[name], 'quietest'));
 
@@ -111,10 +113,11 @@ describe('the loudness ladder, rung 5', () => {
 });
 
 describe('the loudness ladder, rung 6', () => {
-  it('has the unselected detection ring as its floor, in every palette', () => {
-    // §5: the ring you have not selected is rung 6's quietest outline, and it
-    // is the one the survey ink is held under. Every selected-ring stroke is
-    // at least as loud as an unselected one at both ends, so everywhere.
+  it('has the unselected detection ring as the floor of its steady outlines', () => {
+    // §5: the ring you have not selected is rung 6's quietest steady outline,
+    // and it is the one the survey ink is held under. Every selected-ring
+    // stroke is at least as loud as an unselected one at both ends, so
+    // everywhere.
     for (const name of PALETTE_NAMES) {
       const unselected = strokesOf(INSTRUMENT_OUTLINES.unselectedRing!, PALETTES[name], 'quietest');
       for (const stroke of strokesOf(

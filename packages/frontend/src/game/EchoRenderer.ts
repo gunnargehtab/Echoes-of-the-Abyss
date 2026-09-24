@@ -5821,8 +5821,8 @@ export class EchoRenderer {
    * mistake is theirs to judge.
    *
    * Rung 6, instruments (docs/map-visuals.md §5): range rings and the ping
-   * preview. The unselected ring is the rung's quietest outline, and both
-   * detection rings take their alphas from the ladder.
+   * preview. The unselected ring is the rung's quietest steady outline, and
+   * both detection rings take their alphas from the ladder.
    */
   private drawRings(): void {
     const g = this.ringLayer;
@@ -6330,6 +6330,8 @@ export class EchoRenderer {
    * Rung 6, instruments. §5's row does not name acquisition brackets; they
    * are placed by its voice — red warns — and because they are a statement
    * about the player's fire control rather than the contact they close on.
+   * They fade to nothing by design, so the ladder does not weigh them
+   * (docs/map-visuals.md §10).
    */
   private drawLockFlash(
     g: Graphics,
@@ -6383,7 +6385,9 @@ export class EchoRenderer {
    * contact because they fade with the mark they caption. A
    * Tier-1 or Tier-2 column is an edgeless haze, which §5 does not weigh per
    * pixel against a line; it answers to gate 7's glance test. The lock flash
-   * drawn onto a contact is rung 6 (`drawLockFlash`).
+   * drawn onto a contact is rung 6 (`drawLockFlash`). A contact fades in as
+   * it arrives and out as a ghost, so rung 7 is not weighed against rung 6
+   * yet (docs/map-visuals.md §10).
    */
   private drawContacts(): void {
     const g = this.contactLayer;
@@ -6666,7 +6670,8 @@ export class EchoRenderer {
       // hull, billboarded at its drawn depth: rung 6 (docs/map-visuals.md
       // §5), which names selection and the loudness collar. The crush ring,
       // the break-silence ring and the health bar are unnamed there and
-      // placed by its voice: red warns, and the bar is a reading.
+      // placed by its voice: red warns, and the bar is a reading. The
+      // break-silence ring fades to nothing by design and is not weighed.
       const d = this.drawnPosition(unit);
       const p = this.project(d.x, d.y, d.depth);
       if (p === null) break;
@@ -7671,7 +7676,8 @@ export class EchoRenderer {
    * Order routes and the click's acknowledgement. Rung 6, instruments: §5's
    * row does not name them, and they are placed by its voice — cyan tells,
    * red warns — and because an order is the player's own interface, not a
-   * mark about the sea.
+   * mark about the sea. The acknowledgement fades to nothing by design, so
+   * the ladder does not weigh it (docs/map-visuals.md §10).
    */
   private drawOrderPlans(): void {
     const g = this.ringLayer;

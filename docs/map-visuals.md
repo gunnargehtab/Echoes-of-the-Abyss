@@ -155,8 +155,9 @@ darkest and the palest ground, in all four palettes. When furniture gets quieter
 to follow it down.
 
 **The ink also sits under your own detection ring.** A hull's ring while you have not selected
-it is rung 6's quietest outline ([ui-ux.md](ui-ux.md) §3.5), and it is your own exposure: a
-line of seabed that out-shouted it would bury the one reading a quiet navy lives by. In
+it is rung 6's quietest steady outline ([ui-ux.md](ui-ux.md) §3.5), and it is your own
+exposure: a line of seabed that out-shouted it would bury the one reading a quiet navy lives
+by. In
 tritanopia at mid SIG it lifts the kelp fill by 0.044, which caps the coast near 9.9%; it is
 drawn at 9.5%.
 `ladder.ts` holds its alpha, the draw site takes it from there, and the tests hold every ink
@@ -164,8 +165,9 @@ stroke under it in both colours it is drawn in. The owner chose this on #865, ov
 ring.
 
 **The tests hold rungs 4 to 6, and record where rung 6 breaks.** Rung 4 sits under rung 5's
-floor and under that ring. Rung 5's floor is its floor, and rung 6's is the unselected ring.
-Rung 6 is not above rung 5, and the tests pin two breaks rather than hold the order. The
+floor and under that ring. Rung 5's floor is its floor, and the floor of rung 6's steady
+outlines is the unselected ring. Rung 6 is not above rung 5, and the tests pin two breaks
+rather than hold the order. The
 unselected ring lifts the ground less than rung 5's floor in the standard, protanopia and
 tritanopia palettes. And at its loudest, in its loudest colour, every rung-5 outline lifts some
 ground more than that ring in all four palettes: a live hazard's rim, a resource field's and
@@ -321,14 +323,20 @@ pin.
 
 What it leaves for the owner:
 
-- **Rung 6 is not above rung 5.** The unselected ring sits under rung 5's floor in three
-  palettes, and under every rung-5 outline at its loudest in all four. Either the ring comes up,
-  or rung 5's outlines come down, or the loudest of them — a live hazard's rims — are not
-  furniture.
-- **Rung 6 against rung 7 is unweighed.** A contact's Tier-3 ring and Tier-4 edge are strokes
-  the test could weigh, but a ghost fades to nothing by design, so rung 7's floor is zero until
-  the owner says which contact the ladder weighs. Own hulls are models, and gate 3 sets a quiet
-  one near black.
+- **Rung 6 sits under rung 5's floor** in the standard, protanopia and tritanopia palettes.
+  Either the unselected ring comes up, or the floor comes down.
+- **Rung 6 sits under every rung-5 outline at its loudest**, in all four palettes. The ring
+  cannot clear that at any alpha: a live hazard's rim at its loudest lifts black ground by
+  0.719, and the ring's quieter colour at full alpha by 0.341–0.514. Taking a live hazard's
+  rims and countdown off rung 5 still leaves the other ten over the ring as drawn — up to
+  0.382, the crystal's depth ring in tritanopia, against the ring's 0.061–0.093. What remains
+  is rung 5 coming down, or §5's "quieter" meaning floor against floor.
+- **Marks that fade by design are unweighed.** A contact fades in as it arrives and out as a
+  ghost, and the lock brackets, the break-silence ring and an order's acknowledgement fade to
+  nothing, so rung 6's floor is taken over its steady outlines. Weighing rung 7 against rung 6
+  needs a rule for which moment of a fading mark counts, and a measurement rule in §5 is the
+  owner's to write, as the outline and haze rules were on #865. Own hulls are models, and gate
+  3 sets a quiet one near black.
 - **Acoustic residue has no rung.** §5's table does not name it, and no row's words fit: it is
   the player's own intel, not public furniture, and it must never read as a contact.
 - **Two marks have no rim.** Blocked ground is a hatch and a fill, and a formed Lampfry shoal
