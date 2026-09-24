@@ -365,7 +365,7 @@ What stays recorded, for the owner. The tests pin each break and fail if it move
   Hadron's deep blue and dark teal, sit at 0.17–0.19 luminance. At 0.33 the ring lifts the kelp
   fill by 0.024–0.030: under rung 6's floor there (0.065–0.103), and under the survey ink's
   coast (0.042). A Tier-4 contact's glyph, health bar and ordnance disc fall under rung 6's
-  floor too in the three palettes whose Hadron is darkest, in tritanopia by less than 0.0001.
+  floor too in the three palettes that draw the Hadron dark, in tritanopia by less than 0.0001.
   So does a Tier-3 Sounder's halo in the two red-green palettes, where rung 6's floor is
   blocked ground's hatch.
 - **Rung 7 in the conn view is not weighed.** Own hulls and structures are lit models, or

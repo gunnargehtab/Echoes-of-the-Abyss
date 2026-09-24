@@ -1,11 +1,11 @@
 /**
  * The loudness ladder — docs/map-visuals.md §5 — at rungs 5, 6 and 7.
  *
- * surveyInk.test.ts holds rung 4 under rungs 5 and 6. This file holds the
- * rest, **floor against floor** as the owner ruled on #866: a rung's floor —
- * its quietest outline, at its quietest alpha, in its quietest colour — lifts
- * the ground more than the floor of the rung below, over the darkest and the
- * palest ground, in all four palettes. It holds that rung 5's floor is what
+ * surveyInk.test.ts holds rung 4 under rung 5's floor and the unselected
+ * ring. This file holds the rest, **floor against floor** as the owner ruled
+ * on #866: a rung's floor — its quietest outline, at its quietest alpha, in
+ * its quietest colour — lifts the ground more than the floor of the rung
+ * below, over the darkest and the palest ground, in all four palettes. It holds that rung 5's floor is what
  * `ladder.ts` says it is, residue and the stipple included; that rung 6's
  * floor is above it; and it records where rung 7 is not above rung 6. A
  * record pins exactly where a rung breaks and fails when the break moves in
@@ -99,7 +99,7 @@ const RUNG_6_FLOOR_UNDER_RUNG_5_FLOOR: readonly PaletteName[] = [];
  *   crimson, the Hadron's deep blue and dark teal — sit at 0.17–0.19
  *   luminance: at 0.33 and 0.55 they barely lift the ground.
  * - A Tier-4 contact's glyph, health bar and ordnance disc, in the three
- *   palettes whose Hadron is darkest. In tritanopia they miss the ring by
+ *   palettes that draw the Hadron dark. In tritanopia they miss the ring by
  *   0.0001 over the palest ground.
  * - A Tier-3 Sounder's halo, in the two red-green palettes, where fauna is a
  *   grey-green and rung 6's floor is the hatch.
