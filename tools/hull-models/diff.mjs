@@ -271,7 +271,10 @@ function triangleDiff(p, q, scale, shift) {
  * The finishes a file carries, by material name. A name is the key because a
  * name is what `check.mjs`, the bake and every part here match on; when one
  * file gives one name two different finishes that is itself the finding, so
- * it is recorded rather than silently resolved to the first.
+ * it is recorded rather than silently resolved to the first. Strength is
+ * not part of a value — it is the fixture's loudness, and since #891 a file
+ * carries one name at two loudnesses (the Bastion's `amber_lamp` at 2.4 and
+ * 1.1) — so it is left out of the comparison, as finishes.mjs leaves it out.
  */
 function finishesByName(parts) {
   const byName = new Map();
@@ -281,7 +284,8 @@ function finishesByName(parts) {
     const fields = finishFields(p.finish);
     const seen = byName.get(p.material);
     if (!seen) byName.set(p.material, fields);
-    else if (Object.keys(fields).some((k) => seen[k] !== fields[k])) split.add(p.material);
+    else if (Object.keys(fields).some((k) => k !== 'strength' && seen[k] !== fields[k]))
+      split.add(p.material);
   }
   return { byName, split };
 }

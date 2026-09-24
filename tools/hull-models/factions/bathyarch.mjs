@@ -85,7 +85,7 @@ export const ink = {
   hazardAmber: () => clad('hazard_amber', hex('#F2B233'), 0.15, 0.6),
   /**
    * The amber lamp: the token in `emissive` on the kit's near-black base —
-   * the navy's plain amber fixture, on nineteen models, hull or structure:
+   * the navy's plain amber fixture, on twenty-four models, hull or structure:
    * ports, floods, seams, strips, mast and running lights. The Light Scout,
    * the Corvette, the Cruiser, the Harvester and the Foundry carried it
    * amber through and through — the token in `color` as well — at 3.5
@@ -114,8 +114,8 @@ export const ink = {
    * `iron_grey`'s 0.232, and the recolour sets a model's register by its
    * brightest material, lamp bases included (rosterModels.ts `recolor`):
    * so the grey rendered at 0.109 on the three where the ceiling is 0.160.
-   * The black and the rust sit near the floor and move a hundredth
-   * (0.068 to 0.070, 0.072 to 0.079); the grey is the change, ×1.46, up
+   * The black and the rust sit near the floor and move under a hundredth
+   * (0.068 to 0.070, 0.072 to 0.078); the grey is the change, ×1.46, up
    * to the ceiling, where the Submersible — the one hull with no hazard
    * amber on it — already puts its grey. The navy's other twenty models
    * carry `hazard_amber` as cladding, so on them the amber takes the
@@ -169,8 +169,9 @@ export const ink = {
    * and the Barge's `hull-black`, `iron-grey` and `oxide-brown` at a
    * heavier finish (0.55/0.82, 0.6/0.7, 0.25/0.95), `amber-running-light`
    * on #1A1206, and the Barge's `hazard-amber-paint` at 0.4 metal — onto
-   * the names that share their hex, at the hulls' value (Block 2b, "the
-   * hull value is canonical"): the two wear `hull_black`, `iron_grey`,
+   * the names that share their hex (the running light its emissive; its
+   * base is `amber_lamp`'s #1A1408 now), at the hulls' value (Block 2b,
+   * "the hull value is canonical"): the two wear `hull_black`, `iron_grey`,
    * `oxide_rust`, `amber_lamp` and `hazard_amber` now, and the running
    * lights burn at the files' 2.6 still. This one shares its hex with
    * nothing, so it kept its value and lost the hyphen.
@@ -1635,7 +1636,7 @@ export function exhaustLouvres(root, { black, flood }, opts) {
  * claddings are `ink`'s, at the hulls' finish, one value a name; the lamp
  * is `ink.amberLamp` since #891 — the export's `work_lamp` was the token
  * through and through at 0.35 rough, and on the near-black base it is the
- * navy's one amber fixture, at the turret's 2.4.
+ * navy's plain amber fixture, at the turret's 2.4.
  */
 
 /**
@@ -2323,8 +2324,9 @@ export function lightLines(root, lampM, { lines, stern }) {
  * and its palette was `ink`'s hyphenated set (`hullBlackHeavy`,
  * `ironGreyHeavy`, `oxideBrown`, `runningLight`; `submersibleInk` until
  * #888) until #891 folded the four onto the hull names that share their
- * hex — `hullBlack`, `ironGrey`, `oxideRust`, `amberLamp` — at the hulls'
- * value; the part names keep their hyphens, as the file has them.
+ * hex — `hullBlack`, `ironGrey`, `oxideRust`, and `amberLamp`, whose
+ * emissive the running light shared and whose base it took — at the
+ * hulls' value; the part names keep their hyphens, as the file has them.
  * ------------------------------------------------------------------------ */
 
 /**
@@ -3331,7 +3333,7 @@ export function dampeningPads(root, put, foam, { pads }) {
 
 /**
  * Three patch plates, `[plate, size, at, yaw]` each: older plate on the
- * deck, newer grey on the starboard flank, hazard paint low on the port
+ * deck, newer grey on the starboard flank, hazard amber low on the port
  * bow (`patch-plate-1..3`).
  */
 export function patchPlates(root, put, mats, { plates }) {

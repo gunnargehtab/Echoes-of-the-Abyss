@@ -215,8 +215,10 @@ export const ink = {
    * same 0.0512. What the two names had left on this base was 0.35 rough
    * on the Submersible's, which under an emissive is not a second
    * fixture, so both folded here rather than onto a second near-black. On
-   * the chart the photophores go near-black, as the five shared kinds'
-   * lamps did in the other navies with #888. The emissive did not move
+   * the chart the photophores go near-black, as the Consortium's and the
+   * Commune's shared-kind lamps and the Order's four `crystal_seam` hulls
+   * did with #888; the Order's Cruiser and the two Submersibles that
+   * still sat on a token moved with this one. The emissive did not move
    * and no strength did: 2.6, 2.6, 2.4, 6 and 2.2, each file's own.
    */
   biolightCrimson: (intensity = 1) =>

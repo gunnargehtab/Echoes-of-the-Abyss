@@ -73,8 +73,8 @@
  *   The block's wording is #893.
  * - `gill-breath-line-port-1..4`, `-stb-1..4`: the clause names them, so
  *   they stay lit in `bio_light` (`bio-vein` until #891) and move onto an
- *   upward face — each
- *   organ's four now stand round its mound's outboard shoulder at 0.64
+ *   upward face — each organ's four now stand round its mound's outboard
+ *   shoulder at 0.64
  *   and 0.66 from the crown, past the haze cone's 0.55 top radius, laid
  *   tangent, sunk 0.02 and leaned 0.5 outward (`gillOrgan` `lines`), on
  *   bearings that are the organ's own and not the other's turned round.
@@ -101,8 +101,8 @@ const L = 170;
 // lamp; `algae_teal_dark` and `spore_haze` are the Veil's own hexes at
 // their values, hyphens gone. (#888 had already brought `algae-teal` and
 // `spore-pale` from the export's 0.05 / 0.75 and 0 / 0.65 onto the
-// Submersible's 0.1 / 0.7 and 0.05 / 0.65; the hull names sit at 0.08 /
-// 0.6 and 0.05 / 0.5.) The strengths are this file's own: 2.2 on the
+// Submersible's 0.1 / 0.7 and 0.05 / 0.65; `algae_hull` sits at 0.08 /
+// 0.6 and `spore_pod` at 0.05 / 0.5.) The strengths are this file's own: 2.2 on the
 // breathing lines, 0.9 on the stalk tips, 0.35 on the haze. The vein
 // rings wear the vein family's unlit finish (#890; see the header).
 const chitin = pelagia.ink.deepChlorophyll();

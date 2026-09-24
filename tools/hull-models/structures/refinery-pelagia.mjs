@@ -51,8 +51,8 @@
  *   (0, π − b, c) of the same matrix.
  * - The six materials are the navy's `ink`: the Bastion's five with
  *   `bio_light` at 2.6 (`biolight_green` until #891; `spore_pale` is
- *   `spore_pod` since then, the same value), and `floodlight_pale`, the spore token on a
- *   #3A3F1E base at 3.2587.
+ *   `spore_pod` since then, the same value), and `floodlight_pale`, the
+ *   spore token on a #3A3F1E base at 3.2587.
  * - The maw, edge-on on the Directorate's file, shows here past the roof's
  *   overhang.
  *

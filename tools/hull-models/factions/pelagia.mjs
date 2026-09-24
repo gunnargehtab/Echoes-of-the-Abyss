@@ -108,13 +108,16 @@ import {
  *   spore pod, whose register the two now match exactly (the Sower and
  *   eight more hulls anchor on `spore_pod`, and the Submersible with them
  *   since #891). The light is untouched: same emissive, each model's own
- *   strength. Since #891 it is the token's one lamp on every model: the
- *   structures' `biolight_green` (#14351A at 0.35), the Submersible's
- *   `biolum-vein` (#14301A) and the Veil's `bio-vein` and `bio-vein-dim`
- *   (#0F2A12 at 0.45 and 0.5) were one light on four near-blacks under
- *   four names, and are this one on its hull base, each file's strength
- *   kept — the Veil carries it at 2.2 on the breathing lines and 0.9 on
- *   the stalk tips, one fixture at two loudnesses.
+ *   strength. Since #891 it is the token's lamp on every model but for
+ *   the Cruiser's frill: the structures' `biolight_green` (#14351A at
+ *   0.35), the Submersible's `biolum-vein` (#14301A), the Veil's
+ *   `bio-vein` and `bio-vein-dim` (#0F2A12 at 0.45 and 0.5) and the
+ *   Cruiser's `bio_vein_lit` (#2A4A20, a green rather than a near-black)
+ *   were one light on four bases under five names, and are this one on its
+ *   hull base, each file's strength kept — the Veil carries it at 2.2 on
+ *   the breathing lines and 0.9 on the stalk tips, the Cruiser at 1.6 on
+ *   the buds and 1.5 on the lit rings and flank veins: one fixture at two
+ *   loudnesses in one file.
  * - `algae_hull` is a structure name on no hull. The Bastion, the Foundry
  *   and the Refinery carry the algae token #1FA67A at 0.08 and 0.6; the
  *   Sentinel Turret carried #14664C at 0.62, a shade the docs do not name.
@@ -127,16 +130,19 @@ import {
  *   two that split: #888 brought the Veil onto the Submersible's 0.1 / 0.7
  *   and 0.05 / 0.65 and left the ten their names, a fold being a finish
  *   decision of its own. #891 made it. Every one of the ten that shares
- *   its hex with a name of the navy's is that name, at the hulls' value:
+ *   its hex with a name of the navy's is that name, at the hulls' value or
+ *   the structures' where the structures have a name of their own:
  *   the Submersible's `chitin-hull`, `algae-teal`, `spore-pale` and
  *   `biolum-vein` are `chitin_hull`, `algae_membrane`, `spore_pod` and
  *   `bio_light`; the Veil's `deep-chlorophyll` and `algae-teal` are the
  *   structures' `deep_chlorophyll` and `algae_hull`, its `spore-pale` is
  *   `spore_pod`, and its `bio-vein` and `bio-vein-dim` are `bio_light`
  *   (`bio-vein` was never `bio_vein`, the token against the Sower's
- *   #5FAE42 — it was `bio_light` under another name). The three that
- *   share their hex with nothing keep their value and lose the hyphen:
- *   `growth_ring_dark`, `algae_teal_dark`, `spore_haze`. In the same
+ *   #5FAE42 — it was `bio_light` under another name). Three keep their
+ *   value and lose the hyphen: `growth_ring_dark` and `algae_teal_dark`,
+ *   hexes of their own (the rings' #123C2E sits a shade off `growth_ridge`'s
+ *   #14382C and stays, the rule being by hex), and `spore_haze`, a fixture
+ *   of its own whose hex is `bio_light`'s light. In the same
  *   change `spore_pale`, the structures' name for the spore token at
  *   exactly `spore_pod`'s value, folded onto it.
  *
@@ -171,14 +177,15 @@ import {
  * 0.65 and `grown_steel` the fitted things — collars, pipes, tanks. The
  * works' two lamps of the spore token, `forge_light` ("interior forge
  * light spilling from the bay") and `floodlight_pale` ("floodlit working
- * surfaces"), are polished to 0.3. The Cruiser's `bio_vein_lit` and
- * `sensor_frill_lit` are its own, the frill two-sided like a membrane; the
- * Veil's `spore_haze` is the one translucent material on any Commune
- * model — the token as its own base at 0.16 opacity, blended, rough 1,
- * "exhaling a faint haze" — and keeps that base, being a glow with nothing
- * under it rather than a lamp on a base: the one base in the navy that is
- * not near-black, and left so on purpose where #891 moved the other
- * navies' (Block 2b records it).
+ * surfaces"), are polished to 0.3. The Cruiser's `sensor_frill_lit` is its
+ * own: a lit membrane on a green of its own, two-sided like the sheet it
+ * is, so a lit sheet rather than a lamp on a base. The Veil's `spore_haze`
+ * is the one translucent material on any Commune model — the token as its
+ * own base at 0.16 opacity, blended, rough 1, "exhaling a faint haze" —
+ * and keeps that base, being a glow with nothing under it rather than a
+ * lamp on a base: the one lamp in the navy whose base is its own light,
+ * left so on purpose where #891 moved every lamp that sat on a token
+ * (Block 2b records it).
  */
 export const ink = {
   // The hulls — the Sower's pass, on eighteen models.
@@ -188,11 +195,9 @@ export const ink = {
   sporePod: () => clad('spore_pod', hex('#E8F0A3'), 0.05, 0.5),
   bioVein: (intensity = 1) => lamp('bio_vein', hex('#5FAE42'), hex('#061206'), 0.4, intensity),
   bioVeinUnlit: () => clad('bio_vein_unlit', hex('#061206'), 0, 0.4),
-  // The token's one lamp, on every model since #891 (the header).
+  // The token's lamp, on every model since #891 (the header).
   bioLight: (intensity = 1) => lamp('bio_light', hex('#8FE36B'), hex('#0A1A08'), 0.4, intensity),
-  // The Cruiser's own.
-  bioVeinLit: (intensity = 1) =>
-    lamp('bio_vein_lit', hex('#8FE36B'), hex('#2A4A20'), 0.4, intensity),
+  // The Cruiser's own (the header).
   sensorFrillLit: (intensity = 1) => {
     const m = lamp('sensor_frill_lit', hex('#8FE36B'), hex('#3F6B2E'), 0.4, intensity);
     m.side = THREE.DoubleSide;
@@ -434,7 +439,7 @@ export function ribFan(root, { ridge, vein }, opts) {
  * ridges on sixteen facets.
  *
  * `name` and `z` are the Blight's: its spore sac is this orb sunk into
- * the back amidships in the spore-pale finish rather than chitin, a
+ * the back amidships in the `spore_pod` finish rather than chitin, a
  * little off the centreline, ringless and unlit (hulls/blight.mjs;
  * docs/models-plan.md §3.2 rule 4). The Sower's stays `bladder` on the
  * keel line.

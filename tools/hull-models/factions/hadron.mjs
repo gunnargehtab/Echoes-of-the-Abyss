@@ -119,7 +119,8 @@ export const ink = {
    * the drive, at 4.5 — is this lamp since #891. Its base sat at the same
    * 0.469 under `pale_alloy`'s 0.815: not the anchor, but a lamp base
    * rendering at 0.121 in the conn view (rosterModels.ts `recolor`, the
-   * ceiling 0.160) where a base belongs at the floor, and the brightest
+   * ceiling 0.160) where a base belongs at the floor — 0.068 now, level
+   * with the indigo body at 0.071 — and the brightest
    * patch of albedo on the Cruiser's chart sprite after the alloy. A
    * roughness under an emissive is not a second fixture, so it folded
    * here; the emissive did not move, and the 4.5 is the file's still.
@@ -184,8 +185,14 @@ export const ink = {
   navLight: (intensity = 1) => lamp('nav_light', hex('#C9A6FF'), hex('#241744'), 0.3, intensity),
   // The Bastion's and the Spire's second lamp (#652): the crystal-glow token
   // over #3A2560. `forge_light` and `floodlight_glow` are the same finish
-  // under the Foundry's and the Refinery's own names — the names every
-  // navy's works carry, so they stay names.
+  // under the Foundry's and the Refinery's own names — `forge_light` is the
+  // Foundry's name in three navies and `floodlight_<own>` the Refinery's in
+  // each — and this is the settlement's. One value under three names, and
+  // #891 left it so: the works' names onto this one would part the Order's
+  // Foundry from every other navy's, and this one onto a works' name would
+  // misname the Bastion's and the Spire's lamp. With `nav_light` these are
+  // a family polished past the hulls' kit 0.4, as `alloy_white` is to
+  // `pale_alloy`.
   crystalGlow: (intensity = 1) =>
     lamp('crystal_glow', hex('#C9A6FF'), hex('#3A2560'), 0.2, intensity),
   forgeLight: (intensity = 1) =>
@@ -202,9 +209,12 @@ export const ink = {
    * the crystal-glow token #C9A6FF, the export's; #891 put it on the seam's
    * near-black with the Cruiser's two, the last bases in the navy that were
    * not. Under `alloy_white` it never anchored the Spire, and at six
-   * percent the move is a tint the conn view can barely show: a lamp base
-   * is near-black by the kit's convention (kit.mjs `lamp`), and the rule
-   * is cheaper held everywhere than argued at one sheath.
+   * percent the move is a tint the conn view can barely show. On the chart
+   * it is the largest of the three: the albedo pass renders every material
+   * opaque (hull-intake's page.html), so the sheath bakes as a solid disc
+   * over the crown, the token before and near-black now. A lamp base is
+   * near-black by the kit's convention (kit.mjs `lamp`), and the rule is
+   * cheaper held everywhere than argued at one sheath.
    */
   heatShimmer: (intensity = 1) => {
     const m = lamp('heat_shimmer', hex('#8B5CF6'), hex('#1A1030'), 0.1, intensity);

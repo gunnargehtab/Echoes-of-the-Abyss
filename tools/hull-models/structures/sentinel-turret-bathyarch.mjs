@@ -69,7 +69,7 @@ const BEARING = 0.5;
 // finish — and are `ink`'s now, the hulls' 0.25/0.85, 0.32/0.72 and
 // 0.1/0.95, one value a name. The lamp is `amber_lamp` since #891 — the
 // export's `work_lamp` was the token through and through, and on the
-// navy's near-black base it is the navy's one amber fixture (the module's
+// navy's near-black base it is the navy's plain amber fixture (the module's
 // `amberLamp` says what that moved) — at the export's 2.4.
 const black = bathyarch.ink.hullBlack();
 const grey = bathyarch.ink.ironGrey();

@@ -75,7 +75,7 @@ import * as pelagia from '../factions/pelagia.mjs';
 const L = 440;
 
 // The navy's ink (#888); the lamp burns at this file's own 2.9447, second
-// only to the Foundry's 3.0999 among the Commune's structures, for "the
+// only to the Foundry's 3.0999 among the Commune's `bio_light`, for "the
 // one building that can never run silent". It is `bio_light` since #891
 // (`biolight_green`, the same token on a #14351A base, until then), and
 // the pods are `spore_pod` (`spore_pale`, the same value under a
