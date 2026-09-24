@@ -69,9 +69,12 @@
  *   squashed flat and laid on a surface with their flat axis along its
  *   normal (`crust`): four round the foot outside, two on the torn edge,
  *   one on `rib_b`, one on the inner skin, one on the largest fallen chunk.
- *   A crust on a skin sits a tenth of a metre inside the spheroid, because
- *   a facet lies inside the curve it stands in for by up to 0.35 m and a
- *   crust lifted off the curve would float over the facet.
+ *   A crust on the outer skin sits a tenth of a metre inside the spheroid,
+ *   because a facet lies inside the curve it stands in for by up to 0.35 m
+ *   and a crust lifted off the curve would float over the facet. The inner
+ *   skin's facets lie the other way, out in the hollow, so its crust sits
+ *   0.15 m off the curve toward the axis instead; the same lift into the
+ *   wall buried it whole.
  *
  * Every face faces its surface — the outer skin out, the inner in, the tear
  * up its meridian, the ends along the arc, the foot down, every brick and
@@ -353,9 +356,11 @@ shardPiece('shard_b', 1.1, [2, 12], 1.9);
 
 // ---------------------------------------------------------------------------
 // The coral crusts: a unit polyhedron, squashed flat, laid on a surface with
-// its flat axis along the surface's normal and spun about it. On a skin the
-// lift is negative — a tenth of a metre into the spheroid — since the facet
-// under the crust sits inside the curve by up to 0.35 m.
+// its flat axis along the surface's normal and spun about it. On the outer
+// skin the lift is negative — a tenth of a metre into the spheroid — since
+// the facet under the crust sits inside the curve by up to 0.35 m; on the
+// inner skin the facets sit out in the hollow, so the lift there is toward
+// the axis.
 // ---------------------------------------------------------------------------
 function crust(name, shape, size, at, n, spin) {
   const q = new THREE.Quaternion().setFromUnitVectors(
@@ -367,7 +372,7 @@ function crust(name, shape, size, at, n, spin) {
   add(shard, name, shape(), coral, at.toArray(), [e.x, e.y, e.z], size);
 }
 const onOuter = (j, u, lift = -0.1) => v3(skin(j, u)).addScaledVector(normal(j, u), lift);
-const onInner = (j, u, lift = -0.1) => v3(skin(j, u, T)).addScaledVector(normal(j, u), -lift);
+const onInner = (j, u, lift = 0.15) => v3(skin(j, u, T)).addScaledVector(normal(j, u), -lift);
 const onTear = (j) =>
   v3(skin(j, TEAR[j]))
     .add(v3(skin(j, TEAR[j], T)))
