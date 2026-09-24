@@ -77,7 +77,7 @@ export const JELLY_DOTS_PER_FIELD = JELLY_BELLS_PER_FIELD * DOTS_PER_BELL;
  * 0.22 (perspectiveTerrain.ts), which is a statement about *where* in depth a
  * thing is, and the bell's position carries that.
  */
-const BELL_RADIUS_M = 22;
+export const BELL_RADIUS_M = 22;
 const BELL_HEIGHT_M = 16;
 const TENTACLE_M = 44;
 /**
@@ -146,7 +146,7 @@ export const PULSE_WRAP_S = 52;
  * rasterise. The cap is what keeps a field one dolly-notch from the lens a
  * stipple rather than a spray of blobs. */
 const DOT_M = 3.2;
-const DOT_MAX_PX = 2.4;
+export const DOT_MAX_PX = 2.4;
 
 const f = (value: number): string => {
   const text = value.toFixed(6);
