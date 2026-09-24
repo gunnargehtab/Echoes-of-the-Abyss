@@ -111,13 +111,19 @@ refuses. Coastlines take no such licence, because they mark sound rather than sh
 V2's answer is one ladder. Every mark on the map sits on exactly one rung, and each rung is
 quieter than every rung above it. A new layer names its rung before it lands.
 
+*Quieter* means floor against floor. A rung's floor is its quietest steady outline, at its
+quietest alpha, in its quietest colour, and it lifts the ground less than the floor of the rung
+above, over the darkest and the palest ground, in all four palettes. Nothing is asked of a
+rung's loud marks: a live hazard's rim may out-shout a detection ring. The owner settled this
+on #866.
+
 | Rung | What sits on it | Voice |
 | --- | --- | --- |
 | 1 — Water | The depth ramp, marine snow | Luminance only, one blue ([art-direction.md](art-direction.md) "Reading the Water") |
 | 2 — Stone | Rock faces, cliff shadows | `rock-face` / `rock-shadow`, below every biome fill |
 | 3 — Ground | Biome fills, relief, mottle, props | 5–10% luminance, hue by biome |
 | 4 — Survey ink | Isobaths, coastlines | Hue-neutral, thin, constant width (§4) |
-| 5 — Map furniture | Hazard sites, resource fields, currents, tunnel routes, Tetherjelly fields, Lampfry shoals, the map rim | Public, conforming, each in its own token |
+| 5 — Map furniture | Hazard sites, resource fields, currents, tunnel routes, Tetherjelly fields, Lampfry shoals, the map rim, acoustic residue | Public, or your own heard residue; conforming, each in its own token |
 | 6 — Instruments | Range rings, ping preview, blocked ground, selection, the loudness collar | The interface voice: cyan tells, magenta asks, red warns |
 | 7 — Agents | Own hulls and structures, contacts at every tier, ordnance | Loudest; glow is loudness (gate 3) |
 
@@ -140,40 +146,52 @@ water and a line is a pixel or two wide, so the eye reads a haze by its extent a
 edge. The per-pixel metric compares lines with lines; a haze answers to gate 7's glance test.
 The owner settled this on #865.
 
+**A fading mark is weighed at its steady peak**, the moment it is fully present. A contact is
+weighed at its fresh alpha, not while it fades in or as a ghost. The lock brackets, the
+break-silence ring and an order's acknowledgement are weighed at their peak alpha.
+
+**A rimless mark is weighed by its loudest crisp element**, a dot, a hatch line or a dash, at
+its peak, as if it were an outline. Soft fills stay unweighed, as the haze does. Blocked
+ground is weighed by its hatch. A Tetherjelly field's bells are a mark of their own rather
+than its rim's interior, and so is a Lampfry shoal's mote cloud, formed or scattered. Residue's
+dashed arc is its outline, weighed at full intensity; its three soft rings are fills. The owner
+settled both rules on #866.
+
 The ladder is measured, not just stated. A stroke's weight is how far it lifts the pixel
 under it, in encoded luminance, which is how a screenshot measures it. The ink blends in
 encoded space, the way the mark layer's strokes do, so an ink line and a furniture rim over
-the same ground compare exactly. `packages/frontend/src/game/ladder.ts` holds every outline
-rung 5 draws, and four of them are its floor: the quietest outline in each of its three quiet
-colours — a kelp field's rim while it is not gripping, a Tetherjelly field's rim, and a
-simulated hazard's rim while it is dormant — and an inert hazard site's rim, which the outline
-rule above leans on. Every other rung-5 outline lifts more than the least of them in every
-palette, and a test holds that near the eye: the conn view's tunnel routes and map rim fade
-with the water's fog, so a far one lifts less. Which is quietest depends on the palette. The
-draw sites take their alphas from there. The tests hold every ink stroke below the least of them, over the
-darkest and the palest ground, in all four palettes. When furniture gets quieter, the ink has
-to follow it down.
+the same ground compare exactly. The stipple adds instead: a dot is the fauna colour in linear
+light times its gain, encoded and added to the pixel, so it lifts every ground alike.
+`packages/frontend/src/game/ladder.ts` weighs both. It holds every outline rungs 5 and 6 draw,
+and every one rung 7 draws on the chart. Four of rung 5's are its floor: the quietest outline
+in each of its three quiet colours — a kelp field's rim while it is not gripping, a
+Tetherjelly field's rim, and a simulated hazard's rim while it is dormant — and an inert hazard
+site's rim, which the outline rule above leans on. Every other rung-5 mark, residue and the
+stipple included, lifts more than the least of them in every palette, and a test holds that
+near the eye: the conn view's tunnel routes and map rim fade with the water's fog, so a far one
+lifts less. Which is quietest depends on the palette. The draw sites take their alphas from
+there. The tests hold every ink stroke below the least of them, over the darkest and the
+palest ground, in all four palettes. When furniture gets quieter, the ink has to follow it
+down.
 
 **The ink also sits under your own detection ring.** A hull's ring while you have not selected
-it is rung 6's quietest steady outline ([ui-ux.md](ui-ux.md) §3.5), and it is your own
-exposure: a line of seabed that out-shouted it would bury the one reading a quiet navy lives
-by. In
-tritanopia at mid SIG it lifts the kelp fill by 0.044, which caps the coast near 9.9%; it is
-drawn at 9.5%.
-`ladder.ts` holds its alpha, the draw site takes it from there, and the tests hold every ink
-stroke under it in both colours it is drawn in. The owner chose this on #865, over raising the
-ring.
+it is your own exposure ([ui-ux.md](ui-ux.md) §3.5): a line of seabed that out-shouted it
+would bury the one reading a quiet navy lives by. `ladder.ts` holds its alpha, the draw site
+takes it from there, and the tests hold every ink stroke under it in both colours it is drawn
+in. The owner chose the ink coming down on #865, over raising the ring. The ring came up
+anyway on #866, from 0.18 to 0.27, to clear rung 5's floor, and the coast stayed at 9.5%. In
+tritanopia at mid SIG the ring now lifts the kelp fill by 0.065, which would cap the coast near
+14.9%. Rung 5's floor binds first, near 13.3%, in deuteranopia over the same fill.
 
-**The tests hold rungs 4 to 6, and record where rung 6 breaks.** Rung 4 sits under rung 5's
-floor and under that ring. Rung 5's floor is its floor, and the floor of rung 6's steady
-outlines is the unselected ring. Rung 6 is not above rung 5, and the tests pin two breaks
-rather than hold the order. The
-unselected ring lifts the ground less than rung 5's floor in the standard, protanopia and
-tritanopia palettes. And at its loudest, in its loudest colour, every rung-5 outline lifts some
-ground more than that ring in all four palettes: a live hazard's rim, a resource field's and
-the map's are all louder than it. Which side moves is the owner's call, and §10 records it
-with the audit's other findings. Rungs 1 to 3 are the ground every lift is measured over. Rung
-6 against rung 7 is not weighed yet, and §10 says why.
+**The tests hold rungs 4 to 6, and record where rung 7 breaks.** Rung 4 sits under rung 5's
+floor and under that ring. Rung 5's floor is the least of its four quiet outlines. Rung 6's
+floor is the unselected ring in the standard and tritanopia palettes, and blocked ground's
+hatch in the two red-green palettes, whose mid-SIG ring is amber. It lifts every ground more
+than rung 5's floor in all four. Rung 7's floor on the chart does not clear rung 6's: a Tier-3
+contact's ring and glyph, in its navy's colour, lift some ground less than rung 6's floor in
+every palette. The tests pin where, and §10 records it. Rungs 1 to 3 are the ground every lift
+is measured over. What rung 7 draws in the conn view cannot be weighed without a GPU, and §10
+says why.
 
 Two consequences worth naming:
 
@@ -318,36 +336,50 @@ under the ink, and the owner chose to bring the ink down: the coast is 9.5% and 
 ### Phase 2 — landed
 
 Every draw site in `EchoRenderer.ts` and `PerspectiveView.ts` names its rung, or records that
-§5 gives it none. `ladder.ts` holds the alpha of every rung-5 outline and both detection rings.
-No alpha moved: the audit records, and §5 says what its tests hold and which two breaks they
-pin.
+§5 gives it none. `ladder.ts` holds the alpha of every outline rungs 5 and 6 draw, the
+stipple's dot gains, and the shares rung 7's chart outlines take, and the draw sites take them
+from there. The audit first moved no alpha: it pinned two breaks and left three questions
+open. The owner ruled on all five on #866, and one alpha moved.
 
-What it leaves for the owner:
+The rulings:
 
-- **Rung 6 sits under rung 5's floor** in the standard, protanopia and tritanopia palettes.
-  Either the unselected ring comes up, or the floor comes down.
-- **Rung 6 sits under every rung-5 outline at its loudest over black ground**, in all four
-  palettes. The ring cannot clear that at any alpha: a live hazard's rim at its loudest lifts
-  black ground by 0.719, and the ring's quieter colour at full alpha by 0.341–0.514. Taking a
-  live hazard's rims and countdown off rung 5 still leaves the other ten over the ring as
-  drawn, over black — up to 0.382, the crystal's depth ring in tritanopia, against the ring's
-  0.061–0.093. What remains is rung 5 coming down, or §5's "quieter" meaning floor against
-  floor.
-- **Marks that fade by design are unweighed.** A contact fades in as it arrives and out as a
-  ghost, and the lock brackets, the break-silence ring and an order's acknowledgement fade to
-  nothing, so rung 6's floor is taken over its steady outlines. Weighing rung 7 against rung 6
-  needs a rule for which moment of a fading mark counts, and a measurement rule in §5 is the
-  owner's to write, as the outline and haze rules were on #865. Own hulls are models, and gate
-  3 sets a quiet one near black.
-- **Acoustic residue has no rung.** §5's table does not name it, and no row's words fit: it is
-  the player's own intel, not public furniture, and it must never read as a contact.
-- **Some marks go unweighed.** Blocked ground is a hatch and a fill, and a formed Lampfry
-  shoal is a mote cloud (Phase 3). §5's outline rule presumes a rim, so how a rimless mark is
-  weighed is open. A Tetherjelly field's rim is weighed, but its bells hang at the working
-  depth while the rim lies on the ground (Phase 3), so from an oblique camera the bloom stands
-  above its rim rather than inside it. A scattered shoal's cloud stands over its 300 m ring
-  the same way. Whether a cloud over its outline is still that outline's interior is the
-  owner's call. None of these clouds, and not the blocked ground, is weighed yet.
+- **Quieter means floor against floor** (§5). A live hazard's rim may out-shout a detection
+  ring, so the rung-5 outlines that lift black ground more than the ring stop being a break.
+- **The ring comes up.** The unselected detection ring goes from 0.18 to 0.27. Tritanopia's
+  mid-SIG ring needs more than 0.266 to clear rung 5's floor over the kelp fill, and
+  [ui-ux.md](ui-ux.md) §3.5 keeps it under the selected ring's 0.35. Rung 6's floor now clears
+  rung 5's in all four palettes, by 0.0010 in tritanopia over the kelp fill. No other alpha
+  moved, and the ink did not.
+- **A fading mark is weighed at its steady peak** (§5). A contact fresh; the lock brackets,
+  the break-silence ring and an order's acknowledgement at their peak.
+- **Acoustic residue is rung 5**, your own heard residue beside the furniture. Its dashed arc
+  is weighed at intensity 1, the ceiling the server clamps a mark to.
+- **A rimless mark is weighed by its loudest crisp element** (§5). Blocked ground by its
+  hatch, and the bells and each shoal cloud as marks of their own, by their loudest dot. Every
+  one of them clears its rung's floor.
+
+What stays recorded, for the owner. The tests pin each break and fail if it moves.
+
+- **Rung 7 sits under rung 6 on the chart**, in every palette. A Tier-3 contact's ring and
+  glyph wear its navy's colour, and the darkest primaries, the Directorate's crimson and the
+  Hadron's deep blue and dark teal, sit at 0.17–0.19 luminance. At 0.33 the ring lifts the kelp
+  fill by 0.024–0.030: under rung 6's floor there (0.065–0.103), and under the survey ink's
+  coast (0.042). A Tier-4 contact's glyph, health bar and ordnance disc fall under rung 6's
+  floor too in the three palettes whose Hadron is darkest, in tritanopia by less than 0.0001.
+  So does a Tier-3 Sounder's halo in the two red-green palettes, where rung 6's floor is
+  blocked ground's hatch.
+- **Rung 7 in the conn view is not weighed.** Own hulls and structures are lit models, or
+  baked sprites until the model loads, and own ordnance is a lit body with a lamp. What lands
+  on a pixel depends on the lights, the texture and the view, and no number for it can be
+  taken without a GPU. Gate 3 still sets a quiet hull near black. Tier 1 and Tier 2 contacts
+  are the column, a haze, and stay unweighed by the #865 ruling.
+- **The palest ground is the palest fill.** The water ramp's shallowest stop, `#0C2A34`, is
+  paler (0.143 against 0.099), and the fog carries a far shallow floor toward it. Over it the
+  tritanopia ring lifts 0.054 and the dormant eruption rim 0.055. The tests take the fill, as
+  the owner's 0.266 was measured.
+- **The collar's halos are read as glow.** Gate 3's recipe draws the loudness collar's core at
+  full opacity under two halo layers. The audit weighs the core and the dial, and reads the
+  halos as the core's glow rather than as outlines of their own.
 - **Some placements are the audit's, not §5's.** §5's rows do not name these, and each draw
   site says why it was placed where it is. On rung 6: order routes and their markers, the
   lock flash, the crush and break-silence rings, the ink about own ordnance, a yard's rally
@@ -368,12 +400,12 @@ The six review frames are in [one sheet](screenshots/issue-867/stipple-six-frame
 home frame, the survey dolly, a low angle at 12°, a close look at the bells, and one shoal
 formed and then scattered.
 
-What stayed on the chart painter is what §5 weighs: the field's rim, one of rung 5's floor
-outlines, and a scattered shoal's 300 m ring. The disc, the five motes and the halo went. The
-rim still lies on the ground while the bells hang in the water. The −0.10 PF is a plan
-radius, so the rim is the field's footprint and the bells are the life above it. From an
-oblique camera the bloom stands above its rim, not inside it, and the list above records
-whether that is still the rim's interior as the owner's call.
+What stayed on the chart painter is the field's rim, one of rung 5's floor outlines, and a
+scattered shoal's 300 m ring. The disc, the five motes and the halo went. The rim still lies
+on the ground while the bells hang in the water. The −0.10 PF is a plan radius, so the rim is
+the field's footprint and the bells are the life above it. From an oblique camera the bloom
+stands above its rim, not inside it. The owner ruled on #866 that the bloom, like a shoal's
+cloud, is a mark of its own, weighed by its loudest dot (§5).
 
 Four choices a reviewer should see:
 
