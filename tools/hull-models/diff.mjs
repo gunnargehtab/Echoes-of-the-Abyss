@@ -271,17 +271,32 @@ function triangleDiff(p, q, scale, shift) {
  * The finishes a file carries, by material name. A name is the key because a
  * name is what `check.mjs`, the bake and every part here match on; when one
  * file gives one name two different finishes that is itself the finding, so
- * it is recorded rather than silently resolved to the first.
+ * it is recorded rather than silently resolved to the first. Strength is
+ * not part of a value — it is the fixture's loudness, and since #891 a file
+ * carries one name at two loudnesses (the Bastion's `amber_lamp` at 2.4 and
+ * 1.1) — so it is left out of the one-name-two-finishes check, as
+ * finishes.mjs leaves it out, and compared as the set of loudnesses the name
+ * carries, so a lamp banked or raised still shows as a change in value.
  */
 function finishesByName(parts) {
   const byName = new Map();
   const split = new Set();
   for (const p of parts) {
     if (!p.material || !p.finish) continue;
-    const fields = finishFields(p.finish);
+    const { strength, ...fields } = finishFields(p.finish);
     const seen = byName.get(p.material);
-    if (!seen) byName.set(p.material, fields);
-    else if (Object.keys(fields).some((k) => seen[k] !== fields[k])) split.add(p.material);
+    if (!seen) byName.set(p.material, { ...fields, strengths: new Set([strength]) });
+    else {
+      if (Object.keys(fields).some((k) => seen[k] !== fields[k])) split.add(p.material);
+      seen.strengths.add(strength);
+    }
+  }
+  // A name's strengths as one printed value, so the comparison below reads
+  // the Bastion's `amber_lamp` at 2.4 and 1.1 as what it is rather than as
+  // whichever of the two a part happened to carry first.
+  for (const fields of byName.values()) {
+    fields.strength = [...fields.strengths].sort().join('/');
+    delete fields.strengths;
   }
   return { byName, split };
 }

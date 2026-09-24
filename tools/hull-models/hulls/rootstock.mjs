@@ -70,7 +70,7 @@
  *   sheath is legible from it, its seed leaves folded along it as a bud's
  *   are. The pointed end of each hollow is forward, where a Runner's nose
  *   lies, and the scar is at the root, where its peduncle grew from the
- *   node: a spore-pale fleck 1.5 m across at 0.21 of the length.
+ *   node: a fleck of `spore_pod` 1.5 m across at 0.21 of the length.
  * - **Four sites, alternating, reaching forward.** Nodes at x 24, 6, −12
  *   and −30, 18 m apart, starboard first; each sheath rooted 0.6 m outside
  *   the node's skin and yawed 16–19° off the keel toward its own flank,

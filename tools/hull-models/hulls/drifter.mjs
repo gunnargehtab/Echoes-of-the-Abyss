@@ -57,7 +57,15 @@
  * its crown, so that what parts when the bay opens is the seam, and the
  * seam is where the light is. The membrane's *opening* is a later band and
  * is not modelled (§3.2 rule 2): the valves are clad in the membrane
- * finish, unlit, and only the seam carries a lamp.
+ * finish, unlit, and only the seam carries a lamp. Single-sided, as every
+ * `algae_membrane` part is (factions/pelagia.mjs): #891 checked the four
+ * open shells at 12° of pitch from eight bearings against a two-sided
+ * render of this file, and nothing differs but a one-pixel silhouette
+ * fringe the closed chitin orbs show too, and a 3-px see-through at the
+ * bow tip where the pod's lathe is open at its point (`loft` caps no
+ * end), no valve and older than this. Each shell's one open edge is its
+ * equator, facing down, and it nests 4 % proud of a closed lobe: there is
+ * no hole to see into from above the waterline.
  *
  * The light: two `bay_seam_*` beads of `bio_vein` on the valves' crowns,
  * burning at a fifth of the Spinner's vein (`SEAM` below says why), and one

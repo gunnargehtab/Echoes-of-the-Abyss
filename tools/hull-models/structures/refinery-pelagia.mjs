@@ -50,8 +50,9 @@
  *   three's (±π, b, c − π) form of the XYZ Euler, written here as the plain
  *   (0, π − b, c) of the same matrix.
  * - The six materials are the navy's `ink`: the Bastion's five with
- *   `biolight_green` at 2.6, and `floodlight_pale`, the spore token on a
- *   #3A3F1E base at 3.2587.
+ *   `bio_light` at 2.6 (`biolight_green` until #891; `spore_pale` is
+ *   `spore_pod` since then, the same value), and `floodlight_pale`, the
+ *   spore token on a #3A3F1E base at 3.2587.
  * - The maw, edge-on on the Directorate's file, shows here past the roof's
  *   overhang.
  *
@@ -62,7 +63,7 @@
  * that emerges sits under the next ring up — on silos 1 and 3 squarely,
  * on 0 and 2 a few square metres clear. The block's one band lights
  * "visible machinery light", and a vein on a silo is that, so all four
- * stay lit in `biolight_green` and move onto an upward face together
+ * stay lit in `bio_light` and move onto an upward face together
  * (`silos` `vein.lay: 'flat'`): each a hoop round its own silo in the
  * band above its highest ring and under its cap, seated in the nine-sided
  * wall — its ring at 0.97 of the wall's corner radius there, so the 0.06
@@ -109,8 +110,8 @@ const DATUM = 0;
 
 const algae = pelagia.ink.algaeHull();
 const chitin = pelagia.ink.deepChlorophyll();
-const spore = pelagia.ink.sporePale();
-const bio = pelagia.ink.biolightGreen(2.6);
+const spore = pelagia.ink.sporePod();
+const bio = pelagia.ink.bioLight(2.6);
 const steel = pelagia.ink.grownSteel();
 const flood = pelagia.ink.floodlightPale(3.258717662091468);
 

@@ -55,7 +55,8 @@
  * disc a tenth inside its collar's end, facing out along it, so the
  * collar's own wall stood over it. The block lights "ports and working
  * lights" at rest and a dock's mouth is a working light, so both stay lit
- * in `biolight_green` and are drawn as what they are, a lit throat:
+ * in `bio_light` (`biolight_green` until #891) and are drawn as what they
+ * are, a lit throat:
  *
  * - `docking_mouth_main`: the same drum, 0.53 long instead of 0.2, its
  *   after face where the file had it and its fore face 0.1 proud of the
@@ -74,12 +75,15 @@ import * as pelagia from '../factions/pelagia.mjs';
 const L = 440;
 
 // The navy's ink (#888); the lamp burns at this file's own 2.9447, second
-// only to the Foundry's 3.0999 among the Commune's `biolight_green`, for
-// "the one building that can never run silent".
+// only to the Foundry's 3.0999 among the Commune's `bio_light`, for "the
+// one building that can never run silent". It is `bio_light` since #891
+// (`biolight_green`, the same token on a #14351A base, until then), and
+// the pods are `spore_pod` (`spore_pale`, the same value under a
+// structure's name).
 const algae = pelagia.ink.algaeHull();
 const chitin = pelagia.ink.deepChlorophyll();
-const spore = pelagia.ink.sporePale();
-const bio = pelagia.ink.biolightGreen(2.944720997756152);
+const spore = pelagia.ink.sporePod();
+const bio = pelagia.ink.bioLight(2.944720997756152);
 const steel = pelagia.ink.grownSteel();
 
 const root = new THREE.Group();

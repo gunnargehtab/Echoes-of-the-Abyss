@@ -29,11 +29,16 @@
  * and its lateral fin. Nothing here is a shape decision; where the export
  * is odd the script is odd with it:
  *
- * - The lamps are the Cruiser's own (`ink.crystalCoreGlow` and
- *   `ink.crystalPanelGlow`, on no other Order model): a core glow at 4.5 on
- *   the two spines, the four fork crystals and the drive, and a panel glow
- *   at 3.2 on the eight facet panels. The drive prism is a lamp — the one
- *   Z-long Order drive that is.
+ * - The lamps: the core glow at 4.5 on the two spines, the four fork
+ *   crystals and the drive, and a panel glow at 3.2 on the eight facet
+ *   panels. The export drew both on the crystal-glow token as their base,
+ *   under names of its own (`crystal_core_glow`, `crystal_panel_glow`);
+ *   since #891 the core glow is `crystal_seam`, the hulls' lamp — its
+ *   0.3 roughness went to the seam's 0.4 on those seven parts, the one
+ *   move the recolour keeps — and the panel glow keeps its name for its
+ *   own light at its 0.3, both on the seam's near-black base (the module's
+ *   `crystalSeam` and `crystalPanelGlow`).
+ *   The drive prism is a lamp — the one Z-long Order drive that is.
  * - The guard wings and their edges are struts between two points in the
  *   export's frame — the wing from (3.5, 8, -44) at the blade to (19, 9.4,
  *   -54) at its tip, the edge from (9, 8.6, -47.5) to (20, 9.5, -55) — so
@@ -56,7 +61,7 @@
  *   above. The block's resting clause lights fixtures — "vents, sensor
  *   arrays and lit ports" — not places, and the ventral spine is the dorsal
  *   spine's fixture carried under the keel; a keel run can be put on no
- *   upward face, so it stays lit in the core glow where it is (#890 review:
+ *   upward face, so it stays lit in the seam where it is (#890 review:
  *   a lamp the block lights at rest is never clad to quiet the audit). It
  *   is the conn view's light: 67 m² from either beam and 89 m² from below,
  *   by glb.mjs `topDown` with the parts turned onto each axis — a turn
@@ -80,7 +85,7 @@ const DATUM = 8;
 
 const shadow = hadron.ink.shadowIndigo();
 const alloy = hadron.ink.paleAlloy();
-const core = hadron.ink.crystalCoreGlow(4.5);
+const core = hadron.ink.crystalSeam(4.5);
 const panel = hadron.ink.crystalPanelGlow(3.2);
 
 const root = new THREE.Group();

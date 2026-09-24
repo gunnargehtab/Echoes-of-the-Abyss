@@ -42,8 +42,9 @@ const DATUM = 2.6;
 const violet = directorate.ink.bruiseViolet();
 const red = directorate.ink.abyssalRed();
 const chitin = directorate.ink.trenchChitin();
-// The file's own strength.
-const photophore = directorate.ink.redPhotophore(2.6);
+// `red_photophore` until #891: the token in `color` anchored the register
+// (the module's `biolightCrimson`). The strength is the file's own.
+const photophore = directorate.ink.biolightCrimson(2.6);
 
 const root = new THREE.Group();
 root.name = 'directorate_light_scout';

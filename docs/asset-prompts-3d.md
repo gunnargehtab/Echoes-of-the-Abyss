@@ -161,10 +161,13 @@ shadow indigo #3B2E5A, crystal glow #C9A6FF.
 
 ## Block 2b — the derived palette, and why it is not a palette
 
-Block 2's four values a navy are the brief. The approved models carry 51 distinct hex
-values between them, and 35 of those appear in no table in this repository. That looks like
-a breach of gate 4 in [graphics-standards.md](graphics-standards.md) — "never introduce an
-unlisted hex value" — and it is not one. The reason is worth stating once, because it
+Block 2's four values a navy are the brief. Counted the way
+`node tools/hull-models/finishes.mjs --hexes` counts them — every base colour and every
+emissive on a model named for a navy, as sRGB hex, the environment props aside — the
+approved models carry 48 distinct values between them, and 32 of those appear in no table
+in this repository; the other sixteen are Block 2's tokens, every one of which appears.
+That looks like a breach of gate 4 in [graphics-standards.md](graphics-standards.md) —
+"never introduce an unlisted hex value" — and it is not one. The reason is worth stating once, because it
 decides what a model author owes the palette and what they do not.
 
 **A model's hue never reaches a pixel.** Gate 4 says so itself: dressing a model in a
@@ -205,11 +208,11 @@ Lamp bases are the near-black a `lamp()` puts in `color` for its emissive to sit
 | Navy | Role | Values |
 | --- | --- | --- |
 | Consortium | emissive | `#B07A1E` `amber_vent` · `#FFD070` `amber_flood` |
-| Consortium | cladding | `#1C1F22` `baffle-foam` (the Baffle Barge) · `#1A1408` `amber_lamp_unlit` (the lamp's base worn as cladding by a part the block lights only in a later band — the Furnace's burner nozzles, bow floods, ladder strips and manifold strip, lit only cutting) |
-| Consortium | lamp base | `#1A1408` · `#120E06` · `#2A2210` · `#1A1206` |
-| Commune | cladding | `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#1FA67A` `algae_hull` (the token's hex under a second name) · `#11563F` `algae-teal-dark` · `#22302C` `grown_steel` · `#061206` `bio_vein_unlit` (the vein's base worn as cladding by a part the block lights only in a later band — the Glider's tail veins, dark with the drive cut, the Weaver's and the Blight's stem veins, and the Rootstock's node-to-node vein, lit under way) |
+| Consortium | cladding | `#1C1F22` `baffle_foam` (the Baffle Barge) · `#1A1408` `amber_lamp_unlit` (the lamp's base worn as cladding by a part the block lights only in a later band — the Furnace's burner nozzles, bow floods, ladder strips and manifold strip, lit only cutting) |
+| Consortium | lamp base | `#1A1408` · `#120E06` · `#2A2210` |
+| Commune | cladding | `#14382C` `growth_ridge` · `#123C2E` `growth_ring_dark` · `#1FA67A` `algae_hull` (the token's hex under a second name) · `#11563F` `algae_teal_dark` · `#22302C` `grown_steel` · `#061206` `bio_vein_unlit` (the vein's base worn as cladding by a part the block lights only in a later band — the Glider's tail veins, dark with the drive cut, the Weaver's and the Blight's stem veins, and the Rootstock's node-to-node vein, lit under way) |
 | Commune | emissive | `#5FAE42` `bio_vein` (at strength 1 on the Sower and the Spinner, 0.2 on the Drifter's seams and the Glider's wing vein — a strength survives the recolour as a finish does) · `#E8F0A3` `forge_light` / `floodlight_pale` (the spore token as a light) |
-| Commune | lamp base | `#061206` · `#0A1A08` · `#14301A` · `#14351A` · `#0F2A12` · `#2E3A16` · `#3A3F1E` · `#2A4A20` · `#3F6B2E` |
+| Commune | lamp base | `#061206` · `#0A1A08` · `#2E3A16` · `#3A3F1E` · `#3F6B2E` (`sensor_frill_lit`, a lit membrane) |
 | Directorate | cladding | `#3A3F4A` `weld_steel` · `#4E1220` `chitin_red_dark` · `#1A0810` `biolight_unlit` (the lamp base worn as cladding by a part the block lights only in a later band — the Verger's bay doors, and the Lure's fan ribs and tergite-edge rows) |
 | Directorate | emissive | `#E0506A` `gullet_glow` · `#E07A8C` `forge_light` / `floodlight_hot` |
 | Directorate | lamp base | `#1A0810` `biolight_crimson` · `#2A0C14` `gullet_glow` · `#40141C` `forge_light` / `floodlight_hot` |
@@ -241,17 +244,81 @@ and on a model file that is neither an `env-` prop nor named `-<navy>.glb`;
 
 A value is everything a finish carries **except its emissive strength**. Strength is a
 lamp's resting loudness, each model's own, approved against its SIG band and carried into
-the conn view as it stands (`rosterModels.ts`), so `red_photophore` at 2.4 on one hull and 6
+the conn view as it stands (`rosterModels.ts`), so `biolight_crimson` at 2.4 on one hull and 6
 on another is one fixture at two loudnesses. Where a lamp's light moved onto its name's
 value, its strength moved the other way so the resting luminance held: the Consortium
 Cruiser's `amber_vent` burns at 3.516 on `#B07A1E` where it burned at 2.2 on `#F28A1E`.
 Metalness and roughness survive the recolour where a hue does not, so the finish moves are
 the visible ones, in the conn view; the chart's bake reads base colour and light alone.
 
-The rule is by name, so two names for one fixture pass it: the hyphenated names on the
-Submersibles, the Baffle Barge and the Spore Veil (`hull-black`, `algae-teal`) beside
-underscore names that share their hex at other finishes, and the Commune's `bio_light`
-beside `biolight_green`. Folding a pair is a finish decision of its own, not a correction.
+### Two names, one fixture — folded in #891
+
+The rule is by name, so two names for one fixture passed it, and #888 left them as a
+finish decision of their own. #891 made it, on the same rule — the hull value is canonical,
+and a name is the family's where the value is:
+
+- **No lamp but the Veil's haze sits on its token.** `recolor` (`rosterModels.ts`) sets a model's register
+  by its brightest material, lamp bases included, and seven lamps carried a token as their
+  base — five the same token as their light, and the Knights' panel glow and sheath the
+  crystal-glow token under lights of their own. On the Consortium's Bastion, Refinery and Turret
+  (`work_lamp`, `port_glow`) that base was the anchor at 2.2× `iron_grey`, so the grey
+  rendered at 0.109 where the ceiling is 0.160; on the Directorate's Light Scout, Corvette,
+  Harvester, Cruiser and Submersible (`red_photophore`, `photophore`) it was the anchor at
+  3.25× the red beside it (`abyssal_red`, or `edge_red` on the Submersible), so the red
+  rendered at 0.096 where the tergite hulls put theirs at 0.160. The Knights' three
+  (`crystal_core_glow`, `crystal_panel_glow`, `heat_shimmer`) anchored nothing under the
+  Cruiser's `pale_alloy` and the Spire's `alloy_white`, and moved for the rule. Each went onto its family's near-black, and where
+  nothing but a roughness under an emissive was left to tell two names apart, the family's
+  name took it: `amber_lamp`, `biolight_crimson`, `crystal_seam`. The panel glow keeps its
+  name for its own light, the sheath for its six percent. No strength moved — which puts
+  one name on two materials inside a file for the first time, the Bastion's and the
+  Refinery's `amber_lamp` at 2.4 and 1.1, the Veil's `bio_light` at 2.2 and 0.9 and the
+  Commune Cruiser's at 1.6 and 1.5: one fixture at two loudnesses, which every consumer groups by material rather than by name
+  (`recolor`, `mergeByMaterial`, `check.mjs`), and which `parts.mjs` cannot tell apart.
+  The Submersibles' and the Barge's heavier finishes went with their names: the Consortium
+  Submersible's grey keeps 0.68 of its colour as diffuse where it kept 0.40, its black 0.75
+  where it kept 0.45, and the specular a lower metalness loses gives most of that back — the
+  Barge, carrying the same move, reads about five percent lighter in the conn view
+  (`891-structures-before-after.png`, the 55° row).
+- **The hyphenated names folded.** The Submersibles', the Baffle Barge's and the Spore
+  Veil's r184 names went onto the names that share their hex, at the hulls' value or the
+  structures' where the structures have a name of their own —
+  `hull-black` onto `hull_black` and so on down the Consortium's five (the running light
+  shared `amber_lamp`'s emissive and took its base), `chitin-hull` onto
+  `chitin_hull`, `spore-pale` onto `spore_pod`, `algae-teal` onto `algae_membrane` on the
+  hull and `algae_hull` on the structure, `deep-chlorophyll` onto `deep_chlorophyll`, `biolum-vein`, `bio-vein` and `bio-vein-dim`
+  onto `bio_light` — and four kept their value and lost the hyphen only: `baffle_foam`,
+  `growth_ring_dark` and `algae_teal_dark`, hexes of their own, and `spore_haze`, a fixture
+  of its own.
+- **The Commune's pairs.** `biolight_green` was `bio_light` on a second near-black, and is
+  `bio_light`; so was the Cruiser's `bio_vein_lit`, on a green (`#2A4A20`), and it is
+  `bio_light` at its 1.5; `spore_pale` was `spore_pod` to the value, and is `spore_pod`.
+
+What stayed, and why. The Knights' structures light a polished fixture of their own, the
+crystal-glow token over `#3A2560` at 0.2, under three names — `forge_light` and
+`floodlight_glow` because three navies name their Foundry's light `forge_light` and their
+Refinery's `floodlight_<own>` (the Consortium's works light `amber_lamp`), and `crystal_glow`
+on the Bastion and the Spire — with the
+turret's `nav_light` over `#241744` at 0.3: a family polished past the hulls' 0.4, as
+`alloy_white` is to `pale_alloy`, and one value under three names because the works' names
+onto `crystal_glow` would part the Order's Foundry from the other two and `crystal_glow`
+onto a works' name would misname the settlement's lamp. `growth_ring_dark` (`#123C2E`) sits a
+shade off `growth_ridge` (`#14382C`) and stays, the rule being by hex. `deep_chlorophyll`
+and `algae_hull` are the Commune's
+structures' names beside the hulls' `chitin_hull` and `algae_membrane`, a step of finish
+apart on purpose (`factions/pelagia.mjs` says why); `spore_haze`'s base is the token at
+0.16 opacity — a glow with nothing under it, and the one lamp left on its token; the
+Directorate's `edge_red` is a lit cladding, the abyssal-red token glowing faintly at 0.12,
+and where it anchors the Submersible it does so at the red's own 0.0512, exactly where
+`chitin_red` anchors every tergite hull; and the Commune Cruiser's `sensor_frill_lit` is a
+lit membrane, two-sided like the sheet it is, on a green of its own (`#3F6B2E`, in the
+registry above) under `spore_pod`, anchoring nothing. The Drifter's four `bay_valve_*`,
+open quarter-shells in single-sided `algae_membrane`, were checked at 12° of pitch from
+eight bearings against a two-sided render of the same file: nothing differs but a
+one-pixel silhouette fringe that rings the closed chitin orbs too, and a 3-px see-through
+at the bow tip where the pod's lathe is open at its point — no valve, and older than this
+change. A valve's one open edge is its equator, facing down, so no camera above the
+waterline sees in, and the membrane stays single-sided.
 
 One correction landed with the #649 ports and belongs here rather than in a module comment:
 `#5FAE42` was described as the biolight token at half strength. It is not a scaling of

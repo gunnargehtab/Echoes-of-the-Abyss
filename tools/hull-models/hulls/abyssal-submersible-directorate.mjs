@@ -26,8 +26,9 @@
  * (docs/concept-art/models/abyssal-submersible-directorate.glb at 3e15409),
  * part for part in its order, every number the export's own. Every part
  * comes from `factions/directorate.mjs` or is a kit box, and the model
- * carries four materials of its own name in the navy's one `ink` (#888),
- * at the export's values. Nothing here is a shape decision but the lamps
+ * carries three materials of its own name in the navy's one `ink` (#888),
+ * at the export's values, and `biolight_crimson` since #891 (below).
+ * Nothing here is a shape decision but the lamps
  * #890 re-seated, below; where the export is odd the script is odd with
  * it: the
  * `port` parts sit at the export's +x, which is the kit's -z once the file
@@ -100,8 +101,11 @@ const HALF_METRE = (0.5 * DRAWN) / L;
 const chitin = directorate.ink.chitinTrench();
 const violet = directorate.ink.plateViolet();
 // The file's own strengths: the rims' faint 0.12, the photophores' 2.2.
+// The photophores are `biolight_crimson` since #891: the file's
+// `photophore` was the token in `color` too, and anchored the register
+// (the module's `biolightCrimson`).
 const edge = directorate.ink.edgeRed(0.12);
-const photophore = directorate.ink.photophore(2.2);
+const photophore = directorate.ink.biolightCrimson(2.2);
 
 const root = new THREE.Group();
 root.name = 'abyssal_raider';

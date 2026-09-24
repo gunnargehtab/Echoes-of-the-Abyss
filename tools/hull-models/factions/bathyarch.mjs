@@ -85,7 +85,7 @@ export const ink = {
   hazardAmber: () => clad('hazard_amber', hex('#F2B233'), 0.15, 0.6),
   /**
    * The amber lamp: the token in `emissive` on the kit's near-black base —
-   * the navy's plain amber fixture, on nineteen models, hull or structure:
+   * the navy's plain amber fixture, on twenty-four models, hull or structure:
    * ports, floods, seams, strips, mast and running lights. The Light Scout,
    * the Corvette, the Cruiser, the Harvester and the Foundry carried it
    * amber through and through — the token in `color` as well — at 3.5
@@ -106,12 +106,29 @@ export const ink = {
    * its STRUCTURE block asks. The strength stayed because it is the lit
    * state, and the lit state did not move.
    *
-   * Not renamed to `work_lamp`. That would have parted the Foundry from its
-   * sibling the Slipway, whose gantry work lights already carry this name on
-   * this base; and `work_lamp` is token-through at 0.35 rough, so the split
-   * would only have moved onto that name. Every one of the five
-   * carries `hazard_amber` at the same #F2B233, so the brightest colour the
-   * recolour sets its register by is where it was.
+   * `work_lamp` and `port_glow` are this lamp since #891 — the Sentinel
+   * Turret's, the Bastion's and the Refinery's fixtures, which carried the
+   * token in `color` as well as in `emissive`, at 0.35 and 0.4 rough (#639,
+   * #652), one value each and so no split for #888 to see. That base was
+   * the brightest colour on all three models, 0.510 linear against
+   * `iron_grey`'s 0.232, and the recolour sets a model's register by its
+   * brightest material, lamp bases included (rosterModels.ts `recolor`):
+   * so the grey rendered at 0.109 on the three where the ceiling is 0.160.
+   * The black and the rust sit near the floor and move under a hundredth
+   * (0.068 to 0.070, 0.072 to 0.078); the grey is the change, ×1.46, up
+   * to the ceiling, where the Submersible — the one hull with no hazard
+   * amber on it — already puts its grey. The navy's other twenty models
+   * carry `hazard_amber` as cladding, so on them the amber takes the
+   * ceiling and the grey sits at 0.109 under it: per-model normalisation,
+   * which is the recolour's law and not the ink's to change. What the
+   * two names had left once the base is this one is 0.35 rough under an
+   * emissive on one of them, which is not a second fixture, so they folded
+   * here rather than onto a second near-black. Each file's strengths
+   * stand — 2.4 on the work lamps, 1.1 on the ports — which puts this name
+   * at two loudnesses inside the Bastion and the Refinery: one fixture at
+   * two settings, since strength is not part of a value (Block 2b). On the
+   * chart the lamp parts go near-black, as the five shared kinds' did with
+   * #888.
    */
   amberLamp: (intensity = 1) =>
     lamp('amber_lamp', hex('#F2B233'), hex('#1A1408'), 0.4, intensity),
@@ -145,50 +162,21 @@ export const ink = {
    */
   amberLampUnlit: () => clad('amber_lamp_unlit', hex('#1A1408'), 0, 0.4),
   /**
-   * The work lamp of a static mount — every `work_lamp` on the Sentinel
-   * Turret, the Bastion and the Refinery — amber through and through: the
-   * same #F2B233 as `amber_lamp` in `emissive`, and the token in `color`
-   * too rather than a near-black, at 0.35 rough, so it reads as a fixture
-   * in the albedo map (#639). All three pass 2.4 — quieter than the 3.5 the
-   * shared kinds' `amber_lamp` burns at, not louder. One value on the three
-   * models that carry it, so not a split, and left as approved.
+   * The Baffle Barge's acoustic foam (#652): the near-black #1C1F22 of its
+   * vanes and pads, nothing the docs name, rougher than anything else in
+   * the navy. `baffle-foam` in the export, and under its hyphen until #891
+   * folded the rest of the r184 pass's hyphenated set — the Submersible's
+   * and the Barge's `hull-black`, `iron-grey` and `oxide-brown` at a
+   * heavier finish (0.55/0.82, 0.6/0.7, 0.25/0.95), `amber-running-light`
+   * on #1A1206, and the Barge's `hazard-amber-paint` at 0.4 metal — onto
+   * the names that share their hex (the running light its emissive; its
+   * base is `amber_lamp`'s #1A1408 now), at the hulls' value (Block 2b,
+   * "the hull value is canonical"): the two wear `hull_black`, `iron_grey`,
+   * `oxide_rust`, `amber_lamp` and `hazard_amber` now, and the running
+   * lights burn at the files' 2.6 still. This one shares its hex with
+   * nothing, so it kept its value and lost the hyphen.
    */
-  workLamp: (intensity = 1) =>
-    lamp('work_lamp', hex('#F2B233'), hex('#F2B233'), 0.35, intensity),
-  /**
-   * The Refinery's and the Bastion's second lamp (#652): the token through
-   * and through like the work lamp, a shade rougher at 0.4 — the lit ports
-   * of a dome that "can never run silent", the belt lines on the conveyors,
-   * the crusher's intake. Both pass 1.1; the default was 1.1 until #888 and
-   * is the kit's 1 now, like every lamp here, so the output did not move.
-   * One value on both, and left.
-   */
-  portGlow: (intensity = 1) =>
-    lamp('port_glow', hex('#F2B233'), hex('#F2B233'), 0.4, intensity),
-  /*
-   * The Abyssal Submersible's and the Baffle Barge's finishes, hyphenated as
-   * those two exports name them (#649, #652): the three tokens in a heavier
-   * finish than the hulls' — the black 0.55/0.82 against 0.25/0.85, the
-   * grey 0.6/0.7 against 0.32/0.72, the brown named for what it is at
-   * 0.25/0.95 — and a running light on the near-black #1A1206, at 2.6 on
-   * both. The same hex under a second name at a second finish is not a
-   * split rule 3 can see, since the rule is keyed on the name, and #888 left
-   * it: bringing `hull-black` onto `hull_black` is a finish move on two
-   * models that no name asked for, and a decision for its own change.
-   */
-  hullBlackHeavy: () => clad('hull-black', hex('#0E1418'), 0.55, 0.82),
-  ironGreyHeavy: () => clad('iron-grey', hex('#8C8378'), 0.6, 0.7),
-  oxideBrown: () => clad('oxide-brown', hex('#3D2B1F'), 0.25, 0.95),
-  runningLight: (intensity = 1) =>
-    lamp('amber-running-light', hex('#F2B233'), hex('#1A1206'), 0.4, intensity),
-  /*
-   * The Baffle Barge's own two (#652): the acoustic foam of its vanes and
-   * pads, #1C1F22, a near-black nothing in the docs names, rougher than
-   * anything else in the navy; and the hazard amber as paint rather than
-   * plate, at 0.4 metal.
-   */
-  baffleFoam: () => clad('baffle-foam', hex('#1C1F22'), 0.1, 0.98),
-  hazardPaint: () => clad('hazard-amber-paint', hex('#F2B233'), 0.4, 0.6),
+  baffleFoam: () => clad('baffle_foam', hex('#1C1F22'), 0.1, 0.98),
 };
 
 /** The body: a flat-sided slab from a plan outline, with a bow face and transom. */
@@ -1710,11 +1698,11 @@ export function exhaustLouvres(root, { black, flood }, opts) {
 
 /*
  * The structures' palette was `structureInk` until #888: the turret's own
- * three claddings, less rough than the hulls', and `work_lamp`. The lamp is
- * `ink.workLamp` now — the fixture the approved turret named, the token
- * through and through at 0.35 rough where `amber_lamp` sits on a near-black
- * base; the same amber, at 2.4 — and the three claddings are `ink`'s, at
- * the hulls' finish, one value a name.
+ * three claddings, less rough than the hulls', and `work_lamp`. The three
+ * claddings are `ink`'s, at the hulls' finish, one value a name; the lamp
+ * is `ink.amberLamp` since #891 — the export's `work_lamp` was the token
+ * through and through at 0.35 rough, and on the near-black base it is the
+ * navy's plain amber fixture, at the turret's 2.4.
  */
 
 /**
@@ -2399,9 +2387,12 @@ export function lightLines(root, lampM, { lines, stern }) {
  * manipulator arms in frames of their own, and running lights. The export
  * is X-long, hyphenates every name and carries its own finishes, so its
  * builders place with kit `add` in the file's own frame — nothing is yawed —
- * and its palette is `ink`'s hyphenated set (`hullBlackHeavy`,
- * `ironGreyHeavy`, `oxideBrown`, `runningLight`), which was `submersibleInk`
- * until #888.
+ * and its palette was `ink`'s hyphenated set (`hullBlackHeavy`,
+ * `ironGreyHeavy`, `oxideBrown`, `runningLight`; `submersibleInk` until
+ * #888) until #891 folded the four onto the hull names that share their
+ * hex — `hullBlack`, `ironGrey`, `oxideRust`, and `amberLamp`, whose
+ * emissive the running light shared and whose base it took — at the
+ * hulls' value; the part names keep their hyphens, as the file has them.
  * ------------------------------------------------------------------------ */
 
 /**
@@ -2736,13 +2727,15 @@ export function spineGun(root, { grey, black }, { mount, gun }) {
 export const alongZ = (root, name, geo, mat, t, e, s) => part(root, name, geo, mat, drawn(t, e, s));
 export const inFrame = (root, name, geo, mat, t, e, s) => add(root, name, geo, mat, t, e, s);
 
-/** The work lamp these three structures hang everywhere: a six-by-four orb, as the turret's `base_lamp` is. */
+/** The lamp these three structures hang everywhere: a six-by-four orb, as the turret's `base_lamp` is. */
 const lampOrb = (r) => new THREE.SphereGeometry(r, 6, 4);
 
 /*
  * The Baffle Barge's palette was `bargeInk` until #888: the Submersible's
  * four hyphenated finishes and two of its own, the foam and the hazard
- * paint. All six are `ink`'s now (`baffleFoam`, `hazardPaint`).
+ * paint. Five of the six folded onto the hull names with #891 (`hullBlack`,
+ * `ironGrey`, `oxideRust`, `amberLamp`, `hazardAmber`); the foam is
+ * `baffleFoam`, the navy's own, hyphen gone.
  */
 
 /**
@@ -2989,7 +2982,7 @@ export function hallPipes(root, put, mats, { runs, down, elbow }) {
  * The platform: the slab, the skirt under it in older plate, the working
  * apron beside it, two lit stripes across the apron and the pad between
  * them (`platform · platform_skirt · apron · apron_stripe_1 · _2 ·
- * apron_pad`). The stripes are `work_lamp`, the turret's fixture, laid
+ * apron_pad`). The stripes are `amber_lamp` (`work_lamp` until #891), laid
  * flat where the bake can count them — "floodlit working surfaces".
  */
 export function refineryPlatform(root, put, { black, rust, grey, lampM }, opts) {
@@ -3038,7 +3031,8 @@ export function siloRank(root, put, { grey, black, rust, lampM }, opts) {
  * `stack.lean` off plumb — a seven-facet frustum — and the lamp at its
  * throat (`crusher_hall · crusher_roof · crusher_intake · crusher_teeth_top
  * · crusher_teeth_bot · crusher_stack · crusher_stack_lamp`). The intake is
- * `port_glow`, `intake.size` deep from the hall's face: the export drew it
+ * `amber_lamp` at the file's 1.1 (`port_glow` until #891), `intake.size`
+ * deep from the hall's face: the export drew it
  * a tenth deep, a panel the bake never saw, and the Refinery draws it 0.4
  * since #890, a lit throat whose top face shows past the upper teeth.
  */
@@ -3176,7 +3170,8 @@ export function ribbedDome(root, put, { black, grey, rust, lampM }, opts) {
 
 /**
  * "Sustained glow from ports": `count` portholes round the skirt at radius
- * `r`, from `phase` radians, each a six-facet disc of `port_glow` turned
+ * `r`, from `phase` radians, each a six-facet disc of `amber_lamp` at the
+ * file's 1.1 (`port_glow` until #891) turned
  * `[π/2, 0, π/2 − a]` (`porthole_1..10`). That Euler is the file's and it
  * is odd: in three's XYZ order it stands the disc's axis on (−cos a, 0,
  * sin a), the radial mirrored across z, which is 2a off the radial folded
@@ -3233,8 +3228,8 @@ export function dockingCollars(root, put, { grey, rust, lampM }, opts) {
 /**
  * The modules round the dome — the refinery, the quarters, the store — a
  * box each yawed its own way with, where the file fits one, a patch of
- * older plate on its face yawed with it; then the lit windows, `port_glow`
- * boxes of one size at the file's own points, unyawed (`module_refinery ·
+ * older plate on its face yawed with it; then the lit windows, boxes of
+ * `amber_lamp` at 1.1 (`port_glow` until #891), of one size at the file's own points, unyawed (`module_refinery ·
  * module_refinery_patch · module_quarters · module_quarters_patch ·
  * module_store · win_refinery_1 · _2 · win_quarters_1 · _2`). The windows
  * do not turn with their modules; the file's, and kept.
@@ -3406,7 +3401,7 @@ export function dampeningPads(root, put, foam, { pads }) {
 
 /**
  * Three patch plates, `[plate, size, at, yaw]` each: older plate on the
- * deck, newer grey on the starboard flank, hazard paint low on the port
+ * deck, newer grey on the starboard flank, hazard amber low on the port
  * bow (`patch-plate-1..3`).
  */
 export function patchPlates(root, put, mats, { plates }) {
