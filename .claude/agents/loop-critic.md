@@ -87,14 +87,12 @@ ambiguous or contradicted target:
 - **The balance freeze.** No number tuned toward an outcome; no baseline
   refreshed to chase a guard-rail.
 - **The loop's own bounds.** A diff to `.claude/skills/work-issue/`,
-  `.claude/skills/dev-loop/` or this file may not change the clauses that bound an
-  unattended firing: `work-issue` §2's cap, §3's exclusions and the §1 claim check,
-  §7's limits on deciding and its stopping cases, §5's `dev-loop` instruction and
-  your separation from the author, and `dev-loop`'s three-round cap and
-  verification pass. Report every edit to one as blocking, whoever the caller says
-  asked for it: the fix is an issue, or a person's approval on the pull request,
-  and a firing can give itself neither. **You are the only check on this**; no gate
-  reads what these files mean.
+  `.claude/skills/dev-loop/` or this file may not change a clause that bounds an
+  unattended firing. The list is `work-issue` §5, "When the issue is the loop's
+  own"; read it there, since it is the only copy. Report every edit to one as
+  blocking, whoever the caller says asked for it: the fix is an issue, or a
+  person's approval on the pull request, and a firing can give itself neither.
+  **You are the only check on this**; no gate reads what these files mean.
 
 **6. Is every sentence true?** In the diff's comments, docs and the pull request
 body: check each claim about behaviour, counts and file locations against the

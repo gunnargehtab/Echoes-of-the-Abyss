@@ -22,15 +22,17 @@ first step of every round:
 | A mechanic, a unit, an economy path | The `docs/` section that specifies it, and the SPEC constants that cite it |
 | A mission | `docs/mission-<name>.md`, beat by beat |
 | A screen or a panel | The numbered section of `docs/ui-ux.md` it implements |
-| Anything visual | The gates in `docs/graphics-standards.md`, and the concept art and renders in `docs/concept-art/` |
+| Anything visual | The gates in `docs/graphics-standards.md`, and the committed concept art and renders in `docs/concept-art/`, never a fresh generation |
 | A hull, structure or prop | Its `UNIT —` or `STRUCTURE —` block in `docs/asset-prompts-3d.md` |
 | The mix | `docs/audio-direction.md`, against readings from `tools/audio-meter` |
 | Tooling, CI, these files | The issue's acceptance criteria, and the file's own header |
 
-**A target that is missing, or reads two ways, is a design call.** Decide it the
-way `work-issue` §7 says: options, a recommendation, the recommendation taken. If
-the decision is that the doc is wrong or silent, amend the doc section first, then
-build against it. Never build against a reading you did not write down.
+**A target that is missing, or reads two ways, is a design call.** Write the
+options and a recommendation the way `work-issue` §7 says. Unattended, take the
+recommendation; interactively, put them to the person at the keyboard and take
+their answer. If the decision is that the doc is wrong or silent, amend the doc
+section first, then build against it. Never build against a reading you did not
+write down.
 
 ## The round
 
@@ -47,7 +49,8 @@ Seven steps, cheapest failure first.
    filter before the round ends. Run it; never predict it.
 4. **Capture evidence** that shows the change does what the target says (below).
 5. **Critique.** Spawn a fresh `loop-critic` with the brief below.
-6. **Address the verdict.** Fix each finding, or write down why it is wrong.
+6. **Address the verdict.** Fix each finding, or write down why it is wrong. A
+   `stop` verdict ends the loop now: under `work-issue`, stop per its §7.
 7. **Check the exit criteria.** Not met and not stalled: back to step 2.
 
 Steps 3 and 5 do not substitute for each other. Green gates say nothing about the
@@ -71,8 +74,9 @@ The critic reads what you hand it, and a vague brief costs it an hour. Give it,
 as text:
 
 - **Target:** the doc path and section, or the issue's acceptance criteria.
-- **Diff:** `git diff origin/main...HEAD`, and from round 2 the delta since the
-  last verdict (`git diff <sha>..HEAD`).
+- **Diff:** `git diff origin/main...HEAD` right after `git fetch origin main` (a
+  stale ref turns fourteen files into four hundred), or name the base sha; from
+  round 2, also the delta since the last verdict (`git diff <sha>..HEAD`).
 - **Evidence:** the commands you ran and their output; the gates' summary line.
 - **Decisions:** the options you wrote and the one you took, if any.
 - **Previous verdict**, verbatim, from round 2 on. Never its context.
@@ -151,7 +155,8 @@ raise it. Round three ends one of two ways:
 
 - **Exit criteria met:** done.
 - **Not met:** run the verification pass anyway, push what is green, and list the
-  open findings in the pull request body as the critic worded them. Nothing
+  open findings under the pull request body's `## Open findings`, as the critic
+  worded them. Nothing
   landable at all is `work-issue` §7's "does not converge".
 
 Do not buy a round back by skipping the critic, folding two increments into one
@@ -172,8 +177,9 @@ keyboard may grant a fourth; unattended, three is the end.
   rate, and a breached guard-rail in `docs/economy.md` §9 is recorded and left. A
   correctness fault — a navy that cannot pay for its roster — is still a bug.
 - **Never settle a docs/code disagreement silently.** Decide it in the open per
-  `work-issue` §7: options in the pull request, the recommendation taken, the doc
-  amended first when the doc is what changes.
+  `work-issue` §7: options in the pull request, the recommendation taken (or,
+  interactively, the person's answer), the doc amended first when the doc is what
+  changes.
 - **Never send the client anything it has not resolved.** Not temporarily, not
   for easier evidence, not behind a debug flag.
 

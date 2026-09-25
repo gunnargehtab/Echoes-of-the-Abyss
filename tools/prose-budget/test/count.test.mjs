@@ -155,3 +155,27 @@ test('the template itself carries no sentences', async () => {
   assert.deepEqual(missing, []);
   assert.ok(readings.every((r) => r.sentences === 0));
 });
+
+test('open findings and screenshots sit outside the sentence caps', () => {
+  const extra = [
+    '',
+    '## Open findings',
+    '',
+    '- The gloss still says slower is quieter. Round 3 found it.',
+    '- One test covers the happy path only.',
+    '',
+    '## Screenshots',
+    '',
+    'The panel at 100% UI scale, a link:',
+    'https://github.com/o/r/blob/abc/docs/screenshots/issue-1/panel.png',
+  ].join('\n');
+  const { readings, over } = shape(body() + extra);
+  assert.deepEqual(
+    readings.map((r) => [r.name, r.sentences]),
+    [
+      ['problem', 2],
+      ['solution', 2],
+    ]
+  );
+  assert.equal(over, false);
+});

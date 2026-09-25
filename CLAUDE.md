@@ -240,8 +240,9 @@ and `steward` drives the pull request to green. Each skill holds its own rules, 
 
 Three of them bind a session whether or not it loaded the skill. The loop never tunes for
 balance — the freeze above is what a loop maximising a number would launder — and never
-settles a docs/code disagreement silently: it writes the options, takes its recommendation,
-and puts both in the pull request for a reviewer to overturn. The critic has no `Edit` and no `Write`, for
+settles a docs/code disagreement silently: it writes the options and a recommendation.
+Unattended it takes the recommendation and puts both in the pull request for a reviewer to
+overturn; interactively it puts them to the person at the keyboard. The critic has no `Edit` and no `Write`, for
 the reason #540 settled for hulls: **a generator that also grades itself is not a gate.**
 And **a change gets three rounds, a cap a person sets**: reaching it is a stall, and the
 pull request stays open with the findings still open in its body.

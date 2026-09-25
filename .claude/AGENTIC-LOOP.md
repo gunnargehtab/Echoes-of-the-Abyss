@@ -134,17 +134,20 @@ lists every call the loop has taken.
 What it may not decide is unchanged in kind: the balance freeze, its own bounds,
 the hard rules, and a call a person reserved with `needs-decision`. Deciding in the
 open is not guessing; guessing is a reading taken without the options written
-down, which `loop-critic`'s check 4 makes a blocking finding.
+down, which `loop-critic`'s check 4 makes a blocking finding. Interactively the
+options go to the person at the keyboard instead, and their answer is taken.
 
 The same change cut what a firing reads and what a round spends. The pull request
 body is three sections of at most three sentences each, which
 `tools/prose-budget` measures. Findings are **blocking** or **minor**, and only
-blocking ones buy a round: half of the 24 runs #580 logs from 19 to 25 September
-used all three rounds, and in four of them (#855, #886, #901, #931) the third
-verdict's only finding was a stale comment or a wording slip. The critic gets a written brief and a fifteen-minute budget; two
+blocking ones buy a round: of the 26 firings #580 logs from 19 to 25 September
+that ran rounds, 14 used all three, and in four of them (#855, #886, #901, #931)
+the third verdict's only finding was a stale comment or a wording slip. That is a
+count of the log's firing entries by hand, addenda excluded. The critic gets a written brief and a fifteen-minute budget; two
 critics on #825 ran about 55 and 80 minutes. And the rules lost their incident
 histories, which #580 and `git log` keep: `wc -w` over `work-issue`, `dev-loop`,
-`loop-critic` and `steward` read 15,341 words at `fdd802c` and 7,694 after.
+`loop-critic` and `steward` read 15,341 words at `1bf8280`, and about half that
+after (`wc -w` prints today's figure).
 
 ## How it improves itself
 
@@ -161,12 +164,11 @@ Two things close that, decided on 15 September:
   survive a run. `work-issue` §4 carries the bar: verified against code at a
   named commit, never against the prose describing it, and never inside the
   balance freeze.
-- **A firing may edit its own rules, except the ones that bound it** —
-  `work-issue` §2's cap, §3's exclusions and claim check, §7's limits on deciding
-  and its stopping cases,
-  `dev-loop`'s three-round cap, and `loop-critic`'s separation from the author.
-  Those it writes an issue about and stops, per §5. The critic's check 4 fails a round that edits one, which is
-  the only enforcement there is: `npm run gates` does not read `.claude/`.
+- **A firing may edit its own rules, except the ones that bound it.** The list
+  is `work-issue` §5, "When the issue is the loop's own", and only there, so the
+  critic and this file cannot drift from it. A firing writes an issue about those
+  and stops. The critic's check 5 fails a round that edits one, which is the only
+  enforcement there is: `npm run gates` does not read `.claude/`.
 
 So the loop improves itself the way it improves anything else: an issue, a claim,
 rounds, a critic, a reviewed pull request. The one thing it may not do is author
@@ -208,10 +210,9 @@ it is allowed to select.
   is a person's number and not a firing's, which is why it is on the list above.
   What changes for a run shaped like #738's is the ending rather than the work:
   it stops on round three with its pull request open and the findings still open
-  written in the body, instead of refining to round five. `dev-loop`'s "Reaching
-  the cap" says how to stop there, and carries the cost side — what rounds four
-  to seven have actually found in the runs on record. The Routine itself needed
-  no edit, for the reason the paragraph below gives.
+  written in the body, instead of refining to round five. `dev-loop`'s "The cap:
+  three rounds" says how to stop there. The Routine itself needed no edit, for the
+  reason the paragraph below gives.
 
   **It runs `claude-opus-5-5` at medium effort since 22 September**, set by the
   repository owner; it ran `claude-opus-5` before. The two live in different

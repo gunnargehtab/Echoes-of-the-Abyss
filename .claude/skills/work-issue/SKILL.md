@@ -149,6 +149,9 @@ found it. Verify it against code at a named commit and cite file, line and commi
 never file from the prose describing the code. Filing is not taking: do not work
 it. A finding inside the balance freeze stays in the run log.
 
+A decision too wide for the pull request that needed it (§7) is the second kind:
+file it against #746 with its options and recommendation, and do not take it.
+
 ## 5. Claim it, then work it through `dev-loop`
 
 Before you touch a file, two writes, in this order:
@@ -187,7 +190,8 @@ A firing may edit these files like any other work, **except the clauses that bou
 it**:
 
 - §2's open-PR cap and what counts against it;
-- §3's exclusions, the §1 claim check, and oldest-first;
+- §3's exclusions, oldest-first, and both claim checks: §1's, and §6's re-check
+  with its rule that the loop always yields;
 - §7's limits on what the loop may decide, its stopping cases, and which labels a
   firing may apply;
 - this section's instruction to invoke `dev-loop`, `loop-critic`'s separation from
@@ -196,8 +200,8 @@ it**:
 
 For those, **write the issue and stop**: what the rule costs and what you would
 put in its place. A person decides. A generator that widens its own bounds is
-grading itself (#540). The boundary is about authorship, not size, and
-`loop-critic`'s check 4 is the only thing that enforces it.
+grading itself (#540). The boundary is about authorship, not size. This list is
+the only copy: `loop-critic`'s check 5 reads it here, and nothing else enforces it.
 
 ## 6. Gates, the second claim check, and the pull request
 
@@ -226,10 +230,10 @@ the body in `.github/PULL_REQUEST_TEMPLATE.md`'s shape.
   evidence that proves it.
 - The closing line (`Fixes #<n>`, or `Refs #<n>` for part of an issue).
 
-Nothing else: no round history, no gate output, no narrative. When the loop stops
-with work left, one sentence of Solution names it and the open findings go in a
-short list below it, worded as the critic worded them. Check the reading before
-posting:
+Nothing else: no round history, no gate output, no narrative. Two optional
+headings sit outside the sentence caps: **`## Open findings`**, when the loop
+stopped with work left, listing them as the critic worded them, and
+**`## Screenshots`** for a visual change. Check the reading before posting:
 
 ```bash
 node tools/prose-budget/check.mjs --kind=pr --strict body.md
@@ -246,8 +250,9 @@ strips markdown image URLs and `<img src>` alike (tested on #231). So:
 1. Capture with `run-game`, and look at the frames.
 2. Commit them under `docs/screenshots/issue-<n>/`, named for what they show, **in
    the same push as the code** — frames pushed after review can miss the merge.
-3. Put each URL bare on its own line, by full commit SHA, not branch name, with
-   one sentence above it saying what it shows and that it is a link.
+3. Put each URL under `## Screenshots`, bare on its own line, by full commit SHA
+   rather than branch name, with one sentence above it saying what it shows and
+   that it is a link.
 
 ## 7. Decide, and when to stop instead
 
@@ -255,7 +260,9 @@ strips markdown image URLs and `<img src>` alike (tested on #231). So:
 
 When the work needs a call the issue does not make — the docs and the code
 disagree, the target reads two ways, a mechanic's behaviour is unspecified, an
-epic box needs scoping, the critic returns a decision finding — do not stop:
+epic box needs scoping, the critic's verdict lists a call under DECISIONS — do not
+stop. Unattended, take the recommendation as below. Interactively, put the options
+and your recommendation to the person at the keyboard and take their answer.
 
 1. **Write the options**, two or three, at most three sentences each: what it
    does, what it costs, and the doc or code line it rests on. The current
@@ -290,11 +297,15 @@ Open no pull request, comment on the issue (under 100 words), and end the run wh
   work is parked.
 - **A person has reserved the call** mid-run. Leave their label and their
   assignee alone.
+- **A hard rule blocks every option**, or the critic returns `stop`. Name the rule
+  in the comment. No label. A change to the loop's own bounds instead takes §5's
+  route: write the issue and stop.
 - **The fix does not converge**: the gates keep failing in new places, or
   `dev-loop` stalls with nothing landable. No label: the next firing deserves its
   own attempt.
 
-Release the claim in every case: unassign, delete the branch if you pushed one,
+Release the claim in every case: unassign unless a person now holds the issue,
+delete the branch if you pushed one,
 and say in the comment that the Routine let go and what is owed. A stopped run
 that stays assigned reads as work in progress that will never arrive. Name what
 you passed over, as §3 says.
@@ -311,8 +322,8 @@ cap, found nothing, or stood down at once. Under 100 words:
 > happened.
 > Decided: each call taken, the option and the pull request — or "nothing".
 > Passed over: older eligible issues, one clause each, or "nothing older".
-> Needs a person: a stale claim, a label you would propose, a branch left behind
-> — or "nothing".
+> Needs a person: a stale claim, a `needs-decision` you applied and what it waits
+> on, a label you would propose, a branch left behind — or "nothing".
 > Found: a defect filed against #746, or an unverified lead, or "nothing".
 
 **The rounds line is never omitted.** When the critic cannot run, `dev-loop`
