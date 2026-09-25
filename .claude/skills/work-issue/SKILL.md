@@ -44,7 +44,7 @@ git fetch origin main
 git ls-remote --heads origin 'refs/heads/claude/issue-*' | sed 's|.*refs/heads/||'
 ```
 
-Read the latest entries of the run log, never the whole log. The log is the one
+Read the latest entries of the run log, never the whole log. The log is the newest
 open issue labelled `routine-log`; find it with `list_issues` by that label, not by
 number. `issue_read` with `get` gives the comment count; `get_comments` with
 `perPage: 5` on the last page gives the tail. It says what the last firings did
@@ -341,9 +341,11 @@ the only record of how often the three-round cap binds.
 
 **When the pull request merges, edit your entry** — append "Merged as `<sha>`" —
 rather than posting a second comment. A notification is not a record; this log is.
-Never close the run log yourself. Past about 150 comments a person closes it and
-opens a successor with the same label; nothing here changes, because the loop finds
-the log by label.
+**Roll the log over when it is full.** If it holds 150 comments or more when you
+come to write your entry, open a successor first: the same title with the next
+number, labelled `routine-log`, its body linking the old log. Post your entry
+there, then close the old log as completed with one line naming the successor.
+Nothing in this file changes, because the loop finds the log by label.
 
 ## Related
 
