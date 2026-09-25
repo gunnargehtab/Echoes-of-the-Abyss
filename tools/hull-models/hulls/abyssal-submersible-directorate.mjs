@@ -73,8 +73,10 @@
  *   units from the knee, against 0.26 for the other — so the fold is the
  *   file's and only the joint moved; rooting by the other end would fold
  *   every claw the other way, and #890's ruling 6 rules out the one
- *   station on the plates that would show this one. A seventh hidden
- *   claw is put to the owner in #917 beside the decisions #907 holds.
+ *   station on the plates that would show this one. So the seventh
+ *   hides with the six, and #907 closed on it: the block folds the
+ *   limbs, and the 0.5 m² the file showed was the offset that made this
+ *   limb two pieces, which is the fault #907 seated.
  * - `photophore_port_5` and `photophore_starboard_3` are the clause's and
  *   stay lit. Each sat on the fifth plate's flank at its widest line,
  *   under the plate's own upper surface; each is lifted 0.04 inboard and
