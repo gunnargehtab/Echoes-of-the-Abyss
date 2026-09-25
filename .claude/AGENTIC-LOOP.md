@@ -225,10 +225,12 @@ it is allowed to select.
   Its prompt is deliberately thin, and it says so itself — "the rules live in
   that file and not in this prompt ... if the two ever disagree, the file wins" —
   which is the whole reason the loop can be changed in a reviewed pull request
-  instead of in trigger configuration nobody can diff. It has been edited once,
-  on 15 September, and only to stop it naming a target that moved: the bullet
-  asking for "the gates in `CONTRIBUTING.md`" now asks for `npm run gates`, the
-  one command `work-issue` §6 canonicalised.
+  instead of in trigger configuration nobody can diff. It has been edited twice,
+  each time only to stop it naming something that moved. On 15 September the
+  bullet asking for "the gates in `CONTRIBUTING.md`" came to ask for
+  `npm run gates`, the one command `work-issue` §6 canonicalised. On 25 September
+  "the docs and the code disagree" left its list of reasons to stop, and a design
+  call now defers to `work-issue` §7.
 
 ## Related
 
