@@ -102,9 +102,11 @@ tools/claude-docs  markdownlint, a relative-link check, and a path check over
 tools/prose-budget How long a GitHub body is, in the words a person reads —
                    markdown scaffolding, template prompts, fenced evidence and
                    the attribution footer are not reading and do not count.
-                   lib/count.mjs is the counter and holds the budgets;
-                   check.mjs is the CLI the PR body workflow runs, advisory
-                   there and --strict locally. Tested under npm test.
+                   lib/count.mjs is the counter and holds the budgets,
+                   words and the PR body's sentences per section (Problem,
+                   each option, Solution: three each). check.mjs is the CLI
+                   the PR body workflow runs, advisory there and --strict
+                   locally. Tested under npm test.
 tools/roadmap      docs/ROADMAP.md rendered against live GitHub issue state, for
                    GitHub Pages. build.mjs parses the doc rather than keeping a
                    second copy of it, so the doc owns the phases and the
