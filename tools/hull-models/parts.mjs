@@ -57,7 +57,9 @@
  * dropping each ring's closing copy and taking a cap's centre once. An
  * indexed buffer is printed in the file's own vertex order with its index
  * and its NORMAL rows beside the positions, because a smooth-shaded part's
- * normals are the file's and no gate compares them.
+ * normals are the file's and no gate compares them against the export a port
+ * transcribes (check.mjs, since #911, compares a script only against the
+ * file the port rewrote).
  */
 import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
