@@ -877,9 +877,10 @@ match — and the reason turned out to be in the construction branch rather than
 Vent Tap once the plant is nearly drawing more than it makes, and a turret once something is
 raiding. A work that was wanted and unaffordable stopped the branch there, so that the rung
 could not bank against a cheaper need — and nothing saved for the work either, on the
-assumption that a 250 nodule build is always a moment from affordable. For the Commune it
-never is. Its composition cycle spends every purse it is handed on hulls of 30 to 105
-nodules, and on seed 4000 its bank holds 250 on 4 observations of 2,500. Instrumented over
+assumption that a 250 to 300 nodule build is always a moment from affordable. For the Commune
+it never is. Its composition cycle spends every purse it is handed on hulls of 30 to 150
+nodules, and on seed 4000, past its opening gift, its bank reaches 250 once in 25 minutes.
+Instrumented over
 seeds 4000–4029, an unaffordable work stopped the branch on about 800 observations a match,
 mostly a Vent Tap or a turret, and the Commune built 0.13 of each. A want that bars the rung
 and is never itself paid for is a lock rather than a priority.
@@ -897,17 +898,19 @@ before and after:
 | Matches decided, of 30 | 18 | 6 |
 
 The rule #521 set is met: the win rates move, and so do the hulls this section is about —
-twice as many come off the slip. The last row is the cost, recorded rather than answered while the
-freeze holds: a commander that pays for its defences fields a smaller army while it does, and
+twice as many come off the slip. The last row is the cost, recorded rather than answered while
+the freeze holds: a commander that pays for its defences fields a smaller army while it does, and
 the median match now runs to its 25 minute cap. What the repair does not move is the
 arithmetic above. The Commune's peak bank is still the opening gift, and with its yard up in
 half its matches it builds 0.1 rung hulls a match. Whether a 360 nodule Bower is reachable is
 the question for whoever lifts the freeze, as it was.
 
-The duel matrix moved the same way and further on the rung — a Slipway in 28 of the Commune's
-60 matches rather than 3, and 1.2 rung hulls a match across the four columns rather than 0.4 —
-and less on the match, which is decided 107 times in 120 rather than 110. The table under the
-next heading is its reading before this repair; `baselines/duel-matrix.md` is the one after.
+The duel matrix, run at the commit before this repair and after it, moved the same way on the
+rung — a Slipway in 28 of the Commune's 60 matches rather than 3, and rung hulls summed across
+the four columns 1.2 rather than 0.4 — and far less on the match, which is decided 107 times
+in 120 rather than 110. The table under the next heading is older than either: it was read
+at #842, before #839 and #854 changed the commander too, and `baselines/duel-matrix.md` is
+the reading after this repair.
 
 ### The gate, and what a duel actually says
 

@@ -5,19 +5,23 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --du
 ```
 
 > **Refreshed on 25 Sept 2026 because a mechanic changed, not to reach a target** (#706).
-> Same command, seeds and cap. No weight, price or TUNABLE moved. The change: the commander
-> saves for a Refinery, Vent Tap or turret it wants and cannot afford, where it used to let
-> that want bar the rung and save for nothing (`docs/roster-plan.md` §4, "The Commune's rung
-> was locked, not unaffordable").
+> Same command, seeds and cap, run from `81539f9`. No weight, price or TUNABLE moved. The
+> change: the commander saves for a Refinery, Vent Tap or turret it wants and cannot afford,
+> where it used to let that want bar the rung and save for nothing (`docs/roster-plan.md` §4,
+> "The Commune's rung was locked, not unaffordable").
 >
-> What it was for: a Slipway stands in 28 of the Commune's 60 matches, from 3, and Slipway
-> hulls built across the four columns go from 0.4 a match to 1.2, with the Commune's Sower
-> among them where the previous file had none.
+> The previous file was run at #842 (`b6ac276`), and #839 and #854 have changed the commander
+> since, so the comparison below is against the same command run at `1bf8280`, the commit
+> before this change.
 >
-> What it cost, recorded and left: two verdicts flip. Quiet economies reads **breached**, was
-> held (the Commune wins 81%, the best rival 77%); loud economies reads **held**, was
-> breached. The one-navy rail stays **breached** and now names the Commune (81%) rather than
-> the Directorate. 107 matches are decided, not 110, and the median match runs 539 s, not 469.
+> What it was for: a Slipway stands in 28 of the Commune's 60 matches, from 3. Summed across
+> the four columns, Slipway hulls built go from 0.4 to 1.2, with the Commune's Sower among
+> them where there was none.
+>
+> What it cost, recorded and left: one verdict flips — loud economies reads **held**, was
+> breached. The one-navy rail stays **breached** on the Commune (81%, from 80%) and quiet
+> economies stays **breached**. 107 matches are decided, not 110, and the median match runs
+> 539 s, not 445.
 
 120 matches on `ventfront-divide`, seeds 4000–4009. 13 ended without a winner inside the time budget, on a median 0 of the 1 elimination a win needs.
 

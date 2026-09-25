@@ -240,15 +240,15 @@ function structure(
 /**
  * A navy with no army at all, one berth short: its harvester target met and
  * its own scout afloat, so the first want with anything to do is the
- * composition cycle. No Slipway, so every want behind the rung has no yard.
+ * composition cycle. No finished Slipway, so every want behind the rung has no
+ * yard.
  *
  * A Refinery standing and a Slipway rising, so `commandConstruction` wants
  * nothing it cannot pay for. It saves out of the same purse first for any
  * build it wants and cannot afford — the rung, and since #706 a missing
  * Refinery too, which is how this fixture used to stay out of its way — and
  * the case below could not tell that from a hold. A rising Slipway is not a
- * yard (`freeYard` wants a finished one), so every want behind the rung still
- * has none.
+ * yard: `freeYard` wants a finished one.
  */
 function noArmy(
   brief: AiBriefing,

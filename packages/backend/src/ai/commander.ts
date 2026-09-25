@@ -2369,10 +2369,12 @@ export class AiCommander implements AiPlayer {
     // yard and unlike a turret.
     // --- The builds a commander has to save for ---------------------------
     //
-    // Everything above is bought out of pocket when the bank covers it. The
-    // yard and the signature structure below never are, and the branch used to
-    // treat them the same way: ask whether the bank covers the price *right
-    // now*, and if not, do nothing and let the yards spend it.
+    // Everything above is cheap enough to buy out of pocket once the bank
+    // covers it, and is saved for when it does not (below). The yard and the
+    // signature structure are not: they cost too much for "out of pocket" to
+    // work, and the branch used to treat them the same way — ask whether the
+    // bank covers the price *right now*, and if not, do nothing and let the
+    // yards spend it.
     //
     // The yards always did. Measured over four four-seat matches, the Slipway
     // branch was reached between 2,460 and 5,227 times and the **most** any
@@ -2408,13 +2410,13 @@ export class AiCommander implements AiPlayer {
     //
     // It used to stop the branch and save for nothing, on the assumption that
     // a build that cheap is always a moment from affordable. For the Commune it
-    // never is: a Vent Tap and a turret are 250, and its bank holds 250 on 4 of
-    // 2,500 observations of seed 4000. Over seeds 4000–4029 an unaffordable
-    // build stopped this branch on ~800 observations a match, mostly a Vent Tap
-    // or a turret; 0.13 of each was ever built, and the rung behind them was
-    // never held long enough to raise one Slipway in thirty matches. A want
-    // that bars the rung and is never itself paid for is a lock rather than a
-    // priority (#706).
+    // never is: a Vent Tap and a turret are 250, and past its opening gift its
+    // bank reaches 250 once in the 25 minutes of seed 4000. Over seeds
+    // 4000–4029 an unaffordable build stopped this branch on ~800 observations
+    // a match, mostly a Vent Tap or a turret; 0.13 of each was ever built, and
+    // the rung behind them was never held long enough to raise one Slipway in
+    // thirty matches. A want that bars the rung and is never itself paid for is
+    // a lock rather than a priority (#706).
     if (urgent !== null) {
       this.saveToward(urgent, purse);
       return;

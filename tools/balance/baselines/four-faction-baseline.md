@@ -5,10 +5,11 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --ma
 ```
 
 > **Refreshed on 25 Sept 2026 because a mechanic changed, not to reach a target** (#706).
-> Same command, seeds and cap. No weight, price or TUNABLE moved. The change: the commander
-> saves for a Refinery, Vent Tap or turret it wants and cannot afford, where it used to let
-> that want bar the rung and save for nothing (`docs/roster-plan.md` §4, "The Commune's rung
-> was locked, not unaffordable").
+> Same command, seeds and cap, run from `81539f9`; the before figures are the previous file,
+> which the same command at `1bf8280` reproduces. No weight, price or TUNABLE moved. The
+> change: the commander saves for a Refinery, Vent Tap or turret it wants and cannot afford,
+> where it used to let that want bar the rung and save for nothing (`docs/roster-plan.md` §4,
+> "The Commune's rung was locked, not unaffordable").
 >
 > What it was for: the Commune raises a Slipway in 15 matches of 30, from none. Slipway
 > hulls built across the four navies go from 1.0 a match to 1.9.
