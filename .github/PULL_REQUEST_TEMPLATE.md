@@ -1,34 +1,26 @@
 <!--
-Keep this body under 300 words — the merge commit inherits it. Short sentences, plain
-words, facts over narrative.
-Link to the doc, test or issue instead of quoting it. See CLAUDE.md, "Write short on
-GitHub".
+Three short sections; the merge commit inherits them. Problem: at most three sentences.
+Options: only when the PR took a decision, at most three sentences each. Solution: at most
+three sentences. See CLAUDE.md, "Write short on GitHub".
+Two optional headings sit outside those caps: "## Open findings", when work is left, and
+"## Screenshots", for a visual change.
 -->
 
-## Summary
+## Problem
 
-<!-- What does this PR change, and why? Two or three sentences. -->
+<!-- What is wrong or missing, and where. -->
 
-## Related issue
+## Options
 
-<!-- Closes #123 -->
+<!--
+Only when the change needed a decision; otherwise delete this section. One bullet per
+option, the taken one marked **(recommended, taken)**. A reviewer picks another by saying so.
+-->
 
-## Type of change
+## Solution
 
-- [ ] Bug fix
-- [ ] Feature / enhancement
-- [ ] Documentation
-- [ ] Infra / tooling / CI
-- [ ] Other
+<!-- What changed and how. Name the test or evidence that proves it. -->
 
-## Checklist
+Fixes #
 
-- [ ] `npm run type-check`, `npm run lint`, and `npm run format:check` pass
-- [ ] `npm test` passes
-- [ ] `npm run build` succeeds
-- [ ] Docs under `docs/` pass markdownlint and the link checker (if touched)
-- [ ] Related docs updated (if this changes game systems, mechanics, or architecture)
-
-## Additional context
-
-<!-- Screenshots, design decisions, follow-up work. Only what a reviewer needs. -->
+- [ ] `npm run gates` passes

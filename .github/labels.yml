@@ -96,4 +96,4 @@
 
 - name: needs-decision
   color: 6f42c1
-  description: Blocked on a design call a person must make — the unattended loop must not pick a side
+  description: A call a person reserved, or work waiting on the balance freeze — the unattended loop skips it

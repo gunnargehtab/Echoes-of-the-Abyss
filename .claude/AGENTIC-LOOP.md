@@ -84,7 +84,7 @@ through a correctness review while `CLAUDE.md`'s balance freeze is in force.
 
 | #709 guardrail | Here |
 | --- | --- |
-| Max cycles per task | Three rounds, hard, in `dev-loop` — reaching it is a stall, and the pull request stays open with what is left written in its body |
+| Max cycles per task | Three rounds, hard, in `dev-loop` — reaching it is a stall, and the pull request stays open with what is left written in its body. Only a **blocking** finding buys a round; a **minor** one is fixed and checked by the verification pass |
 | Max patch size | Not a line count: one increment per round, and a round whose diff outgrows its target is a finding `loop-critic` raises |
 | Schema validation for patches | `npm run gates` — type-check, lint, format, the model round-trip, all three doc gates |
 | Crash detection | The suites, and the evidence step: a harness run that does not reproduce is `evidence-missing` |
@@ -94,7 +94,7 @@ through a correctness review while `CLAUDE.md`'s balance freeze is in force.
 
 The two guardrails #709 does not have, and this repository needs, are in
 `dev-loop` under "Three things the loop must never do": never tune for balance,
-never resolve a docs/code disagreement by guessing, never send the client
+never settle a docs/code disagreement silently, never send the client
 anything it has not resolved.
 
 ### These files are gated too, and a number in them carries its source
@@ -121,6 +121,34 @@ A bare number reads as a live fact and goes on reading that way forever. A
 number stamped with `at <sha>` reads as a measurement, which is what it is, and
 a reader who needs today's figure knows which command to run.
 
+## The loop decides, and says so
+
+Until 25 September a design call stopped the run: the docs and the code disagreed,
+the firing wrote up two readings, applied `needs-decision` and let go. The
+repository owner changed that. Now `work-issue` §7 writes two or three options,
+takes the recommended one and keeps working, and the options go in the pull
+request's Options section, where a reviewer overturns a call in one comment. The
+merge commit carries the body, so `git log --first-parent --grep='## Options'`
+lists every call the loop has taken.
+
+What it may not decide is unchanged in kind: the balance freeze, its own bounds,
+the hard rules, and a call a person reserved with `needs-decision`. Deciding in the
+open is not guessing; guessing is a reading taken without the options written
+down, which `loop-critic`'s check 4 makes a blocking finding. Interactively the
+options go to the person at the keyboard instead, and their answer is taken.
+
+The same change cut what a firing reads and what a round spends. The pull request
+body is three sections of at most three sentences each, which
+`tools/prose-budget` measures. Findings are **blocking** or **minor**, and only
+blocking ones buy a round: of the 26 firings #580 logs from 19 to 25 September
+that ran rounds, 14 used all three, and in four of them (#855, #886, #901, #931)
+the third verdict's only finding was a stale comment or a wording slip. That is a
+count of the log's firing entries by hand, addenda excluded. The critic gets a written brief and a fifteen-minute budget; two
+critics on #825 ran about 55 and 80 minutes. And the rules lost their incident
+histories, which #580 and `git log` keep: `wc -w` over `work-issue`, `dev-loop`,
+`loop-critic` and `steward` read 15,341 words at `1bf8280`, and about half that
+after (`wc -w` prints today's figure).
+
 ## How it improves itself
 
 #709 has no clause for this, and the gap it left was not the loop's ability to
@@ -136,11 +164,11 @@ Two things close that, decided on 15 September:
   survive a run. `work-issue` §4 carries the bar: verified against code at a
   named commit, never against the prose describing it, and never inside the
   balance freeze.
-- **A firing may edit its own rules, except the ones that bound it** —
-  `work-issue` §2's cap, §3's exclusions and claim check, §7's stopping cases,
-  `dev-loop`'s three-round cap, and `loop-critic`'s separation from the author.
-  Those it writes an issue about and stops, per §5. The critic's check 4 fails a round that edits one, which is
-  the only enforcement there is: `npm run gates` does not read `.claude/`.
+- **A firing may edit its own rules, except the ones that bound it.** The list
+  is `work-issue` §5, "When the issue is the loop's own", and only there, so the
+  critic and this file cannot drift from it. A firing writes an issue about those
+  and stops. The critic's check 5 fails a round that edits one, which is the only
+  enforcement there is: `npm run gates` does not read `.claude/`.
 
 So the loop improves itself the way it improves anything else: an issue, a claim,
 rounds, a critic, a reviewed pull request. The one thing it may not do is author
@@ -182,10 +210,9 @@ it is allowed to select.
   is a person's number and not a firing's, which is why it is on the list above.
   What changes for a run shaped like #738's is the ending rather than the work:
   it stops on round three with its pull request open and the findings still open
-  written in the body, instead of refining to round five. `dev-loop`'s "Reaching
-  the cap" says how to stop there, and carries the cost side — what rounds four
-  to seven have actually found in the runs on record. The Routine itself needed
-  no edit, for the reason the paragraph below gives.
+  written in the body, instead of refining to round five. `dev-loop`'s "The cap:
+  three rounds" says how to stop there. The Routine itself needed no edit, for the
+  reason the paragraph below gives.
 
   **It runs `claude-opus-5-5` at medium effort since 22 September**, set by the
   repository owner; it ran `claude-opus-5` before. The two live in different
@@ -199,10 +226,12 @@ it is allowed to select.
   Its prompt is deliberately thin, and it says so itself — "the rules live in
   that file and not in this prompt ... if the two ever disagree, the file wins" —
   which is the whole reason the loop can be changed in a reviewed pull request
-  instead of in trigger configuration nobody can diff. It has been edited once,
-  on 15 September, and only to stop it naming a target that moved: the bullet
-  asking for "the gates in `CONTRIBUTING.md`" now asks for `npm run gates`, the
-  one command `work-issue` §6 canonicalised.
+  instead of in trigger configuration nobody can diff. It has been edited twice.
+  On 15 September the bullet asking for "the gates in `CONTRIBUTING.md`" came to
+  ask for `npm run gates`, the one command `work-issue` §6 canonicalised. On 25
+  September "the docs and the code disagree" left its list of reasons to stop, a
+  design call came to defer to `work-issue` §7, and the closing reply gained "any
+  design call you took".
 
 ## Related
 

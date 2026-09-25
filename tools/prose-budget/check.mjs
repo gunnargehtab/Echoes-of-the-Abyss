@@ -1,5 +1,6 @@
 /**
- * Report how long a GitHub body is against CLAUDE.md's budget.
+ * Report how long a GitHub body is against CLAUDE.md's budget, and for a pull
+ * request whether it keeps the Problem / Options / Solution shape.
  *
  * Advisory by default in CI: it prints the reading and exits 0, because a
  * body two words over is not worth a red check, and a merge blocked on prose
@@ -16,10 +17,15 @@
 
 import { readFileSync } from 'node:fs';
 
-import { BUDGETS, measure } from './lib/count.mjs';
+import { BUDGETS, measure, shape } from './lib/count.mjs';
 
 const args = process.argv.slice(2);
-const flag = (name) => args.find((a) => a.startsWith(`--${name}=`))?.split('=').slice(1).join('=');
+const flag = (name) =>
+  args
+    .find((a) => a.startsWith(`--${name}=`))
+    ?.split('=')
+    .slice(1)
+    .join('=');
 const kind = flag('kind') ?? 'pr';
 const strict = args.includes('--strict');
 
@@ -46,8 +52,20 @@ if (over === 0) {
     `Over by ${over}. Cut it to ${budget} — short sentences, facts over narrative, ` +
       'a link instead of a quotation. See CLAUDE.md, "Write short on GitHub".'
   );
-  if (!strict) console.log('');
-  if (!strict) console.log('_This check is advisory and never blocks a merge._');
 }
 
-process.exit(strict && over > 0 ? 1 : 0);
+// The shape is a pull request's alone: issues and comments have no template.
+const form = kind === 'pr' ? shape(body) : { readings: [], missing: [], over: false };
+if (kind === 'pr') {
+  const parts = form.readings.map((r) => `${r.name} ${r.sentences}/${r.limit}`);
+  console.log('');
+  console.log(`Sentences: ${parts.join(' · ') || 'none'}.`);
+  if (form.missing.length) console.log(`Missing: ${form.missing.join(', ')}.`);
+  if (form.over) console.log('Keep each section to three sentences, and each option to three.');
+}
+
+const failed = over > 0 || form.over;
+if (failed && !strict) console.log('');
+if (failed && !strict) console.log('_This check is advisory and never blocks a merge._');
+
+process.exit(strict && failed ? 1 : 0);
