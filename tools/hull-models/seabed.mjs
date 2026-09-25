@@ -436,9 +436,11 @@ export function dodecahedronOf(corners) {
  * per-face normals, the UVs stripped — not the non-indexed finish the
  * stone five carry, so `flatShaded` and `tabled` are the wrong builders
  * for them, and nothing downstream would say so: neither check.mjs nor
- * diff.mjs reads an index or a normal, and the runtime merges every mesh
- * under one material into one geometry and refuses a bucket whose members
- * disagree on attributes (environmentModels.ts). So a ruin box keeps the
+ * diff.mjs reads an index; diff.mjs reads no normal, and check.mjs (since
+ * #911) compares a script's normals only against the file it wrote; and
+ * the runtime merges every mesh under one material into one geometry and
+ * refuses a bucket whose members disagree on attributes
+ * (environmentModels.ts). So a ruin box keeps the
  * index and the normal buffer three built and `kept` above takes only the
  * UVs off. The polyhedra — icosahedra, octahedra and tetrahedra, the coral
  * crusts and the block's shards — are three's own, non-indexed as
