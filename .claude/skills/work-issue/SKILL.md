@@ -16,8 +16,8 @@ in the open — options, a recommendation, the recommendation taken — so a
 reviewer can overturn it in one comment. Deciding silently is the failure.
 Stopping is kept for the few cases §7 lists.
 
-The history behind each rule is in #580, the run log, and in `git log` on this
-file. This file keeps the rules and one reason each.
+The history behind each rule is in the run log (#580, then its successors) and in
+`git log` on this file. This file keeps the rules and one reason each.
 
 ## 0. Check GitHub access first
 
@@ -44,8 +44,9 @@ git fetch origin main
 git ls-remote --heads origin 'refs/heads/claude/issue-*' | sed 's|.*refs/heads/||'
 ```
 
-Read the latest entries of #580, never the whole log: it passed 150 comments in
-September. `issue_read` with `get` gives the comment count; `get_comments` with
+Read the latest entries of the run log, never the whole log. The log is the newest
+open issue labelled `routine-log`; find it with `list_issues` by that label, not by
+number. `issue_read` with `get` gives the comment count; `get_comments` with
 `perPage: 5` on the last page gives the tail. It says what the last firings did
 and left.
 
@@ -88,7 +89,7 @@ labelled:
 | Label | Why it is skipped |
 | --- | --- |
 | `epic` | No single PR closes it; §4 files its sub-issues instead. |
-| `routine-log` | #580, this loop's own ledger. |
+| `routine-log` | The run log, this loop's own ledger. |
 | `standing` | Open on purpose: code cites it by number. A person's to apply and remove. |
 | `needs-hardware` | Needs a real GPU or device. A person's to apply. |
 | `needs-decision` | A person reserved the call, or the rest is inside the balance freeze. |
@@ -318,8 +319,9 @@ Either way, name what you passed over, as §3 says.
 
 ## 8. Write the run down, whatever the run was
 
-End every firing with one comment on **#580**, including a firing that hit the
-cap, found nothing, or stood down at once. Under 100 words:
+End every firing with one comment on **the run log**, the open `routine-log`
+issue (#936 since 25 September), including a firing that hit the cap, found
+nothing, or stood down at once. Under 100 words:
 
 > **HH:MM — took #n** / **filed #a, #b** / **stopped on #n** / **nothing to do**
 > The branch and pull request, or the epic and its boxes, or why no pull request.
@@ -339,8 +341,11 @@ the only record of how often the three-round cap binds.
 
 **When the pull request merges, edit your entry** — append "Merged as `<sha>`" —
 rather than posting a second comment. A notification is not a record; this log is.
-Never close #580. When it grows unwieldy a person opens a successor and updates
-the number here.
+**Roll the log over when it is full.** If it holds 150 comments or more when you
+come to write your entry, open a successor first: the same title with the next
+number, labelled `routine-log`, its body linking the old log. Post your entry
+there, then close the old log as completed with one line naming the successor.
+Nothing in this file changes, because the loop finds the log by label.
 
 ## Related
 
