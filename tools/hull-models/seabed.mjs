@@ -301,9 +301,10 @@ export function stand(
  * 21–24° off its own face on a plate and 44° on a branch, where the
  * neighbouring facets' normals are 42.5–47.7° and 88.3–88.8° apart — so a
  * port that ran them through `flatShaded` would pass every gate and still
- * be wrong: no tool here *compares* a normal (`check.mjs` and `diff.mjs`
- * read none; the bake renders them, hull-intake's page.html `normal` pass,
- * and fails nothing on them).
+ * be wrong: no tool here compares a normal against the approved export
+ * (`diff.mjs` reads none, and `check.mjs` since #911 compares a script only
+ * against the file it wrote itself; the bake renders them, hull-intake's
+ * page.html `normal` pass, and fails nothing on them).
  * ------------------------------------------------------------------------ */
 
 const triple = (s = 1) => (typeof s === 'number' ? [s, s, s] : s);

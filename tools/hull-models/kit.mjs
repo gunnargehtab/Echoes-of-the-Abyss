@@ -2270,12 +2270,14 @@ export function reactorIntakeArm(
  * tower's `plate_1..5` are indexed, the branches and plates smooth-shaded
  * (a vertex normal 21–24° off its own face on a plate, 44° on a branch),
  * and the ruin block carries indexed boxes. `tabled` and
- * `faceted` always flatten, and neither `check.mjs` nor `diff.mjs` reads a
- * normal, so a port that fed a smooth part through either would pass every
- * gate and ship a faceted part. A port reproduces the file's index and its normals
- * as the file has them, and compares the NORMAL accessor itself, since no
- * tool here does. `parts.mjs --table <part>` prints an indexed part's
- * normals beside its positions for that reason.
+ * `faceted` always flatten, and a port that fed a smooth part through either
+ * would pass every gate and ship a faceted part: `diff.mjs` reads no normal,
+ * and `check.mjs`, which compares them since #911, compares the script
+ * against the file the port itself rewrote. A port reproduces the file's
+ * index and its normals as the file has them, and compares the NORMAL
+ * accessor against the approved export itself, since no tool here does.
+ * `parts.mjs --table <part>` prints an indexed part's normals beside its
+ * positions for that reason.
  *
  * `factions/pelagia.mjs` `grownBody` is the precedent for a table under a
  * constructor and folds its seam; these do not, because these exports tore

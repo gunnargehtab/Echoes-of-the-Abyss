@@ -71,12 +71,9 @@ export const occludes = (finish) =>
  * back.
  *
  * The stored normals are what the conn view lights a hull by
- * (`rosterModels.ts`), and nothing else here reads them: the bake takes its
- * normal map off the geometry, so a normal buffer can change under an
- * unchanged shape and move nothing but the lighting in a match. #897's
- * sheared ridge did — its first cut recomputed the lathe's normals from its
- * faces and lit one flank brighter than the other — and until #911 the
- * round-trip check passed both buffers, because it read positions only.
+ * (`rosterModels.ts` keeps the file's own), and a buffer can change under
+ * triangles that do not. check.mjs compares them since #911; until then it
+ * read positions only.
  */
 export function readGlb(path) {
   const buf = readFileSync(path);
