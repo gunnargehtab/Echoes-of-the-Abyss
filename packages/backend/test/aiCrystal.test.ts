@@ -680,6 +680,91 @@ describe('the commander saves for what it cannot buy out of pocket', () => {
     );
   });
 
+  /**
+   * A Commune at its hauler target with a Refinery and a finished Slipway, so
+   * the only work it can want is the one a case adds — and, the yard standing
+   * and the Veil short of crystal, nothing else would hold the purse.
+   */
+  function oneWorkWanted(
+    nodules: number,
+    extra: Partial<EchoSnapshot> = {},
+    refinery: { x: number; y: number } = { x: 1000, y: 1000 }
+  ): AiCommand[] {
+    const brief = briefing();
+    return new AiCommander(brief).observe(
+      snapshot(fleet(brief, DOCTRINE[Faction.Pelagia].harvesterTarget), {
+        structures: [
+          structure(20, StructureKind.Foundry),
+          { ...structure(21, StructureKind.Refinery), ...refinery },
+          structure(22, StructureKind.Slipway),
+        ],
+        nodules,
+        ...extra,
+      })
+    );
+  }
+
+  const worksOf = (sent: AiCommand[]): AiCommand[] =>
+    sent.filter((c) => c.kind === 'produce' || c.kind === 'build');
+
+  it('holds the purse for a turret against a raid it cannot yet pay for', () => {
+    // The turret and the Vent Tap were the lock, not the Refinery: over seeds
+    // 4000–4029 they were wanted on most of the observations that stopped the
+    // Commune's construction branch, and 0.13 of each was ever built (#706).
+    const brief = briefing();
+    const home = brief.spawns[brief.slot]!;
+    const raid = {
+      contacts: [
+        { id: 500, x: home.x + 300, y: home.y, tick: 6000, tier: ResolutionTier.Classification },
+      ],
+    };
+    const turret = priceOf(structureStatsFor(StructureKind.SentinelTurret)).nodules;
+    const sites = worksOf(oneWorkWanted(turret, raid)).flatMap((c) =>
+      c.kind === 'build' ? [c.structure] : []
+    );
+    assert.deepEqual(
+      sites,
+      [StructureKind.SentinelTurret],
+      'the premise: this raid wants a turret'
+    );
+    assert.deepEqual(
+      worksOf(oneWorkWanted(Math.floor(turret / 2), raid)),
+      [],
+      'half a turret in the bank, raided: the bank is held for the turret'
+    );
+  });
+
+  it('holds the purse for a Vent Tap once the plant is nearly drawing what it makes', () => {
+    // On a vent the Refinery stands on, so the tap is anchored and the want is
+    // live; `nearestVent` refuses one the server would not let rise.
+    const brief = briefing();
+    const home = brief.spawns[brief.slot]!;
+    const { cols, rows, cellM, biomes } = brief.terrain;
+    let vent: { x: number; y: number } | null = null;
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (biomes[row * cols + col] !== 1) continue;
+        const at = { x: (col + 0.5) * cellM, y: (row + 0.5) * cellM };
+        const nearer =
+          vent === null ||
+          Math.hypot(at.x - home.x, at.y - home.y) < Math.hypot(vent.x - home.x, vent.y - home.y);
+        if (nearer) vent = at;
+      }
+    }
+    assert.ok(vent !== null, 'the default map has a thermal vein');
+    const tight = { draw: { capacity: 6, demand: 6, satisfaction: 1 } };
+    const tap = priceOf(structureStatsFor(StructureKind.VentTap)).nodules;
+    const sites = worksOf(oneWorkWanted(tap, tight, vent)).flatMap((c) =>
+      c.kind === 'build' ? [c.structure] : []
+    );
+    assert.deepEqual(sites, [StructureKind.VentTap], 'the premise: a tight plant wants a tap');
+    assert.deepEqual(
+      worksOf(oneWorkWanted(Math.floor(tap / 2), tight, vent)),
+      [],
+      'half a Vent Tap in the bank, the plant tight: the bank is held for the tap'
+    );
+  });
+
   it('buys haulers rather than saving for a cheaper build, as it does for the rung', () => {
     // The same guard, for the same reason, and on the same count. Saving is
     // holding money back from the yards; a navy short of haulers spends it on
