@@ -301,9 +301,10 @@ export function stand(
  * 21–24° off its own face on a plate and 44° on a branch, where the
  * neighbouring facets' normals are 42.5–47.7° and 88.3–88.8° apart — so a
  * port that ran them through `flatShaded` would pass every gate and still
- * be wrong: no tool here *compares* a normal (`check.mjs` and `diff.mjs`
- * read none; the bake renders them, hull-intake's page.html `normal` pass,
- * and fails nothing on them).
+ * be wrong: no tool here compares a normal against the approved export
+ * (`diff.mjs` reads none, and `check.mjs` since #911 compares a script only
+ * against the file it wrote itself; the bake renders them, hull-intake's
+ * page.html `normal` pass, and fails nothing on them).
  * ------------------------------------------------------------------------ */
 
 const triple = (s = 1) => (typeof s === 'number' ? [s, s, s] : s);
@@ -435,9 +436,11 @@ export function dodecahedronOf(corners) {
  * per-face normals, the UVs stripped — not the non-indexed finish the
  * stone five carry, so `flatShaded` and `tabled` are the wrong builders
  * for them, and nothing downstream would say so: neither check.mjs nor
- * diff.mjs reads an index or a normal, and the runtime merges every mesh
- * under one material into one geometry and refuses a bucket whose members
- * disagree on attributes (environmentModels.ts). So a ruin box keeps the
+ * diff.mjs reads an index; diff.mjs reads no normal, and check.mjs (since
+ * #911) compares a script's normals only against the file it wrote; and
+ * the runtime merges every mesh under one material into one geometry and
+ * refuses a bucket whose members disagree on attributes
+ * (environmentModels.ts). So a ruin box keeps the
  * index and the normal buffer three built and `kept` above takes only the
  * UVs off. The polyhedra — icosahedra, octahedra and tetrahedra, the coral
  * crusts and the block's shards — are three's own, non-indexed as

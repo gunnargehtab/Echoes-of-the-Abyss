@@ -23,9 +23,22 @@
  * at a scratch directory (kit.mjs `outputPath`), so the committed files are
  * never touched; the scratch GLB and the committed one are then read back
  * (glb.mjs) and compared part by part — name, material, finish, triangle
- * count and bounds to the centimetre — which is close enough to catch any
- * edit that moves a vertex and loose enough not to care which three.js wrote
- * the bytes.
+ * count, bounds to the centimetre and every corner's normal to a degree —
+ * which is close enough to catch any edit that moves a vertex and loose
+ * enough not to care which three.js wrote the bytes.
+ *
+ * The normals are compared because the conn view lights a hull by the
+ * file's own (`rosterModels.ts` keeps them), and a buffer can change under
+ * triangles that do not. Until #911 only positions were read, so a file
+ * whose normals its script no longer wrote passed: #897's Antiphon file from
+ * 4a243b5, the first cut of its sheared ridge, reads 55° off on all 72
+ * corners of `blade_spine_aft` against the script that fixed it, and now
+ * fails. What still passes is a wrong buffer committed with the script that
+ * wrote it — 4a243b5 itself, whose script and file agree. That is a fault in
+ * the buffer rather than drift from it, and a reviewer reading the buffer is
+ * still what catches it. A degree is well above what a float32 buffer
+ * written twice disagrees by, which is zero on every model committed, and
+ * fifty-five times under the fault #897 shipped.
  *
  * The finish is the material's values under its name, in `finishFields`'
  * printed precision. Until #888 only the name was compared, so an ink edited
@@ -36,7 +49,9 @@
  * them disagree with each other.
  *
  * The fix for drift is always the same and the report says so: re-run the
- * script (or outlines.mjs) and commit what it wrote. Light-audit warnings
+ * script (or outlines.mjs) and commit what it wrote. The one exception is a
+ * normal the script itself builds as NaN, and its line says so (#911).
+ * Light-audit warnings
  * from the rebuilds print through but do not fail the check — they are the
  * kit's word to the author, not a gate on a model already approved.
  */
@@ -65,8 +80,62 @@ const summarise = (parts) =>
       tris: p.tris,
       min: min.map(cm),
       max: max.map(cm),
+      normals: p.normals,
     };
   });
+
+const TURN_DEG = 1;
+
+/**
+ * How far a part's normals turned between the file and the build, corner by
+ * corner, as a phrase for the report; null when every corner is within
+ * `TURN_DEG`. Only asked of parts whose triangles already agree, so the two
+ * buffers are the same length and the k-th corner of each is the same
+ * vertex. The angle is atan2(|a × b|, a · b), not acos(a · b): two copies
+ * of one float32 normal dot to a hair under 1, and acos reads that as a
+ * fiftieth of a degree.
+ *
+ * A corner that is not a number on either side is its own failure, since
+ * NaN is never greater than a degree and would otherwise pass as unturned.
+ * GLTFExporter writes one through unchanged — its unit-length test is false
+ * for NaN too — so a hand-built normal that divided by zero reaches the file.
+ * Which side it is on decides the fix: in the file alone, re-running the
+ * script clears it; in the build, the script writes it, and the line says so
+ * rather than leave the report's re-run advice standing.
+ */
+function normalsTurned(built, committed) {
+  if (!built || !committed)
+    return built === committed
+      ? null
+      : `normals ${built ? 'built, none in the file' : 'in the file, none built'}`;
+  const corners = built.length / 3;
+  let turned = 0;
+  let inFile = 0;
+  let inBuild = 0;
+  let worst = 0;
+  for (let k = 0; k < built.length; k += 3) {
+    const [ax, ay, az] = built.subarray(k, k + 3);
+    const [bx, by, bz] = committed.subarray(k, k + 3);
+    const cross = Math.hypot(ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx);
+    const deg = (Math.atan2(cross, ax * bx + ay * by + az * bz) * 180) / Math.PI;
+    if (Number.isNaN(deg)) {
+      if (Number.isNaN(ax + ay + az)) inBuild++;
+      else inFile++;
+    } else if (deg > TURN_DEG) {
+      turned++;
+      worst = Math.max(worst, deg);
+    }
+  }
+  const out = [];
+  if (turned) out.push(`normals turned at ${turned} of ${corners} corners, up to ${worst.toFixed(1)}°`);
+  if (inFile) out.push(`${inFile} of ${corners} corners' normals not a number in the file`);
+  if (inBuild)
+    out.push(
+      `${inBuild} of ${corners} corners' normals not a number in the build — ` +
+        'the script writes them, so re-running it will not clear this'
+    );
+  return out.length ? out.join('; ') : null;
+}
 
 /** Lines describing how `built` differs from `committed`; empty when they agree. */
 export function diffParts(built, committed) {
@@ -92,6 +161,12 @@ export function diffParts(built, committed) {
       out.push(
         `\`${a.name}\`: bounds [${b.min}]..[${b.max}] → [${a.min}]..[${a.max}]`
       );
+    else {
+      // Last in the chain: a part whose shape moved has had its line, and a
+      // normal buffer is the one change left that moves no bound.
+      const turned = normalsTurned(a.normals, b.normals);
+      if (turned) out.push(`\`${a.name}\`: ${turned}`);
+    }
     // Beside the chain rather than in it, so a part whose finish moved still
     // has its triangles and bounds read.
     if (
