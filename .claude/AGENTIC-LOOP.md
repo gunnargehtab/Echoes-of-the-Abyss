@@ -84,7 +84,7 @@ through a correctness review while `CLAUDE.md`'s balance freeze is in force.
 
 | #709 guardrail | Here |
 | --- | --- |
-| Max cycles per task | Three rounds, hard, in `dev-loop` — reaching it is a stall, and the pull request stays open with what is left written in its body |
+| Max cycles per task | Three rounds, hard, in `dev-loop` — reaching it is a stall, and the pull request stays open with what is left written in its body. Only a **blocking** finding buys a round; a **minor** one is fixed and checked by the verification pass |
 | Max patch size | Not a line count: one increment per round, and a round whose diff outgrows its target is a finding `loop-critic` raises |
 | Schema validation for patches | `npm run gates` — type-check, lint, format, the model round-trip, all three doc gates |
 | Crash detection | The suites, and the evidence step: a harness run that does not reproduce is `evidence-missing` |
@@ -94,7 +94,7 @@ through a correctness review while `CLAUDE.md`'s balance freeze is in force.
 
 The two guardrails #709 does not have, and this repository needs, are in
 `dev-loop` under "Three things the loop must never do": never tune for balance,
-never resolve a docs/code disagreement by guessing, never send the client
+never settle a docs/code disagreement silently, never send the client
 anything it has not resolved.
 
 ### These files are gated too, and a number in them carries its source
@@ -121,6 +121,31 @@ A bare number reads as a live fact and goes on reading that way forever. A
 number stamped with `at <sha>` reads as a measurement, which is what it is, and
 a reader who needs today's figure knows which command to run.
 
+## The loop decides, and says so
+
+Until 25 September a design call stopped the run: the docs and the code disagreed,
+the firing wrote up two readings, applied `needs-decision` and let go. The
+repository owner changed that. Now `work-issue` §7 writes two or three options,
+takes the recommended one and keeps working, and the options go in the pull
+request's Options section, where a reviewer overturns a call in one comment. The
+merge commit carries the body, so `git log --first-parent --grep='## Options'`
+lists every call the loop has taken.
+
+What it may not decide is unchanged in kind: the balance freeze, its own bounds,
+the hard rules, and a call a person reserved with `needs-decision`. Deciding in the
+open is not guessing; guessing is a reading taken without the options written
+down, which `loop-critic`'s check 4 makes a blocking finding.
+
+The same change cut what a firing reads and what a round spends. The pull request
+body is three sections of at most three sentences each, which
+`tools/prose-budget` measures. Findings are **blocking** or **minor**, and only
+blocking ones buy a round: half of the 24 runs #580 logs from 19 to 25 September
+used all three rounds, and in four of them (#855, #886, #901, #931) the third
+verdict's only finding was a stale comment or a wording slip. The critic gets a written brief and a fifteen-minute budget; two
+critics on #825 ran about 55 and 80 minutes. And the rules lost their incident
+histories, which #580 and `git log` keep: `wc -w` over `work-issue`, `dev-loop`,
+`loop-critic` and `steward` read 15,341 words at `fdd802c` and 7,694 after.
+
 ## How it improves itself
 
 #709 has no clause for this, and the gap it left was not the loop's ability to
@@ -137,7 +162,8 @@ Two things close that, decided on 15 September:
   named commit, never against the prose describing it, and never inside the
   balance freeze.
 - **A firing may edit its own rules, except the ones that bound it** —
-  `work-issue` §2's cap, §3's exclusions and claim check, §7's stopping cases,
+  `work-issue` §2's cap, §3's exclusions and claim check, §7's limits on deciding
+  and its stopping cases,
   `dev-loop`'s three-round cap, and `loop-critic`'s separation from the author.
   Those it writes an issue about and stops, per §5. The critic's check 4 fails a round that edits one, which is
   the only enforcement there is: `npm run gates` does not read `.claude/`.

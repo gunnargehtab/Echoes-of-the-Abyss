@@ -9,7 +9,7 @@ Code transcribes the docs. When the two disagree, that is a bug in one of them �
 
 For engineering conventions, build order, and the runtime gotchas that cost the most time, read **[CLAUDE.md](../CLAUDE.md)** at the repository root. This file covers the design side.
 
-**Write short on GitHub.** Issues, pull requests, reviews, comments and commit messages use clear, simple, short sentences. A PR body stays under 300 words, an issue under 200, a comment under 100. Lead with what changed or what is wrong. Link to a doc or a test instead of quoting it. This applies to GitHub text only — `docs/` is a design bible and stays prose. The full rule is in [CLAUDE.md](../CLAUDE.md#write-short-on-github).
+**Write short on GitHub.** Issues, pull requests, reviews, comments and commit messages use clear, simple, short sentences. A PR body stays under 300 words, in three sections of at most three sentences each — Problem, Options (only when a decision was taken; three per option), Solution — an issue under 200, a comment under 100. Lead with what changed or what is wrong. Link to a doc or a test instead of quoting it. This applies to GitHub text only — `docs/` is a design bible and stays prose. The full rule is in [CLAUDE.md](../CLAUDE.md#write-short-on-github).
 
 ---
 

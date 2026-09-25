@@ -36,10 +36,14 @@ message follows it.
 - **Facts, not narrative.** Numbers, paths, the failing test's name.
 - **Link instead of quoting.** Name the doc, the test or the issue and move on.
 - **Budgets.** 300 words for a pull request body, 200 for an issue, 100 for a comment.
+- **A pull request body is three sections** (`.github/PULL_REQUEST_TEMPLATE.md`):
+  Problem, at most three sentences; Options, only when the change took a decision, at
+  most three per option; Solution, at most three, naming what proves it.
 
 A merge commit carries a body into `main` permanently, which is why commit messages count.
 Scope is GitHub text: code comments still explain *why* ([Style](#style)), and `docs/`
-stays prose. `tools/prose-budget/` measures a body, advisory and never blocking.
+stays prose. `tools/prose-budget/` measures a body's words and its sections' sentences, advisory
+and never blocking.
 
 ## Commands
 
@@ -236,7 +240,8 @@ and `steward` drives the pull request to green. Each skill holds its own rules, 
 
 Three of them bind a session whether or not it loaded the skill. The loop never tunes for
 balance — the freeze above is what a loop maximising a number would launder — and never
-settles a docs/code disagreement by guessing. The critic has no `Edit` and no `Write`, for
+settles a docs/code disagreement silently: it writes the options, takes its recommendation,
+and puts both in the pull request for a reviewer to overturn. The critic has no `Edit` and no `Write`, for
 the reason #540 settled for hulls: **a generator that also grades itself is not a gate.**
 And **a change gets three rounds, a cap a person sets**: reaching it is a stall, and the
 pull request stays open with the findings still open in its body.

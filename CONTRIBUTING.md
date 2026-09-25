@@ -20,7 +20,8 @@ short contract every change is reviewed against.
    [docs/graphics-standards.md](docs/graphics-standards.md), including a screenshot in
    the PR.
 5. **Write short on GitHub.** Clear, simple, short sentences in every issue, PR, review
-   comment and commit message. A PR body under 300 words, an issue under 200, a comment
+   comment and commit message. A PR body under 300 words, in three sections of at most
+   three sentences each (Problem, Options, Solution), an issue under 200, a comment
    under 100. The rule and what it does not cover are in
    [CLAUDE.md](CLAUDE.md#write-short-on-github); `tools/prose-budget/check.mjs` counts a
    body, and the **PR body** workflow reports every PR's count without blocking it.
@@ -96,8 +97,9 @@ Until then, `main` is the release, and the way to get a change to people is to m
 - One concern per PR, referencing the issue it closes (`Fixes #30`).
 - Fill in the template in [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md).
   Issue templates are in `.github/ISSUE_TEMPLATE/`.
-- Keep the body under 300 words — ground rule 5. Say what changed and why, then stop.
-  The merge commit inherits this body, so its length is permanent.
+- Keep the body to the template's three sections — ground rule 5: Problem, Options when
+  the change took a decision, Solution, each at most three sentences (per option for
+  Options). The merge commit inherits this body, so its length is permanent.
 - Run the CI gates locally first — the full sequence is cheap, and it is one command:
 
   ```bash
@@ -155,13 +157,14 @@ Four further labels are addressed to the unattended backlog Routine rather than 
 person, and each takes an issue off its list for a different reason. **`routine-log`**
 marks the run ledger the loop writes to, so it is never mistaken for a work item.
 **`needs-hardware`** marks work that is real but cannot be done in a container — a
-wall-clock frame timing needs an actual GPU. **`needs-decision`** marks work that is
-doable there and blocked on a design call a person owes: the docs and the code disagree,
-or answering the issue means deciding what a mechanic should argue. Without it a blocked
-issue is the *most* selectable thing in the backlog, since being open, unassigned and
-unclaimed is precisely what being blocked looks like from outside. The loop applies
-`needs-decision` itself when it stands down, always alongside a comment saying what is
-owed; the other two are a person's to apply. Removing any of them puts the issue back in
+wall-clock frame timing needs an actual GPU. **`needs-decision`** marks a call a person
+has reserved, or work whose remainder sits inside the balance freeze. Any other design
+call the loop takes itself, in the open: options and a recommendation in the pull
+request, which a reviewer overturns in one comment (`work-issue` §7). Without the label a
+reserved issue is the *most* selectable thing in the backlog, since open, unassigned and
+unclaimed is what blocked looks like from outside. The loop applies `needs-decision` only
+for the freeze, with a comment saying so; a person applies it to reserve a call, and the
+other two are a person's to apply. Removing any of them puts the issue back in
 play on the next firing.
 
 **`standing`** is the fourth, and it marks an issue that is open *because the decision

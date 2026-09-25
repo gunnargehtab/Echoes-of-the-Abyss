@@ -78,28 +78,13 @@ rule is tighter:
   Three speculative pushes start three runs; one validated push starts one.
   Run §1's gates on the whole change before pushing, not after.
 
-### The 2026-08-25 minutes exhaustion is over — do not diagnose it again
+### A three-second job is not a flake
 
-This account ran out of Actions minutes once, on 2026-08-25, when the workflow
-still fired a `push` run and a `pull_request` run for every commit. That is
-history. The minutes were restored, the double-run was removed in the same
-fix, and CI has run normally since: every run in the days before this was
-written completed with all four jobs logged, in about two minutes of wall
-clock. Treat a red check here as this PR's failure, not as an account problem,
-and never tell a reviewer the minutes are out without the evidence below.
-
-The signature is written down only so it stays recognisable if it ever
-recurs: **jobs completing in about three seconds with `runner_id: 0` and no
-logs at all**. That is not a flake and not a re-run candidate. Tell it apart
-from a real run by the per-job durations rather than by the suite finishing
-fast — the four jobs run in parallel, so a healthy run is over quickly too.
-PR #482's run is the reference for healthy: `docs` 21 s, `test (shard 1)`
-37 s, `build` 49 s, `test (shard 2)` 72 s, every job with a runner and a log,
-the suite complete 80 s after it started. Green with those durations is green;
-green at three seconds a job is nothing having run at all. If you ever see the
-three-second shape again, say so in one comment on the PR with the job
-durations and `runner_id` quoted, and stop — the fix is a person's, outside
-the repository.
+The Actions minutes ran out once, on 2026-08-25, and that is fixed. Treat a red check
+as this PR's failure. The signature, should it recur, is **every job finishing in about
+three seconds with `runner_id: 0` and no log**. A healthy run has a runner and a log
+per job: PR #482's took 21 to 72 seconds a job. On the three-second shape, comment once
+with the job durations and `runner_id`, and stop; the fix is a person's.
 
 ## 3. Merge conflicts on `claude/` branches: merge `main` in, never rebase
 
@@ -149,14 +134,14 @@ the docs are canonical.
   and the new value, doc plus constant in one commit is the documented
   procedure; push it. If the ask names only the constant, it is asking you to
   put a number into the design bible that the bible does not say. Do not.
-- **"Make the docs and the code agree"** — when the reviewer has not said
-  which one is wrong, that is the exact situation `work-issue` §7 stops on,
-  and it stops on a PR for the same reason: an unattended pick writes a
-  plausible wrong answer into `docs/`. Reply on the review thread with the two
-  readings and what each costs, in the register `work-issue` §7 describes, and
-  leave the thread open. On a PR you did not open, that reply goes to the
-  author; on one you did, it goes to the reviewer. Either way it is the
-  outcome of that event, not a punt.
+- **"Make the docs and the code agree"**, or any ask that is a design call the
+  reviewer has not settled: decide it the way `work-issue` §7 says. On a PR you
+  opened, reply on the thread with the options and your recommendation, push the
+  recommendation, and add the options to the body's Options section. On a PR you
+  did not open, reply with the options and recommendation and let the author
+  decide. Never on the balance freeze, the loop's bounds or a hard rule.
+- **A reviewer picks a different option** from a PR's Options section: implement
+  theirs, mark it taken in the body, and push. The reviewer's pick is the decision.
 - **Never replace a derived value with a hard-coded one to make a test pass.**
   `BASE_THRESHOLD` is solved from the spec'd self-reveal radius; a reviewer
   asking for "just the number" is asking for that, and the answer is the
@@ -206,7 +191,7 @@ thread is mid-task; give them the fact and let them get back to it.
 ## Related
 
 - `.claude/skills/work-issue/SKILL.md` — the loop that opens the PR; §6 for
-  the gates and the screenshot path, §7 for the stop-and-comment posture
+  the gates, the body and the screenshot path, §7 for deciding a design call
 - `.claude/skills/dev-loop/SKILL.md` — the rounds that produced the PR. A
   review ask that is really a fresh change goes back through them; §4 is still
   what decides that it is a design call, and §6 is still this file's own bound
