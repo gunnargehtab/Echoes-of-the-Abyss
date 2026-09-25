@@ -3061,17 +3061,18 @@ export function walkingLimbs(root, { chitin, red }, opts) {
  * its corners stood outside the shell and showed through the cowl as lit
  * chips beside the mouth. Rule 2 is met by construction; rule 3's place
  * is where the structure eats; rule 4's token is the navy's throat,
- * `gullet_glow`, the Dredge's, the Slipway's and the Vent Tap's. Whether
- * the hopper's lit `intake_mouth`, a floodlit surface and no hole, stands
- * against rules 2 and 3 is the owner's (#907).
+ * `gullet_glow`, the Dredge's, the Slipway's and the Vent Tap's. The
+ * hopper's `intake_mouth` is the model's other aperture (`intakeMaw`),
+ * the first of the two, since the belt feeds this one from it.
  *
  * Every number is in the cowl's own frame — `cowl` is the kit's
  * `crusher` cowl, `{ r, facets, phi, theta, at, rot, scale }` — and all
  * three pieces sit on the cowl's node, so they squash as it does. Returns
- * what `crusher` takes for its `cowl` and `maw`, and the throat to add
- * after them.
+ * what `crusher` takes for its `cowl` and `maw`, the throat to add after
+ * them, and `teeth`, the stations `mawTeeth` takes: `teeth.count` cones
+ * along the mouth's lower lip, in the root's frame (below).
  */
-export function crusherMaw({ cowl, hole, recess = 0.35 }) {
+export function crusherMaw({ cowl, hole, recess = 0.35, teeth = { count: 3, length: 0.8, lean: 0.4 } }) {
   const { r, facets: [round, down], phi: phiLength, theta: thetaLength, at, rot, scale } = cowl;
   const dPhi = phiLength / round;
   const dTheta = thetaLength / down;
@@ -3131,8 +3132,106 @@ export function crusherMaw({ cowl, hole, recess = 0.35 }) {
   throatGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
   throatGeo.computeVertexNormals();
 
+  // The teeth's stations, in the root's frame: `teeth.count` along the
+  // lower lip, evenly between its corners, each rooted on the shell there
+  // and pointing up the meridian, leaned `teeth.lean` into the hole — so a
+  // tooth of `teeth.length` ends short of the floor, by 0.12 of a unit
+  // (1.4 to 1.5 m on the Refinery) as glb.mjs `gapBetween` measures it on
+  // the built file. `at` is the cone's centre, half its length up its axis
+  // from the lip.
+  const node = new THREE.Matrix4().compose(
+    new THREE.Vector3(...at),
+    new THREE.Quaternion().setFromEuler(new THREE.Euler(...rot)),
+    new THREE.Vector3(...scale)
+  );
+  const node3 = new THREE.Matrix3().getNormalMatrix(node);
+  const lipTheta = r1 * dTheta;
+  const stations = Array.from({ length: teeth.count }, (_, k) => {
+    const phi = (q0 + ((k + 0.5) * (q1 - q0)) / teeth.count) * dPhi;
+    const base = new THREE.Vector3(...vertex(r, lipTheta, phi)).applyMatrix4(node);
+    const n = new THREE.Vector3(...vertex(1, lipTheta, phi)).applyMatrix3(node3).normalize();
+    const up = new THREE.Vector3(
+      Math.cos(phi) * Math.cos(lipTheta),
+      Math.sin(lipTheta),
+      -Math.sin(phi) * Math.cos(lipTheta)
+    )
+      .transformDirection(node)
+      .normalize();
+    const axis = up.multiplyScalar(Math.cos(teeth.lean)).addScaledVector(n, -Math.sin(teeth.lean)).normalize();
+    const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), axis);
+    const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+    return { at: base.addScaledVector(axis, teeth.length / 2).toArray(), rot: [e.x, e.y, e.z] };
+  });
+
   const placed = (geo) => ({ geo, at, rot, scale });
-  return { cowl: placed(cowlGeo), maw: placed(floorGeo), throat: placed(throatGeo) };
+  return { cowl: placed(cowlGeo), maw: placed(floorGeo), throat: placed(throatGeo), teeth: stations };
+}
+
+/**
+ * The intake hopper's mouth as an aperture (#907, with the crusher's): the
+ * kit's `intakeHopper` stands a lit drum on the funnel's top, 0.14 of a
+ * unit proud of the rim, which on a Directorate model is the plate wearing
+ * a mouth's name that docs/style-neon-noir.md refuses (rule 2). Here the
+ * funnel loses its top cap (kit `pierced`; three's cylinder puts the cap's
+ * centroids at exactly half its height), `intake_throat` is the rim — an
+ * annulus from the mouth's radius out to the funnel's, on the cylinder's
+ * own angles so it lands on the funnel's rim vertices — and the wall from
+ * the rim down to the floor, wound to face the axis, in the hopper's
+ * chitin; and `intake_mouth` is the floor, a drum of the mouth's radius
+ * with its top `mouth.recess` under the rim, on `gullet_glow`. Rim, wall
+ * and floor share their edges, so the mouth is sealed and what shows from
+ * above is the floor inside a ring of unlit chitin. The Refinery carries
+ * two apertures on rule 3's Dredge clause: the belt feeds the crusher's
+ * maw from this one, so the second is the throat the first feeds. The
+ * names are the export's; the Order's and the Commune's files keep the
+ * kit's drum, whose rule this is not.
+ */
+export function intakeMaw(root, { hopper: hopperMat, throat: throatMat, mouth: mouthMat }, opts = {}) {
+  const {
+    frame = xLong,
+    hopper = { radii: [1.5, 0.9], h: 1.3, facets: 8, at: [13.4, 0.65, 6.9] },
+    mouth = { r: 1.1, recess: 0.15, thick: 0.06 },
+  } = opts;
+  const { radii: [rTop, rBot], h, facets, at } = hopper;
+  const top = h / 2;
+  const funnel = pierced(cyl(rTop, rBot, h, facets), (x, y) => y < top - 1e-6);
+  frame.part(root, 'intake_hopper', funnel, hopperMat, at);
+
+  // Three's cylinder: x = r · sin θ, z = r · cos θ, θ = k · 2π / facets.
+  const ring = (radius, y) =>
+    Array.from({ length: facets }, (_, k) => {
+      const th = (k / facets) * 2 * Math.PI;
+      return [radius * Math.sin(th), y, radius * Math.cos(th)];
+    });
+  const outer = ring(rTop, top);
+  const lip = ring(mouth.r, top);
+  const foot = ring(mouth.r, top - mouth.recess);
+  const tris = [];
+  const uvs = [];
+  // A quad wound so its normal has a positive component along `toward`.
+  const quad = (a, b, c, d, toward) => {
+    const va = new THREE.Vector3(...a);
+    const nrm = new THREE.Vector3(...b).sub(va).cross(new THREE.Vector3(...c).sub(va));
+    const order = nrm.dot(new THREE.Vector3(...toward)) > 0 ? [a, b, c, a, c, d] : [a, d, c, a, c, b];
+    for (const p of order) {
+      tris.push(...p);
+      uvs.push(Math.atan2(p[0], p[2]) / (2 * Math.PI) + 0.5, (p[1] + top) / h);
+    }
+  };
+  for (let k = 0; k < facets; k++) {
+    const k1 = (k + 1) % facets;
+    quad(outer[k], outer[k1], lip[k1], lip[k], [0, 1, 0]);
+    const inward = [-(lip[k][0] + lip[k1][0]), 0, -(lip[k][2] + lip[k1][2])];
+    quad(lip[k], lip[k1], foot[k1], foot[k], inward);
+  }
+  const throatGeo = new THREE.BufferGeometry();
+  throatGeo.setAttribute('position', new THREE.Float32BufferAttribute(tris, 3));
+  throatGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  throatGeo.computeVertexNormals();
+  frame.part(root, 'intake_throat', throatGeo, throatMat, at);
+
+  const floor = cyl(mouth.r, mouth.r, mouth.thick, facets);
+  frame.part(root, 'intake_mouth', floor, mouthMat, [at[0], at[1] + top - mouth.recess - mouth.thick / 2, at[2]]);
 }
 
 /**
@@ -3344,9 +3443,11 @@ export function silos(root, { red, violet, steel, black, light }, opts) {
 }
 
 /**
- * The maw's teeth: four-sided cones of one `r` and `length` hung point-down
- * over the crusher's maw, `maw_tooth_${n}` each at its own station along
- * the maw's lip, as the file places them.
+ * The maw's teeth: four-sided cones of one `r` and `length` over the
+ * crusher's maw, `maw_tooth_${n}` each at its own station along the maw's
+ * lip — hung point-down where a file places them, or since #907 on the
+ * Refinery at the stations `crusherMaw` gives, rooted on the mouth's lower
+ * lip and pointing up its meridian, leaned into the hole (`t.rot`).
  */
 export function mawTeeth(root, black, opts) {
   const { frame = xLong, r = 0.14, length = 0.8, facets = 4, teeth } = opts;

@@ -34,7 +34,8 @@
  *   `amber_vent` until #890 clad them. `amber_vent` again, and a raked
  *   hood a side now: a well of hull black (`louvre_well_s/p`) leaning from
  *   the deck 2.25 m out from the wall (z ±15.25, y 11) up to the wall 2.7 m
- *   above it (z ±13, y 13.7, under the roof's underside at 14.3), and five
+ *   above it (z ±13, y 13.7, on a wall that since #907 runs on up to the
+ *   roof's underside at 19.8), and five
  *   blades stepped down its face, each canted up 35° with its inner edge
  *   in the well and its outer edge half a metre out from the blade above's
  *   — the top one under the eave with its outer edge 0.4 m past it, the
@@ -61,8 +62,9 @@
  *   wall so the outer 0.6 m stands past the eave — the Tender's ports under
  *   its deckhouse eaves — a metre and a half up the wall.
  *
- * The cradle lamp, the stack throat, the frame floods and the roof gratings
- * face up and never moved; the block names them since #893.
+ * The cradle lamp, the stack throat and the frame floods face up and never
+ * moved, and the roof gratings rose 5.5 m with the house whose roof they
+ * are (#907, below); the block names them since #893.
  *
  * THE DECK DATUM buried more than the floods (#894, from #890's review).
  * `DECK` is the slab's mid-height, and the first cut hung the gun off it:
@@ -76,13 +78,25 @@
  * six work floods hung a quarter of a metre over the beams and are on them
  * (`lattice`); the cradle lamp's stay stopped at the frame's top with
  * 1.6 m of water under its foot and now runs from the rail to the lamp.
- * The rail itself hangs 0.9 m under the two cross beams and stops a metre
- * short of each, unlit and so outside the audit's measure; hanging it is
- * #907's. The machinery house keeps its floor at `DECK`, the slab burying
- * all but 3.5 m of it (its louvred hoods stand on that exposed wall since
- * #893): lifting it carries the stack over the frame's top, and the frame
- * reading as the biggest thing on the hull is the block's one hard line,
- * so that is a decision #907 puts to the owner and not this fix.
+ * The rail itself ran fore-aft under the two cross beams, 0.9 m below
+ * them and a metre short of each, unlit and so outside the audit's
+ * measure — and 3.5 m from the nearest of the eight cables, which rank
+ * athwartships at x 5 and so hung from nothing. Since #907 it runs
+ * athwartships under the two side beams, 69.4 m long with its top on
+ * both undersides at their midpoints; every cable starts inside it and
+ * took up its 0.9 rise, so the drums hang where they hung, and the stay
+ * stands on it. The machinery house floored at `DECK` too, the slab
+ * burying all but 3.5 m of its 9 (its louvred hoods stand on the exposed
+ * wall since #893); since #907 it stands on the slab's top with the stack
+ * kept at its station, so the throat still tops out at 27.8, under the
+ * frame's top at 28.2 — the frame reading as the biggest thing on the
+ * hull is the block's one hard line, and lifting the stack with the house
+ * would have carried it over. 5.2 m of the stack's 12 show above the roof
+ * now where 10.7 did. The hoods and the bridge ports stand where they
+ * stood, in the bottom 3 m of a wall now 9 m tall: the top blade is 5.7 m
+ * under the eave and the ports 6.6, so #893's "under the eave" holds in
+ * plan, where the chart reads them, and not in elevation — raising them
+ * to the eave is a further decision this fix leaves to the owner.
  *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.
@@ -148,30 +162,40 @@ for (const [nm, a0, a1, b0, b1] of faces) {
   strut(root, `${nm}_0`, a0, a1, grey);
   strut(root, `${nm}_1`, b0, b1, grey);
 }
-add(root, 'cradle_rail', box(16, 0.8, 0.8), rust, [5, frame.top - 2, 0]);
+// The cradle rail hangs from the two side beams, athwartships under their
+// midpoints, its top on both undersides (frame.top − 0.7): the rank of
+// drums hangs from it on their cables and the lamp's stay stands on it.
+// The first cut ran it fore-aft under the cross beams, 0.9 m lower and a
+// metre short of each — and 3.5 m from the nearest cable (#907).
+add(root, 'cradle_rail', box(0.8, 0.8, 2 * frame.z + 1.4), rust, [5, frame.top - 1.1, 0]);
 for (let i = 0; i < 8; i++) {
   const z = -28 + i * 8;
   const drop = 6 + (i % 2) * 2;
-  add(root, `drum_cable_${i}`, cyl(0.15, 0.15, drop, 5), black, [5, frame.top - 2 - drop / 2, z]);
+  // Each cable starts 0.4 inside the rail and ends on its drum's top, where
+  // the drum always hung: the rail's 0.9 rise is the cable's.
+  const cable = drop + 0.9;
+  add(root, `drum_cable_${i}`, cyl(0.15, 0.15, cable, 5), black, [5, frame.top - 1.1 - cable / 2, z]);
   add(root, `hydrophone_drum_${i}`, cyl(1.5, 1.5, 3.2, 10), rust, [5, frame.top - 2 - drop - 1.6, z]);
 }
 // The cradle lamp rides *above* the rail: a top-down bake sees plan area only.
-// Its stay runs from the rail's top (frame.top − 1.6) to the lamp's
+// Its stay runs from the rail's top (frame.top − 0.7) to the lamp's
 // underside (frame.top + 1.2); the first cut's stopped at frame.top, with
 // 1.6 m of water under its foot (#894).
 add(root, 'cradle_lamp', box(14, 1.0, 5), flood, [5, frame.top + 1.7, 0]);
-add(root, 'cradle_lamp_stay', box(0.6, 2.8, 0.6), grey, [5, frame.top - 0.2, 0]);
+add(root, 'cradle_lamp_stay', box(0.6, 1.9, 0.6), grey, [5, frame.top + 0.25, 0]);
 
 // The machinery house aft of the frame, and the pile hammer stowed against a leg.
-// The house stands 9 m tall from y 5.5, so the slab (top at DEPTH) buries all
-// but 3.5 m of it and the roof's underside is at 14.3. The louvred hood a side
-// stands on that exposed wall: the top blade's centre on the eave line
+// The house stands 9 m tall on the slab's top (DEPTH, #907; the first cut
+// floored it at DECK and the slab buried all but 3.5 m of it), so the roof's
+// underside is at 19.8; the stack keeps its station, its lower 6.8 m inside
+// the house and roof, so its throat still tops out under the frame (header).
+// The louvred hood a side stands on the wall: the top blade's centre on the eave line
 // (beam/2 + 0.5) so its outer edge shows past it, each blade below half a
 // metre further out, and the well raked from the deck up to the wall under
 // them, 1.8 m thick so it reaches the deck/wall corner 1.73 m under its
 // face (header).
 bathyarch.machineryHouse(root, { black, grey, rust, amber, vent, flood }, {
-  x: -24, y: 10, length: 22, height: 9, beam: 26, stack: { x: -30, y: 20, z: 6 },
+  x: -24, y: DEPTH + 4.5, length: 22, height: 9, beam: 26, stack: { x: -30, y: 20, z: 6 },
   louvres: {
     count: 5, y: DEPTH + 0.4, pitch: 0.6, z: 13.5, step: 0.5, tilt: 0.611, blade: [0.15, 0.9],
     deck: DEPTH, well: { t: 1.8 },

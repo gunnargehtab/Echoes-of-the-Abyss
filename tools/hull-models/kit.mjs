@@ -1793,7 +1793,8 @@ export function flangedPipes(root, { pipe: pipeMat, flange: flangeMat }, opts = 
  * `maw.geo` with the maw on the cowl's own node.
  *
  * The teeth are the navy's (directorate.mjs `mawTeeth`, hadron.mjs
- * `mawBlades`) and hang where the exports hung them.
+ * `mawBlades`) and hang where the exports hung them — the Directorate's
+ * since #907 at its aperture's lower lip, where `crusherMaw` stations them.
  */
 export const crusherDome = {
   r: 2.9,
@@ -1967,8 +1968,10 @@ export function conveyorGantry(root, mats, opts = {}) {
 /**
  * The intake hopper at the conveyor's foot: an eight-sided frustum and the
  * lit mouth drum on it, `intake_hopper` and `intake_mouth` with `suffix`
- * (`''` on two files, `_r` and `_l` on the Order's, which has one a
- * gantry).
+ * (`''` on the Commune's, `_r` and `_l` on the Order's, which has one a
+ * gantry). The Directorate's is directorate.mjs `intakeMaw` since #907: the
+ * same funnel with its mouth sunk inside the rim, since on that navy a lit
+ * drum on top is the plate wearing a mouth's name the style doc refuses.
  */
 export function intakeHopper(root, { hopper: hopperMat, mouth: mouthMat }, opts = {}) {
   const {

@@ -15,26 +15,25 @@
  * cap and a crimson tip light on each, and violet spikes off their flanks
  * in ranks with holes in them; the crusher house with a chitin cowl over
  * it and the crusher's maw cut into the cowl — a hole in the dome with
- * `crusher_maw`, the export's name, as its lit floor — three black teeth
- * hung point-down along the face's line, one on the face and two inside
- * the house behind it; two
- * exhaust stacks with hot tips; the conveyor gantry running down to the
+ * `crusher_maw`, the export's name, as its lit floor, and three black
+ * teeth across its lower lip; two exhaust stacks with hot tips; the conveyor gantry running down to the
  * intake hopper, five nodules riding its belt, red rails, eight gantry
- * lights and three legs; the hopper with its lit mouth and five teeth
- * round it; two transfer pipes with red flanges; five anchor claws — the
+ * lights and three legs; the hopper with its lit mouth sunk inside its
+ * rim and five teeth round it; two transfer pipes with red flanges; five anchor claws — the
  * fifth is numbered 5 — two flood masts; and four photophores.
  *
  * A port of the approved export (docs/concept-art/models/refinery-
  * directorate.glb at f7cce0f), part for part in its order, every number
  * the export's own, read off its nodes and its buffers (#652). The
- * crusher, the stacks, the gantry, the hopper, the transfer pipes and the
- * flood masts are the kit's Refinery vocabulary (kit.mjs `crusher`,
- * `exhaustStacks`, `conveyorGantry`, `intakeHopper`, `flangedPipes`,
- * `floodMasts`), whose defaults are this file's numbers; the silos, the
- * teeth, the claws and the photophores are `factions/directorate.mjs`'s
- * works section. Nothing here is a shape decision but the maw's (#890 and
- * #907, the `crusher_maw` bullet) and the photophores' seats (#907, the
- * last); where the export is odd the script is odd with it:
+ * crusher, the stacks, the gantry, the transfer pipes and the flood
+ * masts are the kit's Refinery vocabulary (kit.mjs `crusher`,
+ * `exhaustStacks`, `conveyorGantry`, `flangedPipes`, `floodMasts`), whose
+ * defaults are this file's numbers; the silos, the two mouths, the teeth,
+ * the claws and the photophores are `factions/directorate.mjs`'s works
+ * section. Nothing here is a shape decision but the two mouths' (#890 and
+ * #907, the `crusher_maw` and `intake_mouth` bullets) and the
+ * photophores' seats (#907, the last); where the export is odd the script
+ * is odd with it:
  *
  * - The silos' spike ranks run 1; 0, 2; 0, 1; 0, 1, 2 — three holes — and
  *   the anchor claws 0, 1, 2, 3, 5: there is no `silo_spike_0_0`,
@@ -55,7 +54,7 @@
  * - The seven materials are the navy's `ink`: `chitin_red`,
  *   `chitin_violet`, `trench_black`, `weld_steel`, `biolight_crimson` at
  *   this file's 2.6, `floodlight_hot` at its 3.476, and since #907
- *   `gullet_glow`, the maw's. The export carried the turret's
+ *   `gullet_glow`, the two mouths'. The export carried the turret's
  *   `weld_steel` (#27313B) and a `biolight_crimson` on a #3A0D16 base, the
  *   settlement pass's own values under the hulls' names; #888 brought both
  *   onto the navy's (#3A3F4A and #1A0810). Nothing else on the file moved.
@@ -83,13 +82,38 @@
  *   outside the shell and showed through the cowl as lit chips beside
  *   the mouth. The floor shows 173 m² from above where
  *   the apron showed 309, all of it inside the cowl's plan, and the mouth
- *   is about 20 m across. `maw_tooth_2` hangs on the face 25 m up, over
- *   where the apron's inner end lay, `_0` and `_1` inside the house
- *   behind the face, all three as the export hung them and none of them
- *   at the mouth; whether they move to its lip is the owner's (#907).
- *   `diff.mjs` lists
+ *   is about 20 m across. The three teeth, which the export hung
+ *   point-down along the house's face (`_2` on the face 25 m up, `_0` and
+ *   `_1` inside the house) and #920 left there, are at the mouth since
+ *   #907's second round: rooted on its lower lip at three stations
+ *   between its corners, pointing up the meridian and leaned 0.4 into the
+ *   hole, so their tips clear the floor by 1.4 to 1.5 m (`crusherMaw`
+ *   `teeth`); they cover 12 m² of the floor, which shows 161 from above
+ *   where 173 showed bare. `diff.mjs refinery-directorate 9502d0e` listed
  *   `crusher_maw_throat` added, `crusher_maw` and `crusher_cowl` changed,
- *   and no other part.
+ *   and no other part; against c8b56a1 it lists the three teeth moved,
+ *   `intake_throat` added and the hopper and its mouth changed.
+ * - `intake_mouth` (#907): the kit's `intakeHopper` stands the lit drum
+ *   on the funnel's top, its top 1.7 m proud of the rim — 456 m² of
+ *   `floodlight_hot`, 57 % of the model's lit plan, and on this navy the
+ *   plate wearing a mouth's name that the style doc refuses, which #920's
+ *   review raised. It is sunk now: the funnel loses its top cap,
+ *   `intake_throat` is the rim, a ring 4.9 m wide in the hopper's violet,
+ *   and the wall down to the floor, and `intake_mouth` is the floor, the
+ *   same 13.4 m radius with its top 1.8 m under the rim, on `gullet_glow`
+ *   (`directorate.intakeMaw`). It shows 406 m² from above, the belt's
+ *   foot over the rest. The recess is 1.8 m, 0.15 of the funnel's 1.3
+ *   units and about a ninth of its height, and no more: the rim ring and the wall bound the floor on
+ *   every side at that depth, the 38° camera already loses a 2.3 m band
+ *   of the floor behind the near wall, and the Dredge's hopper throat,
+ *   the precedent, sits at its rim. With both mouths on `gullet_glow`
+ *   the maw glow is 567 of the model's 734 m² of lit plan and
+ *   `floodlight_hot` 121, where the floods had 578 of 796: the block's
+ *   "floodlit working surfaces" are now the lesser light, which the
+ *   owner should know. The Refinery carries two apertures on rule 3's
+ *   Dredge clause — the belt feeds the crusher's maw from this one — and
+ *   docs/style-neon-noir.md says so. The five teeth stand where the file
+ *   leans them.
  * - RESTING ON THE SILOS (#907, from #894's resting measure):
  *   `photophore_1`, `_2` and `_3` hung 2.2, 0.3 and 1.9 m off the silos
  *   they mark, where the export put them, each beside a lower segment;
@@ -126,7 +150,6 @@ import {
   crusherDome,
   exhaustStacks,
   conveyorGantry,
-  intakeHopper,
   flangedPipes,
   floodMasts,
   eulerXYZ,
@@ -249,19 +272,15 @@ directorate.silos(root, { red, violet, steel, black, light: crimson }, { silos: 
 // and `crusher_maw` are the aperture (the header, #907): the cowl with a
 // hole of two rings by two quads cut on the shoulder that faces the belt's
 // high end, the maw its lit floor 0.35 under the shell, and the throat
-// between them; its three teeth hung point-down where the export hung
-// them — `_2` on the face, `_0` and `_1` inside the house — and the two
-// stacks.
+// between them; its three teeth at the mouth's lower lip (below); and the
+// two stacks.
 const mouth = directorate.crusherMaw({ cowl: crusherDome, hole: { rings: [1, 3], quads: [2, 4] } });
 crusher(root, { house: steel, cowl: red, maw: gullet }, { cowl: mouth.cowl, maw: mouth.maw });
 xLong.place(root, 'crusher_maw_throat', mouth.throat.geo, red, mouth.throat);
-directorate.mawTeeth(root, black, {
-  teeth: [
-    { n: 0, at: [6.527034019, 2.5, -1.369996146] },
-    { n: 1, at: [6.9, 2.5, -0.82] },
-    { n: 2, at: [7.272965981, 2.5, -0.430003854] },
-  ],
-});
+// The three teeth at the mouth's lower lip, pointing up the meridian and
+// leaned into the hole (`crusherMaw`), where the export hung them
+// point-down along the house's face over the slab that was the maw (#907).
+directorate.mawTeeth(root, black, { teeth: mouth.teeth.map((t, n) => ({ n, ...t })) });
 exhaustStacks(root, { steel, glow: flood });
 
 // The conveyor gantry, at the kit's defaults, with this file's five
@@ -310,10 +329,11 @@ conveyorGantry(
   }
 );
 
-// The intake hopper at the kit's defaults, and its five teeth: 1.45 out
-// from its centre, 0.2 rad round and a fifth of a turn apart, leaned 0.5
-// outward.
-intakeHopper(root, { hopper: violet, mouth: flood });
+// The hopper at the kit's numbers with its mouth sunk inside the rim
+// (#907, the header), not the kit's drum on top; and its five teeth: 1.45
+// out from its centre, 0.2 rad round and a fifth of a turn apart, leaned
+// 0.5 outward, as the file leans them.
+directorate.intakeMaw(root, { hopper: violet, throat: violet, mouth: gullet });
 directorate.intakeTeeth(root, black, {
   at: [13.4, 1.35, 6.9],
   radius: 1.45,
