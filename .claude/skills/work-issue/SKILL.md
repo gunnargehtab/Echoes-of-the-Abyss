@@ -290,7 +290,7 @@ beyond the issue is filed against #746 with its options instead.
 
 ### Stop, comment, release
 
-Open no pull request, comment on the issue (under 100 words), and end the run when:
+End the run with a comment on the issue (under 100 words) when:
 
 - **The remaining work is inside the balance freeze.** Apply `needs-decision` and
   say the freeze is what stopped you; `wontfix` is a person's durable answer if the
@@ -298,17 +298,23 @@ Open no pull request, comment on the issue (under 100 words), and end the run wh
 - **A person has reserved the call** mid-run. Leave their label and their
   assignee alone.
 - **A hard rule blocks every option**, or the critic returns `stop`. Name the rule
-  in the comment. No label. A change to the loop's own bounds instead takes §5's
-  route: write the issue and stop.
+  in the comment. No label, unless the rule is the freeze, which takes the first
+  bullet. A change to the loop's own bounds instead takes §5's route: write the
+  issue and stop.
 - **The fix does not converge**: the gates keep failing in new places, or
   `dev-loop` stalls with nothing landable. No label: the next firing deserves its
   own attempt.
 
-Release the claim in every case: unassign unless a person now holds the issue,
-delete the branch if you pushed one,
-and say in the comment that the Routine let go and what is owed. A stopped run
-that stays assigned reads as work in progress that will never arrive. Name what
-you passed over, as §3 says.
+**No pull request open yet:** open none, and release the claim. Unassign unless a
+person now holds the issue, delete the branch if you pushed one, and say in the
+comment that the Routine let go and what is owed. A stopped run that stays
+assigned reads as work in progress that will never arrive.
+
+**A pull request already open:** keep it and its branch, since what is green in it
+still stands. Name what stopped the run under its `## Open findings`, as the cap
+does, and let the open pull request stand as the claim.
+
+Either way, name what you passed over, as §3 says.
 
 ## 8. Write the run down, whatever the run was
 
