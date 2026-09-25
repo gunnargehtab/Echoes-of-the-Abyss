@@ -512,9 +512,11 @@ the Sea Floor" and [graphics-standards.md](graphics-standards.md) carry the
 enforcement. Fauna light — a Lampfry shoal's glow — is **not** world light and
 needs no carve-out: the carve-outs are the ground's, and a shoal is life in the
 water column. Nor is a public shoal an agent: it is map furniture, on rung 5 of
-the ladder in [map-visuals.md](map-visuals.md) §5. An animal is an agent only as
-a contact, on rung 7 (§8 there). Either way its colour comes from the palette
-tables above.
+the ladder in [map-visuals.md](map-visuals.md) §5. So public life's glow belongs
+to neither an agent nor an instrument, and rung 5 bounds it instead: soft,
+additive dots, each at a furniture gain `ladder.ts` holds. An animal is an agent
+only as a contact, on rung 7 (§8 there). Either way its colour comes from the
+palette tables above.
 
 ## Don'ts
 
