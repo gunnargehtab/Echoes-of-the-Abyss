@@ -904,6 +904,11 @@ arithmetic above. The Commune's peak bank is still the opening gift, and with it
 half its matches it builds 0.1 rung hulls a match. Whether a 360 nodule Bower is reachable is
 the question for whoever lifts the freeze, as it was.
 
+The duel matrix moved the same way and further on the rung — a Slipway in 28 of the Commune's
+60 matches rather than 3, and 1.2 rung hulls a match across the four columns rather than 0.4 —
+and less on the match, which is decided 107 times in 120 rather than 110. The table under the
+next heading is its reading before this repair; `baselines/duel-matrix.md` is the one after.
+
 ### The gate, and what a duel actually says
 
 Issue #518's fourth option asked for a long-form duel *"and make **that** the gate for waves 4 and
