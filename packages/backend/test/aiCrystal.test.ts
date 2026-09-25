@@ -50,7 +50,7 @@ import {
   type ResourceNodeInfo,
 } from '@echoes/shared';
 import { AiCommander } from '../src/ai/commander.ts';
-import type { AiBriefing } from '../src/ai/types.ts';
+import type { AiBriefing, AiCommand } from '../src/ai/types.ts';
 import { DOCTRINE } from '../src/ai/doctrine.ts';
 import { briefingFor } from '../src/ai/seat.ts';
 import { Match } from '../src/sim/match.ts';
@@ -628,22 +628,49 @@ describe('the commander saves for what it cannot buy out of pocket', () => {
     );
   });
 
-  it('will not save in front of something cheaper it already wants', () => {
+  /** What a Commune at its hauler target and without a Refinery sends, on this bank. */
+  function withoutRefinery(nodules: number, haulers: number): AiCommand[] {
+    const brief = briefing();
+    return new AiCommander(brief).observe(
+      snapshot(fleet(brief, haulers), {
+        structures: [structure(20, StructureKind.Foundry)],
+        nodules,
+      })
+    );
+  }
+
+  it('saves for something cheaper it already wants, not for the rung', () => {
     // A commander with 200 nodules and no Refinery banking every one of them
     // against a 600 nodule yard is the rung bought with the economy's own
     // money. The Refinery falls through when it cannot pay, so "fell through"
-    // had to stop meaning "not wanted".
-    const brief = briefing();
-    const commander = new AiCommander(brief);
-    const sent = commander.observe(
-      snapshot(fleet(brief, DOCTRINE[Faction.Pelagia].harvesterTarget), {
-        structures: [structure(20, StructureKind.Foundry)],
-        nodules: Math.floor(priceOf(structureStatsFor(StructureKind.Refinery)).nodules / 2),
-      })
+    // had to stop meaning "not wanted" — and then had to stop meaning "spend
+    // it on hulls" as well (#706). The Commune's bank is never 250 for long
+    // enough to buy a 250 build out of pocket, so a want that was only ever
+    // hoped for barred its rung in thirty matches of thirty.
+    const target = DOCTRINE[Faction.Pelagia].harvesterTarget;
+    const refinery = priceOf(structureStatsFor(StructureKind.Refinery)).nodules;
+    const short = withoutRefinery(Math.floor(refinery / 2), target);
+    assert.deepEqual(
+      short.filter((c) => c.kind === 'produce' || c.kind === 'build'),
+      [],
+      'half a Refinery in the bank is held for the Refinery: no hull, and no yard'
     );
+    // The same bank that covers the rung buys the cheaper want first.
+    const rich = withoutRefinery(priceOf(structureStatsFor(StructureKind.Slipway)).nodules, target);
+    const sites = rich.flatMap((c) => (c.kind === 'build' ? [c.structure] : []));
+    assert.deepEqual(sites, [StructureKind.Refinery], 'a yard in the bank buys the Refinery');
+  });
+
+  it('buys haulers rather than saving for a cheaper build, as it does for the rung', () => {
+    // The same guard, for the same reason, and on the same count. Saving is
+    // holding money back from the yards; a navy short of haulers spends it on
+    // the economy that will pay for the build.
+    const short = DOCTRINE[Faction.Pelagia].harvesterTarget - 2;
+    const refinery = priceOf(structureStatsFor(StructureKind.Refinery)).nodules;
+    const sent = withoutRefinery(Math.floor(refinery / 2), short);
     assert.ok(
-      sent.some((c) => c.kind === 'produce'),
-      'with no Refinery yet, the money is the economy’s and the yards may spend it'
+      sent.some((c) => c.kind === 'produce' && c.unit === UnitKind.Harvester),
+      'half a Refinery in the bank and two haulers missing buys a hauler'
     );
   });
 

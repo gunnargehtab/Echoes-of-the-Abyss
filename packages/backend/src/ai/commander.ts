@@ -2274,14 +2274,14 @@ export class AiCommander implements AiPlayer {
 
     const has = (kind: StructureKind): boolean => snapshot.structures.some((s) => s.kind === kind);
 
-    // Anything cheaper that is already wanted and unpaid for. The three
-    // branches below buy out of pocket and fall through when they cannot, so
-    // "fell through" on its own does not say whether the build was unwanted or
-    // merely unaffordable — and the saving branch at the bottom has to know
-    // the difference. Without it a commander with 200 nodules and no Refinery
-    // banks every one of them against a 600 nodule yard, which is the rung
-    // bought with the economy's own money.
-    let urgent = false;
+    // Anything cheaper that is already wanted and unpaid for — the first such,
+    // in the order below. The three branches buy out of pocket and fall through
+    // when they cannot, so "fell through" on its own does not say whether the
+    // build was unwanted or merely unaffordable — and the saving branch at the
+    // bottom has to know the difference. Without it a commander with 200
+    // nodules and no Refinery banks every one of them against a 600 nodule
+    // yard, which is the rung bought with the economy's own money.
+    let urgent: StructureKind | null = null;
 
     // A Refinery first: it shortens every haul, and the hauls are where the
     // economy actually lives.
@@ -2293,7 +2293,7 @@ export class AiCommander implements AiPlayer {
           this.buildAttempt++;
           return;
         }
-        urgent = true;
+        urgent ??= StructureKind.Refinery;
       }
     }
 
@@ -2308,7 +2308,7 @@ export class AiCommander implements AiPlayer {
           this.buildAttempt++;
           return;
         }
-        urgent = true;
+        urgent ??= StructureKind.VentTap;
       }
     }
 
@@ -2331,7 +2331,7 @@ export class AiCommander implements AiPlayer {
         this.buildAttempt++;
         return;
       }
-      urgent = true;
+      urgent ??= StructureKind.SentinelTurret;
     }
 
     // A bio-reactor last of the cheap builds, and only behind a standing
@@ -2367,12 +2367,12 @@ export class AiCommander implements AiPlayer {
     // reached the deep never builds one, which is the doc's point: the crystal
     // is a decision about what to field. Placed away from the enemy, like a
     // yard and unlike a turret.
-    // --- The two builds a commander has to save for -----------------------
+    // --- The builds a commander has to save for ---------------------------
     //
-    // Everything above is bought out of pocket, and everything above is cheap
-    // enough for that to work. These two are not, and the branch used to treat
-    // them the same way: ask whether the bank covers the price *right now*,
-    // and if not, do nothing and let the yards spend it.
+    // Everything above is bought out of pocket when the bank covers it. The
+    // yard and the signature structure below never are, and the branch used to
+    // treat them the same way: ask whether the bank covers the price *right
+    // now*, and if not, do nothing and let the yards spend it.
     //
     // The yards always did. Measured over four four-seat matches, the Slipway
     // branch was reached between 2,460 and 5,227 times and the **most** any
@@ -2395,14 +2395,30 @@ export class AiCommander implements AiPlayer {
     // while one is building will not save at all.
     //
     // Being raided is *not* a second guard, and that is deliberate. The turret
-    // branch above already answers a raid and returns before this one is
-    // reached, so a commander under attack buys its defence first and saves
-    // afterwards, which is what a player does. Guarding on it as well cost the
-    // loud navies the rung outright: the Consortium is heard from four minutes
-    // out, so something is closing on it for most of a match, and it built a
-    // Slipway in none of eight.
-    if (urgent) return;
+    // branch above already answers a raid, so a commander under attack buys
+    // its defence first and saves for the rung afterwards, which is what a
+    // player does. Guarding on it as well cost the loud navies the rung
+    // outright: the Consortium is heard from four minutes out, so something is
+    // closing on it for most of a match, and it built a Slipway in none of
+    // eight.
     if (harvesters.length + queuedHarvesters < this.doctrine.harvesterTarget) return;
+
+    // A cheaper build that is wanted and unaffordable is saved for first, on
+    // the same guard, and the rung waits behind it.
+    //
+    // It used to stop the branch and save for nothing, on the assumption that
+    // a build that cheap is always a moment from affordable. For the Commune it
+    // never is: a Vent Tap and a turret are 250, and its bank holds 250 on 4 of
+    // 2,500 observations of seed 4000. Over seeds 4000–4029 an unaffordable
+    // build stopped this branch on ~800 observations a match, mostly a Vent Tap
+    // or a turret; 0.13 of each was ever built, and the rung behind them was
+    // never held long enough to raise one Slipway in thirty matches. A want
+    // that bars the rung and is never itself paid for is a lock rather than a
+    // priority (#706).
+    if (urgent !== null) {
+      this.saveToward(urgent, purse);
+      return;
+    }
 
     // The rung first, then the navy's own structure, because the second is
     // what the first is *for*: the Slipway carries the roster's heavy hulls
