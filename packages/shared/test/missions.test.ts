@@ -145,6 +145,24 @@ describe('the public mission catalogue', () => {
     }
   });
 
+  it('keeps Tend’s briefing auditory and its working interval a tide', () => {
+    const briefing = missionHeaderById('seeding-tend')!.briefing!.join('\n');
+    assert.ok(briefing.includes('We can hear everybody doing it anyway.'));
+    assert.ok(briefing.includes('we think three loads is a tide'));
+    assert.ok(briefing.includes('and on this tide the arrangement is the point'));
+    assert.ok(briefing.includes("We'd like the tide back the way we're lending it to you"));
+    assert.doesNotMatch(
+      briefing,
+      /Watch how|three loads is a day|today of all days the arrangement|like the day back/
+    );
+  });
+
+  it('asks Intake’s ground what it heard in both places', () => {
+    const briefing = missionHeaderById('attending-intake')!.briefing!.join('\n');
+    assert.equal(briefing.match(/what it heard/g)?.length, 2);
+    assert.doesNotMatch(briefing, /what it saw/);
+  });
+
   it('varies the briefing on a scene, and never the mission', () => {
     // docs/campaign.md §1's rule, at the level the catalogue can hold it: the
     // selector reads a header and a set of scene ids and returns paragraphs.
