@@ -1,37 +1,28 @@
 ---
 name: work-issue
-description: Pick one open issue off the backlog, work it end to end, and open a pull request — the unattended loop. When nothing is eligible, file the next sub-issues off an epic instead, so the following runs have work. Use this when asked to work the backlog, pick up an issue, make progress on open issues, or when a scheduled Routine fires with no human watching. Prefer this over improvising a selection rule; the claim check, the self-assignment, and the open-PR cap are what keep two firings from colliding and what keep CI spend bounded.
+description: Pick one open issue off the backlog, work it end to end, and open a pull request — the unattended loop. When the work needs a design call, write the options, take the recommended one and keep going. When nothing is eligible, file the next sub-issues off an epic instead, so the following runs have work. Use this when asked to work the backlog, pick up an issue, make progress on open issues, or when a scheduled Routine fires with no human watching. Prefer this over improvising a selection rule; the claim check, the self-assignment and the open-PR cap are what keep two firings from colliding and what keep CI spend bounded.
 ---
 
 # Working one issue, unattended
 
-This is the loop a scheduled Routine runs several times a day with nobody
-watching. It picks **one** issue, assigns it to itself so everyone can see it
-is taken, takes it to a pull request, and stops. The selection rule, the claim,
-and the cap below are the whole reason the loop is safe to leave running —
-skipping them is how you get two sessions on the same issue, or six open PRs
-each burning a full CI run on every push.
+A scheduled Routine runs this several times a day with nobody watching. It picks
+**one** issue, claims it, takes it to a pull request, and stops. The claim, the
+selection rule and the cap are what make it safe to leave running: skip them and
+two sessions work one issue, or six pull requests each burn CI on every push.
 
-**The one thing this loop must not do is guess.** `docs/` is canonical and code
-transcribes it; when they disagree, that is a bug in one of them, and which one
-is a design call. An unattended session that picks a side and ships it has
-written a plausible wrong answer into the design bible. Step 7 is how you stop
-instead — and stopping with a good comment on the issue is a *successful* run,
-not a failed one.
+**The loop decides; it does not guess.** `docs/` is canonical and code transcribes
+it. When the work needs a call the issue does not make, §7 says how to decide it
+in the open — options, a recommendation, the recommendation taken — so a
+reviewer can overturn it in one comment. Deciding silently is the failure.
+Stopping is kept for the few cases §7 lists.
 
-## 0. Establish what GitHub access you have, before anything else
+The history behind each rule is in #580, the run log, and in `git log` on this
+file. This file keeps the rules and one reason each.
 
-A scheduled firing does not necessarily get the same tools an interactive
-session has. The `mcp__github__*` tools here come from the environment rather
-than from a connector, and a Routine created outside a session holding them may
-fire without them — the create call warns about this explicitly. So find out
-first, rather than discovering it half way through step 4 with an issue
-half-filed.
+## 0. Check GitHub access first
 
-- **If the `mcp__github__*` tools are present, use them.** They are the
-  supported path and the rest of this skill assumes them.
-- **If they are not,** fall back to the REST API with the `GITHUB_TOKEN` (or
-  `GH_TOKEN`) in the environment:
+- **`mcp__github__*` tools present:** use them; the rest of this file assumes them.
+- **Absent:** use the REST API with `GITHUB_TOKEN` or `GH_TOKEN`:
 
   ```bash
   curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" \
@@ -39,755 +30,305 @@ half-filed.
     https://api.github.com/repos/gunnargehtab/Echoes-of-the-Abyss/issues?state=open
   ```
 
-- **If a write comes back 401, 403 or 404** — assigning an issue, commenting
-  on it, creating one, linking a sub-issue, opening a pull request — **stop and
-  say so plainly.** Do not retry against a different credential and do not
-  carry on with the half of the job that works. An issue filed but never linked to its epic is worse than no issue
-  at all: step 4's dedup reads the epic's children, so an unlinked issue gets
-  filed again on the next firing, and again after that.
+- **A write returns 401, 403 or 404:** stop and say so. Do not retry with another
+  credential or finish the half that works. An issue filed but not linked to its
+  epic is re-filed by every later firing.
 
-Git itself is authenticated separately and independently: `git fetch` and
-`git push` over HTTPS work regardless of API access. That leaves one useful
-degraded mode — you can still branch, commit, and push. If the work is done and
-only the PR creation fails, push the branch anyway and report its name, so the
-run is recoverable by hand rather than lost.
+`git fetch` and `git push` authenticate separately. If only PR creation fails,
+push the branch anyway and report its name.
 
-## 1. Take stock before you take an issue
-
-Two questions, in this order: what is in flight, and what merely *looks* like it.
+## 1. Take stock
 
 ```bash
 git fetch origin main
 git ls-remote --heads origin 'refs/heads/claude/issue-*' | sed 's|.*refs/heads/||'
 ```
 
-**An open pull request is a claim.** List them and read both halves — their head
-refs and their `Fixes #<n>` lines — because a PR whose branch was renamed leaves
-no matching ref, and the issue number in the body is the thing that is actually
-being closed.
+Read the latest entries of #580, never the whole log: it passed 150 comments in
+September. `issue_read` with `get` gives the comment count; `get_comments` with
+`perPage: 5` on the last page gives the tail. It says what the last firings did
+and left.
 
-**An assignee is a claim, and the earliest one there is.** Step 3 reads it. It
-exists from the moment somebody, person or loop, decides to start; a branch
-exists only once something has been pushed, and a session that dies before
-pushing leaves no branch at all.
+Three kinds of claim, strongest first:
 
-**A branch on its own is not a claim.** This repository does not delete a head
-branch when its pull request merges, so the refs accumulate — 86 of them by
-September — and under the old rule every one of them marked its issue claimed
-forever. #286 and #518 sat open and unassigned for days while this loop passed
-over them at every firing and filed new work instead, because their branches had
-outlived merged pull requests #519 and #523. So a `claude/issue-<n>-*` ref counts
-as a claim only when one of these holds:
+- **An assignee** is a claim, and the earliest one: it exists from the moment
+  somebody decides to start. §3 reads it.
+- **An open pull request** is a claim. Read its head ref *and* its `Fixes #<n>`
+  line; a renamed branch leaves only the second.
+- **A `claude/issue-<n>-*` branch** is a claim only when an open pull request has
+  it as head, or no pull request was ever opened from it and its tip is under 24
+  hours old. Head branches are not deleted on merge here, so old refs are noise.
+  Check just the issue you are about to take:
 
-- an **open** pull request has it as its head, or
-- **no** pull request was ever opened from it *and* its tip commit is under 24
-  hours old — that is a run still going, or one that died mid-flight.
+  ```bash
+  git fetch --depth=1 origin claude/issue-<n>-<slug> && git log -1 --format=%cI FETCH_HEAD
+  ```
 
-You need the second test only for the issue you are about to take, so it is one
-command rather than eighty-six:
+  Do not use `git merge-base --is-ancestor`: squash-merged work is unreachable
+  from `main` and would read as live.
 
-```bash
-git fetch --depth=1 origin claude/issue-<n>-<slug> && git log -1 --format=%cI FETCH_HEAD
-```
+## 2. Stop if the loop already has two pull requests open
 
-Do **not** try to settle this with `git merge-base --is-ancestor`. Some pull
-requests here are squash-merged, so 62 of those 86 branch tips are unreachable
-from `main` even though their work landed; the ancestry test calls them live and
-you are back where you started.
+Count open pull requests carrying the `routine` label, which §6 puts on every pull
+request this loop opens. **Two or more: end the run** and say so. Do not fall
+through to §4.
 
-## 2. Stop early if the backlog is already saturated
+An open pull request without the label is somebody else's and does not count.
+Only when the label itself is unavailable, count `claude/issue-` head refs instead
+and say so in the run log; that count is too broad, which only stops the loop
+early.
 
-Count the open pull requests **this loop opened** — the ones carrying the
-`routine` label, which step 6 puts on every pull request it opens.
-**If there are two or more, do nothing and end the run.** Say so plainly and exit
-— do not fall through to step 4 and file an issue instead. A saturated backlog
-means stop.
-
-The label is the marker because a branch prefix is not one. This count used to
-read head refs beginning `claude/issue-`, on the reasoning that the prefix was
-the loop's own and a human working in parallel should not be able to throttle
-it. That reasoning was wrong: an interactive session working an issue in this
-account pushes `claude/issue-<n>-<rand>` too, and three such pull requests
-(#449, #475, #492) sat inside this count while a person drove them. Count what
-you can prove is yours.
-
-**An open pull request without the `routine` label is somebody else's, and does
-not count.** That is the whole point of the label, and it is the ordinary case,
-not a fallback.
-
-The fallback is for the label not existing in this repository at all, or a label
-write failing — never for a pull request that merely lacks one. When the label
-itself is unavailable, count `claude/issue-` head refs instead and say in the run
-summary that you did: that count is too *broad* rather than too narrow, so it can
-only stop the loop earlier than it needed to, which is the safe direction. The
-00:14 firing on 9 September read this the other way round and counted a
-hand-driven pull request (#583) against its own budget — under the cap either
-way, but that is exactly the over-broad count this step exists to end.
-
-This cap, not the schedule, is what bounds cost. A full CI run bills around six
-Actions minutes across its four jobs, and every push to an open pull request
-starts one. The account did run out of Actions minutes once, on 2026-08-25, but
-that is over — the minutes were restored and the duplicate-run bug behind it was
-fixed in the same change, as the header comment of `.github/workflows/ci.yml`
-records. Keep the cap because unattended spend deserves a bound, not because the
-budget is currently in trouble.
-
-Do not read the cap as the loop's usual exit, though. Across the twenty-one
-firings measured in September it never once bound: at most one of the loop's own
-pull requests was open at any firing time, and its fourteen pull requests
-accounted for fourteen of the 181 CI runs the repository spent in that window —
-one run each, all green. What keeps the loop cheap is step 6, not this step.
-Raising the cap is still a real spending decision; raising the cron frequency is
-not.
+This cap bounds unattended CI spend. Raising it is a person's decision.
 
 ## 3. Choose one issue
 
-From the open issues that are **not** claimed, **not** assigned, and **not**
-labelled `epic`, `needs-hardware`, `needs-decision`, `routine-log`,
-`standing`, `fable-5.1` or `wontfix`, take the oldest. Nine exclusions, for
-different reasons:
+Take the **oldest** open issue that is not claimed (§1), not assigned, and not
+labelled:
 
-- `epic` issues are trackers for work spanning many PRs (#212 is twenty-eight
-  campaign missions). There is no single PR that closes one, so an agent that
-  takes it produces a PR that cannot honestly say `Fixes`. Step 4 is what to do
-  with them instead.
-- `routine-log` is #580, this loop's own ledger, which step 8 writes to. It is
-  open and unassigned by design — which, without this exclusion, is precisely
-  what *eligible* means. A firing that set out to fix its own logbook would be
-  an absurd way to spend an hour, and nothing else would stop it.
-- `standing` is an issue that is open **because a decision went that way** — a
-  permanent target something in the tree cites by number, not work anyone
-  means to finish. #703 is the one it was cut for. `AiUnbuilt` prices each
-  listed gap at naming the issue that fills it, an entry naming a *closed*
-  issue names nothing, and the three verbs were re-pointed from #621 to #703
-  when the first closed. Closing #703 too would re-create the same defect one
-  citation at a time, so the decision was to let it stay open and say so. Like
-  `routine-log` this is open and unassigned *by design*, which is exactly what
-  eligible looks like from here — and unlike `routine-log` it is not a ledger
-  but a live reference, correct only for as long as it stays open. **A
-  person's to apply and to remove**, like `needs-hardware`: removing it says
-  the citations have somewhere else to point, which is a claim about the code,
-  not about your run.
-- `needs-hardware` is work that is real but cannot be done where this loop runs.
-  #286 wants wall-clock frame timings from an actual GPU and an actual Termux
-  handset; a container can neither produce them nor honestly fake them. The
-  label exists so that the judgement is made once, by a person, rather than
-  re-derived by every firing and re-explained in every claim comment. If you
-  find yourself passing over the same issue for this reason twice, propose the
-  label in your run summary — **applying it is a person's call**, because it is
-  a statement about the work rather than about your run.
-- `needs-decision` is work that is real, doable here, and blocked on a design
-  call — the step 7 case, made durable. #577 is the one it was cut for: the
-  docs and a map disagree, the issue's own body says an unattended run should
-  not pick a side, and it is otherwise the *only* issue in the backlog that
-  passes every other test. A firing at 04:15 on 9 September claimed it,
-  measured it, and released it; the next firing four hours later would have
-  selected it again, re-derived the same conclusion, and posted the same
-  stand-down comment, and every firing after that likewise. Without this label
-  a blocked issue is not merely skipped, it is the *most* selectable thing
-  there is, because being open, unassigned and unclaimed is exactly what makes
-  it blocked. **You may apply this one yourself**, and step 7 says when — it is
-  a statement about a decision you were unable to make, which is a fact about
-  your own run.
-- `fable-5.1` is a routing rule, and it routes away from this loop. `CONTRIBUTING.md`
-  says what it marks — an issue whose work is *shape*, a hull script, a faction
-  module, a GLB, a prop, a prompt block — and `docs/asset-prompts-3d.md` rule 3
-  names the model of record that shape is authored under for this whole series.
-  This loop is not that model, and it cannot become it mid-run: the Routine pins
-  one model at the trigger, so a firing that takes such an issue has already
-  decided to author shape under the wrong one. #586 is the case that cut this
-  exclusion. The 12:16 firing on 9 September read it as ordinary `enhancement`
-  work — it was the oldest eligible issue, the claim comment is correct, every
-  gate passed — and opened #594, 781 lines that straighten the Cantus's cradle
-  to bilateral, lift the Reciter's wing lamps half a metre, and redraw every
-  Order wing as a swept quadrilateral. Those are shape decisions, made under
-  Opus 5, on an issue whose own body says *"the `fable-5.1` label is here for
-  the reason `CONTRIBUTING.md` gives it: this work is shape."* The gates did not
-  catch it and were never going to: they are adversarial to the model, not about
-  which model authored it. The pull request was closed and the issue released.
-  **Do not apply this label yourself and do not remove it** — it is a statement
-  about the work, so it is a person's, like `needs-hardware`. Note in your run
-  summary if the backlog is mostly `fable-5.1`, because that is a fact about the
-  loop's remaining supply of work rather than about any one issue: #540 carries
-  the label across what is left of it — Phase 6's pristine pass, now that every
-  hull, structure and environment prop is built by a script — so it is a
-  Fable-routed session's, never a firing's.
-- `wontfix` is parked work, in the sense `docs/ROADMAP.md` gives the word: the
-  investigation is written down and the next move is one the build cannot make
-  yet. The finding did not stop being true, so the issue stays open — which,
-  again, is exactly what makes it selectable without this exclusion. Like
-  `needs-hardware` it is a statement about the work rather than about your run,
-  so **do not apply or remove it yourself**; propose it in your run summary.
+| Label | Why it is skipped |
+| --- | --- |
+| `epic` | No single PR closes it; §4 files its sub-issues instead. |
+| `routine-log` | #580, this loop's own ledger. |
+| `standing` | Open on purpose: code cites it by number. A person's to apply and remove. |
+| `needs-hardware` | Needs a real GPU or device. A person's to apply. |
+| `needs-decision` | A person reserved the call, or the rest is inside the balance freeze. |
+| `fable-5.1` | Shape work, authored under the design model of record (`CONTRIBUTING.md`). The Routine is pinned to another model. Never apply or remove it. |
+| `wontfix` | Parked: the finding stands, the build cannot act on it yet. A person's. |
 
-**Balance work is frozen, whatever an issue is labelled.** `CLAUDE.md` carries
-the rule and its boundary; the short version is that no firing tunes a number
-because a win rate looked wrong, and no firing refreshes a baseline to chase a
-guard-rail. An issue whose subject is a faction winning or losing too much is
-not eligible even when it passes every test above — #654 is the standing
-example, parked on exactly this basis. A *correctness* fault the balance
-harness surfaced is a different thing and is still yours: a navy that cannot
-pay for its own roster, a commander that never builds a structure its own waves
-gate on. If you cannot tell which kind you are looking at, it is balance, and
-you leave it.
+**An assignee means taken, whoever it is.** The loop runs under the owner's login,
+so the name cannot tell a person from an earlier firing; the claim comment can.
 
-**An issue whose remaining work is all inside the freeze takes `needs-decision`,
-and you may apply that one yourself.** Leaving it is not enough: an issue that is
-open, unassigned and unlabelled is precisely what *eligible* looks like, so the
-next firing selects it, re-derives that everything left is frozen, stands down,
-and proposes `wontfix` again. #706 has run that cycle five times across 14 and
-15 September — its decision-free halves worked and merged as #721 and #736, the
-remainder four candidate levers and two parked readings, all of them yield
-arguments — and the label is still not applied. `wontfix` is a statement about
-the work and stays a person's, per the bullet above. But whether the freeze
-lifts is a decision `CLAUDE.md` says is written down rather than taken by a run,
-and being unable to take it is a fact about **your** run, which is what
-`needs-decision` is for. Say in the stopping comment that the freeze is what
-stopped you, and that `wontfix` is the durable answer if the work is parked
-rather than merely waiting. A person who disagrees removes the label, and the
-issue is eligible again on the next firing.
+**A stale claim** — assigned, the loop's latest comment a claim rather than a
+release, over a day old, no branch — goes in the run log's "Needs a person" line.
+Still skip it; do not clear it.
 
-- Anything already claimed is someone else's — including an earlier you.
-- **An issue with an assignee is taken, whoever took it.** A person who
-  assigned themselves is on it, and so is an earlier firing of this loop, which
-  assigns itself in step 5 before it does anything else. This is the cheapest
-  exclusion to honour and the most valuable, because it is the only signal that
-  exists *before* a branch or a pull request does: step 1's claim check can
-  only see work that has already been pushed. Do not try to tell the two apart
-  from the assignee's name — the loop runs under the repository owner's own
-  login, so the name is the same either way, and it makes no difference to
-  eligibility. The claim comment (step 5) is what says which it is.
+**Balance work is frozen** (`CLAUDE.md`). An issue about a faction winning or
+losing too much is not eligible, whatever its labels. A *correctness* fault the
+harness surfaced is: a navy that cannot pay for its roster, a commander that never
+builds a structure its waves gate on. If you cannot tell which it is, it is
+balance. An issue whose remaining work is all inside the freeze takes
+`needs-decision` per §7.
 
-An assigned issue can also be a **stale claim**: a firing that assigned itself
-and then died before pushing leaves the assignee behind with no branch and no
-pull request. If the latest comment from this loop on such an issue is a claim
-rather than a release, and it is more than a day old, say so in the end-of-run
-summary — issue number, claim time — so a person can clear it. **Still skip it,
-and do not clear it yourself.** The same login could be a person who took the
-issue over after the run died, and a wrong guess here recreates the collision
-this whole rule exists to prevent.
+Prefer `bug` over `enhancement` when the ages are close. Taking anything but the
+oldest is a judgement: name each older eligible issue you passed over, one clause
+each, in the claim comment. An issue you pass over twice for the same reason wants
+a label: apply `needs-decision` yourself only for the freeze case; propose the
+others in the run log.
 
-Prefer `bug` over `enhancement` when the ages are close: a bug is a statement
-about behaviour that is already wrong, and its acceptance criteria are usually
-in the issue rather than in your judgement.
-
-**Taking anything other than the oldest is a judgement call, and it goes in the
-claim comment.** Sometimes it is the right call — an issue can need hardware no
-container has (#286 says so in its own comments), or carry a live investigation
-somebody is mid-way through (#518). But on the first firing after step 1 was
-loosened, the loop took an issue thirteen minutes old and left #286, nine days
-old and eligible, untouched and unexplained. From the outside that is
-indistinguishable from the rule not working. So name the older eligible issues
-you passed over, one clause each, where the next person to look will find them.
-
-If the same issue keeps appearing in that line, it wants an exclusion rather
-than a recurring explanation: `needs-decision` when it is blocked on a call you
-cannot make, `needs-hardware` when no container could do it, `fable-5.1` when the
-work is shape and belongs to the design model of record, an assignee when a
-person is mid-way through it. Apply the first yourself per step 7; say which of
-the others you would propose.
-
-**Found one? Skip to step 5.** Only when step 3 comes up empty do you do step 4.
+**Found one? Go to §5.** §4 is only for an empty backlog.
 
 ## 4. When nothing is eligible, file the next sub-issues off an epic
 
-An epic is not a reason to idle. `#212` carries eleven items under a
-`## Sub-issues` heading, and every one of them is a markdown checkbox rather
-than a real issue — `has_children` is false and the sub-issue list is empty. The
-author's intent is plain from the heading; nobody has done the filing. So do the
-next few pieces of it, and stop.
+1. Take the oldest open `epic`. Read its **linked sub-issues**; that list, not the
+   checkbox ticks, records what is filed. Never tick a box.
+2. Walk its unchecked, unfiled boxes in order. Take **up to three** you can scope:
+   acceptance criteria, the files or docs each touches, one PR each.
+3. A box that needs a scoping call is not a reason to skip it: decide the scope
+   per §7 and put the options in the new issue's body.
+4. Open a normal issue per box — epic constraints restated where they bind, the
+   box it came from named, labelled by nature (`enhancement`, `docs`, `infra`,
+   `bug`), **never `epic`**, and **unassigned**.
+5. Link each to the epic with the sub-issue API. Without the link the next firing
+   files the same box again.
+6. **Stop.** Do not work what you filed; the gap to the next firing is a person's
+   window to adjust the scope.
 
-1. Take the oldest open `epic`. Read its **existing sub-issues** — that list, not
-   the checkbox ticks, is the record of what has already been filed. A ticked box
-   means *done*; an unticked box with a sub-issue already linked means *filed*.
-   Never tick a box yourself.
-2. Walk its unchecked, unfiled boxes in order and take **up to three** that are
-   **concrete enough**: you can state the acceptance criteria, name the files or
-   docs each touches, and believe each is one PR's worth of work.
-3. Open a normal issue for each. Title and body in the register of the epic, the
-   epic's constraints restated where they bind, and a line saying which epic
-   box it came from. Label them by their nature — `enhancement`, `docs`, `infra`,
-   `bug` — and **never `epic`**, or the next run will skip them too. Leave them
-   **unassigned** for the same reason: an assignee means taken, and you are not
-   taking them.
-4. Link each to the epic with the sub-issue API. This is what stops the next
-   firing re-filing the same box, so it is not optional bookkeeping.
-5. **Stop.** Do not then work what you just filed. The gap until the next firing
-   is the window in which a human can look at the scope you chose, and it only
-   exists if you end the run here.
+Three is a ceiling, not a quota. When no box can be scoped even with a decision —
+it is a prose document the design bible has not started, say — comment on the
+epic naming the box and end the run.
 
-Three rather than one, because the loop was otherwise spending every second
-firing on this step. Over the eight firings before this rule was written it
-alternated exactly — file #534, work #534, file #546, work #546 — and the gap it
-was protecting went unused every time: nobody commented on any of the four before
-the next firing claimed it. Keep the gap, so still stop here. But one filing run
-should stock the next three firings rather than the next one; a filing run costs
-a few dollars and a working run around twenty, and the cheap one should not be
-half of what the loop does.
+In the epic comment, list every open issue you considered and why each was
+excluded, a line each. From outside, a correct skip and a broken rule look the
+same; only this list tells them apart.
 
-Three is a ceiling, not a quota. File one if only one box clears the bar above,
-and none if none do — the last paragraph of this step is what to do then.
+### A finding of your own goes to #746
 
-Those boxes are wildly uneven, and telling them apart is the whole skill in this
-step. "Coral Ruins mid-match biome change" is a scoped system with a named write
-path and a doc that marks it unbuilt. "The twenty-eight mission definitions" is
-not an issue. "Faction campaign specifications — the documents first" says in its
-own title that prose comes before code, so the issue it deserves is a doc issue
-for *one* specification, not a code one.
+A defect found while working something else — a doc claim the code contradicts, a
+rule here that failed in a run — is filed against #746, at the end of the run that
+found it. Verify it against code at a named commit and cite file, line and commit;
+never file from the prose describing the code. Filing is not taking: do not work
+it. A finding inside the balance freeze stays in the run log.
 
-When no box is concrete enough, **comment on the epic** naming the box you would
-have taken and the scoping decision it needs from a human, and end the run. That
-comment is a good outcome. Filing a vague issue is not — it converts a design
-question into a work item that some later run will treat as settled.
+## 5. Claim it, then work it through `dev-loop`
 
-### A finding of your own goes to #746, not into #580 a second time
+Before you touch a file, two writes, in this order:
 
-Some of what a firing finds belongs to no epic: a defect noticed while reading
-code for something else, a doc claim the code contradicts, a rule in this skill
-that did not survive contact with a run. Until #746 there was nowhere for it to
-go, so it went into the run log — and the log is a record, not a queue. Eight
-findings sat in it across seven entries, re-listed by every firing and filed by
-none.
-
-**#746 is the home for exactly those.** File against it as you would any epic,
-with one extra bar: the finding is **verified against code at a named commit**,
-and the issue says which file, which line, which commit. Never against the prose
-describing the code. Five entries of #580 record that trap and the most
-expensive instance transcribed `mission-sorrowgate.md` §4 into five authored
-sentences `acoustics.ts` makes false.
-
-**This is not only a §4 run's to do.** A finding usually turns up while working
-something else, and this step is reached only when nothing was eligible. File it
-at the end of whatever run found it — after the pull request is open, before
-§8's comment — and do not then work it. Filing is not taking: the issue you
-claimed is still the issue this firing worked.
-
-Two things stay out of it. A finding **inside the balance freeze** is not yours
-to file — it stays in #580 until the freeze lifts, because filing it converts a
-frozen number into a work item a later run will treat as thawed. And a finding
-you cannot state as a defect — *this feels wrong*, *§7 is awkward* — is a design
-question, so this step's own rule against filing those holds here too.
-
-### Say what you passed over
-
-Reaching this step at all means you decided that nothing in the backlog was
-eligible, and that decision is invisible unless you write it down. Put it in the
-comment on the epic you filed against: every open issue you considered and the
-one reason each was excluded — assigned, `epic`, an open pull request, a live
-branch. A line each is enough.
-
-This is not bookkeeping. Step 1's blindness went unnoticed for four days
-precisely because no run ever said "#518 — skipped, branch
-`claude/issue-518-xx5501`"; from the outside, a correct skip and a broken rule
-look identical, and the loop is the only thing in a position to tell them apart.
-
-**Every run owes this list, not only the ones that reach this step.** A run that
-files puts it on the epic, a run that stops puts it in the stopping comment of
-step 7, and a run that takes an issue puts it in the claim comment of step 5.
-The run that most needs to explain itself is the one that skipped four older
-issues and worked the fifth quite happily — it is the one nobody has any reason
-to look at.
-
-## 5. Claim it, then work it like any other change
-
-Once it is claimed, **invoke `/dev-loop` and follow it** for the work itself.
-Not "bear it in mind" — invoke it. It is the skill at
-[`.claude/skills/dev-loop/SKILL.md`](../dev-loop/SKILL.md), and it owns the
-round: build against the doc section that is the issue's target, run
-`npm run gates`, capture evidence, hand the diff to the `loop-critic` subagent,
-refine on its verdict, and stop on its exit criteria or its stall rule. This
-file owns selecting and claiming the issue and the shape of the pull request
-either side of that; it does not describe the rounds. §6 below is the gate that
-loop's step 3 runs.
-
-**This paragraph used to describe `dev-loop` rather than tell you to invoke it,
-and a firing read it as context.** The 12:13 firing on 13 September took #698,
-edited nine files and opened #714 without ever spawning the critic — good work,
-self-reviewed, and indistinguishable from reviewed work. That is why the wording
-is an instruction now.
-
-**That loop is capped at three rounds**, in its own "Guardrails", which is what
-bounds a firing's spend on refining. Reaching the cap is not a failed run: the
-pull request has been open since the first increment that stood on its own, so
-the run stops with what is done and what is left written in its body, and §8's
-rounds line says the third round was the last. A firing that landed nothing in
-three rounds stops on §7's third case instead. Neither case is a reason to raise
-the cap — see "When the issue is the loop's own" below.
-
-The rule is the edit, not the outcome: **any run that changes a file goes
-through the rounds**, however small it looks. A run that changes none — a
-stand-down, a filing run, an investigation that ends in a comment — never
-reaches `dev-loop`, and correctly reports "no rounds" in §8.
-
-If you cannot invoke it, or the critic cannot be spawned, **do not quietly
-review your own diff instead**. Say so in §8's rounds line, as
-**critic unavailable**, with what happened when you tried. That is the case the
-line exists for.
-
-Before you touch a file, put the claim where the next firing — and a person
-opening the issue — will see it first. Two writes, in this order:
-
-1. **Assign the issue to the account you are running as.** `get_me` (or
-   `GET /user`) tells you the login; it is the repository owner's. This is what
-   step 3 keys on, and it is visible from the moment you decide rather than
-   from the moment you push — the #275 collision happened inside a seven-minute
-   gap that no branch scan could have closed.
-2. **Comment on the issue saying the Routine took it.** The assignee alone
-   cannot say *who*, because the loop and the owner share one login; the
-   comment can. Keep it to the facts a person needs in order to decide whether
-   to step in:
+1. **Assign the issue** to the login `get_me` (or `GET /user`) returns.
+2. **Comment on it** (under 100 words):
 
    > Taken by the work-issue Routine, unattended. Branch
-   > `claude/issue-<n>-<slug>`; session <link, when you have one>.
+   > `claude/issue-<n>-<slug>`; session <link>.
    > Passed over: <older eligible issues, one clause each, or "nothing older">.
-   > To take this over, unassign the issue or say so in a comment — the run
-   > re-reads the issue before it opens a pull request and stands down.
+   > To take this over, unassign the issue or say so here; the run re-reads the
+   > issue before it opens a pull request and stands down.
 
-   Assigning without the comment is worse than not assigning: it makes the
-   issue look like a person's, and nobody can tell it is safe to reclaim.
+If either write fails, stop per §0. Then branch **`claude/issue-<n>-<slug>`** and
+push it early, so the claim is visible in git.
 
-If either write fails, stop per step 0 — do not carry on unclaimed.
+**Then invoke `/dev-loop` and follow it.** Invoke it; do not just bear it in mind.
+It owns the rounds: target, `npm run gates`, evidence, a fresh `loop-critic`,
+exit or stall. Any run that changes a file goes through it, however small. A run
+that changes none reports "no rounds" in §8. If the critic cannot be spawned, do
+not review your own diff instead: write **critic unavailable** in §8 and say what
+happened.
 
-Then branch **`claude/issue-<n>-<slug>`**. The issue number in the branch name
-is not cosmetic — step 1 is how the next firing sees your claim in git, and it
-only works if the number is there. Push the branch early, before the work is
-finished, so the claim is visible to a firing that starts while you are still
-going, and so the branch named in your claim comment actually exists.
+**Land it in instalments.** Commit and push at every self-contained step. Open the
+pull request as soon as the branch carries one increment that stands on its own
+and passes §6. When the session runs short, stop adding scope: push what is green
+and say in the body what is left. An unpushed commit dies with the container.
 
-### Land it in instalments — the session can end before the issue does
-
-A firing has a finite context window and a finite session, and a long issue can
-reach either. Whatever has not reached GitHub when that happens dies with the
-container: an unpushed commit is gone, and a pushed branch nobody opened a pull
-request for is invisible to review and reads to the next firing as a stale
-claim.
-
-So treat the pull request as something you open **during** the work, not after
-it:
-
-- **Commit and push at every self-contained step**, not once at the end. The
-  push is what makes the work survivable, and the branch is already public per
-  the paragraph above.
-- **Open the pull request as soon as the branch carries one increment that
-  stands on its own** and passes the gates in step 6 — do the claim re-check
-  below first, since that is what decides whether you open at all. Then keep
-  working on the same branch; the pull request follows it, and the reviewer sees
-  the change grow instead of arriving whole at midnight.
-- **When the session starts to run short** — context tight, a limit warning, a
-  gate you cannot finish — stop adding scope rather than racing. Push what is
-  green, make sure the pull request exists, and say in its body what is done and
-  what is left. Half an issue in an open pull request is work the next firing or
-  a person can pick up; the same half in a container that has been reclaimed is
-  not.
-
-The cap in step 2 is not a reason to delay opening. It counts the loop's open
-pull requests at the *start* of a firing, so a pull request you open mid-run
-costs the same whenever you open it, and one that never got opened saved
-nothing.
-
-Commit subjects take the `feat:` / `fix:` / `docs:` / `test:` / `refactor:`
-prefixes from `CONTRIBUTING.md`, imperative mood. Read `CLAUDE.md` before
-touching simulation code, and `packages/backend/CLAUDE.md` too, which is where
-the rules that are the server's alone live: the build order, the per-package
-import extensions, the rule that tuning numbers live only in
-`packages/shared/src/constants.ts`, and the two clocks and their budgets are all
-things that look like style until they break the build.
+Commit subjects take `feat:` / `fix:` / `docs:` / `test:` / `refactor:`,
+imperative mood. Read `CLAUDE.md` before touching simulation code, and
+`packages/backend/CLAUDE.md` for the server's own rules.
 
 ### When the issue is the loop's own
 
-An issue filed against #746 can be about this loop: a rule that misfires, a step
-that costs a firing an hour, a case these files do not cover. Work it like any
-other — claim, rounds, gates, pull request — with one boundary.
+A firing may edit these files like any other work, **except the clauses that bound
+it**:
 
-**A firing may edit its own rules, except the ones that bound it.** Those are:
+- §2's open-PR cap and what counts against it;
+- §3's exclusions, the §1 claim check, and oldest-first;
+- §7's limits on what the loop may decide, its stopping cases, and which labels a
+  firing may apply;
+- this section's instruction to invoke `dev-loop`, `loop-critic`'s separation from
+  the author (its file, its missing edit tools) and §8's rounds line;
+- `dev-loop`'s three-round cap and the verification pass that is not a round.
 
-- §2's open-PR cap, and what counts against it.
-- §3's exclusion list, the claim check, and oldest-first.
-- §7's stopping cases, and which labels a firing may apply to itself.
-- §5's instruction to invoke `dev-loop`, and `loop-critic`'s separation from the
-  author — its own file, its missing edit tools, and §8's rounds line, which is
-  the only thing that makes a missing critic visible from outside.
-- `dev-loop`'s three-round cap, and the verification pass that is not a round.
-  The cap is what one firing may spend on refining, which makes it the same kind
-  of number as §2's.
+For those, **write the issue and stop**: what the rule costs and what you would
+put in its place. A person decides. A generator that widens its own bounds is
+grading itself (#540). The boundary is about authorship, not size, and
+`loop-critic`'s check 4 is the only thing that enforces it.
 
-Everything else in these files is ordinary work: the register of a comment, the
-wording of a step, a case worth recording, a stale link, a claim that is no
-longer true. Change those in a pull request like anything else.
-
-For the five above, **write the issue and stop.** Say what the rule costs and
-what you would put in its place; a person decides. This is #540's rule at one
-remove — a generator that also grades itself is not a gate — and the loop is the
-generator here: it can widen what it may select without anyone having chosen
-that. The two caps, the exclusions, the stopping cases and the critic are what
-stand between an unattended firing and work nobody meant it to have.
-
-The boundary is about **authorship, not difficulty**. A one-word edit to §3's
-exclusion list is on the far side of it; a rewrite of §8's register is not.
-
-`loop-critic`'s check 4 holds this, and **nothing else does**. `npm run
-docs:claude` lints these files and resolves their links; no gate reads what they
-*mean*, so a round that quietly widens §3 passes every one of them.
-
-## 6. Run every gate locally before you push
+## 6. Gates, the second claim check, and the pull request
 
 ```bash
 npm run gates
 ```
 
-One command, one exit code, no fail-fast, so one run tells you everything that
-is red. This used to be a hand-copied list of eight commands, which is the drift
-`tools/gates.mjs` was written to end — it was missing `check:models`, which CI
-has run since #540, so a firing that followed it was a gate short of CI and
-learned the difference from a red pull request. It also omitted `preflight`, which
-the workflow never names as a step but which the `build` job runs anyway, since
-root `npm run build` chains it. On a runner it cannot really fail — `npm ci` on
-a pinned Node 22 — but locally it is what catches a stale install or too old a
-Node, which is exactly the state a firing can be in.
+Every blocking CI check, one pass, one exit code. Use `-- --only=` while you
+iterate on one gate; drop it before you push.
 
-Every CI gate is in there, all three doc gates included, so a dead link in
-`docs/` fails the build exactly as a failing test does. The run is slow — the
-test gate alone is over two minutes, and single mission test files run over a
-minute — which is the argument for running it here rather than learning the same
-thing from a red PR a few minutes later. Use `--only=` while you iterate on one
-gate, and drop the filter before you push.
+**Before opening the pull request, check the claim again.** List open pull
+requests for another that closes your issue — by its closing line or by a title
+describing your work — and re-read the issue. If another PR
+covers it, or the assignee is gone, or a newer comment says a person is taking
+it, **you yield, always**: do not open yours, delete your branch, unassign the
+issue unless a person now holds it, and comment one line saying the Routine stood
+down and why. A person's in-flight branch is worth more than a firing's.
 
-### Run the claim check again before you open the PR
+Then open the pull request against `main`: not a draft, labelled **`routine`**,
+the body in `.github/PULL_REQUEST_TEMPLATE.md`'s shape.
 
-Step 1 told you the issue was free **when you started**. That was potentially an
-hour ago, and it does not stay true. So before opening, repeat it: list the open
-pull requests and look for another one that closes your issue — its `Fixes #<n>`
-line, or a title that describes the work you just did.
+- **Problem**, at most three sentences.
+- **Options**, only when the work needed a decision: at most three sentences each,
+  the taken one marked **(recommended, taken)**.
+- **Solution**, at most three sentences: what changed, how, and the test or
+  evidence that proves it.
+- The closing line (`Fixes #<n>`, or `Refs #<n>` for part of an issue).
 
-**Re-read the issue too.** If the assignee you set is gone, or a comment newer
-than your claim says a person is taking it, they have taken it over exactly as
-your claim comment invited them to. Treat that the same as finding a PR.
+Nothing else: no round history, no gate output, no narrative. When the loop stops
+with work left, one sentence of Solution names it and the open findings go in a
+short list below it, worded as the critic worded them. Check the reading before
+posting:
 
-This is not hypothetical. On #275 the loop selected at 12:13, a person's session
-opened its own PR for the same issue at 12:20, and the loop opened a duplicate at
-12:55 and merged it at 14:04 — the person's 558-line branch was closed unmerged.
-Seven minutes decided it, and nothing looked again in the forty that followed.
+```bash
+node tools/prose-budget/check.mjs --kind=pr --strict body.md
+```
 
-Their branch was `claude/continue-212-8hrtxn`, with no issue number in it, so
-step 1's `claude/issue-*` scan was blind to it even at the second look. That is
-why this re-check reads **open pull requests** rather than branch names: a PR
-declares its issue in a way a branch name need not.
+Every comment this skill asks for stays under 100 words.
 
-**If another pull request now covers your issue, or a person has taken it
-over, you yield. Always.** Not a judgement call, and not a comparison of whose
-diff is better:
+### A screenshot, when the change is visual
 
-1. Do not open your PR.
-2. **Delete the branch you pushed in step 5.** A branch pushed in the last 24
-   hours is exactly what step 1 reads as a live run, so one left behind holds
-   the issue shut against the next firing or two — and it used to hold it shut
-   forever, which is how #286 and #518 were lost.
-3. **Release the claim.** Unassign the issue if it is still assigned and nobody
-   has said they are taking it; if a person has, the assignee is theirs now and
-   you leave it alone. Either way, post a one-line comment saying the Routine
-   stood down and why (the PR number, or the takeover) — that comment is what
-   step 3 reads as a release, so a later firing knows the assignee is not a
-   dead run's leftover.
-4. Say plainly what you found, which PR you yielded to, and that your work was
-   discarded. A run that discovers a collision and stands down is a *successful*
-   run; it spent an hour and saved a person's afternoon.
+`docs/graphics-standards.md` requires a screenshot taken through `run-game`. An
+image cannot be inlined from here: the upload endpoint is browser-only, and the API
+strips markdown image URLs and `<img src>` alike (tested on #231). So:
 
-Yield even when you were first to select and even when your work looks more
-complete. A person's in-flight branch is worth more than yours because they are
-not going to get another firing in four hours, and you are.
+1. Capture with `run-game`, and look at the frames.
+2. Commit them under `docs/screenshots/issue-<n>/`, named for what they show, **in
+   the same push as the code** — frames pushed after review can miss the merge.
+3. Put each URL bare on its own line, by full commit SHA, not branch name, with
+   one sentence above it saying what it shows and that it is a link.
 
-Then open the PR against `main`, filling `.github/PULL_REQUEST_TEMPLATE.md` and
-referencing `Fixes #<n>`. Not a draft. **Label it `routine`** — that label is how
-step 2 counts the loop's own open pull requests, and one you forget to label is
-one the next firing cannot see when it budgets.
+## 7. Decide, and when to stop instead
 
-**Keep the body under 300 words**, and every comment this skill asks for under
-100 — the claim, the stand-down, the stopping comment, the run log entry. Short
-sentences, plain words, facts over narrative. `CLAUDE.md`'s "Write short on
-GitHub" is the rule; this loop writes most of the repository's GitHub text, so
-it is the loop that most needs it. A stopping comment that states two readings
-and their costs still fits: state them, do not narrate them.
+### A design call: decide it, say so, keep working
 
-### The screenshot, when the change is visual
+When the work needs a call the issue does not make — the docs and the code
+disagree, the target reads two ways, a mechanic's behaviour is unspecified, an
+epic box needs scoping, the critic returns a decision finding — do not stop:
 
-`docs/graphics-standards.md`'s review checklist asks for a "Screenshot in the PR,
-taken via the **run-game** skill — a visual change is reviewed by looking at it,
-not by reading its diff." That gate is not satisfied by describing the frame, and
-it is not satisfied by a capture that stayed in `/tmp`.
+1. **Write the options**, two or three, at most three sentences each: what it
+   does, what it costs, and the doc or code line it rests on. The current
+   behaviour is one of them when it is viable.
+2. **Recommend one.** The design bible decides: the doc that is more specific
+   and more recent wins, every mechanic is an argument about sound or depth
+   (`CLAUDE.md`), and between two close options take the one cheaper to reverse.
+3. **Take it and continue.** If it says the doc is wrong, change the doc section
+   first, then the code, in the same pull request: the SPEC procedure.
+4. **Show it.** The options go in the pull request's Options section as written,
+   the taken one marked. A reviewer picks another by saying so, and `steward`
+   implements it. The merge commit carries the body, so
+   `git log --first-parent --grep='## Options'` lists every call the loop took.
 
-**You cannot put an image *inline* in a pull request from here, and two things
-that look like they should work do not.** GitHub's attachment upload is a browser
-endpoint no cloud session reaches. And the API write path sanitises image sources
-both ways — this was tested on #231, not assumed:
+A decision rides the pull request that needed it. One that would widen the change
+beyond the issue is filed against #746 with its options instead.
 
-- markdown `![alt](url)` comes back with the URL wrapped in backticks, so it
-  renders as literal text;
-- an HTML `<img src=…>` comes back with `src` stripped, so it renders as nothing.
+**The loop never decides:**
 
-**A bare URL is the strongest form available**, and it renders as a link. Link
-syntax around an image file has not survived either, in any run that tried it —
-#735, #737 and #738 each ended up pasting the URL on a line of its own instead.
-So the shape is a committed file, its URL bare, and a sentence above it saying
-what the frame shows:
+- anything inside the balance freeze (`CLAUDE.md`);
+- its own bounds (§5, "When the issue is the loop's own");
+- against a hard rule: server authority, constants in one place, the wire;
+- a call a person reserved: `needs-decision`, or a comment on the issue saying
+  they will make it.
 
-1. Capture with the run-game skill, as the gate requires. Look at the frames —
-   that is the point of them, and #231's own draw-order bug was found in a
-   screenshot rather than in the diff.
-2. **Commit the frames in the same push as the code**, under
-   `docs/screenshots/issue-<n>/`, named for what they show
-   (`scope-accumulation.png`, not `shot1.png`). Same push, not a follow-up: a
-   screenshot commit pushed after review has started can miss the merge entirely,
-   which is exactly what happened on #231 — the frames landed on the branch a few
-   minutes after it merged, so they never reached `main` at all.
-3. Put the URL in the PR body **bare, on a line of its own**, by full commit SHA
-   rather than by branch name — a branch is deleted after merge and takes the
-   link with it:
+### Stop, comment, release
 
-   ```text
-   The panel at 100% and 200% UI scale, in a live prologue:
-   https://github.com/gunnargehtab/Echoes-of-the-Abyss/blob/<sha>/docs/screenshots/issue-<n>/<file>.png
-   ```
+Open no pull request, comment on the issue (under 100 words), and end the run when:
 
-4. **Say in the PR that the link is a link.** A reviewer clicking through is
-   weaker than a rendered frame, and the gate's author should be able to see that
-   trade rather than discover it.
+- **The remaining work is inside the balance freeze.** Apply `needs-decision` and
+  say the freeze is what stopped you; `wontfix` is a person's durable answer if the
+  work is parked.
+- **A person has reserved the call** mid-run. Leave their label and their
+  assignee alone.
+- **The fix does not converge**: the gates keep failing in new places, or
+  `dev-loop` stalls with nothing landable. No label: the next firing deserves its
+  own attempt.
 
-Prefer one composed image over several loose ones — a strip of the same instrument
-at three times, say — since each link is a click the reviewer has to spend. Keep
-them small and cropped to the instrument under review. `docs/concept-art/` is the
-precedent that images belong in this repository; the cost is honest, those PNGs
-merge into `main` and stay there.
-
-## 7. When to stop instead, and how
-
-Open no PR, comment on the issue, and end the run when:
-
-- **The docs and the code disagree** and the issue does not say which is wrong.
-  Write up both readings and what each would cost. That comment is the run's
-  output.
-- **The issue is a design question wearing a bug's clothes** — a balance
-  guard-rail reading breached, a mechanic that feels wrong. `CLAUDE.md` asks
-  every mechanic to be an argument about sound or depth; if answering the issue
-  means deciding what the mechanic *should* argue, that is not an unattended
-  call.
-- **The fix does not converge.** If the gates in step 6 keep failing in new
-  places, stop and report what you learned. A half-landed change on a green
-  `main` is worse than an issue that stayed open another day.
-
-A comment that sharpens an issue is worth more than a PR that guesses at it.
-State the finding, name what you would need in order to proceed, and leave the
-issue open — **and unassigned**. Release the claim exactly as in step 6: take
-the assignee off, delete the branch if you pushed one, and say in the stopping
-comment that the Routine has let go of the issue. A stopped run that stays
-assigned looks, to the next firing and to every person, like work in progress
-that will never arrive.
-
-### Label the first two cases `needs-decision` on the way out
-
-Stopping for either of the first two reasons above means you have established
-something a later firing cannot establish more cheaply: that this issue is
-blocked on a person. **Add the `needs-decision` label as you release the claim**,
-and say in the stopping comment that you did and what decision is owed.
-
-This is the one label this loop applies to itself, and it is safe to because it
-is a statement about a run rather than about the work: you tried, and the thing
-that stopped you was a call that is not yours. It is also cheap to undo — a
-person who disagrees removes it, and the issue is eligible again on the next
-firing.
-
-**A remainder inside the balance freeze is the second case**, even when the issue
-reads like a bug and its first half was real work somebody merged. What such an
-issue waits on is the freeze lifting, which `CLAUDE.md` says is a written
-decision and not a firing's. Label it and say so; §3 carries the reasoning and
-the five stand-downs on #706 that argued for it.
-
-Do **not** label the third case. A fix that did not converge is a fact about
-your hour, not about the issue, and the next firing deserves its own attempt.
-
-Applying it is not a substitute for the comment. A labelled issue with no
-finding written down is worse than an unlabelled one, because it is now
-invisible to the loop *and* says nothing to the person who has to decide.
-
-Then say what you passed over, as step 4 describes — the issues you considered
-before taking this one, and the one reason each was excluded. A run that stops
-is the run with the most to say about the state of the backlog, and it is the
-one whose reasoning nobody can otherwise see.
+Release the claim in every case: unassign, delete the branch if you pushed one,
+and say in the comment that the Routine let go and what is owed. A stopped run
+that stays assigned reads as work in progress that will never arrive. Name what
+you passed over, as §3 says.
 
 ## 8. Write the run down, whatever the run was
 
-End every firing with one comment on **#580**, the run log. *Every* firing —
-including the ones that touched nothing because the cap was reached or nothing
-was eligible, and the ones that stood down ten minutes in. Those are exactly the
-firings with no other trace, and a loop whose quiet runs are invisible is a loop
-nobody can audit.
-
-Keep it to what a person needs in order to decide whether to step in:
+End every firing with one comment on **#580**, including a firing that hit the
+cap, found nothing, or stood down at once. Under 100 words:
 
 > **HH:MM — took #n** / **filed #a, #b** / **stopped on #n** / **nothing to do**
-> One line: the branch and the pull request, or the epic and the boxes it came
-> from, or why a comment beat a pull request.
-> Rounds: how many `dev-loop` rounds and the critic's last verdict, and **at the
-> cap** when the third round was the last — or **no rounds** and why, or
-> **critic unavailable** and what happened when you tried.
+> The branch and pull request, or the epic and its boxes, or why no pull request.
+> Rounds: how many and the critic's last verdict, **at the cap** when the third
+> was the last — or **no rounds** and why, or **critic unavailable** and what
+> happened.
+> Decided: each call taken, the option and the pull request — or "nothing".
 > Passed over: older eligible issues, one clause each, or "nothing older".
-> Needs a person: a stale claim, a `needs-decision` you applied and the call it
-> is waiting on, a recurring skip that wants a label you cannot apply, a branch
-> left behind — or "nothing".
-> Found: a defect you verified and filed against #746, or "nothing".
+> Needs a person: a stale claim, a label you would propose, a branch left behind
+> — or "nothing".
+> Found: a defect filed against #746, or an unverified lead, or "nothing".
 
-The **Found** line is what stops this log silting up. A finding written here and
-filed nowhere is one the next firing re-reads, re-lists and leaves — the log
-carried eight of them for seven entries before #746 existed. Verified and
-outside the freeze: file it, and name the issue on this line. Not verified: say
-that instead. An unverified finding is a lead, and leads are half of what the
-next firing reads this log for.
+**The rounds line is never omitted.** When the critic cannot run, `dev-loop`
+degrades to self-review with no error: the gates pass and the pull request reads
+like a reviewed one. This line is the only place that shows it. **At the cap** is
+the only record of how often the three-round cap binds.
 
-### Say whether the critic ran, every time
-
-The rounds line is not optional and **"no rounds" is a normal entry** — a firing
-that stood down, filed sub-issues, or found nothing eligible ran none, and
-saying so is the whole point. What the line exists to make impossible is the
-silent case.
-
-§5 hands the work to [`dev-loop`](../dev-loop/SKILL.md), whose round ends by
-handing the diff to the `loop-critic` subagent. That subagent is the only thing
-standing between this loop and a generator grading its own work, which #540
-settled is not a gate. If it cannot be spawned — the agent file missing from the
-clone, `Task` refused, an error you could not get past — `dev-loop` degrades to
-self-review and **produces no error at all**: the gates still pass, the pull
-request still opens, and it reads exactly like a run that was reviewed. Nothing
-else in this repository can detect that from the outside.
-
-**Say when the cap bound, too.** Three rounds is a spending decision a person
-made on 18 September, and the only evidence for whether it is the right number is
-how often a firing stops on it with findings still open. That is one phrase in
-this line — **at the cap** — and nothing else in this repository records it.
-
-So write **critic unavailable** and what you saw when you tried, rather than
-omitting the line. A firing that says so is reporting the most useful thing it
-found that hour. A firing that quietly self-reviews has spent an hour producing
-a pull request nobody should trust as reviewed, and left no way to know.
-
-Most of that list is what steps 3, 4 and 7 already ask for, and writing it twice
-is deliberate rather than redundant: the comment on an issue reaches whoever
-watches *that issue*, and the log reaches whoever watches *the loop*. The rounds
-line is the exception — nothing else asks for it, and the log is the only place
-it is ever recorded. Before #580 the
-second person had nowhere to look, which is why step 1 stayed blind for four days
-while every firing dutifully carried on.
-
-The Routine's completion notifications are **on** — push, per the trigger's own
-settings — and that changes nothing about this comment. A notification is not a
-record: it reaches one person's phone, it scrolls past, and the next firing
-cannot read it. This log is where the loop's history lives and where every firing
-reads what the last one did, so write it whatever the notification already said.
-Never close #580; when it grows unwieldy, a
-person closes it, opens a successor, and updates the number here.
+**When the pull request merges, edit your entry** — append "Merged as `<sha>`" —
+rather than posting a second comment. A notification is not a record; this log is.
+Never close #580. When it grows unwieldy a person opens a successor and updates
+the number here.
 
 ## Related
 
-- `CONTRIBUTING.md` — branch and commit conventions, the gate list, labels
-- `CLAUDE.md` — architecture, build order, budgets, and the gotchas behind them
-- `.claude/skills/dev-loop/SKILL.md` — the rounds themselves, once §5 has
-  claimed the issue: target, gates, evidence, critic, exit criteria
+- `CLAUDE.md` — architecture, build order, the balance freeze, "Write short on GitHub"
+- `.claude/skills/dev-loop/SKILL.md` — the rounds, once §5 has claimed the issue
+- `.claude/skills/steward/SKILL.md` — the pull request from open to merged
 - `.claude/skills/run-game/SKILL.md` — verifying a change in the real client
-- `docs/ROADMAP.md` — what the backlog is for
+- `CONTRIBUTING.md` — branches, commits, labels
