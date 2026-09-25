@@ -343,7 +343,7 @@ export const ATTENDING_INTAKE: MissionDefinition = {
     },
     {
       id: 'the-finding',
-      text: 'At the close the ground files what it saw. It is not asked for a number. It is asked what it saw.',
+      text: 'At the close the ground files what it heard. It is not asked for a number. It is asked what it heard.',
       initial: ObjectiveStatus.Pending,
       // §9 — revealed when the muster is called, because the last minute is
       // the only one in which the finding can be filed, and the mission does
@@ -470,7 +470,7 @@ export const ATTENDING_INTAKE: MissionDefinition = {
       atTick: T(19),
       kind: 'say',
       speaker: 'The ground',
-      text: 'The muster is called. At the close the ground files what it saw.',
+      text: 'The muster is called. At the close the ground files what it heard.',
       note: 'Said once. The finding and its marker appear with this line',
     },
 

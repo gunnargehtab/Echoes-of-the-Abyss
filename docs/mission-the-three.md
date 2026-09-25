@@ -747,6 +747,17 @@ The Order states intervals and conditions, never tasks, and is courteous to the 
 - *The escort is at eight. The house has the Choirmaster and nothing else of the party.*
 - *One of two entered. The Order does not keep a gap.*
 
+The room and hush rows also carry plain operational glosses under
+[ui-ux.md](ui-ux.md) §10.5; the spoken readings above stay whole:
+
+| Row | Gloss |
+| --- | --- |
+| The room | Keep an escort within 600 m of your tender so it can reach the sealed room at 2,900 m. |
+| The hush | Keep the three escort hulls in Silent Running at SIG 8 or less; the 12:00 count excludes the tender. |
+
+These are references to the escort's own orders, not new conditions: the room latches
+on arrival, while the hush is a standing reading visible from the first tick and checked at the close.
+
 ### The voices in the water
 
 **Choirmaster Ivane Sull, at the dive — 02:00**
@@ -756,8 +767,12 @@ The Order states intervals and conditions, never tasks, and is courteous to the 
 
 **Chapter-wright Aldis Fenn, for the house — 03:00**
 
-> The Choirmaster is heard. The house is in tune and the Chord was corrected this season. Nothing is
-> struck.
+> The Choirmaster is heard. The house is glad to hear the voice you kept here as an apprentice in
+> 178, Choirmaster. The house is in tune and the Chord was corrected this season. Nothing is struck.
+
+Fenn recognises the apprentice from §1, not an explanation of what happened to her.
+The Three do not speak, their writing is not quoted, and Sull gives no answer: the
+return has a personal history even for a player who has read no other campaign.
 
 **Voice Ren Kalliso, once, to nobody in particular — 06:00, in the chord**
 

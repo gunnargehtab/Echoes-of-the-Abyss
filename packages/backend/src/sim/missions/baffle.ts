@@ -25,6 +25,7 @@
 import {
   Faction,
   FaunaSpecies,
+  FOURTH_CLOSURE_CONVOY,
   LEDGER_BAFFLE_HEADER,
   MissionOutcome,
   ObjectiveStatus,
@@ -296,6 +297,7 @@ export const LEDGER_BAFFLE: MissionDefinition = {
       speaker: 'Picket-Speaker, Fourth Trench Cohort',
       voice: 'cohorts',
       text: 'The trench is closed while the inquiry is open. What enters it is not being threatened. It is being counted.',
+      scene: FOURTH_CLOSURE_CONVOY,
       note: '',
     },
 

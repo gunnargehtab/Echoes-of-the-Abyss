@@ -642,6 +642,8 @@ export const CHORD_NINETEEN: MissionDefinition = {
     {
       id: 'the-nineteen',
       text: 'Nineteen intervals stand over the Rest. Each is held twenty seconds at the eightieth, bow to the ground the name resolves to. A tone you interrupt is a tone you have not played.',
+      gloss:
+        "At 1,750 m, use each mark's assigned hull within 400 m horizontally and hold its tone bow-on for 20 s at SIG 80; an interrupted tone restarts.",
       initial: ObjectiveStatus.Pending,
       markerId: 'the-rest',
       terminal: true,

@@ -417,13 +417,49 @@ describe('the objectives panel: whose words these are', () => {
     }
   });
 
-  it('draws no gloss at all for the twenty-eight missions that author none', async () => {
+  it('draws no gloss at all for a mission that authors none', async () => {
     // Absent is the ordinary case. A panel that rendered an empty span would
     // put a second grid cell under every reading in the game for nothing, and
     // would announce an empty string to a screen reader.
     const { rendered } = await panel(missionView({ objectives: [objective()], markers: [] }));
     try {
       assert.equal(rendered.allByClass('objectives-gloss').length, 0);
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('keeps the escort reference readable with its camera control and without a briefing', async () => {
+    const reading =
+      'The Choirmaster reads alone. The room is dry and the cases are sealed a season at a time.';
+    const gloss =
+      'Keep an escort within 600 m of your tender so it can reach the sealed room at 2,900 m.';
+    const room = { id: 'the-room', label: 'The sealed room', x: 2750, y: 2250, radiusM: 250 };
+    const { rendered, calls } = await panel(
+      missionView({
+        missionId: 'chord-the-three',
+        objectives: [objective({ id: room.id, text: reading, gloss, markerId: room.id })],
+        markers: [room],
+      })
+    );
+    try {
+      const row = rendered.byClass('objectives-row');
+      const name = deepText(row);
+      assert.ok(
+        name.indexOf(reading) < name.indexOf(gloss),
+        'the house speaks before the reference'
+      );
+      assert.match(
+        name,
+        /escort within 600 m of your tender/,
+        'who to escort and the tether distance'
+      );
+      assert.match(name, /sealed room at 2,900 m/, 'the destination and working depth');
+      assert.ok(deepText(rendered.byClass('objectives-body')).includes(gloss));
+      assert.equal(row.type, 'button');
+      assert.notEqual(row.props.tabIndex, -1, 'the named room stays keyboard reachable');
+      await rendered.act(() => row.props.onClick());
+      assert.deepEqual(calls.focused, [[room.x, room.y]]);
     } finally {
       await rendered.unmount();
     }

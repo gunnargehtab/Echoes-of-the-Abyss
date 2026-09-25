@@ -19,6 +19,8 @@ import assert from 'node:assert/strict';
 import {
   DRIFT,
   DRIFT_REGION_COUNT,
+  FOURTH_CLOSURE_CONVOY,
+  FOURTH_CLOSURE_PICKET,
   MARR_PLATEAU_FILED,
   MISSION,
   MISSION_HEADERS,
@@ -174,6 +176,29 @@ describe('the public mission catalogue', () => {
     }
   });
 
+  it('recognises the Fourth closure only after hearing it from the other side', () => {
+    const cases = [
+      ['ledger-baffle', FOURTH_CLOSURE_CONVOY, FOURTH_CLOSURE_PICKET],
+      ['attending-the-dome', FOURTH_CLOSURE_PICKET, FOURTH_CLOSURE_CONVOY],
+    ] as const;
+    for (const [id, ownScene, otherScene] of cases) {
+      const header = missionHeaderById(id)!;
+      const before = structuredClone(header);
+      for (const history of [[], [id], [ownScene], [MARR_PLATEAU_FILED], ['unknown-scene']]) {
+        assert.deepEqual(missionBriefing(header, new Set(history)), header.briefing, id);
+      }
+      const seen = missionBriefing(header, new Set([otherScene]));
+      assert.deepEqual(seen, header.briefingVariants![0].briefing);
+      assert.notDeepEqual(seen, header.briefing);
+      assert.deepEqual(
+        missionBriefing(header, new Set([ownScene, otherScene, otherScene])),
+        seen,
+        'both sides and replays keep the same recognition'
+      );
+      assert.deepEqual(header, before, 'selection never edits the mission header');
+    }
+  });
+
   it('authors every variant as a whole briefing, on a scene named once', () => {
     for (const mission of MISSION_HEADERS) {
       const variants = mission.briefingVariants;
@@ -206,6 +231,8 @@ describe('the public mission catalogue', () => {
     const cases: readonly [string, number][] = [
       ['seeding-thin-water', 3],
       ['seeding-convocation', 2],
+      ['ledger-baffle', 3],
+      ['attending-the-dome', 1],
     ];
     for (const [id, index] of cases) {
       const header = missionHeaderById(id);

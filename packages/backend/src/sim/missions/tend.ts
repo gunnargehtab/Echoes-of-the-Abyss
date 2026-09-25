@@ -409,7 +409,7 @@ export const SEEDING_TEND: MissionDefinition = {
   objectives: [
     {
       id: 'share',
-      text: 'The share wants bringing in. We think three loads is a day.',
+      text: 'The share wants bringing in. We think three loads is a tide.',
       initial: ObjectiveStatus.Pending,
       markerId: 'holdfast',
       terminal: true,
@@ -577,7 +577,7 @@ export const SEEDING_TEND: MissionDefinition = {
       atTick: T(16),
       kind: 'say',
       speaker: 'Tidespeaker Ysolde Marr',
-      text: 'We held a whole day, once, and nobody had to be brave in it. That used to be the ordinary kind.',
+      text: 'We held a whole tide, once, and nobody had to be brave in it. That used to be the ordinary kind.',
       note: 'The sentence she should not say aloud, and does',
     },
     {

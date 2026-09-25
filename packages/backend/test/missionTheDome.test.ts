@@ -75,6 +75,7 @@ import {
   DepthBand,
   Faction,
   FaunaSpecies,
+  FOURTH_CLOSURE_PICKET,
   MISSION,
   MissionOutcome,
   ObjectiveStatus,
@@ -226,6 +227,7 @@ function sounderRange(sig: number, want: number, multiplier: number): number {
 interface Run {
   outcome: MissionOutcome;
   epilogue: string;
+  scenes: readonly string[];
   closedAtTick: number;
   objectives: { id: string; status: ObjectiveStatus }[];
   /** Every tick at which the count of live watch hulls changed. */
@@ -264,6 +266,7 @@ function runOut(mission: MissionDefinition): Run {
   return {
     outcome: over.outcome,
     epilogue: over.epilogue,
+    scenes: over.scenes,
     closedAtTick: match.world.tick,
     objectives: over.objectives,
     losses,
@@ -1034,6 +1037,12 @@ describe('the count, as docs/mission-the-dome.md §6 takes it', () => {
     }
     // And what that costs a picket that does what §12 says it may: nothing.
     const run = runOut(ATTENDING_THE_DOME);
+    assert.deepEqual(run.scenes, [FOURTH_CLOSURE_PICKET]);
+    assert.equal(
+      run.lines.find((line) => line.text.startsWith('The trench is closed'))?.tick,
+      T(4),
+      'the scene stamp accompanies the actual common line'
+    );
     const lost = run.losses.filter((l) => l.alive < 4);
     assert.equal(lost[lost.length - 1]!.alive, 0, 'a seated picket does not last the tide');
     const firstLoss = lost[0]!.tick / SIM.TICK_HZ;

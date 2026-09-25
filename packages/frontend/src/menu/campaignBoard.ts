@@ -150,7 +150,8 @@ const COLUMN_SOURCES: readonly ColumnSource[] = [
     campaign: 'attending',
     title: 'The Attending',
     faction: Faction.Directorate,
-    commander: 'Undermarshal Setha Korrin believes the Choir is literal and cannot say so.',
+    commander:
+      'Undermarshal Setha Korrin calls the cohorts down. The Cantorate decides whether to follow.',
     slots: [
       { ordinal: 1, title: 'Attendance', teaching: 'HYD, passive listening, patience' },
       { ordinal: 2, title: 'Intake', teaching: 'Cohort economy, cheap expendable units' },

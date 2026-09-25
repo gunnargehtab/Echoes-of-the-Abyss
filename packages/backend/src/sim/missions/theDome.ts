@@ -82,6 +82,7 @@ import {
   ATTENDING_THE_DOME_HEADER,
   Faction,
   FaunaSpecies,
+  FOURTH_CLOSURE_PICKET,
   MissionOutcome,
   ObjectiveStatus,
   ResolutionTier,
@@ -697,6 +698,7 @@ export const ATTENDING_THE_DOME: MissionDefinition = {
       kind: 'say',
       speaker: 'Picket-Speaker, Fourth Trench Cohort',
       text: 'The trench is closed while the inquiry is open. What enters it is not being threatened. It is being counted.',
+      scene: FOURTH_CLOSURE_PICKET,
       note: 'Counting has begun',
     },
 

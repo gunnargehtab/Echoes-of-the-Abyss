@@ -1079,6 +1079,8 @@ export type MissionBeatEffect =
       text: string;
       voice?: MissionVoice;
       speakerId?: MissionSpeaker;
+      /** Earned only when this line fires; carried at the close, never on arrival. */
+      scene?: string;
       note: string;
     }
   /**
