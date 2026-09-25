@@ -67,6 +67,13 @@ describe("the decision's acoustics — docs/mission-item-nine.md §4", () => {
 });
 
 describe('the sitting, sat — docs/mission-item-nine.md §3, §8', () => {
+  it('does not mistake the calendar year for the age of the Board in the fallback', () => {
+    assert.equal(
+      LEDGER_ITEM_NINE.epilogue[MissionOutcome.Lost],
+      'The session did not close. The Underway has held every sitting since the concern was chartered, and the registry opens a file on the interruption.'
+    );
+  });
+
   it('leaves the array unlocked, and the guns struck', () => {
     const locked = new Set(LEDGER_ITEM_NINE.locks.map((lock) => lock.ability));
     assert.ok(!locked.has('activeSonar'), 'the one button that is the mission is fenced');

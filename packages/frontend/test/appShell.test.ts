@@ -17,7 +17,8 @@
 import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { createElement } from 'react';
-import { PROLOGUE_SORROWGATE_HEADER } from '@echoes/shared';
+import { MissionOutcome, PROLOGUE_SORROWGATE_HEADER } from '@echoes/shared';
+import { recordMissionResult } from '../src/progression/store.ts';
 import { clearStorage, installStorage, setSearch } from './support/headless.ts';
 import { installHeadlessAudio, uninstallHeadlessAudio } from './support/headlessAudio.ts';
 import { click, render, type Rendered } from './support/screen.ts';
@@ -68,6 +69,27 @@ describe('the shell: where it opens', () => {
 });
 
 describe('the shell: Back returns through the door it came in by', () => {
+  it('opens saved conclusions from the board without starting another mission', async () => {
+    const epilogue = 'The continuance carried.\n\nThe record has a gap.';
+    recordMissionResult({
+      missionId: 'ledger-item-nine',
+      outcome: MissionOutcome.Complete,
+      epilogue,
+      objectives: [],
+    });
+    const view = await shell();
+    try {
+      await click(view, 'Campaign');
+      await click(view, 'The record');
+      assert.equal(view.byClass('record-conclusion-reading').props.children, epilogue);
+      await click(view, 'Back');
+      await click(view, 'The record');
+      assert.equal(view.byClass('record-conclusion-reading').props.children, epilogue);
+    } finally {
+      await view.unmount();
+    }
+  });
+
   /**
    * The prologue is one mission behind two doors (docs/campaign.md §3): the
    * title's Tutorial entry, and the board's first slot. Both land on the same

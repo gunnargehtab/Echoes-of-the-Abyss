@@ -1031,10 +1031,15 @@ describe('the objective, as §8 chooses it', () => {
     );
     assert.match(
       SEEDING_SECOND_SEEDING.epilogue[MissionOutcome.Partial],
-      /^It's planted and it's empty\./
+      /^It's planted, but the furrow's count wasn't met\./
     );
     assert.match(SEEDING_SECOND_SEEDING.epilogue[MissionOutcome.Lost], /^Nothing was planted\./);
+    assert.match(
+      SEEDING_SECOND_SEEDING.epilogue[MissionOutcome.Complete],
+      /held at least three seed hulls when the count was met/
+    );
     for (const reading of Object.values(SEEDING_SECOND_SEEDING.epilogue)) {
+      assert.doesNotMatch(reading, /Thirty-three are|it's empty|nobody tends|still aboard/);
       assert.ok(
         !/failure|failed/i.test(reading),
         '§8: the Commune closes nothing and ranks nothing'
@@ -1462,6 +1467,65 @@ describe('the tide, run out', () => {
     // breathing, from the second leg, without the player giving an order.
     assert.equal(status(run, 'the-returns'), ObjectiveStatus.Met);
     assert.match(run.epilogue, /we're not going to say what it was/);
+  });
+
+  it('keeps Complete after fewer than three seed hulls remain in the furrow', () => {
+    const run = play((match, at) => {
+      sowFrom(T(2))(match, at);
+      if (at !== T(18) && at !== T(21)) return;
+      for (const eid of [...mine(match, UnitKind.Cruiser), ...mine(match, UnitKind.Harvester)]) {
+        if (at === T(18)) match.orderDepth(PLAYER, eid, 1750);
+        else match.orderMove(PLAYER, eid, 1250, 2700);
+      }
+    });
+    assert.equal(run.outcome, MissionOutcome.Complete);
+    assert.equal(status(run, 'the-furrow'), ObjectiveStatus.Met);
+    const column = [...mine(run.match, UnitKind.Cruiser), ...mine(run.match, UnitKind.Harvester)];
+    assert.ok(
+      column.filter((eid) => inRegion(furrow, Position.x[eid]!, Position.y[eid]!)).length < 3
+    );
+    assert.match(run.epilogue, /held at least three seed hulls when the count was met/);
+    assert.doesNotMatch(run.epilogue, /Thirty-three are|at three thousand metres on the lip/);
+  });
+
+  it('reads Partial with two seed hulls still tending the planted furrow', () => {
+    const run = play((match, at) => {
+      sowFrom(T(2))(match, at);
+      if (at !== T(16) && at !== T(19)) return;
+      for (const tag of ['seed-two', 'seed-three']) {
+        const eid = nearest(match, UnitKind.Harvester, unit(tag));
+        if (at === T(16)) match.orderDepth(PLAYER, eid, 1750);
+        else match.orderMove(PLAYER, eid, 1250, 2700);
+      }
+    });
+    assert.equal(run.outcome, MissionOutcome.Partial);
+    assert.equal(status(run, 'the-seeding'), ObjectiveStatus.Met);
+    assert.equal(status(run, 'the-furrow'), ObjectiveStatus.Pending);
+    const column = [...mine(run.match, UnitKind.Cruiser), ...mine(run.match, UnitKind.Harvester)];
+    assert.equal(
+      column.filter((eid) => inRegion(furrow, Position.x[eid]!, Position.y[eid]!)).length,
+      2
+    );
+    assert.match(run.epilogue, /furrow's count wasn't met/);
+    assert.doesNotMatch(
+      run.epilogue,
+      /it's empty|nobody stayed|nobody tends|column's on its way up/
+    );
+  });
+
+  it('reads Lost without claiming the seed hulls survived unsown', () => {
+    const run = play((match, at) => {
+      if (at !== T(1)) return;
+      for (const eid of [...mine(match, UnitKind.Cruiser), ...mine(match, UnitKind.Harvester)]) {
+        Health.hp[eid] = 0;
+      }
+    });
+    assert.equal(run.outcome, MissionOutcome.Lost);
+    assert.equal(status(run, 'the-seeding'), ObjectiveStatus.Pending);
+    assert.equal(mine(run.match, UnitKind.Harvester).length, 0);
+    assert.equal(mine(run.match, UnitKind.Cruiser).length, 0);
+    assert.match(run.epilogue, /^Nothing was planted\./);
+    assert.doesNotMatch(run.epilogue, /still aboard|column's under a bed|It's planted/);
   });
 
   it('sows the lip, rates it, brings the guns down into it, and the deep is seeded', () => {

@@ -1407,8 +1407,8 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
    * beneath whichever row the run earned, in that order (`runtime.ts` appends
    * `objectiveReadings()` and then `transcript()`).
    *
-   * The Complete reading does not say *Transmitted* and the Partial does not
-   * say it was not. All three keep campaign.md §9 to the letter: no reply, no
+   * No framing reading says whether the tone was transmitted; its own row does.
+   * All three keep campaign.md §9 to the letter: no reply, no
    * description, and a cost of thirty thousand people stated as *nothing with
    * which to do it twice*.
    */
@@ -1416,8 +1416,8 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
     [MissionOutcome.Complete]:
       'The crystal is set and every hull answers the count. The lattice is spent, the nodes are spent, and what is below the line will come up or not. The Order has done the one thing it was founded to do and has nothing with which to do it twice, which Halden will say was the point. What was played over the Chord, or not, is entered beneath this, and the reply is not entered here.',
     [MissionOutcome.Partial]:
-      'The crystal is set and the Order is short. A name is to be said to a house tonight and it is not mine to say; the Order has an instrument on the Mouth’s edge and fewer people than it had this morning, and thirty thousand who will argue for a century about the trade. It is not canon that they are wrong, either way.',
+      'The crystal is set and the Order is short. A name is to be said to a house tonight and it is not mine to say; the Order has an instrument on the Mouth’s edge and fewer people than it had this morning, and thirty thousand who will argue for a century about the trade.',
     [MissionOutcome.Lost]:
-      'Nothing is set. The lattice was spent to reach a node with nothing in it, and the Order is below the line at four points a second with a rating it lent itself and has now taken back. The plan was mine. Enter that, and enter nothing about the Mouth, because nothing was said to it.',
+      'Nothing is set. The lattice was spent, and the crystal was not set. What is below the line will come up or not. The plan was mine. Enter that. What was played over the Chord, or not, is entered beneath this, and the reply is not entered here.',
   },
 };

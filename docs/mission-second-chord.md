@@ -503,12 +503,12 @@ says so in the Directorate's own register.
 | Result | Condition | Sull's reading |
 | --- | --- | --- |
 | **The Chord is whole, and the Order answers** | Crystal set, and every hull answering | "The crystal is set and every hull answers the count. The lattice is spent, the nodes are spent, and what is below the line will come up or not. The Order has done the one thing it was founded to do and has nothing with which to do it twice, which Halden will say was the point. What was played over the Chord, or not, is entered beneath this, and the reply is not entered here." |
-| **The Chord, and the Order short** | Crystal set, and a hull entered | "The crystal is set and the Order is short. A name is to be said to a house tonight and it is not mine to say; the Order has an instrument on the Mouth's edge and fewer people than it had this morning, and thirty thousand who will argue for a century about the trade. It is not canon that they are wrong, either way." |
-| **A node on a lip** | The crystal not set | "Nothing is set. The lattice was spent to reach a node with nothing in it, and the Order is below the line at four points a second with a rating it lent itself and has now taken back. The plan was mine. Enter that, and enter nothing about the Mouth, because nothing was said to it." |
+| **The Chord, and the Order short** | Crystal set, and a hull entered | "The crystal is set and the Order is short. A name is to be said to a house tonight and it is not mine to say; the Order has an instrument on the Mouth's edge and fewer people than it had this morning, and thirty thousand who will argue for a century about the trade." |
+| **A node on a lip** | The crystal not set | "Nothing is set. The lattice was spent, and the crystal was not set. What is below the line will come up or not. The plan was mine. Enter that. What was played over the Chord, or not, is entered beneath this, and the reply is not entered here." |
 
 Beneath whichever reading the run earns: the seven objective readings in the order above, then the
-attendants' and the lip's own entered-and-gap lines. **The Complete epilogue does not say
-*Transmitted* and the Partial does not say it was not.** The last sentence of every one of the three
+attendants' and the lip's own entered-and-gap lines. **No outcome's framing epilogue says whether
+the tone was transmitted; the transmission's own reading does.** All three readings
 keeps [campaign.md](campaign.md) §9 to the letter — no reply, no description, and a cost of thirty
 thousand people stated as *nothing with which to do it twice*.
 
@@ -798,14 +798,13 @@ and counts at the end:
 
 > The crystal is set and the Order is short. A name is to be said to a house tonight and it is not
 > mine to say; the Order has an instrument on the Mouth's edge and fewer people than it had this
-> morning, and thirty thousand who will argue for a century about the trade. It is not canon that
-> they are wrong, either way.
+> morning, and thirty thousand who will argue for a century about the trade.
 
 **Lost — a node on a lip.**
 
-> Nothing is set. The lattice was spent to reach a node with nothing in it, and the Order is below
-> the line at four points a second with a rating it lent itself and has now taken back. The plan was
-> mine. Enter that, and enter nothing about the Mouth, because nothing was said to it.
+> Nothing is set. The lattice was spent, and the crystal was not set. What is below the line will
+> come up or not. The plan was mine. Enter that. What was played over the Chord, or not, is entered
+> beneath this, and the reply is not entered here.
 
 Each line fails [culture.md](culture.md) §3 for the other three factions, which is that document's
 own test (§6). Sull spends an entire order apologising for an instrument's physics and never once
@@ -860,7 +859,7 @@ the player's, which is the sentence §1 was already writing.
 | `pressureRating` on scripted hulls | **A test finding, carried.** `missions.test.ts` reads `statsFor(kind).pressureRating`, not `effectivePressureRating`, so the Directorate's baseline does not rescue a PR-2 Chorister authored at 3,000 m; all twelve carry `pressureRating: 3`, as do the plateaus' two Light Scouts at 2,100 m. Sixth mission to field the hull, sixth document to say so |
 | **Cross-mission Drift Health** | **Built** ([campaign.md](campaign.md) §11, #379), and keyed by map, so this mission gets it for free. This is the fifth mission on `mouth-rim` inside one authored week — *Prospect* and *The Second Seeding* on D, *First Arrival* on D+1, *The Rim Deposits* on D+2 — and the third loud one, and [campaign.md](campaign.md) §2 rule 5's promise is exactly that this tide arrives quieter, deader and more legible than the last. It now does, and the document still does not depend on it: what the carried ledger finds is a rim whose 4 × 4 cells around the terraces have spent two tides of eighty-SIG instrument and a raid, and a basin that may not rise at all |
 | **Permanent roster attrition, and a roster carried between missions** | **Built** (#380) — [campaign.md](campaign.md) §11's record has its second sibling key, and [mission-nineteen.md](mission-nineteen.md) §13 carries the mechanism. Three of the six carry cadre ids: the Voice as `voice`, and the raid's escort pair `escort-a` and `escort-b` as `fourth` and `fifth`, the names they carry on the same tags in [The Rim Deposits](mission-rim-deposits.md). The Choirmaster's hull and the two carriers carry none — §3 gives the carriers a load each and no name, and a hull the document does not identify with one of the six is not one the record can have spent — so they are seated whatever the Rest kept. `survive escort 3` clamps to the escort that came and is removed if none did; `survive tender 1` and `survive carrier 2` are untouched, and this mission spends nothing further. Whether the terraces' two nodes were corrected on D+2 is still not carried: the roster carry is hulls by name, and a structure has none |
-| **Progression, and an ending nothing keeps** | **The record is built** (#371, `echoes.progression`, a per-mission history keeping the best reading a mission has returned) **and nothing writes an ending into it.** [mission-item-nine.md](mission-item-nine.md) §13 said every ending document would lean on this row and none would own it, and this one leans hardest: the campaign's last close reads two records aloud and the shell keeps only an outcome. What is missing is not storage but authorship — a field beside `outcome` for the unranked record a conclusion carries |
+| **Progression, and the witnessed ending** | **Built** as [witnessed conclusions](ui-ux.md#witnessed-conclusions). The Record keeps each distinct full closing reading under this mission, including the transmission's non-terminal reading, separately from the best outcome. Neither transmitting nor remaining silent replaces or outranks the other; the saved words carry no new world state or roster changes into another mission, and the named cadre carry in the preceding row remains a separate mechanism |
 | The seven locks | **Built.** One is authored — `construction`, *three nodes stand; the ledger is empty* — and the six that are not are the point: `activeSonar` has been the Order's since mission 3 and is priced rather than fenced, `weapons` and `torpedoes` are live because the lip has to be held, and Silent Running cannot be locked at all |
 | `sigBudget` as metadata | **Built** — shipped to the HUD under a label as a budget, never as a ceiling and never a live threshold, which is the only reason 100 can be the figure the mission *is* without becoming a rule a player is failed against |
 | Souls, read out | **Not built, and it is documentation.** Nothing in `packages/backend/src` reads `MissionUnit.souls`. The forty-one is carried by hand in §3, and the epilogue reads hulls rather than people |

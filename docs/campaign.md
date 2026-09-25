@@ -131,6 +131,12 @@ Whichever campaign you are playing, the other three arrive. The convergence miss
 
 **None is canon.** The endings are not ranked, not merged, and not resolved by a true ending; the campaign's argument is that four correct people with incompatible obligations produce a war, and awarding one of them the last word would undo it.
 
+The Record's **Witnessed conclusions** collection preserves each distinct reading the player
+actually received, including the unranked choices beneath a mission's close. Contradictory
+playthroughs remain separate, without revealing alternatives the player has not reached.
+It also keeps conclusions from earlier missions; [ui-ux.md](ui-ux.md#witnessed-conclusions)
+specifies persistence and rereading.
+
 ---
 
 ## 10. Mission Conventions

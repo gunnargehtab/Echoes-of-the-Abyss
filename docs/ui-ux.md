@@ -1501,6 +1501,30 @@ beyond the screen itself.
 Review screenshots: `docs/screenshots/issue-410/` has the record read to a history of three
 missions, with the Long Arrangement withheld and its reason attached.
 
+#### Witnessed conclusions
+
+Above the era pages, **Witnessed conclusions** keeps the readings this player has actually
+received at a mission's close. This is a personal collection, separate from the court's
+historical pages: **Readings kept as received. Different tellings stand beside one another.**
+Every mission may contribute, including partial and lost conclusions. A mission appears only
+after a reading has been kept; there are no slots for unseen alternatives, grades, completion
+percentages, or claims that one telling is the true history.
+
+The existing progression record stores the complete server-delivered epilogue, including its
+appended objective readings and transcript, verbatim. Distinct text within one mission is a
+distinct reading; an identical replay or reconnect adds nothing. Contradictory readings remain
+side by side in first-received order, independent of the best completion outcome the board
+already remembers. Nothing is inferred from that outcome, from a mission catalogue, or from
+hidden world state. Old records start with no collected readings; the client cannot reconstruct
+a conclusion it did not keep. The collection is local to this browser, like the rest of
+progression, and clearing browser storage removes it.
+
+Each witnessed mission has a native disclosure headed by its mission title, operable by
+keyboard, with selectable plain text inside. Line breaks survive; markup in a reading is text,
+not executable HTML. Opening a disclosure never joins a room or replays a mission. The empty
+collection says **No conclusions have been kept yet. Finish a mission to keep its reading.**
+The six historical pages and their admission rules remain unchanged.
+
 ### Rooms, and who may see them
 
 A room is listed unless it says otherwise, and two kinds always say otherwise. **A solo game

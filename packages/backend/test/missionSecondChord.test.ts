@@ -960,6 +960,10 @@ describe('the objective, as docs/mission-second-chord.md §8 counts it', () => {
       true
     );
     assert.equal(M.epilogue[MissionOutcome.Lost].startsWith('Nothing is set.'), true);
+    for (const reading of Object.values(M.epilogue)) {
+      assert.doesNotMatch(reading, /canon|nothing was said to it|Order is below the line/);
+    }
+    assert.match(M.epilogue[MissionOutcome.Lost], /What was played over the Chord, or not/);
     for (const outcome of [MissionOutcome.Complete, MissionOutcome.Partial]) {
       assert.ok(
         M.epilogue[outcome].includes('nothing with which to do it twice') ||
@@ -1237,6 +1241,37 @@ describe('the tide, run out — docs/mission-second-chord.md §4, §8 and §9', 
       'and the entered line is not printed beside it'
     );
     assert.equal(run.chordHpFloor, SPIRE.maxHp, '§4: and nothing on the rim ever touched the node');
+  });
+
+  it('reads Lost with Transmitted when the tone is played without setting the crystal', () => {
+    let choirmaster = 0;
+    let ears = 0;
+    const run = play((match, tick) => {
+      if (tick === 24) {
+        choirmaster = nearest(match, UnitKind.Cruiser, STAGING_SEAT);
+        ears = nearest(match, UnitKind.Corvette, { x: 3300, y: 450 });
+      }
+      if (tick === RELEASE + ECHO_TICK_INTERVAL * 2) {
+        match.orderMove(PLAYER, choirmaster, MOUTH.x, MOUTH.y);
+        match.orderDepth(PLAYER, choirmaster, 1750);
+      }
+      if (tick > RELEASE + ECHO_TICK_INTERVAL * 2 && tick % 30 === 0) {
+        const gap = Math.hypot(
+          Position.x[ears]! - Position.x[choirmaster]!,
+          Position.y[ears]! - Position.y[choirmaster]!
+        );
+        if (gap > 250) {
+          match.orderMove(PLAYER, ears, Position.x[choirmaster]!, Position.y[choirmaster]!);
+        }
+      }
+    });
+    assert.equal(run.closedAtTick, CLOSE);
+    assert.equal(run.outcome, MissionOutcome.Lost);
+    assert.equal(run.statuses.get('the-lattice'), ObjectiveStatus.Pending);
+    assert.equal(run.statuses.get('the-transmission'), ObjectiveStatus.Met);
+    assert.match(run.epilogue, /Transmitted\. The reply is not entered here\./);
+    assert.match(run.epilogue, /What was played over the Chord, or not/);
+    assert.doesNotMatch(run.epilogue, /nothing was said to it|Order is below the line/);
   });
 
   it('plays the tide: the crystal set under the node, the lattice spent, the tone held', () => {

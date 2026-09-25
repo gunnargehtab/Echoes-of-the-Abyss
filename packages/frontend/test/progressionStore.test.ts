@@ -30,6 +30,7 @@ import {
   recordMissionResult,
   seenScenes,
   spentCadre,
+  witnessedConclusions,
 } from '../src/progression/store.ts';
 
 const STORAGE_KEY = 'echoes.progression';
@@ -109,6 +110,114 @@ describe('the progression record', () => {
   it('reports an unplayed mission as unplayed rather than as lost', () => {
     assert.equal(hasPlayed('ledger-asset-recovery'), false);
     assert.equal(missionRecord('ledger-asset-recovery'), undefined);
+  });
+
+  it('keeps contradictory endings with the same outcome across reloads and reconnects', () => {
+    const id = 'ledger-item-nine';
+    const concealed = {
+      ...result(id, MissionOutcome.Complete),
+      epilogue: 'The continuance carried.\n\nA gap is entered.',
+    };
+    const disclosed = { ...concealed, epilogue: 'Item Nine is unsealed.\nThe seat is spent.' };
+    recordMissionResult(concealed);
+    recordMissionResult(disclosed);
+    recordMissionResult(concealed);
+    recordMissionResult(disclosed);
+    assert.deepEqual(witnessedConclusions(), [
+      { missionId: id, readings: [concealed.epilogue, disclosed.epilogue] },
+    ]);
+    assert.equal(missionRecord(id)?.outcome, MissionOutcome.Complete);
+  });
+
+  it('keeps lost and partial readings in received order, independently of best outcome', () => {
+    const id = 'chord-second-chord';
+    for (const [outcome, epilogue] of [
+      [MissionOutcome.Lost, 'Nothing is set.'],
+      [MissionOutcome.Complete, 'The crystal is set.'],
+      [MissionOutcome.Partial, 'The Order is short.'],
+    ] as const) {
+      recordMissionResult({ ...result(id, outcome), epilogue });
+    }
+    assert.deepEqual(loadProgression().conclusions[id], [
+      'Nothing is set.',
+      'The crystal is set.',
+      'The Order is short.',
+    ]);
+    assert.equal(missionRecord(id)?.outcome, MissionOutcome.Complete);
+  });
+
+  it('collects by mission and preserves readings of missions removed from the catalogue', () => {
+    recordMissionResult(result('retired-mission', MissionOutcome.Partial));
+    recordMissionResult(result(PROLOGUE_MISSION_ID, MissionOutcome.Complete));
+    assert.deepEqual(witnessedConclusions(), [
+      { missionId: 'retired-mission', readings: ['The court adjourns.'] },
+      { missionId: PROLOGUE_MISSION_ID, readings: ['The court adjourns.'] },
+    ]);
+  });
+
+  it('does not reconstruct a conclusion from an older completion outcome', () => {
+    backing.set(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        missions: { 'ledger-item-nine': { outcome: MissionOutcome.Complete } },
+      })
+    );
+    assert.deepEqual(witnessedConclusions(), []);
+    recordMissionResult(result(PROLOGUE_MISSION_ID, MissionOutcome.Complete));
+    assert.equal(missionRecord('ledger-item-nine')?.outcome, MissionOutcome.Complete);
+    assert.equal(witnessedConclusions().length, 1);
+  });
+
+  it('drops malformed readings individually without trimming or rewriting valid text', () => {
+    backing.set(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        conclusions: {
+          'ledger-item-nine': [
+            null,
+            12,
+            {},
+            '',
+            '   ',
+            ' A reading.\n\nAnother. ',
+            ' A reading.\n\nAnother. ',
+          ],
+          broken: 'not an array',
+          empty: [],
+        },
+      })
+    );
+    assert.deepEqual(witnessedConclusions(), [
+      { missionId: 'ledger-item-nine', readings: [' A reading.\n\nAnother. '] },
+    ]);
+    for (const invalid of [null, [], 7, 'bad']) {
+      backing.set(STORAGE_KEY, JSON.stringify({ version: 1, conclusions: invalid }));
+      assert.deepEqual(witnessedConclusions(), []);
+    }
+  });
+
+  it('handles unusual mission keys without treating inherited properties as readings', () => {
+    for (const id of ['__proto__', 'constructor', 'toString']) {
+      recordMissionResult(result(id, MissionOutcome.Complete));
+    }
+    assert.deepEqual(
+      witnessedConclusions().map(({ missionId }) => missionId),
+      ['__proto__', 'constructor', 'toString']
+    );
+  });
+
+  it('ignores blank epilogues without losing prior conclusions or the new outcome', () => {
+    recordMissionResult(result(PROLOGUE_MISSION_ID, MissionOutcome.Lost));
+    for (const epilogue of ['', ' \n\t ']) {
+      recordMissionResult({
+        ...result(PROLOGUE_MISSION_ID, MissionOutcome.Complete),
+        epilogue,
+      });
+    }
+    assert.deepEqual(loadProgression().conclusions[PROLOGUE_MISSION_ID], ['The court adjourns.']);
+    assert.equal(missionRecord(PROLOGUE_MISSION_ID)?.outcome, MissionOutcome.Complete);
   });
 
   it('counts all three readings as played — Partial is a result, not a failure', () => {

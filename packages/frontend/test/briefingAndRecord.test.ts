@@ -37,6 +37,7 @@ import './support/headless.ts';
 import { click, render, type Rendered } from './support/screen.ts';
 import { BriefingScreen } from '../src/menu/BriefingScreen.tsx';
 import { RecordScreen } from '../src/menu/RecordScreen.tsx';
+import type { WitnessedConclusion } from '../src/progression/store.ts';
 import { ADMISSION_LINE, RECORD_PAGES, countLine, readRecord } from '../src/menu/record.ts';
 
 interface Doors {
@@ -212,12 +213,14 @@ interface Leaving {
 }
 
 async function record(
-  played: readonly string[] = []
+  played: readonly string[] = [],
+  conclusions: readonly WitnessedConclusion[] = []
 ): Promise<{ view: Rendered; leaving: Leaving }> {
   const leaving: Leaving = { backs: 0 };
   const view = await render(
     createElement(RecordScreen, {
       hasPlayed: (missionId: string) => played.includes(missionId),
+      conclusions,
       onBack: () => leaving.backs++,
     })
   );
@@ -230,6 +233,61 @@ const LEDGER_ON_THE_RIM = MISSION_HEADERS.find(
 )!;
 
 describe('the record: a page that is not yet entered is still on the page', () => {
+  it('keeps contradictory witnessed readings verbatim, without grades or unseen endings', async () => {
+    const readings = [
+      'The continuance carried.\n\nThe chair reported the model complete.',
+      'Item Nine is unsealed.\nThe Board will require a new chair.',
+    ];
+    const { view } = await record(
+      ['ledger-item-nine'],
+      [{ missionId: 'ledger-item-nine', readings }]
+    );
+    try {
+      const collection = view.byClass('record-conclusions');
+      const summaries = collection.findAll((node) => node.type === 'summary');
+      assert.deepEqual(
+        summaries.map((node) => node.props.children),
+        ['The Ledger — Item Nine']
+      );
+      assert.deepEqual(
+        view.allByClass('record-conclusion-reading').map((node) => node.props.children),
+        readings
+      );
+      assert.equal(collection.findAll((node) => node.type === 'details').length, 1);
+      assert.equal(collection.findAll((node) => node.type === 'button').length, 0);
+      assert.ok(!view.shows('Mission complete'));
+      assert.ok(!view.shows('The Second Chord — The Second Chord'));
+      assert.equal(collection.props['aria-labelledby'], 'witnessed-conclusions');
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('renders removed missions and markup-like readings as plain text', async () => {
+    const text = '<img src=x onerror=alert(1)>\nA reading, not HTML.';
+    const { view } = await record([], [{ missionId: 'retired-mission', readings: [text] }]);
+    try {
+      assert.ok(view.shows('retired-mission'));
+      assert.equal(view.byClass('record-conclusion-reading').props.children, text);
+      assert.equal(
+        view.byClass('record-conclusions').findAll((node) => node.type === 'img').length,
+        0
+      );
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('does not invent readings for an old completed history', async () => {
+    const { view } = await record(['ledger-item-nine']);
+    try {
+      assert.ok(view.shows('No conclusions have been kept yet.'));
+      assert.equal(view.allByClass('record-conclusion').length, 0);
+    } finally {
+      await view.unmount();
+    }
+  });
+
   it('shows all six eras to a player who has finished nothing', async () => {
     // §14: "a page not yet entered keeps the disabled rule the board keeps —
     // dimmed to 40%, never removed, its condition attached in the register."

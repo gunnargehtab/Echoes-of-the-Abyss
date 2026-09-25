@@ -3242,6 +3242,43 @@ button.objectives-row:hover {
   text-align: left;
 }
 
+.record-conclusions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+}
+
+.record-conclusion {
+  padding: 0.8rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--neon-cyan) 30%, transparent);
+  border-radius: 4px;
+  background: var(--abyss-glass);
+  overflow-wrap: anywhere;
+}
+
+.record-conclusion summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  color: var(--text-cyan);
+}
+
+.record-conclusion summary:focus-visible {
+  outline: 2px solid var(--neon-cyan);
+  outline-offset: 4px;
+}
+
+.record-conclusion-reading {
+  margin: 0.8rem 0 0;
+  padding-top: 0.8rem;
+  border-top: 1px solid color-mix(in srgb, var(--neon-cyan) 30%, transparent);
+  white-space: pre-wrap;
+  font-size: 0.72rem;
+  line-height: 1.7;
+  color: var(--text-bright);
+}
+
 .record-page-head {
   display: flex;
   align-items: baseline;
@@ -3267,7 +3304,8 @@ button.objectives-row:hover {
   white-space: nowrap;
 }
 
-.record-entry {
+.record-entry,
+.record-conclusion-note {
   margin: 0;
   font-size: 0.72rem;
   line-height: 1.7;

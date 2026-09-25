@@ -7,22 +7,25 @@
  * to the board, because the board is where the next mission is chosen and
  * the record is what sits between two of them.
  *
- * Every word on it is authored in `record.ts`; this component renders pages
- * and adds no prose of its own to the court's register. A page not yet
+ * Historical entries are authored in `record.ts`; witnessed conclusions are
+ * preserved exactly as received from the mission. A historical page not yet
  * entered is on screen with its reason, dimmed and never removed — the shell's
  * rule for a door that does not open, applied to a page that is not yet read.
  */
 
+import { missionHeaderById } from '@echoes/shared';
+import type { WitnessedConclusion } from '../progression/store.ts';
 import type { PlayedLookup } from './campaignBoard.ts';
 import { ADMISSION_LINE, countLine, readRecord } from './record.ts';
 
 export interface RecordScreenProps {
   /** Injected for the board's reason: the record reads a history it does not define. */
   hasPlayed: PlayedLookup;
+  conclusions: readonly WitnessedConclusion[];
   onBack(): void;
 }
 
-export function RecordScreen({ hasPlayed, onBack }: RecordScreenProps) {
+export function RecordScreen({ hasPlayed, conclusions, onBack }: RecordScreenProps) {
   // Read once per mount: the history cannot change while the record is on
   // screen, because changing it means playing a mission.
   const reading = readRecord(hasPlayed);
@@ -38,6 +41,30 @@ export function RecordScreen({ hasPlayed, onBack }: RecordScreenProps) {
         </header>
 
         <div className="record-pages">
+          <section className="record-conclusions" aria-labelledby="witnessed-conclusions">
+            <h3 id="witnessed-conclusions" className="record-page-era">
+              Witnessed conclusions
+            </h3>
+            <p className="record-conclusion-note">
+              Readings kept as received. Different tellings stand beside one another.
+            </p>
+            {conclusions.length === 0 ? (
+              <p className="record-conclusion-note">
+                No conclusions have been kept yet. Finish a mission to keep its reading.
+              </p>
+            ) : (
+              conclusions.map(({ missionId, readings }) => (
+                <details className="record-conclusion" key={missionId}>
+                  <summary>{missionHeaderById(missionId)?.name ?? missionId}</summary>
+                  {readings.map((reading, index) => (
+                    <p className="record-conclusion-reading" key={index}>
+                      {reading}
+                    </p>
+                  ))}
+                </details>
+              ))
+            )}
+          </section>
           {reading.map(({ page, entered }) => (
             <article
               key={page.id}
