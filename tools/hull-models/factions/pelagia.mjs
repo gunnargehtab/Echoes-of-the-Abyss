@@ -239,17 +239,28 @@ export const ink = {
  * count language the rule replaces. Any count — no jig closes a grown ring
  * in pairs, and the Bower's and the Blight's stalks are seven-sided on
  * purpose. Five is the floor, the living number: five petals, five arms, the
- * Harvester's tendrils. Thirty is the ceiling, 12° between faces — the
- * softest edge the style still calls crisp, and under three's own 32, which
- * is the smooth render the header above refuses. No sections: nothing grown
- * is a prism, and a quill is a thorn cut on the floor.
+ * Harvester's tendrils — the count a stalk shares with a Directorate spine
+ * under a metre and a third of radius, the lattice above it being where the
+ * two part. Twenty-four is the ceiling, the roundest rim in the roster —
+ * under three's own 32, which is the smooth render the header above refuses
+ * — and it is 24 rather than 30 for gate 6 (docs/graphics-standards.md):
+ * an orb's triangles go as the square of its count, and at 30 the navy's
+ * eight structures would cost about 144k triangles against today's 35k,
+ * more than half the 250k the whole own force is allowed; at 24, about
+ * 108k. No sections: nothing grown is a prism, and a quill is a thorn cut
+ * on the floor. The rule does not reach a table: the four ported scouts'
+ * `grownBody` orbs are their exports' own vertices, and re-cutting one is a
+ * different hull (`grownBody`), so they are named by the measure and left;
+ * the Bower's is a formula in the kit's frame and regenerates at the rule's
+ * count.
  *
  * Panels: a Commune hull is few, large parts — a leaf is one plate, a pod one
  * orb, a fin one membrane — so its median part from above is bigger than its
  * facet says, a metre and a half to five. A structure's band is the hull's at
- * the chart's ratio of densities, 4 to 1.5 px/m, rounded to the half metre.
+ * the chart's ratio of densities, 4 to 1.5 px/m, rounded to the half metre —
+ * a judgement, and Block 2c says what it rests on.
  */
-export const facets = { chordM: 1.5, min: 5, max: 30, step: 1, sections: [] };
+export const facets = { chordM: 1.5, min: 5, max: 24, step: 1, sections: [] };
 export const panels = { hull: [1.5, 5], structure: [4, 13.5] };
 
 /** A grown orb: few facets, and squashed by the caller — never round in section. */

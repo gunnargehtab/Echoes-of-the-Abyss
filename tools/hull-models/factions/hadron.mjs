@@ -246,22 +246,31 @@ export const ink = {
  * plane wide enough to hold one specular, and the Order cuts it at three
  * metres: the Responsory's blade lathes ten facets of 2.8 m at 4.6 m of
  * radius, the Clarion's drive and emitter are cut at 2.8–3.1, and the median
- * unlit part on an Order hull is 3.9 m on a side. Even counts only: every
- * facet has its mirror across the centre plane and the crown's facet has its
- * mirror on the keel — an odd spar has a face on one and an edge on the
- * other, the one asymmetry this navy cannot have. Four is the floor, the
- * blade's diamond; four and six are the sections, the two crystal habits the
- * Order cuts at any size — the four-facet spar and the six-facet horn
- * (`spar`, `bowArray`), which is how the Clarion's horn carries 5.5 m faces
- * and keeps. Twelve is the ceiling, 30° between faces, at which a specular
- * is still a glint on one face rather than a band across several; past it a
- * ring is a wheel, and the Responsory's twenty-eight-facet resonator rings —
- * the one round thing in the navy that is round — are the pass's first cut.
+ * unlit part on an Order hull is 3.9 m on a side. Even counts only, so the
+ * step is two: a regular polygon with an even count has a mirror line every
+ * half facet, through opposite vertices and opposite edges alike, so laid on
+ * the hull's axis it mirrors port to starboard — the law's own axis — however
+ * the kit turns its first vertex, and crown to keel besides; an odd ring
+ * mirrors on one axis only. Four is the floor, the blade's diamond; four and
+ * six are the sections, and a section keeps a count and not a shape: four
+ * keeps every spar, point and prism in the navy, and six every hexagonal
+ * prism — the horns, lips and drives (`spar`, `bowArray`; the Clarion's horn
+ * carries 5.5 m faces and keeps), the stays, struts, pins, pipes, masts and
+ * legs at 0.35–1.9 m of radius where the lattice would say four, and on the
+ * structures the Refinery's silos at 18–27 m, the Foundry's wing halls at
+ * 33–40, the Bio-reactor's cistern and the Tocsin's bell and collars. That
+ * is by design: quartz is a hexagonal prism at a millimetre and at a metre,
+ * and a resonance tower is a crystal the size of a building. Twelve is the
+ * ceiling, a dodecagon at the rim — a cut stone, the coarsest of the four
+ * navies' by the law's own ranking of their curves; past it a ring is a
+ * wheel, and the Responsory's and the Antiphon's twenty-eight-facet
+ * resonator rings are the pass's first cut.
  *
  * Panels: planes — a wing, a fin, a spar — and the seams "the Order builds
  * nothing bare" adds, two to six metres, centred on the Clarion's 3.9. A
  * structure's band is the hull's at the chart's ratio of densities, 4 to
- * 1.5 px/m, rounded to the half metre.
+ * 1.5 px/m, rounded to the half metre — a judgement, and Block 2c says what
+ * it rests on.
  */
 export const facets = { chordM: 3, min: 4, max: 12, step: 2, sections: [4, 6] };
 export const panels = { hull: [2, 6], structure: [5.5, 16] };

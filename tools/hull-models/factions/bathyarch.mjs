@@ -184,33 +184,49 @@ export const ink = {
 
 /**
  * The Klaxon's facet rule and panel bands (docs/asset-prompts-3d.md Block 2c,
- * #919; `tools/hull-models/facets.mjs` is the measure). The one curve this
- * navy allows is the one "a pressure vessel demanded", and a pressure vessel
- * is rolled plate: its facets are its plates, so a facet is a plate wide — a
- * metre, which is the Bulwark's guns and the Tender's stacks (ten facets at
- * 1.7–1.8 m of radius) and the shared kinds' pressure cylinders (twenty-eight
- * at 3.5–4.4). Six plates is the least a drum reads as a drum rather than a
- * box, and the Klaxon's boxes are boxes; the one section it cuts round is the
- * four-sided wedge of its noses (kit.mjs `cyl`). Twenty-four is where a
- * plate's edge stops drawing on the chart's relief — 15° between faces — so
- * on a big drum the plate grows rather than the drum going smooth. Plates go
- * on in pairs: a drum closed on an even count lies level on a plate with its
- * two flanks alike, which is 6, 8, 10, 12 on both approved hulls and 7 and 9
- * on nothing built here, so the step is two. The same two hulls' ballast
- * drums, shrouds and turret rings carry the same *counts* on twice the
- * radius, two to five metres a plate: that is the count language this rule
- * replaces, and the pass re-cuts them.
+ * #919; `tools/hull-models/facets.mjs` is the measure). "No curve unless a
+ * pressure vessel demanded it" ranks this navy's curves third of four —
+ * rounder only than the Order's planes, coarser than a shell and a pod — so
+ * its edge is the third rung of the ladder, two and a half metres, and its
+ * detail is on its boxes rather than in its curves. At the rim a Consortium
+ * drum is a rectangle bent round in a few flat plates, which is what the
+ * approved Bulwark shows: its turret ring is sixteen-sided at 12 m of radius
+ * and its shrouds twelve at 5 m, and this edge keeps both, brings its ballast
+ * from twelve to ten, and cuts its guns and stacks — ten-sided at 1.7–2.6 m,
+ * the finest thing on the hull — to the six-plate drum a small vessel is.
+ * Six is the least a drum reads as a drum rather than a box, and the Klaxon's
+ * boxes are boxes. Sixteen is the ceiling: the most any approved Consortium
+ * drum carries (the turret ring, the barbette and its ring), a sixteen-gon
+ * still a polygon at the rim; a judgement on silhouette, ordered with the
+ * other three navies' ceilings as the law orders their curves. Plates go on
+ * in pairs, so the step is two: on an even count the crown and the keel are
+ * alike — both the middle of a plate at 6, 10, 14, both a seam at 8, 12, 16 —
+ * and the two flanks mirror; on an odd count neither is the middle of
+ * anything and the drum reads as leaning, which is the Directorate's
+ * language and not this one. The hulls' drums carry 6, 8, 10, 12, 14 and 16
+ * and no odd count; the odd counts are the r184 structure passes' — nine on
+ * the Bastion's ballast drums, the Refinery's silos, caps and ballast and the
+ * Turret's mount drum, seven on the Refinery's crusher stack — and a few
+ * five-sided wheel tubes and cables under 0.2 m of radius. The one section
+ * is four, a square: it keeps the wedge noses of the Spark and the shared
+ * kinds (kit.mjs `cyl`, "the Klaxon's nose") and five cables on the Gantry,
+ * the Bastion and the Slipway, which at 0.3–1 m of radius read the same at
+ * four as at six.
  *
- * Panels: from a rivet head — half a metre, the smallest part the chart draws
- * at 4 px/m — to a plate two metres on a side. "Riveted, patchworked" is half
- * the unlit parts on a hull being fittings under two metres, and
- * "over-engineered" is the plates over them being small too. A structure's
- * band is the hull's at the chart's ratio of densities, 4 to 1.5 px/m — the
- * same grain on the chart, since a structure's pads are not a hull's plates —
- * rounded to the half metre.
+ * Panels: from three-quarters of a metre to two. A rivet head reads 0.6–0.8 m
+ * from above and a cable or a dog wheel less, and the Klaxon rivets its
+ * plates rather than building a hull out of rivets, so a median part under
+ * three-quarters of a metre is a hull of fittings and no plate; a plate two
+ * metres on a side is the largest a patch is before a seam crosses it.
+ * "Riveted, patchworked" is half the unlit parts on a hull being fittings
+ * under two metres, and "over-engineered" is the plates over them being
+ * small too. A structure's band is the hull's at the chart's ratio of
+ * densities, 4 to 1.5 px/m, rounded to the half metre — a judgement that a
+ * structure is dressed 2.7× coarser than a hull, since a structure's pads are
+ * not a hull's plates (Block 2c says what it rests on).
  */
-export const facets = { chordM: 1, min: 6, max: 24, step: 2, sections: [4] };
-export const panels = { hull: [0.5, 2], structure: [1.5, 5.5] };
+export const facets = { chordM: 2.5, min: 6, max: 16, step: 2, sections: [4] };
+export const panels = { hull: [0.75, 2], structure: [2, 5.5] };
 
 /** The body: a flat-sided slab from a plan outline, with a bow face and transom. */
 export function hullSlab(root, { black, grey, amber }, { outline, lengthM, depth, bow, stern }) {
