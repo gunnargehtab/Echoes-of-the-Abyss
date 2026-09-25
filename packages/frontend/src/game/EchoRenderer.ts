@@ -4592,13 +4592,6 @@ export class EchoRenderer {
   }
 
   /**
-   * What this mission has taken away, straight off the mission view.
-   *
-   * The server refuses a locked order regardless — this is not a permission
-   * check, and the client is not where the rule lives. It is what lets the
-   * HUD say *why* instead of a key press vanishing into the socket.
-   */
-  /**
    * Install a binding table (docs/ui-ux.md §11). Live: the settings store's
    * `subscribe` calls this mid-match, so a player who rebinds in the esc menu
    * does not have to leave the water to find out whether it suits them.
@@ -4625,6 +4618,13 @@ export class EchoRenderer {
     }
   }
 
+  /**
+   * What this mission has taken away, straight off the mission view.
+   *
+   * The server refuses a locked order regardless — this is not a permission
+   * check, and the client is not where the rule lives. It is what lets the
+   * HUD say *why* instead of a key press vanishing into the socket.
+   */
   setMissionLocks(locks: AbilityLock[]): void {
     this.missionLocks = locks;
   }
@@ -5059,6 +5059,22 @@ export class EchoRenderer {
   }
 
   /**
+   * Where the player is listening from: the water under the screen centre,
+   * asked of the conn camera. Before the conn exists there is no rendered
+   * position to match, and the map origin is as honest as any.
+   *
+   * Shared by the contact picture and the tuned bed so the two cannot disagree
+   * about where the ear is — a bed centred somewhere the contacts are not
+   * would put the water and the things in it in different rooms.
+   */
+  private earPosition(): { x: number; y: number } {
+    const rect = this.app.canvas.getBoundingClientRect();
+    return (
+      this.screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2) ?? { x: 0, y: 0 }
+    );
+  }
+
+  /**
    * The contact picture as the mix is allowed to hear it.
    *
    * Two things this method exists to guarantee, both from
@@ -5078,22 +5094,6 @@ export class EchoRenderer {
    * table asks for spatialisation "matched to the rendered position" — the ear
    * is where the player is looking.
    */
-  /**
-   * Where the player is listening from: the water under the screen centre,
-   * asked of the conn camera. Before the conn exists there is no rendered
-   * position to match, and the map origin is as honest as any.
-   *
-   * Shared by the contact picture and the tuned bed so the two cannot disagree
-   * about where the ear is — a bed centred somewhere the contacts are not
-   * would put the water and the things in it in different rooms.
-   */
-  private earPosition(): { x: number; y: number } {
-    const rect = this.app.canvas.getBoundingClientRect();
-    return (
-      this.screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2) ?? { x: 0, y: 0 }
-    );
-  }
-
   private contactAudioFrame(tick: number, now: number): ContactAudioFrame {
     const decayMs = PERSISTENCE.GHOST_MARKER_DECAY_S * 1000;
     const ear = this.earPosition();
@@ -5249,16 +5249,6 @@ export class EchoRenderer {
   }
 
   /**
-   * Turn a resolution into a log line.
-   *
-   * The rule the whole log rests on: it reports what was told, at the
-   * fidelity it was told, and never sharpens an old entry when a better
-   * resolution of the same contact arrives later. A log that improved its own
-   * history would let a player reconstruct positions they never earned, and
-   * would also destroy the thing the log is *for* — reasoning about what was
-   * knowable at the time (docs/ui-ux.md §10).
-   */
-  /**
    * An own hull or structure, from this snapshot or the one before it.
    *
    * The fallback is what makes a killing blow reportable: the event describes
@@ -5277,12 +5267,6 @@ export class EchoRenderer {
     return { x: structure.x, y: structure.y, name: structureStatsFor(structure.kind).name };
   }
 
-  /**
-   * A log row about the player's own force — an under-fire first blow, a
-   * harvester's stall, or the Lid taking a hull (docs/ui-ux.md §5, §10). Bearing and range are measured
-   * from the scope anchor like every contact row, and focus goes to the hull
-   * itself: it is the player's own, fully known, so the camera may.
-   */
   /**
    * §10's passive exposure rows — the record of *when they heard you*.
    *
@@ -5334,6 +5318,12 @@ export class EchoRenderer {
     });
   }
 
+  /**
+   * A log row about the player's own force — an under-fire first blow, a
+   * harvester's stall, or the Lid taking a hull (docs/ui-ux.md §5, §10). Bearing and range are measured
+   * from the scope anchor like every contact row, and focus goes to the hull
+   * itself: it is the player's own, fully known, so the camera may.
+   */
   private emitOwnForceEvent(tick: number, entityId: number, what: string): void {
     const subject = this.ownEntity(entityId);
     if (subject === undefined) return;
@@ -5402,6 +5392,16 @@ export class EchoRenderer {
     this.callbacks.onContactEvent(entry);
   }
 
+  /**
+   * Turn a resolution into a log line.
+   *
+   * The rule the whole log rests on: it reports what was told, at the
+   * fidelity it was told, and never sharpens an old entry when a better
+   * resolution of the same contact arrives later. A log that improved its own
+   * history would let a player reconstruct positions they never earned, and
+   * would also destroy the thing the log is *for* — reasoning about what was
+   * knowable at the time (docs/ui-ux.md §10).
+   */
   private emitContactEvent(contact: Contact, tick: number, fresh: boolean): void {
     const entry: ContactLogEntry = {
       // Tier is part of the id: one contact climbing 1 -> 3 is two events.
@@ -5909,17 +5909,6 @@ export class EchoRenderer {
   }
 
   /**
-   * Live hazards — docs/hazards.md, docs/maps.md core principles.
-   *
-   * The warning phase is the reason this method exists. `CLAUDE.md` fixes the
-   * target emotion as dread rather than confusion, and dread requires the
-   * player to *see it coming*: a countdown ring that closes as the eruption
-   * approaches, so leaving is a decision they get to make and regret.
-   *
-   * Dormant sites stay drawn — faintly — because a hazard you can forget about
-   * is a hazard that will surprise you, and surprise is the failure mode.
-   */
-  /**
    * Inert hazard sites off the map payload, telegraphed. docs/maps.md's core
    * principles list "hazard telegraphing — players must see danger before
    * entering": this ground is dangerous from the moment the map loads, so it
@@ -5958,6 +5947,16 @@ export class EchoRenderer {
   }
 
   /**
+   * Live hazards — docs/hazards.md, docs/maps.md core principles.
+   *
+   * The warning phase is the reason this method exists. `CLAUDE.md` fixes the
+   * target emotion as dread rather than confusion, and dread requires the
+   * player to *see it coming*: a countdown ring that closes as the eruption
+   * approaches, so leaving is a decision they get to make and regret.
+   *
+   * Dormant sites stay drawn — faintly — because a hazard you can forget about
+   * is a hazard that will surprise you, and surprise is the failure mode.
+   *
    * Rung 5, map furniture, in every phase (docs/map-visuals.md §5). The rim
    * and the warning's countdown ring are the outlines the ladder weighs. The
    * fills, a current's streaks and the two inner rings every other live
@@ -6127,21 +6126,6 @@ export class EchoRenderer {
   }
 
   /**
-   * Acoustic residue — docs/systems-echo.md §7.
-   *
-   * Drawn as a stain rather than a marker, and drawn *before* live contacts so
-   * a contact always sits on top of the residue near it. The distinction the
-   * mix makes in docs/audio-direction.md §6 — "if a player can mistake a mark
-   * for a contact, the mark is mixed wrong" — has to hold visually too, so
-   * marks get no outline, no glyph and no crisp edge: nothing that reads as a
-   * *thing*, only as ground that remembers.
-   *
-   * The intensity is the information. For a battle site it is how much
-   * shooting happened; for the industrial hum it is throughput, which
-   * docs/economy.md §5 wants a player to read income off. So the drawing
-   * scales with it rather than merely fading.
-   */
-  /**
    * Lampfry shoals — docs/bestiary.md §4, the scatter tell.
    *
    * Drawn for every player from the public shoal layer. The shoal itself is a
@@ -6197,6 +6181,20 @@ export class EchoRenderer {
   }
 
   /**
+   * Acoustic residue — docs/systems-echo.md §7.
+   *
+   * Drawn as a stain rather than a marker, and drawn *before* live contacts so
+   * a contact always sits on top of the residue near it. The distinction the
+   * mix makes in docs/audio-direction.md §6 — "if a player can mistake a mark
+   * for a contact, the mark is mixed wrong" — has to hold visually too, so
+   * marks get no outline, no glyph and no crisp edge: nothing that reads as a
+   * *thing*, only as ground that remembers.
+   *
+   * The intensity is the information. For a battle site it is how much
+   * shooting happened; for the industrial hum it is throughput, which
+   * docs/economy.md §5 wants a player to read income off. So the drawing
+   * scales with it rather than merely fading.
+   *
    * Acoustic residue. Rung 5, map furniture: your own heard residue, beside
    * the public furniture (docs/map-visuals.md §5, #866). It must never read
    * as a contact (docs/audio-direction.md §6).
@@ -6848,10 +6846,6 @@ export class EchoRenderer {
   }
 
   /**
-   * HUD. The SIG meter is a permanent element by design — "players must feel
-   * their own loudness" (docs/art-direction.md).
-   */
-  /**
    * Draw one plate VI card: glass, one bevel with one halo, corner registration
    * ticks, and the thin cyan rule under a header band where a panel has one.
    *
@@ -7357,6 +7351,10 @@ export class EchoRenderer {
     }
   }
 
+  /**
+   * HUD. The SIG meter is a permanent element by design — "players must feel
+   * their own loudness" (docs/art-direction.md).
+   */
   private drawHud(): void {
     const g = this.hudGraphics;
     g.clear();
@@ -7643,14 +7641,6 @@ export class EchoRenderer {
   }
 
   /**
-   * Queued orders, drawn as the route they are.
-   *
-   * Only for the selection: every unit drawing its plan at once would bury
-   * the map in lines. Anchors are where each order pointed when it was
-   * given — for a queued attack that is deliberately not the target's live
-   * position, which the player may no longer be entitled to.
-   */
-  /**
    * Where one of the player's own hulls is drawn this frame: between its last
    * two snapshots, from the conn's tracker (#429; docs/ui-ux.md §12), so the
    * ink this pass paints about a hull sits on the hull the conn is drawing.
@@ -7695,6 +7685,13 @@ export class EchoRenderer {
   }
 
   /**
+   * Queued orders, drawn as the route they are.
+   *
+   * Only for the selection: every unit drawing its plan at once would bury
+   * the map in lines. Anchors are where each order pointed when it was
+   * given — for a queued attack that is deliberately not the target's live
+   * position, which the player may no longer be entitled to.
+   *
    * Order routes and the click's acknowledgement. Rung 6, instruments: §5's
    * row does not name them, and they are placed by its voice — cyan tells,
    * red warns — and because an order is the player's own interface, not a
