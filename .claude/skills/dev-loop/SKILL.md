@@ -5,342 +5,190 @@ description: Run one change as a closed loop — build against an authored targe
 
 # Running a change as a closed loop
 
-This is the inner loop. [`work-issue`](../work-issue/SKILL.md) picks *what* to
-work on and takes the result to a pull request; [`steward`](../steward/SKILL.md)
-drives that pull request to green. This file covers the middle: how to get one
-change from "claimed" to "correct" without either stopping too early or
-iterating forever.
+The inner loop. [`work-issue`](../work-issue/SKILL.md) picks the issue and opens
+the pull request; [`steward`](../steward/SKILL.md) drives it to green. This file
+takes one change from "claimed" to "correct" in at most three rounds, each graded
+by a fresh [`loop-critic`](../../agents/loop-critic.md).
+[`.claude/AGENTIC-LOOP.md`](../../AGENTIC-LOOP.md) records where the shape came
+from and where each guardrail is enforced.
 
-It is adapted from [dream-loop](https://github.com/achimala/dream-loop) — build
-toward a locked target, hand the result to a separate critic, refine on its
-feedback, exit on a criterion rather than on a feeling — and from the loop
-proposed in #709. What it is *not* is a new task system, a new spec, a new
-harness or a new verifier. This repository already has all four, and
-[`.claude/AGENTIC-LOOP.md`](../../AGENTIC-LOOP.md) records which is which and
-what was deliberately left unbuilt.
+## The target is authored, not invented
 
-## The target is authored, not dreamed
-
-dream-loop's first move is to generate a target screenshot and lock it, because
-its user's request is the only specification that exists. **Do not do that
-here.** `docs/` is the design bible, it came first, and code transcribes it.
-Generating a target would be writing a second specification that the real one
-then has to agree with.
-
-So the target is already locked, and locating it is step one of every round:
+`docs/` is the design bible and code transcribes it. Locating the target is the
+first step of every round:
 
 | Kind of change | The target is |
 | --- | --- |
 | A mechanic, a unit, an economy path | The `docs/` section that specifies it, and the SPEC constants that cite it |
 | A mission | `docs/mission-<name>.md`, beat by beat |
 | A screen or a panel | The numbered section of `docs/ui-ux.md` it implements |
-| Anything visual | The gates in `docs/graphics-standards.md`, plus the concept art in `docs/concept-art/` |
+| Anything visual | The gates in `docs/graphics-standards.md`, and the concept art and renders in `docs/concept-art/` |
 | A hull, structure or prop | Its `UNIT —` or `STRUCTURE —` block in `docs/asset-prompts-3d.md` |
 | The mix | `docs/audio-direction.md`, against readings from `tools/audio-meter` |
+| Tooling, CI, these files | The issue's acceptance criteria, and the file's own header |
 
-If you cannot name the target, you do not have one, and that is the whole
-finding. **Stop and say so** rather than inventing one — an unnameable target
-is a stall on round one, and "Stall detection" below says how to stop.
-An unattended session that picks a reading of an ambiguous
-doc and ships it has written a plausible wrong answer into the design bible,
-which is the one failure this loop is built to avoid.
-
-Visual work is the exception that proves the rule: there a target *image* is
-right, and the repository already has the idiom for it. Use the committed
-concept art and the renders in `docs/concept-art/renders/`, not a fresh
-generation.
+**A target that is missing, or reads two ways, is a design call.** Decide it the
+way `work-issue` §7 says: options, a recommendation, the recommendation taken. If
+the decision is that the doc is wrong or silent, amend the doc section first, then
+build against it. Never build against a reading you did not write down.
 
 ## The round
 
-Each round is seven steps, and the order matters because it fails cheapest
-first.
+Seven steps, cheapest failure first.
 
-1. **Read the target.** The doc section, every time, not your memory of it. If
-   the target and the code disagree, that is a bug in one of them and which one
-   is a design call — see "Three things the loop must never do", second bullet.
+1. **Read the target**, the section itself, not your memory of it. **Then read the
+   code for anything the change will state as fact** — a comment, a doc line, a
+   label, a sentence in the pull request. The target says what the game *should*
+   do; only the code says what it *does*. Issue bodies are the worst source: they
+   describe a past state in the present tense. False sentences are the finding
+   this loop's critics raise most.
+2. **Implement** one self-contained increment, not the whole issue.
+3. **Self-validate** with `npm run gates`. Iterate with `-- --only=`; drop the
+   filter before the round ends. Run it; never predict it.
+4. **Capture evidence** that shows the change does what the target says (below).
+5. **Critique.** Spawn a fresh `loop-critic` with the brief below.
+6. **Address the verdict.** Fix each finding, or write down why it is wrong.
+7. **Check the exit criteria.** Not met and not stalled: back to step 2.
 
-   **Then read the code for anything the change will state as fact.** The target
-   says what the game *should* do; a sentence that ships — a gloss, a beat, a
-   label, a pull request's own argument — is a claim about what it *does*, and
-   only the simulation settles that. This is the trap this loop falls into most:
-   six instances over 13–15 September across two issues. #738's gloss taught
-   "slower is quieter", transcribed from `docs/mission-sorrowgate.md` §4, when
-   `acoustics.ts` gives a Light Scout two states — `sigCruise` 12 and `sigIdle`
-   6 — so nothing it does under way reaches the ceiling of 20, and only descent
-   crosses it. #739 did it from a worse source still: it read **#623's issue
-   body**, which describes a state somebody has since deliberately changed, and
-   deleted a clause that was true to write a false one in its place. It is not
-   that docs go stale. It is that everything which is not the code goes stale,
-   and an issue body is the worst of them, because it is a description of the
-   past written as though it were the present.
-2. **Implement.** One self-contained increment, not the whole issue. `CLAUDE.md`
-   asks for instalments because a session can end mid-change and take the
-   container with it.
-3. **Self-validate.** `npm run gates`. One command, one exit code, no fail-fast,
-   so one run tells you everything that is red. Use `--only=` while you iterate
-   on a single gate and drop the filter before the round ends.
-4. **Capture evidence.** The gates say the tree is sound. They do not say the
-   change does what the doc describes — that needs an artifact a critic can
-   look at. See the table below.
-5. **Critique.** Hand the target, the diff and the evidence to the
-   [`loop-critic`](../../agents/loop-critic.md) subagent, fresh, every round.
-6. **Address the verdict.** Fix what it found, or write down why a finding is
-   wrong. Both are acceptable; ignoring one is not.
-7. **Check the exit criteria.** Below. If they are not met and the loop has not
-   stalled, go to step 2.
-
-Steps 3 and 5 are separate on purpose and neither substitutes for the other. A
-green `npm run gates` says nothing about whether the change matches its doc; a
-satisfied critic says nothing about whether the tree compiles.
+Steps 3 and 5 do not substitute for each other. Green gates say nothing about the
+doc; a passing critic says nothing about the build.
 
 ### Evidence, by what changed
 
-The critic reads what you give it. Give it the artifact that would show the
-fault, which is not the same artifact for every kind of change:
-
 | What changed | Capture |
 | --- | --- |
-| Echo Layer, detection, propagation | A `tools/echo-sim` scenario — deterministic, and committed beside its `.expected.json` |
-| Simulation, missions, combat | The backend test file for it, run alone: `npm -w packages/backend exec -- node --import tsx --test test/<file>.test.ts` |
+| Echo Layer, detection, propagation | A `tools/echo-sim` scenario, committed beside its `.expected.json` |
+| Simulation, missions, combat | The backend test file, run alone: `npm -w packages/backend exec -- node --import tsx --test test/<file>.test.ts` |
 | Anything rendered, HUD or world | A screenshot through [`run-game`](../run-game/SKILL.md), against a real match |
-| A screen, a panel, a control | The frontend test for it, plus the accessibility path — `docs/ui-ux.md` §11 calls accessibility a correctness requirement |
-| A hull, structure or prop | [`hull-intake`](../hull-intake/SKILL.md)'s bake and report, then `node tools/hull-models/diff.mjs <slug>` if the model already existed |
+| A screen, a panel, a control | Its frontend test, plus the accessibility path (`docs/ui-ux.md` §11) |
+| A hull, structure or prop | [`hull-intake`](../hull-intake/SKILL.md)'s bake and report, and `node tools/hull-models/diff.mjs <slug>` for an existing model |
 | The mix | `tools/audio-meter` readings, taken at the bus |
-| A performance path | The counted work, never a stopwatch — `Match.worstStepWork`, `Match.contactPathWalksLastPass`, nodes built per tick |
+| A performance path | Counted work (`Match.worstStepWork`, `Match.contactPathWalksLastPass`, nodes per tick), never a stopwatch |
 
-That last row is a standing rule, not a preference. A wall-clock maximum is the
-noisiest statistic on a shared runner and has failed CI on spread alone; a count
-is a property of the algorithm and is the same everywhere.
+### The critic's brief
 
-## The critic is a separate agent, and that is structural
+The critic reads what you hand it, and a vague brief costs it an hour. Give it,
+as text:
 
-One fresh [`loop-critic`](../../agents/loop-critic.md) per round. Not a section
-of this file that you read and apply to yourself.
+- **Target:** the doc path and section, or the issue's acceptance criteria.
+- **Diff:** `git diff origin/main...HEAD`, and from round 2 the delta since the
+  last verdict (`git diff <sha>..HEAD`).
+- **Evidence:** the commands you ran and their output; the gates' summary line.
+- **Decisions:** the options you wrote and the one you took, if any.
+- **Previous verdict**, verbatim, from round 2 on. Never its context.
 
-#540 already settled the principle, in one line: **a generator that also grades
-itself is not a gate.** `docs/graphics-standards.md` §2 is the same argument in
-the language of models — "Intake is the gate, not a formality". `hull-designer` used to
-carry its own "reviewing a bake" section, which meant the author of a shape was
-also its only reader — a second draft wearing a review's clothes.
-`hull-reviewer` exists because that did not work, and this is the same split for
-changes that are not hulls.
+## The critic is a separate agent
 
-Two consequences, neither of them style:
+One fresh `loop-critic` per round, never resumed, never a section of this file
+applied to yourself. **A generator that also grades itself is not a gate** (#540).
 
-- **The critic does not edit.** It has no `Edit` and no `Write`, and a standing
-  rule against writing through the `Bash` it does have — that is granted so it
-  can re-run a scenario or a test file, never to change the tree. A critic that
-  fixes what it finds has authored the fix and is grading itself one level down.
-  It reports; you fix; it looks again.
-- **The critic starts fresh every round.** Not resumed, not continued. By round
-  three you have spent two rounds convincing yourself the approach is sound, and
-  that accumulated conviction is exactly the thing a review is supposed to be
-  independent of. Pass it the *previous* verdict as text so it can see whether a
-  finding survived, but never its previous context.
+- **The critic does not edit.** It has no `Edit` or `Write`, and uses its `Bash`
+  only to re-run evidence. A critic that fixes what it finds is grading its own fix.
+- **The critic starts fresh.** Pass the previous verdict as text so it can see
+  what survived; never its context. By round three the author has talked itself
+  into the approach, and fresh context is the cure.
 
-Where this diverges from `hull-reviewer`: that agent is also pinned *away* from
-the authoring model, because a blind spot about shape is aesthetic and travels
-with the model. A blind spot about correctness is not that — it is about what
-this session has already talked itself into, and fresh context is what cures it.
-So the critic is pinned to the strongest reviewer available rather than to a
-different one.
+It is pinned to the strongest model rather than a different one: a correctness
+blind spot is this session's conviction, not the model's taste.
 
-## Exit criteria — when the *loop* stops
+## Findings have a severity
 
-These say when to stop iterating. They do **not** say when to open the pull
-request: that happened at the first increment that stood on its own, several
-rounds earlier, and the pull request has been following the branch since.
-`CLAUDE.md` and `work-issue` §5 both require it, because a container can die
-mid-loop and an unopened PR takes the work with it.
+The critic marks each finding **blocking** or **minor**.
 
-Stop running rounds when **all** of these hold:
+- **Blocking:** behaviour differs from the target, an acceptance criterion is
+  unmet, a hard rule is broken, evidence does not reproduce, a decision taken
+  without options, or a false sentence another text or a test relies on.
+- **Minor:** a local fix checkable by reading it alone — a stale comment, a wording
+  slip, a false aside nothing depends on, a missing line of the PR body.
 
-- `npm run gates` is green — every gate, not a filtered subset.
-- The critic's last verdict is **pass**, or its only open findings are ones you
-  have written down a reason for.
-- Every acceptance condition the issue states is met, and you can point at the
-  evidence for each.
-- The change is still an instalment that stands on its own. If it has grown into
-  three unrelated things, that is three pull requests.
-- **Every acceptance condition is the issue's own**, not a stricter bar you set
-  on the way through — see "The bar is the issue's" below.
-- **Nothing in the tree is an edit nobody has looked at.** A verdict covers the
-  diff the critic was handed, never the fixes you made in answer to it — see
-  "One pass over the way out" below.
-
-A round that meets these is finished. Do not run another for polish — this loop
-has no notion of a score to maximise, deliberately, and "one more round" with no
-open finding is how a bounded loop becomes an unbounded one.
-
-### One pass over the way out
-
-Every round ends on an edit the critic never saw: it reported, you fixed, you
-stopped. On #738 that edit was the fault. Round 4's critic declared the stall and
-said not to run a fifth round chasing it; round 5 fixed its three ordinary bugs
-and was ready to ship. One short pass over *just those fixes* found that
-anchoring a banned-name match at both ends had stopped it catching `Corvettes` —
-the plural of the exact sentence the anti-reveal sweep exists to refuse, passing
-in all twenty-nine missions. Eleven green gates and six green CI runs said
-nothing about it, and neither did the verdict, which predated the fix.
-
-So before the loop stops, run one **verification pass scoped to the edits made
-after the last verdict**. It is not a round and it does not spawn a critic: no
-new scope, no re-litigating a stalled question, four questions and no more —
-
-- does each fix do the thing its finding asked for;
-- does it break a case that used to hold;
-- is there a positive control that must still pass, and does it;
-- did it touch anything its finding did not name?
-
-It costs a fraction of a round. **A stall verdict stops the refining; it does not
-review the last edit.**
-
-### The bar is the issue's, not the one you invented
-
-#739 spent four rounds failing a standard the issue never asked for — "no figure
-in any form survives", arrived at by closing each previous attempt's hole — while
-criteria 1 to 8 sat met. Round 6's critic said so in terms: the bar was
-self-imposed, and the honest exit was one round taking its two remaining
-one-liners. It was right, and round 7 did exactly that and passed.
-
-A loop can fail its own invented bar indefinitely, and from the inside that is
-indistinguishable from diligence — every round has a real finding and every fix
-is a real improvement. Which is why the criterion above names the **issue's**
-acceptance conditions. A critic saying a bar is self-imposed is a stop signal
-rather than a finding to fix, and a round whose only open finding is one you set
-yourself is the round to stop on.
-
-### Stall detection
-
-Two stalls, with different remedies. Do not treat them alike.
-
-**A target you cannot name stalls on round one, and stops immediately.** There
-is nothing to build against, and "reconsidering the design" here is one step
-from inventing the target, which is the failure this loop exists to avoid. Do
-not run a second round. This is `work-issue` §7's design-call case, so stop the
-way it says to — `needs-decision` label and released claim — exactly as "Three
-things the loop must never do" already routes it.
-
-**Two rounds that close no finding the critic had already raised** mean the
-approach is wrong, not that it needs a third attempt. Here reconsidering *is*
-the remedy: stop refining, re-read the target, and say plainly what about the
-current shape cannot satisfy it. If the reconsidered approach also fails to
-close a finding, **the loop is stalled and stops.** Report what you tried, what
-the critic keeps saying, and what you would need in order to proceed. That is
-`work-issue` §7's third case — a fix that did not converge — so it takes a
-stopping comment and a released claim and **no** label; §7 is explicit that the
-next firing deserves its own attempt. Interactively it is a question to the
-person at the keyboard.
-
-A loop that reports a stall is working correctly. A loop that keeps going is not.
-
-### Reaching the cap is the third stall
-
-Three rounds is the hard cap under "Guardrails" below, so round three is the last
-one. The round that hits it ends one of two ways, and neither of them is a fourth
+Only blocking findings earn another round. Minor ones are fixed straight away and
+checked by the verification pass. A round whose findings are all minor is the last
 round.
 
-**The exit criteria are met.** Then there is nothing to say: the loop is
-finished, the way any round meeting them is.
+## Exit criteria
 
-**They are not.** Then the cap has stopped the refining exactly as a stall
-verdict does, and what the run owes is the state rather than another attempt.
+These say when to stop *iterating*. The pull request opened at the first
+increment that stood on its own.
 
-- **Run the verification pass over the way out anyway.** It is not a round, the
-  cap does not delete it, and the cap makes it matter more: a capped run's last
-  edit is the one nobody looked at, which is the fault #738 shipped past eleven
-  green gates.
-- **Leave the work where the next session or a person can pick it up.** The pull
-  request has been open since the first increment that stood on its own, so push
-  what is green and say in its body what is done and what is left. List the open
-  findings as the critic worded them — a finding re-derived from scratch costs one
-  of the three rounds.
-- **If no increment stands on its own after three rounds**, nothing is landable,
-  and that is `work-issue` §7's third case: a fix that did not converge. Stop the
-  way it says to — stopping comment, released claim, no label.
-- **Do not buy a round back.** Skipping the critic, folding two increments into
-  one round, or calling the verification pass a round each spend the cap's saving
-  on the thing the cap was not meant to cut.
+Stop when **all** hold:
 
-Interactively the cap is where the loop **asks** rather than where it stops for
-good: a person at the keyboard can read the open findings and say whether a
-fourth round is worth its cost. That is the only way past three, and it is theirs
-to give. An unattended firing has nobody to ask, so for it three is the end.
+- `npm run gates` is green, every gate.
+- The last verdict is **pass**, or its open findings are minor and fixed, or
+  carry a written reason.
+- Every acceptance condition **the issue states** is met, with evidence for each.
+  Not a stricter bar you set on the way: a critic calling a bar self-imposed is a
+  stop signal, not a finding.
+- The change is still one instalment.
+- The verification pass has covered every edit made after the last verdict.
 
-The cap costs something real, and the record says what. Of the runs these files
-measure, #742 finished inside three rounds; #738 took five
-(`.claude/AGENTIC-LOOP.md`) and #739 reached a seventh ("The bar is the issue's"
-above). Both long runs found a genuine fault late — #738's fifth round fixed
-three ordinary bugs, #739's seventh took the two one-liners that were left — so
-under this cap those two hand over a list instead of a fix. Against that, #739
-spent rounds four to six failing a bar it had invented while criteria 1 to 8 sat
-met, and the cap stops that run three rounds before its own critic did. The trade
-is a person reading a shorter pull request with findings on it, rather than an
-unwatched firing spending a fourth round. It is a spending decision, which is why
-it is a person's to make and not a round's.
+Do not run a round for polish. There is no score to maximise.
+
+### The verification pass
+
+Every loop ends on edits no critic saw. Before stopping, check just those edits
+against four questions — no new scope, no spawned critic, not a round:
+
+- does each fix do what its finding asked;
+- does it break a case that used to hold;
+- does the positive control still pass;
+- did it touch anything its finding did not name?
+
+A stall verdict stops the refining; it does not review the last edit. On #738 the
+unreviewed last edit was the fault, past eleven green gates.
+
+### Stalls
+
+**Two rounds that close no blocking finding** mean the approach is wrong.
+Reconsider once: re-read the target and say what about the current shape cannot
+satisfy it. If the new approach also closes nothing, the loop is stalled: report
+what you tried and what the critic keeps saying. Under `work-issue` that is §7's
+"does not converge" case.
+
+### The cap: three rounds
+
+**Three rounds per change, hard.** A person set it (18 September); a firing may not
+raise it. Round three ends one of two ways:
+
+- **Exit criteria met:** done.
+- **Not met:** run the verification pass anyway, push what is green, and list the
+  open findings in the pull request body as the critic worded them. Nothing
+  landable at all is `work-issue` §7's "does not converge".
+
+Do not buy a round back by skipping the critic, folding two increments into one
+round, or calling the verification pass a round. Interactively, the person at the
+keyboard may grant a fourth; unattended, three is the end.
 
 ## Guardrails
 
-#709 asks for caps, and they translate:
-
-- **Three rounds per change, hard.** Reaching three is a stall by definition,
-  whatever the critic last said, and "Reaching the cap" above says how to stop on
-  it. The cap was ten until 18 September, when the repository owner set it to
-  three for efficiency. An unattended firing may not raise it back: `work-issue`
-  §5's boundary list makes a bound a person's to write, for the same reason its
-  open-PR cap is.
-- **One increment per round.** If a round's diff touches parts of the tree the
-  round's target does not name, split it. A tighter cap is not a licence to make
-  a round bigger — three rounds of one increment each is the shape, and a round
-  carrying two is a finding the critic raises.
-- **Never widen the change to satisfy a finding.** A critic finding about code
-  the change does not touch is a note for the issue tracker, not this round's
-  work.
-- **Push at every self-contained step**, and open the pull request as soon as
-  the branch carries an increment that stands on its own. A container can go
-  away mid-loop; an unpushed round is a lost round.
-- **The gates are run, not predicted.** "This should pass lint" is not step 3.
+- **One increment per round.** A diff reaching beyond the round's target is split.
+- **Never widen the change to satisfy a finding.** A finding about code the change
+  does not touch goes to #746.
+- **Push at every self-contained step.** An unpushed round is lost with the
+  container.
 
 ## Three things the loop must never do
 
-These are the repository's own hard rules, and an autonomous refine loop is
-exactly the thing most likely to break them by accident.
-
-- **Never tune for balance.** `CLAUDE.md` freezes it, and a loop that refines
-  until a number looks right is the purest form of the thing the freeze exists
-  to stop. No exit criterion is a win rate; the critic does not score balance;
-  a breached guard-rail reading in `docs/economy.md` §9 is **recorded and left**.
-  A *correctness* fault the harness surfaces — a navy that cannot pay for its
-  roster, a commander that never builds a structure its waves gate on, an
-  economy path that refuses a legal purchase — is not balance and is still a bug
-  to fix. If a round's justification is a win rate, it is not the round to run.
-- **Never resolve a docs/code disagreement by guessing.** Which one is wrong is
-  a design call. Write up both readings and what each would cost — that write-up
-  is the run's output, and it is a successful run. Under `work-issue`, stop the
-  way its §7 says to, `needs-decision` label and released claim included; do not
-  work from a half-copy of that procedure here.
+- **Never tune for balance.** `CLAUDE.md` freezes it. No exit criterion is a win
+  rate, and a breached guard-rail in `docs/economy.md` §9 is recorded and left. A
+  correctness fault — a navy that cannot pay for its roster — is still a bug.
+- **Never settle a docs/code disagreement silently.** Decide it in the open per
+  `work-issue` §7: options in the pull request, the recommendation taken, the doc
+  amended first when the doc is what changes.
 - **Never send the client anything it has not resolved.** Not temporarily, not
-  to make a round's evidence easier to capture, not behind a debug flag. The
-  whole game is hidden information; a client holding unresolved world state is a
-  maphack regardless of what it draws.
+  for easier evidence, not behind a debug flag.
 
-## Evidence is for the critic, not for the PR body
+## The pull request is not the transcript
 
-The evidence a round captures is long on purpose — the critic reads all of it.
-What reaches GitHub is the conclusion. Do not paste a round's transcript, its
-gate output, or its verdict history into a PR body or a comment; say what the
-change does and what proves it, in the budgets `CLAUDE.md`'s "Write short on
-GitHub" sets. Five rounds and one round should produce the same length of PR
-body, because the reader cares about the diff rather than the route to it.
+Evidence is long because the critic reads all of it. GitHub gets the conclusion,
+in the template's shape: Problem, Options, Solution, three sentences each. One
+round and five rounds produce the same body.
 
 ## Working files
 
-Scratch for a loop — captured screenshots, intermediate harness output, the
-verdict you are about to act on — goes in `.dev-loop/` at the repository root.
-It is gitignored. Nothing in it is an artifact: a screenshot that belongs to the
-change belongs in `docs/screenshots/` through the graphics gates, and a scenario
-worth keeping belongs in `tools/echo-sim/scenarios/` with its expected output
-beside it.
+Scratch — screenshots, harness output, the verdict you are acting on — goes in
+`.dev-loop/` at the repository root, which is gitignored. A screenshot that
+belongs to the change goes in `docs/screenshots/`; a scenario worth keeping goes
+in `tools/echo-sim/scenarios/` beside its expected output.
 
 ## Related
 
