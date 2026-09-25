@@ -64,17 +64,20 @@
  *   the knee from the femur's centre, length and fold and stands the
  *   claw's root on it, the claw's own fold kept (the module says how).
  *   Each moves 1.5 to 1.8 m and reads 0 m from its femur. RESIDUAL AUDIT
- *   LINES: all seven claws show nothing from above — `limb_port_1_claw`
- *   to `_4`, `limb_starboard_1_claw` to `_3` — and the export warns on
- *   each. Six were hidden before; `limb_starboard_1_claw` showed 0.5 m²
- *   where the file's offset had carried it past the second plate's rim,
- *   and rooted on its femur it lies under the plates with the rest
- *   (0.00 m² at 4 px/m). The root is the claw's +Y end — the end the file left 0.1
- *   units from the knee, against 0.26 for the other — so the fold is the
- *   file's and only the joint moved; rooting by the other end would fold
- *   every claw the other way, and #890's ruling 6 rules out the one
- *   station on the plates that would show this one. A seventh hidden
- *   claw is put to the owner in #917 beside the decisions #907 holds.
+ *   LINES: all seven claws show under 0.25 m² from above —
+ *   `limb_port_1_claw` 0.06 m², one cell at 4 px/m, and the other six
+ *   nothing — and the export warns on each. Six were hidden before;
+ *   `limb_starboard_1_claw` showed 0.5 m² where the file's offset had
+ *   carried it past the second plate's rim, and rooted on its femur it
+ *   lies under the plates with the rest (0.00 m² at 4 px/m). The root is
+ *   the claw's +Y end — the end the file left 0.1 units from the knee,
+ *   against 0.26 for the other — so the fold is the file's and only the
+ *   joint moved; rooting by the other end would fold every claw the other
+ *   way, and #890's ruling 6 rules out the one station on the plates that
+ *   would show this one. So the seventh hides with the six, and #907
+ *   closed on it: the block folds the limbs, and the 0.5 m² the file
+ *   showed was the offset that made this limb two pieces, which is the
+ *   fault #907 seated.
  * - `photophore_port_5` and `photophore_starboard_3` are the clause's and
  *   stay lit. Each sat on the fifth plate's flank at its widest line,
  *   under the plate's own upper surface; each is lifted 0.04 inboard and
