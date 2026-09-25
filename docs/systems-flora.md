@@ -237,7 +237,7 @@ Bloom-share pays **nodules** today, at 0.8 a second per tended node, out of auth
 with no supply behind it. Folding it into this account costs less than it looks like it
 should, and the reason is in the code rather than in the prose:
 
-- **The Commune can already spend Biomass, and no hull is repriced.** *Since #580 their
+- **The Commune can already spend Biomass, and no hull is repriced.** *Since #582 their
   doctrine names the Chorister, which is what makes the paragraph below true in a match rather
   than only on paper.* Of the seven
   Biomass-priced entries in the roster, only the Precentor and the Dredge are locked to the
@@ -393,7 +393,7 @@ order:
    income rather than with a repricing — the five unlocked Biomass hulls become reachable by
    a second navy on their own, which is the price-as-lock rule (§6) starting to work;
    repricing the Commune's *own* grown hulls stays the later option §6 says it is.
-7. **Sowing**, and the commander's opinion about all of it. *Built (#576, #580).* Sowing is
+7. **Sowing**, and the commander's opinion about all of it. *Built (#576, #582).* Sowing is
    forty-five seconds on station at the Commune's own 18, and the bed is owed a quarter of a
    canopy which it lays down over the two minutes after — so the hull that bought the cover is
    gone before it arrives. Moving, going silent or dying breaks it and credits nothing; two
