@@ -19,10 +19,10 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    hull-intake like any other export. check.mjs rebuilds every
                    script in all three directories in a scratch directory and
                    fails on any drift from the committed GLB, a material's
-                   values included, on any name finishes.mjs finds at two
-                   values inside one navy, and on a model file that is
-                   neither an env- prop nor named -<navy>.glb (#888); CI runs
-                   it in the build job.
+                   values and a part's normals included (#911), on any name
+                   finishes.mjs finds at two values inside one navy, and on a
+                   model file that is neither an env- prop nor named
+                   -<navy>.glb (#888); CI runs it in the build job.
                    diff.mjs answers the one thing check.mjs cannot —
                    what a port changed about a shape — by reading the pre-port
                    binary out of git history, since after a port the committed

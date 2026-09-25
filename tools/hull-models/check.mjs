@@ -23,9 +23,18 @@
  * at a scratch directory (kit.mjs `outputPath`), so the committed files are
  * never touched; the scratch GLB and the committed one are then read back
  * (glb.mjs) and compared part by part — name, material, finish, triangle
- * count and bounds to the centimetre — which is close enough to catch any
- * edit that moves a vertex and loose enough not to care which three.js wrote
- * the bytes.
+ * count, bounds to the centimetre and every corner's normal to a degree —
+ * which is close enough to catch any edit that moves a vertex and loose
+ * enough not to care which three.js wrote the bytes.
+ *
+ * The normals are compared because the conn view lights a hull by them and
+ * nothing else reads them: the bake takes its normal map off the geometry.
+ * Until #911 only positions were read, so #897's sheared ridge passed with
+ * the normals a first cut recomputed from its faces — one flank lit brighter
+ * than the other, 55° off on every corner — and passed again once they were
+ * fixed, with the triangles unchanged between the two. A degree is well
+ * above what a float32 buffer written twice can disagree by, which is zero
+ * on every model committed, and well under what a light can show.
  *
  * The finish is the material's values under its name, in `finishFields`'
  * printed precision. Until #888 only the name was compared, so an ink edited
@@ -65,8 +74,42 @@ const summarise = (parts) =>
       tris: p.tris,
       min: min.map(cm),
       max: max.map(cm),
+      normals: p.normals,
     };
   });
+
+const TURN_DEG = 1;
+
+/**
+ * How far a part's normals turned between the file and the build, corner by
+ * corner, as a phrase for the report; null when every corner is within
+ * `TURN_DEG`. Only asked of parts whose triangles already agree, so the two
+ * buffers are the same length and the k-th corner of each is the same
+ * vertex. The angle is atan2(|a × b|, a · b), not acos(a · b): two copies
+ * of one float32 normal dot to a hair under 1, and acos reads that as a
+ * fiftieth of a degree.
+ */
+function normalsTurned(built, committed) {
+  if (!built || !committed)
+    return built === committed
+      ? null
+      : `normals ${built ? 'built, none in the file' : 'in the file, none built'}`;
+  let turned = 0;
+  let worst = 0;
+  for (let k = 0; k < built.length; k += 3) {
+    const [ax, ay, az] = built.subarray(k, k + 3);
+    const [bx, by, bz] = committed.subarray(k, k + 3);
+    const cross = Math.hypot(ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx);
+    const deg = (Math.atan2(cross, ax * bx + ay * by + az * bz) * 180) / Math.PI;
+    if (deg > TURN_DEG) {
+      turned++;
+      worst = Math.max(worst, deg);
+    }
+  }
+  return turned
+    ? `normals turned at ${turned} of ${built.length / 3} corners, up to ${worst.toFixed(1)}°`
+    : null;
+}
 
 /** Lines describing how `built` differs from `committed`; empty when they agree. */
 export function diffParts(built, committed) {
@@ -92,6 +135,12 @@ export function diffParts(built, committed) {
       out.push(
         `\`${a.name}\`: bounds [${b.min}]..[${b.max}] → [${a.min}]..[${a.max}]`
       );
+    else {
+      // Last in the chain: a part whose shape moved has had its line, and a
+      // normal buffer is the one change left that moves no bound.
+      const turned = normalsTurned(a.normals, b.normals);
+      if (turned) out.push(`\`${a.name}\`: ${turned}`);
+    }
     // Beside the chain rather than in it, so a part whose finish moved still
     // has its triangles and bounds read.
     if (

@@ -61,12 +61,22 @@ export const occludes = (finish) =>
   !(finish && finish.alpha === 'BLEND' && finish.opacity < TRANSLUCENT);
 
 /**
- * A part: `{ name, material, finish, tris, positions, mirrored }` —
+ * A part: `{ name, material, finish, tris, positions, normals, mirrored }` —
  * `material` the name, `finish` the values behind it — positions 9 floats a
- * triangle, world space; `mirrored` when the node's transform has a
- * negative determinant (a reflection, the Spire's `frame_blade_l`), which
- * turns every triangle's winding round, so a reader taking a normal off the
- * winding has to turn it back.
+ * triangle, world space; `normals` the file's own normal at each of those
+ * corners, world space and unit length, or null when a primitive carries
+ * none; `mirrored` when the node's transform has a negative determinant (a
+ * reflection, the Spire's `frame_blade_l`), which turns every triangle's
+ * winding round, so a reader taking a normal off the winding has to turn it
+ * back.
+ *
+ * The stored normals are what the conn view lights a hull by
+ * (`rosterModels.ts`), and nothing else here reads them: the bake takes its
+ * normal map off the geometry, so a normal buffer can change under an
+ * unchanged shape and move nothing but the lighting in a match. #897's
+ * sheared ridge did — its first cut recomputed the lathe's normals from its
+ * faces and lit one flank brighter than the other — and until #911 the
+ * round-trip check passed both buffers, because it read positions only.
  */
 export function readGlb(path) {
   const buf = readFileSync(path);
@@ -133,14 +143,18 @@ export function readGlb(path) {
   json.nodes.forEach((node, i) => {
     if (node.mesh === undefined) return;
     const m = world[i];
+    const nm = normalMatrix(m);
     const mesh = json.meshes[node.mesh];
     const out = [];
+    let normals = [];
     let material = null;
     let finish = null;
     for (const prim of mesh.primitives) {
       if (prim.mode !== undefined && prim.mode !== 4)
         throw new Error(`${path}: ${node.name} is not a triangle list`);
       const pos = accessor(prim.attributes.POSITION);
+      const nrm = prim.attributes.NORMAL !== undefined ? accessor(prim.attributes.NORMAL) : null;
+      if (!nrm) normals = null;
       const idx = prim.indices !== undefined ? accessor(prim.indices).data : null;
       const count = idx ? idx.length : pos.count;
       for (let k = 0; k < count; k++) {
@@ -151,6 +165,14 @@ export function readGlb(path) {
           m[1] * x + m[5] * y + m[9] * z + m[13],
           m[2] * x + m[6] * y + m[10] * z + m[14]
         );
+        if (normals) {
+          const nx = nrm.data[v * 3], ny = nrm.data[v * 3 + 1], nz = nrm.data[v * 3 + 2];
+          const wx = nm[0] * nx + nm[3] * ny + nm[6] * nz;
+          const wy = nm[1] * nx + nm[4] * ny + nm[7] * nz;
+          const wz = nm[2] * nx + nm[5] * ny + nm[8] * nz;
+          const len = Math.hypot(wx, wy, wz) || 1;
+          normals.push(wx / len, wy / len, wz / len);
+        }
       }
       if (material === null && prim.material !== undefined) {
         material = json.materials[prim.material].name;
@@ -163,6 +185,7 @@ export function readGlb(path) {
       finish,
       tris: out.length / 9,
       positions: Float32Array.from(out),
+      normals: normals && Float32Array.from(normals),
       mirrored: det3(m) < 0,
     });
   });
@@ -174,6 +197,29 @@ const det3 = (m) =>
   m[0] * (m[5] * m[10] - m[9] * m[6]) -
   m[4] * (m[1] * m[10] - m[9] * m[2]) +
   m[8] * (m[1] * m[6] - m[5] * m[2]);
+
+/**
+ * The inverse transpose of a column-major 4×4's upper 3×3, column-major 3×3,
+ * as three's `Matrix3.getNormalMatrix` takes it: a normal goes through the
+ * cofactors, not the matrix, or a non-uniform scale tilts it off its face.
+ * The division by the determinant is kept for its sign — a reflection's
+ * normals come out reflected, as the renderer draws them, rather than
+ * turned inside out; the caller normalises, so the magnitude does not matter.
+ */
+function normalMatrix(m) {
+  const d = det3(m) || 1;
+  return [
+    (m[5] * m[10] - m[9] * m[6]) / d,
+    (m[8] * m[6] - m[4] * m[10]) / d,
+    (m[4] * m[9] - m[8] * m[5]) / d,
+    (m[9] * m[2] - m[1] * m[10]) / d,
+    (m[0] * m[10] - m[8] * m[2]) / d,
+    (m[8] * m[1] - m[0] * m[9]) / d,
+    (m[1] * m[6] - m[5] * m[2]) / d,
+    (m[4] * m[2] - m[0] * m[6]) / d,
+    (m[0] * m[5] - m[4] * m[1]) / d,
+  ];
+}
 
 /**
  * A linear colour as the sRGB hex a person authored. glTF carries colour
@@ -220,16 +266,29 @@ export function sceneParts(root) {
     if (!o.isMesh) return;
     const g = o.geometry;
     const pos = g.attributes.position;
+    const nrm = g.attributes.normal ?? null;
     const idx = g.index;
     const count = idx ? idx.count : pos.count;
     const out = new Float32Array(count * 3);
+    const normals = nrm ? new Float32Array(count * 3) : null;
     const m = o.matrixWorld.elements;
+    const nm = normalMatrix(m);
     for (let k = 0; k < count; k++) {
       const v = idx ? idx.getX(k) : k;
       const x = pos.getX(v), y = pos.getY(v), z = pos.getZ(v);
       out[k * 3] = m[0] * x + m[4] * y + m[8] * z + m[12];
       out[k * 3 + 1] = m[1] * x + m[5] * y + m[9] * z + m[13];
       out[k * 3 + 2] = m[2] * x + m[6] * y + m[10] * z + m[14];
+      if (normals) {
+        const nx = nrm.getX(v), ny = nrm.getY(v), nz = nrm.getZ(v);
+        const wx = nm[0] * nx + nm[3] * ny + nm[6] * nz;
+        const wy = nm[1] * nx + nm[4] * ny + nm[7] * nz;
+        const wz = nm[2] * nx + nm[5] * ny + nm[8] * nz;
+        const len = Math.hypot(wx, wy, wz) || 1;
+        normals[k * 3] = wx / len;
+        normals[k * 3 + 1] = wy / len;
+        normals[k * 3 + 2] = wz / len;
+      }
     }
     const mat = o.material;
     parts.push({
@@ -253,6 +312,7 @@ export function sceneParts(root) {
         : null,
       tris: count / 3,
       positions: out,
+      normals,
       mirrored: o.matrixWorld.determinant() < 0,
     });
   });
