@@ -1759,14 +1759,14 @@ export class MissionRuntime {
       // not announce half of itself.
       this.ring(this.lastWorld, () => true, ability.durationTicks);
     }
-    if (ability.line !== undefined) {
-      const voice = ability.line.voice ?? voiceOf(this.definition.playerFaction);
+    for (const line of ability.lines ?? []) {
+      const voice = line.voice ?? voiceOf(this.definition.playerFaction);
       this.lines.push({
         tick: this.lastWorld.tick,
-        speaker: ability.line.speaker,
-        text: ability.line.text,
+        speaker: line.speaker,
+        text: line.text,
         voice,
-        speakerId: ability.line.speakerId ?? speakerOf(ability.line.speaker, voice),
+        speakerId: line.speakerId ?? speakerOf(line.speaker, voice),
       });
     }
     return true;

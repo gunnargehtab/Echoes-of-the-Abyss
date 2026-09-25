@@ -178,6 +178,18 @@ function runOut(match: Match, drive?: (own: EchoSnapshot, match: Match) => void)
 }
 
 describe('Sorrowgate, reused as docs/mission-radicals.md §11 finds it', () => {
+  it('remembers the court’s route without asserting a prologue survivor count', () => {
+    const line = SEEDING_RADICALS.beats.find(
+      (beat) => beat.kind === 'say' && beat.atTick === T(8, 30)
+    );
+    assert.ok(line?.kind === 'say');
+    assert.equal(line.speaker, "Bloomwright Sefa Anholt, at the arch's foot");
+    assert.equal(
+      line.text,
+      "That's the arch. The court sent its flight toward this lock in the spring, and we've come in through it. We never had their count. We'd have come this way whatever it cost, and we'd like that heard before the next part. The next part's the basin. Nobody's ever asked the basin anything on purpose."
+    );
+  });
+
   it('is the prologue’s map literal, unchanged, and now carries two mission ids', () => {
     // §11: "This mission adds no geometry and spends no biome." The literal is
     // the prologue's, region for region, and the only map in the repository

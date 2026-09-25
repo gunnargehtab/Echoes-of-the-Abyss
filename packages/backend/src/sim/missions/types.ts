@@ -741,14 +741,19 @@ export interface MissionCommanderAbility {
    * What is said when it is rung — docs/mission-convocation.md §12's
    * "Tidespeaker Ysolde Marr, if the bell is rung — ~15:30".
    *
-   * On the ability rather than in `beats` because the line is conditional on
+   * On the ability rather than in `beats` because the speech is conditional on
    * the player and the beat table is the world's clock. It could not be a
    * `MissionConditionalBeat` either: those key on a `MissionPredicate`, every
    * one of which is a query over the player's *force*, and "the commander rang
-   * it" is a query over the commander. So the line rides the act, which is the
-   * thing that happened.
+   * it" is a query over the commander. The entries ride the same act in authored
+   * order, on one tick, so an aside can carry its own speaker attribution.
    */
-  line?: { speaker: string; text: string; voice?: MissionVoice; speakerId?: MissionSpeaker };
+  lines?: readonly {
+    speaker: string;
+    text: string;
+    voice?: MissionVoice;
+    speakerId?: MissionSpeaker;
+  }[];
   note: string;
 }
 

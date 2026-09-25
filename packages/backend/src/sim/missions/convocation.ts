@@ -250,10 +250,16 @@ export const SEEDING_CONVOCATION: MissionDefinition = {
     silentRunningImmunity: true,
     sig: BELL_SIG,
     collapsesWalk: true,
-    line: {
-      speaker: 'Tidespeaker Ysolde Marr',
-      text: 'All of them. Now, please. — and then, quietly, to nobody: "It was always going to be a tide like this one. I used to think that meant I’d know."',
-    },
+    lines: [
+      {
+        speaker: 'Tidespeaker Ysolde Marr',
+        text: 'All of them. Now, please.',
+      },
+      {
+        speaker: 'Tidespeaker Ysolde Marr, quietly, to nobody',
+        text: 'It was always going to be a tide like this one. I used to think that meant I’d know.',
+      },
+    ],
     note: 'She has never invoked it. It exists. It has never been used (characters.md)',
   },
 
@@ -691,7 +697,7 @@ export const SEEDING_CONVOCATION: MissionDefinition = {
 
     // 15:30 — the window in which emergency convocation is worth ringing. The
     // beat table does not ring it; the player does, and Marr's line rides the
-    // act rather than the clock (`commanderAbility.line`).
+    // act rather than the clock (`commanderAbility.lines`).
     {
       atTick: T(15, 30),
       kind: 'say',

@@ -479,6 +479,45 @@ describe('the walk, as docs/mission-convocation.md §4 states it', () => {
     assert.equal(h.view()?.ability, undefined, 'a mission with no act shipped one');
     assert.equal(h.match.commanderAbility(PLAYER), false, 'an act nobody authored was granted');
   });
+
+  it('delivers Marr’s command and attributed aside together, only on an accepted act', () => {
+    const h = harness({
+      ...WALK_MISSION,
+      commanderAbility: {
+        ...WALK_MISSION.commanderAbility!,
+        lines: SEEDING_CONVOCATION.commanderAbility!.lines,
+      },
+    });
+    h.settle(1);
+    assert.deepEqual(h.match.takeMissionLines(), []);
+    assert.equal(h.match.commanderAbility(CONCERN), false);
+    assert.deepEqual(h.match.takeMissionLines(), []);
+
+    const tick = h.match.world.tick;
+    assert.equal(h.match.commanderAbility(PLAYER), true);
+    assert.equal(h.match.world.tick, tick, 'speech must not advance or wait on the clock');
+    assert.deepEqual(h.match.takeMissionLines(), [
+      {
+        tick,
+        speaker: 'Tidespeaker Ysolde Marr',
+        text: 'All of them. Now, please.',
+        voice: 'plateaus',
+        speakerId: 'marr',
+      },
+      {
+        tick,
+        speaker: 'Tidespeaker Ysolde Marr, quietly, to nobody',
+        text: 'It was always going to be a tide like this one. I used to think that meant I’d know.',
+        voice: 'plateaus',
+        speakerId: 'marr',
+      },
+    ]);
+    assert.equal(h.match.commanderAbility(PLAYER), false);
+    assert.deepEqual(h.match.takeMissionLines(), []);
+    h.settle(1);
+    assert.ok(h.match.world.tick > tick, 'the mission must keep running after the aside');
+    assert.deepEqual(h.match.takeMissionLines(), [], 'the aside must not repeat next tick');
+  });
 });
 
 describe('the Holdfast, as docs/mission-convocation.md §8 states it', () => {
