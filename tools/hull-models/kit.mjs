@@ -1967,8 +1967,10 @@ export function conveyorGantry(root, mats, opts = {}) {
 /**
  * The intake hopper at the conveyor's foot: an eight-sided frustum and the
  * lit mouth drum on it, `intake_hopper` and `intake_mouth` with `suffix`
- * (`''` on two files, `_r` and `_l` on the Order's, which has one a
- * gantry).
+ * (`''` on the Commune's, `_r` and `_l` on the Order's, which has one a
+ * gantry). The Directorate's is directorate.mjs `intakeMaw` since #907: the
+ * same funnel with its mouth sunk inside the rim, since on that navy a lit
+ * drum on top is the plate wearing a mouth's name the style doc refuses.
  */
 export function intakeHopper(root, { hopper: hopperMat, mouth: mouthMat }, opts = {}) {
   const {

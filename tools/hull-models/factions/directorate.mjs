@@ -3061,9 +3061,9 @@ export function walkingLimbs(root, { chitin, red }, opts) {
  * its corners stood outside the shell and showed through the cowl as lit
  * chips beside the mouth. Rule 2 is met by construction; rule 3's place
  * is where the structure eats; rule 4's token is the navy's throat,
- * `gullet_glow`, the Dredge's, the Slipway's and the Vent Tap's. Whether
- * the hopper's lit `intake_mouth`, a floodlit surface and no hole, stands
- * against rules 2 and 3 is the owner's (#907).
+ * `gullet_glow`, the Dredge's, the Slipway's and the Vent Tap's. The
+ * hopper's `intake_mouth` is the model's other aperture (`intakeMaw`),
+ * the first of the two, since the belt feeds this one from it.
  *
  * Every number is in the cowl's own frame — `cowl` is the kit's
  * `crusher` cowl, `{ r, facets, phi, theta, at, rot, scale }` — and all
@@ -3133,6 +3133,73 @@ export function crusherMaw({ cowl, hole, recess = 0.35 }) {
 
   const placed = (geo) => ({ geo, at, rot, scale });
   return { cowl: placed(cowlGeo), maw: placed(floorGeo), throat: placed(throatGeo) };
+}
+
+/**
+ * The intake hopper's mouth as an aperture (#907, with the crusher's): the
+ * kit's `intakeHopper` stands a lit drum on the funnel's top, 0.14 of a
+ * unit proud of the rim, which on a Directorate model is the plate wearing
+ * a mouth's name that docs/style-neon-noir.md refuses (rule 2). Here the
+ * funnel loses its top cap (kit `pierced`; three's cylinder puts the cap's
+ * centroids at exactly half its height), `intake_throat` is the rim — an
+ * annulus from the mouth's radius out to the funnel's, on the cylinder's
+ * own angles so it lands on the funnel's rim vertices — and the wall from
+ * the rim down to the floor, wound to face the axis, in the hopper's
+ * chitin; and `intake_mouth` is the floor, a drum of the mouth's radius
+ * with its top `mouth.recess` under the rim, on `gullet_glow`. Rim, wall
+ * and floor share their edges, so the mouth is sealed and what shows from
+ * above is the floor inside a ring of unlit chitin. The Refinery carries
+ * two apertures on rule 3's Dredge clause: the belt feeds the crusher's
+ * maw from this one, so the second is the throat the first feeds. The
+ * names are the export's; the Order's and the Commune's files keep the
+ * kit's drum, whose rule this is not.
+ */
+export function intakeMaw(root, { hopper: hopperMat, throat: throatMat, mouth: mouthMat }, opts = {}) {
+  const {
+    frame = xLong,
+    hopper = { radii: [1.5, 0.9], h: 1.3, facets: 8, at: [13.4, 0.65, 6.9] },
+    mouth = { r: 1.1, recess: 0.15, thick: 0.06 },
+  } = opts;
+  const { radii: [rTop, rBot], h, facets, at } = hopper;
+  const top = h / 2;
+  const funnel = pierced(cyl(rTop, rBot, h, facets), (x, y) => y < top - 1e-6);
+  frame.part(root, 'intake_hopper', funnel, hopperMat, at);
+
+  // Three's cylinder: x = r · sin θ, z = r · cos θ, θ = k · 2π / facets.
+  const ring = (radius, y) =>
+    Array.from({ length: facets }, (_, k) => {
+      const th = (k / facets) * 2 * Math.PI;
+      return [radius * Math.sin(th), y, radius * Math.cos(th)];
+    });
+  const outer = ring(rTop, top);
+  const lip = ring(mouth.r, top);
+  const foot = ring(mouth.r, top - mouth.recess);
+  const tris = [];
+  const uvs = [];
+  // A quad wound so its normal has a positive component along `toward`.
+  const quad = (a, b, c, d, toward) => {
+    const va = new THREE.Vector3(...a);
+    const nrm = new THREE.Vector3(...b).sub(va).cross(new THREE.Vector3(...c).sub(va));
+    const order = nrm.dot(new THREE.Vector3(...toward)) > 0 ? [a, b, c, a, c, d] : [a, d, c, a, c, b];
+    for (const p of order) {
+      tris.push(...p);
+      uvs.push(Math.atan2(p[0], p[2]) / (2 * Math.PI) + 0.5, (p[1] + top) / h);
+    }
+  };
+  for (let k = 0; k < facets; k++) {
+    const k1 = (k + 1) % facets;
+    quad(outer[k], outer[k1], lip[k1], lip[k], [0, 1, 0]);
+    const inward = [-(lip[k][0] + lip[k1][0]), 0, -(lip[k][2] + lip[k1][2])];
+    quad(lip[k], lip[k1], foot[k1], foot[k], inward);
+  }
+  const throatGeo = new THREE.BufferGeometry();
+  throatGeo.setAttribute('position', new THREE.Float32BufferAttribute(tris, 3));
+  throatGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  throatGeo.computeVertexNormals();
+  frame.part(root, 'intake_throat', throatGeo, throatMat, at);
+
+  const floor = cyl(mouth.r, mouth.r, mouth.thick, facets);
+  frame.part(root, 'intake_mouth', floor, mouthMat, [at[0], at[1] + top - mouth.recess - mouth.thick / 2, at[2]]);
 }
 
 /**
