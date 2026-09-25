@@ -1169,9 +1169,10 @@ Gantry (Slipway)
 - Berths: 5 — three for the hull and one for each craft the deck holds
 - Speed: 38
 - HP: 1500
-- Flight: **two Sparks**, rebuilt one every 45s. The roster's smallest flight and its
-  heaviest craft: 120 HP each at SIG 62 under way, which is over the Klaxon's line, so a
-  Spark's gun carries the +12% and a Spark is the loudest thing on that piece of water
+- Flight: **two Sparks**, rebuilt one every 45s. The roster's smallest flight, tied with the
+  Offertory's two, and its second-hardest craft after the Versicle: 120 HP each at SIG 62
+  under way, which is over the Klaxon's line, so a Spark's gun carries the +12% and a Spark
+  is the loudest thing on that piece of water
 - Effect: none beyond the flight, and the flight is the entry. Two of them shoot at 22
   damage a 2s cycle, which is 22 damage a second against a Corvette's 27.8 — less gun than a
   line hull, from a hull that is not there. What the noise buys is the other half
