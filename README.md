@@ -1,7 +1,7 @@
 # Echoes of the Abyss
 **Atmospheric · Industrial · Abyssal · RTS**
 
-> **An RTS where you cannot see — only listen — and every action you take tells the enemy where you are.**
+> **An RTS where every action you take tells the enemy where you are.**
 
 *Echoes of the Abyss* is a browser-native real-time strategy game set in the **Pelagion Rift**, a collapsing underwater world of geothermal vents, abyssal trenches, bioluminescent forests, and pressure-scarred industrial ruins. Four factions fight across hostile biomes for the last habitable water on the planet.
 
