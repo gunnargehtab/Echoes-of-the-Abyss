@@ -3068,10 +3068,11 @@ export function walkingLimbs(root, { chitin, red }, opts) {
  * Every number is in the cowl's own frame — `cowl` is the kit's
  * `crusher` cowl, `{ r, facets, phi, theta, at, rot, scale }` — and all
  * three pieces sit on the cowl's node, so they squash as it does. Returns
- * what `crusher` takes for its `cowl` and `maw`, and the throat to add
- * after them.
+ * what `crusher` takes for its `cowl` and `maw`, the throat to add after
+ * them, and `teeth`, the stations `mawTeeth` takes: `teeth.count` cones
+ * along the mouth's lower lip, in the root's frame (below).
  */
-export function crusherMaw({ cowl, hole, recess = 0.35 }) {
+export function crusherMaw({ cowl, hole, recess = 0.35, teeth = { count: 3, length: 0.8, lean: 0.4 } }) {
   const { r, facets: [round, down], phi: phiLength, theta: thetaLength, at, rot, scale } = cowl;
   const dPhi = phiLength / round;
   const dTheta = thetaLength / down;
@@ -3131,8 +3132,39 @@ export function crusherMaw({ cowl, hole, recess = 0.35 }) {
   throatGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
   throatGeo.computeVertexNormals();
 
+  // The teeth's stations, in the root's frame: `teeth.count` along the
+  // lower lip, evenly between its corners, each rooted on the shell there
+  // and pointing up the meridian, leaned `teeth.lean` into the hole — so a
+  // tooth of `teeth.length` ends short of the floor, by 0.12 of a unit
+  // (1.4 to 1.5 m on the Refinery) as glb.mjs `gapBetween` measures it on
+  // the built file. `at` is the cone's centre, half its length up its axis
+  // from the lip.
+  const node = new THREE.Matrix4().compose(
+    new THREE.Vector3(...at),
+    new THREE.Quaternion().setFromEuler(new THREE.Euler(...rot)),
+    new THREE.Vector3(...scale)
+  );
+  const node3 = new THREE.Matrix3().getNormalMatrix(node);
+  const lipTheta = r1 * dTheta;
+  const stations = Array.from({ length: teeth.count }, (_, k) => {
+    const phi = (q0 + ((k + 0.5) * (q1 - q0)) / teeth.count) * dPhi;
+    const base = new THREE.Vector3(...vertex(r, lipTheta, phi)).applyMatrix4(node);
+    const n = new THREE.Vector3(...vertex(1, lipTheta, phi)).applyMatrix3(node3).normalize();
+    const up = new THREE.Vector3(
+      Math.cos(phi) * Math.cos(lipTheta),
+      Math.sin(lipTheta),
+      -Math.sin(phi) * Math.cos(lipTheta)
+    )
+      .transformDirection(node)
+      .normalize();
+    const axis = up.multiplyScalar(Math.cos(teeth.lean)).addScaledVector(n, -Math.sin(teeth.lean)).normalize();
+    const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), axis);
+    const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+    return { at: base.addScaledVector(axis, teeth.length / 2).toArray(), rot: [e.x, e.y, e.z] };
+  });
+
   const placed = (geo) => ({ geo, at, rot, scale });
-  return { cowl: placed(cowlGeo), maw: placed(floorGeo), throat: placed(throatGeo) };
+  return { cowl: placed(cowlGeo), maw: placed(floorGeo), throat: placed(throatGeo), teeth: stations };
 }
 
 /**
@@ -3411,9 +3443,11 @@ export function silos(root, { red, violet, steel, black, light }, opts) {
 }
 
 /**
- * The maw's teeth: four-sided cones of one `r` and `length` hung point-down
- * over the crusher's maw, `maw_tooth_${n}` each at its own station along
- * the maw's lip, as the file places them.
+ * The maw's teeth: four-sided cones of one `r` and `length` over the
+ * crusher's maw, `maw_tooth_${n}` each at its own station along the maw's
+ * lip — hung point-down where a file places them, or since #907 on the
+ * Refinery at the stations `crusherMaw` gives, rooted on the mouth's lower
+ * lip and pointing up its meridian, leaned into the hole (`t.rot`).
  */
 export function mawTeeth(root, black, opts) {
   const { frame = xLong, r = 0.14, length = 0.8, facets = 4, teeth } = opts;

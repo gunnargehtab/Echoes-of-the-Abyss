@@ -1793,7 +1793,8 @@ export function flangedPipes(root, { pipe: pipeMat, flange: flangeMat }, opts = 
  * `maw.geo` with the maw on the cowl's own node.
  *
  * The teeth are the navy's (directorate.mjs `mawTeeth`, hadron.mjs
- * `mawBlades`) and hang where the exports hung them.
+ * `mawBlades`) and hang where the exports hung them — the Directorate's
+ * since #907 at its aperture's lower lip, where `crusherMaw` stations them.
  */
 export const crusherDome = {
   r: 2.9,

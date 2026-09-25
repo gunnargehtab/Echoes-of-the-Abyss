@@ -263,7 +263,7 @@ apertures, and carries two on the same clause (#907): the intake hopper's mouth,
 sunk 1.8 m inside the hopper's rim, and the crusher's maw the belt feeds from it — a
 hole cut through the crusher's dome, two of the dome's own cells by two and about 20 m
 across, its lit floor three and a half metres down and the throat between them in the dome's
-chitin. Both are on the same token. The rule above is what
+chitin, three teeth across its lower lip. Both are on the same token. The rule above is what
 the next one is measured against.
 
 ## Colour-vision palettes
