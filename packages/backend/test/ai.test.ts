@@ -262,7 +262,18 @@ describe('production does not deadlock', () => {
     const built: UnitKind[] = [];
     for (let i = 0; i < observations; i++) {
       const at = broke(nodules);
-      for (const command of commander.observe({ ...at, tick: at.tick + i * 12 })) {
+      // A Refinery standing and a Slipway rising, so the construction branch
+      // wants nothing it cannot pay for. It saves out of the same purse for
+      // any build it wants and cannot afford (#706) — a missing Refinery as
+      // much as the rung — and these tests ask about the yards, not the works.
+      // A rising Slipway is not a yard (`freeYard` wants a finished one), so no
+      // hull behind the rung becomes buildable.
+      const structures = [
+        ...at.structures,
+        { ...at.structures[0]!, id: 21, kind: StructureKind.Refinery },
+        { ...at.structures[0]!, id: 22, kind: StructureKind.Slipway, buildProgress: 0.5 },
+      ];
+      for (const command of commander.observe({ ...at, structures, tick: at.tick + i * 12 })) {
         if (command.kind === 'produce') built.push(command.unit);
       }
     }
