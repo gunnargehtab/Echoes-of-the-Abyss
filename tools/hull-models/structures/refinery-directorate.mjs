@@ -48,13 +48,13 @@
  *   the rim (`intakeMaw`, #907's), a chute from its foot onto the belt, and
  *   the gallery climbing from under it straight into the maw — a black
  *   arched rib every 15 m, crimson points on alternate crowns, five
- *   nodules riding between the ribs, three lures hung over the belt, and
+ *   nodules riding between the ribs, five lures hung over the belt, and
  *   a pair of jointed legs at every other rib where the bed stands high
  *   enough to want them.
  * - The light: the two mouths are the one area glow (docs/style-neon-
  *   noir.md, "a maw is not livery": both apertures, both on the throat
  *   token, the belt feeding the second from the first). "Floodlit working
- *   surfaces" are three lures — hot lamps on black stalks off the
+ *   surfaces" are five lures — hot lamps on black stalks off the
  *   gallery's rails, hanging over the belt's axis — and the stack throats
  *   are the machinery light.
  *   Livery is points: an eye-line of one bud a segment up every silo, the
@@ -159,8 +159,8 @@ directorate.refineryHopper(root, { violet, gullet, black, steel }, {
   top: 23,
   bottom: 10,
   radii: [15, 7],
-  mouth: { r: 11.5, recess: 2.6, thick: 0.6 },
-  teeth: { r: 1.4, length: 7, radius: 13.4, lift: 2, phase: 0.3, lean: -0.45 },
+  mouth: { r: 12.5, recess: 2.6, thick: 0.6 },
+  teeth: { r: 1.4, length: 7, radius: 13.8, lift: 2, phase: 0.3, lean: -0.45 },
   legs: [0.9, 3, 4.9],
   chute: [4, 3.7],
 });
@@ -182,9 +182,11 @@ directorate.feedGallery(
       [6, 3, 1],
     ],
     lures: [
-      { gap: 1, side: 'p', h: 20, r: 3 },
-      { gap: 3, side: 's', h: 17, r: 2.6 },
-      { gap: 5, side: 'p', h: 22, r: 2.8 },
+      { gap: 0, side: 'p', h: 19, r: 3.2 },
+      { gap: 1, side: 's', h: 22, r: 3.4 },
+      { gap: 2, side: 'p', h: 18, r: 3 },
+      { gap: 4, side: 's', h: 21, r: 3.4 },
+      { gap: 5, side: 'p', h: 19, r: 3.2 },
     ],
     clear: [...HOPPER, 17],
   }
