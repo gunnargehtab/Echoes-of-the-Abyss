@@ -19,6 +19,9 @@
  * and 90 on +Z (starboard); `zoom` multiplies the fitted distance; `parts`
  * is a `+`-joined list of node names (a name also matches its `_n`
  * children) whose union box the camera frames instead of the whole model.
+ * The box is the union across every model on the sheet, so the cameras do
+ * not move between them; `--own` frames each model on its own parts
+ * instead, for a close-up of a part that moved.
  * With no --view the sheet is a bow three-quarter, the conn camera's home
  * view — 55° of pitch from +Z, which is where yaw 0 puts the eye
  * (PerspectiveView.ts `applyCamera`) — a stern three-quarter, and a plan
@@ -48,7 +51,10 @@ const flag = (name, fallback) => {
   return i >= 0 && args[i + 1] !== undefined ? args[i + 1] : fallback;
 };
 const all = (name) => args.flatMap((a, i) => (a === name && args[i + 1] ? [args[i + 1]] : []));
-const target = args.find((a, i) => !a.startsWith('--') && !args[i - 1]?.startsWith('--'));
+const BOOLEAN = new Set(['--own']);
+const target = args.find(
+  (a, i) => !a.startsWith('--') && !(args[i - 1]?.startsWith('--') && !BOOLEAN.has(args[i - 1]))
+);
 if (!target) {
   console.error('usage: inspect.mjs <slug|file.glb> [--before <rev>] [--view id:az:el[:zoom][:parts]]');
   process.exit(1);
@@ -65,6 +71,7 @@ const out = resolve(flag('--out', `${slug}-inspect.png`));
 const title = flag('--title', before ? `${slug}: ${before} → working tree` : slug);
 const exposure = Number(flag('--exposure', 1.15));
 const floorGap = Number(flag('--floor-gap', 0));
+const own = args.includes('--own');
 
 const parseView = (s) => {
   const [id, az, el, zoom, parts] = s.split(':');
@@ -167,6 +174,7 @@ try {
     height: tileH,
     exposure,
     floorGap,
+    own,
     views,
     models: models.map((m) => ({ id: m.id, url: `/model/${m.id}.glb` })),
   });

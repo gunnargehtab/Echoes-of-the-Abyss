@@ -181,11 +181,12 @@
 
       const deg = THREE.MathUtils.degToRad;
       const out = {};
-      for (const view of job.views) {
+      for (const view of job.views) for (const m of models) {
         // Frame the union across models, so a before and an after are shot
-        // from the same place.
+        // from the same place — unless the parts moved between the two, when
+        // `--own` frames each model on its own.
         const box = new THREE.Box3();
-        for (const m of models) box.union(boxOf(m.root, view.focus));
+        for (const o of job.own ? [m] : models) box.union(boxOf(o.root, view.focus));
         if (box.isEmpty()) {
           window.__error = `view ${view.id}: no part named ${view.focus.join(', ')}`;
           throw new Error(window.__error);
@@ -222,11 +223,9 @@
         sc.updateProjectionMatrix();
         key.shadow.normalBias = span * 0.0006;
 
-        for (const m of models) {
-          for (const o of models) o.root.visible = o === m;
-          composer.render();
-          out[`${m.id}/${view.id}`] = renderer.domElement.toDataURL('image/png');
-        }
+        for (const o of models) o.root.visible = o === m;
+        composer.render();
+        out[`${m.id}/${view.id}`] = renderer.domElement.toDataURL('image/png');
       }
       window.__shots = out;
       window.__ready = true;
