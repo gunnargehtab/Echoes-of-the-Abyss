@@ -470,9 +470,14 @@ export interface CarrierWantTally extends WantTally {
    * The partition cannot say this on its own, because it asks the purse last.
    * An observation shut by the escort is filed there whether or not the bank
    * could have paid, so the largest blocked row reads as the gate to argue
-   * with even when opening it would buy nothing (#915). This is the count
-   * that opening every gate in front of the purse would have turned into a
-   * purchase; near zero, the gates are not what kept the deck out.
+   * with whatever the bank held (#915). This counts the observations at which
+   * the shut gate alone stood between the deck and a purchase.
+   *
+   * **A floor on what the gates cost, never a ceiling.** A shut gate also
+   * stops the deck bidding, and a bid is the only way `holdPurse` saves for
+   * it, so a purse that never held the price behind a shut gate is partly the
+   * gate's doing. What opening one would buy is a counterfactual run, not
+   * this count.
    */
   priceInPurse: number;
 }

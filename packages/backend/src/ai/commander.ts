@@ -3076,8 +3076,9 @@ export class AiCommander implements AiPlayer {
     // whatever the bank held, so the largest blocked row named the escort as
     // the gate to argue with — and over the four-faction baseline the Knights
     // held their Offertory's price at none of the 57,029 observations the
-    // escort shut. Asked without `affordUnit`, which would charge the purse
-    // for a hull nobody ordered.
+    // escort shut. A floor on what the gates cost, never a ceiling: see the
+    // count's own note in `types.ts`. Asked without `affordUnit`, which would
+    // charge the purse for a hull nobody ordered.
     const ownCarrier = OWN_CARRIER[this.briefing.faction];
     const decks =
       snapshot.units.reduce((n, u) => n + (u.kind === ownCarrier ? 1 : 0), 0) +
