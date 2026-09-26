@@ -21,8 +21,8 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --ma
 > the Consortium and the Knights 0%.
 >
 > **One row added on 26 Sept 2026, and nothing refreshed** (#915). The same command, run
-> from `2d311e8` with the count the carrier table's last row prints, reproduces every other
-> line of this file byte for byte. The row counts the observations a gate in front of the
+> from `f8f0ed5`, the first commit whose footnote this file carries, reproduces every line
+> below these notes byte for byte. The row counts the observations a gate in front of the
 > purse shut while the purse already held the deck's price.
 
 30 matches on `ventfront-divide`, seeds 4000–4029. 24 ended without a winner inside the time budget, on a median 2 of the 3 eliminations a win needs.
