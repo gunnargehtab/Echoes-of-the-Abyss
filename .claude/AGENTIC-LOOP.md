@@ -223,15 +223,15 @@ it is allowed to select.
   at medium, and `/effort` still moves it for that session. Both are a person's
   settings, like the round cap.
 
-  Its prompt is deliberately thin, and it says so itself — "the rules live in
-  that file and not in this prompt ... if the two ever disagree, the file wins" —
-  which is the whole reason the loop can be changed in a reviewed pull request
-  instead of in trigger configuration nobody can diff. It has been edited twice.
-  On 15 September the bullet asking for "the gates in `CONTRIBUTING.md`" came to
-  ask for `npm run gates`, the one command `work-issue` §6 canonicalised. On 25
-  September "the docs and the code disagree" left its list of reasons to stop, a
-  design call came to defer to `work-issue` §7, and the closing reply gained "any
-  design call you took".
+  Its prompt is 54 words since 26 September (`wc -w` on the trigger's prompt): it
+  names the six-hour interval, invokes `/work-issue`, says the file wins any
+  disagreement, and makes a missing skill a stop. It used to restate the run log,
+  the gates and when a run opens no pull request, all of which `work-issue` already
+  carried, so the two could only drift. The two rules it alone held, reporting a
+  gap in the log and repeating the entry as the final reply, moved to §8. That is
+  the whole reason the loop can be changed in a reviewed pull request instead of in
+  trigger configuration nobody can diff: the prompt names a schedule and a file,
+  and nothing a pull request would need to change.
 
 ## Related
 

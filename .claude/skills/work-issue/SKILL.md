@@ -331,7 +331,8 @@ nothing, or stood down at once. Under 100 words:
 > Decided: each call taken, the option and the pull request — or "nothing".
 > Passed over: older eligible issues, one clause each, or "nothing older".
 > Needs a person: a stale claim, a `needs-decision` you applied and what it waits
-> on, a label you would propose, a branch left behind — or "nothing".
+> on, a label you would propose, a branch left behind — or "nothing". Each also
+> goes on the issue it concerns.
 > Found: a defect filed against #746, or an unverified lead, or "nothing".
 
 **The rounds line is never omitted.** When the critic cannot run, `dev-loop`
@@ -340,7 +341,15 @@ like a reviewed one. This line is the only place that shows it. **At the cap** i
 the only record of how often the three-round cap binds.
 
 **When the pull request merges, edit your entry** — append "Merged as `<sha>`" —
-rather than posting a second comment. A notification is not a record; this log is.
+rather than posting a second comment.
+
+**Say when the log has a gap behind you.** A firing can be rejected before §0 and
+write nothing. If the last entry is older than the Routine's interval, which its
+prompt states, name the gap in your entry.
+
+**Your final reply repeats the entry.** It is what the completion notification
+shows a person. A notification is not a record, though; this log is.
+
 **Roll the log over when it is full.** If it holds 150 comments or more when you
 come to write your entry, open a successor first: the same title with the next
 number, labelled `routine-log`, its body linking the old log. Post your entry
