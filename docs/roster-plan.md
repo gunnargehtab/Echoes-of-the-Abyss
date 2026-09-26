@@ -912,6 +912,65 @@ in 120 rather than 110. The table under the next heading is older than either: i
 at #842, before #839 and #854 changed the commander too, and `baselines/duel-matrix.md` is
 the reading after this repair.
 
+### No navy buys its carrier, measured rather than argued (#915)
+
+Wave 8's gate is that every navy fields a hull that never fires. None does: the four-faction
+baseline's carrier table reads `Bought 0` in all four columns, and its largest blocked row is
+*not escorted* for every navy, 47% to 92% of the observations that reach the want. #915 named
+three plausible causes — the rung's saving floor, yard contention and the escort — and picked
+none.
+
+The table could not pick either, because it asks the purse last: an observation the escort
+shuts is filed there whatever the bank held. The row *Shut before the purse, with the price in
+it* now counts the observations at which a gate in front of the purse shut while the purse held
+the price. Over the same thirty seeds it reads 190, 9, 456 and 0, and the duel matrix 825, 425,
+6 and 0: no more than about 1% of any navy's observations at the want, and none for the
+Knights. That is a floor on what the gates cost and not a ceiling, since a shut gate also stops
+the deck bidding, so the bank never saved toward it.
+
+So three repairs that move no price and no number were measured the way the heavies' were
+above: each made in a scratch copy of the commander at `ed5ccc9`, the same thirty seeds run,
+and the decks ordered counted. The first is #915's escort; the other two are the leads the
+instrumentation below turned up.
+
+| Repair | Consortium | Commune | Directorate | Knights |
+| --- | --- | --- | --- | --- |
+| None — the baseline | 0 | 0 | 0 | 0 |
+| The deck's want not gated on the escort | 6 | 0 | 3 | 0 |
+| The deck first in `holdPurse`, whatever it costs | 0 | 0 | 0 | 0 |
+| No saving for the signature structure | 0 | 0 | 0 | 0 |
+| All three | 6 | 0 | 1 | 1 |
+
+The escort is a real hold: lifted alone, it orders nine decks in 120 navy-matches. It stays,
+because a deck without it is free to sail with no army, and "a carrier caught alone is a
+3-berth hull dying quietly" ([units.md](units.md), "The carriers"). The other two, alone,
+change nothing. The Directorate is the navy most often escorted with a yard free, and files
+24,023 observations, 36% of its own, as *cannot afford*. Instrumented over seeds 4000–4011, its
+Succentor's bid passed `holdPurse`'s account and half-price checks at 579 of 8,817 of those and
+won none, to a Lure, Corvette, Thurible, Light Scout or Verger; put first, it still buys none,
+and in the baseline its purse held the 300 nodules at 151 of them, the 60 Biomass at 3,924, and
+both at once at none. Construction holds the Knights' purse for a Sounding Spire, a Refinery, a
+Vent Tap or a turret on about a third of their observations after the yard is placed, and with the
+Spire never saved for they still order none.
+
+What is left is not shown to be prices, and so not yet the freeze's. The Knights are the case
+against it: their bank clears the Offertory's price, crystal included, after the yard is
+placed in 19 of 30 matches, which is the test the heavies above failed and the Reciter passed,
+and all three repairs together still order one deck. Four leads are open, none measured:
+
+- **Yard contention.** With the escort lifted, *no free yard* becomes the largest blocked row
+  for the Consortium (50%) and the Commune (75%), and reaches 38% for the Knights, whose Slipway
+  stands in all thirty matches. The row also counts observations before the rung stood, and the
+  first two navies' Slipway stands in only 20 and 16 of those thirty, so part of each share is
+  no yard at all rather than a busy one.
+- **The saving floor.** `RUNG.SAVE_FROM` is a number the freeze covers, but the Sower and the
+  Bower already bid past it without moving it, as a bid with no window.
+- **A bid behind a shut escort.** The deck could save while its army is small and buy only
+  once escorted, which keeps units.md's line and removes the stop on bidding that makes the
+  row above a floor.
+- **The Knights' purse.** Where their bank goes between holding the price and reaching the
+  want, and whether it is the Spire, the line, or both.
+
 ### The gate, and what a duel actually says
 
 Issue #518's fourth option asked for a long-form duel *"and make **that** the gate for waves 4 and

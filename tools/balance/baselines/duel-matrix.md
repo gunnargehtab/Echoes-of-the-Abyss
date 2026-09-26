@@ -22,6 +22,11 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --du
 > breached. The one-navy rail stays **breached** on the Commune (81%, from 80%) and quiet
 > economies stays **breached**. 107 matches are decided, not 110, and the median match runs
 > 539 s, not 445.
+>
+> **One row added on 26 Sept 2026, and nothing refreshed** (#915). The same command, run
+> from `6db5600`, the first commit whose footnote this file carries, reproduces every line
+> below these notes byte for byte. The row counts the observations a gate in front of the
+> purse shut while the purse already held the deck's price.
 
 120 matches on `ventfront-divide`, seeds 4000–4009. 13 ended without a winner inside the time budget, on a median 0 of the 1 elimination a win needs.
 
@@ -151,8 +156,9 @@ _The six reasons partition the want: every observation that reaches it increment
 | Blocked: cannot afford | 8301 (12%) | 0 (0%) | 7970 (13%) | 3139 (4%) |
 | Already has one | 0 (0%) | 0 (0%) | 0 (0%) | 0 (0%) |
 | **Bought** | 0 (0%) | 0 (0%) | 0 (0%) | 0 (0%) |
+| _Shut before the purse, with the price in it_ | 825 (1%) | 425 (1%) | 6 (0%) | 0 (0%) |
 
-_The same six reasons and a seventh, partitioning the same way. A navy whose **bought** cell is 0 never put its deck in the water. Every carrier is a Slipway hull, so a free yard is one that has risen, and "no free yard" counts the escorted observations before the rung stood as well as those at a busy yard. "Yielded" is an observation at which the Sower's or the Bower's want was open, so the deck neither bought nor bid: below them in the order of purchase, by the ruling on #839. Only the Commune names either hull._
+_The same six reasons and a seventh, partitioning the same way. A navy whose **bought** cell is 0 never put its deck in the water. Every carrier is a Slipway hull, so a free yard is one that has risen, and "no free yard" counts the escorted observations before the rung stood as well as those at a busy yard. "Yielded" is an observation at which the Sower's or the Bower's want was open, so the deck neither bought nor bid: below them in the order of purchase, by the ruling on #839. Only the Commune names either hull. The last row is not a reason and joins no sum: of the observations the escort, the yard, the berths or the yield shut, it counts those at which the purse already held the deck's price. It is a floor on what the gates cost and not a ceiling: a shut gate also stops the deck bidding, so the bank never saved toward it (#915)._
 
 ## The bank against the rung — the most nodules ever held at once
 

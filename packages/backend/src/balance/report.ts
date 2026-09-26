@@ -623,17 +623,29 @@ function sumWants(tallies: readonly WantTally[]): WantTally {
 }
 
 /**
- * Carrier tallies summed the same way, `yielded` included.
+ * Carrier tallies summed the same way, `yielded` and `priceInPurse` included.
  *
  * Each tally is laid over an empty one first, because a result stored between
  * #880 and the ruling that added `yielded` has the other six and not it — and
  * an `undefined` summed in is `NaN`, which prints as a well-formed cell. The
  * six it has still sum to its `reached`, so reading its seventh as zero keeps
  * the partition.
+ *
+ * `priceInPurse` is the exception, and reads `NaN` — printed as a dash — when
+ * any result lacks it. It is stored from #915 on, and a zero there is the
+ * finding "no gate in front of the purse cost this navy a deck", so a result
+ * that never measured it must not say so. It joins no sum, so nothing else
+ * moves.
  */
 function sumCarrierWants(tallies: readonly Partial<CarrierWantTally>[]): CarrierWantTally {
   const whole = tallies.map((t) => ({ ...emptyCarrierWantTally(), ...t }));
-  return { ...sumWants(whole), yielded: whole.reduce((n, t) => n + t.yielded, 0) };
+  return {
+    ...sumWants(whole),
+    yielded: whole.reduce((n, t) => n + t.yielded, 0),
+    priceInPurse: tallies.every((t) => t.priceInPurse !== undefined)
+      ? whole.reduce((n, t) => n + t.priceInPurse, 0)
+      : NaN,
+  };
 }
 
 /**
@@ -1249,13 +1261,15 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
   //
   // The carrier's table (#839) follows it on the same terms, and is printed
   // under the same rule. It carries one row more, `yielded`, in the place its
-  // gate is asked: after the berths and before the purse.
+  // gate is asked: after the berths and before the purse — and one below the
+  // sum, `priceInPurse` (#915), which is a count and not a reason.
   const wantTable = <T extends WantTally>(
     heading: string,
     hullOf: Record<Faction, UnitKind>,
     tallyOf: (f: FactionSummary) => T,
     footnote: string,
-    beforeThePurse: readonly (readonly [label: string, pick: (t: T) => number])[] = []
+    beforeThePurse: readonly (readonly [label: string, pick: (t: T) => number])[] = [],
+    beside: readonly (readonly [label: string, pick: (t: T) => number])[] = []
   ): void => {
     lines.push(heading);
     lines.push('');
@@ -1276,7 +1290,7 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
     const wantRow = (label: string, pick: (t: T) => number): void => {
       const cells = summary.factions.map((f) => {
         const t = tallyOf(f);
-        if (t.reached === 0) return '—';
+        if (t.reached === 0 || !Number.isFinite(pick(t))) return '—';
         return `${pick(t)} (${Math.round((pick(t) / t.reached) * 100)}%)`;
       });
       lines.push(`| ${label} | ${cells.join(' | ')} |`);
@@ -1288,6 +1302,9 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
     wantRow('Blocked: cannot afford', (t) => t.cannotAfford);
     wantRow('Already has one', (t) => t.alreadyHas);
     wantRow('**Bought**', (t) => t.bought);
+    // Below the sum, and set apart in italics, because these are not reasons:
+    // a row inside the partition would read as one more share of `reached`.
+    for (const [label, pick] of beside) wantRow(`_${label}_`, pick);
     lines.push('');
     lines.push(footnote);
     lines.push('');
@@ -1316,8 +1333,13 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
         'well as those at a busy yard. "Yielded" is an observation at which the ' +
         "Sower's or the Bower's want was open, so the deck neither bought nor bid: " +
         'below them in the order of purchase, by the ruling on #839. Only the ' +
-        'Commune names either hull._',
-      [['Yielded to the Sower or the Bower', (t) => t.yielded]]
+        'Commune names either hull. The last row is not a reason and joins no ' +
+        'sum: of the observations the escort, the yard, the berths or the yield ' +
+        "shut, it counts those at which the purse already held the deck's price. " +
+        'It is a floor on what the gates cost and not a ceiling: a shut gate also ' +
+        'stops the deck bidding, so the bank never saved toward it (#915)._',
+      [['Yielded to the Sower or the Bower', (t) => t.yielded]],
+      [['Shut before the purse, with the price in it', (t) => t.priceInPurse]]
     );
   }
   // The bank against the rung. Read beside the two tables above, and it is what

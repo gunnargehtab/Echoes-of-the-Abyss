@@ -294,6 +294,33 @@ describe('telemetry measures what it says it measures', () => {
       markdown.indexOf('## The carrier want')
     );
     assert.doesNotMatch(ordnanceTable, /Yielded/);
+    // The count beside the reasons (#915), below the sum rather than inside
+    // it, carried off the carrier tally.
+    const priced = summary.factions
+      .map((f) => `${f.carrierWant.priceInPurse} \\(\\d+%\\)`)
+      .join(' \\| ');
+    assert.match(
+      carrierTable,
+      new RegExp(
+        `^\\| \\*\\*Bought\\*\\* \\|.*\\n` +
+          `\\| _Shut before the purse, with the price in it_ \\| ${priced} \\|$`,
+        'm'
+      )
+    );
+    assert.doesNotMatch(ordnanceTable, /Shut before the purse/);
+    // A result stored before #915 never measured it, and a zero there is a
+    // finding: it reads as a dash in every cell, never as a zero or `NaN`.
+    const unpriced = {
+      ...result,
+      players: result.players.map((player) => {
+        const { priceInPurse: _, ...rest } = player.carrierWant;
+        return { ...player, carrierWant: rest };
+      }),
+    } as unknown as MatchTelemetryResult;
+    assert.match(
+      toMarkdown(summarise([unpriced]), 'Test run'),
+      /^\| _Shut before the purse, with the price in it_ \| — \| — \|$/m
+    );
 
     // A result stored between #880 and the ruling has the carrier's six
     // reasons and not its seventh. It is read as a zero, never summed in as
