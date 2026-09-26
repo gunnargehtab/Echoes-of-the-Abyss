@@ -65,6 +65,24 @@ consistency checklist in `docs/asset-prompts-3d.md`, and specifically:
   the deck; a flat uniform grey means the model has no relief to light.
 - **meta.json warnings**: a Z→X rotation warning means verify the bow points
   +X; a rescale warning is harmless but note the factor.
+- **the gain**: a calibrated bake prints `raw E → calibrated E (target, gain
+  ×N)`. E is per pixel of the model's plan, so a wider footprint lowers it
+  with no lamp touched. A gain at the ×64 cap means the lit area is short;
+  add lamps or lit area, never intensity.
+
+The maps look straight down, so they cannot show a model whole. For a model
+that changes one already in the repo, look at it lit beside the file it
+replaces, and sweep what its parts touch:
+
+```bash
+node tools/hull-renders/inspect.mjs <slug> --before <base-sha>
+node tools/hull-models/contacts.mjs <slug>
+```
+
+The first is a lit before-and-after sheet from fixed cameras, its conn row at
+the player's home view. The second lists every pair of parts that meet. Each
+pair is a mount or a clip, and #947's review found four clips that every map
+and gate had passed.
 
 ## 3. File it
 

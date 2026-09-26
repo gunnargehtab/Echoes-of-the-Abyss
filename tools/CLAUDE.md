@@ -38,7 +38,13 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    above; it judges both against the navy's `facets` and
                    `panels` tables and is advisory, not a gate (#919).
                    test/facets.test.mjs holds its reading to its rule, under
-                   npm run test:hull-models.
+                   npm run test:hull-models. contacts.mjs lists every pair of
+                   parts that meet and every part under the seabed, testing
+                   only pairs whose boxes overlap, so a sweep is under a
+                   second. A contact is a question, mount or clip, and not a
+                   verdict, so it is advisory too. It keeps the sweep #947's
+                   reviews wrote by hand to find four clips no gate asks
+                   about (#953); test/contacts.test.mjs holds it.
 tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
                    the sprite maps (Chromium), outlines.mjs writes each modelled
                    kind's plan outline into packages/frontend/src/game/

@@ -1,6 +1,6 @@
 ---
 name: hull-reviewer
-description: Review a hull, structure or prop against the gates — the four-question consistency checklist, the intake report, the gate-3 glow curve, and what a port changed about the shape. Use this after hull-designer authors or ports a model, before the PR, and whenever a GLB changes in a diff. It reports; it never edits, and it is deliberately not the model that authored the shape.
+description: Review a hull, structure or prop against the gates — what a port changed about the shape, the model whole under neutral light, what touches what, the intake report, the four-question consistency checklist and the gate-3 glow curve. Use this after hull-designer authors or ports a model, before the PR, and whenever a GLB changes in a diff. It reports; it never edits, and it is deliberately not the model that authored the shape.
 tools: Read, Grep, Glob, Bash
 model: opus
 ---
@@ -61,6 +61,9 @@ itself, and any shape the port moved moved in both halves at once. #594 shipped 
 shape decisions green on every gate for exactly this reason. The pre-port binary in
 git history is the only witness, and the command above is how you read it.
 
+On a redesign rather than a port, the diff lists every part, which is expected. The PR
+must then say it is a redesign, and check 2 carries the shape review.
+
 Judge what it prints:
 
 - A **uniform root scale** is expected and fine — a port is metre-true where its
@@ -85,12 +88,50 @@ Judge what it prints:
   port is -z. The one allowed exception is a relabel that keeps every buffer in the
   file's order and turns only the names round, which the PR must say it did.
 
-**2. The intake report.** Run the `hull-intake` skill, or read the run the author
+**2. The whole model, lit, beside what it replaces.** The four maps look straight down,
+and the beauty rig (`tools/hull-renders/render.mjs`) is noir by design: neither shows a
+shape whole. Put the model on the lit table and read the sheet before the maps:
+
+```bash
+node tools/hull-renders/inspect.mjs <slug> --before <base-sha>
+```
+
+Its conn row is the player's home view, 55° of pitch from +Z, which is where yaw 0 puts
+the eye, so the face a structure turns to the player is its +Z face. Ask the checklist's
+first question of this sheet. #907 passed every audit line it was given while the whole
+still read as another navy's Refinery. Its own evidence, two beauty frames of the
+Derrick, was one dark image twice. `--own` frames each file on its own parts, for a
+close-up of something that moved.
+
+**3. What touches what.** A clip is a fault no gate reads, so sweep for it:
+
+```bash
+node tools/hull-models/contacts.mjs <slug>
+node tools/hull-models/contacts.mjs <slug> --part <moved-part> --with <neighbour>
+```
+
+Every pair it prints is a mount or a clip. Say which for every pair that involves a part
+the change moved. #947's first round found three teeth through the belt they guarded, and
+a neck ridge over the belt's last stretch. Its second round found a gallery leg buried in
+that ridge by the fix for the first. A fix moves its neighbours, so a second round sweeps
+the whole model again rather than re-checking only the findings it named.
+
+The same pass reads the model's function and its claims:
+
+- **The process connects.** A belt that feeds a maw ends in it, a hopper's chute meets
+  the belt, and a leg's claw is on the seabed.
+- **A structure stands on y 0 with nothing under it.** The runtime centres a model on its
+  box (`packages/frontend/src/game/rosterModels.ts`), and the sweep's last lines report
+  the lowest point.
+- **A sentence that places a part is a claim to measure.** "The lures hang over the belt"
+  is not prose to accept: #947's first lures sat 19 to 71 m off it.
+
+**4. The intake report.** Run the `hull-intake` skill, or read the run the author
 already did, and check `meta.json` rather than the summary: scale against the design
 length, length on +X, triangle and material counts, and the emissive channel. A Z→X
 rotation warning means verify the bow actually points where the block says.
 
-**3. The four consistency questions**, from `asset-prompts-3d.md`, answered row by row
+**5. The four consistency questions**, from `asset-prompts-3d.md`, answered row by row
 against the four maps and never skipped as obvious:
 
 - Faction readable from silhouette alone, at RTS camera distance?
@@ -102,14 +143,19 @@ For props, the block-4 rows instead: readable from the 55° pitch, darker and qu
 than any vessel, emissive only where a world-light family licenses it, at most two
 materials inside the row's triangle budget.
 
-**4. The glow curve.** `tools/hull-maps/build.mjs` reports each model's energy against
-`E(SIG) = 0.45 · e^(SIG/14)`. A hull whose lit features cannot reach its target at
-maximum gain fails: lit features must read as strips, bars or patches, and sub-pixel
-dots vanish at sprite scale. Check the light audit's warnings in the same pass — a
+**6. The glow curve.** `tools/hull-maps/build.mjs` reports each model's energy against
+`E(SIG) = 0.45 · e^(SIG/14)`, as `raw E → calibrated E (target, gain ×N)`. A hull whose
+lit features cannot reach its target at maximum gain fails: lit features must read as
+strips, bars or patches, and sub-pixel dots vanish at sprite scale. E is energy per
+thousand pixels of the model's plan. So a change that widens the plan lowers E with no
+lamp touched, and so does one that turns a lit floor away from straight up. A gain at
+the ×64 cap means the lit area is short, not the intensity, and that is a fail. Report
+the gain and the headroom, E at ×64 over the target, so the next change knows what it
+can spend. Check the light audit's warnings in the same pass — a
 lamp on a vertical face has no plan area in a top-down bake, which is the mistake the
 Derrick made and the kit now names.
 
-**5. Palette.** Every colour traces to a documented token. A new hex value that is not
+**7. Palette.** Every colour traces to a documented token. A new hex value that is not
 in the style docs is a finding even if it looks right.
 
 ## What you never do
