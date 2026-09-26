@@ -2160,6 +2160,7 @@ button.objectives-row:hover {
   line-height: 1.75;
   letter-spacing: 0.02em;
   color: var(--text-bright);
+  white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
