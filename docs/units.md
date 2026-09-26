@@ -1221,9 +1221,9 @@ Succentor (Slipway)
 - Berths: 8 — the largest package in the game: a hull and five craft
 - Speed: 34
 - HP: 900
-- Flight: **five Trebles**, rebuilt one every 24s. The roster's largest flight and its
-  weakest craft: 90 HP, 45 m/s, 12 damage a 2.2s cycle, PR-4 like the hull that built them —
-  very many, cheap and slow, which is the navy's whole line
+- Flight: **five Trebles**, rebuilt one every 24s. The roster's largest flight, 90 HP each at
+  45 m/s and 12 damage a 2.2s cycle, PR-4 like the hull that built them — very many, cheap
+  and slow, which is the navy's whole line
 - Effect: none beyond the flight. Five of them make 27 damage a second, and the point is
   where they make it: below the Shelf line a Succentor's flight is the only thing in the
   roster shooting at all except a Dredge and whatever is renting a band
