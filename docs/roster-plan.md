@@ -960,7 +960,9 @@ and all three repairs together still order one deck. Four leads are open, none m
 
 - **Yard contention.** With the escort lifted, *no free yard* becomes the largest blocked row
   for the Consortium (50%) and the Commune (75%), and reaches 38% for the Knights, whose Slipway
-  stands in all thirty matches.
+  stands in all thirty matches. The row also counts observations before the rung stood, and the
+  first two navies' Slipway stands in only 20 and 16 of those thirty, so part of each share is
+  no yard at all rather than a busy one.
 - **The saving floor.** `RUNG.SAVE_FROM` is a number the freeze covers, but the Sower and the
   Bower already bid past it without moving it, as a bid with no window.
 - **A bid behind a shut escort.** The deck could save while its army is small and buy only
