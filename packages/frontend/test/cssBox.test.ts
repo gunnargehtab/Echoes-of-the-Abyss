@@ -755,6 +755,15 @@ describe('cssBox: whether a word too long for its box may be broken', () => {
     ancestors: RESULT_ANCESTRY.slice(0, -1),
   };
 
+  it('preserves authored paragraph gaps and transcript lines on the result card', () => {
+    const rule = parseCss(APP_CSS).find((rule) => rule.selector === '.mission-result-line');
+    assert.ok(rule);
+    assert.deepEqual(
+      rule.declarations.filter(([property]) => property === 'white-space'),
+      [['white-space', 'pre-wrap']]
+    );
+  });
+
   it('reads the card’s epilogue as it now ships', () => {
     const verdict = wordBreaking(parseCss(APP_CSS), EPILOGUE);
     assert.equal(
@@ -779,10 +788,10 @@ describe('cssBox: whether a word too long for its box may be broken', () => {
     // this axis reached it.
     const CELL =
       '.mission-result-line {\n  margin: 0;\n  font-size: 0.72rem;\n  line-height: 1.75;\n' +
-      '  letter-spacing: 0.02em;\n  color: var(--text-bright);\n  overflow-wrap: anywhere;\n}\n';
+      '  letter-spacing: 0.02em;\n  color: var(--text-bright);\n  white-space: pre-wrap;\n  overflow-wrap: anywhere;\n}\n';
     const WITHOUT =
       '.mission-result-line {\n  margin: 0;\n  font-size: 0.72rem;\n  line-height: 1.75;\n' +
-      '  letter-spacing: 0.02em;\n  color: var(--text-bright);\n}\n';
+      '  letter-spacing: 0.02em;\n  color: var(--text-bright);\n  white-space: pre-wrap;\n}\n';
     assert.equal(APP_CSS.split(CELL).length - 1, 1, 'the epilogue’s rule is unique');
 
     const stripped = APP_CSS.replace(CELL, WITHOUT);

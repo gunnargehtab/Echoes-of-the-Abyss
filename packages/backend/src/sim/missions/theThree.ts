@@ -493,6 +493,8 @@ export const CHORD_THE_THREE: MissionDefinition = {
     {
       id: 'the-room',
       text: 'The Choirmaster reads alone. The room is dry and the cases are sealed a season at a time.',
+      gloss:
+        'Keep an escort within 600 m of your tender so it can reach the sealed room at 2,900 m.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       markerId: 'the-room',
@@ -510,6 +512,8 @@ export const CHORD_THE_THREE: MissionDefinition = {
     {
       id: 'the-hush',
       text: 'The chord is where the house keeps its silence. The escort is silent in it: eight, and nothing struck.',
+      gloss:
+        'Keep the three escort hulls in Silent Running at SIG 8 or less; the 12:00 count excludes the tender.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       // `quiet` reads the peak emitted SIG over the named role and never
@@ -568,7 +572,7 @@ export const CHORD_THE_THREE: MissionDefinition = {
       atTick: T(3),
       kind: 'say',
       speaker: 'Chapter-wright Aldis Fenn, for the house',
-      text: 'The Choirmaster is heard. The house is in tune and the Chord was corrected this season. Nothing is struck.',
+      text: 'The Choirmaster is heard. The house is glad to hear the voice you kept here as an apprentice in 178, Choirmaster. The house is in tune and the Chord was corrected this season. Nothing is struck.',
       note: 'The house acknowledges an arrival it has already heard, which is the courtesy running the correct way round. The wrights corrected the lattice this season regardless of what the Chapter-Master who built it now wants, and Fenn says so without knowing or caring that it is an argument',
     },
     {

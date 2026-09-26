@@ -259,7 +259,7 @@ early is bitten for it, which is the shape §3's ledger rewards and this table c
 
 **The mission's one act is a finding, filed once, worth nothing, and read out.**
 
-At the close the ground files what it saw. It has two things it can file, and the player decides
+At the close the ground files what it heard. It has two things it can file, and the player decides
 which by where they put their hulls in the last minute:
 
 - **One of Intake 11 is entered on the shallow-band roll.** A hull is taken to the foot of the
@@ -580,8 +580,8 @@ sentences.
 >
 > Nine of twelve is a muster. The Undermarshalcy does not round up.
 >
-> At the close the ground files what it saw. It is not asked for a number. It is asked what it
-> saw.
+> At the close the ground files what it heard. It is not asked for a number. It is asked what it
+> heard.
 
 ### Objective readings, in play
 

@@ -39,6 +39,15 @@ const allSlots = (board: CampaignBoard) => [
 ];
 
 describe('the shape of the board', () => {
+  it('introduces Korrin through an observable conflict, not her private belief', () => {
+    const attending = buildBoard(nothingPlayed).columns.find(
+      (column) => column.campaign === 'attending'
+    )!;
+    assert.match(attending.commander, /Korrin calls the cohorts down/);
+    assert.match(attending.commander, /Cantorate decides whether to follow/);
+    assert.doesNotMatch(attending.commander, /believes|literal|cannot say/);
+  });
+
   it('renders campaign.md §1s count: one prologue and four columns of seven', () => {
     const board = buildBoard(nothingPlayed);
     assert.equal(board.columns.length, 4);

@@ -666,9 +666,9 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
       revealAtTick: RELEASE,
       predicate: { kind: 'extract', role: 'seed', region: 'the-rim-furrow', count: 3 },
       reading: {
-        met: 'Three of the column were in it when the basin woke, at three thousand metres on the lip, and it holds them.',
+        met: 'At least three of the column stood in the furrow after the basin woke. The count was met.',
         unmet:
-          "It's planted and nobody stayed. We'll say the count at home and we'll say where they were when we said it.",
+          "The furrow's count was not met. We'll say the count at home and we'll say where they were when we said it.",
       },
     },
     {
@@ -1127,17 +1127,17 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
    * comes up the lanes a tide later, because she cannot be heard from the rim.
    *
    * None of the three is the good ending and the register does not say which
-   * was right: a sown furrow with people in it, a sown furrow with nobody in
-   * it, and no furrow are each read as what they are. The sentence Marr should
+   * was right: a sown furrow whose count was met, one whose count was not,
+   * and no furrow are each read as what they are. The sentence Marr should
    * not say aloud is inside the *Complete* reading, because that is the reading
    * it costs the most in.
    */
   epilogue: {
     [MissionOutcome.Complete]:
-      "The deep's seeded. Thirty-three are under a bed at three thousand metres on the lip and it holds them, and the concern went home the slow way, and the Order measured its crystal, and the watch heard the bed and entered it in an account that isn't ours, and by this time tomorrow the arrangement that kept those below from ever having to fight is over, and the people it's over for first are the ones in the furrow, by household, with two more tides of this week still to come down on them. I opposed it. I ordered nobody. Both of those are still true and I'd like the record to show they were the same thing. There isn't a record.",
+      "The deep's seeded. The furrow held at least three seed hulls when the count was met, and the concern went home the slow way, and the Order measured its crystal, and the watch heard the bed and entered it in an account that isn't ours, and by this time tomorrow the arrangement that kept those below from ever having to fight is over, and the people it's over for first are the ones who stood in the furrow, by household, with two more tides of this week still to come down on them. I opposed it. I ordered nobody. Both of those are still true and I'd like the record to show they were the same thing. There isn't a record.",
     [MissionOutcome.Partial]:
-      "It's planted and it's empty. A garden nobody tends is a claim, and we've made one, at the bottom of the Rift, on ground everybody else calls something, and the column's on its way up through three navies' ears to tell us. This is a result. Sefa will say it's the seeding; Juno will say it's where the guns weren't; and we're saying it's the first thing we've ever owned.",
+      "It's planted, but the furrow's count wasn't met. A garden is a claim, and we've made one, at the bottom of the Rift, on ground everybody else calls something. This is a result. Sefa will say it's the seeding; Juno will say it's where the guns weren't; and we're saying it's the first thing we've ever owned.",
     [MissionOutcome.Lost]:
-      "Nothing was planted. The rim is what it was, and the column's under a bed on it with the Kell seed still aboard, and somebody down there decided that, and it wasn't us, because we can't hear them. We've said we're still turning it for two hundred years. This is the first time it's been said at the bottom.",
+      "Nothing was planted. The rim is what it was, and the count below says what was heard and what wasn't. We've said we're still turning it for two hundred years. This is the first time we've tried it at the bottom.",
   },
 };

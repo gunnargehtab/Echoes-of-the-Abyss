@@ -393,6 +393,6 @@ export const LEDGER_ITEM_NINE: MissionDefinition = {
     [MissionOutcome.Partial]:
       'The session closes short of its own procedure, which the minutes record and the registry queries. The reading below stands regardless.',
     [MissionOutcome.Lost]:
-      'The session did not close. The Underway has held every sitting since the concern was chartered, and the registry opens a file on the first exception in two hundred and fourteen years.',
+      'The session did not close. The Underway has held every sitting since the concern was chartered, and the registry opens a file on the interruption.',
   },
 };

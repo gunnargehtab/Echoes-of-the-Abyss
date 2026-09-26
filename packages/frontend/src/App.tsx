@@ -37,7 +37,7 @@ import { ControlsScreen } from './menu/ControlsScreen.tsx';
 import { SettingsScreen } from './menu/SettingsScreen.tsx';
 import { TitleScreen } from './menu/TitleScreen.tsx';
 import { storedMissionId } from './net/GameClient.ts';
-import { hasPlayed, seenScenes } from './progression/store.ts';
+import { hasPlayed, seenScenes, witnessedConclusions } from './progression/store.ts';
 import { loadSettings } from './settings/store.ts';
 
 const GameCanvas = lazy(() =>
@@ -224,7 +224,13 @@ function App() {
           onBack={toTitle}
         />
       )}
-      {screen.kind === 'record' && <RecordScreen hasPlayed={hasPlayed} onBack={toCampaign} />}
+      {screen.kind === 'record' && (
+        <RecordScreen
+          hasPlayed={hasPlayed}
+          conclusions={witnessedConclusions()}
+          onBack={toCampaign}
+        />
+      )}
       {screen.kind === 'briefing' && (
         <BriefingScreen
           missionId={screen.missionId}

@@ -188,6 +188,10 @@ everything — that is most of what a Board is. One reading frames the close; be
 record's own line states the ending the player chose, and the nine items' entries and gaps
 assemble the minutes.
 
+The unreachable Lost fallback reads: *The session did not close. The Underway has held every
+sitting since the concern was chartered, and the registry opens a file on the interruption.*
+It claims no duration: the concern was chartered in 19 PC, not at the start of the calendar.
+
 | The record | Condition | The line beneath the close |
 | --- | --- | --- |
 | **Unsealed** | The chair transmitted — the flight was held at Classification, even once, even briefly | "Item Nine is unsealed. Every array in the Holding holds a copy, and a copy cannot be reclassified; the continuance dies of being moot. The Board will require a new chair by the first tide. The registry does not price what the seat bought, and the seat did not ask it to." |
@@ -358,7 +362,7 @@ have kept since Face Six.
 | The decision — the tolerance as a latch, and the chair's words fired by it | **Built** (#272; #282's conditional beats, [mission-exposure.md](mission-exposure.md) §13). The ping's three-second self-reveal at the chamber's ranges holds the flight at Classification for longer than the record needs, which the mission's own tests state against the shared model rather than assume |
 | The two endings, unranked — one outcome, two records | **Built** on readings-per-objective ([mission-shift-change.md](mission-shift-change.md) §13): the session's close is a single conclusion outcome, and the ending is the record's own line beneath it — neither branch graded, exactly as [campaign.md](campaign.md) §9 requires |
 | A conclusion close with no failure state | **Built** (#252's arrangement — Tend's carve-out, stated in `missions.test.ts`) |
-| Campaign progression — this ending recorded anywhere after the room empties | **Not built.** The close reads the ending and nothing keeps it: the progression and unlock rows of #212, which every ending document will lean on and none of them owns |
+| Campaign progression — this ending recorded anywhere after the room empties | **Built** as [witnessed conclusions](ui-ux.md#witnessed-conclusions). The Record keeps each distinct full closing reading under this mission, so the unsealing and the continuance remain separately readable without ranking either. This is a record of what was witnessed, not a change carried into another mission's world or roster |
 | In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line. The chair's transmission line was hailed in the concern's beat and read, and in a *voice* it was the row's largest unpaid item. **Paid** (#403): [audio-direction.md](audio-direction.md) §13's cast signs every line with its speaker, and the chair's is one particular machine — the concern's beat at 54 Hz and 3.2 syllables a second, the lowest and slowest in the register ([characters.md](characters.md)) — so when the chair transmits, the ear is told *the chair* before the log is read. The Registry's *Entered.* that follows is the grid's plain hail, which is what a registry is |
 
 ---

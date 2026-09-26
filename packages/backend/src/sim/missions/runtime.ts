@@ -367,6 +367,8 @@ export class MissionRuntime {
    * with the tide, and the course bend below is the only feedback in play.
    */
   private filed = false;
+  /** Scenes heard on the channel, latched by the same beat that queues the line. */
+  private readonly heardScenes = new Set<string>();
   /** Windows whose course has already bent toward something heard. */
   private readonly bentWindows = new Set<number>();
   /**
@@ -1062,6 +1064,7 @@ export class MissionRuntime {
           voice,
           speakerId: beat.speakerId ?? speakerOf(beat.speaker, voice),
         });
+        if (beat.scene !== undefined) this.heardScenes.add(beat.scene);
         return;
       }
       case 'resolve':
@@ -1756,14 +1759,14 @@ export class MissionRuntime {
       // not announce half of itself.
       this.ring(this.lastWorld, () => true, ability.durationTicks);
     }
-    if (ability.line !== undefined) {
-      const voice = ability.line.voice ?? voiceOf(this.definition.playerFaction);
+    for (const line of ability.lines ?? []) {
+      const voice = line.voice ?? voiceOf(this.definition.playerFaction);
       this.lines.push({
         tick: this.lastWorld.tick,
-        speaker: ability.line.speaker,
-        text: ability.line.text,
+        speaker: line.speaker,
+        text: line.text,
         voice,
-        speakerId: ability.line.speakerId ?? speakerOf(ability.line.speaker, voice),
+        speakerId: line.speakerId ?? speakerOf(line.speaker, voice),
       });
     }
     return true;
@@ -2274,17 +2277,17 @@ export class MissionRuntime {
     // what was heard (docs/mission-shift-change.md §8; types.ts, `reading`).
     const lines = [...this.objectiveReadings(), ...this.transcript()];
     const transcript = lines.length === 0 ? '' : `\n\n${lines.join('\n')}`;
+    const scenes = new Set(this.heardScenes);
+    if (this.filed && this.definition.sweep?.scene !== undefined) {
+      scenes.add(this.definition.sweep.scene);
+    }
     this.resolution = {
       outcome,
       epilogue: this.definition.epilogue[outcome] + filedReading + transcript,
       objectives,
-      // Latched off the same condition as the reading above, and never off a
-      // separate one: the scene the client remembers is exactly the sentence
-      // the player was just shown (docs/campaign.md §1).
-      scenes:
-        this.filed && this.definition.sweep?.scene !== undefined
-          ? [this.definition.sweep.scene]
-          : [],
+      // Every stamp accompanies a line actually given, on the channel or at
+      // the close. Neither arrival nor the outcome is a witness condition.
+      scenes: [...scenes],
       spent: this.spentCadre(),
     };
   }

@@ -130,11 +130,17 @@ export interface Progression {
    * that as nothing spent.
    */
   spent: Record<string, Record<string, true>>;
+  /** Verbatim resolved readings, in first-received order, never ranked by outcome. */
+  conclusions: Record<string, string[]>;
 }
 
 /** An empty history — what a first boot, a cleared browser or a bad read gives. */
 export function emptyProgression(): Progression {
-  return { version: 1, missions: {}, scenes: {}, drift: {}, spent: {} };
+  return { version: 1, missions: {}, scenes: {}, drift: {}, spent: {}, conclusions: {} };
+}
+
+function isReading(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
 }
 
 function isOutcome(value: unknown): value is MissionOutcome {
@@ -223,7 +229,22 @@ function sanitise(raw: unknown): Progression {
     spent[campaign] = kept;
   }
 
-  return { ...record, version: 1, missions, scenes, drift, spent } as Progression;
+  const storedConclusions =
+    typeof record.conclusions === 'object' &&
+    record.conclusions !== null &&
+    !Array.isArray(record.conclusions)
+      ? record.conclusions
+      : {};
+  // Older histories contain only an outcome: it cannot reconstruct either
+  // branch of an unranked ending. Keep valid readings without inventing any.
+  const conclusions = Object.fromEntries(
+    Object.entries(storedConclusions)
+      .filter(([, readings]) => Array.isArray(readings))
+      .map(([id, readings]) => [id, [...new Set((readings as unknown[]).filter(isReading))]])
+      .filter(([, readings]) => readings.length > 0)
+  ) as Record<string, string[]>;
+
+  return { ...record, version: 1, missions, scenes, drift, spent, conclusions } as Progression;
 }
 
 export function loadProgression(): Progression {
@@ -301,6 +322,19 @@ export function recordMissionResult(result: MissionResultPayload): Progression {
     scenes,
     drift,
     spent,
+    conclusions: isReading(result.epilogue)
+      ? {
+          ...current.conclusions,
+          [result.missionId]: [
+            ...new Set([
+              ...(Object.prototype.hasOwnProperty.call(current.conclusions, result.missionId)
+                ? current.conclusions[result.missionId]
+                : []),
+              result.epilogue,
+            ]),
+          ],
+        }
+      : current.conclusions,
   };
 
   try {
@@ -314,6 +348,19 @@ export function recordMissionResult(result: MissionResultPayload): Progression {
 /** What is remembered about one mission, or `undefined` if it is unplayed. */
 export function missionRecord(missionId: string): MissionRecord | undefined {
   return loadProgression().missions[missionId];
+}
+
+export interface WitnessedConclusion {
+  missionId: string;
+  readings: readonly string[];
+}
+
+/** No catalogue join here: a removed mission must not take its readings with it. */
+export function witnessedConclusions(): WitnessedConclusion[] {
+  return Object.entries(loadProgression().conclusions).map(([missionId, readings]) => ({
+    missionId,
+    readings,
+  }));
 }
 
 /**

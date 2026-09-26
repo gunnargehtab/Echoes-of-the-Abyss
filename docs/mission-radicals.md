@@ -963,9 +963,14 @@ the water is going to be heard.
 
 **Bloomwright Sefa Anholt, at the arch's foot — 08:30**
 
-> That's the arch. Fourteen came out through the lock in the spring and we've come in through
-> it, and we'd have come this way whatever it cost, and we'd like that heard before the next
-> part. The next part's the basin. Nobody's ever asked the basin anything on purpose.
+> That's the arch. The court sent its flight toward this lock in the spring, and we've come
+> in through it. We never had their count. We'd have come this way whatever it cost, and we'd
+> like that heard before the next part. The next part's the basin. Nobody's ever asked the
+> basin anything on purpose.
+
+Anholt names the court's route, not its survivors: the prologue may end with all, some or
+none of the prisoners out. The same line holds for every outcome without giving her a
+record she never received or changing this mission according to campaign history.
 
 **The watch, on the first hull in the far water — fired by the tally**
 

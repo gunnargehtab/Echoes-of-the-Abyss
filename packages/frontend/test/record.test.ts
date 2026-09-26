@@ -58,6 +58,35 @@ describe('what a history enters', () => {
     );
   });
 
+  it('withholds the First Chord’s history throughout an Order-first campaign', () => {
+    const history = [PROLOGUE_SORROWGATE_HEADER.id];
+    const order = MISSION_HEADERS.filter((header) => header.campaign === 'chord').sort(
+      (a, b) => a.ordinal - b.ordinal
+    );
+    assert.equal(order.length, 7);
+    for (const mission of order) {
+      history.push(mission.id);
+      const pages = readRecord(only(...history));
+      const arrangement = pages.find(({ page }) => page.id === 'the-long-arrangement')!;
+      assert.equal(arrangement.entered, false, mission.id);
+      assert.ok(
+        !pages
+          .filter(({ entered }) => entered)
+          .flatMap(({ page }) => page.entries)
+          .join(' ')
+          .includes('178 PC'),
+        mission.id
+      );
+    }
+    assert.ok(entered(only(...history)).includes('the-present-crisis'));
+    for (const campaign of ['ledger', 'seeding', 'attending']) {
+      assert.ok(
+        entered(only(...history, idOf(campaign, 1))).includes('the-long-arrangement'),
+        campaign
+      );
+    }
+  });
+
   it('enters the Present Crisis when the rim has been reached, from any side', () => {
     const rim = MISSION_HEADERS.filter((h) => h.mapId === 'mouth-rim');
     assert.equal(rim.length, 5);

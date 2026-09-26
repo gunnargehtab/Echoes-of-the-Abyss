@@ -1539,8 +1539,8 @@ describe('the register a line is spoken in', () => {
         if (beat.voice === undefined) continue;
         assert.ok(VOICES.has(beat.voice), `${mission.id}: "${beat.speaker}" speaks in no register`);
       }
-      const line = mission.commanderAbility?.line;
-      if (line?.voice !== undefined) {
+      for (const line of mission.commanderAbility?.lines ?? []) {
+        if (line.voice === undefined) continue;
         assert.ok(VOICES.has(line.voice), `${mission.id}: the commander's line is in no register`);
       }
     }
@@ -1604,8 +1604,7 @@ describe('who is speaking', () => {
         speakerId: beat.speakerId ?? speakerOf(beat.speaker, voice),
       });
     }
-    const line = mission.commanderAbility?.line;
-    if (line !== undefined) {
+    for (const line of mission.commanderAbility?.lines ?? []) {
       const voice = line.voice ?? own;
       lines.push({
         speaker: line.speaker,

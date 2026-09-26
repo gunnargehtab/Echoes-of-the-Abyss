@@ -271,6 +271,14 @@ export interface MissionBriefingVariant {
 }
 
 /**
+ * The same closure heard at 04:00 from either side of the Fourth Trench.
+ * Separate stamps keep a replay on one side from claiming the other hearing.
+ * Earned by the spoken line, not by completing Baffle or The Dome (§12).
+ */
+export const FOURTH_CLOSURE_CONVOY = 'fourth-closure-convoy';
+export const FOURTH_CLOSURE_PICKET = 'fourth-closure-picket';
+
+/**
  * The sweep heard the Marr Plateau's gardens working, and filed them —
  * docs/mission-tend.md §8, the *filed* reading.
  *
@@ -451,6 +459,18 @@ export const LEDGER_BAFFLE_HEADER: MissionHeader = {
     'The picket will announce the closure. It will be correct. Proceed.',
     'Forty-one berths are on the yard’s complement. The plant you are hauling is the line item above them. Exposure is authorised. Sentiment is not. Signed for the Board.',
   ],
+  briefingVariants: [
+    {
+      scene: FOURTH_CLOSURE_PICKET,
+      briefing: [
+        'The Deep Yard’s plant fails in twenty minutes of transit time. The replacement is crated and the escort is funded. The long route misses the arithmetic by two tides. This writ takes the short one.',
+        'The Fourth Trench is closed to chartered freight while the exchange inquiry runs. The concern has reviewed the closure and finds it is not the concern’s. No transit request has been filed: a request enters the yard’s condition into the inquiry’s record, and that exposure is priced above yours. You are advised of the pricing so that nobody mistakes it for an oversight.',
+        'Two baffle stations are moored at the chartered lay-bys. Advance station to station. Fight at the mouths, where the bubble bends the water your way; do not fight in the open corridor, which is theirs from end to end and carries everything. The escort carries the survey array. Transmit once, late, and commit on what it returns. The trench will hear the transmission. The trench hears everything; that is what a trench is.',
+        'The closure has been heard from the picket’s side: what enters is being counted, not threatened. This writ purchases a transit, not an exemption from their count. The picket will announce the closure. It will be correct. Proceed.',
+        'Forty-one berths are on the yard’s complement. The plant you are hauling is the line item above them. Exposure is authorised. Sentiment is not. Signed for the Board.',
+      ],
+    },
+  ],
 };
 
 export const LEDGER_EXPOSURE_HEADER: MissionHeader = {
@@ -585,10 +605,10 @@ export const SEEDING_TEND_HEADER: MissionHeader = {
    * writing.
    */
   briefing: [
-    "We're not going to tell you what to do today. That isn't the arrangement, and today of all days the arrangement is the point.",
-    "The bloom is ready on the north gardens and the share wants bringing in — we think three loads is a day. The west lane's jellies have walked in the current again, the way they do, and the lane is louder than we like it. And Teel's landing took the storm badly last tide. We have bread that remembers being grain. Somebody could carry it over, if they were going that way.",
-    'The concern is running the drop today, charting. They call it a survey, and it is one. What their instruments hear, their ledgers keep, and a garden in a ledger is halfway to being an asset. When the sweep comes up the lane, the plateaus go still. Nobody orders that. Watch how everybody does it anyway.',
-    "Nothing out there means you harm. We'd like the day back the way we're lending it to you: quiet, fed, and unfiled.",
+    "We're not going to tell you what to do today. That isn't the arrangement, and on this tide the arrangement is the point.",
+    "The bloom is ready on the north gardens and the share wants bringing in — we think three loads is a tide. The west lane's jellies have walked in the current again, the way they do, and the lane is louder than we like it. And Teel's landing took the storm badly last tide. We have bread that remembers being grain. Somebody could carry it over, if they were going that way.",
+    'The concern is running the drop today, charting. They call it a survey, and it is one. What their instruments hear, their ledgers keep, and a garden in a ledger is halfway to being an asset. When the sweep comes up the lane, the plateaus go still. Nobody orders that. We can hear everybody doing it anyway.',
+    "Nothing out there means you harm. We'd like the tide back the way we're lending it to you: quiet, fed, and unfiled.",
   ],
 };
 
@@ -917,6 +937,20 @@ export const ATTENDING_THE_DOME_HEADER: MissionHeader = {
     'What is heard is entered. What is not heard is not entered, and the gap is entered too.',
     'Three of four attend. The Undermarshalcy does not round up.',
   ],
+  briefingVariants: [
+    {
+      scene: FOURTH_CLOSURE_CONVOY,
+      briefing: [
+        'The dome is open. The trench is attended. Nothing is expected of the picket but sufficiency, and sufficiency is not a small thing to be expected of.',
+        'The Fourth is closed while the exchange inquiry is open, and has been closed for three tides. The closure has been heard from the convoy’s side: what enters is being counted, not threatened. A relief convoy is at the north staging under a writ that has not been filed. It will enter the trench. The count is entered from this side now; the convoy’s need and the closure are not entered as answers to one another.',
+        'Four hulls stand the two watches. They are seated where the watches have always been seated, and they are not required to move. A watch that is stood into may engage. A watch that yields the water and counts has also attended, and the record does not grade the two.',
+        'Six of the cohort are at the foot, under the dome, and are not the picket. The array is lent — the Cantorate lends its ears, and its ears are worth more to a cohort hull than to the hulls the Undermarshalcy has paid most for — and it is withdrawn while the picket is loud. That is written down. It has always been written down.',
+        'The survey array is aboard and it is live. It is not sealed and it is not recommended. A transmission at the foot is a question put to water that has not been asked one, and what is in that water is not the Undermarshalcy’s to describe.',
+        'What is heard is entered. What is not heard is not entered, and the gap is entered too.',
+        'Three of four attend. The Undermarshalcy does not round up.',
+      ],
+    },
+  ],
 };
 
 export const ATTENDING_INTAKE_HEADER: MissionHeader = {
@@ -941,7 +975,7 @@ export const ATTENDING_INTAKE_HEADER: MissionHeader = {
     'Intake 11 is mustered. The year is at the top of the water it was made for, which is the customary place to find out whether that is true.',
     'Twelve hulls are given to the ground. The band is two hundred and forty-five, and it is rendered from what lives on the walls. What lives on the walls is quieter than the year is and hears better than the year does, and it will not come to you. The Directorate is not brought its living. The Directorate goes and gets it.',
     'Nine of twelve is a muster. The Undermarshalcy does not round up.',
-    'At the close the ground files what it saw. It is not asked for a number. It is asked what it saw.',
+    'At the close the ground files what it heard. It is not asked for a number. It is asked what it heard.',
   ],
 };
 
@@ -1655,10 +1689,9 @@ export interface MissionResultPayload {
    * no scene.
    *
    * **This adds no information to the wire, and that is the test it had to
-   * pass.** A scene is latched from something the epilogue already states in
-   * words: `marr-plateau-filed` is emitted exactly when the sweep's *filed*
-   * reading is appended to the count, so the player has read the fact on the
-   * result screen before the client stores its id. What crosses here is a
+   * pass.** A scene is latched from a line already given: `marr-plateau-filed`
+   * accompanies the sweep's *filed* reading at the close; the Fourth Trench's
+   * side-specific stamps accompany its spoken closure announcement. What crosses here is a
    * machine-readable spelling of a sentence that was already shown, never a
    * fact the mission withheld — the same standard the progression record holds
    * itself to (`progression/store.ts`).

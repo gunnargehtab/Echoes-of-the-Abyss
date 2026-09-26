@@ -333,6 +333,25 @@ register is defined in [culture.md](culture.md) §3.
 > Forty-one berths are on the yard's complement. The plant you are hauling is the line item
 > above them. Exposure is authorised. Sentiment is not. Signed for the Board.
 
+### If the closure was heard from the picket
+
+The default above is read unless the record holds `fourth-closure-picket`: the
+Picket-Speaker's **04:00** line below, heard while playing [The Dome](mission-the-dome.md).
+Completing that mission without hearing the line does not qualify. Replace only the fourth
+paragraph, leaving the writ's orders and every other paragraph unchanged:
+
+> The closure has been heard from the picket's side: what enters is being counted, not
+> threatened. This writ purchases a transit, not an exemption from their count. The picket
+> will announce the closure. It will be correct. Proceed.
+
+The same line here earns `fourth-closure-convoy` when its `say` beat fires, not on arrival
+or mission completion; the close carries that stamp even if the relief is lost. A replay
+adds no second copy. Each header reads only the other side's stamp, so repeating this
+mission alone does not select its alternate. Nothing about the Call, the deep water, or
+the eventual delivery is inferred from hearing a closure. This is recognition of an
+encounter, not a ruling on whose claim prevails. The in-mission lines and mechanics do
+not vary.
+
 ### Objective readings, in play
 
 - *Deliver the plant to the yard's berth. The arithmetic closes at the whistle.*
@@ -382,6 +401,7 @@ What exists against this document and what does not, continuing the Ledger's lis
 | A mobile Baffle Barge | **Not built, and not needed here.** [systems-echo.md](systems-echo.md) §8 calls the Barge mobile; `structures.ts` holds every structure static, and this mission moors its two at the lay-bys — which is what the freight charter always did. A Barge that advances with a push remains a roster gap, named so nobody reads this mission as having closed it |
 | A picket that *answers* what it hears | **Not built.** The watches walk authored legs and engage what stands into range; nothing scripted reacts to being resolved or to resolving. The beat-fired-by-condition row of [mission-aptitude.md](mission-aptitude.md) §13 is the shape such a picket would need, and mission 4's recall is where the Ledger first spends it |
 | In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
+| The paired closure briefing | **Built** — §12's alternate reads the picket-side stamp from *The Dome*. The common 04:00 `say` stamps this convoy-side hearing only when it fires; the existing scene record carries it at the close, independently of outcome |
 | **A pack under its band** | **Landed** (#420) — `baffle.ts` drives the pack at 1,600 m, and [bestiary.md](bestiary.md) §4 gives the Draymaw 500–1,300. §4's rider settles it without moving the literal: the band is where the Drift lives, not where a beat may send it, and a driven pack holds the depth it was given for its commitment and climbs home when that lapses. §5's roster row says so |
 
 ---

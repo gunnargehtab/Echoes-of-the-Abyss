@@ -19,7 +19,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { MissionOutcome, SIM } from '@echoes/shared';
+import { FOURTH_CLOSURE_CONVOY, MissionOutcome, SIM } from '@echoes/shared';
 import { defineQuery, hasComponent } from 'bitecs';
 import { Owner, Structure, Unit, Weapon } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
@@ -41,6 +41,8 @@ interface Run {
   resolvedAtTick: number;
   outcome: MissionOutcome | null;
   epilogue: string | null;
+  scenes: readonly string[];
+  lines: { tick: number; text: string }[];
 }
 
 let memo: Run | null = null;
@@ -74,8 +76,10 @@ function run(): Run {
   const stationsBefore = stations();
   let stationsAfter = stationsBefore;
   let resolvedAtTick = 0;
+  const lines: Run['lines'] = [];
   for (let tick = 0; tick <= T(20, 30); tick++) {
     match.update(STEP_MS);
+    lines.push(...match.takeMissionLines());
     if (tick === T(13, 10)) stationsAfter = stations();
     if (match.missionOver !== null) {
       resolvedAtTick = match.world.tick;
@@ -92,6 +96,8 @@ function run(): Run {
     resolvedAtTick,
     outcome: match.missionOver?.outcome ?? null,
     epilogue: match.missionOver?.epilogue ?? null,
+    scenes: match.missionOver?.scenes ?? [],
+    lines,
   };
   return memo;
 }
@@ -124,5 +130,11 @@ describe('the writ, run out — docs/mission-baffle.md §7, §8, §9', () => {
       Math.abs(closeS - 20 * 60) <= 1,
       `the writ closed at ${closeS.toFixed(1)}s against the authored 1200s`
     );
+  });
+
+  it('carries the convoy hearing from the spoken closure even when the relief is lost', () => {
+    assert.deepEqual(run().scenes, [FOURTH_CLOSURE_CONVOY]);
+    const line = run().lines.find((line) => line.text.startsWith('The trench is closed'));
+    assert.equal(line?.tick, T(4));
   });
 });

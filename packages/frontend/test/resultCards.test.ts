@@ -295,7 +295,10 @@ describe('the mission result: a partial run is a result', () => {
   it('reads the court’s own words back, whole and unedited', async () => {
     // The authored epilogue is the whole report. The heading above it is
     // chrome, so a mission's voice is never competing with the client's.
-    const result = payload();
+    const result = payload({
+      epilogue:
+        'The reading is entered.\n\nA second paragraph is kept.\n\nVoice: First line.\nHouse: Second line.',
+    });
     const { view } = await missionResult(result);
     try {
       assert.equal(view.byClass('mission-result-line').props.children, result.epilogue);

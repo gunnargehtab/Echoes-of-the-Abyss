@@ -620,8 +620,14 @@ The Commune cannot command, so its objectives arrive as statements of what the t
 
 > All of them. Now, please.
 >
-> — and then, quietly, to nobody: "It was always going to be a tide like this one. I used to
-> think that meant I'd know."
+**Tidespeaker Ysolde Marr, quietly, to nobody — on the same act**
+
+> It was always going to be a tide like this one. I used to think that meant I'd know.
+
+The command and the aside are two consecutive mission-log entries, emitted on the same
+simulation tick when the bell is rung. The second entry carries the direction in its
+speaker attribution, never in its spoken text; both retain Marr's voice identity.
+Neither entry waits for audio, pauses the mission, or fires if the act is refused.
 
 **Tidespeaker Ysolde Marr, at the tide's turn — 19:00**
 

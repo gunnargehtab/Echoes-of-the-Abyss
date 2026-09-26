@@ -44,11 +44,14 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { SIM, UnitKind, type EchoSnapshot, type MissionView } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { missionMapById } from '../src/sim/maps/index.ts';
 import { PROLOGUE_SORROWGATE, type MissionObjective } from '../src/sim/missions/index.ts';
+import { CHORD_NINETEEN } from '../src/sim/missions/nineteen.ts';
+import { CHORD_THE_THREE } from '../src/sim/missions/theThree.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 /**
@@ -97,6 +100,56 @@ let breached: MissionView[] | null = null;
 const breachRun = (): MissionView[] => (breached ??= viewsThroughABreach());
 
 describe('the gloss beside a mission’s own reading', () => {
+  for (const mission of [CHORD_NINETEEN, CHORD_THE_THREE]) {
+    it(`${mission.id}: puts the operational references on the first view, beside their readings`, () => {
+      const match = new Match(missionMapById(mission.mapId)!, {
+        mission,
+        fauna: false,
+        seed: SEED,
+      });
+      const doc = readFileSync(new URL(`../../../${mission.doc}`, import.meta.url), 'utf8');
+      for (let tick = 0; tick < SIM.TICK_HZ / SIM.ECHO_HZ; tick++) match.update(STEP_MS);
+      const view = match.takeMissionView();
+      assert.ok(view, 'the first Echo pass must carry the orders');
+      const glossed = view.objectives.filter((row) => row.gloss !== undefined);
+      assert.equal(glossed.length, mission === CHORD_NINETEEN ? 1 : 2);
+      for (const row of glossed) {
+        const authored = mission.objectives.find((objective) => objective.id === row.id)!;
+        assert.equal(row.text, authored.text, 'the reference never replaces the dramatic reading');
+        assert.equal(row.gloss, authored.gloss);
+        assert.ok(doc.includes(row.gloss!), 'the reference is transcribed from the mission doc');
+      }
+      if (mission === CHORD_NINETEEN) {
+        const gloss = glossed[0].gloss!;
+        for (const term of [
+          '1,750 m',
+          'assigned hull',
+          '400 m horizontally',
+          'bow-on',
+          '20 s',
+          'SIG 80',
+          'restarts',
+        ]) {
+          assert.ok(gloss.includes(term), `the committal reference must answer: ${term}`);
+        }
+        assert.ok(
+          mission.soundings?.every(
+            (s) => s.radiusM === 400 && s.holdTicks === 20 * SIM.TICK_HZ && s.sig === 80
+          )
+        );
+      } else {
+        assert.match(
+          glossed.find((row) => row.id === 'the-room')!.gloss!,
+          /600 m.*your tender.*2,900 m/
+        );
+        assert.match(
+          glossed.find((row) => row.id === 'the-hush')!.gloss!,
+          /three escort hulls.*Silent Running.*SIG 8.*12:00.*excludes the tender/
+        );
+      }
+    });
+  }
+
   it('sends only strings the mission authored, chosen and never assembled', () => {
     // The anti-reveal property, in the form that is a property of the shape
     // rather than of the author's care: every gloss on the wire is byte-equal

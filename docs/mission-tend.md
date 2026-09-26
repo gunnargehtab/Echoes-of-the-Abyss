@@ -383,21 +383,21 @@ Spoken by Tidespeaker Ysolde Marr at dawn tide. The Commune's register is define
 genuinely harder to parse than an order would be. [campaign.md](campaign.md) §10 says that is
 the point, and this document agrees in writing.
 
-> We're not going to tell you what to do today. That isn't the arrangement, and today of all
-> days the arrangement is the point.
+> We're not going to tell you what to do today. That isn't the arrangement, and on this tide
+> the arrangement is the point.
 >
 > The bloom is ready on the north gardens and the share wants bringing in — we think three
-> loads is a day. The west lane's jellies have walked in the current again, the way they do,
+> loads is a tide. The west lane's jellies have walked in the current again, the way they do,
 > and the lane is louder than we like it. And Teel's landing took the storm badly last tide.
 > We have bread that remembers being grain. Somebody could carry it over, if they were going
 > that way.
 >
 > The concern is running the drop today, charting. They call it a survey, and it is one. What
 > their instruments hear, their ledgers keep, and a garden in a ledger is halfway to being an
-> asset. When the sweep comes up the lane, the plateaus go still. Nobody orders that. Watch
-> how everybody does it anyway.
+> asset. When the sweep comes up the lane, the plateaus go still. Nobody orders that. We can
+> hear everybody doing it anyway.
 >
-> Nothing out there means you harm. We'd like the day back the way we're lending it to you:
+> Nothing out there means you harm. We'd like the tide back the way we're lending it to you:
 > quiet, fed, and unfiled.
 
 ### Objective readings, in play
@@ -405,7 +405,7 @@ the point, and this document agrees in writing.
 The Commune cannot command, so its objectives arrive as statements of what the day holds, and
 the player learns to hear the ask inside them:
 
-- *The share wants bringing in. We think three loads is a day.*
+- *The share wants bringing in. We think three loads is a tide.*
 - *The jellies would sit better off the lane. It's loud work; the water's ours for another
   hour.*
 - *Teel's landing is short of bread. We're not asking. We're saying it's short.*
@@ -433,7 +433,7 @@ the player learns to hear the ask inside them:
 **Tidespeaker Ysolde Marr, at the tide's end — 16:00**
 
 > The reading of the day, per §8, and then one sentence she should not say aloud and does:
-> "We held a whole day, once, and nobody had to be brave in it. That used to be the ordinary
+> "We held a whole tide, once, and nobody had to be brave in it. That used to be the ordinary
 > kind."
 
 Each line fails [culture.md](culture.md) §3 for the other three factions, which is that

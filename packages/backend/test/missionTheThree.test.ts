@@ -696,6 +696,19 @@ describe('the objective, as docs/mission-the-three.md §8 chooses it', () => {
 });
 
 describe('the beats, as docs/mission-the-three.md §9 clocks them', () => {
+  it('lets a first-time escort hear why the house knows Sull, without giving the Three a voice', () => {
+    const run = play(undefined, T(3, 1));
+    const recognition = run.lines.filter((line) => line.text.includes('as an apprentice'));
+    assert.equal(recognition.length, 1);
+    assert.equal(recognition[0].tick, T(3));
+    assert.equal(recognition[0].speaker, 'Chapter-wright Aldis Fenn, for the house');
+    assert.match(recognition[0].text, /voice you kept here as an apprentice in 178, Choirmaster/);
+    for (const tag of ['cell-one', 'cell-two', 'cell-three']) {
+      assert.equal(emitter(tag).reading, undefined, 'the Three still have no readable testimony');
+    }
+    assert.ok(!run.lines.some((line) => /technician|The Three/.test(line.speaker)));
+  });
+
   it('speaks seven times on the clock and once on a tally, in ascending order', () => {
     // §13: eight lines, seven on the clock and one on a tally — six said, the
     // close read, and Fenn's line when the Choirmaster reaches the room.
@@ -735,7 +748,7 @@ describe('the beats, as docs/mission-the-three.md §9 clocks them', () => {
         ],
         [
           'Chapter-wright Aldis Fenn, for the house',
-          'The Choirmaster is heard. The house is in tune and the Chord was corrected this season. Nothing is struck.',
+          'The Choirmaster is heard. The house is glad to hear the voice you kept here as an apprentice in 178, Choirmaster. The house is in tune and the Chord was corrected this season. Nothing is struck.',
         ],
         [
           'Voice Ren Kalliso, to nobody in particular',

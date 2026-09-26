@@ -19,6 +19,8 @@ import assert from 'node:assert/strict';
 import {
   DRIFT,
   DRIFT_REGION_COUNT,
+  FOURTH_CLOSURE_CONVOY,
+  FOURTH_CLOSURE_PICKET,
   MARR_PLATEAU_FILED,
   MISSION,
   MISSION_HEADERS,
@@ -143,6 +145,24 @@ describe('the public mission catalogue', () => {
     }
   });
 
+  it('keeps Tend’s briefing auditory and its working interval a tide', () => {
+    const briefing = missionHeaderById('seeding-tend')!.briefing!.join('\n');
+    assert.ok(briefing.includes('We can hear everybody doing it anyway.'));
+    assert.ok(briefing.includes('we think three loads is a tide'));
+    assert.ok(briefing.includes('and on this tide the arrangement is the point'));
+    assert.ok(briefing.includes("We'd like the tide back the way we're lending it to you"));
+    assert.doesNotMatch(
+      briefing,
+      /Watch how|three loads is a day|today of all days the arrangement|like the day back/
+    );
+  });
+
+  it('asks Intake’s ground what it heard in both places', () => {
+    const briefing = missionHeaderById('attending-intake')!.briefing!.join('\n');
+    assert.equal(briefing.match(/what it heard/g)?.length, 2);
+    assert.doesNotMatch(briefing, /what it saw/);
+  });
+
   it('varies the briefing on a scene, and never the mission', () => {
     // docs/campaign.md §1's rule, at the level the catalogue can hold it: the
     // selector reads a header and a set of scene ids and returns paragraphs.
@@ -171,6 +191,29 @@ describe('the public mission catalogue', () => {
       if (mission.briefing !== null) continue;
       assert.equal(mission.briefingVariants, undefined, `${mission.id}: withheld, yet varies`);
       assert.equal(missionBriefing(mission, new Set([MARR_PLATEAU_FILED])), null);
+    }
+  });
+
+  it('recognises the Fourth closure only after hearing it from the other side', () => {
+    const cases = [
+      ['ledger-baffle', FOURTH_CLOSURE_CONVOY, FOURTH_CLOSURE_PICKET],
+      ['attending-the-dome', FOURTH_CLOSURE_PICKET, FOURTH_CLOSURE_CONVOY],
+    ] as const;
+    for (const [id, ownScene, otherScene] of cases) {
+      const header = missionHeaderById(id)!;
+      const before = structuredClone(header);
+      for (const history of [[], [id], [ownScene], [MARR_PLATEAU_FILED], ['unknown-scene']]) {
+        assert.deepEqual(missionBriefing(header, new Set(history)), header.briefing, id);
+      }
+      const seen = missionBriefing(header, new Set([otherScene]));
+      assert.deepEqual(seen, header.briefingVariants![0].briefing);
+      assert.notDeepEqual(seen, header.briefing);
+      assert.deepEqual(
+        missionBriefing(header, new Set([ownScene, otherScene, otherScene])),
+        seen,
+        'both sides and replays keep the same recognition'
+      );
+      assert.deepEqual(header, before, 'selection never edits the mission header');
     }
   });
 
@@ -206,6 +249,8 @@ describe('the public mission catalogue', () => {
     const cases: readonly [string, number][] = [
       ['seeding-thin-water', 3],
       ['seeding-convocation', 2],
+      ['ledger-baffle', 3],
+      ['attending-the-dome', 1],
     ];
     for (const [id, index] of cases) {
       const header = missionHeaderById(id);
