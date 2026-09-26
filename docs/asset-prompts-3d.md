@@ -363,7 +363,9 @@ tergite is judged as the wide thing it is.
 a pentagon, a six-sided horn a hexagonal crystal: a shape the navy cuts at any size, listed
 in its `sections`, and the rule never rounds it. But the measure cannot tell a six-facet
 horn from a six-facet silo, so a listed count keeps *every* prism, pipe, ring and tube at
-that count in the navy, and a navy lists one only where every ring at it is its own — each
+that count in the navy, and a navy lists one only where every ring at it is its own — or
+lists it with the parts it is on, `{ turn, parts }`, matched as tokens of the node's name,
+where one count is a shape on a beak and a builder's default on a seam tube. Each
 paragraph below names what its sections keep. A section never exempts an orb or a
 capsule, which are round by what they are: a six-round lamp bud is a coarse circle, not a
 hexagon, and the rule judges it.
@@ -389,8 +391,8 @@ law that relates the two classes and the one the pass can argue against with a s
 | Navy | Facet edge | Floor | Ceiling | Step | Sections | Hull panel | Structure panel |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Consortium | 2.5 m | 6 | 16 | 2 | 4 | 0.75–2 m | 2–5.5 m |
-| Commune | 1.5 m | 5 | 24 | 1 | — | 1.5–5 m | 4–13.5 m |
-| Directorate | 2.0 m | 5 | 21 | 2 from 1 | 5 | 1–3 m | 2.5–8 m |
+| Commune | 1.5 m | 5 | 18 | 1 | — | 1.5–5 m | 4–13.5 m |
+| Directorate | 2.0 m | 5 | 17 | 2 from 1 | 5; 4 on named parts | 1–3 m | 2.5–8 m |
 | Knights | 3.0 m | 4 | 12 | 2 | 4, 6 | 2–6 m | 5.5–16 m |
 
 What the rule yields, facets a turn at the radii a hull is made of:
@@ -398,8 +400,8 @@ What the rule yields, facets a turn at the radii a hull is made of:
 | Radius | 0.5 m | 1 m | 1.5 m | 2 m | 3 m | 4 m | 5 m | 6 m | 10 m |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Consortium | 6 | 6 | 6 | 6 | 8 | 10 | 12 | 16 | 16 |
-| Commune | 5 | 5 | 6 | 8 | 13 | 17 | 21 | 24 | 24 |
-| Directorate | 5 | 5 | 5 | 7 | 9 | 13 | 15 | 19 | 21 |
+| Commune | 5 | 5 | 6 | 8 | 13 | 17 | 18 | 18 | 18 |
+| Directorate | 5 | 5 | 5 | 7 | 9 | 13 | 15 | 17 | 17 |
 | Knights | 4 | 4 | 4 | 4 | 6 | 8 | 10 | 12 | 12 |
 
 Read across, the table is four languages, and the first thing it says is the law's own
@@ -419,8 +421,12 @@ and carry even counts only; the Commune grows, and a grown ring has however many
 it grew; the Directorate grows regimented, and carries odd counts only — the one lattice on
 which no facet has a facet opposite it. The ceilings are judgements on one criterion — the
 coarsest polygon a navy's largest bodies may show in silhouette at the rim — ordered as the
-edges are, 12, 16, 21, 24, every one under three's default of 32 radial segments, which is
-the smooth render Block 1 refuses; the law names no angle, and none is claimed. The floors
+edges are, 12, 16, 17, 18, the Commune's where gate 6 puts it ("What the rule costs",
+below) and the Directorate's under it for the order, every one under three's default of 32
+radial segments, which is the smooth render Block 1 refuses; the law names no angle, and
+none is claimed. A navy reaches its ceiling where its curve does — the Commune at 4.18 m of
+radius, the Directorate at 5.09, the Order at 5.25 and the Consortium at 5.97 — and above
+that every rim it cuts is the same polygon. The floors
 are what the smallest parts land on, since at a metre and a half of edge or more the rule
 rounds everything under half a metre of radius to the floor: a six-plate drum, a five-fold
 stalk, a five-sided spine, a four-facet blade.
@@ -481,8 +487,9 @@ the rule replaces. Any count, so the step is one: no jig closes a grown ring in 
 the Bower's and the Blight's stalks are seven-sided on purpose. Five is the floor, the
 living number — five petals, five arms, the Harvester's tendrils — the count a stalk shares
 with a Directorate spine under a metre and a third of radius, the lattice above it being
-where the two part. Twenty-four is the ceiling, the roundest rim in the roster, and it is
-twenty-four rather than thirty for gate 6 ("What the rule costs", below). No sections,
+where the two part. Eighteen is the ceiling, the roundest rim in the roster, and it is
+eighteen rather than twenty-four or thirty for gate 6 ("What the rule costs", below): the
+navy's structures are orbs, and an orb's triangles go as the square of its count. No sections,
 because nothing grown is a prism; a quill is a thorn, cut on the floor. The rule does not
 reach a table: the Light Scout's, the Corvette's, the Harvester's and the Cruiser's bodies
 are `grownBody` orbs whose every vertex is their export's own, and re-cutting one is a
@@ -503,33 +510,36 @@ on the hull's axis with a vertex to starboard, as the kit's `cyl` lays it, it mi
 to keel and never port to starboard, the law's own axis — "asymmetric, yet regimented" in
 one shape — and both approved hulls with a dorsal rank cut every spine five-sided. The pass
 lays every odd ring so and never turns one a quarter facet, which would put a vertex on
-the crown and mirror it across the keel line. Five is the floor. Twenty-one is the ceiling,
-set between the Consortium's sixteen and the Commune's twenty-four on the odd lattice. The
-one section is five, and it keeps a count: every five-sided spike at any size — the spine
-is a pentagon the way the Order's spar is a diamond, where the lattice alone would cut the
-Bastion's anchor claws at seven metres of base to twenty-one — and with them nine
-pentagonal torus rings and tubes on the structures, the Bastion's seam rings, lips and
+the crown and mirror it across the keel line. Five is the floor. Seventeen is the ceiling,
+over the Consortium's sixteen and under the Commune's eighteen on the odd lattice. It was
+twenty-one until the Commune's came down for gate 6: at twenty-one this navy fit the
+budget, 106.7 k of the 145 k for its own force on screen ("What the rule costs"), and it
+came down for the order alone, since a ceiling over the roundest navy's would say a shell
+is rounder than a pod. Two sections. Five keeps a count: every five-sided spike at any size
+— the spine is a pentagon the way the Order's spar is a diamond, where the lattice alone
+would cut the Bastion's anchor claws at seven metres of base to seventeen — and with them
+nine pentagonal torus rings and tubes on the structures, the Bastion's seam rings, lips and
 pipes, the Turret's collar and the Foundry's launch mouth, which pass as pentagons. Four is
-not a section here, and that is a call still open (#919), so this is what it costs.
-Dropping it re-cuts 118 rings: the Corvette's and the Light Scout's rostra and the
-Cruiser's head shield, which the module's own `wedgeRostrum` cuts four-sided; the
-Submersible's rostrum, the Cruiser's sixteen dorsal spikes and the Submersible's nine
-(`spikes`, at four); the Harvester's six teeth, seven
-skirt tips and two claw tips; the Refinery's eight teeth; eight mandibles; the Verger's
-eight hatch dogs; seven ridges, four nubs, the Lure's plectrum, the Turret's three
-antennae, the Foundry's four finials and the Slipway's three cables — and twenty-eight
-square tubes on seams, collars, barbs and flanges. The module's `rostrum` cuts the navy's
-own hulls' beaks at six and eight and is not touched. Ninety-four of the 118 go to the
-floor, a five-sided point for a four-sided one; twenty-four go above it, the beaks furthest
-— the Corvette's rostrum to thirteen, the Light Scout's to eleven, the Cruiser's head
-shield to twenty-one, the Bastion's four dock mandibles to thirteen and the Foundry's two
-launch mandibles to eleven — with the finials, three dorsal spikes and eight tubes at
-seven. A square beak becoming a near-round cone is the change to weigh. Three readings:
-keep four as a section beside five, which keeps the seam tubes and cables with it; drop it,
-this table, on which the Verger's dogs and the Lure's plectrum at five are more the navy
-than they were; or a section keyed by count and by part — four on a rostrum, a spike, a
-tooth, a mandible, a dog, and on nothing else — which `keeps` does not read yet and would
-take a dozen lines. The owner picks before the pass builds the Directorate. The keels'
+a section by count and by part, the third of the three readings #919 put to the owner:
+`{ turn: 4, parts: [...] }` names a `rostrum`, a `head_shield`, a `spike`, a `dspike`, a
+`tooth`, a `mandible` and a `dog`, and `keeps` reads them as tokens of the node's name, so
+`dspike_p3` is a `dspike` and `tergite_spine_0` is no `spike`. Of the navy's 118 four-sided
+rings it keeps 59: the Corvette's and the Light Scout's rostra and the Cruiser's head
+shield, which the module's own `wedgeRostrum` cuts four-sided; the Submersible's rostrum,
+the Cruiser's sixteen dorsal spikes and the Submersible's nine, which `spikes` cuts; the
+Harvester's six mill teeth and the Refinery's eight; the Submersible's two mandibles, the
+Bastion's four and the Foundry's two; and the Verger's eight hatch dogs. The other 59 were
+a builder's default and go to the rule: the Corvette's five ridges and the Light Scout's two, the
+Harvester's four nubs, seven skirt tips and two claw tips, the Turret's three antennae, the
+Lure's plectrum, the Foundry's four finials, the Slipway's three cables, and twenty-eight
+square tubes on the Refinery's silo seams, the Foundry's tergite and stern seams and the
+Turret's barbs, skirt and flange — forty-seven to the floor, a five-sided point or pipe for
+a four-sided one, and twelve to seven, the finials, seven of the Foundry's seam tubes and
+the Turret's skirt. A square beak stays a square beak at any size — the Cruiser's head
+shield at 11.5 m of radius, where the rule says seventeen — which is what the reading was
+chosen for; four on every part would have kept the tubes and cables with the beaks, and no
+section would have made the beaks near-round cones, the Corvette's rostrum a thirteen.
+The keels'
 seven is a builder's default on four hulls and not a
 section; the plates' twelve is one count on every size of tergite, and an even one; both
 are the rule's to re-cut. Panels run one to three metres, argued from what the measure
@@ -569,16 +579,22 @@ fin, a spar — and the seams "the Order builds nothing bare" adds, centred on t
 3.9.
 
 **What the rule costs.** Gate 6 ([graphics-standards.md](graphics-standards.md) §6) allows
-the own force on screen — five hulls and a dozen structures — 250 k triangles, and an orb's
-triangles go as the square of its count. Estimated by scaling each round part's triangles
-by its new count over its old, ring by ring, the table costs: Consortium hulls 53 k → 41 k
-and structures 17 k → 21 k; Commune hulls 48 k → 66 k and structures 35 k → 108 k;
-Directorate hulls 30 k → 50 k and structures 27 k → 52 k; Order hulls 10 k → 8 k and
-structures 16 k → 13 k.
-The Commune's ceiling is the one number that moved for it: at thirty its eight structures
-came to about 144 k, the Foundry alone 7 k → 32 k, which with a dozen on screen is the whole
-gate; at twenty-four they are 108 k. Nothing else moves for the budget, and the pass
-measures the real figure with the probe rather than this estimate.
+the conn view 250 k triangles on screen and reserves 105 k of them for the environment
+props, so the own force — five hulls and a dozen structures — has 145 k, and an orb's
+triangles go as the square of its count. Every round part rebuilt with its own constructor
+at the count the rule gives it, the table costs: Consortium hulls 53.3 k → 41.1 k and
+structures 16.6 k → 20.8 k; Commune hulls 47.6 k → 52.5 k and structures 35.2 k → 75.1 k;
+Directorate hulls 30.0 k → 41.2 k and structures 26.6 k → 40.7 k; Order hulls 9.9 k → 8.0 k
+and structures 15.8 k → 12.4 k; the fourteen props, under no rule, 4.3 k. The own force
+the gate names, taken as a navy's eight structures, four more Turrets and its five largest
+hulls, comes to 43.7 k for the Consortium, 126.6 k for the Commune, 80.5 k for the
+Directorate and 19.2 k for the Order. The Commune's ceiling is the number gate 6 moved: at
+twenty-four that dozen and five were 181.0 k, its eight structures alone 110.5 k, over the
+budget; at twenty they were 142.4 k, within 3 k of it; at eighteen 126.6 k, with 18 k in
+hand, the Slipway 7.8 k → 16.6 k and the Foundry 7.3 k → 14.8 k the costliest; at sixteen
+107.0 k. The Directorate's followed it for the order alone, from twenty-one, where its own
+force was 106.7 k and under the budget. Nothing else moves for the budget, and the pass
+measures the real figure with the probe rather than this rebuild.
 
 **The baseline, and the pass.** Measured by `node tools/hull-models/facets.mjs` on
 `9502d0e`, before any of it is applied (the ring totals below are the measure's before it
@@ -594,9 +610,9 @@ read capsules; it reads them since `a36b87e`):
 The table above was derived from the law and the reference hulls, never from that baseline
 — where a paragraph above quotes a reference hull's cut, it is corroboration — and where the
 two disagree the law wins. So the rule names 789 of the Consortium's 1,119 rings off it —
-581 of the 787 on hulls, the drums that carry one count on every radius — 1,092 of the
-Commune's 1,240 (456 of the 526 on hulls, seven of them the four ported `grownBody` bodies
-the pass leaves), 1,068 of the Directorate's 1,418 (569 of the 681 on hulls), and 251 of
+581 of the 787 on hulls, the drums that carry one count on every radius — 1,085 of the
+Commune's 1,240 (457 of the 526 on hulls, seven of them the four ported `grownBody` bodies
+the pass leaves), 1,019 of the Directorate's 1,418 (524 of the 681 on hulls), and 251 of
 the Order's 616, fourteen of them on hulls, since an Order hull is sections almost through.
 Outside the bands: eight Consortium hulls (the five shared kinds, the Chorister and the
 Tender at 2.3–3.9 m, and the Beacon at 0.5) and five structures; two Commune hulls (the
