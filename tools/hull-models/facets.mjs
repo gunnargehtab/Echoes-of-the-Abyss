@@ -29,9 +29,10 @@
  * (docs/asset-prompts-3d.md Block 2c): a facet's target edge in metres, a
  * floor and a ceiling, a step every count is a multiple of, and the counts
  * that are sections rather than circles — a four-sided spar is a square, and
- * no chord rule should round it. `facetsFor` is the rule, one line, and the
- * pass that follows the table builds through it. A navy that exports no
- * `facets` is measured and not judged.
+ * no chord rule should round it — each on every part or, as
+ * `{ turn, parts }`, on the parts it names. `facetsFor` is the rule, one
+ * line, and the pass that follows the table builds through it. A navy that
+ * exports no `facets` is measured and not judged.
  *
  * **Panel density** is how finely the chart sees a model's surface divided:
  * the unlit parts that own at least a quarter of a square metre from above
@@ -350,18 +351,42 @@ async function rulesOf(navy) {
 const ORBS = new Set(['sphere round', 'sphere meridian', 'capsule round', 'capsule meridian']);
 
 /**
+ * Whether `part` — a node's name, as `measureAll` carries it on the ring —
+ * is one a `{ turn, parts }` section names: the name is read as tokens
+ * between underscores, so `dspike_p3` and `hatch_s0_dog` are a `dspike` and
+ * a `dog`, `tergite_spine_0` is not a `spike`, and `head_shield` is the two
+ * tokens together.
+ */
+function isPart(parts, part) {
+  return parts.some((p) => new RegExp(`(^|_)${p}(_|$)`).test(part ?? ''));
+}
+
+/**
  * Whether a ring keeps its navy's rule. A section count is its own shape and
  * always does — on a spar, a pipe, a ring's tube, never on an orb: a sphere
  * or a capsule is round by what it is, so a six-round lamp bud is a coarse
- * circle and not a hexagon. A ring over part of a turn is held to the rule's
- * count for a whole turn, prorated over its arc: a sphere's meridian closes
- * in half a turn, so its facets a turn are always even, and an odd rule
- * judged a turn at a time would call half of every navy's orbs wrong forever.
+ * circle and not a hexagon. A section is a count on every part, or
+ * `{ turn, parts }`, the count on the parts it names alone: the measure
+ * cannot tell a square beak from a square seam tube, and a navy that cuts
+ * one as a shape and the other as a default keys the section by part
+ * (#919). A ring over part of a turn is held to the rule's count for a
+ * whole turn, prorated over its arc: a sphere's meridian closes in half a
+ * turn, so its facets a turn are always even, and an odd rule judged a turn
+ * at a time would call half of every navy's orbs wrong forever.
  */
-export function keeps(rule, r) {
-  if (!ORBS.has(r.kind) && rule.sections?.includes(r.turn)) return true;
+export function keeps(rule, r, part = r.part) {
+  if (!ORBS.has(r.kind) && isSection(rule.sections, r.turn, part)) return true;
   return r.n === Math.max(ORB_FLOOR[r.kind] ?? 1, facetsFor(rule, r.radiusM, r.arc));
 }
+
+function isSection(sections = [], turn, part) {
+  return sections.some((s) =>
+    typeof s === 'number' ? s === turn : s.turn === turn && isPart(s.parts, part)
+  );
+}
+
+/** A `sections` entry for the report: `5`, or `4 on rostrum/spike/…`. */
+const sectionLabel = (s) => (typeof s === 'number' ? `${s}` : `${s.turn} on ${s.parts.join('/')}`);
 
 const BANDS = [
   ['< 0.5 m', 0, 0.5],
@@ -399,7 +424,9 @@ function report(navy, models, rules, listParts) {
   const { facets, panels } = rules;
   if (facets) {
     const off = rings.filter((r) => !keeps(facets, r));
-    const sections = facets.sections?.length ? `, sections ${facets.sections.join('/')}` : '';
+    const sections = facets.sections?.length
+      ? `, sections ${facets.sections.map(sectionLabel).join(', ')}`
+      : '';
     console.log(
       `  rule: ${facets.chordM} m a facet, ${facets.min}–${facets.max}, step ${facets.step ?? 1}` +
         `${facets.offset ? ` from ${facets.offset}` : ''}${sections}` +

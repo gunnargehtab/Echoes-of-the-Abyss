@@ -191,18 +191,24 @@ export const ink = {
  * detail is on its boxes rather than in its curves. At the rim a Consortium
  * drum is a rectangle bent round in a few flat plates, which is what the
  * approved Bulwark shows: its turret ring is sixteen-sided at 12 m of radius
- * and its shrouds twelve at 5 m, and this edge keeps both, brings its ballast
- * from twelve to ten, and cuts its guns and stacks — ten-sided at 1.7–2.6 m,
- * the finest thing on the hull — to the six-plate drum a small vessel is.
- * Six is the least a drum reads as a drum rather than a box, and the Klaxon's
- * boxes are boxes. Sixteen is the ceiling, a judgement on silhouette ordered
- * with the other three navies' ceilings as the law orders their curves: a
- * sixteen-gon is still a polygon at the rim, the turret ring and the
- * barbette carry it, and the shared kinds' pressure vessels, ballast drums
- * and shrouds and the Derrick's deck scuff carry 18 to 28 above it, for the
- * pass to bring under (docs/asset-prompts-3d.md Block 2c). Plates go on
+ * and its shrouds twelve at 5 m, and this edge keeps the shrouds, brings the
+ * ring to fourteen and its ballast from twelve to ten, and cuts its guns and
+ * stacks — ten-sided at 1.7–2.6 m, the finest thing on the hull — to the
+ * six-plate drum a small vessel is. Six is the least a drum reads as a drum
+ * rather than a box, and the Klaxon's boxes are boxes. Fourteen is the
+ * ceiling, ordered with the other three navies' ceilings as the law orders
+ * their curves: the even step under the Directorate's fifteen, which is the
+ * odd step under the Commune's sixteen, where gate 6 puts the roundest
+ * navy's (`pelagia.mjs`). It was sixteen, the turret ring's own count, until
+ * the Commune's came down; a fourteen-gon is still a polygon at the rim, the
+ * move puts eleven rings off the rule that sixteen kept (the turret ring,
+ * the Derrick's barbette ring, the Beacon's four drum hoops, five rims on the
+ * Bio-reactor and the Vent-tap), and the shared kinds' pressure vessels,
+ * ballast drums and shrouds and the Derrick's deck scuff carry 18 to 28
+ * above it, for the pass to bring under
+ * (docs/asset-prompts-3d.md Block 2c). Plates go on
  * in pairs, so the step is two: on an even count the crown and the keel are
- * alike — both the middle of a plate at 6, 10, 14, both a seam at 8, 12, 16 —
+ * alike — both the middle of a plate at 6, 10, 14, both a seam at 8 and 12 —
  * and the two flanks mirror; on an odd count neither is the middle of
  * anything and the drum reads as leaning, which is the Directorate's
  * language and not this one. The hulls' drums carry even counts and no odd
@@ -229,7 +235,7 @@ export const ink = {
  * structure is dressed 2.7× coarser than a hull, since a structure's pads are
  * not a hull's plates (Block 2c says what it rests on).
  */
-export const facets = { chordM: 2.5, min: 6, max: 16, step: 2, sections: [4] };
+export const facets = { chordM: 2.5, min: 6, max: 14, step: 2, sections: [4] };
 export const panels = { hull: [0.75, 2], structure: [2, 5.5] };
 
 /** The body: a flat-sided slab from a plan outline, with a bow face and transom. */

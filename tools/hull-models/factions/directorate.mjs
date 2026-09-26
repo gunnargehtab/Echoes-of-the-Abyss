@@ -300,21 +300,28 @@ export const ink = {
  * never turned a quarter facet, which would put a vertex on the crown and
  * mirror it across the keel line) — and both approved hulls with a dorsal
  * rank cut every spine five-sided (`dorsalSpines`). Five is the floor.
- * Twenty-one is the ceiling: a judgement on silhouette, set between the
- * Consortium's sixteen and the Commune's twenty-four because a chitin shell
- * is rounder at the rim than rolled plate and harder than a pod, on the odd
- * lattice. The one section is five, and a section keeps a count and not a
- * shape: it keeps every five-sided spike at any size — the spine is a
- * pentagon the way the Order's spar is a diamond, where the lattice alone
- * would cut the Bastion's anchor claws at seven metres of base to twenty-one
- * — and with them nine pentagonal torus rings and tubes on the structures
- * (the Bastion's seam rings, lips and pipes, the Turret's collar, the
- * Foundry's launch mouth), which pass as pentagons. Four is not a section
- * here, and whether it should be is the owner's open call (#919): dropping
- * it re-cuts 118 rings, this module's own `wedgeRostrum` beaks and `spikes`
- * among them, which docs/asset-prompts-3d.md Block 2c lists with what each
- * becomes and the three readings; `rostrum` cuts the navy's own hulls' beaks
- * at six and eight and is untouched either way. The
+ * Fifteen is the ceiling: the odd step under the Commune's sixteen and over
+ * the Consortium's fourteen, because a chitin shell is rounder at the rim
+ * than rolled plate and harder than a pod. It was twenty-one until the
+ * Commune's came down to sixteen for gate 6 (`pelagia.mjs`); at twenty-one
+ * this navy fit the budget — its own force on screen 107k of about 112k —
+ * and came down for the order alone, since a ceiling over the roundest
+ * navy's says the shell is rounder than the pod.
+ * Two sections, and a section keeps a count and not a shape. Five keeps
+ * every five-sided spike at any size — the spine is a pentagon the way the
+ * Order's spar is a diamond, where the lattice alone would cut the
+ * Bastion's anchor claws at seven metres of base to fifteen — and with
+ * them nine pentagonal torus rings and tubes on the structures (the
+ * Bastion's seam rings, lips and pipes, the Turret's collar, the Foundry's
+ * launch mouth), which pass as pentagons. Four is a section by count and by
+ * part (#919): on a `rostrum`, a `head_shield`, a `spike`, a `dspike`, a
+ * `tooth`, a `mandible` and a `dog`, each a token of the node's name, so
+ * this module's own `wedgeRostrum` beaks and `spikes` keep their squares
+ * and the structures' seam tubes, cables, ridges, nubs, tips, antennae and
+ * finials cut four-sided by default go to the rule — 59 rings kept and 59
+ * re-cut, which docs/asset-prompts-3d.md Block 2c lists. `rostrum` cuts
+ * the navy's own hulls' beaks at six and eight, counts no section names,
+ * so the pass re-cuts them to the rule like any drum. The
  * keels' seven is a builder's default on four hulls and not a section, and
  * the pass re-cuts it to the rule; so are the plates' twelve, one count on
  * every size of tergite, and an even one.
@@ -334,7 +341,17 @@ export const ink = {
  * hull's at the chart's ratio of densities, 4 to 1.5 px/m, rounded to the
  * half metre — a judgement, and Block 2c says what it rests on.
  */
-export const facets = { chordM: 2, min: 5, max: 21, step: 2, offset: 1, sections: [5] };
+export const facets = {
+  chordM: 2,
+  min: 5,
+  max: 15,
+  step: 2,
+  offset: 1,
+  sections: [
+    5,
+    { turn: 4, parts: ['rostrum', 'head_shield', 'spike', 'dspike', 'tooth', 'mandible', 'dog'] },
+  ],
+};
 export const panels = { hull: [1, 3], structure: [2.5, 8] };
 
 /** A carapace orb: a low-facet sphere the caller squashes into a plate. */

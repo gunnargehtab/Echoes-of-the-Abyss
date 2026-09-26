@@ -208,3 +208,50 @@ test('a section keeps a spar\'s count and never an orb\'s', () => {
   const { 'sphere round': orb } = byKind(ringsOf(meshOf(new THREE.SphereGeometry(2, 6, 4))));
   assert.equal(keeps(rule, orb), false);
 });
+
+test('a section keyed by part keeps its count on the parts it names, read as tokens', () => {
+  const rule = {
+    chordM: 2,
+    min: 5,
+    max: 17,
+    step: 2,
+    offset: 1,
+    sections: [5, { turn: 4, parts: ['spike', 'head_shield', 'dog'] }],
+  };
+  const square = (name) => {
+    const [r] = ringsOf(meshOf(new THREE.CylinderGeometry(0, 1.5, 6, 4), { name }));
+    return { ...r, part: name };
+  };
+  // The count on a named part, whatever its suffix or its place in the name.
+  assert.equal(keeps(rule, square('spike')), true);
+  assert.equal(keeps(rule, square('spike_dorsal_2')), true);
+  assert.equal(keeps(rule, square('hatch_s0_dog')), true);
+  assert.equal(keeps(rule, square('head_shield')), true);
+  // A token, not a substring: a spine is not a spike, and a dspike is its own name.
+  assert.equal(keeps(rule, square('tergite_spine_0')), false);
+  assert.equal(keeps(rule, square('dspike_p3')), false);
+  assert.equal(keeps(rule, square('silo_1_seam')), false);
+  assert.equal(keeps(rule, square('unnamed')), false);
+  // The part is the ring's, or passed; a ring with no part is judged by the rule alone.
+  const [bare] = ringsOf(meshOf(new THREE.CylinderGeometry(0, 1.5, 6, 4)));
+  assert.equal(keeps(rule, bare), false);
+  assert.equal(keeps(rule, bare, 'spike_flank_p1'), true);
+  // The count, not the part: a spike of seven at this radius is the rule's, and off it.
+  const [seven] = ringsOf(meshOf(new THREE.CylinderGeometry(0, 1.5, 6, 7), { name: 'spike' }));
+  assert.equal(keeps(rule, { ...seven, part: 'spike' }), false);
+  // A plain section still keeps its count on every part; an orb keeps neither.
+  const [five] = ringsOf(
+    meshOf(new THREE.CylinderGeometry(0, 1.5, 6, 5), { name: 'gantry_cable' })
+  );
+  assert.equal(keeps(rule, { ...five, part: 'gantry_cable' }), true);
+  const orb = byKind(ringsOf(meshOf(new THREE.SphereGeometry(1.5, 4, 4), { name: 'spike' })));
+  assert.equal(keeps(rule, { ...orb['sphere round'], part: 'spike' }), false);
+  // The Directorate lists four so: its beaks keep it, its seam tubes and cables do not.
+  const d = RULES.directorate;
+  assert.equal(keeps(d, square('rostrum')), true);
+  assert.equal(keeps(d, square('dspike_s4')), true);
+  assert.equal(keeps(d, square('dock_main_mandible_0')), true);
+  assert.equal(keeps(d, square('gantry_cable_1')), false);
+  const [tube] = ringsOf(meshOf(new THREE.TorusGeometry(3, 0.4, 4, 9), { name: 'silo_1_seam' }));
+  assert.equal(keeps(d, { ...tube, part: 'silo_1_seam' }), false);
+});
