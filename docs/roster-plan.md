@@ -909,21 +909,21 @@ The duel matrix, run at the commit before this repair and after it, moved the sa
 rung — a Slipway in 28 of the Commune's 60 matches rather than 3, and rung hulls summed across
 the four columns 1.2 rather than 0.4 — and far less on the match, which is decided 107 times
 in 120 rather than 110. The table under the next heading is older than either: it was read
-at #842, before #839 and #854 changed the commander too, and `baselines/duel-matrix.md` is
-the reading after this repair.
+at #842, before #839 and #854 changed the commander too, and `baselines/duel-matrix.md` was
+the reading after this repair until #946 refreshed it.
 
 ### No navy buys its carrier, measured rather than argued (#915)
 
-Wave 8's gate is that every navy fields a hull that never fires. None does: the four-faction
-baseline's carrier table reads `Bought 0` in all four columns, and its largest blocked row is
-*not escorted* for every navy, 47% to 92% of the observations that reach the want. #915 named
-three plausible causes — the rung's saving floor, yard contention and the escort — and picked
-none.
+Wave 8's gate is that every navy fields a hull that never fires. None does: at `6db5600` the
+four-faction baseline's carrier table read `Bought 0` in all four columns, and its largest
+blocked row was *not escorted* for every navy, 47% to 92% of the observations that reach the
+want. #915 named three plausible causes — the rung's saving floor, yard contention and the
+escort — and picked none.
 
 The table could not pick either, because it asks the purse last: an observation the escort
 shuts is filed there whatever the bank held. The row *Shut before the purse, with the price in
 it* now counts the observations at which a gate in front of the purse shut while the purse held
-the price. Over the same thirty seeds it reads 190, 9, 456 and 0, and the duel matrix 825, 425,
+the price. Over the same thirty seeds it read 190, 9, 456 and 0, and the duel matrix 825, 425,
 6 and 0: no more than about 1% of any navy's observations at the want, and none for the
 Knights. That is a floor on what the gates cost and not a ceiling, since a shut gate also stops
 the deck bidding, so the bank never saved toward it.
@@ -944,12 +944,13 @@ instrumentation below turned up.
 The escort is a real hold: lifted alone, it orders nine decks in 120 navy-matches. It stays,
 because a deck without it is free to sail with no army, and "a carrier caught alone is a
 3-berth hull dying quietly" ([units.md](units.md), "The carriers"). The other two, alone,
-change nothing. The Directorate is the navy most often escorted with a yard free, and files
-24,023 observations, 36% of its own, as *cannot afford*. Instrumented over seeds 4000–4011, its
-Succentor's bid passed `holdPurse`'s account and half-price checks at 579 of 8,817 of those and
-won none, to a Lure, Corvette, Thurible, Light Scout or Verger; put first, it still buys none,
-and in the baseline its purse held the 300 nodules at 151 of them, the 60 Biomass at 3,924, and
-both at once at none. Construction holds the Knights' purse for a Sounding Spire, a Refinery, a
+change nothing. The Directorate is the navy most often escorted with a yard free, and at
+`6db5600` filed 24,023 observations, 36% of its own, as *cannot afford*. Instrumented over
+seeds 4000–4011, its Succentor's bid passed `holdPurse`'s account and half-price checks at 579
+of 8,817 of those and won none, to a Lure, Corvette, Thurible, Light Scout or Verger; put
+first, it still buys none, and in the baseline its purse held the 300 nodules at 151 of them,
+the 60 Biomass at 3,924, and both at once at none. Construction holds the Knights' purse for
+a Sounding Spire, a Refinery, a
 Vent Tap or a turret on about a third of their observations after the yard is placed, and with the
 Spire never saved for they still order none.
 

@@ -4623,9 +4623,22 @@ export class AiCommander implements AiPlayer {
       // bet yet, and a hull that dove while waiting would spend the climb
       // ascending when the order to go finally came.
       this.setCrossed(army, false, out);
-      if (nearest(army, rally) > RANGE.ARRIVE_M) {
-        out.push({ kind: 'move', unitIds: ids, x: rally.x, y: rally.y });
-      }
+      // Every hull that is not there yet, rather than the army while none of
+      // it is (#946). The gate used to be `nearest(army, rally)`, so once the
+      // first hull arrived the rest were left on whatever order they last had
+      // — and the commonest was an `attack` from the two branches above. An
+      // attack chases its target until it dies (`combat.ts`), however far it
+      // runs, so the reach those branches checked when they gave it was never
+      // checked again: the commander went back to waiting and its chasers
+      // carried on.
+      //
+      // The siege hull is `commandSiege`'s, which walks it to a wall on its
+      // own clock; recalling it here would undo that walk every observation.
+      const siege = OWN_SIEGE[this.briefing.faction];
+      const away = army
+        .filter((u) => u.kind !== siege && distance(u, rally) > RANGE.ARRIVE_M)
+        .map((u) => u.id);
+      if (away.length > 0) out.push({ kind: 'move', unitIds: away, x: rally.x, y: rally.y });
       return;
     }
 
