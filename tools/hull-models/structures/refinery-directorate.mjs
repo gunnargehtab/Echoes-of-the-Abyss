@@ -23,33 +23,40 @@
  * - The body: five tergites, violet and red by turns from the tail, each a
  *   dome with a black ridge standing proud at its aft edge, so the chart
  *   reads five plates and not one mound; a telson of three blades fanned
- *   off the tail; and an anchor leg a side off every plate, knee up and
- *   claw in the seabed — the port legs shorter and set aft, never a mirror.
+ *   flat on the seabed off the tail; and an anchor leg a side off every
+ *   plate, knee up and claw on the seabed — the port legs shorter and set
+ *   aft, never a mirror, and none to starboard off the last plate, where
+ *   the gallery passes.
  * - The silo rank: one silo stood up off each plate's crown — the same
- *   spacing, heights 80 to 132 m and never two alike — each four or five
+ *   spacing, heights 80 to 132 m and never two alike — each three to five
  *   lathed shells whose foot lips overhang the shoulder under them, turned
  *   half a facet a segment, a black five-sided crown and a crimson tip.
  *   One colour a silo, the opposite of its plate's, so the alternation runs
  *   along the rank instead of striping up each tower.
- * - The head: the crusher, a red carapace dome whose maw is cut into the
- *   shoulder facing the hopper — three of the dome's rings by two of its
- *   quads, the lit floor on `gullet_glow` a fifth of the dome's radius in,
- *   the throat in the dome's chitin, five teeth on the lower lip — between
- *   two black mandibles that reach out along the mouth's axis and hook in
- *   across it, port the larger; the rostrum runs on from the brow, three
- *   stacks with hot throats stand on the head's back, and two clusters of
- *   points, three and two, are its eyes.
+ * - The head: the crusher, a red carapace dome whose maw is cut into its
+ *   front shoulder, facing the hopper and the conn view's home camera —
+ *   three of the dome's rings by two of its quads, forward of the neck
+ *   ridge so the belt clears it; the lit floor on `gullet_glow` a fifth of
+ *   the dome's radius in, the throat in the dome's chitin, five fangs hung
+ *   from the upper lip over the belt that runs in across the lower one —
+ *   between two black mandibles that reach out along the mouth's axis and
+ *   hook in toward it without crossing it, port the larger. The rostrum
+ *   runs on from the brow, three stacks with hot throats stand on the
+ *   head's back, and two clusters of points, three and two, are its eyes,
+ *   on the crown above the mouth.
  * - The feed: the hopper raised on three legs with its mouth sunk inside
  *   the rim (`intakeMaw`, #907's), a chute from its foot onto the belt, and
  *   the gallery climbing from under it straight into the maw — a black
  *   arched rib every 15 m, crimson points on alternate crowns, five
- *   nodules riding, and a pair of jointed legs at every other rib where
- *   the bed stands high enough to want them.
+ *   nodules riding between the ribs, three lures hung over the belt, and
+ *   a pair of jointed legs at every other rib where the bed stands high
+ *   enough to want them.
  * - The light: the two mouths are the one area glow (docs/style-neon-
  *   noir.md, "a maw is not livery": both apertures, both on the throat
  *   token, the belt feeding the second from the first). "Floodlit working
- *   surfaces" are three lures — hot lamps on black stalks arched off the
- *   plates over the belt — and the stack throats are the machinery light.
+ *   surfaces" are three lures — hot lamps on black stalks off the
+ *   gallery's rails, hanging over the belt's axis — and the stack throats
+ *   are the machinery light.
  *   Livery is points: an eye-line of one bud a segment up every silo, the
  *   ridge lights and the gallery's crowns.
  *
@@ -68,7 +75,7 @@ import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
 
 const L = 280;
-const DRAWN = 280.0265655517578;
+const DRAWN = 280.0713;
 
 const red = directorate.ink.chitinRed();
 const steel = directorate.ink.weldSteel();
@@ -92,7 +99,7 @@ const PLATES = [
 ];
 directorate.refineryBody(root, { violet, red, black }, { z: Z, plates: PLATES });
 directorate.telsonBlades(root, [violet, black], {
-  at: [-118, 3.5, Z],
+  at: [-118, Z],
   blades: [
     [-0.5, 18, 0],
     [0.08, 24, 1],
@@ -107,20 +114,20 @@ const head = directorate.refineryHead(
   {
     at: [92, 0, Z],
     scale: [36, 38, 42],
-    hole: { rings: [1, 4], quads: [1, 3] },
+    hole: { rings: [1, 4], quads: [2, 4] },
     recess: 0.2,
-    teeth: { count: 5, r: 1.9, length: 7, lean: 0.55 },
+    teeth: { count: 5, r: 1.9, length: 7, lean: 0.3, lip: 'upper' },
     mandibles: [
       { name: 'mandible_p', side: 0, k: 1.15 },
       { name: 'mandible_s', side: 1, k: 0.9 },
     ],
     rostrum: { from: [1.1, Math.PI, 0.92], tip: [138, 16, Z + 3], r: 6 },
     eyes: [
-      ['eye_0', 1.3, 0.2, 0.45],
-      ['eye_1', 1.1, 0.26, 0.62],
-      ['eye_2', 0.9, 0.33, 0.76],
-      ['eye_3', 1.2, 0.24, 1.5],
-      ['eye_4', 0.9, 0.31, 1.66],
+      ['eye_0', 1.3, 0.1, 0.95],
+      ['eye_1', 1.1, 0.14, 1.07],
+      ['eye_2', 0.9, 0.18, 1.17],
+      ['eye_3', 1.2, 0.12, 1.5],
+      ['eye_4', 0.9, 0.17, 1.6],
     ],
   }
 );
@@ -161,18 +168,23 @@ const into = head.lip.clone().lerp(head.floor, 0.35);
 const toward = into.clone().setY(0).sub(new THREE.Vector3(HOPPER[0], 0, HOPPER[1])).normalize();
 directorate.feedGallery(
   root,
-  { steel, black, red, light: crimson, skins: [violet, red] },
+  { steel, black, red, light: crimson, lamp: flood, skins: [violet, red] },
   {
     from: new THREE.Vector3(HOPPER[0], 3.2, HOPPER[1]).addScaledVector(toward, -9).toArray(),
     to: into.toArray(),
-    ribs: { first: 18, pitch: 15, last: 10, tube: 0.75 },
+    ribs: { first: 26, pitch: 15, last: 10, tube: 0.75 },
     legs: { every: 2, minHip: 7, reach: [8, 17], rise: 7 },
     nodules: [
-      [0.22, 3.1, 0],
-      [0.34, 3.5, 1],
-      [0.52, 2.8, 0],
-      [0.69, 3.3, 0],
-      [0.84, 3, 1],
+      [0, 3.1, 0],
+      [1, 3.5, 1],
+      [3, 2.8, 0],
+      [4, 3.3, 0],
+      [6, 3, 1],
+    ],
+    lures: [
+      { gap: 1, side: 'p', h: 20, r: 3 },
+      { gap: 3, side: 's', h: 17, r: 2.6 },
+      { gap: 5, side: 'p', h: 22, r: 2.8 },
     ],
     clear: [...HOPPER, 17],
   }
@@ -188,17 +200,6 @@ directorate.anchorLegs(root, black, {
     ...(plate < 4 ? [{ plate, side: 's', dx: 7, k: 1 }] : []),
     { plate, side: 'p', dx: -5, k: 0.86 },
   ]),
-});
-
-// Floodlit working surfaces: three lures over the belt.
-directorate.lureStalks(root, { black, lamp: flood }, {
-  z: Z,
-  plates: PLATES,
-  lures: [
-    { plate: 1, dx: 6, h: 36, reach: 26, r: 3 },
-    { plate: 2, dx: 4, h: 30, reach: 24, r: 2.6 },
-    { plate: 3, dx: 2, h: 40, reach: 28, r: 2.8 },
-  ],
 });
 
 // Livery: rows of points along the ridges.

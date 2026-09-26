@@ -242,8 +242,8 @@ export const ink = {
    * The works' lights, one model each: `forge_light` is the Foundry's line
    * and launch glow, "the forge light across the bay and at its mouth",
    * "flooding from the bay when producing"; `floodlight_hot` the
-   * Refinery's stack tips, gantry lights, intake mouth and flood lamps,
-   * "floodlit working surfaces, visible machinery light" — one lamp
+   * Refinery's stack throats and, since #947, its lure lamps over the
+   * belt, "floodlit working surfaces, visible machinery light" — one lamp
    * colour on one base, polished to 0.3, each at its file's own strength
    * (3.698 and 3.476). The approved files' own values (#652). The
    * Refinery's maw wore it too until #907 made the maw an aperture on
@@ -2660,10 +2660,11 @@ export function telsonFan(root, skins, { name = 'telson', size, blades }) {
  * squashed by their nodes, no two alike (#649). `tolerance` is
  * `refuseMirror`'s, in the frame the placements are in. `frame` is the
  * kit's `zLong` (the default, every placement a `drawn` one) or `xLong`,
- * for the Refinery's four, whose file is X-long and whose placements are
- * the export's own (#652); a placement made by `laid` below names the
- * X-long frame itself, which is how the Bastion's sixteen — drawn the
- * Submersible's way, an orb each of its own radius — go through `place`.
+ * for an X-long file whose placements are the export's own (#652; the
+ * Refinery's four until #947 rebuilt it); a placement made by `laid` below
+ * names the X-long frame itself, which is how the Bastion's sixteen — drawn
+ * the Submersible's way, an orb each of its own radius — go through
+ * `place`.
  */
 export function photophoreDomes(root, light, opts) {
   const { r = 0.32, facets = [8, 6], domes, tolerance, frame = null } = opts;
@@ -3145,7 +3146,11 @@ export function crusherMaw({ cowl, hole, recess = 0.35, teeth = { count: 3, leng
     new THREE.Vector3(...scale)
   );
   const node3 = new THREE.Matrix3().getNormalMatrix(node);
-  const lipTheta = r1 * dTheta;
+  // `teeth.lip: 'upper'` hangs them from the upper lip instead, pointing
+  // down the meridian into the hole — fangs over whatever enters (#947,
+  // whose belt runs in across the lower lip).
+  const upper = teeth.lip === 'upper';
+  const lipTheta = (upper ? r0 : r1) * dTheta;
   const stations = Array.from({ length: teeth.count }, (_, k) => {
     const phi = (q0 + ((k + 0.5) * (q1 - q0)) / teeth.count) * dPhi;
     const base = new THREE.Vector3(...vertex(r, lipTheta, phi)).applyMatrix4(node);
@@ -3157,7 +3162,8 @@ export function crusherMaw({ cowl, hole, recess = 0.35, teeth = { count: 3, leng
     )
       .transformDirection(node)
       .normalize();
-    const axis = up.multiplyScalar(Math.cos(teeth.lean)).addScaledVector(n, -Math.sin(teeth.lean)).normalize();
+    const into = upper ? -Math.cos(teeth.lean) : Math.cos(teeth.lean);
+    const axis = up.multiplyScalar(into).addScaledVector(n, -Math.sin(teeth.lean)).normalize();
     const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), axis);
     const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
     return { at: base.addScaledVector(axis, teeth.length / 2).toArray(), rot: [e.x, e.y, e.z] };
@@ -3347,9 +3353,10 @@ export function launchMandibles(root, violet, opts) {
  * `facets` and their own `length`, each laid by its own node so that its
  * point rises out and up from a foot near the hull, skinned through `skins`
  * by the claw's number — as `clawGrips` skins the turret's, with the same
- * hole in the rank: the Refinery's run 0, 1, 2, 3, 5. Every rotation is
- * the minimal one carrying +Y onto the claw's own line, the file's node
- * transcribed. Both works carry them, so the builder takes its `frame`.
+ * hole in the rank, as the Refinery's ran 0, 1, 2, 3, 5 until #947 gave
+ * it legs (`anchorLegs`). Every rotation is the minimal one carrying +Y
+ * onto the claw's own line, the file's node transcribed. The builder
+ * takes its `frame`, the Foundry's `zLong` by default.
  */
 export function anchorClaws(root, skins, { frame = zLong, r = 0.28, facets = 5, claws }) {
   for (const c of claws) {
@@ -3359,11 +3366,12 @@ export function anchorClaws(root, skins, { frame = zLong, r = 0.28, facets = 5, 
 }
 
 /**
- * The maw's teeth: four-sided cones of one `r` and `length` over the
- * crusher's maw, `maw_tooth_${n}` each at its own station along the maw's
- * lip — hung point-down where a file places them, or since #907 on the
- * Refinery at the stations `crusherMaw` gives, rooted on the mouth's lower
- * lip and pointing up its meridian, leaned into the hole (`t.rot`).
+ * The maw's teeth: cones of one `r`, `length` and `facets` (four by
+ * default, five on the #947 Refinery) over the crusher's maw,
+ * `maw_tooth_${n}` each at its own station along the maw's lip — hung
+ * point-down where a file places them, or at the stations `crusherMaw`
+ * gives, rooted on one of the mouth's lips and leaned into the hole
+ * (`t.rot`).
  */
 export function mawTeeth(root, black, opts) {
   const { frame = xLong, r = 0.14, length = 0.8, facets = 4, teeth } = opts;
@@ -3419,6 +3427,11 @@ export function intakeTeeth(root, black, opts) {
  * ------------------------------------------------------------------------ */
 
 /** A dome: the upper half of an orb, so a plate stands on the seabed rather than in it. */
+/**
+ * A foot's end: a claw point 0.15 m across, ended 0.1 m up, so its rim
+ * meets the seabed at any rake and nothing stands under y 0.
+ */
+const [FOOT, CLAW] = [0.1, 0.15];
 const dome = (round, down) => new THREE.SphereGeometry(1, round, down, 0, Math.PI * 2, 0, Math.PI / 2);
 
 /**
@@ -3535,7 +3548,7 @@ export function siloRank(root, { red, violet, black, light }, opts) {
  * The head: the crusher, a carapace dome at `at` scaled `scale`, with the
  * maw cut into the shoulder that faces the hopper (`crusherMaw`: `hole`
  * names the cells, `recess` the floor's depth, both in the dome's own
- * frame), five black teeth on its lower lip, and a black ridge at its aft
+ * frame), black teeth on the lip `teeth.lip` names, and a black ridge at its aft
  * edge where the body's last plate meets it. Two mandibles flank the maw,
  * rooted on the shell beside the hole's sides, reaching out along the
  * mouth's axis and hooking in and down toward the belt, each tip stopping
@@ -3599,7 +3612,7 @@ export function refineryHead(root, { red, black, gullet, light }, opts) {
     const tip = centre
       .clone()
       .addScaledVector(axis, 8)
-      .addScaledVector(across, -base.distanceTo(centre) * 0.35)
+      .addScaledVector(across, -base.distanceTo(centre) * 0.7)
       .add(new THREE.Vector3(0, -5, 0));
     limbRun(root, name, [base.toArray(), elbow.toArray(), tip.toArray()], [4.4 * k, 3 * k, 0.3], black);
   });
@@ -3648,7 +3661,7 @@ export function refineryHopper(root, { violet, gullet, black, steel }, opts) {
   add(root, 'intake_chute', cyl(chute[0], chute[0] * 0.8, bottom - chute[1], 5), steel, [x, (bottom + chute[1]) / 2, z]);
   legs.forEach((a, k) => {
     const at = (r, y) => [x + r * Math.cos(a), y, z + r * Math.sin(a)];
-    limbRun(root, `hopper_leg_${k}`, [at(radii[1] + 4, bottom + 4), at(radii[0] + 6, top - 4), at(radii[0] + 12, 0.3)], [2, 1.6, 0.4], black);
+    limbRun(root, `hopper_leg_${k}`, [at(radii[1] + 4, bottom + 4), at(radii[0] + 6, top - 4), at(radii[0] + 12, FOOT)], [2, 1.6, CLAW], black);
   });
 }
 
@@ -3660,12 +3673,14 @@ export function refineryHopper(root, { violet, gullet, black, steel }, opts) {
  * (none under the hopper, where the chart cannot see one). It walks on
  * jointed legs, a pair at every `legs.every`th rib where the bed stands
  * high enough to want them, the port leg the shorter and set a rib-width
- * aft of the starboard, never mirrored. The nodules ride the belt, `[t, r,
- * skin]` at `t` of its length.
+ * aft of the starboard, never mirrored. The nodules ride the belt, `[gap,
+ * r, skin]` midway between rib `gap` and the next, and the lures hang over
+ * it (below).
  */
 export function feedGallery(root, mats, opts) {
   const { steel, black, red, light, skins } = mats;
-  const { from, to, width = 6.5, ribs, legs, nodules, clear } = opts;
+  const { from, to, width = 6.5, ribs, legs, nodules, lures = [], clear } = opts;
+  const { lamp: lampMat = light } = mats;
   const S = new THREE.Vector3(...from);
   const D = new THREE.Vector3(...to).sub(S);
   const L = D.length();
@@ -3699,17 +3714,35 @@ export function feedGallery(root, mats, opts) {
       const hip = world([x + dx, -2.4, sgn * W]);
       const out = Z.clone().multiplyScalar(sgn);
       const knee = hip.clone().addScaledVector(out, legs.reach[0] * s).add(new THREE.Vector3(0, legs.rise * s, 0));
-      const foot = hip.clone().addScaledVector(out, legs.reach[1] * s).setY(0.3);
-      limbRun(root, `conveyor_leg_${side}${k}`, [hip.toArray(), knee.toArray(), foot.toArray()], [2, 1.5, 0.4], black);
+      const foot = hip.clone().addScaledVector(out, legs.reach[1] * s).setY(FOOT);
+      limbRun(root, `conveyor_leg_${side}${k}`, [hip.toArray(), knee.toArray(), foot.toArray()], [2, 1.5, CLAW], black);
     }
   }
-  nodules.forEach(([t, r, skin], n) =>
-    add(gallery, `nodule_${n}`, new THREE.DodecahedronGeometry(r, 0), skins[skin], [t * L, 0.5 + r * 0.8, (n % 2 ? 1 : -1) * 1.4], [
-      n * 0.7,
-      n * 1.3,
-      n * 0.4,
-    ])
+  // A nodule rides midway between two ribs, `gap` the rib before it, its
+  // lowest point on the belt whichever way it tumbles.
+  nodules.forEach(([gap, r, skin], n) =>
+    add(gallery, `nodule_${n}`, new THREE.DodecahedronGeometry(r, 0), skins[skin], [
+      ribs.first + (gap + 0.5) * ribs.pitch,
+      0.5 + r,
+      (n % 2 ? 1 : -1) * 1.4,
+    ], [n * 0.7, n * 1.3, n * 0.4])
   );
+  // The lures: the Refinery's floodlights, grown — a black stalk off one
+  // rail, `{ gap, side, h, r }`, rising clear of the ribs and hooking in
+  // so its hot lamp hangs over the belt's axis, midway between two ribs:
+  // an angler's lure, the oldest light in the deep, over the working
+  // surface it lights. A lamp is a point on a stalk, never a panel
+  // (docs/style-neon-noir.md, rule 1), and it faces up, where the chart
+  // reads it.
+  lures.forEach(({ gap, side, h, r }, k) => {
+    const x = ribs.first + (gap + 0.5) * ribs.pitch;
+    const z = side === 's' ? W - 0.6 : -(W - 0.6);
+    const hip = [x, 3.2, z];
+    const bend = [x - 2, h * 0.75, z * 1.6];
+    const end = [x, h, 0];
+    limbRun(gallery, `lure_stalk_${k}`, [hip, bend, end], [1.2, 0.9, 0.6], black);
+    add(gallery, `lure_lamp_${k}`, new THREE.SphereGeometry(r, 9, 5), lampMat, [x, h + r * 0.6, 0]);
+  });
   return gallery;
 }
 
@@ -3726,27 +3759,8 @@ export function anchorLegs(root, black, { z, plates, legs, e = 0.34 }) {
     const a = sgn * (Math.PI / 2 - dx / p.s[2]);
     const hip = new THREE.Vector3(...onDome([p.x, z], p.s, a, e, 0.97));
     const knee = hip.clone().add(new THREE.Vector3(dx * 0.4, 10 * k, sgn * 12 * k));
-    const foot = hip.clone().add(new THREE.Vector3(dx * 0.7 + 3, 0, sgn * 24 * k)).setY(0.3);
-    limbRun(root, `anchor_leg_${side}${plate}`, [hip.toArray(), knee.toArray(), foot.toArray()], [2.6 * k, 2 * k, 0.4], black);
-  });
-}
-
-/**
- * The lures: the Refinery's floodlights, grown. Each `{ plate, dx, h,
- * reach, r }` is a black stalk off a plate's front flank, arching up and
- * out over the apron, with a hot lamp at its end — an angler's lure, the
- * oldest light in the deep, over the belt it lights. A lamp is a point on
- * a stalk, never a panel (docs/style-neon-noir.md, rule 1), and it faces
- * up, where the chart reads it.
- */
-export function lureStalks(root, { black, lamp: lampMat }, { z, plates, lures }) {
-  lures.forEach(({ plate, dx, h, reach, r }, k) => {
-    const p = plates[plate];
-    const hip = new THREE.Vector3(...onDome([p.x, z], p.s, Math.PI / 2 - dx / p.s[2], 0.5, 0.97));
-    const bend = hip.clone().add(new THREE.Vector3(0, h * 0.8, reach * 0.4));
-    const end = hip.clone().add(new THREE.Vector3(-4, h, reach));
-    limbRun(root, `lure_stalk_${k}`, [hip.toArray(), bend.toArray(), end.toArray()], [1.6, 1, 0.7], black);
-    add(root, `lure_lamp_${k}`, new THREE.SphereGeometry(r, 9, 5), lampMat, end.add(new THREE.Vector3(0, r * 0.6, 0)).toArray());
+    const foot = hip.clone().add(new THREE.Vector3(dx * 0.7 + 3, 0, sgn * 24 * k)).setY(FOOT);
+    limbRun(root, `anchor_leg_${side}${plate}`, [hip.toArray(), knee.toArray(), foot.toArray()], [2.6 * k, 2 * k, CLAW], black);
   });
 }
 
@@ -3763,16 +3777,18 @@ export function ridgeLights(root, light, { z, plates, lights, r = 1.2, ridge = -
 }
 
 /**
- * The telson: blades fanned off the tail, `[bearing, length, skin]` each,
- * flattened to a third of their width and lying low on the seabed.
+ * The telson: blades fanned off the tail from `at`, `[x, z]`, `[bearing,
+ * length, skin]` each, flattened to `flat` of their width and lying on the
+ * seabed.
  */
-export function telsonBlades(root, skins, { at, blades }) {
+export function telsonBlades(root, skins, { at: [x, z], blades, r = 7, flat = 0.35 }) {
   blades.forEach(([a, len, skin], k) => {
-    const base = [at[0], at[1], at[2] + 4 * a];
-    const tip = [base[0] - len * Math.cos(a), 1.2, base[2] + len * Math.sin(a) * 1.2];
-    const blade = limbRun(root, `telson_${k}`, [base, tip], [7, 0.4], skins[skin]);
-    // Flattened about the blade's root, so it lies on the seabed as a plate.
-    blade.geometry.translate(0, -base[1], 0).scale(1, 0.35, 1).translate(0, base[1], 0);
+    // Drawn round, its underside tangent to the seabed from root to tip,
+    // then flattened onto it: a plate lying on the ground, not over it.
+    const base = [x, r, z + 4 * a];
+    const tip = [x - len * Math.cos(a), 0.4, z + 4 * a + len * Math.sin(a) * 1.2];
+    const blade = limbRun(root, `telson_${k}`, [base, tip], [r, 0.4], skins[skin]);
+    blade.geometry.scale(1, flat, 1);
     blade.geometry.computeVertexNormals();
   });
 }
