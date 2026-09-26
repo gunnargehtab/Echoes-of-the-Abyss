@@ -918,14 +918,14 @@ Below half the doctrine's number it keeps waiting regardless, because that is no
 going in, it is a hull being posted.
 
 **And while it waits, it calls back what it sent chasing.** An attack order pursues its target
-until the target dies, however far it runs, so the distance the commander checks before
-giving one is a leash only at the moment it is given. The waiting used to walk the army to the
-rally point only while none of it was there, and the first hull to arrive stood the rest down
-wherever they were. Measured over six seeds of twenty minutes, all four navies, 2,198 of the
-observations that found a hull away from a waiting army found it still chasing, against 21
-that found a fresh launch; the army was split on 11 to 45% of the time it spent waiting. Now
-every hull away from the rally is recalled, except the siege hull, which walks to its wall on
-an order of its own (#946).
+until the target dies, however far it runs, so the reach the commander checks before giving
+one holds only at the moment it is given. The waiting used to walk the army to the rally point
+only while none of it was there, so once the first hull arrived the rest were left on whatever
+order they last had. Measured over six seeds of twenty minutes, all four navies: of 5,027
+observations that found a hull away from a waiting army, 2,198 found it still chasing, 2,182
+found it already walking back, and 21 found a fresh launch nobody had moved. The army was
+split on 11 to 45% of the time it spent waiting. Now every hull away from the rally is
+recalled, except the siege hull, which walks to its wall on an order of its own (#946).
 
 **And it crosses a base off the list.** With nothing remembered, the fallback push target
 used to be one fixed enemy spawn, chosen when the commander was built and never reconsidered

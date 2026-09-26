@@ -909,21 +909,21 @@ The duel matrix, run at the commit before this repair and after it, moved the sa
 rung — a Slipway in 28 of the Commune's 60 matches rather than 3, and rung hulls summed across
 the four columns 1.2 rather than 0.4 — and far less on the match, which is decided 107 times
 in 120 rather than 110. The table under the next heading is older than either: it was read
-at #842, before #839 and #854 changed the commander too, and `baselines/duel-matrix.md` is
-the reading after this repair.
+at #842, before #839 and #854 changed the commander too, and `baselines/duel-matrix.md` was
+the reading after this repair until #946 refreshed it.
 
 ### No navy buys its carrier, measured rather than argued (#915)
 
-Wave 8's gate is that every navy fields a hull that never fires. None does: the four-faction
-baseline's carrier table reads `Bought 0` in all four columns, and its largest blocked row is
-*not escorted* for every navy, 47% to 92% of the observations that reach the want. #915 named
-three plausible causes — the rung's saving floor, yard contention and the escort — and picked
-none.
+Wave 8's gate is that every navy fields a hull that never fires. None does: at `6db5600` the
+four-faction baseline's carrier table read `Bought 0` in all four columns, and its largest
+blocked row was *not escorted* for every navy, 47% to 92% of the observations that reach the
+want. #915 named three plausible causes — the rung's saving floor, yard contention and the
+escort — and picked none.
 
 The table could not pick either, because it asks the purse last: an observation the escort
 shuts is filed there whatever the bank held. The row *Shut before the purse, with the price in
 it* now counts the observations at which a gate in front of the purse shut while the purse held
-the price. Over the same thirty seeds it reads 190, 9, 456 and 0, and the duel matrix 825, 425,
+the price. Over the same thirty seeds it read 190, 9, 456 and 0, and the duel matrix 825, 425,
 6 and 0: no more than about 1% of any navy's observations at the want, and none for the
 Knights. That is a floor on what the gates cost and not a ceiling, since a shut gate also stops
 the deck bidding, so the bank never saved toward it.

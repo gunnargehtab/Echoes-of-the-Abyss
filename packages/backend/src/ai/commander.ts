@@ -115,11 +115,6 @@ const RANGE = {
    * a weapons range — it is the leash. Without one, a single enemy scout
    * heard across the map drags the whole army after it, which is the classic
    * way an RTS AI loses a game it was winning.
-   *
-   * Checked when the order is given, and the sim's chase has no leash of its
-   * own. While the army waits, what holds it afterwards is the massing branch
-   * in `commandArmy`, which recalls every hull away from the rally once
-   * nothing is left in reach (#946).
    */
   PURSUIT_M: 2800,
   /**
@@ -4629,12 +4624,13 @@ export class AiCommander implements AiPlayer {
       // ascending when the order to go finally came.
       this.setCrossed(army, false, out);
       // Every hull that is not there yet, rather than the army while none of
-      // it is (#946). The gate used to be `nearest(army, rally)`, so the first
-      // hull to arrive stood the rest down wherever they were — and where they
-      // were was mostly after a contact. An `attack` chases its target until
-      // it dies (`combat.ts`), however far it runs, so a distance checked when
-      // the order was given was never checked again: the commander went back
-      // to waiting and its chasers carried on.
+      // it is (#946). The gate used to be `nearest(army, rally)`, so once the
+      // first hull arrived the rest were left on whatever order they last had
+      // — and the commonest was an `attack` from the two branches above. An
+      // attack chases its target until it dies (`combat.ts`), however far it
+      // runs, so the reach those branches checked when they gave it was never
+      // checked again: the commander went back to waiting and its chasers
+      // carried on.
       //
       // The siege hull is `commandSiege`'s, which walks it to a wall on its
       // own clock; recalling it here would undo that walk every observation.

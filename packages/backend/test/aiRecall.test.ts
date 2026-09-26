@@ -5,10 +5,10 @@
  * chases its target until it dies (`combat.ts`, "Only an explicit order
  * chases"), however far it runs. The massing branch used to move the army
  * only while *no* hull of it was at the rally point, so once one had arrived
- * the rest were never told again — and most of the rest were still chasing.
- * Measured on six seeds of twenty minutes, all four navies: 2,198 of the
- * observations that found a hull away from a waiting army found it carrying
- * an old attack order, against 21 that found a fresh launch.
+ * the rest were never told again. Measured on six seeds of twenty minutes,
+ * all four navies: of 5,027 observations that found a hull away from a
+ * waiting army, 2,198 found it carrying an old attack order and 21 found a
+ * fresh launch; most of the rest were already walking back.
  *
  * Two arms. The decision, on synthesised snapshots, because which hulls get
  * the order is the whole of the fix and a real match cannot place them. And
@@ -17,7 +17,8 @@
  * recall reaches `Match` and ends a pursuit the commander cannot hear.
  *
  * The rally point is read off the commander's own first order rather than
- * recomputed here, so this file restates no distance the commander owns.
+ * recomputed here. Arrival is the one distance restated, below, because
+ * `RANGE` is not exported.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -37,19 +38,19 @@ import { AiCommander } from '../src/ai/commander.ts';
 import { AiSeat, briefingFor } from '../src/ai/seat.ts';
 import { Match } from '../src/sim/match.ts';
 import { spawnUnit } from '../src/sim/world.ts';
-import { Position, Weapon } from '../src/sim/components.ts';
+import { MoveOrder, Weapon } from '../src/sim/components.ts';
 import type { AiBriefing, AiCommand } from '../src/ai/types.ts';
 
 const SEED = 0x946;
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const ECHO_EVERY = SIM.TICK_HZ / SIM.ECHO_HZ;
-/** Arrival, as the massing branch reads it (`RANGE.ARRIVE_M`). */
+/** Arrival, as the massing branch reads it: `RANGE.ARRIVE_M`, restated. */
 const ARRIVED_M = 700;
 
 /**
- * The Consortium, because it masses at five: two hulls are under half of
+ * The Knights, because they mass at five: two hulls are under half of
  * that, which `stillMassing` answers with "keep waiting" whatever the clock
- * says. And its siege hull, the Tocsin, carries a gun — so it is in `army`,
+ * says. And their siege hull, the Tocsin, carries a gun — so it is in `army`,
  * which is the case the exemption exists for.
  */
 const NAVY = Faction.Hadron;
@@ -203,10 +204,15 @@ describe('recalling the massing army (#946)', () => {
 
   it('ends a chase the commander can no longer hear', () => {
     // The defect as it happens: a hull chasing an attack target into water
-    // the commander is not listening to, while the rest of the force waits.
-    // The target is set on the component rather than ordered through a
+    // the commander is not listening to, while another hull waits at the
+    // rally. The target is set on the component rather than ordered through a
     // handle, because the handle is the part that has already gone — this is
     // the state an old `attack` leaves behind once its contact drops out.
+    //
+    // Read after three seconds, before anything the commander can hear has a
+    // chance to reorder the force. Left longer, `main` passes too: an in-reach
+    // attack retargets the chaser, and a later whole-army move brings it home
+    // — the right answer for the wrong reason.
     const { match, brief, base } = rig();
     const seat = new AiSeat(match, brief);
     const rally = rallyOf(brief, base);
@@ -229,12 +235,13 @@ describe('recalling the massing army (#946)', () => {
     match.setEngineOff(0, quarry, true);
     Weapon.orderedTargetEid[chaser] = quarry;
 
-    const away = () => Math.hypot(Position.x[chaser]! - rally.x, Position.y[chaser]! - rally.y);
-    for (let i = 0; i < SIM.TICK_HZ * 45; i++) {
+    for (let i = 0; i < SIM.TICK_HZ * 3; i++) {
       const own = match.update(STEP_MS)?.get(1);
       if (own !== undefined) seat.observe(own);
     }
-    assert.equal(Weapon.orderedTargetEid[chaser], 0, 'the chaser is still chasing');
-    assert.ok(away() < ARRIVED_M, `the chaser ended ${Math.round(away())} m from the rally`);
+    assert.notEqual(Weapon.orderedTargetEid[chaser], quarry, 'the chaser is still chasing');
+    const bound = Math.hypot(MoveOrder.x[chaser]! - rally.x, MoveOrder.y[chaser]! - rally.y);
+    assert.equal(MoveOrder.active[chaser], 1, 'the chaser was stopped rather than recalled');
+    assert.ok(bound < 1, `the chaser is bound ${Math.round(bound)} m from the rally`);
   });
 });
