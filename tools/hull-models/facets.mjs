@@ -49,7 +49,8 @@
  * Advisory, like the light audit: it exits 0 whatever it finds, because it
  * reports what the pass has left to do rather than gating a model already
  * approved. Polyhedra, boxes and extrusions carry no ring and are counted as
- * parts only.
+ * parts only. test/facets.test.mjs holds the reading to the rule: a part
+ * built through `facetsFor`, arcs included, reads back as on it.
  */
 import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -61,6 +62,8 @@ import { NAVIES } from './finishes.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
+const TAU = 2 * Math.PI;
+
 /**
  * A navy's facet count for a round part of radius `radiusM`: the count whose
  * facet edge is nearest `chordM`, on the lattice `offset + k·step`, held
@@ -68,11 +71,44 @@ const here = dirname(fileURLToPath(import.meta.url));
  * from 1 — which step alone cannot. Every round primitive a navy's module
  * builds takes its count from here once the pass lands, which is what makes
  * re-faceting a fleet one edit.
+ *
+ * `radiusM` is the radius of the widest ring the part will show, since that
+ * is the circle the reader takes each facet as a chord of: a cylinder's
+ * wider rim, an orb's equator, and a torus's ring at its major radius plus
+ * its tube. `arc` is for a ring that closes in part of a turn — an orb's
+ * meridians over π, a dome's over its `thetaLength`, a torus arc, a half
+ * drum: the count a turn is the same, the chord being the thing, and the
+ * segments are the arc's share of it, at least one. `keeps` reads a ring
+ * back through the same call, so a part built here reads as on the rule;
+ * before it did, a builder prorating by hand and a reader rounding a turn
+ * could disagree on any odd count. A capsule's meridian is twice its cap
+ * segments over π, so a rule whose half-turn share is odd is one a capsule
+ * meets a segment over or under.
  */
-export function facetsFor({ chordM, min, max, step = 1, offset = 0 }, radiusM) {
+export function facetsFor({ chordM, min, max, step = 1, offset = 0 }, radiusM, arc = TAU) {
   const x = (2 * Math.PI * radiusM) / chordM;
   const n = step * Math.round((x - offset) / step) + offset;
-  return Math.min(max, Math.max(min, n));
+  const turn = Math.min(max, Math.max(min, n));
+  return arc >= TAU ? turn : Math.max(1, Math.round((turn * arc) / TAU));
+}
+
+/**
+ * An orb's two counts from the rule — `{ widthSegments, heightSegments }`
+ * for a `SphereGeometry` of `radiusM` over `thetaLength` — asked the way
+ * `ringsOf` reads one back: the meridians at the orb's radius over its arc,
+ * and the round at the widest ring the orb will draw. That is its equator
+ * only when a row lands there; with an odd count of meridian segments, or
+ * a dome that stops short of the equator, the widest drawn ring sits inside
+ * the radius, and asked at the radius the round would be a step out on a
+ * coarse lattice — a Knights orb of six at 2.5 m draws its widest ring at
+ * 2.17 m, where the rule says four.
+ */
+export function orbFacets(rule, radiusM, thetaLength = Math.PI) {
+  const heightSegments = facetsFor(rule, radiusM, thetaLength);
+  let widest = 0;
+  for (let k = 1; k <= heightSegments; k++)
+    widest = Math.max(widest, radiusM * Math.sin((k * thetaLength) / heightSegments));
+  return { widthSegments: facetsFor(rule, widest), heightSegments };
 }
 
 /* --------------------------------------------------------------------------
@@ -80,8 +116,6 @@ export function facetsFor({ chordM, min, max, step = 1, offset = 0 }, radiusM) {
  * layout in three r169, which is the only thing that says where one facet
  * ends and the next begins.
  * ------------------------------------------------------------------------ */
-
-const TAU = 2 * Math.PI;
 
 const median = (xs) => {
   const s = [...xs].sort((a, b) => a - b);
@@ -309,7 +343,7 @@ const ORBS = new Set(['sphere round', 'sphere meridian', 'capsule round', 'capsu
  */
 export function keeps(rule, r) {
   if (!ORBS.has(r.kind) && rule.sections?.includes(r.turn)) return true;
-  return r.n === Math.max(1, Math.round((facetsFor(rule, r.radiusM) * r.arc) / TAU));
+  return r.n === facetsFor(rule, r.radiusM, r.arc);
 }
 
 const BANDS = [
