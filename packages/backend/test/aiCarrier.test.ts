@@ -604,8 +604,11 @@ describe('the commander fields its navy carrier', () => {
     );
 
     for (const [i, s] of run.entries()) {
-      const counted = Object.values(s.counted).reduce((n, v) => n + v, 0) - s.counted.reached;
-      assert.equal(counted, s.counted.reached, `observation ${i}: one reason, or none`);
+      // `priceInPurse` is a count beside the reasons, not one of them (#915).
+      const { reached, priceInPurse, ...reasons } = s.counted;
+      const counted = Object.values(reasons).reduce((n, v) => n + v, 0);
+      assert.equal(counted, reached, `observation ${i}: one reason, or none`);
+      assert.ok(priceInPurse <= s.counted.yielded, `observation ${i}: counted only if it yielded`);
       if (s.open) {
         // Neither buys nor bids: a bid is counted `cannotAfford`, a buy `bought`.
         assert.equal(s.counted.bought, 0, `observation ${i}: no deck while a want is open`);
@@ -619,6 +622,12 @@ describe('the commander fields its navy carrier', () => {
     assert.ok(
       run.some((s) => s.counted.yielded === 1),
       'the observations it yielded are counted as yielded'
+    );
+    // And, in the band, that the purse could have paid for it (#915): the
+    // 340–359 nodules the premise found cover the 340 nodule deck.
+    assert.ok(
+      band.some((s) => s.counted.yielded === 1 && s.counted.priceInPurse === 1),
+      'a deck yielded with its price in the purse is counted as such'
     );
   });
 
@@ -698,6 +707,9 @@ describe('the commander fields its navy carrier', () => {
   });
 });
 
+/** One of the carrier tally's seven reasons: every key but `reached` and the count beside them. */
+type Reason = Exclude<keyof CarrierWantTally, 'reached' | 'priceInPurse'>;
+
 /** Whether this navy's composition names the Sower or the Bower, so its deck can yield. */
 function yields(faction: Faction): boolean {
   return SOWER_AND_BOWER.some((kind) => DOCTRINE[faction].composition.includes(kind));
@@ -713,7 +725,7 @@ function yieldCases(
   carrier: UnitKind,
   oneShort: EchoSnapshot['berths'],
   slipway: (over: Partial<EchoSnapshot['structures'][number]>) => Partial<EchoSnapshot>,
-  only: (reason: Exclude<keyof CarrierWantTally, 'reached'>) => CarrierWantTally
+  only: (reason: Reason, priced?: boolean) => CarrierWantTally
 ): [string, Partial<EchoSnapshot>, CarrierWantTally][] {
   const bothOpen = force(brief, { sowerAndBower: false });
   const bowerOpen = force(brief, { sowerAndBower: false, extra: [UnitKind.Sower] });
@@ -730,7 +742,7 @@ function yieldCases(
     [
       'both wants open, with the price in the bank',
       { ...purseFor(carrier), ...bothOpen },
-      only('yielded'),
+      only('yielded', true),
     ],
     ["the Bower's want open alone", bowerOpen, only('yielded')],
     [
@@ -758,7 +770,7 @@ function yieldCases(
     [
       "the Bower's want shut by the berths, with the price in the bank",
       { ...purseFor(carrier), ...bowerShut },
-      only('noBerth'),
+      only('noBerth', true),
     ],
   ];
 }
@@ -782,10 +794,13 @@ describe('the commander counts why it did or did not buy its carrier', () => {
         commander.observe(snapshot(brief, 6000, overrides));
         return commander.carrierWant;
       };
-      const only = (reason: Exclude<keyof CarrierWantTally, 'reached'>): CarrierWantTally => ({
+      // `priced` is the count beside the reasons (#915): a gate in front of the
+      // purse shut, and the purse held the price all the same.
+      const only = (reason: Reason, priced = false): CarrierWantTally => ({
         ...emptyCarrierWantTally(),
         reached: 1,
         [reason]: 1,
+        priceInPurse: priced ? 1 : 0,
       });
       const slipway = (
         over: Partial<EchoSnapshot['structures'][number]>
@@ -820,7 +835,14 @@ describe('the commander counts why it did or did not buy its carrier', () => {
         [
           'the berths one short, with the price in the bank',
           { ...purseFor(carrier), berths: oneShort },
-          only('noBerth'),
+          only('noBerth', true),
+        ],
+        // The yard shut, and the bank could have paid: the case the count
+        // beside the reasons exists for, in the yard's place.
+        [
+          'the Slipway still rising, with the price in the bank',
+          { ...purseFor(carrier), ...slipway({ buildProgress: 0.5 }) },
+          only('noYard', true),
         ],
         // The yard is asked first, in `Match.produce`'s own order.
         [
@@ -832,7 +854,21 @@ describe('the commander counts why it did or did not buy its carrier', () => {
           only('noYard'),
         ],
         ['an army short of the escort', force(brief, { escort: false }), only('notEscorted')],
+        // And in the escort's (#915): the gate the largest blocked row names,
+        // with the bank that would have paid had it been open.
+        [
+          'an army short of the escort, with the price in the bank',
+          { ...purseFor(carrier), ...force(brief, { escort: false }) },
+          only('notEscorted', true),
+        ],
         ['a deck already afloat', force(brief, { extra: [carrier] }), only('alreadyHas')],
+        // A satisfied want is not a shut one, so a deck afloat with its price
+        // in the bank again is counted nowhere but `alreadyHas`.
+        [
+          'a deck already afloat, with the price in the bank',
+          { ...purseFor(carrier), ...force(brief, { extra: [carrier] }) },
+          only('alreadyHas'),
+        ],
         // The order, held: a navy holding its deck while its army is below the
         // floor has a satisfied want, not a blocked one. Asking the escort
         // first files this under `notEscorted`, which is the fault the note on

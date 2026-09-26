@@ -442,7 +442,8 @@ export interface WantTally {
 
 /**
  * The carrier want's tally (#839): `WantTally`'s six reasons and a seventh,
- * still a partition, so the seven sum to `reached`.
+ * still a partition, so the seven sum to `reached` — and `priceInPurse`
+ * beside them, a count inside four of the seven that joins no sum.
  *
  * The seventh is the owner's ruling on #839. The carrier's want sits below the
  * Sower's and the Bower's in the order of purchase, so while either of those
@@ -460,6 +461,20 @@ export interface CarrierWantTally extends WantTally {
    * composition names the Sower or the Bower can count it.
    */
   yielded: number;
+  /**
+   * **Not a reason, and not in the partition.** Of the observations filed
+   * under `notEscorted`, `noYard`, `noBerth` or `yielded` — the four gates
+   * asked before the purse — the ones at which the purse already held the
+   * deck's price, in every account.
+   *
+   * The partition cannot say this on its own, because it asks the purse last.
+   * An observation shut by the escort is filed there whether or not the bank
+   * could have paid, so the largest blocked row reads as the gate to argue
+   * with even when opening it would buy nothing (#915). This is the count
+   * that opening every gate in front of the purse would have turned into a
+   * purchase; near zero, the gates are not what kept the deck out.
+   */
+  priceInPurse: number;
 }
 
 /** A tally with every counter at zero — a commander that has not observed yet. */
@@ -475,7 +490,7 @@ export function emptyWantTally(): WantTally {
   };
 }
 
-/** `emptyWantTally`, with the carrier's seventh reason at zero too. */
+/** `emptyWantTally`, with the carrier's seventh reason and its count beside them at zero too. */
 export function emptyCarrierWantTally(): CarrierWantTally {
-  return { ...emptyWantTally(), yielded: 0 };
+  return { ...emptyWantTally(), yielded: 0, priceInPurse: 0 };
 }

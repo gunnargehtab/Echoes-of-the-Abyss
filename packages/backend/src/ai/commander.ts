@@ -3070,14 +3070,26 @@ export class AiCommander implements AiPlayer {
     // that sum to `reached`, and `alreadyHas` asked before the escort, for the
     // reason the note on the ordnance branch measured. `yielded` is asked
     // after the berths, where the purse is the next question.
+    //
+    // And one count beside them, `priceInPurse`, because the purse is asked
+    // last (#915). A deck shut out by the escort is filed as `notEscorted`
+    // whatever the bank held, so the largest blocked row named the escort as
+    // the gate to argue with — and over the four-faction baseline the Knights
+    // held their Offertory's price at none of the 57,029 observations the
+    // escort shut. Asked without `affordUnit`, which would charge the purse
+    // for a hull nobody ordered.
     const ownCarrier = OWN_CARRIER[this.briefing.faction];
     const decks =
       snapshot.units.reduce((n, u) => n + (u.kind === ownCarrier ? 1 : 0), 0) +
       queuedOf(ownCarrier);
     const deckTally = this.carrierWantTally;
+    const priced = decks < 1 && affords(purse, priceOf(statsFor(ownCarrier)));
     deckTally.reached++;
     if (decks >= 1) deckTally.alreadyHas++;
-    else if (!escorted) deckTally.notEscorted++;
+    else if (!escorted) {
+      deckTally.notEscorted++;
+      if (priced) deckTally.priceInPurse++;
+    }
     if (escorted) {
       if (decks < 1) {
         const yard = this.freeYard(snapshot.structures, ownCarrier);
@@ -3085,6 +3097,7 @@ export class AiCommander implements AiPlayer {
         if (yard === null) deckTally.noYard++;
         else if (!crewed) deckTally.noBerth++;
         else if (sowerOrBowerOpen) deckTally.yielded++;
+        if ((yard === null || !crewed || sowerOrBowerOpen) && priced) deckTally.priceInPurse++;
         if (yard !== null && crewed && !sowerOrBowerOpen) {
           if (this.affordUnit(ownCarrier, purse)) {
             deckTally.bought++;

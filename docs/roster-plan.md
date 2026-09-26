@@ -912,6 +912,38 @@ in 120 rather than 110. The table under the next heading is older than either: i
 at #842, before #839 and #854 changed the commander too, and `baselines/duel-matrix.md` is
 the reading after this repair.
 
+### No navy buys its carrier, and the escort is not why (#915)
+
+Wave 8's gate is that every navy fields a hull that never fires. None does: the four-faction
+baseline's carrier table reads `Bought 0` in all four columns, and its largest blocked row is
+*not escorted* for every navy, 47% to 92% of the observations that reach the want. Read by
+the footnote the ordnance table set (#698), that names the escort as the gate to argue with.
+
+It is the wrong gate, and the table could not say so, because it asks the purse last: an
+observation the escort shuts is filed there whatever the bank held. The row *Shut before the
+purse, with the price in it* now counts the observations that a gate in front of the purse
+shut while the purse could already pay. Over the same thirty seeds it reads 190, 9, 456 and
+0 — at most 1% of any navy's observations at the want, and none at all for the Knights, whose
+Offertory costs 420 nodules and 40 crystal. Instrumented by hand at `2d311e8`, the 655 fall in
+eleven of the 120 navy-matches, and the escort shut 643 of them, with the army short of half
+its massing size. Opening every gate in front of the purse would have put a deck in the water
+in at most those eleven, nearly always in the state in which "a carrier caught alone is a
+3-berth hull dying quietly" ([units.md](units.md), "The carriers").
+
+The Directorate is the one navy often escorted with a yard free, and it files 24,023
+observations, 36% of its own, as *cannot afford*. Its Succentor costs 300 nodules and 60
+Biomass. Instrumented over seeds 4000–4011, the purse held 300 nodules at 151 of the 8,817
+such observations and 60 Biomass at 3,924, and never both at once. The Knights' peak of 677
+with the yard up is not a contradiction either: the want reads the purse construction leaves
+it, and construction held that purse for a Sounding Spire, a Refinery, a Vent Tap or a turret
+on about a third of the Knights' observations after the yard rose.
+
+So the carrier is the rung's arithmetic a second time, not a gate of its own. The purse at the
+want never holds the deck's price, which is what "The purse is arbitrated by price" above
+found for the heavies. Whether a 600 nodule yard and a 300 to 520 nodule deck are reachable in
+one match is a claim about prices against the map, which the freeze in `CLAUDE.md` covers, and
+lifting the escort would not answer it.
+
 ### The gate, and what a duel actually says
 
 Issue #518's fourth option asked for a long-form duel *"and make **that** the gate for waves 4 and
