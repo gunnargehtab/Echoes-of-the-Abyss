@@ -64,7 +64,8 @@ the brief; the numbers are constraints, not suggestions.
    `docs/graphics-standards.md` § "Where the GLB comes from" both describe that path.
    Compose from `factions/<navy>.mjs` and `kit.mjs`; anything a script cannot reach with
    the navy's existing vocabulary belongs in that module or in the kit, never inlined in
-   one hull. Run the script, then `npm run check:models`, then the `hull-intake` skill.
+   one hull. Run the script, then `npm run check:models`, then the `hull-intake` skill,
+   then put it on the lit table and sweep it (the rules below).
 
    **A port is not a redesign.** When the script reproduces a model that is already
    approved, it must match the committed GLB part for part — name, material, triangle
@@ -101,6 +102,26 @@ the brief; the numbers are constraints, not suggestions.
   is not.
 - **No fauna, ever.** Animals are contacts drawn at earned fidelity, never world meshes
   (`docs/bestiary.md` §3).
+- **Look at the whole, lit, every round.** Run
+  `node tools/hull-renders/inspect.mjs <slug> --before <base-sha>`. The maps are straight
+  down and the beauty rig hides geometry, so a run of fixes, each right against its audit
+  line, can leave a whole that reads as another navy's; #907 did, and #947 rebuilt it. The
+  player's home camera looks from +Z at 55° of pitch, so a structure's working face (its
+  maw, its belt, its eye-lines) goes on +Z.
+- **A fix moves its neighbours.** After moving a part, run
+  `node tools/hull-models/contacts.mjs <slug> --part <it>` and bake again. #947's maw moved
+  clear of the neck and swung the belt into a leg's path. Its fangs covered part of the maw
+  floor, and gate 3 hit the ×64 gain cap: E is per pixel of plan, so a wider plan or a lit
+  face turned from straight up costs glow with no lamp touched.
+- **Function reads as well as silhouette.** A structure's nouns are a process: nodules go
+  hopper, belt, maw. Each stage meets the next. A belt that stops under the maw it feeds
+  has the noun and not the machine.
+- **A structure stands on y 0 with nothing under it.** The runtime centres a model on its
+  box (`packages/frontend/src/game/rosterModels.ts` `normalise`), so a buried half lifts
+  the rest. Feet end on the seabed, not in it.
+- **A header states what the model does.** A sentence that places a part, like "the lures
+  hang over the belt", is a measurement the reviewer will take. Write it after measuring,
+  not as the intent.
 - **Prompts here transcribe the visual law; they never invent it.** If a prompt you want to
   write disagrees with `art-direction.md`, `factions.md` or `style-neon-noir.md`, the prompt
   is the bug — say so rather than writing it.
@@ -114,10 +135,11 @@ it is pinned away from the authoring model on purpose.
 
 So when your model is built, hand it over rather than reading it back yourself. What you
 owe that review is the material it judges against: which prompt block the model answers to,
-what the script did that the block does not say, and — on a port — the `diff.mjs` output
-you already looked at and your reason for every part it lists. A finding that comes back is
-a fix to make and re-submit, not a verdict to argue with; if you think it is wrong, say why
-in your report to whoever is running you, and let them decide.
+what the script did that the block does not say, the `inspect.mjs` sheet against the base,
+and — on a port — the `diff.mjs` output you already looked at and your reason for every
+part it lists. A finding that comes back is a fix to make and re-submit, not a verdict to
+argue with; if you think it is wrong, say why in your report to whoever is running you, and
+let them decide.
 
 Looking at your own maps while you work is not reviewing — do it, and iterate on what you
 see. The line is that your reading of them never stands in for the gate.
