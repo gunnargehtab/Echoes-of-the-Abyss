@@ -21,7 +21,7 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --ma
 > the Consortium and the Knights 0%.
 >
 > **One row added on 26 Sept 2026, and nothing refreshed** (#915). The same command, run
-> from `f8f0ed5`, the first commit whose footnote this file carries, reproduces every line
+> from `6db5600`, the first commit whose footnote this file carries, reproduces every line
 > below these notes byte for byte. The row counts the observations a gate in front of the
 > purse shut while the purse already held the deck's price.
 
