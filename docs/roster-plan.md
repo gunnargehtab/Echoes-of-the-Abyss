@@ -956,41 +956,46 @@ Spire never saved for they still order none.
 That left four leads, since the Knights' bank clears the Offertory's price, crystal included,
 after the yard is placed in 19 of 30 matches: yard contention, the saving floor, a bid behind
 a shut escort, and where the Knights' purse goes. All four are measured the same way, at
-`b8bf546`: each repair made in a scratch copy of the commander, the same thirty seeds run, and
-the want traced at every observation after the yard was commissioned. Decks ordered:
+`b8bf546`: each repair made in a scratch copy of the commander and the same thirty seeds run,
+and the baseline's want traced at every observation that reached it with the Slipway
+commissioned. Decks ordered:
 
 | Repair | Consortium | Commune | Directorate | Knights |
 | --- | --- | --- | --- | --- |
 | None — the baseline | 0 | 0 | 0 | 0 |
 | The deck's bid free of `RUNG.SAVE_FROM`, its window kept | 0 | 0 | 0 | 0 |
-| The deck's bid unconditional, on the Sower's terms | 0 | 0 | 0 | 0 |
-| Unconditional, and first in `holdPurse` | 0 | 0 | 0 | 0 |
+| The deck's bid with no window, as the Sower's is | 0 | 0 | 0 | 0 |
+| No window, and first in `holdPurse` | 0 | 0 | 0 | 0 |
 | Free of the floor, and bidding while unescorted to buy once escorted | 0 | 0 | 0 | 0 |
-| No saving for the Sounding Spire | 0 | 0 | 0 | 0 |
+| No signature structure for any navy, so the Knights' 11 Spires are never built | 0 | 0 | 0 | 0 |
 | The deck asked before the ordnance, heavy and siege wants | 9 | 0 | 9 | 1 |
-| Every row above but the unescorted bid | 9 | 0 | 11 | 12 |
+| No window, first, asked before those three, and no signature structure | 9 | 0 | 11 | 12 |
 
 - **Yard contention is not the gate.** With the Slipway commissioned, it was backed up at 381
   of the Consortium's 18,094 observations of the want, 16 of the Commune's 15,330, and none of
   the Directorate's or the Knights'. *No free yard* is the rung not standing yet.
-- **Nor is the saving floor.** Free of it, unconditional, or first in the arbitration, the deck
+- **Nor is the saving floor.** Free of it, with no window, or first in the arbitration, the deck
   orders none, because the ordnance, heavy and siege wants are asked before it, and each buys
   out of pocket as soon as the bank covers its own price.
 - **Nor the escort's stop on bidding.** A deck that saves while the army is small orders none.
-- **The Knights' purse goes to the Spire.** At all 3,256 observations at which their bank held
-  the Offertory's price, construction had already reserved it toward the Sounding Spire's 750
-  nodules and 120 crystal, and 2,828 of them were unescorted as well. Without that saving they
-  still order no deck, and their ordnance want buys 11 Lances where it bought none.
+- **The Knights' purse goes to the Spire.** At 3,255 of the 3,256 observations at which their
+  bank held the Offertory's price, construction had reserved it toward the Sounding Spire's 750
+  nodules and 120 crystal, or spent it on one; 2,828 of them were unescorted as well. Without
+  the Spire they still order no deck, and their ordnance want buys 11 Lances where it bought
+  none.
 
-So the one lever that fields a deck is the order of purchase, and it fields one by taking the
-purse from a hull in front of it. Asked first, the deck buys 19 and the rest of the rung loses
-30: the Consortium's Furnace goes from 10 to none, the Directorate's Thurible from 12 to none,
-the Broadside from 6 to 1. The four navies build 58 Slipway hulls in the thirty matches, fewer
-than one a navy a match, so which of them a navy fields first is a build-list call the freeze
-covers (`CLAUDE.md`), beside §8's question of whether the top of the roster is priced for an
-economy that never banks it. The Commune orders no deck in any row: its Sower's or Bower's want
-is open at 13,796 of its 15,330 observations, and by the ruling on #839 the deck yields to
-both.
+So what fields a deck is the order of purchase, and it fields one by taking the purse from a
+hull in front of it. Asked first, the deck buys 19 and the rest of the rung loses 30: the
+Consortium's Furnace goes from 10 to none, the Directorate's Thurible from 12 to none, the
+Broadside from 6 to 1. The Knights take both calls: the order alone fields them one deck, and
+the last row, with no Spire, twelve. This is a priority and not a lock in the sense of the
+Commune's rung above: the wants ahead of the deck are paid for, so they outrank it rather than
+bar it. The four navies build 58 Slipway hulls in the thirty matches, fewer than one a navy a
+match, so which of them a navy fields first, and whether the Knights' purse goes to the Spire
+or the deck, is a build-list call the freeze covers (`CLAUDE.md`), beside §8's question of
+whether the top of the roster is priced for an economy that never banks it. The Commune orders
+no deck in any row: its Sower's or Bower's want is open at 13,796 of its 15,330 observations,
+and by the ruling on #839 the deck yields to both.
 
 ### The gate, and what a duel actually says
 
