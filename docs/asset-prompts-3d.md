@@ -454,9 +454,11 @@ the six-plate drum a small vessel is. Six is the least a drum reads as a drum ra
 box, and the Klaxon's boxes are boxes. Fourteen is the ceiling, the even step under the
 Directorate's fifteen so the ladder holds at the rim; it was sixteen, the turret ring's own
 count, until the Commune's ceiling came down for gate 6 ("What the rule costs", below). A
-fourteen-gon is still a polygon at the rim, and the Bulwark's turret ring and the Derrick's
-barbette, at sixteen, are the first the pass brings to it. The approved drums above them
-are the shared kinds' pressure vessels — the
+fourteen-gon is still a polygon at the rim. The move puts eleven rings off the rule that
+sixteen kept — the Bulwark's turret ring, the Derrick's barbette ring, the Beacon's four drum
+hoops, the Bio-reactor's holdfast mat and slab kerb and the Vent-tap's apron, clamp ring and
+manifold ring — and the pass brings them to fourteen with the rest. The approved drums above
+them are the shared kinds' pressure vessels — the
 Corvette's and the Cruiser's cylinders and caps at twenty-eight on 3.5–4.4 m of radius, the
 Light Scout's hull and shroud at twenty — their ballast drums at eighteen and twenty, the
 Corvette's and the Cruiser's shrouds and the Derrick's deck scuff at twenty-four, the
@@ -623,7 +625,7 @@ The table above was derived from the law and the reference hulls, never from tha
 — where a paragraph above quotes a reference hull's cut, it is corroboration — and where the
 two disagree the law wins. So the rule names 792 of the Consortium's 1,119 rings off it —
 579 of the 787 on hulls, the drums that carry one count on every radius — 1,089 of the
-Commune's 1,240 (452 of the 526 on hulls, seven of them the four ported `grownBody` bodies
+Commune's 1,240 (452 of the 526 on hulls, six of them on the four ported `grownBody` bodies
 the pass leaves), 997 of the Directorate's 1,418 (516 of the 681 on hulls), and 251 of
 the Order's 616, fourteen of them on hulls, since an Order hull is sections almost through.
 Outside the bands: eight Consortium hulls (the five shared kinds, the Chorister and the

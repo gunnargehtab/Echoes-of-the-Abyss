@@ -201,9 +201,11 @@ export const ink = {
  * odd step under the Commune's sixteen, where gate 6 puts the roundest
  * navy's (`pelagia.mjs`). It was sixteen, the turret ring's own count, until
  * the Commune's came down; a fourteen-gon is still a polygon at the rim, the
- * turret ring and the Derrick's barbette come to it first, and the shared
- * kinds' pressure vessels, ballast drums and shrouds and the Derrick's deck
- * scuff carry 18 to 28 above it, for the pass to bring under
+ * move puts eleven rings off the rule that sixteen kept (the turret ring,
+ * the Derrick's barbette ring, the Beacon's four drum hoops, five rims on the
+ * Bio-reactor and the Vent-tap), and the shared kinds' pressure vessels,
+ * ballast drums and shrouds and the Derrick's deck scuff carry 18 to 28
+ * above it, for the pass to bring under
  * (docs/asset-prompts-3d.md Block 2c). Plates go on
  * in pairs, so the step is two: on an even count the crown and the keel are
  * alike — both the middle of a plate at 6, 10, 14, both a seam at 8 and 12 —
