@@ -1191,7 +1191,8 @@ Rootstock (Slipway)
 - PR: 1 — the Commune baseline, and the ceiling of what its flight can be launched into
 - Cost: 340
 - Build time: 70s
-- Berths: 7 — the roster's largest, and four of it is the flight
+- Berths: 7 — the roster's second-largest, after the Succentor's 8, and four of it is the
+  flight
 - Speed: 55
 - HP: 620
 - Flight: **four Runners**, rebuilt one every 30s. 70 HP each — a Corvette kills one in two
