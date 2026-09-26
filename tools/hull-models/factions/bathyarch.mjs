@@ -195,16 +195,20 @@ export const ink = {
  * from twelve to ten, and cuts its guns and stacks — ten-sided at 1.7–2.6 m,
  * the finest thing on the hull — to the six-plate drum a small vessel is.
  * Six is the least a drum reads as a drum rather than a box, and the Klaxon's
- * boxes are boxes. Sixteen is the ceiling: the most any approved Consortium
- * drum carries (the turret ring, the barbette and its ring), a sixteen-gon
- * still a polygon at the rim; a judgement on silhouette, ordered with the
- * other three navies' ceilings as the law orders their curves. Plates go on
+ * boxes are boxes. Sixteen is the ceiling, a judgement on silhouette ordered
+ * with the other three navies' ceilings as the law orders their curves: a
+ * sixteen-gon is still a polygon at the rim, the turret ring and the
+ * barbette carry it, and the shared kinds' pressure vessels, ballast drums
+ * and shrouds and the Derrick's deck scuff carry 18 to 28 above it, for the
+ * pass to bring under (docs/asset-prompts-3d.md Block 2c). Plates go on
  * in pairs, so the step is two: on an even count the crown and the keel are
  * alike — both the middle of a plate at 6, 10, 14, both a seam at 8, 12, 16 —
  * and the two flanks mirror; on an odd count neither is the middle of
  * anything and the drum reads as leaning, which is the Directorate's
- * language and not this one. The hulls' drums carry 6, 8, 10, 12, 14 and 16
- * and no odd count; the odd counts are the r184 structure passes' — nine on
+ * language and not this one. The hulls' drums carry even counts and no odd
+ * one — 6 to 16 on the Bulwark and the Tender, 18 to 28 on the shared kinds'
+ * vessels and the Derrick's scuff; the odd counts are the r184 structure
+ * passes' — nine on
  * the Bastion's ballast drums, the Refinery's silos, caps and ballast and the
  * Turret's mount drum, seven on the Refinery's crusher stack — and a few
  * five-sided wheel tubes and cables under 0.2 m of radius. The one section

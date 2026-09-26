@@ -74,8 +74,8 @@ const TAU = 2 * Math.PI;
  *
  * `radiusM` is the radius of the widest ring the part will show, since that
  * is the circle the reader takes each facet as a chord of: a cylinder's
- * wider rim, an orb's equator, and a torus's ring at its major radius plus
- * its tube. `arc` is for a ring that closes in part of a turn — an orb's
+ * wider rim, an orb's widest drawn ring (`orbFacets`), and a torus's ring
+ * at its major radius plus its tube. `arc` is for a ring that closes in part of a turn — an orb's
  * meridians over π, a dome's over its `thetaLength`, a torus arc, a half
  * drum: the count a turn is the same, the chord being the thing, and the
  * segments are the arc's share of it, at least one. `keeps` reads a ring
@@ -94,21 +94,37 @@ export function facetsFor({ chordM, min, max, step = 1, offset = 0 }, radiusM, a
 
 /**
  * An orb's two counts from the rule — `{ widthSegments, heightSegments }`
- * for a `SphereGeometry` of `radiusM` over `thetaLength` — asked the way
- * `ringsOf` reads one back: the meridians at the orb's radius over its arc,
- * and the round at the widest ring the orb will draw. That is its equator
- * only when a row lands there; with an odd count of meridian segments, or
- * a dome that stops short of the equator, the widest drawn ring sits inside
- * the radius, and asked at the radius the round would be a step out on a
- * coarse lattice — a Knights orb of six at 2.5 m draws its widest ring at
- * 2.17 m, where the rule says four.
+ * for a `SphereGeometry` of `radiusM` over the window three's constructor
+ * takes, `phiLength` round from any start and `thetaLength` down from
+ * `thetaStart` — asked the way `ringsOf` reads one back: the meridians at
+ * the orb's radius over their arc, and the round, over its own arc, at the
+ * widest ring the orb will draw. That is its equator only when a row lands
+ * there; with an odd count of meridian segments, or a dome or a window that
+ * stops short of the equator, the widest drawn ring sits inside the radius,
+ * and asked at the radius the round would be a step out on a coarse lattice
+ * — a Knights orb of six at 2.5 m draws its widest ring at 2.17 m, where the
+ * rule says four. three draws no orb under three round and two meridian
+ * segments (`SphereGeometry` clamps both), so a window thinner than the
+ * rule's share is drawn at those floors, and `keeps` reads it there.
  */
-export function orbFacets(rule, radiusM, thetaLength = Math.PI) {
-  const heightSegments = facetsFor(rule, radiusM, thetaLength);
+export const ORB_FLOOR = { 'sphere round': 3, 'sphere meridian': 2 };
+
+export function orbFacets(
+  rule,
+  radiusM,
+  { thetaStart = 0, thetaLength = Math.PI, phiLength = TAU } = {}
+) {
+  const heightSegments = Math.max(
+    ORB_FLOOR['sphere meridian'],
+    facetsFor(rule, radiusM, thetaLength)
+  );
   let widest = 0;
-  for (let k = 1; k <= heightSegments; k++)
-    widest = Math.max(widest, radiusM * Math.sin((k * thetaLength) / heightSegments));
-  return { widthSegments: facetsFor(rule, widest), heightSegments };
+  for (let k = 0; k <= heightSegments; k++)
+    widest = Math.max(widest, radiusM * Math.sin(thetaStart + (k * thetaLength) / heightSegments));
+  return {
+    widthSegments: Math.max(ORB_FLOOR['sphere round'], facetsFor(rule, widest, phiLength)),
+    heightSegments,
+  };
 }
 
 /* --------------------------------------------------------------------------
@@ -343,7 +359,7 @@ const ORBS = new Set(['sphere round', 'sphere meridian', 'capsule round', 'capsu
  */
 export function keeps(rule, r) {
   if (!ORBS.has(r.kind) && rule.sections?.includes(r.turn)) return true;
-  return r.n === facetsFor(rule, r.radiusM, r.arc);
+  return r.n === Math.max(ORB_FLOOR[r.kind] ?? 1, facetsFor(rule, r.radiusM, r.arc));
 }
 
 const BANDS = [

@@ -310,10 +310,11 @@ export const ink = {
  * — and with them nine pentagonal torus rings and tubes on the structures
  * (the Bastion's seam rings, lips and pipes, the Turret's collar, the
  * Foundry's launch mouth), which pass as pentagons. Four is not a section
- * any more: what it kept was two dozen square-section torus seams and cables
- * on the r184 structures and the shared kinds' rostra, none of them this
- * module's — its own rostrum is six-sided — and the Verger's hatch dogs and
- * the Lure's plectrum re-cut to five are more the navy than they were. The
+ * here, and whether it should be is the owner's open call (#919): dropping
+ * it re-cuts 118 rings, this module's own `wedgeRostrum` beaks and `spikes`
+ * among them, which docs/asset-prompts-3d.md Block 2c lists with what each
+ * becomes and the three readings; `rostrum` cuts the navy's own hulls' beaks
+ * at six and eight and is untouched either way. The
  * keels' seven is a builder's default on four hulls and not a section, and
  * the pass re-cuts it to the rule; so are the plates' twelve, one count on
  * every size of tergite, and an even one.

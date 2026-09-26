@@ -139,9 +139,10 @@ test('a part built through its navy\'s rule reads as on it, arcs included', () =
   const parts = (f) => {
     // An orb is asked through orbFacets: with an odd count of meridian
     // segments its widest drawn ring is not its equator.
-    const orb = (r, theta = Math.PI) => {
-      const { widthSegments, heightSegments } = orbFacets(f, r, theta);
-      return new THREE.SphereGeometry(r, widthSegments, heightSegments, 0, TAU, 0, theta);
+    const orb = (r, window = {}) => {
+      const { thetaStart = 0, thetaLength = Math.PI, phiLength = TAU } = window;
+      const { widthSegments, heightSegments } = orbFacets(f, r, window);
+      return new THREE.SphereGeometry(r, widthSegments, heightSegments, 0, phiLength, thetaStart, thetaLength);
     };
     return [
       ['drum', new THREE.CylinderGeometry(2, 2, 1, facetsFor(f, 2))],
@@ -153,8 +154,11 @@ test('a part built through its navy\'s rule reads as on it, arcs included', () =
       ['tank', new THREE.CylinderGeometry(6, 6, 20, facetsFor(f, 6))],
       ['orb', orb(2.5)],
       ['bud', orb(1.56)],
-      ['cap', orb(3, Math.PI / 2)],
-      ['pressure_dome', orb(121.47, 0.52 * Math.PI)],
+      ['cap', orb(3, { thetaLength: Math.PI / 2 })],
+      ['pressure_dome', orb(121.47, { thetaLength: 0.52 * Math.PI })],
+      // A window, as the Directorate's `patch` and the Commune's lobes cut one.
+      ['patch', orb(4, { thetaStart: 0.3, thetaLength: 1.2, phiLength: Math.PI })],
+      ['belt', orb(2.2, { thetaStart: 1.1, thetaLength: 0.9 })],
       // A torus is read at its outer radius, so it is asked for there.
       ['ring', new THREE.TorusGeometry(3, 0.5, facetsFor(f, 0.5), facetsFor(f, 3.5))],
       [
