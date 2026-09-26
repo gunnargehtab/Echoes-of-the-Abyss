@@ -1,0 +1,242 @@
+<!doctype html>
+<!--
+  Inspection-render page for tools/hull-renders. Loaded by inspect.mjs in
+  headless Chromium; not a standalone tool and not a gate.
+
+  scene.html photographs a hull the way the game wants it seen: black water,
+  plate squeezed into a noir band, a coloured rim, most of the frame dark.
+  That is right for key art and wrong for judging a shape change. #907's
+  Derrick strip is the case: its before and after beauty frames were the
+  same black rectangle with the same lamps in it, because the rig that makes
+  a portrait is built to hide exactly the geometry a review is asking about.
+
+  This page is the other rig: a lit table. Authored albedo, roughness and
+  metalness untouched; a neutral studio environment for the metal to
+  reflect; a warm key that casts the only shadow, a cool fill and a white
+  rim, all placed relative to each camera so every view is lit from the same
+  side of the lens; a grey floor under the model so a part that floats, or
+  sinks, shows it in its contact shadow. Emissive is the model's own, with a
+  high-threshold bloom so a lamp reads as a lamp without washing the plate.
+
+  Several models load into one page and are shot from identical cameras, so
+  a before and an after differ only by the model. The cameras frame the
+  union of every model's box, or of the named focus parts.
+
+  Query params: none. The job arrives as window.__job, set by the driver.
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/deps/node_modules/three/build/three.module.js",
+          "three/addons/": "/deps/node_modules/three/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body style="margin: 0; background: #000; overflow: hidden">
+    <script type="module">
+      import * as THREE from 'three';
+      import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+      import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+      import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+      import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+      import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+      import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+      const job = window.__job;
+      const W = job.width;
+      const H = job.height;
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      renderer.setSize(W, H);
+      renderer.setPixelRatio(1);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      // Neutral tone mapping, not ACES: ACES shifts a saturated dark red
+      // toward brown and desaturates on the way up, and the question here
+      // is what colour the plate is.
+      renderer.toneMapping = THREE.NeutralToneMapping;
+      renderer.toneMappingExposure = job.exposure;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      document.body.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+      // Enough studio to give metal something to reflect and a dark plate a
+      // floor under its shadows; the key still draws the form.
+      scene.environmentIntensity = 0.45;
+
+      // A vertical gradient backdrop, mid-dark and hue-neutral: the Directorate's
+      // plate is near-black, and a near-black model on a black ground is a
+      // silhouette with no edges to judge.
+      {
+        const c = document.createElement('canvas');
+        c.width = 4;
+        c.height = 256;
+        const g = c.getContext('2d');
+        const grad = g.createLinearGradient(0, 0, 0, 256);
+        grad.addColorStop(0, '#3a4048');
+        grad.addColorStop(1, '#16191d');
+        g.fillStyle = grad;
+        g.fillRect(0, 0, 4, 256);
+        const t = new THREE.CanvasTexture(c);
+        t.colorSpace = THREE.SRGBColorSpace;
+        scene.background = t;
+      }
+
+      // --- the models -------------------------------------------------------
+      const loader = new GLTFLoader();
+      const models = [];
+      for (const m of job.models) {
+        const gltf = await loader.loadAsync(m.url);
+        const root = gltf.scene;
+        // The kit builds X-long with Y up; a Z-long export is turned as
+        // hull-intake turns it, so a port and its pre-port file line up.
+        const raw = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
+        if (raw.z > raw.x) root.rotation.y = Math.PI / 2;
+        root.updateMatrixWorld(true);
+        root.traverse((o) => {
+          if (!o.isMesh) return;
+          o.castShadow = true;
+          o.receiveShadow = true;
+        });
+        root.visible = false;
+        scene.add(root);
+        models.push({ ...m, root });
+      }
+
+      /** The world box of the named parts of a model, or of all of it. */
+      const boxOf = (root, names) => {
+        const box = new THREE.Box3();
+        if (!names || names.length === 0) return box.setFromObject(root);
+        root.traverse((o) => {
+          if (o.isMesh && names.some((n) => o.name === n || o.name.startsWith(n + '_')))
+            box.expandByObject(o);
+        });
+        return box;
+      };
+
+      const whole = new THREE.Box3();
+      for (const m of models) whole.union(boxOf(m.root));
+      const wholeSize = whole.getSize(new THREE.Vector3());
+      const span = Math.max(wholeSize.x, wholeSize.y, wholeSize.z);
+
+      // The floor: under the lowest model, grey, and the only thing besides
+      // the models that takes a shadow.
+      const floor = new THREE.Mesh(
+        new THREE.CircleGeometry(span * 30, 96).rotateX(-Math.PI / 2),
+        new THREE.MeshStandardMaterial({ color: '#4a4f55', roughness: 0.9, metalness: 0 })
+      );
+      floor.position.y = whole.min.y - span * job.floorGap;
+      floor.receiveShadow = true;
+      scene.add(floor);
+      // The floor fades into the backdrop rather than ending at an edge.
+      scene.fog = new THREE.Fog('#262b31', span * 2.5, span * 9);
+
+      // --- the rig: key, fill, rim, all camera-relative --------------------
+      const key = new THREE.DirectionalLight('#fff3e0', 2.6);
+      key.castShadow = true;
+      key.shadow.mapSize.set(4096, 4096);
+      key.shadow.bias = -0.0004;
+      scene.add(key, key.target);
+      const fill = new THREE.DirectionalLight('#cfe0ff', 0.7);
+      scene.add(fill, fill.target);
+      const rim = new THREE.DirectionalLight('#ffffff', 1.6);
+      scene.add(rim, rim.target);
+      scene.add(new THREE.HemisphereLight('#dfe8f0', '#2a2622', 0.35));
+
+      /** Put a directional light at a bearing and height relative to the camera. */
+      const aim = (light, target, camAz, dAz, el, dist) => {
+        const a = camAz + dAz;
+        light.position.set(
+          target.x + Math.cos(a) * Math.cos(el) * dist,
+          target.y + Math.sin(el) * dist,
+          target.z + Math.sin(a) * Math.cos(el) * dist
+        );
+        light.target.position.copy(target);
+        light.target.updateMatrixWorld();
+      };
+
+      const camera = new THREE.PerspectiveCamera(30, W / H, 0.1, span * 40);
+      const composer = new EffectComposer(
+        renderer,
+        // Byte target: SwiftShader renders a half-float target through the
+        // bloom pass as pure black (scene.html, makeTarget).
+        Object.assign(
+          new THREE.WebGLRenderTarget(W, H, {
+            type: THREE.UnsignedByteType,
+            colorSpace: THREE.LinearSRGBColorSpace,
+          }),
+          { samples: 4 }
+        )
+      );
+      composer.setSize(W, H);
+      composer.addPass(new RenderPass(scene, camera));
+      composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.35, 0.25, 0.86));
+      composer.addPass(new OutputPass());
+
+      const deg = THREE.MathUtils.degToRad;
+      const out = {};
+      for (const view of job.views) for (const m of models) {
+        // Frame the union across models, so a before and an after are shot
+        // from the same place — unless the parts moved between the two, when
+        // `--own` frames each model on its own.
+        const box = new THREE.Box3();
+        for (const o of job.own ? [m] : models) box.union(boxOf(o.root, view.focus));
+        if (box.isEmpty()) {
+          window.__error = `view ${view.id}: no part named ${view.focus.join(', ')}`;
+          throw new Error(window.__error);
+        }
+        const centre = box.getCenter(new THREE.Vector3());
+        const sphere = box.getBoundingSphere(new THREE.Sphere());
+        const az = deg(view.az);
+        const el = deg(view.el);
+        camera.fov = view.fov ?? 30;
+        camera.aspect = W / H;
+        const fit = (sphere.radius / Math.sin(deg(camera.fov) / 2)) * (view.zoom ?? 0.62);
+        camera.position.set(
+          centre.x + Math.cos(az) * Math.cos(el) * fit,
+          centre.y + Math.sin(el) * fit,
+          centre.z + Math.sin(az) * Math.cos(el) * fit
+        );
+        camera.near = Math.max(0.05, fit - sphere.radius * 3);
+        camera.far = fit + span * 6;
+        camera.lookAt(centre);
+        camera.updateProjectionMatrix();
+
+        // Key 50° left of the lens and 48° up; fill opposite and low; rim
+        // behind and high. The shadow frustum covers the whole model, so a
+        // close-up still gets the shadow the whole model casts on the part.
+        const d = span * 3;
+        aim(key, centre, az, deg(-50), deg(48), d);
+        aim(fill, centre, az, deg(70), deg(12), d);
+        aim(rim, centre, az, deg(170), deg(35), d);
+        const sc = key.shadow.camera;
+        sc.left = sc.bottom = -span * 0.85;
+        sc.right = sc.top = span * 0.85;
+        sc.near = d - span * 2;
+        sc.far = d + span * 2;
+        sc.updateProjectionMatrix();
+        key.shadow.normalBias = span * 0.0006;
+
+        for (const o of models) o.root.visible = o === m;
+        composer.render();
+        out[`${m.id}/${view.id}`] = renderer.domElement.toDataURL('image/png');
+      }
+      window.__shots = out;
+      window.__ready = true;
+    </script>
+    <script>
+      window.addEventListener('error', (e) => {
+        window.__error = String((e.error && e.error.message) || e.message);
+      });
+      window.addEventListener('unhandledrejection', (e) => {
+        window.__error = String((e.reason && e.reason.message) || e.reason);
+      });
+    </script>
+  </body>
+</html>

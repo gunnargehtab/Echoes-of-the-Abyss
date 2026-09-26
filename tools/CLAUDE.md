@@ -48,10 +48,16 @@ tools/hull-renders The same models photographed rather than measured:
                    render.mjs drives Chromium/three.js to write one beauty
                    frame per hull into docs/concept-art/renders/, in the
                    water its navy lives in, under the neon-noir rig.
-                   shots.mjs is the table of which hull in whose biome. Not
-                   an npm workspace and not a gate — a portrait is a
-                   presentation artifact, and a model is still approved by
-                   hull-intake and check.mjs, which measure.
+                   shots.mjs is the table of which hull in whose biome.
+                   inspect.mjs is the other rig: any model on a lit table —
+                   authored materials, a neutral key, fill and rim, a floor
+                   for contact shadows — beside the same file at a git
+                   revision (--before), from cameras that do not move
+                   between the two. The noir rig hides geometry by design,
+                   so a shape change is shown here (#947). Not an npm
+                   workspace and not a gate — a picture is a presentation
+                   artifact, and a model is still approved by hull-intake
+                   and check.mjs, which measure.
 tools/audio-meter  What the mix measures, rather than what it was meant to.
                    meter.mjs bundles the production audio classes, renders one
                    layer at a time through Chromium's OfflineAudioContext, and

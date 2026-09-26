@@ -259,12 +259,14 @@ the rule keeps its teeth and gains a boundary rather than an exception:
    eye-lines do. A hull running silent closes its mouth.
 
 The Dredge passes on all four. The Directorate's Nodule Refinery is the second model with
-apertures, and carries two on the same clause (#907): the intake hopper's mouth, a lit floor
-sunk 1.8 m inside the hopper's rim, and the crusher's maw the belt feeds from it — a
-hole cut through the crusher's dome, two of the dome's own cells by two and about 20 m
-across, its lit floor three and a half metres down and the throat between them in the dome's
-chitin, three teeth across its lower lip. Both are on the same token. The rule above is what
-the next one is measured against.
+apertures, and carries two on the same clause (#907, rebuilt in #947). The first is the
+intake hopper's mouth, a lit floor sunk 2.6 m inside the rim of a hopper raised over the
+belt's tail. The second is the crusher's maw that belt runs into — a hole cut through the
+front shoulder of the structure's head, three of the dome's own cells by two and about 20 m
+across. Its lit floor lies a fifth of the dome's radius in, and the throat between them is
+the dome's chitin. Three fangs hang from its upper lip over that floor, and two mandibles
+frame it. Both are on the same token. The rule above is what the next one is measured
+against.
 
 ## Colour-vision palettes
 
