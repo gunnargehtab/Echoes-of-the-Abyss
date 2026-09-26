@@ -241,16 +241,17 @@ export const ink = {
  * purpose. Five is the floor, the living number: five petals, five arms, the
  * Harvester's tendrils — the count a stalk shares with a Directorate spine
  * under a metre and a third of radius, the lattice above it being where the
- * two part. Eighteen is the ceiling, the roundest rim in the roster —
- * under three's own 32, which is the smooth render the header above refuses
- * — and it is 18 rather than 24 or 30 for gate 6 (docs/graphics-standards.md
- * §6): an orb's triangles go as the square of its count, and the own force
- * on screen has 145k triangles once the environment props' 105k are out of
- * the frame's 250k. Every model rebuilt at the rule's counts, a dozen of
- * the navy's structures and its five largest hulls come to 181k at a
- * ceiling of 24 and 127k at 18 (Block 2c, "What the rule costs"); the
- * structures alone, 35k today, are 110k at 24 and 75k at 18. No sections:
- * nothing grown is a prism, and a quill is a thorn cut on the floor. The rule does not reach a table: the four ported scouts'
+ * two part. Sixteen is the ceiling, the roundest rim in the roster — under
+ * three's own 32, which is the smooth render the header above refuses — and
+ * it is 16 rather than 24 or 30 for gate 6 (docs/graphics-standards.md §6):
+ * an orb's triangles go as the square of its count, and the own force on
+ * screen has about 112k triangles once the environment props' 105k and the
+ * terrain's 33k are out of the frame's 250k. Every model rebuilt at the
+ * rule's counts, a dozen of the navy's structures and its five largest hulls
+ * come to 181k at a ceiling of 24, 127k at 18 and 107k at 16 (Block 2c,
+ * "What the rule costs"); the structures alone, 35k today, are 110k at 24
+ * and 62k at 16. No sections: nothing grown is a prism, and a quill is a
+ * thorn cut on the floor. The rule does not reach a table: the four ported scouts'
  * `grownBody` orbs are their exports' own vertices, and re-cutting one is a
  * different hull (`grownBody`), so they are named by the measure and left;
  * the Bower's is a formula in the kit's frame and regenerates at the rule's
@@ -262,7 +263,7 @@ export const ink = {
  * the chart's ratio of densities, 4 to 1.5 px/m, rounded to the half metre —
  * a judgement, and Block 2c says what it rests on.
  */
-export const facets = { chordM: 1.5, min: 5, max: 18, step: 1, sections: [] };
+export const facets = { chordM: 1.5, min: 5, max: 16, step: 1, sections: [] };
 export const panels = { hull: [1.5, 5], structure: [4, 13.5] };
 
 /** A grown orb: few facets, and squashed by the caller — never round in section. */

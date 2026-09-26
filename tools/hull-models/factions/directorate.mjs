@@ -300,17 +300,17 @@ export const ink = {
  * never turned a quarter facet, which would put a vertex on the crown and
  * mirror it across the keel line) — and both approved hulls with a dorsal
  * rank cut every spine five-sided (`dorsalSpines`). Five is the floor.
- * Seventeen is the ceiling: a judgement on silhouette on the odd lattice,
- * over the Consortium's sixteen and under the Commune's eighteen because a
- * chitin shell is rounder at the rim than rolled plate and harder than a
- * pod. It was twenty-one until the Commune's came down to eighteen for gate
- * 6 (`pelagia.mjs`); at twenty-one this navy fit the budget — its own force
- * on screen 107k of the 145k — and came down for the order alone, since a
- * ceiling over the roundest navy's says the shell is rounder than the pod.
+ * Fifteen is the ceiling: the odd step under the Commune's sixteen and over
+ * the Consortium's fourteen, because a chitin shell is rounder at the rim
+ * than rolled plate and harder than a pod. It was twenty-one until the
+ * Commune's came down to sixteen for gate 6 (`pelagia.mjs`); at twenty-one
+ * this navy fit the budget — its own force on screen 107k of about 112k —
+ * and came down for the order alone, since a ceiling over the roundest
+ * navy's says the shell is rounder than the pod.
  * Two sections, and a section keeps a count and not a shape. Five keeps
  * every five-sided spike at any size — the spine is a pentagon the way the
  * Order's spar is a diamond, where the lattice alone would cut the
- * Bastion's anchor claws at seven metres of base to seventeen — and with
+ * Bastion's anchor claws at seven metres of base to fifteen — and with
  * them nine pentagonal torus rings and tubes on the structures (the
  * Bastion's seam rings, lips and pipes, the Turret's collar, the Foundry's
  * launch mouth), which pass as pentagons. Four is a section by count and by
@@ -344,7 +344,7 @@ export const ink = {
 export const facets = {
   chordM: 2,
   min: 5,
-  max: 17,
+  max: 15,
   step: 2,
   offset: 1,
   sections: [
