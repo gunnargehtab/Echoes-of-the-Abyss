@@ -37,6 +37,8 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    were a circle or a prism, and each model's panel edge from
                    above; it judges both against the navy's `facets` and
                    `panels` tables and is advisory, not a gate (#919).
+                   test/facets.test.mjs holds its reading to its rule, under
+                   npm run test:hull-models.
 tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
                    the sprite maps (Chromium), outlines.mjs writes each modelled
                    kind's plan outline into packages/frontend/src/game/
