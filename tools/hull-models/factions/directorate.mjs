@@ -3426,12 +3426,13 @@ export function intakeTeeth(root, black, opts) {
  * teeth are five-sided, the navy's one section.
  * ------------------------------------------------------------------------ */
 
-/** A dome: the upper half of an orb, so a plate stands on the seabed rather than in it. */
 /**
  * A foot's end: a claw point 0.15 m across, ended 0.1 m up, so its rim
  * meets the seabed at any rake and nothing stands under y 0.
  */
 const [FOOT, CLAW] = [0.1, 0.15];
+
+/** A dome: the upper half of an orb, so a plate stands on the seabed rather than in it. */
 const dome = (round, down) => new THREE.SphereGeometry(1, round, down, 0, Math.PI * 2, 0, Math.PI / 2);
 
 /**
@@ -3552,9 +3553,9 @@ export function siloRank(root, { red, violet, black, light }, opts) {
  * edge where the body's last plate meets it. Two mandibles flank the maw,
  * rooted on the shell beside the hole's sides, reaching out along the
  * mouth's axis and hooking in and down toward the belt, each tip stopping
- * on its own side of the mouth so the pair frames the lit floor rather
- * than barring it — port the larger, as the navy's paired limbs are
- * (`jointedLimb`). The rostrum runs on from the brow along
+ * on its own side of the mouth, a short way over the floor's edge, so the
+ * pair frames the lit floor rather than barring it — port the larger, as
+ * the navy's paired limbs are (`jointedLimb`). The rostrum runs on from the brow along
  * the body's axis. `eyes`, `[name, r, θ, φ]` on the shell, are two
  * clusters of points above the maw.
  *
@@ -3672,7 +3673,8 @@ export function refineryHopper(root, { violet, gullet, black, steel }, opts) {
  * on top so the nodules show — with a crimson point on alternate crowns
  * (none under the hopper, where the chart cannot see one). It walks on
  * jointed legs, a pair at every `legs.every`th rib where the bed stands
- * high enough to want them, the port leg the shorter and set a rib-width
+ * high enough to want them — less any `legs.skip` names, `p7` for a leg
+ * whose reach lands on the body — the port leg the shorter and set a rib-width
  * aft of the starboard, never mirrored. The nodules ride the belt, `[gap,
  * r, skin]` midway between rib `gap` and the next, and the lures hang over
  * it (below).
@@ -3711,6 +3713,7 @@ export function feedGallery(root, mats, opts) {
       ['s', 1, 1, 1.5],
       ['p', -1, 0.86, -1.5],
     ]) {
+      if (legs.skip?.includes(`${side}${k}`)) continue;
       const hip = world([x + dx, -2.4, sgn * W]);
       const out = Z.clone().multiplyScalar(sgn);
       const knee = hip.clone().addScaledVector(out, legs.reach[0] * s).add(new THREE.Vector3(0, legs.rise * s, 0));

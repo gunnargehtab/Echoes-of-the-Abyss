@@ -37,10 +37,10 @@
  *   front shoulder, facing the hopper and the conn view's home camera —
  *   three of the dome's rings by two of its quads, forward of the neck
  *   ridge so the belt clears it; the lit floor on `gullet_glow` a fifth of
- *   the dome's radius in, the throat in the dome's chitin, five fangs hung
- *   from the upper lip over the belt that runs in across the lower one —
- *   between two black mandibles that reach out along the mouth's axis and
- *   hook in toward it without crossing it, port the larger. The rostrum
+ *   the dome's radius in, the throat in the dome's chitin, three fangs
+ *   hung from the upper lip over the floor the belt runs in to across the
+ *   lower one — between two black mandibles that reach out along the
+ *   mouth's axis and hook in to its edge, port the larger. The rostrum
  *   runs on from the brow, three stacks with hot throats stand on the
  *   head's back, and two clusters of points, three and two, are its eyes,
  *   on the crown above the mouth.
@@ -116,18 +116,18 @@ const head = directorate.refineryHead(
     scale: [36, 38, 42],
     hole: { rings: [1, 4], quads: [2, 4] },
     recess: 0.2,
-    teeth: { count: 5, r: 1.9, length: 7, lean: 0.3, lip: 'upper' },
+    teeth: { count: 3, r: 1.2, length: 8, lean: 0.3, lip: 'upper' },
     mandibles: [
       { name: 'mandible_p', side: 0, k: 1.15 },
       { name: 'mandible_s', side: 1, k: 0.9 },
     ],
     rostrum: { from: [1.1, Math.PI, 0.92], tip: [138, 16, Z + 3], r: 6 },
     eyes: [
-      ['eye_0', 1.3, 0.1, 0.95],
-      ['eye_1', 1.1, 0.14, 1.07],
-      ['eye_2', 0.9, 0.18, 1.17],
-      ['eye_3', 1.2, 0.12, 1.5],
-      ['eye_4', 0.9, 0.17, 1.6],
+      ['eye_0', 1.3, 0.06, 0.95],
+      ['eye_1', 1.1, 0.13, 1.05],
+      ['eye_2', 0.9, 0.2, 1.15],
+      ['eye_3', 1.2, 0.1, 1.65],
+      ['eye_4', 0.9, 0.17, 1.75],
     ],
   }
 );
@@ -173,7 +173,8 @@ directorate.feedGallery(
     from: new THREE.Vector3(HOPPER[0], 3.2, HOPPER[1]).addScaledVector(toward, -9).toArray(),
     to: into.toArray(),
     ribs: { first: 26, pitch: 15, last: 10, tube: 0.75 },
-    legs: { every: 2, minHip: 7, reach: [8, 17], rise: 7 },
+    // No port leg at the seventh rib: its reach lands in the neck ridge.
+    legs: { every: 2, minHip: 7, reach: [8, 17], rise: 7, skip: ['p7'] },
     nodules: [
       [0, 3.1, 0],
       [1, 3.5, 1],

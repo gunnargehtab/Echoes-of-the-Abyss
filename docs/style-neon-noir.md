@@ -264,8 +264,9 @@ intake hopper's mouth, a lit floor sunk 2.6 m inside the rim of a hopper raised 
 belt's tail. The second is the crusher's maw that belt runs into — a hole cut through the
 front shoulder of the structure's head, three of the dome's own cells by two and about 20 m
 across. Its lit floor lies a fifth of the dome's radius in, and the throat between them is
-the dome's chitin. Five fangs hang from its upper lip over the belt, and two mandibles frame
-it. Both are on the same token. The rule above is what the next one is measured against.
+the dome's chitin. Three fangs hang from its upper lip over that floor, and two mandibles
+frame it. Both are on the same token. The rule above is what the next one is measured
+against.
 
 ## Colour-vision palettes
 
