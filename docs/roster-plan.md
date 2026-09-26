@@ -944,12 +944,13 @@ instrumentation below turned up.
 The escort is a real hold: lifted alone, it orders nine decks in 120 navy-matches. It stays,
 because a deck without it is free to sail with no army, and "a carrier caught alone is a
 3-berth hull dying quietly" ([units.md](units.md), "The carriers"). The other two, alone,
-change nothing. The Directorate is the navy most often escorted with a yard free, and files
-24,023 observations, 36% of its own, as *cannot afford*. Instrumented over seeds 4000–4011, its
-Succentor's bid passed `holdPurse`'s account and half-price checks at 579 of 8,817 of those and
-won none, to a Lure, Corvette, Thurible, Light Scout or Verger; put first, it still buys none,
-and in the baseline its purse held the 300 nodules at 151 of them, the 60 Biomass at 3,924, and
-both at once at none. Construction holds the Knights' purse for a Sounding Spire, a Refinery, a
+change nothing. The Directorate is the navy most often escorted with a yard free, and at
+`6db5600` filed 24,023 observations, 36% of its own, as *cannot afford*. Instrumented over
+seeds 4000–4011, its Succentor's bid passed `holdPurse`'s account and half-price checks at 579
+of 8,817 of those and won none, to a Lure, Corvette, Thurible, Light Scout or Verger; put
+first, it still buys none, and in the baseline its purse held the 300 nodules at 151 of them,
+the 60 Biomass at 3,924, and both at once at none. Construction holds the Knights' purse for
+a Sounding Spire, a Refinery, a
 Vent Tap or a turret on about a third of their observations after the yard is placed, and with the
 Spire never saved for they still order none.
 

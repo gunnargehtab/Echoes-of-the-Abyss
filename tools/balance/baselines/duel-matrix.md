@@ -39,7 +39,8 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --du
 > What it moved, recorded and left: one verdict flips — quiet economies reads **held**, was
 > breached. The one-navy rail stays **breached**, now on the Directorate (78%) where it was the
 > Commune (81%), and Directorate Biomass stays **breached**. 108 matches are decided, not 107,
-> and the median match runs 576 s, not 539.
+> and the median match runs 576 s, not 539. Win rates: the Commune 60% from 81%, the
+> Consortium 30% from 21%, the Knights 28% from 19%, the Directorate 78% from 77%.
 
 120 matches on `ventfront-divide`, seeds 4000–4009. 12 ended without a winner inside the time budget, on a median 0 of the 1 elimination a win needs.
 
