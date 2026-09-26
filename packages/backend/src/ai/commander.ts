@@ -3074,9 +3074,9 @@ export class AiCommander implements AiPlayer {
     // And one count beside them, `priceInPurse`, because the purse is asked
     // last (#915). A deck shut out by the escort is filed as `notEscorted`
     // whatever the bank held, so the largest blocked row named the escort as
-    // the gate to argue with — and over the four-faction baseline the Knights
-    // held their Offertory's price at none of the 57,029 observations the
-    // escort shut. A floor on what the gates cost, never a ceiling: see the
+    // the gate to argue with — and over the four-faction baseline the Knights'
+    // purse at the want held their Offertory's price at none of the 57,029
+    // observations the escort shut. A floor on what the gates cost, never a ceiling: see the
     // count's own note in `types.ts`. Asked without `affordUnit`, which would
     // charge the purse for a hull nobody ordered.
     const ownCarrier = OWN_CARRIER[this.briefing.faction];

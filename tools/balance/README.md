@@ -94,10 +94,10 @@ carrier's want sits below those two in the order of purchase, so while either is
 neither buys nor bids. Only the Commune names either hull, so the row reads zero for the other
 three. The last row, in italics, is not a reason and joins no sum (#915). Of the observations
 the escort, the yard, the berths or the yield shut, it counts those at which the purse already
-held the deck's price: the shut gate alone stood between the deck and a purchase. The purse is
-asked last, so the largest blocked row cannot say that. The row is a floor and not a ceiling:
-a shut gate also stops the deck bidding, so the bank never saved toward it, and what opening a
-gate would buy takes a run with the gate open.
+held the deck's price. The purse is asked last, so the largest blocked row cannot say whether
+the bank could have paid. The row is a floor and not a ceiling: a shut gate also stops the deck
+bidding, so the bank never saved toward it, and what opening a gate would buy takes a run with
+the gate open.
 
 **The bank against the rung.** The most nodules a navy ever held at one instant, and the most
 it held once a Slipway was standing. The tables above are rates and counts, and none of

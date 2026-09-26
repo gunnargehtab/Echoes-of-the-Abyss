@@ -1335,10 +1335,9 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
         'below them in the order of purchase, by the ruling on #839. Only the ' +
         'Commune names either hull. The last row is not a reason and joins no ' +
         'sum: of the observations the escort, the yard, the berths or the yield ' +
-        "shut, it counts those at which the purse already held the deck's price, " +
-        'so that the shut gate alone stood between the deck and a purchase. It is ' +
-        'a floor on what the gates cost and not a ceiling: a shut gate also stops ' +
-        'the deck bidding, so the bank never saved toward it (#915)._',
+        "shut, it counts those at which the purse already held the deck's price. " +
+        'It is a floor on what the gates cost and not a ceiling: a shut gate also ' +
+        'stops the deck bidding, so the bank never saved toward it (#915)._',
       [['Yielded to the Sower or the Bower', (t) => t.yielded]],
       [['Shut before the purse, with the price in it', (t) => t.priceInPurse]]
     );

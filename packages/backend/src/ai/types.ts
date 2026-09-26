@@ -471,7 +471,9 @@ export interface CarrierWantTally extends WantTally {
    * An observation shut by the escort is filed there whether or not the bank
    * could have paid, so the largest blocked row reads as the gate to argue
    * with whatever the bank held (#915). This counts the observations at which
-   * the shut gate alone stood between the deck and a purchase.
+   * a gate in front of the purse shut while the purse held the price. The
+   * escort is asked first and alone, so an observation it shut was never
+   * asked about the yard, the berths or the yield.
    *
    * **A floor on what the gates cost, never a ceiling.** A shut gate also
    * stops the deck bidding, and a bid is the only way `holdPurse` saves for
