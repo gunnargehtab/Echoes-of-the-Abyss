@@ -351,9 +351,11 @@ ceiling: the count whose facet is nearest the navy's edge, on the lattice `offse
 any closed run of facets round an axis — a cylinder's or a lathe's rim, a torus's ring and
 its tube, a capsule's round, and a sphere's parallels **and its meridians**, which are rings
 under the same rule. A ring that closes in a fraction of a turn is held to that fraction of
-the rule's count, so a sphere is `(n, round(n / 2))`, its `n` taken at the widest ring it
-draws (`orbFacets` in `tools/hull-models/facets.mjs`) — never the `(32, 16)` three.js defaults
-to — and an odd rule does not call every orb wrong for closing its meridians in half a turn.
+the rule's count, so a sphere's meridians are the rule's count at its radius over half a
+turn and its round the rule's count at the widest ring those meridians draw (`orbFacets` in
+`tools/hull-models/facets.mjs`), never under three's floors of three and two — never the
+`(32, 16)` three.js defaults to — and an odd rule does not call every orb wrong for closing
+its meridians in half a turn.
 A part scaled flat is read at the radius its widest facet is a chord of, so a squashed
 tergite is judged as the wide thing it is.
 
@@ -408,10 +410,10 @@ and a half, three — that runs from the navy that grows to the navy that polish
 two metres of radius up the yields table ranks them so at every column: the Commune carries
 the most facets and the Order the fewest, with the Directorate and the Consortium between
 them in that order — the Consortium and the Order tying at 6, 8 and 10 for a few decimetres
-between the columns (2.4–2.8 m, 3.35–3.6 m and 4.3–4.4 m). Under 1.3 m every navy is on
+between the columns (2.4–2.8 m, 3.34–3.6 m and 4.3–4.4 m). Under 1.3 m every navy is on
 its floor, where the Consortium's six is over the grown navies' five, because a floor is
 what a drum needs to read as a drum and not where a navy stands on curves; the Commune
-passes it at 1.56 m and the Directorate at 1.91 m. The steps are
+passes it at 1.55 m and the Directorate at 1.91 m. The steps are
 four lattices: the Consortium and the Order build in pairs, on a jig or against a mirror,
 and carry even counts only; the Commune grows, and a grown ring has however many segments
 it grew; the Directorate grows regimented, and carries odd counts only — the one lattice on
@@ -509,9 +511,10 @@ Bastion's anchor claws at seven metres of base to twenty-one — and with them n
 pentagonal torus rings and tubes on the structures, the Bastion's seam rings, lips and
 pipes, the Turret's collar and the Foundry's launch mouth, which pass as pentagons. Four is
 not a section here, and that is a call still open (#919), so this is what it costs.
-Dropping it re-cuts 118 rings: the shared kinds' three rostra and the Cruiser's head
-shield, which the module's own `wedgeRostrum` cuts four-sided; the Cruiser's sixteen dorsal
-spikes and the Submersible's nine (`spikes`, at four); the Harvester's six teeth, seven
+Dropping it re-cuts 118 rings: the Corvette's and the Light Scout's rostra and the
+Cruiser's head shield, which the module's own `wedgeRostrum` cuts four-sided; the
+Submersible's rostrum, the Cruiser's sixteen dorsal spikes and the Submersible's nine
+(`spikes`, at four); the Harvester's six teeth, seven
 skirt tips and two claw tips; the Refinery's eight teeth; eight mandibles; the Verger's
 eight hatch dogs; seven ridges, four nubs, the Lure's plectrum, the Turret's three
 antennae, the Foundry's four finials and the Slipway's three cables — and twenty-eight

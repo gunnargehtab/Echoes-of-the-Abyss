@@ -92,6 +92,9 @@ export function facetsFor({ chordM, min, max, step = 1, offset = 0 }, radiusM, a
   return arc >= TAU ? turn : Math.max(1, Math.round((turn * arc) / TAU));
 }
 
+/** three's `SphereGeometry` clamps its two counts here, so a thinner ask is drawn at these. */
+export const ORB_FLOOR = { 'sphere round': 3, 'sphere meridian': 2 };
+
 /**
  * An orb's two counts from the rule — `{ widthSegments, heightSegments }`
  * for a `SphereGeometry` of `radiusM` over the window three's constructor
@@ -104,11 +107,9 @@ export function facetsFor({ chordM, min, max, step = 1, offset = 0 }, radiusM, a
  * and asked at the radius the round would be a step out on a coarse lattice
  * — a Knights orb of six at 2.5 m draws its widest ring at 2.17 m, where the
  * rule says four. three draws no orb under three round and two meridian
- * segments (`SphereGeometry` clamps both), so a window thinner than the
- * rule's share is drawn at those floors, and `keeps` reads it there.
+ * segments (`ORB_FLOOR`), so a window thinner than the rule's share is
+ * drawn at those floors, and `keeps` reads it there.
  */
-export const ORB_FLOOR = { 'sphere round': 3, 'sphere meridian': 2 };
-
 export function orbFacets(
   rule,
   radiusM,
