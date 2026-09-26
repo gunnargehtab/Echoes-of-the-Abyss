@@ -50,7 +50,7 @@ import {
   type ResourceNodeInfo,
 } from '@echoes/shared';
 import { AiCommander } from '../src/ai/commander.ts';
-import type { AiBriefing } from '../src/ai/types.ts';
+import type { AiBriefing, AiCommand } from '../src/ai/types.ts';
 import { DOCTRINE } from '../src/ai/doctrine.ts';
 import { briefingFor } from '../src/ai/seat.ts';
 import { Match } from '../src/sim/match.ts';
@@ -628,22 +628,153 @@ describe('the commander saves for what it cannot buy out of pocket', () => {
     );
   });
 
-  it('will not save in front of something cheaper it already wants', () => {
+  /** What a Commune without a Refinery sends, on this bank, beside these yards. */
+  function withoutRefinery(
+    nodules: number,
+    haulers: number,
+    structures = [structure(20, StructureKind.Foundry)]
+  ): AiCommand[] {
+    const brief = briefing();
+    return new AiCommander(brief).observe(snapshot(fleet(brief, haulers), { structures, nodules }));
+  }
+
+  it('saves for something cheaper it already wants, not for the rung', () => {
     // A commander with 200 nodules and no Refinery banking every one of them
     // against a 600 nodule yard is the rung bought with the economy's own
     // money. The Refinery falls through when it cannot pay, so "fell through"
-    // had to stop meaning "not wanted".
+    // had to stop meaning "not wanted" — and then had to stop meaning "spend
+    // it on hulls" as well (#706). Past its opening gift the Commune's bank
+    // almost never holds the 250 to 300 a work costs, so a want that was only
+    // ever hoped for barred its rung in thirty matches of thirty.
+    const target = DOCTRINE[Faction.Pelagia].harvesterTarget;
+    const refinery = priceOf(structureStatsFor(StructureKind.Refinery)).nodules;
+    const short = withoutRefinery(Math.floor(refinery / 2), target);
+    assert.deepEqual(
+      short.filter((c) => c.kind === 'produce' || c.kind === 'build'),
+      [],
+      'half a Refinery in the bank is held for the Refinery: no hull, and no yard'
+    );
+    // The same bank that covers the rung buys the cheaper want first.
+    const rich = withoutRefinery(priceOf(structureStatsFor(StructureKind.Slipway)).nodules, target);
+    const sites = rich.flatMap((c) => (c.kind === 'build' ? [c.structure] : []));
+    assert.deepEqual(sites, [StructureKind.Refinery], 'a yard in the bank buys the Refinery');
+  });
+
+  it('holds the purse for a wanted work with the rung already standing', () => {
+    // The case above cannot tell a purse held for the Refinery from one held
+    // for the yard: both leave nothing of half a Refinery. With a finished
+    // Slipway there is no yard left to save for, and the signature structure
+    // is short of crystal, which no wait closes — so the rung saves nothing,
+    // and only a hold for the Refinery keeps the yards from spending the bank.
+    // That was #706 again one rung up: a want nothing paid for.
+    const target = DOCTRINE[Faction.Pelagia].harvesterTarget;
+    const refinery = priceOf(structureStatsFor(StructureKind.Refinery)).nodules;
+    const sent = withoutRefinery(Math.floor(refinery / 2), target, [
+      structure(20, StructureKind.Foundry),
+      structure(22, StructureKind.Slipway),
+    ]);
+    assert.deepEqual(
+      sent.filter((c) => c.kind === 'produce' || c.kind === 'build'),
+      [],
+      'half a Refinery in the bank, the yard up and no crystal: the bank is held for the Refinery'
+    );
+  });
+
+  /**
+   * A Commune at its hauler target with a Refinery and a finished Slipway, so
+   * the only work it can want is the one a case adds — and, the yard standing
+   * and the Veil short of crystal, nothing else would hold the purse.
+   */
+  function oneWorkWanted(
+    nodules: number,
+    extra: Partial<EchoSnapshot> = {},
+    refinery: { x: number; y: number } = { x: 1000, y: 1000 }
+  ): AiCommand[] {
     const brief = briefing();
-    const commander = new AiCommander(brief);
-    const sent = commander.observe(
+    return new AiCommander(brief).observe(
       snapshot(fleet(brief, DOCTRINE[Faction.Pelagia].harvesterTarget), {
-        structures: [structure(20, StructureKind.Foundry)],
-        nodules: Math.floor(priceOf(structureStatsFor(StructureKind.Refinery)).nodules / 2),
+        structures: [
+          structure(20, StructureKind.Foundry),
+          { ...structure(21, StructureKind.Refinery), ...refinery },
+          structure(22, StructureKind.Slipway),
+        ],
+        nodules,
+        ...extra,
       })
     );
+  }
+
+  const worksOf = (sent: AiCommand[]): AiCommand[] =>
+    sent.filter((c) => c.kind === 'produce' || c.kind === 'build');
+
+  it('holds the purse for a turret against a raid it cannot yet pay for', () => {
+    // The turret and the Vent Tap were the lock, not the Refinery: over seeds
+    // 4000–4029 they were wanted on most of the observations that stopped the
+    // Commune's construction branch, and 0.13 of each was ever built (#706).
+    const brief = briefing();
+    const home = brief.spawns[brief.slot]!;
+    const raid = {
+      contacts: [
+        { id: 500, x: home.x + 300, y: home.y, tick: 6000, tier: ResolutionTier.Classification },
+      ],
+    };
+    const turret = priceOf(structureStatsFor(StructureKind.SentinelTurret)).nodules;
+    const sites = worksOf(oneWorkWanted(turret, raid)).flatMap((c) =>
+      c.kind === 'build' ? [c.structure] : []
+    );
+    assert.deepEqual(
+      sites,
+      [StructureKind.SentinelTurret],
+      'the premise: this raid wants a turret'
+    );
+    assert.deepEqual(
+      worksOf(oneWorkWanted(Math.floor(turret / 2), raid)),
+      [],
+      'half a turret in the bank, raided: the bank is held for the turret'
+    );
+  });
+
+  it('holds the purse for a Vent Tap once the plant is nearly drawing what it makes', () => {
+    // On a vent the Refinery stands on, so the tap is anchored and the want is
+    // live; `nearestVent` refuses one the server would not let rise.
+    const brief = briefing();
+    const home = brief.spawns[brief.slot]!;
+    const { cols, rows, cellM, biomes } = brief.terrain;
+    let vent: { x: number; y: number } | null = null;
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (biomes[row * cols + col] !== 1) continue;
+        const at = { x: (col + 0.5) * cellM, y: (row + 0.5) * cellM };
+        const nearer =
+          vent === null ||
+          Math.hypot(at.x - home.x, at.y - home.y) < Math.hypot(vent.x - home.x, vent.y - home.y);
+        if (nearer) vent = at;
+      }
+    }
+    assert.ok(vent !== null, 'the default map has a thermal vein');
+    const tight = { draw: { capacity: 6, demand: 6, satisfaction: 1 } };
+    const tap = priceOf(structureStatsFor(StructureKind.VentTap)).nodules;
+    const sites = worksOf(oneWorkWanted(tap, tight, vent)).flatMap((c) =>
+      c.kind === 'build' ? [c.structure] : []
+    );
+    assert.deepEqual(sites, [StructureKind.VentTap], 'the premise: a tight plant wants a tap');
+    assert.deepEqual(
+      worksOf(oneWorkWanted(Math.floor(tap / 2), tight, vent)),
+      [],
+      'half a Vent Tap in the bank, the plant tight: the bank is held for the tap'
+    );
+  });
+
+  it('buys haulers rather than saving for a cheaper build, as it does for the rung', () => {
+    // The same guard, for the same reason, and on the same count. Saving is
+    // holding money back from the yards; a navy short of haulers spends it on
+    // the economy that will pay for the build.
+    const short = DOCTRINE[Faction.Pelagia].harvesterTarget - 2;
+    const refinery = priceOf(structureStatsFor(StructureKind.Refinery)).nodules;
+    const sent = withoutRefinery(Math.floor(refinery / 2), short);
     assert.ok(
-      sent.some((c) => c.kind === 'produce'),
-      'with no Refinery yet, the money is the economy’s and the yards may spend it'
+      sent.some((c) => c.kind === 'produce' && c.unit === UnitKind.Harvester),
+      'half a Refinery in the bank and two haulers missing buys a hauler'
     );
   });
 

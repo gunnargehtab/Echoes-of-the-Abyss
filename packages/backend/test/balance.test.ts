@@ -246,7 +246,12 @@ describe('telemetry measures what it says it measures', () => {
     // The carrier's tally rides the ordnance tally's channel — seat, runner,
     // `finish` — and this holds the channel, not the branches:
     // `aiCarrier.test.ts` drives each of the seven reasons on its own.
-    const result = runMatch({ seats: DUEL, seed: 60, maxMinutes: 2, fauna: false });
+    //
+    // With the Drift, for the premise below. Without it the Commune spends
+    // these two minutes buying haulers and saving — for the Slipway as much as
+    // for a Vent Tap (#706) — fields no army hull, is never escorted, and both
+    // tallies file every observation under the same reason.
+    const result = runMatch({ seats: DUEL, seed: 60, maxMinutes: 2, fauna: true });
     for (const player of result.players) {
       const t = player.carrierWant;
       assert.ok(t.reached > 0, `slot ${player.slot} reached the carrier want at all`);
