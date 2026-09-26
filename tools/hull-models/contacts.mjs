@@ -18,11 +18,12 @@
  * and `--with <re>` those parts' partners; both match the node's name. The
  * test is glb.mjs `gapBetween`, the light audit's resting measure, run only
  * where two parts' boxes overlap, so a full sweep over a model's hundred and
- * fifty parts is seconds rather than minutes. A structure should stand on
- * the seabed at y 0 with nothing under it — the runtime centres a model on
- * its box (rosterModels.ts `normalise`) — so the lowest point is printed
- * too, with every part that reaches below it by more than `--sink` metres
- * (0.05 by default, a claw's point).
+ * fifty parts is seconds rather than minutes. A model is authored standing
+ * on y 0, and a part under it is the model's own error: it drags down the
+ * box the conn view seats a structure by (rosterModels.ts `normalise` puts
+ * the box's centre at working depth, not y 0 on the seabed, #955). So the
+ * lowest point is printed too, with every part that reaches below y 0 by
+ * more than `--sink` metres (0.05 by default, a claw's point).
  *
  * Advisory, not a gate: a contact is a question for the reviewer, not a
  * verdict. `hull-reviewer` runs it on every changed model.

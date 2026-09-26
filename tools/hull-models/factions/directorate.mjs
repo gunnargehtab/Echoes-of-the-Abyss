@@ -3436,9 +3436,11 @@ export function intakeTeeth(root, black, opts) {
  * many-limbed, regimented in spacing and asymmetric in size.
  *
  * Everything is in metres in the root's frame, bow (the head) on +X, ground
- * at y 0, and nothing is drawn under it: the runtime centres a structure on
- * its box, so a buried half would lift the rest (rosterModels.ts
- * `normalise`). Round bodies cut 15 a turn, the navy's ceiling as #919's
+ * at y 0, and nothing is drawn under it. The conn view does not seat a
+ * structure on that ground: it puts the box's centre at the 600 m working
+ * depth (rosterModels.ts `normalise`), so on a floor shallower than about
+ * 900 m the lowest 66 m of this one, its plates, head, belt and hopper, are
+ * under the seabed (#955). Round bodies cut 15 a turn, the navy's ceiling as #919's
  * table brings it and what Block 2c's crisp facets ask; spines, limbs and
  * teeth are five-sided, the navy's one section.
  * ------------------------------------------------------------------------ */

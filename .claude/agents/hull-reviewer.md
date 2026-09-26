@@ -120,9 +120,13 @@ The same pass reads the model's function and its claims:
 
 - **The process connects.** A belt that feeds a maw ends in it, a hopper's chute meets
   the belt, and a leg's claw is on the seabed.
-- **A structure stands on y 0 with nothing under it.** The runtime centres a model on its
-  box (`packages/frontend/src/game/rosterModels.ts`), and the sweep's last lines report
-  the lowest point.
+- **A structure keeps its read in its upper half.** The conn view puts a structure's box
+  centre at its 600 m working depth and draws the model true against depth drawn at 0.22,
+  so the lower half is under any floor shallower than about 900 m
+  (`packages/frontend/src/game/rosterModels.ts` `normalise`, #955). The lit table seats
+  the model on its own base and cannot show this, so ask for a `run-game` frame of a
+  structure at a real site. #947's rebuild lost its plates, head, belt and hopper that way.
+  The sweep's last lines report anything under the model's own y 0.
 - **A sentence that places a part is a claim to measure.** "The lures hang over the belt"
   is not prose to accept: #947's first lures sat 19 to 71 m off it.
 

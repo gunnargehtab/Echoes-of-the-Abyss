@@ -116,9 +116,15 @@ the brief; the numbers are constraints, not suggestions.
 - **Function reads as well as silhouette.** A structure's nouns are a process: nodules go
   hopper, belt, maw. Each stage meets the next. A belt that stops under the maw it feeds
   has the noun and not the machine.
-- **A structure stands on y 0 with nothing under it.** The runtime centres a model on its
-  box (`packages/frontend/src/game/rosterModels.ts` `normalise`), so a buried half lifts
-  the rest. Feet end on the seabed, not in it.
+- **A structure keeps its read in its upper half.** The conn view does not stand a
+  structure on the seabed. It puts the model's box centre at the 600 m working depth
+  (`packages/frontend/src/game/rosterModels.ts` `normalise`), and it draws depth at 0.22 of
+  a metre a metre while it draws the model true. So the lower half of a 133 m model reaches
+  some 300 m of depth below that point, under any floor shallower than about 900 m (#955).
+  #947's rebuild kept its plates, head, belt and hopper in its lowest 40 m and lost all four
+  in the game. The lit table seats a model on its own base and cannot show this, so a
+  structure gets a `run-game` frame at a real site before its PR. Author on y 0 with nothing
+  under it all the same: a part below moves the box the game seats by.
 - **A header states what the model does.** A sentence that places a part, like "the lures
   hang over the belt", is a measurement the reviewer will take. Write it after measuring,
   not as the intent.
