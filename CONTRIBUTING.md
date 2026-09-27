@@ -207,10 +207,10 @@ repeating it:
 
 ## Docs conventions
 
-Four rules, stated once in [CLAUDE.md](CLAUDE.md#docs): the glossary is authoritative,
-never link a doc that does not exist, cross-link rather than restate, and use concrete
-numbers. [docs/README.md](docs/README.md) is the design bible's own index and its editing
-rules.
+Four rules, stated once in [docs/CLAUDE.md](docs/CLAUDE.md): the glossary is
+authoritative, never link a doc that does not exist, cross-link rather than restate, and
+use concrete numbers. [docs/README.md](docs/README.md) is the design bible's own index and
+its editing rules.
 
 The third of those is why this file links instead of repeating. It applies to the
 repository's own prose as much as to `docs/`.
@@ -223,8 +223,8 @@ than a list here, and each skill's own front matter for what it is for.
 
 `tools/claude-docs/check.mjs` holds the authoritative split between the skills this
 repository wrote and the vendored copies, and fails `npm run docs:claude` on a skill in
-neither list. [CLAUDE.md](CLAUDE.md#vendored-skills) says why the copies are read-only,
-and `.claude/VENDORED-SKILLS.md` records each one's upstream and licence.
+neither list. [CLAUDE.md](CLAUDE.md#contributing) says the copies are read-only, and
+`.claude/VENDORED-SKILLS.md` says why and records each one's upstream and licence.
 
 This file used to name four of them, and there are six. A list here is a second copy of
 something the gate already holds, and it drifts the same quiet way the hand-copied gate

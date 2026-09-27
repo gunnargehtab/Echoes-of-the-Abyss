@@ -77,6 +77,10 @@
  * gated document, `.claude/` included, because the rule is about prose naming
  * the tree and both scopes are that.
  *
+ * **And every `CLAUDE.md` stays under 200 lines, since #899** — the only
+ * documents here a session loads without asking. `lib/length.mjs` holds the
+ * ceiling and the reason for it.
+ *
  *   node tools/claude-docs/check.mjs [--list]
  */
 
@@ -86,6 +90,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { spawn } from '../lib/spawn.mjs';
+import { CLAUDE_MD_LINE_LIMIT, overlongClaudeFiles } from './lib/length.mjs';
 import { makeResolver, unresolvedPaths, unusedAllowances } from './lib/paths.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -393,6 +398,21 @@ if (pathProblems.length > 0) {
 }
 
 process.stdout.write('paths named in backticks: all resolve\n');
+
+// Checked before the lint runs because it needs no network and names its own
+// fix; lib/length.mjs says why the ceiling exists.
+const overlong = overlongClaudeFiles(documents);
+if (overlong.length > 0) {
+  process.stderr.write(
+    `CLAUDE.md file(s) at or over ${CLAUDE_MD_LINE_LIMIT} lines:\n${overlong
+      .map(({ file, lines }) => `  ${file}: ${lines}`)
+      .join('\n')}\n` +
+      "Cut a line for each one added, or move what binds one directory into that directory's CLAUDE.md.\n"
+  );
+  process.exit(1);
+}
+
+process.stdout.write(`CLAUDE.md files: all under ${CLAUDE_MD_LINE_LIMIT} lines\n`);
 
 // Two lint runs, two configs: .claude/'s turns MD018 off for the register those
 // files use, and the root three neither need that nor should get it.
