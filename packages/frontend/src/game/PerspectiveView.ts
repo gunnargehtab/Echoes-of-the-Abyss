@@ -95,6 +95,7 @@ import { ACTIVE_PALETTE } from './palette.ts';
 import {
   applyLiveGlow,
   rosterModelInstance,
+  standingY,
   type RosterModelInstance,
   type RosterModelKey,
 } from './rosterModels.ts';
@@ -298,6 +299,8 @@ interface EntityHandle {
   /** The approved model, once loaded. Sprite hides while it shows. */
   model: RosterModelInstance | null;
   modelKey: string;
+  /** A structure stands on its depth; a hull hangs by its centre (#955). */
+  stands: boolean;
 }
 
 /** Everything one entity's sync needs, sprite path and model path alike. */
@@ -315,6 +318,8 @@ interface EntitySpec {
   modelCacheKey: string;
   liveSig: number;
   restSig: number;
+  /** True for a structure, whose model stands on its depth (`standingY`). */
+  stands: boolean;
 }
 
 /**
@@ -1594,6 +1599,7 @@ export class PerspectiveView {
         heightM: 0,
         model: null,
         modelKey: '',
+        stands: spec.stands,
       };
       handles.set(id, handle);
     }
@@ -1673,7 +1679,8 @@ export class PerspectiveView {
     // would otherwise bury half its own height in the seabed at survey zoom.
     const hullY = Math.max(y, groundY + 4 * draw);
     if (model !== null) {
-      model.root.position.set(x, hullY, z);
+      const modelY = handle.stands ? standingY(model.baseM, draw, y, groundY) : hullY;
+      model.root.position.set(x, modelY, z);
       model.root.rotation.y = -yaw;
     } else {
       handle.mesh.position.set(x, hullY, z);
@@ -1733,6 +1740,7 @@ export class PerspectiveView {
         modelCacheKey: `unit:${unit.kind}:${this.faction}:${ACTIVE_PALETTE.name}`,
         liveSig: unit.sig,
         restSig: statsFor(unit.kind).sigIdle,
+        stands: false,
       });
     }
 
@@ -1763,6 +1771,7 @@ export class PerspectiveView {
           : '',
         liveSig: structure.sig,
         restSig: structureStatsFor(structure.kind).sigIdle,
+        stands: true,
       });
     }
     this.syncOrdnance(now);

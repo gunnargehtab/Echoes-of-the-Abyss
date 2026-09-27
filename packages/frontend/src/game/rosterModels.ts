@@ -243,6 +243,12 @@ export interface RosterModelInstance {
    * `root.scale`, which it is itself about to overwrite.
    */
   baseScale: number;
+  /**
+   * How far the lowest drawn vertex sits under `root`'s origin, metres at
+   * `baseScale`. Intake centres a model on its box, which is where a hull
+   * hangs; a structure stands on this instead (`standingY`, #955).
+   */
+  baseM: number;
 }
 
 /** A slug's recoloured, canonicalised model, which every instance clones. */
@@ -252,6 +258,21 @@ export interface Template {
   beamM: number;
   heightM: number;
   baseScale: number;
+  baseM: number;
+}
+
+/**
+ * Where a structure's `root` goes so the model stands on its depth
+ * (docs/art-direction.md "A structure stands on its depth"): its lowest point
+ * at `depthY`, or on the ground where the ground is higher, rising from there
+ * at whatever scale it is drawn. A hull is a point in the water and hangs by
+ * its centre. Hung the same way, a 133 m Refinery reached 300 m of drawn depth
+ * under the depth it was built at, since depth draws at 0.22 and the model
+ * true, and on a floor shallower than about 900 m its lower half was
+ * underground (#955).
+ */
+export function standingY(baseM: number, drawScale: number, depthY: number, groundY: number) {
+  return Math.max(depthY, groundY) + baseM * drawScale;
 }
 
 const loader = new GLTFLoader();
@@ -395,7 +416,8 @@ function designLengthM(key: RosterModelKey): number {
  * part is yawed or leaned. Until #882 that drew the Pelagia Spore Veil 1.145×
  * the size intake reviewed, as environmentModels.ts `propFootprint` found for
  * props (#876). The extents returned are the merged vertices', which is what
- * draws.
+ * draws, and so is `baseM`: a structure stood on the loose box would float by
+ * however far a leaning part's box reaches under its lowest vertex.
  */
 function normalise(scene: Group, key: RosterModelKey): Template {
   const raw = new Box3().setFromObject(scene).getSize(new Vector3());
@@ -408,8 +430,10 @@ function normalise(scene: Group, key: RosterModelKey): Template {
   const scale = partsSize.x > 0 ? designLengthM(key) / partsSize.x : 1;
 
   const merged = mergeByMaterial(yawed);
-  const drawn = new Box3().setFromObject(merged, true).getSize(new Vector3());
-  merged.position.sub(parts.getCenter(new Vector3()));
+  const extent = new Box3().setFromObject(merged, true);
+  const drawn = extent.getSize(new Vector3());
+  const centre = parts.getCenter(new Vector3());
+  merged.position.sub(centre);
 
   const root = new Group();
   root.add(merged);
@@ -420,6 +444,7 @@ function normalise(scene: Group, key: RosterModelKey): Template {
     beamM: drawn.z * scale,
     heightM: drawn.y * scale,
     baseScale: scale,
+    baseM: (centre.y - extent.min.y) * scale,
   };
 }
 
@@ -525,6 +550,7 @@ export function rosterModelInstance(key: RosterModelKey): RosterModelInstance | 
     beamM: template.beamM,
     heightM: template.heightM,
     baseScale: template.baseScale,
+    baseM: template.baseM,
   };
 }
 

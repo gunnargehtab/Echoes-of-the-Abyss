@@ -19,9 +19,9 @@
  * test is glb.mjs `gapBetween`, the light audit's resting measure, run only
  * where two parts' boxes overlap, so a full sweep over a model's hundred and
  * fifty parts is seconds rather than minutes. A model is authored standing
- * on y 0, and a part under it is the model's own error: it drags down the
- * box the conn view seats a structure by (rosterModels.ts `normalise` puts
- * the box's centre at working depth, not y 0 on the seabed, #955). So the
+ * on y 0, and a part under it is the model's own error: the conn view stands
+ * a structure on its lowest point (rosterModels.ts `standingY`, #955), so
+ * that part lifts the rest of the model off the floor. So the
  * lowest point is printed too, with every part that reaches below y 0 by
  * more than `--sink` metres (0.05 by default, a claw's point).
  *

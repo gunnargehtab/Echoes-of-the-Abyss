@@ -22,10 +22,12 @@ import { existsSync, readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { Box3, Vector3 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { Faction, StructureKind, UnitKind } from '@echoes/shared';
+import { CONSTRUCTION, Faction, StructureKind, UnitKind } from '@echoes/shared';
 
 import { STRUCTURES, UNITS } from '../../../tools/hull-maps/models.mjs';
-import { buildTemplate, slugFor } from '../src/game/rosterModels.ts';
+import { buildTemplate, slugFor, standingY } from '../src/game/rosterModels.ts';
+import { depthToWorldY } from '../src/game/perspectiveTerrain.ts';
+import { MAX_HULL_SCALE } from '../src/game/readability.ts';
 
 const MODELS = new URL('../../../docs/concept-art/models/', import.meta.url);
 
@@ -93,6 +95,39 @@ describe('roster scale', () => {
       close(template.lengthM, size.x, `${file} lengthM`);
       close(template.beamM, size.z, `${file} beamM`);
       close(template.heightM, size.y, `${file} heightM`);
+    });
+  }
+});
+
+/**
+ * docs/art-direction.md "A structure stands on its depth" (#955): the model's
+ * lowest point at the depth it was built at, and on the ground where the
+ * ground is higher, at every scale the far-zoom factor draws it. Hung by its
+ * box centre, #947's Refinery put its plates, head, belt and hopper under any
+ * floor shallower than about 900 m. Every committed structure, built by the
+ * real template code and stood by the function the conn view calls.
+ */
+describe('structure seating', () => {
+  const depthY = depthToWorldY(CONSTRUCTION.WORKING_DEPTH_M);
+  const grounds = [
+    ['a floor 100 m under its depth', depthToWorldY(CONSTRUCTION.WORKING_DEPTH_M + 100), depthY],
+    ['a floor 50 m over its depth', depthToWorldY(CONSTRUCTION.WORKING_DEPTH_M - 50), null],
+  ];
+  for (const key of KEYS.filter((k) => 'structure' in k)) {
+    const file = `${slugFor(key)}.glb`;
+    it(`${file} stands on its depth, never under the floor`, async () => {
+      const template = buildTemplate(await parse(file), key);
+      assert.ok(template.baseM > 0, `${file} has a base under its centre`);
+      for (const draw of [1, MAX_HULL_SCALE]) {
+        const root = template.root.clone(true);
+        root.scale.setScalar(template.baseScale * draw);
+        for (const [where, groundY, expected] of grounds) {
+          root.position.y = standingY(template.baseM, draw, depthY, groundY);
+          const drawn = new Box3().setFromObject(root, true);
+          close(drawn.min.y, expected ?? groundY, `${file} at ×${draw} over ${where}`);
+          close(drawn.getSize(new Vector3()).y, template.heightM * draw, `${file} height`);
+        }
+      }
     });
   }
 });
