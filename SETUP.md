@@ -139,8 +139,9 @@ npm run lint
 | `VITE_SERVER_URL` | frontend, **at build time** | the page's own scheme and host, on `:3000` | Where the client dials the server. |
 
 `CORS_ORIGIN` is the one to understand. The WebSocket upgrade is not subject to
-CORS, but colyseus.js POSTs to `/matchmake/` first, so this decides whether a
-browser can reach the server at all:
+CORS, but `@colyseus/sdk` POSTs to `/matchmake/` first, and the lobby list is a
+GET to `/rooms/match`, so this decides whether a browser can reach the server at
+all:
 
 - **Unset outside production** — loopback origins only, on any port. That covers
   `npm run dev`, a second Vite instance on 5174, and the on-device Termux setup,

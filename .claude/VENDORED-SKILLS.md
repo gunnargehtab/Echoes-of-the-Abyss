@@ -72,15 +72,16 @@ Why each one earns its context:
   genuinely run against the dev client through `run-game` — a check the
   react-test-renderer suites cannot perform, because they assert what a doc
   section promises rather than what a browser computes.
-- **colyseus** does not apply yet, and that is the point. It documents 0.18,
-  and its own first step tells the reader to stop and follow the version's own
-  docs when the project is on 0.16 or older. `@colyseus/core` here is pinned to
-  `^0.15.57`. It is installed as a **guard**: the 0.17 and 0.18 API drift
-  (the `Room` generic, the `onLeave` close code, the removal of `client.id`,
-  `@filter` becoming views) is exactly what stale model recall writes into a
-  0.15 room, and `packages/backend/CLAUDE.md`'s own Colyseus notes cover the meta-package import
-  and the decorator flag but not that drift. Drop it if the noise outweighs the
-  guard.
+- **colyseus** documents 0.18, which is what this repository runs since #962:
+  `@colyseus/core` `^0.18.17` and `@colyseus/schema` `^5.0.34` on the server,
+  `@colyseus/sdk` `^0.18.4` on the client. It was vendored as a guard while the
+  backend sat on 0.15; now it is the reference. Its table of what memory gets
+  wrong — the `Room` generic, the `onLeave` close code, the removal of
+  `client.id`, `@filter` becoming views — is exactly what pre-0.17 model recall
+  writes into a 0.18 room. Its version check reads `colyseus`, which is not
+  installed here, and its examples import from it;
+  `packages/backend/CLAUDE.md`'s Colyseus notes give the local names, plus the
+  decorator flag the skill does not cover.
 
 ### The BitmapText argument, measured
 
