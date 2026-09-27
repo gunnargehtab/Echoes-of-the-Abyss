@@ -165,7 +165,8 @@ to run first. Anything visual also clears `docs/graphics-standards.md`. The temp
 
 - **Push in instalments.** A session can hit a context or session limit and lose its
   container. Commit and push at every self-contained step; open the pull request once an
-  increment passes the gates, not when the issue is done, and say in it what is left.
+  increment stands on its own and passes the gates, not when the issue is done, and say
+  in it what is left.
 - **Claim the issue before you touch a file.** Assign it to the repository owner (`get_me`
   gives the login) **before** the first edit, in every session: the assignee is the only
   claim that exists before a branch does (`.claude/skills/work-issue/SKILL.md` §3; §5 keeps
