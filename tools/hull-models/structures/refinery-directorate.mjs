@@ -66,12 +66,10 @@
  * the audit; no lamp is hidden or floating.
  *
  * THE FRAME: X-long, metres, ground at y 0 and nothing under it. The conn
- * view does not seat the model on that ground: it puts the box's centre at
- * the 600 m working depth (rosterModels.ts `normalise`), and on a floor
- * shallower than about 900 m everything here under 66 m — the plates, the
- * head, the belt and the hopper — is under the seabed; in run-game left of
- * the Ventfront Bastion only the silo tops and the stacks show (#955).
- * `DRAWN` is the length the
+ * view stands the model's y 0 at the 600 m working depth (rosterModels.ts
+ * `standingY`). It used to hang it by the box's centre, which buried the
+ * plates, head, belt and hopper under any floor shallower than about 900 m
+ * (#955). `DRAWN` is the length the
  * parts span as intake measures it, three's `Box3` over the parts' own
  * boxes; `metreTrue` scales that to 280 so both consumers' rescale is 1.
  */

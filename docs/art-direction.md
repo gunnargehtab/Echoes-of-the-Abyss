@@ -449,6 +449,15 @@ The projection change moved the old plan-view protections; it did not drop them:
   ground shadow; a hull's height above its own shadow *is* its depth. Verticality keeps
   its luminance-and-fog language ("Reading the Sea Floor" above); the tilt supports it
   rather than competing with it.
+- **A structure stands on its depth.** A hull is a point in the water and hangs by its
+  centre. A structure is built up from a footing: its model's ground, the y 0 it was
+  authored standing on, sits at the depth it was built at, 600 m of Mid-Water, and the
+  model rises from there; where the seabed is higher, it stands on the seabed. An anchor, a
+  root or a slab authored under that line grips the floor wherever the floor meets it.
+  Hung by its centre, a 133 m Refinery reached some 300 m of drawn depth under that point,
+  because the view draws depth at 0.22 and models true, and on any floor shallower than
+  about 900 m its lower half was underground (#955). The plumb runs from the footing to the
+  seabed.
 - **An unearned depth is drawn as a column, not as a height.** Below Tier 3 the server
   sends no depth at all, and a projection that picks one — even a stable, deliberately
   arbitrary one — draws a precision the tier never carried. So a contact with no earned
@@ -533,7 +542,8 @@ What the rule is careful about:
   floor — so a hull is never drawn larger than it can be clicked, and aim never has to know
   the scale exists.
 - **Depth stays honest.** The plumb line is never scaled: its length *is* the hull's depth,
-  and the hull's centre does not move. The ground shadow scales with the hull, because a
+  and the hull's centre does not move, nor a structure's footing: a structure grows up from
+  it. The ground shadow scales with the hull, because a
   shadow that stayed true-scale under an exaggerated hull would read as the wrong depth.
   Instrument ink drawn *about* a hull — selection ring, loudness ring, bars — scales with
   it, for the same reason a caption tracks its figure.

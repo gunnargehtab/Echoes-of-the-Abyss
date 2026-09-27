@@ -61,9 +61,8 @@ tools/hull-renders The same models photographed rather than measured:
                    revision (--before), from cameras that do not move
                    between the two. The noir rig hides geometry by design,
                    so a shape change is shown here (#947). It seats a model
-                   on its own base, which the conn view does not do for a
-                   structure (#955), so a structure still wants a run-game
-                   frame. Not an npm
+                   on its own base, as the conn view stands a structure
+                   (#955). Not an npm
                    workspace and not a gate — a picture is a presentation
                    artifact, and a model is still approved by hull-intake
                    and check.mjs, which measure.
