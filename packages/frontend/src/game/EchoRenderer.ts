@@ -6213,7 +6213,7 @@ export class EchoRenderer {
       if (style === undefined) continue;
       const radius = markRadiusM(mark.kind, mark.intensity);
 
-      // Three soft rings rather than a disc: residue has no edge, and a disc
+      // Three soft rings rather than a disc: residue has no solid edge, and a disc
       // at any alpha reads as an object sitting on the seabed.
       for (let ring = 0; ring < 3; ring++) {
         const t = (ring + 1) / 3;
