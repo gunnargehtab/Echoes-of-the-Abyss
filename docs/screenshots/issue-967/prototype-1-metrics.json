@@ -1,0 +1,47 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "probe": {
+    "active": true,
+    "pitchDeg": 55,
+    "yawDeg": 0,
+    "focus": {
+      "xM": 1340,
+      "zM": 1300,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 1340,
+      "zM": 2160,
+      "depthM": -4868
+    },
+    "distance": 1500,
+    "waterReachM": 4800,
+    "waterDensity": 1,
+    "hullScale": 1,
+    "drawCalls": 55,
+    "triangles": 148290,
+    "station": "dream-home",
+    "stationMs": 10007.9,
+    "stationFrames": 601,
+    "avgFrames": 240,
+    "fps": 60.1,
+    "avgFrameMs": 16.66,
+    "worstFrameMs": 24.1,
+    "avgConnMs": 0.85,
+    "worstConnMs": 1.4,
+    "avgOverlayMs": 1.11,
+    "worstOverlayMs": 2.6,
+    "overlayFrames": 601,
+    "units": 4,
+    "structures": 2,
+    "ordnance": 0,
+    "props": 367,
+    "propTris": 99520,
+    "modelBacked": 6,
+    "ownCentre": {
+      "x": 1332.5069580078125,
+      "z": 1403.0888671875
+    }
+  }
+}
