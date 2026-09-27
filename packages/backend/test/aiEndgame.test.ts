@@ -283,8 +283,9 @@ describe('a force with the numbers is a committed force', () => {
     // At full strength — which is where production holds the army — the
     // commander used never to reach the commitment, so the long leash stood
     // and the push branch was reached "between zero and eight times in
-    // twenty-five minutes" (#440). Two kilometres out is inside the pursuit
-    // leash and outside any gun: a committed force walks past it.
+    // twenty-five minutes" (#440). Two kilometres out was inside the old
+    // 2,800 m pursuit leash (removed, #949) and is outside any gun: a
+    // committed force walks past it.
     const { home, enemyStarts } = rig();
     const away = enemyStarts[0]!;
     const length = Math.hypot(away.x - home.x, away.y - home.y) || 1;
@@ -355,20 +356,20 @@ describe('a push started without the numbers stays a push', () => {
 
 describe('on the way in, the army shoots what is in its way', () => {
   /**
-   * The fault that made the other two nearly pointless. `bestThreat` treats an
+   * The fault that made the other two nearly pointless. `bestThreat` treated an
    * unclassified smudge as a target — correctly, that is the game — and with
-   * the Drift in the water something is nearly always inside the 2,800 m
-   * pursuit leash, so the branch that attacks whatever it can hear pre-empted
-   * the branch that walks at a base. Measured over four four-seat matches at
-   * the cap, every commander reached the push branch between zero and eight
-   * times in twenty-five minutes.
+   * the Drift in the water something was nearly always inside the 2,800 m
+   * pursuit leash (removed, #949), so the branch that attacked whatever it
+   * could hear pre-empted the branch that walks at a base. Measured over four
+   * four-seat matches at the cap, every commander reached the push branch
+   * between zero and eight times in twenty-five minutes.
    */
   it('walks past a smudge it can hear but is not in contact with', () => {
     const { home, enemyStarts } = rig();
     // Two kilometres out, and deliberately *away* from the enemy: inside the
-    // pursuit leash, far outside a gun's reach, and nowhere near the rally
-    // point. Under the old leash the commander only ever issued an attack
-    // order for this and never moved at all.
+    // old pursuit leash (removed, #949), far outside a gun's reach, and
+    // nowhere near the rally point. Under the old leash the commander only
+    // ever issued an attack order for this and never moved at all.
     //
     // What it goes at once it does move is a *base*, not the smudge (#440). A
     // committed push used to take its destination from `remembered`, which is

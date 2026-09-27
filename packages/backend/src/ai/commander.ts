@@ -4910,12 +4910,12 @@ export class AiCommander implements AiPlayer {
    * to ask this only while `size < threshold`, so a force that made its
    * doctrine's number skipped the gate entirely and never opened a commitment
    * — which meant it kept the 2,800 m pursuit leash, and with the Drift in the
-   * water there is nearly always something inside 2,800 m for the engage
-   * branch to prefer over a base (see RANGE.PUSH_ENGAGE_M). The impatient push
-   * got the short leash and the strong one did not: the army that had every
-   * reason to walk in was the one still chasing fish. Both ways of opening the
-   * gate now commit, so "we are going" means the same thing however the force
-   * got there.
+   * water there was nearly always something inside 2,800 m for the pursuit
+   * branch (since removed, #949) to prefer over a base (see
+   * RANGE.PUSH_ENGAGE_M). The impatient push got the short leash and the
+   * strong one did not: the army that had every reason to walk in was the one
+   * still chasing fish. Both ways of opening the gate now commit, so "we are
+   * going" means the same thing however the force got there.
    */
   private stillMassing(tick: number, size: number, threshold: number): boolean {
     // Already gone. A push is a decision, and a decision that is reconsidered
