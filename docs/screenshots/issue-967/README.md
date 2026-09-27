@@ -63,6 +63,18 @@ Round 1's [live frame](prototype-1.png) and [reading](prototype-1-metrics.json) 
 The first pass is incomplete: regular brick-like platework, sparse vegetation and flat
 ground still differ from the target. No approved model or simulation number changed.
 
+Round 2's [live frame](prototype-2.png) and [reading](prototype-2-metrics.json) retain
+60.1 FPS, 55 calls and 148,290 triangles. The cladding now has larger plates, seam relief,
+rivets and roughness variation; ground shading uses a raked dune-normal field rather
+than dominant parallel stripes. These are fragment-shader details, not new geometry.
+The production build excludes the prototype branch at compile time.
+
+The corrected independent review scored round 1 **4.9/10** (composition 2.8, lighting 0.9,
+materials 1.0, details 0.2). An earlier 7.0 verdict described halos and suspended specks
+absent from that frame and was not used as the acceptance result.
+The target still needs denser low ground dressing, atmospheric detail and more convincing
+steel and amber lighting; the prototype does not authorize changes to approved GLBs.
+
 ## How the target was made
 
 Claude Design (`claude.ai/design`), three rounds in one conversation.
