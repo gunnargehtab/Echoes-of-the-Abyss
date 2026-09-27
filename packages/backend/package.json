@@ -14,12 +14,11 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@colyseus/core": "^0.15.57",
-    "@colyseus/schema": "^2.0.0",
-    "@colyseus/ws-transport": "^0.15.3",
+    "@colyseus/core": "^0.18.17",
+    "@colyseus/schema": "^5.0.34",
+    "@colyseus/ws-transport": "^0.18.4",
     "@echoes/shared": "*",
     "bitecs": "^0.3.40",
-    "colyseus": "^0.15.11",
     "express": "^4.19.2"
   },
   "devDependencies": {

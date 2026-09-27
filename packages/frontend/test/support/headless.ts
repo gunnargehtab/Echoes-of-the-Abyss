@@ -538,7 +538,7 @@ export function installHeadlessDom(): void {
     devicePixelRatio: 1,
     innerWidth: 1280,
     innerHeight: 720,
-    // Fuller than the client needs, because `colyseus.js` reads
+    // Fuller than the client needs, because `@colyseus/sdk` reads
     // `location.protocol` and `location.port` at module scope to derive its
     // default endpoint — a missing field there throws before any test body runs.
     location: {

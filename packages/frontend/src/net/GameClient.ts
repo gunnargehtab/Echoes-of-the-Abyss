@@ -6,9 +6,9 @@
  * state it has not resolved — see packages/backend/src/rooms/MatchRoom.ts.
  */
 
-import { Client, type Room } from 'colyseus.js';
+import { Callbacks, Client, type Room } from '@colyseus/sdk';
+import type { MapSchema, Schema } from '@colyseus/schema';
 import {
-  LIFECYCLE,
   // A value, not just a type: `pushLobby` names the phase an undecoded state
   // stands in for.
   MatchPhase,
@@ -19,7 +19,6 @@ import {
   type HarvestThrottle,
   type LobbyPlayerView,
   type MatchListing,
-  type MatchListingMetadata,
   type MissionResultPayload,
   type MissionView,
   type RefitKind,
@@ -73,16 +72,13 @@ export interface LobbyView {
   players: LobbyPlayerView[];
 }
 
-/** Undoing one schema subscription, as @colyseus/schema hands it back. */
+/** Undoing one state callback subscription. */
 type Unsubscribe = () => unknown;
 
 /**
- * One seat, as the decoder holds it: the public fields plus the callback the
- * decoder fires when any of them moves.
+ * One seat, as the decoder holds it: only the public fields this client reads.
  */
-interface MatchPlayerState extends LobbyPlayerView {
-  onChange(callback: () => void): Unsubscribe;
-}
+interface MatchPlayerState extends Schema, LobbyPlayerView {}
 
 /**
  * The half of the room's schema a lobby is a view of.
@@ -94,39 +90,37 @@ interface MatchPlayerState extends LobbyPlayerView {
  * lobby view 300 times a minute to discover the roster had not moved, which is
  * what the `JSON.stringify` guard here used to be for.
  */
-interface MatchLobbyState {
+interface MatchLobbyState extends Schema {
   /**
-   * The three primitives are optional and the roster is not, which is the
-   * decoder's own asymmetry rather than a hedge here. `Reflection.decode`
-   * auto-initialises the root's *referenced* types — which is exactly what
-   * makes `players` safe to subscribe to the moment a room is joined — and
-   * leaves primitives undefined until a patch decodes them. The join
-   * handshake fires `onJoin` before the first `ROOM_STATE` arrives, so the
-   * view `attach` pushes is assembled from a state that has none of them
-   * yet, and `pushLobby` spends its fallbacks on exactly that one push.
+   * The SDK initially returns an empty Schema when the join handshake ends;
+   * the first `ROOM_STATE` supplies the roster as well as these primitives.
+   * The optional shape makes `attach` wait for that snapshot before iterating
+   * players or subscribing to their changes.
    */
   phase?: MatchPhase;
   mapId?: string;
   winnerSlot?: number;
-  players: {
-    forEach(each: (player: MatchPlayerState, key: string) => void): void;
-    onAdd(
-      callback: (player: MatchPlayerState, key: string) => void,
-      triggerAll?: boolean
-    ): Unsubscribe;
-    onRemove(callback: (player: MatchPlayerState, key: string) => void): Unsubscribe;
-  };
-  /**
-   * Watch one field. `immediate` defaults to true in @colyseus/schema — every
-   * caller here passes false, because `attach` pushes the joined view itself
-   * and three listeners firing on registration would push it three more times.
-   */
+  players?: MapSchema<MatchPlayerState>;
+}
+
+type MatchRoom = Room<unknown, MatchLobbyState>;
+
+interface LobbyCallbacks {
   listen<K extends 'phase' | 'mapId' | 'winnerSlot'>(
     prop: K,
-    callback: (value: MatchLobbyState[K], previous: MatchLobbyState[K]) => void,
+    callback: () => void,
     immediate?: boolean
   ): Unsubscribe;
+  onChange(instance: MatchPlayerState, callback: () => void): Unsubscribe;
+  onAdd(
+    property: 'players',
+    callback: (player: unknown, key: unknown) => void,
+    immediate?: boolean
+  ): Unsubscribe;
+  onRemove(property: 'players', callback: (player: unknown, key: unknown) => void): Unsubscribe;
 }
+
+export type LobbyCallbacksFactory = (room: MatchRoom) => LobbyCallbacks;
 
 export interface GameClientHandlers {
   onTerrain(terrain: TerrainPayload): void;
@@ -179,10 +173,6 @@ export function defaultEndpoint(): string {
   return `${scheme}://${window.location.hostname}:3000`;
 }
 
-/** Reconnection backoff: first retry is quick, then it backs off to this. */
-const RECONNECT_MIN_DELAY_MS = 400;
-const RECONNECT_MAX_DELAY_MS = 4000;
-
 /**
  * Where a reconnection token is parked across a page reload.
  *
@@ -203,8 +193,6 @@ const TOKEN_KEY = 'echoes.reconnection';
  * else's water. Stored beside the token and cleared with it.
  */
 const TOKEN_MISSION_KEY = 'echoes.reconnection.mission';
-
-const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Storage throws in some privacy modes; a missing token is only a re-join. */
 function rememberToken(token: string | null, missionId = ''): void {
@@ -259,15 +247,14 @@ export function storedMissionId(): string | null {
  * there is a match to be a client of, and it must not be the thing that opens a
  * socket: browsing is looking, not joining.
  *
- * The matchmaker's availability query already filters `locked: false` and
- * `private: false`, so a started room and a private one are absent rather than
- * shown-and-refused. A room that has not published its metadata yet is dropped
- * instead of guessed at — a row that could not say which water it was on would
- * be asking the player to click and find out.
+ * The server's public listing endpoint filters locked, private and unlisted
+ * rooms. A room that has not published valid metadata is dropped rather than
+ * guessed at — a row that could not say which water it was on would be asking
+ * the player to click and find out.
  */
 export async function listMatches(endpoint: string = defaultEndpoint()): Promise<MatchListing[]> {
   try {
-    const rooms = await new Client(endpoint).getAvailableRooms<MatchListingMetadata>('match');
+    const { data: rooms } = await new Client(endpoint).http.get('/rooms/match');
     return toListings(rooms);
   } catch {
     // A server that is down is an empty list rather than an error screen: the
@@ -337,7 +324,8 @@ export interface ConnectOptions {
 export class GameClient {
   private readonly client: Client;
   private readonly handlers: GameClientHandlers;
-  private room: Room<MatchLobbyState> | null = null;
+  private readonly callbacks: LobbyCallbacksFactory;
+  private room: MatchRoom | null = null;
   /** The last Echo snapshot reconstructed, and its sequence (#433). */
   private echoLast: { seq: number; snapshot: EchoSnapshot } | null = null;
   /** Which room kind this client is in, so a parked token can be matched. */
@@ -353,6 +341,10 @@ export class GameClient {
    */
   private lobbyWatch: Unsubscribe[] = [];
   private readonly seatWatch = new Map<string, Unsubscribe>();
+  private pendingLobbyState: {
+    room: MatchRoom;
+    listener: (state: MatchLobbyState) => void;
+  } | null = null;
 
   /**
    * `client` is a seam with exactly one non-default caller: the headless
@@ -363,10 +355,12 @@ export class GameClient {
   constructor(
     handlers: GameClientHandlers,
     endpoint: string = defaultEndpoint(),
-    client: Client = new Client(endpoint)
+    client: Client = new Client(endpoint),
+    callbacks: LobbyCallbacksFactory = (room) => Callbacks.get(room)
   ) {
     this.client = client;
     this.handlers = handlers;
+    this.callbacks = callbacks;
   }
 
   async connect(options: ConnectOptions = {}): Promise<void> {
@@ -456,7 +450,7 @@ export class GameClient {
 
   /** Handle one server message, payload type and all. */
   private handle<K extends ServerMessageName>(
-    room: Room<MatchLobbyState>,
+    room: MatchRoom,
     type: K,
     handler: (payload: ServerMessages[K]) => void
   ): void {
@@ -479,7 +473,7 @@ export class GameClient {
    * produces a *different* Room object for the same seat, and it needs exactly
    * the same wiring.
    */
-  private attach(room: Room<MatchLobbyState>): void {
+  private attach(room: MatchRoom): void {
     this.unwatchLobby();
     this.room = room;
     rememberToken(room.reconnectionToken, this.missionId);
@@ -516,15 +510,28 @@ export class GameClient {
     // Sent on start and on reconnection. The schema carries the phase too;
     // this is the edge-triggered version, for anything that must happen once.
     this.handle(room, SERVER_MSG.phase, () => this.pushLobby());
-    this.watchLobby(room.state);
+    this.watchLobby(room);
     room.onError((code, message) => this.handlers.onStatus('error', `${code}: ${message ?? ''}`));
 
-    // A reconnection token is only useful while the seat still exists on the
-    // server, so it is read at drop time rather than cached here.
+    room.onDrop(() => {
+      if (this.leaving || room !== this.room) return;
+      this.handlers.onStatus('reconnecting');
+    });
+
+    room.onReconnect(() => {
+      if (this.leaving || room !== this.room) return;
+      this.echoLast = null;
+      rememberToken(room.reconnectionToken, this.missionId);
+      this.handlers.onStatus('connected');
+      this.pushLobby();
+    });
+
     room.onLeave(() => {
       if (this.leaving || room !== this.room) return;
       this.unwatchLobby();
-      void this.reconnect(room.reconnectionToken);
+      this.room = null;
+      rememberToken(null);
+      this.handlers.onStatus('closed');
     });
 
     this.pushLobby();
@@ -543,29 +550,51 @@ export class GameClient {
    * what it does while it is here, since a commander picking a navy or
    * readying up changes the row rather than the roster.
    */
-  private watchLobby(state: MatchLobbyState): void {
+  private watchLobby(room: MatchRoom): void {
+    const state = room.state;
+    if (state.players === undefined) {
+      const listener = (): void => {
+        if (this.pendingLobbyState?.listener === listener) this.pendingLobbyState = null;
+        if (room !== this.room) return;
+        this.watchLobby(room);
+        this.pushLobby();
+      };
+      this.pendingLobbyState = { room, listener };
+      room.onStateChange.once(listener);
+      return;
+    }
+
+    const callbacks = this.callbacks(room);
     const push = (): void => this.pushLobby();
-    // A seat the decoder is already holding is wired here rather than through
-    // `onAdd`'s `triggerAll`, which would announce each of them as an arrival
-    // — and joining is one lobby view, which `attach` pushes itself.
-    state.players.forEach((player, key) => this.seatWatch.set(key, player.onChange(push)));
+    // Existing seats are wired here rather than through `onAdd`'s `triggerAll`,
+    // which would announce each as an arrival. The attach or initial-state
+    // callback pushes their shared lobby view once.
+    state.players.forEach((player, key) =>
+      this.seatWatch.set(key, callbacks.onChange(player, push))
+    );
     this.lobbyWatch = [
-      state.listen('phase', push, false),
-      state.listen('mapId', push, false),
-      state.listen('winnerSlot', push, false),
-      state.players.onAdd((player, key) => {
-        // Released before it is replaced, because a seat can be re-added
-        // without being removed first: the decoder fires onRemove then onAdd
-        // for a DELETE_AND_ADD, but only when it kept the previous value, and
-        // @colyseus/schema 2.x carries a FIXME saying it does not always.
-        // Overwriting the handle instead would strand the old subscription.
-        this.seatWatch.get(key)?.();
-        this.seatWatch.set(key, player.onChange(push));
-        push();
-      }, false),
-      state.players.onRemove((_player, key) => {
-        this.seatWatch.get(key)?.();
-        this.seatWatch.delete(key);
+      callbacks.listen('phase', push, false),
+      callbacks.listen('mapId', push, false),
+      callbacks.listen('winnerSlot', push, false),
+      callbacks.onAdd(
+        'players',
+        (player, key) => {
+          const sessionId = key as string;
+          // Released before it is replaced, because a seat can be re-added
+          // without being removed first: the decoder fires onRemove then onAdd
+          // for a DELETE_AND_ADD, but only when it kept the previous value, and
+          // A replaced key must release its previous field subscription before
+          // the new value is watched.
+          this.seatWatch.get(sessionId)?.();
+          this.seatWatch.set(sessionId, callbacks.onChange(player as MatchPlayerState, push));
+          push();
+        },
+        false
+      ),
+      callbacks.onRemove('players', (_player, key) => {
+        const sessionId = key as string;
+        this.seatWatch.get(sessionId)?.();
+        this.seatWatch.delete(sessionId);
         push();
       }),
     ];
@@ -577,39 +606,14 @@ export class GameClient {
    * that also pushes stale rosters upward, and this client reconnects.
    */
   private unwatchLobby(): void {
+    if (this.pendingLobbyState !== null) {
+      this.pendingLobbyState.room.onStateChange.remove(this.pendingLobbyState.listener);
+      this.pendingLobbyState = null;
+    }
     for (const undo of this.lobbyWatch) undo();
     this.lobbyWatch = [];
     for (const undo of this.seatWatch.values()) undo();
     this.seatWatch.clear();
-  }
-
-  /**
-   * Re-take the seat we just lost, for as long as the server holds it open.
-   *
-   * The grace window is the server's, not ours: retrying past it only produces
-   * a join error, so the loop stops when the window does.
-   */
-  private async reconnect(token: string): Promise<void> {
-    this.room = null;
-    this.handlers.onStatus('reconnecting');
-    const deadline = Date.now() + LIFECYCLE.RECONNECT_GRACE_S * 1000;
-    let delay = RECONNECT_MIN_DELAY_MS;
-
-    while (!this.leaving && Date.now() < deadline) {
-      await sleep(delay);
-      if (this.leaving) return;
-      try {
-        this.attach(await this.client.reconnect<MatchLobbyState>(token));
-        this.handlers.onStatus('connected');
-        return;
-      } catch {
-        delay = Math.min(delay * 2, RECONNECT_MAX_DELAY_MS);
-      }
-    }
-    if (!this.leaving) {
-      rememberToken(null);
-      this.handlers.onStatus('closed');
-    }
   }
 
   /**
@@ -621,7 +625,7 @@ export class GameClient {
    */
   private pushLobby(): void {
     const state = this.room?.state;
-    if (state === undefined) return;
+    if (state === undefined || state.players === undefined) return;
 
     const players: LobbyPlayerView[] = [];
     // MapSchema iterates like a Map, and this is the whole roster — four

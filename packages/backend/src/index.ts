@@ -5,10 +5,7 @@
  * simulation is authoritative here rather than shared with the client.
  */
 
-import express from 'express';
-import { createServer } from 'http';
-// See MatchRoom.ts for why this is @colyseus/core and not `colyseus`.
-import { Server } from '@colyseus/core';
+import { defineRoom, defineServer, matchMaker } from '@colyseus/core';
 import { WebSocketTransport } from '@colyseus/ws-transport';
 import { SIM } from '@echoes/shared';
 import { MatchRoom } from './rooms/MatchRoom.ts';
@@ -40,69 +37,78 @@ function loadCorsPolicy(): CorsPolicy {
 
 const corsPolicy = loadCorsPolicy();
 
-const app = express();
+export const server = defineServer({
+  rooms: {
+    // Filtered by map and mission so matchmaking cannot put a player in the
+    // wrong authored water.
+    match: defineRoom(MatchRoom).filterBy(['mapId', 'missionId']),
+  },
+  transport: new WebSocketTransport(),
+  express: (app) => {
+    /**
+     * CORS for HTTP matchmaking and listing requests. A disallowed origin gets
+     * no allow-origin header, so the browser reports the blocked origin.
+     */
+    app.use((req, res, next) => {
+      const origin = req.headers.origin;
+      if (corsPolicy.kind === 'any') {
+        res.header('Access-Control-Allow-Origin', '*');
+      } else if (typeof origin === 'string' && isOriginAllowed(corsPolicy, origin)) {
+        res.header('Access-Control-Allow-Origin', origin);
+        res.header('Vary', 'Origin');
+      }
+      res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+      if (req.method === 'OPTIONS') {
+        res.sendStatus(204);
+        return;
+      }
+      next();
+    });
 
-/**
- * CORS for the matchmaking endpoint. The WebSocket upgrade itself is not
- * subject to CORS, but colyseus.js POSTs to /matchmake/ first.
- *
- * A disallowed origin gets no `Access-Control-Allow-Origin` header rather than
- * an error status: that is what the fetch spec asks for, and it is also the
- * more useful failure, since the browser then reports a CORS violation naming
- * the origin instead of a 403 the client would have to guess the cause of.
- */
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (corsPolicy.kind === 'any') {
-    res.header('Access-Control-Allow-Origin', '*');
-  } else if (typeof origin === 'string' && isOriginAllowed(corsPolicy, origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-    // The allowed origin varies by request, so a shared cache must not reuse
-    // one origin's response for another.
-    res.header('Vary', 'Origin');
-  }
-  res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(204);
-    return;
-  }
-  next();
+    app.get('/', (_req, res) => {
+      res.send('Echoes of the Abyss - Server running');
+    });
+
+    app.get('/health', (_req, res) => {
+      res.json({
+        status: 'ok',
+        tickHz: SIM.TICK_HZ,
+        echoHz: SIM.ECHO_HZ,
+      });
+    });
+
+    // Colyseus 0.16 removed getAvailableRooms() because it exposed room data
+    // indiscriminately. Return only the metadata needed for public match rows.
+    app.get('/rooms/match', async (_req, res) => {
+      try {
+        const rooms = await matchMaker.query({
+          name: 'match',
+          locked: false,
+          private: false,
+          unlisted: false,
+        });
+        res.setHeader('Cache-Control', 'no-store');
+        res.json(
+          rooms.map(({ roomId, metadata }) => ({
+            roomId,
+            metadata: {
+              mapId: metadata?.mapId,
+              mapName: metadata?.mapName,
+              seats: metadata?.seats,
+              filled: metadata?.filled,
+            },
+          }))
+        );
+      } catch (error) {
+        console.error('Failed to list public matches:', error);
+        res.status(500).json({ error: 'Match listings are unavailable.' });
+      }
+    });
+  },
 });
 
-const httpServer = createServer(app);
-// Transport is constructed explicitly: passing `server` straight to Server is
-// deprecated in Colyseus 0.15 and removed later.
-const gameServer = new Server({
-  transport: new WebSocketTransport({ server: httpServer }),
-});
-
-// Filtered by map, so `joinOrCreate` never drops a player who asked for one
-// archetype into a match already running on another. Without it the first
-// room created wins every subsequent join regardless of what was requested.
-//
-// Mission id is the second key for the same reason and a sharper one: a
-// mission is a single-seat authored scenario, so a skirmish player landing in
-// one — or a commander starting the prologue and being handed somebody else's
-// running match — is not a mismatched preference but a broken game. The client
-// always sends a string ('' for a skirmish), because two encodings of "no
-// mission" would split the skirmish pool in half.
-gameServer.define('match', MatchRoom).filterBy(['mapId', 'missionId']);
-
-app.get('/', (_req, res) => {
-  res.send('Echoes of the Abyss - Server running');
-});
-
-app.get('/health', (_req, res) => {
-  res.json({
-    status: 'ok',
-    tickHz: SIM.TICK_HZ,
-    echoHz: SIM.ECHO_HZ,
-  });
-});
-
-httpServer.listen(PORT, () => {
-  console.log(`Echoes of the Abyss server listening on :${PORT}`);
-  console.log(`  simulation ${SIM.TICK_HZ} Hz | Echo Layer ${SIM.ECHO_HZ} Hz`);
-  console.log(`  origins: ${describeCorsPolicy(corsPolicy)}`);
-});
+await server.listen(PORT);
+console.log(`Echoes of the Abyss server listening on :${PORT}`);
+console.log(`  simulation ${SIM.TICK_HZ} Hz | Echo Layer ${SIM.ECHO_HZ} Hz`);
+console.log(`  origins: ${describeCorsPolicy(corsPolicy)}`);

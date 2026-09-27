@@ -240,7 +240,7 @@ describe('the declared bounds', () => {
       // Both clients already have an entry: `startPlaying` readies each of
       // them, and a `ready` is a message like any other.
       assert.equal(guts(room).messageBudget.size, 2);
-      await room.onLeave(one as unknown as Parameters<MatchRoom['onLeave']>[0], true);
+      await room.onLeave(one as unknown as Parameters<MatchRoom['onLeave']>[0]);
       assert.equal(guts(room).messageBudget.has(one.sessionId), false, 'the entry outlived them');
       assert.equal(
         guts(room).messageBudget.has(two.sessionId),

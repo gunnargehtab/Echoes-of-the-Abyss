@@ -47,7 +47,7 @@ import {
   type StubElement,
 } from './support/headless.ts';
 import { installHeadlessAudio, uninstallHeadlessAudio } from './support/headlessAudio.ts';
-import { StubClient, StubRoom } from './support/colyseusStub.ts';
+import { StubClient, StubRoom, stubCallbacks } from './support/colyseusStub.ts';
 import { cannedMap, cannedNodes, cannedSnapshot, cannedTerrain } from './support/cannedMatch.ts';
 import { GameCanvas, panelType, type GameCanvasProps } from '../src/game/GameCanvas.tsx';
 
@@ -121,6 +121,7 @@ async function mount(
             return gl.asRenderer();
           },
           netClient: () => net as unknown as never,
+          callbacks: stubCallbacks,
         },
         ...options.props,
       }),

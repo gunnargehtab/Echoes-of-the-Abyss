@@ -17,7 +17,13 @@
  */
 
 import assert from 'node:assert/strict';
-import type { Client } from '@colyseus/core';
+import {
+  LocalDriver,
+  LocalPresence,
+  RoomInternalState,
+  matchMaker,
+  type Client,
+} from '@colyseus/core';
 import { CLIENT_MSG, MatchPhase } from '@echoes/shared';
 
 import { MatchRoom } from '../../src/rooms/MatchRoom.ts';
@@ -37,13 +43,22 @@ export const fakeClient = (sessionId: string): FakeClient => ({
   },
 });
 
+let matchMakerReady: Promise<void> | undefined;
+let nextRoomId = 0;
+
+async function prepareMatchMaker(): Promise<void> {
+  matchMakerReady ??= matchMaker.setup(new LocalPresence(), new LocalDriver());
+  await matchMakerReady;
+}
+
 /**
  * The room's row in the matchmaker's cache.
  *
  * `lock()`, `setPrivate()` and `setMetadata()` all write to it, and `_dispose`
  * removes it, so a room cannot be booted without one.
  */
-export const stubListing = (): Record<string, unknown> => ({
+export const stubListing = (roomId: string): Record<string, unknown> => ({
+  roomId,
   metadata: undefined,
   private: false,
   locked: false,
@@ -54,20 +69,20 @@ export const stubListing = (): Record<string, unknown> => ({
 
 /** The private Colyseus internals these tests have to reach through. */
 export interface RoomInternals {
-  listing: unknown;
+  _listing: unknown;
   _internalState: number;
   _simulationInterval: NodeJS.Timeout | undefined;
-  onMessageHandlers: Record<string, ((client: Client, payload: unknown) => void) | undefined>;
+  onMessageEvents: {
+    events: Record<string, Array<(client: Client, payload: unknown) => void> | undefined>;
+  };
   /** The room's own simulation. Private, and the only way to tear a step. */
   match: { update: (deltaMs: number) => unknown; tick: number };
 }
 
 export const internals = (room: MatchRoom): RoomInternals => room as unknown as RoomInternals;
 
-/** Colyseus's `RoomInternalState.CREATED`. */
-export const CREATED = 1;
-/** Colyseus's `RoomInternalState.DISPOSING`. */
-export const DISPOSING = 2;
+export const CREATED = RoomInternalState.CREATED;
+export const DISPOSING = RoomInternalState.DISPOSING;
 
 /**
  * A booted room on the default map, with its simulation interval live.
@@ -77,8 +92,9 @@ export const DISPOSING = 2;
  * one actually under test.
  */
 export async function bootRoom(): Promise<MatchRoom> {
+  await prepareMatchMaker();
   const room = new MatchRoom();
-  internals(room).listing = stubListing();
+  internals(room)._listing = stubListing(`test-room-${nextRoomId++}`);
   await room.onCreate({});
   // The matchmaker flips this once `onCreate` resolves, and `disconnect()`
   // refuses to run while a room still reads as CREATING. A room that never
@@ -90,7 +106,7 @@ export async function bootRoom(): Promise<MatchRoom> {
 
 /** Deliver one message through the handler Colyseus actually registered. */
 export function deliver(room: MatchRoom, type: string, client: FakeClient, payload: unknown): void {
-  const handler = internals(room).onMessageHandlers[type];
+  const handler = internals(room).onMessageEvents.events[type]?.[0];
   assert.ok(handler !== undefined, `no handler registered for ${type}`);
   handler(client as unknown as Client, payload);
 }
@@ -113,7 +129,7 @@ export async function until(done: () => boolean, what: string): Promise<void> {
   assert.fail(`timed out waiting for ${what}`);
 }
 
-/** Tear a room down through the path the server uses, without its log line. */
+/** Tear a room down through Colyseus, without its disposal log line. */
 export async function shutdown(room: MatchRoom): Promise<void> {
   const log = console.log;
   console.log = (): void => {};

@@ -105,6 +105,10 @@ export interface MatchRoomOptions {
   spent?: string[];
 }
 
+interface MatchRoomMetadata extends MatchListingMetadata {
+  missionId: string;
+}
+
 /**
  * What actually happened to a throw the room caught, for the log line.
  *
@@ -117,7 +121,8 @@ export interface MatchRoomOptions {
  */
 const outcomeOf = (methodName: Parameters<MatchRoom['onUncaughtException']>[1]): string => {
   switch (methodName) {
-    case 'setSimulationInterval':
+    case 'setTimestep':
+    case 'setFixedTimestep':
       // A torn world, so the room is over; see the hook's own comment.
       return 'ending this room';
     case 'onMessage':
@@ -125,6 +130,8 @@ const outcomeOf = (methodName: Parameters<MatchRoom['onUncaughtException']>[1]):
     case 'onCreate':
     case 'onAuth':
     case 'onJoin':
+    case 'onDrop':
+    case 'onReconnect':
     case 'onLeave':
       // Re-raised by the wrapper, so the client is already being told. These
       // are how the room refuses an unknown mission or a full lobby, and they
@@ -141,7 +148,7 @@ const outcomeOf = (methodName: Parameters<MatchRoom['onUncaughtException']>[1]):
   }
 };
 
-export class MatchRoom extends Room<MatchState> {
+export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMetadata }> {
   maxClients = 4;
 
   private match!: Match;
@@ -304,7 +311,7 @@ export class MatchRoom extends Room<MatchState> {
     // one spawn and authors its other parties itself. A mission is not a lobby.
     this.maxClients = this.mission === null ? Math.min(this.maxClients, this.map.spawns.length) : 1;
 
-    this.setState(new MatchState());
+    this.state = new MatchState();
     this.state.mapId = this.map.id;
 
     // Awaited rather than fired and forgotten, and this is why `onCreate` is
@@ -588,7 +595,7 @@ export class MatchRoom extends Room<MatchState> {
     });
 
     // Colyseus drives wall-clock; Match converts it into fixed steps itself.
-    this.setSimulationInterval((deltaMs) => this.update(deltaMs), 1000 / SIM.TICK_HZ);
+    this.setTimestep((deltaMs) => this.update(deltaMs), 1000 / SIM.TICK_HZ);
   }
 
   /**
@@ -609,11 +616,12 @@ export class MatchRoom extends Room<MatchState> {
    * does — a listing that went stale would send players at rooms that are full.
    */
   private publishListing(): Promise<void> {
-    const metadata: MatchListingMetadata = {
+    const metadata: MatchRoomMetadata = {
       mapId: this.map.id,
       mapName: this.map.name,
       seats: this.maxClients,
       filled: this.state.players.size,
+      missionId: this.mission?.id ?? '',
     };
     // Never allowed to fail a join or a leave: a listing is a convenience, and
     // a room that could not advertise itself is still a room people can play.
@@ -871,10 +879,9 @@ export class MatchRoom extends Room<MatchState> {
    * else can take it. Mid-match it is not, because the fleet is still in the
    * water — see the grace window below.
    */
-  override async onLeave(client: Client, consented?: boolean): Promise<void> {
+  override onDrop(client: Client): void {
     const player = this.state.players.get(client.sessionId);
     if (player === undefined) return;
-    player.connected = false;
 
     if (this.state.phase !== MatchPhase.Playing) {
       this.releasePlayer(client.sessionId);
@@ -883,41 +890,36 @@ export class MatchRoom extends Room<MatchState> {
       return;
     }
 
-    if (consented === true) {
-      // Walking out of a live match is a resignation, not a disconnection.
-      // Without this the survivor's opponent is gone from the roster but not
-      // beaten, and the victory check — which needs two rosters — never fires,
-      // so the winner sits in a won game waiting for nobody.
-      this.forfeit(client.sessionId);
+    player.connected = false;
+    this.allowReconnection(client, LIFECYCLE.RECONNECT_GRACE_S);
+  }
+
+  override onReconnect(client: Client): void {
+    const returning = this.state.players.get(client.sessionId);
+    if (returning === undefined) return;
+    returning.connected = true;
+    // A reloaded client has no terrain or match view, so rebuild the same
+    // client-specific payloads that onJoin sends.
+    this.sendMapData(client);
+    this.sendMatchData(client);
+    this.sendTo(client, SERVER_MSG.phase, { phase: this.state.phase });
+    this.echoSent.delete(client.sessionId);
+  }
+
+  override onLeave(client: Client): void {
+    const player = this.state.players.get(client.sessionId);
+    if (player === undefined) return;
+    player.connected = false;
+
+    if (this.state.phase !== MatchPhase.Playing) {
+      this.releasePlayer(client.sessionId);
+      this.startIfEveryoneIsReady();
       return;
     }
 
-    try {
-      // The grace window. The player's units are NOT frozen, hidden, or lifted
-      // out of the world while it runs: they hold station and keep emitting,
-      // and an opponent listening in the right place hears an unpiloted fleet
-      // exactly as it hears a piloted one (docs/tech-stack.md "Match lifecycle"). Anything
-      // gentler would make dropping out the cheapest stealth in the game.
-      await this.allowReconnection(client, LIFECYCLE.RECONNECT_GRACE_S);
-      const returning = this.state.players.get(client.sessionId);
-      if (returning !== undefined) {
-        returning.connected = true;
-        // The ground first. A reconnection is a *fresh* client on an old seat —
-        // the page reloaded, so the renderer has no terrain, no map bounds and
-        // therefore no minimap. Only `onJoin` used to send these, and a
-        // reconnection does not go through `onJoin`, so a resumed player was
-        // looking at their fleet floating over blank water.
-        this.sendMapData(client);
-        this.sendMatchData(client);
-        this.sendTo(client, SERVER_MSG.phase, { phase: this.state.phase });
-        // And the next Echo tick whole: the client's copy of the last
-        // snapshot went with the page.
-        this.echoSent.delete(client.sessionId);
-      }
-    } catch {
-      // Out of grace. Same answer as walking out: abandoning is losing.
-      this.forfeit(client.sessionId);
-    }
+    // A consented departure or an expired reconnect grace period both abandon
+    // the fleet. Neither may leave the opponent waiting on an empty roster.
+    this.forfeit(client.sessionId);
   }
 
   /** Give up a slot's match and clear its seat. */
@@ -1014,10 +1016,13 @@ export class MatchRoom extends Room<MatchState> {
       | 'onCreate'
       | 'onAuth'
       | 'onJoin'
+      | 'onDrop'
+      | 'onReconnect'
       | 'onLeave'
       | 'onDispose'
       | 'onMessage'
-      | 'setSimulationInterval'
+      | 'setTimestep'
+      | 'setFixedTimestep'
       | 'setInterval'
       | 'setTimeout'
   ): void {
@@ -1029,7 +1034,8 @@ export class MatchRoom extends Room<MatchState> {
       this.state === undefined ? 'no state' : (MatchPhase[this.state.phase] ?? 'unknown');
     // The message name is the one fact that says which of the 32 handlers this
     // was, and it is only carried by the `onMessage` exception.
-    const where = error instanceof OnMessageException ? `${methodName} ${error.type}` : methodName;
+    const where =
+      error instanceof OnMessageException ? `${methodName} ${String(error.type)}` : methodName;
     // Read through a cast rather than as `error.cause`: every one of these
     // exceptions passes the original to `super(message, { cause })`, but this
     // package compiles against `lib: ES2020` and `Error.cause` is ES2022, so
@@ -1041,12 +1047,12 @@ export class MatchRoom extends Room<MatchState> {
         (cause instanceof Error ? (cause.stack ?? cause.message) : String(cause))
     );
 
-    if (methodName !== 'setSimulationInterval') return;
+    if (methodName !== 'setTimestep' && methodName !== 'setFixedTimestep') return;
 
     // Cleared before the disconnect is awaited, because `disconnect()` only
     // clears the interval once its dispose has settled — and a torn world must
     // not be stepped again even once in the meantime.
-    this.setSimulationInterval();
+    this.setTimestep();
     void this.disconnect();
   }
 

@@ -14,6 +14,8 @@
  * on the wire, and `emit` is the server putting something on it.
  */
 
+import type { LobbyCallbacksFactory } from '../../src/net/GameClient.ts';
+
 /** One message this client would have sent to the server. */
 export interface SentMessage {
   type: string;
@@ -89,8 +91,7 @@ export class StubPlayer implements StubPlayerFields {
  * of the roster. Each registration hands back its own undo, because that is
  * what the client is expected to hold on to.
  *
- * The collection callbacks are @colyseus/schema 2.x's, which is what is
- * installed: `onAdd` replays the entries already in the map unless it is
+ * The callback adapter mirrors the SDK API: `onAdd` replays entries unless it is
  * told not to, `onRemove` never replays, and both return their own
  * de-register.
  */
@@ -164,12 +165,9 @@ type StubFieldValue = StubStateFields[keyof StubStateFields];
  * them apart.
  */
 export class StubState implements Partial<StubStateFields> {
-  // Undefined until a patch decodes them, which is not tidiness: the real
-  // `Reflection.decode` builds the root from decorators alone, so it
-  // auto-initialises referenced types — `players` below — and leaves every
-  // primitive unset. A stub that started these at 0 would be *better*
-  // initialised than the decoder and could never catch a client that read
-  // them before the first patch, which is the one push `attach` makes.
+  // Undefined until a patch decodes them. The real SDK initially returns an
+  // empty Schema, including an absent `players` field; `deferInitialState()`
+  // models that pre-snapshot window for the client regression test.
   tick?: number;
   phase?: number;
   mapId?: string;
@@ -227,8 +225,12 @@ export class StubRoom {
 
   private readonly messageHandlers = new Map<string, Listener>();
   private readonly stateHandlers: Listener[] = [];
+  private readonly onceStateHandlers = new Set<Listener>();
   private readonly errorHandlers: Listener[] = [];
+  private readonly dropHandlers: Listener[] = [];
+  private readonly reconnectHandlers: Listener[] = [];
   private readonly leaveHandlers: Listener[] = [];
+  private deferredPlayers: StubPlayers | null = null;
 
   constructor(sessionId = 'seat-1', roomId = 'room-1') {
     this.sessionId = sessionId;
@@ -239,12 +241,31 @@ export class StubRoom {
     this.messageHandlers.set(type, handler);
   }
 
-  onStateChange(handler: Listener): void {
-    this.stateHandlers.push(handler);
-  }
+  readonly onStateChange = Object.assign(
+    (handler: Listener): void => {
+      this.stateHandlers.push(handler);
+    },
+    {
+      once: (handler: Listener): void => {
+        this.stateHandlers.push(handler);
+        this.onceStateHandlers.add(handler);
+      },
+      remove: (handler: Listener): void => {
+        this.removeStateHandler(handler);
+      },
+    }
+  );
 
   onError(handler: Listener): void {
     this.errorHandlers.push(handler);
+  }
+
+  onDrop(handler: Listener): void {
+    this.dropHandlers.push(handler);
+  }
+
+  onReconnect(handler: Listener): void {
+    this.reconnectHandlers.push(handler);
   }
 
   onLeave(handler: Listener): void {
@@ -282,7 +303,38 @@ export class StubRoom {
    * `tick` sets for a client that listens there.
    */
   private announceState(): void {
-    for (const handler of [...this.stateHandlers]) handler();
+    for (const handler of [...this.stateHandlers]) {
+      if (this.onceStateHandlers.delete(handler)) this.removeStateHandler(handler);
+      handler();
+    }
+  }
+
+  private removeStateHandler(handler: Listener): void {
+    const index = this.stateHandlers.indexOf(handler);
+    if (index !== -1) this.stateHandlers.splice(index, 1);
+    this.onceStateHandlers.delete(handler);
+  }
+
+  /** Hold the roster back until the initial state snapshot is delivered. */
+  deferInitialState(): void {
+    this.deferredPlayers = this.state.players;
+    Object.defineProperty(this.state, 'players', {
+      configurable: true,
+      value: undefined,
+      writable: true,
+    });
+  }
+
+  /** Deliver the initial state snapshot after the room has been joined. */
+  receiveInitialState(): void {
+    if (this.deferredPlayers === null) return;
+    Object.defineProperty(this.state, 'players', {
+      configurable: true,
+      value: this.deferredPlayers,
+      writable: true,
+    });
+    this.deferredPlayers = null;
+    this.announceState();
   }
 
   /**
@@ -348,7 +400,17 @@ export class StubRoom {
 
   /** Drop the connection, the way a lost socket would. */
   drop(): void {
-    for (const handler of [...this.leaveHandlers]) handler(1006);
+    for (const handler of [...this.dropHandlers]) handler(1006);
+  }
+
+  /** Restore a dropped room, as the SDK's automatic retry does. */
+  reconnect(): void {
+    for (const handler of [...this.reconnectHandlers]) handler();
+  }
+
+  /** Permanently leave after a drop or an intentional disconnect. */
+  finishLeave(code = 1000): void {
+    for (const handler of [...this.leaveHandlers]) handler(code);
   }
 
   /** Every payload sent under one message type. */
@@ -425,12 +487,21 @@ export class StubClient {
     return this.answer({ method: 'reconnect', target: token, options: undefined });
   }
 
-  async getAvailableRooms(): Promise<unknown[]> {
-    return [];
-  }
-
   /** The single call of a given method, for the join-door assertions. */
   callOf(method: JoinCall['method']): JoinCall | undefined {
     return this.calls.find((call) => call.method === method);
   }
 }
+
+/** State-callback adapter for GameClient's real SDK callback provider seam. */
+export const stubCallbacks: LobbyCallbacksFactory = (room) => {
+  const state = room.state as unknown as StubState;
+  return {
+    listen: (property, callback, immediate) => state.listen(property, () => callback(), immediate),
+    onChange: (instance, callback) => (instance as unknown as StubPlayer).onChange(callback),
+    onAdd: (_property, callback, immediate) =>
+      state.players.onAdd((player, key) => callback(player, key), immediate),
+    onRemove: (_property, callback) =>
+      state.players.onRemove((player, key) => callback(player, key)),
+  };
+};

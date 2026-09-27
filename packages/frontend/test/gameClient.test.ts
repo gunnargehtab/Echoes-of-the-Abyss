@@ -32,7 +32,7 @@ import {
   UnitKind,
 } from '@echoes/shared';
 import { clearStorage, installStorage } from './support/headless.ts';
-import { StubClient, StubRoom, type SentMessage } from './support/colyseusStub.ts';
+import { StubClient, StubRoom, stubCallbacks, type SentMessage } from './support/colyseusStub.ts';
 import {
   defaultEndpoint,
   GameClient,
@@ -78,29 +78,13 @@ function recordingHandlers(): { handlers: GameClientHandlers; log: HandlerLog } 
   };
 }
 
-/**
- * Wait for a condition the client reaches on its own schedule.
- *
- * The reconnection backoff is a real timer, and a fixed sleep against it is a
- * race the runner gets to decide. Polling turns "wait long enough" into "wait
- * exactly as long as it takes", which is fast when it works and honest when it
- * does not.
- */
-async function until(condition: () => boolean, what: string, timeoutMs = 5000): Promise<void> {
-  const deadline = Date.now() + timeoutMs;
-  while (!condition()) {
-    if (Date.now() > deadline) assert.fail(`timed out waiting for: ${what}`);
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-}
-
 async function connected(
   options: Parameters<GameClient['connect']>[0] = {}
 ): Promise<{ client: GameClient; room: StubRoom; net: StubClient; log: HandlerLog }> {
   const room = new StubRoom();
   const net = new StubClient(room);
   const { handlers, log } = recordingHandlers();
-  const client = new GameClient(handlers, 'ws://test', net as unknown as never);
+  const client = new GameClient(handlers, 'ws://test', net as unknown as never, stubCallbacks);
   await client.connect(options);
   return { client, room, net, log };
 }
@@ -288,6 +272,49 @@ describe('the match client: where it dials when nobody says', () => {
 });
 
 describe('the match client: getting into a room', () => {
+  it('waits for the initial state snapshot before reading the roster', async () => {
+    const room = new StubRoom();
+    room.state.set({ phase: MatchPhase.Lobby, mapId: 'ventfront-divide', winnerSlot: -1 });
+    room.seat('seat-1', { name: 'Nacre', slot: 0 });
+    room.deferInitialState();
+
+    const net = new StubClient(room);
+    const { handlers, log } = recordingHandlers();
+    const client = new GameClient(handlers, 'ws://test', net as unknown as never, stubCallbacks);
+    await client.connect({});
+
+    assert.deepEqual(log.statuses(), ['connecting', 'connected']);
+    assert.deepEqual(log.argsOf('onLobby'), [], 'the undecoded state has no roster to draw');
+
+    room.receiveInitialState();
+    assert.deepEqual(log.argsOf('onLobby'), [
+      [
+        {
+          phase: MatchPhase.Lobby,
+          mapId: 'ventfront-divide',
+          winnerSlot: -1,
+          players: [
+            {
+              sessionId: 'seat-1',
+              name: 'Nacre',
+              slot: 0,
+              faction: 0,
+              ready: false,
+              connected: true,
+              isAi: false,
+              difficulty: 0,
+            },
+          ],
+        },
+      ],
+    ]);
+
+    room.changePlayer('seat-1', { ready: true });
+    const updatedLobby = log.argsOf('onLobby').at(-1)?.[0] as LobbyView | undefined;
+    assert.equal(updatedLobby?.players[0]?.ready, true);
+    room.finishLeave();
+  });
+
   it('takes the three doors in the documented order of specificity', async () => {
     // A room id names a room, and matchmaking cannot improve on that.
     const byId = await connected({ roomId: '  ABC123  ', name: 'Marr' });
@@ -360,7 +387,7 @@ describe('the match client: getting into a room', () => {
     const net = new StubClient(room);
     net.fail('reconnect');
     const { handlers, log } = recordingHandlers();
-    const client = new GameClient(handlers, 'ws://test', net as unknown as never);
+    const client = new GameClient(handlers, 'ws://test', net as unknown as never, stubCallbacks);
     await client.connect({});
 
     assert.ok(net.callOf('reconnect') !== undefined, 'the seat was tried');
@@ -390,7 +417,9 @@ describe('the match client: getting into a room', () => {
     const room = new StubRoom();
     const net = new StubClient(room);
     const { handlers } = recordingHandlers();
-    await new GameClient(handlers, 'ws://test', net as unknown as never).connect({ resume: false });
+    await new GameClient(handlers, 'ws://test', net as unknown as never, stubCallbacks).connect({
+      resume: false,
+    });
     assert.equal(net.callOf('reconnect'), undefined, 'a solo game must not resurrect an old match');
   });
 
@@ -398,7 +427,7 @@ describe('the match client: getting into a room', () => {
     const net = new StubClient();
     net.fail('joinOrCreate');
     const { handlers, log } = recordingHandlers();
-    await new GameClient(handlers, 'ws://test', net as unknown as never).connect({});
+    await new GameClient(handlers, 'ws://test', net as unknown as never, stubCallbacks).connect({});
 
     assert.deepEqual(log.statuses(), ['connecting', 'error']);
     assert.match(String(log.argsOf('onStatus').at(-1)?.[1]), /refused/);
@@ -474,19 +503,17 @@ describe('the match client: what the room says', () => {
   it('starts a reconnection from a clean delta history', async () => {
     // A reconnection is a fresh client and the server sends it whole, so a
     // patch left over from the old socket must not be applied to the new one.
-    const { room, net, log } = await connected({});
+    const { room, log } = await connected({});
     room.emit('echo', encodeEcho(null, cannedSnapshot(100), 4));
     assert.equal(log.argsOf('onEcho').length, 1);
 
     room.drop();
-    // Waited for rather than slept through: the backoff is 400 ms and a fixed
-    // sleep would be a race the runner gets to decide. Polling for the retry
-    // is the same assertion without the coin toss.
-    await until(() => net.callOf('reconnect') !== undefined, 'the client retried the seat');
     assert.equal(log.statuses().includes('reconnecting'), true, 'and said so');
+    room.reconnect();
+    assert.equal(log.statuses().at(-1), 'connected', 'the SDK restored this room');
 
     // Seq 5 would follow the seq 4 above if the history had survived the
-    // re-attach, and must not.
+    // reconnect, and must not.
     room.emit('echo', encodeEcho(cannedSnapshot(100), cannedSnapshot(200), 5, false));
     assert.equal(log.argsOf('onEcho').length, 1, 'the stale patch found no history to apply to');
   });
@@ -606,14 +633,13 @@ describe('the match client: what the room says', () => {
     // The stub hands the same room back, which is what makes this checkable:
     // a re-attach that did not first let go would leave two subscriptions on
     // one field, and every later change would be pushed twice.
-    const { room, net, log } = await connected({});
+    const { room, log } = await connected({});
     room.drop();
-    await until(() => net.callOf('reconnect') !== undefined, 'the client retried the seat');
-    await until(() => log.statuses().at(-1) === 'connected', 'the seat was re-taken');
+    room.reconnect();
 
     const pushed = log.argsOf('onLobby').length;
     room.changeState({ mapId: 'smoke-basin' });
-    assert.equal(log.argsOf('onLobby').length, pushed + 1, 'one change, one view');
+    assert.equal(log.argsOf('onLobby').length, pushed + 1, 'callbacks stayed attached once');
     assert.equal(room.state.watchers('mapId'), 1, 'one field, one listener');
   });
 
@@ -657,7 +683,12 @@ describe('the match client: what the player asks for', () => {
     const { handlers } = recordingHandlers();
     // Never connected: every intent must be a no-op rather than a throw. The
     // shell's buttons exist before the socket does.
-    const client = new GameClient(handlers, 'ws://test', new StubClient(room) as unknown as never);
+    const client = new GameClient(
+      handlers,
+      'ws://test',
+      new StubClient(room) as unknown as never,
+      stubCallbacks
+    );
     for (const [, act] of ORDERS) act(client);
     assert.deepEqual(room.sent, [], 'an unconnected client is silent');
   });
