@@ -210,7 +210,6 @@ import {
   type ColumnPoint,
 } from './contactColumn.ts';
 
-/** A contact plus when we last actually heard it, for ghost decay. */
 /**
  * An order the player gave that the server has not yet echoed back
  * (docs/ui-ux.md §12). Drawn as the route it asked for until the snapshot
@@ -243,6 +242,7 @@ const EDGE_SCROLL_PX_PER_S = 900;
 /** Snapshots a pending order outlives before the server's plan is trusted to carry it. */
 const PENDING_ORDER_SNAPSHOTS = 2;
 
+/** A contact plus when we last actually heard it, for ghost decay. */
 interface TrackedContact {
   contact: Contact;
   lastSeenMs: number;
@@ -685,7 +685,6 @@ function missionBanner(outcome: MissionOutcome): { text: string; fill: number } 
   }
 }
 
-/** Production hotkeys 1-5, in docs/units.md roster order. */
 /** Digit codes to control-group numbers. docs/ui-ux.md §9. */
 const DIGIT_KEYS: Record<string, number> = {
   Digit1: 1,
@@ -772,7 +771,6 @@ const UNIT_SHORT: Record<UnitKind, string> = {
   [UnitKind.Versicle]: 'VRS',
 };
 
-/** Compact structure names for the build buttons. */
 /**
  * The refits, as the bar abbreviates them (docs/systems-progression.md §2).
  * Same three-letter register as the hulls and the structures beside them.
@@ -781,6 +779,7 @@ const REFIT_SHORT: Record<RefitKind, string> = {
   [RefitKind.Pressure]: 'PRS',
 };
 
+/** Compact structure names for the build buttons. */
 const STRUCTURE_SHORT: Record<StructureKind, string> = {
   [StructureKind.Bastion]: 'BAS',
   [StructureKind.Refinery]: 'REF',
@@ -1767,8 +1766,9 @@ export class EchoRenderer {
    */
   private precedence: PrecedenceTiming = PRECEDENCE_MS;
 
-  /** True while the ping-cost preview is being shown. */
   /**
+   * True while the ping-cost preview is being shown.
+   *
    * Ping preview moved from Shift to Alt.
    *
    * docs/ui-ux.md §9 specifies order queueing on Shift, which is the RTS
@@ -3002,7 +3002,6 @@ export class EchoRenderer {
 
   // --- Sonar scope (minimap) ------------------------------------------------
 
-  /** The scope's screen rect. Sized down on narrow screens. */
   /**
    * The console's blocks for the current width.
    *
@@ -3069,6 +3068,10 @@ export class EchoRenderer {
     return { y, h, scope, commands, selection, fleet, production };
   }
 
+  /**
+   * The scope's screen rect. One size at every width: a narrow screen drops
+   * other blocks rather than shrinking this one (`consoleBlocks`).
+   */
   private minimapRect(): { x: number; y: number; size: number } {
     const blocks = this.consoleBlocks();
     // Square, and inset inside its block under the header band.
@@ -4105,7 +4108,6 @@ export class EchoRenderer {
     this.previewPing = false;
   }
 
-  /** Cycle the harvest throttle: how loud am I willing to be paid. */
   /**
    * The depth a step in `direction` would take the selection to (+1 deeper,
    * -1 shallower), or null when the whole selection is already at the end of
@@ -4139,12 +4141,6 @@ export class EchoRenderer {
     this.callbacks.onDepthOrder(ids, target);
   }
 
-  /**
-   * The standing order (docs/systems-depth.md §2). Engage when any of the
-   * selection is not yet following, disarm only when all are — the same
-   * converge-then-toggle shape a mixed silent squad gets, so one press means
-   * one thing for the whole selection.
-   */
   /** `0`: every hull that fights, wherever it is (§9). */
   private selectArmy(): void {
     const army = this.units.filter((u) => u.throttle === undefined);
@@ -4196,6 +4192,12 @@ export class EchoRenderer {
     );
   }
 
+  /**
+   * The standing order (docs/systems-depth.md §2). Engage when any of the
+   * selection is not yet following, disarm only when all are — the same
+   * converge-then-toggle shape a mixed silent squad gets, so one press means
+   * one thing for the whole selection.
+   */
   private commandFollowFloor(): void {
     const units = this.selectedUnits();
     if (units.length === 0) return;
@@ -4281,6 +4283,7 @@ export class EchoRenderer {
     );
   }
 
+  /** Cycle the harvest throttle: how loud am I willing to be paid. */
   private commandCycleThrottle(): void {
     const harvesters = this.selectedUnits().filter((u) => u.throttle !== undefined);
     if (harvesters.length === 0) return;
@@ -6181,23 +6184,21 @@ export class EchoRenderer {
   }
 
   /**
-   * Acoustic residue — docs/systems-echo.md §7.
+   * Acoustic residue — docs/systems-echo.md §7. Rung 5, map furniture: your
+   * own heard residue, beside the public furniture (docs/map-visuals.md §5,
+   * #866).
    *
    * Drawn as a stain rather than a marker, and drawn *before* live contacts so
    * a contact always sits on top of the residue near it. The distinction the
    * mix makes in docs/audio-direction.md §6 — "if a player can mistake a mark
-   * for a contact, the mark is mixed wrong" — has to hold visually too, so
-   * marks get no outline, no glyph and no crisp edge: nothing that reads as a
-   * *thing*, only as ground that remembers.
+   * for a contact, the mark is mixed wrong" — has to hold visually too, so a
+   * mark gets no glyph and no solid edge, only a dashed arc: nothing that
+   * reads as a *thing*, only as ground that remembers.
    *
    * The intensity is the information. For a battle site it is how much
    * shooting happened; for the industrial hum it is throughput, which
    * docs/economy.md §5 wants a player to read income off. So the drawing
    * scales with it rather than merely fading.
-   *
-   * Acoustic residue. Rung 5, map furniture: your own heard residue, beside
-   * the public furniture (docs/map-visuals.md §5, #866). It must never read
-   * as a contact (docs/audio-direction.md §6).
    *
    * The dashed arc is its outline, weighed at its peak, and the server gives
    * residue no single peak (ladder.ts `RESIDUE_PEAK`). At the scale's ceiling
@@ -6212,7 +6213,7 @@ export class EchoRenderer {
       if (style === undefined) continue;
       const radius = markRadiusM(mark.kind, mark.intensity);
 
-      // Three soft rings rather than a disc: residue has no edge, and a disc
+      // Three soft rings rather than a disc: residue has no solid edge, and a disc
       // at any alpha reads as an object sitting on the seabed.
       for (let ring = 0; ring < 3; ring++) {
         const t = (ring + 1) / 3;
@@ -6615,7 +6616,6 @@ export class EchoRenderer {
     paintAgentStipple(this.contactSymbols.stipple(id, context), alpha);
   }
 
-  /** Faction colour, but only once the tier is high enough to know it. */
   /**
    * The faction glyph beside a mark that has earned a faction (§11, #207).
    *
@@ -6656,6 +6656,7 @@ export class EchoRenderer {
     );
   }
 
+  /** Faction colour, but only once the tier is high enough to know it. */
   private contactColor(contact: Contact, fallback: number): number {
     if (contact.faction === undefined) return fallback;
     return FACTION_PALETTE[contact.faction]?.primary ?? fallback;
