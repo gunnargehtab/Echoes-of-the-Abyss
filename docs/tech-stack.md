@@ -932,9 +932,9 @@ away from the objective, rather than the army while none of it stands there. A p
 stands there with nothing to fight, because within 900 m of what it heard the commander
 orders the fight instead. It does when what it walked at has gone quiet. Over the
 four-faction baseline's thirty seeds that was 18 of 16,365 push observations, and of 68
-observations that found a hull left behind, 57 found it still chasing. The siege hull goes on with the army here, as it
-always has: the pass that walks it to a wall sends it to the rally point when it has no
-wall, and a pushing army is not there (#950).
+observations that found a hull left behind, 57 found it still chasing. The siege hull goes
+on with the army here, as it always has: the pass that walks it to a wall sends it to the
+rally point when it has no wall, and a pushing army is not there (#950).
 
 **And it crosses a base off the list.** With nothing remembered, the fallback push target
 used to be one fixed enemy spawn, chosen when the commander was built and never reconsidered

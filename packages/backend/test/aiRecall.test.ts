@@ -10,11 +10,18 @@
  * waiting army, 2,198 found it carrying an old attack order and 21 found a
  * fresh launch; most of the rest were already walking back.
  *
- * Two arms. The decision, on synthesised snapshots, because which hulls get
+ * Two arms for the massing army. The decision, on synthesised snapshots, because which hulls get
  * the order is the whole of the fix and a real match cannot place them. And
  * the chase itself, in a real match through the seat, because the defect
  * lives in the sim's side of the order: what has to be shown is that the
  * recall reaches `Match` and ends a pursuit the commander cannot hear.
+ *
+ * The committed push had the same gap at its objective (#950), and its three
+ * arms sit in the second suite, on synthesised snapshots alone: a real match
+ * reaches that case on 18 of 16,365 push observations over thirty seeds, too
+ * rarely to place. They pin the hull that is away being ordered on, the push
+ * standing on its objective being left alone, and the siege hull going with
+ * the push rather than to `commandSiege`'s rally point.
  *
  * The rally point is read off the commander's own first order rather than
  * recomputed here. Arrival is the one distance restated, below, because
