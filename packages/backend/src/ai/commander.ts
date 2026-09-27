@@ -541,6 +541,40 @@ const CRYSTAL_RUN = {
   SEED_DEPTH_M: CRYSTAL.WORKING_DEPTH_TOLERANCE_M,
 } as const;
 
+/**
+ * The hull the crystal field is held with, and the water it holds — see
+ * `commandField` (#703).
+ *
+ * docs/units.md gives the Dredge its role in one sentence: "The hull for the
+ * floor of the map. The crystal field sits at 2,400 m and every navy raids it;
+ * the Directorate is meant to *hold* it." The hull is faction-locked, so naming
+ * it is the faction gate: no other navy can own one.
+ *
+ * TUNABLE, like every range in this file.
+ */
+const FIELD_HOLD = {
+  KIND: UnitKind.Dredge,
+  /**
+   * How near the field the holder counts as on its post, and so is held.
+   *
+   * The walk goes to the field itself, so this is a shove's worth rather than
+   * an arrival ring — the haulers working the node crowd it. Inside 200 m
+   * because that is the clearance #491 gave the crystal from both plumes on
+   * Ventfront Divide: a hull held here is not parked in an eruption.
+   */
+  STATION_M: 150,
+  /**
+   * How near the node, in three dimensions, an enemy hull must be before the
+   * holder is told to take it: the gun's own reach.
+   *
+   * Three dimensions because a raider has to go down to the node to work it,
+   * and a hull passing over the field at cruise depth is 1,800 m above the
+   * node and raiding nothing. No wider, because a held hull never closes the
+   * gap: a hull further out than this is not at the field.
+   */
+  WATCH_M: statsFor(UnitKind.Dredge).attackRangeM,
+} as const;
+
 /** The four holds of docs/units.md "The transports" — one a navy. */
 const TRANSPORTS: readonly UnitKind[] = [
   UnitKind.Freighter,
@@ -1214,6 +1248,24 @@ export class AiCommander implements AiPlayer {
    * states the property, and is the only place that states it whole.
    */
   private readonly gardenByTender = new Map<number, number>();
+  /**
+   * The Dredge `commandField` posted on the crystal field, while it lives.
+   *
+   * Kept rather than re-derived as the lowest id every observation, because
+   * ids are reused once enough entities have died: a Dredge built later can
+   * carry a lower id than the one on the post, and re-deriving would swap
+   * them — sending the incumbent back to the army still on the floor.
+   */
+  private fieldHolder: number | null = null;
+  /**
+   * The contact that holder was last told to take.
+   *
+   * Remembered so the order is given once per target rather than once per
+   * observation: an `attack` replaces the ordered target outright, and a
+   * commander re-sending the same one every 0.6 s would fill the replay with
+   * orders that changed nothing.
+   */
+  private fieldOrder: number | null = null;
   /** Largest the army has been while massing, and when that last rose. */
   private massingPeak = 0;
   private massingPeakTick = -1;
@@ -1468,7 +1520,14 @@ export class AiCommander implements AiPlayer {
     // same observation would be walked off the garden it is paying for.
     const tending = this.commandGardens(snapshot, army, commands);
     this.releaseTenders(tending, commands);
-    const free = tending.size === 0 ? army : army.filter((u) => !tending.has(u.id));
+    // The field's holder is claimed the same way and for the same reason: a
+    // Dredge the lift ordered aboard, or the army walked to the rally, is a
+    // Dredge off its post — and a move is what releases a hold.
+    const posted = this.commandField(snapshot, army, commands);
+    const free =
+      tending.size === 0 && posted.size === 0
+        ? army
+        : army.filter((u) => !tending.has(u.id) && !posted.has(u.id));
     // The lift claims the hulls it orders aboard this observation, so the
     // army branch does not walk them back to the rally in the same breath.
     const lifted = this.commandTransports(snapshot, free, raiders, commands);
@@ -4153,6 +4212,143 @@ export class AiCommander implements AiPlayer {
         this.walk(hull, rally, snapshot.tick, out);
       }
     }
+  }
+
+  /**
+   * Hold the crystal field with the Dredge — docs/units.md, and #703.
+   *
+   * "The hull for the floor of the map. The crystal field sits at 2,400 m and
+   * every navy raids it; the Directorate is meant to *hold* it." Until this
+   * branch the commander bought the hull and marched it with the army, which
+   * spent a PR-4 hull on the one kind of water every other hull can reach.
+   * It is the only branch that says two of the client's verbs, and it needs
+   * both:
+   *
+   * - **`followFloor`, from the moment of the claim.** The mode rides a hull
+   *   down to the edge of its rating and disengages there
+   *   (docs/systems-depth.md §2), which is why no other pass uses it: every
+   *   other hull would be left at whatever depth the ground happened to fall
+   *   past its rating. The Dredge has no edge — PR-4, and nothing below the
+   *   Abyssal floor crushes it — so for this hull alone the standing order is
+   *   unconditional. It walks out under the layer as soon as the ground
+   *   allows, and the dive off the plateau is loud, as a dive is whoever asked
+   *   for it.
+   * - **`hold`, on the post, with an `attack` beside it.** A stopped hull
+   *   already fires at whatever enters its reach, so a hold alone would buy
+   *   nothing. What it buys is an ordered target the hull does not chase: an
+   *   `attack` pursues its target for as long as it runs (`combat.ts`), and a
+   *   raider that backs off the node would tow the holder off the field with
+   *   it. Held, the order stands and the shot waits for the raider to come
+   *   back.
+   *
+   * The target is a hauler first. A raid is a hauler; the escort is shot by
+   * the gun meanwhile, since a held hull whose ordered target is out of reach
+   * acquires like an idle one. By `CRYSTAL_RUN.RESERVE`'s arithmetic a PR-2
+   * raider reaches the node with about 247 of its 300 and needs 185 of them to
+   * work it and climb out, so one 120-damage round is the whole of denying
+   * the trip.
+   *
+   * One holder, kept while it lives and chosen by lowest id when there is
+   * none, as `commandSeeders` picks its spare; a second Dredge stays with the
+   * army. The holder is not recalled to defend home:
+   * the field is its post, and at speed 35 it would arrive after the fight. It
+   * leaves `commandArmy`'s count with it, so the navy masses without it.
+   *
+   * Returns the id it claimed, for `observe` to keep out of the lift and the
+   * army, as the gardens do.
+   */
+  private commandField(
+    snapshot: EchoSnapshot,
+    army: readonly OwnUnit[],
+    out: AiCommand[]
+  ): Set<number> {
+    const claimed = new Set<number>();
+    const field = this.crystalField;
+    let holder: OwnUnit | null = null;
+    if (field !== null) {
+      holder = army.find((u) => u.id === this.fieldHolder && u.kind === FIELD_HOLD.KIND) ?? null;
+      for (const unit of holder === null ? army : []) {
+        if (unit.kind !== FIELD_HOLD.KIND) continue;
+        if (holder === null || unit.id < holder.id) holder = unit;
+      }
+    }
+    if (field === null || holder === null) {
+      this.fieldHolder = null;
+      this.fieldOrder = null;
+      return claimed;
+    }
+    claimed.add(holder.id);
+    if (holder.id !== this.fieldHolder) {
+      this.fieldHolder = holder.id;
+      this.fieldOrder = null;
+    }
+
+    // Read off the hull rather than remembered: the mode comes back in the
+    // snapshot while it stands, so a mode the server refused is asked again.
+    if (holder.followFloor !== true) {
+      out.push({ kind: 'followFloor', unitIds: [holder.id], active: true });
+    }
+
+    // Off the post, neither the hold nor an order: an unheld hull chases what
+    // it is ordered on, and a move would release the hold anyway.
+    if (distance(holder, field) > FIELD_HOLD.STATION_M) {
+      this.walk(holder, field, snapshot.tick, out);
+      return claimed;
+    }
+
+    if (holder.holding !== true) {
+      out.push({ kind: 'hold', unitIds: [holder.id], active: true });
+      // A hull that is not held has been moved since it was, and a move drops
+      // the ordered target too (`Match.orderMove`), so the order goes again
+      // with the hold.
+      this.fieldOrder = null;
+    }
+
+    // Beside the hold rather than after it in any sense that matters: the
+    // seat applies both before the next step, `orderHold` keeps an ordered
+    // target, and an attack on a live contact writes no course.
+    const raider = this.raiderAt(snapshot, holder, field);
+    if (raider !== null && raider.id !== this.fieldOrder) {
+      out.push({ kind: 'attack', unitIds: [holder.id], contactId: raider.id });
+      this.fieldOrder = raider.id;
+    }
+    return claimed;
+  }
+
+  /**
+   * The enemy hull at the field most worth the holder's order, or null.
+   *
+   * Classified hulls only — `kind` is present from Tier 3 and names a unit,
+   * so fauna, structures and ordnance never qualify, and nothing the layer
+   * has not told this commander is somebody's hull is ever ordered on
+   * (`bestThreat`'s rule, #440). A hauler outranks anything else, and between
+   * equals the nearer to the holder wins.
+   */
+  private raiderAt(
+    snapshot: EchoSnapshot,
+    holder: OwnUnit,
+    field: ResourceNodeInfo
+  ): Contact | null {
+    let best: Contact | null = null;
+    let bestHauler = false;
+    let bestD = Infinity;
+    for (const contact of snapshot.contacts) {
+      if (contact.kind === undefined || contact.depth === undefined) continue;
+      const fromNode = Math.hypot(
+        contact.x - field.x,
+        contact.y - field.y,
+        contact.depth - field.depth
+      );
+      if (fromNode > FIELD_HOLD.WATCH_M) continue;
+      const hauler = contact.kind === UnitKind.Harvester;
+      const d = distance(holder, contact);
+      if (best === null || (hauler && !bestHauler) || (hauler === bestHauler && d < bestD)) {
+        best = contact;
+        bestHauler = hauler;
+        bestD = d;
+      }
+    }
+    return best;
   }
 
   /**

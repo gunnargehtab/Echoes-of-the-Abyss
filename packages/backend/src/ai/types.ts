@@ -14,10 +14,10 @@
  * Not a resemblance — "the AI plays through the interface a player plays
  * through" has to be literally true or it is decoration.
  *
- * Today it is true with **five named exceptions**: 22 variants against the 27
+ * Today it is true with **three named exceptions**: 24 variants against the 27
  * in-match client messages, the difference listed and justified in
- * `AiUnbuilt` and `AiExempt` below — three verbs nobody has written a rule
- * for, and two an AI seat provably cannot use. That is a narrower claim than
+ * `AiUnbuilt` and `AiExempt` below — one verb nobody has written a rule for,
+ * and two an AI seat provably cannot use. That is a narrower claim than
  * this comment used to make, and the reason it is written down rather than
  * asserted is #621 — this comment claimed the two sets were identical, and
  * for the whole of this file's life that was false. `depth` was the set
@@ -191,7 +191,28 @@ export type AiCommand =
    * which is why `commandCountermeasures` spends it only on a hull that is
    * actually under way. See that pass for what was measured.
    */
-  | { kind: 'noisemaker'; unitId: number };
+  | { kind: 'noisemaker'; unitId: number }
+  /**
+   * Hold position (docs/ui-ux.md §9): fire at what comes into range, chase
+   * nothing, go nowhere. A toggle over a group, like `silent`.
+   *
+   * On its own it changes nothing a stopped hull was not already doing — an
+   * idle gun acquires whatever is in range either way. What it changes is an
+   * *ordered* target: a held hull keeps the order and takes the shot when the
+   * target comes to it, where any other hull chases it for as long as it runs
+   * (`combat.ts`). So the commander says it beside an `attack`, and only for
+   * a hull whose post is the point — see `commandField`.
+   */
+  | { kind: 'hold'; unitIds: number[]; active: boolean }
+  /**
+   * The floor-following standing order (docs/systems-depth.md §2): keep 30 m
+   * over whatever ground is under the hull, down at the loud descent rate.
+   *
+   * It disengages where the ground falls below the hull's rating, which is
+   * why the commander gives it to the one hull whose rating no floor on any
+   * map exceeds, and to no other — see `commandField`.
+   */
+  | { kind: 'followFloor'; unitIds: number[]; active: boolean };
 
 // --- The vocabularies are held against each other --------------------------
 //
@@ -221,22 +242,11 @@ export type AiCommand =
  * defect again with a rubber stamp on it: the list stops being a record of
  * known gaps and becomes a place to put inconvenient verbs.
  *
- * The commander has no rule that would spend any of these:
+ * The commander has no rule that would spend this one:
  *
- * - `hold` (`Match.orderHold`) — approximated today by `engineOff`, which
- *   `commandWatchPost` uses to park an Acolyte by cutting its drive. That is
- *   much the quieter posture, and by more than it looks: `engineOffSig` is
- *   half the hull's *Silent Running* figure rather than a fraction of idle,
- *   which puts a parked Acolyte near SIG 2, while a hold leaves the drive
- *   turning at its idle 10. So the gap costs tidiness rather than strength,
- *   and converting that caller would spend five-fold the watch post's
- *   signature on a rounder count — the wrong trade here, on the one axis this
- *   game is about. The branch that would earn `hold` is a hull that needs its
- *   *gun* live while stationary, and no pass wants one yet. #703.
  * - `rally` (`Match.setRally`) — a *structure's* spawn point, which is why it
  *   cannot be conflated with the per-hull walks that send a siege hull back
  *   to the fleet. #703.
- * - `followFloor` (`Match.orderFollowFloor`). #703.
  *
  * The issue number moved from #621 to #703 when the first closed, and that is
  * the maintenance this list costs: an entry naming a *closed* issue names
@@ -244,21 +254,27 @@ export type AiCommand =
  * warns about, arrived at by attrition rather than by anyone deciding.
  *
  * **#703 is the last of those moves, by decision.** The rule above wants a
- * live issue, and that issue could only close by building all three or
- * exempting all three — both of which #703 weighed and declined on the
+ * live issue, and that issue could only close once this list was empty — by
+ * building every entry or exempting it, and #703 declined exempting on the
  * merits. So it would have closed by attrition in its turn and handed these
- * same three entries to a fresh successor, and that one to the next: the
+ * same entries to a fresh successor, and that one to the next: the
  * convention eating its own tail one closed citation at a time. #703 is
  * labelled `standing` instead — open because the decision went that way, and
  * kept off the backlog Routine's list by that label rather than by sitting
- * permanently assigned (CONTRIBUTING.md, "Labels"). The three citations above
- * are therefore stable, and an author who wants to add a fourth entry has a
- * live issue to name rather than a reason to file one.
+ * permanently assigned (CONTRIBUTING.md, "Labels"). The citation above is
+ * therefore stable, and an author who wants to add another entry has a live
+ * issue to name rather than a reason to file one.
  *
- * `noisemaker` was the fourth of these and is `commandCountermeasures` now.
- * It was the one that bought strength rather than tidiness, which is what
- * earned it a doctrine field and a measured range instead of a variant and a
- * reflex.
+ * `noisemaker` was on this list and is `commandCountermeasures` now. It was
+ * the one that bought strength rather than tidiness, which is what earned it
+ * a doctrine field and a measured range instead of a variant and a reflex.
+ * `hold` and `followFloor` were here too, and left together, by one rule
+ * that needs both: `commandField` posts the Dredge on the crystal field that
+ * docs/units.md says the Directorate is meant to *hold*, on the floor it says
+ * the hull is for. Neither was converted from an existing caller. The watch
+ * post still cuts its drive: `engineOffSig` is half the hull's *Silent
+ * Running* figure, which parks an Acolyte near SIG 2 where a hold leaves it at
+ * its idle 10, and that is the trade this game is about.
  *
  * **A tuple rather than a bare union, for `LOBBY_MSG`'s reason** (`wire.ts`):
  * the length of this list is arithmetic somewhere else — the header's variant
@@ -266,9 +282,9 @@ export type AiCommand =
  * derived from the tuple rather than written beside it, so the two cannot
  * disagree about what is on the list.
  */
-export const AI_UNBUILT = ['hold', 'rally', 'followFloor'] as const;
+export const AI_UNBUILT = ['rally'] as const;
 
-/** One of those three, where a type is what is wanted. */
+/** That one, where a type is what is wanted. */
 type AiUnbuilt = (typeof AI_UNBUILT)[number];
 
 /**

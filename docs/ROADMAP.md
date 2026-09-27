@@ -739,7 +739,7 @@ takes this one.
 
 | Work | Issue |
 | --- | --- |
-| Three verbs the commander still lacks — a vocabulary of 22 of 27 | [#703](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/703) |
+| One verb the commander still lacks — a vocabulary of 24 of 27 | [#703](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/703) |
 
 A verb gets built when a commander branch needs it, not to round a count up.
 
