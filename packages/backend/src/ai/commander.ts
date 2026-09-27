@@ -4886,8 +4886,24 @@ export class AiCommander implements AiPlayer {
     // parking a gun's reach short of it — a move order stopped re-issuing at
     // ARRIVE_M and left the force between 550 and 700 m from a Bastion with
     // nothing in range.
-    if (nearest(army, target) > RANGE.ARRIVE_M) {
-      out.push({ kind: 'attackMove', unitIds: ids, x: target.x, y: target.y });
+    //
+    // Every hull that is not there yet, rather than the army while none of it
+    // is — the massing branch's gap (#946), in the push (#950). An `attack`
+    // from the branches above chases until its target dies, so once the front
+    // stood on the objective a chaser was never told again. It stands there
+    // rarely: within PUSH_ENGAGE_M of what it walked at, the in-reach branch
+    // usually has the army first. It gets here when that contact has gone
+    // quiet, since `remembered` outlives it by MEMORY_S — on the four-faction
+    // baseline's seeds, 18 of 16,365 push observations, every one at a
+    // contact last heard 1 to 9 s before.
+    //
+    // The siege hull goes too, as it always has on this branch. The massing
+    // branch leaves it to `commandSiege`, whose answer with no wall is the
+    // rally point: where a massing army is, and a pushing one is not. Whether
+    // the army should leave it alone everywhere is #971.
+    const away = army.filter((u) => distance(u, target) > RANGE.ARRIVE_M).map((u) => u.id);
+    if (away.length > 0) {
+      out.push({ kind: 'attackMove', unitIds: away, x: target.x, y: target.y });
     }
   }
 

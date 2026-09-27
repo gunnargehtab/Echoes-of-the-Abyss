@@ -927,6 +927,15 @@ found it already walking back, and 21 found a fresh launch nobody had moved. The
 split on 11 to 45% of the time it spent waiting. Now every hull away from the rally is
 recalled, except the siege hull, which walks to its wall on an order of its own (#946).
 
+The push had the same gap at its objective, and it is ordered on the same way: every hull
+away from the objective, rather than the army while none of it stands there. A push rarely
+stands there with nothing to fight, because within 900 m of what it heard the commander
+orders the fight instead. It does when what it walked at has gone quiet. Over the
+four-faction baseline's thirty seeds that was 18 of 16,365 push observations, and of 68
+observations that found a hull left behind, 57 found it still chasing. The siege hull goes
+on with the army here, as it always has: the pass that walks it to a wall sends it to the
+rally point when it has no wall, and a pushing army is not there (#950).
+
 **And it crosses a base off the list.** With nothing remembered, the fallback push target
 used to be one fixed enemy spawn, chosen when the commander was built and never reconsidered
 — so in a four-seat match whoever held a dead player's corner as their fallback spent the
