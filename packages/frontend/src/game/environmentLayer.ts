@@ -71,11 +71,14 @@ export class EnvironmentLayer {
    * function — the same heights the terrain mesh stands on, so props sit on
    * the drawn ground, crag and all, rather than on the authored floor.
    */
-  rebuild(terrain: TerrainPayload, groundY: (xM: number, yM: number) => number): void {
+  rebuild(
+    terrain: TerrainPayload,
+    groundY: (xM: number, yM: number) => number,
+    placements: readonly PropPlacement[] = placeProps(terrain)
+  ): void {
     const generation = ++this.generation;
     this.clear();
 
-    const placements = placeProps(terrain);
     if (placements.length === 0) return;
 
     const bySlug = new Map<string, PropPlacement[]>();
@@ -91,7 +94,7 @@ export class EnvironmentLayer {
       const template = envTemplate(slug, spec.footprintM, spec.swayM, () => {
         // Loaded after this pass: rebuild once, on the same terrain, unless a
         // newer rebuild has already superseded these placements.
-        if (generation === this.generation) this.rebuild(terrain, groundY);
+        if (generation === this.generation) this.rebuild(terrain, groundY, placements);
       });
       if (template === null) continue;
 

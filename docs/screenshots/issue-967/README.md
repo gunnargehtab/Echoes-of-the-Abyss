@@ -15,6 +15,8 @@ runs.
 | `baseline.png` | The game before the loop, in the same frame, HUD hidden. |
 | `rounds.png` | The baseline and the three rounds, side by side. |
 | `shoot.mjs` | A `run-game` steps module that shoots the loop's frame from the running game. |
+| `measure.mjs` | The locked shot followed by a ten-second GPU measurement. |
+| `review.mjs` | The same shot and measurement, then low, overhead, survey and panning controls. |
 | `render-target.cjs` | Renders a Claude Design export headless at 1920×1080, DPR 1. |
 
 ## The frame
@@ -82,6 +84,45 @@ focused-test output and the final twelve passing gates. Its verdict remains
 **evidence-missing** only because its available tools could not independently execute the
 focused test; the supplied run passed all three cases.
 The [normal-play control](normal-play-control.png) still shows the shipped warm cladding.
+
+### One-hour continuation
+
+The owner authorized another hour on 27 September, starting at 19:47:48 CEST with
+the same locked target and the merged second prototype as the baseline.
+The three-round cap still applies; this is not approval to replace any GLB or
+change the production art direction.
+
+The next increment addresses the scene rather than another plate-pattern tweak.
+Increasing the global prop density would spend the reservation on off-screen ground
+and leave the end of the map bare. Instead, the prototype studies denser, deterministic
+kelp and coral-growth scatter, selecting visible instances within the existing
+600-instance and 105,000-triangle limits. It uses the approved models, published
+terrain and original biome eligibility; neither hidden entities nor the simulation
+participate. Normal play retains its existing scatter.
+
+The material study also tests a hue-preserving highlight shoulder on lamps and
+sparse marine snow at the locked dolly. Lamp colours, approved resting intensities
+and live-SIG modulation remain the inputs; the shoulder changes how overbright
+light reaches the display, not the model or its energy data. Snow still sinks only
+downward, respects reduced motion and water density, and fades out toward survey
+distance. This is an explicit prototype exception to the normal overview fade,
+not a change to [Reading the Water](../../art-direction.md#reading-the-water).
+The world-only study omits the magenta map-edge chrome. A single depth-tested
+point layer supplies tight halos at small, connected components of the approved
+own-force lamp meshes; large floodlit panels are not converted into point lights.
+It follows each lamp's live energy and shares the conn camera, with no full-screen
+bloom pass and no new light sites authored by hand.
+
+The continuation's first [home frame](prototype-3.png) runs at **60.0 FPS** on
+the same GTX 1070: **51 draw calls, 118,204 triangles**, including 215 visible
+props costing 69,434 triangles ([measurement](prototype-3-metrics.json)).
+The [low view](prototype-3-low.png), [survey view](prototype-3-survey.png) and
+300-frame pan remain within the geometry reservations; all four additional
+stations run at 59.8–60.1 FPS ([readings](prototype-3-review.json)).
+The [normal-play control](normal-play-control-2.png) retains the shipped appearance.
+The prototype's mean encoded luma is 0.0564 and 94.28% of pixels are below 10%
+luma; the target is 0.0594 and 91.29%, so matching the average is not evidence
+that the distribution or the material detail matches.
 
 ## How the target was made
 
