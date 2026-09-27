@@ -1249,15 +1249,23 @@ export class AiCommander implements AiPlayer {
    */
   private readonly gardenByTender = new Map<number, number>();
   /**
-   * The contact `commandField` last told its holder to take, and which holder.
+   * The Dredge `commandField` posted on the crystal field, while it lives.
+   *
+   * Kept rather than re-derived as the lowest id every observation, because
+   * ids are reused once enough entities have died: a Dredge built later can
+   * carry a lower id than the one on the post, and re-deriving would swap
+   * them — sending the incumbent back to the army still on the floor.
+   */
+  private fieldHolder: number | null = null;
+  /**
+   * The contact that holder was last told to take.
    *
    * Remembered so the order is given once per target rather than once per
    * observation: an `attack` replaces the ordered target outright, and a
    * commander re-sending the same one every 0.6 s would fill the replay with
-   * orders that changed nothing. Keyed by the holder because a new Dredge
-   * inherits none of a dead one's orders.
+   * orders that changed nothing.
    */
-  private fieldOrder: { holder: number; contact: number } | null = null;
+  private fieldOrder: number | null = null;
   /** Largest the army has been while massing, and when that last rose. */
   private massingPeak = 0;
   private massingPeakTick = -1;
@@ -4235,12 +4243,14 @@ export class AiCommander implements AiPlayer {
    *
    * The target is a hauler first. A raid is a hauler; the escort is shot by
    * the gun meanwhile, since a held hull whose ordered target is out of reach
-   * acquires like an idle one. A raiding hauler arrives at about a fifth of
-   * its hull (`CRYSTAL_RUN.RESERVE`'s arithmetic), so one 120-damage round is
-   * the whole of denying the trip.
+   * acquires like an idle one. By `CRYSTAL_RUN.RESERVE`'s arithmetic a PR-2
+   * raider reaches the node with about 247 of its 300 and needs 185 of them to
+   * work it and climb out, so one 120-damage round is the whole of denying
+   * the trip.
    *
-   * One holder, the lowest id, as `commandSeeders` picks its spare; a second
-   * Dredge stays with the army. The holder is not recalled to defend home:
+   * One holder, kept while it lives and chosen by lowest id when there is
+   * none, as `commandSeeders` picks its spare; a second Dredge stays with the
+   * army. The holder is not recalled to defend home:
    * the field is its post, and at speed 35 it would arrive after the fight. It
    * leaves `commandArmy`'s count with it, so the navy masses without it.
    *
@@ -4256,17 +4266,22 @@ export class AiCommander implements AiPlayer {
     const field = this.crystalField;
     let holder: OwnUnit | null = null;
     if (field !== null) {
-      for (const unit of army) {
+      holder = army.find((u) => u.id === this.fieldHolder && u.kind === FIELD_HOLD.KIND) ?? null;
+      for (const unit of holder === null ? army : []) {
         if (unit.kind !== FIELD_HOLD.KIND) continue;
         if (holder === null || unit.id < holder.id) holder = unit;
       }
     }
     if (field === null || holder === null) {
+      this.fieldHolder = null;
       this.fieldOrder = null;
       return claimed;
     }
     claimed.add(holder.id);
-    if (this.fieldOrder?.holder !== holder.id) this.fieldOrder = null;
+    if (holder.id !== this.fieldHolder) {
+      this.fieldHolder = holder.id;
+      this.fieldOrder = null;
+    }
 
     // Read off the hull rather than remembered: the mode comes back in the
     // snapshot while it stands, so a mode the server refused is asked again.
@@ -4274,25 +4289,28 @@ export class AiCommander implements AiPlayer {
       out.push({ kind: 'followFloor', unitIds: [holder.id], active: true });
     }
 
+    // Off the post, neither the hold nor an order: an unheld hull chases what
+    // it is ordered on, and a move would release the hold anyway.
     if (distance(holder, field) > FIELD_HOLD.STATION_M) {
-      // A move releases the hold and drops the ordered target
-      // (`Match.orderMove`), so the order is forgotten with them and given
-      // again once the hull is back on its post.
-      this.fieldOrder = null;
       this.walk(holder, field, snapshot.tick, out);
       return claimed;
     }
 
     if (holder.holding !== true) {
       out.push({ kind: 'hold', unitIds: [holder.id], active: true });
+      // A hull that is not held has been moved since it was, and a move drops
+      // the ordered target too (`Match.orderMove`), so the order goes again
+      // with the hold.
+      this.fieldOrder = null;
     }
 
+    // Beside the hold rather than after it in any sense that matters: the
+    // seat applies both before the next step, `orderHold` keeps an ordered
+    // target, and an attack on a live contact writes no course.
     const raider = this.raiderAt(snapshot, holder, field);
-    if (raider !== null && raider.id !== this.fieldOrder?.contact) {
-      // After the hold, and in the same observation: the seat applies these in
-      // order, and an attack on a hull that is not yet held is a chase.
+    if (raider !== null && raider.id !== this.fieldOrder) {
       out.push({ kind: 'attack', unitIds: [holder.id], contactId: raider.id });
-      this.fieldOrder = { holder: holder.id, contact: raider.id };
+      this.fieldOrder = raider.id;
     }
     return claimed;
   }

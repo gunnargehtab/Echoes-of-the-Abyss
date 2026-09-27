@@ -1078,8 +1078,8 @@ either way; what differs is an ordered target, which an unheld hull chases for a
 runs, so a raider backing off the node would tow the holder off the field. Held, the order
 stands and the shot waits. The holder is ordered on a classified hull within its gun's reach
 of the node, a hauler first, because a raid is a hauler. It is not recalled to defend home,
-and the army masses without it. The duel matrix builds 0.0 Dredges a match, so the rule moves
-no baseline today; `test/aiFieldHold.test.ts` is what shows it spent.
+and the army masses without it. The duel matrix builds 0.0 Dredges a match, so the harness
+barely reaches the rule; `test/aiFieldHold.test.ts` is what shows it spent.
 
 Related: [factions.md](factions.md) · [systems-echo.md](systems-echo.md) ·
 [economy.md](economy.md)

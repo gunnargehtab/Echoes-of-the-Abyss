@@ -14,8 +14,9 @@
  *     target is chased by a hull that is not held and waited for by one that
  *     is, which is the whole of what the verb buys a hull that is already
  *     stopped;
- *   - the order of operations — floor from the claim, hold only on the post,
- *     and the attack after the hold, never before it;
+ *   - when each is said — the floor from the claim, and the hold and the
+ *     attack only on the post, never on the walk out, where an unheld order
+ *     is a chase;
  *   - what the holder is ordered on: a classified hull at the node, a hauler
  *     first, and never a hull merely passing over the field at cruise depth.
  */
@@ -318,7 +319,7 @@ describe('the Dredge holds the crystal field (#703)', () => {
     );
   });
 
-  it('orders the held Dredge on a raiding hauler, after the hold, and only once', () => {
+  it('orders the held Dredge on a raiding hauler, with the hold, and only once', () => {
     const brief = briefing();
     const field = crystalOf(brief.nodes);
     const commander = new AiCommander(brief);
@@ -331,13 +332,16 @@ describe('the Dredge holds the crystal field (#703)', () => {
       commander.observe(snapshot([posted], { contacts: [escort, hauler] })),
       71
     );
+    // Which of the two comes first is not asserted, because it changes nothing:
+    // the seat applies both before the next step, a hold keeps an ordered
+    // target, and an attack on a live contact writes no course.
     assert.deepEqual(
-      first.map((c) => c.kind),
-      ['hold', 'attack'],
-      'held first: the seat applies these in order, and an unheld attack is a chase'
+      first.map((c) => c.kind).sort(),
+      ['attack', 'hold'],
+      'on the post, held and ordered on something'
     );
-    const attack = first[1]!;
-    assert.ok(attack.kind === 'attack' && attack.contactId === hauler.id, 'on the hauler');
+    const attack = first.find((c) => c.kind === 'attack');
+    assert.ok(attack?.kind === 'attack' && attack.contactId === hauler.id, 'on the hauler');
 
     // Next decision, same water: the order stands and is not given again.
     const heldNow = { ...posted, holding: true };
@@ -420,9 +424,47 @@ describe('the Dredge holds the crystal field (#703)', () => {
       );
     }
     assert.deepEqual(
-      forHull(back, 71).map((c) => c.kind),
-      ['hold', 'attack'],
+      forHull(back, 71)
+        .map((c) => c.kind)
+        .sort(),
+      ['attack', 'hold'],
       'back on the post, held again and ordered again'
+    );
+  });
+
+  it('keeps the Dredge on the post while it lives, whatever the next one is numbered', () => {
+    // Entity ids are reused once enough entities have died, so a Dredge built
+    // later can carry a lower id than the one already on the field. Choosing
+    // the lowest id afresh every observation would swap them: the newcomer
+    // walked out, and the incumbent sent back to the army still on the floor.
+    const brief = briefing();
+    const field = crystalOf(brief.nodes);
+    const home = brief.spawns[brief.slot]!;
+    const commander = new AiCommander(brief);
+    const incumbent = hull(80, UnitKind.Dredge, field, {
+      followFloor: true,
+      holding: true,
+      depth: 2570,
+    });
+    commander.observe(snapshot([incumbent]));
+
+    const newcomer = hull(40, UnitKind.Dredge, home);
+    let later: AiCommand[] = [];
+    for (let i = 0; i < 3; i++) later = commander.observe(snapshot([incumbent, newcomer]));
+    assert.ok(
+      !later.some((c) => c.kind === 'followFloor' && c.unitIds.includes(40)),
+      'the newcomer was put on the floor, so it was made the holder'
+    );
+    assert.ok(
+      later.some((c) => c.kind === 'move' && c.unitIds.includes(40) && !c.unitIds.includes(80)),
+      'the newcomer goes with the army, and the incumbent stays where it is'
+    );
+
+    // And once the incumbent is gone, the newcomer is the holder.
+    for (let i = 0; i < 3; i++) later = commander.observe(snapshot([newcomer]));
+    assert.ok(
+      later.some((c) => c.kind === 'followFloor' && c.unitIds.includes(40)),
+      'the next Dredge takes the post'
     );
   });
 
