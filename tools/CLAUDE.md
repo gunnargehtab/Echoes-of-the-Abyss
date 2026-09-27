@@ -1,7 +1,7 @@
 # tools/CLAUDE.md
 
-What each harness and gate under `tools/` is, and why it is shaped the way it is. It loads
-for a session working here; the root `CLAUDE.md` keeps one line per directory and the
+What each harness and gate under `tools/` is, and why it is shaped the way it is: the index
+below is the only one. It loads for a session working here; the root `CLAUDE.md` keeps the
 `npm run gates` sequence that runs the blocking ones.
 
 Not all of it is a gate: a portrait and a level are judgements a number informs rather
@@ -106,7 +106,9 @@ tools/claude-docs  markdownlint, a relative-link check, and a path check over
                    build output, a glob must match something, and an exemption
                    nothing names any more fails —
                    which is what a link checker cannot see, since prose names a
-                   file far more often than it links one. Configs are
+                   file far more often than it links one. lib/length.mjs holds
+                   every CLAUDE.md under 200 lines (#899), since a session
+                   loads each one unasked. Configs are
                    .claude/.markdownlint.json, which extends the root one and
                    turns MD018 off because those files open paragraphs with
                    issue numbers — the root three neither need that nor get it —
@@ -163,6 +165,6 @@ tools/*.mjs        The three scripts that sit at the top of the tree.
                    anyone has a working install.
 ```
 
-Related: `CLAUDE.md` (the root file — the one-line index, the gate list, CI's four jobs) ·
+Related: `CLAUDE.md` (the root file — the gate list, CI's four jobs) ·
 `CONTRIBUTING.md` (which gates block a merge) ·
 `.github/workflows/ci.yml` (the jobs each gate runs in)
