@@ -10,10 +10,11 @@
  * sim/: `Match` knows about hulls and sound, and nothing about sockets.
  */
 
-// Imported from @colyseus/core rather than the `colyseus` meta-package: the
-// latter re-exports via __exportStar, which Node's static CJS export detection
-// cannot see, so `import { Room } from 'colyseus'` fails at runtime under an
-// unbundled ESM loader (the dev server) while working fine once bundled.
+// Imported from @colyseus/core: the `colyseus` meta-package is not a dependency,
+// and was avoided before it was dropped. Under 0.15 it re-exported via
+// __exportStar, which Node's static CJS export detection cannot see, so
+// `import { Room } from 'colyseus'` failed at runtime under an unbundled ESM
+// loader (the dev server) while working fine once bundled.
 import { OnMessageException, Room, type Client, type RoomException } from '@colyseus/core';
 import {
   AiDifficulty,
