@@ -109,25 +109,21 @@ const RANGE = {
   /** An unclassified contact this close to the army is worth a ping. */
   PING_CLASSIFY_M: 1600,
   /**
-   * How far the army will chase a contact it can hear.
+   * The army's leash, massing or pushing.
    *
-   * An explicit attack order pursues (see the combat system), so this is not
-   * a weapons range — it is the leash. Without one, a single enemy scout
-   * heard across the map drags the whole army after it, which is the classic
-   * way an RTS AI loses a game it was winning.
-   */
-  PURSUIT_M: 2800,
-  /**
-   * The leash while the army is committed to a push.
-   *
-   * The pursuit leash is the right rule for a force with nothing better to do
-   * and the wrong one for a force that has decided where it is going: with the
-   * Drift in the water there is nearly always *something* within 2,800 m, and
-   * an unclassified smudge is a target by construction (see `bestThreat`), so
-   * the branch that attacks whatever it can hear pre-empts the branch that
-   * walks at a base. Measured over four four-seat matches at the default cap,
-   * every commander reached the push branch between **zero and eight** times
-   * in twenty-five minutes; the rest was chasing.
+   * An explicit attack order pursues (see the combat system), so without a
+   * leash a single enemy scout heard across the map drags the whole army after
+   * it. There used to be a longer one, a 2,800 m pursuit range for a force
+   * with nothing better to do, and it was the wrong rule for a force that has
+   * decided where it is going: with the Drift in the water there is nearly
+   * always *something* within 2,800 m, and an unclassified smudge was a target
+   * by construction (see `bestThreat`), so the branch that attacked whatever it
+   * could hear pre-empted the branch that walks at a base. Measured over four
+   * four-seat matches at the default cap, every commander reached the push
+   * branch between **zero and eight** times in twenty-five minutes; the rest
+   * was chasing. Once both ways out of massing opened a commitment (#440), no
+   * army was ever uncommitted and done massing, so that range was never read
+   * again, and it went (#949).
    *
    * On the way in, the army shoots what is in its way rather than what it can
    * hear. This is a gun's reach — the longest weapon in the roster is the
@@ -1269,7 +1265,10 @@ export class AiCommander implements AiPlayer {
   /** Largest the army has been while massing, and when that last rose. */
   private massingPeak = 0;
   private massingPeakTick = -1;
-  /** While set, the army is committed to a push it started without the numbers. */
+  /**
+   * While set, the army is committed to a push. Every way out of massing sets
+   * it, with the numbers or without (see `stillMassing`), and so does a landing.
+   */
   private commitUntilTick = -1;
   /**
    * The one hull the purse is currently being held for, whichever want asked.
@@ -4799,10 +4798,18 @@ export class AiCommander implements AiPlayer {
     // anything inside PUSH_ENGAGE_M is shooting or about to be. Checked ahead
     // of the massing branch, which used to win — an army gathering at home
     // walked to its rally point past a contact four hundred metres off.
+    //
+    // Past this reach the commander orders no chase: a massing force goes to
+    // its rally and a committed one walks at a base (#949).
     const inReach = this.bestThreat(
       snapshot.contacts.filter((c) => nearest(army, c) < RANGE.PUSH_ENGAGE_M)
     );
     if (inReach !== null) {
+      // Silent Running trades weapons for quiet, so it comes off the moment
+      // there is something to shoot. The crossing is given back for the same
+      // reason and one more: under the layer the army is deaf to the surface
+      // in exactly the measure it is hidden from it, and a fight is the one
+      // moment it cannot afford to stop hearing.
       this.setSilent(ids, false, out);
       this.setCrossed(army, false, out);
       out.push({ kind: 'attack', unitIds: ids, contactId: inReach.id });
@@ -4848,38 +4855,15 @@ export class AiCommander implements AiPlayer {
     // killing was in a corner nobody visited (#440). A commitment that does
     // not carry an objective is not a commitment.
     //
-    // So a committed force walks at a *base*: `searchTarget` is the enemy
-    // start it has not yet crossed off, which is the one place a Bastion is
-    // certainly known to have been. An uncommitted force keeps the old
-    // behaviour and follows the freshest lead it has, because a force with
-    // nothing decided has nothing better to do than look.
+    // So the force walks at a *base*: `searchTarget` is the enemy start it has
+    // not yet crossed off, which is the one place a Bastion is certainly known
+    // to have been. Every force that gets this far is committed, because
+    // `stillMassing` returns false only inside a commitment window, so there
+    // is no uncommitted force here to follow the freshest lead instead (#949).
     //
     // `searchTarget` crosses starts off as a side effect of being asked, so it
-    // is asked exactly once here whichever way the answer is used.
-    const committed = snapshot.tick < this.commitUntilTick;
-    const start = this.searchTarget(snapshot, army);
-    const objective =
-      (committed ? (start ?? this.remembered) : (this.remembered ?? start)) ?? this.home;
-
-    // An attack order chases and then holds to shoot, so this covers both
-    // closing and firing. The leash is what stops one heard scout from towing
-    // the whole army off the map — and a committed push has no leash beyond
-    // the gun's reach handled above (PUSH_ENGAGE_M): on the way in, the army
-    // shoots what is in its way rather than what it can hear.
-    const engaging = committed
-      ? null
-      : this.bestThreat(snapshot.contacts.filter((c) => nearest(army, c) < RANGE.PURSUIT_M));
-    if (engaging !== null) {
-      // Silent Running trades weapons for quiet, so it comes off the moment
-      // there is something to shoot. The crossing is given back for the same
-      // reason and one more: under the layer the army is deaf to the surface
-      // in exactly the measure it is hidden from it, and a fight is the one
-      // moment it cannot afford to stop hearing.
-      this.setSilent(ids, false, out);
-      this.setCrossed(army, false, out);
-      out.push({ kind: 'attack', unitIds: ids, contactId: engaging.id });
-      return;
-    }
+    // is asked exactly once here.
+    const objective = this.searchTarget(snapshot, army) ?? this.remembered ?? this.home;
 
     // The attack run, and the one place the layer is worth its price. The dive
     // costs 72 SIG for ~16 s and the climb back takes ~47 s, so it is only
