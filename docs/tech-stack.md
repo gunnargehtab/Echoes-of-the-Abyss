@@ -1006,9 +1006,8 @@ the seat ignores no longer reads as a commander that chose not to act.
 **That check only ever held one of the two directions**, and the arithmetic above went stale
 while nobody noticed. A client message with *no* variant is invisible to a `never` on a switch,
 because there is nothing in the union for the switch to fail on; five more verbs accumulated
-behind `depth` in exactly that blind spot. The counts today are **22 variants against 27
-in-match client messages** — `hold`, `rally`, `followFloor`, `ability` and `sow` are the
-difference — and the reason this paragraph can state them is that both directions are now
+behind `depth` in exactly that blind spot. The counts today are **24 variants against 27
+in-match client messages** — `rally`, `ability` and `sow` are the difference — and the reason this paragraph can state them is that both directions are now
 checked rather than asserted (#621). `wire.ts` declares `LOBBY_MSG` beside `CLIENT_MSG`, so
 the five phase-gated names are a type rather than a comment and the in-match set can be
 subtracted; `ai/types.ts` carries an `Exclude<>` assertion against it, and a 28th in-match
@@ -1029,10 +1028,10 @@ that list is meant to shrink — a verb built and its entry pruned moves two cou
 commit, and nothing would have caught the other five going stale behind it. That is #621's
 defect one level up: the partition was asserted, and the arithmetic over it was still prose.
 
-**The five are two different things, and they are two types.** `AiUnbuilt` holds the three
-nobody has written a rule for — `hold`, `rally`, `followFloor` — and the price of an entry
-there is the issue that fills it, because a list you may add to without a number is this same
-defect with a rubber stamp on it. `AiExempt` holds the two an AI seat provably cannot use:
+**The three are two different things, and they are two types.** `AiUnbuilt` holds the one
+nobody has written a rule for — `rally` — and the price of an entry there is the issue that
+fills it, because a list you may add to without a number is this same defect with a rubber
+stamp on it. `AiExempt` holds the two an AI seat provably cannot use:
 `MatchRoom` refuses `addAi` in any room carrying a mission and `ability` does nothing outside
 one, and `docs/systems-flora.md` gives the commander two judgements about flora, neither of
 which is sowing. Those carry no issue, and the absence is the claim. A gap and an exemption
@@ -1065,6 +1064,22 @@ currently one. Worth knowing if the roster or the baselines move again.
 `hullSecondsByZone` in the balance telemetry is what makes any of this checkable. Until it
 existed, every committed baseline was measured against commanders that spent whole matches in
 one acoustic zone, and nothing in the harness could report that.
+
+**The Dredge holds the crystal field**, and that one rule is where `hold` and `followFloor`
+are said (#703). [units.md](units.md) gives the hull its role — "the hull for the floor of the
+map", on a field "the Directorate is meant to *hold*" — so `commandField` takes the navy's
+first Dredge out of the army, walks it to the field under the floor-following order, and
+holds it once it stands there. The floor is the Dredge's alone because the mode disengages at
+a hull's Pressure Rating ([systems-depth.md](systems-depth.md) §2), and PR-4 is the one rating
+no floor exceeds: any other hull would be left wherever the ground fell past its rating.
+
+The hold earns its place beside an `attack`. A stopped hull fires at whatever enters its reach
+either way; what differs is an ordered target, which an unheld hull chases for as long as it
+runs, so a raider backing off the node would tow the holder off the field. Held, the order
+stands and the shot waits. The holder is ordered on a classified hull within its gun's reach
+of the node, a hauler first, because a raid is a hauler. It is not recalled to defend home,
+and the army masses without it. The duel matrix builds 0.0 Dredges a match, so the rule moves
+no baseline today; `test/aiFieldHold.test.ts` is what shows it spent.
 
 Related: [factions.md](factions.md) · [systems-echo.md](systems-echo.md) ·
 [economy.md](economy.md)

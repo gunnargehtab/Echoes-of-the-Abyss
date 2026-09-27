@@ -1170,6 +1170,11 @@ function assertOnlyKnown(command: AiCommand, known: Known): void {
     case 'throttle':
     case 'silent':
     case 'engineOff':
+    case 'hold':
+    case 'followFloor':
+      // Postures over own hulls. The hold names no target — the `attack`
+      // beside it does, and is audited as one — and the floor is whatever
+      // ground is under the hull, which the briefing's terrain already is.
       owns(command.unitIds);
       return;
     case 'ping':
@@ -1321,6 +1326,12 @@ function applyTo(match: Match, slot: number, command: AiCommand): void {
       return;
     case 'disembark':
       for (const id of command.unitIds) match.orderDisembark(slot, id);
+      return;
+    case 'hold':
+      for (const id of command.unitIds) match.orderHold(slot, id, command.active);
+      return;
+    case 'followFloor':
+      for (const id of command.unitIds) match.orderFollowFloor(slot, id, command.active);
       return;
     default: {
       const untranslated: never = command;

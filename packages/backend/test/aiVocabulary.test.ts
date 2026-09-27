@@ -72,7 +72,7 @@ const flatten = (text: string) =>
     .trim();
 
 /** Numbers these sentences spell out rather than write. */
-const WORDS: Record<string, number> = { four: 4, five: 5, six: 6, seven: 7 };
+const WORDS: Record<string, number> = { three: 3, four: 4, five: 5, six: 6, seven: 7 };
 
 /**
  * Every sentence in the tree that states one of the six.

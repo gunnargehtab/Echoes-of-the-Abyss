@@ -136,6 +136,14 @@ export class AiSeat {
       case 'disembark':
         for (const id of command.unitIds) this.match.orderDisembark(slot, id);
         return;
+      case 'hold':
+        for (const id of command.unitIds) this.match.orderHold(slot, id, command.active);
+        return;
+      case 'followFloor':
+        for (const id of command.unitIds) {
+          this.match.orderFollowFloor(slot, id, command.active);
+        }
+        return;
       default: {
         // No silent gap. A variant the commander emits and this switch ignores
         // produces an AI that looks like it decided something and then did
