@@ -268,7 +268,11 @@ describe('the Dredge holds the crystal field (#703)', () => {
     const home = brief.spawns[brief.slot]!;
     const dredge = hull(71, UnitKind.Dredge, home);
 
-    const walking = new AiCommander(brief).observe(snapshot([dredge]));
+    // A raider already on the node, so refusing to order on it is a decision
+    // the walk has to make rather than one an empty sea makes for it.
+    const walking = new AiCommander(brief).observe(
+      snapshot([dredge], { contacts: [enemy(6, UnitKind.Harvester, field, field.depth)] })
+    );
     const said = forHull(walking, 71);
     assert.ok(
       said.some((c) => c.kind === 'followFloor' && c.active),
@@ -457,8 +461,9 @@ describe('the Dredge holds the crystal field (#703)', () => {
     );
     assert.ok(
       later.some((c) => c.kind === 'move' && c.unitIds.includes(40) && !c.unitIds.includes(80)),
-      'the newcomer goes with the army, and the incumbent stays where it is'
+      'the newcomer goes with the army'
     );
+    assert.equal(forHull(later, 80).length, 0, 'the incumbent was told something');
 
     // And once the incumbent is gone, the newcomer is the holder.
     for (let i = 0; i < 3; i++) later = commander.observe(snapshot([newcomer]));
