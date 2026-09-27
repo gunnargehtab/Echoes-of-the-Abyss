@@ -64,7 +64,7 @@ doc; a passing critic says nothing about the build.
 | Simulation, missions, combat | The backend test file, run alone: `npm -w packages/backend exec -- node --import tsx --test test/<file>.test.ts` |
 | Anything rendered, HUD or world | A screenshot through [`run-game`](../run-game/SKILL.md), against a real match |
 | A screen, a panel, a control | Its frontend test, plus the accessibility path (`docs/ui-ux.md` §11) |
-| A hull, structure or prop | [`hull-intake`](../hull-intake/SKILL.md)'s bake and report, and `node tools/hull-models/diff.mjs <slug>` for an existing model |
+| A hull, structure or prop | [`hull-intake`](../hull-intake/SKILL.md)'s bake and report; for an existing model, `node tools/hull-models/diff.mjs <slug>`, the lit sheet `node tools/hull-renders/inspect.mjs <slug> --before <base-sha>` and the sweep `node tools/hull-models/contacts.mjs <slug>` |
 | The mix | `tools/audio-meter` readings, taken at the bus |
 | A performance path | Counted work (`Match.worstStepWork`, `Match.contactPathWalksLastPass`, nodes per tick), never a stopwatch |
 
