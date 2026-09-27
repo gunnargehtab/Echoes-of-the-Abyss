@@ -2,7 +2,7 @@
 name: loop-critic
 description: Judge one round of a dev-loop change against its authored target — does the diff do what the doc says, is the evidence real, were its design calls taken in the open, and what is still missing. Use once per round, fresh, after the gates are green and the evidence is captured. It reports a verdict and a severity-ranked gap list; it never edits, and it never scores balance.
 tools: Read, Grep, Glob, Bash
-model: opus
+model: gpt-6-astra
 ---
 
 # Loop critic

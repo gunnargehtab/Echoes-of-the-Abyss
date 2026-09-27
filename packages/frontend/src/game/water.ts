@@ -47,6 +47,7 @@ import {
 } from 'three';
 import { DEPTH, LID, THERMOCLINE } from '@echoes/shared';
 import { DEPTH_VISUAL_M_PER_M } from './perspectiveTerrain.ts';
+import { DREAM_LOOP, dreamSnowNear } from './dreamLoop.ts';
 
 // -------------------------------------------------------------- the ramp
 
@@ -641,13 +642,15 @@ export class MarineSnow {
     // The eye's height above the surface, in metres of column, is how far
     // out of the water the camera has climbed — see `SNOW_FADE_FROM_M`.
     const aboveM = Math.max(0, eye.y) / DEPTH_VISUAL_M_PER_M;
-    const near = 1 - smoothstepAt(SNOW_FADE_FROM_M, SNOW_FADE_TO_M, aboveM);
+    const near = DREAM_LOOP
+      ? dreamSnowNear(aboveM)
+      : 1 - smoothstepAt(SNOW_FADE_FROM_M, SNOW_FADE_TO_M, aboveM);
     this.uniforms.uStrength.value = near * Math.min(1, Math.max(0, strength));
     this.uniforms.uReachM.value = reachM;
-    this.uniforms.uPixelScale.value = SNOW_MOTE_M * projectionScalePx;
+    this.uniforms.uPixelScale.value = (DREAM_LOOP ? 4.5 : SNOW_MOTE_M) * projectionScalePx;
     // `gl_PointSize` is device pixels, so the clamp is too — a mote must not
     // shrink to a sub-pixel flicker on a 3× phone screen.
-    this.uniforms.uSizePx.value.set(pixelRatio, SNOW_MAX_PX * pixelRatio);
+    this.uniforms.uSizePx.value.set(pixelRatio, (DREAM_LOOP ? 4 : SNOW_MAX_PX) * pixelRatio);
     this.points.visible = strength > 0 && near > 0.002;
   }
 

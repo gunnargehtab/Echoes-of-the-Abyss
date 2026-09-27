@@ -50,7 +50,7 @@ import { Faction, StructureKind, structureStatsFor, UnitKind } from '@echoes/sha
 import { ACTIVE_PALETTE, FACTION_PALETTE } from './palette.ts';
 import { HULL_LENGTH_M } from './silhouettes.ts';
 import { glowFactor } from './glow.ts';
-import { DREAM_LOOP, installDreamSteel } from './dreamLoop.ts';
+import { DREAM_LOOP, installDreamLamp, installDreamSteel } from './dreamLoop.ts';
 
 /**
  * TUNABLE — the linear diffuse luminance a model's *brightest* cladding
@@ -547,6 +547,7 @@ export function rosterModelInstance(key: RosterModelKey): RosterModelInstance | 
         material.emissive.getHex() !== 0
       ) {
         const own = material.clone();
+        if (DREAM_LOOP) installDreamLamp(own);
         emissives.push({ material: own, restIntensity: own.emissiveIntensity });
         return own;
       }
