@@ -258,12 +258,13 @@ export type AiCommand =
  * building every entry or exempting it, and #703 declined exempting on the
  * merits. So it would have closed by attrition in its turn and handed these
  * same entries to a fresh successor, and that one to the next: the
- * convention eating its own tail one closed citation at a time. #703 is
- * labelled `standing` instead — open because the decision went that way, and
- * kept off the backlog Routine's list by that label rather than by sitting
- * permanently assigned (CONTRIBUTING.md, "Labels"). The citation above is
- * therefore stable, and an author who wants to add another entry has a live
- * issue to name rather than a reason to file one.
+ * convention eating its own tail one closed citation at a time. So #703
+ * stays open because the decision went that way, and closes when this list is
+ * empty rather than by attrition. Its labels are GitHub's state and not this
+ * tree's, so this comment names none: the sentence here that named one
+ * outlived the label. The citation above is therefore stable, and an author
+ * who wants to add another entry has a live issue to name rather than a
+ * reason to file one.
  *
  * `noisemaker` was on this list and is `commandCountermeasures` now. It was
  * the one that bought strength rather than tidiness, which is what earned it
