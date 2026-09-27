@@ -35,6 +35,11 @@ a redesign does not move the verdict.
 
 The build follows dream-loop's shape and #709's component list.
 
+An [opt-in upstream copy](../optional-skills/README.md) is also available for
+isolated image-first visual prototypes. It lives outside the skill discovery
+directories so its different target and exit criteria do not enter ordinary
+sessions; it does not replace `dev-loop` for repository changes.
+
 ## What #709 asked for, and what it already was
 
 | #709 component | Already here as | Built? |

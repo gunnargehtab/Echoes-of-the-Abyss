@@ -50,3 +50,6 @@ zprobe*.test.ts
 # docs/screenshots/, and a scenario worth keeping goes in
 # tools/echo-sim/scenarios/ beside its expected output.
 .dev-loop/
+
+# Scratch for opt-in Dream Loop visual prototypes.
+.dream-loop/
