@@ -4899,7 +4899,8 @@ export class AiCommander implements AiPlayer {
     //
     // The siege hull goes too, as it always has on this branch. The massing
     // branch leaves it to `commandSiege`, whose answer with no wall is the
-    // rally point: where a massing army is, and a pushing one is not.
+    // rally point: where a massing army is, and a pushing one is not. Whether
+    // the army should leave it alone everywhere is #971.
     const away = army.filter((u) => distance(u, target) > RANGE.ARRIVE_M).map((u) => u.id);
     if (away.length > 0) {
       out.push({ kind: 'attackMove', unitIds: away, x: target.x, y: target.y });
