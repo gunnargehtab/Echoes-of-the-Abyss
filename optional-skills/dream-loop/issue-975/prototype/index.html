@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Echoes of the Abyss - Key-art study #975</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #000;
+        overflow: hidden;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      canvas {
+        display: block;
+        aspect-ratio: 16/9;
+        width: min(100vw, calc(100vh * 16 / 9));
+        height: auto;
+      }
+      #prog {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        height: 2px;
+        width: 0;
+        background: #3fb8c8;
+        opacity: 0.6;
+      }
+      #error {
+        position: fixed;
+        inset: auto 1rem 1rem;
+        color: #ffc6a8;
+        background: #211417;
+        padding: 1rem;
+        white-space: pre-wrap;
+      }
+      #error[hidden] {
+        display: none;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      #controls {
+        position: fixed;
+        bottom: 20px;
+        left: 24px;
+        padding: 14px 18px;
+        color: #c6dadd;
+        background: #03141ae6;
+        border: 1px solid #406870;
+        border-radius: 4px;
+        font:
+          12px/1.6 system-ui,
+          sans-serif;
+      }
+      #controls strong {
+        display: block;
+        letter-spacing: 0.16em;
+        font-size: 11px;
+        color: #78e1ea;
+      }
+      #controls p {
+        margin: 4px 0 8px;
+      }
+      button {
+        font: inherit;
+        background: transparent;
+        color: inherit;
+        border: 1px solid #557b83;
+        border-radius: 2px;
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+      button + button {
+        margin-left: 8px;
+      }
+      button:hover,
+      button:focus-visible {
+        background: #16434a;
+        outline: 2px solid #78e1ea;
+        outline-offset: 2px;
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: wait;
+      }
+      #art {
+        touch-action: none;
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/vendor/three.mjs",
+          "three-core": "/vendor/three-core.mjs",
+          "abyss-engine": "./engine.mjs",
+          "abyss-tex": "./tex.mjs",
+          "abyss-models": "./models.mjs",
+          "abyss-life": "./life.mjs"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <canvas
+      id="art"
+      role="img"
+      aria-label="Underwater key-art diorama: a carrier over a living vent shelf, its sonar sweeping the deep."
+    ></canvas>
+    <div
+      id="prog"
+      role="progressbar"
+      aria-label="Resolving key art"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow="0"
+    ></div>
+    <pre id="error" role="alert" hidden></pre>
+    <nav id="controls" aria-label="Key-art camera" hidden>
+      <strong>ECHOES / THE ABYSS HOLDS ITS BREATH</strong>
+      <p>Drag or arrow keys to drift. Scroll to move through the water.</p>
+      <p id="status" role="status">Resolving light through the water...</p>
+      <button id="reset" type="button">Locked frame (R)</button>
+      <button id="save" type="button">Save PNG (S)</button>
+    </nav>
+    <script type="module" src="./boot.mjs"></script>
+  </body>
+</html>
