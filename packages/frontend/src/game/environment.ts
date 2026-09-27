@@ -327,7 +327,7 @@ export function propSpec(slug: string): PropSpec | undefined {
  * cell's own published values plus per-use salts — nothing map-global, which
  * is the whole delta-locality argument above.
  */
-function hash01(values: readonly number[]): number {
+export function propHash(values: readonly number[]): number {
   let h = 0x811c9dc5;
   for (const value of values) {
     const v = value | 0;
@@ -429,22 +429,22 @@ export function* scatterProps(
           s,
         ];
         const whole = Math.floor(spec.density);
-        const count = whole + (hash01([...cell, 0x1b873593]) < spec.density - whole ? 1 : 0);
+        const count = whole + (propHash([...cell, 0x1b873593]) < spec.density - whole ? 1 : 0);
 
         for (let k = 0; k < count; k++) {
           // Inside its own cell, like an ember: a prop that leaned over a
           // boundary would dress ground of a different identity.
           const margin = Math.min(0.45, spec.footprintM / 2 / cellM);
-          const fx = margin + (1 - 2 * margin) * hash01([...cell, k, 0x85ebca6b]);
-          const fy = margin + (1 - 2 * margin) * hash01([...cell, k, 0xc2b2ae35]);
+          const fx = margin + (1 - 2 * margin) * propHash([...cell, k, 0x85ebca6b]);
+          const fy = margin + (1 - 2 * margin) * propHash([...cell, k, 0xc2b2ae35]);
           const [lo, hi] = spec.scaleJitter;
           yield {
             placement: {
               slug: spec.slug,
               xM: (col + fx) * cellM,
               yM: (row + fy) * cellM,
-              yawRad: hash01([...cell, k, 0x27d4eb2d]) * Math.PI * 2,
-              scale: lo + (hi - lo) * hash01([...cell, k, 0x9e3779b9]),
+              yawRad: propHash([...cell, k, 0x27d4eb2d]) * Math.PI * 2,
+              scale: lo + (hi - lo) * propHash([...cell, k, 0x9e3779b9]),
               cellIndex: index,
             },
             spec,

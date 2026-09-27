@@ -572,7 +572,7 @@ export class PerspectiveView {
       this.cues.group,
       this.snow.points
     );
-    if (this.dreamLights !== null) this.scene.add(this.dreamLights.points);
+    if (this.dreamLights !== null) this.scene.add(this.dreamLights.group);
     // The clear colour under the backdrop, and the deepest water there is —
     // the ramp's bottom stop is `UI.background` exactly, so the abyss is the
     // colour it always was and the change is all in the water above it.

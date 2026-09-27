@@ -8,11 +8,13 @@ import {
   BufferAttribute,
   BufferGeometry,
   DynamicDrawUsage,
+  Color,
   Group,
   Mesh,
   MeshStandardMaterial,
   Object3D,
   PerspectiveCamera,
+  PointLight,
   Points,
   ShaderMaterial,
   Sphere,
@@ -81,7 +83,14 @@ interface LampBinding {
 }
 
 export class DreamLightHalos {
+  readonly group = new Group();
   readonly points: Points<BufferGeometry, ShaderMaterial>;
+  private readonly lights = Array.from({ length: 8 }, () => ({
+    light: new PointLight(0xffffff, 0, 100, 2),
+    priority: 0,
+  }));
+  private readonly bestPosition = new Vector3();
+  private readonly bestColor = new Color();
   private readonly bindings = new WeakMap<Object3D, LampBinding[]>();
   private readonly position = new BufferAttribute(new Float32Array(HALO_CAP * 3), 3);
   private readonly color = new BufferAttribute(new Float32Array(HALO_CAP * 3), 3);
@@ -144,6 +153,7 @@ export class DreamLightHalos {
     this.points.frustumCulled = false;
     this.points.visible = false;
     this.points.renderOrder = 3;
+    this.group.add(this.points, ...this.lights.map(({ light }) => light));
   }
 
   update(
@@ -157,8 +167,12 @@ export class DreamLightHalos {
     readabilityScale: number
   ): void {
     this.count = 0;
-    this.append(units, readabilityScale);
-    this.append(structures, readabilityScale);
+    for (const slot of this.lights) {
+      slot.priority = 0;
+      slot.light.intensity = 0;
+    }
+    this.append(units, readabilityScale, camera);
+    this.append(structures, readabilityScale, camera);
     this.uniforms.uReach.value = reachM;
     this.uniforms.uDensity.value = density;
     this.uniforms.uProjection.value.set(projectionScale, pixelRatio);
@@ -172,10 +186,12 @@ export class DreamLightHalos {
     this.points.layers.mask = camera.layers.mask;
   }
 
-  private append(group: Group, readabilityScale: number): void {
+  private append(group: Group, readabilityScale: number, camera: PerspectiveCamera): void {
     group.updateWorldMatrix(true, true);
     for (const child of group.children) {
       if (!child.visible) continue;
+      let bestPower = 0;
+      let bestRadius = 0;
       let bindings = this.bindings.get(child);
       if (bindings === undefined) {
         bindings = [];
@@ -200,16 +216,40 @@ export class DreamLightHalos {
         const ink = material.emissive;
         const energy = Math.max(ink.r, ink.g, ink.b) * material.emissiveIntensity;
         for (const site of sites) {
-          if (this.count >= HALO_CAP) return;
           const radius = site.radius * scale;
-          // Floodlit decks and long strips are not point lamps.
-          if (radius / readabilityScale > 8 || radius <= 0) continue;
           this.point.copy(site.center).applyMatrix4(mesh.matrixWorld);
+          const power = (energy / (1 + energy)) * radius * radius;
+          if (power > bestPower) {
+            bestPower = power;
+            bestRadius = radius;
+            this.bestPosition.copy(this.point);
+            this.bestColor.copy(ink);
+          }
+          // Floodlit decks and long strips are not point lamps.
+          if (this.count >= HALO_CAP || radius / readabilityScale > 12 || radius <= 0) continue;
           const i = this.count++;
           this.position.setXYZ(i, this.point.x, this.point.y, this.point.z);
           this.color.setXYZ(i, ink.r, ink.g, ink.b);
           this.radius.setX(i, radius);
-          this.strength.setX(i, 1 - Math.exp(-energy));
+          const area = (radius / readabilityScale) ** 2;
+          this.strength.setX(i, 1 - Math.exp((-energy * area) / 16));
+        }
+      }
+      // One real source per model, at its brightest approved emitter. Keeping
+      // eight allocated lights avoids shader recompilation when a lamp dims.
+      if (bestPower > 0) {
+        const priority =
+          bestPower / Math.max(1, this.bestPosition.distanceToSquared(camera.position));
+        let slot = this.lights[0]!;
+        for (const candidate of this.lights) {
+          if (candidate.priority < slot.priority) slot = candidate;
+        }
+        if (priority > slot.priority) {
+          slot.priority = priority;
+          slot.light.position.copy(this.bestPosition);
+          slot.light.color.copy(this.bestColor);
+          slot.light.intensity = bestPower * 2;
+          slot.light.distance = Math.min(500, Math.max(40, bestRadius * 8));
         }
       }
     }

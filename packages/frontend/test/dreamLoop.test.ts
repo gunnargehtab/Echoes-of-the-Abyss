@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { BoxGeometry, Group, Mesh, MeshStandardMaterial, PerspectiveCamera } from 'three';
+import {
+  BoxGeometry,
+  Group,
+  Mesh,
+  MeshStandardMaterial,
+  PerspectiveCamera,
+  PointLight,
+} from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Biome } from '@echoes/shared';
 import {
@@ -107,6 +114,8 @@ describe('the view-bounded ground-cover study', () => {
       assert.ok(placements.length <= PROP_INSTANCE_CAP);
       const triangles = placements.reduce((sum, p) => sum + propSpec(p.slug)!.triBudget, 0);
       assert.ok(triangles <= PROP_TRI_RESERVATION, `${triangles} triangles at ${pitch} degrees`);
+      const headings = placements.map((p) => p.yawRad);
+      assert.ok(Math.max(...headings) - Math.min(...headings) > 5, 'the cap biased prop yaw');
     }
   });
 
@@ -143,16 +152,25 @@ describe('the view-bounded ground-cover study', () => {
       const positions = halos.points.geometry.getAttribute('position');
       const strength = halos.points.geometry.getAttribute('lampStrength');
       const first = strength.getX(0);
+      const lights = halos.group.children.filter(
+        (child): child is PointLight => child instanceof PointLight
+      );
+      assert.equal(lights.length, 8);
+      assert.equal(lights.filter((light) => light.intensity > 0).length, 1);
+      const firstPower = lights.reduce((sum, light) => sum + light.intensity, 0);
       root.position.x = 30;
       material.emissiveIntensity = 2;
       update();
       assert.equal(positions.getX(0), 30);
       assert.ok(strength.getX(0) > first);
+      assert.ok(lights.reduce((sum, light) => sum + light.intensity, 0) > firstPower);
+      assert.equal(lights.find((light) => light.intensity > 0)!.position.x, 30);
       assert.equal(halos.points.geometry.getAttribute('position'), positions);
       material.emissiveIntensity = 0;
       update();
       assert.equal(halos.points.geometry.drawRange.count, 0);
       assert.equal(halos.points.visible, false);
+      assert.ok(lights.every((light) => light.intensity === 0));
       material.emissiveIntensity = 1;
       update();
       assert.equal(halos.points.geometry.drawRange.count, 1);

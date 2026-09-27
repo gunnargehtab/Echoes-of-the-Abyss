@@ -109,7 +109,7 @@ distance. This is an explicit prototype exception to the normal overview fade,
 not a change to [Reading the Water](../../art-direction.md#reading-the-water).
 The world-only study omits the magenta map-edge chrome. A single depth-tested
 point layer supplies tight halos at small, connected components of the approved
-own-force lamp meshes; large floodlit panels are not converted into point lights.
+own-force lamp meshes; large floodlit panels are not converted into point halos.
 It follows each lamp's live energy and shares the conn camera, with no full-screen
 bloom pass and no new light sites authored by hand.
 
@@ -123,6 +123,32 @@ The [normal-play control](normal-play-control-2.png) retains the shipped appeara
 The prototype's mean encoded luma is 0.0564 and 94.28% of pixels are below 10%
 luma; the target is 0.0594 and 91.29%, so matching the average is not evidence
 that the distribution or the material detail matches.
+
+The first continuation review provisionally scored **6.2/10** (composition 2.8,
+lighting 1.6, materials 1.5, details 0.3). It found no code-correctness blocker,
+but retained the visual gaps: low clustered dressing, repetitive ground and steel,
+flat amber bay lighting, and hard particulate. It also found that the capped
+scatter ranked props by their yaw, which could bias their orientation.
+The owner then selected **gpt-6-astra** for the loop critic; that model is now
+named in the agent's configuration, and grades the next round.
+
+The second increment groups smaller kelp into cell-local drifts, ranks the
+reservation with a separately salted hash, and replaces dominant silt stripes
+with finer grain and scours. Halos alone could not shade the bay walls, so the
+study now reuses each model's strongest approved emitter for local light spill:
+at most eight fixed, unshadowed lights, selected by projected source power.
+This is an approximation of the model's existing emission, not new hand-placed
+work lamps; the source colours and energy still come from the live materials.
+Point-halo strength now accounts for source area, keeping small navigation marks
+quieter than the large work lamps, and the snow's soft footprints are slightly larger.
+
+The second [home frame](prototype-4.png) holds **60.0 FPS**, **51 draw calls**
+and **118,980 triangles**, including 217 props at 70,210 triangles
+([measurement](prototype-4-metrics.json)).
+Its [low](prototype-4-low.png), [survey](prototype-4-survey.png), overhead and
+panning controls hold 59.9–60.0 FPS; the largest prop submission is 104,936
+triangles ([readings](prototype-4-review.json)).
+Mean encoded luma is 0.0559, with 94.48% of pixels below 10%.
 
 ## How the target was made
 

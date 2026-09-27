@@ -7,6 +7,7 @@ import {
   ENVIRONMENT_PROPS,
   PROP_INSTANCE_CAP,
   PROP_TRI_RESERVATION,
+  propHash,
   scatterProps,
   type PropPlacement,
   type PropSpec,
@@ -15,7 +16,7 @@ import {
 
 const STUDY_PROPS: readonly PropSpec[] = ENVIRONMENT_PROPS.map((spec) => {
   if (spec.slug === 'env-kelp-cluster') {
-    return { ...spec, density: 18, scaleJitter: [0.55, 0.9] };
+    return { ...spec, density: 18, scaleJitter: [0.3, 0.65] };
   }
   if (spec.slug === 'env-coral-growth') {
     return { ...spec, density: 2, scaleJitter: [1, 1.8] };
@@ -27,6 +28,7 @@ interface Candidate {
   placement: PropPlacement;
   triangles: number;
   bounds: Sphere;
+  priority: number;
 }
 
 export class DreamGroundCover {
@@ -39,6 +41,27 @@ export class DreamGroundCover {
   setTerrain(terrain: TerrainGrid, groundY: (xM: number, yM: number) => number): void {
     this.candidates = [];
     for (const { placement, spec } of scatterProps(terrain, STUDY_PROPS)) {
+      if (spec.worldLight === 'flora') {
+        const col = placement.cellIndex % terrain.cols;
+        const row = Math.floor(placement.cellIndex / terrain.cols);
+        const fx = placement.xM / terrain.cellM - col;
+        const fy = placement.yM / terrain.cellM - row;
+        const cluster = Math.floor(fx * 3);
+        const seed = [
+          col,
+          row,
+          terrain.cols,
+          terrain.rows,
+          terrain.floor[placement.cellIndex]!,
+          terrain.ceiling[placement.cellIndex]!,
+          cluster,
+        ];
+        placement.xM =
+          (col + 0.2 + 0.6 * propHash([...seed, 0x25af]) + (fx * 3 - cluster - 0.5) * 0.18) *
+          terrain.cellM;
+        placement.yM =
+          (row + 0.2 + 0.6 * propHash([...seed, 0x739b]) + (fy - 0.5) * 0.18) * terrain.cellM;
+      }
       // Quiet gaps between drifts, rather than one uniformly planted lawn.
       if (
         spec.worldLight === 'flora' &&
@@ -52,6 +75,12 @@ export class DreamGroundCover {
       this.candidates.push({
         placement,
         triangles: spec.triBudget,
+        priority: propHash([
+          placement.cellIndex,
+          Math.round(placement.xM * 100),
+          Math.round(placement.yM * 100),
+          0x51ed270b,
+        ]),
         bounds: new Sphere(
           new Vector3(placement.xM, groundY(placement.xM, placement.yM) + radius / 2, placement.yM),
           radius
@@ -61,8 +90,7 @@ export class DreamGroundCover {
     // Stable, spatially distributed priority: a capped survey view must not
     // dress only the northern rows or only the ground closest to the camera.
     this.candidates.sort(
-      (a, b) =>
-        a.placement.yawRad - b.placement.yawRad || a.placement.cellIndex - b.placement.cellIndex
+      (a, b) => a.priority - b.priority || a.placement.cellIndex - b.placement.cellIndex
     );
     this.dirty = true;
   }

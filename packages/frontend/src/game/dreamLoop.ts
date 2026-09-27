@@ -78,8 +78,8 @@ export function installDreamGround(material: Material): void {
         vec3 duneNormal = normalize(vec3(h - dreamDune(p + vec2(1.0, 0.0)), 1.0,
                                          h - dreamDune(p + vec2(0.0, 1.0))));
         float rake = max(dot(duneNormal, normalize(vec3(-0.6, 0.45, -0.5))), 0.0);
-        float detail = 0.86 + 0.14 * rake + 0.07 * ripple +
-                       0.10 * (grain - 0.5) * fine + 0.08 * (scours - 0.5);
+        float detail = 0.80 + 0.25 * rake + 0.025 * ripple +
+                       0.14 * (grain - 0.5) * fine + 0.12 * (scours - 0.5);
         diffuseColor.rgb *= clamp(detail, 0.12, 1.0);`
       );
   };
@@ -131,11 +131,12 @@ export function installDreamSteel(material: MeshStandardMaterial): void {
                                smoothstep(0.006, 0.006 + aa.y, edge.y));
         float panel = dreamHash(floor(cell));
         float grime = dreamNoise(plate / 5.0);
-        float weather = dreamNoise(plate / 17.0);
+        float weather = dreamNoise(plate / 17.0 + grime * 2.0);
+        float scarring = dreamNoise(vec2(plate.x * 2.3, plate.y * 0.3));
         vec2 bolt = (edge - vec2(0.035, 0.048)) * vec2(22.0, 16.0);
         float rivet = 1.0 - smoothstep(0.11, 0.11 + max(fwidth(plate.x), fwidth(plate.y)), length(bolt));
-        float dreamHeight = 0.08 * grime - 0.12 * seam + 0.09 * rivet;
-        diffuseColor.rgb *= (0.62 + 0.06 * panel + 0.20 * weather + 0.12 * grime) *
+        float dreamHeight = 0.10 * grime - 0.12 * seam + 0.09 * rivet + 0.025 * scarring;
+        diffuseColor.rgb *= (0.45 + 0.05 * panel + 0.36 * weather + 0.14 * grime) *
                             (1.0 - 0.45 * seam) + 0.12 * rivet;`
       )
       .replace(
@@ -159,9 +160,10 @@ export function installDreamSteel(material: MeshStandardMaterial): void {
         float grazing = pow(1.0 - max(dot(normal, normalize(vViewPosition)), 0.0), 5.0);
         float facing = max(dot(normal, rimDirection), 0.0);
         outgoingLight += uDreamRim * grazing * facing * (0.36 + 0.24 * weather);
+        outgoingLight /= 1.0 + max(outgoingLight.r, max(outgoingLight.g, outgoingLight.b));
         #include <opaque_fragment>`
       );
   };
-  material.customProgramCacheKey = () => 'dream-steel-2';
+  material.customProgramCacheKey = () => 'dream-steel-3';
   material.needsUpdate = true;
 }
