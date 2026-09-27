@@ -5,6 +5,7 @@ target the dream loop builds toward, how it was made, and what to watch for whil
 runs.
 
 ![Baseline and the three Claude Design rounds](rounds.png)
+![The original game, four prototype rounds, and the locked target reference](evolution.png)
 
 ## Files
 
@@ -14,6 +15,7 @@ runs.
 | `target.html` | That export as downloaded. `render-target.cjs` turns it back into `target.png` byte for byte. |
 | `baseline.png` | The game before the loop, in the same frame, HUD hidden. |
 | `rounds.png` | The baseline and the three rounds, side by side. |
+| `evolution.png` | Baseline and prototypes 1–4 side by side, with the locked target clearly marked as a reference. |
 | `shoot.mjs` | A `run-game` steps module that shoots the loop's frame from the running game. |
 | `measure.mjs` | The locked shot followed by a ten-second GPU measurement. |
 | `review.mjs` | The same shot and measurement, then low, overhead, survey and panning controls. |
