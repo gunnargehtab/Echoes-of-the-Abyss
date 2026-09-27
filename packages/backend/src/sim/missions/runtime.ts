@@ -2094,15 +2094,6 @@ export class MissionRuntime {
   }
 
   /**
-   * The transcript, assembled — docs/mission-attendance.md §13's last ask.
-   *
-   * One authored line per attendable emitter, in the order the mission
-   * authors them, each of them the emitter's own `entered` or `gap`. Nothing
-   * is templated and nothing is counted into a sentence: the close reads back
-   * which arrivals were entered because the mission wrote both readings for
-   * each of them, and the run picks.
-   */
-  /**
    * The readings the objectives themselves earned — types.ts, `reading`: an
    * objective may author a met and an unmet line, and the close appends the
    * one its frozen status picked, in authored order. `transcript`'s shape,
@@ -2118,6 +2109,15 @@ export class MissionRuntime {
     return lines;
   }
 
+  /**
+   * The transcript, assembled — docs/mission-attendance.md §13's last ask.
+   *
+   * One authored line per attendable emitter, in the order the mission
+   * authors them, each of them the emitter's own `entered` or `gap`. Nothing
+   * is templated and nothing is counted into a sentence: the close reads back
+   * which arrivals were entered because the mission wrote both readings for
+   * each of them, and the run picks.
+   */
   private transcript(): string[] {
     const lines: string[] = [];
     for (const party of this.definition.parties) {

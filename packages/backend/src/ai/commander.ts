@@ -550,26 +550,6 @@ const TRANSPORTS: readonly UnitKind[] = [
 ];
 
 /**
- * Hulls the commander buys by a want of its own rather than by the composition
- * cycle, and why the list has to exist at all.
- *
- * The cycle index is `army.length`, so every hull it selects has to be one
- * that joins the army — otherwise buying it does not advance the index, the
- * next observation selects the same hull, and the yard fills with it. Both
- * entries here are unarmed and neither ever joins: the Spinner lays the wall
- * (#467, `commandLayers`) and the Sower stands over the crystal field
- * (`commandSeeders`). Each is bought instead by a gate that names how many the
- * navy wants, which is also where "not before the escort" and "not before the
- * yard" belong.
- *
- * The Tender, the Precentor and the Cantus are the same shape and are *not*
- * here, because they are not bought by a want of their own — they are on their
- * navies' compositions and belong there. `joinsTheArmy` below is what keeps
- * them out of the cycle instead. Until #531 they were kept out of it only by
- * never being affordable at the instant they were asked for, which stopped
- * being a guard the moment the cycle learned to save.
- */
-/**
  * Each navy's own scout, for `designateScout` (#506).
  *
  * A table rather than a field on the doctrine because it is a roster fact and
@@ -786,6 +766,26 @@ const DECK = {
   TRAIL_M: FLIGHT.TETHER_M - RANGE.PUSH_ENGAGE_M,
 } as const;
 
+/**
+ * Hulls the commander buys by a want of its own rather than by the composition
+ * cycle, and why the list has to exist at all.
+ *
+ * The cycle index is `army.length`, so every hull it selects has to be one
+ * that joins the army — otherwise buying it does not advance the index, the
+ * next observation selects the same hull, and the yard fills with it. Both
+ * entries here are unarmed and neither ever joins: the Spinner lays the wall
+ * (#467, `commandLayers`) and the Sower stands over the crystal field
+ * (`commandSeeders`). Each is bought instead by a gate that names how many the
+ * navy wants, which is also where "not before the escort" and "not before the
+ * yard" belong.
+ *
+ * The Tender, the Precentor and the Cantus are the same shape and are *not*
+ * here, because they are not bought by a want of their own — they are on their
+ * navies' compositions and belong there. `joinsTheArmy` below is what keeps
+ * them out of the cycle instead. Until #531 they were kept out of it only by
+ * never being affordable at the instant they were asked for, which stopped
+ * being a guard the moment the cycle learned to save.
+ */
 const WANTED_SEPARATELY: readonly UnitKind[] = [
   UnitKind.Spinner,
   UnitKind.Sower,
@@ -1823,14 +1823,6 @@ export class AiCommander implements AiPlayer {
   }
 
   /**
-   * The nearest field this hull is rated to work, least crowded first.
-   *
-   * The pressure check is the interesting one: crystal sits in the Abyssal
-   * band, so an ordinary Harvester sent to a crystal field would descend into
-   * water that eats it (docs/economy.md §7). Pressure ratings are stat-table
-   * data, not world state — the HUD prints them.
-   */
-  /**
    * What one of this navy's hulls is actually rated for, right now.
    *
    * `effectivePressureRating` is the roster's answer — the hull's own band or
@@ -1845,6 +1837,14 @@ export class AiCommander implements AiPlayer {
     return this.refitted ? refittedPressureRating(base, this.briefing.faction) : base;
   }
 
+  /**
+   * The nearest field this hull is rated to work, least crowded first.
+   *
+   * The pressure check is the interesting one: crystal sits in the Abyssal
+   * band, so an ordinary Harvester sent to a crystal field would descend into
+   * water that eats it (docs/economy.md §7). Pressure ratings are stat-table
+   * data, not world state — the HUD prints them.
+   */
   private pickNode(harvester: OwnUnit, exclude: number | null = null): ResourceNodeInfo | null {
     const own = this.ownRating(harvester.kind);
     const crowd = new Map<number, number>();
@@ -2547,23 +2547,6 @@ export class AiCommander implements AiPlayer {
   }
 
   /**
-   * The nearest Thermal Vein cell to home that a tap could actually rise on.
-   *
-   * "Could actually rise on" is the part that was missing, and it is the one
-   * placement in the whole branch the commander cannot nudge: a tap only works
-   * on a vent (docs/economy.md §2), so unlike `nearHome` there is no spiral to
-   * walk — the same cell comes back every time. Ask for one the server will
-   * refuse and the commander asks forever.
-   *
-   * The server's rule is that a new site must rise within
-   * `CONSTRUCTION.BUILD_RADIUS_M` of a structure the commander already owns,
-   * so that is the rule applied here, against the same structures — not
-   * against `this.home`, because a Refinery placed out toward a field is a
-   * legitimate anchor and a player would chain off it. TAP_SEARCH_M stays as
-   * the outer bound: a vent further away than that is not worth reaching for
-   * even when something of ours happens to stand near it.
-   */
-  /**
    * Does this navy field anything priced in Biomass?
    *
    * The reactor's whole justification, and the reason it is a roster question
@@ -2630,6 +2613,23 @@ export class AiCommander implements AiPlayer {
     return cy * cols + cx;
   }
 
+  /**
+   * The nearest Thermal Vein cell to home that a tap could actually rise on.
+   *
+   * "Could actually rise on" is the part that was missing, and it is the one
+   * placement in the whole branch the commander cannot nudge: a tap only works
+   * on a vent (docs/economy.md §2), so unlike `nearHome` there is no spiral to
+   * walk — the same cell comes back every time. Ask for one the server will
+   * refuse and the commander asks forever.
+   *
+   * The server's rule is that a new site must rise within
+   * `CONSTRUCTION.BUILD_RADIUS_M` of a structure the commander already owns,
+   * so that is the rule applied here, against the same structures — not
+   * against `this.home`, because a Refinery placed out toward a field is a
+   * legitimate anchor and a player would chain off it. TAP_SEARCH_M stays as
+   * the outer bound: a vent further away than that is not worth reaching for
+   * even when something of ours happens to stand near it.
+   */
   private nearestVent(structures: readonly OwnStructure[]): { x: number; y: number } | null {
     const { cols, rows, cellM, biomes } = this.briefing.terrain;
     let best: { x: number; y: number } | null = null;

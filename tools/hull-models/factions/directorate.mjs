@@ -387,6 +387,14 @@ function refuseMirror(what, spots, tol = 0.5) {
 export const segmentSeries = (opts) => series({ section: [0.6, 1.5], ...opts });
 
 /**
+ * The tergite ridge as the Dredge draws it: an orb `at` of the plate's
+ * half-length from its centre, `size` of the plate's [sx, sy, sz], stood
+ * `lift` up. One value, read by `tergites` to build the ridge and by
+ * `plateEdgePhotophores` to keep a lamp out from under it (#890).
+ */
+export const TERGITE_RIDGE = { at: -0.75, size: [0.25, 1.125, 0.92], lift: 0.5, facets: [10, 6] };
+
+/**
  * The tergites: a squashed orb per `[x, sx, sy, sz]` station, alternating
  * violet and red from the stern, with a lip and a spine each.
  *
@@ -435,14 +443,6 @@ export const segmentSeries = (opts) => series({ section: [0.6, 1.5], ...opts });
  * and every fraction hung on it then comes out a few percent long (#630,
  * the second pass).
  */
-/**
- * The tergite ridge as the Dredge draws it: an orb `at` of the plate's
- * half-length from its centre, `size` of the plate's [sx, sy, sz], stood
- * `lift` up. One value, read by `tergites` to build the ridge and by
- * `plateEdgePhotophores` to keep a lamp out from under it (#890).
- */
-export const TERGITE_RIDGE = { at: -0.75, size: [0.25, 1.125, 0.92], lift: 0.5, facets: [10, 6] };
-
 export function tergites(root, { violet, red, black }, opts) {
   const { segments, lip = 'seam', seam = {}, ridge = {}, spines, facets = [12, 6], first = 0 } = opts;
   const { at: seamAt = 0.85, size: seamSize = [0.3, 0.95, 0.9], tallOf = 'height' } = seam;

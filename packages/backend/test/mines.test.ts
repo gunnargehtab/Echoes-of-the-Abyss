@@ -73,10 +73,6 @@ function liveMines(match: Match): number[] {
 }
 
 /**
- * Lay one armed mine for slot 0 at a position, and remove the hull that laid it
- * so the thing under test is the field rather than its escort.
- */
-/**
  * An armed mine with nothing loud left near it: the layer goes silent once the
  * clock has run, so a seeker in these tests has only the mine's water to run
  * through and not a cruising Corvette to bend toward.
@@ -101,6 +97,10 @@ function soloMineAt(match: Match, x: number, y: number): number {
   return mine;
 }
 
+/**
+ * Lay one armed mine for slot 0 at a position, and remove the hull that laid it
+ * so the thing under test is the field rather than its escort.
+ */
 function armedMineAt(match: Match, x: number, y: number): number {
   const layer = spawnUnit(match.world, {
     kind: UnitKind.Corvette,

@@ -868,11 +868,6 @@ export class AudioEngine {
   }
 
   /**
-   * User volume for one bus, as a linear gain. Every bus caps at unity except
-   * contacts, which §11 allows up to +12 dB — information may be boosted,
-   * atmosphere may only be turned down. Safe before `start()`.
-   */
-  /**
    * Turn §11's speaker profile on or off.
    *
    * Buffered like the volumes, so a player whose device asked for it does not
@@ -889,6 +884,11 @@ export class AudioEngine {
     return this.speakerProfile;
   }
 
+  /**
+   * User volume for one bus, as a linear gain. Every bus caps at unity except
+   * contacts, which §11 allows up to +12 dB — information may be boosted,
+   * atmosphere may only be turned down. Safe before `start()`.
+   */
   setBusTrim(bus: TrimBus, gain: number): void {
     const cap = bus === 'contact' ? dbToGain(CONTACT_BOOST_MAX_DB) : 1;
     this.busTrims[bus] = Math.min(cap, Math.max(0, gain));
