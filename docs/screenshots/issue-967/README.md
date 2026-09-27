@@ -165,6 +165,22 @@ than another small coefficient tweak. The critic viewed all supplied frames
 and the captured logs, but could not independently execute Git or tests; its
 score is a pixel judgement, not a claim that it reran the gates.
 
+### Restart checkpoint
+
+The saved code checkpoint is `b7a8c788681df150e243aff9fd6a516af4bace49` in
+[#970](https://github.com/gunnargehtab/Echoes-of-the-Abyss/pull/970).
+Continue from that PR or its eventual merge, keeping the same committed
+`target.png`, `shoot.mjs` camera and development-only `?dream-loop=1` boundary.
+The latest comparison is `prototype-4.png`, with its measurement and camera
+controls above; the complete [Astra verdict](critic-4.txt) is saved for the next
+fresh critic, including the note that its code finding was fixed afterward.
+
+The next run starts with **6.3/10 at 60.0 FPS**, not visual acceptance.
+Use **gpt-6-astra** for the critic and a new time budget; this run's timer is
+finished. Reconsider the material/light response against the five saved visual
+priorities rather than spending another round on small coefficient changes.
+No approved asset replacement or production art change has been authorized.
+
 ## How the target was made
 
 Claude Design (`claude.ai/design`), three rounds in one conversation.
