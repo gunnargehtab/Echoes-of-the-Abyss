@@ -74,8 +74,8 @@ samples, progress, export and an explicit failure surface. The first accumulatio
 sample replaces history rather than blending against the previous camera's HDR values.
 
 Static opaque parts sharing a material and render state are batched while preserving
-their world-space geometry, UVs, normals and materials. Moving torpedoes, custom translucent shaders,
-existing instances and coloured terrain are excluded. `geometry.mjs` shares the
+their world-space geometry, UVs, normals and materials. Moving torpedoes, custom
+translucent shaders, existing instances and coloured terrain are excluded. `geometry.mjs` shares the
 export's UV merge with its fauna; tests hold batching to world bounds, triangle counts,
 shadow state and exclusions. This is still a key-art renderer, not a proposed gameplay
 asset pipeline.
@@ -106,6 +106,23 @@ Those are pixel readings, not an independent visual score.
 The browser verification passed. After drifting and returning, only 270 RGB channels
 changed, each by one 8-bit step, for a mean of 0.0000434/255; keyboard movement, full-size
 PNG export, portrait layout, idle suspension and visible invalid-input errors also held.
+
+## Independent verdict
+
+The fresh read-only reviewer passed the first round at **9.8/10**: composition 3/3,
+lighting 3/3, materials 3/3 and details 0.8/1. It opened the target, current, reference,
+comparison and drift images, reran the seven focused tests and found no blocking or
+minor engineering defect. The remaining difference is fine grain and highlight speckle,
+not missing scene content; it is optional polish rather than an acceptance finding.
+The reviewer accepted 37.436 full-render FPS for this progressively resolved still,
+while retaining the cold-load caveat and rejecting any claim of 60 FPS gameplay.
+
+The configured custom critic could not launch because its `opus` alias was unavailable.
+A fresh runtime-default reviewer applied the same read-only critic contract and Pro
+rubric instead; no model or agent configuration changed. The score and engineering
+pass accept this isolated prototype only, not production art or gameplay integration.
+The loop stops at its first passing round rather than spending the rest of the hour
+chasing an unrequested perfect score.
 
 ## Related
 
