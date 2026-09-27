@@ -75,6 +75,14 @@ absent from that frame and was not used as the acceptance result.
 The target still needs denser low ground dressing, atmospheric detail and more convincing
 steel and amber lighting; the prototype does not authorize changes to approved GLBs.
 
+Round 2 scored **5.4/10** (composition 2.8, lighting 1.1, materials 1.3, details 0.2).
+Two rounds fit the owner's 30-minute budget; the >=8 visual exit was not reached.
+The independent critic inspected the complete diff, issue and PR bodies, captures,
+focused-test output and the final twelve passing gates. Its verdict remains
+**evidence-missing** only because its available tools could not independently execute the
+focused test; the supplied run passed all three cases.
+The [normal-play control](normal-play-control.png) still shows the shipped warm cladding.
+
 ## How the target was made
 
 Claude Design (`claude.ai/design`), three rounds in one conversation.
