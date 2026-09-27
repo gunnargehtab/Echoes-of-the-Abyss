@@ -121,6 +121,7 @@ import {
 import { FrameCost, ms } from './frameCost.ts';
 import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 import { FaunaStipple } from './faunaStipple.ts';
+import { DREAM_LOOP, installDreamGround } from './dreamLoop.ts';
 
 /**
  * Steps in the veil's shade table. 64 is finer than an 8-bit colour channel
@@ -579,11 +580,11 @@ export class PerspectiveView {
     // ambient so black water never crushes to nothing, an oblique key from
     // high north-west, and a hard cyan rim from the north — the same rim the
     // prompt kit poses every model against.
-    this.scene.add(new AmbientLight(0x5a6b80, 0.65));
-    const key = new DirectionalLight(0xdfe8f0, 1.35);
+    this.scene.add(new AmbientLight(0x5a6b80, DREAM_LOOP ? 0.85 : 0.65));
+    const key = new DirectionalLight(0xdfe8f0, DREAM_LOOP ? 1.7 : 1.35);
     key.position.set(-1400, 2600, -900);
     this.scene.add(key, key.target);
-    const rim = new DirectionalLight(0x9fd8ff, 1.0);
+    const rim = new DirectionalLight(DREAM_LOOP ? UI.accent : 0x9fd8ff, DREAM_LOOP ? 2.4 : 1.0);
     rim.position.set(0, 900, -3000);
     this.scene.add(rim, rim.target);
   }
@@ -1157,6 +1158,7 @@ export class PerspectiveView {
     const classes = surveyCellClasses(terrain);
     const cells = surveyCellTexture(terrain, classes);
     installSurveyInk(material, terrain, cells);
+    if (DREAM_LOOP) installDreamGround(material);
     this.terrainMesh = new Mesh(geometry, material);
     this.scene.add(this.terrainMesh);
     this.terrainGrid = grid;

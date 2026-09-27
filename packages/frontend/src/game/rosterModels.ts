@@ -50,6 +50,7 @@ import { Faction, StructureKind, structureStatsFor, UnitKind } from '@echoes/sha
 import { ACTIVE_PALETTE, FACTION_PALETTE } from './palette.ts';
 import { HULL_LENGTH_M } from './silhouettes.ts';
 import { glowFactor } from './glow.ts';
+import { DREAM_LOOP, installDreamSteel } from './dreamLoop.ts';
 
 /**
  * TUNABLE — the linear diffuse luminance a model's *brightest* cladding
@@ -346,6 +347,7 @@ function recolor(root: Group, faction: Faction): void {
       material.emissive.copy(glow);
       material.emissiveIntensity *= emissiveLum / glowLum;
     }
+    if (DREAM_LOOP) installDreamSteel(material);
   }
 }
 

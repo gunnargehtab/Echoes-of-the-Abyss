@@ -43,6 +43,26 @@ runs.
 
 4. Judge each shot against `target.png`, as the skill's judge prompt says.
 
+### Development-only prototype
+
+Open `http://localhost:5173/?dream-loop=1` to enable the material study. Without that
+explicit opt-in, or in a production build, the shipped appearance is unchanged.
+On Windows, the existing development servers can be driven with:
+
+```powershell
+$env:VIEW_W='1920'; $env:VIEW_H='1080'
+$env:DREAM_METRICS='.dream-loop\metrics.json'
+node .claude\skills\run-game\scripts\drive.mjs --headed --channel msedge `
+  --url 'http://localhost:5173/?dream-loop=1' --out .dream-loop\shots `
+  --steps docs\screenshots\issue-967\measure.mjs
+```
+
+`measure.mjs` calls the unchanged `shoot.mjs`, then measures a separate ten-second station.
+Round 1's [live frame](prototype-1.png) and [reading](prototype-1-metrics.json) show
+60.1 FPS on a GTX 1070 through ANGLE/D3D11, 55 draw calls and 148,290 triangles.
+The first pass is incomplete: regular brick-like platework, sparse vegetation and flat
+ground still differ from the target. No approved model or simulation number changed.
+
 ## How the target was made
 
 Claude Design (`claude.ai/design`), three rounds in one conversation.
@@ -132,6 +152,11 @@ the share of pixels under 10% luma:
 
 ## Design calls taken
 
+- **27 September prototype: opt-in cool steel.** The owner chose development-only
+  `?dream-loop=1` over retaining the shipped faction-coloured cladding, with a 30-minute
+  budget and the existing three-round cap. This studies the target's cool finish without
+  changing normal play or production behaviour; faction-coloured lamps retain their
+  approved resting energy and live-SIG modulation. The approved GLBs and camera are unchanged.
 - **Rim light, not outline.** v2 drew the cyan as an even outline.
   [art-direction.md](../../art-direction.md) asks for a hard cyan rim light, and cyan is
   also the interface's voice, so an outline on every object could read as a selection. v3
