@@ -569,14 +569,6 @@ export const Sowing = defineComponent({
 });
 
 /**
- * Grown mines aboard a hull that carries more than the roster's one — the
- * Spinner (docs/units.md). A magazine and not a cooldown, for the torpedo's
- * reason: the decision is "is this worth one of my four", and the regrowth
- * clock runs only where the doc says the hull can regrow — inside a Spore
- * Veil or by a Bastion — so a Spinner in the field is a Spinner with what it
- * brought.
- */
-/**
  * Decoys aboard a hull that lays them as a screen (docs/systems-combat.md §5,
  * "A screen, laid"). Only the Weaver has one.
  *
@@ -621,6 +613,14 @@ export const Song = defineComponent({
   cooldownS: Types.f32,
 });
 
+/**
+ * Grown mines aboard a hull that carries more than the roster's one — the
+ * Spinner (docs/units.md). A magazine and not a cooldown, for the torpedo's
+ * reason: the decision is "is this worth one of my four", and the regrowth
+ * clock runs only where the doc says the hull can regrow — inside a Spore
+ * Veil or by a Bastion — so a Spinner in the field is a Spinner with what it
+ * brought.
+ */
 export const MineMagazine = defineComponent({
   mines: Types.ui8,
   /** Seconds until the next mine is grown; only counts down at a nursery. */

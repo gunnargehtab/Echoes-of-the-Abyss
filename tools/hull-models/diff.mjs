@@ -311,6 +311,19 @@ function box(parts) {
 }
 
 /**
+ * A part's key: its name, and which occurrence of that name it is in the
+ * file — so that a repeated arm's fourth `valve_block` matches the fourth.
+ */
+function keyed(parts) {
+  const seen = new Map();
+  return parts.map((p) => {
+    const n = (seen.get(p.name) ?? 0) + 1;
+    seen.set(p.name, n);
+    return { ...p, key: n === 1 ? p.name : `${p.name}#${n}` };
+  });
+}
+
+/**
  * The single factor the whole hull moved by, per axis — the **median** of the
  * per-part extent ratios, not the ratio of the whole-model extents.
  *
@@ -329,19 +342,6 @@ function box(parts) {
  * eleven, and against a fixed metre no part of theirs qualifies, the scale
  * silently defaults to 1 and every part reads as moved.
  */
-/**
- * A part's key: its name, and which occurrence of that name it is in the
- * file — so that a repeated arm's fourth `valve_block` matches the fourth.
- */
-function keyed(parts) {
-  const seen = new Map();
-  return parts.map((p) => {
-    const n = (seen.get(p.name) ?? 0) + 1;
-    seen.set(p.name, n);
-    return { ...p, key: n === 1 ? p.name : `${p.name}#${n}` };
-  });
-}
-
 function rootScale(before, after) {
   const afterByName = new Map(after.map((p) => [p.key, p]));
   const floor = Math.max(...box(before).extent) / 100;

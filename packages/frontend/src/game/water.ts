@@ -320,23 +320,6 @@ export function installWaterFog(): void {
 // --------------------------------------------------------- the backdrop
 
 /**
- * The water where there is no geometry.
- *
- * One screen-filling triangle pair, one draw call, no depth. Every pixel
- * unprojects to a world-space ray and asks the ramp what colour the water is
- * one reach along it — the *same* question `fog_fragment` asks — which is why
- * the horizon stops existing: the far seabed fades toward the colour the sky
- * behind it already is, so there is no edge left to see. Looking down darkens,
- * looking up brightens toward the Lid, and both happen because the ray goes
- * there, not because the screen has a top and a bottom.
- *
- * That last part is the reason this is a world-ray shader rather than a
- * vertical screen gradient, which would have been a third of the code: a
- * screen gradient is an atmosphere pass that rotates with the projection, and
- * docs/free-camera.md §5 keeps that prohibition verbatim — the player may turn
- * the camera, an effect may not.
- */
-/**
  * How much depth the backdrop spends over a full quarter-turn of ray — the
  * metres between a ray pointing level and one pointing straight up. TUNABLE.
  *
@@ -354,6 +337,23 @@ export function installWaterFog(): void {
  */
 const BACKDROP_SPAN_M = 2200;
 
+/**
+ * The water where there is no geometry.
+ *
+ * One screen-filling triangle pair, one draw call, no depth. Every pixel
+ * unprojects to a world-space ray and asks the ramp what colour the water is
+ * one reach along it — the *same* question `fog_fragment` asks — which is why
+ * the horizon stops existing: the far seabed fades toward the colour the sky
+ * behind it already is, so there is no edge left to see. Looking down darkens,
+ * looking up brightens toward the Lid, and both happen because the ray goes
+ * there, not because the screen has a top and a bottom.
+ *
+ * That last part is the reason this is a world-ray shader rather than a
+ * vertical screen gradient, which would have been a third of the code: a
+ * screen gradient is an atmosphere pass that rotates with the projection, and
+ * docs/free-camera.md §5 keeps that prohibition verbatim — the player may turn
+ * the camera, an effect may not.
+ */
 export class WaterBackdrop {
   readonly mesh: Mesh;
   private readonly uniforms = {

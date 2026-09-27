@@ -38,13 +38,6 @@ const DECAY_PERIOD_STRETCH = 0.4;
 const FALLOFF_REFERENCE_M = 900;
 
 /**
- * The oscillator's level, by what the tier is allowed to say, and how far a
- * drive-signature pulse lifts it.
- *
- * Named because `strike` has to anchor to the level rather than read one back
- * — see the comment there for what reading it back cost.
- */
-/**
  * The unclassified thump's partials — §11's speaker profile (#663).
  *
  * §3 gives Tier 1 and Tier 2 "a low pressure-thump, 40-90 Hz", and a bare sine
@@ -88,6 +81,13 @@ function thumpWave(context: AudioContext): PeriodicWave | null {
   }
 }
 
+/**
+ * The oscillator's level, by what the tier is allowed to say, and how far a
+ * drive-signature pulse lifts it.
+ *
+ * Named because `strike` has to anchor to the level rather than read one back
+ * — see the comment there for what reading it back cost.
+ */
 const DRIVE_LEVEL = {
   /** Tier 3+: the faction's drive signature (§8). */
   CLASSIFIED: 0.5,

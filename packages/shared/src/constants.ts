@@ -2468,13 +2468,6 @@ export const STRUCTURE_AURAS = {
 } as const;
 
 /**
- * The effect hulls of docs/units.md's rung roster (#461) — each the mechanism
- * one of the signature structures already has, on a hull: the Precentor's
- * dome is the Cantor's, the Cantus's and the Sower's grant is the Spire's, the
- * Spinner's magazine is the mine cap's, and the Tender is the one mechanism
- * the simulation did not have. All SPEC, cited to the hull's stat block.
- */
-/**
  * The reach of a nursery — a Bastion's, and the Bower's for the same reason.
  *
  * One number with two readers (docs/units.md: the Spinner "regrows one every
@@ -2484,6 +2477,13 @@ export const STRUCTURE_AURAS = {
  */
 const NURSERY_RADIUS_M = 300;
 
+/**
+ * The effect hulls of docs/units.md's rung roster (#461) — each the mechanism
+ * one of the signature structures already has, on a hull: the Precentor's
+ * dome is the Cantor's, the Cantus's and the Sower's grant is the Spire's, the
+ * Spinner's magazine is the mine cap's, and the Tender is the one mechanism
+ * the simulation did not have. All SPEC, cited to the hull's stat block.
+ */
 export const HULL_EFFECTS = {
   /** SPEC — Tender: "15 HP/s to one allied hull within 300 m, nearest first". */
   TENDER: {
@@ -2526,11 +2526,6 @@ export const HULL_EFFECTS = {
     PR_BONUS: 1,
     STATIONARY_S: 20,
   },
-  /**
-   * SPEC — Antiphon: "Every hull it disembarks carries +1 PR for 20 s, the
-   * Spire's grant on a clock. It does not stack with a Spire, a Cantus or a
-   * Sower — one band rented, never two — and it does not renew."
-   */
   /**
    * The Blight's spore — docs/systems-combat.md §9, "A weapon that is not a
    * weapon". A Deepbloom strain seeded on a structure.
@@ -2575,6 +2570,11 @@ export const HULL_EFFECTS = {
     COOLDOWN_S: 90,
   },
 
+  /**
+   * SPEC — Antiphon: "Every hull it disembarks carries +1 PR for 20 s, the
+   * Spire's grant on a clock. It does not stack with a Spire, a Cantus or a
+   * Sower — one band rented, never two — and it does not renew."
+   */
   ANTIPHON: {
     PR_BONUS: 1,
     GRANT_S: 20,

@@ -256,20 +256,6 @@ export interface SimWorld extends IWorld {
    */
   siegeWorkSig: Map<number, number>;
   /**
-   * Hulls carrying a mission commander's one authored act this tick — eid to
-   * the speed multiplier it grants (docs/characters.md; `MissionCommanderAbility`).
-   *
-   * `liftCutSig`'s arrangement in every respect: written by the mission runtime
-   * on the Echo tick, read by movement at 60 Hz, cleared and rebuilt whole on
-   * every mission pass so an expired act cannot leave a stale bonus on a
-   * recycled entity id. Empty in every skirmish, and the read is gated on that.
-   *
-   * A speed multiplier and not a component, because the effect is authored,
-   * bounded and re-derived from the runtime's own clock every pass — the same
-   * argument the cut floor makes. A component would be a second place the
-   * fifteen seconds are counted.
-   */
-  /**
    * Rectangles a mission has made habitable, and the Pressure Rating each
    * grants over a hull's own — `MissionRegion.pressureBonus`, and the
    * `ground` beat that turns one on.
@@ -286,6 +272,20 @@ export interface SimWorld extends IWorld {
    * that.
    */
   regionPressureBonus: { x: number; y: number; widthM: number; heightM: number; bonus: number }[];
+  /**
+   * Hulls carrying a mission commander's one authored act this tick — eid to
+   * the speed multiplier it grants (docs/characters.md; `MissionCommanderAbility`).
+   *
+   * `liftCutSig`'s arrangement in every respect: written by the mission runtime
+   * on the Echo tick, read by movement at 60 Hz, cleared and rebuilt whole on
+   * every mission pass so an expired act cannot leave a stale bonus on a
+   * recycled entity id. Empty in every skirmish, and the read is gated on that.
+   *
+   * A speed multiplier and not a component, because the effect is authored,
+   * bounded and re-derived from the runtime's own clock every pass — the same
+   * argument the cut floor makes. A component would be a second place the
+   * fifteen seconds are counted.
+   */
   commanderHaste: Map<number, number>;
   /**
    * Hulls the same act lifts Silent Running's **speed** penalty from — the
@@ -594,15 +594,6 @@ export function economyFor(world: SimWorld, slot: number): PlayerEconomy {
 }
 
 /**
- * Put a creature on the map.
- *
- * Owned by `DRIFT_SLOT`, which is not a player — so the Echo Layer's
- * "different slot" test admits it for everybody, and every player resolves the
- * Drift exactly as they resolve each other. That is the whole trick behind
- * docs/bestiary.md §3: fauna are contacts because nothing marks them out as
- * anything else.
- */
-/**
  * The band a species rests in on *this* map — its profile's, unless the map
  * re-homed it (docs/bestiary.md §4, "One species, two waters").
  *
@@ -621,6 +612,15 @@ export function ambientBandFor(world: SimWorld, species: FaunaSpecies): AmbientB
   );
 }
 
+/**
+ * Put a creature on the map.
+ *
+ * Owned by `DRIFT_SLOT`, which is not a player — so the Echo Layer's
+ * "different slot" test admits it for everybody, and every player resolves the
+ * Drift exactly as they resolve each other. That is the whole trick behind
+ * docs/bestiary.md §3: fauna are contacts because nothing marks them out as
+ * anything else.
+ */
 export function spawnFauna(
   world: SimWorld,
   options: { species: FaunaSpecies; x: number; y: number; depth?: number }
@@ -980,13 +980,6 @@ export interface SpawnOptions {
 }
 
 /**
- * Create a unit with every component the simulation systems expect.
- *
- * Systems query by component signature, so a unit missing one silently drops
- * out of that system rather than erroring — spawning goes through this one
- * function so that cannot happen by accident.
- */
-/**
  * The hulls whose work *is* standing still (docs/units.md, the rung's roster):
  * the Tender welding, the Sower seeded, the Cantus singing for PR, and the
  * Bower grown out (#509). These are the hulls `hullEffectsSystem` drives from
@@ -1004,6 +997,13 @@ const WORKS_BY_STANDING_STILL: ReadonlySet<UnitKind> = new Set([
   UnitKind.Bower,
 ]);
 
+/**
+ * Create a unit with every component the simulation systems expect.
+ *
+ * Systems query by component signature, so a unit missing one silently drops
+ * out of that system rather than erroring — spawning goes through this one
+ * function so that cannot happen by accident.
+ */
 export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   const stats = statsFor(opts.kind);
   const eid = addEntity(world);

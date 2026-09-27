@@ -330,20 +330,6 @@ describe('contact timbre', () => {
 });
 
 /**
- * The rate the engine actually drives a voice at — `engine.ts`'s `onEchoTick`,
- * once per Echo snapshot.
- *
- * The tests above drive at 60 Hz, which is a fine way to sample a train
- * densely and was, until #731, the reason none of them could see the fault
- * they were written to hold. A mechanism scheduled only at the instant the
- * caller asked was quantised onto the caller's grid, and every property here
- * was measured on a 60 Hz grid the game never uses: on the 5 Hz one it does,
- * the Directorate's whole period band lies inside a single tick, so the swarm
- * rendered as an exact 0.2000 s metronome — a beat §8 reserves to the
- * Consortium, at the ordnance screw's own shortest interval, which §8.1
- * forbids. The block below measures at the Echo rate for that reason.
- */
-/**
  * Another voice inside a context that already holds one.
  *
  * `drive` finds its oscillator as the first in the context; a fixture standing
@@ -422,6 +408,20 @@ function clustersFrom(
   return out;
 }
 
+/**
+ * The rate the engine actually drives a voice at — `engine.ts`'s `onEchoTick`,
+ * once per Echo snapshot.
+ *
+ * The tests above drive at 60 Hz, which is a fine way to sample a train
+ * densely and was, until #731, the reason none of them could see the fault
+ * they were written to hold. A mechanism scheduled only at the instant the
+ * caller asked was quantised onto the caller's grid, and every property here
+ * was measured on a 60 Hz grid the game never uses: on the 5 Hz one it does,
+ * the Directorate's whole period band lies inside a single tick, so the swarm
+ * rendered as an exact 0.2000 s metronome — a beat §8 reserves to the
+ * Consortium, at the ordnance screw's own shortest interval, which §8.1
+ * forbids. The block below measures at the Echo rate for that reason.
+ */
 const ECHO_STEP_S = 1 / SIM.ECHO_HZ;
 
 /** Every family with events, and the identity that reaches it. */

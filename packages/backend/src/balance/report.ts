@@ -452,13 +452,6 @@ function noSeat(risk: string, source: string, faction: string): GuardRailVerdict
 }
 
 /**
- * How many distinct seatings the batch was played under.
- *
- * A signature per match rather than a count of factions or of slots: a mirror
- * batch has one seating and four slots, a rotated four-faction batch has four
- * of each, and only the assignment itself separates them.
- */
-/**
  * How many distinct *rosters* the batch was played with, ignoring the chairs.
  *
  * The other half of what `countSeatings` counts, and the two come apart exactly
@@ -481,6 +474,13 @@ function countRosters(results: MatchTelemetryResult[]): number {
   return seen.size;
 }
 
+/**
+ * How many distinct seatings the batch was played under.
+ *
+ * A signature per match rather than a count of factions or of slots: a mirror
+ * batch has one seating and four slots, a rotated four-faction batch has four
+ * of each, and only the assignment itself separates them.
+ */
 function countSeatings(results: MatchTelemetryResult[]): number {
   const seen = new Set<string>();
   for (const result of results) {

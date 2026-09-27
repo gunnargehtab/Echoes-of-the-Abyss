@@ -928,28 +928,6 @@ export function ordnanceSystem(world: SimWorld, destroyed: number[]): void {
 }
 
 /**
- * The enemy hull this torpedo is close enough to detonate on, or 0.
- *
- * **Three-dimensional, unlike everything acoustic in this simulation.** The
- * Echo Layer resolves on horizontal distance alone — depth is a commitment
- * timer, not a term in the propagation model — and the seeker above follows
- * that rule exactly, because a seeker is a listener and must hear what a
- * listener would hear.
- *
- * A fuse is not a listener. It is physical contact, and the depth axis is
- * where docs/systems-combat.md §8 lives: if the fuse ignored depth, a torpedo
- * running at 900 m would detonate on a Directorate hull sitting 1,500 m below
- * it, the ordnance would never have to descend, and the whole depth envelope —
- * the thing that makes the Abyssal band feel different to fight in — would
- * apply to nothing. It also means a shallow torpedo genuinely cannot reach a
- * deep hull, which is §8's sentence, mechanised.
- *
- * Ordnance is skipped: a torpedo does not detonate on a mine, on another
- * torpedo, or on the decoy it was chasing — a noisemaker that could be
- * *destroyed* by the torpedo it pulled would be a countermeasure that stops
- * working the instant it works.
- */
-/**
  * The largest radius any fuse can ever want, derived rather than picked.
  *
  * The broadphase below has to be sized so that nothing inside a fuse envelope
@@ -987,6 +965,28 @@ function rebuildFuseGrid(world: SimWorld): void {
   }
 }
 
+/**
+ * The enemy hull this torpedo is close enough to detonate on, or 0.
+ *
+ * **Three-dimensional, unlike everything acoustic in this simulation.** The
+ * Echo Layer resolves on horizontal distance alone — depth is a commitment
+ * timer, not a term in the propagation model — and the seeker above follows
+ * that rule exactly, because a seeker is a listener and must hear what a
+ * listener would hear.
+ *
+ * A fuse is not a listener. It is physical contact, and the depth axis is
+ * where docs/systems-combat.md §8 lives: if the fuse ignored depth, a torpedo
+ * running at 900 m would detonate on a Directorate hull sitting 1,500 m below
+ * it, the ordnance would never have to descend, and the whole depth envelope —
+ * the thing that makes the Abyssal band feel different to fight in — would
+ * apply to nothing. It also means a shallow torpedo genuinely cannot reach a
+ * deep hull, which is §8's sentence, mechanised.
+ *
+ * Ordnance is skipped: a torpedo does not detonate on a mine, on another
+ * torpedo, or on the decoy it was chasing — a noisemaker that could be
+ * *destroyed* by the torpedo it pulled would be a countermeasure that stops
+ * working the instant it works.
+ */
 function nearestFuseHit(world: SimWorld, eid: number): number {
   const x = Position.x[eid]!;
   const y = Position.y[eid]!;
