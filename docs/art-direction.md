@@ -450,12 +450,14 @@ The projection change moved the old plan-view protections; it did not drop them:
   its luminance-and-fog language ("Reading the Sea Floor" above); the tilt supports it
   rather than competing with it.
 - **A structure stands on its depth.** A hull is a point in the water and hangs by its
-  centre. A structure is built up from a footing, so its model's lowest point sits at the
-  depth it was built at, 600 m of Mid-Water, and the model rises from there; where the
-  ground is higher, it stands on the ground. Hung by its centre, a 133 m Refinery reached
-  some 300 m of drawn depth under that point, because the view draws depth at 0.22 and
-  models true, and on any floor shallower than about 900 m its lower half was underground
-  (#955). The plumb runs from the footing to the seabed.
+  centre. A structure is built up from a footing: its model's ground, the y 0 it was
+  authored standing on, sits at the depth it was built at, 600 m of Mid-Water, and the
+  model rises from there; where the seabed is higher, it stands on the seabed. An anchor, a
+  root or a slab authored under that line grips the floor wherever the floor meets it.
+  Hung by its centre, a 133 m Refinery reached some 300 m of drawn depth under that point,
+  because the view draws depth at 0.22 and models true, and on any floor shallower than
+  about 900 m its lower half was underground (#955). The plumb runs from the footing to the
+  seabed.
 - **An unearned depth is drawn as a column, not as a height.** Below Tier 3 the server
   sends no depth at all, and a projection that picks one — even a stable, deliberately
   arbitrary one — draws a precision the tier never carried. So a contact with no earned

@@ -1679,7 +1679,7 @@ export class PerspectiveView {
     // would otherwise bury half its own height in the seabed at survey zoom.
     const hullY = Math.max(y, groundY + 4 * draw);
     if (model !== null) {
-      const modelY = handle.stands ? standingY(model.baseM, draw, y, groundY) : hullY;
+      const modelY = handle.stands ? standingY(model.groundM, draw, y, groundY) : hullY;
       model.root.position.set(x, modelY, z);
       model.root.rotation.y = -yaw;
     } else {

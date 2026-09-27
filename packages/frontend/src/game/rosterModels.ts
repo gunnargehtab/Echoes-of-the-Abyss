@@ -244,11 +244,11 @@ export interface RosterModelInstance {
    */
   baseScale: number;
   /**
-   * How far the lowest drawn vertex sits under `root`'s origin, metres at
-   * `baseScale`. Intake centres a model on its box, which is where a hull
-   * hangs; a structure stands on this instead (`standingY`, #955).
+   * How far the model's ground, its own y 0, sits under `root`'s origin,
+   * metres at `baseScale`. Intake centres a model on its box, which is where a
+   * hull hangs; a structure stands on its ground instead (`standingY`, #955).
    */
-  baseM: number;
+  groundM: number;
 }
 
 /** A slug's recoloured, canonicalised model, which every instance clones. */
@@ -258,21 +258,31 @@ export interface Template {
   beamM: number;
   heightM: number;
   baseScale: number;
-  baseM: number;
+  groundM: number;
 }
 
 /**
  * Where a structure's `root` goes so the model stands on its depth
- * (docs/art-direction.md "A structure stands on its depth"): its lowest point
- * at `depthY`, or on the ground where the ground is higher, rising from there
- * at whatever scale it is drawn. A hull is a point in the water and hangs by
- * its centre. Hung the same way, a 133 m Refinery reached 300 m of drawn depth
+ * (docs/art-direction.md "A structure stands on its depth"): its own y 0 at
+ * `depthY`, or on the seabed where the seabed is higher, rising from there at
+ * whatever scale it is drawn. A hull is a point in the water and hangs by its
+ * centre. Hung the same way, a 133 m Refinery reached 300 m of drawn depth
  * under the depth it was built at, since depth draws at 0.22 and the model
  * true, and on a floor shallower than about 900 m its lower half was
  * underground (#955).
+ *
+ * The y 0 and not the lowest vertex: 23 of the 32 committed structures sink
+ * an anchor, a root or a footing under their y 0 on purpose, the Baffle
+ * Barge's anchor blocks 76 m of it, and a model stood on its lowest point
+ * would hang all of them clear of the floor they grip.
  */
-export function standingY(baseM: number, drawScale: number, depthY: number, groundY: number) {
-  return Math.max(depthY, groundY) + baseM * drawScale;
+export function standingY(
+  groundM: number,
+  drawScale: number,
+  depthY: number,
+  groundY: number
+): number {
+  return Math.max(depthY, groundY) + groundM * drawScale;
 }
 
 const loader = new GLTFLoader();
@@ -416,8 +426,8 @@ function designLengthM(key: RosterModelKey): number {
  * part is yawed or leaned. Until #882 that drew the Pelagia Spore Veil 1.145×
  * the size intake reviewed, as environmentModels.ts `propFootprint` found for
  * props (#876). The extents returned are the merged vertices', which is what
- * draws, and so is `baseM`: a structure stood on the loose box would float by
- * however far a leaning part's box reaches under its lowest vertex.
+ * draws. `groundM` is where the file's own y 0 lands after the same yaw, scale
+ * and centring; a yaw is about Y, so it leaves the ground where it was.
  */
 function normalise(scene: Group, key: RosterModelKey): Template {
   const raw = new Box3().setFromObject(scene).getSize(new Vector3());
@@ -430,8 +440,7 @@ function normalise(scene: Group, key: RosterModelKey): Template {
   const scale = partsSize.x > 0 ? designLengthM(key) / partsSize.x : 1;
 
   const merged = mergeByMaterial(yawed);
-  const extent = new Box3().setFromObject(merged, true);
-  const drawn = extent.getSize(new Vector3());
+  const drawn = new Box3().setFromObject(merged, true).getSize(new Vector3());
   const centre = parts.getCenter(new Vector3());
   merged.position.sub(centre);
 
@@ -444,7 +453,7 @@ function normalise(scene: Group, key: RosterModelKey): Template {
     beamM: drawn.z * scale,
     heightM: drawn.y * scale,
     baseScale: scale,
-    baseM: (centre.y - extent.min.y) * scale,
+    groundM: centre.y * scale,
   };
 }
 
@@ -550,7 +559,7 @@ export function rosterModelInstance(key: RosterModelKey): RosterModelInstance | 
     beamM: template.beamM,
     heightM: template.heightM,
     baseScale: template.baseScale,
-    baseM: template.baseM,
+    groundM: template.groundM,
   };
 }
 

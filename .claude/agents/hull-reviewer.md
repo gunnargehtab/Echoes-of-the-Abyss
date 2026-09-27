@@ -120,10 +120,10 @@ The same pass reads the model's function and its claims:
 
 - **The process connects.** A belt that feeds a maw ends in it, a hopper's chute meets
   the belt, and a leg's claw is on the seabed.
-- **A structure stands on its lowest point.** The conn view puts that point at the 600 m
+- **A structure stands on its y 0.** The conn view puts the model's y 0 at the 600 m
   working depth (`packages/frontend/src/game/rosterModels.ts` `standingY`, #955), so a
-  part under the model's own y 0 lifts the rest off the floor. The sweep's last lines
-  report every such part.
+  part under it is in the seabed wherever the floor meets that depth. The sweep's last
+  lines list every such part: an anchor, a root or a slab passes, anything else is buried.
 - **A sentence that places a part is a claim to measure.** "The lures hang over the belt"
   is not prose to accept: #947's first lures sat 19 to 71 m off it.
 

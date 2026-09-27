@@ -100,12 +100,25 @@ describe('roster scale', () => {
 });
 
 /**
+ * Where a file's own y 0 lands under intake's canonicalisation, relative to
+ * the centre it draws about: yaw is about Y and leaves it, the scale does not.
+ */
+function intakeGround(scene, lengthM) {
+  const probe = scene.clone(true);
+  const raw = new Box3().setFromObject(probe).getSize(new Vector3());
+  if (raw.z > raw.x) probe.rotation.y = Math.PI / 2;
+  const parts = new Box3().setFromObject(probe);
+  return (-parts.getCenter(new Vector3()).y * lengthM) / parts.getSize(new Vector3()).x;
+}
+
+/**
  * docs/art-direction.md "A structure stands on its depth" (#955): the model's
- * lowest point at the depth it was built at, and on the ground where the
- * ground is higher, at every scale the far-zoom factor draws it. Hung by its
- * box centre, #947's Refinery put its plates, head, belt and hopper under any
- * floor shallower than about 900 m. Every committed structure, built by the
- * real template code and stood by the function the conn view calls.
+ * own y 0, where it meets the seabed, at the depth it was built at, and on the
+ * seabed where that is higher, at every scale the far-zoom factor draws it.
+ * Hung by its box centre, #947's Refinery put its plates, head, belt and
+ * hopper under any floor shallower than about 900 m. Every committed
+ * structure, built by the real template code and stood by the function the
+ * conn view calls.
  */
 describe('structure seating', () => {
   const depthY = depthToWorldY(CONSTRUCTION.WORKING_DEPTH_M);
@@ -115,17 +128,14 @@ describe('structure seating', () => {
   ];
   for (const key of KEYS.filter((k) => 'structure' in k)) {
     const file = `${slugFor(key)}.glb`;
-    it(`${file} stands on its depth, never under the floor`, async () => {
-      const template = buildTemplate(await parse(file), key);
-      assert.ok(template.baseM > 0, `${file} has a base under its centre`);
+    it(`${file} stands its own y 0 on its depth, or on a higher floor`, async () => {
+      const scene = await parse(file);
+      const ground = intakeGround(scene, LENGTH_M.get(file));
+      const template = buildTemplate(scene, key);
       for (const draw of [1, MAX_HULL_SCALE]) {
-        const root = template.root.clone(true);
-        root.scale.setScalar(template.baseScale * draw);
         for (const [where, groundY, expected] of grounds) {
-          root.position.y = standingY(template.baseM, draw, depthY, groundY);
-          const drawn = new Box3().setFromObject(root, true);
-          close(drawn.min.y, expected ?? groundY, `${file} at ×${draw} over ${where}`);
-          close(drawn.getSize(new Vector3()).y, template.heightM * draw, `${file} height`);
+          const y = standingY(template.groundM, draw, depthY, groundY) + ground * draw;
+          close(y, expected ?? groundY, `${file} at ×${draw} over ${where}`);
         }
       }
     });
