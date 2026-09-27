@@ -182,11 +182,11 @@ register; don't strip them when refactoring.
 
 ### Vendored skills
 
-`.claude/skills/` holds six skills written here and eleven copied from public marketplaces.
+`.claude/skills/` holds repository-authored workflows and skills copied from public marketplaces.
 `.claude/VENDORED-SKILLS.md` records each copy's upstream, licence, why it is a copy rather
 than a plugin, and its two `LOCAL` edits. The copies are read-only — reformatting one
-destroys what makes a re-sync cheap — so `npm run docs:claude` lints the six and leaves the
-eleven alone. Never link one from `docs/`, where the link check is blocking.
+destroys what makes a re-sync cheap — so `npm run docs:claude` lints the authored workflows and leaves the
+copies alone. Never link a vendored skill from `docs/`, where the link check is blocking.
 
 ## Design constraints worth knowing before you touch gameplay
 

@@ -41,6 +41,7 @@ import {
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeByMaterial } from './rosterModels.ts';
 import { swayWeight } from './environment.ts';
+import { installPropSurface, type WorldLook } from './tutorialLook.ts';
 
 /**
  * TUNABLE — the diffuse luminance a prop's brightest material is set to,
@@ -87,6 +88,8 @@ export interface EnvTemplate {
 const loader = new GLTFLoader();
 /** Templates per slug; null marks "still loading" (or failed — see below). */
 const templates = new Map<string, EnvTemplate | null>();
+const waiting = new Map<string, Set<() => void>>();
+let generation = 0;
 
 function luminance(material: MeshStandardMaterial): number {
   return 0.2126 * material.color.r + 0.7152 * material.color.g + 0.0722 * material.color.b;
@@ -168,7 +171,12 @@ export function propFootprint(root: Object3D): number {
 }
 
 /** One prop's template from its parsed file; exported for the test that holds it to intake. */
-export function buildTemplate(scene: Group, footprintM: number, swayM: number): EnvTemplate {
+export function buildTemplate(
+  scene: Group,
+  footprintM: number,
+  swayM: number,
+  look: WorldLook = 'standard'
+): EnvTemplate {
   // Clone materials through an identity map (rosterModels' argument: shared
   // materials must keep sharing their clone or the merge silently fails).
   const materialClones = new Map<Material, Material>();
@@ -228,6 +236,7 @@ export function buildTemplate(scene: Group, footprintM: number, swayM: number): 
       geometry.setAttribute('swayWeight', new Float32BufferAttribute(weights, 1));
       patchSway(material, sway);
     }
+    if (look === 'sorrowgate') installPropSurface(material);
     parts.push({ geometry, material });
   });
   return { parts, trianglesPerInstance: triangles, sway };
@@ -244,29 +253,46 @@ export function envTemplate(
   slug: string,
   footprintM: number,
   swayM: number,
-  onReady: () => void
+  onReady: () => void,
+  look: WorldLook = 'standard'
 ): EnvTemplate | null {
-  const cached = templates.get(slug);
-  if (cached !== undefined) return cached;
+  const key = `${slug}:${look}`;
+  const cached = templates.get(key);
+  if (cached !== undefined) {
+    waiting.get(key)?.add(onReady);
+    return cached;
+  }
   const load = ENV_MODEL_BY_FILE.get(`${slug}.glb`);
   if (load === undefined) {
-    templates.set(slug, null);
+    templates.set(key, null);
     return null;
   }
-  templates.set(slug, null);
+  templates.set(key, null);
+  const listeners = new Set([onReady]);
+  waiting.set(key, listeners);
+  const started = generation;
   load()
     .then((url) => loader.loadAsync(url))
-    .then((gltf) => {
-      templates.set(slug, buildTemplate(gltf.scene, footprintM, swayM));
-      onReady();
-    })
-    .catch(() => {
-      // Stays null: a broken export is a missing prop, never a retry loop.
-    });
+    .then((gltf) => buildTemplate(gltf.scene, footprintM, swayM, look))
+    .then(
+      (template) => {
+        if (started !== generation) return;
+        templates.set(key, template);
+        waiting.delete(key);
+        for (const notify of listeners) notify();
+      },
+      (error: unknown) => {
+        if (started !== generation) return;
+        waiting.delete(key);
+        console.warn(`Environment model ${slug} failed; retaining terrain-only fallback.`, error);
+      }
+    );
   return null;
 }
 
 /** For tests and teardown: forget every cached template. */
 export function resetEnvironmentModels(): void {
+  generation++;
   templates.clear();
+  waiting.clear();
 }

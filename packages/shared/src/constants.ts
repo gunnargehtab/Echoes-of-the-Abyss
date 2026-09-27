@@ -10,6 +10,26 @@
 import { Biome, DepthBand, Faction, HarvestThrottle, ResourceKind } from './types.js';
 import { MEAN_RENDERED_BIOMASS } from './fauna.js';
 
+/** SPEC — docs/visual-reboot.md §5. Presentation only; never read by simulation. */
+export const SORROWGATE_LOOK = {
+  TEXTURE_SIZE: 128,
+  HULL_TILE_M: 12,
+  STONE_TILE_M: 48,
+  LAMINATE_M: 7,
+  PAVING_M: 24,
+  HULL_DIFFUSE_FLOOR: 0.72,
+  STONE_DIFFUSE_FLOOR: 0.62,
+  HULL_FADE_M_PER_PX: [1, 6],
+  GROUND_FADE_M_PER_PX: [3, 18],
+  HULL_HEIGHT_M: 0.12,
+  STONE_HEIGHT_M: 0.3,
+  ROUGHNESS_VARIATION: 0.12,
+  ANISOTROPY: 4,
+  AMBIENT: 0.75,
+  KEY: 1.8,
+  RIM: 1.6,
+} as const;
+
 /** SPEC — docs/systems-depth.md §1. Metres. */
 export const DEPTH_BANDS: Record<DepthBand, { min: number; max: number }> = {
   [DepthBand.Shelf]: { min: 0, max: 400 },

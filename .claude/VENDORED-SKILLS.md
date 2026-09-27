@@ -2,8 +2,9 @@
 
 Eleven of the skills in `.claude/skills/` were not written here. They are copies
 of public Agent Skills, taken from the marketplaces indexed by
-[skills.sh](https://skills.sh), and they sit beside this repository's own six
-(`balance-run`, `dev-loop`, `hull-intake`, `run-game`, `steward`, `work-issue`).
+[skills.sh](https://skills.sh), and they sit beside this repository's own workflows.
+The authoritative authored/vendor split is in `tools/claude-docs/check.mjs`; the
+art, unit, material, map, world and game design workflows are authored here, not copies.
 
 ## Why they are copied rather than installed
 

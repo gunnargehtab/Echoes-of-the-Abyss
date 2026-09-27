@@ -55,6 +55,7 @@ import {
 import {
   DEPTH,
   Faction,
+  SORROWGATE_LOOK,
   statsFor,
   structureStatsFor,
   type EchoSnapshot,
@@ -122,6 +123,7 @@ import { FrameCost, ms } from './frameCost.ts';
 import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 import { FaunaStipple } from './faunaStipple.ts';
 import { DREAM_LOOP, installDreamGround } from './dreamLoop.ts';
+import { installGroundSurface, type WorldLook } from './tutorialLook.ts';
 
 /**
  * Steps in the veil's shade table. 64 is finer than an 8-bit colour channel
@@ -400,7 +402,7 @@ export class PerspectiveView {
   private surveyCells: DataTexture | null = null;
   private readonly terrainDressing = new Group();
   /** Environment props (environmentLayer.ts) — rebuilt on the terrain cadence. */
-  private readonly environment = new EnvironmentLayer();
+  private readonly environment: EnvironmentLayer;
   private embers: Points | null = null;
   private emberPhases: number[] = [];
   private emberBucket = -1;
@@ -539,7 +541,8 @@ export class PerspectiveView {
    * by an elapsed time that means something. */
   private stationStartedAt = performance.now();
 
-  constructor() {
+  constructor(private readonly look: WorldLook = 'standard') {
+    this.environment = new EnvironmentLayer(look);
     // Before the first material compiles: the water's fog is a patch on
     // three's global shader chunks, so a material built ahead of it would
     // carry the old distance fog for the life of the scene (water.ts).
@@ -580,11 +583,20 @@ export class PerspectiveView {
     // ambient so black water never crushes to nothing, an oblique key from
     // high north-west, and a hard cyan rim from the north — the same rim the
     // prompt kit poses every model against.
-    this.scene.add(new AmbientLight(0x5a6b80, DREAM_LOOP ? 0.85 : 0.65));
-    const key = new DirectionalLight(0xdfe8f0, DREAM_LOOP ? 1.7 : 1.35);
+    const tutorial = look === 'sorrowgate';
+    this.scene.add(
+      new AmbientLight(0x5a6b80, tutorial ? SORROWGATE_LOOK.AMBIENT : DREAM_LOOP ? 0.85 : 0.65)
+    );
+    const key = new DirectionalLight(
+      0xdfe8f0,
+      tutorial ? SORROWGATE_LOOK.KEY : DREAM_LOOP ? 1.7 : 1.35
+    );
     key.position.set(-1400, 2600, -900);
     this.scene.add(key, key.target);
-    const rim = new DirectionalLight(DREAM_LOOP ? UI.accent : 0x9fd8ff, DREAM_LOOP ? 2.4 : 1.0);
+    const rim = new DirectionalLight(
+      DREAM_LOOP && !tutorial ? UI.accent : 0x9fd8ff,
+      tutorial ? SORROWGATE_LOOK.RIM : DREAM_LOOP ? 2.4 : 1.0
+    );
     rim.position.set(0, 900, -3000);
     this.scene.add(rim, rim.target);
   }
@@ -1158,7 +1170,8 @@ export class PerspectiveView {
     const classes = surveyCellClasses(terrain);
     const cells = surveyCellTexture(terrain, classes);
     installSurveyInk(material, terrain, cells);
-    if (DREAM_LOOP) installDreamGround(material);
+    if (this.look === 'sorrowgate') installGroundSurface(material);
+    else if (DREAM_LOOP) installDreamGround(material);
     this.terrainMesh = new Mesh(geometry, material);
     this.scene.add(this.terrainMesh);
     this.terrainGrid = grid;
@@ -1610,7 +1623,7 @@ export class PerspectiveView {
     // ready. A construction site passes modelDesc null and stays schematic
     // (gate 1's scaffold register) until commissioned.
     if (spec.modelDesc !== null && handle.modelKey !== spec.modelCacheKey) {
-      const instance = rosterModelInstance(spec.modelDesc);
+      const instance = rosterModelInstance(spec.modelDesc, this.look);
       if (instance !== null) {
         if (handle.model !== null) group.remove(handle.model.root);
         handle.model = instance;
@@ -2101,6 +2114,7 @@ export class PerspectiveView {
     const elapsed = performance.now() - this.stationStartedAt;
     return {
       active: this.active,
+      look: this.look,
       // The rig's whole state (docs/free-camera.md §4). `pitchDeg` was a
       // constant when the camera was locked; a screenshot review that has to
       // judge gates 6 and 7 across the pitch band needs it to be a reading.
@@ -2130,6 +2144,7 @@ export class PerspectiveView {
       hullScale: Number(this.drawScale.toFixed(2)),
       drawCalls: info?.render.calls ?? 0,
       triangles: info?.render.triangles ?? 0,
+      textures: info?.memory.textures ?? 0,
       // The station these frame numbers belong to, and the two counts that say
       // whether to believe them: `stationFrames` is every frame since the
       // boundary, `avgFrames` the window the average actually covers. Equal

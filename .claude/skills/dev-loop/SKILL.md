@@ -34,6 +34,11 @@ their answer. If the decision is that the doc is wrong or silent, amend the doc
 section first, then build against it. Never build against a reading you did not
 write down.
 
+A staged visual reboot starts with [art direction](../art-direction/SKILL.md):
+one shared brief, with the game, map, world, unit and material workflows feeding it.
+Those specialists do not start additional loops. The playable target and their concrete
+outputs are recorded together, as in `docs/visual-reboot.md`.
+
 ## The round
 
 Seven steps, cheapest failure first.

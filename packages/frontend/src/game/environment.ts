@@ -327,7 +327,7 @@ export function propSpec(slug: string): PropSpec | undefined {
  * cell's own published values plus per-use salts — nothing map-global, which
  * is the whole delta-locality argument above.
  */
-function hash01(values: readonly number[]): number {
+export function hash01(values: readonly number[]): number {
   let h = 0x811c9dc5;
   for (const value of values) {
     const v = value | 0;

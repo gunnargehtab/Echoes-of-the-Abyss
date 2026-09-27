@@ -25,6 +25,7 @@ import {
 } from '@echoes/shared';
 import { EchoRenderer, type ContactLogEntry } from './EchoRenderer.ts';
 import { PerspectiveView } from './PerspectiveView.ts';
+import { lookForMission } from './tutorialLook.ts';
 import { paletteFor, type PaletteName } from './palette.ts';
 import { ContactLog } from './ContactLog.tsx';
 import { EscMenu } from './EscMenu.tsx';
@@ -367,7 +368,7 @@ export function GameCanvas({
     const start = async () => {
       // The world first: the conn view mounts for the whole match, and the
       // Pixi glass above it cannot draw a single world mark without it.
-      const perspective = new PerspectiveView();
+      const perspective = new PerspectiveView(lookForMission(missionId));
       perspectiveRef.current = perspective;
       const perspectiveHost = perspectiveHostRef.current;
       if (perspectiveHost === null || !perspective.mount(perspectiveHost, harness?.glRenderer)) {
