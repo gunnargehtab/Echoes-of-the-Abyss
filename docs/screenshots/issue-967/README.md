@@ -150,6 +150,21 @@ panning controls hold 59.9–60.0 FPS; the largest prop submission is 104,936
 triangles ([readings](prototype-4-review.json)).
 Mean encoded luma is 0.0559, with 94.48% of pixels below 10%.
 
+The **gpt-6-astra** critic scored this frame **6.3/10**: composition 2.8,
+lighting 1.7, materials 1.4, details 0.4. It confirmed the yaw-ranking fix and
+raised one code finding: the new spill constants belonged in shared, not inline.
+They are now `DREAM_LOOP_LIGHT_SPILL` in `packages/shared/src/constants.ts`,
+annotated TUNABLE and moved without changing their values.
+
+The one-hour run stops without visual acceptance. Astra's remaining priorities
+are dimensional amber light, readable nonperiodic ground texture, low ground
+drifts, less uniform steel finish, and softer water detail; the bay's broad
+mustard patch and the sharp upper map/water transition remain particularly clear.
+These repeated gaps call for reconsidering the material/light response rather
+than another small coefficient tweak. The critic viewed all supplied frames
+and the captured logs, but could not independently execute Git or tests; its
+score is a pixel judgement, not a claim that it reran the gates.
+
 ## How the target was made
 
 Claude Design (`claude.ai/design`), three rounds in one conversation.

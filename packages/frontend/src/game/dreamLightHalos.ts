@@ -21,6 +21,7 @@ import {
   Vector2,
   Vector3,
 } from 'three';
+import { DREAM_LOOP_LIGHT_SPILL } from '@echoes/shared';
 
 const HALO_CAP = 256;
 const sitesByGeometry = new WeakMap<BufferGeometry, readonly Sphere[]>();
@@ -85,8 +86,8 @@ interface LampBinding {
 export class DreamLightHalos {
   readonly group = new Group();
   readonly points: Points<BufferGeometry, ShaderMaterial>;
-  private readonly lights = Array.from({ length: 8 }, () => ({
-    light: new PointLight(0xffffff, 0, 100, 2),
+  private readonly lights = Array.from({ length: DREAM_LOOP_LIGHT_SPILL.MAX_SOURCES }, () => ({
+    light: new PointLight(0xffffff, 0, DREAM_LOOP_LIGHT_SPILL.INITIAL_RANGE_M, 2),
     priority: 0,
   }));
   private readonly bestPosition = new Vector3();
@@ -248,8 +249,14 @@ export class DreamLightHalos {
           slot.priority = priority;
           slot.light.position.copy(this.bestPosition);
           slot.light.color.copy(this.bestColor);
-          slot.light.intensity = bestPower * 2;
-          slot.light.distance = Math.min(500, Math.max(40, bestRadius * 8));
+          slot.light.intensity = bestPower * DREAM_LOOP_LIGHT_SPILL.GAIN;
+          slot.light.distance = Math.min(
+            DREAM_LOOP_LIGHT_SPILL.MAX_RANGE_M,
+            Math.max(
+              DREAM_LOOP_LIGHT_SPILL.MIN_RANGE_M,
+              bestRadius * DREAM_LOOP_LIGHT_SPILL.RANGE_RADII
+            )
+          );
         }
       }
     }
