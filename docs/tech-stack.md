@@ -446,7 +446,7 @@ list is the easiest place to give it away by accident.
 
 **Private rooms are unlisted and unmatchable**, reachable only by their room id. Colyseus's
 `setPrivate` is exactly this: the matchmaker's availability query filters on
-`private: false`, so a private room is invisible to both `getAvailableRooms` and
+`private: false`, so a private room is invisible to both the `/rooms/match` listing and
 `joinOrCreate`, while `joinById` still finds it. That is what a room code is.
 
 Two room kinds are private by construction rather than by choice:

@@ -38,7 +38,7 @@ export function doorFor(mode: SetupMode, listed: boolean): MatchDoor {
   return { create: listed ? 'public' : 'private' };
 }
 
-/** The shape `getAvailableRooms` hands back, narrowed to what a listing needs. */
+/** The shape returned by the server's filtered public-listing endpoint. */
 export interface AvailableRoom {
   roomId: string;
   metadata?: Partial<MatchListingMetadata>;

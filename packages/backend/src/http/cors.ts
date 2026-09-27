@@ -1,7 +1,7 @@
 /**
  * Origin policy for the matchmaking endpoint.
  *
- * The WebSocket upgrade itself is not subject to CORS, but colyseus.js POSTs to
+ * The WebSocket upgrade itself is not subject to CORS, but the Colyseus SDK POSTs to
  * `/matchmake/` first, so the browser will not let a client reach this server at
  * all unless that POST answers with an acceptable `Access-Control-Allow-Origin`.
  * This module decides what "acceptable" means, and is a separate file from

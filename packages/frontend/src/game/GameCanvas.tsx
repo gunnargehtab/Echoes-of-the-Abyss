@@ -40,6 +40,7 @@ import type { TunedInputs } from '../audio/tunedBed.ts';
 import { driftCarryForMap, recordMissionResult, spentCadre } from '../progression/store.ts';
 import {
   GameClient,
+  type LobbyCallbacksFactory,
   type ConnectionStatus,
   type LobbyView,
   type MissionLine,
@@ -47,7 +48,7 @@ import {
 import { resolveBindings } from '../input/bindings.ts';
 import type { Application } from 'pixi.js';
 import type { WebGLRenderer } from 'three';
-import type { Client } from 'colyseus.js';
+import type { Client } from '@colyseus/sdk';
 import { loadSettings, subscribeSettings, type Settings } from '../settings/store.ts';
 
 /** Longest log a player will ever scroll back through. */
@@ -91,7 +92,7 @@ function cssVariables(uiScale: number, palette: PaletteName): CSSProperties {
 }
 
 /**
- * Stand-ins for the three things this shell constructs that need a device: the
+ * Stand-ins for the things this shell constructs that need a device: the
  * Pixi application, the conn view's GL renderer, and the socket.
  *
  * A seam with one non-default caller — test/gameCanvas.test.ts (#487) — and
@@ -101,7 +102,7 @@ function cssVariables(uiScale: number, palette: PaletteName): CSSProperties {
  * on a runner with no GPU, and the 277 lines below that wire the four
  * subsystems to each other never run at all.
  *
- * All three or none: a harness that supplied only some would be a half-real
+ * All of them or none: a harness that supplied only some would be a half-real
  * client, which is a worse thing to test than either a real one or a stubbed
  * one. Production renders `<GameCanvas>` without the prop and gets the real
  * three.
@@ -110,6 +111,7 @@ export interface GameCanvasHarness {
   application: () => Application;
   glRenderer: () => WebGLRenderer;
   netClient: () => Client;
+  callbacks: LobbyCallbacksFactory;
 }
 
 export interface GameCanvasProps {
@@ -589,7 +591,8 @@ export function GameCanvas({
           },
         },
         undefined,
-        harness?.netClient()
+        harness?.netClient(),
+        harness?.callbacks
       );
 
       // The player's stored preferences, applied to the live handles. Audio

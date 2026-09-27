@@ -75,11 +75,11 @@ describe('the containment gate', () => {
       // every handler in `MatchRoom` is written `(client, message)` or
       // `(client)`. A name that escaped the wrap would still have its own
       // arity, which is what this counts.
-      const registered = internals(room).onMessageHandlers;
+      const registered = internals(room).onMessageEvents.events;
       const names = Object.values(CLIENT_MSG);
       assert.equal(names.length, 32);
       for (const name of names) {
-        const handler = registered[name];
+        const handler = registered[name]?.[0];
         assert.ok(handler !== undefined, `${name} has no handler`);
         assert.equal(handler.length, 0, `${name} is registered unwrapped`);
       }
@@ -223,7 +223,7 @@ describe('a simulation step that throws', () => {
       });
 
       assert.equal(logged.length, 1, 'the torn step should have been logged once');
-      assert.match(logged[0] ?? '', /setSimulationInterval/);
+      assert.match(logged[0] ?? '', /setTimestep/);
       assert.match(logged[0] ?? '', /ending this room/);
       // Stopped, and stopped *now*: a torn world must not be stepped again
       // while the disconnect settles.

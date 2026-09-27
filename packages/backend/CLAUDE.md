@@ -32,17 +32,22 @@ milliseconds are still tracked and still worth printing; they are not what a tes
 
 ## Colyseus
 
-Import from `@colyseus/core`, never the `colyseus` meta-package. The meta-package
-re-exports via `__exportStar`, which Node's static CJS export detection cannot see, so
-`import { Room } from 'colyseus'` fails at runtime under the unbundled ESM dev server while
-working fine once bundled. `@colyseus/schema` needs legacy decorators, which is why
-`useDefineForClassFields` stays `false` in the backend tsconfig — flipping it silently
-wipes the `@type()` metadata.
+The backend runs Colyseus **0.18**: `@colyseus/core`, `@colyseus/ws-transport` and
+`@colyseus/schema` 5, with `@colyseus/sdk` on the client. Import from `@colyseus/core`. The
+`colyseus` meta-package is not a dependency, and was avoided before it was dropped: under
+0.15 it re-exported via `__exportStar`, which Node's static CJS export detection cannot see,
+so `import { Room } from 'colyseus'` failed at runtime under the unbundled ESM dev server
+while working fine once bundled.
 
-The vendored `colyseus` skill documents **0.18**, four minors ahead of what is pinned here.
-It checks the installed version first and will tell you to follow 0.15's own docs, which is
-correct — it is carried as a guard against recall writing 0.17/0.18 API shapes into a 0.15
-room, not as a description of this backend.
+`MatchState` declares its fields with `@type()` decorators, not the `schema()` builder, and
+the decorators need legacy semantics. That is why `useDefineForClassFields` stays `false`
+in the backend tsconfig — flipping it silently wipes the `@type()` metadata.
+
+The vendored `colyseus` skill documents 0.18, so it describes this backend: load it before
+writing Room or Schema code. Translate two things. Its first step reads the version from
+`colyseus`, which is absent here, so read `@colyseus/core` instead — finding nothing is not
+"nothing installed". And its examples import from `'colyseus'`, which here is
+`'@colyseus/core'`.
 
 Related: `CLAUDE.md` (the root file — the wire, import extensions, constants, CI) ·
 `docs/invariants.md` (the rows that hold both budgets above) ·
