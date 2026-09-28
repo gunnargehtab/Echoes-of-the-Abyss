@@ -248,6 +248,18 @@ node .claude\skills\run-game\scripts\drive.mjs --headed --channel msedge --entry
 Allow eleven minutes for the authored clock, and do not run a build during capture.
 `readings.json` is marked `complete: true` only after the final control succeeds.
 
+### Independent review
+
+The fresh loop critic, running GPT-6 Astra, returned **pass, no blocking or minor
+findings** for commit `cbb18f7a1a477c3407d5333cf378362de00ec236`. Its first round was
+blocked by missing command access, not an implementation finding; the second received
+the exact full diff, current PR body and a separate independent rerun of
+`tutorialLoading.test.mjs` (4 passed, 0 failed). All twelve repository gates passed
+before review. No production code changed after that verdict.
+
+This closes the first retained-geometry slice, not the wider visual reboot or the
+unmeasured phone budget. The pressure-warning defect remains tracked separately.
+
 ## Related
 
 - [Art direction](art-direction.md)
