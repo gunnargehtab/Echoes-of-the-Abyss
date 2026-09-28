@@ -826,7 +826,7 @@ The siege hulls — one a navy, and four answers to a wall
 Nothing in the roster killed a structure well, and the superweapons are sites rather than
 hulls ([factions.md](factions.md)). So a base was a timer: whoever won the field walked in
 eventually. These four are how each navy takes a wall down instead, and *only one of them is
-a gun* — the other three are a spore, a song, and a bell
+a gun* — the bell; the other three are a cutter, a spore, and a song
 ([systems-combat.md](systems-combat.md) §9, "A weapon that is not a weapon"). All four sit
 behind the Slipway and share its line with the five refits
 ([systems-progression.md](systems-progression.md) §1): a navy building its siege hull is a
