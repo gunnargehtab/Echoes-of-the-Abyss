@@ -50,8 +50,22 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --ma
 > and the median match runs 1477 s, not 1462. No verdict flips: one-navy stays **breached**
 > (the Directorate 71%, n=17), and the other five read **held**. Win rates over the seventeen:
 > the Directorate 71%, the Knights 18%, the Consortium 12%, the Commune 0%.
+>
+> **Refreshed on 28 Sept 2026 because a mechanic changed, not to reach a target** (#971).
+> Same command, seeds and cap, run from `6e28777`; the before figures are the previous file,
+> which the same command at `7149d0d` reproduces. No weight, price or TUNABLE moved. The
+> change: the army orders its siege hull in no branch, and a siege hull with no wall waits in
+> the fleet's middle rather than at the rally point (`docs/tech-stack.md`, "The skirmish AI").
+>
+> What it moved, recorded and left: nine matches of thirty differ. Three change their result:
+> 4006 goes from a Knights win to a draw, 4029 from a Directorate win to a draw, and 4026
+> from a Consortium win to a Directorate win. So 15 matches are decided, not 17, and the
+> median match runs to the 1500 s cap. One verdict moves: Knights-starve reads **no data**,
+> not **held**, with no longer-than-median match. One-navy stays **breached** (the Directorate
+> 80%, n=15), and the other four read **held**. Win rates over the fifteen: the Directorate
+> 80%, the Knights 13%, the Consortium 7%, the Commune 0%.
 
-30 matches on `ventfront-divide`, seeds 4000–4029. 13 ended without a winner inside the time budget, on a median 2 of the 3 eliminations a win needs.
+30 matches on `ventfront-divide`, seeds 4000–4029. 15 ended without a winner inside the time budget, on a median 2 of the 3 eliminations a win needs.
 
 _One seating: every match dealt each navy the same spawn. A win rate here cannot separate the doctrine from the chair — see `baselines/seat-rotation.md`, and `--rotate-seats`._
 
@@ -59,23 +73,23 @@ _One seating: every match dealt each navy the same spawn. A win rate here cannot
 
 | Risk | Source | Metric | Reading | Verdict |
 | --- | --- | --- | --- | --- |
-| One navy is simply stronger | economy.md §9 | Best win rate against 2x parity | Directorate 71% vs parity 25%, bar 50% (n=17 decided, one seating) | **breached** |
-| Quiet economies simply win | economy.md §9 | Commune win rate, and nodules per minute per point of mean SIG | win 0% vs best rival 71%, premium 5.6 vs 4.7 (n=17 decided) | **held** |
-| Loud economies are unplayable | economy.md §9 | Consortium seconds tracked, against Consortium win rate | 732 s tracked per match, win 12% (n=17 decided) | **held** |
-| Directorate Biomass snowballs | economy.md §9 · bestiary.md §8 | Biomass per minute against final Drift Health | 11.3/min, Drift Health median 66 (n=30) | **held** |
-| Knights starve out of every long game | economy.md §9 | Hadron income against the field, in longer-than-median matches | 126/min vs field 143 — 89% (n=14 long) | **held** |
+| One navy is simply stronger | economy.md §9 | Best win rate against 2x parity | Directorate 80% vs parity 25%, bar 50% (n=15 decided, one seating) | **breached** |
+| Quiet economies simply win | economy.md §9 | Commune win rate, and nodules per minute per point of mean SIG | win 0% vs best rival 80%, premium 5.4 vs 4.8 (n=15 decided) | **held** |
+| Loud economies are unplayable | economy.md §9 | Consortium seconds tracked, against Consortium win rate | 723 s tracked per match, win 7% (n=15 decided) | **held** |
+| Directorate Biomass snowballs | economy.md §9 · bestiary.md §8 | Biomass per minute against final Drift Health | 11.4/min, Drift Health median 65 (n=30) | **held** |
+| Knights starve out of every long game | economy.md §9 | Hadron income against the field, in longer-than-median matches | no long matches in this batch | **no data** |
 | Fauna decide matches | bestiary.md §8 | First blood against first classified enemy — losses before anyone met anyone | enemy found 20 s, first blood 48 s (n=30) | **held** |
 
 ## The match
 
 | Measure | Median (p10–p90) |
 | --- | --- |
-| Length, seconds | 1477 (950–1500) |
-| Commanders eliminated, of 3 needed | 2 (1–3) |
+| Length, seconds | 1500 (950–1500) |
+| Commanders eliminated, of 3 needed | 2 (1–2) |
 | First contact, seconds | 0 (0–0) |
 | First classified enemy, seconds | 20 (20–20) |
 | First blood, seconds | 48 (48–48) |
-| Drift Health at the end | 66 (59–70) |
+| Drift Health at the end | 65 (59–71) |
 
 ## The Drift as seeded
 
@@ -93,20 +107,20 @@ _One seating: every match dealt each navy the same spawn. A win rate here cannot
 
 | Faction | Matches | Decided | Win rate | Nodules/min | Crystal/min | Biomass/min | Mean SIG | Tracked, s | Found enemy, s | Throttled down | Losses | Below the Shelf | Under the layer |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Consortium | 30 | 17 | 12% | 184 | 2.0 | 3.9 | 39 | 732 | 30 | 0% | 15.3 | 100% | 4% |
-| Commune | 30 | 17 | 0% | 168 | 0.2 | 9.3 | 30 | 712 | 20 | 0% | 35.1 | 59% | 1% |
-| Directorate | 30 | 17 | 71% | 156 | 2.8 | 11.3 | 48 | 893 | 45 | 0% | 23.2 | 100% | 11% |
-| Knights | 30 | 17 | 18% | 143 | 10.7 | 0.8 | 55 | 825 | 60 | 0% | 13.7 | 100% | 8% |
+| Consortium | 30 | 15 | 7% | 183 | 2.0 | 3.8 | 38 | 723 | 30 | 0% | 15.5 | 100% | 4% |
+| Commune | 30 | 15 | 0% | 165 | 0.2 | 9.2 | 30 | 702 | 20 | 0% | 34.9 | 59% | 1% |
+| Directorate | 30 | 15 | 80% | 155 | 2.6 | 11.4 | 48 | 880 | 45 | 0% | 23.0 | 100% | 13% |
+| Knights | 30 | 15 | 13% | 142 | 10.2 | 0.7 | 54 | 825 | 60 | 0% | 13.7 | 100% | 8% |
 
 ## Hulls per match — built / lost
 
 | Hull | Consortium | Commune | Directorate | Knights |
 | --- | --- | --- | --- | --- |
-| Light Scout | 0.0 / 1.0 | 11.5 / 12.4 | 12.9 / 11.9 | 0.0 / 1.0 |
-| Corvette | 0.0 / 0.0 | 0.0 / 0.0 | 3.4 / 1.8 | 0.0 / 0.0 |
-| Harvester | 7.6 / 8.0 | 14.6 / 14.8 | 6.7 / 5.6 | 10.8 / 9.5 |
-| Chorister | 0.0 / 0.0 | 3.3 / 3.2 | 0.0 / 1.9 | 0.0 / 0.0 |
-| Clarion | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.3 / 2.2 |
+| Light Scout | 0.0 / 1.0 | 11.5 / 12.5 | 12.7 / 11.5 | 0.0 / 1.0 |
+| Corvette | 0.0 / 0.0 | 0.0 / 0.0 | 3.4 / 2.0 | 0.0 / 0.0 |
+| Harvester | 7.7 / 8.2 | 14.3 / 14.4 | 6.8 / 5.8 | 11.2 / 9.5 |
+| Chorister | 0.0 / 0.0 | 3.6 / 3.4 | 0.0 / 1.9 | 0.0 / 0.0 |
+| Clarion | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.2 / 2.1 |
 | Bulwark | 0.1 / 0.1 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Spinner | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Sower | 0.0 / 0.0 | 0.1 / 0.1 | 0.0 / 0.0 | 0.0 / 0.0 |
@@ -115,17 +129,17 @@ _One seating: every match dealt each navy the same spawn. A win rate here cannot
 | Verger | 0.0 / 0.0 | 0.0 / 0.0 | 0.9 / 0.1 | 0.0 / 0.0 |
 | Beacon | 1.9 / 1.9 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Glider | 0.0 / 0.0 | 2.5 / 2.4 | 0.0 / 0.0 | 0.0 / 0.0 |
-| Acolyte | 0.0 / 0.0 | 0.0 / 0.0 | 2.0 / 1.4 | 0.0 / 0.0 |
+| Acolyte | 0.0 / 0.0 | 0.0 / 0.0 | 2.1 / 1.5 | 0.0 / 0.0 |
 | Herald | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.9 / 0.3 |
 | Broadside | 0.4 / 0.2 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
-| Weaver | 0.0 / 0.0 | 0.1 / 0.1 | 0.0 / 0.0 | 0.0 / 0.0 |
-| Thurible | 0.0 / 0.0 | 0.0 / 0.0 | 0.4 / 0.3 | 0.0 / 0.0 |
-| Furnace | 0.3 / 0.3 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
-| Lure | 0.0 / 0.0 | 0.0 / 0.0 | 0.1 / 0.0 | 0.0 / 0.0 |
+| Weaver | 0.0 / 0.0 | 0.1 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
+| Thurible | 0.0 / 0.0 | 0.0 / 0.0 | 0.4 / 0.2 | 0.0 / 0.0 |
+| Furnace | 0.3 / 0.2 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
+| Lure | 0.0 / 0.0 | 0.0 / 0.0 | 0.1 / 0.1 | 0.0 / 0.0 |
 | Caisson | 1.5 / 3.4 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Reed | 0.0 / 0.0 | 0.2 / 2.2 | 0.0 / 0.0 | 0.0 / 0.0 |
-| Derrick | 0.5 / 0.4 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
-| Responsory | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.6 / 0.4 |
+| Derrick | 0.5 / 0.5 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
+| Responsory | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.5 / 0.4 |
 
 _The opening escort is not counted as built: it is a gift, not a decision._
 
@@ -133,8 +147,8 @@ _The opening escort is not counted as built: it is a gift, not a decision._
 
 | Structure | Consortium | Commune | Directorate | Knights |
 | --- | --- | --- | --- | --- |
-| Nodule Refinery | 1.0 | 1.0 | 1.0 | 1.1 |
-| Sentinel Turret | 1.0 | 0.6 | 1.0 | 1.0 |
+| Nodule Refinery | 1.0 | 1.1 | 1.0 | 1.1 |
+| Sentinel Turret | 1.0 | 0.7 | 1.0 | 1.0 |
 | Sounding Spire | 0.0 | 0.0 | 0.0 | 0.2 |
 | Vent Tap | 1.2 | 0.9 | 1.2 | 1.1 |
 | Slipway | 0.8 | 0.3 | 1.0 | 1.0 |
@@ -147,13 +161,13 @@ _The opening Bastion and Foundry are not counted: they are a gift, not a decisio
 | Reason | Consortium | Commune | Directorate | Knights |
 | --- | --- | --- | --- | --- |
 | Hull wanted | Broadside | Weaver | Thurible | Lance |
-| Observations reaching the want | 41713 | 49521 | 64153 | 58951 |
-| Blocked: not escorted | 16395 (39%) | 26839 (54%) | 29882 (47%) | 53661 (91%) |
-| Blocked: no free yard | 10161 (24%) | 3103 (6%) | 8301 (13%) | 370 (1%) |
+| Observations reaching the want | 41489 | 50488 | 64589 | 60047 |
+| Blocked: not escorted | 16080 (39%) | 27292 (54%) | 28213 (44%) | 55392 (92%) |
+| Blocked: no free yard | 10161 (24%) | 3028 (6%) | 8338 (13%) | 370 (1%) |
 | Blocked: no berth | 0 (0%) | 0 (0%) | 0 (0%) | 0 (0%) |
-| Blocked: cannot afford | 3365 (8%) | 16922 (34%) | 17785 (28%) | 4920 (8%) |
-| Already has one | 11781 (28%) | 2654 (5%) | 8173 (13%) | 0 (0%) |
-| **Bought** | 11 (0%) | 3 (0%) | 12 (0%) | 0 (0%) |
+| Blocked: cannot afford | 2969 (7%) | 17408 (34%) | 19232 (30%) | 4285 (7%) |
+| Already has one | 12268 (30%) | 2757 (5%) | 8795 (14%) | 0 (0%) |
+| **Bought** | 11 (0%) | 3 (0%) | 11 (0%) | 0 (0%) |
 
 _The six reasons partition the want: every observation that reaches it increments exactly one, so the six sum to the row above them. A navy whose **bought** cell is 0 never put its own declared ordnance hull in the water, and the largest blocked row says which gate to argue with (#698)._
 
@@ -162,12 +176,12 @@ _The six reasons partition the want: every observation that reaches it increment
 | Reason | Consortium | Commune | Directorate | Knights |
 | --- | --- | --- | --- | --- |
 | Hull wanted | Gantry | Rootstock | Succentor | Offertory |
-| Observations reaching the want | 41692 | 49515 | 64138 | 58937 |
-| Blocked: not escorted | 24175 (58%) | 28400 (57%) | 32726 (51%) | 53651 (91%) |
-| Blocked: no free yard | 10415 (25%) | 19416 (39%) | 8330 (13%) | 370 (1%) |
-| Blocked: no berth | 0 (0%) | 0 (0%) | 559 (1%) | 0 (0%) |
-| Yielded to the Sower or the Bower | 0 (0%) | 1699 (3%) | 0 (0%) | 0 (0%) |
-| Blocked: cannot afford | 7102 (17%) | 0 (0%) | 22523 (35%) | 4916 (8%) |
+| Observations reaching the want | 41468 | 50482 | 64575 | 60034 |
+| Blocked: not escorted | 24539 (59%) | 28817 (57%) | 31190 (48%) | 55383 (92%) |
+| Blocked: no free yard | 10415 (25%) | 19891 (39%) | 8367 (13%) | 370 (1%) |
+| Blocked: no berth | 0 (0%) | 0 (0%) | 566 (1%) | 0 (0%) |
+| Yielded to the Sower or the Bower | 0 (0%) | 1774 (4%) | 0 (0%) | 0 (0%) |
+| Blocked: cannot afford | 6514 (16%) | 0 (0%) | 24452 (38%) | 4281 (7%) |
 | Already has one | 0 (0%) | 0 (0%) | 0 (0%) | 0 (0%) |
 | **Bought** | 0 (0%) | 0 (0%) | 0 (0%) | 0 (0%) |
 | _Shut before the purse, with the price in it_ | 162 (0%) | 37 (0%) | 0 (0%) | 0 (0%) |
@@ -181,8 +195,8 @@ _The same six reasons and a seventh, partitioning the same way. A navy whose **b
 | Peak in a match, median | 610 | 600 | 630 | 751 |
 | Peak in any match | 760 | 640 | 640 | 772 |
 | Best peak above the opening 600 | 160 | 40 | 40 | 172 |
-| Matches with a Slipway standing | 23 | 9 | 29 | 29 |
-| Peak with the yard up, median | 410 | 155 | 310 | 751 |
+| Matches with a Slipway standing | 23 | 8 | 29 | 29 |
+| Peak with the yard up, median | 410 | 170 | 310 | 751 |
 | Peak with the yard up, best | 760 | 390 | 530 | 772 |
 
 _The opening stockpile is 600 nodules and a Slipway costs 600, so a peak at the opening is the gift rather than savings — the row above it is what a navy ever banked on top of what it was handed. The rung rows are read over the matches that raised a Slipway, and are "—" for a navy that raised none._
@@ -191,13 +205,13 @@ _The opening stockpile is 600 nodules and a Slipway costs 600, so a peak at the 
 
 | Measure | Consortium | Commune | Directorate | Knights |
 | --- | --- | --- | --- | --- |
-| Deliveries a match | 34.7 | 54.2 | 64.7 | 61.3 |
-| Nodules delivered a match | 2397 | 2696 | 3218 | 3022 |
-| Nodules banked a match | 2394 | 2691 | 3211 | 2690 |
+| Deliveries a match | 34.6 | 53.9 | 64.7 | 61.2 |
+| Nodules delivered a match | 2392 | 2683 | 3218 | 3017 |
+| Nodules banked a match | 2389 | 2679 | 3211 | 2710 |
 | Mean hold delivered | 69.1 | 49.8 | 49.7 | 49.3 |
-| Nodules lost in transit a match | 123 | 173 | 151 | 77 |
-| Lost as a share of what was cut | 5% | 6% | 4% | 2% |
-| Harvester-time laden | 25% | 36% | 36% | 20% |
+| Nodules lost in transit a match | 125 | 172 | 146 | 88 |
+| Lost as a share of what was cut | 5% | 6% | 4% | 3% |
+| Harvester-time laden | 25% | 36% | 37% | 19% |
 | Harvester-time stalled | 0% | 0% | 0% | 0% |
 
 _Delivered is what reached a depot; banked is what the account rose by. The Order is this table's own control and is meant to differ, by both of economy.md §6's nodule terms — half of each hold (`HADRON.NODULE_YIELD_MULTIPLIER`) taken off, and the tithe (`HADRON.TITHE_PER_S` a second) put back on. The gap printed is what is left of the larger term after the smaller one, plus the netting below. For the other three, weigh a gap rather than read it as a defect: banked is a per-observation delta, so a purchase in the same pass as a deposit nets against it. Lost in transit is ore that was cut and died with its hauler, which no income column can show. Laden is any second with a hold aboard, so it is the cut after the first bite plus the haul home, not the haul alone. Stalled counts a harvester the server reports as out of work, never one throttled down on purpose._

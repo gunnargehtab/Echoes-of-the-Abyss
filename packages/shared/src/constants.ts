@@ -466,6 +466,20 @@ export const FOLLOW_FLOOR = {
 } as const;
 
 /**
+ * TUNABLE — isolated rendering study, docs/screenshots/issue-967/README.md
+ * "One-hour continuation". Centralized without retuning after the review;
+ * these values never participate in the simulation or enable the prototype.
+ */
+export const DREAM_LOOP_LIGHT_SPILL = {
+  MAX_SOURCES: 8,
+  GAIN: 2,
+  RANGE_RADII: 8,
+  MIN_RANGE_M: 40,
+  MAX_RANGE_M: 500,
+  INITIAL_RANGE_M: 100,
+} as const;
+
+/**
  * The SIG meter's colour stops — SPEC, docs/ui-ux.md §3, "Colour stops".
  *
  * Here rather than in the client because the *red* stop stopped being a

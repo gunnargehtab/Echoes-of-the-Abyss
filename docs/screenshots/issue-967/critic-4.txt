@@ -1,0 +1,62 @@
+Prototype 4 independent review
+Model: gpt-6-astra
+Reviewed code: ce079a0224b5ed8b5aa665ae349bedf05a8d1a0b
+
+Checkpoint note: finding 1 was subsequently fixed in
+b7a8c788681df150e243aff9fd6a516af4bace49 by moving the spill constants into
+DREAM_LOOP_LIGHT_SPILL in shared, without changing any values. The final
+verification passed eight affected gates and 46 focused tests, and the
+published revision passed CI. No later visual judgement replaced this score.
+
+The report below is preserved verbatim.
+
+VERDICT: revise
+
+TARGET
+  Match the locked frame’s lighting, finish and ground using the approved assets.
+  Keep the study development-only, preserving normal play and gameplay information.
+  Completion requires ≥8/10 visually and acceptable actual GPU FPS.
+
+FINDINGS
+  1. [blocking] packages/frontend/src/game/dreamLightHalos.ts:88,251–252 — The new light cap, spill gain and range limits are inline tuning numbers.
+     Why: CLAUDE.md requires tuning constants in packages/shared/src/constants.ts, with SPEC/TUNABLE annotations; the prototype has no stated exception.
+     Fix: Centralize these values, cite the prototype specification, and consume them unchanged—do not retune them.
+
+DECISIONS
+  View-bounded scatter rather than global density, and bounded model-derived spill rather than halos alone, are documented choices consistent with the isolated study.
+  The home-dolly snow exception is explicit; it does not authorize changing normal water behaviour.
+  Review limitation: I inspected current source, pixels and captured logs, but could not execute Git or tests. The available scratch diffs describe prototype-2, not this continuation; the requested commit comparisons and origin/main bounds were not independently checked.
+
+CARRIED OVER
+  - Visual score: 6.2/10 — composition 2.8, lighting 1.6, materials 1.5, details 0.3. The ≥8 exit remains unmet.
+  - Remaining priorities: clustered low ground dressing, less repetitive ground texture, dimensional amber bay lighting, less tile-like steel, softer particulate.
+
+GOOD
+  The independent salted placement ranking resolves the previous yaw-coupling finding.
+  Preserve the shared camera, approved source materials, bounded submissions and explicit DEV/query boundary.
+
+### Independent visual judgement
+
+I opened the **target, prototype-3, prototype-4, low, survey and normal-control pixels**. The carried score above is historical; my current score is:
+
+| Category | Score | Judgement |
+|---|---:|---|
+| Composition | **2.8/3** | Major placement and framing remain close. No penalty for retaining approved GLB shapes. |
+| Lighting | **1.7/3** | Some local amber shading is visible, but the Foundry bay remains predominantly a flat mustard area rather than an illuminated recess. |
+| Materials | **1.4/3** | Reduced striping helps, but the ground now reads smoother and less dimensional. Steel still reads as regular blue-grey tiles. |
+| Details | **0.4/1** | Grouping is clearer, especially low down; home-frame ground dressing and particulate remain substantially short of the target. |
+| **Total** | **6.3/10** | **Visual exit not met.** |
+
+This is a small net improvement over 6.2, not a substantial convergence.
+
+**Persistent visual priorities—not additional code-correctness findings:**
+
+1. **Dimensional amber light.** Make the existing-source spill visibly describe bay walls, supports and floor through localized falloff. The broad uniform amber patch still dominates; increasing overall brightness would not fix it.
+2. **Readable ground texture.** Restore nonperiodic sediment detail and relief shading. The current broad green mottle removes the former stripes but also loses the target’s sculpted surface.
+3. **Low ground drifts.** Clusters are better organized, but large foreground/left areas remain visually bare. Redistribute approved instances within the existing reservation rather than raising global density.
+4. **Steel finish.** Break the uniform seam grid with stronger localized weathering and less uniform panel contrast—not replacement geometry.
+5. **Water detail.** Particularly in the low control, particulate still reads as distinct blue pinpoints rather than soft suspended matter. The sharp upper map/water transition also remains unlike the target’s continuous dark water.
+
+**Performance/evidence:** The captured logs show **46 tests passed, zero failed**, and **12 gates passed**. The GPU record supports acceptable desktop performance: **60.0 FPS home**, **59.9–60.0 FPS controls**, within the recorded geometry reservations. My search of the current frontend dist found none of the supplied prototype shader markers. **I did not rerun tests or gates.**
+
+The repeated visual gaps warrant reconsidering the material/light response, not another small coefficient tweak. A time-limit stop should retain these gaps explicitly; it is not visual acceptance.

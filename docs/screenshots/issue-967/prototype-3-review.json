@@ -1,0 +1,174 @@
+[
+  {
+    "active": true,
+    "pitchDeg": 12,
+    "yawDeg": 0,
+    "focus": {
+      "xM": 1340,
+      "zM": 1300,
+      "depthM": 700
+    },
+    "eye": {
+      "xM": 1340,
+      "zM": 2767,
+      "depthM": -718
+    },
+    "distance": 1500,
+    "waterReachM": 4800,
+    "waterDensity": 1,
+    "hullScale": 1,
+    "drawCalls": 51,
+    "triangles": 151856,
+    "station": "low",
+    "stationMs": 5003.7,
+    "stationFrames": 300,
+    "avgFrames": 240,
+    "fps": 60,
+    "avgFrameMs": 16.68,
+    "worstFrameMs": 23.1,
+    "avgConnMs": 0.81,
+    "worstConnMs": 1.6,
+    "avgOverlayMs": 0.98,
+    "worstOverlayMs": 2,
+    "overlayFrames": 300,
+    "units": 4,
+    "structures": 2,
+    "ordnance": 0,
+    "props": 307,
+    "propTris": 103086,
+    "modelBacked": 6,
+    "ownCentre": {
+      "x": 1340.7884318033855,
+      "z": 1406.6014811197917
+    }
+  },
+  {
+    "active": true,
+    "pitchDeg": 88,
+    "yawDeg": 0,
+    "focus": {
+      "xM": 1340,
+      "zM": 1300,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 1340,
+      "zM": 1352,
+      "depthM": -6097
+    },
+    "distance": 1500,
+    "waterReachM": 4800,
+    "waterDensity": 1,
+    "hullScale": 1,
+    "drawCalls": 51,
+    "triangles": 122342,
+    "station": "overhead",
+    "stationMs": 5012.6,
+    "stationFrames": 300,
+    "avgFrames": 240,
+    "fps": 59.8,
+    "avgFrameMs": 16.67,
+    "worstFrameMs": 19.6,
+    "avgConnMs": 0.79,
+    "worstConnMs": 1.2,
+    "avgOverlayMs": 1.26,
+    "worstOverlayMs": 2.1,
+    "overlayFrames": 300,
+    "units": 4,
+    "structures": 2,
+    "ordnance": 0,
+    "props": 219,
+    "propTris": 73572,
+    "modelBacked": 6,
+    "ownCentre": {
+      "x": 1378.5950317382812,
+      "z": 1414.1171264648438
+    }
+  },
+  {
+    "active": true,
+    "pitchDeg": 55,
+    "yawDeg": 0,
+    "focus": {
+      "xM": 1340,
+      "zM": 1300,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 1340,
+      "zM": 5889,
+      "depthM": -29070
+    },
+    "distance": 8000,
+    "waterReachM": 25600,
+    "waterDensity": 1,
+    "hullScale": 2.8,
+    "drawCalls": 54,
+    "triangles": 153746,
+    "station": "survey",
+    "stationMs": 5012.3,
+    "stationFrames": 301,
+    "avgFrames": 240,
+    "fps": 60.1,
+    "avgFrameMs": 16.67,
+    "worstFrameMs": 23.3,
+    "avgConnMs": 0.85,
+    "worstConnMs": 1.3,
+    "avgOverlayMs": 1.28,
+    "worstOverlayMs": 2,
+    "overlayFrames": 301,
+    "units": 4,
+    "structures": 2,
+    "ordnance": 0,
+    "props": 324,
+    "propTris": 104976,
+    "modelBacked": 6,
+    "ownCentre": {
+      "x": 1354.302022298177,
+      "z": 1407.6343383789062
+    }
+  },
+  {
+    "active": true,
+    "pitchDeg": 55,
+    "yawDeg": 0,
+    "focus": {
+      "xM": 1286,
+      "zM": 1300,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 1286,
+      "zM": 2160,
+      "depthM": -4873
+    },
+    "distance": 1500,
+    "waterReachM": 4800,
+    "waterDensity": 1,
+    "hullScale": 1,
+    "drawCalls": 51,
+    "triangles": 119334,
+    "station": "pan",
+    "stationMs": 4991.7,
+    "stationFrames": 300,
+    "avgFrames": 240,
+    "fps": 60.1,
+    "avgFrameMs": 16.67,
+    "worstFrameMs": 17.5,
+    "avgConnMs": 1.35,
+    "worstConnMs": 2.5,
+    "avgOverlayMs": 1.06,
+    "worstOverlayMs": 1.9,
+    "overlayFrames": 300,
+    "units": 4,
+    "structures": 2,
+    "ordnance": 0,
+    "props": 217,
+    "propTris": 70564,
+    "modelBacked": 6,
+    "ownCentre": {
+      "x": 1322.5985107421875,
+      "z": 1398.248779296875
+    }
+  }
+]

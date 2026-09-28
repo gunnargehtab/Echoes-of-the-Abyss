@@ -124,6 +124,8 @@ import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 import { FaunaStipple } from './faunaStipple.ts';
 import { DREAM_LOOP, installDreamGround } from './dreamLoop.ts';
 import { installGroundSurface, type WorldLook } from './tutorialLook.ts';
+import { DreamGroundCover } from './dreamGroundCover.ts';
+import { DreamLightHalos } from './dreamLightHalos.ts';
 
 /**
  * Steps in the veil's shade table. 64 is finer than an 8-bit colour channel
@@ -401,6 +403,9 @@ export class PerspectiveView {
   private surveyClasses: Uint8Array<ArrayBuffer> | null = null;
   private surveyCells: DataTexture | null = null;
   private readonly terrainDressing = new Group();
+  private readonly dreamStudy: boolean;
+  private readonly dreamCover: DreamGroundCover | null;
+  private readonly dreamLights: DreamLightHalos | null;
   /** Environment props (environmentLayer.ts) — rebuilt on the terrain cadence. */
   private readonly environment: EnvironmentLayer;
   private embers: Points | null = null;
@@ -441,7 +446,7 @@ export class PerspectiveView {
    * that gives the medium something to parallax.
    */
   private readonly backdrop = new WaterBackdrop();
-  private readonly snow = new MarineSnow();
+  private readonly snow: MarineSnow;
   /**
    * Tetherjelly fields and Lampfry shoals as stipple in the water column
    * (faunaStipple.ts, docs/map-visuals.md §8): two draw calls, the pulse on
@@ -543,6 +548,10 @@ export class PerspectiveView {
 
   constructor(private readonly look: WorldLook = 'standard') {
     this.environment = new EnvironmentLayer(look);
+    this.dreamStudy = DREAM_LOOP && look === 'standard';
+    this.dreamCover = this.dreamStudy ? new DreamGroundCover() : null;
+    this.dreamLights = this.dreamStudy ? new DreamLightHalos() : null;
+    this.snow = new MarineSnow(this.dreamStudy ? 1200 : undefined, this.dreamStudy);
     // Before the first material compiles: the water's fog is a patch on
     // three's global shader chunks, so a material built ahead of it would
     // carry the old distance fog for the life of the scene (water.ts).
@@ -571,6 +580,7 @@ export class PerspectiveView {
       this.cues.group,
       this.snow.points
     );
+    if (this.dreamLights !== null) this.scene.add(this.dreamLights.group);
     // The clear colour under the backdrop, and the deepest water there is —
     // the ramp's bottom stop is `UI.background` exactly, so the abyss is the
     // colour it always was and the change is all in the water above it.
@@ -585,17 +595,17 @@ export class PerspectiveView {
     // prompt kit poses every model against.
     const tutorial = look === 'sorrowgate';
     this.scene.add(
-      new AmbientLight(0x5a6b80, tutorial ? SORROWGATE_LOOK.AMBIENT : DREAM_LOOP ? 0.85 : 0.65)
+      new AmbientLight(0x5a6b80, tutorial ? SORROWGATE_LOOK.AMBIENT : this.dreamStudy ? 0.75 : 0.65)
     );
     const key = new DirectionalLight(
       0xdfe8f0,
-      tutorial ? SORROWGATE_LOOK.KEY : DREAM_LOOP ? 1.7 : 1.35
+      tutorial ? SORROWGATE_LOOK.KEY : this.dreamStudy ? 1.2 : 1.35
     );
     key.position.set(-1400, 2600, -900);
     this.scene.add(key, key.target);
     const rim = new DirectionalLight(
-      DREAM_LOOP && !tutorial ? UI.accent : 0x9fd8ff,
-      tutorial ? SORROWGATE_LOOK.RIM : DREAM_LOOP ? 2.4 : 1.0
+      this.dreamStudy ? UI.accent : 0x9fd8ff,
+      tutorial ? SORROWGATE_LOOK.RIM : this.dreamStudy ? 1.3 : 1.0
     );
     rim.position.set(0, 900, -3000);
     this.scene.add(rim, rim.target);
@@ -807,6 +817,7 @@ export class PerspectiveView {
     this.cues.dispose();
     this.backdrop.dispose();
     this.snow.dispose();
+    this.dreamLights?.dispose();
     this.life.dispose();
     for (const texture of this.spriteTextures.values()) texture.dispose();
     this.renderer?.dispose();
@@ -1171,7 +1182,7 @@ export class PerspectiveView {
     const cells = surveyCellTexture(terrain, classes);
     installSurveyInk(material, terrain, cells);
     if (this.look === 'sorrowgate') installGroundSurface(material);
-    else if (DREAM_LOOP) installDreamGround(material);
+    else if (this.dreamStudy) installDreamGround(material);
     this.terrainMesh = new Mesh(geometry, material);
     this.scene.add(this.terrainMesh);
     this.terrainGrid = grid;
@@ -1211,9 +1222,15 @@ export class PerspectiveView {
     this.buildTerrainDressing(terrain);
     this.buildEmbers(terrain);
     // Props stand on the drawn ground — the same heights the mesh has, crag
-    // included — and rebuild only here, never per frame (gate 6). Rung 3,
-    // ground (docs/map-visuals.md §5).
-    this.environment.rebuild(terrain, (xM, yM) => this.groundYAt(xM, yM));
+    // included. Normal play rebuilds only here; the opt-in study also selects
+    // its budgeted instances when the camera changes. Rung 3, ground.
+    const groundY = (xM: number, yM: number) => this.groundYAt(xM, yM);
+    if (this.dreamCover !== null) {
+      this.dreamCover.setTerrain(terrain, groundY);
+      this.environment.rebuild(terrain, groundY, this.dreamCover.update(this.camera) ?? []);
+    } else {
+      this.environment.rebuild(terrain, groundY);
+    }
   }
 
   /**
@@ -1312,17 +1329,19 @@ export class PerspectiveView {
 
     // The rim is rung 5 too, at the ladder's alpha. The skirt below it is
     // unnamed in §5 and placed on rung 1, the deep water the world ends in.
-    const rim = perimeter.map((p) => new Vector3(p.x, groundY(p.x, p.y) + 4, p.y));
-    this.terrainDressing.add(
-      new LineLoop(
-        new BufferGeometry().setFromPoints(rim),
-        new LineBasicMaterial({
-          color: UI.glassStroke,
-          transparent: true,
-          opacity: FURNITURE_OUTLINE_ALPHA.mapRim,
-        })
-      )
-    );
+    if (!this.dreamStudy) {
+      const rim = perimeter.map((p) => new Vector3(p.x, groundY(p.x, p.y) + 4, p.y));
+      this.terrainDressing.add(
+        new LineLoop(
+          new BufferGeometry().setFromPoints(rim),
+          new LineBasicMaterial({
+            color: UI.glassStroke,
+            transparent: true,
+            opacity: FURNITURE_OUTLINE_ALPHA.mapRim,
+          })
+        )
+      );
+    }
 
     const skirtBottom = depthToWorldY(DEPTH.MAX_M) - 250;
     const skirtPositions: number[] = [];
@@ -1998,6 +2017,12 @@ export class PerspectiveView {
     this.environment.tick(now);
 
     this.applyCamera();
+    if (this.dreamCover !== null && this.terrain !== null) {
+      const placements = this.dreamCover.update(this.camera);
+      if (placements !== null) {
+        this.environment.rebuild(this.terrain, (xM, yM) => this.groundYAt(xM, yM), placements);
+      }
+    }
     this.syncWater(now);
     // The readability factor follows the dolly, so it is recomputed on the
     // frame rather than on the 5 Hz snapshot: a wheel zoom must not wait up to
@@ -2013,6 +2038,19 @@ export class PerspectiveView {
       // the frame nothing.
       this.placeUnits(now);
       this.syncOrdnance(now);
+    }
+    if (this.dreamLights !== null) {
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
+      this.dreamLights.update(
+        this.unitGroup,
+        this.structureGroup,
+        this.camera,
+        this.waterReach,
+        this.waterDensity,
+        (this.viewHeight * pixelRatio) / (2 * Math.tan((FOV_DEG * Math.PI) / 360)),
+        pixelRatio,
+        this.drawScale
+      );
     }
     renderer.render(this.scene, this.camera);
     this.connCost.add(performance.now() - now);

@@ -5,6 +5,19 @@
     }
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Read(//**/*.glb)",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/no-glb-read.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [

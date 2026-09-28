@@ -171,6 +171,8 @@ The retained profile now has focused tests in
 deterministic texture bytes and filtering, canonical geometry and scale, all four
 palettes, untouched lamps, shader composition, the ground-before-survey order, shared
 texture ownership and standard-profile re-entry.
+Loader coverage also holds caller-selected pending prop batches;
+`packages/frontend/test/water.test.ts` holds the separate original/study snow size and fade.
 
 The loader tests let Vite expand the real model manifests, then control only GLTF decode
 completion. They cover pending subscribers, a superseding terrain rebuild, destroyed
@@ -200,23 +202,24 @@ authored refusal reasons.
 
 | Station | Frame | Calls / triangles | Textures | Conn / overlay average ms |
 | --- | --- | --- | --- | --- |
-| Opening | [Home](screenshots/issue-979/final/03-opening.png) | 45 / 47,422 | 7 | 0.65 / 0.56 |
-| Escorts | [Close](screenshots/issue-979/final/04-escorts.png) | 36 / 40,682 | 7 | 0.69 / 0.59 |
-| Court | [Low pitch](screenshots/issue-979/final/05-court.png) | 46 / 47,422 | 7 | 0.72 / 0.78 |
-| Route | [Survey](screenshots/issue-979/final/06-survey.png) | 45 / 47,422 | 7 | 0.61 / 0.57 |
-| Stopped escort | [Selected](screenshots/issue-979/final/08-stopped-sig-6.png) | 36 / 40,682 | 7 | 0.55 / 0.83 |
-| Deuteranopia, reduced motion | [Close](screenshots/issue-979/final/11-accessible-escorts.png) | 36 / 40,682 | 7 | 0.59 / 0.85 |
-| Arch collapse | [Changed ground](screenshots/issue-979/final/12-arch-collapse.png) | 46 / 46,846 | 7 | 0.70 / 0.82 |
-| Campaign door | [Tutorial again](screenshots/issue-979/final/13-campaign-tutorial.png) | 45 / 47,422 | 5 | 0.81 / 0.56 |
-| Standard-profile control | [Tend](screenshots/issue-979/final/14-non-target-tend.png) | 35 / 50,916 | 2 | 1.12 / 0.64 |
+| Opening | [Home](screenshots/issue-979/final/03-opening.png) | 45 / 47,422 | 7 | 0.63 / 0.71 |
+| Escorts | [Close](screenshots/issue-979/final/04-escorts.png) | 36 / 40,682 | 7 | 0.76 / 0.65 |
+| Court | [Low pitch](screenshots/issue-979/final/05-court.png) | 46 / 47,422 | 7 | 0.73 / 0.66 |
+| Route | [Survey](screenshots/issue-979/final/06-survey.png) | 45 / 47,422 | 7 | 0.67 / 0.67 |
+| Stopped escort | [Selected](screenshots/issue-979/final/08-stopped-sig-6.png) | 36 / 40,682 | 7 | 0.51 / 0.75 |
+| Deuteranopia, reduced motion | [Close](screenshots/issue-979/final/11-accessible-escorts.png) | 36 / 40,682 | 7 | 0.62 / 0.84 |
+| Arch collapse | [Changed ground](screenshots/issue-979/final/12-arch-collapse.png) | 46 / 46,846 | 7 | 0.51 / 0.70 |
+| Campaign door | [Tutorial again](screenshots/issue-979/final/13-campaign-tutorial.png) | 45 / 47,422 | 5 | 0.64 / 0.51 |
+| Standard-profile control | [Tend](screenshots/issue-979/final/14-non-target-tend.png) | 35 / 50,916 | 2 | 0.51 / 0.58 |
 
 The [raw readings](screenshots/issue-979/final/readings.json) retain every station's
 camera, both painters' 240 frames, timings and texture count, plus the observed own
 snapshots and public ground delta. The GPU is a GTX 1070 through headed Edge
-ANGLE/D3D11, at 1920 × 1080. Tutorial averages sit at approximately 60 fps; the largest
-recorded tutorial frame interval is 26.7 ms. Tend's first-live station includes a
-112.1 ms worst frame and averages 59 fps: the record does not hide that outlier or claim
-a speedup. The phone floor remains unmeasured.
+ANGLE/D3D11, at 1920 × 1080. These captures refresh the full drive after merging `main`.
+Tutorial stations average 57–60 fps; the largest recorded tutorial frame interval is
+35.9 ms. Tend averages 57.2 fps with a 19.1 ms worst frame. The earlier pre-merge run at
+`cbb18f7` included a 112.1 ms Tend outlier; a new capture does not erase it or establish a
+speedup. The phone floor remains unmeasured.
 
 The collapse is the server's unaccelerated 10:40 beat: twenty arch cells become solid,
 then the two Service Lock cells reopen with a 1,500 m floor and 1,300 m roof. The array
@@ -248,6 +251,20 @@ node .claude\skills\run-game\scripts\drive.mjs --headed --channel msedge --entry
 Allow eleven minutes for the authored clock, and do not run a build during capture.
 `readings.json` is marked `complete: true` only after the final control succeeds.
 
+### Development-study compatibility
+
+The [compatibility drive](screenshots/issue-979/compatibility.mjs) repeats tutorial entry
+with `--url 'http://localhost:5173/?dream-loop=1'`, then enters Tend through Campaign.
+Its [readings](screenshots/issue-979/compatibility/readings.json) assert the flag really
+is enabled and record 240 frames from each canvas at both stations. The
+[tutorial](screenshots/issue-979/compatibility/03-flagged-tutorial.png) keeps its own
+light rig, 7,000 original snow motes, and unchanged lamps, with no study ground cover
+or halos: 45 calls and 47,422 triangles. The
+[standard control](screenshots/issue-979/compatibility/04-flagged-standard-tend.png)
+retains main's study rig, 1,200 study motes, lamp shader, ground cover and halos:
+34 calls and 124,798 triangles. No browser console errors occurred in either control;
+both remain within the 150-call, 250,000-triangle gate.
+
 ### Independent review
 
 The fresh loop critic, running GPT-6 Astra, returned **pass, no blocking or minor
@@ -255,10 +272,14 @@ findings** for commit `cbb18f7a1a477c3407d5333cf378362de00ec236`. Its first roun
 blocked by missing command access, not an implementation finding; the second received
 the exact full diff, current PR body and a separate independent rerun of
 `tutorialLoading.test.mjs` (4 passed, 0 failed). All twelve repository gates passed
-before review. No production code changed after that verdict.
+before that review.
 
-This closes the first retained-geometry slice, not the wider visual reboot or the
-unmeasured phone budget. The pressure-warning defect remains tracked separately.
+The subsequent merge of `main` required a compatibility pass before final readiness:
+the existing opt-in study gained camera-budgeted prop batches, lamp shaders, local light
+halos and a different snow treatment. The tutorial keeps its mission profile even with
+that development flag present; standard experimental play retains the study. Pending
+loads also retain the caller's selected prop batch. The pressure-warning defect remains
+tracked separately, and the phone budget remains unmeasured.
 
 ## Related
 

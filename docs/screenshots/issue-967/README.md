@@ -5,6 +5,7 @@ target the dream loop builds toward, how it was made, and what to watch for whil
 runs.
 
 ![Baseline and the three Claude Design rounds](rounds.png)
+![The original game, four prototype rounds, and the locked target reference](evolution.png)
 
 ## Files
 
@@ -14,7 +15,10 @@ runs.
 | `target.html` | That export as downloaded. `render-target.cjs` turns it back into `target.png` byte for byte. |
 | `baseline.png` | The game before the loop, in the same frame, HUD hidden. |
 | `rounds.png` | The baseline and the three rounds, side by side. |
+| `evolution.png` | Baseline and prototypes 1–4 side by side, with the locked target clearly marked as a reference. |
 | `shoot.mjs` | A `run-game` steps module that shoots the loop's frame from the running game. |
+| `measure.mjs` | The locked shot followed by a ten-second GPU measurement. |
+| `review.mjs` | The same shot and measurement, then low, overhead, survey and panning controls. |
 | `render-target.cjs` | Renders a Claude Design export headless at 1920×1080, DPR 1. |
 
 ## The frame
@@ -82,6 +86,102 @@ focused-test output and the final twelve passing gates. Its verdict remains
 **evidence-missing** only because its available tools could not independently execute the
 focused test; the supplied run passed all three cases.
 The [normal-play control](normal-play-control.png) still shows the shipped warm cladding.
+
+### One-hour continuation
+
+The owner authorized another hour on 27 September, starting at 19:47:48 CEST with
+the same locked target and the merged second prototype as the baseline.
+The three-round cap still applies; this is not approval to replace any GLB or
+change the production art direction.
+
+The next increment addresses the scene rather than another plate-pattern tweak.
+Increasing the global prop density would spend the reservation on off-screen ground
+and leave the end of the map bare. Instead, the prototype studies denser, deterministic
+kelp and coral-growth scatter, selecting visible instances within the existing
+600-instance and 105,000-triangle limits. It uses the approved models, published
+terrain and original biome eligibility; neither hidden entities nor the simulation
+participate. Normal play retains its existing scatter.
+
+The material study also tests a hue-preserving highlight shoulder on lamps and
+sparse marine snow at the locked dolly. Lamp colours, approved resting intensities
+and live-SIG modulation remain the inputs; the shoulder changes how overbright
+light reaches the display, not the model or its energy data. Snow still sinks only
+downward, respects reduced motion and water density, and fades out toward survey
+distance. This is an explicit prototype exception to the normal overview fade,
+not a change to [Reading the Water](../../art-direction.md#reading-the-water).
+The world-only study omits the magenta map-edge chrome. A single depth-tested
+point layer supplies tight halos at small, connected components of the approved
+own-force lamp meshes; large floodlit panels are not converted into point halos.
+It follows each lamp's live energy and shares the conn camera, with no full-screen
+bloom pass and no new light sites authored by hand.
+
+The continuation's first [home frame](prototype-3.png) runs at **60.0 FPS** on
+the same GTX 1070: **51 draw calls, 118,204 triangles**, including 215 visible
+props costing 69,434 triangles ([measurement](prototype-3-metrics.json)).
+The [low view](prototype-3-low.png), [survey view](prototype-3-survey.png) and
+300-frame pan remain within the geometry reservations; all four additional
+stations run at 59.8–60.1 FPS ([readings](prototype-3-review.json)).
+The [normal-play control](normal-play-control-2.png) retains the shipped appearance.
+The prototype's mean encoded luma is 0.0564 and 94.28% of pixels are below 10%
+luma; the target is 0.0594 and 91.29%, so matching the average is not evidence
+that the distribution or the material detail matches.
+
+The first continuation review provisionally scored **6.2/10** (composition 2.8,
+lighting 1.6, materials 1.5, details 0.3). It found no code-correctness blocker,
+but retained the visual gaps: low clustered dressing, repetitive ground and steel,
+flat amber bay lighting, and hard particulate. It also found that the capped
+scatter ranked props by their yaw, which could bias their orientation.
+The owner then selected **gpt-6-astra** for the loop critic; that model is now
+named in the agent's configuration, and grades the next round.
+
+The second increment groups smaller kelp into cell-local drifts, ranks the
+reservation with a separately salted hash, and replaces dominant silt stripes
+with finer grain and scours. Halos alone could not shade the bay walls, so the
+study now reuses each model's strongest approved emitter for local light spill:
+at most eight fixed, unshadowed lights, selected by projected source power.
+This is an approximation of the model's existing emission, not new hand-placed
+work lamps; the source colours and energy still come from the live materials.
+Point-halo strength now accounts for source area, keeping small navigation marks
+quieter than the large work lamps, and the snow's soft footprints are slightly larger.
+
+The second [home frame](prototype-4.png) holds **60.0 FPS**, **51 draw calls**
+and **118,980 triangles**, including 217 props at 70,210 triangles
+([measurement](prototype-4-metrics.json)).
+Its [low](prototype-4-low.png), [survey](prototype-4-survey.png), overhead and
+panning controls hold 59.9–60.0 FPS; the largest prop submission is 104,936
+triangles ([readings](prototype-4-review.json)).
+Mean encoded luma is 0.0559, with 94.48% of pixels below 10%.
+
+The **gpt-6-astra** critic scored this frame **6.3/10**: composition 2.8,
+lighting 1.7, materials 1.4, details 0.4. It confirmed the yaw-ranking fix and
+raised one code finding: the new spill constants belonged in shared, not inline.
+They are now `DREAM_LOOP_LIGHT_SPILL` in `packages/shared/src/constants.ts`,
+annotated TUNABLE and moved without changing their values.
+
+The one-hour run stops without visual acceptance. Astra's remaining priorities
+are dimensional amber light, readable nonperiodic ground texture, low ground
+drifts, less uniform steel finish, and softer water detail; the bay's broad
+mustard patch and the sharp upper map/water transition remain particularly clear.
+These repeated gaps call for reconsidering the material/light response rather
+than another small coefficient tweak. The critic viewed all supplied frames
+and the captured logs, but could not independently execute Git or tests; its
+score is a pixel judgement, not a claim that it reran the gates.
+
+### Restart checkpoint
+
+The saved code checkpoint is `b7a8c788681df150e243aff9fd6a516af4bace49` in
+[#970](https://github.com/gunnargehtab/Echoes-of-the-Abyss/pull/970).
+Continue from that PR or its eventual merge, keeping the same committed
+`target.png`, `shoot.mjs` camera and development-only `?dream-loop=1` boundary.
+The latest comparison is `prototype-4.png`, with its measurement and camera
+controls above; the complete [Astra verdict](critic-4.txt) is saved for the next
+fresh critic, including the note that its code finding was fixed afterward.
+
+The next run starts with **6.3/10 at 60.0 FPS**, not visual acceptance.
+Use **gpt-6-astra** for the critic and a new time budget; this run's timer is
+finished. Reconsider the material/light response against the five saved visual
+priorities rather than spending another round on small coefficient changes.
+No approved asset replacement or production art change has been authorized.
 
 ## How the target was made
 

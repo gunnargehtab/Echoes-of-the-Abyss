@@ -100,6 +100,23 @@ function controlLoads() {
 }
 
 describe('pending prop delivery', () => {
+  it('retains the caller-selected placement batch across a pending load', async () => {
+    controlLoads();
+    const cells = terrain();
+    const placements = placeProps(cells).slice(0, 1);
+    assert.equal(placements.length, 1);
+    const layer = new EnvironmentLayer();
+    try {
+      layer.rebuild(cells, () => -200, placements);
+      await until(() => pending.length === 1);
+      pending[0].resolve(source());
+      await until(() => layer.stats().props > 0);
+      assert.equal(layer.stats().props, 1, 'a completed load must not restore the full map batch');
+    } finally {
+      layer.destroy();
+    }
+  });
+
   it('notifies every waiting caller once and separates both look templates', async () => {
     controlLoads();
     const ready = [0, 0, 0];

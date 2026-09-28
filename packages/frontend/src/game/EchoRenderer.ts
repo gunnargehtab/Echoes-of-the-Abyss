@@ -873,8 +873,8 @@ const BAR_BUTTON_HEIGHT = 40;
  * Four of the five are fixed because their content is: a scope is square, a
  * command card is four columns of a known width, a selection card holds six
  * stats. Production takes whatever is left, because a queue is the one block
- * that reads better wider, and it is the first to go when there is not enough
- * width to give it — see `consoleBlocks`.
+ * that reads better wider. Which blocks go when the width runs out, and in
+ * what order, is decided in `consoleBlocks`.
  */
 const BLOCK_W = {
   scope: 170,
@@ -3003,15 +3003,9 @@ export class EchoRenderer {
   // --- Sonar scope (minimap) ------------------------------------------------
 
   /**
-   * The console's blocks for the current width.
-   *
-   * Blocks are dropped rather than squeezed when the width runs out, because a
-   * block narrower than its content is a block that lies about holding it. They
-   * go in reverse order of how often a commander looks at them: production
-   * first, because its facts are also on the selection card when a yard is
-   * selected, then selection, whose card the world view can carry alone. The
-   * scope and the command card never go — one is how a touchscreen reaches any
-   * order at all, and the other is the only view of the whole map.
+   * The console's blocks for the current width, dropped in docs/ui-ux.md §2's
+   * order: fleet, then production, then selection. The list in the body says
+   * why each goes where it does.
    */
   private consoleBlocks(): {
     y: number;
@@ -3037,18 +3031,25 @@ export class EchoRenderer {
     //   digits. It is the block that makes them quick, not the only one that
     //   makes them reachable.
     // - **Production next**, and reluctantly: production being visible without
-    //   a tab is this console's whole argument, so it gives way only to the two
-    //   blocks that cannot go at all.
+    //   a tab is this console's whole argument.
     // - **Selection after that**, because the world view carries a hull's state
     //   on the hull itself.
     //
     // Scope and commands never go. One is the only view of the whole map, and
     // the other is how a touchscreen reaches any order at all.
-    const fixed = BLOCK_W.scope + BLOCK_W.commands + BLOCK_GAP * 2;
-    const spare = right - left - fixed;
-    const wantsSelection = spare >= BLOCK_W.selection + BLOCK_GAP + BLOCK_W.productionMin;
-    const afterSelection = wantsSelection ? spare - BLOCK_W.selection - BLOCK_GAP : spare;
-    const wantsFleet = afterSelection >= BLOCK_W.fleet + BLOCK_GAP + BLOCK_W.productionMin;
+    //
+    // So a block is kept only when every block that outlasts it fits too: each
+    // test below adds its own cost to theirs. Testing a block against the room
+    // left after the others let the fleet come back once selection had gone
+    // (#957), and gave production the longest life of the three.
+    const fixed = BLOCK_W.scope + BLOCK_GAP + BLOCK_W.commands;
+    const room = right - left - fixed;
+    const selectionCost = BLOCK_GAP + BLOCK_W.selection;
+    const productionCost = BLOCK_GAP + BLOCK_W.productionMin;
+    const fleetCost = BLOCK_GAP + BLOCK_W.fleet;
+    const wantsSelection = room >= selectionCost;
+    const wantsProduction = room >= selectionCost + productionCost;
+    const wantsFleet = room >= selectionCost + productionCost + fleetCost;
 
     let x = left;
     const scope = { x, w: BLOCK_W.scope };
@@ -3063,8 +3064,11 @@ export class EchoRenderer {
     const commands = { x, w: BLOCK_W.commands };
     x += commands.w + BLOCK_GAP;
 
-    const rest = right - x;
-    const production = rest >= BLOCK_W.productionMin ? { x, w: rest } : undefined;
+    // At least `productionMin` wide by `wantsProduction`, and wider whenever
+    // the room is. Once production has gone, what it held stays bare glass on
+    // purpose: the other four blocks are as wide as their content (`BLOCK_W`),
+    // and giving the room to one would only pad it.
+    const production = wantsProduction ? { x, w: right - x } : undefined;
     return { y, h, scope, commands, selection, fleet, production };
   }
 

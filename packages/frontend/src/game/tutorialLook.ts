@@ -11,7 +11,7 @@ import {
   type Material,
 } from 'three';
 import { Biome, Faction, PROLOGUE_SORROWGATE_HEADER, SORROWGATE_LOOK } from '@echoes/shared';
-import { hash01 } from './environment.ts';
+import { propHash } from './environment.ts';
 
 export type WorldLook = 'standard' | 'sorrowgate';
 
@@ -28,7 +28,7 @@ function periodicNoise(u: number, v: number, period: number, salt: number): numb
   const fy = y - iy;
   const sx = fx * fx * (3 - 2 * fx);
   const sy = fy * fy * (3 - 2 * fy);
-  const at = (dx: number, dy: number) => hash01([(ix + dx) % period, (iy + dy) % period, salt]);
+  const at = (dx: number, dy: number) => propHash([(ix + dx) % period, (iy + dy) % period, salt]);
   const a = at(0, 0) * (1 - sx) + at(1, 0) * sx;
   const b = at(0, 1) * (1 - sx) + at(1, 1) * sx;
   return a * (1 - sy) + b * sy;

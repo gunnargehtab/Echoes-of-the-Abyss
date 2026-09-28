@@ -74,11 +74,14 @@ export class EnvironmentLayer {
    * function — the same heights the terrain mesh stands on, so props sit on
    * the drawn ground, crag and all, rather than on the authored floor.
    */
-  rebuild(terrain: TerrainPayload, groundY: (xM: number, yM: number) => number): void {
+  rebuild(
+    terrain: TerrainPayload,
+    groundY: (xM: number, yM: number) => number,
+    placements: readonly PropPlacement[] = placeProps(terrain)
+  ): void {
     const generation = ++this.generation;
     this.clear();
 
-    const placements = placeProps(terrain);
     if (placements.length === 0) return;
 
     const bySlug = new Map<string, PropPlacement[]>();
@@ -97,7 +100,7 @@ export class EnvironmentLayer {
         spec.swayM,
         () => {
           // A load belongs to the latest rebuild that subscribed to it.
-          if (generation === this.generation) this.rebuild(terrain, groundY);
+          if (generation === this.generation) this.rebuild(terrain, groundY, placements);
         },
         this.look
       );

@@ -327,7 +327,7 @@ export function propSpec(slug: string): PropSpec | undefined {
  * cell's own published values plus per-use salts — nothing map-global, which
  * is the whole delta-locality argument above.
  */
-export function hash01(values: readonly number[]): number {
+export function propHash(values: readonly number[]): number {
   let h = 0x811c9dc5;
   for (const value of values) {
     const v = value | 0;
@@ -349,21 +349,35 @@ export function hash01(values: readonly number[]): number {
  * Every prop placement for a terrain, deterministic and budget-capped.
  *
  * Row-major cells, registry-order specs — a fixed spend order, so the caps
- * cut identically on every client. `specs` is injectable for tests only; the
- * renderer always passes the registry.
+ * cut identically on every client. Normal play always passes the registry.
  */
 export function placeProps(
   terrain: TerrainGrid,
   specs: readonly PropSpec[] = ENVIRONMENT_PROPS
 ): PropPlacement[] {
-  const { cols, rows, cellM } = terrain;
   const placements: PropPlacement[] = [];
-  if (specs.length === 0) return placements;
+  let trisSpent = 0;
+  for (const { placement, spec } of scatterProps(terrain, specs)) {
+    if (placements.length >= PROP_INSTANCE_CAP) break;
+    if (trisSpent + spec.triBudget > PROP_TRI_RESERVATION) break;
+    trisSpent += spec.triBudget;
+    placements.push(placement);
+  }
+  return placements;
+}
+
+/** Unbudgeted candidates, shared with the opt-in view-bounded material study.
+ * Consumers must apply both reservations before creating instances. */
+export function* scatterProps(
+  terrain: TerrainGrid,
+  specs: readonly PropSpec[] = ENVIRONMENT_PROPS
+): Generator<{ placement: PropPlacement; spec: PropSpec }> {
+  const { cols, rows, cellM } = terrain;
+  if (specs.length === 0) return;
 
   const isRock = (i: number) => terrain.ceiling[i]! > terrain.floor[i]!;
   const isRoofed = (i: number) => terrain.ceiling[i]! !== 0 && !isRock(i);
 
-  let trisSpent = 0;
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
       const index = row * cols + col;
@@ -415,31 +429,30 @@ export function placeProps(
           s,
         ];
         const whole = Math.floor(spec.density);
-        const count = whole + (hash01([...cell, 0x1b873593]) < spec.density - whole ? 1 : 0);
+        const count = whole + (propHash([...cell, 0x1b873593]) < spec.density - whole ? 1 : 0);
 
         for (let k = 0; k < count; k++) {
-          if (placements.length >= PROP_INSTANCE_CAP) return placements;
-          if (trisSpent + spec.triBudget > PROP_TRI_RESERVATION) return placements;
-          trisSpent += spec.triBudget;
           // Inside its own cell, like an ember: a prop that leaned over a
           // boundary would dress ground of a different identity.
           const margin = Math.min(0.45, spec.footprintM / 2 / cellM);
-          const fx = margin + (1 - 2 * margin) * hash01([...cell, k, 0x85ebca6b]);
-          const fy = margin + (1 - 2 * margin) * hash01([...cell, k, 0xc2b2ae35]);
+          const fx = margin + (1 - 2 * margin) * propHash([...cell, k, 0x85ebca6b]);
+          const fy = margin + (1 - 2 * margin) * propHash([...cell, k, 0xc2b2ae35]);
           const [lo, hi] = spec.scaleJitter;
-          placements.push({
-            slug: spec.slug,
-            xM: (col + fx) * cellM,
-            yM: (row + fy) * cellM,
-            yawRad: hash01([...cell, k, 0x27d4eb2d]) * Math.PI * 2,
-            scale: lo + (hi - lo) * hash01([...cell, k, 0x9e3779b9]),
-            cellIndex: index,
-          });
+          yield {
+            placement: {
+              slug: spec.slug,
+              xM: (col + fx) * cellM,
+              yM: (row + fy) * cellM,
+              yawRad: propHash([...cell, k, 0x27d4eb2d]) * Math.PI * 2,
+              scale: lo + (hi - lo) * propHash([...cell, k, 0x9e3779b9]),
+              cellIndex: index,
+            },
+            spec,
+          };
         }
       }
     }
   }
-  return placements;
 }
 
 /**
