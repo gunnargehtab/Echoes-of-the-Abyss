@@ -192,8 +192,8 @@ describe('recalling the massing army (#946)', () => {
       faction: Faction.Bathyarch,
       tick: 0,
     };
-    // `walkToWall` re-issues on a fifteen-second clock, so this watches for
-    // two of its windows rather than two decisions.
+    // `walkToWall` re-issues on a five-second clock, so this watches seven of
+    // its windows rather than two decisions.
     const moves = movesFor(
       brief,
       base,
@@ -423,7 +423,7 @@ describe('leaving the siege hull to the pass that besieges (#971)', () => {
     const home = brief.spawns[brief.slot]!;
     const at = (id: number, dx: number, kind = UnitKind.Corvette) =>
       hull(id, objective.x + dx, objective.y, kind);
-    // Two of `commandSiege`'s windows a phase, as the massing suite watches.
+    // Seven of `commandSiege`'s five-second windows a phase.
     const orders = ordersAcross(
       brief,
       base,

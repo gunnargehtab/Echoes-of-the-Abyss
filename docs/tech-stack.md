@@ -798,11 +798,11 @@ standoff is 95% of the weapon's range for a measured reason: hulls are held off 
 a Bastion's ring is 278 m, and a comfortable fraction of a short reach parks a siege hull
 where it can never fire. The Furnace and the Tocsin do shoot, so they are in the army, and
 the army orders them in no branch: its attack-move and its fights rewrote that walk at every
-decision, before it could land (#971). Nor does it set their depth or their silence, because
-reach is measured with depth: a Tocsin that dove with its push could not reach a wall at
-working depth from its standoff. With no wall classified, a siege hull waits in the middle
-of the fleet rather than at the rally point, where a massing army is and a pushing one is
-not.
+decision, before it could land (#971). Nor does it set their depth, because reach is measured
+with depth: a Tocsin that dove with its push could not reach a wall at working depth from its
+standoff. Nor their silence, which neither of their navies approaches in. With no wall
+classified, a siege hull waits in the middle of the fleet rather than at the rally point,
+where a massing army is and a pushing one is not.
 
 **And, for one navy, it anchors.** The Bower (#509) is the Commune's heavy and it has no
 gun, so like the Sower and the Spinner before it, it is bought by a want of its own and moved

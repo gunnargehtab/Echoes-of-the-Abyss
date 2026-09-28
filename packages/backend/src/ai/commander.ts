@@ -4798,12 +4798,13 @@ export class AiCommander implements AiPlayer {
     // Every order below goes to the army less its siege hull, which is
     // `commandSiege`'s: it walks the hull to a wall on its own clock, and an
     // attack or an attack-move from here, given at every decision, rewrote
-    // that walk before it could land (#971). Its posture is not the army's
+    // that walk before it could land (#971). Its depth is not the army's
     // either: combat measures reach with depth, so a Tocsin that dove with a
     // push to the crossing depth, at a standoff 95% of its reach off a wall at
-    // working depth, could not fire, and a silent gun holds its fire. The hull
-    // still counts toward the size the army masses to, and its position toward
-    // what is in reach.
+    // working depth, could not fire. Silence goes with depth so the hull's
+    // posture has one owner, and changes nothing today: neither navy with an
+    // armed siege hull approaches silently. The hull still counts toward the
+    // size the army masses to, and its position toward what is in reach.
     const siege = OWN_SIEGE[this.briefing.faction];
     const ordered = army.filter((u) => u.kind !== siege);
     const ids = ordered.map((u) => u.id);
