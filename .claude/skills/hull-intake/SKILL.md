@@ -39,6 +39,10 @@ renders four top-down orthographic passes in headless Chromium
 
 `meta.json` records mesh/material inventory, sizes, the scale applied, glow
 energy (the gate-3 metric in `docs/graphics-standards.md`), and warnings.
+It and `tools/hull-models/parts.mjs` are how a session reads a model: a hook
+refuses the Read tool on a `.glb` (`.claude/hooks/no-glb-read.mjs`, #899),
+because Read prints the binary into context — 625 KB of it for the largest
+committed model. Bash, Glob and every script still reach GLBs as before.
 Default `--ppm 2` (pixels per metre) matches sprite scale; raise it for
 archival maps. `--glow-e <target>` calibrates the emissive map onto a target
 glow energy — `tools/hull-maps/build.mjs` passes it from the unit's SIG, so
