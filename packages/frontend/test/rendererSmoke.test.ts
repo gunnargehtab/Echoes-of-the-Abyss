@@ -2281,6 +2281,66 @@ describe('renderer smoke test: the strip explains itself', () => {
 });
 
 /**
+ * The console's drop order — docs/ui-ux.md §2 (#957).
+ *
+ * A block is dropped rather than squeezed, and §2 names the order: the fleet
+ * block first, then production, then selection, while the scope and the
+ * command card never go. Held as two properties over a sweep of widths rather
+ * than as the thresholds, which are arithmetic on `BLOCK_W` and would only
+ * restate it: a block is on the glass only while every block §2 drops after it
+ * is too, and widening the window never takes a block away. The layout this
+ * replaced broke both — selection went before production, and the fleet came
+ * back once selection had gone.
+ */
+describe('the console drops its blocks in §2’s order', () => {
+  /** §2's order, first to go first. */
+  const DROP_ORDER = ['FLEET', 'PRODUCTION', 'SELECTION'] as const;
+  const TITLES = new Set<string>(['SCOPE', 'COMMANDS', ...DROP_ORDER]);
+
+  it('drops the fleet, then production, then selection, and never scope or commands', async () => {
+    const world = await boot();
+    try {
+      const states = new Set<string>();
+      let narrower: Set<string> | undefined;
+      // 640 is a 1280 px window at §11's 200%; 1700 clears every block.
+      for (let width = 640; width <= 1700; width += 2) {
+        world.app.resize(width, 720);
+        world.frame(1);
+        const shown = new Set(textContents(world.app.stage).filter((line) => TITLES.has(line)));
+
+        for (const kept of ['SCOPE', 'COMMANDS']) {
+          assert.ok(shown.has(kept), `at ${width} px the console dropped ${kept}`);
+        }
+        DROP_ORDER.forEach((title, at) => {
+          if (!shown.has(title)) return;
+          for (const later of DROP_ORDER.slice(at + 1)) {
+            assert.ok(
+              shown.has(later),
+              `at ${width} px ${title} is on the glass and ${later} is not`
+            );
+          }
+        });
+        for (const title of narrower ?? []) {
+          assert.ok(shown.has(title), `widening to ${width} px took ${title} away`);
+        }
+        narrower = shown;
+        states.add(DROP_ORDER.filter((title) => shown.has(title)).join(' '));
+      }
+
+      // Every state the order allows turned up, so neither check above passed
+      // on a sweep that never dropped anything.
+      assert.deepEqual(
+        [...states].sort(),
+        ['', 'FLEET PRODUCTION SELECTION', 'PRODUCTION SELECTION', 'SELECTION'],
+        'the sweep did not pass through every step of the drop order'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
+/**
  * #815 — the card is offered more than its twelve cells hold, and what went
  * used to be whatever `buildBarModel` pushed last. For any hull carrying
  * torpedoes — ten of them, the Corvette and the Cruiser among them — that was
