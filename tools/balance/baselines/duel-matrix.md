@@ -46,8 +46,9 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --du
 > Same command, seeds and cap, run from `fcff184`; the before figures are the previous file,
 > which the same command at `bf138d4` reproduces. No weight, price or TUNABLE moved. The
 > changes: the Dredge holds the crystal field (#961), and the army orders its siege hull in no
-> branch, so with no wall classified it waits in the fleet's middle (#971). Both are in
-> `docs/tech-stack.md`, "The skirmish AI". #950's push, merged between them, moves no match.
+> branch, and a siege hull with no wall classified waits in the fleet's middle rather than at
+> the rally point (#971). Both are in `docs/tech-stack.md`, "The skirmish AI". #950's push,
+> merged between them, moves no match.
 >
 > What it moved, recorded and left: 16 matches of 120 differ, 2 at #961 and 15 at #971, with
 > one match moving at both. Two change their result, both at #971 and both the Consortium
