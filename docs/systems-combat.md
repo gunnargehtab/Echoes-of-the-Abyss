@@ -420,8 +420,8 @@ centred on the one hull it cannot hurt. The Directorate's Thurible is the hull b
 
 ### A weapon that is not a weapon
 
-Three of the four siege hulls do not shoot the wall down, and each is its navy's argument
-about how a wall actually falls.
+Only one of the four siege hulls is a gun, two never fire on the wall at all, and each is its
+navy's argument about how a wall actually falls.
 
 - **A spore, and silence.** The Commune's Blight seeds a structure with a Deepbloom strain
   that eats **1% of its maximum hull a second for 60 s** — 60% of the wall, and never the
@@ -442,10 +442,11 @@ about how a wall actually falls.
   Cantus sings that way — but a *gun* gated on it is new, and it is the whole hull: nothing
   outranges it, and anything that reaches it kills it.
 
-The Consortium's Furnace is the one that does shoot: thermal cutters, the same tool that
-opens kelp ([hazards.md](hazards.md) §4), turned on plate at 320 m and SIG 75 while they
-run — every siege weapon has to out-reach the ring the separation system holds a hull on,
-and a Bastion's is 278 m. Four navies, four answers, and only one of them is a gun.
+The Consortium's Furnace fires on the wall too, and is still not a gun: thermal cutters, the
+same tool that opens kelp ([hazards.md](hazards.md) §4), turned on plate at 320 m and SIG 75
+while they run, and floored against a hull so that a cutter never reads as a gun (§9). Every
+siege weapon has to out-reach the ring the separation system holds a hull on, and a
+Bastion's is 278 m. Four navies, four answers, and only one of them is a gun.
 
 Ramming is parked as a design question — descent is fast and deafening, and a Consortium
 hull dropping onto a target is thematically irresistible, but it needs the collision model
