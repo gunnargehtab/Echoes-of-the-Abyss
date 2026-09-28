@@ -163,8 +163,9 @@ export class OrdnanceLayer {
       metalness: 0.35,
       roughness: 0.55,
     });
-    this.lampMaterial = new MeshBasicMaterial({ color: 0xffffff });
+    this.lampMaterial = new MeshBasicMaterial({ color: 0xffffff, toneMapped: false });
     this.trailMaterial = new LineBasicMaterial({
+      toneMapped: false,
       vertexColors: true,
       transparent: true,
       opacity: 0.55,

@@ -49,6 +49,7 @@ import {
 import { resolveBindings } from '../input/bindings.ts';
 import type { Application } from 'pixi.js';
 import type { WebGLRenderer } from 'three';
+import type { createWaterEnvironment } from './modelLighting.ts';
 import type { Client } from '@colyseus/sdk';
 import { loadSettings, subscribeSettings, type Settings } from '../settings/store.ts';
 
@@ -111,6 +112,7 @@ function cssVariables(uiScale: number, palette: PaletteName): CSSProperties {
 export interface GameCanvasHarness {
   application: () => Application;
   glRenderer: () => WebGLRenderer;
+  environment: typeof createWaterEnvironment;
   netClient: () => Client;
   callbacks: LobbyCallbacksFactory;
 }
@@ -371,7 +373,10 @@ export function GameCanvas({
       const perspective = new PerspectiveView(lookForMission(missionId));
       perspectiveRef.current = perspective;
       const perspectiveHost = perspectiveHostRef.current;
-      if (perspectiveHost === null || !perspective.mount(perspectiveHost, harness?.glRenderer)) {
+      if (
+        perspectiveHost === null ||
+        !perspective.mount(perspectiveHost, harness?.glRenderer, harness?.environment)
+      ) {
         // No WebGL, no world. Say so rather than leaving a black screen
         // wearing a working HUD — and take no seat in a match this device
         // cannot render.

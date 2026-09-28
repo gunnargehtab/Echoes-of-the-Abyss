@@ -58,8 +58,14 @@ export class DepthCues {
     // The interface voice for the plumb, because depth here is information,
     // not threat; a soft black disc for the shadow. Both exactly what the
     // per-hull objects carried, so the register does not move.
-    this.plumbMaterial = new LineBasicMaterial({ color: accent, transparent: true, opacity: 0.22 });
+    this.plumbMaterial = new LineBasicMaterial({
+      color: accent,
+      transparent: true,
+      opacity: 0.22,
+      toneMapped: false,
+    });
     this.shadowMaterial = new MeshBasicMaterial({
+      toneMapped: false,
       color: 0x000000,
       transparent: true,
       opacity: 0.3,

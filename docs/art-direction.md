@@ -35,6 +35,68 @@ Use gradients to show depth: dark → darker → pitch black → bioluminescent 
 - Bioluminescent flora/fauna as natural light sources
 - Flickering industrial lamps in bases
 
+### Shared model lighting — Abyss Render Stack
+
+Sorrowgate is the blueprint for the game's graphics, not a permanently separate
+lighting style. The first increment of [#974](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/974)
+promotes its readability rig to every production match: cold ambient **0.75**,
+oblique key **1.8**, cyan rim **1.6**, retaining the existing colours and directions.
+Its Pelagia laminate and authored court surfaces remain mission-specific; sharing a
+light rig does not make every navy Commune-built.
+
+**Decision.** Keeping the old standard rig and improving only it would make the
+tutorial a competing look. Instead, share the tutorial rig and add the same metal
+reflections and highlight handling to both profiles. The approved hull portraits
+above and Sorrowgate's retained-geometry slice supply the reference: transfer wet
+surface definition and controlled highlights, not their offline shadows or bloom.
+The emotion remains inhabited darkness: close views reveal construction, home views
+separate hulls from ground, and survey views preserve sound and depth information.
+
+**SPEC.** The world renderer uses ACES filmic tone mapping at exposure **1.0**.
+One **128 × 64** linear-float equirectangular texture grades vertically from the
+existing cold ambient colour overhead to the deepest water colour below; a PMREM
+is generated once per mounted view, used at environment intensity **0.35**, and
+disposed with that view. It reflects no entities, faction accents or hidden state.
+It is not a background replacement, a sun, or a new emissive source.
+The existing water backdrop, baked seabed and fallback sprites, depth marks, route
+ink, embers and unlit ordnance lamps bypass tone mapping; the Pixi HUD and enemy
+contacts remain outside this world-material operation. Live SIG still drives the
+same input emission curve. No bloom, shadows, camera effects or geometry are added.
+
+The asset list is the existing approved roster and prop kit, with no new downloads
+or GLB edits. Evidence pairs the old and new standard-match and tutorial frames at
+close, home, low-pitch and survey cameras with the HUD present, and includes quiet
+and loud own-unit readings. The non-target control is the baked chart/overlay path,
+not the tutorial: both production profiles intentionally receive the lighting.
+Gate 6 counts steady-state work separately from the one-time PMREM bake; gates 3
+and 8 still bind. The development-only Dream Loop study remains an isolated
+experiment, not the production reference.
+
+#### Ranked audit and remaining work
+
+The baseline is commit `1df288a` (28 September 2026), not the earlier #286 scene.
+`PerspectiveView.ts` submits the world directly through WebGLRenderer with no tone
+mapping, environment, shadow-map enable or composer at that baseline.
+`tools/hull-renders/scene.html` instead configures ACES, PMREM, shadows and a bloom
+composer. Its still is a lighting reference, not a runtime implementation to copy.
+
+| Rank | Upgrade | Verified starting point and boundary |
+| --- | --- | --- |
+| 1 | Shared rig, tone mapping, PMREM | This increment. Promote the tutorial rig; no model edits or full-screen pass |
+| 2 | SIG-selective bloom | No production composer. First specify off/quality controls, quiet-SIG exclusion and the gate-6 pass/memory allowance |
+| 3 | Bevel coverage and baked AO | `kit.mjs` already supports bevelled `plate`/`plan`; this is coverage, not a missing primitive. None of the 108 source GLBs has an occlusion texture. Start with one reviewed asset and preserve its silhouette |
+| 4 | Vignette, chromatic split, camera sway | Not in the production camera. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
+| 5 | GLB gzip | `packages/frontend/nginx.conf` has no gzip rule. Low implementation risk, independent of the visual sequence; delivery cost, not frame quality |
+| 6 | UV layout and trim sheets | 6,378 of 6,540 exported primitives have UV0, but attribute presence is not a laid-out atlas. `uvAlike` also writes zero-filled placeholder UVs. Sorrowgate already has triplanar surface detail; retain that work rather than replacing it blindly |
+| 7 | Shallow caustics | Design first: where light can exist, how it obeys depth and the licensed world-light families, and what stays unlit. No gameplay visibility |
+| 8 | WebGPU/TSL | Defer migration until a separate feasibility decision. Water, survey, surface and sway shader patches depend on the current WebGL pipeline; this is not a renderer-constructor swap |
+
+`node tools/render-stack/audit.mjs` measures **17,819,812 raw bytes** and
+**2,211,283 gzip bytes** over 108 source GLBs with Node's default gzip settings.
+Those are sums over the source library, not a browser's initial download: Vite hashes
+assets and the client loads them by need. The rank retains the issue's visual priority;
+gzip can proceed independently and WebGPU is not a prerequisite for the other seven.
+
 ### Reading the Sea Floor
 
 The ground has a shape now ([systems-depth.md](systems-depth.md) §1), and the player has to
