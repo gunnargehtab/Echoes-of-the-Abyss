@@ -3727,19 +3727,18 @@ export class AiCommander implements AiPlayer {
    * `roster-plan.md` §7 calls the opponent the real cost of this wave.
    *
    * Besieging is the one behaviour in the commander that is not "go somewhere
-   * and shoot what you meet": it is *pick a wall, walk to it, and stay*. Three
-   * of the four hulls do not even shoot, so the army branch would never move
-   * them, and a siege hull the AI bought and parked at the rally would leave
-   * this wave's gate — match length — measuring a hole in four economies.
+   * and shoot what you meet": it is *pick a wall, walk to it, and stay*. The
+   * Blight and the Lure do not shoot, so the army branch never moved them, and
+   * a siege hull the AI bought and parked at the rally would leave this wave's
+   * gate — match length — measuring a hole in four economies. The Furnace and
+   * the Tocsin do, so they are in `army`, and `commandArmy` gives them no
+   * order: one from there, at every decision, rewrote the walk this pass gives
+   * on its own clock before it could land (#971).
    *
    * One target at a time, and it is the nearest enemy *structure* this
    * commander has classified. Classification is required where a plain gun
    * needs only a bearing (§7): a Tier-2 smudge might be a hull, and a siege
    * hull that walked 200 m onto a Corvette would die there for nothing.
-   *
-   * Two of the four carry a gun, so they are in `army`, and `commandArmy`
-   * gives them no order: one from there, at every decision, rewrote the walk
-   * this pass gives on its own clock before it could land (#971).
    */
   private commandSiege(snapshot: EchoSnapshot, army: readonly OwnUnit[], out: AiCommand[]): void {
     const kind = OWN_SIEGE[this.briefing.faction];
@@ -3761,9 +3760,13 @@ export class AiCommander implements AiPlayer {
         // not the rally point, which is where a massing army is and a pushing
         // one is not (#971) — and left alone once it is there, because a
         // Tocsin walked a few metres at every window of this clock is a gun
-        // that never stands still long enough to fire.
+        // that never stands still long enough to fire. The fleet leaves out
+        // the hulls the last observation posted — the tenders and the field's
+        // holder — which stand where their post is, not where the army is.
         if (snapshot.tick % (TICKS_PER_OBSERVATION * 25) < TICKS_PER_OBSERVATION) {
-          const fleet = army.filter((u) => u.kind !== kind);
+          const fleet = army.filter(
+            (u) => u.kind !== kind && !this.tending.has(u.id) && u.id !== this.fieldHolder
+          );
           const station = fleet.length > 0 ? centroid(fleet) : this.rallyPoint();
           if (distance(hull, station) > RANGE.ARRIVE_M) {
             out.push({ kind: 'move', unitIds: [hull.id], x: station.x, y: station.y });
@@ -4795,8 +4798,12 @@ export class AiCommander implements AiPlayer {
     // Every order below goes to the army less its siege hull, which is
     // `commandSiege`'s: it walks the hull to a wall on its own clock, and an
     // attack or an attack-move from here, given at every decision, rewrote
-    // that walk before it could land (#971). The hull still counts toward the
-    // size the army masses to, and its position toward what is in reach.
+    // that walk before it could land (#971). Its posture is not the army's
+    // either: combat measures reach with depth, so a Tocsin that dove with a
+    // push to the crossing depth, at a standoff 95% of its reach off a wall at
+    // working depth, could not fire, and a silent gun holds its fire. The hull
+    // still counts toward the size the army masses to, and its position toward
+    // what is in reach.
     const siege = OWN_SIEGE[this.briefing.faction];
     const ordered = army.filter((u) => u.kind !== siege);
     const ids = ordered.map((u) => u.id);

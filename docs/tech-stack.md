@@ -786,8 +786,8 @@ will not spend three seconds of reveal on a transmission in two minutes, goes un
 it already crosses, which §9.5 lists as the other way to starve a seeker.
 
 **And it besieges, which is the one thing it does that is not "go somewhere and shoot".**
-Wave 4's four hulls (#508) are a wall-breaker apiece, and three of them do not shoot at all,
-so the army branch would never have moved them. `commandSiege` picks the nearest enemy
+Wave 4's four hulls (#508) are a wall-breaker apiece, and the Blight and the Lure do not shoot
+at all, so the army branch never moved them. `commandSiege` picks the nearest enemy
 structure the commander has *classified* — a Tier-2 smudge might be a hull, and a siege hull
 walked onto a Corvette dies there for nothing — and then does what that navy's hull does: a
 Blight seeds from 350 m and leaves, because the strain keeps eating after the hull has gone
@@ -798,9 +798,11 @@ standoff is 95% of the weapon's range for a measured reason: hulls are held off 
 a Bastion's ring is 278 m, and a comfortable fraction of a short reach parks a siege hull
 where it can never fire. The Furnace and the Tocsin do shoot, so they are in the army, and
 the army orders them in no branch: its attack-move and its fights rewrote that walk at every
-decision, before it could land (#971). With no wall classified, a siege hull waits in the
-middle of the fleet rather than at the rally point, where a massing army is and a pushing
-one is not.
+decision, before it could land (#971). Nor does it set their depth or their silence, because
+reach is measured with depth: a Tocsin that dove with its push could not reach a wall at
+working depth from its standoff. With no wall classified, a siege hull waits in the middle
+of the fleet rather than at the rally point, where a massing army is and a pushing one is
+not.
 
 **And, for one navy, it anchors.** The Bower (#509) is the Commune's heavy and it has no
 gun, so like the Sower and the Spinner before it, it is bought by a want of its own and moved

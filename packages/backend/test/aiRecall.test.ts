@@ -448,6 +448,13 @@ describe('leaving the siege hull to the pass that besieges (#971)', () => {
     for (const phase of [orders.first, orders.then]) {
       assert.equal(ordersNaming(phase, 'attackMove', 106).length, 0, 'the push took the Tocsin');
     }
+    // Already with the fleet, so left alone: a stationary Tocsin re-walked at
+    // every window would never stand still long enough to fire.
+    assert.equal(
+      ordersNaming(orders.first, 'move', 106).length,
+      0,
+      'the Tocsin standing with its fleet was walked'
+    );
     const walks = ordersNaming(orders.then, 'move', 106);
     assert.ok(walks.length > 0, 'the Tocsin 2.5 km behind its push was never walked');
     const rally = rallyOf(brief, base);
