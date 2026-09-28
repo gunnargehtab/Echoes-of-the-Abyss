@@ -251,6 +251,28 @@ afterEach(() => {
 });
 
 describe('the shell: booting', () => {
+  it('selects the tutorial look by mission and does not retain it on the next map-only entry', async () => {
+    for (const missionId of ['prologue-sorrowgate', undefined, 'bathyarch-1-ultimatum']) {
+      const world = await mount({ props: { mapId: 'sorrowgate', missionId } });
+      try {
+        await joinMatch(world);
+        const g = globalThis as unknown as {
+          window: { __perspectiveProbe: () => { look: string } };
+        };
+        assert.equal(
+          g.window.__perspectiveProbe().look,
+          missionId === 'prologue-sorrowgate' ? 'sorrowgate' : 'standard'
+        );
+        const options = world.net.callOf('joinOrCreate')?.options;
+        assert.ok(options && typeof options === 'object' && 'missionId' in options);
+        assert.equal(options.missionId, missionId ?? '');
+      } finally {
+        await world.unmount();
+      }
+      assert.equal(world.gl.disposed, true);
+    }
+  });
+
   it('builds the two canvases in the order the compositing needs', async () => {
     const world = await mount();
     try {

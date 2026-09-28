@@ -98,6 +98,7 @@ the tutorial's templates rather than baked every frame or copied per hull.
 | Hull texture repeat | 12 m, attached to canonical model metres rather than the far-view scale |
 | Ground/stone texture repeat | 48 m |
 | Hull laminate interval | 7 m |
+| Civic paving interval | 24 m |
 | Minimum cosmetic diffuse multiplier | 0.72 on hulls; 0.62 on stone and ground |
 | Detail fade | Full through 1 m/pixel, gone by 6 m/pixel on hulls; 3 to 18 m/pixel on ground |
 | Normal-only surface height | 0.12 m on hulls; 0.3 m on props; no geometry displacement |
@@ -160,6 +161,92 @@ non-target controls, and an independent critic. The surface change is restrained
 the existing full-screen HUD grain still crosses the world. Any decision to alter that
 grain or the opening camera must amend its governing design first; neither changes in
 this checkpoint. The phone floor remains unmeasured.
+
+### Regression coverage
+
+The retained profile now has focused tests in
+`packages/frontend/test/tutorialLook.test.mjs`,
+`packages/frontend/test/tutorialLoading.test.mjs` and
+`packages/frontend/test/gameCanvas.test.ts`. They hold mission-only selection,
+deterministic texture bytes and filtering, canonical geometry and scale, all four
+palettes, untouched lamps, shader composition, the ground-before-survey order, shared
+texture ownership and standard-profile re-entry.
+
+The loader tests let Vite expand the real model manifests, then control only GLTF decode
+completion. They cover pending subscribers, a superseding terrain rebuild, destroyed
+layers, reset generations, explicit decode warnings and look-separated caches. This
+found a real race: switching palettes while a hull loaded could put the new ink in the
+old palette's cache entry. Template construction now uses the palette captured with
+the requesting key, while the raw parsed model remains shared and unmodified.
+
+The mission contract is also exercised by `missions.test.ts`, `missionRuntime.test.ts`,
+`missionHold.test.ts`, `silenceReadout.test.ts` and `terrainChange.test.ts` in the backend.
+No mission literal, timing, balance number, source model or protocol changes with this
+coverage. The HUD grain and opening camera remain as authored; making them different is
+not a prerequisite for this retained-geometry increment.
+
+### Completed live pass
+
+The [acceptance drive](screenshots/issue-979/acceptance.mjs) starts from
+[Tutorial](screenshots/issue-979/final/01-title.png), reads the
+[briefing](screenshots/issue-979/final/02-briefing.png), and presses Descend.
+It observes the real client methods without injecting snapshots or issuing orders
+through them. Selection and movement use the pointer; Stop, sonar and construction use
+their normal keys. [Cruise](screenshots/issue-979/final/07-cruise-sig-12.png) and
+[Stop](screenshots/issue-979/final/08-stopped-sig-6.png) show the flight's 6 → 12 → 6
+reading; [sonar](screenshots/issue-979/final/09-sonar-refused.png) and
+[construction](screenshots/issue-979/final/10-construction-refused.png) answer with their
+authored refusal reasons.
+
+| Station | Frame | Calls / triangles | Textures | Conn / overlay average ms |
+| --- | --- | --- | --- | --- |
+| Opening | [Home](screenshots/issue-979/final/03-opening.png) | 45 / 47,422 | 7 | 0.65 / 0.56 |
+| Escorts | [Close](screenshots/issue-979/final/04-escorts.png) | 36 / 40,682 | 7 | 0.69 / 0.59 |
+| Court | [Low pitch](screenshots/issue-979/final/05-court.png) | 46 / 47,422 | 7 | 0.72 / 0.78 |
+| Route | [Survey](screenshots/issue-979/final/06-survey.png) | 45 / 47,422 | 7 | 0.61 / 0.57 |
+| Stopped escort | [Selected](screenshots/issue-979/final/08-stopped-sig-6.png) | 36 / 40,682 | 7 | 0.55 / 0.83 |
+| Deuteranopia, reduced motion | [Close](screenshots/issue-979/final/11-accessible-escorts.png) | 36 / 40,682 | 7 | 0.59 / 0.85 |
+| Arch collapse | [Changed ground](screenshots/issue-979/final/12-arch-collapse.png) | 46 / 46,846 | 7 | 0.70 / 0.82 |
+| Campaign door | [Tutorial again](screenshots/issue-979/final/13-campaign-tutorial.png) | 45 / 47,422 | 5 | 0.81 / 0.56 |
+| Standard-profile control | [Tend](screenshots/issue-979/final/14-non-target-tend.png) | 35 / 50,916 | 2 | 1.12 / 0.64 |
+
+The [raw readings](screenshots/issue-979/final/readings.json) retain every station's
+camera, both painters' 240 frames, timings and texture count, plus the observed own
+snapshots and public ground delta. The GPU is a GTX 1070 through headed Edge
+ANGLE/D3D11, at 1920 × 1080. Tutorial averages sit at approximately 60 fps; the largest
+recorded tutorial frame interval is 26.7 ms. Tend's first-live station includes a
+112.1 ms worst frame and averages 59 fps: the record does not hide that outlier or claim
+a speedup. The phone floor remains unmeasured.
+
+The collapse is the server's unaccelerated 10:40 beat: twenty arch cells become solid,
+then the two Service Lock cells reopen with a 1,500 m floor and 1,300 m roof. The array
+disappears; the layer still holds 80 props, now costing 20,680 triangles rather than
+21,252. Exiting destroys the world canvas and removes its probe. Campaign → Sorrowgate
+recreates the tutorial profile; exiting again and entering Tend in the same page keeps
+the standard profile and renders 93 approved props. This last count includes the
+shared pending-delivery repair; it is not a claim that the formerly empty standard
+scenery remains empty.
+
+The Settings door applies Deuteranopia through its keyboard-activated control and
+reduced motion through its labelled checkbox, then restores both settings. No browser
+console errors occurred, including shader compilation. The source-model tests cover
+the other two colour-vision palettes and confirm unchanged lamp energy.
+
+One pre-existing display defect is deliberately not hidden by the screenshots:
+the selected court-refitted scout says PR1 and CRUSHING while its hull remains whole.
+The HUD derives the base rating from kind and faction rather than the mission's refit.
+It is recorded under [the unrelated-defects epic](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/746#issuecomment-5873717868);
+neither that HUD calculation nor the mission's PR-2 literal changes in this slice.
+
+To reproduce on Windows, start the usual development servers and run from the root:
+
+```powershell
+$env:VIEW_W='1920'; $env:VIEW_H='1080'
+node .claude\skills\run-game\scripts\drive.mjs --headed --channel msedge --entry tutorial --out .dev-loop\issue-979\replay --steps docs\screenshots\issue-979\acceptance.mjs
+```
+
+Allow eleven minutes for the authored clock, and do not run a build during capture.
+`readings.json` is marked `complete: true` only after the final control succeeds.
 
 ## Related
 

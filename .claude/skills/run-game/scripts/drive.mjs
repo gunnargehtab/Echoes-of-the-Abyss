@@ -68,6 +68,10 @@ function arg(name, fallback = null) {
 const OUT = resolve(arg('out', '/tmp/run-game'));
 const URL = arg('url', 'http://localhost:5173/');
 const STEPS = arg('steps');
+const ENTRY = arg('entry', 'solo');
+if (!['solo', 'tutorial'].includes(ENTRY)) {
+  throw new Error('--entry must be solo or tutorial');
+}
 
 mkdirSync(OUT, { recursive: true });
 
@@ -139,9 +143,10 @@ if (title !== null) {
   // what the screen promises a player; a class is an implementation detail
   // this harness has no business depending on, and CLAUDE.md already makes the
   // accessible name the way the shell's own tests reach a control.
-  await page.getByRole('button', { name: 'Solo game' }).click();
+  await page.getByRole('button', { name: ENTRY === 'tutorial' ? /^Tutorial/ : 'Solo game' }).click();
   await page.waitForSelector('.menu-commit', { timeout: 5000 });
-  await shot('setup');
+  if (ENTRY === 'tutorial') await page.getByRole('region', { name: 'Briefing' }).waitFor();
+  await shot(ENTRY === 'tutorial' ? 'briefing' : 'setup');
   await page.click('.menu-commit');
   // Wait for the match screen to actually mount before racing on the
   // overlay below — the race treats "no overlay" as connected, and for one
