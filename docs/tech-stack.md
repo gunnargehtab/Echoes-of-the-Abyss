@@ -796,7 +796,11 @@ sings from beside the wall rather than on it, because what arrives is the Drift 
 Lure; a Furnace and a Tocsin walk to a standoff just inside their own reach and engage. That
 standoff is 95% of the weapon's range for a measured reason: hulls are held off a footprint,
 a Bastion's ring is 278 m, and a comfortable fraction of a short reach parks a siege hull
-where it can never fire.
+where it can never fire. The Furnace and the Tocsin do shoot, so they are in the army, and
+the army orders them in no branch: its attack-move and its fights rewrote that walk at every
+decision, before it could land (#971). With no wall classified, a siege hull waits in the
+middle of the fleet rather than at the rally point, where a massing army is and a pushing
+one is not.
 
 **And, for one navy, it anchors.** The Bower (#509) is the Commune's heavy and it has no
 gun, so like the Sower and the Spinner before it, it is bought by a want of its own and moved
@@ -932,9 +936,9 @@ away from the objective, rather than the army while none of it stands there. A p
 stands there with nothing to fight, because within 900 m of what it heard the commander
 orders the fight instead. It does when what it walked at has gone quiet. Over the
 four-faction baseline's thirty seeds that was 18 of 16,365 push observations, and of 68
-observations that found a hull left behind, 57 found it still chasing. The siege hull goes
-on with the army here, as it always has: the pass that walks it to a wall sends it to the
-rally point when it has no wall, and a pushing army is not there (#950).
+observations that found a hull left behind, 57 found it still chasing. The siege hull is
+not among them, here or in a fight: the pass that walks it to a wall walks it to the fleet
+when it has none (#971).
 
 **And it crosses a base off the list.** With nothing remembered, the fallback push target
 used to be one fixed enemy spawn, chosen when the commander was built and never reconsidered
