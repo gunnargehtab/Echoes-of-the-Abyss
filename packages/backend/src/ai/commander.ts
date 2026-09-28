@@ -1510,7 +1510,7 @@ export class AiCommander implements AiPlayer {
     this.commandScout(snapshot, scout, commands);
     this.commandOrdnance(snapshot, commands);
     this.commandCountermeasures(snapshot, commands);
-    this.commandSiege(snapshot, commands);
+    this.commandSiege(snapshot, army, commands);
     this.commandLayers(snapshot, commands);
     this.commandSeeders(snapshot, commands);
     this.commandAnchor(snapshot, commands);
@@ -3736,8 +3736,12 @@ export class AiCommander implements AiPlayer {
    * commander has classified. Classification is required where a plain gun
    * needs only a bearing (§7): a Tier-2 smudge might be a hull, and a siege
    * hull that walked 200 m onto a Corvette would die there for nothing.
+   *
+   * Two of the four carry a gun, so they are in `army`, and `commandArmy`
+   * gives them no order: one from there, at every decision, rewrote the walk
+   * this pass gives on its own clock before it could land (#971).
    */
-  private commandSiege(snapshot: EchoSnapshot, out: AiCommand[]): void {
+  private commandSiege(snapshot: EchoSnapshot, army: readonly OwnUnit[], out: AiCommand[]): void {
     const kind = OWN_SIEGE[this.briefing.faction];
     for (const hull of snapshot.units) {
       if (hull.kind !== kind) continue;
@@ -3753,9 +3757,17 @@ export class AiCommander implements AiPlayer {
       }
       if (wall === null) {
         // Nothing classified to besiege. Wait with the fleet rather than
-        // wandering: a siege hull alone in open water is a gift.
+        // wandering: a siege hull alone in open water is a gift. The fleet,
+        // not the rally point, which is where a massing army is and a pushing
+        // one is not (#971) — and left alone once it is there, because a
+        // Tocsin walked a few metres at every window of this clock is a gun
+        // that never stands still long enough to fire.
         if (snapshot.tick % (TICKS_PER_OBSERVATION * 25) < TICKS_PER_OBSERVATION) {
-          out.push({ kind: 'move', unitIds: [hull.id], ...this.rallyPoint() });
+          const fleet = army.filter((u) => u.kind !== kind);
+          const station = fleet.length > 0 ? centroid(fleet) : this.rallyPoint();
+          if (distance(hull, station) > RANGE.ARRIVE_M) {
+            out.push({ kind: 'move', unitIds: [hull.id], x: station.x, y: station.y });
+          }
         }
         continue;
       }
@@ -4780,7 +4792,14 @@ export class AiCommander implements AiPlayer {
     out: AiCommand[]
   ): void {
     if (army.length === 0) return;
-    const ids = army.map((u) => u.id);
+    // Every order below goes to the army less its siege hull, which is
+    // `commandSiege`'s: it walks the hull to a wall on its own clock, and an
+    // attack or an attack-move from here, given at every decision, rewrote
+    // that walk before it could land (#971). The hull still counts toward the
+    // size the army masses to, and its position toward what is in reach.
+    const siege = OWN_SIEGE[this.briefing.faction];
+    const ordered = army.filter((u) => u.kind !== siege);
+    const ids = ordered.map((u) => u.id);
 
     // Home first. A push that leaves the Bastion undefended trades the match
     // for a raid, and losing the Bastion is losing — but not everything near
@@ -4788,8 +4807,8 @@ export class AiCommander implements AiPlayer {
     const athome = this.bestThreat(raiders, true);
     if (athome !== null) {
       this.setSilent(ids, false, out);
-      this.setCrossed(army, false, out);
-      out.push({ kind: 'attack', unitIds: ids, contactId: athome.id });
+      this.setCrossed(ordered, false, out);
+      if (ids.length > 0) out.push({ kind: 'attack', unitIds: ids, contactId: athome.id });
       return;
     }
 
@@ -4811,8 +4830,8 @@ export class AiCommander implements AiPlayer {
       // in exactly the measure it is hidden from it, and a fight is the one
       // moment it cannot afford to stop hearing.
       this.setSilent(ids, false, out);
-      this.setCrossed(army, false, out);
-      out.push({ kind: 'attack', unitIds: ids, contactId: inReach.id });
+      this.setCrossed(ordered, false, out);
+      if (ids.length > 0) out.push({ kind: 'attack', unitIds: ids, contactId: inReach.id });
       return;
     }
 
@@ -4825,7 +4844,7 @@ export class AiCommander implements AiPlayer {
       // Massing happens in the light. A force still gathering has not made the
       // bet yet, and a hull that dove while waiting would spend the climb
       // ascending when the order to go finally came.
-      this.setCrossed(army, false, out);
+      this.setCrossed(ordered, false, out);
       // Every hull that is not there yet, rather than the army while none of
       // it is (#946). The gate used to be `nearest(army, rally)`, so once the
       // first hull arrived the rest were left on whatever order they last had
@@ -4834,13 +4853,7 @@ export class AiCommander implements AiPlayer {
       // runs, so the reach those branches checked when they gave it was never
       // checked again: the commander went back to waiting and its chasers
       // carried on.
-      //
-      // The siege hull is `commandSiege`'s, which walks it to a wall on its
-      // own clock; recalling it here would undo that walk every observation.
-      const siege = OWN_SIEGE[this.briefing.faction];
-      const away = army
-        .filter((u) => u.kind !== siege && distance(u, rally) > RANGE.ARRIVE_M)
-        .map((u) => u.id);
+      const away = ordered.filter((u) => distance(u, rally) > RANGE.ARRIVE_M).map((u) => u.id);
       if (away.length > 0) out.push({ kind: 'move', unitIds: away, x: rally.x, y: rally.y });
       return;
     }
@@ -4880,7 +4893,7 @@ export class AiCommander implements AiPlayer {
     const known = this.remembered !== null && this.remembered.classified ? this.remembered : null;
     const target = known ?? objective;
     this.setSilent(ids, this.doctrine.approachesSilently && this.tuning.usesSilentRunning, out);
-    this.setCrossed(army, this.doctrine.crossesTheLayer, out);
+    this.setCrossed(ordered, this.doctrine.crossesTheLayer, out);
     // An attack-move, not a move (#435): the army fights what it meets on the
     // way and then carries on, and it walks *into* the base rather than
     // parking a gun's reach short of it — a move order stopped re-issuing at
@@ -4896,12 +4909,7 @@ export class AiCommander implements AiPlayer {
     // quiet, since `remembered` outlives it by MEMORY_S — on the four-faction
     // baseline's seeds, 18 of 16,365 push observations, every one at a
     // contact last heard 1 to 9 s before.
-    //
-    // The siege hull goes too, as it always has on this branch. The massing
-    // branch leaves it to `commandSiege`, whose answer with no wall is the
-    // rally point: where a massing army is, and a pushing one is not. Whether
-    // the army should leave it alone everywhere is #971.
-    const away = army.filter((u) => distance(u, target) > RANGE.ARRIVE_M).map((u) => u.id);
+    const away = ordered.filter((u) => distance(u, target) > RANGE.ARRIVE_M).map((u) => u.id);
     if (away.length > 0) {
       out.push({ kind: 'attackMove', unitIds: away, x: target.x, y: target.y });
     }
