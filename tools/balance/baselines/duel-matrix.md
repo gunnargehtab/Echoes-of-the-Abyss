@@ -41,6 +41,22 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --du
 > Commune (81%), and Directorate Biomass stays **breached**. 108 matches are decided, not 107,
 > and the median match runs 576 s, not 539. Win rates: the Commune 60% from 81%, the
 > Consortium 30% from 21%, the Knights 28% from 19%, the Directorate 78% from 77%.
+>
+> **Refreshed on 28 Sept 2026 because two mechanics changed, not to reach a target** (#973).
+> Same command, seeds and cap, run from `fcff184`; the before figures are the previous file,
+> which the same command at `bf138d4` reproduces. No weight, price or TUNABLE moved. The
+> changes: the Dredge holds the crystal field (#961), and the army orders its siege hull in no
+> branch, and a siege hull with no wall classified waits in the fleet's middle rather than at
+> the rally point (#971). Both are in `docs/tech-stack.md`, "The skirmish AI". #950's push,
+> merged between them, moves no match.
+>
+> What it moved, recorded and left: 16 matches of 120 differ, 2 at #961 and 15 at #971, with
+> one match moving at both. Two change their result, both at #971 and both the Consortium
+> against the Knights: seed 4006 goes from a Consortium win to a draw with the Consortium in
+> slot 0, and seed 4005 from a draw to a Consortium win with the Knights in slot 0. So
+> 108 matches are still decided, the median match still runs 576 s, and no verdict flips or
+> navy's win rate moves; the two chairs read 50% each, not 51% and 49%. Knights-starve reads
+> 75%, not 77%, and the Consortium is tracked 551 s a match, not 555.
 
 120 matches on `ventfront-divide`, seeds 4000–4009. 12 ended without a winner inside the time budget, on a median 0 of the 1 elimination a win needs.
 
@@ -52,9 +68,9 @@ _12 seatings over 6 rosters, pooled. Each navy played more than one spawn *and* 
 | --- | --- | --- | --- | --- |
 | One navy is simply stronger | economy.md §9 | Best win rate against 2x parity | Directorate 78% vs parity 25%, bar 50% (n=58 decided, 12 seatings pooled) | **breached** |
 | Quiet economies simply win | economy.md §9 | Commune win rate, and nodules per minute per point of mean SIG | win 60% vs best rival 78%, premium 6.0 vs 5.4 (n=108 decided) | **held** |
-| Loud economies are unplayable | economy.md §9 | Consortium seconds tracked, against Consortium win rate | 555 s tracked per match, win 30% (n=108 decided) | **held** |
+| Loud economies are unplayable | economy.md §9 | Consortium seconds tracked, against Consortium win rate | 551 s tracked per match, win 30% (n=108 decided) | **held** |
 | Directorate Biomass snowballs | economy.md §9 · bestiary.md §8 | Biomass per minute against final Drift Health | 10.3/min, Drift Health median 81 (n=120) | **breached** |
-| Knights starve out of every long game | economy.md §9 | Hadron income against the field, in longer-than-median matches | 151/min vs field 197 — 77% (n=33 long) | **held** |
+| Knights starve out of every long game | economy.md §9 | Hadron income against the field, in longer-than-median matches | 150/min vs field 199 — 75% (n=33 long) | **held** |
 | Fauna decide matches | bestiary.md §8 | First blood against first classified enemy — losses before anyone met anyone | enemy found 24 s, first blood 61 s (n=120) | **held** |
 
 ## The match
@@ -84,17 +100,17 @@ _12 seatings over 6 rosters, pooled. Each navy played more than one spawn *and* 
 
 | Faction | Matches | Decided | Win rate | Nodules/min | Crystal/min | Biomass/min | Mean SIG | Tracked, s | Found enemy, s | Throttled down | Losses | Below the Shelf | Under the layer |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Consortium | 60 | 53 | 30% | 194 | 2.2 | 3.5 | 62 | 555 | 33 | 0% | 11.9 | 100% | 5% |
-| Commune | 60 | 55 | 60% | 240 | 0.8 | 8.6 | 40 | 411 | 23 | 0% | 19.3 | 56% | 2% |
-| Directorate | 60 | 58 | 78% | 256 | 1.5 | 10.3 | 47 | 497 | 27 | 0% | 14.0 | 100% | 5% |
-| Knights | 60 | 50 | 28% | 148 | 8.1 | 0.9 | 59 | 511 | 32 | 0% | 7.8 | 100% | 7% |
+| Consortium | 60 | 53 | 30% | 195 | 2.3 | 3.5 | 62 | 551 | 33 | 0% | 11.9 | 100% | 5% |
+| Commune | 60 | 55 | 60% | 241 | 0.8 | 8.6 | 40 | 409 | 23 | 0% | 19.2 | 56% | 2% |
+| Directorate | 60 | 58 | 78% | 257 | 1.5 | 10.3 | 47 | 494 | 27 | 0% | 13.8 | 100% | 5% |
+| Knights | 60 | 50 | 28% | 148 | 8.0 | 0.9 | 58 | 519 | 32 | 0% | 7.9 | 100% | 7% |
 
 ## Per chair
 
 | Slot | Matches | Decided | Win rate | Navies that sat here |
 | --- | --- | --- | --- | --- |
-| 0 | 120 | 108 | 51% | Consortium, Commune, Directorate, Knights |
-| 1 | 120 | 108 | 49% | Consortium, Commune, Directorate, Knights |
+| 0 | 120 | 108 | 50% | Consortium, Commune, Directorate, Knights |
+| 1 | 120 | 108 | 50% | Consortium, Commune, Directorate, Knights |
 
 _The spawn, not the navy. `--matchup` binds a faction to a spawn by its position in the list, so this column and the one above it are the two marginals of one table — and on `ventfront-divide` this is the bigger of them._
 
@@ -102,9 +118,9 @@ _The spawn, not the navy. `--matchup` binds a faction to a spawn by its position
 
 | Hull | Consortium | Commune | Directorate | Knights |
 | --- | --- | --- | --- | --- |
-| Light Scout | 0.0 / 1.0 | 6.3 / 5.5 | 8.5 / 6.7 | 0.0 / 1.0 |
+| Light Scout | 0.0 / 1.0 | 6.3 / 5.5 | 8.6 / 6.6 | 0.0 / 1.0 |
 | Corvette | 0.0 / 0.0 | 0.0 / 0.0 | 2.0 / 0.8 | 0.0 / 0.0 |
-| Harvester | 7.4 / 6.3 | 12.0 / 10.3 | 6.9 / 4.2 | 6.8 / 4.3 |
+| Harvester | 7.3 / 6.3 | 12.0 / 10.3 | 6.9 / 4.1 | 6.9 / 4.4 |
 | Chorister | 0.0 / 0.0 | 1.6 / 1.3 | 0.0 / 1.6 | 0.0 / 0.0 |
 | Clarion | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.4 / 2.0 |
 | Bulwark | 0.1 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
@@ -112,7 +128,7 @@ _The spawn, not the navy. `--matchup` binds a faction to a spawn by its position
 | Sower | 0.0 / 0.0 | 0.1 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Dredge | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Reciter | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.7 / 0.3 |
-| Verger | 0.0 / 0.0 | 0.0 / 0.0 | 0.3 / 0.1 | 0.0 / 0.0 |
+| Verger | 0.0 / 0.0 | 0.0 / 0.0 | 0.4 / 0.1 | 0.0 / 0.0 |
 | Beacon | 1.8 / 1.6 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Glider | 0.0 / 0.0 | 1.3 / 0.7 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Acolyte | 0.0 / 0.0 | 0.0 / 0.0 | 1.1 / 0.6 | 0.0 / 0.0 |
@@ -123,7 +139,7 @@ _The spawn, not the navy. `--matchup` binds a faction to a spawn by its position
 | Lance | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Furnace | 0.3 / 0.1 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Lure | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
-| Caisson | 1.0 / 2.6 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
+| Caisson | 1.0 / 2.7 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Reed | 0.0 / 0.0 | 0.5 / 1.5 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Bower | 0.0 / 0.0 | 0.1 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Derrick | 0.3 / 0.2 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
@@ -149,13 +165,13 @@ _The opening Bastion and Foundry are not counted: they are a gift, not a decisio
 | Reason | Consortium | Commune | Directorate | Knights |
 | --- | --- | --- | --- | --- |
 | Hull wanted | Broadside | Weaver | Thurible | Lance |
-| Observations reaching the want | 69769 | 64976 | 63118 | 74838 |
-| Blocked: not escorted | 30055 (43%) | 37540 (58%) | 35634 (56%) | 68246 (91%) |
-| Blocked: no free yard | 17467 (25%) | 4096 (6%) | 17604 (28%) | 322 (0%) |
+| Observations reaching the want | 69264 | 64728 | 62866 | 75415 |
+| Blocked: not escorted | 30035 (43%) | 37303 (58%) | 35374 (56%) | 68988 (91%) |
+| Blocked: no free yard | 17467 (25%) | 4096 (6%) | 17583 (28%) | 322 (0%) |
 | Blocked: no berth | 0 (0%) | 0 (0%) | 0 (0%) | 0 (0%) |
-| Blocked: cannot afford | 3959 (6%) | 12441 (19%) | 7058 (11%) | 5721 (8%) |
-| Already has one | 18266 (26%) | 10876 (17%) | 2811 (4%) | 546 (1%) |
-| **Bought** | 22 (0%) | 23 (0%) | 11 (0%) | 3 (0%) |
+| Blocked: cannot afford | 3959 (6%) | 12429 (19%) | 7526 (12%) | 5556 (7%) |
+| Already has one | 17781 (26%) | 10877 (17%) | 2373 (4%) | 546 (1%) |
+| **Bought** | 22 (0%) | 23 (0%) | 10 (0%) | 3 (0%) |
 
 _The six reasons partition the want: every observation that reaches it increments exactly one, so the six sum to the row above them. A navy whose **bought** cell is 0 never put its own declared ordnance hull in the water, and the largest blocked row says which gate to argue with (#698)._
 
@@ -164,12 +180,12 @@ _The six reasons partition the want: every observation that reaches it increment
 | Reason | Consortium | Commune | Directorate | Knights |
 | --- | --- | --- | --- | --- |
 | Hull wanted | Gantry | Rootstock | Succentor | Offertory |
-| Observations reaching the want | 69726 | 64911 | 63103 | 74805 |
-| Blocked: not escorted | 41496 (60%) | 42385 (65%) | 35953 (57%) | 68216 (91%) |
-| Blocked: no free yard | 18129 (26%) | 17088 (26%) | 17640 (28%) | 383 (1%) |
+| Observations reaching the want | 69221 | 64663 | 62852 | 75382 |
+| Blocked: not escorted | 41445 (60%) | 42148 (65%) | 35693 (57%) | 68958 (91%) |
+| Blocked: no free yard | 18129 (26%) | 17088 (26%) | 17619 (28%) | 383 (1%) |
 | Blocked: no berth | 0 (0%) | 0 (0%) | 265 (0%) | 0 (0%) |
-| Yielded to the Sower or the Bower | 0 (0%) | 5438 (8%) | 0 (0%) | 0 (0%) |
-| Blocked: cannot afford | 10101 (14%) | 0 (0%) | 9245 (15%) | 6206 (8%) |
+| Yielded to the Sower or the Bower | 0 (0%) | 5427 (8%) | 0 (0%) | 0 (0%) |
+| Blocked: cannot afford | 9647 (14%) | 0 (0%) | 9275 (15%) | 6041 (8%) |
 | Already has one | 0 (0%) | 0 (0%) | 0 (0%) | 0 (0%) |
 | **Bought** | 0 (0%) | 0 (0%) | 0 (0%) | 0 (0%) |
 | _Shut before the purse, with the price in it_ | 119 (0%) | 189 (0%) | 370 (1%) | 1 (0%) |
@@ -193,11 +209,11 @@ _The opening stockpile is 600 nodules and a Slipway costs 600, so a peak at the 
 
 | Measure | Consortium | Commune | Directorate | Knights |
 | --- | --- | --- | --- | --- |
-| Deliveries a match | 31.5 | 48.0 | 50.3 | 42.6 |
-| Nodules delivered a match | 2186 | 2388 | 2501 | 2121 |
-| Nodules banked a match | 2176 | 2378 | 2491 | 1809 |
-| Mean hold delivered | 69.5 | 49.7 | 49.7 | 49.8 |
-| Nodules lost in transit a match | 142 | 147 | 95 | 63 |
+| Deliveries a match | 31.4 | 48.0 | 50.3 | 42.6 |
+| Nodules delivered a match | 2183 | 2389 | 2502 | 2120 |
+| Nodules banked a match | 2172 | 2380 | 2493 | 1814 |
+| Mean hold delivered | 69.5 | 49.8 | 49.7 | 49.8 |
+| Nodules lost in transit a match | 145 | 143 | 92 | 65 |
 | Lost as a share of what was cut | 6% | 6% | 4% | 3% |
 | Harvester-time laden | 28% | 35% | 40% | 29% |
 | Harvester-time stalled | 0% | 0% | 0% | 0% |
