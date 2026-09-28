@@ -874,7 +874,7 @@ const BAR_BUTTON_HEIGHT = 40;
  * command card is four columns of a known width, a selection card holds six
  * stats. Production takes whatever is left, because a queue is the one block
  * that reads better wider. Which blocks go when the width runs out, and in
- * what order, is `consoleBlocks`'s.
+ * what order, is decided in `consoleBlocks`.
  */
 const BLOCK_W = {
   scope: 170,
@@ -3065,7 +3065,9 @@ export class EchoRenderer {
     x += commands.w + BLOCK_GAP;
 
     // At least `productionMin` wide by `wantsProduction`, and wider whenever
-    // the room is.
+    // the room is. Once production has gone, what it held stays bare glass on
+    // purpose: the other four blocks are as wide as their content (`BLOCK_W`),
+    // and giving the room to one would only pad it.
     const production = wantsProduction ? { x, w: right - x } : undefined;
     return { y, h, scope, commands, selection, fleet, production };
   }
