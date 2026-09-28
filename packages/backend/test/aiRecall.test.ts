@@ -16,12 +16,15 @@
  * lives in the sim's side of the order: what has to be shown is that the
  * recall reaches `Match` and ends a pursuit the commander cannot hear.
  *
- * The committed push had the same gap at its objective (#950), and its three
+ * The committed push had the same gap at its objective (#950), and its two
  * arms sit in the second suite, on synthesised snapshots alone: a real match
  * reaches that case on 18 of 16,365 push observations over thirty seeds, too
- * rarely to place. They pin the hull that is away being ordered on, the push
- * standing on its objective being left alone, and the siege hull going with
- * the push rather than to `commandSiege`'s rally point.
+ * rarely to place. They pin the hull that is away being ordered on, and the
+ * push standing on its objective being left alone.
+ *
+ * The third suite is the siege hull, which the army orders in none of these
+ * branches (#971): the push leaves it to `commandSiege`, which walks it to the
+ * fleet with no wall, and a fight in reach leaves it walking to its wall.
  *
  * The rally point is read off the commander's own first order rather than
  * recomputed here. Arrival is the one distance restated, below, because
@@ -189,8 +192,8 @@ describe('recalling the massing army (#946)', () => {
       faction: Faction.Bathyarch,
       tick: 0,
     };
-    // `walkToWall` re-issues on a fifteen-second clock, so this watches for
-    // two of its windows rather than two decisions.
+    // `walkToWall` re-issues on a five-second clock, so this watches seven of
+    // its windows rather than two decisions.
     const moves = movesFor(
       brief,
       base,
@@ -285,42 +288,42 @@ function ordersAcross(
 const idsAttackMoved = (orders: AiCommand[]) =>
   new Set(orders.flatMap((o) => (o.kind === 'attackMove' ? o.unitIds : [])));
 
-describe('re-ordering the committed push (#950)', () => {
-  /**
-   * Five Corvettes, which is the Knights' whole massing number, so the first
-   * decision commits. They start at home and hear one classified enemy hull
-   * across the map, which the push walks at; then it goes quiet. `remembered`
-   * keeps a classified contact for MEMORY_S after the last time it was heard,
-   * so the push still walks at the point — and with nothing heard inside
-   * PUSH_ENGAGE_M, it is the push branch, not the in-reach one, that answers.
-   */
-  function push(): {
-    brief: AiBriefing;
-    base: EchoSnapshot;
-    objective: { x: number; y: number };
-    atHome: OwnUnit[];
-    quarry: Contact;
-  } {
-    const { brief, base } = rig();
-    const home = brief.spawns[brief.slot]!;
-    const enemy = brief.spawns.find((_, slot) => slot !== brief.slot)!;
-    const objective = { x: (home.x + enemy.x) / 2, y: (home.y + enemy.y) / 2 };
-    assert.ok(
-      Math.hypot(objective.x - home.x, objective.y - home.y) > 2000,
-      'the objective is too near home to be a push — the rig is wrong'
-    );
-    const atHome = [101, 102, 103, 104, 105].map((id, i) => hull(id, home.x + i * 40, home.y));
-    const quarry: Contact = {
-      id: 7,
-      tier: ResolutionTier.Classification,
-      x: objective.x,
-      y: objective.y,
-      faction: Faction.Bathyarch,
-      tick: 0,
-    };
-    return { brief, base, objective, atHome, quarry };
-  }
+/**
+ * Five Corvettes, which is the Knights' whole massing number, so the first
+ * decision commits. They start at home and hear one classified enemy hull
+ * across the map, which the push walks at; then it goes quiet. `remembered`
+ * keeps a classified contact for MEMORY_S after the last time it was heard,
+ * so the push still walks at the point — and with nothing heard inside
+ * PUSH_ENGAGE_M, it is the push branch, not the in-reach one, that answers.
+ */
+function push(): {
+  brief: AiBriefing;
+  base: EchoSnapshot;
+  objective: { x: number; y: number };
+  atHome: OwnUnit[];
+  quarry: Contact;
+} {
+  const { brief, base } = rig();
+  const home = brief.spawns[brief.slot]!;
+  const enemy = brief.spawns.find((_, slot) => slot !== brief.slot)!;
+  const objective = { x: (home.x + enemy.x) / 2, y: (home.y + enemy.y) / 2 };
+  assert.ok(
+    Math.hypot(objective.x - home.x, objective.y - home.y) > 2000,
+    'the objective is too near home to be a push — the rig is wrong'
+  );
+  const atHome = [101, 102, 103, 104, 105].map((id, i) => hull(id, home.x + i * 40, home.y));
+  const quarry: Contact = {
+    id: 7,
+    tier: ResolutionTier.Classification,
+    x: objective.x,
+    y: objective.y,
+    faction: Faction.Bathyarch,
+    tick: 0,
+  };
+  return { brief, base, objective, atHome, quarry };
+}
 
+describe('re-ordering the committed push (#950)', () => {
   it('orders on the hull that is away once the front is at the objective', () => {
     // The old gate's blind spot, in the push: four hulls standing on the
     // objective and one 2.5 km off. `nearest` read the four and ordered
@@ -386,19 +389,45 @@ describe('re-ordering the committed push (#950)', () => {
       'a push standing on its objective was ordered again'
     );
   });
+});
 
-  it('keeps the siege hull with the push, as the far branch always has', () => {
-    // Not the massing branch's exemption. With no wall classified,
-    // `commandSiege` walks the siege hull to the rally point, which is where
-    // a massing army is and a pushing one is not; exempted here, a Tocsin
-    // would turn for home the moment its army arrived.
+describe('leaving the siege hull to the pass that besieges (#971)', () => {
+  /** Every order a fresh commander gives over `observations` Echo ticks. */
+  function ordersFor(
+    brief: AiBriefing,
+    base: EchoSnapshot,
+    units: OwnUnit[],
+    contacts: Contact[],
+    observations: number
+  ): AiCommand[] {
+    const commander = new AiCommander(brief);
+    const orders: AiCommand[] = [];
+    let tick = base.tick;
+    for (let i = 0; i < observations; i++) {
+      tick += ECHO_EVERY;
+      const heard = contacts.map((c) => ({ ...c, tick }));
+      orders.push(...commander.observe({ ...base, tick, units, contacts: heard, marks: [] }));
+    }
+    return orders;
+  }
+
+  const ordersNaming = (orders: AiCommand[], kind: AiCommand['kind'], id: number) =>
+    orders.filter((o) => o.kind === kind && 'unitIds' in o && o.unitIds.includes(id));
+
+  it('walks it to the fleet in a push, where the attack-move used to take it', () => {
+    // The push's attack-move took the Tocsin at every decision, so the walk
+    // `commandSiege` gives on its own clock never landed. With no wall heard,
+    // that walk now goes to the fleet's middle: where a pushing army is, which
+    // the rally point it used to go to is not.
     const { brief, base, objective, atHome, quarry } = push();
+    const home = brief.spawns[brief.slot]!;
     const at = (id: number, dx: number, kind = UnitKind.Corvette) =>
       hull(id, objective.x + dx, objective.y, kind);
+    // Seven of `commandSiege`'s five-second windows a phase.
     const orders = ordersAcross(
       brief,
       base,
-      { units: atHome, contacts: [quarry] },
+      { units: [...atHome, hull(106, home.x, home.y + 40, UnitKind.Tocsin)], contacts: [quarry] },
       {
         units: [
           at(101, 0),
@@ -408,8 +437,83 @@ describe('re-ordering the committed push (#950)', () => {
           at(106, -2500, UnitKind.Tocsin),
         ],
         contacts: [],
-      }
+      },
+      SIM.ECHO_HZ * 35
     );
-    assert.ok(idsAttackMoved(orders.then).has(106), 'the siege hull was left behind by its push');
+
+    const went = idsAttackMoved(orders.first);
+    for (const id of [101, 102, 103, 104, 105]) {
+      assert.ok(went.has(id), 'the first decision was not a push — the rig is wrong');
+    }
+    for (const phase of [orders.first, orders.then]) {
+      assert.equal(ordersNaming(phase, 'attackMove', 106).length, 0, 'the push took the Tocsin');
+    }
+    // Already with the fleet, so left alone: a stationary Tocsin re-walked at
+    // every window would never stand still long enough to fire.
+    assert.equal(
+      ordersNaming(orders.first, 'move', 106).length,
+      0,
+      'the Tocsin standing with its fleet was walked'
+    );
+    const walks = ordersNaming(orders.then, 'move', 106);
+    assert.ok(walks.length > 0, 'the Tocsin 2.5 km behind its push was never walked');
+    const rally = rallyOf(brief, base);
+    for (const walk of walks) {
+      if (walk.kind !== 'move') continue;
+      assert.ok(
+        Math.hypot(walk.x - (objective.x + 60), walk.y - objective.y) < 1,
+        `walked to (${Math.round(walk.x)}, ${Math.round(walk.y)}), not the fleet's middle`
+      );
+      assert.ok(
+        Math.hypot(walk.x - rally.x, walk.y - rally.y) > ARRIVED_M,
+        'walked back to the rally point, away from its push'
+      );
+    }
+  });
+
+  it('keeps it walking to its wall while the army fights in reach', () => {
+    // The fight branch ordered the whole army onto one contact, siege hull
+    // and all, and an ordered target chases. The wall is a classified Bastion
+    // 2.5 km past the Tocsin; the fight is a classified hull beside the line.
+    const { brief, base } = rig();
+    const rally = rallyOf(brief, base);
+    const wall: Contact = {
+      id: 7,
+      tier: ResolutionTier.Classification,
+      x: rally.x + 5000,
+      y: rally.y,
+      structure: StructureKind.Bastion,
+      faction: Faction.Bathyarch,
+      tick: 0,
+    };
+    const raider: Contact = {
+      id: 8,
+      tier: ResolutionTier.Classification,
+      x: rally.x,
+      y: rally.y + 400,
+      faction: Faction.Bathyarch,
+      tick: 0,
+    };
+    const orders = ordersFor(
+      brief,
+      base,
+      [hull(101, rally.x, rally.y), hull(103, rally.x + 2500, rally.y, UnitKind.Tocsin)],
+      [wall, raider],
+      SIM.ECHO_HZ * 35
+    );
+
+    const fights = orders.filter((o) => o.kind === 'attack' && o.contactId === raider.id);
+    assert.ok(fights.length > 0, 'the army never fought the hull in reach — the rig is wrong');
+    assert.equal(ordersNaming(orders, 'attack', 103).length, 0, 'the fight took the Tocsin');
+    const walks = ordersNaming(orders, 'move', 103);
+    assert.ok(walks.length > 0, 'the Tocsin was never walked at its wall');
+    const standoff = statsFor(UnitKind.Tocsin).attackRangeM * 0.95;
+    for (const walk of walks) {
+      if (walk.kind !== 'move') continue;
+      assert.ok(
+        Math.abs(Math.hypot(walk.x - wall.x, walk.y - wall.y) - standoff) < 1,
+        'walked somewhere other than its standoff ring'
+      );
+    }
   });
 });
