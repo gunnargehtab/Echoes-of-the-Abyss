@@ -14,9 +14,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { DEPTH, LID, THERMOCLINE } from '@echoes/shared';
+import { ShaderMaterial, Vector3 } from 'three';
 import {
   fogDensityFor,
   installWaterFog,
+  MarineSnow,
   WATER_RAMP_GLSL,
   WATER_REACH_DOLLIES,
   WATER_REACH_MIN_M,
@@ -26,6 +28,34 @@ import {
   waterTransmittance,
 } from '../src/game/water.ts';
 import { ACTIVE_PALETTE } from '../src/game/palette.ts';
+
+describe('marine snow profile isolation', () => {
+  it('keeps the original size and fade separate from the opt-in study', () => {
+    const original = new MarineSnow(32, false);
+    const study = new MarineSnow(32, true);
+    try {
+      const eye = new Vector3(0, 0, 0);
+      for (const snow of [original, study]) snow.update(0, eye, 0, 0, 4000, 1, 1000, 1);
+      const originalMaterial = original.points.material;
+      const studyMaterial = study.points.material;
+      assert.ok(originalMaterial instanceof ShaderMaterial);
+      assert.ok(studyMaterial instanceof ShaderMaterial);
+      assert.equal(originalMaterial.uniforms.uPixelScale.value, 2600);
+      assert.equal(studyMaterial.uniforms.uPixelScale.value, 4500);
+      assert.equal(originalMaterial.uniforms.uSizePx.value.y, 2.6);
+      assert.equal(studyMaterial.uniforms.uSizePx.value.y, 4);
+      assert.equal(originalMaterial.uniforms.uStrength.value, 1);
+      assert.equal(studyMaterial.uniforms.uStrength.value, 0.7);
+      eye.y = 1_000_000;
+      for (const snow of [original, study]) snow.update(1, eye, 0, 0, 4000, 1, 1000, 1);
+      assert.equal(originalMaterial.uniforms.uStrength.value, 0);
+      assert.equal(studyMaterial.uniforms.uStrength.value, 0);
+    } finally {
+      original.dispose();
+      study.dispose();
+    }
+  });
+});
 
 describe('the water ramp', () => {
   it('darkens all the way down, and never brightens on the way', () => {

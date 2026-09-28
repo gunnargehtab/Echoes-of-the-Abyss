@@ -498,7 +498,10 @@ export class MarineSnow {
   private sunkM = 0;
   private lastTickAt: number | null = null;
 
-  constructor(count: number = MARINE_SNOW_COUNT) {
+  constructor(
+    count: number = MARINE_SNOW_COUNT,
+    private readonly dreamStudy = DREAM_LOOP
+  ) {
     // Positions are the unit cube; the shader scales them to whatever the box
     // is this frame, so a dolly never rebuilds the buffer.
     const positions = new Float32Array(count * 3);
@@ -642,15 +645,15 @@ export class MarineSnow {
     // The eye's height above the surface, in metres of column, is how far
     // out of the water the camera has climbed — see `SNOW_FADE_FROM_M`.
     const aboveM = Math.max(0, eye.y) / DEPTH_VISUAL_M_PER_M;
-    const near = DREAM_LOOP
+    const near = this.dreamStudy
       ? dreamSnowNear(aboveM)
       : 1 - smoothstepAt(SNOW_FADE_FROM_M, SNOW_FADE_TO_M, aboveM);
     this.uniforms.uStrength.value = near * Math.min(1, Math.max(0, strength));
     this.uniforms.uReachM.value = reachM;
-    this.uniforms.uPixelScale.value = (DREAM_LOOP ? 4.5 : SNOW_MOTE_M) * projectionScalePx;
+    this.uniforms.uPixelScale.value = (this.dreamStudy ? 4.5 : SNOW_MOTE_M) * projectionScalePx;
     // `gl_PointSize` is device pixels, so the clamp is too — a mote must not
     // shrink to a sub-pixel flicker on a 3× phone screen.
-    this.uniforms.uSizePx.value.set(pixelRatio, (DREAM_LOOP ? 4 : SNOW_MAX_PX) * pixelRatio);
+    this.uniforms.uSizePx.value.set(pixelRatio, (this.dreamStudy ? 4 : SNOW_MAX_PX) * pixelRatio);
     this.points.visible = strength > 0 && near > 0.002;
   }
 

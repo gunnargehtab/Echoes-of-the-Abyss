@@ -101,12 +101,18 @@ const npx = 'npx';
  * where each vendored copy came from; this is the list the gate acts on.
  */
 const REPO_AUTHORED_SKILLS = [
+  'art-direction',
   'balance-run',
   'dev-loop',
+  'game-design',
   'hull-intake',
+  'map-design',
+  'material-design',
   'run-game',
   'steward',
+  'unit-design',
   'work-issue',
+  'world-design',
 ];
 
 /**

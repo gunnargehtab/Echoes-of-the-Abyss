@@ -47,10 +47,11 @@ import {
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Faction, StructureKind, structureStatsFor, UnitKind } from '@echoes/shared';
-import { ACTIVE_PALETTE, FACTION_PALETTE } from './palette.ts';
+import { ACTIVE_PALETTE, type Palette } from './palette.ts';
 import { HULL_LENGTH_M } from './silhouettes.ts';
 import { glowFactor } from './glow.ts';
 import { DREAM_LOOP, installDreamLamp, installDreamSteel } from './dreamLoop.ts';
+import { installHullSurface, type WorldLook } from './tutorialLook.ts';
 
 /**
  * TUNABLE — the linear diffuse luminance a model's *brightest* cladding
@@ -315,8 +316,8 @@ function luminance(color: Color): number {
  * scaled ink straight into `emissive` would not — the Directorate's `#C2465E`
  * normalised to unit luminance clips its red channel past 3.
  */
-function recolor(root: Group, faction: Faction): void {
-  const ink = FACTION_PALETTE[faction];
+function recolor(root: Group, faction: Faction, look: WorldLook, palette: Palette): void {
+  const ink = palette.faction[faction];
   const primary = new Color(ink.primary);
   const glow = new Color(ink.glow);
   const primaryLum = luminance(primary);
@@ -347,7 +348,7 @@ function recolor(root: Group, faction: Faction): void {
       material.emissive.copy(glow);
       material.emissiveIntensity *= emissiveLum / glowLum;
     }
-    if (DREAM_LOOP) installDreamSteel(material);
+    if (DREAM_LOOP && look === 'standard') installDreamSteel(material);
   }
 }
 
@@ -464,7 +465,12 @@ function normalise(scene: Group, key: RosterModelKey): Template {
  * the test that holds every committed roster model to intake's scale; the
  * parsed scene itself is left untouched.
  */
-export function buildTemplate(raw: Group, key: RosterModelKey): Template {
+export function buildTemplate(
+  raw: Group,
+  key: RosterModelKey,
+  look: WorldLook = 'standard',
+  palette: Palette = ACTIVE_PALETTE
+): Template {
   // Clone before recolouring: the parse cache stays hue-neutral so a
   // palette switch can recolour fresh rather than compounding tints.
   const copy = raw.clone(true);
@@ -487,17 +493,27 @@ export function buildTemplate(raw: Group, key: RosterModelKey): Template {
         : cloneOf(child.material);
     }
   });
-  recolor(copy, key.faction);
-  return normalise(copy, key);
+  recolor(copy, key.faction, look, palette);
+  const template = normalise(copy, key);
+  if (look === 'sorrowgate') {
+    for (const material of materialClones.values()) {
+      installHullSurface(material, key.faction, template.baseScale);
+    }
+  }
+  return template;
 }
 
 function loadTemplate(
   templateKey: string,
   file: string,
   load: () => Promise<string>,
-  key: RosterModelKey
+  key: RosterModelKey,
+  look: WorldLook
 ): void {
   templates.set(templateKey, null);
+  // The user can switch palettes before decoding finishes. Keep the ink
+  // paired with the cache key that requested it, not the completion time.
+  const palette = ACTIVE_PALETTE;
   let scene = parsed.get(file);
   if (scene === undefined) {
     scene = load()
@@ -507,7 +523,7 @@ function loadTemplate(
   }
   scene
     .then((raw) => {
-      templates.set(templateKey, buildTemplate(raw, key));
+      templates.set(templateKey, buildTemplate(raw, key, look, palette));
     })
     .catch(() => {
       // A model that fails to decode is a missing model: the entry stays
@@ -523,14 +539,17 @@ function loadTemplate(
  * null is never a hole on screen. Instances share geometry with their template; lamp materials are
  * cloned per instance so each hull's live SIG dims its own lights.
  */
-export function rosterModelInstance(key: RosterModelKey): RosterModelInstance | null {
+export function rosterModelInstance(
+  key: RosterModelKey,
+  look: WorldLook = 'standard'
+): RosterModelInstance | null {
   const slug = slugFor(key);
   const load = MODEL_BY_FILE.get(`${slug}.glb`);
   if (load === undefined) return null;
-  const templateKey = `${slug}:${ACTIVE_PALETTE.name}`;
+  const templateKey = `${slug}:${ACTIVE_PALETTE.name}:${look}`;
   const template = templates.get(templateKey);
   if (template === undefined) {
-    loadTemplate(templateKey, `${slug}.glb`, load, key);
+    loadTemplate(templateKey, `${slug}.glb`, load, key, look);
     return null;
   }
   if (template === null) return null;
@@ -547,7 +566,7 @@ export function rosterModelInstance(key: RosterModelKey): RosterModelInstance | 
         material.emissive.getHex() !== 0
       ) {
         const own = material.clone();
-        if (DREAM_LOOP) installDreamLamp(own);
+        if (DREAM_LOOP && look === 'standard') installDreamLamp(own);
         emissives.push({ material: own, restIntensity: own.emissiveIntensity });
         return own;
       }

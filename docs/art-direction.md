@@ -12,6 +12,12 @@ The art direction should communicate three things instantly:
 
 ## World Aesthetic
 
+The first staged visual-reboot slice is specified in
+[visual-reboot.md](visual-reboot.md): the Sorrowgate tutorial develops runtime surfaces
+and the approved environment kit before commissioning replacement shapes. Its
+mission-scoped profile keeps the palette, SIG and contact laws below; it does not change
+the look of every mission that shares its map.
+
 ### Color Palette
 
 - Deep blues, blacks — abyssal trenches

@@ -101,6 +101,11 @@ instant a ping fires, then decaying. If that happens, the whole loop works.
 
 ### Driving something else
 
+`--entry tutorial` takes the title screen's **Tutorial → briefing → Descend** door
+instead of Solo game. Pair it with a tutorial `--steps` module: Sorrowgate is an
+unarmed listening/escort mission, so the default ping smoke is not its acceptance
+test. A `?mission=` deep link skips the briefing and does not prove that door.
+
 Pass `--steps` with an ES module that default-exports an async function. It
 receives the connected `page` (a Playwright page, already in a live match) and
 a `shot(name)` helper that numbers screenshots in call order:

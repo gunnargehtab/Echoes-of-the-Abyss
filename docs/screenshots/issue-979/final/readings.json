@@ -1,0 +1,603 @@
+{
+  "complete": true,
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "observations": {
+    "selected": 1,
+    "idle": 6,
+    "cruise": {
+      "id": 1,
+      "kind": 0,
+      "x": 2417.50732421875,
+      "y": 2209.66845703125,
+      "depth": 1450,
+      "hp": 180,
+      "maxHp": 180,
+      "heading": 0.5046029686927795,
+      "sig": 12,
+      "silentRunning": false,
+      "engineOff": false,
+      "pressureBonus": 0,
+      "unhealableDamage": 0
+    },
+    "stopped": {
+      "id": 1,
+      "kind": 0,
+      "x": 2457.774169921875,
+      "y": 2231.907470703125,
+      "depth": 1450,
+      "hp": 180,
+      "maxHp": 180,
+      "heading": 0.504602313041687,
+      "sig": 6,
+      "silentRunning": false,
+      "engineOff": false,
+      "pressureBonus": 0,
+      "unhealableDamage": 0
+    },
+    "sonar-refused": "disabled — the array was pulled with the hardpoints",
+    "construction-refused": "the court's water is not yours to build in",
+    "flightChip": "flight SIG 006 / 020",
+    "reducedMotion": true,
+    "ground": [
+      {
+        "index": 160,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 1
+      },
+      {
+        "index": 161,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 1
+      },
+      {
+        "index": 162,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 1
+      },
+      {
+        "index": 163,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 1
+      },
+      {
+        "index": 164,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 1
+      },
+      {
+        "index": 165,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 1
+      },
+      {
+        "index": 166,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 5
+      },
+      {
+        "index": 167,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 5
+      },
+      {
+        "index": 168,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 5
+      },
+      {
+        "index": 169,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 5
+      },
+      {
+        "index": 170,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 5
+      },
+      {
+        "index": 171,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 5
+      },
+      {
+        "index": 172,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 5
+      },
+      {
+        "index": 173,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 5
+      },
+      {
+        "index": 174,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 5
+      },
+      {
+        "index": 175,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 5
+      },
+      {
+        "index": 176,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 5
+      },
+      {
+        "index": 177,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 5
+      },
+      {
+        "index": 178,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 5
+      },
+      {
+        "index": 179,
+        "floorM": 0,
+        "ceilingM": 1,
+        "biome": 5
+      },
+      {
+        "index": 167,
+        "floorM": 1500,
+        "ceilingM": 1300,
+        "biome": 5
+      },
+      {
+        "index": 168,
+        "floorM": 1500,
+        "ceilingM": 1300,
+        "biome": 5
+      }
+    ],
+    "teardown": true,
+    "nonTarget": "standard"
+  },
+  "readings": [
+    {
+      "name": "opening",
+      "file": "03-opening.png",
+      "active": true,
+      "look": "sorrowgate",
+      "pitchDeg": 55,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2550,
+        "zM": 2490,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 2550,
+        "zM": 3981,
+        "depthM": -8192
+      },
+      "distance": 2600,
+      "waterReachM": 8320,
+      "waterDensity": 1,
+      "hullScale": 1,
+      "drawCalls": 45,
+      "triangles": 47422,
+      "textures": 7,
+      "station": "opening",
+      "stationMs": 3995.9,
+      "stationFrames": 240,
+      "avgFrames": 240,
+      "fps": 60.1,
+      "avgFrameMs": 16.67,
+      "worstFrameMs": 19.4,
+      "avgConnMs": 0.63,
+      "worstConnMs": 1.1,
+      "avgOverlayMs": 0.71,
+      "worstOverlayMs": 1.1,
+      "overlayFrames": 240,
+      "units": 6,
+      "structures": 1,
+      "ordnance": 0,
+      "props": 80,
+      "propTris": 21252,
+      "modelBacked": 6,
+      "ownCentre": {
+        "x": 2550,
+        "z": 2490
+      }
+    },
+    {
+      "name": "escorts",
+      "file": "04-escorts.png",
+      "active": true,
+      "look": "sorrowgate",
+      "pitchDeg": 35,
+      "yawDeg": 25,
+      "focus": {
+        "xM": 2550,
+        "zM": 2200,
+        "depthM": 1450
+      },
+      "eye": {
+        "xM": 2695,
+        "zM": 2512,
+        "depthM": 355
+      },
+      "distance": 420,
+      "waterReachM": 1344,
+      "waterDensity": 1,
+      "hullScale": 1,
+      "drawCalls": 36,
+      "triangles": 40682,
+      "textures": 7,
+      "station": "escorts",
+      "stationMs": 4010,
+      "stationFrames": 240,
+      "avgFrames": 240,
+      "fps": 59.9,
+      "avgFrameMs": 16.74,
+      "worstFrameMs": 35.9,
+      "avgConnMs": 0.76,
+      "worstConnMs": 32.3,
+      "avgOverlayMs": 0.65,
+      "worstOverlayMs": 1.2,
+      "overlayFrames": 240,
+      "units": 6,
+      "structures": 1,
+      "ordnance": 0,
+      "props": 80,
+      "propTris": 21252,
+      "modelBacked": 6,
+      "ownCentre": {
+        "x": 2550,
+        "z": 2490
+      }
+    },
+    {
+      "name": "court",
+      "file": "05-court.png",
+      "active": true,
+      "look": "sorrowgate",
+      "pitchDeg": 20,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2550,
+        "zM": 2750,
+        "depthM": 1495
+      },
+      "eye": {
+        "xM": 2550,
+        "zM": 3361,
+        "depthM": 484
+      },
+      "distance": 650,
+      "waterReachM": 2080,
+      "waterDensity": 1,
+      "hullScale": 1,
+      "drawCalls": 46,
+      "triangles": 47422,
+      "textures": 7,
+      "station": "court",
+      "stationMs": 3993.3,
+      "stationFrames": 240,
+      "avgFrames": 240,
+      "fps": 60.1,
+      "avgFrameMs": 16.66,
+      "worstFrameMs": 22.7,
+      "avgConnMs": 0.73,
+      "worstConnMs": 1.1,
+      "avgOverlayMs": 0.66,
+      "worstOverlayMs": 1.2,
+      "overlayFrames": 240,
+      "units": 6,
+      "structures": 1,
+      "ordnance": 0,
+      "props": 80,
+      "propTris": 21252,
+      "modelBacked": 6,
+      "ownCentre": {
+        "x": 2550,
+        "z": 2490
+      }
+    },
+    {
+      "name": "survey",
+      "file": "06-survey.png",
+      "active": true,
+      "look": "sorrowgate",
+      "pitchDeg": 55,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2500,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 2500,
+        "zM": 5728,
+        "depthM": -22596
+      },
+      "distance": 6500,
+      "waterReachM": 20800,
+      "waterDensity": 1,
+      "hullScale": 2.28,
+      "drawCalls": 45,
+      "triangles": 47422,
+      "textures": 7,
+      "station": "survey",
+      "stationMs": 3997.9,
+      "stationFrames": 240,
+      "avgFrames": 240,
+      "fps": 60,
+      "avgFrameMs": 16.67,
+      "worstFrameMs": 22.3,
+      "avgConnMs": 0.67,
+      "worstConnMs": 0.9,
+      "avgOverlayMs": 0.67,
+      "worstOverlayMs": 4.8,
+      "overlayFrames": 240,
+      "units": 6,
+      "structures": 1,
+      "ordnance": 0,
+      "props": 80,
+      "propTris": 21252,
+      "modelBacked": 6,
+      "ownCentre": {
+        "x": 2550,
+        "z": 2490
+      }
+    },
+    {
+      "name": "stopped-sig-6",
+      "file": "08-stopped-sig-6.png",
+      "active": true,
+      "look": "sorrowgate",
+      "pitchDeg": 55,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2400,
+        "zM": 2200,
+        "depthM": 1450
+      },
+      "eye": {
+        "xM": 2400,
+        "zM": 2831,
+        "depthM": -2646
+      },
+      "distance": 1100,
+      "waterReachM": 3520,
+      "waterDensity": 1,
+      "hullScale": 1,
+      "drawCalls": 36,
+      "triangles": 40682,
+      "textures": 7,
+      "station": "stopped-sig-6",
+      "stationMs": 3999.2,
+      "stationFrames": 240,
+      "avgFrames": 240,
+      "fps": 60,
+      "avgFrameMs": 16.67,
+      "worstFrameMs": 17,
+      "avgConnMs": 0.51,
+      "worstConnMs": 0.8,
+      "avgOverlayMs": 0.75,
+      "worstOverlayMs": 1.2,
+      "overlayFrames": 240,
+      "units": 6,
+      "structures": 1,
+      "ordnance": 0,
+      "props": 80,
+      "propTris": 21252,
+      "modelBacked": 6,
+      "ownCentre": {
+        "x": 2558.2534528459823,
+        "z": 2494.5582101004466
+      }
+    },
+    {
+      "name": "accessible-escorts",
+      "file": "11-accessible-escorts.png",
+      "active": true,
+      "look": "sorrowgate",
+      "pitchDeg": 35,
+      "yawDeg": 25,
+      "focus": {
+        "xM": 2550,
+        "zM": 2200,
+        "depthM": 1450
+      },
+      "eye": {
+        "xM": 2695,
+        "zM": 2512,
+        "depthM": 355
+      },
+      "distance": 420,
+      "waterReachM": 1344,
+      "waterDensity": 1,
+      "hullScale": 1,
+      "drawCalls": 36,
+      "triangles": 40682,
+      "textures": 7,
+      "station": "accessible-escorts",
+      "stationMs": 3998.1,
+      "stationFrames": 240,
+      "avgFrames": 240,
+      "fps": 60,
+      "avgFrameMs": 16.66,
+      "worstFrameMs": 16.9,
+      "avgConnMs": 0.62,
+      "worstConnMs": 2.9,
+      "avgOverlayMs": 0.84,
+      "worstOverlayMs": 1.5,
+      "overlayFrames": 240,
+      "units": 6,
+      "structures": 1,
+      "ordnance": 0,
+      "props": 80,
+      "propTris": 21252,
+      "modelBacked": 6,
+      "ownCentre": {
+        "x": 2558.2534528459823,
+        "z": 2494.5582101004466
+      }
+    },
+    {
+      "name": "arch-collapse",
+      "file": "12-arch-collapse.png",
+      "active": true,
+      "look": "sorrowgate",
+      "pitchDeg": 55,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2500,
+        "zM": 1593,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 2500,
+        "zM": 5322,
+        "depthM": -23289
+      },
+      "distance": 6500,
+      "waterReachM": 20800,
+      "waterDensity": 1,
+      "hullScale": 2.28,
+      "drawCalls": 46,
+      "triangles": 46846,
+      "textures": 7,
+      "station": "arch-collapse",
+      "stationMs": 4210.1,
+      "stationFrames": 240,
+      "avgFrames": 240,
+      "fps": 57,
+      "avgFrameMs": 17.56,
+      "worstFrameMs": 19.6,
+      "avgConnMs": 0.51,
+      "worstConnMs": 0.9,
+      "avgOverlayMs": 0.7,
+      "worstOverlayMs": 1.6,
+      "overlayFrames": 240,
+      "units": 6,
+      "structures": 0,
+      "ordnance": 0,
+      "props": 80,
+      "propTris": 20680,
+      "modelBacked": 6,
+      "ownCentre": {
+        "x": 2559.6290283203125,
+        "z": 2451.984578450521
+      }
+    },
+    {
+      "name": "campaign-tutorial",
+      "file": "13-campaign-tutorial.png",
+      "active": true,
+      "look": "sorrowgate",
+      "pitchDeg": 55,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2550,
+        "zM": 2490,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 2550,
+        "zM": 3981,
+        "depthM": -8192
+      },
+      "distance": 2600,
+      "waterReachM": 8320,
+      "waterDensity": 1,
+      "hullScale": 1,
+      "drawCalls": 45,
+      "triangles": 47422,
+      "textures": 5,
+      "station": "campaign-tutorial",
+      "stationMs": 4194.6,
+      "stationFrames": 240,
+      "avgFrames": 240,
+      "fps": 57.2,
+      "avgFrameMs": 17.48,
+      "worstFrameMs": 19.3,
+      "avgConnMs": 0.64,
+      "worstConnMs": 1,
+      "avgOverlayMs": 0.51,
+      "worstOverlayMs": 0.9,
+      "overlayFrames": 240,
+      "units": 6,
+      "structures": 1,
+      "ordnance": 0,
+      "props": 80,
+      "propTris": 21252,
+      "modelBacked": 6,
+      "ownCentre": {
+        "x": 2550,
+        "z": 2490
+      }
+    },
+    {
+      "name": "non-target-tend",
+      "file": "14-non-target-tend.png",
+      "active": true,
+      "look": "standard",
+      "pitchDeg": 55,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2625,
+        "zM": 400,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 2625,
+        "zM": 1891,
+        "depthM": -9421
+      },
+      "distance": 2600,
+      "waterReachM": 8320,
+      "waterDensity": 1,
+      "hullScale": 1,
+      "drawCalls": 35,
+      "triangles": 50916,
+      "textures": 2,
+      "station": "non-target-tend",
+      "stationMs": 4193.4,
+      "stationFrames": 240,
+      "avgFrames": 240,
+      "fps": 57.2,
+      "avgFrameMs": 17.47,
+      "worstFrameMs": 19.1,
+      "avgConnMs": 0.51,
+      "worstConnMs": 0.9,
+      "avgOverlayMs": 0.58,
+      "worstOverlayMs": 1.2,
+      "overlayFrames": 240,
+      "units": 5,
+      "structures": 0,
+      "ordnance": 0,
+      "props": 93,
+      "propTris": 31034,
+      "modelBacked": 5,
+      "ownCentre": {
+        "x": 2625,
+        "z": 400
+      }
+    }
+  ]
+}

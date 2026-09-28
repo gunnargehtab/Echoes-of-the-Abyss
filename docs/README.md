@@ -76,6 +76,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | Doc | What it covers |
 | --- | --- |
 | **[art-direction.md](art-direction.md)** | Palettes, shape language, silhouette law, Echo Layer UI requirements |
+| **[visual-reboot.md](visual-reboot.md)** | The staged visual reboot: Sorrowgate tutorial target, role sheets, runtime surfaces and rollout boundary |
 | **[three-layer-ocean.md](three-layer-ocean.md)** | The presentation revision: WC3-lineage perspective camera, the visible seabed, band navigation, and the Lid — proposed in §7 and adopted |
 | **[free-camera.md](free-camera.md)** | The camera revision: free yaw and pitch, a focus that leaves the seabed, and the retirement of the no-rotation rule |
 | **[map-visuals.md](map-visuals.md)** | The map revision: survey ink for silhouettes at every zoom, one loudness ladder for every layer, a biome's visual contract, stipple life |

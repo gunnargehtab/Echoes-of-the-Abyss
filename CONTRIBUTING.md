@@ -226,9 +226,9 @@ repository wrote and the vendored copies, and fails `npm run docs:claude` on a s
 neither list. [CLAUDE.md](CLAUDE.md#contributing) says the copies are read-only, and
 `.claude/VENDORED-SKILLS.md` says why and records each one's upstream and licence.
 
-This file used to name four of them, and there are six. A list here is a second copy of
-something the gate already holds, and it drifts the same quiet way the hand-copied gate
-list above drifted before `npm run gates` became the one command that runs them all.
+This file once kept its own incomplete list. A list here is a second copy of something
+the gate already holds, and it drifts the same quiet way the hand-copied gate list above
+drifted before `npm run gates` became the one command that runs them all.
 
 When you find yourself re-explaining a workflow a second time — a bake step, a test
 harness, a review checklist — turn it into a skill next to those rather than a wiki page

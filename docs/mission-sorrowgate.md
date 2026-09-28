@@ -6,6 +6,10 @@
 **Setting:** Arbiter Mosk Halloran's court, a collapsed transit dome, 214 PC
 ([timeline.md](timeline.md); [characters.md](characters.md), Neutrals).
 
+The tutorial is the first [staged visual-reboot slice](visual-reboot.md). That brief owns
+its runtime surface treatment, not its mechanics: the forces, beats, map and teaching
+below remain unchanged.
+
 ---
 
 ## 1. What Sorrowgate Is

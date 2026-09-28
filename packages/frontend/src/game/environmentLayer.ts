@@ -31,6 +31,7 @@ import { Color, Group, InstancedMesh, Matrix4, Quaternion, Vector3 } from 'three
 import type { TerrainPayload } from '../net/GameClient.ts';
 import { placeProps, propSpec, type PropPlacement } from './environment.ts';
 import { envTemplate, type SwayUniforms } from './environmentModels.ts';
+import type { WorldLook } from './tutorialLook.ts';
 
 const TMP_MATRIX = new Matrix4();
 const TMP_QUAT = new Quaternion();
@@ -40,6 +41,8 @@ const Y_AXIS = new Vector3(0, 1, 0);
 const TMP_COLOR = new Color();
 
 export class EnvironmentLayer {
+  constructor(private readonly look: WorldLook = 'standard') {}
+
   /** Added to the scene once by the view; rebuilt in place. */
   readonly group = new Group();
 
@@ -91,11 +94,16 @@ export class EnvironmentLayer {
     for (const [slug, list] of bySlug) {
       const spec = propSpec(slug);
       if (spec === undefined) continue;
-      const template = envTemplate(slug, spec.footprintM, spec.swayM, () => {
-        // Loaded after this pass: rebuild once, on the same terrain, unless a
-        // newer rebuild has already superseded these placements.
-        if (generation === this.generation) this.rebuild(terrain, groundY, placements);
-      });
+      const template = envTemplate(
+        slug,
+        spec.footprintM,
+        spec.swayM,
+        () => {
+          // A load belongs to the latest rebuild that subscribed to it.
+          if (generation === this.generation) this.rebuild(terrain, groundY, placements);
+        },
+        this.look
+      );
       if (template === null) continue;
 
       for (const part of template.parts) {
