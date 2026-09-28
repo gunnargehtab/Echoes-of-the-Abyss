@@ -456,8 +456,8 @@ Report material cost on the named GPU: zero extra draws does not mean zero GPU t
 
 Bloom is deferred until a quality setting has an off path and this gate has an
 explicit pass, resolution and render-target-memory allocation. It must fit within
-the existing 150-call/250,000-triangle frame limits, not silently borrow the historical
-#286 headroom as a current measurement. That reading measures CPU submit and overlay
+the existing 150-call/250,000-triangle frame limits, not silently borrow historical
+headroom from #286 as a current measurement. That reading measures CPU submit and overlay
 time, not isolated GPU execution time.
 
 For #974 and subsequent render-stack upgrades, desktop is the required hardware

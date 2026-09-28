@@ -94,8 +94,9 @@ For the tutorial use `?mission=prologue-sorrowgate` and a separate output direct
 For the original pictures run the same capture script against `1df288a`.
 
 Frontend type-check passed. The focused model-lighting, renderer-smoke, loudness
-and GameCanvas suite passed **102 tests**. A full `npm run gates` was launched;
-its result must be checked before this checkpoint is presented as gate-clean.
+and GameCanvas suite passed **102 tests**. The full `npm run gates` passed 11 of
+12 gates; documentation lint caught an issue reference starting a line as a heading.
+That wording was corrected in the checkpoint follow-up.
 No critic has reviewed this increment. Resume with the missing evidence, file the
 scoped follow-ups, run all gates, then submit the authored target and exact diff to
 a fresh `loop-critic` before opening the first-increment PR.
