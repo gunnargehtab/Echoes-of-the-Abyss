@@ -281,6 +281,13 @@ that development flag present; standard experimental play retains the study. Pen
 loads also retain the caller's selected prop batch. The pressure-warning defect remains
 tracked separately, and the phone budget remains unmeasured.
 
+The third and final critic round returned **pass, no blocking or minor findings** at
+`33952384c756b2807f24eb8a6938514893fa4d61`. It reviewed the exact merged diff, fresh
+interactive and flagged-control evidence, all twelve green gates, and a separate
+independent rerun of the loader and water regressions: 17 passed, 0 failed. GitHub's
+build, both test shards and docs checks also passed at that commit. This closes the
+retained-geometry slice; no production code changed after the final verdict.
+
 ## Related
 
 - [Art direction](art-direction.md)
