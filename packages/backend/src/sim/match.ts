@@ -2436,9 +2436,10 @@ export class Match {
     // placed, rather than falling through to the next: falling through would
     // restock a different animal in every band, which is a change to what the
     // map holds rather than to what this row means. So a species admitted in
-    // some region but with no ground of its own there still waits; asking
-    // that is a terrain walk, which `searchFauna` pays once per species at
-    // seed time and this tick does not.
+    // some region but with no ground of its own there, or whose open water is
+    // all held bare, still waits (#993); asking about ground is a terrain
+    // walk, which `searchFauna` pays once per species at seed time and this
+    // tick does not.
     let wanted: FaunaSpecies | null = null;
     let worst = 0;
     for (const { species } of DRIFT_ROSTER) {
@@ -2479,11 +2480,12 @@ export class Match {
    * map Strained everywhere, and turn that −40% into −100% for every species
    * behind it.
    *
-   * Not the crop, which `admitted` also reads: it thins a region rather than
-   * closing one. Wherever the band breeds anything but the Rasp, a stripped
-   * bed regrows every tick, and one a cutter or a reactor holds bare reads zero
-   * or a rounding error above it. A closure keyed on that zero would be decided
-   * by arithmetic, not by the water.
+   * Not the crop, which `admitted` also reads: bare rock feeds nothing
+   * (docs/systems-flora.md §4), but its zero is not a stable one. Wherever the
+   * band breeds anything but the Rasp, a stripped bed regrows every tick, and
+   * one a cutter or a reactor holds bare reads zero or a rounding error above
+   * it. A closure keyed on that zero would be decided by arithmetic, not by the
+   * water.
    */
   private breedsAnywhere(species: FaunaSpecies): boolean {
     const drift = this.world.drift;
