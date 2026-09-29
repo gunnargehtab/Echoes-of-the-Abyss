@@ -275,15 +275,10 @@ describe('the Drift puts back what it loses', () => {
     // §6's Collapsing row, "Scavengers only", read as the spawn rule it is
     // (#655) rather than as a description of what happened to survive.
     //
-    // The ground is a **carried** grid rather than a worn one, and that is the
-    // honest way to reach this row rather than a convenience. Wearing a map
-    // down inside one match takes it through Failing, where §6 kills off the
-    // ambient species — and `repopulate` restocks the single most-deficient
-    // species and gives the interval up if it cannot place it, so six dead
-    // Lampfry outrank one dead Rasp for the rest of the match and the row is
-    // never reached. A campaign second visit has no such backlog: the carry is
-    // the ground the match opens on (docs/campaign.md §2 rule 5), and the
-    // complement is counted from what was actually seated on it.
+    // The ground is a **carried** grid: a campaign second visit, where the
+    // carry is the ground the match opens on (docs/campaign.md §2 rule 5) and
+    // the complement is counted from what was actually seated on it. The next
+    // case reaches the same row by wearing a living map down.
     const m = collapsedMatch();
     const before = countFaunaOf(m.world, FaunaSpecies.Rasp);
     assert.ok(before > 0, 'collapsed ground seats the scavenger and this test needs one');
@@ -297,6 +292,35 @@ describe('the Drift puts back what it loses', () => {
       before,
       'carrion is what is left when a region dies, and something arrives to eat it'
     );
+  });
+
+  it('breeds the scavenger on a map worn past Failing everywhere', () => {
+    // #990. Wearing a living map down takes it through Failing, where §6 kills
+    // the Lampfry, and no region will breed a shoal again. Six dead shoals
+    // outrank one dead Rasp, and until `repopulate` passed over a species no
+    // region admits it waited on them for the rest of the match, so this row
+    // was reachable only from a carried grid. No eruptions, as above.
+    const map: MapDefinition = { ...VENTFRONT_DIVIDE, id: 'test-worn', hazards: [] };
+    const m = match(map, true);
+    const rasp = countFaunaOf(m.world, FaunaSpecies.Rasp);
+    assert.ok(rasp > 0, 'the map must seed the scavenger this test culls');
+    assert.ok(
+      countFaunaOf(m.world, FaunaSpecies.Lampfry) > 1,
+      'and more shoals than scavengers, or no deficit outranks the Rasp'
+    );
+    wearMapTo(m, DRIFT.HEALTH_COLLAPSING - 13);
+    cull(m, FaunaSpecies.Rasp);
+    advance(m, 1);
+    assert.equal(countFaunaOf(m.world, FaunaSpecies.Rasp), rasp - 1, 'it really died');
+    assert.equal(countFaunaOf(m.world, FaunaSpecies.Lampfry), 0, 'and Failing took the shoals');
+
+    advance(m, DRIFT.RESPAWN_INTERVAL_S * 8);
+    assert.equal(
+      countFaunaOf(m.world, FaunaSpecies.Rasp),
+      rasp,
+      'collapsing water breeds carrion-eaters however it got there'
+    );
+    assert.equal(countFaunaOf(m.world, FaunaSpecies.Lampfry), 0, 'and nothing else');
   });
 
   it('breeds nothing but the scavenger there', () => {
@@ -349,6 +373,25 @@ describe('the Drift puts back what it loses', () => {
       0,
       'a map worked into Strained loses its colossus for the match'
     );
+  });
+
+  it('restocks the roster behind a colossus that strained water will not take back', () => {
+    // #990, the megafauna clause. On water Strained everywhere a dead colossus
+    // is a deficit no region will fill, and it sits ahead of the Rasp in the
+    // roster, so the queue used to wait on it: §6's "spawn rate −40%" became
+    // −100% for every species behind it. No eruptions, so nothing else dies.
+    const map: MapDefinition = { ...VENTFRONT_DIVIDE, id: 'test-strained', hazards: [] };
+    const m = match(map, true);
+    assert.equal(countFaunaOf(m.world, FaunaSpecies.Sounder), 1, 'the map must seat its colossus');
+    const rasp = countFaunaOf(m.world, FaunaSpecies.Rasp);
+    cull(m, FaunaSpecies.Sounder);
+    cull(m, FaunaSpecies.Rasp);
+    // Clear of the boundary: quiet water heals, and a region back at 75 opens
+    // to the colossus again.
+    wearMapTo(m, DRIFT.HEALTH_STRAINED - 10);
+    advance(m, DRIFT.RESPAWN_INTERVAL_S * 4);
+    assert.equal(countFaunaOf(m.world, FaunaSpecies.Sounder), 0, 'the colossus stays gone');
+    assert.equal(countFaunaOf(m.world, FaunaSpecies.Rasp), rasp, 'and the swarm behind it returns');
   });
 
   it('breeds nothing at all in a match with no Drift', () => {

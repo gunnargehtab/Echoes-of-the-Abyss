@@ -2425,23 +2425,26 @@ export class Match {
     // the roster's own order — a deterministic choice, because a replay that
     // restocked a different animal diverges from the tick it did.
     //
-    // One candidate, and the interval is spent whether or not it can be
-    // placed. Measured while #655 opened Collapsing water to the scavengers:
-    // on a map worn past Failing *everywhere*, §6's own Failing row kills the
-    // six Lampfry and five Tetherjelly, whose deficits then outrank a dead
-    // Rasp's for the rest of the match and can never be filled, so the
-    // Collapsing row is never reached. It is reachable whenever some of the
-    // map is still living — the ambient deficits are filled there and the
-    // queue moves on — and a returning campaign mission seats on the carried
-    // grid directly, which is how `floraRegrowth.test.ts` holds the row. Left
-    // as it is rather than made to fall through: falling through would restock
-    // a different animal in every band, which is a change to what the map
-    // holds rather than to what this row means.
+    // Among the species some region would breed, because one no region admits
+    // can never be filled (#990). On a map worn past Failing *everywhere*,
+    // §6's own Failing row kills the six Lampfry and five Tetherjelly, and
+    // their deficits used to outrank a dead Rasp's for the rest of the match,
+    // so the Collapsing row was never reached. Nothing changes while every
+    // species is admitted somewhere.
+    //
+    // Still one candidate, and the interval is spent whether or not it can be
+    // placed, rather than falling through to the next: falling through would
+    // restock a different animal in every band, which is a change to what the
+    // map holds rather than to what this row means. So a species admitted in
+    // some region but with no ground of its own there, or whose open water is
+    // all held bare, still waits (#993); asking about ground is a terrain
+    // walk, which `searchFauna` pays once per species at seed time and this
+    // tick does not.
     let wanted: FaunaSpecies | null = null;
     let worst = 0;
     for (const { species } of DRIFT_ROSTER) {
       const deficit = (this.complement.get(species) ?? 0) - countFaunaOf(this.world, species);
-      if (deficit > worst) {
+      if (deficit > worst && this.breedsAnywhere(species)) {
         worst = deficit;
         wanted = species;
       }
@@ -2465,6 +2468,33 @@ export class Match {
     // A cluster masks by writing PF, so the grid has to learn about one the
     // moment it exists — the same rebuild `Match.reap` runs when one dies.
     if (species === FaunaSpecies.Tetherjelly) rebuildPropagation(this.world);
+  }
+
+  /**
+   * Whether any region's water is open to this species — §6's band and its
+   * megafauna clause, asked of each region's middle. Both are per region, so
+   * the middle answers for the whole of it.
+   *
+   * The Strained row closes water to the colossus and thins it for the rest by
+   * 40%. Asking the band alone would let a dead colossus hold the queue on a
+   * map Strained everywhere, and turn that −40% into −100% for every species
+   * behind it.
+   *
+   * Not the crop, which `admitted` also reads: bare rock feeds nothing
+   * (docs/systems-flora.md §4), but its zero is not a stable one. Wherever the
+   * band breeds anything but the Rasp, a stripped bed regrows every tick, and
+   * one a cutter or a reactor holds bare reads zero or a rounding error above
+   * it. A closure keyed on that zero would be decided by arithmetic, not by the
+   * water.
+   */
+  private breedsAnywhere(species: FaunaSpecies): boolean {
+    const drift = this.world.drift;
+    for (let region = 0; region < drift.regionCount; region++) {
+      const { x, y } = drift.regionCentre(region);
+      if (MEGAFAUNA.has(species) && !drift.admitsMegafauna(x, y)) continue;
+      if (drift.spawnRate(x, y, species) > 0) return true;
+    }
+    return false;
   }
 
   /**
