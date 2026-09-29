@@ -418,36 +418,6 @@ centred on the one hull it cannot hurt. The Directorate's Thurible is the hull b
 — PR-3, at home under the layer, reaching up into water it does not own
 ([units.md](units.md)).
 
-### A weapon that is not a weapon
-
-Only one of the four siege hulls is a gun, two never fire on the wall at all, and each is its
-navy's argument about how a wall actually falls.
-
-- **A spore, and silence.** The Commune's Blight seeds a structure with a Deepbloom strain
-  that eats **1% of its maximum hull a second for 60 s** — 60% of the wall, and never the
-  last of it — and the structure's own SIG never moves while it does. A spore does not take
-  a base; it makes one takeable, and something still has to arrive. That silence is the design claim rather than an oversight: every
-  other way of taking a wall down announces itself — a cutter at 75, a bell at 88, a gun
-  at all — and this one is a Refinery whose hull is falling with nothing to hear. The
-  counter-play is *looking*, which is the one sense this game otherwise never asks for.
-- **A song, and the Drift.** The Directorate's Lure sings for **60 s at SIG 55** and
-  doubles what fauna hear from anything within **500 m of the point it sang at**
-  ([bestiary.md](bestiary.md) §2's modifier table, with a source and a clock). The
-  Listening does not knock the wall down; it tells the Drift where the wall is. A siege
-  that works this way costs nothing but time and is worth nothing against a base nothing
-  lives near, which is exactly the trade a Biomass price should buy.
-- **A bell, and a firing arc measured in kilometres.** The Order's Tocsin reaches
-  **1,400 m** and fires only while **stationary**, and stationary it is the loudest thing
-  in the water short of a ping. Standing still to work exists already — a Sower seeds and a
-  Cantus sings that way — but a *gun* gated on it is new, and it is the whole hull: nothing
-  outranges it, and anything that reaches it kills it.
-
-The Consortium's Furnace fires on the wall too, and is still not a gun: thermal cutters, the
-same tool that opens kelp ([hazards.md](hazards.md) §4), turned on plate at 320 m and SIG 75
-while they run, and floored against a hull so that a cutter never reads as a gun (§9). Every
-siege weapon has to out-reach the ring the separation system holds a hull on, and a
-Bastion's is 278 m. Four navies, four answers, and only one of them is a gun.
-
 Ramming is parked as a design question — descent is fast and deafening, and a Consortium
 hull dropping onto a target is thematically irresistible, but it needs the collision model
 to earn it. Plain text until decided.
@@ -480,6 +450,36 @@ them* — a tuning change that leaves these bands is a bug.
 | Torpedo vs Cruiser | survives three, dies to four |
 | Mine (single) vs Light Scout | killed |
 | Mine (single) vs Corvette | survives, wounded |
+
+### A weapon that is not a weapon
+
+Only one of the four siege hulls is a gun, two never fire on the wall at all, and each is its
+navy's argument about how a wall actually falls.
+
+- **A spore, and silence.** The Commune's Blight seeds a structure with a Deepbloom strain
+  that eats **1% of its maximum hull a second for 60 s** — 60% of the wall, and never the
+  last of it — and the structure's own SIG never moves while it does. A spore does not take
+  a base; it makes one takeable, and something still has to arrive. That silence is the design claim rather than an oversight: every
+  other way of taking a wall down announces itself — a cutter at 75, a bell at 88, a gun
+  at all — and this one is a Refinery whose hull is falling with nothing to hear. The
+  counter-play is *looking*, which is the one sense this game otherwise never asks for.
+- **A song, and the Drift.** The Directorate's Lure sings for **60 s at SIG 55** and
+  doubles what fauna hear from anything within **500 m of the point it sang at**
+  ([bestiary.md](bestiary.md) §2's modifier table, with a source and a clock). The
+  Listening does not knock the wall down; it tells the Drift where the wall is. A siege
+  that works this way costs nothing but time and is worth nothing against a base nothing
+  lives near, which is exactly the trade a Biomass price should buy.
+- **A bell, and a firing arc measured in kilometres.** The Order's Tocsin reaches
+  **1,400 m** and fires only while **stationary**, and stationary it is the loudest thing
+  in the water short of a ping. Standing still to work exists already — a Sower seeds and a
+  Cantus sings that way — but a *gun* gated on it is new, and it is the whole hull: nothing
+  outranges it, and anything that reaches it kills it.
+
+The Consortium's Furnace fires on the wall too, and is still not a gun: thermal cutters, the
+same tool that opens kelp ([hazards.md](hazards.md) §4), turned on plate at 320 m and SIG 75
+while they run, and floored against a hull so that a cutter never reads as a gun (the siege
+bands below). Every siege weapon has to out-reach the ring the separation system holds a hull
+on, and a Bastion's is 278 m. Four navies, four answers, and only one of them is a gun.
 
 ### One weapon, two numbers
 
