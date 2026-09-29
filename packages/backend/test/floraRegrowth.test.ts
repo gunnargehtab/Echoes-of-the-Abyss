@@ -375,6 +375,25 @@ describe('the Drift puts back what it loses', () => {
     );
   });
 
+  it('restocks the roster behind a colossus that strained water will not take back', () => {
+    // #990, the megafauna clause. On water Strained everywhere a dead colossus
+    // is a deficit no region will fill, and it sits ahead of the Rasp in the
+    // roster, so the queue used to wait on it: §6's "spawn rate −40%" became
+    // −100% for every species behind it. No eruptions, so nothing else dies.
+    const map: MapDefinition = { ...VENTFRONT_DIVIDE, id: 'test-strained', hazards: [] };
+    const m = match(map, true);
+    assert.equal(countFaunaOf(m.world, FaunaSpecies.Sounder), 1, 'the map must seat its colossus');
+    const rasp = countFaunaOf(m.world, FaunaSpecies.Rasp);
+    cull(m, FaunaSpecies.Sounder);
+    cull(m, FaunaSpecies.Rasp);
+    // Clear of the boundary: quiet water heals, and a region back at 75 opens
+    // to the colossus again.
+    wearMapTo(m, DRIFT.HEALTH_STRAINED - 10);
+    advance(m, DRIFT.RESPAWN_INTERVAL_S * 4);
+    assert.equal(countFaunaOf(m.world, FaunaSpecies.Sounder), 0, 'the colossus stays gone');
+    assert.equal(countFaunaOf(m.world, FaunaSpecies.Rasp), rasp, 'and the swarm behind it returns');
+  });
+
   it('breeds nothing at all in a match with no Drift', () => {
     // Every test and every mission that opens `fauna: false` must pay nothing
     // for this: no complement, so no accumulator and no walk.

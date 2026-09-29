@@ -2470,21 +2470,27 @@ export class Match {
   }
 
   /**
-   * Whether any region would breed this species now — the two tests
-   * `repopulate`'s `admitted` makes of a point, asked of each region's middle.
+   * Whether any region's water is open to this species — §6's band and its
+   * megafauna clause, asked of each region's middle. Both are per region, so
+   * the middle answers for the whole of it.
    *
-   * Both are per region (§6's band and its megafauna clause, and the crop of
-   * the region's beds), so the middle answers for the whole region. Kept apart
-   * from `admitted` rather than shared with it: `admitted` spends a draw on a
-   * region stripped bare and none on the megafauna clause, and one folded rate
-   * would move the restock stream wherever either applies.
+   * The Strained row closes water to the colossus and thins it for the rest by
+   * 40%. Asking the band alone would let a dead colossus hold the queue on a
+   * map Strained everywhere, and turn that −40% into −100% for every species
+   * behind it.
+   *
+   * Not the crop, which `admitted` also reads: it thins a region rather than
+   * closing one. Wherever the band breeds anything but the Rasp, a stripped
+   * bed regrows every tick, and one a cutter or a reactor holds bare reads zero
+   * or a rounding error above it. A closure keyed on that zero would be decided
+   * by arithmetic, not by the water.
    */
   private breedsAnywhere(species: FaunaSpecies): boolean {
     const drift = this.world.drift;
     for (let region = 0; region < drift.regionCount; region++) {
       const { x, y } = drift.regionCentre(region);
       if (MEGAFAUNA.has(species) && !drift.admitsMegafauna(x, y)) continue;
-      if (drift.spawnRate(x, y, species) * this.cropDensityAt(x, y) > 0) return true;
+      if (drift.spawnRate(x, y, species) > 0) return true;
     }
     return false;
   }
