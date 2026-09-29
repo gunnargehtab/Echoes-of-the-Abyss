@@ -2708,9 +2708,10 @@ export class EchoRenderer {
           //
           // The weapons lock is the second half, and #989 is why. Armed under
           // one, the click painted an attack-move marker for what
-          // `orderAttackMove` turns into a plain move, so the player found out
-          // the weapons were struck only by watching a hull not fight. The
-          // key refuses where ENGAGE does, with the mission's words.
+          // `orderAttackMove` turns into a plain move, and nothing at the
+          // press said why: the hint bar announced a mode the struck weapons
+          // could not serve. The key refuses where ENGAGE does, with the
+          // mission's words.
           //
           // Two of ENGAGE's three conditions, not all three: it greys on
           // `fighters` as well, and the key still arms over a harvester-only
