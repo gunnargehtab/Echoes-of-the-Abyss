@@ -153,6 +153,21 @@ export class DriftHealth {
   }
 
   /**
+   * The middle of a region, for a caller asking every region a question rather
+   * than one point — `Match.repopulate`, which must know whether a species is
+   * admitted anywhere before it waits on one. Every rule here is per region,
+   * so the middle answers for the whole of it.
+   */
+  regionCentre(region: number): { x: number; y: number } {
+    const cx = region % this.cols;
+    const cy = Math.floor(region / this.cols);
+    return {
+      x: ((cx + 0.5) / this.cols) * this.widthM,
+      y: ((cy + 0.5) / this.cols) * this.heightM,
+    };
+  }
+
+  /**
    * Biomass multiplier for a region, from §6's table.
    *
    * Healthy 1.0, Strained −25%, Failing −25% (no new spawns is the bigger

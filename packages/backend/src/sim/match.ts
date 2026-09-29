@@ -2425,23 +2425,25 @@ export class Match {
     // the roster's own order — a deterministic choice, because a replay that
     // restocked a different animal diverges from the tick it did.
     //
-    // One candidate, and the interval is spent whether or not it can be
-    // placed. Measured while #655 opened Collapsing water to the scavengers:
-    // on a map worn past Failing *everywhere*, §6's own Failing row kills the
-    // six Lampfry and five Tetherjelly, whose deficits then outrank a dead
-    // Rasp's for the rest of the match and can never be filled, so the
-    // Collapsing row is never reached. It is reachable whenever some of the
-    // map is still living — the ambient deficits are filled there and the
-    // queue moves on — and a returning campaign mission seats on the carried
-    // grid directly, which is how `floraRegrowth.test.ts` holds the row. Left
-    // as it is rather than made to fall through: falling through would restock
-    // a different animal in every band, which is a change to what the map
-    // holds rather than to what this row means.
+    // Among the species some region would breed, because one no region admits
+    // can never be filled (#990). On a map worn past Failing *everywhere*,
+    // §6's own Failing row kills the six Lampfry and five Tetherjelly, and
+    // their deficits used to outrank a dead Rasp's for the rest of the match,
+    // so the Collapsing row was never reached. Nothing changes while every
+    // species is admitted somewhere.
+    //
+    // Still one candidate, and the interval is spent whether or not it can be
+    // placed, rather than falling through to the next: falling through would
+    // restock a different animal in every band, which is a change to what the
+    // map holds rather than to what this row means. So a species admitted in
+    // some region but with no ground of its own there still waits; asking
+    // that is a terrain walk, which `searchFauna` pays once per species at
+    // seed time and this tick does not.
     let wanted: FaunaSpecies | null = null;
     let worst = 0;
     for (const { species } of DRIFT_ROSTER) {
       const deficit = (this.complement.get(species) ?? 0) - countFaunaOf(this.world, species);
-      if (deficit > worst) {
+      if (deficit > worst && this.breedsAnywhere(species)) {
         worst = deficit;
         wanted = species;
       }
@@ -2465,6 +2467,26 @@ export class Match {
     // A cluster masks by writing PF, so the grid has to learn about one the
     // moment it exists — the same rebuild `Match.reap` runs when one dies.
     if (species === FaunaSpecies.Tetherjelly) rebuildPropagation(this.world);
+  }
+
+  /**
+   * Whether any region would breed this species now — the two tests
+   * `repopulate`'s `admitted` makes of a point, asked of each region's middle.
+   *
+   * Both are per region (§6's band and its megafauna clause, and the crop of
+   * the region's beds), so the middle answers for the whole region. Kept apart
+   * from `admitted` rather than shared with it: `admitted` spends a draw on a
+   * region stripped bare and none on the megafauna clause, and one folded rate
+   * would move the restock stream wherever either applies.
+   */
+  private breedsAnywhere(species: FaunaSpecies): boolean {
+    const drift = this.world.drift;
+    for (let region = 0; region < drift.regionCount; region++) {
+      const { x, y } = drift.regionCentre(region);
+      if (MEGAFAUNA.has(species) && !drift.admitsMegafauna(x, y)) continue;
+      if (drift.spawnRate(x, y, species) * this.cropDensityAt(x, y) > 0) return true;
+    }
+    return false;
   }
 
   /**
