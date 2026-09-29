@@ -2706,20 +2706,22 @@ export class EchoRenderer {
           // it, so the press did not merely fail late, it failed invisibly
           // (#722).
           //
-          // One half and not three: ENGAGE greys on `fighters` and on
-          // `missionLock('weapons')` as well, and the key still arms under
-          // either. The weapons lock is the case worth writing down, and it is
-          // not that the button has it right — its `refusal` carries the hold
-          // only, so under a weapons lock the button greys *silently* while
-          // the key arms and the click falls through to the move
-          // `orderAttackMove` makes of it. §7's "with a reason attached, never
-          // silently" is owed on both halves there. #722 asks for the hold
-          // mirror and only that, so this is recorded rather than taken.
+          // The weapons lock is the second half, and #989 is why. Armed under
+          // one, the click painted an attack-move marker for what
+          // `orderAttackMove` turns into a plain move, so the player found out
+          // the weapons were struck only by watching a hull not fight. The
+          // key refuses where ENGAGE does, with the mission's words.
+          //
+          // Two of ENGAGE's three conditions, not all three: it greys on
+          // `fighters` as well, and the key still arms over a harvester-only
+          // selection. #989 asks for the weapons lock and only that, so the
+          // third is recorded rather than taken.
           const held = this.heldSelection(this.selectedUnits());
           if (held !== null) {
             this.refuse(held);
             return;
           }
+          if (this.refusedByMission('weapons')) return;
           this.pendingBuild = null;
           this.pendingAttackMove = true;
           return;
@@ -3354,10 +3356,14 @@ export class EchoRenderer {
         // then heard why — the "refusal delivered afterwards" §10.5 says
         // teaches nothing. The prologue hides this by accident, its tenders
         // being Harvesters and so not `fighters`; *Radicals* holds a Cruiser.
+        //
+        // The weapons lock is the refusal's second source. Twelve missions
+        // strike weapons, and the button greyed under every one of them with
+        // nothing to say when pressed — the silent drop §7 forbids (#989).
         label: 'ENGAGE',
         enabled: fighters && heldAll === null && this.missionLock('weapons') === null,
         active: this.pendingAttackMove,
-        refusal: heldAll ?? undefined,
+        refusal: heldAll ?? this.missionLock('weapons') ?? undefined,
         action: () => {
           this.pendingBuild = null;
           this.pendingAttackMove = !this.pendingAttackMove;
