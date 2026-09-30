@@ -352,8 +352,9 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
         : 0;
     // A gun choosing, not a mode switch: the order is not cancelled, and on
     // the next cycle the hull goes back to shelling the launcher. It is also
-    // not a *movement* act: the guard below is what keeps a hull chasing a
-    // distant ordered target from stopping dead the tick it intercepts.
+    // not a *movement* act, under any order: the halt below is for a hull, so
+    // a hull chasing a distant ordered target, or crossing water on an
+    // attack-move, keeps its course the tick it intercepts (#991).
     const pdOverride = ordered && intercept !== 0;
 
     if (!ordered) {
@@ -490,9 +491,16 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
       continue;
     }
 
-    if (!pdOverride && (ordered || engaging) && isMobile && MoveOrder.active[eid] === 1) {
+    if (target !== intercept && (ordered || engaging) && isMobile && MoveOrder.active[eid] === 1) {
       // In range: hold position to shoot. An attack-move keeps its course in
       // `Posture` and takes it up again when there is nothing left to fight.
+      //
+      // A round in the water is not a fight (#991). An attack-move that
+      // stopped for one sat still until the round was gone, so a Corvette
+      // under two torpedoes took the second, where the same hull on a plain
+      // move kept it chasing until the gun came round again. Nor does an
+      // intercept start a hull that stopped for a hull: only the branch above,
+      // with nothing left to shoot, resumes the course.
       MoveOrder.active[eid] = 0;
     }
 
