@@ -159,6 +159,28 @@ function stripGlyphs(
   return found;
 }
 
+/**
+ * Where a command-card label is drawn, in the client pixels a press is made
+ * in. `paintCommandBar` anchors each label at its cell's centre, so this is
+ * the point `pressBarButton` resolves to that cell.
+ */
+function barLabel(app: HeadlessApplication, label: string): { x: number; y: number } {
+  const found: Array<{ x: number; y: number }> = [];
+  const walk = (node: Container): void => {
+    for (const child of node.children) {
+      if (!child.visible) continue;
+      if (child instanceof Text) {
+        if (child.text === label) found.push(child.getGlobalPosition());
+      } else {
+        walk(child as Container);
+      }
+    }
+  };
+  walk(app.stage as unknown as Container);
+  assert.equal(found.length, 1, `${label} is not on the command card exactly once`);
+  return found[0]!;
+}
+
 /** `TOP_BAR_HEIGHT` in EchoRenderer, restated so a change to it fails here. */
 const TOP_BAR_HEIGHT_PX = 52;
 
@@ -1649,6 +1671,99 @@ describe('renderer smoke test: input and teardown', () => {
     // silently, which is the half of #722 item 3 that made the key worse than
     // the button rather than merely different.
     assert.equal(held.reason, 'held — not released yet', 'the refused press never said why');
+  });
+
+  /**
+   * Both routes to attack-move under a weapons lock — #989.
+   *
+   * ENGAGE greyed under the lock with no `refusal`, so a press said nothing,
+   * and `W` armed anyway: the click painted an attack-move for what
+   * `orderAttackMove` turns into a plain move. §7 wants the grey-out "with a
+   * reason attached", never silently, and the mission's reason is the one.
+   *
+   * The #722 test's shape, for its reason: arm, *lift* the lock, then click,
+   * so the order is the press's doing alone. The button is pressed where its
+   * label is drawn — `paintCommandBar` centres the label on the cell, and
+   * `pressBarButton` hit-tests the same cell.
+   */
+  it('arms no attack-move under a weapons lock, from the key or ENGAGE', async () => {
+    const reason = 'weapons cold — the hardpoints are on the table';
+    const armed = async (
+      route: 'key' | 'button',
+      locked: boolean
+    ): Promise<{ ordered: boolean; bar: string | null; reason: string | null }> => {
+      const world = await boot();
+      try {
+        const fighter = cannedSnapshot().units.find((unit) => unit.throttle === undefined);
+        assert.ok(fighter !== undefined, 'the canned match has no fighter to arm');
+        if (locked) world.chart.setMissionLocks([{ ability: 'weapons', reason }]);
+        world.chart.focusOn(fighter.x, fighter.y);
+        world.frame(2);
+
+        const canvas = world.app.canvas;
+        const at = world.conn.projectPoint(fighter.x, fighter.y, fighter.depth);
+        assert.ok(at.visible, 'the camera is looking at the hull we are about to select');
+        for (const type of ['pointerdown', 'pointerup']) {
+          canvas.dispatch(type, {
+            button: 0,
+            pointerId: 1,
+            pointerType: 'mouse',
+            clientX: at.x,
+            clientY: at.y,
+          });
+        }
+        world.frame(1);
+
+        if (route === 'key') {
+          dispatchWindow('keydown', { code: 'KeyW' });
+        } else {
+          const engage = barLabel(world.app, 'ENGAGE');
+          canvas.dispatch('pointerdown', {
+            button: 0,
+            pointerId: 1,
+            pointerType: 'mouse',
+            clientX: engage.x,
+            clientY: engage.y,
+          });
+        }
+        world.chart.setMissionLocks([]);
+        world.frame(1);
+        const bar = textSaying(world.app.stage, 'ATTACK-MOVE armed');
+        const said = textSaying(world.app.stage, reason);
+
+        canvas.dispatch('pointerdown', {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x + 140,
+          clientY: at.y + 60,
+          shiftKey: false,
+        });
+        return {
+          ordered: world.log.first('onAttackMoveOrder') !== undefined,
+          bar,
+          reason: said,
+        };
+      } finally {
+        world.teardown();
+      }
+    };
+
+    for (const route of ['key', 'button'] as const) {
+      // The control: unlocked, this route arms and the click is an attack-move.
+      const free = await armed(route, false);
+      assert.ok(
+        free.ordered,
+        `${route}: the control never armed, so the case below proves nothing`
+      );
+      assert.ok(free.bar !== null, `${route}: the control armed without the bar saying so`);
+      assert.equal(free.reason, null, `${route}: nothing was refused, yet a reason is showing`);
+
+      const locked = await armed(route, true);
+      assert.equal(locked.ordered, false, `${route}: armed an attack-move under a weapons lock`);
+      assert.equal(locked.bar, null, `${route}: the bar announced a mode that should not arm`);
+      assert.equal(locked.reason, reason, `${route}: the refused press never said why`);
+    }
   });
 
   /**
