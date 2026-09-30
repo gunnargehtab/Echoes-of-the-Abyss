@@ -438,6 +438,23 @@ describe('the Drift puts back what it loses', () => {
     assert.ok(after > others, `and the rest of the roster restocks: ${after} against ${others}`);
   });
 
+  it('walks its census again when a beat repaints the ground', () => {
+    // #993's census is walked at seed time, and a mission `ground` beat can
+    // move a vein (`fillGround`, which is what the beat calls). Painting the
+    // vent line over leaves an Ashgrazer ground nowhere, so a census kept from
+    // seed time would still hold the queue on the grazer's deficit and the
+    // Draymaw behind it would never return. No eruptions, as above.
+    const map: MapDefinition = { ...VENTFRONT_DIVIDE, id: 'test-repainted', hazards: [] };
+    const m = match(map, true);
+    const pack = countFaunaOf(m.world, FaunaSpecies.Draymaw);
+    for (let i = 0; i < 8; i++) cull(m, FaunaSpecies.Ashgrazer);
+    cull(m, FaunaSpecies.Draymaw);
+    m.world.terrain.fillGround(0, 3000, MAP_M, 2000, { biome: Biome.OpenWater });
+
+    advance(m, DRIFT.RESPAWN_INTERVAL_S * 6);
+    assert.equal(countFaunaOf(m.world, FaunaSpecies.Draymaw), pack, 'the pack is restocked');
+  });
+
   it('breeds nothing at all in a match with no Drift', () => {
     // Every test and every mission that opens `fauna: false` must pay nothing
     // for this: no complement, so no accumulator and no walk.

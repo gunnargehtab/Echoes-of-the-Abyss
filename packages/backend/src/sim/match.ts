@@ -280,6 +280,15 @@ const MEGAFAUNA: ReadonlySet<FaunaSpecies> = new Set([FaunaSpecies.Sounder]);
  */
 const FAUNA_SEARCH_STEP_M = 50;
 
+/**
+ * How far inside the map's edge the Drift puts anything — the box
+ * `placeFauna` draws in, and the one `searchFauna` and `groundRegions` walk.
+ *
+ * One figure for all three: a walk over a wider box than the sampler draws in
+ * would find ground no draw can reach, and the census would wait on it.
+ */
+const FAUNA_EDGE_MARGIN_M = 400;
+
 export class Match {
   readonly world: SimWorld;
   /** Public for bench/echo-pass.mjs, which times the pass in isolation. */
@@ -864,8 +873,8 @@ export class Match {
   ): boolean {
     const { widthM, heightM } = this.world.terrain;
     for (let attempt = 0; attempt < 12; attempt++) {
-      const x = rng.range(400, widthM - 400);
-      const y = rng.range(400, heightM - 400);
+      const x = rng.range(FAUNA_EDGE_MARGIN_M, widthM - FAUNA_EDGE_MARGIN_M);
+      const y = rng.range(FAUNA_EDGE_MARGIN_M, heightM - FAUNA_EDGE_MARGIN_M);
       if (!this.faunaGroundAdmits(species, x, y)) continue;
       // Last, and only for ground that has already passed every other test:
       // the caller's rule may spend a draw, and a draw spent on water the
@@ -939,8 +948,9 @@ export class Match {
     if (admissible === undefined) {
       admissible = [];
       const { widthM, heightM } = this.world.terrain;
-      for (let y = 400; y <= heightM - 400; y += FAUNA_SEARCH_STEP_M) {
-        for (let x = 400; x <= widthM - 400; x += FAUNA_SEARCH_STEP_M) {
+      const edge = FAUNA_EDGE_MARGIN_M;
+      for (let y = edge; y <= heightM - edge; y += FAUNA_SEARCH_STEP_M) {
+        for (let x = edge; x <= widthM - edge; x += FAUNA_SEARCH_STEP_M) {
           if (this.faunaGroundAdmits(species, x, y)) admissible.push({ x, y });
         }
       }
@@ -982,7 +992,7 @@ export class Match {
    * constant gives, and the ground tests alone: the band moves every tick and
    * `breedsAnywhere` reads it live. A region stops probing at its first hit,
    * so only regions holding none of a species' ground are walked in full:
-   * 67,000 to 77,000 probes for the whole roster on each skirmish map, three
+   * 64,500 to 74,000 probes for the whole roster on each skirmish map, three
    * to four of `searchFauna`'s walks, once.
    *
    * Walked at seed time for the whole complement. A mission beat that repaints
@@ -999,8 +1009,9 @@ export class Match {
     if (regions !== undefined) return regions;
     const drift = this.world.drift;
     regions = new Uint8Array(drift.regionCount);
-    for (let y = 400; y <= terrain.heightM - 400; y += FAUNA_SEARCH_STEP_M) {
-      for (let x = 400; x <= terrain.widthM - 400; x += FAUNA_SEARCH_STEP_M) {
+    const edge = FAUNA_EDGE_MARGIN_M;
+    for (let y = edge; y <= terrain.heightM - edge; y += FAUNA_SEARCH_STEP_M) {
+      for (let x = edge; x <= terrain.widthM - edge; x += FAUNA_SEARCH_STEP_M) {
         const region = drift.regionIndex(x, y);
         if (regions[region] === 0 && this.faunaGroundFits(species, x, y)) regions[region] = 1;
       }
@@ -2474,7 +2485,9 @@ export class Match {
    *
    * Costs an accumulator a tick. The placement burst — at most twelve terrain
    * probes — happens once per `DRIFT.RESPAWN_INTERVAL_S`, and the population
-   * cap that protects the Echo pass's 2 ms budget is untouched.
+   * cap that protects the Echo pass's 2 ms budget is untouched. Besides that,
+   * `groundRegions` walks again on the first restock after a mission beat
+   * repaints ground; no mission that repaints ground seeds a Drift today.
    */
   private repopulate(): void {
     if (this.complement.size === 0) return;
