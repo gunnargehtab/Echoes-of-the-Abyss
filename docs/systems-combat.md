@@ -207,6 +207,9 @@ launched torpedo, both end when it does, and neither is available without spendi
   bearings beat it. That is the whole price, and it is charged in cycles rather than in
   orders: a hull that is already fighting is the hull most likely to be torpedoed, so a
   counter that lapsed whenever the gun had a target would not be a counter (§2, §13).
+  Nor is it charged in movement: under any order, attack-move included, a hull shooting a
+  round down keeps its course, because a round is not a fight, and a hull that stopped for
+  the first torpedo would sit still for the second.
 - **A mine astern:** a running torpedo is louder than the cruising Corvette a mine's
   trigger is calibrated on, so it trips any hostile mine it passes within 150 m of, and a
   blast spends every torpedo and depth charge inside its 200 m (§6). Any armed hull carries
