@@ -154,6 +154,7 @@ import {
   isPermanent,
   isSimulated,
   rebuildPropagation,
+  standingCropOf,
   type Hazard,
 } from './systems/hazards.ts';
 import { drawFor, thermalSystem } from './systems/thermal.ts';
@@ -393,6 +394,14 @@ export class Match {
   private readonly complement = new Map<FaunaSpecies, number>();
   /** Seconds of match owed to the Drift, toward its next replacement. */
   private repopulateCreditS = 0;
+  /**
+   * Per species, the regions that hold any ground it may stand on, 1 or 0 —
+   * built by `groundRegions`, and kept only while the terrain is the one it
+   * was walked over (`groundRevision`).
+   */
+  private readonly groundCensus = new Map<FaunaSpecies, Uint8Array>();
+  /** The `Terrain.revision` the census was walked at; −1 before any walk. */
+  private groundRevision = -1;
   private worstPhysicsMs = 0;
   /**
    * The same rolling worst case, counted instead of timed.
@@ -833,6 +842,9 @@ export class Match {
         this.complement.set(species, (this.complement.get(species) ?? 0) + 1);
       }
     }
+    // Walked here rather than on the first restock, so the 60 Hz path never
+    // pays for it on a map whose ground stays as it was authored.
+    for (const species of this.complement.keys()) this.groundRegions(species);
     rebuildPropagation(this.world);
   }
 
@@ -875,12 +887,22 @@ export class Match {
    * somewhere the roster's own rules say it cannot be.
    */
   private faunaGroundAdmits(species: FaunaSpecies, x: number, y: number): boolean {
+    // Per species since #655: Collapsing water is closed to everything except
+    // §6's scavengers, and closed to them is not the same as closed.
+    return this.faunaGroundFits(species, x, y) && this.world.drift.spawnsAllowed(x, y, species);
+  }
+
+  /**
+   * The three of `faunaGroundAdmits`' tests that read the ground rather than
+   * the band — habitat, working depth, doorstep.
+   *
+   * Split out for `groundRegions`, which has to know where a species could
+   * live once its water heals, so it must not ask how the water is now.
+   */
+  private faunaGroundFits(species: FaunaSpecies, x: number, y: number): boolean {
     const wantVein = species === FaunaSpecies.Ashgrazer;
     const onVein = this.world.terrain.biomeAt(x, y) === Biome.ThermalVein;
     if (wantVein !== onVein) return false;
-    // Per species since #655: Collapsing water is closed to everything except
-    // §6's scavengers, and closed to them is not the same as closed.
-    if (!this.world.drift.spawnsAllowed(x, y, species)) return false;
     // Deep enough for the species to live there. A Sounder seeded over a
     // 700 m plateau would be a colossus in a puddle, and the roster's
     // habitats are the reason the depths exist at all (bestiary.md §4).
@@ -945,6 +967,46 @@ export class Match {
     admissible.pop();
     spawnFauna(this.world, { species, x: cell.x, y: cell.y });
     return true;
+  }
+
+  /**
+   * Which Drift Health regions hold ground this species may stand on (#993).
+   *
+   * `breedsAnywhere` asks each region's band, but the band is per region and
+   * ground is per point: an Ashgrazer needs Thermal Vein, and on the Ventfront
+   * Divide every vein cell is in the middle eight regions. Worn to Failing,
+   * those eight left the band open only where the Ashgrazer cannot stand, so
+   * its deficit held the queue while eight Healthy regions bred nothing.
+   *
+   * The same 50 m grid and the same box as `searchFauna`, for the reason that
+   * constant gives, and the ground tests alone: the band moves every tick and
+   * `breedsAnywhere` reads it live. A region stops probing at its first hit,
+   * so only regions holding none of a species' ground are walked in full:
+   * 67,000 to 77,000 probes for the whole roster on each skirmish map, three
+   * to four of `searchFauna`'s walks, once.
+   *
+   * Walked at seed time for the whole complement. A mission beat that repaints
+   * ground bumps `Terrain.revision`, and the next restock walks the census
+   * again, since a beat can move a vein or lift a floor under a species.
+   */
+  private groundRegions(species: FaunaSpecies): Uint8Array {
+    const terrain = this.world.terrain;
+    if (terrain.revision !== this.groundRevision) {
+      this.groundCensus.clear();
+      this.groundRevision = terrain.revision;
+    }
+    let regions = this.groundCensus.get(species);
+    if (regions !== undefined) return regions;
+    const drift = this.world.drift;
+    regions = new Uint8Array(drift.regionCount);
+    for (let y = 400; y <= terrain.heightM - 400; y += FAUNA_SEARCH_STEP_M) {
+      for (let x = 400; x <= terrain.widthM - 400; x += FAUNA_SEARCH_STEP_M) {
+        const region = drift.regionIndex(x, y);
+        if (regions[region] === 0 && this.faunaGroundFits(species, x, y)) regions[region] = 1;
+      }
+    }
+    this.groundCensus.set(species, regions);
+    return regions;
   }
 
   private addNode(x: number, y: number, amount?: number, kind = ResourceKind.Nodule): void {
@@ -2435,11 +2497,10 @@ export class Match {
     // Still one candidate, and the interval is spent whether or not it can be
     // placed, rather than falling through to the next: falling through would
     // restock a different animal in every band, which is a change to what the
-    // map holds rather than to what this row means. So a species admitted in
-    // some region but with no ground of its own there, or whose open water is
-    // all held bare, still waits (#993); asking about ground is a terrain
-    // walk, which `searchFauna` pays once per species at seed time and this
-    // tick does not.
+    // map holds rather than to what this row means. "Some region" is a region
+    // holding the species' own ground with a canopy standing, or no beds at
+    // all (#993), so an open region the species cannot stand in, or one whose
+    // beds are held bare, no longer holds the queue.
     let wanted: FaunaSpecies | null = null;
     let worst = 0;
     for (const { species } of DRIFT_ROSTER) {
@@ -2471,30 +2532,54 @@ export class Match {
   }
 
   /**
-   * Whether any region's water is open to this species — §6's band and its
-   * megafauna clause, asked of each region's middle. Both are per region, so
-   * the middle answers for the whole of it.
+   * Whether any region would breed this species — one that holds its ground
+   * (`groundRegions`), whose band and megafauna clause admit it, and whose
+   * beds have a canopy standing. The band and the clause are per region, so
+   * each region's middle answers for the whole of it.
    *
    * The Strained row closes water to the colossus and thins it for the rest by
    * 40%. Asking the band alone would let a dead colossus hold the queue on a
    * map Strained everywhere, and turn that −40% into −100% for every species
    * behind it.
    *
-   * Not the crop, which `admitted` also reads: bare rock feeds nothing
-   * (docs/systems-flora.md §4), but its zero is not a stable one. Wherever the
-   * band breeds anything but the Rasp, a stripped bed regrows every tick, and
-   * one a cutter or a reactor holds bare reads zero or a rounding error above
-   * it. A closure keyed on that zero would be decided by arithmetic, not by the
-   * water.
+   * The crop is read as the canopy (`canopyStands`), not as the raw figure
+   * `admitted` scales the rate by. Bare rock feeds nothing
+   * (docs/systems-flora.md §4), but a stripped bed regrows every tick wherever
+   * the band breeds anything but the Rasp, so one a cutter or a reactor holds
+   * bare reads a rounding error above zero, and a closure keyed on the raw
+   * zero would never close. The canopy has a zero that holds.
    */
   private breedsAnywhere(species: FaunaSpecies): boolean {
     const drift = this.world.drift;
+    const ground = this.groundRegions(species);
     for (let region = 0; region < drift.regionCount; region++) {
+      if (ground[region] === 0) continue;
       const { x, y } = drift.regionCentre(region);
       if (MEGAFAUNA.has(species) && !drift.admitsMegafauna(x, y)) continue;
-      if (drift.spawnRate(x, y, species) > 0) return true;
+      if (drift.spawnRate(x, y, species) > 0 && this.canopyStands(region)) return true;
     }
     return false;
+  }
+
+  /**
+   * Whether a region has any canopy standing, or no beds to have one — the
+   * closure `breedsAnywhere` reads where `cropDensityAt` reads a rate.
+   *
+   * Through `standingCropOf`, the quantised figure the PF grid, the grip and
+   * the phase read: below half a step there is no canopy (`FLORA.CROP_PF_STEPS`),
+   * so a bed held bare reads a steady zero rather than a rounding error. A
+   * region closed this way has every bed under half a step, so the raw rate
+   * `admitted` would have drawn against is under half a step of its band's.
+   */
+  private canopyStands(region: number): boolean {
+    let beds = 0;
+    for (const hazard of this.world.hazards) {
+      if (hazard.kind !== 'kelp-entanglement') continue;
+      if (this.world.drift.regionIndex(hazard.x, hazard.y) !== region) continue;
+      if (standingCropOf(hazard) > 0) return true;
+      beds++;
+    }
+    return beds === 0;
   }
 
   /**
