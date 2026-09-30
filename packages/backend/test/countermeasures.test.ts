@@ -37,6 +37,7 @@ import {
   MoveOrder,
   Ordnance,
   Position,
+  Posture,
   Weapon,
 } from '../src/sim/components.ts';
 import { launchTorpedo } from '../src/sim/systems/ordnance.ts';
@@ -479,6 +480,13 @@ describe('countermeasures', () => {
       for (let i = 0; i < steps; i++) {
         match.update(STEP_MS);
         if (MoveOrder.active[defender] === 0) haltedTicks++;
+      }
+      if (attackMove) {
+        assert.equal(
+          Posture.engage[defender],
+          1,
+          'the attack-move must stand for the whole run, or this arm measures nothing'
+        );
       }
       assert.equal(Health.hp[launcher], statsFor(UnitKind.Corvette).maxHp, 'nothing shot back');
       return {
