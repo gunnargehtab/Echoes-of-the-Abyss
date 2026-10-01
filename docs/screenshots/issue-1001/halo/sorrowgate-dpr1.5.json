@@ -38,7 +38,8 @@
       "entities": [
         {
           "name": "Light Scout",
-          "id": 238,
+          "id": 142,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -56,7 +57,8 @@
         },
         {
           "name": "Light Scout",
-          "id": 239,
+          "id": 143,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -74,7 +76,8 @@
         },
         {
           "name": "Light Scout",
-          "id": 240,
+          "id": 144,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -92,7 +95,8 @@
         },
         {
           "name": "Light Scout",
-          "id": 241,
+          "id": 145,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -110,7 +114,8 @@
         },
         {
           "name": "Harvester",
-          "id": 242,
+          "id": 146,
+          "unit": true,
           "sig": 18,
           "restSig": 18,
           "lamps": 1,
@@ -128,7 +133,8 @@
         },
         {
           "name": "Harvester",
-          "id": 243,
+          "id": 147,
+          "unit": true,
           "sig": 18,
           "restSig": 18,
           "lamps": 1,
@@ -143,6 +149,29 @@
           ],
           "lostAtPing": 0.759,
           "lostFiring": null
+        }
+      ],
+      "haloFlashBound": [
+        {
+          "multiple": 2,
+          "hull": "Harvester",
+          "areaPx": 23.1,
+          "frameShare": 0.00002,
+          "windowShare": 0.00016
+        },
+        {
+          "multiple": 4,
+          "hull": "Harvester",
+          "areaPx": 92.5,
+          "frameShare": 0.00007,
+          "windowShare": 0.00064
+        },
+        {
+          "multiple": 8,
+          "hull": "Harvester",
+          "areaPx": 370,
+          "frameShare": 0.00029,
+          "windowShare": 0.00257
         }
       ]
     },
@@ -177,7 +206,8 @@
       "entities": [
         {
           "name": "Light Scout",
-          "id": 238,
+          "id": 142,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -195,7 +225,8 @@
         },
         {
           "name": "Light Scout",
-          "id": 239,
+          "id": 143,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -213,7 +244,8 @@
         },
         {
           "name": "Light Scout",
-          "id": 240,
+          "id": 144,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -231,7 +263,8 @@
         },
         {
           "name": "Light Scout",
-          "id": 241,
+          "id": 145,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -249,7 +282,8 @@
         },
         {
           "name": "Harvester",
-          "id": 242,
+          "id": 146,
+          "unit": true,
           "sig": 18,
           "restSig": 18,
           "lamps": 1,
@@ -267,7 +301,8 @@
         },
         {
           "name": "Harvester",
-          "id": 243,
+          "id": 147,
+          "unit": true,
           "sig": 18,
           "restSig": 18,
           "lamps": 1,
@@ -282,6 +317,29 @@
           ],
           "lostAtPing": 0.759,
           "lostFiring": null
+        }
+      ],
+      "haloFlashBound": [
+        {
+          "multiple": 2,
+          "hull": "Harvester",
+          "areaPx": 49.6,
+          "frameShare": 0.00004,
+          "windowShare": 0.00034
+        },
+        {
+          "multiple": 4,
+          "hull": "Harvester",
+          "areaPx": 198.4,
+          "frameShare": 0.00015,
+          "windowShare": 0.00138
+        },
+        {
+          "multiple": 8,
+          "hull": "Harvester",
+          "areaPx": 793.8,
+          "frameShare": 0.00061,
+          "windowShare": 0.00551
         }
       ]
     },
@@ -316,7 +374,8 @@
       "entities": [
         {
           "name": "Light Scout",
-          "id": 238,
+          "id": 142,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -334,7 +393,8 @@
         },
         {
           "name": "Light Scout",
-          "id": 239,
+          "id": 143,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -352,7 +412,8 @@
         },
         {
           "name": "Light Scout",
-          "id": 240,
+          "id": 144,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -370,7 +431,8 @@
         },
         {
           "name": "Light Scout",
-          "id": 241,
+          "id": 145,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -388,7 +450,8 @@
         },
         {
           "name": "Harvester",
-          "id": 242,
+          "id": 146,
+          "unit": true,
           "sig": 18,
           "restSig": 18,
           "lamps": 1,
@@ -406,7 +469,8 @@
         },
         {
           "name": "Harvester",
-          "id": 243,
+          "id": 147,
+          "unit": true,
           "sig": 18,
           "restSig": 18,
           "lamps": 1,
@@ -421,6 +485,29 @@
           ],
           "lostAtPing": 0.759,
           "lostFiring": null
+        }
+      ],
+      "haloFlashBound": [
+        {
+          "multiple": 2,
+          "hull": "Harvester",
+          "areaPx": 27.1,
+          "frameShare": 0.00002,
+          "windowShare": 0.00019
+        },
+        {
+          "multiple": 4,
+          "hull": "Harvester",
+          "areaPx": 108.4,
+          "frameShare": 0.00008,
+          "windowShare": 0.00075
+        },
+        {
+          "multiple": 8,
+          "hull": "Harvester",
+          "areaPx": 433.7,
+          "frameShare": 0.00033,
+          "windowShare": 0.00301
         }
       ]
     },
@@ -455,7 +542,8 @@
       "entities": [
         {
           "name": "Light Scout",
-          "id": 238,
+          "id": 142,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -473,7 +561,8 @@
         },
         {
           "name": "Light Scout",
-          "id": 239,
+          "id": 143,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -491,7 +580,8 @@
         },
         {
           "name": "Light Scout",
-          "id": 240,
+          "id": 144,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -509,7 +599,8 @@
         },
         {
           "name": "Light Scout",
-          "id": 241,
+          "id": 145,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -527,7 +618,8 @@
         },
         {
           "name": "Harvester",
-          "id": 242,
+          "id": 146,
+          "unit": true,
           "sig": 18,
           "restSig": 18,
           "lamps": 1,
@@ -545,7 +637,8 @@
         },
         {
           "name": "Harvester",
-          "id": 243,
+          "id": 147,
+          "unit": true,
           "sig": 18,
           "restSig": 18,
           "lamps": 1,
@@ -560,6 +653,29 @@
           ],
           "lostAtPing": 0.759,
           "lostFiring": null
+        }
+      ],
+      "haloFlashBound": [
+        {
+          "multiple": 2,
+          "hull": "Harvester",
+          "areaPx": 9.7,
+          "frameShare": 0.00001,
+          "windowShare": 0.00007
+        },
+        {
+          "multiple": 4,
+          "hull": "Harvester",
+          "areaPx": 38.8,
+          "frameShare": 0.00003,
+          "windowShare": 0.00027
+        },
+        {
+          "multiple": 8,
+          "hull": "Harvester",
+          "areaPx": 155.3,
+          "frameShare": 0.00012,
+          "windowShare": 0.00108
         }
       ]
     }

@@ -15,7 +15,9 @@
   const H = Number(params.get('h') ?? 900);
   const FRAMES = Number(params.get('frames') ?? 240);
   const SITES = 250; // lamp sites in the full-screen source; Ventfront's opening has about 113
-  const POINTS = 1024; // the point layer's cap from the design round's site census
+  // An assumed upper bound for a point layer: Ventfront's opening holds 113 sites, and a
+  // force near the berth ceiling holds several hundred more.
+  const POINTS = 1024;
 
   const canvas = document.getElementById('c');
   canvas.width = W;
@@ -31,8 +33,9 @@
   // How the copy is asked for: depth only, or the stencil too, into a texture
   // or a renderbuffer (both DEPTH24_STENCIL8, the one format the blit takes).
   // Depth only is the default and the route: on the named GPU asking for the
-  // stencil as well cost 5–7 ms at 1440×900 against 0.13–0.14 ms, although
-  // the canvas has no stencil at all (?mask=depthstencil shows it).
+  // stencil as well cost 5–7 ms at 1440×900 against about 0.12–0.16 ms,
+  // although the canvas has no stencil at all (?mask=depthstencil shows it;
+  // docs/screenshots/issue-1001/halo/route-cost.json has the depth-only run).
   const BLIT_MASK = params.get('mask') === 'depthstencil' ? 'depthstencil' : 'depth';
   const BLIT_INTO = params.get('into') === 'renderbuffer' ? 'renderbuffer' : 'texture';
   const dbg = gl.getExtension('WEBGL_debug_renderer_info');

@@ -21,17 +21,20 @@
  * - the light a loud state would lose at white: the share of a unit's lamp
  *   light past white under gate 3's lamp core at a ping (SIG 95) and at its
  *   firing burst, weighted by area.
- * Then one ping at the home dolly: the conn canvas and the frame just before
- * and once its SIG 95 has arrived, and the share of pixels whose relative
- * luminance moved by at least 0.1 with the darker under 0.8, WCAG 2.3.1's
- * general-flash pair, over the frame and over the worst window of a third of
- * its width by a third of its height. Writes halo.json beside the frames.
- * Not a gate.
+ * - a bound on a halo's ping flash: no halo exists, so for the unit whose halo
+ *   would cover most, discs of 2, 4 and 8 times each site's radius, all of it
+ *   counted as flashing, over the frame and over one window a third of the
+ *   frame each way.
+ * Then one ping at the home dolly, the no-halo baseline: the conn canvas and
+ * the frame just before and once its SIG 95 has arrived, and the share of
+ * pixels whose relative luminance moved by at least 0.1 with the darker under
+ * 0.8, WCAG 2.3.1's general-flash pair, over the frame and over the worst such
+ * window. Writes halo.json beside the frames. Not a gate.
  */
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { statsFor } from '../../packages/shared/dist/index.js';
+import { ACTIVE_SONAR, statsFor } from '../../packages/shared/dist/index.js';
 import { decode } from './lamps.mjs';
 
 const CAMERAS = [
@@ -41,7 +44,9 @@ const CAMERAS = [
   ['survey', 18000, 88],
 ];
 const SETTLE_MS = 1500;
-const PING_SIG = 95;
+const PING_SIG = ACTIVE_SONAR.EMITTER_SIG;
+/** Halo radii, as multiples of a lamp site's own, for the ping-flash bound. */
+const HALO_MULTIPLES = [2, 4, 8];
 
 const linear = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
 const inkOf = (hex) => [1, 3, 5].map((i) => linear(parseInt(hex.slice(i, i + 2), 16) / 255));
@@ -145,7 +150,7 @@ function flash(a, b) {
 }
 
 /** One own entity's lamps, as a halo source would see them. */
-function entityLight(entity, isUnit) {
+function entityLight(entity, isUnit, curve) {
   let emitted = 0;
   let area = 0;
   const sites = [];
@@ -164,21 +169,48 @@ function entityLight(entity, isUnit) {
     area += lamp.areaPx;
     sites.push(...lamp.sitesPx);
   }
-  const factor = (sig) => Math.exp((sig - entity.restSig) / 14);
+  // The game's own curve, from the lamp reading (glow.ts), clamp included.
+  const factor = (sig) =>
+    Math.min(curve.max, Math.max(curve.min, Math.exp((sig - entity.restSig) / curve.efold)));
   const burst = isUnit ? statsFor(entity.kind).sigFiringBurst : 0;
   return {
     name: entity.name,
     id: entity.id,
+    unit: isUnit,
     sig: entity.sig,
     restSig: entity.restSig,
     lamps: entity.lamps.length,
     areaPx: Number(area.toFixed(1)),
     emitted: Number(emitted.toFixed(2)),
     sitesPx: sites.sort((a, b) => a - b),
-    // The live factor is clamped to ×6 (glow.ts), so the cap stands in for it.
-    lostAtPing: isUnit ? lossAt(Math.min(6, factor(PING_SIG))) : null,
-    lostFiring: burst > 0 ? lossAt(Math.min(6, factor(entity.restSig + burst))) : null,
+    lostAtPing: isUnit ? lossAt(factor(PING_SIG)) : null,
+    lostFiring: burst > 0 ? lossAt(factor(entity.restSig + burst)) : null,
   };
+}
+
+/**
+ * The most a halo could flash on a ping, from the lamp sites already read: no
+ * halo exists to measure, so this bounds one rather than picking a design.
+ * For the unit in view whose halo would cover most, a disc of k times each
+ * site's radius at k = 2, 4 and 8, every pixel counted as flashing, all of
+ * it in one window a third of the frame each way. Structures cannot ping.
+ */
+function haloFlashBound(entities, viewport) {
+  const window = (viewport.width / 3) * (viewport.height / 3);
+  return HALO_MULTIPLES.map((k) => {
+    let worst = { name: null, areaPx: 0 };
+    for (const e of entities.filter((x) => x.unit)) {
+      const areaPx = e.sitesPx.reduce((sum, r) => sum + Math.PI * (k * r) ** 2, 0);
+      if (areaPx > worst.areaPx) worst = { name: e.name, areaPx };
+    }
+    return {
+      multiple: k,
+      hull: worst.name,
+      areaPx: Number(worst.areaPx.toFixed(1)),
+      frameShare: Number((worst.areaPx / (viewport.width * viewport.height)).toFixed(5)),
+      windowShare: Number(Math.min(1, worst.areaPx / window).toFixed(5)),
+    };
+  });
 }
 
 const quantile = (sorted, q) =>
@@ -231,8 +263,8 @@ export default async ({ page, shot }) => {
       e.screen.x0 < viewport.width &&
       e.screen.y0 < viewport.height;
     const entities = [
-      ...reading.units.filter(inView).map((u) => entityLight(u, true)),
-      ...reading.structures.filter(inView).map((s) => entityLight(s, false)),
+      ...reading.units.filter(inView).map((u) => entityLight(u, true, reading.curve)),
+      ...reading.structures.filter(inView).map((s) => entityLight(s, false, reading.curve)),
     ];
     const sites = entities.flatMap((e) => e.sitesPx).sort((a, b) => a - b);
     cameras.push({
@@ -250,6 +282,7 @@ export default async ({ page, shot }) => {
         max: quantile(sites, 1),
       },
       entities,
+      haloFlashBound: haloFlashBound(entities, viewport),
     });
     dir = dirname(await shot(`halo-${name}`));
   }

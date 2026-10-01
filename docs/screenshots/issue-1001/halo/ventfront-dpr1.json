@@ -18,14 +18,14 @@
       },
       "nearBlack": {
         "conn": {
-          "under5": 0.8273,
-          "under10": 0.9762,
-          "under20": 0.9911
+          "under5": 0.8269,
+          "under10": 0.9759,
+          "under20": 0.9909
         },
         "frame": {
-          "under5": 0.3942,
-          "under10": 0.7662,
-          "under20": 0.965
+          "under5": 0.3982,
+          "under10": 0.7773,
+          "under20": 0.9661
         }
       },
       "sitesPx": {
@@ -38,7 +38,8 @@
       "entities": [
         {
           "name": "Light Scout",
-          "id": 120,
+          "id": 58,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -56,7 +57,8 @@
         },
         {
           "name": "Caisson",
-          "id": 121,
+          "id": 59,
+          "unit": true,
           "sig": 64,
           "restSig": 64,
           "lamps": 3,
@@ -100,7 +102,8 @@
         },
         {
           "name": "Caisson",
-          "id": 122,
+          "id": 60,
+          "unit": true,
           "sig": 64,
           "restSig": 64,
           "lamps": 3,
@@ -144,7 +147,8 @@
         },
         {
           "name": "Harvester",
-          "id": 123,
+          "id": 61,
+          "unit": true,
           "sig": 40,
           "restSig": 18,
           "lamps": 1,
@@ -166,7 +170,8 @@
         },
         {
           "name": "Bastion",
-          "id": 118,
+          "id": 56,
+          "unit": false,
           "sig": 35,
           "restSig": 35,
           "lamps": 2,
@@ -206,7 +211,8 @@
         },
         {
           "name": "Foundry",
-          "id": 119,
+          "id": 57,
+          "unit": false,
           "sig": 25,
           "restSig": 25,
           "lamps": 1,
@@ -227,6 +233,29 @@
           "lostAtPing": null,
           "lostFiring": null
         }
+      ],
+      "haloFlashBound": [
+        {
+          "multiple": 2,
+          "hull": "Caisson",
+          "areaPx": 4147.2,
+          "frameShare": 0.0032,
+          "windowShare": 0.0288
+        },
+        {
+          "multiple": 4,
+          "hull": "Caisson",
+          "areaPx": 16588.9,
+          "frameShare": 0.0128,
+          "windowShare": 0.1152
+        },
+        {
+          "multiple": 8,
+          "hull": "Caisson",
+          "areaPx": 66355.8,
+          "frameShare": 0.0512,
+          "windowShare": 0.4608
+        }
       ]
     },
     {
@@ -245,9 +274,9 @@
           "under20": 0.9866
         },
         "frame": {
-          "under5": 0.287,
-          "under10": 0.7097,
-          "under20": 0.9602
+          "under5": 0.2998,
+          "under10": 0.7203,
+          "under20": 0.9625
         }
       },
       "sitesPx": {
@@ -260,7 +289,8 @@
       "entities": [
         {
           "name": "Light Scout",
-          "id": 120,
+          "id": 58,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -278,7 +308,8 @@
         },
         {
           "name": "Caisson",
-          "id": 121,
+          "id": 59,
+          "unit": true,
           "sig": 64,
           "restSig": 64,
           "lamps": 3,
@@ -322,7 +353,8 @@
         },
         {
           "name": "Caisson",
-          "id": 122,
+          "id": 60,
+          "unit": true,
           "sig": 64,
           "restSig": 64,
           "lamps": 3,
@@ -366,7 +398,8 @@
         },
         {
           "name": "Harvester",
-          "id": 123,
+          "id": 61,
+          "unit": true,
           "sig": 40,
           "restSig": 18,
           "lamps": 1,
@@ -388,7 +421,8 @@
         },
         {
           "name": "Bastion",
-          "id": 118,
+          "id": 56,
+          "unit": false,
           "sig": 35,
           "restSig": 35,
           "lamps": 2,
@@ -428,7 +462,8 @@
         },
         {
           "name": "Foundry",
-          "id": 119,
+          "id": 57,
+          "unit": false,
           "sig": 25,
           "restSig": 25,
           "lamps": 1,
@@ -449,6 +484,29 @@
           "lostAtPing": null,
           "lostFiring": null
         }
+      ],
+      "haloFlashBound": [
+        {
+          "multiple": 2,
+          "hull": "Caisson",
+          "areaPx": 7856.5,
+          "frameShare": 0.00606,
+          "windowShare": 0.05456
+        },
+        {
+          "multiple": 4,
+          "hull": "Caisson",
+          "areaPx": 31426.2,
+          "frameShare": 0.02425,
+          "windowShare": 0.21824
+        },
+        {
+          "multiple": 8,
+          "hull": "Caisson",
+          "areaPx": 125704.7,
+          "frameShare": 0.09699,
+          "windowShare": 0.87295
+        }
       ]
     },
     {
@@ -462,14 +520,14 @@
       },
       "nearBlack": {
         "conn": {
-          "under5": 0.2933,
-          "under10": 0.9901,
+          "under5": 0.2932,
+          "under10": 0.99,
           "under20": 0.9959
         },
         "frame": {
-          "under5": 0.0772,
-          "under10": 0.6833,
-          "under20": 0.97
+          "under5": 0.0776,
+          "under10": 0.6929,
+          "under20": 0.9712
         }
       },
       "sitesPx": {
@@ -482,7 +540,8 @@
       "entities": [
         {
           "name": "Light Scout",
-          "id": 120,
+          "id": 58,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -500,7 +559,8 @@
         },
         {
           "name": "Caisson",
-          "id": 121,
+          "id": 59,
+          "unit": true,
           "sig": 64,
           "restSig": 64,
           "lamps": 3,
@@ -544,7 +604,8 @@
         },
         {
           "name": "Caisson",
-          "id": 122,
+          "id": 60,
+          "unit": true,
           "sig": 64,
           "restSig": 64,
           "lamps": 3,
@@ -588,7 +649,8 @@
         },
         {
           "name": "Harvester",
-          "id": 123,
+          "id": 61,
+          "unit": true,
           "sig": 45,
           "restSig": 18,
           "lamps": 1,
@@ -610,7 +672,8 @@
         },
         {
           "name": "Bastion",
-          "id": 118,
+          "id": 56,
+          "unit": false,
           "sig": 35,
           "restSig": 35,
           "lamps": 2,
@@ -650,7 +713,8 @@
         },
         {
           "name": "Foundry",
-          "id": 119,
+          "id": 57,
+          "unit": false,
           "sig": 25,
           "restSig": 25,
           "lamps": 1,
@@ -671,6 +735,29 @@
           "lostAtPing": null,
           "lostFiring": null
         }
+      ],
+      "haloFlashBound": [
+        {
+          "multiple": 2,
+          "hull": "Caisson",
+          "areaPx": 4333.1,
+          "frameShare": 0.00334,
+          "windowShare": 0.03009
+        },
+        {
+          "multiple": 4,
+          "hull": "Caisson",
+          "areaPx": 17332.5,
+          "frameShare": 0.01337,
+          "windowShare": 0.12036
+        },
+        {
+          "multiple": 8,
+          "hull": "Caisson",
+          "areaPx": 69330.1,
+          "frameShare": 0.0535,
+          "windowShare": 0.48146
+        }
       ]
     },
     {
@@ -684,14 +771,14 @@
       },
       "nearBlack": {
         "conn": {
-          "under5": 0.9548,
+          "under5": 0.9547,
           "under10": 0.9884,
-          "under20": 0.9955
+          "under20": 0.9956
         },
         "frame": {
-          "under5": 0.5223,
-          "under10": 0.8147,
-          "under20": 0.9722
+          "under5": 0.531,
+          "under10": 0.8259,
+          "under20": 0.9733
         }
       },
       "sitesPx": {
@@ -704,7 +791,8 @@
       "entities": [
         {
           "name": "Light Scout",
-          "id": 120,
+          "id": 58,
+          "unit": true,
           "sig": 6,
           "restSig": 6,
           "lamps": 1,
@@ -722,7 +810,8 @@
         },
         {
           "name": "Caisson",
-          "id": 121,
+          "id": 59,
+          "unit": true,
           "sig": 64,
           "restSig": 64,
           "lamps": 3,
@@ -766,7 +855,8 @@
         },
         {
           "name": "Caisson",
-          "id": 122,
+          "id": 60,
+          "unit": true,
           "sig": 64,
           "restSig": 64,
           "lamps": 3,
@@ -810,7 +900,8 @@
         },
         {
           "name": "Harvester",
-          "id": 123,
+          "id": 61,
+          "unit": true,
           "sig": 45,
           "restSig": 18,
           "lamps": 1,
@@ -832,7 +923,8 @@
         },
         {
           "name": "Bastion",
-          "id": 118,
+          "id": 56,
+          "unit": false,
           "sig": 35,
           "restSig": 35,
           "lamps": 2,
@@ -872,7 +964,8 @@
         },
         {
           "name": "Foundry",
-          "id": 119,
+          "id": 57,
+          "unit": false,
           "sig": 25,
           "restSig": 25,
           "lamps": 1,
@@ -893,6 +986,29 @@
           "lostAtPing": null,
           "lostFiring": null
         }
+      ],
+      "haloFlashBound": [
+        {
+          "multiple": 2,
+          "hull": "Caisson",
+          "areaPx": 1124.5,
+          "frameShare": 0.00087,
+          "windowShare": 0.00781
+        },
+        {
+          "multiple": 4,
+          "hull": "Caisson",
+          "areaPx": 4498.1,
+          "frameShare": 0.00347,
+          "windowShare": 0.03124
+        },
+        {
+          "multiple": 8,
+          "hull": "Caisson",
+          "areaPx": 17992.5,
+          "frameShare": 0.01388,
+          "windowShare": 0.12495
+        }
       ]
     }
   ],
@@ -900,11 +1016,11 @@
     "hull": "Light Scout",
     "restSig": 6,
     "conn": {
-      "frameShare": 0,
+      "frameShare": 0.0001,
       "worstWindowShare": 0.0003
     },
     "frame": {
-      "frameShare": 0.0036,
+      "frameShare": 0.0037,
       "worstWindowShare": 0.0222
     }
   }
