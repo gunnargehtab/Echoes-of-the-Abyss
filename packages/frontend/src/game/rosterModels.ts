@@ -49,7 +49,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Faction, StructureKind, structureStatsFor, UnitKind } from '@echoes/shared';
 import { ACTIVE_PALETTE, type Palette } from './palette.ts';
 import { HULL_LENGTH_M } from './silhouettes.ts';
-import { glowFactor } from './glow.ts';
+import { glowFactor, lampCoreRest } from './glow.ts';
 import { DREAM_LOOP, installDreamLamp, installDreamSteel } from './dreamLoop.ts';
 import { installHullSurface, type WorldLook } from './tutorialLook.ts';
 import { keepGlowOutsideToneMapping } from './modelLighting.ts';
@@ -310,9 +310,12 @@ function luminance(color: Color): number {
  *
  * Emissive is treated differently from cladding on purpose. A lamp's resting
  * strength was approved at intake against the hull's SIG band (gate 3), so it
- * is preserved exactly: the correction goes into `emissiveIntensity`, which is
- * where `applyLiveGlow` already reads the resting value from, and the emitted
- * luminance comes out as the model's own. Recolouring it to the glow ink's
+ * is preserved exactly up to white: the correction goes into
+ * `emissiveIntensity`, which is where `applyLiveGlow` already reads the
+ * resting value from, and the emitted luminance comes out as the model's own.
+ * Past white, gate 3's lamp core holds the rest at white along the ink
+ * (`lampCoreRest`), worked out here because the ink is this palette's; the
+ * export's own value stays on `userData.exportIntensity` for the lamp reading. Recolouring it to the glow ink's
  * chromaticity keeps the emissive colour inside gamut, which writing the
  * scaled ink straight into `emissive` would not — the Directorate's `#C2465E`
  * normalised to unit luminance clips its red channel past 3.
@@ -348,6 +351,9 @@ function recolor(root: Group, faction: Faction, look: WorldLook, palette: Palett
     if (emissiveLum > 0 && glowLum > 0) {
       material.emissive.copy(glow);
       material.emissiveIntensity *= emissiveLum / glowLum;
+      material.userData.exportIntensity = material.emissiveIntensity;
+      const { r, g, b } = material.emissive;
+      material.emissiveIntensity = lampCoreRest(Math.max(r, g, b), material.emissiveIntensity);
     }
     if (DREAM_LOOP && look === 'standard') installDreamSteel(material);
   }

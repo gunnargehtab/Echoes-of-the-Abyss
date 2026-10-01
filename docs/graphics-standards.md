@@ -215,13 +215,14 @@ Each live state is that rest times the live-SIG factor, so a quieted lamp still 
 curve's own ratio, and a pixel a louder state drives past white is scaled down along its
 hue rather than clipped channel by channel. A lamp resting under white keeps its resting
 strength. One held at white has no headroom to flare, so its hull's flare reads on the
-loudness collar ([ui-ux.md](ui-ux.md) §3.5). The conn view meets this rule with
-[#1021](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1021); until then a
-channel past white clips. Environment reflections are surface light, never a substitute
-for SIG emission. Any future bloom must explicitly exclude SIG **0–15** from its source,
-including bright reflected highlights; a brightness threshold alone cannot enforce that
-rule. Compare quiet and loud own hulls under the shared rig before accepting a lighting
-change:
+loudness collar ([ui-ux.md](ui-ux.md) §3.5).
+`lampCoreRest` (`packages/frontend/src/game/glow.ts`) holds the rest and
+`GLOW_AFTER_TONE_MAPPING` (`modelLighting.ts`) the pixel, which it scales for every
+material it patches, glowing props included. Environment reflections are surface light,
+never a substitute for SIG emission. Any future bloom must explicitly exclude SIG **0–15**
+from its source, including bright reflected highlights; a brightness threshold alone
+cannot enforce that rule. Compare quiet and loud own hulls under the shared rig before
+accepting a lighting change:
 `tools/render-stack/lamps.mjs` stages both and reads each lamp's strength and pixels.
 
 The rule is measured, not eyeballed. On the shipped maps, **glow energy** is the sum of

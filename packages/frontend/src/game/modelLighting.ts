@@ -59,8 +59,12 @@ export function createWaterEnvironment(renderer: WebGLRenderer): WebGLRenderTarg
  * colour fades a saturated lamp toward white, so a faction's glow would stop
  * reading as its faction (gate 4) and a loud hull's colour would lie about its
  * SIG (gate 3). Map everything but the emission, then add the emission back
- * at its own hue and strength, unmapped: exposure does not scale it and nothing
- * compresses it, so a channel past 1 clips, as it did before #974.
+ * at its own hue and strength, unmapped: exposure does not scale it.
+ * The canvas holds eight bits, so a pixel the sum drives past white is scaled
+ * down along its hue rather than clipped channel by channel, which drew an
+ * amber lamp yellow and a loud one white until #1021. That is the pixel half
+ * of gate 3's lamp core: `lampCoreRest` (glow.ts) holds the rest at white, so
+ * what reaches this is a flare past it, or lit surface under a lamp at white.
  * A no-op wherever three defines no TONE_MAPPING: a renderer without tone
  * mapping, or a draw into a render target, which r169 never tone-maps per
  * material (WebGLPrograms). So behind a RenderPass that feeds later passes the
@@ -71,9 +75,10 @@ export function createWaterEnvironment(renderer: WebGLRenderer): WebGLRenderTarg
  */
 export const GLOW_AFTER_TONE_MAPPING = `#if defined( TONE_MAPPING )
 	gl_FragColor.rgb = toneMapping( max( gl_FragColor.rgb - totalEmissiveRadiance, 0.0 ) ) + totalEmissiveRadiance;
+	gl_FragColor.rgb /= max( 1.0, max( gl_FragColor.r, max( gl_FragColor.g, gl_FragColor.b ) ) );
 #endif`;
 
-const GLOW_AFTER_TONE_KEY = ':glow-after-tone-1';
+const GLOW_AFTER_TONE_KEY = ':glow-after-tone-2';
 
 /** Chains onto any earlier patch, as tutorialLook.ts does. */
 export function keepGlowOutsideToneMapping(material: MeshStandardMaterial): void {

@@ -49,7 +49,8 @@ example; do not install another rendering stack.
 `docs/graphics-standards.md` hold the numbers; these are the three.js mechanics under them.
 
 - **Glow goes after the curve.** `keepGlowOutsideToneMapping` (`modelLighting.ts`) maps
-  surface light and adds a lamp's emission back unmapped (gate 3). Install it on the
+  surface light, adds a lamp's emission back unmapped, and scales a pixel past white along
+  its hue (gate 3's lamp core; `lampCoreRest` in `glow.ts` holds the rest). Install it on the
   material that draws: after any `clone()`, since three's `Material.copy` drops shader
   hooks; after a hook that replaces rather than chains, such as `patchSway`; and before the
   material first compiles, or with `needsUpdate` set, since the patch sets none. It is
