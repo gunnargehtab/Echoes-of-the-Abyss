@@ -16,23 +16,57 @@ laminate is not Bathyarch's riveted steel. Preserve the approved silhouette and 
 material describe the existing surface rather than draw a second hull on top of it.
 
 Choose reused maps, an atlas, or a bounded procedural texture. Record its dimensions,
-channels, colour space, mip policy, memory, owner and lifetime. Search the existing
-material helpers first. Reuse the available three.js material/texture/shader guidance;
-do not install another rendering stack.
+channels, colour space, mip policy, memory, owner and lifetime.
+`createWaterEnvironment` (`packages/frontend/src/game/modelLighting.ts`) is the worked
+example: its float source and PMREM generator are disposed in a `finally` once baked, and
+the one retained target, the probe's `environmentBytes`, goes with the view (gate 6).
+Search the existing material helpers first. Reuse the vendored three.js skills where they
+agree with three 0.169, and prefer this repository's own shader patches to any skill's
+example; do not install another rendering stack.
 
 ## Implement in the actual material pipeline
 
 - Colour textures use sRGB; height, roughness and noise are linear data.
 - Coordinates stay attached to the model, independently of motion and the far-view
   readability scale. Filter or fade subpixel detail; a screenshot cannot prove no shimmer.
-- Chain shader hooks and cache keys. Ground cosmetics run before survey ink; fog,
-  vertex-colour veil, instancing and sway must still run.
-- Never alter a lamp's approved resting energy, placement, hue or live-SIG curve.
-  A cosmetic rim is not a new light source.
+- Chain shader hooks and cache keys: capture the earlier `onBeforeCompile` and
+  `customProgramCacheKey()` and suffix the key, because three's default key is the hook's
+  own source text, which a wrapper shares with every material it wraps. Ground cosmetics
+  run before survey ink; fog, vertex-colour veil, instancing and sway must still run.
+- Never alter a lamp's approved resting energy, placement, hue or live-SIG curve, on
+  screen as well as in the material: ACES faded amber lamps toward cream in #974 with
+  every lamp value untouched. A cosmetic rim is not a new light source.
 - Key cached templates by every look-changing input. A tutorial palette or material
   must not contaminate a later skirmish, including after a palette switch.
 - Keep normal materials on their original path outside the approved slice. Surface
   detail does not add geometry, hidden state or a per-frame texture bake.
+
+## The render stack
+
+`docs/art-direction.md` (Shared model lighting) and gates 3, 6 and 8 of
+`docs/graphics-standards.md` hold the numbers; these are the three.js mechanics under them.
+
+- **Glow goes after the curve.** `keepGlowOutsideToneMapping` (`modelLighting.ts`) maps
+  surface light and adds a lamp's emission back unmapped (gate 3). Install it on the
+  material that draws: after any `clone()`, since three's `Material.copy` drops shader
+  hooks; after a hook that replaces rather than chains, such as `patchSway`; and before the
+  material first compiles, or with `needsUpdate` set, since the patch sets none. It is
+  exact for `MeshStandardMaterial` only: clearcoat or sheen attenuate emission first, yet
+  a physical material passes an `instanceof MeshStandardMaterial` guard. It does nothing
+  where three defines no `TONE_MAPPING`, and its comment says where.
+- **Unlit layers stay off the curve.** A built-in material sets `toneMapped: false`, which
+  `packages/frontend/test/modelLighting.test.ts` checks as flags over the canned match,
+  not as pixels. A `ShaderMaterial` ends on `<colorspace_fragment>` without
+  `<tonemapping_fragment>`, as the water backdrop does, and no test checks that.
+- **One environment, owned by the view.** The PMREM above is `scene.environment`, at
+  `scene.environmentIntensity`; a material without its own `envMap` ignores its
+  `envMapIntensity` there. Templates outlive a view (`rosterModels.ts`), so none takes the
+  environment as its own `envMap`. It is never the background, and never a capture of the
+  match: it reflects no entity, accent or hidden state.
+- **UV0 is not a layout.** A map reads the UV set its texture's `channel` names: `uv`,
+  then `uv1`, so `uv2` is the third. `aoMap` darkens indirect light only. `uvAlike` writes
+  zeros, and `node tools/render-stack/audit.mjs` counts what the library carries (#1002
+  and #1005 start there).
 
 ## Prove the surface
 
@@ -42,7 +76,9 @@ template separation and hook order in the smallest relevant frontend tests.
 
 Use [run-game](../run-game/SKILL.md) at close, home, survey and low pitch, and move the
 camera. Capture actual texture, call and triangle counts alongside the full composited
-frame. A fallback must be named as a fallback, never accepted as the new material.
+frame. `tools/render-stack/capture.mjs` holds those four cameras as a run-game `--steps`
+module, with the probe's readings beside the frames. A fallback must be named as a
+fallback, never accepted as the new material.
 
 Return the material family, implementation, memory ledger and evidence to
 [art direction](../art-direction/SKILL.md).
@@ -51,4 +87,5 @@ Return the material family, implementation, memory ledger and evidence to
 
 - [Visual reboot brief](../../../docs/visual-reboot.md)
 - [Graphics gates](../../../docs/graphics-standards.md)
-- [Three.js materials](../threejs-materials/SKILL.md)
+- [Three.js materials](../threejs-materials/SKILL.md), vendored;
+  `.claude/VENDORED-SKILLS.md` lists where it predates three 0.169

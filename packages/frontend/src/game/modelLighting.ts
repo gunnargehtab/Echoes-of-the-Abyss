@@ -59,7 +59,13 @@ export function createWaterEnvironment(renderer: WebGLRenderer): WebGLRenderTarg
  * colour fades a saturated lamp toward white, so a faction's glow would stop
  * reading as its faction (gate 4) and a loud hull's colour would lie about its
  * SIG (gate 3). Map everything but the emission, then add the emission back
- * at its own hue and strength. A no-op wherever the renderer has no tone mapping.
+ * at its own hue and strength, unmapped: exposure does not scale it and nothing
+ * compresses it, so a channel past 1 clips, as it did before #974.
+ * A no-op wherever three defines no TONE_MAPPING: a renderer without tone
+ * mapping, or a draw into a render target, which r169 never tone-maps per
+ * material (WebGLPrograms). So behind a RenderPass that feeds later passes the
+ * glow is summed unmapped, and OutputPass tone-maps it, and every
+ * `toneMapped: false` layer, with everything else.
  * Exact for MeshStandardMaterial, where emission sits unattenuated in the sum;
  * a physical material's clearcoat or sheen would attenuate it first.
  */
