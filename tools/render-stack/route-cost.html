@@ -1,0 +1,371 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>halo route cost</title>
+<style>
+  body { margin: 0; background: #000; }
+  canvas { display: block; }
+</style>
+<canvas id="c"></canvas>
+<script type="module">
+  // What each halo route #1001 weighs would add to a frame, on its own: see
+  // route-cost.mjs for why and how this page is driven. Raw WebGL 2, so the
+  // timed passes are exactly the route's and nothing three adds.
+  const params = new URLSearchParams(location.search);
+  const W = Number(params.get('w') ?? 1440);
+  const H = Number(params.get('h') ?? 900);
+  const FRAMES = Number(params.get('frames') ?? 240);
+  const SITES = 250; // lamp sites in the full-screen source; Ventfront's opening has about 113
+  const POINTS = 1024; // the point layer's cap from the design round's site census
+
+  const canvas = document.getElementById('c');
+  canvas.width = W;
+  canvas.height = H;
+  canvas.style.width = `${W}px`;
+  canvas.style.height = `${H}px`;
+  const gl = canvas.getContext('webgl2', { antialias: true, depth: true, stencil: false, alpha: false });
+  gl.getExtension('EXT_color_buffer_float');
+  gl.getExtension('EXT_color_buffer_half_float');
+  const timer = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+  // Read while the canvas is the bound framebuffer: SAMPLES is per binding.
+  const canvasSamples = gl.getParameter(gl.SAMPLES);
+  // How the copy is asked for: depth only, or the stencil too, into a texture
+  // or a renderbuffer (both DEPTH24_STENCIL8, the one format the blit takes).
+  // Depth only is the default and the route: on the named GPU asking for the
+  // stencil as well cost 5–7 ms at 1440×900 against 0.13–0.14 ms, although
+  // the canvas has no stencil at all (?mask=depthstencil shows it).
+  const BLIT_MASK = params.get('mask') === 'depthstencil' ? 'depthstencil' : 'depth';
+  const BLIT_INTO = params.get('into') === 'renderbuffer' ? 'renderbuffer' : 'texture';
+  const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+  const renderer = gl.getParameter(dbg ? dbg.UNMASKED_RENDERER_WEBGL : gl.RENDERER);
+
+  // ---------------------------------------------------------------- programs
+  const compile = (vs, fs) => {
+    const p = gl.createProgram();
+    for (const [type, src] of [[gl.VERTEX_SHADER, vs], [gl.FRAGMENT_SHADER, fs]]) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, '#version 300 es\nprecision highp float;\n' + src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+      gl.attachShader(p, s);
+    }
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    return p;
+  };
+  const FULL = 'out vec2 uv; void main(){ vec2 p = vec2((gl_VertexID<<1)&2, gl_VertexID&2); uv = p; gl_Position = vec4(p*2.0-1.0, 0.0, 1.0); }';
+  // The scene: quads at depth, lit flat. Stands in for the world's depth and fill.
+  const sceneProg = compile(
+    'in vec4 q; out float shade; void main(){ vec2 c[6] = vec2[6](vec2(0,0),vec2(1,0),vec2(0,1),vec2(1,0),vec2(1,1),vec2(0,1)); vec2 o = c[gl_VertexID % 6]; gl_Position = vec4(q.xy + o*q.z, q.w, 1.0); shade = 0.05 + 0.1*q.w; }',
+    'in float shade; out vec4 o; void main(){ o = vec4(vec3(shade), 1.0); }'
+  );
+  // Lamp sites into the source: small quads behind the scene's depth.
+  const siteProg = compile(
+    'in vec4 q; void main(){ vec2 c[6] = vec2[6](vec2(-1,-1),vec2(1,-1),vec2(-1,1),vec2(1,-1),vec2(1,1),vec2(-1,1)); gl_Position = vec4(q.xy + c[gl_VertexID % 6]*q.z, q.w, 1.0); }',
+    'out vec4 o; void main(){ o = vec4(0.95, 0.45, 0.03, 1.0); }'
+  );
+  const copyProg = compile(FULL, 'in vec2 uv; uniform sampler2D src; out vec4 o; void main(){ o = texture(src, uv); }');
+  const blurProg = compile(
+    FULL,
+    'in vec2 uv; uniform sampler2D src; uniform vec2 step; out vec4 o; void main(){ float w[5] = float[5](0.227,0.195,0.122,0.054,0.016); vec4 s = texture(src, uv)*w[0]; for (int i=1;i<5;i++){ s += texture(src, uv+step*float(i))*w[i]; s += texture(src, uv-step*float(i))*w[i]; } o = s; }'
+  );
+  const pointProg = compile(
+    'in vec4 q; void main(){ gl_Position = vec4(q.xy, q.w, 1.0); gl_PointSize = q.z; }',
+    'out vec4 o; void main(){ float r = length(gl_PointCoord-0.5)*2.0; float a = exp(-r*r*4.0)*(1.0-smoothstep(0.7,1.0,r)); o = vec4(vec3(0.95,0.45,0.03)*a*0.4, 1.0); }'
+  );
+  const depthCheckProg = compile(
+    FULL,
+    'in vec2 uv; uniform sampler2D a; uniform sampler2D b; out vec4 o; void main(){ float d = abs(texture(a, uv).r - texture(b, uv).r); o = vec4(d > 1e-4 ? 1.0 : 0.0, d > 1e-2 ? 1.0 : 0.0, 0.0, 1.0); }'
+  );
+
+  // Deterministic geometry: a seeded generator, so every run draws one scene.
+  let seed = 1;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const buffer = (data) => {
+    const b = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, b);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+    return b;
+  };
+  const instanced = (prog, buf) => {
+    const vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    const loc = gl.getAttribLocation(prog, 'q');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 4, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribDivisor(loc, 1);
+    gl.bindVertexArray(null);
+    return vao;
+  };
+  const QUADS = 400;
+  const scene = [-1, -1, 2, 0.9]; // a full-screen floor far back
+  for (let i = 0; i < QUADS; i++) scene.push(rnd() * 2 - 1.2, rnd() * 2 - 1.2, 0.05 + rnd() * 0.2, rnd() * 1.6 - 0.8);
+  const sceneVao = instanced(sceneProg, buffer(scene));
+  const sites = [];
+  for (let i = 0; i < SITES; i++) sites.push(rnd() * 2 - 1, rnd() * 2 - 1, (2 + rnd() * 18) / W, rnd() * 1.6 - 0.8);
+  const siteVao = instanced(siteProg, buffer(sites));
+  const points = [];
+  for (let i = 0; i < POINTS; i++) points.push(rnd() * 2 - 1, rnd() * 2 - 1, 4 + rnd() * 44, rnd() * 1.6 - 0.8);
+  const pointVao = gl.createVertexArray();
+  gl.bindVertexArray(pointVao);
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer(points));
+  gl.enableVertexAttribArray(gl.getAttribLocation(pointProg, 'q'));
+  gl.vertexAttribPointer(gl.getAttribLocation(pointProg, 'q'), 4, gl.FLOAT, false, 0, 0);
+  gl.bindVertexArray(null);
+  const emptyVao = gl.createVertexArray();
+
+  // ---------------------------------------------------------------- targets
+  let bytes = 0;
+  const colorTarget = (w, h) => {
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, w, h, 0, gl.RGBA, gl.HALF_FLOAT, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const fb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    bytes += w * h * 8;
+    return { tex, fb, w, h };
+  };
+  const depthTexture = (w, h) => {
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texStorage2D(gl.TEXTURE_2D, 1, gl.DEPTH24_STENCIL8, w, h);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    return tex;
+  };
+  // The full-screen route: a full-size source sharing the copied depth, and
+  // a three-mip chain from half size, two targets a level for the blur.
+  const source = colorTarget(W, H);
+  const copiedDepth = depthTexture(W, H);
+  bytes += W * H * 4;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, source.fb);
+  if (BLIT_INTO === 'renderbuffer') {
+    const rb = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, W, H);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, rb);
+  } else {
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, copiedDepth, 0);
+  }
+  const sourceComplete = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+  const levels = [2, 4, 8].map((d) => [colorTarget(W / d, H / d), colorTarget(W / d, H / d)]);
+  const routeBytes = bytes;
+
+  const fullscreen = (prog, target, tex, extra) => {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, target ? target.fb : null);
+    gl.viewport(0, 0, target ? target.w : W, target ? target.h : H);
+    gl.useProgram(prog);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.uniform1i(gl.getUniformLocation(prog, 'src'), 0);
+    extra?.();
+    gl.bindVertexArray(emptyVao);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  };
+
+  // ---------------------------------------------------------------- passes
+  const pass = {
+    scene() {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.viewport(0, 0, W, H);
+      gl.disable(gl.BLEND);
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LESS);
+      gl.depthMask(true);
+      gl.clearColor(0.01, 0.02, 0.03, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      gl.useProgram(sceneProg);
+      gl.bindVertexArray(sceneVao);
+      gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, QUADS + 1);
+    },
+    // The canvas depth into the source's, a copy rather than a draw.
+    blit() {
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+      gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, source.fb);
+      const mask = BLIT_MASK === 'depth' ? gl.DEPTH_BUFFER_BIT : gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT;
+      gl.blitFramebuffer(0, 0, W, H, 0, 0, W, H, mask, gl.NEAREST);
+    },
+    source() {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, source.fb);
+      gl.viewport(0, 0, W, H);
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LEQUAL);
+      gl.depthMask(false);
+      gl.useProgram(siteProg);
+      gl.bindVertexArray(siteVao);
+      gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, SITES);
+      gl.depthMask(true);
+    },
+    blur() {
+      gl.disable(gl.DEPTH_TEST);
+      gl.disable(gl.BLEND);
+      let from = source.tex;
+      for (const [a, b] of levels) {
+        fullscreen(copyProg, a, from);
+        fullscreen(blurProg, b, a.tex, () => gl.uniform2f(gl.getUniformLocation(blurProg, 'step'), 1 / a.w, 0));
+        fullscreen(blurProg, a, b.tex, () => gl.uniform2f(gl.getUniformLocation(blurProg, 'step'), 0, 1 / a.h));
+        from = a.tex;
+      }
+      // Back up the chain, each level added into the one above.
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE, gl.ONE);
+      fullscreen(copyProg, levels[1][0], levels[2][0].tex);
+      fullscreen(copyProg, levels[0][0], levels[1][0].tex);
+      gl.disable(gl.BLEND);
+    },
+    composite() {
+      gl.disable(gl.DEPTH_TEST);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE, gl.ONE);
+      fullscreen(copyProg, null, levels[0][0].tex);
+      gl.disable(gl.BLEND);
+    },
+    points() {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.viewport(0, 0, W, H);
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LEQUAL);
+      gl.depthMask(false);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE, gl.ONE);
+      gl.useProgram(pointProg);
+      gl.bindVertexArray(pointVao);
+      gl.drawArrays(gl.POINTS, 0, POINTS);
+      gl.depthMask(true);
+      gl.disable(gl.BLEND);
+    },
+  };
+  const VARIANTS = {
+    none: ['scene'],
+    full: ['scene', 'blit', 'source', 'blur', 'composite'],
+    points: ['scene', 'points'],
+  };
+
+  // ------------------------------------------------- the depth copy, checked
+  // The reference: the same scene drawn into a single-sample target with its
+  // own depth texture. The copy: the canvas's 4× depth, resolved by the blit.
+  // Edges differ where the resolve picks a sample the reference did not draw.
+  function checkDepth() {
+    const refDepth = depthTexture(W, H);
+    const refFb = gl.createFramebuffer();
+    const refColor = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, refColor);
+    gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, W, H);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, refFb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, refColor, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, refDepth, 0);
+    gl.viewport(0, 0, W, H);
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LESS);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.useProgram(sceneProg);
+    gl.bindVertexArray(sceneVao);
+    gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, QUADS + 1);
+    pass.scene();
+    pass.blit();
+    const blitError = gl.getError();
+    const out = colorTarget(W, H);
+    bytes -= W * H * 8;
+    gl.disable(gl.DEPTH_TEST);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, out.fb);
+    gl.viewport(0, 0, W, H);
+    gl.useProgram(depthCheckProg);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, refDepth);
+    gl.uniform1i(gl.getUniformLocation(depthCheckProg, 'a'), 0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, copiedDepth);
+    gl.uniform1i(gl.getUniformLocation(depthCheckProg, 'b'), 1);
+    gl.bindVertexArray(emptyVao);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    const px = new Float32Array(W * H * 4);
+    gl.readPixels(0, 0, W, H, gl.RGBA, gl.FLOAT, px);
+    let off = 0;
+    let far = 0;
+    for (let i = 0; i < px.length; i += 4) {
+      if (px[i] > 0.5) off++;
+      if (px[i + 1] > 0.5) far++;
+    }
+    gl.activeTexture(gl.TEXTURE0);
+    return {
+      blitError,
+      pixels: W * H,
+      differOver1e4: off,
+      differOver1e2: far,
+      shareOver1e4: Number((off / (W * H)).toFixed(5)),
+    };
+  }
+
+  // ---------------------------------------------------------------- timing
+  const frame = () => new Promise((r) => requestAnimationFrame(r));
+  async function measure(variant) {
+    const parts = VARIANTS[variant];
+    const pending = [];
+    const sums = Object.fromEntries(parts.map((p) => [p, []]));
+    let dropped = 0;
+    for (let f = 0; f < FRAMES + 30; f++) {
+      await frame();
+      if (gl.getParameter(timer.GPU_DISJOINT_EXT)) {
+        dropped += pending.length;
+        pending.length = 0;
+      }
+      while (pending.length > 0 && gl.getQueryParameter(pending[0].q, gl.QUERY_RESULT_AVAILABLE)) {
+        const { q, part, keep } = pending.shift();
+        if (keep) sums[part].push(gl.getQueryParameter(q, gl.QUERY_RESULT) / 1e6);
+        gl.deleteQuery(q);
+      }
+      for (const part of parts) {
+        const q = gl.createQuery();
+        gl.beginQuery(timer.TIME_ELAPSED_EXT, q);
+        pass[part]();
+        gl.endQuery(timer.TIME_ELAPSED_EXT);
+        // The first thirty frames warm the driver and are not kept.
+        pending.push({ q, part, keep: f >= 30 });
+      }
+    }
+    while (pending.length > 0) {
+      await frame();
+      const { q, part, keep } = pending[0];
+      if (!gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE)) continue;
+      if (keep) sums[part].push(gl.getQueryParameter(q, gl.QUERY_RESULT) / 1e6);
+      pending.shift();
+      gl.deleteQuery(q);
+    }
+    const stat = (xs) => {
+      const s = [...xs].sort((a, b) => a - b);
+      return {
+        frames: s.length,
+        avgMs: Number((s.reduce((a, b) => a + b, 0) / s.length).toFixed(4)),
+        medianMs: Number(s[s.length >> 1].toFixed(4)),
+      };
+    };
+    return { dropped, parts: Object.fromEntries(parts.map((p) => [p, stat(sums[p])])) };
+  }
+
+  window.__routeCost = (async () => {
+    if (!timer) return { renderer, error: 'no EXT_disjoint_timer_query_webgl2' };
+    const depth = BLIT_INTO === 'texture' ? checkDepth() : null;
+    const result = {
+      renderer,
+      size: { width: W, height: H },
+      samples: canvasSamples,
+      blit: { mask: BLIT_MASK, into: BLIT_INTO },
+      sourceComplete,
+      routeBytes,
+      routeMiB: Number((routeBytes / 2 ** 20).toFixed(2)),
+      sites: SITES,
+      points: POINTS,
+      depthCheck: depth,
+      variants: {},
+    };
+    for (const variant of Object.keys(VARIANTS)) result.variants[variant] = await measure(variant);
+    return result;
+  })();
+</script>

@@ -272,7 +272,7 @@ export default async ({ page, shot }) => {
 // --- pixels -------------------------------------------------------------------
 
 /** An 8-bit RGB or RGBA PNG, as Chromium writes them. */
-function decode(buf) {
+export function decode(buf) {
   let p = 8;
   let w = 0;
   let h = 0;

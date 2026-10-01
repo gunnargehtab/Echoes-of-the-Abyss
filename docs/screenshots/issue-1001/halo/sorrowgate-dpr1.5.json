@@ -1,0 +1,572 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "dpr": 1.5
+  },
+  "cameras": [
+    {
+      "name": "home",
+      "distance": 6000,
+      "pitchDeg": 55,
+      "hullScale": 2.52,
+      "drawingBuffer": {
+        "width": 2160,
+        "height": 1350
+      },
+      "nearBlack": {
+        "conn": {
+          "under5": 0.6196,
+          "under10": 0.9938,
+          "under20": 0.9973
+        },
+        "frame": {
+          "under5": 0.1684,
+          "under10": 0.6564,
+          "under20": 0.9667
+        }
+      },
+      "sitesPx": {
+        "count": 30,
+        "min": 0.34,
+        "median": 0.35,
+        "p90": 0.59,
+        "max": 0.74
+      },
+      "entities": [
+        {
+          "name": "Light Scout",
+          "id": 238,
+          "sig": 6,
+          "restSig": 6,
+          "lamps": 1,
+          "areaPx": 0.6,
+          "emitted": 0.48,
+          "sitesPx": [
+            0.34,
+            0.34,
+            0.34,
+            0.34,
+            0.44
+          ],
+          "lostAtPing": 0.833,
+          "lostFiring": 0.657
+        },
+        {
+          "name": "Light Scout",
+          "id": 239,
+          "sig": 6,
+          "restSig": 6,
+          "lamps": 1,
+          "areaPx": 0.6,
+          "emitted": 0.48,
+          "sitesPx": [
+            0.34,
+            0.34,
+            0.34,
+            0.34,
+            0.44
+          ],
+          "lostAtPing": 0.833,
+          "lostFiring": 0.657
+        },
+        {
+          "name": "Light Scout",
+          "id": 240,
+          "sig": 6,
+          "restSig": 6,
+          "lamps": 1,
+          "areaPx": 0.6,
+          "emitted": 0.48,
+          "sitesPx": [
+            0.34,
+            0.34,
+            0.34,
+            0.34,
+            0.44
+          ],
+          "lostAtPing": 0.833,
+          "lostFiring": 0.657
+        },
+        {
+          "name": "Light Scout",
+          "id": 241,
+          "sig": 6,
+          "restSig": 6,
+          "lamps": 1,
+          "areaPx": 0.6,
+          "emitted": 0.48,
+          "sitesPx": [
+            0.35,
+            0.35,
+            0.35,
+            0.35,
+            0.45
+          ],
+          "lostAtPing": 0.833,
+          "lostFiring": 0.657
+        },
+        {
+          "name": "Harvester",
+          "id": 242,
+          "sig": 18,
+          "restSig": 18,
+          "lamps": 1,
+          "areaPx": 1.7,
+          "emitted": 0.95,
+          "sitesPx": [
+            0.51,
+            0.58,
+            0.59,
+            0.59,
+            0.74
+          ],
+          "lostAtPing": 0.759,
+          "lostFiring": null
+        },
+        {
+          "name": "Harvester",
+          "id": 243,
+          "sig": 18,
+          "restSig": 18,
+          "lamps": 1,
+          "areaPx": 1.7,
+          "emitted": 0.95,
+          "sitesPx": [
+            0.51,
+            0.58,
+            0.59,
+            0.59,
+            0.74
+          ],
+          "lostAtPing": 0.759,
+          "lostFiring": null
+        }
+      ]
+    },
+    {
+      "name": "close",
+      "distance": 1800,
+      "pitchDeg": 55,
+      "hullScale": 1,
+      "drawingBuffer": {
+        "width": 2160,
+        "height": 1350
+      },
+      "nearBlack": {
+        "conn": {
+          "under5": 0.294,
+          "under10": 0.9927,
+          "under20": 0.9965
+        },
+        "frame": {
+          "under5": 0.0431,
+          "under10": 0.6456,
+          "under20": 0.9641
+        }
+      },
+      "sitesPx": {
+        "count": 30,
+        "min": 0.42,
+        "median": 0.44,
+        "p90": 0.87,
+        "max": 1.08
+      },
+      "entities": [
+        {
+          "name": "Light Scout",
+          "id": 238,
+          "sig": 6,
+          "restSig": 6,
+          "lamps": 1,
+          "areaPx": 1,
+          "emitted": 0.81,
+          "sitesPx": [
+            0.43,
+            0.43,
+            0.43,
+            0.43,
+            0.55
+          ],
+          "lostAtPing": 0.833,
+          "lostFiring": 0.657
+        },
+        {
+          "name": "Light Scout",
+          "id": 239,
+          "sig": 6,
+          "restSig": 6,
+          "lamps": 1,
+          "areaPx": 1,
+          "emitted": 0.81,
+          "sitesPx": [
+            0.42,
+            0.42,
+            0.42,
+            0.42,
+            0.54
+          ],
+          "lostAtPing": 0.833,
+          "lostFiring": 0.657
+        },
+        {
+          "name": "Light Scout",
+          "id": 240,
+          "sig": 6,
+          "restSig": 6,
+          "lamps": 1,
+          "areaPx": 1,
+          "emitted": 0.81,
+          "sitesPx": [
+            0.43,
+            0.43,
+            0.43,
+            0.43,
+            0.55
+          ],
+          "lostAtPing": 0.833,
+          "lostFiring": 0.657
+        },
+        {
+          "name": "Light Scout",
+          "id": 241,
+          "sig": 6,
+          "restSig": 6,
+          "lamps": 1,
+          "areaPx": 1.1,
+          "emitted": 0.89,
+          "sitesPx": [
+            0.44,
+            0.44,
+            0.44,
+            0.44,
+            0.57
+          ],
+          "lostAtPing": 0.833,
+          "lostFiring": 0.657
+        },
+        {
+          "name": "Harvester",
+          "id": 242,
+          "sig": 18,
+          "restSig": 18,
+          "lamps": 1,
+          "areaPx": 3.8,
+          "emitted": 2.11,
+          "sitesPx": [
+            0.75,
+            0.85,
+            0.86,
+            0.87,
+            1.08
+          ],
+          "lostAtPing": 0.759,
+          "lostFiring": null
+        },
+        {
+          "name": "Harvester",
+          "id": 243,
+          "sig": 18,
+          "restSig": 18,
+          "lamps": 1,
+          "areaPx": 3.8,
+          "emitted": 2.11,
+          "sitesPx": [
+            0.75,
+            0.85,
+            0.86,
+            0.87,
+            1.08
+          ],
+          "lostAtPing": 0.759,
+          "lostFiring": null
+        }
+      ]
+    },
+    {
+      "name": "low",
+      "distance": 3500,
+      "pitchDeg": 12,
+      "hullScale": 1.47,
+      "drawingBuffer": {
+        "width": 2160,
+        "height": 1350
+      },
+      "nearBlack": {
+        "conn": {
+          "under5": 0.4654,
+          "under10": 0.995,
+          "under20": 0.9985
+        },
+        "frame": {
+          "under5": 0.159,
+          "under10": 0.65,
+          "under20": 0.9667
+        }
+      },
+      "sitesPx": {
+        "count": 30,
+        "min": 0.32,
+        "median": 0.34,
+        "p90": 0.64,
+        "max": 0.8
+      },
+      "entities": [
+        {
+          "name": "Light Scout",
+          "id": 238,
+          "sig": 6,
+          "restSig": 6,
+          "lamps": 1,
+          "areaPx": 0.6,
+          "emitted": 0.48,
+          "sitesPx": [
+            0.33,
+            0.33,
+            0.33,
+            0.33,
+            0.42
+          ],
+          "lostAtPing": 0.833,
+          "lostFiring": 0.657
+        },
+        {
+          "name": "Light Scout",
+          "id": 239,
+          "sig": 6,
+          "restSig": 6,
+          "lamps": 1,
+          "areaPx": 0.6,
+          "emitted": 0.48,
+          "sitesPx": [
+            0.32,
+            0.32,
+            0.32,
+            0.32,
+            0.41
+          ],
+          "lostAtPing": 0.833,
+          "lostFiring": 0.657
+        },
+        {
+          "name": "Light Scout",
+          "id": 240,
+          "sig": 6,
+          "restSig": 6,
+          "lamps": 1,
+          "areaPx": 0.6,
+          "emitted": 0.48,
+          "sitesPx": [
+            0.33,
+            0.33,
+            0.33,
+            0.33,
+            0.42
+          ],
+          "lostAtPing": 0.833,
+          "lostFiring": 0.657
+        },
+        {
+          "name": "Light Scout",
+          "id": 241,
+          "sig": 6,
+          "restSig": 6,
+          "lamps": 1,
+          "areaPx": 0.6,
+          "emitted": 0.48,
+          "sitesPx": [
+            0.34,
+            0.34,
+            0.34,
+            0.34,
+            0.43
+          ],
+          "lostAtPing": 0.833,
+          "lostFiring": 0.657
+        },
+        {
+          "name": "Harvester",
+          "id": 242,
+          "sig": 18,
+          "restSig": 18,
+          "lamps": 1,
+          "areaPx": 2.1,
+          "emitted": 1.17,
+          "sitesPx": [
+            0.56,
+            0.63,
+            0.63,
+            0.64,
+            0.8
+          ],
+          "lostAtPing": 0.759,
+          "lostFiring": null
+        },
+        {
+          "name": "Harvester",
+          "id": 243,
+          "sig": 18,
+          "restSig": 18,
+          "lamps": 1,
+          "areaPx": 2.1,
+          "emitted": 1.17,
+          "sitesPx": [
+            0.56,
+            0.63,
+            0.63,
+            0.64,
+            0.8
+          ],
+          "lostAtPing": 0.759,
+          "lostFiring": null
+        }
+      ]
+    },
+    {
+      "name": "survey",
+      "distance": 18000,
+      "pitchDeg": 88,
+      "hullScale": 4,
+      "drawingBuffer": {
+        "width": 2160,
+        "height": 1350
+      },
+      "nearBlack": {
+        "conn": {
+          "under5": 0.9018,
+          "under10": 0.9972,
+          "under20": 0.9992
+        },
+        "frame": {
+          "under5": 0.3283,
+          "under10": 0.6621,
+          "under20": 0.9686
+        }
+      },
+      "sitesPx": {
+        "count": 30,
+        "min": 0.24,
+        "median": 0.24,
+        "p90": 0.38,
+        "max": 0.48
+      },
+      "entities": [
+        {
+          "name": "Light Scout",
+          "id": 238,
+          "sig": 6,
+          "restSig": 6,
+          "lamps": 1,
+          "areaPx": 0.3,
+          "emitted": 0.24,
+          "sitesPx": [
+            0.24,
+            0.24,
+            0.24,
+            0.24,
+            0.31
+          ],
+          "lostAtPing": 0.833,
+          "lostFiring": 0.657
+        },
+        {
+          "name": "Light Scout",
+          "id": 239,
+          "sig": 6,
+          "restSig": 6,
+          "lamps": 1,
+          "areaPx": 0.3,
+          "emitted": 0.24,
+          "sitesPx": [
+            0.24,
+            0.24,
+            0.24,
+            0.24,
+            0.31
+          ],
+          "lostAtPing": 0.833,
+          "lostFiring": 0.657
+        },
+        {
+          "name": "Light Scout",
+          "id": 240,
+          "sig": 6,
+          "restSig": 6,
+          "lamps": 1,
+          "areaPx": 0.3,
+          "emitted": 0.24,
+          "sitesPx": [
+            0.24,
+            0.24,
+            0.24,
+            0.24,
+            0.31
+          ],
+          "lostAtPing": 0.833,
+          "lostFiring": 0.657
+        },
+        {
+          "name": "Light Scout",
+          "id": 241,
+          "sig": 6,
+          "restSig": 6,
+          "lamps": 1,
+          "areaPx": 0.3,
+          "emitted": 0.24,
+          "sitesPx": [
+            0.24,
+            0.24,
+            0.24,
+            0.24,
+            0.31
+          ],
+          "lostAtPing": 0.833,
+          "lostFiring": 0.657
+        },
+        {
+          "name": "Harvester",
+          "id": 242,
+          "sig": 18,
+          "restSig": 18,
+          "lamps": 1,
+          "areaPx": 0.7,
+          "emitted": 0.39,
+          "sitesPx": [
+            0.33,
+            0.38,
+            0.38,
+            0.38,
+            0.48
+          ],
+          "lostAtPing": 0.759,
+          "lostFiring": null
+        },
+        {
+          "name": "Harvester",
+          "id": 243,
+          "sig": 18,
+          "restSig": 18,
+          "lamps": 1,
+          "areaPx": 0.7,
+          "emitted": 0.39,
+          "sitesPx": [
+            0.33,
+            0.38,
+            0.38,
+            0.38,
+            0.48
+          ],
+          "lostAtPing": 0.759,
+          "lostFiring": null
+        }
+      ]
+    }
+  ],
+  "ping": {
+    "hull": "Light Scout",
+    "restSig": 6,
+    "struck": true
+  }
+}

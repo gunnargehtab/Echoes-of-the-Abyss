@@ -67,6 +67,112 @@ four stations are in `unpaced/stations-dpr1.json` and `stations-dpr1.5.json`. Ca
 triangles match #974's readings, so the timer added no draw. Two runs of one camera agree
 within 0.11 ms, which is the smallest change these readings can resolve.
 
+## Halo readings, with the lamp core in place
+
+What a lamp halo would have to work with, read before any halo exists, so the owner can
+pick point halos, a full-screen pass or none
+([graphics-standards.md](../../graphics-standards.md) gate 6). Same hardware; the
+client at `99d9d8d8` with this increment's lamp hook; `halo/` holds the JSON.
+`tools/render-stack/halo.mjs` reads the game at capture.mjs's four cameras, and
+`tools/render-stack/route-cost.mjs` times each route's own passes on a stand-in scene.
+The GPU time at gate 6's stations, the low camera and the fight station included, is
+[issue-1021](../issue-1021/README.md)'s "after" set, taken on the same lamp core.
+
+### Near-black share
+
+The share of pixels whose encoded luma is under 5, 10 and 20 %. style-neon-noir.md asks
+85–90 % near-black of any frame and names no threshold, so three are given. The conn
+canvas is the world alone; the frame is everything the player sees, HUD included.
+
+| Map, camera | Conn canvas: under 5 / 10 / 20 % | Frame with HUD: under 5 / 10 / 20 % | Ratio 1.5, frame under 10 % |
+| --- | --- | --- | --- |
+| Ventfront home | 82.7 / 97.6 / 99.1 | 39.4 / 76.6 / 96.5 | 77.0 |
+| Ventfront close | 45.7 / 96.0 / 98.7 | 28.7 / 71.0 / 96.0 | 70.0 |
+| Ventfront low | 29.3 / 99.0 / 99.6 | 7.7 / 68.3 / 97.0 | 68.9 |
+| Ventfront survey | 95.5 / 98.8 / 99.6 | 52.2 / 81.5 / 97.2 | 82.1 |
+| Sorrowgate home | 60.8 / 99.2 / 99.7 | 16.1 / 64.5 / 96.0 | 65.6 |
+| Sorrowgate close | 29.2 / 99.2 / 99.7 | 4.1 / 63.3 / 95.7 | 64.6 |
+| Sorrowgate low | 45.9 / 99.3 / 99.8 | 15.1 / 62.3 / 96.0 | 65.0 |
+| Sorrowgate survey | 89.6 / 99.6 / 99.9 | 32.3 / 65.2 / 96.1 | 66.2 |
+
+Under 10 %, the world alone is 96.0–99.6 % near-black at every camera. The frame with
+the HUD is 62.3–82.1 %, under the 85 % the style asks for, and the HUD is what takes it
+there. A halo adds light to the world half.
+
+### Lamp sizes on screen
+
+Each lamp site's radius (one connected bulb or strip, `lampScreen.ts`), at pixel ratio
+1; sizes are CSS pixels, so ratio 1.5 reads the same.
+
+| Map, camera | Lamp sites | Radius min / median / 90th / max (CSS px) |
+| --- | --- | --- |
+| Ventfront home | 113 | 0.25 / 2.63 / 10.62 / 40.82 |
+| Ventfront close | 113 | 0.33 / 3.34 / 14.63 / 52.82 |
+| Ventfront low | 113 | 0.25 / 2.43 / 10.88 / 38.94 |
+| Ventfront survey | 113 | 0.13 / 1.46 / 5.51 / 21.8 |
+| Sorrowgate home | 30 | 0.34 / 0.35 / 0.59 / 0.74 |
+| Sorrowgate close | 30 | 0.42 / 0.44 / 0.87 / 1.08 |
+| Sorrowgate low | 30 | 0.32 / 0.34 / 0.64 / 0.8 |
+| Sorrowgate survey | 30 | 0.24 / 0.24 / 0.38 / 0.48 |
+
+At Ventfront most lights are a few pixels across and the largest is the Foundry's flood
+bay. Every Sorrowgate site is a pixel or less, at every camera.
+
+### Light against SIG
+
+Each own entity in view at Ventfront's home camera: its lamps' camera-facing area, and
+its light, that area times the displayed lamp's luminance in linear light, which is what
+a source built from the emissive term would carry before occlusion. "Lost at white" is
+the share of a unit's lamp light past white under gate 3's lamp core at a ping (SIG 95,
+the ×6 cap) and at its firing burst.
+
+| Entity (Ventfront, home) | SIG now / at rest | Lamp area (CSS px²) | Light | Largest site (px) | Lost at white: ping / firing |
+| --- | --- | --- | --- | --- | --- |
+| Foundry | 25 / 25 | 4051.5 | 2325.12 | 40.82 | — / — |
+| Bastion | 35 / 35 | 512 | 289.31 | 7.45 | — / — |
+| Caisson | 64 / 64 | 48.6 | 25.51 | 10.62 | 81.8 % / 81.7 % |
+| Caisson | 64 / 64 | 48.5 | 25.45 | 10.62 | 81.8 % / 81.7 % |
+| Light Scout | 6 / 6 | 5.8 | 3.33 | 2.22 | 83.3 % / 65.7 % |
+| Harvester | 40 / 18 | 2.9 | 1.66 | 0.55 | 83.3 % / — |
+
+A halo built from the emissive term would order light by lit area, not by loudness: the
+SIG-25 Foundry carries about 91 times a SIG-64 Caisson's light, and the SIG-35 Bastion
+about 11 times. At Sorrowgate, two Harvesters (SIG 18) carry 0.95 each against four
+scouts' (SIG 6) 0.48, which does follow SIG. A ping or a firing burst would lose 66–83 %
+of a unit's lamp light to the white the core holds, which is the flare a halo could carry.
+
+### A ping's flash
+
+The pixels whose relative luminance moved by at least 0.1, the darker under 0.8 (WCAG
+2.3.1's general-flash pair), between the frame before a Light Scout's ping at the home
+dolly and the frame once its SIG 95 had arrived. The conn canvas changed in 0–0.01 % of
+its pixels, since the scout's lamp is held at white and has no flare left. The frame
+with the HUD, whose ping ring is the change, moved in 0.36 %, and in at most 2.2 % of any
+window a third of the frame each way, against WCAG's 25 % of a 10° field. A ping holds
+SIG 95 for 3 s and a repeat refreshes the timer, so one hull changes state at most once
+every 3 s. Sorrowgate strikes the ping.
+
+### What each route costs on its own
+
+`route-cost.mjs`, unpaced, average GPU ms over 240 frames on a 4× MSAA canvas.
+
+| Part | 1440×900 | 2160×1350 |
+| --- | --- | --- |
+| Full-screen: copy the canvas depth (one blit) | 0.155 | 0.290 |
+| Full-screen: 250 lamp sites into a full-size half-float source | 0.008 | 0.017 |
+| Full-screen: blur over three mips from half size (12 draws) | 0.098 | 0.173 |
+| Full-screen: add onto the canvas | 0.033 | 0.055 |
+| Full-screen, total, and its targets | 0.29, 21.3 MiB | 0.53, 48.0 MiB |
+| 1,024 point halos in the canvas pass | 0.013 | 0.011 |
+
+Ventfront's whole conn frame reads 0.44–0.53 ms at ratio 1 and 0.58–0.74 ms at 1.5
+(issue-1021's after set), so the full-screen route would add 55–66 % and 72–91 % to it;
+the point layer adds nothing these readings resolve. The depth copy must
+ask for depth only: with the stencil bit as well it took 5–7 ms at 1440×900, though the
+canvas has no stencil (`?mask=depthstencil`). Its values match the same scene's depth
+drawn single-sampled in all but 1.04 % of pixels at 1440×900 and 0.79 % at 2160×1350, the
+edges, where the 4× resolve keeps a sample the reference did not draw.
+
 ## Related
 
 [graphics-standards.md](../../graphics-standards.md) gate 6 ·
