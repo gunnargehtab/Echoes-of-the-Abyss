@@ -239,7 +239,10 @@ The water is a medium: `packages/frontend/src/game/water.ts` carries the depth r
 shader-chunk patch that makes three's fog read it, the backdrop and the marine snow;
 [art-direction.md](art-direction.md) "Reading the Water" is the SPEC it transcribes.
 Review screenshots are in `docs/screenshots/issue-836/`, the same five frames as
-`issue-831/` so the pair can be read against each other.
+`issue-831/` so the pair can be read against each other. They predate #1016: the fog mixed
+its linear ramp into a fragment three had already encoded, so fogged ground sank toward black,
+below the backdrop it should meet. `docs/screenshots/issue-1016/` pairs frames before and
+after the fix, with `tools/render-stack/fog.mjs` measuring the meeting.
 
 What the phase settled:
 

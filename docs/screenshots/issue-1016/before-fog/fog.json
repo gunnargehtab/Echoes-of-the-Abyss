@@ -1,0 +1,79 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "camera": {
+    "x": 7600,
+    "z": 500,
+    "distance": 250,
+    "yawDeg": 90,
+    "pitchDeg": 10,
+    "focusDepthM": 2800
+  },
+  "probe": {
+    "active": true,
+    "look": "standard",
+    "pitchDeg": 10,
+    "yawDeg": 90,
+    "focus": {
+      "xM": 7600,
+      "zM": 500,
+      "depthM": 2800
+    },
+    "eye": {
+      "xM": 7846,
+      "zM": 500,
+      "depthM": 2603
+    },
+    "distance": 250,
+    "waterReachM": 900,
+    "waterDensity": 1,
+    "hullScale": 1,
+    "drawCalls": 56,
+    "triangles": 148290,
+    "textures": 9,
+    "toneMapping": 4,
+    "environmentIntensity": 0.35,
+    "environmentBytes": 344064,
+    "station": null,
+    "stationMs": 10874.7,
+    "stationFrames": 438,
+    "avgFrames": 240,
+    "fps": 40.3,
+    "avgFrameMs": 17.59,
+    "worstFrameMs": 876.4,
+    "avgConnMs": 0.77,
+    "worstConnMs": 264.3,
+    "avgOverlayMs": 1.04,
+    "worstOverlayMs": 24.1,
+    "overlayFrames": 435,
+    "units": 4,
+    "structures": 2,
+    "ordnance": 0,
+    "props": 367,
+    "propTris": 99520,
+    "modelBacked": 6,
+    "ownCentre": {
+      "x": 1329.6666666666667,
+      "z": 1417.330830891927
+    }
+  },
+  "counts": {
+    "fogged": 7314,
+    "backdrop": 12728
+  },
+  "fogged": [
+    0,
+    1,
+    1
+  ],
+  "backdrop": [
+    3,
+    8,
+    14
+  ],
+  "delta": [
+    3,
+    7,
+    13
+  ]
+}
