@@ -19,7 +19,8 @@
  * of ribs that are 0.52π of a four-sided ring stood on end and yawed round
  * the dome, an equator band and a plinth band that are full rings, an
  * eight-facet plinth turned an eighth, twelve port lights on one six-by-five
- * orb, two docks each a frame of its own — throat, lip, lit mouth, two fins
+ * orb (the export's counts, here and through this paragraph; FACETS, at the
+ * foot, gives the pass's), two docks each a frame of its own — throat, lip, lit mouth, two fins
  * — four five-sided conduits that are 0.9 rad of a ring, two standpipes with
  * flanges, two capsules of ballast tank, and four mirrored pairs of anchor
  * blades stood off one circle.
@@ -123,12 +124,45 @@
  *   is the station now — half the throat's length and half the disc's
  *   thickness, a rule in `dockingCollar` — so the disc's underside is on
  *   the end face, 0.21 m inboard of where it was. `diff.mjs` lists both.
+ *
+ * FACETS (#919). The export's counts above are history. The Order's rule
+ * is one facet edge of 3 m held between four and twelve
+ * (docs/asset-prompts-3d.md Block 2c; hadron.mjs `facets`, `cut`), and at
+ * 21 m to the unit nearly every round part here is at its ceiling:
+ * - the dome twelve round by three down, where it was twelve by six, and
+ *   each rib three along its run, the dome's own three, where it was
+ *   eighteen;
+ * - the equator band, the plinth and the plinth band twelve round, where
+ *   they were twenty-four, eight and twenty-four — the plinth and its band
+ *   turned half a facet, a flat to each axis as the octagon's was
+ *   (`hadron.plinth`), and the band's tube six where it was five;
+ * - each dock's throat, lip and mouth twelve, where they were eight
+ *   (`hadron.dockingCollar`);
+ * - each conduit two along its 0.9 rad on a tube of six, where it was
+ *   fourteen on five;
+ * - the standpipes the navy's six-sided pipe, where they were eight, their
+ *   flanges twelve round on a tube of four, where they were ten on five;
+ *   the tanks twelve round, where they were eight;
+ * - the port lights an orb of four by three, where it was six by five.
+ * The plan is 20.90 by 18.13 now: the plinth's turned box was the 19.34,
+ * a twelve-gon's overhangs less, and x is the docks' still, so the scale
+ * did not move. Three pairs of port lights up the dome sat on the round
+ * sphere's skin and are seated on the facets under them (`lightPairs`
+ * `on`), as #907 seated the first pair; left at the file's stations the
+ * fourth pair stood 1.09 m off the dome. The anchor blades are where they
+ * were: the second pair foots on the plinth now, where it stood 4.9 m off
+ * it, and the third stands 0.40 m off, where it stood 0.47. 58 parts and
+ * 3,788 triangles become 58 and 1,948.
  */
 import { THREE, fitFootprint, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
 
 const L = 440;
 const DRAWN = 20.9;
+
+// The Order's facet rule at this file's scale (hadron.mjs `cut`, #919): the
+// builders are handed the export's units and the rule is a chord in metres.
+const cut = hadron.cut(L / DRAWN);
 
 const alloy = hadron.ink.alloyWhite();
 // The two strengths are the approved export's own floats (#639 review, N1).
@@ -155,10 +189,11 @@ hadron.pressureDome(
   root,
   { alloy, crystal, glow, shadow },
   {
-    dome: { r: 6, segments: [12, 6], theta: Math.PI * 0.52, ...dome },
+    dome: { r: 6, theta: Math.PI * 0.52, ...dome },
     lantern: { r: 1.15, at: [0, 8.12, 0], scale: [0.8, 1.6, 0.8] },
     finial: { r: 0.4, at: [0, 9.72, 0], scale: [0.55, 1.8, 0.55] },
     prongs: { size: [0.18, 2.4, 0.32], y: 8.12, reach: 0.85, splay: 0.12 },
+    cut,
   }
 );
 
@@ -170,28 +205,31 @@ hadron.reinforceRibs(
     r: 5.88,
     t: 0.17,
     radial: 4,
-    tubular: 18,
     angle: Math.PI * 0.52,
     yaws: [0.35, 1.05, 2.09, 2.79],
     ...dome,
+    cut,
   }
 );
 
-// The equator band, the plinth and its band.
+// The equator band — four-sided in its tube, the Order's section — the
+// plinth and its band, each the rule's twelve round: the equator band with
+// a vertex on each axis, as the dome has, and the plinth and the band on
+// its shoulder turned half a facet, a flat to each axis (`hadron.plinth`).
 hadron.ring(root, 'equator_band', steel, {
   r: 5.94,
   t: 0.22,
   radial: 4,
-  tubular: 24,
   at: [0, 2.5, 0],
+  cut,
 });
-hadron.plinth(root, 'plinth', steel, { rTop: 6.7, r: 7.4, h: 1.2, y: 0.6 });
+hadron.plinth(root, 'plinth', steel, { rTop: 6.7, r: 7.4, h: 1.2, y: 0.6, cut });
 hadron.ring(root, 'plinth_band', alloy, {
   r: 6.8,
   t: 0.15,
-  radial: 5,
-  tubular: 24,
   at: [0, 1.25, 0],
+  half: true,
+  cut,
 });
 
 // Twelve port lights — "sustained glow from ports" — two pairs on the
@@ -200,13 +238,14 @@ hadron.ring(root, 'plinth_band', alloy, {
 hadron.lightPairs(root, glow, {
   name: 'port_light',
   r: 0.12,
+  cut,
   at: [
     [5.7, 2.85, 1.6, 'pressure_dome'],
     [4.9, 2.5, 3.4],
     [5.95, 2.5, -0.9],
-    [3.9, 5.5, 2.2],
-    [4.6, 4.8, -1.8],
-    [2.2, 7, 0.6],
+    [3.9, 5.5, 2.2, 'pressure_dome'],
+    [4.6, 4.8, -1.8, 'pressure_dome'],
+    [2.2, 7, 0.6, 'pressure_dome'],
   ],
 });
 
@@ -228,19 +267,19 @@ for (const [name, x, roll] of [
       lip: { r: 1.38, t: 0.22, y: 1.35 },
       mouth: { r: 1, t: 0.18 },
       fins: { r: 0.18, length: 1.5, y: 0.5, z: 1.85, cant: 0.4 },
+      cut,
     }
   );
 
-// Four conduits, 0.9 rad of a five-sided ring each, laid over the dome's crown.
+// Four conduits, 0.9 rad of a ring each, laid over the dome's crown.
 hadron.conduits(root, steel, {
   r: 5.4,
   t: 0.14,
-  radial: 5,
-  tubular: 14,
   angle: 0.9,
   lean: Math.PI / 2 - 0.55,
   at: [0, 1.6, 0],
   scale: dome.scale,
+  cut,
 });
 
 // The standpipes with their flanges, and the ballast tanks, abaft.
@@ -250,10 +289,11 @@ hadron.standpipes(
   {
     at: [5.2, 1.6, -4.2],
     pipe: { rTop: 0.2, r: 0.24, h: 3.2 },
-    flange: { r: 0.27, t: 0.06, radial: 5, tubular: 10, y: 2.6 },
+    flange: { r: 0.27, t: 0.06, y: 2.6 },
+    cut,
   }
 );
-hadron.ballastTanks(root, steel, { r: 0.7, waist: 1.9, at: [2.6, 1.15, -6.4] });
+hadron.ballastTanks(root, steel, { r: 0.7, waist: 1.9, at: [2.6, 1.15, -6.4], cut });
 
 // Four pairs of anchor blades stood off one circle round the plinth's foot.
 hadron.anchorBlades(

@@ -109,6 +109,17 @@
  * `conveyorGantry`, `on`). Same names, radii, order and material; the row
  * moves 0.78 of a unit outboard, 11 m, on both gantries, and `diff.mjs`
  * lists those eight and no other part.
+ *
+ * FACETS (#919). The Order's rule (docs/asset-prompts-3d.md Block 2c;
+ * hadron.mjs `cut`) re-cut the round parts the file had at the kit's
+ * counts: the five tip lights and the eight gantry lights are orbs of four
+ * by two, where they were six by five and five by four; the stacks, their
+ * tips and the transfer pipes the navy's six-sided pipe, where they were
+ * seven; the hoppers and their mouths twelve, where they were eight; the
+ * transfer flanges eight round on a tube of four, where they were ten on
+ * five. The silos are the Order's hexagon, as they were, and their collars
+ * and the cowl's half drum were on the rule and are asked of it now. 84
+ * parts and 2,412 triangles become 84 and 2,004.
  */
 import {
   THREE,
@@ -127,6 +138,10 @@ import * as hadron from '../factions/hadron.mjs';
 const L = 280;
 const DRAWN = 19.799999904632568;
 const DATUM = 0;
+
+// The Order's facet rule at this file's scale (hadron.mjs `cut`, #919): the
+// builders are handed the export's units and the rule is a chord in metres.
+const cut = hadron.cut(L / DRAWN);
 
 const alloy = hadron.ink.alloyWhite();
 // The two strengths are the approved export's own floats (#639 review, N1).
@@ -148,6 +163,7 @@ hadron.silos(
       { n: 1, tags: ['r', 'l'], r: 1.6, h: 8.6, at: [3.6, 0.6] },
       { n: 2, tags: ['r', 'l'], r: 1.3, h: 6.6, at: [6.6, 2] },
     ],
+    cut,
   }
 );
 
@@ -160,7 +176,8 @@ crusher(
   {
     house: { size: [5.2, 3.2, 3.4], at: [0, 1.6, -4.8] },
     cowl: {
-      geo: new THREE.CylinderGeometry(1.7, 1.7, 5.4, 6, 1, false, 0, Math.PI),
+      // Half a drum: the rule's share of a half turn, six at 24 m.
+      geo: new THREE.CylinderGeometry(1.7, 1.7, 5.4, cut.round(1.7, Math.PI), 1, false, 0, Math.PI),
       at: [0, 3.2, -4.8],
       rot: [Math.PI / 2, Math.PI / 2, 0],
     },
@@ -168,12 +185,17 @@ crusher(
   }
 );
 hadron.mawBlades(root, shadow, { r: 0.16, length: 1.1, at: [0.75, 2.5, -3] });
+// The stacks and their tips are the Order's hexagonal prism (#919). The file
+// had the kit's seven sides — a count with no mirror plane through a pair
+// that is one — and the rule would round a 5 m stack to ten; but a stack is
+// a pipe stood on end, and this navy's pipes are six (hadron.mjs
+// `PIPE_FACETS`), as the silos beside these are at four times the size.
 exhaustStacks(
   root,
   { steel, glow },
   {
-    stack: { radii: [0.28, 0.36], h: 3.4, facets: 7 },
-    tip: { radii: [0.32, 0.28], h: 0.24, facets: 7 },
+    stack: { radii: [0.28, 0.36], h: 3.4, facets: hadron.PIPE_FACETS },
+    tip: { radii: [0.32, 0.28], h: 0.24, facets: hadron.PIPE_FACETS },
     order: 'kind',
     share: true,
     stacks: [
@@ -214,7 +236,7 @@ const gantry = (suffix, row, sgn) =>
         },
       ],
     },
-    lights: { r: 0.08, facets: [5, 4], y: 0.66, xs: [-2.85, -0.85, 1.15, 3.15] },
+    lights: { r: 0.08, facets: cut.orb, y: 0.66, xs: [-2.85, -0.85, 1.15, 3.15] },
     legs: {
       radii: [0.13, 0.17],
       facets: 6,
@@ -226,14 +248,18 @@ const gantry = (suffix, row, sgn) =>
       ],
     },
   });
+// The hopper and its mouth are funnels, round, and take the rule's twelve
+// at 18 and 13 m where the file had the kit's eight. A twelve-gon keeps a
+// vertex outboard on x as the octagon did, and the hoppers' outboard
+// vertices are this file's length, so `DRAWN` is the file's still.
 const hopper = (suffix, sgn) =>
   intakeHopper(
     root,
     { hopper: shadow, mouth: glow },
     {
       suffix,
-      hopper: { radii: [1.3, 0.8], h: 1.2, facets: 8, at: [sgn * 8.6, 0.6, 8.6] },
-      mouth: { r: 0.95, h: 0.16, facets: 8, at: [sgn * 8.6, 1.25, 8.6] },
+      hopper: { radii: [1.3, 0.8], h: 1.2, facets: cut.round, at: [sgn * 8.6, 0.6, 8.6] },
+      mouth: { r: 0.95, h: 0.16, facets: cut.round, at: [sgn * 8.6, 1.25, 8.6] },
     }
   );
 gantry('_r', '0', 1);
@@ -249,8 +275,8 @@ flangedPipes(
   {
     frame: xLong,
     stems: { pipe: 'transfer_pipe', flange: 'transfer_flange' },
-    pipe: { radii: [0.16, 0.16], facets: 7 },
-    flange: { R: 0.22, tube: 0.06, facets: [5, 10] },
+    pipe: { radii: [0.16, 0.16], facets: hadron.PIPE_FACETS },
+    flange: { R: 0.22, tube: 0.06, facets: [cut.round, cut.round] },
     order: 'kind',
     share: true,
     pipes: [

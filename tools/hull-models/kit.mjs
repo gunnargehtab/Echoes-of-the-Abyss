@@ -155,6 +155,21 @@ export const torus = (r, t, rs = 8, ts = 24) => new THREE.TorusGeometry(r, t, rs
 export const octa = (r) => new THREE.OctahedronGeometry(r, 0);
 
 /**
+ * A facet count as a shared builder takes one (#919): the number a file
+ * carries, or a navy's rule to ask at the part's own radius — a function of
+ * that radius, in the builder's drawn units, which the navy's module binds
+ * to its `facets` table and the script's scale (factions/hadron.mjs `cut`).
+ * A skeleton four navies build keeps one set of radii and each navy cuts
+ * them by its own chord, so a navy's facet pass passes its rule here and
+ * leaves the numbers alone; a builder called with none draws what it
+ * always drew. `at` is the radius of the widest ring the part shows, and
+ * for a ring that closes in part of a turn the arc after it, as
+ * facets.mjs `facetsFor` takes them; an orb's rule gives `[round, down]`
+ * and a capsule's `[cap, round]`, the order their constructors take.
+ */
+export const asked = (count, ...at) => (typeof count === 'function' ? count(...at) : count);
+
+/**
  * A thin plate from a plan outline — points are absolute metres in the
  * horizontal plane, `[x, z]`, and the plate is `thicknessM` in Y.
  *
@@ -717,46 +732,76 @@ export function fitFootprint(root, lengthM) {
  * and a manifold rather than two washers.
  */
 export function ventWellhead(root, { rock, mouth, steel }, opts = {}) {
-  const {
-    chimney = {
-      profile: [
-        [-6, 0.2],
-        [-4, 30],
-        [8, 24],
-        [18, 16],
-        [24, 12],
-      ],
-      facets: 10,
-    },
-    lobes = { count: 5, phase: 0.6, r: 34, y: 1, size: [14, 6, 10] },
-    ember = { r: 11.5, y: 24.4, t: 1.2 },
-    apron = { r: 64, rTop: 60, y: -3.5, t: 3 },
-    clamp = { y: 26, r: 16, crown: 19, halfWidth: 3 },
-    manifold = { y: 31, r: 14.5, crown: 19.5, halfWidth: 1.2 },
-  } = opts;
+  // Each group is the files' numbers with a caller's laid over them, key by
+  // key, so a navy's facet pass passes `{ facets }` and nothing else (#919,
+  // `asked`); the counts are the approved files' own.
+  const chimney = {
+    profile: [
+      [-6, 0.2],
+      [-4, 30],
+      [8, 24],
+      [18, 16],
+      [24, 12],
+    ],
+    facets: 10,
+    ...opts.chimney,
+  };
+  const lobes = {
+    count: 5,
+    phase: 0.6,
+    r: 34,
+    y: 1,
+    size: [14, 6, 10],
+    facets: [8, 6],
+    ...opts.lobes,
+  };
+  const ember = { r: 11.5, y: 24.4, t: 1.2, facets: 12, ...opts.ember };
+  const apron = { r: 64, rTop: 60, y: -3.5, t: 3, facets: 16, ...opts.apron };
+  const clamp = { y: 26, r: 16, crown: 19, halfWidth: 3, facets: 16, ...opts.clamp };
+  const manifold = { y: 31, r: 14.5, crown: 19.5, halfWidth: 1.2, facets: 16, ...opts.manifold };
   const upright = [0, 0, Math.PI / 2];
-  add(root, 'vent_chimney', loft(chimney.profile, chimney.facets), rock, [0, 0, 0], upright);
+  const widest = Math.max(...chimney.profile.map(([, r]) => r));
+  add(
+    root,
+    'vent_chimney',
+    loft(chimney.profile, asked(chimney.facets, widest)),
+    rock,
+    [0, 0, 0],
+    upright
+  );
   radialSeries(lobes, (a, i) =>
     add(
       root,
       `basalt_lobe_${i}`,
-      new THREE.SphereGeometry(1, 8, 6),
+      new THREE.SphereGeometry(1, ...asked(lobes.facets, Math.max(...lobes.size))),
       rock,
       polar(a, lobes.r, lobes.y),
       [0, -a, 0],
       lobes.size
     )
   );
-  add(root, 'vent_mouth', cyl(ember.r, ember.r, ember.t, 12), mouth, [0, ember.y, 0]);
-  add(root, 'apron', cyl(apron.rTop, apron.r, apron.t, 16), rock, [0, apron.y, 0]);
-  const ring = ({ r, crown, halfWidth }) =>
+  add(
+    root,
+    'vent_mouth',
+    cyl(ember.r, ember.r, ember.t, asked(ember.facets, ember.r)),
+    mouth,
+    [0, ember.y, 0]
+  );
+  add(
+    root,
+    'apron',
+    cyl(apron.rTop, apron.r, apron.t, asked(apron.facets, Math.max(apron.r, apron.rTop))),
+    rock,
+    [0, apron.y, 0]
+  );
+  const ring = ({ r, crown, halfWidth, facets }) =>
     loft(
       [
         [-halfWidth, r],
         [0, crown],
         [halfWidth, r],
       ],
-      16
+      asked(facets, Math.max(r, crown))
     );
   add(root, 'clamp_ring', ring(clamp), rock, [0, clamp.y, 0], upright);
   add(root, 'manifold_ring', ring(manifold), steel, [0, manifold.y, 0], upright);
@@ -778,20 +823,22 @@ export function ventWellhead(root, { rock, mouth, steel }, opts = {}) {
 export function ventDrawArm(root, { rock, steel, deck, lamp, flood }, opts) {
   const {
     bearing: a,
-    pipe = { from: 18, to: 62, r: 2.6, y: 20 },
     valve = { at: 30, block: 6, stem: { r: 0.8, h: 6, y: 25 } },
     lamps = { from: 24, pitch: 12, count: 3, size: [2, 0.6, 2], sink: 0.05 },
-    riser = { at: 64, r: 2.4, h: 20, y: 10 },
     platform = { at: 40, size: [14, 1.2, 10], y: 8, flood: { size: [12, 0.4, 8], y: 8.9 } },
     legs = { spread: 6, r: [0.9, 1.1], h: 10, y: 2.5 },
   } = opts;
+  // The files' eight sides, or a navy's rule (#919, `asked`), laid over key
+  // by key as `ventWellhead`'s are.
+  const pipe = { from: 18, to: 62, r: 2.6, y: 20, facets: 8, ...opts.pipe };
+  const riser = { at: 64, r: 2.4, h: 20, y: 10, facets: 8, ...opts.riser };
   const yaw = [0, -a, 0];
   // A cylinder is born on Y; laid along the bearing this way it keeps a
   // vertex on top, which is where the approved pipe's is.
   add(
     root,
     'draw_pipe',
-    cyl(pipe.r, pipe.r, pipe.to - pipe.from, 8),
+    cyl(pipe.r, pipe.r, pipe.to - pipe.from, asked(pipe.facets, pipe.r)),
     steel,
     polar(a, (pipe.from + pipe.to) / 2, pipe.y),
     [0, -a, -Math.PI / 2]
@@ -811,7 +858,13 @@ export function ventDrawArm(root, { rock, steel, deck, lamp, flood }, opts) {
   const lampY = pipe.y + pipe.r + lamps.size[1] / 2 - lamps.sink;
   for (let i = 0; i < lamps.count; i++)
     add(root, `pipe_lamp_${i}`, box(...lamps.size), lamp, polar(a, lamps.from + lamps.pitch * i, lampY), yaw);
-  add(root, 'riser', cyl(riser.r, riser.r, riser.h, 8), steel, polar(a, riser.at, riser.y));
+  add(
+    root,
+    'riser',
+    cyl(riser.r, riser.r, riser.h, asked(riser.facets, riser.r)),
+    steel,
+    polar(a, riser.at, riser.y)
+  );
   add(root, 'platform', box(...platform.size), deck, polar(a, platform.at, platform.y), yaw);
   add(root, 'platform_flood', box(...platform.flood.size), flood, polar(a, platform.at, platform.flood.y), yaw);
   for (const [tag, sgn] of [
@@ -1515,7 +1568,7 @@ export function foundryBay(root, mats, opts = {}) {
       frame.part(
         root,
         `bay_guide_${side.guides}_${i}`,
-        new THREE.SphereGeometry(guide.r, ...guide.facets),
+        new THREE.SphereGeometry(guide.r, ...asked(guide.facets, guide.r)),
         guideMat,
         [gx, guide.y, guide.from + guide.pitch * i]
       );
@@ -1579,7 +1632,7 @@ export function gantryCrane(root, mats, opts) {
   frame.part(
     crane,
     `gantry_cable_${n}`,
-    cyl(cable.r, cable.r, trolley.y - top, cable.facets),
+    cyl(cable.r, cable.r, trolley.y - top, asked(cable.facets, cable.r)),
     mats.cable,
     [x, (trolley.y + top) / 2, 0]
   );
@@ -1606,7 +1659,7 @@ export function gantryCrane(root, mats, opts) {
   frame.place(
     crane,
     `gantry_warnlight_${n}`,
-    new THREE.SphereGeometry(warnlight.r, ...warnlight.facets),
+    new THREE.SphereGeometry(warnlight.r, ...asked(warnlight.facets, warnlight.r)),
     mats.warnlight,
     { at: bulb.at, rot: bulb.rot }
   );
@@ -1694,7 +1747,7 @@ export function ballastTanks(root, steel, opts = {}) {
   } = opts;
   const geo = sharer(share);
   for (const t of tanks) {
-    const tank = geo('tank', () => capsule(r, length, ...facets));
+    const tank = geo('tank', () => capsule(r, length, ...asked(facets, r)));
     frame.part(root, `ballast_tank_${t.n}`, tank, steel, t.at, t.rot);
   }
 }
@@ -1744,7 +1797,9 @@ export function flangedPipes(root, { pipe: pipeMat, flange: flangeMat }, opts = 
       frame.part(
         root,
         `${stems.pipe}_${p.n}`,
-        geo(`pipe_${p.length}`, () => cyl(pipe.radii[0], pipe.radii[1], p.length, pipe.facets)),
+        geo(`pipe_${p.length}`, () =>
+          cyl(pipe.radii[0], pipe.radii[1], p.length, asked(pipe.facets, Math.max(...pipe.radii)))
+        ),
         pipeMat,
         p.at,
         p.rot
@@ -1753,7 +1808,14 @@ export function flangedPipes(root, { pipe: pipeMat, flange: flangeMat }, opts = 
       frame.part(
         root,
         `${stems.flange}_${p.n}`,
-        geo('flange', () => torus(flange.R, flange.tube, ...flange.facets)),
+        geo('flange', () =>
+          torus(
+            flange.R,
+            flange.tube,
+            asked(flange.facets[0], flange.tube),
+            asked(flange.facets[1], flange.R + flange.tube)
+          )
+        ),
         flangeMat,
         p.flange.at ?? p.at,
         p.flange.rot
@@ -1861,7 +1923,9 @@ export function exhaustStacks(root, { steel, glow }, opts = {}) {
       frame.part(
         root,
         `exhaust_stack_${s.n}`,
-        geo('stack', () => cyl(stack.radii[0], stack.radii[1], stack.h, stack.facets)),
+        geo('stack', () =>
+          cyl(stack.radii[0], stack.radii[1], stack.h, asked(stack.facets, Math.max(...stack.radii)))
+        ),
         steel,
         s.at,
         s.rot
@@ -1870,7 +1934,9 @@ export function exhaustStacks(root, { steel, glow }, opts = {}) {
       frame.part(
         root,
         `exhaust_tip_${s.n}`,
-        geo('tip', () => cyl(tip.radii[0], tip.radii[1], tip.h, tip.facets)),
+        geo('tip', () =>
+          cyl(tip.radii[0], tip.radii[1], tip.h, asked(tip.facets, Math.max(...tip.radii)))
+        ),
         glow,
         s.tip.at,
         s.tip.rot
@@ -1952,7 +2018,7 @@ export function conveyorGantry(root, mats, opts = {}) {
         frame.place(
           gantry,
           `gantry_light_${side.lights.row}_${i}`,
-          new THREE.SphereGeometry(lights.r, ...lights.facets),
+          new THREE.SphereGeometry(lights.r, ...asked(lights.facets, lights.r)),
           mats.light,
           placement
         );
@@ -1980,9 +2046,14 @@ export function intakeHopper(root, { hopper: hopperMat, mouth: mouthMat }, opts 
     hopper = { radii: [1.5, 0.9], h: 1.3, facets: 8, at: [13.4, 0.65, 6.9] },
     mouth = { r: 1.1, h: 0.18, facets: 8, at: [13.4, 1.35, 6.9] },
   } = opts;
-  const funnel = cyl(hopper.radii[0], hopper.radii[1], hopper.h, hopper.facets);
+  const funnel = cyl(
+    hopper.radii[0],
+    hopper.radii[1],
+    hopper.h,
+    asked(hopper.facets, Math.max(...hopper.radii))
+  );
   frame.part(root, `intake_hopper${suffix}`, funnel, hopperMat, hopper.at);
-  const lip = cyl(mouth.r, mouth.r, mouth.h, mouth.facets);
+  const lip = cyl(mouth.r, mouth.r, mouth.h, asked(mouth.facets, mouth.r));
   frame.part(root, `intake_mouth${suffix}`, lip, mouthMat, mouth.at);
 }
 
@@ -2100,29 +2171,44 @@ export function floodMasts(root, { steel, lamp: lampMat }, opts = {}) {
  * run light.
  */
 export function reactorBed(root, { holdfast, slab, kerb, lamp }, opts = {}) {
+  // Wide enough that an arm's `foot` at 48 m straddles the mat's top face
+  // rather than grazing its skirt: "anchor feet driven into the holdfast"
+  // is a claim the geometry has to carry (#788 review, N6).
+  const mat = { r: 52, rTop: 47, y: -1.4, t: 3.6, facets: 16, ...opts.mat };
+  // Eight facets turned an eighth, so a flat faces the bow rather than a
+  // corner: plate cut and welded, which is what a slab under a plant is
+  // whoever built it (factions/bathyarch.mjs `anchoredRaft` makes the same
+  // argument about an octagon). `facets` and `phase` are a navy's to pass
+  // where its plate is another polygon (#919) — the Order's is its hexagon —
+  // and each count is the files' or a navy's rule (`asked`), laid over key
+  // by key as `ventWellhead`'s are.
+  const pad = { r: 34, rTop: 30.5, y: 2.2, t: 4.4, facets: 8, phase: Math.PI / 8, ...opts.pad };
+  const rim = { r: 29.6, t: 1, radial: 5, facets: 16, y: 4.4, ...opts.rim };
   const {
-    // Wide enough that an arm's `foot` at 48 m straddles the mat's top face
-    // rather than grazing its skirt: "anchor feet driven into the holdfast"
-    // is a claim the geometry has to carry (#788 review, N6).
-    mat = { r: 52, rTop: 47, y: -1.4, t: 3.6, facets: 16 },
-    pad = { r: 34, rTop: 30.5, y: 2.2, t: 4.4 },
-    rim = { r: 29.6, t: 1, radial: 5, facets: 16, y: 4.4 },
     // Phase 0, so a light sits on each sixth from +X: the three arms leave
     // the kerb clear (a boom starts at 30 m and the lights are at 29.6), but
     // the outflow trunk crosses it, and every navy runs that out on the same
     // bearing — the gap at −30°, which is halfway between two lights here.
     lights = { count: 6, phase: 0, r: 29.6, y: 5.6, size: [3.2, 0.5, 1.8] },
   } = opts;
-  add(root, 'holdfast_mat', cyl(mat.rTop, mat.r, mat.t, mat.facets), holdfast, [0, mat.y, 0]);
-  // Eight facets turned an eighth, so a flat faces the bow rather than a
-  // corner: plate cut and welded, which is what a slab under a plant is
-  // whoever built it (factions/bathyarch.mjs `anchoredRaft` makes the same
-  // argument about an octagon).
-  add(root, 'footprint_slab', cyl(pad.rTop, pad.r, pad.t, 8, Math.PI / 8), slab, [0, pad.y, 0]);
+  add(
+    root,
+    'holdfast_mat',
+    cyl(mat.rTop, mat.r, mat.t, asked(mat.facets, Math.max(mat.r, mat.rTop))),
+    holdfast,
+    [0, mat.y, 0]
+  );
+  add(
+    root,
+    'footprint_slab',
+    cyl(pad.rTop, pad.r, pad.t, asked(pad.facets, Math.max(pad.r, pad.rTop)), pad.phase),
+    slab,
+    [0, pad.y, 0]
+  );
   add(
     root,
     'slab_kerb',
-    torus(rim.r, rim.t, rim.radial, rim.facets),
+    torus(rim.r, rim.t, asked(rim.radial, rim.t), asked(rim.facets, rim.r + rim.t)),
     kerb,
     [0, rim.y, 0],
     [Math.PI / 2, 0, 0]
@@ -2168,8 +2254,6 @@ export function reactorIntakeArm(
     boom = { from: 16, to: 74, size: [3, 3.6], y: 14 },
     legs = { at: 48, spread: 5.2, r: [1.1, 1.5], h: 12.4 },
     foot = { at: 48, size: [11, 4.2, 11], y: 1.4 },
-    drum = { at: 68, r: [3.6, 4.2], h: 6.4, y: 15.2 },
-    mouth = { at: 68, r: 2.9, t: 1, y: 18.6 },
     // The rake hangs off the boom's end and has to *reach* it: the beam
     // overlaps the boom by 0.9 m along the bearing and 0.6 m in height, and
     // each tine's head is 0.2 m up inside the beam. A top-down bake cannot
@@ -2182,8 +2266,21 @@ export function reactorIntakeArm(
     // (`legs`, `drum`, a stack), which is the convention the first draft took
     // by mistake and which left five cones fat-end-down under the beam
     // (#788 review, F2).
-    tines = { count: 5, across: 3.2, r: [0.95, 0.25], h: 7, y: 7.4, facets: 5 },
   } = opts;
+  // The first build's counts — a ten-sided drum and mouth, five-sided tines
+  // — or a navy's own (#919, `asked`), laid over key by key as
+  // `ventWellhead`'s are.
+  const drum = { at: 68, r: [3.6, 4.2], h: 6.4, y: 15.2, facets: 10, ...opts.drum };
+  const mouth = { at: 68, r: 2.9, t: 1, y: 18.6, facets: 10, ...opts.mouth };
+  const tines = {
+    count: 5,
+    across: 3.2,
+    r: [0.95, 0.25],
+    h: 7,
+    y: 7.4,
+    facets: 5,
+    ...opts.tines,
+  };
   const yaw = [0, -a, 0];
   // A point `r` out along the bearing and `s` to the left of it: `polar`
   // walks the arm, this walks across it, and the rake's tines are the only
@@ -2217,14 +2314,14 @@ export function reactorIntakeArm(
   add(
     root,
     'throat_drum',
-    cyl(drum.r[0], drum.r[1], drum.h, 10),
+    cyl(drum.r[0], drum.r[1], drum.h, asked(drum.facets, Math.max(...drum.r))),
     collar,
     polar(a, drum.at, drum.y)
   );
   add(
     root,
     'feed_throat',
-    cyl(mouth.r, mouth.r, mouth.t, 10),
+    cyl(mouth.r, mouth.r, mouth.t, asked(mouth.facets, mouth.r)),
     throatMat,
     polar(a, mouth.at, mouth.y)
   );
@@ -2233,7 +2330,7 @@ export function reactorIntakeArm(
     add(
       root,
       `rake_tine_${i}`,
-      cyl(tines.r[0], tines.r[1], tines.h, tines.facets),
+      cyl(tines.r[0], tines.r[1], tines.h, asked(tines.facets, Math.max(...tines.r))),
       rakeMat,
       beside(rake.at, (i - (tines.count - 1) / 2) * tines.across, tines.y),
       yaw

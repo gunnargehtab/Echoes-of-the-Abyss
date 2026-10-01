@@ -72,7 +72,7 @@
  *   45.8, at z ±2.0 and 1.1 m below the torpedo's axis — joined under it by
  *   three alloy ribs and by nothing else: the runners are the rail, and
  *   carry the unlit finish for the reason the guard edges do. The torpedo
- *   is a capsule of eight facets, 3 m across and 30 m long from its tail at
+ *   is a capsule of four facets (FACETS, below), 3 m across and 30 m long from its tail at
  *   x 16.5 to its nose at 46.5, lying between the runners with 2.1 m of its
  *   back above them and a cross of tail fins at x 19; the body's lathe
  *   closes to r 0.7 inside its tail. The collar is a six-facet crystal
@@ -144,6 +144,14 @@
  * cut with a 3.2 m collar and the wide guard read ×0.057; the collar was
  * shortened and the guard narrowed, and the two moved it together. 21
  * parts, 484 triangles, bounds x ±47.5, y −3.9..4.8, z ±19.5.
+ *
+ * FACETS (#919). The torpedo is the rule's count at 1.5 m of radius
+ * (hadron.mjs `spike`, `cut`): four round and one step to each cap, a
+ * square bar on its corner drawn to a point at both ends, where the first
+ * build had eight round and three-step caps. Its ridges are on the crown,
+ * the keel and the two beams, so it lies on the ribs along its lower ridge
+ * and between the runners by its side ridges, as the round one did. 21
+ * parts and 484 triangles become 21 and 396.
  */
 import { THREE, exportGlb, metreTrue } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -274,7 +282,6 @@ hadron.spike(
       y: 1.6,
       r: 1.5,
       length: 27,
-      facets: 8,
       fins: { x: 19, chord: 3, span: 2.0, t: 0.3 },
     },
     collar: {

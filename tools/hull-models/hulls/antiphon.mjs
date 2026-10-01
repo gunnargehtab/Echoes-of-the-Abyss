@@ -112,6 +112,13 @@
  * bake reads raw E 1.16 and dims by ×0.570 onto 0.66, inside its ×1/64..×64
  * range with room either way. 21 parts, 1,280 triangles, bounds x ±55,
  * y −5.2..5.6, z ±23.
+ *
+ * FACETS (#919). The deck ring and the crystal ring inside it are the
+ * rule's twelve round on a tube of four (hadron.mjs `deckRing`, `cut`),
+ * where each was twenty-eight on eight: a dodecagon with a vertex on the
+ * keel line fore and aft. The bays' outboard corners stand half a metre
+ * inside the crystal ring's flats, where they had a metre inside its
+ * circle. 21 parts and 1,280 triangles become 21 and 576.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
