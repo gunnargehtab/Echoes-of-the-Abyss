@@ -7,9 +7,15 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { Mesh, MeshStandardMaterial, PlaneGeometry } from 'three';
+import { PlaneGeometry } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { HALO_SIG_FLOOR, HALO_SIG_FULL, haloGain, haloWeight } from '../src/game/glow.ts';
+import {
+  GLOW_FACTOR_MAX,
+  HALO_SIG_FLOOR,
+  HALO_SIG_FULL,
+  haloGain,
+  haloWeight,
+} from '../src/game/glow.ts';
 import { capSites, entityHaloEnergy, LAMP_HALO, siteShares } from '../src/game/lampHalo.ts';
 import { lampSiteParts, lampSites } from '../src/game/lampSites.ts';
 
@@ -41,7 +47,7 @@ describe('lamp halo: the SIG gate (gate 3)', () => {
   it('rides gate 3 curve above 35, uncapped where the lamp factor stops at 6', () => {
     assert.equal(haloGain(35), 1);
     assert.ok(close(haloGain(95), Math.exp(60 / 14)), 'a ping carries about 73 times SIG 35');
-    assert.ok(haloGain(95) > 6);
+    assert.ok(haloGain(95) > GLOW_FACTOR_MAX);
   });
 });
 
@@ -76,7 +82,7 @@ describe('lamp halo: the energy (art-direction, Lamp halo — SPEC)', () => {
     );
     assert.ok(close(shares[1]! / shares[0]!, 3), 'by area at one luminance');
     assert.ok(close(shares[2]! / shares[0]!, 1), 'and by luminance at one area');
-    // A flood bay a hundred times the area carries the same total, split thinner.
+    // A flood bay a hundred times the area carries the same total, split the same way.
     const flood = siteShares(sites.map((s) => ({ ...s, area: s.area * 100 })));
     shares.forEach((share, i) => assert.ok(close(flood[i]!, share)));
     assert.deepEqual(siteShares([{ area: 3, luminance: 0 }]), [0], 'unlit sites share nothing');
@@ -109,7 +115,5 @@ describe('lamp sites: the connected lights a lamp mesh holds', () => {
     assert.ok(close(sites[1]!.box.max.x - sites[1]!.box.min.x, 2));
     assert.equal(lampSiteParts(geometry), lampSiteParts(geometry), 'cached per geometry');
     assert.equal(lampSites(geometry).length, 2, 'the spheres agree');
-    // The material plays no part: the split is the geometry's.
-    assert.equal(lampSites(new Mesh(geometry, new MeshStandardMaterial()).geometry).length, 2);
   });
 });
