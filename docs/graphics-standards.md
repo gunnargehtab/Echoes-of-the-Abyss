@@ -315,8 +315,10 @@ number is checked rather than argued about. A frame that renders more than once 
 whole: every pass's draw calls, triangles and GPU time sum, a full-screen draw is a call
 toward the 150, a framebuffer blit is a listed pass, and render-target bytes include
 renderbuffers.
-three resets `renderer.info` on every `render()` by default, so a probe that reads it once
-a frame reads only the last pass; the conn view renders once a frame today. Only the own
+three resets `renderer.info` on every `render()` by default, which would leave a probe the
+last pass alone, so the conn view turns that off and resets it once at the top of each
+frame: the probe's calls and triangles are the whole frame's, and its `passes` lists the
+renders that made it. Only the own
 force is ever geometry — five hulls and a dozen structures, never an army of contacts —
 which is what keeps the budget flat. The offline bake (`tools/hull-maps/build.mjs`,
 **4 px/m** units, **1.5 px/m** structures) remains a contract with `hullTextures.ts` and
@@ -655,9 +657,8 @@ there is a picture to review.
 - [ ] Enemy-facing rendering still caps at tier fidelity; own-force-only detail stayed
   own-force-only (gate 5)
 - [ ] Draw calls and triangles stay inside the gate-6 budgets, counted over every pass of
-  the frame (`__perspectiveProbe` reads a one-pass frame; gate 6 says how a multi-pass
-  frame sums), and the map density contracts (`4` / `1.5` px/m) are untouched or changed
-  on both sides at once
+  the frame (`__perspectiveProbe` sums every pass and lists them as `passes`), and the map
+  density contracts (`4` / `1.5` px/m) are untouched or changed on both sides at once
 - [ ] A render-stack change reports the frame's GPU time, every pass summed, on the named
   GPU, before and after (gate 6)
 - [ ] World marks still project through the conn camera — measurements conform, symbols

@@ -70,7 +70,16 @@ import type { ReadoutBox } from '../src/game/readouts.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FAUNA_COLOR, TIER_STYLE } from '../src/game/palette.ts';
-import { BufferAttribute, FogExp2, Mesh, Points, type Scene } from 'three';
+import {
+  BufferAttribute,
+  FogExp2,
+  Mesh,
+  MeshBasicMaterial,
+  PlaneGeometry,
+  Points,
+  Scene,
+  type Camera,
+} from 'three';
 
 /** What the shell was told, in the order it was told. */
 interface CallbackLog {
@@ -913,6 +922,42 @@ describe('renderer smoke test: the conn view', () => {
       for (const key of ['avgConnMs', 'worstConnMs', 'avgOverlayMs', 'worstOverlayMs', 'fps']) {
         assert.equal(typeof held[key], 'number', `${key} is reported`);
       }
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('counts a frame whole, every pass summed, and only that frame (gate 6, #1001)', async () => {
+    const world = await boot();
+    try {
+      const probe = (
+        globalThis as unknown as { window: { __perspectiveProbe: () => Record<string, unknown> } }
+      ).window.__perspectiveProbe;
+      world.frame(3);
+      const one = probe();
+      assert.deepEqual(one.passes, ['canvas'], 'today the frame is the canvas pass alone');
+      assert.equal(
+        one.drawCalls,
+        world.gl.ledger.calls,
+        "a one-pass frame reads that pass's calls"
+      );
+      assert.equal(one.triangles, world.gl.ledger.triangles);
+      world.frame(5);
+      // The view resets once a frame, so frames never pile up into the reading.
+      assert.equal(probe().drawCalls, one.drawCalls, 'five more frames read one frame');
+      // A second pass inside the frame, as the lamp halo will add: one mesh
+      // of two triangles, rendered after the canvas pass by the same renderer.
+      const extra = new Scene();
+      extra.add(new Mesh(new PlaneGeometry(1, 1), new MeshBasicMaterial()));
+      const real = world.gl.render.bind(world.gl);
+      world.gl.render = (scene: Scene, camera: Camera) => {
+        real(scene, camera);
+        real(extra, camera);
+      };
+      world.frame(2);
+      const two = probe();
+      assert.equal(two.drawCalls, (one.drawCalls as number) + 1, 'both passes are counted');
+      assert.equal(two.triangles, (one.triangles as number) + 2);
     } finally {
       world.teardown();
     }

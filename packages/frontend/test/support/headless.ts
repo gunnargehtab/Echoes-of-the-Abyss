@@ -885,7 +885,20 @@ export class HeadlessWebGLRenderer {
   readonly domElement = new StubCanvas();
   readonly context = new HeadlessGL(this.domElement);
   readonly ledger: DrawLedger = { frames: 0, calls: 0, triangles: 0 };
-  readonly info = { render: { calls: 0, triangles: 0 }, memory: { geometries: 0, textures: 0 } };
+  /**
+   * As three's WebGLInfo: zeroed at the start of every render() while
+   * autoReset holds, and otherwise only by reset(), so a frame of several
+   * passes sums when its owner turns autoReset off.
+   */
+  readonly info = {
+    render: { calls: 0, triangles: 0 },
+    memory: { geometries: 0, textures: 0 },
+    autoReset: true,
+    reset(): void {
+      this.render.calls = 0;
+      this.render.triangles = 0;
+    },
+  };
   readonly capabilities = { getMaxAnisotropy: (): number => 1, isWebGL2: true };
   readonly shadowMap = { enabled: false, type: 0 };
   outputColorSpace = '';
@@ -966,8 +979,9 @@ export class HeadlessWebGLRenderer {
     this.ledger.frames++;
     this.ledger.calls = calls;
     this.ledger.triangles = triangles;
-    this.info.render.calls = calls;
-    this.info.render.triangles = triangles;
+    if (this.info.autoReset) this.info.reset();
+    this.info.render.calls += calls;
+    this.info.render.triangles += triangles;
   }
 
   dispose(): void {
