@@ -2345,8 +2345,9 @@ export class PerspectiveView {
 
   /**
    * Gate 3's reading: each own hull and structure with its live and resting
-   * SIG, every lamp's approved and applied strength, whether the lamp adds its
-   * glow after the tone curve, and the model's box on screen in CSS pixels,
+   * SIG, every lamp's export, resting and applied strength, whether the lamp
+   * adds its glow after the tone curve, each lamp's sites and area on screen
+   * (#1001's halo readings), and the model's box on screen in CSS pixels,
    * beside the curve the strengths follow. Own entities only, which the HUD
    * already draws; it changes and orders nothing.
    */
