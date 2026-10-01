@@ -210,7 +210,8 @@ after the tone-mapping curve, so a lamp keeps its faction hue and the strength i
 reflections are surface light, never a substitute for SIG emission. Any future bloom
 must explicitly exclude SIG **0–15** from its source, including bright reflected
 highlights; a brightness threshold alone cannot enforce that rule. Compare quiet and
-loud own hulls under the shared rig before accepting a lighting change.
+loud own hulls under the shared rig before accepting a lighting change:
+`tools/render-stack/lamps.mjs` stages both and reads each lamp's strength and pixels.
 
 The rule is measured, not eyeballed. On the shipped maps, **glow energy** is the sum of
 `v / 255` over all emissive pixels (`v` = the max of R, G, B), per 1,000 hull-mask pixels
