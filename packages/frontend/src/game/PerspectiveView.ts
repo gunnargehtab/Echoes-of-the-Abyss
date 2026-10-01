@@ -28,6 +28,7 @@ import {
   ACESFilmicToneMapping,
   AdditiveBlending,
   AmbientLight,
+  Box3,
   BufferAttribute,
   BufferGeometry,
   CanvasTexture,
@@ -105,7 +106,7 @@ import {
 import { OwnMotion } from './ownMotion.ts';
 import { OrdnanceLayer } from './ordnanceLayer.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
-import { createWaterEnvironment } from './modelLighting.ts';
+import { createWaterEnvironment, keepsGlowOutsideToneMapping } from './modelLighting.ts';
 import { VeilField, veilShade, type VeilListener } from './acousticVeil.ts';
 import {
   installSurveyInk,
@@ -263,6 +264,9 @@ const RAY_TMP = new Raycaster();
 const NDC_TMP = new Vector2();
 const LOOK_TMP = new Vector3();
 const DIR_TMP = new Vector3();
+/** The lamp reading's box and corner; a capture reads it once a frame at most. */
+const LAMP_BOX = new Box3();
+const LAMP_CORNER = new Vector3();
 const EMBER_COLOR = new Color(VENT_EMBER);
 /** Screen corners in NDC, the order `groundQuad` has always returned them in. */
 const QUAD_CORNERS: ReadonlyArray<readonly [number, number]> = [
@@ -844,6 +848,7 @@ export class PerspectiveView {
     delete (window as unknown as { __perspectiveProbe?: unknown }).__perspectiveProbe;
     delete (window as unknown as { __perspectiveStation?: unknown }).__perspectiveStation;
     delete (window as unknown as { __perspectiveCamera?: unknown }).__perspectiveCamera;
+    delete (window as unknown as { __perspectiveLamps?: unknown }).__perspectiveLamps;
   }
 
   // ---------------------------------------------------------------- camera
@@ -2157,6 +2162,13 @@ export class PerspectiveView {
       this.clampTarget();
       this.applyCamera();
     };
+
+    // Gate 3's quiet-and-loud reading (tools/render-stack/lamps.mjs). Kept
+    // out of production builds: only a capture against the dev server reads it.
+    if (import.meta.env?.PROD !== true) {
+      (window as unknown as { __perspectiveLamps?: () => unknown }).__perspectiveLamps = () =>
+        this.lampReading();
+    }
   }
 
   /**
@@ -2267,5 +2279,74 @@ export class PerspectiveView {
     }
     if (count === 0) return null;
     return { x: x / count, z: z / count };
+  }
+
+  /**
+   * Gate 3's reading: each own hull and structure with its live and resting
+   * SIG, every lamp's approved and applied strength, whether the lamp adds its
+   * glow after the tone curve, and the model's box on screen in CSS pixels.
+   * Own entities only, which the HUD already draws; it reads and orders nothing.
+   */
+  private lampReading() {
+    const rect = this.renderer?.domElement.getBoundingClientRect() ?? null;
+    const shown = (handle: EntityHandle | undefined) => {
+      const model = handle === undefined || handle.mesh.visible ? null : handle.model;
+      if (model === null || rect === null) return { lamps: [], screen: null };
+      const box = LAMP_BOX.setFromObject(model.root);
+      let x0 = Infinity;
+      let y0 = Infinity;
+      let x1 = -Infinity;
+      let y1 = -Infinity;
+      for (let i = 0; i < 8; i++) {
+        LAMP_CORNER.set(
+          i & 1 ? box.max.x : box.min.x,
+          i & 2 ? box.max.y : box.min.y,
+          i & 4 ? box.max.z : box.min.z
+        ).project(this.camera);
+        const x = rect.left + ((LAMP_CORNER.x + 1) / 2) * rect.width;
+        const y = rect.top + ((1 - LAMP_CORNER.y) / 2) * rect.height;
+        x0 = Math.min(x0, x);
+        x1 = Math.max(x1, x);
+        y0 = Math.min(y0, y);
+        y1 = Math.max(y1, y);
+      }
+      return {
+        lamps: model.emissives.map(({ material, restIntensity }) => ({
+          hex: `#${material.emissive.getHexString()}`,
+          restIntensity,
+          intensity: material.emissiveIntensity,
+          afterToneMapping: keepsGlowOutsideToneMapping(material),
+        })),
+        screen: { x0: Math.floor(x0), y0: Math.floor(y0), x1: Math.ceil(x1), y1: Math.ceil(y1) },
+      };
+    };
+    return {
+      faction: this.faction,
+      palette: ACTIVE_PALETTE.name,
+      units: this.units.map((unit) => ({
+        id: unit.id,
+        kind: unit.kind,
+        name: statsFor(unit.kind).name,
+        sig: unit.sig,
+        restSig: statsFor(unit.kind).sigIdle,
+        silentRunning: unit.silentRunning,
+        engineOff: unit.engineOff,
+        xM: unit.x,
+        zM: unit.y,
+        depthM: unit.depth,
+        ...shown(this.unitHandles.get(unit.id)),
+      })),
+      structures: this.structures.map((structure) => ({
+        id: structure.id,
+        kind: structure.kind,
+        name: structureStatsFor(structure.kind).name,
+        sig: structure.sig,
+        restSig: structureStatsFor(structure.kind).sigIdle,
+        xM: structure.x,
+        zM: structure.y,
+        depthM: structure.depth,
+        ...shown(this.structureHandles.get(structure.id)),
+      })),
+    };
   }
 }
