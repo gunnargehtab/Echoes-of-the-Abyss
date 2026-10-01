@@ -332,7 +332,11 @@ export const ACTIVE_SONAR = {
   SELF_REVEAL_RADIUS_M: 2400,
   /** Omnidirectional SIG emitted by the pinger. */
   EMITTER_SIG: 95,
-  /** How long the reveal lasts, seconds. */
+  /**
+   * How long the reveal lasts, seconds — and the SIG with it: one timer,
+   * `ActivePing.remainingS`, holds both, so the pinger is loud for exactly
+   * as long as its reveal lasts.
+   */
   REVEAL_DURATION_S: 3,
   /** SIG contribution to fauna aggro is tripled for a ping. */
   FAUNA_AGGRO_MULTIPLIER: 3,

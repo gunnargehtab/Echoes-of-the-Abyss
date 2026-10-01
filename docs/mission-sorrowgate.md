@@ -246,18 +246,18 @@ Tier 2 as she turns, then gone again.
 
 Drenn is being asked to sign for fourteen people with an unresolved contact on her approach. The
 Consortium does not price uncertainty by ignoring it. An exposure that cannot be graded cannot
-be signed for, and there is exactly one instrument in the Rift that grades a contact in a second
-and a half. She uses it. In her register that is not panic; it is diligence, and the record will
+be signed for, and there is exactly one instrument in the Rift that grades a contact the instant
+it is fired. She uses it. In her register that is not panic; it is diligence, and the record will
 show she logged it.
 
 [systems-echo.md](systems-echo.md) §5 delivers the verdict without anybody in the chamber being
 stupid: *bad players ping when they're nervous, which is how the Rift eats them.* Drenn was
 nervous, and being nervous is what diligence feels like from inside.
 
-The ping is SIG 95, omnidirectional, 1.5 s. It resolves the chamber to Tier 4 for three seconds.
-It carries down the basin, which is Abyssal Trench and carries sound far along its axis. The
-Sounder reads an active emission inside its corridor as a challenge call and alters course
-toward the emitter ([bestiary.md](bestiary.md)).
+The ping is SIG 95, omnidirectional, for three seconds, and for those three seconds it resolves
+the chamber to Tier 4. It carries down the basin, which is Abyssal Trench and carries sound far
+along its axis. The Sounder reads an active emission inside its corridor as a challenge call and
+alters course toward the emitter ([bestiary.md](bestiary.md)).
 
 Nobody is wrong. The Knight causes the disaster by being quiet and polite. The Underwriter
 causes it by being procedurally correct. The court causes it by having built its neutrality

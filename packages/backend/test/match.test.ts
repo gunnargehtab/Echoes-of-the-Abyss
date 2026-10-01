@@ -10,6 +10,7 @@ import { after, before, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  ACTIVE_SONAR,
   DEPTH,
   ECONOMY,
   Faction,
@@ -212,6 +213,26 @@ describe('Echo Layer', () => {
     // ...and the cost: the pinger is now screaming.
     const heardBack = afterSnapshots.get(1)!.contacts;
     assert.ok(heardBack.length > 0, 'pinging must expose the pinger');
+  });
+
+  it('holds a ping at SIG 95 for the whole of its reveal, and no longer', () => {
+    // docs/systems-echo.md §5: the pinger emits 95 for the 3 s its reveal lasts.
+    // The SIG table once said 1.5 s while the server held 3 (#1022); one
+    // timer drives both, and this is what says so.
+    const match = twoPlayerMatch();
+    advance(match, 1);
+    const mine = advance(match, 0.2)!.get(0)!.units[0]!;
+    assert.ok(Acoustic.sig[mine.id]! < ACTIVE_SONAR.EMITTER_SIG, 'a hull at rest is quieter');
+
+    match.activeSonar(0, mine.id);
+    advance(match, ACTIVE_SONAR.REVEAL_DURATION_S - 0.1);
+    assert.ok(Acoustic.sig[mine.id]! >= ACTIVE_SONAR.EMITTER_SIG, 'still transmitting at 2.9 s');
+
+    advance(match, 0.2);
+    assert.ok(
+      Acoustic.sig[mine.id]! < ACTIVE_SONAR.EMITTER_SIG,
+      'quiet again once the reveal ends'
+    );
   });
 
   it('stays inside its work budget for a small match in contact', () => {
