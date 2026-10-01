@@ -95,8 +95,9 @@ const WATER_RAMP: readonly WaterStop[] = [
 ];
 
 /** The renderer's working space is linear (`outputColorSpace = SRGBColorSpace`
- * converts on the way out), so every authored sRGB stop is decoded once here
- * rather than per fragment. */
+ * converts on the way out, in `colorspace_fragment`), so every authored sRGB
+ * stop is decoded once here rather than per fragment. The fog runs after that
+ * conversion, so it encodes the water itself (`installWaterFog`). */
 function srgbToLinear(channel: number): number {
   return channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
 }
@@ -260,6 +261,14 @@ let fogInstalled = false;
  * three.js already binds, which is `fogDensity`, `viewMatrix` and
  * `cameraPosition`.
  *
+ * three runs `fog_fragment` after `colorspace_fragment`, so the fragment it
+ * mixes is already in the output space, sRGB on the canvas, and three encodes
+ * its own fog colour to match. The water is encoded the same way, by three's
+ * `linearToOutputTexel`, which every program that fogs declares. Mixed in raw,
+ * the linear ramp faded the far seabed toward black, eight to twelve times
+ * darker than the backdrop at the same depth (#1016). Behind a render target
+ * three outputs linear, and the encode is the identity.
+ *
  * Idempotent, and called before the first material compiles.
  */
 export function installWaterFog(): void {
@@ -313,6 +322,7 @@ export function installWaterFog(): void {
     // luminance" now governs the air between the camera and the ground as well
     // as the ground itself.
     '  vec3 waterAtFragment = echoesWaterColor( echoesWaterDepthM( vWaterWorldY ) );',
+    '  waterAtFragment = linearToOutputTexel( vec4( waterAtFragment, 1.0 ) ).rgb;',
     '  gl_FragColor.rgb = mix( gl_FragColor.rgb, waterAtFragment, fogFactor );',
     '#endif',
   ].join('\n');

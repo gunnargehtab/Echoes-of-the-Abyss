@@ -6,7 +6,8 @@
  * what it decorates.
  *
  * What a screenshot has to judge is how it looks, and the review frames for
- * that are in `docs/screenshots/issue-836/`. What node:test can hold is the
+ * that are in `docs/screenshots/issue-836/`, with the fog's corrected colour
+ * in `docs/screenshots/issue-1016/`. What node:test can hold is the
  * ramp those frames are a picture of, the reach that scales it, and the one
  * promise that makes the setting safe: turning the water down can only reveal.
  */
@@ -207,5 +208,25 @@ describe('the fog patch', () => {
       false,
       'the world height is taken from the view-space position, not the pre-instance one'
     );
+  });
+
+  it('mixes toward the water in the space the fragment is already in', async () => {
+    // Every three shader that fogs encodes to the output space first, so the
+    // water is encoded before the mix, as three encodes its own fog colour.
+    // Mixed in raw, the far seabed faded toward black, darker than the
+    // backdrop at the same depth (#1016). If a three upgrade moves the fog
+    // ahead of the encode, the patch would encode twice, and this fails.
+    const { ShaderChunk, ShaderLib } = await import('three');
+    installWaterFog();
+    assert.ok(ShaderChunk.fog_fragment.includes('linearToOutputTexel'));
+    let fogged = 0;
+    for (const [name, shader] of Object.entries(ShaderLib)) {
+      const fog = shader.fragmentShader.indexOf('#include <fog_fragment>');
+      if (fog < 0) continue;
+      fogged++;
+      const encode = shader.fragmentShader.indexOf('#include <colorspace_fragment>');
+      assert.ok(encode >= 0 && encode < fog, `${name} fogs before it encodes`);
+    }
+    assert.ok(fogged > 0, 'no three shader fogs, so the order above was never checked');
   });
 });
