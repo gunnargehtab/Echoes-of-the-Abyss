@@ -758,6 +758,113 @@ export interface DrawLedger {
 }
 
 /**
+ * The slice of a WebGL 2 context the conn view reads off its renderer: the
+ * drawing buffer, the renderer's name, and the timer query gate 6 reads GPU
+ * time with (`packages/frontend/src/game/gpuTimer.ts`).
+ *
+ * Modelled rather than swallowed. A query's result arrives `latency` frames
+ * after it ended, as a real one does, and `ns` is what every frame cost: a
+ * fixed number a test chose, so the reading is asserted exactly and never
+ * timed. Without `timer` the extension is withheld, which is what a browser
+ * that does not expose it looks like.
+ */
+export class HeadlessGL {
+  readonly RENDERER = 0x1f01;
+  readonly QUERY_RESULT = 0x8866;
+  readonly QUERY_RESULT_AVAILABLE = 0x8867;
+  static readonly UNMASKED_RENDERER_WEBGL = 0x9246;
+  static readonly TIME_ELAPSED_EXT = 0x88bf;
+  static readonly GPU_DISJOINT_EXT = 0x8fbb;
+  rendererName = 'Headless stand-in';
+  timer: { ns: number; latency: number } | null = null;
+  /** Set to report one disjoint event at the next read, which clears it. */
+  disjoint = false;
+  /** Queries created and not yet deleted. */
+  live = 0;
+  private active: object | null = null;
+  /** Queries ended so far: the frame clock a result's latency counts in. */
+  private ended = 0;
+  private readonly endedAt = new Map<object, number>();
+
+  constructor(private readonly canvas: StubCanvas) {}
+
+  /** Whether a timer query is open: a pass drawn now is inside the bracket. */
+  get timing(): boolean {
+    return this.active !== null;
+  }
+
+  get drawingBufferWidth(): number {
+    return this.canvas.width;
+  }
+
+  get drawingBufferHeight(): number {
+    return this.canvas.height;
+  }
+
+  getExtension(name: string): object | null {
+    if (name === 'WEBGL_debug_renderer_info') {
+      return { UNMASKED_RENDERER_WEBGL: HeadlessGL.UNMASKED_RENDERER_WEBGL };
+    }
+    if (name === 'EXT_disjoint_timer_query_webgl2' && this.timer !== null) {
+      return {
+        TIME_ELAPSED_EXT: HeadlessGL.TIME_ELAPSED_EXT,
+        GPU_DISJOINT_EXT: HeadlessGL.GPU_DISJOINT_EXT,
+      };
+    }
+    return null;
+  }
+
+  getParameter(name: number): unknown {
+    if (name === this.RENDERER || name === HeadlessGL.UNMASKED_RENDERER_WEBGL) {
+      return this.rendererName;
+    }
+    if (name === HeadlessGL.GPU_DISJOINT_EXT) {
+      const disjoint = this.disjoint;
+      this.disjoint = false;
+      return disjoint;
+    }
+    throw new Error(`headless GL: parameter 0x${name.toString(16)} is not modelled`);
+  }
+
+  createQuery(): object {
+    this.live++;
+    return {};
+  }
+
+  deleteQuery(query: object): void {
+    this.endedAt.delete(query);
+    this.live--;
+  }
+
+  // GL makes both of these INVALID_OPERATION and carries on; a test wants to
+  // hear about it.
+  beginQuery(target: number, query: object): void {
+    if (target !== HeadlessGL.TIME_ELAPSED_EXT) throw new Error('headless GL: not a timer query');
+    if (this.active !== null) throw new Error('headless GL: a timer query is already active');
+    this.active = query;
+    this.endedAt.delete(query);
+  }
+
+  endQuery(target: number): void {
+    if (target !== HeadlessGL.TIME_ELAPSED_EXT || this.active === null) {
+      throw new Error('headless GL: no timer query is active');
+    }
+    this.endedAt.set(this.active, ++this.ended);
+    this.active = null;
+  }
+
+  getQueryParameter(query: object, name: number): unknown {
+    const endedAt = this.endedAt.get(query);
+    if (endedAt === undefined) throw new Error('headless GL: that query never ended');
+    if (name === this.QUERY_RESULT_AVAILABLE) {
+      return this.ended - endedAt >= (this.timer?.latency ?? 0);
+    }
+    if (name === this.QUERY_RESULT) return this.timer?.ns ?? 0;
+    throw new Error(`headless GL: query parameter 0x${name.toString(16)} is not modelled`);
+  }
+}
+
+/**
  * A three.js `WebGLRenderer` that walks the scene instead of drawing it.
  *
  * `calls` and `triangles` are counted from the scene graph — one call per
@@ -770,6 +877,7 @@ export interface DrawLedger {
  */
 export class HeadlessWebGLRenderer {
   readonly domElement = new StubCanvas();
+  readonly context = new HeadlessGL(this.domElement);
   readonly ledger: DrawLedger = { frames: 0, calls: 0, triangles: 0 };
   readonly info = { render: { calls: 0, triangles: 0 }, memory: { geometries: 0, textures: 0 } };
   readonly capabilities = { getMaxAnisotropy: (): number => 1, isWebGL2: true };
@@ -797,26 +905,45 @@ export class HeadlessWebGLRenderer {
    * anywhere else (docs/ui-ux.md §4.5).
    */
   lastScene: Scene | null = null;
+  /** Passes rendered, and how many of them a timer query was open across. */
+  passes = 0;
+  timedPasses = 0;
 
-  setPixelRatio(): void {}
+  private pixelRatio = 1;
+
+  /** As three's: the canvas's backing store is the CSS size times the ratio. */
+  setPixelRatio(ratio: number): void {
+    this.pixelRatio = ratio;
+  }
+
+  getPixelRatio(): number {
+    return this.pixelRatio;
+  }
+
+  getContext(): WebGL2RenderingContext {
+    return this.context as unknown as WebGL2RenderingContext;
+  }
+
   setClearColor(): void {}
   setAnimationLoop(): void {}
 
   setSize(width: number, height: number): void {
-    this.domElement.width = width;
-    this.domElement.height = height;
+    this.domElement.width = Math.floor(width * this.pixelRatio);
+    this.domElement.height = Math.floor(height * this.pixelRatio);
     this.domElement.clientWidth = width;
     this.domElement.clientHeight = height;
   }
 
   getSize<T extends { x: number; y: number }>(target: T): T {
-    target.x = this.domElement.width;
-    target.y = this.domElement.height;
+    target.x = this.domElement.clientWidth;
+    target.y = this.domElement.clientHeight;
     return target;
   }
 
   render(scene: Scene): void {
     this.lastScene = scene;
+    this.passes++;
+    if (this.context.timing) this.timedPasses++;
     let calls = 0;
     let triangles = 0;
     scene.traverseVisible((object) => {

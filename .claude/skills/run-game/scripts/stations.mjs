@@ -167,6 +167,14 @@ export default async ({ page, shot }) => {
   console.log('');
   console.log(`gate-6 review drive — ${DWELL_MS / 1000}s per station`);
   console.log(`renderer: ${renderer}`);
+  // Gate 6's GPU time is an unpaced reading (drive.mjs), and an unpaced run's
+  // frame columns are no frame budget: say which run this was.
+  const unpaced = process.env.UNPACED === '1';
+  console.log(
+    unpaced
+      ? "unpaced: the gpu column is gate 6's reading; the frame columns are not a budget."
+      : "paced: the frame columns are the budget; the gpu column is clock-bound, not gate 6's."
+  );
   if (software) {
     console.log(
       'WARNING: a software rasteriser drew this run. The millisecond columns below measure ' +
@@ -174,19 +182,28 @@ export default async ({ page, shot }) => {
     );
   }
   console.log(
-    '| station | frames | avg over | fps | frame avg/worst ms | conn avg/worst | overlay avg/worst | calls | tris | ordnance |'
+    '| station | frames | avg over | fps | frame avg/worst ms | conn avg/worst | overlay avg/worst | gpu avg/worst | calls | tris | ordnance |'
   );
-  console.log('| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |');
+  console.log('| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |');
   for (const { label, probe: p } of rows) {
     console.log(
       `| ${label} | ${p.stationFrames} | ${p.avgFrames} | ${p.fps} | ` +
         `${p.avgFrameMs} / ${p.worstFrameMs} | ${p.avgConnMs} / ${p.worstConnMs} | ` +
-        `${p.avgOverlayMs} / ${p.worstOverlayMs} | ${p.drawCalls} | ${p.triangles} | ${p.ordnance} |`
+        `${p.avgOverlayMs} / ${p.worstOverlayMs} | ${p.avgGpuMs ?? '—'} / ${p.worstGpuMs ?? '—'} | ` +
+        `${p.drawCalls} | ${p.triangles} | ${p.ordnance} |`
     );
   }
   console.log('');
   for (const { label, note, probe: p } of rows) {
     console.log(`${label.padEnd(13)} ${cell(p.avgFrameMs)} ms avg — ${note}`);
+    // The conn view's GPU time, every pass summed (gpuTimer.ts); gate 6 asks
+    // for it before and after a render-stack change. A revision before #1001
+    // has no field at all.
+    if (p.gpuTimer !== undefined && p.gpuTimer !== 'timing' && !software) {
+      console.log(
+        `${''.padEnd(13)} WARNING: no GPU time at this station (gpuTimer: ${p.gpuTimer}).`
+      );
+    }
     if (p.overlayFrames === 0) {
       console.log(`${''.padEnd(13)} WARNING: the overlay reported no frames at this station.`);
     }
@@ -209,5 +226,5 @@ export default async ({ page, shot }) => {
     }
   }
   console.log('');
-  console.log(JSON.stringify({ renderer, software, rows }, null, 2));
+  console.log(JSON.stringify({ renderer, software, unpaced, rows }, null, 2));
 };

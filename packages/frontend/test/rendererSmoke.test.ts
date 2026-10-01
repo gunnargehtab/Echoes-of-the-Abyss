@@ -42,6 +42,7 @@ import {
   carryRasterised,
   fireResizeObservers,
   HeadlessApplication,
+  HeadlessGL,
   HeadlessWebGLRenderer,
   pumpAnimationFrames,
   setCoarsePointer,
@@ -279,8 +280,11 @@ interface Booted {
  * point: a renderer that only works when told about the map before the terrain
  * is a renderer with a latent bug.
  */
-async function boot(options: { webgl?: boolean } = {}): Promise<Booted> {
+async function boot(
+  options: { webgl?: boolean; gpu?: Partial<Pick<HeadlessGL, 'timer' | 'rendererName'>> } = {}
+): Promise<Booted> {
   const gl = new HeadlessWebGLRenderer();
+  Object.assign(gl.context, options.gpu);
   const app = new HeadlessApplication();
   const connHost = createHost(1280, 720);
   const chartHost = createHost(1280, 720);
@@ -910,6 +914,82 @@ describe('renderer smoke test: the conn view', () => {
       }
     } finally {
       world.teardown();
+    }
+  });
+
+  it('times the frame on the GPU, every pass inside the bracket (gate 6, #1001)', async () => {
+    const world = await boot({ gpu: { timer: { ns: 3_200_000, latency: 2 } } });
+    try {
+      const { __perspectiveProbe: probe, __perspectiveStation: station } = (
+        globalThis as unknown as {
+          window: {
+            __perspectiveProbe: () => Record<string, unknown>;
+            __perspectiveStation: (label?: string) => Record<string, unknown>;
+          };
+        }
+      ).window;
+      world.frame(4);
+      station('home');
+      world.frame(6);
+      const held = probe();
+      assert.equal(held.gpuTimer, 'timing');
+      // Six frames into the station, a result two frames late: the first
+      // three have landed, and each read exactly what the frame cost.
+      assert.equal(held.gpuFrames, 3);
+      assert.equal(held.avgGpuMs, 3.2);
+      assert.equal(held.worstGpuMs, 3.2);
+      assert.equal(held.gpuDropped, 0);
+      assert.equal(world.gl.timedPasses, world.gl.passes, 'no pass was drawn outside the timer');
+      assert.ok(world.gl.passes >= 10, 'and the frames above were drawn');
+      // A fresh station starts from nothing rather than from the last reading.
+      station('close');
+      const opened = probe();
+      assert.equal(opened.gpuFrames, 0);
+      assert.equal(opened.avgGpuMs, null, 'no reading is null, never a zero');
+      // What was shaded: the stub window's ratio of 1, on a 1280 × 720 host.
+      assert.equal(held.pixelRatio, 1);
+      assert.deepEqual(held.drawingBuffer, { width: 1280, height: 720 });
+    } finally {
+      world.teardown();
+    }
+    assert.equal(world.gl.context.live, 0, 'every query went with the view');
+  });
+
+  it('says why there is no GPU reading, and shades at the capped pixel ratio', async () => {
+    for (const [gpu, state] of [
+      [{}, 'unavailable'],
+      [{ timer: { ns: 700, latency: 0 }, rendererName: 'SwiftShader driver' }, 'software'],
+    ] as const) {
+      const world = await boot({ gpu });
+      try {
+        world.frame(4);
+        const reading = (
+          globalThis as unknown as { window: { __perspectiveProbe: () => Record<string, unknown> } }
+        ).window.__perspectiveProbe();
+        assert.equal(reading.gpuTimer, state);
+        assert.equal(reading.avgGpuMs, null);
+        assert.equal(reading.gpuFrames, 0);
+        assert.equal(world.gl.context.live, 0, `${state}: no query was made`);
+      } finally {
+        world.teardown();
+      }
+    }
+    // A 2× display is held to gate 6's 1.5, and the drawing buffer follows.
+    const stub = globalThis as unknown as { window: { devicePixelRatio: number } };
+    stub.window.devicePixelRatio = 2;
+    try {
+      const world = await boot();
+      try {
+        const reading = (
+          globalThis as unknown as { window: { __perspectiveProbe: () => Record<string, unknown> } }
+        ).window.__perspectiveProbe();
+        assert.equal(reading.pixelRatio, 1.5);
+        assert.deepEqual(reading.drawingBuffer, { width: 1920, height: 1080 });
+      } finally {
+        world.teardown();
+      }
+    } finally {
+      stub.window.devicePixelRatio = 1;
     }
   });
 
