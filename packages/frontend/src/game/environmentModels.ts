@@ -11,9 +11,10 @@
  *   lightless ocean must read darker and quieter than any vessel
  *   (docs/asset-prompts-3d.md, ENV STYLE), and must still read — while hue
  *   stays the model's own desaturated stone/coral/crystal.
- * - **Emissive passes through untouched.** A prop's light was licensed (or
- *   refused) at intake against the world-light families; the runtime is not a
- *   second review. Gate 3's SIG modulation never applies — a prop has no SIG.
+ * - **Emissive keeps its intake strength and hue.** A prop's light was licensed
+ *   (or refused) at intake against the world-light families; the runtime is not a
+ *   second review, so the glow is added after tone mapping like a hull's
+ *   (art-direction.md). Gate 3's SIG modulation never applies — a prop has no SIG.
  * - **Transforms are baked into the geometry.** Instancing wants metre-true
  *   geometry under simple TRS instance matrices, so canonicalisation (scale
  *   to `footprintM`, centre XZ, base at Y=0 — props *stand*, hulls float)
@@ -42,6 +43,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeByMaterial } from './rosterModels.ts';
 import { swayWeight } from './environment.ts';
 import { installPropSurface, type WorldLook } from './tutorialLook.ts';
+import { keepGlowOutsideToneMapping } from './modelLighting.ts';
 
 /**
  * TUNABLE — the diffuse luminance a prop's brightest material is set to,
@@ -237,6 +239,10 @@ export function buildTemplate(
       patchSway(material, sway);
     }
     if (look === 'sorrowgate') installPropSurface(material);
+    // After patchSway, which replaces onBeforeCompile rather than chaining it.
+    if (material instanceof MeshStandardMaterial && material.emissive.getHex() !== 0) {
+      keepGlowOutsideToneMapping(material);
+    }
     parts.push({ geometry, material });
   });
   return { parts, trianglesPerInstance: triangles, sway };

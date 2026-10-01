@@ -34,8 +34,7 @@ No geometry, simulation, detection or gameplay numbers changed.
   adds no draws but still costs shading time.
 
 Reproduce the asset counts with `node tools/render-stack/audit.mjs`.
-The remaining seven upgrades still need linked follow-up issues; none was filed
-before this checkpoint.
+The remaining seven upgrades are filed as #1001–#1007 and linked to #974.
 
 ## Captured evidence
 
@@ -88,8 +87,8 @@ saturation:
 | Low | 0.64 | 0.58 | 0.69 |
 
 The owner chose to tone-map surface light only and add emission back afterwards
-(`keepGlowOutsideToneMapping` in `modelLighting.ts`, on every hull's cloned lamp
-materials). Three.js's Neutral curve was also measured: 0.52 at the close camera,
+(`keepGlowOutsideToneMapping` in `modelLighting.ts`, on every hull's and
+structure's cloned lamp materials, and on glowing environment props). Three.js's Neutral curve was also measured: 0.52 at the close camera,
 with amber shifted toward peach. The glow term now reaches the screen exactly as it
 did before this increment, so gate 3's resting brightness is unchanged by construction.
 

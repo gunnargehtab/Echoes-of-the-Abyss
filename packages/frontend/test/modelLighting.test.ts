@@ -13,6 +13,7 @@ import {
   Points,
   MeshStandardMaterial,
   SRGBColorSpace,
+  ShaderLib,
 } from 'three';
 import { DEPTH, MODEL_LIGHTING } from '@echoes/shared';
 import { createHost, HeadlessWebGLRenderer, pumpAnimationFrames } from './support/headless.ts';
@@ -177,5 +178,12 @@ describe('glow stays outside tone mapping: gates 3 and 4', () => {
     material.onBeforeCompile(shader as never, null as never);
     assert.equal(earlier.mock.callCount(), 1);
     assert.ok(shader.fragmentShader.includes(GLOW_AFTER_TONE_MAPPING));
+  });
+
+  it("three's standard shader still offers the chunk, after the emission is declared", () => {
+    const fragment = ShaderLib.standard.fragmentShader;
+    const declared = fragment.indexOf('vec3 totalEmissiveRadiance');
+    const mapped = fragment.indexOf('#include <tonemapping_fragment>');
+    assert.ok(declared >= 0 && mapped > declared, 'a renamed chunk would make the patch a no-op');
   });
 });

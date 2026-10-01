@@ -60,6 +60,8 @@ export function createWaterEnvironment(renderer: WebGLRenderer): WebGLRenderTarg
  * reading as its faction (gate 4) and a loud hull's colour would lie about its
  * SIG (gate 3). Map everything but the emission, then add the emission back
  * at its own hue and strength. A no-op wherever the renderer has no tone mapping.
+ * Exact for MeshStandardMaterial, where emission sits unattenuated in the sum;
+ * a physical material's clearcoat or sheen would attenuate it first.
  */
 export const GLOW_AFTER_TONE_MAPPING = `#if defined( TONE_MAPPING )
 	gl_FragColor.rgb = toneMapping( max( gl_FragColor.rgb - totalEmissiveRadiance, 0.0 ) ) + totalEmissiveRadiance;

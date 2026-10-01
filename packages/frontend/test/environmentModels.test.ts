@@ -15,7 +15,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
-import { Box3, Vector3, type Group } from 'three';
+import { Box3, MeshStandardMaterial, Vector3, type Group } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ENVIRONMENT_PROPS } from '../src/game/environment.ts';
 import { buildTemplate, type EnvTemplate } from '../src/game/environmentModels.ts';
@@ -76,4 +76,17 @@ describe('prop scale', () => {
     close(size.y, 6, 'boulder height');
     close(Math.max(size.x, size.z), 9.7736, 'boulder vertex extent');
   });
+});
+
+describe('glowing props keep their hue: art-direction, gates 3 and 4', () => {
+  for (const spec of ENVIRONMENT_PROPS) {
+    it(`${spec.slug}: every emissive part adds its glow after tone mapping`, async () => {
+      const template = buildTemplate(await parse(spec.slug), spec.footprintM, spec.swayM);
+      for (const { material } of template.parts) {
+        if (!(material instanceof MeshStandardMaterial) || material.emissive.getHex() === 0)
+          continue;
+        assert.match(material.customProgramCacheKey(), /glow-after-tone-1$/);
+      }
+    });
+  }
 });
