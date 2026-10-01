@@ -315,10 +315,11 @@ function luminance(color: Color): number {
  * resting value from, and the emitted luminance comes out as the model's own.
  * Past white, gate 3's lamp core holds the rest at white along the ink
  * (`lampCoreRest`), worked out here because the ink is this palette's; the
- * export's own value stays on `userData.exportIntensity` for the lamp reading. Recolouring it to the glow ink's
- * chromaticity keeps the emissive colour inside gamut, which writing the
- * scaled ink straight into `emissive` would not — the Directorate's `#C2465E`
- * normalised to unit luminance clips its red channel past 3.
+ * export's own value stays on `userData.exportIntensity` for the lamp reading.
+ * Recolouring it to the glow ink's chromaticity keeps the emissive colour
+ * inside gamut, which writing the scaled ink straight into `emissive` would
+ * not — the Directorate's `#C2465E` normalised to unit luminance clips its red
+ * channel past 3.
  */
 function recolor(root: Group, faction: Faction, look: WorldLook, palette: Palette): void {
   const ink = palette.faction[faction];

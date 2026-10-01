@@ -64,7 +64,8 @@ export function createWaterEnvironment(renderer: WebGLRenderer): WebGLRenderTarg
  * down along its hue rather than clipped channel by channel, which drew an
  * amber lamp yellow and a loud one white until #1021. That is the pixel half
  * of gate 3's lamp core: `lampCoreRest` (glow.ts) holds the rest at white, so
- * what reaches this is a flare past it, or lit surface under a lamp at white.
+ * what reaches this is a flare past the rest, or lit surface added to emission,
+ * on a lamp or on a glowing prop.
  * A no-op wherever three defines no TONE_MAPPING: a renderer without tone
  * mapping, or a draw into a render target, which r169 never tone-maps per
  * material (WebGLPrograms). So behind a RenderPass that feeds later passes the

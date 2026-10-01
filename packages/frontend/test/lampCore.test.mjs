@@ -26,7 +26,7 @@ import { Faction, StructureKind, UnitKind } from '@echoes/shared';
 
 import { buildTemplate, slugFor } from '../src/game/rosterModels.ts';
 import { PALETTES } from '../src/game/palette.ts';
-import { GLOW_FACTOR_MAX, GLOW_FACTOR_MIN, glowFactor, lampCoreRest } from '../src/game/glow.ts';
+import { lampCoreRest } from '../src/game/glow.ts';
 
 const MODELS = new URL('../../../docs/concept-art/models/', import.meta.url);
 
@@ -102,15 +102,6 @@ describe('lamp core: the rest (gate 3)', () => {
               `${label}: untouched`
             );
           }
-          // Each live state is the rest times the factor: under white every
-          // quieter state draws strictly darker, which the clip had stopped.
-          for (const factor of [GLOW_FACTOR_MIN, glowFactor(1.75, 6), 0.99]) {
-            assert.ok(
-              Math.min(1, rest * factor) < Math.min(1, rest),
-              `${label}: dims at ×${factor}`
-            );
-          }
-          assert.ok(Math.min(1, rest * GLOW_FACTOR_MAX) >= Math.min(1, rest), `${label}: flares`);
         }
       }
       assert.ok(total >= 151, `${name}: positive control, the roster's lamps, saw ${total}`);

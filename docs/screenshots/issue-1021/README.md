@@ -29,6 +29,7 @@ tools/render-stack/lamps.mjs`, and `?mission=prologue-sorrowgate` for the tutori
 | Consortium scout, engine off (SIG 1.75) | 1.00 / 85 / 57.4°, 0.66 | 0.82 / 0 / 41.6°, 0.71 |
 | Consortium scout, ping (SIG 95) | 1.00 / 85 / 57.8°, 0.29 | 0.91 / 0 / 41.6°, 0.72 |
 | Commune scout, rest (SIG 6) | 1.00 / 5 / 169.1°, 0.84 | 0.91 / 0 / 169.1°, 0.84 |
+| Commune scout, silent (SIG 3.5) | 0.93 / 0 / 169.0°, 0.84 | 0.86 / 0 / 169.9°, 0.85 |
 | Commune scout, engine off (SIG 1.75) | 0.89 / 0 / 169.6°, 0.85 | 0.81 / 0 / 169.9°, 0.85 |
 
 The ink `#F2B233` is 39.9° as stored. The Consortium scout rested at 3.5 times its ink and
@@ -37,9 +38,11 @@ from 0.91 to 0.82, about 22 of 255 steps, where before it did not move. Its rest
 engine-off emission is now amber (29.0° against the ink's linear 28.9°; before, teal
 noise from a clipped red). Its ping no longer whitens it, and no longer flares on the
 lamp either: a lamp held at white has no headroom, and the loudness collar carries the
-ping, as gate 3 says. The Caisson's lamp rests under white and is not held; what clipped
-was lit surface under it, which the pixel half now scales. The Commune scout rested at
-1.6 and is held at 1.302.
+ping, as gate 3 says. One of the Caisson's three lamp materials rested past white (1.33,
+peak 1.18) and is held at 1.126; the other two rest under it (peaks 0.41 and 0.89). Its 99
+clipped pixels are gone through both halves together, the hold and the pixel scaling of
+lit surface added to emission; these readings do not separate them. The Commune scout
+rested at 1.6 and is held at 1.302.
 
 ## GPU time (`gpu-after/`)
 

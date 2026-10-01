@@ -98,12 +98,13 @@ model.
 ### 3.2 One glow factor
 
 The pipeline draws one lighting state. The chart bakes the model as it is and calibrates
-its total emissive energy onto E(SIG) = 0.45 · e^(SIG/14) from the model table's `sig`;
-the conn view then scales every lamp from that resting strength by one factor, E(live) /
+its total emissive energy onto E(SIG) = 0.45 · e^(SIG/14) from the model table's `sig`; the
+conn view then scales every lamp from that resting strength by one factor, E(live) /
 E(rest), in `applyLiveGlow`. A lamp whose resting strength would put its brightest channel
-past white rests at white instead, along its faction hue (gate 3's lamp core, #1021). The intake calibration searches a gain between ×1/64 and ×64
-and stops there — past ×64 the light geometry is what is wrong, not its intensity. From
-this, five consequences, and #775 is the case that settled them on the Responsory:
+past white rests at white instead, along its faction hue (gate 3's lamp core, #1021). The
+intake calibration searches a gain between ×1/64 and ×64 and stops there — past ×64 the
+light geometry is what is wrong, not its intensity. From this, five consequences, and #775
+is the case that settled them on the Responsory:
 
 1. **The resting clause is what the model lights.** Every `UNIT —` block ends with a
    lighting clause in bands: at rest, under way, sometimes working. The model's lamps are
