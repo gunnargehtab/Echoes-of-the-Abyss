@@ -125,6 +125,7 @@ import {
   waterTransmittance,
 } from './water.ts';
 import { FrameCost, ms } from './frameCost.ts';
+import { GpuTimer } from './gpuTimer.ts';
 import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 import { FaunaStipple } from './faunaStipple.ts';
 import { DREAM_LOOP, installDreamGround } from './dreamLoop.ts';
@@ -549,6 +550,8 @@ export class PerspectiveView {
   private readonly connCost = new FrameCost();
   /** Time inside the overlay painter's `draw`, reported by `EchoRenderer`. */
   private readonly overlayCost = new FrameCost();
+  /** The frame's GPU time, every pass summed (gate 6); set up with the renderer. */
+  private gpuTimer: GpuTimer | null = null;
   /** The station these three are measuring, or null before one is named. */
   private stationLabel: string | null = null;
   /** Set at construction so a probe read before the first frame still divides
@@ -649,6 +652,11 @@ export class PerspectiveView {
       this.scene.environmentIntensity = MODEL_LIGHTING.ENVIRONMENT_INTENSITY;
     }
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO));
+    // three has drawn only through WebGL 2 since r163; its typing predates that.
+    this.gpuTimer = new GpuTimer(
+      this.renderer.getContext() as WebGL2RenderingContext,
+      import.meta.env?.PROD !== true
+    );
     host.appendChild(this.renderer.domElement);
     this.host = host;
     this.resizeObserver = new ResizeObserver(() => this.resize());
@@ -843,6 +851,8 @@ export class PerspectiveView {
     this.scene.environment = null;
     this.lightingEnvironment?.dispose();
     this.lightingEnvironment = null;
+    this.gpuTimer?.dispose();
+    this.gpuTimer = null;
     this.renderer?.dispose();
     this.renderer?.domElement.remove();
     this.renderer = null;
@@ -2083,7 +2093,15 @@ export class PerspectiveView {
         this.drawScale
       );
     }
-    renderer.render(this.scene, this.camera);
+    // Every pass of the frame goes inside this bracket, so a pass added later
+    // is timed with the rest (gate 6). Ended even if a pass throws: a query
+    // left open would stop every later frame from starting its own.
+    this.gpuTimer?.begin();
+    try {
+      renderer.render(this.scene, this.camera);
+    } finally {
+      this.gpuTimer?.end();
+    }
     this.connCost.add(performance.now() - now);
   }
 
@@ -2118,6 +2136,7 @@ export class PerspectiveView {
     this.frameCost.reset();
     this.connCost.reset();
     this.overlayCost.reset();
+    this.gpuTimer?.reset();
   }
 
   /** Read-only telemetry for the harness, like the audio and hazard probes. */
@@ -2187,7 +2206,11 @@ export class PerspectiveView {
    */
   private probeReading() {
     const info = this.renderer?.info;
+    const gl = this.renderer?.getContext();
     const elapsed = performance.now() - this.stationStartedAt;
+    const gpu = this.gpuTimer;
+    // No reading is null, never a zero that would be quoted as free.
+    const gpuReads = gpu !== null && gpu.state === 'timing' && gpu.cost.count > 0;
     return {
       active: this.active,
       look: this.look,
@@ -2221,6 +2244,11 @@ export class PerspectiveView {
       drawCalls: info?.render.calls ?? 0,
       triangles: info?.render.triangles ?? 0,
       textures: info?.memory.textures ?? 0,
+      // What the GPU shades: the capped pixel ratio, and the drawing buffer
+      // it gives. Gate 6 reads GPU time at 1 and 1.5, and the same camera at
+      // 1.5 is 2.25 times the fragments.
+      pixelRatio: this.renderer?.getPixelRatio() ?? 0,
+      drawingBuffer: { width: gl?.drawingBufferWidth ?? 0, height: gl?.drawingBufferHeight ?? 0 },
       toneMapping: this.renderer?.toneMapping,
       environmentIntensity: this.scene.environmentIntensity,
       environmentBytes:
@@ -2248,6 +2276,16 @@ export class PerspectiveView {
       // the two painters run on separate loops and only one of them is this
       // class's.
       overlayFrames: this.overlayCost.count,
+      // The frame's GPU time, every pass summed (gpuTimer.ts), and why there
+      // is none when there is none: `off` in a production build, `software`
+      // on a software rasteriser, `unavailable` without the timer extension.
+      // Results land frames late, so `gpuFrames` trails `stationFrames`;
+      // `gpuDropped` counts the ones a disjoint event voided.
+      gpuTimer: gpu?.state ?? 'unavailable',
+      avgGpuMs: gpuReads ? ms(gpu.cost.avg) : null,
+      worstGpuMs: gpuReads ? ms(gpu.cost.worst) : null,
+      gpuFrames: gpu?.cost.count ?? 0,
+      gpuDropped: gpu?.dropped ?? 0,
       units: this.unitHandles.size,
       structures: this.structureHandles.size,
       // Own ordnance in the water, drawn by the instanced layer (gate 6).

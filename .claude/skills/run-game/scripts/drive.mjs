@@ -12,7 +12,8 @@
  *   node .claude/skills/run-game/scripts/drive.mjs --out <dir> [--steps <file>] [--url <url>]
  *     [--entry solo|tutorial] [--headed] [--channel msedge|chrome]
  *
- * VIEW_W and VIEW_H move the 1440×900 viewport.
+ * VIEW_W and VIEW_H move the 1440×900 viewport, and VIEW_DPR its device pixel
+ * ratio (default 1): gate 6 reads GPU time at 1 and at 1.5, the conn view's cap.
  *
  * With no --steps it runs the default smoke: connect, select a unit, ping.
  * A steps file is an ES module with `export default async ({ page, shot }) => {...}`.
@@ -111,7 +112,12 @@ const browser = await chromium.launch({
   headless: !HEADED,
   ...(CHANNEL === null ? {} : { channel: CHANNEL }),
 });
-const page = await (await browser.newContext({ viewport: { width: Number(process.env.VIEW_W ?? 1440), height: Number(process.env.VIEW_H ?? 900) } })).newPage();
+const page = await (
+  await browser.newContext({
+    viewport: { width: Number(process.env.VIEW_W ?? 1440), height: Number(process.env.VIEW_H ?? 900) },
+    deviceScaleFactor: Number(process.env.VIEW_DPR ?? 1),
+  })
+).newPage();
 
 const errors = [];
 page.on('console', (m) => {

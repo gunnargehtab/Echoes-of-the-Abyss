@@ -478,8 +478,9 @@ named GPU). It is read before and after the change at pixel ratio 1 and 1.5: at 
 home, low (12°) and survey cameras of `tools/render-stack/capture.mjs` on Ventfront and
 Sorrowgate, and at the fight station of `stations.mjs` on Ventfront. A software
 rasteriser's time is no reading.
-[#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001) adds the field to
-`__perspectiveProbe`.
+`__perspectiveProbe` reports it as `avgGpuMs` and `worstGpuMs` in a development build,
+with `gpuTimer` saying why a reading is absent, and `pixelRatio` and `drawingBuffer`
+saying what was shaded ([#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001)).
 
 Gate 3's lamp core is allocated nothing: no pass, draw call, triangle or render-target byte.
 

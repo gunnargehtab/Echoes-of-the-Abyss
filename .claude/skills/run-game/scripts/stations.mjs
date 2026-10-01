@@ -174,19 +174,28 @@ export default async ({ page, shot }) => {
     );
   }
   console.log(
-    '| station | frames | avg over | fps | frame avg/worst ms | conn avg/worst | overlay avg/worst | calls | tris | ordnance |'
+    '| station | frames | avg over | fps | frame avg/worst ms | conn avg/worst | overlay avg/worst | gpu avg/worst | calls | tris | ordnance |'
   );
-  console.log('| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |');
+  console.log('| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |');
   for (const { label, probe: p } of rows) {
     console.log(
       `| ${label} | ${p.stationFrames} | ${p.avgFrames} | ${p.fps} | ` +
         `${p.avgFrameMs} / ${p.worstFrameMs} | ${p.avgConnMs} / ${p.worstConnMs} | ` +
-        `${p.avgOverlayMs} / ${p.worstOverlayMs} | ${p.drawCalls} | ${p.triangles} | ${p.ordnance} |`
+        `${p.avgOverlayMs} / ${p.worstOverlayMs} | ${p.avgGpuMs ?? '—'} / ${p.worstGpuMs ?? '—'} | ` +
+        `${p.drawCalls} | ${p.triangles} | ${p.ordnance} |`
     );
   }
   console.log('');
   for (const { label, note, probe: p } of rows) {
     console.log(`${label.padEnd(13)} ${cell(p.avgFrameMs)} ms avg — ${note}`);
+    // The conn view's GPU time, every pass summed (gpuTimer.ts); gate 6 asks
+    // for it before and after a render-stack change. A revision before #1001
+    // has no field at all.
+    if (p.gpuTimer !== undefined && p.gpuTimer !== 'timing' && !software) {
+      console.log(
+        `${''.padEnd(13)} WARNING: no GPU time at this station (gpuTimer: ${p.gpuTimer}).`
+      );
+    }
     if (p.overlayFrames === 0) {
       console.log(`${''.padEnd(13)} WARNING: the overlay reported no frames at this station.`);
     }

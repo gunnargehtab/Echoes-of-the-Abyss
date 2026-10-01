@@ -234,8 +234,12 @@ under 3 ms. The draw-call and triangle columns are real; the millisecond columns
 are the software rasteriser. Real numbers need a real GPU, and gate 6 still owes a
 Termux row (docs/graphics-standards.md gate 6); render-stack work is accepted on the
 named desktop GPU without one ("Abyss Render Stack increment"). Even there the conn
-and overlay columns are CPU time, conn being entity sync plus the GL submit. Nothing
-here reads a GPU timer, so zero new draws is not zero shading cost.
+and overlay columns are CPU time, conn being entity sync plus the GL submit. The gpu
+column is the conn view's GPU time, every pass summed, from a timer query: a dev build
+reads it on a GPU and refuses it on a software rasteriser, and the probe's `gpuTimer`
+says which. Zero new draws is not zero shading cost, and that column is what shows it.
+Gate 6 reads it at device pixel ratio 1 and 1.5; `VIEW_DPR=1.5` sets the second, and the
+probe's `pixelRatio` and `drawingBuffer` say what was shaded.
 
 On a desktop with a GPU, drive **headed**. Headless Chromium may draw through SwiftShader
 anyway, and `--channel msedge` (or `chrome`) uses an installed browser where no Playwright

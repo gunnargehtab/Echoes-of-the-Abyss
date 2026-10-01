@@ -83,7 +83,9 @@ tools/render-stack #974's audit and camera pairs, kept runnable rather than
                    laid-out atlas), and materials with an occlusion
                    texture. capture.mjs is a run-game --steps module: four
                    held cameras with the HUD on, gate 6's call and triangle
-                   limits asserted, readings.json beside the frames. The
+                   limits asserted, the probe's GPU time required on a GPU
+                   and refused on a software rasteriser (#1001), and
+                   readings.json beside the frames. The
                    run-game skill has the recipe and what its milliseconds
                    measure. fog.mjs, another, reads whether fully fogged
                    seabed meets the backdrop at its depth (#1016), and

@@ -8,12 +8,15 @@
  *     --steps tools/render-stack/capture.mjs
  *
  * `?mission=prologue-sorrowgate` is the tutorial, and a pair is two revisions
- * captured into two <dir>s. Headed, because headless Chromium may rasterise
- * through SwiftShader on a machine with a GPU (drive.mjs), and `software`
- * records when it did: that frame time is the rasteriser's, not the scene's.
- * connMs and overlayMs are the two painters' CPU time and frameMs the interval
- * between frames; none is a GPU timer query, and a station's worst frame
- * includes the one that first draws its view. No pixel is read here: the
+ * captured into two <dir>s; `VIEW_DPR=1.5` takes gate 6's second pixel ratio.
+ * Headed, because headless Chromium may rasterise through SwiftShader on a
+ * machine with a GPU (drive.mjs), and `software` records when it did: that
+ * frame time is the rasteriser's, not the scene's. connMs and overlayMs are
+ * the two painters' CPU time and frameMs the interval between frames.
+ * avgGpuMs and worstGpuMs are the conn view's GPU time, every pass summed,
+ * from a timer query (gpuTimer.ts): read on a GPU, refused on a software
+ * rasteriser, and absent from a revision before #1001. A station's worst
+ * frame includes the one that first draws its view. No pixel is read here: the
  * saturation table in docs/screenshots/issue-974/README.md was read from the
  * frames separately. Not a gate; the asserts stop a capture that could not be
  * evidence.
@@ -60,11 +63,19 @@ export default async ({ page, shot }) => {
       });
       window.__perspectiveStation(name);
     }, { centre, distance, pitchDeg, name });
+    // GPU results land a few frames late, so a timing probe waits for its own
+    // windowful too.
     await page.waitForFunction(() => {
       const p = window.__perspectiveProbe();
-      return p.stationFrames >= 240 && p.overlayFrames >= 240;
+      const gpu = p.gpuTimer !== 'timing' || p.gpuFrames >= 240;
+      return p.stationFrames >= 240 && p.overlayFrames >= 240 && gpu;
     }, null, { timeout: 120000 });
     const probe = await page.evaluate(() => window.__perspectiveProbe());
+    if (probe.gpuTimer !== undefined) {
+      // A GPU capture that read no GPU time is no gate-6 before-and-after, and
+      // a software one that read some would be quoted.
+      assert.equal(probe.gpuTimer, software ? 'software' : 'timing', `${name}: GPU timer`);
+    }
     assert.ok(probe.drawCalls <= 150, `${name}: draw budget`);
     assert.ok(probe.triangles <= 250000, `${name}: triangle budget`);
     // Absent before #974, so a baseline capture of 1df288a still runs.
