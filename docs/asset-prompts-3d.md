@@ -582,8 +582,9 @@ hexagonal prism at a millimetre and at a metre, and a resonance tower is a cryst
 of a building. On the Order, then, the rule is mostly its sections — a hull here is
 diamonds and hexagons almost through — and the chord governs what is neither: the rings,
 the pips and the structures' drums. Twelve is the ceiling, a dodecagon at the rim, a cut
-stone; past it a ring is a wheel, and the Responsory's and the Antiphon's twenty-eight-facet
-resonator rings are the pass's first cut. Panels run two to six metres: planes — a wing, a
+stone; past it a ring is a wheel, and the Responsory's and the Antiphon's resonator rings,
+twenty-eight-faceted until the pass, were its first cut: twelve round now, the crystal ring
+inside the Responsory's ten. Panels run two to six metres: planes — a wing, a
 fin, a spar — and the seams "the Order builds nothing bare" adds, centred on the Clarion's
 3.9.
 
@@ -597,10 +598,12 @@ triangles go as the square of its count. Every round part rebuilt with its own c
 at the count the rule gives it, the table costs: Consortium hulls 53.3 k → 40.9 k and
 structures 16.6 k → 19.5 k; Commune hulls 47.6 k → 47.8 k and structures 35.2 k → 62.4 k;
 Directorate hulls 30.0 k → 33.5 k and structures 26.6 k → 32.8 k; Order hulls 9.9 k → 8.0 k
-and structures 15.8 k → 12.4 k; the fourteen props, under no rule, 4.3 k. The own force
+and structures 15.8 k → 12.0 k, the Order's as built since its pass, where this rebuild had
+said 12.4 k before the pass cut its pipes, stacks and throat drums as hexagons; the fourteen
+props, under no rule, 4.3 k. The own force
 the gate names, taken as a navy's eight structures, four more Turrets and its five largest
 hulls, comes to 42.1 k for the Consortium, 107.0 k for the Commune, 64.0 k for the
-Directorate and 19.2 k for the Order. That mix is one sample base and not a worst case —
+Directorate and 18.8 k for the Order, as built. That mix is one sample base and not a worst case —
 nothing caps what a base builds, and a dozen Commune Slipways alone are 170 k — so the
 probe, not this rebuild, is the check. The Commune's ceiling is the number gate 6 moved: at
 twenty-four that dozen and five were 181.0 k, its eight structures alone 110.5 k; at
@@ -626,14 +629,21 @@ The table above was derived from the law and the reference hulls, never from tha
 two disagree the law wins. So the rule names 792 of the Consortium's 1,119 rings off it —
 579 of the 787 on hulls, the drums that carry one count on every radius — 1,089 of the
 Commune's 1,240 (452 of the 526 on hulls, six of them on the four ported `grownBody` bodies
-the pass leaves), 997 of the Directorate's 1,418 (516 of the 681 on hulls), and 251 of
-the Order's 616, fourteen of them on hulls, since an Order hull is sections almost through.
+the pass leaves), 935 of the Directorate's 1,477 (516 of the 681 on hulls; its Refinery was
+rebuilt in #951), and 251 of the Order's 616, fourteen of them on hulls, since an Order hull
+is sections almost through. The Order's pass leaves five of its 616, none on a hull: the
+Sentinel Turret's emplacement and the Sounding Spire's plinth and cap, octagons whose turned
+boxes are the measure their models are scaled to, so that re-cutting one resizes the whole
+structure and is a decision of its own; and the Turret's two pods' caps, a capsule's
+meridian at 5.1 m, where the rule's share of a half turn is five and a capsule draws an even
+count.
 Outside the bands: eight Consortium hulls (the five shared kinds, the Chorister and the
 Tender at 2.3–3.9 m, and the Beacon at 0.5) and five structures; two Commune hulls (the
 Bower at 0.8 m, the Submersible at 7.3) and three structures; three Directorate hulls (the
 Verger, the Submersible and the Dredge, 4.0–5.2 m) and four structures; five Order hulls
 (the Versicle at 1.5 m; the Reciter, the Responsory, the Antiphon and the Offertory at
-6.1–7.2 — the Responsory's block asks for fine ceramic panelling, so its 6.4 is a finding
+6.0–7.2 — the Responsory's block asks for fine ceramic panelling, so its 6.0, 6.4 until the
+facet pass thinned its rings, is a finding
 and not a doubt about the band, and the Reciter, at 6.1 m over eleven parts, is within one
 part of the edge) and three structures — every Bastion among them, and three of the four
 Foundries.
