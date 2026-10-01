@@ -167,6 +167,14 @@ describe('glow stays outside tone mapping: gates 3 and 4', () => {
       /toneMapping\( max\( gl_FragColor\.rgb - totalEmissiveRadiance, 0\.0 \) \) \+ totalEmissiveRadiance/
     );
     assert.ok(GLOW_AFTER_TONE_MAPPING.startsWith('#if defined( TONE_MAPPING )'));
+    // Gate 3's lamp core, the pixel half: past white the sum is scaled along
+    // its hue, after the emission is added and before the chunk ends.
+    const added = GLOW_AFTER_TONE_MAPPING.indexOf('+ totalEmissiveRadiance;');
+    const scaled = GLOW_AFTER_TONE_MAPPING.indexOf(
+      'gl_FragColor.rgb /= max( 1.0, max( gl_FragColor.r, max( gl_FragColor.g, gl_FragColor.b ) ) );'
+    );
+    assert.ok(added >= 0 && scaled > added, 'scaled along its hue once the emission is in');
+    assert.ok(scaled < GLOW_AFTER_TONE_MAPPING.indexOf('#endif'));
     assert.notEqual(material.customProgramCacheKey(), keyBefore, 'a distinct program');
   });
 

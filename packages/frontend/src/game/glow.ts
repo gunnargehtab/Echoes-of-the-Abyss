@@ -28,3 +28,19 @@ export function glowFactor(liveSig: number, restSig: number): number {
     Math.max(GLOW_FACTOR_MIN, Math.exp((liveSig - restSig) / SIG_GLOW_EFOLD))
   );
 }
+
+/**
+ * Gate 3's lamp core: the resting intensity at which a lamp's brightest
+ * channel rests at most at white (1.0), the most the 8-bit canvas shows.
+ *
+ * An export that rests past white would otherwise clip channel by channel,
+ * the red of an amber ink first, and draw a different hue (#1021: the
+ * Consortium scout's #F2B233 drew yellow, and lamps far past white drew white
+ * in every state, so a quieted hull never dimmed). Held at white along its ink
+ * instead, its live states are still rest × `glowFactor`, so a quiet lamp dims
+ * by the curve's own ratio. A lamp resting under white keeps its intensity
+ * exactly. `peak` is the brightest channel of the recoloured emissive colour.
+ */
+export function lampCoreRest(peak: number, intensity: number): number {
+  return peak * intensity > 1 ? 1 / peak : intensity;
+}

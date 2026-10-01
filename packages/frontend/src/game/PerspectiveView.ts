@@ -2397,6 +2397,10 @@ export class PerspectiveView {
       return {
         lamps: model.emissives.map(({ material, restIntensity }) => ({
           hex: `#${material.emissive.getHexString()}`,
+          // The export's own resting strength, beside the one gate 3's lamp
+          // core holds at white (rosterModels.ts); equal under white.
+          exportIntensity:
+            (material.userData.exportIntensity as number | undefined) ?? restIntensity,
           restIntensity,
           intensity: material.emissiveIntensity,
           afterToneMapping: keepsGlowOutsideToneMapping(material),
