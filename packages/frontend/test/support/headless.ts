@@ -30,7 +30,13 @@
 
 import { Container, DOMAdapter, Graphics, Text } from 'pixi.js';
 import type { Application } from 'pixi.js';
-import { NoToneMapping, WebGLRenderTarget, type Scene, type WebGLRenderer } from 'three';
+import {
+  NoToneMapping,
+  WebGLRenderTarget,
+  type Camera,
+  type Scene,
+  type WebGLRenderer,
+} from 'three';
 
 // --- DOM ---------------------------------------------------------------
 
@@ -905,6 +911,9 @@ export class HeadlessWebGLRenderer {
    * anywhere else (docs/ui-ux.md §4.5).
    */
   lastScene: Scene | null = null;
+  /** And the camera it was drawn through: the sway may move it and never
+   * turn it (docs/graphics-standards.md gate 8). */
+  lastCamera: Camera | null = null;
   /** Passes rendered, and how many of them a timer query was open across. */
   passes = 0;
   timedPasses = 0;
@@ -940,8 +949,9 @@ export class HeadlessWebGLRenderer {
     return target;
   }
 
-  render(scene: Scene): void {
+  render(scene: Scene, camera: Camera): void {
     this.lastScene = scene;
+    this.lastCamera = camera;
     this.passes++;
     if (this.context.timing) this.timedPasses++;
     let calls = 0;

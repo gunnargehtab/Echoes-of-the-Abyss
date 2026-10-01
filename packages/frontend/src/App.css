@@ -41,6 +41,24 @@
   touch-action: none;
 }
 
+/* The slight vignette (docs/art-direction.md, "Atmosphere rides on top"):
+   the frame's edges sink toward the abyss. A CSS layer rather than a pass,
+   so it costs the conn view no draw call and sits outside its tone mapping;
+   painted over the world canvas and under the Pixi glass, so the HUD and
+   every contact mark stay outside it. Clear inside 55% of the way to the
+   corners, 40% abyss at them. Both stops TUNABLE. */
+.perspective-host::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 55%,
+    color-mix(in srgb, var(--abyss-void) 40%, transparent) 100%
+  );
+}
+
 .game-host {
   position: absolute;
   inset: 0;

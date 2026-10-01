@@ -91,7 +91,7 @@ composer. Its still is a lighting reference, not a runtime implementation to cop
 | 1 | Shared rig, tone mapping, PMREM | This increment. Promote the tutorial rig; no model edits or full-screen pass |
 | 2 | Lamp core, then SIG-selective bloom ([#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001)) | No production composer. First gate 3's lamp core ([#1021](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1021)), at no draw cost. Then the owner picks, from #1001's readings, an in-pass point layer, a full-screen pass drawn after the canvas over a copy of its depth, or no halo. A halo then specifies off/quality controls, quiet-SIG exclusion and gate 6's pass, memory and GPU-time allowance |
 | 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | `kit.mjs` already supports bevelled `plate`/`plan`; this is coverage, not a missing primitive. None of the 108 source GLBs has an occlusion texture. Start with one reviewed asset and preserve its silhouette |
-| 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | Not in the production camera. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
+| 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | Vignette and sway are built, with no pass ([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)). The split waits on a gate-6 allocation for its full-screen draw and copy. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
 | 5 | GLB gzip ([#1004](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1004)) | `packages/frontend/nginx.conf` has no gzip rule. Low implementation risk, independent of the visual sequence; delivery cost, not frame quality |
 | 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | 6,378 of 6,540 exported primitives have UV0, but attribute presence is not a laid-out atlas. `uvAlike` also writes zero-filled placeholder UVs. Sorrowgate already has triplanar surface detail; retain that work rather than replacing it blindly |
 | 7 | Shallow caustics ([#1006](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1006)) | Design first: where light can exist, how it obeys depth and the licensed world-light families, and what stays unlit. No gameplay visibility |
@@ -651,6 +651,30 @@ chromatic split at frame edges ([style-neon-noir.md](style-neon-noir.md)) — is
 composited over the world. Sway is translation only. None of these effects may tilt,
 shear or rotate the projection: the moment an atmosphere pass bends a range ring, it has
 crossed from mood into misinformation.
+
+The vignette and the sway are built
+([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)), and neither
+is a pass. The **vignette** is a radial gradient toward `abyss-void` on the conn view's
+host, which the browser composites over the world canvas and under the HUD glass: clear
+inside 55% of the way to the corners, about 14% abyss at the middle of each edge, 40% at
+the corners. It costs the conn view no draw call and sits outside its tone mapping, and
+the HUD and every contact mark stay outside it by layer order. The **sway** moves the one
+camera after it is aimed, along the camera's own right and up axes, so it can only
+translate: a heave of 0.3% of the frame's height at the focus over 11 s, and a drift of
+0.2% over 17 s. The overlay projects through that camera, so a ring rides with the water
+it measures and a click resolves through the camera the frame was drawn with. That makes
+the overlay re-project every frame, which it already did: the conn view re-applies its
+camera on every frame, and each application bumps the revision the overlay's layers key
+on. A heave
+that would dip the eye under its clearance is lifted straight up, not re-aimed. Reduced
+motion holds the sway at rest, because it carries nothing ([ui-ux.md](ui-ux.md) §11).
+Both are TUNABLE: `packages/frontend/src/game/cameraSway.ts` holds the sway's numbers,
+and the conn view's stylesheet holds the vignette's.
+
+The chromatic split is not built. It needs the drawn frame as a texture, so it is a
+full-screen draw and a framebuffer copy, and gate 6 of
+[graphics-standards.md](graphics-standards.md) must allocate both, and the named GPU time
+them, before it lands.
 
 ## Atmosphere & Mood
 

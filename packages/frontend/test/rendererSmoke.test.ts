@@ -35,6 +35,7 @@ import {
   type Contact,
 } from '@echoes/shared';
 import { FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
+import { swayAt } from '../src/game/cameraSway.ts';
 import {
   createHost,
   dispatchWindow,
@@ -2801,6 +2802,7 @@ describe('renderer smoke test: the free camera', () => {
     distance: number;
     focus: { xM: number; zM: number; depthM: number | null };
     eye: { xM: number; zM: number; depthM: number };
+    sway: 'on' | 'held';
   } =>
     (
       globalThis as unknown as {
@@ -2999,6 +3001,60 @@ describe('renderer smoke test: the free camera', () => {
       assert.equal(rig().yawDeg, 90, 'a quarter turn is a quarter turn');
       assert.equal(rig().pitchDeg, HOME_PITCH_DEG, 'and a twist is not a tilt');
     } finally {
+      world.teardown();
+    }
+  });
+
+  it('sways by translation alone, and holds still under reduced motion (#1003)', async () => {
+    const world = await boot();
+    // The frame reads the clock once and applies the camera at it, so a held
+    // clock makes the sway's phase the test's to name.
+    let nowMs = 0;
+    const clock = mock.method(performance, 'now', () => nowMs);
+    try {
+      world.conn.home();
+      world.conn.focusWorld(2000, 2000, 3000);
+      world.frame(1);
+      const camera = world.gl.lastCamera;
+      assert.ok(camera !== null, 'the frame was drawn through a camera');
+      const aim = camera.quaternion.clone();
+      const sway = { right: 0, up: 0 };
+      let furthest = 0;
+      for (const at of [2_000, 6_500, 13_250]) {
+        nowMs = at;
+        world.frame(1);
+        // Gate 8: an effect may not turn the camera. The aim is the player's.
+        assert.deepEqual(
+          camera.quaternion.toArray(),
+          aim.toArray(),
+          `the sway turned the camera at ${at} ms`
+        );
+        // A translation in the camera's own plane carries the focus off the
+        // centre of the 1280x720 frame by exactly the sway, in shares of the
+        // frame's height: the overlay projects through this camera, so a ring
+        // drawn there moves with the water rather than over it.
+        swayAt(at, sway);
+        const focus = world.conn.projectPoint(2000, 2000, null);
+        assert.ok(Math.abs(focus.x - (640 - sway.right * 720)) < 1e-4, `across at ${at} ms`);
+        assert.ok(Math.abs(focus.y - (360 + sway.up * 720)) < 1e-4, `up and down at ${at} ms`);
+        furthest = Math.max(furthest, Math.hypot(focus.x - 640, focus.y - 360));
+      }
+      assert.ok(furthest > 1, `the camera does sway: ${furthest.toFixed(2)} px at most`);
+      assert.ok(furthest < 4, `and only slightly: ${furthest.toFixed(2)} px at most`);
+
+      // Reduced motion holds it at rest at once, not on the next frame, and
+      // keeps it there however long the clock runs.
+      world.conn.setReducedMotion(true);
+      for (const at of [13_250, 21_000]) {
+        nowMs = at;
+        world.frame(1);
+        const focus = world.conn.projectPoint(2000, 2000, null);
+        assert.ok(Math.hypot(focus.x - 640, focus.y - 360) < 1e-4, `held at ${at} ms`);
+        assert.deepEqual(camera.quaternion.toArray(), aim.toArray(), 'and aimed where it was');
+      }
+      assert.equal(rig().sway, 'held', 'and the probe says so');
+    } finally {
+      clock.mock.restore();
       world.teardown();
     }
   });
