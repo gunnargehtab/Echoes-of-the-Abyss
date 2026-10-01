@@ -29,8 +29,8 @@
  * Commune hull was: the stem, its rings, the fluke, the vein and the marks
  * are the module's existing vocabulary, and the deck is one builder added
  * to `factions/pelagia.mjs` for it — `buddingSheaths`, with the two
- * sections and the girth it sweeps (kit.mjs `sweep`, imported into the
- * module for it) and a local `uvAlike`. Nothing already in the module
+ * sections and the girth it sweeps (kit.mjs `sweep` and `uvAlike`, both
+ * imported into the module for it). Nothing already in the module
  * moved, and every Commune script round-trips unchanged. Metre-true at 115
  * with no root scale — the stem's last station is the bow at x 57.5 and
  * the fluke's bevel the stern at −57.5, and `metreTrue` returns 1. Port is

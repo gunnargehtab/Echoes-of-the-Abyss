@@ -167,12 +167,12 @@ tools/echo-sim     Standalone CommonJS harness for deterministic Echo scenarios.
                    Not an npm workspace; run it directly:
                    node tools/echo-sim/sim.js [tools/echo-sim/scenarios/<name>.json]
                    Tests can also require('./lib') for detect/runScenario.
-tools/lib          spawn.mjs, the one way a gate is spawned, carrying the Windows
-                   reasoning: npm and npx are .cmd batch files there, and since
-                   the CVE-2024-27980 fix spawning one without a shell returns
-                   status: null with error set rather than throwing, which made
-                   every gate FAIL in 0.0s printing nothing. Extracted when
-                   claude-docs became gates.mjs's second caller.
+tools/lib          spawn.mjs, the one way a gate or a tool's npm is spawned,
+                   carrying the Windows reasoning: npm and npx are .cmd batch
+                   files there, and since the CVE-2024-27980 fix spawning one
+                   without a shell returns status: null with error set rather
+                   than throwing, which made every gate FAIL in 0.0s printing
+                   nothing. Extracted when claude-docs became its second caller.
 tools/*.mjs        The three scripts that sit at the top of the tree.
                    gates.mjs is every blocking gate in one pass — see the root
                    CLAUDE.md's Commands section. preflight-deps.mjs is the presence

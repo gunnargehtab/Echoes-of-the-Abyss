@@ -3,10 +3,11 @@
   Bake page for hull-intake. Loaded by bake.mjs in headless Chromium; not a
   standalone tool. Renders one GLB from a fixed top-down orthographic camera
   in four passes (albedo / normal / emissive / height) so the driver can save
-  each as a PNG. For units and structures the passes are the sprite bake's
-  shipped inputs (packages/frontend/src/game/hullTextures.ts composes exactly
-  these channels; the approved GLB itself also ships, loaded at runtime by
-  rosterModels.ts). For environment props (category=env) the passes are
+  each as a PNG. For units and structures albedo, emissive and height are the
+  sprite bake's shipped inputs (tools/hull-maps/build.mjs copies those three,
+  packages/frontend/src/game/hullTextures.ts composes them; the approved GLB
+  itself also ships, loaded at runtime by rosterModels.ts) and normal is for
+  review. For environment props (category=env) the passes are
   review artifacts only — props ship as instanced meshes — and
   canonicalisation differs: no length-on-X yaw (a prop stands at a random
   yaw), scale held to the registry footprint on the larger horizontal axis.
@@ -175,7 +176,8 @@
             renderer.setClearColor(0x000000, 0);
             swap((m) => new THREE.MeshBasicMaterial({ color: m.color, map: m.map || null }));
           },
-          // World-space normals; lighting downstream is relit per faction.
+          // World-space normals, for review only: build.mjs ships the other
+          // three passes, and the sprite relights from height (bake.ts).
           normal() {
             renderer.setClearColor(0x000000, 0);
             swap(() => new THREE.MeshNormalMaterial());
