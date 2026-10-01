@@ -2,7 +2,7 @@
 
 The first lighting increment, with one correction found on review: the faction glow
 is added after tone mapping (see [Glow after tone mapping](#glow-after-tone-mapping)).
-Visual approval on the GTX 1070 is still owed.
+Visually approved by the owner on GTX 1070 frames.
 
 ## Decision and scope
 
@@ -78,27 +78,32 @@ which is how the faded glow below was found.
 
 ACES on the summed colour faded the Consortium's amber lamps toward cream. Bright
 pixels (max channel above 0.8, world area above the HUD) lost most of their
-saturation:
+saturation. GTX 1070 frames, with the container's SwiftShader reading in brackets:
 
 | Ventfront camera | No tone mapping | ACES on everything | ACES on surfaces, glow after |
 | --- | --- | --- | --- |
-| Home | 0.65 | 0.41 | 0.67 |
-| Close | 0.66 | 0.38 | 0.67 |
-| Low | 0.64 | 0.58 | 0.69 |
+| Home | 0.65 | 0.40 (0.41) | 0.62 (0.67) |
+| Close | 0.66 | 0.39 (0.38) | 0.64 (0.67) |
+| Low | 0.64 | 0.53 (0.58) | 0.56 (0.69) |
 
-The owner chose to tone-map surface light only and add emission back afterwards
-(`keepGlowOutsideToneMapping` in `modelLighting.ts`, on every hull's and
-structure's cloned lamp materials, and on glowing environment props). Three.js's Neutral curve was also measured: 0.52 at the close camera,
-with amber shifted toward peach. The glow term now reaches the screen exactly as it
-did before this increment, so gate 3's resting brightness is unchanged by construction.
+The low camera has few bright pixels, and tone-mapped surface highlights are among them,
+so it moves least. The owner chose to tone-map surface light only and add emission back
+afterwards (`keepGlowOutsideToneMapping` in `modelLighting.ts`, on every hull's and
+structure's cloned lamp materials, and on glowing environment props). Three.js's Neutral
+curve was also measured on SwiftShader: 0.52 at the close camera, with amber shifted
+toward peach. The glow term reaches the screen as it did before this increment, so gate
+3's resting brightness is unchanged by construction.
 
 [`after-glow-standard`](after-glow-standard/03-close.png) and
-[`after-glow-tutorial`](after-glow-tutorial/02-close.png) hold the corrected frames;
-[`aces-container`](aces-container/03-close.png) holds the ACES frames from the same
-machine. These three sets come from headless Chromium on SwiftShader, so they carry
-no readings file: their pixels are valid and their frame times are not. Draw calls
-and triangles matched the table above at every station. The Sorrowgate pair is
-unchanged to the eye, because its hulls run quiet.
+[`after-glow-tutorial`](after-glow-tutorial/02-close.png) are the GTX 1070 frames, with
+[standard readings](after-glow-standard/readings.json) and
+[tutorial readings](after-glow-tutorial/readings.json). The owner approved them.
+[`aces-container`](aces-container/03-close.png) holds the SwiftShader ACES frames used to
+diagnose the fade; their frame times are not valid. Every station held about 60 fps at
+54–55 calls and 148,290 triangles (Ventfront) or 45–46 calls and 47,422 triangles
+(Sorrowgate), with conn CPU 0.61–1.03 ms on average. Every capture, the 1df288a
+baseline included, shows one slow frame at the low camera (22–31 ms, almost all in
+the conn view). This run's was 50.5 ms; it is not new to this change.
 
 ## Reproduction and remaining acceptance
 
@@ -120,7 +125,7 @@ Frontend type-check passed. The focused model-lighting, renderer-smoke, loudness
 and GameCanvas suite passed **102 tests**. The full `npm run gates` passed 11 of
 12 gates; documentation lint caught an issue reference starting a line as a heading.
 That wording was corrected in the checkpoint follow-up.
-Remaining before merge: paired GPU frames of the glow correction on the GTX 1070, and visual approval.
+Captured on the GTX 1070 and approved by the owner.
 
 ## Related
 
