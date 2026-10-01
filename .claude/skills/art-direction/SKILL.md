@@ -53,9 +53,10 @@ and fresh independent critic. Specialists do not start nested loops or approve t
 outputs. Any GLB change also goes through the separate hull-reviewer.
 
 Stop on the brief's written criteria, not on a beauty score. Report measured GPU work
-and the hardware that produced timings. The probe's milliseconds are CPU time
-([run-game](../run-game/SKILL.md) says why), so a shading cost nothing measured stays
-unmeasured, like an unmeasured phone. Render-stack work is accepted on desktop (gate 6).
+and the hardware that produced timings. The probe's conn and overlay milliseconds are CPU
+time and its frame time an interval; none reads a GPU timer ([run-game](../run-game/SKILL.md)
+says why), so a shading cost nothing measured stays unmeasured, like an unmeasured phone.
+Render-stack work is accepted on desktop (gate 6).
 
 ## Related
 

@@ -29,8 +29,8 @@
  *
  * It does not read what a texture would sample — UVs, vertex colours, a
  * material's texture slots: glb.mjs `readGlb` keeps positions and normals,
- * and `finishOf` factors only. No committed model carries a texture
- * (`node tools/render-stack/audit.mjs`), so a UV that drifts changes nothing
+ * and `finishOf` factors only. No committed model carries a texture (none
+ * has a `textures` or `images` array), so a UV that drifts changes nothing
  * visible today. The change that first gives a model a UV layout or baked
  * occlusion (#1005, #1002) extends both readers, or a script whose UVs
  * moved passes here against a stale file.

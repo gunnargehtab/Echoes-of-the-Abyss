@@ -17,6 +17,9 @@
   side of the lens; a grey floor under the model so a part that floats, or
   sinks, shows it in its contact shadow. Emissive is the model's own, with a
   high-threshold bloom so a lamp reads as a lamp without washing the plate.
+  The Neutral curve runs once, in OutputPass, so lamps are curved with the
+  plate and bloomed: take lamp hue and strength from a run-game frame, never
+  from this sheet (tools/CLAUDE.md, hull-renders).
 
   Several models load into one page and are shot from identical cameras, so
   a before and an after differ only by the model. The cameras frame the
