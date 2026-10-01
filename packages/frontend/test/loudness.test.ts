@@ -377,7 +377,10 @@ describe('the crackle (style-neon-noir.md, Motion and FX timing)', () => {
     const world = await boot();
     try {
       const moving = collarWobble(world.app);
+      // Both painters, as GameCanvas sets it: the conn's sway moves the
+      // camera, and with it every collar's pixels per metre (#1003).
       world.chart.setReducedMotion(true);
+      world.conn.setReducedMotion(true);
       world.frame(2);
       const still = collarWobble(world.app);
 

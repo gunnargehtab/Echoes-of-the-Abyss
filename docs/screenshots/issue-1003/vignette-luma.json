@@ -1,0 +1,22 @@
+{
+  "centre 400x300": {
+    "off": 26.47,
+    "on": 26.06,
+    "ratio": 0.984
+  },
+  "left edge, 60x300 at x=0": {
+    "off": 12.72,
+    "on": 11.45,
+    "ratio": 0.9
+  },
+  "right edge, 60x300 at x=1380": {
+    "off": 11,
+    "on": 10.11,
+    "ratio": 0.919
+  },
+  "lower-left world corner 120x100": {
+    "off": 19.45,
+    "on": 17.23,
+    "ratio": 0.886
+  }
+}

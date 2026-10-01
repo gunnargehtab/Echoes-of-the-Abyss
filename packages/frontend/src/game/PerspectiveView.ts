@@ -135,6 +135,7 @@ import { DREAM_LOOP, installDreamGround } from './dreamLoop.ts';
 import { installGroundSurface, type WorldLook } from './tutorialLook.ts';
 import { DreamGroundCover } from './dreamGroundCover.ts';
 import { DreamLightHalos } from './dreamLightHalos.ts';
+import { swayAt, type SwayOffset } from './cameraSway.ts';
 
 /**
  * Steps in the veil's shade table. 64 is finer than an 8-bit colour channel
@@ -269,6 +270,9 @@ const RAY_TMP = new Raycaster();
 const NDC_TMP = new Vector2();
 const LOOK_TMP = new Vector3();
 const DIR_TMP = new Vector3();
+const SWAY_TMP: SwayOffset = { right: 0, up: 0 };
+const SWAY_RIGHT = new Vector3();
+const SWAY_UP = new Vector3();
 /** The lamp reading's box and corner; a capture reads it once a frame at most. */
 const LAMP_BOX = new Box3();
 const LAMP_CORNER = new Vector3();
@@ -395,6 +399,14 @@ export class PerspectiveView {
    * than sample it once.
    */
   private focusDepthM: number | null = null;
+  /**
+   * The sway's clock (cameraSway.ts): the frame's own time, set once a frame
+   * before the camera is applied. A pan between frames re-applies the camera
+   * at this phase rather than at its own, so the sway never jumps.
+   */
+  private swayClockMs = 0;
+  /** Reduced motion holds the sway at rest (docs/ui-ux.md §11). */
+  private swayHeld = false;
   /**
    * How much larger than true metre scale the fleet is currently drawn
    * (readability.ts). 1 at close zoom, and re-applied only when it actually
@@ -710,11 +722,17 @@ export class PerspectiveView {
     }
   }
 
-  /** ui-ux.md §11: the world's one animation is the kelp current; hold it. */
+  /**
+   * ui-ux.md §11: hold the world's decoration — the kelp current, the snow's
+   * sink, the stipple's pulse and the camera's sway. Re-applied now, so the
+   * camera settles before the overlay's next projection, not a frame later.
+   */
   setReducedMotion(reduced: boolean): void {
     this.environment.setReducedMotion(reduced);
     this.snow.setReducedMotion(reduced);
     this.life.setReducedMotion(reduced);
+    this.swayHeld = reduced;
+    this.applyCamera();
   }
 
   /**
@@ -1953,8 +1971,34 @@ export class PerspectiveView {
 
     this.camera.position.set(eyeX, eyeY, eyeZ);
     this.camera.lookAt(look);
+    this.applySway();
     this.camera.updateMatrixWorld();
     this.cameraRevision++;
+  }
+
+  /**
+   * The slow sway (cameraSway.ts), after the aim and never instead of it.
+   * `lookAt` has fixed the orientation, and moving the position afterwards
+   * leaves it alone, so the sway can only translate: gate 8's rule that an
+   * effect may not turn the camera holds by construction.
+   *
+   * Held in the Dream Loop study too: its ground cover rebuilds whenever the
+   * view matrix moves, and a sway that moved it every frame would rebuild
+   * every frame and change what the study measures.
+   */
+  private applySway(): void {
+    if (this.swayHeld || this.dreamStudy) return;
+    swayAt(this.swayClockMs, SWAY_TMP);
+    const frameM = 2 * this.distance * Math.tan(((FOV_DEG / 2) * Math.PI) / 180);
+    const quaternion = this.camera.quaternion;
+    const right = SWAY_RIGHT.set(1, 0, 0).applyQuaternion(quaternion);
+    const up = SWAY_UP.set(0, 1, 0).applyQuaternion(quaternion);
+    const eye = this.camera.position;
+    eye.addScaledVector(right, SWAY_TMP.right * frameM).addScaledVector(up, SWAY_TMP.up * frameM);
+    // A heave that would dip the eye under its clearance is lifted straight
+    // up rather than re-aimed: still a translation, and still clear of rock.
+    const floorY = this.groundYAt(eye.x, eye.z) + EYE_CLEARANCE_M * DEPTH_VISUAL_M_PER_M;
+    if (eye.y < floorY) eye.y = floorY;
   }
 
   /**
@@ -2080,6 +2124,7 @@ export class PerspectiveView {
     // The kelp current: one uniform per bending template, nothing per prop.
     this.environment.tick(now);
 
+    this.swayClockMs = now;
     this.applyCamera();
     if (this.dreamCover !== null && this.terrain !== null) {
       const placements = this.dreamCover.update(this.camera);
@@ -2242,6 +2287,9 @@ export class PerspectiveView {
       // judge gates 6 and 7 across the pitch band needs it to be a reading.
       pitchDeg: Number(((this.pitch * 180) / Math.PI).toFixed(1)),
       yawDeg: Number((((this.yaw * 180) / Math.PI + 360) % 360).toFixed(1)),
+      // Whether `eye` below includes the sway (cameraSway.ts): a capture
+      // compared pixel for pixel across two revisions wants it held.
+      sway: this.swayHeld || this.dreamStudy ? 'held' : 'on',
       // Where the camera is looking, and from where. A screenshot review
       // judging gates 6 and 7 across the pitch band has to be able to caption
       // the shot with the frame it was taken in; before the camera was freed

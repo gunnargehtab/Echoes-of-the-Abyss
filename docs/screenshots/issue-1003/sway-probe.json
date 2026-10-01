@@ -1,0 +1,97 @@
+[
+  {
+    "t": 35002,
+    "sway": "on",
+    "focus": {
+      "xM": 1276,
+      "zM": 1418,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 1277,
+      "zM": 2906,
+      "depthM": -8967
+    },
+    "yawDeg": 0,
+    "pitchDeg": 55,
+    "distance": 2600,
+    "drawCalls": 55,
+    "triangles": 148290
+  },
+  {
+    "t": 37256,
+    "sway": "on",
+    "focus": {
+      "xM": 1276,
+      "zM": 1418,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 1280,
+      "zM": 2906,
+      "depthM": -8967
+    },
+    "yawDeg": 0,
+    "pitchDeg": 55,
+    "distance": 2600,
+    "drawCalls": 55,
+    "triangles": 148290
+  },
+  {
+    "t": 39663,
+    "sway": "on",
+    "focus": {
+      "xM": 1276,
+      "zM": 1418,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 1280,
+      "zM": 2911,
+      "depthM": -8949
+    },
+    "yawDeg": 0,
+    "pitchDeg": 55,
+    "distance": 2600,
+    "drawCalls": 55,
+    "triangles": 148290
+  },
+  {
+    "t": 42115,
+    "sway": "on",
+    "focus": {
+      "xM": 1276,
+      "zM": 1418,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 1277,
+      "zM": 2914,
+      "depthM": -8941
+    },
+    "yawDeg": 0,
+    "pitchDeg": 55,
+    "distance": 2600,
+    "drawCalls": 55,
+    "triangles": 148290
+  },
+  {
+    "t": 44546,
+    "sway": "on",
+    "focus": {
+      "xM": 1276,
+      "zM": 1418,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 1274,
+      "zM": 2909,
+      "depthM": -8957
+    },
+    "yawDeg": 0,
+    "pitchDeg": 55,
+    "distance": 2600,
+    "drawCalls": 55,
+    "triangles": 148290
+  }
+]

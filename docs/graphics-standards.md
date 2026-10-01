@@ -488,6 +488,9 @@ with `gpuTimer` saying why a reading is absent, and `pixelRatio` and `drawingBuf
 saying what was shaded ([#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001)).
 
 Gate 3's lamp core is allocated nothing: no pass, draw call, triangle or render-target byte.
+Nor are the vignette and the sway
+([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)): the browser
+composites the one, and the other moves a camera the frame already draws through.
 
 Bloom, or any other lamp halo, waits first for #1001's readings of what one would show and
 cost: GPU time at those stations, lamp sizes on screen, the share of the frame that stays
@@ -560,9 +563,13 @@ under a free yaw it is also the compass, its far edge drawn heavier to say which
 camera faces.
 
 Tone mapping and a static environment must not move this camera or its projections.
-Future chromatic split is bounded to **1 px at frame edges** and must exclude HUD and
-contact ink; sway must share the world/overlay projection and respect reduced motion.
-These effects remain deferred, not permission to add a second camera in a lighting PR.
+The sway shares the world/overlay projection and respects reduced motion: it translates
+the one camera after it is aimed, and reduced motion holds it at rest. The vignette is a
+layer between the world canvas and the glass, so it never reaches HUD or contact ink
+([art-direction.md](art-direction.md#atmosphere-rides-on-top-in-screen-space)). The
+chromatic split is bounded to **1 px at frame edges**, must exclude HUD and contact ink,
+and stays deferred until gate 6 allocates its pass. None of this is permission to add a
+second camera in a lighting PR.
 
 ## What `npm test` holds, and what only a screenshot can
 
@@ -627,8 +634,8 @@ there is a picture to review.
 - [ ] A render-stack change reports the frame's GPU time, every pass summed, on the named
   GPU, before and after (gate 6)
 - [ ] World marks still project through the conn camera — measurements conform, symbols
-  billboard, no second projection, atmosphere effects stay screen-space and rotate
-  nothing (gate 8)
+  billboard, no second projection, atmosphere effects stay screen-space (the sway
+  translates the shared camera instead) and rotate nothing (gate 8)
 - [ ] Gates 6 and 7 still hold **across the pitch band**, not only at the 55° home frame —
   a shot at 12° has far more map in it than a shot at 55° (gate 8)
 - [ ] `npm test` still passes, including the headless renderer smoke test — a change that
