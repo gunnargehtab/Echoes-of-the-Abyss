@@ -192,6 +192,10 @@ Bloom-share
 
 - The Commune's income: a bed pays them continuously while a live, non-silent hull of theirs tends it, and stops the tick it is untended — held is *tended*, not possessed. It is bounded by what the bed regrows, so it takes the interest and never the principal, and it pays Biomass. Anchored to Shelf-band plateau ground, which is the guard-rail: the quietest navy earns on the most reachable water.
 
+Lamp halo
+
+- The conn view's soft light in the water around a loud own lamp, gated and scaled by its entity's live SIG ([art-direction.md](art-direction.md#lamp-halo--spec)). Not the glow recipe's interface halo, and not "bloom", which in-world is Deepbloom, bloom-share and the Bloom Surge.
+
 Scavenger
 
 - A fauna class, not a feeding habit: the species bestiary.md §4 files under its *Scavengers* heading. Today that is the Rasp and nothing else.

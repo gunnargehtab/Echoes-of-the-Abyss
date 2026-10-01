@@ -67,7 +67,8 @@ emissive glow is added after tone mapping, at its own faction hue and approved s
 held at white along that hue where the export rests past it (gate 3's lamp core).
 ACES alone fades a saturated glow toward white (Ventfront close camera on a GTX 1070:
 bright-pixel saturation 0.66 untone-mapped, 0.39 under ACES), which breaks palette discipline and
-makes a loud hull lie about its colour. No bloom, shadows, camera effects or geometry are added.
+makes a loud hull lie about its colour. The canvas pass adds no bloom, shadows, camera effects
+or geometry; the lamp halo below is the one full-screen pass after it, behind its own setting.
 
 The asset list is the existing approved roster and prop kit, with no new downloads
 or GLB edits. Evidence pairs the old and new standard-match and tutorial frames at
@@ -77,6 +78,191 @@ not the tutorial: both production profiles intentionally receive the lighting.
 Gate 6 counts steady-state work separately from the one-time PMREM bake; gates 3
 and 8 still bind. The development-only Dream Loop study remains an isolated
 experiment, not the production reference.
+
+#### Lamp halo — SPEC
+
+*Specified for [#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001), not
+yet built.* It lands behind the Lamp halos setting, switched off, and turns on by default
+only after its reading on the named GPU ([graphics-standards.md](graphics-standards.md)
+gate 6) and the owner's approval of its frames.
+
+The lamp halo is the soft light a loud own lamp spreads into the water around it. It
+carries one fact: how loud that hull or structure is now. It carries the part of that fact
+gate 3's lamp core cannot show. A lamp held at white along its hue has no headroom left, so
+a ping or a firing burst loses 66–83 % of a unit's lamp light to that white
+([issue-1001](screenshots/issue-1001/README.md), "Halo readings"). The halo is where that
+flare reads.
+
+It is a second reading of loudness, never the first. With the halo off, the lamp core and
+the loudness collar ([ui-ux.md](ui-ux.md) §3.5) carry every loudness fact, so turning it off
+withholds nothing. It is drawn only for the player's own force, from the live SIG the client
+already holds. It is not "bloom", which in this world is a Commune word
+([glossary.md](glossary.md)), and nothing in it thresholds the frame.
+
+**Route.** The canvas pass is drawn exactly as the SPEC above describes: per-material ACES,
+glow after the curve, the unlit layers, encoded blending and 4× MSAA. Then, inside the same
+GPU-timer bracket, four steps run, and nothing else is drawn:
+
+1. **Depth copy.** One framebuffer blit copies the canvas depth, the depth bit only, into a
+   DEPTH24_STENCIL8 depth texture the size of the drawing buffer. Asking for the stencil
+   bit as well cost 5–7 ms on the named GPU.
+2. **Source.** One instanced draw writes a splat for every lamp site into a half-float
+   target the size of the drawing buffer, depth-tested against that copy.
+3. **Spread.** The source is blurred over three levels, at 1/2, 1/4 and 1/8 of the drawing
+   buffer.
+4. **Composite.** One full-screen draw puts the result onto the canvas.
+
+There is no EffectComposer, no OutputPass and no second camera: the splats project through
+the conn camera, and the full-screen draws ignore its matrices (gate 8). A frame in which
+no entity draws a splat runs none of the four steps.
+
+**What feeds it.** Only own hull and structure lamps whose model is showing feed the
+source, one splat per lamp site: one connected bulb or strip of an emissive material, the
+split `lampScreen.ts` already reads. Nothing else can write into the source, which excludes
+ordnance lamps, sprite-fallback and still-loading hulls, construction sites, environment
+props and every world light, fauna, contacts and the HUD. Because the source holds lamp
+sites and nothing else, no brightness threshold is involved, and a reflected highlight has
+no way in.
+
+**Energy.** Each entity's halo is given one energy, set by its live SIG and nothing else:
+
+```text
+Q = Ā · w(SIG) · e^((SIG − 35) / 14) · drawScale²
+```
+
+w is the gate below. e^((SIG − 35)/14) is gate 3's E(SIG), normalised to 1 at SIG 35.
+drawScale is the far-zoom readability scale, so a halo grows with its drawn hull. Ā is
+**20 m²** (TUNABLE, set from the reading below): a SIG-35 entity's halo carries the light of
+20 square metres of lamp at full ink. Each site takes a share of Q in proportion to its
+surface area times its material's resting luminance after the lamp core, so a model keeps
+its light placement and its lamps' relative strengths, and its size and lit area never
+change its total.
+
+A source built from the lamps' displayed light would order the halo by lit area instead:
+every lamp displays about the same luminance under the core, so at Ventfront's home camera
+the SIG-25 Foundry would carry 91 times a SIG-64 Caisson's light. Under this law the ratio
+between two entities is a function of their SIG alone: each Caisson (64) carries 7.9 times
+the Bastion's (35), and 32 times the Foundry's (25).
+
+**The SIG gate.** Each entity is weighted by its live SIG on the 5 Hz snapshot, the reading
+that already swings its lamps: w = clamp((SIG − 15) / 20, 0, 1), nothing through SIG 15,
+rising linearly to full at SIG 35. It is not eased between snapshots, because the lamp core
+steps on the same 200 ms. An entity at weight 0 draws no splat, so gate 3's exclusion of
+SIG 0–15 holds by construction, over every input. Above 35 the halo rides the curve
+uncapped, with SIG taken between 0 and 100: a ping's SIG 95 carries 73 times a SIG-35
+entity's energy, though `GLOW_FACTOR_MAX` stops the lamp itself at 6. A hull at SIG 15 or
+under gains a halo only while a ping, a firing burst or a dive lifts it. An entity whose
+whole energy, gathered at one pixel, would stay under the toe below also draws no splat.
+
+**Splats.** A site's box is treated as a Gaussian, σ = half-extent ÷ √3 on each axis,
+projected through the conn camera into a screen ellipse with a floor of 0.6 drawing-buffer
+pixels, truncated at 3σ and renormalised. A splat therefore carries exactly its share of
+the energy at any size: a lamp a quarter of a pixel across keeps its whole light and never
+flickers with its sub-pixel phase, where a rasterised lamp would. Every Sorrowgate site is
+under 1.1 px.
+
+**Occlusion.** A splat sits at its site's nearest point along the view ray, less
+**2 m × drawScale**, so a lamp never occludes itself; that bias stays above two steps of the
+copied depth even at the survey dolly. The splat is drawn less-or-equal against the copied
+canvas depth, without depth writes, so terrain, props, structures and other hulls hide a
+halo where they hide its lamp. The copy matches a single-sampled depth in all but about 1 %
+of pixels, the 4× edges.
+
+**Fog.** Each splat is multiplied by τ^2.2, where τ = e^(−(fogDensity · d)²) is the lamp's
+own FOG_EXP2 transmittance at its view depth d, at the density the water setting gives. The
+lamp is faded in encoded space, after its sRGB encode; raised to 2.2, τ makes the encoded
+halo fade by the same ratio, to within the sRGB curve's departure from a 2.2 power. The fade
+is extinction only: the halo never mixes toward the water colour, and at Water density 0 it
+does not fade at all. The halo is agent light dimming with its lamp, never the water
+brightening ("Reading the Water").
+
+**Spread.** Each level is a 2 × 2 box downsample of the level above (the source, for the
+first), so a sub-pixel lamp keeps all its light, and then a separable Gaussian of σ = 1.69 ×
+the pixel ratio in that level's texels, with taps one texel apart out to at least 2.3σ. At
+ratio 1 that is the nine-tap kernel #1001 timed. Each level blurs the one before it, so the
+three widths are about **3.4, 7.6 and 15.6 CSS px** at any pixel ratio, summed in the
+composite with weights **0.6, 0.3 and 0.1**. A halo's size is the chain's, not the lamp's,
+so a louder hull's halo reaches further rather than only brighter.
+
+**Strength.** In the composite, the field's brightest channel m becomes
+C = K · (1 − e^(−(m − 0.004) / K)) above 0.004 and 0 below, and the colour is scaled along
+its hue to match. The toe, 0.004 linear (5 % encoded), ends a halo rather than letting it
+haze the water. The ceiling K is **0.25** linear, 54 % encoded, near the glow recipe's 35 %
+halo, so overlapping halos and a ping never sum toward white. Both are TUNABLE and approved
+on frames. Modelled at Ā = 20 m², as point sources at Ventfront's home camera at ratio 1,
+and so upper bounds: SIG 25 peaks at 0.08 encoded and never passes 10 % luma; SIG 35 peaks at
+0.22, past 10 % luma out to about 4.5 CSS px; a resting Caisson peaks at 0.48, out to 10 px;
+a ping reaches the ceiling, out to about 20 px, with its faint edge at about 30 px.
+
+**Composite.** The halo is added as light: screen-blended onto the canvas, in the encoded
+space every transparent layer here blends in (out = halo + canvas × (1 − halo)). The
+plating, its texture and the hull's outline stay visible under it, and no channel passes
+white. Lamp pixels take none of it: while the halo is on, every own lamp material marks the
+pixels it draws in the canvas's stencil, at no extra draw, and the composite skips them
+sample by sample under 4× MSAA. A lamp therefore reads byte-identically with the halo on or
+off, at any strength, and gate 3's lamp core is untouched. The canvas asks for a stencil
+buffer for this, and nothing else draws into it.
+
+**Colour.** Each splat takes its site material's emissive colour, the faction glow ink after
+the palette recolour, normalised so its brightest channel is 1, so the hue holds in all four
+palettes. Energy is carried separately, so loudness never leaks into hue. Every lamp's light
+sums in one field before the one curve, so neighbouring halos merge into one layer and never
+stack.
+
+**Cap.** At most **1,024** sites are drawn. Sites are culled to the view first, and the
+faintest on-screen energies drop first. Dropped light is lost, not redistributed.
+
+**What it must show.** Read on the named GPU, with the halo on and off, at gate 6's
+stations:
+
+- **Loudness order.** At Ventfront's opening, each entity's on-minus-off light is ordered by
+  live SIG: Caisson > Harvester (40, working) > Bastion > Foundry, and nothing from the Light
+  Scout. No own entity at live SIG 0–15 contributes a splat, over every input.
+- **Ping.** A ping at least doubles the area a hull's halo lifts past 10 % luma, for any hull
+  resting at SIG 64 or under.
+- **The lamp.** Lamp pixels are unchanged with the halo on, within 1/255 on at least 99 % of
+  them, at every station. A lamp behind a ridge at the low (12°) camera adds nothing.
+- **Darkness.** The conn canvas keeps at least 95 % of its pixels under 10 % encoded luma,
+  and loses no more than 1.5 points against the halo-off frame, at every capture camera on
+  both maps and both ratios. The frame with the HUD is reported beside it; the HUD already
+  holds that frame at 62–83 %.
+- **Flash.** One hull's ping changes no more than 0.6 % of the frame and 5.5 % of any
+  third-by-third window at the close camera, counted by WCAG 2.3.1's pair: the 2× bound
+  #1001 read. One hull changes state at most once every 3 s.
+- **The collar.** The loudness collar draws above the conn canvas and is never covered. At
+  rest its core keeps at least 3:1 contrast against the halo-on pixels beside it, at the
+  home and close cameras; at a ping it keeps 3:1 on at least 90 % of its track.
+- **Cost.** It spends only what gate 6 allocates.
+
+**Off, and when it is unavailable.** "Lamp halos" is a toggle in Settings
+([ui-ux.md](ui-ux.md) §14, once it lands). Off, no halo pass runs and no halo target is
+held, so the frame is the canvas pass alone. Reduced motion keeps the halo, because its
+flare is a change of state and the state is the message. The halo turns itself off for a
+view only when that view fails its capability check, run when the halo turns on and after a
+context restore: a renderable half-float colour target, framebuffer-complete with its depth
+texture; a canvas stencil buffer; a depth copy that blits without error; and a known clear
+read back from the half-float target. On a failure the stored choice is kept, Settings says
+"Not available on this display", and the probe gives the reason. A software rasteriser is
+not a reason, since half-float targets render under SwiftShader.
+
+**What it is not.** It is not world light: the world-light families keep "no halo recipe"
+([style-neon-noir.md](style-neon-noir.md)). It is not an interface glow: the glow recipe's
+two-layer cap binds interface elements, and the collar keeps its two layers. It reveals
+nothing the client did not already resolve, because it reads only own entities and their
+live SIG.
+
+**Where the numbers live.** The gate's 15 and 35 are SPEC, from gate 3, beside
+`SIG_GLOW_EFOLD` in `glow.ts`. The rest are TUNABLE, in the halo's own module: the 20 m²
+energy, the ceiling and the toe, the 1.69-tap kernel and the 0.6/0.3/0.1 weights, the 0.6 px
+floor, the 2 m bias, the 1,024 cap and the build default. All are frontend-only, because no
+other package reads them. The reach is derived from the chain and stored nowhere.
+
+**Hull portraits** take this halo rather than a bloom of their own. Once the default turns
+on, `tools/hull-renders/scene.html` draws the game's frame and runs this pass at each hull's
+idle SIG, with its three widths multiplied by the hull's drawn length in the portrait over
+its drawn length at the close camera, so a portrait shows the close camera's halo magnified
+with the hull. The 20 portraits are re-rendered once
+([#1015](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1015)).
 
 #### Ranked audit and remaining work
 
@@ -89,7 +275,7 @@ composer. Its still is a lighting reference, not a runtime implementation to cop
 | Rank | Upgrade | Verified starting point and boundary |
 | --- | --- | --- |
 | 1 | Shared rig, tone mapping, PMREM | This increment. Promote the tutorial rig; no model edits or full-screen pass |
-| 2 | Lamp core, then SIG-selective bloom ([#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001)) | No production composer. First gate 3's lamp core ([#1021](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1021)), at no draw cost. Then the owner picks, from #1001's readings, an in-pass point layer, a full-screen pass drawn after the canvas over a copy of its depth, or no halo. A halo then specifies off/quality controls, quiet-SIG exclusion and gate 6's pass, memory and GPU-time allowance |
+| 2 | Lamp core, then a lamp halo ([#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001)) | The lamp core landed ([#1021](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1021), [#1029](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1029)). From #1001's readings the owner picked the full-screen route, drawn after the canvas over a depth-only copy of its depth; "Lamp halo — SPEC" above and gate 6's line specify it, landing off behind its setting |
 | 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | `kit.mjs` already supports bevelled `plate`/`plan`; this is coverage, not a missing primitive. None of the 108 source GLBs has an occlusion texture. Start with one reviewed asset and preserve its silhouette |
 | 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | Vignette and sway are built, with no pass ([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)). The split waits on a gate-6 allocation for its full-screen draw and copy. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
 | 5 | GLB gzip ([#1004](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1004)) | `packages/frontend/nginx.conf` has no gzip rule. Low implementation risk, independent of the visual sequence; delivery cost, not frame quality |
@@ -234,6 +420,8 @@ for going down into the water is that the water is there.
 **Texture, not information**, under the same law as the seabed relief: the simulation never
 reads any of it, no gameplay quantity derives from it, and nothing about it is state. The
 water never brightens with activity, occupancy or anything a player could read as a signal.
+The lamp halo is an own lamp's light, gated by its entity's live SIG and faded by extinction
+alone, so the water itself still never brightens.
 
 **The colour is absolute; the reach is relative.** A metre of depth is the same colour at
 every zoom, so the luminance rule is never scaled or lied about. How far the medium reaches
@@ -305,7 +493,8 @@ photographed in the water its navy lives in, by
 angle, a displaced seabed, the biome's own environment props, and the rig this
 doc's [Lighting](#lighting) section and
 [style-neon-noir.md](style-neon-noir.md) describe — key, faction rim, fill, one
-bloom over the lamps.
+bloom over the lamps. That bloom is the rig's own until [#1015](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1015) re-renders the
+portraits through the conn view's lamp halo.
 
 Everything about a portrait is transcribed rather than invented. The dressing
 is each navy's biome and licensed world light; the accent is its neon signal;
