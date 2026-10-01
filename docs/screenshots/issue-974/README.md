@@ -139,7 +139,7 @@ Commune's is `#8FE36B`: 102° and 107.7°.
   off (×0.74) it is as bright as at rest: the same 93 pixels over 0.8 and 85 clipped, and red
   unchanged. The ping (×6) can raise only blue, which whitens it (saturation 0.62 to 0.29),
   and its differences are teal and blue for the same reason. Gate 3's "glow encodes
-  loudness — always" does not hold for this hull. Its resting strength is the model's own,
+  loudness — always" does not hold for this hull (#1021). Its resting strength is the model's own,
   kept through the recolour (`packages/frontend/src/game/rosterModels.ts`), and #1001
   decides whether glow is compressed.
 - **Sorrowgate's quiet side holds.** Its Commune scout shows five pixels over 0.8 at rest,
