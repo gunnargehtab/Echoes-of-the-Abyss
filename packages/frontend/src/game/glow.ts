@@ -44,3 +44,30 @@ export function glowFactor(liveSig: number, restSig: number): number {
 export function lampCoreRest(peak: number, intensity: number): number {
   return peak * intensity > 1 ? 1 / peak : intensity;
 }
+
+/**
+ * SPEC — docs/graphics-standards.md gate 3 and docs/art-direction.md "Lamp
+ * halo — SPEC": the lamp halo's weight is zero through this live SIG, so a
+ * quiet hull never spreads light, by construction rather than by a threshold.
+ */
+export const HALO_SIG_FLOOR = 15;
+/** SPEC — and full from this live SIG, across the band asset-prompts-3d.md
+ * calls dim running lights. */
+export const HALO_SIG_FULL = 35;
+
+/** The halo's weight at a live SIG: 0 through the floor, linear to 1 at full. */
+export function haloWeight(liveSig: number): number {
+  const w = (liveSig - HALO_SIG_FLOOR) / (HALO_SIG_FULL - HALO_SIG_FLOOR);
+  return Math.min(1, Math.max(0, w));
+}
+
+/**
+ * The halo's gain at a live SIG, relative to SIG 35: its weight times gate 3's
+ * E(SIG) normalised there. Uncapped above 35, unlike the lamp's own factor,
+ * since a ping's light past white is what the halo is for; SIG is taken
+ * between 0 and 100.
+ */
+export function haloGain(liveSig: number): number {
+  const sig = Math.min(100, Math.max(0, liveSig));
+  return haloWeight(sig) * Math.exp((sig - HALO_SIG_FULL) / SIG_GLOW_EFOLD);
+}

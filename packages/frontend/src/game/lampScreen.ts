@@ -6,7 +6,7 @@
  *
  * Two numbers per lamp mesh, for the development-only lamp reading:
  * - `sitesPx`: each lamp site's radius. A site is one connected bulb or strip
- *   (`lampSites`, the Dream Loop's own split), so a merged lamp mesh still
+ *   (`lampSites.ts`), so a merged lamp mesh still
  *   reads as the separate lights a player sees.
  * - `areaPx`: the area of its camera-facing triangles. Occlusion is not
  *   counted: a hull in front of a lamp still counts its area, which makes this
@@ -15,7 +15,7 @@
  * Read on demand, never per frame; it walks every triangle of the mesh.
  */
 import { Camera, Mesh, Vector3 } from 'three';
-import { lampSites } from './dreamLightHalos.ts';
+import { lampSites } from './lampSites.ts';
 
 const A = new Vector3();
 const B = new Vector3();

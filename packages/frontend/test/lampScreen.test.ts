@@ -11,7 +11,7 @@ import { describe, it } from 'node:test';
 import { Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { lampScreen } from '../src/game/lampScreen.ts';
-import { lampSites } from '../src/game/dreamLightHalos.ts';
+import { lampSites } from '../src/game/lampSites.ts';
 
 const RECT = { width: 1000, height: 1000 };
 
