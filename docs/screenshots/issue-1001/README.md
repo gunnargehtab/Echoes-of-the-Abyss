@@ -8,7 +8,8 @@ the lamp core ([#1021](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issue
 `__perspectiveProbe` reports `avgGpuMs` and `worstGpuMs` from a timer query
 (`EXT_disjoint_timer_query_webgl2`) that brackets the frame's passes
 (`packages/frontend/src/game/gpuTimer.ts`), in a development build only. Hardware: GTX
-1070 through ANGLE/Direct3D 11, headed Edge, 1440×900, at commit `cc5f24ed`. Every reading
+1070 through ANGLE/Direct3D 11, headed Edge, 1440×900; the client at `cc5f24ed`, and
+`drive.mjs`, `capture.mjs` and `stations.mjs` as at `36920695`. Every reading
 below had `gpuTimer: timing`, 240 GPU frames in its average and no result dropped to a
 disjoint event.
 
@@ -26,9 +27,13 @@ same Ventfront capture (`paced/`):
 | survey | 2.04 · 1.87 · 1.86 | 0.54 · 1.36 · 1.45 |
 
 The same frame at 2.25 times the fragments reads *less*, and one run reads half the
-next. Unpaced (vsync and the frame-rate limit off, about 240–320 fps), the GPU stays
-loaded and the readings repeat and grow with the pixel count. That is gate 6's reading;
-an unpaced run's frame times are no frame budget, so a frame-time drive stays paced.
+next. The GPU clock shows why. `nvidia-smi`, sampled every 500 ms through one more capture of
+each kind (`paced/clock.csv`, `unpaced/clock.csv`), read the GPU in its P8 state at
+139–405 MHz (median 215) while paced, and in P0 at 1,771 MHz while unpaced; that pair read
+home 1.92 ms paced and 0.48 ms unpaced. Unpaced (vsync and the frame-rate limit off, about
+240–460 fps), the GPU stays loaded and the readings repeat and grow with the pixel count.
+That is gate 6's reading; an unpaced run's frame times are no frame budget, so a
+frame-time drive stays paced.
 
 ```powershell
 $env:UNPACED = '1'; $env:VIEW_DPR = '1.5'

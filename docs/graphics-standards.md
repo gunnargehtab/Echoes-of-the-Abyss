@@ -478,8 +478,8 @@ named GPU). It is read before and after the change at pixel ratio 1 and 1.5: at 
 home, low (12°) and survey cameras of `tools/render-stack/capture.mjs` on Ventfront and
 Sorrowgate, and at the fight station of `stations.mjs` on Ventfront. It is read with the
 frame unpaced, vsync and the frame-rate limit off (`UNPACED=1` in `drive.mjs`): paced at
-60 fps the GPU idles at a low clock, and Ventfront's home frame read 2.0 ms paced against
-0.5 ms unpaced, and less at pixel ratio 1.5 than at 1
+60 fps the named GPU idled at 139–405 MHz against 1,771 MHz unpaced, and Ventfront's home
+frame read 2.0 ms paced against 0.5 ms unpaced, and less at pixel ratio 1.5 than at 1
 ([issue-1001](screenshots/issue-1001/README.md)). A software rasteriser's time is no
 reading.
 `__perspectiveProbe` reports it as `avgGpuMs` and `worstGpuMs` in a development build,
