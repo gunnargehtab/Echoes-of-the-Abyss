@@ -166,12 +166,16 @@ describe('a thermal cutter banks what it cuts', () => {
     const spent = before - m.world.drift.at(BED_X, BED_Y);
     const onTheCut = FLORA.CUTTER_CROP_PER_MIN * FLORA.HEALTH_PER_BIOMASS;
     const onTheBank = onTheCut * FLORA.CUTTER_YIELD;
-    // A cutter is loud but not loud enough to wear a region by noise, so the
-    // water is also healing the whole minute. The charge is the difference.
-    const healed = DRIFT.HEALTH_RECOVERY_PER_S * 60;
+    // The region also hears the cutter, for the whole minute (#999), and a
+    // region either wears by noise or heals, never both. Read off its own
+    // noise rather than assumed, so the charge is what is left over.
+    const region = m.world.drift.regionIndex(BED_X, BED_Y);
+    const excess = m.world.driftNoise[region]! - DRIFT.HEALTH_SIG_THRESHOLD;
+    const byNoise =
+      excess > 0 ? excess * DRIFT.HEALTH_SIG_DRAIN_PER_S * 60 : -DRIFT.HEALTH_RECOVERY_PER_S * 60;
     assert.ok(
-      Math.abs(spent - (onTheCut - healed)) < 0.5,
-      `charged for the cut: ${spent} against ${onTheCut} less ${healed} healed`
+      Math.abs(spent - (onTheCut + byNoise)) < 0.05,
+      `charged for the cut: ${spent} against ${onTheCut} and ${byNoise} by noise`
     );
     assert.ok(spent > onTheBank, `and for more than the banked share of ${onTheBank}`);
   });
@@ -355,6 +359,37 @@ describe('a canopy opens only for what is actually cutting', () => {
     assert.ok(
       Acoustic.sig[loud]! - Acoustic.sig[idle]! >= HAZARDS.KELP.CUTTER_SIG,
       `and cutters on is loud: ${Acoustic.sig[loud]} against ${Acoustic.sig[idle]}`
+    );
+  });
+
+  it('stays loud for as long as it holds the canopy open', () => {
+    // The reading above is taken at two seconds, before the burn lands. Past
+    // it the field is open and grips nobody, but the cut reads no phase, so
+    // the hull is still cutting and still banking (#999). Doc §4 prices
+    // holding a field open as parking "a hull where everyone can hear its
+    // cutters"; gated on the phase, the cutters fell silent six seconds in.
+    // Against a Commune hull, for the reason the test above gives.
+    const m = match();
+    const cutter = inTheBed(m);
+    const commune = spawnUnit(m.world, {
+      kind: UnitKind.Corvette,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: BED_X + 100,
+      y: BED_Y,
+      depth: 300,
+    });
+    advance(m, HAZARDS.KELP.BATHYARCH_BURN_S + 2);
+    assert.equal(bed(m).phase, HazardPhase.Dormant, 'the canopy is open');
+
+    const crop = bed(m).crop;
+    const banked = biomass(m);
+    advance(m, 2);
+    assert.ok(bed(m).crop < crop, `still cutting: ${bed(m).crop} from ${crop}`);
+    assert.ok(biomass(m) > banked, `and still banking: ${biomass(m)} from ${banked}`);
+    assert.ok(
+      Acoustic.sig[cutter]! - Acoustic.sig[commune]! >= HAZARDS.KELP.CUTTER_SIG,
+      `so still heard: ${Acoustic.sig[cutter]} against ${Acoustic.sig[commune]}`
     );
   });
 });

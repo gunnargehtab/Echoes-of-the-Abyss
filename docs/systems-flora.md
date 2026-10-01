@@ -84,7 +84,7 @@ It is the recommended way to hold an economy and the easiest thing in the game t
 ### The cutter — the fast, loud, wasteful way
 
 A hull already opens a canopy by standing in it with thermal cutters running: six seconds to
-come apart, loud while it does, and closing slowly once the hull leaves
+come apart, loud for as long as the cutters run, and closing slowly once the hull leaves
 ([hazards.md](hazards.md) §4). That mechanic now also **banks what it cuts, at 40%**.
 
 Raw cut mass is unprocessed, so the yield is bad and the point is rarely the money. The point
