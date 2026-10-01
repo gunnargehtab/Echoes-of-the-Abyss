@@ -1,7 +1,7 @@
 /**
  * How render.mjs and inspect.mjs start Chromium, and how they tell a frame it
- * drew from an empty one. One copy, because the two drivers each carried their
- * own and the copies drifted (#1014).
+ * drew from an empty one. One copy, so a change to the flag or the check lands
+ * in both drivers: #1014 had to change both.
  *
  * SwiftShader is the only GL in the Linux container that made the committed
  * portraits, and three's WebGL2 path needs it asked for by name, or the page
