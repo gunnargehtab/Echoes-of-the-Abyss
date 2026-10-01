@@ -634,8 +634,8 @@ there is a picture to review.
 - [ ] A render-stack change reports the frame's GPU time, every pass summed, on the named
   GPU, before and after (gate 6)
 - [ ] World marks still project through the conn camera — measurements conform, symbols
-  billboard, no second projection, atmosphere effects stay screen-space and rotate
-  nothing (gate 8)
+  billboard, no second projection, atmosphere effects stay screen-space (the sway
+  translates the shared camera instead) and rotate nothing (gate 8)
 - [ ] Gates 6 and 7 still hold **across the pitch band**, not only at the 55° home frame —
   a shot at 12° has far more map in it than a shot at 55° (gate 8)
 - [ ] `npm test` still passes, including the headless renderer smoke test — a change that

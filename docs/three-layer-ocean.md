@@ -132,8 +132,9 @@ The old spec was load-bearing. Each load moves; none is dropped:
   [graphics-standards.md](graphics-standards.md) gate 3 applies to runtime emissive materials
   exactly as it applied to baked emissive maps, up to the white the canvas can show, where
   gate 3's lamp core holds a lamp along its faction hue. A quiet hull is dark in 3D too.
-- **Atmosphere is screen-space.** Vignette, sway (translation only), chromatic split — the
-  existing rules carry over unchanged.
+- **Atmosphere is screen-space.** Vignette and chromatic split — the existing rules carry
+  over unchanged. The sway, translation only, moves the shared camera instead
+  ([art-direction.md](art-direction.md#atmosphere-rides-on-top-in-screen-space)).
 
 ## 5. The seabed made visible
 
@@ -244,7 +245,8 @@ Downstream:
   low-spec fallback, which it already knows how to be.
 - **Gate 8 is rewritten to the new spec.** Fixed-pitch perspective, locked yaw, rings as
   world-space decals, sonar scope stays plan view, atmosphere stays screen-space. (The
-  first two clauses were retired by [free-camera.md](free-camera.md); the rest stands, and
+  first two clauses were retired by [free-camera.md](free-camera.md), and the sway moves
+  the camera rather than the picture (#1003); the rest stands, and
   the rings conforming vertex-by-vertex is exactly why freeing the camera cost them
   nothing.)
 - **Gate 5 and the review checklist survive untouched** — including the rule that every visual

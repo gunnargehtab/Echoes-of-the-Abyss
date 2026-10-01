@@ -1958,9 +1958,13 @@ export class PerspectiveView {
    * `lookAt` has fixed the orientation, and moving the position afterwards
    * leaves it alone, so the sway can only translate: gate 8's rule that an
    * effect may not turn the camera holds by construction.
+   *
+   * Held in the Dream Loop study too: its ground cover rebuilds whenever the
+   * view matrix moves, and a sway that moved it every frame would rebuild
+   * every frame and change what the study measures.
    */
   private applySway(): void {
-    if (this.swayHeld) return;
+    if (this.swayHeld || this.dreamStudy) return;
     swayAt(this.swayClockMs, SWAY_TMP);
     const frameM = 2 * this.distance * Math.tan(((FOV_DEG / 2) * Math.PI) / 180);
     const quaternion = this.camera.quaternion;
@@ -2262,7 +2266,7 @@ export class PerspectiveView {
       yawDeg: Number((((this.yaw * 180) / Math.PI + 360) % 360).toFixed(1)),
       // Whether `eye` below includes the sway (cameraSway.ts): a capture
       // compared pixel for pixel across two revisions wants it held.
-      sway: this.swayHeld ? 'held' : 'on',
+      sway: this.swayHeld || this.dreamStudy ? 'held' : 'on',
       // Where the camera is looking, and from where. A screenshot review
       // judging gates 6 and 7 across the pitch band has to be able to caption
       // the shot with the frame it was taken in; before the camera was freed

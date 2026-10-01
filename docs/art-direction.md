@@ -647,29 +647,37 @@ What the rule is careful about:
 ### Atmosphere rides on top, in screen space
 
 The submarine feel — slight vignette, slow camera sway, fog layers for parallax, the ≤1 px
-chromatic split at frame edges ([style-neon-noir.md](style-neon-noir.md)) — is post-work
-composited over the world. Sway is translation only. None of these effects may tilt,
-shear or rotate the projection: the moment an atmosphere pass bends a range ring, it has
-crossed from mood into misinformation.
+chromatic split at frame edges ([style-neon-noir.md](style-neon-noir.md)) — rides on top
+of the world. The vignette and the split are post-work composited over it, in screen
+space. The sway is the exception: it translates the shared camera rather than the
+picture, because a picture shifted under the glass would need a second projection for
+every mark drawn on it ([graphics-standards.md](graphics-standards.md) gate 8). Sway is
+translation only. None of these effects may tilt, shear or rotate the projection: the
+moment an atmosphere pass bends a range ring, it has crossed from mood into
+misinformation.
 
 The vignette and the sway are built
-([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)), and neither
-is a pass. The **vignette** is a radial gradient toward `abyss-void` on the conn view's
-host, which the browser composites over the world canvas and under the HUD glass: clear
-inside 55% of the way to the corners, about 14% abyss at the middle of each edge, 40% at
-the corners. It costs the conn view no draw call and sits outside its tone mapping, and
-the HUD and every contact mark stay outside it by layer order. The **sway** moves the one
-camera after it is aimed, along the camera's own right and up axes, so it can only
-translate: a heave of 0.3% of the frame's height at the focus over 11 s, and a drift of
-0.2% over 17 s. The overlay projects through that camera, so a ring rides with the water
-it measures and a click resolves through the camera the frame was drawn with. That makes
-the overlay re-project every frame, which it already did: the conn view re-applies its
-camera on every frame, and each application bumps the revision the overlay's layers key
-on. A heave
-that would dip the eye under its clearance is lifted straight up, not re-aimed. Reduced
-motion holds the sway at rest, because it carries nothing ([ui-ux.md](ui-ux.md) §11).
-Both are TUNABLE: `packages/frontend/src/game/cameraSway.ts` holds the sway's numbers,
-and the conn view's stylesheet holds the vignette's.
+([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)), and neither is
+a pass. The **vignette** is a radial gradient toward `abyss-void` on the conn view's host,
+which the browser composites over the world canvas and under the HUD glass: clear inside
+55% of the way to the corners, about 14% abyss at the middle of each edge, 40% at the
+corners. It costs the conn view no draw call and sits outside its tone mapping, and the
+HUD and every contact mark stay outside it by layer order. It does dim an own lamp near
+the frame's edge, by up to 22% at a 1440×900 frame's corners just above the command strip.
+Gate 3 holds as it does through the water's fade with range: everything at one place on
+screen dims alike, so lamps keep their order there, and the loudness collar on the glass
+keeps the reading ([ui-ux.md](ui-ux.md) §3.5). The **sway** moves the one camera after it
+is aimed, along the camera's own right and up axes, so it can only translate: a heave of
+0.3% of the frame's height at the focus over 11 s, and a drift of 0.2% over 17 s. The
+overlay projects through that camera, so a ring rides with the water it measures and a
+click resolves through the camera the frame was drawn with. That makes the overlay
+re-project every frame, which it already did: the conn view re-applies its camera on every
+frame, and each application bumps the revision the overlay's layers key on. A heave that
+would dip the eye under its clearance is lifted straight up, not re-aimed. Reduced motion
+holds the sway at rest, because it carries nothing ([ui-ux.md](ui-ux.md) §11), and so does
+the development-only Dream Loop study, whose ground cover rebuilds whenever the view
+moves. Both are TUNABLE: `packages/frontend/src/game/cameraSway.ts` holds the sway's
+numbers, and the conn view's stylesheet holds the vignette's.
 
 The chromatic split is not built. It needs the drawn frame as a texture, so it is a
 full-screen draw and a framebuffer copy, and gate 6 of

@@ -2902,10 +2902,15 @@ describe('renderer smoke test: the free camera', () => {
   it('never puts the eye inside the seabed, at any angle', async () => {
     const world = await boot();
     try {
+      // At the bottom of the sway's heave (cameraSway.ts, 8.25 s into an 11 s
+      // period), so every clamped aim below also tests the sway's own lift:
+      // a heave that would dip a clamped eye under its clearance lifts it.
+      const clock = mock.method(performance, 'now', () => 8_250);
       world.frame(3);
+      clock.mock.restore();
       // Read off the camera itself rather than the probe's whole metres: one
       // cell from an 840 m wall, half a metre of rounding is metres of ground,
-      // and the sway (#1003) moves the eye by less than that between aims.
+      // and the sway (#1003) puts the eye wherever that rounding is unkind.
       const camera = world.gl.lastCamera;
       assert.ok(camera !== null, 'the frame was drawn through a camera');
       let clamped = 0;
@@ -3052,6 +3057,8 @@ describe('renderer smoke test: the free camera', () => {
       // Reduced motion holds it at rest at once, not on the next frame, and
       // keeps it there however long the clock runs.
       world.conn.setReducedMotion(true);
+      const settled = world.conn.projectPoint(2000, 2000, null);
+      assert.ok(Math.hypot(settled.x - 640, settled.y - 360) < 1e-4, 'held before any frame');
       for (const at of [13_250, 21_000]) {
         nowMs = at;
         world.frame(1);
