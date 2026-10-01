@@ -107,7 +107,10 @@ the brief; the numbers are constraints, not suggestions.
   down and the beauty rig hides geometry, so a run of fixes, each right against its audit
   line, can leave a whole that reads as another navy's; #907 did, and #947 rebuilt it. The
   player's home camera looks from +Z at 55° of pitch, so a structure's working face (its
-  maw, its belt, its eye-lines) goes on +Z.
+  maw, its belt, its eye-lines) goes on +Z. The sheet shows shape, not glow: its lamps are
+  curved with the plate and bloomed, so never retune a lamp's colour or strength against
+  it. The conn view keeps a lamp's exported luminance as its resting glow, recoloured to
+  the faction's glow ink (`packages/frontend/src/game/rosterModels.ts` `recolor`).
 - **A fix moves its neighbours.** After moving a part, run
   `node tools/hull-models/contacts.mjs <slug> --part <it>` and bake again. #947's maw moved
   clear of the neck and swung the belt into a leg's path. Its fangs covered part of the maw

@@ -44,6 +44,16 @@
         preserveDrawingBuffer: true,
       });
       document.body.appendChild(renderer.domElement);
+      // No tone mapping, sRGB out, no environment: the passes are data for
+      // hullTextures.ts and gate 3, not a look. #974 tone-maps the conn view
+      // with ACES (PerspectiveView.ts) and names this baked chart path its
+      // non-target control (docs/art-direction.md, "Shared model lighting");
+      // a curve here would bend gate 3's glow energy and the albedo luminance
+      // the recolour reads. Both values are three r169's defaults, set so that
+      // changing one is a decision. The passes' unlit materials never sample
+      // scene.environment, so none is set.
+      renderer.toneMapping = THREE.NoToneMapping;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
 
       const scene = new THREE.Scene();
 

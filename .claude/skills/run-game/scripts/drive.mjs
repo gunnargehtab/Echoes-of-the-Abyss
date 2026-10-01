@@ -9,7 +9,10 @@
  * the interaction it cares about.
  *
  * Usage:
- *   node .claude/skills/run-game/scripts/drive.mjs --out <dir> [--steps <file>]
+ *   node .claude/skills/run-game/scripts/drive.mjs --out <dir> [--steps <file>] [--url <url>]
+ *     [--entry solo|tutorial] [--headed] [--channel msedge|chrome]
+ *
+ * VIEW_W and VIEW_H move the 1440×900 viewport.
  *
  * With no --steps it runs the default smoke: connect, select a unit, ping.
  * A steps file is an ES module with `export default async ({ page, shot }) => {...}`.
