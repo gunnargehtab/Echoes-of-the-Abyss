@@ -142,8 +142,10 @@ export interface Hazard {
    * here spends the map's concealment, which is the argument about sound this
    * account never had.
    *
-   * Nothing consumes it yet (#549): every bed stands full, so PF and drag are
-   * what they have always been.
+   * The raw figure, which regrowth, sowing, the cutter and the reactor write.
+   * The grid, the grip and the phase read it rounded to a step (`standingCrop`);
+   * `standingCropOf` names the readers outside this module that take it raw,
+   * and why.
    */
   crop: number;
   /**
@@ -555,17 +557,19 @@ function cropPropagationDelta(crop: number): number {
 }
 
 /**
- * A bed's canopy as everything that reads it sees it: the crop, rounded to the
- * step the PF grid is written from.
+ * A bed's canopy as the cover reads it: the crop, rounded to the step the PF
+ * grid is written from.
  *
- * One number read one way. The grid is quantised because it is a whole-map
- * recompute (see `FLORA.CROP_PF_STEPS`), and if the grip and the phase read
- * the raw figure instead they would disagree with it at the edges — a bed
- * regrowing at 4% a minute is above zero a tick after it is stripped, so a
- * field the map masks as bare ground would be gripping hulls again, and
- * charging a Consortium cutter the full `CUTTER_SIG` for cutting a canopy of
- * two hundredths of a per cent. Below half a step there is no canopy, in every
- * reading.
+ * The grid is quantised because it is a whole-map recompute (see
+ * `FLORA.CROP_PF_STEPS`), and if the grip and the phase read the raw figure
+ * instead they would disagree with it at the edges — a bed regrowing at 4% a
+ * minute is above zero a tick after it is stripped, so a field the map masks
+ * as bare ground would be gripping hulls again, and charging a Consortium
+ * cutter the full `CUTTER_SIG` for cutting a canopy of two hundredths of a per
+ * cent. Below half a step there is no canopy in any reading of the cover: the
+ * grid, the grip, the phase, `bedAt` and bloom-share. What moves the crop —
+ * regrowth and the cutter here, the reactor in flora.ts — reads the raw
+ * figure, and `standingCropOf` names the readers outside this module that do.
  */
 function standingCrop(crop: number): number {
   return cropStep(crop) / FLORA.CROP_PF_STEPS;
@@ -617,11 +621,24 @@ export function regrowthPerS(world: SimWorld, hazard: Hazard): number {
 }
 
 /**
- * A bed's canopy, as everything outside this module must read it.
+ * A bed's canopy, as anything outside this module reads the cover.
  *
  * Exported for bloom-share, which pays by the canopy standing and so has to
  * see the same quantised figure the PF grid, the grip and the phase do — see
  * `standingCrop` for why the raw number is not that figure.
+ *
+ * Three readers outside take the raw `crop` instead, each on purpose (#997):
+ *
+ * - The bio-reactor (flora.ts) renders the crop and writes back the raw
+ *   figure less what it took, so it reads the figure it writes.
+ * - The Drift's restock rate (`Match.cropDensityAt`) scales a draw by a
+ *   region's mean crop. Nothing that rate decides has to agree with the grid,
+ *   the grip or the phase, which is what `standingCrop` is for, and a bed held
+ *   a rounding error above bare moves it by a rounding error. The two readings
+ *   differ by at most half a step (`FLORA.CROP_PF_STEPS`).
+ * - The state hash (stateHash.ts) mixes every float by its exact bits; a
+ *   rounding would let two runs that diverged inside one step agree at a
+ *   checkpoint.
  */
 export function standingCropOf(hazard: Hazard): number {
   return standingCrop(hazard.crop);
