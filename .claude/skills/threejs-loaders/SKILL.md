@@ -3,6 +3,16 @@ name: threejs-loaders
 description: Three.js asset loading - GLTF, textures, images, models, async patterns. Use when loading 3D models, textures, HDR environments, or managing loading progress.
 ---
 
+<!-- LOCAL NOTE (not upstream) — see .claude/VENDORED-SKILLS.md -->
+> **In this repository an environment belongs to the view that bakes it.** Keep the
+> render target `fromEquirectangular` returns, not only its `.texture`, because only
+> `target.dispose()` frees it. Dispose the source and the generator once the bake
+> returns, and the target with the view. The game's environment is never the
+> background. Under `scene.environment`, a `MeshStandardMaterial` without its own
+> `envMap` takes `scene.environmentIntensity` every frame, so the GLTF sample's
+> `envMapIntensity` does nothing there. The `material-design` skill has this
+> repository's rules.
+
 # Three.js Loaders
 
 ## Quick Start

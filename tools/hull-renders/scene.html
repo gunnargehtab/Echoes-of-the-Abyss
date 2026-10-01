@@ -16,8 +16,11 @@
   - the rule that near-black fills 85-90% of a frame is why the rig is three
     small lights and a very dark seabed rather than an evenly lit studio;
   - the rule that glow encodes loudness is why emissive is driven from the
-    hull's SIG and recoloured to the faction accent, exactly as the runtime
-    does it (packages/frontend/src/game/rosterModels.ts, gate 4);
+    hull's SIG in the faction accent's hue. That is the rule, not the
+    runtime's glow: packages/frontend/src/game/rosterModels.ts recolours to
+    the glow ink at the model's approved strength, and modelLighting.ts adds
+    it after the tone curve (gates 3 and 4), where this page's composer
+    tone-maps it with the frame (see post);
   - the props are the shipped environment registry, canonicalised to the same
     footprint metres packages/frontend/src/game/environmentModels.ts uses.
 
@@ -153,7 +156,11 @@
       // the floor and the water's own colour overhead, with the faction
       // accent banded low where the rim light comes from. It is never seen
       // directly — only in the plate — and it is what turns "dark" into
-      // "wet".
+      // "wet". Presentation only: the conn view's environment carries no
+      // accent, is not its background, and is linear float (modelLighting.ts).
+      // This one samples darker than the colours below, because they are
+      // linear values written into a byte texture tagged sRGB, which the GPU
+      // decodes a second time; the approved portraits were rendered that way.
       const envSize = 64;
       const envData = new Uint8Array(envSize * envSize * 4);
       {
@@ -271,14 +278,15 @@
           // as dark as this water, that renders a black cut-out with a glint
           // on it, whatever the key is set to. So metalness stays low enough
           // to keep a diffuse term and the wet look comes from roughness and
-          // the environment instead — and the environment's own weight stays
-          // under 1, because an up-facing deck sees the whole sky of it and
-          // a flat-topped hull like the Harvester turns into a pale slab
-          // long before the key is what is doing it. Roughness is held in a narrow band so no
-          // part of a hull turns into a mirror or into felt.
+          // the environment instead. The environment's weight is
+          // scene.environmentIntensity, left at 1: three r169 ignores a
+          // material's envMapIntensity whenever its map is scene.environment
+          // (WebGLRenderer.js), so the 0.95 this page once wrote never
+          // applied, and the approved portraits were rendered at 1. Roughness
+          // is held in a narrow band so no part of a hull turns into a mirror
+          // or into felt.
           m.metalness = THREE.MathUtils.clamp(m.metalness ?? 0.5, 0.18, 0.42);
           m.roughness = THREE.MathUtils.clamp(m.roughness ?? 0.5, 0.26, 0.5);
-          m.envMapIntensity = 0.95;
           // Plate is remapped into a noir band — and it is remapped at both
           // ends, which is the part that took a while to see.
           //
@@ -639,6 +647,19 @@
        * arguably on-style: everything the rig puts on hull plate stays well
        * under the threshold, and what crosses it is the lamps, which is
        * exactly what is supposed to bloom.
+       *
+       * Where the tone curve runs. renderer.toneMapping (ACES at 0.88, above)
+       * reaches this frame once, in OutputPass, over the summed buffer: plate,
+       * lamps, bloom, water and snow alike. RenderPass draws into the
+       * composer's target, and three r169 defines TONE_MAPPING for a material
+       * only on the default framebuffer (WebGLPrograms.js), so nothing here
+       * tone-maps itself. That is why lampColor and glowGain above exist, and
+       * why the conn view's glow split (modelLighting.ts
+       * keepGlowOutsideToneMapping, gate 3) would be a silent no-op in this
+       * chain: glow after the curve under a composer means rendering the
+       * emission as its own term, the term #1001's bloom is to be built from.
+       * A composer copied from this page into the conn view would undo that
+       * correction.
        */
       function makeTarget() {
         const t = new THREE.WebGLRenderTarget(W, H, {

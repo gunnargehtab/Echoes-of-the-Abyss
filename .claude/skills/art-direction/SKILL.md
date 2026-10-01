@@ -7,7 +7,10 @@ description: Direct a staged visual change in Echoes of the Abyss. Use for a vis
 
 Start with `CLAUDE.md`, `docs/art-direction.md`, `docs/graphics-standards.md` and the
 mission or screen being changed. `docs/visual-reboot.md` is the first worked brief:
-the tutorial is Sorrowgate, not a skirmish with a tutorial label.
+the tutorial is Sorrowgate, not a skirmish with a tutorial label. The second is
+game-wide: `docs/art-direction.md`'s "Shared model lighting — Abyss Render Stack" gives
+every production match Sorrowgate's rig, ACES and a static water environment, ranks the
+upgrades its follow-ups start from, and rules out the Dream Loop study as the reference.
 
 ## Author the shared brief
 
@@ -42,14 +45,18 @@ with a reason, not permission to skip the role or asset audit.
 
 Use [run-game](../run-game/SKILL.md) for the real client, with the HUD present. A screenshot
 of a standalone scene does not prove a playable slice. Compare the same cameras before
-and after, and include a non-target mission as the rollout control.
+and after, and include a non-target control: a mission outside the slice or, for a
+game-wide change, the path it must leave alone (#974's was the baked chart and overlay).
 
 The coordinator runs **one** [dev-loop](../dev-loop/SKILL.md), with its three-round cap
 and fresh independent critic. Specialists do not start nested loops or approve their own
 outputs. Any GLB change also goes through the separate hull-reviewer.
 
 Stop on the brief's written criteria, not on a beauty score. Report measured GPU work
-and the hardware that produced timings; an unmeasured phone remains unmeasured.
+and the hardware that produced timings. The probe's conn and overlay milliseconds are CPU
+time and its frame time an interval; none reads a GPU timer ([run-game](../run-game/SKILL.md)
+says why), so a shading cost nothing measured stays unmeasured, like an unmeasured phone.
+Render-stack work is accepted on desktop (gate 6).
 
 ## Related
 

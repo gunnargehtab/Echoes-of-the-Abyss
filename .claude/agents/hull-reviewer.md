@@ -101,7 +101,11 @@ the eye, so the face a structure turns to the player is its +Z face. Ask the che
 first question of this sheet. #907 passed every audit line it was given while the whole
 still read as another navy's Refinery. Its own evidence, two beauty frames of the
 Derrick, was one dark image twice. `--own` frames each file on its own parts, for a
-close-up of something that moved.
+close-up of something that moved. The sheet is for shape. Its lamps are the export's own
+emissive, curved with the plate by the sheet's Neutral tone mapping and bloomed; the conn
+view recolours them to the faction glow ink and adds them after its ACES curve
+(`packages/frontend/src/game/modelLighting.ts`). A lamp's hue or brightness on the sheet
+is not a glow or palette finding: glow is checks 5 and 6.
 
 **3. What touches what.** A clip is a fault no gate reads, so sweep for it:
 

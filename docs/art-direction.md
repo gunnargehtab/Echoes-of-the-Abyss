@@ -46,8 +46,9 @@ light rig does not make every navy Commune-built.
 
 **Decision.** Keeping the old standard rig and improving only it would make the
 tutorial a competing look. Instead, share the tutorial rig and add the same metal
-reflections and highlight handling to both profiles. The approved hull portraits
-above and Sorrowgate's retained-geometry slice supply the reference: transfer wet
+reflections and highlight handling to both profiles. The approved
+[hull portraits](#hull-portraits--the-roster-photographed) below and Sorrowgate's
+retained-geometry slice supply the reference: transfer wet
 surface definition and controlled highlights, not their offline shadows or bloom.
 The emotion remains inhabited darkness: close views reveal construction, home views
 separate hulls from ground, and survey views preserve sound and depth information.
@@ -63,8 +64,8 @@ ink, embers and unlit ordnance lamps bypass tone mapping; the Pixi HUD and enemy
 contacts remain outside this world-material operation. Live SIG still drives the
 same input emission curve, and the curve applies to **surface light only**: a model's
 emissive glow is added after tone mapping, at its own faction hue and approved strength.
-ACES alone fades a saturated glow toward white (Ventfront close camera: bright-pixel
-saturation 0.66 untone-mapped, 0.38 under ACES), which breaks palette discipline and
+ACES alone fades a saturated glow toward white (Ventfront close camera on a GTX 1070:
+bright-pixel saturation 0.66 untone-mapped, 0.39 under ACES), which breaks palette discipline and
 makes a loud hull lie about its colour. No bloom, shadows, camera effects or geometry are added.
 
 The asset list is the existing approved roster and prop kit, with no new downloads
@@ -95,8 +96,10 @@ composer. Its still is a lighting reference, not a runtime implementation to cop
 | 7 | Shallow caustics ([#1006](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1006)) | Design first: where light can exist, how it obeys depth and the licensed world-light families, and what stays unlit. No gameplay visibility |
 | 8 | WebGPU/TSL ([#1007](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1007)) | Defer migration until a separate feasibility decision. Water, survey, surface and sway shader patches depend on the current WebGL pipeline; this is not a renderer-constructor swap |
 
-`node tools/render-stack/audit.mjs` measures **17,819,812 raw bytes** and
-**2,211,283 gzip bytes** over 108 source GLBs with Node's default gzip settings.
+Over the model library as it stood at `1df288a`, `node tools/render-stack/audit.mjs`
+counts **17,819,812 raw bytes** and **2,211,283 gzip bytes** over 108 source GLBs with
+Node's default gzip settings. It reads the library as it stands, so the bytes move
+whenever a model does.
 Those are sums over the source library, not a browser's initial download: Vite hashes
 assets and the client loads them by need. The rank retains the issue's visual priority;
 gzip can proceed independently and WebGPU is not a prerequisite for the other seven.

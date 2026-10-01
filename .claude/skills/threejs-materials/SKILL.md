@@ -3,6 +3,16 @@ name: threejs-materials
 description: Three.js materials - PBR, basic, phong, shader materials, material properties. Use when styling meshes, working with textures, creating custom shaders, or optimizing material performance.
 ---
 
+<!-- LOCAL NOTE (not upstream) — see .claude/VENDORED-SKILLS.md -->
+> **In this repository the conn view tone-maps with ACES and adds a lamp's emission
+> after the curve**, through a chained `onBeforeCompile` patch that `clone()` drops,
+> and its unlit layers set `toneMapped: false`. The `ShaderMaterial` sample below
+> ends without `<colorspace_fragment>`, so on that sRGB canvas it would draw too
+> dark. A map reads the UV set its texture's `channel` names (0 is `uv`, 1 is
+> `uv1`), so the `aoMap` sample's `uv2` is read only when the map's `channel` is 2,
+> and an `aoMap` darkens indirect light only. The `material-design` skill has this
+> repository's rules.
+
 # Three.js Materials
 
 ## Quick Start

@@ -48,6 +48,17 @@ archival maps. `--glow-e <target>` calibrates the emissive map onto a target
 glow energy — `tools/hull-maps/build.mjs` passes it from the unit's SIG, so
 intake runs measure raw and the shipped maps land on the curve.
 
+**The maps are data, not the game's look.** Every pass draws an unlit material,
+with no tone mapping, environment or lights, and `scripts/page.html` pins that.
+Since #974 the conn view lights the same GLB with ACES and a static water
+environment and adds lamp emission after the curve
+(`packages/frontend/src/game/modelLighting.ts`). The baked chart path is that
+change's non-target control (`docs/art-direction.md` "Shared model lighting"),
+so none of it reaches a map, and gate 3 still sums glow over the untoned
+emissive pass. The albedo pass keeps colour and base map only: an export's
+occlusion map or vertex colours reach no map today, and whether baked AO should
+is #1002's call.
+
 **The bake fails if no material is emissive** — that almost always means the
 export dropped the channel, and a glow-less hull is a style bug, not a
 preference. Re-export before overriding with `--allow-no-emissive` (only a
@@ -84,9 +95,12 @@ node tools/hull-models/contacts.mjs <slug>
 ```
 
 The first is a lit before-and-after sheet from fixed cameras, its conn row at
-the player's home view. The second lists every pair of parts that meet. Each
-pair is a mount or a clip, and #947's review found four clips that every map
-and gate had passed.
+the player's home view. That sheet is lit as a studio, not as the game: its
+`OutputPass` curves lamps and plate alike, with bloom (`tools/CLAUDE.md`,
+hull-renders). Judge shape and authored finish there, glow in the maps, and the
+shipped look in a `run-game` frame. The second lists every pair of parts that
+meet. Each pair is a mount or a clip, and #947's review found four clips that
+every map and gate had passed.
 
 ## 3. File it
 

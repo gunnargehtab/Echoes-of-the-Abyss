@@ -22,7 +22,9 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    values and a part's normals included (#911), on any name
                    finishes.mjs finds at two values inside one navy, and on a
                    model file that is neither an env- prop nor named
-                   -<navy>.glb (#888); CI runs it in the build job.
+                   -<navy>.glb (#888); CI runs it in the build job. It
+                   reads no UVs, vertex colours or textures, so a change to
+                   those passes it (#1002, #1005).
                    diff.mjs answers the one thing check.mjs cannot —
                    what a port changed about a shape — by reading the pre-port
                    binary out of git history, since after a port the committed
@@ -60,12 +62,30 @@ tools/hull-renders The same models photographed rather than measured:
                    for contact shadows — beside the same file at a git
                    revision (--before), from cameras that do not move
                    between the two. The noir rig hides geometry by design,
-                   so a shape change is shown here (#947). It seats a model
-                   on its own base, as the conn view stands a structure
-                   (#955). Not an npm
-                   workspace and not a gate — a picture is a presentation
-                   artifact, and a model is still approved by hull-intake
-                   and check.mjs, which measure.
+                   so a shape change is shown here (#947). It floors the
+                   sheet under the lowest part, not at the y 0 where the
+                   conn view stands a structure (#955), so an anchor that
+                   sinks into the seabed in the game rests on the table
+                   here. Both pages tone-map once, in the composer's
+                   OutputPass, lamps included, so the conn view's glow
+                   after the curve (#974, frontend modelLighting.ts) cannot
+                   hold in them: take lamp hue and strength from a run-game
+                   frame, never from these. Not an npm workspace and not a
+                   gate — a picture is a presentation artifact, and a model
+                   is still approved by hull-intake and check.mjs, which
+                   measure.
+tools/render-stack #974's audit and camera pairs, kept runnable rather than
+                   quoted; not an npm workspace and not a gate. audit.mjs
+                   recounts what docs/art-direction.md's ranked audit
+                   quotes: raw and gzip bytes over the committed GLBs (a
+                   library sum, not a download), primitives with UV0 and
+                   how many of those are uvAlike's zeros (UV0 is not a
+                   laid-out atlas), and materials with an occlusion
+                   texture. capture.mjs is a run-game --steps module: four
+                   held cameras with the HUD on, gate 6's call and triangle
+                   limits asserted, readings.json beside the frames. The
+                   run-game skill has the recipe and what its milliseconds
+                   measure.
 tools/audio-meter  What the mix measures, rather than what it was meant to.
                    meter.mjs bundles the production audio classes, renders one
                    layer at a time through Chromium's OfflineAudioContext, and

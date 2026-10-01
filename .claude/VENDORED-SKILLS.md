@@ -20,10 +20,13 @@ The selection rule was **what the code actually imports**, not what looked
 useful. `packages/frontend` imports exactly five names from `pixi.js`
 (`Application`, `Container`, `Graphics`, `Text`, `Texture`) and drives the HUD
 off `app.ticker`; its three.js side loads GLBs through `GLTFLoader` and merges
-geometry through `BufferGeometryUtils`, and the only `EffectComposer` chain in
-the tree — render, bloom and output passes — is the beauty-render rig in
-`tools/hull-renders/scene.html`. The vendored set is those surfaces and nothing
-else.
+geometry through `BufferGeometryUtils`, and the tree's `EffectComposer` chains —
+render, bloom and output passes — are the two rigs in `tools/hull-renders/`
+(`tools/hull-renders/inspect.html` joined `tools/hull-renders/scene.html` in #947).
+The vendored set is those surfaces and nothing else. The client's shader
+patching, which since #974 includes the glow-after-tone-mapping hook in
+`packages/frontend/src/game/modelLighting.ts`, has no vendored skill; its rules
+are repo-authored, in the `material-design` skill.
 
 ## What is here
 
@@ -55,15 +58,27 @@ Why each one earns its context:
   `pixijs-performance` is the one that argues for `BitmapText` on per-frame
   labels; that argument has now been measured against this HUD and **does not
   currently apply** — see below.
-- **three.js** is plain three, with no react-three-fiber assumptions, and it
-  uses the post-r152 colour-space API, so it agrees with `three@^0.169`. Geometry
-  and materials are the conn view's own surface — `BufferGeometry`, `InstancedMesh`
-  and the standard/basic materials account for most of what it builds — and
-  loaders is how hull and environment GLBs reach it. Post-processing serves
-  `tools/hull-renders` rather than the client, and imports through
-  `three/addons/postprocessing/`, the same path that rig uses. The set does
-  **not** cover `GLTFExporter`, so it does nothing for `tools/hull-models`,
-  which is where the heaviest three.js authoring in this repository happens.
+- **three.js** is plain three, with no react-three-fiber assumptions, and its
+  texture samples use the post-r152 colour-space API. Geometry and materials are
+  the conn view's own surface — `BufferGeometry`, `InstancedMesh` and the
+  standard/basic materials account for most of what it builds — and loaders is how
+  hull and environment GLBs reach it. Post-processing serves `tools/hull-renders`
+  rather than the client, and imports through `three/addons/postprocessing/`, the
+  same path those rigs use. The set does **not** cover `GLTFExporter`, so it
+  reaches `tools/hull-models`, where the heaviest three.js authoring in this
+  repository happens, only through the primitives `tools/hull-models/kit.mjs`
+  builds from.
+
+  Several samples predate `three@^0.169`. In materials, the `aoMap` sample copies
+  UVs into `uv2`, which a map reads only when its texture's `channel` is 2, and the
+  `ShaderMaterial` sample omits `<colorspace_fragment>`. Loaders sets a
+  per-material `envMapIntensity` that `scene.environmentIntensity` overrides on
+  any material without its own `envMap`. Post-processing ends a chain in
+  `GammaCorrectionShader` rather than `OutputPass`, passes `FilmPass` four
+  arguments where it takes two, and imports a `three/addons/nodes/Nodes.js` that
+  does not exist. Geometry calls a `BufferGeometryUtils.computeTangents` that is
+  not exported. Where the conn view's tone mapping departs from these samples is
+  in `packages/frontend/CLAUDE.md` and the `material-design` skill.
 - **accessibility** is WCAG 2.2 with two reference files, and `docs/ui-ux.md`
   §11 already calls accessibility "a correctness requirement, not a feature
   tier". The overlap is direct: §11 owes contrast, motion and flash limits, a
@@ -151,17 +166,28 @@ need that API surface, but it does not yet show redundancy across repeated text 
 
 ## Rules
 
-- **Do not edit a vendored skill.** Two exceptions exist, both marked `LOCAL`
+- **Do not edit a vendored skill.** Five exceptions exist, each marked `LOCAL`
   in place. The `pixijs` router carries a `LOCAL NOTE` block saying which five
   of its twenty-six rows exist on disk, because the rest of its router table and
   all of `references/index.md` point at skills this repository did not take. The
   `accessibility` skill has one reference row repointed at its upstream sibling
-  `web-quality-audit`, which is not vendored here.
+  `web-quality-audit`, which is not vendored here. Since #974, `threejs-postprocessing`,
+  `threejs-loaders` and `threejs-materials` each open with a `LOCAL NOTE` on where
+  this repository departs from their samples: a composer moves tone mapping, an
+  environment belongs to the view that bakes it, and a lamp's emission goes after
+  the curve. Each points at the `material-design` skill.
+- **A personal copy wins.** Claude Code prefers a personal skill
+  (`~/.claude/skills/`) to a project skill of the same name, and `skillOverrides`
+  matches names only, so it cannot choose between them. On a machine that also
+  installed these marketplaces personally, as the owner's has, the upstream text
+  loads and the `LOCAL` edits here do not. Rules this repository needs live in a
+  repo-authored skill or a `CLAUDE.md`; a `LOCAL` block only points there and
+  names no repository path beyond this file, because `tools/claude-docs/check.mjs`
+  checks nothing inside a vendored skill.
 - **Do not link them from `docs/`.** Link checking on `docs/` is blocking in CI,
   and these files live outside it.
 - To re-sync one, clone the upstream at a newer commit, copy the skill directory
-  over, re-apply the `LOCAL NOTE` if it was the router, and update the table
-  above:
+  over, re-apply its `LOCAL` edit if it has one, and update the table above:
 
 ```bash
 git clone --depth 1 https://github.com/pixijs/pixijs-skills /tmp/pixijs-skills
@@ -184,3 +210,23 @@ Recorded so the next search does not repeat this one.
 - **Game-dev bundles** are Unity, Godot or Roblox shaped, and **code review,
   monorepo and vitest** skills duplicate what is already here. The backend suite
   runs on `node:test`, not vitest.
+- **`threejs-lighting`** (`cloudai-x/threejs-skills`, `b1c6230`), checked for #974
+  at `f3a21972`. The client builds one `AmbientLight`, two `DirectionalLight`s and
+  one `PMREMGenerator`, plus a `PointLight` in the development-only Dream Loop
+  study, and `grep -rE 'castShadow|receiveShadow|shadowMap' packages/frontend/src`
+  finds nothing, because the shared rig adds no shadows. The rest — shadows,
+  hemisphere and point lights — belongs to the two `tools/hull-renders` rigs, which
+  are not a gate. The skill's IBL recipe also drops the render target that
+  `packages/frontend/src/game/modelLighting.ts` keeps and disposes. Revisit if a
+  production shadow map or a new runtime light type lands.
+- **`threejs-shaders`** (same upstream and commit). It passes the import half: the
+  client builds three `ShaderMaterial`s outside the Dream Loop study, patches
+  built-in materials through `onBeforeCompile` at five sites and rewrites three's
+  global fog chunks in `packages/frontend/src/game/water.ts`. It fails the half
+  that earns context. Its extension example replaces an earlier patch and sets no
+  `customProgramCacheKey`, it lists `output_fragment`, which r169 no longer has,
+  and it sets WebGL1 extension flags r169 no longer reads. A vendored copy could
+  be corrected only through another `LOCAL` exception, and the chaining rule
+  already lives in `material-design` and in
+  `packages/frontend/test/modelLighting.test.ts`. Revisit with a
+  `.claude/skill-eval/` probe on a shader-patch issue.

@@ -54,6 +54,13 @@ already-running server — step 2 does not care who started it.
 Server output goes to `/tmp/echoes-dev.log`, with both sides interleaved under
 `[frontend]` and `[backend]` prefixes.
 
+**On Windows, run the servers yourself.** Git for Windows' Bash has no `lsof` or
+`setsid`, and its `ps` takes no `-o`, so `dev.sh` cannot see who holds :3000 or
+:5173. Check both from PowerShell first:
+`Get-NetTCPConnection -LocalPort 3000,5173 -State Listen -ErrorAction SilentlyContinue`
+prints nothing when they are free. Then run `npm run dev` from the repository root,
+and end its whole tree when you finish (`taskkill /T /F /PID <pid>`).
+
 ## 2. Drive it
 
 ```bash
@@ -94,6 +101,11 @@ match rendered, not on a checklist of rings. Signature radius rings are sized
 to each unit's current SIG, so a quiet unit legitimately has no visible ring,
 and rings lie on the terrain now — an ellipse-ish ring hugging a slope is the
 projection working, not a bug.
+
+If this session cannot open an image (a local hook refused image reads on #974's
+Windows machine), say so in the pull request and have the frames reviewed where
+they can be opened, as #974 did from a Linux container. A frame nobody opened is
+not a reviewed frame.
 
 The clearest single indicator that input reached the server and came back is
 the **SIG bar changing colour** — amber around 40 at rest, full red at 95 the
@@ -219,8 +231,11 @@ counts so a short station is visible rather than assumed.
 The only rasteriser here is SwiftShader, and a drive of the five stations shows
 why: the composited frame runs ~170 ms while both CPU halves inside it total
 under 3 ms. The draw-call and triangle columns are real; the millisecond columns
-are the software rasteriser. Real numbers need a real GPU and a Termux device
-(docs/graphics-standards.md gate 6).
+are the software rasteriser. Real numbers need a real GPU, and gate 6 still owes a
+Termux row (docs/graphics-standards.md gate 6); render-stack work is accepted on the
+named desktop GPU without one ("Abyss Render Stack increment"). Even there the conn
+and overlay columns are CPU time, conn being entity sync plus the GL submit. Nothing
+here reads a GPU timer, so zero new draws is not zero shading cost.
 
 On a desktop with a GPU, drive **headed**. Headless Chromium may draw through SwiftShader
 anyway, and `--channel msedge` (or `chrome`) uses an installed browser where no Playwright
@@ -242,6 +257,25 @@ The table's `renderer:` line names the rasteriser, and a software one is flagged
 nothing else while it drives.** A build rewrites `@echoes/shared/dist`, the backend's
 `tsx watch` restarts, and the `fight` station ends on "No signal" with numbers that still
 look like numbers.
+
+### The render-stack camera pairs
+
+```bash
+node .claude/skills/run-game/scripts/drive.mjs --headed --channel msedge \
+  --url 'http://localhost:5173/?map=ventfront-divide' \
+  --out /tmp/render-after --steps tools/render-stack/capture.mjs
+```
+
+#974's paired set: home, close, low and survey cameras on the own force, each held for at
+least 240 frames of both painters and asserted against gate 6's call, triangle and
+environment budgets. `readings.json` lands beside the frames: the renderer string, whether
+it is a software one, the viewport, and each camera's whole probe, `look`, `toneMapping`
+and `environmentBytes` included, so a frame says which lighting path drew it. Use a map's
+real id: an unknown `?map=` boots the default map without a word. The tutorial is
+`?mission=prologue-sorrowgate`, and a before set is the same script against servers at the
+base commit. The script holds the fleet at rest and stages no silent or pinging hull, so
+gate 3's quiet-and-loud comparison is still yours. Its header says what each millisecond
+field measures.
 
 ### The esc menu's focus trap
 
