@@ -743,7 +743,8 @@ function applyCurrent(world: SimWorld, hazard: Hazard, dt: number): void {
 }
 
 /**
- * What a kelp field costs a hull: speed always, SIG only if it is moving.
+ * What a kelp field costs a hull: speed while it grips, SIG for pushing
+ * through it, and SIG for cutting it.
  *
  * Returned rather than written, like `stormModifiers` and `currentModifiers`,
  * because SIG is rebuilt from scratch by the acoustics pass every tick.
@@ -771,17 +772,38 @@ export function kelpModifiers(world: SimWorld, eid: number): { speed: number; si
   // tick is bare from this tick — the phase catches up in `hazardsSystem`, and
   // in between a hull would otherwise still be paying cutter SIG for cutting a
   // canopy that is gone.
+  //
+  // And the two costs read different fields (#999). The grip is the Active
+  // canopy's alone: a field burned or blasted open drags on nobody. The
+  // cutters are paid in any field with a canopy standing, open or not,
+  // because the cut in `hazardsSystem` reads no phase either — holding a
+  // field open *is* cutting it, and §4's "park a hull where everyone can hear
+  // its cutters" is the price of that. Gated on the phase, a cutter went quiet
+  // six seconds in and kept banking crop.
   let crop = 0;
+  let canopy = false;
   for (const hazard of world.hazards) {
     if (hazard.kind !== 'kelp-entanglement') continue;
-    if (hazard.phase !== HazardPhase.Active) continue;
     const standing = standingCrop(hazard.crop);
-    if (standing <= crop) continue;
+    if (standing <= 0) continue;
+    const grips = hazard.phase === HazardPhase.Active && standing > crop;
+    if (canopy && !grips) continue;
     const dx = x - hazard.x;
     const dy = y - hazard.y;
-    if (dx * dx + dy * dy <= hazard.radiusM * hazard.radiusM) crop = standing;
+    if (dx * dx + dy * dy > hazard.radiusM * hazard.radiusM) continue;
+    canopy = true;
+    if (grips) crop = standing;
   }
-  if (crop <= 0) return none;
+  if (!canopy) return none;
+
+  // Thermal cutters run whether the hull is moving or not — unlike drag,
+  // cutting is work you are doing on purpose, and it is what stops burning
+  // being a free counter to the map (doc §4). The same predicate the canopy
+  // and the crop read, so a hull cannot be charged for cutters it is not
+  // running (#653): before it, a Consortium hull on Silent Running paid 40 SIG
+  // for a bed it was taking nothing from.
+  const cutting = isCutting(world, eid) ? HAZARDS.KELP.CUTTER_SIG : 0;
+  if (crop <= 0) return { speed: 1, sig: cutting };
 
   const faction = Owner.faction[eid];
   let speed: number;
@@ -805,14 +827,6 @@ export function kelpModifiers(world: SimWorld, eid: number): { speed: number; si
   // cannot drift apart. Pelagia stay at 1 whatever the crop, because nothing
   // was dragging on them to thin.
   speed = 1 - (1 - speed) * crop;
-
-  // Thermal cutters run whether the hull is moving or not — unlike drag,
-  // cutting is work you are doing on purpose, and it is what stops burning
-  // being a free counter to the map (doc §4). The same predicate the canopy
-  // and the crop read, so a hull cannot be charged for cutters it is not
-  // running (#653): before it, a Consortium hull on Silent Running paid 40 SIG
-  // for a bed it was taking nothing from.
-  const cutting = isCutting(world, eid) ? HAZARDS.KELP.CUTTER_SIG : 0;
 
   const vx = Velocity.x[eid]!;
   const vy = Velocity.y[eid]!;
