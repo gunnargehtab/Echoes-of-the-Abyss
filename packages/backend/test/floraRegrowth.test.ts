@@ -97,6 +97,15 @@ function wearTo(m: Match, x: number, y: number, health: number): void {
   }
 }
 
+/**
+ * Whether a point is in the Ventfront Divide's middle two rows of regions,
+ * which hold every cell of its vent line (y 3,000 to 5,000 m).
+ */
+function inVeinRows(m: Match, x: number, y: number): boolean {
+  const row = Math.floor(m.world.drift.regionIndex(x, y) / DRIFT.HEALTH_REGIONS);
+  return row === 1 || row === 2;
+}
+
 /** Wear every region on the map down to a band. */
 function wearMapTo(m: Match, health: number): void {
   const step = MAP_M / DRIFT.HEALTH_REGIONS;
@@ -394,6 +403,58 @@ describe('the Drift puts back what it loses', () => {
     assert.equal(countFaunaOf(m.world, FaunaSpecies.Rasp), rasp, 'and the swarm behind it returns');
   });
 
+  it('restocks the roster behind a grazer whose open water holds none of its ground', () => {
+    // #993. The band is per region and ground is per point: every vent cell
+    // on this map is in the middle eight regions, so wearing those to Failing
+    // leaves the band open only where an Ashgrazer cannot stand. Its deficit
+    // used to hold the queue, and the eight Healthy regions bred nothing.
+    // No eruptions, as above.
+    const map: MapDefinition = { ...VENTFRONT_DIVIDE, id: 'test-veinless', hazards: [] };
+    const m = match(map, true);
+    for (let y = 400; y <= MAP_M - 400; y += 50) {
+      for (let x = 400; x <= MAP_M - 400; x += 50) {
+        if (m.world.terrain.biomeAt(x, y) !== Biome.ThermalVein) continue;
+        assert.ok(inVeinRows(m, x, y), `vent ground at ${x}, ${y} is outside the worn rows`);
+      }
+    }
+    const step = MAP_M / DRIFT.HEALTH_REGIONS;
+    for (let cx = 0; cx < DRIFT.HEALTH_REGIONS; cx++) {
+      // Clear of the boundary: quiet water heals 1.2 a minute, and this case
+      // runs seven intervals.
+      wearTo(m, (cx + 0.5) * step, 1.5 * step, DRIFT.HEALTH_FAILING - 15);
+      wearTo(m, (cx + 0.5) * step, 2.5 * step, DRIFT.HEALTH_FAILING - 15);
+    }
+    // Eight, so the grazer's deficit tops the roster from the first interval:
+    // Failing kills this water's shoals and withers its clusters too.
+    for (let i = 0; i < 8; i++) cull(m, FaunaSpecies.Ashgrazer);
+    // One interval for that die-off to finish before anything is counted.
+    advance(m, DRIFT.RESPAWN_INTERVAL_S);
+    const grazers = countFaunaOf(m.world, FaunaSpecies.Ashgrazer);
+    const others = countFauna(m.world) - grazers;
+
+    advance(m, DRIFT.RESPAWN_INTERVAL_S * 6);
+    assert.equal(countFaunaOf(m.world, FaunaSpecies.Ashgrazer), grazers, 'no vent is open');
+    const after = countFauna(m.world) - countFaunaOf(m.world, FaunaSpecies.Ashgrazer);
+    assert.ok(after > others, `and the rest of the roster restocks: ${after} against ${others}`);
+  });
+
+  it('walks its census again when a beat repaints the ground', () => {
+    // #993's census is walked at seed time, and a mission `ground` beat can
+    // move a vein (`fillGround`, which is what the beat calls). Painting the
+    // vent line over leaves an Ashgrazer ground nowhere, so a census kept from
+    // seed time would still hold the queue on the grazer's deficit and the
+    // Draymaw behind it would never return. No eruptions, as above.
+    const map: MapDefinition = { ...VENTFRONT_DIVIDE, id: 'test-repainted', hazards: [] };
+    const m = match(map, true);
+    const pack = countFaunaOf(m.world, FaunaSpecies.Draymaw);
+    for (let i = 0; i < 8; i++) cull(m, FaunaSpecies.Ashgrazer);
+    cull(m, FaunaSpecies.Draymaw);
+    m.world.terrain.fillGround(0, 3000, MAP_M, 2000, { biome: Biome.OpenWater });
+
+    advance(m, DRIFT.RESPAWN_INTERVAL_S * 6);
+    assert.equal(countFaunaOf(m.world, FaunaSpecies.Draymaw), pack, 'the pack is restocked');
+  });
+
   it('breeds nothing at all in a match with no Drift', () => {
     // Every test and every mission that opens `fauna: false` must pay nothing
     // for this: no complement, so no accumulator and no walk.
@@ -445,5 +506,30 @@ describe('the herd eats the crop', () => {
       countFauna(m.world) > before - 6,
       'standing crop feeds a herd the Drift can put back'
     );
+  });
+
+  it('restocks the roster behind a grazer whose every vent is held bare', () => {
+    // #993's second case. Every vent cell is in the middle eight regions, and
+    // holding their beds bare starves the Ashgrazer while the outer eight keep
+    // a full canopy. A bed held bare regrows a rounding error each tick, and
+    // the grazer's deficit used to hold the queue on it, so the Draymaw behind
+    // it never came back. No eruptions: the bedded map carries only its beds.
+    const m = match(beddedMap(), true);
+    const grazers = countFaunaOf(m.world, FaunaSpecies.Ashgrazer);
+    const pack = countFaunaOf(m.world, FaunaSpecies.Draymaw);
+    for (let i = 0; i < 3; i++) cull(m, FaunaSpecies.Ashgrazer);
+    cull(m, FaunaSpecies.Draymaw);
+    for (let i = 0; i < DRIFT.RESPAWN_INTERVAL_S * 8; i++) {
+      for (const field of m.world.hazards) {
+        if (inVeinRows(m, field.x, field.y)) setKelpCrop(m.world, field, 0);
+      }
+      advance(m, 1);
+    }
+    assert.equal(
+      countFaunaOf(m.world, FaunaSpecies.Ashgrazer),
+      grazers - 3,
+      'bare vents feed none'
+    );
+    assert.equal(countFaunaOf(m.world, FaunaSpecies.Draymaw), pack, 'and the pack is restocked');
   });
 });
