@@ -20,7 +20,9 @@
  * none of the three depends on the order: a hull under an attack order keeps
  * its decoy, keeps its mine astern, and keeps its gun's answer. That equality
  * is the point rather than an accident of three separate tests, so it is
- * asserted as an equality where the arms can be compared directly.
+ * asserted as an equality where the arms can be compared directly. Nor does
+ * the gun's answer depend on the movement order: a hull on an attack-move
+ * keeps its course through an intercept exactly as one on a plain move (#991).
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -32,8 +34,10 @@ import {
   Acoustic,
   Countermeasure,
   Health,
+  MoveOrder,
   Ordnance,
   Position,
+  Posture,
   Weapon,
 } from '../src/sim/components.ts';
 import { launchTorpedo } from '../src/sim/systems/ordnance.ts';
@@ -428,6 +432,91 @@ describe('countermeasures', () => {
       Health.hp[quarry]! < quarryFull,
       'and the quarry is still being shelled, so the gun went back to it'
     );
+  });
+
+  it('keeps its course while it shoots the round down, on a move or an attack-move', () => {
+    // #991: point defence is not a movement act, under any order. An
+    // attack-move is the order to stop and fight what it meets, and a round in
+    // the water is not a fight. Before #991 the halt that answers a hull also
+    // answered a torpedo, so an attack-moving hull sat still for as long as a
+    // round was in its reach.
+    //
+    // Two torpedoes rather than one: the first is shot down on the tick it
+    // comes into reach, so a halt for it lasts a tick. The second closes while
+    // the gun is on its 1.8 s cooldown, and a halted Corvette takes it, where
+    // a moving one keeps it chasing until the gun comes round again.
+    //
+    // The launcher sits 2 km off, outside a Corvette's 550 m reach, so the
+    // attack-move meets no hull to fight and any halt can only be the
+    // intercept. Both arms go through `Match`, the path a player's order takes.
+    const crossing = (
+      attackMove: boolean
+    ): { haltedTicks: number; defenderHp: number; y: number; torpedoes: number } => {
+      const match = openWaterMatch();
+      const launcher = spawnUnit(match.world, {
+        kind: UnitKind.Corvette,
+        slot: 0,
+        faction: Faction.Bathyarch,
+        x: 2000,
+        y: 6000,
+      });
+      const defender = spawnUnit(match.world, {
+        kind: UnitKind.Corvette,
+        slot: 1,
+        faction: Faction.Pelagia,
+        x: 4000,
+        y: 6000,
+      });
+      advance(match, 0.2);
+      if (attackMove) match.orderAttackMove(1, defender, 4000, 11000);
+      else match.orderMove(1, defender, 4000, 11000);
+      assert.ok(launchTorpedo(match.world, launcher, 4000, 6000) !== 0, 'the first round is away');
+      assert.ok(launchTorpedo(match.world, launcher, 4000, 6000) !== 0, 'and the second');
+
+      // Long enough for both rounds to be dealt with, and short of the 5 km
+      // course, so a hull at rest at any tick here was halted, not arrived.
+      let haltedTicks = 0;
+      const steps = Math.ceil((17 * 1000) / STEP_MS);
+      for (let i = 0; i < steps; i++) {
+        match.update(STEP_MS);
+        if (MoveOrder.active[defender] === 0) haltedTicks++;
+      }
+      if (attackMove) {
+        assert.equal(
+          Posture.engage[defender],
+          1,
+          'the attack-move must stand for the whole run, or this arm measures nothing'
+        );
+      }
+      assert.equal(Health.hp[launcher], statsFor(UnitKind.Corvette).maxHp, 'nothing shot back');
+      return {
+        haltedTicks,
+        defenderHp: Health.hp[defender]!,
+        y: Position.y[defender]!,
+        torpedoes: liveOrdnanceOf(match, OrdnanceKind.Torpedo).length,
+      };
+    };
+
+    const moving = crossing(false);
+    assert.equal(moving.torpedoes, 0, 'move: the gun deals with both rounds');
+    assert.equal(moving.haltedTicks, 0, 'move: and the hull never stops');
+    assert.equal(moving.defenderHp, statsFor(UnitKind.Corvette).maxHp, 'move: and takes nothing');
+
+    const attackMoving = crossing(true);
+    assert.equal(attackMoving.torpedoes, 0, 'attack-move: the gun deals with both rounds');
+    assert.equal(
+      attackMoving.haltedTicks,
+      0,
+      'attack-move: an intercept is not a fight, so the hull never stops for one'
+    );
+    // The equality is the rule, as in the ordered arm above: which of the two
+    // orders a hull is under changes nothing about what a torpedo does to it.
+    assert.equal(
+      attackMoving.defenderHp,
+      moving.defenderHp,
+      'the order changes nothing about what the rounds take off the hull'
+    );
+    assert.equal(attackMoving.y, moving.y, 'nor about how far the hull gets while they run');
   });
 
   it('cannot engage ordnance that carries no hull to shoot off', () => {
