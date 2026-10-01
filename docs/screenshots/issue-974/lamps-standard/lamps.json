@@ -9,6 +9,11 @@
   "look": "standard",
   "faction": 0,
   "palette": "standard",
+  "curve": {
+    "efold": 14,
+    "min": 0.05,
+    "max": 6
+  },
   "readings": [
     {
       "state": "rest",
@@ -22,7 +27,7 @@
         "height": 116
       },
       "unit": {
-        "id": 138,
+        "id": 59,
         "name": "Caisson",
         "sig": 64,
         "restSig": 64,
@@ -87,7 +92,7 @@
         "height": 116
       },
       "unit": {
-        "id": 138,
+        "id": 59,
         "name": "Caisson",
         "sig": 8,
         "restSig": 64,
@@ -124,15 +129,15 @@
       },
       "pixels": {
         "n": 30392,
-        "maxV": 0.388,
+        "maxV": 0.396,
         "over05": 0,
         "over08": 0,
         "clipped": 0,
         "meanV": 0.1364,
         "brightest1pc": {
           "v": 0.365,
-          "saturation": 0.449,
-          "hueDeg": 45
+          "saturation": 0.448,
+          "hueDeg": 44.9
         },
         "lampInk": {
           "hueDeg": 39.9,
@@ -152,7 +157,7 @@
         "height": 93
       },
       "unit": {
-        "id": 137,
+        "id": 58,
         "name": "Light Scout",
         "sig": 6,
         "restSig": 6,
@@ -183,9 +188,9 @@
         "clipped": 85,
         "meanV": 0.1106,
         "brightest1pc": {
-          "v": 0.74,
-          "saturation": 0.624,
-          "hueDeg": 57.6
+          "v": 0.739,
+          "saturation": 0.623,
+          "hueDeg": 58.3
         },
         "lampInk": {
           "hueDeg": 39.9,
@@ -205,7 +210,7 @@
         "height": 93
       },
       "unit": {
-        "id": 137,
+        "id": 58,
         "name": "Light Scout",
         "sig": 1.75,
         "restSig": 6,
@@ -234,9 +239,9 @@
         "over05": 119,
         "over08": 93,
         "clipped": 85,
-        "meanV": 0.1106,
+        "meanV": 0.1105,
         "brightest1pc": {
-          "v": 0.739,
+          "v": 0.74,
           "saturation": 0.658,
           "hueDeg": 57.4
         },
@@ -258,7 +263,7 @@
         "height": 93
       },
       "unit": {
-        "id": 137,
+        "id": 58,
         "name": "Light Scout",
         "sig": 95,
         "restSig": 6,
@@ -308,16 +313,16 @@
       "factorStep": 0.95,
       "comparable": true,
       "linearSum": [
-        620.88,
-        323.23,
-        27.98
+        620.86,
+        323.2,
+        27.95
       ],
-      "linearTotal": 972.09,
+      "linearTotal": 972.01,
       "hueDeg": 29.9,
       "saturation": 0.955,
-      "lampInk": {
-        "hueDeg": 39.9,
-        "saturation": 0.789
+      "lampInkLinear": {
+        "hueDeg": 28.9,
+        "saturation": 0.963
       }
     },
     {
@@ -327,16 +332,16 @@
       "factorStep": 0.2618,
       "comparable": true,
       "linearSum": [
-        -0.03,
-        3.59,
-        2.52
+        -0.01,
+        3.67,
+        2.62
       ],
-      "linearTotal": 6.08,
-      "hueDeg": 162.1,
+      "linearTotal": 6.27,
+      "hueDeg": 162.9,
       "saturation": 1,
-      "lampInk": {
-        "hueDeg": 39.9,
-        "saturation": 0.789
+      "lampInkLinear": {
+        "hueDeg": 28.9,
+        "saturation": 0.963
       }
     },
     {
@@ -347,15 +352,15 @@
       "comparable": true,
       "linearSum": [
         0,
-        3.71,
-        50.63
+        3.74,
+        50.66
       ],
-      "linearTotal": 54.34,
+      "linearTotal": 54.41,
       "hueDeg": 235.6,
       "saturation": 1,
-      "lampInk": {
-        "hueDeg": 39.9,
-        "saturation": 0.789
+      "lampInkLinear": {
+        "hueDeg": 28.9,
+        "saturation": 0.963
       }
     }
   ]

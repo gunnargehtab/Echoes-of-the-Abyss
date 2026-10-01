@@ -26,23 +26,24 @@
  * only once its SIG has arrived, and is rejected if the SIG moved while it was
  * read. Pairs of one hull's states, at one camera, are differenced in linear
  * light: surface light cancels and what is left is the emission the SIG moved,
- * whose hue should be the lamp's. The difference is approximate: about 9% of
- * water fog is mixed in after the colour-space encode at this dolly. Writes
- * lamps.json beside the frames. Not a gate.
+ * whose hue should be the lamp ink's, taken in linear light too, unless a
+ * channel clipped. The difference is approximate: about 9% of water fog is
+ * mixed in after the colour-space encode at this dolly. Writes lamps.json
+ * beside the frames. Not a gate.
  */
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { inflateSync } from 'node:zlib';
 
-// glow.ts, restated because this runs in plain Node: SIG_GLOW_EFOLD (SPEC),
-// GLOW_FACTOR_MIN and GLOW_FACTOR_MAX (TUNABLE). Every reading asserts the
-// game applied exactly this, so a drift fails here.
-const EFOLD = 14;
-const FACTOR_MIN = 0.05;
-const FACTOR_MAX = 6;
-const curve = (sig, rest) => Math.exp((sig - rest) / EFOLD);
-const factorOf = (sig, rest) => Math.min(FACTOR_MAX, Math.max(FACTOR_MIN, curve(sig, rest)));
+// Gate 3's energy curve, E(SIG) = 0.45 · e^(SIG / 14) (docs/graphics-standards.md):
+// the one number here with a source of its own. The hook reports the e-fold and
+// the clamp the game applies (glow.ts), and the e-fold is held to this.
+const DOC_EFOLD = 14;
+let glowCurve = null;
+const curve = (sig, rest) => Math.exp((sig - rest) / glowCurve.efold);
+const factorOf = (sig, rest) =>
+  Math.min(glowCurve.max, Math.max(glowCurve.min, curve(sig, rest)));
 
 const CLOSE_M = 500;
 const ECHO_MS = 200;
@@ -72,6 +73,8 @@ export default async ({ page, shot }) => {
   const software = /swiftshader|llvmpipe|software|basic render/i.test(renderer);
   const { look } = await page.evaluate(() => window.__perspectiveProbe());
   const first = await lampsNow(page);
+  glowCurve = first.curve;
+  assert.equal(glowCurve.efold, DOC_EFOLD, "the game's glow e-fold left gate 3's curve");
   const lit = first.units.filter((u) => u.lamps.length > 0 && u.screen !== null);
   assert.ok(lit.length > 0, 'no own hull shows a model with lamps');
   const quiet = lit.reduce((a, b) => (b.restSig < a.restSig ? b : a));
@@ -235,6 +238,7 @@ export default async ({ page, shot }) => {
         look,
         faction: first.faction,
         palette: first.palette,
+        curve: glowCurve,
         readings: readings.map(({ image, ...r }) => r),
         pairs,
       },
@@ -324,9 +328,15 @@ function hueSat(r, g, b) {
   return { hueDeg: hue === null ? null : Number(hue.toFixed(1)), saturation: Number((d / max).toFixed(3)) };
 }
 
-const inkOf = (hex) =>
+/** The ink's hue as stored (sRGB), or in linear light to set beside a sum. */
+const inkOf = (hex, inLinear = false) =>
   hex
-    ? hueSat(...[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)))
+    ? hueSat(
+        ...[1, 3, 5].map((i) => {
+          const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+          return inLinear ? linear(c) : c;
+        })
+      )
     : { hueDeg: null, saturation: 0 };
 
 /** What a quiet hull is judged by: its brightest pixels, not their hue. */
@@ -396,7 +406,7 @@ function difference(a, b, hex) {
     linearSum: sum.map((s) => Number(s.toFixed(2))),
     linearTotal: Number((sum[0] + sum[1] + sum[2]).toFixed(2)),
     ...hueSat(...sum.map((s) => Math.max(0, s))),
-    lampInk: inkOf(hex),
+    lampInkLinear: inkOf(hex, true),
   };
 }
 

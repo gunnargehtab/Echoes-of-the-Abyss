@@ -107,6 +107,7 @@ import { OwnMotion } from './ownMotion.ts';
 import { OrdnanceLayer } from './ordnanceLayer.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
 import { createWaterEnvironment, keepsGlowOutsideToneMapping } from './modelLighting.ts';
+import { GLOW_FACTOR_MAX, GLOW_FACTOR_MIN, SIG_GLOW_EFOLD } from './glow.ts';
 import { VeilField, veilShade, type VeilListener } from './acousticVeil.ts';
 import {
   installSurveyInk,
@@ -2284,8 +2285,9 @@ export class PerspectiveView {
   /**
    * Gate 3's reading: each own hull and structure with its live and resting
    * SIG, every lamp's approved and applied strength, whether the lamp adds its
-   * glow after the tone curve, and the model's box on screen in CSS pixels.
-   * Own entities only, which the HUD already draws; it reads and orders nothing.
+   * glow after the tone curve, and the model's box on screen in CSS pixels,
+   * beside the curve the strengths follow. Own entities only, which the HUD
+   * already draws; it changes and orders nothing.
    */
   private lampReading() {
     const rect = this.renderer?.domElement.getBoundingClientRect() ?? null;
@@ -2323,6 +2325,7 @@ export class PerspectiveView {
     return {
       faction: this.faction,
       palette: ACTIVE_PALETTE.name,
+      curve: { efold: SIG_GLOW_EFOLD, min: GLOW_FACTOR_MIN, max: GLOW_FACTOR_MAX },
       units: this.units.map((unit) => ({
         id: unit.id,
         kind: unit.kind,

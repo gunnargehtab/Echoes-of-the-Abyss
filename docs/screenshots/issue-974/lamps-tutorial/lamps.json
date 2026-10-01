@@ -9,6 +9,11 @@
   "look": "sorrowgate",
   "faction": 1,
   "palette": "standard",
+  "curve": {
+    "efold": 14,
+    "min": 0.05,
+    "max": 6
+  },
   "readings": [
     {
       "state": "rest",
@@ -22,7 +27,7 @@
         "height": 106
       },
       "unit": {
-        "id": 142,
+        "id": 63,
         "name": "Light Scout",
         "sig": 6,
         "restSig": 6,
@@ -75,7 +80,7 @@
         "height": 106
       },
       "unit": {
-        "id": 142,
+        "id": 63,
         "name": "Light Scout",
         "sig": 3.5,
         "restSig": 6,
@@ -107,8 +112,8 @@
         "meanV": 0.0823,
         "brightest1pc": {
           "v": 0.354,
-          "saturation": 0.844,
-          "hueDeg": 168.9
+          "saturation": 0.843,
+          "hueDeg": 169
         },
         "lampInk": {
           "hueDeg": 102,
@@ -128,7 +133,7 @@
         "height": 106
       },
       "unit": {
-        "id": 142,
+        "id": 63,
         "name": "Light Scout",
         "sig": 1.75,
         "restSig": 6,
@@ -161,7 +166,7 @@
         "brightest1pc": {
           "v": 0.352,
           "saturation": 0.848,
-          "hueDeg": 169.5
+          "hueDeg": 169.6
         },
         "lampInk": {
           "hueDeg": 102,
@@ -179,15 +184,15 @@
       "comparable": true,
       "linearSum": [
         0.71,
-        1.95,
-        0.56
+        1.96,
+        0.59
       ],
-      "linearTotal": 3.22,
-      "hueDeg": 113.9,
-      "saturation": 0.711,
-      "lampInk": {
-        "hueDeg": 102,
-        "saturation": 0.529
+      "linearTotal": 3.26,
+      "hueDeg": 114.9,
+      "saturation": 0.7,
+      "lampInkLinear": {
+        "hueDeg": 107.7,
+        "saturation": 0.809
       }
     },
     {
@@ -198,15 +203,15 @@
       "comparable": true,
       "linearSum": [
         0.29,
-        0.81,
+        0.82,
         0.3
       ],
-      "linearTotal": 1.4,
-      "hueDeg": 120.4,
-      "saturation": 0.64,
-      "lampInk": {
-        "hueDeg": 102,
-        "saturation": 0.529
+      "linearTotal": 1.41,
+      "hueDeg": 120.7,
+      "saturation": 0.643,
+      "lampInkLinear": {
+        "hueDeg": 107.7,
+        "saturation": 0.809
       }
     }
   ]

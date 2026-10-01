@@ -22,6 +22,7 @@ import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import {
   GLOW_AFTER_TONE_MAPPING,
   keepGlowOutsideToneMapping,
+  keepsGlowOutsideToneMapping,
   waterEnvironmentSource,
 } from '../src/game/modelLighting.ts';
 import { waterColorAt } from '../src/game/water.ts';
@@ -178,6 +179,15 @@ describe('glow stays outside tone mapping: gates 3 and 4', () => {
     material.onBeforeCompile(shader as never, null as never);
     assert.equal(earlier.mock.callCount(), 1);
     assert.ok(shader.fragmentShader.includes(GLOW_AFTER_TONE_MAPPING));
+  });
+
+  it('can say whether a lamp carries the patch, which the lamp reading reports', () => {
+    const material = new MeshStandardMaterial({ emissive: 0xffb000 });
+    assert.equal(keepsGlowOutsideToneMapping(material), false, 'before the patch');
+    keepGlowOutsideToneMapping(material);
+    assert.equal(keepsGlowOutsideToneMapping(material), true, 'after it');
+    // clone() drops the hooks, so a lamp cloned after patching lost its patch.
+    assert.equal(keepsGlowOutsideToneMapping(material.clone()), false, 'a clone of it');
   });
 
   it("three's standard shader still offers the chunk, after the emission is declared", () => {
