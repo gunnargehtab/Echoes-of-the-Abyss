@@ -60,6 +60,14 @@
  *
  * `FileReader` is shimmed because three r169's GLTFExporter reads its own binary
  * chunk back through one, and Node has `Blob` but not `FileReader`.
+ *
+ * Nothing shims a canvas, so no image can leave this export: GLTFExporter
+ * encodes a texture through `OffscreenCanvas` or `document` (`getCanvas`),
+ * Node has neither, and a material carrying an `aoMap` or any other map
+ * throws at `exportGlb`. Vertex attributes still export (a second UV set,
+ * `COLOR_0`). So "no textures" above is this kit's limit as well as the
+ * models' history: an occlusion texture (#1002) cannot be written from here
+ * as it stands.
  */
 globalThis.FileReader = class {
   readAsArrayBuffer(b) {
@@ -354,6 +362,14 @@ export const CHINE = [
  * normals only. Nothing samples a texture, so the values are zero and the
  * attribute's presence is the point. Two navies had the same four lines
  * (#840), which is when a builder moves here (models-plan.md §3.7).
+ *
+ * So UV0 on a part says it merges, not that it is laid out: a three
+ * constructor carries its own parameterisation, about 0..1; `plate` and
+ * `plan` their outline's metres; this, zeros; the env props, none
+ * (`flatShaded` below, seabed.mjs `kept`). rosterModels.ts
+ * `mergeByMaterial` stacks a material's parts in one buffer, islands
+ * overlapping. A trim sheet or baked map (#1005, #1002) needs a layout none
+ * of these is; `node tools/render-stack/audit.mjs` counts what there is.
  */
 export function uvAlike(geo) {
   const n = geo.attributes.position.count;
