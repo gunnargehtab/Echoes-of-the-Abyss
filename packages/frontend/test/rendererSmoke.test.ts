@@ -2903,6 +2903,11 @@ describe('renderer smoke test: the free camera', () => {
     const world = await boot();
     try {
       world.frame(3);
+      // Read off the camera itself rather than the probe's whole metres: one
+      // cell from an 840 m wall, half a metre of rounding is metres of ground,
+      // and the sway (#1003) moves the eye by less than that between aims.
+      const camera = world.gl.lastCamera;
+      assert.ok(camera !== null, 'the frame was drawn through a camera');
       let clamped = 0;
       // The invariant over the whole rig, rather than at one flattering
       // configuration: the eye keeps its clearance wherever it is aimed.
@@ -2913,10 +2918,12 @@ describe('renderer smoke test: the free camera', () => {
             world.conn.focusWorld(2700, 2600, distance);
             world.conn.orbitBy(yawPx, pitchPx);
             const { eye, focus, pitchDeg } = rig();
-            const groundDepth = world.conn.seabedDepthAt(eye.xM, eye.zM);
+            const at = camera.position;
+            const eyeDepth = -at.y / 0.22;
+            const groundDepth = world.conn.seabedDepthAt(at.x, at.z);
             assert.ok(
-              eye.depthM <= groundDepth - 24,
-              `eye at ${eye.depthM} m under ground at ${groundDepth} m ` +
+              eyeDepth <= groundDepth - 24,
+              `eye at ${eyeDepth.toFixed(1)} m under ground at ${groundDepth.toFixed(1)} m ` +
                 `(yaw ${yawPx}px, pitch ${pitchDeg}°, dolly ${distance} m)`
             );
             const focusDepth = focus.depthM ?? world.conn.seabedDepthAt(focus.xM, focus.zM);
