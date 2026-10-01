@@ -82,11 +82,14 @@ describe('glowing props keep their hue: art-direction, gates 3 and 4', () => {
   for (const spec of ENVIRONMENT_PROPS) {
     it(`${spec.slug}: every emissive part adds its glow after tone mapping`, async () => {
       const template = buildTemplate(await parse(spec.slug), spec.footprintM, spec.swayM);
+      let glowing = 0;
       for (const { material } of template.parts) {
         if (!(material instanceof MeshStandardMaterial) || material.emissive.getHex() === 0)
           continue;
         assert.match(material.customProgramCacheKey(), /glow-after-tone-1$/);
+        glowing++;
       }
+      if (spec.worldLight !== 'none') assert.ok(glowing > 0, 'a licensed light must reach a part');
     });
   }
 });
