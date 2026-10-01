@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Echoes of the Abyss — Dream Loop</title>
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden}
+body{display:flex;align-items:center;justify-content:center}
+canvas{display:block;aspect-ratio:16/9;width:min(100vw,calc(100vh*16/9));height:auto;background:#000}
+#prog{position:fixed;left:0;bottom:0;height:2px;width:0;background:#3fb8c8;opacity:.6}
+</style>
+<!-- Dev entry: prototype modules in ./src, vendored three.js from the original export. -->
+<script type="importmap">
+{ "imports": {
+  "three-core": "./vendor/three.core.js",
+  "three": "./vendor/three.module.js",
+  "abyss-engine": "./src/engine.js",
+  "abyss-tex": "./src/tex.js",
+  "abyss-models": "./src/models.js",
+  "abyss-life": "./src/life.js"
+} }
+</script>
+</head>
+<body>
+<canvas id="art"></canvas><div id="prog"></div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
