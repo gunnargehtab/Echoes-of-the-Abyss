@@ -9,8 +9,10 @@
  *     --steps tools/render-stack/lamps.mjs
  *
  * The numbers come from window.__perspectiveLamps, which only a development
- * build installs: each hull's live and resting SIG, every lamp's approved and
- * applied strength, and whether the lamp adds its glow after the tone curve.
+ * build installs: each hull's live and resting SIG, every lamp's export, resting
+ * and applied strength, and whether the lamp adds its glow after the tone curve.
+ * Gate 3's lamp core holds a resting brightest channel at white, and each
+ * reading asserts it (#1021).
  * The pixels come from a crop round the hull with the HUD canvas hidden, so
  * rings and the ping's wavefront stay out of them; a full frame with the HUD
  * is shot beside each crop for review.
@@ -150,6 +152,12 @@ export default async ({ page, shot }) => {
       assert.ok(lamp.afterToneMapping, `${state}: a lamp lost its glow-after-tone patch`);
       const expected = lamp.restIntensity * factorOf(before.sig, before.restSig);
       assert.ok(Math.abs(lamp.intensity - expected) < 1e-6, `${state}: lamp not on the curve`);
+      // The hex is the linear colour rounded to 8-bit sRGB, hence the margin.
+      if (lamp.exportIntensity !== undefined) {
+        const channels = [1, 3, 5].map((i) => linear(parseInt(lamp.hex.slice(i, i + 2), 16) / 255));
+        const peak = Math.max(...channels) * lamp.restIntensity;
+        assert.ok(peak <= 1.01, `${state}: a lamp rests at ${peak.toFixed(3)}, past white`);
+      }
     }
     const probe = await page.evaluate(() => window.__perspectiveProbe());
     readings.push({

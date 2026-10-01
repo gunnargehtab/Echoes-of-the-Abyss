@@ -12,11 +12,12 @@ view (the world) under a transparent PixiJS HUD, on one shared camera
 Outside the development-only Dream Loop study, the conn view lights its models with the
 shared `MODEL_LIGHTING` rig and a static PMREM water environment, baked once per mounted
 view, and tone-maps each material with ACES as it draws to the canvas (#974). Emission is
-added back after the curve (`packages/frontend/src/game/modelLighting.ts`), and unlit
-layers stay off it. A composer undoes both: behind a `RenderPass` that feeds later passes
-no material tone-maps itself, and `OutputPass` maps glow and unlit layers with the rest.
-So a full-screen pass is specified in `docs/art-direction.md` before it is built, and the
-`material-design` skill has the three.js rules.
+added back after the curve (`packages/frontend/src/game/modelLighting.ts`), held at white
+along its hue by gate 3's lamp core (#1021), and unlit layers stay off it. A composer
+undoes both: behind a `RenderPass` that feeds later passes no material tone-maps itself,
+and `OutputPass` maps glow and unlit layers with the rest. So a full-screen pass is
+specified in `docs/art-direction.md` before it is built, and the `material-design` skill
+has the three.js rules.
 
 ## Tests run under a Vite shim
 

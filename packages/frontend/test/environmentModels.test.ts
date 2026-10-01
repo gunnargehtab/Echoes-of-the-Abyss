@@ -86,7 +86,7 @@ describe('glowing props keep their hue: art-direction, gates 3 and 4', () => {
       for (const { material } of template.parts) {
         if (!(material instanceof MeshStandardMaterial) || material.emissive.getHex() === 0)
           continue;
-        assert.match(material.customProgramCacheKey(), /glow-after-tone-1$/);
+        assert.match(material.customProgramCacheKey(), /glow-after-tone-2$/);
         glowing++;
       }
       if (spec.worldLight !== 'none') assert.ok(glowing > 0, 'a licensed light must reach a part');
