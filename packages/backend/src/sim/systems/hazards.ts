@@ -143,8 +143,9 @@ export interface Hazard {
    * account never had.
    *
    * The raw figure, which regrowth, sowing, the cutter and the reactor write.
-   * The cover is `standingCropOf`, which names the readers outside this module
-   * that take this number instead, and why.
+   * The grid, the grip and the phase read it rounded to a step (`standingCrop`);
+   * `standingCropOf` names the readers outside this module that take it raw,
+   * and why.
    */
   crop: number;
   /**
@@ -556,17 +557,19 @@ function cropPropagationDelta(crop: number): number {
 }
 
 /**
- * A bed's canopy as everything that reads it sees it: the crop, rounded to the
- * step the PF grid is written from.
+ * A bed's canopy as the cover reads it: the crop, rounded to the step the PF
+ * grid is written from.
  *
- * One number read one way. The grid is quantised because it is a whole-map
- * recompute (see `FLORA.CROP_PF_STEPS`), and if the grip and the phase read
- * the raw figure instead they would disagree with it at the edges — a bed
- * regrowing at 4% a minute is above zero a tick after it is stripped, so a
- * field the map masks as bare ground would be gripping hulls again, and
- * charging a Consortium cutter the full `CUTTER_SIG` for cutting a canopy of
- * two hundredths of a per cent. Below half a step there is no canopy, in every
- * reading.
+ * The grid is quantised because it is a whole-map recompute (see
+ * `FLORA.CROP_PF_STEPS`), and if the grip and the phase read the raw figure
+ * instead they would disagree with it at the edges — a bed regrowing at 4% a
+ * minute is above zero a tick after it is stripped, so a field the map masks
+ * as bare ground would be gripping hulls again, and charging a Consortium
+ * cutter the full `CUTTER_SIG` for cutting a canopy of two hundredths of a per
+ * cent. Below half a step there is no canopy in any reading of the cover: the
+ * grid, the grip, the phase, `bedAt` and bloom-share. What moves the crop —
+ * regrowth and the cutter here, the reactor in flora.ts — reads the raw
+ * figure, and `standingCropOf` names the readers outside this module that do.
  */
 function standingCrop(crop: number): number {
   return cropStep(crop) / FLORA.CROP_PF_STEPS;
@@ -633,8 +636,9 @@ export function regrowthPerS(world: SimWorld, hazard: Hazard): number {
  *   the grip or the phase, which is what `standingCrop` is for, and a bed held
  *   a rounding error above bare moves it by a rounding error. The two readings
  *   differ by at most half a step (`FLORA.CROP_PF_STEPS`).
- * - The state hash (stateHash.ts) hashes what a replay carries; a rounding
- *   would let two runs that diverged inside one step agree.
+ * - The state hash (stateHash.ts) mixes every float by its exact bits; a
+ *   rounding would let two runs that diverged inside one step agree at a
+ *   checkpoint.
  */
 export function standingCropOf(hazard: Hazard): number {
   return standingCrop(hazard.crop);
