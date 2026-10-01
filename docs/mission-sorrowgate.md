@@ -246,8 +246,8 @@ Tier 2 as she turns, then gone again.
 
 Drenn is being asked to sign for fourteen people with an unresolved contact on her approach. The
 Consortium does not price uncertainty by ignoring it. An exposure that cannot be graded cannot
-be signed for, and there is exactly one instrument in the Rift that grades a contact in a second
-and a half. She uses it. In her register that is not panic; it is diligence, and the record will
+be signed for, and there is exactly one instrument in the Rift that grades a contact the instant
+it is fired. She uses it. In her register that is not panic; it is diligence, and the record will
 show she logged it.
 
 [systems-echo.md](systems-echo.md) §5 delivers the verdict without anybody in the chamber being
