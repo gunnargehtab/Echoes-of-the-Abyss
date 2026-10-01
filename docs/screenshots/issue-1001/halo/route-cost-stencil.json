@@ -1,0 +1,168 @@
+[
+  {
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "size": {
+      "width": 1440,
+      "height": 900
+    },
+    "samples": 4,
+    "blit": {
+      "mask": "depth",
+      "into": "texture",
+      "canvasStencil": true,
+      "stencilBits": 8
+    },
+    "sourceComplete": true,
+    "routeBytes": 22356000,
+    "routeMiB": 21.32,
+    "sites": 250,
+    "points": 1024,
+    "depthCheck": {
+      "blitError": 0,
+      "pixels": 1296000,
+      "differOver1e4": 13496,
+      "differOver1e2": 12793,
+      "shareOver1e4": 0.01041
+    },
+    "variants": {
+      "none": {
+        "dropped": 0,
+        "parts": {
+          "scene": {
+            "frames": 240,
+            "avgMs": 0.12,
+            "medianMs": 0.1188
+          }
+        }
+      },
+      "full": {
+        "dropped": 0,
+        "parts": {
+          "scene": {
+            "frames": 240,
+            "avgMs": 0.1439,
+            "medianMs": 0.1434
+          },
+          "blit": {
+            "frames": 240,
+            "avgMs": 0.1663,
+            "medianMs": 0.1536
+          },
+          "source": {
+            "frames": 240,
+            "avgMs": 0.0098,
+            "medianMs": 0.0092
+          },
+          "blur": {
+            "frames": 240,
+            "avgMs": 0.125,
+            "medianMs": 0.1167
+          },
+          "composite": {
+            "frames": 240,
+            "avgMs": 0.0371,
+            "medianMs": 0.0358
+          }
+        }
+      },
+      "points": {
+        "dropped": 0,
+        "parts": {
+          "scene": {
+            "frames": 240,
+            "avgMs": 0.1201,
+            "medianMs": 0.1198
+          },
+          "points": {
+            "frames": 240,
+            "avgMs": 0.0101,
+            "medianMs": 0.0102
+          }
+        }
+      }
+    }
+  },
+  {
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "size": {
+      "width": 2160,
+      "height": 1350
+    },
+    "samples": 4,
+    "blit": {
+      "mask": "depth",
+      "into": "texture",
+      "canvasStencil": true,
+      "stencilBits": 8
+    },
+    "sourceComplete": true,
+    "routeBytes": 50301000,
+    "routeMiB": 47.97,
+    "sites": 250,
+    "points": 1024,
+    "depthCheck": {
+      "blitError": 0,
+      "pixels": 2916000,
+      "differOver1e4": 22948,
+      "differOver1e2": 21901,
+      "shareOver1e4": 0.00787
+    },
+    "variants": {
+      "none": {
+        "dropped": 0,
+        "parts": {
+          "scene": {
+            "frames": 240,
+            "avgMs": 0.2475,
+            "medianMs": 0.2178
+          }
+        }
+      },
+      "full": {
+        "dropped": 0,
+        "parts": {
+          "scene": {
+            "frames": 240,
+            "avgMs": 0.2191,
+            "medianMs": 0.2191
+          },
+          "blit": {
+            "frames": 240,
+            "avgMs": 0.2706,
+            "medianMs": 0.2703
+          },
+          "source": {
+            "frames": 240,
+            "avgMs": 0.0148,
+            "medianMs": 0.0143
+          },
+          "blur": {
+            "frames": 240,
+            "avgMs": 0.1542,
+            "medianMs": 0.1536
+          },
+          "composite": {
+            "frames": 240,
+            "avgMs": 0.0498,
+            "medianMs": 0.0492
+          }
+        }
+      },
+      "points": {
+        "dropped": 0,
+        "parts": {
+          "scene": {
+            "frames": 240,
+            "avgMs": 0.219,
+            "medianMs": 0.2181
+          },
+          "points": {
+            "frames": 240,
+            "avgMs": 0.0109,
+            "medianMs": 0.0102
+          }
+        }
+      }
+    }
+  }
+]

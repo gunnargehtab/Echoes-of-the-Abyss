@@ -11,7 +11,9 @@ argument made visible: in a lightless ocean, *emitting anything* — light, nois
 a ping — is how you are found. So the style rule is the game rule:
 
 1. **Darkness is the default state.** Near-black fills roughly 85–90 % of any
-   frame. The ocean is not "dark blue"; it is black with blue memory.
+   frame. The ocean is not "dark blue"; it is black with blue memory. With the lamp
+   halo on, the world's own canvas keeps at least 95 % under 10 % luma
+   ([art-direction.md](art-direction.md#lamp-halo--spec)).
 2. **Neon is information, never decoration.** A glowing edge means a live
    system, a contact, a warning, a player choice. If a glow carries no data,
    cut it.
@@ -173,11 +175,13 @@ A neon element is never a flat colour. It is three layers:
    element at 10–15 % opacity, vertically smeared (plate V's water line).
    In-game, the moving water does this job; do not fake it on the HUD.
 
-Budget: at most **two halo layers per element**, and halos never stack on
-adjacent elements — plate VI reads because each card has one magenta bevel
+Budget, for interface elements: at most **two halo layers per element**, and halos
+never stack on adjacent elements — plate VI reads because each card has one magenta bevel
 glow and one cyan header glow, nothing more. Bloom-everything is the failure
 mode of this style; when in doubt, darken the neighbourhood instead of
-brightening the subject.
+brightening the subject. The conn view's lamp halo is not this recipe: it is world-side
+light from own lamps, every lamp summed in one field under one curve
+([art-direction.md](art-direction.md#lamp-halo--spec)).
 
 ## Typography
 
@@ -478,7 +482,8 @@ Every family obeys the same five rules, and they are gates, not suggestions:
 
 1. **World light is points and seams, never area glow.** No lit ground, no
    glowing fills, no halo recipe — the glow recipe above belongs to the
-   interface. A world light is a small emitter in a dark world, full stop.
+   interface. A world light is a small emitter in a dark world, full stop. Terrain-owned
+   light never enters the lamp halo's source, which is own agents' lamps only.
 2. **The vent ember is the brightness ceiling.** No family renders brighter than
    `vent-ember` does today — dim, small, swallowed by fog at any distance. The
    85–90 % darkness budget and the 5–10 % seafloor luminance floor stand
@@ -536,7 +541,8 @@ palette tables above.
   a filled rectangle.
 - No white UI. The brightest steady element is `text-bright`; pure white is
   reserved for one-frame cores (ping front, commit flash).
-- No stacking halos, no bloom slider. Two glow layers per element, hard cap.
+- No stacking halos on interface elements, no bloom slider: the lamp halo is one toggle.
+  Two glow layers per interface element, hard cap.
 
 ## Transcription targets
 

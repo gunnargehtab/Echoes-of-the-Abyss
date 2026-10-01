@@ -219,9 +219,12 @@ loudness collar ([ui-ux.md](ui-ux.md) §3.5).
 `lampCoreRest` (`packages/frontend/src/game/glow.ts`) holds the rest and
 `GLOW_AFTER_TONE_MAPPING` (`modelLighting.ts`) the pixel, which it scales for every
 material it patches, glowing props included. Environment reflections are surface light,
-never a substitute for SIG emission. Any future bloom must explicitly exclude SIG **0–15**
-from its source, including bright reflected highlights; a brightness threshold alone
-cannot enforce that rule. Compare quiet and loud own hulls under the shared rig before
+never a substitute for SIG emission. The lamp halo
+([art-direction.md](art-direction.md#lamp-halo--spec)) is the only pass that spreads lamp
+light in the conn view, the development-only Dream Loop study apart, and its source holds
+only own lamp-site splats, weighted zero through SIG **15** and linearly to full at 35,
+times E(SIG)/E(35): its energy follows loudness, never a lamp's area or brightness, so no
+reflected highlight enters and no brightness threshold plays a part. Compare quiet and loud own hulls under the shared rig before
 accepting a lighting change:
 `tools/render-stack/lamps.mjs` stages both and reads each lamp's strength and pixels.
 
@@ -492,14 +495,38 @@ Nor are the vignette and the sway
 ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)): the browser
 composites the one, and the other moves a camera the frame already draws through.
 
-Bloom, or any other lamp halo, waits first for #1001's readings of what one would show and
-cost: GPU time at those stations, lamp sizes on screen, the share of the frame that stays
-near-black, whether halo light would follow SIG, and a ping's flash area. From those the
-owner picks point halos, a full-screen pass or none
-([art-direction.md](art-direction.md#ranked-audit-and-remaining-work), row 2). A halo the
-owner picks is then deferred until a quality setting has an off path and this gate has an
-explicit pass, resolution, render-target-memory and GPU-time allocation. It must fit within
-the existing 150-call/250,000-triangle frame limits, not silently borrow historical
+**Lamp halo** ([art-direction.md](art-direction.md#lamp-halo--spec), specified, not yet
+built). With Lamp halos off it spends no pass, call, triangle or target. The one cost it
+keeps is the canvas's stencil, which the canvas always asks for so the setting stays live
+mid-match: a context buffer, likely no extra memory on ANGLE/D3D11, where the 24-bit depth
+is stored with a stencil either way, and up to 1 byte per sample elsewhere. On, it runs
+after the canvas render, inside the same GPU-timer bracket, and only while some own
+entity draws a splat.
+
+- **Passes.** One blit of the canvas depth, depth bit only, into a drawing-buffer-sized
+  DEPTH24_STENCIL8 depth texture, a listed pass and not a call; one instanced splat draw into
+  a drawing-buffer-sized RGBA16F source, tested against that copy; nine chain draws, a
+  downsample and two blur draws at each of 1/2, 1/4 and 1/8 of the drawing buffer, each level
+  an RGBA16F pair with no depth buffer; and one composite onto the canvas.
+- **Calls and triangles.** **+11 calls at any force size**, and 2 × sites + 10 triangles, with
+  at most 1,024 sites (2,058 triangles). Ventfront's opening would read 65–66 calls,
+  Sorrowgate 56–57 while any entity draws a splat and 45–46 otherwise, and the fight station
+  68. The halo neither causes nor fixes the berth-ceiling breach of
+  [#1027](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1027).
+- **Memory.** 17.25 bytes per drawing-buffer pixel (source 8, depth texture 4, chain 5.25):
+  **21.32 MiB at 1440 × 900 and ratio 1, and 47.97 MiB at 2160 × 1350 and ratio 1.5**, plus a
+  64 KiB instance buffer, capped at 21.4 and 48.1 MiB and counted from the live targets. The
+  canvas's stencil is a context buffer, not a target: it is reported, not capped, on or off.
+- **GPU time.** The halo's cost is on − off `avgGpuMs`, read unpaced on the named GPU, two
+  runs each: **at most 0.40 ms at ratio 1 and 0.75 ms at 1.5** at every station, and no
+  station's conn frame over 1.2 ms at ratio 1 or 1.7 ms at 1.5. `avgConnMs`, the CPU side
+  (the per-site cull, the sort to 1,024 and the instance upload), rises by at most 0.2 ms at
+  the fight station. `route-cost.mjs` read 0.29 and 0.54 ms for its stand-in route, and its
+  depth copy cost the same with a canvas stencil present.
+- **Stations.** capture.mjs's four cameras on Ventfront and Sorrowgate, and the fight
+  station of `stations.mjs` on Ventfront, at ratio 1 and 1.5.
+
+It must fit within the existing 150-call/250,000-triangle frame limits, not silently borrow historical
 headroom from #286 as a current measurement. That reading measures CPU submit and overlay
 time, not isolated GPU execution time.
 

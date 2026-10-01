@@ -5,7 +5,10 @@
  * scene into a 4× MSAA canvas like the conn view's, then times each route's
  * own passes with a timer query, unpaced.
  *
- *   node tools/render-stack/route-cost.mjs [--out <dir>]
+ *   node tools/render-stack/route-cost.mjs [--out <dir>] [--stencil]
+ *
+ * --stencil gives the canvas a stencil buffer, as the lamp halo's masked composite
+ * does (art-direction.md, Lamp halo — SPEC), and writes route-cost-stencil.json.
  *
  * The full-screen route copies the canvas depth into a full-size
  * DEPTH24_STENCIL8 texture (one blit), draws 250 lamp sites into a full-size
@@ -28,6 +31,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const require = createRequire(import.meta.url);
 const here = dirname(fileURLToPath(import.meta.url));
 const outArg = process.argv.indexOf('--out');
+const STENCIL = process.argv.includes('--stencil');
+const FILE = STENCIL ? 'route-cost-stencil.json' : 'route-cost.json';
 const OUT = resolve(
   outArg === -1 ? join(here, '..', '..', '.dev-loop', 'route-cost') : process.argv[outArg + 1]
 );
@@ -69,7 +74,7 @@ try {
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     const url = pathToFileURL(join(here, 'route-cost.html'));
-    url.search = `?w=${w}&h=${h}`;
+    url.search = `?w=${w}&h=${h}${STENCIL ? '&stencil=1' : ''}`;
     await page.goto(url.href);
     const result = await page.evaluate(() => window.__routeCost);
     if (errors.length > 0) throw new Error(`page errors: ${errors.join('; ')}`);
@@ -80,7 +85,7 @@ try {
   await browser.close();
 }
 mkdirSync(OUT, { recursive: true });
-writeFileSync(join(OUT, 'route-cost.json'), JSON.stringify(results, null, 2) + '\n');
+writeFileSync(join(OUT, FILE), JSON.stringify(results, null, 2) + '\n');
 for (const r of results) {
   const line = Object.entries(r.variants).map(
     ([v, { parts }]) =>
@@ -94,4 +99,4 @@ for (const r of results) {
   );
   for (const l of line) console.log(`  ${l}`);
 }
-console.log(`written: ${join(OUT, 'route-cost.json')}`);
+console.log(`written: ${join(OUT, FILE)}`);

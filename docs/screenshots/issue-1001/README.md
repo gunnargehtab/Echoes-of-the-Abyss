@@ -196,6 +196,12 @@ match the same scene's depth drawn single-sampled in all but 1.0 % of pixels at 
 and 0.8 % at 2160×1350, the edges, where the 4× resolve keeps a sample the reference did not
 draw.
 
+The lamp halo's masked composite needs a canvas stencil, so the copy was read again with
+one: `node tools/render-stack/route-cost.mjs --stencil` gives the canvas 8 stencil bits and
+writes `halo/route-cost-stencil.json`. The depth-only copy read 0.17 ms at 1440×900 and
+0.27 ms at 2160×1350, against 0.15 and 0.29 ms without a stencil, the same within the
+spread between runs, and its depth check is identical.
+
 ## Related
 
 [graphics-standards.md](../../graphics-standards.md) gate 6 ·

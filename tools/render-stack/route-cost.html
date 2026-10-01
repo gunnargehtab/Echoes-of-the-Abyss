@@ -24,12 +24,16 @@
   canvas.height = H;
   canvas.style.width = `${W}px`;
   canvas.style.height = `${H}px`;
-  const gl = canvas.getContext('webgl2', { antialias: true, depth: true, stencil: false, alpha: false });
+  // ?stencil=1 asks the canvas for a stencil buffer, as the lamp halo's masked composite
+  // does (art-direction.md, Lamp halo — SPEC); the depth copy is read both ways.
+  const CANVAS_STENCIL = params.get('stencil') === '1';
+  const gl = canvas.getContext('webgl2', { antialias: true, depth: true, stencil: CANVAS_STENCIL, alpha: false });
   gl.getExtension('EXT_color_buffer_float');
   gl.getExtension('EXT_color_buffer_half_float');
   const timer = gl.getExtension('EXT_disjoint_timer_query_webgl2');
   // Read while the canvas is the bound framebuffer: SAMPLES is per binding.
   const canvasSamples = gl.getParameter(gl.SAMPLES);
+  const canvasStencilBits = gl.getParameter(gl.STENCIL_BITS);
   // How the copy is asked for: depth only, or the stencil too, into a texture
   // or a renderbuffer (both DEPTH24_STENCIL8, the one format the blit takes).
   // Depth only is the default and the route: on the named GPU asking for the
@@ -359,7 +363,7 @@
       renderer,
       size: { width: W, height: H },
       samples: canvasSamples,
-      blit: { mask: BLIT_MASK, into: BLIT_INTO },
+      blit: { mask: BLIT_MASK, into: BLIT_INTO, canvasStencil: CANVAS_STENCIL, stencilBits: canvasStencilBits },
       sourceComplete,
       routeBytes,
       routeMiB: Number((routeBytes / 2 ** 20).toFixed(2)),
