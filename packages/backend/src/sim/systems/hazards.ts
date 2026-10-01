@@ -142,8 +142,9 @@ export interface Hazard {
    * here spends the map's concealment, which is the argument about sound this
    * account never had.
    *
-   * Nothing consumes it yet (#549): every bed stands full, so PF and drag are
-   * what they have always been.
+   * The raw figure, which regrowth, sowing, the cutter and the reactor write.
+   * The cover is `standingCropOf`, which names the readers outside this module
+   * that take this number instead, and why.
    */
   crop: number;
   /**
@@ -617,11 +618,23 @@ export function regrowthPerS(world: SimWorld, hazard: Hazard): number {
 }
 
 /**
- * A bed's canopy, as everything outside this module must read it.
+ * A bed's canopy, as anything outside this module reads the cover.
  *
  * Exported for bloom-share, which pays by the canopy standing and so has to
  * see the same quantised figure the PF grid, the grip and the phase do — see
  * `standingCrop` for why the raw number is not that figure.
+ *
+ * Three readers outside take the raw `crop` instead, each on purpose (#997):
+ *
+ * - The bio-reactor (flora.ts) renders the crop and writes back the raw
+ *   figure less what it took, so it reads the figure it writes.
+ * - The Drift's restock rate (`Match.cropDensityAt`) scales a draw by a
+ *   region's mean crop. Nothing that rate decides has to agree with the grid,
+ *   the grip or the phase, which is what `standingCrop` is for, and a bed held
+ *   a rounding error above bare moves it by a rounding error. The two readings
+ *   differ by at most half a step (`FLORA.CROP_PF_STEPS`).
+ * - The state hash (stateHash.ts) hashes what a replay carries; a rounding
+ *   would let two runs that diverged inside one step agree.
  */
 export function standingCropOf(hazard: Hazard): number {
   return standingCrop(hazard.crop);

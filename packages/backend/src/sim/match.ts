@@ -2504,6 +2504,9 @@ export class Match {
    * Beds are few and this runs once per replacement, so a walk is the honest
    * answer; a region with no kelp in it is every region on every map that
    * authors no field, which is why this is 1 rather than 0 by default.
+   *
+   * The raw crop, not `standingCropOf`'s canopy, on purpose: that function
+   * says why the rate may read it.
    */
   private cropDensityAt(x: number, y: number): number {
     const region = this.world.drift.regionIndex(x, y);
