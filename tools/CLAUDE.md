@@ -86,7 +86,9 @@ tools/render-stack #974's audit and camera pairs, kept runnable rather than
                    limits asserted, readings.json beside the frames. The
                    run-game skill has the recipe and what its milliseconds
                    measure. fog.mjs, another, reads whether fully fogged
-                   seabed meets the backdrop at its depth (#1016).
+                   seabed meets the backdrop at its depth (#1016), and
+                   lamps.mjs stages own hulls quiet and loud and reads each
+                   lamp's strength and pixels (gate 3).
 tools/audio-meter  What the mix measures, rather than what it was meant to.
                    meter.mjs bundles the production audio classes, renders one
                    layer at a time through Chromium's OfflineAudioContext, and

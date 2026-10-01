@@ -73,6 +73,8 @@ export const GLOW_AFTER_TONE_MAPPING = `#if defined( TONE_MAPPING )
 	gl_FragColor.rgb = toneMapping( max( gl_FragColor.rgb - totalEmissiveRadiance, 0.0 ) ) + totalEmissiveRadiance;
 #endif`;
 
+const GLOW_AFTER_TONE_KEY = ':glow-after-tone-1';
+
 /** Chains onto any earlier patch, as tutorialLook.ts does. */
 export function keepGlowOutsideToneMapping(material: MeshStandardMaterial): void {
   const before = material.onBeforeCompile;
@@ -84,5 +86,11 @@ export function keepGlowOutsideToneMapping(material: MeshStandardMaterial): void
       GLOW_AFTER_TONE_MAPPING
     );
   };
-  material.customProgramCacheKey = () => `${key}:glow-after-tone-1`;
+  material.customProgramCacheKey = () => `${key}${GLOW_AFTER_TONE_KEY}`;
+}
+
+/** Whether `keepGlowOutsideToneMapping` patched this material, read off the
+ * key it leaves, for a reading that has to show the patch is there. */
+export function keepsGlowOutsideToneMapping(material: MeshStandardMaterial): boolean {
+  return material.customProgramCacheKey().endsWith(GLOW_AFTER_TONE_KEY);
 }

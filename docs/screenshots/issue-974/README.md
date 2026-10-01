@@ -105,6 +105,52 @@ diagnose the fade; their frame times are not valid. Every station held about 60 
 baseline included, shows one slow frame at the low camera (22–31 ms, almost all in
 the conn view). This run's was 50.5 ms; it is not new to this change.
 
+## Quiet and loud own-unit readings
+
+[art-direction.md](../../art-direction.md#shared-model-lighting--abyss-render-stack) asks this
+increment's evidence for quiet and loud own-unit readings. They were taken afterwards by
+`tools/render-stack/lamps.mjs`, on `ecbc9a17` with the reading's development-only hook
+added. It frames one own hull at a 500 m dolly and 55° pitch, stages each state with the
+player's own keys, and reads it twice: the strengths the game applied, through the hook, and
+a crop of the hull with the HUD hidden. Every lamp sat exactly on the runtime's curve in
+`glow.ts`, `rest × clamp(e^((SIG − rest) / 14), 0.05, 6)`, with its glow added after the
+tone curve. GTX 1070, headed Edge, 1440 × 900.
+
+| Hull | State | SIG | Lamp factor | Max v | Pixels over 0.8 | Brightest 1 %: hue, saturation |
+| --- | --- | --- | --- | --- | --- | --- |
+| Caisson, Consortium | at rest | 64 | 1 | 1.00 | 557 | 39.7°, 0.71 |
+| Caisson | silent (Space) | 8 | 0.05, the floor | 0.40 | 0 | 44.9°, 0.45 |
+| Light Scout, Consortium | at rest | 6 | 1 | 1.00 | 93 | 58.3°, 0.62 |
+| Light Scout | engine off (Q) | 1.75 | 0.74 | 1.00 | 93 | 57.4°, 0.66 |
+| Light Scout | pinging (P) | 95 | 6, the cap | 1.00 | 93 | 57.8°, 0.29 |
+| Light Scout, Commune (Sorrowgate) | at rest | 6 | 1 | 1.00 | 5 | the water's |
+| Light Scout, Commune | silent (Space) | 3.5 | 0.84 | 0.93 | 5 | the water's |
+| Light Scout, Commune | engine off (Q) | 1.75 | 0.74 | 0.89 | 5 | the water's |
+
+The Consortium's lamp ink is `#F2B233`: hue 39.9° as stored, 28.9° in linear light. The
+Commune's is `#8FE36B`: 102° and 107.7°.
+
+- **The Caisson keeps its ink loud and goes dark quiet.** Its brightest pixels at rest sit
+  0.2° from the amber ink, and its rest-minus-silent emission, differenced in linear light,
+  sits 1° from the ink's linear hue (29.9° against 28.9°). Running silent leaves a maximum of
+  0.40 and nothing over 0.5, so the 0.05 floor does not leave a silent hull glowing.
+- **The Consortium scout's lamp does not encode its loudness.** It rests at 3.5 times its
+  ink, so its red and green stay past 1 at every state the scout reaches. With its engine
+  off (×0.74) it is as bright as at rest: the same 93 pixels over 0.8 and 85 clipped, and red
+  unchanged. The ping (×6) can raise only blue, which whitens it (saturation 0.62 to 0.29),
+  and its differences are teal and blue for the same reason. Gate 3's "glow encodes
+  loudness — always" does not hold for this hull (#1021). Its resting strength is the model's own,
+  kept through the recolour (`packages/frontend/src/game/rosterModels.ts`), and #1001
+  decides whether glow is compressed.
+- **Sorrowgate's quiet side holds.** Its Commune scout shows five pixels over 0.8 at rest,
+  falling to a maximum of 0.89 with its engine off, and its rest-minus-engine-off emission
+  is green (114.9° against the ink's linear 107.7°). Sorrowgate strikes the ping, so the
+  loud side is the standard match's. At the owner's call there is no scripted dive, which
+  would breach its silence order, and no reading at `1df288a`.
+
+Frames, HUD-free crops and each state's numbers: [standard](lamps-standard/lamps.json),
+[tutorial](lamps-tutorial/lamps.json).
+
 ## Reproduction and remaining acceptance
 
 Use the `run-game` skill to start the servers. On Windows, this run used an owned
@@ -114,12 +160,13 @@ unavailable. Do not rebuild shared or run gates during a capture.
 ```powershell
 $env:CAPTURE_DIR='docs\screenshots\issue-974\after-standard'
 node .claude\skills\run-game\scripts\drive.mjs --headed --channel msedge `
-  --url 'http://localhost:5173/?map=ventfront' --out $env:CAPTURE_DIR `
+  --url 'http://localhost:5173/?map=ventfront-divide' --out $env:CAPTURE_DIR `
   --steps tools\render-stack\capture.mjs
 ```
 
 For the tutorial use `?mission=prologue-sorrowgate` and a separate output directory.
-For the original pictures run the same capture script against `1df288a`.
+For the original pictures run the same capture script against `1df288a`. The lamp
+readings are `--steps tools/render-stack/lamps.mjs` against a development build.
 
 Frontend type-check passed. The focused model-lighting, renderer-smoke, loudness
 and GameCanvas suite passed **102 tests**. The full `npm run gates` passed 11 of

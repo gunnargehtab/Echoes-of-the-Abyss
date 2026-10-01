@@ -273,9 +273,9 @@ it is a software one, the viewport, and each camera's whole probe, `look`, `tone
 and `environmentBytes` included, so a frame says which lighting path drew it. Use a map's
 real id: an unknown `?map=` boots the default map without a word. The tutorial is
 `?mission=prologue-sorrowgate`, and a before set is the same script against servers at the
-base commit. The script holds the fleet at rest and stages no silent or pinging hull, so
-gate 3's quiet-and-loud comparison is still yours. Its header says what each millisecond
-field measures.
+base commit. Its header says what each millisecond field measures. It holds the fleet at
+rest; gate 3's quiet-and-loud comparison is `tools/render-stack/lamps.mjs`, run the same
+way against the dev server, which stages each state with the player's own keys.
 
 ### The esc menu's focus trap
 

@@ -962,12 +962,20 @@ describe('renderer smoke test: the conn view', () => {
   it('takes the probes down with the view', async () => {
     const world = await boot();
     world.frame(2);
-    world.teardown();
     const probes = globalThis as unknown as {
-      window: { __perspectiveProbe?: unknown; __perspectiveStation?: unknown };
+      window: {
+        __perspectiveProbe?: unknown;
+        __perspectiveStation?: unknown;
+        __perspectiveLamps?: () => { units: unknown[]; structures: unknown[] };
+      };
     };
+    // Outside a production build gate 3's lamp reading comes up with the rest.
+    const lamps = probes.window.__perspectiveLamps?.();
+    assert.ok(lamps && Array.isArray(lamps.units) && Array.isArray(lamps.structures));
+    world.teardown();
     assert.equal(probes.window.__perspectiveProbe, undefined, 'the reading went with it');
     assert.equal(probes.window.__perspectiveStation, undefined, 'and so did the boundary');
+    assert.equal(probes.window.__perspectiveLamps, undefined, 'and the lamp reading');
   });
 
   it('is the only opinion about where the water is: project and resolve round-trip', async () => {
