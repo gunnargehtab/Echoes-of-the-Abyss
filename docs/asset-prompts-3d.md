@@ -571,17 +571,34 @@ Order's edge is the top rung, three metres: the Responsory's blade lathes ten fa
 counts only, so the step is two: a regular polygon with an even count has a mirror line
 every half facet, through opposite vertices and opposite edges alike, so laid on the hull's
 axis it mirrors port to starboard — the law's own axis — however the kit turns its first
-vertex, and crown to keel besides; an odd ring mirrors on one axis only. Four is the floor,
+vertex, and crown to keel besides; an odd ring mirrors on one axis only. Three parts are the
+exception, by a turn on their nodes and not by their count: the Sentinel Turret's
+emplacement frustum and the Sounding Spire's plinth and its cap are twelve-gons turned an
+eighth of a turn, the turn the approved octagons had. An octagon mirrors at an eighth and a
+twelve-gon does not — its reflection is itself turned fifteen degrees, half a facet, so one
+side has a corner where the other has the middle of a flat — but the turned box is what each model's footprint is measured
+by, and only that turn keeps the box and so the model's size; the owner took the turn over
+a turret 9.1 % larger and a Spire 3.3 % larger, knowingly. Four is the floor,
 the blade's diamond. Four and six are the sections, and each keeps a count: four keeps
 every spar, point and prism in the navy, and six every hexagonal prism — the horns, lips
 and drives (the Clarion's horn carries 5.5 m faces and keeps), the stays, struts, pins,
-pipes, masts and legs at 0.35–1.9 m of radius where the lattice would say four, and on the
-structures the Refinery's silos at 18–27 m of radius, the Foundry's wing halls at 33–40, the
-Bio-reactor's cistern and the Tocsin's bell and collars. That is by design: quartz is a
-hexagonal prism at a millimetre and at a metre, and a resonance tower is a crystal the size
-of a building. On the Order, then, the rule is mostly its sections — a hull here is
-diamonds and hexagons almost through — and the chord governs what is neither: the rings,
-the pips and the structures' drums. Twelve is the ceiling, a dodecagon at the rim, a cut
+pipes, masts and legs from 0.35 m of radius, where the lattice would say four, to 5.1 m,
+where it would say ten, and on the structures the Refinery's silos at 18–27 m of radius, the
+Foundry's wing halls at 33–40, the Bio-reactor's cistern and the Tocsin's bell and collars.
+The pass added to that list what the approved files drew at five, seven, eight, ten and
+sixteen sides and the Order cuts as its hexagon: its own pipes past 1.9 m — the Bastion's
+standpipes at 5.1 m, the Spire's ballast pipes and the Foundry's standpipes at 3.2 and the
+Refinery's transfer pipes at 2.3 — the Refinery's exhaust stacks and their tips at 4.5–5.1,
+the Sentinel Turret's recoil struts at 1.0, and on the Bio-reactor the footprint slab at
+44 m, the kerb round it at 40, and the three throat drums and the mouths in them
+(`feed_throat`) at 3.8–5.4. One pipe is not on it: the Vent Tap's draw pipes are the shared
+skeleton's, laid with a vertex on the crown for the lamps saddled there, and stay the
+rule's eight at 3.5 m, since a hexagon laid the same way has a flat under those lamps. That
+is by design: quartz is a hexagonal prism at a millimetre and at a metre, and a resonance
+tower is a crystal the size of a building. On the Order, then, the rule is mostly its
+sections — a hull here is diamonds and hexagons almost through — and the chord governs what
+is neither: the rings, the pips, and the structures' drums, kerbs and collars wherever one
+is not among the hexagons just named. Twelve is the ceiling, a dodecagon at the rim, a cut
 stone; past it a ring is a wheel, and the Responsory's and the Antiphon's resonator rings,
 twenty-eight-faceted until the pass, were its first cut: twelve round now, the crystal ring
 inside the Responsory's ten. Panels run two to six metres: planes — a wing, a
@@ -598,12 +615,12 @@ triangles go as the square of its count. Every round part rebuilt with its own c
 at the count the rule gives it, the table costs: Consortium hulls 53.3 k → 40.9 k and
 structures 16.6 k → 19.5 k; Commune hulls 47.6 k → 47.8 k and structures 35.2 k → 62.4 k;
 Directorate hulls 30.0 k → 33.5 k and structures 26.6 k → 32.8 k; Order hulls 9.9 k → 8.0 k
-and structures 15.8 k → 12.0 k, the Order's as built since its pass, where this rebuild had
+and structures 15.8 k → 12.1 k, the Order's as built since its pass, where this rebuild had
 said 12.4 k before the pass cut its pipes, stacks and throat drums as hexagons; the fourteen
 props, under no rule, 4.3 k. The own force
 the gate names, taken as a navy's eight structures, four more Turrets and its five largest
 hulls, comes to 42.1 k for the Consortium, 107.0 k for the Commune, 64.0 k for the
-Directorate and 18.8 k for the Order, as built. That mix is one sample base and not a worst case —
+Directorate and 18.9 k for the Order, as built. That mix is one sample base and not a worst case —
 nothing caps what a base builds, and a dozen Commune Slipways alone are 170 k — so the
 probe, not this rebuild, is the check. The Commune's ceiling is the number gate 6 moved: at
 twenty-four that dozen and five were 181.0 k, its eight structures alone 110.5 k; at
@@ -631,12 +648,9 @@ two disagree the law wins. So the rule names 792 of the Consortium's 1,119 rings
 Commune's 1,240 (452 of the 526 on hulls, six of them on the four ported `grownBody` bodies
 the pass leaves), 935 of the Directorate's 1,477 (516 of the 681 on hulls; its Refinery was
 rebuilt in #951), and 251 of the Order's 616, fourteen of them on hulls, since an Order hull
-is sections almost through. The Order's pass leaves five of its 616, none on a hull: the
-Sentinel Turret's emplacement and the Sounding Spire's plinth and cap, octagons whose turned
-boxes are the measure their models are scaled to, so that re-cutting one resizes the whole
-structure and is a decision of its own; and the Turret's two pods' caps, a capsule's
-meridian at 5.1 m, where the rule's share of a half turn is five and a capsule draws an even
-count.
+is sections almost through. The Order's pass leaves two of its 616, neither on a hull: the
+Sentinel Turret's two pods' caps, a capsule's meridian at 5.1 m, where the rule's share of a
+half turn is five and a capsule draws an even count.
 Outside the bands: eight Consortium hulls (the five shared kinds, the Chorister and the
 Tender at 2.3–3.9 m, and the Beacon at 0.5) and five structures; two Commune hulls (the
 Bower at 0.8 m, the Submersible at 7.3) and three structures; three Directorate hulls (the

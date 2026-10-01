@@ -115,7 +115,11 @@ ventWellhead(
 // Four arms on the diagonals, each with the Order's exchanger on its end.
 radialSeries({ count: 4, phase: Math.PI / 4 }, (a) => {
   // The draw pipe is the rule's eight at 3.5 m, as the kit has it, and the
-  // riser its six at 3.2 m, where the kit has eight.
+  // riser its six at 3.2 m, where the kit has eight. Not the Order's
+  // six-sided pipe (hadron.mjs `PIPE_FACETS`), which its own builders cut:
+  // the kit lays this one with a vertex on the crown and saddles three
+  // lamps on it, and a hexagon laid the same way has a flat there — all
+  // twelve lamps stand 0.4 m off it, measured.
   ventDrawArm(
     root,
     { rock: shadow, steel: alloy, deck: alloy, lamp: seam, flood: node },

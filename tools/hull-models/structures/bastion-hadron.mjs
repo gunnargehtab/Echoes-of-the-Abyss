@@ -146,13 +146,32 @@
  * - the port lights an orb of four by three, where it was six by five.
  * The plan is 20.90 by 18.13 now: the plinth's turned box was the 19.34,
  * a twelve-gon's overhangs less, and x is the docks' still, so the scale
- * did not move. Three pairs of port lights up the dome sat on the round
- * sphere's skin and are seated on the facets under them (`lightPairs`
- * `on`), as #907 seated the first pair; left at the file's stations the
- * fourth pair stood 1.09 m off the dome. The anchor blades are where they
- * were: the second pair foots on the plinth now, where it stood 4.9 m off
- * it, and the third stands 0.40 m off, where it stood 0.47. 58 parts and
- * 3,788 triangles become 58 and 1,948.
+ * did not move. Four pairs of port lights moved with the dome's skin:
+ * the first, which #907 seated on the dome, is seated on the coarser
+ * facet under it, and the three pairs up the dome, which sat on the round
+ * sphere's skin at the file's stations, are seated the same way now
+ * (`lightPairs` `on`) — left where they were the fourth pair stood 1.09 m
+ * off the dome. The two pairs on the equator band did not move.
+ *
+ * THE ANCHOR BLADES moved, and by review (#919, round two). The file stood
+ * all four pairs on one circle of 7.3 round an octagon, whose corners at
+ * 22.5°, 67.5°, 112.5° and 157.5° lay beside the blades' bearings, and the
+ * gaps to the plinth were, pairs 0 to 3: 0.51, 4.89 and 0.47 m, and the
+ * fourth a mount. On the same circle round a twelve-gon no turn keeps
+ * that mount on both sides:
+ *
+ *   turn                   pair 0   pair 1   pair 2   pair 3      (m)
+ *   none (vertex on axes)   0.36     3.27     2.99     1.86
+ *   half a facet (π/12)     2.92     0        0.40     2.02
+ *   an eighth, `_r` side    3.10     2.66     3.06     0
+ *   an eighth, `_l` side    0.18     0.98     0.05     3.44
+ *
+ * So the plinth keeps the half facet, the one turn here that mirrors port
+ * to starboard, and the blades are stood off the plinth's skin at their
+ * own bearings instead of off the circle (`anchorBlades` `foot`): drawn in
+ * 4.9, 1.6, 2.4 and 4.0 m, pairs 0 to 3, each pair still a mirror, and all
+ * eight foot on the plinth — gap 0, 0, 0, 0. 58 parts and 3,788 triangles
+ * become 58 and 1,948.
  */
 import { THREE, fitFootprint, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -223,7 +242,8 @@ hadron.ring(root, 'equator_band', steel, {
   at: [0, 2.5, 0],
   cut,
 });
-hadron.plinth(root, 'plinth', steel, { rTop: 6.7, r: 7.4, h: 1.2, y: 0.6, cut });
+const PLINTH = { r: 7.4, facets: cut.round(7.4), yaw: Math.PI / cut.round(7.4) };
+hadron.plinth(root, 'plinth', steel, { rTop: 6.7, h: 1.2, y: 0.6, ...PLINTH });
 hadron.ring(root, 'plinth_band', alloy, {
   r: 6.8,
   t: 0.15,
@@ -306,6 +326,9 @@ hadron.anchorBlades(
     lift: 0.5,
     seat: 0.8,
     bearings: [0.45, 1.35, 1.9, 2.75],
+    // Each pair stood off the plinth's skin at its own bearing, not off one
+    // circle (FACETS, at the head).
+    foot: PLINTH,
   }
 );
 

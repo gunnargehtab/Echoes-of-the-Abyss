@@ -252,17 +252,29 @@ export const ink = {
  * half facet, through opposite vertices and opposite edges alike, so laid on
  * the hull's axis it mirrors port to starboard — the law's own axis — however
  * the kit turns its first vertex, and crown to keel besides; an odd ring
- * mirrors on one axis only. Four is the floor, the blade's diamond; four and
+ * mirrors on one axis only. Three parts are the exception, by a turn on
+ * their nodes and not by their count — the Sentinel Turret's frustum and
+ * the Sounding Spire's plinth and cap, twelve-gons turned the approved
+ * octagons' eighth to keep the box their models are measured by
+ * (`emplacement`, `plinth`). Four is the floor, the blade's diamond; four and
  * six are the sections, and a section keeps a count and not a shape: four
  * keeps every spar, point and prism in the navy, and six every hexagonal
  * prism — the horns, lips and drives (`spar`, `bowArray`; the Clarion's horn
  * carries 5.5 m faces and keeps), the stays, struts, pins, pipes, masts and
  * legs at 0.35–1.9 m of radius where the lattice would say four, and on the
  * structures the Refinery's silos at 18–27 m, the Foundry's wing halls at
- * 33–40, the Bio-reactor's cistern and the Tocsin's bell and collars — and,
- * since the pass, the pipes and stacks the files drew seven- and
- * eight-sided (`PIPE_FACETS`), the turret's recoil struts, and the
- * Bio-reactor's slab, kerb and throat drums. That
+ * 33–40, the Bio-reactor's cistern and the Tocsin's bell and collars. Since
+ * the pass six also keeps what the files drew five-, seven-, eight-, ten-
+ * and sixteen-sided and the Order cuts as its hexagon: every pipe of its
+ * own, past 1.9 m too — the Bastion's standpipes at 5.1 m, the Spire's
+ * ballast pipes at 3.2, the Foundry's standpipes at 3.2 and the Refinery's
+ * transfer pipes at 2.3 — the Refinery's exhaust stacks and their tips at
+ * 4.5–5.1 (`PIPE_FACETS`), the turret's recoil struts at 1.0, and on the
+ * Bio-reactor the footprint slab at 44 m, its kerb at 40 and the three
+ * throat drums and their mouths (`feed_throat`) at 3.8–5.4. The Vent
+ * Tap's draw pipes are the kit's and stay the rule's eight at 3.5 m: a
+ * hexagon as the kit lays one has a flat on the crown, and the twelve pipe
+ * lamps saddled on that crown stand 0.4 m off it. That
  * is by design: quartz is a hexagonal prism at a millimetre and at a metre,
  * and a resonance tower is a crystal the size of a building. Twelve is the
  * ceiling, a dodecagon at the rim — a cut stone, the coarsest of the four
@@ -1696,22 +1708,28 @@ const sided = (sgn, [x, y, z], [a = 0, b = 0, c = 0] = []) =>
  * matrices to the sixth decimal; each pair's `_l` mirrors its `_r` in x, which
  * puts the third pair's `_r` at -x, as the file has it.
  *
- * THE FRUSTUM IS STILL AN OCTAGON, and off the rule (#919): eight is
- * neither a section nor the rule's twelve at 32.8 m. It did not move with
- * the pass because it cannot move alone. Turned an eighth, its box
- * overhangs its vertices by 1.31 of its radius, and that box is the
- * turret's after end — the 11.7165 the script's `DRAWN` is, so the measure
- * every other part's scale hangs on. A twelve-gon or a hexagon that keeps
- * the navy's mirror plane measures 10.74 instead (its vertex on the axis,
- * no overhang), and the whole turret grows 9.1 % to fill the same 120 m;
- * a hexagon with a flat aft measures 11.69 and grows 0.2 %, but stands
- * its faces 2.8 m inside the six skirt blades that foot on it. Each is a
- * decision about the turret's size or its skirt, not about a count, so it
- * is left for one.
+ * THE FRUSTUM is the rule's twelve at 32.8 m, turned the file's eighth
+ * (#919), and it is one of three parts in the navy that do not mirror port
+ * to starboard — with the Sounding Spire's plinth and its cap. The file's
+ * was an octagon turned an eighth, a flat to each axis, and its turned box
+ * — r (cos + sin)(π/8), 1.31 of its radius — is the turret's after end,
+ * the measure `DRAWN` is and every part's scale hangs on. A twelve-gon has
+ * a vertex on each axis of its own frame, so its box is the octagon's
+ * exactly, and turned the same eighth its turned box is too: the count
+ * moves and the turret's size does not. The cost is the mirror. A
+ * twelve-gon's lines of symmetry are every fifteen degrees and an eighth
+ * of a turn is 22.5, so no vertex and no flat lies on the axis, and its
+ * reflection is itself turned fifteen degrees, half a facet: where one
+ * side has a corner the other has the middle of a 17 m flat. Any turn that mirrors (none, or half a facet)
+ * measures 10.74 or 11.46 for the 11.72 and grows the whole turret 9.1 or
+ * 2.3 % to fill the same 120 m, and the owner took the turn over the
+ * growth, knowingly (#919, round two). docs/asset-prompts-3d.md Block 2c
+ * names the three.
  */
 export function emplacement(root, { shadow, steel, dim }, opts) {
   const { at, yaw = 0, r, rTop = r * 0.84, height, collar, blades, cut: rule = METRE } = opts;
-  part(root, 'base_frustum', cyl(rTop, r, height, 8), shadow, drawn(at, [0, yaw, 0]));
+  const sides = rule.round(Math.max(r, rTop));
+  part(root, 'base_frustum', cyl(rTop, r, height, sides), shadow, drawn(at, [0, yaw, 0]));
   // A torus is born in the XY plane; a collar lies flat, so it is laid down.
   const ring = torus(
     collar.r,
@@ -2128,23 +2146,27 @@ export function ring(root, name, mat, opts) {
  * The approved files drew every plinth eight-sided. Eight is not the
  * Order's — its sections are the diamond and the hexagon — and a plinth is
  * the foot of a dome, not a prism of its own, so it is cut by the rule:
- * twelve at the Bastion's 156 m and the Bio-reactor vessel's 28. Not the
- * hexagon, which stands six flats inside the twelve-sided dome it carries
- * (a hexagon of the Bastion's 6.7 has an apothem of 5.8 under a dome of 6).
- * The half-facet turn is a twelfth on a twelve-gon, and mirrors across both
- * axes as the octagon's eighth did; the same eighth on a twelve-gon mirrors
- * across neither. A dome's vertices are on the axes, so they stand over its
- * plinth's flats, a half-facet's twist between the two, as an octagonal
- * plinth's corners stood between a twelve-sided dome's before. On the
- * Bastion the turn also puts a corner within four degrees of the second
- * and third anchor-blade pairs, which is where the octagon's corners were:
- * the second pair foots on the plinth now, where it stood 4.9 m off it.
+ * twelve at the Bastion's 156 m, the Spire's 54 and the Bio-reactor
+ * vessel's 28. Not the hexagon, which stands six flats inside the
+ * twelve-sided dome it carries (a hexagon of the Bastion's 6.7 has an
+ * apothem of 5.8 under a dome of 6). The half-facet turn is a twelfth on a
+ * twelve-gon, and mirrors across both axes as the octagon's eighth did. A
+ * dome's vertices are on the axes, so they stand over its plinth's flats,
+ * a half-facet's twist between the two, as an octagonal plinth's corners
+ * stood between a twelve-sided dome's before.
  *
- * `facets` and `yaw` are still a caller's to pass, and the Sounding Spire
- * passes the file's eight and its eighth: its plinth's turned box is the
- * measure its footprint is fitted to (kit.mjs `fitFootprint`), so its count
- * cannot change without the Spire changing size, and the script says what
- * that decision is.
+ * `facets` and `yaw` are a caller's to pass. The Sounding Spire passes the
+ * file's eighth as `yaw` for its plinth and its cap: the plinth's turned
+ * box is the measure the Spire's footprint is fitted to (kit.mjs
+ * `fitFootprint`), a twelve-gon turned an eighth has the octagon's turned
+ * box exactly, and so the count moves and the Spire's size does not — at
+ * the cost of the mirror, as on the turret's frustum (`emplacement` says
+ * how much, and that the owner took it knowingly).
+ *
+ * The Bastion's keeps the half facet. Its turned box is the plan's beam
+ * and not its length, so no turn changes its size, and the half facet is
+ * the turn that mirrors. What the turn does move is the footing of the
+ * anchor blades round it, and `anchorBlades` `foot` is the answer to that.
  */
 export function plinth(root, name, mat, opts) {
   const { rTop, r, h, y, cut: rule = METRE } = opts;
@@ -2396,9 +2418,13 @@ export function conduits(root, steel, opts) {
  * seven, these and the Spire's eight — and neither is a shape the Order
  * cuts. A pipe is its hexagonal prism: the feed pipes, stays, pins, masts
  * and legs are six on every file already, at radii where the lattice says
- * four, and one noun is one section across the navy. So the Bastion's
- * standpipe is six at 5 m where the rule would round it to ten, and the
- * Refinery's transfer pipe six at 2.3 m where it would say four.
+ * four, and one noun is one section across the navy's own builders. So
+ * the Bastion's standpipe is six at 5 m where the rule would round it to
+ * ten, and the Refinery's transfer pipe six at 2.3 m where it would say
+ * four. The one pipe that is not is the Vent Tap's draw pipe, the kit's
+ * skeleton: it stays the rule's eight at 3.5 m, because the kit lays it
+ * with a vertex on the crown for the pipe lamps saddled there, and a
+ * hexagon laid the same way has a flat on the crown 0.4 m under them.
  */
 export const PIPE_FACETS = 6;
 export function standpipes(root, { steel, shadow }, opts) {
@@ -2456,14 +2482,36 @@ export function ballastTanks(root, mat, opts) {
  * 0.5 and seated 0.8, that regenerates the approved node matrices to the
  * sixteenth place. Its twin in `emplacement` could be folded onto this; it
  * has not been, because the turret's file is not this issue's.
+ *
+ * `foot` is the plinth the blades stand round — `{ r, facets, yaw }`, its
+ * foot radius, its count and its turn — and with it each blade's anchor is
+ * drawn in from the circle by as much as the plinth's skin at that bearing
+ * falls short of its corner radius: `anchor[0] − (r − ρ)`, ρ the polygon's
+ * radius at the bearing. The file's circle was drawn against an octagon
+ * whose corners lay within a few degrees of the blades, and its fourth
+ * pair footed on a corner. A twelve-gon's corners are elsewhere, whatever
+ * its turn, so on the one circle that pair stood 1.9 to 2.0 m off the
+ * re-cut plinth and the first up to 2.9 (#919, at review); stood off the
+ * skin instead, every pair foots, the three the file left in the water
+ * included. A blade on a corner's bearing is where the file had it.
+ * Without `foot` every blade is on the circle.
  */
 export function anchorBlades(root, { shadow, alloy }, opts) {
-  const { r, length, anchor, lift, seat, bearings } = opts;
+  const { r, length, anchor, lift, seat, bearings, foot = null } = opts;
   const up = new THREE.Vector3(0, 1, 0);
+  // The polygon's radius at a bearing: its apothem over the cosine of the
+  // angle to the nearest flat's middle. A cylinder's first vertex is on +z,
+  // bearing π/2, and a node's yaw turns it toward +x.
+  const skin = (bearing) => {
+    const step = (2 * Math.PI) / foot.facets;
+    const fromVertex = (((bearing - (Math.PI / 2 - foot.yaw)) % step) + step) % step;
+    return (foot.r * Math.cos(step / 2)) / Math.cos(fromVertex - step / 2);
+  };
   bearings.forEach((bearing, i) => {
     const out = new THREE.Vector3(Math.cos(bearing), 0, Math.sin(bearing));
     const axis = out.clone().setY(lift).normalize();
-    const c = out.multiplyScalar(anchor[0]).setY(anchor[1]).addScaledVector(axis, seat);
+    const circle = foot ? anchor[0] - (foot.r - skin(bearing)) : anchor[0];
+    const c = out.multiplyScalar(circle).setY(anchor[1]).addScaledVector(axis, seat);
     const q = new THREE.Quaternion().setFromUnitVectors(up, axis);
     const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
     pair((tag, sgn) =>

@@ -86,7 +86,7 @@
  * `diff.mjs responsory-hadron` lists the three and no other part.
  *
  * FACETS (#919). The Order's rule is one facet edge of 3 m
- * (docs/asset-prompts-3d.md Block 2c; hadron.mjs `facets`, `cut`), and four
+ * (docs/asset-prompts-3d.md Block 2c; hadron.mjs `facets`, `cut`), and five
  * parts here were off it. Each resonator ring is twelve round on a tube of
  * four, where it was twenty-eight on eight; the crystal ring inside it ten
  * round, where it was twenty-eight, on the hexagonal tube it had; and the

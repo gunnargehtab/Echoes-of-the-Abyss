@@ -15,7 +15,7 @@
  * (docs/concept-art/models/sentinel-turret-hadron.glb at 0522b01~1), part for
  * part in its order, every number the export's own (#639 — the first port,
  * #553, reproportioned it: 27 of 27 parts moved and the scale came out 7 %
- * apart across the axes). An eight-facet frustum turned an eighth on its
+ * apart across the axes). A twelve-facet frustum turned an eighth on its
  * node, under a twelve-facet collar; six skirt blades that are four-sided
  * pyramids stood off one anchor circle; two six-facet recoil struts; a
  * `turret_head` node at 2.6 carrying a six-facet frustum of a wedge squeezed
@@ -58,16 +58,18 @@
  * collar twelve round on a tube of four, where the file had nine on five;
  * the recoil struts the Order's hexagonal rod, where it had five; the pip
  * and the four marks orbs of four by two, octahedra at 0.82 m, where it had
- * five by four; the pods ten round, where it had seven. Two things did not
- * move. The frustum is the file's octagon still, because its turned box is
- * the after end `DRAWN` measures (hadron.mjs `emplacement` gives the
- * options); and the pods' caps keep three steps, a segment over the rule's
- * odd share of a half turn, which no capsule draws (`magazine`). The pip is
+ * five by four; the pods ten round, where it had seven; and the frustum
+ * twelve, where it had eight, still turned the file's eighth — which keeps
+ * the turned box `DRAWN` measures and gives up the frustum's mirror, port
+ * to starboard (hadron.mjs `emplacement`; the owner's call, #919 round
+ * two). One thing did not move: the pods' caps keep three steps, a segment
+ * over the rule's odd share of a half turn, which no capsule draws
+ * (`magazine`). The pip is
  * the bow end of the same measure: an octahedron has a vertex on the axis
  * where the five-sided orb had a flat 0.004 short of it, so `DRAWN` is
  * 11.7204 where the export's was 11.7165, the scale ×10.239 where it was
  * ×10.242, and every part 0.03 % smaller — 4 cm on the 120 m. 27 parts and
- * 704 triangles become 27 and 692.
+ * 704 triangles become 27 and 708.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
