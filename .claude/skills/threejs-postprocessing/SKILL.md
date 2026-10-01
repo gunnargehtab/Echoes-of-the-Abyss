@@ -3,6 +3,17 @@ name: threejs-postprocessing
 description: Three.js post-processing - EffectComposer, bloom, DOF, screen effects. Use when adding visual effects, color grading, blur, glow, or creating custom screen-space shaders.
 ---
 
+<!-- LOCAL NOTE (not upstream) — see .claude/VENDORED-SKILLS.md -->
+> **In this repository a composer changes the picture.** three 0.169 tone-maps a
+> material only when it draws to the canvas, so behind a `RenderPass` that feeds
+> later passes every material draws untone-mapped and `OutputPass` maps the whole
+> buffer, including the faction glow the game adds after the curve and the layers
+> it marks `toneMapped: false`. Put an `OutputPass` after every pass that works on
+> linear colour; the `GammaCorrectionShader` below applies the sRGB transfer and no
+> tone mapping. Bloom here must keep every quiet hull (SIG 0–15) out of its source,
+> reflected highlights included, which a brightness threshold cannot do. The
+> `material-design` skill has this repository's rules.
+
 # Three.js Post-Processing
 
 ## Quick Start
