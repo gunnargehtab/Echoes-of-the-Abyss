@@ -52,6 +52,7 @@ import { HULL_LENGTH_M } from './silhouettes.ts';
 import { glowFactor } from './glow.ts';
 import { DREAM_LOOP, installDreamLamp, installDreamSteel } from './dreamLoop.ts';
 import { installHullSurface, type WorldLook } from './tutorialLook.ts';
+import { keepGlowOutsideToneMapping } from './modelLighting.ts';
 
 /**
  * TUNABLE — the linear diffuse luminance a model's *brightest* cladding
@@ -567,6 +568,7 @@ export function rosterModelInstance(
       ) {
         const own = material.clone();
         if (DREAM_LOOP && look === 'standard') installDreamLamp(own);
+        keepGlowOutsideToneMapping(own);
         emissives.push({ material: own, restIntensity: own.emissiveIntensity });
         return own;
       }

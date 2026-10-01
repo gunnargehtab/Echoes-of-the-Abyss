@@ -178,7 +178,7 @@ async function boot(): Promise<{
   });
 
   const conn = new PerspectiveView();
-  conn.mount(connHost as unknown as HTMLElement, () => gl.asRenderer());
+  conn.mount(connHost as unknown as HTMLElement, () => gl.asRenderer(), gl.environment);
   conn.setActive(true);
 
   const chart = new EchoRenderer(callbacks, app.asApplication());

@@ -115,6 +115,7 @@ async function mount(
         onExit: () => {},
         onRecord: () => {},
         harness: {
+          environment: gl.environment,
           application: () => app.asApplication(),
           glRenderer: () => {
             if (options.webgl === false) throw new Error('headless: WebGL unavailable');

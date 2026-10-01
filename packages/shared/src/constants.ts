@@ -10,6 +10,20 @@
 import { Biome, DepthBand, Faction, HarvestThrottle, ResourceKind } from './types.js';
 import { MEAN_RENDERED_BIOMASS } from './fauna.js';
 
+/** SPEC — docs/art-direction.md, Shared model lighting. Presentation only. */
+export const MODEL_LIGHTING = {
+  AMBIENT: 0.75,
+  KEY: 1.8,
+  RIM: 1.6,
+  AMBIENT_COLOR: 0x5a6b80,
+  KEY_COLOR: 0xdfe8f0,
+  RIM_COLOR: 0x9fd8ff,
+  EXPOSURE: 1,
+  ENVIRONMENT_INTENSITY: 0.35,
+  ENVIRONMENT_WIDTH: 128,
+  ENVIRONMENT_HEIGHT: 64,
+} as const;
+
 /** SPEC — docs/visual-reboot.md §5. Presentation only; never read by simulation. */
 export const SORROWGATE_LOOK = {
   TEXTURE_SIZE: 128,
@@ -25,9 +39,6 @@ export const SORROWGATE_LOOK = {
   STONE_HEIGHT_M: 0.3,
   ROUGHNESS_VARIATION: 0.12,
   ANISOTROPY: 4,
-  AMBIENT: 0.75,
-  KEY: 1.8,
-  RIM: 1.6,
 } as const;
 
 /** SPEC — docs/systems-depth.md §1. Metres. */

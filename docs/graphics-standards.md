@@ -205,6 +205,13 @@ preference — a quiet unit that glows brightly is lying to the player about the
 exactly as a loud unit rendered dark is. Firing bursts may flare; the resting state must
 match the number.
 
+Tone mapping changes displayed surface highlights, never the glow: emissive light is added
+after the tone-mapping curve, so a lamp keeps its faction hue and the strength its SIG band set. Environment
+reflections are surface light, never a substitute for SIG emission. Any future bloom
+must explicitly exclude SIG **0–15** from its source, including bright reflected
+highlights; a brightness threshold alone cannot enforce that rule. Compare quiet and
+loud own hulls under the shared rig before accepting a lighting change.
+
 The rule is measured, not eyeballed. On the shipped maps, **glow energy** is the sum of
 `v / 255` over all emissive pixels (`v` = the max of R, G, B), per 1,000 hull-mask pixels
 (albedo alpha > 16), at the record densities of gate 6. There is deliberately no
@@ -439,6 +446,25 @@ went hidden, and [invariants.md](invariants.md) lists that as the conn probe's r
 ([three-layer-ocean.md](three-layer-ocean.md)) once taken, and until then this gate bounds
 the desktop frame and says out loud that it does not bound the floor.
 
+#### Abyss Render Stack increment
+
+The [shared lighting rig](art-direction.md#shared-model-lighting--abyss-render-stack)
+adds **zero steady-state draw calls or triangles**. ACES and environment sampling run
+in existing material shaders; the PMREM bake does spend one-time GPU work at mount.
+Retain one filtered environment target below **1 MiB** per view and release the source
+texture, generator scratch and target at their respective lifecycle boundaries.
+Report material cost on the named GPU: zero extra draws does not mean zero GPU time.
+
+Bloom is deferred until a quality setting has an off path and this gate has an
+explicit pass, resolution and render-target-memory allocation. It must fit within
+the existing 150-call/250,000-triangle frame limits, not silently borrow historical
+headroom from #286 as a current measurement. That reading measures CPU submit and overlay
+time, not isolated GPU execution time.
+
+For #974 and subsequent render-stack upgrades, desktop is the required hardware
+target; the issue explicitly retires Termux as an acceptance requirement. The old
+phone observations above remain historical, not an outstanding gate for this stack.
+
 ### 7. Readability outranks richness
 
 RTS readability beats realism, at every zoom the camera allows: faction from silhouette,
@@ -493,6 +519,11 @@ misinformation. The sonar scope stays the flat chart, and its camera box is the 
 ground footprint: a trapezoid, because that is what a tilted camera honestly sees — and
 under a free yaw it is also the compass, its far edge drawn heavier to say which way the
 camera faces.
+
+Tone mapping and a static environment must not move this camera or its projections.
+Future chromatic split is bounded to **1 px at frame edges** and must exclude HUD and
+contact ink; sway must share the world/overlay projection and respect reduced motion.
+These effects remain deferred, not permission to add a second camera in a lighting PR.
 
 ## What `npm test` holds, and what only a screenshot can
 

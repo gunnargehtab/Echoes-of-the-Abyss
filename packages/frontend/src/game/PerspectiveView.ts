@@ -25,6 +25,7 @@
  */
 
 import {
+  ACESFilmicToneMapping,
   AdditiveBlending,
   AmbientLight,
   BufferAttribute,
@@ -51,11 +52,12 @@ import {
   Vector2,
   Vector3,
   WebGLRenderer,
+  type WebGLRenderTarget,
 } from 'three';
 import {
   DEPTH,
   Faction,
-  SORROWGATE_LOOK,
+  MODEL_LIGHTING,
   statsFor,
   structureStatsFor,
   type EchoSnapshot,
@@ -103,6 +105,7 @@ import {
 import { OwnMotion } from './ownMotion.ts';
 import { OrdnanceLayer } from './ordnanceLayer.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
+import { createWaterEnvironment } from './modelLighting.ts';
 import { VeilField, veilShade, type VeilListener } from './acousticVeil.ts';
 import {
   installSurveyInk,
@@ -408,6 +411,7 @@ export class PerspectiveView {
   private readonly dreamLights: DreamLightHalos | null;
   /** Environment props (environmentLayer.ts) — rebuilt on the terrain cadence. */
   private readonly environment: EnvironmentLayer;
+  private lightingEnvironment: WebGLRenderTarget | null = null;
   private embers: Points | null = null;
   private emberPhases: number[] = [];
   private emberBucket = -1;
@@ -587,25 +591,18 @@ export class PerspectiveView {
     const deepest = waterColorAt(DEPTH.MAX_M);
     this.scene.background = new Color().setRGB(deepest.r, deepest.g, deepest.b);
 
-    // Lights exist for the roster models alone: the terrain and fallback
-    // sprites are unlit materials with their shading baked in, so these touch
-    // nothing else. The rig transcribes the sprite bake's (bake.ts): a cold
-    // ambient so black water never crushes to nothing, an oblique key from
-    // high north-west, and a hard cyan rim from the north — the same rim the
-    // prompt kit poses every model against.
-    const tutorial = look === 'sorrowgate';
-    this.scene.add(
-      new AmbientLight(0x5a6b80, tutorial ? SORROWGATE_LOOK.AMBIENT : this.dreamStudy ? 0.75 : 0.65)
-    );
+    // Sorrowgate's rig is the production baseline for all lit models.
+    // Baked ground/sprites and instrument ink keep their authored register.
+    this.scene.add(new AmbientLight(MODEL_LIGHTING.AMBIENT_COLOR, MODEL_LIGHTING.AMBIENT));
     const key = new DirectionalLight(
-      0xdfe8f0,
-      tutorial ? SORROWGATE_LOOK.KEY : this.dreamStudy ? 1.2 : 1.35
+      MODEL_LIGHTING.KEY_COLOR,
+      this.dreamStudy ? 1.2 : MODEL_LIGHTING.KEY
     );
     key.position.set(-1400, 2600, -900);
     this.scene.add(key, key.target);
     const rim = new DirectionalLight(
-      this.dreamStudy ? UI.accent : 0x9fd8ff,
-      tutorial ? SORROWGATE_LOOK.RIM : this.dreamStudy ? 1.3 : 1.0
+      this.dreamStudy ? UI.accent : MODEL_LIGHTING.RIM_COLOR,
+      this.dreamStudy ? 1.3 : MODEL_LIGHTING.RIM
     );
     rim.position.set(0, 900, -3000);
     this.scene.add(rim, rim.target);
@@ -620,7 +617,11 @@ export class PerspectiveView {
    * entity sync and the frame path are all verified on a runner with no GPU.
    * Production calls this with one argument.
    */
-  mount(host: HTMLElement, makeRenderer: () => WebGLRenderer = glRenderer): boolean {
+  mount(
+    host: HTMLElement,
+    makeRenderer: () => WebGLRenderer = glRenderer,
+    makeEnvironment: typeof createWaterEnvironment = createWaterEnvironment
+  ): boolean {
     if (this.renderer !== null) return true;
     try {
       this.renderer = makeRenderer();
@@ -628,6 +629,20 @@ export class PerspectiveView {
       return false;
     }
     this.renderer.outputColorSpace = SRGBColorSpace;
+    if (!this.dreamStudy) {
+      this.renderer.toneMapping = ACESFilmicToneMapping;
+      this.renderer.toneMappingExposure = MODEL_LIGHTING.EXPOSURE;
+      try {
+        this.lightingEnvironment = makeEnvironment(this.renderer);
+      } catch (error) {
+        this.renderer.dispose();
+        this.renderer = null;
+        console.error('Could not initialise model environment lighting', error);
+        return false;
+      }
+      this.scene.environment = this.lightingEnvironment.texture;
+      this.scene.environmentIntensity = MODEL_LIGHTING.ENVIRONMENT_INTENSITY;
+    }
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO));
     host.appendChild(this.renderer.domElement);
     this.host = host;
@@ -820,6 +835,9 @@ export class PerspectiveView {
     this.dreamLights?.dispose();
     this.life.dispose();
     for (const texture of this.spriteTextures.values()) texture.dispose();
+    this.scene.environment = null;
+    this.lightingEnvironment?.dispose();
+    this.lightingEnvironment = null;
     this.renderer?.dispose();
     this.renderer?.domElement.remove();
     this.renderer = null;
@@ -1175,7 +1193,7 @@ export class PerspectiveView {
     texture.flipY = false;
     texture.colorSpace = SRGBColorSpace;
     texture.anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
-    const material = new MeshBasicMaterial({ map: texture, vertexColors: true });
+    const material = new MeshBasicMaterial({ map: texture, vertexColors: true, toneMapped: false });
     // The survey: isobaths and coastlines drawn in this material's own
     // fragment shader, so the ground's silhouette costs no draw call.
     const classes = surveyCellClasses(terrain);
@@ -1309,6 +1327,7 @@ export class PerspectiveView {
         new LineSegments(
           routeGeometry,
           new LineBasicMaterial({
+            toneMapped: false,
             color: UI.accent,
             transparent: true,
             opacity: FURNITURE_OUTLINE_ALPHA.tunnelRoute,
@@ -1335,6 +1354,7 @@ export class PerspectiveView {
         new LineLoop(
           new BufferGeometry().setFromPoints(rim),
           new LineBasicMaterial({
+            toneMapped: false,
             color: UI.glassStroke,
             transparent: true,
             opacity: FURNITURE_OUTLINE_ALPHA.mapRim,
@@ -1364,7 +1384,10 @@ export class PerspectiveView {
     // front of it dissolves is the hard edge this whole change exists to
     // remove. It falls away into the same water everything else does.
     this.terrainDressing.add(
-      new Mesh(skirtGeometry, new MeshBasicMaterial({ color: 0x040a12, side: DoubleSide }))
+      new Mesh(
+        skirtGeometry,
+        new MeshBasicMaterial({ color: 0x040a12, side: DoubleSide, toneMapped: false })
+      )
     );
   }
 
@@ -1396,6 +1419,7 @@ export class PerspectiveView {
     this.embers = new Points(
       emberGeometry,
       new PointsMaterial({
+        toneMapped: false,
         size: 55,
         sizeAttenuation: true,
         vertexColors: true,
@@ -1614,6 +1638,7 @@ export class PerspectiveView {
       const mesh = new Mesh(
         new PlaneGeometry(1, 1),
         new MeshBasicMaterial({
+          toneMapped: false,
           transparent: true,
           side: DoubleSide,
           depthWrite: false,
@@ -2183,6 +2208,12 @@ export class PerspectiveView {
       drawCalls: info?.render.calls ?? 0,
       triangles: info?.render.triangles ?? 0,
       textures: info?.memory.textures ?? 0,
+      toneMapping: this.renderer?.toneMapping,
+      environmentIntensity: this.scene.environmentIntensity,
+      environmentBytes:
+        this.lightingEnvironment === null
+          ? 0
+          : this.lightingEnvironment.width * this.lightingEnvironment.height * 8,
       // The station these frame numbers belong to, and the two counts that say
       // whether to believe them: `stationFrames` is every frame since the
       // boundary, `avgFrames` the window the average actually covers. Equal

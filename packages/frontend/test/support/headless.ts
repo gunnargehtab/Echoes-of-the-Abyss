@@ -30,7 +30,7 @@
 
 import { Container, DOMAdapter, Graphics, Text } from 'pixi.js';
 import type { Application } from 'pixi.js';
-import type { Scene, WebGLRenderer } from 'three';
+import { NoToneMapping, WebGLRenderTarget, type Scene, type WebGLRenderer } from 'three';
 
 // --- DOM ---------------------------------------------------------------
 
@@ -775,6 +775,18 @@ export class HeadlessWebGLRenderer {
   readonly capabilities = { getMaxAnisotropy: (): number => 1, isWebGL2: true };
   readonly shadowMap = { enabled: false, type: 0 };
   outputColorSpace = '';
+  toneMapping = NoToneMapping;
+  toneMappingExposure = 1;
+  environmentBuilds = 0;
+  environmentDisposed = false;
+  readonly environment = (): WebGLRenderTarget => {
+    this.environmentBuilds++;
+    const target = new WebGLRenderTarget(336, 128);
+    target.addEventListener('dispose', () => {
+      this.environmentDisposed = true;
+    });
+    return target;
+  };
   disposed = false;
   /**
    * The scene this renderer was last handed.

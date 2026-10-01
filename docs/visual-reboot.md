@@ -41,10 +41,12 @@ make the basin's danger visible before detection earns it. The existing mission 
 escort holds, silence debt, collapse, routes, text, camera controls and outcomes stay
 unchanged. The balance freeze is not lifted.
 
-The profile is selected by **mission identity**, not map identity, a development URL
+The surface profile is selected by **mission identity**, not map identity, a development URL
 flag, or a global material switch. Another mission using Sorrowgate's map retains the
-standard look. Re-entering a standard mission after the tutorial must not inherit its
-cached materials.
+standard surfaces. Re-entering a standard mission after the tutorial must not inherit its
+cached materials. The later [shared lighting rollout](art-direction.md#shared-model-lighting--abyss-render-stack)
+uses this tutorial's rig as the game-wide baseline and adds tone mapping and environment
+lighting to both profiles; mission isolation now applies to surfaces, not that shared rig.
 
 ## 3. Unit and structure sheet
 
@@ -103,7 +105,7 @@ the tutorial's templates rather than baked every frame or copied per hull.
 | Detail fade | Full through 1 m/pixel, gone by 6 m/pixel on hulls; 3 to 18 m/pixel on ground |
 | Normal-only surface height | 0.12 m on hulls; 0.3 m on props; no geometry displacement |
 | Roughness variation and texture filtering | 0.12 amplitude; anisotropy 4 |
-| Shared model light rig | Ambient 0.75, key 1.8, rim 1.6; existing light colours and directions |
+| Shared model light rig | [Game-wide rig](art-direction.md#shared-model-lighting--abyss-render-stack): ambient 0.75, key 1.8, rim 1.6; existing light colours and directions |
 
 These are presentation parameters, not simulation tuning. Surface normals and roughness
 describe existing geometry; there is no displacement or extra geometry. Emissive
@@ -112,7 +114,7 @@ are unchanged. The shared rig remains a readability light, not fictional sunligh
 
 Shader patches compose with the existing survey, water fog, veil, instancing and sway.
 Template keys include the selected look and, for hulls, the active palette. The standard
-path retains its existing material and light settings. The data texture is a bounded
+path retains its existing surface settings; lighting follows the shared rollout above. The data texture is a bounded
 page-lifetime cache like the approved model templates, not a new texture per match.
 
 ## 6. Evidence and exit

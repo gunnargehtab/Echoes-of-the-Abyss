@@ -287,10 +287,14 @@ async function boot(options: { webgl?: boolean } = {}): Promise<Booted> {
   const { callbacks, log } = recordingShell();
 
   const conn = new PerspectiveView();
-  const mounted = conn.mount(connHost as unknown as HTMLElement, () => {
-    if (options.webgl === false) throw new Error('headless: WebGL unavailable');
-    return gl.asRenderer();
-  });
+  const mounted = conn.mount(
+    connHost as unknown as HTMLElement,
+    () => {
+      if (options.webgl === false) throw new Error('headless: WebGL unavailable');
+      return gl.asRenderer();
+    },
+    gl.environment
+  );
   assert.equal(mounted, options.webgl !== false, 'mount reports whether it got a context');
   conn.setActive(true);
 
