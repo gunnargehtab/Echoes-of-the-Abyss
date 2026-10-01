@@ -1,0 +1,221 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "dpr": 1
+  },
+  "look": "sorrowgate",
+  "faction": 1,
+  "palette": "standard",
+  "curve": {
+    "efold": 14,
+    "min": 0.05,
+    "max": 6
+  },
+  "readings": [
+    {
+      "state": "rest",
+      "input": "none",
+      "frame": "01-rest-light-scout.png",
+      "crop": "01-rest-light-scout-crop.png",
+      "clip": {
+        "x": 629,
+        "y": 397,
+        "width": 184,
+        "height": 106
+      },
+      "unit": {
+        "id": 63,
+        "name": "Light Scout",
+        "sig": 6,
+        "restSig": 6,
+        "silentRunning": false,
+        "engineOff": false
+      },
+      "factor": 1,
+      "curve": 1,
+      "lamps": [
+        {
+          "hex": "#8fe36b",
+          "exportIntensity": 1.6,
+          "restIntensity": 1.3018271255464278,
+          "intensity": 1.3018271255464278,
+          "afterToneMapping": true
+        }
+      ],
+      "camera": {
+        "distance": 500,
+        "pitchDeg": 55,
+        "hullScale": 1,
+        "waterReachM": 1600
+      },
+      "pixels": {
+        "n": 19504,
+        "maxV": 0.914,
+        "over05": 9,
+        "over08": 5,
+        "clipped": 0,
+        "meanV": 0.0823,
+        "brightest1pc": {
+          "v": 0.353,
+          "saturation": 0.843,
+          "hueDeg": 169.1
+        },
+        "lampInk": {
+          "hueDeg": 102,
+          "saturation": 0.529
+        }
+      }
+    },
+    {
+      "state": "silent",
+      "input": "Space",
+      "frame": "02-silent-light-scout.png",
+      "crop": "02-silent-light-scout-crop.png",
+      "clip": {
+        "x": 629,
+        "y": 397,
+        "width": 184,
+        "height": 106
+      },
+      "unit": {
+        "id": 63,
+        "name": "Light Scout",
+        "sig": 3.5,
+        "restSig": 6,
+        "silentRunning": true,
+        "engineOff": false
+      },
+      "factor": 0.8364643072929833,
+      "curve": 0.8364643072929833,
+      "lamps": [
+        {
+          "hex": "#8fe36b",
+          "exportIntensity": 1.6,
+          "restIntensity": 1.3018271255464278,
+          "intensity": 1.0889319247854083,
+          "afterToneMapping": true
+        }
+      ],
+      "camera": {
+        "distance": 500,
+        "pitchDeg": 55,
+        "hullScale": 1,
+        "waterReachM": 1600
+      },
+      "pixels": {
+        "n": 19504,
+        "maxV": 0.855,
+        "over05": 7,
+        "over08": 5,
+        "clipped": 0,
+        "meanV": 0.0822,
+        "brightest1pc": {
+          "v": 0.35,
+          "saturation": 0.85,
+          "hueDeg": 169.9
+        },
+        "lampInk": {
+          "hueDeg": 102,
+          "saturation": 0.529
+        }
+      }
+    },
+    {
+      "state": "engine-off",
+      "input": "Q",
+      "frame": "03-engine-off-light-scout.png",
+      "crop": "03-engine-off-light-scout-crop.png",
+      "clip": {
+        "x": 629,
+        "y": 397,
+        "width": 184,
+        "height": 106
+      },
+      "unit": {
+        "id": 63,
+        "name": "Light Scout",
+        "sig": 1.75,
+        "restSig": 6,
+        "silentRunning": false,
+        "engineOff": true
+      },
+      "factor": 0.7381771603086269,
+      "curve": 0.7381771603086269,
+      "lamps": [
+        {
+          "hex": "#8fe36b",
+          "exportIntensity": 1.6,
+          "restIntensity": 1.3018271255464278,
+          "intensity": 0.9609790507486043,
+          "afterToneMapping": true
+        }
+      ],
+      "camera": {
+        "distance": 500,
+        "pitchDeg": 55,
+        "hullScale": 1,
+        "waterReachM": 1600
+      },
+      "pixels": {
+        "n": 19504,
+        "maxV": 0.812,
+        "over05": 7,
+        "over08": 4,
+        "clipped": 0,
+        "meanV": 0.0822,
+        "brightest1pc": {
+          "v": 0.348,
+          "saturation": 0.85,
+          "hueDeg": 169.9
+        },
+        "lampInk": {
+          "hueDeg": 102,
+          "saturation": 0.529
+        }
+      }
+    }
+  ],
+  "pairs": [
+    {
+      "unit": "Light Scout",
+      "louder": "rest",
+      "quieter": "engine-off",
+      "factorStep": 0.2618,
+      "comparable": true,
+      "linearSum": [
+        0.54,
+        1.59,
+        0.49
+      ],
+      "linearTotal": 2.62,
+      "hueDeg": 117.5,
+      "saturation": 0.692,
+      "lampInkLinear": {
+        "hueDeg": 107.7,
+        "saturation": 0.809
+      }
+    },
+    {
+      "unit": "Light Scout",
+      "louder": "silent",
+      "quieter": "engine-off",
+      "factorStep": 0.0983,
+      "comparable": true,
+      "linearSum": [
+        0.21,
+        0.68,
+        0.28
+      ],
+      "linearTotal": 1.17,
+      "hueDeg": 127.9,
+      "saturation": 0.687,
+      "lampInkLinear": {
+        "hueDeg": 107.7,
+        "saturation": 0.809
+      }
+    }
+  ]
+}
