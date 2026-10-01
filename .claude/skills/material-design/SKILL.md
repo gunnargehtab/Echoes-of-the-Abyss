@@ -35,7 +35,9 @@ example; do not install another rendering stack.
   run before survey ink; fog, vertex-colour veil, instancing and sway must still run.
 - Never alter a lamp's approved resting energy, placement, hue or live-SIG curve, on
   screen as well as in the material: ACES faded amber lamps toward cream in #974 with
-  every lamp value untouched. A cosmetic rim is not a new light source.
+  every lamp value untouched. The one exception is gate 3's lamp core, which holds a lamp
+  past white at white along its faction hue; no material compresses glow any other way. A
+  cosmetic rim is not a new light source.
 - Key cached templates by every look-changing input. A tutorial palette or material
   must not contaminate a later skirmish, including after a palette switch.
 - Keep normal materials on their original path outside the approved slice. Surface
