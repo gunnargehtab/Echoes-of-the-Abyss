@@ -209,7 +209,8 @@ Tone mapping changes displayed surface highlights, never the glow: emissive ligh
 after the tone-mapping curve, so a lamp keeps its faction hue and the strength its SIG band
 set, up to the white (1.0) the canvas can show. **The lamp core** keeps the hue at that
 ceiling. A lamp whose export rests past white in its brightest channel rests at white along
-its ink instead, worked out after the palette recolour so that it holds in every palette.
+its faction hue instead, worked out after the palette recolour so that it holds in every
+palette.
 Each live state is that rest times the live-SIG factor, so a quieted lamp still dims by the
 curve's own ratio, and a pixel a louder state drives past white is scaled down along its
 hue rather than clipped channel by channel. A lamp resting under white keeps its resting
@@ -307,8 +308,9 @@ The conn view renders the world at runtime — the terrain heightfield and the p
 triangles** on screen (`mergeByMaterial` collapses each model to one mesh per material),
 pixel ratio capped at 1.5, and the `__perspectiveProbe` frame-cost telemetry is how the
 number is checked rather than argued about. A frame that renders more than once is counted
-whole: every pass's draw calls and triangles sum, a full-screen draw is a call toward the
-150, a framebuffer blit is a listed pass, and render-target bytes include renderbuffers.
+whole: every pass's draw calls, triangles and GPU time sum, a full-screen draw is a call
+toward the 150, a framebuffer blit is a listed pass, and render-target bytes include
+renderbuffers.
 three resets `renderer.info` on every `render()` by default, so a probe that reads it once
 a frame reads only the last pass; the conn view renders once a frame today. Only the own
 force is ever geometry — five hulls and a dozen structures, never an army of contacts —
@@ -470,10 +472,11 @@ in existing material shaders; the PMREM bake does spend one-time GPU work at mou
 Retain one filtered environment target below **1 MiB** per view and release the source
 texture, generator scratch and target at their respective lifecycle boundaries.
 Report material cost on the named GPU: zero extra draws does not mean zero GPU time.
-That report is the canvas pass's GPU time from a timer query
-(`EXT_disjoint_timer_query_webgl2`, which Edge exposes on the named GPU), read before and
-after the change at pixel ratio 1 and 1.5: the close, home, low (12°) and survey cameras on
-Ventfront and Sorrowgate, and the fight station of `stations.mjs` on Ventfront. A software
+That report is the conn view's GPU time over every pass of its frame (today the one canvas
+render), from a timer query (`EXT_disjoint_timer_query_webgl2`, which Edge exposes on the
+named GPU). It is read before and after the change at pixel ratio 1 and 1.5: at the close,
+home, low (12°) and survey cameras of `tools/render-stack/capture.mjs` on Ventfront and
+Sorrowgate, and at the fight station of `stations.mjs` on Ventfront. A software
 rasteriser's time is no reading.
 [#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001) adds the field to
 `__perspectiveProbe`.
@@ -482,9 +485,11 @@ Gate 3's lamp core is allocated nothing: no pass, draw call, triangle or render-
 
 Bloom, or any other lamp halo, waits first for #1001's readings of what one would show and
 cost: GPU time at those stations, lamp sizes on screen, the share of the frame that stays
-near-black, whether halo light would follow SIG, and a ping's flash area. After that it is
-deferred until a quality setting has an off path and this gate has an explicit pass,
-resolution, render-target-memory and GPU-time allocation. It must fit within
+near-black, whether halo light would follow SIG, and a ping's flash area. From those the
+owner picks point halos, a full-screen pass or none
+([art-direction.md](art-direction.md#ranked-audit-and-remaining-work), row 2). A halo the
+owner picks is then deferred until a quality setting has an off path and this gate has an
+explicit pass, resolution, render-target-memory and GPU-time allocation. It must fit within
 the existing 150-call/250,000-triangle frame limits, not silently borrow historical
 headroom from #286 as a current measurement. That reading measures CPU submit and overlay
 time, not isolated GPU execution time.
@@ -610,10 +615,11 @@ there is a picture to review.
 - [ ] Enemy-facing rendering still caps at tier fidelity; own-force-only detail stayed
   own-force-only (gate 5)
 - [ ] Draw calls and triangles stay inside the gate-6 budgets, counted over every pass of
-  the frame (`__perspectiveProbe` reports them), and the map density contracts (`4` /
-  `1.5` px/m) are untouched or changed on both sides at once
-- [ ] A render-stack change reports the canvas pass's GPU time on the named GPU, before
-  and after (gate 6)
+  the frame (`__perspectiveProbe` reads a one-pass frame; gate 6 says how a multi-pass
+  frame sums), and the map density contracts (`4` / `1.5` px/m) are untouched or changed
+  on both sides at once
+- [ ] A render-stack change reports the frame's GPU time, every pass summed, on the named
+  GPU, before and after (gate 6)
 - [ ] World marks still project through the conn camera — measurements conform, symbols
   billboard, no second projection, atmosphere effects stay screen-space and rotate
   nothing (gate 8)

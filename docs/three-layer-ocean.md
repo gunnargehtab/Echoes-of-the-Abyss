@@ -131,7 +131,7 @@ The old spec was load-bearing. Each load moves; none is dropped:
 - **Glow encodes loudness.** The `E(SIG)` energy curve in
   [graphics-standards.md](graphics-standards.md) gate 3 applies to runtime emissive materials
   exactly as it applied to baked emissive maps, up to the white the canvas can show, where
-  gate 3's lamp core holds a lamp along its ink. A quiet hull is dark in 3D too.
+  gate 3's lamp core holds a lamp along its faction hue. A quiet hull is dark in 3D too.
 - **Atmosphere is screen-space.** Vignette, sway (translation only), chromatic split — the
   existing rules carry over unchanged.
 
