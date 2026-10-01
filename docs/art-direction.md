@@ -106,9 +106,9 @@ GPU-timer bracket, four steps run, and nothing else is drawn:
 1. **Depth copy.** One framebuffer blit copies the canvas depth, the depth bit only, into a
    DEPTH24_STENCIL8 depth texture the size of the drawing buffer. Asking for the stencil
    bit as well cost 5–7 ms on the named GPU. With the canvas stencil the composite needs
-   present, the depth-only copy read the same, 0.12 ms at 1440 × 900 and 0.27 ms at
-   2160 × 1350 ([issue-1001](screenshots/issue-1001/README.md),
-   `halo/route-cost-stencil.json`).
+   present, the depth-only copy read 0.17 ms at 1440 × 900 and 0.27 ms at 2160 × 1350,
+   against 0.15 and 0.29 ms without one: the same, within run-to-run spread
+   ([issue-1001](screenshots/issue-1001/README.md), "What each route costs on its own").
 2. **Source.** One instanced draw writes a splat for every lamp site into a half-float
    target the size of the drawing buffer, depth-tested against that copy.
 3. **Spread.** The source is blurred over three levels, at 1/2, 1/4 and 1/8 of the drawing
