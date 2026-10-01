@@ -585,9 +585,9 @@ export class PerspectiveView {
   private readonly connCost = new FrameCost();
   /** Time inside the overlay painter's `draw`, reported by `EchoRenderer`. */
   private readonly overlayCost = new FrameCost();
-  /** The frame's GPU time, every pass summed (gate 6); set up with the renderer. */
   /** The renders that made the last frame, in order (gate 6's pass list). */
   private framePasses: readonly string[] = [];
+  /** The frame's GPU time, every pass summed (gate 6); set up with the renderer. */
   private gpuTimer: GpuTimer | null = null;
   /** The station these three are measuring, or null before one is named. */
   private stationLabel: string | null = null;
