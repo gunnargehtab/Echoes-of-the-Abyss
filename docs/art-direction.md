@@ -105,7 +105,10 @@ GPU-timer bracket, four steps run, and nothing else is drawn:
 
 1. **Depth copy.** One framebuffer blit copies the canvas depth, the depth bit only, into a
    DEPTH24_STENCIL8 depth texture the size of the drawing buffer. Asking for the stencil
-   bit as well cost 5–7 ms on the named GPU.
+   bit as well cost 5–7 ms on the named GPU. With the canvas stencil the composite needs
+   present, the depth-only copy read the same, 0.12 ms at 1440 × 900 and 0.27 ms at
+   2160 × 1350 ([issue-1001](screenshots/issue-1001/README.md),
+   `halo/route-cost-stencil.json`).
 2. **Source.** One instanced draw writes a splat for every lamp site into a half-float
    target the size of the drawing buffer, depth-tested against that copy.
 3. **Spread.** The source is blurred over three levels, at 1/2, 1/4 and 1/8 of the drawing
@@ -114,7 +117,8 @@ GPU-timer bracket, four steps run, and nothing else is drawn:
 
 There is no EffectComposer, no OutputPass and no second camera: the splats project through
 the conn camera, and the full-screen draws ignore its matrices (gate 8). A frame in which
-no entity draws a splat runs none of the four steps.
+no entity draws a splat runs none of the four steps. The halo is never built while the
+development-only Dream Loop study is on, which has lamp halos of its own.
 
 **What feeds it.** Only own hull and structure lamps whose model is showing feed the
 source, one splat per lamp site: one connected bulb or strip of an emissive material, the
@@ -150,8 +154,9 @@ rising linearly to full at SIG 35. It is not eased between snapshots, because th
 steps on the same 200 ms. An entity at weight 0 draws no splat, so gate 3's exclusion of
 SIG 0–15 holds by construction, over every input. Above 35 the halo rides the curve
 uncapped, with SIG taken between 0 and 100: a ping's SIG 95 carries 73 times a SIG-35
-entity's energy, though `GLOW_FACTOR_MAX` stops the lamp itself at 6. A hull at SIG 15 or
-under gains a halo only while a ping, a firing burst or a dive lifts it. An entity whose
+entity's energy, though `GLOW_FACTOR_MAX` stops the lamp itself at 6. A hull whose live SIG
+stays at 15 or under, as a Light Scout's does idling (6) and cruising (12), gains a halo only
+while something lifts it past 15: a ping, a firing burst, a dive. An entity whose
 whole energy, gathered at one pixel, would stay under the toe below also draws no splat.
 
 **Splats.** A site's box is treated as a Gaussian, σ = half-extent ÷ √3 on each axis,
@@ -200,8 +205,9 @@ plating, its texture and the hull's outline stay visible under it, and no channe
 white. Lamp pixels take none of it: while the halo is on, every own lamp material marks the
 pixels it draws in the canvas's stencil, at no extra draw, and the composite skips them
 sample by sample under 4× MSAA. A lamp therefore reads byte-identically with the halo on or
-off, at any strength, and gate 3's lamp core is untouched. The canvas asks for a stencil
-buffer for this, and nothing else draws into it.
+off, at any strength, and gate 3's lamp core is untouched. The canvas always asks for a
+stencil buffer for this, so the setting can turn the halo on and off mid-match, and nothing
+else draws into it.
 
 **Colour.** Each splat takes its site material's emissive colour, the faction glow ink after
 the palette recolour, normalised so its brightest channel is 1, so the hue holds in all four
