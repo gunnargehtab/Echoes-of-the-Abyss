@@ -1,8 +1,8 @@
 # Abyss Render Stack — first-increment checkpoint
 
-**Not visually accepted.** Work paused at the user's request to save the run and
-commit findings. The first lighting increment is implemented, but there has been
-no independent critic round and no visual approval of the after frames.
+The first lighting increment, with one correction found on review: the faction glow
+is added after tone mapping (see [Glow after tone mapping](#glow-after-tone-mapping)).
+Visual approval on the GTX 1070 is still owed.
 
 ## Decision and scope
 
@@ -71,11 +71,35 @@ Close-frame pairs:
 [tutorial before](before-tutorial/02-close.png) /
 [tutorial after](after-tutorial/02-close.png).
 
-The repository's pre-tool hook rejected image viewing with an error. The user
-attached the standard before frame, which was visible in the conversation; the
-after frame and tutorial pair were not visually inspected. Capture success and
-the table above therefore do **not** constitute art approval. Quiet/loud interaction
-evidence, other faction/palette coverage and review of all camera pairs remain owed.
+The first run could not view its own frames: a pre-tool hook rejected image reads
+on that Windows machine. Every camera pair was later reviewed from a Linux container,
+which is how the faded glow below was found.
+
+## Glow after tone mapping
+
+ACES on the summed colour faded the Consortium's amber lamps toward cream. Bright
+pixels (max channel above 0.8, world area above the HUD) lost most of their
+saturation:
+
+| Ventfront camera | No tone mapping | ACES on everything | ACES on surfaces, glow after |
+| --- | --- | --- | --- |
+| Home | 0.65 | 0.41 | 0.67 |
+| Close | 0.66 | 0.38 | 0.67 |
+| Low | 0.64 | 0.58 | 0.69 |
+
+The owner chose to tone-map surface light only and add emission back afterwards
+(`keepGlowOutsideToneMapping` in `modelLighting.ts`, on every hull's cloned lamp
+materials). Three.js's Neutral curve was also measured: 0.52 at the close camera,
+with amber shifted toward peach. The glow term now reaches the screen exactly as it
+did before this increment, so gate 3's resting brightness is unchanged by construction.
+
+[`after-glow-standard`](after-glow-standard/03-close.png) and
+[`after-glow-tutorial`](after-glow-tutorial/02-close.png) hold the corrected frames;
+[`aces-container`](aces-container/03-close.png) holds the ACES frames from the same
+machine. These three sets come from headless Chromium on SwiftShader, so they carry
+no readings file: their pixels are valid and their frame times are not. Draw calls
+and triangles matched the table above at every station. The Sorrowgate pair is
+unchanged to the eye, because its hulls run quiet.
 
 ## Reproduction and remaining acceptance
 
@@ -97,9 +121,7 @@ Frontend type-check passed. The focused model-lighting, renderer-smoke, loudness
 and GameCanvas suite passed **102 tests**. The full `npm run gates` passed 11 of
 12 gates; documentation lint caught an issue reference starting a line as a heading.
 That wording was corrected in the checkpoint follow-up.
-No critic has reviewed this increment. Resume with the missing evidence, file the
-scoped follow-ups, run all gates, then submit the authored target and exact diff to
-a fresh `loop-critic` before opening the first-increment PR.
+Remaining before merge: paired GPU frames of the glow correction on the GTX 1070, and visual approval.
 
 ## Related
 

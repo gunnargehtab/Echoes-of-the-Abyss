@@ -4,6 +4,7 @@ import {
   EquirectangularReflectionMapping,
   FloatType,
   LinearSRGBColorSpace,
+  type MeshStandardMaterial,
   PMREMGenerator,
   RGBAFormat,
   type WebGLRenderer,
@@ -51,4 +52,29 @@ export function createWaterEnvironment(renderer: WebGLRenderer): WebGLRenderTarg
     source.dispose();
     generator.dispose();
   }
+}
+
+/**
+ * The tone-mapping curve applies to surface light only. ACES on the summed
+ * colour fades a saturated lamp toward white, so a faction's glow would stop
+ * reading as its faction (gate 4) and a loud hull's colour would lie about its
+ * SIG (gate 3). Map everything but the emission, then add the emission back
+ * at its own hue and strength. A no-op wherever the renderer has no tone mapping.
+ */
+export const GLOW_AFTER_TONE_MAPPING = `#if defined( TONE_MAPPING )
+	gl_FragColor.rgb = toneMapping( max( gl_FragColor.rgb - totalEmissiveRadiance, 0.0 ) ) + totalEmissiveRadiance;
+#endif`;
+
+/** Chains onto any earlier patch, as tutorialLook.ts does. */
+export function keepGlowOutsideToneMapping(material: MeshStandardMaterial): void {
+  const before = material.onBeforeCompile;
+  const key = material.customProgramCacheKey();
+  material.onBeforeCompile = (shader, renderer) => {
+    before.call(material, shader, renderer);
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <tonemapping_fragment>',
+      GLOW_AFTER_TONE_MAPPING
+    );
+  };
+  material.customProgramCacheKey = () => `${key}:glow-after-tone-1`;
 }

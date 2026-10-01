@@ -18,7 +18,11 @@ import { DEPTH, MODEL_LIGHTING } from '@echoes/shared';
 import { createHost, HeadlessWebGLRenderer, pumpAnimationFrames } from './support/headless.ts';
 import { cannedSnapshot, cannedTerrain } from './support/cannedMatch.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
-import { waterEnvironmentSource } from '../src/game/modelLighting.ts';
+import {
+  GLOW_AFTER_TONE_MAPPING,
+  keepGlowOutsideToneMapping,
+  waterEnvironmentSource,
+} from '../src/game/modelLighting.ts';
 import { waterColorAt } from '../src/game/water.ts';
 import type { WorldLook } from '../src/game/tutorialLook.ts';
 
@@ -138,5 +142,40 @@ describe('shared model lighting: art-direction and gates 3/6/8', () => {
       log.mock.restore();
       view.destroy();
     }
+  });
+});
+
+describe('glow stays outside tone mapping: gates 3 and 4', () => {
+  const shaderWith = () => ({
+    uniforms: {},
+    vertexShader: '',
+    fragmentShader: 'void main() {\n#include <opaque_fragment>\n#include <tonemapping_fragment>\n}',
+  });
+
+  it('tone-maps surface light and adds the emission back unmapped', () => {
+    const material = new MeshStandardMaterial({ emissive: 0xffb000 });
+    const keyBefore = material.customProgramCacheKey();
+    keepGlowOutsideToneMapping(material);
+    const shader = shaderWith();
+    material.onBeforeCompile(shader as never, null as never);
+    assert.ok(!shader.fragmentShader.includes('#include <tonemapping_fragment>'));
+    assert.ok(shader.fragmentShader.includes(GLOW_AFTER_TONE_MAPPING));
+    assert.match(
+      GLOW_AFTER_TONE_MAPPING,
+      /toneMapping\( max\( gl_FragColor\.rgb - totalEmissiveRadiance, 0\.0 \) \) \+ totalEmissiveRadiance/
+    );
+    assert.ok(GLOW_AFTER_TONE_MAPPING.startsWith('#if defined( TONE_MAPPING )'));
+    assert.notEqual(material.customProgramCacheKey(), keyBefore, 'a distinct program');
+  });
+
+  it('chains onto an earlier patch instead of replacing it', () => {
+    const material = new MeshStandardMaterial({ emissive: 0xc2465e });
+    const earlier = mock.fn();
+    material.onBeforeCompile = earlier;
+    keepGlowOutsideToneMapping(material);
+    const shader = shaderWith();
+    material.onBeforeCompile(shader as never, null as never);
+    assert.equal(earlier.mock.callCount(), 1);
+    assert.ok(shader.fragmentShader.includes(GLOW_AFTER_TONE_MAPPING));
   });
 });

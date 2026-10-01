@@ -205,7 +205,8 @@ preference — a quiet unit that glows brightly is lying to the player about the
 exactly as a loud unit rendered dark is. Firing bursts may flare; the resting state must
 match the number.
 
-Tone mapping changes displayed highlights, not the input emission curve. Environment
+Tone mapping changes displayed surface highlights, never the glow: emissive light is added
+after the tone-mapping curve, so a lamp keeps its faction hue and the strength its SIG band set. Environment
 reflections are surface light, never a substitute for SIG emission. Any future bloom
 must explicitly exclude SIG **0–15** from its source, including bright reflected
 highlights; a brightness threshold alone cannot enforce that rule. Compare quiet and

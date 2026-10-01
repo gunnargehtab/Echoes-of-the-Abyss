@@ -61,7 +61,11 @@ It is not a background replacement, a sun, or a new emissive source.
 The existing water backdrop, baked seabed and fallback sprites, depth marks, route
 ink, embers and unlit ordnance lamps bypass tone mapping; the Pixi HUD and enemy
 contacts remain outside this world-material operation. Live SIG still drives the
-same input emission curve. No bloom, shadows, camera effects or geometry are added.
+same input emission curve, and the curve applies to **surface light only**: a model's
+emissive glow is added after tone mapping, at its own faction hue and approved strength.
+ACES alone fades a saturated glow toward white (Ventfront close camera: bright-pixel
+saturation 0.66 untone-mapped, 0.38 under ACES), which breaks palette discipline and
+makes a loud hull lie about its colour. No bloom, shadows, camera effects or geometry are added.
 
 The asset list is the existing approved roster and prop kit, with no new downloads
 or GLB edits. Evidence pairs the old and new standard-match and tutorial frames at
