@@ -576,9 +576,10 @@ exception, by a turn on their nodes and not by their count: the Sentinel Turret'
 emplacement frustum and the Sounding Spire's plinth and its cap are twelve-gons turned an
 eighth of a turn, the turn the approved octagons had. An octagon mirrors at an eighth and a
 twelve-gon does not — its reflection is itself turned fifteen degrees, half a facet, so one
-side has a corner where the other has the middle of a flat — but the turned box is what each model's footprint is measured
-by, and only that turn keeps the box and so the model's size; the owner took the turn over
-a turret 9.1 % larger and a Spire 3.3 % larger, knowingly. Four is the floor,
+side has a corner where the other has the middle of a flat — but the turned box is what
+each model's footprint is measured by, and only that turn keeps the box and so the model's
+size; the owner took the turn over a turret 2.3 % larger (9.1 % with a vertex on the axis)
+and a Spire 3.3 % larger, knowingly. Four is the floor,
 the blade's diamond. Four and six are the sections, and each keeps a count: four keeps
 every spar, point and prism in the navy, and six every hexagonal prism — the horns, lips
 and drives (the Clarion's horn carries 5.5 m faces and keeps), the stays, struts, pins,

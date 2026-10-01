@@ -14,8 +14,8 @@
  * (docs/concept-art/models/sounding-spire-hadron.glb at f7cce0f), part for
  * part in its order, every number the export's own (#652, off #540 Phase
  * 3). Forty-six parts, 1,684 triangles (the export's; FACETS, at the foot):
- * a plinth and cap turned an eighth, eight-sided on the export; four anchor legs on the diagonals with a claw on each; a
- * crystal core, throat and apex that are three octahedra drawn tall; two
+ * a plinth and cap turned an eighth, eight-sided on the export; four anchor
+ * legs on the diagonals with a claw on each; a crystal core, throat and apex that are three octahedra drawn tall; two
  * frame blades that are one bevelled extrusion, the `_l` a reflection of
  * the `_r`; three resonance collars, four-sided rings with a vane each
  * side; two tuning horns with lit tips and the brace between; two ballast
@@ -26,8 +26,8 @@
  * THE FRAME, and the trap in it. An X-long r184 export that is square to
  * the digit: 9.66856606468874 by 9.66856606468874 in plan by the measure
  * the bake takes (intake `rawSize`) — the plinth's frustum, eight-sided on
- * the export and twelve since #919, turned an eighth, sets both extents from the same cos π/8 + sin π/8 of
- * its radius. Intake's yaw rule is strict `raw.z > raw.x`, so the approved
+ * the export and twelve since #919, turned an eighth, sets both extents
+ * from the same cos π/8 + sin π/8 of its radius. Intake's yaw rule is strict `raw.z > raw.x`, so the approved
  * file was *not* yawed (`rotatedZtoX: false`), which is the opposite tie to
  * the Knights' Vent Tap, whose square plan fell an ulp the other way and
  * was (structures/vent-tap-hadron.mjs). So this file builds in the export's
@@ -137,7 +137,9 @@
  * running lights an orb of four by two, an octahedron at 1.45 m, where it
  * had six by five; and the plinth and its cap twelve, where it had eight,
  * turned the file's eighth still — the comment at their call says what
- * that keeps and what it costs. 46 parts and 1,684 triangles become 46 and
+ * that keeps and what it costs. The first pair of running lights stands
+ * on the plinth's skin and moved with it, 1.6 m the `_r` and 0.7 the `_l`,
+ * so that pair no longer mirrors. 46 parts and 1,684 triangles become 46 and
  * 1,460.
  */
 import { THREE, fitFootprint, exportGlb } from '../kit.mjs';

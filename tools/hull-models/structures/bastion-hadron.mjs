@@ -146,12 +146,13 @@
  * - the port lights an orb of four by three, where it was six by five.
  * The plan is 20.90 by 18.13 now: the plinth's turned box was the 19.34,
  * a twelve-gon's overhangs less, and x is the docks' still, so the scale
- * did not move. Four pairs of port lights moved with the dome's skin:
- * the first, which #907 seated on the dome, is seated on the coarser
- * facet under it, and the three pairs up the dome, which sat on the round
- * sphere's skin at the file's stations, are seated the same way now
- * (`lightPairs` `on`) — left where they were the fourth pair stood 1.09 m
- * off the dome. The two pairs on the equator band did not move.
+ * did not move. Four pairs of port lights are seated on the facets under
+ * them (`lightPairs` `on`): the first, which #907 seated on the dome, on
+ * the coarser facet there, and the three pairs up the dome, which sat on
+ * the round sphere's skin at the file's stations — left where they were
+ * the fourth pair stood 1.09 m off the dome. Three of the four move, pairs
+ * 0, 3 and 5 by 3.5, 1.5 and 2.4 m, and pair 4 lands where it was. The two
+ * pairs on the equator band did not move.
  *
  * THE ANCHOR BLADES moved, and by review (#919, round two). The file stood
  * all four pairs on one circle of 7.3 round an octagon, whose corners at
@@ -170,7 +171,12 @@
  * to starboard, and the blades are stood off the plinth's skin at their
  * own bearings instead of off the circle (`anchorBlades` `foot`): drawn in
  * 4.9, 1.6, 2.4 and 4.0 m, pairs 0 to 3, each pair still a mirror, and all
- * eight foot on the plinth — gap 0, 0, 0, 0. 58 parts and 3,788 triangles
+ * eight foot on the plinth — gap 0, 0, 0, 0. `diff.mjs` reads the same
+ * moves as 4.4, 1.5, 2.3 and 3.7 m, a blade's largest axis rather than
+ * its draw-in. One crossing is deeper for it: the fourth pair's blade
+ * meets the first's across the beam by 0.88 m where the file had 0.08,
+ * the two drawn in by different amounts, most of it inside the plinth.
+ * 58 parts and 3,788 triangles
  * become 58 and 1,948.
  */
 import { THREE, fitFootprint, exportGlb } from '../kit.mjs';

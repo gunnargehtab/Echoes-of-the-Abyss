@@ -62,7 +62,9 @@
  * twelve, where it had eight, still turned the file's eighth — which keeps
  * the turned box `DRAWN` measures and gives up the frustum's mirror, port
  * to starboard (hadron.mjs `emplacement`; the owner's call, #919 round
- * two). One thing did not move: the pods' caps keep three steps, a segment
+ * two). The four nav marks stand on that frustum's skin, so they moved
+ * with it, 0.4 to 1.3 m, and no longer mirror port to starboard either.
+ * One count did not move: the pods' caps keep three steps, a segment
  * over the rule's odd share of a half turn, which no capsule draws
  * (`magazine`). The pip is
  * the bow end of the same measure: an octahedron has a vertex on the axis

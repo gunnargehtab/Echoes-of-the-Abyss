@@ -1720,8 +1720,8 @@ const sided = (sgn, [x, y, z], [a = 0, b = 0, c = 0] = []) =>
  * twelve-gon's lines of symmetry are every fifteen degrees and an eighth
  * of a turn is 22.5, so no vertex and no flat lies on the axis, and its
  * reflection is itself turned fifteen degrees, half a facet: where one
- * side has a corner the other has the middle of a 17 m flat. Any turn that mirrors (none, or half a facet)
- * measures 10.74 or 11.46 for the 11.72 and grows the whole turret 9.1 or
+ * side has a corner the other has the middle of a 17 m flat. Any turn
+ * that mirrors (none, or half a facet) measures 10.74 or 11.46 for the 11.72 and grows the whole turret 9.1 or
  * 2.3 % to fill the same 120 m, and the owner took the turn over the
  * growth, knowingly (#919, round two). docs/asset-prompts-3d.md Block 2c
  * names the three.
