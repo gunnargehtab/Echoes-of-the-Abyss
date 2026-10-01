@@ -4,9 +4,9 @@
  * Takes one exported GLB (from Claude Design or anywhere else) and produces
  * the four orthographic maps — albedo, normal, emissive, height — plus a
  * meta.json describing what the export actually contains. For units and
- * structures the maps are also the shipped sprite inputs
- * (tools/hull-maps/build.mjs); for environment props they are review
- * artifacts only, because props ship as instanced meshes
+ * structures albedo, emissive and height are also the shipped sprite inputs
+ * (tools/hull-maps/build.mjs) and normal is for review; for environment props
+ * all four are review artifacts, because props ship as instanced meshes
  * (packages/frontend/src/game/environmentModels.ts). Rendering happens in
  * headless Chromium via three.js because that is the only real glTF renderer
  * available in this container (no Blender), and it is the same Playwright
@@ -38,12 +38,13 @@
  */
 
 import { createRequire } from 'node:module';
-import { execSync, spawnSync } from 'node:child_process';
+import { execSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawn } from '../../../../tools/lib/spawn.mjs';
 
 const require = createRequire(import.meta.url);
 const here = dirname(fileURLToPath(import.meta.url));
@@ -96,16 +97,19 @@ if (isEnv && glowE > 0) {
 }
 
 // --- three.js, installed once outside the repo -----------------------------
-// The repo has no three dependency and should not grow one for an offline
-// bake tool, so pin it in a throwaway prefix under the system temp dir.
+// packages/frontend depends on three, but page.html imports it by URL through
+// an importmap (/deps/node_modules/three/) that the server below answers from
+// a throwaway prefix under the system temp dir, so the bake needs no workspace
+// install. Pinned to the version package-lock.json resolves, so a bake runs the
+// r169 the client ships; tools/hull-renders shares the prefix.
 const THREE_VERSION = '0.169.0';
 const depsDir = join(tmpdir(), 'hull-intake-deps');
 if (!existsSync(join(depsDir, 'node_modules', 'three', 'package.json'))) {
   console.log(`installing three@${THREE_VERSION} into ${depsDir} (first run only)...`);
   mkdirSync(depsDir, { recursive: true });
-  const r = spawnSync('npm', ['install', '--no-audit', '--no-fund', `three@${THREE_VERSION}`], {
+  // npm is a .cmd batch file on Windows, which spawnSync cannot start alone.
+  const r = spawn('npm', ['install', '--no-audit', '--no-fund', `three@${THREE_VERSION}`], {
     cwd: depsDir,
-    stdio: 'inherit',
   });
   if (r.status !== 0) {
     console.error('npm install of three failed — the bake cannot run without it.');
@@ -187,6 +191,12 @@ try {
   if (error) throw new Error(`model failed to load: ${error}`);
   const stats = await page.evaluate(() => window.__stats);
 
+  // Before any map is written: a lost WebGL context still answers toDataURL,
+  // with transparent passes, so no opaque albedo pixel is a frame nothing drew
+  // (#1014). Its raw energy is the glow reading when --glow-e is not given.
+  const drawn = await page.evaluate(() => window.__glow(0));
+  if (!(drawn.maskPx > 0)) throw new Error('the albedo pass is empty: nothing was drawn');
+
   mkdirSync(outDir, { recursive: true });
   let glow;
   for (const pass of ['albedo', 'normal', 'emissive', 'height']) {
@@ -204,7 +214,7 @@ try {
   }
   // Raw glow energy is reported even uncalibrated — intake review reads it
   // against the gate-3 curve.
-  if (!glow) glow = await page.evaluate(() => window.__glow(0));
+  if (!glow) glow = drawn;
 
   // --- validation verdicts -------------------------------------------------
   const warnings = [];

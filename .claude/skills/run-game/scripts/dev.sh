@@ -21,6 +21,16 @@ PORTS=(3000 5173)
 
 listeners() { lsof -ti:"$1" -sTCP:LISTEN 2>/dev/null; }
 
+# Without lsof every port reads free: status says free, stop kills nothing, and
+# start launches a second tree whose readiness probe a stale server can answer
+# (#1014). Git for Windows' Bash has none; run-game SKILL.md step 1 says what
+# to do there. Checked here, not in listeners(): an exit inside $(...) ends
+# only that subshell.
+if ! command -v lsof > /dev/null; then
+  echo "dev.sh: lsof not found, so it cannot see who holds :${PORTS[0]} or :${PORTS[1]}" >&2
+  exit 2
+fi
+
 stop() {
   local mypgid killed=0
   mypgid=$(ps -o pgid= -p $$ 2>/dev/null | tr -d ' ')

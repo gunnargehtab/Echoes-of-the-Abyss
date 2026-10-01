@@ -79,9 +79,10 @@ if (stripUv) {
   console.log(`stripped UVs from ${stripped} primitive(s)`);
 }
 
-let text = JSON.stringify(json);
-while (text.length % 4) text += ' ';
-const jsonBuffer = Buffer.from(text, 'utf8');
+// Pad the bytes, not the string: a GLB chunk aligns on 4 bytes, padded with
+// spaces, and a name outside ASCII is more UTF-8 bytes than UTF-16 units.
+const bytes = Buffer.from(JSON.stringify(json), 'utf8');
+const jsonBuffer = Buffer.concat([bytes, Buffer.alloc((4 - (bytes.length % 4)) % 4, 0x20)]);
 const header = Buffer.alloc(20);
 header.write('glTF', 0, 'ascii');
 header.writeUInt32LE(2, 4);

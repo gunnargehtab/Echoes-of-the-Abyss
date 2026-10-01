@@ -32,12 +32,14 @@
  */
 
 import { createRequire } from 'node:module';
-import { execSync, spawnSync } from 'node:child_process';
+import { execSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawn } from '../lib/spawn.mjs';
+import { CHROMIUM_ARGS, emptyFrame } from './chromium.mjs';
 import { KINDS, NAVIES, NEW_KINDS, shots } from './shots.mjs';
 
 const require = createRequire(import.meta.url);
@@ -74,17 +76,20 @@ if (plan.length === 0) {
 }
 
 // --- three.js, installed once outside the repo -------------------------------
-// Shared with .claude/skills/hull-intake/scripts/bake.mjs, deliberately: the
-// repo has no three dependency and should not grow one for two offline tools,
-// and one pinned prefix means one download.
+// Shared with inspect.mjs and .claude/skills/hull-intake/scripts/bake.mjs,
+// deliberately: one pinned prefix means one download. packages/frontend does
+// depend on three, but scene.html imports it by URL through an importmap
+// (/deps/node_modules/three/) that the server below answers from this prefix,
+// so a render needs no workspace install. Keep THREE_VERSION on the version
+// package-lock.json resolves, so a render runs the r169 the client ships.
 const THREE_VERSION = '0.169.0';
 const depsDir = join(tmpdir(), 'hull-intake-deps');
 if (!existsSync(join(depsDir, 'node_modules', 'three', 'package.json'))) {
   console.log(`installing three@${THREE_VERSION} into ${depsDir} (first run only)...`);
   mkdirSync(depsDir, { recursive: true });
-  const r = spawnSync('npm', ['install', '--no-audit', '--no-fund', `three@${THREE_VERSION}`], {
+  // npm is a .cmd batch file on Windows, which spawnSync cannot start alone.
+  const r = spawn('npm', ['install', '--no-audit', '--no-fund', `three@${THREE_VERSION}`], {
     cwd: depsDir,
-    stdio: 'inherit',
   });
   if (r.status !== 0) {
     console.error('npm install of three failed — the render cannot run without it.');
@@ -173,17 +178,7 @@ const seedOf = (id) => {
 
 // --- render ------------------------------------------------------------------
 const { chromium } = loadPlaywright();
-const browser = await chromium.launch({
-  args: [
-    '--no-sandbox',
-    // SwiftShader is the only GL this container has, and three's WebGL2 path
-    // needs it asked for by name; without these the page falls back to no
-    // context at all and every shot fails identically.
-    '--use-gl=swiftshader',
-    '--enable-unsafe-swiftshader',
-    '--disable-gpu-sandbox',
-  ],
-});
+const browser = await chromium.launch({ args: CHROMIUM_ARGS });
 mkdirSync(outDir, { recursive: true });
 let failed = 0;
 try {
@@ -217,6 +212,9 @@ try {
       await page.waitForFunction(() => window.__ready || window.__error, null, { timeout: 180000 });
       const error = await page.evaluate(() => window.__error);
       if (error) throw new Error(error);
+      // Before anything is written: --out defaults to the committed portraits.
+      const empty = await page.evaluate(emptyFrame);
+      if (empty) throw new Error(`empty frame: ${empty}`);
       const stats = await page.evaluate(() => window.__stats);
       const dataUrl = await page.evaluate(() => window.__png());
       const png = Buffer.from(dataUrl.slice('data:image/png;base64,'.length), 'base64');

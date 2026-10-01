@@ -32,12 +32,14 @@
  */
 
 import { createRequire } from 'node:module';
-import { execFileSync, execSync, spawnSync } from 'node:child_process';
+import { execFileSync, execSync } from 'node:child_process';
 import { createServer } from 'node:http';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawn } from '../lib/spawn.mjs';
+import { CHROMIUM_ARGS, emptyFrame } from './chromium.mjs';
 
 const require = createRequire(import.meta.url);
 const here = dirname(fileURLToPath(import.meta.url));
@@ -94,6 +96,8 @@ if (views.length === 0)
 
 // --- the files ---------------------------------------------------------------
 const scratch = mkdtempSync(join(tmpdir(), 'hull-inspect-'));
+// Gone on every exit, a throw included: it holds a copy of the --before model.
+process.on('exit', () => rmSync(scratch, { recursive: true, force: true }));
 const models = [];
 if (before) {
   const path = relative(repo, file).split('\\').join('/');
@@ -115,10 +119,8 @@ const depsDir = join(tmpdir(), 'hull-intake-deps');
 if (!existsSync(join(depsDir, 'node_modules', 'three', 'package.json'))) {
   console.log(`installing three@${THREE_VERSION} into ${depsDir} (first run only)...`);
   mkdirSync(depsDir, { recursive: true });
-  const r = spawnSync('npm', ['install', '--no-audit', '--no-fund', `three@${THREE_VERSION}`], {
+  const r = spawn('npm', ['install', '--no-audit', '--no-fund', `three@${THREE_VERSION}`], {
     cwd: depsDir,
-    stdio: 'inherit',
-    shell: process.platform === 'win32',
   });
   if (r.status !== 0) process.exit(1);
 }
@@ -126,7 +128,11 @@ function loadPlaywright() {
   const candidates = ['playwright', 'playwright-core'];
   try {
     const root = execSync('npm root -g', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
-    if (root.trim()) candidates.push(`${root.trim()}/playwright/index.js`);
+    if (root.trim())
+      candidates.push(
+        `${root.trim()}/playwright/index.js`,
+        `${root.trim()}/playwright-core/index.js`
+      );
   } catch {
     // npm missing; the bare specifiers may still resolve.
   }
@@ -160,10 +166,7 @@ await new Promise((ok) => server.listen(0, '127.0.0.1', ok));
 const port = server.address().port;
 
 const { chromium } = loadPlaywright();
-const browser = await chromium.launch({
-  // SwiftShader by name, or three gets no WebGL2 context (render.mjs).
-  args: ['--no-sandbox', '--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--disable-gpu-sandbox'],
-});
+const browser = await chromium.launch({ args: CHROMIUM_ARGS });
 try {
   const page = await browser.newPage({ viewport: { width: tileW, height: tileH } });
   page.on('pageerror', (e) => console.error(`page error: ${e.message}`));
@@ -182,6 +185,10 @@ try {
   await page.waitForFunction(() => window.__ready || window.__error, null, { timeout: 300000 });
   const error = await page.evaluate(() => window.__error);
   if (error) throw new Error(error);
+  // The last tile is still on the canvas, and a lost context leaves every tile
+  // empty, round labels that would make the sheet look like a result.
+  const empty = await page.evaluate(emptyFrame);
+  if (empty) throw new Error(`empty frame: ${empty}`);
   const shots = await page.evaluate(() => window.__shots);
   await page.close();
 

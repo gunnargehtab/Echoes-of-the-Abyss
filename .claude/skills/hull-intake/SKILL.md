@@ -33,7 +33,7 @@ renders four top-down orthographic passes in headless Chromium
 | Map | What it is | Why it exists |
 | --- | --- | --- |
 | `albedo.png` | Unlit base colour, transparent ground | Hull cladding + free sprite mask |
-| `normal.png` | World-space normals | Per-pixel relighting in faction palette |
+| `normal.png` | World-space normals | Review only: smooth or faceted shading shows here. Nothing ships it; the sprite relights from `height.png` |
 | `emissive.png` | Emissive channel only, black ground | The glow layer — bright = loud |
 | `height.png` | Depth from above, bright = high | Replaces the distance-transform guess |
 
