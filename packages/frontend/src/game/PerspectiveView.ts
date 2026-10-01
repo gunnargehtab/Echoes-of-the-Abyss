@@ -53,6 +53,8 @@ import {
   Vector2,
   Vector3,
   WebGLRenderer,
+  type Material,
+  type Object3D,
   type WebGLRenderTarget,
 } from 'three';
 import {
@@ -126,6 +128,7 @@ import {
 } from './water.ts';
 import { FrameCost, ms } from './frameCost.ts';
 import { GpuTimer } from './gpuTimer.ts';
+import { lampScreen } from './lampScreen.ts';
 import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 import { FaunaStipple } from './faunaStipple.ts';
 import { DREAM_LOOP, installDreamGround } from './dreamLoop.ts';
@@ -269,6 +272,26 @@ const DIR_TMP = new Vector3();
 /** The lamp reading's box and corner; a capture reads it once a frame at most. */
 const LAMP_BOX = new Box3();
 const LAMP_CORNER = new Vector3();
+
+/** Every mesh one lamp material draws, measured together (lampScreen.ts). */
+function lampMeshesScreen(
+  root: Object3D,
+  material: Material,
+  camera: PerspectiveCamera,
+  rect: { width: number; height: number }
+): { sitesPx: number[]; areaPx: number } {
+  const sitesPx: number[] = [];
+  let areaPx = 0;
+  root.traverse((child) => {
+    if (!(child instanceof Mesh) || !child.visible) return;
+    const materials = Array.isArray(child.material) ? child.material : [child.material];
+    if (!materials.includes(material)) return;
+    const reading = lampScreen(child, camera, rect);
+    sitesPx.push(...reading.sitesPx.map((px) => Number(px.toFixed(2))));
+    areaPx += reading.areaPx;
+  });
+  return { sitesPx, areaPx: Number(areaPx.toFixed(1)) };
+}
 const EMBER_COLOR = new Color(VENT_EMBER);
 /** Screen corners in NDC, the order `groundQuad` has always returned them in. */
 const QUAD_CORNERS: ReadonlyArray<readonly [number, number]> = [
@@ -2322,8 +2345,9 @@ export class PerspectiveView {
 
   /**
    * Gate 3's reading: each own hull and structure with its live and resting
-   * SIG, every lamp's approved and applied strength, whether the lamp adds its
-   * glow after the tone curve, and the model's box on screen in CSS pixels,
+   * SIG, every lamp's export, resting and applied strength, whether the lamp
+   * adds its glow after the tone curve, each lamp's sites and area on screen
+   * (#1001's halo readings), and the model's box on screen in CSS pixels,
    * beside the curve the strengths follow. Own entities only, which the HUD
    * already draws; it changes and orders nothing.
    */
@@ -2352,6 +2376,8 @@ export class PerspectiveView {
       }
       return {
         lamps: model.emissives.map(({ material, restIntensity }) => ({
+          // Its size on screen, for #1001's halo readings (lampScreen.ts).
+          ...lampMeshesScreen(model.root, material, this.camera, rect),
           hex: `#${material.emissive.getHexString()}`,
           // The export's own resting strength, beside the one gate 3's lamp
           // core holds at white (rosterModels.ts); equal under white.
