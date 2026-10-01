@@ -137,6 +137,12 @@ describe('lamp halo source: over real roster models', () => {
       assert.ok(s.nearOffset > 0, 'a lit site has depth along the ray');
       assert.ok(s.nearOffset <= s.halfDiagonal + 1e-9, 'never past the corner farthest out');
     }
+    // A flat lamp seen face-on from above has almost no depth along the ray:
+    // half its diagonal would push its splat out past a ridge that hides it.
+    assert.ok(
+      splats.some((s) => s.nearOffset < 0.5 * s.halfDiagonal),
+      'some site lies nearer its centre than half its diagonal'
+    );
   });
 
   it('reaches the cap and counts the rest', async () => {

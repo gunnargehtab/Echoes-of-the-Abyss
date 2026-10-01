@@ -135,7 +135,7 @@ describe('lamp halo: the spread (art-direction, Lamp halo — SPEC)', () => {
     levelSigmasPx(1.5).forEach((sigma, k) => assert.ok(sigma > sigmas[k]!));
   });
 
-  it('skips a site whose light, gathered at one pixel, would stay under the toe', () => {
+  it('reads the toe exactly where the light crosses it', () => {
     for (const ratio of [1, 1.5]) {
       // The field is linear in light, so one light reads exactly the toe.
       const atToe = LAMP_HALO.TOE / peakField(1, ratio);
@@ -143,6 +143,12 @@ describe('lamp halo: the spread (art-direction, Lamp halo — SPEC)', () => {
       assert.ok(peakField(atToe * 0.99, ratio) < LAMP_HALO.TOE);
       assert.ok(peakField(atToe * 1.01, ratio) > LAMP_HALO.TOE);
       assert.equal(peakField(0, ratio), 0);
+      const sigmas = levelSigmasPx(ratio);
+      const one = LAMP_HALO.LEVEL_WEIGHTS.reduce(
+        (sum, w, k) => sum + w / (2 * Math.PI * sigmas[k]! ** 2),
+        0
+      );
+      assert.ok(close(peakField(1, ratio), one), 'each level spreads its share as a Gaussian');
     }
   });
 });

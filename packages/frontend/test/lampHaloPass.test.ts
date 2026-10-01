@@ -27,7 +27,7 @@ function splats(count: number): HaloSplat[] {
     cov: [1, 0, 0, 1, 0, 1] as [number, number, number, number, number, number],
     ink: new Color(1, 0.5, 0.04),
     energy: 3,
-    halfDiagonal: 1,
+    halfDiagonal: 3,
     nearOffset: 1,
   }));
 }
