@@ -413,7 +413,7 @@ The one interaction the UI is allowed to be pushy about.
 | --- | --- |
 | **Hover / preview** | Two rings on the terrain at the emitting unit: 900 m reveal in friendly cyan, 2,400 m self-reveal in threat-red `#FF3B30`, plus a live count of enemy contacts currently known inside the outer ring |
 | **Commit** | Explicit press. Never bound to a bare click on the world; never fires from a double-tap of another ability |
-| **Transmit** | 1.5 s emission: the SIG meter pegs to 95 and glows, the outer ring stays drawn for the duration |
+| **Transmit** | 3 s emission, the reveal's own window ([systems-echo.md](systems-echo.md) §5): the SIG meter pegs to 95 and glows, the outer ring stays drawn for the duration |
 | **Reveal** | 3 s of Tier-4 rendering for everything inside 900 m, with a hard countdown ring so the player can see their knowledge expiring |
 | **After** | Every revealed contact drops to its earned tier and begins normal ghost decay. The drop is instant and visible — the player must watch certainty end |
 | **Being pinged** | Screen-edge flash on the emitter's bearing, log entry, and the SIG meter's frame turns red for 2 s. You always know you were lit |

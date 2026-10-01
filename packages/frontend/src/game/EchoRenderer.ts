@@ -906,9 +906,10 @@ const SIG_METER = {
   W: 240,
   H: 12,
   /**
-   * How long a transient stays drawn over the baseline. A ping's burst is 1.5 s
-   * of emission (§6), so the overlay outlives it by enough to be read and not
-   * so long that it reads as a second baseline.
+   * How long a full-scale transient takes to fall back to the baseline. The
+   * hold only falls once the burst is over — a ping holds 95 for its whole 3 s
+   * (docs/systems-echo.md §5) — so the overlay outlives it by at most this:
+   * enough to be read and not so long that it reads as a second baseline.
    */
   SPIKE_DECAY_MS: 2200,
   /** The single flash when a hull crosses into the red band (§3). */

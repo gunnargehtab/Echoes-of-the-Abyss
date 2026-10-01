@@ -46,7 +46,7 @@ heard. §6 has the postures, §3 the load and the layer, and
 | Firing energy weapons | +10 burst |
 | Construction / mining | 40–60 sustained |
 | Structure: refinery, smelter | 55–75 sustained |
-| Active sonar ping | **95, omnidirectional, 1.5 s** |
+| Active sonar ping | **95, omnidirectional, 3 s** |
 
 ### SIG determines
 
@@ -319,7 +319,7 @@ Tier 1 and 2 contacts **persist as ghost markers** and decay over 20 seconds. A 
 Any unit may fire an **active ping**.
 
 - **Effect:** instant Tier-4 resolution on everything in a 900 m radius, for 3 seconds.
-- **Cost:** the pinging player emits **SIG 95, omnidirectional**, and is resolved to Tier 4 by *every* enemy listener in a **2,400 m** radius.
+- **Cost:** for those same 3 seconds, the pinging player emits **SIG 95, omnidirectional**, and is resolved to Tier 4 by *every* enemy listener in a **2,400 m** radius. The 1.5 s outgoing sweep ([audio-direction.md](audio-direction.md) §5) is how the ping sounds to its own player, not how long it is heard.
 - **Additional cost:** the ping's SIG contribution to fauna aggro is **tripled**.
 
 You learn everything. Everyone learns where you are. **Twice as far.**
