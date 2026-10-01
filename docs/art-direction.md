@@ -63,7 +63,8 @@ The existing water backdrop, baked seabed and fallback sprites, depth marks, rou
 ink, embers and unlit ordnance lamps bypass tone mapping; the Pixi HUD and enemy
 contacts remain outside this world-material operation. Live SIG still drives the
 same input emission curve, and the curve applies to **surface light only**: a model's
-emissive glow is added after tone mapping, at its own faction hue and approved strength.
+emissive glow is added after tone mapping, at its own faction hue and approved strength,
+held at white along that hue where the export rests past it (gate 3's lamp core).
 ACES alone fades a saturated glow toward white (Ventfront close camera on a GTX 1070:
 bright-pixel saturation 0.66 untone-mapped, 0.39 under ACES), which breaks palette discipline and
 makes a loud hull lie about its colour. No bloom, shadows, camera effects or geometry are added.
@@ -88,7 +89,7 @@ composer. Its still is a lighting reference, not a runtime implementation to cop
 | Rank | Upgrade | Verified starting point and boundary |
 | --- | --- | --- |
 | 1 | Shared rig, tone mapping, PMREM | This increment. Promote the tutorial rig; no model edits or full-screen pass |
-| 2 | SIG-selective bloom ([#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001)) | No production composer. First specify off/quality controls, quiet-SIG exclusion and the gate-6 pass/memory allowance |
+| 2 | Lamp core, then SIG-selective bloom ([#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001)) | No production composer. First gate 3's lamp core ([#1021](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1021)), at no draw cost. Then the owner picks, from #1001's readings, an in-pass point layer, a full-screen pass drawn after the canvas over a copy of its depth, or no halo. A halo then specifies off/quality controls, quiet-SIG exclusion and gate 6's pass, memory and GPU-time allowance |
 | 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | `kit.mjs` already supports bevelled `plate`/`plan`; this is coverage, not a missing primitive. None of the 108 source GLBs has an occlusion texture. Start with one reviewed asset and preserve its silhouette |
 | 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | Not in the production camera. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
 | 5 | GLB gzip ([#1004](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1004)) | `packages/frontend/nginx.conf` has no gzip rule. Low implementation risk, independent of the visual sequence; delivery cost, not frame quality |
