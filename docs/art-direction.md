@@ -81,10 +81,11 @@ experiment, not the production reference.
 
 #### Lamp halo — SPEC
 
-*Specified for [#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001), not
-yet built.* It lands behind the Lamp halos setting, switched off, and turns on by default
-only after its reading on the named GPU ([graphics-standards.md](graphics-standards.md)
-gate 6) and the owner's approval of its frames.
+*Built for [#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001) and
+switched off.* Until the Lamp halos setting lands, only a development switch turns it on,
+and it turns on by default only after its reading on the named GPU
+([graphics-standards.md](graphics-standards.md) gate 6) and the owner's approval of its
+frames.
 
 The lamp halo is the soft light a loud own lamp spreads into the water around it. It
 carries one fact: how loud that hull or structure is now. It carries the part of that fact

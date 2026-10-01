@@ -26,6 +26,7 @@
 
 import {
   ACESFilmicToneMapping,
+  AlwaysStencilFunc,
   AdditiveBlending,
   AmbientLight,
   Box3,
@@ -48,6 +49,7 @@ import {
   Points,
   PointsMaterial,
   Raycaster,
+  ReplaceStencilOp,
   Scene,
   SRGBColorSpace,
   Vector2,
@@ -129,6 +131,9 @@ import {
 import { FrameCost, ms } from './frameCost.ts';
 import { GpuTimer } from './gpuTimer.ts';
 import { lampScreen } from './lampScreen.ts';
+import { LampHaloPass, type HaloSplat } from './lampHaloPass.ts';
+import { LAMP_HALO } from './lampHalo.ts';
+import { gatherHaloSplats } from './haloSource.ts';
 import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 import { FaunaStipple } from './faunaStipple.ts';
 import { DREAM_LOOP, installDreamGround } from './dreamLoop.ts';
@@ -368,7 +373,9 @@ interface EntitySpec {
  * declare — production has no other renderer, and this is the whole of it.
  */
 function glRenderer(): WebGLRenderer {
-  return new WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  // The stencil is the lamp halo's lamp mask (art-direction.md, "Lamp halo —
+  // SPEC"): asked for always, so the setting can turn the halo on mid-match.
+  return new WebGLRenderer({ antialias: true, stencil: true, powerPreference: 'high-performance' });
 }
 
 export class PerspectiveView {
@@ -585,6 +592,12 @@ export class PerspectiveView {
   private readonly connCost = new FrameCost();
   /** Time inside the overlay painter's `draw`, reported by `EchoRenderer`. */
   private readonly overlayCost = new FrameCost();
+  /** The lamp halo, drawn after the canvas pass while on (lampHaloPass.ts). */
+  private readonly halo = new LampHaloPass();
+  /** The halo pass's own calls and triangles in the last frame. */
+  private haloCost = { calls: 0, triangles: 0 };
+  /** Stencil bits the canvas got, read once at mount (the halo needs 8). */
+  private canvasStencilBits = 0;
   /** The renders that made the last frame, in order (gate 6's pass list). */
   private framePasses: readonly string[] = [];
   /** The frame's GPU time, every pass summed (gate 6); set up with the renderer. */
@@ -693,6 +706,8 @@ export class PerspectiveView {
     // every render() by default, which would leave the probe the last pass
     // alone; renderFrame resets it once instead, before the frame's first.
     this.renderer.info.autoReset = false;
+    const gl = this.renderer.getContext();
+    this.canvasStencilBits = (gl.getParameter?.(gl.STENCIL_BITS) as number | undefined) ?? 0;
     // three has drawn only through WebGL 2 since r163; its typing predates that.
     this.gpuTimer = new GpuTimer(
       this.renderer.getContext() as WebGL2RenderingContext,
@@ -900,6 +915,7 @@ export class PerspectiveView {
     this.lightingEnvironment = null;
     this.gpuTimer?.dispose();
     this.gpuTimer = null;
+    this.halo.dispose();
     this.renderer?.dispose();
     this.renderer?.domElement.remove();
     this.renderer = null;
@@ -907,6 +923,7 @@ export class PerspectiveView {
     delete (window as unknown as { __perspectiveStation?: unknown }).__perspectiveStation;
     delete (window as unknown as { __perspectiveCamera?: unknown }).__perspectiveCamera;
     delete (window as unknown as { __perspectiveLamps?: unknown }).__perspectiveLamps;
+    delete (window as unknown as { __perspectiveHalo?: unknown }).__perspectiveHalo;
   }
 
   // ---------------------------------------------------------------- camera
@@ -2172,10 +2189,34 @@ export class PerspectiveView {
     // Every pass of the frame goes inside this bracket, so a pass added later
     // is timed with the rest (gate 6). Ended even if a pass throws: a query
     // left open would stop every later frame from starting its own.
+    if (this.halo.on) this.markLamps(true);
     this.gpuTimer?.begin();
     try {
       renderer.render(this.scene, this.camera);
       passes.push('canvas');
+      this.haloCost = { calls: 0, triangles: 0 };
+      if (this.halo.on) {
+        const before = {
+          calls: renderer.info.render.calls,
+          triangles: renderer.info.render.triangles,
+        };
+        const { splats, dropped } = this.haloSplats(renderer);
+        passes.push(
+          ...this.halo.render(
+            renderer,
+            this.camera,
+            splats,
+            dropped,
+            this.scene.fog instanceof FogExp2 ? this.scene.fog.density : 0,
+            renderer.getPixelRatio(),
+            LAMP_HALO.BIAS_M * this.drawScale
+          )
+        );
+        this.haloCost = {
+          calls: renderer.info.render.calls - before.calls,
+          triangles: renderer.info.render.triangles - before.triangles,
+        };
+      }
     } finally {
       this.gpuTimer?.end();
     }
@@ -2266,6 +2307,13 @@ export class PerspectiveView {
     if (import.meta.env?.PROD !== true) {
       (window as unknown as { __perspectiveLamps?: () => unknown }).__perspectiveLamps = () =>
         this.lampReading();
+      // The halo's switch until its setting lands: captures read on/off pairs.
+      (window as unknown as { __perspectiveHalo?: (on: boolean) => unknown }).__perspectiveHalo = (
+        on: boolean
+      ) => {
+        this.setLampHalos(on);
+        return this.halo.state;
+      };
     }
   }
 
@@ -2327,6 +2375,15 @@ export class PerspectiveView {
       drawCalls: info?.render.calls ?? 0,
       triangles: info?.render.triangles ?? 0,
       passes: this.framePasses,
+      // The lamp halo (art-direction.md, "Lamp halo — SPEC"): its state, what
+      // it drew last frame, and what it holds (gate 6).
+      halo: this.halo.state,
+      haloSites: this.halo.sites,
+      haloDropped: this.halo.dropped,
+      haloCalls: this.haloCost.calls,
+      haloTriangles: this.haloCost.triangles,
+      haloBytes: this.halo.bytes,
+      canvasStencilBits: this.canvasStencilBits,
       textures: info?.memory.textures ?? 0,
       // What the GPU shades: the capped pixel ratio, and the drawing buffer
       // it gives. Gate 6 reads GPU time at 1 and 1.5, and the same camera at
@@ -2402,6 +2459,58 @@ export class PerspectiveView {
     }
     if (count === 0) return null;
     return { x: x / count, z: z / count };
+  }
+
+  /**
+   * Turn the lamp halo on or off (docs/art-direction.md, "Lamp halo — SPEC").
+   * On runs its capability check first; a view that fails it keeps the frame
+   * the canvas pass alone and says why on the probe. Never on while the Dream
+   * Loop study is, which has lamp halos of its own.
+   */
+  setLampHalos(on: boolean): void {
+    if (this.renderer === null || this.dreamStudy || on === this.halo.on) return;
+    if (on) {
+      this.halo.enable(this.renderer);
+    } else {
+      this.halo.disable();
+      this.markLamps(false);
+    }
+  }
+
+  /** Every own lamp clone marks its pixels in the canvas stencil while the
+   * halo is on, so the composite skips them; state only, no recompile. */
+  private markLamps(on: boolean): void {
+    for (const handle of [...this.unitHandles.values(), ...this.structureHandles.values()]) {
+      for (const { material } of handle.model?.emissives ?? []) {
+        if (material.stencilWrite === on) continue;
+        material.stencilWrite = on;
+        material.stencilRef = 1;
+        material.stencilFunc = AlwaysStencilFunc;
+        material.stencilZPass = ReplaceStencilOp;
+      }
+    }
+  }
+
+  /** This frame's splats, from every own entity with its model showing (haloSource.ts). */
+  private haloSplats(renderer: WebGLRenderer): { splats: HaloSplat[]; dropped: number } {
+    const gl = renderer.getContext();
+    const entities: { sig: number; model: RosterModelInstance }[] = [];
+    const add = (sig: number, handle: EntityHandle | undefined) => {
+      const model = handle === undefined || handle.mesh.visible ? null : handle.model;
+      if (model !== null) entities.push({ sig, model });
+    };
+    for (const unit of this.units) add(unit.sig, this.unitHandles.get(unit.id));
+    for (const structure of this.structures)
+      add(structure.sig, this.structureHandles.get(structure.id));
+    return gatherHaloSplats({
+      entities,
+      camera: this.camera,
+      bufferWidth: gl.drawingBufferWidth,
+      bufferHeight: gl.drawingBufferHeight,
+      drawScale: this.drawScale,
+      fogDensity: this.scene.fog instanceof FogExp2 ? this.scene.fog.density : 0,
+      pixelRatio: renderer.getPixelRatio(),
+    });
   }
 
   /**

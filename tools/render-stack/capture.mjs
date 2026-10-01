@@ -50,6 +50,13 @@ export default async ({ page, shot }) => {
     );
   }
   const unpaced = process.env.UNPACED === '1';
+  // HALO=on turns the lamp halo on through its development switch (#1001),
+  // for an on/off pair; a view that cannot draw it fails the capture.
+  const halo = process.env.HALO === 'on';
+  if (halo) {
+    const state = await page.evaluate(() => window.__perspectiveHalo?.(true));
+    assert.ok(state === 'idle' || state === 'drawn', `the lamp halo is ${state}`);
+  }
   if (!unpaced && !software) {
     console.log(
       'NOTE: paced at the display rate, the GPU idles at a low clock, so avgGpuMs here ' +
@@ -92,7 +99,7 @@ export default async ({ page, shot }) => {
     readings.push({ name, probe });
     dir = dirname(await shot(name));
   }
-  const record = { renderer, software, unpaced, viewport, readings };
+  const record = { renderer, software, unpaced, halo, viewport, readings };
   writeFileSync(join(dir, 'readings.json'), JSON.stringify(record, null, 2) + '\n');
   console.log(JSON.stringify(record));
 };

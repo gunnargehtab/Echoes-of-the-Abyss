@@ -31,6 +31,7 @@
 import { Container, DOMAdapter, Graphics, Text } from 'pixi.js';
 import type { Application } from 'pixi.js';
 import {
+  Color,
   NoToneMapping,
   WebGLRenderTarget,
   type Camera,
@@ -776,6 +777,29 @@ export interface DrawLedger {
  */
 export class HeadlessGL {
   readonly RENDERER = 0x1f01;
+  readonly STENCIL_BITS = 0x0d57;
+  readonly READ_FRAMEBUFFER = 0x8ca8;
+  readonly DRAW_FRAMEBUFFER = 0x8ca9;
+  readonly FRAMEBUFFER = 0x8d40;
+  readonly FRAMEBUFFER_COMPLETE = 0x8cd5;
+  readonly DEPTH_BUFFER_BIT = 0x100;
+  readonly COLOR_BUFFER_BIT = 0x4000;
+  readonly NEAREST = 0x2600;
+  readonly NO_ERROR = 0;
+  readonly INVALID_OPERATION = 0x502;
+  readonly RGBA = 0x1908;
+  readonly FLOAT = 0x1406;
+  /** The canvas's stencil bits; a test sets 0 to model a context without one. */
+  stencilBits = 8;
+  /** What checkFramebufferStatus answers. */
+  framebufferStatus = 0x8cd5;
+  /** The error the next blit raises; a test sets INVALID_OPERATION to fail it. */
+  blitError = 0;
+  /** What readPixels returns, as the four floats of one pixel. */
+  readback: [number, number, number, number] = [2.5, 1.25, 0.1, 1];
+  /** Blits made, each a listed pass of the frame. */
+  blits = 0;
+  private error = 0;
   readonly QUERY_RESULT = 0x8866;
   readonly QUERY_RESULT_AVAILABLE = 0x8867;
   static readonly UNMASKED_RENDERER_WEBGL = 0x9246;
@@ -820,7 +844,37 @@ export class HeadlessGL {
     return null;
   }
 
+  bindFramebuffer(): void {}
+
+  blitFramebuffer(): void {
+    this.blits++;
+    this.error = this.blitError;
+  }
+
+  getError(): number {
+    const error = this.error;
+    this.error = 0;
+    return error;
+  }
+
+  checkFramebufferStatus(): number {
+    return this.framebufferStatus;
+  }
+
+  readPixels(
+    _x: number,
+    _y: number,
+    _w: number,
+    _h: number,
+    _f: number,
+    _t: number,
+    out: Float32Array
+  ): void {
+    out.set(this.readback);
+  }
+
   getParameter(name: number): unknown {
+    if (name === this.STENCIL_BITS) return this.stencilBits;
     if (name === this.RENDERER || name === HeadlessGL.UNMASKED_RENDERER_WEBGL) {
       return this.rendererName;
     }
@@ -894,9 +948,10 @@ export class HeadlessWebGLRenderer {
     render: { calls: 0, triangles: 0 },
     memory: { geometries: 0, textures: 0 },
     autoReset: true,
-    reset(): void {
-      this.render.calls = 0;
-      this.render.triangles = 0;
+    reset: (): void => {
+      this.info.render.calls = 0;
+      this.info.render.triangles = 0;
+      this.firstPass = true;
     },
   };
   readonly capabilities = { getMaxAnisotropy: (): number => 1, isWebGL2: true };
@@ -946,7 +1001,6 @@ export class HeadlessWebGLRenderer {
     return this.context as unknown as WebGL2RenderingContext;
   }
 
-  setClearColor(): void {}
   setAnimationLoop(): void {}
 
   setSize(width: number, height: number): void {
@@ -962,19 +1016,80 @@ export class HeadlessWebGLRenderer {
     return target;
   }
 
+  /** Extensions the context offers; a test removes one to model its absence. */
+  readonly extensionNames = new Set(['EXT_color_buffer_float']);
+  readonly extensions = { has: (name: string): boolean => this.extensionNames.has(name) };
+  private readonly targetProperties = new WeakMap<object, { __webglFramebuffer: object }>();
+  readonly properties = {
+    get: (object: object): { __webglFramebuffer: object } => {
+      let entry = this.targetProperties.get(object);
+      if (entry === undefined) {
+        entry = { __webglFramebuffer: {} };
+        this.targetProperties.set(object, entry);
+      }
+      return entry;
+    },
+  };
+  autoClear = true;
+  private renderTarget: WebGLRenderTarget | null = null;
+  private clearColor = new Color(0x000000);
+  private clearAlpha = 1;
+  /** The render target of every pass this frame, in order (null is the canvas). */
+  readonly frameTargets: (WebGLRenderTarget | null)[] = [];
+  private firstPass = true;
+
+  initRenderTarget(): void {}
+  setRenderTarget(target: WebGLRenderTarget | null): void {
+    this.renderTarget = target;
+  }
+  getRenderTarget(): WebGLRenderTarget | null {
+    return this.renderTarget;
+  }
+  clear(): void {}
+  setClearColor(color: Color | number, alpha = 1): void {
+    this.clearColor = new Color(color);
+    this.clearAlpha = alpha;
+  }
+  getClearColor(target: Color): Color {
+    return target.copy(this.clearColor);
+  }
+  getClearAlpha(): number {
+    return this.clearAlpha;
+  }
+
   render(scene: Scene, camera: Camera): void {
-    this.lastScene = scene;
-    this.lastCamera = camera;
+    // The frame's first pass is the world: the lighting and veil tests read it.
+    if (this.firstPass || this.info.autoReset) {
+      this.lastScene = scene;
+      this.lastCamera = camera;
+      this.frameTargets.length = 0;
+    }
+    this.firstPass = false;
+    this.frameTargets.push(this.renderTarget);
     this.passes++;
     if (this.context.timing) this.timedPasses++;
     let calls = 0;
     let triangles = 0;
     scene.traverseVisible((object) => {
-      const geometry = (object as { geometry?: { index?: { count: number } | null } }).geometry;
+      const geometry = (
+        object as {
+          geometry?: {
+            index?: { count: number } | null;
+            attributes?: { position?: { count: number } };
+            isInstancedBufferGeometry?: boolean;
+            instanceCount?: number;
+          };
+        }
+      ).geometry;
       if (geometry === undefined) return;
+      // An instanced draw with no instances is no draw, as in three.
+      const instances = geometry.isInstancedBufferGeometry
+        ? (geometry.instanceCount ?? 0)
+        : ((object as { count?: number }).count ?? 1);
+      if (instances === 0) return;
       calls++;
-      const instances = (object as { count?: number }).count ?? 1;
-      triangles += ((geometry.index?.count ?? 0) / 3) * instances;
+      const corners = geometry.index?.count ?? geometry.attributes?.position?.count ?? 0;
+      triangles += (corners / 3) * instances;
     });
     this.ledger.frames++;
     this.ledger.calls = calls;

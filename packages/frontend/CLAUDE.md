@@ -17,7 +17,11 @@ along its hue by gate 3's lamp core (#1021), and unlit layers stay off it. A com
 undoes both: behind a `RenderPass` that feeds later passes no material tone-maps itself,
 and `OutputPass` maps glow and unlit layers with the rest. So a full-screen pass is
 specified in `docs/art-direction.md` before it is built, and the `material-design` skill
-has the three.js rules.
+has the three.js rules. The one built is the lamp halo (`lampHaloPass.ts`), drawn after
+the canvas pass with no composer. Its depth copy binds `READ_FRAMEBUFFER` with raw GL
+and rebinds `FRAMEBUFFER` after, since three's cache never tracks READ; every halo pass
+runs with `autoClear` off and a clear alpha of 0, restored after. The view counts the
+frame whole: `renderer.info.autoReset` is off and reset once a frame.
 
 ## Tests run under a Vite shim
 
