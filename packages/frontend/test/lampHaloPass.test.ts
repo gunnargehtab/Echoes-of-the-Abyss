@@ -28,6 +28,7 @@ function splats(count: number): HaloSplat[] {
     ink: new Color(1, 0.5, 0.04),
     energy: 3,
     halfDiagonal: 1,
+    nearOffset: 1,
   }));
 }
 

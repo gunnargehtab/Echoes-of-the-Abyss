@@ -63,14 +63,20 @@ export interface HaloSplat {
   readonly ink: Color;
   /** Its share of its entity's energy, m² of lamp at full ink. */
   readonly energy: number;
-  /** Half its box's diagonal, m: the splat sits that far in front of its centre. */
+  /** Half its box's diagonal, m: the sphere it is culled by. */
   readonly halfDiagonal: number;
+  /**
+   * How far in front of its centre its nearest point lies along the view ray,
+   * m: the box's extent along that ray. The splat sits there, less the bias,
+   * so terrain and hulls hide a halo where they hide its lamp.
+   */
+  readonly nearOffset: number;
 }
 
 /** Why the halo is or is not drawing; the probe reports it. */
 export type LampHaloState = 'off' | 'idle' | 'drawn' | `unavailable: ${string}`;
 
-/** Floats per splat: centre 3, covariance 6, ink 3, energy 1, half-diagonal 1, pad 2. */
+/** Floats per splat: centre 3, covariance 6, ink 3, energy 1, near offset 1, pad 2. */
 const STRIDE = 16;
 /** The instance buffer the cap bounds: 1,024 × 16 floats, 64 KiB. */
 export const INSTANCE_BYTES = LAMP_HALO.SITE_CAP * STRIDE * 4;
@@ -113,8 +119,9 @@ void main() {
   vec2 e1 = abs(b) > 1e-9 ? normalize(vec2(b, l1 - a)) : (a >= c ? vec2(1.0, 0.0) : vec2(0.0, 1.0));
   vec2 e2 = vec2(-e1.y, e1.x);
   vec2 offset = position.x * 3.0 * sqrt(l1) * e1 + position.y * 3.0 * sqrt(l2) * e2;
-  // In front of the site by its half-diagonal and the bias, so a lamp never
-  // hides itself; never past the near plane.
+  // At the site's nearest point along the view ray, less the bias, so a lamp
+  // never hides itself and a lamp behind a ridge stays hidden; never past the
+  // near plane.
   float back = iEnergy.y + uBias;
   vec3 near = view.xyz * max(0.0, 1.0 - back / length(view.xyz));
   vec4 clipNear = projectionMatrix * vec4(near, 1.0);
@@ -563,7 +570,7 @@ export class LampHaloPass {
       data[o + 10] = s.ink.g;
       data[o + 11] = s.ink.b;
       data[o + 12] = s.energy;
-      data[o + 13] = s.halfDiagonal;
+      data[o + 13] = s.nearOffset;
     });
     this.instances.needsUpdate = true;
     this.instances.clearUpdateRanges();

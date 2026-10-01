@@ -16,7 +16,15 @@ import {
   haloGain,
   haloWeight,
 } from '../src/game/glow.ts';
-import { capSites, entityHaloEnergy, LAMP_HALO, siteShares } from '../src/game/lampHalo.ts';
+import {
+  blurWeights,
+  capSites,
+  entityHaloEnergy,
+  LAMP_HALO,
+  levelSigmasPx,
+  peakField,
+  siteShares,
+} from '../src/game/lampHalo.ts';
 import { lampSiteParts, lampSites } from '../src/game/lampSites.ts';
 
 const SIGS = Array.from({ length: 401 }, (_, i) => i / 4);
@@ -98,6 +106,44 @@ describe('lamp halo: the energy (art-direction, Lamp halo — SPEC)', () => {
     );
     assert.equal(dropped, 6);
     assert.equal(LAMP_HALO.SITE_CAP, 1024);
+  });
+});
+
+describe('lamp halo: the spread (art-direction, Lamp halo — SPEC)', () => {
+  it('blurs with taps one texel apart out to 2.3σ, weights summing to one', () => {
+    for (const [ratio, length] of [
+      [1, 5],
+      [1.5, 7],
+    ] as const) {
+      const weights = blurWeights(ratio);
+      const sigma = LAMP_HALO.KERNEL_SIGMA_TEXELS * ratio;
+      assert.equal(weights.length, length, `ratio ${ratio}`);
+      assert.ok(weights.length - 1 >= 2.3 * sigma, 'the last tap reaches 2.3σ');
+      assert.ok(weights.length - 2 < 2.3 * sigma, 'and no tap past it');
+      // Each tap past the centre is read twice, once either side.
+      const total = weights[0]! + 2 * weights.slice(1).reduce((a, b) => a + b, 0);
+      assert.ok(close(total, 1), `ratio ${ratio} sums to ${total}`);
+      for (let i = 1; i < weights.length; i++) assert.ok(weights[i]! < weights[i - 1]!);
+    }
+  });
+
+  it('widens each level from the one before, at about 3.4, 7.6 and 15.6 px', () => {
+    const sigmas = levelSigmasPx(1);
+    [3.4, 7.6, 15.6].forEach((want, k) =>
+      assert.ok(Math.abs(sigmas[k]! - want) < 0.1, `level ${k + 1}: ${sigmas[k]}`)
+    );
+    levelSigmasPx(1.5).forEach((sigma, k) => assert.ok(sigma > sigmas[k]!));
+  });
+
+  it('skips a site whose light, gathered at one pixel, would stay under the toe', () => {
+    for (const ratio of [1, 1.5]) {
+      // The field is linear in light, so one light reads exactly the toe.
+      const atToe = LAMP_HALO.TOE / peakField(1, ratio);
+      assert.ok(close(peakField(atToe, ratio), LAMP_HALO.TOE));
+      assert.ok(peakField(atToe * 0.99, ratio) < LAMP_HALO.TOE);
+      assert.ok(peakField(atToe * 1.01, ratio) > LAMP_HALO.TOE);
+      assert.equal(peakField(0, ratio), 0);
+    }
   });
 });
 

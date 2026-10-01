@@ -82,9 +82,10 @@ export function blurWeights(pixelRatio: number): number[] {
 }
 
 /**
- * Each spread level's width as σ in drawing-buffer pixels: every level blurs
- * the one before it, at twice its texel, so the widths compound. At ratio 1
- * that is about 3.4, 7.6 and 15.6 px, the SPEC's figures; derived here and
+ * Each spread level's width as σ in drawing-buffer pixels: every level is a
+ * 2 × 2 box downsample of the one before it, then a blur at its own texel, so
+ * the widths compound, the box's variance included. At ratio 1 that is 3.42,
+ * 7.64 and 15.66 px, within 0.1 px of the SPEC's figures; derived here and
  * stored nowhere.
  */
 export function levelSigmasPx(pixelRatio: number): number[] {
@@ -92,7 +93,8 @@ export function levelSigmasPx(pixelRatio: number): number[] {
   let variance = 0;
   for (let level = 1; level <= LAMP_HALO.LEVEL_WEIGHTS.length; level++) {
     const texel = 2 ** level;
-    variance += (LAMP_HALO.KERNEL_SIGMA_TEXELS * pixelRatio * texel) ** 2;
+    // The box averages two texels of the level above, half this one apart.
+    variance += (texel / 4) ** 2 + (LAMP_HALO.KERNEL_SIGMA_TEXELS * pixelRatio * texel) ** 2;
     sigmas.push(Math.sqrt(variance));
   }
   return sigmas;

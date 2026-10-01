@@ -963,7 +963,7 @@ describe('renderer smoke test: the conn view', () => {
     }
   });
 
-  it('turns the lamp halo on and off, and says why when the view cannot draw it (#1001)', async () => {
+  it('turns the lamp halo on and off, says why when the view cannot draw it, and checks again after a context restore (#1001)', async () => {
     type Probes = {
       __perspectiveProbe: () => Record<string, unknown>;
       __perspectiveHalo?: (on: boolean) => string;
@@ -994,7 +994,25 @@ describe('renderer smoke test: the conn view', () => {
         0
       );
       assert.equal(on.haloBytes, w * h * 12 + levels + 65_536);
+
+      // A lost context takes the targets; a restore re-runs the check, and
+      // a restored context without its stencil keeps the halo off.
+      const canvas = world.gl.domElement;
+      canvas.dispatchEvent({ type: 'webglcontextlost' });
+      assert.equal(probes.__perspectiveProbe().halo, 'off');
+      assert.equal(probes.__perspectiveProbe().haloBytes, 0);
+      world.gl.context.stencilBits = 0;
+      canvas.dispatchEvent({ type: 'webglcontextrestored' });
+      assert.equal(probes.__perspectiveProbe().halo, 'unavailable: no canvas stencil');
+      assert.equal(probes.__perspectiveProbe().canvasStencilBits, 0);
+      world.gl.context.stencilBits = 8;
+      canvas.dispatchEvent({ type: 'webglcontextlost' });
+      canvas.dispatchEvent({ type: 'webglcontextrestored' });
+      assert.equal(probes.__perspectiveProbe().halo, 'idle', 'back on once it can draw');
       assert.equal(probes.__perspectiveHalo!(false), 'off');
+      canvas.dispatchEvent({ type: 'webglcontextlost' });
+      canvas.dispatchEvent({ type: 'webglcontextrestored' });
+      assert.equal(probes.__perspectiveProbe().halo, 'off', 'a halo asked off stays off');
       assert.equal(probes.__perspectiveProbe().haloBytes, 0);
     } finally {
       world.teardown();

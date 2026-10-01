@@ -226,15 +226,19 @@ Calls and triangles are gate 6's allocation exactly: +11 calls, 2 × sites + 10 
 
 **GPU time does not meet gate 6's line yet, and the method may be what fails.** On − off frame
 GPU time is 1.0–1.5 ms at ratio 1 and 1.1–1.7 ms at 1.5, against the 0.40 and 0.75 ms gate 6
-allows. The halo's own passes measure far less. On a bare page with no game the pass reads
-0.23–0.30 ms at 1440×900 across five runs, the stand-in route's figure; in the game, with the frame's timer
-opened after the canvas pass, its passes read 0.26 ms. And the unpaced frame interval, which
-no timer semantics can inflate, rises by only 0.10–0.34 ms at ratio 1 and 0.38–0.84 ms at
-1.5. Those two readings came from local instrumented builds, not from committed tools. What
-the extra timer time is was not settled: it is not CPU time inside the timed span (a 1 ms
-spin there read as 0.14 ms), not a second context's work (a busy one beside the bench changed
-nothing), not the lamp stencil marks and not the blur shader. The readings increment decides
-how gate 6 reads a multi-pass frame before the default can turn on.
+allows. The conn frame's own line fails with it: 1.55–1.97 ms on at ratio 1 and 1.78–2.35 ms
+at 1.5, against 1.2 and 1.7 ms.
+
+The halo's own passes measure far less. On a bare page with no game the pass reads 0.23–0.30
+ms at 1440×900 across five runs, the stand-in route's figure; in the game, with the frame's
+timer opened after the canvas pass, its passes read 0.26 ms. And the unpaced frame interval,
+which no timer semantics can inflate, rises by only 0.10–0.34 ms at ratio 1 and 0.38–0.84 ms
+at 1.5 (the table above). What the extra timer time is was not settled: it is not CPU time
+inside the timed span (a 1 ms spin there read as 0.14 ms), not a second context's work (a busy
+one beside the bench changed nothing), not the lamp stencil marks and not the blur shader.
+The 0.23–0.30, 0.26 and 0.14 ms readings were console output from local instrumented builds,
+neither committed nor kept; the readings increment re-takes them with committed tools, and
+decides how gate 6 reads a multi-pass frame before the default can turn on.
 
 ## Related
 

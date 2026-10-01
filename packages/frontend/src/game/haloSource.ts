@@ -35,6 +35,7 @@ const SPHERE = new Sphere();
 const POINT = new Vector3();
 const SIZE = new Vector3();
 const VIEW = new Vector3();
+const RAY = new Vector3();
 
 export function gatherHaloSplats(input: HaloSourceInput): {
   splats: SourceSplat[];
@@ -73,6 +74,10 @@ export function gatherHaloSplats(input: HaloSourceInput): {
           // carried into world space by the mesh's matrix (yaw and scale).
           const cov: [number, number, number, number, number, number] = [0, 0, 0, 0, 0, 0];
           let diagonal2 = 0;
+          // The box's extent along the ray from the eye: how far its nearest
+          // point lies in front of its centre (SPEC, Occlusion).
+          RAY.copy(POINT).sub(camera.position).normalize();
+          let nearOffset = 0;
           for (let axis = 0; axis < 3; axis++) {
             const half = SIZE.getComponent(axis);
             const cx = m[axis * 4]!;
@@ -86,6 +91,7 @@ export function gatherHaloSplats(input: HaloSourceInput): {
             cov[4] += w * cy * cz;
             cov[5] += w * cz * cz;
             diagonal2 += half * half * (cx * cx + cy * cy + cz * cz);
+            nearOffset += half * Math.abs(RAY.x * cx + RAY.y * cy + RAY.z * cz);
           }
           const depth = -VIEW.copy(POINT).applyMatrix4(camera.matrixWorldInverse).z;
           const tau = Math.exp(-((input.fogDensity * depth) ** 2));
@@ -97,6 +103,7 @@ export function gatherHaloSplats(input: HaloSourceInput): {
             cov,
             ink,
             halfDiagonal: Math.sqrt(diagonal2),
+            nearOffset,
             area: site.area,
             luminance,
             light: depth > 0 ? ((fx * fy) / (depth * depth)) * tau ** 2.2 : 0,
@@ -120,6 +127,7 @@ export function gatherHaloSplats(input: HaloSourceInput): {
         cov: p.cov,
         ink: p.ink,
         halfDiagonal: p.halfDiagonal,
+        nearOffset: p.nearOffset,
         energy: energy * shares[i]!,
         light: energy * shares[i]! * p.light,
       });

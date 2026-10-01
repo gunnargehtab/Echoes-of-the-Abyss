@@ -573,6 +573,23 @@ export class PerspectiveView {
   private readonly onVisibility = (): void => {
     if (document.hidden) this.hiddenSinceFrame = true;
   };
+  /**
+   * A lost context takes the halo's targets with it, and a restored one may
+   * not pass what the lost one did: the SPEC re-runs the capability check
+   * after a restore. three's own listeners, added first, have rebuilt its
+   * state by the time these run.
+   */
+  private readonly onContextLost = (): void => {
+    if (!this.halo.on) return;
+    this.halo.disable();
+    this.markLamps(false);
+  };
+  private readonly onContextRestored = (): void => {
+    if (this.renderer === null) return;
+    const gl = this.renderer.getContext();
+    this.canvasStencilBits = (gl.getParameter?.(gl.STENCIL_BITS) as number | undefined) ?? 0;
+    if (this.haloWanted) this.setLampHalos(true);
+  };
 
   /**
    * Frame-cost telemetry for the gate-6 measurement drive, as three series
@@ -594,6 +611,8 @@ export class PerspectiveView {
   private readonly overlayCost = new FrameCost();
   /** The lamp halo, drawn after the canvas pass while on (lampHaloPass.ts). */
   private readonly halo = new LampHaloPass();
+  /** Whether the halo was asked on: a context restore turns it back on. */
+  private haloWanted = false;
   /** The halo pass's own calls and triangles in the last frame. */
   private haloCost = { calls: 0, triangles: 0 };
   /** Stencil bits the canvas got, read once at mount (the halo needs 8). */
@@ -713,6 +732,8 @@ export class PerspectiveView {
       this.renderer.getContext() as WebGL2RenderingContext,
       import.meta.env?.PROD !== true
     );
+    this.renderer.domElement.addEventListener('webglcontextlost', this.onContextLost);
+    this.renderer.domElement.addEventListener('webglcontextrestored', this.onContextRestored);
     host.appendChild(this.renderer.domElement);
     this.host = host;
     this.resizeObserver = new ResizeObserver(() => this.resize());
@@ -916,6 +937,8 @@ export class PerspectiveView {
     this.gpuTimer?.dispose();
     this.gpuTimer = null;
     this.halo.dispose();
+    this.renderer?.domElement.removeEventListener('webglcontextlost', this.onContextLost);
+    this.renderer?.domElement.removeEventListener('webglcontextrestored', this.onContextRestored);
     this.renderer?.dispose();
     this.renderer?.domElement.remove();
     this.renderer = null;
@@ -2468,6 +2491,7 @@ export class PerspectiveView {
    * Loop study is, which has lamp halos of its own.
    */
   setLampHalos(on: boolean): void {
+    this.haloWanted = on;
     if (this.renderer === null || this.dreamStudy || on === this.halo.on) return;
     if (on) {
       this.halo.enable(this.renderer);

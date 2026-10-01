@@ -48,19 +48,19 @@ async function instance(key, xM) {
   return { root, emissives };
 }
 
-function camera() {
-  // Looking straight down from 600 m, wide enough to hold every model whole.
+function camera(heightM = 600) {
+  // Looking straight down, from 600 m wide enough to hold every model whole.
   const eye = new PerspectiveCamera(60, 1440 / 900, 10, 60_000);
-  eye.position.set(0, 600, 0.01);
+  eye.position.set(0, heightM, 0.01);
   eye.lookAt(0, 0, 0);
   eye.updateMatrixWorld(true);
   return eye;
 }
 
-const gather = (entities) =>
+const gather = (entities, heightM) =>
   gatherHaloSplats({
     entities,
-    camera: camera(),
+    camera: camera(heightM),
     bufferWidth: 1440,
     bufferHeight: 900,
     drawScale: 1,
@@ -118,7 +118,28 @@ describe('lamp halo source: over real roster models', () => {
     }
   });
 
-  it('keeps the brightest sites under the cap and counts the rest', async () => {
+  it('skips an entity whose light would stay under the toe, and draws it close up', async () => {
+    const caisson = await instance({ unit: UnitKind.Caisson, faction: Faction.Bathyarch }, 0);
+    // Just over the gate, a Caisson carries 2.5 % of its weight: at 2 km its
+    // light gathered at one pixel stays under the toe, at 100 m it does not.
+    const far = gather([{ sig: 15.5, model: caisson }], 2000);
+    assert.equal(far.splats.length, 0);
+    assert.equal(far.dropped, 0, 'a skipped site is not a dropped one');
+    const near = gather([{ sig: 15.5, model: caisson }], 100);
+    assert.ok(near.splats.length > 0, 'close up the same Caisson draws');
+  });
+
+  it("sets each splat at its site's nearest point along the view ray, inside its sphere", async () => {
+    const caisson = await instance({ unit: UnitKind.Caisson, faction: Faction.Bathyarch }, 0);
+    const { splats } = gather([{ sig: 64, model: caisson }]);
+    assert.ok(splats.length > 0);
+    for (const s of splats) {
+      assert.ok(s.nearOffset > 0, 'a lit site has depth along the ray');
+      assert.ok(s.nearOffset <= s.halfDiagonal + 1e-9, 'never past the corner farthest out');
+    }
+  });
+
+  it('reaches the cap and counts the rest', async () => {
     const models = await Promise.all(
       Array.from({ length: 40 }, (_, i) =>
         instance({ unit: UnitKind.Caisson, faction: Faction.Bathyarch }, -200 + (i % 8) * 50)
