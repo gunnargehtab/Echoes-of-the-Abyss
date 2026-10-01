@@ -167,6 +167,14 @@ export default async ({ page, shot }) => {
   console.log('');
   console.log(`gate-6 review drive — ${DWELL_MS / 1000}s per station`);
   console.log(`renderer: ${renderer}`);
+  // Gate 6's GPU time is an unpaced reading (drive.mjs), and an unpaced run's
+  // frame columns are no frame budget: say which run this was.
+  const unpaced = process.env.UNPACED === '1';
+  console.log(
+    unpaced
+      ? "unpaced: the gpu column is gate 6's reading; the frame columns are not a budget."
+      : "paced: the frame columns are the budget; the gpu column is clock-bound, not gate 6's."
+  );
   if (software) {
     console.log(
       'WARNING: a software rasteriser drew this run. The millisecond columns below measure ' +
@@ -218,5 +226,5 @@ export default async ({ page, shot }) => {
     }
   }
   console.log('');
-  console.log(JSON.stringify({ renderer, software, rows }, null, 2));
+  console.log(JSON.stringify({ renderer, software, unpaced, rows }, null, 2));
 };

@@ -15,7 +15,9 @@
  * the two painters' CPU time and frameMs the interval between frames.
  * avgGpuMs and worstGpuMs are the conn view's GPU time, every pass summed,
  * from a timer query (gpuTimer.ts): read on a GPU, refused on a software
- * rasteriser, and absent from a revision before #1001. A station's worst
+ * rasteriser, and absent from a revision before #1001. They are gate 6's
+ * reading only from a run with UNPACED=1 (drive.mjs), whose frame times in
+ * turn are not; `unpaced` records which run this was. A station's worst
  * frame includes the one that first draws its view. No pixel is read here: the
  * saturation table in docs/screenshots/issue-974/README.md was read from the
  * frames separately. Not a gate; the asserts stop a capture that could not be
@@ -45,6 +47,13 @@ export default async ({ page, shot }) => {
     console.log(
       'WARNING: a software rasteriser drew this capture. Its millisecond fields measure ' +
         'the rasteriser, not the scene; only calls and triangles are gate-6 numbers.'
+    );
+  }
+  const unpaced = process.env.UNPACED === '1';
+  if (!unpaced && !software) {
+    console.log(
+      'NOTE: paced at the display rate, the GPU idles at a low clock, so avgGpuMs here ' +
+        "is not gate 6's reading; re-run with UNPACED=1 for it."
     );
   }
   const centre = await page.evaluate(() => window.__perspectiveProbe().ownCentre);
@@ -83,7 +92,7 @@ export default async ({ page, shot }) => {
     readings.push({ name, probe });
     dir = dirname(await shot(name));
   }
-  const record = { renderer, software, viewport, readings };
+  const record = { renderer, software, unpaced, viewport, readings };
   writeFileSync(join(dir, 'readings.json'), JSON.stringify(record, null, 2) + '\n');
   console.log(JSON.stringify(record));
 };

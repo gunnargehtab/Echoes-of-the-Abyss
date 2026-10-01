@@ -14,6 +14,10 @@
  *
  * VIEW_W and VIEW_H move the 1440×900 viewport, and VIEW_DPR its device pixel
  * ratio (default 1): gate 6 reads GPU time at 1 and at 1.5, the conn view's cap.
+ * UNPACED=1 turns vsync and the frame-rate limit off. Gate 6's GPU time is read
+ * that way: paced at 60 fps the GPU idles at a low clock, and a timer query
+ * then measures the clock as much as the frame (docs/screenshots/issue-1001/).
+ * Its frame times are no frame budget, so a frame-time drive stays paced.
  *
  * With no --steps it runs the default smoke: connect, select a unit, ping.
  * A steps file is an ES module with `export default async ({ page, shot }) => {...}`.
@@ -108,7 +112,11 @@ const browser = await chromium.launch({
   // Windows throttles requestAnimationFrame in a window it computes as covered,
   // and a headed drive's window usually opens behind whatever launched it —
   // which would price the throttle rather than the frame.
-  args: ['--no-sandbox', ...(HEADED ? ['--disable-features=CalculateNativeWinOcclusion'] : [])],
+  args: [
+    '--no-sandbox',
+    ...(HEADED ? ['--disable-features=CalculateNativeWinOcclusion'] : []),
+    ...(process.env.UNPACED === '1' ? ['--disable-gpu-vsync', '--disable-frame-rate-limit'] : []),
+  ],
   headless: !HEADED,
   ...(CHANNEL === null ? {} : { channel: CHANNEL }),
 });

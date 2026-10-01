@@ -1,0 +1,256 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "dpr": 1.5
+  },
+  "readings": [
+    {
+      "name": "home",
+      "probe": {
+        "active": true,
+        "look": "standard",
+        "pitchDeg": 55,
+        "yawDeg": 0,
+        "focus": {
+          "xM": 1350,
+          "zM": 1417,
+          "depthM": null
+        },
+        "eye": {
+          "xM": 1350,
+          "zM": 4859,
+          "depthM": -21607
+        },
+        "distance": 6000,
+        "waterReachM": 19200,
+        "waterDensity": 1,
+        "hullScale": 2.52,
+        "drawCalls": 55,
+        "triangles": 148290,
+        "textures": 9,
+        "pixelRatio": 1.5,
+        "drawingBuffer": {
+          "width": 2160,
+          "height": 1350
+        },
+        "toneMapping": 4,
+        "environmentIntensity": 0.35,
+        "environmentBytes": 344064,
+        "station": "home",
+        "stationMs": 921,
+        "stationFrames": 243,
+        "avgFrames": 240,
+        "fps": 263.8,
+        "avgFrameMs": 3.76,
+        "worstFrameMs": 12.9,
+        "avgConnMs": 0.6,
+        "worstConnMs": 1.4,
+        "avgOverlayMs": 1.26,
+        "worstOverlayMs": 7.5,
+        "overlayFrames": 243,
+        "gpuTimer": "timing",
+        "avgGpuMs": 0.69,
+        "worstGpuMs": 4.41,
+        "gpuFrames": 241,
+        "gpuDropped": 0,
+        "units": 4,
+        "structures": 2,
+        "ordnance": 0,
+        "props": 367,
+        "propTris": 99520,
+        "modelBacked": 6,
+        "ownCentre": {
+          "x": 1356.3317057291667,
+          "z": 1417.045186360677
+        }
+      }
+    },
+    {
+      "name": "close",
+      "probe": {
+        "active": true,
+        "look": "standard",
+        "pitchDeg": 55,
+        "yawDeg": 0,
+        "focus": {
+          "xM": 1350,
+          "zM": 1417,
+          "depthM": null
+        },
+        "eye": {
+          "xM": 1350,
+          "zM": 2450,
+          "depthM": -5968
+        },
+        "distance": 1800,
+        "waterReachM": 5760,
+        "waterDensity": 1,
+        "hullScale": 1,
+        "drawCalls": 54,
+        "triangles": 148290,
+        "textures": 9,
+        "pixelRatio": 1.5,
+        "drawingBuffer": {
+          "width": 2160,
+          "height": 1350
+        },
+        "toneMapping": 4,
+        "environmentIntensity": 0.35,
+        "environmentBytes": 344064,
+        "station": "close",
+        "stationMs": 768.5,
+        "stationFrames": 244,
+        "avgFrames": 240,
+        "fps": 317.5,
+        "avgFrameMs": 3.14,
+        "worstFrameMs": 10.7,
+        "avgConnMs": 0.56,
+        "worstConnMs": 1.2,
+        "avgOverlayMs": 1.05,
+        "worstOverlayMs": 2,
+        "overlayFrames": 244,
+        "gpuTimer": "timing",
+        "avgGpuMs": 0.75,
+        "worstGpuMs": 1.42,
+        "gpuFrames": 242,
+        "gpuDropped": 0,
+        "units": 4,
+        "structures": 2,
+        "ordnance": 0,
+        "props": 367,
+        "propTris": 99520,
+        "modelBacked": 6,
+        "ownCentre": {
+          "x": 1362.9979654947917,
+          "z": 1416.9737752278645
+        }
+      }
+    },
+    {
+      "name": "low",
+      "probe": {
+        "active": true,
+        "look": "standard",
+        "pitchDeg": 12,
+        "yawDeg": 0,
+        "focus": {
+          "xM": 1350,
+          "zM": 1417,
+          "depthM": null
+        },
+        "eye": {
+          "xM": 1350,
+          "zM": 4841,
+          "depthM": -2574
+        },
+        "distance": 3500,
+        "waterReachM": 11200,
+        "waterDensity": 1,
+        "hullScale": 1.47,
+        "drawCalls": 55,
+        "triangles": 148290,
+        "textures": 9,
+        "pixelRatio": 1.5,
+        "drawingBuffer": {
+          "width": 2160,
+          "height": 1350
+        },
+        "toneMapping": 4,
+        "environmentIntensity": 0.35,
+        "environmentBytes": 344064,
+        "station": "low",
+        "stationMs": 818.6,
+        "stationFrames": 244,
+        "avgFrames": 240,
+        "fps": 298.1,
+        "avgFrameMs": 3.25,
+        "worstFrameMs": 29,
+        "avgConnMs": 0.6,
+        "worstConnMs": 23.3,
+        "avgOverlayMs": 1.07,
+        "worstOverlayMs": 1.9,
+        "overlayFrames": 244,
+        "gpuTimer": "timing",
+        "avgGpuMs": 0.62,
+        "worstGpuMs": 26.04,
+        "gpuFrames": 241,
+        "gpuDropped": 0,
+        "units": 4,
+        "structures": 2,
+        "ordnance": 0,
+        "props": 367,
+        "propTris": 99520,
+        "modelBacked": 6,
+        "ownCentre": {
+          "x": 1369.6642252604167,
+          "z": 1416.902364095052
+        }
+      }
+    },
+    {
+      "name": "survey",
+      "probe": {
+        "active": true,
+        "look": "standard",
+        "pitchDeg": 88,
+        "yawDeg": 0,
+        "focus": {
+          "xM": 1350,
+          "zM": 1417,
+          "depthM": null
+        },
+        "eye": {
+          "xM": 1350,
+          "zM": 2045,
+          "depthM": -81035
+        },
+        "distance": 18000,
+        "waterReachM": 57600,
+        "waterDensity": 1,
+        "hullScale": 4,
+        "drawCalls": 55,
+        "triangles": 148290,
+        "textures": 9,
+        "pixelRatio": 1.5,
+        "drawingBuffer": {
+          "width": 2160,
+          "height": 1350
+        },
+        "toneMapping": 4,
+        "environmentIntensity": 0.35,
+        "environmentBytes": 344064,
+        "station": "survey",
+        "stationMs": 896.9,
+        "stationFrames": 243,
+        "avgFrames": 240,
+        "fps": 270.9,
+        "avgFrameMs": 3.68,
+        "worstFrameMs": 11.1,
+        "avgConnMs": 0.61,
+        "worstConnMs": 1.4,
+        "avgOverlayMs": 1.24,
+        "worstOverlayMs": 2,
+        "overlayFrames": 243,
+        "gpuTimer": "timing",
+        "avgGpuMs": 0.59,
+        "worstGpuMs": 3.31,
+        "gpuFrames": 241,
+        "gpuDropped": 0,
+        "units": 4,
+        "structures": 2,
+        "ordnance": 0,
+        "props": 367,
+        "propTris": 99520,
+        "modelBacked": 6,
+        "ownCentre": {
+          "x": 1376.3304850260417,
+          "z": 1416.8309529622395
+        }
+      }
+    }
+  ],
+  "unpaced": true
+}

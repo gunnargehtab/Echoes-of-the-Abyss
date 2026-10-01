@@ -239,7 +239,10 @@ column is the conn view's GPU time, every pass summed, from a timer query: a dev
 reads it on a GPU and refuses it on a software rasteriser, and the probe's `gpuTimer`
 says which. Zero new draws is not zero shading cost, and that column is what shows it.
 Gate 6 reads it at device pixel ratio 1 and 1.5; `VIEW_DPR=1.5` sets the second, and the
-probe's `pixelRatio` and `drawingBuffer` say what was shaded.
+probe's `pixelRatio` and `drawingBuffer` say what was shaded. Read it **unpaced**:
+`UNPACED=1` turns vsync off, because a GPU paced at 60 fps idles at a low clock and the
+timer then measures the clock (docs/screenshots/issue-1001/README.md). An unpaced run's
+frame columns are no budget, so a frame-time drive stays paced.
 
 On a desktop with a GPU, drive **headed**. Headless Chromium may draw through SwiftShader
 anyway, and `--channel msedge` (or `chrome`) uses an installed browser where no Playwright
