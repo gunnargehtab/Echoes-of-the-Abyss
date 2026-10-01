@@ -4,7 +4,6 @@
  */
 import {
   AdditiveBlending,
-  Box3,
   BufferAttribute,
   BufferGeometry,
   DynamicDrawUsage,
@@ -22,61 +21,9 @@ import {
   Vector3,
 } from 'three';
 import { DREAM_LOOP_LIGHT_SPILL } from '@echoes/shared';
+import { lampSites } from './lampSites.ts';
 
 const HALO_CAP = 256;
-const sitesByGeometry = new WeakMap<BufferGeometry, readonly Sphere[]>();
-
-/** Merged lamp meshes still have disconnected bulbs. Weld position seams,
- * then find their connected components rather than lighting the bucket's centre. */
-export function lampSites(geometry: BufferGeometry): readonly Sphere[] {
-  const cached = sitesByGeometry.get(geometry);
-  if (cached !== undefined) return cached;
-  const position = geometry.getAttribute('position');
-  const vertices: number[] = [];
-  const parents: number[] = [];
-  const welded = new Map<string, number>();
-  for (let i = 0; i < position.count; i++) {
-    const key = `${position.getX(i).toFixed(5)},${position.getY(i).toFixed(5)},${position.getZ(i).toFixed(5)}`;
-    let id = welded.get(key);
-    if (id === undefined) {
-      id = parents.length;
-      parents.push(id);
-      welded.set(key, id);
-    }
-    vertices.push(id);
-  }
-  const root = (id: number): number => {
-    while (parents[id] !== id) {
-      parents[id] = parents[parents[id]!]!;
-      id = parents[id]!;
-    }
-    return id;
-  };
-  const index = geometry.index;
-  const count = index?.count ?? position.count;
-  for (let i = 0; i < count; i += 3) {
-    const a = root(vertices[index?.getX(i) ?? i]!);
-    const b = root(vertices[index?.getX(i + 1) ?? i + 1]!);
-    const c = root(vertices[index?.getX(i + 2) ?? i + 2]!);
-    parents[b] = a;
-    parents[c] = a;
-  }
-  const boxes = new Map<number, Box3>();
-  const point = new Vector3();
-  for (let i = 0; i < position.count; i++) {
-    const id = root(vertices[i]!);
-    let box = boxes.get(id);
-    if (box === undefined) {
-      box = new Box3();
-      boxes.set(id, box);
-    }
-    box.expandByPoint(point.fromBufferAttribute(position, i));
-  }
-  const sites = [...boxes.values()].map((box) => box.getBoundingSphere(new Sphere()));
-  sitesByGeometry.set(geometry, sites);
-  return sites;
-}
-
 interface LampBinding {
   mesh: Mesh;
   material: MeshStandardMaterial;

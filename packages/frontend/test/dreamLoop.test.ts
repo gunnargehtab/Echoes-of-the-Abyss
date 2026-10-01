@@ -17,7 +17,8 @@ import {
   installDreamSteel,
 } from '../src/game/dreamLoop.ts';
 import { DreamGroundCover } from '../src/game/dreamGroundCover.ts';
-import { DreamLightHalos, lampSites } from '../src/game/dreamLightHalos.ts';
+import { DreamLightHalos } from '../src/game/dreamLightHalos.ts';
+import { lampSites } from '../src/game/lampSites.ts';
 import {
   PROP_INSTANCE_CAP,
   PROP_TRI_RESERVATION,
