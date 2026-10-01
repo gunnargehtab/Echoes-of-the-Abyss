@@ -1,5 +1,6 @@
 /**
- * Spawning a gate, on every platform the gates run on.
+ * Spawning a gate, or a hull tool's npm install, on every platform the gates
+ * run on.
  *
  * Extracted from `tools/gates.mjs` when `tools/claude-docs/check.mjs` became the
  * second caller. The Windows reasoning below is the whole reason this is a
