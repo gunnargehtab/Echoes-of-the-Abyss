@@ -121,7 +121,10 @@ others in the run log.
 ## 4. When nothing is eligible, file the next sub-issues off an epic
 
 1. Take the oldest open `epic`. Read its **linked sub-issues**; that list, not the
-   checkbox ticks, records what is filed. Never tick a box.
+   checkbox ticks, records what is filed. Ticks are bookkeeping the loop keeps
+   itself, no person needed: tick each box whose linked sub-issue is closed, so
+   the checklist reads current with nobody watching. A tick is display, never a
+   claim check — only the links say what exists.
 2. Walk its unchecked, unfiled boxes in order. Take **up to three** you can scope:
    acceptance criteria, the files or docs each touches, one PR each.
 3. A box that needs a scoping call is not a reason to skip it: decide the scope
@@ -129,8 +132,9 @@ others in the run log.
 4. Open a normal issue per box — epic constraints restated where they bind, the
    box it came from named, labelled by nature (`enhancement`, `docs`, `infra`,
    `bug`), **never `epic`**, and **unassigned**.
-5. Link each to the epic with the sub-issue API. Without the link the next firing
-   files the same box again.
+5. Link each to the epic with the sub-issue API, and put the new issue's number
+   on its box, unticked, so a later firing can tick it on close. Without the link
+   the next firing files the same box again.
 6. **Stop.** Do not work what you filed; the gap to the next firing is a person's
    window to adjust the scope.
 
