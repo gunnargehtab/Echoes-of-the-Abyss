@@ -28,7 +28,7 @@ same Ventfront capture (`paced/`):
 
 The same frame at 2.25 times the fragments reads *less*, and one run reads half the
 next. The GPU clock shows why. `nvidia-smi`, sampled every 500 ms through one more capture of
-each kind (`paced/clock.csv`, `unpaced/clock.csv`), read the GPU in its P8 state at
+each kind (`clock.csv` and `ventfront-dpr1-clock.json` in each folder), read the GPU in its P8 state at
 139–405 MHz (median 215) while paced, and in P0 at 1,771 MHz while unpaced; that pair read
 home 1.92 ms paced and 0.48 ms unpaced. Unpaced (vsync and the frame-rate limit off, about
 240–460 fps), the GPU stays loaded and the readings repeat and grow with the pixel count.
