@@ -84,6 +84,17 @@
  * under z 3.4 is the third facet, 72° from level, where a box would stand
  * nearly on edge and show under a cell. Same names, sizes and material;
  * `diff.mjs responsory-hadron` lists the three and no other part.
+ *
+ * FACETS (#919). The Order's rule is one facet edge of 3 m
+ * (docs/asset-prompts-3d.md Block 2c; hadron.mjs `facets`, `cut`), and five
+ * parts here were off it. Each resonator ring is twelve round on a tube of
+ * four, where it was twenty-eight on eight; the crystal ring inside it ten
+ * round, where it was twenty-eight, on the hexagonal tube it had; and the
+ * emitter barrel four-sided at a metre of radius, a diamond with its ridge
+ * on the crown, where it was ten. The body's ten at 4.6 m was the rule's
+ * already and is asked of it now. 42 parts and 2,244 triangles become 42
+ * and 1,084; `diff.mjs responsory-hadron fc217cb` lists the five re-cut
+ * parts and no movement.
  */
 import { THREE, bothSides, add, box, seat, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -115,8 +126,10 @@ hadron.bowArray(
   { alloy, crystal, seam, node },
   { from: 29, to: BOW - 5.4, r: 5.2, coreLead: 0.2 }
 );
-// The emitter runs aft from the array along the spine as a slim faired barrel.
-const barrel = new THREE.CylinderGeometry(0.85, 1.0, 22, 10);
+// The emitter runs aft from the array along the spine as a slim faired
+// barrel — the rule's four at a metre of radius (hadron.mjs `cut`, #919), a
+// diamond with its ridge on the crown, where the first build had ten.
+const barrel = new THREE.CylinderGeometry(0.85, 1.0, 22, hadron.cut().round(1.0));
 add(root, 'emitter_barrel', barrel, alloy, [10, 5.9, 0], [0, 0, Math.PI / 2]);
 
 // The resonator shoulders — the one thing a Clarion does not have. Cold at

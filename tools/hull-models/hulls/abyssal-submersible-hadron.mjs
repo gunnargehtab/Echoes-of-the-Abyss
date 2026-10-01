@@ -19,8 +19,8 @@
  * A port of the approved export
  * (docs/concept-art/models/abyssal-submersible-hadron.glb at 3e15409), part
  * for part in its order, every number the export's own. Every part is
- * `factions/hadron.mjs`'s `prism` — eight of them at eight facets, seven at
- * four — or a kit box; every pair goes through `flanks`, `_p` first at the
+ * `factions/hadron.mjs`'s `prism` — seven of them at eight facets, eight at
+ * four (FACETS, below) — or a kit box; every pair goes through `flanks`, `_p` first at the
  * export's +x, which is how the file writes them and where -z is port once
  * the file is turned onto its length (#642). Nothing here is a shape
  * decision; where the export is odd the script is odd with it:
@@ -46,6 +46,13 @@
  * overhangs either end — the pitched blades and fin sit well inboard of
  * both — so `DRAWN` is the vertex extent. Every number below is the
  * export's, through kit.mjs `drawn`.
+ *
+ * FACETS (#919). The pressure hull's drums take the Order's rule at their
+ * own radii (hadron.mjs `cut`): the three lengths of hull and the four
+ * bands are eight at 3.9 to 4.1 m, as the file had them, and the crystal
+ * `bow_tip`, 0.44 m at its base, is four where the file drew it eight like
+ * the hull behind it — the one shape decision here since the port. 27
+ * parts and 516 triangles become 27 and 500.
  */
 import { THREE, box, part, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -53,6 +60,10 @@ import * as hadron from '../factions/hadron.mjs';
 const L = 95;
 const DRAWN = 107.5;
 const DATUM = 6;
+
+// The Order's facet rule at this file's scale (hadron.mjs `cut`, #919): the
+// builders are handed the export's units and the rule is a chord in metres.
+const cut = hadron.cut(L / DRAWN);
 
 const alloy = hadron.ink.paleAlloy();
 const shadow = hadron.ink.shadowIndigo();
@@ -62,9 +73,20 @@ const seam = hadron.ink.crystalSeam(1.1);
 const root = new THREE.Group();
 root.name = 'hadron_submersible';
 const bar = (name, mat, size, placement) => part(root, name, box(...size), mat, placement);
-/** The pressure hull's drum: eight facets on the hull's axis, `[fore, aft]` radii by `length`. */
+/**
+ * The pressure hull's drum, `[fore, aft]` radii by `length` on the hull's
+ * axis, the rule's count at its wider end: eight on the hull and its bands
+ * at 3.9 to 4.1 m, four on the crystal tip at 0.44.
+ */
 const drum = (name, mat, [fore, aft], length, z) =>
-  hadron.prism(root, mat, { name, fore, aft, length, facets: 8, ...drawn([0, DATUM, z]) });
+  hadron.prism(root, mat, {
+    name,
+    fore,
+    aft,
+    length,
+    facets: cut.round(Math.max(fore, aft)),
+    ...drawn([0, DATUM, z]),
+  });
 
 // The pressure hull in three lengths — middle, spear, cone — then the four
 // bands proud of it at twelve-unit stations, and the crystal tip on the

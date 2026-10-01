@@ -456,7 +456,13 @@ function report(navy, models, rules, listParts) {
   }
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+/**
+ * The command line. A function called at the foot rather than a top-level
+ * await: since the pass (#919) a navy's module imports `facetsFor` from
+ * this file, so a script `measureAll` imports reaches back here, and a
+ * module still awaiting its own body is one that import waits on forever.
+ */
+async function main() {
   const listParts = process.argv.includes('--parts');
   const asked = process.argv.slice(2).filter((a) => a !== '--parts');
   const known = [...NAVIES, 'env'];
@@ -471,3 +477,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     if (mine.length) report(navy, mine, await rulesOf(navy), listParts);
   }
 }
+
+if (process.argv[1] === fileURLToPath(import.meta.url))
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

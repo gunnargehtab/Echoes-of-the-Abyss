@@ -58,6 +58,7 @@ import {
   xLong,
   seat,
 } from '../kit.mjs';
+import { facetsFor, orbFacets } from '../facets.mjs';
 
 /**
  * The Order's palette — one table, one factory a material name (#888).
@@ -251,20 +252,36 @@ export const ink = {
  * half facet, through opposite vertices and opposite edges alike, so laid on
  * the hull's axis it mirrors port to starboard — the law's own axis — however
  * the kit turns its first vertex, and crown to keel besides; an odd ring
- * mirrors on one axis only. Four is the floor, the blade's diamond; four and
+ * mirrors on one axis only. Three parts are the exception, by a turn on
+ * their nodes and not by their count — the Sentinel Turret's frustum and
+ * the Sounding Spire's plinth and cap, twelve-gons turned the approved
+ * octagons' eighth to keep the box their models are measured by
+ * (`emplacement`, `plinth`). Four is the floor, the blade's diamond; four and
  * six are the sections, and a section keeps a count and not a shape: four
  * keeps every spar, point and prism in the navy, and six every hexagonal
  * prism — the horns, lips and drives (`spar`, `bowArray`; the Clarion's horn
  * carries 5.5 m faces and keeps), the stays, struts, pins, pipes, masts and
  * legs at 0.35–1.9 m of radius where the lattice would say four, and on the
  * structures the Refinery's silos at 18–27 m, the Foundry's wing halls at
- * 33–40, the Bio-reactor's cistern and the Tocsin's bell and collars. That
+ * 33–40, the Bio-reactor's cistern and the Tocsin's bell and collars. Since
+ * the pass six also keeps what the files drew five-, seven-, eight-, ten-
+ * and sixteen-sided and the Order cuts as its hexagon: every pipe of its
+ * own, past 1.9 m too — the Bastion's standpipes at 5.1 m, the Spire's
+ * ballast pipes at 3.2, the Foundry's standpipes at 3.2 and the Refinery's
+ * transfer pipes at 2.3 — the Refinery's exhaust stacks and their tips at
+ * 4.5–5.1 (`PIPE_FACETS`), the turret's recoil struts at 1.0, and on the
+ * Bio-reactor the footprint slab at 44 m, its kerb at 40 and the three
+ * throat drums and their mouths (`feed_throat`) at 3.8–5.4. The Vent
+ * Tap's draw pipes are the kit's and stay the rule's eight at 3.5 m: a
+ * hexagon as the kit lays one has a flat on the crown, and the twelve pipe
+ * lamps saddled on that crown stand 0.4 m off it. That
  * is by design: quartz is a hexagonal prism at a millimetre and at a metre,
  * and a resonance tower is a crystal the size of a building. Twelve is the
  * ceiling, a dodecagon at the rim — a cut stone, the coarsest of the four
  * navies' by the law's own ranking of their curves; past it a ring is a
- * wheel, and the Responsory's and the Antiphon's twenty-eight-facet
- * resonator rings are the pass's first cut.
+ * wheel, and the Responsory's and the Antiphon's resonator rings, drawn at
+ * twenty-eight until the pass, were its first cut: twelve round, the
+ * Responsory's inner ring ten.
  *
  * Panels: planes — a wing, a fin, a spar — and the seams "the Order builds
  * nothing bare" adds, two to six metres, centred on the Clarion's 3.9. A
@@ -276,6 +293,46 @@ export const facets = { chordM: 3, min: 4, max: 12, step: 2, sections: [4, 6] };
 export const panels = { hull: [2, 6], structure: [5.5, 16] };
 
 /**
+ * The rule as a builder asks it (#919): every round part in this module and
+ * in the Order's scripts takes its count from here, so re-faceting the navy
+ * is the one line above. `m` is metres a drawn unit — 1 for a hull drawn in
+ * metres, `L / DRAWN` for a port that builds in its export's units and is
+ * scaled on its root — because the rule is a chord in metres and a builder
+ * is handed the file's numbers. A radius is always the widest ring's, as
+ * the reader takes it (facets.mjs `facetsFor`): a frustum's wider rim, a
+ * torus's ring at its major radius plus its tube, a part pressed by its
+ * node at its major axis.
+ *
+ * `round(radius, arc)` is a cylinder's, a lathe's, a torus's ring or tube;
+ * `orb(radius, window)` a sphere's `[round, down]`; `capsule(radius)` the
+ * kit capsule's `[cap, round]`. A capsule's meridian is twice its cap
+ * segments over a half turn, so where the rule's half-turn share is odd —
+ * ten a turn, five over π — no capsule draws it, and the cap takes the
+ * segment over: the Sentinel Turret's pods, at 5.12 m, are the navy's one
+ * case, and the measure names their meridians for it.
+ *
+ * A section is not asked here. Four and six are shapes the Order cuts at
+ * any size — the diamond and the hexagonal prism — and a builder that draws
+ * one writes the count, with the reason where the approved file had another.
+ * Each of these is a function a kit builder takes in place of a count
+ * (kit.mjs `asked`), so the shared skeletons ask the rule at their own
+ * radii.
+ */
+export function cut(m = 1) {
+  const round = (radius, arc) => facetsFor(facets, radius * m, arc);
+  return {
+    round,
+    orb: (radius, window) => {
+      const { widthSegments, heightSegments } = orbFacets(facets, radius * m, window);
+      return [widthSegments, heightSegments];
+    },
+    capsule: (radius) => [Math.ceil(round(radius, Math.PI) / 2), round(radius)],
+  };
+}
+/** The rule for a hull drawn in metres, which is every builder's default. */
+const METRE = cut();
+
+/**
  * The blade hull: a faceted spar, full forward and narrowing aft to almost
  * nothing. `maxR` is the half-section amidships — keep it near a tenth of the
  * length, as the Clarion's 4 m on 75 m is.
@@ -284,8 +341,11 @@ export const panels = { hull: [2, 6], structure: [5.5, 16] };
  * models' `[x, r]` stations, four facets laid `flat` (`spar` below) — because
  * a port transcribes, and none of them is the fraction-of-length swell here.
  */
-export function bladeBody(root, mat, { bow, stern, maxR, facets = 10, profile = null, flat }) {
+export function bladeBody(root, mat, { bow, stern, maxR, facets, profile = null, flat }) {
   if (profile) return spar(root, 'blade_hull', mat, { profile, facets, flat });
+  // The lofted body is round, so its count is the rule's at its fullest
+  // section — ten on the Responsory's 4.6 m — unless a hull cuts a section.
+  const sides = facets ?? METRE.round(maxR);
   const L = bow - stern;
   const at = (t) => stern + L * t;
   // Fine point aft, swelling a little forward of amidships, drawn down to a
@@ -304,7 +364,7 @@ export function bladeBody(root, mat, { bow, stern, maxR, facets = 10, profile = 
         [at(0.9), maxR * 0.72],
         [at(1), maxR * 0.42],
       ],
-      facets
+      sides
     ),
     mat
   );
@@ -596,8 +656,16 @@ export function drive(root, { shadow, crystal, node }, opts) {
  * the shipped emissive map: a faint glow on the rings in the resting map,
  * which is the one thing the block refuses. It could not be lifted into
  * view without refusing it outright, so #645 took the two out.
+ *
+ * Both rings are round and take the rule's count at their outer radius
+ * (#919): twelve on the Responsory's alloy ring and ten on the crystal
+ * inside it, where both were twenty-eight. The alloy tube is the rule's too,
+ * four at 0.87 m where it was eight; the crystal's is the Order's hexagonal
+ * section, as it was, and so is the stay.
  */
 export function resonatorRing(root, { shadow, alloy, crystal }, { x, y, z, r, cant }) {
+  const tube = r * 0.15;
+  const inner = { r: r * 0.74, tube: 0.35 };
   bothSides((side, sgn) => {
     add(root, `ring_cradle_${side}`, box(r * 1.7, 1.5, r * 0.9), shadow, [
       x,
@@ -612,7 +680,7 @@ export function resonatorRing(root, { shadow, alloy, crystal }, { x, y, z, r, ca
     add(
       root,
       `resonator_ring_${side}`,
-      torus(r, r * 0.15, 8, 28),
+      torus(r, tube, METRE.round(tube), METRE.round(r + tube)),
       alloy,
       [x, y + r * 0.7, sgn * z],
       [sgn * cant, 0, 0]
@@ -620,7 +688,7 @@ export function resonatorRing(root, { shadow, alloy, crystal }, { x, y, z, r, ca
     add(
       root,
       `ring_inner_${side}`,
-      torus(r * 0.74, 0.35, 6, 28),
+      torus(inner.r, inner.tube, 6, METRE.round(inner.r + inner.tube)),
       crystal,
       [x, y + r * 0.7, sgn * z],
       [sgn * cant, 0, 0]
@@ -704,8 +772,10 @@ export function landingDeck(root, { shadow, alloy }, { outline, y, t, bays, floo
  * Responsory's `resonatorRing` is a mirrored pair of canted shoulders
  * standing off the spine; this is one ring on its side about a vertical
  * axis at `[x, z]`, its underside resting on the deck at `y`: the alloy ring
- * of radius `r` and tube `tube`, and the crystal `inner` inside it, both
- * eight-sided in section and `segments` round. The names are the
+ * of radius `r` and tube `tube`, and the crystal `inner` inside it, each
+ * the rule's count in section and round (#919) — four and twelve on the
+ * Antiphon's, where the file had eight and twenty-eight — unless `segments`
+ * says otherwise for both. The names are the
  * Responsory's without a side, because a ring on the centreline has none.
  *
  * It is cold for the reason the Responsory's are: the crystal is a `clad`
@@ -714,13 +784,14 @@ export function landingDeck(root, { shadow, alloy }, { outline, y, t, bays, floo
  * §3.2, the Responsory's header for the cores that were sealed in it).
  */
 export function deckRing(root, { alloy, crystal }, opts) {
-  const { x, y, z = 0, r, tube, inner, segments = 28 } = opts;
+  const { x, y, z = 0, r, tube, inner, segments = null } = opts;
   const flat = [Math.PI / 2, 0, 0];
-  add(root, 'resonator_ring', torus(r, tube, 8, segments), alloy, [x, y + tube, z], flat);
+  const ringOf = (R, t) => torus(R, t, METRE.round(t), segments ?? METRE.round(R + t));
+  add(root, 'resonator_ring', ringOf(r, tube), alloy, [x, y + tube, z], flat);
   add(
     root,
     'ring_inner',
-    torus(inner.r, inner.tube, 8, segments),
+    ringOf(inner.r, inner.tube),
     crystal,
     [x, y + inner.tube, z],
     flat
@@ -1151,8 +1222,10 @@ export function transom(root, mat, { x, t = 0.8, halfHeight, halfBeam, y = 0 }) 
  * the rail under way and a lamp dark at rest is a lamp this pipeline never
  * shows (§3.2, rule 2); the ribs are alloy. The `torpedo` is one capsule
  * (kit.mjs `capsule` — the turrets' ammo-pod idiom, `magazine` below) of
- * `torpedo.r` on `torpedo.length` of straight side, `torpedo.facets`
- * round, laid along X about `torpedo.x` at `torpedo.y`, with a cross of
+ * `torpedo.r` on `torpedo.length` of straight side, the rule's count round
+ * and over its caps (`cut`, #919: four round and one step a cap at the
+ * Lance's 1.5 m, a square bar drawn to a point at each end, where the first
+ * draft had eight and three), laid along X about `torpedo.x` at `torpedo.y`, with a cross of
  * two tail plates at `fins.x` — `fins.chord` along the hull, `fins.span`
  * out from the axis each way, `fins.t` thick. The `collar` is a six-facet
  * ring lathed on its own stations, bore and all, with a vertex on the crown
@@ -1168,8 +1241,8 @@ export function transom(root, mat, { x, t = 0.8, halfHeight, halfBeam, y = 0 }) 
 export function spike(root, { alloy, unlit, node }, { rail, ribs, torpedo, collar }) {
   bothSides((side, sgn) => spar(root, `rail_${side}`, unlit, { ...rail, z: sgn * rail.z }));
   ribs.at.forEach((x, i) => add(root, `rail_rib_${i}`, box(...ribs.size), alloy, [x, ribs.y, 0]));
-  const { x, y, r, length, facets = 8, fins } = torpedo;
-  add(root, 'torpedo', capsule(r, length, 3, facets), alloy, [x, y, 0], [0, 0, -Math.PI / 2]);
+  const { x, y, r, length, fins } = torpedo;
+  add(root, 'torpedo', capsule(r, length, ...METRE.capsule(r)), alloy, [x, y, 0], [0, 0, -Math.PI / 2]);
   add(root, 'torpedo_fins_lateral', box(fins.chord, fins.t, 2 * fins.span), alloy, [fins.x, y, 0]);
   add(root, 'torpedo_fins_vertical', box(fins.chord, 2 * fins.span, fins.t), alloy, [fins.x, y, 0]);
   spar(root, 'muzzle_collar', node, { facets: 6, ...collar });
@@ -1625,7 +1698,8 @@ const sided = (sgn, [x, y, z], [a = 0, b = 0, c = 0] = []) =>
  * Every number is the approved turret's own (#639), through kit.mjs `drawn`:
  * the frustum's centre and its `yaw` on the node — the approved octagon is turned an eighth
  * there, and the bake measures the turned box (kit.mjs `fitFootprint`) —
- * `collar.facets` round, and `blades` an object: each blade a four-sided
+ * the collar the rule's count round and in its tube (`cut`, #919: twelve and
+ * four on the turret, where the file had nine and five), and `blades` an object: each blade a four-sided
  * pyramid of radius `r` with its own `[bearing, length]` (radians from +X
  * toward +Z), stood on the `anchor` circle `[radius, y]`, its axis the outward
  * radial with `lift` added to y before normalising, its centre `seat` of its
@@ -1633,12 +1707,36 @@ const sided = (sgn, [x, y, z], [a = 0, b = 0, c = 0] = []) =>
  * that carries +Y there. That construction regenerates the approved node
  * matrices to the sixth decimal; each pair's `_l` mirrors its `_r` in x, which
  * puts the third pair's `_r` at -x, as the file has it.
+ *
+ * THE FRUSTUM is the rule's twelve at 32.8 m, turned the file's eighth
+ * (#919), and it is one of three parts in the navy that do not mirror port
+ * to starboard — with the Sounding Spire's plinth and its cap. The file's
+ * was an octagon turned an eighth, a flat to each axis, and its turned box
+ * — r (cos + sin)(π/8), 1.31 of its radius — is the turret's after end,
+ * the measure `DRAWN` is and every part's scale hangs on. A twelve-gon has
+ * a vertex on each axis of its own frame, so its box is the octagon's
+ * exactly, and turned the same eighth its turned box is too: the count
+ * moves and the turret's size does not. The cost is the mirror. A
+ * twelve-gon's lines of symmetry are every fifteen degrees and an eighth
+ * of a turn is 22.5, so no vertex and no flat lies on the axis, and its
+ * reflection is itself turned fifteen degrees, half a facet: where one
+ * side has a corner the other has the middle of a 17 m flat. Any turn
+ * that mirrors (none, or half a facet) measures 10.74 or 11.46 for the 11.72 and grows the whole turret 9.1 or
+ * 2.3 % to fill the same 120 m, and the owner took the turn over the
+ * growth, knowingly (#919, round two). docs/asset-prompts-3d.md Block 2c
+ * names the three.
  */
 export function emplacement(root, { shadow, steel, dim }, opts) {
-  const { at, yaw = 0, r, rTop = r * 0.84, height, collar, blades } = opts;
-  part(root, 'base_frustum', cyl(rTop, r, height, 8), shadow, drawn(at, [0, yaw, 0]));
+  const { at, yaw = 0, r, rTop = r * 0.84, height, collar, blades, cut: rule = METRE } = opts;
+  const sides = rule.round(Math.max(r, rTop));
+  part(root, 'base_frustum', cyl(rTop, r, height, sides), shadow, drawn(at, [0, yaw, 0]));
   // A torus is born in the XY plane; a collar lies flat, so it is laid down.
-  const ring = torus(collar.r, collar.t, 5, collar.facets ?? 16);
+  const ring = torus(
+    collar.r,
+    collar.t,
+    rule.round(collar.t),
+    collar.facets ?? rule.round(collar.r + collar.t)
+  );
   part(root, 'base_collar', ring, steel, drawn([at[0], collar.y, at[2]], [Math.PI / 2, 0, 0]));
   const up = new THREE.Vector3(0, 1, 0);
   blades.each.forEach(([bearing, length], i) => {
@@ -1669,7 +1767,7 @@ export function emplacement(root, { shadow, steel, dim }, opts) {
  * what makes the kind readable from above at 120 m.
  *
  * Every number is the approved turret's own (#639), through kit.mjs `drawn`,
- * and in the file's order: the two struts first — five-facet rods, `r` `[top,
+ * and in the file's order: the two struts first — six-facet rods, `r` `[top,
  * bottom]` by `length`, the `_l` mirroring the `_r` placement in x — on the
  * root, then a `turret_head` node at `at` carrying the wedge (a six-facet
  * frustum, `r` `[top, bottom]` by `height`, its node scaled `scale`), the
@@ -1679,13 +1777,19 @@ export function emplacement(root, { shadow, steel, dim }, opts) {
  * The wedge is six-sided rather than square. "Blade-like, crystalline
  * silhouettes" (docs/asset-prompts-3d.md, Block 2) is a facet count as much
  * as a proportion, and a rectangle is the one plan shape this navy never has.
+ *
+ * The struts were five-sided on the file, a count the Order has no shape
+ * for. They are cut as its hexagonal rod (#919) rather than rounded to the
+ * rule's four at a metre of radius: a strut is the noun the navy's stays,
+ * pins and pipes are, every one of them six, and the feed pipes beside
+ * these on the same emplacement are six already.
  */
 export function gunHead(root, { shadow, steel, dim }, { at, wedge, visor, crest, struts }) {
   pair((tag, sgn) =>
     part(
       root,
       `recoil_strut_${tag}`,
-      cyl(struts.r[0], struts.r[1], struts.length, 5),
+      cyl(struts.r[0], struts.r[1], struts.length, 6),
       steel,
       sided(sgn, struts.at, struts.rot)
     )
@@ -1710,11 +1814,12 @@ export function gunHead(root, { shadow, steel, dim }, { at, wedge, visor, crest,
  * under `parent` — the head node `gunHead` returns — at `at`, pitched `pitch`
  * about x, and inside it, each at its own `z` along the group: the root and
  * mid bars (`size`), a vane box each side at ±`x`, the tip — a four-sided
- * pyramid `r` by `length`, stood on its base — and the pip, a sphere of five
- * by four segments. Returns the group.
+ * pyramid `r` by `length`, stood on its base — and the pip, an orb at the
+ * rule's counts (`cut`, #919): four round by two down at the turret's 0.82 m,
+ * an octahedron, where the file had five by four. Returns the group.
  */
 export function railGun(parent, { steel, dim, vane, pip }, opts) {
-  const { at, pitch, root: bar, mid, vanes, tip, pip: dot } = opts;
+  const { at, pitch, root: bar, mid, vanes, tip, pip: dot, cut: rule = METRE } = opts;
   const g = group(parent, 'barrel_group', drawn(at, [pitch, 0, 0]));
   part(g, 'rail_root', box(...bar.size), steel, drawn([0, 0, bar.z]));
   part(g, 'rail_mid', box(...mid.size), dim, drawn([0, 0, mid.z]));
@@ -1723,7 +1828,13 @@ export function railGun(parent, { steel, dim, vane, pip }, opts) {
   );
   const stood = drawn([0, 0, tip.z], [Math.PI / 2, 0, 0]);
   part(g, 'rail_tip', cyl(0, tip.r, tip.length, 4), steel, stood);
-  part(g, 'muzzle_pip', new THREE.SphereGeometry(dot.r, 5, 4), pip, drawn([0, 0, dot.z]));
+  part(
+    g,
+    'muzzle_pip',
+    new THREE.SphereGeometry(dot.r, ...rule.orb(dot.r)),
+    pip,
+    drawn([0, 0, dot.z])
+  );
   return g;
 }
 
@@ -1732,11 +1843,15 @@ export function railGun(parent, { steel, dim, vane, pip }, opts) {
  *
  * Every number is the approved turret's own (#639), in the file's order —
  * both pipes, then both pods: each pipe a six-facet rod, `r` `[top, bottom]`;
- * each pod a capsule of radius `r` and `waist` with three-step caps and seven
- * facets, laid out as three r184 lays a capsule (kit.mjs `capsule`); the `_l`
- * of each mirroring the `_r` placement in x.
+ * each pod a capsule of radius `r` and `waist` at the rule's counts (`cut`,
+ * #919), laid out as three r184 lays a capsule (kit.mjs `capsule`); the `_l`
+ * of each mirroring the `_r` placement in x. At the turret's 5.12 m that is
+ * ten round, where the file had seven, and three-step caps as the file had:
+ * the rule's half-turn share there is five, which no capsule's two caps
+ * draw, so the caps keep the step over and the measure names the two
+ * meridians (`cut`).
  */
-export function magazine(root, steel, { pods, pipe }) {
+export function magazine(root, steel, { pods, pipe, cut: rule = METRE }) {
   pair((tag, sgn) =>
     part(
       root,
@@ -1750,7 +1865,7 @@ export function magazine(root, steel, { pods, pipe }) {
     part(
       root,
       `ammo_pod_${tag}`,
-      capsule(pods.r, pods.waist, 3, 7),
+      capsule(pods.r, pods.waist, ...rule.capsule(pods.r)),
       steel,
       sided(sgn, pods.at, pods.rot)
     )
@@ -1761,8 +1876,9 @@ export function magazine(root, steel, { pods, pipe }) {
  * Navigation marks, flat on an upward face — the only light a turret shows
  * until it fires. Named rather than numbered, because the Order places them
  * in mirrored pairs and a bare index would hide which pair is which. They are
- * the approved turret's spheres of `r` on five by four segments at the
- * export's own `[x, y, z]`, the `_r` at +x (#639).
+ * the approved turret's spheres of `r` at the export's own `[x, y, z]`, the
+ * `_r` at +x (#639), at the rule's counts (`cut`, #919) — four round by two
+ * down at 0.82 m, where the file had five by four.
  *
  * Given `on` — the part or parts the marks sit on — each is a bud on the
  * nearest skin among them from its own station, stood its radius off and
@@ -1770,12 +1886,13 @@ export function magazine(root, steel, { pods, pipe }) {
  * Order's four stood 1.4 to 6 m off its emplacement, the resting measure
  * found (#907). Without `on` every mark is at the export's station.
  */
-export function navMarks(root, light, { marks, r, on = null }) {
+export function navMarks(root, light, { marks, r, on = null, cut: rule = METRE }) {
   for (const [name, x, y, z] of marks)
     pair((tag, sgn) => {
       const station = sided(sgn, [x, y, z]);
       const placement = on ? { at: seat(root, on, station.at, { stand: r, sink: r / 2 }).at } : station;
-      part(root, `nav_mark_${name}_${tag}`, new THREE.SphereGeometry(r, 5, 4), light, placement);
+      const bud = new THREE.SphereGeometry(r, ...rule.orb(r));
+      part(root, `nav_mark_${name}_${tag}`, bud, light, placement);
     });
 }
 
@@ -1914,11 +2031,12 @@ export function slipwayHall(hall, { shadow, alloy, crystal, seam }, opts) {
  * facet count, and on this hull the count is four.
  *
  * The four Z-long kinds behind the scout (#649) are the same prism at their
- * own sizes, with two more readings of it. `facets` is eight on the
- * Submersible's pressure hull — its three lengths of hull, four pressure
- * bands and bow tip are one drum drawn rounder, and "heavy segmented
- * pressure carapace" said the Order's way is a faceted tube — and four
- * everywhere else. `upright` leaves the prism standing on the export's y
+ * own sizes, with two more readings of it. `facets` is the rule's count on
+ * the Submersible's pressure hull (`cut`, #919) — its three lengths of hull
+ * and four pressure bands are one drum drawn rounder, eight at 3.9 m, and
+ * "heavy segmented pressure carapace" said the Order's way is a faceted
+ * tube; the bow tip on its point, half a metre across, is the rule's four
+ * where the file had the hull's eight — and four everywhere else. `upright` leaves the prism standing on the export's y
  * exactly as its buffer holds it, and `fore` is then the +y end: the guard
  * wings of the Corvette and the Cruiser, and their edges, were drawn as
  * struts between two points — a cylinder born on y and carried to the tip
@@ -1987,8 +2105,7 @@ export function cage(root, alloy, { r, length, at, lean }) {
  * tube `t`, `radial` facets round the tube and `tubular` along the arc,
  * starting on the ring's +x and turning toward its +y — three's own `arc`.
  * The Bastion's eight reinforcement ribs are one of these (0.52π, past the
- * equator by a facet, four-sided) and so are its four conduits (0.9 rad,
- * five-sided). Kit `torus` draws only the full ring; a partial one is
+ * equator by a facet, four-sided) and so are its four conduits (0.9 rad). Kit `torus` draws only the full ring; a partial one is
  * faction-neutral and is a kit candidate.
  */
 export const arc = (r, t, radial, tubular, angle) =>
@@ -2003,19 +2120,58 @@ const crystal = (root, name, mat, { r, at, scale }) =>
  * born in the xy-plane, turned `roll` about its own axis and then laid down
  * by a quarter about x — an XYZ Euler of (π/2, 0, roll) applies the z turn
  * first. The Bastion's equator and plinth bands, the Spire's three collars
- * (rolled an eighth) and both files' flanges are all this.
+ * (rolled half a facet) and both files' flanges are all this.
+ *
+ * Either count left out is the rule's (`cut`, #919): the tube's at `t`, the
+ * ring's at its outer radius `r + t`. A caller that cuts a section — a
+ * four-sided band, a six-sided flange — passes that count and says so.
+ * `half` rolls the ring half a facet instead of by `roll`, whatever its
+ * count comes to, so a flat faces each axis: the turn a `plinth` takes, for
+ * a band that lies on one, and the Spire's collars'.
  */
-export function ring(root, name, mat, { r, t, radial, tubular, at, roll = 0 }) {
-  return add(root, name, torus(r, t, radial, tubular), mat, at, [Math.PI / 2, 0, roll]);
+export function ring(root, name, mat, opts) {
+  const { r, t, radial, at, half = false, cut: rule = METRE } = opts;
+  const { tubular = rule.round(r + t) } = opts;
+  const { roll = half ? Math.PI / tubular : 0 } = opts;
+  const geo = torus(r, t, radial ?? rule.round(t), tubular);
+  return add(root, name, geo, mat, at, [Math.PI / 2, 0, roll]);
 }
 
 /**
- * A plinth: a `facets`-sided frustum of `rTop` over `r`, `h` tall and
- * centred at `y`, turned `yaw` on its node — an eighth on both files, so a
- * flat faces each axis and the yawed box overhangs the vertices, which is
- * the measure the bake takes (kit.mjs `fitFootprint`).
+ * A plinth: a frustum of `rTop` over `r`, `h` tall and centred at `y`, the
+ * rule's count round (`cut`, #919) and turned half a facet on its node, so
+ * a flat faces each axis — the files' own turn, an eighth on their
+ * octagons, kept as a rule for whatever the count comes to.
+ *
+ * The approved files drew every plinth eight-sided. Eight is not the
+ * Order's — its sections are the diamond and the hexagon — and a plinth is
+ * the foot of a dome, not a prism of its own, so it is cut by the rule:
+ * twelve at the Bastion's 156 m, the Spire's 54 and the Bio-reactor
+ * vessel's 28. Not the hexagon, which stands six flats inside the
+ * twelve-sided dome it carries (a hexagon of the Bastion's 6.7 has an
+ * apothem of 5.8 under a dome of 6). The half-facet turn is a twelfth on a
+ * twelve-gon, and mirrors across both axes as the octagon's eighth did. A
+ * dome's vertices are on the axes, so they stand over its plinth's flats,
+ * a half-facet's twist between the two, as an octagonal plinth's corners
+ * stood between a twelve-sided dome's before.
+ *
+ * `facets` and `yaw` are a caller's to pass. The Sounding Spire passes the
+ * file's eighth as `yaw` for its plinth and its cap: the plinth's turned
+ * box is the measure the Spire's footprint is fitted to (kit.mjs
+ * `fitFootprint`), a twelve-gon turned an eighth has the octagon's turned
+ * box exactly, and so the count moves and the Spire's size does not — at
+ * the cost of the mirror, as on the turret's frustum (`emplacement` says
+ * how much, and that the owner took it knowingly).
+ *
+ * The Bastion's keeps the half facet. Its turned box is the plan's beam
+ * and not its length, so no turn changes its size, and the half facet is
+ * the turn that mirrors. What the turn does move is the footing of the
+ * anchor blades round it, and `anchorBlades` `foot` is the answer to that.
  */
-export function plinth(root, name, mat, { rTop, r, h, y, facets = 8, yaw = Math.PI / 8 }) {
+export function plinth(root, name, mat, opts) {
+  const { rTop, r, h, y, cut: rule = METRE } = opts;
+  const { facets = rule.round(Math.max(r, rTop)) } = opts;
+  const { yaw = Math.PI / facets } = opts;
   return add(root, name, cyl(rTop, r, h, facets), mat, [0, y, 0], [0, yaw, 0]);
 }
 
@@ -2023,9 +2179,12 @@ export function plinth(root, name, mat, { rTop, r, h, y, facets = 8, yaw = Math.
  * The pressure dome under its apex lantern — "a large pressure dome with
  * visible reinforcement ribs" (the Bastion block), the Order's. The dome is
  * a sphere of `dome.r` drawn `dome.theta` down from its pole — 0.52π on the
- * file, past the equator by a ring, so its skirt tucks under the band —
- * `dome.segments` `[round, down]`, pressed to `dome.scale` on its node at
- * `dome.at`. The `lantern` and the `finial` are crystals stood on the pole,
+ * file, past the equator, so its skirt tucks under the band — at the rule's
+ * counts `[round, down]` (`cut`, #919; `dome.segments` overrides them),
+ * pressed to `dome.scale` on its node at `dome.at`. At the Bastion's 126 m
+ * that is twelve round by three down, where the file had twelve by six: a
+ * meridian is held to the rule's twelve a turn like any ring, and 0.52π is
+ * three of them. The `lantern` and the `finial` are crystals stood on the pole,
  * the finial in the brighter glow, and four `prongs` hold the lantern: a
  * box of `prongs.size` at ±`prongs.reach` along x, `_r` at +x, rolled
  * ∓`prongs.splay` about z so each leans in, and the same box turned across
@@ -2034,14 +2193,16 @@ export function plinth(root, name, mat, { rTop, r, h, y, facets = 8, yaw = Math.
  * twice — the file's.
  */
 export function pressureDome(root, { alloy, crystal: lit, glow, shadow }, opts) {
-  const { dome, lantern, finial, prongs } = opts;
+  const { dome, lantern, finial, prongs, cut: rule = METRE } = opts;
+  const major = dome.r * Math.max(...(dome.scale ?? [1]));
+  const segments = dome.segments ?? rule.orb(major, { thetaLength: dome.theta });
   add(
     root,
     'pressure_dome',
     new THREE.SphereGeometry(
       dome.r,
-      dome.segments[0],
-      dome.segments[1],
+      segments[0],
+      segments[1],
       0,
       Math.PI * 2,
       0,
@@ -2088,9 +2249,16 @@ export function pressureDome(root, { alloy, crystal: lit, glow, shadow }, opts) 
  * y of the rib's *own* frame, which after the quarter turn is the world's
  * x-z, so a rib is a quarter-ellipse 5.41 out by 6.05 up against a dome
  * 5.99 out by 5.51 up. The file's. Each rib is its own buffer, eight in all.
+ *
+ * `radial` is the rib's section, four on the file. Along its run a rib is a
+ * ring like the dome's meridian it lies on, so `tubular` left out is the
+ * rule's share of `angle` (`cut`, #919): three at the Bastion's 127 m, the
+ * dome's own three, where the file had eighteen over the dome's six.
  */
 export function reinforceRibs(root, { alloy, shadow }, opts) {
-  const { r, t, radial, tubular, angle, yaws, at, scale } = opts;
+  const { r, t, radial, angle, yaws, at, scale, cut: rule = METRE } = opts;
+  const major = Math.max(...(scale ?? [1]));
+  const { tubular = rule.round((r + t) * major, angle) } = opts;
   yaws.forEach((yaw, i) =>
     pair((tag, sgn) =>
       add(
@@ -2109,11 +2277,13 @@ export function reinforceRibs(root, { alloy, shadow }, opts) {
 /**
  * Lit marks in mirrored pairs — the Bastion's twelve port lights, "sustained
  * glow from ports and working lights" (the Bastion block), and the Spire's
- * ten running lights. One sphere of `r`, six round by five up, drawn once
+ * ten running lights. One sphere of `r` at the rule's counts (`cut`, #919:
+ * four round by three down at the Bastion's 2.5 m and by two at the Spire's
+ * 1.45, where both files had six by five), drawn once
  * and placed at each `[x, y, z]` of `at` as `${name}_${i}_r` and, at −x, as
  * `${name}_${i}_l`: the pairs mirror across the export's x, the `_r` toward
  * +x — the bow axis on these X-long files, neither beam. A twin of
- * `navMarks` (the turret's five-by-four orbs through `drawn`) for files that
+ * `navMarks` (the turret's orbs through `drawn`) for files that
  * are not yawed; every node shares the one buffer, as both files do.
  *
  * A row may carry a fourth entry, `on`: the part or parts the pair sits
@@ -2126,8 +2296,8 @@ export function reinforceRibs(root, { alloy, shadow }, opts) {
  * band and 2.6 m off its dome, and eight of the Spire's ten 0.4 to 6.5 m
  * off what they run beside, the resting measure found (#907).
  */
-export function lightPairs(root, light, { name, r, at }) {
-  const orb = new THREE.SphereGeometry(r, 6, 5);
+export function lightPairs(root, light, { name, r, at, cut: rule = METRE }) {
+  const orb = new THREE.SphereGeometry(r, ...rule.orb(r));
   at.forEach(([x, y, z, on = null], i) =>
     pair((tag, sgn) => {
       const station = [-sgn * x, y, z];
@@ -2142,16 +2312,20 @@ export function lightPairs(root, light, { name, r, at }) {
  * A docking collar — "docking collars and external pipework" (the Bastion
  * block) — as a frame of its own: a `dock_${name}` node at `at`, rolled
  * `roll` about z so its y runs out along the beam, and inside it a throat
- * (an eight-facet frustum of `throat.rTop` over `throat.r`, `throat.h`
+ * (a frustum of `throat.rTop` over `throat.r`, `throat.h`
  * long, on the node's origin with no transform of its own), a lip, a lit
- * mouth and two fins. The Bastion has two, `starboard` at +x rolled −π/2 and
+ * mouth and two fins. The throat, the lip's ring and the mouth are round
+ * and take the rule's count (`cut`, #919) — twelve each at 36, 34 and 21 m,
+ * where the file had eight; a twelve-gon keeps a vertex on the throat's
+ * axis where the octagon had one, so the lip's outboard reach, which is the
+ * Bastion's length, is the file's still. The Bastion has two, `starboard` at +x rolled −π/2 and
  * `port` at −x rolled +π/2, each throat pointing outboard along the file's
  * x: the bow axis and not the beam, so neither #642's relabel rule nor its
  * exception applies by the letter, and the names are carried as the file
  * has them.
  *
- * The lip is the file's oddity: a four-sided ring (`lip.r`, `lip.t`, eight
- * round) at `lip.y` up the throat with no rotation on its node, so it stands
+ * The lip is the file's oddity: a four-sided ring (`lip.r`, `lip.t`) at
+ * `lip.y` up the throat with no rotation on its node, so it stands
  * in the frame's xy-plane — edge-on to the throat, a ring the throat runs
  * through — rather than laid round the mouth. A collar's lip wants the
  * quarter turn about x the export never gave it; a port keeps the buffer
@@ -2166,12 +2340,15 @@ export function lightPairs(root, light, { name, r, at }) {
  * about x so each leans outboard, `_0` at +z first.
  */
 export function dockingCollar(root, { alloy, shadow, crystal: lit }, opts) {
-  const { name, at, roll, throat, lip, mouth, fins } = opts;
+  const { name, at, roll, throat, lip, mouth, fins, cut: rule = METRE } = opts;
   const dock = group(root, `dock_${name}`, { at, rot: [0, 0, roll] });
-  add(dock, `dock_${name}_throat`, cyl(throat.rTop, throat.r, throat.h, 8), alloy);
-  add(dock, `dock_${name}_lip`, torus(lip.r, lip.t, 4, 8), shadow, [0, lip.y, 0]);
+  const bore = cyl(throat.rTop, throat.r, throat.h, rule.round(Math.max(throat.r, throat.rTop)));
+  add(dock, `dock_${name}_throat`, bore, alloy);
+  const rim = torus(lip.r, lip.t, 4, rule.round(lip.r + lip.t));
+  add(dock, `dock_${name}_lip`, rim, shadow, [0, lip.y, 0]);
   const mouthY = throat.h / 2 + mouth.t / 2;
-  add(dock, `dock_${name}_mouth`, cyl(mouth.r, mouth.r, mouth.t, 8), lit, [0, mouthY, 0]);
+  const disc = cyl(mouth.r, mouth.r, mouth.t, rule.round(mouth.r));
+  add(dock, `dock_${name}_mouth`, disc, lit, [0, mouthY, 0]);
   [1, -1].forEach((sgn, i) =>
     add(
       dock,
@@ -2186,8 +2363,8 @@ export function dockingCollar(root, { alloy, shadow, crystal: lit }, opts) {
 }
 
 /**
- * The conduits — "external pipework" — four arcs (`arc` above, five-sided)
- * of a circle of `r` about the dome's `at`, laid over the dome's crown (6.1
+ * The conduits — "external pipework" — four arcs (`arc` above) of a circle
+ * of `r` about the dome's `at`, laid over the dome's crown (6.1
  * to 7.0 up on a dome that tops at 7.4) and pressed to its `scale`: `fore_r`
  * at the XYZ Euler (0, `lean`, `lean`), yawed and rolled by the one angle
  * (π/2 − 0.55 on the file), which drapes it from 2.5 out at −z to 1.4 out at
@@ -2200,8 +2377,17 @@ export function dockingCollar(root, { alloy, shadow, crystal: lit }, opts) {
  * matrix is the same to the sixteenth place either way and parts.mjs then
  * reads it back line for line. `fore` before `aft`,
  * `_r` before `_l`; each conduit its own buffer.
+ *
+ * Both counts are the rule's unless passed (`cut`, #919): the tube's at `t`
+ * — six at the Bastion's 2.95 m, where the file had five — and the run's
+ * share of `angle` at `r + t`, two at 113 m over 0.9 rad where the file had
+ * fourteen. A conduit is pipe over a faceted dome, and it bends where the
+ * rule bends a ring that size.
  */
-export function conduits(root, steel, { r, t, radial, tubular, angle, lean, at, scale }) {
+export function conduits(root, steel, opts) {
+  const { r, t, angle, lean, at, scale, cut: rule = METRE } = opts;
+  const major = Math.max(...(scale ?? [1]));
+  const { radial = rule.round(t), tubular = rule.round((r + t) * major, angle) } = opts;
   for (const [name, yaw] of [
     ['fore', lean],
     ['aft', -lean],
@@ -2220,17 +2406,38 @@ export function conduits(root, steel, { r, t, radial, tubular, angle, lean, at, 
 }
 
 /**
- * Standpipes: a pair of eight-facet pipes of `pipe.rTop` over `pipe.r`,
+ * Standpipes: a pair of six-facet pipes of `pipe.rTop` over `pipe.r`,
  * `pipe.h` tall, at ±`at[0]` and `at[1]`, `at[2]`, and a flange each — a
- * ring of `flange.r` and `flange.t`, `flange.radial` by `flange.tubular`,
+ * ring of `flange.r` and `flange.t` at the rule's counts (`cut`, #919),
  * laid flat at `flange.y` — both pipes before both flanges, the `_r` at +x,
  * each pair one buffer. The Spire's `ballastPipes` are the same two pipes
  * drawn a side at a time, leaned, and sharing nothing.
+ *
+ * `PIPE_FACETS` is why six. The files drew this navy's pipes at seven and
+ * eight sides — the Foundry's standpipes and the Refinery's transfer pipes
+ * seven, these and the Spire's eight — and neither is a shape the Order
+ * cuts. A pipe is its hexagonal prism: the feed pipes, stays, pins, masts
+ * and legs are six on every file already, at radii where the lattice says
+ * four, and one noun is one section across the navy's own builders. So
+ * the Bastion's standpipe is six at 5 m where the rule would round it to
+ * ten, and the Refinery's transfer pipe six at 2.3 m where it would say
+ * four. The one pipe that is not is the Vent Tap's draw pipe, the kit's
+ * skeleton: it stays the rule's eight at 3.5 m, because the kit lays it
+ * with a vertex on the crown for the pipe lamps saddled there, and a
+ * hexagon laid the same way has a flat on the crown 0.4 m under them.
  */
-export function standpipes(root, { steel, shadow }, { at: [x, y, z], pipe, flange }) {
-  const stem = cyl(pipe.rTop, pipe.r, pipe.h, 8);
+export const PIPE_FACETS = 6;
+export function standpipes(root, { steel, shadow }, opts) {
+  const { pipe, flange, cut: rule = METRE } = opts;
+  const [x, y, z] = opts.at;
+  const stem = cyl(pipe.rTop, pipe.r, pipe.h, PIPE_FACETS);
   pair((tag, sgn) => add(root, `standpipe_${tag}`, stem, steel, [-sgn * x, y, z]));
-  const collar = torus(flange.r, flange.t, flange.radial, flange.tubular);
+  const collar = torus(
+    flange.r,
+    flange.t,
+    flange.radial ?? rule.round(flange.t),
+    flange.tubular ?? rule.round(flange.r + flange.t)
+  );
   pair((tag, sgn) =>
     add(
       root,
@@ -2244,13 +2451,17 @@ export function standpipes(root, { steel, shadow }, { at: [x, y, z], pipe, flang
 }
 
 /**
- * Ballast tanks: a capsule of `r` and `waist`, three-step caps and eight
- * facets, laid along z by a quarter about x at ±`at[0]` — a later three's
- * CapsuleGeometry as the turret's pods are (kit.mjs `capsule`) — one buffer
- * for the pair, the `_r` at +x. Both files carry one pair.
+ * Ballast tanks: a capsule of `r` and `waist` at the rule's counts (`cut`,
+ * #919: twelve round on three-step caps at the Bastion's 14.7 m and the
+ * Spire's 9, where both files had eight), laid along z by a quarter about x
+ * at ±`at[0]` — a later three's CapsuleGeometry as the turret's pods are
+ * (kit.mjs `capsule`) — one buffer for the pair, the `_r` at +x. Both files
+ * carry one pair.
  */
-export function ballastTanks(root, mat, { r, waist, at: [x, y, z] }) {
-  const tank = capsule(r, waist, 3, 8);
+export function ballastTanks(root, mat, opts) {
+  const { r, waist, cut: rule = METRE } = opts;
+  const [x, y, z] = opts.at;
+  const tank = capsule(r, waist, ...rule.capsule(r));
   pair((tag, sgn) =>
     add(root, `ballast_tank_${tag}`, tank, mat, [-sgn * x, y, z], [Math.PI / 2, 0, 0])
   );
@@ -2271,14 +2482,36 @@ export function ballastTanks(root, mat, { r, waist, at: [x, y, z] }) {
  * 0.5 and seated 0.8, that regenerates the approved node matrices to the
  * sixteenth place. Its twin in `emplacement` could be folded onto this; it
  * has not been, because the turret's file is not this issue's.
+ *
+ * `foot` is the plinth the blades stand round — `{ r, facets, yaw }`, its
+ * foot radius, its count and its turn — and with it each blade's anchor is
+ * drawn in from the circle by as much as the plinth's skin at that bearing
+ * falls short of its corner radius: `anchor[0] − (r − ρ)`, ρ the polygon's
+ * radius at the bearing. The file's circle was drawn against an octagon
+ * whose corners lay within a few degrees of the blades, and its fourth
+ * pair footed on a corner. A twelve-gon's corners are elsewhere, whatever
+ * its turn, so on the one circle that pair stood 1.9 to 2.0 m off the
+ * re-cut plinth and the first up to 2.9 (#919, at review); stood off the
+ * skin instead, every pair foots, the three the file left in the water
+ * included. A blade on a corner's bearing is where the file had it.
+ * Without `foot` every blade is on the circle.
  */
 export function anchorBlades(root, { shadow, alloy }, opts) {
-  const { r, length, anchor, lift, seat, bearings } = opts;
+  const { r, length, anchor, lift, seat, bearings, foot = null } = opts;
   const up = new THREE.Vector3(0, 1, 0);
+  // The polygon's radius at a bearing: its apothem over the cosine of the
+  // angle to the nearest flat's middle. A cylinder's first vertex is on +z,
+  // bearing π/2, and a node's yaw turns it toward +x.
+  const skin = (bearing) => {
+    const step = (2 * Math.PI) / foot.facets;
+    const fromVertex = (((bearing - (Math.PI / 2 - foot.yaw)) % step) + step) % step;
+    return (foot.r * Math.cos(step / 2)) / Math.cos(fromVertex - step / 2);
+  };
   bearings.forEach((bearing, i) => {
     const out = new THREE.Vector3(Math.cos(bearing), 0, Math.sin(bearing));
     const axis = out.clone().setY(lift).normalize();
-    const c = out.multiplyScalar(anchor[0]).setY(anchor[1]).addScaledVector(axis, seat);
+    const circle = foot ? anchor[0] - (foot.r - skin(bearing)) : anchor[0];
+    const c = out.multiplyScalar(circle).setY(anchor[1]).addScaledVector(axis, seat);
     const q = new THREE.Quaternion().setFromUnitVectors(up, axis);
     const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
     pair((tag, sgn) =>
@@ -2381,21 +2614,23 @@ export function frameBlades(root, alloy, { outline, depth, bevel: [thickness, si
 
 /**
  * The resonance collars — the tuned rings up the core: one a `[y, r, reach]`
- * of `rings`, a four-sided ring of `t` laid flat at `y` and rolled an eighth
- * first (`ring`), with a vane each side — a four-sided pyramid of `vane.r`
+ * of `rings`, a four-sided ring of `t` laid flat at `y`, the rule's count
+ * round (`cut`, #919: twelve at 12 to 19 m, where the file had eight) and
+ * rolled half a facet first (`ring`) so a flat faces each vane as the
+ * octagon's did, with a vane each side — a four-sided pyramid of `vane.r`
  * by `vane.length` at ±`reach`, rolled ∓π/2 so its point goes outboard
  * along x, the `_r` at +x. Collar, `_r`, `_l` a ring at a time; each collar
  * its own buffer and each vane pair one.
  */
-export function resonanceCollars(root, { alloy, shadow }, { rings, t, vane }) {
+export function resonanceCollars(root, { alloy, shadow }, { rings, t, vane, cut: rule = METRE }) {
   rings.forEach(([y, r, reach], i) => {
     ring(root, `resonance_collar_${i}`, alloy, {
       r,
       t,
       radial: 4,
-      tubular: 8,
       at: [0, y, 0],
-      roll: Math.PI / 8,
+      half: true,
+      cut: rule,
     });
     const spike = cyl(0, vane.r, vane.length, 4);
     pair((tag, sgn) =>
@@ -2460,21 +2695,24 @@ export function tuningHorns(root, { alloy, glow, steel }, { horn, tip, brace }) 
 
 /**
  * The ballast pipes: a pipe and its flange a side at a time, `_r` then
- * `_l`. The pipe is an eight-facet frustum of `pipe.rTop` over `pipe.r`,
+ * `_l`. The pipe is a six-facet frustum (`PIPE_FACETS`, at `standpipes`:
+ * the file had eight) of `pipe.rTop` over `pipe.r`,
  * `pipe.h` tall, at ±`pipe.at[0]`, rolled ∓`pipe.lean` about z so it leans
- * in at the top; the flange a six-sided ring of `flange.r` and `flange.t`
+ * in at the top; the flange a ring of `flange.r` and `flange.t`, six-sided
+ * in its tube as the file had it and the rule's count round (`cut`, #919:
+ * ten at 4.6 m, where the file had twelve),
  * laid flat at ±`flange.at[0]` and turned ∓`pipe.lean` about the vertical
  * — not leaned with its pipe, because the file wrote the roll and the laying
  * in the order that spins the ring instead (`ring`: XYZ puts the z turn
  * first). Four buffers, none shared; the Bastion's `standpipes` are the same
  * two pipes drawn pair-first and sharing.
  */
-export function ballastPipes(root, { steel, alloy }, { pipe, flange }) {
+export function ballastPipes(root, { steel, alloy }, { pipe, flange, cut: rule = METRE }) {
   pair((tag, sgn) => {
     add(
       root,
       `ballast_pipe_${tag}`,
-      cyl(pipe.rTop, pipe.r, pipe.h, 8),
+      cyl(pipe.rTop, pipe.r, pipe.h, PIPE_FACETS),
       steel,
       [-sgn * pipe.at[0], pipe.at[1], pipe.at[2]],
       [0, 0, -sgn * pipe.lean]
@@ -2483,7 +2721,7 @@ export function ballastPipes(root, { steel, alloy }, { pipe, flange }) {
       r: flange.r,
       t: flange.t,
       radial: 6,
-      tubular: 12,
+      cut: rule,
       at: [-sgn * flange.at[0], flange.at[1], flange.at[2]],
       roll: -sgn * pipe.lean,
     });
@@ -2546,7 +2784,9 @@ const inKit = (frame, t) => (frame === xLong ? t : drawn(t).at);
  * `crest.roll` in toward the bay, a crystal ridge of `ridge.size` along its
  * inboard edge, a six-facet point of `ends.r` by `ends.length` at each end
  * — the bow's apex forward at +`ends.z`, the stern's aft — under the same
- * press, and three port lights of `lights.r` at `lights.x`, `lights.y`,
+ * press, and three port lights of `lights.r` — orbs at the rule's counts
+ * (`cut`, #919: four round by two down at 1.8 m, an octahedron, where the
+ * file had six by five) — at `lights.x`, `lights.y`,
  * down its length at `lights.zs`. A wing at a time, `_r` first at the
  * export's +x, then `_l` its mirror; every part its own buffer, as the file
  * has it. On a Z-long export the `_r` wing lands on the kit's −z, port
@@ -2567,7 +2807,7 @@ const inKit = (frame, t) => (frame === xLong ? t : drawn(t).at);
  * measure (#907). Without it the ridge is at the file's `[x, y]`.
  */
 export function hallWings(root, { shadow, alloy, crystal: ridgeMat, light }, opts) {
-  const { frame = zLong, hull, crest, ridge, ends, lights } = opts;
+  const { frame = zLong, hull, crest, ridge, ends, lights, cut: rule = METRE } = opts;
   const press = [1, 1, hull.squash];
   pair((tag, sgn) => {
     const [hullAt, hullRot] = mirrored(sgn, [hull.x, hull.y, 0], [Math.PI / 2, 0, 0]);
@@ -2602,7 +2842,7 @@ export function hallWings(root, { shadow, alloy, crystal: ridgeMat, light }, opt
       frame.part(
         root,
         `wing_portlight_${tag}_${i}`,
-        new THREE.SphereGeometry(lights.r, 6, 5),
+        new THREE.SphereGeometry(lights.r, ...rule.orb(lights.r)),
         light,
         at
       );
@@ -2673,16 +2913,18 @@ export function rakedBlades(root, { shadow, alloy }, opts) {
  * and 0.8 `r` at the head, `h` tall, standing on the ground at `at`
  * `[x, z]`; a crystal seam up its face, 0.22 square and 0.82 `h` tall, 0.88
  * `r` toward +z; a four-sided steel collar of 0.82 `r` and tube 0.12 laid
- * flat at 0.72 `h`; a tip that is an octahedron of 0.55 `r` drawn to
- * [0.7, 1.9, 0.7] at `h` + 0.85 `r`; and a tip light, a sphere of `light.r`
- * six by five, at `h` + 1.9 `r`. Those ratios are the file's: three sizes
+ * flat at 0.72 `h`, the rule's count round (`cut`, #919 — twelve at 17 to
+ * 24 m, as the file had); a tip that is an octahedron of 0.55 `r` drawn to
+ * [0.7, 1.9, 0.7] at `h` + 0.85 `r`; and a tip light, an orb of `light.r`
+ * at the rule's counts (four by two at 2 m, where the file had six by
+ * five), at `h` + 1.9 `r`. Those ratios are the file's: three sizes
  * of silo carry them to the digit. Body and tip alternate alloy and shadow
  * by the silo's `n`, the even silos' bodies in alloy. A silo is drawn once
  * a `tag` — `_c` on the centreline, `_r` at +x and `_l` its mirror — its
  * five parts together, each its own buffer.
  */
 export function silos(root, { alloy, shadow, crystal: seamMat, steel, light }, opts) {
-  const { frame = xLong, light: lamp = { r: 0.14 }, silos: ranks } = opts;
+  const { frame = xLong, light: lamp = { r: 0.14 }, silos: ranks, cut: rule = METRE } = opts;
   for (const {
     n,
     tags,
@@ -2703,7 +2945,7 @@ export function silos(root, { alloy, shadow, crystal: seamMat, steel, light }, o
       frame.part(
         root,
         name('silo_collar_'),
-        torus(0.82 * r, 0.12, 4, 12),
+        torus(0.82 * r, 0.12, 4, rule.round(0.82 * r + 0.12)),
         steel,
         [sx, 0.72 * h, z],
         [Math.PI / 2, 0, 0]
@@ -2717,11 +2959,8 @@ export function silos(root, { alloy, shadow, crystal: seamMat, steel, light }, o
         [0, 0, 0],
         [0.7, 1.9, 0.7]
       );
-      frame.part(root, name('silo_tiplight_'), new THREE.SphereGeometry(lamp.r, 6, 5), light, [
-        sx,
-        h + 1.9 * r,
-        z,
-      ]);
+      const bud = new THREE.SphereGeometry(lamp.r, ...rule.orb(lamp.r));
+      frame.part(root, name('silo_tiplight_'), bud, light, [sx, h + 1.9 * r, z]);
     }
   }
 }
@@ -2763,46 +3002,81 @@ export { THREE };
  * because the block lights them only while crop is coming in
  * (docs/models-plan.md §3.2 rule 2), and so does the core, which the block
  * never lists among the lights at rest.
+ *
+ * Every round part is the rule's (`cut`, #919). The dome is twelve round by
+ * three down at 31 m, where the first build had fourteen by eight; an arch
+ * is the dome's meridian drawn as a ring, six along its half turn where it
+ * had sixteen, so on bearings a twelfth of a turn apart each lies along an
+ * edge of the dome; the plinth, the collars and their tubes follow. A
+ * `dome_collar` is given as `[proud, y]` and stands its centreline `proud`
+ * of the dome's skin at `y` — the skin as it is drawn, read off the
+ * meridian's own rows, so a collar hugs a dome of three rows as it hugged
+ * one of eight and a re-faceted dome keeps its collars; the first build
+ * gave each a radius measured on the round dome. The crown `mark` and the
+ * seams are where they were, level at their stations: each stands on a
+ * ridge of the dome — a meridian's edge — which passes through its
+ * underside, so each still rests on the dome it marks.
  */
 export function reactorVessel(root, { shadow, alloy, crystal: crystalMat, lampM, unlit }, opts) {
-  const { plinth: base, dome, arches, collars, core, mark, seams } = opts;
-  plinth(root, 'vessel_plinth', shadow, base);
+  const { plinth: base, dome, arches, collars, core, mark, seams, cut: rule = METRE } = opts;
+  plinth(root, 'vessel_plinth', shadow, { cut: rule, ...base });
+  const quarter = Math.PI / 2;
+  const [round, down] = dome.facets ?? rule.orb(Math.max(...dome.r), { thetaLength: quarter });
   add(
     root,
     'reactor_vessel',
-    new THREE.SphereGeometry(1, dome.facets[0], dome.facets[1], 0, Math.PI * 2, 0, Math.PI / 2),
+    new THREE.SphereGeometry(1, round, down, 0, Math.PI * 2, 0, quarter),
     shadow,
     [0, dome.y, 0],
     [0, 0, 0],
     dome.r
   );
+  // The skin's radius at height `y`, at a meridian's vertex: the rows the
+  // sphere draws, joined by straight facets.
+  const skin = (y) => {
+    const row = (k) => {
+      const theta = (k * quarter) / down;
+      return [dome.r[0] * Math.sin(theta), dome.y + dome.r[1] * Math.cos(theta)];
+    };
+    for (let k = 1; k <= down; k++) {
+      const [r0, y0] = row(k - 1);
+      const [r1, y1] = row(k);
+      if (y >= y1) return r0 + ((r1 - r0) * (y0 - y)) / (y0 - y1);
+    }
+    return dome.r[0];
+  };
+  const arched = arches.r * Math.max(...arches.scale) + arches.t;
   arches.at.forEach((a, i) =>
     add(
       root,
       `frame_arch_${i}`,
-      arc(arches.r, arches.t, arches.radial, arches.tubular, Math.PI),
+      arc(
+        arches.r,
+        arches.t,
+        arches.radial ?? rule.round(arches.t),
+        arches.tubular ?? rule.round(arched, Math.PI),
+        Math.PI
+      ),
       alloy,
       [0, dome.y, 0],
       [0, a, 0],
       arches.scale
     )
   );
-  collars.at.forEach(([r, y], i) =>
+  collars.at.forEach(([proud, y], i) =>
     ring(root, `dome_collar_${i}`, alloy, {
-      r,
+      r: skin(y) + proud,
       t: collars.t,
-      radial: 5,
-      tubular: 16,
       at: [0, y, 0],
+      cut: rule,
     })
   );
   add(root, 'crystal_core', octa(core.r), crystalMat, [0, core.y, 0], [0, core.yaw, 0], core.scale);
   ring(root, 'core_collar', alloy, {
     r: core.collar.r,
     t: core.collar.t,
-    radial: 5,
-    tubular: 12,
     at: [0, core.collar.y, 0],
+    cut: rule,
   });
   add(root, 'crown_mark', box(...mark.size), lampM, mark.at, [0, mark.yaw ?? 0, 0]);
   seams.at.forEach(([a, r, y], i) =>
@@ -2820,10 +3094,12 @@ export function reactorVessel(root, { shadow, alloy, crystal: crystalMat, lampM,
  * up rather than an edge — the Vent Tap's exchanger prism, at a structure's
  * scale (`exchangerHead` above). Distances are metres out along the bearing,
  * as the kit's `reactorIntakeArm` takes them; the mouth is the crystal
- * seam's unlit finish for the same reason the vessel's seams are.
+ * seam's unlit finish for the same reason the vessel's seams are. The two
+ * collars are rings and take the rule's counts (`cut`, #919): twelve round,
+ * as they were, on a tube of four where the first build had five.
  */
 export function reactorOutflow(root, { shadow, alloy, unlit }, opts) {
-  const { bearing: a, conduit, collars, cistern, cap, mouth } = opts;
+  const { bearing: a, conduit, collars, cistern, cap, mouth, cut: rule = METRE } = opts;
   add(
     root,
     'outflow_conduit',
@@ -2839,7 +3115,7 @@ export function reactorOutflow(root, { shadow, alloy, unlit }, opts) {
     add(
       root,
       `conduit_collar_${i}`,
-      torus(collars.r, collars.t, 5, 12),
+      torus(collars.r, collars.t, rule.round(collars.t), rule.round(collars.r + collars.t)),
       shadow,
       polar(a, d, conduit.y),
       [0, Math.PI / 2 - a, 0]

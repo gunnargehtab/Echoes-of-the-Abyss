@@ -51,6 +51,15 @@
  * pixel. The cost is on the audit side only: against the un-turned approved
  * binary `diff.mjs` would read every part as moved, which is why it compares
  * a square plan at whichever yaw agrees and says that it did.
+ *
+ * FACETS (#919). The wellhead and the arms are the kit's skeleton, and its
+ * round parts ask the Order's rule here (docs/asset-prompts-3d.md Block 2c;
+ * hadron.mjs `cut`; kit.mjs `asked`): the chimney twelve, where the four
+ * files share ten; the five lobes twelve round, where they share eight;
+ * the apron, the clamp and the manifold twelve, where they share sixteen;
+ * the four risers six, where they share eight. The mouth and the draw
+ * pipes were on the rule. 82 parts and 1,952 triangles become 82 and
+ * 2,088 — the one model the pass makes heavier, by its lobes.
  */
 import {
   THREE,
@@ -64,6 +73,12 @@ import {
 import * as hadron from '../factions/hadron.mjs';
 
 const L = 180;
+/** The plan's side as built: the exchanger prisms' boxes, corner to corner. */
+const DRAWN = 133.4508;
+// The Order's facet rule at this file's scale (hadron.mjs `cut`, #919): the
+// model is drawn 133.45 across and priced at 180 m, and the rule is a chord
+// in metres. Asserted after the fit, since the fit is what sets the scale.
+const cut = hadron.cut(L / DRAWN);
 
 const shadow = hadron.ink.shadowIndigo();
 const alloy = hadron.ink.paleAlloy();
@@ -75,11 +90,41 @@ const root = new THREE.Group();
 root.name = 'vent_tap_hadron';
 
 // The wellhead in shadow indigo, the manifold in pale alloy, the mouth a node.
-ventWellhead(root, { rock: shadow, mouth: node, steel: alloy });
+// The kit's skeleton at the Order's counts (#919): every round part of it
+// asks the rule at its own radius — twelve on the chimney, its lobes, the
+// apron and the two rings, where the four files share ten, eight and
+// sixteen — and the numbers stay the kit's, but one. The ember is the lid
+// in the chimney's mouth, a twelve-gon of 11.5 inside a rim of 12: against
+// the kit's ten-sided chimney its corners passed through the rim's flats
+// and it rested there, and inside a twelve-sided rim cut to the same
+// corners it rests on nothing, 0.67 m clear all round. It is drawn at the
+// rim's own 12, corner to corner, so the lid closes the mouth.
+ventWellhead(
+  root,
+  { rock: shadow, mouth: node, steel: alloy },
+  {
+    chimney: { facets: cut.round },
+    lobes: { facets: cut.orb },
+    ember: { r: 12, facets: cut.round },
+    apron: { facets: cut.round },
+    clamp: { facets: cut.round },
+    manifold: { facets: cut.round },
+  }
+);
 
 // Four arms on the diagonals, each with the Order's exchanger on its end.
 radialSeries({ count: 4, phase: Math.PI / 4 }, (a) => {
-  ventDrawArm(root, { rock: shadow, steel: alloy, deck: alloy, lamp: seam, flood: node }, { bearing: a });
+  // The draw pipe is the rule's eight at 3.5 m, as the kit has it, and the
+  // riser its six at 3.2 m, where the kit has eight. Not the Order's
+  // six-sided pipe (hadron.mjs `PIPE_FACETS`), which its own builders cut:
+  // the kit lays this one with a vertex on the crown and saddles three
+  // lamps on it, and a hexagon laid the same way has a flat there — all
+  // twelve lamps stand 0.4 m off it, measured.
+  ventDrawArm(
+    root,
+    { rock: shadow, steel: alloy, deck: alloy, lamp: seam, flood: node },
+    { bearing: a, pipe: { facets: cut.round }, riser: { facets: cut.round } }
+  );
   hadron.exchangerHead(
     root,
     { crystal, alloy, seam },
@@ -120,5 +165,9 @@ wellheadFloods(root, node);
 // always had (see the header). Before the fit, so the fit measures the file
 // as the bake will.
 root.rotation.y = Math.PI / 2;
-fitFootprint(root, L);
+const size = fitFootprint(root, L);
+if (Math.abs(Math.max(size.x, size.z) - DRAWN) > 1e-3)
+  throw new Error(
+    `${root.name}: drawn ${Math.max(size.x, size.z).toFixed(4)} across; the facet rule was asked at ${DRAWN}`
+  );
 await exportGlb(root, 'vent-tap-hadron.glb');

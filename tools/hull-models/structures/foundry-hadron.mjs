@@ -175,6 +175,17 @@
  * - `gantry_warnlight_0` and `_1` stood 0.8 m over their beams; each is
  *   on its beam's crown since #907, the kit's rule for all three navies'
  *   cranes (kit.mjs `gantryCrane`). `diff.mjs` lists both.
+ *
+ * FACETS (#919). The Order's rule (docs/asset-prompts-3d.md Block 2c;
+ * hadron.mjs `cut`) re-cut the round parts the file had at the kit's
+ * counts: the six port lights, the ten guides and the two warning lights
+ * are orbs of four by two — octahedra at 1.5 to 1.8 m — where they were
+ * six by five and five by four; the crane cables four-sided, where they
+ * were five; the tanks twelve round, where they were eight; the standpipes
+ * the navy's six-sided pipe, where they were seven, and their flanges
+ * eight round on a tube of four, where they were ten on five. The wing
+ * halls and their points are the Order's hexagon, as they were. 66 parts
+ * and 1,608 triangles become 66 and 1,128.
  */
 import {
   THREE,
@@ -191,6 +202,10 @@ import * as hadron from '../factions/hadron.mjs';
 const L = 320;
 const DRAWN = 19.300000047683717;
 const DATUM = 0;
+
+// The Order's facet rule at this file's scale (hadron.mjs `cut`, #919): the
+// builders are handed the export's units and the rule is a chord in metres.
+const cut = hadron.cut(L / DRAWN);
 
 const shadow = hadron.ink.shadowIndigo();
 const alloy = hadron.ink.alloyWhite();
@@ -213,6 +228,7 @@ hadron.hallWings(
     ridge: { size: [0.2, 0.2, 11.18], x: 2.1, y: 3.45, on: true },
     ends: { r: 2.05, length: 3.2, z: 8.05 },
     lights: { r: 0.11, x: 5.4, y: 3.2, zs: [-3.6, 0, 3.6] },
+    cut,
   }
 );
 
@@ -227,7 +243,7 @@ foundryBay(
     forge: { size: [1.0, 0.18, 10.6], at: [0, 0.58, 0] },
     hull: { geo: octa(0.85), at: [0, 1.15, 1.6], scale: [0.7, 0.6, 2.2] },
     lip: { size: [0.45, 1.4, 12.2], x: 1.65, y: 0.85 },
-    guide: { r: 0.09, facets: [5, 4], x: 0.75, y: 0.62, from: -4.1, pitch: 2.5, count: 5 },
+    guide: { r: 0.09, facets: cut.orb, x: 0.75, y: 0.62, from: -4.1, pitch: 2.5, count: 5 },
     sides: [
       { lip: 'r', guides: 'r', sgn: 1 },
       { lip: 'l', guides: 'l', sgn: -1 },
@@ -251,8 +267,8 @@ const order = {
   beam: { y: 5.6, size: [5.6, 0.42, 0.55] },
   finials: { x: 2.8, y: 6.3, r: 0.11, h: 1.0, facets: 4 },
   trolley: { x: 0, y: 5.15, size: [0.75, 0.48, 0.65] },
-  cable: { r: 0.05, facets: 5, hang: 0.2 },
-  warnlight: { y: 5.95, r: 0.09, facets: [5, 4] },
+  cable: { r: 0.05, facets: cut.round, hang: 0.2 },
+  warnlight: { y: 5.95, r: 0.09, facets: cut.orb },
 };
 const load = (y) => ({ y, geo: octa(0.42), scale: [1.05, 1.35, 1.05] });
 gantryCrane(root, crane, { ...order, n: 0, at: [0, 0, -2.7], load: load(2.45) });
@@ -277,6 +293,7 @@ hadron.launchGate(
 ballastTanks(root, steel, {
   r: 0.65,
   length: 1.7,
+  facets: cut.capsule,
   share: true,
   tanks: [
     { n: 'r', at: [5.4, 1, -5.6], rot: [Math.PI / 2, 0, 0] },
@@ -288,8 +305,8 @@ flangedPipes(
   { pipe: steel, flange: alloy },
   {
     stems: { pipe: 'standpipe', flange: 'standpipe_flange' },
-    pipe: { radii: [0.15, 0.19], facets: 7 },
-    flange: { R: 0.2, tube: 0.05, facets: [5, 10] },
+    pipe: { radii: [0.15, 0.19], facets: hadron.PIPE_FACETS },
+    flange: { R: 0.2, tube: 0.05, facets: [cut.round, cut.round] },
     order: 'kind',
     share: true,
     pipes: [

@@ -44,6 +44,18 @@
  * Order's own Vent Tap fell into from the other side, where a plan square to
  * an ulp was yawed a quarter turn by intake
  * (structures/vent-tap-hadron.mjs).
+ *
+ * FACETS (#919). The Order's rule (docs/asset-prompts-3d.md Block 2c;
+ * hadron.mjs `cut`) re-cut every round part, the kit's and the navy's. On
+ * the bed: the mat twelve, where it was sixteen; the slab and its kerb the
+ * Order's hexagon, where they were an octagon and sixteen; the throat
+ * drums and their mouths the hexagon too, where they were ten; the tines
+ * four-sided, where they were five — the comments at each call give the
+ * reasons. On the vessel: the plinth twelve, where it was eight; the dome
+ * twelve by three, where it was fourteen by eight; each arch six along its
+ * half turn, where it was sixteen; every collar twelve round on a tube of
+ * four, where the dome's two were sixteen on five. 65 parts and 2,686
+ * triangles become 65 and 1,724.
  */
 import {
   THREE,
@@ -56,6 +68,12 @@ import {
 import * as hadron from '../factions/hadron.mjs';
 
 const L = 180;
+/** The plan's long side as built: the after arms' rake beams, tip to tip. */
+const DRAWN = 138.9626;
+// The Order's facet rule at this file's scale (hadron.mjs `cut`, #919): the
+// model is drawn 138.96 long and priced at 180 m, and the rule is a chord
+// in metres. Asserted after the fit, since the fit is what sets the scale.
+const cut = hadron.cut(L / DRAWN);
 const ARMS = { count: 3, phase: -Math.PI / 2 };
 /** The outflow runs into the gap between the arms at −90° and 30°. */
 const OUTFLOW = -Math.PI / 6;
@@ -72,15 +90,40 @@ root.name = 'bio_reactor_hadron';
 
 // The bed: the holdfast and the kerb in shadow indigo, the slab in pale
 // alloy, the six run lights in crystal seam.
-reactorBed(root, { holdfast: shadow, slab: alloy, kerb: shadow, lamp: lampM });
+//
+// The mat is ground and round, the rule's twelve at 67 m where the kit has
+// sixteen. The slab is a plate, and the kit's is an octagon — a count the
+// Order has no shape for. It is cut as the navy's hexagon (#919) rather
+// than rounded to twelve, because the bed is six-fold already: six run
+// lights on the sixths and three arms between them. Turned a twelfth
+// (`phase`), the hexagon has a corner under every light and a flat under
+// every arm and under the outflow, and the kerb is the same hexagon inside
+// it, a vertex under each light, on a tube of the rule's four.
+reactorBed(
+  root,
+  { holdfast: shadow, slab: alloy, kerb: shadow, lamp: lampM },
+  {
+    mat: { facets: cut.round },
+    pad: { facets: 6, phase: Math.PI / 6 },
+    rim: { radial: cut.round, facets: 6 },
+  }
+);
 
 // Three arms out into the canopy, booms in alloy, throats in the unlit
 // finish, anchor feet in shadow and the rake tines in crystal.
+//
+// The throat drum and the mouth in it are six-sided, where the kit has ten:
+// the Order's drum is the hexagonal prism its own cistern and that
+// cistern's mouth are on this file (`reactorOutflow`), and a ten-sided
+// collar beside a six-sided one is the skeleton's default, not a shape of
+// this navy's. On three arms a third of a turn apart, each drum has a
+// vertex on its own arm's line. The tines are crystal blades and take the
+// rule's count, which at 1.2 m is the diamond; the kit's are five-sided.
 radialSeries(ARMS, (a) =>
   reactorIntakeArm(
     root,
     { boom: alloy, collar: shadow, throat: unlit, foot: shadow, rake: crystal },
-    { bearing: a }
+    { bearing: a, drum: { facets: 6 }, mouth: { facets: 6 }, tines: { facets: cut.round } }
   )
 );
 
@@ -91,20 +134,20 @@ hadron.reactorVessel(
   { shadow, alloy, crystal, lampM, unlit },
   {
     plinth: { rTop: 19, r: 22, h: 4.4, y: 6.6 },
-    dome: { y: 8.8, r: [18, 24, 18], facets: [14, 8] },
+    dome: { y: 8.8, r: [18, 24, 18] },
     arches: {
       r: 18,
       t: 0.9,
-      radial: 5,
-      tubular: 16,
       scale: [1, 24 / 18, 1],
       at: [0, deg(60), deg(120)],
     },
+    // Each collar's centreline a quarter-metre proud of the dome's skin at
+    // its height, as drawn.
     collars: {
       t: 0.7,
       at: [
-        [17.4, 16],
-        [14.2, 24],
+        [0.25, 16],
+        [0.25, 24],
       ],
     },
     core: {
@@ -124,6 +167,7 @@ hadron.reactorVessel(
         [deg(330), 8.5, 30],
       ],
     },
+    cut,
   }
 );
 
@@ -149,6 +193,7 @@ hadron.reactorOutflow(
     cistern: { at: 50, r: [9, 11], h: 12, y: 6 },
     cap: { r: [7.5, 9.2], h: 2.2, y: 13.1 },
     mouth: { r: 3.2, t: 0.9, y: 14.6 },
+    cut,
   }
 );
 
@@ -156,5 +201,9 @@ const size = fitFootprint(root, L);
 if (size.z > size.x)
   throw new Error(
     `${root.name}: drawn ${size.x.toFixed(2)} × ${size.z.toFixed(2)}; the arms' phase has to leave x the longer axis`
+  );
+if (Math.abs(size.x - DRAWN) > 1e-3)
+  throw new Error(
+    `${root.name}: drawn ${size.x.toFixed(4)} long; the facet rule was asked at ${DRAWN}`
   );
 await exportGlb(root, 'bio-reactor-hadron.glb');

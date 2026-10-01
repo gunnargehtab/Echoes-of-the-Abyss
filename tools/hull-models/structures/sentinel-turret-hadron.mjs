@@ -15,13 +15,13 @@
  * (docs/concept-art/models/sentinel-turret-hadron.glb at 0522b01~1), part for
  * part in its order, every number the export's own (#639 — the first port,
  * #553, reproportioned it: 27 of 27 parts moved and the scale came out 7 %
- * apart across the axes). An eight-facet frustum turned an eighth on its
- * node, under a nine-facet collar; six skirt blades that are four-sided
- * pyramids stood off one anchor circle; two five-facet recoil struts; a
+ * apart across the axes). A twelve-facet frustum turned an eighth on its
+ * node, under a twelve-facet collar; six skirt blades that are four-sided
+ * pyramids stood off one anchor circle; two six-facet recoil struts; a
  * `turret_head` node at 2.6 carrying a six-facet frustum of a wedge squeezed
  * to 0.8 across, a visor box and a pyramid crest, and inside it a
  * `barrel_group` pitched 0.12 with the rail's two bars, a crystal vane each
- * side, a pyramid tip and a five-by-four sphere of a pip; four such spheres
+ * side, a pyramid tip and a four-by-two orb of a pip; four such orbs
  * for marks; two six-facet feed pipes and two capsules for magazines. Where
  * the export is odd the script is odd with it: the third pair of blades has
  * its `_r` at the export's -x, and the pods are a later three's
@@ -34,7 +34,7 @@
  * units long by the measure those two take — three's `Box3.setFromObject`,
  * each part's box through its node, and the turned frustum's box overhangs
  * its vertices by a third, which is why the approved bake reported ×10.242
- * against a vertex length of 10.482 — the ground at y = 0. Every number below
+ * against a vertex length of 10.482 (×10.239 since #919, FACETS below) — the ground at y = 0. Every number below
  * is the export's, through kit.mjs `drawn`; `metreTrue` measures the same
  * way, so intake reports ×1.000 and the maps land where the approved
  * export's did.
@@ -52,12 +52,36 @@
  * them from above. "Flat on an upward face": the flank rises 56° and each
  * mark shows 1.6 m² from above. Same names, radius and material; `diff.mjs
  * sentinel-turret-hadron` lists the four and no other part.
+ *
+ * FACETS (#919). The counts in the paragraph above are the pass's, not the
+ * export's (docs/asset-prompts-3d.md Block 2c; hadron.mjs `cut`): the
+ * collar twelve round on a tube of four, where the file had nine on five;
+ * the recoil struts the Order's hexagonal rod, where it had five; the pip
+ * and the four marks orbs of four by two, octahedra at 0.82 m, where it had
+ * five by four; the pods ten round, where it had seven; and the frustum
+ * twelve, where it had eight, still turned the file's eighth — which keeps
+ * the turned box `DRAWN` measures and gives up the frustum's mirror, port
+ * to starboard (hadron.mjs `emplacement`; the owner's call, #919 round
+ * two). The four nav marks stand on that frustum's skin, so they moved
+ * with it, 0.4 to 1.3 m, and no longer mirror port to starboard either.
+ * One count did not move: the pods' caps keep three steps, a segment
+ * over the rule's odd share of a half turn, which no capsule draws
+ * (`magazine`). The pip is
+ * the bow end of the same measure: an octahedron has a vertex on the axis
+ * where the five-sided orb had a flat 0.004 short of it, so `DRAWN` is
+ * 11.7204 where the export's was 11.7165, the scale ×10.239 where it was
+ * ×10.242, and every part 0.03 % smaller — 4 cm on the 120 m. 27 parts and
+ * 704 triangles become 27 and 708.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
 
 const L = 120;
-const DRAWN = 11.7165;
+const DRAWN = 11.7204;
+
+// The Order's facet rule at this file's scale (hadron.mjs `cut`, #919): the
+// builders are handed the export's units and the rule is a chord in metres.
+const cut = hadron.cut(L / DRAWN);
 
 // The navy's `shadow_indigo` — the token at the hulls' 0.35 — since #888.
 // The approved export had a shade darker and duller, #2C2244 at 0.25, one
@@ -86,7 +110,8 @@ hadron.emplacement(
     r: 3.2,
     rTop: 2.2,
     height: 1.5,
-    collar: { r: 1.5, t: 0.18, y: 1.65, facets: 9 },
+    collar: { r: 1.5, t: 0.18, y: 1.65 },
+    cut,
     blades: {
       r: 0.2,
       anchor: [2.9, 0.55],
@@ -128,6 +153,7 @@ hadron.railGun(
     vanes: { size: [0.1, 0.28, 2.2], x: 0.28, z: 4.1 },
     tip: { r: 0.24, length: 1.3, z: 6.2 },
     pip: { r: 0.08, z: 6.9 },
+    cut,
   }
 );
 
@@ -137,6 +163,7 @@ hadron.railGun(
 hadron.navMarks(root, navLight, {
   r: 0.08,
   on: 'base_frustum',
+  cut,
   marks: [
     ['fore', 2.6, 0.9, 1.4],
     ['aft', 1.9, 1.5, -2.2],
@@ -147,6 +174,7 @@ hadron.navMarks(root, navLight, {
 hadron.magazine(root, steel, {
   pipe: { r: [0.12, 0.15], length: 2.1, at: [1.4, 1.5, -0.9], rot: [0.2, 0, 0.5] },
   pods: { r: 0.5, waist: 1, at: [2.3, 0.7, -1.2], rot: [Math.PI / 2, 0, 0.3] },
+  cut,
 });
 
 metreTrue(root, L, { drawn: DRAWN });

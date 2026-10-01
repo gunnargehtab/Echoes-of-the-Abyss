@@ -13,21 +13,21 @@
  * A port of the approved export
  * (docs/concept-art/models/sounding-spire-hadron.glb at f7cce0f), part for
  * part in its order, every number the export's own (#652, off #540 Phase
- * 3). Forty-six parts, 1,684 triangles: an eight-facet plinth and cap turned
- * an eighth; four anchor legs on the diagonals with a claw on each; a
- * crystal core, throat and apex that are three octahedra drawn tall; two
+ * 3). Forty-six parts, 1,684 triangles (the export's; FACETS, at the foot):
+ * a plinth and cap turned an eighth, eight-sided on the export; four anchor
+ * legs on the diagonals with a claw on each; a crystal core, throat and apex that are three octahedra drawn tall; two
  * frame blades that are one bevelled extrusion, the `_l` a reflection of
  * the `_r`; three resonance collars, four-sided rings with a vane each
  * side; two tuning horns with lit tips and the brace between; two ballast
  * pipes with flanges and two capsules of tank; ten running lights on one
- * six-by-five orb; and the heat-shimmer sheath, a subdivided octahedron in
+ * orb; and the heat-shimmer sheath, a subdivided octahedron in
  * the one translucent material on any Order model.
  *
  * THE FRAME, and the trap in it. An X-long r184 export that is square to
  * the digit: 9.66856606468874 by 9.66856606468874 in plan by the measure
- * the bake takes (intake `rawSize`) — the plinth's eight-facet frustum,
- * turned an eighth, sets both extents from the same cos π/8 + sin π/8 of
- * its radius. Intake's yaw rule is strict `raw.z > raw.x`, so the approved
+ * the bake takes (intake `rawSize`) — the plinth's frustum, eight-sided on
+ * the export and twelve since #919, turned an eighth, sets both extents
+ * from the same cos π/8 + sin π/8 of its radius. Intake's yaw rule is strict `raw.z > raw.x`, so the approved
  * file was *not* yawed (`rotatedZtoX: false`), which is the opposite tie to
  * the Knights' Vent Tap, whose square plan fell an ulp the other way and
  * was (structures/vent-tap-hadron.mjs). So this file builds in the export's
@@ -127,12 +127,30 @@
  *   move has no reason left, and #894 put the pair back at the file's x
  *   and y. Its z is the blade's face since #907, 0.13 inboard of the
  *   file's 0.55 (the bullet above).
+ *
+ * FACETS (#919). The Order's rule (docs/asset-prompts-3d.md Block 2c;
+ * hadron.mjs `cut`) re-cut five kinds of part here: the three resonance
+ * collars are twelve round, where the file had eight, each rolled half a
+ * facet so a flat still faces its vanes; the ballast pipes are the navy's
+ * six-sided pipe, where it had eight, and their flanges ten round, where
+ * it had twelve; the tanks twelve round, where it had eight; and the
+ * running lights an orb of four by two, an octahedron at 1.45 m, where it
+ * had six by five; and the plinth and its cap twelve, where it had eight,
+ * turned the file's eighth still — the comment at their call says what
+ * that keeps and what it costs. The first pair of running lights stands
+ * on the plinth's skin and moved with it, 1.6 m the `_r` and 0.7 the `_l`,
+ * so that pair no longer mirrors. 46 parts and 1,684 triangles become 46 and
+ * 1,460.
  */
 import { THREE, fitFootprint, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
 
 const L = 140;
 const DRAWN = 9.66856606468874;
+
+// The Order's facet rule at this file's scale (hadron.mjs `cut`, #919): the
+// builders are handed the export's units and the rule is a chord in metres.
+const cut = hadron.cut(L / DRAWN);
 
 const steel = hadron.ink.darkSteel();
 // At the hulls' metalness of 0.35 since #888; the export had the turret's 0.25.
@@ -153,9 +171,18 @@ const shimmer = hadron.ink.heatShimmer(0.55);
 const root = new THREE.Group();
 root.name = 'sounding_spire';
 
-// The plinth and its cap, each turned an eighth.
-hadron.plinth(root, 'plinth', steel, { rTop: 3.1, r: 3.7, h: 1, y: 0.5 });
-hadron.plinth(root, 'plinth_cap', shadow, { rTop: 2.5, r: 3.15, h: 0.7, y: 1.35 });
+// The plinth and its cap, each the rule's twelve (#919; the file had eight)
+// and each still turned the file's eighth. The plinth's turned box is this
+// file's footprint: 3.7 × (cos + sin)(π/8) is the 4.834 that `DRAWN` is
+// twice, and a twelve-gon has a vertex on each axis of its own frame as the
+// octagon did, so its turned box is the same and the Spire is the size it
+// was. At an eighth a twelve-gon does not mirror — the two are the navy's
+// exceptions with the turret's frustum, the owner's call (hadron.mjs
+// `emplacement`, `plinth`). The cap takes the plinth's turn so its corners
+// stand over the plinth's.
+const TURNED = { yaw: Math.PI / 8, cut };
+hadron.plinth(root, 'plinth', steel, { rTop: 3.1, r: 3.7, h: 1, y: 0.5, ...TURNED });
+hadron.plinth(root, 'plinth_cap', shadow, { rTop: 2.5, r: 3.15, h: 0.7, y: 1.35, ...TURNED });
 
 // Four legs on the diagonals, a claw on the end of each.
 hadron.anchorLegs(
@@ -208,6 +235,7 @@ hadron.resonanceCollars(
     ],
     t: 0.16,
     vane: { r: 0.14, length: 1.5 },
+    cut,
   }
 );
 
@@ -230,9 +258,10 @@ hadron.ballastPipes(
   {
     pipe: { rTop: 0.18, r: 0.22, h: 3.6, at: [0.95, 3.4, -0.85], lean: 0.1 },
     flange: { r: 0.26, t: 0.06, at: [0.88, 4.3, -0.85] },
+    cut,
   }
 );
-hadron.ballastTanks(root, shadow, { r: 0.62, waist: 1.6, at: [2.3, 1.35, -1.5] });
+hadron.ballastTanks(root, shadow, { r: 0.62, waist: 1.6, at: [2.3, 1.35, -1.5], cut });
 
 // Ten running lights, two pairs at the foot and three up the frame — the
 // third of those under the sheath where the export has them — each but the
@@ -242,6 +271,7 @@ const own = (stem) => (tag) => `${stem}_${tag}`;
 hadron.lightPairs(root, glow, {
   name: 'running_light',
   r: 0.1,
+  cut,
   at: [
     [2.6, 1.85, 1.4, 'plinth_cap'],
     [2.6, 1.85, -1.4],
