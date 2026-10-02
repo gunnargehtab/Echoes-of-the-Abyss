@@ -180,6 +180,19 @@
  * and a band for it. Coordinate tables below are laid out as tables on
  * purpose; `tools/**\/*.mjs` is outside the repo's Prettier scope
  * (package.json) precisely so they can be.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * and the pass re-cut what was off it: the ballast blisters and caps six
+ * at 2.6 m and the prop shrouds eight at 3.4, where this script drew
+ * twelve; the gas bottles and their bands, the gas lines and feeds, the
+ * nozzles, the manifold header and posts, the valve hubs, the pipe runs,
+ * the pump riser and the prop hubs six, where they were eight; the valve
+ * wheels and the hatch wheel six on a ring of six, where they were six on
+ * twelve. Two things moved to meet what the new plates no longer reached:
+ * the pipe runs lie 0.07 m lower on the deck and each valve hub starts
+ * 0.07 m further aft on the header, each a six-gon's plate where the
+ * eight-gon's vertex had been. 295 parts and 5,456 triangles become 295
+ * and 4,584.
  */
 import { THREE, bothSides, exportGlb, metreTrue } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -302,11 +315,15 @@ bathyarch.cutterLadders(root, { grey, rust, unlit }, {
 
 // The manifold: the header across the house's forward face at x 16.4,
 // z ±13, on a post a side beyond the house; a valve under each ladder,
-// wheel to the bow; the strip along its top, lit only cutting.
+// wheel to the bow; the strip along its top, lit only cutting. The header
+// is a six-sided pipe since #919 (bathyarch.mjs `cut`; it was eight) with a
+// plate toward the bow, 0.07 m short of where the eight-gon's vertex
+// reached, so each valve hub starts 0.07 m further aft to stand on it; its
+// wheel still rides the hub.
 bathyarch.gasManifold(root, { rust, grey, unlit }, {
   header: { at: [16.4, 7.6, 0], r: 0.5, length: 26 },
   posts: { r: 0.3, h: 2.0, x: 16.4, y: 6.6, z: 12 },
-  valves: { at: LADDERS, hub: { r: 0.18, length: 1.0, x: 17.4 }, wheel: { R: 0.55, t: 0.1, x: 17.9 } },
+  valves: { at: LADDERS, hub: { r: 0.18, length: 1.0, x: 17.33 }, wheel: { R: 0.55, t: 0.1, x: 17.9 } },
   strip: { size: [0.4, 0.25, 24], at: [16.4, 8.22, 0] },
 });
 
@@ -346,7 +363,10 @@ bathyarch.pumpHouse(root, { grey, rust }, {
   house: { at: [-22.5, 7.35, 0], size: [7, 3.5, 5.5] },
   riser: { at: [-22.5, 10.6, 0], r: 0.7, h: 5 },
 });
-bathyarch.pipeRuns(root, rust, { x: -15.5, y: 6.1, z: 3.6, r: 0.5, length: 39 });
+// A six-sided pipe since #919 (bathyarch.mjs `cut`; it was eight), laid with
+// a plate on its keel, so it lies 0.07 m lower than the eight-gon did for
+// that plate to rest on the deck's top at 5.6 as the vertex did.
+bathyarch.pipeRuns(root, rust, { x: -15.5, y: 6.03, z: 3.6, r: 0.5, length: 39 });
 
 // The low bridge citadel aft, on the deck between the plant and the stern
 // notches: the block, the bridge set back on it, the visor across the

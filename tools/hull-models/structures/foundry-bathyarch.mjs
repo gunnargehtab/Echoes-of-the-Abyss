@@ -81,12 +81,23 @@
  * export's own y = 0 kept as the ground (the step sinks a tenth into it).
  * Intake then reports ×1.000 and no rotation on the port's output, and the
  * shipped maps re-bake where the approved bake put them.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * asked at this file's scale, and the pass re-cut what was off it: the
+ * three tanks and the cap fourteen at 9–13 m, where the export had
+ * eighteen; both stacks and the band fourteen at 6.8–8.2 m, where they
+ * were twelve; the two pipe runs and the down pipe six at 2.2–2.4 m, where
+ * they were twelve. 107 parts and 1,740 triangles become 107 and 1,628.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
 
 const L = 320;
 const DRAWN = 66;
+// The Klaxon's facet rule at this file's scale (bathyarch.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres.
+const cut = bathyarch.cut(L / DRAWN);
 
 const black = bathyarch.ink.hullBlack();
 const rust = bathyarch.ink.oxideRust();
@@ -136,6 +147,7 @@ bathyarch.hallStacks(
     a: { radii: [1.4, 1.7], h: 8, at: [11, 24, -26] },
     band: { r: 1.55, h: 0.8, at: [11, 26.6, -26] },
     b: { radii: [1.1, 1.4], h: 6.4, at: [14.5, 23.2, -20] },
+    cut,
   }
 );
 bathyarch.roofVents(
@@ -223,6 +235,7 @@ bathyarch.sideTanks(
     straps: { size: [0.7, 6, 1], x: 23.5, y: 6.4, a: -8, b: -18 },
     s1: { r: 2.7, length: 12, at: [-23.8, 5, -20] },
     sCap: { radii: [1.6, 2.7], length: 2.2, at: [-23.8, 5, -13] },
+    cut,
   }
 );
 bathyarch.hallPipes(
@@ -236,6 +249,7 @@ bathyarch.hallPipes(
     ],
     down: { r: 0.45, h: 9, at: [9, 9.5, -1.2] },
     elbow: { size: [1.1, 1.1, 3], at: [9, 5.2, 0.6] },
+    cut,
   }
 );
 

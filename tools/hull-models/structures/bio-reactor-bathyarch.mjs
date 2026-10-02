@@ -56,6 +56,18 @@
  * an even phase come out Z-long and intake would yaw the file a quarter turn.
  * The script asserts x ≥ z after the fit so a moved arm fails here rather
  * than in the maps.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`;
+ * kit.mjs `asked`), asked at this file's scale, and the pass re-cut what
+ * was off it, the kit's bed and arms included: the holdfast mat, the
+ * footprint slab, the kerb, the vessel, its bands and crown and the three
+ * throat drums fourteen at 22–67 m, where the files had eight to sixteen;
+ * the hopper chute fourteen and the outflow flanges ten; the vent stack ten
+ * and its band ten, its mouth six; the kerb's tube and the rake tines six,
+ * where they were five. The feed throats, roof ports and outflow trunk
+ * were the rule's eight and ten already. The six run lights are dropped
+ * onto the fourteen-sided kerb (kit.mjs `reactorBed` `on`; below). 77 parts
+ * and 1,904 triangles become 77 and 2,124.
  */
 import {
   THREE,
@@ -68,6 +80,12 @@ import {
 import * as bathyarch from '../factions/bathyarch.mjs';
 
 const L = 180;
+/** Drawn across by the measure the fit takes (header); the facet rule is asked at this scale and the fit is asserted against it. */
+const DRAWN = 138.9626;
+// The Klaxon's facet rule at this file's scale (bathyarch.mjs `cut`, #919):
+// the builders are handed the file's units and the rule is a chord in
+// metres. Asserted after the fit, since the fit is what sets the scale.
+const cut = bathyarch.cut(L / DRAWN);
 const ARMS = { count: 3, phase: -Math.PI / 2 };
 /** The outflow runs into the gap between the arms at −90° and 30°. */
 const OUTFLOW = -Math.PI / 6;
@@ -84,7 +102,26 @@ root.name = 'bio_reactor_bathyarch';
 
 // The bed: the holdfast in rust, the slab in black, the kerb and its six run
 // lights in iron and amber.
-reactorBed(root, { holdfast: rust, slab: black, kerb: grey, lamp: lampM });
+// Every round part of the bed at the Klaxon's count (#919, kit.mjs `asked`):
+// the mat and the slab fourteen-sided at 67 and 44 m, the kerb fourteen on a
+// tube of six. A fourteen-gon laid as the kit lays one already has a flat
+// facing the bow, which the file's octagon needed an eighth of a turn for.
+// The six run lights sit at a sixth of a turn each and a fourteen-gon kerb
+// has a chord under four of them, a third of the way along it, so those
+// four stood 0.48 m off the kerb; each of the six is dropped onto the
+// kerb's top under its own station and kept level (kit.mjs `reactorBed`
+// `on`). The four came down 0.67 m and the two over a crest 0.11, since
+// the kerb's six-sided tube tops out lower than the file's five-sided one.
+reactorBed(
+  root,
+  { holdfast: rust, slab: black, kerb: grey, lamp: lampM },
+  {
+    mat: { facets: cut.round },
+    pad: { facets: cut.round, phase: 0 },
+    rim: { radial: cut.round, facets: cut.round },
+    lights: { on: 'slab_kerb' },
+  }
+);
 
 // Three arms out into the canopy, booms in iron, throats in the unlit finish,
 // anchor feet in rust and the rake tines in hazard amber.
@@ -92,7 +129,7 @@ radialSeries(ARMS, (a) =>
   reactorIntakeArm(
     root,
     { boom: grey, collar: black, throat: unlit, foot: rust, rake: amber },
-    { bearing: a }
+    { bearing: a, drum: { facets: cut.round }, mouth: { facets: cut.round }, tines: { facets: cut.round } }
   )
 );
 
@@ -101,7 +138,7 @@ bathyarch.reactorVessel(
   root,
   { black, grey, rust, lampM, unlit },
   {
-    tank: { r: [16.5, 18], h: 30, y: 19.4, facets: 12 },
+    tank: { r: [16.5, 18], h: 30, y: 19.4 },
     bands: { r: 18.4, h: 1.6, ys: [9.8, 19.4, 29] },
     crown: { r: [16.4, 17.4], h: 3.2, y: 36 },
     rivets: { count: 12, r: 14.8, y: 37.9, size: [1.3, 0.7, 1.3] },
@@ -125,6 +162,7 @@ bathyarch.reactorVessel(
       band: { r: 3.2, h: 1.2, y: 49 },
       mouth: { r: 2.1, t: 0.8, y: 51.4 },
     },
+    cut,
   }
 );
 
@@ -141,10 +179,15 @@ bathyarch.reactorOutflow(
     hopper: { at: 47, size: [15, 11, 15], y: 5.5 },
     lip: { size: [16.4, 1.2, 16.4], y: 11.6 },
     chute: { at: 47, r: [3.2, 4.4], h: 7.4, y: 15.7 },
+    cut,
   }
 );
 
 const size = fitFootprint(root, L);
+if (Math.abs(size.x - DRAWN) > 1e-3)
+  throw new Error(
+    `${root.name}: drawn ${size.x.toFixed(4)} long; the facet rule was asked at ${DRAWN}`
+  );
 if (size.z > size.x)
   throw new Error(
     `${root.name}: drawn ${size.x.toFixed(2)} × ${size.z.toFixed(2)}; the arms' phase has to leave x the longer axis`

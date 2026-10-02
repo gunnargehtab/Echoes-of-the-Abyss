@@ -107,6 +107,15 @@
  * Gantry's berth. Coordinate tables below are laid out as tables on
  * purpose; `tools/**\/*.mjs` is outside the repo's Prettier scope
  * (package.json) precisely so they can be.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * and the pass re-cut what was off it: the cell, its bands and heads six
+ * at 2.1–2.25 m, where `plantCylinder` drew sixteen, its saddles drawn up
+ * to the six-plate drum's keel; the gun's ring, drum, barrel and muzzle
+ * six, where they were ten and twelve; the screw's shaft and hub six, where
+ * they were eight; the four lifting eyes six on a ring of six, where they
+ * were five on ten. The nose wedge stays the navy's square. 61 parts and
+ * 1,568 triangles become 61 and 1,120.
  */
 import { THREE, exportGlb, metreTrue } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -169,13 +178,20 @@ bathyarch.craftDrive(root, { black, grey, rust, vent }, {
 
 // The gun on the cell's crown forward: seat, ring, drum, cradle, barrel
 // laid forward over the nose, and the muzzle collar.
+// The gun stands on the cell's crown, and since #919 the cell is a
+// six-plate drum with a plate on its crown at 1.82 m (bathyarch.mjs
+// `crownOnX`), 0.28 m under where the sixteen-gon's vertex reached, so
+// the seat's underside is 0.05 m into that plate — 0.28 m lower than the
+// first build's 2.05, which sat on the vertex — and the ring, drum,
+// cradle, barrel and muzzle come down the same 0.28 with it. The muzzle
+// still clears the nose wedge and the bow lamp by about 2 m.
 bathyarch.craftGun(root, { black, grey, rust, amber }, {
   x: 3.0,
-  seat: { size: [2.4, 0.3, 2.4], y: 2.2 },
-  ring: { r: 1.0, h: 0.4, y: 2.55 },
-  drum: { r: 0.8, rTop: 0.7, h: 0.8, y: 3.15 },
-  cradle: { size: [1.6, 0.8, 1.1], dx: 0.2, y: 3.9 },
-  barrel: { rBreech: 0.32, rMuzzle: 0.26, length: 3.6, breech: 3.6, y: 3.9 },
+  seat: { size: [2.4, 0.3, 2.4], y: 1.92 },
+  ring: { r: 1.0, h: 0.4, y: 2.27 },
+  drum: { r: 0.8, rTop: 0.7, h: 0.8, y: 2.87 },
+  cradle: { size: [1.6, 0.8, 1.1], dx: 0.2, y: 3.62 },
+  barrel: { rBreech: 0.32, rMuzzle: 0.26, length: 3.6, breech: 3.6, y: 3.62 },
   muzzle: { r: 0.36, length: 0.4, sink: 0.1 },
 });
 

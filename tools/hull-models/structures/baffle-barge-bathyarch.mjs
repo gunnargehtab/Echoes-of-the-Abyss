@@ -63,12 +63,27 @@
  * `rawSize.x` on the approved file), and scales the root to it, so intake
  * reports ×1.000 and no rotation on the port's output and the shipped
  * maps re-bake where the approved bake put them.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * asked at this file's scale, and the pass re-cut what was off it: the four
+ * pontoons, their caps and feet fourteen at 12–13 m, where the export had
+ * ten; the emitter drum fourteen at 11.8 m, where it had ten, the mast
+ * collar fourteen at 6.4 and the trunk twelve at 5.2, where both were
+ * eight, the beacon ten; the winch drum and capstans fourteen at 5.6 m and
+ * the first vent stack ten at 4.3, where all were eight; the deck pipe and
+ * riser six. The second vent stack and the corner domes were the rule's
+ * eight already and are asked of it now. 110 parts and 2,300 triangles
+ * become 110 and 2,620.
  */
 import { THREE, hex, fitFootprint, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
 
 const L = 180;
 const DRAWN = 8.3863;
+// The Klaxon's facet rule at this file's scale (bathyarch.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres. Asserted after the fit, since the fit is what sets the scale.
+const cut = bathyarch.cut(L / DRAWN);
 
 const black = bathyarch.ink.hullBlack();
 const brown = bathyarch.ink.oxideRust();
@@ -109,6 +124,7 @@ bathyarch.pontoons(
     cap: { r: 0.62, h: 0.24, y: 0.95 },
     foot: { radii: [0.4, 0.62], h: 0.3, y: -1.45 },
     bolts: { r: 0.06, h: 0.1, radius: 0.5, y: 1.08 },
+    cut,
   }
 );
 
@@ -166,6 +182,7 @@ bathyarch.emitterMast(
     drum: { r: 0.55, h: 0.5, y: 3.05 },
     fins: { r: 0.75, y: 3.05, size: [0.5, 0.4, 0.08] },
     beacon: { radii: [0.14, 0.17], h: 0.16, y: 3.41, on: 'emitter-drum' },
+    cut,
   }
 );
 
@@ -196,6 +213,7 @@ bathyarch.deckGear(
       riser: { h: 0.5, at: [1.85, 1.2, -1.15] },
       elbowB: [-1.45, 0.93, -1.15],
     },
+    cut,
   }
 );
 
@@ -207,6 +225,7 @@ bathyarch.moorings(
   {
     chain: { from: [2.15, -1.5, 1.85], to: [3.8, -3.1, 2.7], r: 0.06 },
     block: { size: [0.6, 0.5, 0.6], x: 3.8, y: -3.3, z: 2.7, yaw: 0.4 },
+    cut,
   }
 );
 
@@ -222,6 +241,7 @@ bathyarch.cornerDomes(root, put, lampM, {
   radii: [0.11, 0.13],
   h: 0.12,
   on: 'pontoon-cap',
+  cut,
 });
 bathyarch.glowLamps(root, {
   color: hex('#F2B233'),

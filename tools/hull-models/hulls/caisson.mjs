@@ -222,6 +222,19 @@
  * beside the Broadside's casings and the Furnace's racks. Coordinate tables
  * below are laid out as tables on purpose; `tools/**\/*.mjs` is outside the
  * repo's Prettier scope (package.json) precisely so they can be.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * and the pass re-cut what was off it: the bow tubes, their flanges and
+ * doors six at 1.85–2.1 m and the plant cylinder and its heads six at 2.6,
+ * where `bowTubes` and `plantCylinder` drew sixteen, the plant's 2.8 m
+ * bands eight; the stacks, their bands and throats six at 1.7–2 m, where
+ * they were ten; the ballast blisters, caps and prop shrouds six at 2–2.6 m,
+ * where they were twelve; the hubs, hinges and hatch six. Two things moved
+ * to meet what the new plates no longer reached: the plant's saddles are
+ * drawn up to the six-plate drum's keel (`plantCylinder`), and the blisters
+ * sit 0.27 m higher so their crown plate meets the caisson's underside as
+ * the twelve-gon's vertex did. 158 parts and 3,688 triangles become 158
+ * and 2,832.
  */
 import { THREE, bothSides, exportGlb, metreTrue } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -366,8 +379,12 @@ bathyarch.citadel(root, { black, grey, rust, lampM }, {
 // Ballast blisters low on both flanks under the caisson, capped fore and
 // aft: 47 m between the caps, reaching z 12.7 — inside the caisson's 13 —
 // and stopping a metre short of the shoulder, so nothing bridges the step.
+// The blister is the rule's six-plate drum since #919 (bathyarch.mjs
+// `cut`; it was twelve), laid with a plate on its crown, so its axis sits
+// 0.27 m higher than the twelve-gon's did for the crown to meet the
+// caisson's underside at y −2.5 as the vertex did.
 bathyarch.ballastBlisters(root, { grey, rust }, {
-  x: 11.5, y: -4.5, z: 10.7, r: 2, length: 47,
+  x: 11.5, y: -4.23, z: 10.7, r: 2, length: 47,
   caps: { length: 3, fore: 36.5, aft: -13.5, tipR: 1.2 },
 });
 

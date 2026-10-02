@@ -172,6 +172,17 @@
  * there, beside the Spark's own. Coordinate tables below are laid out as
  * tables on purpose; `tools/**\/*.mjs` is outside the repo's Prettier scope
  * (package.json) precisely so they can be.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * and the pass re-cut what was off it: the ballast blisters, their caps and
+ * the prop shrouds six at 2–2.6 m, where this script drew twelve; the
+ * shops' stacks, bands and throats six at 1.2–1.4 m, where they were ten;
+ * the gate's hinge, knuckles and hubs and the prop hubs six, where they
+ * were eight; the gate wheels and the hatch wheel six on a ring of six. The
+ * gate's hinge rail lies against the gate by its plate rather than a
+ * vertex (`launchGate`, `crownOnX`), 0.05 m closer. The gantry's cable is
+ * the kit's four-sided one, the navy's one section. 274 parts and 4,292
+ * triangles become 274 and 3,804.
  */
 import { THREE, bothSides, group, slipwayBed, slipwayGantry, exportGlb, metreTrue } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';

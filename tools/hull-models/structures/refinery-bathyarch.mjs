@@ -74,12 +74,26 @@
  * approved file), and scales the root to it, so intake reports ×1.000 and
  * no rotation on the port's output and the shipped maps re-bake where the
  * approved bake put them.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * asked at this file's scale, and the pass re-cut what was off it: the four
+ * silos and their caps fourteen at 22–23 m and the ballast tank fourteen
+ * at 16, where the export had nine; the silo bands and the ballast band
+ * fourteen on a tube of six, where they were ten on five; the crusher
+ * stack fourteen at 8.4 m, where it was seven; the four flood masts six,
+ * where they were five; the ballast pipe eight; the ten work lamps orbs of
+ * six by three, where they were six by four. 55 parts and 1,568 triangles
+ * become 55 and 1,980.
  */
 import { THREE, fitFootprint, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
 
 const L = 280;
 const DRAWN = 7.35;
+// The Klaxon's facet rule at this file's scale (bathyarch.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres. Asserted after the fit, since the fit is what sets the scale.
+const cut = bathyarch.cut(L / DRAWN);
 
 const black = bathyarch.ink.hullBlack();
 const rust = bathyarch.ink.oxideRust();
@@ -126,6 +140,7 @@ bathyarch.siloRank(
     band: { R: 0.58, t: 0.05, at: 0.55 },
     lamp: { r: 0.07, above: 0.5 },
     patch: { size: [0.7, 0.9, 0.06], at: [-1.3, 1.6, -1.02] },
+    cut,
   }
 );
 
@@ -144,6 +159,7 @@ bathyarch.crusherHall(
     teeth: { size: [1.2, 0.14, 0.14], x: -1.6, top: 1.62, bot: 0.68, z: 1.84 },
     stack: { radii: [0.18, 0.22], h: 1.2, at: [-2.3, 2.9, 0.5], lean: 0.12 },
     lamp: { r: 0.06, at: [-2.37, 3.55, 0.5] },
+    cut,
   }
 );
 
@@ -178,19 +194,19 @@ bathyarch.floodMast(
   root,
   put,
   { black, lampM },
-  { tag: 'apron_a', at: [3, 0, 3.6], mast, bank: { ...bank, rot: [0.5, -0.7, 0] } }
+  { tag: 'apron_a', at: [3, 0, 3.6], mast, bank: { ...bank, rot: [0.5, -0.7, 0] }, cut }
 );
 bathyarch.floodMast(
   root,
   put,
   { black, lampM },
-  { tag: 'apron_b', at: [0.2, 0, 3.5], mast, bank: { ...bank, rot: [0.5, 0.6, 0] } }
+  { tag: 'apron_b', at: [0.2, 0, 3.5], mast, bank: { ...bank, rot: [0.5, 0.6, 0] }, cut }
 );
 bathyarch.floodMast(
   root,
   put,
   { black, lampM },
-  { tag: 'yard', at: [2.4, 0, -0.9], mast, bank: { ...bank, rot: [0.5, -2.2, 0] } }
+  { tag: 'yard', at: [2.4, 0, -0.9], mast, bank: { ...bank, rot: [0.5, -2.2, 0] }, cut }
 );
 bathyarch.floodMast(
   root,
@@ -202,6 +218,7 @@ bathyarch.floodMast(
     mast: { radii: [0.05, 0.07], h: 2, y: 1.5 },
     bank: { size: [0.8, 0.2, 0.12], y: 2.5, rot: [0.4, 2.2, 0] },
     bankFirst: true,
+    cut,
   }
 );
 
@@ -218,6 +235,7 @@ bathyarch.bandedTank(
     length: 1.9,
     rot: [0, 0, Math.PI / 2],
     band: { R: 0.44, t: 0.05 },
+    cut,
   }
 );
 bathyarch.pipeBetween(root, put, rust, {
@@ -225,18 +243,21 @@ bathyarch.pipeBetween(root, put, rust, {
   from: [2.6, 0.9, -1.5],
   to: [0.4, 1, -0.6],
   r: 0.08,
+  cut,
 });
 bathyarch.pipeBetween(root, put, rust, {
   name: 'pipe_crusher',
   from: [-1, 1.9, 0.9],
   to: [0, 2.2, -1.4],
   r: 0.07,
+  cut,
 });
 bathyarch.pipeBetween(root, put, rust, {
   name: 'pipe_silo',
   from: [-2.6, 2.4, -1.2],
   to: [-2.6, 1.1, 0.6],
   r: 0.07,
+  cut,
 });
 
 // Five work lamps along the apron's outer edge.
@@ -249,6 +270,7 @@ bathyarch.lampRow(root, put, lampM, {
   y: 0.45,
   z: 3.82,
   on: 'apron',
+  cut,
 });
 
 const size = fitFootprint(root, L);

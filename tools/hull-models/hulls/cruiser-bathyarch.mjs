@@ -78,6 +78,16 @@
  * the pressure cylinders'; built here metre-true at 130 m along +X, centred
  * on its length, the axis at y = 0. Every number below is the export's,
  * through kit.mjs `drawn`.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * asked at this file's scale, and the pass re-cut what was off it: both
+ * pressure cylinders and their caps ten at 4.4 m, where the export had
+ * twenty-eight; the dish eight at 3.1 m, where it had sixteen; the ballast
+ * blisters and caps six at 1.8 m, where they were eighteen; the six torpedo
+ * tubes six at 0.7 m, where they were fourteen; the two prop shrouds ten at
+ * 4 m on a tube of six, where they were twenty-four on twelve, and their
+ * hubs six; the pipes, risers and hydrophones six, where they were ten and
+ * twelve. 114 parts and 3,828 triangles become 114 and 1,972.
  */
 import { THREE, box, part, drawn, seat, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -85,6 +95,10 @@ import * as bathyarch from '../factions/bathyarch.mjs';
 const L = 130;
 const DRAWN = 107.5;
 const DATUM = 5;
+// The Klaxon's facet rule at this file's scale (bathyarch.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres.
+const cut = bathyarch.cut(L / DRAWN);
 
 // `scoutInk` until #888: the same four claddings, and an `amber_lamp` that
 // was the token through and through. The base is the navy's near-black now
@@ -111,28 +125,28 @@ bathyarch.drum(root, black, {
   name: 'pressure_cyl_p',
   radii: [3.6, 3.6],
   length: 92,
-  facets: 28,
+  cut,
   ...drawn([4.4, 5, -6], ALONG_KEEL),
 });
 bathyarch.drum(root, black, {
   name: 'pressure_cyl_s',
   radii: [3.6, 3.6],
   length: 92,
-  facets: 28,
+  cut,
   ...drawn([-4.4, 5, -6], ALONG_KEEL),
 });
 bathyarch.drum(root, rust, {
   name: 'pressure_cap_pf',
   radii: [2.6, 3.6],
   length: 3,
-  facets: 28,
+  cut,
   ...drawn([4.4, 5, 41.5], ALONG_KEEL),
 });
 bathyarch.drum(root, rust, {
   name: 'pressure_cap_sf',
   radii: [2.6, 3.6],
   length: 3,
-  facets: 28,
+  cut,
   ...drawn([-4.4, 5, 41.5], ALONG_KEEL),
 });
 bar('hull_lower', grey, [17, 7, 84], [0, 5, -6]);
@@ -171,7 +185,7 @@ bar('armor_m_s', black, [0.36, 3.2, 18], [-7.18, 10.4, -16]);
 bathyarch.ballastPair(
   root,
   { blister: grey, cap: rust },
-  { x: 9.6, y: 3.2, z: -10, r: 1.5, length: 40, facets: 18, cap: { z: 10.9, length: 1.8, tipR: 0.9 } }
+  { x: 9.6, y: 3.2, z: -10, r: 1.5, length: 40, cut, cap: { z: 10.9, length: 1.8, tipR: 0.9 } }
 );
 
 // Pipes: a low run and a mid run a side, each pair in opposite plate, and a
@@ -180,42 +194,42 @@ bathyarch.drum(root, rust, {
   name: 'pipe_low_p',
   radii: [0.35, 0.35],
   length: 60,
-  facets: 12,
+  cut,
   ...drawn([7.8, 8.9, -4], ALONG_KEEL),
 });
 bathyarch.drum(root, black, {
   name: 'pipe_low_s',
   radii: [0.35, 0.35],
   length: 60,
-  facets: 12,
+  cut,
   ...drawn([-7.8, 8.9, -4], ALONG_KEEL),
 });
 bathyarch.drum(root, black, {
   name: 'pipe_mid_p',
   radii: [0.3, 0.3],
   length: 40,
-  facets: 12,
+  cut,
   ...drawn([6.4, 13.8, -8], ALONG_KEEL),
 });
 bathyarch.drum(root, rust, {
   name: 'pipe_mid_s',
   radii: [0.3, 0.3],
   length: 40,
-  facets: 12,
+  cut,
   ...drawn([-6.4, 13.8, -8], ALONG_KEEL),
 });
 bathyarch.drum(root, rust, {
   name: 'pipe_riser_a',
   radii: [0.3, 0.3],
   length: 4.6,
-  facets: 10,
+  cut,
   ...drawn([7.8, 11.2, -30]),
 });
 bathyarch.drum(root, black, {
   name: 'pipe_riser_b',
   radii: [0.3, 0.3],
   length: 4.6,
-  facets: 10,
+  cut,
   ...drawn([-7.8, 11.2, 14]),
 });
 
@@ -259,12 +273,12 @@ bathyarch.drum(root, grey, {
   name: 'dish',
   radii: [2.6, 0.6],
   length: 1.1,
-  facets: 16,
+  cut,
   ...drawn([0, 28.6, 9.6], [2.2, 0, 0]),
 });
 bar('dish_boom', black, [0.5, 0.5, 3], [0, 27.6, 8.6]);
 bathyarch.whips(root, black, {
-  facets: 10,
+  cut,
   whips: [
     ['hydrophone_0', 0.45, 3.2, drawn([-1.2, 24.6, -34])],
     ['hydrophone_1', 0.45, 3.2, drawn([0, 24.6, -34])],
@@ -288,7 +302,8 @@ bathyarch.torpedoRacks(
       [9.35, 5.3],
       [9.35, 6.6],
     ],
-    tube: { r: 0.6, length: 11, facets: 14 },
+    tube: { r: 0.6, length: 11 },
+    cut,
     tubeName: (tag, i) => `torp_${tag}${i}`,
   }
 );
@@ -304,14 +319,14 @@ for (const [side, x] of [
     name: `prop_shroud_${side}`,
     R: 2.7,
     tube: 0.6,
-    facets: [12, 24],
+    cut,
     ...drawn([x, 5, -50.5]),
   });
   bathyarch.drum(root, black, {
     name: `prop_hub_${side}`,
     radii: [0.55, 1.2],
     length: 2.8,
-    facets: 14,
+    cut,
     ...drawn([x, 5, -50.5], ALONG_KEEL),
   });
   bathyarch.screwBlades(root, black, {

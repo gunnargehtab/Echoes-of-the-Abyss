@@ -37,6 +37,16 @@
  * maps exactly where the approved bake put them. The arms sit on the
  * diagonals, 45° and every quarter turn from it, as the approved file has
  * them; the wellhead floods start on +X.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`;
+ * kit.mjs `asked`), asked at this file's scale, and the pass re-cut the
+ * kit's wellhead to it: the chimney, the apron, the clamp and manifold
+ * rings and the ember mouth fourteen at 15–84 m, where the files share ten,
+ * sixteen and twelve; the five basalt lobes orbs of fourteen by seven, where
+ * they were eight by six. The ember is drawn at the rim's 12 so it rests in
+ * the mouth (below); the draw pipes, risers and the exchangers' stacks were
+ * the rule's eight already. 122 parts and 2,528 triangles become 122 and
+ * 2,984.
  */
 import {
   THREE,
@@ -50,6 +60,13 @@ import {
 import * as bathyarch from '../factions/bathyarch.mjs';
 
 const L = 180;
+/** Drawn across by the measure the fit takes (header); the facet rule is asked at this scale and the fit is asserted against it. */
+const DRAWN = 137.1787;
+// The Klaxon's facet rule at this file's scale (bathyarch.mjs `cut`, #919;
+// kit.mjs `asked`): the kit's wellhead and arms are handed the file's units
+// and the rule is a chord in metres. Asserted after the fit, since the fit
+// is what sets the scale.
+const cut = bathyarch.cut(L / DRAWN);
 
 const black = bathyarch.ink.hullBlack();
 const grey = bathyarch.ink.ironGrey();
@@ -63,11 +80,40 @@ const root = new THREE.Group();
 root.name = 'vent_tap_bathyarch';
 
 // The wellhead in rust, the manifold in iron, the ember mouth flood-lit.
-ventWellhead(root, { rock: rust, mouth: flood, steel: grey });
+// The kit's skeleton at the Klaxon's counts (#919): every round part of it
+// asks the rule at its own radius — fourteen on the chimney, the apron and
+// the two rings, where the four files share ten and sixteen; the lobes
+// fourteen by seven; the draw pipes and risers the kit's own eight, which
+// is what the rule gives 3.4 and 3.1 m — and the numbers stay the kit's,
+// but one. The eight wellhead floods are seated on the manifold ring
+// (kit.mjs `wellheadFloods`), so they came down 0.03–0.14 m with its
+// re-cut rim and are not placed here.
+// The ember is the lid in the chimney's mouth, a disc of 11.5 inside a rim
+// of 12: against the kit's ten-sided chimney its corners passed through
+// the rim's flats and it rested there, and inside a fourteen-sided rim cut
+// to the same corners it rests on nothing, 0.66 m clear all round. It is
+// drawn at the rim's own 12, corner to corner, so the lid closes the mouth
+// — the Order's answer on its tap (vent-tap-hadron.mjs).
+ventWellhead(
+  root,
+  { rock: rust, mouth: flood, steel: grey },
+  {
+    chimney: { facets: cut.round },
+    lobes: { facets: cut.orb },
+    ember: { r: 12, facets: cut.round },
+    apron: { facets: cut.round },
+    clamp: { facets: cut.round },
+    manifold: { facets: cut.round },
+  }
+);
 
 // Four arms on the diagonals, each with the Klaxon's exchanger on its end.
 radialSeries({ count: 4, phase: Math.PI / 4 }, (a) => {
-  ventDrawArm(root, { rock: rust, steel: grey, deck: black, lamp, flood }, { bearing: a });
+  ventDrawArm(
+    root,
+    { rock: rust, steel: grey, deck: black, lamp, flood },
+    { bearing: a, pipe: { facets: cut.round }, riser: { facets: cut.round } }
+  );
   bathyarch.exchangerHead(
     root,
     { black, grey, rust, amber, vent },
@@ -83,6 +129,7 @@ radialSeries({ count: 4, phase: Math.PI / 4 }, (a) => {
       grating: { at: 70, size: [6, 0.4, 6], y: 15.1 },
       foot: { at: 88, size: [8, 4, 8], y: 0 },
       rivets: { count: 4, from: -10, pitch: 6.5, stagger: 7, size: [1.2, 0.8, 1.2], y: 14.2 },
+      cut,
     }
   );
 });
@@ -91,5 +138,9 @@ radialSeries({ count: 4, phase: Math.PI / 4 }, (a) => {
 // the "burning bright" of a structure at SIG 55.
 wellheadFloods(root, flood);
 
-fitFootprint(root, L);
+const size = fitFootprint(root, L);
+if (Math.abs(Math.max(size.x, size.z) - DRAWN) > 1e-3)
+  throw new Error(
+    `${root.name}: drawn ${Math.max(size.x, size.z).toFixed(4)} across; the facet rule was asked at ${DRAWN}`
+  );
 await exportGlb(root, 'vent-tap-bathyarch.glb');

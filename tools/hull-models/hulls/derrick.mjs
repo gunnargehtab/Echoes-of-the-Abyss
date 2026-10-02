@@ -100,6 +100,17 @@
  *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * and the pass re-cut what was off it: the barbette ring and the barbette
+ * fourteen at 7.5 and 5.2 m, and the deck scuff fourteen at 9.5, where
+ * `barbette` drew sixteen and twenty-four; the barrel and muzzle six, where
+ * they were twelve; the prop shrouds ten at 4.2 m and the ballast drums
+ * eight at 3 m, where they were fourteen and ten; the stack eight at 2.8 m
+ * with its band and throat six, where all three were twelve; the eight
+ * hydrophone drums six and their cables six, where they were ten and five;
+ * the fifty-six flank rivets orbs of six by three, where they were six by
+ * four. 161 parts and 4,164 triangles become 161 and 3,164.
  */
 import { THREE, add, box, cyl, strut, bothSides, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -128,6 +139,8 @@ const flood = bathyarch.ink.amberFlood();
 
 const root = new THREE.Group();
 root.name = 'consortium_derrick';
+// The Klaxon's facet rule for a hull drawn in metres (bathyarch.mjs `cut`, #919).
+const cut = bathyarch.cut();
 
 bathyarch.hullSlab(root, { black, grey, amber }, {
   outline, lengthM: L, depth: DEPTH, bow: BOW, stern: STERN,
@@ -174,8 +187,8 @@ for (let i = 0; i < 8; i++) {
   // Each cable starts 0.4 inside the rail and ends on its drum's top, where
   // the drum always hung: the rail's 0.9 rise is the cable's.
   const cable = drop + 0.9;
-  add(root, `drum_cable_${i}`, cyl(0.15, 0.15, cable, 5), black, [5, frame.top - 1.1 - cable / 2, z]);
-  add(root, `hydrophone_drum_${i}`, cyl(1.5, 1.5, 3.2, 10), rust, [5, frame.top - 2 - drop - 1.6, z]);
+  add(root, `drum_cable_${i}`, cyl(0.15, 0.15, cable, cut.round(0.15)), black, [5, frame.top - 1.1 - cable / 2, z]);
+  add(root, `hydrophone_drum_${i}`, cyl(1.5, 1.5, 3.2, cut.round(1.5)), rust, [5, frame.top - 2 - drop - 1.6, z]);
 }
 // The cradle lamp rides *above* the rail: a top-down bake sees plan area only.
 // Its stay runs from the rail's top (frame.top − 0.7) to the lamp's

@@ -64,6 +64,12 @@
  *   decision for all four yards; docs/models-plan.md §3.2 rule 5; #890).
  *   `diff.mjs` lists the seven crosses, moved by that 8 m and nothing
  *   else.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * asked at this file's scale, and the pass re-cut the one round family the
+ * yard carries: the halls' eight tanks fourteen at 5.9 m, where the export
+ * had ten. The gantry cables are the kit's four-sided ones, the navy's one
+ * section. 172 parts and 2,684 triangles become 172 and 2,812.
  */
 import {
   THREE,
@@ -78,6 +84,13 @@ import {
 import * as bathyarch from '../factions/bathyarch.mjs';
 
 const L = 340;
+/** Drawn across by the measure the fit takes (header); the facet rule is asked at this scale and the fit is asserted against it. */
+const DRAWN = 344;
+// The Klaxon's facet rule at this file's scale (bathyarch.mjs `cut`, #919):
+// the halls' tanks are the one round part the Klaxon's yard carries, and
+// the rule is a chord in metres. Asserted after the fit, since the fit is
+// what sets the scale.
+const cut = bathyarch.cut(L / DRAWN);
 
 const black = bathyarch.ink.hullBlack();
 const rust = bathyarch.ink.oxideRust();
@@ -111,8 +124,12 @@ slipwayHeadGate(root, rust, { pylon: bathyarch.slipwayPylon(black) });
 
 // Two halls, the +z one first as the file writes it (starboard, `hall_s`).
 bothSides((tag, sgn) =>
-  bathyarch.slipwayHall(group(root, `hall_${tag}`), { black, grey, rust, amber, flood }, { sgn })
+  bathyarch.slipwayHall(group(root, `hall_${tag}`), { black, grey, rust, amber, flood }, { sgn, cut })
 );
 
-fitFootprint(root, L);
+const size = fitFootprint(root, L);
+if (Math.abs(Math.max(size.x, size.z) - DRAWN) > 1e-3)
+  throw new Error(
+    `${root.name}: drawn ${Math.max(size.x, size.z).toFixed(4)} across; the facet rule was asked at ${DRAWN}`
+  );
 await exportGlb(root, 'slipway-bathyarch.glb');
