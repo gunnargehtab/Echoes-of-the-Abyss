@@ -45,6 +45,26 @@
  * are. The three arms sit at −90°, 30° and 150°, the kit's default phase,
  * which is what leaves x the longer axis; the script asserts it after the
  * fit so a moved arm fails here rather than in the maps.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked at the
+ * fitted footprint's scale (`DRAWN`), and the pass re-cut what was off it:
+ * the footprint slab sixteen at 44 m of radius, where the kit's files share
+ * eight; the three throat drums and feed throats sixteen at 3.8–5.4 m,
+ * where they were ten; the vessel sixteen round and sixteen a turn down at
+ * 22.6 m, where the first cut had twelve by eight, its three rings sixteen
+ * on tubes of seven at 20–25 m, where they were fourteen on five, its five
+ * grips fifteen and sixteen at 3.6–4.4 m, where they were five, its crown
+ * bud sixteen by sixteen at 7 m, where it was ten by six, and its four nubs
+ * fourteen by fourteen at 3.3 m, where they were eight by six; the gut
+ * sixteen at 4.9 m, where it was eight, its two rings sixteen on five, where
+ * they were twelve on five, the sac sixteen by sixteen at 12.3 m, where it
+ * was ten by six, its ring sixteen on seven, where it was fourteen on five,
+ * and its mouth sixteen at 3.9 m, where it was eight. The holdfast mat, the
+ * kerb and the fifteen rake tines keep the counts the rule gives them. The
+ * measure still names the six boom legs, the kit's six-sided drums at
+ * 1.94 m where the rule says eight: kit.mjs `reactorIntakeArm` writes that
+ * count itself. 66 parts and 2,800 triangles become 66 and 4,344.
  */
 import {
   THREE,
@@ -57,6 +77,13 @@ import {
 import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 180;
+/** The plan's long side as built: the after arms' rake beams, tip to tip (kit.mjs `fitFootprint`). */
+const DRAWN = 138.9627;
+// The Commune's facet rule at this file's scale (pelagia.mjs `cut`, #919):
+// the model is drawn 138.96 long and priced at 180 m, and the rule is a
+// chord in metres. Asserted after the fit, since the fit is what sets the
+// scale.
+const cut = pelagia.cut(L / DRAWN);
 const ARMS = { count: 3, phase: -Math.PI / 2 };
 /** The outflow runs into the gap between the arms at −90° and 30°. */
 const OUTFLOW = -Math.PI / 6;
@@ -73,8 +100,18 @@ const root = new THREE.Group();
 root.name = 'bio_reactor_pelagia';
 
 // The bed: the holdfast in chitin, the slab in growth ridge, the kerb and
-// its six run lights in chitin and biolight.
-reactorBed(root, { holdfast: chitin, slab: ridge, kerb: chitin, lamp: lampM });
+// its six run lights in chitin and biolight — every round part on the
+// rule's count at its own radius (kit.mjs `asked`); the pad keeps the kit's
+// turn of an eighth, a flat to the bow.
+reactorBed(
+  root,
+  { holdfast: chitin, slab: ridge, kerb: chitin, lamp: lampM },
+  {
+    mat: { facets: cut.round },
+    pad: { facets: cut.round },
+    rim: { radial: cut.round, facets: cut.round },
+  }
+);
 
 // Three arms out into the canopy, booms in growth ridge, throats in the
 // unlit finish, anchor feet in chitin and the rake tines in membrane.
@@ -82,7 +119,14 @@ radialSeries(ARMS, (a) =>
   reactorIntakeArm(
     root,
     { boom: ridge, collar: chitin, throat: unlit, foot: chitin, rake: membrane },
-    { bearing: a }
+    {
+      bearing: a,
+      drum: { facets: cut.round },
+      mouth: { facets: cut.round },
+      tines: { facets: cut.round },
+      // The kit's own legs, asked for the rule's count (kit.mjs `reactorIntakeArm`, #919).
+      legs: { at: 48, spread: 5.2, r: [1.1, 1.5], h: 12.4, facets: cut.round },
+    }
   )
 );
 
@@ -91,6 +135,7 @@ pelagia.reactorVessel(
   root,
   { chitin, ridge, membrane, spore, lampM, unlit },
   {
+    cut,
     bladder: { y: 19.5, r: [17.5, 15.5, 17.5] },
     rings: [
       { r: 14.2, t: 1.2, y: 10 },
@@ -125,6 +170,7 @@ pelagia.reactorOutflow(
   root,
   { ridge, membrane, unlit },
   {
+    cut,
     bearing: OUTFLOW,
     gut: {
       y: 18,
@@ -148,4 +194,6 @@ if (size.z > size.x)
   throw new Error(
     `${root.name}: drawn ${size.x.toFixed(2)} × ${size.z.toFixed(2)}; the arms' phase has to leave x the longer axis`
   );
+if (Math.abs(size.x - DRAWN) > 1e-3)
+  throw new Error(`${root.name}: drawn ${size.x}, DRAWN says ${DRAWN}`);
 await exportGlb(root, 'bio-reactor-pelagia.glb');

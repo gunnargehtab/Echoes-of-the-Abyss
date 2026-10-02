@@ -78,6 +78,25 @@
  *   lamp on this hull as hidden or floating.
  *
  * Nothing here reaches the length or the beam.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked at this
+ * file's scale for each part as its node presses it, and the pass re-cut
+ * what was off it: the two cargo lobes sixteen round and sixteen down at
+ * 10.8 and 13.1 m, where the export had ten by seven; the five growth rings
+ * sixteen round at 11.7–16.6 m, where they were twenty-two, on tubes of
+ * five, seven and nine at 1.2–2.3 m, where they were five; the peduncle
+ * sixteen at 4.7 m, where it was seven; the five light buds five by three at
+ * 0.47–0.68 m, where they were eight by six. The three feed tendrils keep
+ * their five. The hull's table stays the export's 18 × 12, and the measure
+ * names both its rings — eighteen and twenty-four a turn at 27–28 m — as
+ * Block 2c says it will. It also names the first and fourth rings' tubes,
+ * nine a turn at 2.28–2.29 m where the rule says ten: pressed to the hull's
+ * profile, a tube of nine reads a chord the rule gives ten for and a tube of
+ * ten one it gives nine for, so no count meets it there (pelagia.mjs `cut`,
+ * `settle`). The lobes' fuller round brings them against the rings they sat
+ * 0.01–0.59 m off, the port lobe the first and the starboard the second and
+ * third. 30 parts and 3,368 triangles become 30 and 3,396.
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -85,6 +104,10 @@ import * as pelagia from '../factions/pelagia.mjs';
 const L = 75;
 const DRAWN = 4.7903;
 const DATUM = 0;
+// The Commune's facet rule at this file's scale (pelagia.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres.
+const cut = pelagia.cut(L / DRAWN);
 
 // The navy's ink (#888). The export carried the r184 pass's glossier
 // finish — chitin at 0.2 metal and 0.28 rough, the ridge #14332A at 0.12
@@ -326,7 +349,7 @@ const HULL = [
 
 // The body, and the two cargo lobes slung under its flanks — the port one
 // the larger and lower, rolled 0.3 outboard; the starboard one rolled 0.24
-// the other way. Ten by seven, as the file draws them.
+// the other way, each on the rule's counts (the file drew both ten by seven).
 pelagia.grownBody(root, chitin, {
   name: 'hull',
   facets: [18, 12],
@@ -334,7 +357,7 @@ pelagia.grownBody(root, chitin, {
   ...drawn([0, 0, 0], [0, 0, 0], [0.95, 0.72, 1.7]),
 });
 pelagia.cargoLobes(root, chitin, {
-  facets: [10, 7],
+  cut,
   lobes: [
     { side: 'port', ...drawn([0.62, -0.28, -0.35], [0, 0, 0.3], [0.42, 0.34, 0.85]) },
     { side: 'starboard', ...drawn([-0.6, -0.3, -0.15], [0, 0, -0.24], [0.32, 0.26, 0.7]) },
@@ -351,7 +374,7 @@ const ring = (tube, at, lean) => ({
   ...drawn(at, [...lean, 0], [0.95 * 1.07 * profile(at[2]), 0.72 * 1.14 * profile(at[2]), 1.6]),
 });
 pelagia.grownRings(root, ridge, {
-  facets: [5, 22],
+  cut,
   rings: [
     ring(0.09104, [0, -0.03, -1.25], [0.05753, 0.08]),
     ring(0.07104, [0.0171, -0.03, -0.7], [0.09702, -0.0533]),
@@ -388,6 +411,7 @@ pelagia.baleen(root, ridge, {
   },
 });
 pelagia.tendrils(root, ridge, {
+  cut,
   tendrils: [
     { name: 'starboard', x: -0.5, droop: 0.45, phase: 0.4, length: 0.495 },
     { name: 'mid', x: 0.05, droop: 0.55, phase: 1.9, length: 0.605 },
@@ -427,6 +451,7 @@ pelagia.membranes(root, membrane, {
 pelagia.stalk(root, chitin, {
   radii: [0.16, 0.3],
   length: 0.75,
+  cut,
   ...drawn([0.02, 0, -1.85], [Math.PI / 2 + 0.1, 0, 0]),
 });
 pelagia.membranes(root, membrane, {
@@ -452,6 +477,7 @@ pelagia.membranes(root, membrane, {
 // mark, on the one line of the hold the hull does not overhang — and one
 // at the tail (#890; see the header).
 pelagia.lightBuds(root, light, {
+  cut,
   buds: [
     ['brow_light', 0.05, { ...drawn([0, 0.55, 1.35]), on: 'hull' }],
     ['flank_light_port', 0.04, drawn([0.8, 0.53, 0.1])],

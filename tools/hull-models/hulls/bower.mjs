@@ -163,14 +163,30 @@
  *   carry, and the bed of pods the Sower carries, are both absent, and the
  *   only things that leave this hull are spores it does not aim.
  *
- * The light, measured (`lightAudit`, printed on export): nav_bow 1.5 m²,
- * nav_beam_s 1.5, nav_beam_p 1.5, nav_tail 1.5 — 6.0 m² facing up on a
- * 4,402 m² plan, nothing hidden. The bake at E(10) = 0.919 reads raw E 1.31
+ * The light, measured (`lightAudit`, printed on export): nav_bow 1.75 m²,
+ * nav_beam_s 1.5, nav_beam_p 1.5, nav_tail 1.5 — 6.3 m² facing up on a
+ * 4,420 m² plan, nothing hidden. The bake at E(10) = 0.919 reads raw E 1.31
  * → calibrated 0.92 at a gain of ×0.703: 45× above the ×1/64 floor and 91×
- * under the ×64 ceiling. 88 parts, 3,972 triangles, six materials, bounds
- * x ±52.5, y −4.3..17.6, z −30.3..30.8 by the export's box measure and
- * −28.9..29.3 by its vertices; the 21.9 m of height is the tallest stalk
+ * under the ×64 ceiling. 88 parts, 4,698 triangles, six materials, bounds
+ * x ±52.5, y −4.3..17.5, z −30.4..30.9 by the export's box measure and
+ * −28.9..29.3 by its vertices; the 21.8 m of height is the tallest stalk
  * over the fluke, and the bed under them is 9.1 m from keel to crown.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked in metres,
+ * and the pass re-cut what was off it. The bed is a formula and regenerates
+ * at the rule's count: sixteen by eight, where it was eighteen by ten — the
+ * ceiling round a rim the measure reads at 56 m of radius, and eight rows
+ * down it. The nose to sixteen at 8.5 m, where it was twelve; the nine
+ * lobes and four gill mounds to sixteen by eight at 6.1–9.7 m, where they
+ * were ten by six; on the six stalks at ×5, the stems to five, where they
+ * were seven, the pods to five by three at 0.56 m, where they were seven
+ * by five, and the tips to five by three at 0.3 m, where they were six by
+ * four; the twelve brood nubs to five by three up to eight by four at
+ * 0.9–1.8 m, where all were eight by five. The three marks on the bed are
+ * dropped onto its skin, which lies a facet's sag under `backAt`'s formula
+ * at sixteen by eight, where at eighteen by ten the two met. 88 parts and
+ * 3,972 triangles become 88 and 4,698.
  *
  * The hand-drawn entry in silhouettes.ts stays until the kind is wired
  * (docs/models-plan.md §2). The generated outline is thirty-one vertices —
@@ -221,7 +237,10 @@ const HALF_BEAM = 24.5;
 const CROWN = 5.6;
 const KEEL = 3.5;
 const Q = 0.55;
-const FACETS = [18, 10];
+
+// The Commune's facet rule, a chord of 1.5 m (docs/asset-prompts-3d.md Block
+// 2c; pelagia.mjs `cut`, #919), asked in metres since the file is drawn in them.
+const cut = pelagia.cut();
 
 /** The rim's radius, grown: nothing regular, and the same wobble every build. */
 const wobble = (f) => 1 + 0.03 * Math.cos(3 * f + 0.6) + 0.022 * Math.sin(5 * f + 2.1);
@@ -275,18 +294,33 @@ const backAt = (x, z) => {
   return CROWN * rise(best[0]) * Math.sqrt(Math.max(0, 1 - g ** (2 / Q)));
 };
 
-const [W, H] = FACETS;
-const BUFFER = [[0, CROWN, 0]];
-for (let iy = 1; iy < H; iy++) {
-  const th = (Math.PI * iy) / H;
-  const g = Math.sin(th) ** Q;
-  const cy = Math.cos(th);
-  for (let ix = 0; ix < W; ix++) {
-    const f = (2 * Math.PI * ix) / W;
-    BUFFER.push([g * rimX(f), (cy >= 0 ? CROWN : KEEL) * cy * rise(f), g * rimZ(f)]);
+/** The bed's table at `[W, H]` facets: the top pole, each ring from the top down, the bottom pole. */
+const bufferFor = (W, H) => {
+  const buffer = [[0, CROWN, 0]];
+  for (let iy = 1; iy < H; iy++) {
+    const th = (Math.PI * iy) / H;
+    const g = Math.sin(th) ** Q;
+    const cy = Math.cos(th);
+    for (let ix = 0; ix < W; ix++) {
+      const f = (2 * Math.PI * ix) / W;
+      buffer.push([g * rimX(f), (cy >= 0 ? CROWN : KEEL) * cy * rise(f), g * rimZ(f)]);
+    }
   }
-}
-BUFFER.push([0, -KEEL, 0]);
+  buffer.push([0, -KEEL, 0]);
+  return buffer;
+};
+
+// The bed regenerates at the rule's count (#919): a formula, not a binary's
+// table, so the rule is asked of the orb it draws — `cut.settle` builds the
+// table at a guess and reads its rings back through the measure until the
+// counts hold — which is the ceiling, sixteen, round a rim 48 m from the
+// crown, and the rule's share down a bed 9 m from keel to crown.
+const FACETS = cut.settle(
+  ([w, h]) => pelagia.grownBodyGeometry([w, h], bufferFor(w, h)),
+  {},
+  [16, 8]
+);
+const BUFFER = bufferFor(...FACETS);
 
 pelagia.grownBody(root, chitin, { name: 'hull', facets: FACETS, buffer: BUFFER, frame: xLong });
 
@@ -295,7 +329,7 @@ pelagia.grownBody(root, chitin, { name: 'hull', facets: FACETS, buffer: BUFFER, 
 pelagia.podBody(root, ridge, {
   name: 'grown_nose',
   squash: 0.34,
-  facets: 12,
+  cut,
   profile: [
     [38, 8.6],
     [42, 8.2],
@@ -326,7 +360,7 @@ for (const [side, x, scale, yaw, roll, skin] of LOBES) {
   const z = beamAt(x, sgn) - sgn * 0.3 * scale[2];
   pelagia.lobe(root, skin, {
     name: `edge_lobe_${side}_${lobeCount[side]++}`,
-    facets: [10, 6],
+    cut,
     at: [x, -0.3, z],
     rot: [roll, yaw, 0],
     scale,
@@ -350,9 +384,10 @@ for (const [side, x, out, yaw, sgn] of ORGANS) {
     {
       side,
       sep: '_',
+      cut,
       at: [x, backAt(x, z) - 1.0, z],
       yaw,
-      mound: { facets: [10, 6], scale: [6.2, 2.1, 4.4], roll: sgn * 0.14 },
+      mound: { scale: [6.2, 2.1, 4.4], roll: sgn * 0.14 },
       slits: {
         count: 4,
         yaw0: -0.5,
@@ -388,6 +423,7 @@ for (const [n, h, x, z, lean] of STALKS)
     {
       name: `stalk_${n}`,
       sep: '_',
+      cut,
       H: h,
       ...pelagia.verbatim([x, backAt(x, z) - 0.3, z], lean, [
         STALK_SCALE,
@@ -401,6 +437,7 @@ for (const [n, h, x, z, lean] of STALKS)
 // nubs along each flank, under the lobes. Seven to starboard, five to port.
 const nubRow = (sgn, row) => row.map(([x, r]) => [x, -1.6, 0.93 * beamAt(x, sgn), r]);
 pelagia.broodNubs(root, spore, {
+  cut,
   rows: [
     {
       side: 's',
@@ -455,18 +492,22 @@ pelagia.driveFluke(root, membrane, {
 });
 
 // "Nearly black at rest, navigation marks only": four marks on a hull this
-// broad — bow, both beams and stern — none opposite another.
+// broad — bow, both beams and stern — none opposite another. The three on
+// the bed are dropped onto its skin (kit.mjs `seat`): `backAt` is the
+// formula's height, and the table the rule cuts lies under it by a facet's
+// sag — 0.05–0.12 m at the beams once the bed went to sixteen by eight (#919).
 pelagia.navMarks(root, light, {
   marks: [
     ['nav_bow', 38, backAt(38, 1.6) + 0.2, 1.6],
     ['nav_beam_s', 10, backAt(10, 16.5) + 0.2, 16.5],
     ['nav_beam_p', -8, backAt(-8, -17.2) + 0.2, -17.2],
-    ['nav_tail', -46, 0.35, -4.0],
   ],
+  on: 'hull',
   w: 1.6,
   h: 0.5,
   d: 1.0,
 });
+pelagia.navMarks(root, light, { marks: [['nav_tail', -46, 0.35, -4.0]], w: 1.6, h: 0.5, d: 1.0 });
 
 metreTrue(root, L, { drawn: L });
 await exportGlb(root, 'bower-pelagia.glb');

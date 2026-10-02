@@ -114,9 +114,20 @@
  * nav_tail 0.75 — 1.5 m² facing up on a 1,290 m² plan, nothing hidden. The
  * bake at E(8) = 0.797 reads raw E 1.43 → calibrated 0.80 at a gain of
  * ×0.557 at the maps' 4 px/m (×0.518 at intake's default 2): 36× above the
- * ×1/64 floor and 115× under the ×64 ceiling. 26 parts, 5,300 triangles,
+ * ×1/64 floor and 115× under the ×64 ceiling. 26 parts, 5,172 triangles,
  * six materials, bounds x ±57.5, y ±3.9, z −14.6..14.4 by the export's box
  * measure and −12.5..12.3 by its vertices.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked in metres,
+ * and the pass re-cut what was off it: the stolon to sixteen at 4.9 m of
+ * radius, where it was fourteen; the four node rings to sixteen at 5.2 m
+ * and the fifth, behind the tip, to twelve at 2.8 m, where all were
+ * fourteen; the four bud nodes to ten by five at 2.3 m, where they were
+ * ten by six, and the four scars to five by three, where they were eight
+ * by five; the vein stays five, the floor. The sheaths and their linings
+ * are sweeps and carry no ring. 26 parts and 5,300 triangles become 26 and
+ * 5,172.
  *
  * The hand-drawn entry in silhouettes.ts stays until the kind is wired
  * (docs/models-plan.md §2). The generated outline is twenty-seven vertices:
@@ -143,8 +154,6 @@ const root = new THREE.Group();
 root.name = 'pelagia_rootstock';
 
 const SQUASH = 0.74;
-const FACETS = 14;
-const FLAT = Math.cos(Math.PI / FACETS);
 
 /** The four nodes, bow to stern, and the flank each one buds on. */
 const NODES = [
@@ -198,19 +207,26 @@ const rAt = (x) => {
   }
   return PROFILE[PROFILE.length - 1][1];
 };
+// The Commune's facet rule, a chord of 1.5 m (docs/asset-prompts-3d.md Block
+// 2c; pelagia.mjs `cut`, #919), asked in metres since the file is drawn in them.
+const cut = pelagia.cut();
+/** The stolon's count under the rule, as squashed: what the crown's flat is cut on. */
+const FACETS = cut.lathe(PROFILE, { scale: [1, SQUASH, 1] });
+const FLAT = Math.cos(Math.PI / FACETS);
 const crownAt = (x) => rAt(x) * SQUASH * FLAT;
 
 // The stem, and a growth ring girdling each node — 0.7 m ridges cresting
 // 0.4 m proud of the skin, each leaned its own way — with a fifth behind
 // the growing tip, the next node forming.
-pelagia.stem(root, { chitin, ridge }, { profile: PROFILE, facets: FACETS, squash: SQUASH });
+pelagia.stem(root, { chitin, ridge }, { profile: PROFILE, squash: SQUASH, cut });
 pelagia.growthRings(root, ridge, {
   name: 'node_ring',
   stations: [...NODES.map(({ x }) => [x, rAt(x) - 0.3]), [50, rAt(50) - 0.25]],
   squash: SQUASH,
   tube: 0.7,
   wobble: 0.06,
-  ring: { rise: 0.7, facets: FACETS },
+  ring: { rise: 0.7 },
+  cut,
 });
 
 /**
@@ -229,6 +245,7 @@ pelagia.buddingSheaths(
   root,
   { sheath: membrane, lining: chitin, scar: spore, knuckle: ridge },
   {
+    cut,
     sites: SITES.map((s, i) => {
       const { x, sgn } = NODES[i];
       return {
@@ -279,7 +296,7 @@ pelagia.sweptVein(root, veinUnlit, {
   ]),
   steps: 48,
   r: 0.16,
-  facets: 5,
+  cut,
 });
 
 // "Nearly black at rest, navigation marks only": two, and the only lamps.

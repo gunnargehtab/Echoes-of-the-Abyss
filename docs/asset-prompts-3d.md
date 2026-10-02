@@ -536,7 +536,39 @@ reach a table: the Light Scout's, the Corvette's, the Harvester's and the Cruise
 are `grownBody` orbs whose every vertex is their export's own, and re-cutting one is a
 different hull with a screenshot of its own (`factions/pelagia.mjs`), so the measure names
 them and the pass leaves them; the Bower's is a formula in the kit's frame and regenerates
-at the rule's count. Panels run a metre and a half to five: a Commune hull is few, large
+at the rule's count, sixteen by eight. The pass asks the rule through `pelagia.cut`, and
+not at a part's radius: almost every Commune part is pressed by its node, and the measure
+reads a pressed ring by the chord it draws, shorter than the circle's at the major radius,
+so `cut` builds each candidate, presses it as its placement will and reads it back through
+the measure's own reader until the counts hold. Three tubes it cannot settle — two of the
+Harvester's growth rings and one of the Foundry's lobe rings, pressed so that at one count
+the chord reads a step over the rule and at the next a step under — are built at the last
+and named with the tables, nine rings in all. The kit's capsule draws its meridian as two
+quarter turns of one count, so where the rule's half-turn share is odd no capsule meets it
+and the cap takes the segment over, the Order's reading; the Commune's twenty-nine landed
+on even shares and none is named. Besides a count the pass moved what the coarser rounds
+left standing off: the Bastion's eight ports are seated on the dome along the ray from
+its centre (`portLights` `on`), 0.3 up from the file's stations, where three of them lay
+in the lowest growth ring in the file itself and five did once that ring sat on the dome's
+rows; its growth rings sit on the dome's four rows rather
+than the sphere between them (`domeRings` `dome`), its three veins are set out by a fifth
+of their own chord's sag (`domeArcs` `sag`) where a two-segment vein's chord dipped under
+the dome's skin between its vertices and the first showed nothing from above — its ribs
+and pipes stay at the file's radius, a band's chords sinking into an opaque dome being
+nothing the eye sees — the Foundry's veins by their whole sag, the Foundry's
+second vein is swept from R 2.306 to 2.34 to show again and its third in from 2.228 to
+2.17 to lie on its lobe again, the Turret's recoil ribs are
+sized to the root they band (`grownBarrel` `fit`), the Refinery's silo hoops hug their
+sixteen-sided drums at 1.0 where 0.97 buried them, the Vent Tap's ember takes r 12 and its
+lamp housings the crown flat's shortfall as the Consortium's did, the Bower's bed marks
+are seated on its regenerated hull, the Glider's tail knuckle moves 0.13 m aft to keep
+the stern at 27.5 and its fluke's hinge comes down 0.24 m onto it, the Veil's eight gill
+slits stand 0.05 further out of mounds that filled to their spheres, and the Light Scout's
+two flank marks grow from 0.035 to 0.042 — the one lamp the pass resized, because at the
+rule's five by three a 0.035 bud owned 0.19 m² from above and a mark that can face up takes
+no residual audit line ("Glow encodes loudness", above). Seven files fit a hair differently once their rounds moved — the Foundry
+is 1.1 % smaller in metres and the Veil 1.3, the rest under 0.6 — and two more now assert
+their fit. Panels run a metre and a half to five: a Commune hull is few, large
 parts — a leaf is one plate, a pod one orb, a fin one membrane — so its median part from
 above is bigger than its facet says. The two grown navies swap places between the facet
 column and the panel column, and that is the difference between a pod and a crab.
@@ -647,14 +679,15 @@ on a 32 × 32-cell map, 32,768 triangles (`packages/frontend/src/game/perspectiv
 triangles go as the square of its count. Every round part rebuilt with its own constructor
 at the count the rule gives it, the table costs: Consortium hulls 53.3 k → 40.9 k and
 structures 16.6 k → 19.5 k by its facet pass, and 45.7 k and 23.3 k as built since its panel
-pass dressed thirteen models; Commune hulls 47.6 k → 47.8 k and structures 35.2 k → 62.4 k;
+pass dressed thirteen models; Commune hulls 47.6 k → 48.3 k and structures 35.2 k → 63.1 k, as
+built since its facet pass (this rebuild had said 47.8 k and 62.4 k);
 Directorate hulls 30.0 k → 33.5 k and structures 26.6 k → 32.8 k; Order hulls 9.9 k → 8.0 k
 and structures 15.8 k → 12.1 k, the Order's as built since its pass, where this rebuild had
 said 12.4 k before the pass cut its pipes, stacks and throat drums as hexagons; the fourteen
 props, under no rule, 4.3 k. The own force
 the gate names, taken as a navy's eight structures, four more Turrets and its five largest
-hulls, comes to 48.2 k for the Consortium since its panel pass (42.1 k before it), 107.0 k for the
-Commune, 64.0 k for the Directorate and 18.9 k for the Order, as built. That mix is one sample base and not a worst case —
+hulls, comes to 48.2 k for the Consortium since its panel pass (42.1 k before it), 108.0 k for the
+Commune since its facet pass (107.0 k projected), 64.0 k for the Directorate and 18.9 k for the Order, as built. That mix is one sample base and not a worst case —
 nothing caps what a base builds, and a dozen Commune Slipways alone are 170 k — so the
 probe, not this rebuild, is the check. The Commune's ceiling is the number gate 6 moved: at
 twenty-four that dozen and five were 181.0 k, its eight structures alone 110.5 k; at
@@ -686,14 +719,18 @@ is sections almost through. The Order's pass leaves two of its 616, neither on a
 Sentinel Turret's two pods' caps, a capsule's meridian at 5.1 m, where the rule's share of a
 half turn is five and a capsule draws an even count. The Consortium's pass leaves none of
 its 1,119: `node tools/hull-models/facets.mjs bathyarch` names no ring, and the navy
-carries seven distinct counts a turn where it carried fifteen.
+carries seven distinct counts a turn where it carried fifteen. The Commune's leaves nine of
+its 1,240: the six on the four tables and three pressed tubes no count settles on (the
+Commune paragraph), and the navy carries eighteen distinct counts a turn where it carried
+thirty-five, every ring from 4 m of radius up on sixteen a turn but the tables' and the
+part-turn arcs the measure reads a turn at a time.
 Outside the bands, before the panel pass: eight Consortium hulls (the five shared kinds, the Chorister
 and the Tender at 2.2–3.9 m — the Corvette's 2.3 was 2.2 once the facet pass thinned its
 drums — and the Beacon at 0.5) and five structures (the Vent Tap at 6.2 m, the Turret at
 10.2, the Foundry at 15.7, the Refinery at 20.6 and the Bastion at 42.2), every one inside its
 band since the Consortium's panel pass — the hulls at 0.9–1.6 m, the structures at 3.1–5.5;
 two Commune hulls (the
-Bower at 0.8 m, the Submersible at 7.3) and three structures; three Directorate hulls (the
+Bower at 0.8 m, the Submersible at 7.3, 7.8 since the facet pass) and three structures; three Directorate hulls (the
 Verger, the Submersible and the Dredge, 4.0–5.2 m) and four structures; five Order hulls
 (the Versicle at 1.5 m; the Reciter, the Responsory, the Antiphon and the Offertory at
 6.0–7.2 — the Responsory's block asks for fine ceramic panelling, so its 6.0, 6.4 until the

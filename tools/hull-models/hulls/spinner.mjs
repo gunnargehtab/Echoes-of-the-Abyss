@@ -18,10 +18,20 @@
  * matched pair for that reason and would throw here if two were sized alike.
  *
  * `nav_bow` (#907, from #894's resting measure): the bow mark's height was
- * read off the pod's ideal section, and on the pod's eighteen facets it
- * stood 0.26 m over the crown. It is dropped onto the pod at its own
+ * read off the pod's ideal section, and on the pod's facets — eighteen then
+ * — it stood 0.26 m over the crown. It is dropped onto the pod at its own
  * station now, its underside on the facet (`navMarks` `on`, kit.mjs
  * `seat`); `diff.mjs` lists it and nothing else.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked at this
+ * file's scale, and the pass re-cut what was off it: the pod body and its
+ * three rings sixteen at 5.9–7.4 m of radius, where the export had eighteen;
+ * the four mine sacs eleven to thirteen round and ten to fourteen a turn
+ * down at 2.6–3.1 m, where they were twelve by twelve, and their buds five at
+ * 0.9–1.2 m, where they were eight by twelve; the spinneret five at 1.07 m,
+ * where it was eight. 21 parts and 1,416 triangles become 21 and 1,110; the
+ * bow mark, seated on the pod, came down 0.1 m with its re-cut crown.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -43,6 +53,10 @@ import * as pelagia from '../factions/pelagia.mjs';
  */
 const L = 55;
 const DRAWN = 61.5;
+// The Commune's facet rule at this file's scale (pelagia.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres.
+const cut = pelagia.cut(L / DRAWN);
 
 const chitin = pelagia.ink.chitinHull();
 const ridge = pelagia.ink.growthRidge();
@@ -56,11 +70,11 @@ root.scale.setScalar(L / DRAWN);
 
 // The body: 16.8 m across the waist and 11.8 m tall, the navy's rule that beam
 // is body. The stations are the approved export's own, open 0.2 m at both
-// ends where the spinneret and the tail root, on its eighteen facets — the
-// kit's default is twelve, and a port takes the model's.
+// ends where the spinneret and the tail root; the count is the rule's for
+// the squashed lathe, where the export carried eighteen.
 pelagia.podBody(root, chitin, {
   squash: 0.7,
-  facets: 18,
+  cut,
   profile: [
     [-27.5, 0.2],
     [-24, 1.6],
@@ -73,29 +87,33 @@ pelagia.podBody(root, chitin, {
     [27.5, 0.2],
   ],
 });
-// Three growth rings, each a 0.7 m ridge on eighteen facets, squashed with
-// the body.
+// Three growth rings, each a 0.7 m ridge, squashed with the body.
 pelagia.growthRings(root, ridge, {
   stations: [
     [-7, 5.8],
     [0, 7.0],
     [7, 5.8],
   ],
-  ring: { rise: 0.7, facets: 18 },
+  ring: { rise: 0.7 },
+  cut,
 });
 
 // The four mine sacs, on the waist where the pod is widest and able to carry
 // them. Sizes and stations are the approved model's — no two alike, no two
-// opposite, two a side but not a pair — and so is the twelve-facet cut
-// `mineSacs` now defaults to.
-pelagia.mineSacs(root, { skin: membrane, cap: ridge }, {
-  pods: [
-    [-4, 3.2, 6.2, 3.4],
-    [6, 2.6, 6.6, 3.0],
-    [-6, 2.4, -6.8, 3.1],
-    [4, 3.4, -5.9, 3.5],
-  ],
-});
+// opposite, two a side but not a pair.
+pelagia.mineSacs(
+  root,
+  { skin: membrane, cap: ridge },
+  {
+    cut,
+    pods: [
+      [-4, 3.2, 6.2, 3.4],
+      [6, 2.6, 6.6, 3.0],
+      [-6, 2.4, -6.8, 3.1],
+      [4, 3.4, -5.9, 3.5],
+    ],
+  }
+);
 
 // Leaf pectorals forward and tail flukes aft — swept, and swept opposite ways:
 // the pectoral rakes forward off its root and the fluke trails aft off its own.
@@ -130,7 +148,7 @@ pelagia.fins(root, membrane, {
 });
 
 pelagia.dorsalBlade(root, ridge, { from: -12, to: -4, y: 4.5, height: 4, t: 1 });
-pelagia.nose(root, ridge, { name: 'spinneret', tip: 34, r: 1.2, length: 8, facets: 8 });
+pelagia.nose(root, ridge, { name: 'spinneret', tip: 34, r: 1.2, length: 8, cut });
 
 // "Nearly black": two nav marks and a vein, and that is the whole light budget
 // of a hull quieter at rest than a Light Scout.

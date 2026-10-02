@@ -48,8 +48,9 @@
  *   and so lists those ten as moved, each `_starboard_i` to where its
  *   `_port_i` was and back, which is the relabel and nothing else; a
  *   scratch build under the file's own names diffs clean.
- * - The lobes are partial spheres, not tables: 10 × 7 orbs stopped 0.62 of
- *   the way down, each pitched a fraction of a degree its own way under the
+ * - The lobes are partial spheres, not tables: orbs stopped 0.62 of the way
+ *   down (10 × 7 in the file; the rule's counts since the facet pass,
+ *   below), each pitched a fraction of a degree its own way under the
  *   flank's 0.14 roll. Each ring's station and tube are the file's, and its
  *   place and scale follow from them by one rule (`huskFlanks`).
  * - The cranes carry no finials; their trolleys sit at −0.7082 and 0.0013
@@ -133,15 +134,51 @@
  * length, the ground kept at y = 0 — which is where the bake and the
  * runtime put a Z-long file anyway. Every placement goes through kit.mjs
  * `drawn` (the kit's `zLong` frame); the two crane frames through `group`;
- * the one scale and shift through `metreTrue`. `DRAWN` is the export's
+ * the one scale and shift through `metreTrue`. `DRAWN` is the built file's
  * length as intake measures it, three's `Box3` over the parts' own boxes,
  * so that both consumers' own rescale is exactly 1 and the maps stay where
- * the approved export put them; the built file is X-long (320 × 317.6 m),
- * so intake does not yaw it again.
+ * the file put them — 17.4354 since the facet pass re-cut the root anchors
+ * whose boxes set it, the export's 17.2438 before, so every part stands
+ * 1.1 % smaller in metres than it did; the built file is X-long, so intake
+ * does not yaw it again.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m, five to
+ * sixteen (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked at
+ * this file's scale for each part as its node presses it, and the pass
+ * re-cut every round part: the eight husk lobes sixteen round and five
+ * rows over their 0.62 of a half turn at 41–64 m of radius, where the
+ * export had 10 × 7; their twenty rings sixteen round at 16–53 m on tubes
+ * of five to twelve at 0.9–2.8 m, where they had 20 on 4; the knuckles,
+ * the outrigger lobes, the stern pod and the three buds sixteen by eight
+ * at 7–65 m, where they had 7 × 5 to 10 × 6; the outrigger and stern
+ * rings sixteen on tubes of seven and eight at 1.6–1.9 m, where they had
+ * 16 and 18 on 4; the four veins three segments over 1.06–1.37 rad,
+ * fourteen to eighteen a turn, on a tube of five at 1.1 m, where they had
+ * 12 on 4; and the kit's parts at its numbers — the hull in progress and
+ * the two tanks capsules of sixteen round with eight-segment caps at 12–13
+ * m, where they had 7 and 8 on 3; the ten guides eight by four at 1.8 m
+ * and the two warning lights seven by four at 1.65 m, where they had 5 × 4;
+ * the cables five at 0.9 m, as they were; the launch mouth sixteen on a
+ * tube of sixteen at 42 and 6.3 m, where it had 10 on 5, and its glow drum
+ * sixteen at 25 m, where it had nine; the graft pipes fifteen at 3.7 m and
+ * their flanges sixteen on a tube of five, where they had 7 and 10 on 5 —
+ * and the five root anchors sixteen round with eight-segment caps at
+ * 7.5–8.8 m, where they had 6 on 3. `facets.mjs pelagia` names one ring:
+ * `lobe_ring_1_3_2`'s tube, nine at 2.02 m where the rule says eight —
+ * pressed 1.74 by 1.55 on its node, it reads a step over at eight and a
+ * step under at nine, and no count reads back on the rule, so the last is
+ * built and the measure names it (pelagia.mjs `cut`). `hull_vein_1` is
+ * swept out to R 2.34 from the file's 2.306: inside the sixteen-round lobe
+ * it showed nothing from above (7.4 m² before the pass), and at 2.34 it
+ * shows 13 and still rests on the lobe; `hull_vein_2` is swept in to 2.17
+ * from 2.228, where it stood 0.67 m off its lobe, and lies on it. 87 parts
+ * and 7,280 triangles become 87 and 12,660.
  */
 import {
   THREE,
   zLong,
+  drawn,
+  capsule,
   foundryBay,
   gantryCrane,
   launchMouth,
@@ -153,8 +190,12 @@ import {
 import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 320;
-const DRAWN = 17.243808807368453;
+const DRAWN = 17.4354;
 const DATUM = 0;
+// The Commune's facet rule at this file's scale (pelagia.mjs `cut`, #919;
+// kit.mjs `asked` for the kit's bay, cranes, tanks and pipes): the builders
+// are handed the export's units and the rule is a chord in metres.
+const cut = pelagia.cut(L / DRAWN);
 
 const algae = pelagia.ink.algaeHull();
 const chitin = pelagia.ink.deepChlorophyll();
@@ -176,6 +217,7 @@ pelagia.huskFlanks(
   root,
   { skin: algae, ring: chitin },
   {
+    cut,
     flanks: [
       {
         name: 'port',
@@ -271,6 +313,7 @@ pelagia.huskFlanks(
 
 // Six knuckles where the lobes meet, three a flank, each its own size.
 pelagia.huskKnuckles(root, chitin, {
+  cut,
   knuckles: [
     [0.5476813912, [3.47713672267, 2.47026535487, -2.9]],
     [0.5620514154, [3.09033972956, 2.30498886763, 0.5]],
@@ -287,59 +330,54 @@ pelagia.outriggerLobes(
   root,
   { skin: algae, ring: chitin, bud: spore },
   {
-    big: {
-      r: 1.9,
-      facets: [9, 6],
-      at: [6.6, 0.75, -1.6],
-      rot: [0, 0.5, 0],
-      scale: [1.25, 0.7, 0.95],
-    },
-    ring: {
-      R: 1.55,
-      tube: 0.07,
-      facets: [4, 16],
-      at: [6.6, 1.35, -1.6],
-      rot: FLAT,
-      scale: [1.25, 0.95, 1],
-    },
-    small: {
-      r: 1.25,
-      facets: [8, 5],
-      at: [-5.9, 0.6, 3.8],
-      rot: [0, -0.4, 0],
-      scale: [1.1, 0.65, 1.3],
-    },
-    bud: { r: 0.4, facets: [6, 4], at: [-6.3, 1.35, 4.3] },
+    cut,
+    big: { r: 1.9, at: [6.6, 0.75, -1.6], rot: [0, 0.5, 0], scale: [1.25, 0.7, 0.95] },
+    ring: { R: 1.55, tube: 0.07, at: [6.6, 1.35, -1.6], rot: FLAT, scale: [1.25, 0.95, 1] },
+    small: { r: 1.25, at: [-5.9, 0.6, 3.8], rot: [0, -0.4, 0], scale: [1.1, 0.65, 1.3] },
+    bud: { r: 0.4, at: [-6.3, 1.35, 4.3] },
   }
 );
 pelagia.sternPod(
   root,
   { skin: algae, ring: chitin, bud: spore },
   {
-    pod: { r: 3.1, facets: [10, 6], at: [0.7, 1, -7.2], rot: [0, 0, 0], scale: [1.15, 0.75, 0.9] },
-    ring: {
-      R: 2.35,
-      tube: 0.09,
-      facets: [4, 18],
-      at: [0.7, 2, -7.2],
-      rot: FLAT,
-      scale: [1.15, 0.9, 1],
-    },
-    bud: { r: 0.55, facets: [7, 5], at: [1.6, 2.9, -8] },
+    cut,
+    pod: { r: 3.1, at: [0.7, 1, -7.2], rot: [0, 0, 0], scale: [1.15, 0.75, 0.9] },
+    ring: { R: 2.35, tube: 0.09, at: [0.7, 2, -7.2], rot: FLAT, scale: [1.15, 0.9, 1] },
+    bud: { r: 0.55, at: [1.6, 2.9, -8] },
   }
 );
 
 // The bay at the kit's defaults — the Directorate file's numbers, which
 // this file carries too, five guides a lip either side of the forge line
-// since #890 — and the two cranes over it, each without finials, its
-// trolley where the file has it.
-foundryBay(root, { floor: chitin, forge, hull: steel, guide: bio });
+// since #890 — restated where a count rides them so the rule can take it
+// (#919): the hull in progress is the kit's capsule at the rule's two
+// counts, the guides orbs at the rule's; and the two cranes over it, each
+// without finials, its trolley where the file has it, the cable and the
+// warning light at the kit's numbers on the rule's counts.
+foundryBay(
+  root,
+  { floor: chitin, forge, hull: steel, guide: bio },
+  {
+    hull: {
+      geo: capsule(0.65, 2.2, ...cut.capsule(0.65)),
+      at: [0.1, 1.15, 2.1],
+      rot: [Math.PI / 2, 0, 0.06],
+    },
+    guide: { r: 0.1, facets: cut.orb, x: 0.75, y: 0.62, from: -4.1, pitch: 2.5, count: 5 },
+  }
+);
 const crane = { steel, trolley: chitin, cable: steel, load: steel, warnlight: bio };
+const rigging = {
+  cable: { r: 0.05, facets: cut.round, hang: 0.2 },
+  warnlight: { y: 6.08, r: 0.09, facets: cut.orb },
+};
 gantryCrane(root, crane, {
   n: 0,
   at: [0, 0, -2.6],
   finials: null,
   trolley: { x: -0.708194032, y: 5.3, size: [0.8, 0.5, 0.7] },
+  ...rigging,
 });
 gantryCrane(root, crane, {
   n: 1,
@@ -347,22 +385,45 @@ gantryCrane(root, crane, {
   finials: null,
   trolley: { x: 0.001294153, y: 5.3, size: [0.8, 0.5, 0.7] },
   load: { y: 3.6, size: [0.55, 0.4, 0.5] },
+  ...rigging,
 });
 
 // The launch mouth and its glow drum, at the kit's defaults — the drum
 // lying flat at the floor's level since #893, lit in `forge_light`, the
-// forge line's own: the block's forge light "at its mouth" (the header).
-launchMouth(root, { mouth: chitin, glow: forge });
+// forge line's own: the block's forge light "at its mouth" (the header) —
+// restated with the rule's counts (#919; the kit takes these two as
+// numbers): the ring as its node presses it, the drum at its radius.
+const MOUTH = { R: 1.7, tube: 0.3, at: [0.1, 1.5, 6.7], scale: [1.15, 0.8, 1] };
+const GLOW = { r: 1.35, h: 0.2, at: [0.1, 0.5, 6.0], rot: [0, 0, 0] };
+launchMouth(
+  root,
+  { mouth: chitin, glow: forge },
+  {
+    mouth: {
+      ...MOUTH,
+      facets: cut.torus(MOUTH.R, MOUTH.tube, {
+        ...drawn(MOUTH.at, [0, 0, 0], MOUTH.scale),
+        yaw: true,
+      }),
+    },
+    glow: { ...GLOW, facets: cut.cyl(GLOW.r, GLOW.r, GLOW.h, { yaw: true }) },
+  }
+);
 
 // Four lit veins climbing the flanks, two a side, each its own radius and
 // arc, yawed −0.4 and rolled its own way — "the navy's own lamps on the
 // halls and the mouth — ... veins" of the block's resting clause since
 // #893 (the header).
+// Each vein set out by its own chord's sag (`domeArcs` `sag`, #919): three
+// segments over 1.06–1.37 rad sag 0.016–0.026 of the radius, and at the
+// file's radius `hull_vein_1` lay inside the lobe it climbs, its plan from
+// above gone from 7.4 m² to none.
 pelagia.domeArcs(root, bio, {
   name: 'hull_vein',
+  cut,
+  sag: true,
   frame: zLong,
   tube: 0.06,
-  facets: [4, 12],
   arcs: [
     // R 2.10, not the file's 2.344514791 — the veins bullet in the header.
     {
@@ -371,9 +432,16 @@ pelagia.domeArcs(root, bio, {
       at: [-3.7, 0.3, -3.5],
       rot: [0, Math.PI + 0.4, 0.827962757369],
     },
-    { R: 2.305575315, arc: 1.3233022131, at: [3.7, 0.3, -1.2], rot: [0, -0.4, 0.524075461924] },
+    // R 2.34, not the file's 2.305575315 (#919): on the sixteen-round lobe the
+    // file's arc lay inside the skin and showed nothing from above where it
+    // had shown 7.4 m²; swept outward as `hull_vein_0` was swept in — 2.32
+    // shows 2.6 m², 2.34 13 — and at 2.34 it still rests on `husk_lobe_port_1`.
+    { R: 2.34, arc: 1.3233022131, at: [3.7, 0.3, -1.2], rot: [0, -0.4, 0.524075461924] },
+    // R 2.17, not the file's 2.228130762 (#919): on the sixteen-round lobe the
+    // file's arc stood 0.67 m off `husk_lobe_starboard_1`; swept in as
+    // `hull_vein_0` was — 2.21 leaves 0.39 m, 2.19 0.07, 2.17 lies on.
     {
-      R: 2.228130762,
+      R: 2.17,
       arc: 1.3655300752,
       at: [-3.7, 0.3, 1.1],
       rot: [0, Math.PI + 0.4, 0.802234526259],
@@ -383,17 +451,26 @@ pelagia.domeArcs(root, bio, {
 });
 
 // Two ballast tanks and two graft pipes with their flanges, at the kit's
-// defaults — the Directorate file's numbers, which this file carries too.
-ballastTanks(root, steel);
-flangedPipes(root, { pipe: steel, flange: algae });
+// defaults — the Directorate file's numbers, which this file carries too —
+// on the rule's counts (#919; the pipe's and flange's radii restated, since
+// the kit takes the count beside them).
+ballastTanks(root, steel, { facets: cut.capsule });
+flangedPipes(
+  root,
+  { pipe: steel, flange: algae },
+  {
+    pipe: { radii: [0.16, 0.2], facets: cut.round },
+    flange: { R: 0.22, tube: 0.06, facets: [cut.round, cut.round] },
+  }
+);
 
 // Five root anchors into the seabed, no two alike, algae and chitin by
 // turns, laid 0.14 short of flat and yawed each its own way.
 pelagia.rootButtresses(root, [algae, chitin], {
   name: 'root_anchor',
+  cut,
   frame: zLong,
   roll: Math.PI / 2 - 0.14,
-  facets: [3, 6],
   grips: [
     {
       r: 0.4327703416,

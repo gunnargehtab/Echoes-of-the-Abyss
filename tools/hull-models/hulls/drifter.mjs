@@ -70,12 +70,23 @@
  * The light: two `bay_seam_*` beads of `bio_vein` on the valves' crowns,
  * burning at a fifth of the Spinner's vein (`SEAM` below says why), and one
  * `nav_bow` of `bio_light`, every one on an upward face where the top-down
- * maps see it. The audit reads bay_seam_p 3.56 m², bay_seam_s 3.31 m²,
- * nav_bow 0.50 m² — 7.4 m² facing up on a 572 m² plan, nothing hidden. The
+ * maps see it. The audit reads bay_seam_p 3.44 m², bay_seam_s 3.13 m²,
+ * nav_bow 0.50 m² — 7.1 m² facing up on a 574 m² plan, nothing hidden. The
  * bake at E(4) = 0.60 reads raw E 5.75 → calibrated 0.61 at a gain of
  * ×0.105: the quietest hull in the roster, and the gain sits 6.7× above the
  * ×1/64 floor docs/models-plan.md §3.2 warns the quiet end about, and
  * under the SIG-8 Spinner's raw 7.56 by about the E(4)/E(8) the curve asks.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked in metres,
+ * and the pass re-cut what was off it: the body to sixteen at 5.55 m of
+ * radius, where it was fourteen; the four rings to sixteen, fifteen,
+ * sixteen and eleven at 5.2, 3.5, 4.7 and 2.5 m, where all were fourteen;
+ * the two bays to sixteen by eight at 8.9 and 8.3 m, where they were twelve
+ * by six, and the valves over them to eight by four, half the bays' counts
+ * as before, so they still nest on the bays' own facet directions; the two
+ * seam beads stay five, the floor. 18 parts and 1,384 triangles become 18
+ * and 1,752.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -145,21 +156,27 @@ const rAt = (x) => {
   }
   return PROFILE[PROFILE.length - 1][1];
 };
-/** The crown's height at `x`: the squashed radius, on the flat a fourteen-facet loft turns up. */
-const crownAt = (x) => rAt(x) * SQUASH * Math.cos(Math.PI / 14);
+// The Commune's facet rule, a chord of 1.5 m (docs/asset-prompts-3d.md Block
+// 2c; pelagia.mjs `cut`, #919), asked in metres since the file is drawn in them.
+const cut = pelagia.cut();
+/** The body's count under the rule, as squashed: what the crown's flat is cut on. */
+const FACETS = cut.lathe(PROFILE, { scale: [1, SQUASH, 1] });
+/** The crown's height at `x`: the squashed radius, on the flat the loft turns up. */
+const crownAt = (x) => rAt(x) * SQUASH * Math.cos(Math.PI / FACETS);
 
-pelagia.podBody(root, chitin, { squash: SQUASH, facets: 14, profile: PROFILE });
+pelagia.podBody(root, chitin, { squash: SQUASH, profile: PROFILE, cut });
 
-// Four growth rings, two either side of the bays, each a 0.7 m ridge on
-// fourteen facets cresting 0.45 m proud of the skin — the Spinner's are
-// lathed to crest inside its body, an oddity its port keeps, and these are
-// not — and each leaned its own way off square.
+// Four growth rings, two either side of the bays, each a 0.7 m ridge on the
+// rule's count cresting 0.45 m proud of the skin — the Spinner's are lathed
+// to crest inside its body, an oddity its port keeps, and these are not —
+// and each leaned its own way off square.
 pelagia.growthRings(root, ridge, {
   stations: [13.5, 22.5, -11.5, -20].map((x) => [x, rAt(x) - 0.25]),
   squash: SQUASH,
   tube: 0.7,
   wobble: 0.07,
-  ring: { rise: 0.7, facets: 14 },
+  ring: { rise: 0.7 },
+  cut,
 });
 
 // The two bays: a pair of swelling bays amidships, each an orb of chitin
@@ -171,11 +188,11 @@ const BAYS = [
   { side: 's', at: [2.5, -0.2, 4.1], radii: [8.4, 3.7, 3.8] },
 ];
 pelagia.cargoLobes(root, chitin, {
-  facets: [12, 6],
   lobes: BAYS.map(({ side, at, radii }) => [side, ...at, ...radii]),
+  cut,
 });
 // The membrane over each, shut: two valves meeting on the crown.
-pelagia.bayValves(root, membrane, { bays: BAYS });
+pelagia.bayValves(root, membrane, { bays: BAYS, cut });
 
 // Trim vanes rather than planes: two leaves forward off the flanks, the
 // port one the larger, dipped 17° and 23°, and one standing on the
@@ -253,7 +270,7 @@ pelagia.driveFluke(root, membrane, {
 // "Almost dark": a faint seam of vein along each bay's crown where the
 // valves meet, and one bow mark. That is the whole resting light of the
 // quietest hull in the roster.
-pelagia.baySeams(root, vein, { bays: BAYS });
+pelagia.baySeams(root, vein, { bays: BAYS, cut });
 pelagia.navMarks(root, light, {
   marks: [['nav_bow', 27, crownAt(27) + 0.15]],
   w: 0.8,

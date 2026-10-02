@@ -77,18 +77,26 @@
  * "visible machinery light", and a vein on a silo is that, so all four
  * stay lit in `bio_light` and move onto an upward face together
  * (`silos` `vein.lay: 'flat'`): each a hoop round its own silo in the
- * band above its highest ring and under its cap, seated in the nine-sided
- * wall — its ring at 0.97 of the wall's corner radius there, so the 0.06
- * tube straddles the drum's corners and flats alike — tilted 0.18 off
- * level with its arc rising and yawed the silo's own way as before. Silos
- * 0 and 2, whose rings stop at 0.57 of their height, carry it at 0.8,
- * where the wall stands 0.036 R past the cap's rim; silos 1 and 3, whose
- * rings climb to 0.87, carry it at 0.9, where the wall and the rim are
- * within 0.01 R and the band shows past the rim's flats. The first cut
- * put every ring at 0.92 and 1.09 of the wall, which left the tube 0.37
- * to 0.94 m off the drum touching nothing (review, F1). Same names, tube,
- * facets and arc; the four move as one series. Nothing here reaches the
- * footprint.
+ * band above its highest ring and under its cap, seated in the wall —
+ * its ring at the wall's corner radius there (`hug` 1.0), so the 0.06 tube
+ * straddles the drum's corners and flats alike — tilted 0.18 off level
+ * with its arc rising and yawed the silo's own way as before. The wall is
+ * sixteen-sided since the facet pass (below), its flats at 0.981 of the
+ * corner radius, and the hoop itself is five segments over its 0.65π, a
+ * fifteen-gon whose chords sag 0.022 of its radius between vertices: at
+ * 1.0 the tube's core sits on the corners at its vertices and 0.003 R
+ * inside the flats between them, half out all round. The 0.97 the hoop
+ * carried on the nine-sided wall, whose flats lie at 0.94, put the core
+ * 0.05 R inside the sixteen-gon's flats at mid-chord and buried the four
+ * veins to 1.7–7 m² from above (16–26 before the pass); at 1.0 they show
+ * 10–22 m² and meet their drums. Silos 0 and 2, whose rings stop at 0.57
+ * of their height, carry it at 0.8, where the wall stands 0.036 R past the
+ * cap's rim; silos 1 and 3, whose rings climb to 0.87, carry it at 0.9,
+ * where the wall and the rim are within 0.01 R and the band shows past
+ * the rim's flats. The first cut put every ring at 0.92 and 1.09 of the
+ * wall, which left the tube 0.37 to 0.94 m off the drum touching nothing
+ * (review, F1). Same names, tube and arc; the four move as one series.
+ * Nothing here reaches the footprint.
  *
  * THE FRAME is the export's own: an X-long file, 22.7246 units long for a
  * 280 m footprint (hull-intake's `rawSize.x` on the approved file, which
@@ -96,10 +104,34 @@
  * every placement the file's own translation, rotation and scale through
  * the kit's `xLong` frame — and made metre-true at 280 m along X, centred
  * on its length, the ground kept at y = 0, by `metreTrue`. `DRAWN` is the
- * export's length as intake measures it, three's `Box3` over the parts' own
- * boxes, so that both consumers' own rescale is exactly 1 and the maps stay
- * where the approved export put them; the built file is X-long
- * (280 × 191.2 m), so intake does not yaw it.
+ * built file's length as intake measures it, three's `Box3` over the parts'
+ * own boxes, so that both consumers' own rescale is exactly 1 and the maps
+ * stay where the file put them — 22.8326 since the facet pass re-cut the
+ * hopper and the anchors whose boxes set it, the export's 22.7246 before,
+ * so every part stands 0.5 % smaller in metres than it did; the built file
+ * is X-long, so intake does not yaw it.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m, five to
+ * sixteen (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked at
+ * this file's scale for each part as its node presses it, and the pass
+ * re-cut every round part: the four silos sixteen at 18–25 m of radius,
+ * where the export had nine; their caps sixteen round and four rows over
+ * their quarter turn at 13–18 m, where they had 9 × 5; their ten rings
+ * sixteen on tubes of six to eight at 1.4–1.9 m, where they had 18 on 4;
+ * the two buds sixteen by eight at 6.1 m, where they had 7 × 5; the four
+ * veins five segments over their 0.65π, fifteen a turn, on a tube of five
+ * at 0.74 m, where they had 14 on 4, and their `hug` 1.0 for the
+ * sixteen-sided wall (LIGHT PLACEMENT, above); the crusher's roof eight
+ * over its half turn at 22.7 m, where it had six; the stacks and their
+ * tips sixteen at 4.2–4.7 m, where they had seven; the hopper and its
+ * mouth sixteen at 18 and 13.5 m, where they had eight; the eight gantry
+ * lights five round and three rows at 1.0–1.1 m, where they had 5 × 4; the
+ * gantry legs nine at 2.2 m, where they had six; the transfer pipes nine
+ * at 2.1 m and their flanges fifteen on a tube of five, where they had 7
+ * and 10 on 5; the flood masts seven at 1.7 m, where they had six; and the
+ * six root anchors capsules of sixteen round with eight-segment caps at
+ * 5.4–7 m, where they had 6 on 3. `facets.mjs pelagia` names none of them.
+ * 69 parts and 4,088 triangles become 69 and 6,828.
  */
 import {
   THREE,
@@ -117,8 +149,12 @@ import {
 import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 280;
-const DRAWN = 22.724610351326202;
+const DRAWN = 22.8326;
 const DATUM = 0;
+// The Commune's facet rule at this file's scale (pelagia.mjs `cut`, #919;
+// kit.mjs `asked` for the kit's stacks, gantry, hopper and pipes): the
+// builders are handed the export's units and the rule is a chord in metres.
+const cut = pelagia.cut(L / DRAWN);
 
 const algae = pelagia.ink.algaeHull();
 const chitin = pelagia.ink.deepChlorophyll();
@@ -137,11 +173,11 @@ pelagia.silos(
   root,
   { skin: algae, cap: algae, ring: chitin, bud: spore, vein: bio },
   {
+    cut,
     vein: {
       lay: 'flat',
-      hug: 0.97,
+      hug: 1.0,
       tube: 0.06,
-      facets: [4, 14],
       arc: Math.PI * 0.65,
       at: 0.9,
       tilt: 0.18,
@@ -210,27 +246,58 @@ pelagia.silos(
 
 // The crusher at the kit's defaults — the maw's are this file's, the slab
 // set into the roof's ridge at its forward end since #894 (the header) —
-// but its roof, a half drum laid on its side; and the two stacks.
+// but its roof, a half drum laid on its side on the rule's share of a half
+// turn (#919; the file's was six); and the two stacks, at the kit's radii
+// on the rule's counts.
 crusher(
   root,
   { house: steel, cowl: chitin, maw: flood },
   {
     cowl: {
       name: 'crusher_roof',
-      geo: new THREE.CylinderGeometry(1.85, 1.85, 4.7, 6, 1, false, 0, Math.PI),
+      geo: new THREE.CylinderGeometry(
+        1.85,
+        1.85,
+        4.7,
+        cut.round(1.85, Math.PI),
+        1,
+        false,
+        0,
+        Math.PI
+      ),
       at: [5.2, 3.4, -2.2],
       rot: [0, -0.25, Math.PI / 2],
     },
   }
 );
-exhaustStacks(root, { steel, glow: flood });
+exhaustStacks(
+  root,
+  { steel, glow: flood },
+  {
+    stack: { radii: [0.3, 0.38], h: 3.2, facets: cut.round },
+    tip: { radii: [0.34, 0.3], h: 0.25, facets: cut.round },
+  }
+);
 
 // The conveyor gantry, at the kit's defaults, with this file's five
-// nodules: dodecahedra of five radii, tumbled every way, one of them pale.
+// nodules: dodecahedra of five radii, tumbled every way, one of them pale;
+// the lights and the legs at the kit's numbers on the rule's counts (#919;
+// the kit takes a leg's count as a number).
 conveyorGantry(
   root,
   { bed: steel, belt: chitin, rail: algae, light: flood, leg: steel },
   {
+    lights: { r: 0.09, facets: cut.orb, y: 0.72, xs: [-3.25, -0.95, 1.35, 3.65] },
+    legs: {
+      radii: [0.14, 0.18],
+      facets: cut.round(0.18),
+      stem: 'gantry_leg',
+      legs: [
+        { n: '0', x: -3.15, y: -1.1, h: 2.2 },
+        { n: '1', x: -0.05, y: -1.65, h: 3.35 },
+        { n: '2', x: 3.05, y: -2.2, h: 4.5 },
+      ],
+    },
     nodules: [
       {
         name: 'nodule_0',
@@ -271,8 +338,15 @@ conveyorGantry(
   }
 );
 
-// The intake hopper at the kit's defaults.
-intakeHopper(root, { hopper: chitin, mouth: flood });
+// The intake hopper at the kit's defaults, on the rule's counts.
+intakeHopper(
+  root,
+  { hopper: chitin, mouth: flood },
+  {
+    hopper: { radii: [1.5, 0.9], h: 1.3, facets: cut.round, at: [13.4, 0.65, 6.9] },
+    mouth: { r: 1.1, h: 0.18, facets: cut.round, at: [13.4, 1.35, 6.9] },
+  }
+);
 
 // Two transfer pipes from the silos to the crusher, each yawed to its run
 // and tipped over — YXZ, as the file has them — with its flange on the
@@ -283,8 +357,8 @@ flangedPipes(
   {
     frame: xLong,
     stems: { pipe: 'transfer_pipe', flange: 'transfer_flange' },
-    pipe: { radii: [0.17, 0.17], facets: 7 },
-    flange: { R: 0.24, tube: 0.06, facets: [5, 10] },
+    pipe: { radii: [0.17, 0.17], facets: cut.round },
+    flange: { R: 0.24, tube: 0.06, facets: [cut.round, cut.round] },
     pipes: [
       {
         n: '0',
@@ -308,9 +382,9 @@ flangedPipes(
 // turns, laid 0.15 short of flat and yawed each its own way.
 pelagia.rootButtresses(root, [algae, chitin], {
   name: 'root_anchor',
+  cut,
   frame: xLong,
   roll: Math.PI / 2 - 0.15,
-  facets: [3, 6],
   grips: [
     {
       r: 0.5227002501,
@@ -351,8 +425,9 @@ pelagia.rootButtresses(root, [algae, chitin], {
   ],
 });
 
-// "Floodlit working surfaces": two flood masts at the kit's defaults.
-floodMasts(root, { steel, lamp: flood });
+// "Floodlit working surfaces": two flood masts at the kit's defaults, the
+// mast on the rule's count (the kit takes it as a number).
+floodMasts(root, { steel, lamp: flood }, { mast: { radii: [0.1, 0.14], facets: cut.round(0.14) } });
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
 await exportGlb(root, 'refinery-pelagia.glb');

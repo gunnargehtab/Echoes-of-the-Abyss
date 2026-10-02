@@ -51,11 +51,12 @@
  *   nodes, named `glow-core` and `glow-stalks`; they are kept (`glow`) at
  *   the file's colour, intensity and range. No map can see them.
  *
- * THE FRAME is the export's own: drawn along X, 7.13 across by the measure
+ * THE FRAME is the export's own: drawn along X, 7.22 across by the measure
  * the bake takes — three's `Box3` over the parts' own boxes, which the
- * leaned stalks' boxes overhang — priced at 170 m by the table, so the root
- * carries that one scale through kit.mjs `fitFootprint`, as the Vent Taps
- * do, and no yaw.
+ * leaned stalks' boxes overhang; 7.13 before the facet pass re-cut the
+ * root flares and the lobes (`DRAWN`) — priced at 170 m by the table, so
+ * the root carries that one scale through kit.mjs `fitFootprint`, as the
+ * Vent Taps do, and no yaw.
  *
  * LIGHT PLACEMENT (#890 and #893, the light axis of #540). The light
  * audit on the approved file named thirty of the thirty-one vein-ring
@@ -144,11 +145,36 @@
  * lamp (glb.mjs `occludes`) — and the chart sees the mound and the slits
  * through them where it saw a solid cone. Nothing here moves the
  * footprint.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m, five to
+ * sixteen (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked at
+ * this file's scale for each part as its node presses it, and the pass
+ * re-cut every round part: the six lobes and the two gill mounds sixteen
+ * by eight at 19–49 m of radius, where the export had 10 × 6 and 9 × 6;
+ * the three growth rings sixteen round at 22–42 m on tubes of five to
+ * seven at 1.2–1.8 m, where they had 14 on 5; the haze cones and the
+ * seven root flares sixteen at 13 and 5.2 m, where they had seven and six;
+ * each stalk's lower stem seven at 1.8 m, as it was, its upper five at
+ * 1.2 m, where it had seven, its pod thirteen round at 3.1 m and eight
+ * rows at 4.1 m, where it had 7 × 5, and its tip seven by four at 1.7 and
+ * 1.9 m, where it had 6 × 4. `facets.mjs pelagia` names none of them; the
+ * vein-ring segments lie on the re-cut skin by their own rule. 91 parts
+ * and 2,876 triangles become 91 and 5,140.
  */
 import { THREE, exportGlb, fitFootprint } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 170;
+/**
+ * Drawn across by the measure the fit takes (THE FRAME, above), since the
+ * pass: the facet rule is asked at this scale and the fit is asserted
+ * against it, the Vent Taps' way.
+ */
+const DRAWN = 7.2207;
+// The Commune's facet rule at this file's scale (pelagia.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres.
+const cut = pelagia.cut(L / DRAWN);
 
 // The navy's ink, under the navy's names since #891. The export's
 // `deep-chlorophyll`, `algae-teal` and `spore-pale` are the structures'
@@ -178,56 +204,29 @@ root.name = 'pelagia-spore-veil';
 const FLAT = [Math.PI / 2, 0, 0];
 const { verbatim } = pelagia;
 
-// Six lobes, "broad overlapping": a 10 × 6 orb each, squashed to its own
-// three radii and yawed its own way, chitin and dark teal by turns.
+// Six lobes, "broad overlapping": an orb each on the rule's counts (the
+// file's were 10 × 6), squashed to its own three radii and yawed its own
+// way, chitin and dark teal by turns.
 pelagia.grownOrbs(root, {
+  cut,
   orbs: [
-    ['lobe-core', chitin, 1, [10, 6], verbatim([0, 0.1, 0], [0, 0.2, 0], [2.1, 0.85, 1.9])],
-    ['lobe-west', tealDark, 1, [10, 6], verbatim([-1.7, 0, -0.5], [0, 0.9, 0], [1.5, 0.6, 1.35])],
-    [
-      'lobe-east',
-      tealDark,
-      1,
-      [10, 6],
-      verbatim([1.6, 0.02, 0.4], [0, -0.6, 0], [1.45, 0.62, 1.3]),
-    ],
-    ['lobe-north', chitin, 1, [10, 6], verbatim([0.5, -0.02, -1.5], [0, 1.8, 0], [1.25, 0.5, 1.1])],
-    ['lobe-south', tealDark, 1, [10, 6], verbatim([-0.6, 0, 1.45], [0, 2.6, 0], [1.3, 0.52, 1.15])],
-    ['lobe-runt', chitin, 1, [10, 6], verbatim([2.4, -0.05, -0.9], [0, 0.4, 0], [0.8, 0.38, 0.7])],
+    ['lobe-core', chitin, 1, verbatim([0, 0.1, 0], [0, 0.2, 0], [2.1, 0.85, 1.9])],
+    ['lobe-west', tealDark, 1, verbatim([-1.7, 0, -0.5], [0, 0.9, 0], [1.5, 0.6, 1.35])],
+    ['lobe-east', tealDark, 1, verbatim([1.6, 0.02, 0.4], [0, -0.6, 0], [1.45, 0.62, 1.3])],
+    ['lobe-north', chitin, 1, verbatim([0.5, -0.02, -1.5], [0, 1.8, 0], [1.25, 0.5, 1.1])],
+    ['lobe-south', tealDark, 1, verbatim([-0.6, 0, 1.45], [0, 2.6, 0], [1.3, 0.52, 1.15])],
+    ['lobe-runt', chitin, 1, verbatim([2.4, -0.05, -0.9], [0, 0.4, 0], [0.8, 0.38, 0.7])],
   ],
 });
 
 // Three growth rings round the crown, wider and thinner as they go down,
 // each squashed 0.92 in its tube by its node.
 pelagia.grownHoops(root, {
+  cut,
   hoops: [
-    [
-      'growth-ring-1',
-      teal,
-      0.85,
-      0.075,
-      [5, 14],
-      undefined,
-      verbatim([0, 0.62, 0], FLAT, [1, 1, 0.92]),
-    ],
-    [
-      'growth-ring-2',
-      teal,
-      1.3,
-      0.063,
-      [5, 14],
-      undefined,
-      verbatim([0, 0.42, 0], FLAT, [1, 1, 0.92]),
-    ],
-    [
-      'growth-ring-3',
-      teal,
-      1.75,
-      0.051,
-      [5, 14],
-      undefined,
-      verbatim([0, 0.22, 0], FLAT, [1, 1, 0.92]),
-    ],
+    ['growth-ring-1', teal, 0.85, 0.075, undefined, verbatim([0, 0.62, 0], FLAT, [1, 1, 0.92])],
+    ['growth-ring-2', teal, 1.3, 0.063, undefined, verbatim([0, 0.42, 0], FLAT, [1, 1, 0.92])],
+    ['growth-ring-3', teal, 1.75, 0.051, undefined, verbatim([0, 0.22, 0], FLAT, [1, 1, 0.92])],
   ],
 });
 
@@ -253,16 +252,20 @@ for (const [side, at, yaw, sgn, lines] of [
       side,
       at,
       yaw,
-      mound: { facets: [9, 6], scale: [0.85, 0.55, 0.65], roll: sgn * 0.25 },
+      cut,
+      mound: { scale: [0.85, 0.55, 0.65], roll: sgn * 0.25 },
       slits: {
         count: 4,
         yaw0: -0.5,
         pitch: 0.34,
         slit: [0.09, 0.3, 0.62],
         breath: [0.035, 0.26, 0.56],
+        // 0.05 out along the ray from the organ's origin (#919): the rule's
+        // sixteen-by-eight mound swallowed two slits the ten-by-six showed.
+        out: 0.05,
       },
       lines: { ...lines, sink: 0.02, lean: 0.5 },
-      haze: { radii: [0.55, 0.2], h: 1.1, facets: 7, y: 0.95, roll: sgn * 0.15 },
+      haze: { radii: [0.55, 0.2], h: 1.1, y: 0.95, roll: sgn * 0.15 },
     }
   );
 
@@ -322,14 +325,14 @@ for (const [n, H, at, lean] of [
   pelagia.sporeStalk(
     root,
     { lower: tealDark, upper: teal, pod: spore, tip: dim },
-    { name: `stalk-${n}`, H, ...verbatim(at, lean) }
+    { name: `stalk-${n}`, H, cut, ...verbatim(at, lean) }
   );
 
 // Seven root flares round the bed's edge, sunk into the seabed.
 pelagia.rootFlares(root, chitin, {
+  cut,
   radii: [0.05, 0.22],
   length: 0.9,
-  facets: 6,
   y: -0.12,
   lean: 0.684706091167,
   yaw0: -0.5,
@@ -348,5 +351,9 @@ pelagia.rootFlares(root, chitin, {
 pelagia.glow(root, { name: 'glow-core', intensity: 3, range: 3.5, at: [0, 0.9, 0] });
 pelagia.glow(root, { name: 'glow-stalks', intensity: 2, range: 3, at: [0.3, 2.2, 1.1] });
 
-fitFootprint(root, L);
+const size = fitFootprint(root, L);
+if (Math.abs(Math.max(size.x, size.z) - DRAWN) > 1e-3)
+  throw new Error(
+    `${root.name}: drawn ${Math.max(size.x, size.z).toFixed(4)} across; the facet rule was asked at ${DRAWN}`
+  );
 await exportGlb(root, 'spore-veil-pelagia.glb');

@@ -52,9 +52,9 @@
  *   265° round from starboard, 3.4, 2.7 and 3.1 m long, none a pair and
  *   none at the crown. The third bead sits in the cup with its equator
  *   2.5 m inside the mouth and a quarter of it proud in the water, the cup's wall 0.3 m
- *   clear of it at every station, because both are polygons of fourteen
- *   and sixteen facets and a vertex of one would show through a flat of
- *   the other at less. In plan the cup and the cap it holds are 10.9 m
+ *   clear of it at every station, because both are polygons of sixteen
+ *   facets and a vertex of one would show through a flat of the other at
+ *   less. In plan the cup and the cap it holds are 10.9 m
  *   long by 11.9 wide — bead-sized — which is what keeps the count three.
  * - **Where the fluke hangs.** The block puts the fluke behind the port; a
  *   bead leaves aft, so the water astern of the mouth has to stay clear,
@@ -106,10 +106,23 @@
  * quiet end about and a hundredfold under the ×64 ceiling, with no lamp
  * but the two marks — the Glider's raw 4.34 at E(8) and the Drifter's
  * 5.75 at E(4) both carry a vein or a seam this hull does not light.
- * 20 parts, 2,104 triangles, bounds x ±35, y −6.0..5.3, z ±6.3; the
+ * 20 parts, 1,954 triangles, bounds x ±35, y −6.0..5.3, z ±6.3; the
  * 12.7 m beam is the lip, and the 11.3 m of height is the fluke under the
  * cup against the tail mark on the lip's crest over it (the intake's box
  * reads 11.7, three's bounding box overstating the rotated sepals).
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked in metres,
+ * and the pass re-cut what was off it: the nose to five at 1.1 m of
+ * radius, where it was six; the stem to ten at 2.5 m, where it was
+ * fourteen; its three rings to eight, eleven and twelve at 1.8–2.8 m,
+ * where all were fourteen; the lay port's cup and lip to sixteen at 5.9
+ * and 6.3 m, where both were fourteen; the tail knuckle to five by three,
+ * where it was ten by six. The three beads were sixteen by eight and stay
+ * so, and the stem vein stays five, the floor. The sixteen-facet lip
+ * reaches the fluke's top face under it where the fourteen-facet one
+ * stood 0.17 m off, and sepal 1 stands 0.05 m off the cup's wall where it
+ * touched. 20 parts and 2,104 triangles become 20 and 1,954.
  *
  * The hand-drawn entry in silhouettes.ts stays until the kind is wired
  * (docs/models-plan.md §2); the generated outline will read the beads at
@@ -133,8 +146,6 @@ const root = new THREE.Group();
 root.name = 'pelagia_weaver';
 
 const SQUASH = 0.8;
-const FACETS = 14;
-const FLAT = Math.cos(Math.PI / FACETS);
 
 /**
  * The stem's stations, [x, r] in metres: the thread. Open at the nose root
@@ -162,14 +173,31 @@ const rAt = (x) => {
   }
   return PROFILE[PROFILE.length - 1][1];
 };
-/** The crown's height at `x`: the squashed radius, on the flat a fourteen-facet loft turns up. */
+// The Commune's facet rule, a chord of 1.5 m (docs/asset-prompts-3d.md Block
+// 2c; pelagia.mjs `cut`, #919), asked in metres since the file is drawn in them.
+const cut = pelagia.cut();
+const PRESSED = { scale: [1, SQUASH, 1] };
+/** The stem's count under the rule, as squashed: what the crown's flat is cut on. */
+const FACETS = cut.lathe(PROFILE, PRESSED);
+const FLAT = Math.cos(Math.PI / FACETS);
+/** The crown's height at `x`: the squashed radius, on the flat the loft turns up. */
 const crownAt = (x) => rAt(x) * SQUASH * FLAT;
 
 /** Where the stem's rings sit, and how far proud of the skin their crests ride. */
 const RING_X = [26, 21, 14];
 const RING_TUBE = 0.6;
 const RING_SINK = 0.2;
-const ringCrestAt = (x) => (rAt(x) - RING_SINK + RING_TUBE) * SQUASH * FLAT;
+/** A ring's own count under the rule — a ridge of this crown, as squashed — and the flat it turns up. */
+const ringFlatAt = (x) => {
+  const crown = rAt(x) - RING_SINK + RING_TUBE;
+  const profile = [
+    [-RING_TUBE, crown - 0.6],
+    [0, crown],
+    [RING_TUBE, crown - 0.6],
+  ];
+  return Math.cos(Math.PI / cut.lathe(profile, PRESSED));
+};
+const ringCrestAt = (x) => (rAt(x) - RING_SINK + RING_TUBE) * SQUASH * ringFlatAt(x);
 
 /** The beads: three, one size, centred on the stem's axis. */
 const POD_R = 5.4;
@@ -190,17 +218,30 @@ const CUP = [
 ];
 const LIP = { tube: 0.4, rise: 0.4, halfWidth: 0.6 };
 const [MOUTH_X, MOUTH_R] = CUP[0];
-const lipCrest = (MOUTH_R + LIP.tube) * SQUASH * FLAT;
+/** The lip's own count under the rule, and the flat its crest turns up. */
+const LIP_FLAT = Math.cos(
+  Math.PI /
+    cut.lathe(
+      [
+        [-LIP.halfWidth, MOUTH_R + LIP.tube - LIP.rise],
+        [0, MOUTH_R + LIP.tube],
+        [LIP.halfWidth, MOUTH_R + LIP.tube - LIP.rise],
+      ],
+      PRESSED
+    )
+);
+const lipCrest = (MOUTH_R + LIP.tube) * SQUASH * LIP_FLAT;
 
-pelagia.nose(root, ridge, { tip: BOW, r: 1.1, length: 7, facets: 6 });
-pelagia.stem(root, { chitin, ridge }, { profile: PROFILE, facets: FACETS, squash: SQUASH });
+pelagia.nose(root, ridge, { tip: BOW, r: 1.1, length: 7, cut });
+pelagia.stem(root, { chitin, ridge }, { profile: PROFILE, squash: SQUASH, cut });
 pelagia.growthRings(root, ridge, {
   name: 'stem_ring',
   stations: RING_X.map((x) => [x, rAt(x) - RING_SINK]),
   squash: SQUASH,
   tube: RING_TUBE,
   wobble: 0.06,
-  ring: { rise: 0.6, facets: FACETS },
+  ring: { rise: 0.6 },
+  cut,
 });
 
 pelagia.decoyPods(root, chitin, {
@@ -208,6 +249,7 @@ pelagia.decoyPods(root, chitin, {
   r: POD_R,
   squash: POD_SQUASH,
   lean: 0.05,
+  cut,
 });
 
 pelagia.layPort(
@@ -216,7 +258,7 @@ pelagia.layPort(
   {
     profile: CUP,
     squash: SQUASH,
-    facets: FACETS,
+    cut,
     lip: LIP,
     sepals: [
       { angle: 0.87, length: 3.4, width: 2.8, curl: 0.4 },
@@ -263,7 +305,7 @@ pelagia.trimVanes(root, membrane, {
 // The muscle-drive fluke, hinged on a knuckle under the lip.
 const FLUKE_Y = -5.4;
 const BEVEL = 0.2;
-pelagia.tailKnuckle(root, ridge, { at: [-23.5, -4.95, 0], r: 1.4, squash: 0.75 });
+pelagia.tailKnuckle(root, ridge, { at: [-23.5, -4.95, 0], r: 1.4, squash: 0.75, cut });
 pelagia.driveFluke(root, membrane, {
   y: FLUKE_Y,
   t: 0.4,
@@ -301,7 +343,7 @@ pelagia.sweptVein(root, veinUnlit, {
   ].map(([x, z]) => [x, veinY(x), z]),
   steps: 40,
   r: VEIN_R,
-  facets: 5,
+  cut,
 });
 
 // "Nearly black at rest, navigation marks only": two marks.

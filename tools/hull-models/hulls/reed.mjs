@@ -117,7 +117,7 @@
  *   Weaver's, the Glider's and the Blight's — and nothing else on the hull
  *   is lit: the leaves are membrane, the lips are a transient, the seeds
  *   are cladding, the vein is clad.
- * - **The nose.** 7 m of six-sided cone at r 1.0 where the stem's lathe
+ * - **The nose.** 7 m of five-sided cone at r 1.0 where the stem's lathe
  *   ends, skin to skin — a shade finer than the Weaver's r 1.1, on a hull
  *   of the same length.
  *
@@ -129,9 +129,18 @@
  * above the ×1/64 floor docs/models-plan.md §3.2 warns the quiet end about
  * and 172× under the ×64 ceiling, with no lamp but the two marks — the
  * Weaver's raw 1.89 at the same E is the same two marks on a fuller hull.
- * 16 parts, 2,448 triangles, six materials, bounds x ±35, y −4.6..6.6,
+ * 16 parts, 2,046 triangles, six materials, bounds x ±35, y −4.6..6.6,
  * z −8.4..10.0; the 18.4 m of beam is the two leaves and the 11.2 m of
  * height is the fluke's two lobes.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked in metres,
+ * and the pass re-cut what was off it: the nose to five at 1.0 m of
+ * radius, where it was six; the stem to ten at 2.5 m, where it was twelve;
+ * its two rings to twelve and eleven at 2.8 and 2.6 m, where both were
+ * twelve; the two hardpoints' nodes, lips and seeds to five at 0.5–1.2 m,
+ * where they were ten, ten and eight; the vein stays five, the floor. 16
+ * parts and 2,448 triangles become 16 and 2,046.
  *
  * The hand-drawn entry in silhouettes.ts stays until the kind is wired
  * (docs/models-plan.md §2). The generated outline is fifteen vertices and
@@ -161,8 +170,6 @@ const root = new THREE.Group();
 root.name = 'pelagia_reed';
 
 const SQUASH = 0.78;
-const FACETS = 12;
-const FLAT = Math.cos(Math.PI / FACETS);
 
 /**
  * The stem's stations, [x, r] in metres: a reed. 2.6 m across between the
@@ -206,7 +213,14 @@ const rAt = (x) => {
   }
   return PROFILE[PROFILE.length - 1][1];
 };
-/** The crown's height at `x`: the squashed radius, on the flat a twelve-facet loft turns up. */
+// The Commune's facet rule, a chord of 1.5 m (docs/asset-prompts-3d.md Block
+// 2c; pelagia.mjs `cut`, #919), asked in metres since the file is drawn in them.
+const cut = pelagia.cut();
+const PRESSED = { scale: [1, SQUASH, 1] };
+/** The stem's count under the rule, as squashed: what the crown's flat is cut on. */
+const FACETS = cut.lathe(PROFILE, PRESSED);
+const FLAT = Math.cos(Math.PI / FACETS);
+/** The crown's height at `x`: the squashed radius, on the flat the loft turns up. */
 const crownAt = (x) => rAt(x) * SQUASH * FLAT;
 
 /** The two nodes: where the stem swells, where a leaf springs, where the vein ends. */
@@ -214,17 +228,28 @@ const FORE_NODE = 13;
 const AFT_NODE = -11;
 const RING_TUBE = 0.5;
 const RING_SINK = 0.18;
-const ringCrestAt = (x) => (rAt(x) - RING_SINK + RING_TUBE) * SQUASH * FLAT;
+/** A ring's own count under the rule — a ridge of this crown, as squashed — and the flat it turns up. */
+const ringFlatAt = (x) => {
+  const crown = rAt(x) - RING_SINK + RING_TUBE;
+  const profile = [
+    [-RING_TUBE, crown - 0.5],
+    [0, crown],
+    [RING_TUBE, crown - 0.5],
+  ];
+  return Math.cos(Math.PI / cut.lathe(profile, PRESSED));
+};
+const ringCrestAt = (x) => (rAt(x) - RING_SINK + RING_TUBE) * SQUASH * ringFlatAt(x);
 
-pelagia.nose(root, ridge, { tip: BOW, r: 1.0, length: 7, facets: 6 });
-pelagia.stem(root, { chitin, ridge }, { profile: PROFILE, facets: FACETS, squash: SQUASH });
+pelagia.nose(root, ridge, { tip: BOW, r: 1.0, length: 7, cut });
+pelagia.stem(root, { chitin, ridge }, { profile: PROFILE, squash: SQUASH, cut });
 pelagia.growthRings(root, ridge, {
   name: 'stem_ring',
   stations: [FORE_NODE, AFT_NODE].map((x) => [x, rAt(x) - RING_SINK]),
   squash: SQUASH,
   tube: RING_TUBE,
   wobble: 0.06,
-  ring: { rise: 0.5, facets: FACETS },
+  ring: { rise: 0.5 },
+  cut,
 });
 
 // The two hardpoints, grown into the stem below the nose: a hollow lipped
@@ -233,7 +258,7 @@ pelagia.seedNodes(
   root,
   { chitin, ridge, seed: spore },
   {
-    facets: 10,
+    cut,
     nodes: [
       {
         side: 's',
@@ -312,6 +337,7 @@ pelagia.leafWing(
   {
     name: 'leaf_blade',
     side: 's',
+    cut,
     root: [FORE_NODE, -0.35, 1.85],
     span: 21.5,
     depth: 9.2,
@@ -325,6 +351,7 @@ pelagia.leafWing(
   {
     name: 'leaf_blade',
     side: 'p',
+    cut,
     root: [AFT_NODE, -0.2, -1.75],
     span: 16.5,
     depth: 7.6,
@@ -381,7 +408,7 @@ pelagia.sweptVein(root, veinUnlit, {
   ].map(([x, z]) => [x, veinY(x), z]),
   steps: 40,
   r: VEIN_R,
-  facets: 5,
+  cut,
 });
 
 // "Nearly black at rest, navigation marks only": two marks.
