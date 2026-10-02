@@ -132,6 +132,29 @@
  * six root anchors capsules of sixteen round with eight-segment caps at
  * 5.4–7 m, where they had 6 on 3. `facets.mjs pelagia` names none of them.
  * 69 parts and 4,088 triangles become 69 and 6,828.
+ *
+ * PANELS (#919). The Commune's structure band is a median part from above
+ * of 4–13.5 m on a side (Block 2c; pelagia.mjs `panels`), and this one read
+ * 14.0 m over forty-five parts, the silos, caps, rings, anchors, belt and
+ * roof 190–2,150 m² each. The pass rings and knots the works where they
+ * grew: two half rings of chitin over the crusher's roof and an algae ring
+ * round each stack above it (`drumRings`, which reads each drum off the
+ * part), and two knots of chitin on the second and fourth silos' lowest
+ * rings, 2.7–3.2 m of radius, seated on the ring half its radius in
+ * (`grownNubs`). Two over the roof and not more: the maw takes its forward
+ * end, the stacks' own rings reach half a unit either side of each stack,
+ * and past 1.7 of its 2.35 half-length a ring's inboard foot stands on
+ * `silo_2`'s wall. A first cut knotted the stacks' feet, and the stack
+ * rings covered both knots from above; a second ringed each stack twice
+ * and knotted all four silos, ten fittings where four parts in the band are
+ * the least, and the knot on `silo_0`'s ring reached past the file's
+ * westmost vertex and moved the chart's raster. They show 17–113 m² each,
+ * and the median part is 12.7 m over fifty-one; the knots and rings stand
+ * 49 m² proud of the silos' and the roof's plan, inside the raster's
+ * bounds, which are main's. 69 parts and 6,828 triangles become 75 and
+ * 7,552; no part moved, no lamp's plan changed — one pixel of the emissive
+ * map on a stack tip's edge reads a third darker, the bake's gain and not
+ * a cell lost — and the fit is the same 22.8326 long.
  */
 import {
   THREE,
@@ -278,6 +301,60 @@ exhaustStacks(
     tip: { radii: [0.34, 0.3], h: 0.25, facets: cut.round },
   }
 );
+
+// PANELS (#919): the crusher's roof and stacks ringed and knotted where they
+// grew. Two half rings of chitin over the roof's half drum, cresting half a
+// tube beyond it (pelagia.mjs `drumRings`, which reads the drum off the
+// part), at the two stations the roof leaves: the maw takes its forward
+// end, the two stacks pierce it a third and two thirds of the way along
+// and their own rings reach a half unit either side of each, and past 1.7
+// of its 2.35 half-length a ring's inboard foot stands on `silo_2`'s wall.
+// An algae ring round each stack above where it leaves the roof — the
+// Foundry's graft pipes carry algae flanges the same way — fat enough to
+// show past the tip from the chart's height. And two knots of chitin on
+// the second and fourth silos' lowest rings, each at a bearing of its own,
+// seated on the ring half its radius in (`grownNubs`) — the rings knotted
+// where they grew, as the Bastion's are — on the sides the transfer pipes,
+// the crusher house and the root anchors leave clear. Six fittings where
+// four parts in the band are the least, since more would spend gate 6 (the
+// header).
+pelagia.drumRings(root, chitin, {
+  name: 'roof_ring',
+  on: 'crusher_roof',
+  cut,
+  stations: [
+    { s: 0.35, tube: 0.1 },
+    { s: 1.62, tube: 0.1 },
+  ],
+});
+pelagia.drumRings(root, algae, {
+  name: 'stack_ring_0',
+  on: 'exhaust_stack_0',
+  cut,
+  stations: [{ s: 1.05, tube: 0.1 }],
+});
+pelagia.drumRings(root, algae, {
+  name: 'stack_ring_1',
+  on: 'exhaust_stack_1',
+  cut,
+  stations: [{ s: 0.7, tube: 0.1 }],
+});
+// A seed a tenth outside the silo's lowest ring at `deg` round its axis from
+// +x toward +z; the silos' stations, radii and ring heights are `silos`'
+// above. A first cut knotted all four silos and ringed each stack twice.
+const onRing = ([x, z], R, y, deg) => {
+  const a = (deg * Math.PI) / 180;
+  return [x + 1.1 * R * Math.cos(a), y, z + 1.1 * R * Math.sin(a)];
+};
+pelagia.grownNubs(root, chitin, {
+  name: 'ring_knot',
+  on: ['silo_ring_1_0', 'silo_ring_3_0'],
+  cut,
+  nubs: [
+    [0.26, onRing([-1.9, -1.2], 1.933685295, 2.71727233805, -90)],
+    [0.22, onRing([-4, 1.9], 1.402105503, 1.95306810646, 60)],
+  ],
+});
 
 // The conveyor gantry, at the kit's defaults, with this file's five
 // nodules: dodecahedra of five radii, tumbled every way, one of them pale;

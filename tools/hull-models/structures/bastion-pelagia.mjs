@@ -96,6 +96,28 @@
  * sit on the dome's rows, and the veins are set out by a fifth of their
  * sag (each call below says how). 47 parts and 5,346 triangles become 47
  * and 10,124.
+ *
+ * PANELS (#919). The Commune's structure band is a median part from above
+ * of 4–13.5 m on a side (Block 2c; pelagia.mjs `panels`), and this one read
+ * 31.4 m over twenty-nine parts: a dome, four rings, seven roots, two
+ * collars and a crown pod of 500–46,000 m² each, and six parts inside the
+ * band. The pass knots the rings where they grew: twenty knots of chitin
+ * on three of the four growth rings — five, seven and eight — 2.7–4.6 m of
+ * radius, each seated on its ring half its radius in (`grownNubs`) at a
+ * bearing of its own clear of the ribs, the veins, the pipes and the crown
+ * pod. None on the third ring: a first cut's five there fell between the
+ * eight ports a step below it, and the ring read as a string of light and
+ * dark beads (hull-reviewer). Not at the ribs' crossings: the ribs stay at
+ * the file's radius and run inside the dome below the second ring, so only
+ * two of twenty crossings exist. Twenty where eighteen parts in the band
+ * are the least, and cut toward the band's floor — a first cut's 4.2–7.1 m
+ * knots were sixteen-round orbs of 224 triangles each, and these 2.7–4.6 m
+ * ones are 88–224, the nine of 3.8 m and over still at the rule's ceiling
+ * of sixteen, where the cut saved nothing — since the knots' triangles are
+ * gate 6's. They show 20–62 m² each, and the median part is 11.1 m over
+ * forty-nine. 47 parts
+ * and 10,124 triangles become 67 and 13,788; no part moved, no lamp's plan
+ * changed, no plan grew, and the fit is the same 16.7179 across.
  */
 import { THREE, xLong, ballastTanks, flangedPipes, exportGlb, fitFootprint } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -148,6 +170,13 @@ const DOME_CUT = pelagia.grownDome(root, algae, {
 // surface is the faceted one: at four rows over the dome's 0.56π the skin
 // between two rows sags up to 0.15 of a unit inside the sphere, and a ring
 // set on the sphere stood 0.39 m off it (`domeRings` `dome`, #919).
+/** The four rings' polar angles from the crown, and their tubes, thinning down the dome. */
+const RINGS = [
+  { t: 0.32, tube: 0.3 },
+  { t: 0.62, tube: 0.24 },
+  { t: 0.88, tube: 0.2 },
+  { t: 1.12, tube: 0.16 },
+];
 pelagia.domeRings(root, chitin, {
   cut,
   dome: { rows: DOME_CUT[1], down: 0.56 },
@@ -156,11 +185,56 @@ pelagia.domeRings(root, chitin, {
   squash: 0.88,
   lift: 0.1,
   scale: [1, 1.12, 1],
-  rings: [
-    { t: 0.32, tube: 0.3 },
-    { t: 0.62, tube: 0.24 },
-    { t: 0.88, tube: 0.2 },
-    { t: 1.12, tube: 0.16 },
+  rings: RINGS,
+});
+
+// PANELS (#919): the rings knotted where they grew. Twenty knots of chitin
+// on three of the four growth rings — five, seven and eight, none on the
+// third — each its own size and at a bearing of its own round the dome,
+// seated on its ring half its radius in (pelagia.mjs `grownNubs`). The
+// bearings keep clear of what else stands on the dome: the five ribs over
+// the +x crown, the three lit veins climbing the +z flank, the two pipes
+// and the crown pod; the radii are two thirds of a first cut's, toward the
+// band's floor. None on the third ring, because its knots fell between
+// the eight ports a step below it and the ring read as a string of light
+// and dark beads (hull-reviewer, the first round); twenty where eighteen
+// parts in the band are the least, since more would spend gate 6 (the
+// header). A seed sits a tenth outside the ring at `deg` round the crown
+// from +x toward +z, on the dome's 6.2 × 0.88 × 1.12.
+const onRing = (j, deg) => {
+  const a = (deg * Math.PI) / 180;
+  const { t } = RINGS[j];
+  return [
+    DOME[0] + 1.1 * 6.2 * Math.sin(t) * Math.cos(a),
+    DOME[1] + 0.88 * 6.2 * Math.cos(t),
+    DOME[2] + 1.1 * 1.12 * 6.2 * Math.sin(t) * Math.sin(a),
+  ];
+};
+pelagia.grownNubs(root, chitin, {
+  name: 'ring_knot',
+  on: RINGS.map((_, j) => `growth_ring_${j}`),
+  cut,
+  nubs: [
+    [0.104, onRing(0, 62)],
+    [0.1268, onRing(0, 123)],
+    [0.1495, onRing(0, 171)],
+    [0.1723, onRing(0, 214)],
+    [0.1202, onRing(0, 240)],
+    [0.143, onRing(1, 72)],
+    [0.1658, onRing(1, 128)],
+    [0.1137, onRing(1, 163)],
+    [0.1365, onRing(1, 204)],
+    [0.1593, onRing(1, 247)],
+    [0.1073, onRing(1, 283)],
+    [0.13, onRing(1, 88)],
+    [0.169, onRing(3, 22)],
+    [0.117, onRing(3, 68)],
+    [0.1398, onRing(3, 113)],
+    [0.1625, onRing(3, 160)],
+    [0.1105, onRing(3, 232)],
+    [0.1333, onRing(3, 318)],
+    [0.1527, onRing(3, 180)],
+    [0.1755, onRing(3, 270)],
   ],
 });
 

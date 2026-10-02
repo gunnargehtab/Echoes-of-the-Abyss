@@ -188,6 +188,30 @@
  * at sixteen by eight, where at eighteen by ten the two met. 88 parts and
  * 3,972 triangles become 88 and 4,698.
  *
+ * PANELS (#919). The Commune's hull band is a median part from above of
+ * 1.5–5 m on a side (Block 2c; pelagia.mjs `panels`), and this hull read
+ * 0.8 m over seventy-one parts — the one Commune hull under its band, as
+ * the Beacon was the Consortium's: the bed, the nose, the lobes, the
+ * mounds and the fluke are sixteen parts of 50–3,100 m² each, and the
+ * fifty-five between them are stalk stems, pods and tips, gill slits and
+ * breathing lines of 0.25–1.4 m², so the median thing from above was a slit.
+ * The pass grows forty-three algae mats over the back (`grownNubs`, the
+ * MATS table below): low domes in the ridge finish, the lobes' darker
+ * skin, 1.2–2 m of radius about six centres, dropped onto the bed under their
+ * stations and lying along its skin, clear of the organs, the stalks' feet,
+ * the marks and the nose's root — ridge and not the pale membrane, since the
+ * block keeps this hull nearly black at rest and its paler nubs for the
+ * brood pouches. Forty-three, because a hull of fittings lifts its median only with
+ * more parts over the band's floor than it has under it, and none under
+ * 1.2 m, because the rule cuts a mat that size as a pentagon of three rows
+ * whose plan is 1.78 r², under the band's 2.25 m² below 1.12 m of radius —
+ * a first scatter of forty from 0.9 m left the median at 1.2. Forty-three
+ * and not more, three over the forty the arithmetic needs, and none over
+ * 2 m, since the mats' triangles are gate 6's. They show 2.7–11.1 m² each,
+ * and the median part is 1.7 m over 114. 88 parts and 4,698 triangles
+ * become 131 and 6,078; no part moved, no lamp's plan changed, no plan
+ * grew, and the outline is the bed's as before.
+ *
  * The hand-drawn entry in silhouettes.ts stays until the kind is wired
  * (docs/models-plan.md §2). The generated outline is thirty-one vertices —
  * the longest track in the roster and the scallops are why: `outlines.mjs`
@@ -489,6 +513,87 @@ pelagia.driveFluke(root, membrane, {
     [-41.0, -6.6],
     [-38.2, -2.6],
   ],
+});
+
+// PANELS (#919): algae mats over the back. Forty-three low mats of the
+// composite's own algae in the ridge finish, the lobes' darker skin, grown
+// on the bed's back, each its own radius from 1.2 to 2 m, lying on the
+// skin under its station 0.4 of its radius tall and half of that proud
+// (pelagia.mjs `grownNubs`, `squash`, `drop`). Ridge and not membrane: the
+// block keeps this hull "nearly black at rest" and its paler nubs for the
+// brood pouches along the flanks, so the mats divide the back by relief
+// and the little value a ridge has against chitin, and a first cut's
+// membrane mats read as a bloom-bed (loop-critic, round 1). They lie
+// inside the rim by a seventh of its reach, clear of the four organs, the
+// six stalks' feet, the three marks on the bed and the nose's root, and
+// none within 0.45 m of another, grown in six colonies as algae grows,
+// each mat within 9 m of one of six centres at least 15 m apart — a first
+// cut's colonies spread so wide they met everywhere, and read as an even
+// field (hull-reviewer, the second round); the three aft of amidships
+// still run together, 1.6–1.8 m between their nearest mats, and whether
+// they read as colonies is the reviewer's eye; the stations and radii are
+// one scatter fixed by hand, bow to stern, so a rebuild is a rebuild. The bed is one
+// part 90 m long, and its stalks' pods, gill slits and breathing lines are
+// what the chart counts: without these the median thing on this hull from
+// above was a slit under a metre on a side, and the band says a metre and
+// a half to five. Forty-three and none under 1.2 m, because a mat on the
+// rule's floor is a pentagon of three rows whose plan is 1.78 r² and not
+// πr², under the band's 2.25 m² below 1.12 m of radius, and a hull of
+// fittings needs the parts over that floor to outnumber the fittings under
+// it; none over 2 m, since the mats' triangles are gate 6's and a colony
+// of five to eleven has to fit. `[r, [x, z]]` each.
+const MATS = [
+  [1.36, [34.7, -7.1]],
+  [1.69, [34.6, -11.1]],
+  [1.73, [33, -2.7]],
+  [1.68, [30, -8.2]],
+  [1.41, [30, -12]],
+  [1.9, [28.8, 0]],
+  [1.67, [25.5, -3.3]],
+  [1.99, [25.1, -8.2]],
+  [1.33, [25.1, -12.1]],
+  [1.27, [23.1, -0.4]],
+  [1.79, [21.4, -3.5]],
+  [1.39, [14.9, 8]],
+  [1.43, [14.2, 16.9]],
+  [1.95, [13.3, 12.3]],
+  [1.24, [13.1, 4.1]],
+  [1.8, [10.7, 6.9]],
+  [1.76, [7.3, 11.5]],
+  [1.4, [5.9, -4.7]],
+  [1.64, [1.3, -9.8]],
+  [1.91, [-0.3, -14.6]],
+  [1.75, [-0.3, -6.1]],
+  [1.87, [-3.5, -9.9]],
+  [1.29, [-4.6, -6.2]],
+  [1.77, [-5.3, -13.8]],
+  [1.26, [-5.4, 14.2]],
+  [1.56, [-6.7, 10.1]],
+  [1.92, [-8.3, 3.8]],
+  [1.35, [-9.4, 7.4]],
+  [1.21, [-11.9, 1]],
+  [1.94, [-13.6, 5.3]],
+  [1.51, [-17, -8]],
+  [1.46, [-17.8, 3.1]],
+  [1.47, [-19.5, -1.1]],
+  [1.5, [-19.9, -5.2]],
+  [1.72, [-23.6, -3.4]],
+  [1.3, [-25.6, 6.9]],
+  [1.61, [-26.4, 1.9]],
+  [1.63, [-28.8, -4.1]],
+  [1.65, [-29, 9.8]],
+  [1.88, [-31, 0.7]],
+  [1.86, [-32.5, 5.7]],
+  [1.34, [-34.8, -0.9]],
+  [1.7, [-37.4, 1.6]],
+];
+pelagia.grownNubs(root, ridge, {
+  name: 'algae_mat',
+  on: 'hull',
+  squash: 0.4,
+  drop: true,
+  cut,
+  nubs: MATS.map(([r, [x, z]]) => [r, [x, 0, z]]),
 });
 
 // "Nearly black at rest, navigation marks only": four marks on a hull this

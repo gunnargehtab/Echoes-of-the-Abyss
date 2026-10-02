@@ -89,6 +89,27 @@
  * between them on the side each leans to, and ring 1 touches ring 2 and
  * the port fin; the third eye sac, grown from the hull, no longer touches
  * the first.
+ *
+ * PANELS (#919). The Commune's hull band is a median part from above of
+ * 1.5–5 m on a side (Block 2c; pelagia.mjs `panels`), and this hull read
+ * 7.8 m over twenty parts: a seed is its hull, six rings, two fins and a
+ * nozzle, each tens of square metres from above, and only four tendril
+ * tips and a tendril under the band's 25 m². The pass knots the carapace where it
+ * grew: twelve dark knots on the six growth rings, two a ring, 1.6–2.2 m
+ * of radius at bearings of their own in the upper quarters, 35–65° off the
+ * crown either side, and one nub of 1.35 m on the port side of the bow
+ * collar forward of the last ring, 30° off the crown, where the eye sacs
+ * leave it bare — each seated on its ring or the hull half its radius in
+ * (pelagia.mjs `grownNubs`), no two alike, none over a lit part, none
+ * between the rings, where the hoops leave 1.3 m of skin, and none at the
+ * beams or further round the bow, where a first cut's knots and nubs stood
+ * proud of the plan and read as burrs (hull-reviewer, both rounds). Twelve
+ * and one where eleven parts in the band are the least: the fittings'
+ * triangles are gate 6's, and the first cut's twenty-four spent 800 of them
+ * where 600 do. They show 3.3–12.1 m² each, and the median part is
+ * 3.4 m over thirty-three. 35 parts and 6,516 triangles become 48 and
+ * 7,116; no part moved, no lamp's plan changed, and no plan grew: the hull's
+ * outline from above is its own.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -143,50 +164,26 @@ pelagia.grownOrbs(root, { cut, orbs: [['prow-tip', pale, 0.22, verbatim([3.28, 0
 // few hundredths off square its own way — and five lit vein rings between
 // them, open arcs each turned its own way about the keel, 1.1 wide.
 const ACROSS = (lean) => [0, Math.PI / 2 + lean, 0];
+/** The six growth rings: station, R, tube, finish and the file's own rotation. */
+const GROWTH_RINGS = [
+  [-1.9, 1.05, 0.34, dark, [-Math.PI, 1.4708, -Math.PI]],
+  [-1.15, 1.38, 0.3, teal, ACROSS(-0.06)],
+  [-0.35, 1.52, 0.26, dark, [-Math.PI, 1.4908, -Math.PI]],
+  [0.45, 1.46, 0.24, teal, ACROSS(-0.04)],
+  [1.2, 1.22, 0.2, dark, [-Math.PI, 1.4708, -Math.PI]],
+  [1.85, 0.92, 0.18, teal, ACROSS(0)],
+];
 pelagia.grownHoops(root, {
   cut,
   hoops: [
-    [
-      'growth-ring-1',
-      dark,
-      1.05,
-      0.34,
+    ...GROWTH_RINGS.map(([x, R, tube, mat, rot], i) => [
+      `growth-ring-${i + 1}`,
+      mat,
+      R,
+      tube,
       undefined,
-      verbatim([-1.9, 0, 0], [-Math.PI, 1.4708, -Math.PI], [1.12, 1, 1]),
-    ],
-    [
-      'growth-ring-2',
-      teal,
-      1.38,
-      0.3,
-      undefined,
-      verbatim([-1.15, 0, 0], ACROSS(-0.06), [1.12, 1, 1]),
-    ],
-    [
-      'growth-ring-3',
-      dark,
-      1.52,
-      0.26,
-      undefined,
-      verbatim([-0.35, 0, 0], [-Math.PI, 1.4908, -Math.PI], [1.12, 1, 1]),
-    ],
-    [
-      'growth-ring-4',
-      teal,
-      1.46,
-      0.24,
-      undefined,
-      verbatim([0.45, 0, 0], ACROSS(-0.04), [1.12, 1, 1]),
-    ],
-    [
-      'growth-ring-5',
-      dark,
-      1.22,
-      0.2,
-      undefined,
-      verbatim([1.2, 0, 0], [-Math.PI, 1.4708, -Math.PI], [1.12, 1, 1]),
-    ],
-    ['growth-ring-6', teal, 0.92, 0.18, undefined, verbatim([1.85, 0, 0], ACROSS(0), [1.12, 1, 1])],
+      verbatim([x, 0, 0], rot, [1.12, 1, 1]),
+    ]),
     [
       'vein-ring-a',
       vein,
@@ -320,6 +317,62 @@ pelagia.grownHoops(root, {
       verbatim([-0.4, -0.08, -1.6], [1.2208, 0.25, 0.6], [1.45, 0.75, 1]),
     ],
   ],
+});
+
+// PANELS (#919): the carapace knotted where it grew. Twelve dark knots on
+// the six growth rings, two a ring, 1.6–2.2 m of radius at bearings of
+// their own in the upper quarters, 35–65° off the crown either side —
+// clear of the keel and the spine vein over the crown, and off the beams,
+// where a knot would stand proud of the plan and lie over a fin — and one
+// nub on the port side of the bow collar forward of the last ring, 30° off
+// the crown, where the eye sacs leave it bare: a second further round
+// stood 1.2 m² proud of the plan where the bow narrows ahead of it
+// (hull-reviewer, the second round). Each is seated on the ring or the
+// hull it grew from, half its radius in (pelagia.mjs `grownNubs`), no two
+// alike; twelve and one where eleven parts in the band are the least,
+// since more would spend gate 6 (the header). A seed sits a tenth outside the hoop at its
+// bearing, `deg` from the crown, port negative; the hoops are 1.12 wider
+// than tall.
+const onRing = (n, deg) => {
+  const [x, R, tube] = GROWTH_RINGS[n - 1];
+  const a = (deg * Math.PI) / 180;
+  const k = 1.12 * (R + tube);
+  return [x, k * Math.cos(a), 1.12 * k * Math.sin(a)];
+};
+pelagia.grownNubs(root, dark, {
+  name: 'carapace-knot',
+  sep: '-',
+  first: 1,
+  on: GROWTH_RINGS.map((_, i) => `growth-ring-${i + 1}`),
+  cut,
+  nubs: [
+    [0.142, onRing(1, -58)],
+    [0.121, onRing(1, 44)],
+    [0.156, onRing(2, -40)],
+    [0.128, onRing(2, 63)],
+    [0.149, onRing(3, -52)],
+    [0.135, onRing(3, 38)],
+    [0.16, onRing(4, -64)],
+    [0.124, onRing(4, 47)],
+    [0.146, onRing(5, -45)],
+    [0.131, onRing(5, 58)],
+    [0.118, onRing(6, -55)],
+    [0.126, onRing(6, 36)],
+  ],
+});
+// The seed hull's section at station x: r 1.5 under its node's [1.75, 1, 1.15].
+const onBow = (x, deg) => {
+  const f = Math.sqrt(1 - (x / 2.625) ** 2);
+  const a = (deg * Math.PI) / 180;
+  return [x, 1.1 * 1.5 * f * Math.cos(a), 1.1 * 1.725 * f * Math.sin(a)];
+};
+pelagia.grownNubs(root, dark, {
+  name: 'bow-nub',
+  sep: '-',
+  first: 1,
+  on: 'seed-hull',
+  cut,
+  nubs: [[0.1, onBow(2.25, -30)]],
 });
 
 // The export's two named point lights, one over the back and one at the prow.
