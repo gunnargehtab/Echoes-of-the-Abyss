@@ -14,6 +14,7 @@ import {
   MeshStandardMaterial,
   SRGBColorSpace,
   ShaderLib,
+  ShaderMaterial,
 } from 'three';
 import { DEPTH, MODEL_LIGHTING } from '@echoes/shared';
 import { createHost, HeadlessWebGLRenderer, pumpAnimationFrames } from './support/headless.ts';
@@ -95,11 +96,22 @@ describe('shared model lighting: art-direction and gates 3/6/8', () => {
         [0.75, 1.8, 1.6]
       );
       let unlit = 0;
+      let shaders = 0;
       scene.traverse((node) => {
         if (!(node instanceof Mesh || node instanceof Line || node instanceof Points)) return;
         for (const material of Array.isArray(node.material) ? node.material : [node.material]) {
-          if (material instanceof MeshStandardMaterial || material.type === 'ShaderMaterial')
+          if (material instanceof MeshStandardMaterial) continue;
+          if (material instanceof ShaderMaterial) {
+            // A shader layer's flag only gates the define its own source would
+            // have to read: it is on the curve only if it also includes the
+            // chunk, so either one left out keeps it off (#1026).
+            shaders++;
+            assert.ok(
+              !material.toneMapped || !material.fragmentShader.includes('<tonemapping_fragment>'),
+              `a ${node.type} shader layer must keep its authored register`
+            );
             continue;
+          }
           unlit++;
           assert.equal(
             material.toneMapped,
@@ -109,6 +121,7 @@ describe('shared model lighting: art-direction and gates 3/6/8', () => {
         }
       });
       assert.ok(unlit > 5, 'positive control: ground, marks, sprites and ordnance are present');
+      assert.ok(shaders >= 4, 'positive control: backdrop, snow and both stipple clouds present');
       const calls = gl.info.render.calls;
       const triangles = gl.info.render.triangles;
       pumpAnimationFrames(20);
