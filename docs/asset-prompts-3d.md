@@ -588,12 +588,13 @@ run inside the dome below the second ring; the Foundry's eight lobes bud, twelve
 of 2.6–4 m; the Refinery's roof and stacks ring, two half rings and one a stack, and two of
 its silos' lowest rings knot. The Bower, the one Commune hull under the band — the bed is
 one part and its stalks, slits and breathing lines fifty-five of 0.25–1.4 m² — grows
-forty-three algae mats of 1.2–2 m over its back in six colonies, in the ridge finish the
+forty-three algae mats of 1.2–2 m over its back about six centres, the three aft ones running
+together, in the ridge finish the
 lobes' darker skin wears,
 since its block keeps it nearly black at rest and its paler nubs for the brood pouches —
 the way the Beacon took plates over its rivets: a hull of fittings lifts its median only
 with more parts over the floor than it has under it, and a mat the rule cuts on its floor,
-a pentagon of three rows, shows 1.78 r² of plan, under the band's 2.25 m² below 1.13 m of
+a pentagon of three rows, shows 1.78 r² of plan, under the band's 2.25 m² below 1.12 m of
 radius. Each script's header says what its model took and where.
 
 **Directorate.** "Spiked, insectoid, segmented crustacean forms"; "nothing is symmetrical;
@@ -745,11 +746,14 @@ hulls, comes to 48.2 k for the Consortium since its panel pass (42.1 k before it
 Commune since its panel pass (108.0 k since its facet pass, 107.0 k projected) — over the
 112 k by 4 k, where the fittings cost 8 k: a knot or a bud at the band's floor is an orb of a
 hundred triangles at the rule's chord and a mat a few dozen, the five models need 83 of them
-at the least and carry 94, cut to 2.7–4.6 m where a first cut's 4.2–7.1 m knots were 224
-triangles each and spent 6 k on size alone, and the ceiling of sixteen's 5 k in hand covers
-the count and not the margin; the facet pass called 120.3 k at a ceiling of seventeen still
-over and came down to sixteen for it, so the sample stands recorded over the same mark, the
-probe is the check, and whether a base so dressed may stand on screen is a person's call —
+at the least and carry 94. A first cut's fittings on the five cost 12 k, about 6 k of it size
+over the floor; cut toward it, the structures' thirty-four knots and buds still cost 6.3 k
+against about 3.4 k at a hundred each, since from 3.8 m of radius the ceiling of sixteen
+holds and eleven of them are 224 triangles still, so about 3 k of the 4 k over is size and
+1 k the margin, and the ceiling's 5 k in hand covers the count and not that. The facet pass
+called 120.3 k at a ceiling of seventeen still over and came down to sixteen for it, where
+this pass records its sample over the same mark for a person instead: the probe is the
+check, and whether a base so dressed may stand on screen is that person's call —
 66.3 k for the Directorate since its facet pass
 (64.0 k before it) and 18.9 k for the Order, as built. That mix is one sample base and not a worst case —
 nothing caps what a base builds, and a dozen Commune Slipways alone are 170 k — so the

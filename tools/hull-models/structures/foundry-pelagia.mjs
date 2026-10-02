@@ -188,8 +188,8 @@
  * is pale on every Commune structure. Twelve where ten parts in the band
  * are the least, and cut toward the band's floor from a first cut's
  * 3.3–6.2 m, since the buds' triangles are gate 6's. They show 18–50 m²
- * each, and the median part is 12.9 m over seventy-one, the outrigger's
- * bud. 87 parts and 12,660 triangles become 99 and 14,592; no part moved,
+ * each, and the median part is 12.9 m over seventy-one, a lobe ring a
+ * hair over the outrigger's bud. 87 parts and 12,660 triangles become 99 and 14,592; no part moved,
  * no lamp's plan changed, no plan grew, and the fit is the same 17.4354
  * long.
  */

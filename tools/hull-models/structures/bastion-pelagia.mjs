@@ -112,8 +112,10 @@
  * two of twenty crossings exist. Twenty where eighteen parts in the band
  * are the least, and cut toward the band's floor — a first cut's 4.2–7.1 m
  * knots were sixteen-round orbs of 224 triangles each, and these 2.7–4.6 m
- * ones are 100–200 — since the knots' triangles are gate 6's. They show
- * 17–62 m² each, and the median part is 11.1 m over forty-nine. 47 parts
+ * ones are 88–224, the nine of 3.8 m and over still at the rule's ceiling
+ * of sixteen, where the cut saved nothing — since the knots' triangles are
+ * gate 6's. They show 20–62 m² each, and the median part is 11.1 m over
+ * forty-nine. 47 parts
  * and 10,124 triangles become 67 and 13,788; no part moved, no lamp's plan
  * changed, no plan grew, and the fit is the same 16.7179 across.
  */

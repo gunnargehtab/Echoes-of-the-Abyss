@@ -152,8 +152,9 @@
  * and the median part is 12.7 m over fifty-one; the knots and rings stand
  * 49 m² proud of the silos' and the roof's plan, inside the raster's
  * bounds, which are main's. 69 parts and 6,828 triangles become 75 and
- * 7,552; no part moved, no lamp's plan changed, and the fit is the same
- * 22.8326 long.
+ * 7,552; no part moved, no lamp's plan changed — one pixel of the emissive
+ * map on a stack tip's edge reads a third darker, the bake's gain and not
+ * a cell lost — and the fit is the same 22.8326 long.
  */
 import {
   THREE,

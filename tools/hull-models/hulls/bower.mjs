@@ -197,7 +197,7 @@
  * breathing lines of 0.25–1.4 m², so the median thing from above was a slit.
  * The pass grows forty-three algae mats over the back (`grownNubs`, the
  * MATS table below): low domes in the ridge finish, the lobes' darker
- * skin, 1.2–2 m of radius in six colonies, dropped onto the bed under their
+ * skin, 1.2–2 m of radius about six centres, dropped onto the bed under their
  * stations and lying along its skin, clear of the organs, the stalks' feet,
  * the marks and the nose's root — ridge and not the pale membrane, since the
  * block keeps this hull nearly black at rest and its paler nubs for the
@@ -526,11 +526,13 @@ pelagia.driveFluke(root, membrane, {
 // membrane mats read as a bloom-bed (loop-critic, round 1). They lie
 // inside the rim by a seventh of its reach, clear of the four organs, the
 // six stalks' feet, the three marks on the bed and the nose's root, and
-// none within 0.5 m of another, grown in six colonies as algae grows,
+// none within 0.45 m of another, grown in six colonies as algae grows,
 // each mat within 9 m of one of six centres at least 15 m apart — a first
-// cut's colonies spread so wide they met, and read as an even field
-// (hull-reviewer, the second round); the stations and radii are one
-// scatter fixed by hand, bow to stern, so a rebuild is a rebuild. The bed is one
+// cut's colonies spread so wide they met everywhere, and read as an even
+// field (hull-reviewer, the second round); the three aft of amidships
+// still run together, 1.6–1.8 m between their nearest mats, and whether
+// they read as colonies is the reviewer's eye; the stations and radii are
+// one scatter fixed by hand, bow to stern, so a rebuild is a rebuild. The bed is one
 // part 90 m long, and its stalks' pods, gill slits and breathing lines are
 // what the chart counts: without these the median thing on this hull from
 // above was a slit under a metre on a side, and the band says a metre and
@@ -539,7 +541,7 @@ pelagia.driveFluke(root, membrane, {
 // πr², under the band's 2.25 m² below 1.12 m of radius, and a hull of
 // fittings needs the parts over that floor to outnumber the fittings under
 // it; none over 2 m, since the mats' triangles are gate 6's and a colony
-// of seven has to fit. `[r, [x, z]]` each.
+// of five to eleven has to fit. `[r, [x, z]]` each.
 const MATS = [
   [1.36, [34.7, -7.1]],
   [1.69, [34.6, -11.1]],
