@@ -141,15 +141,15 @@
  * the shell and its plates (`spineRing`): `_48`, `_50` and `_51` root in
  * `shell_plate_2`, standing 0.2–0.5 m off the dome under it, and `_49`
  * leaves the dome and passes out through that plate's edge. Fourteen where
- * ten are the least. They show 9–13 m²
- * each, and the median part is 2.59 m over seventy-nine, 0.09 m inside the
- * band's floor: the parts either side of its 6.25 m² read 5.8–7.6, six
- * spines of the upper three rings and the quill's third segment, so
- * fourteen new spines leave the median at 2.59 m, seventeen would move it
- * to 2.63 and twenty to 2.75, and only past twenty does it land on a new
- * spine. No lamp's plan changed, no plan grew from above, each new
- * spine meets its shell and nothing else. 88 parts and 1,864 triangles
- * become 102 and 2,004; `DRAWN` holds at 17.9120.
+ * ten are the least. They show 9–13 m² each, and the median part is 2.59 m
+ * over seventy-nine, 0.09 m above the band's floor: the parts either side
+ * of its 6.25 m² read 5.8–7.6, nine spines of the upper three rings and
+ * the quill's third segment, so fourteen new spines leave the median at
+ * 2.59 m, seventeen would move it to 2.63 and twenty to 2.75, and only
+ * past twenty does it land on a new spine. No lamp's plan changed, no plan
+ * grew from above, and each new spine meets the dome or `shell_plate_2`,
+ * `_49` both, and nothing else. 88 parts and 1,864 triangles become 102
+ * and 2,004; `DRAWN` holds at 17.9120.
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';

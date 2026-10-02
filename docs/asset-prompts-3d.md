@@ -680,9 +680,10 @@ spines at the pass — its rows of small points are photophores, livery
 ([style-neon-noir.md](style-neon-noir.md)), which the metric drops. The panel pass (#919,
 the seventh instalment) brought the seven models outside the bands inside them with spines
 alone, 112 of them (`directorate.mjs` `spineRing`, `spineRank`), every one seated on the shell
-or plate it grows from, no lamp added or moved, no part moved, no plan grown from above, and every
-ring and rank a regimented rule, a station left ungrown wherever a lamp, a rib, a pipe, a
-dock, the hopper or a plate stands in its way, as `crown_spine_4` was never grown. The Bastion's four tiers each carry a ring of spines on
+or plate it grows from, no lamp added or moved, no part moved, no plan grown from above, and
+every ring and rank a regimented rule, a station left ungrown wherever a lamp, a rib, a
+dock, a tank, a spike, the hopper or a plate stands in its way, as `crown_spine_4` was
+never grown. The Bastion's four tiers each carry a ring of spines on
 the wall — twenty-one, seventeen, thirteen and nine stations, ten never grown — fifty in
 all, 14–30 m² each; the Cantor's dome a fifth ring of fourteen at its foot, the thickest on it and the widest from above, 9–13 m²; the Foundry a second, smaller spike abaft five of its six, a ring of
 seven round its stern spike and three round its outrigger's barb; the Bio-Reactor three more
@@ -691,7 +692,7 @@ five, three stepped along the claw's arm as the boom's teeth are, and five teeth
 scoop's lip; the Verger a pair of shoulder spines on each of its four aft plates; the
 Submersible a fifth dorsal spike, six on the shoulders and three on the tail. Every new part
 on a hull shows 0.8–3.7 m², on a structure 7–30, so each median lands among parts the file
-already had: the Cantor's at 2.59 m, 0.09 m inside the band's floor — the parts either side
+already had: the Cantor's at 2.59 m, 0.09 m above the band's floor — the parts either side
 of its 6.25 m² are spines of the upper three rings and the quill's third segment at 5.8–7.6,
 so fourteen new spines leave the median at 2.59 m, seventeen would move it to 2.63 and twenty
 to 2.75, and only past twenty does it land on a new spine.

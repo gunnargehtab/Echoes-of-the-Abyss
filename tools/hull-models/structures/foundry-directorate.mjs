@@ -170,9 +170,9 @@
  * unlit part from above (facets.mjs `panelsOf`; Block 2c), and this file
  * read 11.0 m over fifty-one, thirty-two parts over 64 m² against nineteen
  * in the band. The pass adds fifteen spines where fourteen are the least: a
- * second, smaller spike a unit abaft each spine spike on its own plate,
- * raked the one way, on five of the six — not the second starboard plate, where
- * `flank_photophore_8` stands — and none on the bow plates, which carry no
+ * second, smaller spike a unit abaft each spine spike, raked the one way
+ * and seated on the plate under it, on five of the six — not the second
+ * starboard plate, where `flank_photophore_8` stands — and none on the bow plates, which carry no
  * spine in the file (`spineRank`); a ring of seven round the stern spike on
  * the stern carapace's crown and a ring of five round the outrigger's spike
  * on the big pod, its first and third stations never grown, where that
@@ -291,10 +291,12 @@ directorate.tergiteFlanks(
   }
 );
 
-// A second, smaller spike a unit abaft each spine spike on the same plate
-// (#919, the panel pass; the header), raked the one way the spikes rake,
-// seated on that plate (`spineRank`; kit.mjs `seat`): five, since `flank_photophore_8`
-// stands where the second starboard plate's would grow, and none on the bow
+// A second, smaller spike a unit abaft each spine spike (#919, the panel
+// pass; the header), raked the one way the spikes rake, seated on the plate
+// under it (`spineRank`; kit.mjs `seat`) — the spike's own plate on four;
+// the second port spike stands on the third plate's edge and its barb on
+// the second plate abaft it. Five, since `flank_photophore_8` stands where
+// the second starboard plate's would grow, and none on the bow
 // plates, which carry no spine in the file.
 const barb = (n, [x, y, z], rake, length) => [n, black, 0.09, length, [x, y - 0.3, z - 1], rake];
 directorate.spineRank(root, {
