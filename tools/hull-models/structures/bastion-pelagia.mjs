@@ -101,16 +101,19 @@
  * of 4–13.5 m on a side (Block 2c; pelagia.mjs `panels`), and this one read
  * 31.4 m over twenty-nine parts: a dome, four rings, seven roots, two
  * collars and a crown pod of 500–46,000 m² each, and six parts inside the
- * band. The pass knots the rings where they grew: twenty-two knots of
- * chitin on the four growth rings — five, six, five and six — 4.2–7.1 m of
+ * band. The pass knots the rings where they grew: twenty knots of chitin
+ * on three of the four growth rings — five, seven and eight — 4.2–7.1 m of
  * radius, each seated on its ring half its radius in (`grownNubs`) at a
- * bearing of its own clear of the ribs, the veins, the pipes, the crown pod
- * and, on the third ring, the eight ports a step below it. Not at the
- * ribs' crossings: the ribs stay at the file's radius and run inside the
- * dome below the second ring, so only two of twenty crossings exist. They
- * show 47–147 m² each, and the median part is 11.5 m over fifty-one. 47
- * parts and 10,124 triangles become 69 and 15,052; no part moved, no lamp's
- * plan changed, and the fit is the same 16.7179 across.
+ * bearing of its own clear of the ribs, the veins, the pipes and the crown
+ * pod. None on the third ring: a first cut's five there fell between the
+ * eight ports a step below it, and the ring read as a string of light and
+ * dark beads (hull-reviewer). Not at the ribs' crossings: the ribs stay at
+ * the file's radius and run inside the dome below the second ring, so only
+ * two of twenty crossings exist. Twenty where eighteen parts in the band
+ * are the least, since the knots' triangles are gate 6's. They show
+ * 54–147 m² each, and the median part is 12.0 m over forty-nine. 47 parts
+ * and 10,124 triangles become 67 and 14,604; no part moved, no lamp's plan
+ * changed, and the fit is the same 16.7179 across.
  */
 import { THREE, xLong, ballastTanks, flangedPipes, exportGlb, fitFootprint } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -181,15 +184,18 @@ pelagia.domeRings(root, chitin, {
   rings: RINGS,
 });
 
-// PANELS (#919): the rings knotted where they grew. Twenty-two knots of
-// chitin on the four growth rings — five, six, five and six — each its own
-// size and at a bearing of its own round the dome, seated on its ring half
-// its radius in (pelagia.mjs `grownNubs`). The bearings keep clear of what
-// else stands on the dome: the five ribs over the +x crown, the three lit
-// veins climbing the +z flank, the two pipes, the crown pod, and on the
-// third ring the eight ports a step below it, which a knot at a port's
-// bearing would shade from above. A seed sits a tenth outside the ring at
-// `deg` round the crown from +x toward +z, on the dome's 6.2 × 0.88 × 1.12.
+// PANELS (#919): the rings knotted where they grew. Twenty knots of chitin
+// on three of the four growth rings — five, seven and eight, none on the
+// third — each its own size and at a bearing of its own round the dome,
+// seated on its ring half its radius in (pelagia.mjs `grownNubs`). The
+// bearings keep clear of what else stands on the dome: the five ribs over
+// the +x crown, the three lit veins climbing the +z flank, the two pipes
+// and the crown pod. None on the third ring, because its knots fell between
+// the eight ports a step below it and the ring read as a string of light
+// and dark beads (hull-reviewer, the first round); twenty where eighteen
+// parts in the band are the least, since more would spend gate 6 (the
+// header). A seed sits a tenth outside the ring at `deg` round the crown
+// from +x toward +z, on the dome's 6.2 × 0.88 × 1.12.
 const onRing = (j, deg) => {
   const a = (deg * Math.PI) / 180;
   const { t } = RINGS[j];
@@ -215,17 +221,15 @@ pelagia.grownNubs(root, chitin, {
     [0.21, onRing(1, 204)],
     [0.245, onRing(1, 247)],
     [0.165, onRing(1, 283)],
-    [0.2, onRing(2, 10)],
-    [0.235, onRing(2, 80)],
-    [0.27, onRing(2, 122)],
-    [0.19, onRing(2, 212)],
-    [0.225, onRing(2, 272)],
+    [0.2, onRing(1, 88)],
     [0.26, onRing(3, 22)],
     [0.18, onRing(3, 68)],
     [0.215, onRing(3, 113)],
     [0.25, onRing(3, 160)],
     [0.17, onRing(3, 232)],
     [0.205, onRing(3, 318)],
+    [0.235, onRing(3, 180)],
+    [0.27, onRing(3, 270)],
   ],
 });
 

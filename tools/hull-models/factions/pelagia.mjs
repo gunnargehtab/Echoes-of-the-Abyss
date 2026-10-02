@@ -3838,8 +3838,7 @@ export function broodNubs(root, pale, opts) {
  * names from `seed` (a station in the script's own frame, near the skin)
  * and half its height into it, as `rested` seats a bud. Named
  * `<name><sep><first + i>`. `skins` is one material or several, and an
- * entry's third field picks one — the Bower's mats are algae and ridge by
- * turns, the way its lobes are. No two alike: a matched pair is refused,
+ * entry's third field picks one. No two alike: a matched pair is refused,
  * since a grown thing does not repeat (§3.6). A round nub keeps its pole
  * up like every other orb in the navy; a squashed one lies along the skin's
  * normal, which is what makes a mat a mat and not a lens stood on edge.

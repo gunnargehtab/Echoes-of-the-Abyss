@@ -93,17 +93,22 @@
  * PANELS (#919). The Commune's hull band is a median part from above of
  * 1.5–5 m on a side (Block 2c; pelagia.mjs `panels`), and this hull read
  * 7.8 m over twenty parts: a seed is its hull, six rings, two fins and a
- * nozzle, each tens of square metres from above, and only its tendril tips
- * and prow tip under the band's 25 m². The pass knots the carapace where it
- * grew: eighteen dark knots on the six growth rings, three a ring, 1.2–2 m
- * of radius at bearings of their own off the crown, and six nubs on the
- * bow collar forward of the last ring, 1.15–1.75 m, where the eye sacs
- * leave the port side and both beams bare — each seated on its ring or the
- * hull half its radius in (pelagia.mjs `grownNubs`), no two alike, none
- * over a lit part, and none between the rings, where the hoops leave 1.3 m
- * of skin. They show 2.3–11.4 m² each, and the median part is 2.9 m over
- * forty-four. 35 parts and 6,516 triangles become 59 and 7,318; no part
- * moved, no lamp's plan changed.
+ * nozzle, each tens of square metres from above, and only four tendril
+ * tips and a tendril under the band's 25 m². The pass knots the carapace where it
+ * grew: twelve dark knots on the six growth rings, two a ring, 1.6–2.2 m
+ * of radius at bearings of their own in the upper quarters, 35–65° off the
+ * crown either side, and two nubs on the port side of the bow collar
+ * forward of the last ring, 1.35–1.6 m, where the eye sacs leave it bare —
+ * each seated on its ring or the hull half its radius in (pelagia.mjs
+ * `grownNubs`), no two alike, none over a lit part, none between the rings,
+ * where the hoops leave 1.3 m of skin, and none at the beams, where a first
+ * cut's knots and nubs stood proud of the plan and read as burrs
+ * (hull-reviewer). Twelve and two where eleven parts in the band are the
+ * least: the fittings' triangles are gate 6's, and the first cut's
+ * twenty-four spent 800 of them where 640 do. They show 3.4–12.1 m² each,
+ * and the median part is 3.4 m over thirty-four. 35 parts and 6,516
+ * triangles become 49 and 7,158; no part moved, no lamp's plan changed, and
+ * the plan's outline is the hull's own.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -313,13 +318,16 @@ pelagia.grownHoops(root, {
   ],
 });
 
-// PANELS (#919): the carapace knotted where it grew. Eighteen dark knots on
-// the six growth rings, three a ring at bearings of their own off the crown
-// — the upper quarters and the beams where no fin or lit vein lies under
-// them — and six nubs on the bow collar forward of the last ring, where the
-// eye sacs leave the port side and both beams bare. Each is seated on the
-// ring or the hull it grew from, half its radius in (pelagia.mjs
-// `grownNubs`), no two alike. A seed sits a tenth outside the hoop at its
+// PANELS (#919): the carapace knotted where it grew. Twelve dark knots on
+// the six growth rings, two a ring, 1.6–2.2 m of radius at bearings of
+// their own in the upper quarters, 35–65° off the crown either side —
+// clear of the keel and the spine vein over the crown, and off the beams,
+// where a knot would stand proud of the plan and lie over a fin — and two
+// nubs on the port side of the bow collar forward of the last ring, where
+// the eye sacs leave it bare. Each is seated on the ring or the hull it grew
+// from, half its radius in (pelagia.mjs `grownNubs`), no two alike; twelve
+// and two where eleven parts in the band are the least, since more would
+// spend gate 6 (the header). A seed sits a tenth outside the hoop at its
 // bearing, `deg` from the crown, port negative; the hoops are 1.12 wider
 // than tall.
 const onRing = (n, deg) => {
@@ -335,24 +343,18 @@ pelagia.grownNubs(root, dark, {
   on: GROWTH_RINGS.map((_, i) => `growth-ring-${i + 1}`),
   cut,
   nubs: [
-    [0.112, onRing(1, -62)],
-    [0.131, onRing(1, 47)],
-    [0.094, onRing(1, 78)],
-    [0.146, onRing(2, -63)],
-    [0.098, onRing(2, -31)],
-    [0.123, onRing(2, 72)],
-    [0.139, onRing(3, -58)],
-    [0.106, onRing(3, 42)],
-    [0.116, onRing(3, 66)],
-    [0.133, onRing(4, -66)],
-    [0.149, onRing(4, -40)],
-    [0.11, onRing(4, 62)],
-    [0.126, onRing(5, -58)],
-    [0.143, onRing(5, -36)],
-    [0.09, onRing(5, 44)],
-    [0.103, onRing(6, -52)],
-    [0.12, onRing(6, -75)],
-    [0.136, onRing(6, 60)],
+    [0.142, onRing(1, -58)],
+    [0.121, onRing(1, 44)],
+    [0.156, onRing(2, -40)],
+    [0.128, onRing(2, 63)],
+    [0.149, onRing(3, -52)],
+    [0.135, onRing(3, 38)],
+    [0.16, onRing(4, -64)],
+    [0.124, onRing(4, 47)],
+    [0.146, onRing(5, -45)],
+    [0.131, onRing(5, 58)],
+    [0.118, onRing(6, -55)],
+    [0.126, onRing(6, 36)],
   ],
 });
 // The seed hull's section at station x: r 1.5 under its node's [1.75, 1, 1.15].
@@ -368,12 +370,8 @@ pelagia.grownNubs(root, dark, {
   on: 'seed-hull',
   cut,
   nubs: [
-    [0.13, onBow(2.4, -90)],
     [0.119, onBow(2.4, -52)],
-    [0.085, onBow(2.4, -28)],
-    [0.105, onBow(2.4, 90)],
-    [0.092, onBow(2.25, -70)],
-    [0.1, onBow(2.25, 70)],
+    [0.1, onBow(2.25, -70)],
   ],
 });
 

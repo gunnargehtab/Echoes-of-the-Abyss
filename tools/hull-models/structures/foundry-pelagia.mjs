@@ -178,15 +178,18 @@
  * of 4–13.5 m on a side (Block 2c; pelagia.mjs `panels`), and this one read
  * 15.7 m over fifty-nine parts, the lobes, tanks, beams, floor and lips
  * 1,100–9,500 m² each and the rings and knuckles either side of the
- * band's 182 m². The pass buds the husk where it grew: fourteen pale buds
+ * band's 182 m². The pass buds the husk where it grew: twelve pale buds
  * on the eight lobes — one on each crown inside its top ring, a second on
- * six of them down the slope between the second ring and the third or the
+ * four of them down the slope between the second ring and the third or the
  * skirt — 3.3–6.2 m of radius, seated on the lobe half its radius in
  * (`grownNubs`), none where a vein climbs its lobe or a knuckle lies
- * between two, none over the bay. They show 31–119 m² each, and the median
- * part is 12.8 m over seventy-three, the outrigger's bud. 87 parts and
- * 12,660 triangles become 101 and 15,628; no part moved, no lamp's plan
- * changed, and the fit is the same 17.4354 long.
+ * between two, none over the bay. Spore pale, as the outrigger's and the
+ * stern pod's buds are, though the pale shares the flood lamps' hex: a bud
+ * is pale on every Commune structure. Twelve where ten parts in the band
+ * are the least, since the buds' triangles are gate 6's. They show
+ * 31–119 m² each, and the median part is 12.9 m over seventy-one, the
+ * outrigger's bud. 87 parts and 12,660 triangles become 99 and 15,236; no
+ * part moved, no lamp's plan changed, and the fit is the same 17.4354 long.
  */
 import {
   THREE,
@@ -338,8 +341,8 @@ pelagia.huskKnuckles(root, chitin, {
   ],
 });
 
-// PANELS (#919): the husk budded where it grew. Fourteen pale buds on the
-// eight lobes — one on each crown inside its top ring, and a second on six
+// PANELS (#919): the husk budded where it grew. Twelve pale buds on the
+// eight lobes — one on each crown inside its top ring, and a second on four
 // of them down the slope between the second ring and the third or the
 // skirt — each its own size, seated on the lobe half its radius in
 // (pelagia.mjs `grownNubs`). None sits where a lit vein climbs its lobe
@@ -359,12 +362,10 @@ pelagia.grownNubs(root, spore, {
     [0.28, [3.5, 3.3, 2.1]],
     [0.21, [5.09, 2.25, 1.21]],
     [0.24, [3.0, 2.7, 5.3]],
-    [0.19, [4.38, 1.9, 6.22]],
     [0.25, [-3.5, 2.8, -4.5]],
     [0.32, [-3.4, 3.1, -1.3]],
     [0.18, [-4.45, 2.15, -2.39]],
     [0.29, [-3.5, 2.9, 2.3]],
-    [0.23, [-4.27, 2.0, 3.79]],
     [0.27, [-3.7, 2.3, 4.6]],
   ],
 });

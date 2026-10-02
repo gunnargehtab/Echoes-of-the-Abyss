@@ -137,20 +137,21 @@
  * of 4–13.5 m on a side (Block 2c; pelagia.mjs `panels`), and this one read
  * 14.0 m over forty-five parts, the silos, caps, rings, anchors, belt and
  * roof 190–2,150 m² each. The pass rings and knots the works where they
- * grew: two half rings of chitin over the crusher's roof and two algae rings
+ * grew: two half rings of chitin over the crusher's roof and an algae ring
  * round each stack above it (`drumRings`, which reads each drum off the
- * part), and four knots of chitin on the silos' lowest rings, one a silo,
- * 3.4–4.4 m of radius, seated on the ring half its radius in (`grownNubs`).
- * Two over the roof and not more: the maw takes its forward end, the stacks'
- * own rings reach half a unit either side of each stack, and past 1.7 of
- * its 2.35 half-length a ring's inboard foot stands on `silo_2`'s wall. A
- * first cut knotted the stacks' feet instead, and the stack rings covered
- * both knots from above. They show 21–113 m² each, and the median part is
- * 12.1 m over fifty-three. 69 parts and 6,828 triangles become 79 and 8,424;
- * no part moved, no lamp hidden — the knot on `silo_0`'s ring reaches
- * 1.8 m past the file's westmost vertex, so the chart's raster shifts a
- * cell and each lamp's plan reads within 0.5 m² of before — and the fit is
- * the same 22.8326 long.
+ * part), and two knots of chitin on the second and fourth silos' lowest
+ * rings, 3.7–4.4 m of radius, seated on the ring half its radius in
+ * (`grownNubs`). Two over the roof and not more: the maw takes its forward
+ * end, the stacks' own rings reach half a unit either side of each stack,
+ * and past 1.7 of its 2.35 half-length a ring's inboard foot stands on
+ * `silo_2`'s wall. A first cut knotted the stacks' feet, and the stack
+ * rings covered both knots from above; a second ringed each stack twice
+ * and knotted all four silos, ten fittings where four parts in the band are
+ * the least, and the knot on `silo_0`'s ring reached past the file's
+ * westmost vertex and moved the chart's raster. They show 35–113 m² each,
+ * and the median part is 12.6 m over fifty-one. 69 parts and 6,828
+ * triangles become 75 and 7,712; no part moved, no lamp's plan changed, and
+ * the fit is the same 22.8326 long.
  */
 import {
   THREE,
@@ -305,14 +306,15 @@ exhaustStacks(
 // end, the two stacks pierce it a third and two thirds of the way along
 // and their own rings reach a half unit either side of each, and past 1.7
 // of its 2.35 half-length a ring's inboard foot stands on `silo_2`'s wall.
-// Two algae rings round each stack above where it leaves the roof — the
-// Foundry's graft pipes carry algae flanges the same way — the lower the
-// fatter, so each shows past the one above it and the tip from the
-// chart's height, 21–26 m² of annulus each. And four knots of chitin on
-// the silos' lowest rings, one a silo at a bearing of its own, seated on
-// the ring half its radius in (`grownNubs`) — the rings knotted where they
-// grew, as the Bastion's are — on the sides the transfer pipes, the crusher
-// house, the flood mast and the root anchors leave clear.
+// An algae ring round each stack above where it leaves the roof — the
+// Foundry's graft pipes carry algae flanges the same way — fat enough to
+// show past the tip from the chart's height. And two knots of chitin on
+// the second and fourth silos' lowest rings, each at a bearing of its own,
+// seated on the ring half its radius in (`grownNubs`) — the rings knotted
+// where they grew, as the Bastion's are — on the sides the transfer pipes,
+// the crusher house and the root anchors leave clear. Six fittings where
+// four parts in the band are the least, since more would spend gate 6 (the
+// header).
 pelagia.drumRings(root, chitin, {
   name: 'roof_ring',
   on: 'crusher_roof',
@@ -326,35 +328,27 @@ pelagia.drumRings(root, algae, {
   name: 'stack_ring_0',
   on: 'exhaust_stack_0',
   cut,
-  stations: [
-    { s: 1.05, tube: 0.1 },
-    { s: 1.4, tube: 0.065 },
-  ],
+  stations: [{ s: 1.05, tube: 0.1 }],
 });
 pelagia.drumRings(root, algae, {
   name: 'stack_ring_1',
   on: 'exhaust_stack_1',
   cut,
-  stations: [
-    { s: 0.7, tube: 0.1 },
-    { s: 1.15, tube: 0.065 },
-  ],
+  stations: [{ s: 0.7, tube: 0.1 }],
 });
 // A seed a tenth outside the silo's lowest ring at `deg` round its axis from
 // +x toward +z; the silos' stations, radii and ring heights are `silos`'
-// above.
+// above. A first cut knotted all four silos and ringed each stack twice.
 const onRing = ([x, z], R, y, deg) => {
   const a = (deg * Math.PI) / 180;
   return [x + 1.1 * R * Math.cos(a), y, z + 1.1 * R * Math.sin(a)];
 };
 pelagia.grownNubs(root, chitin, {
   name: 'ring_knot',
-  on: ['silo_ring_0_0', 'silo_ring_1_0', 'silo_ring_2_0', 'silo_ring_3_0'],
+  on: ['silo_ring_1_0', 'silo_ring_3_0'],
   cut,
   nubs: [
-    [0.32, onRing([-5.6, -2.6], 1.683932573, 2.56363214184, 200)],
     [0.36, onRing([-1.9, -1.2], 1.933685295, 2.71727233805, -90)],
-    [0.28, onRing([1.9, 0.2], 1.55849281, 2.06128180915, 90)],
     [0.3, onRing([-4, 1.9], 1.402105503, 1.95306810646, 60)],
   ],
 });
