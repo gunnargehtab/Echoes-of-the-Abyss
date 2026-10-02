@@ -686,7 +686,7 @@ dock, a tank, a spike, the hopper or a plate stands in its way, as `crown_spine_
 never grown. The Bastion's four tiers each carry a ring of spines on
 the wall — twenty-one, seventeen, thirteen and nine stations, ten never grown — fifty in
 all, 14–30 m² each; the Cantor's dome a fifth ring of fourteen at its foot, the thickest on it and the widest from above, 9–13 m²; the Foundry a second, smaller spike abaft five of its six, a ring of
-seven round its stern spike and three round its outrigger's barb; the Bio-Reactor three more
+seven round its stern spike and three round its outrigger's spike; the Bio-Reactor three more
 mound spines on the spined side; the Dredge a second spine abaft and outboard of four of its
 five, three stepped along the claw's arm as the boom's teeth are, and five teeth on the
 scoop's lip; the Verger a pair of shoulder spines on each of its four aft plates; the

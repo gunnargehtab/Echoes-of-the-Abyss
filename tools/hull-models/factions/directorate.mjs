@@ -4174,7 +4174,7 @@ export function telsonBlades(root, skins, { at: [x, z], blades, r = 7, flat = 0.
  * rule — seven stations of 2π/7 from 0.5 rad, the fifth never grown — made
  * a builder, for the four rings down its tiers, the Cantor's fifth ring at
  * the foot of its dome and the Foundry's rings round its stern spike and
- * its outrigger's barb. Named `<name>_<first + i>` by station, so a hole
+ * its outrigger's spike. Named `<name>_<first + i>` by station, so a hole
  * leaves a gap in the numbering as `crown_spine_4` does; `skin` is one
  * material or one a station, as the Cantor's fall by no rule.
  */
