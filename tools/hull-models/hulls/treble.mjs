@@ -17,8 +17,8 @@
  *
  * What it is, at 64 px on the chart and 16 at 1 px/m: the Chorister's
  * cohort plan cut down to a craft — three overlapping tergites, violet,
- * red and violet from the stern, the middle one the widest; a six-sided
- * rostrum; a six-sided telson closing a blunt transom — and what a hull
+ * red and violet from the stern, the middle one the widest; a rostrum; a
+ * telson closing a blunt transom — and what a hull
  * nobody crews does without. No bladder dome, because there is no cohort
  * aboard to keep at pressure; no walking limbs, because it is launched and
  * never walks; no dome and no hatch. The plates carry the Dredge's raised
@@ -62,6 +62,17 @@
  * Every part comes from `factions/directorate.mjs`; `trebleBody`,
  * `craftGun` and `claspLugs` were written for this hull and run here for
  * the first time.
+ *
+ * FACETS (#919). The Listening's rule is one facet edge of 2 m on the odd
+ * lattice, five to fifteen (docs/asset-prompts-3d.md Block 2c; directorate.mjs
+ * `cut`), asked in metres and settled on each part as pressed, and the pass
+ * re-cut what was off it: the plates nine and eleven round and five down at
+ * 2.7–3.3 m, where they were twelve by six; the ridges seven and nine round
+ * and four and five down at 2.4–3 m, where they were ten by six; the
+ * rostrum, the telson and the gun five, where they were six. The dorsal
+ * spines keep their five. 16 parts and 788 triangles become 16 and 520; the
+ * two marks show 1.1 m² as before, the gun now meets the fore plate it
+ * stood 0.03 m over, and no ring is off the rule.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -69,6 +80,8 @@ import * as directorate from '../factions/directorate.mjs';
 const L = 16;
 const BODY = directorate.trebleBody;
 const { segments: SEGMENTS, ridge: RIDGE } = BODY;
+// The Listening's facet rule for a hull drawn in metres (directorate.mjs `cut`, #919).
+const cut = directorate.cut();
 
 /** Where the shell's crown is at `(x, z)`, ridges included. */
 const crown = (x, z) => directorate.tergiteCrown(SEGMENTS, x, z, RIDGE);
@@ -90,13 +103,14 @@ directorate.tergites(root, { violet, red, black }, {
   segments: SEGMENTS,
   lip: 'ridge',
   ridge: RIDGE,
+  cut,
 });
 
 // The rostrum's point is the bow at +8, its base buried 5 m aft in the
 // fore plate; the telson's base ring is the stern at −8, its apex buried
 // 3 m forward in the stern plate, so the transom is 2.2 m across.
-directorate.rostrum(root, red, BODY.rostrum);
-directorate.telson(root, { violet, black }, BODY.telson);
+directorate.rostrum(root, red, { ...BODY.rostrum, cut });
+directorate.telson(root, { violet, black }, { ...BODY.telson, cut });
 
 // The gun, off the centreline to port on the fore plate (the header).
 const { gun } = BODY;
@@ -106,6 +120,7 @@ directorate.craftGun(root, { steel, black }, {
   z: gun.z,
   r: gun.r,
   length: gun.length,
+  cut,
   mount: {
     size: [1.2, 0.6, 0.8],
     at: [gun.x - gun.length / 2 + 0.3, crown(gun.x - gun.length / 2, gun.z) - 0.05, gun.z],

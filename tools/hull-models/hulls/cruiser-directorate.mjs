@@ -87,6 +87,25 @@
  * antenna's box, aimed with its node, overhangs at the stern: 146.2887
  * over the vertices' 146.28. Every number below is the export's, through
  * kit.mjs `drawn`.
+ *
+ * FACETS (#919). The Directorate's rule is one facet edge of 2 m on odd
+ * counts, five to fifteen (docs/asset-prompts-3d.md Block 2c;
+ * directorate.mjs `cut`), asked at this file's scale — 0.89 m a unit — for
+ * each part as its node presses it, and the pass re-cut what was off it: the
+ * two eyes five round by three down at 1.07–1.33 m where the file had six
+ * by four; the twelve darts five-sided at 0.84 m where they were six; the
+ * seven light domes, unit orbs pressed to 2.4–2.8 m, nine round by five
+ * down on the four largest, nine by four on `dome_p0` and `dome_s2`, seven
+ * by four on `dome_p3`, where the file cut every one ten by six. The sixteen
+ * dorsal spikes and the head shield keep their square, the sections the rule
+ * names on a `dspike` and a `head_shield`; the antennae, the whiskers, the
+ * keel spurs and the telson spike keep their five. Thirty of the file's
+ * sixty-three rings were off the rule and none is; 2,360 triangles became
+ * 2,018; `DRAWN` holds at 146.2887. Two darts no longer touch the rim they
+ * stood against — `dart_s1` is 0.073 m off `plate_rim_3` and `dart_p6`
+ * 0.016 m off `plate_rim_6`, a pentagon's base reaching less far than a
+ * hexagon's — and each still meets its plate; the seven domes show 10.4–
+ * 16.6 m² from above, 0.1–1.6 less than before.
  */
 import { THREE, box, part, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -94,6 +113,8 @@ import * as directorate from '../factions/directorate.mjs';
 const L = 130;
 const DRAWN = 146.2887;
 const DATUM = 6.2;
+// The navy's facet rule at this file's scale (FACETS, the header).
+const cut = directorate.cut(L / DRAWN);
 
 const violet = directorate.ink.bruiseViolet();
 const red = directorate.ink.abyssalRed();
@@ -180,6 +201,7 @@ directorate.wedgeRostrum(root, violet, {
 });
 bar('head_crest', red, [1.1, 3.2, 10], [0.3, 11.2, 44], [-0.14, 0.025, 0]);
 directorate.eyes(root, red, {
+  cut,
   eyes: [
     ['eye_p', 1.5, drawn([4.6, 9.4, 42.5])],
     ['eye_s', 1.2, drawn([-4.1, 9, 43.5])],
@@ -262,7 +284,8 @@ directorate.aimedSpikes(
 // "Visible torpedo hardpoints", the Corvette's rule at the Cruiser's size:
 // twelve darts at an 8.2 pitch, seven to port and five to starboard, the
 // starboard rank 0.4 lower and set back 6, each raked forward 0.16 off
-// vertical and canted 0.3 outboard, and no sockets.
+// vertical and canted 0.3 outboard, and no sockets. Five-sided since #919,
+// the rule's at 0.84 m; the file's six.
 const dart = (side, sgn, y, z) => ({
   name: `dart_${side}`,
   ...drawn([sgn * 8.6, y, z], [Math.PI / 2 - 0.16, 0, -sgn * 0.3]),
@@ -271,9 +294,9 @@ directorate.darts(
   root,
   { dart: chitin },
   {
+    cut,
     radii: [0.4, 0.95],
     length: 8.5,
-    facets: 6,
     darts: [
       ...[28, 19.8, 11.6, 3.4, -4.8, -13, -21.2].map((z, k) => dart(`p${k}`, 1, 4.6, z)),
       ...[22, 13.8, 5.6, -2.6, -10.8].map((z, k) => dart(`s${k}`, -1, 4.2, z)),
@@ -336,8 +359,10 @@ directorate.spikes(root, red, {
 // "Sustained glow from vents, sensor arrays and lit ports": a light band
 // 78 long down each flank, the starboard one 0.2 lower and set back 1,
 // each ribbed three times in chitin; seven light domes along the back,
-// each a unit orb squashed its own way by its node, four to port and three
-// to starboard at a 20 pitch, offset by 10; four gills on the flanks, two
+// each a unit orb squashed its own way by its node (the rule's counts on
+// the orb as pressed since #919, seven to nine a turn at 2.4–2.8 m where
+// the file cut ten by six), four to port and three to starboard at a 20
+// pitch, offset by 10; four gills on the flanks, two
 // a side, each leaned its own way; and a mark on the head and one on the
 // tail — pads on the crest's top and the last plate's top (#890, the
 // header).
@@ -350,7 +375,7 @@ bar('band_rib_s1', chitin, [2.6, 0.9, 1.1], [-9.2, 8.1, -16]);
 bar('band_rib_p2', chitin, [2.6, 0.9, 1.1], [9.2, 8.3, -34]);
 bar('band_rib_s2', chitin, [2.6, 0.9, 1.1], [-9.2, 8.1, -36]);
 directorate.photophoreDomes(root, photophore, {
-  facets: [10, 6],
+  cut,
   domes: [
     ['dome_p0', 1, drawn([4.6, 12, 30], [0, 0, 0], [2.4, 1, 3])],
     ['dome_p1', 1, drawn([4.9, 13.15, 10], [0, 0, 0], [2.6, 1, 3.2])],

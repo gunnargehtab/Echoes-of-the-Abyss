@@ -615,7 +615,35 @@ section would have made the beaks near-round cones, the Corvette's rostrum a thi
 The keels'
 seven is a builder's default on four hulls and not a
 section; the plates' twelve is one count on every size of tergite, and an even one; both
-are the rule's to re-cut. Panels run one to three metres, argued from what the measure
+are the rule's to re-cut. The pass (#919, the fifth instalment) binds the rule the Commune's
+way: `directorate.cut` settles every count on what the measure reads back off the part as its
+node presses it — a tergite is a unit orb drawn 17 × 10 × 26 m, and a count asked at its
+major radius lands off the odd lattice as often as not — and every builder asks it, so a
+count a script still names is kept only as a section, read through the measure's own
+`isSection`, and is an error otherwise. The tergites from 4.5 m of radius settle at fifteen
+round and seven down (the half-turn share of fifteen rounds down; the Treble's at nine and
+eleven by five), the keels at eleven, the rostra from five to fifteen by their radius, and
+every six and eight that was a builder's default — limbs, hydrophones, booms, mandibles,
+guns, collars, ducts, the Slipway's legs, pylons and launch mandibles — goes to the rule; the
+fives stay, the torus tubes' among them (`torusOf`, and the kit's `launchMouth` for the
+Foundry's mouth: the Bastion's seam rings, lips, pipes and flanges, the turret's collar and the
+Foundry's launch mouth keep their pentagon tubes while their rings go to the rule). The measure names eight of the navy's
+1,477 rings, all one reading: the capsule meridians of the Verger's, the Bastion's and the
+Foundry's ballast tanks, the Foundry's hull in progress and the turret's pod, where the
+rule's half-turn share is odd and a capsule draws an even count, built a segment over as the
+Order's are. What the coarser rounds left standing off was reseated through the builders:
+the Cantor's forty-two hydrophone spines rooted on its dome (`shellSpines` `on`), its
+twenty-two photophores grown from shell and foot (`on`), its second ballast pipe stood on the
+collar (`standpipes` `on`, 4 m out along its bearing, its inboard side let up to 1.6 m into a
+shell plate and 1.0 m into the dome, as the file's first pipe runs 1.8 m into the same plate), the
+turret's two marks, the
+Bastion's four lamps (two grown from their tiers, one lowered, one swung off its rib) and
+the Foundry's ten lamps grown from their plates (`on`) and one bay guide stepped aft, the
+Harvester's flank dome and the Submersible's third port lamp seated, the Vent Tap's ember at
+its rim's own radius; the Refinery's
+crusher cowl takes the rule's fifteen by four and its maw's cells were re-chosen on that
+grid. Six fits moved a hair (the turret, the Cantor, the Bastion, the Foundry, the
+Harvester, the Vent Tap) and two more now assert theirs. Panels run one to three metres, argued from what the measure
 counts, which is unlit parts. The navy's unlit vocabulary is plates and seams, which are
 wide, and spines, limbs, dogs and teeth — a spine 2–3 m on a side from above, a limb about
 two — and "spiked, insectoid, many-limbed" is three of the law's four words for the small
@@ -681,13 +709,16 @@ at the count the rule gives it, the table costs: Consortium hulls 53.3 k → 40.
 structures 16.6 k → 19.5 k by its facet pass, and 45.7 k and 23.3 k as built since its panel
 pass dressed thirteen models; Commune hulls 47.6 k → 48.3 k and structures 35.2 k → 63.1 k, as
 built since its facet pass (this rebuild had said 47.8 k and 62.4 k);
-Directorate hulls 30.0 k → 33.5 k and structures 26.6 k → 32.8 k; Order hulls 9.9 k → 8.0 k
+Directorate hulls 30.0 k → 33.6 k and structures 29.7 k → 35.1 k, as built since its facet
+pass (this rebuild had said 33.5 k and 32.8 k, and 26.6 k for the structures before the
+Refinery's rebuild); Order hulls 9.9 k → 8.0 k
 and structures 15.8 k → 12.1 k, the Order's as built since its pass, where this rebuild had
 said 12.4 k before the pass cut its pipes, stacks and throat drums as hexagons; the fourteen
 props, under no rule, 4.3 k. The own force
 the gate names, taken as a navy's eight structures, four more Turrets and its five largest
 hulls, comes to 48.2 k for the Consortium since its panel pass (42.1 k before it), 108.0 k for the
-Commune since its facet pass (107.0 k projected), 64.0 k for the Directorate and 18.9 k for the Order, as built. That mix is one sample base and not a worst case —
+Commune since its facet pass (107.0 k projected), 66.3 k for the Directorate since its facet pass
+(64.0 k before it) and 18.9 k for the Order, as built. That mix is one sample base and not a worst case —
 nothing caps what a base builds, and a dozen Commune Slipways alone are 170 k — so the
 probe, not this rebuild, is the check. The Commune's ceiling is the number gate 6 moved: at
 twenty-four that dozen and five were 181.0 k, its eight structures alone 110.5 k; at
@@ -723,7 +754,9 @@ carries seven distinct counts a turn where it carried fifteen. The Commune's lea
 its 1,240: the six on the four tables and three pressed tubes no count settles on (the
 Commune paragraph), and the navy carries eighteen distinct counts a turn where it carried
 thirty-five, every ring from 4 m of radius up on sixteen a turn but the tables' and the
-part-turn arcs the measure reads a turn at a time.
+part-turn arcs the measure reads a turn at a time. The Directorate's leaves eight of its
+1,477, every one a capsule meridian on the odd share (the Directorate paragraph), and the
+navy carries seventeen distinct counts a turn where it carried twenty-four.
 Outside the bands, before the panel pass: eight Consortium hulls (the five shared kinds, the Chorister
 and the Tender at 2.2–3.9 m — the Corvette's 2.3 was 2.2 once the facet pass thinned its
 drums — and the Beacon at 0.5) and five structures (the Vent Tap at 6.2 m, the Turret at
@@ -731,7 +764,7 @@ drums — and the Beacon at 0.5) and five structures (the Vent Tap at 6.2 m, the
 band since the Consortium's panel pass — the hulls at 0.9–1.6 m, the structures at 3.1–5.5;
 two Commune hulls (the
 Bower at 0.8 m, the Submersible at 7.3, 7.8 since the facet pass) and three structures; three Directorate hulls (the
-Verger, the Submersible and the Dredge, 4.0–5.2 m) and four structures; five Order hulls
+Verger, the Submersible and the Dredge, 4.0–5.2 m; 4.2–5.6 since the facet pass) and four structures; five Order hulls
 (the Versicle at 1.5 m; the Reciter, the Responsory, the Antiphon and the Offertory at
 6.0–7.2 — the Responsory's block asks for fine ceramic panelling, so its 6.0, 6.4 until the
 facet pass thinned its rings, is a finding

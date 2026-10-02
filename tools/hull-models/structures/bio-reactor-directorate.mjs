@@ -43,6 +43,22 @@
  * are. The three arms sit at −90°, 30° and 150°, the kit's default phase,
  * which is what leaves x the longer axis; the script asserts it after the
  * fit so a moved arm fails here rather than in the maps.
+ *
+ * FACETS (#919). The Directorate's rule is one facet edge of 2 m on the odd
+ * lattice, five to fifteen (docs/asset-prompts-3d.md Block 2c;
+ * directorate.mjs `cut`), asked at the fitted footprint's scale (`DRAWN`,
+ * 1.295 m a unit) and settled on each part as pressed. The pass re-cut
+ * what was off it, 40 of this file's 66 rings: the vessel to fifteen round
+ * and seven down (the file's 12 × 8), its collar 16 × 6 → 15 × 7, the six
+ * scutes and the crown seam to 15 × 7 (8 × 6 and 10 × 6), the four ports
+ * 8 × 5 → 9 × 5, the gullet eight to fifteen and its two ribs 12 × 5 →
+ * 15 × 5; on the kit's bed and arms the holdfast mat sixteen to fifteen,
+ * the slab eight to fifteen, the kerb 16 × 5 → 15 × 5, the throat drums
+ * ten to fifteen, the feed throats ten to eleven and the boom legs six to
+ * seven. The four mound spines and fifteen rake tines keep their five, the
+ * navy's section. Triangles 2,692 → 3,646; the fit, the after arms' rake
+ * beams, is unchanged at 138.9627. `facets.mjs` names no ring here, and no
+ * contact pair was lost or gained.
  */
 import {
   THREE,
@@ -55,6 +71,13 @@ import {
 import * as directorate from '../factions/directorate.mjs';
 
 const L = 180;
+/** The plan's long side as built: the after arms' rake beams, tip to tip (kit.mjs `fitFootprint`). */
+const DRAWN = 138.9627;
+// The Directorate's facet rule at this file's scale (directorate.mjs `cut`,
+// #919): the model is drawn 138.96 across and priced at 180 m, and the rule
+// is a chord in metres. Asserted after the fit, since the fit is what sets
+// the scale.
+const cut = directorate.cut(L / DRAWN);
 const ARMS = { count: 3, phase: -Math.PI / 2 };
 /** The outflow runs into the gap between the arms at −90° and 30°. */
 const OUTFLOW = -Math.PI / 6;
@@ -72,7 +95,17 @@ root.name = 'bio_reactor_directorate';
 
 // The bed: the holdfast in trench black, the slab in violet, the kerb and
 // its six run lights in steel and crimson.
-reactorBed(root, { holdfast: black, slab: violet, kerb: steel, lamp: lampM });
+// Every round part on the rule's count at its own radius (kit.mjs `asked`,
+// #919); the pad keeps the kit's turn of an eighth, a flat to the bow.
+reactorBed(
+  root,
+  { holdfast: black, slab: violet, kerb: steel, lamp: lampM },
+  {
+    mat: { facets: cut.round },
+    pad: { facets: cut.round },
+    rim: { radial: cut.round, facets: cut.round },
+  }
+);
 
 // Three arms out into the canopy, booms in steel, throats in the unlit
 // finish, anchor feet in red and the rake tines in trench black.
@@ -80,7 +113,14 @@ radialSeries(ARMS, (a) =>
   reactorIntakeArm(
     root,
     { boom: steel, collar: black, throat: unlit, foot: red, rake: black },
-    { bearing: a }
+    {
+      bearing: a,
+      drum: { facets: cut.round },
+      mouth: { facets: cut.round },
+      tines: { facets: cut.round },
+      // The kit's own legs, asked for the rule's count (kit.mjs `reactorIntakeArm`, #919).
+      legs: { at: 48, spread: 5.2, r: [1.1, 1.5], h: 12.4, facets: cut.round },
+    }
   )
 );
 
@@ -89,6 +129,7 @@ directorate.reactorVessel(
   root,
   { violet, red, black, steel, lampM, unlit },
   {
+    cut,
     mound: { y: 18, r: [19, 17, 19] },
     collar: { r: 17.8, t: 1.7, y: 9 },
     scutes: {
@@ -132,6 +173,7 @@ directorate.reactorOutflow(
   root,
   { red, black, steel, unlit },
   {
+    cut,
     bearing: OUTFLOW,
     gullet: {
       // Low enough to enter the hopper's throat: the first draft's gullet ran
@@ -153,6 +195,8 @@ directorate.reactorOutflow(
 );
 
 const size = fitFootprint(root, L);
+if (Math.abs(Math.max(size.x, size.z) - DRAWN) > 1e-3)
+  throw new Error(`${root.name}: drawn ${Math.max(size.x, size.z)}, DRAWN says ${DRAWN}`);
 if (size.z > size.x)
   throw new Error(
     `${root.name}: drawn ${size.x.toFixed(2)} × ${size.z.toFixed(2)}; the arms' phase has to leave x the longer axis`

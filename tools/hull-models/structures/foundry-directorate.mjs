@@ -90,9 +90,12 @@
  *     rank moves, both lips, to either side of the forge line at x ±0.75 —
  *     the one column the plates and the Commune's lobes leave clear; the
  *     floor's own edges at ±1.7 are under the plates. The hull in
- *     progress, whose plan reaches x 0.69, still covers 38 % of
- *     `bay_guide_0_2` at z 0.9, which shows 4.94 m² where its siblings
- *     show 6.8 to 8.1. The port rank overlaps the forge line's edge by
+ *     progress, whose plan reached x 0.69, covered 38 % of
+ *     `bay_guide_0_2` at z 0.9, which showed 4.94 m² where its siblings
+ *     showed 6.8 to 8.1 (6.0–6.2 since the pass cut them 5 × 3) — and 74 %
+ *     once the rule cut it fifteen-sided
+ *     (#919), so that guide steps 0.7 aft to z 0.2 (`foundryBay`
+ *     `shift`) and shows 6.1 m². The port rank overlaps the forge line's edge by
  *     0.9 m, the line running 0.15 off centre; the starboard rank clears
  *     it. And to
  *     z −4.1 at the same 2.5 pitch, off the beams (rule 5). The kit's
@@ -140,6 +143,28 @@
  * so that both consumers' own rescale is exactly 1 and the maps stay where
  * the approved export put them; the built file is X-long (320 × 306.7 m),
  * so intake does not yaw it again.
+ *
+ * FACETS (#919). The navy's rule is one facet of 2 m, odd counts five to
+ * fifteen, five and a named four the sections (docs/asset-prompts-3d.md
+ * Block 2c; directorate.mjs `cut`), asked at this file's scale and settled on
+ * each part as its node places it; the kit's bay, cranes, mouth, tanks and
+ * pipes take it through `asked`. The export's counts went: the eight tergites
+ * 9 × 6 → 15 × 4 over 0.58 of a half-turn, their seams 4 × 16 → 7, 9 or 11 by
+ * 7 over their half turn (tube by ring, the tubes pressed with their
+ * plates), the outrigger pods 8 × 5 and 7 × 5 → 15 × 7, the stern carapace
+ * 9 × 6 → 15 × 7 with its seam 4 × 16 → 5 × 15, the hull in progress
+ * 3 × 7 → 4 × 15, the bay guides and warning lights 5 × 4 → 5 × 3, the
+ * finials 4 → 7, the cables 5 → 5, the launch mouth 5 × 10 → 5 × 15 (its
+ * tube's five a section kept) with its
+ * drum 9 → 15, the ballast tanks 3 × 8 → 4 × 15, the graft pipes 7 → 11 with
+ * flanges 5 × 10 → 5 × 15, and the ten flank photophores 5 × 4 → 5 × 3 (one
+ * 7 × 4); the spine spikes, the two mandibles and the five claws keep their
+ * sections. `facets.mjs` names three of its 118 rings: the hull in progress
+ * and the two ballast tanks, capsules whose half-turn share of fifteen is
+ * seven, odd, so the capsule takes the segment over: eight a half turn,
+ * sixteen a turn (Block 2c, the capsule reading). Triangles
+ * 3,884 → 4,714; `DRAWN` 17.4421, where the file measured 17.5184. The ten
+ * flank photophores are grown from their plates now (`on`, below).
  */
 import {
   THREE,
@@ -148,6 +173,7 @@ import {
   launchMouth,
   ballastTanks,
   flangedPipes,
+  capsule,
   drawn,
   metreTrue,
   exportGlb,
@@ -155,8 +181,10 @@ import {
 import * as directorate from '../factions/directorate.mjs';
 
 const L = 320;
-const DRAWN = 17.518382244244393;
+const DRAWN = 17.4421;
 const DATUM = 0;
+// The navy's facet rule at this file's scale (directorate.mjs `cut`, #919).
+const cut = directorate.cut(L / DRAWN);
 
 const red = directorate.ink.chitinRed();
 const steel = directorate.ink.weldSteel();
@@ -179,6 +207,7 @@ directorate.tergiteFlanks(
   root,
   { violet, red, black, steel },
   {
+    cut,
     flanks: [
       {
         name: 'port',
@@ -239,11 +268,11 @@ directorate.outriggerPods(
   root,
   { violet, black, red },
   {
-    big: { r: 1.8, facets: [8, 5], at: [6.5, 0.7, -2], rot: [0, 0.5, 0], scale: [1.25, 0.7, 0.95] },
+    cut,
+    big: { r: 1.8, at: [6.5, 0.7, -2], rot: [0, 0.5, 0], scale: [1.25, 0.7, 0.95] },
     spike: { r: 0.18, length: 1.6, at: [7.6, 1.4, -2.6], rot: [0, 0, -0.7] },
     small: {
       r: 1.2,
-      facets: [7, 5],
       at: [-5.8, 0.55, 3.9],
       rot: [0, -0.4, 0],
       scale: [1.1, 0.7, 1.3],
@@ -254,11 +283,11 @@ directorate.sternCarapace(
   root,
   { red, steel, black },
   {
-    carapace: { r: 3, facets: [9, 6], at: [0.7, 1, -7.2], scale: [1.15, 0.72, 0.9] },
+    cut,
+    carapace: { r: 3, at: [0.7, 1, -7.2], scale: [1.15, 0.72, 0.9] },
     seam: {
       R: 2.2,
       tube: 0.09,
-      facets: [4, 16],
       at: [0.7, 1.95, -7.2],
       rot: [Math.PI / 2, 0, 0],
       scale: [1.15, 0.9, 1],
@@ -269,13 +298,24 @@ directorate.sternCarapace(
 
 // The bay, at the kit's defaults — this file's numbers, the guides either
 // side of the forge line since #890 — with the −x lip one guide short; and
-// the two cranes over it.
+// the two cranes over it. The hull in progress, the guides, the finials, the
+// cables and the warning lights take the navy's rule through the kit's
+// `asked` (#919); their stations and sizes are the kit's defaults.
 foundryBay(
   root,
   { floor: black, forge, hull: violet, guide: crimson },
   {
+    hull: {
+      geo: capsule(0.65, 2.2, ...cut.capsule(0.65)),
+      at: [0.1, 1.15, 2.1],
+      rot: [Math.PI / 2, 0, 0.06],
+    },
+    guide: { r: 0.1, facets: cut.orb, x: 0.75, y: 0.62, from: -4.1, pitch: 2.5, count: 5 },
     sides: [
-      { lip: 'port', guides: '0', sgn: 1 },
+      // `_0_2` steps 0.7 aft off its station, out from under the rule's
+      // fifteen-sided hull in progress, which covered it to 1.6 m² of 6 from
+      // above (hull-reviewer, the first round; kit.mjs `foundryBay` `shift`).
+      { lip: 'port', guides: '0', sgn: 1, shift: { 2: [0, 0, -0.7] } },
       { lip: 'starboard', guides: '1', sgn: -1, only: [0, 1, 3, 4] },
     ],
   }
@@ -288,23 +328,34 @@ const crane = {
   load: steel,
   warnlight: crimson,
 };
+const ruled = {
+  finials: { x: 3, y: 6.4, r: 0.12, h: 0.9, facets: cut.round },
+  cable: { r: 0.05, facets: cut.round, hang: 0.2 },
+  warnlight: { y: 6.08, r: 0.09, facets: cut.orb },
+};
 gantryCrane(root, crane, {
   n: 0,
   at: [0, 0, -2.6],
   trolley: { x: 0.230816541, y: 5.3, size: [0.8, 0.5, 0.7] },
+  ...ruled,
 });
 gantryCrane(root, crane, {
   n: 1,
   at: [0, 0, 2.9],
   trolley: { x: -0.091257522, y: 5.3, size: [0.8, 0.5, 0.7] },
   load: { y: 3.6, size: [0.55, 0.4, 0.5] },
+  ...ruled,
 });
 
 // The launch mouth and its glow drum, at the kit's defaults — the drum
 // lying flat at the floor's level since #893, lit in `forge_light`, the
 // forge line's own: the block's forge light "at its mouth" (the header) —
 // and the mandibles.
-launchMouth(root, { mouth: black, glow: forge });
+launchMouth(root, { mouth: black, glow: forge }, {
+  // The mouth's tube keeps the file's five (a section, Block 2c's pentagons); the ring is the rule's.
+  mouth: { R: 1.7, tube: 0.3, facets: [5, cut.round], at: [0.1, 1.5, 6.7], scale: [1.15, 0.8, 1] },
+  glow: { r: 1.35, h: 0.2, facets: cut.round, at: [0.1, 0.5, 6.0], rot: [0, 0, 0] },
+});
 directorate.launchMandibles(root, violet, {
   r: 0.18,
   length: 1.5,
@@ -320,30 +371,39 @@ directorate.launchMandibles(root, violet, {
 // since #893 (the header), lit as the approved file lights them. Nine of
 // them the export drew inside the tergite shells — `_0` just under its
 // plate's surface, the rest deep — so each of those keeps its station in
-// plan and takes its plate's surface height there, read off the built
+// plan and took its plate's surface height there, read off the built
 // file from above at eight cells a metre with the dome itself left out,
-// plus `LIFT`, the 0.07 a guide sat proud of its lip (#890).
+// plus `LIFT`, the 0.07 a guide sat proud of its lip (#890). Those
+// heights were read off the file's 9 × 6 plates; the rule's are 15 × 4
+// and their facets lie elsewhere, so since #919 every lamp is seeded at
+// that station and grown from whichever plate is nearest (`on`, kit.mjs
+// `seat`): three had come to stand 0.05–0.25 m off their plates.
 const LIFT = 0.07;
+const PLATES = [0, 1, 2, 3].flatMap((i) => [`tergite_port_${i}`, `tergite_starboard_${i}`]);
+const seeded = (at) => ({ ...drawn(at), on: PLATES });
 directorate.photophoreDomes(root, crimson, {
-  facets: [5, 4],
+  cut,
   domes: [
-    ['flank_photophore_0', 0.0918777, drawn([2.6, 2.476 + LIFT, -3.2])],
-    ['flank_photophore_1', 0.0865724, drawn([3.35, 2.943 + LIFT, -2.7])],
-    ['flank_photophore_2', 0.0933471, drawn([4.1, 2.979 + LIFT, -2.2])],
-    ['flank_photophore_3', 0.0834194, drawn([2.6, 2.887 + LIFT, 1.5])],
-    ['flank_photophore_4', 0.0967476, drawn([3.35, 3.0 + LIFT, 2])],
-    ['flank_photophore_5', 0.0894588, drawn([4.1, 2.775 + LIFT, 2.5])],
-    ['flank_photophore_6', 0.0875567, drawn([4.85, 1.98 + LIFT, 3])],
-    ['flank_photophore_7', 0.1091392, drawn([-2.6, 2.528785505, -0.8])],
-    ['flank_photophore_8', 0.0965313, drawn([-3.35, 2.638 + LIFT, -0.3])],
-    ['flank_photophore_9', 0.0934656, drawn([-4.1, 2.357 + LIFT, 0.2])],
+    ['flank_photophore_0', 0.0918777, seeded([2.6, 2.476 + LIFT, -3.2])],
+    ['flank_photophore_1', 0.0865724, seeded([3.35, 2.943 + LIFT, -2.7])],
+    ['flank_photophore_2', 0.0933471, seeded([4.1, 2.979 + LIFT, -2.2])],
+    ['flank_photophore_3', 0.0834194, seeded([2.6, 2.887 + LIFT, 1.5])],
+    ['flank_photophore_4', 0.0967476, seeded([3.35, 3.0 + LIFT, 2])],
+    ['flank_photophore_5', 0.0894588, seeded([4.1, 2.775 + LIFT, 2.5])],
+    ['flank_photophore_6', 0.0875567, seeded([4.85, 1.98 + LIFT, 3])],
+    ['flank_photophore_7', 0.1091392, seeded([-2.6, 2.528785505, -0.8])],
+    ['flank_photophore_8', 0.0965313, seeded([-3.35, 2.638 + LIFT, -0.3])],
+    ['flank_photophore_9', 0.0934656, seeded([-4.1, 2.357 + LIFT, 0.2])],
   ],
 });
 
 // Two ballast tanks and two graft pipes with their flanges, at the kit's
-// defaults — this file's numbers.
-ballastTanks(root, steel);
-flangedPipes(root, { pipe: steel, flange: red });
+// defaults — this file's numbers — cut by the navy's rule (#919).
+ballastTanks(root, steel, { facets: cut.capsule });
+flangedPipes(root, { pipe: steel, flange: red }, {
+  pipe: { radii: [0.16, 0.2], facets: cut.round },
+  flange: { R: 0.22, tube: 0.06, facets: [cut.round, cut.round] },
+});
 
 // Five anchor claws into the seabed, red and black by their number.
 directorate.anchorClaws(root, [red, black], {

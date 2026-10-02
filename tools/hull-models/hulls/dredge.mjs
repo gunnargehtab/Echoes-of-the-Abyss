@@ -61,6 +61,21 @@
  *   none by more than two metres, none across the keel; `diff.mjs` lists
  *   them and nothing else, and the audit names no lamp on this hull as
  *   hidden or floating.
+ *
+ * FACETS (#919). The Listening's rule is one facet edge of 2 m on the odd
+ * lattice, five to fifteen (docs/asset-prompts-3d.md Block 2c; directorate.mjs
+ * `cut`), asked at the export's scale (×0.903) and settled on each part as
+ * pressed, and the pass re-cut what was off it: the five plates fifteen
+ * round and seven down at 15–22.9 m, where they were fourteen by seven, and
+ * their ridges the same for ten by six; the telson fifteen at 4.5 m for
+ * eight; the mandibles seven at 2 m for six; the claw's arm seven and
+ * forearm five for eight, the boom five for eight, the five plate spines
+ * five for six. The tail spines and claw tips keep their five. 62 parts and
+ * 2,068 triangles become 62 and 2,508; the twenty-eight lamps show 196 m²
+ * for 198, the throat covered a little more by the plates round it, and the
+ * audit names none. The contact sweep's exact-zero test (#746) reads three
+ * resting marks as touching nothing at 0.000 m; they lie on their facets as
+ * before. No ring is off the rule.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -82,10 +97,11 @@ const DRAWN = 132.94;
 /**
  * The five tergites, stern first: `[x, half-length, half-height, half-beam]`,
  * the approved model's own stations — the scales its orbs are drawn at, which
- * are not their bounding boxes. An `orb(14, 7)` reaches only 0.975 of its sx
- * and 0.950 of its sz, so a station read off a box comes out 13.649 for 14
- * and 24.713 for 26, and every ridge and lamp fraction hung on it is then
- * wrong by the same few percent (#630, second pass). Passed twice on purpose
+ * are not their bounding boxes. The file's `orb(14, 7)` reached only 0.975
+ * of its sx and 0.950 of its sz, and the rule's fifteen by seven 0.975 and
+ * 0.970, so a station read off a box comes out a few percent short, and
+ * every ridge and lamp fraction hung on it is then wrong by the same few
+ * percent (#630, second pass). Passed twice on purpose
  * — the plates are built from them and the plate-edge light is ranked off
  * them — so a plate cannot move out from under its own photophores.
  */
@@ -107,19 +123,19 @@ const crimson = directorate.ink.biolightCrimson();
 const root = new THREE.Group();
 root.name = 'directorate_dredge';
 root.scale.setScalar(L / DRAWN);
+// The Listening's facet rule, asked at the export's scale (directorate.mjs `cut`, #919).
+const cut = directorate.cut(L / DRAWN);
 
 // The body: five overlapping plates, alternating violet and red from the
 // stern, each with a raised trailing ridge and a spine off it. `ridge` rather
 // than the Precentor's `seam` — this is the heavier carapace of the two, and
 // the lip stands proud of the plate instead of shading under the one ahead.
-// Fourteen meridians and seven stacks, the approved model's grid: `[12, 8]`
-// has the same 168 triangles and the same bounding box and is a different
-// plate — a pointed lozenge in plan, where this one holds its full beam over
-// a 6.7 m shoulder (#630, second pass).
+// The approved model's grid was fourteen meridians and seven stacks; the rule
+// cuts each plate as pressed (`cut`, #919), fifteen round and seven down.
 directorate.tergites(root, { violet, red, black }, {
   segments: SEGMENTS,
   lip: 'ridge',
-  facets: [14, 7],
+  cut,
   // Starboard 5 m off the keel on the even plates, port 6 m on the odd: two
   // constant offsets on plates from 16 m to 25 m of half-beam, which is the
   // approved model's rule and not a fraction of the beam (#630 F5).
@@ -133,7 +149,7 @@ directorate.telson(root, { violet, black }, {
   tip: -63,
   r: 5,
   length: 14,
-  facets: 8,
+  cut,
   tailSpines: { x: -50, y: 2, z: 9, r: 1.2, length: 9, splay: 0.35 },
 });
 
@@ -177,6 +193,7 @@ directorate.scoopBow(root, { red, steel, black, gullet }, {
   },
   mandibles: { x: 62, z: 10 },
   gullet: { x: 51, y: 3.5, w: 10, d: 9 },
+  cut,
 });
 
 // One great folded claw to port and the dredge boom to starboard. There is no
@@ -200,8 +217,9 @@ directorate.claw(root, { steel, black }, {
     a: { r: 2, length: 9, close: 0.2, at: [48, 2.5, -29] },
     b: { r: 1.6, length: 7, close: -0.3, at: [46, 2.5, -24] },
   },
+  cut,
 });
-directorate.dredgeBoom(root, { steel, black }, { side: 's', x: -8, y: 0.5, z: 29 });
+directorate.dredgeBoom(root, { steel, black }, { side: 's', x: -8, y: 0.5, z: 29, cut });
 
 // The hopper amidships, lit around its throat — the second of the two places
 // this hull puts a lamp large enough to read as a patch rather than a mark.

@@ -155,7 +155,7 @@
  *   pairs' 3 m past theirs, where the chart sees them as the Thurible's
  *   are seen. Under the carapace and not the abdomen: on a body with a
  *   tail fan the walking limbs are the carapace's.
- * - **The keel stops with the carapace.** A black seven-sided spar 36 m
+ * - **The keel stops with the carapace.** A black spar 36 m
  *   long from +31 to −5, 3.2 m forward to 2.6 aft, its axis at −9.4 so its
  *   bottom runs 2.5 m under the middle plate's belly; six steel hoops
  *   (`keel`'s `ribs`) are the "ribbed". Not under the abdomen: a straight
@@ -216,12 +216,31 @@
  * `rim` on `limbs` and the slope-laid marks of `rimPhotophores` are the
  * Thurible's, and every default is the older hulls' own, which
  * `check.mjs` holds to their files.
+ *
+ * FACETS (#919). The Listening's rule is one facet edge of 2 m on the odd
+ * lattice, five to fifteen (docs/asset-prompts-3d.md Block 2c; directorate.mjs
+ * `cut`), asked in metres and settled on each part as pressed, and the pass
+ * re-cut what was off it: the seven plates, three seams and four ridges
+ * fifteen round and seven down at 4.9–16.7 m, where they were twelve by
+ * six and ten by six; the bladder fifteen by seven for twelve by six; the
+ * rostrum fifteen for eight, the keel eleven for seven and its six hoops
+ * eleven for fourteen; the six limbs and the plectrum's two bones five for
+ * six, its three joints five by three for eight by five, and the pick five
+ * for four — a pentagon pressed to 0.3 of its radius, the rule's, since
+ * `plectrum` is no part the four-section names (Block 2c lists it). The
+ * dorsal spines keep their five. 77 parts and 3,858 triangles become 77
+ * and 4,586; the ten marks show 18.3 m² for 18.0, four tail marks and three
+ * edge-row marks now meet their plates, and the inner fan plates, rooted in
+ * the last abdomen plate, no longer graze the one ahead (0.25 m). No ring
+ * is off the rule.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
 
 const L = 100;
 const BOW = L / 2;
+// The Listening's facet rule for a hull drawn in metres (directorate.mjs `cut`, #919).
+const cut = directorate.cut();
 
 /**
  * The abdomen, stern first: `[x, half-length, half-height, half-beam]`,
@@ -290,17 +309,23 @@ directorate.tergites(root, { violet, red, black }, {
   segments: ABDOMEN,
   lip: 'ridge',
   ridge: RIDGE,
+  cut,
 });
-directorate.tergites(root, { violet, red, black }, { segments: CARAPACE, seam: SEAM, first: 4 });
+directorate.tergites(root, { violet, red, black }, {
+  segments: CARAPACE,
+  seam: SEAM,
+  first: 4,
+  cut,
+});
 
 // The rostrum's point is the bow at +50; its base is 14 m aft, inside the
-// fore plate's nose, so the last 6 m of it show. Eight-sided, the Verger's.
-directorate.rostrum(root, red, { tip: BOW, r: 4.5, length: 14, facets: 8 });
+// fore plate's nose, so the last 6 m of it show.
+directorate.rostrum(root, red, { tip: BOW, r: 4.5, length: 14, cut });
 
 // The resonating bladder, showing through the second abdomen plate as a
 // paler dome: violet on red, the Chorister's, 8.4 m across and 2.2 m proud
 // of the plate's crown, 1.6 m to starboard of the keel. No lamp (the header).
-directorate.bladderDome(root, violet, { x: -27, y: 2.6, z: 1.6, r: 4.2 });
+directorate.bladderDome(root, violet, { x: -27, y: 2.6, z: 1.6, r: 4.2, cut });
 
 // Three dorsal spines on the carapace, alternating sides — 3 m to port,
 // 3.5 to starboard, 3.5 to port — 5, 6.5 and 5.5 m long from the bow,
@@ -325,6 +350,7 @@ directorate.limbs(root, steel, {
   r: [0.8, 0.55],
   length: 8,
   fold: 0.6,
+  cut,
 });
 
 // The ribbed pressure keel: a black spar 36 m under the carapace, 3.2 m
@@ -335,6 +361,7 @@ directorate.keel(root, black, {
   radii: [3.2, 2.6],
   length: 36,
   ribs: { count: 6, mat: steel, tube: 0.35, proud: 0.25, inset: 3 },
+  cut,
 });
 
 // The file ridge down the abdomen's back, a metre to starboard of the
@@ -366,6 +393,7 @@ directorate.plectrumLimb(root, { steel, black }, {
   femur: [1.0, 0.85],
   tibia: [0.85, 0.65],
   pick: { r: 1.2, flat: 0.3 },
+  cut,
 });
 
 // The sounding fan, spread: the telson on the keel line to the stern at

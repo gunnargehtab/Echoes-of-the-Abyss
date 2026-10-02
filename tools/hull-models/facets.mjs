@@ -379,7 +379,12 @@ export function keeps(rule, r, part = r.part) {
   return r.n === Math.max(ORB_FLOOR[r.kind] ?? 1, facetsFor(rule, r.radiusM, r.arc));
 }
 
-function isSection(sections = [], turn, part) {
+/**
+ * Is `turn` facets a turn a section the rule keeps on `part`? Exported so a
+ * navy's module can ask the measure's own question of a count a script
+ * names by hand (directorate.mjs, #919) rather than carry a second reading.
+ */
+export function isSection(sections = [], turn, part) {
   return sections.some((s) =>
     typeof s === 'number' ? s === turn : s.turn === turn && isPart(s.parts, part)
   );

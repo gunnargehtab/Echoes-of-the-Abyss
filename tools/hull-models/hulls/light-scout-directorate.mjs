@@ -31,6 +31,20 @@
  * parts' boxes — which the rostrum's box, yawed 0.04 with its node,
  * overhangs at the bow by 0.04 units over the vertices' 28.2237. Every
  * number below is the export's, through kit.mjs `drawn`.
+ *
+ * FACETS (#919). The Directorate's rule is one facet edge of 2 m on odd
+ * counts, five to fifteen (docs/asset-prompts-3d.md Block 2c;
+ * directorate.mjs `cut`), asked at this file's scale — 2.12 m a unit — for
+ * each part as its node places it, and the pass re-cut what was off it: the
+ * two eyes five round by three down at 0.85–1.06 m, where the export had six
+ * by four; the two ridges five-sided where the file cut them four, a `ridge`
+ * being no part the square section names; the three photophore domes five
+ * by three at 0.68 m, where they were eight by six (the head dome shows
+ * 0.88 m² from above, 1.31 before; the flank dome 0.50, 0.69 before). The
+ * rostrum keeps its square, the section the rule names on a `rostrum`, and
+ * the antennae and the telson spike their five. Twelve of the file's sixteen
+ * rings were off the rule and none is; 672 triangles became 468; `DRAWN`
+ * holds at 28.2651, since no re-cut part reaches an extreme.
  */
 import { THREE, box, part, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -38,6 +52,8 @@ import * as directorate from '../factions/directorate.mjs';
 const L = 60;
 const DRAWN = 28.2651;
 const DATUM = 2.6;
+// The navy's facet rule at this file's scale (FACETS, the header).
+const cut = directorate.cut(L / DRAWN);
 
 const violet = directorate.ink.bruiseViolet();
 const red = directorate.ink.abyssalRed();
@@ -74,6 +90,7 @@ directorate.wedgeRostrum(root, chitin, {
   ...drawn([0.05, 2.7, 9.6], [0, 0.04, 0]),
 });
 directorate.eyes(root, red, {
+  cut,
   eyes: [
     ['eye_p', 0.5, drawn([1.05, 3.3, 7.6])],
     ['eye_s', 0.4, drawn([-0.95, 3.15, 7.9])],
@@ -99,7 +116,9 @@ bar('antenna_root_p', chitin, [0.5, 0.5, 1.2], [1.15, 3.4, 6.9], [0, 0, 0.2]);
 bar('antenna_root_s', chitin, [0.45, 0.45, 1.1], [-1.05, 3.3, 7.1], [0, 0, -0.2]);
 
 // Two limbs folded under the flanks, not a pair; two ridges on the back,
-// leaned and splayed each its own way; and the keel.
+// leaned and splayed each its own way — five-sided since #919, the rule's
+// floor, where the file cut them four (a `ridge` is no part the square
+// section names; Block 2c); and the keel.
 bar('limb_p', chitin, [0.5, 0.9, 3.2], [1.5, 1.5, 3.2], [0.2, 0, 0.3]);
 bar('limb_s', chitin, [0.45, 0.8, 2.9], [-1.4, 1.5, 3.8], [0.22, 0, -0.28]);
 directorate.spikes(root, red, {
@@ -108,14 +127,12 @@ directorate.spikes(root, red, {
       name: 'ridge_a',
       radii: [0.02, 0.3],
       length: 1.2,
-      facets: 4,
       ...drawn([-0.15, 4.1, 1.5], [0.5, 0, 0.25]),
     },
     {
       name: 'ridge_b',
       radii: [0.02, 0.26],
       length: 1,
-      facets: 4,
       ...drawn([0.2, 3.9, -2.4], [0.55, 0, -0.22]),
     },
   ],
@@ -150,6 +167,7 @@ directorate.spikes(root, red, {
 // that repeats on neither side, and that is the whole resting light of a
 // hull that idles at SIG 6.
 directorate.photophoreDomes(root, photophore, {
+  cut,
   domes: [
     ['photophore_dome_head', drawn([0.05, 3.65, 6.4])],
     ['photophore_dome_p', drawn([1.45, 2.9, -0.6])],

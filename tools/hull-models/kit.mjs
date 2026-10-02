@@ -1594,14 +1594,21 @@ export function foundryBay(root, mats, opts = {}) {
     frame.part(root, `bay_lip_${side.lip}`, box(...lip.size), lipMat, [x, lip.y, 0]);
     const gx = side.sgn * (guide.x ?? lip.x);
     const rank = side.only ?? Array.from({ length: guide.count }, (_, i) => i);
-    for (const i of rank)
+    // `side.shift[i]` steps one guide `[dx, dy, dz]` off its station: a
+    // navy's hull in progress can cover a guide from above once its round
+    // is the rule's (#919, the Directorate's `bay_guide_0_2` under its
+    // fifteen-sided capsule, 1.6 m² of 6 showing), and the rank's pitch is
+    // the file's for the other four.
+    for (const i of rank) {
+      const [dx, dy, dz] = side.shift?.[i] ?? [0, 0, 0];
       frame.part(
         root,
         `bay_guide_${side.guides}_${i}`,
         new THREE.SphereGeometry(guide.r, ...asked(guide.facets, guide.r)),
         guideMat,
-        [gx, guide.y, guide.from + guide.pitch * i]
+        [gx + dx, guide.y + dy, guide.from + guide.pitch * i + dz]
       );
+    }
   }
 }
 
@@ -1652,7 +1659,7 @@ export function gantryCrane(root, mats, opts) {
       frame.part(
         crane,
         `gantry_finial_${n}_${i}`,
-        cyl(0, finials.r, finials.h, finials.facets),
+        cyl(0, finials.r, finials.h, asked(finials.facets, finials.r)),
         mats.finial,
         [sgn * finials.x, finials.y, 0]
       );
@@ -1751,9 +1758,16 @@ export function launchMouth(root, { mouth: mouthMat, glow: glowMat }, opts = {})
     mouth = { R: 1.7, tube: 0.3, facets: [5, 10], at: [0.1, 1.5, 6.7], scale: [1.15, 0.8, 1] },
     glow = { r: 1.35, h: 0.2, facets: 9, at: [0.1, 0.5, 6.0], rot: [0, 0, 0] },
   } = opts;
-  const ring = torus(mouth.R, mouth.tube, ...mouth.facets);
+  // The files' counts, or a navy's rule (#919, `asked`): the ring's at its
+  // outer radius and its tube's at the tube, the drum's at its radius.
+  const ring = torus(
+    mouth.R,
+    mouth.tube,
+    asked(mouth.facets[0], mouth.tube),
+    asked(mouth.facets[1], mouth.R + mouth.tube)
+  );
   frame.part(root, 'launch_mouth', ring, mouthMat, mouth.at, [0, 0, 0], mouth.scale);
-  const drum = cyl(glow.r, glow.r, glow.h, glow.facets);
+  const drum = cyl(glow.r, glow.r, glow.h, asked(glow.facets, glow.r));
   frame.part(root, 'launch_glow', drum, glowMat, glow.at, glow.rot);
 }
 

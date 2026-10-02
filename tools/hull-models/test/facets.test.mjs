@@ -272,6 +272,82 @@ test('a Commune part pressed by its node reads as on the rule once settled', asy
   for (const r of ringsOf(yawedMesh)) assert.ok(keeps(pelagia, r), `yawed hoop ${r.kind} ${r.n}`);
 });
 
+test('a Directorate part pressed by its node settles on the odd lattice; a hand count is a section or an error', async () => {
+  // The Directorate presses nearly every round part as the Commune does, on
+  // a lattice of odd counts only, so directorate.mjs `cut` settles the same
+  // way (#919). A count a script names by hand is kept only as a section —
+  // five anywhere, four on the parts the rule lists — read through the
+  // measure's own `isSection`, so a six a script names is refused where a
+  // six a builder defaulted to goes to the rule.
+  const { cut, spikes, ink } = await import('../factions/directorate.mjs');
+  const { drawn } = await import('../kit.mjs');
+  const rule = cut();
+  const check = (geo, scale, what, rot = [0, 0, 0]) => {
+    const mesh = meshOf(geo, { scale, name: what });
+    mesh.rotation.set(...rot);
+    mesh.updateMatrixWorld(true);
+    const rings = ringsOf(mesh);
+    assert.ok(rings.length, `${what} has rings`);
+    for (const r of rings)
+      assert.ok(
+        keeps(directorate, r),
+        `${what} ${r.kind} ${r.n} over ${r.arc.toFixed(3)} at r ${r.radiusM.toFixed(3)}, rule ${facetsFor(directorate, r.radiusM, r.arc)}`
+      );
+  };
+  // Tergites, seams and scutes: unit orbs pressed to plates at a hull's and a
+  // structure's scales, and the mound's shell cut 0.42 of the way down.
+  for (const scale of [
+    [17, 10, 26],
+    [3, 1.8, 2.7],
+    [2.6, 1.5, 2.2],
+    [28, 16, 30],
+    [1.15 * 15, 0.85 * 15, 15],
+  ]) {
+    check(new THREE.SphereGeometry(1, ...rule.orb(1, { scale })), scale, `orb ${scale}`);
+    const window = { thetaLength: Math.PI * 0.42 };
+    const [w, h] = rule.orb(1, { scale }, window);
+    check(new THREE.SphereGeometry(1, w, h, 0, TAU, 0, Math.PI * 0.42), scale, `mound ${scale}`);
+  }
+  // A keel rolled onto X and pressed across the beam, and its hoops.
+  const keel = { scale: [1, 1, 0.8], rot: [0, 0, -Math.PI / 2] };
+  check(new THREE.CylinderGeometry(2.2, 1.6, 40, rule.cyl(2.2, 1.6, 40, keel)), keel.scale, 'keel', keel.rot);
+  const [radial, tubular] = rule.torus(2.5, 0.35, { scale: [1, 1, 0.8], yaw: true });
+  check(new THREE.TorusGeometry(2.5, 0.35, radial, tubular).rotateY(Math.PI / 2), [1, 1, 0.8], 'keel rib');
+  // The silos' lathe on three's own profile, and the drive duct's loft.
+  const profile = [
+    [14, 0],
+    [14, 1],
+    [13, 5],
+    [11.7, 12.8],
+  ].map(([r, y]) => new THREE.Vector2(r, y));
+  check(new THREE.LatheGeometry(profile, rule.lathe(profile)), [1, 1, 1], 'silo');
+  const duct = [
+    [-40, 2.4],
+    [-40, 3],
+    [-32, 3],
+    [-32, 2.4],
+    [-40, 2.4],
+  ];
+  const { loft } = await import('../kit.mjs');
+  check(loft(duct, rule.loft(duct)), [1, 1, 1], 'duct');
+  // The control: a seam orb at a corvette's scale asked at its major radius
+  // alone reads off the rule (a meridian of five where it says four). At the
+  // ceiling the ask and the reading agree, since fifteen is where both clamp,
+  // so the control sits in the lattice's middle band.
+  const flat = [2.6, 1.5, 2.2];
+  const { widthSegments, heightSegments } = orbFacets(directorate, 2.6);
+  const naive = ringsOf(meshOf(new THREE.SphereGeometry(1, widthSegments, heightSegments), { scale: flat }));
+  assert.ok(naive.some((r) => !keeps(directorate, r)), 'the unsettled tergite is named');
+  // Sections: four keeps on a dspike and refuses on a ridge; six is refused anywhere.
+  const root = new THREE.Group();
+  const mat = ink.chitinRed();
+  const dart = (name, facets) => ({ name, radii: [0.02, 0.3], length: 2, facets, ...drawn([0, 0, 0]) });
+  spikes(root, mat, { spikes: [dart('dspike_p0', 4), dart('antenna_p', 5)] });
+  assert.equal(root.children.length, 2);
+  assert.throws(() => spikes(root, mat, { spikes: [dart('ridge_0', 4)] }), /no section/);
+  assert.throws(() => spikes(root, mat, { spikes: [dart('dspike_p1', 6)] }), /no section/);
+});
+
 test('a section keeps a spar\'s count and never an orb\'s', () => {
   const rule = { chordM: 3, min: 4, max: 12, step: 2, sections: [4, 6] };
   const [spar] = ringsOf(meshOf(new THREE.CylinderGeometry(2, 2, 10, 6)));

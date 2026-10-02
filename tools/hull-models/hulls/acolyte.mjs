@@ -97,6 +97,19 @@
  * Every part comes from `factions/directorate.mjs`. `tergiteFlank` and
  * `plantedLimbs` were written for this hull and run here for the first
  * time.
+ *
+ * FACETS (#919). The Listening's rule is one facet edge of 2 m on the odd
+ * lattice, five to fifteen (docs/asset-prompts-3d.md Block 2c; directorate.mjs
+ * `cut`), asked in metres and settled on each part as its node presses it, and
+ * the pass re-cut what was off it: the three plates and their seams fifteen
+ * round and seven down at 5.8–10.8 m, where they were twelve by six and ten
+ * by six; the dome eleven by five at 3.7 m, where it was fourteen by seven;
+ * the rostrum and the telson seven at 2.2 and 2 m, where they were six; the
+ * limbs' bones and feet five at 0.8–1.1 m, where they were six, and their
+ * hips and knees five by three, where they were eight by five. The dome
+ * spines and the dorsal spines keep their five, the navy's section. 54
+ * parts and 2,142 triangles become 54 and 1,898; the six knee marks show
+ * 6.5 m² as before, every contact holds, and no ring is off the rule.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -104,11 +117,14 @@ import * as directorate from '../factions/directorate.mjs';
 const L = 58;
 const BOW = L / 2;
 const STERN = -L / 2;
+// The Listening's facet rule for a hull drawn in metres (directorate.mjs `cut`, #919).
+const cut = directorate.cut();
 
 /**
  * The three tergites, stern first: `[x, half-length, half-height,
- * half-beam]`, the scales the orbs are drawn at — and their extents, since
- * an `orb(12, 6)` reaches its radius on every axis (hulls/precentor.mjs).
+ * half-beam]`, the scales the orbs are drawn at — and, to within the few
+ * percent a fifteen-by-seven orb falls short of its scale across the beam
+ * (hulls/precentor.mjs), their extents.
  * The middle plate is the widest and the lowest for its beam; the plates
  * overlap by a third to a half of a half-length, the Chorister's, so the
  * seams show as dark collars where each plate's forward end passes into
@@ -136,9 +152,9 @@ root.name = 'directorate_acolyte';
 // violet, red, violet from the stern. The rostrum's point is the bow at
 // +29, its base 4 m inside the bow plate; the telson's base ring is the
 // stern at −29, its point buried 2 m into the stern plate.
-directorate.tergites(root, { violet, red, black }, { segments: SEGMENTS });
-directorate.rostrum(root, red, { tip: BOW, r: 2.2, length: 9 });
-directorate.telson(root, { violet, black }, { tip: STERN, r: 2, length: 6 });
+directorate.tergites(root, { violet, red, black }, { segments: SEGMENTS, cut });
+directorate.rostrum(root, red, { tip: BOW, r: 2.2, length: 9, cut });
+directorate.telson(root, { violet, black }, { tip: STERN, r: 2, length: 6, cut });
 
 // The listening dome sunk low into the middle plate: 7.6 m across and 6.4 m
 // tall, centred 2.2 m up on the keel line so its crown stands a metre proud
@@ -153,6 +169,7 @@ directorate.listeningDome(
     r: 3.8,
     ry: 3.2,
     studs: { radius: 2.6, lift: 2.3, length: 2.6, r: 0.45 },
+    cut,
   }
 );
 
@@ -184,6 +201,7 @@ const joints = directorate.plantedLimbs(
     knee: { r: 1.3 },
     tibia: { r: [0.9, 0.7], reach: 4, drop: 6 },
     foot: { r: 0.8, length: 2.4 },
+    cut,
     limbs: [
       { side: 's', x: 13, rake: RAKE },
       { side: 's', x: -2, rake: 0 },
