@@ -284,7 +284,7 @@ composer. Its still is a lighting reference, not a runtime implementation to cop
 | 2 | Lamp core, then a lamp halo ([#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001)) | The lamp core landed ([#1021](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1021), [#1029](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1029)). From #1001's readings the owner picked the full-screen route, drawn after the canvas over a depth-only copy of its depth; "Lamp halo — SPEC" above and gate 6's line specify it, landing off behind its setting |
 | 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | `kit.mjs` already supports bevelled `plate`/`plan`; this is coverage, not a missing primitive. None of the 108 source GLBs has an occlusion texture. Start with one reviewed asset and preserve its silhouette |
 | 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | Vignette and sway are built, with no pass ([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)). The split waits on a gate-6 allocation for its full-screen draw and copy. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
-| 5 | GLB gzip ([#1004](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1004)) | `packages/frontend/nginx.conf` has no gzip rule. Low implementation risk, independent of the visual sequence; delivery cost, not frame quality |
+| 5 | GLB gzip ([#1004](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1004)) | Built. The nginx image's `mime.types` names no `glb`, so `packages/frontend/nginx.conf` names the type in the models' own location and gzips them at level 6. Delivery cost, not frame quality |
 | 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | 6,378 of 6,540 exported primitives have UV0, but attribute presence is not a laid-out atlas. `uvAlike` also writes zero-filled placeholder UVs. Sorrowgate already has triplanar surface detail; retain that work rather than replacing it blindly |
 | 7 | Shallow caustics ([#1006](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1006)) | Design first: where light can exist, how it obeys depth and the licensed world-light families, and what stays unlit. No gameplay visibility |
 | 8 | WebGPU/TSL ([#1007](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1007)) | Defer migration until a separate feasibility decision. Water, survey, surface and sway shader patches depend on the current WebGL pipeline; this is not a renderer-constructor swap |
@@ -294,8 +294,12 @@ counts **17,819,812 raw bytes** and **2,211,283 gzip bytes** over 108 source GLB
 Node's default gzip settings. It reads the library as it stands, so the bytes move
 whenever a model does.
 Those are sums over the source library, not a browser's initial download: Vite hashes
-assets and the client loads them by need. The rank retains the issue's visual priority;
-gzip can proceed independently and WebGPU is not a prerequisite for the other seven.
+assets and the client loads them by need. A solo match on the default map, its build at
+`c771ca8` served by nginx 1.24 through `nginx.conf` and the image's `http` settings, fetched
+13 of the 108 models before its requests stopped: **1,213,200 bytes** raw and **150,459**
+gzipped, by nginx's access log. The whole load fell from 4,546,477 bytes to 3,483,736. The
+rank retains the issue's visual priority, and WebGPU is not a prerequisite for the other
+seven.
 
 ### Reading the Sea Floor
 
