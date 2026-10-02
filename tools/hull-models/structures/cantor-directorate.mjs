@@ -125,7 +125,8 @@
  * it touched the file's. Every photophore is grown from the shell or the
  * foot (`on`), every spine is rooted on the shell (`shellSpines` `on`), and
  * the second ballast pipe stands on the collar, stepped 4 m out along its
- * bearing and plumbed 0.6 m into the dome (`standpipes` `on`, below).
+ * bearing and let into the plate and the dome by up to 1.6 and 1.0 m
+ * (`standpipes` `on`, below).
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -341,10 +342,16 @@ directorate.clawGrips(root, [red, black], {
 // seated where the file stood it, the slide down its lean ran its top 2.2 m
 // and its flange 0.4 m into the dome (hull-reviewer, the second pass), and
 // dropped straight down instead it sat deeper, the dome widening below.
-// Stepped out and seated, the flange stands clear of the shell and the
-// pipe's top runs 0.6 m into the dome's skin — a pipe plumbed into the
-// shell it feeds, where the file's stood 1.7 m short of it in water. The
-// first pipe stood sound on its tier and keeps the file's station.
+// Stepped out and seated, the flange stands clear of the shell; the pipe
+// itself ends 2.1 m nearer the dome's axis than the file stood it, its
+// inboard side running up to 1.6 m into `shell_plate_2` over its middle
+// stretch and up to 1.0 m into the dome's skin over its upper third — a
+// pipe let into the shell it feeds, as the file's own first pipe runs
+// 1.8 m into the same plate (hull-reviewer, the third pass; a vertex probe
+// had read the top alone, 0.6 m). `hydrophone_spine_32` roots in this
+// pipe's wall, 10.4 m² of its 15 inside it, as 4.6 m² were on main: left,
+// an open finding of #1046. The first pipe stood sound on its tier and
+// keeps the file's station.
 const OUT = 0.45;
 const out = ([x, y, z]) => {
   const rho = Math.hypot(x, z);

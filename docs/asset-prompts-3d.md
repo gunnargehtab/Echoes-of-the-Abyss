@@ -634,7 +634,8 @@ rule's half-turn share is odd and a capsule draws an even count, built a segment
 Order's are. What the coarser rounds left standing off was reseated through the builders:
 the Cantor's forty-two hydrophone spines rooted on its dome (`shellSpines` `on`), its
 twenty-two photophores grown from shell and foot (`on`), its second ballast pipe stood on the
-collar (`standpipes` `on`, 4 m out along its bearing and plumbed 0.6 m into the dome), the
+collar (`standpipes` `on`, 4 m out along its bearing, its inboard side let up to 1.6 m into a
+shell plate and 1.0 m into the dome, as the file's first pipe runs 1.8 m into the same plate), the
 turret's two marks, the
 Bastion's four lamps (two grown from their tiers, one lowered, one swung off its rib) and
 the Foundry's ten lamps grown from their plates (`on`) and one bay guide stepped aft, the
