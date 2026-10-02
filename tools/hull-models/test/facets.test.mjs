@@ -252,7 +252,7 @@ test('a Commune part pressed by its node reads as on the rule once settled', asy
       `lathe squashed ${squash}`
     );
   }
-  // The control: an oblate orb cut at the major radius alone reads under the rule.
+  // The control: an oblate orb cut at the major radius alone reads over the rule.
   const flat = [3, 1.5, 3];
   const { widthSegments, heightSegments } = orbFacets(pelagia, 3);
   const naive = ringsOf(

@@ -40,8 +40,9 @@
  * by twelve, and their twelve rings sixteen, where they were twelve. The
  * apron, the clamp and the manifold rings keep the sixteen the rule gives
  * them; the four valve stems and the eight platform legs ask the rule
- * through kit.mjs `ventDrawArm` since the pass, five and nine where the kit
- * drew six. 98 parts and 3,360 triangles become 98 and 5,824.
+ * through kit.mjs `ventDrawArm` since the pass — five for the stems where
+ * the kit drew six, and the six it drew for the legs, which is the rule's
+ * at their radius. 98 parts and 3,360 triangles become 98 and 5,824.
  */
 import {
   THREE,

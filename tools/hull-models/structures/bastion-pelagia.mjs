@@ -238,7 +238,7 @@ pelagia.portLights(root, bio, {
 // The veins are lamps, and a two-segment arc over 0.9 rad at the file's
 // radius dips under the dome's skin between its vertices, so that the first
 // showed nothing from above (31 m² before the rule). Set out by a fifth of
-// their sag (`domeArcs` `sag`, #919) they show 16, 84 and 508 m² and the
+// their sag (`domeArcs` `sag`, #919) they show 16, 82 and 508 m² and the
 // first's end stays 0.15 m clear of the crown bud; by the whole it ran 2.9 m
 // into it.
 pelagia.domeArcs(root, bio, {

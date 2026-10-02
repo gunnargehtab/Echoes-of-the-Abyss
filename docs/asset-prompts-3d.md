@@ -564,7 +564,7 @@ lamp housings the crown flat's shortfall as the Consortium's did, the Bower's be
 are seated on its regenerated hull, the Glider's tail knuckle moves 0.13 m aft to keep
 the stern at 27.5 and its fluke's hinge comes down 0.24 m onto it, the Veil's eight gill
 slits stand 0.05 further out of mounds that filled to their spheres, and the Light Scout's
-two flank marks grow from 0.035 to 0.042 — the one lamp the pass touched, because at the
+two flank marks grow from 0.035 to 0.042 — the one lamp the pass resized, because at the
 rule's five by three a 0.035 bud owned 0.19 m² from above and a mark that can face up takes
 no residual audit line ("Glow encodes loudness", above). Seven files fit a hair differently once their rounds moved — the Foundry
 is 1.1 % smaller in metres and the Veil 1.3, the rest under 0.6 — and two more now assert

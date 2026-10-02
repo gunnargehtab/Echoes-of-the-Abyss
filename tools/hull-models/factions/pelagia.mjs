@@ -1641,7 +1641,7 @@ export function domeRings(root, mat, opts) {
  * and a vein's end ran 2.9 m into the crown bud — so a band whose chords
  * sink into an opaque dome takes none, and a lamp takes the least share
  * that shows it from above with its ends still clear of what they pass:
- * the Bastion's veins at a fifth show 16, 84 and 508 m² where the full
+ * the Bastion's veins at a fifth show 16, 82 and 508 m² where the full
  * sag showed 137, 272 and 528 and none 0, 54 and 505. Without `sag` the
  * file's radius is built, as every arc was before the rule.
  */
