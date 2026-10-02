@@ -447,11 +447,14 @@ export function cable(root, name, a, b, mat, { r = 0.15, sag = 0, steps = 8, fac
 export function louvres(root, name, mat, opts) {
   const { x, y, z = 0, length, count, pitch, slat = pitch * 0.8, tilt = 0.5, t = 0.15 } = opts;
   for (let i = 0; i < count; i++)
-    add(root, `${name}_${i}`, box(length, t, slat), mat, [x, y, z + (i - (count - 1) / 2) * pitch], [
-      tilt,
-      0,
-      0,
-    ]);
+    add(
+      root,
+      `${name}_${i}`,
+      box(length, t, slat),
+      mat,
+      [x, y, z + (i - (count - 1) / 2) * pitch],
+      [tilt, 0, 0]
+    );
 }
 
 /** A strut between two points, oriented by quaternion — no Euler-order guesswork. */
@@ -796,13 +799,11 @@ export function ventWellhead(root, { rock, mouth, steel }, opts = {}) {
       lobes.size
     )
   );
-  add(
-    root,
-    'vent_mouth',
-    cyl(ember.r, ember.r, ember.t, asked(ember.facets, ember.r)),
-    mouth,
-    [0, ember.y, 0]
-  );
+  add(root, 'vent_mouth', cyl(ember.r, ember.r, ember.t, asked(ember.facets, ember.r)), mouth, [
+    0,
+    ember.y,
+    0,
+  ]);
   add(
     root,
     'apron',
@@ -859,8 +860,22 @@ export function ventDrawArm(root, { rock, steel, deck, lamp, flood }, opts) {
     polar(a, (pipe.from + pipe.to) / 2, pipe.y),
     [0, -a, -Math.PI / 2]
   );
-  add(root, 'valve_block', box(valve.block, valve.block, valve.block), rock, polar(a, valve.at, pipe.y), yaw);
-  add(root, 'valve_stem', cyl(valve.stem.r, valve.stem.r, valve.stem.h, 6), rock, polar(a, valve.at, valve.stem.y));
+  add(
+    root,
+    'valve_block',
+    box(valve.block, valve.block, valve.block),
+    rock,
+    polar(a, valve.at, pipe.y),
+    yaw
+  );
+  // The stem's and the legs' counts are the file's six unless a navy asks its rule (#919).
+  add(
+    root,
+    'valve_stem',
+    cyl(valve.stem.r, valve.stem.r, valve.stem.h, asked(valve.stem.facets ?? 6, valve.stem.r)),
+    rock,
+    polar(a, valve.at, valve.stem.y)
+  );
   // A lamp housing saddled on the pipe: its underside `sink` into the
   // crown rather than tangent to it. The approved files laid each housing
   // exactly on the pipe's top edge, an edge along a face with no vertex of
@@ -873,7 +888,14 @@ export function ventDrawArm(root, { rock, steel, deck, lamp, flood }, opts) {
   // a fixture on a pipe is, and reads the same on all four.
   const lampY = pipe.y + pipe.r + lamps.size[1] / 2 - lamps.sink;
   for (let i = 0; i < lamps.count; i++)
-    add(root, `pipe_lamp_${i}`, box(...lamps.size), lamp, polar(a, lamps.from + lamps.pitch * i, lampY), yaw);
+    add(
+      root,
+      `pipe_lamp_${i}`,
+      box(...lamps.size),
+      lamp,
+      polar(a, lamps.from + lamps.pitch * i, lampY),
+      yaw
+    );
   add(
     root,
     'riser',
@@ -882,7 +904,14 @@ export function ventDrawArm(root, { rock, steel, deck, lamp, flood }, opts) {
     polar(a, riser.at, riser.y)
   );
   add(root, 'platform', box(...platform.size), deck, polar(a, platform.at, platform.y), yaw);
-  add(root, 'platform_flood', box(...platform.flood.size), flood, polar(a, platform.at, platform.flood.y), yaw);
+  add(
+    root,
+    'platform_flood',
+    box(...platform.flood.size),
+    flood,
+    polar(a, platform.at, platform.flood.y),
+    yaw
+  );
   for (const [tag, sgn] of [
     ['a', -1],
     ['b', 1],
@@ -890,7 +919,7 @@ export function ventDrawArm(root, { rock, steel, deck, lamp, flood }, opts) {
     add(
       root,
       `platform_leg_${tag}`,
-      cyl(legs.r[0], legs.r[1], legs.h, 6),
+      cyl(legs.r[0], legs.r[1], legs.h, asked(legs.facets ?? 6, Math.max(...legs.r))),
       steel,
       polar(a, platform.at + sgn * legs.spread, legs.y)
     );
@@ -1086,7 +1115,12 @@ export function slipwayGantry(root, { beam, trolley, cable, worklight }, opts) {
   });
   add(g, 'gantry_beam', box(...beamBar.size), beam, [x, beamBar.y, 0]);
   add(g, 'gantry_trolley', box(...crab.size), trolley, [x, crab.y, crab.z]);
-  add(g, 'gantry_cable', cyl(fall.r, fall.r, fall.h, 4), cable, [x, fall.y, crab.z]);
+  // The cable is the file's four-sided fall unless a navy asks its rule (#919).
+  add(g, 'gantry_cable', cyl(fall.r, fall.r, fall.h, asked(fall.facets ?? 4, fall.r)), cable, [
+    x,
+    fall.y,
+    crab.z,
+  ]);
   add(g, 'gantry_worklight', box(...light.size), worklight, [
     x + beamBar.size[0] / 2 + light.clear,
     light.y,
@@ -1910,7 +1944,15 @@ export function crusher(root, mats, opts = {}) {
   } = opts;
   frame.part(root, 'crusher_house', box(...house.size), mats.house, house.at, house.rot);
   frame.part(root, cowl.name ?? 'crusher_cowl', cowl.geo, mats.cowl, cowl.at, cowl.rot, cowl.scale);
-  frame.part(root, 'crusher_maw', maw.geo ?? box(...maw.size), mats.maw, maw.at, maw.rot, maw.scale);
+  frame.part(
+    root,
+    'crusher_maw',
+    maw.geo ?? box(...maw.size),
+    mats.maw,
+    maw.at,
+    maw.rot,
+    maw.scale
+  );
 }
 
 /**
@@ -1940,7 +1982,12 @@ export function exhaustStacks(root, { steel, glow }, opts = {}) {
         root,
         `exhaust_stack_${s.n}`,
         geo('stack', () =>
-          cyl(stack.radii[0], stack.radii[1], stack.h, asked(stack.facets, Math.max(...stack.radii)))
+          cyl(
+            stack.radii[0],
+            stack.radii[1],
+            stack.h,
+            asked(stack.facets, Math.max(...stack.radii))
+          )
         ),
         steel,
         s.at,
@@ -2029,7 +2076,11 @@ export function conveyorGantry(root, mats, opts = {}) {
         // files' own numbers and pass nothing; the Order's row hung over
         // the belt and takes its second rail (#907, refinery-hadron.mjs).
         const placement = side.lights.on
-          ? seat(gantry, side.lights.on, station, { stand: lights.r, sink: lights.r / 2, drop: true })
+          ? seat(gantry, side.lights.on, station, {
+              stand: lights.r,
+              sink: lights.r / 2,
+              drop: true,
+            })
           : { at: station };
         frame.place(
           gantry,
@@ -2338,7 +2389,7 @@ export function reactorIntakeArm(
     add(
       root,
       `boom_leg_${tag}`,
-      cyl(legs.r[0], legs.r[1], legs.h, 6),
+      cyl(legs.r[0], legs.r[1], legs.h, asked(legs.facets ?? 6, Math.max(...legs.r))),
       boomMat,
       beside(legs.at, sgn * legs.spread, legs.h / 2),
       yaw

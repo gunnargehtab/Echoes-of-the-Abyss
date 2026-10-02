@@ -72,7 +72,14 @@
  * sharpest form (docs/models-plan.md §3.2): a single mark a little over
  * the audit's own 0.25 m² is still 1.2 % of a 31 m² plan, and the only
  * other lever, its strength, is the one the conn view keeps. 9 parts,
- * 1,308 triangles, five materials, bounds x ±7, y −1.5..2.0, z −2.3..2.5.
+ * 1,012 triangles, five materials, bounds x ±7, y −1.5..2.0, z −2.3..2.5.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked in metres,
+ * and on a 14 m hull every round part lands at or near the floor: the body
+ * and its ring to six at 1.3–1.4 m of radius, where they were twelve; the
+ * gun's node, lip and seed to five at 0.2–0.5 m, where they were ten, ten
+ * and eight. 9 parts and 1,308 triangles become 9 and 1,012.
  *
  * The hand-drawn entry in silhouettes.ts stays until the kind is wired
  * (docs/models-plan.md §2). The generated outline is seventeen vertices: a
@@ -97,8 +104,6 @@ const root = new THREE.Group();
 root.name = 'pelagia_runner';
 
 const SQUASH = 0.72;
-const FACETS = 12;
-const FLAT = Math.cos(Math.PI / FACETS);
 
 /**
  * The body's stations, [x, r] in metres: a seed, fullest a little forward
@@ -126,18 +131,25 @@ const rAt = (x) => {
   }
   return PROFILE[PROFILE.length - 1][1];
 };
+// The Commune's facet rule, a chord of 1.5 m (docs/asset-prompts-3d.md Block
+// 2c; pelagia.mjs `cut`, #919), asked in metres since the file is drawn in them.
+const cut = pelagia.cut();
+/** The body's count under the rule, as squashed — the floor, on a body 1.3 m in radius. */
+const FACETS = cut.lathe(PROFILE, { scale: [1, SQUASH, 1] });
+const FLAT = Math.cos(Math.PI / FACETS);
 const crownAt = (x) => rAt(x) * SQUASH * FLAT;
 
 /** The node the two seed leaves spring from, and the one ring on the hull. */
 const NODE = 3.2;
 
-pelagia.podBody(root, chitin, { squash: SQUASH, facets: FACETS, profile: PROFILE });
+pelagia.podBody(root, chitin, { squash: SQUASH, profile: PROFILE, cut });
 pelagia.growthRings(root, ridge, {
   stations: [[NODE, rAt(NODE) - 0.08]],
   squash: SQUASH,
   tube: 0.22,
   wobble: 0.07,
-  ring: { rise: 0.22, facets: FACETS },
+  ring: { rise: 0.22 },
+  cut,
 });
 
 // The two seed leaves, off the one node, swept aft: opposite and unequal.
@@ -147,6 +159,7 @@ pelagia.leafWing(
   {
     name: 'seed_leaf',
     side: 's',
+    cut,
     root: [NODE, 0.05, 0.9],
     span: 4.6,
     depth: 1.8,
@@ -160,6 +173,7 @@ pelagia.leafWing(
   {
     name: 'seed_leaf',
     side: 'p',
+    cut,
     root: [NODE - 0.3, 0.0, -0.86],
     span: 4.0,
     depth: 1.6,
@@ -173,7 +187,7 @@ pelagia.seedNodes(
   root,
   { chitin, ridge, seed: spore },
   {
-    facets: 10,
+    cut,
     nodes: [
       {
         side: 's',

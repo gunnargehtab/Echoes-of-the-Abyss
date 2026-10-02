@@ -88,8 +88,21 @@
  * nothing hidden. The bake at E(8) = 0.80 reads raw E 4.34 → calibrated
  * 0.82 at a gain of ×0.183: under the SIG-8 Spinner's raw 7.56, and 11.7×
  * above the ×1/64 floor docs/models-plan.md §3.2 warns the quiet end
- * about. 16 parts, 1,828 triangles, bounds x ±27.5, y −2.6..3.0,
+ * about. 16 parts, 1,754 triangles, bounds x ±27.5, y −2.6..3.0,
  * z −8.4..16.3.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked in metres,
+ * and the pass re-cut what was off it: the stem to fifteen at 3.5 m of
+ * radius, where it was fourteen; its two rings to seven and eleven at 1.7
+ * and 2.7 m, where both were fourteen; the wing's three rings to sixteen at
+ * 5.3–6.6 m, where they were fourteen; the tail knuckle to five by three,
+ * where it was ten by six, and so stood 0.13 m further aft to keep its
+ * aftmost vertex the stern — a five-by-three orb has no equator, and its
+ * widest ring is sin 60° of the radius; the veins stay five, the floor.
+ * The knuckle's crown is a point now, 0.215 m under the fluke's underside
+ * where the ten-by-six orb kissed it. 16 parts and 1,828 triangles become
+ * 16 and 1,754.
  *
  * The generated outline reads the wing at +Y, starboard, 0.22 out at x
  * −0.16, and the vane at −0.22 at x −0.125 — the two extremes equal because
@@ -155,20 +168,26 @@ const rAt = (x) => {
   }
   return PROFILE[PROFILE.length - 1][1];
 };
-/** The crown's height at `x`: the squashed radius, on the flat a fourteen-facet loft turns up. */
-const crownAt = (x) => rAt(x) * SQUASH * Math.cos(Math.PI / 14);
+// The Commune's facet rule, a chord of 1.5 m (docs/asset-prompts-3d.md Block
+// 2c; pelagia.mjs `cut`, #919), asked in metres since the file is drawn in them.
+const cut = pelagia.cut();
+/** The stem's count under the rule, as squashed: what the crown's flat is cut on. */
+const FACETS = cut.lathe(PROFILE, { scale: [1, SQUASH, 1] });
+/** The crown's height at `x`: the squashed radius, on the flat the loft turns up. */
+const crownAt = (x) => rAt(x) * SQUASH * Math.cos(Math.PI / FACETS);
 
-// The stem, on fourteen facets like the Sower's, and two growth rings grown
-// on its own profile forward of the wing's root — each a 0.6 m ridge
-// cresting 0.4 m proud of the skin and leaned its own way off square.
-pelagia.stem(root, { chitin, ridge }, { profile: PROFILE, facets: 14, squash: SQUASH });
+// The stem, on the rule's count, and two growth rings grown on its own
+// profile forward of the wing's root — each a 0.6 m ridge cresting 0.4 m
+// proud of the skin and leaned its own way off square.
+pelagia.stem(root, { chitin, ridge }, { profile: PROFILE, squash: SQUASH, cut });
 pelagia.growthRings(root, ridge, {
   name: 'stem_ring',
   stations: [24, 19.5].map((x) => [x, rAt(x) - 0.2]),
   squash: SQUASH,
   tube: 0.6,
   wobble: 0.06,
-  ring: { rise: 0.6, facets: 14 },
+  ring: { rise: 0.6 },
+  cut,
 });
 
 // The wing, to starboard: one leaf, stalk forward, its rings across the
@@ -180,6 +199,7 @@ pelagia.leafWing(
   { membrane, ridge, vein },
   {
     ...WING,
+    cut,
     rings: [
       { at: 0.3, halfWidth: 0.6, proud: 0.3, lean: 0.06 },
       { at: 0.52, halfWidth: 0.7, proud: 0.36, lean: -0.04 },
@@ -212,12 +232,21 @@ pelagia.trimVanes(root, membrane, {
 });
 
 // The tail, folded flat along the stem: the knuckle at the stern, the
-// paddle forward over the back, its three dark veins on it.
+// paddle forward over the back, its three dark veins on it. The knuckle's
+// aftmost vertex is the stern, so it stands as far forward of −27.5 as its
+// widest ring reaches: the rule cuts it five by three (#919), whose widest
+// ring is a row at 60° from the pole, sin 60° of the radius, where the
+// ten-by-six orb before it carried an equator and reached the whole metre.
+const KNUCKLE_R = 1.0;
+const KNUCKLE_SQUASH = 0.85;
+const [, knuckleRows] = cut.orb(1, { scale: [KNUCKLE_R, KNUCKLE_R * KNUCKLE_SQUASH, KNUCKLE_R] });
+const knuckleReach = KNUCKLE_R * Math.sin((Math.PI * Math.floor(knuckleRows / 2)) / knuckleRows);
 pelagia.foldedTail(
   root,
   { membrane, ridge, vein: veinUnlit },
   {
-    knuckle: { at: [STERN + 1.0, 0.35, 0], r: 1.0, squash: 0.85 },
+    cut,
+    knuckle: { at: [STERN + knuckleReach, 0.35, 0], r: KNUCKLE_R, squash: KNUCKLE_SQUASH },
     hinge: [-26.3, 1.35, 0],
     pitch: 0.095,
     outline: [

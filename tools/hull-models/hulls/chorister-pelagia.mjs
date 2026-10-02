@@ -14,8 +14,8 @@
  * with a growth ring lathed round it, the middle one membrane where the
  * bladder shows and a pale bud on its crown; a rostrum of ridge drawn to a
  * point; a tail cone; two pectorals and two flukes of membrane, flat; a leaf
- * of ridge standing on the back; the spine-gun, a five-sided spike two units
- * to port of the keel line; a vein of biolight along the middle lobe's
+ * of ridge standing on the back; the spine-gun, a spike two units to port
+ * of the keel line; a vein of biolight along the middle lobe's
  * crest; and two nav marks, bow and dorsal, which is the whole resting light
  * of a hull that idles at SIG 16.
  *
@@ -59,6 +59,16 @@
  * at its name, material and size and moves up onto the rostrum's crest,
  * (23, 1.85, 0), its foot sunk 0.07 into the facet as the dorsal mark's
  * is into the leaf. Nothing here reaches the length.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked at this
+ * file's scale, and the pass re-cut what was off it: the three lobes
+ * sixteen round and sixteen a turn down at 6.5–7.8 m of radius, where the
+ * export had fourteen by fourteen, and their rings sixteen, where they were
+ * fourteen; the bladder bud eight, where it was ten by twelve; the rostrum
+ * eight and the tail cone seven at 2 and 1.6 m, where both were six. The
+ * spine-gun's five is the rule's as it was the file's. 18 parts and 902
+ * triangles become 18 and 1,048.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -66,6 +76,10 @@ import * as pelagia from '../factions/pelagia.mjs';
 const L = 50;
 const DRAWN = 61;
 const DATUM = 0;
+// The Commune's facet rule at this file's scale (pelagia.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres.
+const cut = pelagia.cut(L / DRAWN);
 
 const chitin = pelagia.ink.chitinHull();
 const ridge = pelagia.ink.growthRidge();
@@ -84,6 +98,7 @@ root.name = 'commune_chorister';
 // centre with a ridge cresting at 0.9 of its beam from a shoulder at 0.82.
 // Lobe then ring, as the file orders them.
 pelagia.cohortLobes(root, ridge, {
+  cut,
   lobes: [
     {
       skin: chitin,
@@ -108,19 +123,18 @@ pelagia.cohortLobes(root, ridge, {
 // The bladder's crown showing as a paler dome, off the centreline.
 pelagia.bud(root, spore, {
   name: 'bladder_bud',
-  facets: [10, 6],
   x: 1,
   y: 5.2,
   z: 1.5,
   r: 2.4,
   squash: 1.6 / 2.4,
+  cut,
 });
 
-// The rostrum, a six-sided cone of ridge drawn to a point at the bow, and
-// the tail cone behind the last lobe with its point forward (see the
-// header).
-pelagia.nose(root, ridge, { name: 'rostrum', tip: 30.5, r: 2.4, length: 9 });
-pelagia.nose(root, chitin, { name: 'stem_tail', tip: -23.5, r: 2, length: 7 });
+// The rostrum, a cone of ridge drawn to a point at the bow, and the tail
+// cone behind the last lobe with its point forward (see the header).
+pelagia.nose(root, ridge, { name: 'rostrum', tip: 30.5, r: 2.4, length: 9, cut });
+pelagia.nose(root, chitin, { name: 'stem_tail', tip: -23.5, r: 2, length: 7, cut });
 
 // "Folded walking limbs", grown as fins: a pectoral and a fluke a side, flat
 // plates of membrane, the pectorals 0.5 thick standing on y 0.2 and the
@@ -154,8 +168,8 @@ pelagia.fins(root, membrane, {
 });
 
 // A leaf of ridge standing on the back over the after lobe, and the
-// spine-gun: a five-sided spike, ten long, two units to port of the keel
-// line on the fore lobe's back.
+// spine-gun: a spike, ten long, two units to port of the keel line on the
+// fore lobe's back.
 pelagia.dorsalBlade(root, ridge, {
   name: 'dorsal_leaf',
   from: -12,
@@ -171,7 +185,7 @@ pelagia.nose(root, ridge, {
   z: -2,
   r: 0.7,
   length: 10,
-  facets: 5,
+  cut,
 });
 
 // "Dim": a vein along the middle lobe's crest, and two nav marks — the bow

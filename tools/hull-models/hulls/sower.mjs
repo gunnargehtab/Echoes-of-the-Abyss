@@ -40,6 +40,18 @@
  * out to the margin its name claims, because that would be a second
  * decision this pass was not asked for. `diff.mjs` against `main`'s file
  * lists those seven and nothing else.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked at this
+ * file's scale, and the pass re-cut what was off it: the seven ribs five at
+ * 1.04 m of radius, where the export had six; the bud ten at 2.4 m, where it
+ * was twelve by twelve; the six seed pods seven to twelve round and eight to
+ * fourteen a turn down at 1.7–3 m, where they were ten by twelve, and their
+ * caps five at 0.7–1.3 m, where they were eight by twelve; the stem and its
+ * three rings sixteen at 3.8–4 m, where they were fourteen. The bladder, its
+ * two rings and the leaf tip keep the counts they had, sixteen and six,
+ * which the rule gives them. 47 parts and 2,352 triangles become 47 and
+ * 1,814.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -61,6 +73,10 @@ import * as pelagia from '../factions/pelagia.mjs';
  */
 const L = 90;
 const DRAWN = 95;
+// The Commune's facet rule at this file's scale (pelagia.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres.
+const cut = pelagia.cut(L / DRAWN);
 
 /** Where the ribs spring from, and where the bladder and the bud sit with them. */
 const NODE_X = -8;
@@ -84,98 +100,122 @@ root.scale.setScalar(L / DRAWN);
 // broader forward than amidships. Both outlines start at that widest station
 // and run forward round the tip: an extrusion's caps are earcut from the
 // first corner, and this is the start the approved export's caps were cut from.
-pelagia.bloomBed(root, { membrane, chitin }, {
-  outline: [
-    [18, -26],
-    [30, -23],
-    [40, -14],
-    [47, -2],
-    [47, 2],
-    [40, 14],
-    [30, 23],
-    [18, 26],
-    [4, 21],
-    [-14, 9],
-    [-14, -9],
-    [4, -21],
-  ],
-  depth: 3,
-  bevel: 1,
-  underside: {
+pelagia.bloomBed(
+  root,
+  { membrane, chitin },
+  {
     outline: [
-      [18, -22],
-      [28, -19],
-      [36, -12],
-      [42, -2],
-      [42, 2],
-      [36, 12],
-      [28, 19],
-      [18, 22],
-      [4, 17],
-      [-12, 7],
-      [-12, -7],
-      [4, -17],
+      [18, -26],
+      [30, -23],
+      [40, -14],
+      [47, -2],
+      [47, 2],
+      [40, 14],
+      [30, 23],
+      [18, 26],
+      [4, 21],
+      [-14, 9],
+      [-14, -9],
+      [4, -21],
     ],
-    depth: 2,
-    y: -2.6,
-  },
-});
+    depth: 3,
+    bevel: 1,
+    underside: {
+      outline: [
+        [18, -22],
+        [28, -19],
+        [36, -12],
+        [42, -2],
+        [42, 2],
+        [36, 12],
+        [28, 19],
+        [18, 22],
+        [4, 17],
+        [-12, 7],
+        [-12, -7],
+        [4, -17],
+      ],
+      depth: 2,
+      y: -2.6,
+    },
+  }
+);
 
 // Midrib and three ribs a side, drawn to their tips and tapering from 1.1 m
 // at the node to 0.5 m at the tip. Venation is the one Commune series that is
 // bilateral, because a leaf's is.
-pelagia.ribFan(root, { ridge, vein }, {
-  node: [NODE_X, 0],
-  y: 1.9,
-  midrib: 54,
-  flank: [ribTo(38, 14), ribTo(26, 22), ribTo(10, 22)],
-});
+pelagia.ribFan(
+  root,
+  { ridge, vein },
+  {
+    node: [NODE_X, 0],
+    y: 1.9,
+    midrib: 54,
+    flank: [ribTo(38, 14), ribTo(26, 22), ribTo(10, 22)],
+    cut,
+  }
+);
 
 // The pressure bladder at the node — 18 m across and 9 m tall, the flattest
-// body in the navy — ringed twice with 0.7 m ridges on sixteen facets, and the
-// one lit bud riding on it, 2.6 m across and 1.4 m tall.
-pelagia.bladder(root, { chitin, ridge }, {
-  x: -6,
-  y: 2.5,
-  r: 9,
-  squash: 0.5,
-  rings: [
-    [0, 6.4],
-    [-3, 7.4],
-  ],
-  ring: { rise: 0.7, facets: 16 },
-});
-pelagia.bud(root, light, { x: -2, y: 6.4, r: 2.6 });
+// body in the navy — ringed twice with 0.7 m ridges, and the one lit bud
+// riding on it, 2.6 m across and 1.4 m tall.
+pelagia.bladder(
+  root,
+  { chitin, ridge },
+  {
+    x: -6,
+    y: 2.5,
+    r: 9,
+    squash: 0.5,
+    rings: [
+      [0, 6.4],
+      [-3, 7.4],
+    ],
+    ring: { rise: 0.7 },
+    cut,
+  }
+);
+pelagia.bud(root, light, { x: -2, y: 6.4, r: 2.6, cut });
 
 // Six seed pods grown on the bed, each its own size and none in a rank. A cap
 // is 0.45 of its pod across and 0.3 of it tall.
-pelagia.seedPods(root, { skin: spore, cap: ridge }, {
-  pods: [
-    [26, 3.2, 9, 3.2],
-    [16, 2.9, -12, 2.6],
-    [30, 2.7, -6, 2.2],
-    [10, 2.8, 14, 2.4],
-    [34, 2.5, 3, 1.8],
-    [20, 2.6, 0, 2.0],
-  ],
-});
+pelagia.seedPods(
+  root,
+  { skin: spore, cap: ridge },
+  {
+    cut,
+    pods: [
+      [26, 3.2, 9, 3.2],
+      [16, 2.9, -12, 2.6],
+      [30, 2.7, -6, 2.2],
+      [10, 2.8, 14, 2.4],
+      [34, 2.5, 3, 1.8],
+      [20, 2.6, 0, 2.0],
+    ],
+  }
+);
 
-// The stem: 35 m of narrow grown body aft of the node, an open lathe on
-// fourteen facets from 0.3 m at the tail to 4.2 m at the node, squashed 0.8,
-// ringed three times with 0.6 m ridges; the caudal fin trails off its end.
-pelagia.stem(root, { chitin, ridge }, {
-  profile: [
-    [-45, 0.3],
-    [-40, 2.4],
-    [-30, 3.6],
-    [-20, 3.8],
-    [-10, 4.2],
-  ],
-  y: 0.6,
-  squash: 0.8,
-  rings: [-36, -28, -20],
-  band: { crown: 4, shoulder: 3.4, halfWidth: 0.7, facets: 14 },
-});
+// The stem: 35 m of narrow grown body aft of the node, an open lathe from
+// 0.3 m at the tail to 4.2 m at the node, squashed 0.8, ringed three times
+// with 0.6 m ridges; the caudal fin trails off its end.
+pelagia.stem(
+  root,
+  { chitin, ridge },
+  {
+    profile: [
+      [-45, 0.3],
+      [-40, 2.4],
+      [-30, 3.6],
+      [-20, 3.8],
+      [-10, 4.2],
+    ],
+    y: 0.6,
+    squash: 0.8,
+    rings: [-36, -28, -20],
+    band: { crown: 4, shoulder: 3.4, halfWidth: 0.7 },
+    cut,
+  }
+);
 // The caudal's corners from its root aft round the tip — the start the
 // approved export's caps are cut from, as with the bed above.
 pelagia.fins(root, membrane, {
@@ -196,7 +236,7 @@ pelagia.fins(root, membrane, {
 // approved model has it — check.mjs compares in order, and the first port's
 // blade ahead of the pair read as three parts changed.
 pelagia.stemKeel(root, ridge, { from: -38, to: -22, height: 3, y: 5 });
-pelagia.nose(root, ridge, { tip: 50, y: 0.2, r: 1.5, length: 6 });
+pelagia.nose(root, ridge, { tip: 50, y: 0.2, r: 1.5, length: 6, cut });
 
 // Three margin lights a side and one on the stem: dim accents, all of them
 // flat on an upward face where the top-down maps can see them — since #645,

@@ -44,11 +44,12 @@
  * - The port lights and the root buttresses sit on no rule the port could
  *   find; their places are the file's, to twelve places.
  *
- * THE FRAME is the export's own: drawn along X, 16.70 across by the measure
+ * THE FRAME is the export's own: drawn along X, 16.72 across by the measure
  * the bake takes — three's `Box3` over the parts' own boxes, which the
- * leaned roots' and yawed pipes' boxes overhang — priced at 440 m by the
- * table, so the root carries that one scale through kit.mjs `fitFootprint`,
- * as the Vent Taps do, and no yaw.
+ * leaned roots' and yawed pipes' boxes overhang; 16.70 before the facet
+ * pass re-cut the roots' capsules (`DRAWN`) — priced at 440 m by the table,
+ * so the root carries that one scale through kit.mjs `fitFootprint`, as the
+ * Vent Taps do, and no yaw.
  *
  * LIGHT PLACEMENT (#890, the light axis of #540). The light audit named
  * both docking mouths as showing under a cell from above: each was a thin
@@ -68,11 +69,46 @@
  * Both lips set the footprint's x extremes, so each throat stops short of
  * its lip's own reach: the model's `Box3`, its scale and its vertex
  * extents are the file's to the centimetre.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m, five to
+ * sixteen (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked at
+ * this file's scale for each part as its node presses it, and the pass
+ * re-cut every round part: the dome sixteen round and four rows over its
+ * 0.56 of a half turn, fourteen a turn, at 179–181 m of radius, where the
+ * export had 18 × 10; the crown pod sixteen by five at 63 m, where it had
+ * 12 × 7; the four growth rings sixteen round on a tube of sixteen at
+ * 4.7–8.8 m, where they had 26 on 5; the five ribs four segments over
+ * their quarter turn, sixteen a turn, on a tube of sixteen at 5.3 m, where
+ * they had 22 on 4; the three veins two segments over 0.9–0.98 rad,
+ * thirteen or fourteen a turn, on a tube of nine at 2.06 m, where they had
+ * 18 on 4; the two pipes two and three segments on a tube of sixteen at
+ * 3.8–4.7 m, where they had 16 on 5; the eight ports and the crown bud
+ * sixteen by eight at 5.8 and 22 m, where they had 6 × 5 and 8 × 5; the
+ * stalk, both collars, both lips, both mouths and the three standpipes
+ * sixteen at 6.8–50 m, where they had seven to twelve; the flanges sixteen
+ * on a tube of eight at 1.8 m, where they had 10 on 5; and the seven roots
+ * and two tanks, capsules of sixteen round with eight-segment caps at
+ * 15–20 m, where they had 7 and 9 on 3. `facets.mjs pelagia` names none of
+ * them. The dome's coarser skin lies under where the file placed what sat
+ * on its ideal surface: the light audit reads `port_light_0`, `_1` and `_4`
+ * resting on nothing, 0.7–1.3 m off it, the other five 0.005–2.7 m off,
+ * `growth_ring_3` 0.39 m off, and `bio_vein_0` under a cell from above.
+ * 47 parts and 5,346 triangles become 47 and 10,124.
  */
 import { THREE, xLong, ballastTanks, flangedPipes, exportGlb, fitFootprint } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 440;
+/**
+ * Drawn across by the measure the fit takes (THE FRAME, above), since the
+ * pass: the facet rule is asked at this scale and the fit is asserted
+ * against it, the Vent Taps' way.
+ */
+const DRAWN = 16.7179;
+// The Commune's facet rule at this file's scale (pelagia.mjs `cut`, #919;
+// kit.mjs `asked` for the tanks and the standpipes): the builders are
+// handed the export's units and the rule is a chord in metres.
+const cut = pelagia.cut(L / DRAWN);
 
 // The navy's ink (#888); the lamp burns at this file's own 2.9447, second
 // only to the Foundry's 3.0999 among the Commune's `bio_light`, for "the
@@ -94,19 +130,25 @@ const DOME = [0.3, 1.6, -0.2];
 /** The squash the ribs, veins and pipes carry on their nodes — not the dome's 0.88. */
 const ARC_SCALE = [1, 0.9, 1.12];
 
-// The pressure dome: an 18 × 10 orb of 6.2 stopped 0.56 of the way down,
-// 0.88 tall and 1.12 across, rolled 0.06 about the keel.
-pelagia.grownDome(root, algae, {
+// The pressure dome: an orb of 6.2 stopped 0.56 of the way down, 0.88 tall
+// and 1.12 across, rolled 0.06 about the keel, on the rule's counts (the
+// file's were 18 × 10).
+const DOME_CUT = pelagia.grownDome(root, algae, {
   name: 'pressure_dome',
   r: 6.2,
-  facets: [18, 10],
   down: 0.56,
+  cut,
   ...pelagia.verbatim(DOME, [0, 0, 0.06], [1, 0.88, 1.12]),
 });
 
 // Four growth rings where the dome grew, each at its polar angle from the
-// crown, 0.1 proud of the dome's surface and thinner as they go down.
+// crown, 0.1 proud of the dome's surface and thinner as they go down. The
+// surface is the faceted one: at four rows over the dome's 0.56π the skin
+// between two rows sags up to 0.15 of a unit inside the sphere, and a ring
+// set on the sphere stood 0.39 m off it (`domeRings` `dome`, #919).
 pelagia.domeRings(root, chitin, {
+  cut,
+  dome: { rows: DOME_CUT[1], down: 0.56 },
   centre: DOME,
   R: 6.2,
   squash: 0.88,
@@ -122,13 +164,19 @@ pelagia.domeRings(root, chitin, {
 
 // Five reinforce ribs over the crown: a quarter turn of torus each, stood on
 // edge and yawed each its own way round the dome.
+// Each arc set out by its own chord's sag (`domeArcs` `sag`, #919), so its
+// facets' midpoints lie at the file's radius: a rib of four segments a
+// quarter turn sags 0.019 of its radius, a two-segment vein over 0.9 rad
+// 0.025 — and at the file's radius the veins lay inside the dome, their
+// plan from above gone to 0 and 52 of 31 and 142 m².
 pelagia.domeArcs(root, chitin, {
   name: 'reinforce_rib',
+  cut,
+  sag: true,
   centre: DOME,
   scale: ARC_SCALE,
   R: 6.076,
   tube: 0.18,
-  facets: [4, 22],
   arc: Math.PI / 2,
   roll: Math.PI / 2,
   arcs: [
@@ -145,30 +193,28 @@ pelagia.domeArcs(root, chitin, {
 pelagia.grownDome(root, algae, {
   name: 'crown_pod',
   r: 2.3,
-  facets: [12, 7],
   down: 0.6,
+  cut,
   ...pelagia.verbatim([2.1, 6.2, -1.3], [0, 0, 0], [1, 0.85, 1.05]),
 });
 pelagia.grownOrbs(root, {
-  orbs: [['crown_bud', spore, 0.85, [8, 5], pelagia.verbatim([2.4, 8.2, -1.5])]],
+  cut,
+  orbs: [['crown_bud', spore, 0.85, pelagia.verbatim([2.4, 8.2, -1.5])]],
 });
 pelagia.grownCones(root, {
+  cut,
   cones: [
-    [
-      'crown_stalk',
-      chitin,
-      [0.28, 0.5],
-      2.2,
-      7,
-      pelagia.verbatim([2.35, 7.5, -1.45], [0, 0, -0.12]),
-    ],
+    ['crown_stalk', chitin, [0.28, 0.5], 2.2, pelagia.verbatim([2.35, 7.5, -1.45], [0, 0, -0.12])],
   ],
 });
 
-// Eight lit ports round the waist — "sustained glow from ports".
+// Eight lit ports round the waist — "sustained glow from ports" — each
+// seated on the dome (`portLights` `on`, #919): at the file's stations
+// three hung 0.67–1.34 m off the sixteen-gon skin and five 0.005–2.7 m.
 pelagia.portLights(root, bio, {
+  cut,
+  on: 'pressure_dome',
   r: 0.22,
-  facets: [6, 5],
   at: [
     [4.99449141236415, 4.46855601815711, 2.669318764605],
     [2.7435749289379, 4.41313356162392, 5.17145772972358],
@@ -185,11 +231,12 @@ pelagia.portLights(root, bio, {
 // and 0.59 short of upright.
 pelagia.domeArcs(root, bio, {
   name: 'bio_vein',
+  cut,
+  sag: true,
   centre: DOME,
   scale: ARC_SCALE,
   R: 6.231,
   tube: 0.07,
-  facets: [4, 18],
   arcs: [
     { yaw: 0.752858169191, arc: 0.899998428848, roll: Math.PI / 2 - 0.35 },
     { yaw: 1.32905395231, arc: 0.976362795731, roll: Math.PI / 2 - 0.47 },
@@ -200,8 +247,8 @@ pelagia.domeArcs(root, bio, {
 // Seven root buttresses on the seabed, no two alike, skinned algae and
 // chitin by turns, laid 0.18 short of flat and yawed each its own way.
 pelagia.rootButtresses(root, [algae, chitin], {
+  cut,
   roll: Math.PI / 2 - 0.18,
-  facets: [3, 7],
   grips: [
     {
       r: 0.6226683855,
@@ -260,8 +307,9 @@ pelagia.dockingCollar(
   {
     tag: 'main',
     yaw: -0.4,
-    collar: { radii: [1.5, 1.9], length: 2.6, facets: 9, at: [7.2, 1.5, 1.8] },
-    lip: { R: 1.6, tube: 0.28, facets: [5, 12], at: [8.35, 1.5, 2.3] },
+    cut,
+    collar: { radii: [1.5, 1.9], length: 2.6, at: [7.2, 1.5, 1.8] },
+    lip: { R: 1.6, tube: 0.28, at: [8.35, 1.5, 2.3] },
     mouth: {
       r: 1.15,
       t: 0.53,
@@ -275,8 +323,9 @@ pelagia.dockingCollar(
   {
     tag: 'small',
     yaw: 0.75,
-    collar: { radii: [0.95, 1.25], length: 2, facets: 8, at: [-5.6, 1.2, 4.9] },
-    lip: { R: 1.02, tube: 0.2, facets: [5, 11], at: [-6.4, 1.2, 5.6] },
+    cut,
+    collar: { radii: [0.95, 1.25], length: 2, at: [-5.6, 1.2, 4.9] },
+    lip: { R: 1.02, tube: 0.2, at: [-6.4, 1.2, 5.6] },
     mouth: {
       r: 0.72,
       t: 0.47,
@@ -288,10 +337,11 @@ pelagia.dockingCollar(
 // Two hull pipes over the dome in grown steel — "external pipework".
 pelagia.domeArcs(root, steel, {
   name: 'hull_pipe',
+  cut,
+  sag: true,
   centre: DOME,
   scale: ARC_SCALE,
   R: 6.324,
-  facets: [5, 16],
   arcs: [
     { yaw: 3.9, arc: 0.9, tube: 0.16, roll: Math.PI / 2 - 0.55 },
     { yaw: 4.5, arc: 1.15, tube: 0.13, roll: Math.PI / 2 - 0.8 },
@@ -307,8 +357,8 @@ flangedPipes(
   {
     frame: xLong,
     stems: { pipe: 'standpipe', flange: 'standpipe_flange' },
-    pipe: { radii: [0.22, 0.26], facets: 8 },
-    flange: { R: 0.3, tube: 0.07, facets: [5, 10] },
+    pipe: { radii: [0.22, 0.26], facets: cut.round },
+    flange: { R: 0.3, tube: 0.07, facets: [cut.round, cut.round] },
     pipes: [
       {
         n: '0',
@@ -341,12 +391,16 @@ ballastTanks(root, steel, {
   frame: xLong,
   r: 0.75,
   length: 2,
-  facets: [3, 9],
+  facets: cut.capsule,
   tanks: [
     { n: '0', at: [-2, 1.05, -5.9], rot: [Math.PI / 2, 0, 0.5] },
     { n: '1', at: [-0.2, 1.05, -6.4], rot: [Math.PI / 2, 0, 0.8] },
   ],
 });
 
-fitFootprint(root, L);
+const size = fitFootprint(root, L);
+if (Math.abs(Math.max(size.x, size.z) - DRAWN) > 1e-3)
+  throw new Error(
+    `${root.name}: drawn ${Math.max(size.x, size.z).toFixed(4)} across; the facet rule was asked at ${DRAWN}`
+  );
 await exportGlb(root, 'bastion-pelagia.glb');

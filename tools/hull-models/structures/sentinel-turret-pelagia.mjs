@@ -65,13 +65,44 @@
  * roots as orbs; the mound and the cowl as closed orbs; every facet count;
  * the collar behind the ring and the pod ahead of the pipe in the order; and
  * the ribs in steel.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked at this
+ * file's scale for each part as its frames press it, and the pass re-cut
+ * what was off it: the mound sixteen round at 50 m of radius on three rows
+ * down its 0.42 of a half turn, where the export had eleven on six; the
+ * collar and the mound ring sixteen on tubes of fourteen and nine, where
+ * they were eleven on five and sixteen on four; the head pod sixteen by
+ * sixteen, where it was ten by twelve; the cowl fifteen a turn round its
+ * 0.525 of a turn and sixteen down, where it was nineteen and twenty; the
+ * quills six, where they were four; the barrel's root and mid sixteen and
+ * its tip thirteen at 3–6.9 m, where they were seven, seven and six; the
+ * iris and the three ribs sixteen on five, where they were eight and nine on
+ * four; the pip and the three nav marks five round, where they were five by
+ * eight; the five root grips and the ammo pod sixteen round on caps of
+ * eight, where they were six and seven on three; the feed pipe ten, where it
+ * was six; the flange fourteen on five, where it was nine on four. The
+ * capsules' leaned boxes grew with their counts, so `DRAWN` is 8.0286 where
+ * the file measured 7.9848 and the whole model sits 0.55 % smaller in its
+ * 120 m, recentred 0.38 m along its length. 28 parts and 1,675 triangles
+ * become 28 and 3,952. The three recoil ribs no longer touch the root they
+ * band: the file's nine-sided rings had their flats inside a seven-sided
+ * frustum's vertices, and both round now, the rings' inner flats stand
+ * 0.25–0.41 m off it.
  */
 import { THREE, drawn, eulerXYZ, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 120;
-const DRAWN = 7.9848;
+// 7.9848 until the facet pass (#919): the roots' capsules took the rule's
+// counts, and a leaned capsule's box is a little wider at them, so the
+// length intake measures grew by 0.55 % with nothing moved.
+const DRAWN = 8.0286;
 const DATUM = 0;
+// The Commune's facet rule at this file's scale (pelagia.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres.
+const cut = pelagia.cut(L / DRAWN);
 
 // A torus is born in the XY plane; every ring on this turret lies flat.
 const FLAT = [Math.PI / 2, 0, 0];
@@ -99,14 +130,14 @@ pelagia.grownMound(
   root,
   { body, ring: algae, collar: steel },
   {
+    cut,
     mound: {
       r: 3,
-      facets: [11, 6],
       down: 0.42,
       ...drawn([0.15, 0, -0.1], [0, 0, 0], [1.15, 0.85, 1]),
     },
-    collar: { R: 1.55, tube: 0.22, facets: [5, 11], ...drawn([0.1, 2.05, 0], FLAT) },
-    ring: { R: 2.6, tube: 0.13, facets: [4, 16], ...drawn([0.15, 0.9, -0.1], FLAT, [1.12, 1, 1]) },
+    collar: { R: 1.55, tube: 0.22, ...drawn([0.1, 2.05, 0], FLAT) },
+    ring: { R: 2.6, tube: 0.13, ...drawn([0.15, 0.9, -0.1], FLAT, [1.12, 1, 1]) },
   }
 );
 
@@ -118,10 +149,10 @@ const head = pelagia.grownHead(
   { pod: algae, cowl: body },
   {
     ...drawn([0.1, 2.75, 0], [0, 0.3, 0]),
-    pod: { r: 1.5, facets: [10, 6], ...drawn([0, 0, 0], [0, 0, 0], [1.25, 0.85, 1]) },
+    cut,
+    pod: { r: 1.5, ...drawn([0, 0, 0], [0, 0, 0], [1.25, 0.85, 1]) },
     cowl: {
       r: 1.68,
-      facets: [10, 5],
       round: 0.525,
       down: 0.5,
       ...drawn([0, 0, 0], eulerXYZ([0, -Math.PI / 2, -0.12], 'YXZ'), [1.22, 0.95, 1]),
@@ -159,15 +190,20 @@ pelagia.grownBarrel(
   { rootMat: steel, mid: algae, tip: steel, iris: body, rib: body, pip: bio },
   {
     ...drawn([0.55, 0.15, 0.45], eulerXYZ([0.9, 0.35, 0], 'YXZ')),
-    root: { radii: [0.34, 0.46], length: 2.2, facets: 7, ...drawn([0, 1.1, 0]) },
-    mid: { radii: [0.22, 0.32], length: 2.4, facets: 7, ...drawn([0, 3.2, 0]) },
-    tip: { radii: [0.13, 0.2], length: 1.6, facets: 6, ...drawn([0, 5.1, 0]) },
-    iris: { R: 0.19, tube: 0.07, facets: [4, 8], ...drawn([0, 5.92, 0], FLAT) },
-    pip: { r: 0.08, facets: [5, 4], ...drawn([0, 5.9, 0]) },
+    cut,
+    root: { radii: [0.34, 0.46], length: 2.2, ...drawn([0, 1.1, 0]) },
+    mid: { radii: [0.22, 0.32], length: 2.4, ...drawn([0, 3.2, 0]) },
+    tip: { radii: [0.13, 0.2], length: 1.6, ...drawn([0, 5.1, 0]) },
+    iris: { R: 0.19, tube: 0.07, ...drawn([0, 5.92, 0], FLAT) },
+    pip: { r: 0.08, ...drawn([0, 5.9, 0]) },
+    // Each rib fitted to the root's faceted skin at its station (`grownBarrel`
+    // `fit`, #919): the file's 0.5, 0.47 and 0.44 were nine-gons whose flats
+    // sat inside the seven-gon root's vertices, and round at the rule's
+    // sixteen they stood 0.25–0.41 m off it.
     ribs: [
-      { R: 0.5, tube: 0.06, facets: [4, 9], ...drawn([0, 0.5, 0], FLAT) },
-      { R: 0.47, tube: 0.06, facets: [4, 9], ...drawn([0, 1.15, 0], FLAT) },
-      { R: 0.44, tube: 0.06, facets: [4, 9], ...drawn([0, 1.8, 0], FLAT) },
+      { fit: true, tube: 0.06, ...drawn([0, 0.5, 0], FLAT) },
+      { fit: true, tube: 0.06, ...drawn([0, 1.15, 0], FLAT) },
+      { fit: true, tube: 0.06, ...drawn([0, 1.8, 0], FLAT) },
     ],
   }
 );
@@ -177,7 +213,7 @@ pelagia.grownBarrel(
 // The first is on the shell since #645 (the header); the export had it 0.2
 // under.
 pelagia.lightBuds(root, bio, {
-  facets: [5, 4],
+  cut,
   buds: [
     ['nav_mark_0', 0.08, drawn([2.9, 0.95, 1.1])],
     ['nav_mark_1', 0.08, drawn([-2.3, 1.15, -1.6])],
@@ -188,7 +224,7 @@ pelagia.lightBuds(root, bio, {
 // Five holdfasts on the seabed, no two alike: capsules laid over 0.13 short
 // of flat, each yawed its own way, lying across the mound's radius.
 pelagia.rootGrips(root, [algae, body], {
-  facets: [3, 6],
+  cut,
   grips: [
     {
       r: 0.38352045,
@@ -224,12 +260,12 @@ pelagia.magazine(
   root,
   { pipe: steel, pod: steel, flange: algae },
   {
-    pipe: { radii: [0.13, 0.16], length: 2.3, facets: 6, ...drawn([-1.5, 1.6, 0.9], [0.25, 0, 0.55]) },
-    pod: { r: 0.55, length: 1.1, facets: [3, 7], ...drawn([-2.4, 0.75, 1.3], [Math.PI / 2, 0, 0.4]) },
+    cut,
+    pipe: { radii: [0.13, 0.16], length: 2.3, ...drawn([-1.5, 1.6, 0.9], [0.25, 0, 0.55]) },
+    pod: { r: 0.55, length: 1.1, ...drawn([-2.4, 0.75, 1.3], [Math.PI / 2, 0, 0.4]) },
     flange: {
       R: 0.18,
       tube: 0.05,
-      facets: [4, 9],
       ...drawn([-1.15, 2.25, 0.75], [Math.PI / 2 + 0.25, 0, 0.55]),
     },
   }

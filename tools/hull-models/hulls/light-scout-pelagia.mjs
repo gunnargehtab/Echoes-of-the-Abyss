@@ -54,7 +54,11 @@
  *   length*: three's `Box3` over the parts' own boxes, which a rotated
  *   plate's box overhangs. Tip to tip this hull's vertices span 5.3033 units
  *   (the upper fluke's trailing tip to the feeler light); its raked flukes'
- *   boxes make the measure 5.3776, 1.4 % more. Scaling to the measure rather
+ *   boxes make the measure 5.3697, 1.3 % more — 5.3776 until the facet pass
+ *   (#919) cut the feeler-tip bud, the forward extreme, from an 8 × 6 orb
+ *   to the rule's 5 × 5, whose box reaches 0.008 units less far forward;
+ *   the runtime measures the same box, so the hull's size on the chart is
+ *   unchanged. Scaling to the measure rather
  *   than the vertices is what leaves both consumers' own rescale at exactly
  *   1 and the maps where the approved export put them — the measure is
  *   homogeneous, so they would normalise either file to the same size, and
@@ -92,13 +96,33 @@
  *   review, F2.)
  *
  * Nothing here reaches the length or the beam.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked at this
+ * file's scale for each part as its node presses it, and the pass re-cut
+ * what was off it: the ballast lobe sixteen round and sixteen down at 7.5 m,
+ * where the export had nine by six; the four growth rings sixteen round at
+ * 4.8–6.1 m, where they were twenty, on tubes of five as before; the five
+ * light buds five round by three down at 0.34–0.5 m, where they were eight
+ * by six. The feeler keeps its five and the peduncle its seven, which the
+ * rule gives at their radii. The hull's table stays the export's 16 × 10,
+ * and the measure names its meridian — twenty a turn at 20 m — as Block 2c
+ * says it will. The light audit names the two flank marks beside the
+ * throat light since the pass: a 0.39 m bud of five by three owns 0.19 m²
+ * from above, under the audit's quarter-metre floor, where the eight-by-six
+ * bud owned 0.31 and 0.5; the tail mark owns the floor exactly. 18 parts and
+ * 2,226 triangles become 18 and 1,900.
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 60;
-const DRAWN = 5.3776;
+const DRAWN = 5.3697;
 const DATUM = 0;
+// The Commune's facet rule at this file's scale (pelagia.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres.
+const cut = pelagia.cut(L / DRAWN);
 
 // The navy's ink (#888). The export carried an earlier pass's finish —
 // chitin at 0.05 metal and 0.55 rough, the ridge #14332A at 0.03 and 0.7,
@@ -291,6 +315,7 @@ pelagia.grownBody(root, chitin, {
 });
 pelagia.lobe(root, chitin, {
   name: 'ballast_lobe',
+  cut,
   ...drawn([0.13, -0.22, -0.2], [0, 0, 0.22], [0.24, 0.18, 0.68]),
 });
 
@@ -304,6 +329,7 @@ const ring = (tube, at, lean) => ({
   ...drawn(at, [...lean, 0], [0.5 * 1.08 * profile(at[2]), 0.34 * 1.16 * profile(at[2]), 1.6]),
 });
 pelagia.grownRings(root, ridge, {
+  cut,
   rings: [
     ring(0.06683, [0, -0.02, -1.2], [0.06712, 0.1]),
     ring(0.05083, [0.01282, -0.02, -0.5], [0.11319, -0.06663]),
@@ -314,6 +340,7 @@ pelagia.grownRings(root, ridge, {
 
 // The feeler, from the brow forward and up to the light at its tip.
 pelagia.feeler(root, ridge, {
+  cut,
   through: [
     [0.02, 0.02, 1.6],
     [0.1, 0.15, 2.0],
@@ -352,6 +379,7 @@ pelagia.membranes(root, membrane, {
 pelagia.stalk(root, chitin, {
   radii: [0.1, 0.16],
   length: 0.7,
+  cut,
   ...drawn([0.02, 0.02, -1.95], [Math.PI / 2 + 0.08, 0, 0]),
 });
 pelagia.membranes(root, membrane, {
@@ -376,6 +404,7 @@ pelagia.membranes(root, membrane, {
 // chin, where no map sees it, and the tail's on the peduncle's aft crown
 // (#890; see the header).
 pelagia.lightBuds(root, light, {
+  cut,
   buds: [
     ['feeler_tip_light', 0.045, drawn([0.24, 0.34, 2.2])],
     ['flank_light_port', 0.035, drawn([0.44, 0.1, 0.9])],

@@ -67,6 +67,9 @@ import {
   eulerXYZ,
   seat,
 } from '../kit.mjs';
+import { facetsFor, orbFacets, ringsOf, ORB_FLOOR } from '../facets.mjs';
+
+const TAU = 2 * Math.PI;
 
 /**
  * The Commune's palette: one factory a material name, for every model of
@@ -266,8 +269,138 @@ export const ink = {
 export const facets = { chordM: 1.5, min: 5, max: 16, step: 1, sections: [] };
 export const panels = { hull: [1.5, 5], structure: [4, 13.5] };
 
+/**
+ * The rule as a builder asks it (#919; bathyarch.mjs and hadron.mjs `cut`
+ * are the same shape): every round part in this module takes its count from
+ * here, so re-faceting the navy is the one line above. `m` is metres a drawn
+ * unit — 1 for a hull drawn in metres, `L / DRAWN` for a port that builds in
+ * its export's units and is scaled on its root — because the rule is a chord
+ * in metres and a builder is handed the file's numbers.
+ *
+ * The Commune's parts are pressed, almost every one: an orb squashed to a
+ * pod, a lathe to a bladder, a torus to a body's own profile. The measure
+ * reads a ring by its widest facet as the scene draws it (facets.mjs
+ * `ringsOf`), and on an ellipse that chord is shorter than the circle's at
+ * the major radius — on a four-row orb squashed to half its beam, six per
+ * cent shorter, a count over the rule at 1.6 m and at 3 m of radius — so a
+ * count asked at the major radius alone reads back off the rule, and the
+ * plain `round` is only for a part its node leaves round.
+ * `settle` is the rest: it builds the candidate, presses it as its placement
+ * will (the node's `scale`, a `parent` frame's, the quarter turn `part`
+ * gives a Z-long export's geometry — `yaw`) and reads it back through the
+ * measure's own reader, asking the rule at what it read, until the counts
+ * come back unchanged. A monotone step from the circle's answer meets that
+ * fixed point in a round or two; where it cycles — a tall orb whose widest
+ * meridian chord sits on its equator at an even count and off it at an odd
+ * — every count the cycle visited is tried, and when none reads back as on
+ * the rule the last is built and the measure names it, which is what the
+ * measure is for. `probe` and `settle` are exported on the rule for a part
+ * no helper here builds (hulls/bower.mjs's formula body).
+ *
+ * `round(radius, arc)` is the plain ask; `orb`, `lathe`, `torus`, `cyl` and
+ * `tube` build their primitive's counts through `settle` from a `placement`
+ * — `{ scale, rot, parent, yaw }`, the fields the module's builders already
+ * carry, extra ones ignored — and return them in the order their
+ * constructor takes: `[round, down]` for an orb, `[radial, tubular]` for a
+ * torus as the kit's `torus` takes them, a count for the rest. `capsule` is
+ * the Order's: the kit's capsule draws its meridian as two quarter turns of
+ * one count, so where the rule's half-turn share is odd no capsule meets it
+ * and the cap takes the segment over — the measure names those, and Block
+ * 2c says how many. No section is asked, because the Commune has none.
+ */
+export function cut(m = 1) {
+  const round = (radius, arc) => facetsFor(facets, radius * m, arc);
+  const probe = (geo, placement = {}) => {
+    const { scale = [1, 1, 1], rot = [0, 0, 0], parent = null, yaw = false } = placement;
+    const mesh = new THREE.Mesh(yaw ? geo.clone().rotateY(Math.PI / 2) : geo);
+    mesh.rotation.set(...rot);
+    mesh.scale.set(...scale);
+    if (parent) {
+      parent.add(mesh);
+      parent.updateMatrixWorld(true);
+      parent.remove(mesh);
+    } else mesh.updateMatrixWorld(true);
+    mesh.matrixWorld.premultiply(new THREE.Matrix4().makeScale(m, m, m));
+    return ringsOf(mesh).map((r) =>
+      Math.max(ORB_FLOOR[r.kind] ?? 1, facetsFor(facets, r.radiusM, r.arc))
+    );
+  };
+  const same = (a, b) => a.length === b.length && a.every((n, k) => n === b[k]);
+  const settle = (build, placement, start) => {
+    const seen = [];
+    let counts = start;
+    for (let i = 0; i < 2 * (facets.max - facets.min + 1); i++) {
+      const next = probe(build(counts), placement);
+      if (same(next, counts)) return counts;
+      if (seen.some((s) => same(s, next))) break;
+      seen.push(counts);
+      counts = next;
+    }
+    seen.push(counts);
+    const axes = counts.map((_, k) => [...new Set(seen.map((s) => s[k]))].sort((a, b) => a - b));
+    const tried = axes.reduce((acc, ax) => acc.flatMap((c) => ax.map((n) => [...c, n])), [[]]);
+    return tried.find((c) => same(probe(build(c), placement), c)) ?? counts;
+  };
+  const pressed = (placement = {}) => Math.max(...(placement.scale ?? [1, 1, 1]));
+  return {
+    round,
+    probe,
+    settle,
+    orb(radius, placement = {}, window = {}) {
+      const { phiStart = 0, phiLength = TAU, thetaStart = 0, thetaLength = Math.PI } = window;
+      const { widthSegments, heightSegments } = orbFacets(facets, radius * pressed(placement) * m, {
+        thetaStart,
+        thetaLength,
+        phiLength,
+      });
+      return settle(
+        ([w, h]) =>
+          new THREE.SphereGeometry(radius, w, h, phiStart, phiLength, thetaStart, thetaLength),
+        placement,
+        [widthSegments, heightSegments]
+      );
+    },
+    lathe(profile, placement = {}, phase = 0) {
+      const maxR = Math.max(...profile.map(([, r]) => r));
+      return settle(([n]) => loft(profile, n, phase), placement, [
+        round(maxR * pressed(placement)),
+      ])[0];
+    },
+    torus(R, tube, placement = {}, arc = TAU) {
+      // The reader lists a torus's ring before its tube; the kit's `torus`
+      // takes the tube's count (radial) before the ring's (tubular).
+      const s = pressed(placement);
+      const [tubular, radial] = settle(
+        ([ts, rs]) => new THREE.TorusGeometry(R, tube, rs, ts, arc),
+        placement,
+        [round((R + tube) * s, arc), round(tube * s)]
+      );
+      return [radial, tubular];
+    },
+    cyl(rTop, rBottom, h, placement = {}, thetaStart = 0) {
+      return settle(([n]) => cyl(rTop, rBottom, h, n, thetaStart), placement, [
+        round(Math.max(rTop, rBottom) * pressed(placement)),
+      ])[0];
+    },
+    tube: (radius, placement = {}) => round(radius * pressed(placement)),
+    capsule: (radius, placement = {}) => {
+      const r = radius * pressed(placement);
+      return [Math.ceil(round(r, Math.PI) / 2), round(r)];
+    },
+  };
+}
+/** The rule for a model drawn in metres, which is every builder's default. */
+const METRE = cut();
+
 /** A grown orb: few facets, and squashed by the caller — never round in section. */
 const orb = (w = 12, h = 6) => new THREE.SphereGeometry(1, w, h);
+
+/** The three stations a ridge ring is lathed from: shoulder, crown, shoulder. */
+const ridgeProfile = ({ crown, shoulder, halfWidth }) => [
+  [-halfWidth, shoulder],
+  [0, crown],
+  [halfWidth, shoulder],
+];
 
 /**
  * A growth ring as the approved Sower and Spinner carry every one of theirs:
@@ -289,15 +422,23 @@ const ridgeRing = ({ crown, shoulder, halfWidth, facets }) => {
   for (const [k, v] of Object.entries({ crown, shoulder, halfWidth, facets }))
     if (!Number.isFinite(v))
       throw new Error(`ridgeRing: ${k} is ${v} — a ridge is crown, shoulder, halfWidth, facets`);
-  return loft(
-    [
-      [-halfWidth, shoulder],
-      [0, crown],
-      [halfWidth, shoulder],
-    ],
-    facets
-  );
+  return loft(ridgeProfile({ crown, shoulder, halfWidth }), facets);
 };
+
+/**
+ * A ridge ring at the rule's count (#919): `ridgeRing` with its facets asked
+ * of `rule` for the ridge as `placement` presses it — `{ scale }` the
+ * squash the ring takes with its body.
+ */
+const ruledRidge = (rule, ridge, placement) =>
+  ridgeRing({ ...ridge, facets: rule.lathe(ridgeProfile(ridge), placement) });
+
+/** A script still handing over a count the rule now gives is told so, not ignored (#919). */
+function noCount(what, opts, ...keys) {
+  for (const key of keys)
+    if (opts && opts[key] !== undefined)
+      throw new Error(`${what}: \`${key}\` is the rule's since #919 (pelagia.mjs \`cut\`)`);
+}
 
 /**
  * A blade standing on a back — the Spinner's dorsal blade, the Sower's stem
@@ -349,31 +490,39 @@ function refuseMirror(what, items, key) {
  * as the binary carries them (#639).
  */
 export function podBody(root, mat, opts) {
-  const { bow, stern, maxR, waist = 0.5, squash = 0.7, facets = 12, name = 'pod_body' } = opts;
+  const {
+    bow,
+    stern,
+    maxR,
+    waist = 0.5,
+    squash = 0.7,
+    name = 'pod_body',
+    cut: rule = METRE,
+  } = opts;
+  noCount(name, opts, 'facets');
   const { profile } = opts;
   const L = bow - stern;
   const at = (t) => stern + L * t;
+  const stations = profile ?? [
+    [at(0), 0],
+    [at(0.064), maxR * 0.19],
+    [at(0.209), maxR * 0.536],
+    [at(waist - 0.109), maxR * 0.905],
+    [at(waist), maxR],
+    [at(waist + 0.109), maxR * 0.905],
+    [at(0.791), maxR * 0.536],
+    [at(0.936), maxR * 0.19],
+    [at(1), 0],
+  ];
+  const scale = [1, squash, 1];
   return add(
     root,
     name,
-    loft(
-      profile ?? [
-        [at(0), 0],
-        [at(0.064), maxR * 0.19],
-        [at(0.209), maxR * 0.536],
-        [at(waist - 0.109), maxR * 0.905],
-        [at(waist), maxR],
-        [at(waist + 0.109), maxR * 0.905],
-        [at(0.791), maxR * 0.536],
-        [at(0.936), maxR * 0.19],
-        [at(1), 0],
-      ],
-      facets
-    ),
+    loft(stations, rule.lathe(stations, { scale })),
     mat,
     [0, 0, 0],
     [0, 0, 0],
-    [1, squash, 1]
+    scale
   );
 }
 
@@ -384,30 +533,33 @@ export function podBody(root, mat, opts) {
  * lean up to five degrees, and it is the one thing that makes them read as
  * grown rather than turned.
  *
- * `ring` = `{ rise, facets, halfWidth? }` says how each one is lathed
+ * `ring` = `{ rise, halfWidth? }` says how each one is lathed
  * (`ridgeRing`): the crown at `r + tube`, the shoulders `rise` below it,
- * `halfWidth` (the tube, unless said) either side. The Spinner's three are
- * 0.7 m ridges on eighteen facets, which is what its approved export holds.
- * It is not optional, and the torus this builder first drew is gone with it:
- * every ring on every approved Commune hull is a ridge, so a torus here was
- * a default no model has and only the caller's `ring` kept out of the file.
+ * `halfWidth` (the tube, unless said) either side, on the rule's count for
+ * the ridge as the body squashes it (`cut`, #919; the Spinner's three were
+ * 0.7 m ridges on eighteen facets, the count its export held). It is not
+ * optional, and the torus this builder first drew is gone with it: every
+ * ring on every approved Commune hull is a ridge, so a torus here was a
+ * default no model has and only the caller's `ring` kept out of the file.
  */
 export function growthRings(root, mat, opts) {
   const { stations, squash = 0.72, tube = 0.9, wobble = 0, name = 'growth_ring', ring } = opts;
+  const { cut: rule = METRE } = opts;
+  noCount(name, ring, 'facets');
+  const scale = [1, squash, 1];
   stations.forEach(([x, r], i) =>
     add(
       root,
       `${name}_${i}`,
-      ridgeRing({
-        crown: r + tube,
-        shoulder: r + tube - ring.rise,
-        halfWidth: ring.halfWidth ?? tube,
-        facets: ring.facets,
-      }),
+      ruledRidge(
+        rule,
+        { crown: r + tube, shoulder: r + tube - ring.rise, halfWidth: ring.halfWidth ?? tube },
+        { scale }
+      ),
       mat,
       [x, 0, 0],
       [wobble * Math.sin(1 + i * 2.4), wobble * Math.cos(2 + i * 1.7), 0],
-      [1, squash, 1]
+      scale
     )
   );
 }
@@ -451,6 +603,7 @@ export function bloomBed(root, mats, opts) {
  */
 export function ribFan(root, { ridge, vein }, opts) {
   const { node, y, midrib, flank, r = 1.1, tip = 0.5, veinFrac = 0.8, lift = 1.15 } = opts;
+  const { cut: rule = METRE } = opts;
   const [nx, nz] = node;
   const ribs = [[midrib, 0]];
   for (const [len, yaw] of flank) ribs.push([len, -Math.abs(yaw)]);
@@ -458,7 +611,8 @@ export function ribFan(root, { ridge, vein }, opts) {
   ribs.forEach(([len, yaw], i) => {
     const cx = nx + (len / 2) * Math.cos(yaw);
     const cz = nz - (len / 2) * Math.sin(yaw);
-    add(root, `rib_${i}`, cyl(tip, r, len, 6), ridge, [cx, y, cz], [0, yaw, -Math.PI / 2]);
+    const rib = cyl(tip, r, len, rule.cyl(tip, r, len));
+    add(root, `rib_${i}`, rib, ridge, [cx, y, cz], [0, yaw, -Math.PI / 2]);
     add(
       root,
       `rib_vein_${i}`,
@@ -487,22 +641,25 @@ export function ribFan(root, { ridge, vein }, opts) {
  */
 export function bladder(root, { chitin, ridge }, opts) {
   const { name = 'bladder', x, y, z = 0, r, squash = 0.5, rings = [], ring } = opts;
+  const { cut: rule = METRE } = opts;
+  noCount(name, ring, 'facets');
   const tube = 0.8;
-  add(root, name, orb(16, 8), chitin, [x, y, z], [0, 0, 0], [r, r * squash, r]);
+  const body = [r, r * squash, r];
+  add(root, name, orb(...rule.orb(1, { scale: body })), chitin, [x, y, z], [0, 0, 0], body);
+  const scale = [1, squash, 1];
   rings.forEach(([dx, rr], i) =>
     add(
       root,
       `bladder_ring_${i}`,
-      ridgeRing({
-        crown: rr + tube,
-        shoulder: rr + tube - ring.rise,
-        halfWidth: ring.halfWidth ?? tube,
-        facets: ring.facets,
-      }),
+      ruledRidge(
+        rule,
+        { crown: rr + tube, shoulder: rr + tube - ring.rise, halfWidth: ring.halfWidth ?? tube },
+        { scale }
+      ),
       ridge,
       [x + dx, y, z],
       [0, 0, 0],
-      [1, squash, 1]
+      scale
     )
   );
 }
@@ -510,14 +667,16 @@ export function bladder(root, { chitin, ridge }, opts) {
 /**
  * The one lit bud at the node: a squashed orb in `bio_light`, facing up.
  * `squash` is height over beam, and the default is the approved Sower's bud
- * — 1.4 m tall on 2.6 m across. `name` and `facets` are the Chorister's
- * `bladder_bud` — the bladder showing through the middle segment as a paler
- * dome, a ten-by-six orb in spore pale rather than a lamp
- * (hulls/chorister-pelagia.mjs), and squashed its own way.
+ * — 1.4 m tall on 2.6 m across. `name` is the Chorister's `bladder_bud` —
+ * the bladder showing through the middle segment as a paler dome in spore
+ * pale rather than a lamp (hulls/chorister-pelagia.mjs), and squashed its
+ * own way. The orb's two counts are the rule's for it as squashed (`cut`).
  */
 export function bud(root, light, opts) {
-  const { name = 'bud', facets = [12, 6], x, y, z = 0, r, squash = 1.4 / 2.6 } = opts;
-  add(root, name, orb(...facets), light, [x, y, z], [0, 0, 0], [r, r * squash, r]);
+  const { name = 'bud', x, y, z = 0, r, squash = 1.4 / 2.6, cut: rule = METRE } = opts;
+  noCount(name, opts, 'facets');
+  const scale = [r, r * squash, r];
+  add(root, name, orb(...rule.orb(1, { scale })), light, [x, y, z], [0, 0, 0], scale);
 }
 
 /**
@@ -526,25 +685,36 @@ export function bud(root, light, opts) {
  * matched pair is refused. The Sower's seed pods and the Spinner's mine sacs
  * are the same construction with different proportions and names, so both
  * are exported from one builder below. Everything that differs between them
- * is a default on the export rather than on this shared body, `facets`
- * included — the pod orb's `[widthSegments, heightSegments]`, ten by six on
- * a seed pod and twelve by six on the Spinner's sacs, whose export carries a
- * vertex on both beams of the equator and so a hundred and twenty triangles
- * to a seed pod's hundred.
+ * is a default on the export rather than on this shared body. The orbs'
+ * counts are the rule's for each pod and cap as squashed (`cut`, #919): the
+ * exports carried ten by six on a seed pod and twelve by six on the
+ * Spinner's sacs, a vertex on both beams of the equator and so a hundred
+ * and twenty triangles to a seed pod's hundred, which the rule replaces.
  */
 function grownPods(root, { skin, cap }, opts) {
-  const { pods, names, squash, capR, capLift, capSquash, facets } = opts;
+  const { pods, names, squash, capR, capLift, capSquash, cut: rule = METRE } = opts;
+  noCount(names[0], opts, 'facets');
   refuseMirror(names[0], pods, ([, , , r]) => r);
   pods.forEach(([x, y, z, r], i) => {
-    add(root, `${names[0]}_${i}`, orb(...facets), skin, [x, y, z], [0, 0, 0], [r, r * squash, r]);
+    const pod = [r, r * squash, r];
+    add(
+      root,
+      `${names[0]}_${i}`,
+      orb(...rule.orb(1, { scale: pod })),
+      skin,
+      [x, y, z],
+      [0, 0, 0],
+      pod
+    );
+    const lid = [capR * r, capR * r * capSquash, capR * r];
     add(
       root,
       `${names[1]}_${i}`,
-      orb(8, 6),
+      orb(...rule.orb(1, { scale: lid })),
       cap,
       [x, y + capLift * r, z],
       [0, 0, 0],
-      [capR * r, capR * r * capSquash, capR * r]
+      lid
     );
   });
 }
@@ -552,7 +722,7 @@ function grownPods(root, { skin, cap }, opts) {
 /**
  * Seed pods on a bloom bed: pale `spore_pod` skin, a ridge cap. The numbers
  * are the approved Sower's — a cap 0.45 of its pod across and two thirds of
- * that tall, on a ten-by-six orb.
+ * that tall.
  */
 export const seedPods = (root, mats, opts) =>
   grownPods(root, mats, {
@@ -561,13 +731,12 @@ export const seedPods = (root, mats, opts) =>
     capR: 0.45,
     capLift: 0.6,
     capSquash: 2 / 3,
-    facets: [10, 6],
     ...opts,
   });
 
 /**
  * Mine sacs at a pod's waist: membrane skin, a ridge bud — fuller than a seed
- * pod. The numbers are the approved Spinner's, twelve-facet orbs included.
+ * pod. The numbers are the approved Spinner's.
  */
 export const mineSacs = (root, mats, opts) =>
   grownPods(root, mats, {
@@ -576,7 +745,6 @@ export const mineSacs = (root, mats, opts) =>
     capR: 0.4,
     capLift: 0.7,
     capSquash: 0.75,
-    facets: [12, 6],
     ...opts,
   });
 
@@ -586,23 +754,44 @@ export const mineSacs = (root, mats, opts) =>
  *
  * `profile` is those stations and there is no parametric body behind it. The
  * approved Sower's stem is open at both ends — 0.3 m at the tail, 4.2 m where
- * it meets the node — on fourteen facets, which is the default cut; the body
- * the first port drew instead was closed to a point at both ends on eight,
- * and the numbers it was swelled from (`from`, `to`, `r`) went with it.
+ * it meets the node — and was cut on fourteen facets, which the rule now
+ * gives for it as squashed (`cut`); the body the first port drew instead was
+ * closed to a point at both ends on eight, and the numbers it was swelled
+ * from (`from`, `to`, `r`) went with it.
  *
  * `band` is the ring, lathed as a ridge (`ridgeRing`) in place of the torus
- * that stood there: `{ crown, shoulder, halfWidth, facets }` in **absolute
- * metres**, because a stem's rings are all one size and it has no per-station
- * radius to hang a fraction on. That is the other option shape in this module
- * and the reason it is not called `ring`: `growthRings` and `bladder` take a
+ * that stood there: `{ crown, shoulder, halfWidth }` in **absolute metres**,
+ * because a stem's rings are all one size and it has no per-station radius
+ * to hang a fraction on. That is the other option shape in this module and
+ * the reason it is not called `ring`: `growthRings` and `bladder` take a
  * `ring` that is a rise over the station radius they already know, and the
  * two were one name until #646.
  */
 export function stem(root, { chitin, ridge }, opts) {
-  const { profile, facets = 14, y = 0, squash = 0.8, rings = [], band } = opts;
-  add(root, 'stem', loft(profile, facets), chitin, [0, y, 0], [0, 0, 0], [1, squash, 1]);
+  const { profile, y = 0, squash = 0.8, rings = [], band, cut: rule = METRE } = opts;
+  noCount('stem', opts, 'facets');
+  noCount('stem_ring', band, 'facets');
+  const scale = [1, squash, 1];
+  add(
+    root,
+    'stem',
+    loft(profile, rule.lathe(profile, { scale })),
+    chitin,
+    [0, y, 0],
+    [0, 0, 0],
+    scale
+  );
+  // A buffer a ring, as the export carries them: a geometry two meshes share exports as one.
   rings.forEach((x, i) =>
-    add(root, `stem_ring_${i}`, ridgeRing(band), ridge, [x, y, 0], [0, 0, 0], [1, squash, 1])
+    add(
+      root,
+      `stem_ring_${i}`,
+      ruledRidge(rule, band, { scale }),
+      ridge,
+      [x, y, 0],
+      [0, 0, 0],
+      scale
+    )
   );
 }
 
@@ -659,13 +848,16 @@ export function fins(root, membrane, { y = 0, pairs, bySide = false, stand = fal
 /**
  * The grown point at the bow — the Sower's `leaf_tip`, the Spinner's
  * `spinneret`: a faceted cone whose apex is at `tip`. `z` is off the keel
- * line: the Chorister's `spine_gun` is the same cone, five-sided, two units
- * to port of it (hulls/chorister-pelagia.mjs), and its `stem_tail` is one
- * with the apex *forward*, buried in the last lobe, so that the stern is a
- * transom — the approved export's own, kept.
+ * line: the Chorister's `spine_gun` is the same cone, two units to port of
+ * it (hulls/chorister-pelagia.mjs), and its `stem_tail` is one with the apex
+ * *forward*, buried in the last lobe, so that the stern is a transom — the
+ * approved export's own, kept. The count is the rule's at the base (`cut`).
  */
-export function nose(root, mat, { name = 'leaf_tip', tip, y = 0, z = 0, r, length, facets = 6 }) {
-  add(root, name, cyl(0, r, length, facets), mat, [tip - length / 2, y, z], [0, 0, -Math.PI / 2]);
+export function nose(root, mat, opts) {
+  const { name = 'leaf_tip', tip, y = 0, z = 0, r, length, cut: rule = METRE } = opts;
+  noCount(name, opts, 'facets');
+  const cone = cyl(0, r, length, rule.cyl(0, r, length));
+  add(root, name, cone, mat, [tip - length / 2, y, z], [0, 0, -Math.PI / 2]);
 }
 
 /**
@@ -721,26 +913,37 @@ export function vein(root, veinMat, { name = 'dorsal_vein', from, to, y, z = 0, 
  * and a matched pair is refused for it.
  *
  * As the approved Harvester draws them (hulls/harvester-pelagia.mjs): an
- * entry is `{ side, ...placement }` through kit.mjs `drawn`, the orb ten by
- * seven rather than the first reading's ten by six — `facets` — and the
- * roll and the three radii in the node, as the file carries them. The array
- * form above still builds what it built, on the same ten-by-six orb unless
- * `facets` says otherwise — the Drifter's bays are twelve by six, so that
- * the valves over them (`bayValves`) can be cut on half their facets and
- * nest (#783).
+ * entry is `{ side, ...placement }` through kit.mjs `drawn`, with the roll
+ * and the three radii in the node, as the file carries them; the array form
+ * above still builds what it built. Either way the orb's two counts are the
+ * rule's for the lobe as its node presses it (`cut`, #919) — the exports
+ * carried ten by seven on the Harvester and the first reading ten by six;
+ * the Drifter's bays were twelve by six so that the valves over them
+ * (`bayValves`) could be cut on half their facets and nest, and
+ * `bayValves` says what the rule makes of that.
  */
-export function cargoLobes(root, chitin, { lobes, facets = [10, 6] }) {
+export function cargoLobes(root, chitin, opts) {
+  const { lobes, cut: rule = METRE } = opts;
+  noCount('cargo_lobe', opts, 'facets');
   if (!Array.isArray(lobes[0])) {
     refuseMirror('cargo_lobe', lobes, (l) => l.scale.join());
     lobes.forEach(({ side, ...placement }) =>
-      part(root, `cargo_lobe_${side}`, orb(...facets), chitin, placement)
+      part(
+        root,
+        `cargo_lobe_${side}`,
+        orb(...rule.orb(1, { ...placement, yaw: true })),
+        chitin,
+        placement
+      )
     );
     return;
   }
   refuseMirror('cargo_lobe', lobes, ([, , , , rx, ry, rz]) => `${rx},${ry},${rz}`);
-  lobes.forEach(([side, x, y, z, rx, ry, rz, roll = 0]) =>
-    add(root, `cargo_lobe_${side}`, orb(...facets), chitin, [x, y, z], [0, 0, roll], [rx, ry, rz])
-  );
+  lobes.forEach(([side, x, y, z, rx, ry, rz, roll = 0]) => {
+    const scale = [rx, ry, rz];
+    const lobe = orb(...rule.orb(1, { scale }));
+    add(root, `cargo_lobe_${side}`, lobe, chitin, [x, y, z], [0, 0, roll], scale);
+  });
 }
 
 /**
@@ -802,9 +1005,10 @@ export function baleen(root, ridge, opts) {
  * curves' 21 each). The array form above still builds what it built.
  */
 export function tendrils(root, ridge, opts) {
-  const { tendrils: list } = opts;
+  const { tendrils: list, cut: rule = METRE } = opts;
+  noCount('feed_tendril', opts, 'facets');
   if (!Array.isArray(list[0])) {
-    const { r = 0.045, steps = 20, facets = 5, z0 = 1.35, knots = 6 } = opts;
+    const { r = 0.045, steps = 20, z0 = 1.35, knots = 6 } = opts;
     list.forEach(({ name, x, droop, phase, length }) => {
       const through = [];
       for (let k = 0; k < knots; k++) {
@@ -820,7 +1024,7 @@ export function tendrils(root, ridge, opts) {
         through: through.map((p) => drawn(p).at),
         r,
         steps,
-        facets,
+        cut: rule,
       });
     });
     return;
@@ -831,7 +1035,8 @@ export function tendrils(root, ridge, opts) {
       new THREE.Vector3(x - length * 0.35, y - length * sag, z),
       new THREE.Vector3(x - length * 0.8, y - length * 0.55, z)
     );
-    add(root, `feed_tendril_${name}`, new THREE.TubeGeometry(curve, 6, r, 5, false), ridge);
+    const tube = new THREE.TubeGeometry(curve, 6, r, rule.tube(r), false);
+    add(root, `feed_tendril_${name}`, tube, ridge);
   });
 }
 
@@ -869,36 +1074,34 @@ const shell = (r, [w, h], { round = 1, down = 1 } = {}) =>
  */
 export function bladderHead(root, { membrane, ridge, spore, vein }, opts) {
   const { bearing: a, at, bladder: body, rings, bud: crown, vein: thread, roots } = opts;
-  add(root, 'bladder', orb(12, 6), membrane, polar(a, at, body.y), [0, -a, 0], body.r);
+  const { cut: rule = METRE } = opts;
+  const bag = orb(...rule.orb(1, { scale: body.r }));
+  add(root, 'bladder', bag, membrane, polar(a, at, body.y), [0, -a, 0], body.r);
+  const squash = [1, rings.squash, 1];
   rings.stations.forEach(([r, shoulder], i) =>
     add(
       root,
       `bladder_ring_${i}`,
-      loft(
-        [
-          [-rings.halfWidth, shoulder],
-          [0, r],
-          [rings.halfWidth, shoulder],
-        ],
-        12
-      ),
+      ruledRidge(rule, { crown: r, shoulder, halfWidth: rings.halfWidth }, { scale: squash }),
       ridge,
       polar(a, rings.from + rings.pitch * i, body.y),
       [0, -a, 0],
-      [1, rings.squash, 1]
+      squash
     )
   );
-  add(root, 'bud', orb(8, 6), spore, polar(a, crown.at, crown.y), [0, 0, 0], crown.r);
+  const pale = orb(...rule.orb(1, { scale: crown.r }));
+  add(root, 'bud', pale, spore, polar(a, crown.at, crown.y), [0, 0, 0], crown.r);
   add(root, 'bladder_vein', box(...thread.size), vein, polar(a, at, thread.y), [0, -a, 0]);
   // Each root is laid along the arm as the draw pipe is, then raised
   // `roots.raise` radians toward vertical: the approved file's lean is
   // π/2 − 0.9 to the bit.
+  const [r0, r1] = roots.r;
   roots.across.forEach((d, i) => {
     const [x, y, z] = polar(a, roots.at, roots.y);
     add(
       root,
       `root_${i}`,
-      cyl(roots.r[0], roots.r[1], roots.length, 6),
+      cyl(r0, r1, roots.length, rule.cyl(r0, r1, roots.length)),
       ridge,
       [x + d * Math.sin(a), y, z - d * Math.cos(a)],
       [0, -a, roots.raise - Math.PI / 2]
@@ -913,14 +1116,31 @@ export function bladderHead(root, { membrane, ridge, spore, vein }, opts) {
  * As the approved turret draws it — `mound`, `collar` and `ring`, each with
  * its own numbers and its `drawn` placement, built in the file's order
  * (mound, collar, ring): the mound a `shell` of radius `r` cut `down` of the
- * way to the pole, the collar and the ring toruses of `R` and `tube` with
- * `facets` [radial, tubular].
+ * way to the pole, the collar and the ring toruses of `R` and `tube`, every
+ * count the rule's for the part as its node presses it (`cut`, #919).
  */
 export function grownMound(root, { body, ring, collar }, opts) {
-  const { mound, collar: c, ring: g } = opts;
-  part(root, 'base_mound', shell(mound.r, mound.facets, mound), body, mound);
-  part(root, 'base_collar', torus(c.R, c.tube, ...c.facets), collar, c);
-  part(root, 'mound_ring', torus(g.R, g.tube, ...g.facets), ring, g);
+  const { mound, collar: c, ring: g, cut: rule = METRE } = opts;
+  noCount('base_mound', mound, 'facets');
+  noCount('base_collar', c, 'facets');
+  noCount('mound_ring', g, 'facets');
+  const window = { thetaLength: Math.PI * (mound.down ?? 1), phiLength: TAU * (mound.round ?? 1) };
+  const dome = shell(mound.r, rule.orb(mound.r, { ...mound, yaw: true }, window), mound);
+  part(root, 'base_mound', dome, body, mound);
+  part(
+    root,
+    'base_collar',
+    torus(c.R, c.tube, ...rule.torus(c.R, c.tube, { ...c, yaw: true })),
+    collar,
+    c
+  );
+  part(
+    root,
+    'mound_ring',
+    torus(g.R, g.tube, ...rule.torus(g.R, g.tube, { ...g, yaw: true })),
+    ring,
+    g
+  );
 }
 
 /**
@@ -928,18 +1148,21 @@ export function grownMound(root, { body, ring, collar }, opts) {
  * a matched pair is refused, because the Commune grows each root its own size
  * and a turret that came out rotationally regular would read as a machine.
  *
- * As the approved turret draws them: a capsule each (kit.mjs `capsule`,
- * `facets` [cap, radial]), `r` thick and `length` between its caps, placed by
- * its own node — laid over 0.13 rad short of flat and yawed each its own way,
- * which puts every root *across* the mound's radius rather than out along it.
- * That is where the file has them, and a port reproduces the file. Skins
- * alternate from the first grip.
+ * As the approved turret draws them: a capsule each (kit.mjs `capsule`, its
+ * two counts the rule's — `cut.capsule`), `r` thick and `length` between its
+ * caps, placed by its own node — laid over 0.13 rad short of flat and yawed
+ * each its own way, which puts every root *across* the mound's radius rather
+ * than out along it. That is where the file has them, and a port reproduces
+ * the file. Skins alternate from the first grip.
  */
-export function rootGrips(root, skins, { grips, facets = [3, 6] }) {
+export function rootGrips(root, skins, opts) {
+  const { grips, cut: rule = METRE } = opts;
+  noCount('root_grip', opts, 'facets');
   refuseMirror('root_grip', grips, ({ r, length }) => `${r},${length}`);
-  grips.forEach((g, i) =>
-    part(root, `root_grip_${i}`, capsule(g.r, g.length, ...facets), skins[i % skins.length], g)
-  );
+  grips.forEach((g, i) => {
+    const grip = capsule(g.r, g.length, ...rule.capsule(g.r, g));
+    part(root, `root_grip_${i}`, grip, skins[i % skins.length], g);
+  });
 }
 
 /**
@@ -949,20 +1172,29 @@ export function rootGrips(root, skins, { grips, facets = [3, 6] }) {
  *
  * As the approved turret draws it, the head is a frame of its own — the
  * file's `turret_head` node, trained 0.3 rad off the mound's axis — and every
- * part carries its numbers in that frame: `pod` an orb of `r` and `facets`,
- * `cowl` a half-`shell` open `round` of a turn, `quills` cones `r` at the
- * foot and `length` tall, each by its own node. The placement at the top of
- * `opts` is the frame's (kit.mjs `group`), and the frame is returned so the
- * gun can be grown in it, as the file hangs `barrel_group` off `turret_head`.
+ * part carries its numbers in that frame: `pod` an orb of `r`, `cowl` a
+ * half-`shell` open `round` of a turn, `quills` cones `r` at the foot and
+ * `length` tall, each by its own node, every count the rule's as the frame
+ * and the node press the part (`cut`, #919; the file's quills were
+ * four-sided, and a quill is a thorn cut on the floor). The placement at the
+ * top of `opts` is the frame's (kit.mjs `group`), and the frame is returned
+ * so the gun can be grown in it, as the file hangs `barrel_group` off
+ * `turret_head`.
  */
 export function grownHead(root, { pod, cowl }, opts) {
   const head = group(root, 'turret_head', opts);
-  const { pod: p, cowl: c, quills } = opts;
-  part(head, 'head_pod', shell(p.r, p.facets), pod, p);
-  part(head, 'head_cowl', shell(c.r, c.facets, c), cowl, c);
-  quills.forEach((q, i) =>
-    part(head, `cowl_quill_${i}`, cyl(0, q.r, q.length, q.facets ?? 4), cowl, q)
-  );
+  const { pod: p, cowl: c, quills, cut: rule = METRE } = opts;
+  noCount('head_pod', p, 'facets');
+  noCount('head_cowl', c, 'facets');
+  const under = (o) => ({ ...o, parent: head, yaw: true });
+  part(head, 'head_pod', shell(p.r, rule.orb(p.r, under(p))), pod, p);
+  const window = { thetaLength: Math.PI * (c.down ?? 1), phiLength: TAU * (c.round ?? 1) };
+  part(head, 'head_cowl', shell(c.r, rule.orb(c.r, under(c), window), c), cowl, c);
+  quills.forEach((q, i) => {
+    noCount(`cowl_quill_${i}`, q, 'facets');
+    const quill = cyl(0, q.r, q.length, rule.cyl(0, q.r, q.length, under(q)));
+    part(head, `cowl_quill_${i}`, quill, cowl, q);
+  });
   return head;
 }
 
@@ -978,25 +1210,55 @@ export function grownHead(root, { pod, cowl }, opts) {
  * As the approved turret draws it, the limb is a frame off the head — the
  * file's `barrel_group`, placed by the top of `opts` — and each part is its
  * own primitive at its own station up the frame's Y: `root`, `mid` and `tip`
- * frusta of `radii` [muzzle end, breech end], `length` and `facets`; `iris`
- * and each of `ribs` a torus of `R`, `tube` and `facets`; `pip` an orb. The
- * ribs are clad in `rib`, which the file has in the cowl's ink and not the
- * steel's.
+ * frusta of `radii` [muzzle end, breech end] and `length`; `iris` and each
+ * of `ribs` a torus of `R` and `tube`; `pip` an orb — every count the rule's
+ * for the part as the frames press it (`cut`, #919). The ribs are clad in
+ * `rib`, which the file has in the cowl's ink and not the steel's.
+ *
+ * A rib with `fit` in place of `R` is sized to the root at its station
+ * (#919): the root's radius there, on its flats — a sixteen-gon drum and a
+ * sixteen-gon ring share their vertex bearings, so the ring's inside lies
+ * along the drum's faces — plus half the tube, so the tube is half-sunk in
+ * the root. The file's three ribs were nine-gons of 0.5, 0.47 and 0.44
+ * whose flats sat inside the seven-gon root's vertices; round at the rule,
+ * they stood 0.25–0.41 m off it.
  */
 export function grownBarrel(root, mats, opts) {
   const { rootMat, mid, tip, iris, pip, rib: ribMat = rootMat } = mats;
+  const { cut: rule = METRE } = opts;
   const g = group(root, 'barrel_group', opts);
-  const seg = (name, s, mat) =>
-    part(g, name, cyl(s.radii[0], s.radii[1], s.length, s.facets), mat, s);
-  seg('barrel_root', opts.root, rootMat);
+  const under = (o) => ({ ...o, parent: g, yaw: true });
+  const seg = (name, s, mat) => {
+    noCount(name, s, 'facets');
+    const [a, b] = s.radii;
+    const n = rule.cyl(a, b, s.length, under(s));
+    part(g, name, cyl(a, b, s.length, n), mat, s);
+    return n;
+  };
+  const rootN = seg('barrel_root', opts.root, rootMat);
   seg('barrel_mid', opts.mid, mid);
   seg('barrel_tip', opts.tip, tip);
   const { iris: ir, pip: pp, ribs } = opts;
-  part(g, 'muzzle_iris', torus(ir.R, ir.tube, ...ir.facets), iris, ir);
-  part(g, 'muzzle_pip', new THREE.SphereGeometry(pp.r, ...pp.facets), pip, pp);
-  ribs.forEach((rb, i) =>
-    part(g, `recoil_rib_${i}`, torus(rb.R, rb.tube, ...rb.facets), ribMat, rb)
-  );
+  noCount('muzzle_iris', ir, 'facets');
+  noCount('muzzle_pip', pp, 'facets');
+  part(g, 'muzzle_iris', torus(ir.R, ir.tube, ...rule.torus(ir.R, ir.tube, under(ir))), iris, ir);
+  part(g, 'muzzle_pip', new THREE.SphereGeometry(pp.r, ...rule.orb(pp.r, under(pp))), pip, pp);
+  // The root's radius at height `y` up the frame: its frustum runs from the
+  // breech radius at its foot to the muzzle radius at its head.
+  const rootAt = (y) => {
+    const {
+      radii: [muzzle, breech],
+      length,
+      at,
+    } = opts.root;
+    const foot = at[1] - length / 2;
+    return breech + ((muzzle - breech) * (y - foot)) / length;
+  };
+  ribs.forEach((rb, i) => {
+    noCount(`recoil_rib_${i}`, rb, 'facets');
+    const R = rb.fit ? rootAt(rb.at[1]) * Math.cos(Math.PI / rootN) + rb.tube / 2 : rb.R;
+    part(g, `recoil_rib_${i}`, torus(R, rb.tube, ...rule.torus(R, rb.tube, under(rb))), ribMat, rb);
+  });
   return g;
 }
 
@@ -1006,20 +1268,26 @@ export function grownBarrel(root, mats, opts) {
  * Commune's turret feeds from the side it grew on.
  *
  * As the approved turret draws it, in the file's order — `pipe`, `pod`,
- * `flange`: the feed a straight frustum of `radii`, `length` and `facets`,
- * leaned by its node; the pod a capsule (kit.mjs `capsule`, `facets` [cap,
- * radial]); the flange a torus.
+ * `flange`: the feed a straight frustum of `radii` and `length`, leaned by
+ * its node; the pod a capsule (kit.mjs `capsule`); the flange a torus — the
+ * counts the rule's (`cut`, #919).
  */
-export function magazine(root, { pipe: pipeMat, pod: podMat, flange }, { pipe, pod, flange: f }) {
+export function magazine(root, { pipe: pipeMat, pod: podMat, flange }, opts) {
+  const { pipe, pod, flange: f, cut: rule = METRE } = opts;
+  noCount('feed_pipe', pipe, 'facets');
+  noCount('ammo_pod', pod, 'facets');
+  noCount('feed_flange', f, 'facets');
+  const [a, b] = pipe.radii;
+  const feed = cyl(a, b, pipe.length, rule.cyl(a, b, pipe.length, { ...pipe, yaw: true }));
+  part(root, 'feed_pipe', feed, pipeMat, pipe);
+  part(root, 'ammo_pod', capsule(pod.r, pod.length, ...rule.capsule(pod.r, pod)), podMat, pod);
   part(
     root,
-    'feed_pipe',
-    cyl(pipe.radii[0], pipe.radii[1], pipe.length, pipe.facets),
-    pipeMat,
-    pipe
+    'feed_flange',
+    torus(f.R, f.tube, ...rule.torus(f.R, f.tube, { ...f, yaw: true })),
+    flange,
+    f
   );
-  part(root, 'ammo_pod', capsule(pod.r, pod.length, ...pod.facets), podMat, pod);
-  part(root, 'feed_flange', torus(f.R, f.tube, ...f.facets), flange, f);
 }
 
 /* --------------------------------------------------------------------------
@@ -1036,11 +1304,11 @@ export function magazine(root, { pipe: pipeMat, pod: podMat, flange }, { pipe, p
  * slipway-pelagia.glb's own and is the default.
  * ------------------------------------------------------------------------ */
 
-/** A gantry leg: an eight-facet ridge stalk 44 m tall, 32 m out, leaning 0.18 outward. */
-export const slipwayLeg = (ridge) =>
+/** A gantry leg: a ridge stalk 44 m tall, 32 m out, leaning 0.18 outward, on the rule's count (the file's was eight). */
+export const slipwayLeg = (ridge, rule = METRE) =>
   sidedPost({
     name: 'gantry_leg',
-    geo: () => cyl(2.4, 4.2, 44, 8),
+    geo: () => cyl(2.4, 4.2, 44, rule.cyl(2.4, 4.2, 44)),
     mat: ridge,
     y: 22,
     spread: 32,
@@ -1048,10 +1316,10 @@ export const slipwayLeg = (ridge) =>
   });
 
 /** The knuckle on a leg: a chitin orb 8 m across where the stalk meets the beam. */
-export const slipwayKnuckle = (chitin) =>
+export const slipwayKnuckle = (chitin, rule = METRE) =>
   sidedPost({
     name: 'gantry_knuckle',
-    geo: () => orb(8, 6),
+    geo: () => orb(...rule.orb(1, { scale: [4, 3, 4] })),
     mat: chitin,
     y: 44,
     spread: 27,
@@ -1059,10 +1327,10 @@ export const slipwayKnuckle = (chitin) =>
   });
 
 /** A head pylon: a chitin orb drawn 56 m tall, 34 m out. */
-export const slipwayPylon = (chitin) =>
+export const slipwayPylon = (chitin, rule = METRE) =>
   sidedPost({
     name: 'head_pylon',
-    geo: () => orb(10, 6),
+    geo: () => orb(...rule.orb(1, { scale: [6, 28, 6] })),
     mat: chitin,
     y: 24,
     spread: 34,
@@ -1076,10 +1344,13 @@ export const slipwayPylon = (chitin) =>
  */
 export function slipwayHull(root, { hull: membrane, deck: chitin }, opts = {}) {
   const {
-    body = { facets: [14, 7], at: [-50, 7, 0], r: [56, 6, 10] },
+    body = { at: [-50, 7, 0], r: [56, 6, 10] },
     deck = { size: [60, 1, 8], at: [-60, 12, 0] },
+    cut: rule = METRE,
   } = opts;
-  add(root, 'hull_in_progress', orb(...body.facets), membrane, body.at, [0, 0, 0], body.r);
+  noCount('hull_in_progress', body, 'facets');
+  const hull = orb(...rule.orb(1, { scale: body.r }));
+  add(root, 'hull_in_progress', hull, membrane, body.at, [0, 0, 0], body.r);
   add(root, 'hull_in_progress_deck', box(...deck.size), chitin, deck.at);
 }
 
@@ -1106,19 +1377,10 @@ export function slipwayHall(hall, { chitin, ridge, membrane, spore, vein }, opts
   const {
     sgn,
     z = 54,
-    lobes = {
-      count: 6,
-      from: -125,
-      pitch: 50,
-      facets: [14, 7],
-      y: 8,
-      sx: 30,
-      sy: [17, 19, 21],
-      sz: [26, 30],
-    },
-    rings = { dx: [-12, 8], crown: 0.8, shoulder: 0.9, halfWidth: 1.5, facets: 14, squash: 0.62 },
-    buds = { dx: 6, rise: 9, out: 6, facets: [8, 6], r: [4, 3, 4] },
-    knuckles = { count: 5, from: -100, pitch: 50, facets: [10, 6], y: 6, r: [12, 9, 14] },
+    lobes = { count: 6, from: -125, pitch: 50, y: 8, sx: 30, sy: [17, 19, 21], sz: [26, 30] },
+    rings = { dx: [-12, 8], crown: 0.8, shoulder: 0.9, halfWidth: 1.5, squash: 0.62 },
+    buds = { dx: 6, rise: 9, out: 6, r: [4, 3, 4] },
+    knuckles = { count: 5, from: -100, pitch: 50, y: 6, r: [12, 9, 14] },
     lip = { size: [320, 3, 8], y: 1.5, z: 27 },
     veins = { count: 5, from: -120, pitch: 60, size: [24, 0.4, 1.4], y: 3.1 },
     roots = {
@@ -1131,41 +1393,57 @@ export function slipwayHall(hall, { chitin, ridge, membrane, spore, vein }, opts
       z: 86,
       raise: 1.2,
     },
-    bladders = { count: 3, from: -90, pitch: 90, facets: [10, 6], y: 2, z: 88, r: [12, 6, 7] },
+    bladders = { count: 3, from: -90, pitch: 90, y: 2, z: 88, r: [12, 6, 7] },
+    cut: rule = METRE,
   } = opts;
+  for (const [what, o] of [
+    ['husk_lobe', lobes],
+    ['lobe_ring', rings],
+    ['lobe_bud', buds],
+    ['husk_knuckle', knuckles],
+    ['ballast_bladder', bladders],
+  ])
+    noCount(what, o, 'facets');
+  // The hall is in its own frame, so each orb is asked as that frame presses it.
+  const under = (scale) => ({ scale, parent: hall });
   for (let i = 0; i < lobes.count; i++) {
     const x = lobes.from + lobes.pitch * i;
     const sy = lobes.sy[i % lobes.sy.length];
     const sz = lobes.sz[i % lobes.sz.length];
+    const lobe = [lobes.sx, sy, sz];
     add(
       hall,
       `husk_lobe_${i}`,
-      orb(...lobes.facets),
+      orb(...rule.orb(1, under(lobe))),
       i % 2 ? chitin : ridge,
       [x, lobes.y, sgn * z],
       [0, 0, 0],
-      [lobes.sx, sy, sz]
+      lobe
     );
+    const squash = [1, rings.squash, 1];
     rings.dx.forEach((dx, j) =>
       add(
         hall,
         `lobe_ring_${i}_${j}`,
-        ridgeRing({
-          crown: rings.crown * sz,
-          shoulder: rings.shoulder * rings.crown * sz,
-          halfWidth: rings.halfWidth,
-          facets: rings.facets,
-        }),
+        ruledRidge(
+          rule,
+          {
+            crown: rings.crown * sz,
+            shoulder: rings.shoulder * rings.crown * sz,
+            halfWidth: rings.halfWidth,
+          },
+          under(squash)
+        ),
         membrane,
         [x + dx, lobes.y, sgn * z],
         [0, 0, 0],
-        [1, rings.squash, 1]
+        squash
       )
     );
     add(
       hall,
       `lobe_bud_${i}`,
-      orb(...buds.facets),
+      orb(...rule.orb(1, under(buds.r))),
       spore,
       [x + buds.dx, sy + buds.rise, sgn * (z + buds.out)],
       [0, 0, 0],
@@ -1176,7 +1454,7 @@ export function slipwayHall(hall, { chitin, ridge, membrane, spore, vein }, opts
     add(
       hall,
       `husk_knuckle_${i}`,
-      orb(...knuckles.facets),
+      orb(...rule.orb(1, under(knuckles.r))),
       chitin,
       [knuckles.from + knuckles.pitch * i, knuckles.y, sgn * z],
       [0, 0, 0],
@@ -1189,11 +1467,12 @@ export function slipwayHall(hall, { chitin, ridge, membrane, spore, vein }, opts
       veins.y,
       sgn * lip.z,
     ]);
+  const [r0, r1] = roots.r;
   for (let i = 0; i < roots.count; i++)
     add(
       hall,
       `root_anchor_${i}`,
-      cyl(roots.r[0], roots.r[1], roots.length, 6),
+      cyl(r0, r1, roots.length, rule.cyl(r0, r1, roots.length, { parent: hall })),
       ridge,
       [roots.from + roots.pitch * i, roots.y, sgn * roots.z],
       [Math.PI / 2 + sgn * roots.raise, 0, 0]
@@ -1202,7 +1481,7 @@ export function slipwayHall(hall, { chitin, ridge, membrane, spore, vein }, opts
     add(
       hall,
       `ballast_bladder_${i}`,
-      orb(...bladders.facets),
+      orb(...rule.orb(1, under(bladders.r))),
       membrane,
       [bladders.from + bladders.pitch * i, bladders.y, sgn * bladders.z],
       [0, 0, 0],
@@ -1251,40 +1530,84 @@ export function slipwayHall(hall, { chitin, ridge, membrane, spore, vein }, opts
 /**
  * A grown dome: a `shell` stopped `down` of a half-turn short of its pole,
  * placed by `frame` (kit.mjs `xLong` or `zLong`) from the export's own
- * `at`, `rot` and `scale`. The Bastion's `pressure_dome` is an 18 × 10 orb
- * of 6.2 stopped at 0.56, squashed 0.88 tall and 1.12 across and rolled
- * 0.06 by its node; its `crown_pod` a 12 × 7 of 2.3 stopped at 0.6; the
- * Foundry's eight husk lobes are unit 10 × 7 orbs stopped at 0.62
- * (`huskFlanks`). None is a table: the counts `parts.mjs` could not name
- * are a partial sphere's, w·(2h − 1) triangles where a closed orb has
- * 2w(h − 1).
+ * `at`, `rot` and `scale`, its two counts the rule's for the dome as its
+ * node presses it (`cut`, #919). The Bastion's `pressure_dome` is an orb of
+ * 6.2 stopped at 0.56, squashed 0.88 tall and 1.12 across and rolled 0.06
+ * by its node, 18 × 10 in the file; its `crown_pod` one of 2.3 stopped at
+ * 0.6, 12 × 7; the Foundry's eight husk lobes are unit orbs stopped at
+ * 0.62, 10 × 7 (`huskFlanks`). None is a table: the counts `parts.mjs`
+ * could not name are a partial sphere's, w·(2h − 1) triangles where a
+ * closed orb has 2w(h − 1).
  */
 export function grownDome(root, mat, opts) {
-  const { name = 'pressure_dome', r, facets, down, frame = xLong, at, rot, scale } = opts;
-  frame.part(root, name, shell(r, facets, { down }), mat, at, rot, scale);
+  const {
+    name = 'pressure_dome',
+    r,
+    down,
+    frame = xLong,
+    at,
+    rot,
+    scale,
+    cut: rule = METRE,
+  } = opts;
+  noCount(name, opts, 'facets');
+  const placement = { scale, rot, yaw: frame === zLong };
+  const counts = rule.orb(r, placement, { thetaLength: Math.PI * down });
+  frame.part(root, name, shell(r, counts, { down }), mat, at, rot, scale);
+  // The settled `[round, down]`, so what rings the dome can sit on its rows (`domeRings`).
+  return counts;
 }
 
 /**
  * Growth rings round a dome, where it grew: each a torus lying flat at the
  * height of the dome's surface at polar angle `t` from the crown — y = cy +
  * squash·R·cos t — cresting `lift` beyond the dome's radius there, R·sin t +
- * lift, `tube` thick on `facets` [radial, tubular], with the dome's beam
- * scale on its node. The Bastion's four sit at t = 0.32, 0.62, 0.88 and
- * 1.12 on its 6.2 dome, 0.1 proud, thinning 0.3, 0.24, 0.2, 0.16 down the
- * dome; the rule reproduces all four buffers and heights to the float.
+ * lift, `tube` thick on the rule's two counts for the ring as the dome's
+ * beam scale on its node presses it (`cut`, #919; the file's were 5 × 26).
+ * The Bastion's four sit at t = 0.32, 0.62, 0.88 and 1.12 on its 6.2 dome,
+ * 0.1 proud, thinning 0.3, 0.24, 0.2, 0.16 down the dome; the rule
+ * reproduces all four buffers and heights to the float.
+ *
+ * `dome` = `{ rows, down }` seats each ring on the dome as cut rather than
+ * on the sphere it was cut from (#919): a dome of `rows` meridian rows over
+ * `down` of a half turn is a cone frustum between two rows, and at the
+ * rule's four rows over the Bastion's 0.56π that skin lies up to 0.15 of a
+ * unit inside the sphere midway between rows, where a ring 0.1 proud of
+ * the sphere stood 0.39 m off the skin. The point on the chord between the
+ * two rows at polar angle `t` is the ring's station — its height, and the
+ * radius it crests `lift` beyond — so the ring is `lift` proud of what is
+ * there. Without `dome` the sphere's own surface is used, as the file had
+ * it and the rings were placed before the rule.
  */
 export function domeRings(root, mat, opts) {
-  const { name = 'growth_ring', centre, R, squash, lift, rings, facets = [5, 26], scale } = opts;
+  const { name = 'growth_ring', centre, R, squash, lift, rings, scale, dome } = opts;
+  const { cut: rule = METRE } = opts;
+  noCount(name, opts, 'facets');
   const [cx, cy, cz] = centre;
-  rings.forEach(({ t, tube }, i) =>
+  // The dome's skin at polar angle `t`: on the sphere, or on the chord
+  // between the two rows that straddle `t`, read as [radius, height] of R.
+  const skinAt = (t) => {
+    if (!dome) return [Math.sin(t), Math.cos(t)];
+    const step = (Math.PI * dome.down) / dome.rows;
+    const k = Math.min(dome.rows - 1, Math.floor(t / step));
+    const [ax, ay] = [Math.sin(k * step), Math.cos(k * step)];
+    const [bx, by] = [Math.sin((k + 1) * step), Math.cos((k + 1) * step)];
+    // Where the ray at angle t from the centre meets the chord A→B.
+    const tan = Math.tan(t);
+    const l = (ay * tan - ax) / (bx - ax - (by - ay) * tan);
+    return [ax + l * (bx - ax), ay + l * (by - ay)];
+  };
+  rings.forEach(({ t, tube }, i) => {
+    const [sx, sy] = skinAt(t);
+    const ring = R * sx + lift;
     placed(
       root,
       `${name}_${i}`,
-      torus(R * Math.sin(t) + lift, tube, ...facets),
+      torus(ring, tube, ...rule.torus(ring, tube, { scale })),
       mat,
-      verbatim([cx, cy + squash * R * Math.cos(t), cz], [Math.PI / 2, 0, 0], scale)
-    )
-  );
+      verbatim([cx, cy + squash * R * sy, cz], [Math.PI / 2, 0, 0], scale)
+    );
+  });
 }
 
 /**
@@ -1304,32 +1627,68 @@ export function domeRings(root, mat, opts) {
  * in three's other XYZ form of the same matrix, (±π, b, c − π); they are
  * written as (0, π − b, c), which is the form the other two are in and the
  * one that shows the pipes' yaws to be round.
+ *
+ * `sag` sets each arc out by its own chord's sag (#919; the Consortium's
+ * Bastion ribs took the same reckoning): an arc of `n` segments has its
+ * facets' midpoints `R·(1 − cos(arc / 2n))` inside its radius, and at the
+ * rule's two segments over the Bastion's 0.9 rad veins that is 0.025 of
+ * it — the veins lay inside the dome, their plan from above gone. With
+ * `sag` the radius is raised so the midpoints lie at the file's `R`; the
+ * count is settled again at the raised radius until it holds. Without it
+ * the file's radius is built, as every arc was before the rule.
  */
 export function domeArcs(root, mat, opts) {
-  const { name, first = 0, frame = xLong, centre, scale, R, tube, facets, arc, roll, arcs } = opts;
-  arcs.forEach((a, i) =>
+  const { name, first = 0, frame = xLong, centre, scale, R, tube, arc, roll, arcs } = opts;
+  const { cut: rule = METRE, sag = false } = opts;
+  noCount(name, opts, 'facets');
+  arcs.forEach((a, i) => {
+    const [ringT, ringArc] = [a.tube ?? tube, a.arc ?? arc];
+    const rot = a.rot ?? [0, a.yaw, a.roll ?? roll];
+    const placement = { scale, rot, yaw: frame === zLong };
+    let ringR = a.R ?? R;
+    let [radial, tubular] = rule.torus(ringR, ringT, placement, ringArc);
+    if (sag)
+      for (let k = 0; k < 4; k++) {
+        const raised = (a.R ?? R) / Math.cos(ringArc / (2 * tubular));
+        const counts = rule.torus(raised, ringT, placement, ringArc);
+        ringR = raised;
+        if (counts[1] === tubular) {
+          [radial, tubular] = counts;
+          break;
+        }
+        [radial, tubular] = counts;
+      }
     frame.part(
       root,
       `${name}_${first + i}`,
-      new THREE.TorusGeometry(a.R ?? R, a.tube ?? tube, ...facets, a.arc ?? arc),
+      new THREE.TorusGeometry(ringR, ringT, radial, tubular, ringArc),
       mat,
       a.at ?? centre,
-      a.rot ?? [0, a.yaw, a.roll ?? roll],
+      rot,
       scale
-    )
-  );
+    );
+  });
 }
 
 /**
  * Lit ports round a dome — "sustained glow from ports and working lights":
- * orbs of `r` on `facets` in the lamp, one buffer shared by all as the file
- * has it, each where the export put it. The Bastion's eight sit a little
- * above the dome's waist at eight radii between 6.23 and 6.31 from its
- * centre, on no rule the port could find, so the places are the file's.
+ * orbs of `r` in the lamp on the rule's counts, one buffer shared by all as
+ * the file has it, each where the export put it. The Bastion's eight sit a
+ * little above the dome's waist at eight radii between 6.23 and 6.31 from
+ * its centre, on no rule the port could find, so the places are the file's
+ * — in plan. `on` names the dome, and each port is then seated on it from
+ * its station, half its radius into the skin (kit.mjs `seat`, as `rested`
+ * seats a bud, #919): the file hung them on the sphere, and on the dome as
+ * the rule cuts it three stood 0.67–1.34 m off and five 0.005–2.7 m.
  */
-export function portLights(root, mat, { name = 'port_light', r, facets = [6, 5], at }) {
-  const geo = new THREE.SphereGeometry(r, ...facets);
-  at.forEach((p, i) => placed(root, `${name}_${i}`, geo, mat, verbatim(p)));
+export function portLights(root, mat, opts) {
+  const { name = 'port_light', r, at, on = null, cut: rule = METRE } = opts;
+  noCount(name, opts, 'facets');
+  const geo = new THREE.SphereGeometry(r, ...rule.orb(r));
+  at.forEach((p, i) => {
+    const station = on ? seat(root, on, p, { stand: r, sink: r / 2 }).at : p;
+    placed(root, `${name}_${i}`, geo, mat, verbatim(station));
+  });
 }
 
 /**
@@ -1346,14 +1705,18 @@ export function portLights(root, mat, { name = 'port_light', r, facets = [6, 5],
  * same matrix, and all are written here in the second.
  */
 export function rootButtresses(root, skins, opts) {
-  const { name = 'root_buttress', frame = xLong, roll, facets = [3, 7], grips } = opts;
+  const { name = 'root_buttress', frame = xLong, roll, grips, cut: rule = METRE } = opts;
+  noCount(name, opts, 'facets');
   refuseMirror(name, grips, ({ r, length }) => `${r},${length}`);
   grips.forEach(({ r, length, at, yaw }, i) =>
-    frame.part(root, `${name}_${i}`, capsule(r, length, ...facets), skins[i % skins.length], at, [
-      0,
-      yaw,
-      roll,
-    ])
+    frame.part(
+      root,
+      `${name}_${i}`,
+      capsule(r, length, ...rule.capsule(r)),
+      skins[i % skins.length],
+      at,
+      [0, yaw, roll]
+    )
   );
 }
 
@@ -1361,35 +1724,39 @@ export function rootButtresses(root, skins, opts) {
  * A docking collar: the collar, a frustum laid on its side — a quarter turn
  * about the keel — and yawed out `yaw`; the lip round its mouth, a torus
  * stood on edge at π/2 + yaw; and the lit mouth, a thin drum in the collar's
- * own attitude and facet count. Exported collar, lip, mouth, as the file
- * has them, under `docking_<part>_<tag>`. The Bastion's `main` (1.5 to 1.9
- * by 2.6 on 9 facets, yawed −0.4 off the +x flank) and `small` (0.95 to
- * 1.25 by 2 on 8, yawed 0.75, aft and to starboard). The lip's and the
- * mouth's places are the file's and not a distance along the collar's axis
- * — each sits a few centimetres off it.
+ * own attitude, each on the rule's count at its own radius (`cut`, #919).
+ * Exported collar, lip, mouth, as the file has them, under
+ * `docking_<part>_<tag>`. The Bastion's `main` (1.5 to 1.9 by 2.6, yawed
+ * −0.4 off the +x flank; the file cut it on 9) and `small` (0.95 to 1.25 by
+ * 2, yawed 0.75, aft and to starboard; 8). The lip's and the mouth's places
+ * are the file's and not a distance along the collar's axis — each sits a
+ * few centimetres off it.
  */
 export function dockingCollar(root, mats, opts) {
   const { collar: collarMat, lip: lipMat, mouth: mouthMat } = mats;
-  const { tag, yaw, collar, lip, mouth } = opts;
+  const { tag, yaw, collar, lip, mouth, cut: rule = METRE } = opts;
+  noCount(`docking_collar_${tag}`, collar, 'facets');
+  noCount(`docking_lip_${tag}`, lip, 'facets');
   const attitude = [0, yaw, Math.PI / 2];
+  const [a, b] = collar.radii;
   placed(
     root,
     `docking_collar_${tag}`,
-    cyl(collar.radii[0], collar.radii[1], collar.length, collar.facets),
+    cyl(a, b, collar.length, rule.cyl(a, b, collar.length)),
     collarMat,
     verbatim(collar.at, attitude)
   );
   placed(
     root,
     `docking_lip_${tag}`,
-    torus(lip.R, lip.tube, ...lip.facets),
+    torus(lip.R, lip.tube, ...rule.torus(lip.R, lip.tube)),
     lipMat,
     verbatim(lip.at, [0, Math.PI / 2 + yaw, 0])
   );
   placed(
     root,
     `docking_mouth_${tag}`,
-    cyl(mouth.r, mouth.r, mouth.t, collar.facets),
+    cyl(mouth.r, mouth.r, mouth.t, rule.cyl(mouth.r, mouth.r, mouth.t)),
     mouthMat,
     verbatim(mouth.at, attitude)
   );
@@ -1444,12 +1811,14 @@ export function dockingCollar(root, mats, opts) {
 export function gillOrgan(root, mats, opts) {
   const { mound: moundMat, slit: slitMat, breath: breathMat, haze: hazeMat } = mats;
   const { side, at, yaw, mound, slits, haze, lines, prefix = 'gill', sep = '-' } = opts;
+  const { cut: rule = METRE } = opts;
   const n = (...w) => [prefix, ...w].join(sep);
+  noCount(n('mound', side), mound, 'facets');
   const organ = group(root, n('organ', side), verbatim(at, [0, yaw, 0]));
   placed(
     organ,
     n('mound', side),
-    new THREE.SphereGeometry(1, ...mound.facets),
+    new THREE.SphereGeometry(1, ...rule.orb(1, { scale: mound.scale, parent: organ })),
     moundMat,
     verbatim([0, 0, 0], [0, 0, mound.roll], mound.scale)
   );
@@ -1502,14 +1871,17 @@ export function gillOrgan(root, mats, opts) {
         verbatim([reach[1] * Math.sin(a), y[1], z], [tilt, a, 0])
       );
   }
-  if (haze)
+  if (haze) {
+    noCount(n('haze', side), haze, 'facets');
+    const [a, b] = haze.radii;
     placed(
       organ,
       n('haze', side),
-      cyl(haze.radii[0], haze.radii[1], haze.h, haze.facets),
+      cyl(a, b, haze.h, rule.cyl(a, b, haze.h, { parent: organ })),
       hazeMat,
       verbatim([0, haze.y, 0], [0, 0, haze.roll])
     );
+  }
   return organ;
 }
 
@@ -1736,33 +2108,36 @@ const STALK_SWAY = 0.0298876264947198;
  */
 export function sporeStalk(root, mats, opts) {
   const { lower: lowerMat, upper: upperMat, pod: podMat, tip: tipMat } = mats;
-  const { name, H, sway = STALK_SWAY, sep = '-', ...placement } = opts;
+  const { name, H, sway = STALK_SWAY, sep = '-', cut: rule = METRE, ...placement } = opts;
   const stalk = group(root, name, placement);
+  // Every count the rule's for the part as the stalk's own frame presses it
+  // (`cut`, #919): the file's stems were seven-sided, its pod 7 × 5, its tip 6 × 4.
+  const under = (scale) => ({ scale, parent: stalk });
   placed(
     stalk,
     `${name}${sep}stem${sep}lower`,
-    cyl(0.05, 0.075, 0.55 * H, 7),
+    cyl(0.05, 0.075, 0.55 * H, rule.cyl(0.05, 0.075, 0.55 * H, under())),
     lowerMat,
     verbatim([0, 0.27 * H, 0], [0, 0, 0.06])
   );
   placed(
     stalk,
     `${name}${sep}stem${sep}upper`,
-    cyl(0.032, 0.05, 0.45 * H, 7),
+    cyl(0.032, 0.05, 0.45 * H, rule.cyl(0.032, 0.05, 0.45 * H, under())),
     upperMat,
     verbatim([sway * H, 0.75 * H, 0], [0, 0, 0.16])
   );
   placed(
     stalk,
     `${name}${sep}pod`,
-    new THREE.SphereGeometry(0.13, 7, 5),
+    new THREE.SphereGeometry(0.13, ...rule.orb(0.13, under([1, 1.35, 1]))),
     podMat,
     verbatim([1.4 * sway * H, 0.98 * H, 0], [0, 0, 0], [1, 1.35, 1])
   );
   placed(
     stalk,
     `${name}${sep}pod${sep}tip`,
-    new THREE.SphereGeometry(0.07, 6, 4),
+    new THREE.SphereGeometry(0.07, ...rule.orb(0.07, under([1, 1.2, 1]))),
     tipMat,
     verbatim([1.4 * sway * H, 0.98 * H + 0.16, 0], [0, 0, 0], [1, 1.2, 1])
   );
@@ -1782,13 +2157,15 @@ export function sporeStalk(root, mats, opts) {
  * file's.
  */
 export function rootFlares(root, mat, opts) {
-  const { name = 'root-flare', radii, length, facets = 6, y, lean, leanStep = Math.PI / 3 } = opts;
-  const { yaw0, at } = opts;
+  const { name = 'root-flare', radii, length, y, lean, leanStep = Math.PI / 3 } = opts;
+  const { yaw0, at, cut: rule = METRE } = opts;
+  noCount(name, opts, 'facets');
+  const [a, b] = radii;
   at.forEach(([x, z], k) =>
     placed(
       root,
       `${name}-${k + 1}`,
-      cyl(radii[0], radii[1], length, facets),
+      cyl(a, b, length, rule.cyl(a, b, length)),
       mat,
       verbatim([x, y, z], [lean + (k % 2) * leanStep, yaw0 - (k * 2 * Math.PI) / at.length, 0])
     )
@@ -1811,31 +2188,33 @@ export function rootFlares(root, mat, opts) {
  * (#642; see structures/foundry-pelagia.mjs).
  */
 export function huskFlanks(root, { skin, ring: ringMat }, opts) {
-  const { frame = zLong, facets = [10, 7], down = 0.62, ring = { facets: [4, 20] }, flanks } = opts;
+  const { frame = zLong, down = 0.62, flanks, cut: rule = METRE } = opts;
+  noCount('husk_lobe', opts, 'facets', 'ring');
   for (const { name, n, lobes } of flanks)
     lobes.forEach(({ at, rot, scale, rings }, i) => {
       grownDome(root, skin, {
         name: `husk_lobe_${name}_${i}`,
         r: 1,
-        facets,
         down,
         frame,
         at,
         rot,
         scale,
+        cut: rule,
       });
       const roll = rot[2];
       const [sx, sy, sz] = scale;
       rings.forEach(({ f, tube }, j) => {
         const g = Math.sqrt(1 - f * f);
+        const pressed = [sx * g, sz * g, 1];
         frame.part(
           root,
           `lobe_ring_${n}_${i}_${j}`,
-          torus(1, tube, ...ring.facets),
+          torus(1, tube, ...rule.torus(1, tube, { scale: pressed, yaw: frame === zLong })),
           ringMat,
           [at[0] - Math.sin(roll) * sy * f, at[1] + Math.cos(roll) * sy * f, at[2]],
           [Math.PI / 2, 0, roll],
-          [sx * g, sz * g, 1]
+          pressed
         );
       });
     });
@@ -1846,10 +2225,12 @@ export function huskFlanks(root, { skin, ring: ringMat }, opts) {
  * three a flank, each its own radius — `husk_knuckle_${i}`, `[r, at]`
  * each. A matched pair is refused.
  */
-export function huskKnuckles(root, mat, { frame = zLong, facets = [7, 5], knuckles }) {
+export function huskKnuckles(root, mat, opts) {
+  const { frame = zLong, knuckles, cut: rule = METRE } = opts;
+  noCount('husk_knuckle', opts, 'facets');
   refuseMirror('husk_knuckle', knuckles, ([r]) => r);
   knuckles.forEach(([r, at], i) =>
-    frame.part(root, `husk_knuckle_${i}`, new THREE.SphereGeometry(r, ...facets), mat, at)
+    frame.part(root, `husk_knuckle_${i}`, new THREE.SphereGeometry(r, ...rule.orb(r)), mat, at)
   );
 }
 
@@ -1861,20 +2242,34 @@ export function huskKnuckles(root, mat, { frame = zLong, facets = [7, 5], knuckl
  * nodes; the ring a torus of `R` and `tube` lying flat; the bud an orb.
  */
 export function outriggerLobes(root, { skin, ring: ringMat, bud: budMat }, opts) {
-  const { frame = zLong, big, ring, small, bud } = opts;
-  const orbOf = (o) => new THREE.SphereGeometry(o.r, ...o.facets);
-  frame.part(root, 'outrigger_lobe_big', orbOf(big), skin, big.at, big.rot, big.scale);
+  const { frame = zLong, big, ring, small, bud, cut: rule = METRE } = opts;
+  const yaw = frame === zLong;
+  const orbOf = (what, o) => {
+    noCount(what, o, 'facets');
+    return new THREE.SphereGeometry(o.r, ...rule.orb(o.r, { ...o, yaw }));
+  };
+  noCount('outrigger_ring_big', ring, 'facets');
+  frame.part(
+    root,
+    'outrigger_lobe_big',
+    orbOf('outrigger_lobe_big', big),
+    skin,
+    big.at,
+    big.rot,
+    big.scale
+  );
   frame.part(
     root,
     'outrigger_ring_big',
-    torus(ring.R, ring.tube, ...ring.facets),
+    torus(ring.R, ring.tube, ...rule.torus(ring.R, ring.tube, { ...ring, yaw })),
     ringMat,
     ring.at,
     ring.rot,
     ring.scale
   );
-  frame.part(root, 'outrigger_lobe_small', orbOf(small), skin, small.at, small.rot, small.scale);
-  frame.part(root, 'outrigger_bud', orbOf(bud), budMat, bud.at);
+  const smallLobe = orbOf('outrigger_lobe_small', small);
+  frame.part(root, 'outrigger_lobe_small', smallLobe, skin, small.at, small.rot, small.scale);
+  frame.part(root, 'outrigger_bud', orbOf('outrigger_bud', bud), budMat, bud.at);
 }
 
 /**
@@ -1883,11 +2278,15 @@ export function outriggerLobes(root, { skin, ring: ringMat, bud: budMat }, opts)
  * `stern_pod`, `stern_ring`, `stern_bud`.
  */
 export function sternPod(root, { skin, ring: ringMat, bud: budMat }, opts) {
-  const { frame = zLong, pod, ring, bud } = opts;
+  const { frame = zLong, pod, ring, bud, cut: rule = METRE } = opts;
+  const yaw = frame === zLong;
+  noCount('stern_pod', pod, 'facets');
+  noCount('stern_ring', ring, 'facets');
+  noCount('stern_bud', bud, 'facets');
   frame.part(
     root,
     'stern_pod',
-    new THREE.SphereGeometry(pod.r, ...pod.facets),
+    new THREE.SphereGeometry(pod.r, ...rule.orb(pod.r, { ...pod, yaw })),
     skin,
     pod.at,
     pod.rot,
@@ -1896,13 +2295,14 @@ export function sternPod(root, { skin, ring: ringMat, bud: budMat }, opts) {
   frame.part(
     root,
     'stern_ring',
-    torus(ring.R, ring.tube, ...ring.facets),
+    torus(ring.R, ring.tube, ...rule.torus(ring.R, ring.tube, { ...ring, yaw })),
     ringMat,
     ring.at,
     ring.rot,
     ring.scale
   );
-  frame.part(root, 'stern_bud', new THREE.SphereGeometry(bud.r, ...bud.facets), budMat, bud.at);
+  const pale = new THREE.SphereGeometry(bud.r, ...rule.orb(bud.r, { yaw }));
+  frame.part(root, 'stern_bud', pale, budMat, bud.at);
 }
 
 /**
@@ -1931,70 +2331,86 @@ export function sternPod(root, { skin, ring: ringMat, bud: budMat }, opts) {
  * the leaned axis there, tilted `vein.tilt` off level with its `arc` on
  * the rising side and yawed the silo's own way, so what the block calls
  * "visible machinery light" is a band a top-down map sees whole. The
- * drum is a nine-sided prism whose flats lie at 0.94 of its corner
- * radius, so a `hug` a little under 1 — the Refinery's 0.97 — runs the
- * wall through the tube's core at corners and flats alike; a hug over 1
- * leaves the tube floating off the drum, which is what the first cut did
- * at 1.09 (review, F1). The caller puts `at` above the highest ring,
- * where nothing wider stands over it. Upright stays the default, as the
- * file has it.
+ * drum was a nine-sided prism whose flats lay at 0.94 of its corner
+ * radius, so a `hug` a little under 1 — 0.97 — ran the wall through the
+ * tube's core at corners and flats alike; a hug over 1 leaves the tube
+ * floating off the drum, which is what the first cut did at 1.09 (review,
+ * F1). At the rule's sixteen the flats lie at 0.98 and the hoop is itself
+ * a fifteen-gon sagging 0.022 of its radius, so 0.97 buried the Refinery's
+ * veins to a few square metres from above and it hugs at 1.0 since the
+ * facet pass (#919; structures/refinery-pelagia.mjs). The caller puts `at`
+ * above the highest ring, where nothing wider stands over it. Upright
+ * stays the default, as the file has it.
  */
 export function silos(root, mats, opts) {
   const { skin: skinMat, cap: capMat, ring: ringMat, bud: budMat, vein: veinMat } = mats;
   const {
     frame = xLong,
-    facets = 9,
     taper = 0.72,
-    cap = { of: 0.74, facets: [9, 5], squash: 0.75 },
-    ring = { facets: [4, 18] },
-    bud = { r: 0.5, facets: [7, 5], lift: 0.62 },
+    cap = { of: 0.74, squash: 0.75 },
+    ring = {},
+    bud = { r: 0.5, lift: 0.62 },
     vein = {
       of: 0.92,
       tube: 0.06,
-      facets: [4, 14],
       arc: Math.PI * 0.65,
       at: 0.55,
       roll: Math.PI / 2 - 0.5,
     },
     silos: list,
+    cut: rule = METRE,
   } = opts;
+  noCount('silo', opts, 'facets');
+  for (const [what, o] of [
+    ['silo_cap', cap],
+    ['silo_ring', ring],
+    ['silo_bud', bud],
+    ['silo_vein', vein],
+  ])
+    noCount(what, o, 'facets');
+  const yaw = frame === zLong;
   for (const s of list) {
-    const { n, R, h, lean, yaw } = s;
+    const { n, R, h, lean, yaw: turn } = s;
     const [x, z] = s.at;
-    const stance = eulerXYZ([lean, yaw, lean], 'YXZ');
+    const stance = eulerXYZ([lean, turn, lean], 'YXZ');
     frame.part(
       root,
       `silo_${n}`,
-      cyl(taper * R, R, h, facets),
+      cyl(taper * R, R, h, rule.cyl(taper * R, R, h, { yaw })),
       s.skin ?? skinMat,
       [x, h / 2, z],
       stance
     );
+    const lid = [1, cap.squash, 1];
     frame.part(
       root,
       `silo_cap_${n}`,
-      shell(cap.of * R, cap.facets, { down: 0.5 }),
+      shell(cap.of * R, rule.orb(cap.of * R, { scale: lid, yaw }, { thetaLength: Math.PI / 2 }), {
+        down: 0.5,
+      }),
       capMat,
       [x, h, z],
       [0, 0, 0],
-      [1, cap.squash, 1]
+      lid
     );
     s.rings.forEach(({ y, R: rr, tube }, j) =>
       frame.part(
         root,
         `silo_ring_${n}_${j}`,
-        torus(rr, tube, ...ring.facets),
+        torus(rr, tube, ...rule.torus(rr, tube, { yaw })),
         ringMat,
         [x, y, z],
         [Math.PI / 2, 0, 0]
       )
     );
     if (s.bud)
-      frame.part(root, `silo_bud_${n}`, new THREE.SphereGeometry(bud.r, ...bud.facets), budMat, [
-        x,
-        h + bud.lift * R,
-        z,
-      ]);
+      frame.part(
+        root,
+        `silo_bud_${n}`,
+        new THREE.SphereGeometry(bud.r, ...rule.orb(bud.r, { yaw })),
+        budMat,
+        [x, h + bud.lift * R, z]
+      );
     if (vein.lay === 'flat') {
       // A silo may carry its hoop at its own height (`s.vein.at`): where
       // its rings stop is where the band above them starts.
@@ -2005,10 +2421,16 @@ export function silos(root, mats, opts) {
       const off = new THREE.Vector3(0, (at - 0.5) * h, 0).applyEuler(
         new THREE.Euler(...stance, 'XYZ')
       );
+      const hoop = vein.hug * wall;
       frame.part(
         root,
         `silo_vein_${n}`,
-        new THREE.TorusGeometry(vein.hug * wall, vein.tube, ...vein.facets, vein.arc),
+        new THREE.TorusGeometry(
+          hoop,
+          vein.tube,
+          ...rule.torus(hoop, vein.tube, { yaw }, vein.arc),
+          vein.arc
+        ),
         veinMat,
         [x + off.x, h / 2 + off.y, z + off.z],
         // YXZ, as the x, y, z fields of a three Euler (the silo's stance is
@@ -2019,10 +2441,16 @@ export function silos(root, mats, opts) {
       );
       continue;
     }
+    const band = vein.of * R;
     frame.part(
       root,
       `silo_vein_${n}`,
-      new THREE.TorusGeometry(vein.of * R, vein.tube, ...vein.facets, vein.arc),
+      new THREE.TorusGeometry(
+        band,
+        vein.tube,
+        ...rule.torus(band, vein.tube, { yaw }, vein.arc),
+        vein.arc
+      ),
       veinMat,
       [x, vein.at * h, z],
       [0, s.vein.yaw, vein.roll]
@@ -2064,7 +2492,19 @@ export function silos(root, mats, opts) {
  */
 export function grownBody(root, mat, opts) {
   const { name = 'hull', facets = [16, 10], buffer, frame = zLong, ...placement } = opts;
-  const [w, h] = facets;
+  return frame.place(root, name, grownBodyGeometry(facets, buffer, name), mat, placement);
+}
+
+/**
+ * The orb `grownBody` places, on its own: a `[w, h]` sphere with `buffer`'s
+ * points in place of its vertices. Exported so a hull that generates its
+ * buffer by formula can ask the rule for the counts to generate it at
+ * (`cut.settle`, #919) — the Bower's bed, hulls/bower.mjs — since the rule
+ * reads a table's rings as it reads any orb's, by the chords it draws. The
+ * four ported scouts' tables keep their exports' counts and are named by
+ * the measure, as Block 2c says.
+ */
+export function grownBodyGeometry([w, h], buffer, name = 'hull') {
   if (buffer.length !== (h - 1) * w + 2)
     throw new Error(
       `${name}: ${buffer.length} points for a ${w}×${h} orb, want ${(h - 1) * w + 2}`
@@ -2088,7 +2528,7 @@ export function grownBody(root, mat, opts) {
   // normal on a table-built hull that a world-space comparison finds moved
   // (#649 review). Orphans in both files; nothing renders from them.
   geo.computeVertexNormals();
-  return frame.place(root, name, geo, mat, placement);
+  return geo;
 }
 
 /**
@@ -2096,8 +2536,9 @@ export function grownBody(root, mat, opts) {
  * rolled. The scout's ballast lobe hangs under the belly, rolled 0.22 to one
  * side — there is no second.
  */
-export function lobe(root, mat, { name = 'ballast_lobe', facets = [9, 6], ...placement }) {
-  return part(root, name, orb(...facets), mat, placement);
+export function lobe(root, mat, { name = 'ballast_lobe', cut: rule = METRE, ...placement }) {
+  noCount(name, placement, 'facets');
+  return part(root, name, orb(...rule.orb(1, { ...placement, yaw: true })), mat, placement);
 }
 
 /**
@@ -2108,27 +2549,30 @@ export function lobe(root, mat, { name = 'ballast_lobe', facets = [9, 6], ...pla
  * Spinner's rule, a wobble from the index; this takes each ring's own.
  *
  * `lit` lights every ring the Cruiser's way (hulls/cruiser-pelagia.mjs): a
- * thinner torus of `lit.tube` on `lit.facets` in `lit.mat` rides each ring
- * at the same station and lean, named `lit.name` with the ring's number and
- * exported straight after it, scaled by the ring's own `vein` — a shade
- * wider than the ridge it lights. "Living bioluminescent veins" as a
- * growth ring.
+ * thinner torus of `lit.tube` in `lit.mat` rides each ring at the same
+ * station and lean, named `lit.name` with the ring's number and exported
+ * straight after it, scaled by the ring's own `vein` — a shade wider than
+ * the ridge it lights. "Living bioluminescent veins" as a growth ring. Every
+ * count is the rule's for the torus as its node presses it (`cut`, #919).
  */
-export function grownRings(
-  root,
-  mat,
-  { name = 'growth_ring', first = 1, facets = [5, 20], rings, lit }
-) {
+export function grownRings(root, mat, opts) {
+  const { name = 'growth_ring', first = 1, rings, lit, cut: rule = METRE } = opts;
+  noCount(name, opts, 'facets');
+  noCount(lit?.name ?? 'vein_ring', lit, 'facets');
   rings.forEach(({ tube, vein, ...placement }, i) => {
-    part(root, `${name}_${first + i}`, torus(1, tube, ...facets), mat, placement);
-    if (lit)
-      part(
-        root,
-        `${lit.name ?? 'vein_ring'}_${first + i}`,
-        torus(1, lit.tube, ...lit.facets),
-        lit.mat,
-        { ...placement, scale: vein }
+    const ring = torus(1, tube, ...rule.torus(1, tube, { ...placement, yaw: true }));
+    part(root, `${name}_${first + i}`, ring, mat, placement);
+    if (lit) {
+      const lamp = torus(
+        1,
+        lit.tube,
+        ...rule.torus(1, lit.tube, { ...placement, scale: vein, yaw: true })
       );
+      part(root, `${lit.name ?? 'vein_ring'}_${first + i}`, lamp, lit.mat, {
+        ...placement,
+        scale: vein,
+      });
+    }
   });
 }
 
@@ -2140,9 +2584,12 @@ export function grownRings(
  * rebuild would twist its facets.
  */
 export function feeler(root, mat, opts) {
-  const { name = 'sensor_feeler', through, r = 0.03, steps = 16, facets = 5, ...placement } = opts;
+  const { name = 'sensor_feeler', through, r = 0.03, steps = 16, cut: rule = METRE } = opts;
+  const { ...placement } = opts;
+  noCount(name, opts, 'facets');
   const asDrawn = through.map(([x, y, z]) => new THREE.Vector3(-z, y, x));
-  const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(asDrawn), steps, r, facets, false);
+  const curve = new THREE.CatmullRomCurve3(asDrawn);
+  const tube = new THREE.TubeGeometry(curve, steps, r, rule.tube(r, placement), false);
   return part(root, name, tube, mat, placement);
 }
 
@@ -2190,8 +2637,11 @@ export function membranes(root, mat, { fins, thickness = 0.028, segments = 8 }) 
  * 0.08 off the keel line.
  */
 export function stalk(root, mat, opts) {
-  const { name = 'tail_peduncle', radii, length, facets = 7, ...placement } = opts;
-  return part(root, name, cyl(radii[0], radii[1], length, facets), mat, placement);
+  const { name = 'tail_peduncle', radii, length, cut: rule = METRE, ...placement } = opts;
+  noCount(name, opts, 'facets');
+  const [a, b] = radii;
+  const spar = cyl(a, b, length, rule.cyl(a, b, length, { ...placement, yaw: true }));
+  return part(root, name, spar, mat, placement);
 }
 
 /**
@@ -2199,10 +2649,14 @@ export function stalk(root, mat, opts) {
  * placement]` — a feeler tip, two flank marks, a throat and a tail. Five,
  * and that is the resting light of the quietest hull in the roster.
  */
-export function lightBuds(root, light, { buds, facets = [8, 6] }) {
-  buds.forEach(([name, r, placement]) =>
-    part(root, name, new THREE.SphereGeometry(r, ...facets), light, rested(root, r, placement))
-  );
+export function lightBuds(root, light, opts) {
+  const { buds, cut: rule = METRE } = opts;
+  noCount('light bud', opts, 'facets');
+  buds.forEach(([name, r, placement]) => {
+    const seated = rested(root, r, placement);
+    const bud = new THREE.SphereGeometry(r, ...rule.orb(r, { ...seated, yaw: true }));
+    part(root, name, bud, light, seated);
+  });
 }
 
 /**
@@ -2253,28 +2707,33 @@ export function glow(root, { name, color = hex('#8FE36B'), intensity, range, at 
  * its own count of `seeds`, and the rest is the export's one rule, which
  * reproduces every node matrix in both files to the double: the sheath is
  * a unit orb scaled [0.32, 0.24, 0.68] of the length; the k-th of n seeds
- * is a seven-by-five orb of radius 0.15·length·(1 − 0.125·|2t − 1|),
- * t = k/(n − 1) — fullest amidships — at z = length·(t − ½) along the
- * sheath, y = 0.14·length above it and x = 0.12·length·sin 2.4k across,
- * so the row wobbles as it grew.
+ * is an orb of radius 0.15·length·(1 − 0.125·|2t − 1|), t = k/(n − 1) —
+ * fullest amidships — at z = length·(t − ½) along the sheath, y =
+ * 0.14·length above it and x = 0.12·length·sin 2.4k across, so the row
+ * wobbles as it grew. The counts are the rule's for each orb as the frame
+ * presses it (`cut`, #919; the files' sheaths were 8 × 6, their seeds 7 × 5).
  */
-export function seedLauncher(root, { sheath, seed }, { name, length, seeds, ...placement }) {
+export function seedLauncher(root, { sheath, seed }, opts) {
+  const { name, length, seeds, cut: rule = METRE, ...placement } = opts;
   const frame = group(root, name, placement);
+  const bag = drawn([0, 0, 0], [0, 0, 0], [0.32 * length, 0.24 * length, 0.68 * length]);
   part(
     frame,
     `${name}_sheath`,
-    orb(8, 6),
+    orb(...rule.orb(1, { ...bag, parent: frame, yaw: true })),
     sheath,
-    drawn([0, 0, 0], [0, 0, 0], [0.32 * length, 0.24 * length, 0.68 * length])
+    bag
   );
   for (let k = 0; k < seeds; k++) {
     const t = k / (seeds - 1);
+    const r = 0.15 * length * (1 - 0.125 * Math.abs(2 * t - 1));
+    const at = drawn([0.12 * length * Math.sin(2.4 * k), 0.14 * length, length * (t - 0.5)]);
     part(
       frame,
       `${name}_seed_${k + 1}`,
-      new THREE.SphereGeometry(0.15 * length * (1 - 0.125 * Math.abs(2 * t - 1)), 7, 5),
+      new THREE.SphereGeometry(r, ...rule.orb(r, { ...at, parent: frame, yaw: true })),
       seed,
-      drawn([0.12 * length * Math.sin(2.4 * k), 0.14 * length, length * (t - 0.5)])
+      at
     );
   }
   return frame;
@@ -2327,7 +2786,8 @@ export function intakeScoop(root, mat, opts) {
  * and not a choice here.
  */
 export function hullVeins(root, mat, opts) {
-  const { hull, lift = 1.1, knots = 21, steps = 56, r = 0.03, facets = 5, veins } = opts;
+  const { hull, lift = 1.1, knots = 21, steps = 56, r = 0.03, veins, cut: rule = METRE } = opts;
+  noCount('hull vein', opts, 'facets');
   const [sx, sy, sz] = hull;
   veins.forEach(({ name, from, to, base, phase }) => {
     const through = [];
@@ -2337,7 +2797,7 @@ export function hullVeins(root, mat, opts) {
       const rr = lift * Math.sqrt(1 - z * z);
       through.push([sx * rr * Math.cos(a), sy * rr * Math.sin(a), sz * z]);
     }
-    feeler(root, mat, { name, through: through.map((p) => drawn(p).at), r, steps, facets });
+    feeler(root, mat, { name, through: through.map((p) => drawn(p).at), r, steps, cut: rule });
   });
 }
 
@@ -2350,7 +2810,8 @@ export function hullVeins(root, mat, opts) {
  * The rule is the export's, recovered to the float from both masts.
  */
 export function hydrophoneMasts(root, { mast, tip }, opts) {
-  const { masts, knots = 7, steps = 24, r = 0.035, facets = 5, tipR = 0.05 } = opts;
+  const { masts, knots = 7, steps = 24, r = 0.035, tipR = 0.05, cut: rule = METRE } = opts;
+  noCount('hydrophone mast', opts, 'facets');
   masts.forEach(({ name, x, phase, y, from, to }) => {
     const through = [];
     for (let k = 0; k < knots; k++) {
@@ -2361,8 +2822,8 @@ export function hydrophoneMasts(root, { mast, tip }, opts) {
         from + (to - from) * t,
       ]);
     }
-    feeler(root, mast, { name, through: through.map((p) => drawn(p).at), r, steps, facets });
-    lightBuds(root, tip, { buds: [[`${name}_tip`, tipR, drawn(through[knots - 1])]] });
+    feeler(root, mast, { name, through: through.map((p) => drawn(p).at), r, steps, cut: rule });
+    lightBuds(root, tip, { buds: [[`${name}_tip`, tipR, drawn(through[knots - 1])]], cut: rule });
   });
 }
 
@@ -2386,65 +2847,75 @@ const placed = (root, name, geo, mat, placement = {}) => {
 
 /**
  * Grown orbs, placed verbatim: the Submersible's whole body is these — a
- * `seed-hull` of radius 1.5 on twelve by nine, squashed and rolled by its
- * node; a keel, a bulge, a prow tip, three eye sacs, two aft pods and two
- * fins, each an orb of its own radius and facets. `[name, mat, r, facets,
- * placement]` each (hulls/abyssal-submersible-pelagia.mjs).
+ * `seed-hull` of radius 1.5, squashed and rolled by its node; a keel, a
+ * bulge, a prow tip, three eye sacs, two aft pods and two fins, each an orb
+ * of its own radius. `[name, mat, r, placement]` each
+ * (hulls/abyssal-submersible-pelagia.mjs), the two counts the rule's for the
+ * orb as its node presses it (`cut`, #919); an entry still carrying the
+ * file's `facets` between `r` and its placement is refused.
  */
-export function grownOrbs(root, { orbs }) {
+export function grownOrbs(root, { orbs, cut: rule = METRE }) {
   // A placement carrying `on` is a seed, as `lightBuds` reads one (`rested`,
   // #894): the orb grows from the nearest of the parts it names, half its
   // radius in — the Submersible's third eye sac, which the file hung 0.55 m
   // off the hull beside its siblings (#907).
-  orbs.forEach(([name, mat, r, facets, placement]) =>
-    placed(root, name, new THREE.SphereGeometry(r, ...facets), mat, rested(root, r, placement))
-  );
+  orbs.forEach((entry) => {
+    const [name, mat, r, placement] = entry;
+    if (entry.length !== 4) noCount(name, { facets: entry[3] }, 'facets');
+    const seated = rested(root, r, placement);
+    placed(root, name, new THREE.SphereGeometry(r, ...rule.orb(r, seated)), mat, seated);
+  });
 }
 
 /**
  * Grown cones, placed verbatim: `radii` [top, bottom] as kit `cyl` takes
- * them, `length` between, `facets` round — the Submersible's prow beak and
- * aft nozzle drawn to a point, its nozzle throat open at both ends, and
- * each tendril's tip (hulls/abyssal-submersible-pelagia.mjs). Which way a
- * cone points is its node's: −π/2 about the keel puts the apex forward,
- * +π/2 aft.
+ * them, `length` between, on the rule's count (`cut`) — the Submersible's
+ * prow beak and aft nozzle drawn to a point, its nozzle throat open at both
+ * ends, and each tendril's tip (hulls/abyssal-submersible-pelagia.mjs).
+ * Which way a cone points is its node's: −π/2 about the keel puts the apex
+ * forward, +π/2 aft. `[name, mat, radii, length, placement]` each.
  */
-export function grownCones(root, { cones }) {
-  cones.forEach(([name, mat, [rTop, rBottom], length, facets, placement]) =>
-    placed(root, name, cyl(rTop, rBottom, length, facets), mat, placement)
-  );
+export function grownCones(root, { cones, cut: rule = METRE }) {
+  cones.forEach((entry) => {
+    const [name, mat, [rTop, rBottom], length, placement] = entry;
+    if (entry.length !== 5) noCount(name, { facets: entry[4] }, 'facets');
+    const cone = cyl(rTop, rBottom, length, rule.cyl(rTop, rBottom, length, placement));
+    placed(root, name, cone, mat, placement);
+  });
 }
 
 /**
  * Hoops round an X-long body, placed verbatim: a torus each of `R` and
- * `tube` on `facets` [radial, tubular], open over `arc` radians when it is
- * less than a turn — the Submersible's six growth rings, its five vein
- * rings (open 4.6, 5.2, 4.4, 5.0 and 3.8 of the way round, each turned its
- * own way about the keel) and the vein along its port fin, a 3.6 rad arc
- * (hulls/abyssal-submersible-pelagia.mjs). `[name, mat, R, tube, facets,
- * arc, placement]` each.
+ * `tube`, open over `arc` radians when it is less than a turn, on the
+ * rule's two counts for the hoop as its node presses it (`cut`) — the
+ * Submersible's six growth rings, its five vein rings (open 4.6, 5.2, 4.4,
+ * 5.0 and 3.8 of the way round, each turned its own way about the keel) and
+ * the vein along its port fin, a 3.6 rad arc
+ * (hulls/abyssal-submersible-pelagia.mjs). `[name, mat, R, tube, arc,
+ * placement]` each.
  */
-export function grownHoops(root, { hoops }) {
-  hoops.forEach(([name, mat, R, tube, [radial, tubular], arc, placement]) =>
-    placed(
-      root,
-      name,
-      new THREE.TorusGeometry(R, tube, radial, tubular, arc ?? Math.PI * 2),
-      mat,
-      placement
-    )
-  );
+export function grownHoops(root, { hoops, cut: rule = METRE }) {
+  hoops.forEach((entry) => {
+    const [name, mat, R, tube, arc, placement] = entry;
+    if (entry.length !== 6) noCount(name, { facets: entry[4] }, 'facets');
+    const turn = arc ?? TAU;
+    const [radial, tubular] = rule.torus(R, tube, placement, turn);
+    placed(root, name, new THREE.TorusGeometry(R, tube, radial, tubular, turn), mat, placement);
+  });
 }
 
 /**
  * A vein swept along a centripetal Catmull-Rom `through` points in the
  * export's own frame, un-yawed — `feeler` for an X-long file. The
  * Submersible's `spine-vein` runs bow to stern over five stations
- * (hulls/abyssal-submersible-pelagia.mjs).
+ * (hulls/abyssal-submersible-pelagia.mjs). The tube's count is the rule's
+ * at its radius (`cut`): the floor, on every vein in the navy.
  */
-export function sweptVein(root, mat, { name, through, steps, r, facets = 4 }) {
+export function sweptVein(root, mat, opts) {
+  const { name, through, steps, r, cut: rule = METRE } = opts;
+  noCount(name, opts, 'facets');
   const curve = new THREE.CatmullRomCurve3(through.map((p) => new THREE.Vector3(...p)));
-  return add(root, name, new THREE.TubeGeometry(curve, steps, r, facets, false), mat);
+  return add(root, name, new THREE.TubeGeometry(curve, steps, r, rule.tube(r), false), mat);
 }
 
 /**
@@ -2461,7 +2932,8 @@ export function sweptVein(root, mat, { name, through, steps, r, facets = 4 }) {
  * Exported tube then tip, as the file has them.
  */
 export function abyssalTendrils(root, { tube, tip }, opts) {
-  const { tendrils: list, from = 1.6, knots = 7, steps = 20, facets = 5 } = opts;
+  const { tendrils: list, from = 1.6, knots = 7, steps = 20, cut: rule = METRE } = opts;
+  noCount('tendril', opts, 'facets');
   list.forEach(({ name, seed, z, xEnd, r }) => {
     const through = [];
     for (let k = 0; k < knots; k++) {
@@ -2472,12 +2944,12 @@ export function abyssalTendrils(root, { tube, tip }, opts) {
         z + 0.28 * Math.sin(3.2 * t + 1.7 * seed),
       ]);
     }
-    sweptVein(root, tube, { name, through, steps, r, facets });
+    sweptVein(root, tube, { name, through, steps, r, cut: rule });
     const [ex, ey, ez] = through[knots - 1];
     placed(
       root,
       `${name}-tip`,
-      cyl(0, 1.4 * r, 0.45, 6),
+      cyl(0, 1.4 * r, 0.45, rule.cyl(0, 1.4 * r, 0.45)),
       tip,
       verbatim([ex - 0.2, ey, ez], [0, 0, Math.PI / 2])
     );
@@ -2495,25 +2967,29 @@ export function abyssalTendrils(root, { tube, tip }, opts) {
  * and `lobe_ring_0..2`, lobe then ring as the file orders them
  * (hulls/chorister-pelagia.mjs). Its rings crest at 0.9 of the lobe's beam
  * radius from a shoulder at 0.82 of it, two units forward — passed as the
- * numbers, which are the export's.
+ * numbers, which are the export's; the counts are the rule's for each lobe
+ * and ridge as pressed (`cut`, #919; the file cut both on fourteen).
  */
 export function cohortLobes(root, ridge, opts) {
-  const { lobes, facets = [14, 7], ring: rf = { halfWidth: 0.6, facets: 14 } } = opts;
+  const { lobes, ring: rf = { halfWidth: 0.6 }, cut: rule = METRE } = opts;
+  noCount('lobe', opts, 'facets');
+  noCount('lobe_ring', rf, 'facets');
   lobes.forEach(({ skin, at: [x, y, z], radii: [rx, ry, rz], ring }, i) => {
-    add(root, `lobe_${i}`, orb(...facets), skin, [x, y, z], [0, 0, 0], [rx, ry, rz]);
+    const body = [rx, ry, rz];
+    add(root, `lobe_${i}`, orb(...rule.orb(1, { scale: body })), skin, [x, y, z], [0, 0, 0], body);
+    const squash = [1, ry / rz, 1];
     add(
       root,
       `lobe_ring_${i}`,
-      ridgeRing({
-        crown: ring.crown,
-        shoulder: ring.shoulder,
-        halfWidth: rf.halfWidth,
-        facets: rf.facets,
-      }),
+      ruledRidge(
+        rule,
+        { crown: ring.crown, shoulder: ring.shoulder, halfWidth: rf.halfWidth },
+        { scale: squash }
+      ),
       ridge,
       [x + ring.dx, y, z],
       [0, 0, 0],
-      [1, ry / rz, 1]
+      squash
     );
   });
 }
@@ -2534,24 +3010,36 @@ export function cohortLobes(root, ridge, opts) {
  * hinged along the bay's waterline and meeting along its crown — so the
  * seam where they meet is the line that parts when the bay opens, and the
  * light along it (`baySeams`) is what shows first. Each shell is a sector
- * of the same orb as the lobe, cut at the crown meridian and the equator,
- * on half the lobe's facets round and half its rings down, so every vertex
- * lies on one of the lobe's own facet directions and the two nest instead
- * of crossing. Exported outboard then inboard, a bay at a time.
+ * of the same orb as the lobe, cut at the crown meridian and the equator.
+ * Exported outboard then inboard, a bay at a time.
+ *
+ * Each shell's two counts are the rule's for it as pressed (`cut`, #919),
+ * which is the rule's share of the lobe's turn — a half turn round and a
+ * quarter down — so a valve nests on its lobe's own facet directions when
+ * the lobe's count is even, as the Drifter's twelve-by-six bays and
+ * six-by-three valves did before the rule, and sits half a facet off them
+ * when it is odd. Off them it still clears: the valves grow `grow` proud of
+ * the lobe, and a shell's flats at 1.04 of the lobe's radius stand outside
+ * a lobe's vertices at any count the rule gives (cos(π/n) · 1.04 > 1 from
+ * n = 7). hulls/drifter.mjs says which its bays landed on.
  *
  * `bays` is `[{ side, at: [x, y, z], radii: [rx, ry, rz] }]` — the lobe's
  * own centre and radii, as `cargoLobes` took them — and which way is
  * outboard is the sign of `z`; a bay on the keel line has no outboard and
  * is refused. `bay_valve_outboard_<side>`, `bay_valve_inboard_<side>`.
  */
-export function bayValves(root, membrane, { bays, grow = 1.04, facets = [6, 3] }) {
-  const [w, h] = facets;
+export function bayValves(root, membrane, opts) {
+  const { bays, grow = 1.04, cut: rule = METRE } = opts;
+  noCount('bay_valve', opts, 'facets');
   bays.forEach(({ side, at: [x, y, z], radii: [rx, ry, rz] }) => {
     if (!z) throw new Error(`bay_valve_${side}: a bay on the keel line has no outboard`);
     // three's sphere runs phi from -x through +z to +x, so [0, π) is the +z
     // half of the shell and [π, 2π) the -z half.
     const halves = z > 0 ? [0, Math.PI] : [Math.PI, 0];
-    ['outboard', 'inboard'].forEach((which, i) =>
+    const scale = [rx * grow, ry * grow, rz * grow];
+    ['outboard', 'inboard'].forEach((which, i) => {
+      const window = { phiStart: halves[i], phiLength: Math.PI, thetaLength: Math.PI / 2 };
+      const [w, h] = rule.orb(1, { scale }, window);
       add(
         root,
         `bay_valve_${which}_${side}`,
@@ -2559,9 +3047,9 @@ export function bayValves(root, membrane, { bays, grow = 1.04, facets = [6, 3] }
         membrane,
         [x, y, z],
         [0, 0, 0],
-        [rx * grow, ry * grow, rz * grow]
-      )
-    );
+        scale
+      );
+    });
   });
 }
 
@@ -2578,14 +3066,15 @@ export function bayValves(root, membrane, { bays, grow = 1.04, facets = [6, 3] }
  */
 export function baySeams(root, veinMat, opts) {
   const { bays, grow = 1.04, rings = 3, reach = 2, r = 0.18, sink = 0.08 } = opts;
-  const { steps = 16, facets = 5 } = opts;
+  const { steps = 16, cut: rule = METRE } = opts;
+  noCount('bay_seam', opts, 'facets');
   bays.forEach(({ side, at: [x, y, z], radii: [rx, ry] }) => {
     const through = [];
     for (let k = -reach; k <= reach; k++) {
       const theta = (k * Math.PI) / 2 / rings;
       through.push([x + rx * grow * Math.sin(theta), y + ry * grow * Math.cos(theta) - sink, z]);
     }
-    sweptVein(root, veinMat, { name: `bay_seam_${side}`, through, steps, r, facets });
+    sweptVein(root, veinMat, { name: `bay_seam_${side}`, through, steps, r, cut: rule });
   });
 }
 
@@ -2733,7 +3222,8 @@ export function leafWing(root, { membrane, ridge, vein: veinMat }, opts) {
     segments = 12,
     name = 'wing',
   } = opts;
-  const { rings = [], vein, facets = 14 } = opts;
+  const { rings = [], vein, cut: rule = METRE } = opts;
+  noCount(`${name}_${side}`, opts, 'facets');
   if (!z0) throw new Error(`${name}_${side}: a leaf on the keel line has no flank`);
   const sgn = Math.sign(z0);
   const shape = leafOutline(span, depth);
@@ -2751,25 +3241,31 @@ export function leafWing(root, { membrane, ridge, vein: veinMat }, opts) {
     const [lo, hi] = leafChord(shape, u);
     const crown = (hi - lo) / 2 + tube;
     const [x, z] = toPlan([u, (lo + hi) / 2]);
+    const pressed = [1, (top + proud) / crown, 1];
     add(
       root,
       `${name}_ring_${side}${i}`,
       // The shoulders sink a blade's depth under the face; the crest rides
       // `proud` over it once the ring is pressed flat.
-      ridgeRing({ crown, shoulder: crown * (top / (top + proud)) - tube, halfWidth, facets }),
+      ruledRidge(
+        rule,
+        { crown, shoulder: crown * (top / (top + proud)) - tube, halfWidth },
+        { scale: pressed }
+      ),
       ridge,
       [x, y0, z],
       [0, lean, 0],
-      [1, (top + proud) / crown, 1]
+      pressed
     );
   });
   if (vein) {
-    const { r = 0.14, inset = 0.35, sink = 0.05, steps = 36, facets: vf = 5 } = vein;
+    const { r = 0.14, inset = 0.35, sink = 0.05, steps = 36 } = vein;
+    noCount(`${name}_vein_${side}`, vein, 'facets');
     const through = leafLeadingEdge(shape, inset).map(([u, v]) => {
       const [x, z] = toPlan([u, v]);
       return [x, y0 + top - sink, z];
     });
-    sweptVein(root, veinMat, { name: `${name}_vein_${side}`, through, steps, r, facets: vf });
+    sweptVein(root, veinMat, { name: `${name}_vein_${side}`, through, steps, r, cut: rule });
   }
 }
 
@@ -2781,8 +3277,11 @@ export function leafWing(root, { membrane, ridge, vein: veinMat }, opts) {
  * because the mouth astern of it has to stay clear (hulls/weaver.mjs).
  * `tail_knuckle`.
  */
-export function tailKnuckle(root, ridge, { at, r, squash = 0.85, facets = [10, 6] }) {
-  add(root, 'tail_knuckle', orb(...facets), ridge, at, [0, 0, 0], [r, r * squash, r]);
+export function tailKnuckle(root, ridge, opts) {
+  const { at, r, squash = 0.85, cut: rule = METRE } = opts;
+  noCount('tail_knuckle', opts, 'facets');
+  const scale = [r, r * squash, r];
+  add(root, 'tail_knuckle', orb(...rule.orb(1, { scale })), ridge, at, [0, 0, 0], scale);
 }
 
 /**
@@ -2807,8 +3306,10 @@ export function tailKnuckle(root, ridge, { at, r, squash = 0.85, facets = [10, 6
  */
 export function foldedTail(root, { membrane, ridge, vein: veinMat }, opts) {
   const { hinge, pitch = 0, outline, t = 0.4, bevel = 0.15, knuckle, veins = [] } = opts;
-  const { r = 0.12, steps = 12, facets = 5, sink = 0.04 } = opts.vein ?? {};
-  if (knuckle) tailKnuckle(root, ridge, knuckle);
+  const { cut: rule = METRE } = opts;
+  const { r = 0.12, steps = 12, sink = 0.04 } = opts.vein ?? {};
+  noCount('tail_vein', opts.vein, 'facets');
+  if (knuckle) tailKnuckle(root, ridge, { ...knuckle, cut: rule });
   const frame = group(root, 'tail', { at: hinge, rot: [0, 0, pitch] });
   add(frame, 'tail_fluke', plan(outline, t, bevel), membrane);
   const top = t / 2 + bevel - sink;
@@ -2818,7 +3319,7 @@ export function foldedTail(root, { membrane, ridge, vein: veinMat }, opts) {
       through: through.map(([x, z]) => [x, top, z]),
       steps,
       r,
-      facets,
+      cut: rule,
     })
   );
 }
@@ -2853,17 +3354,19 @@ export function foldedTail(root, { membrane, ridge, vein: veinMat }, opts) {
  * `decoy_pod_<i>`.
  */
 export function decoyPods(root, chitin, opts) {
-  const { name = 'decoy_pod', stations, y = 0, r, squash = 0.72, facets = [16, 8] } = opts;
+  const { name = 'decoy_pod', stations, y = 0, r, squash = 0.72, cut: rule = METRE } = opts;
   const { lean = 0 } = opts;
+  noCount(name, opts, 'facets');
+  const scale = [r, r * squash, r];
   stations.forEach((x, i) =>
     add(
       root,
       `${name}_${i}`,
-      orb(...facets),
+      orb(...rule.orb(1, { scale })),
       chitin,
       [x, y, 0],
       [lean * Math.sin(1 + i * 2.4), 0, lean * Math.cos(2 + i * 1.7)],
-      [r, r * squash, r]
+      scale
     )
   );
 }
@@ -2898,22 +3401,35 @@ export function decoyPods(root, chitin, opts) {
  * (#642).
  */
 export function layPort(root, { chitin, ridge, membrane }, opts) {
-  const { profile, y = 0, squash = 0.8, facets = 14, lip, sepals = [] } = opts;
-  add(root, 'lay_port', loft(profile, facets), chitin, [0, y, 0], [0, 0, 0], [1, squash, 1]);
+  const { profile, y = 0, squash = 0.8, lip, sepals = [], cut: rule = METRE } = opts;
+  noCount('lay_port', opts, 'facets');
+  const scale = [1, squash, 1];
+  add(
+    root,
+    'lay_port',
+    loft(profile, rule.lathe(profile, { scale })),
+    chitin,
+    [0, y, 0],
+    [0, 0, 0],
+    scale
+  );
   const [mx, mr] = profile[0];
   add(
     root,
     'lay_port_lip',
-    ridgeRing({
-      crown: mr + lip.tube,
-      shoulder: mr + lip.tube - lip.rise,
-      halfWidth: lip.halfWidth ?? lip.tube,
-      facets,
-    }),
+    ruledRidge(
+      rule,
+      {
+        crown: mr + lip.tube,
+        shoulder: mr + lip.tube - lip.rise,
+        halfWidth: lip.halfWidth ?? lip.tube,
+      },
+      { scale }
+    ),
     ridge,
     [mx, y, 0],
     [0, 0, 0],
-    [1, squash, 1]
+    scale
   );
   refuseMirror('lay_sepal', sepals, (s) => `${s.length}|${s.width}`);
   sepals.forEach(({ angle, length: len, width: w, curl = 0, t = 0.3 }, i) => {
@@ -2989,19 +3505,24 @@ function curlOutboard(geo, { from, to, reach, sgn }) {
  * counts two, and each its own profile, curl and roll — a matched pair is
  * refused. `husk_lobe_<side>`.
  */
-export function huskLobes(root, chitin, { lobes, facets = 12 }) {
+export function huskLobes(root, chitin, opts) {
+  const { lobes, cut: rule = METRE } = opts;
+  noCount('husk_lobe', opts, 'facets');
   refuseMirror('husk_lobe', lobes, (l) => `${l.profile.map((s) => s.join()).join('|')}|${l.curl}`);
   lobes.forEach(({ side, z, y = 0, profile, squash = 0.85, curl = 0, from, roll = 0 }) => {
     if (!z) throw new Error(`husk_lobe_${side}: a lobe on the keel line has no side`);
     const sgn = Math.sign(z);
     const tip = profile[profile.length - 1][0];
-    const geo = curlOutboard(loft(profile, facets), {
+    const scale = [1, squash, 1];
+    // The curl carries every vertex of a ring the same way, so the ring's
+    // chords are the straight lathe's and the rule is asked of that.
+    const geo = curlOutboard(loft(profile, rule.lathe(profile, { scale })), {
       from: from ?? profile[0][0],
       to: tip,
       reach: curl,
       sgn,
     });
-    add(root, `husk_lobe_${side}`, geo, chitin, [0, y, z], [roll, 0, 0], [1, squash, 1]);
+    add(root, `husk_lobe_${side}`, geo, chitin, [0, y, z], [roll, 0, 0], scale);
   });
 }
 
@@ -3027,13 +3548,24 @@ export function huskLobes(root, chitin, { lobes, facets = 12 }) {
  * rule 4).
  */
 export function seedingArm(root, { ridge, chitin, sac, membrane }, opts) {
-  const { joints, knuckles, stems, head, hood } = opts;
+  const { joints, knuckles, stems, head, hood, cut: rule = METRE } = opts;
+  for (const [what, o] of [
+    ['seed_arm_root', knuckles[0]],
+    ['seed_arm_knuckle', knuckles[1]],
+    ['seed_arm_stem_0', stems[0]],
+    ['seed_arm_stem_1', stems[1]],
+    ['seed_arm_head', head],
+  ])
+    noCount(what, o, 'facets');
   const [rootAt, elbowAt, wristAt] = joints.map((j) => new THREE.Vector3(...j));
-  const knuckle = (name, at, { r, squash = 0.85, facets = [10, 6] }) =>
-    add(root, name, orb(...facets), ridge, at.toArray(), [0, 0, 0], [r, r * squash, r]);
-  const stem = (name, a, b, { r: [rBase, rTip], facets = 7 }) => {
+  const knuckle = (name, at, { r, squash = 0.85 }) => {
+    const scale = [r, r * squash, r];
+    add(root, name, orb(...rule.orb(1, { scale })), ridge, at.toArray(), [0, 0, 0], scale);
+  };
+  const stem = (name, a, b, { r: [rBase, rTip] }) => {
     const d = b.clone().sub(a);
-    const mesh = new THREE.Mesh(cyl(rTip, rBase, d.length(), facets), chitin);
+    const len = d.length();
+    const mesh = new THREE.Mesh(cyl(rTip, rBase, len, rule.cyl(rTip, rBase, len)), chitin);
     mesh.name = name;
     mesh.position.copy(a).add(b).multiplyScalar(0.5);
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize());
@@ -3044,18 +3576,33 @@ export function seedingArm(root, { ridge, chitin, sac, membrane }, opts) {
   stem('seed_arm_stem_0', rootAt, elbowAt, stems[0]);
   knuckle('seed_arm_knuckle', elbowAt, knuckles[1]);
   stem('seed_arm_stem_1', elbowAt, wristAt, stems[1]);
-  const { at, r, squash = 0.85, facets = [12, 6] } = head;
-  add(root, 'seed_arm_head', orb(...facets), sac, at, [0, 0, 0], [r, r * squash, r]);
+  const { at, r, squash = 0.85 } = head;
+  const sacScale = [r, r * squash, r];
+  add(
+    root,
+    'seed_arm_head',
+    orb(...rule.orb(1, { scale: sacScale })),
+    sac,
+    at,
+    [0, 0, 0],
+    sacScale
+  );
   const { grow = 1.14, phi = 1.1 * Math.PI, theta = 0.6 * Math.PI, pitch = 0, roll = 0 } = hood;
   const R = r * grow;
+  const hoodScale = [R, R * squash, R];
+  const [w, h] = rule.orb(
+    1,
+    { scale: hoodScale },
+    { phiStart: -phi / 2, phiLength: phi, thetaLength: theta }
+  );
   add(
     root,
     'seed_arm_hood',
-    new THREE.SphereGeometry(1, facets[0], facets[1], -phi / 2, phi, 0, theta),
+    new THREE.SphereGeometry(1, w, h, -phi / 2, phi, 0, theta),
     membrane,
     hood.at ?? at,
     [roll, 0, pitch],
-    [R, R * squash, R]
+    hoodScale
   );
 }
 
@@ -3104,36 +3651,51 @@ export function seedingArm(root, { ridge, chitin, sac, membrane }, opts) {
  * hardpoints are two swellings of the same stem.
  */
 export function seedNodes(root, { chitin, ridge, seed: seedMat }, opts) {
-  const { nodes, facets = 10 } = opts;
+  const { nodes, cut: rule = METRE } = opts;
+  noCount('seed_node', opts, 'facets');
   refuseMirror('seed_node', nodes, (nd) => nd.profile.map((st) => st.join()).join('|'));
   nodes.forEach(({ side, at, profile, squash = 0.85, lip, seed }) => {
     const [x, y, z] = at;
     if (!z) throw new Error(`seed_node_${side}: a hardpoint on the keel line has no side`);
-    add(root, `seed_node_${side}`, loft(profile, facets), chitin, at, [0, 0, 0], [1, squash, 1]);
+    noCount(`seed_torpedo_${side}`, seed, 'facets');
+    const scale = [1, squash, 1];
+    add(
+      root,
+      `seed_node_${side}`,
+      loft(profile, rule.lathe(profile, { scale })),
+      chitin,
+      at,
+      [0, 0, 0],
+      scale
+    );
     const mouth = profile.reduce((a, b) => (b[1] > a[1] ? b : a));
     add(
       root,
       `seed_node_lip_${side}`,
-      ridgeRing({
-        crown: mouth[1] + lip.tube,
-        shoulder: mouth[1] + lip.tube - lip.rise,
-        halfWidth: lip.halfWidth ?? lip.tube,
-        facets,
-      }),
+      ruledRidge(
+        rule,
+        {
+          crown: mouth[1] + lip.tube,
+          shoulder: mouth[1] + lip.tube - lip.rise,
+          halfWidth: lip.halfWidth ?? lip.tube,
+        },
+        { scale }
+      ),
       ridge,
       [x + mouth[0], y, z],
       [0, 0, 0],
-      [1, squash, 1]
+      scale
     );
     const nose = seed.profile[seed.profile.length - 1][0];
+    const seedScale = [1, seed.squash ?? 0.9, 1];
     add(
       root,
       `seed_torpedo_${side}`,
-      loft(seed.profile, seed.facets ?? 8),
+      loft(seed.profile, rule.lathe(seed.profile, { scale: seedScale })),
       seedMat,
       [x + mouth[0] + seed.proud - nose, y, z],
       [0, 0, 0],
-      [1, seed.squash ?? 0.9, 1]
+      seedScale
     );
   });
 }
@@ -3182,7 +3744,8 @@ export function standingFluke(root, membrane, opts) {
  * a top-down bake too, which is where the block puts it.
  */
 export function broodNubs(root, pale, opts) {
-  const { rows, facets = [8, 5], name = 'brood_nub' } = opts;
+  const { rows, name = 'brood_nub', cut: rule = METRE } = opts;
+  noCount(name, opts, 'facets');
   // Key on the flank-independent fields: a nub is [x, y, z, r] and its z
   // carries the side's sign, so keying on the raw tuple gave two rows that
   // ARE each other's mirror two different keys and let them through — the
@@ -3193,14 +3756,15 @@ export function broodNubs(root, pale, opts) {
   rows.forEach(({ side, nubs, squash = 0.55 }) =>
     nubs.forEach(([x, y, z, r], i) => {
       if (!z) throw new Error(`${name}_${side}_${i}: a pouch on the keel line has no flank`);
+      const scale = [r, r * squash, r];
       add(
         root,
         `${name}_${side}_${i}`,
-        orb(...facets),
+        orb(...rule.orb(1, { scale })),
         pale,
         [x, y, z],
         [0, 0, 0],
-        [r, r * squash, r]
+        scale
       );
     })
   );
@@ -3232,22 +3796,36 @@ export { THREE };
  * is coming in (docs/models-plan.md §3.2 rule 2).
  */
 export function reactorVessel(root, { chitin, ridge, membrane, spore, lampM, unlit }, opts) {
-  const { bladder, rings, grips, bud, mark, nubs } = opts;
-  add(root, 'reactor_vessel', orb(12, 8), membrane, [0, bladder.y, 0], [0, 0, 0], bladder.r);
+  const { bladder, rings, grips, bud, mark, nubs, cut: rule = METRE } = opts;
+  // Every count the rule's for the part as pressed (`cut`, #919): the first
+  // cut's were a 12 × 8 bladder, 5 × 14 rings, five-sided grips, a 10 × 6 bud and 8 × 6 nubs.
+  const bag = orb(...rule.orb(1, { scale: bladder.r }));
+  add(root, 'reactor_vessel', bag, membrane, [0, bladder.y, 0], [0, 0, 0], bladder.r);
   rings.forEach((g, i) =>
-    add(root, `vessel_ring_${i}`, torus(g.r, g.t, 5, 14), ridge, [0, g.y, 0], [Math.PI / 2, 0, 0])
+    add(
+      root,
+      `vessel_ring_${i}`,
+      torus(g.r, g.t, ...rule.torus(g.r, g.t)),
+      ridge,
+      [0, g.y, 0],
+      [Math.PI / 2, 0, 0]
+    )
   );
   grips.forEach((g, i) =>
-    add(root, `root_grip_${i}`, cyl(g.r[0], g.r[1], g.h, 5), chitin, polar(g.bearing, g.at, g.y), [
-      0,
-      -g.bearing,
-      g.lean,
-    ])
+    add(
+      root,
+      `root_grip_${i}`,
+      cyl(g.r[0], g.r[1], g.h, rule.cyl(g.r[0], g.r[1], g.h)),
+      chitin,
+      polar(g.bearing, g.at, g.y),
+      [0, -g.bearing, g.lean]
+    )
   );
-  add(root, 'crown_bud', orb(10, 6), spore, bud.at, [0, 0, 0], bud.r);
+  add(root, 'crown_bud', orb(...rule.orb(1, { scale: bud.r })), spore, bud.at, [0, 0, 0], bud.r);
   add(root, 'crown_mark', box(...mark.size), lampM, mark.at, [0, mark.yaw ?? 0, 0]);
+  const nub = orb(...rule.orb(1, { scale: nubs.scale }));
   nubs.at.forEach(([a, r, y], i) =>
-    add(root, `vessel_nub_${i}`, orb(8, 6), unlit, polar(a, r, y), [0, -a, 0], nubs.scale)
+    add(root, `vessel_nub_${i}`, nub, unlit, polar(a, r, y), [0, -a, 0], nubs.scale)
   );
 }
 
@@ -3264,25 +3842,33 @@ export function reactorVessel(root, { chitin, ridge, membrane, spore, lampM, unl
  * same reason the nubs are.
  */
 export function reactorOutflow(root, { ridge, membrane, unlit }, opts) {
-  const { bearing: a, gut, rings, sac, mouth } = opts;
-  add(root, 'outflow_gut', loft(gut.profile, gut.facets ?? 8), membrane, [0, gut.y, 0], [0, -a, 0]);
+  const { bearing: a, gut, rings, sac, mouth, cut: rule = METRE } = opts;
+  noCount('outflow_gut', gut, 'facets');
+  // Every count the rule's (`cut`, #919): the first cut's were an eight-sided
+  // gut, 5 × 12 gut rings, a 10 × 6 sac, a 5 × 14 sac ring and an eight-sided mouth.
+  const gutGeo = loft(gut.profile, rule.lathe(gut.profile));
+  add(root, 'outflow_gut', gutGeo, membrane, [0, gut.y, 0], [0, -a, 0]);
   // A torus is born round +Z, so the turn that lays its axis on the bearing
   // is π/2 − a about Y, not −a: the rings ride the gut rather than stand
   // across it.
+  const ringCounts = rule.torus(rings.r, rings.t);
   rings.at.forEach((d, i) =>
-    add(root, `gut_ring_${i}`, torus(rings.r, rings.t, 5, 12), ridge, polar(a, d, gut.y), [
+    add(root, `gut_ring_${i}`, torus(rings.r, rings.t, ...ringCounts), ridge, polar(a, d, gut.y), [
       0,
       Math.PI / 2 - a,
       0,
     ])
   );
-  add(root, 'outflow_sac', orb(10, 6), membrane, polar(a, sac.at, sac.y), [0, -a, 0], sac.r);
-  add(root, 'sac_ring', torus(sac.ring.r, sac.ring.t, 5, 14), ridge, polar(a, sac.at, sac.ring.y), [
+  const bag = orb(...rule.orb(1, { scale: sac.r }));
+  add(root, 'outflow_sac', bag, membrane, polar(a, sac.at, sac.y), [0, -a, 0], sac.r);
+  const { r: sr, t: st, y: sy } = sac.ring;
+  add(root, 'sac_ring', torus(sr, st, ...rule.torus(sr, st)), ridge, polar(a, sac.at, sy), [
     Math.PI / 2,
     0,
     0,
   ]);
-  add(root, 'sac_mouth', cyl(mouth.r, mouth.r, mouth.t, 8), unlit, polar(a, sac.at, mouth.y));
+  const lip = cyl(mouth.r, mouth.r, mouth.t, rule.cyl(mouth.r, mouth.r, mouth.t));
+  add(root, 'sac_mouth', lip, unlit, polar(a, sac.at, mouth.y));
 }
 
 /* --------------------------------------------------------------------------
@@ -3437,7 +4023,7 @@ const SHEATH_GIRTH = [
  * that its material cannot merge into one draw.
  */
 export function buddingSheaths(root, { sheath, lining, scar, knuckle }, opts) {
-  const { sites, girth = SHEATH_GIRTH } = opts;
+  const { sites, girth = SHEATH_GIRTH, cut: rule = METRE } = opts;
   refuseMirror(
     'bud_sheath',
     sites,
@@ -3451,14 +4037,17 @@ export function buddingSheaths(root, { sheath, lining, scar, knuckle }, opts) {
     const sgn = Math.sign(z);
     const frame = group(root, `bud_site_${i}`, { at, rot: [sgn * roll, -sgn * yaw, 0] });
     const stations = girth.map(([f, b, h]) => [f * length, b * halfBeam, h * halfHeight, 0]);
+    noCount(`bud_node_${i}`, node, 'facets');
+    noCount(`bud_scar_${i}`, bud, 'facets');
+    const nodeScale = [node.r, node.r * (node.squash ?? 0.7), node.r];
     add(
       frame,
       `bud_node_${i}`,
-      orb(...(node.facets ?? [10, 6])),
+      orb(...rule.orb(1, { scale: nodeScale, parent: frame })),
       knuckle,
       node.at,
       [0, 0, 0],
-      [node.r, node.r * (node.squash ?? 0.7), node.r]
+      nodeScale
     );
     add(frame, `bud_sheath_${i}`, uvAlike(sweep(stations, SHEATH_SECTION)), sheath);
     add(frame, `sheath_lining_${i}`, uvAlike(sweep(stations, LINING_SECTION)), lining);
@@ -3474,14 +4063,15 @@ export function buddingSheaths(root, { sheath, lining, scar, knuckle }, opts) {
         break;
       }
     const floor = LINING_FLOOR * h * halfHeight;
+    const scarScale = [bud.r, bud.r * (bud.squash ?? 0.6), bud.r];
     add(
       frame,
       `bud_scar_${i}`,
-      orb(...(bud.facets ?? [8, 5])),
+      orb(...rule.orb(1, { scale: scarScale, parent: frame })),
       scar,
       [fx * length, floor - (bud.sink ?? 0.2) * bud.r, 0],
       [0, 0, 0],
-      [bud.r, bud.r * (bud.squash ?? 0.6), bud.r]
+      scarScale
     );
   });
 }

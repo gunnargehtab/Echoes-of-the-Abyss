@@ -61,7 +61,7 @@
  * the seed's skin, which stands 1.29 tall at its station where the other
  * four rings crest the skin. The block's resting band is its "dim
  * photophores", which in green are these rings, so it stays lit at its
- * name, material, tube, facets, arc and turn and grows to 1.32, standing
+ * name, material, tube, arc and turn and grows to 1.32, standing
  * off the crown as its four fellows do — between growth rings 5 and 6,
  * whose 1.42 and 1.1 it now sits between. Nothing here reaches the
  * length.
@@ -71,6 +71,24 @@
  * seed hull now, seated on the nearest skin from its own station and half
  * its radius in (`grownOrbs` `on`, kit.mjs `seat`), still clustered with
  * the other two on the starboard bow. `diff.mjs` lists it and nothing else.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked at this
+ * file's scale for each part as its node presses it, and the pass re-cut
+ * what was off it: the seed hull, keel, bulge, fins and aft pods sixteen
+ * round and sixteen a turn down at 3.5–35 m of radius, where the export had
+ * eight to twelve round and ten to eighteen down; the prow beak, nozzle and
+ * throat sixteen at 6.7–10 m, where they were eight and nine; the six
+ * growth rings sixteen round on tubes of eleven to sixteen at 2.7–5.1 m,
+ * where they were fourteen on five; the five vein rings and the fin vein
+ * sixteen a turn on five-sided tubes, where they ran thirty-four to
+ * forty-six a turn on four; the spine vein and the tendrils five and six,
+ * their tips six to nine; the eye sacs five to nine and the prow tip twelve.
+ * 35 parts and 4,230 triangles become 35 and 6,516. With round tubes where
+ * they had pentagons, growth rings 2 and 5 now touch the vein rings a and d
+ * between them on the side each leans to, and ring 1 touches ring 2 and
+ * the port fin; the third eye sac, grown from the hull, no longer touches
+ * the first.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -78,6 +96,10 @@ import * as pelagia from '../factions/pelagia.mjs';
 const L = 95;
 const DRAWN = 7.05;
 const DATUM = 0;
+// The Commune's facet rule at this file's scale (pelagia.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres.
+const cut = pelagia.cut(L / DRAWN);
 
 // The navy's ink, under the hull names since #891: the export's
 // `chitin-hull`, `algae-teal`, `spore-pale` and `biolum-vein` shared their
@@ -98,40 +120,23 @@ root.name = 'pelagia-abyssal-submersible';
 
 // The seed: an orb of radius 1.5 drawn out along the keel and rolled 0.08,
 // the keel of algae on its back leaned and rolled with it, the dark bulge
-// under its belly, and the beak of a prow — an eight-sided cone, apex
-// forward, squashed 0.8 across — with the pale tip on it.
+// under its belly, and the beak of a prow — a cone, apex forward, squashed
+// 0.8 across — with the pale tip on it.
 pelagia.grownOrbs(root, {
+  cut,
   orbs: [
-    ['seed-hull', chitin, 1.5, [12, 9], verbatim([0, 0, 0], [0, 0, 0.08], [1.75, 1, 1.15])],
-    [
-      'dorsal-keel',
-      teal,
-      1,
-      [8, 6],
-      verbatim([-0.5, 1.15, 0.25], [0.18, 0, 0.5], [1.5, 0.85, 0.22]),
-    ],
-    [
-      'ventral-bulge',
-      dark,
-      0.85,
-      [10, 7],
-      verbatim([0.3, -0.85, -0.45], [0, 0, 0], [1.5, 0.75, 1]),
-    ],
+    ['seed-hull', chitin, 1.5, verbatim([0, 0, 0], [0, 0, 0.08], [1.75, 1, 1.15])],
+    ['dorsal-keel', teal, 1, verbatim([-0.5, 1.15, 0.25], [0.18, 0, 0.5], [1.5, 0.85, 0.22])],
+    ['ventral-bulge', dark, 0.85, verbatim([0.3, -0.85, -0.45], [0, 0, 0], [1.5, 0.75, 1])],
   ],
 });
 pelagia.grownCones(root, {
+  cut,
   cones: [
-    [
-      'prow-beak',
-      teal,
-      [0, 0.75],
-      1.5,
-      8,
-      verbatim([2.5, 0.1, 0], [0, 0, -Math.PI / 2], [1, 1, 0.8]),
-    ],
+    ['prow-beak', teal, [0, 0.75], 1.5, verbatim([2.5, 0.1, 0], [0, 0, -Math.PI / 2], [1, 1, 0.8])],
   ],
 });
-pelagia.grownOrbs(root, { orbs: [['prow-tip', pale, 0.22, [8, 6], verbatim([3.28, 0.1, 0])]] });
+pelagia.grownOrbs(root, { cut, orbs: [['prow-tip', pale, 0.22, verbatim([3.28, 0.1, 0])]] });
 
 // "Heavy segmented pressure carapace": six growth rings standing across the
 // keel, dark and teal by turns, each 1.12 wider than it is tall and each a
@@ -139,13 +144,13 @@ pelagia.grownOrbs(root, { orbs: [['prow-tip', pale, 0.22, [8, 6], verbatim([3.28
 // them, open arcs each turned its own way about the keel, 1.1 wide.
 const ACROSS = (lean) => [0, Math.PI / 2 + lean, 0];
 pelagia.grownHoops(root, {
+  cut,
   hoops: [
     [
       'growth-ring-1',
       dark,
       1.05,
       0.34,
-      [5, 14],
       undefined,
       verbatim([-1.9, 0, 0], [-Math.PI, 1.4708, -Math.PI], [1.12, 1, 1]),
     ],
@@ -154,7 +159,6 @@ pelagia.grownHoops(root, {
       teal,
       1.38,
       0.3,
-      [5, 14],
       undefined,
       verbatim([-1.15, 0, 0], ACROSS(-0.06), [1.12, 1, 1]),
     ],
@@ -163,7 +167,6 @@ pelagia.grownHoops(root, {
       dark,
       1.52,
       0.26,
-      [5, 14],
       undefined,
       verbatim([-0.35, 0, 0], [-Math.PI, 1.4908, -Math.PI], [1.12, 1, 1]),
     ],
@@ -172,7 +175,6 @@ pelagia.grownHoops(root, {
       teal,
       1.46,
       0.24,
-      [5, 14],
       undefined,
       verbatim([0.45, 0, 0], ACROSS(-0.04), [1.12, 1, 1]),
     ],
@@ -181,25 +183,15 @@ pelagia.grownHoops(root, {
       dark,
       1.22,
       0.2,
-      [5, 14],
       undefined,
       verbatim([1.2, 0, 0], [-Math.PI, 1.4708, -Math.PI], [1.12, 1, 1]),
     ],
-    [
-      'growth-ring-6',
-      teal,
-      0.92,
-      0.18,
-      [5, 14],
-      undefined,
-      verbatim([1.85, 0, 0], ACROSS(0), [1.12, 1, 1]),
-    ],
+    ['growth-ring-6', teal, 0.92, 0.18, undefined, verbatim([1.85, 0, 0], ACROSS(0), [1.12, 1, 1])],
     [
       'vein-ring-a',
       vein,
       1.28,
       0.045,
-      [4, 28],
       4.6,
       verbatim([-1.55, 0, 0], [0.4, Math.PI / 2, 0], [1.1, 1, 1]),
     ],
@@ -208,7 +200,6 @@ pelagia.grownHoops(root, {
       vein,
       1.52,
       0.045,
-      [4, 28],
       5.2,
       verbatim([-0.75, 0, 0], [-0.2, Math.PI / 2, 0], [1.1, 1, 1]),
     ],
@@ -217,7 +208,6 @@ pelagia.grownHoops(root, {
       vein,
       1.55,
       0.045,
-      [4, 28],
       4.4,
       verbatim([0.05, 0, 0], [0.9, Math.PI / 2, 0], [1.1, 1, 1]),
     ],
@@ -226,7 +216,6 @@ pelagia.grownHoops(root, {
       vein,
       1.38,
       0.045,
-      [4, 28],
       5.0,
       verbatim([0.85, 0, 0], [-0.5, Math.PI / 2, 0], [1.1, 1, 1]),
     ],
@@ -236,7 +225,6 @@ pelagia.grownHoops(root, {
       vein,
       1.32,
       0.045,
-      [4, 28],
       3.8,
       verbatim([1.55, 0, 0], [0.3, Math.PI / 2, 0], [1.1, 1, 1]),
     ],
@@ -257,12 +245,14 @@ pelagia.sweptVein(root, vein, {
   ],
   steps: 24,
   r: 0.05,
+  cut,
 });
 pelagia.grownOrbs(root, {
+  cut,
   orbs: [
-    ['eye-sac-1', vein, 0.16, [8, 6], verbatim([2.35, 0.55, 0.45])],
-    ['eye-sac-2', vein, 0.11, [8, 6], verbatim([2.1, 0.72, 0.6])],
-    ['eye-sac-3', vein, 0.09, [8, 6], { ...verbatim([2.5, 0.38, 0.62]), on: 'seed-hull' }],
+    ['eye-sac-1', vein, 0.16, verbatim([2.35, 0.55, 0.45])],
+    ['eye-sac-2', vein, 0.11, verbatim([2.1, 0.72, 0.6])],
+    ['eye-sac-3', vein, 0.09, { ...verbatim([2.5, 0.38, 0.62]), on: 'seed-hull' }],
   ],
 });
 
@@ -279,62 +269,53 @@ pelagia.abyssalTendrils(
       { name: 'tendril-stb-1', seed: 2.2, z: 0.6, xEnd: -2.7, r: 0.1 },
       { name: 'tendril-stb-2', seed: 3.5, z: 0.9, xEnd: -2, r: 0.08 },
     ],
+    cut,
   }
 );
 
-// The stern: a nine-sided nozzle drawn to a point aft, squashed 0.85
+// The stern: a nozzle drawn to a point aft, squashed 0.85
 // across, the lit throat inside it — a drum narrowing aft, its after face
 // at the nozzle's apex — and two pods beside it, one high to starboard and
 // one low to port.
 pelagia.grownCones(root, {
+  cut,
   cones: [
     [
       'aft-nozzle',
       dark,
       [0, 0.85],
       1.4,
-      9,
       verbatim([-2.85, 0.05, 0], [0, 0, Math.PI / 2], [1, 1, 0.85]),
     ],
-    ['nozzle-throat', vein, [0.35, 0.5], 0.5, 9, verbatim([-3.3, 0.05, 0], [0, 0, Math.PI / 2])],
+    ['nozzle-throat', vein, [0.35, 0.5], 0.5, verbatim([-3.3, 0.05, 0], [0, 0, Math.PI / 2])],
   ],
 });
 pelagia.grownOrbs(root, {
+  cut,
   orbs: [
-    ['aft-pod-a', teal, 0.34, [8, 6], verbatim([-2.6, 0.7, 0.5])],
-    ['aft-pod-b', teal, 0.26, [8, 6], verbatim([-2.75, -0.5, -0.55])],
+    ['aft-pod-a', teal, 0.34, verbatim([-2.6, 0.7, 0.5])],
+    ['aft-pod-b', teal, 0.26, verbatim([-2.75, -0.5, -0.55])],
   ],
 });
 
 // Two fins, orbs squashed flat, the port one the larger and raked its own
 // way, and the lit vein along the port fin's leading edge — an arc of 3.6
-// rad on twenty segments, leaned to lie along it.
+// rad, leaned to lie along it.
 pelagia.grownOrbs(root, {
+  cut,
   orbs: [
-    [
-      'fin-port',
-      teal,
-      0.9,
-      [8, 5],
-      verbatim([-0.4, -0.1, -1.55], [-0.35, 0.25, 0.1], [1.6, 0.14, 0.8]),
-    ],
-    [
-      'fin-stb',
-      teal,
-      0.75,
-      [8, 5],
-      verbatim([0.1, 0.05, 1.5], [0.3, -0.15, -0.05], [1.4, 0.13, 0.7]),
-    ],
+    ['fin-port', teal, 0.9, verbatim([-0.4, -0.1, -1.55], [-0.35, 0.25, 0.1], [1.6, 0.14, 0.8])],
+    ['fin-stb', teal, 0.75, verbatim([0.1, 0.05, 1.5], [0.3, -0.15, -0.05], [1.4, 0.13, 0.7])],
   ],
 });
 pelagia.grownHoops(root, {
+  cut,
   hoops: [
     [
       'fin-vein',
       vein,
       0.95,
       0.035,
-      [4, 20],
       3.6,
       verbatim([-0.4, -0.08, -1.6], [1.2208, 0.25, 0.6], [1.45, 0.75, 1]),
     ],

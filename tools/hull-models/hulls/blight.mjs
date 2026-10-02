@@ -49,7 +49,7 @@
  *   lathes laid beside a nose that closes blunt between them
  *   (`huskLobes`): the body's own profile draws in from 5.1 m at x 20 to
  *   4.0 at 27 and shuts at 30.8, inside the cleft, and each lobe is lathed
- *   on twelve facets with its aft station at x 21 buried in the body
+ *   on ten facets with its aft station at x 21 buried in the body
  *   (r 1.1 against the body's 5.03 there), its skin clearing the body's
  *   at x 24.4, fullest at x 30 — 4.8 m across and 4.1 tall to starboard,
  *   4.6 by 3.9 to port, squashed 0.85 — and closing to a blunt tip at 40
@@ -78,7 +78,7 @@
  * - **Where the arm stands, and how it folds.** The root is a knuckle of
  *   ridge r 1.0 at (28.4, 1.9, 0.3), half-sunk in the nose's crown where
  *   the lobes' inner faces are 4 m apart at that height; the first stem,
- *   seven-sided and r 0.55 to 0.42, rises 7.3 m forward to an elbow orb of
+ *   five-sided and r 0.55 to 0.42, rises 7.3 m forward to an elbow orb of
  *   r 0.85 at (35.2, 4.4, −0.15); the second, r 0.42 to 0.32, folds 3.3 m
  *   back to a wrist at (32.6, 6.3, 0.4), and the head sits there: a sac
  *   of r 1.7 in the `spore_pod` finish, 3.4 m across, under a membrane hood
@@ -152,10 +152,24 @@
  * ×0.921: 59× above the ×1/64 floor docs/models-plan.md §3.2 warns the
  * quiet end about and 69× under the ×64 ceiling, with no lamp but the two
  * marks — the Weaver's raw 1.65 on a 507 m² plan is the same two marks
- * on a smaller hull. 20 parts, 2,468 triangles, bounds x ±40, y −4.9..8.6,
+ * on a smaller hull. 20 parts, 2,114 triangles, bounds x ±40, y −4.9..8.6,
  * z ±6.9; the waist is 13.6 m and the intake's 13.8 m beam is the vanes'
  * rolled lower corners at z +6.88 and −6.93, and the 13.5 m of height is
  * the hood over the head against the keel under the waist.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked in metres,
+ * and the pass re-cut what was off it: the pod to sixteen at 6.7 m of
+ * radius, where it was fourteen, and its four rings to sixteen at 4.9–6.7
+ * m, where they were fourteen; the two husk lobes to ten at 2.3–2.4 m,
+ * where they were twelve; on the arm, the root and elbow knuckles to five
+ * by three, where they were ten by six, both stems to five, where they
+ * were seven, the head to seven by four at 1.7 m, where it was twelve by
+ * six, and the hood over it to four by two — the rule's share of its 198°
+ * and 108°, under three's floor of three round and two down, so the floor
+ * — where it was twelve by six. The spore sac was sixteen by eight and
+ * stays so; the vein stays five, the floor. 20 parts and 2,468 triangles
+ * become 20 and 2,114.
  *
  * The hand-drawn entry in silhouettes.ts stays until the kind is wired
  * (docs/models-plan.md §2); the generated outline will read the waist at
@@ -182,8 +196,6 @@ const root = new THREE.Group();
 root.name = 'pelagia_blight';
 
 const SQUASH = 0.72;
-const FACETS = 14;
-const FLAT = Math.cos(Math.PI / FACETS);
 
 /**
  * The pod's stations, [x, r] in metres: a seed, widest at x 6 — a little
@@ -219,26 +231,45 @@ const rAt = (x) => {
   }
   return PROFILE[PROFILE.length - 1][1];
 };
-/** The crown's height at `x`: the squashed radius, on the flat a fourteen-facet loft turns up. */
+// The Commune's facet rule, a chord of 1.5 m (docs/asset-prompts-3d.md Block
+// 2c; pelagia.mjs `cut`, #919), asked in metres since the file is drawn in them.
+const cut = pelagia.cut();
+const PRESSED = { scale: [1, SQUASH, 1] };
+/** The pod's count under the rule, as squashed: what the crown's flat is cut on. */
+const FACETS = cut.lathe(PROFILE, PRESSED);
+const FLAT = Math.cos(Math.PI / FACETS);
+/** The crown's height at `x`: the squashed radius, on the flat the loft turns up. */
 const crownAt = (x) => rAt(x) * SQUASH * FLAT;
 
 /** Where the rings sit, and how far proud of the skin their crests ride. */
 const RING_X = [20, 13, -9, -17];
 const RING_TUBE = 0.75;
 const RING_SINK = 0.25;
-const ringCrestAt = (x) => (rAt(x) - RING_SINK + RING_TUBE) * SQUASH * FLAT;
+/** A ring's own count under the rule — a ridge of this crown, as squashed — and the flat it turns up. */
+const ringFlatAt = (x) => {
+  const crown = rAt(x) - RING_SINK + RING_TUBE;
+  const profile = [
+    [-RING_TUBE, crown - 0.75],
+    [0, crown],
+    [RING_TUBE, crown - 0.75],
+  ];
+  return Math.cos(Math.PI / cut.lathe(profile, PRESSED));
+};
+const ringCrestAt = (x) => (rAt(x) - RING_SINK + RING_TUBE) * SQUASH * ringFlatAt(x);
 
-pelagia.podBody(root, chitin, { squash: SQUASH, facets: FACETS, profile: PROFILE });
+pelagia.podBody(root, chitin, { squash: SQUASH, profile: PROFILE, cut });
 pelagia.growthRings(root, ridge, {
   stations: RING_X.map((x) => [x, rAt(x) - RING_SINK]),
   squash: SQUASH,
   tube: RING_TUBE,
   wobble: 0.06,
-  ring: { rise: 0.75, facets: FACETS },
+  ring: { rise: 0.75 },
+  cut,
 });
 
 // The husk, parted: two lobes, one a side, each its own size and curl.
 pelagia.huskLobes(root, chitin, {
+  cut,
   lobes: [
     {
       side: 's',
@@ -292,6 +323,7 @@ pelagia.bladder(
     z: 0.6,
     r: 3.9,
     squash: 0.6,
+    cut,
   }
 );
 
@@ -358,6 +390,7 @@ pelagia.seedingArm(
   root,
   { ridge, chitin, sac: spore, membrane },
   {
+    cut,
     joints: [
       [28.4, 1.9, 0.3],
       [35.2, 4.4, -0.15],
@@ -398,7 +431,7 @@ pelagia.sweptVein(root, veinUnlit, {
   ].map(([x, z]) => [x, veinY(x), z]),
   steps: 48,
   r: VEIN_R,
-  facets: 5,
+  cut,
 });
 
 // "Nearly black at rest, navigation marks only": two marks.

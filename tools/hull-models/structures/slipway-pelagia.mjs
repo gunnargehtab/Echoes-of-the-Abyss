@@ -69,6 +69,22 @@
  *   (kit.mjs `slipwayBed`, one decision for all four yards;
  *   docs/models-plan.md §3.2 rule 5; #890). `diff.mjs` lists the seven
  *   crosses, moved by that 8 m and nothing else.
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked at the
+ * fitted footprint's scale (`DRAWN`), and the pass re-cut what was off it:
+ * the hull in progress sixteen round and sixteen a turn down at 54 m of
+ * radius, where the export had fourteen by fourteen; the six gantry legs
+ * sixteen at 4.15 m, where they were eight; the knuckles, the pylons, the
+ * lobe buds, the husk knuckles and the ballast bladders sixteen by sixteen
+ * at 3.9–27 m, where they were eight and ten by twelve; the twelve husk
+ * lobes sixteen by sixteen at 29 m, where they were fourteen by fourteen,
+ * and their twenty-four rings sixteen, where they were fourteen; the twelve
+ * root anchors fourteen at 3.46 m, where they were six. The measure still
+ * names the three gantry cables, the kit's four-sided drums at 0.4 m where
+ * the rule says five: kit.mjs `slipwayGantry` writes that count itself, and
+ * the Commune has no section to keep it. 134 parts and 7,824 triangles
+ * become 134 and 14,144.
  */
 import {
   THREE,
@@ -83,6 +99,15 @@ import {
 import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 340;
+/** The plan's long side as built: the slab's chamfer, corner to corner (kit.mjs `fitFootprint`). */
+const DRAWN = 344;
+// The Commune's facet rule at this file's scale (pelagia.mjs `cut`, #919):
+// the model is drawn 344 long and priced at 340 m, and the rule is a chord
+// in metres. Asserted after the fit, since the fit is what sets the scale.
+const cut = pelagia.cut(L / DRAWN);
+// The gantry's fall at the rule's count — the kit's own 0.4 by 24 at 26, which
+// it draws four-sided unless asked (kit.mjs `slipwayGantry`, #919).
+const CABLE = { r: 0.4, h: 24, y: 26, facets: cut.round };
 
 const chitin = pelagia.ink.chitinHull();
 const ridge = pelagia.ink.growthRidge();
@@ -99,7 +124,7 @@ root.name = 'slipway_pelagia';
 slipwayBed(
   root,
   { slab: chitin, floor: ridge, line: vein, keel: chitin },
-  { hull: (r) => pelagia.slipwayHull(r, { hull: membrane, deck: chitin }) }
+  { hull: (r) => pelagia.slipwayHull(r, { hull: membrane, deck: chitin }, { cut }) }
 );
 
 // Three gantries: leaning ridge stalks with chitin knuckles, a ridge beam
@@ -111,19 +136,26 @@ for (const index of [0, 1, 2])
     { beam: ridge, trolley: chitin, cable: chitin, worklight: light },
     {
       index,
-      leg: pelagia.slipwayLeg(ridge),
-      ornament: pelagia.slipwayKnuckle(chitin),
+      leg: pelagia.slipwayLeg(ridge, cut),
+      ornament: pelagia.slipwayKnuckle(chitin, cut),
       beam: { size: [7, 4, 70], y: 44 },
+      cable: CABLE,
     }
   );
 
 // The head gate: two tall chitin orbs under a chitin lintel.
-slipwayHeadGate(root, chitin, { pylon: pelagia.slipwayPylon(chitin) });
+slipwayHeadGate(root, chitin, { pylon: pelagia.slipwayPylon(chitin, cut) });
 
 // Two halls, the +z one first as the file writes it (starboard, `hall_s`).
 bothSides((tag, sgn) =>
-  pelagia.slipwayHall(group(root, `hall_${tag}`), { chitin, ridge, membrane, spore, vein }, { sgn })
+  pelagia.slipwayHall(
+    group(root, `hall_${tag}`),
+    { chitin, ridge, membrane, spore, vein },
+    { sgn, cut }
+  )
 );
 
-fitFootprint(root, L);
+const size = fitFootprint(root, L);
+if (Math.abs(Math.max(size.x, size.z) - DRAWN) > 1e-3)
+  throw new Error(`${root.name}: drawn ${Math.max(size.x, size.z)}, DRAWN says ${DRAWN}`);
 await exportGlb(root, 'slipway-pelagia.glb');

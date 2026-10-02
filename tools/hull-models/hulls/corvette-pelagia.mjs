@@ -74,6 +74,23 @@
  * material, and the audit names no lamp on this hull as hidden or
  * floating. The bow light was the hull's forward extreme, so its move
  * changes the scale (THE SCALE above).
+ *
+ * FACETS (#919). The Commune's rule is one facet edge of 1.5 m
+ * (docs/asset-prompts-3d.md Block 2c; pelagia.mjs `cut`), asked at this
+ * file's scale for each part as its node presses it, and the pass re-cut
+ * what was off it: the jaw lobe sixteen round and sixteen down at 6.9 m,
+ * where the export had eight by six; the three growth rings sixteen round
+ * at 5.3–6.6 m, where they were twenty, on tubes of five as before; the
+ * three launcher sheaths sixteen by sixteen at 4.7–5.4 m, where they were
+ * eight by six, and their eleven seeds five by three at 0.8–1.0 m, where
+ * they were seven by five; the peduncle eleven at 2.5 m, where it was
+ * seven; the seven light buds five by three at 0.37–0.49 m, where they were
+ * eight by six. The hull's table stays the export's 16 × 11, and the
+ * measure names its meridian — twenty-two a turn at 30 m — as Block 2c says
+ * it will. The buds own less of the plan at five by three: the forward
+ * starboard hull-line light and the tail light own the audit's
+ * quarter-metre floor exactly, 0.5 before. 33 parts and 2,996 triangles
+ * become 33 and 2,652.
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -81,6 +98,10 @@ import * as pelagia from '../factions/pelagia.mjs';
 const L = 80;
 const DRAWN = 5.6605;
 const DATUM = 0;
+// The Commune's facet rule at this file's scale (pelagia.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres.
+const cut = pelagia.cut(L / DRAWN);
 
 // The navy's ink (#888). The export carried the r184 pass's glossier
 // finish — chitin at 0.2 metal and 0.28 rough, the ridge #14332A at 0.12
@@ -288,7 +309,7 @@ pelagia.grownBody(root, chitin, {
 });
 pelagia.lobe(root, chitin, {
   name: 'jaw_lobe',
-  facets: [8, 6],
+  cut,
   ...drawn([0.03, -0.16, 1.7], [-0.15, 0, 0], [0.14, 0.1, 0.5]),
 });
 
@@ -302,6 +323,7 @@ const ring = (tube, at, lean) => ({
   ...drawn(at, [...lean, 0], [0.42 * 1.08 * profile(at[2]), 0.4 * 1.14 * profile(at[2]), 1.5]),
 });
 pelagia.grownRings(root, ridge, {
+  cut,
   rings: [
     ring(0.05762, [0, -0.01, -1.35], [0.22, 0.07]),
     ring(0.04562, [0.01068, -0.01, -0.6], [0.29933, -0.04664]),
@@ -319,6 +341,7 @@ pelagia.seedLauncher(
     name: 'launcher_port_fwd',
     length: 0.575,
     seeds: 4,
+    cut,
     ...drawn([0.42, 0.12, 0.55], [0, 0, -0.5]),
   }
 );
@@ -329,6 +352,7 @@ pelagia.seedLauncher(
     name: 'launcher_port_aft',
     length: 0.5,
     seeds: 3,
+    cut,
     ...drawn([0.4, -0.1, -0.55], [0, 0, -0.9]),
   }
 );
@@ -339,6 +363,7 @@ pelagia.seedLauncher(
     name: 'launcher_starboard',
     length: 0.55,
     seeds: 4,
+    cut,
     ...drawn([-0.42, 0.02, 0.1], [0, 0, 0.7]),
   }
 );
@@ -382,6 +407,7 @@ pelagia.membranes(root, membrane, {
 pelagia.stalk(root, chitin, {
   radii: [0.08, 0.18],
   length: 0.9,
+  cut,
   ...drawn([0.01, 0.01, -2.25], [Math.PI / 2 + 0.06, 0, 0]),
 });
 pelagia.membranes(root, membrane, {
@@ -407,6 +433,7 @@ pelagia.membranes(root, membrane, {
 // each other across the keel — and one on the peduncle's aft crown, a
 // hair to starboard of the fluke's root (#890; see the header).
 pelagia.lightBuds(root, light, {
+  cut,
   buds: [
     ['bow_light', 0.04, { ...drawn([0.06, 0.08, 2.2]), on: 'hull' }],
     ['hullline_port_1', 0.032, { ...drawn([0.36, 0.16, 1.15]), on: 'hull' }],

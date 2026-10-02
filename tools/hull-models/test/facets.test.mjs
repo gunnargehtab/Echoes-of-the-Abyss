@@ -46,7 +46,7 @@ test('a cylinder is one ring at its wider rim, a half cylinder counts a full tur
   assert.equal(ringsOf(meshOf(new THREE.CylinderGeometry(0, 1, 2, 6))).length, 1);
 });
 
-test('an orb is a round and a meridian, both at its radius; a dome\'s meridian counts its turn', () => {
+test("an orb is a round and a meridian, both at its radius; a dome's meridian counts its turn", () => {
   const { 'sphere round': round, 'sphere meridian': meridian } = byKind(
     ringsOf(meshOf(new THREE.SphereGeometry(2, 8, 6)))
   );
@@ -56,12 +56,12 @@ test('an orb is a round and a meridian, both at its radius; a dome\'s meridian c
   assert.equal(meridian.n, 6);
   assert.equal(meridian.turn, 12);
   near(meridian.radiusM, 2);
-  const dome = byKind(
-    ringsOf(meshOf(new THREE.SphereGeometry(3, 10, 4, 0, TAU, 0, Math.PI / 2)))
-  );
+  const dome = byKind(ringsOf(meshOf(new THREE.SphereGeometry(3, 10, 4, 0, TAU, 0, Math.PI / 2))));
   assert.equal(dome['sphere meridian'].turn, 16);
   // Squashed by its node, the round is read at its major radius.
-  const squashed = byKind(ringsOf(meshOf(new THREE.SphereGeometry(2, 8, 6), { scale: [1, 0.5, 1] })));
+  const squashed = byKind(
+    ringsOf(meshOf(new THREE.SphereGeometry(2, 8, 6), { scale: [1, 0.5, 1] }))
+  );
   near(squashed['sphere round'].radiusM, 2);
 });
 
@@ -132,7 +132,7 @@ test('facetsFor cuts the chord on the lattice, holds the floor and ceiling, and 
   }
 });
 
-test('a part built through its navy\'s rule reads as on it, arcs included', () => {
+test("a part built through its navy's rule reads as on it, arcs included", () => {
   // `keeps` and a builder share one call, so a round of five with three
   // meridian segments over π — which read a turn at a time would be six —
   // is on the rule, and every part here comes back so for every navy.
@@ -142,7 +142,15 @@ test('a part built through its navy\'s rule reads as on it, arcs included', () =
     const orb = (r, window = {}) => {
       const { thetaStart = 0, thetaLength = Math.PI, phiLength = TAU } = window;
       const { widthSegments, heightSegments } = orbFacets(f, r, window);
-      return new THREE.SphereGeometry(r, widthSegments, heightSegments, 0, phiLength, thetaStart, thetaLength);
+      return new THREE.SphereGeometry(
+        r,
+        widthSegments,
+        heightSegments,
+        0,
+        phiLength,
+        thetaStart,
+        thetaLength
+      );
     };
     return [
       ['drum', new THREE.CylinderGeometry(2, 2, 1, facetsFor(f, 2))],
@@ -199,7 +207,80 @@ test('a part built through its navy\'s rule reads as on it, arcs included', () =
   assert.equal(keeps(k, byKind(ringsOf(meshOf(atRadius)))['sphere round']), false);
 });
 
-test('a section keeps a spar\'s count and never an orb\'s', () => {
+test('a Commune part pressed by its node reads as on the rule once settled', async () => {
+  // The Commune's parts are squashed almost to a one, and the measure reads
+  // a pressed ring by its chord, shorter than the circle's at the major
+  // radius — so pelagia.mjs `cut` settles each count on what the reader
+  // reads back (#919). A count asked at the major radius alone is the
+  // control: on a coarse oblate orb it reads a step under the rule.
+  const { cut } = await import('../factions/pelagia.mjs');
+  const rule = cut();
+  const check = (geo, scale, what) => {
+    const rings = ringsOf(meshOf(geo, { scale, name: what }));
+    assert.ok(rings.length, `${what} has rings`);
+    for (const r of rings)
+      assert.ok(
+        keeps(pelagia, r),
+        `${what} ${r.kind} ${r.n} over ${r.arc.toFixed(3)} at r ${r.radiusM.toFixed(3)}, rule ${facetsFor(pelagia, r.radiusM, r.arc)}`
+      );
+  };
+  for (const scale of [
+    [9, 4.5, 9],
+    [2.2, 1.5, 2.2],
+    [30, 17, 26],
+    [6, 28, 6],
+    [0.55, 0.37, 1],
+  ]) {
+    check(new THREE.SphereGeometry(1, ...rule.orb(1, { scale })), scale, `orb ${scale}`);
+    const window = { phiLength: Math.PI, thetaLength: Math.PI / 2 };
+    const [w, h] = rule.orb(1, { scale }, window);
+    check(
+      new THREE.SphereGeometry(1, w, h, 0, Math.PI, 0, Math.PI / 2),
+      scale,
+      `quarter shell ${scale}`
+    );
+    const [radial, tubular] = rule.torus(1, 0.06, { scale });
+    check(new THREE.TorusGeometry(1, 0.06, radial, tubular), scale, `hoop ${scale}`);
+  }
+  const profile = [
+    [-28, 0.001],
+    [-20, 4.5],
+    [0, 8.4],
+    [18, 6],
+    [27, 0.001],
+  ];
+  for (const squash of [0.7, 0.5, 0.34]) {
+    const scale = [1, squash, 1];
+    check(
+      new THREE.LatheGeometry(
+        profile.map(([x, r]) => new THREE.Vector2(r, x)),
+        rule.lathe(profile, { scale })
+      ).rotateZ(-Math.PI / 2),
+      scale,
+      `lathe squashed ${squash}`
+    );
+  }
+  // The control: an oblate orb cut at the major radius alone reads under the rule.
+  const flat = [3, 1.5, 3];
+  const { widthSegments, heightSegments } = orbFacets(pelagia, 3);
+  const naive = ringsOf(
+    meshOf(new THREE.SphereGeometry(1, widthSegments, heightSegments), { scale: flat })
+  );
+  assert.ok(
+    naive.some((r) => !keeps(pelagia, r)),
+    'the unsettled oblate orb is named'
+  );
+  // A yawed Z-long part reads the same through `yaw` as `part` will place it.
+  const drawnScale = [0.55, 0.37, 1];
+  const [rs, ts] = rule.torus(1, 0.08, { scale: drawnScale, yaw: true });
+  const yawedMesh = meshOf(new THREE.TorusGeometry(1, 0.08, rs, ts).rotateY(Math.PI / 2), {
+    scale: drawnScale,
+    name: 'yawed hoop',
+  });
+  for (const r of ringsOf(yawedMesh)) assert.ok(keeps(pelagia, r), `yawed hoop ${r.kind} ${r.n}`);
+});
+
+test("a section keeps a spar's count and never an orb's", () => {
   const rule = { chordM: 3, min: 4, max: 12, step: 2, sections: [4, 6] };
   const [spar] = ringsOf(meshOf(new THREE.CylinderGeometry(2, 2, 10, 6)));
   assert.equal(keeps(rule, spar), true);
