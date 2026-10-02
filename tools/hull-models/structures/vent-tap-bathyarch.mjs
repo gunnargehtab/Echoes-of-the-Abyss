@@ -47,9 +47,31 @@
  * the mouth (below); the draw pipes, risers and the exchangers' stacks were
  * the rule's eight already. 122 parts and 2,528 triangles become 122 and
  * 2,984.
+ *
+ * PANELS (#919). The Klaxon's structure band is a median unlit part of 2–5.5 m
+ * on a side from above (Block 2c; bathyarch.mjs `panels`), and this model read
+ * 6.2 m over 68 panels: the exchangers' fins, risers and platforms at 5–8 m
+ * with the apron and the chimney over them. The pass dressed the apron with
+ * forty-four parts, each seated on it (bathyarch.mjs "Panels"): four ranks
+ * out across the scorched ground between the arms — a kerb, a capped
+ * standpipe with its dogging wheel, two pairs of kerb posts flanking two
+ * anchor blocks, and a kerb at the rim, steel and black bolted into the rust
+ * — and a grey plate on each anchor foot's free top. Two ranks stand on the
+ * axes and two are turned off theirs, 10° and 25°, to clear the basalt
+ * lobes, which are orbs 28 units long on their bearings. The apron's top is
+ * 2.6 m under the y 0 the conn view stands a structure on (#955), so every
+ * fitting on it is tall enough to show above the ground: posts 5.2 m, blocks
+ * and caps 3.9, kerbs 3.4. Each reads 2.7–3.7 m on a side from above, the
+ * wheels 1.7. The median comes to 4.1 m (17.2 m²) over 112 panels, and 122
+ * parts and 2,984 triangles become 166 and 3,992. The footprint the fit
+ * measures is the hazard bands' corners at r 68.6, and the ranks end at the
+ * apron's rim, r 58.
  */
 import {
   THREE,
+  box,
+  part,
+  polar,
   exportGlb,
   radialSeries,
   ventWellhead,
@@ -137,6 +159,78 @@ radialSeries({ count: 4, phase: Math.PI / 4 }, (a) => {
 // Eight floods round the manifold — with the platform floods and the mouth,
 // the "burning bright" of a structure at SIG 55.
 wellheadFloods(root, flood);
+
+// PANELS (#919, header): the fittings that bring the median unlit part
+// inside the structure band, each dropped onto the apron under its station
+// (bathyarch.mjs "Panels"). Four ranks out across the apron between the
+// diagonals the arms sit on, from outside the basalt lobes (orbs 28 long,
+// reaching r 48 on their bearings) to inside the apron's rim (its apothem
+// 58.5): a kerb, a capped standpipe with its dogging wheel, two pairs of
+// kerb posts flanking two anchor blocks, and a kerb at the rim. Steel and
+// black bolted into the rust ground — "anchor feet into the scorched
+// ground". Two ranks stand on their axes; the other two are turned off
+// theirs, 10° and 25°, to clear the lobe at 106° and the one lying along
+// 178°. The apron's top is 2 units under the y 0 the conn view stands a
+// structure on (#955), so every fitting here is tall enough to show above
+// it: posts 4, blocks and caps 3, kerbs 2.6. `spoke` is a station `r` out
+// along bearing `a` and `s` across it, in the kit's `polar` frame.
+const spoke = (a, r, s = 0) => [r * Math.cos(a) - s * Math.sin(a), r * Math.sin(a) + s * Math.cos(a)];
+const RANKS = [0, (80 * Math.PI) / 180, (205 * Math.PI) / 180, (3 * Math.PI) / 2];
+bathyarch.deckHatches(root, { hatch: grey, wheel: black }, {
+  on: 'apron',
+  r: 1.6,
+  h: 3,
+  wheel: { R: 0.9, t: 0.15 },
+  cut,
+  hatches: RANKS.map((a, i) => [`well_cap_${i}`, spoke(a, 46)]),
+});
+bathyarch.deckPosts(root, black, {
+  on: 'apron',
+  r: 1.5,
+  h: 4,
+  cut,
+  posts: RANKS.flatMap((a, i) => [
+    [`kerb_post_${i}a`, spoke(a, 48, 5)],
+    [`kerb_post_${i}b`, spoke(a, 48, -5)],
+    [`kerb_post_${i}c`, spoke(a, 52.5, 5)],
+    [`kerb_post_${i}d`, spoke(a, 52.5, -5)],
+  ]),
+});
+bathyarch.deckPlates(root, { grey, black }, {
+  on: 'apron',
+  t: 3,
+  plates: RANKS.flatMap((a, i) => [
+    [`anchor_block_${i}a`, i % 2 ? 'grey' : 'black', [3, 2.6], spoke(a, 49.5), -a],
+    [`anchor_block_${i}b`, i % 2 ? 'black' : 'grey', [3, 2.6], spoke(a, 54.5), -a],
+  ]),
+});
+// The kerbs lie across their rank, a strip 6 long: `plateSeams` lays one
+// so at a station on x, and for a rank turned off that axis the same strip
+// goes down through `deckPlates` with the rank's yaw, the same box seated
+// the same way under another name.
+bathyarch.plateSeams(root, grey, {
+  on: 'apron',
+  name: 'kerb',
+  stations: [42.5, 57.5],
+  length: 6,
+  w: 0.7,
+  h: 2.6,
+});
+bathyarch.deckPlates(root, { grey }, {
+  on: 'apron',
+  t: 2.6,
+  plates: RANKS.slice(1).flatMap((a, i) => [
+    [`kerb_${2 * i + 2}`, 'grey', [0.7, 6], spoke(a, 42.5), -a],
+    [`kerb_${2 * i + 3}`, 'grey', [0.7, 6], spoke(a, 57.5), -a],
+  ]),
+});
+// A plate bolted on each anchor foot's free top, outboard of the exchanger
+// that overhangs its inner three units. The four feet share one name, which
+// `seat` cannot take, so each plate is placed by the foot's own numbers:
+// top at y 2, the plate's centre 0.2 over it.
+radialSeries({ count: 4, phase: Math.PI / 4 }, (a, i) =>
+  part(root, `foot_plate_${i}`, box(2.6, 0.4, 3), grey, { at: polar(a, 89.6, 2.2), rot: [0, -a, 0] })
+);
 
 const size = fitFootprint(root, L);
 if (Math.abs(Math.max(size.x, size.z) - DRAWN) > 1e-3)

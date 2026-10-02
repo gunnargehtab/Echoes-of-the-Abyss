@@ -307,9 +307,14 @@ const lampOrb = (r, rule = METRE) => new THREE.SphereGeometry(r, ...rule.orb(r))
  * coplanar split of one finish is not one of them and no builder here makes
  * one. A station is `[x, z]` in the root's frame, or a `drawn` placement's
  * `at` for a Z-long port, whose y is ignored; every size is in the script's
- * own units, as `seat` takes them, and every round part asks `cut`. A
- * fitting is laid where nothing stands over it and no lamp lies under it:
- * the first is the plan the measure reads, the second the light audit's.
+ * own units, as `seat` takes them, and every round part asks `cut`. Sizes
+ * are in the root's frame too: a plate's `w` lies along x, the keel, and
+ * its `d` along z, athwart, before its `yaw`, on a Z-long port as on a
+ * model drawn in the kit's own frame — the boxes go in through kit.mjs
+ * `add`, never `part`, whose quarter turn is for a primitive an export
+ * drew in its own frame, which these are not. A fitting is laid where
+ * nothing stands over it and no lamp lies under it: the first is the plan
+ * the measure reads, the second the light audit's.
  * ------------------------------------------------------------------------ */
 
 const planOf = (s) => (s.length === 3 ? [s[0], s[2]] : s);
@@ -324,7 +329,7 @@ export function deckPlates(root, mats, { on, t, plates }) {
   for (const [name, finish, [w, d], station, yaw = 0] of plates) {
     const [x, z] = planOf(station);
     const { at, rot } = seat(root, on, [x, 0, z], { stand: t / 2, drop: true, yaw });
-    part(root, name, box(w, t, d), mats[finish], { at, rot });
+    add(root, name, box(w, t, d), mats[finish], at, rot);
   }
 }
 
@@ -340,21 +345,29 @@ export function plateSeams(root, mat, opts) {
   const strip = box(along ? length : w, h, along ? w : length);
   stations.forEach((x, i) => {
     const { at, rot } = seat(root, on, [x, 0, z], { stand: h / 2, drop: true });
-    part(root, `${name}_${i}`, strip, mat, { at, rot });
+    add(root, `${name}_${i}`, strip, mat, at, rot);
   });
 }
 
 /**
  * Dogged hatches on a deck — `doggedHatch`'s coaming and wheel at the rule's
  * counts, each dropped onto `on` at its station, `[name, station]` each, all
- * of one `r`, `h` and `wheel`. The coaming stands on Y whatever the facet
- * under it, since a hatch is cut into a deck and not laid on a shell.
+ * of one `r`, `h` and `wheel: { R, t }`. The coaming stands on Y whatever
+ * the facet under it, since a hatch is cut into a deck and not laid on a
+ * shell. The wheel is laid on the coaming here, not by the script: its tube
+ * is a polygon of the rule's count — six at any size the Klaxon cuts — with
+ * a vertex outward in the ring's plane, so its underside is `t · cos(π/n)`
+ * below its centre, 0.87 t at six, and a `dy` of `h / 2 + t` floats it by
+ * the rest. Every hatch the pass laid had floated so until this took the
+ * number over.
  */
 export function deckHatches(root, mats, { on, hatches, r, h, wheel, cut: rule = METRE }) {
+  const { R, t } = wheel;
+  const dy = h / 2 + t * Math.cos(Math.PI / rule.round(t));
   for (const [name, station] of hatches) {
     const [x, z] = planOf(station);
     const { at } = seat(root, on, [x, 0, z], { stand: h / 2, drop: true });
-    doggedHatch(root, mats, { name, at, r, h, wheel, cut: rule });
+    doggedHatch(root, mats, { name, at, r, h, wheel: { R, t, dy }, cut: rule });
   }
 }
 
@@ -368,7 +381,7 @@ export function deckPosts(root, mat, { on, posts, r, h, cut: rule = METRE }) {
   for (const [name, station] of posts) {
     const [x, z] = planOf(station);
     const { at, rot } = seat(root, on, [x, 0, z], { stand: h / 2, drop: true });
-    part(root, name, drum, mat, { at, rot });
+    add(root, name, drum, mat, at, rot);
   }
 }
 

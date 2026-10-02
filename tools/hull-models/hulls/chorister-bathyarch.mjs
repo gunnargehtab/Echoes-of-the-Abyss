@@ -60,6 +60,20 @@
  * middle at eight and ten where twelve had a vertex (`cans`, `crownOnX`)
  * — 0.03 and 0.07 units. The ram, the hub, the gun and the keel pipes were
  * six and stay six. 46 parts and 952 triangles become 46 and 816.
+ *
+ * PANELS (#919). The Klaxon's hull band is a median unlit part of 0.75–2 m
+ * on a side from above (Block 2c; bathyarch.mjs `panels`), and this hull
+ * read 2.45 m over 29 parts: its deck walk was one grey plate and its cans
+ * three drums, with nothing on either but the stripe, the ports and the
+ * patch. The pass dressed the walk with two dogged hatches, seven plates of
+ * the other two finishes and two seams across it, and laid three patches on
+ * the cans' upper facets beside the walk, each seated on the plate under it
+ * (bathyarch.mjs `deckPlates`, `plateSeams`, `deckHatches`; kit.mjs
+ * `seat`) — sixteen parts of 0.5–1.9 m² in plan, none over a lamp. The
+ * median reads 1.32 m over 45. 46 parts and 816 triangles become 62 and
+ * 1,152. The sweep (contacts.mjs) reads every one on its plate but the
+ * fore can's patch, which lies flush on the facet at 0.00 mm and crosses no
+ * edge of it.
  */
 import { THREE, add, box, bothSides, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -146,6 +160,69 @@ bar('port_a', lampM, [1.6, 0.5, 1.2], [-4, 5.05, 1.2]);
 bar('port_b', lampM, [1.6, 0.5, 1.2], [6, 5.05, 1.2]);
 bar('bow_lamp', lampM, [1, 0.5, 2], [28, 2.6, 0]);
 bar('stern_lamp', vent, [0.8, 0.5, 1.4], [-27, 2.4, 0]);
+
+// PANELS (#919, header): the deck walk and the cans dressed to the band.
+// Two dogged hatches on the walk, aft and forward of the stripe; seven
+// plates of the other two finishes laid on the grey walk, clear of the
+// stripe, the ports and each other; two seams across the walk where the
+// hatches' plates meet the stripe's; and three patches on the cans' upper
+// facets beside the walk, where the file's `patch` already lies — the
+// middle can's second facet a side, the fore can's first to starboard,
+// aft of the walk's end. Every station keeps 0.2 unit or more from the
+// nearest part on the walk; the can patches clear the pipes under them and
+// the walk over them, and the gun's mount to port of the fore can.
+const WALK = 'deck_walk';
+bathyarch.deckHatches(
+  root,
+  { hatch: black, wheel: rust },
+  {
+    on: WALK,
+    r: 0.9,
+    h: 0.3,
+    wheel: { R: 0.45, t: 0.07 },
+    hatches: [
+      ['walk_hatch_a', [-13.6, 0.1]],
+      ['walk_hatch_f', [11.6, -0.5]],
+    ],
+    cut,
+  }
+);
+bathyarch.deckPlates(root, { black, rust }, {
+  on: WALK,
+  t: 0.25,
+  plates: [
+    ['walk_plate_0', 'black', [1.8, 1.6], [-10.9, -0.5]],
+    ['walk_plate_1', 'rust', [1.6, 1.3], [-16, 0.75]],
+    ['walk_plate_2', 'black', [1.6, 1.3], [9.2, 0.75]],
+    ['walk_plate_3', 'rust', [1.6, 1], [9, -1]],
+    ['walk_plate_4', 'rust', [2.4, 0.8], [0, -1.1]],
+    ['walk_plate_5', 'black', [2.4, 0.8], [-6.6, 1.1]],
+    ['walk_plate_6', 'black', [1.6, 0.9], [-16, -0.85]],
+  ],
+});
+bathyarch.plateSeams(root, rust, {
+  on: WALK,
+  name: 'walk_seam',
+  stations: [-8.9, 7.6],
+  length: 3,
+  w: 0.5,
+  h: 0.25,
+});
+// The can patches: 2 along the keel, 1.2 down the facet, each laid flat on
+// the facet it lands on (bathyarch.mjs `deckPlates`, kit.mjs `seat`).
+bathyarch.deckPlates(root, { black, rust }, {
+  on: 'can_1',
+  t: 0.25,
+  plates: [
+    ['can_patch_s', 'rust', [2, 1.2], [4, 2.57]],
+    ['can_patch_p', 'black', [2, 1.2], [-4, -2.57]],
+  ],
+});
+bathyarch.deckPlates(root, { black, rust }, {
+  on: 'can_0',
+  t: 0.25,
+  plates: [['can_patch_f', 'rust', [2, 1], [17, 1.27]]],
+});
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
 await exportGlb(root, 'chorister-bathyarch.glb');

@@ -50,6 +50,20 @@
  * booms, the gas bottles, the pipe runs, the pump riser and the prop hubs
  * six, where they were eight. 100 parts and 1,960 triangles become 100 and
  * 1,680.
+ *
+ * PANELS (#919). The Klaxon's hull band is a median unlit part of 0.75–2 m
+ * from above (Block 2c; bathyarch.mjs `panels`), and this hull read 3.0 m:
+ * its median part was a spare plate, since a workshop's deck is one plate
+ * of 1,640 m² and its stores are few. The pass laid twenty-nine fittings on
+ * the deck and the workshop roof through bathyarch.mjs `deckPlates`,
+ * `plateSeams` and `deckHatches` (kit.mjs `seat`): fifteen plates of older
+ * rust and newer black, 1.8–2 m by 1.3–1.4 and 0.25 proud — four on the
+ * work deck, four on the strips outboard of the workshop, three on the
+ * foredeck, two on the quarters, two on the roof; six seams 0.35 m wide and
+ * 5–6 m long; and eight dogged hatches 1.6 m across. The work deck's own
+ * plate lies 0.2 under the deck's top, so the deck is what a fitting there
+ * stands on. The median reads 1.6 m. 100 parts and 1,680 triangles become
+ * 133 and 2,508.
  */
 import { THREE, bothSides, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -171,5 +185,64 @@ bothSides((side, sgn) =>
 bathyarch.bowLamp(root, lampM, { at: [41, 4.6, 0], size: [1.2, 0.8, 3] });
 bathyarch.bowStencil(root, amber, { at: [34, 4.3, 0], size: [6, 0.3, 1.2] });
 bathyarch.rivetRows(root, grey, { from: -30, to: 24, count: 14, y: 4.3, z: 17.2, size: [0.7, 0.42, 0.7] });
+
+// PANELS (#919, header): the deck's own division, seated on it. Every
+// fitting below is dropped onto `deck` by kit.mjs `seat` — the work deck's
+// own plate lies 0.2 under the deck's top, so the deck is what a fitting
+// there stands on — or onto `workshop_roof`. Plates of older and newer
+// plate 1.8–2 m by 1.3–1.4, 0.25 proud; seams 0.35 wide and 0.25 high, 5–6 m
+// across the work deck and the foredeck and 6 along the strips outboard of
+// the workshop; dogged hatches 1.6 m across under a 0.5 m wheel, which the
+// measure drops. Each sits where the deck is bare: clear of the welding
+// bays, the plate in repair, the derricks' falls and hooks, the stencil,
+// the stores aft, the pipe runs and the rim's rivets.
+const PLATE_T = 0.25;
+const HATCH = { r: 0.8, h: 0.3, wheel: { R: 0.25, t: 0.05 }, cut };
+bathyarch.deckPlates(root, { black, rust }, {
+  on: 'deck', t: PLATE_T,
+  plates: [
+    // The work deck, forward of the bays and abaft the hooks.
+    ['work_plate_0', 'rust', [2.0, 1.4], [12, 8]],
+    ['work_plate_1', 'black', [1.8, 1.3], [12, -8.5]],
+    ['work_plate_2', 'black', [2.0, 1.4], [15, 5]],
+    ['work_plate_3', 'rust', [1.8, 1.3], [15, -5.5]],
+    // The strips outboard of the workshop, inside the pipe runs.
+    ['deck_plate_0', 'rust', [2.0, 1.4], [-10, 13.2]],
+    ['deck_plate_1', 'black', [2.0, 1.4], [-8, -13.2]],
+    ['deck_plate_2', 'black', [1.8, 1.3], [-2, 13.2]],
+    ['deck_plate_3', 'rust', [2.0, 1.4], [2, -13.2]],
+    // The foredeck either side of the stencil.
+    ['fore_plate_0', 'rust', [2.0, 1.4], [34, 5]],
+    ['fore_plate_1', 'black', [2.0, 1.4], [34, -5]],
+    ['fore_plate_2', 'black', [1.8, 1.3], [37.5, -2.5]],
+    // The quarters, abaft the plate rack and the pump house.
+    ['aft_plate_0', 'rust', [1.8, 1.3], [-33, 5.5]],
+    ['aft_plate_1', 'black', [1.8, 1.3], [-33.5, -4]],
+  ],
+});
+// A 0.35 m strip spans two of the maps' 0.25 m cells, so a seam reads half
+// a metre wide from above and six metres is the length that keeps it a
+// panel under the band's two metres.
+bathyarch.plateSeams(root, rust, { on: 'deck', name: 'work_seam', stations: [10, 27.5], length: 6, w: 0.35, h: 0.25 });
+bathyarch.plateSeams(root, rust, { on: 'deck', name: 'deck_seam_s', stations: [-17], z: 13.5, length: 6, w: 0.35, h: 0.25, along: true });
+bathyarch.plateSeams(root, rust, { on: 'deck', name: 'deck_seam_p', stations: [-17], z: -13.5, length: 6, w: 0.35, h: 0.25, along: true });
+bathyarch.plateSeams(root, rust, { on: 'deck', name: 'fore_seam_s', stations: [32], z: 5, length: 5, w: 0.35, h: 0.25 });
+bathyarch.plateSeams(root, rust, { on: 'deck', name: 'fore_seam_p', stations: [32], z: -5, length: 5, w: 0.35, h: 0.25 });
+bathyarch.deckHatches(root, { hatch: grey, wheel: rust }, {
+  on: 'deck', ...HATCH,
+  hatches: [
+    ['work_hatch', [29, 0]],
+    ['work_hatch_s', [28.5, 9.5]],
+    ['work_hatch_p', [28.5, -9.5]],
+    ['fore_hatch', [37.5, 4]],
+    ['aft_hatch', [-36, 6.2]],
+  ],
+});
+// The workshop roof, between the skylight and the eaves.
+bathyarch.deckPlates(root, { black, rust }, {
+  on: 'workshop_roof', t: PLATE_T,
+  plates: [['roof_plate_s', 'rust', [2.0, 1.4], [-14, 7]], ['roof_plate_p', 'black', [2.0, 1.4], [0, -7]]],
+});
+bathyarch.deckHatches(root, { hatch: grey, wheel: rust }, { on: 'workshop_roof', ...HATCH, hatches: [['roof_hatch', [4, 6.5]]] });
 
 await exportGlb(root, 'tender-bathyarch.glb');

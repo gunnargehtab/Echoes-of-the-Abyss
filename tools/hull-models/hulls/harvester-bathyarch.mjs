@@ -78,6 +78,24 @@
  * pipes, risers, crusher vents and mast six, where they were eight to
  * twelve. The dredge wheel's twelve at 4.6 m was the rule's already and is
  * asked of it now. 122 parts and 2,080 triangles become 122 and 1,672.
+ *
+ * PANELS (#919). The Klaxon's hull band is a median unlit part of 0.75–2 m
+ * on a side from above (Block 2c; bathyarch.mjs `panels`), and this hull
+ * read 2.6 m: a barge is a deck plate, two holds of four walls and a
+ * gunwale a side, each four to twenty-seven metres on a side, and its
+ * fittings were forty rivets too small to count. The pass laid thirty-seven
+ * fittings, each seated on its plate (bathyarch.mjs `deckPlates`,
+ * `plateSeams`, `deckHatches`): twenty-two patch plates of grey and rust,
+ * 1.1–1.5 m on a side and 0.22 m proud — four along each gunwale top between
+ * the markers, two on each hold floor, three on the divider, two on the
+ * crusher roof round its vents, four on the foredeck either side of the
+ * conveyor, one on the cab's visor beside its mast; three grey seam straps
+ * 0.43 m wide across the hold floors and the foredeck; and six dogged
+ * hatches, a 0.8 m coaming under a 0.55 m wheel at the rule's six, two down
+ * through each hold floor to the barge hull, one on the foredeck and one on
+ * the crusher roof. The forward hold's last 3.75 units lie under the crusher
+ * house, so nothing on that floor goes past z 2. The median reads 1.5 m.
+ * 122 parts and 1,672 triangles become 159 and 2,548.
  */
 import { THREE, box, part, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -292,6 +310,88 @@ bathyarch.runningLights(root, lamp, {
 const APRON_PITCH = Math.atan(0.912);
 bar('marker_bow', lamp, [1.6, 0.32, 0.8], [0, 5.9, 24.16], [APRON_PITCH, 0, 0]);
 bar('marker_stern', lamp, [1.6, 0.32, 0.8], [0, 9.56, -33.76]);
+
+// PANELS (#919): the deck fittings the panel pass added (header). Every
+// station is the export's [x, z] over the plate it rests on, handed on as a
+// `drawn` placement so it lands in the kit's frame; a plate's `[w, d]` is in
+// that frame, `w` along the keel and `d` across it, and a seam lies athwart.
+// A Harvester's open plate is its two hold floors — the deck plate inside the
+// walls, which the chart sees whole — the divider between them, the gunwale
+// tops between the markers, the crusher roof round its vents, the foredeck
+// either side of the conveyor and clear of the deck patch, and the cab's
+// visor beside its mast. Grey over black is the newer plate, rust the older;
+// the hold floors are dogged down to the barge hull.
+const at = (x, z) => drawn([x, 0, z]).at;
+// The wheel's `dy` is half the coaming's height plus the tube's radius less
+// 0.015, so the wheel sits into the coaming's top rather than a hair over it.
+const HATCH = { r: 0.75, h: 0.25, wheel: { R: 0.5, t: 0.1 }, cut };
+const PLATE_T = 0.2;
+const SEAM = { w: 0.4, h: 0.22, along: false };
+for (const [side, sgn, finishes] of [
+  ['p', 1, ['rust', 'grey', 'rust', 'grey']],
+  ['s', -1, ['grey', 'rust', 'grey', 'rust']],
+])
+  bathyarch.deckPlates(root, { grey, rust }, {
+    on: `gunwale_${side}`,
+    t: PLATE_T,
+    plates: [-30, -18, -2, 12].map((z, i) => [`patch_gw_${side}${i + 1}`, finishes[i], [1.3, 1.0], at(sgn * 10.6, z)]),
+  });
+bathyarch.deckHatches(root, { hatch: grey, wheel: rust }, {
+  on: 'deck_plate',
+  hatches: [
+    ['hatch_hold_f_p', at(3.5, 1.5)],
+    ['hatch_hold_f_s', at(-3.5, -4)],
+    ['hatch_hold_a_p', at(3.5, -16)],
+    ['hatch_hold_a_s', at(-3.5, -22)],
+    ['hatch_fwd_s', at(-7.0, 16)],
+  ],
+  ...HATCH,
+});
+bathyarch.deckPlates(root, { grey, rust }, {
+  on: 'deck_plate',
+  t: PLATE_T,
+  plates: [
+    ['patch_hold_1', 'grey', [1.2, 1.4], at(3.0, -5)],
+    // The crusher house stands over the forward hold's last 3.75 units, so
+    // nothing on that floor goes past z 2.
+    ['patch_hold_2', 'rust', [1.4, 1.2], at(-3.5, 0.5)],
+    ['patch_hold_3', 'rust', [1.2, 1.4], at(3.5, -23)],
+    ['patch_hold_4', 'grey', [1.4, 1.2], at(-3.0, -14.5)],
+    ['patch_fwd_1', 'grey', [1.2, 1.4], at(-6.5, 13.5)],
+    ['patch_fwd_2', 'rust', [1.2, 1.2], at(-4.5, 16)],
+    ['patch_fwd_3', 'rust', [1.2, 1.4], at(6.5, 12)],
+    ['patch_fwd_4', 'grey', [1.2, 1.2], at(4.5, 15.5)],
+  ],
+});
+bathyarch.plateSeams(root, grey, { on: 'deck_plate', name: 'seam_hold', stations: [-1, -19], z: 0, length: 5, ...SEAM });
+bathyarch.plateSeams(root, grey, { on: 'deck_plate', name: 'seam_fwd', stations: [14], z: -6.5, length: 4, ...SEAM });
+bathyarch.deckPlates(root, { grey, rust }, {
+  on: 'hold_divider',
+  t: PLATE_T,
+  plates: [
+    ['patch_div_1', 'rust', [1.2, 1.4], at(-5.5, -10)],
+    ['patch_div_2', 'grey', [1.2, 1.4], at(0, -10)],
+    ['patch_div_3', 'rust', [1.2, 1.4], at(5.5, -10)],
+  ],
+});
+bathyarch.deckHatches(root, { hatch: grey, wheel: rust }, {
+  on: 'crusher_roof',
+  hatches: [['hatch_crusher', at(1.5, 8.8)]],
+  ...HATCH,
+});
+bathyarch.deckPlates(root, { grey, rust }, {
+  on: 'crusher_roof',
+  t: PLATE_T,
+  plates: [
+    ['patch_roof_1', 'grey', [1.2, 1.4], at(-2.5, 4.0)],
+    ['patch_roof_2', 'rust', [1.2, 1.2], at(3.0, 8.5)],
+  ],
+});
+bathyarch.deckPlates(root, { grey, rust }, {
+  on: 'cab_visor',
+  t: PLATE_T,
+  plates: [['patch_cab', 'grey', [1.2, 1.2], at(0.8, -29)]],
+});
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
 await exportGlb(root, 'harvester-bathyarch.glb');
