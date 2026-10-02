@@ -107,9 +107,11 @@ root.name = 'bio_reactor_bathyarch';
 // tube of six. A fourteen-gon laid as the kit lays one already has a flat
 // facing the bow, which the file's octagon needed an eighth of a turn for.
 // The six run lights sit at a sixth of a turn each and a fourteen-gon kerb
-// has a chord's middle under four of them, 0.48 m below their station, so
-// each is dropped onto the kerb's top under its own station and kept level
-// (kit.mjs `reactorBed` `on`); the two over a crest do not move.
+// has a chord under four of them, a third of the way along it, so those
+// four stood 0.48 m off the kerb; each of the six is dropped onto the
+// kerb's top under its own station and kept level (kit.mjs `reactorBed`
+// `on`). The four came down 0.67 m and the two over a crest 0.11, since
+// the kerb's six-sided tube tops out lower than the file's five-sided one.
 reactorBed(
   root,
   { holdfast: rust, slab: black, kerb: grey, lamp: lampM },

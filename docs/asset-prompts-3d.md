@@ -487,9 +487,10 @@ with the crown. On the Bastion the fourteen-sided skirt's skin sits up to 3.5 m 
 ten-gon's, so all ten portholes are seated on it (five were, since #907) and the seventh
 is re-cut 0.4 rad round the skirt, since seated at its own station it stood 5 m into a
 ballast tank; its six ribs, seven segments over the half turn, are set out by the sag of
-such a chord, 0.063 of its radius, so each stands off the dome what the file's did. On
-the Bio-reactor the six run lights, a sixth of a turn apart, are dropped onto the
-fourteen-sided kerb, which has a chord's middle under four of them; on the Vent Tap the
+such a chord, a fortieth of its radius (0.063 of the file's unit, 3.2 m), so each is flush
+with the dome at its chords and up to 1.2 m prouder at its vertices, where the file's
+sat into it. On the Bio-reactor the six run lights, a sixth of a turn apart, are dropped
+onto the fourteen-sided kerb, which has a chord under four of them; on the Vent Tap the
 ember is drawn at the rim's own 12 to rest in the fourteen-sided mouth, the Order's answer
 on its tap. The Bastion's crane cable and the Gantry's and the Slipway's kit cables keep
 their four. Panels run from three-quarters of a metre to two. A rivet head reads 0.6–0.8 m from above
@@ -671,7 +672,8 @@ half turn is five and a capsule draws an even count. The Consortium's pass leave
 its 1,119: `node tools/hull-models/facets.mjs bathyarch` names no ring, and the navy
 carries seven distinct counts a turn where it carried fifteen.
 Outside the bands: eight Consortium hulls (the five shared kinds, the Chorister and the
-Tender at 2.3–3.9 m, and the Beacon at 0.5) and five structures; two Commune hulls (the
+Tender at 2.2–3.9 m — the Corvette's 2.3 was 2.2 once the facet pass thinned its drums —
+and the Beacon at 0.5) and five structures; two Commune hulls (the
 Bower at 0.8 m, the Submersible at 7.3) and three structures; three Directorate hulls (the
 Verger, the Submersible and the Dredge, 4.0–5.2 m) and four structures; five Order hulls
 (the Versicle at 1.5 m; the Reciter, the Responsory, the Antiphon and the Offertory at

@@ -2207,11 +2207,14 @@ export function reactorBed(root, { holdfast, slab, kerb, lamp }, opts = {}) {
   // `on` names the kerb — `'slab_kerb'` — for a navy whose kerb count puts
   // no vertex under a light: the files' sixteen-gon carries a crest at
   // 22.5° steps and every light at a sixth of a turn sits on or beside one,
-  // but the Klaxon's fourteen (#919) has a chord's middle under four of the
-  // six, 0.48 m below the station. Named, each light is dropped onto the
-  // kerb's top under its own station and kept level on its bearing (`seat`,
-  // `drop`), bedding into the tube's shoulder where the kerb is lower rather
-  // than tilting with it; unnamed, the rank is laid at `y` as every file has it.
+  // but the Klaxon's fourteen (#919) has a chord under four of the six, a
+  // third of the way along it, and those four stood 0.48 m off the kerb.
+  // Named, each light is dropped onto the kerb's top under its own station
+  // and kept level on its bearing (`seat`, `drop`), bedding into the tube's
+  // shoulder where the kerb is lower rather than tilting with it — the
+  // Klaxon's four came down 0.67 m and its two over a crest 0.11, a
+  // six-sided tube's top being lower than the files' five-sided one's;
+  // unnamed, the rank is laid at `y` as every file has it.
   const lights = {
     count: 6,
     phase: 0,

@@ -105,7 +105,8 @@
  * each rib seven over its half, where it had seven and eighteen, the ribs
  * set out by the sag of a seven-segment chord so they stand off the dome
  * what the file's did (`ribbedDome`); the beacon, the dock and perimeter
- * lamps and the crane lamp orbs of eight by four and fourteen by six; the
+ * lamps and the crane lamp orbs — the beacon fourteen by seven, the dock
+ * lamps ten by five, the perimeter and crane lamps eight by four; the
  * ballast and ring pipes eight; the eight perimeter posts six, where they
  * were five. The crane's cable keeps its four, the navy's one section. All
  * ten portholes are seated on the fourteen-sided skirt and the seventh is
@@ -152,10 +153,11 @@ bathyarch.ribbedDome(
 // "Sustained glow from ports": ten round the skirt, the fifth re-cut clear
 // of the quarters module (header, #890). All ten are seated on the skirt
 // since #919: #907 seated the five the file's turn left standing off it,
-// and the other five touched a ten-sided skirt edge-on where their turn
-// happened to meet it; the skirt is fourteen-sided now and its skin sits
-// up to 0.07 units — 3.5 m — from where the ten-gon's did, so those five
-// stood off it too, the tenth by a metre. Each is laid flat on the
+// and of the other five four touched a ten-sided skirt edge-on where their
+// turn happened to meet it and the tenth stood 0.19 m off; the skirt is
+// fourteen-sided now and its skin sits up to 0.07 units — 3.5 m — from
+// where the ten-gon's did, so those five stood 1.5 m off it, the tenth by
+// a metre. Each is laid flat on the
 // frustum's face from its own station (kit.mjs `seat`), as the first five
 // were. One moves: the seventh's station, 4.08 rad, is where `ballast_a`
 // lies against the skirt (its drum reaches z −2.55 from x −3.4 to −1.0),

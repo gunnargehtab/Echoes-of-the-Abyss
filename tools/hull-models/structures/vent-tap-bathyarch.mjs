@@ -42,7 +42,7 @@
  * kit.mjs `asked`), asked at this file's scale, and the pass re-cut the
  * kit's wellhead to it: the chimney, the apron, the clamp and manifold
  * rings and the ember mouth fourteen at 15–84 m, where the files share ten,
- * sixteen and twelve; the five basalt lobes orbs of fourteen by six, where
+ * sixteen and twelve; the five basalt lobes orbs of fourteen by seven, where
  * they were eight by six. The ember is drawn at the rim's 12 so it rests in
  * the mouth (below); the draw pipes, risers and the exchangers' stacks were
  * the rule's eight already. 122 parts and 2,528 triangles become 122 and
@@ -82,9 +82,12 @@ root.name = 'vent_tap_bathyarch';
 // The wellhead in rust, the manifold in iron, the ember mouth flood-lit.
 // The kit's skeleton at the Klaxon's counts (#919): every round part of it
 // asks the rule at its own radius — fourteen on the chimney, the apron and
-// the two rings, where the four files share ten and sixteen; the lobes six
-// by three; the draw pipes and risers the kit's own eight, which is what
-// the rule gives 3.4 and 3.1 m — and the numbers stay the kit's, but one.
+// the two rings, where the four files share ten and sixteen; the lobes
+// fourteen by seven; the draw pipes and risers the kit's own eight, which
+// is what the rule gives 3.4 and 3.1 m — and the numbers stay the kit's,
+// but one. The eight wellhead floods are seated on the manifold ring
+// (kit.mjs `wellheadFloods`), so they came down 0.03–0.14 m with its
+// re-cut rim and are not placed here.
 // The ember is the lid in the chimney's mouth, a disc of 11.5 inside a rim
 // of 12: against the kit's ten-sided chimney its corners passed through
 // the rim's flats and it rested there, and inside a fourteen-sided rim cut

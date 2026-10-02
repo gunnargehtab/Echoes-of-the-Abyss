@@ -320,6 +320,14 @@ export function hullSlab(root, { black, grey, amber }, { outline, lengthM, depth
  */
 export function flankPlates(root, { grey, rust }, opts) {
   const { z, plates, plateT = 1.2, seamLength, seam = {}, rivets = [], cut: rule = METRE } = opts;
+  // The rule's orb (#919; the files' six by four). A rivet row entry may
+  // carry a third member, `{ <index>: <part> }`, naming a rivet seated on
+  // the part given rather than laid at the rank's z — half its radius in,
+  // from its own station (kit.mjs `seat`): the Derrick's fifth rivet a row
+  // lies between two plates and kissed the slab's flank by the six-by-four
+  // orb's equator row, which the six-by-three orb has no vertex on, so it
+  // stood 0.04 m detached. The rest of the rank sits half-sunk in its
+  // plates as the files have it.
   const rivet = new THREE.SphereGeometry(0.45, ...rule.orb(0.45));
   const { x: seamX = 0, y: seamY = 2.2, h: seamH = 0.5, t: seamT = 1.4, z: seamZ = z } = seam;
   bothSides((side, sgn) => {
@@ -331,14 +339,12 @@ export function flankPlates(root, { grey, rust }, opts) {
       seamY,
       sgn * seamZ,
     ]);
-    for (const [tag, y] of rivets) {
+    for (const [tag, y, on = {}] of rivets) {
       for (let i = 0; i < 14; i++) {
         const x = seamX - seamLength / 2 + 4 + ((seamLength - 8) * i) / 13;
-        add(root, `rivet_${side}${tag}_${i}`, rivet, grey, [
-          x,
-          y,
-          sgn * (z + 0.6),
-        ]);
+        const at = [x, y, sgn * (z + 0.6)];
+        const rest = on[i] && seat(root, on[i], at, { sink: 0.225 });
+        add(root, `rivet_${side}${tag}_${i}`, rivet, grey, rest ? rest.at : at);
       }
     }
   });
@@ -678,8 +684,8 @@ export function citadel(root, { black, grey, rust, lampM }, opts) {
  * its stack, the Tender both stacks and then both bands) and name them
  * differently (`stack_band_0` against `stack_a_band`); the hull script
  * spells both. A band a step wider than its stack can cut a step finer —
- * the Bulwark's 3 m bands are eight on 2.8 m stacks of six — which is the
- * chord rule read at two radii, and the way the Klaxon's plate steps.
+ * the Bulwark's 2.8 m bands are eight on 2.6 m stacks of six — which is
+ * the chord rule read at two radii, and the way the Klaxon's plate steps.
  */
 export function stack(root, mat, { name, at, r, rTop, height, cut: rule = METRE }) {
   add(root, name, cyl(rTop, r, height, rule.round(Math.max(r, rTop))), mat, at);
@@ -2301,17 +2307,25 @@ export function whips(root, mat, { whips: list, cut: rule = METRE }) {
  * the Cruiser's, which is how those three exports count theirs (#649); a row
  * may then carry its own `y`, since the lower rank sits on the hull and the
  * upper on the deck edge. `size` as a triple is the box the Corvette's and
- * the Harvester's running lights share (`runningLights` below).
+ * the Harvester's running lights share (`runningLights` below). A row
+ * carrying `on` names the part its rivets are seated on, half their size
+ * in, from each one's own station (kit.mjs `seat`): the Light Scout's two
+ * rows sat half-sunk in a twenty-gon hull at the file's z, and the rule's
+ * ten-gon (#919) has a plate at the beam an apothem in, 0.07 units, so the
+ * rank stood 9 mm clear of it; seated, each rivet is half-sunk again. The
+ * other rows keep the file's z.
  */
 export function flankRivets(root, mat, { name = 'rivet', size = 0.14, y, rows, running = false }) {
   const head = Array.isArray(size) ? box(...size) : box(size, size, size);
+  const half = (Array.isArray(size) ? size[0] : size) / 2;
   let n = 0;
-  rows.forEach(({ side, z, stations, y: rowY = y }) =>
-    stations.forEach((x, i) =>
+  rows.forEach(({ side, z, stations, y: rowY = y, on = null }) =>
+    stations.forEach((x, i) => {
+      const at = [x, rowY, z];
       part(root, running ? `${name}_${n++}` : `${name}_${side}${i}`, head, mat, {
-        at: [x, rowY, z],
-      })
-    )
+        at: on ? seat(root, on, at, { sink: half }).at : at,
+      });
+    })
   );
 }
 
@@ -3420,12 +3434,14 @@ export function lampRow(root, put, lampM, opts) {
  * A rib's outer radius is 2.51 against the dome's 2.4, and it is centred
  * 0.02 higher — the file's — and the rib stands off the dome by that 0.11
  * at a vertex. A seven-segment half ring sags between its vertices by
- * `(R + t)(1 − cos(π/14))`, 0.063, where the eighteen-segment one sagged
- * 0.019, so a rib cut to the file's radius would sink to 0.07 proud at a
- * chord's middle and read as half buried. Each rib is set out by that sag,
- * so its chords stand off the dome what the file's did and its vertices a
- * sag further, the collars' answer on the Order's Bio-reactor
- * (hadron.mjs `reactorVessel`).
+ * `(R + t)(1 − cos(π/14))`, 0.063 of a unit — a fortieth of the radius,
+ * 3.2 m at 440 — where the eighteen-segment one sagged 0.010, so a rib cut
+ * to the file's radius would sink to 0.07 proud at a chord's middle and
+ * read as half buried. Each rib is set out by that sag, so its chords'
+ * middles sit at the file's radius, 2.42, and its vertices a sag further
+ * out: flush with the dome at the chords, where the file's vertices sat
+ * 1.15 m into it, and up to 1.2 m prouder at the vertices — the collars'
+ * answer on the Order's Bio-reactor (hadron.mjs `reactorVessel`).
  */
 export function ribbedDome(root, put, { black, grey, rust, lampM }, opts) {
   const { foundation, skirt, dome, ribs, cap, beacon, cut: rule = METRE } = opts;
