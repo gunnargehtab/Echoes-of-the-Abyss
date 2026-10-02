@@ -2714,7 +2714,8 @@ export function dockingCollar(root, { violet, steel, crimson, black }, opts) {
 
 /**
  * "External pipework": `hull_pipe_i`, each an arc of a torus — `R` round,
- * `tube` thick, `facets` [radial, tubular], `arc` radians of the way round
+ * `tube` thick, `facets` the tube's section as one number (`torusOf`; the
+ * arc's count is the rule's), `arc` radians of the way round
  * — born flat and stood up on the flank by its node. The Bastion's two run
  * round at 0.92 of the base tier's foot (R 5.888), 1.1 rad each, tubes of
  * 0.16 and 0.13, rolled up π/2 − 0.5 and π/2 − 0.85 and yawed 0.6 and
@@ -2729,9 +2730,11 @@ export function hullPipes(root, steel, { pipes, cut: rule = METRE }) {
 }
 
 /**
- * Standpipes: a frustum each (`radii` [top, bottom], `length`, `facets`)
- * with a flat black flange — a torus of `R`, `tube` and `facets` [radial,
- * tubular] — part way up it, pipe then flange in the file's order:
+ * Standpipes: a frustum each (`radii` [top, bottom], `length`; its count
+ * the rule's) with a flat black flange — a torus of `R` and `tube`, its
+ * `facets` the tube's section as one number (`torusOf`) — part way up it,
+ * pipe then flange in the file's order; a pipe's own `on` names the parts
+ * its foot stands on (`footed`, #919). The parts go
  * `standpipe_i` / `standpipe_flange_i` on the Bastion, `ballast_pipe_i` /
  * `pipe_flange_i` on the Cantor (`name` and `flange` are the stems). The
  * Bastion's three pipes lean a hundredth or two off vertical while their

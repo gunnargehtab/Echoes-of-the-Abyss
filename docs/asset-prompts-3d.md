@@ -633,8 +633,9 @@ Foundry's ballast tanks, the Foundry's hull in progress and the turret's pod, wh
 rule's half-turn share is odd and a capsule draws an even count, built a segment over as the
 Order's are. What the coarser rounds left standing off was reseated through the builders:
 the Cantor's forty-two hydrophone spines rooted on its dome (`shellSpines` `on`), its
-twenty-two photophores and its second ballast pipe stood on the collar (`standpipes` `on`,
-4 m out along its bearing and plumbed 0.6 m into the dome), the turret's two marks, the
+twenty-two photophores grown from shell and foot (`on`), its second ballast pipe stood on the
+collar (`standpipes` `on`, 4 m out along its bearing and plumbed 0.6 m into the dome), the
+turret's two marks, the
 Bastion's four lamps (two grown from their tiers, one lowered, one swung off its rib) and
 the Foundry's ten lamps grown from their plates (`on`) and one bay guide stepped aft, the
 Harvester's flank dome and the Submersible's third port lamp seated, the Vent Tap's ember at
