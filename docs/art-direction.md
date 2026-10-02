@@ -882,12 +882,14 @@ lamps keep their order there, and the loudness collar on the glass keeps the rea
 the camera's own right and up axes, so it can only translate: a heave of 0.3% of the
 frame's height at the focus over 11 s, and a drift of 0.2% over 17 s. The overlay projects
 through that camera, so a ring rides with the water it measures and a click resolves
-through the camera the frame was drawn with. That makes the overlay re-project every
-frame, which it already did: the conn view re-applies its camera on every frame, and each
-application bumps the revision the overlay's layers key on. A heave that would dip the eye
+through the camera the frame was drawn with. So the overlay re-projects on every frame of
+the sway: its static layers key on a revision that bumps whenever the applied camera or the
+viewport changes, and a swaying camera changes every frame. A heave that would dip the eye
 under its clearance is lifted straight up, not re-aimed. Reduced motion holds the sway at
 rest, because it carries nothing ([ui-ux.md](ui-ux.md) §11), and so does the
-development-only Dream Loop study, whose ground cover rebuilds whenever the view moves.
+development-only Dream Loop study, whose ground cover rebuilds whenever the view moves. A
+camera held still keeps its revision, so a frame that moves nothing leaves the overlay's
+static layers alone ([#1032](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1032)).
 Both are TUNABLE: `packages/frontend/src/game/cameraSway.ts` holds the sway's numbers, and
 the conn view's stylesheet holds the vignette's.
 
