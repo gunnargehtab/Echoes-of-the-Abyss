@@ -35,7 +35,8 @@
  *   along the rank instead of striping up each tower.
  * - The head: the crusher, a red carapace dome whose maw is cut into its
  *   front shoulder, facing the hopper and the conn view's home camera —
- *   three of the dome's rings by two of its quads, forward of the neck
+ *   two of the dome's four rings by two of its fifteen quads (three of six
+ *   by two of fifteen until #919 re-cut the dome), forward of the neck
  *   ridge so the belt clears it; the lit floor on `gullet_glow` a fifth of
  *   the dome's radius in, the throat in the dome's chitin, three fangs
  *   hung from the upper lip over the floor the belt runs in to across the
@@ -72,12 +73,35 @@
  * (#955). `DRAWN` is the length the
  * parts span as intake measures it, three's `Box3` over the parts' own
  * boxes; `metreTrue` scales that to 280 so both consumers' rescale is 1.
+ *
+ * FACETS (#919). The Directorate's rule is one facet edge of 2 m on the odd
+ * lattice, five to fifteen (docs/asset-prompts-3d.md Block 2c;
+ * directorate.mjs `cut`), settled on each part as its node presses it. Built
+ * to the rule's fifteen a turn from the start (#947), this file was off it
+ * in its rows: the pass re-cut 21 of its 173 rings — the five body domes
+ * from five rows to the rule's four over their quarter turn and their
+ * ridges from three to four, the crusher dome from six rows to four, the
+ * gallery's eight arches from eight to seven segments over their half
+ * turn, and the five lure lamps' rounds from nine to the rule's nine and
+ * eleven at their radii. The crusher's maw is named on the dome's grid, so
+ * its rings moved with the rows: [1, 4] of six to [1, 3] of four, the
+ * same two quads — a mouth 22.5° to 67.5° from the pole where it was 15°
+ * to 60°, its lower lip 4.5 m lower, so the belt into it is a metre
+ * shorter and `ribs.last` comes in to 9 to keep the eighth arch and its
+ * leg. Triangles 6,963 → 6,881. `facets.mjs` names no ring here; the sweep
+ * drops `maw_tooth_2` on the throat at exactly 0.000 m, which its box
+ * test does not count (#746), and finds the crusher's ridge meeting
+ * `silo_4_seg_0`, 0.015 m apart before.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
 
 const L = 280;
 const DRAWN = 280.0713;
+// The Directorate's facet rule at this file's scale (directorate.mjs `cut`,
+// #919): metres, scaled to L by `metreTrue`, so the chord is a metre here
+// up to the rescale DRAWN asserts.
+const cut = directorate.cut(L / DRAWN);
 
 const red = directorate.ink.chitinRed();
 const steel = directorate.ink.weldSteel();
@@ -99,7 +123,7 @@ const PLATES = [
   { x: 6, s: [26, 22, 39] },
   { x: 42, s: [24, 20, 35] },
 ];
-directorate.refineryBody(root, { violet, red, black }, { z: Z, plates: PLATES });
+directorate.refineryBody(root, { violet, red, black }, { cut, z: Z, plates: PLATES });
 directorate.telsonBlades(root, [violet, black], {
   at: [-118, Z],
   blades: [
@@ -114,9 +138,10 @@ const head = directorate.refineryHead(
   root,
   { red, black, gullet, light: crimson },
   {
+    cut,
     at: [92, 0, Z],
     scale: [36, 38, 42],
-    hole: { rings: [1, 4], quads: [2, 4] },
+    hole: { rings: [1, 3], quads: [2, 4] },
     recess: 0.2,
     teeth: { count: 3, r: 1.2, length: 8, lean: 0.3, lip: 'upper' },
     mandibles: [
@@ -143,6 +168,7 @@ directorate.refineryStacks(root, { steel, glow: flood }, {
 
 // The silo rank, one off each plate.
 directorate.siloRank(root, { red, violet, black, light: crimson }, {
+  cut,
   z: Z,
   plates: PLATES,
   silos: [
@@ -157,6 +183,7 @@ directorate.siloRank(root, { red, violet, black, light: crimson }, {
 // The hopper, raised over the gallery's tail, and the gallery into the maw.
 const HOPPER = [-22, 84];
 directorate.refineryHopper(root, { violet, gullet, black, steel }, {
+  cut,
   at: HOPPER,
   top: 23,
   bottom: 10,
@@ -172,9 +199,14 @@ directorate.feedGallery(
   root,
   { steel, black, red, light: crimson, lamp: flood, skins: [violet, red] },
   {
+    cut,
     from: new THREE.Vector3(HOPPER[0], 3.2, HOPPER[1]).addScaledVector(toward, -9).toArray(),
     to: into.toArray(),
-    ribs: { first: 26, pitch: 15, last: 10, tube: 0.75 },
+    // `last` 9, not 10: the maw's lower lip came down 4.5 m with the rule's
+    // four rows (the hole's rings, `refineryHead`), the belt into it is a
+    // metre shorter, and at 10 the eighth rib and its starboard leg fell off
+    // the end (#919). The file's eight ribs and leg pairs stand.
+    ribs: { first: 26, pitch: 15, last: 9, tube: 0.75 },
     // No port leg at the seventh rib: its reach lands in the neck ridge.
     legs: { every: 2, minHip: 7, reach: [8, 17], rise: 7, skip: ['p7'] },
     nodules: [
@@ -209,6 +241,7 @@ directorate.anchorLegs(root, black, {
 
 // Livery: rows of points along the ridges.
 directorate.ridgeLights(root, crimson, {
+  cut,
   z: Z,
   plates: PLATES,
   lights: [

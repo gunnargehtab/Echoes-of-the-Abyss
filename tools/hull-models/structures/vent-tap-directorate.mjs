@@ -55,7 +55,25 @@
  * this file, and since #890 seated the studs on the shells its vertices are
  * square too: 166.77 m on both axes at 180 m, the four anchor claws setting
  * every edge. The arms sit on the diagonals, 45° and every quarter turn
- * from it, as the approved file has them.
+ * from it, as the approved file has them; 141.34 since the facet pass
+ * re-cut the shells and claws whose boxes set it (`DRAWN`).
+ *
+ * FACETS (#919). The Directorate's rule is one facet edge of 2 m on the odd
+ * lattice, five to fifteen (docs/asset-prompts-3d.md Block 2c;
+ * directorate.mjs `cut`), asked at the fitted footprint's scale (`DRAWN`,
+ * 1.274 m a unit) and settled on each part as pressed. The pass re-cut
+ * what was off it, 51 of this file's 67 rings: the four carapaces, their
+ * seams and the kit's five basalt lobes to fifteen round and seven down
+ * (the file's 12 × 6, 8 × 6 and 8 × 6), the chimney ten to fifteen, the
+ * apron, clamp and manifold sixteen to fifteen, the ember twelve to
+ * fifteen — and from the kit's 11.5 to 12 in radius, the rim's own, since
+ * inside a fifteen-sided rim the smaller lid rested on nothing (the
+ * sweep named it 0.64 m clear) — the draw pipes eight to eleven at 3.3 m,
+ * the risers eight to nine, the valve stems and platform legs six to five.
+ * The twelve spines and four claws keep their five, the navy's section.
+ * Triangles 2,800 → 3,996. `facets.mjs` names no ring here; the sweep
+ * drops one pair, `wellhead_flood_2` on the manifold ring at exactly
+ * 0.000 m, which its box test does not count (#746).
  */
 import {
   THREE,
@@ -69,6 +87,15 @@ import {
 import * as directorate from '../factions/directorate.mjs';
 
 const L = 180;
+/** The plan's side as built: the exchangers' claws, box to box (kit.mjs `fitFootprint`). */
+const DRAWN = 141.3357;
+// The Directorate's facet rule at this file's scale (directorate.mjs `cut`,
+// #919): the model is drawn 142.84 across and priced at 180 m, and the rule
+// is a chord in metres. Asserted after the fit, since the fit is what sets
+// the scale.
+const cut = directorate.cut(L / DRAWN);
+/** The kit's own lobe, pressed 14 × 6 × 10, so the rule reads it as laid (kit.mjs `ventWellhead`). */
+const LOBE = [14, 6, 10];
 
 const violet = directorate.ink.chitinViolet();
 const red = directorate.ink.chitinRed();
@@ -80,8 +107,25 @@ const gullet = directorate.ink.gulletGlow();
 const root = new THREE.Group();
 root.name = 'vent_tap_directorate';
 
-// The wellhead in trench black, the manifold in weld steel, the mouth a gullet.
-ventWellhead(root, { rock: black, mouth: gullet, steel });
+// The wellhead in trench black, the manifold in weld steel, the mouth a
+// gullet — every round part on the rule's count at its own radius (kit.mjs
+// `asked`, #919).
+ventWellhead(
+  root,
+  { rock: black, mouth: gullet, steel },
+  {
+    chimney: { facets: cut.round },
+    lobes: { size: LOBE, facets: () => cut.orb(1, { scale: LOBE }) },
+    // The ember is the lid in the chimney's mouth: at the kit's 11.5 inside
+    // the rule's fifteen-sided rim it rested on nothing, 0.64 m clear (the
+    // sweep named it), so it is drawn at the rim's own 12, corner to corner,
+    // as the Commune's tap draws its lid (vent-tap-pelagia.mjs).
+    ember: { r: 12, facets: cut.round },
+    apron: { facets: cut.round },
+    clamp: { facets: cut.round },
+    manifold: { facets: cut.round },
+  }
+);
 
 // Four arms on the diagonals, each with a carapace on its end — violet on the
 // even arms, red on the odd, as the tergites alternate along a hull; the
@@ -91,12 +135,20 @@ radialSeries({ count: 4, phase: Math.PI / 4 }, (a, i) => {
   ventDrawArm(
     root,
     { rock: black, steel, deck: red, lamp: crimson, flood: gullet },
-    { bearing: a }
+    {
+      bearing: a,
+      pipe: { facets: cut.round },
+      riser: { facets: cut.round },
+      // The kit's own valve and legs, asked for the rule's count (kit.mjs `ventDrawArm`, #919).
+      valve: { at: 30, block: 6, stem: { r: 0.8, h: 6, y: 25, facets: cut.round } },
+      legs: { spread: 6, r: [0.9, 1.1], h: 10, y: 2.5, facets: cut.round },
+    }
   );
   directorate.carapaceHead(
     root,
     { skin: i % 2 ? red : violet, black, steel, crimson },
     {
+      cut,
       bearing: a,
       at: 74,
       carapace: { y: 5, r: [15, 8, 12] },
@@ -112,5 +164,7 @@ radialSeries({ count: 4, phase: Math.PI / 4 }, (a, i) => {
 // the "burning bright" of a structure at SIG 55, in the gullet's glow.
 wellheadFloods(root, gullet);
 
-fitFootprint(root, L);
+const size = fitFootprint(root, L);
+if (Math.abs(Math.max(size.x, size.z) - DRAWN) > 1e-3)
+  throw new Error(`${root.name}: drawn ${Math.max(size.x, size.z)}, DRAWN says ${DRAWN}`);
 await exportGlb(root, 'vent-tap-directorate.glb');

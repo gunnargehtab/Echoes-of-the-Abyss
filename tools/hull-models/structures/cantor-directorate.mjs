@@ -106,6 +106,24 @@
  * `node tools/hull-models/diff.mjs cantor-directorate f7cce0f` reads the
  * twenty-two photophores grown and the five lamps seated (#907), and
  * nothing else beyond the root scale and shift.
+ *
+ * FACETS (#919). The navy's rule is one facet of 2 m, odd counts five to
+ * fifteen, five the section (docs/asset-prompts-3d.md Block 2c;
+ * directorate.mjs `cut`), asked at this file's scale and settled on each part
+ * as its node places it. The export's counts went: the tiers 12 → 15, the
+ * collar 6 × 28 → 5 × 15 (tube by ring), the dome 16 × 9 → 15 × 4, the three
+ * shell plates 16 × 3 → 5 × 2, 5 × 2 and 6 × 2 over their windows (the
+ * measure prorates a window's count over its arc; two rows is three's
+ * floor), the quill 6 → 9, 7 and 5 with its tip 8 × 6 → 5 × 3, the boss
+ * 8 × 5 → 15 × 4, the ballast pipes 8 → 7 with flanges 6 × 12 → 5 × 11, and
+ * every photophore 6 × 5 → 5 × 3; the forty-two hydrophone spines and the
+ * eight claws keep their five. `facets.mjs` names none of its 119 rings.
+ * Triangles 3,124 → 1,864. `DRAWN` is 17.9120 since the pass (18.0617
+ * before: the coarser dome and collar reach less far). The plates still
+ * show over the dome from above, 868, 771 and 214 m² against 884, 784 and
+ * 214, though the third now stands 1.5 m clear of the dome's facets where
+ * it touched the file's. Every photophore is grown from the shell or the
+ * foot (`on`), and every spine is rooted on the shell (`shellSpines` `on`).
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -113,8 +131,10 @@ import * as directorate from '../factions/directorate.mjs';
 const { leaning } = directorate;
 
 const L = 160;
-const DRAWN = 18.0617;
+const DRAWN = 17.9120;
 const DATUM = 0;
+// The navy's facet rule at this file's scale (directorate.mjs `cut`, #919).
+const cut = directorate.cut(L / DRAWN);
 // `refuseMirror`'s half a metre, in this export's units: two studs a unit
 // apart in one run down the dome (photophore_5 and _6) straddle the export's
 // x = 0 by less than half a *unit*, which is 4.4 m here and not a pair.
@@ -137,16 +157,16 @@ root.name = 'cantor_listening_dome';
 // Two tiers, violet under red, turned 0.16 and 0.42, and the weld collar
 // on the upper one's top edge.
 directorate.carapaceTiers(root, {
+  cut,
   tiers: [
-    { name: 'base_tier_low', skin: violet, radii: [6.6, 7.5], length: 1.3, facets: 12, ...drawn([0, 0.65, 0], [0, 0.16, 0]) },
+    { name: 'base_tier_low', skin: violet, radii: [6.6, 7.5], length: 1.3, ...drawn([0, 0.65, 0], [0, 0.16, 0]) },
     {
       name: 'base_tier_high',
       skin: red,
       radii: [5.9, 6.75],
       length: 1.05,
-      facets: 12,
       ...drawn([0, 1.78, 0], [0, 0.42, 0]),
-      ring: { name: 'weld_collar', skin: steel, R: 5.95, tube: 0.17, facets: [6, 28], ...drawn([0, 2.32, 0], FLAT) },
+      ring: { name: 'weld_collar', skin: steel, R: 5.95, tube: 0.17, ...drawn([0, 2.32, 0], FLAT) },
     },
   ],
 });
@@ -156,22 +176,31 @@ directorate.domeShell(
   root,
   { shell: red, plate },
   {
+    cut,
     r: 5.4,
-    facets: [16, 9],
     ...drawn([0, 2.25, 0]),
     plates: [
-      { r: 5.53, facets: [16, 3], phi: [0.35, 2.3], theta: [0.52, 0.34], ...drawn([0, 2.25, 0]) },
-      { r: 5.531, facets: [16, 3], phi: [2.75, 2.7], theta: [0.92, 0.3], ...drawn([0, 2.25, 0]) },
-      { r: 5.532, facets: [16, 3], phi: [5.15, 1.9], theta: [1.22, 0.26], ...drawn([0, 2.25, 0]) },
+      { r: 5.53, phi: [0.35, 2.3], theta: [0.52, 0.34], ...drawn([0, 2.25, 0]) },
+      { r: 5.531, phi: [2.75, 2.7], theta: [0.92, 0.3], ...drawn([0, 2.25, 0]) },
+      { r: 5.532, phi: [5.15, 1.9], theta: [1.22, 0.26], ...drawn([0, 2.25, 0]) },
     ],
   }
 );
 
 // Forty-two hydrophone spines in four rings down the dome — seven, ten,
 // eleven and fourteen — each its own bearing, reach, height, lean, length
-// and skin.
+// and skin. Each is rooted on the shell since #919: the file set every
+// base on the ideal sphere, and on the rule's 15 × 4 dome, whose facets
+// sag further inside that sphere than the file's 16 × 9, fifteen of them
+// stood 0.01–1.06 m off it, ten touching nothing. So each spine's base —
+// half its length down its own axis from the station — is seated on the
+// nearest of the dome and its plates (`shellSpines` `on`; kit.mjs `seat`),
+// and the spine slides along its axis to meet it; bearing, lean and length
+// are the file's.
+const SHELL = ['dome_shell', 'shell_plate_0', 'shell_plate_1', 'shell_plate_2'];
 directorate.shellSpines(root, {
   name: 'hydrophone_spine',
+  on: SHELL,
   spines: [
     { n: 0, skin: black, r: 0.115, length: 1.52859199, ...drawn(...leaning(0.7362795344, 2.439054547, 7.777827883, 0.4155385764)) },
     { n: 1, skin: violet, r: 0.115, length: 1.358878493, ...drawn(...leaning(1.432586083, 2.41905109, 7.708735787, 0.4171447699)) },
@@ -226,12 +255,13 @@ directorate.primaryQuill(
   { skins: [black, red], light: crimson },
   {
     ...drawn([0.55, 7.4, -0.35], [-0.1, 0, 0.17]),
+    cut,
     segments: [
-      { radii: [0.208, 0.34], length: 1.7, facets: 6, ...drawn([0, 0.85, 0]) },
-      { radii: [0.136, 0.26], length: 1.5, facets: 6, ...drawn([0, 2.314, 0]) },
-      { radii: [0.04, 0.17], length: 1.7, facets: 6, ...drawn([0, 3.794, 0]) },
+      { radii: [0.208, 0.34], length: 1.7, ...drawn([0, 0.85, 0]) },
+      { radii: [0.136, 0.26], length: 1.5, ...drawn([0, 2.314, 0]) },
+      { radii: [0.04, 0.17], length: 1.7, ...drawn([0, 3.794, 0]) },
     ],
-    tip: { r: 0.17, facets: [8, 6], ...drawn([0, 5.058, 0]) },
+    tip: { r: 0.17, ...drawn([0, 5.058, 0]) },
   }
 );
 
@@ -239,7 +269,7 @@ directorate.primaryQuill(
 directorate.apexBoss(
   root,
   { boss: black },
-  { boss: { r: 1.05, facets: [8, 5], ...drawn([0.45, 7.15, -0.3]) } }
+  { cut, boss: { r: 1.05, ...drawn([0.45, 7.15, -0.3]) } }
 );
 
 // "Dim red photophore constellation across the dome and round its foot":
@@ -247,14 +277,16 @@ directorate.apexBoss(
 // each of its own radius, every radius grown by the one factor so gate 3
 // reaches its target
 // under the cap (#890, the header). SIG 35, and the quill's tip is the
-// brightest of them. Four grow from the shell or the foot they stood off
-// (`on`, #907; the header).
+// brightest of them. Four grew from the shell or the foot they stood off
+// (`on`, #907; the header); since #919 every one does, seeded at the
+// file's station: the dome is a 15 × 4 orb where the file's was 16 × 9,
+// its facets sag further inside the sphere, and thirteen studs set on the
+// sphere stood 0.03–0.85 m off the shell (nine on nothing at all).
 const GROWN = 1.5;
-const stud = (name, r, at, on) => [name, r * GROWN, on ? { ...drawn(at), on } : drawn(at)];
-const SHELL = ['dome_shell', 'shell_plate_0', 'shell_plate_1', 'shell_plate_2'];
+const stud = (name, r, at, on = SHELL) => [name, r * GROWN, { ...drawn(at), on }];
 const FOOT = ['base_tier_low', 'base_tier_high'];
 directorate.photophoreDomes(root, crimson, {
-  facets: [6, 5],
+  cut,
   tolerance: HALF_METRE,
   domes: [
     stud('photophore_0', 0.09078078717, [2.001284611, 6.985964502, 1.837688805]),
@@ -276,7 +308,7 @@ directorate.photophoreDomes(root, crimson, {
     stud('photophore_16', 0.07442957163, [1.670438087, 6.75908503, -2.586385275]),
     stud('photophore_17', 0.1023402661, [2.490058274, 6.429079775, -2.479213995]),
     stud('photophore_18', 0.1013723612, [3.441314567, 5.941913658, -2.082961256]),
-    stud('photophore_base_0', 0.09, [6.7, 1, 1.9]),
+    stud('photophore_base_0', 0.09, [6.7, 1, 1.9], FOOT),
     stud('photophore_base_1', 0.09, [-5.9, 1.75, 3.4], FOOT),
     stud('photophore_base_2', 0.09, [2.2, 0.7, -6.9], FOOT),
   ],
@@ -307,20 +339,19 @@ directorate.standpipes(
   {
     name: 'ballast_pipe',
     flange: 'pipe_flange',
+    cut,
     pipes: [
       {
         radii: [0.22, 0.26],
         length: 2.9,
-        facets: 8,
         ...drawn([-4.6, 3.4, -2.9], [0.12, 0, -0.28]),
-        flange: { R: 0.3, tube: 0.07, facets: [6, 12], ...drawn([-4.6, 4.5, -2.9], [Math.PI / 2 + 0.12, 0, -0.28]) },
+        flange: { R: 0.3, tube: 0.07, ...drawn([-4.6, 4.5, -2.9], [Math.PI / 2 + 0.12, 0, -0.28]) },
       },
       {
         radii: [0.22, 0.26],
         length: 2.4,
-        facets: 8,
         ...drawn([-5.4, 3.7, -1.6], [0.12, 0, -0.42]),
-        flange: { R: 0.3, tube: 0.07, facets: [6, 12], ...drawn([-5.4, 4.6, -1.6], [Math.PI / 2 + 0.12, 0, -0.42]) },
+        flange: { R: 0.3, tube: 0.07, ...drawn([-5.4, 4.6, -1.6], [Math.PI / 2 + 0.12, 0, -0.42]) },
       },
     ],
   }

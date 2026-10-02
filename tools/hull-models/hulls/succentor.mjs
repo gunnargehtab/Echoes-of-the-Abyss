@@ -113,6 +113,20 @@
  * `cradles`, `bodyPlan`, `bodyEnvelope`, `bodyHalfBeam` and `trebleBody`
  * were written for this hull and the Treble and run here for the first
  * time; every other builder is the older hulls' own, at its own defaults.
+ *
+ * FACETS (#919). The Listening's rule is one facet edge of 2 m on the odd
+ * lattice, five to fifteen (docs/asset-prompts-3d.md Block 2c; directorate.mjs
+ * `cut`), asked in metres and settled on each part as pressed, and the pass
+ * re-cut what was off it: the eight plates and three ridges fifteen round
+ * and seven down at 8.5–25.4 m, where they were twelve by six and ten by
+ * six; the dome thirteen by seven at 4.4 m for fourteen by seven, the aft
+ * dome seven by four for ten by six; the rostrum thirteen for eight, the
+ * telson eleven for eight, the limbs, the two tail-plate spines and the ten
+ * cradle mandibles five for six. The rim spines, the tail spines and the
+ * clasps keep their five. 87 parts and 4,294 triangles become 87 and
+ * 4,904; the fourteen rim marks show 46.9 m² for 42.8, each lying on a
+ * flatter facet of the fifteen-gon, and the two tail spines now meet the
+ * plate they root in. No ring is off the rule.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -120,6 +134,8 @@ import * as directorate from '../factions/directorate.mjs';
 const L = 130;
 const BOW = L / 2;
 const STERN = -L / 2;
+// The Listening's facet rule for a hull drawn in metres (directorate.mjs `cut`, #919).
+const cut = directorate.cut();
 
 /**
  * The tail, stern first: `[x, half-length, half-height, half-beam]`. Two
@@ -180,19 +196,20 @@ directorate.tergites(root, { violet, red, black }, {
   segments: TAIL,
   lip: 'ridge',
   spines: { lengths: [6, 7], r: 1, offsets: [3.5, 4.5] },
+  cut,
 });
-directorate.tergites(root, { violet, red, black }, { segments: DECK, lip: 'none', first: 2 });
-directorate.tergites(root, { violet, red, black }, { segments: HEAD, lip: 'ridge', first: 7 });
+directorate.tergites(root, { violet, red, black }, { segments: DECK, lip: 'none', first: 2, cut });
+directorate.tergites(root, { violet, red, black }, { segments: HEAD, lip: 'ridge', first: 7, cut });
 
 // The rostrum's point is the bow at +65, its base 16 m aft inside the head
 // plate; the telson's base ring is the stern at −65, its apex buried 11 m
 // forward in the last plate, and the Dredge's two tail spines off it.
-directorate.rostrum(root, red, { tip: BOW, r: 4.2, length: 16, facets: 8 });
+directorate.rostrum(root, red, { tip: BOW, r: 4.2, length: 16, cut });
 directorate.telson(root, { violet, black }, {
   tip: STERN,
   r: 3.8,
   length: 11,
-  facets: 8,
+  cut,
   tailSpines: { x: -57, y: 1.5, z: 6.5, r: 0.9, length: 7, splay: 0.35 },
 });
 
@@ -205,6 +222,7 @@ directorate.listeningDome(root, { red, violet, black }, {
   ry: 3.4,
   studs: { radius: 2.6, lift: 2.8, length: 2.6, r: 0.4 },
   aft: { x: 37.5, y: crown(37.5, -3.5) - 0.8, z: -3.5, r: 2.1, ry: 1.8 },
+  cut,
 });
 
 // The deck: five cradles cut to the Treble, one a deck plate, alternating
@@ -221,6 +239,7 @@ directorate.cradles(root, { black, steel, lamp: crimson }, {
     { side: 'p', x: -18, z: 10.5 },
     { side: 's', x: -32, z: 10.5 },
   ],
+  cut,
 });
 
 // Spines off the deck's rim between the cradle mouths (the header): rooted
@@ -251,6 +270,7 @@ directorate.limbs(root, steel, {
   r: [0.8, 0.55],
   length: 8,
   fold: 0.8,
+  cut,
 });
 
 // "Dim running lights along the hull line": a row down each flank of the

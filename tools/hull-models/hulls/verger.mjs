@@ -19,9 +19,9 @@
  *
  * The body is the Precentor's family at twice the beam: six overlapping
  * tergites, violet and red by turns from the stern, each with the
- * Precentor's seam — 0.35 of the half-length at 0.8 forward, standing a
+ * the Precentor's seam — 0.35 of the half-length at 0.8 forward, standing a
  * little proud above and below (`tallOf: 'beam'`) so the plates read as
- * ribs — a short eight-sided rostrum, four dorsal spines alternating sides,
+ * ribs — a short rostrum, four dorsal spines alternating sides,
  * the studded listening dome forward with its smaller violet dome behind it
  * and off the centreline, and four photophores in a pattern that repeats on
  * neither side. No walking limbs: the block names none, and a hull that
@@ -82,6 +82,27 @@
  * Every part comes from `factions/directorate.mjs`. The hatches, the keel,
  * the ducted drive, the crown lamp and the crown-height rule were written
  * for this hull and run here for the first time.
+ *
+ * FACETS (#919). The Listening's rule is one facet edge of 2 m on the odd
+ * lattice, five to fifteen (docs/asset-prompts-3d.md Block 2c; directorate.mjs
+ * `cut`), asked in metres and settled on each part as pressed, and the pass
+ * re-cut what was off it: the six plates and their seams fifteen round and
+ * seven down at 10.5–21.6 m, where they were twelve by six and ten by six;
+ * the dome fifteen by seven, where it was fourteen by seven, the aft dome
+ * nine by five for ten by six, and the crown boss five by three at 1.4 m
+ * for ten by five — it shows 4.3 m² from above where it showed 7.0, a
+ * pentagon's plan for a decagon's, still the hull's second light; the
+ * hatch rims eleven a turn for fourteen, their collars eleven and doors
+ * nine for eight; the rostrum fifteen for eight, the keel eleven for
+ * seven, the duct fifteen for ten and the hub eleven for eight. The two
+ * ballast capsules go to nine round for ten, and their caps are the two
+ * rings the measure still names: the rule's half-turn share at 2.8 m is
+ * five segments, a capsule draws its two caps to an even count, and the
+ * pass builds a segment over (six, twelve a turn) — the Order's turret
+ * pods are named the same way. 58 parts and 3,232 triangles become 58 and
+ * 3,908. The plates meet as before but for the first and third, which no
+ * longer graze each other through the second (1.2 m), and the rostrum,
+ * rooted in the bow plate, no longer grazes the one behind it.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -89,6 +110,8 @@ import * as directorate from '../factions/directorate.mjs';
 const L = 100;
 const BOW = L / 2;
 const STERN = -L / 2;
+// The Listening's facet rule for a hull drawn in metres (directorate.mjs `cut`, #919).
+const cut = directorate.cut();
 
 /**
  * The six tergites, stern first: `[x, half-length, half-height, half-beam]`,
@@ -129,8 +152,8 @@ root.name = 'directorate_verger';
 // the Precentor's seam standing proud as a rib. The rostrum's point is the
 // bow at +50; its base is buried in the bow plate's nose and its root under
 // that plate's seam, so the last six metres of it show, as the Precentor's do.
-directorate.tergites(root, { violet, red, black }, { segments: SEGMENTS, seam: SEAM });
-directorate.rostrum(root, red, { tip: BOW, r: 5, length: 14, facets: 8 });
+directorate.tergites(root, { violet, red, black }, { segments: SEGMENTS, seam: SEAM, cut });
+directorate.rostrum(root, red, { tip: BOW, r: 5, length: 14, cut });
 
 // The listening dome forward, on the fifth plate's crown between the ribs
 // of the fourth and fifth seams — 13 m across and 11 m tall, studded with
@@ -146,6 +169,7 @@ directorate.listeningDome(root, { red, violet, black, crimson }, {
   studs: { radius: 4, lift: 4 },
   aft: { x: 15, y: crown(15, -5) - 0.4, z: -5, r: 3.2, ry: 2.6 },
   crown: { r: 1.6, ry: 0.6 },
+  cut,
 });
 
 // Four dorsal spines on the four aft plates, alternating sides — 3 m to
@@ -176,20 +200,22 @@ directorate.pressureHatches(root, { collar: steel, door: unlit, rim: crimson, bl
     { side: 's', plate: 3 },
     { side: 'p', plate: 4 },
   ],
+  cut,
 });
 
-// The heavy keel: a seven-sided spar 76 m long under the belly, 3.4 m
+// The heavy keel: a spar 76 m long under the belly, 3.4 m
 // forward to 3.8 m aft in radius and squashed 0.8 across, its bottom at
 // −16.8 where the deepest plate reaches −13.2; and the two ballast tanks
 // flanking it, steel capsules 2.8 m in radius 8 m either side of the keel
 // at −12, half in the belly amidships and clear of it toward the ends —
 // the starboard one 40 m and further aft, the port one 36 m and further
 // forward, so the pair never mirrors.
-directorate.keel(root, black, { x: -6, y: -13, radii: [3.4, 3.8], length: 76 });
+directorate.keel(root, black, { x: -6, y: -13, radii: [3.4, 3.8], length: 76, cut });
 directorate.ballastTanks(root, steel, {
+  cut,
   tanks: [
-    { r: 2.8, length: 40, facets: [4, 10], ...directorate.laid([-10, -12, 8.5], [0, 0, Math.PI / 2]) },
-    { r: 2.8, length: 36, facets: [4, 10], ...directorate.laid([-3, -12, -8], [0, 0, Math.PI / 2]) },
+    { r: 2.8, length: 40, ...directorate.laid([-10, -12, 8.5], [0, 0, Math.PI / 2]) },
+    { r: 2.8, length: 36, ...directorate.laid([-3, -12, -8], [0, 0, Math.PI / 2]) },
   ],
 });
 
@@ -203,6 +229,7 @@ directorate.ductedDrive(root, { duct: violet, hub: black, vane: steel }, {
   r: 6.5,
   hub: { tip: STERN + 1, r: 3.8, length: 10 },
   vanes: { count: 3, phase: 0.5 },
+  cut,
 });
 
 // "Nearly black; navigation marks only": four photophores on the crowns,

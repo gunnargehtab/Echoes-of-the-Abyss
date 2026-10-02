@@ -101,6 +101,28 @@
  * `node tools/hull-models/diff.mjs bastion-directorate f7cce0f` reads the
  * nine lamps and the two mouths above, and nothing else beyond the root
  * scale and shift.
+ *
+ * FACETS (#919). The navy's rule is one facet of 2 m, odd counts five to
+ * fifteen, five and a named four the sections (docs/asset-prompts-3d.md
+ * Block 2c; directorate.mjs `cut`), asked at this file's scale — `DRAWN`,
+ * the fit `fitFootprint` measures, held and asserted at the foot — and
+ * settled on each part as its node places it. The export's counts went: the
+ * four tiers 10 → 15, the seam rings 5 × 20 → 11 × 15 (tube by ring), the
+ * crown 10 × 5 → 15 × 4, the boss 8 → 15 with its light 6 × 5 → 15 × 7, the
+ * dock throats and mouths 8 → 15 with lips 5 × 10 → 15 × 15, the hull pipes
+ * 5 × 16 → 11 × 3 and 13 × 3 over their 1.1 rad, the standpipes 8 → 15 with
+ * flanges 5 × 10 → 5 × 15, the ballast tanks 3 × 9 → 4 × 15, and the sixteen
+ * photophores 6 × 5 → 7, 9 or 11 round by their radii over 4 or 5 down; the
+ * crown spines, the rib spikes, the claws and the four mandibles keep their
+ * sections. `facets.mjs` names two of its 96 rings, the two ballast tanks'
+ * meridians — capsules whose half-turn share of fifteen is eight, drawn as
+ * sixteen a turn (Block 2c, the capsule reading). Triangles 3,634 → 5,943;
+ * the fit 17.7998, where the ten-sided tiers measured 17.8096. The rounder
+ * tiers reach further out at the ribs' bearings: six rib plates that stood
+ * 0.8–4.4 m off their tiers meet them now and sink 0.5–2.1 m in, and
+ * `dock_small_mandible_1`'s point runs 1 m into the base tier. Two more
+ * lamps are grown from their tiers (`on`): `_1` and `_7`, which rested on
+ * the ten-gons and stood 0.7 and 1.6 m off the fifteen-gons.
  */
 import { THREE, exportGlb, fitFootprint } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -108,6 +130,12 @@ import * as directorate from '../factions/directorate.mjs';
 const { laid, leaning } = directorate;
 
 const L = 440;
+// The export's extent as `fitFootprint` measures it, three's `Box3` over the
+// parts' own boxes, which the facet rule is asked at: a `fitFootprint` file
+// learns its scale after it is built, so the fit is held here and asserted
+// at the foot (directorate.mjs `cut`, #919).
+const DRAWN = 17.7998;
+const cut = directorate.cut(L / DRAWN);
 
 // A torus is born in the XY plane; every seam ring and flange here lies flat.
 const FLAT = [Math.PI / 2, 0, 0];
@@ -136,24 +164,22 @@ const tier = ({ name, skin, foot, length, y }, i) => ({
   skin,
   radii: [0.86 * foot, foot],
   length,
-  facets: 10,
   ...laid([0, y, 0], [0, 0.22 * i, 0]),
   ring: {
     name: `seam_ring_${i}`,
     skin: steel,
     R: 0.88 * foot,
     tube: RING_TUBE,
-    facets: [5, 20],
     ...laid([0, y + length / 2, 0], FLAT),
   },
 });
-directorate.carapaceTiers(root, { tiers: TIERS.map(tier) });
+directorate.carapaceTiers(root, { cut, tiers: TIERS.map(tier) });
 
 // The crown: a half-orb on the top tier, squashed to 0.8 in height.
 directorate.domeShell(
   root,
   { shell: red },
-  { name: 'carapace_crown', r: 3.25, facets: [10, 5], ...laid([0, 6.65, 0], [0, 0, 0], [1, 0.8, 1]) }
+  { cut, name: 'carapace_crown', r: 3.25, ...laid([0, 6.65, 0], [0, 0, 0], [1, 0.8, 1]) }
 );
 
 // The apex boss, a black drum off the crown's centre, and its light.
@@ -161,8 +187,9 @@ directorate.apexBoss(
   root,
   { boss: black, light: crimson },
   {
-    boss: { radii: [0.9, 1.25], length: 1.1, facets: 8, ...laid([0.4, 9.45, -0.3]) },
-    light: { r: 0.22, facets: [6, 5], ...laid([0.4, 10.1, -0.3]) },
+    cut,
+    boss: { radii: [0.9, 1.25], length: 1.1, ...laid([0.4, 9.45, -0.3]) },
+    light: { r: 0.22, ...laid([0.4, 10.1, -0.3]) },
   }
 );
 
@@ -210,19 +237,20 @@ directorate.shellSpines(root, {
 directorate.dockingCollar(
   root,
   { violet, steel, crimson, black },
-  { name: 'dock_main', r: 1.4, frame: laid, ...laid([7.5, 1.7, 2], [0, -0.26, Math.PI / 2]) }
+  { cut, name: 'dock_main', r: 1.4, frame: laid, ...laid([7.5, 1.7, 2], [0, -0.26, Math.PI / 2]) }
 );
 directorate.dockingCollar(
   root,
   { violet, steel, crimson, black },
-  { name: 'dock_small', r: 0.9, frame: laid, ...laid([-6.4, 1.3, 4.3], [0, 0.6 - Math.PI, Math.PI / 2]) }
+  { cut, name: 'dock_small', r: 0.9, frame: laid, ...laid([-6.4, 1.3, 4.3], [0, 0.6 - Math.PI, Math.PI / 2]) }
 );
 
 // Two pipes arcing up the hull at 0.92 of the base tier's foot.
 directorate.hullPipes(root, steel, {
+  cut,
   pipes: [
-    { R: 5.888, tube: 0.16, facets: [5, 16], arc: 1.1, ...laid([0, 2.2, 0], [0, 0.6, Math.PI / 2 - 0.5]) },
-    { R: 5.888, tube: 0.13, facets: [5, 16], arc: 1.1, ...laid([0, 2.2, 0], [0, 1.05, Math.PI / 2 - 0.85]) },
+    { R: 5.888, tube: 0.16, arc: 1.1, ...laid([0, 2.2, 0], [0, 0.6, Math.PI / 2 - 0.5]) },
+    { R: 5.888, tube: 0.13, arc: 1.1, ...laid([0, 2.2, 0], [0, 1.05, Math.PI / 2 - 0.85]) },
   ],
 });
 
@@ -231,14 +259,14 @@ directorate.hullPipes(root, steel, {
 const standpipe = (x, y, z, length, lean) => ({
   radii: [0.22, 0.26],
   length,
-  facets: 8,
   ...laid([x, y, z], [0, 0, lean]),
-  flange: { R: 0.3, tube: 0.07, facets: [5, 10], ...laid([x, y + 0.22 * length, z], FLAT) },
+  flange: { R: 0.3, tube: 0.07, ...laid([x, y + 0.22 * length, z], FLAT) },
 });
 directorate.standpipes(
   root,
   { steel, black },
   {
+    cut,
     pipes: [
       standpipe(-4.6, 1.7, -3.8, 3.4, -0.03777644408),
       standpipe(-5.6, 1.4, -2.2, 2.8, 0.02077835745),
@@ -249,9 +277,10 @@ directorate.standpipes(
 
 // Two ballast tanks laid on their sides on the -z flank.
 directorate.ballastTanks(root, steel, {
+  cut,
   tanks: [
-    { r: 0.75, length: 2, facets: [3, 9], ...laid([-2.2, 1.05, -6.2], [Math.PI / 2, 0, 0.5]) },
-    { r: 0.75, length: 2, facets: [3, 9], ...laid([-0.3, 1.05, -6.8], [Math.PI / 2, 0, 0.8]) },
+    { r: 0.75, length: 2, ...laid([-2.2, 1.05, -6.2], [Math.PI / 2, 0, 0.5]) },
+    { r: 0.75, length: 2, ...laid([-0.3, 1.05, -6.8], [Math.PI / 2, 0, 0.8]) },
   ],
 });
 
@@ -272,7 +301,9 @@ directorate.clawGrips(root, [red, black], {
 // Sixteen photophores climbing the tiers in three runs — seven up the +z
 // flank, five up the -x, four along the -z foot — an orb each of its own
 // radius, nine of them grown from the tier they climb (`on`, #907; the
-// header). "Sustained glow from ports and working lights": SIG 35.
+// header) and two more since #919 — `_1` and `_7`, which rested on the
+// ten-sided tiers and stood 0.73 and 1.61 m off the fifteen-sided ones.
+// "Sustained glow from ports and working lights": SIG 35.
 const DOME = TIERS.map((t) => t.name).concat('carapace_crown');
 const on = (at) => ({ ...laid(at), on: DOME });
 // Two lamps seeded off their own stations (the header, THE LAMPS THAT
@@ -289,16 +320,16 @@ const corner = ([x, , z], i, r) => {
   return on([foot * Math.cos(a), y, foot * Math.sin(a)]);
 };
 directorate.photophoreDomes(root, crimson, {
-  facets: [6, 5],
+  cut,
   domes: [
     ['photophore_0', 0.1469616145, on([5.580291581, 1.421189459, 2.073583992])],
-    ['photophore_1', 0.1434205025, laid([4.884848655, 1.843210097, 3.08199889])],
+    ['photophore_1', 0.1434205025, on([4.884848655, 1.843210097, 3.08199889])],
     ['photophore_2', 0.102385737, on([3.878459379, 2.46997304, 3.9174528])],
     ['photophore_3', 0.1021963134, lower([2.459903688, 3.158942005, 4.607727799], 2.8)],
     ['photophore_4', 0.1277387589, laid([1.840131535, 3.631424866, 4.675740221])],
     ['photophore_5', 0.1476596892, on([0.7185694396, 4.464471434, 4.619367234])],
     ['photophore_6', 0.1411419511, on([-0.6710058168, 5.009296906, 4.395169463])],
-    ['photophore_7', 0.09141562134, laid([-5.563735404, 2.309025739, -0.4284658226])],
+    ['photophore_7', 0.09141562134, on([-5.563735404, 2.309025739, -0.4284658226])],
     ['photophore_8', 0.1488719881, laid([-5.088318711, 3.272992157, -0.945087779])],
     ['photophore_9', 0.1191934049, on([-4.39122562, 4.104702698, -2.001912477])],
     ['photophore_10', 0.1251562387, on([-3.511139819, 4.737823037, -2.909731917])],
@@ -316,5 +347,9 @@ directorate.photophoreMarks(root, crimson, {
   marks: [['dock_worklight', laid([6.2, 3.4, 1.7], [0, -0.26, 0])]],
 });
 
-fitFootprint(root, L);
+const size = fitFootprint(root, L);
+if (Math.abs(Math.max(size.x, size.z) - DRAWN) > 1e-3)
+  throw new Error(
+    `${root.name}: drawn ${Math.max(size.x, size.z).toFixed(4)} across; the facet rule was asked at ${DRAWN}`
+  );
 await exportGlb(root, 'bastion-directorate.glb');

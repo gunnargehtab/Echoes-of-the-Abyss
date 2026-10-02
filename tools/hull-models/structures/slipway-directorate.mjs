@@ -78,6 +78,21 @@
  *   facet and tilted with it (`slipwayHall`, kit.mjs `seat`). `diff.mjs`
  *   lists the eight at 0.7 m, and beyond them, the crosses and the
  *   relabel, nothing.
+ *
+ * FACETS (#919). The Directorate's rule is one facet edge of 2 m on the odd
+ * lattice, five to fifteen (docs/asset-prompts-3d.md Block 2c;
+ * directorate.mjs `cut`), asked at the fitted footprint's scale (`DRAWN`,
+ * 0.938 m a unit) and settled on each part as its node presses it. The
+ * pass re-cut what was off it, 70 of this file's 103 rings: the fourteen
+ * tergites and their seams to fifteen round (the file's fourteen and ten)
+ * and seven down, the hull on the blocks the same, the tergite spines six
+ * to seven at 2.3 m, the gantry legs six to eleven at 3.2 m, the head
+ * pylons and the two launch mandibles six to fifteen at 5.6 and 4.7 m,
+ * and the kit's three cables four to five. The twelve anchor claws and six
+ * gantry claws keep their five, the navy's section. Triangles 5,156 →
+ * 6,688; the fit is the same mandibles' boxes, 362.5947 to the file's
+ * 362.59. `facets.mjs` names no ring here, and no contact pair was lost or
+ * gained.
  */
 import {
   THREE,
@@ -92,6 +107,16 @@ import {
 import * as directorate from '../factions/directorate.mjs';
 
 const L = 340;
+/** The plan's long side as built: the two mandibles' yawed boxes, mouth to head gate (kit.mjs `fitFootprint`). */
+const DRAWN = 362.5947;
+// The Directorate's facet rule at this file's scale (directorate.mjs `cut`,
+// #919): the model is drawn 362.59 long and priced at 340 m, and the rule is
+// a chord in metres. Asserted after the fit, since the fit is what sets the
+// scale.
+const cut = directorate.cut(L / DRAWN);
+// The gantry's fall at the rule's count — the kit's own 0.4 by 24 at 26,
+// which it draws four-sided unless asked (kit.mjs `slipwayGantry`, #919).
+const CABLE = { r: 0.4, h: 24, y: 26, facets: cut.round };
 
 const violet = directorate.ink.chitinViolet();
 const black = directorate.ink.trenchBlack();
@@ -108,7 +133,7 @@ root.name = 'slipway_directorate';
 slipwayBed(
   root,
   { slab: violet, floor: black, line: gullet, keel: violet },
-  { hull: (r) => directorate.slipwayHull(r, { hull: red, deck: violet }) }
+  { hull: (r) => directorate.slipwayHull(r, { hull: red, deck: violet }, { cut }) }
 );
 
 // Three gantries: leaning steel legs with black claws, a steel beam, a
@@ -117,20 +142,27 @@ for (const index of [0, 1, 2])
   slipwayGantry(
     root,
     { beam: steel, trolley: violet, cable: violet, worklight: crimson },
-    { index, leg: directorate.slipwayLeg(steel), ornament: directorate.slipwayClaw(black) }
+    {
+      index,
+      leg: directorate.slipwayLeg(steel, cut),
+      ornament: directorate.slipwayClaw(black),
+      cable: CABLE,
+    }
   );
 
 // The head gate: two red cones leaning in under a violet lintel.
-slipwayHeadGate(root, violet, { pylon: directorate.slipwayPylon(red) });
+slipwayHeadGate(root, violet, { pylon: directorate.slipwayPylon(red, cut) });
 
 // Two halls, the +z one first as the file writes it (starboard, `hall_s`).
 bothSides((tag, sgn) =>
   directorate.slipwayHall(
     group(root, `hall_${tag}`),
     { violet, red, black, steel, crimson },
-    { sgn }
+    { sgn, cut }
   )
 );
 
-fitFootprint(root, L);
+const size = fitFootprint(root, L);
+if (Math.abs(Math.max(size.x, size.z) - DRAWN) > 1e-3)
+  throw new Error(`${root.name}: drawn ${Math.max(size.x, size.z)}, DRAWN says ${DRAWN}`);
 await exportGlb(root, 'slipway-directorate.glb');

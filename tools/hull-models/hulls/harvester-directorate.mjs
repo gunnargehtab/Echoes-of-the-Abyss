@@ -76,15 +76,38 @@
  * intake measures it — the parts' boxes — which the port claw's tip, laid
  * across the bow and yawed 0.15 with its node, overhangs at the bow, and
  * the paddles' boxes, each rolled and pitched with its node, overhang at
- * the stern: 81.0323 over the vertices' 80.81. Every number below is the
- * export's, through kit.mjs `drawn`.
+ * the stern: 81.0244 over the vertices' 80.81 since the facet pass (81.0323
+ * before it; the port claw's five-sided tip reaches a hair less far than
+ * the square did). Every number below is the export's, through kit.mjs
+ * `drawn`.
+ *
+ * FACETS (#919). The Directorate's rule is one facet edge of 2 m on odd
+ * counts, five to fifteen (docs/asset-prompts-3d.md Block 2c;
+ * directorate.mjs `cut`), asked at this file's scale — 0.93 m a unit — for
+ * each part as its node presses it, and the pass re-cut what was off it: the
+ * cargo gut fifteen round at 19.8 m where the file had ten, on its seven
+ * stacks as before; the mill's mouth and the maw ring seven-sided at
+ * 2.4–2.55 m where they were eight; the four nubs, the seven skirt tips and
+ * the two claw tips five-sided, the rule's floor, where the file cut them
+ * four — parts the square section does not name (Block 2c); the three light
+ * domes five round by three down at 0.74 m where they were eight by six. The
+ * six mill teeth keep their square, the section the rule names on a `tooth`.
+ * Twenty-two of the file's twenty-nine rings were off the rule and none is;
+ * 1,304 triangles became 1,228. One part moved: `dome_flank_p`, the five-by-
+ * three bud, stood 0.035 m off `carapace_1` where the file's eight-by-six
+ * rested on it, so it is seated on that plate from its station as the bow
+ * dome is (`on`), 0.38 m in; it shows 0.38 m² from above (1.00 before, 0.63
+ * unseated), the bow dome 0.94 (1.50), the tail dome 0.69 (1.06), all over
+ * the audit's quarter metre. `diff.mjs` lists it and the re-cut parts.
  */
 import { THREE, box, part, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
 
 const L = 75;
-const DRAWN = 81.0323;
+const DRAWN = 81.0244;
 const DATUM = 3.6;
+// The navy's facet rule at this file's scale (FACETS, the header).
+const cut = directorate.cut(L / DRAWN);
 
 const violet = directorate.ink.bruiseViolet();
 const red = directorate.ink.abyssalRed();
@@ -97,15 +120,16 @@ const root = new THREE.Group();
 root.name = 'directorate_harvester';
 const bar = (name, mat, size, t, e) => part(root, name, box(...size), mat, drawn(t, e));
 
-// The cargo gut: one unit orb of ten meridians and seven stacks, drawn
-// 23 × 8.4 × 44 by its node and yawed 0.02, and three violet bands round
-// it, each leaned its own way.
+// The cargo gut: one unit orb drawn 23 × 8.4 × 44 by its node and yawed
+// 0.02 — the rule's counts on the orb as pressed since #919 (the file's ten
+// meridians and seven stacks) — and three violet bands round it, each
+// leaned its own way.
 directorate.carapaceOrbs(
   root,
   { skin: chitin },
   {
     name: 'cargo_gut',
-    facets: [10, 7],
+    cut,
     plates: [{ r: 1, ...drawn([0.2, 3.6, -4], [0, 0.02, 0], [11.5, 4.2, 22]) }],
   }
 );
@@ -131,13 +155,14 @@ directorate.plateSegments(root, red, {
 });
 
 // The dorsal dome along the back, and four nubs off it, each its own
-// height, leaned 0.35 aft and alternating sides.
+// height, leaned 0.35 aft and alternating sides — five-sided since #919,
+// the rule's floor, where the file cut them four (a `nub` is no part the
+// square section names; Block 2c).
 bar('dorsal_dome', chitin, [10, 2.2, 26], [0.1, 11.3, -3], [0, 0.015, 0]);
 const nub = (name, length, t, e) => ({
   name,
   radii: [0.02, 0.85],
   length,
-  facets: 4,
   ...drawn(t, e),
 });
 directorate.spikes(root, red, {
@@ -153,7 +178,8 @@ directorate.spikes(root, red, {
 // the flanks, four to port at a 10 pitch and three to starboard set 4
 // forward of them, violet and chitin turn about, each leaned half a radian
 // down and yawed 0.12, each with a spike 3.1 outboard of it leaned 1.15
-// out and 0.2 aft.
+// out and 0.2 aft — five-sided since #919, the rule's floor, where the
+// file cut the tips four (Block 2c).
 const skirt = (name, skin, sgn, x, z) => ({
   name,
   skin,
@@ -164,8 +190,9 @@ directorate.skirtPlates(
   root,
   { tip: red },
   {
+    cut,
     size: [6.5, 1.6, 5.5],
-    tip: { radii: [0.02, 0.7], length: 3.2, facets: 4 },
+    tip: { radii: [0.02, 0.7], length: 3.2 },
     plates: [
       skirt('p0', violet, 1, 11.5, 12),
       skirt('p1', chitin, 1, 12.5, 2),
@@ -178,15 +205,17 @@ directorate.skirtPlates(
   }
 );
 
-// The mill at the bow: the housing, the eight-sided mouth stood on its
-// face, and six four-sided teeth in a ring 1.7 out from the mouth's axis,
-// leaned 0.3 back.
+// The mill at the bow: the housing, the mouth stood on its face (seven-sided
+// since #919, the rule's at 2.4 m; the file's eight), and six four-sided
+// teeth in a ring 1.7 out from the mouth's axis, leaned 0.3 back — a
+// `tooth` keeps its square, a section the rule names.
 directorate.millMouth(
   root,
   { housing: violet, mouth: chitin, teeth: red },
   {
+    cut,
     housing: { size: [9, 6.5, 5], ...drawn([0.2, 5.6, 23], [0, 0.02, 0]) },
-    mouth: { r: 2.6, h: 2.2, facets: 8, ...drawn([0.2, 5.2, 25.6], [Math.PI / 2, 0, 0]) },
+    mouth: { r: 2.6, h: 2.2, ...drawn([0.2, 5.2, 25.6], [Math.PI / 2, 0, 0]) },
     teeth: {
       count: 6,
       r: 1.7,
@@ -200,20 +229,22 @@ directorate.millMouth(
 );
 
 // Two jointed claws either side of the mouth — a shoulder, an arm, a hand,
-// two fingers, a four-sided tip and a knuckle — drawn from one set of
-// sizes, the port claw at 1.2 and the starboard at 0.95, the starboard set
-// 1.2 further aft; each joint placed by its own node.
+// two fingers, a tip (five-sided since #919, the rule's floor; the file's
+// four, on a part the square section does not name) and a knuckle — drawn
+// from one set of sizes, the port claw at 1.2 and the starboard at 0.95,
+// the starboard set 1.2 further aft; each joint placed by its own node.
 const claw = (prefix, scale, [shoulder, arm, hand, fingerUp, fingerLo, tip, knuckle]) =>
   directorate.jointedLimb(root, {
     prefix,
     scale,
+    cut,
     joints: [
       { name: 'shoulder', skin: violet, size: [3.2, 4.2, 5], ...shoulder },
       { name: 'arm', skin: chitin, size: [2.6, 3, 9], ...arm },
       { name: 'hand', skin: violet, size: [3.6, 4.4, 8.5], ...hand },
       { name: 'finger_up', skin: chitin, size: [2.2, 1.9, 7], ...fingerUp },
       { name: 'finger_lo', skin: chitin, size: [2, 1.7, 6.4], ...fingerLo },
-      { name: 'tip', skin: red, r: 0.9, length: 4.2, facets: 4, ...tip },
+      { name: 'tip', skin: red, r: 0.9, length: 4.2, ...tip },
       { name: 'knuckle', skin: red, size: [0.7, 2.6, 0.7], ...knuckle },
     ],
   });
@@ -268,22 +299,25 @@ bar('flank_strip_p', photophore, [0.5, 0.5, 22], [12.6, 7.9, -2], [0, 0.03, 0]);
 bar('flank_strip_s', photophore, [0.5, 0.5, 15], [-12.7, 7.6, -9], [0, -0.03, 0]);
 bar('maw_bar', photophore, [8.2, 1.1, 0.6], [0.2, 8.6, 25.6], [0, 0.02, 0]);
 directorate.drums(root, photophore, {
+  cut,
   drums: [
     {
       name: 'maw_ring',
       radii: [2.75, 2.75],
       length: 0.7,
-      facets: 8,
       ...drawn([0.2, 5.2, 26.5], [Math.PI / 2, 0, 0]),
     },
   ],
 });
 directorate.photophoreDomes(root, photophore, {
+  cut,
   r: 0.8,
-  facets: [8, 6],
   domes: [
     ['dome_bow', { ...drawn([0.2, 12.5, 16]), on: 'carapace_0' }],
-    ['dome_flank_p', drawn([13.2, 7.2, 8])],
+    // Seated since #919: the rule's five-by-three bud is narrower at the
+    // plate's edge than the file's eight-by-six, and stood 0.035 m off
+    // `carapace_1` where the file's rested on it (FACETS, the header).
+    ['dome_flank_p', { ...drawn([13.2, 7.2, 8]), on: 'carapace_1' }],
     ['dome_tail', drawn([0.3, 6.4, -33.2])],
   ],
 });

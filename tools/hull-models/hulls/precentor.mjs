@@ -46,7 +46,7 @@
  * THE FOUR PHOTOPHORES (#907, from #894's resting measure). Three stood
  * off the shell — `photophore_1` 1.0 m, `_2` 1.2, `_3` 2.3 — and `_0`
  * rested on the fourth dorsal spine's shaft rather than on its plate. The
- * stations were read off the ideal ellipsoids, and the plates are 12 × 6
+ * stations were read off the ideal ellipsoids, and the plates were 12 × 6
  * orbs; `_3` sat at z = −6 besides, 0.4 m outboard of the third plate's
  * rim over open water, its nearest thing the first port hydrophone. The
  * rank rests on the shell now: each mark dropped from its station onto
@@ -58,6 +58,20 @@
  * of the file's spot, and lies on the third plate's port shoulder.
  * `diff.mjs` lists the four — `_1` at 4.5 m, `_3` 2.1, `_2` 1.5, `_0`
  * 1.4 — and every one shows 0.88 to 1.31 m² from above.
+ *
+ * FACETS (#919). The Listening's rule is one facet edge of 2 m on the odd
+ * lattice, five to fifteen (docs/asset-prompts-3d.md Block 2c; directorate.mjs
+ * `cut`), asked at the export's scale (×0.938) and settled on each part as
+ * pressed, and the pass re-cut what was off it: the four plates fifteen
+ * round and seven down at 5.5–7.4 m, where they were twelve by six; the
+ * seams eleven, thirteen, thirteen and fifteen round and five to seven down
+ * at 3.4–4.6 m, where they were ten by six; the dome fifteen by seven at
+ * 5.1 m for fourteen by seven, the aft dome seven by four for ten by six;
+ * the rostrum nine at 3 m for eight, the telson seven for six; the boom and
+ * its sleeve five for eight; the eleven hydrophones, the two boom tips and
+ * the six limbs five for six. The dome spines and dorsal spines keep their
+ * five. 58 parts and 1,820 triangles become 58 and 2,124; the four marks
+ * show 5.0 m² for 4.6, every contact holds, and no ring is off the rule.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -79,10 +93,11 @@ const DRAWN = 64;
 /**
  * The four tergites, stern first: `[x, half-length, half-height, half-beam]`,
  * the approved model's own stations — the scales its orbs are drawn at. On
- * this hull those are also the plates' half-extents, because an `orb(12, 6)`
+ * the file those were also the plates' half-extents, because an `orb(12, 6)`
  * carries a vertex on every axis and reaches its full radius on all three,
- * unlike the Dredge's `orb(14, 7)` (#630); the seam fractions below are
- * hung off them and hold either way. Stated rather than generated, because
+ * unlike the Dredge's `orb(14, 7)` (#630); the rule's fifteen by seven
+ * reaches 0.975 of its sx and 0.970 of its sz, and the seam fractions below
+ * are hung off the scales and hold either way. Stated rather than generated, because
  * `segmentSeries`'s profile swells aft of amidships and this hull's plates
  * peak at the third — the model is what the port transcribes, not the curve.
  */
@@ -102,6 +117,8 @@ const crimson = directorate.ink.biolightCrimson();
 const root = new THREE.Group();
 root.name = 'directorate_precentor';
 root.scale.setScalar(L / DRAWN);
+// The Listening's facet rule, asked at the export's scale (directorate.mjs `cut`, #919).
+const cut = directorate.cut(L / DRAWN);
 
 // The body: four overlapping plates with a seam each, alternating violet and
 // red from the stern. No spines off them — this hull's back carries a dorsal
@@ -111,9 +128,9 @@ root.scale.setScalar(L / DRAWN);
 // it stands a little proud of its plate above and below instead of sinking
 // under the one ahead, and stays that whatever a station's height becomes.
 const SEAM = { at: 0.8, size: [0.35, 0.7, 0.9], tallOf: 'beam' };
-directorate.tergites(root, { violet, red, black }, { segments: SEGMENTS, seam: SEAM });
-directorate.rostrum(root, red, { tip: 30, r: 3.2, length: 12, facets: 8 });
-directorate.telson(root, { violet, black }, { tip: -34, r: 2.5, length: 8 });
+directorate.tergites(root, { violet, red, black }, { segments: SEGMENTS, seam: SEAM, cut });
+directorate.rostrum(root, red, { tip: 30, r: 3.2, length: 12, cut });
+directorate.telson(root, { violet, black }, { tip: -34, r: 2.5, length: 8, cut });
 
 // The hydrophone array, and the hull's argument: 44 m of boom across a 64 m
 // body, six sockets to starboard against five to port. `arrayBoom` refuses
@@ -132,6 +149,7 @@ directorate.arrayBoom(root, { steel, black, red }, {
   pitch: 2.6,
   sleeveR: 1.9,
   seat: [3, 3.7],
+  cut,
 });
 
 // The listening dome forward of the boom, 5.5 m by 4.2 m, studded with six
@@ -145,6 +163,7 @@ directorate.listeningDome(root, { red, violet, black }, {
   ry: 4.2,
   studs: { radius: 3.2, lift: 3.4 },
   aft: { x: -14, y: 3.6, z: -3.5, r: 2.6, ry: 2.2 },
+  cut,
 });
 
 // Four dorsal spines lengthening toward the bow by half a metre a station,
@@ -168,7 +187,15 @@ directorate.dorsalSpines(root, black, {
 // roots outboard, and the port kept it (#638); since #645 `limbs` mirrors,
 // so the port roots stand at the flank as the starboard ones do — the same
 // six lines in plan, the taper the other way along three of them.
-directorate.limbs(root, steel, { xs: [-14, -4, 6], y: -1, z: 7.5, r: [0.7, 0.5], length: 7, fold: 0.4 });
+directorate.limbs(root, steel, {
+  xs: [-14, -4, 6],
+  y: -1,
+  z: 7.5,
+  r: [0.7, 0.5],
+  length: 7,
+  fold: 0.4,
+  cut,
+});
 
 // "Nearly black": four photophores, and that is the whole light budget of a
 // hull that idles at SIG 12. None of them answers another across the keel;

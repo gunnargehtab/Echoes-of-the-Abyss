@@ -97,7 +97,7 @@
  *   inside it, under the rim, where only the conn view does. The plan's `walkingLimbs` is
  *   the Submersible's box-and-claw builder in that export's own frame; a
  *   hull in the Chorister's family carries the Chorister's limb.
- * - **The keel and its ribs.** A black seven-sided spar 64 m long from +25
+ * - **The keel and its ribs.** A black spar 64 m long from +25
  *   to −39, 3.6 m forward to 2.6 aft, its axis at −6.8 so its bottom runs
  *   just under the shield's belly and 6 m under the tail's; seven steel
  *   hoops along it (`keel`'s `ribs`) are the "ribbed". Nothing on any
@@ -153,6 +153,20 @@
  * `limbs` and a spot's own rotation in `photophores` were written for this
  * hull and run here for the first time; every default is the older hulls'
  * own, and `check.mjs` holds them to their files.
+ *
+ * FACETS (#919). The Listening's rule is one facet edge of 2 m on the odd
+ * lattice, five to fifteen (docs/asset-prompts-3d.md Block 2c; directorate.mjs
+ * `cut`), asked in metres and settled on each part as pressed, and the pass
+ * re-cut what was off it: the six plates and five lips fifteen round and
+ * seven down at 5.8–26.4 m, where they were twelve by six and ten by six;
+ * the keel eleven for seven and its seven hoops eleven and thirteen for
+ * fourteen; the cells' collars and lids nine for ten, their wells seven for
+ * ten and their hinge pins five for six; the rostrum eleven for six, the
+ * telson nine for six, the gun and the eight limbs five for six. The rim
+ * spines keep their five. 78 parts and 3,988 triangles become 78 and 4,398;
+ * the fifteen marks show 24.0 m² for 23.9, and the six tail marks and two
+ * rim spines that stood 0.03–0.36 m off the twelve-gon's chord meet the
+ * fifteen-gon. No ring is off the rule.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -160,6 +174,8 @@ import * as directorate from '../factions/directorate.mjs';
 const L = 105;
 const BOW = L / 2;
 const STERN = -L / 2;
+// The Listening's facet rule for a hull drawn in metres (directorate.mjs `cut`, #919).
+const cut = directorate.cut();
 
 /**
  * The abdomen, stern first: `[x, half-length, half-height, half-beam]`,
@@ -218,20 +234,26 @@ root.name = 'directorate_thurible';
 // plates with the Dredge's ridge, the aft shield plate with the lower lip,
 // the fore shield plate with none. Violet, red, violet, red, violet, red
 // from the stern.
-directorate.tergites(root, { violet, red, black }, { segments: ABDOMEN, lip: 'ridge' });
+directorate.tergites(root, { violet, red, black }, { segments: ABDOMEN, lip: 'ridge', cut });
 directorate.tergites(root, { violet, red, black }, {
   segments: [SHIELD[0]],
   lip: 'ridge',
   ridge: LIP,
   first: 4,
+  cut,
 });
-directorate.tergites(root, { violet, red, black }, { segments: [SHIELD[1]], lip: 'none', first: 5 });
+directorate.tergites(root, { violet, red, black }, {
+  segments: [SHIELD[1]],
+  lip: 'none',
+  first: 5,
+  cut,
+});
 
 // The rostrum's point is the bow at +52.5; its base is 13 m aft, inside
 // the shield's nose, so the last 8.5 m of it show. The telson's base ring
 // is the stern at −52.5, its apex buried 10 m forward in the last plate.
-directorate.rostrum(root, red, { tip: BOW, r: 3.4, length: 13 });
-directorate.telson(root, { violet, black }, { tip: STERN, r: 2.6, length: 10 });
+directorate.rostrum(root, red, { tip: BOW, r: 3.4, length: 13, cut });
+directorate.telson(root, { violet, black }, { tip: STERN, r: 2.6, length: 10, cut });
 
 // Four spines off the shield's rim at different stations each side (the
 // header): rooted at y = 1 in the flank, canted 1.05 outboard, raked 0.25
@@ -262,6 +284,7 @@ directorate.limbs(root, steel, {
   r: [0.8, 0.55],
   length: 8,
   fold: 0.6,
+  cut,
 });
 
 // "One small spine-gun off the centreline ahead of the rack": 5.5 m to
@@ -270,7 +293,7 @@ directorate.limbs(root, steel, {
 directorate.spineGun(
   root,
   { steel, black },
-  { x: 35, y: crown(31, -5.5) + 0.4, z: -5.5, r: [0.6, 0.45], length: 8, mount: { x: 31 } }
+  { x: 35, y: crown(31, -5.5) + 0.4, z: -5.5, r: [0.6, 0.45], length: 8, mount: { x: 31 }, cut }
 );
 
 // The charge rack: seven cells in two ranks on the shield's back, the
@@ -287,6 +310,7 @@ directorate.chargeRack(root, { steel, black }, {
     { side: 'p', x: 9, z: 7.5 },
     { side: 'p', x: -1, z: 7.5 },
   ],
+  cut,
 });
 
 // The ribbed pressure keel: a black spar 64 m under all of it, 3.6 m
@@ -297,6 +321,7 @@ directorate.keel(root, black, {
   radii: [3.6, 2.6],
   length: 64,
   ribs: { count: 7, mat: steel, tube: 0.35, proud: 0.25, inset: 3 },
+  cut,
 });
 
 // "Rows of photophores along the shield's rim and down the abdomen in a

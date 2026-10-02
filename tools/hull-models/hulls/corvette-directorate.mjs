@@ -56,6 +56,22 @@
  * blades' boxes, each rolled and pitched with its node, overhang at the
  * stern: 94.4009 over the vertices' 94.31. Every number below is the
  * export's, through kit.mjs `drawn`.
+ *
+ * FACETS (#919). The Directorate's rule is one facet edge of 2 m on odd
+ * counts, five to fifteen (docs/asset-prompts-3d.md Block 2c;
+ * directorate.mjs `cut`), asked at this file's scale — 0.85 m a unit — for
+ * each part as its node places it, and the pass re-cut what was off it: the
+ * five ridges five-sided at 0.93 m where the file cut them four (a `ridge`
+ * is no part the square section names; Block 2c); the two eyes five round
+ * by three down where they were six by four; the two claws five-sided at
+ * 0.57–0.73 m where they were six; the ten darts five-sided at 0.68 m where
+ * they were six. The rostrum keeps its square, the section the rule names on
+ * a `rostrum`; the antennae, the keel spurs and the telson spike keep their
+ * five. Twenty-one of the file's twenty-seven rings were off the rule and
+ * none is; 1,156 triangles became 1,096; `DRAWN` holds at 94.4009. The
+ * contacts sweep is unchanged, and `photophore_p3` shows 1.25 m² from above
+ * where it showed 0.94: the ridge beside it is a pentagon now and covers
+ * less of it.
  */
 import { THREE, box, part, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -63,6 +79,8 @@ import * as directorate from '../factions/directorate.mjs';
 const L = 80;
 const DRAWN = 94.4009;
 const DATUM = 5.5;
+// The navy's facet rule at this file's scale (FACETS, the header).
+const cut = directorate.cut(L / DRAWN);
 
 const violet = directorate.ink.bruiseViolet();
 const red = directorate.ink.abyssalRed();
@@ -93,13 +111,14 @@ directorate.plateSegments(root, red, {
   ],
 });
 
-// A ridge off each plate: four-sided, leaned half a radian aft and each
-// rolled its own way, alternating sides down the back.
+// A ridge off each plate, leaned half a radian aft and each rolled its own
+// way, alternating sides down the back. Five-sided since #919, the rule's
+// floor at 0.93 m, where the file cut them four: a `ridge` is no part the
+// square section names (Block 2c).
 const ridge = (name, t, e) => ({
   name,
   radii: [0.02, 1.1],
   length: 3.6,
-  facets: 4,
   ...drawn(t, e),
 });
 directorate.spikes(root, red, {
@@ -123,6 +142,7 @@ directorate.wedgeRostrum(root, chitin, {
 });
 bar('rostrum_blade', red, [0.7, 2.6, 9], [0.2, 7.2, 30], [-0.12, 0.03, 0]);
 directorate.eyes(root, red, {
+  cut,
   eyes: [
     ['eye_p', 1.05, drawn([3.1, 7.4, 26.5])],
     ['eye_s', 0.85, drawn([-2.7, 7, 27.5])],
@@ -141,18 +161,20 @@ directorate.spikes(root, violet, {
 });
 
 // Two jointed limbs folded under the bow flanks — a shoulder, an upper, a
-// forearm and a six-sided claw — drawn from one set of sizes, the port
-// limb at 1.15 and the starboard at 0.9, the starboard set 1.6 further
-// aft; each joint placed by its own node.
+// forearm and a claw (five-sided since #919, the rule's at 0.57–0.73 m; the
+// file's six) — drawn from one set of sizes, the port limb at 1.15 and the
+// starboard at 0.9, the starboard set 1.6 further aft; each joint placed by
+// its own node.
 const limb = (prefix, scale, [shoulder, upper, forearm, claw]) =>
   directorate.jointedLimb(root, {
     prefix,
     scale,
+    cut,
     joints: [
       { name: 'shoulder', skin: violet, size: [1.6, 3.4, 4.4], ...shoulder },
       { name: 'upper', skin: chitin, size: [1.3, 1.7, 8.5], ...upper },
       { name: 'forearm', skin: violet, size: [1.1, 1.5, 10], ...forearm },
-      { name: 'claw', skin: red, r: 0.75, length: 6.5, facets: 6, ...claw },
+      { name: 'claw', skin: red, r: 0.75, length: 6.5, ...claw },
     ],
   });
 limb('limb_p', 1.15, [
@@ -171,7 +193,8 @@ limb('limb_s', 0.9, [
 // "Visible torpedo hardpoints": ten darts at a 4.6 pitch, six to port and
 // four to starboard, the starboard rank 0.4 lower and set back 5, each
 // raked forward 0.18 off vertical and canted 0.34 outboard, each on a
-// socket 2.2 aft of it, 0.4 inboard and 0.5 under.
+// socket 2.2 aft of it, 0.4 inboard and 0.5 under. Five-sided since #919,
+// the rule's at 0.68 m; the file's six.
 const dart = (side, sgn, y, z) => ({
   name: `dart_${side}`,
   ...drawn([sgn * 5.35, y, z], [Math.PI / 2 - 0.18, 0, -sgn * 0.34]),
@@ -181,9 +204,9 @@ directorate.darts(
   root,
   { dart: violet, socket: red },
   {
+    cut,
     radii: [0.34, 0.8],
     length: 7.2,
-    facets: 6,
     socket: { size: [1.1, 1.1, 1.4] },
     darts: [
       ...[14, 9.4, 4.8, 0.2, -4.4, -9].map((z, k) => dart(`p${k}`, 1, 6.5, z)),

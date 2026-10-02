@@ -13,8 +13,8 @@
  * along one flank and one on the other, in a pattern that repeats on
  * neither side." Three tergites, violet, red and violet, each with its
  * dark seam sunk under the plate ahead; the bladder dome off the
- * centreline on the middle one; a six-sided rostrum and a six-sided
- * telson, two tail spines splayed off it; three dorsal spines alternating
+ * centreline on the middle one; a rostrum and a telson, two tail spines
+ * splayed off it; three dorsal spines alternating
  * sides; six walking limbs in two matched ranks, tapered and folded 0.45;
  * the spine-gun and its mount, to port; and five photophores — four along
  * the starboard flank and one to port — which are the whole resting light
@@ -64,13 +64,26 @@
  * THE LAMPS THAT FLOATED (#907, from #894's resting measure). Three of
  * the five photophores stood off the shell — `photophore_p0` 0.49 m,
  * `_s1` 0.5, `_s3` 0.35 — laid flat at stations read off the ideal
- * ellipsoids where the plates are 12 × 6 orbs. The rank rests on the
+ * ellipsoids where the plates were 12 × 6 orbs. The rank rests on the
  * shell now: every mark dropped from its station onto the facet under it,
  * its underside on the facet and tilted with it (`photophores` `rest`,
  * kit.mjs `seat`), so `_s0` and `_s2`, which rested by a corner, lie flat
  * on their facets too. `diff.mjs` lists the five — `_p0` at 2.4 m, `_s1`
  * 1.5, `_s3` 1.2, `_s2` 0.6, `_s0` 0.5 — and the audit names none as
  * floating or hidden: 0.69 to 1.0 m² each from above.
+ *
+ * FACETS (#919). The Listening's rule is one facet edge of 2 m on the odd
+ * lattice, five to fifteen (docs/asset-prompts-3d.md Block 2c; directorate.mjs
+ * `cut`), asked at the export's scale (×0.847) and settled on each part as
+ * pressed, and the pass re-cut what was off it: the three plates and their
+ * seams fifteen round and seven down at 5.6–7.9 m, where they were twelve
+ * by six and ten by six; the bladder dome fifteen by seven at 4.5 m for
+ * twelve by six; the rostrum seven at 2.2 m for six; the telson, the gun
+ * and the six limbs five for six. The dorsal and tail spines keep their
+ * five. 27 parts and 1,094 triangles become 27 and 1,546; the five marks
+ * show 4.6 m² for 4.3, and the sweep's exact-zero test (#746) reads one
+ * resting mark as touching nothing at 0.000 m, lying on its facet as
+ * before. No ring is off the rule.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -78,13 +91,15 @@ import * as directorate from '../factions/directorate.mjs';
 const L = 50;
 const DRAWN = 59;
 const DATUM = 0;
+// The Listening's facet rule, asked at the export's scale (directorate.mjs `cut`, #919).
+const cut = directorate.cut(L / DRAWN);
 
 /**
  * The three tergites, bow first as the export numbers them:
  * `[x, half-length, half-height, half-beam]`, the scales its orbs are drawn
- * at — and their extents too, since an `orb(12, 6)` reaches its radius on
- * every axis (hulls/precentor.mjs). The seam under each is the module's
- * default, which was read off this file.
+ * at — and, to within the few percent a fifteen-by-seven orb falls short
+ * of its scale across the beam (hulls/precentor.mjs), their extents too. The
+ * seam under each is the module's default, which was read off this file.
  */
 const SEGMENTS = [
   [15, 8.5, 4.2, 7.5],
@@ -104,13 +119,13 @@ root.name = 'directorate_chorister';
 // The body: three overlapping plates with a seam each, violet, red, violet
 // from the bow, and the bladder showing through the middle one as a paler
 // dome set 1 aft and 0.8 to starboard of the centreline.
-directorate.tergites(root, { violet, red, black }, { segments: SEGMENTS });
-directorate.bladderDome(root, violet, { x: -1, y: 3.4, z: 0.8, r: 5 });
+directorate.tergites(root, { violet, red, black }, { segments: SEGMENTS, cut });
+directorate.bladderDome(root, violet, { x: -1, y: 3.4, z: 0.8, r: 5, cut });
 
 // The rostrum, its point at 30; the telson, its base ring at −29 and its
 // point buried forward in the last plate; and the two tail spines off it,
 // base aft and point forward, splayed 0.4 off the keel 3.5 out.
-directorate.rostrum(root, red, { tip: 30, r: 2.6, length: 8 });
+directorate.rostrum(root, red, { tip: 30, r: 2.6, length: 8, cut });
 directorate.telson(
   root,
   { violet, black },
@@ -119,6 +134,7 @@ directorate.telson(
     r: 2.2,
     length: 6,
     tailSpines: { x: -23, y: 1, z: 3.5, r: 0.6, length: 5, splay: 0.4 },
+    cut,
   }
 );
 
@@ -146,6 +162,7 @@ directorate.limbs(root, steel, {
   r: [0.6, 0.45],
   length: 6,
   fold: 0.45,
+  cut,
 });
 
 // "One small dorsal spine-gun off the centreline": 2.2 to port, tapering
@@ -154,7 +171,7 @@ directorate.limbs(root, steel, {
 directorate.spineGun(
   root,
   { steel, black },
-  { x: 20, y: 3.6, z: -2.2, r: [0.7, 0.5], length: 9, mount: { x: 15 } }
+  { x: 20, y: 3.6, z: -2.2, r: [0.7, 0.5], length: 9, mount: { x: 15 }, cut }
 );
 
 // "A short row of photophores along one flank and one on the other": four

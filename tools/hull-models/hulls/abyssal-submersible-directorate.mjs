@@ -142,6 +142,36 @@
  * further forward at the file's tilt, so the hull is 0.5 % larger on the
  * chart than the approved bake drew it. Every number below is the export's, through
  * kit.mjs `drawn`.
+ *
+ * FACETS (#919). The Directorate's rule is one facet edge of 2 m on odd
+ * counts, five to fifteen (docs/asset-prompts-3d.md Block 2c;
+ * directorate.mjs `cut`), asked at this file's scale — 21 m a unit — for
+ * each part as its node presses it, and the pass re-cut what was off it,
+ * which on a hull drawn at 4.5 units was nearly everything round: the five
+ * plates fifteen round by seven down at 12–14.5 m where the file had seven
+ * by four, their rims fifteen-sided at 13–16 m where they were nine; the
+ * keel fifteen at 5.5 m where it was seven, and the head fifteen at 11 m
+ * where it was six, both read on the cone as pressed (the head goes through
+ * `drums` now, since a `head` is no section's part and `spikes` cuts
+ * sections only); the first three tail segments fifteen by seven and the
+ * fourth eleven by five, where all four were six by four, their joints
+ * fifteen, fifteen, fifteen and eleven where they were eight; the ten
+ * photophores five round by three down at 0.6–0.85 m where they were six by
+ * four. The rostrum, the two mandibles and the nine spikes keep their
+ * square, the sections the rule names on a `rostrum`, a `mandible` and a
+ * `spike`; the rostrum still hangs from the head's apex and reads 0 m from
+ * it. Forty-nine of the file's sixty-one rings were off the rule and none
+ * is; 1,208 triangles became 2,380; `DRAWN` holds at 4.5261. One lamp
+ * moved: `photophore_port_3` rested on the third plate's flank at the file's
+ * station, and the fifteen-gon plate and rim stand wider there than the
+ * seven-gon and the nine-gon did, so the five-by-three bud showed 0.19 m²
+ * from above, under the audit's quarter metre. It is seated on the shell
+ * from its station like the six flank buds before it (`on`, half in): 0.58 m
+ * from where it was, on `carapace_3`, 0.94 m² (1.31 in the file). The rims
+ * and the joints, lit in `edge_red`, show 2–38 m² each as before, the
+ * second rim 13 where it showed 19; nine parts that stood a few decimetres
+ * off the seven-gon plates — spikes, femurs, the tail's first two segments
+ * — meet the fifteen-gon ones.
  */
 import { THREE, box, part, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -151,6 +181,8 @@ const DRAWN = 4.5261;
 const DATUM = 0.8;
 // `refuseMirror`'s half a metre, in this export's units.
 const HALF_METRE = (0.5 * DRAWN) / L;
+// The navy's facet rule at this file's scale (FACETS, the header).
+const cut = directorate.cut(L / DRAWN);
 
 const chitin = directorate.ink.chitinTrench();
 const violet = directorate.ink.plateViolet();
@@ -167,26 +199,30 @@ const bar = (name, mat, size, t, e) => part(root, name, box(...size), mat, drawn
 // The export's spikes and drums stand on y and each node lays its own.
 const ALONG_KEEL = (roll) => [Math.PI / 2, 0, roll];
 
-// The keel: a seven-sided spar tapering aft, laid along the keel, rolled
-// 0.06 and squashed to 0.75 across by its node.
+// The keel: a spar tapering aft, laid along the keel, rolled 0.06 and
+// squashed to 0.75 across by its node — the rule's count on the spar as
+// pressed since #919 (the file's seven at 5.5 m, where the rule says
+// fifteen).
 directorate.drums(root, chitin, {
+  cut,
   drums: [
     {
       name: 'keel',
       radii: [0.26, 0.2],
       length: 2.9,
-      facets: 7,
       ...drawn([0.02, 0.56, -0.05], ALONG_KEEL(0.06), [1, 1, 0.75]),
     },
   ],
 });
 
 // The pressure carapace: five plates from the bow, the third the largest,
-// every one a 7 × 4 orb of its own radius squashed 1.3 × 0.62 × 1.02 by its
+// every one an orb of its own radius squashed 1.3 × 0.62 × 1.02 by its
 // node, pitched 0.1 down and yawed and rolled a few hundredths its own
 // way; under each forward edge an open rim 1.06 to 1.12 of its radius,
-// nine-sided, 0.07 tall, laid across the keel and yawed with its plate,
-// squashed 1.28 × 1 × 0.58.
+// 0.07 tall, laid across the keel and yawed with its plate, squashed
+// 1.28 × 1 × 0.58. Every count is the rule's on the part as pressed since
+// #919 (the file's 7 × 4 plates and nine-sided rims, at 12–16 m where the
+// rule says fifteen).
 const PLATE = [1.3, 0.62, 1.02];
 const RIM = [1.28, 1, 0.58];
 directorate.carapaceOrbs(
@@ -194,8 +230,8 @@ directorate.carapaceOrbs(
   { skin: violet, rim: edge },
   {
     name: 'carapace',
-    facets: [7, 4],
-    rim: { name: 'plate_rim', ratio: [1.06, 1.12], h: 0.07, facets: 9 },
+    cut,
+    rim: { name: 'plate_rim', ratio: [1.06, 1.12], h: 0.07 },
     plates: [
       {
         n: 1,
@@ -231,17 +267,21 @@ directorate.carapaceOrbs(
   }
 );
 
-// The head: a six-sided cone to a point, squashed 1.25 × 0.62 by its node
-// and rolled 0.12; the rostrum, four-sided and lit, hung from the head's
-// apex and aimed at its own tip (`rootOn`, #907; the header); and two mandibles
-// under it, the port one the longer, each leaned down its own way.
-directorate.spikes(root, violet, {
-  spikes: [
+// The head: a cone to a point, squashed 1.25 × 0.62 by its node and rolled
+// 0.12 — the rule's count on the cone as pressed since #919 (the file's six
+// at 10.5 m, where the rule says fifteen; a `head` is no section's part, so
+// it goes through `drums` rather than `spikes`, whose counts are sections);
+// the rostrum, four-sided and lit, hung from the head's apex and aimed at
+// its own tip (`rootOn`, #907; the header); and two mandibles under it, the
+// port one the longer, each leaned down its own way — both keep their
+// square, the section the rule names on a `rostrum` and a `mandible`.
+directorate.drums(root, violet, {
+  cut,
+  drums: [
     {
       name: 'head',
       radii: [0, 0.42],
       length: 0.85,
-      facets: 6,
       ...drawn([0.02, 0.8, 1.62], ALONG_KEEL(0.12), [1.25, 0.62, 1]),
     },
   ],
@@ -321,11 +361,13 @@ directorate.walkingLimbs(
   }
 );
 
-// The tail: four segments shrinking astern, 6 × 4 orbs squashed 1.15 × 0.7
-// by their nodes and rolled 0.08 turn about, each with a lit joint behind
-// it — an open eight-sided ring 0.92 to 0.98 of its radius, 0.05 tall,
-// squashed 1.12 × 1 × 0.66; then the telson, three thin plates, the middle
-// one pitched up and the outer two splayed each its own way.
+// The tail: four segments shrinking astern, orbs squashed 1.15 × 0.7 by
+// their nodes and rolled 0.08 turn about, each with a lit joint behind it
+// — an open ring 0.92 to 0.98 of its radius, 0.05 tall, squashed
+// 1.12 × 1 × 0.66 — every count the rule's as pressed since #919 (the
+// file's 6 × 4 orbs and eight-sided rings, at 3.3–7.2 m); then the telson,
+// three thin plates, the middle one pitched up and the outer two splayed
+// each its own way.
 const SEG = [1.15, 0.7, 1];
 const JOINT = [1.12, 1, 0.66];
 directorate.carapaceOrbs(
@@ -333,8 +375,8 @@ directorate.carapaceOrbs(
   { skin: violet, rim: edge },
   {
     name: 'tail_seg',
-    facets: [6, 4],
-    rim: { name: 'tail_joint', ratio: [0.92, 0.98], h: 0.05, facets: 8 },
+    cut,
+    rim: { name: 'tail_joint', ratio: [0.92, 0.98], h: 0.05 },
     plates: [
       {
         n: 1,
@@ -377,12 +419,12 @@ bar('telson_starboard', violet, [0.26, 0.02, 0.32], [-0.18, 0.68, -1.84], [0.1, 
 // the starboard mandible for the jaw's.
 const SHELL = [1, 2, 3, 4, 5].flatMap((n) => [`carapace_${n}`, `plate_rim_${n}`]);
 directorate.photophoreDomes(root, photophore, {
-  facets: [6, 4],
+  cut,
   tolerance: HALF_METRE,
   domes: [
     ['photophore_port_1', 0.035, { ...drawn([0.6, 0.94, 1.1]), on: SHELL }],
     ['photophore_port_2', 0.03, { ...drawn([0.66, 0.8, 0.62]), on: SHELL }],
-    ['photophore_port_3', 0.035, drawn([0.68, 0.9, 0.3])],
+    ['photophore_port_3', 0.035, { ...drawn([0.68, 0.9, 0.3]), on: SHELL }],
     ['photophore_port_4', 0.028, { ...drawn([0.62, 0.76, -0.14]), on: SHELL }],
     ['photophore_port_5', 0.03, drawn([0.46, 1.03, -0.52])],
     ['photophore_starboard_1', 0.03, { ...drawn([-0.64, 0.86, 0.8]), on: SHELL }],

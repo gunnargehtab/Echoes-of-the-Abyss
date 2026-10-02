@@ -73,13 +73,34 @@
  * the collar behind the skirt and the pod ahead of the pipe in the order; the
  * claws skinned along the list; and the steel and the lamp at the Dredge's
  * values.
+ *
+ * FACETS (#919). The navy's rule is one facet of 2 m, odd counts five to
+ * fifteen, five and a named four the sections (docs/asset-prompts-3d.md
+ * Block 2c; directorate.mjs `cut`), asked at this file's scale and settled on
+ * each part as its node presses it. The export's counts went: the mound
+ * 10 × 6 → 15 × 3 over its 0.42 of a half-turn, the scutes 7 × 5 → 15 × 7,
+ * the pod 9 × 6 → 15 × 7, the brow 9 × 5 → 8 × 4 over its window, the collar
+ * 5 × 9 → 11 × 15 and the skirt 4 × 14 → 7 × 15 (tube by ring), the barbs
+ * 4 × 8 → 5 × 15, 5 × 15 and 5 × 11, the segments 6 → 15, 15 and 9, the feed
+ * 6 → 7 with its flange 4 × 9 → 5 × 11, the pod capsule 3 × 7 → 4 × 15, the
+ * antennae 4 → 5, the marks and the pip 5 × 4 → 5 × 3; the five-sided claws,
+ * tip and counter-spike keep their section. `facets.mjs` names one of its 52
+ * rings: the ammo pod's meridian, a capsule whose half-turn share of fifteen
+ * is eight, drawn as sixteen a turn (Block 2c, the capsule reading).
+ * Triangles 1,435 → 2,905. `DRAWN` is 7.9707 since the pass (7.9822 before:
+ * the scutes' boxes moved with their counts). The two flank marks are grown
+ * from their scutes now (`on`): read at the heights taken off the
+ * seven-by-five scutes, `nav_mark_1` showed 0.75 m² from above under the
+ * rounder plate, 2.75 seated.
  */
 import { THREE, drawn, eulerXYZ, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
 
 const L = 120;
-const DRAWN = 7.9822;
+const DRAWN = 7.9707;
 const DATUM = 0;
+// The navy's facet rule at this file's scale (directorate.mjs `cut`, #919).
+const cut = directorate.cut(L / DRAWN);
 
 // A torus is born in the XY plane; every ring on this turret lies flat.
 const FLAT = [Math.PI / 2, 0, 0];
@@ -101,21 +122,17 @@ directorate.carapaceMound(
   root,
   { violet, black, steel },
   {
-    mound: {
-      r: 3,
-      facets: [10, 6],
-      down: 0.42,
-      ...drawn([0.15, 0, -0.1], [0, 0, 0], [1.15, 0.85, 1]),
-    },
-    collar: { R: 1.55, tube: 0.22, facets: [5, 9], ...drawn([0.1, 2.05, 0], FLAT) },
-    skirt: { R: 2.6, tube: 0.13, facets: [4, 14], ...drawn([0.15, 0.9, -0.1], FLAT, [1.12, 1, 1]) },
+    cut,
+    mound: { r: 3, down: 0.42, ...drawn([0.15, 0, -0.1], [0, 0, 0], [1.15, 0.85, 1]) },
+    collar: { R: 1.55, tube: 0.22, ...drawn([0.1, 2.05, 0], FLAT) },
+    skirt: { R: 2.6, tube: 0.13, ...drawn([0.15, 0.9, -0.1], FLAT, [1.12, 1, 1]) },
   }
 );
 
 // Five scutes plated round the mound, each its own size, each laid on the
 // flank its own way — a regular rule, never a regular result.
 directorate.baseScutes(root, [black, red], {
-  facets: [7, 5],
+  cut,
   scutes: [
     {
       r: 1.130267,
@@ -168,10 +185,10 @@ const head = directorate.browHead(
   { red, black, violet },
   {
     ...drawn([0.1, 2.75, 0], [0, 0.3, 0]),
-    pod: { r: 1.5, facets: [9, 6], ...drawn([0, 0, 0], [0, 0, 0], [1.3, 0.8, 1.05]) },
+    cut,
+    pod: { r: 1.5, ...drawn([0, 0, 0], [0, 0, 0], [1.3, 0.8, 1.05]) },
     brow: {
       r: 1.66,
-      facets: [9, 5],
       round: 0.55,
       down: 0.48,
       ...drawn([0, 0, 0], eulerXYZ([0, -Math.PI * 0.52, -0.14], 'YXZ'), [1.3, 0.95, 1.05]),
@@ -191,31 +208,30 @@ directorate.stingerBarrel(
   { steel, violet, black, pip: crimson },
   {
     ...drawn([0.55, 0.15, 0.45], eulerXYZ([0.9, 0.35, 0], 'YXZ')),
+    cut,
     segments: [
       {
         radii: [0.288, 0.44],
         length: 1.9,
-        facets: 6,
         ...drawn([0, 0.95, 0]),
-        barb: { R: 0.418, tube: 0.06, facets: [4, 8], ...drawn([0, 0.1, 0], FLAT) },
+        barb: { R: 0.418, tube: 0.06, ...drawn([0, 0.1, 0], FLAT) },
       },
       {
         radii: [0.18, 0.32],
         length: 1.8,
-        facets: 6,
         ...drawn([0, 2.686, 0]),
-        barb: { R: 0.304, tube: 0.06, facets: [4, 8], ...drawn([0, 1.886, 0], FLAT) },
+        barb: { R: 0.304, tube: 0.06, ...drawn([0, 1.886, 0], FLAT) },
       },
       {
         radii: [0.1, 0.2],
         length: 1.7,
-        facets: 6,
         ...drawn([0, 4.328, 0]),
-        barb: { R: 0.19, tube: 0.06, facets: [4, 8], ...drawn([0, 3.578, 0], FLAT) },
+        barb: { R: 0.19, tube: 0.06, ...drawn([0, 3.578, 0], FLAT) },
       },
     ],
+    // The tip keeps its five, a section; the pip is the rule's.
     tip: { r: 0.14, length: 1, facets: 5, ...drawn([0, 5.576, 0]) },
-    pip: { r: 0.08, facets: [5, 4], ...drawn([0, 6.126, 0]) },
+    pip: { r: 0.08, ...drawn([0, 6.126, 0]) },
   }
 );
 
@@ -232,13 +248,17 @@ directorate.counterSpike(head, violet, {
 // on the brow — which with the pip at the muzzle are the whole resting light.
 // `photophoreDomes` refuses a mirrored pair, as every light builder here does.
 // The flank two ride their scutes since #645 (the header); the export had
-// them under, at 0.75 and 1.15.
+// them under, at 0.75 and 1.15. Those heights were read off the file's
+// seven-by-five scutes; the rule cuts the scutes rounder and their faces
+// lie higher, so since #919 each is seeded there and grown from its scute
+// (`on`, kit.mjs `seat`): read at the old height, `nav_mark_1` showed
+// 0.75 m² from above where the file's showed 2.8.
 directorate.photophoreDomes(root, crimson, {
+  cut,
   r: 0.08,
-  facets: [5, 4],
   domes: [
-    ['nav_mark_0', drawn([2.9, 1.39, 1.1])],
-    ['nav_mark_1', drawn([-2.3, 1.75, -1.6])],
+    ['nav_mark_0', { ...drawn([2.9, 1.39, 1.1]), on: 'base_scute_0' }],
+    ['nav_mark_1', { ...drawn([-2.3, 1.75, -1.6]), on: 'base_scute_3' }],
     ['nav_mark_2', drawn([0.4, 3.45, -1.35])],
   ],
 });
@@ -302,14 +322,10 @@ directorate.magazine(
   root,
   { steel, red },
   {
-    pipe: { radii: [0.13, 0.16], length: 2.3, facets: 6, ...drawn([-1.5, 1.6, 0.9], [0.25, 0, 0.55]) },
-    pod: { r: 0.55, length: 1.1, facets: [3, 7], ...drawn([-2.4, 0.75, 1.3], [Math.PI / 2, 0, 0.4]) },
-    flange: {
-      R: 0.18,
-      tube: 0.05,
-      facets: [4, 9],
-      ...drawn([-1.15, 2.25, 0.75], [Math.PI / 2 + 0.25, 0, 0.55]),
-    },
+    cut,
+    pipe: { radii: [0.13, 0.16], length: 2.3, ...drawn([-1.5, 1.6, 0.9], [0.25, 0, 0.55]) },
+    pod: { r: 0.55, length: 1.1, ...drawn([-2.4, 0.75, 1.3], [Math.PI / 2, 0, 0.4]) },
+    flange: { R: 0.18, tube: 0.05, ...drawn([-1.15, 2.25, 0.75], [Math.PI / 2 + 0.25, 0, 0.55]) },
   }
 );
 

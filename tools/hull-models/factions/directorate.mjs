@@ -104,6 +104,9 @@ import {
   pierced,
 } from '../kit.mjs';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { facetsFor, orbFacets, ringsOf, ORB_FLOOR, isSection } from '../facets.mjs';
+
+const TAU = 2 * Math.PI;
 
 /**
  * The Directorate's palette: one table, one factory a material *name*, so
@@ -355,10 +358,189 @@ export const facets = {
 };
 export const panels = { hull: [1, 3], structure: [2.5, 8] };
 
-/** A carapace orb: a low-facet sphere the caller squashes into a plate. */
-const orb = (w = 12, h = 6) => new THREE.SphereGeometry(1, w, h);
-/** A spine: a faceted cone, apex at +Y until the caller rakes it. */
-const spike = (r, length, facets = 6) => cyl(0, r, length, facets);
+/**
+ * The rule bound to a script's scale, `m` metres a drawn unit (#919). The
+ * Commune's `pelagia.cut` is the pattern, because both grown navies press
+ * nearly every round part by its node: a tergite is a unit orb drawn
+ * 17 × 10 × 26 m, its widest ring is no circle, the measure reads the
+ * widest *chord* it draws, and a count asked at the major radius alone
+ * lands a step off on the odd lattice as often as not. So `round(r, arc)`
+ * is the bare count a turn at a radius in drawn units, and `orb`, `cyl`,
+ * `torus`, `lathe`, `loft` and `capsule` give a primitive's counts
+ * *settled*: the part is built, placed as its node will place it
+ * (`placement` — `scale`, `rot`, `parent`, and `yaw` for a part the kit's
+ * `part` turns from Z-long onto +X), read back through the measure's own
+ * `ringsOf`, and asked again at what it reads until the count holds.
+ * `settle` breaks a cycle by trying the lattice the iterates visited and,
+ * failing that, builds the last iterate: a ring no count holds is the
+ * measure's to name, and Block 2c records each.
+ *
+ * `METRE` is the rule for a model drawn in metres, every builder's
+ * default; a script at an export's scale passes `cut: directorate.cut(L /
+ * DRAWN)`. No builder takes a count from a script any more (`noCount`)
+ * except a *section* — five on any part, four on the parts the rule names
+ * — which `section` reads through the measure's own `isSection`, so the
+ * module and the measure cannot disagree on what a section is: a six that
+ * was a builder's default goes to the rule, and a six a script names is
+ * an error.
+ */
+export function cut(m = 1) {
+  const round = (radius, arc) => facetsFor(facets, radius * m, arc);
+  const probe = (geo, placement = {}) => {
+    const { scale = [1, 1, 1], rot = [0, 0, 0], parent = null, yaw = false } = placement;
+    const mesh = new THREE.Mesh(yaw ? geo.clone().rotateY(Math.PI / 2) : geo);
+    mesh.rotation.set(...rot);
+    mesh.scale.set(...scale);
+    if (parent) {
+      parent.add(mesh);
+      parent.updateMatrixWorld(true);
+      parent.remove(mesh);
+    } else mesh.updateMatrixWorld(true);
+    mesh.matrixWorld.premultiply(new THREE.Matrix4().makeScale(m, m, m));
+    return ringsOf(mesh).map((r) =>
+      Math.max(ORB_FLOOR[r.kind] ?? 1, facetsFor(facets, r.radiusM, r.arc))
+    );
+  };
+  const same = (a, b) => a.length === b.length && a.every((n, k) => n === b[k]);
+  const settle = (build, placement, start) => {
+    const seen = [];
+    let counts = start;
+    for (let i = 0; i < 2 * (facets.max - facets.min + 1); i++) {
+      const next = probe(build(counts), placement);
+      if (same(next, counts)) return counts;
+      if (seen.some((s) => same(s, next))) break;
+      seen.push(counts);
+      counts = next;
+    }
+    seen.push(counts);
+    const axes = counts.map((_, k) => [...new Set(seen.map((s) => s[k]))].sort((a, b) => a - b));
+    const tried = axes.reduce((acc, ax) => acc.flatMap((c) => ax.map((n) => [...c, n])), [[]]);
+    return tried.find((c) => same(probe(build(c), placement), c)) ?? counts;
+  };
+  const pressed = (placement = {}) => Math.max(...(placement.scale ?? [1, 1, 1]));
+  return {
+    round,
+    probe,
+    settle,
+    orb(radius, placement = {}, window = {}) {
+      const { phiStart = 0, phiLength = TAU, thetaStart = 0, thetaLength = Math.PI } = window;
+      const { widthSegments, heightSegments } = orbFacets(facets, radius * pressed(placement) * m, {
+        thetaStart,
+        thetaLength,
+        phiLength,
+      });
+      return settle(
+        ([w, h]) =>
+          new THREE.SphereGeometry(radius, w, h, phiStart, phiLength, thetaStart, thetaLength),
+        placement,
+        [widthSegments, heightSegments]
+      );
+    },
+    cyl(rTop, rBottom, h, placement = {}, thetaStart = 0) {
+      return settle(([n]) => cyl(rTop, rBottom, h, n, thetaStart), placement, [
+        round(Math.max(rTop, rBottom) * pressed(placement)),
+      ])[0];
+    },
+    torus(R, tube, placement = {}, arc = TAU) {
+      // The reader lists a torus's ring before its tube; the kit's `torus`
+      // takes the tube's count (radial) before the ring's (tubular).
+      const s = pressed(placement);
+      const [tubular, radial] = settle(
+        ([ts, rs]) => new THREE.TorusGeometry(R, tube, rs, ts, arc),
+        placement,
+        [round((R + tube) * s, arc), round(tube * s)]
+      );
+      return [radial, tubular];
+    },
+    /** A lathe on three's own profile, `Vector2` (r, y) points, as the silos are turned. */
+    lathe(points, placement = {}, phase = 0) {
+      const maxR = Math.max(...points.map((p) => p.x));
+      return settle(([n]) => new THREE.LatheGeometry(points, n, phase), placement, [
+        round(maxR * pressed(placement)),
+      ])[0];
+    },
+    /** A lathe on the kit's `loft` profile, `[x, r]` stations along X. */
+    loft(profile, placement = {}, phase = 0) {
+      const maxR = Math.max(...profile.map(([, r]) => r));
+      return settle(([n]) => loft(profile, n, phase), placement, [
+        round(maxR * pressed(placement)),
+      ])[0];
+    },
+    capsule: (radius, placement = {}) => {
+      const r = radius * pressed(placement);
+      return [Math.ceil(round(r, Math.PI) / 2), round(r)];
+    },
+  };
+}
+/** The rule for a model drawn in metres, which is every builder's default. */
+const METRE = cut();
+
+function noCount(what, opts, ...keys) {
+  for (const key of keys)
+    if (opts && opts[key] !== undefined)
+      throw new Error(`${what}: \`${key}\` is the rule's since #919 (directorate.mjs \`cut\`)`);
+}
+
+/**
+ * A count a script names by hand, kept only where the measure keeps it: a
+ * section of the rule's on this part (`isSection` — five anywhere, four on
+ * a `rostrum`, a `head_shield`, a `spike`, a `dspike`, a `tooth`, a
+ * `mandible` or a `dog`). Anything else is the rule's since #919.
+ */
+function section(name, n) {
+  if (!isSection(facets.sections, n, name))
+    throw new Error(
+      `${name}: ${n} a turn is no section the rule keeps on this part — the count is the rule's since #919 (directorate.mjs \`cut\`)`
+    );
+  return n;
+}
+
+/**
+ * The probe's placement for a part placed through `place`, `part` or a
+ * frame by a `drawn` or `laid` placement: the node's scale and rotation as
+ * the kit will set them, and the quarter turn `zLong` gives the geometry.
+ * A part a frame places from the export's own `(e, s)` is probed on those
+ * (`framed`): the kit's frame is the export's turned whole, so the chords
+ * come out the same.
+ */
+const by = (p = {}, frame) => ({
+  scale: p.scale,
+  rot: p.rot,
+  yaw: frame ? frame === zLong : !p.laid,
+});
+const framed = (rot, scale) => ({ rot, scale });
+
+/** A carapace orb: a unit sphere cut by the rule for the scale its node presses it to. */
+const orb = (rule, scale, more = {}) => new THREE.SphereGeometry(1, ...rule.orb(1, { scale, ...more }));
+/**
+ * A carapace shell: an orb of `r` that may stop short of a full turn
+ * (`round`, the fraction of one it goes round) or short of the bottom pole
+ * (`down`, the fraction of a half-turn it comes down from the crown), cut
+ * by the rule as placed. The approved turret's mound is an orb cut off
+ * 0.42 of the way down; its brow a shell open 0.55 of a turn and 0.48
+ * deep.
+ */
+const shellOf = (rule, r, { round = 1, down = 1 } = {}, placement = {}) => {
+  const window = { phiLength: TAU * round, thetaLength: Math.PI * down };
+  const [w, h] = rule.orb(r, placement, window);
+  return new THREE.SphereGeometry(r, w, h, 0, window.phiLength, 0, window.thetaLength);
+};
+/** A patch of a sphere: `r` over the window `phi` and `theta`, each [start, length], cut by the rule as placed. */
+const patchOf = (rule, r, { phi, theta }, placement = {}) => {
+  const window = { phiStart: phi[0], phiLength: phi[1], thetaStart: theta[0], thetaLength: theta[1] };
+  const [w, h] = rule.orb(r, placement, window);
+  return new THREE.SphereGeometry(r, w, h, phi[0], phi[1], theta[0], theta[1]);
+};
+/** A spine: a cone of `facets` sides, apex at +Y until the caller rakes it — a section's count, or `cone`'s. */
+const spike = (r, length, facets) => cyl(0, r, length, facets);
+/** A cone cut by the rule at its base, `tip` wide at the point. */
+const cone = (rule, r, length, placement, tip = 0) =>
+  cyl(tip, r, length, rule.cyl(tip, r, length, placement));
+/** A cone whose count a script may name only as a section of the rule's; unnamed, it is the rule's. */
+const spikeOf = (rule, name, r, length, facets, placement, tip = 0) =>
+  facets === undefined
+    ? cone(rule, r, length, placement, tip)
+    : cyl(tip, r, length, section(name, facets));
 
 /**
  * Refuse a mirrored pair: nothing on this navy is symmetrical. `tol` is
@@ -392,7 +574,7 @@ export const segmentSeries = (opts) => series({ section: [0.6, 1.5], ...opts });
  * `lift` up. One value, read by `tergites` to build the ridge and by
  * `plateEdgePhotophores` to keep a lamp out from under it (#890).
  */
-export const TERGITE_RIDGE = { at: -0.75, size: [0.25, 1.125, 0.92], lift: 0.5, facets: [10, 6] };
+export const TERGITE_RIDGE = { at: -0.75, size: [0.25, 1.125, 0.92], lift: 0.5 };
 
 /**
  * The tergites: a squashed orb per `[x, sx, sy, sz]` station, alternating
@@ -444,35 +626,29 @@ export const TERGITE_RIDGE = { at: -0.75, size: [0.25, 1.125, 0.92], lift: 0.5, 
  * the second pass).
  */
 export function tergites(root, { violet, red, black }, opts) {
-  const { segments, lip = 'seam', seam = {}, ridge = {}, spines, facets = [12, 6], first = 0 } = opts;
+  const { segments, lip = 'seam', seam = {}, ridge = {}, spines, first = 0 } = opts;
+  const { cut: rule = METRE } = opts;
+  noCount('tergites', opts, 'facets');
+  noCount('tergites: ridge', ridge, 'facets');
   const { at: seamAt = 0.85, size: seamSize = [0.3, 0.95, 0.9], tallOf = 'height' } = seam;
-  const {
-    at: ridgeAt,
-    size: ridgeSize,
-    lift: ridgeLift,
-    facets: ridgeFacets,
-  } = { ...TERGITE_RIDGE, ...ridge };
+  const { at: ridgeAt, size: ridgeSize, lift: ridgeLift } = { ...TERGITE_RIDGE, ...ridge };
   if (tallOf !== 'height' && tallOf !== 'beam')
     throw new Error(`tergites: seam.tallOf is '${tallOf}' — 'height' (sy) or 'beam' (sz)`);
   segments.forEach(([x, sx, sy, sz], k) => {
     const i = first + k;
-    add(root, `tergite_${i}`, orb(...facets), i % 2 ? red : violet, [x, 0, 0], [0, 0, 0], [sx, sy, sz]);
-    if (lip === 'seam')
-      add(root, `tergite_seam_${i}`, orb(10, 6), black, [x + seamAt * sx, 0, 0], [0, 0, 0], [
-        seamSize[0] * sx,
-        seamSize[1] * (tallOf === 'beam' ? sz : sy),
-        seamSize[2] * sz,
-      ]);
-    else if (lip === 'ridge')
-      add(root, `tergite_ridge_${i}`, orb(...ridgeFacets), black, [x + ridgeAt * sx, ridgeLift, 0], [0, 0, 0], [
-        ridgeSize[0] * sx,
-        ridgeSize[1] * sy,
-        ridgeSize[2] * sz,
-      ]);
+    const plate = [sx, sy, sz];
+    add(root, `tergite_${i}`, orb(rule, plate), i % 2 ? red : violet, [x, 0, 0], [0, 0, 0], plate);
+    if (lip === 'seam') {
+      const s = [seamSize[0] * sx, seamSize[1] * (tallOf === 'beam' ? sz : sy), seamSize[2] * sz];
+      add(root, `tergite_seam_${i}`, orb(rule, s), black, [x + seamAt * sx, 0, 0], [0, 0, 0], s);
+    } else if (lip === 'ridge') {
+      const s = [ridgeSize[0] * sx, ridgeSize[1] * sy, ridgeSize[2] * sz];
+      add(root, `tergite_ridge_${i}`, orb(rule, s), black, [x + ridgeAt * sx, ridgeLift, 0], [0, 0, 0], s);
+    }
     if (spines) {
       const { lengths = [7, 10], r = 1.2, rake = -0.3, offsets = [5, 6] } = spines;
       const sgn = i % 2 ? -1 : 1;
-      add(root, `tergite_spine_${i}`, spike(r, lengths[i % lengths.length]), black, [
+      add(root, `tergite_spine_${i}`, cone(rule, r, lengths[i % lengths.length]), black, [
         x + 2,
         sy + 2,
         sgn * offsets[i % offsets.length],
@@ -482,8 +658,10 @@ export function tergites(root, { violet, red, black }, opts) {
 }
 
 /** The rostrum: a faceted cone ahead of the first plate, apex at `tip`. */
-export function rostrum(root, red, { tip, r, length, facets = 6 }) {
-  add(root, 'rostrum', spike(r, length, facets), red, [tip - length / 2, 0, 0], [0, 0, -Math.PI / 2]);
+export function rostrum(root, red, opts) {
+  const { tip, r, length, cut: rule = METRE } = opts;
+  noCount('rostrum', opts, 'facets');
+  add(root, 'rostrum', cone(rule, r, length), red, [tip - length / 2, 0, 0], [0, 0, -Math.PI / 2]);
 }
 
 /**
@@ -500,12 +678,14 @@ export function rostrum(root, red, { tip, r, length, facets = 6 }) {
  * and Precentor both draw them this way (#630, beyond F1–F5).
  */
 export function telson(root, { violet, black }, opts) {
-  const { tip, r, length, facets = 6, tailSpines } = opts;
-  add(root, 'telson', cyl(0, r, length, facets), violet, [tip + length / 2, 0, 0], [0, 0, -Math.PI / 2]);
+  const { tip, r, length, tailSpines, cut: rule = METRE } = opts;
+  noCount('telson', opts, 'facets');
+  add(root, 'telson', cone(rule, r, length), violet, [tip + length / 2, 0, 0], [0, 0, -Math.PI / 2]);
   if (tailSpines) {
     const { x, y = 1, z, r: sr, length: sl, splay = 0.4 } = tailSpines;
+    const five = section('tail_spine', 5);
     bothSides((side, sgn) =>
-      add(root, `tail_spine_${side}`, cyl(0, sr, sl, 5), black, [x, y, sgn * z], [0, sgn * splay, -Math.PI / 2])
+      add(root, `tail_spine_${side}`, spike(sr, sl, five), black, [x, y, sgn * z], [0, sgn * splay, -Math.PI / 2])
     );
   }
 }
@@ -541,8 +721,10 @@ export function telson(root, { violet, black }, opts) {
  * other (#785). The Chorister and the Precentor pass none and are
  * unchanged.
  */
-export function limbs(root, steel, { xs, y, z, r = 0.6, length = 6, fold = 0.45, rim, sink = 0.8 }) {
+export function limbs(root, steel, opts) {
+  const { xs, y, z, r = 0.6, length = 6, fold = 0.45, rim, sink = 0.8, cut: rule = METRE } = opts;
   const [rootR, tipR] = Array.isArray(r) ? r : [r, r];
+  const sides = rule.cyl(tipR, rootR, length);
   // A limb's centre is `x`; its root, half a length back along the fold,
   // is where the flank is asked. `rim` given, `z` is not read.
   const centreZ = (x) => {
@@ -553,7 +735,7 @@ export function limbs(root, steel, { xs, y, z, r = 0.6, length = 6, fold = 0.45,
   };
   bothSides((side, sgn) =>
     xs.forEach((x, i) =>
-      add(root, `limb_${side}${i}`, cyl(tipR, rootR, length, 6), steel, [x, y, sgn * centreZ(x)], [
+      add(root, `limb_${side}${i}`, cyl(tipR, rootR, length, sides), steel, [x, y, sgn * centreZ(x)], [
         (sgn * Math.PI) / 2,
         0,
         -fold,
@@ -568,11 +750,12 @@ export function limbs(root, steel, { xs, y, z, r = 0.6, length = 6, fold = 0.45,
  * `facets` is the cone's cut, and five is the default because five is what
  * both approved hulls with a dorsal rank have — the Precentor and the
  * Chorister — and this builder has no third caller to want six (#638, #646).
+ * A section only, since #919 (`section`): five keeps at any size.
  */
 export function dorsalSpines(root, black, { spines, r = 0.7, rake = -0.3, facets = 5 }) {
   refuseMirror('dorsal_spine', spines.map((s, i) => [i, ...s]));
   spines.forEach(([x, y, z, length], i) =>
-    add(root, `dorsal_spine_${i}`, spike(r, length, facets), black, [x, y, z], [0, 0, rake])
+    add(root, `dorsal_spine_${i}`, spike(r, length, section('dorsal_spine', facets)), black, [x, y, z], [0, 0, rake])
   );
 }
 
@@ -703,8 +886,10 @@ export function plateEdgePhotophores(root, crimson, opts) {
  * a paler dome — off the centreline, as the Chorister's is, because a grown
  * thing is not centred.
  */
-export function bladderDome(root, violet, { x, y, z, r, squash = 0.64, stretch = 1.1 }) {
-  add(root, 'bladder_dome', orb(), violet, [x, y, z], [0, 0, 0], [r, r * squash, r * stretch]);
+export function bladderDome(root, violet, opts) {
+  const { x, y, z, r, squash = 0.64, stretch = 1.1, cut: rule = METRE } = opts;
+  const s = [r, r * squash, r * stretch];
+  add(root, 'bladder_dome', orb(rule, s), violet, [x, y, z], [0, 0, 0], s);
 }
 
 /**
@@ -731,27 +916,26 @@ export function bladderDome(root, violet, { x, y, z, r, squash = 0.64, stretch =
  * and passes none, and its output is unchanged.
  */
 export function listeningDome(root, { red, violet, black, crimson }, opts) {
-  const { x, y, z = 0, r, ry, studs = {}, aft, crown } = opts;
+  const { x, y, z = 0, r, ry, studs = {}, aft, crown, cut: rule = METRE } = opts;
   const { count = 6, tilt = 0.5, length = 3.2, r: sr = 0.5, phase = 0.4 } = studs;
   const { facets = 5, radius, lift } = studs;
-  add(root, 'dome', orb(14, 7), red, [x, y, z], [0, 0, 0], [r, ry, r]);
+  add(root, 'dome', orb(rule, [r, ry, r]), red, [x, y, z], [0, 0, 0], [r, ry, r]);
   for (let i = 0; i < count; i++) {
     const a = phase + (i * 2 * Math.PI) / count;
-    add(root, `dome_spine_${i}`, spike(sr, length, facets), black, [
+    add(root, `dome_spine_${i}`, spike(sr, length, section('dome_spine', facets)), black, [
       x + radius * Math.cos(a),
       y + lift,
       z + radius * Math.sin(a),
     ], [tilt * Math.sin(a), 0, -tilt * Math.cos(a)]);
   }
-  if (aft)
-    add(root, 'dome_aft', orb(10, 6), violet, [aft.x, aft.y, aft.z], [0, 0, 0], [
-      aft.r,
-      aft.ry ?? aft.r * 0.85,
-      aft.r,
-    ]);
+  if (aft) {
+    const s = [aft.r, aft.ry ?? aft.r * 0.85, aft.r];
+    add(root, 'dome_aft', orb(rule, s), violet, [aft.x, aft.y, aft.z], [0, 0, 0], s);
+  }
   if (crown) {
     const { r: cr, ry: cry = cr * 0.4, sink = 0.3 } = crown;
-    add(root, 'dome_crown', orb(10, 5), crimson, [x, y + ry - sink, z], [0, 0, 0], [cr, cry, cr]);
+    const s = [cr, cry, cr];
+    add(root, 'dome_crown', orb(rule, s), crimson, [x, y + ry - sink, z], [0, 0, 0], s);
   }
 }
 
@@ -783,24 +967,27 @@ export function listeningDome(root, { red, violet, black, crimson }, opts) {
 export function arrayBoom(root, { steel, black, red }, opts) {
   const { x, y, halfSpan, r = 1.3, starboard = 6, port = 5, z0 = 5, pitch = 2.6 } = opts;
   const { lengths = [6, 7.5], hr = 0.9, cant = 0.25, tip = 4, seat, sleeveR } = opts;
+  const { cut: rule = METRE } = opts;
   if (port === starboard)
     throw new Error(`array_boom: ${port} hydrophones a side — the ranks never match`);
-  add(root, 'array_boom', cyl(r, r, halfSpan * 2, 8), steel, [x, y, 0], [Math.PI / 2, 0, 0]);
-  add(root, 'array_boom_sleeve', cyl(sleeveR, sleeveR, 6, 8), black, [x, y, 0], [Math.PI / 2, 0, 0]);
+  const boom = cyl(r, r, halfSpan * 2, rule.cyl(r, r, halfSpan * 2));
+  add(root, 'array_boom', boom, steel, [x, y, 0], [Math.PI / 2, 0, 0]);
+  const sleeve = cyl(sleeveR, sleeveR, 6, rule.cyl(sleeveR, sleeveR, 6));
+  add(root, 'array_boom_sleeve', sleeve, black, [x, y, 0], [Math.PI / 2, 0, 0]);
   bothSides((side, sgn) => {
     const count = sgn > 0 ? starboard : port;
     for (let j = 0; j < count; j++) {
       const len = lengths[j % lengths.length];
       const z = sgn * (z0 + pitch * j);
       const lift = y + seat[j % seat.length];
-      add(root, `hydrophone_${side}${j}`, spike(hr, len), red, [x, lift, z], [
+      add(root, `hydrophone_${side}${j}`, cone(rule, hr, len), red, [x, lift, z], [
         sgn * cant,
         0,
         0.15,
       ]);
       add(root, `hydrophone_socket_${side}${j}`, box(1.6, 1.2, 1.6), steel, [x, y + 0.9, z]);
     }
-    add(root, `boom_tip_${side}`, spike(r, tip), black, [x, y, sgn * (halfSpan + tip / 2)], [
+    add(root, `boom_tip_${side}`, cone(rule, r, tip), black, [x, y, sgn * (halfSpan + tip / 2)], [
       sgn * Math.PI / 2,
       0,
       0,
@@ -820,9 +1007,11 @@ export function arrayBoom(root, { steel, black, red }, opts) {
  * follow: its mount sits at x = 15 under a barrel centred at 20, 0.5 m
  * further aft than the rule puts it (#649).
  */
-export function spineGun(root, { steel, black }, { x, y, z, r = 0.7, length = 9, mount = {} }) {
+export function spineGun(root, { steel, black }, opts) {
+  const { x, y, z, r = 0.7, length = 9, mount = {}, cut: rule = METRE } = opts;
   const [breech, muzzle] = Array.isArray(r) ? r : [r, r];
-  add(root, 'spine_gun', cyl(muzzle, breech, length, 6), steel, [x, y, z], [0, 0, -Math.PI / 2]);
+  const barrel = cyl(muzzle, breech, length, rule.cyl(muzzle, breech, length));
+  add(root, 'spine_gun', barrel, steel, [x, y, z], [0, 0, -Math.PI / 2]);
   const { x: mx = x - length / 2, y: my = y - 0.2, z: mz = z } = mount;
   add(root, 'spine_gun_mount', box(2.4, 1.6, 2), black, [mx, my, mz]);
 }
@@ -837,13 +1026,13 @@ export function spineGun(root, { steel, black }, { x, y, z, r = 0.7, length = 9,
  * and the lip over it is sheet steel with an edge.
  */
 export function scoopBow(root, { red, steel, black, gullet }, opts) {
-  const { outline, y, depth, bevel = 0, lip, mandibles, gullet: g } = opts;
+  const { outline, y, depth, bevel = 0, lip, mandibles, gullet: g, cut: rule = METRE } = opts;
   add(root, 'scoop', plan(outline, depth, bevel), red, [0, y, 0]);
   if (lip) add(root, 'scoop_lip', plan(lip.outline, lip.depth, lip.bevel ?? 0), steel, [0, lip.y, 0]);
   if (mandibles) {
     const { x, y: my = 0.5, z, r = 2.2, length = 16, pinch = 0.12 } = mandibles;
     bothSides((side, sgn) => {
-      add(root, `mandible_${side}`, spike(r, length), steel, [x, my, sgn * z], [0, sgn * pinch, -Math.PI / 2]);
+      add(root, `mandible_${side}`, cone(rule, r, length), steel, [x, my, sgn * z], [0, sgn * pinch, -Math.PI / 2]);
       add(root, `mandible_root_${side}`, box(4, 4, 4), black, [x - length / 2, my, sgn * (z + 0.5)]);
     });
   }
@@ -875,7 +1064,7 @@ export function scoopBow(root, { red, steel, black, gullet }, opts) {
  * which the first transcription did not carry. A scalar is a straight limb.
  */
 export function claw(root, { steel, black }, opts) {
-  const { side = 'p', x, y = 1, z, arm, fore, tips } = opts;
+  const { side = 'p', x, y = 1, z, arm, fore, tips, cut: rule = METRE } = opts;
   const sgn = side === 'p' ? -1 : 1;
   // A cylinder is born along Y with `rTop` at +Y; rolled onto X, +Y is the
   // far end, and a yaw about Y turns that end toward −Z. Inboard is +Z to
@@ -884,19 +1073,21 @@ export function claw(root, { steel, black }, opts) {
   const turn = (inboard) => [0, sgn * inboard, -Math.PI / 2];
   const limb = (r, length) => {
     const [root, end] = Array.isArray(r) ? r : [r, r];
-    return cyl(end, root, length, 8);
+    return cyl(end, root, length, rule.cyl(end, root, length));
   };
   add(root, 'claw_arm', limb(arm.r, arm.length), steel, [x + arm.length / 2, y, z], turn(0));
   add(root, 'claw_forearm', limb(fore.r, fore.length), steel, fore.at, turn(fore.bend));
-  add(root, 'claw_tip_a', spike(tips.a.r, tips.a.length, 5), black, tips.a.at, turn(tips.a.close));
-  add(root, 'claw_tip_b', spike(tips.b.r, tips.b.length, 5), black, tips.b.at, turn(tips.b.close));
+  const five = section('claw_tip', 5);
+  add(root, 'claw_tip_a', spike(tips.a.r, tips.a.length, five), black, tips.a.at, turn(tips.a.close));
+  add(root, 'claw_tip_b', spike(tips.b.r, tips.b.length, five), black, tips.b.at, turn(tips.b.close));
 }
 
 /** The dredge boom off the other beam: a spar along the hull with teeth stepped along it. */
 export function dredgeBoom(root, { steel, black }, opts) {
-  const { side = 's', x, y = 0.5, z, r = 1.2, length = 30, teeth = 3 } = opts;
+  const { side = 's', x, y = 0.5, z, r = 1.2, length = 30, teeth = 3, cut: rule = METRE } = opts;
   const sgn = side === 'p' ? -1 : 1;
-  add(root, 'dredge_boom', cyl(r, r, length, 8), steel, [x, y, z], [0, 0, -Math.PI / 2]);
+  const boom = cyl(r, r, length, rule.cyl(r, r, length));
+  add(root, 'dredge_boom', boom, steel, [x, y, z], [0, 0, -Math.PI / 2]);
   for (let i = 0; i < teeth; i++)
     add(root, `dredge_tooth_${i}`, box(2.2, 2.2, 3), black, [
       x - length / 3 + (length / 3) * i,
@@ -1003,10 +1194,11 @@ export function pressureHatches(root, { collar, door, rim, black }, opts) {
     proud = 1.4,
     sink = 0.8,
     tube = 0.3,
-    facets = 8,
     dogs = { r: 0.28, lengths: [2.4, 2], reach: 0.8, hook: 0.25 },
     hatches,
+    cut: rule = METRE,
   } = opts;
+  noCount('pressureHatches', opts, 'facets');
   const up = new THREE.Vector3(0, 1, 0);
   const seat = ({ side, plate, dx = 0 }) => {
     const [cx, sx, sy, sz] = segments[plate];
@@ -1030,17 +1222,16 @@ export function pressureHatches(root, { collar, door, rim, black }, opts) {
   hatches.forEach(({ side }, i) => {
     const name = `hatch_${side}${i}`;
     const frame = group(root, name, seats[i]);
-    add(frame, `${name}_collar`, cyl(r, r * 1.15, proud + sink, facets), collar, [
-      0,
-      (proud - sink) / 2,
-      0,
-    ]);
-    add(frame, `${name}_door`, cyl(r * 0.9, r * 0.9, 0.4, facets), door, [0, proud + 0.2, 0]);
-    add(frame, `${name}_rim`, torus(r, tube, 5, 14).rotateX(Math.PI / 2), rim, [0, proud, 0]);
+    const collarGeo = cyl(r, r * 1.15, proud + sink, rule.cyl(r, r * 1.15, proud + sink));
+    add(frame, `${name}_collar`, collarGeo, collar, [0, (proud - sink) / 2, 0]);
+    const doorGeo = cyl(r * 0.9, r * 0.9, 0.4, rule.cyl(r * 0.9, r * 0.9, 0.4));
+    add(frame, `${name}_door`, doorGeo, door, [0, proud + 0.2, 0]);
+    const rimGeo = torus(r, tube, ...rule.torus(r, tube)).rotateX(Math.PI / 2);
+    add(frame, `${name}_rim`, rimGeo, rim, [0, proud, 0]);
     // A cone's apex is +Y; a roll of ±(π/2 + hook) about Z lays it across
     // the face toward the centre and dips the point onto the door.
     [1, -1].forEach((s, k) =>
-      add(frame, `${name}_dog_${k}`, spike(dogs.r, dogs.lengths[k % dogs.lengths.length], 4), black, [
+      add(frame, `${name}_dog_${k}`, spike(dogs.r, dogs.lengths[k % dogs.lengths.length], section(`${name}_dog_${k}`, 4)), black, [
         s * dogs.reach * r,
         proud + 0.5,
         0,
@@ -1065,8 +1256,13 @@ export function pressureHatches(root, { collar, door, rim, black }, opts) {
  * unchanged.
  */
 export function keel(root, mat, opts) {
-  const { x, y, z = 0, radii, length, facets = 7, squash = 0.8, ribs } = opts;
-  add(root, 'keel', cyl(radii[0], radii[1], length, facets), mat, [x, y, z], [0, 0, -Math.PI / 2], [
+  const { x, y, z = 0, radii, length, squash = 0.8, ribs, cut: rule = METRE } = opts;
+  noCount('keel', opts, 'facets');
+  // The spar is rolled onto X and then pressed across the beam, so the rule
+  // reads it as the node lays it (`cut`).
+  const pressed = { scale: [1, 1, squash], rot: [0, 0, -Math.PI / 2] };
+  const sides = rule.cyl(radii[0], radii[1], length, pressed);
+  add(root, 'keel', cyl(radii[0], radii[1], length, sides), mat, [x, y, z], [0, 0, -Math.PI / 2], [
     1,
     1,
     squash,
@@ -1080,11 +1276,9 @@ export function keel(root, mat, opts) {
     const t = count > 1 ? i / (count - 1) : 0.5;
     const rx = x + (length / 2 - inset) * (1 - 2 * t);
     const r = radii[0] + (radii[1] - radii[0]) * (rx - (x + length / 2)) / -length;
-    add(root, `keel_rib_${i}`, torus(r + proud, tube, 5, 14).rotateY(Math.PI / 2), ribMat, [rx, y, z], [
-      0,
-      0,
-      0,
-    ], [1, 1, squash]);
+    const [radial, tubular] = rule.torus(r + proud, tube, { scale: [1, 1, squash], yaw: true });
+    const hoop = torus(r + proud, tube, radial, tubular).rotateY(Math.PI / 2);
+    add(root, `keel_rib_${i}`, hoop, ribMat, [rx, y, z], [0, 0, 0], [1, 1, squash]);
   }
 }
 
@@ -1100,25 +1294,20 @@ export function keel(root, mat, opts) {
  * across the keel.
  */
 export function ductedDrive(root, { duct: ductMat, hub: hubMat, vane: vaneMat }, opts) {
-  const { stern, length, r, wall = 0.6, facets = 10, hub, vanes = {} } = opts;
+  const { stern, length, r, wall = 0.6, hub, vanes = {}, cut: rule = METRE } = opts;
+  noCount('ductedDrive', opts, 'facets');
+  noCount('ductedDrive: hub', hub, 'facets');
   const { count = 3, phase = 0.5, chord = 2.5, t = 0.4, x: vx = stern + length / 2 } = vanes;
   const inner = r - wall;
-  add(
-    root,
-    'drive_duct',
-    loft(
-      [
-        [stern, inner],
-        [stern, r],
-        [stern + length, r],
-        [stern + length, inner],
-        [stern, inner],
-      ],
-      facets
-    ),
-    ductMat
-  );
-  add(root, 'drive_hub', cyl(0, hub.r, hub.length, hub.facets ?? 8), hubMat, [
+  const duct = [
+    [stern, inner],
+    [stern, r],
+    [stern + length, r],
+    [stern + length, inner],
+    [stern, inner],
+  ];
+  add(root, 'drive_duct', loft(duct, rule.loft(duct)), ductMat);
+  add(root, 'drive_hub', cone(rule, hub.r, hub.length), hubMat, [
     hub.tip + hub.length / 2,
     0,
     0,
@@ -1190,9 +1379,10 @@ export function tergiteFlank(segments, x, y, seam = {}) {
  * A bone: a steel frustum `[root, tip]` in radius laid from `a` to `b`,
  * the rotation the minimal one taking +Y onto that line, as `aimedSpikes`
  * lays the Cruiser's antennae. The node sits at the midpoint and the
- * length is the distance, so a script holds joints and never a length.
+ * length is the distance, so a script holds joints and never a length;
+ * `rule` cuts it at its root (#919).
  */
-function bone(root, name, mat, [rootR, tipR], a, b, facets) {
+function bone(root, name, mat, [rootR, tipR], a, b, rule) {
   const A = new THREE.Vector3(...a);
   const B = new THREE.Vector3(...b);
   const d = B.clone().sub(A);
@@ -1202,7 +1392,8 @@ function bone(root, name, mat, [rootR, tipR], a, b, facets) {
   );
   const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
   const mid = A.clone().add(B).multiplyScalar(0.5).toArray();
-  return add(root, name, cyl(tipR, rootR, d.length(), facets), mat, mid, [e.x, e.y, e.z]);
+  const sides = rule.cyl(tipR, rootR, d.length());
+  return add(root, name, cyl(tipR, rootR, d.length(), sides), mat, mid, [e.x, e.y, e.z]);
 }
 
 /**
@@ -1247,9 +1438,10 @@ export function plantedLimbs(root, { steel, black, red }, opts) {
     knee = { r: 1.3 },
     tibia = { r: [0.9, 0.7], reach: 4, drop: 6 },
     foot = { r: 0.8, length: 2.4 },
-    facets = 6,
     limbs: list,
+    cut: rule = METRE,
   } = opts;
+  noCount('plantedLimbs', opts, 'facets');
   const count = { p: 0, s: 0 };
   const joints = list.map(({ side, x, rake = 0 }) => {
     if (side !== 'p' && side !== 's')
@@ -1276,16 +1468,18 @@ export function plantedLimbs(root, { steel, black, red }, opts) {
   );
   joints.forEach(({ side, i, hip: at, knee: kneeAt, ankle }) => {
     const name = `limb_${side}${i}`;
-    add(root, `${name}_hip`, orb(8, 5), black, at, [0, 0, 0], [hip.r, hip.r, hip.r]);
-    bone(root, `${name}_femur`, steel, femur.r, at, kneeAt, facets);
-    add(root, `${name}_knee`, orb(8, 5), black, kneeAt, [0, 0, 0], [knee.r, knee.r, knee.r]);
-    bone(root, `${name}_tibia`, steel, tibia.r, kneeAt, ankle, facets);
+    const hipS = [hip.r, hip.r, hip.r];
+    add(root, `${name}_hip`, orb(rule, hipS), black, at, [0, 0, 0], hipS);
+    bone(root, `${name}_femur`, steel, femur.r, at, kneeAt, rule);
+    const kneeS = [knee.r, knee.r, knee.r];
+    add(root, `${name}_knee`, orb(rule, kneeS), black, kneeAt, [0, 0, 0], kneeS);
+    bone(root, `${name}_tibia`, steel, tibia.r, kneeAt, ankle, rule);
     // A cone's apex is +Y; a half turn about X plants it point-down, its
     // base ring on the ankle.
     add(
       root,
       `${name}_foot`,
-      spike(foot.r, foot.length, facets),
+      cone(rule, foot.r, foot.length),
       red,
       [ankle[0], ankle[1] - foot.length / 2, ankle[2]],
       [Math.PI, 0, 0]
@@ -1338,7 +1532,7 @@ export function rimSpines(root, black, opts) {
   });
   refuseMirror('rim_spine', placed.map(({ name, at }) => [name, ...at]));
   placed.forEach(({ name, at, rot, length }) =>
-    add(root, name, spike(r, length, facets), black, at, rot)
+    add(root, name, spike(r, length, section(name, facets)), black, at, rot)
   );
 }
 
@@ -1454,8 +1648,9 @@ export function chargeRack(root, { steel, black }, opts) {
     floor = 0.3,
     lid = { t: 0.25, open: 1.35 },
     hinge = { r: 0.22, length: 0.85 },
-    facets = 10,
+    cut: rule = METRE,
   } = opts;
+  noCount('chargeRack', opts, 'facets');
   const count = { p: 0, s: 0 };
   const placed = cells.map(({ side, x, z }) => {
     if (side !== 'p' && side !== 's')
@@ -1468,36 +1663,33 @@ export function chargeRack(root, { steel, black }, opts) {
   });
   refuseMirror('cell', placed.map(({ name, at }) => [name, ...at]));
   const inner = r - wall;
+  const collar = [
+    [0, inner],
+    [0, r],
+    [proud + sink, r],
+    [proud + sink, inner],
+    [0, inner],
+  ];
+  // Each ring the rule's at its own radius: the collar at `r`, the well at
+  // the bore, the lid at `r`, the pin at its own.
+  const facets = rule.loft(collar);
+  const wellSides = rule.cyl(inner, inner, floor);
+  const lidSides = rule.cyl(r, r, lid.t);
+  const pinSides = rule.cyl(hinge.r, hinge.r, 2 * r * hinge.length);
   placed.forEach(({ name, at: [x, y, z] }) => {
     const top = y + proud;
-    add(
-      root,
-      `${name}_collar`,
-      loft(
-        [
-          [0, inner],
-          [0, r],
-          [proud + sink, r],
-          [proud + sink, inner],
-          [0, inner],
-        ],
-        facets
-      ),
-      steel,
-      [x, y - sink, z],
-      [0, 0, Math.PI / 2]
-    );
-    add(root, `${name}_well`, cyl(inner, inner, floor, facets), black, [x, top - depth - floor / 2, z]);
+    add(root, `${name}_collar`, loft(collar, facets), steel, [x, y - sink, z], [0, 0, Math.PI / 2]);
+    add(root, `${name}_well`, cyl(inner, inner, floor, wellSides), black, [x, top - depth - floor / 2, z]);
     // The lid turns about the hinge at the collar's aft edge: a roll of
     // `open` about Z lifts a flat disc's forward edge, and its centre swings
     // with it round the pin.
     const { t, open } = lid;
-    add(root, `${name}_lid`, cyl(r, r, t, facets), steel, [
+    add(root, `${name}_lid`, cyl(r, r, t, lidSides), steel, [
       x - r + r * Math.cos(open),
       top + t / 2 + r * Math.sin(open),
       z,
     ], [0, 0, open]);
-    add(root, `${name}_hinge`, cyl(hinge.r, hinge.r, 2 * r * hinge.length, 6), black, [x - r, top, z], [
+    add(root, `${name}_hinge`, cyl(hinge.r, hinge.r, 2 * r * hinge.length, pinSides), black, [x - r, top, z], [
       Math.PI / 2,
       0,
       0,
@@ -1667,11 +1859,12 @@ export function fileRidge(root, black, opts) {
  * `wrist` over the file, the pick's `tip` just clear of its teeth — and
  * the bones are drawn between them on `plantedLimbs`' rule (`bone`): a
  * steel frustum `femur` and `tibia` in `[root, tip]` radius, a black orb
- * at each joint of `joints`' radii. The pick is a black four-sided cone
- * from the wrist to the tip, its base square `pick.r` in radius and
- * pressed to `pick.flat` of that across the beam, so its broad face lies
- * in the plane of the stroke — along the hull — and its edge across the
- * file's teeth. Its frame is built rather than taken from the minimal
+ * at each joint of `joints`' radii. The pick is a black cone from the
+ * wrist to the tip, its base `pick.r` in radius and pressed to `pick.flat`
+ * of that across the beam, so its broad face lies in the plane of the
+ * stroke — along the hull — and its edge across the file's teeth. It was
+ * four-sided; its count is the rule's on the cone as pressed since #919,
+ * which Block 2c names among the squares that go to the rule. Its frame is built rather than taken from the minimal
  * rotation: +Y onto the aim, the beam axis kept as near the hull's beam
  * as the aim allows, and the third axis their cross — a cone aimed by the
  * minimal rotation lands its flat at whatever angle the rotation's axis
@@ -1691,14 +1884,16 @@ export function plectrumLimb(root, { steel, black }, opts) {
     femur = [1.0, 0.85],
     tibia = [0.85, 0.65],
     pick = { r: 1.2, flat: 0.3 },
-    facets = 6,
     name = 'plectrum',
+    cut: rule = METRE,
   } = opts;
-  const joint = (n, at, r) => add(root, `${name}_${n}`, orb(8, 5), black, at, [0, 0, 0], [r, r, r]);
+  noCount(name, opts, 'facets');
+  const joint = (n, at, r) =>
+    add(root, `${name}_${n}`, orb(rule, [r, r, r]), black, at, [0, 0, 0], [r, r, r]);
   joint('hip', hip, joints.hip);
-  bone(root, `${name}_femur`, steel, femur, hip, knee, facets);
+  bone(root, `${name}_femur`, steel, femur, hip, knee, rule);
   joint('knee', knee, joints.knee);
-  bone(root, `${name}_tibia`, steel, tibia, knee, wrist, facets);
+  bone(root, `${name}_tibia`, steel, tibia, knee, wrist, rule);
   joint('wrist', wrist, joints.wrist);
   const W = new THREE.Vector3(...wrist);
   const T = new THREE.Vector3(...tip);
@@ -1712,7 +1907,9 @@ export function plectrumLimb(root, { steel, black }, opts) {
     'XYZ'
   );
   const mid = W.clone().add(T).multiplyScalar(0.5).toArray();
-  add(root, name, cyl(0, pick.r, aim.length(), 4, Math.PI / 4), black, mid, [e.x, e.y, e.z], [
+  const pressed = { scale: [1, 1, pick.flat], rot: [e.x, e.y, e.z] };
+  const sides = rule.cyl(0, pick.r, aim.length(), pressed, Math.PI / 4);
+  add(root, name, cyl(0, pick.r, aim.length(), sides, Math.PI / 4), black, mid, [e.x, e.y, e.z], [
     1,
     1,
     pick.flat,
@@ -1760,7 +1957,8 @@ export function plectrumLimb(root, { steel, black }, opts) {
  * side of the shell. The seat is the *built* face, not the ideal orb: the
  * shells are low-facet (`scute(12, 6)` and `scute(8, 6)`), their faces lie
  * inside the ellipsoid by up to a third of a stud's height, and a stud
- * set on the ellipsoid floats (#890 round 3, F1). So each station is ray
+ * set on the ellipsoid floats (#890 round 3, F1); the rule cuts both
+ * coarser still since #919 (`cut`). So each station is ray
  * cast straight down onto the two meshes as built, and the stud is laid
  * on the face the ray hits, its underside in that face's plane, tilted to
  * the face's own normal — taken from the face's three vertices in world
@@ -1772,21 +1970,22 @@ export function plectrumLimb(root, { steel, black }, opts) {
  */
 export function carapaceHead(root, { skin, black, steel, crimson }, opts) {
   const { bearing: a, at, carapace, seam, spines, photophores: rank, claw } = opts;
+  const { cut: rule = METRE } = opts;
   const shells = [
-    add(root, 'carapace', scute(12, 6), skin, polar(a, at, carapace.y), [0, -a, 0], carapace.r),
-    add(root, 'carapace_seam', scute(8, 6), black, polar(a, seam.at, seam.y), [0, -a, 0], seam.r),
+    add(root, 'carapace', orb(rule, carapace.r), skin, polar(a, at, carapace.y), [0, -a, 0], carapace.r),
+    add(root, 'carapace_seam', orb(rule, seam.r), black, polar(a, seam.at, seam.y), [0, -a, 0], seam.r),
   ];
   spines.lengths.forEach((length, i) => {
     const [x, y, z] = polar(a, at + (spines.from + spines.pitch * i), spines.y);
-    add(root, `spine_${i}`, spike(spines.r, length, 5), black, [x, y, z + spines.stagger[i]], [
+    add(root, `spine_${i}`, spike(spines.r, length, section('spine', 5)), black, [x, y, z + spines.stagger[i]], [
       0,
       0,
       spines.rake,
     ]);
   });
-  // `reach` 0.75 lands the drawn-back stud mid-facet on a 12 × 6 scute
-  // (0.8 put it on a facet corner, and a corner of it hung 0.9 m over the
-  // neighbouring face).
+  // `reach` 0.75 landed the drawn-back stud mid-facet on the file's 12 × 6
+  // scute (0.8 put it on a facet corner, and a corner of it hung 0.9 m over
+  // the neighbouring face); the ray seats it on the face as the rule cuts it.
   const { count = 4, from, pitch, stagger, size, h, reach = 0.75 } = rank;
   const along = new THREE.Vector3(Math.cos(a), 0, Math.sin(a));
   const across = new THREE.Vector3(-Math.sin(a), 0, Math.cos(a));
@@ -1834,26 +2033,12 @@ export function carapaceHead(root, { skin, black, steel, crimson }, opts) {
   photophores(root, crimson, { size, h, spots });
   // Laid along the arm as the draw pipe is, then raised `claw.raise` radians
   // toward vertical: the approved file's lean is π/2 − 0.8 to the bit.
-  add(root, 'anchor_claw', spike(claw.r, claw.length, 5), steel, polar(a, claw.at, claw.y), [
+  add(root, 'anchor_claw', spike(claw.r, claw.length, section('anchor_claw', 5)), steel, polar(a, claw.at, claw.y), [
     0,
     -a,
     claw.raise - Math.PI / 2,
   ]);
 }
-
-/** A carapace plate: a low-facet orb the caller squashes and lays on the mound. */
-const scute = (w = 10, h = 6) => new THREE.SphereGeometry(1, w, h);
-
-/**
- * A carapace shell: an orb of `r` and `facets` [round, down] that may stop
- * short of a full turn (`round`, the fraction of one it goes round) or short
- * of the bottom pole (`down`, the fraction of a half-turn it comes down from
- * the crown). The approved turret's mound is an orb cut off 0.42 of the way
- * down; its brow a shell open 0.55 of a turn and 0.48 deep. `scute` above is
- * the closed unit case.
- */
-const shell = (r, [w, h], { round = 1, down = 1 } = {}) =>
-  new THREE.SphereGeometry(r, w, h, 0, Math.PI * 2 * round, 0, Math.PI * down);
 
 /**
  * The mound: a chitinous dome, the collar the head turns in, and the skirt
@@ -1862,13 +2047,20 @@ const shell = (r, [w, h], { round = 1, down = 1 } = {}) =>
  * As the approved turret draws it — `mound`, `collar` and `skirt`, each with
  * its own numbers and its `drawn` placement, built in the file's order
  * (mound, collar, skirt): the mound a `shell` of radius `r` cut `down` of the
- * way to the pole, the collar and the skirt toruses of `R` and `tube` with
- * `facets` [radial, tubular].
+ * way to the pole, the collar and the skirt toruses of `R` and `tube`.
+ * Every count is the rule's as the node places the part (`cut`, #919); the
+ * file's were [10, 6], [5, 9] and [4, 14].
  */
-export function carapaceMound(root, { violet, black, steel }, { mound, collar, skirt }) {
-  part(root, 'base_mound', shell(mound.r, mound.facets, mound), violet, mound);
-  part(root, 'base_collar', torus(collar.R, collar.tube, ...collar.facets), steel, collar);
-  part(root, 'mound_skirt', torus(skirt.R, skirt.tube, ...skirt.facets), black, skirt);
+export function carapaceMound(root, { violet, black, steel }, opts) {
+  const { mound, collar, skirt, cut: rule = METRE } = opts;
+  noCount('base_mound', mound, 'facets');
+  noCount('base_collar', collar, 'facets');
+  noCount('mound_skirt', skirt, 'facets');
+  part(root, 'base_mound', shellOf(rule, mound.r, mound, by(mound, zLong)), violet, mound);
+  const collarRing = rule.torus(collar.R, collar.tube, by(collar, zLong));
+  part(root, 'base_collar', torus(collar.R, collar.tube, ...collarRing), steel, collar);
+  const skirtRing = rule.torus(skirt.R, skirt.tube, by(skirt, zLong));
+  part(root, 'mound_skirt', torus(skirt.R, skirt.tube, ...skirtRing), black, skirt);
 }
 
 /**
@@ -1876,14 +2068,17 @@ export function carapaceMound(root, { violet, black, steel }, { mound, collar, s
  * regular in rule and never regular in result — the sizes are the plates'
  * own.
  *
- * As the approved turret draws them: an orb each of its own `r` and the
- * shared `facets`, squashed to a plate and laid on the flank by its own node
- * (`drawn`, with the plate's scale) — yawed near its bearing, pitched down the
- * slope and rolled a little, each its own way.
+ * As the approved turret draws them: an orb each of its own `r`, squashed
+ * to a plate and laid on the flank by its own node (`drawn`, with the
+ * plate's scale) — yawed near its bearing, pitched down the slope and
+ * rolled a little, each its own way — and cut by the rule as pressed
+ * (`cut`, #919; the file's seven by five).
  */
-export function baseScutes(root, skins, { scutes, facets = [7, 5] }) {
+export function baseScutes(root, skins, opts) {
+  const { scutes, cut: rule = METRE } = opts;
+  noCount('baseScutes', opts, 'facets');
   scutes.forEach((s, i) =>
-    part(root, `base_scute_${i}`, shell(s.r, facets), skins[i % skins.length], s)
+    part(root, `base_scute_${i}`, shellOf(rule, s.r, {}, by(s, zLong)), skins[i % skins.length], s)
   );
 }
 
@@ -1904,12 +2099,17 @@ export function baseScutes(root, skins, { scutes, facets = [7, 5] }) {
  */
 export function browHead(root, { red, black, violet }, opts) {
   const head = group(root, 'turret_head', opts);
-  const { pod, brow, antennae } = opts;
-  part(head, 'head_pod', shell(pod.r, pod.facets), red, pod);
-  part(head, 'head_brow', shell(brow.r, brow.facets, brow), black, brow);
-  antennae.forEach((a, i) =>
-    part(head, `brow_antenna_${i}`, spike(a.r, a.length, a.facets ?? 4), violet, a)
-  );
+  const { pod, brow, antennae, cut: rule = METRE } = opts;
+  noCount('head_pod', pod, 'facets');
+  noCount('head_brow', brow, 'facets');
+  part(head, 'head_pod', shellOf(rule, pod.r, {}, by(pod, zLong)), red, pod);
+  part(head, 'head_brow', shellOf(rule, brow.r, brow, by(brow, zLong)), black, brow);
+  // The antennae go to the rule (Block 2c): their four was the file's and
+  // `brow_antenna` is no part the four-section names.
+  antennae.forEach((a, i) => {
+    const name = `brow_antenna_${i}`;
+    part(head, name, spikeOf(rule, name, a.r, a.length, a.facets, by(a, zLong)), violet, a);
+  });
   return head;
 }
 
@@ -1921,7 +2121,8 @@ export function browHead(root, { red, black, violet }, opts) {
  * stinger.
  */
 export function counterSpike(head, violet, opts) {
-  part(head, 'counter_spike', spike(opts.r, opts.length, opts.facets ?? 5), violet, opts);
+  const { r, length, facets = 5 } = opts;
+  part(head, 'counter_spike', spike(r, length, section('counter_spike', facets)), violet, opts);
 }
 
 /**
@@ -1941,14 +2142,22 @@ export function counterSpike(head, violet, opts) {
  */
 export function stingerBarrel(root, { steel, violet, black, pip }, opts) {
   const g = group(root, 'barrel_group', opts);
+  const { cut: rule = METRE } = opts;
   opts.segments.forEach(({ barb, ...s }, i) => {
     const skin = i % 2 ? violet : steel;
-    part(g, `barrel_seg_${i}`, cyl(s.radii[0], s.radii[1], s.length, s.facets), skin, s);
-    part(g, `barrel_barb_${i}`, torus(barb.R, barb.tube, ...barb.facets), black, barb);
+    noCount(`barrel_seg_${i}`, s, 'facets');
+    noCount(`barrel_barb_${i}`, barb, 'facets');
+    const [rt, rb] = s.radii;
+    const sides = rule.cyl(rt, rb, s.length, by(s, zLong));
+    part(g, `barrel_seg_${i}`, cyl(rt, rb, s.length, sides), skin, s);
+    const barbRing = rule.torus(barb.R, barb.tube, by(barb, zLong));
+    part(g, `barrel_barb_${i}`, torus(barb.R, barb.tube, ...barbRing), black, barb);
   });
   const { tip, pip: pp } = opts;
-  part(g, 'stinger_tip', spike(tip.r, tip.length, tip.facets), black, tip);
-  part(g, 'muzzle_pip', new THREE.SphereGeometry(pp.r, ...pp.facets), pip, pp);
+  noCount('muzzle_pip', pp, 'facets');
+  const point = spikeOf(rule, 'stinger_tip', tip.r, tip.length, tip.facets, by(tip, zLong));
+  part(g, 'stinger_tip', point, black, tip);
+  part(g, 'muzzle_pip', new THREE.SphereGeometry(pp.r, ...rule.orb(pp.r, by(pp, zLong))), pip, pp);
   return g;
 }
 
@@ -1977,7 +2186,7 @@ export function clawGrips(root, skins, { grips, facets = 5, name = 'claw_grip' }
     place(
       root,
       `${name}_${c.index}`,
-      spike(c.r, c.length, facets),
+      spike(c.r, c.length, section(`${name}_${c.index}`, facets)),
       c.skin ?? skins[c.index % skins.length],
       c
     )
@@ -1992,10 +2201,16 @@ export function clawGrips(root, skins, { grips, facets = 5, name = 'claw_grip' }
  * leaned by its node; the pod a capsule (kit.mjs `capsule`, `facets` [cap,
  * radial]); the flange a torus.
  */
-export function magazine(root, { steel, red }, { pipe, pod, flange }) {
-  part(root, 'feed_pipe', cyl(pipe.radii[0], pipe.radii[1], pipe.length, pipe.facets), steel, pipe);
-  part(root, 'ammo_pod', capsule(pod.r, pod.length, ...pod.facets), steel, pod);
-  part(root, 'feed_flange', torus(flange.R, flange.tube, ...flange.facets), red, flange);
+export function magazine(root, { steel, red }, { pipe, pod, flange, cut: rule = METRE }) {
+  noCount('feed_pipe', pipe, 'facets');
+  noCount('ammo_pod', pod, 'facets');
+  noCount('feed_flange', flange, 'facets');
+  const [rt, rb] = pipe.radii;
+  const sides = rule.cyl(rt, rb, pipe.length, by(pipe, zLong));
+  part(root, 'feed_pipe', cyl(rt, rb, pipe.length, sides), steel, pipe);
+  part(root, 'ammo_pod', capsule(pod.r, pod.length, ...rule.capsule(pod.r, by(pod, zLong))), steel, pod);
+  const ring = rule.torus(flange.R, flange.tube, by(flange, zLong));
+  part(root, 'feed_flange', torus(flange.R, flange.tube, ...ring), red, flange);
 }
 
 /* --------------------------------------------------------------------------
@@ -2012,11 +2227,11 @@ export function magazine(root, { steel, red }, { pipe, pod, flange }) {
  * slipway-directorate.glb's own and is the default.
  * ------------------------------------------------------------------------ */
 
-/** A gantry leg: a six-facet steel cone 44 m tall, 32 m out, leaning 0.15 outward. */
-export const slipwayLeg = (steel) =>
+/** A gantry leg: a steel cone 44 m tall, 32 m out, leaning 0.15 outward, the rule's count (six in the file). */
+export const slipwayLeg = (steel, rule = METRE) =>
   sidedPost({
     name: 'gantry_leg',
-    geo: () => cyl(2, 3.4, 44, 6),
+    geo: () => cyl(2, 3.4, 44, rule.cyl(2, 3.4, 44)),
     mat: steel,
     y: 22,
     spread: 32,
@@ -2027,18 +2242,18 @@ export const slipwayLeg = (steel) =>
 export const slipwayClaw = (black) =>
   sidedPost({
     name: 'gantry_claw',
-    geo: () => spike(2.4, 10, 5),
+    geo: () => spike(2.4, 10, section('gantry_claw', 5)),
     mat: black,
     y: 46,
     spread: 24,
     lean: 1.1,
   });
 
-/** A head pylon: a red six-facet cone 54 m to its point, 34 m out, leaning 0.12 in. */
-export const slipwayPylon = (red) =>
+/** A head pylon: a red cone 54 m to its point, 34 m out, leaning 0.12 in, the rule's count (six in the file). */
+export const slipwayPylon = (red, rule = METRE) =>
   sidedPost({
     name: 'head_pylon',
-    geo: () => spike(6, 54, 6),
+    geo: () => cone(rule, 6, 54),
     mat: red,
     y: 27,
     spread: 34,
@@ -2052,10 +2267,12 @@ export const slipwayPylon = (red) =>
  */
 export function slipwayHull(root, { hull: red, deck: violet }, opts = {}) {
   const {
-    body = { facets: [14, 7], at: [-50, 7, 0], r: [56, 6, 10] },
+    body = { at: [-50, 7, 0], r: [56, 6, 10] },
     deck = { size: [60, 1, 8], at: [-60, 12, 0] },
+    cut: rule = METRE,
   } = opts;
-  add(root, 'hull_in_progress', orb(...body.facets), red, body.at, [0, 0, 0], body.r);
+  noCount('hull_in_progress', body, 'facets');
+  add(root, 'hull_in_progress', orb(rule, body.r), red, body.at, [0, 0, 0], body.r);
   add(root, 'hull_in_progress_deck', box(...deck.size), violet, deck.at);
 }
 
@@ -2090,21 +2307,24 @@ export function slipwayHall(hall, { violet, red, black, steel, crimson }, opts) 
   const {
     sgn,
     z = 54,
-    tergites: plates = { count: 7, from: -132, pitch: 44, facets: [14, 7], y: 6, r: [28, 16, 30] },
-    seams = { facets: [10, 6], dx: 24, y: 5, r: [7, 15, 29] },
+    tergites: plates = { count: 7, from: -132, pitch: 44, y: 6, r: [28, 16, 30] },
+    seams = { dx: 24, y: 5, r: [7, 15, 29] },
     spines = { dx: 4, y: 26, out: 6, step: 5, r: 2.4, lengths: [16, 22], lean: 0.3, rake: -0.25 },
     photophores: dots = { dx: -8, y: 21.5, z: 45, size: [2.5, 0.6, 2.5] },
     lip = { size: [320, 3, 8], y: 1.5, z: 27 },
     lipLights = { count: 6, from: -125, pitch: 50, size: [3, 0.5, 3], y: 3.2 },
     claws = { count: 6, from: -125, pitch: 50, r: 2.6, length: 20, y: 0, z: 88, raise: 1.35 },
     mandible = { r: 5, length: 40, at: [-170, 4, 36], yaw: 0.2 },
+    cut: rule = METRE,
   } = opts;
+  noCount('slipwayHall: tergites', plates, 'facets');
+  noCount('slipwayHall: seams', seams, 'facets');
   for (let i = 0; i < plates.count; i++) {
     const x = plates.from + plates.pitch * i;
     add(
       hall,
       `tergite_${i}`,
-      orb(...plates.facets),
+      orb(rule, plates.r),
       i % 2 ? red : violet,
       [x, plates.y, sgn * z],
       [0, 0, 0],
@@ -2113,7 +2333,7 @@ export function slipwayHall(hall, { violet, red, black, steel, crimson }, opts) 
     add(
       hall,
       `tergite_seam_${i}`,
-      orb(...seams.facets),
+      orb(rule, seams.r),
       black,
       [x + seams.dx, seams.y, sgn * z],
       [0, 0, 0],
@@ -2122,7 +2342,7 @@ export function slipwayHall(hall, { violet, red, black, steel, crimson }, opts) 
     add(
       hall,
       `tergite_spine_${i}`,
-      spike(spines.r, spines.lengths[i % spines.lengths.length]),
+      cone(rule, spines.r, spines.lengths[i % spines.lengths.length]),
       black,
       [x + spines.dx, spines.y, sgn * (z + spines.out + spines.step * (i % 3))],
       [sgn * spines.lean, 0, spines.rake]
@@ -2145,7 +2365,7 @@ export function slipwayHall(hall, { violet, red, black, steel, crimson }, opts) 
     add(
       hall,
       `anchor_claw_${i}`,
-      spike(claws.r, claws.length, 5),
+      spike(claws.r, claws.length, section(`anchor_claw_${i}`, 5)),
       steel,
       [claws.from + claws.pitch * i, claws.y, sgn * claws.z],
       [Math.PI / 2 + sgn * claws.raise, 0, 0]
@@ -2154,7 +2374,7 @@ export function slipwayHall(hall, { violet, red, black, steel, crimson }, opts) 
   add(
     hall,
     'launch_mandible',
-    spike(mandible.r, mandible.length, 6),
+    cone(rule, mandible.r, mandible.length),
     steel,
     [mx, my, sgn * mz],
     [0, -sgn * mandible.yaw, -Math.PI / 2]
@@ -2252,10 +2472,6 @@ export function leaning(bearing, rho, y, tilt) {
   return [polar(bearing, rho, y), [e.x, e.y, e.z]];
 }
 
-/** A patch of a sphere: `r`, `facets` [round, down], and the window it fills, `phi` and `theta` each [start, length]. */
-const patch = (r, [w, h], { phi, theta }) =>
-  new THREE.SphereGeometry(r, w, h, phi[0], phi[1], theta[0], theta[1]);
-
 /** An arc of a torus: kit `torus` with three's fifth argument, the angle it goes round. */
 const torusArc = (R, tube, rs, ts, arc) => new THREE.TorusGeometry(R, tube, rs, ts, arc);
 
@@ -2263,11 +2479,13 @@ const torusArc = (R, tube, rs, ts, arc) => new THREE.TorusGeometry(R, tube, rs, 
  * Carapace tiers: the dome as the Directorate builds one — frusta stepping
  * in, each in its own `skin`, each yawed a little further than the one
  * below, and welded to the tier above by a `ring`, a flat torus on its top
- * edge. Every tier is `{ name, skin, radii: [top, bottom], length, facets,
+ * edge. Every tier is `{ name, skin, radii: [top, bottom], length,
  * ...placement }` and its ring, where it has one, `{ name, skin, R, tube,
- * facets: [radial, tubular], ...placement }`, drawn straight after it as
- * the files order them: the Bastion's four tiers each with a `seam_ring`,
- * the Cantor's two with the one `weld_collar` after the second.
+ * ...placement }`, drawn straight after it as the files order them: the
+ * Bastion's four tiers each with a `seam_ring`, the Cantor's two with the
+ * one `weld_collar` after the second. Every count is the rule's as placed
+ * (`cut`, #919; the files' were ten and twelve a tier, 5 × 20 and 6 × 28
+ * a ring).
  *
  * The numbers are the scripts' because the two files' rules differ: the
  * Bastion's tiers narrow to 0.86 of their foot, ring at 0.88 of it with a
@@ -2275,32 +2493,39 @@ const torusArc = (R, tube, rs, ts, arc) => new THREE.TorusGeometry(R, tube, rs, 
  * 0.874, its collar sits at 0.8815 of the upper foot, and its two yaws are
  * 0.16 and 0.42.
  */
-export function carapaceTiers(root, { tiers }) {
-  tiers.forEach(({ name, skin, radii, length, facets, ring, ...placement }) => {
-    place(root, name, cyl(radii[0], radii[1], length, facets), skin, placement);
+export function carapaceTiers(root, { tiers, cut: rule = METRE }) {
+  tiers.forEach(({ name, skin, radii, length, ring, ...placement }) => {
+    noCount(name, placement, 'facets');
+    const sides = rule.cyl(radii[0], radii[1], length, by(placement));
+    place(root, name, cyl(radii[0], radii[1], length, sides), skin, placement);
     if (ring) {
-      const { name: rn, skin: rs, R, tube, facets: rf, ...rp } = ring;
-      place(root, rn, torus(R, tube, ...rf), rs, rp);
+      const { name: rn, skin: rs, R, tube, ...rp } = ring;
+      noCount(rn, rp, 'facets');
+      place(root, rn, torus(R, tube, ...rule.torus(R, tube, by(rp))), rs, rp);
     }
   });
 }
 
 /**
- * The dome shell: a half-orb of `r` and `facets` [round, down] on the tiers
- * — the Cantor's `dome_shell`, 5.4 by 16 × 9, and the Bastion's
- * `carapace_crown`, 3.25 by 10 × 5 squashed to 0.8 in height by its node —
+ * The dome shell: a half-orb of `r` on the tiers — the Cantor's
+ * `dome_shell`, 5.4 (16 × 9 in the file), and the Bastion's
+ * `carapace_crown`, 3.25 (10 × 5) squashed to 0.8 in height by its node —
  * and, on the Cantor, three `shell_plate`s: patches of a slightly larger
  * sphere (5.53, 5.531 and 5.532 — a millimetre apart each, so none fights
  * the one under it) at the same centre, each a window `phi` and `theta`
- * [start, length] wide, 16 × 3, in `chitin_violet_open` — the two-sided
- * violet the approved export drew them in (`ink` says why it stays).
+ * [start, length] wide (16 × 3 in the file), in `chitin_violet_open` — the
+ * two-sided violet the approved export drew them in (`ink` says why it
+ * stays). Every count is the rule's as placed (`cut`, #919), a window's
+ * prorated over its arc as the measure reads it.
  */
 export function domeShell(root, { shell: shellMat, plate: plateMat }, opts) {
-  const { name = 'dome_shell', r, facets, plates = [], ...placement } = opts;
-  place(root, name, shell(r, facets, { down: 0.5 }), shellMat, placement);
-  plates.forEach(({ r: pr, facets: pf, phi, theta, ...pp }, i) =>
-    place(root, `shell_plate_${i}`, patch(pr, pf, { phi, theta }), plateMat, pp)
-  );
+  const { name = 'dome_shell', r, plates = [], cut: rule = METRE, ...placement } = opts;
+  noCount(name, placement, 'facets');
+  place(root, name, shellOf(rule, r, { down: 0.5 }, by(placement)), shellMat, placement);
+  plates.forEach(({ r: pr, phi, theta, ...pp }, i) => {
+    noCount(`shell_plate_${i}`, pp, 'facets');
+    place(root, `shell_plate_${i}`, patchOf(rule, pr, { phi, theta }, by(pp)), plateMat, pp);
+  });
 }
 
 /**
@@ -2310,18 +2535,16 @@ export function domeShell(root, { shell: shellMat, plate: plateMat }, opts) {
  * over it; a half-orb (`r`, `facets`) on the Cantor with no light, because
  * the Cantor's light is the quill's tip.
  */
-export function apexBoss(root, { boss: bossMat, light: lightMat }, { boss, light }) {
-  const { radii, r, length, facets, ...bp } = boss;
-  place(
-    root,
-    'apex_boss',
-    radii ? cyl(radii[0], radii[1], length, facets) : shell(r, facets, { down: 0.5 }),
-    bossMat,
-    bp
-  );
+export function apexBoss(root, { boss: bossMat, light: lightMat }, opts) {
+  const { boss, light, cut: rule = METRE } = opts;
+  const { radii, r, length, ...bp } = boss;
+  noCount('apex_boss', bp, 'facets');
+  const drum = () => cyl(radii[0], radii[1], length, rule.cyl(radii[0], radii[1], length, by(bp)));
+  place(root, 'apex_boss', radii ? drum() : shellOf(rule, r, { down: 0.5 }, by(bp)), bossMat, bp);
   if (light) {
-    const { r: lr, facets: lf, ...lp } = light;
-    place(root, 'apex_light', new THREE.SphereGeometry(lr, ...lf), lightMat, lp);
+    const { r: lr, ...lp } = light;
+    noCount('apex_light', lp, 'facets');
+    place(root, 'apex_light', new THREE.SphereGeometry(lr, ...rule.orb(lr, by(lp))), lightMat, lp);
   }
 }
 
@@ -2369,7 +2592,7 @@ export function reinforceRibs(root, mats, opts) {
     place(
       rib,
       `rib_spike_${i}`,
-      spike(sp.r, length, sp.facets),
+      spike(sp.r, length, section(`rib_spike_${i}`, sp.facets)),
       mats[sp.skin],
       frame(...leaning(bearing, sp.rho, sp.y, sp.tilt))
     );
@@ -2386,10 +2609,26 @@ export function reinforceRibs(root, mats, opts) {
  * Cantor's twenty-seven violet and fifteen black fall by no rule a count
  * recovers), its own length, and a `leaning` placement.
  */
-export function shellSpines(root, { name, facets = 5, spines }) {
-  spines.forEach(({ n, skin, r, length, ...placement }) =>
-    place(root, `${name}_${n}`, spike(r, length, facets), skin, placement)
-  );
+export function shellSpines(root, { name, facets = 5, spines, on = null }) {
+  // `on` names the shell parts the spines root in (#919): the files set
+  // every base on the ideal sphere, and on the rule's coarser dome — the
+  // Cantor's 15 × 4 where the file's was 16 × 9 — fifteen of its forty-two
+  // stood 0.01–1.06 m off the facets, ten touching nothing. So each spine's
+  // base, half its length down its own axis from the station, is seated on
+  // the nearest of those parts with its centre one radius in (kit.mjs
+  // `seat`), and the spine slides along its axis to meet it; bearing, lean
+  // and length stay the file's. The Bastion's crown spines pass none: its
+  // tiers kept them.
+  const rooted = ({ at, rot, r, length }) => {
+    const axis = new THREE.Vector3(0, 1, 0).applyEuler(new THREE.Euler(...rot));
+    const base = new THREE.Vector3(...at).addScaledVector(axis, -length / 2);
+    const foot = new THREE.Vector3(...seat(root, on, base.toArray(), { sink: r }).at);
+    return foot.addScaledVector(axis, length / 2).toArray();
+  };
+  spines.forEach(({ n, skin, r, length, ...placement }) => {
+    const p = on ? { ...placement, at: rooted({ ...placement, r, length }) } : placement;
+    place(root, `${name}_${n}`, spike(r, length, section(`${name}_${n}`, facets)), skin, p);
+  });
 }
 
 /**
@@ -2421,24 +2660,23 @@ export function shellSpines(root, { name, facets = 5, spines }) {
  * with it.
  */
 export function dockingCollar(root, { violet, steel, crimson, black }, opts) {
-  const { name, r, frame = drawn, ...placement } = opts;
+  const { name, r, frame = drawn, cut: rule = METRE, ...placement } = opts;
   const dock = group(root, name, placement);
   const throat = 2.4;
   const disc = 0.18;
-  place(dock, `${name}_throat`, cyl(r, 1.25 * r, throat, 8), violet, frame());
-  place(dock, `${name}_lip`, torus(1.05 * r, 0.2, 5, 10), steel, frame([0, 1.25, 0]));
-  place(
-    dock,
-    `${name}_mouth`,
-    cyl(0.72 * r, 0.72 * r, disc, 8),
-    crimson,
-    frame([0, throat / 2 + disc / 2, 0])
-  );
+  // Every count the rule's (#919); the file's were eight, 5 × 10 and eight.
+  const pressed = by(frame());
+  const throatGeo = cyl(r, 1.25 * r, throat, rule.cyl(r, 1.25 * r, throat, pressed));
+  place(dock, `${name}_throat`, throatGeo, violet, frame());
+  const lip = torus(1.05 * r, 0.2, ...rule.torus(1.05 * r, 0.2, pressed));
+  place(dock, `${name}_lip`, lip, steel, frame([0, 1.25, 0]));
+  const mouth = cyl(0.72 * r, 0.72 * r, disc, rule.cyl(0.72 * r, 0.72 * r, disc, pressed));
+  place(dock, `${name}_mouth`, mouth, crimson, frame([0, throat / 2 + disc / 2, 0]));
   [1, -1].forEach((sgn, i) =>
     place(
       dock,
       `${name}_mandible_${i}`,
-      spike(0.16, 1.3, 4),
+      spike(0.16, 1.3, section(`${name}_mandible_${i}`, 4)),
       black,
       frame([sgn * 1.15 * r, 1, 0], [0, 0, -sgn * 0.35])
     )
@@ -2454,10 +2692,12 @@ export function dockingCollar(root, { violet, steel, crimson, black }, opts) {
  * 1.05. `parts.mjs` offers the buffer as a torus of 16 × 5 among its
  * lathe-family guesses; the rows of seventeen at six tube angles say which.
  */
-export function hullPipes(root, steel, { pipes }) {
-  pipes.forEach(({ R, tube, facets, arc, ...placement }, i) =>
-    place(root, `hull_pipe_${i}`, torusArc(R, tube, ...facets, arc), steel, placement)
-  );
+export function hullPipes(root, steel, { pipes, cut: rule = METRE }) {
+  pipes.forEach(({ R, tube, arc, ...placement }, i) => {
+    noCount(`hull_pipe_${i}`, placement, 'facets');
+    const counts = rule.torus(R, tube, by(placement), arc);
+    place(root, `hull_pipe_${i}`, torusArc(R, tube, ...counts, arc), steel, placement);
+  });
 }
 
 /**
@@ -2473,10 +2713,14 @@ export function hullPipes(root, steel, { pipes }) {
  */
 export function standpipes(root, { steel, black }, opts) {
   const { name = 'standpipe', flange: flangeName = 'standpipe_flange', pipes } = opts;
-  pipes.forEach(({ radii, length, facets, flange, ...placement }, i) => {
-    place(root, `${name}_${i}`, cyl(radii[0], radii[1], length, facets), steel, placement);
-    const { R, tube, facets: ff, ...fp } = flange;
-    place(root, `${flangeName}_${i}`, torus(R, tube, ...ff), black, fp);
+  const { cut: rule = METRE } = opts;
+  pipes.forEach(({ radii, length, flange, ...placement }, i) => {
+    noCount(`${name}_${i}`, placement, 'facets');
+    const sides = rule.cyl(radii[0], radii[1], length, by(placement));
+    place(root, `${name}_${i}`, cyl(radii[0], radii[1], length, sides), steel, placement);
+    const { R, tube, ...fp } = flange;
+    noCount(`${flangeName}_${i}`, fp, 'facets');
+    place(root, `${flangeName}_${i}`, torus(R, tube, ...rule.torus(R, tube, by(fp))), black, fp);
   });
 }
 
@@ -2486,10 +2730,12 @@ export function standpipes(root, { steel, black }, opts) {
  * Bastion's two are 0.75 by 2, three cap rings round nine, rolled a quarter
  * turn and yawed 0.5 and 0.8 on the -z flank.
  */
-export function ballastTanks(root, steel, { tanks }) {
-  tanks.forEach(({ r, length, facets, ...placement }, i) =>
-    place(root, `ballast_tank_${i}`, capsule(r, length, ...facets), steel, placement)
-  );
+export function ballastTanks(root, steel, { tanks, cut: rule = METRE }) {
+  tanks.forEach(({ r, length, ...placement }, i) => {
+    noCount(`ballast_tank_${i}`, placement, 'facets');
+    const counts = rule.capsule(r, by(placement));
+    place(root, `ballast_tank_${i}`, capsule(r, length, ...counts), steel, placement);
+  });
 }
 
 /**
@@ -2512,15 +2758,19 @@ export function ballastTanks(root, steel, { tanks }) {
  * station moves; the orb is round and keeps the file's rotation.
  */
 export function primaryQuill(root, { skins, light }, opts) {
-  const { segments, tip, ...placement } = opts;
+  const { segments, tip, cut: rule = METRE, ...placement } = opts;
   const quill = group(root, 'primary_quill', placement);
-  segments.forEach(({ radii, length, facets, ...sp }, i) =>
-    place(quill, `quill_seg_${i}`, cyl(radii[0], radii[1], length, facets), skins[i % skins.length], sp)
-  );
-  const { r, facets, ...tp } = tip;
+  segments.forEach(({ radii, length, ...sp }, i) => {
+    noCount(`quill_seg_${i}`, sp, 'facets');
+    const sides = rule.cyl(radii[0], radii[1], length, by(sp));
+    place(quill, `quill_seg_${i}`, cyl(radii[0], radii[1], length, sides), skins[i % skins.length], sp);
+  });
+  const { r, ...tp } = tip;
+  noCount('quill_tip_light', tp, 'facets');
   const last = `quill_seg_${segments.length - 1}`;
   const { at } = seat(quill, last, tp.at, { stand: r, sink: r / 2 });
-  place(quill, 'quill_tip_light', new THREE.SphereGeometry(r, ...facets), light, { ...tp, at });
+  const bulb = new THREE.SphereGeometry(r, ...rule.orb(r, by(tp)));
+  place(quill, 'quill_tip_light', bulb, light, { ...tp, at });
 }
 
 /* --------------------------------------------------------------------------
@@ -2583,23 +2833,30 @@ export function plateSegments(root, lipMat, { name = 'seg', first = 1, lip, segm
  */
 export function wedgeRostrum(root, mat, opts) {
   const { name = 'rostrum', radii, length, squash = [1, 1], ...placement } = opts;
-  const geo = cyl(radii[0], radii[1], length, 4, Math.PI / 4).rotateX(Math.PI / 2);
+  // Four is a section on a `rostrum` or a `head_shield` and on nothing else (#919).
+  const geo = cyl(radii[0], radii[1], length, section(name, 4), Math.PI / 4).rotateX(Math.PI / 2);
   geo.scale(squash[0], squash[1], 1);
   return part(root, name, geo, mat, placement);
 }
 
 /** Eyes: low-facet orbs, `[name, r, placement]` each — two, of different sizes at different heights. */
-export function eyes(root, mat, { eyes: list, facets = [6, 4] }) {
+export function eyes(root, mat, opts) {
+  const { eyes: list, cut: rule = METRE } = opts;
+  noCount('eyes', opts, 'facets');
   list.forEach(([name, r, placement]) =>
-    part(root, name, new THREE.SphereGeometry(r, ...facets), mat, placement)
+    part(root, name, new THREE.SphereGeometry(r, ...rule.orb(r, by(placement, zLong))), mat, placement)
   );
 }
 
 /**
  * Spikes: tapered cones, `radii` [tip, base] along `length` with `facets`
- * sides, each placed by its own node — the antennae (five-sided, raked back
- * off the head), the dorsal ridges (four-sided, leaned) and the telson's
- * spike. Drawn as the export drew them, tip up, and laid over by the node.
+ * sides, each placed by its own node — the antennae (raked back off the
+ * head), the dorsal ridges (leaned) and the telson's spike. Drawn as the
+ * export drew them, tip up, and laid over by the node. `facets` is a
+ * section of the rule's or nothing (`section`, #919): five on any part,
+ * four on a `spike`, a `dspike` or a `rostrum`; the ridges' four was a
+ * default on parts the rule names no square for, and went to the floor's
+ * five, which Block 2c lists.
  *
  * A spike given `rootOn`, the name of a cone already in the scene, is
  * re-hung with its base centre on that cone's apex — its +Y end, read off
@@ -2618,7 +2875,8 @@ export function eyes(root, mat, { eyes: list, facets = [6, 4] }) {
  */
 export function spikes(root, mat, { spikes: list }) {
   list.forEach(({ name, radii, length, facets = 5, rootOn, ...placement }) => {
-    const mesh = part(root, name, cyl(radii[0], radii[1], length, facets), mat, placement);
+    const sides = section(name, facets);
+    const mesh = part(root, name, cyl(radii[0], radii[1], length, sides), mat, placement);
     if (rootOn) hangOn(root, mesh, length, rootOn);
   });
 }
@@ -2666,8 +2924,9 @@ export function telsonFan(root, skins, { name = 'telson', size, blades }) {
 }
 
 /**
- * Photophore domes: lit orbs of one radius, `[name, placement]` each, one
- * geometry shared — a head, one flank and the tail, three in a pattern that
+ * Photophore domes: lit orbs of one radius, `[name, placement]` each, a
+ * geometry each cut by the rule as placed (#919; the file's counts were one
+ * buffer shared) — a head, one flank and the tail, three in a pattern that
  * repeats on neither side. A mirrored pair is refused, as `photophores`
  * refuses one.
  *
@@ -2684,14 +2943,16 @@ export function telsonFan(root, skins, { name = 'telson', size, blades }) {
  * `place`.
  */
 export function photophoreDomes(root, light, opts) {
-  const { r = 0.32, facets = [8, 6], domes, tolerance, frame = null } = opts;
+  const { r = 0.32, domes, tolerance, frame = null, cut: rule = METRE } = opts;
+  noCount('photophoreDomes', opts, 'facets');
   const put = frame ? frame.place : place;
+  const bulb = (radius, placement) =>
+    new THREE.SphereGeometry(radius, ...rule.orb(radius, by(placement, frame ?? undefined)));
   refuseMirror(
     'photophore_dome',
     domes.map((d) => [d[0], ...d[d.length - 1].at]),
     tolerance
   );
-  const dome = new THREE.SphereGeometry(r, ...facets);
   // A placement carrying `on` is a seed: the bud is seated on the nearest
   // of the parts it names, half its radius into the shell, where the file
   // left it standing off (kit.mjs `seat`, #894). Without it the placement
@@ -2705,8 +2966,8 @@ export function photophoreDomes(root, light, opts) {
       : placement;
   domes.forEach((d) =>
     d.length === 3
-      ? put(root, d[0], new THREE.SphereGeometry(d[1], ...facets), light, rested(d[1], d[2]))
-      : put(root, d[0], dome, light, rested(r, d[1]))
+      ? put(root, d[0], bulb(d[1], d[2]), light, rested(d[1], d[2]))
+      : put(root, d[0], bulb(r, d[1]), light, rested(r, d[1]))
   );
 }
 
@@ -2760,16 +3021,19 @@ export function photophoreDomes(root, light, opts) {
  * hulls draw the two limbs from one set of base sizes, the port one larger
  * (the Corvette's 1.15 against 0.9, the Harvester's 1.2 against 0.95) —
  * asymmetric, yet regimented. A joint is `{ name, skin, size }` for a box
- * or `{ name, skin, r, length, facets }` for a cone; every dimension is
- * scaled but the cone's 0.02 point, which both files leave at 0.02 on both
- * sides. The placements are the file's own, not mirrored from one side.
+ * or `{ name, skin, r, length }` for a cone; every dimension is scaled but
+ * the cone's 0.02 point, which both files leave at 0.02 on both sides. The
+ * placements are the file's own, not mirrored from one side. The cone's
+ * count is the rule's (#919): its four was a default, and the claw tips are
+ * no part the four-section names.
  */
-export function jointedLimb(root, { prefix, scale = 1, point = 0.02, joints }) {
-  joints.forEach(({ name, skin, size, r, length, facets = 4, ...placement }) => {
+export function jointedLimb(root, { prefix, scale = 1, point = 0.02, joints, cut: rule = METRE }) {
+  joints.forEach(({ name, skin, size, r, length, facets, ...placement }) => {
+    const full = `${prefix}_${name}`;
     const geo = size
       ? box(...size.map((d) => d * scale))
-      : cyl(point, r * scale, length * scale, facets);
-    part(root, `${prefix}_${name}`, geo, skin, placement);
+      : spikeOf(rule, full, r * scale, length * scale, facets, by(placement, zLong), point);
+    part(root, full, geo, skin, placement);
   });
 }
 
@@ -2784,8 +3048,9 @@ export function jointedLimb(root, { prefix, scale = 1, point = 0.02, joints }) {
  * the Cruiser seven to five.
  */
 export function darts(root, { dart: dartMat, socket: socketMat }, opts) {
-  const { radii, length, facets = 6, socket, darts: list } = opts;
-  const geo = cyl(radii[0], radii[1], length, facets);
+  const { radii, length, socket, darts: list, cut: rule = METRE } = opts;
+  noCount('darts', opts, 'facets');
+  const geo = cyl(radii[0], radii[1], length, rule.cyl(radii[0], radii[1], length));
   list.forEach(({ name, socket: socketAt, ...placement }) => {
     part(root, name, geo, dartMat, placement);
     if (socketAt) part(root, `${name}_socket`, box(...socket.size), socketMat, socketAt);
@@ -2827,23 +3092,22 @@ export function photophoreMarks(root, light, { size, marks, tolerance }) {
  * two rows at ±h/2, the top at the smaller radius, and is the cylinder.
  */
 export function carapaceOrbs(root, { skin, rim: rimMat }, opts) {
-  const { name = 'carapace', facets = [7, 4], rim, plates } = opts;
+  const { name = 'carapace', rim, plates, cut: rule = METRE } = opts;
+  noCount(name, opts, 'facets');
+  if (rim) noCount(rim.name, rim, 'facets');
   plates.forEach(({ n, r, rim: rimAt, ...placement }) => {
     part(
       root,
       n === undefined ? name : `${name}_${n}`,
-      new THREE.SphereGeometry(r, ...facets),
+      new THREE.SphereGeometry(r, ...rule.orb(r, by(placement, zLong))),
       skin,
       placement
     );
-    if (rim)
-      part(
-        root,
-        `${rim.name}_${n}`,
-        new THREE.CylinderGeometry(r * rim.ratio[0], r * rim.ratio[1], rim.h, rim.facets, 1, true),
-        rimMat,
-        rimAt
-      );
+    if (rim) {
+      const [ra, rb] = [r * rim.ratio[0], r * rim.ratio[1]];
+      const sides = rule.cyl(ra, rb, rim.h, by(rimAt, zLong));
+      part(root, `${rim.name}_${n}`, new THREE.CylinderGeometry(ra, rb, rim.h, sides, 1, true), rimMat, rimAt);
+    }
   });
 }
 
@@ -2855,16 +3119,12 @@ export function carapaceOrbs(root, { skin, rim: rimMat }, opts) {
  * its own node; `skirt_${name}` and `skirt_tip_${name}`, interleaved as
  * the file has them. Four to port, three to starboard.
  */
-export function skirtPlates(root, { tip: tipMat }, { size, tip, plates }) {
+export function skirtPlates(root, { tip: tipMat }, { size, tip, plates, cut: rule = METRE }) {
+  noCount('skirt_tip', tip, 'facets');
   plates.forEach(({ name, skin, tip: tipAt, ...placement }) => {
     part(root, `skirt_${name}`, box(...size), skin, placement);
-    part(
-      root,
-      `skirt_tip_${name}`,
-      cyl(tip.radii[0], tip.radii[1], tip.length, tip.facets ?? 4),
-      tipMat,
-      tipAt
-    );
+    const sides = rule.cyl(tip.radii[0], tip.radii[1], tip.length, by(tipAt, zLong));
+    part(root, `skirt_tip_${name}`, cyl(tip.radii[0], tip.radii[1], tip.length, sides), tipMat, tipAt);
   });
 }
 
@@ -2878,16 +3138,18 @@ export function skirtPlates(root, { tip: tipMat }, { size, tip, plates }) {
  * file's six teeth follow to the seventh decimal (mill_tooth_1 at
  * y = 5.2 + 1.7 · sin 60°). The maw's light is the hull's, laid over it.
  */
-export function millMouth(root, mats, { housing, mouth, teeth }) {
+export function millMouth(root, mats, { housing, mouth, teeth, cut: rule = METRE }) {
   part(root, 'mill_housing', box(...housing.size), mats.housing, housing);
-  part(root, 'mill_mouth', cyl(mouth.r, mouth.r, mouth.h, mouth.facets ?? 8), mats.mouth, mouth);
+  noCount('mill_mouth', mouth, 'facets');
+  const drum = cyl(mouth.r, mouth.r, mouth.h, rule.cyl(mouth.r, mouth.r, mouth.h, by(mouth, zLong)));
+  part(root, 'mill_mouth', drum, mats.mouth, mouth);
   const { count, r, at, tilt, radii, length, facets = 4 } = teeth;
   for (let k = 0; k < count; k++) {
     const a = (k * 2 * Math.PI) / count;
     part(
       root,
       `mill_tooth_${k}`,
-      cyl(radii[0], radii[1], length, facets),
+      cyl(radii[0], radii[1], length, section(`mill_tooth_${k}`, facets)),
       mats.teeth,
       drawn([at[0] + r * Math.cos(a), at[1] + r * Math.sin(a), at[2]], [tilt, 0, -a])
     );
@@ -2902,10 +3164,12 @@ export function millMouth(root, mats, { housing, mouth, teeth }) {
  * above builds the same primitive; this is the name for one that is a
  * body rather than a point.
  */
-export function drums(root, mat, { drums: list }) {
-  list.forEach(({ name, radii, length, facets, ...placement }) =>
-    part(root, name, cyl(radii[0], radii[1], length, facets), mat, placement)
-  );
+export function drums(root, mat, { drums: list, cut: rule = METRE }) {
+  list.forEach(({ name, radii, length, ...placement }) => {
+    noCount(name, placement, 'facets');
+    const sides = rule.cyl(radii[0], radii[1], length, by(placement, zLong));
+    part(root, name, cyl(radii[0], radii[1], length, sides), mat, placement);
+  });
 }
 
 /**
@@ -2949,7 +3213,7 @@ export function aimedSpikes(root, { spike: spikeMat, tip: tipMat }, { spikes: li
     const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
     const mid = A.clone().add(B).multiplyScalar(0.5).toArray();
     const placement = drawn(mid, [e.x, e.y, e.z]);
-    part(root, name, cyl(radii[0], radii[1], d.length(), facets), skin, placement);
+    part(root, name, cyl(radii[0], radii[1], d.length(), section(name, facets)), skin, placement);
     if (tip) {
       const { size, inset = 0 } = tip;
       const geo = tip.buffer
@@ -3212,10 +3476,15 @@ export function crusherMaw({ cowl, hole, recess = 0.35, teeth = { count: 3, leng
 export function intakeMaw(root, { hopper: hopperMat, throat: throatMat, mouth: mouthMat }, opts = {}) {
   const {
     frame = xLong,
-    hopper = { radii: [1.5, 0.9], h: 1.3, facets: 8, at: [13.4, 0.65, 6.9] },
+    hopper = { radii: [1.5, 0.9], h: 1.3, at: [13.4, 0.65, 6.9] },
     mouth = { r: 1.1, recess: 0.15, thick: 0.06 },
+    cut: rule = METRE,
   } = opts;
-  const { radii: [rTop, rBot], h, facets, at } = hopper;
+  noCount('intake_hopper', hopper, 'facets');
+  const { radii: [rTop, rBot], h, at } = hopper;
+  // One count for the funnel, the rim and the floor, the rule's at the
+  // funnel's rim (#919): the three share their vertices.
+  const facets = rule.cyl(rTop, rBot, h);
   const top = h / 2;
   const funnel = pierced(cyl(rTop, rBot, h, facets), (x, y) => y < top - 1e-6);
   frame.part(root, 'intake_hopper', funnel, hopperMat, at);
@@ -3281,39 +3550,44 @@ export function intakeMaw(root, { hopper: hopperMat, throat: throatMat, mouth: m
 export function tergiteFlanks(root, { violet, red, black, steel }, opts) {
   const {
     frame = zLong,
-    facets = [9, 6],
     down = 0.58,
-    seam = { tube: 0.06, facets: [4, 16], of: [0.9, 0.98], lift: 0.15 },
+    seam = { tube: 0.06, of: [0.9, 0.98], lift: 0.15 },
     spike: spk = { r: 0.14, facets: 5 },
     flanks,
+    cut: rule = METRE,
   } = opts;
+  noCount('tergiteFlanks', opts, 'facets');
+  noCount('tergite_seam', seam, 'facets');
   for (const { name, n, plates } of flanks)
     plates.forEach((p, i) => {
       const [x, y, z] = p.at;
       const [pitch, yaw, roll] = p.rot;
+      const rot = eulerXYZ([pitch, yaw, roll], 'YXZ');
       frame.part(
         root,
         `tergite_${name}_${i}`,
-        shell(1, facets, { down }),
+        shellOf(rule, 1, { down }, framed(rot, p.scale)),
         i % 2 ? violet : red,
         p.at,
-        eulerXYZ([pitch, yaw, roll], 'YXZ'),
+        rot,
         p.scale
       );
+      const seamScale = [seam.of[0] * p.scale[0], seam.of[1] * p.scale[1], 1];
+      const [radial, tubular] = rule.torus(1, seam.tube, framed([0, yaw, roll], seamScale), Math.PI);
       frame.part(
         root,
         `tergite_seam_${n}_${i}`,
-        new THREE.TorusGeometry(1, seam.tube, ...seam.facets, Math.PI),
+        new THREE.TorusGeometry(1, seam.tube, radial, tubular, Math.PI),
         steel,
         [x, y + seam.lift, z],
         [0, yaw, roll],
-        [seam.of[0] * p.scale[0], seam.of[1] * p.scale[1], 1]
+        seamScale
       );
       if (p.spike)
         frame.part(
           root,
           `spine_spike_${n}_${i}`,
-          spike(spk.r, p.spike.length, spk.facets),
+          spike(spk.r, p.spike.length, section(`spine_spike_${n}_${i}`, spk.facets)),
           black,
           p.spike.at,
           p.spike.rot
@@ -3329,10 +3603,12 @@ export function tergiteFlanks(root, { violet, red, black, steel }, opts) {
  * its node.
  */
 export function outriggerPods(root, { violet, black, red }, opts) {
-  const { frame = zLong, big, spike: spk, small } = opts;
-  const orbOf = (o) => new THREE.SphereGeometry(o.r, ...o.facets);
+  const { frame = zLong, big, spike: spk, small, cut: rule = METRE } = opts;
+  noCount('outrigger_pod_big', big, 'facets');
+  noCount('outrigger_pod_small', small, 'facets');
+  const orbOf = (o) => new THREE.SphereGeometry(o.r, ...rule.orb(o.r, framed(o.rot, o.scale)));
   frame.part(root, 'outrigger_pod_big', orbOf(big), violet, big.at, big.rot, big.scale);
-  const barb = spike(spk.r, spk.length, spk.facets ?? 5);
+  const barb = spike(spk.r, spk.length, section('outrigger_spike', spk.facets ?? 5));
   frame.part(root, 'outrigger_spike', barb, black, spk.at, spk.rot);
   frame.part(root, 'outrigger_pod_small', orbOf(small), red, small.at, small.rot, small.scale);
 }
@@ -3344,12 +3620,14 @@ export function outriggerPods(root, { violet, black, red }, opts) {
  * crown: `stern_carapace`, `stern_seam`, `stern_spike`.
  */
 export function sternCarapace(root, { red, steel, black }, opts) {
-  const { frame = zLong, carapace: c, seam, spike: spk } = opts;
-  const orb = new THREE.SphereGeometry(c.r, ...c.facets);
-  frame.part(root, 'stern_carapace', orb, red, c.at, c.rot, c.scale);
-  const ring = torus(seam.R, seam.tube, ...seam.facets);
-  frame.part(root, 'stern_seam', ring, steel, seam.at, seam.rot, seam.scale);
-  const barb = spike(spk.r, spk.length, spk.facets ?? 5);
+  const { frame = zLong, carapace: c, seam, spike: spk, cut: rule = METRE } = opts;
+  noCount('stern_carapace', c, 'facets');
+  noCount('stern_seam', seam, 'facets');
+  const shell = new THREE.SphereGeometry(c.r, ...rule.orb(c.r, framed(c.rot, c.scale)));
+  frame.part(root, 'stern_carapace', shell, red, c.at, c.rot, c.scale);
+  const counts = rule.torus(seam.R, seam.tube, framed(seam.rot, seam.scale));
+  frame.part(root, 'stern_seam', torus(seam.R, seam.tube, ...counts), steel, seam.at, seam.rot, seam.scale);
+  const barb = spike(spk.r, spk.length, section('stern_spike', spk.facets ?? 5));
   frame.part(root, 'stern_spike', barb, black, spk.at, spk.rot);
 }
 
@@ -3362,7 +3640,7 @@ export function sternCarapace(root, { red, steel, black }, opts) {
 export function launchMandibles(root, violet, opts) {
   const { frame = zLong, r, length, facets = 4, mandibles } = opts;
   for (const m of mandibles)
-    frame.part(root, `launch_mandible_${m.n}`, spike(r, length, facets), violet, m.at, m.rot);
+    frame.part(root, `launch_mandible_${m.n}`, spike(r, length, section(`launch_mandible_${m.n}`, facets)), violet, m.at, m.rot);
 }
 
 /**
@@ -3378,7 +3656,7 @@ export function launchMandibles(root, violet, opts) {
 export function anchorClaws(root, skins, { frame = zLong, r = 0.28, facets = 5, claws }) {
   for (const c of claws) {
     const skin = skins[c.index % skins.length];
-    frame.part(root, `anchor_claw_${c.index}`, spike(r, c.length, facets), skin, c.at, c.rot);
+    frame.part(root, `anchor_claw_${c.index}`, spike(r, c.length, section(`anchor_claw_${c.index}`, facets)), skin, c.at, c.rot);
   }
 }
 
@@ -3394,7 +3672,7 @@ export function mawTeeth(root, black, opts) {
   const { frame = xLong, r = 0.14, length = 0.8, facets = 4, teeth } = opts;
   for (const t of teeth) {
     const rot = t.rot ?? [Math.PI, 0, 0];
-    frame.part(root, `maw_tooth_${t.n}`, spike(r, length, facets), black, t.at, rot);
+    frame.part(root, `maw_tooth_${t.n}`, spike(r, length, section(`maw_tooth_${t.n}`, facets)), black, t.at, rot);
   }
 }
 
@@ -3416,7 +3694,7 @@ export function intakeTeeth(root, black, opts) {
     frame.part(
       root,
       `intake_tooth_${k}`,
-      spike(r, length, facets),
+      spike(r, length, section(`intake_tooth_${k}`, facets)),
       black,
       [at[0] + radius * Math.cos(a), y, at[2] + radius * Math.sin(a)],
       [lean * Math.sin(a), 0, -lean * Math.cos(a)]
@@ -3438,9 +3716,9 @@ export function intakeTeeth(root, black, opts) {
  * Everything is in metres in the root's frame, bow (the head) on +X, ground
  * at y 0, and nothing is drawn under it: the conn view stands a
  * structure's y 0 at the 600 m working depth (rosterModels.ts `standingY`,
- * #955). Round bodies cut 15 a turn, the navy's ceiling as #919's
- * table brings it and what Block 2c's crisp facets ask; spines, limbs and
- * teeth are five-sided, the navy's one section.
+ * #955). Round bodies take the rule's count as placed (`cut`, #919),
+ * fifteen at the body's radii, which is what Block 2c's crisp facets ask;
+ * spines, limbs and teeth are five-sided, the navy's section.
  * ------------------------------------------------------------------------ */
 
 /**
@@ -3449,8 +3727,8 @@ export function intakeTeeth(root, black, opts) {
  */
 const [FOOT, CLAW] = [0.1, 0.15];
 
-/** A dome: the upper half of an orb, so a plate stands on the seabed rather than in it. */
-const dome = (round, down) => new THREE.SphereGeometry(1, round, down, 0, Math.PI * 2, 0, Math.PI / 2);
+/** A dome: the upper half of a unit orb, so a plate stands on the seabed rather than in it, cut by the rule for its node's `scale`. */
+const dome = (rule, scale) => shellOf(rule, 1, { down: 0.5 }, { scale });
 
 /**
  * A limb as one buffer: five-sided frusta through `points`, each tapering
@@ -3461,12 +3739,13 @@ const dome = (round, down) => new THREE.SphereGeometry(1, round, down, 0, Math.P
  * limb.
  */
 export function limbRun(root, name, points, radii, mat, facets = 5) {
+  const sides = section(name, facets);
   const pieces = [];
   for (let i = 0; i + 1 < points.length; i++) {
     const a = new THREE.Vector3(...points[i]);
     const b = new THREE.Vector3(...points[i + 1]);
     const d = b.clone().sub(a);
-    const g = cyl(radii[i + 1], radii[i], d.length(), facets);
+    const g = cyl(radii[i + 1], radii[i], d.length(), sides);
     g.applyQuaternion(
       new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize())
     );
@@ -3492,15 +3771,14 @@ export const onDome = ([x, z], [sx, sy, sz], a, e, out = 1) => [
  * the chart sees five plates, not one mound.
  */
 export function refineryBody(root, { violet, red, black }, opts) {
-  const { z, plates, round = 15, down = 5, ridge = {} } = opts;
-  const { at = -0.78, size = [0.2, 1.1, 0.93], down: ridgeDown = 3 } = ridge;
+  const { z, plates, ridge = {}, cut: rule = METRE } = opts;
+  noCount('refineryBody', opts, 'round', 'down');
+  noCount('refineryBody: ridge', ridge, 'down');
+  const { at = -0.78, size = [0.2, 1.1, 0.93] } = ridge;
   plates.forEach((p, i) => {
-    add(root, `tergite_${i}`, dome(round, down), i % 2 ? red : violet, [p.x, 0, z], [0, 0, 0], p.s);
-    add(root, `tergite_ridge_${i}`, dome(round, ridgeDown), black, [p.x + at * p.s[0], 0, z], [0, 0, 0], [
-      size[0] * p.s[0],
-      size[1] * p.s[1],
-      size[2] * p.s[2],
-    ]);
+    add(root, `tergite_${i}`, dome(rule, p.s), i % 2 ? red : violet, [p.x, 0, z], [0, 0, 0], p.s);
+    const s = [size[0] * p.s[0], size[1] * p.s[1], size[2] * p.s[2]];
+    add(root, `tergite_ridge_${i}`, dome(rule, s), black, [p.x + at * p.s[0], 0, z], [0, 0, 0], s);
   });
 }
 
@@ -3522,8 +3800,10 @@ export function refineryBody(root, { violet, red, black }, opts) {
  * every silo, never mirrored.
  */
 export function siloRank(root, { red, violet, black, light }, opts) {
-  const { z, plates, silos: list, round = 15, shrink = 0.9, shorten = 0.86, foot = 0.78 } = opts;
+  const { z, plates, silos: list, shrink = 0.9, shorten = 0.86, foot = 0.78 } = opts;
   const { eye = { bearing: 1.4, r: 1.3 }, spine = { bearing: 4.36, lengths: [10, 14] } } = opts;
+  const { cut: rule = METRE } = opts;
+  noCount('siloRank', opts, 'round');
   list.forEach((s, n) => {
     const p = plates[s.plate];
     const [cx, cz] = [p.x + (s.dx ?? 2), z + (s.dz ?? -3)];
@@ -3543,12 +3823,13 @@ export function siloRank(root, { red, violet, black, light }, opts) {
       const seg = `silo_${n}_seg_${k}`;
       // r169's lathe leaves its interior normals unnormalised, the sum of two
       // segment normals; the exporter would fix them silently, once a part.
+      const round = rule.lathe(profile);
       const shell = new THREE.LatheGeometry(profile, round, (k * Math.PI) / round);
       shell.normalizeNormals();
       add(root, seg, shell, skin, [cx, y, cz]);
       const e = [cx + R * Math.cos(eye.bearing), y + H * 0.4, cz + R * Math.sin(eye.bearing)];
       const bud = seat(root, seg, e, { stand: eye.r, sink: eye.r / 2 });
-      add(root, `silo_${n}_eye_${k}`, new THREE.SphereGeometry(eye.r, 5, 3), light, bud.at);
+      add(root, `silo_${n}_eye_${k}`, new THREE.SphereGeometry(eye.r, ...rule.orb(eye.r)), light, bud.at);
       const len = spine.lengths[k % spine.lengths.length] * (s.r / 13);
       const b = spine.bearing;
       const base = new THREE.Vector3(cx + R * 0.95 * Math.cos(b), y + H * 0.4, cz + R * 0.95 * Math.sin(b));
@@ -3557,8 +3838,9 @@ export function siloRank(root, { red, violet, black, light }, opts) {
       y += H;
       R *= shrink;
     }
-    add(root, `silo_${n}_crown`, cyl(0, R * 0.98, crownH, 5, (n * Math.PI) / 5), black, [cx, y + crownH / 2, cz]);
-    add(root, `silo_${n}_tip`, new THREE.SphereGeometry(1.4, 5, 3), light, [cx, y + crownH - 0.4, cz]);
+    const five = section(`silo_${n}_crown`, 5);
+    add(root, `silo_${n}_crown`, cyl(0, R * 0.98, crownH, five, (n * Math.PI) / 5), black, [cx, y + crownH / 2, cz]);
+    add(root, `silo_${n}_tip`, new THREE.SphereGeometry(1.4, ...rule.orb(1.4)), light, [cx, y + crownH - 0.4, cz]);
   });
 }
 
@@ -3580,8 +3862,12 @@ export function siloRank(root, { red, violet, black, light }, opts) {
  * the maw's `lip` and `floor` centres, for the gallery to aim at.
  */
 export function refineryHead(root, { red, black, gullet, light }, opts) {
-  const { at, scale, round = 15, down = 6, hole, recess, teeth, mandibles, rostrum, eyes } = opts;
+  const { at, scale, hole, recess, teeth, mandibles, rostrum, eyes, cut: rule = METRE } = opts;
   const { ridge = { at: -0.8, size: [0.2, 1.08, 0.93] } } = opts;
+  noCount('refineryHead', opts, 'round', 'down');
+  // The cowl's two counts are the rule's for the dome as pressed (#919; the
+  // file's fifteen by six), and `hole` names its cells on that grid.
+  const [round, down] = rule.orb(1, { scale }, { thetaLength: Math.PI / 2 });
   const mouth = crusherMaw({
     cowl: { r: 1, facets: [round, down], phi: Math.PI * 2, theta: Math.PI / 2, at, rot: [0, 0, 0], scale },
     hole,
@@ -3591,11 +3877,8 @@ export function refineryHead(root, { red, black, gullet, light }, opts) {
   add(root, 'crusher_cowl', mouth.cowl.geo, red, at, [0, 0, 0], scale);
   add(root, 'crusher_maw', mouth.maw.geo, gullet, at, [0, 0, 0], scale);
   add(root, 'crusher_maw_throat', mouth.throat.geo, red, at, [0, 0, 0], scale);
-  add(root, 'crusher_ridge', dome(round, 3), black, [at[0] + ridge.at * scale[0], 0, at[2]], [0, 0, 0], [
-    ridge.size[0] * scale[0],
-    ridge.size[1] * scale[1],
-    ridge.size[2] * scale[2],
-  ]);
+  const ridgeS = [ridge.size[0] * scale[0], ridge.size[1] * scale[1], ridge.size[2] * scale[2]];
+  add(root, 'crusher_ridge', dome(rule, ridgeS), black, [at[0] + ridge.at * scale[0], 0, at[2]], [0, 0, 0], ridgeS);
   mawTeeth(root, black, {
     r: teeth.r,
     length: teeth.length,
@@ -3637,7 +3920,7 @@ export function refineryHead(root, { red, black, gullet, light }, opts) {
   limbRun(root, 'rostrum', [shell(...rostrum.from).toArray(), rostrum.tip], [rostrum.r, 0.3], black);
   for (const [name, r, theta, phi] of eyes) {
     const bud = seat(root, 'crusher_cowl', shell(theta, phi, 1.02).toArray(), { stand: r, sink: r / 2 });
-    add(root, name, new THREE.SphereGeometry(r, 5, 3), light, bud.at);
+    add(root, name, new THREE.SphereGeometry(r, ...rule.orb(r)), light, bud.at);
   }
   return { shell, lip, floor };
 }
@@ -3655,10 +3938,11 @@ export function refineryStacks(root, { steel, glow }, { stacks }) {
       [r * 0.62, h * 0.8],
       [r * 0.95, h],
     ].map(([a, b]) => new THREE.Vector2(a, b));
-    const flue = new THREE.LatheGeometry(profile, 5, k * 0.4);
+    const five = section(`exhaust_stack_${k}`, 5);
+    const flue = new THREE.LatheGeometry(profile, five, k * 0.4);
     flue.normalizeNormals();
     add(root, `exhaust_stack_${k}`, flue, steel, [x, 0, z]);
-    add(root, `exhaust_tip_${k}`, cyl(r * 0.9, r * 0.9, 0.8, 5, k * 0.4), glow, [x, h - 0.5, z]);
+    add(root, `exhaust_tip_${k}`, cyl(r * 0.9, r * 0.9, 0.8, five, k * 0.4), glow, [x, h - 0.5, z]);
   });
 }
 
@@ -3670,13 +3954,15 @@ export function refineryStacks(root, { steel, glow }, { stacks }) {
  * negative lean). `legs` are bearings; `chute` is `[r, bottom]`.
  */
 export function refineryHopper(root, { violet, gullet, black, steel }, opts) {
-  const { at: [x, z], top, bottom, radii, facets = 15, mouth, teeth, legs, chute } = opts;
+  const { at: [x, z], top, bottom, radii, mouth, teeth, legs, chute, cut: rule = METRE } = opts;
+  noCount('refineryHopper', opts, 'facets');
   intakeMaw(root, { hopper: violet, throat: violet, mouth: gullet }, {
-    hopper: { radii, h: top - bottom, facets, at: [x, (top + bottom) / 2, z] },
+    hopper: { radii, h: top - bottom, at: [x, (top + bottom) / 2, z] },
     mouth,
+    cut: rule,
   });
   intakeTeeth(root, black, { ...teeth, facets: 5, at: [x, 0, z], y: top + teeth.lift });
-  add(root, 'intake_chute', cyl(chute[0], chute[0] * 0.8, bottom - chute[1], 5), steel, [x, (bottom + chute[1]) / 2, z]);
+  add(root, 'intake_chute', cyl(chute[0], chute[0] * 0.8, bottom - chute[1], section('intake_chute', 5)), steel, [x, (bottom + chute[1]) / 2, z]);
   legs.forEach((a, k) => {
     const at = (r, y) => [x + r * Math.cos(a), y, z + r * Math.sin(a)];
     limbRun(root, `hopper_leg_${k}`, [at(radii[1] + 4, bottom + 4), at(radii[0] + 6, top - 4), at(radii[0] + 12, FOOT)], [2, 1.6, CLAW], black);
@@ -3698,7 +3984,7 @@ export function refineryHopper(root, { violet, gullet, black, steel }, opts) {
  */
 export function feedGallery(root, mats, opts) {
   const { steel, black, red, light, skins } = mats;
-  const { from, to, width = 6.5, ribs, legs, nodules, lures = [], clear } = opts;
+  const { from, to, width = 6.5, ribs, legs, nodules, lures = [], clear, cut: rule = METRE } = opts;
   const { lamp: lampMat = light } = mats;
   const S = new THREE.Vector3(...from);
   const D = new THREE.Vector3(...to).sub(S);
@@ -3719,12 +4005,13 @@ export function feedGallery(root, mats, opts) {
   const world = (p) => new THREE.Vector3(...p).applyMatrix4(frame);
   let k = 0;
   for (let x = ribs.first; x < L - ribs.last; x += ribs.pitch, k++) {
-    const arch = new THREE.TorusGeometry(W + 0.4, ribs.tube, 5, 8, Math.PI);
+    const [radial, tubular] = rule.torus(W + 0.4, ribs.tube, {}, Math.PI);
+    const arch = new THREE.TorusGeometry(W + 0.4, ribs.tube, radial, tubular, Math.PI);
     arch.rotateY(Math.PI / 2);
     add(gallery, `conveyor_rib_${k}`, arch, black, [x, 0, 0]);
     const crown = world([x, W + 0.4, 0]);
     if (k % 2 === 0 && Math.hypot(crown.x - clear[0], crown.z - clear[1]) > clear[2])
-      add(gallery, `conveyor_light_${k}`, new THREE.SphereGeometry(1.2, 5, 3), light, [x, W + 0.4 + ribs.tube * 0.5, 0]);
+      add(gallery, `conveyor_light_${k}`, new THREE.SphereGeometry(1.2, ...rule.orb(1.2)), light, [x, W + 0.4 + ribs.tube * 0.5, 0]);
     if (k % legs.every !== legs.every - 1 || world([x, -2.4, 0]).y < legs.minHip) continue;
     for (const [side, sgn, s, dx] of [
       ['s', 1, 1, 1.5],
@@ -3761,7 +4048,7 @@ export function feedGallery(root, mats, opts) {
     const bend = [x - 2, h * 0.75, z * 1.6];
     const end = [x, h, 0];
     limbRun(gallery, `lure_stalk_${k}`, [hip, bend, end], [1.2, 0.9, 0.6], black);
-    add(gallery, `lure_lamp_${k}`, new THREE.SphereGeometry(r, 9, 5), lampMat, [x, h + r * 0.6, 0]);
+    add(gallery, `lure_lamp_${k}`, new THREE.SphereGeometry(r, ...rule.orb(r)), lampMat, [x, h + r * 0.6, 0]);
   });
   return gallery;
 }
@@ -3788,11 +4075,11 @@ export function anchorLegs(root, black, { z, plates, legs, e = 0.34 }) {
  * The ridge lights: rows of points along the ridges, `[plate, dz]` each,
  * dropped onto the ridge's top at that station across the body.
  */
-export function ridgeLights(root, light, { z, plates, lights, r = 1.2, ridge = -0.78 }) {
+export function ridgeLights(root, light, { z, plates, lights, r = 1.2, ridge = -0.78, cut: rule = METRE }) {
   lights.forEach(([i, dz], k) => {
     const p = plates[i];
     const bud = seat(root, `tergite_ridge_${i}`, [p.x + ridge * p.s[0], 60, z + dz], { stand: r, sink: r / 2, drop: true });
-    add(root, `ridge_light_${k}`, new THREE.SphereGeometry(r, 5, 3), light, bud.at);
+    add(root, `ridge_light_${k}`, new THREE.SphereGeometry(r, ...rule.orb(r)), light, bud.at);
   });
 }
 
@@ -3839,12 +4126,12 @@ export { THREE };
  * (docs/models-plan.md §3.2 rule 2).
  */
 export function reactorVessel(root, { violet, red, black, steel, lampM, unlit }, opts) {
-  const { mound, collar, scutes, seam, spines, mark, ports } = opts;
-  add(root, 'reactor_vessel', orb(12, 8), violet, [0, mound.y, 0], [0, 0, 0], mound.r);
+  const { mound, collar, scutes, seam, spines, mark, ports, cut: rule = METRE } = opts;
+  add(root, 'reactor_vessel', orb(rule, mound.r), violet, [0, mound.y, 0], [0, 0, 0], mound.r);
   add(
     root,
     'mound_collar',
-    torus(collar.r, collar.t, 6, 16),
+    torus(collar.r, collar.t, ...rule.torus(collar.r, collar.t)),
     steel,
     [0, collar.y, 0],
     [Math.PI / 2, 0, 0]
@@ -3854,16 +4141,16 @@ export function reactorVessel(root, { violet, red, black, steel, lampM, unlit },
     add(
       root,
       `base_scute_${i}`,
-      orb(8, 6),
+      orb(rule, scutes.scale, { rot: [0, -a, scutes.pitch] }),
       skins[i % 2],
       polar(a, r, y),
       [0, -a, scutes.pitch],
       scutes.scale
     )
   );
-  add(root, 'mound_seam', orb(10, 6), black, seam.at, [0, seam.yaw, 0], seam.r);
+  add(root, 'mound_seam', orb(rule, seam.r), black, seam.at, [0, seam.yaw, 0], seam.r);
   spines.at.forEach(([a, r, y, length], i) =>
-    add(root, `mound_spine_${i}`, spike(spines.r, length, 5), black, polar(a, r, y), [
+    add(root, `mound_spine_${i}`, spike(spines.r, length, section('mound_spine', 5)), black, polar(a, r, y), [
       0,
       -a,
       spines.rake,
@@ -3871,7 +4158,7 @@ export function reactorVessel(root, { violet, red, black, steel, lampM, unlit },
   );
   add(root, 'crown_mark', box(...mark.size), lampM, mark.at, [0, mark.yaw ?? 0, 0]);
   ports.at.forEach(([a, r, y], i) =>
-    add(root, `vessel_port_${i}`, orb(8, 5), unlit, polar(a, r, y), [0, -a, 0], ports.scale)
+    add(root, `vessel_port_${i}`, orb(rule, ports.scale), unlit, polar(a, r, y), [0, -a, 0], ports.scale)
   );
 }
 
@@ -3889,13 +4176,15 @@ export function reactorVessel(root, { violet, red, black, steel, lampM, unlit },
  * for the same reason the ports are.
  */
 export function reactorOutflow(root, { red, black, steel, unlit }, opts) {
-  const { bearing: a, gullet, ribs, hopper: bin, rim, throat } = opts;
+  const { bearing: a, gullet, ribs, hopper: bin, rim, throat, cut: rule = METRE } = opts;
+  noCount('outflow_gullet', gullet, 'facets');
   const yaw = [0, -a, 0];
-  add(root, 'outflow_gullet', loft(gullet.profile, gullet.facets ?? 8), red, [0, gullet.y, 0], yaw);
+  const gulletGeo = loft(gullet.profile, rule.loft(gullet.profile));
+  add(root, 'outflow_gullet', gulletGeo, red, [0, gullet.y, 0], yaw);
   // A torus is born round +Z, so the turn that lays its axis on the bearing
   // is π/2 − a about Y: the ribs ride the gullet rather than stand across it.
   ribs.at.forEach((d, i) =>
-    add(root, `gullet_rib_${i}`, torus(ribs.r, ribs.t, 5, 12), steel, polar(a, d, gullet.y), [
+    add(root, `gullet_rib_${i}`, torus(ribs.r, ribs.t, ...rule.torus(ribs.r, ribs.t)), steel, polar(a, d, gullet.y), [
       0,
       Math.PI / 2 - a,
       0,
@@ -3939,8 +4228,8 @@ export const trebleBody = {
     [3.4, 2.8, 1.9, 2.8],
   ],
   ridge: { at: -0.75, size: [0.25, 1.1, 0.92], lift: 0.15 },
-  rostrum: { tip: 8, r: 1.3, length: 5, facets: 6 },
-  telson: { tip: -8, r: 1.1, length: 3, facets: 6 },
+  rostrum: { tip: 8, r: 1.3, length: 5 },
+  telson: { tip: -8, r: 1.1, length: 3 },
   gun: { x: 3.9, z: -0.8, r: [0.3, 0.22], length: 4.4 },
   lugs: { x: 0, z: 3.3, size: [1.4, 0.8, 0.7] },
 };
@@ -4030,9 +4319,10 @@ export function bodyPlan(body, grow = 0, { step = 1, to, side, smooth = 0 } = {}
  * block on a 50 m hull and would be a third of a Treble's beam. So the
  * mount's size and seat are given, and the names are the Chorister's.
  */
-export function craftGun(root, { steel, black }, { x, y, z, r, length, mount }) {
+export function craftGun(root, { steel, black }, { x, y, z, r, length, mount, cut: rule = METRE }) {
   const [breech, muzzle] = r;
-  add(root, 'spine_gun', cyl(muzzle, breech, length, 6), steel, [x, y, z], [0, 0, -Math.PI / 2]);
+  const barrel = cyl(muzzle, breech, length, rule.cyl(muzzle, breech, length));
+  add(root, 'spine_gun', barrel, steel, [x, y, z], [0, 0, -Math.PI / 2]);
   add(root, 'spine_gun_mount', box(...mount.size), black, mount.at);
 }
 
@@ -4125,6 +4415,7 @@ export function cradles(root, { black, steel, lamp: lampMat }, opts) {
     sill = { d: 0.7, h: 0.3 },
     mandibles = { r: 0.7, length: 4.5, yaw: 0.3 },
     clasps = { r: 0.5, length: 4, lean: 0.75, sink: 0.4 },
+    cut: rule = METRE,
   } = opts;
   // The craft's belly: the lowest of its plates and ridges under its axis.
   const { ridge } = craft;
@@ -4244,7 +4535,7 @@ export function cradles(root, { black, steel, lamp: lampMat }, opts) {
       add(
         frame,
         `${name}_mandible_${k}`,
-        spike(mandibles.r, mandibles.length),
+        cone(rule, mandibles.r, mandibles.length),
         steel,
         [mouth + dir[0] * half, -seat + coaming.proud / 2, s * armZ + dir[2] * half],
         [0, -s * mandibles.yaw, -Math.PI / 2]
@@ -4259,7 +4550,7 @@ export function cradles(root, { black, steel, lamp: lampMat }, opts) {
       add(
         frame,
         `${name}_clasp_${k}`,
-        spike(clasps.r, clasps.length, 5),
+        spike(clasps.r, clasps.length, section(`${name}_clasp_${k}`, 5)),
         black,
         [
           waist,
