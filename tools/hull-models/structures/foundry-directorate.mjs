@@ -170,8 +170,8 @@
  * unlit part from above (facets.mjs `panelsOf`; Block 2c), and this file
  * read 11.0 m over fifty-one, thirty-two parts over 64 m² against nineteen
  * in the band. The pass adds fifteen spines where fourteen are the least: a
- * second, smaller spike a plate's length abaft each spine spike, raked the
- * one way, on five of the six — not the second starboard plate, where
+ * second, smaller spike a unit abaft each spine spike on its own plate,
+ * raked the one way, on five of the six — not the second starboard plate, where
  * `flank_photophore_8` stands — and none on the bow plates, which carry no
  * spine in the file (`spineRank`); a ring of seven round the stern spike on
  * the stern carapace's crown and a ring of five round the outrigger's spike
@@ -217,6 +217,17 @@ root.name = 'foundry_directorate';
 // the +x flank, (−0.35, 1, 0.1) on the −x, the file's node decomposed.
 const RAKE_P = [0.094119023, -0.015933738, -0.335170772];
 const RAKE_S = [0.094119023, 0.015933738, 0.335170772];
+// The six spine spikes' stations, the file's nodes to nine places, read by
+// the plates below and by the second rank's barbs (#919), so a spike that
+// moves takes its barb with it.
+const SPIKES = {
+  p0: [3.43499122, 3.155403486, -2.837859651],
+  p1: [3.320243272, 3.481266491, 0.477926649],
+  p2: [3.137728502, 3.118652864, 3.495065286],
+  s0: [-3.471891574, 2.66426164, -2.470173836],
+  s1: [-3.341732114, 2.968377468, 0.652637747],
+  s2: [-3.221987448, 2.699392707, 3.379139271],
+};
 
 // The tergite flanks: the +x rank first, as the file writes it — named port
 // here (see the header) — then the −x rank.
@@ -234,19 +245,19 @@ directorate.tergiteFlanks(
             at: [3.4, 0.15, -4.5],
             rot: [-0.004298972, 0.12, -0.12],
             scale: [2.52, 2.7, 2.9],
-            spike: { at: [3.43499122, 3.155403486, -2.837859651], rot: RAKE_P, length: 1.7862519 },
+            spike: { at: SPIKES.p0, rot: RAKE_P, length: 1.7862519 },
           },
           {
             at: [3.3, 0.15, -1.4],
             rot: [0.016585802, 0.17, -0.12],
             scale: [2.52, 3.1, 3.3],
-            spike: { at: [3.320243272, 3.481266491, 0.477926649], rot: RAKE_P, length: 1.6741475 },
+            spike: { at: SPIKES.p1, rot: RAKE_P, length: 1.6741475 },
           },
           {
             at: [3.18, 0.15, 1.8],
             rot: [-0.03502016, 0.22, -0.12],
             scale: [2.52, 2.9, 3],
-            spike: { at: [3.137728502, 3.118652864, 3.495065286], rot: RAKE_P, length: 1.1989505 },
+            spike: { at: SPIKES.p2, rot: RAKE_P, length: 1.1989505 },
           },
           { at: [3.08, 0.15, 4.7], rot: [0.000254751, 0.27, -0.12], scale: [2.52, 2.3, 2.4] },
         ],
@@ -259,19 +270,19 @@ directorate.tergiteFlanks(
             at: [-3.48, 0.15, -3.9],
             rot: [-0.013344816, -0.12, 0.12],
             scale: [2.112, 2.3, 2.5],
-            spike: { at: [-3.471891574, 2.66426164, -2.470173836], rot: RAKE_S, length: 1.4586362 },
+            spike: { at: SPIKES.s0, rot: RAKE_S, length: 1.4586362 },
           },
           {
             at: [-3.34, 0.15, -1],
             rot: [-0.033392322, -0.17, 0.12],
             scale: [2.112, 2.6, 2.9],
-            spike: { at: [-3.341732114, 2.968377468, 0.652637747], rot: RAKE_S, length: 1.5334376 },
+            spike: { at: SPIKES.s1, rot: RAKE_S, length: 1.5334376 },
           },
           {
             at: [-3.25, 0.15, 1.9],
             rot: [-0.009265448, -0.22, 0.12],
             scale: [2.112, 2.4, 2.6],
-            spike: { at: [-3.221987448, 2.699392707, 3.379139271], rot: RAKE_S, length: 1.3073378 },
+            spike: { at: SPIKES.s2, rot: RAKE_S, length: 1.3073378 },
           },
           { at: [-3.4, 0.15, 4.3], rot: [-0.036309463, -0.27, 0.12], scale: [2.112, 1.8, 2] },
         ],
@@ -280,9 +291,9 @@ directorate.tergiteFlanks(
   }
 );
 
-// A second, smaller spike a plate's length abaft each spine spike (#919, the
-// panel pass; the header), raked the one way the spikes rake, seated on its
-// plate (`spineRank`; kit.mjs `seat`): five, since `flank_photophore_8`
+// A second, smaller spike a unit abaft each spine spike on the same plate
+// (#919, the panel pass; the header), raked the one way the spikes rake,
+// seated on that plate (`spineRank`; kit.mjs `seat`): five, since `flank_photophore_8`
 // stands where the second starboard plate's would grow, and none on the bow
 // plates, which carry no spine in the file.
 const barb = (n, [x, y, z], rake, length) => [n, black, 0.09, length, [x, y - 0.3, z - 1], rake];
@@ -291,11 +302,11 @@ directorate.spineRank(root, {
   frame: drawn,
   on: [0, 1, 2, 3].flatMap((i) => [`tergite_port_${i}`, `tergite_starboard_${i}`]),
   spines: [
-    barb('0_0', [3.43499122, 3.155403486, -2.837859651], [0.35, 1, 0.1], 0.95),
-    barb('0_1', [3.320243272, 3.481266491, 0.477926649], [0.35, 1, 0.1], 0.88),
-    barb('0_2', [3.137728502, 3.118652864, 3.495065286], [0.35, 1, 0.1], 0.82),
-    barb('1_0', [-3.471891574, 2.66426164, -2.470173836], [-0.35, 1, 0.1], 0.9),
-    barb('1_2', [-3.221987448, 2.699392707, 3.379139271], [-0.35, 1, 0.1], 0.86),
+    barb('0_0', SPIKES.p0, [0.35, 1, 0.1], 0.95),
+    barb('0_1', SPIKES.p1, [0.35, 1, 0.1], 0.88),
+    barb('0_2', SPIKES.p2, [0.35, 1, 0.1], 0.82),
+    barb('1_0', SPIKES.s0, [-0.35, 1, 0.1], 0.9),
+    barb('1_2', SPIKES.s2, [-0.35, 1, 0.1], 0.86),
   ],
 });
 

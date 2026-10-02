@@ -83,8 +83,10 @@
  * in the band. Block 2c says the Dredge gains limbs or spines at the pass;
  * it gains twelve spines where eight are the least, since eight would have
  * left the median on the claw's inner tip at 2.9 m: a second, smaller spine
- * five units abaft and eight off the keel on the first rank's side of four
- * plates — not the third, where the hopper stands — three stepped along the
+ * on four plates, seeded five units abaft the plate's centre and eight off
+ * the keel on the first spine's side and seated on the plate, which carries
+ * it up the slope: as built 4.5–4.9 m behind the first spine and 6.4–6.9 m
+ * off the keel — not the third plate, where the hopper stands — three stepped along the
  * claw's arm as the boom's teeth are stepped along the boom, leaning a
  * little inboard so the plan from above stays the file's own, and five
  * teeth on the scoop's lip raked forward over the mouth, no two the same
@@ -242,10 +244,12 @@ directorate.dredgeBoom(root, { steel, black }, { side: 's', x: -8, y: 0.5, z: 29
 // this hull puts a lamp large enough to read as a patch rather than a mark.
 directorate.hopper(root, { black, steel, gullet }, { x: -6, y: 8, z: 2 });
 
-// The panel pass's spines (#919; the header): a second, smaller spine a plate
-// behind and outboard of the first — five units aft of it and eight off the
-// keel on its own side, a rule with a hole in it where the hopper stands on
-// the third plate; three spines stepped along the claw's arm as the boom's
+// The panel pass's spines (#919; the header): a second, smaller spine behind
+// and outboard of the first on each plate, seeded five units abaft the
+// plate's centre and eight off the keel on the first spine's side and then
+// seated on the plate, which carries it three to four units up the slope —
+// as built, 4.5–4.9 m behind the first spine and 6.4–6.9 m off the keel —
+// a rule with a hole in it where the hopper stands on the third plate; three spines stepped along the claw's arm as the boom's
 // teeth are stepped along the boom, answering it without mirroring it; and
 // five teeth on the scoop's lip, cones raked forward over the mouth, no two
 // the same length. Black and five-sided like the plate spines, each seated on

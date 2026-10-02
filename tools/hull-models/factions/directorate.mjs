@@ -4158,9 +4158,10 @@ export function telsonBlades(root, skins, { at: [x, z], blades, r = 7, flat = 0.
  * station near the skin and the skin settles the rest, and every one is a
  * five-sided cone but the Submersible's, whose spikes keep the four the file
  * cut (`section`). The seven models outside their bands took ranks and rings
- * and nothing else — a regimented rule with a hole in it where a lamp, a
- * rib, a pipe or a dock stands, the navy's own idiom (`crown_spine_4` was
- * never grown) — and each script's header says where and why.
+ * and nothing else — regimented rules, a station left ungrown wherever a
+ * lamp, a rib, a pipe, a dock, the hopper or a plate stands in its way, the
+ * navy's own idiom (`crown_spine_4` was never grown) — and each script's
+ * header says where and why.
  * ------------------------------------------------------------------------ */
 
 /**

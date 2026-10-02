@@ -136,13 +136,18 @@
  * dome, 0.75 units up from its centre, fifteen stations of a turn from 0.2
  * rad with the eleventh never grown, where `photophore_13` sits on the shell;
  * each leaning out nearly flat (1.35 rad) over the collar, 1.26–1.54 units
- * long at 0.13 of radius, the longest and thickest on the dome, violet and
- * black by no rule, its base seated on the shell (`spineRing`; four root in
- * `shell_plate_2`). Fourteen where ten are the least. They show 9–13 m²
- * each, and the median part is 2.59 m over seventy-nine — within one part of
- * the band's floor, since the fourth ring's spines read 6.1–6.9 m² either
- * side of 6.25 and a fifth ring of any count under twenty leaves the median
- * in that cluster. No lamp's plan changed, no plan grew from above, each new
+ * long at 0.13 of radius, the thickest on the dome and the widest from
+ * above, violet and black by no rule, its base seated on the nearest of
+ * the shell and its plates (`spineRing`): `_48`, `_50` and `_51` root in
+ * `shell_plate_2`, standing 0.2–0.5 m off the dome under it, and `_49`
+ * leaves the dome and passes out through that plate's edge. Fourteen where
+ * ten are the least. They show 9–13 m²
+ * each, and the median part is 2.59 m over seventy-nine, 0.09 m inside the
+ * band's floor: the parts either side of its 6.25 m² read 5.8–7.6, six
+ * spines of the upper three rings and the quill's third segment, so
+ * fourteen new spines leave the median at 2.59 m, seventeen would move it
+ * to 2.63 and twenty to 2.75, and only past twenty does it land on a new
+ * spine. No lamp's plan changed, no plan grew from above, each new
  * spine meets its shell and nothing else. 88 parts and 1,864 triangles
  * become 102 and 2,004; `DRAWN` holds at 17.9120.
  */
@@ -272,9 +277,10 @@ directorate.shellSpines(root, {
 // pass; the header): fifteen stations of a turn from 0.2 rad, the eleventh
 // never grown, where `photophore_13` sits on the shell, each leaning out
 // nearly flat (1.35 rad) over the collar from the dome's skin 0.75 up from
-// its centre, each its own length and the longest and thickest on the dome,
-// skinned violet and black by no rule, seated on the shell (`spineRing`;
-// kit.mjs `seat`). Numbered on from the file's forty-two, by station.
+// its centre, each its own length, the thickest on the dome and the widest
+// from above, skinned violet and black by no rule, seated on the nearest of
+// the shell and its plates (`spineRing`; kit.mjs `seat`; the header).
+// Numbered on from the file's forty-two, by station.
 directorate.spineRing(
   root,
   [violet, black, violet, violet, black, violet, black, violet, violet, black, violet, violet, black, black, violet],
