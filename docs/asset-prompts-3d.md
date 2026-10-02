@@ -547,18 +547,26 @@ and named with the tables, nine rings in all. The kit's capsule draws its meridi
 quarter turns of one count, so where the rule's half-turn share is odd no capsule meets it
 and the cap takes the segment over, the Order's reading; the Commune's twenty-nine landed
 on even shares and none is named. Besides a count the pass moved what the coarser rounds
-left standing off: the Bastion's eight ports are seated on the dome where the file hung
-them on its sphere (`portLights` `on`), its growth rings sit on the dome's four rows rather
-than the sphere between them (`domeRings` `dome`), its ribs, veins and pipes and the
-Foundry's veins are set out by their own chord's sag (`domeArcs` `sag`) where a
-two-segment vein had sunk into the dome and shown nothing from above, the Foundry's
+left standing off: the Bastion's eight ports are seated on the dome along the ray from
+its centre (`portLights` `on`), 0.3 up from the file's stations, where three of them lay
+in the lowest growth ring in the file itself and five did once that ring sat on the dome's
+rows; its growth rings sit on the dome's four rows rather
+than the sphere between them (`domeRings` `dome`), its three veins are set out by a fifth
+of their own chord's sag (`domeArcs` `sag`) where a two-segment vein's chord dipped under
+the dome's skin between its vertices and the first showed nothing from above — its ribs
+and pipes stay at the file's radius, a band's chords sinking into an opaque dome being
+nothing the eye sees — the Foundry's veins by their whole sag, the Foundry's
 second vein is swept from R 2.306 to 2.34 to show again and its third in from 2.228 to
 2.17 to lie on its lobe again, the Turret's recoil ribs are
 sized to the root they band (`grownBarrel` `fit`), the Refinery's silo hoops hug their
 sixteen-sided drums at 1.0 where 0.97 buried them, the Vent Tap's ember takes r 12 and its
 lamp housings the crown flat's shortfall as the Consortium's did, the Bower's bed marks
-are seated on its regenerated hull, and the Glider's tail knuckle moves 0.13 m aft to keep
-the stern at 27.5. Seven files fit a hair differently once their rounds moved — the Foundry
+are seated on its regenerated hull, the Glider's tail knuckle moves 0.13 m aft to keep
+the stern at 27.5 and its fluke's hinge comes down 0.24 m onto it, the Veil's eight gill
+slits stand 0.05 further out of mounds that filled to their spheres, and the Light Scout's
+two flank marks grow from 0.035 to 0.042 — the one lamp the pass touched, because at the
+rule's five by three a 0.035 bud owned 0.19 m² from above and a mark that can face up takes
+no residual audit line ("Glow encodes loudness", above). Seven files fit a hair differently once their rounds moved — the Foundry
 is 1.1 % smaller in metres and the Veil 1.3, the rest under 0.6 — and two more now assert
 their fit. Panels run a metre and a half to five: a Commune hull is few, large
 parts — a leaf is one plate, a pod one orb, a fin one membrane — so its median part from

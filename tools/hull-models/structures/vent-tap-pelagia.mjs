@@ -39,9 +39,9 @@
  * their buds sixteen by sixteen, where they were twelve by twelve and eight
  * by twelve, and their twelve rings sixteen, where they were twelve. The
  * apron, the clamp and the manifold rings keep the sixteen the rule gives
- * them. The measure still names the four valve stems, the kit's six-sided
- * drums at 1.01 m where the rule says five: kit.mjs `ventDrawArm` writes
- * that count itself. 98 parts and 3,360 triangles become 98 and 5,840.
+ * them; the four valve stems and the eight platform legs ask the rule
+ * through kit.mjs `ventDrawArm` since the pass, five and nine where the kit
+ * drew six. 98 parts and 3,360 triangles become 98 and 5,824.
  */
 import {
   THREE,

@@ -260,6 +260,9 @@ for (const [side, at, yaw, sgn, lines] of [
         pitch: 0.34,
         slit: [0.09, 0.3, 0.62],
         breath: [0.035, 0.26, 0.56],
+        // 0.05 out along the ray from the organ's origin (#919): the rule's
+        // sixteen-by-eight mound swallowed two slits the ten-by-six showed.
+        out: 0.05,
       },
       lines: { ...lines, sink: 0.02, lean: 0.5 },
       haze: { radii: [0.55, 0.2], h: 1.1, y: 0.95, roll: sgn * 0.15 },

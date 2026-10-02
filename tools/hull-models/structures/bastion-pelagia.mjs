@@ -89,11 +89,13 @@
  * on a tube of eight at 1.8 m, where they had 10 on 5; and the seven roots
  * and two tanks, capsules of sixteen round with eight-segment caps at
  * 15–20 m, where they had 7 and 9 on 3. `facets.mjs pelagia` names none of
- * them. The dome's coarser skin lies under where the file placed what sat
- * on its ideal surface: the light audit reads `port_light_0`, `_1` and `_4`
- * resting on nothing, 0.7–1.3 m off it, the other five 0.005–2.7 m off,
- * `growth_ring_3` 0.39 m off, and `bio_vein_0` under a cell from above.
- * 47 parts and 5,346 triangles become 47 and 10,124.
+ * them. The dome's coarser skin lay under where the file placed what sat
+ * on its ideal surface — three ports 0.7–1.3 m off it and five 0.005–2.7,
+ * `growth_ring_3` 0.39 m off, `bio_vein_0` under a cell from above — so the
+ * ports are seated on the dome 0.3 up from the file's stations, the rings
+ * sit on the dome's rows, and the veins are set out by a fifth of their
+ * sag (each call below says how). 47 parts and 5,346 triangles become 47
+ * and 10,124.
  */
 import { THREE, xLong, ballastTanks, flangedPipes, exportGlb, fitFootprint } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -164,15 +166,13 @@ pelagia.domeRings(root, chitin, {
 
 // Five reinforce ribs over the crown: a quarter turn of torus each, stood on
 // edge and yawed each its own way round the dome.
-// Each arc set out by its own chord's sag (`domeArcs` `sag`, #919), so its
-// facets' midpoints lie at the file's radius: a rib of four segments a
-// quarter turn sags 0.019 of its radius, a two-segment vein over 0.9 rad
-// 0.025 — and at the file's radius the veins lay inside the dome, their
-// plan from above gone to 0 and 52 of 31 and 142 m².
+// The ribs and the pipes at the file's radius: a band's chords sinking into
+// an opaque dome between its vertices is nothing the eye sees, and set out
+// by their sag (`domeArcs` `sag`) the ribs stood 0.7–2.3 m clear of the dome
+// and one ran into the crown bud (hull-reviewer, the first round).
 pelagia.domeArcs(root, chitin, {
   name: 'reinforce_rib',
   cut,
-  sag: true,
   centre: DOME,
   scale: ARC_SCALE,
   R: 6.076,
@@ -209,30 +209,42 @@ pelagia.grownCones(root, {
 });
 
 // Eight lit ports round the waist — "sustained glow from ports" — each
-// seated on the dome (`portLights` `on`, #919): at the file's stations
-// three hung 0.67–1.34 m off the sixteen-gon skin and five 0.005–2.7 m.
+// seated on the dome along the ray from its centre (`portLights` `on`,
+// `centre`, #919): at the file's stations three hung 0.67–1.34 m off the
+// sixteen-gon skin and five 0.005–2.7 m, and dropped straight down they
+// slid into the lowest growth ring. The stations are the file's bearings
+// 0.3 higher: with the ring on the dome's rows (above) five ports lay in
+// its tube, three of them 1.8–3 m deep in the file itself, and 0.3 up the
+// dome every port clears it and still sits under the ring above.
 pelagia.portLights(root, bio, {
   cut,
   on: 'pressure_dome',
+  centre: DOME,
   r: 0.22,
   at: [
-    [4.99449141236415, 4.46855601815711, 2.669318764605],
-    [2.7435749289379, 4.41313356162392, 5.17145772972358],
-    [-0.411353213574325, 4.20375305048753, 5.92549803170619],
-    [-4.46636731952868, 4.13442774443913, 3.00811524046761],
-    [-4.95395276522038, 4.5098168027938, -1.13901502207446],
-    [-1.38328278057245, 4.27486375989644, -6.03123466182229],
-    [2.40217929144374, 4.13572680479148, -5.96082470091036],
-    [4.85966559068978, 4.29780639927124, -3.56555483988218],
+    [4.99449141236415, 4.7685560181571, 2.669318764605],
+    [2.7435749289379, 4.7131335616239, 5.17145772972358],
+    [-0.411353213574325, 4.5037530504875, 5.92549803170619],
+    [-4.46636731952868, 4.4344277444391, 3.00811524046761],
+    [-4.95395276522038, 4.8098168027938, -1.13901502207446],
+    [-1.38328278057245, 4.5748637598964, -6.03123466182229],
+    [2.40217929144374, 4.4357268047915, -5.96082470091036],
+    [4.85966559068978, 4.5978063992712, -3.56555483988218],
   ],
 });
 
 // Three lit veins climbing the flank, each its own arc, rolled 0.35, 0.47
 // and 0.59 short of upright.
+// The veins are lamps, and a two-segment arc over 0.9 rad at the file's
+// radius dips under the dome's skin between its vertices, so that the first
+// showed nothing from above (31 m² before the rule). Set out by a fifth of
+// their sag (`domeArcs` `sag`, #919) they show 16, 84 and 508 m² and the
+// first's end stays 0.15 m clear of the crown bud; by the whole it ran 2.9 m
+// into it.
 pelagia.domeArcs(root, bio, {
   name: 'bio_vein',
   cut,
-  sag: true,
+  sag: 0.2,
   centre: DOME,
   scale: ARC_SCALE,
   R: 6.231,
@@ -338,7 +350,6 @@ pelagia.dockingCollar(
 pelagia.domeArcs(root, steel, {
   name: 'hull_pipe',
   cut,
-  sag: true,
   centre: DOME,
   scale: ARC_SCALE,
   R: 6.324,

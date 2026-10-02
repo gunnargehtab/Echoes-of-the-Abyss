@@ -100,9 +100,10 @@
  * where it was ten by six, and so stood 0.13 m further aft to keep its
  * aftmost vertex the stern — a five-by-three orb has no equator, and its
  * widest ring is sin 60° of the radius; the veins stay five, the floor.
- * The knuckle's crown is a point now, 0.215 m under the fluke's underside
- * where the ten-by-six orb kissed it. 16 parts and 1,828 triangles become
- * 16 and 1,754.
+ * The knuckle's crown is a point now, 0.215 m under where the fluke's
+ * underside was, so the hinge comes down from 1.35 to 1.11 and the fluke
+ * lies on the knuckle and on the stem's back. 16 parts and 1,828 triangles
+ * become 16 and 1,754.
  *
  * The generated outline reads the wing at +Y, starboard, 0.22 out at x
  * −0.16, and the vane at −0.22 at x −0.125 — the two extremes equal because
@@ -247,7 +248,10 @@ pelagia.foldedTail(
   {
     cut,
     knuckle: { at: [STERN + knuckleReach, 0.35, 0], r: KNUCKLE_R, squash: KNUCKLE_SQUASH },
-    hinge: [-26.3, 1.35, 0],
+    // 1.11, not 1.35: the five-by-three knuckle's crown is a point 0.215 m
+    // under where the fluke's underside was, so the hinge comes down to it
+    // and the fluke lies on the knuckle and the stem's back (#919).
+    hinge: [-26.3, 1.11, 0],
     pitch: 0.095,
     outline: [
       [0.3, 0.6],

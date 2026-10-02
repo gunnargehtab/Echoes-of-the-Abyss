@@ -1628,28 +1628,37 @@ export function domeRings(root, mat, opts) {
  * written as (0, π − b, c), which is the form the other two are in and the
  * one that shows the pipes' yaws to be round.
  *
- * `sag` sets each arc out by its own chord's sag (#919; the Consortium's
- * Bastion ribs took the same reckoning): an arc of `n` segments has its
- * facets' midpoints `R·(1 − cos(arc / 2n))` inside its radius, and at the
- * rule's two segments over the Bastion's 0.9 rad veins that is 0.025 of
- * it — the veins lay inside the dome, their plan from above gone. With
- * `sag` the radius is raised so the midpoints lie at the file's `R`; the
- * count is settled again at the raised radius until it holds. Without it
- * the file's radius is built, as every arc was before the rule.
+ * `sag` sets each arc out by a share of its own chord's sag (#919): an arc
+ * of `n` segments has its facets' midpoints `R·(1 − cos(arc / 2n))` inside
+ * its radius, and at the rule's two segments over the Bastion's 0.9 rad
+ * veins that is 0.025 of it — a vein's chord dips under the dome's convex
+ * skin between its two vertices, and from above the dome covers it. `sag`
+ * is the fraction of that sag the radius is raised by, 1 (or `true`) for
+ * the midpoints at the file's `R`; the count is settled again at the
+ * raised radius until it holds. A share rather than the whole, because
+ * the whole lifts the arc's vertices as far as it sinks its midpoints — on
+ * the Bastion, set out in full, its ribs stood 0.7–2.3 m clear of the dome
+ * and a vein's end ran 2.9 m into the crown bud — so a band whose chords
+ * sink into an opaque dome takes none, and a lamp takes the least share
+ * that shows it from above with its ends still clear of what they pass:
+ * the Bastion's veins at a fifth show 16, 84 and 508 m² where the full
+ * sag showed 137, 272 and 528 and none 0, 54 and 505. Without `sag` the
+ * file's radius is built, as every arc was before the rule.
  */
 export function domeArcs(root, mat, opts) {
   const { name, first = 0, frame = xLong, centre, scale, R, tube, arc, roll, arcs } = opts;
-  const { cut: rule = METRE, sag = false } = opts;
+  const { cut: rule = METRE, sag = 0 } = opts;
   noCount(name, opts, 'facets');
+  const share = sag === true ? 1 : Number(sag);
   arcs.forEach((a, i) => {
     const [ringT, ringArc] = [a.tube ?? tube, a.arc ?? arc];
     const rot = a.rot ?? [0, a.yaw, a.roll ?? roll];
     const placement = { scale, rot, yaw: frame === zLong };
     let ringR = a.R ?? R;
     let [radial, tubular] = rule.torus(ringR, ringT, placement, ringArc);
-    if (sag)
+    if (share > 0)
       for (let k = 0; k < 4; k++) {
-        const raised = (a.R ?? R) / Math.cos(ringArc / (2 * tubular));
+        const raised = (a.R ?? R) / Math.pow(Math.cos(ringArc / (2 * tubular)), share);
         const counts = rule.torus(raised, ringT, placement, ringArc);
         ringR = raised;
         if (counts[1] === tubular) {
@@ -1676,17 +1685,38 @@ export function domeArcs(root, mat, opts) {
  * the file has it, each where the export put it. The Bastion's eight sit a
  * little above the dome's waist at eight radii between 6.23 and 6.31 from
  * its centre, on no rule the port could find, so the places are the file's
- * — in plan. `on` names the dome, and each port is then seated on it from
- * its station, half its radius into the skin (kit.mjs `seat`, as `rested`
- * seats a bud, #919): the file hung them on the sphere, and on the dome as
- * the rule cuts it three stood 0.67–1.34 m off and five 0.005–2.7 m.
+ * — in plan. `on` names the dome and `centre` its centre, and each port is
+ * then seated on the dome along the ray from the centre through its
+ * station, half its radius into the skin (#919): the file hung them on the
+ * sphere, and on the dome as the rule cuts it three stood 0.67–1.34 m off
+ * and five 0.005–2.7 m. Along the ray and not straight down (kit.mjs
+ * `seat`), because a port sits on the dome's flank: dropped, it slid
+ * 3–5.7 m down the slope into the lowest growth ring (hull-reviewer, the
+ * first round). A ray that meets nothing leaves the port at its station.
  */
 export function portLights(root, mat, opts) {
-  const { name = 'port_light', r, at, on = null, cut: rule = METRE } = opts;
+  const { name = 'port_light', r, at, on = null, centre = [0, 0, 0] } = opts;
+  const { cut: rule = METRE } = opts;
   noCount(name, opts, 'facets');
   const geo = new THREE.SphereGeometry(r, ...rule.orb(r));
+  const dome = on ? root.getObjectByName(on) : null;
+  if (on && !dome) throw new Error(`${name}: no part named ${on} to seat on`);
+  if (dome) root.updateMatrixWorld(true);
+  const caster = new THREE.Raycaster();
   at.forEach((p, i) => {
-    const station = on ? seat(root, on, p, { stand: r, sink: r / 2 }).at : p;
+    let station = p;
+    if (dome) {
+      const origin = new THREE.Vector3(...centre);
+      const dir = new THREE.Vector3(...p).sub(origin).normalize();
+      // Cast from far outside back toward the centre: the dome's skin faces
+      // out, and a ray from inside meets only its back, which three's
+      // raycaster passes over. The first hit is the outer skin.
+      const reach = origin.distanceTo(new THREE.Vector3(...p)) * 4 + 1;
+      caster.set(origin.clone().addScaledVector(dir, reach), dir.clone().negate());
+      caster.far = Infinity;
+      const [first] = caster.intersectObject(dome, false);
+      if (first) station = first.point.addScaledVector(dir, r / 2).toArray();
+    }
     placed(root, `${name}_${i}`, geo, mat, verbatim(station));
   });
 }
@@ -1823,7 +1853,16 @@ export function gillOrgan(root, mats, opts) {
     verbatim([0, 0, 0], [0, 0, mound.roll], mound.scale)
   );
   const { count = 4, yaw0 = -0.5, pitch = 0.34, tilt = 0.5, slit, breath } = slits;
-  const { y = [0.28, 0.3], reach = [0.72, 0.78], lift = 0.28, sink = 0.14 } = slits;
+  const { y = [0.28, 0.3], reach = [0.72, 0.78], lift = 0.28, sink = 0.14, out = 0 } = slits;
+  // `out` moves each slit that far along the ray from the organ's origin
+  // through its station (#919): the file set the slits in a ten-by-six
+  // mound with two corners showing, and the rule's sixteen-by-eight mound
+  // fills out to its sphere and swallowed two of the eight whole; at 0.05
+  // every slit shows at least two corners again, as the file's did.
+  const proud = (x, yy, z) => {
+    const v = new THREE.Vector3(x, yy, z);
+    return v.addScaledVector(v.clone().normalize(), out).toArray();
+  };
   // The mound's upper skin at plan (x, z): the unit orb scaled `mound.scale`
   // and rolled `mound.roll` about z, un-rolled and solved for y — the upper
   // root of the quadratic the ellipsoid gives.
@@ -1846,7 +1885,7 @@ export function gillOrgan(root, mats, opts) {
       n('slit', side, k + 1),
       box(...slit),
       slitMat,
-      verbatim([reach[0] * Math.sin(a), y[0], z], [tilt, a, 0])
+      verbatim(proud(reach[0] * Math.sin(a), y[0], z), [tilt, a, 0])
     );
     if (lines) {
       const b = lines.bearings[k];

@@ -89,9 +89,9 @@
  *   is still down at the peduncle's back. On the crown line both halves
  *   of the bud stand clear of the peduncle's fall-off; a hair to one side
  *   the inboard half sat under it. Its radius is 0.035, the flank marks'
- *   size, where the file had it 0.03: the file's bud is an octagon 0.67 m
- *   wide that the audit's quarter-metre cells read as four cells, the
- *   floor exactly, and at the flank marks' radius it reads six. (The first
+ *   size until #919, where the file had it 0.03: the file's bud is an
+ *   octagon 0.67 m wide that the audit's quarter-metre cells read as four
+ *   cells, the floor exactly, and at 0.035 it read six. (The first
  *   cut only slid it 0.06 across and left it 0.45 m off the fluke;
  *   review, F2.)
  *
@@ -107,11 +107,13 @@
  * by six. The feeler keeps its five and the peduncle its seven, which the
  * rule gives at their radii. The hull's table stays the export's 16 × 10,
  * and the measure names its meridian — twenty a turn at 20 m — as Block 2c
- * says it will. The light audit names the two flank marks beside the
- * throat light since the pass: a 0.39 m bud of five by three owns 0.19 m²
- * from above, under the audit's quarter-metre floor, where the eight-by-six
- * bud owned 0.31 and 0.5; the tail mark owns the floor exactly. 18 parts and
- * 2,226 triangles become 18 and 1,900.
+ * says it will. The two flank marks grow from 0.035 to 0.042 (0.47 m): a
+ * 0.39 m bud of five by three owned 0.19 m² from above, under the audit's
+ * quarter-metre floor, where the eight-by-six bud owned 0.31 and 0.5, and a
+ * mark that can face up takes no residual line; at 0.042 they own 0.31 and
+ * 0.38.
+ * The tail mark owns the floor exactly. The audit names the throat light
+ * alone, as before. 18 parts and 2,226 triangles become 18 and 1,900.
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -407,8 +409,13 @@ pelagia.lightBuds(root, light, {
   cut,
   buds: [
     ['feeler_tip_light', 0.045, drawn([0.24, 0.34, 2.2])],
-    ['flank_light_port', 0.035, drawn([0.44, 0.1, 0.9])],
-    ['flank_light_starboard', 0.035, drawn([-0.42, 0.06, 0.85])],
+    // 0.042, not the file's 0.035 (#919): at the rule's five by three a bud
+    // of 0.035 owns 0.19 m² from above, under the audit's quarter-metre
+    // floor, and these two can face up (asset-prompts-3d.md, the light the
+    // chart reads first), so they grow as #890 grew the tail mark; at 0.042
+    // they own 0.31 and 0.38.
+    ['flank_light_port', 0.042, drawn([0.44, 0.1, 0.9])],
+    ['flank_light_starboard', 0.042, drawn([-0.42, 0.06, 0.85])],
     ['throat_light', 0.035, drawn([0, -0.28, 1.3])],
     ['tail_light', 0.035, drawn([0.02, 0.213, -2.27])],
   ],
