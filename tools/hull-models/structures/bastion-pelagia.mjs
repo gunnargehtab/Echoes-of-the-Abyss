@@ -96,6 +96,21 @@
  * sit on the dome's rows, and the veins are set out by a fifth of their
  * sag (each call below says how). 47 parts and 5,346 triangles become 47
  * and 10,124.
+ *
+ * PANELS (#919). The Commune's structure band is a median part from above
+ * of 4–13.5 m on a side (Block 2c; pelagia.mjs `panels`), and this one read
+ * 31.4 m over twenty-nine parts: a dome, four rings, seven roots, two
+ * collars and a crown pod of 500–46,000 m² each, and six parts inside the
+ * band. The pass knots the rings where they grew: twenty-two knots of
+ * chitin on the four growth rings — five, six, five and six — 4.2–7.1 m of
+ * radius, each seated on its ring half its radius in (`grownNubs`) at a
+ * bearing of its own clear of the ribs, the veins, the pipes, the crown pod
+ * and, on the third ring, the eight ports a step below it. Not at the
+ * ribs' crossings: the ribs stay at the file's radius and run inside the
+ * dome below the second ring, so only two of twenty crossings exist. They
+ * show 47–147 m² each, and the median part is 11.5 m over fifty-one. 47
+ * parts and 10,124 triangles become 69 and 15,052; no part moved, no lamp's
+ * plan changed, and the fit is the same 16.7179 across.
  */
 import { THREE, xLong, ballastTanks, flangedPipes, exportGlb, fitFootprint } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -148,6 +163,13 @@ const DOME_CUT = pelagia.grownDome(root, algae, {
 // surface is the faceted one: at four rows over the dome's 0.56π the skin
 // between two rows sags up to 0.15 of a unit inside the sphere, and a ring
 // set on the sphere stood 0.39 m off it (`domeRings` `dome`, #919).
+/** The four rings' polar angles from the crown, and their tubes, thinning down the dome. */
+const RINGS = [
+  { t: 0.32, tube: 0.3 },
+  { t: 0.62, tube: 0.24 },
+  { t: 0.88, tube: 0.2 },
+  { t: 1.12, tube: 0.16 },
+];
 pelagia.domeRings(root, chitin, {
   cut,
   dome: { rows: DOME_CUT[1], down: 0.56 },
@@ -156,11 +178,54 @@ pelagia.domeRings(root, chitin, {
   squash: 0.88,
   lift: 0.1,
   scale: [1, 1.12, 1],
-  rings: [
-    { t: 0.32, tube: 0.3 },
-    { t: 0.62, tube: 0.24 },
-    { t: 0.88, tube: 0.2 },
-    { t: 1.12, tube: 0.16 },
+  rings: RINGS,
+});
+
+// PANELS (#919): the rings knotted where they grew. Twenty-two knots of
+// chitin on the four growth rings — five, six, five and six — each its own
+// size and at a bearing of its own round the dome, seated on its ring half
+// its radius in (pelagia.mjs `grownNubs`). The bearings keep clear of what
+// else stands on the dome: the five ribs over the +x crown, the three lit
+// veins climbing the +z flank, the two pipes, the crown pod, and on the
+// third ring the eight ports a step below it, which a knot at a port's
+// bearing would shade from above. A seed sits a tenth outside the ring at
+// `deg` round the crown from +x toward +z, on the dome's 6.2 × 0.88 × 1.12.
+const onRing = (j, deg) => {
+  const a = (deg * Math.PI) / 180;
+  const { t } = RINGS[j];
+  return [
+    DOME[0] + 1.1 * 6.2 * Math.sin(t) * Math.cos(a),
+    DOME[1] + 0.88 * 6.2 * Math.cos(t),
+    DOME[2] + 1.1 * 1.12 * 6.2 * Math.sin(t) * Math.sin(a),
+  ];
+};
+pelagia.grownNubs(root, chitin, {
+  name: 'ring_knot',
+  on: RINGS.map((_, j) => `growth_ring_${j}`),
+  cut,
+  nubs: [
+    [0.16, onRing(0, 62)],
+    [0.195, onRing(0, 123)],
+    [0.23, onRing(0, 171)],
+    [0.265, onRing(0, 214)],
+    [0.185, onRing(0, 240)],
+    [0.22, onRing(1, 72)],
+    [0.255, onRing(1, 128)],
+    [0.175, onRing(1, 163)],
+    [0.21, onRing(1, 204)],
+    [0.245, onRing(1, 247)],
+    [0.165, onRing(1, 283)],
+    [0.2, onRing(2, 10)],
+    [0.235, onRing(2, 80)],
+    [0.27, onRing(2, 122)],
+    [0.19, onRing(2, 212)],
+    [0.225, onRing(2, 272)],
+    [0.26, onRing(3, 22)],
+    [0.18, onRing(3, 68)],
+    [0.215, onRing(3, 113)],
+    [0.25, onRing(3, 160)],
+    [0.17, onRing(3, 232)],
+    [0.205, onRing(3, 318)],
   ],
 });
 

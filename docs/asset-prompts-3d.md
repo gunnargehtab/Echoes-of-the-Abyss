@@ -571,7 +571,26 @@ is 1.1 % smaller in metres and the Veil 1.3, the rest under 0.6 — and two more
 their fit. Panels run a metre and a half to five: a Commune hull is few, large
 parts — a leaf is one plate, a pod one orb, a fin one membrane — so its median part from
 above is bigger than its facet says. The two grown navies swap places between the facet
-column and the panel column, and that is the difference between a pod and a crab.
+column and the panel column, and that is the difference between a pod and a crab. The
+panel pass (#919, the sixth instalment) brought the five Commune models outside the bands
+inside them — `node tools/hull-models/facets.mjs pelagia` names none, the hulls at
+1.5–3.9 m and the structures at 4.5–12.8 — with the two divisions a grown hull has and
+nothing else: a nub, a bud, a knot or a mat standing proud of the skin it grew from, in its
+own finish or the skin's, and a growth ring round a drum where it grew (`factions/pelagia.mjs`
+`grownNubs`, `drumRings`); 116 fittings, every one seated on the part it grew from, no
+lamp added or moved, no part moved, no plate split in its own finish. The Submersible's
+rings are knotted, eighteen dark knots and six nubs on its bow collar of 1.15–2 m, where
+the hoops leave 1.3 m of skin between them and no ring would fit; the Bastion's four rings
+carry twenty-two knots of 4.2–7.1 m, not at the ribs' crossings, since the ribs run inside
+the dome below the second ring; the Foundry's eight lobes bud, fourteen pale buds of
+3.3–6.2 m; the Refinery's roof and stacks ring, two half rings and four, and its silos'
+lowest rings knot. The Bower, the one Commune hull under the band — the bed is one part
+and its stalks, slits and breathing lines fifty-five of 0.25–1.4 m² — grows forty-six algae
+mats of 1.25–3.5 m over its back, membrane and ridge by turns, the way the Beacon took
+plates over its rivets: a hull of fittings lifts its median only with more parts over the
+floor than it has under it, and the rule cuts a mat under 1.25 m as a pentagon of three
+rows whose plan reads under the floor. Each script's header says what its model took and
+where.
 
 **Directorate.** "Spiked, insectoid, segmented crustacean forms"; "nothing is symmetrical;
 everything is regimented" ([factions.md](factions.md)). The facet is a segment of shell,
@@ -708,7 +727,9 @@ triangles go as the square of its count. Every round part rebuilt with its own c
 at the count the rule gives it, the table costs: Consortium hulls 53.3 k → 40.9 k and
 structures 16.6 k → 19.5 k by its facet pass, and 45.7 k and 23.3 k as built since its panel
 pass dressed thirteen models; Commune hulls 47.6 k → 48.3 k and structures 35.2 k → 63.1 k, as
-built since its facet pass (this rebuild had said 47.8 k and 62.4 k);
+built since its facet pass (this rebuild had said 47.8 k and 62.4 k), and 52.9 k and 72.6 k
+since its panel pass grew its five models outside the bands 116 fittings at the rule's
+counts;
 Directorate hulls 30.0 k → 33.6 k and structures 29.7 k → 35.1 k, as built since its facet
 pass (this rebuild had said 33.5 k and 32.8 k, and 26.6 k for the structures before the
 Refinery's rebuild); Order hulls 9.9 k → 8.0 k
@@ -716,8 +737,12 @@ and structures 15.8 k → 12.1 k, the Order's as built since its pass, where thi
 said 12.4 k before the pass cut its pipes, stacks and throat drums as hexagons; the fourteen
 props, under no rule, 4.3 k. The own force
 the gate names, taken as a navy's eight structures, four more Turrets and its five largest
-hulls, comes to 48.2 k for the Consortium since its panel pass (42.1 k before it), 108.0 k for the
-Commune since its facet pass (107.0 k projected), 66.3 k for the Directorate since its facet pass
+hulls, comes to 48.2 k for the Consortium since its panel pass (42.1 k before it), 122.2 k for the
+Commune since its panel pass (108.0 k since its facet pass, 107.0 k projected) — over the
+112 k, by the 14 k the band's fittings cost: a knot or a bud of the band's 16 m² is an orb of
+a hundred triangles and more at the rule's chord, and the five models needed 116 of them,
+which the ceiling of sixteen's 5 k in hand did not cover; the sample stands recorded and the
+probe is the check, and the ceiling is #746's to revisit — 66.3 k for the Directorate since its facet pass
 (64.0 k before it) and 18.9 k for the Order, as built. That mix is one sample base and not a worst case —
 nothing caps what a base builds, and a dozen Commune Slipways alone are 170 k — so the
 probe, not this rebuild, is the check. The Commune's ceiling is the number gate 6 moved: at
@@ -763,7 +788,10 @@ drums — and the Beacon at 0.5) and five structures (the Vent Tap at 6.2 m, the
 10.2, the Foundry at 15.7, the Refinery at 20.6 and the Bastion at 42.2), every one inside its
 band since the Consortium's panel pass — the hulls at 0.9–1.6 m, the structures at 3.1–5.5;
 two Commune hulls (the
-Bower at 0.8 m, the Submersible at 7.3, 7.8 since the facet pass) and three structures; three Directorate hulls (the
+Bower at 0.8 m, the Submersible at 7.3, 7.8 since the facet pass) and three structures (the
+Refinery at 14.0 m, the Foundry at 15.7 and the Bastion at 31.4), every one inside its band
+since the Commune's panel pass — the Bower at 1.9 m, the Submersible at 2.9, the structures
+at 11.5–12.8; three Directorate hulls (the
 Verger, the Submersible and the Dredge, 4.0–5.2 m; 4.2–5.6 since the facet pass) and four structures; five Order hulls
 (the Versicle at 1.5 m; the Reciter, the Responsory, the Antiphon and the Offertory at
 6.0–7.2 — the Responsory's block asks for fine ceramic panelling, so its 6.0, 6.4 until the

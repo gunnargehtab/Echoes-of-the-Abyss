@@ -264,7 +264,12 @@ export const ink = {
  * orb, a fin one membrane — so its median part from above is bigger than its
  * facet says, a metre and a half to five. A structure's band is the hull's at
  * the chart's ratio of densities, 4 to 1.5 px/m, rounded to the half metre —
- * a judgement, and Block 2c says what it rests on.
+ * a judgement, and Block 2c says what it rests on. The panel pass (#919)
+ * brought the five models outside the bands inside them with the two
+ * divisions a grown hull has — a nub, bud, knot or mat standing proud of
+ * the skin it grew from, and a growth ring round a drum — through
+ * `grownNubs` and `drumRings` ("Panels", below), never a coplanar split,
+ * and each model's header says where.
  */
 export const facets = { chordM: 1.5, min: 5, max: 16, step: 1, sections: [] };
 export const panels = { hull: [1.5, 5], structure: [4, 13.5] };
@@ -3807,6 +3812,105 @@ export function broodNubs(root, pale, opts) {
       );
     })
   );
+}
+
+/* --------------------------------------------------------------------------
+ * Panels (#919): the divisions the panel pass grows on a model whose median
+ * part from above lies outside its band (facets.mjs `panelsOf`; Block 2c,
+ * "Panels"). The measure counts unlit parts by their plan, so what moves a
+ * median is a division that shows — "a seam that reads in value or relief
+ * or a fitting that stands proud" — and a grown hull has two: a nub, a bud
+ * or a knot standing proud of the skin it grew from, in its own finish or
+ * the skin's, and a growth ring round a drum where it grew. Nothing here is
+ * a coplanar split of one finish, which the chart cannot see, and nothing
+ * is a lamp. Each is seated on the part it grows from (kit.mjs `seat`), so
+ * a script hands over a station near the skin and the skin settles the
+ * rest; every round part asks `cut`. The Commune's five models outside
+ * their bands took these and nothing else: knots on the Bastion's and the
+ * Submersible's growth rings, nubs on the Submersible's bow, buds on the
+ * Foundry's lobes, rings over the Refinery's roof and stacks, mats on the
+ * Bower's back — each script's header says where and why.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Nubs grown from a skin — `[r, seed, skin?]` each: an orb of its own
+ * radius, squashed `squash` tall, seated on the nearest of the parts `on`
+ * names from `seed` (a station in the script's own frame, near the skin)
+ * and half its height into it, as `rested` seats a bud. Named
+ * `<name><sep><first + i>`. `skins` is one material or several, and an
+ * entry's third field picks one — the Bower's mats are algae and ridge by
+ * turns, the way its lobes are. No two alike: a matched pair is refused,
+ * since a grown thing does not repeat (§3.6). A round nub keeps its pole
+ * up like every other orb in the navy; a squashed one lies along the skin's
+ * normal, which is what makes a mat a mat and not a lens stood on edge.
+ * `drop` seats each straight down onto the skin under its station rather
+ * than on the nearest point (kit.mjs `seat`): a back is seated from above,
+ * as the Bower's marks are, and a flank from the side.
+ */
+export function grownNubs(root, skins, opts) {
+  const { name, sep = '_', first = 0, frame = xLong, on, squash = 1, drop = false, nubs } = opts;
+  const { cut: rule = METRE } = opts;
+  noCount(name, opts, 'facets');
+  refuseMirror(name, nubs, ([r]) => r);
+  const mats = Array.isArray(skins) ? skins : [skins];
+  nubs.forEach(([r, seed, skin = 0], i) => {
+    const station = frame === zLong ? drawn(seed).at : seed;
+    const h = r * squash;
+    const { at, rot } = seat(root, on, station, { stand: h, sink: h / 2, drop });
+    const lie = squash === 1 ? [0, 0, 0] : rot;
+    const scale = [r, h, r];
+    const geo = orb(...rule.orb(1, { scale, rot: lie }));
+    frame.place(root, `${name}${sep}${first + i}`, geo, mats[skin], { at, rot: lie, scale });
+  });
+}
+
+/**
+ * Growth rings round a drum where it grew — the Refinery's crusher roof, a
+ * half drum laid on its side, and its two exhaust stacks: a torus at each
+ * `{ s, tube }` station along the drum's own axis, `s` from its middle,
+ * cresting `lift` of its tube beyond the wall there (the silos' rings sit
+ * about half a tube proud), on the rule's two counts. The drum is read off
+ * the scene — `on` names a part the kit's `cyl` or three's constructor
+ * built, placed on the root in an X-long frame — so its radii, height,
+ * lean and the part of a turn it covers are the part's own and not restated:
+ * a ring round a half drum is a half ring over the same half, from the
+ * drum's first facet round the way its arc turns.
+ */
+export function drumRings(root, mat, opts) {
+  const { name, first = 0, on, stations, lift = 0.5, cut: rule = METRE } = opts;
+  noCount(name, opts, 'facets');
+  const drum = root.getObjectByName(on);
+  if (!drum || drum.parent !== root) throw new Error(`${name}: no drum named ${on} on ${root.name}`);
+  const p = drum.geometry.parameters;
+  if (p.height === undefined) throw new Error(`${name}: ${on} is not a cylinder`);
+  const { radiusTop, radiusBottom, height, thetaStart = 0, thetaLength = TAU } = p;
+  const axis = new THREE.Vector3(0, 1, 0).applyQuaternion(drum.quaternion);
+  // A torus is born in its XY plane and sweeps from +x toward +y; a cylinder's
+  // facets run from `thetaStart` at (sin θ, 0, cos θ) the same way round its
+  // Y. So the torus's x goes to the drum's first bearing, its y to the way
+  // the arc turns, its z to the axis — a right-handed basis — and the drum's
+  // own turn goes on top.
+  const basis = new THREE.Matrix4().makeBasis(
+    new THREE.Vector3(Math.sin(thetaStart), 0, Math.cos(thetaStart)),
+    new THREE.Vector3(Math.cos(thetaStart), 0, -Math.sin(thetaStart)),
+    new THREE.Vector3(0, 1, 0)
+  );
+  const turn = new THREE.Quaternion().setFromRotationMatrix(basis).premultiply(drum.quaternion);
+  const rot = new THREE.Euler().setFromQuaternion(turn).toArray().slice(0, 3);
+  stations.forEach(({ s, tube }, i) => {
+    const wall = radiusBottom + ((radiusTop - radiusBottom) * (s + height / 2)) / height;
+    const R = wall + lift * tube;
+    const at = drum.position.clone().addScaledVector(axis, s).toArray();
+    const [radial, tubular] = rule.torus(R, tube, { rot }, thetaLength);
+    add(
+      root,
+      `${name}_${first + i}`,
+      new THREE.TorusGeometry(R, tube, radial, tubular, thetaLength),
+      mat,
+      at,
+      rot
+    );
+  });
 }
 
 export { THREE };
