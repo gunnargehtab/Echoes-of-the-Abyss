@@ -129,7 +129,8 @@ export default async ({ page, shot }) => {
     // tell. The sway (#1030) moves it too, after the clamp: along the camera's
     // up axis by at most SWAY_HEAVE of the frame's height at the focus, and
     // level along its right, so that bound is allowed on top of the probe's
-    // rounding. It shifts a ray by under a tenth of a pixel at these ranges.
+    // rounding. It moves a point at the fog's full reach by under half a pixel,
+    // which the samples' row margins absorb.
     const swayM = probe.sway === 'held' ? 0 : (SWAY_HEAVE * 2 * c.distance * tan) / M_PER_M;
     assert.ok(Math.abs(probe.eye.depthM + eye[1] / M_PER_M) <= 1 + swayM, 'the eye was clamped');
     const forward = unit(focus.map((f, k) => f - eye[k]));

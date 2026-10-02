@@ -259,7 +259,8 @@ What the phase settled:
   that water, and far ground shallower than it stands brighter. Each is depth read as
   luminance, the rule both terms transcribe, rather than a seam. With the focus raised to
   700 m over Ventfront's north trench, the backdrop beside the far trench is graded 842 to
-  1,162 m and reads sRGB (6, 22, 32) over the trench's (3, 8, 14).
+  1,162 m, 897 m at the median, and reads a median sRGB (6, 22, 32) over the trench's
+  (3, 8, 14).
   `tools/render-stack/fog.mjs` measures it, and `docs/screenshots/issue-1023/` holds the
   frame and readings, taken on SwiftShader; the module's seam reading there matches #1016's
   GPU one to the level.
