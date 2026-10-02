@@ -331,7 +331,8 @@ directorate.clawGrips(root, [red, black], {
   ].map((c) => ({ r: 0.27, ...c })),
 });
 
-// Two ballast pipes on the -x side, leaning 0.12 fore and 0.28 / 0.42
+// Two ballast pipes on the -x side, each standing on the upper tier or the
+// collar since #919 (`standpipes` `on`), leaning 0.12 fore and 0.28 / 0.42
 // across, each with a flange that leans with it.
 directorate.standpipes(
   root,
@@ -340,6 +341,10 @@ directorate.standpipes(
     name: 'ballast_pipe',
     flange: 'pipe_flange',
     cut,
+    // Each pipe's foot stands on the upper tier or the collar (`standpipes`
+    // `on`, #919): the second stood 2.5 m off the plate it had touched once
+    // the plate took the rule's window, in water otherwise.
+    on: ['base_tier_high', 'weld_collar'],
     pipes: [
       {
         radii: [0.22, 0.26],

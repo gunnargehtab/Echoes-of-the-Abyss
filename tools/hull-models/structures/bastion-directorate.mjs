@@ -87,7 +87,14 @@
  * -z foot's run ends in a pair. `diff.mjs` lists the nine, `_13` at
  * 14.6 m and `_3` at 9.8 the largest and the seven others 1.6 to 7.1,
  * with the two mouths at 0.2 m; the seven other lamps rested where the
- * file had them and stay.
+ * file had them and stayed until the facet pass (#919), when the rule's
+ * fifteen-gon tiers and five-by-fifteen seam rings covered two more from
+ * above: `_6` fell to 7.3 m² of 32.7 under `seam_ring_2` and `_8` to
+ * 2.7 of 36.2 under `seam_ring_1` and `reinforce_rib_3` (hull-reviewer).
+ * `_6` comes down tier 2's wall to y 4.6 (`lower`, 28.6 m²); `_8` swings
+ * 0.12 rad toward `_7` off the rib's bearing (`swung`, 25.2 m²), since at
+ * no height under the rib does it show. `_1` and `_7` grow from their
+ * tiers (`on`), 0.73 and 1.61 m off on the file's stations.
  *
  * THE FRAME is the export's own. It is X-long — 17.8096 by 16.9464 by the
  * measure intake takes, three's `Box3` over the parts' own boxes — and the
@@ -107,16 +114,18 @@
  * Block 2c; directorate.mjs `cut`), asked at this file's scale — `DRAWN`,
  * the fit `fitFootprint` measures, held and asserted at the foot — and
  * settled on each part as its node places it. The export's counts went: the
- * four tiers 10 → 15, the seam rings 5 × 20 → 11 × 15 (tube by ring), the
+ * four tiers 10 → 15, the seam rings 5 × 20 → 5 × 15 (tube by ring: the
+ * tube's five is a section Block 2c keeps as a pentagon, `torusOf`), the
  * crown 10 × 5 → 15 × 4, the boss 8 → 15 with its light 6 × 5 → 15 × 7, the
- * dock throats and mouths 8 → 15 with lips 5 × 10 → 15 × 15, the hull pipes
- * 5 × 16 → 11 × 3 and 13 × 3 over their 1.1 rad, the standpipes 8 → 15 with
+ * dock throats and mouths 8 → 15 with lips 5 × 10 → 5 × 15, the hull pipes
+ * 5 × 16 → 5 × 3 over their 1.1 rad, the standpipes 8 → 15 with
  * flanges 5 × 10 → 5 × 15, the ballast tanks 3 × 9 → 4 × 15, and the sixteen
  * photophores 6 × 5 → 7, 9 or 11 round by their radii over 4 or 5 down; the
  * crown spines, the rib spikes, the claws and the four mandibles keep their
  * sections. `facets.mjs` names two of its 96 rings, the two ballast tanks'
- * meridians — capsules whose half-turn share of fifteen is eight, drawn as
- * sixteen a turn (Block 2c, the capsule reading). Triangles 3,634 → 5,943;
+ * meridians — capsules whose half-turn share of fifteen is seven, odd, so
+ * the capsule takes the segment over: eight a half turn, sixteen a turn
+ * (Block 2c, the capsule reading). Triangles 3,634 → 4,539;
  * the fit 17.7998, where the ten-sided tiers measured 17.8096. The rounder
  * tiers reach further out at the ribs' bearings: six rib plates that stood
  * 0.8–4.4 m off their tiers meet them now and sink 0.5–2.1 m in, and
@@ -170,6 +179,9 @@ const tier = ({ name, skin, foot, length, y }, i) => ({
     skin: steel,
     R: 0.88 * foot,
     tube: RING_TUBE,
+    // The tube keeps the file's five, a section Block 2c keeps as a pentagon;
+    // the ring goes to the rule (`torusOf`).
+    facets: 5,
     ...laid([0, y + length / 2, 0], FLAT),
   },
 });
@@ -249,8 +261,9 @@ directorate.dockingCollar(
 directorate.hullPipes(root, steel, {
   cut,
   pipes: [
-    { R: 5.888, tube: 0.16, arc: 1.1, ...laid([0, 2.2, 0], [0, 0.6, Math.PI / 2 - 0.5]) },
-    { R: 5.888, tube: 0.13, arc: 1.1, ...laid([0, 2.2, 0], [0, 1.05, Math.PI / 2 - 0.85]) },
+    // `facets` is the tube's five, kept as a pentagon; the arc's count is the rule's.
+    { R: 5.888, tube: 0.16, arc: 1.1, facets: 5, ...laid([0, 2.2, 0], [0, 0.6, Math.PI / 2 - 0.5]) },
+    { R: 5.888, tube: 0.13, arc: 1.1, facets: 5, ...laid([0, 2.2, 0], [0, 1.05, Math.PI / 2 - 0.85]) },
   ],
 });
 
@@ -260,7 +273,7 @@ const standpipe = (x, y, z, length, lean) => ({
   radii: [0.22, 0.26],
   length,
   ...laid([x, y, z], [0, 0, lean]),
-  flange: { R: 0.3, tube: 0.07, ...laid([x, y + 0.22 * length, z], FLAT) },
+  flange: { R: 0.3, tube: 0.07, facets: 5, ...laid([x, y + 0.22 * length, z], FLAT) },
 });
 directorate.standpipes(
   root,
@@ -312,6 +325,17 @@ const on = (at) => ({ ...laid(at), on: DOME });
 // `corner` seeds on tier `i`'s wall at the file's bearing, a radius above
 // the seam ring under it, where no lower station on the tier shows.
 const lower = ([x, , z], y) => on([x, y, z]);
+// `swung` turns a seed `da` radians about the dome's axis at its own radius
+// and height, then seats it (`on`): `_8` sits dead under `reinforce_rib_3`
+// (bearing −2.95 against the lamp's −2.96) and showed 8 m² of 36 past the
+// rib's plates in the file; on the fifteen-gon tiers, seated on its wall, it
+// shows none at any height under the rib, so it swings 0.12 rad toward `_7`,
+// still between `_7` and `_9` in the climb (hull-reviewer, the first round).
+const swung = ([x, y, z], da) => {
+  const a = Math.atan2(z, x) + da;
+  const rho = Math.hypot(x, z);
+  return on([rho * Math.cos(a), y, rho * Math.sin(a)]);
+};
 const corner = ([x, , z], i, r) => {
   const a = Math.atan2(z, x);
   const { foot } = TIERS[i];
@@ -328,9 +352,9 @@ directorate.photophoreDomes(root, crimson, {
     ['photophore_3', 0.1021963134, lower([2.459903688, 3.158942005, 4.607727799], 2.8)],
     ['photophore_4', 0.1277387589, laid([1.840131535, 3.631424866, 4.675740221])],
     ['photophore_5', 0.1476596892, on([0.7185694396, 4.464471434, 4.619367234])],
-    ['photophore_6', 0.1411419511, on([-0.6710058168, 5.009296906, 4.395169463])],
+    ['photophore_6', 0.1411419511, lower([-0.6710058168, 5.009296906, 4.395169463], 4.6)],
     ['photophore_7', 0.09141562134, on([-5.563735404, 2.309025739, -0.4284658226])],
-    ['photophore_8', 0.1488719881, laid([-5.088318711, 3.272992157, -0.945087779])],
+    ['photophore_8', 0.1488719881, swung([-5.088318711, 3.272992157, -0.945087779], -0.12)],
     ['photophore_9', 0.1191934049, on([-4.39122562, 4.104702698, -2.001912477])],
     ['photophore_10', 0.1251562387, on([-3.511139819, 4.737823037, -2.909731917])],
     ['photophore_11', 0.1451682299, laid([-2.543776346, 5.618331569, -3.329838164])],

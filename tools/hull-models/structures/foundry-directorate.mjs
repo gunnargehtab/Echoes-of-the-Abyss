@@ -90,9 +90,11 @@
  *     rank moves, both lips, to either side of the forge line at x ±0.75 —
  *     the one column the plates and the Commune's lobes leave clear; the
  *     floor's own edges at ±1.7 are under the plates. The hull in
- *     progress, whose plan reaches x 0.69, still covers 38 % of
- *     `bay_guide_0_2` at z 0.9, which shows 4.94 m² where its siblings
- *     show 6.8 to 8.1. The port rank overlaps the forge line's edge by
+ *     progress, whose plan reached x 0.69, covered 38 % of
+ *     `bay_guide_0_2` at z 0.9, which showed 4.94 m² where its siblings
+ *     show 6.8 to 8.1 — and 74 % once the rule cut it fifteen-sided
+ *     (#919), so that guide steps 0.7 aft to z 0.2 (`foundryBay`
+ *     `shift`) and shows 6.1 m². The port rank overlaps the forge line's edge by
  *     0.9 m, the line running 0.15 off centre; the starboard rank clears
  *     it. And to
  *     z −4.1 at the same 2.5 pitch, off the beams (rule 5). The kit's
@@ -151,14 +153,16 @@
  * plates), the outrigger pods 8 × 5 and 7 × 5 → 15 × 7, the stern carapace
  * 9 × 6 → 15 × 7 with its seam 4 × 16 → 5 × 15, the hull in progress
  * 3 × 7 → 4 × 15, the bay guides and warning lights 5 × 4 → 5 × 3, the
- * finials 4 → 7, the cables 5 → 5, the launch mouth 5 × 10 → 15 × 15 with its
+ * finials 4 → 7, the cables 5 → 5, the launch mouth 5 × 10 → 5 × 15 (its
+ * tube's five a section kept) with its
  * drum 9 → 15, the ballast tanks 3 × 8 → 4 × 15, the graft pipes 7 → 11 with
  * flanges 5 × 10 → 5 × 15, and the ten flank photophores 5 × 4 → 5 × 3 (one
  * 7 × 4); the spine spikes, the two mandibles and the five claws keep their
  * sections. `facets.mjs` names three of its 118 rings: the hull in progress
  * and the two ballast tanks, capsules whose half-turn share of fifteen is
- * eight, drawn as sixteen a turn (Block 2c, the capsule reading). Triangles
- * 3,884 → 5,014; `DRAWN` 17.4421, where the file measured 17.5184. The ten
+ * seven, odd, so the capsule takes the segment over: eight a half turn,
+ * sixteen a turn (Block 2c, the capsule reading). Triangles
+ * 3,884 → 4,714; `DRAWN` 17.4421, where the file measured 17.5184. The ten
  * flank photophores are grown from their plates now (`on`, below).
  */
 import {
@@ -307,7 +311,10 @@ foundryBay(
     },
     guide: { r: 0.1, facets: cut.orb, x: 0.75, y: 0.62, from: -4.1, pitch: 2.5, count: 5 },
     sides: [
-      { lip: 'port', guides: '0', sgn: 1 },
+      // `_0_2` steps 0.7 aft off its station, out from under the rule's
+      // fifteen-sided hull in progress, which covered it to 1.6 m² of 6 from
+      // above (hull-reviewer, the first round; kit.mjs `foundryBay` `shift`).
+      { lip: 'port', guides: '0', sgn: 1, shift: { 2: [0, 0, -0.7] } },
       { lip: 'starboard', guides: '1', sgn: -1, only: [0, 1, 3, 4] },
     ],
   }
@@ -344,7 +351,8 @@ gantryCrane(root, crane, {
 // forge line's own: the block's forge light "at its mouth" (the header) —
 // and the mandibles.
 launchMouth(root, { mouth: black, glow: forge }, {
-  mouth: { R: 1.7, tube: 0.3, facets: [cut.round, cut.round], at: [0.1, 1.5, 6.7], scale: [1.15, 0.8, 1] },
+  // The mouth's tube keeps the file's five (a section, Block 2c's pentagons); the ring is the rule's.
+  mouth: { R: 1.7, tube: 0.3, facets: [5, cut.round], at: [0.1, 1.5, 6.7], scale: [1.15, 0.8, 1] },
   glow: { r: 1.35, h: 0.2, facets: cut.round, at: [0.1, 0.5, 6.0], rot: [0, 0, 0] },
 });
 directorate.launchMandibles(root, violet, {

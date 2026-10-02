@@ -44,7 +44,7 @@
  * hangs over the neighbouring face, by up to 0.5 m; its centre and the
  * corners on its own face touch.
  *
- * The frame is the approved export's own: drawn 142.84 across by the measure
+ * The frame is the approved export's own: drawn 141.34 across by the measure
  * the bake takes — a yawed orb measures wider than its vertices (kit.mjs
  * `fitFootprint`) — and priced at 180 m by the table, so the root carries
  * that one scale, as hulls/sower.mjs does. By its vertices the approved file
@@ -90,7 +90,7 @@ const L = 180;
 /** The plan's side as built: the exchangers' claws, box to box (kit.mjs `fitFootprint`). */
 const DRAWN = 141.3357;
 // The Directorate's facet rule at this file's scale (directorate.mjs `cut`,
-// #919): the model is drawn 142.84 across and priced at 180 m, and the rule
+// #919): the model is drawn 141.34 across and priced at 180 m, and the rule
 // is a chord in metres. Asserted after the fit, since the fit is what sets
 // the scale.
 const cut = directorate.cut(L / DRAWN);

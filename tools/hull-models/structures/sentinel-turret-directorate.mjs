@@ -80,14 +80,16 @@
  * each part as its node presses it. The export's counts went: the mound
  * 10 × 6 → 15 × 3 over its 0.42 of a half-turn, the scutes 7 × 5 → 15 × 7,
  * the pod 9 × 6 → 15 × 7, the brow 9 × 5 → 8 × 4 over its window, the collar
- * 5 × 9 → 11 × 15 and the skirt 4 × 14 → 7 × 15 (tube by ring), the barbs
+ * 5 × 9 → 5 × 15 (its tube's five a section kept, `torusOf`) and the skirt
+ * 4 × 14 → 7 × 15 (tube by ring), the barbs
  * 4 × 8 → 5 × 15, 5 × 15 and 5 × 11, the segments 6 → 15, 15 and 9, the feed
  * 6 → 7 with its flange 4 × 9 → 5 × 11, the pod capsule 3 × 7 → 4 × 15, the
  * antennae 4 → 5, the marks and the pip 5 × 4 → 5 × 3; the five-sided claws,
  * tip and counter-spike keep their section. `facets.mjs` names one of its 52
  * rings: the ammo pod's meridian, a capsule whose half-turn share of fifteen
- * is eight, drawn as sixteen a turn (Block 2c, the capsule reading).
- * Triangles 1,435 → 2,905. `DRAWN` is 7.9707 since the pass (7.9822 before:
+ * is seven, odd, so the capsule takes the segment over: eight a half turn,
+ * sixteen a turn (Block 2c, the capsule reading).
+ * Triangles 1,435 → 2,725. `DRAWN` is 7.9707 since the pass (7.9822 before:
  * the scutes' boxes moved with their counts). The two flank marks are grown
  * from their scutes now (`on`): read at the heights taken off the
  * seven-by-five scutes, `nav_mark_1` showed 0.75 m² from above under the
@@ -124,7 +126,8 @@ directorate.carapaceMound(
   {
     cut,
     mound: { r: 3, down: 0.42, ...drawn([0.15, 0, -0.1], [0, 0, 0], [1.15, 0.85, 1]) },
-    collar: { R: 1.55, tube: 0.22, ...drawn([0.1, 2.05, 0], FLAT) },
+    // The collar's tube keeps the file's five, a section (Block 2c's pentagons); the ring is the rule's.
+    collar: { R: 1.55, tube: 0.22, facets: 5, ...drawn([0.1, 2.05, 0], FLAT) },
     skirt: { R: 2.6, tube: 0.13, ...drawn([0.15, 0.9, -0.1], FLAT, [1.12, 1, 1]) },
   }
 );

@@ -620,11 +620,14 @@ way: `directorate.cut` settles every count on what the measure reads back off th
 node presses it — a tergite is a unit orb drawn 17 × 10 × 26 m, and a count asked at its
 major radius lands off the odd lattice as often as not — and every builder asks it, so a
 count a script still names is kept only as a section, read through the measure's own
-`isSection`, and is an error otherwise. The tergites settle at fifteen round and seven down
-(the half-turn share of fifteen rounds down), the keels at eleven, the rostra from seven to
-fifteen by their radius, and every six and eight that was a builder's default — limbs,
-hydrophones, booms, mandibles, guns, collars, ducts, the Slipway's legs, pylons and
-launch mandibles — goes to the rule; the fives stay. The measure names eight of the navy's
+`isSection`, and is an error otherwise. The tergites from 4.5 m of radius settle at fifteen
+round and seven down (the half-turn share of fifteen rounds down; the Treble's at nine and
+eleven by five), the keels at eleven, the rostra from five to fifteen by their radius, and
+every six and eight that was a builder's default — limbs, hydrophones, booms, mandibles,
+guns, collars, ducts, the Slipway's legs, pylons and launch mandibles — goes to the rule; the
+fives stay, the torus tubes' among them (`torusOf`: the Bastion's seam rings, lips, pipes and
+flanges, the turret's collar and the Foundry's launch mouth keep their pentagon tubes while
+their rings go to the rule). The measure names eight of the navy's
 1,477 rings, all one reading: the capsule meridians of the Verger's, the Bastion's and the
 Foundry's ballast tanks, the Foundry's hull in progress and the turret's pod, where the
 rule's half-turn share is odd and a capsule draws an even count, built a segment over as the
@@ -701,7 +704,7 @@ at the count the rule gives it, the table costs: Consortium hulls 53.3 k → 40.
 structures 16.6 k → 19.5 k by its facet pass, and 45.7 k and 23.3 k as built since its panel
 pass dressed thirteen models; Commune hulls 47.6 k → 48.3 k and structures 35.2 k → 63.1 k, as
 built since its facet pass (this rebuild had said 47.8 k and 62.4 k);
-Directorate hulls 30.0 k → 33.6 k and structures 29.7 k → 36.9 k, as built since its facet
+Directorate hulls 30.0 k → 33.6 k and structures 29.7 k → 35.1 k, as built since its facet
 pass (this rebuild had said 33.5 k and 32.8 k, and 26.6 k for the structures before the
 Refinery's rebuild); Order hulls 9.9 k → 8.0 k
 and structures 15.8 k → 12.1 k, the Order's as built since its pass, where this rebuild had
@@ -709,7 +712,7 @@ said 12.4 k before the pass cut its pipes, stacks and throat drums as hexagons; 
 props, under no rule, 4.3 k. The own force
 the gate names, taken as a navy's eight structures, four more Turrets and its five largest
 hulls, comes to 48.2 k for the Consortium since its panel pass (42.1 k before it), 108.0 k for the
-Commune since its facet pass (107.0 k projected), 68.9 k for the Directorate since its facet pass
+Commune since its facet pass (107.0 k projected), 66.3 k for the Directorate since its facet pass
 (64.0 k before it) and 18.9 k for the Order, as built. That mix is one sample base and not a worst case —
 nothing caps what a base builds, and a dozen Commune Slipways alone are 170 k — so the
 probe, not this rebuild, is the check. The Commune's ceiling is the number gate 6 moved: at

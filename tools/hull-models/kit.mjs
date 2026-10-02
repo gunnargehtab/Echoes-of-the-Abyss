@@ -1594,14 +1594,21 @@ export function foundryBay(root, mats, opts = {}) {
     frame.part(root, `bay_lip_${side.lip}`, box(...lip.size), lipMat, [x, lip.y, 0]);
     const gx = side.sgn * (guide.x ?? lip.x);
     const rank = side.only ?? Array.from({ length: guide.count }, (_, i) => i);
-    for (const i of rank)
+    // `side.shift[i]` steps one guide `[dx, dy, dz]` off its station: a
+    // navy's hull in progress can cover a guide from above once its round
+    // is the rule's (#919, the Directorate's `bay_guide_0_2` under its
+    // fifteen-sided capsule, 1.6 m² of 6 showing), and the rank's pitch is
+    // the file's for the other four.
+    for (const i of rank) {
+      const [dx, dy, dz] = side.shift?.[i] ?? [0, 0, 0];
       frame.part(
         root,
         `bay_guide_${side.guides}_${i}`,
         new THREE.SphereGeometry(guide.r, ...asked(guide.facets, guide.r)),
         guideMat,
-        [gx, guide.y, guide.from + guide.pitch * i]
+        [gx + dx, guide.y + dy, guide.from + guide.pitch * i + dz]
       );
+    }
   }
 }
 

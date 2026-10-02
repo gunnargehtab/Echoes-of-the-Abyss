@@ -19,7 +19,7 @@
  *
  * The body is the Precentor's family at twice the beam: six overlapping
  * tergites, violet and red by turns from the stern, each with the
- * the Precentor's seam — 0.35 of the half-length at 0.8 forward, standing a
+ * Precentor's seam — 0.35 of the half-length at 0.8 forward, standing a
  * little proud above and below (`tallOf: 'beam'`) so the plates read as
  * ribs — a short rostrum, four dorsal spines alternating sides,
  * the studded listening dome forward with its smaller violet dome behind it

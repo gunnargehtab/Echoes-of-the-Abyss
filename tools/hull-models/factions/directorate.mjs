@@ -541,6 +541,23 @@ const spikeOf = (rule, name, r, length, facets, placement, tip = 0) =>
   facets === undefined
     ? cone(rule, r, length, placement, tip)
     : cyl(tip, r, length, section(name, facets));
+/**
+ * A torus's two counts, [radial, tubular] as the kit's `torus` takes them:
+ * the ring the rule's as placed, and the tube the rule's too — or the
+ * section a script names in `facets`, one number, the tube's. Block 2c
+ * keeps the structures' five-sided tubes as pentagons (the Bastion's seam
+ * rings, lips and pipes, the Turret's collar, the Foundry's launch mouth),
+ * so a script keeps a five there and the ring still goes to the rule; a
+ * pair `[radial, tubular]` is the rule's since #919 and is refused.
+ */
+function torusOf(rule, name, R, tube, facets, placement, arc = TAU) {
+  if (Array.isArray(facets))
+    throw new Error(
+      `${name}: \`facets\` [radial, tubular] is the rule's since #919 — name the tube's section alone, as a number (directorate.mjs \`cut\`)`
+    );
+  const [radial, tubular] = rule.torus(R, tube, placement, arc);
+  return [facets === undefined ? radial : section(name, facets), tubular];
+}
 
 /**
  * Refuse a mirrored pair: nothing on this navy is symmetrical. `tol` is
@@ -1226,7 +1243,7 @@ export function pressureHatches(root, { collar, door, rim, black }, opts) {
     add(frame, `${name}_collar`, collarGeo, collar, [0, (proud - sink) / 2, 0]);
     const doorGeo = cyl(r * 0.9, r * 0.9, 0.4, rule.cyl(r * 0.9, r * 0.9, 0.4));
     add(frame, `${name}_door`, doorGeo, door, [0, proud + 0.2, 0]);
-    const rimGeo = torus(r, tube, ...rule.torus(r, tube)).rotateX(Math.PI / 2);
+    const rimGeo = torus(r, tube, ...torusOf(rule, `${name}_rim`, r, tube, 5)).rotateX(Math.PI / 2);
     add(frame, `${name}_rim`, rimGeo, rim, [0, proud, 0]);
     // A cone's apex is +Y; a roll of ±(π/2 + hook) about Z lays it across
     // the face toward the centre and dips the point onto the door.
@@ -1276,7 +1293,8 @@ export function keel(root, mat, opts) {
     const t = count > 1 ? i / (count - 1) : 0.5;
     const rx = x + (length / 2 - inset) * (1 - 2 * t);
     const r = radii[0] + (radii[1] - radii[0]) * (rx - (x + length / 2)) / -length;
-    const [radial, tubular] = rule.torus(r + proud, tube, { scale: [1, 1, squash], yaw: true });
+    const pressedRib = { scale: [1, 1, squash], yaw: true };
+    const [radial, tubular] = torusOf(rule, `keel_rib_${i}`, r + proud, tube, 5, pressedRib);
     const hoop = torus(r + proud, tube, radial, tubular).rotateY(Math.PI / 2);
     add(root, `keel_rib_${i}`, hoop, ribMat, [rx, y, z], [0, 0, 0], [1, 1, squash]);
   }
@@ -2048,18 +2066,17 @@ export function carapaceHead(root, { skin, black, steel, crimson }, opts) {
  * its own numbers and its `drawn` placement, built in the file's order
  * (mound, collar, skirt): the mound a `shell` of radius `r` cut `down` of the
  * way to the pole, the collar and the skirt toruses of `R` and `tube`.
- * Every count is the rule's as the node places the part (`cut`, #919); the
- * file's were [10, 6], [5, 9] and [4, 14].
+ * Every count is the rule's as the node places the part (`cut`, #919), but
+ * a tube's section a script names (`torusOf`): the file's were [10, 6],
+ * [5, 9] and [4, 14], and the collar keeps its five.
  */
 export function carapaceMound(root, { violet, black, steel }, opts) {
   const { mound, collar, skirt, cut: rule = METRE } = opts;
   noCount('base_mound', mound, 'facets');
-  noCount('base_collar', collar, 'facets');
-  noCount('mound_skirt', skirt, 'facets');
   part(root, 'base_mound', shellOf(rule, mound.r, mound, by(mound, zLong)), violet, mound);
-  const collarRing = rule.torus(collar.R, collar.tube, by(collar, zLong));
+  const collarRing = torusOf(rule, 'base_collar', collar.R, collar.tube, collar.facets, by(collar, zLong));
   part(root, 'base_collar', torus(collar.R, collar.tube, ...collarRing), steel, collar);
-  const skirtRing = rule.torus(skirt.R, skirt.tube, by(skirt, zLong));
+  const skirtRing = torusOf(rule, 'mound_skirt', skirt.R, skirt.tube, skirt.facets, by(skirt, zLong));
   part(root, 'mound_skirt', torus(skirt.R, skirt.tube, ...skirtRing), black, skirt);
 }
 
@@ -2146,11 +2163,10 @@ export function stingerBarrel(root, { steel, violet, black, pip }, opts) {
   opts.segments.forEach(({ barb, ...s }, i) => {
     const skin = i % 2 ? violet : steel;
     noCount(`barrel_seg_${i}`, s, 'facets');
-    noCount(`barrel_barb_${i}`, barb, 'facets');
     const [rt, rb] = s.radii;
     const sides = rule.cyl(rt, rb, s.length, by(s, zLong));
     part(g, `barrel_seg_${i}`, cyl(rt, rb, s.length, sides), skin, s);
-    const barbRing = rule.torus(barb.R, barb.tube, by(barb, zLong));
+    const barbRing = torusOf(rule, `barrel_barb_${i}`, barb.R, barb.tube, barb.facets, by(barb, zLong));
     part(g, `barrel_barb_${i}`, torus(barb.R, barb.tube, ...barbRing), black, barb);
   });
   const { tip, pip: pp } = opts;
@@ -2204,12 +2220,11 @@ export function clawGrips(root, skins, { grips, facets = 5, name = 'claw_grip' }
 export function magazine(root, { steel, red }, { pipe, pod, flange, cut: rule = METRE }) {
   noCount('feed_pipe', pipe, 'facets');
   noCount('ammo_pod', pod, 'facets');
-  noCount('feed_flange', flange, 'facets');
   const [rt, rb] = pipe.radii;
   const sides = rule.cyl(rt, rb, pipe.length, by(pipe, zLong));
   part(root, 'feed_pipe', cyl(rt, rb, pipe.length, sides), steel, pipe);
   part(root, 'ammo_pod', capsule(pod.r, pod.length, ...rule.capsule(pod.r, by(pod, zLong))), steel, pod);
-  const ring = rule.torus(flange.R, flange.tube, by(flange, zLong));
+  const ring = torusOf(rule, 'feed_flange', flange.R, flange.tube, flange.facets, by(flange, zLong));
   part(root, 'feed_flange', torus(flange.R, flange.tube, ...ring), red, flange);
 }
 
@@ -2485,7 +2500,9 @@ const torusArc = (R, tube, rs, ts, arc) => new THREE.TorusGeometry(R, tube, rs, 
  * Bastion's four tiers each with a `seam_ring`, the Cantor's two with the
  * one `weld_collar` after the second. Every count is the rule's as placed
  * (`cut`, #919; the files' were ten and twelve a tier, 5 × 20 and 6 × 28
- * a ring).
+ * a ring), but a ring's tube keeps the section its file names (`torusOf`:
+ * the Bastion's seam rings stay pentagons, the Cantor's collar goes to
+ * the rule).
  *
  * The numbers are the scripts' because the two files' rules differ: the
  * Bastion's tiers narrow to 0.86 of their foot, ring at 0.88 of it with a
@@ -2499,9 +2516,8 @@ export function carapaceTiers(root, { tiers, cut: rule = METRE }) {
     const sides = rule.cyl(radii[0], radii[1], length, by(placement));
     place(root, name, cyl(radii[0], radii[1], length, sides), skin, placement);
     if (ring) {
-      const { name: rn, skin: rs, R, tube, ...rp } = ring;
-      noCount(rn, rp, 'facets');
-      place(root, rn, torus(R, tube, ...rule.torus(R, tube, by(rp))), rs, rp);
+      const { name: rn, skin: rs, R, tube, facets: rf, ...rp } = ring;
+      place(root, rn, torus(R, tube, ...torusOf(rule, rn, R, tube, rf, by(rp))), rs, rp);
     }
   });
 }
@@ -2614,21 +2630,27 @@ export function shellSpines(root, { name, facets = 5, spines, on = null }) {
   // every base on the ideal sphere, and on the rule's coarser dome — the
   // Cantor's 15 × 4 where the file's was 16 × 9 — fifteen of its forty-two
   // stood 0.01–1.06 m off the facets, ten touching nothing. So each spine's
-  // base, half its length down its own axis from the station, is seated on
-  // the nearest of those parts with its centre one radius in (kit.mjs
-  // `seat`), and the spine slides along its axis to meet it; bearing, lean
-  // and length stay the file's. The Bastion's crown spines pass none: its
-  // tiers kept them.
-  const rooted = ({ at, rot, r, length }) => {
-    const axis = new THREE.Vector3(0, 1, 0).applyEuler(new THREE.Euler(...rot));
-    const base = new THREE.Vector3(...at).addScaledVector(axis, -length / 2);
-    const foot = new THREE.Vector3(...seat(root, on, base.toArray(), { sink: r }).at);
-    return foot.addScaledVector(axis, length / 2).toArray();
-  };
+  // foot is seated on those parts (`footed`); bearing, lean and length stay
+  // the file's. The Bastion's crown spines pass none: its tiers kept them.
   spines.forEach(({ n, skin, r, length, ...placement }) => {
-    const p = on ? { ...placement, at: rooted({ ...placement, r, length }) } : placement;
+    const p = on ? { ...placement, at: footed(root, on, placement, r, length) } : placement;
     place(root, `${name}_${n}`, spike(r, length, section(`${name}_${n}`, facets)), skin, p);
   });
+}
+
+/**
+ * A part stood on its foot: the centre a cone or a drum of `length` along
+ * its own Y takes so that its base — half its length down its axis from
+ * `at`, under `rot` — rests on the nearest of the parts `on` names with its
+ * centre `r` in (kit.mjs `seat`, nearest). The part slides along its own
+ * axis and keeps its lean, so a spine or a pipe a coarser cut left floating
+ * meets the shell it was drawn against (#919).
+ */
+function footed(root, on, { at, rot }, r, length) {
+  const axis = new THREE.Vector3(0, 1, 0).applyEuler(new THREE.Euler(...rot));
+  const base = new THREE.Vector3(...at).addScaledVector(axis, -length / 2);
+  const foot = new THREE.Vector3(...seat(root, on, base.toArray(), { sink: r }).at);
+  return foot.addScaledVector(axis, length / 2).toArray();
 }
 
 /**
@@ -2664,11 +2686,12 @@ export function dockingCollar(root, { violet, steel, crimson, black }, opts) {
   const dock = group(root, name, placement);
   const throat = 2.4;
   const disc = 0.18;
-  // Every count the rule's (#919); the file's were eight, 5 × 10 and eight.
+  // Every count the rule's (#919) but the lip's five-sided tube, a section
+  // Block 2c keeps; the file's were eight, 5 × 10 and eight.
   const pressed = by(frame());
   const throatGeo = cyl(r, 1.25 * r, throat, rule.cyl(r, 1.25 * r, throat, pressed));
   place(dock, `${name}_throat`, throatGeo, violet, frame());
-  const lip = torus(1.05 * r, 0.2, ...rule.torus(1.05 * r, 0.2, pressed));
+  const lip = torus(1.05 * r, 0.2, ...torusOf(rule, `${name}_lip`, 1.05 * r, 0.2, 5, pressed));
   place(dock, `${name}_lip`, lip, steel, frame([0, 1.25, 0]));
   const mouth = cyl(0.72 * r, 0.72 * r, disc, rule.cyl(0.72 * r, 0.72 * r, disc, pressed));
   place(dock, `${name}_mouth`, mouth, crimson, frame([0, throat / 2 + disc / 2, 0]));
@@ -2693,9 +2716,8 @@ export function dockingCollar(root, { violet, steel, crimson, black }, opts) {
  * lathe-family guesses; the rows of seventeen at six tube angles say which.
  */
 export function hullPipes(root, steel, { pipes, cut: rule = METRE }) {
-  pipes.forEach(({ R, tube, arc, ...placement }, i) => {
-    noCount(`hull_pipe_${i}`, placement, 'facets');
-    const counts = rule.torus(R, tube, by(placement), arc);
+  pipes.forEach(({ R, tube, arc, facets, ...placement }, i) => {
+    const counts = torusOf(rule, `hull_pipe_${i}`, R, tube, facets, by(placement), arc);
     place(root, `hull_pipe_${i}`, torusArc(R, tube, ...counts, arc), steel, placement);
   });
 }
@@ -2714,13 +2736,22 @@ export function hullPipes(root, steel, { pipes, cut: rule = METRE }) {
 export function standpipes(root, { steel, black }, opts) {
   const { name = 'standpipe', flange: flangeName = 'standpipe_flange', pipes } = opts;
   const { cut: rule = METRE } = opts;
+  const { on = null } = opts;
   pipes.forEach(({ radii, length, flange, ...placement }, i) => {
     noCount(`${name}_${i}`, placement, 'facets');
-    const sides = rule.cyl(radii[0], radii[1], length, by(placement));
-    place(root, `${name}_${i}`, cyl(radii[0], radii[1], length, sides), steel, placement);
-    const { R, tube, ...fp } = flange;
-    noCount(`${flangeName}_${i}`, fp, 'facets');
-    place(root, `${flangeName}_${i}`, torus(R, tube, ...rule.torus(R, tube, by(fp))), black, fp);
+    // `on` names the parts a pipe stands on (#919): its foot is seated on
+    // them (`footed`) and its flange moves with it, so a pipe the rounder
+    // tiers and the re-cut plates left standing in water — the Cantor's
+    // `ballast_pipe_1`, 2.5 m off the plate it touched — meets the foot.
+    const at = on ? footed(root, on, placement, radii[1], length) : placement.at;
+    const slid = at.map((c, k) => c - placement.at[k]);
+    const p = { ...placement, at };
+    const sides = rule.cyl(radii[0], radii[1], length, by(p));
+    place(root, `${name}_${i}`, cyl(radii[0], radii[1], length, sides), steel, p);
+    const { R, tube, facets: ff, ...fp } = flange;
+    const fpSlid = { ...fp, at: fp.at.map((c, k) => c + slid[k]) };
+    const counts = torusOf(rule, `${flangeName}_${i}`, R, tube, ff, by(fpSlid));
+    place(root, `${flangeName}_${i}`, torus(R, tube, ...counts), black, fpSlid);
   });
 }
 
@@ -2833,7 +2864,7 @@ export function plateSegments(root, lipMat, { name = 'seg', first = 1, lip, segm
  */
 export function wedgeRostrum(root, mat, opts) {
   const { name = 'rostrum', radii, length, squash = [1, 1], ...placement } = opts;
-  // Four is a section on a `rostrum` or a `head_shield` and on nothing else (#919).
+  // Four is a section on the parts the rule names, a `rostrum` and a `head_shield` among them (#919).
   const geo = cyl(radii[0], radii[1], length, section(name, 4), Math.PI / 4).rotateX(Math.PI / 2);
   geo.scale(squash[0], squash[1], 1);
   return part(root, name, geo, mat, placement);
@@ -2854,7 +2885,7 @@ export function eyes(root, mat, opts) {
  * head), the dorsal ridges (leaned) and the telson's spike. Drawn as the
  * export drew them, tip up, and laid over by the node. `facets` is a
  * section of the rule's or nothing (`section`, #919): five on any part,
- * four on a `spike`, a `dspike` or a `rostrum`; the ridges' four was a
+ * four on the parts the rule names; the ridges' four was a
  * default on parts the rule names no square for, and went to the floor's
  * five, which Block 2c lists.
  *
@@ -3622,10 +3653,9 @@ export function outriggerPods(root, { violet, black, red }, opts) {
 export function sternCarapace(root, { red, steel, black }, opts) {
   const { frame = zLong, carapace: c, seam, spike: spk, cut: rule = METRE } = opts;
   noCount('stern_carapace', c, 'facets');
-  noCount('stern_seam', seam, 'facets');
   const shell = new THREE.SphereGeometry(c.r, ...rule.orb(c.r, framed(c.rot, c.scale)));
   frame.part(root, 'stern_carapace', shell, red, c.at, c.rot, c.scale);
-  const counts = rule.torus(seam.R, seam.tube, framed(seam.rot, seam.scale));
+  const counts = torusOf(rule, 'stern_seam', seam.R, seam.tube, seam.facets, framed(seam.rot, seam.scale));
   frame.part(root, 'stern_seam', torus(seam.R, seam.tube, ...counts), steel, seam.at, seam.rot, seam.scale);
   const barb = spike(spk.r, spk.length, section('stern_spike', spk.facets ?? 5));
   frame.part(root, 'stern_spike', barb, black, spk.at, spk.rot);
@@ -4005,7 +4035,7 @@ export function feedGallery(root, mats, opts) {
   const world = (p) => new THREE.Vector3(...p).applyMatrix4(frame);
   let k = 0;
   for (let x = ribs.first; x < L - ribs.last; x += ribs.pitch, k++) {
-    const [radial, tubular] = rule.torus(W + 0.4, ribs.tube, {}, Math.PI);
+    const [radial, tubular] = torusOf(rule, `conveyor_rib_${k}`, W + 0.4, ribs.tube, 5, {}, Math.PI);
     const arch = new THREE.TorusGeometry(W + 0.4, ribs.tube, radial, tubular, Math.PI);
     arch.rotateY(Math.PI / 2);
     add(gallery, `conveyor_rib_${k}`, arch, black, [x, 0, 0]);
@@ -4184,7 +4214,7 @@ export function reactorOutflow(root, { red, black, steel, unlit }, opts) {
   // A torus is born round +Z, so the turn that lays its axis on the bearing
   // is π/2 − a about Y: the ribs ride the gullet rather than stand across it.
   ribs.at.forEach((d, i) =>
-    add(root, `gullet_rib_${i}`, torus(ribs.r, ribs.t, ...rule.torus(ribs.r, ribs.t)), steel, polar(a, d, gullet.y), [
+    add(root, `gullet_rib_${i}`, torus(ribs.r, ribs.t, ...torusOf(rule, `gullet_rib_${i}`, ribs.r, ribs.t, 5)), steel, polar(a, d, gullet.y), [
       0,
       Math.PI / 2 - a,
       0,
