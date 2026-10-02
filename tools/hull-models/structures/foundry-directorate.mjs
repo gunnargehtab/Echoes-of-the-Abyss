@@ -165,6 +165,23 @@
  * sixteen a turn (Block 2c, the capsule reading). Triangles
  * 3,884 → 4,714; `DRAWN` 17.4421, where the file measured 17.5184. The ten
  * flank photophores are grown from their plates now (`on`, below).
+ *
+ * PANELS (#919). The band for a structure is 2.5–8 m on a side, the median
+ * unlit part from above (facets.mjs `panelsOf`; Block 2c), and this file
+ * read 11.0 m over fifty-one, thirty-two parts over 64 m² against nineteen
+ * in the band. The pass adds fifteen spines where fourteen are the least: a
+ * second, smaller spike a unit abaft each spine spike, raked the one way
+ * and seated on the plate under it, on five of the six — not the second
+ * starboard plate, where `flank_photophore_8` stands — and none on the bow plates, which carry no
+ * spine in the file (`spineRank`); a ring of seven round the stern spike on
+ * the stern carapace's crown and a ring of five round the outrigger's spike
+ * on the big pod, its first and third stations never grown, where that
+ * spike stands and where the pod meets the second port plate (`spineRing`).
+ * Each its own length, black, its base seated on its plate, carapace or
+ * pod, touching nothing else. They show 10–15 m² each, and the median part
+ * is 7.1 m over sixty-six, the two graft flanges. No lamp's plan changed, no
+ * plan grew from above. 85 parts and 4,714 triangles become 100 and 4,864;
+ * `DRAWN` holds at 17.4421.
  */
 import {
   THREE,
@@ -200,6 +217,17 @@ root.name = 'foundry_directorate';
 // the +x flank, (−0.35, 1, 0.1) on the −x, the file's node decomposed.
 const RAKE_P = [0.094119023, -0.015933738, -0.335170772];
 const RAKE_S = [0.094119023, 0.015933738, 0.335170772];
+// The six spine spikes' stations, the file's nodes to nine places, read by
+// the plates below and by the second rank's barbs (#919), so a spike that
+// moves takes its barb with it.
+const SPIKES = {
+  p0: [3.43499122, 3.155403486, -2.837859651],
+  p1: [3.320243272, 3.481266491, 0.477926649],
+  p2: [3.137728502, 3.118652864, 3.495065286],
+  s0: [-3.471891574, 2.66426164, -2.470173836],
+  s1: [-3.341732114, 2.968377468, 0.652637747],
+  s2: [-3.221987448, 2.699392707, 3.379139271],
+};
 
 // The tergite flanks: the +x rank first, as the file writes it — named port
 // here (see the header) — then the −x rank.
@@ -217,19 +245,19 @@ directorate.tergiteFlanks(
             at: [3.4, 0.15, -4.5],
             rot: [-0.004298972, 0.12, -0.12],
             scale: [2.52, 2.7, 2.9],
-            spike: { at: [3.43499122, 3.155403486, -2.837859651], rot: RAKE_P, length: 1.7862519 },
+            spike: { at: SPIKES.p0, rot: RAKE_P, length: 1.7862519 },
           },
           {
             at: [3.3, 0.15, -1.4],
             rot: [0.016585802, 0.17, -0.12],
             scale: [2.52, 3.1, 3.3],
-            spike: { at: [3.320243272, 3.481266491, 0.477926649], rot: RAKE_P, length: 1.6741475 },
+            spike: { at: SPIKES.p1, rot: RAKE_P, length: 1.6741475 },
           },
           {
             at: [3.18, 0.15, 1.8],
             rot: [-0.03502016, 0.22, -0.12],
             scale: [2.52, 2.9, 3],
-            spike: { at: [3.137728502, 3.118652864, 3.495065286], rot: RAKE_P, length: 1.1989505 },
+            spike: { at: SPIKES.p2, rot: RAKE_P, length: 1.1989505 },
           },
           { at: [3.08, 0.15, 4.7], rot: [0.000254751, 0.27, -0.12], scale: [2.52, 2.3, 2.4] },
         ],
@@ -242,19 +270,19 @@ directorate.tergiteFlanks(
             at: [-3.48, 0.15, -3.9],
             rot: [-0.013344816, -0.12, 0.12],
             scale: [2.112, 2.3, 2.5],
-            spike: { at: [-3.471891574, 2.66426164, -2.470173836], rot: RAKE_S, length: 1.4586362 },
+            spike: { at: SPIKES.s0, rot: RAKE_S, length: 1.4586362 },
           },
           {
             at: [-3.34, 0.15, -1],
             rot: [-0.033392322, -0.17, 0.12],
             scale: [2.112, 2.6, 2.9],
-            spike: { at: [-3.341732114, 2.968377468, 0.652637747], rot: RAKE_S, length: 1.5334376 },
+            spike: { at: SPIKES.s1, rot: RAKE_S, length: 1.5334376 },
           },
           {
             at: [-3.25, 0.15, 1.9],
             rot: [-0.009265448, -0.22, 0.12],
             scale: [2.112, 2.4, 2.6],
-            spike: { at: [-3.221987448, 2.699392707, 3.379139271], rot: RAKE_S, length: 1.3073378 },
+            spike: { at: SPIKES.s2, rot: RAKE_S, length: 1.3073378 },
           },
           { at: [-3.4, 0.15, 4.3], rot: [-0.036309463, -0.27, 0.12], scale: [2.112, 1.8, 2] },
         ],
@@ -262,6 +290,27 @@ directorate.tergiteFlanks(
     ],
   }
 );
+
+// A second, smaller spike a unit abaft each spine spike (#919, the panel
+// pass; the header), raked the one way the spikes rake, seated on the plate
+// under it (`spineRank`; kit.mjs `seat`) — the spike's own plate on four;
+// the second port spike stands on the third plate's edge and its barb on
+// the second plate abaft it. Five, since `flank_photophore_8` stands where
+// the second starboard plate's would grow, and none on the bow
+// plates, which carry no spine in the file.
+const barb = (n, [x, y, z], rake, length) => [n, black, 0.09, length, [x, y - 0.3, z - 1], rake];
+directorate.spineRank(root, {
+  name: 'spine_barb',
+  frame: drawn,
+  on: [0, 1, 2, 3].flatMap((i) => [`tergite_port_${i}`, `tergite_starboard_${i}`]),
+  spines: [
+    barb('0_0', SPIKES.p0, [0.35, 1, 0.1], 0.95),
+    barb('0_1', SPIKES.p1, [0.35, 1, 0.1], 0.88),
+    barb('0_2', SPIKES.p2, [0.35, 1, 0.1], 0.82),
+    barb('1_0', SPIKES.s0, [-0.35, 1, 0.1], 0.9),
+    barb('1_2', SPIKES.s2, [-0.35, 1, 0.1], 0.86),
+  ],
+});
 
 // The outrigger pods off the corners and the stern carapace at the blind end.
 directorate.outriggerPods(
@@ -295,6 +344,41 @@ directorate.sternCarapace(
     spike: { r: 0.2, length: 2, at: [1.4, 2.6, -8.6], rot: [-0.6, 0, 0] },
   }
 );
+
+// Rings round the file's two barbs (#919, the panel pass; the header): seven
+// stations round the stern spike on the stern carapace's crown; five round
+// the outrigger's spike on the big pod's crown, the first and the third never
+// grown, where that spike itself stands and where the pod meets the second
+// port plate. Each spine its own length, leaning out along its own bearing,
+// black, seated on its shell (`spineRing`; kit.mjs `seat`).
+directorate.spineRing(root, black, {
+  name: 'stern_spine',
+  frame: drawn,
+  on: 'stern_carapace',
+  about: [0.7, -7.2],
+  stations: 7,
+  phase: 0.3,
+  rho: 2.07,
+  y: 2.73,
+  tilt: 0.7,
+  r: 0.09,
+  holes: [],
+  lengths: [0.8, 0.9, 0.78, 0.71, 0.85, 0.88, 0.73],
+});
+directorate.spineRing(root, black, {
+  name: 'pod_spine',
+  frame: drawn,
+  on: 'outrigger_pod_big',
+  about: [6.5, -2],
+  stations: 5,
+  phase: 0.2,
+  rho: 1.1,
+  y: 1.75,
+  tilt: 0.75,
+  r: 0.08,
+  holes: [0, 2],
+  lengths: [0.77, 0.74, 0.62, 0.68, 0.78],
+});
 
 // The bay, at the kit's defaults — this file's numbers, the guides either
 // side of the forge line since #890 — with the −x lip one guide short; and

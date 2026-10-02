@@ -677,7 +677,25 @@ plate is the segmented half of the law without the spiked half. The Dredge, this
 facet reference, reads 5.2 m: its block asks for five wide overlapping tergites and it has
 them, with five spines, a claw and a boom and no limbs, so under Block 2 it gains limbs or
 spines at the pass — its rows of small points are photophores, livery
-([style-neon-noir.md](style-neon-noir.md)), which the metric drops.
+([style-neon-noir.md](style-neon-noir.md)), which the metric drops. The panel pass (#919,
+the seventh instalment) brought the seven models outside the bands inside them with spines
+alone, 112 of them (`directorate.mjs` `spineRing`, `spineRank`), every one seated on the shell
+or plate it grows from, no lamp added or moved, no part moved, no plan grown from above, and
+every ring and rank a regimented rule, a station left ungrown wherever a lamp, a rib, a
+dock, a tank, a spike, the hopper or a plate stands in its way, as `crown_spine_4` was
+never grown. The Bastion's four tiers each carry a ring of spines on
+the wall — twenty-one, seventeen, thirteen and nine stations, ten never grown — fifty in
+all, 14–30 m² each; the Cantor's dome a fifth ring of fourteen at its foot, the thickest on it and the widest from above, 9–13 m²; the Foundry a second, smaller spike abaft five of its six, a ring of
+seven round its stern spike and three round its outrigger's spike; the Bio-Reactor three more
+mound spines on the spined side; the Dredge a second spine abaft and outboard of four of its
+five, three stepped along the claw's arm as the boom's teeth are, and five teeth on the
+scoop's lip; the Verger a pair of shoulder spines on each of its four aft plates; the
+Submersible a fifth dorsal spike, six on the shoulders and three on the tail. Every new part
+on a hull shows 0.8–3.7 m², on a structure 7–30, so each median lands among parts the file
+already had: the Cantor's at 2.59 m, 0.09 m above the band's floor — the parts either side
+of its 6.25 m² are spines of the upper three rings and the quill's third segment at 5.8–7.6,
+so fourteen new spines leave the median at 2.59 m, seventeen would move it to 2.63 and twenty
+to 2.75, and only past twenty does it land on a new spine.
 
 **Knights.** "Hard geometric facets and mirror-finish surfaces that catch light no other
 faction produces"; "crystalline"; "the only faction with true bilateral symmetry"
@@ -737,7 +755,9 @@ since its panel pass grew its five models outside the bands 94 fittings at the r
 counts;
 Directorate hulls 30.0 k → 33.6 k and structures 29.7 k → 35.1 k, as built since its facet
 pass (this rebuild had said 33.5 k and 32.8 k, and 26.6 k for the structures before the
-Refinery's rebuild); Order hulls 9.9 k → 8.0 k
+Refinery's rebuild), and 33.9 k and 35.9 k since its panel pass grew its seven models outside
+the bands 112 spines, a five-sided cone of ten triangles each but the Submersible's ten,
+four-sided and eight; Order hulls 9.9 k → 8.0 k
 and structures 15.8 k → 12.1 k, the Order's as built since its pass, where this rebuild had
 said 12.4 k before the pass cut its pipes, stacks and throat drums as hexagons; the fourteen
 props, under no rule, 4.3 k. The own force
@@ -754,8 +774,8 @@ holds and eleven of them are 224 triangles still, so about 3 k of the 4 k over i
 called 120.3 k at a ceiling of seventeen still over and came down to sixteen for it, where
 this pass records its sample over the same mark for a person instead: the probe is the
 check, and whether a base so dressed may stand on screen is that person's call —
-66.3 k for the Directorate since its facet pass
-(64.0 k before it) and 18.9 k for the Order, as built. That mix is one sample base and not a worst case —
+67.3 k for the Directorate since its panel pass
+(66.3 k since its facet pass, 64.0 k before it) and 18.9 k for the Order, as built. That mix is one sample base and not a worst case —
 nothing caps what a base builds, and a dozen Commune Slipways alone are 170 k — so the
 probe, not this rebuild, is the check. The Commune's ceiling is the number gate 6 moved: at
 twenty-four that dozen and five were 181.0 k, its eight structures alone 110.5 k; at
@@ -804,7 +824,10 @@ Bower at 0.8 m, the Submersible at 7.3, 7.8 since the facet pass) and three stru
 Refinery at 14.0 m, the Foundry at 15.7 and the Bastion at 31.4), every one inside its band
 since the Commune's panel pass — the Bower at 1.7 m, the Submersible at 3.4, the structures
 at 11.1–12.9; three Directorate hulls (the
-Verger, the Submersible and the Dredge, 4.0–5.2 m; 4.2–5.6 since the facet pass) and four structures; five Order hulls
+Verger, the Submersible and the Dredge, 4.0–5.2 m; 4.2–5.6 since the facet pass) and four
+structures (the Cantor at 2.4 m, under the band, the Bio-Reactor at 8.1, the Foundry at 11.0
+and the Bastion at 14.5), every one inside its band since the Directorate's panel pass — the
+hulls at 1.6–2.6 m, the structures at 2.6–7.1; five Order hulls
 (the Versicle at 1.5 m; the Reciter, the Responsory, the Antiphon and the Offertory at
 6.0–7.2 — the Responsory's block asks for fine ceramic panelling, so its 6.0, 6.4 until the
 facet pass thinned its rings, is a finding

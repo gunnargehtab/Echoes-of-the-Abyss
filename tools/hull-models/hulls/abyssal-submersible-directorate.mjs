@@ -172,6 +172,25 @@
  * second rim 13 where it showed 19; nine parts that stood a few decimetres
  * off the seven-gon plates — spikes, femurs, the tail's first two segments
  * — meet the fifteen-gon ones.
+ *
+ * PANELS (#919). The Directorate's band for a hull is 1–3 m on a side, the
+ * median unlit part from above (facets.mjs `panelsOf`; Block 2c), and this
+ * file read 4.3 m over twenty-five: sixteen parts over 9 m² against nine in
+ * the band, every one of the nine a spike or the keel. The pass adds ten
+ * spikes where eight are the least, since eight or nine would have left the
+ * median within a hundredth of the band's edge on the first starboard flank
+ * spike: a fifth dorsal spike on the fifth plate, carrying the rank's
+ * alternation on to port; six shoulder spikes 35° off the crown, one a plate
+ * on the side its dorsal spike is not and a second on the bow plate, each a
+ * tenth aft of its plate's centre, where the lit rims under the plates'
+ * forward edges leave the shoulder bare; and three tail spikes, one a
+ * segment on the first three, sides alternating from starboard. Four-sided
+ * like the file's spikes, each its own size, each its base seated on its
+ * plate or segment (`spineRank`; a shoulder spike meets the plate it roots
+ * in and the one overlapping it) and meeting no lit part. They show
+ * 0.8–3.7 m² each, and the median part is 2.6 m over thirty-five, the third
+ * port flank spike. No lamp's plan changed, no plan grew from above; `DRAWN`
+ * holds at 4.5261. 59 parts and 2,380 triangles become 69 and 2,460.
  */
 import { THREE, box, part, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -341,6 +360,39 @@ directorate.spikes(root, chitin, {
   ],
 });
 
+// The panel pass's spikes (#919; the header): a fifth dorsal spike on the
+// fifth plate, carrying the rank's alternation on to port; six shoulder
+// spikes 35° off the crown, one a plate on the side its dorsal spike is not
+// and a second on the bow plate, each a tenth aft of its plate's centre,
+// where the rims under the plates' forward edges leave the shoulder bare;
+// and three tail spikes, one a segment on the first three, sides
+// alternating from starboard. Each is seated on the plate or segment it
+// grows from (`spineRank`; kit.mjs `seat`), four-sided as the file's spikes
+// are, each its own size, none the mirror of another. Stations are the
+// file's frame: `[x, y, z]` on the shell, and the way the spike points.
+const SHOULDER = (sgn) => [sgn * Math.sin(0.5), Math.cos(0.5), -0.2];
+directorate.spineRank(root, {
+  name: 'spike_shoulder',
+  frame: drawn,
+  facets: 4,
+  on: [1, 2, 3, 4, 5].map((n) => `carapace_${n}`),
+  spines: [
+    ['s1', chitin, 0.06, 0.3, [-0.3505, 1.0687, 1.02], SHOULDER(-1)],
+    ['p1', chitin, 0.06, 0.26, [0.3505, 1.0687, 1.12], SHOULDER(1)],
+    ['p2', chitin, 0.06, 0.3, [0.3878, 1.0941, 0.52], SHOULDER(1)],
+    ['s3', chitin, 0.06, 0.28, [-0.4027, 1.1043, 0.12], SHOULDER(-1)],
+    ['p4', chitin, 0.06, 0.3, [0.3729, 1.084, -0.28], SHOULDER(1)],
+    ['s5', chitin, 0.06, 0.26, [-0.3281, 1.0535, -0.66], SHOULDER(-1)],
+  ],
+});
+directorate.spineRank(root, {
+  name: 'spike_dorsal',
+  frame: drawn,
+  facets: 4,
+  on: 'carapace_5',
+  spines: [[5, chitin, 0.07, 0.3, [0.05, 1.1, -0.7], [0.1, 1, -0.18]]],
+});
+
 // "Folded manipulator limbs": seven, four to port at a 0.4 pitch and three
 // to starboard at 0.44, each its own length, every one folded by the one
 // rule `walkingLimbs` holds, each claw hung from its femur's end (#907);
@@ -408,6 +460,22 @@ directorate.carapaceOrbs(
 bar('telson_mid', violet, [0.34, 0.02, 0.42], [0, 0.66, -1.88], [0.12, 0, 0]);
 bar('telson_port', violet, [0.3, 0.02, 0.36], [0.2, 0.68, -1.84], [0.1, 0.5, 0.15]);
 bar('telson_starboard', violet, [0.26, 0.02, 0.32], [-0.18, 0.68, -1.84], [0.1, -0.45, -0.12]);
+
+// The tail spikes of the panel pass (#919; above, with the shoulder spikes):
+// one a segment on the first three, sides alternating from starboard, each
+// seated on its segment.
+const TAIL = (sgn) => [sgn * Math.sin(0.4), Math.cos(0.4), -0.15];
+directorate.spineRank(root, {
+  name: 'spike_tail',
+  frame: drawn,
+  facets: 4,
+  on: [1, 2, 3].map((n) => `tail_seg_${n}`),
+  spines: [
+    [1, chitin, 0.04, 0.18, [-0.1725, 0.9419, -0.92], TAIL(-1)],
+    [2, chitin, 0.04, 0.16, [0.1438, 0.8816, -1.2], TAIL(1)],
+    [3, chitin, 0.04, 0.14, [-0.115, 0.8212, -1.45], TAIL(-1)],
+  ],
+});
 
 // "Dim red photophores": ten buds, each its own size, five down the port
 // flank and three down the starboard, one under the jaw and one on the

@@ -133,6 +133,27 @@
  * `dock_small_mandible_1`'s point runs 1 m into the base tier. Two more
  * lamps are grown from their tiers (`on`): `_1` and `_7`, which rested on
  * the ten-gons and stood 0.7 and 1.6 m off the fifteen-gons.
+ *
+ * PANELS (#919). The Directorate's band for a structure is 2.5–8 m on a
+ * side, the median unlit part from above (facets.mjs `panelsOf`; Block 2c),
+ * and this file read 14.5 m over sixty-one: fifty-four parts over the band's
+ * 64 m² and seven in it, the crown spines and a mandible. The pass rings each
+ * tier with spines on its wall (directorate.mjs `spineRing`): twenty-one,
+ * seventeen, thirteen and nine stations of a turn from phases of 0.12, 0.25,
+ * 0.3 and 0.45 rad, ten never grown — the lowest tier's 7th, 8th, 12th, 14th
+ * and 15th, where rib plates, the small dock's lip and the ballast tanks
+ * stand; the second's 0th, 5th, 8th and 13th, where the worklight and a rib
+ * plate stand and where `photophore_7` and `_13` would be hidden from above;
+ * the third's 3rd, over `photophore_6` — each leaning out along its own
+ * bearing, 0.75 rad out of vertical on the lowest tier to 0.9 on the top,
+ * each its own length (0.66–0.95 units, 16–23 m) at 0.075–0.09 of radius,
+ * black like the crown's, its base seated on its tier. Fifty where
+ * forty-eight parts in the band are the least. Every tip stays inside the
+ * foot of the tier below it, so the plan from above is the file's own
+ * (0.00 m² outside it at 8 px/m); no lamp's plan changed; each spine meets
+ * its tier and nothing else (contacts.mjs). They show 14–30 m² each, and the
+ * median part is 5.9 m over 111. 84 parts and 4,539 triangles become 134
+ * and 5,039; the fit is the same 17.7998 across.
  */
 import { THREE, exportGlb, fitFootprint } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -244,6 +265,33 @@ directorate.shellSpines(root, {
     ...laid(...leaning(bearing, rho, y, CROWN_TILT)),
   })),
 });
+
+// Four rings of tier spines down the dome, one a tier on its wall (#919, the
+// panel pass; the header): twenty-one, seventeen, thirteen and nine stations
+// of a turn from a phase of their own, ten never grown — where a rib plate,
+// the small dock's lip, a ballast tank or the worklight stands, or where a
+// spine would hide a photophore from above — each leaning out along its own
+// bearing, a little further out of vertical each tier up, each its own
+// length, black like the crown's, seated on its tier (`spineRing`; kit.mjs
+// `seat`). Every tip stays inside the foot of the tier below it, so the
+// plan from above is the file's own.
+const wall = ({ foot, length, y: yc }, y) => foot - 0.14 * foot * ((y - (yc - length / 2)) / length);
+const TIER_RINGS = [
+  { tier: 0, stations: 21, phase: 0.12, y: 1.25, tilt: 0.75, r: 0.09, holes: [7, 8, 12, 14, 15], lengths: [0.75, 0.84, 0.73, 0.67, 0.79, 0.82, 0.69, 0.69, 0.83, 0.79, 0.66, 0.74, 0.84, 0.74, 0.66, 0.78, 0.83, 0.7, 0.68, 0.82, 0.8] },
+  { tier: 1, stations: 17, phase: 0.25, y: 3.0, tilt: 0.8, r: 0.085, holes: [0, 5, 8, 13], lengths: [0.93, 0.9, 0.76, 0.82, 0.95, 0.85, 0.75, 0.87, 0.95, 0.8, 0.77, 0.92, 0.92, 0.76, 0.81, 0.95, 0.87] },
+  { tier: 2, stations: 13, phase: 0.3, y: 4.6, tilt: 0.85, r: 0.08, holes: [3], lengths: [0.95, 0.81, 0.76, 0.91, 0.92, 0.77, 0.8, 0.94, 0.88, 0.75, 0.84, 0.95, 0.83] },
+  { tier: 3, stations: 9, phase: 0.45, y: 6.1, tilt: 0.9, r: 0.075, holes: [], lengths: [0.84, 0.71, 0.78, 0.9, 0.79, 0.71, 0.83, 0.89, 0.75] },
+];
+TIER_RINGS.forEach(({ tier, y, ...ring }) =>
+  directorate.spineRing(root, black, {
+    name: `tier_spine_${tier}`,
+    frame: laid,
+    on: TIERS[tier].name,
+    rho: wall(TIERS[tier], y),
+    y,
+    ...ring,
+  })
+);
 
 // Two docking collars on the flank: the main one on +x, rolled a quarter
 // turn and yawed 0.26; the small one on -x +z, the same the other way.

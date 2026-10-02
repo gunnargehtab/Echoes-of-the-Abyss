@@ -76,6 +76,26 @@
  * audit names none. The contact sweep's exact-zero test (#746) reads three
  * resting marks as touching nothing at 0.000 m; they lie on their facets as
  * before. No ring is off the rule.
+ *
+ * PANELS (#919). The Directorate's band for a hull is 1–3 m on a side, the
+ * median unlit part from above (facets.mjs `panelsOf`; Block 2c), and this
+ * file read 5.6 m over thirty-three: twenty parts over 9 m² against thirteen
+ * in the band. Block 2c says the Dredge gains limbs or spines at the pass;
+ * it gains twelve spines where eight are the least, since eight would have
+ * left the median on the claw's inner tip at 2.9 m: a second, smaller spine
+ * on four plates, seeded five units abaft the plate's centre and eight off
+ * the keel on the first spine's side and seated on the plate, which drops
+ * it about three units and a unit or less inboard and forward: as built 4.5–4.9 m behind
+ * the first spine and 6.4–6.9 m off the keel — not the third plate, where
+ * the hopper stands — three stepped along the claw's arm as the boom's
+ * teeth are stepped along the boom, leaning a little inboard so the plan
+ * from above stays the file's own, and five
+ * teeth on the scoop's lip raked forward over the mouth, no two the same
+ * length (`spineRank`). Black and five-sided, each its base seated on its
+ * plate, arm or lip and touching nothing else. They show 1–2 m² each, and
+ * the median part is 2.35 m over forty-five, a boom tooth. No lamp's plan
+ * changed, no plan grew from above (0.00 m² outside main's at 8 px/m). 62
+ * parts and 2,508 triangles become 74 and 2,628.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -224,6 +244,48 @@ directorate.dredgeBoom(root, { steel, black }, { side: 's', x: -8, y: 0.5, z: 29
 // The hopper amidships, lit around its throat — the second of the two places
 // this hull puts a lamp large enough to read as a patch rather than a mark.
 directorate.hopper(root, { black, steel, gullet }, { x: -6, y: 8, z: 2 });
+
+// The panel pass's spines (#919; the header): a second, smaller spine behind
+// and outboard of the first on each plate, seeded five units abaft the
+// plate's centre and eight off the keel on the first spine's side and then
+// seated on the plate, which drops it about three units and a unit or less
+// inboard and forward — as built, 4.5–4.9 m behind the first spine and 6.4–6.9 m off
+// the keel — a rule with a hole in it where the hopper stands on the third
+// plate; three spines stepped along the claw's arm as the boom's teeth are
+// stepped along the boom, answering it without mirroring it; and
+// five teeth on the scoop's lip, cones raked forward over the mouth, no two
+// the same length. Black and five-sided like the plate spines, each seated on
+// the plate, ridge, arm or lip it grows from (`spineRank`; kit.mjs `seat`).
+const RAKE = [Math.sin(0.3), Math.cos(0.3), 0];
+directorate.spineRank(root, {
+  name: 'tergite_barb',
+  on: SEGMENTS.flatMap((_, i) => [`tergite_${i}`, `tergite_ridge_${i}`]),
+  spines: [0, 1, 3, 4].map((i) => {
+    const [x, , sy] = SEGMENTS[i];
+    return [i, black, 0.9, i % 2 ? 7 : 5, [x - 5, sy + 1, (i % 2 ? -1 : 1) * 8], RAKE];
+  }),
+});
+directorate.spineRank(root, {
+  name: 'claw_spine',
+  on: 'claw_arm',
+  spines: [
+    [0, black, 0.9, 6, [2, 3.2, -31], [0.2, 1, 0.15]],
+    [1, black, 0.9, 7, [12, 3.2, -31], [0.2, 1, 0.15]],
+    [2, black, 0.9, 8, [22, 3.2, -31], [0.2, 1, 0.15]],
+  ],
+});
+const BITE = [Math.sin(0.45), Math.cos(0.45), 0];
+directorate.spineRank(root, {
+  name: 'scoop_tooth',
+  on: 'scoop_lip',
+  spines: [
+    [-6, 4.2],
+    [-3.5, 3.9],
+    [-0.5, 4.4],
+    [2.5, 4.0],
+    [5, 4.3],
+  ].map(([z, length], i) => [i, black, 0.7, length, [57, 3.4, z], BITE]),
+});
 
 // "Rows of photophores along every plate edge": three a plate to starboard on
 // all five, two to port on every other one. Twenty-one lights that follow a
