@@ -3189,4 +3189,60 @@ describe('renderer smoke test: the free camera', () => {
       world.teardown();
     }
   });
+
+  it('leaves the chart’s ground and nodes alone while the camera holds still (#1032)', async () => {
+    const world = await boot();
+    // The sway reads the frame's clock, so a held clock names its phase.
+    let nowMs = 1_000;
+    const clock = mock.method(performance, 'now', () => nowMs);
+    // The two layers keyed on the view revision, counted where they repaint.
+    const chart = world.chart as unknown as { drawBlockedGround(): void; drawNodes(): void };
+    const ground = mock.method(chart, 'drawBlockedGround');
+    const nodes = mock.method(chart, 'drawNodes');
+    const repaints = (): { ground: number; nodes: number } => ({
+      ground: ground.mock.callCount(),
+      nodes: nodes.mock.callCount(),
+    });
+    const settle = (): void => {
+      ground.mock.resetCalls();
+      nodes.mock.resetCalls();
+    };
+    const frames = (times: readonly number[]): void => {
+      for (const at of times) {
+        nowMs = at;
+        world.frame(1);
+      }
+    };
+    try {
+      world.frame(2);
+
+      // The control: a swaying camera moves every frame, and the layers that
+      // are projected through it move with it.
+      settle();
+      frames([2_000, 6_500, 13_250]);
+      assert.deepEqual(repaints(), { ground: 3, nodes: 3 }, 'the sway repaints every frame');
+
+      // Reduced motion holds the sway (docs/ui-ux.md §11), and GameCanvas
+      // tells both painters. The eye comes to rest once, and then holds.
+      world.chart.setReducedMotion(true);
+      world.conn.setReducedMotion(true);
+      world.frame(1);
+      const revision = world.conn.viewRevision;
+      settle();
+      frames([13_250, 21_000, 34_500, 34_500]);
+      assert.equal(world.conn.viewRevision, revision, 'a still camera keeps its revision');
+      assert.deepEqual(repaints(), { ground: 0, nodes: 0 }, 'and the chart keeps both layers');
+
+      // A skip, not a freeze: one pan is one revision and one repaint.
+      world.conn.panBy(40, 0);
+      frames([40_000]);
+      assert.equal(world.conn.viewRevision, revision + 1, 'a pan is a change');
+      assert.deepEqual(repaints(), { ground: 1, nodes: 1 }, 'and repaints both once');
+      frames([41_000, 52_000]);
+      assert.deepEqual(repaints(), { ground: 1, nodes: 1 }, 'and only once');
+    } finally {
+      clock.mock.restore();
+      world.teardown();
+    }
+  });
 });

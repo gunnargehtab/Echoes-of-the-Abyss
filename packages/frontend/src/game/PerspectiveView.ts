@@ -42,6 +42,7 @@ import {
   LineBasicMaterial,
   LineLoop,
   LineSegments,
+  Matrix4,
   Mesh,
   MeshBasicMaterial,
   PerspectiveCamera,
@@ -560,6 +561,17 @@ export class PerspectiveView {
    * its static layers alone.
    */
   private cameraRevision = 0;
+  /**
+   * What the revision last counted: the applied camera and the CSS size
+   * `projectPoint` scales by. Compared rather than trusted, because every
+   * frame re-applies the camera for the sway's clock, and a bump per call
+   * repainted the chart's ground and nodes on every frame of a still camera
+   * (#1032). The width starts below any real one, so the first apply counts.
+   */
+  private readonly appliedWorld = new Matrix4();
+  private readonly appliedProjection = new Matrix4();
+  private appliedWidth = 0;
+  private appliedHeight = 0;
   private active = false;
   private frameHandle = 0;
   private lastFrameAt = 0;
@@ -2019,6 +2031,19 @@ export class PerspectiveView {
     this.camera.lookAt(look);
     this.applySway();
     this.camera.updateMatrixWorld();
+    const camera = this.camera;
+    if (
+      camera.matrixWorld.equals(this.appliedWorld) &&
+      camera.projectionMatrix.equals(this.appliedProjection) &&
+      this.viewWidth === this.appliedWidth &&
+      this.viewHeight === this.appliedHeight
+    ) {
+      return;
+    }
+    this.appliedWorld.copy(camera.matrixWorld);
+    this.appliedProjection.copy(camera.projectionMatrix);
+    this.appliedWidth = this.viewWidth;
+    this.appliedHeight = this.viewHeight;
     this.cameraRevision++;
   }
 
