@@ -558,8 +558,9 @@ sized to the root they band (`grownBarrel` `fit`), the Refinery's silo hoops hug
 sixteen-sided drums at 1.0 where 0.97 buried them, the Vent Tap's ember takes r 12 and its
 lamp housings the crown flat's shortfall as the Consortium's did, the Bower's bed marks
 are seated on its regenerated hull, and the Glider's tail knuckle moves 0.13 m aft to keep
-the stern at 27.5. Nine files fit a hair differently once their rounds moved: the Foundry
-is 1.1 % smaller in metres and the Veil 1.3, the rest under 0.6. Panels run a metre and a half to five: a Commune hull is few, large
+the stern at 27.5. Seven files fit a hair differently once their rounds moved — the Foundry
+is 1.1 % smaller in metres and the Veil 1.3, the rest under 0.6 — and two more now assert
+their fit. Panels run a metre and a half to five: a Commune hull is few, large
 parts — a leaf is one plate, a pod one orb, a fin one membrane — so its median part from
 above is bigger than its facet says. The two grown navies swap places between the facet
 column and the panel column, and that is the difference between a pod and a crab.
@@ -713,7 +714,8 @@ its 1,119: `node tools/hull-models/facets.mjs bathyarch` names no ring, and the 
 carries seven distinct counts a turn where it carried fifteen. The Commune's leaves nine of
 its 1,240: the six on the four tables and three pressed tubes no count settles on (the
 Commune paragraph), and the navy carries eighteen distinct counts a turn where it carried
-thirty-five, its rings from 4 m of radius up all sixteen.
+thirty-five, every ring from 4 m of radius up on sixteen a turn but the tables' and the
+part-turn arcs the measure reads a turn at a time.
 Outside the bands, before the panel pass: eight Consortium hulls (the five shared kinds, the Chorister
 and the Tender at 2.2–3.9 m — the Corvette's 2.3 was 2.2 once the facet pass thinned its
 drums — and the Beacon at 0.5) and five structures (the Vent Tap at 6.2 m, the Turret at
