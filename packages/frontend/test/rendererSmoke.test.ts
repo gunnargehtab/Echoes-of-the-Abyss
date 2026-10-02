@@ -963,6 +963,78 @@ describe('renderer smoke test: the conn view', () => {
     }
   });
 
+  it('turns the lamp halo on and off, says why when the view cannot draw it, and checks again after a context restore (#1001)', async () => {
+    type Probes = {
+      __perspectiveProbe: () => Record<string, unknown>;
+      __perspectiveHalo?: (on: boolean) => string;
+    };
+    const world = await boot();
+    try {
+      const probes = (globalThis as unknown as { window: Probes }).window;
+      assert.ok(probes.__perspectiveHalo, 'outside a production build the switch is there');
+      world.frame(2);
+      const off = probes.__perspectiveProbe();
+      assert.equal(off.halo, 'off');
+      assert.equal(off.haloBytes, 0, 'off holds nothing');
+      assert.equal(off.canvasStencilBits, 8, 'the canvas carries its stencil either way');
+      assert.equal(probes.__perspectiveHalo!(true), 'idle');
+      world.frame(2);
+      const on = probes.__perspectiveProbe();
+      // The canned match draws sprites, not models, so no lamp feeds a splat:
+      // the halo holds its targets and runs no pass.
+      assert.equal(on.halo, 'idle');
+      assert.deepEqual(on.passes, ['canvas']);
+      assert.equal(on.haloCalls, 0);
+      assert.equal(on.drawCalls, off.drawCalls, 'an idle halo adds no call');
+      // 17.25 bytes a drawing-buffer pixel and the instance buffer (gate 6).
+      const w = 1280;
+      const h = 720;
+      const levels = [2, 4, 8].reduce(
+        (sum, d) => sum + 2 * Math.ceil(w / d) * Math.ceil(h / d) * 8,
+        0
+      );
+      assert.equal(on.haloBytes, w * h * 12 + levels + 65_536);
+
+      // A lost context takes the targets; a restore re-runs the check, and
+      // a restored context without its stencil keeps the halo off.
+      const canvas = world.gl.domElement;
+      canvas.dispatchEvent({ type: 'webglcontextlost' });
+      assert.equal(probes.__perspectiveProbe().halo, 'off');
+      assert.equal(probes.__perspectiveProbe().haloBytes, 0);
+      world.gl.context.stencilBits = 0;
+      canvas.dispatchEvent({ type: 'webglcontextrestored' });
+      assert.equal(probes.__perspectiveProbe().halo, 'unavailable: no canvas stencil');
+      assert.equal(probes.__perspectiveProbe().canvasStencilBits, 0);
+      world.gl.context.stencilBits = 8;
+      canvas.dispatchEvent({ type: 'webglcontextlost' });
+      canvas.dispatchEvent({ type: 'webglcontextrestored' });
+      assert.equal(probes.__perspectiveProbe().halo, 'idle', 'back on once it can draw');
+      assert.equal(probes.__perspectiveHalo!(false), 'off');
+      canvas.dispatchEvent({ type: 'webglcontextlost' });
+      canvas.dispatchEvent({ type: 'webglcontextrestored' });
+      assert.equal(probes.__perspectiveProbe().halo, 'off', 'a halo asked off stays off');
+      assert.equal(probes.__perspectiveProbe().haloBytes, 0);
+    } finally {
+      world.teardown();
+    }
+    const probes = (globalThis as unknown as { window: Partial<Probes> }).window;
+    assert.equal(probes.__perspectiveHalo, undefined, 'the switch goes with the view');
+
+    // A view without the float colour target keeps the canvas pass alone.
+    const blind = await boot();
+    try {
+      blind.gl.extensionNames.delete('EXT_color_buffer_float');
+      const window = (globalThis as unknown as { window: Probes }).window;
+      assert.equal(window.__perspectiveHalo!(true), 'unavailable: no EXT_color_buffer_float');
+      blind.frame(2);
+      const reading = window.__perspectiveProbe();
+      assert.equal(reading.haloBytes, 0);
+      assert.deepEqual(reading.passes, ['canvas']);
+    } finally {
+      blind.teardown();
+    }
+  });
+
   it('times the frame on the GPU, every pass inside the bracket (gate 6, #1001)', async () => {
     const world = await boot({ gpu: { timer: { ns: 3_200_000, latency: 2 } } });
     try {

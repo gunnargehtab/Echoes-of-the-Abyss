@@ -57,6 +57,13 @@ example; do not install another rendering stack.
   exact for `MeshStandardMaterial` only: clearcoat or sheen attenuate emission first, yet
   a physical material passes an `instanceof MeshStandardMaterial` guard. It does nothing
   where three defines no `TONE_MAPPING`, and its comment says where.
+- **A lamp's halo follows its entity, not its export.** The lamp halo
+  (`lampHaloPass.ts`, fed by `haloSource.ts`) gives each own entity one energy from its
+  live SIG and shares it among its lamp sites by area times resting luminance, so never
+  retune a lamp's strength or area to change its halo. It never changes a lamp pixel: own
+  lamps mark the canvas stencil while it is on, and its screen composite skips them. Its
+  mechanics are a depth-only blit of the canvas depth, instanced splats into a half-float
+  source, a three-level half-float chain and that masked composite.
 - **Unlit layers stay off the curve.** A built-in material sets `toneMapped: false`, which
   `packages/frontend/test/modelLighting.test.ts` checks as flags over the canned match,
   not as pixels. A `ShaderMaterial` ends on `<colorspace_fragment>` without

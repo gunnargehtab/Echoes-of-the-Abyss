@@ -84,8 +84,9 @@ tools/render-stack #974's audit and camera pairs, kept runnable rather than
                    texture. capture.mjs is a run-game --steps module: four
                    held cameras with the HUD on, gate 6's call and triangle
                    limits asserted, the probe's GPU time required on a GPU
-                   and refused on a software rasteriser (#1001), and
-                   readings.json beside the frames; the run-game skill has
+                   and refused on a software rasteriser (#1001), HALO=on for
+                   the lamp halo, and readings.json beside the frames; the
+                   run-game skill has
                    the recipe. fog.mjs reads fully fogged seabed against the
                    backdrop (#1016), lamps.mjs own hulls quiet and loud
                    (gate 3), and halo.mjs what a lamp halo would work with:

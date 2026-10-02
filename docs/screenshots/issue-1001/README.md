@@ -202,6 +202,46 @@ writes `halo/route-cost-stencil.json`. The depth-only copy read 0.17 ms at 1440�
 0.27 ms at 2160×1350, against 0.15 and 0.29 ms without a stencil, the same within the
 spread between runs, and its depth check is identical.
 
+## The halo, built and off
+
+The lamp halo ([art-direction.md](../../art-direction.md), "Lamp halo — SPEC") is built and
+switched off; a development switch turns it on until its setting lands. `HALO=on` turns it
+on for `tools/render-stack/capture.mjs`. `halo-built/` holds a Ventfront capture each way at
+ratio 1 and 1.5 on the named GPU, unpaced, and paced home and close frames off and on.
+
+| Camera | Ratio | Calls, off → on | Triangles, off → on | Sites | Frame GPU ms, off → on | Frame interval ms, off → on |
+| --- | --- | --- | --- | --- | --- | --- |
+| home | 1 | 55 → 66 | 148290 → 148516 | 108 | 0.5 → 1.77 | 3.53 → 3.61 |
+| close | 1 | 54 → 65 | 148290 → 148516 | 108 | 0.62 → 1.59 | 3.1 → 3.28 |
+| low | 1 | 55 → 66 | 148290 → 148516 | 108 | 0.49 → 1.49 | 3.12 → 3.22 |
+| survey | 1 | 55 → 66 | 148290 → 148496 | 98 | 0.53 → 1.48 | 3.56 → 3.47 |
+| home | 1.5 | 55 → 66 | 148290 → 148516 | 108 | 0.57 → 2.49 | 3.43 → 4.35 |
+| close | 1.5 | 54 → 65 | 148290 → 148516 | 108 | 0.77 → 2.33 | 3.12 → 4.21 |
+| low | 1.5 | 55 → 66 | 148290 → 148516 | 108 | 0.65 → 1.95 | 3.28 → 3.71 |
+| survey | 1.5 | 55 → 66 | 148290 → 148496 | 98 | 0.65 → 1.84 | 3.49 → 3.84 |
+
+Calls and triangles are gate 6's allocation exactly: +11 calls, 2 × sites + 10 triangles,
+108 sites at Ventfront's opening. The halo holds 21.38 MiB at 1440×900 (gate 6's cap is
+21.4).
+
+**GPU time does not meet gate 6's line yet.** On − off frame
+GPU time is 0.95–1.27 ms at ratio 1 and 1.19–1.92 ms at 1.5, against the 0.40 and 0.75 ms
+gate 6 allows. The conn frame's own line fails with it: 1.48–1.77 ms on at ratio 1 and
+1.84–2.49 ms at 1.5, against 1.2 and 1.7 ms.
+
+The halo's own passes measured far less in earlier runs, before the nearest-point offset. On
+a bare page with no game the pass read 0.23–0.30 ms at 1440×900 across five runs, the stand-in
+route's figure; in the game, with the frame's timer opened after the canvas pass, its passes
+read 0.26 ms. The unpaced frame interval, which no timer semantics can inflate, splits the
+two. At ratio 1 it moves by −0.09 to +0.18 ms, inside the line; at 1.5 it rises by 0.35–1.09
+ms, past it at home and close (the table above). So the timer may overstate the halo, but at
+1.5 the frame really slows. What the extra timer time is was not settled: it is not CPU time
+inside the timed span (a 1 ms spin there read as 0.14 ms), not a second context's work (a busy
+one beside the bench changed nothing), not the lamp stencil marks and not the blur shader.
+The 0.23–0.30, 0.26 and 0.14 ms readings were console output from local instrumented builds,
+neither committed nor kept; the readings increment re-takes them with committed tools, and
+decides how gate 6 reads a multi-pass frame before the default can turn on.
+
 ## Related
 
 [graphics-standards.md](../../graphics-standards.md) gate 6 ·

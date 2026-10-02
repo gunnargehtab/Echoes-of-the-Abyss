@@ -66,3 +66,49 @@ export function capSites<T extends { energy: number }>(
   const kept = [...sites].sort((a, b) => b.energy - a.energy).slice(0, cap);
   return { kept, dropped: sites.length - cap };
 }
+
+/**
+ * The blur's half-kernel at a pixel ratio: σ = KERNEL_SIGMA_TEXELS × ratio in a
+ * level's texels, taps one texel apart out to at least 2.3σ, normalised over
+ * both sides. Stepping taps by the ratio instead would comb a level that is
+ * not yet blurred, so σ scales and the taps do not.
+ */
+export function blurWeights(pixelRatio: number): number[] {
+  const sigma = LAMP_HALO.KERNEL_SIGMA_TEXELS * pixelRatio;
+  const taps = Math.ceil(2.3 * sigma);
+  const raw = Array.from({ length: taps + 1 }, (_, i) => Math.exp(-(i * i) / (2 * sigma * sigma)));
+  const total = raw[0]! + 2 * raw.slice(1).reduce((a, b) => a + b, 0);
+  return raw.map((w) => w / total);
+}
+
+/**
+ * Each spread level's width as σ in drawing-buffer pixels: every level is a
+ * 2 × 2 box downsample of the one before it, then a blur at its own texel, so
+ * the widths compound, the box's variance included. At ratio 1 that is 3.42,
+ * 7.64 and 15.66 px, within 0.1 px of the SPEC's figures; derived here and
+ * stored nowhere.
+ */
+export function levelSigmasPx(pixelRatio: number): number[] {
+  const sigmas: number[] = [];
+  let variance = 0;
+  for (let level = 1; level <= LAMP_HALO.LEVEL_WEIGHTS.length; level++) {
+    const texel = 2 ** level;
+    // The box averages two texels of the level above, half this one apart.
+    variance += (texel / 4) ** 2 + (LAMP_HALO.KERNEL_SIGMA_TEXELS * pixelRatio * texel) ** 2;
+    sigmas.push(Math.sqrt(variance));
+  }
+  return sigmas;
+}
+
+/**
+ * The brightest the composited field could get from `lightPx2` (an entity's
+ * whole light in drawing-buffer px² of full ink) gathered at one pixel. Below
+ * the toe the entity draws no splat: it would composite to nothing.
+ */
+export function peakField(lightPx2: number, pixelRatio: number): number {
+  const sigmas = levelSigmasPx(pixelRatio);
+  return LAMP_HALO.LEVEL_WEIGHTS.reduce(
+    (sum, weight, k) => sum + (lightPx2 * weight) / (2 * Math.PI * sigmas[k]! ** 2),
+    0
+  );
+}
