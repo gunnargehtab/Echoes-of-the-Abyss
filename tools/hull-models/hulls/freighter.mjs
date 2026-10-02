@@ -80,6 +80,15 @@
  *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * and the pass re-cut what was off it: the ballast blisters and caps eight
+ * at 3.5 m, where this script drew twelve; the two stacks and their bands
+ * six at 2.4–2.6 m, where they were ten; the hinge rails and knuckles, the
+ * dog hubs and the four prop hubs six, where they were eight; the twelve
+ * dogging wheels six on a ring of six, where they were five on ten. The
+ * four prop shrouds' twelve at 4.5 m was the rule's already and is asked of
+ * it now. 210 parts and 4,744 triangles become 210 and 3,992.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';

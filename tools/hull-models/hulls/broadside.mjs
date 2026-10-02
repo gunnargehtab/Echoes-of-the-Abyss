@@ -127,6 +127,15 @@
  * for this hull there, beside the Beacon's `transducerDrum`. Coordinate
  * tables below are laid out as tables on purpose; `tools/**\/*.mjs` is
  * outside the repo's Prettier scope (package.json) precisely so they can be.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * and the pass re-cut what was off it: the casings, their bands, flanges
+ * and hoop lamps eight at 3–3.45 m, where `tubeCasings` drew sixteen; the
+ * breech and muzzle doors six at 2.75 m; the hubs, hinges and hatch six and
+ * the wheels six on a ring of six, where they were eight and six by twelve;
+ * the ballast blisters and caps six at 2.6 m and the prop shrouds eight at
+ * 3.4 m, where both were twelve; the prop hubs six. 177 parts and 5,260
+ * triangles become 177 and 3,420.
  */
 import { THREE, bothSides, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';

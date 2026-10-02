@@ -119,6 +119,17 @@
  * hyphenated names (`pressure-hull`, `end-cap-fore`) because `bandedHull`
  * is that model's builder and the names are the builder's; everything else
  * is named as the Tender and the Freighter name theirs.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * and the pass re-cut what was off it: the pressure body twelve at 4.5 m,
+ * its bands and caps twelve and the caps' cores eight, where this script
+ * drew sixteen and twelve; the transducer drum, its heads, hoops and lit
+ * hoops fourteen at 5.5–6.1 m, where it drew sixteen; the ballast blisters
+ * and their caps six at 2 m, where they were twelve, laid with a plate on
+ * the crown and so lifted 0.17 m to meet the box's underside as the vertex
+ * did; the prop shroud eight and its hub six; the two hatches and their
+ * wheels six, the mast six and the mast lamp an orb of six by three. 143
+ * parts and 3,756 triangles become 143 and 3,148.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -146,9 +157,9 @@ bathyarch.bandedHull(
   root,
   { black, grey, brown: rust },
   {
-    hull: { r: 4.5, length: 62, facets: 16 },
+    hull: { r: 4.5, length: 62 },
     bands: { r: 4.75, width: 1.2, x: [-22, -8, 8, 22] },
-    caps: { x: 31.5, r: 4.7, width: 1, core: { x: 32.3, r: 3.2, width: 1.2, facets: 12 } },
+    caps: { x: 31.5, r: 4.7, width: 1, core: { x: 32.3, r: 3.2, width: 1.2 } },
     bolts: { x: 32.2, radius: 4.0, count: 12, r: 0.28, h: 0.5 },
   }
 );
@@ -223,13 +234,17 @@ bathyarch.flankPlates(
 );
 
 // Ballast blisters low on both flanks, in the armpit between the box's
-// underside and the pressure drum, capped fore and aft.
+// underside and the pressure drum, capped fore and aft. The blister is the
+// rule's six-plate drum since #919 (bathyarch.mjs `cut`; it was twelve),
+// laid with a plate on its crown, so its axis sits 0.17 m higher than the
+// twelve-gon's did for the crown to meet the box's underside at y 1.5 as
+// the vertex did; its inboard corner still meets the pressure drum.
 bathyarch.ballastBlisters(
   root,
   { grey, rust },
   {
     x: -6,
-    y: -0.4,
+    y: -0.23,
     z: 6.4,
     r: 2,
     length: 36,
@@ -264,7 +279,6 @@ bathyarch.transducerDrum(
     at: [0, 9.5, 0],
     r: 5.5,
     length: 26,
-    facets: 16,
     cradle: {
       bed: { size: [15, 0.5, 15], y: 7.25 },
       chock: { size: [2.4, 3.2, 16], x: 5.6, y: 8.6 },

@@ -41,6 +41,15 @@
  *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * asked at this file's scale, and the pass re-cut what was off it: the
+ * ballast blisters and caps eight at 3 m, where the export had twelve; the
+ * prop shrouds ten at 4.1 m, where they were twelve; the two stacks and
+ * their bands six at 1.8–1.9 m, where they were ten; the derrick masts and
+ * booms, the gas bottles, the pipe runs, the pump riser and the prop hubs
+ * six, where they were eight. 100 parts and 1,960 triangles become 100 and
+ * 1,680.
  */
 import { THREE, bothSides, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -70,6 +79,9 @@ const flood = bathyarch.ink.amberFlood();
 const root = new THREE.Group();
 root.name = 'consortium_tender';
 root.scale.setScalar(L / DRAWN);
+// The Klaxon's facet rule at this file's scale (bathyarch.mjs `cut`, #919):
+// the numbers below are the export's and the rule is a chord in metres.
+const cut = bathyarch.cut(L / DRAWN);
 
 // The box hull: a 9 m plan with a 0.6 m chamfer, notched at the stern between
 // the prop tunnels, and the deck plate a metre or two inside its rim.
@@ -86,6 +98,7 @@ bathyarch.boxHull(root, { black, grey, rust }, {
 });
 bathyarch.ballastBlisters(root, { grey, rust }, {
   x: -6, y: -3, z: 17.5, r: 3, length: 46, caps: { length: 2, fore: 18, aft: -30, tipR: 2.4 },
+  cut,
 });
 
 // The workshop deckhouse amidships and its fittings.
@@ -117,6 +130,7 @@ bathyarch.derrickRig(root, { grey, amber, black, lampM }, {
   fall: { x: 29, y: 9.5, z: 6, r: 0.2, length: 9 },
   hook: { y: 5.5, size: [1.6, 1.6, 1.6] },
   lamp: { x: 10.2, y: 18.2, z: 13, size: [1.8, 1.2, 1.8] },
+  cut,
 });
 
 // Deck stores aft of the workshop: the plate rack to starboard, the bottles to
@@ -125,18 +139,19 @@ bathyarch.spareRack(root, { grey, rust }, {
   x: -26, z: 9,
   plates: [[4.6, [9, 0.9, 6], false], [5.5, [9, 0.9, 5], true], [6.4, [9, 0.9, 4], false]],
 });
-bathyarch.gasBottles(root, amber, { x: -24, y: 6.3, z: -10, count: 4, pitch: 2.4, r: 0.9, h: 4.5 });
-bathyarch.pipeRuns(root, rust, { x: -5, y: 4.7, z: 16.5, r: 0.6, length: 50 });
+bathyarch.gasBottles(root, amber, { x: -24, y: 6.3, z: -10, count: 4, pitch: 2.4, r: 0.9, h: 4.5, cut });
+bathyarch.pipeRuns(root, rust, { x: -5, y: 4.7, z: 16.5, r: 0.6, length: 50, cut });
 bathyarch.pumpHouse(root, { grey, rust }, {
   house: { at: [-28, 5.9, -3], size: [6, 3.5, 6] },
   riser: { at: [-28, 9.5, -3], r: 0.8, h: 7 },
+  cut,
 });
 
 // Two stacks side by side, then their two bands — the file's order.
-bathyarch.stack(root, black, { name: 'stack_a', at: [-20, 15, 3], r: 1.8, rTop: 1.5, height: 8 });
-bathyarch.stack(root, black, { name: 'stack_b', at: [-20, 15, -3], r: 1.8, rTop: 1.5, height: 8 });
-bathyarch.stackBand(root, amber, { name: 'stack_a_band', at: [-20, 17, 3], r: 1.9, h: 0.8 });
-bathyarch.stackBand(root, amber, { name: 'stack_b_band', at: [-20, 17, -3], r: 1.9, h: 0.8 });
+bathyarch.stack(root, black, { name: 'stack_a', at: [-20, 15, 3], r: 1.8, rTop: 1.5, height: 8, cut });
+bathyarch.stack(root, black, { name: 'stack_b', at: [-20, 15, -3], r: 1.8, rTop: 1.5, height: 8, cut });
+bathyarch.stackBand(root, amber, { name: 'stack_a_band', at: [-20, 17, 3], r: 1.9, h: 0.8, cut });
+bathyarch.stackBand(root, amber, { name: 'stack_b_band', at: [-20, 17, -3], r: 1.9, h: 0.8, cut });
 
 // A prop tunnel a side, notched into the stern, each with its three blades
 // showing and its engine vent over it: a grating on the deck (top 4.7) at
@@ -147,6 +162,7 @@ bothSides((side, sgn) =>
     name: side, at: [-40, -2, sgn * 10], r: 4.2, length: 5, hub: { r: 1.2, length: 5.5 },
     blades: { count: 3, dx: -0.5, size: [1, 3.4, 0.6] },
     vent: { at: [-35.5, 4.85, sgn * 11.5], size: [1.5, 0.3, 6] },
+    cut,
   })
 );
 

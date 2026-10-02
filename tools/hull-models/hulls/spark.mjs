@@ -107,6 +107,15 @@
  * Gantry's berth. Coordinate tables below are laid out as tables on
  * purpose; `tools/**\/*.mjs` is outside the repo's Prettier scope
  * (package.json) precisely so they can be.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * and the pass re-cut what was off it: the cell, its bands and heads six
+ * at 2.1–2.25 m, where `plantCylinder` drew sixteen, its saddles drawn up
+ * to the six-plate drum's keel; the gun's ring, drum, barrel and muzzle
+ * six, where they were ten and twelve; the screw's shaft and hub six, where
+ * they were eight; the four lifting eyes six on a ring of six, where they
+ * were five on ten. The nose wedge stays the navy's square. 61 parts and
+ * 1,568 triangles become 61 and 1,120.
  */
 import { THREE, exportGlb, metreTrue } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';

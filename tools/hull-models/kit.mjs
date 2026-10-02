@@ -2200,13 +2200,27 @@ export function reactorBed(root, { holdfast, slab, kerb, lamp }, opts = {}) {
   // by key as `ventWellhead`'s are.
   const pad = { r: 34, rTop: 30.5, y: 2.2, t: 4.4, facets: 8, phase: Math.PI / 8, ...opts.pad };
   const rim = { r: 29.6, t: 1, radial: 5, facets: 16, y: 4.4, ...opts.rim };
-  const {
-    // Phase 0, so a light sits on each sixth from +X: the three arms leave
-    // the kerb clear (a boom starts at 30 m and the lights are at 29.6), but
-    // the outflow trunk crosses it, and every navy runs that out on the same
-    // bearing — the gap at −30°, which is halfway between two lights here.
-    lights = { count: 6, phase: 0, r: 29.6, y: 5.6, size: [3.2, 0.5, 1.8] },
-  } = opts;
+  // Phase 0, so a light sits on each sixth from +X: the three arms leave
+  // the kerb clear (a boom starts at 30 m and the lights are at 29.6), but
+  // the outflow trunk crosses it, and every navy runs that out on the same
+  // bearing — the gap at −30°, which is halfway between two lights here.
+  // `on` names the kerb — `'slab_kerb'` — for a navy whose kerb count puts
+  // no vertex under a light: the files' sixteen-gon carries a crest at
+  // 22.5° steps and every light at a sixth of a turn sits on or beside one,
+  // but the Klaxon's fourteen (#919) has a chord's middle under four of the
+  // six, 0.48 m below the station. Named, each light is dropped onto the
+  // kerb's top under its own station and kept level on its bearing (`seat`,
+  // `drop`), bedding into the tube's shoulder where the kerb is lower rather
+  // than tilting with it; unnamed, the rank is laid at `y` as every file has it.
+  const lights = {
+    count: 6,
+    phase: 0,
+    r: 29.6,
+    y: 5.6,
+    size: [3.2, 0.5, 1.8],
+    on: null,
+    ...opts.lights,
+  };
   add(
     root,
     'holdfast_mat',
@@ -2229,13 +2243,13 @@ export function reactorBed(root, { holdfast, slab, kerb, lamp }, opts = {}) {
     [0, rim.y, 0],
     [Math.PI / 2, 0, 0]
   );
-  radialSeries(lights, (a, i) =>
-    add(root, `slab_run_light_${i}`, box(...lights.size), lamp, polar(a, lights.r, lights.y), [
-      0,
-      -a,
-      0,
-    ])
-  );
+  radialSeries(lights, (a, i) => {
+    const station = polar(a, lights.r, lights.y);
+    const at = lights.on
+      ? seat(root, lights.on, station, { stand: lights.size[1] / 2, drop: true }).at
+      : station;
+    add(root, `slab_run_light_${i}`, box(...lights.size), lamp, at, [0, -a, 0]);
+  });
 }
 
 /**

@@ -51,6 +51,15 @@
  * with no turned box overhanging either end, and a unit off centre — built
  * here metre-true at 50 m, centred on its length, the axis at y = 0
  * (kit.mjs `metreTrue`).
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * asked at this file's scale, and the pass re-cut what was off it: the
+ * outer cans and their caps eight at 2.8 m and the middle can and its caps
+ * ten at 3.6, where the export had twelve, and the prop shroud six at 2 m,
+ * where it had ten. The crown rivets come down with the crown — a plate's
+ * middle at eight and ten where twelve had a vertex (`cans`, `crownOnX`)
+ * — 0.03 and 0.07 units. The ram, the hub, the gun and the keel pipes were
+ * six and stay six. 46 parts and 952 triangles become 46 and 816.
  */
 import { THREE, add, box, bothSides, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -58,6 +67,10 @@ import * as bathyarch from '../factions/bathyarch.mjs';
 const L = 50;
 const DRAWN = 64;
 const DATUM = 0;
+// The Klaxon's facet rule at this file's scale (bathyarch.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres.
+const cut = bathyarch.cut(L / DRAWN);
 
 const black = bathyarch.ink.hullBlack();
 const rust = bathyarch.ink.oxideRust();
@@ -83,6 +96,7 @@ bathyarch.cans(
     ],
     cap: { length: 1.2, tip: 0.85, proud: 0.4 },
     rivet: { size: [0.6, 0.36, 0.6], proud: 0.2 },
+    cut,
   }
 );
 
@@ -95,16 +109,17 @@ bathyarch.keelPipes(root, rust, {
     ['pipe_s', 0.5, 34, [-1, 2.6, 3.8]],
     ['pipe_p', 0.5, 26, [3, 2.2, -4]],
   ],
+  cut,
 });
 
 // The bow block and its ram; the stern block and the screw in its shroud.
 bar('bow_block', black, [6, 5, 6], [26, 0, 0]);
-bathyarch.ramCone(root, grey, { r: 2.4, length: 5, at: [30.5, 0, 0] });
+bathyarch.ramCone(root, grey, { r: 2.4, length: 5, at: [30.5, 0, 0], cut });
 bar('stern_block', black, [5, 4.5, 5], [-26, 0, 0]);
 bathyarch.tailScrew(
   root,
   { grey, black },
-  { at: [-29.5, -0.5, 0], shroud: { r: 2.6, length: 2.5 }, hub: { r: 0.8, length: 3 } }
+  { at: [-29.5, -0.5, 0], shroud: { r: 2.6, length: 2.5 }, hub: { r: 0.8, length: 3 }, cut }
 );
 
 // "One small dorsal spine-gun off the centreline", to port; the hazard
@@ -112,7 +127,7 @@ bathyarch.tailScrew(
 bathyarch.spineGun(
   root,
   { grey, black },
-  { mount: { size: [3, 1.6, 3], at: [16, 5.2, -2] }, gun: { radii: [0.5, 0.6], length: 9, at: [21, 5.6, -2] } }
+  { mount: { size: [3, 1.6, 3], at: [16, 5.2, -2] }, gun: { radii: [0.5, 0.6], length: 9, at: [21, 5.6, -2] }, cut }
 );
 bar('hazard_stripe', amber, [12, 0.3, 1], [-2, 5.05, 0]);
 bar('patch', rust, [5, 0.4, 4], [-14, 3.7, 1.5]);

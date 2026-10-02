@@ -56,6 +56,18 @@
  * the turned tubes' boxes, which is why the figure moved from 3.8894 when
  * the tubes turned onto the bearing — the ground at y = 0. Every number
  * below is the export's, through kit.mjs `drawn`.
+ *
+ * FACETS (#919). The counts in the paragraphs above are the export's; the
+ * Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`), asked at this file's
+ * scale, and the pass re-cut what was off it: the raft fourteen at 32 m,
+ * where the export had eight; the mount drum fourteen at 21 m and its ring
+ * fourteen on a tube of six, where they were nine and five by twelve; the
+ * breech fourteen at 6.1 m, the jacket and brake twelve at 4.7–4.9 and the
+ * barrel ten at 4, where all were eight, the recoil cylinder six as it was;
+ * the six rivets and the work lamp orbs of six by three, where they were
+ * five by four and six by four. `DRAWN` holds: no re-cut tube reaches past
+ * the box the eight-sided ones measured. 30 parts and 796 triangles become
+ * 30 and 904.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -63,6 +75,10 @@ import * as bathyarch from '../factions/bathyarch.mjs';
 const L = 120;
 const DRAWN = 3.9425;
 const BEARING = 0.5;
+// The Klaxon's facet rule at this file's scale (bathyarch.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres.
+const cut = bathyarch.cut(L / DRAWN);
 
 // The three claddings were this turret's own `structureInk` until #888 —
 // the hulls' hexes at 0.3/0.45, 0.3/0.52 and 0.1/0.75, an earlier pass's
@@ -90,6 +106,7 @@ bathyarch.anchoredRaft(
     height: 0.35,
     foot: { radius: 1.05, size: [0.34, 0.2, 0.5] },
     bolt: { radius: 1.18, r: 0.05, height: 0.26 },
+    cut,
   }
 );
 
@@ -101,10 +118,10 @@ bathyarch.mountDrum(
     at: [0, 0.6, 0],
     r: [0.62, 0.7],
     height: 0.5,
-    facets: 9,
-    ring: { r: 0.64, t: 0.06, y: 0.83, facets: 12 },
-    rivets: { count: 6, from: 0.2, radius: 0.67, y: 0.6, r: 0.045, segments: [5, 4] },
+    ring: { r: 0.64, t: 0.06, y: 0.83 },
+    rivets: { count: 6, from: 0.2, radius: 0.67, y: 0.6, r: 0.045 },
     patch: { size: [0.34, 0.3, 0.05], at: [-0.42, 0.58, 0.45], rot: [0, 0.85, 0] },
+    cut,
   }
 );
 
@@ -135,11 +152,12 @@ bathyarch.heavyBarrel(
     brake: { r: [0.16, 0.14], length: 0.3, along: 3.05, y: 0.982 },
     recoil: { r: [0.06, 0.06], length: 0.9, along: 0.95, y: 0.93 },
     counterweight: { size: [0.45, 0.4, 0.35], along: -0.6, y: 1.05 },
+    cut,
   }
 );
 
 // The feed, from the drum's foot up toward the housing.
-bathyarch.feedPipe(root, rust, { from: [0.5, 0.4, -0.45], to: [0.2, 0.95, -0.25], r: 0.05 });
+bathyarch.feedPipe(root, rust, { from: [0.5, 0.4, -0.45], to: [0.2, 0.95, -0.25], r: 0.05, cut });
 
 // The whole resting light budget: one work lamp on its bracket, on the raft
 // where the top-down bake can see it — the approved turret's emissive map is
@@ -158,6 +176,7 @@ bathyarch.baseLamp(
     r: 0.06,
     at: [0.64, 0.42, 0.65],
     bracket: { at: [0.59, 0.32, 0.59], size: [0.08, 0.14, 0.06] },
+    cut,
   }
 );
 

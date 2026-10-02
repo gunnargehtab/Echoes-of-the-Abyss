@@ -34,6 +34,14 @@
  * half its radius in (`domes` `on`); the strip is dropped onto the cap at
  * its station (kit.mjs `seat`). Same names, sizes and material; `diff.mjs`
  * lists the two and nothing else.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * asked at this file's scale, and the pass re-cut what was off it: the
+ * pressure hull and its cap ten at 3.9 m, where the export had twenty; the
+ * prop shroud eight at 3.4 m on a tube of six, where it was twenty on ten,
+ * and its hub six, where it was twelve; the two whips six, where they were
+ * eight; the three nav domes orbs of six by three at 0.9 m, where they were
+ * eight by six. 45 parts and 1,348 triangles become 45 and 756.
  */
 import { THREE, box, part, drawn, seat, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -41,6 +49,10 @@ import * as bathyarch from '../factions/bathyarch.mjs';
 const L = 60;
 const DRAWN = 23.2;
 const DATUM = 2.6;
+// The Klaxon's facet rule at this file's scale (bathyarch.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres.
+const cut = bathyarch.cut(L / DRAWN);
 
 // `scoutInk` until #888: the same four claddings, and an `amber_lamp` that
 // was the token through and through. The base is the navy's near-black now
@@ -64,12 +76,14 @@ bathyarch.drum(root, black, {
   name: 'pressure_hull',
   radii: [1.5, 1.5],
   length: 15,
+  cut,
   ...drawn([0, 2.6, 0], ALONG_KEEL),
 });
 bathyarch.drum(root, black, {
   name: 'hull_cap_aft',
   radii: [1.5, 0.95],
   length: 1.6,
+  cut,
   ...drawn([0, 2.6, -8.3], ALONG_KEEL),
 });
 bathyarch.squareWedge(root, grey, { radii: [0.45, 1.55], length: 4.6, ...drawn([0, 2.6, 9.7]) });
@@ -88,6 +102,7 @@ bathyarch.whips(root, grey, {
     ['whip_a', 0.06, 2.8, drawn([0.7, 6.9, 5.4])],
     ['whip_b', 0.05, 2, drawn([-0.8, 6.4, 6.6])],
   ],
+  cut,
 });
 
 // A spine plate along the back and a skid under the keel.
@@ -112,12 +127,12 @@ bathyarch.flankRivets(root, black, {
 
 // The screw: a shroud ring, a hub tapering forward, and three blades fanned
 // a third of a turn apart.
-bathyarch.shroud(root, grey, { R: 1.05, tube: 0.28, ...drawn([0, 2.6, -9.4]) });
+bathyarch.shroud(root, grey, { R: 1.05, tube: 0.28, cut, ...drawn([0, 2.6, -9.4]) });
 bathyarch.drum(root, black, {
   name: 'prop_hub',
   radii: [0.25, 0.5],
   length: 1.2,
-  facets: 12,
+  cut,
   ...drawn([0, 2.6, -9.4], ALONG_KEEL),
 });
 bathyarch.screwBlades(root, black, { size: [0.14, 1.8, 0.5], at: drawn([0, 2.6, -9.5]).at });
@@ -135,6 +150,7 @@ bar('stencil_fin', amber, [0.27, 0.5, 0.5], [0, 5.2, -7.3]);
 // side, a strip on the spine and one across the stern.
 bathyarch.domes(root, lamp, {
   r: 0.34,
+  cut,
   domes: [
     ['nav_dome_mast', { ...drawn([0, 5.9, 6.2]), on: ['sensor_brow', 'sensor_head'] }],
     ['nav_dome_p', drawn([1.55, 3.3, 3.2])],

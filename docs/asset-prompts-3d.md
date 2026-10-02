@@ -454,29 +454,45 @@ the six-plate drum a small vessel is. Six is the least a drum reads as a drum ra
 box, and the Klaxon's boxes are boxes. Fourteen is the ceiling, the even step under the
 Directorate's fifteen so the ladder holds at the rim; it was sixteen, the turret ring's own
 count, until the Commune's ceiling came down for gate 6 ("What the rule costs", below). A
-fourteen-gon is still a polygon at the rim. The move puts eleven rings off the rule that
+fourteen-gon is still a polygon at the rim. The move put eleven rings off the rule that
 sixteen kept — the Bulwark's turret ring, the Derrick's barbette ring, the Beacon's four drum
 hoops, the Bio-reactor's holdfast mat and slab kerb and the Vent-tap's apron, clamp ring and
-manifold ring — and the pass brings them to fourteen with the rest. The approved drums above
-them are the shared kinds' pressure vessels — the
+manifold ring — and the pass brought them to fourteen with the rest. The approved drums
+above them were the shared kinds' pressure vessels — the
 Corvette's and the Cruiser's cylinders and caps at twenty-eight on 3.5–4.4 m of radius, the
 Light Scout's hull and shroud at twenty — their ballast drums at eighteen and twenty, the
 Corvette's and the Cruiser's shrouds and the Derrick's deck scuff at twenty-four, the
-Foundry's tanks at eighteen and the Bastion's dome ribs at thirty-six, every one of them
-the pass's to bring to fourteen or under. Plates go on in pairs, so the step is two: on an
+Foundry's tanks at eighteen and the Bastion's dome ribs at thirty-six, and the pass brought
+every one of them to fourteen or under. Plates go on in pairs, so the step is two: on an
 even count the crown and the keel are alike — both the middle of a plate at 6, 10 and 14,
 both a seam at 8 and 12 —
 and the two flanks mirror; on an odd count neither is the middle of anything and the drum
-reads as leaning, which is the Directorate's language and not this one. The hulls' drums
-carry even counts and no odd one — 6 to 16 on the Bulwark and the Tender (the Bulwark 8,
-10, 12 and 16; the Tender 6 to 12), 18 to 28 on the shared kinds' vessels and the Derrick's
-scuff; the odd counts are the r184 structure passes' — nine on the Bastion's ballast
-drums, the Refinery's silos, caps and ballast and the Turret's mount drum, seven on the
-Refinery's crusher stack — and a few five-sided wheel tubes and cables under 0.2 m of
-radius. The one section is four, a square: it keeps the wedge noses of the Spark and the
-shared kinds (`kit.mjs` `cyl`, "the Klaxon's nose") and five cables on the Gantry, the
-Bastion and the Slipway, which at 0.3–1 m of radius read the same at four as at six.
-Panels run from three-quarters of a metre to two. A rivet head reads 0.6–0.8 m from above
+reads as leaning, which is the Directorate's language and not this one. Until the pass the
+hulls' drums carried even counts and no odd one — 6 to 16 on the Bulwark and the Tender
+(the Bulwark 8, 10, 12 and 16; the Tender 6 to 12), 18 to 28 on the shared kinds' vessels
+and the Derrick's scuff; the odd counts were the r184 structure passes' — nine on the
+Bastion's ballast drums, the Refinery's silos, caps and ballast and the Turret's mount
+drum, seven on the Refinery's crusher stack — and a few five-sided wheel tubes and cables
+under 0.2 m of radius. The one section is four, a square: it keeps the wedge noses of the
+Spark and the shared kinds (`kit.mjs` `cyl`, "the Klaxon's nose") and five cables on the
+Gantry, the Bastion and the Slipway, which at 0.3–1 m of radius read the same at four as at
+six. What the pass moved besides a count, it moved for a plate where a vertex had been:
+a six-plate drum laid along a keel carries a plate on its crown and its keel, an apothem
+in from where a twelve-gon's vertex reached, so the Beacon's and the Caisson's ballast
+blisters rose 0.17 and 0.27 m to meet the box over them, the Caisson's and the Spark's
+plant saddles are drawn up to their drum's keel, the Furnace's pipe runs lie 0.07 m lower
+on its deck and its valve hubs start as much further aft on their header, the Gantry's
+gate hinge lies against the gate by its plate, and the Chorister's crown rivets came down
+with the crown. On the Bastion the fourteen-sided skirt's skin sits up to 3.5 m from the
+ten-gon's, so all ten portholes are seated on it (five were, since #907) and the seventh
+is re-cut 0.4 rad round the skirt, since seated at its own station it stood 5 m into a
+ballast tank; its six ribs, seven segments over the half turn, are set out by the sag of
+such a chord, 0.063 of its radius, so each stands off the dome what the file's did. On
+the Bio-reactor the six run lights, a sixth of a turn apart, are dropped onto the
+fourteen-sided kerb, which has a chord's middle under four of them; on the Vent Tap the
+ember is drawn at the rim's own 12 to rest in the fourteen-sided mouth, the Order's answer
+on its tap. The Bastion's crane cable and the Gantry's and the Slipway's kit cables keep
+their four. Panels run from three-quarters of a metre to two. A rivet head reads 0.6–0.8 m from above
 and a cable or a dog wheel less, and the Klaxon rivets its plates rather than building a
 hull out of rivets, so a median part under three-quarters of a metre is a hull of fittings
 and no plate; and a plate two metres on a side is the largest a patch is before a seam
@@ -614,7 +630,7 @@ on a 32 × 32-cell map, 32,768 triangles (`packages/frontend/src/game/perspectiv
 33 k), so the own force — five hulls and a dozen structures — has about 112 k, and an orb's
 triangles go as the square of its count. Every round part rebuilt with its own constructor
 at the count the rule gives it, the table costs: Consortium hulls 53.3 k → 40.9 k and
-structures 16.6 k → 19.5 k; Commune hulls 47.6 k → 47.8 k and structures 35.2 k → 62.4 k;
+structures 16.6 k → 19.5 k, the Consortium's as built since its pass; Commune hulls 47.6 k → 47.8 k and structures 35.2 k → 62.4 k;
 Directorate hulls 30.0 k → 33.5 k and structures 26.6 k → 32.8 k; Order hulls 9.9 k → 8.0 k
 and structures 15.8 k → 12.1 k, the Order's as built since its pass, where this rebuild had
 said 12.4 k before the pass cut its pipes, stacks and throat drums as hexagons; the fourteen
@@ -651,7 +667,9 @@ the pass leaves), 935 of the Directorate's 1,477 (516 of the 681 on hulls; its R
 rebuilt in #951), and 251 of the Order's 616, fourteen of them on hulls, since an Order hull
 is sections almost through. The Order's pass leaves two of its 616, neither on a hull: the
 Sentinel Turret's two pods' caps, a capsule's meridian at 5.1 m, where the rule's share of a
-half turn is five and a capsule draws an even count.
+half turn is five and a capsule draws an even count. The Consortium's pass leaves none of
+its 1,119: `node tools/hull-models/facets.mjs bathyarch` names no ring, and the navy
+carries seven distinct counts a turn where it carried fifteen.
 Outside the bands: eight Consortium hulls (the five shared kinds, the Chorister and the
 Tender at 2.3–3.9 m, and the Beacon at 0.5) and five structures; two Commune hulls (the
 Bower at 0.8 m, the Submersible at 7.3) and three structures; three Directorate hulls (the

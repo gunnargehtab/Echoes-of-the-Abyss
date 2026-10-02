@@ -70,6 +70,14 @@
  * end — the hull axis at y = 4.5, the barge hull's; built here metre-true at
  * 75 m along +X, centred on its length, the axis at y = 0. Every number
  * below is the export's, through kit.mjs `drawn`.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * asked at this file's scale, and the pass re-cut what was off it: the
+ * ballast blisters and caps six at 1.8 m, where the export had twenty; the
+ * dredge hub six at 1.2 m, where it had ten; the stack and its band, the
+ * pipes, risers, crusher vents and mast six, where they were eight to
+ * twelve. The dredge wheel's twelve at 4.6 m was the rule's already and is
+ * asked of it now. 122 parts and 2,080 triangles become 122 and 1,672.
  */
 import { THREE, box, part, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -77,6 +85,10 @@ import * as bathyarch from '../factions/bathyarch.mjs';
 const L = 75;
 const DRAWN = 69.11;
 const DATUM = 4.5;
+// The Klaxon's facet rule at this file's scale (bathyarch.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres.
+const cut = bathyarch.cut(L / DRAWN);
 
 // `scoutInk` until #888: the same four claddings, and an `amber_lamp` that
 // was the token through and through. The base is the navy's near-black now
@@ -131,7 +143,7 @@ bathyarch.ballastPair(
     z: -8,
     r: 1.7,
     length: 34,
-    facets: 20,
+    cut,
     cap: { z: 10, length: 2, tipR: 1 },
     straps: { size: [0.5, 4.4, 0.9], y: 5.2, z: [-1, -17] },
   }
@@ -147,6 +159,7 @@ bathyarch.bucketWheel(
     wheel: { r: 4.2, width: 3.4 },
     hub: { r: 1.1, width: 4.4 },
     buckets: { count: 8, r: 4.6, size: [2.6, 1.5, 1.7] },
+    cut,
   }
 );
 bar('dredge_arm_p', grey, [1.1, 1.6, 9], [2.2, 5.2, 25], [-0.25, 0, 0]);
@@ -173,14 +186,14 @@ bathyarch.drum(root, rust, {
   name: 'crusher_vent_a',
   radii: [0.5, 0.5],
   length: 2.6,
-  facets: 10,
+  cut,
   ...drawn([2.8, 16.2, 5]),
 });
 bathyarch.drum(root, black, {
   name: 'crusher_vent_b',
   radii: [0.7, 0.7],
   length: 3.4,
-  facets: 10,
+  cut,
   ...drawn([-2.6, 16.4, 7.5]),
 });
 bar('crusher_stencil', amber, [2.6, 0.9, 0.1], [0, 12.6, 10.02]);
@@ -194,17 +207,17 @@ bathyarch.drum(root, rust, {
   name: 'stack',
   radii: [0.9, 1.1],
   length: 5,
-  facets: 12,
+  cut,
   ...drawn([2.4, 14, -32.5]),
 });
 bathyarch.drum(root, amber, {
   name: 'stack_band',
   radii: [1, 1],
   length: 0.6,
-  facets: 12,
+  cut,
   ...drawn([2.4, 15.6, -32.5]),
 });
-bathyarch.whips(root, grey, { whips: [['mast', 0.18, 3.6, drawn([-1.8, 16.5, -30.5])]] });
+bathyarch.whips(root, grey, { whips: [['mast', 0.18, 3.6, drawn([-1.8, 16.5, -30.5])]], cut });
 bar('mast_lamp', lamp, [0.5, 0.5, 0.5], [-1.8, 18.5, -30.5]);
 
 // A pipe a side along the deck edge in its own plate, and a riser off each
@@ -213,28 +226,28 @@ bathyarch.drum(root, rust, {
   name: 'pipe_p',
   radii: [0.4, 0.4],
   length: 40,
-  facets: 12,
+  cut,
   ...drawn([9.4, 8.7, -6], ALONG_KEEL),
 });
 bathyarch.drum(root, black, {
   name: 'pipe_s',
   radii: [0.4, 0.4],
   length: 40,
-  facets: 12,
+  cut,
   ...drawn([-9.4, 8.7, -6], ALONG_KEEL),
 });
 bathyarch.drum(root, rust, {
   name: 'pipe_riser_p',
   radii: [0.35, 0.35],
   length: 3,
-  facets: 10,
+  cut,
   ...drawn([9.4, 10, 6]),
 });
 bathyarch.drum(root, black, {
   name: 'pipe_riser_s',
   radii: [0.35, 0.35],
   length: 3,
-  facets: 10,
+  cut,
   ...drawn([-9.4, 10, -14]),
 });
 

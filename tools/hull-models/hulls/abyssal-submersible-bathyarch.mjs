@@ -84,6 +84,17 @@
  * units long — the hub's after face to the viewport's — with no turned box
  * overhanging either end; built here metre-true at 95 m, centred on its
  * length, the axis at y = 0 (kit.mjs `metreTrue`).
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * asked at this file's scale, and the pass re-cut what was off it: the end
+ * caps' cores fourteen at 9.5 m, where the file had twelve; the ballast
+ * tanks, their caps and straps fourteen at 5.5–6.2 m, where it had ten; the
+ * tower's dome light, the two masts, the pipework, the shoulder pins and
+ * the elbows six at 0.9–2.6 m, where it had eight; the prop shroud's ring
+ * fourteen at 10 m on a tube of six, where it had twelve on six; the aft
+ * beacon six. The fourteen-sided pressure hull, its bands and caps were
+ * the rule's already and are asked of it now. 121 parts and 3,008
+ * triangles become 121 and 3,120.
  */
 import { THREE, add, box, hex, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -91,6 +102,10 @@ import * as bathyarch from '../factions/bathyarch.mjs';
 const L = 95;
 const DRAWN = 7.19;
 const DATUM = 0;
+// The Klaxon's facet rule at this file's scale (bathyarch.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres.
+const cut = bathyarch.cut(L / DRAWN);
 
 const black = bathyarch.ink.hullBlack();
 const grey = bathyarch.ink.ironGrey();
@@ -107,10 +122,11 @@ bathyarch.bandedHull(
   root,
   { black, grey, brown },
   {
-    hull: { r: 1, length: 5.6, facets: 14 },
+    hull: { r: 1, length: 5.6 },
     bands: { r: 1.13, width: 0.32, x: [-2.2, -1.1, 0, 1.1, 2.2] },
-    caps: { x: 2.85, r: 1.18, width: 0.34, core: { x: 3.15, r: 0.72, width: 0.3, facets: 12 } },
+    caps: { x: 2.85, r: 1.18, width: 0.34, core: { x: 3.15, r: 0.72, width: 0.3 } },
     bolts: { x: 3.05, radius: 0.97, count: 12, r: 0.075, h: 0.14 },
+    cut,
   }
 );
 
@@ -129,6 +145,7 @@ bathyarch.conningTower(
     dome: { rTop: 0.16, r: 0.2, h: 0.14, at: [0.7, 2.38, 0] },
     periscope: { r: 0.07, h: 0.8, at: [0.35, 2.6, -0.25], head: { size: [0.3, 0.14, 0.14], at: [0.42, 3, -0.25] } },
     snorkel: { r: 0.1, h: 0.55, at: [1, 2.5, 0.25] },
+    cut,
   }
 );
 
@@ -142,6 +159,7 @@ bathyarch.ballastTanks(
     tank: { x: -0.2, r: 0.42, length: 3.4 },
     caps: { r: 0.46, width: 0.2, fore: 1.5, aft: -1.9 },
     straps: { r: 0.47, width: 0.16, aft: -1.2, fore: 0.8 },
+    cut,
   }
 );
 
@@ -156,6 +174,7 @@ bathyarch.deckPipework(
     drop: { r: 0.09, length: 0.5, at: [-2.2, 0.95, 0.32], lean: Math.PI / 4 },
     main2: { r: 0.07, length: 1.6, at: [-0.9, 1.12, -0.38] },
     elbowB: { size: [0.17, 0.17, 0.17], at: [-1.75, 1.12, -0.38] },
+    cut,
   }
 );
 
@@ -168,7 +187,7 @@ for (const [name, plate, size, at, roll] of [
   ['patch-3', grey, [0.9, 0.07, 0.6], [0.3, 0.78359, -0.65299], 0.87606],
   ['patch-4', brown, [0.6, 0.07, 0.5], [-0.7, 0.22127, -0.99571], 0.21867],
 ])
-  bathyarch.rivetedPatch(root, { plate, rivet: black }, { name, size, at, roll, rivet: RIVET });
+  bathyarch.rivetedPatch(root, { plate, rivet: black }, { name, size, at, roll, rivet: RIVET, cut });
 
 // "Folded manipulator limbs": the same arm hung at either beam under the
 // bow, starboard first as the file writes them.
@@ -181,8 +200,8 @@ const ARM = {
   wrist: { size: [0.22, 0.22, 0.26], at: [-0.1, -0.64, 0] },
   claws: { size: [0.42, 0.09, 0.1], a: [0.18, -0.6, 0.09], b: [0.18, -0.6, -0.09], yaw: 0.25 },
 };
-bathyarch.manipulator(root, { grey, brown, black }, { side: 'stb', at: [2.1, -0.65, 0.62], ...ARM });
-bathyarch.manipulator(root, { grey, brown, black }, { side: 'port', at: [2.1, -0.65, -0.62], ...ARM });
+bathyarch.manipulator(root, { grey, brown, black }, { side: 'stb', at: [2.1, -0.65, 0.62], ...ARM, cut });
+bathyarch.manipulator(root, { grey, brown, black }, { side: 'port', at: [2.1, -0.65, -0.62], ...ARM, cut });
 
 // The screw: shroud, hub drawn in astern, four blades pitched half a radian.
 bathyarch.submersibleScrew(
@@ -193,6 +212,7 @@ bathyarch.submersibleScrew(
     shroud: { R: 0.62, tube: 0.14 },
     hub: { radii: [0.16, 0.22], length: 0.5 },
     blades: { count: 4, size: [0.06, 0.85, 0.26], pitch: 0.5 },
+    cut,
   }
 );
 
@@ -234,6 +254,7 @@ bathyarch.hullLights(root, lampM, {
   },
   strip: { size: [0.9, 0.06, 0.08], at: [0.7, 2.34, 0.54] },
   beacon: { rTop: 0.12, r: 0.14, h: 0.12, at: [-3.13, 0.79, 0] },
+  cut,
 });
 bathyarch.glowLamps(root, {
   color: hex('#F2B233'),

@@ -59,6 +59,17 @@
  *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * asked at this file's scale, and the pass re-cut what was off it: the
+ * turret ring fourteen at 12.2 m, where the export had sixteen, and the
+ * turret drum fourteen at 11.2, where it had twelve; the barrels and
+ * muzzles six at 1.7–1.8 m and the four stacks six at 2.6, where all were
+ * ten, their 2.8 m bands eight; the ballast blisters ten at 4.2 m, where
+ * they were twelve; the pipe runs, risers and prop hubs six, where they
+ * were eight. The three prop shrouds' twelve at 5.1 m was the rule's
+ * already and is asked of it now. 162 parts and 2,784 triangles become 162
+ * and 2,552.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -88,6 +99,9 @@ const flood = bathyarch.ink.amberFlood();
 const root = new THREE.Group();
 root.name = 'consortium_bulwark';
 root.scale.setScalar(L / DRAWN);
+// The Klaxon's facet rule at this file's scale (bathyarch.mjs `cut`, #919):
+// the numbers below are the export's and the rule is a chord in metres.
+const cut = bathyarch.cut(L / DRAWN);
 
 // The slab and the three tiers stepped up it, each a plan in absolute metres,
 // bow first down the starboard side and back up the port. The slab is 14 m
@@ -113,6 +127,7 @@ bathyarch.flankPlates(root, { grey, rust }, {
   z: 30.8, plateT: 2.4,
   plates: [[-44, 22, 9, -1, false], [-18, 22, 7, 0.5, true], [8, 22, 9, -1, false], [34, 22, 7, 0.5, true]],
   seamLength: 100, seam: { y: 6.2, h: 1.2, t: 1.2, z: 29.4 },
+  cut,
 });
 
 // The ram: the plough is a 5 m plan with a 0.8 m chamfer, so its waist reaches
@@ -132,6 +147,7 @@ bathyarch.twinTurret(root, { black, grey, rust, amber }, {
   face: { at: [34, 17, 0], size: [8, 6, 20] },
   hatch: { at: [24, 20.8, 0], size: [4, 0.6, 5] },
   barrel: { x: 54, y: 18, z: 4.5, length: 40, r: 1.8, rMuzzle: 1.4, muzzle: { x: 72, length: 4, r: 1.9 } },
+  cut,
 });
 
 bathyarch.citadel(root, { black, grey, rust, lampM }, {
@@ -145,8 +161,8 @@ bathyarch.citadel(root, { black, grey, rust, lampM }, {
 // Four stacks in two pairs abaft the citadel, port pair first, each
 // with its band written directly after it.
 [[-46, -12], [-54, -12], [-46, 12], [-54, 12]].forEach(([x, z], i) => {
-  bathyarch.stack(root, black, { name: `stack_${i}`, at: [x, 20, z], r: 2.8, rTop: 2.4, height: 12 });
-  bathyarch.stackBand(root, amber, { name: `stack_band_${i}`, at: [x, 24, z], r: 3, h: 1 });
+  bathyarch.stack(root, black, { name: `stack_${i}`, at: [x, 20, z], r: 2.8, rTop: 2.4, height: 12, cut });
+  bathyarch.stackBand(root, amber, { name: `stack_band_${i}`, at: [x, 24, z], r: 3, h: 1, cut });
 });
 // Six vents across the transom, their tops a metre proud of the after deck
 // at y 7 (header).
@@ -173,14 +189,15 @@ bathyarch.ballastBlisters(root, { grey, rust }, {
   x: -4, y: -6, z: 31, r: 4.5, length: 90,
   skid: { x: 0, y: -14, z: 18, size: [100, 2, 3] },
   pipe: { x: -10, y: 9.6, z: 20, r: 0.8, length: 80 },
+  cut,
 });
-bathyarch.riser(root, rust, { name: 'pipe_riser_a', at: [-40, 14, 8], r: 0.9, h: 10 });
-bathyarch.riser(root, rust, { name: 'pipe_riser_b', at: [-40, 14, -8], r: 0.9, h: 10 });
+bathyarch.riser(root, rust, { name: 'pipe_riser_a', at: [-40, 14, 8], r: 0.9, h: 10, cut });
+bathyarch.riser(root, rust, { name: 'pipe_riser_b', at: [-40, 14, -8], r: 0.9, h: 10, cut });
 
 // Three prop shrouds across the transom, port to starboard, and the rudder.
 [-17, 0, 17].forEach((z, i) =>
   bathyarch.propTunnel(root, { grey, black }, {
-    name: `${i}`, at: [-76, -3, z], r: 5.5, length: 6, hub: { r: 1.5, length: 7 },
+    name: `${i}`, at: [-76, -3, z], r: 5.5, length: 6, hub: { r: 1.5, length: 7 }, cut,
   })
 );
 bathyarch.rudder(root, grey, { at: [-78, -8, 0], size: [8, 10, 1.5] });

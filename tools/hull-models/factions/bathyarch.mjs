@@ -46,6 +46,7 @@ import {
   zLong,
   xLong,
 } from '../kit.mjs';
+import { facetsFor, orbFacets } from '../facets.mjs';
 
 /**
  * The Klaxon's palette — every material name the navy's twenty-four models
@@ -217,7 +218,9 @@ export const ink = {
  * passes' — nine on
  * the Bastion's ballast drums, the Refinery's silos, caps and ballast and the
  * Turret's mount drum, seven on the Refinery's crusher stack — and a few
- * five-sided wheel tubes and cables under 0.2 m of radius. The one section
+ * five-sided wheel tubes and cables under 0.2 m of radius. The pass (#919)
+ * re-cut every one of them through `cut` below, so those counts are the
+ * files' history and the rule's are what the scripts draw. The one section
  * is four, a square: it keeps the wedge noses of the Spark and the shared
  * kinds (kit.mjs `cyl`, "the Klaxon's nose") and five cables on the Gantry,
  * the Bastion and the Slipway, which at 0.3–1 m of radius read the same at
@@ -237,6 +240,52 @@ export const ink = {
  */
 export const facets = { chordM: 2.5, min: 6, max: 14, step: 2, sections: [4] };
 export const panels = { hull: [0.75, 2], structure: [2, 5.5] };
+
+/**
+ * The rule as a builder asks it (#919; hadron.mjs `cut` is the same shape):
+ * every round part in this module takes its count from here, so re-faceting
+ * the navy is the one line above. `m` is metres a drawn unit — 1 for a hull
+ * drawn in metres, `L / DRAWN` for a port that builds in its export's units
+ * and is scaled on its root — because the rule is a chord in metres and a
+ * builder is handed the file's numbers. A radius is always the widest ring's,
+ * as the reader takes it (facets.mjs `facetsFor`): a frustum's wider rim, a
+ * torus's ring at its major radius plus its tube.
+ *
+ * `round(radius, arc)` is a cylinder's, a lathe's, a torus's ring or tube;
+ * `orb(radius, window)` a sphere's `[round, down]`. Every builder below takes
+ * the bound rule as `cut` and defaults to `METRE`, the rule for a script
+ * drawn in metres; a script drawn in its export's units passes
+ * `bathyarch.cut(L / DRAWN)`. A section is not asked here: four is the
+ * square the Klaxon cuts at any size, and a builder that draws one writes
+ * the count (`squareWedge`, `jibCrane`'s cable, the kit's gantry cables).
+ */
+export function cut(m = 1) {
+  const round = (radius, arc) => facetsFor(facets, radius * m, arc);
+  return {
+    round,
+    orb: (radius, window) => {
+      const { widthSegments, heightSegments } = orbFacets(facets, radius * m, window);
+      return [widthSegments, heightSegments];
+    },
+  };
+}
+/** The rule for a model drawn in metres, which is every builder's default. */
+const METRE = cut();
+
+/**
+ * Where a drum's skin is on its crown once it is laid along X by a quarter
+ * turn about Z (`onX`, `LAID`, `TO_BOW`): the kit's `cyl` puts its first
+ * vertex on +z, so turned that way a vertex reaches the crown only at a
+ * count that is a multiple of four, and at six, ten and fourteen the crown
+ * is the middle of a plate, an apothem in — which is where a rivet or a
+ * saddle that the file placed at `r` has to come down to. A drum turned
+ * about X instead (`ATHWART`, `ALONG_KEEL`) carries that +z vertex onto the
+ * crown at every count, and this is not for it.
+ */
+export const crownOnX = (r, n) => (n % 4 === 0 ? r : r * Math.cos(Math.PI / n));
+
+/** A lamp orb at the rule's two counts — the structures' work lamp and the turret's `base_lamp`. */
+const lampOrb = (r, rule = METRE) => new THREE.SphereGeometry(r, ...rule.orb(r));
 
 /** The body: a flat-sided slab from a plan outline, with a bow face and transom. */
 export function hullSlab(root, { black, grey, amber }, { outline, lengthM, depth, bow, stern }) {
@@ -270,7 +319,8 @@ export function hullSlab(root, { black, grey, amber }, { outline, lengthM, depth
  * behind it (#786 review).
  */
 export function flankPlates(root, { grey, rust }, opts) {
-  const { z, plates, plateT = 1.2, seamLength, seam = {}, rivets = [] } = opts;
+  const { z, plates, plateT = 1.2, seamLength, seam = {}, rivets = [], cut: rule = METRE } = opts;
+  const rivet = new THREE.SphereGeometry(0.45, ...rule.orb(0.45));
   const { x: seamX = 0, y: seamY = 2.2, h: seamH = 0.5, t: seamT = 1.4, z: seamZ = z } = seam;
   bothSides((side, sgn) => {
     plates.forEach(([x, len, h, y, old], i) =>
@@ -284,7 +334,7 @@ export function flankPlates(root, { grey, rust }, opts) {
     for (const [tag, y] of rivets) {
       for (let i = 0; i < 14; i++) {
         const x = seamX - seamLength / 2 + 4 + ((seamLength - 8) * i) / 13;
-        add(root, `rivet_${side}${tag}_${i}`, new THREE.SphereGeometry(0.45, 6, 4), grey, [
+        add(root, `rivet_${side}${tag}_${i}`, rivet, grey, [
           x,
           y,
           sgn * (z + 0.6),
@@ -295,12 +345,12 @@ export function flankPlates(root, { grey, rust }, opts) {
 }
 
 /** Ballast blisters low on the hull, and the keel under them. */
-export function ballastAndKeel(root, { black, rust }, { z, x, length, r, keel }) {
+export function ballastAndKeel(root, { black, rust }, { z, x, length, r, keel, cut: rule = METRE }) {
   bothSides((side, sgn) =>
     add(
       root,
       `ballast_${side}`,
-      cyl(r, r, length, 10),
+      cyl(r, r, length, rule.round(r)),
       black,
       [x, -4.5, sgn * z],
       [0, 0, Math.PI / 2]
@@ -310,12 +360,12 @@ export function ballastAndKeel(root, { black, rust }, { z, x, length, r, keel })
 }
 
 /** Twin prop tunnels in the transom: a shroud ring and a hub each side. */
-export function propTunnels(root, { grey, rust }, { x, z, r }) {
+export function propTunnels(root, { grey, rust }, { x, z, r, cut: rule = METRE }) {
   bothSides((side, sgn) => {
     add(
       root,
       `prop_shroud_${side}`,
-      cyl(r, r, 3.6, 14),
+      cyl(r, r, 3.6, rule.round(r)),
       rust,
       [x, -1.5, sgn * z],
       [0, 0, Math.PI / 2]
@@ -323,7 +373,7 @@ export function propTunnels(root, { grey, rust }, { x, z, r }) {
     add(
       root,
       `prop_hub_${side}`,
-      cyl(r * 0.29, r * 0.29, 4, 8),
+      cyl(r * 0.29, r * 0.29, 4, rule.round(r * 0.29)),
       grey,
       [x, -1.5, sgn * z],
       [0, 0, Math.PI / 2]
@@ -363,7 +413,7 @@ export function propTunnels(root, { grey, rust }, { x, z, r }) {
  * on the roof are the rest of the light.
  */
 export function machineryHouse(root, { black, grey, rust, amber, vent, flood }, opts) {
-  const { x, y, length, height, beam, louvres, gratings = 6, stack } = opts;
+  const { x, y, length, height, beam, louvres, gratings = 6, stack, cut: rule = METRE } = opts;
   add(root, 'machinery_house', box(length, height, beam), black, [x, y, 0]);
   add(root, 'house_roof', box(length + 1, 1, beam + 1), grey, [x, y + height / 2 + 0.3, 0]);
   for (let i = 0; i < gratings; i++)
@@ -421,9 +471,12 @@ export function machineryHouse(root, { black, grey, rust, amber, vent, flood }, 
       );
   });
   if (stack) {
-    add(root, 'stack', cyl(2.4, 2.8, 12, 12), rust, [stack.x, stack.y, stack.z]);
-    add(root, 'stack_band', cyl(2.7, 2.7, 1.2, 12), amber, [stack.x, stack.y + 4, stack.z]);
-    add(root, 'stack_throat', cyl(2.6, 2.3, 2.0, 12), flood, [stack.x, stack.y + 6.8, stack.z]);
+    // The Derrick's stack: 2.8 m at the foot, so the rule gives it eight
+    // and its band and throat, under 2.75 m, six — a band narrower-cut than
+    // the drum it rings, which the chord rule does at every step (#919).
+    add(root, 'stack', cyl(2.4, 2.8, 12, rule.round(2.8)), rust, [stack.x, stack.y, stack.z]);
+    add(root, 'stack_band', cyl(2.7, 2.7, 1.2, rule.round(2.7)), amber, [stack.x, stack.y + 4, stack.z]);
+    add(root, 'stack_throat', cyl(2.6, 2.3, 2.0, rule.round(2.6)), flood, [stack.x, stack.y + 6.8, stack.z]);
   }
 }
 
@@ -465,14 +518,15 @@ export function lattice(root, { grey, rust, flood }, { fwd, aft, z, deck, height
 }
 
 /** An open barbette and a short thick gun — no shield, this navy does not hide. */
-export function barbette(root, { black, grey, rust, amber }, { x, deck, r, barrel }) {
-  add(root, 'barbette_ring', cyl(r, r * 1.07, 2.2, 16), amber, [x, deck + 0.9, 0]);
-  add(root, 'barbette', cyl(r * 0.74, r * 0.74, 3.2, 16), grey, [x, deck + 2.1, 0]);
+export function barbette(root, { black, grey, rust, amber }, opts) {
+  const { x, deck, r, barrel, cut: rule = METRE } = opts;
+  add(root, 'barbette_ring', cyl(r, r * 1.07, 2.2, rule.round(r * 1.07)), amber, [x, deck + 0.9, 0]);
+  add(root, 'barbette', cyl(r * 0.74, r * 0.74, 3.2, rule.round(r * 0.74)), grey, [x, deck + 2.1, 0]);
   add(root, 'gun_cradle', box(7, 3, 6), black, [x + 2, deck + 4.1, 0]);
   add(
     root,
     'barrel',
-    cyl(1.6, 1.9, barrel.length, 12),
+    cyl(1.6, 1.9, barrel.length, rule.round(1.9)),
     grey,
     [barrel.x, deck + 4.7, 0],
     [0, 0, Math.PI / 2]
@@ -480,12 +534,12 @@ export function barbette(root, { black, grey, rust, amber }, { x, deck, r, barre
   add(
     root,
     'muzzle',
-    cyl(2.2, 2.2, 1.6, 12),
+    cyl(2.2, 2.2, 1.6, rule.round(2.2)),
     rust,
     [barrel.x + barrel.length / 2 + 0.7, deck + 4.7, 0],
     [0, 0, Math.PI / 2]
   );
-  add(root, 'deck_scuff', cyl(r * 1.36, r * 1.36, 0.3, 24), rust, [x, deck + 0.2, 0]);
+  add(root, 'deck_scuff', cyl(r * 1.36, r * 1.36, 0.3, rule.round(r * 1.36)), rust, [x, deck + 0.2, 0]);
 }
 
 /**
@@ -509,8 +563,9 @@ export function deckFloods(root, lampMat, { deck, spots }) {
  *
  * Positions are `at: [x, y, z]` in metres and boxes are `size: [x, y, z]`;
  * anything built a side takes scalar `x, y, z` and mirrors z. Facet counts
- * are the two hulls' own, and they agree: a pressure vessel or a prop shroud
- * is a twelve-facet drum, a stack or a gun ten, a pipe eight, a fall six.
+ * were the two hulls' own until #919 — a pressure vessel or a prop shroud a
+ * twelve-facet drum, a stack or a gun ten, a pipe eight, a fall six — and
+ * are the rule's at each part's radius now (`cut`).
  * ------------------------------------------------------------------------ */
 
 /**
@@ -560,16 +615,22 @@ export function ramBow(root, { grey, rust, amber }, { plough, teeth, band }) {
  * breech radius is the geometry's `rTop`.
  */
 export function twinTurret(root, { black, grey, rust, amber }, opts) {
-  const { x, ring, drum, face, hatch, barrel } = opts;
-  add(root, 'turret_ring', cyl(ring.r, ring.r, ring.h, 16), rust, [x, ring.y, 0]);
-  add(root, 'turret', cyl(drum.rTop, drum.r, drum.h, 12), black, [x, drum.y, 0]);
+  const { x, ring, drum, face, hatch, barrel, cut: rule = METRE } = opts;
+  add(root, 'turret_ring', cyl(ring.r, ring.r, ring.h, rule.round(ring.r)), rust, [x, ring.y, 0]);
+  add(
+    root,
+    'turret',
+    cyl(drum.rTop, drum.r, drum.h, rule.round(Math.max(drum.r, drum.rTop))),
+    black,
+    [x, drum.y, 0]
+  );
   add(root, 'turret_face', box(...face.size), grey, face.at);
   add(root, 'turret_hatch', box(...hatch.size), amber, hatch.at);
   bothSides((side, sgn) => {
     add(
       root,
       `barrel_${side}`,
-      cyl(barrel.r, barrel.rMuzzle, barrel.length, 10),
+      cyl(barrel.r, barrel.rMuzzle, barrel.length, rule.round(Math.max(barrel.r, barrel.rMuzzle))),
       grey,
       [barrel.x, barrel.y, sgn * barrel.z],
       [0, 0, Math.PI / 2]
@@ -577,7 +638,7 @@ export function twinTurret(root, { black, grey, rust, amber }, opts) {
     add(
       root,
       `muzzle_${side}`,
-      cyl(barrel.muzzle.r, barrel.muzzle.r, barrel.muzzle.length, 10),
+      cyl(barrel.muzzle.r, barrel.muzzle.r, barrel.muzzle.length, rule.round(barrel.muzzle.r)),
       rust,
       [barrel.muzzle.x, barrel.y, sgn * barrel.z],
       [0, 0, Math.PI / 2]
@@ -611,18 +672,21 @@ export function citadel(root, { black, grey, rust, lampM }, opts) {
 }
 
 /**
- * A stack — a ten-facet drum standing on Y, drawn in toward the top — and,
- * separately, the hazard band ringed round it. Separate because the two
- * hulls order them differently (the Bulwark each band after its stack, the
- * Tender both stacks and then both bands) and name them differently
- * (`stack_band_0` against `stack_a_band`); the hull script spells both.
+ * A stack — a drum standing on Y, drawn in toward the top, the rule's count
+ * at its foot — and, separately, the hazard band ringed round it. Separate
+ * because the two hulls order them differently (the Bulwark each band after
+ * its stack, the Tender both stacks and then both bands) and name them
+ * differently (`stack_band_0` against `stack_a_band`); the hull script
+ * spells both. A band a step wider than its stack can cut a step finer —
+ * the Bulwark's 3 m bands are eight on 2.8 m stacks of six — which is the
+ * chord rule read at two radii, and the way the Klaxon's plate steps.
  */
-export function stack(root, mat, { name, at, r, rTop, height }) {
-  add(root, name, cyl(rTop, r, height, 10), mat, at);
+export function stack(root, mat, { name, at, r, rTop, height, cut: rule = METRE }) {
+  add(root, name, cyl(rTop, r, height, rule.round(Math.max(r, rTop))), mat, at);
 }
 
-export function stackBand(root, mat, { name, at, r, h }) {
-  add(root, name, cyl(r, r, h, 10), mat, at);
+export function stackBand(root, mat, { name, at, r, h, cut: rule = METRE }) {
+  add(root, name, cyl(r, r, h, rule.round(r)), mat, at);
 }
 
 /**
@@ -687,10 +751,13 @@ export function floodStrips(root, { flood, lampM }, { strip, lamps }) {
  * that keel.
  */
 export function ballastBlisters(root, { grey, rust }, opts) {
-  const { x, y, z, r, length, caps, skid, pipe } = opts;
+  const { x, y, z, r, length, caps, skid, pipe, cut: rule = METRE } = opts;
   const onX = [0, 0, Math.PI / 2];
+  // The drum's count, and its caps' with it: a cap is a frustum of the
+  // drum's radius at its wide end, so the rule reads both at `r`.
+  const sides = rule.round(r);
   bothSides((side, sgn) => {
-    add(root, `ballast_${side}`, cyl(r, r, length, 12), grey, [x, y, sgn * z], onX);
+    add(root, `ballast_${side}`, cyl(r, r, length, sides), grey, [x, y, sgn * z], onX);
     // The caps are nose cones, not drums: each tapers from the blister's radius
     // to `caps.tipR` away from the hull, so the fore cap's small end faces +X
     // and the aft cap's -X. A drum has the same bounds and the same triangle
@@ -705,7 +772,7 @@ export function ballastBlisters(root, { grey, rust }, opts) {
         add(
           root,
           `ballast_cap_${side}${end}`,
-          cyl(rTop, rBottom, caps.length, 12),
+          cyl(rTop, rBottom, caps.length, sides),
           rust,
           [cx, y, sgn * z],
           onX
@@ -716,7 +783,7 @@ export function ballastBlisters(root, { grey, rust }, opts) {
       add(
         root,
         `pipe_${side}`,
-        cyl(pipe.r, pipe.r, pipe.length, 8),
+        cyl(pipe.r, pipe.r, pipe.length, rule.round(pipe.r)),
         rust,
         [pipe.x, pipe.y, sgn * pipe.z],
         onX
@@ -724,14 +791,14 @@ export function ballastBlisters(root, { grey, rust }, opts) {
   });
 }
 
-/** A riser: an eight-facet pipe standing on Y, named by the caller (`pipe_riser_a`, `pump_riser`). */
-export function riser(root, rust, { name, at, r, h }) {
-  add(root, name, cyl(r, r, h, 8), rust, at);
+/** A riser: a pipe standing on Y at the rule's count, named by the caller (`pipe_riser_a`, `pump_riser`). */
+export function riser(root, rust, { name, at, r, h, cut: rule = METRE }) {
+  add(root, name, cyl(r, r, h, rule.round(r)), rust, at);
 }
 
 /**
- * One prop tunnel in the transom: a twelve-facet shroud ring on X with an
- * eight-facet hub through it and — where the hull shows its screw — blade
+ * One prop tunnel in the transom: a shroud ring on X with the hub through
+ * it, each at the rule's count, and — where the hull shows its screw — blade
  * plates on the hub a half-turn apart between them, and the engine vent
  * beside it. Named by the caller: the Tender has one a side
  * (`prop_shroud_p`), the Bulwark a rank of three (`prop_shroud_0..2`).
@@ -739,10 +806,10 @@ export function riser(root, rust, { name, at, r, h }) {
  * tunnel the other two hulls compose.
  */
 export function propTunnel(root, { grey, black, vent }, opts) {
-  const { name, at, r, length, hub, blades, vent: ev } = opts;
+  const { name, at, r, length, hub, blades, vent: ev, cut: rule = METRE } = opts;
   const onX = [0, 0, Math.PI / 2];
-  add(root, `prop_shroud_${name}`, cyl(r, r, length, 12), grey, at, onX);
-  add(root, `prop_hub_${name}`, cyl(hub.r, hub.r, hub.length, 8), black, at, onX);
+  add(root, `prop_shroud_${name}`, cyl(r, r, length, rule.round(r)), grey, at, onX);
+  add(root, `prop_hub_${name}`, cyl(hub.r, hub.r, hub.length, rule.round(hub.r)), black, at, onX);
   if (blades)
     for (let i = 0; i < blades.count; i++)
       add(
@@ -888,12 +955,12 @@ export function workDeck(root, { black, flood, rust }, { deck, bays, job }) {
  *
  * The boom is placed by its centre under Euler (0, ±yaw, pitch − π/2): laid
  * along +X, raised, then swung inboard — the approved rig's own frame, which
- * is why its eight facets land where they do. The tip is the geometry's top.
+ * is why its facets land where they do. The tip is the geometry's top.
  */
 export function derrickRig(root, { grey, amber, black, lampM }, opts) {
-  const { mast, head, boom, fall, hook, lamp: flood } = opts;
+  const { mast, head, boom, fall, hook, lamp: flood, cut: rule = METRE } = opts;
   bothSides((side, sgn) => {
-    add(root, `derrick_mast_${side}`, cyl(mast.rTop, mast.r, mast.height, 8), grey, [
+    add(root, `derrick_mast_${side}`, cyl(mast.rTop, mast.r, mast.height, rule.round(mast.r)), grey, [
       mast.x,
       mast.y,
       sgn * mast.z,
@@ -902,12 +969,12 @@ export function derrickRig(root, { grey, amber, black, lampM }, opts) {
     add(
       root,
       `derrick_boom_${side}`,
-      cyl(boom.rTip, boom.r, boom.length, 8),
+      cyl(boom.rTip, boom.r, boom.length, rule.round(boom.r)),
       grey,
       [boom.x, boom.y, sgn * boom.z],
       [0, sgn * boom.yaw, boom.pitch - Math.PI / 2]
     );
-    add(root, `derrick_cable_${side}`, cyl(fall.r, fall.r, fall.length, 6), black, [
+    add(root, `derrick_cable_${side}`, cyl(fall.r, fall.r, fall.length, rule.round(fall.r)), black, [
       fall.x,
       fall.y,
       sgn * fall.z,
@@ -933,18 +1000,19 @@ export function spareRack(root, { grey, rust }, { x, z, plates }) {
 }
 
 /**
- * Gas bottles in a rank on the deck: eight-facet cylinders `pitch` apart
- * (`gas_bottle_0..n`). `tag` names the rank when a hull carries more than
- * one (`gas_bottle_s0..`), and `band` — `{ mat, r, h, dy }` — rings each
- * bottle with a reinforcement band `dy` above its centre, written after
- * its bottle (`gas_band_s0`), which is what "banded gas cylinders" (UNIT —
- * Furnace) are. The Tender passes neither and draws as it always did.
+ * Gas bottles in a rank on the deck: cylinders at the rule's count `pitch`
+ * apart (`gas_bottle_0..n`). `tag` names the rank when a hull carries more
+ * than one (`gas_bottle_s0..`), and `band` — `{ mat, r, h, dy }` — rings
+ * each bottle with a reinforcement band `dy` above its centre, written
+ * after its bottle (`gas_band_s0`), which is what "banded gas cylinders"
+ * (UNIT — Furnace) are. The Tender passes neither.
  */
-export function gasBottles(root, amber, { x, y, z, count, pitch, r, h, tag = '', band }) {
+export function gasBottles(root, amber, opts) {
+  const { x, y, z, count, pitch, r, h, tag = '', band, cut: rule = METRE } = opts;
   for (let i = 0; i < count; i++) {
-    add(root, `gas_bottle_${tag}${i}`, cyl(r, r, h, 8), amber, [x + i * pitch, y, z]);
+    add(root, `gas_bottle_${tag}${i}`, cyl(r, r, h, rule.round(r)), amber, [x + i * pitch, y, z]);
     if (band)
-      add(root, `gas_band_${tag}${i}`, cyl(band.r, band.r, band.h, 8), band.mat, [
+      add(root, `gas_band_${tag}${i}`, cyl(band.r, band.r, band.h, rule.round(band.r)), band.mat, [
         x + i * pitch,
         y + band.dy,
         z,
@@ -952,17 +1020,18 @@ export function gasBottles(root, amber, { x, y, z, count, pitch, r, h, tag = '',
   }
 }
 
-/** A pipe run along each side of the deck (`pipe_run_p/s`): an eight-facet tube on X. */
-export function pipeRuns(root, rust, { x, y, z, r, length }) {
+/** A pipe run along each side of the deck (`pipe_run_p/s`): a tube on X at the rule's count. */
+export function pipeRuns(root, rust, { x, y, z, r, length, cut: rule = METRE }) {
+  const sides = rule.round(r);
   bothSides((side, sgn) =>
-    add(root, `pipe_run_${side}`, cyl(r, r, length, 8), rust, [x, y, sgn * z], [0, 0, Math.PI / 2])
+    add(root, `pipe_run_${side}`, cyl(r, r, length, sides), rust, [x, y, sgn * z], [0, 0, Math.PI / 2])
   );
 }
 
 /** The pump house and the riser standing out of it (`pump_house · pump_riser`). */
-export function pumpHouse(root, { grey, rust }, { house, riser: up }) {
+export function pumpHouse(root, { grey, rust }, { house, riser: up, cut: rule = METRE }) {
   add(root, 'pump_house', box(...house.size), grey, house.at);
-  riser(root, rust, { name: 'pump_riser', ...up });
+  riser(root, rust, { name: 'pump_riser', ...up, cut: rule });
 }
 
 /* --------------------------------------------------------------------------
@@ -1007,9 +1076,10 @@ export function bowPlate(root, { grey, amber }, { plate, band }) {
  * door's ends.
  */
 export function holdDoors(root, { grey, rust, amber, lampM }, opts) {
-  const { doors, height, y, z, t, stripe, hinge, wheels, seams } = opts;
+  const { doors, height, y, z, t, stripe, hinge, wheels, seams, cut: rule = METRE } = opts;
   const onX = [0, 0, Math.PI / 2];
   const onZ = [Math.PI / 2, 0, 0];
+  const wheel = torus(wheels.r, wheels.rim, rule.round(wheels.rim), rule.round(wheels.r + wheels.rim));
   bothSides((side, sgn) => {
     doors.forEach(([x, length, old], i) => {
       const tag = `${side}${i}`;
@@ -1019,27 +1089,23 @@ export function holdDoors(root, { grey, rust, amber, lampM }, opts) {
         stripe.y,
         sgn * stripe.z,
       ]);
-      add(root, `hinge_rail_${tag}`, cyl(hinge.r, hinge.r, length, 8), rust, [x, hinge.y, sgn * hinge.z], onX);
+      add(root, `hinge_rail_${tag}`, cyl(hinge.r, hinge.r, length, rule.round(hinge.r)), rust, [x, hinge.y, sgn * hinge.z], onX);
       hinge.knuckles.forEach((dx, k) =>
         add(
           root,
           `hinge_knuckle_${tag}_${k}`,
-          cyl(hinge.knuckle.r, hinge.knuckle.r, hinge.knuckle.length, 8),
+          cyl(hinge.knuckle.r, hinge.knuckle.r, hinge.knuckle.length, rule.round(hinge.knuckle.r)),
           grey,
           [x + dx, hinge.y, sgn * hinge.z],
           onX
         )
       );
       wheels.at.forEach((dx, k) => {
-        add(root, `dog_wheel_${tag}_${k}`, torus(wheels.r, wheels.rim, 5, 10), grey, [
-          x + dx,
-          wheels.y,
-          sgn * wheels.z,
-        ]);
+        add(root, `dog_wheel_${tag}_${k}`, wheel, grey, [x + dx, wheels.y, sgn * wheels.z]);
         add(
           root,
           `dog_hub_${tag}_${k}`,
-          cyl(wheels.hub.r, wheels.hub.r, wheels.hub.length, 8),
+          cyl(wheels.hub.r, wheels.hub.r, wheels.hub.length, rule.round(wheels.hub.r)),
           rust,
           [x + dx, wheels.y, sgn * wheels.hub.z],
           onZ
@@ -1094,7 +1160,7 @@ export function skeg(root, { rust, grey, black }, { block, tunnels }) {
  * gantry stays inside the hull's, so the plan outline is still the slab's.
  */
 export function deckGantries(root, { grey, rust, black }, opts) {
-  const { rails, gantries, legs, beam, trolley, cable, hook } = opts;
+  const { rails, gantries, legs, beam, trolley, cable, hook, cut: rule = METRE } = opts;
   bothSides((side, sgn) =>
     add(root, `crane_rail_${side}`, box(...rails.size), rust, [rails.x, rails.y, sgn * rails.z])
   );
@@ -1104,7 +1170,7 @@ export function deckGantries(root, { grey, rust, black }, opts) {
     );
     add(root, `gantry_${i}_beam`, box(...beam.size), grey, [x, beam.y, 0]);
     add(root, `gantry_${i}_trolley`, box(...trolley.size), black, [x, trolley.y, tz]);
-    add(root, `gantry_${i}_cable`, cyl(cable.r, cable.r, cable.length, 6), black, [x, cable.y, tz]);
+    add(root, `gantry_${i}_cable`, cyl(cable.r, cable.r, cable.length, rule.round(cable.r)), black, [x, cable.y, tz]);
     add(root, `gantry_${i}_hook`, box(...hook.size), rust, [x, hook.y, tz]);
   });
 }
@@ -1135,7 +1201,7 @@ export function cargoHatch(root, { grey, rust }, { coaming, cover }) {
 const ATHWART = [Math.PI / 2, 0, 0];
 
 /**
- * A dogged hatch: a round coaming standing on Y, `facets` round, and the
+ * A dogged hatch: a round coaming standing on Y at the rule's count, and the
  * dogging wheel lying flat on it — a torus turned onto the horizontal,
  * `wheel.dy` above the coaming's centre. Named `<name>` and `<name>_wheel`.
  * The hold doors above carry their wheels on a vertical face
@@ -1143,12 +1209,12 @@ const ATHWART = [Math.PI / 2, 0, 0];
  * the wheel as a ring.
  */
 export function doggedHatch(root, { hatch: hatchMat, wheel: wheelMat }, opts) {
-  const { name, at, r, h, facets = 8, wheel } = opts;
-  add(root, name, cyl(r, r, h, facets), hatchMat, at);
+  const { name, at, r, h, wheel, cut: rule = METRE } = opts;
+  add(root, name, cyl(r, r, h, rule.round(r)), hatchMat, at);
   add(
     root,
     `${name}_wheel`,
-    torus(wheel.R, wheel.t, 6, 12),
+    torus(wheel.R, wheel.t, rule.round(wheel.t), rule.round(wheel.R + wheel.t)),
     wheelMat,
     [at[0], at[1] + wheel.dy, at[2]],
     ATHWART
@@ -1182,9 +1248,13 @@ export function doggedHatch(root, { hatch: hatchMat, wheel: wheelMat }, opts) {
  * emitter on the hull that nothing can occlude.
  */
 export function transducerDrum(root, { black, grey, rust, lampM }, opts) {
-  const { at, r, length, facets = 16, cradle, heads, hoops, hoopLamps, hatch, mast } = opts;
+  const { at, r, length, cradle, heads, hoops, hoopLamps, hatch, mast, cut: rule = METRE } = opts;
   const [x, y, z] = at;
-  const bolt = cyl(cradle.bolts.r, cradle.bolts.r, cradle.bolts.h, 6);
+  // The drum's count at its radius; the heads are frusta of that radius at
+  // the wide end and take it. The hoops and the lit hoop are each read at
+  // their own, a step out.
+  const facets = rule.round(r);
+  const bolt = cyl(cradle.bolts.r, cradle.bolts.r, cradle.bolts.h, rule.round(cradle.bolts.r));
   add(root, 'drum_bed', box(...cradle.bed.size), grey, [x, cradle.bed.y, z]);
   for (const [tag, sgn] of [
     ['f', 1],
@@ -1205,8 +1275,8 @@ export function transducerDrum(root, { black, grey, rust, lampM }, opts) {
   }
   add(root, 'transducer_drum', cyl(r, r, length, facets), black, at, ATHWART);
   const head = cyl(heads.tipR, r, heads.length, facets);
-  const hoop = cyl(hoops.r, hoops.r, hoops.width, facets);
-  const lit = cyl(hoopLamps.r, hoopLamps.r, hoopLamps.width, facets);
+  const hoop = cyl(hoops.r, hoops.r, hoops.width, rule.round(hoops.r));
+  const lit = cyl(hoopLamps.r, hoopLamps.r, hoopLamps.width, rule.round(hoopLamps.r));
   bothSides((side, sgn) => {
     // The frustum's small end is its top, and the turn carries the top to
     // +z on the starboard side and -z on the port: outboard both times.
@@ -1232,14 +1302,15 @@ export function transducerDrum(root, { black, grey, rust, lampM }, opts) {
       r: hatch.r,
       h: hatch.h,
       wheel: hatch.wheel,
+      cut: rule,
     }
   );
-  add(root, 'drum_mast', cyl(mast.rTop, mast.r, mast.h, 8), grey, [
+  add(root, 'drum_mast', cyl(mast.rTop, mast.r, mast.h, rule.round(mast.r)), grey, [
     x,
     y + r + mast.h / 2 - mast.sink,
     z,
   ]);
-  add(root, 'mast_lamp', new THREE.SphereGeometry(mast.lamp.r, 8, 6), lampM, [
+  add(root, 'mast_lamp', new THREE.SphereGeometry(mast.lamp.r, ...rule.orb(mast.lamp.r)), lampM, [
     x,
     y + r + mast.h - mast.sink + mast.lamp.dy,
     z,
@@ -1287,8 +1358,22 @@ export function transducerDrum(root, { black, grey, rust, lampM }, opts) {
  * carried.
  */
 export function tubeCasings(root, { black, grey, rust, lampM }, opts) {
-  const { r, y, flank, gap, toe, facets = 16, casings, bands, tail, hoopLamp, muzzle, saddles } =
-    opts;
+  const { r, y, flank, gap, toe, casings, bands, tail, hoopLamp, muzzle, saddles } = opts;
+  const { cut: rule = METRE } = opts;
+  // Each ring at its own radius: the casing's count, the bands' and the
+  // flanges' a step out from it, the doors' a step in, the hoop lamp's.
+  const facets = rule.round(r);
+  const n = {
+    band: rule.round(bands.r),
+    tailFlange: rule.round(tail.flange.r),
+    tailDoor: rule.round(tail.door.r),
+    hub: rule.round(tail.hub.r),
+    hoop: rule.round(hoopLamp.r),
+    muzzleFlange: rule.round(muzzle.flange.r),
+    muzzleDoor: rule.round(muzzle.door.r),
+    hinge: rule.round(muzzle.hinge.r),
+  };
+  const wheel = torus(tail.wheel.R, tail.wheel.t, rule.round(tail.wheel.t), rule.round(tail.wheel.R + tail.wheel.t));
   bothSides((side, sgn) => {
     // The axis runs from the breech face at `breech` outboard by `toe`; `at`
     // is a point `t` metres along it, `out` the same point carried outboard
@@ -1304,20 +1389,20 @@ export function tubeCasings(root, { black, grey, rust, lampM }, opts) {
       const out = (t, d) => [breech + t * dir[0] + d * perp[0], y, zb + t * dir[2] + d * perp[2]];
       add(root, `casing_${name}`, cyl(r, r, length, facets), black, at(length / 2), along);
       bands.t.forEach((t, k) =>
-        add(root, `casing_band_${name}_${k}`, cyl(bands.r, bands.r, bands.width, facets), grey, at(t), along)
+        add(root, `casing_band_${name}_${k}`, cyl(bands.r, bands.r, bands.width, n.band), grey, at(t), along)
       );
       // The tail: the flange the door dogs against, the door on it, the
       // wheel's hub through the door and the wheel on the hub.
-      add(root, `tail_flange_${name}`, cyl(tail.flange.r, tail.flange.r, tail.flange.width, facets), rust, at(tail.flange.width / 2), along);
-      add(root, `breech_door_${name}`, cyl(tail.door.r, tail.door.r, tail.door.h, facets), grey, at(-tail.door.h / 2), along);
-      add(root, `breech_hub_${name}`, cyl(tail.hub.r, tail.hub.r, tail.hub.length, 8), black, at(-tail.door.h - tail.hub.length / 2 + tail.hub.sink), along);
-      add(root, `breech_wheel_${name}`, torus(tail.wheel.R, tail.wheel.t, 6, 12), grey, at(-tail.door.h - tail.wheel.stand), facing);
-      add(root, `hoop_lamp_${name}`, cyl(hoopLamp.r, hoopLamp.r, hoopLamp.width, facets), lampM, at(hoopLamp.t), along);
+      add(root, `tail_flange_${name}`, cyl(tail.flange.r, tail.flange.r, tail.flange.width, n.tailFlange), rust, at(tail.flange.width / 2), along);
+      add(root, `breech_door_${name}`, cyl(tail.door.r, tail.door.r, tail.door.h, n.tailDoor), grey, at(-tail.door.h / 2), along);
+      add(root, `breech_hub_${name}`, cyl(tail.hub.r, tail.hub.r, tail.hub.length, n.hub), black, at(-tail.door.h - tail.hub.length / 2 + tail.hub.sink), along);
+      add(root, `breech_wheel_${name}`, wheel, grey, at(-tail.door.h - tail.wheel.stand), facing);
+      add(root, `hoop_lamp_${name}`, cyl(hoopLamp.r, hoopLamp.r, hoopLamp.width, n.hoop), lampM, at(hoopLamp.t), along);
       // The muzzle: its flange, the door on the forward face, the knuckle
       // up the door's outboard edge.
-      add(root, `muzzle_flange_${name}`, cyl(muzzle.flange.r, muzzle.flange.r, muzzle.flange.width, facets), rust, at(length - muzzle.flange.width / 2), along);
-      add(root, `muzzle_door_${name}`, cyl(muzzle.door.r, muzzle.door.r, muzzle.door.h, facets), grey, at(length + muzzle.door.h / 2), along);
-      add(root, `muzzle_hinge_${name}`, cyl(muzzle.hinge.r, muzzle.hinge.r, muzzle.hinge.h, 8), rust, out(length + muzzle.door.h / 2, muzzle.hinge.inset));
+      add(root, `muzzle_flange_${name}`, cyl(muzzle.flange.r, muzzle.flange.r, muzzle.flange.width, n.muzzleFlange), rust, at(length - muzzle.flange.width / 2), along);
+      add(root, `muzzle_door_${name}`, cyl(muzzle.door.r, muzzle.door.r, muzzle.door.h, n.muzzleDoor), grey, at(length + muzzle.door.h / 2), along);
+      add(root, `muzzle_hinge_${name}`, cyl(muzzle.hinge.r, muzzle.hinge.r, muzzle.hinge.h, n.hinge), rust, out(length + muzzle.door.h / 2, muzzle.hinge.inset));
       for (const [end, t] of [
         ['f', saddles.t[1]],
         ['a', saddles.t[0]],
@@ -1439,6 +1524,7 @@ export function cutterGantry(root, { grey, rust, unlit }, opts) {
  */
 export function cutterLadders(root, { grey, rust, unlit }, opts) {
   const { ladders, aft, tip, y, half, chord, bays, lace, strip, head, lines, straps, feed } = opts;
+  const { cut: rule = METRE } = opts;
   const length = tip - aft;
   const xc = (tip + aft) / 2;
   const onX = [0, 0, Math.PI / 2];
@@ -1491,13 +1577,13 @@ export function cutterLadders(root, { grey, rust, unlit }, opts) {
     add(
       root,
       `burner_nozzle_${tag}`,
-      cyl(head.nozzle.r, head.nozzle.r, head.nozzle.length, 8),
+      cyl(head.nozzle.r, head.nozzle.r, head.nozzle.length, rule.round(head.nozzle.r)),
       unlit,
       [tip + head.nozzle.dx, y + head.nozzle.dy, z],
       onX
     );
     bothSides((side, sgn) =>
-      add(root, `gas_line_${tag}_${side}`, cyl(lines.r, lines.r, length, 8), rust, [
+      add(root, `gas_line_${tag}_${side}`, cyl(lines.r, lines.r, length, rule.round(lines.r)), rust, [
         xc,
         y + lines.dy,
         z + sgn * lines.dz,
@@ -1507,7 +1593,7 @@ export function cutterLadders(root, { grey, rust, unlit }, opts) {
       add(root, `gas_strap_${tag}_${i}`, box(...straps.size), rust, [sx, y + straps.dy, z])
     );
     bothSides((side, sgn) =>
-      add(root, `gas_feed_${tag}_${side}`, cyl(lines.r, lines.r, feed.h, 8), rust, [
+      add(root, `gas_feed_${tag}_${side}`, cyl(lines.r, lines.r, feed.h, rule.round(lines.r)), rust, [
         feed.x,
         feed.y,
         z + sgn * lines.dz,
@@ -1527,10 +1613,10 @@ export function cutterLadders(root, { grey, rust, unlit }, opts) {
  * manifold_strip`).
  */
 export function gasManifold(root, { rust, grey, unlit }, opts) {
-  const { header, posts, valves, strip } = opts;
-  add(root, 'manifold_header', cyl(header.r, header.r, header.length, 8), rust, header.at, ATHWART);
+  const { header, posts, valves, strip, cut: rule = METRE } = opts;
+  add(root, 'manifold_header', cyl(header.r, header.r, header.length, rule.round(header.r)), rust, header.at, ATHWART);
   bothSides((side, sgn) =>
-    add(root, `manifold_post_${side}`, cyl(posts.r, posts.r, posts.h, 8), rust, [
+    add(root, `manifold_post_${side}`, cyl(posts.r, posts.r, posts.h, rule.round(posts.r)), rust, [
       posts.x,
       posts.y,
       sgn * posts.z,
@@ -1540,7 +1626,7 @@ export function gasManifold(root, { rust, grey, unlit }, opts) {
     add(
       root,
       `valve_hub_${tag}`,
-      cyl(valves.hub.r, valves.hub.r, valves.hub.length, 8),
+      cyl(valves.hub.r, valves.hub.r, valves.hub.length, rule.round(valves.hub.r)),
       grey,
       [valves.hub.x, header.at[1], z],
       [0, 0, Math.PI / 2]
@@ -1548,7 +1634,12 @@ export function gasManifold(root, { rust, grey, unlit }, opts) {
     add(
       root,
       `valve_wheel_${tag}`,
-      torus(valves.wheel.R, valves.wheel.t, 6, 12),
+      torus(
+        valves.wheel.R,
+        valves.wheel.t,
+        rule.round(valves.wheel.t),
+        rule.round(valves.wheel.R + valves.wheel.t)
+      ),
       grey,
       [valves.wheel.x, header.at[1], z],
       [0, Math.PI / 2, 0]
@@ -1569,10 +1660,10 @@ export function gasManifold(root, { rust, grey, unlit }, opts) {
  * rack_rail_s · rack_lamp_s0.. · rack_sill_p …`).
  */
 export function gasRacks(root, { grey, rust, amber, lampM }, opts) {
-  const { ranks, bottles, band, sill, posts, rail, lamps } = opts;
+  const { ranks, bottles, band, sill, posts, rail, lamps, cut: rule = METRE } = opts;
   for (const [tag, z] of ranks) {
     add(root, `rack_sill_${tag}`, box(...sill.size), rust, [sill.x, sill.y, z]);
-    gasBottles(root, amber, { ...bottles, z, tag, band: { mat: grey, ...band } });
+    gasBottles(root, amber, { ...bottles, z, tag, band: { mat: grey, ...band }, cut: rule });
     for (const [end, x] of [
       ['a', posts.xa],
       ['f', posts.xf],
@@ -1632,7 +1723,7 @@ export function gasRacks(root, { grey, rust, amber, lampM }, opts) {
  * Furnace's seam-on-the-flank fault (#786 review) in the other direction.
  */
 export function caissonBox(root, mats, opts) {
-  const { slab, courses = [], shoulder, plough, band, bolts } = opts;
+  const { slab, courses = [], shoulder, plough, band, bolts, cut: rule = METRE } = opts;
   add(root, 'caisson', plan(slab.outline, slab.depth), mats[slab.mat ?? 'black'], [0, slab.y, 0]);
   courses.forEach((c, i) =>
     add(root, `caisson_course_${i}`, plan(c.outline, c.depth), mats[c.mat ?? 'grey'], [0, c.y, 0])
@@ -1649,7 +1740,7 @@ export function caissonBox(root, mats, opts) {
       add(
         root,
         `caisson_bolt_${side}${i}`,
-        cyl(bolts.r, bolts.r, bolts.h, 6),
+        cyl(bolts.r, bolts.r, bolts.h, rule.round(bolts.r)),
         mats.grey,
         [bolts.from + ((bolts.to - bolts.from) * (i + 0.5)) / bolts.count, bolts.y, sgn * bolts.z],
         ATHWART
@@ -1675,14 +1766,14 @@ export function caissonBox(root, mats, opts) {
  * keel and only the doors show.
  */
 export function bowTubes(root, { black, grey, rust }, opts) {
-  const { x, y, z, facets = 16, socket, flange, door, hinge } = opts;
+  const { x, y, z, socket, flange, door, hinge, cut: rule = METRE } = opts;
   const onX = [0, 0, Math.PI / 2];
   bothSides((side, sgn) => {
     const at = (dx) => [x + dx, y, sgn * z];
-    add(root, `bow_tube_${side}`, cyl(socket.r, socket.r, socket.depth, facets), black, at(-socket.depth / 2), onX);
-    add(root, `tube_flange_${side}`, cyl(flange.r, flange.r, flange.width, facets), rust, at(flange.width / 2), onX);
-    add(root, `tube_door_${side}`, cyl(door.r, door.r, door.h, facets), grey, at(flange.width + door.h / 2), onX);
-    add(root, `tube_hinge_${side}`, cyl(hinge.r, hinge.r, hinge.h, 8), rust, [
+    add(root, `bow_tube_${side}`, cyl(socket.r, socket.r, socket.depth, rule.round(socket.r)), black, at(-socket.depth / 2), onX);
+    add(root, `tube_flange_${side}`, cyl(flange.r, flange.r, flange.width, rule.round(flange.r)), rust, at(flange.width / 2), onX);
+    add(root, `tube_door_${side}`, cyl(door.r, door.r, door.h, rule.round(door.r)), grey, at(flange.width + door.h / 2), onX);
+    add(root, `tube_hinge_${side}`, cyl(hinge.r, hinge.r, hinge.h, rule.round(hinge.r)), rust, [
       x + flange.width + door.h / 2,
       y,
       sgn * (z + hinge.out),
@@ -1709,22 +1800,37 @@ export function bowTubes(root, { black, grey, rust }, opts) {
  * same reason (`transducerDrum`). A cylinder laid on X by a quarter turn
  * about Z carries its `rTop` onto −X, so the fore head is `cyl(r, tipR)`
  * and the after one `cyl(tipR, r)`.
+ *
+ * A saddle reaches the drum it carries. `saddles.y` and `size[1]` give its
+ * underside, the file's; its top is the drum's keel plus `saddles.sink`
+ * (a tenth of a metre), and the keel is where the facets put it
+ * (`crownOnX`): since #919 the Caisson's plant is a six-plate drum with a
+ * plate on its keel, 0.35 m higher than the sixteen-sided drum's vertex
+ * was, and a saddle cut to the old keel stood 0.15 m under the new one.
  */
 export function plantCylinder(root, { black, grey, rust }, opts) {
-  const { at, r, length, facets = 16, bands, heads, saddles } = opts;
+  const { at, r, length, bands, heads, saddles, cut: rule = METRE } = opts;
   const [x, y, z] = at;
   const onX = [0, 0, Math.PI / 2];
+  const facets = rule.round(r);
   add(root, 'plant_cylinder', cyl(r, r, length, facets), black, at, onX);
   bands.x.forEach((bx, i) =>
-    add(root, `plant_band_${i}`, cyl(bands.r, bands.r, bands.width, facets), grey, [bx, y, z], onX)
+    add(root, `plant_band_${i}`, cyl(bands.r, bands.r, bands.width, rule.round(bands.r)), grey, [bx, y, z], onX)
   );
   for (const [end, cx, rTop, rBottom] of [
     ['f', x + length / 2 + heads.length / 2, r, heads.tipR],
     ['a', x - length / 2 - heads.length / 2, heads.tipR, r],
   ])
     add(root, `plant_head_${end}`, cyl(rTop, rBottom, heads.length, facets), rust, [cx, y, z], onX);
+  const { sink = 0.1 } = saddles;
+  const bottom = saddles.y - saddles.size[1] / 2;
+  const top = y - crownOnX(r, facets) + sink;
   saddles.x.forEach((sx, i) =>
-    add(root, `plant_saddle_${i}`, box(...saddles.size), rust, [sx, saddles.y, z])
+    add(root, `plant_saddle_${i}`, box(saddles.size[0], top - bottom, saddles.size[2]), rust, [
+      sx,
+      (top + bottom) / 2,
+      z,
+    ])
   );
 }
 
@@ -1802,16 +1908,23 @@ export function exhaustLouvres(root, { black, flood }, opts) {
  */
 export function exchangerHead(root, { black, grey, rust, amber, vent }, opts) {
   const { bearing: a, at, y, size, fins, band, stack, grating, foot, rivets } = opts;
+  const { cut: rule = METRE } = opts;
   const yaw = [0, -a, 0];
   add(root, 'exchanger', box(...size), black, polar(a, at, y), yaw);
   for (let i = 0; i < fins.count; i++)
     add(root, `fin_${i}`, box(...fins.size), grey, polar(a, fins.from + fins.pitch * i, fins.y), yaw);
   add(root, 'hazard_band', box(...band.size), amber, polar(a, at, band.y), yaw);
-  add(root, 'stack', cyl(stack.r[0], stack.r[1], stack.h, 8), black, polar(a, stack.at, stack.y));
+  add(
+    root,
+    'stack',
+    cyl(stack.r[0], stack.r[1], stack.h, rule.round(Math.max(...stack.r))),
+    black,
+    polar(a, stack.at, stack.y)
+  );
   add(
     root,
     'stack_band',
-    cyl(stack.band.r, stack.band.r, stack.band.h, 8),
+    cyl(stack.band.r, stack.band.r, stack.band.h, rule.round(stack.band.r)),
     amber,
     polar(a, stack.at, stack.band.y)
   );
@@ -1836,17 +1949,18 @@ export function exchangerHead(root, { black, grey, rust, amber, vent }, opts) {
  * round, which is the approved turret's own order.
  *
  * Every number is the approved turret's own (#639), through kit.mjs `drawn`:
- * the raft an eight-facet frustum, `rTop` over `r` — eight-sided rather than
- * square, because an octagon is what reads as *plate cut and welded* from
- * above — and on each of the four diagonal bearings, π/4 + n·π/2 round from
- * +X toward +Z, which is the numbering above, a foot at `foot.radius` yawed
- * by minus its bearing so its long side lies tangential, and its bolt
- * outboard at `bolt.radius`, both standing on the ground.
+ * the raft a frustum, `rTop` over `r`, at the rule's count — the file's was
+ * an octagon, which at 32 m of radius the chord rule cuts as its fourteen,
+ * still plate cut and welded and not a disc (#919) — and on each of the
+ * four diagonal bearings, π/4 + n·π/2 round from +X toward +Z, which is the
+ * numbering above, a foot at `foot.radius` yawed by minus its bearing so its
+ * long side lies tangential, and its bolt outboard at `bolt.radius`, both
+ * standing on the ground.
  */
 export function anchoredRaft(root, { black, rust, grey }, opts) {
-  const { at, r, rTop = r, height, foot, bolt } = opts;
+  const { at, r, rTop = r, height, foot, bolt, cut: rule = METRE } = opts;
   const [cx, cy, cz] = at;
-  part(root, 'base_raft', cyl(rTop, r, height, 8), black, drawn(at));
+  part(root, 'base_raft', cyl(rTop, r, height, rule.round(Math.max(r, rTop))), black, drawn(at));
   const ground = cy - height / 2;
   for (let n = 1; n <= 4; n++) {
     const a = Math.PI / 4 + ((n - 1) * Math.PI) / 2;
@@ -1854,7 +1968,7 @@ export function anchoredRaft(root, { black, rust, grey }, opts) {
     const footAt = [cx + foot.radius * dx, ground + foot.size[1] / 2, cz + foot.radius * dz];
     part(root, `anchor_foot_${n}`, box(...foot.size), rust, drawn(footAt, [0, -a, 0]));
     const boltAt = [cx + bolt.radius * dx, ground + bolt.height / 2, cz + bolt.radius * dz];
-    part(root, `anchor_bolt_${n}`, cyl(bolt.r, bolt.r, bolt.height, 6), grey, drawn(boltAt));
+    part(root, `anchor_bolt_${n}`, cyl(bolt.r, bolt.r, bolt.height, rule.round(bolt.r)), grey, drawn(boltAt));
   }
 }
 
@@ -1867,19 +1981,19 @@ export function anchoredRaft(root, { black, rust, grey }, opts) {
  * straight lines even when the thing repaired is round.
  *
  * Every number is the approved turret's own (#639), through kit.mjs `drawn`:
- * `r` is `[top, bottom]` and the drum a frustum of `facets`, the ring a torus
- * of five by `ring.facets`, the rivets spheres of `rivets.segments` from
- * `rivets.from` *radians* round from +X toward +Z, the patch a box at
- * `patch.at` turned `patch.rot` — and no feed: the approved file writes that
- * after the gun (`feedPipe` below).
+ * `r` is `[top, bottom]` and the drum a frustum, the ring a torus, the
+ * rivets spheres from `rivets.from` *radians* round from +X toward +Z, each
+ * at the rule's count (`cut`, #919; the file's nine, five by twelve and five
+ * by four), the patch a box at `patch.at` turned `patch.rot` — and no feed:
+ * the approved file writes that after the gun (`feedPipe` below).
  */
 export function mountDrum(root, { black, grey, rust }, opts) {
-  const { at, r, height, ring, rivets, patch, facets = 10 } = opts;
+  const { at, r, height, ring, rivets, patch, cut: rule = METRE } = opts;
   const [cx, , cz] = at;
-  part(root, 'mount_drum', cyl(r[0], r[1], height, facets), black, drawn(at));
-  const collar = torus(ring.r, ring.t, 5, ring.facets ?? 18);
+  part(root, 'mount_drum', cyl(r[0], r[1], height, rule.round(Math.max(...r))), black, drawn(at));
+  const collar = torus(ring.r, ring.t, rule.round(ring.t), rule.round(ring.r + ring.t));
   part(root, 'mount_ring', collar, grey, drawn([cx, ring.y, cz], [Math.PI / 2, 0, 0]));
-  const [w, h] = rivets.segments ?? [6, 5];
+  const [w, h] = rule.orb(rivets.r);
   for (let i = 0; i < rivets.count; i++) {
     const a = rivets.from + ((2 * Math.PI) / rivets.count) * i;
     const head = new THREE.SphereGeometry(rivets.r, w, h);
@@ -1890,8 +2004,8 @@ export function mountDrum(root, { black, grey, rust }, opts) {
 }
 
 /**
- * The feed pipe beside the mount: a six-facet pipe of radius `r` stood
- * between two points of the export's frame — at their midpoint, turned by
+ * The feed pipe beside the mount: a pipe of radius `r` at the rule's count,
+ * stood between two points of the export's frame — at their midpoint, turned by
  * the one rotation that carries +Y onto the run (three's
  * `setFromUnitVectors`), which is exactly the node matrix the approved file
  * holds for (0.5, 0.4, -0.45) to (0.2, 0.95, -0.25). The pipe runs from the
@@ -1899,10 +2013,10 @@ export function mountDrum(root, { black, grey, rust }, opts) {
  * writes it after the gun rather than with the drum — which is why it is its
  * own builder and not a line of `mountDrum` (#639).
  */
-export function feedPipe(root, rust, { from, to, r, facets = 6 }) {
+export function feedPipe(root, rust, { from, to, r, cut: rule = METRE }) {
   // The same rule stands every pipe on the Refinery and the Bastion (#652),
   // so the arithmetic lives once, in `pipeBetween` below.
-  pipeBetween(root, alongZ, rust, { name: 'feed_pipe', from, to, r, facets });
+  pipeBetween(root, alongZ, rust, { name: 'feed_pipe', from, to, r, cut: rule });
 }
 
 /**
@@ -1942,10 +2056,11 @@ export function turretHouse(root, { black, grey, rust }, { housing, glacis, roof
  * muzzle, and not a number chosen here. The barrel and the jacket sit on
  * that axis at their own `along`; the recoil cylinder keeps its own `y`
  * under the breech and lies parallel; the counterweight is a box yawed by
- * the bearing, astern. The five tubes are eight-facet frusta, `r` `[top,
- * bottom]` by `length` (the recoil cylinder six-facet), each laid along the
- * axis in YXZ order — the yaw, then a quarter turn less the pitch about the
- * beam the yaw carried the tube's X onto (kit.mjs `eulerXYZ`).
+ * the bearing, astern. The five tubes are frusta, `r` `[top, bottom]` by
+ * `length`, each at the rule's count for its wider end (`cut`, #919; the
+ * file's were eight, the recoil cylinder six), each laid along the axis in
+ * YXZ order — the yaw, then a quarter turn less the pitch about the beam
+ * the yaw carried the tube's X onto (kit.mjs `eulerXYZ`).
  *
  * The approved file turned each tube `[π/2 − 0.06, bearing, 0]` in three's
  * XYZ order, which yaws *before* it lays the tube down, so every tube lay
@@ -1960,18 +2075,18 @@ export function turretHouse(root, { black, grey, rust }, { housing, glacis, roof
  * onto the axis with the rest, and the counterweight does not move at all.
  */
 export function heavyBarrel(root, { black, grey, rust }, opts) {
-  const { breech, barrel, jacket, brake, recoil, counterweight, bearing } = opts;
+  const { breech, barrel, jacket, brake, recoil, counterweight, bearing, cut: rule = METRE } = opts;
   const pitch = Math.atan2(brake.y - breech.y, brake.along - breech.along);
   const at = (p) => [p.along * Math.sin(bearing), p.y, p.along * Math.cos(bearing)];
   const onAxis = (p) => ({ ...p, y: breech.y + (p.along - breech.along) * Math.tan(pitch) });
   const laid = eulerXYZ([Math.PI / 2 - pitch, bearing, 0], 'YXZ');
-  const tube = (name, p, mat, facets = 8) =>
-    part(root, name, cyl(p.r[0], p.r[1], p.length, facets), mat, drawn(at(p), laid));
+  const tube = (name, p, mat) =>
+    part(root, name, cyl(p.r[0], p.r[1], p.length, rule.round(Math.max(...p.r))), mat, drawn(at(p), laid));
   tube('barrel_breech', breech, grey);
   tube('barrel', onAxis(barrel), black);
   tube('barrel_jacket', onAxis(jacket), rust);
   tube('muzzle_brake', brake, grey);
-  tube('recoil_cylinder', recoil, grey, 6);
+  tube('recoil_cylinder', recoil, grey);
   const weight = box(...counterweight.size);
   part(root, 'counterweight', weight, rust, drawn(at(counterweight), [0, bearing, 0]));
 }
@@ -1979,11 +2094,12 @@ export function heavyBarrel(root, { black, grey, rust }, opts) {
 /**
  * The one work lamp on its bracket — the turret's whole resting light budget,
  * flat on an upward face because the maps are top-down (kit.mjs). Every
- * number is the approved turret's own (#639): a sphere of `r` on `segments`
- * at `at` with the bracket box under it, through kit.mjs `drawn`.
+ * number is the approved turret's own (#639): a sphere of `r` at the rule's
+ * two counts (`cut`, #919; the file's six by four) at `at` with the bracket
+ * box under it, through kit.mjs `drawn`.
  */
-export function baseLamp(root, { lampMat, black }, { at, bracket, r, segments = [6, 4] }) {
-  part(root, 'base_lamp', new THREE.SphereGeometry(r, ...segments), lampMat, drawn(at));
+export function baseLamp(root, { lampMat, black }, { at, bracket, r, cut: rule = METRE }) {
+  part(root, 'base_lamp', lampOrb(r, rule), lampMat, drawn(at));
   part(root, 'base_lamp_bracket', box(...bracket.size), black, drawn(bracket.at));
 }
 
@@ -2057,6 +2173,7 @@ export function slipwayHall(hall, { black, grey, rust, amber, flood }, opts) {
     floods = { count: 6, from: -125, pitch: 50, size: [10, 0.5, 5], y: 2.1 },
     tanks = { xs: [-120, -40, 40, 120], y: 3, z: 90, r: 6, length: 40 },
     rivets = { from: -145, to: 145, count: 24, y: 32.7, z: 78, size: [2.2, 1.32, 2.2] },
+    cut: rule = METRE,
   } = opts;
   add(hall, 'hall_body', box(...body.size), black, [0, body.y, sgn * z]);
   add(hall, 'hall_roof', box(...roof.size), grey, [0, roof.y, sgn * z]);
@@ -2073,12 +2190,14 @@ export function slipwayHall(hall, { black, grey, rust, amber, flood }, opts) {
       r: stacks.r,
       rTop: stacks.rTop,
       height: stacks.height,
+      cut: rule,
     });
     stackBand(hall, amber, {
       name: `stack_band_${i}`,
       at: [x, bands.y, sgn * stacks.z],
       r: bands.r,
       h: bands.h,
+      cut: rule,
     });
   });
   patches.forEach(({ size, at: [x, y, pz], mat }, i) =>
@@ -2097,7 +2216,7 @@ export function slipwayHall(hall, { black, grey, rust, amber, flood }, opts) {
     add(
       hall,
       `tank_${i}`,
-      cyl(tanks.r, tanks.r, tanks.length, 10),
+      cyl(tanks.r, tanks.r, tanks.length, rule.round(tanks.r)),
       grey,
       [x, tanks.y, sgn * tanks.z],
       [0, 0, -Math.PI / 2]
@@ -2109,7 +2228,7 @@ export function slipwayHall(hall, { black, grey, rust, amber, flood }, opts) {
 /* --------------------------------------------------------------------------
  * Shared kinds. The Light Scout is the first of the six kinds every navy
  * models (#588, off #540 Phase 3), and the Klaxon's is a pressure vessel
- * with the fittings bolted on: a twenty-sided drum and its cap, a square
+ * with the fittings bolted on: a drum and its cap, a square
  * wedge for a nose, a boxed sensor head with two whips, a spine plate and a
  * skid, three patches and twelve rivets, a shrouded screw, four fins, two
  * stencils and the amber that is its whole resting light. The builders take
@@ -2128,10 +2247,13 @@ export function slipwayHall(hall, { black, grey, rust, amber, flood }, opts) {
 
 /**
  * A drum: a closed cylinder, `radii` [top, bottom] as drawn and laid along
- * the keel by its node, `facets` round — the one curve a pressure vessel
- * demanded. The hull, the cap that closes it astern, and the screw's hub.
+ * the keel by its node, the rule's count round at its wider rim (`cut`,
+ * #919; the exports' were twenty on the scout, twenty-eight on the Corvette
+ * and the Cruiser) — the one curve a pressure vessel demanded. The hull,
+ * the cap that closes it astern, and the screw's hub.
  */
-export function drum(root, mat, { name, radii, length, facets = 20, ...placement }) {
+export function drum(root, mat, opts) {
+  const { name, radii, length, cut: rule = METRE, facets = rule.round(Math.max(...radii)), ...placement } = opts;
   return part(root, name, cyl(radii[0], radii[1], length, facets), mat, placement);
 }
 
@@ -2153,14 +2275,15 @@ export function squareWedge(root, mat, opts) {
 
 /**
  * Standing pipes: thin cylinders on Y, `[name, r, length, placement]` each,
- * `facets` round — the scout's two whip aerials off its sensor head, at
- * their own heights and off the centreline each its own way; the Corvette's
- * two masts and the Harvester's one; the Cruiser's three hydrophones (#649).
- * A riser or a vent in its own plate is `drum` with no turn on its node.
+ * the rule's count round — the scout's two whip aerials off its sensor head,
+ * at their own heights and off the centreline each its own way; the
+ * Corvette's two masts and the Harvester's one; the Cruiser's three
+ * hydrophones (#649). A riser or a vent in its own plate is `drum` with no
+ * turn on its node.
  */
-export function whips(root, mat, { whips: list, facets = 8 }) {
+export function whips(root, mat, { whips: list, cut: rule = METRE }) {
   list.forEach(([name, r, length, placement]) =>
-    part(root, name, cyl(r, r, length, facets), mat, placement)
+    part(root, name, cyl(r, r, length, rule.round(r)), mat, placement)
   );
 }
 
@@ -2192,13 +2315,10 @@ export function flankRivets(root, mat, { name = 'rivet', size = 0.14, y, rows, r
   );
 }
 
-/** The screw's shroud: a ring of `tube` section on radius `R`, across the keel once turned. */
-export function shroud(
-  root,
-  mat,
-  { name = 'prop_shroud', R, tube, facets = [10, 20], ...placement }
-) {
-  return part(root, name, torus(R, tube, ...facets), mat, placement);
+/** The screw's shroud: a ring of `tube` section on radius `R`, across the keel once turned, the rule's count on both. */
+export function shroud(root, mat, opts) {
+  const { name = 'prop_shroud', R, tube, cut: rule = METRE, ...placement } = opts;
+  return part(root, name, torus(R, tube, rule.round(tube), rule.round(R + tube)), mat, placement);
 }
 
 /**
@@ -2221,8 +2341,8 @@ export function screwBlades(root, mat, opts) {
  * geometry shared — on the mast and one each side, which is the light gate 3
  * measures on this hull.
  */
-export function domes(root, light, { r, facets = [8, 6], domes: list }) {
-  const dome = new THREE.SphereGeometry(r, ...facets);
+export function domes(root, light, { r, domes: list, cut: rule = METRE }) {
+  const dome = new THREE.SphereGeometry(r, ...rule.orb(r));
   // A placement carrying `on` is a seed: the dome grows from the nearest of
   // the parts it names, half its radius in (kit.mjs `seat`), where the file
   // hung it off — the Klaxon scout's mast dome, 0.27 m over the sensor head
@@ -2286,13 +2406,13 @@ export function runningLights(root, lampM, { name = 'runlight', ...opts }) {
  * files write each family across both sides before the next.
  */
 export function ballastPair(root, { blister, cap: capMat, strap }, opts) {
-  const { x, y, z, r, length, facets, cap, straps } = opts;
+  const { x, y, z, r, length, cap, straps, cut: rule = METRE } = opts;
   flanks((side, sgn) =>
     drum(root, blister, {
       name: `ballast_${side}`,
       radii: [r, r],
       length,
-      facets,
+      cut: rule,
       ...drawn([sgn * x, y, z], ALONG_KEEL),
     })
   );
@@ -2301,7 +2421,7 @@ export function ballastPair(root, { blister, cap: capMat, strap }, opts) {
       name: `ballast_cap_${side}f`,
       radii: [cap.tipR, r],
       length: cap.length,
-      facets,
+      cut: rule,
       ...drawn([sgn * x, y, cap.z], ALONG_KEEL),
     })
   );
@@ -2327,7 +2447,8 @@ export function ballastPair(root, { blister, cap: capMat, strap }, opts) {
  */
 export function torpedoRacks(root, { frame: frameMat, tube: tubeMat, collar: collarMat }, opts) {
   const { racks, frame, tubes, tube, collar, tubeName = (tag, i) => `torp_${tag}_${i}` } = opts;
-  const bore = cyl(tube.r, tube.r, tube.length, tube.facets ?? 14);
+  const { cut: rule = METRE } = opts;
+  const bore = cyl(tube.r, tube.r, tube.length, rule.round(tube.r));
   const placed = [];
   for (const { tag, side, z } of racks) {
     part(root, `rack_frame_${tag}`, box(...frame.size), frameMat, drawn([side * frame.x, frame.y, z]));
@@ -2338,7 +2459,7 @@ export function torpedoRacks(root, { frame: frameMat, tube: tubeMat, collar: col
     });
   }
   if (!collar) return;
-  const ring = cyl(collar.r, collar.r, collar.length, tube.facets ?? 14);
+  const ring = cyl(collar.r, collar.r, collar.length, rule.round(collar.r));
   placed.forEach(([x, y, z], k) => {
     part(root, `torp_collar_${k}f`, ring, collarMat, drawn([x, y, z + collar.stand], ALONG_KEEL));
     part(root, `torp_collar_${k}a`, ring, collarMat, drawn([x, y, z - collar.stand], ALONG_KEEL));
@@ -2372,21 +2493,22 @@ export function cargoHold(root, { grey, amber }, { tag, y, z, side, ends, stripe
  * the wheel turns. parts.mjs prints the bearings past a half turn wrapped
  * into (−π, π]; they are the same rotations.
  */
-export function bucketWheel(root, { black, rust, grey }, { at, wheel, hub, buckets }) {
+export function bucketWheel(root, { black, rust, grey }, opts) {
+  const { at, wheel, hub, buckets, cut: rule = METRE } = opts;
   const [x, y, z] = at;
   const acrossBeam = [0, 0, Math.PI / 2];
   drum(root, black, {
     name: 'dredge_wheel',
     radii: [wheel.r, wheel.r],
     length: wheel.width,
-    facets: 12,
+    cut: rule,
     ...drawn(at, acrossBeam),
   });
   drum(root, rust, {
     name: 'dredge_hub',
     radii: [hub.r, hub.r],
     length: hub.width,
-    facets: 10,
+    cut: rule,
     ...drawn(at, acrossBeam),
   });
   for (let i = 0; i < buckets.count; i++) {
@@ -2494,20 +2616,22 @@ const LAID = [0, 0, Math.PI / 2];
  * end-cap-fore-core · bolt-fore-1..12 · end-cap-aft …`). Every part is a
  * buffer of its own, as the export carries them.
  */
-export function bandedHull(root, { black, grey, brown }, { hull, bands, caps, bolts }) {
-  add(root, 'pressure-hull', cyl(hull.r, hull.r, hull.length, hull.facets), black, [0, 0, 0], LAID);
+export function bandedHull(root, { black, grey, brown }, { hull, bands, caps, bolts, cut: rule = METRE }) {
+  // Every ring at its own radius (#919): the drum's, the bands' and the
+  // caps' a step out from it, the cores' inside it, the bolts' their own.
+  add(root, 'pressure-hull', cyl(hull.r, hull.r, hull.length, rule.round(hull.r)), black, [0, 0, 0], LAID);
   bands.x.forEach((x, i) =>
-    add(root, `reinforcement-band-${i + 1}`, cyl(bands.r, bands.r, bands.width, hull.facets), grey, [x, 0, 0], LAID)
+    add(root, `reinforcement-band-${i + 1}`, cyl(bands.r, bands.r, bands.width, rule.round(bands.r)), grey, [x, 0, 0], LAID)
   );
   for (const [end, sgn] of [
     ['fore', 1],
     ['aft', -1],
   ]) {
-    add(root, `end-cap-${end}`, cyl(caps.r, caps.r, caps.width, hull.facets), grey, [sgn * caps.x, 0, 0], LAID);
+    add(root, `end-cap-${end}`, cyl(caps.r, caps.r, caps.width, rule.round(caps.r)), grey, [sgn * caps.x, 0, 0], LAID);
     add(
       root,
       `end-cap-${end}-core`,
-      cyl(caps.core.r, caps.core.r, caps.core.width, caps.core.facets),
+      cyl(caps.core.r, caps.core.r, caps.core.width, rule.round(caps.core.r)),
       black,
       [sgn * caps.core.x, 0, 0],
       LAID
@@ -2517,7 +2641,7 @@ export function bandedHull(root, { black, grey, brown }, { hull, bands, caps, bo
       add(
         root,
         `bolt-${end}-${k + 1}`,
-        cyl(bolts.r, bolts.r, bolts.h, 6),
+        cyl(bolts.r, bolts.r, bolts.h, rule.round(bolts.r)),
         brown,
         [sgn * bolts.x, bolts.radius * Math.cos(a), bolts.radius * Math.sin(a)],
         LAID
@@ -2533,35 +2657,37 @@ export function bandedHull(root, { black, grey, brown }, { hull, bands, caps, bo
  * periscope-mast · periscope-head · snorkel-mast`).
  */
 export function conningTower(root, { black, grey, brown, lampM }, opts) {
-  const { base, tower, cap, dome, periscope, snorkel } = opts;
+  const { base, tower, cap, dome, periscope, snorkel, cut: rule = METRE } = opts;
   add(root, 'tower-base', box(...base.size), black, base.at);
   add(root, 'tower', box(...tower.size), grey, tower.at);
   add(root, 'tower-cap', box(...cap.size), brown, cap.at);
-  add(root, 'tower-dome-light', cyl(dome.rTop, dome.r, dome.h, 8), lampM, dome.at);
-  add(root, 'periscope-mast', cyl(periscope.r, periscope.r, periscope.h, 8), grey, periscope.at);
+  add(root, 'tower-dome-light', cyl(dome.rTop, dome.r, dome.h, rule.round(Math.max(dome.r, dome.rTop))), lampM, dome.at);
+  add(root, 'periscope-mast', cyl(periscope.r, periscope.r, periscope.h, rule.round(periscope.r)), grey, periscope.at);
   add(root, 'periscope-head', box(...periscope.head.size), brown, periscope.head.at);
-  add(root, 'snorkel-mast', cyl(snorkel.r, snorkel.r, snorkel.h, 8), brown, snorkel.at);
+  add(root, 'snorkel-mast', cyl(snorkel.r, snorkel.r, snorkel.h, rule.round(snorkel.r)), brown, snorkel.at);
 }
 
 /**
- * Ballast tanks: a ten-facet drum a side laid along the keel at `z` either
- * beam, each with a cap fore and aft and a strap aft and fore, port first
- * (`ballast-tank-port · ballast-cap-fore-port · ballast-cap-aft-port ·
- * tank-strap-port-a · tank-strap-port-f · …-stb`).
+ * Ballast tanks: a drum a side laid along the keel at `z` either beam, each
+ * with a cap fore and aft and a strap aft and fore, port first, every ring
+ * at the rule's count for its own radius (`ballast-tank-port ·
+ * ballast-cap-fore-port · ballast-cap-aft-port · tank-strap-port-a ·
+ * tank-strap-port-f · …-stb`).
  */
-export function ballastTanks(root, { brown, grey, black }, { z, y, tank, caps, straps }) {
+export function ballastTanks(root, { brown, grey, black }, { z, y, tank, caps, straps, cut: rule = METRE }) {
+  const n = { tank: rule.round(tank.r), cap: rule.round(caps.r), strap: rule.round(straps.r) };
   for (const [side, sgn] of [
     ['port', -1],
     ['stb', 1],
   ]) {
-    add(root, `ballast-tank-${side}`, cyl(tank.r, tank.r, tank.length, 10), brown, [tank.x, y, sgn * z], LAID);
-    add(root, `ballast-cap-fore-${side}`, cyl(caps.r, caps.r, caps.width, 10), grey, [caps.fore, y, sgn * z], LAID);
-    add(root, `ballast-cap-aft-${side}`, cyl(caps.r, caps.r, caps.width, 10), grey, [caps.aft, y, sgn * z], LAID);
+    add(root, `ballast-tank-${side}`, cyl(tank.r, tank.r, tank.length, n.tank), brown, [tank.x, y, sgn * z], LAID);
+    add(root, `ballast-cap-fore-${side}`, cyl(caps.r, caps.r, caps.width, n.cap), grey, [caps.fore, y, sgn * z], LAID);
+    add(root, `ballast-cap-aft-${side}`, cyl(caps.r, caps.r, caps.width, n.cap), grey, [caps.aft, y, sgn * z], LAID);
     for (const [end, x] of [
       ['a', straps.aft],
       ['f', straps.fore],
     ])
-      add(root, `tank-strap-${side}-${end}`, cyl(straps.r, straps.r, straps.width, 10), black, [x, y, sgn * z], LAID);
+      add(root, `tank-strap-${side}-${end}`, cyl(straps.r, straps.r, straps.width, n.strap), black, [x, y, sgn * z], LAID);
   }
 }
 
@@ -2571,11 +2697,12 @@ export function ballastTanks(root, { brown, grey, black }, { z, y, tank, caps, s
  * second elbow on the other side of the tower, in the file's order
  * (`pipe-main · pipe-elbow-a · pipe-drop · pipe-main-2 · pipe-elbow-b`).
  */
-export function deckPipework(root, { grey, brown }, { main, elbowA, drop, main2, elbowB }) {
-  add(root, 'pipe-main', cyl(main.r, main.r, main.length, 8), grey, main.at, LAID);
+export function deckPipework(root, { grey, brown }, opts) {
+  const { main, elbowA, drop, main2, elbowB, cut: rule = METRE } = opts;
+  add(root, 'pipe-main', cyl(main.r, main.r, main.length, rule.round(main.r)), grey, main.at, LAID);
   add(root, 'pipe-elbow-a', box(...elbowA.size), brown, elbowA.at);
-  add(root, 'pipe-drop', cyl(drop.r, drop.r, drop.length, 8), grey, drop.at, [0, 0, drop.lean]);
-  add(root, 'pipe-main-2', cyl(main2.r, main2.r, main2.length, 8), grey, main2.at, LAID);
+  add(root, 'pipe-drop', cyl(drop.r, drop.r, drop.length, rule.round(drop.r)), grey, drop.at, [0, 0, drop.lean]);
+  add(root, 'pipe-main-2', cyl(main2.r, main2.r, main2.length, rule.round(main2.r)), grey, main2.at, LAID);
   add(root, 'pipe-elbow-b', box(...elbowB.size), brown, elbowB.at);
 }
 
@@ -2596,11 +2723,13 @@ export function deckPipework(root, { grey, brown }, { main, elbowA, drop, main2,
  * the insets are read off the four exports' sixteen rivets and reproduce
  * them to the fifth decimal.
  */
-export function rivetedPatch(root, { plate, rivet: rivetMat }, { name, size, at, roll, rivet }) {
+export function rivetedPatch(root, { plate, rivet: rivetMat }, opts) {
+  const { name, size, at, roll, rivet, cut: rule = METRE } = opts;
   add(root, name, box(...size), plate, at, [roll, 0, 0]);
   const [w, , d] = size;
   const c = Math.cos(roll);
   const s = Math.sin(roll);
+  const head = cyl(rivet.r, rivet.r, rivet.h, rule.round(rivet.r));
   for (const [tag, lz] of [
     ['p', -(d / 2 - rivet.inset.p)],
     ['s', d / 2 - rivet.inset.s],
@@ -2612,7 +2741,7 @@ export function rivetedPatch(root, { plate, rivet: rivetMat }, { name, size, at,
       add(
         root,
         `${name}-rivet${end}${tag}`,
-        cyl(rivet.r, rivet.r, rivet.h, 6),
+        head,
         rivetMat,
         [at[0] + lx, at[1] - lz * s, at[2] + lz * c],
         [roll, 0, 0]
@@ -2630,13 +2759,13 @@ export function rivetedPatch(root, { plate, rivet: rivetMat }, { name, size, at,
  * is where the approved file has it. "Folded manipulator limbs".
  */
 export function manipulator(root, { grey, brown, black }, opts) {
-  const { side, at, shoulder, pin, upperArm, elbow, forearm, wrist, claws } = opts;
+  const { side, at, shoulder, pin, upperArm, elbow, forearm, wrist, claws, cut: rule = METRE } = opts;
   const frame = group(root, `manipulator-${side}`, { at });
   const hinge = [Math.PI / 2, 0, 0];
   add(frame, `shoulder-${side}`, box(...shoulder.size), grey);
-  add(frame, `shoulder-pin-${side}`, cyl(pin.r, pin.r, pin.length, 8), brown, pin.at, hinge);
+  add(frame, `shoulder-pin-${side}`, cyl(pin.r, pin.r, pin.length, rule.round(pin.r)), brown, pin.at, hinge);
   add(frame, `upper-arm-${side}`, box(...upperArm.size), black, upperArm.at, [0, 0, upperArm.roll]);
-  add(frame, `elbow-${side}`, cyl(elbow.r, elbow.r, elbow.length, 8), grey, elbow.at, hinge);
+  add(frame, `elbow-${side}`, cyl(elbow.r, elbow.r, elbow.length, rule.round(elbow.r)), grey, elbow.at, hinge);
   add(frame, `forearm-${side}`, box(...forearm.size), black, forearm.at, [0, 0, forearm.roll]);
   add(frame, `wrist-${side}`, box(...wrist.size), brown, wrist.at);
   add(frame, `claw-a-${side}`, box(...claws.size), grey, claws.a, [0, claws.yaw, 0]);
@@ -2644,15 +2773,17 @@ export function manipulator(root, { grey, brown, black }, opts) {
 }
 
 /**
- * The screw: a six-by-twelve torus of a shroud yawed across the keel, the
- * hub drawn in astern, and four blades of a box each, a quarter turn apart
- * about the keel and every one pitched `blades.pitch` about Y (`prop-shroud
- * · prop-hub · prop-blade-1..4`). parts.mjs prints the fourth blade's
- * three-quarter turn as −π/2; it is the same rotation.
+ * The screw: a torus of a shroud yawed across the keel, the hub drawn in
+ * astern, each at the rule's count, and four blades of a box each, a quarter
+ * turn apart about the keel and every one pitched `blades.pitch` about Y
+ * (`prop-shroud · prop-hub · prop-blade-1..4`). parts.mjs prints the fourth
+ * blade's three-quarter turn as −π/2; it is the same rotation.
  */
-export function submersibleScrew(root, { grey, brown, black }, { at, shroud, hub, blades }) {
-  add(root, 'prop-shroud', torus(shroud.R, shroud.tube, 6, 12), grey, at, [0, Math.PI / 2, 0]);
-  add(root, 'prop-hub', cyl(hub.radii[0], hub.radii[1], hub.length, 8), brown, at, LAID);
+export function submersibleScrew(root, { grey, brown, black }, opts) {
+  const { at, shroud, hub, blades, cut: rule = METRE } = opts;
+  const ring = torus(shroud.R, shroud.tube, rule.round(shroud.tube), rule.round(shroud.R + shroud.tube));
+  add(root, 'prop-shroud', ring, grey, at, [0, Math.PI / 2, 0]);
+  add(root, 'prop-hub', cyl(hub.radii[0], hub.radii[1], hub.length, rule.round(Math.max(...hub.radii))), brown, at, LAID);
   for (let i = 0; i < blades.count; i++)
     add(root, `prop-blade-${i + 1}`, box(...blades.size), black, at, [
       (i * 2 * Math.PI) / blades.count,
@@ -2690,7 +2821,7 @@ export function skids(root, { brown, black }, { z, skid, legs }) {
  * lit frustum standing on the stern. With the nose viewport and the tower
  * dome, the whole light of a hull that idles at SIG 22.
  */
-export function hullLights(root, lampM, { running, strip, beacon }) {
+export function hullLights(root, lampM, { running, strip, beacon, cut: rule = METRE }) {
   // `running.at` names a light out of its rank — `{ 'stb-4': [x, y, z] }` —
   // for the one the Submersible remounts over a repair patch (#890); the
   // rank itself is unmoved and the Barge passes none.
@@ -2721,7 +2852,14 @@ export function hullLights(root, lampM, { running, strip, beacon }) {
   // The Baffle Barge's six running lights are this rank in this order and
   // nothing else of it (#652), so the strip and the beacon are optional.
   if (strip) add(root, 'tower-light-strip', box(...strip.size), lampM, strip.at);
-  if (beacon) add(root, 'aft-beacon', cyl(beacon.rTop, beacon.r, beacon.h, 8), lampM, beacon.at);
+  if (beacon)
+    add(
+      root,
+      'aft-beacon',
+      cyl(beacon.rTop, beacon.r, beacon.h, rule.round(Math.max(beacon.r, beacon.rTop))),
+      lampM,
+      beacon.at
+    );
 }
 
 /**
@@ -2750,48 +2888,53 @@ export function glowLamps(root, { color, intensity, range, lamps }) {
 const TO_BOW = [0, 0, -Math.PI / 2];
 
 /**
- * The cans: a twelve-facet drum each, centred at `x` on the keel in its own
- * plate, capped fore and aft with a frustum in older plate drawn in to
- * `cap.tip` of the can's radius and standing `cap.proud` past the can's
- * end, and five rivets along its crown at `pitch`, `rivet.proud` above the
- * plate — numbered by their place in the file, the way the Bulwark and the
- * Tender count theirs (`can_0 · can_cap_0f · can_cap_0a · rivet_3..7 ·
- * can_1 …`), a box each.
+ * The cans: a drum each at the rule's count (`cut`, #919; the file's
+ * twelve), centred at `x` on the keel in its own plate, capped fore and aft
+ * with a frustum in older plate drawn in to `cap.tip` of the can's radius
+ * and standing `cap.proud` past the can's end, and five rivets along its
+ * crown at `pitch`, `rivet.proud` above the plate — numbered by their place
+ * in the file, the way the Bulwark and the Tender count theirs (`can_0 ·
+ * can_cap_0f · can_cap_0a · rivet_3..7 · can_1 …`), a box each. The crown
+ * is where the count puts it: a vertex at twelve, the middle of a plate at
+ * eight and ten (`crownOnX`), so the rivets come down with it.
  */
-export function cans(root, { rust, grey }, { cans: list, cap, rivet }) {
+export function cans(root, { rust, grey }, { cans: list, cap, rivet, cut: rule = METRE }) {
   list.forEach(({ mat, x, r, length, pitch }, i) => {
-    add(root, `can_${i}`, cyl(r, r, length, 12), mat, [x, 0, 0], TO_BOW);
+    const n = rule.round(r);
+    add(root, `can_${i}`, cyl(r, r, length, n), mat, [x, 0, 0], TO_BOW);
     const reach = length / 2 + cap.proud;
-    add(root, `can_cap_${i}f`, cyl(cap.tip * r, r, cap.length, 12), rust, [x + reach, 0, 0], TO_BOW);
-    add(root, `can_cap_${i}a`, cyl(r, cap.tip * r, cap.length, 12), rust, [x - reach, 0, 0], TO_BOW);
+    add(root, `can_cap_${i}f`, cyl(cap.tip * r, r, cap.length, n), rust, [x + reach, 0, 0], TO_BOW);
+    add(root, `can_cap_${i}a`, cyl(r, cap.tip * r, cap.length, n), rust, [x - reach, 0, 0], TO_BOW);
+    const crown = crownOnX(r, n);
     for (let k = -2; k <= 2; k++)
-      add(root, `rivet_${root.children.length}`, box(...rivet.size), grey, [x + k * pitch, r + rivet.proud, 0]);
+      add(root, `rivet_${root.children.length}`, box(...rivet.size), grey, [x + k * pitch, crown + rivet.proud, 0]);
   });
 }
 
-/** Pipe runs laid along the keel, `[name, r, length, at]` each, six-facet — two, neither where the other is. */
-export function keelPipes(root, mat, { pipes, facets = 6 }) {
-  pipes.forEach(([name, r, length, at]) => add(root, name, cyl(r, r, length, facets), mat, at, TO_BOW));
+/** Pipe runs laid along the keel, `[name, r, length, at]` each, at the rule's count — two, neither where the other is. */
+export function keelPipes(root, mat, { pipes, cut: rule = METRE }) {
+  pipes.forEach(([name, r, length, at]) => add(root, name, cyl(r, r, length, rule.round(r)), mat, at, TO_BOW));
 }
 
-/** The ram: a six-facet cone drawn to a point ahead of the bow block (`bow_ram`). */
-export function ramCone(root, mat, { r, length, at, facets = 6 }) {
-  add(root, 'bow_ram', cyl(0, r, length, facets), mat, at, TO_BOW);
+/** The ram: a cone at the rule's count drawn to a point ahead of the bow block (`bow_ram`). */
+export function ramCone(root, mat, { r, length, at, cut: rule = METRE }) {
+  add(root, 'bow_ram', cyl(0, r, length, rule.round(r)), mat, at, TO_BOW);
 }
 
-/** The tail screw: a ten-facet shroud and a six-facet hub on one axis astern (`prop_shroud · prop_hub`). */
-export function tailScrew(root, { grey, black }, { at, shroud, hub }) {
-  add(root, 'prop_shroud', cyl(shroud.r, shroud.r, shroud.length, 10), grey, at, TO_BOW);
-  add(root, 'prop_hub', cyl(hub.r, hub.r, hub.length, 6), black, at, TO_BOW);
+/** The tail screw: a shroud and a hub on one axis astern, each at the rule's count (`prop_shroud · prop_hub`). */
+export function tailScrew(root, { grey, black }, { at, shroud, hub, cut: rule = METRE }) {
+  add(root, 'prop_shroud', cyl(shroud.r, shroud.r, shroud.length, rule.round(shroud.r)), grey, at, TO_BOW);
+  add(root, 'prop_hub', cyl(hub.r, hub.r, hub.length, rule.round(hub.r)), black, at, TO_BOW);
 }
 
 /**
- * The spine-gun: its mount block on the crown and the gun, a six-facet tube
- * drawn in toward the muzzle, laid forward off it (`gun_mount · gun`).
+ * The spine-gun: its mount block on the crown and the gun, a tube at the
+ * rule's count drawn in toward the muzzle, laid forward off it (`gun_mount ·
+ * gun`).
  */
-export function spineGun(root, { grey, black }, { mount, gun }) {
+export function spineGun(root, { grey, black }, { mount, gun, cut: rule = METRE }) {
   add(root, 'gun_mount', box(...mount.size), grey, mount.at);
-  add(root, 'gun', cyl(gun.radii[0], gun.radii[1], gun.length, 6), black, gun.at, TO_BOW);
+  add(root, 'gun', cyl(gun.radii[0], gun.radii[1], gun.length, rule.round(Math.max(...gun.radii))), black, gun.at, TO_BOW);
 }
 
 /* --------------------------------------------------------------------------
@@ -2843,9 +2986,6 @@ function putSeated(root, put, name, geo, mat, on, t, opts) {
   return put.frame.place(root, name, geo, mat, { at, rot });
 }
 
-/** The lamp these three structures hang everywhere: a six-by-four orb, as the turret's `base_lamp` is. */
-const lampOrb = (r) => new THREE.SphereGeometry(r, 6, 4);
-
 /*
  * The Baffle Barge's palette was `bargeInk` until #888: the Submersible's
  * four hyphenated finishes and two of its own, the foam and the hazard
@@ -2862,7 +3002,8 @@ const lampOrb = (r) => new THREE.SphereGeometry(r, 6, 4);
  * follows, each from a round point to a round point. The export's own
  * midpoints and lengths fall out of the same arithmetic, to the bit.
  */
-export function pipeBetween(root, put, mat, { name, from, to, r, facets = 6 }) {
+export function pipeBetween(root, put, mat, { name, from, to, r, cut: rule = METRE }) {
+  const facets = rule.round(r);
   const A = new THREE.Vector3(...from);
   const B = new THREE.Vector3(...to);
   const run = B.clone().sub(A);
@@ -2875,17 +3016,26 @@ export function pipeBetween(root, put, mat, { name, from, to, r, facets = 6 }) {
 }
 
 /**
- * A ballast tank with a reinforcing band round it: a nine-facet drum and,
- * where the file fits one, a five-by-ten torus of `band.R` by `band.t` at
- * the same point under the same turn (`ballast · ballast_band` on the
- * Refinery, `ballast_a · ballast_a_band` on the Bastion, whose `ballast_b`
- * has none). `ballastBlisters` and `ballastPair` above are hulls' pairs
- * along the keel; a structure's tank lies where it was dropped.
+ * A ballast tank with a reinforcing band round it: a drum and, where the
+ * file fits one, a torus of `band.R` by `band.t` at the same point under
+ * the same turn, each at the rule's count (`cut`, #919; the files' nine and
+ * five by ten) (`ballast · ballast_band` on the Refinery, `ballast_a ·
+ * ballast_a_band` on the Bastion, whose `ballast_b` has none).
+ * `ballastBlisters` and `ballastPair` above are hulls' pairs along the
+ * keel; a structure's tank lies where it was dropped.
  */
 export function bandedTank(root, put, { tank, band: bandMat }, opts) {
-  const { name, at, r, length, facets = 9, rot, band } = opts;
-  put(root, name, cyl(r, r, length, facets), tank, at, rot);
-  if (band) put(root, `${name}_band`, torus(band.R, band.t, 5, 10), bandMat, at, rot);
+  const { name, at, r, length, rot, band, cut: rule = METRE } = opts;
+  put(root, name, cyl(r, r, length, rule.round(r)), tank, at, rot);
+  if (band)
+    put(
+      root,
+      `${name}_band`,
+      torus(band.R, band.t, rule.round(band.t), rule.round(band.R + band.t)),
+      bandMat,
+      at,
+      rot
+    );
 }
 
 /* -- The Foundry: "unit production hall with a recessed launch bay and
@@ -2938,15 +3088,15 @@ export function productionHall(root, put, { grey, black }, opts) {
 }
 
 /**
- * The hall's two stacks: a twelve-facet frustum in older plate with the
- * hazard band ringed round it, and a second, shorter, in black with no band
- * (`stack_a · stack_a_band · stack_b`). `stack` and `stackBand` above are
- * the Tender's and the Bulwark's ten-facet ones in the X-long frame.
+ * The hall's two stacks: a frustum in older plate with the hazard band
+ * ringed round it, and a second, shorter, in black with no band, each at
+ * the rule's count (`stack_a · stack_a_band · stack_b`). `stack` and
+ * `stackBand` above are the Tender's and the Bulwark's in the X-long frame.
  */
-export function hallStacks(root, put, { rust, amber, black }, { a, band, b }) {
-  put(root, 'stack_a', cyl(a.radii[0], a.radii[1], a.h, 12), rust, a.at);
-  put(root, 'stack_a_band', cyl(band.r, band.r, band.h, 12), amber, band.at);
-  put(root, 'stack_b', cyl(b.radii[0], b.radii[1], b.h, 12), black, b.at);
+export function hallStacks(root, put, { rust, amber, black }, { a, band, b, cut: rule = METRE }) {
+  put(root, 'stack_a', cyl(a.radii[0], a.radii[1], a.h, rule.round(Math.max(...a.radii))), rust, a.at);
+  put(root, 'stack_a_band', cyl(band.r, band.r, band.h, rule.round(band.r)), amber, band.at);
+  put(root, 'stack_b', cyl(b.radii[0], b.radii[1], b.h, rule.round(Math.max(...b.radii))), black, b.at);
 }
 
 /** Two roof vents, a box each, one older plate and one black (`roof_vent_a · roof_vent_b`). */
@@ -3052,23 +3202,25 @@ export function gantryCranes(root, put, { grey, black, rust, amber, lampM }, opt
  * The tanks along the hall's flanks: two to port, one over the other in
  * black and older plate, strapped twice; one to starboard in older plate
  * with a black cap drawn in on its forward end (`tank_p1 · tank_p2 ·
- * tank_strap_a · tank_strap_b · tank_s1 · tank_s_cap`). Eighteen-facet
- * drums laid along the export's z by the same quarter turn the shared
- * kinds put on a keel drum. No pair on this hall matches its opposite.
+ * tank_strap_a · tank_strap_b · tank_s1 · tank_s_cap`). Drums at the rule's
+ * count (`cut`, #919; the file's eighteen) laid along the export's z by the
+ * same quarter turn the shared kinds put on a keel drum. No pair on this
+ * hall matches its opposite.
  */
-export function sideTanks(root, put, { black, rust, grey }, { p1, p2, straps, s1, sCap }) {
-  put(root, 'tank_p1', cyl(p1.r, p1.r, p1.length, 18), black, p1.at, ALONG_KEEL);
-  put(root, 'tank_p2', cyl(p2.r, p2.r, p2.length, 18), rust, p2.at, ALONG_KEEL);
+export function sideTanks(root, put, { black, rust, grey }, opts) {
+  const { p1, p2, straps, s1, sCap, cut: rule = METRE } = opts;
+  put(root, 'tank_p1', cyl(p1.r, p1.r, p1.length, rule.round(p1.r)), black, p1.at, ALONG_KEEL);
+  put(root, 'tank_p2', cyl(p2.r, p2.r, p2.length, rule.round(p2.r)), rust, p2.at, ALONG_KEEL);
   for (const [tag, z] of [
     ['a', straps.a],
     ['b', straps.b],
   ])
     put(root, `tank_strap_${tag}`, box(...straps.size), grey, [straps.x, straps.y, z]);
-  put(root, 'tank_s1', cyl(s1.r, s1.r, s1.length, 18), rust, s1.at, ALONG_KEEL);
+  put(root, 'tank_s1', cyl(s1.r, s1.r, s1.length, rule.round(s1.r)), rust, s1.at, ALONG_KEEL);
   put(
     root,
     'tank_s_cap',
-    cyl(sCap.radii[0], sCap.radii[1], sCap.length, 18),
+    cyl(sCap.radii[0], sCap.radii[1], sCap.length, rule.round(Math.max(...sCap.radii))),
     black,
     sCap.at,
     ALONG_KEEL
@@ -3076,17 +3228,17 @@ export function sideTanks(root, put, { black, rust, grey }, { p1, p2, straps, s1
 }
 
 /**
- * The hall's pipework: a run a side laid across the export's x — a
- * twelve-facet pipe rolled a quarter turn about z, `[name, plate, r,
- * length, at]` each, port in older plate and starboard in black, neither
- * at the other's height or station — then the down pipe standing beside the
- * gable and the elbow at its foot (`pipe_p_run · pipe_s_run ·
- * pipe_gable_down · pipe_gable_elbow`).
+ * The hall's pipework: a run a side laid across the export's x — a pipe at
+ * the rule's count rolled a quarter turn about z, `[name, plate, r, length,
+ * at]` each, port in older plate and starboard in black, neither at the
+ * other's height or station — then the down pipe standing beside the gable
+ * and the elbow at its foot (`pipe_p_run · pipe_s_run · pipe_gable_down ·
+ * pipe_gable_elbow`).
  */
-export function hallPipes(root, put, mats, { runs, down, elbow }) {
+export function hallPipes(root, put, mats, { runs, down, elbow, cut: rule = METRE }) {
   for (const [name, plate, r, length, at] of runs)
-    put(root, name, cyl(r, r, length, 12), mats[plate], at, [0, 0, Math.PI / 2]);
-  put(root, 'pipe_gable_down', cyl(down.r, down.r, down.h, 12), mats.rust, down.at);
+    put(root, name, cyl(r, r, length, rule.round(r)), mats[plate], at, [0, 0, Math.PI / 2]);
+  put(root, 'pipe_gable_down', cyl(down.r, down.r, down.h, rule.round(down.r)), mats.rust, down.at);
   put(root, 'pipe_gable_elbow', box(...elbow.size), mats.rust, elbow.at);
 }
 
@@ -3113,30 +3265,26 @@ export function refineryPlatform(root, put, { black, rust, grey, lampM }, opts) 
 }
 
 /**
- * "A rank of upright silos": each a nine-facet frustum standing on the
- * platform top (`base`), its cap a cone to a point sat `cap.lift` above
- * the silo's top, a five-by-ten torus of a band round it `band.at` of its
- * height up, and a work lamp `lamp.above` its top — silo by silo in the
- * file's order, then the one patch of older plate on the second (`silo_1 ·
+ * "A rank of upright silos": each a frustum standing on the platform top
+ * (`base`), its cap a cone to a point sat `cap.lift` above the silo's top,
+ * a torus of a band round it `band.at` of its height up, and a work lamp
+ * `lamp.above` its top, each at the rule's count (`cut`, #919; the file's
+ * nine, nine, five by ten and six by four) — silo by silo in the file's
+ * order, then the one patch of older plate on the second (`silo_1 ·
  * silo_cap_1 · silo_band_1 · silo_lamp_1 · silo_2 … · silo_patch`). The
  * heights alternate short, tall, short, tall; each cap's base sits 0.005
  * into its silo's top.
  */
 export function siloRank(root, put, { grey, black, rust, lampM }, opts) {
-  const { silos, z, base, radii, facets = 9, cap, band, lamp, patch } = opts;
+  const { silos, z, base, radii, cap, band, lamp, patch, cut: rule = METRE } = opts;
+  const facets = rule.round(Math.max(...radii));
+  const bandRing = torus(band.R, band.t, rule.round(band.t), rule.round(band.R + band.t));
   silos.forEach(({ x, h }, i) => {
     const n = i + 1;
     put(root, `silo_${n}`, cyl(radii[0], radii[1], h, facets), grey, [x, base + h / 2, z]);
-    put(root, `silo_cap_${n}`, cyl(0, cap.r, cap.h, facets), black, [x, base + h + cap.lift, z]);
-    put(
-      root,
-      `silo_band_${n}`,
-      torus(band.R, band.t, 5, 10),
-      rust,
-      [x, base + band.at * h, z],
-      [Math.PI / 2, 0, 0]
-    );
-    put(root, `silo_lamp_${n}`, lampOrb(lamp.r), lampM, [x, base + h + lamp.above, z]);
+    put(root, `silo_cap_${n}`, cyl(0, cap.r, cap.h, rule.round(cap.r)), black, [x, base + h + cap.lift, z]);
+    put(root, `silo_band_${n}`, bandRing, rust, [x, base + band.at * h, z], [Math.PI / 2, 0, 0]);
+    put(root, `silo_lamp_${n}`, lampOrb(lamp.r, rule), lampM, [x, base + h + lamp.above, z]);
   });
   put(root, 'silo_patch', box(...patch.size), rust, patch.at);
 }
@@ -3144,8 +3292,8 @@ export function siloRank(root, put, { grey, black, rust, lampM }, opts) {
 /**
  * "Crusher machinery": the hall, its roof in older plate, the lit intake
  * on its face with a rank of teeth above and below, the stack leaning
- * `stack.lean` off plumb — a seven-facet frustum — and the lamp at its
- * throat (`crusher_hall · crusher_roof · crusher_intake · crusher_teeth_top
+ * `stack.lean` off plumb — a frustum at the rule's count, the file's seven
+ * — and the lamp at its throat (`crusher_hall · crusher_roof · crusher_intake · crusher_teeth_top
  * · crusher_teeth_bot · crusher_stack · crusher_stack_lamp`). The intake is
  * `amber_lamp` at the file's 1.1 (`port_glow` until #891), `intake.size`
  * deep from the hall's face: the export drew it
@@ -3153,18 +3301,21 @@ export function siloRank(root, put, { grey, black, rust, lampM }, opts) {
  * since #890, a lit throat whose top face shows past the upper teeth.
  */
 export function crusherHall(root, put, { black, rust, glow, grey, lampM }, opts) {
-  const { hall, roof, intake, teeth, stack, lamp } = opts;
+  const { hall, roof, intake, teeth, stack, lamp, cut: rule = METRE } = opts;
   put(root, 'crusher_hall', box(...hall.size), black, hall.at);
   put(root, 'crusher_roof', box(...roof.size), rust, roof.at);
   put(root, 'crusher_intake', box(...intake.size), glow, intake.at);
   put(root, 'crusher_teeth_top', box(...teeth.size), grey, [teeth.x, teeth.top, teeth.z]);
   put(root, 'crusher_teeth_bot', box(...teeth.size), grey, [teeth.x, teeth.bot, teeth.z]);
-  put(root, 'crusher_stack', cyl(stack.radii[0], stack.radii[1], stack.h, 7), rust, stack.at, [
-    0,
-    0,
-    stack.lean,
-  ]);
-  put(root, 'crusher_stack_lamp', lampOrb(lamp.r), lampM, lamp.at);
+  put(
+    root,
+    'crusher_stack',
+    cyl(stack.radii[0], stack.radii[1], stack.h, rule.round(Math.max(...stack.radii))),
+    rust,
+    stack.at,
+    [0, 0, stack.lean]
+  );
+  put(root, 'crusher_stack_lamp', lampOrb(lamp.r, rule), lampM, lamp.at);
 }
 
 /**
@@ -3205,8 +3356,9 @@ export function conveyorLegs(root, put, grey, { width, legs }) {
 }
 
 /**
- * A flood mast: a five-facet post and the lamp bank on its head, turned
- * to look where the file points it (`flood_<tag>_mast · flood_<tag>_bank`).
+ * A flood mast: a post at the rule's count (the file's five) and the lamp
+ * bank on its head, turned to look where the file points it
+ * (`flood_<tag>_mast · flood_<tag>_bank`).
  * The silo mast writes its bank before its post, alone of the four
  * (`bankFirst`); that is the file's order and the port keeps it. Three of
  * the banks look down and out at 0.5 of pitch and the fourth at 0.4; two
@@ -3214,10 +3366,11 @@ export function conveyorLegs(root, put, grey, { width, legs }) {
  * triple and three composes to the same turn.
  */
 export function floodMast(root, put, { black, lampM }, opts) {
-  const { tag, at, mast, bank, bankFirst = false } = opts;
+  const { tag, at, mast, bank, bankFirst = false, cut: rule = METRE } = opts;
   const [x, , z] = at;
+  const sides = rule.round(Math.max(...mast.radii));
   const post = () =>
-    put(root, `flood_${tag}_mast`, cyl(mast.radii[0], mast.radii[1], mast.h, 5), black, [
+    put(root, `flood_${tag}_mast`, cyl(mast.radii[0], mast.radii[1], mast.h, sides), black, [
       x,
       mast.y,
       z,
@@ -3234,14 +3387,16 @@ export function floodMast(root, put, { black, lampM }, opts) {
 }
 
 /** A row of work lamps along a line: `count` orbs of `r` from `from` at `pitch` along x (`apron_lamp_1..5`). */
-export function lampRow(root, put, lampM, { name, r, from, pitch, count, y, z, on = null }) {
+export function lampRow(root, put, lampM, opts) {
+  const { name, r, from, pitch, count, y, z, on = null, cut: rule = METRE } = opts;
   // With `on`, each orb is dropped onto the part named at its station, half
   // its radius in (`putSeated`): the Refinery's five apron lamps stood 0.03 of a
   // unit — 1.1 m at its scale — over the apron they light (#907).
   for (let i = 0; i < count; i++) {
     const t = [from + pitch * i, y, z];
-    if (on) putSeated(root, put, `${name}_${i + 1}`, lampOrb(r), lampM, on, t, { stand: r, sink: r / 2, drop: true });
-    else put(root, `${name}_${i + 1}`, lampOrb(r), lampM, t);
+    const orb = lampOrb(r, rule);
+    if (on) putSeated(root, put, `${name}_${i + 1}`, orb, lampM, on, t, { stand: r, sink: r / 2, drop: true });
+    else put(root, `${name}_${i + 1}`, orb, lampM, t);
   }
 }
 
@@ -3250,50 +3405,78 @@ export function lampRow(root, put, lampM, { name, r, from, pitch, count, y, z, o
  *    builder through `alongZ`. -- */
 
 /**
- * The dome: the ten-facet foundation and skirt, the dome itself — a
- * twelve-by-seven hemisphere squashed `dome.squash` in height and yawed
- * `dome.yaw` on its foot so no seam lies on an axis — `ribs.count` ribs
- * over it, each a half torus stood on end and yawed its share of a half
- * turn, squashed with the dome; the cap on the crown in older plate and the
- * beacon over it, an eight-by-five orb of the work lamp (`foundation ·
- * dome_skirt · dome · dome_rib_1..6 · dome_cap · beacon`). A rib's outer
- * radius is 2.51 against the dome's 2.4, and it is centred 0.02 higher.
+ * The dome: the foundation and skirt, the dome itself — a hemisphere
+ * squashed `dome.squash` in height and yawed `dome.yaw` on its foot so no
+ * seam lies on an axis — `ribs.count` ribs over it, each a half torus stood
+ * on end and yawed its share of a half turn, squashed with the dome; the
+ * cap on the crown in older plate and the beacon over it, an orb of the
+ * work lamp (`foundation · dome_skirt · dome · dome_rib_1..6 · dome_cap ·
+ * beacon`). Every count is the rule's (`cut`, #919): the file drew the
+ * foundation and skirt ten-sided, the dome twelve by seven, the ribs five by
+ * eighteen over the half turn, the cap eight and the beacon eight by five,
+ * and at 440 m the Klaxon's rule cuts the lot at its fourteen, the dome four
+ * rows deep over its quarter and each rib seven over its half.
+ *
+ * A rib's outer radius is 2.51 against the dome's 2.4, and it is centred
+ * 0.02 higher — the file's — and the rib stands off the dome by that 0.11
+ * at a vertex. A seven-segment half ring sags between its vertices by
+ * `(R + t)(1 − cos(π/14))`, 0.063, where the eighteen-segment one sagged
+ * 0.019, so a rib cut to the file's radius would sink to 0.07 proud at a
+ * chord's middle and read as half buried. Each rib is set out by that sag,
+ * so its chords stand off the dome what the file's did and its vertices a
+ * sag further, the collars' answer on the Order's Bio-reactor
+ * (hadron.mjs `reactorVessel`).
  */
 export function ribbedDome(root, put, { black, grey, rust, lampM }, opts) {
-  const { foundation, skirt, dome, ribs, cap, beacon } = opts;
-  put(root, 'foundation', cyl(foundation.radii[0], foundation.radii[1], foundation.h, 10), black, [
-    0,
-    foundation.y,
-    0,
-  ]);
-  put(root, 'dome_skirt', cyl(skirt.radii[0], skirt.radii[1], skirt.h, 10), grey, [0, skirt.y, 0]);
+  const { foundation, skirt, dome, ribs, cap, beacon, cut: rule = METRE } = opts;
+  put(
+    root,
+    'foundation',
+    cyl(foundation.radii[0], foundation.radii[1], foundation.h, rule.round(Math.max(...foundation.radii))),
+    black,
+    [0, foundation.y, 0]
+  );
+  put(
+    root,
+    'dome_skirt',
+    cyl(skirt.radii[0], skirt.radii[1], skirt.h, rule.round(Math.max(...skirt.radii))),
+    grey,
+    [0, skirt.y, 0]
+  );
+  const quarter = Math.PI / 2;
+  const [round, down] = rule.orb(dome.r, { thetaLength: quarter });
   put(
     root,
     'dome',
-    new THREE.SphereGeometry(dome.r, 12, 7, 0, Math.PI * 2, 0, Math.PI / 2),
+    new THREE.SphereGeometry(dome.r, round, down, 0, Math.PI * 2, 0, quarter),
     grey,
     [0, dome.y, 0],
     [0, dome.yaw, 0],
     [1, dome.squash, 1]
   );
+  const radial = rule.round(ribs.t);
+  const turn = rule.round(ribs.R + ribs.t);
+  const tubular = rule.round(ribs.R + ribs.t, Math.PI);
+  const sag = (ribs.R + ribs.t) * (1 - Math.cos(Math.PI / turn));
+  const rib = new THREE.TorusGeometry(ribs.R + sag, ribs.t, radial, tubular, Math.PI);
   for (let i = 0; i < ribs.count; i++)
     put(
       root,
       `dome_rib_${i + 1}`,
-      new THREE.TorusGeometry(ribs.R, ribs.t, 5, 18, Math.PI),
+      rib,
       black,
       [0, ribs.y, 0],
       [0, (i * Math.PI) / ribs.count, 0],
       [1, dome.squash, 1]
     );
-  put(root, 'dome_cap', cyl(cap.radii[0], cap.radii[1], cap.h, 8), rust, [0, cap.y, 0]);
-  put(root, 'beacon', new THREE.SphereGeometry(beacon.r, 8, 5), lampM, [0, beacon.y, 0]);
+  put(root, 'dome_cap', cyl(cap.radii[0], cap.radii[1], cap.h, rule.round(Math.max(...cap.radii))), rust, [0, cap.y, 0]);
+  put(root, 'beacon', lampOrb(beacon.r, rule), lampM, [0, beacon.y, 0]);
 }
 
 /**
  * "Sustained glow from ports": `count` portholes round the skirt at radius
- * `r`, from `phase` radians, each a six-facet disc of `amber_lamp` at the
- * file's 1.1 (`port_glow` until #891) turned
+ * `r`, from `phase` radians, each a disc at the rule's count (the file's
+ * six) of `amber_lamp` at the file's 1.1 (`port_glow` until #891) turned
  * `[π/2, 0, π/2 − a]` (`porthole_1..10`). That Euler is the file's and it
  * is odd: in three's XYZ order it stands the disc's axis on (−cos a, 0,
  * sin a), the radial mirrored across z, which is 2a off the radial folded
@@ -3306,15 +3489,16 @@ export function ribbedDome(root, put, { black, grey, rust, lampM }, opts) {
  * 0) and the port faces square out along its radial, as ports 3 and 8 do;
  * the other seven face 0.62 to 1.27 off theirs.
  */
-export function portholes(root, put, glow, { count, phase, r, y, disc, bearings = {}, on = {} }) {
+export function portholes(root, put, glow, opts) {
+  const { count, phase, r, y, disc, bearings = {}, on = {}, cut: rule = METRE } = opts;
   // `on` seats a port by its number — `{ 5: 'dome_skirt' }` — on the nearest
   // face of the part named, the disc laid flat on it (`putSeated`): the file's
   // Euler leaves five of the Bastion's ten standing off the skirt, 0.55 to
   // 6.87 m (#907), the other five touching it edge-on where their turn
   // happens to meet it. A port not named keeps the file's turn.
+  const geo = cyl(disc.r, disc.r, disc.h, rule.round(disc.r));
   for (let i = 0; i < count; i++) {
     const a = bearings[i + 1] ?? phase + (i * 2 * Math.PI) / count;
-    const geo = cyl(disc.r, disc.r, disc.h, 6);
     if (on[i + 1])
       putSeated(root, put, `porthole_${i + 1}`, geo, glow, on[i + 1], polar(a, r, y), { stand: disc.h / 2 });
     else
@@ -3324,31 +3508,23 @@ export function portholes(root, put, glow, { count, phase, r, y, disc, bearings 
 
 /**
  * "Docking collars": on each of `bearings` — three, at 0.4, 2.3 and 4.4
- * radians, spaced in nothing — an eight-facet collar at radius `r`, its
- * ring `ring.out` further out, a five-by-ten torus faced radially, and the
- * work lamp `lamp.out` out and up (`dock_collar_1 · dock_ring_1 ·
- * dock_lamp_1 · dock_collar_2 …`). The collar carries the portholes' Euler
- * and the same mirrored axis, so the three lie 0.80, 1.46 and 0.62 radians
- * off the rings they are meant to feed. Carried across (#540).
+ * radians, spaced in nothing — a collar at radius `r`, its ring `ring.out`
+ * further out, a torus faced radially, and the work lamp `lamp.out` out and
+ * up, each at the rule's count (the file's eight, five by ten and six by
+ * four) (`dock_collar_1 · dock_ring_1 · dock_lamp_1 · dock_collar_2 …`).
+ * The collar carries the portholes' Euler and the same mirrored axis, so
+ * the three lie 0.80, 1.46 and 0.62 radians off the rings they are meant
+ * to feed. Carried across (#540).
  */
 export function dockingCollars(root, put, { grey, rust, lampM }, opts) {
-  const { bearings, r, y, collar, ring, lamp } = opts;
+  const { bearings, r, y, collar, ring, lamp, cut: rule = METRE } = opts;
+  const sleeve = cyl(collar.radii[0], collar.radii[1], collar.h, rule.round(Math.max(...collar.radii)));
+  const hoop = torus(ring.R, ring.t, rule.round(ring.t), rule.round(ring.R + ring.t));
   bearings.forEach((a, i) => {
     const n = i + 1;
-    put(
-      root,
-      `dock_collar_${n}`,
-      cyl(collar.radii[0], collar.radii[1], collar.h, 8),
-      grey,
-      polar(a, r, y),
-      [Math.PI / 2, 0, Math.PI / 2 - a]
-    );
-    put(root, `dock_ring_${n}`, torus(ring.R, ring.t, 5, 10), rust, polar(a, r + ring.out, y), [
-      0,
-      Math.PI / 2 - a,
-      0,
-    ]);
-    put(root, `dock_lamp_${n}`, lampOrb(lamp.r), lampM, polar(a, r + lamp.out, lamp.y));
+    put(root, `dock_collar_${n}`, sleeve, grey, polar(a, r, y), [Math.PI / 2, 0, Math.PI / 2 - a]);
+    put(root, `dock_ring_${n}`, hoop, rust, polar(a, r + ring.out, y), [0, Math.PI / 2 - a, 0]);
+    put(root, `dock_lamp_${n}`, lampOrb(lamp.r, rule), lampM, polar(a, r + lamp.out, lamp.y));
   });
 }
 
@@ -3379,41 +3555,46 @@ export function bastionModules(root, put, mats, { modules: list, windows }) {
  * crane_lamp`). The Foundry's are gantries; this one swings.
  */
 export function jibCrane(root, put, { grey, rust, black, lampM }, opts) {
-  const { mast, jib, counter, cable, hook, lamp } = opts;
+  const { mast, jib, counter, cable, hook, lamp, cut: rule = METRE } = opts;
   put(root, 'crane_mast', box(...mast.size), grey, mast.at);
   put(root, 'crane_jib', box(...jib.size), grey, jib.at, [jib.pitch, 0, 0]);
   put(root, 'crane_counter', box(...counter.size), rust, counter.at);
+  // Four is the navy's one section, a square (docs/asset-prompts-3d.md
+  // Block 2c): the file drew this cable square and the rule never rounds it.
   put(root, 'crane_cable', cyl(cable.r, cable.r, cable.h, 4), black, cable.at);
   put(root, 'crane_hook', box(...hook.size), rust, hook.at);
   // On the jib's head with `lamp.on`: dropped onto the jib at the file's
   // station, half in (`putSeated`) — the file hung it 2.3 m under the jib's
   // end (#907).
-  if (lamp.on) putSeated(root, put, 'crane_lamp', lampOrb(lamp.r), lampM, lamp.on, lamp.at, { stand: lamp.r, sink: lamp.r / 2, drop: true });
-  else put(root, 'crane_lamp', lampOrb(lamp.r), lampM, lamp.at);
+  const orb = lampOrb(lamp.r, rule);
+  if (lamp.on) putSeated(root, put, 'crane_lamp', orb, lampM, lamp.on, lamp.at, { stand: lamp.r, sink: lamp.r / 2, drop: true });
+  else put(root, 'crane_lamp', orb, lampM, lamp.at);
 }
 
 /**
  * The perimeter: `count` posts round the foundation's edge at radius `r`
- * from `phase` radians, each a five-facet post with a work lamp on it,
- * post then lamp (`perimeter_post_1 · perimeter_lamp_1 · …_8`) — the ring
+ * from `phase` radians, each a post at the rule's count (the file's five)
+ * with a work lamp on it, post then lamp (`perimeter_post_1 ·
+ * perimeter_lamp_1 · …_8`) — the ring
  * of light the settlement's "constant hum" shows from above. `lift` makes a
  * post taller by its number — `{ 4: 0.52, 8: 0.82 }` — foot where it was,
  * lamp raised by the same: the two the modules were built over stand up
  * through their roofs, and the lamp shows where the post does not (#890).
  */
 export function perimeterPosts(root, put, { black, lampM }, opts) {
-  const { count, phase, r, post, lamp, lift = {} } = opts;
+  const { count, phase, r, post, lamp, lift = {}, cut: rule = METRE } = opts;
+  const sides = rule.round(Math.max(...post.radii));
   for (let i = 0; i < count; i++) {
     const a = phase + (i * 2 * Math.PI) / count;
     const up = lift[i + 1] ?? 0;
     put(
       root,
       `perimeter_post_${i + 1}`,
-      cyl(post.radii[0], post.radii[1], post.h + up, 5),
+      cyl(post.radii[0], post.radii[1], post.h + up, sides),
       black,
       polar(a, r, post.y + up / 2)
     );
-    put(root, `perimeter_lamp_${i + 1}`, lampOrb(lamp.r), lampM, polar(a, r, lamp.y + up));
+    put(root, `perimeter_lamp_${i + 1}`, lampOrb(lamp.r, rule), lampM, polar(a, r, lamp.y + up));
   }
 }
 
@@ -3449,26 +3630,33 @@ const CORNERS = [
 ];
 
 /**
- * A pontoon at each corner: the ten-facet drum, the cap on it in older
- * plate, the foot drawn in under it, and six bolts round the cap at
- * `bolts.radius`, from +x round toward +z a sixth of a turn apart
- * (`pontoon-ap · pontoon-cap-ap · pontoon-foot-ap · pontoon-bolt-ap-1..6 ·
- * pontoon-as …`). Every bolt a buffer of its own, as the file has them.
+ * A pontoon at each corner: the drum, the cap on it in older plate, the
+ * foot drawn in under it, each at the rule's count (the file's ten), and
+ * six bolts round the cap at `bolts.radius`, from +x round toward +z a
+ * sixth of a turn apart (`pontoon-ap · pontoon-cap-ap · pontoon-foot-ap ·
+ * pontoon-bolt-ap-1..6 · pontoon-as …`). Every bolt a buffer of its own,
+ * as the file has them.
  */
 export function pontoons(root, put, { grey, brown, black }, opts) {
-  const { x, z, y, r, h, cap, foot, bolts } = opts;
+  const { x, z, y, r, h, cap, foot, bolts, cut: rule = METRE } = opts;
+  const n = {
+    drum: rule.round(r),
+    cap: rule.round(cap.r),
+    foot: rule.round(Math.max(...foot.radii)),
+    bolt: rule.round(bolts.r),
+  };
   for (const [tag, sx, sz] of CORNERS) {
     const [cx, cz] = [sx * x, sz * z];
-    put(root, `pontoon-${tag}`, cyl(r, r, h, 10), grey, [cx, y, cz]);
-    put(root, `pontoon-cap-${tag}`, cyl(cap.r, cap.r, cap.h, 10), brown, [cx, cap.y, cz]);
-    put(root, `pontoon-foot-${tag}`, cyl(foot.radii[0], foot.radii[1], foot.h, 10), black, [
+    put(root, `pontoon-${tag}`, cyl(r, r, h, n.drum), grey, [cx, y, cz]);
+    put(root, `pontoon-cap-${tag}`, cyl(cap.r, cap.r, cap.h, n.cap), brown, [cx, cap.y, cz]);
+    put(root, `pontoon-foot-${tag}`, cyl(foot.radii[0], foot.radii[1], foot.h, n.foot), black, [
       cx,
       foot.y,
       cz,
     ]);
     for (let k = 0; k < 6; k++) {
       const a = (k * Math.PI) / 3;
-      put(root, `pontoon-bolt-${tag}-${k + 1}`, cyl(bolts.r, bolts.r, bolts.h, 6), black, [
+      put(root, `pontoon-bolt-${tag}-${k + 1}`, cyl(bolts.r, bolts.r, bolts.h, n.bolt), black, [
         cx + bolts.radius * Math.cos(a),
         bolts.y,
         cz + bolts.radius * Math.sin(a),
@@ -3542,19 +3730,20 @@ export function patchPlates(root, put, mats, { plates }) {
 }
 
 /**
- * The emitter mast amidships: the base, the trunk — an eight-facet frustum
- * — the collar round it, the ten-facet emitter drum at its head, eight foam
- * fins out from the drum at `fins.r`, each yawed back by its bearing so it
- * stands radial, and the beacon on top, the running light's lit frustum
- * (`mast-base · mast-trunk · mast-collar · emitter-drum · emitter-fin-1..8
- * · mast-beacon`). The collar sits below the trunk's middle; the file's.
+ * The emitter mast amidships: the base, the trunk — a frustum — the collar
+ * round it, the emitter drum at its head, eight foam fins out from the drum
+ * at `fins.r`, each yawed back by its bearing so it stands radial, and the
+ * beacon on top, the running light's lit frustum, every round part at the
+ * rule's count (the file's eight, eight, ten and eight) (`mast-base ·
+ * mast-trunk · mast-collar · emitter-drum · emitter-fin-1..8 ·
+ * mast-beacon`). The collar sits below the trunk's middle; the file's.
  */
 export function emitterMast(root, put, { grey, brown, black, foam, lampM }, opts) {
-  const { x, base, trunk, collar, drum, fins, beacon } = opts;
+  const { x, base, trunk, collar, drum, fins, beacon, cut: rule = METRE } = opts;
   put(root, 'mast-base', box(...base.size), grey, [x, base.y, 0]);
-  put(root, 'mast-trunk', cyl(trunk.radii[0], trunk.radii[1], trunk.h, 8), brown, [x, trunk.y, 0]);
-  put(root, 'mast-collar', cyl(collar.r, collar.r, collar.h, 8), grey, [x, collar.y, 0]);
-  put(root, 'emitter-drum', cyl(drum.r, drum.r, drum.h, 10), black, [x, drum.y, 0]);
+  put(root, 'mast-trunk', cyl(trunk.radii[0], trunk.radii[1], trunk.h, rule.round(Math.max(...trunk.radii))), brown, [x, trunk.y, 0]);
+  put(root, 'mast-collar', cyl(collar.r, collar.r, collar.h, rule.round(collar.r)), grey, [x, collar.y, 0]);
+  put(root, 'emitter-drum', cyl(drum.r, drum.r, drum.h, rule.round(drum.r)), black, [x, drum.y, 0]);
   for (let k = 0; k < 8; k++) {
     const a = (k * Math.PI) / 4;
     put(
@@ -3569,7 +3758,7 @@ export function emitterMast(root, put, { grey, brown, black, foam, lampM }, opts
   // The beacon stands on the drum with `beacon.on`: dropped onto it at the
   // mast's station, its foot on the drum's top (`putSeated`) — the file stood
   // it 0.64 m over (#907).
-  const beaconGeo = cyl(beacon.radii[0], beacon.radii[1], beacon.h, 8);
+  const beaconGeo = cyl(beacon.radii[0], beacon.radii[1], beacon.h, rule.round(Math.max(...beacon.radii)));
   if (beacon.on)
     putSeated(root, put, 'mast-beacon', beaconGeo, lampM, beacon.on, [x, beacon.y, 0], { stand: beacon.h / 2, drop: true });
   else put(root, 'mast-beacon', beaconGeo, lampM, [x, beacon.y, 0]);
@@ -3581,39 +3770,38 @@ export function emitterMast(root, put, { grey, brown, black, foam, lampM }, opts
  * fore and aft; the pipe run along the port deck edge rolled onto x, an
  * elbow at each end and the riser off the forward one (`winch-house ·
  * winch-drum · vent-stack-1 · _2 · vent-elbow-1 · capstan-f · capstan-a ·
- * pipe-main · pipe-elbow-a · pipe-riser · pipe-elbow-b`). Eight facets
- * throughout. `deckPipework` above is the Submersible's run with its drop;
- * this one has a riser.
+ * pipe-main · pipe-elbow-a · pipe-riser · pipe-elbow-b`). The file drew
+ * eight facets throughout; each is the rule's count at its own radius now.
+ * `deckPipework` above is the Submersible's run with its drop; this one
+ * has a riser.
  */
-export function deckGear(root, put, { brown, grey }, { winch, vents, capstans, pipe }) {
+export function deckGear(root, put, { brown, grey }, { winch, vents, capstans, pipe, cut: rule = METRE }) {
   put(root, 'winch-house', box(...winch.house.size), brown, winch.house.at);
-  put(root, 'winch-drum', cyl(winch.drum.r, winch.drum.r, winch.drum.h, 8), grey, winch.drum.at, [
+  put(root, 'winch-drum', cyl(winch.drum.r, winch.drum.r, winch.drum.h, rule.round(winch.drum.r)), grey, winch.drum.at, [
     Math.PI / 2,
     0,
     0,
   ]);
   vents.stacks.forEach(({ radii, h, at }, i) =>
-    put(root, `vent-stack-${i + 1}`, cyl(radii[0], radii[1], h, 8), grey, at)
+    put(root, `vent-stack-${i + 1}`, cyl(radii[0], radii[1], h, rule.round(Math.max(...radii))), grey, at)
   );
   put(root, 'vent-elbow-1', box(...vents.elbow.size), brown, vents.elbow.at);
+  const capstan = cyl(capstans.radii[0], capstans.radii[1], capstans.h, rule.round(Math.max(...capstans.radii)));
   for (const [end, x] of [
     ['f', capstans.fore],
     ['a', capstans.aft],
   ])
-    put(root, `capstan-${end}`, cyl(capstans.radii[0], capstans.radii[1], capstans.h, 8), grey, [
-      x,
-      capstans.y,
-      capstans.z,
-    ]);
-  put(root, 'pipe-main', cyl(pipe.r, pipe.r, pipe.length, 8), grey, pipe.at, [0, 0, Math.PI / 2]);
+    put(root, `capstan-${end}`, capstan, grey, [x, capstans.y, capstans.z]);
+  const pipeSides = rule.round(pipe.r);
+  put(root, 'pipe-main', cyl(pipe.r, pipe.r, pipe.length, pipeSides), grey, pipe.at, [0, 0, Math.PI / 2]);
   put(root, 'pipe-elbow-a', box(...pipe.elbow.size), brown, pipe.elbowA);
-  put(root, 'pipe-riser', cyl(pipe.r, pipe.r, pipe.riser.h, 8), grey, pipe.riser.at);
+  put(root, 'pipe-riser', cyl(pipe.r, pipe.r, pipe.riser.h, pipeSides), grey, pipe.riser.at);
   put(root, 'pipe-elbow-b', box(...pipe.elbow.size), brown, pipe.elbowB);
 }
 
 /**
- * "Moored": at each corner a chain — a six-facet cylinder from a point
- * under the pontoon down to the anchor block — and the block on the seabed
+ * "Moored": at each corner a chain — a cylinder at the rule's count from a
+ * point under the pontoon down to the anchor block — and the block on the seabed
  * beyond it; aft port, fore port, aft starboard, fore starboard, which is
  * not the order the pontoons come in (`mooring-chain-ap · anchor-block-ap
  * · mooring-chain-fp · …`).
@@ -3625,7 +3813,8 @@ export function deckGear(root, put, { brown, grey }, { winch, vents, capstans, p
  * — the one rule that reproduces all four matrices. And the four anchor
  * blocks are all yawed 0.4 the same way, not mirrored corner to corner.
  */
-export function moorings(root, put, { brown, black }, { chain, block }) {
+export function moorings(root, put, { brown, black }, { chain, block, cut: rule = METRE }) {
+  const links = rule.round(chain.r);
   for (const [tag, sx, sz] of [
     ['ap', -1, -1],
     ['fp', 1, -1],
@@ -3641,7 +3830,7 @@ export function moorings(root, put, { brown, black }, { chain, block }) {
     put(
       root,
       `mooring-chain-${tag}`,
-      cyl(chain.r, chain.r, A.distanceTo(B), 6),
+      cyl(chain.r, chain.r, A.distanceTo(B), links),
       brown,
       hang.position.toArray(),
       [hang.rotation.x, hang.rotation.y, hang.rotation.z]
@@ -3658,17 +3847,18 @@ export function moorings(root, put, { brown, black }, { chain, block }) {
 }
 
 /**
- * A dome light on each pontoon cap, an eight-facet lit frustum, in the
- * pontoons' corner order (`corner-dome-ap · -as · -fp · -fs`). With the
+ * A dome light on each pontoon cap, a lit frustum at the rule's count, in
+ * the pontoons' corner order (`corner-dome-ap · -as · -fp · -fs`). With the
  * six running lights and the beacon, the "dim amber running lights" of a
  * barge that idles at SIG 30.
  */
-export function cornerDomes(root, put, lampM, { x, z, y, radii, h, on = null }) {
+export function cornerDomes(root, put, lampM, { x, z, y, radii, h, on = null, cut: rule = METRE }) {
   // `on` is the cap's stem — `'pontoon-cap'` — and each dome is dropped onto
   // its own corner's cap, its foot on the cap's top (`putSeated`): the file
   // stood all four 0.21 m over (#907).
+  const sides = rule.round(Math.max(...radii));
   for (const [tag, sx, sz] of CORNERS) {
-    const geo = cyl(radii[0], radii[1], h, 8);
+    const geo = cyl(radii[0], radii[1], h, sides);
     if (on) putSeated(root, put, `corner-dome-${tag}`, geo, lampM, `${on}-${tag}`, [sx * x, y, sz * z], { stand: h / 2, drop: true });
     else put(root, `corner-dome-${tag}`, geo, lampM, [sx * x, y, sz * z]);
   }
@@ -3701,16 +3891,16 @@ export function cornerDomes(root, put, lampM, { x, z, y, radii, h, on = null }) 
  * only while crop is coming in (docs/models-plan.md §3.2 rule 2).
  */
 export function reactorVessel(root, { black, grey, rust, lampM, unlit }, opts) {
-  const { tank, bands, crown, rivets, hatch, mark, ports, stack } = opts;
-  add(root, 'reactor_vessel', cyl(tank.r[0], tank.r[1], tank.h, tank.facets), black, [
+  const { tank, bands, crown, rivets, hatch, mark, ports, stack, cut: rule = METRE } = opts;
+  add(root, 'reactor_vessel', cyl(tank.r[0], tank.r[1], tank.h, rule.round(Math.max(...tank.r))), black, [
     0,
     tank.y,
     0,
   ]);
   bands.ys.forEach((y, i) =>
-    add(root, `vessel_band_${i}`, cyl(bands.r, bands.r, bands.h, tank.facets), grey, [0, y, 0])
+    add(root, `vessel_band_${i}`, cyl(bands.r, bands.r, bands.h, rule.round(bands.r)), grey, [0, y, 0])
   );
-  add(root, 'vessel_crown', cyl(crown.r[0], crown.r[1], crown.h, tank.facets), grey, [
+  add(root, 'vessel_crown', cyl(crown.r[0], crown.r[1], crown.h, rule.round(Math.max(...crown.r))), grey, [
     0,
     crown.y,
     0,
@@ -3727,17 +3917,16 @@ export function reactorVessel(root, { black, grey, rust, lampM, unlit }, opts) {
   }
   add(root, 'crown_hatch', box(...hatch.size), rust, hatch.at, [0, hatch.yaw, 0]);
   add(root, 'crown_mark', box(...mark.size), lampM, mark.at, [0, mark.yaw ?? 0, 0]);
-  ports.at.forEach(([a, r], i) =>
-    add(root, `roof_port_${i}`, cyl(ports.r, ports.r, ports.t, 8), unlit, polar(a, r, ports.y))
-  );
-  add(root, 'vent_stack', cyl(stack.r[0], stack.r[1], stack.h, 8), black, stack.at);
+  const port = cyl(ports.r, ports.r, ports.t, rule.round(ports.r));
+  ports.at.forEach(([a, r], i) => add(root, `roof_port_${i}`, port, unlit, polar(a, r, ports.y)));
+  add(root, 'vent_stack', cyl(stack.r[0], stack.r[1], stack.h, rule.round(Math.max(...stack.r))), black, stack.at);
   const [sx, , sz] = stack.at;
-  add(root, 'stack_band', cyl(stack.band.r, stack.band.r, stack.band.h, 8), rust, [
+  add(root, 'stack_band', cyl(stack.band.r, stack.band.r, stack.band.h, rule.round(stack.band.r)), rust, [
     sx,
     stack.band.y,
     sz,
   ]);
-  add(root, 'stack_mouth', cyl(stack.mouth.r, stack.mouth.r, stack.mouth.t, 8), unlit, [
+  add(root, 'stack_mouth', cyl(stack.mouth.r, stack.mouth.r, stack.mouth.t, rule.round(stack.mouth.r)), unlit, [
     sx,
     stack.mouth.y,
     sz,
@@ -3756,25 +3945,19 @@ export function reactorVessel(root, { black, grey, rust, lampM, unlit }, opts) {
  * for the same reason the roof ports are.
  */
 export function reactorOutflow(root, { black, grey, rust, unlit }, opts) {
-  const { bearing: a, trunk, flanges, hopper, lip, chute } = opts;
+  const { bearing: a, trunk, flanges, hopper, lip, chute, cut: rule = METRE } = opts;
   const laid = [0, -a, -Math.PI / 2];
   add(
     root,
     'outflow_trunk',
-    cyl(trunk.r, trunk.r, trunk.to - trunk.from, 8),
+    cyl(trunk.r, trunk.r, trunk.to - trunk.from, rule.round(trunk.r)),
     grey,
     polar(a, (trunk.from + trunk.to) / 2, trunk.y),
     laid
   );
+  const flange = cyl(flanges.r, flanges.r, flanges.t, rule.round(flanges.r));
   flanges.at.forEach((d, i) =>
-    add(
-      root,
-      `outflow_flange_${i}`,
-      cyl(flanges.r, flanges.r, flanges.t, 8),
-      rust,
-      polar(a, d, trunk.y),
-      laid
-    )
+    add(root, `outflow_flange_${i}`, flange, rust, polar(a, d, trunk.y), laid)
   );
   add(root, 'outflow_hopper', box(...hopper.size), black, polar(a, hopper.at, hopper.y), [
     0,
@@ -3785,7 +3968,7 @@ export function reactorOutflow(root, { black, grey, rust, unlit }, opts) {
   add(
     root,
     'hopper_chute',
-    cyl(chute.r[0], chute.r[1], chute.h, 8),
+    cyl(chute.r[0], chute.r[1], chute.h, rule.round(Math.max(...chute.r))),
     unlit,
     polar(a, chute.at, chute.y)
   );
@@ -4014,30 +4197,27 @@ export function craftBerth(root, { amber, grey, rust, black }, opts) {
  * (docs/models-plan.md §3.2 rule 3).
  */
 export function launchGate(root, { grey, rust, amber }, opts) {
-  const { x, y, size, stripe, hinge, wheels } = opts;
+  const { x, y, size, stripe, hinge, wheels, cut: rule = METRE } = opts;
   const [t, h, w] = size;
   add(root, 'launch_gate', box(t, h, w), grey, [x, y + h / 2, 0]);
   add(root, 'gate_stripe', box(t + stripe.over, stripe.h, w), amber, [x, y + h + stripe.h / 2, 0]);
-  const outboard = x - t / 2 - hinge.r;
-  add(root, 'gate_hinge', cyl(hinge.r, hinge.r, w, 8), rust, [outboard, y + hinge.r, 0], ATHWART);
+  // The rail lies against the gate's outboard face by whatever its count
+  // puts toward it: a vertex at eight, the middle of a plate at six, an
+  // apothem in — the same reading `crownOnX` gives a drum laid along X,
+  // since a drum turned about X has its vertex toward ±x on the same counts.
+  const sides = rule.round(hinge.r);
+  const outboard = x - t / 2 - crownOnX(hinge.r, sides);
+  add(root, 'gate_hinge', cyl(hinge.r, hinge.r, w, sides), rust, [outboard, y + hinge.r, 0], ATHWART);
+  const knuckle = cyl(hinge.knuckle.r, hinge.knuckle.r, hinge.knuckle.length, rule.round(hinge.knuckle.r));
   hinge.knuckles.forEach((kz, i) =>
-    add(
-      root,
-      `gate_knuckle_${i}`,
-      cyl(hinge.knuckle.r, hinge.knuckle.r, hinge.knuckle.length, 8),
-      grey,
-      [outboard, y + hinge.r, kz],
-      ATHWART
-    )
+    add(root, `gate_knuckle_${i}`, knuckle, grey, [outboard, y + hinge.r, kz], ATHWART)
   );
   const inboard = x + t / 2;
+  const wheel = torus(wheels.R, wheels.rim, rule.round(wheels.rim), rule.round(wheels.R + wheels.rim));
+  const hub = cyl(wheels.hub.r, wheels.hub.r, wheels.hub.length, rule.round(wheels.hub.r));
   wheels.z.forEach((wz, i) => {
-    add(root, `gate_wheel_${i}`, torus(wheels.R, wheels.rim, 5, 10), grey, [
-      inboard + wheels.stand,
-      wheels.y,
-      wz,
-    ], [0, Math.PI / 2, 0]);
-    add(root, `gate_hub_${i}`, cyl(wheels.hub.r, wheels.hub.r, wheels.hub.length, 8), rust, [
+    add(root, `gate_wheel_${i}`, wheel, grey, [inboard + wheels.stand, wheels.y, wz], [0, Math.PI / 2, 0]);
+    add(root, `gate_hub_${i}`, hub, rust, [
       inboard + wheels.hub.length / 2,
       wheels.y,
       wz,
@@ -4057,9 +4237,11 @@ export function launchGate(root, { grey, rust, amber }, opts) {
  * the skids' sole, which is the craft's lowest point and the height the
  * cradle's ways meet it at.
  */
-export function liftFrame(root, { grey, rust, amber }, { craft, rail, bar, skid, post, cap, eye }) {
+export function liftFrame(root, { grey, rust, amber }, opts) {
+  const { craft, rail, bar, skid, post, cap, eye, cut: rule = METRE } = opts;
   const [xf, xa] = craft.posts.x;
   const zr = craft.posts.z;
+  const ring = torus(eye.R, eye.t, rule.round(eye.t), rule.round(eye.R + eye.t));
   bothSides((side, sgn) =>
     add(root, `frame_rail_${side}`, box(rail.to - rail.from, rail.h, rail.w), grey, [
       (rail.from + rail.to) / 2,
@@ -4092,7 +4274,7 @@ export function liftFrame(root, { grey, rust, amber }, { craft, rail, bar, skid,
         post.top + cap.h / 2,
         sgn * zr,
       ]);
-      add(root, `lift_eye_${side}${i}`, torus(eye.R, eye.t, 5, 10), rust, [
+      add(root, `lift_eye_${side}${i}`, ring, rust, [
         x,
         post.top + cap.h + eye.R,
         sgn * zr,
@@ -4113,15 +4295,15 @@ export function liftFrame(root, { grey, rust, amber }, { craft, rail, bar, skid,
  * the loud kind, on a craft whose argument is being heard.
  */
 export function craftDrive(root, { black, grey, rust, vent }, opts) {
-  const { box: body, roof, louvres: lv, shaft, hub, blades } = opts;
+  const { box: body, roof, louvres: lv, shaft, hub, blades, cut: rule = METRE } = opts;
   const onX = [0, 0, Math.PI / 2];
   add(root, 'drive_box', box(...body.size), black, body.at);
   add(root, 'drive_roof', box(...roof.size), grey, roof.at);
   louvres(root, 'drive_louvre', vent, lv);
-  add(root, 'screw_shaft', cyl(shaft.r, shaft.r, shaft.length, 8), rust, shaft.at, onX);
+  add(root, 'screw_shaft', cyl(shaft.r, shaft.r, shaft.length, rule.round(shaft.r)), rust, shaft.at, onX);
   // Laid on X by a quarter turn about Z, a cylinder's top lands on −X: the
   // hub's tip radius is the geometry's `rTop`, so it draws in astern.
-  add(root, 'screw_hub', cyl(hub.rTip, hub.r, hub.length, 8), grey, hub.at, onX);
+  add(root, 'screw_hub', cyl(hub.rTip, hub.r, hub.length, rule.round(Math.max(hub.r, hub.rTip))), grey, hub.at, onX);
   for (let i = 0; i < blades.count; i++)
     add(root, `screw_blade_${i}`, box(...blades.size), grey, blades.at, [(i * Math.PI) / blades.count, 0, 0]);
 }
@@ -4137,20 +4319,21 @@ export function craftDrive(root, { black, grey, rust, vent }, opts) {
  * transient and not a lamp.
  */
 export function craftGun(root, { black, grey, rust, amber }, opts) {
-  const { x, seat, ring, drum, cradle, barrel, muzzle } = opts;
+  const { x, seat, ring, drum, cradle, barrel, muzzle, cut: rule = METRE } = opts;
   const onX = [0, 0, Math.PI / 2];
   add(root, 'gun_seat', box(...seat.size), grey, [x, seat.y, 0]);
-  add(root, 'gun_ring', cyl(ring.r, ring.r, ring.h, 12), amber, [x, ring.y, 0]);
-  add(root, 'gun_drum', cyl(drum.rTop, drum.r, drum.h, 12), grey, [x, drum.y, 0]);
+  add(root, 'gun_ring', cyl(ring.r, ring.r, ring.h, rule.round(ring.r)), amber, [x, ring.y, 0]);
+  add(root, 'gun_drum', cyl(drum.rTop, drum.r, drum.h, rule.round(Math.max(drum.r, drum.rTop))), grey, [x, drum.y, 0]);
   add(root, 'gun_cradle', box(...cradle.size), black, [x + cradle.dx, cradle.y, 0]);
   // Rolled onto its side by a quarter turn about Z, a cylinder's top lands
   // on −X, so the breech radius is the geometry's `rTop`.
-  add(root, 'gun_barrel', cyl(barrel.rBreech, barrel.rMuzzle, barrel.length, 10), grey, [
+  const bore = rule.round(Math.max(barrel.rBreech, barrel.rMuzzle));
+  add(root, 'gun_barrel', cyl(barrel.rBreech, barrel.rMuzzle, barrel.length, bore), grey, [
     barrel.breech + barrel.length / 2,
     barrel.y,
     0,
   ], onX);
-  add(root, 'gun_muzzle', cyl(muzzle.r, muzzle.r, muzzle.length, 10), rust, [
+  add(root, 'gun_muzzle', cyl(muzzle.r, muzzle.r, muzzle.length, rule.round(muzzle.r)), rust, [
     barrel.breech + barrel.length + muzzle.length / 2 - muzzle.sink,
     barrel.y,
     0,

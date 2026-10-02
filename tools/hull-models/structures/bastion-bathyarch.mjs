@@ -95,12 +95,32 @@
  * y = 0 kept as the ground, which is the foundation's underside. Intake
  * then reports ×1.000 and no rotation on the port's output, and the
  * shipped maps re-bake where the approved bake put them.
+ *
+ * FACETS (#919). The Klaxon's rule is one facet edge of 2.5 m (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`),
+ * asked at this file's scale, and at 440 m the rule is its ceiling almost
+ * through: the foundation, the skirt, the dome's round, the cap, the three
+ * docking collars and their rings, the ten portholes, both ballast tanks
+ * and its band, and the refinery and quarters pipes are fourteen, where the
+ * export had six to sixteen; the dome four rows deep over its quarter and
+ * each rib seven over its half, where it had seven and eighteen, the ribs
+ * set out by the sag of a seven-segment chord so they stand off the dome
+ * what the file's did (`ribbedDome`); the beacon, the dock and perimeter
+ * lamps and the crane lamp orbs of eight by four and fourteen by six; the
+ * ballast and ring pipes eight; the eight perimeter posts six, where they
+ * were five. The crane's cable keeps its four, the navy's one section. All
+ * ten portholes are seated on the fourteen-sided skirt and the seventh is
+ * re-cut round it clear of `ballast_a` (below). 68 parts and 3,080
+ * triangles become 68 and 4,486.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
 
 const L = 440;
 const DRAWN = 8.7012;
+// The Klaxon's facet rule at this file's scale (bathyarch.mjs `cut`, #919):
+// the builders are handed the export's units and the rule is a chord in
+// metres.
+const cut = bathyarch.cut(L / DRAWN);
 
 const black = bathyarch.ink.hullBlack();
 const grey = bathyarch.ink.ironGrey();
@@ -125,19 +145,34 @@ bathyarch.ribbedDome(
     ribs: { count: 6, R: 2.42, t: 0.09, y: 1.42 },
     cap: { radii: [0.5, 0.66], h: 0.5, y: 3.7 },
     beacon: { r: 0.16, y: 4.05 },
+    cut,
   }
 );
 
 // "Sustained glow from ports": ten round the skirt, the fifth re-cut clear
-// of the quarters module (header, #890).
+// of the quarters module (header, #890). All ten are seated on the skirt
+// since #919: #907 seated the five the file's turn left standing off it,
+// and the other five touched a ten-sided skirt edge-on where their turn
+// happened to meet it; the skirt is fourteen-sided now and its skin sits
+// up to 0.07 units — 3.5 m — from where the ten-gon's did, so those five
+// stood off it too, the tenth by a metre. Each is laid flat on the
+// frustum's face from its own station (kit.mjs `seat`), as the first five
+// were. One moves: the seventh's station, 4.08 rad, is where `ballast_a`
+// lies against the skirt (its drum reaches z −2.55 from x −3.4 to −1.0),
+// so seated there the disc stood 5 m into the tank's end, and the file's
+// turn had it edge-on 1.4 m clear. It is re-cut round the skirt to 4.5 rad,
+// past the tank's end and 12° short of the eighth port, the way #890
+// re-cut the fifth clear of the quarters module; same radius, height and
+// material.
 bathyarch.portholes(root, put, glow, {
   count: 10,
   phase: 0.31,
   r: 2.74,
   y: 1.15,
   disc: { r: 0.14, h: 0.1 },
-  bearings: { 5: Math.PI },
-  on: { 1: 'dome_skirt', 3: 'dome_skirt', 5: 'dome_skirt', 6: 'dome_skirt', 8: 'dome_skirt' },
+  bearings: { 5: Math.PI, 7: 4.5 },
+  on: Object.fromEntries(Array.from({ length: 10 }, (_, i) => [i + 1, 'dome_skirt'])),
+  cut,
 });
 
 // "Docking collars": three, each with its ring and its lamp.
@@ -152,6 +187,7 @@ bathyarch.dockingCollars(
     collar: { radii: [0.55, 0.62], h: 0.7 },
     ring: { out: 0.408, R: 0.58, t: 0.08 },
     lamp: { out: 0.34, y: 1.35, r: 0.08 },
+    cut,
   }
 );
 
@@ -204,6 +240,7 @@ bathyarch.jibCrane(
     cable: { r: 0.02, h: 1.7, at: [1.9, 2.9, 4.55] },
     hook: { size: [0.3, 0.24, 0.3], at: [1.9, 2, 4.55] },
     lamp: { r: 0.07, at: [1.9, 3.85, 4.7], on: 'crane_jib' },
+    cut,
   }
 );
 
@@ -221,37 +258,42 @@ bathyarch.bandedTank(
     length: 2.4,
     rot: [0, 0, Math.PI / 2],
     band: { R: 0.52, t: 0.05 },
+    cut,
   }
 );
 bathyarch.bandedTank(
   root,
   put,
   { tank: rust },
-  { name: 'ballast_b', at: [3.2, 0.9, 0.9], r: 0.4, length: 1.8, rot: [Math.PI / 2, 0.4, 0] }
+  { name: 'ballast_b', at: [3.2, 0.9, 0.9], r: 0.4, length: 1.8, rot: [Math.PI / 2, 0.4, 0], cut }
 );
 bathyarch.pipeBetween(root, put, rust, {
   name: 'pipe_refinery',
   from: [2.4, 1.6, -1.9],
   to: [1.4, 2.1, -0.9],
   r: 0.09,
+  cut,
 });
 bathyarch.pipeBetween(root, put, rust, {
   name: 'pipe_quarters',
   from: [-2.5, 1, 1.2],
   to: [-1.6, 1.5, 0.7],
   r: 0.09,
+  cut,
 });
 bathyarch.pipeBetween(root, put, rust, {
   name: 'pipe_ballast',
   from: [-2.2, 1, -1.6],
   to: [-1.2, 1.4, -0.8],
   r: 0.07,
+  cut,
 });
 bathyarch.pipeBetween(root, put, rust, {
   name: 'pipe_ring',
   from: [3, 0.9, 0.9],
   to: [2.2, 1.3, 1.8],
   r: 0.07,
+  cut,
 });
 
 // "Working lights": eight posts round the foundation's edge, a lamp each;
@@ -268,6 +310,7 @@ bathyarch.perimeterPosts(
     post: { radii: [0.04, 0.05], h: 0.55, y: 0.78 },
     lamp: { r: 0.07, y: 1.1 },
     lift: { 4: 0.52, 8: 0.82 },
+    cut,
   }
 );
 
