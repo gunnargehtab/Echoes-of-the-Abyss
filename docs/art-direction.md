@@ -64,10 +64,11 @@ bodies. Every unlit layer bypasses it and keeps its authored register: the water
 backdrop and marine snow; the baked seabed with its route ink, map rim and skirt;
 fallback sprites and depth marks; public life's stipple; embers; and ordnance lamps
 with their trails. The loudness ladder measures its rungs in encoded luminance
-([map-visuals.md](map-visuals.md) §5), and the water, the skirt, the routes, the rim and
-the stipple stand on its rungs 1 and 5; a trail wears its lamp's glow, which ACES would
-fade toward white. The backdrop, the snow and the stipple are shader layers: they bypass
-by leaving out three's tone-mapping chunk, not by a flag. The Pixi HUD and enemy
+([map-visuals.md](map-visuals.md) §5), and the water, the routes, the rim and the stipple
+stand on its rungs 1 and 5; the conn view places the skirt, which §5 does not name, on
+rung 1. A trail wears its lamp's glow, which ACES would fade toward white. Each of these
+layers sets three's `toneMapped` flag false, the shader layers included: a true flag
+hands a shader the curve's function, which it can call without the chunk. The Pixi HUD and enemy
 contacts remain outside this world-material operation. Live SIG still drives the
 same input emission curve, and the curve applies to **surface light only**: a model's
 emissive glow is added after tone mapping, at its own faction hue and approved strength,

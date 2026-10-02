@@ -101,17 +101,10 @@ describe('shared model lighting: art-direction and gates 3/6/8', () => {
         if (!(node instanceof Mesh || node instanceof Line || node instanceof Points)) return;
         for (const material of Array.isArray(node.material) ? node.material : [node.material]) {
           if (material instanceof MeshStandardMaterial) continue;
-          if (material instanceof ShaderMaterial) {
-            // A shader layer's flag only gates the define its own source would
-            // have to read: it is on the curve only if it also includes the
-            // chunk, so either one left out keeps it off (#1026).
-            shaders++;
-            assert.ok(
-              !material.toneMapped || !material.fragmentShader.includes('<tonemapping_fragment>'),
-              `a ${node.type} shader layer must keep its authored register`
-            );
-            continue;
-          }
+          // A shader layer is held by its flag too, not by its source: a true
+          // flag hands it three's `toneMapping()`, which it could call without
+          // the chunk, and a false one leaves nothing to call (#1026).
+          if (material instanceof ShaderMaterial) shaders++;
           unlit++;
           assert.equal(
             material.toneMapped,

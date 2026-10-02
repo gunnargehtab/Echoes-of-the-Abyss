@@ -219,6 +219,9 @@ class StippleCloud {
       // off, so dots never occlude each other or the water behind them.
       depthWrite: false,
       blending: AdditiveBlending,
+      // Off the tone curve (docs/art-direction.md): the ladder weighs a dot
+      // added in encoded space, which a curve would bend.
+      toneMapped: false,
       vertexShader: [
         'uniform float uTime;',
         'uniform vec3 uEye;',
