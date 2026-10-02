@@ -381,6 +381,11 @@ export class WaterBackdrop {
       uniforms: this.uniforms,
       depthTest: false,
       depthWrite: false,
+      // Off the tone curve (docs/art-direction.md): the stops are authored
+      // sRGB, and the fog and the clear colour show them unmapped. Left true,
+      // the flag would still hand this source three's `toneMapping()`, so it
+      // is the off switch.
+      toneMapped: false,
       vertexShader: [
         'uniform mat4 uInvViewProj;',
         'varying vec4 vFarPoint;',
@@ -545,6 +550,8 @@ export class MarineSnow {
       // depth-*write* off so motes never occlude each other.
       depthWrite: false,
       blending: AdditiveBlending,
+      // Off the tone curve, as the backdrop is: both draw the one water ramp.
+      toneMapped: false,
       vertexShader: [
         'uniform vec3 uEye;',
         'uniform vec2 uFocus;',

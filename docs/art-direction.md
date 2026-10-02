@@ -59,8 +59,16 @@ existing cold ambient colour overhead to the deepest water colour below; a PMREM
 is generated once per mounted view, used at environment intensity **0.35**, and
 disposed with that view. It reflects no entities, faction accents or hidden state.
 It is not a background replacement, a sun, or a new emissive source.
-The existing water backdrop, baked seabed and fallback sprites, depth marks, route
-ink, embers and unlit ordnance lamps bypass tone mapping; the Pixi HUD and enemy
+Only lit surfaces take the curve: the hulls, structures and props, and the ordnance
+bodies. Every unlit layer bypasses it and keeps its authored register: the water
+backdrop and marine snow; the baked seabed with its route ink, map rim and skirt;
+fallback sprites and depth marks; public life's stipple; embers; and ordnance lamps
+with their trails. The loudness ladder measures its rungs in encoded luminance
+([map-visuals.md](map-visuals.md) §5), and the water, the routes, the rim and the stipple
+stand on its rungs 1 and 5; the conn view places the skirt, which §5 does not name, on
+rung 1. A trail wears its lamp's glow, which ACES would fade toward white. Each of these
+layers sets three's `toneMapped` flag false, the shader layers included: a true flag
+hands a shader the curve's function, which it can call without the chunk. The Pixi HUD and enemy
 contacts remain outside this world-material operation. Live SIG still drives the
 same input emission curve, and the curve applies to **surface light only**: a model's
 emissive glow is added after tone mapping, at its own faction hue and approved strength,
