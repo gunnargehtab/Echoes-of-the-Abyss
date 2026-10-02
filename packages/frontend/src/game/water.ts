@@ -550,7 +550,7 @@ export class MarineSnow {
       // depth-*write* off so motes never occlude each other.
       depthWrite: false,
       blending: AdditiveBlending,
-      // Off the tone curve, as the backdrop it takes its colour from.
+      // Off the tone curve, as the backdrop is: both draw the one water ramp.
       toneMapped: false,
       vertexShader: [
         'uniform vec3 uEye;',

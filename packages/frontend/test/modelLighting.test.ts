@@ -105,7 +105,7 @@ describe('shared model lighting: art-direction and gates 3/6/8', () => {
           // flag hands it three's `toneMapping()`, which it could call without
           // the chunk, and a false one leaves nothing to call (#1026).
           if (material instanceof ShaderMaterial) shaders++;
-          unlit++;
+          else unlit++;
           assert.equal(
             material.toneMapped,
             false,
