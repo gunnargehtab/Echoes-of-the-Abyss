@@ -3195,7 +3195,9 @@ describe('renderer smoke test: the free camera', () => {
     // The sway reads the frame's clock, so a held clock names its phase.
     let nowMs = 1_000;
     const clock = mock.method(performance, 'now', () => nowMs);
-    // The two layers keyed on the view revision, counted where they repaint.
+    // Two of the three layers keyed on the view revision, counted where they
+    // repaint. The third, the force layer, also keys on ordnance in the water,
+    // which this snapshot has, so it stays on the frame cadence regardless.
     const chart = world.chart as unknown as { drawBlockedGround(): void; drawNodes(): void };
     const ground = mock.method(chart, 'drawBlockedGround');
     const nodes = mock.method(chart, 'drawNodes');
@@ -3240,6 +3242,18 @@ describe('renderer smoke test: the free camera', () => {
       assert.deepEqual(repaints(), { ground: 1, nodes: 1 }, 'and repaints both once');
       frames([41_000, 52_000]);
       assert.deepEqual(repaints(), { ground: 1, nodes: 1 }, 'and only once');
+
+      // The viewport is a change too, even at the same aspect: the projection
+      // matrix holds, and only the CSS size `projectPoint` scales by moves.
+      for (const host of [world.connHost, world.chartHost]) {
+        host.clientWidth = 640;
+        host.clientHeight = 360;
+      }
+      world.app.resize(640, 360);
+      fireResizeObservers();
+      frames([60_000, 61_000, 72_000]);
+      assert.equal(world.conn.viewRevision, revision + 2, 'a resize is a change');
+      assert.deepEqual(repaints(), { ground: 2, nodes: 2 }, 'and repaints both once');
     } finally {
       clock.mock.restore();
       world.teardown();
