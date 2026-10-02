@@ -103,8 +103,9 @@
  * and its band, and the refinery and quarters pipes are fourteen, where the
  * export had six to sixteen; the dome four rows deep over its quarter and
  * each rib seven over its half, where it had seven and eighteen, the ribs
- * set out by the sag of a seven-segment chord so they stand off the dome
- * what the file's did (`ribbedDome`); the beacon, the dock and perimeter
+ * set out by the sag of a seven-segment chord, flush with the dome at the
+ * chords and up to 1.2 m prouder at the vertices, where the file's sat into
+ * it (`ribbedDome`); the beacon, the dock and perimeter
  * lamps and the crane lamp orbs — the beacon fourteen by seven, the dock
  * lamps ten by five, the perimeter and crane lamps eight by four; the
  * ballast and ring pipes eight; the eight perimeter posts six, where they
@@ -156,8 +157,8 @@ bathyarch.ribbedDome(
 // and of the other five four touched a ten-sided skirt edge-on where their
 // turn happened to meet it and the tenth stood 0.19 m off; the skirt is
 // fourteen-sided now and its skin sits up to 0.07 units — 3.5 m — from
-// where the ten-gon's did, so those five stood 1.5 m off it, the tenth by
-// a metre. Each is laid flat on the
+// where the ten-gon's did, so those five stood off it too, four by 1.5 m
+// and the tenth by a metre. Each is laid flat on the
 // frustum's face from its own station (kit.mjs `seat`), as the first five
 // were. One moves: the seventh's station, 4.08 rad, is where `ballast_a`
 // lies against the skirt (its drum reaches z −2.55 from x −3.4 to −1.0),

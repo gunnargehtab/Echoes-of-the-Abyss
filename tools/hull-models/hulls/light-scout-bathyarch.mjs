@@ -41,9 +41,9 @@
  * prop shroud eight at 3.4 m on a tube of six, where it was twenty on ten,
  * and its hub six, where it was twelve; the two whips six, where they were
  * eight; the three nav domes orbs of six by three at 0.9 m, where they were
- * eight by six. The twelve flank rivets are seated on the ten-gon's plate at
- * the beam, 0.07 units in from the twenty-gon's skin they sat half-sunk in.
- * 45 parts and 1,348 triangles become 45 and 756.
+ * eight by six. The twelve flank rivets sit half-sunk in the ten-gon's plate
+ * at the beam, 0.07 units in from the twenty-gon's skin they sat half-sunk
+ * in. 45 parts and 1,348 triangles become 45 and 756.
  */
 import { THREE, box, part, drawn, seat, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -118,9 +118,10 @@ bar('patch_p1', rust, [0.12, 1.3, 2.6], [1.47, 2.9, -2]);
 bar('patch_s1', rust, [0.12, 1, 1.9], [-1.47, 2.3, 2.5]);
 bar('patch_s2', grey, [0.12, 0.8, 1.3], [-1.45, 3.1, -5]);
 bar('patch_top', rust, [1.1, 0.12, 2], [0.4, 4.32, -4.5]);
-// Each rivet is seated on the ten-sided hull from its station (#919,
-// `flankRivets` `on`): the file's z 1.5 was the twenty-gon's skin at the
-// beam, and the rule's ten-gon has a plate there 0.07 units in.
+// Each rivet is seated on the ten-sided hull from its station, its centre
+// on the plate so the head is half-sunk (#919, `flankRivets` `on`): the
+// file's z 1.5 was the twenty-gon's skin at the beam, and the rule's
+// ten-gon has a plate there 0.07 units in.
 const STATIONS = [-6, -3.6, -1.2, 1.2, 3.6, 6];
 bathyarch.flankRivets(root, black, {
   y: 2.6,

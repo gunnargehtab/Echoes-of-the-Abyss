@@ -149,10 +149,7 @@ bathyarch.flankPlates(root, { grey, rust }, {
   z: 24.6,
   plates: [[36, 28, 5, -1, false], [-24, 18, 4, -2, true], [-46, 14, 3.5, 0, false]],
   seamLength: 112,
-  // The fifth rivet a row sits between the plates and is seated on the
-  // slab's flank (#919, `flankPlates`); the other thirteen a row sit
-  // half-sunk in their plates.
-  rivets: [['u', 3.6, { 5: 'hull_slab' }], ['l', -3.2, { 5: 'hull_slab' }]],
+  rivets: [['u', 3.6], ['l', -3.2]],
 });
 bathyarch.propTunnels(root, { grey, rust }, { x: -58, z: 9, r: 4.2 });
 bathyarch.ballastAndKeel(root, { black, rust }, {

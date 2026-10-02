@@ -320,14 +320,12 @@ export function hullSlab(root, { black, grey, amber }, { outline, lengthM, depth
  */
 export function flankPlates(root, { grey, rust }, opts) {
   const { z, plates, plateT = 1.2, seamLength, seam = {}, rivets = [], cut: rule = METRE } = opts;
-  // The rule's orb (#919; the files' six by four). A rivet row entry may
-  // carry a third member, `{ <index>: <part> }`, naming a rivet seated on
-  // the part given rather than laid at the rank's z — half its radius in,
-  // from its own station (kit.mjs `seat`): the Derrick's fifth rivet a row
-  // lies between two plates and kissed the slab's flank by the six-by-four
-  // orb's equator row, which the six-by-three orb has no vertex on, so it
-  // stood 0.04 m detached. The rest of the rank sits half-sunk in its
-  // plates as the files have it.
+  // The rule's orb (#919; the files' six by four). The rank's z is the
+  // files' and stays: the Derrick's fifth rivet of the upper row lies
+  // between two plates on the slab's waist and kissed its flank by the
+  // six-by-four orb's equator row, which the six-by-three orb has no vertex
+  // on, so it stands 0.04 m clear; seating it slid it 0.6 m off the pitch,
+  // and a rivet off its line is the worse fault.
   const rivet = new THREE.SphereGeometry(0.45, ...rule.orb(0.45));
   const { x: seamX = 0, y: seamY = 2.2, h: seamH = 0.5, t: seamT = 1.4, z: seamZ = z } = seam;
   bothSides((side, sgn) => {
@@ -339,12 +337,10 @@ export function flankPlates(root, { grey, rust }, opts) {
       seamY,
       sgn * seamZ,
     ]);
-    for (const [tag, y, on = {}] of rivets) {
+    for (const [tag, y] of rivets) {
       for (let i = 0; i < 14; i++) {
         const x = seamX - seamLength / 2 + 4 + ((seamLength - 8) * i) / 13;
-        const at = [x, y, sgn * (z + 0.6)];
-        const rest = on[i] && seat(root, on[i], at, { sink: 0.225 });
-        add(root, `rivet_${side}${tag}_${i}`, rivet, grey, rest ? rest.at : at);
+        add(root, `rivet_${side}${tag}_${i}`, rivet, grey, [x, y, sgn * (z + 0.6)]);
       }
     }
   });
@@ -2308,22 +2304,21 @@ export function whips(root, mat, { whips: list, cut: rule = METRE }) {
  * may then carry its own `y`, since the lower rank sits on the hull and the
  * upper on the deck edge. `size` as a triple is the box the Corvette's and
  * the Harvester's running lights share (`runningLights` below). A row
- * carrying `on` names the part its rivets are seated on, half their size
- * in, from each one's own station (kit.mjs `seat`): the Light Scout's two
+ * carrying `on` names the part its rivets are seated on from each one's
+ * own station, centre on the surface so the head is half-sunk as the files
+ * lay them (kit.mjs `seat`, no stand and no sink): the Light Scout's two
  * rows sat half-sunk in a twenty-gon hull at the file's z, and the rule's
  * ten-gon (#919) has a plate at the beam an apothem in, 0.07 units, so the
- * rank stood 9 mm clear of it; seated, each rivet is half-sunk again. The
- * other rows keep the file's z.
+ * rank stood 9 mm clear of it. The other rows keep the file's z.
  */
 export function flankRivets(root, mat, { name = 'rivet', size = 0.14, y, rows, running = false }) {
   const head = Array.isArray(size) ? box(...size) : box(size, size, size);
-  const half = (Array.isArray(size) ? size[0] : size) / 2;
   let n = 0;
   rows.forEach(({ side, z, stations, y: rowY = y, on = null }) =>
     stations.forEach((x, i) => {
       const at = [x, rowY, z];
       part(root, running ? `${name}_${n++}` : `${name}_${side}${i}`, head, mat, {
-        at: on ? seat(root, on, at, { sink: half }).at : at,
+        at: on ? seat(root, on, at).at : at,
       });
     })
   );
