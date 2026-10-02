@@ -130,6 +130,17 @@
  * did; the prop shroud eight and its hub six; the two hatches and their
  * wheels six, the mast six and the mast lamp an orb of six by three. 143
  * parts and 3,756 triangles become 143 and 3,148.
+ *
+ * PANELS (#919). The Klaxon's hull band is a median unlit part of 0.75–2 m
+ * from above (Block 2c; bathyarch.mjs `panels`), and this hull read 0.5 m:
+ * its median part was one of its eighty-six rivets and bolts, "a hull of
+ * fittings and no plate". The pass laid twenty-two fittings on the deck
+ * through bathyarch.mjs `deckPlates`, `plateSeams` and `deckHatches`
+ * (kit.mjs `seat`): fifteen plates of older rust and newer black, 1.4–2.4 m
+ * by 1.2–1.6 and 0.25 proud, fore and aft of the cradle; five seams 0.35 m
+ * wide and 6 m across the deck between them; and an inspection hatch 1.6 m
+ * across on each deck. The rivets stay as they were; the median reads 1.35 m.
+ * 143 parts and 3,148 triangles become 167 and 3,580.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -354,6 +365,45 @@ bathyarch.runningLights(root, lampM, {
     { side: 'p', z: -7.95, stations: [26, 13, -13, -26] },
     { side: 's', z: 7.95, stations: [26, 13, -13, -26] },
   ],
+});
+
+// PANELS (#919, header): "plate patchworked older-under-newer" on the deck
+// itself, seated on it by kit.mjs `seat`, so the median unlit part from
+// above is a plate and not a rivet. Fifteen plates of older rust and newer
+// black, 1.4–2.4 m by 1.2–1.6 and 0.25 proud, fore and aft of the cradle;
+// five seams 0.35 wide, 0.25 high and 6 m across the deck between them; and
+// an inspection hatch on each deck 1.6 m across under a 0.5 m wheel, which
+// the measure drops. Each lies where the deck is bare — clear of the bed,
+// the crew hatch, the foredeck patch, the stencil and the rim's rivets and
+// lamps, and short of the stern notch at x −30. Written after the rivets so
+// their numbering by place in the file stands.
+const PLATE_T = 0.25;
+bathyarch.deckPlates(root, { black, rust }, {
+  on: 'deck', t: PLATE_T,
+  plates: [
+    ['deck_plate_f0', 'rust', [2.4, 1.6], [11.5, 4.0]],
+    ['deck_plate_f1', 'black', [2.0, 1.4], [11.5, -4.6]],
+    ['deck_plate_f2', 'rust', [1.6, 1.2], [14.2, 3.8]],
+    ['deck_plate_f3', 'black', [2.0, 1.4], [17, 5.0]],
+    ['deck_plate_f4', 'rust', [2.4, 1.6], [17, -4.8]],
+    ['deck_plate_f5', 'black', [2.2, 1.6], [21.5, -3.0]],
+    ['deck_plate_f6', 'black', [1.6, 1.2], [23.5, 5.6]],
+    ['deck_plate_f7', 'rust', [1.8, 1.4], [27, 4.0]],
+    ['deck_plate_a0', 'black', [2.4, 1.6], [-10.5, 4.0]],
+    ['deck_plate_a1', 'rust', [2.0, 1.4], [-10.5, -4.2]],
+    ['deck_plate_a2', 'rust', [2.4, 1.6], [-16, 0.5]],
+    ['deck_plate_a3', 'rust', [2.0, 1.4], [-21.5, 4.5]],
+    ['deck_plate_a4', 'black', [2.4, 1.6], [-21.5, -4.5]],
+    ['deck_plate_a5', 'black', [2.4, 1.6], [-27, -1.0]],
+    ['deck_plate_a6', 'rust', [1.4, 1.2], [-29.2, 0.6]],
+  ],
+});
+// A 0.35 m strip spans two of the maps' 0.25 m cells and reads half a metre
+// wide, so six metres keeps a seam a panel under the band's two.
+bathyarch.plateSeams(root, rust, { on: 'deck', name: 'deck_seam', stations: [9.5, 25, -13.5, -19, -25], length: 6, w: 0.35, h: 0.25 });
+bathyarch.deckHatches(root, { hatch: rust, wheel: grey }, {
+  on: 'deck', r: 0.8, h: 0.3, wheel: { R: 0.25, t: 0.05 },
+  hatches: [['inspection_hatch_f', [22.5, -5.5]], ['inspection_hatch_a', [-28.5, 3.5]]],
 });
 
 await exportGlb(root, 'beacon-bathyarch.glb');

@@ -88,6 +88,22 @@
  * 4 m on a tube of six, where they were twenty-four on twelve, and their
  * hubs six; the pipes, risers and hydrophones six, where they were ten and
  * twelve. 114 parts and 3,828 triangles become 114 and 1,972.
+ *
+ * PANELS (#919). The Klaxon's hull band is a median unlit part of 0.75–2 m
+ * on a side from above (Block 2c; bathyarch.mjs `panels`), and this hull
+ * read 2.8 m: its three deck plates, bow wedge, ballast and pipe runs are
+ * each ten to twenty-four metres on a side and nothing on a deck divided
+ * them. The pass laid thirty-four fittings, forty-one parts, on the three
+ * decks, each seated on its plate (bathyarch.mjs `deckPlates`, `plateSeams`, `deckHatches`):
+ * nineteen patch plates of grey and rust over the black decks, 1.2–1.7 m on a
+ * side and 0.22 m proud; eight grey seam straps 0.44 m wide and 5–7 m long
+ * across one half of a deck at a time, staggered; and seven dogged hatches,
+ * a 0.9 m coaming under a 0.6 m wheel, at the rule's six. Eight plates,
+ * three seams and three hatches on the upper deck aft of the citadel and
+ * forward of it under the tower; five, two and two on the middle deck fore
+ * and aft of the upper tier; six, three and two on the lower deck fore and
+ * aft of the middle one. The median reads 1.5 m. 114 parts and 1,972
+ * triangles become 155 and 2,968.
  */
 import { THREE, box, part, drawn, seat, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -390,6 +406,96 @@ bar('stencil_stern', amber, [3.4, 1.2, 0.1], [0, 4.4, -49.05]);
   const { at, rot } = seat(root, 'dish', drawn([0, 30.2, 9.6]).at, { stand: 0.3, drop: true });
   part(root, 'mast_lamp', box(0.6, 0.6, 0.6), lamp, { at, rot });
 }
+
+// PANELS (#919): the deck fittings the panel pass added (header). Every
+// station is the export's [x, z] over its deck plate, handed on as a
+// `drawn` placement so it lands in the kit's frame; a plate's `[w, d]` is in
+// that frame, `w` along the keel and `d` across it, and a seam lies athwart.
+// The three plates the chart sees whole are the upper deck aft of the citadel
+// and forward of it under the tower, the middle deck fore and aft of the
+// upper tier, and the lower deck fore and aft of the middle one; the strip
+// beside each tier is the pipe run's and the light line's, so nothing goes
+// there, and nothing stands within a plate's width of a lamp. Grey over
+// black is the newer plate, rust the older; a seam is a grey strap across
+// the joint, on one half of the deck at a time, staggered — the patchwork,
+// not a grid.
+const at = (x, z) => drawn([x, 0, z]).at;
+const HATCH = { r: 0.75, h: 0.25, wheel: { R: 0.5, t: 0.1 }, cut };
+const PLATE_T = 0.18;
+const SEAM = { w: 0.36, h: 0.2, along: false };
+bathyarch.deckPlates(root, { grey, rust }, {
+  on: 'deck_upper',
+  t: PLATE_T,
+  plates: [
+    ['patch_up_1', 'grey', [1.0, 1.2], at(-2.8, -26)],
+    ['patch_up_2', 'rust', [1.2, 1.0], at(-3.2, -23.5)],
+    ['patch_up_3', 'grey', [1.1, 1.3], at(3.0, -19.5)],
+    ['patch_up_4', 'rust', [1.0, 1.0], at(3.4, -16.5)],
+    ['patch_up_5', 'grey', [1.1, 1.2], at(-2.6, -13.5)],
+    ['patch_up_6', 'rust', [1.0, 1.2], at(3.0, 4.2)],
+    ['patch_up_7', 'grey', [1.4, 1.0], at(4.35, -7)],
+    ['patch_up_8', 'rust', [1.4, 1.0], at(-4.35, -2)],
+  ],
+});
+bathyarch.plateSeams(root, grey, { on: 'deck_upper', name: 'seam_up_p', stations: [-27.5, -15], z: -2.5, length: 4.2, ...SEAM });
+bathyarch.plateSeams(root, grey, { on: 'deck_upper', name: 'seam_up_s', stations: [-21], z: 2.5, length: 4.2, ...SEAM });
+bathyarch.deckHatches(root, { hatch: grey, wheel: rust }, {
+  on: 'deck_upper',
+  hatches: [
+    ['hatch_up_a', at(2.2, -24)],
+    ['hatch_up_b', at(-2.0, -18)],
+    ['hatch_up_c', at(0, 4.3)],
+  ],
+  ...HATCH,
+});
+bathyarch.deckPlates(root, { grey, rust }, {
+  on: 'deck_mid',
+  t: PLATE_T,
+  plates: [
+    ['patch_mid_1', 'grey', [1.1, 1.3], at(-3.5, 12.5)],
+    ['patch_mid_2', 'rust', [1.2, 1.0], at(3.8, 14.5)],
+    ['patch_mid_3', 'rust', [1.0, 1.2], at(-4.2, 17)],
+    ['patch_mid_4', 'grey', [1.1, 1.3], at(0.5, 17.5)],
+    ['patch_mid_5', 'grey', [1.1, 1.2], at(4.0, -37.5)],
+  ],
+});
+// The port seam stands aft of the dish, which hangs over the middle deck from
+// x 8.2 to 11.9 and had a quarter of the seam under it at 11, and between
+// `patch_mid_2` (to x 15.1) and `patch_mid_4` (from 16.95), which a station
+// of 14.5 cut across.
+bathyarch.plateSeams(root, grey, { on: 'deck_mid', name: 'seam_mid_p', stations: [16], z: -3.2, length: 5, ...SEAM });
+bathyarch.plateSeams(root, grey, { on: 'deck_mid', name: 'seam_mid_s', stations: [20], z: 3.2, length: 5, ...SEAM });
+bathyarch.deckHatches(root, { hatch: grey, wheel: rust }, {
+  on: 'deck_mid',
+  hatches: [
+    ['hatch_mid_a', at(-1.5, 15)],
+    ['hatch_mid_b', at(-4.2, -37)],
+  ],
+  ...HATCH,
+});
+bathyarch.deckPlates(root, { grey, rust }, {
+  on: 'deck_lower',
+  t: PLATE_T,
+  plates: [
+    ['patch_low_1', 'grey', [1.1, 1.3], at(-5.5, 26)],
+    ['patch_low_2', 'rust', [1.0, 1.2], at(6.0, 29)],
+    ['patch_low_3', 'grey', [1.1, 1.3], at(1.0, 30)],
+    ['patch_low_4', 'rust', [1.0, 1.2], at(-2.5, 34.5)],
+    ['patch_low_5', 'grey', [1.1, 1.3], at(4.5, -41)],
+    ['patch_low_6', 'rust', [1.0, 1.2], at(-4.5, -45.5)],
+  ],
+});
+bathyarch.plateSeams(root, grey, { on: 'deck_lower', name: 'seam_low_p', stations: [25], z: -4.2, length: 6, ...SEAM });
+bathyarch.plateSeams(root, grey, { on: 'deck_lower', name: 'seam_low_s', stations: [33], z: 4.2, length: 6, ...SEAM });
+bathyarch.plateSeams(root, grey, { on: 'deck_lower', name: 'seam_low_q', stations: [-47], z: -4, length: 4.5, ...SEAM });
+bathyarch.deckHatches(root, { hatch: grey, wheel: rust }, {
+  on: 'deck_lower',
+  hatches: [
+    ['hatch_low_a', at(-2.0, 27.5)],
+    ['hatch_low_b', at(0, -42.5)],
+  ],
+  ...HATCH,
+});
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
 await exportGlb(root, 'cruiser-bathyarch.glb');

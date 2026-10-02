@@ -113,8 +113,26 @@
  * ten portholes are seated on the fourteen-sided skirt and the seventh is
  * re-cut round it clear of `ballast_a` (below). 68 parts and 3,080
  * triangles become 68 and 4,486.
+ *
+ * PANELS (#919). The structure band is 2–5.5 m a panel (Block 2c;
+ * bathyarch.mjs `panels`), and this model read 42.2 m over 30 unlit parts:
+ * a dome, a skirt and a 170 m foundation own the plan, and the file dressed
+ * the slab with nothing but the modules and the tanks. The pass divides the
+ * foundation's bare annulus between the skirt's foot and its own rim — the
+ * four arcs the file leaves clear: between the crane and the second collar,
+ * between the quarters module and `ballast_a`, between the store and the
+ * refinery module, and between the refinery module and `ballast_b` — with
+ * fourteen radial seam straps, 18.2 × 0.8 m, at an irregular pitch; four
+ * runs of three and four plates of grey and rust, 4.3 × 4.05 m each, laid
+ * along the ring between them; and three dogged hatches, 4.6 m across
+ * under a 3 m wheel: 31 fittings, 34 parts, since a hatch is two. Every one
+ * is dropped onto `foundation` from its station (`deckPlates`,
+ * `deckHatches`; kit.mjs `seat`) and reads 2.2–4.2 m on a side from above, the wheels the least;
+ * nothing stands over a lamp, and each meets the slab alone. The median
+ * edge goes 42.2 m → 4.2 m over 64 panels. 68 parts and 4,486 triangles
+ * become 102 and 5,110.
  */
-import { THREE, metreTrue, exportGlb } from '../kit.mjs';
+import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
 
 const L = 440;
@@ -316,6 +334,63 @@ bathyarch.perimeterPosts(
     cut,
   }
 );
+
+// Panels (#919): the foundation's top is a bare annulus from the skirt's foot
+// (r 2.9) to its own rim (r 3.4, apothem 3.315 on the fourteen-gon), 25 m
+// of slab round a settlement. Four arcs of it carry nothing — the rest is
+// under the modules, the tanks, the collars, the ring pipe and the jib —
+// and the slab is divided there the way a Klaxon slab is: radial seam
+// straps right across it, r 2.94 to 3.30, at a pitch no two alike, and
+// between some of them a run of plates of the other two finishes laid
+// almost edge to edge along the ring — a 12 cm gap, so each is its own
+// part to the sweep — and a dogged hatch. The first cut sprinkled 41 small
+// fittings in two rows and the reviewer read sparkle, not division; this
+// lays 14 seams, 14 plates in four runs and 3 hatches. Bearings are the
+// export's, as the portholes' and the posts' are, through `drawn`. Sizes
+// are the export's units, 50.57 m a unit: a seam is 0.36 × 0.016, 18.2 ×
+// 0.8 m; a plate 0.085 × 0.08, 4.3 × 4.05 m; a hatch coaming r 0.045, 4.6 m
+// across, its wheel R 0.03, 3 m across; each reads 2.4–4.3 m on a side from
+// above. A seam is a `deckPlates` plate yawed radial.
+const onSlab = (a, r) => drawn([r * Math.cos(a), 0, r * Math.sin(a)]).at;
+const RING = 3.12;
+const SEAMS = [1.08, 1.3, 1.46, 1.72, 1.86, 2.05, 3.13, 3.42, 4.68, 4.84, 5.07, 5.24, 5.96, 6.19];
+const RUNS = [
+  [1.19, 4],
+  [1.59, 4],
+  [1.955, 3],
+  [4.955, 3],
+];
+const HATCHES = [1.38, 3.275, 6.075];
+// 0.028 rad at r 3.12 is 0.0874 units between centres for a plate 0.085
+// along the ring: a 0.0024 gap at mid-depth, 0.0013 at the inner edge.
+const PITCH = 0.028;
+bathyarch.deckPlates(root, { rust }, {
+  on: 'foundation',
+  t: 0.012,
+  plates: SEAMS.map((a, i) => [`slab_seam_${i + 1}`, 'rust', [0.36, 0.016], onSlab(a, RING), Math.PI / 2 - a]),
+});
+// A plate's long side lies along the ring (yaw π − a in the root's frame,
+// where a bearing a is a − π/2); grey and rust alternate along a run and
+// the runs start on opposite finishes, so the patchwork reads as repairs.
+let plateN = 0;
+bathyarch.deckPlates(root, { grey, rust }, {
+  on: 'foundation',
+  t: 0.01,
+  plates: RUNS.flatMap(([centre, n], run) =>
+    Array.from({ length: n }, (_, i) => {
+      const a = centre + (i - (n - 1) / 2) * PITCH;
+      return [`slab_plate_${++plateN}`, (i + run) % 2 ? 'rust' : 'grey', [0.085, 0.08], onSlab(a, RING), Math.PI - a];
+    })
+  ),
+});
+bathyarch.deckHatches(root, { hatch: grey, wheel: rust }, {
+  on: 'foundation',
+  r: 0.045,
+  h: 0.012,
+  wheel: { R: 0.03, t: 0.006 },
+  hatches: HATCHES.map((a, i) => [`slab_hatch_${i + 1}`, onSlab(a, RING)]),
+  cut,
+});
 
 metreTrue(root, L, { drawn: DRAWN });
 await exportGlb(root, 'bastion-bathyarch.glb');

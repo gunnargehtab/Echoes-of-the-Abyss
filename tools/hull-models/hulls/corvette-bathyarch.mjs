@@ -71,6 +71,17 @@
  * tube of six, where it was twenty-four on twelve, and its hub six; the
  * masts, deck pipes and risers six, where they were ten and twelve. 128
  * parts and 4,456 triangles become 128 and 2,248.
+ *
+ * PANELS (#919). The Klaxon's hull band is a median unlit part of 0.75–2 m
+ * on a side from above (Block 2c; bathyarch.mjs `panels`), and this hull
+ * read 2.22 m over 42 parts, one patch and two pipes on a 39-unit deck
+ * plate. The pass dressed the deck between the pipes with two dogged
+ * hatches, aft of the tower and on the foredeck, four patches of the two
+ * other finishes and two seams across it, each seated on the plate under
+ * it (bathyarch.mjs `deckPlates`, `plateSeams`, `deckHatches`; kit.mjs
+ * `seat`) — ten parts of 0.25–2.2 m² in plan, clear of the running-light
+ * pads on the plate's edge. The median reads 1.48 m over 51. 128 parts and
+ * 2,248 triangles become 138 and 2,512.
  */
 import { THREE, box, part, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -276,6 +287,51 @@ bathyarch.runningLights(root, lamp, {
 });
 bar('sternlight', lamp, [1.6, 0.3, 0.6], [0, 8, -26]);
 bar('bowlight', lamp, [1.2, 0.5, 1.6], [0, 5.79, 43]);
+
+// PANELS (#919, header): the deck plate dressed to the band, between the
+// two deck pipes (x ±4.32 clear) and clear of the tower, the deck patch,
+// the risers and the running-light pads on the plate's edge. Two dogged
+// hatches, one aft of the tower and one forward; four patches of the two
+// other finishes; and two seams across the plate, aft of the tower and
+// across the foredeck. Sizes are the export's, through `drawn`, as every
+// `bar` above, but a fitting's size is the root's: `w` along the keel, the
+// export's z, and `d` across it, the export's x.
+const DECK = 'deck_plate';
+bathyarch.deckHatches(
+  root,
+  { hatch: grey, wheel: rust },
+  {
+    on: DECK,
+    r: 0.75,
+    h: 0.3,
+    wheel: { R: 0.4, t: 0.06 },
+    hatches: [
+      ['deck_hatch_a', drawn([-2.4, 0, -4]).at],
+      ['deck_hatch_f', drawn([0, 0, 16]).at],
+    ],
+    cut,
+  }
+);
+bathyarch.deckPlates(root, { grey, rust }, {
+  on: DECK,
+  t: 0.2,
+  plates: [
+    ['deck_patch_1', 'grey', [1.2, 1.6], drawn([-2.6, 0, -8.5]).at],
+    ['deck_patch_2', 'rust', [1.6, 1.4], drawn([-2.2, 0, -16]).at],
+    ['deck_patch_3', 'grey', [1.2, 1.5], drawn([2.6, 0, 11]).at],
+    ['deck_patch_4', 'rust', [1.5, 1.3], drawn([-2.4, 0, 13.5]).at],
+  ],
+});
+// Stations are the export's z, which is the root's x; the seam lies athwart,
+// across the export's x, between the pipes.
+bathyarch.plateSeams(root, rust, {
+  on: DECK,
+  name: 'deck_seam',
+  stations: [-2.5, 18.5].map((z) => drawn([0, 0, z]).at[0]),
+  length: 8.4,
+  w: 0.3,
+  h: 0.25,
+});
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
 await exportGlb(root, 'corvette-bathyarch.glb');

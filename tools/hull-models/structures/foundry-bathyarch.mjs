@@ -88,6 +88,23 @@
  * eighteen; both stacks and the band fourteen at 6.8–8.2 m, where they
  * were twelve; the two pipe runs and the down pipe six at 2.2–2.4 m, where
  * they were twelve. 107 parts and 1,740 triangles become 107 and 1,628.
+ *
+ * PANELS (#919). The Klaxon's structure band is a median unlit part of 2–5.5 m
+ * on a side from above (Block 2c; bathyarch.mjs `panels`), and this model read
+ * 15.7 m over 47 panels: a slab, a step, a roof and the bay's walls, with
+ * twelve parts inside the band under them. The pass dressed it with the
+ * three divisions the band allows, each seated on the plate under its
+ * station (bathyarch.mjs "Panels"), forty-one parts: ten kerb posts along
+ * the step's margin, five a flank, black on the rust step; six plates of
+ * grey and black on the step's fore and aft strips; eight dogged hatches
+ * into the black roof, four a side of the ridge, with four plates of rust
+ * and grey beside the file's one roof patch; and five rust seams standing
+ * proud across the grey ridge. Each reads 3.4–4.4 m on a side from above,
+ * the hatch wheels 1.7. The median comes to 4.1 m (16.9 m²) over 88 panels,
+ * and 107 parts and 1,628 triangles become 148 and 2,816. The slab's bare
+ * margins beside the hall are under the tanks and the pipe runs, so the
+ * kerb ranks skip the stations under them and nothing new stands under a
+ * lamp.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -266,6 +283,88 @@ bathyarch.flankRivets(root, black, {
     { z: -19.14, y: 17.5, stations },
     { z: 19.14, y: 17.5, stations },
   ],
+});
+
+// PANELS (#919, header): the fittings that bring the median unlit part
+// inside the structure band, each dropped onto the plate under its station
+// (bathyarch.mjs "Panels"). Stations are the export's `[x, 0, z]` through
+// `put.kit`, the frame the rest of this file is written in; sizes are the
+// file's units, 4.85 m each.
+const at = (x, z) => put.kit([x, 0, z]);
+
+// Kerb posts along the step's margin outboard of the slab, five a flank at
+// stations the tanks and the pylons leave clear — the port rank skips the
+// two stations under the stacked tanks, the starboard one the station under
+// its tank — black bollards on the rust step.
+bathyarch.deckPosts(root, black, {
+  on: 'foundation_step',
+  r: 0.4,
+  h: 0.6,
+  cut,
+  posts: [
+    ...[-35, -26, 5, 15, 25].map((z, i) => [`kerb_post_p${i}`, at(24, z)]),
+    ...[-35, -5, 5, 15, 25].map((z, i) => [`kerb_post_s${i}`, at(-24, z)]),
+  ],
+});
+
+// Plates of newer grey and black laid on the step's fore and aft strips,
+// the two-unit margins past the slab's ends, three each — "patchworked",
+// alternating, as the hall's own patches alternate rust and black.
+bathyarch.deckPlates(root, { grey, black }, {
+  on: 'foundation_step',
+  t: 0.12,
+  plates: [
+    ['step_plate_f1', 'grey', [0.8, 0.9], at(-14, 28)],
+    ['step_plate_f2', 'black', [0.8, 0.9], at(0, 28)],
+    ['step_plate_f3', 'grey', [0.8, 0.9], at(14, 28)],
+    ['step_plate_a1', 'black', [0.8, 0.9], at(-14, -36)],
+    ['step_plate_a2', 'grey', [0.8, 0.9], at(0, -36)],
+    ['step_plate_a3', 'black', [0.8, 0.9], at(14, -36)],
+  ],
+});
+
+// Eight dogged hatches into the hall roof, four a side of the ridge between
+// the vents, the stacks and the roof patch, grey coamings and rust wheels
+// on the black roof; and four plates of older rust and newer grey over it,
+// where the file's one roof patch is.
+bathyarch.deckHatches(root, { hatch: grey, wheel: rust }, {
+  on: 'hall_roof',
+  r: 0.45,
+  h: 0.12,
+  wheel: { R: 0.25, t: 0.04 },
+  cut,
+  hatches: [
+    ['roof_hatch_p1', at(8, -31)],
+    ['roof_hatch_p2', at(16, -31)],
+    ['roof_hatch_p3', at(16, -12)],
+    ['roof_hatch_p4', at(8, -5)],
+    ['roof_hatch_s1', at(-8, -31)],
+    ['roof_hatch_s2', at(-17, -31)],
+    ['roof_hatch_s3', at(-17, -18)],
+    ['roof_hatch_s4', at(-8, -5)],
+  ],
+});
+bathyarch.deckPlates(root, { grey, rust }, {
+  on: 'hall_roof',
+  t: 0.12,
+  plates: [
+    ['roof_plate_p1', 'grey', [0.9, 0.8], at(15, -9)],
+    ['roof_plate_p2', 'rust', [0.9, 0.8], at(12, -7)],
+    ['roof_plate_s1', 'rust', [0.9, 0.8], at(-8, -18)],
+    ['roof_plate_s2', 'grey', [0.9, 0.8], at(-18, -9)],
+  ],
+});
+
+// Five seams standing proud across the ridge, the riveted joints between
+// its plates, at a six-unit pitch: rust on the grey ridge. The ridge runs
+// along the export's z, which is the kit's x, so the stations are its z.
+bathyarch.plateSeams(root, rust, {
+  on: 'hall_roof_ridge',
+  name: 'ridge_seam',
+  stations: [-30, -24, -18, -12, -6],
+  length: 6,
+  w: 0.14,
+  h: 0.1,
 });
 
 metreTrue(root, L, { drawn: DRAWN });

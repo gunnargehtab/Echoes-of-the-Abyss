@@ -44,6 +44,19 @@
  * eight by six. The twelve flank rivets sit half-sunk in the ten-gon's plate
  * at the beam, 0.07 units in from the twenty-gon's skin they sat half-sunk
  * in. 45 parts and 1,348 triangles become 45 and 756.
+ *
+ * PANELS (#919). The Klaxon's hull band is a median unlit part of 0.75–2 m
+ * on a side from above (Block 2c; bathyarch.mjs `panels`), and this hull
+ * read 2.29 m over 22 parts, its spine plate bare between the strip and the
+ * sensor head. The pass set a dogged hatch and an older patch there, a seam
+ * across the spine ahead of the hatch, and a patch on each flank of the
+ * ten-gon hull, on its third facet from the crown, clear of the domes and
+ * the beam rivets — six parts of 0.3–2 m² in plan, each seated on the
+ * plate or the facet under it (bathyarch.mjs `deckPlates`, `plateSeams`,
+ * `deckHatches`; kit.mjs `seat`). The median reads 1.50 m over 28. 45 parts
+ * and 756 triangles become 51 and 900. The sweep (contacts.mjs) reads the
+ * two shell patches on the hull; the three spine fittings lie flush on the
+ * plate at 0.00 mm and cross no edge of it, so it lists none.
  */
 import { THREE, box, part, drawn, seat, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -170,6 +183,46 @@ bar('nav_strip_spine', lamp, [0.5, 0.22, 3.2], [0, 4.36, -1]);
   const { at, rot } = seat(root, 'hull_cap_aft', drawn([0, 3.8, -8.9]).at, { stand: 0.14, drop: true });
   part(root, 'nav_strip_stern', box(1.4, 0.28, 0.24), lamp, { at, rot });
 }
+
+// PANELS (#919, header): a dogged hatch and an older patch on the spine
+// plate between the spine strip and the sensor head, a seam across the
+// spine ahead of the hatch, and a patch on each flank of the ten-gon hull
+// — its third facet from the crown, clear of the spine, the beam rivets
+// and the nav domes — laid flat on the facet. Sizes are the export's,
+// through `drawn`, as every `bar` above.
+bathyarch.deckHatches(
+  root,
+  { hatch: black, wheel: rust },
+  {
+    on: 'spine_plate',
+    r: 0.3,
+    h: 0.12,
+    wheel: { R: 0.16, t: 0.03 },
+    hatches: [['spine_hatch', drawn([0, 0, 2.6]).at]],
+    cut,
+  }
+);
+bathyarch.deckPlates(root, { rust, black }, {
+  on: 'spine_plate',
+  t: 0.1,
+  plates: [['spine_patch', 'rust', [0.45, 0.55], drawn([-0.2, 0, 1.4]).at]],
+});
+bathyarch.plateSeams(root, rust, {
+  on: 'spine_plate',
+  name: 'spine_seam',
+  stations: [drawn([0, 0, 3.8]).at[0]],
+  length: 1.5,
+  w: 0.15,
+  h: 0.1,
+});
+bathyarch.deckPlates(root, { rust, grey }, {
+  on: 'pressure_hull',
+  t: 0.1,
+  plates: [
+    ['shell_patch_p', 'grey', [0.6, 0.5], drawn([1.15, 0, -0.5]).at],
+    ['shell_patch_s', 'rust', [0.6, 0.5], drawn([-1.15, 0, 2]).at],
+  ],
+});
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
 await exportGlb(root, 'light-scout-bathyarch.glb');

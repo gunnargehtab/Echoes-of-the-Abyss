@@ -68,8 +68,22 @@
  * five by four and six by four. `DRAWN` holds: no re-cut tube reaches past
  * the box the eight-sided ones measured. 30 parts and 796 triangles become
  * 30 and 904.
+ *
+ * PANELS (#919). The Klaxon's structure band is a median unlit part of
+ * 2–5.5 m on a side from above (Block 2c; bathyarch.mjs `panels`), and this
+ * turret read 10.2 m over 25 parts: a bare raft under a drum under a housing,
+ * with nothing on the raft's top but the lamp's bracket. The pass dressed
+ * the raft's top ring — the 6 m annulus between the drum's foot and the rim —
+ * with four kerb posts of 1.8 m radius, three plates of the other two
+ * finishes 3 by 3.7 m, and two dogged hatches of 2 m radius, each seated on
+ * the raft under its station (bathyarch.mjs `deckPosts`, `deckPlates`,
+ * `deckHatches`; kit.mjs `seat`), on the bearings the gun, its glacis and
+ * the counterweight leave clear from above (the comment at the call says
+ * which) — eleven parts of 2.3–12 m² in plan. The median reads 3.11 m over
+ * 36. 30 parts and 904 triangles become 41 and 1,228; `DRAWN` holds, since
+ * every fitting stands inside the raft's rim.
  */
-import { THREE, metreTrue, exportGlb } from '../kit.mjs';
+import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
 
 const L = 120;
@@ -179,6 +193,52 @@ bathyarch.baseLamp(
     cut,
   }
 );
+
+// PANELS (#919, header): the raft's top ring dressed to the band — the
+// 6 m annulus between the mount drum's foot (r 0.7) and the raft's rim
+// (0.9), at r 0.78 — with four kerb posts, three plates and two dogged
+// hatches, on the bearings the gun, the lamp and the counterweight leave
+// clear from above. Bearings are the export's plan, `atan2(z, x)`, read
+// off the bake's own raster (glb.mjs `topDown`) at r 0.78: the breech
+// shades 0.9–1.2 and the glacis's corners 0.6 and 1.5–1.6, the lamp stands
+// at 0.79 off the rim, and the counterweight's corners hang over 4.0–4.1
+// and 4.4–4.5 — a post first set at 1.2 read nothing from above, one at
+// 4.45 a third. So nothing stands between 0.55 and 1.75 or between 3.9 and
+// 4.6. Every station is the export's, through `drawn`, as the feet are.
+{
+  const ring = (a) => drawn([0.78 * Math.cos(a), 0, 0.78 * Math.sin(a)]).at;
+  bathyarch.deckPosts(root, grey, {
+    on: 'base_raft',
+    r: 0.06,
+    h: 0.1,
+    posts: [1.95, 2.95, 4.75, 5.75].map((a, i) => [`kerb_post_${i + 1}`, ring(a)]),
+    cut,
+  });
+  bathyarch.deckPlates(root, { grey, rust }, {
+    on: 'base_raft',
+    t: 0.012,
+    plates: [
+      ['raft_plate_1', 'rust', [0.1, 0.12], ring(2.45)],
+      ['raft_plate_2', 'grey', [0.12, 0.1], ring(3.45)],
+      ['raft_plate_3', 'rust', [0.1, 0.12], ring(5.25)],
+    ],
+  });
+  bathyarch.deckHatches(
+    root,
+    { hatch: grey, wheel: rust },
+    {
+      on: 'base_raft',
+      r: 0.065,
+      h: 0.02,
+      wheel: { R: 0.035, t: 0.007 },
+      hatches: [
+        ['raft_hatch_1', ring(6.05)],
+        ['raft_hatch_2', ring(0.25)],
+      ],
+      cut,
+    }
+  );
+}
 
 metreTrue(root, L, { drawn: DRAWN });
 await exportGlb(root, 'sentinel-turret-bathyarch.glb');

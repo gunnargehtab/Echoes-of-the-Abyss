@@ -499,7 +499,22 @@ hull out of rivets, so a median part under three-quarters of a metre is a hull o
 and no plate; and a plate two metres on a side is the largest a patch is before a seam
 crosses it. "Riveted, patchworked" is half the unlit parts on a hull being fittings under
 two metres — rivets, knuckles, dogging wheels, seams, ports — and "over-engineered" is the
-plates over them being small too.
+plates over them being small too. The panel pass brought the thirteen Consortium models
+outside the bands inside them — `node tools/hull-models/facets.mjs bathyarch` names none, the
+hulls at 0.9–1.6 m and the structures at 3.1–5.5 — with the three divisions the measure sees
+and nothing else: plates of a finish other than the one under them laid over a deck or a slab,
+0.63–2.4 m on a side on a hull and 3–4.4 m on a structure, 0.2–0.26 m proud on a hull and up
+to 5.2 m tall on the Vent Tap, whose apron lies 2.6 m under the seabed; seams standing proud
+across a deck; dogged hatches, and on the structures kerb posts, kerbs and anchor blocks; 314
+fittings, 366 parts, all but the Vent Tap's four foot plates seated on the plate under their
+station (`factions/bathyarch.mjs`, "Panels"). They lie where a plate
+was bare: the shared kinds', the Tender's and the Chorister's decks, the Submersible's hull
+plates and tank crowns, the Bastion's foundation between its skirt and its rim, the Refinery's
+yard, the Foundry's step and roof, the Turret's raft ring and the Vent Tap's apron. The Beacon,
+the one hull under the band, kept its eighty-six rivets and bolts and took twenty-two plates, seams
+and hatches over them, since the floor is what a hull whose median is a rivet fails. No plate
+was split in its own finish, no part moved, no lamp added; each script's header says what its
+model took and where.
 
 **Commune.** "Grown, so nothing is quite regular" (`factions/pelagia.mjs`); "organic,
 curved"; "growth rings". A grown thing adds the same increment whatever its size — a growth
@@ -631,14 +646,15 @@ on a 32 × 32-cell map, 32,768 triangles (`packages/frontend/src/game/perspectiv
 33 k), so the own force — five hulls and a dozen structures — has about 112 k, and an orb's
 triangles go as the square of its count. Every round part rebuilt with its own constructor
 at the count the rule gives it, the table costs: Consortium hulls 53.3 k → 40.9 k and
-structures 16.6 k → 19.5 k, the Consortium's as built since its pass; Commune hulls 47.6 k → 47.8 k and structures 35.2 k → 62.4 k;
+structures 16.6 k → 19.5 k by its facet pass, and 45.7 k and 23.3 k as built since its panel
+pass dressed thirteen models; Commune hulls 47.6 k → 47.8 k and structures 35.2 k → 62.4 k;
 Directorate hulls 30.0 k → 33.5 k and structures 26.6 k → 32.8 k; Order hulls 9.9 k → 8.0 k
 and structures 15.8 k → 12.1 k, the Order's as built since its pass, where this rebuild had
 said 12.4 k before the pass cut its pipes, stacks and throat drums as hexagons; the fourteen
 props, under no rule, 4.3 k. The own force
 the gate names, taken as a navy's eight structures, four more Turrets and its five largest
-hulls, comes to 42.1 k for the Consortium, 107.0 k for the Commune, 64.0 k for the
-Directorate and 18.9 k for the Order, as built. That mix is one sample base and not a worst case —
+hulls, comes to 48.2 k for the Consortium since its panel pass (42.1 k before it), 107.0 k for the
+Commune, 64.0 k for the Directorate and 18.9 k for the Order, as built. That mix is one sample base and not a worst case —
 nothing caps what a base builds, and a dozen Commune Slipways alone are 170 k — so the
 probe, not this rebuild, is the check. The Commune's ceiling is the number gate 6 moved: at
 twenty-four that dozen and five were 181.0 k, its eight structures alone 110.5 k; at
@@ -671,9 +687,12 @@ Sentinel Turret's two pods' caps, a capsule's meridian at 5.1 m, where the rule'
 half turn is five and a capsule draws an even count. The Consortium's pass leaves none of
 its 1,119: `node tools/hull-models/facets.mjs bathyarch` names no ring, and the navy
 carries seven distinct counts a turn where it carried fifteen.
-Outside the bands: eight Consortium hulls (the five shared kinds, the Chorister and the
-Tender at 2.2–3.9 m — the Corvette's 2.3 was 2.2 once the facet pass thinned its drums —
-and the Beacon at 0.5) and five structures; two Commune hulls (the
+Outside the bands, before the panel pass: eight Consortium hulls (the five shared kinds, the Chorister
+and the Tender at 2.2–3.9 m — the Corvette's 2.3 was 2.2 once the facet pass thinned its
+drums — and the Beacon at 0.5) and five structures (the Vent Tap at 6.2 m, the Turret at
+10.2, the Foundry at 15.7, the Refinery at 20.6 and the Bastion at 42.2), every one inside its
+band since the Consortium's panel pass — the hulls at 0.9–1.6 m, the structures at 3.1–5.5;
+two Commune hulls (the
 Bower at 0.8 m, the Submersible at 7.3) and three structures; three Directorate hulls (the
 Verger, the Submersible and the Dredge, 4.0–5.2 m) and four structures; five Order hulls
 (the Versicle at 1.5 m; the Reciter, the Responsory, the Antiphon and the Offertory at

@@ -95,6 +95,19 @@
  * beacon six. The fourteen-sided pressure hull, its bands and caps were
  * the rule's already and are asked of it now. 121 parts and 3,008
  * triangles become 121 and 3,120.
+ *
+ * PANELS (#919). The Klaxon's hull band is a median unlit part of 0.75–2 m
+ * from above (Block 2c; bathyarch.mjs `panels`), and this hull read 3.9 m:
+ * its median part was a ballast cap, since a drum's fittings are few and its
+ * plates wide. The pass seated thirty-four fittings on its plates through
+ * bathyarch.mjs `deckPlates` and `deckHatches` (kit.mjs `seat`): two pads
+ * and two hatches on the crown plate between the bands, eighteen pads on
+ * the plates either side of it, a pad fore and aft, a seam and a hatch on
+ * each ballast tank's crown between its straps, and a pad and a hatch on
+ * each pair of the tower cap's corners — each pad 1.6 × 1.2 m, 0.2 m proud
+ * and of a finish other than its plate's, grey on the rust tanks and cap,
+ * each hatch 1.3 m across. The median reads 1.6 m.
+ * 121 parts and 3,120 triangles become 161 and 4,032.
  */
 import { THREE, add, box, hex, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -264,6 +277,77 @@ bathyarch.glowLamps(root, {
     ['glow-port', [0, 0.3, -1.3]],
     ['glow-stb', [0, 0.3, 1.3]],
   ],
+});
+
+// PANELS (#919, header): the carapace's own division, seated on it. Pads of
+// older and newer plate on the crown plate and on the plates either side of
+// it between the bands — none at x −2.52 on the crown, where the rudder
+// stands — a hatch on the crown fore and aft of the tower, pads, a seam and
+// a hatch along each ballast tank's crown between its straps, and a pad and
+// a hatch on each pair of the tower cap's corners, clear of its strip. A
+// pad is 1.6 × 1.2 m and 0.2 m proud; a hatch 1.3 m across under a 0.45 m
+// wheel, which the measure drops; a seam 4 m by 0.4. Every one is dropped
+// onto its plate by kit.mjs `seat`, so a pad on a sloped plate lies on it.
+// The third plate's pads stop short of the starboard fore running light,
+// which `hullLights` seats on that plate at x 1.3–1.8.
+const PAD = [0.12, 0.09];
+const PAD_T = 0.015;
+const HATCH = { r: 0.05, h: 0.02, wheel: { R: 0.017, t: 0.004 }, cut };
+bathyarch.deckPlates(root, { grey, brown }, {
+  on: 'pressure-hull', t: PAD_T,
+  plates: [
+    ['crown-pad-1', 'grey', PAD, [-0.55, 0]],
+    ['crown-pad-2', 'brown', PAD, [2.52, 0]],
+    ['flank-pad-stb-1', 'brown', PAD, [-2.52, 0.55]],
+    ['flank-pad-stb-2', 'grey', PAD, [-1.65, 0.55]],
+    ['flank-pad-stb-3', 'brown', PAD, [-0.55, 0.55]],
+    ['flank-pad-stb-4', 'grey', PAD, [2.52, 0.55]],
+    ['flank-pad-stb-5', 'grey', PAD, [-1.65, 0.83]],
+    ['flank-pad-stb-6', 'brown', PAD, [-0.55, 0.83]],
+    ['flank-pad-stb-7', 'brown', PAD, [-2.52, 0.83]],
+    ['flank-pad-stb-8', 'grey', PAD, [2.52, 0.83]],
+    ['flank-pad-port-1', 'grey', PAD, [-2.52, -0.55]],
+    ['flank-pad-port-2', 'brown', PAD, [-1.65, -0.55]],
+    ['flank-pad-port-3', 'grey', PAD, [-0.55, -0.55]],
+    ['flank-pad-port-4', 'brown', PAD, [1.8, -0.55]],
+    ['flank-pad-port-5', 'grey', PAD, [2.52, -0.55]],
+    ['flank-pad-port-6', 'brown', PAD, [-1.65, -0.83]],
+    ['flank-pad-port-7', 'grey', PAD, [-0.55, -0.83]],
+    ['flank-pad-port-8', 'grey', PAD, [-2.52, -0.83]],
+    ['flank-pad-port-9', 'brown', PAD, [1.8, -0.83]],
+    ['flank-pad-port-10', 'grey', PAD, [2.52, -0.83]],
+  ],
+});
+bathyarch.deckHatches(root, { hatch: grey, wheel: black }, {
+  on: 'pressure-hull', ...HATCH,
+  hatches: [['crown-hatch-aft', [-1.65, 0]], ['crown-hatch-fore', [1.8, 0]]],
+});
+// The tank seams are plates of the hull's black on the tanks' older plate,
+// a strip each, through `deckPlates` so they keep this file's hyphens.
+for (const [side, sgn] of [['stb', 1], ['port', -1]]) {
+  const on = `ballast-tank-${side}`;
+  bathyarch.deckPlates(root, { grey, brown, black }, {
+    on, t: PAD_T,
+    plates: [
+      [`tank-pad-${side}-a`, 'grey', PAD, [-1.55, sgn * 1.18]],
+      [`tank-seam-${side}`, 'black', [0.3, 0.03], [-0.2, sgn * 1.18]],
+      [`tank-pad-${side}-f`, 'grey', PAD, [0.4, sgn * 1.18]],
+    ],
+  });
+  // The port hatch sits forward of the seam; the starboard one aft of it,
+  // since `patch-1` stands on edge over the starboard tank's crown from
+  // x 1.05 to 2.15 and a hatch under it owns no plan the measure reads.
+  bathyarch.deckHatches(root, { hatch: grey, wheel: black }, {
+    on, ...HATCH, hatches: [[`tank-hatch-${side}`, [side === 'stb' ? -0.9 : 1.15, sgn * 1.18]]],
+  });
+}
+bathyarch.deckPlates(root, { grey, brown }, {
+  on: 'tower-cap', t: PAD_T,
+  plates: [['cap-pad-stb', 'grey', PAD, [1.3, 0.45]], ['cap-pad-port', 'grey', PAD, [0.1, -0.45]]],
+});
+bathyarch.deckHatches(root, { hatch: grey, wheel: black }, {
+  on: 'tower-cap', ...HATCH,
+  hatches: [['cap-hatch-stb', [0.1, 0.45]], ['cap-hatch-port', [1.3, -0.45]]],
 });
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
