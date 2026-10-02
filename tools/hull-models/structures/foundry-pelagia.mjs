@@ -181,15 +181,17 @@
  * band's 182 m². The pass buds the husk where it grew: twelve pale buds
  * on the eight lobes — one on each crown inside its top ring, a second on
  * four of them down the slope between the second ring and the third or the
- * skirt — 3.3–6.2 m of radius, seated on the lobe half its radius in
+ * skirt — 2.6–4.0 m of radius, seated on the lobe half its radius in
  * (`grownNubs`), none where a vein climbs its lobe or a knuckle lies
  * between two, none over the bay. Spore pale, as the outrigger's and the
  * stern pod's buds are, though the pale shares the flood lamps' hex: a bud
  * is pale on every Commune structure. Twelve where ten parts in the band
- * are the least, since the buds' triangles are gate 6's. They show
- * 31–119 m² each, and the median part is 12.9 m over seventy-one, the
- * outrigger's bud. 87 parts and 12,660 triangles become 99 and 15,236; no
- * part moved, no lamp's plan changed, and the fit is the same 17.4354 long.
+ * are the least, and cut toward the band's floor from a first cut's
+ * 3.3–6.2 m, since the buds' triangles are gate 6's. They show 18–50 m²
+ * each, and the median part is 12.9 m over seventy-one, the outrigger's
+ * bud. 87 parts and 12,660 triangles become 99 and 14,592; no part moved,
+ * no lamp's plan changed, no plan grew, and the fit is the same 17.4354
+ * long.
  */
 import {
   THREE,
@@ -355,18 +357,18 @@ pelagia.grownNubs(root, spore, {
   on: [0, 1, 2, 3].flatMap((i) => [`husk_lobe_port_${i}`, `husk_lobe_starboard_${i}`]),
   cut,
   nubs: [
-    [0.3, [3.34, 3.1, -4.7]],
-    [0.26, [4.77, 2.1, -6.05]],
-    [0.34, [3.3, 3.5, -2.1]],
-    [0.2, [4.8, 2.45, 0.35]],
-    [0.28, [3.5, 3.3, 2.1]],
-    [0.21, [5.09, 2.25, 1.21]],
-    [0.24, [3.0, 2.7, 5.3]],
-    [0.25, [-3.5, 2.8, -4.5]],
-    [0.32, [-3.4, 3.1, -1.3]],
-    [0.18, [-4.45, 2.15, -2.39]],
-    [0.29, [-3.5, 2.9, 2.3]],
-    [0.27, [-3.7, 2.3, 4.6]],
+    [0.2, [3.34, 3.1, -4.7]],
+    [0.18, [4.77, 2.1, -6.05]],
+    [0.22, [3.3, 3.5, -2.1]],
+    [0.15, [4.8, 2.45, 0.35]],
+    [0.19, [3.5, 3.3, 2.1]],
+    [0.155, [5.09, 2.25, 1.21]],
+    [0.17, [3.0, 2.7, 5.3]],
+    [0.175, [-3.5, 2.8, -4.5]],
+    [0.21, [-3.4, 3.1, -1.3]],
+    [0.14, [-4.45, 2.15, -2.39]],
+    [0.195, [-3.5, 2.9, 2.3]],
+    [0.185, [-3.7, 2.3, 4.6]],
   ],
 });
 

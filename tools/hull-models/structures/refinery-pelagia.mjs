@@ -140,7 +140,7 @@
  * grew: two half rings of chitin over the crusher's roof and an algae ring
  * round each stack above it (`drumRings`, which reads each drum off the
  * part), and two knots of chitin on the second and fourth silos' lowest
- * rings, 3.7–4.4 m of radius, seated on the ring half its radius in
+ * rings, 2.7–3.2 m of radius, seated on the ring half its radius in
  * (`grownNubs`). Two over the roof and not more: the maw takes its forward
  * end, the stacks' own rings reach half a unit either side of each stack,
  * and past 1.7 of its 2.35 half-length a ring's inboard foot stands on
@@ -148,10 +148,12 @@
  * rings covered both knots from above; a second ringed each stack twice
  * and knotted all four silos, ten fittings where four parts in the band are
  * the least, and the knot on `silo_0`'s ring reached past the file's
- * westmost vertex and moved the chart's raster. They show 35–113 m² each,
- * and the median part is 12.6 m over fifty-one. 69 parts and 6,828
- * triangles become 75 and 7,712; no part moved, no lamp's plan changed, and
- * the fit is the same 22.8326 long.
+ * westmost vertex and moved the chart's raster. They show 17–113 m² each,
+ * and the median part is 12.7 m over fifty-one; the knots and rings stand
+ * 49 m² proud of the silos' and the roof's plan, inside the raster's
+ * bounds, which are main's. 69 parts and 6,828 triangles become 75 and
+ * 7,552; no part moved, no lamp's plan changed, and the fit is the same
+ * 22.8326 long.
  */
 import {
   THREE,
@@ -348,8 +350,8 @@ pelagia.grownNubs(root, chitin, {
   on: ['silo_ring_1_0', 'silo_ring_3_0'],
   cut,
   nubs: [
-    [0.36, onRing([-1.9, -1.2], 1.933685295, 2.71727233805, -90)],
-    [0.3, onRing([-4, 1.9], 1.402105503, 1.95306810646, 60)],
+    [0.26, onRing([-1.9, -1.2], 1.933685295, 2.71727233805, -90)],
+    [0.22, onRing([-4, 1.9], 1.402105503, 1.95306810646, 60)],
   ],
 });
 

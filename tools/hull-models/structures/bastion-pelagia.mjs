@@ -102,7 +102,7 @@
  * 31.4 m over twenty-nine parts: a dome, four rings, seven roots, two
  * collars and a crown pod of 500–46,000 m² each, and six parts inside the
  * band. The pass knots the rings where they grew: twenty knots of chitin
- * on three of the four growth rings — five, seven and eight — 4.2–7.1 m of
+ * on three of the four growth rings — five, seven and eight — 2.7–4.6 m of
  * radius, each seated on its ring half its radius in (`grownNubs`) at a
  * bearing of its own clear of the ribs, the veins, the pipes and the crown
  * pod. None on the third ring: a first cut's five there fell between the
@@ -110,10 +110,12 @@
  * dark beads (hull-reviewer). Not at the ribs' crossings: the ribs stay at
  * the file's radius and run inside the dome below the second ring, so only
  * two of twenty crossings exist. Twenty where eighteen parts in the band
- * are the least, since the knots' triangles are gate 6's. They show
- * 54–147 m² each, and the median part is 12.0 m over forty-nine. 47 parts
- * and 10,124 triangles become 67 and 14,604; no part moved, no lamp's plan
- * changed, and the fit is the same 16.7179 across.
+ * are the least, and cut toward the band's floor — a first cut's 4.2–7.1 m
+ * knots were sixteen-round orbs of 224 triangles each, and these 2.7–4.6 m
+ * ones are 100–200 — since the knots' triangles are gate 6's. They show
+ * 17–62 m² each, and the median part is 11.1 m over forty-nine. 47 parts
+ * and 10,124 triangles become 67 and 13,788; no part moved, no lamp's plan
+ * changed, no plan grew, and the fit is the same 16.7179 across.
  */
 import { THREE, xLong, ballastTanks, flangedPipes, exportGlb, fitFootprint } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -190,7 +192,8 @@ pelagia.domeRings(root, chitin, {
 // seated on its ring half its radius in (pelagia.mjs `grownNubs`). The
 // bearings keep clear of what else stands on the dome: the five ribs over
 // the +x crown, the three lit veins climbing the +z flank, the two pipes
-// and the crown pod. None on the third ring, because its knots fell between
+// and the crown pod; the radii are two thirds of a first cut's, toward the
+// band's floor. None on the third ring, because its knots fell between
 // the eight ports a step below it and the ring read as a string of light
 // and dark beads (hull-reviewer, the first round); twenty where eighteen
 // parts in the band are the least, since more would spend gate 6 (the
@@ -210,26 +213,26 @@ pelagia.grownNubs(root, chitin, {
   on: RINGS.map((_, j) => `growth_ring_${j}`),
   cut,
   nubs: [
-    [0.16, onRing(0, 62)],
-    [0.195, onRing(0, 123)],
-    [0.23, onRing(0, 171)],
-    [0.265, onRing(0, 214)],
-    [0.185, onRing(0, 240)],
-    [0.22, onRing(1, 72)],
-    [0.255, onRing(1, 128)],
-    [0.175, onRing(1, 163)],
-    [0.21, onRing(1, 204)],
-    [0.245, onRing(1, 247)],
-    [0.165, onRing(1, 283)],
-    [0.2, onRing(1, 88)],
-    [0.26, onRing(3, 22)],
-    [0.18, onRing(3, 68)],
-    [0.215, onRing(3, 113)],
-    [0.25, onRing(3, 160)],
-    [0.17, onRing(3, 232)],
-    [0.205, onRing(3, 318)],
-    [0.235, onRing(3, 180)],
-    [0.27, onRing(3, 270)],
+    [0.104, onRing(0, 62)],
+    [0.1268, onRing(0, 123)],
+    [0.1495, onRing(0, 171)],
+    [0.1723, onRing(0, 214)],
+    [0.1202, onRing(0, 240)],
+    [0.143, onRing(1, 72)],
+    [0.1658, onRing(1, 128)],
+    [0.1137, onRing(1, 163)],
+    [0.1365, onRing(1, 204)],
+    [0.1593, onRing(1, 247)],
+    [0.1073, onRing(1, 283)],
+    [0.13, onRing(1, 88)],
+    [0.169, onRing(3, 22)],
+    [0.117, onRing(3, 68)],
+    [0.1398, onRing(3, 113)],
+    [0.1625, onRing(3, 160)],
+    [0.1105, onRing(3, 232)],
+    [0.1333, onRing(3, 318)],
+    [0.1527, onRing(3, 180)],
+    [0.1755, onRing(3, 270)],
   ],
 });
 

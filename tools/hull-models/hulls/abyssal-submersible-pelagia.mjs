@@ -97,18 +97,19 @@
  * tips and a tendril under the band's 25 m². The pass knots the carapace where it
  * grew: twelve dark knots on the six growth rings, two a ring, 1.6–2.2 m
  * of radius at bearings of their own in the upper quarters, 35–65° off the
- * crown either side, and two nubs on the port side of the bow collar
- * forward of the last ring, 1.35–1.6 m, where the eye sacs leave it bare —
- * each seated on its ring or the hull half its radius in (pelagia.mjs
- * `grownNubs`), no two alike, none over a lit part, none between the rings,
- * where the hoops leave 1.3 m of skin, and none at the beams, where a first
- * cut's knots and nubs stood proud of the plan and read as burrs
- * (hull-reviewer). Twelve and two where eleven parts in the band are the
- * least: the fittings' triangles are gate 6's, and the first cut's
- * twenty-four spent 800 of them where 640 do. They show 3.4–12.1 m² each,
- * and the median part is 3.4 m over thirty-four. 35 parts and 6,516
- * triangles become 49 and 7,158; no part moved, no lamp's plan changed, and
- * the plan's outline is the hull's own.
+ * crown either side, and one nub of 1.35 m on the port side of the bow
+ * collar forward of the last ring, 30° off the crown, where the eye sacs
+ * leave it bare — each seated on its ring or the hull half its radius in
+ * (pelagia.mjs `grownNubs`), no two alike, none over a lit part, none
+ * between the rings, where the hoops leave 1.3 m of skin, and none at the
+ * beams or further round the bow, where a first cut's knots and nubs stood
+ * proud of the plan and read as burrs (hull-reviewer, both rounds). Twelve
+ * and one where eleven parts in the band are the least: the fittings'
+ * triangles are gate 6's, and the first cut's twenty-four spent 800 of them
+ * where 600 do. They show 3.3–12.1 m² each, and the median part is
+ * 3.4 m over thirty-three. 35 parts and 6,516 triangles become 48 and
+ * 7,116; no part moved, no lamp's plan changed, and no plan grew: the hull's
+ * outline from above is its own.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -322,12 +323,14 @@ pelagia.grownHoops(root, {
 // the six growth rings, two a ring, 1.6–2.2 m of radius at bearings of
 // their own in the upper quarters, 35–65° off the crown either side —
 // clear of the keel and the spine vein over the crown, and off the beams,
-// where a knot would stand proud of the plan and lie over a fin — and two
-// nubs on the port side of the bow collar forward of the last ring, where
-// the eye sacs leave it bare. Each is seated on the ring or the hull it grew
-// from, half its radius in (pelagia.mjs `grownNubs`), no two alike; twelve
-// and two where eleven parts in the band are the least, since more would
-// spend gate 6 (the header). A seed sits a tenth outside the hoop at its
+// where a knot would stand proud of the plan and lie over a fin — and one
+// nub on the port side of the bow collar forward of the last ring, 30° off
+// the crown, where the eye sacs leave it bare: a second further round
+// stood 1.2 m² proud of the plan where the bow narrows ahead of it
+// (hull-reviewer, the second round). Each is seated on the ring or the
+// hull it grew from, half its radius in (pelagia.mjs `grownNubs`), no two
+// alike; twelve and one where eleven parts in the band are the least,
+// since more would spend gate 6 (the header). A seed sits a tenth outside the hoop at its
 // bearing, `deg` from the crown, port negative; the hoops are 1.12 wider
 // than tall.
 const onRing = (n, deg) => {
@@ -369,10 +372,7 @@ pelagia.grownNubs(root, dark, {
   first: 1,
   on: 'seed-hull',
   cut,
-  nubs: [
-    [0.119, onBow(2.4, -52)],
-    [0.1, onBow(2.25, -70)],
-  ],
+  nubs: [[0.1, onBow(2.25, -30)]],
 });
 
 // The export's two named point lights, one over the back and one at the prow.

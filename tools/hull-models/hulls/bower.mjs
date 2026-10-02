@@ -197,19 +197,20 @@
  * breathing lines of 0.25–1.4 m², so the median thing from above was a slit.
  * The pass grows forty-three algae mats over the back (`grownNubs`, the
  * MATS table below): low domes in the ridge finish, the lobes' darker
- * skin, 1.25–3.5 m of radius, dropped onto the bed under their stations
- * and lying along its skin, clear of the organs, the stalks' feet, the
- * marks and the nose's root — ridge and not the pale membrane, since the
+ * skin, 1.2–2 m of radius in six colonies, dropped onto the bed under their
+ * stations and lying along its skin, clear of the organs, the stalks' feet,
+ * the marks and the nose's root — ridge and not the pale membrane, since the
  * block keeps this hull nearly black at rest and its paler nubs for the
  * brood pouches. Forty-three, because a hull of fittings lifts its median only with
  * more parts over the band's floor than it has under it, and none under
- * 1.25 m, because the rule cuts a mat that size as a pentagon of three rows
- * whose plan is 1.8 r² — a first scatter of forty from 0.9 m left the
- * median at 1.2. Forty-three and not more, three over the forty the
- * arithmetic needs, since the mats' triangles are gate 6's. They show
- * 2.9–32.1 m² each, and the median part is 1.9 m over 114. 88 parts and
- * 4,698 triangles become 131 and 7,772; no part moved, no lamp's plan
- * changed, and the outline is the bed's as before.
+ * 1.2 m, because the rule cuts a mat that size as a pentagon of three rows
+ * whose plan is 1.78 r², under the band's 2.25 m² below 1.12 m of radius —
+ * a first scatter of forty from 0.9 m left the median at 1.2. Forty-three
+ * and not more, three over the forty the arithmetic needs, and none over
+ * 2 m, since the mats' triangles are gate 6's. They show 2.7–11.1 m² each,
+ * and the median part is 1.7 m over 114. 88 parts and 4,698 triangles
+ * become 131 and 6,078; no part moved, no lamp's plan changed, no plan
+ * grew, and the outline is the bed's as before.
  *
  * The hand-drawn entry in silhouettes.ts stays until the kind is wired
  * (docs/models-plan.md §2). The generated outline is thirty-one vertices —
@@ -516,7 +517,7 @@ pelagia.driveFluke(root, membrane, {
 
 // PANELS (#919): algae mats over the back. Forty-three low mats of the
 // composite's own algae in the ridge finish, the lobes' darker skin, grown
-// on the bed's back, each its own radius from 1.25 to 3.5 m, lying on the
+// on the bed's back, each its own radius from 1.2 to 2 m, lying on the
 // skin under its station 0.4 of its radius tall and half of that proud
 // (pelagia.mjs `grownNubs`, `squash`, `drop`). Ridge and not membrane: the
 // block keeps this hull "nearly black at rest" and its paler nubs for the
@@ -525,61 +526,64 @@ pelagia.driveFluke(root, membrane, {
 // membrane mats read as a bloom-bed (loop-critic, round 1). They lie
 // inside the rim by a seventh of its reach, clear of the four organs, the
 // six stalks' feet, the three marks on the bed and the nose's root, and
-// none within 0.7 m of another, grown as six colonies rather than spread
-// evenly, as algae grows; the stations and radii are one scatter fixed by
-// hand, bow to stern, so a rebuild is a rebuild. The bed is one
+// none within 0.5 m of another, grown in six colonies as algae grows,
+// each mat within 9 m of one of six centres at least 15 m apart — a first
+// cut's colonies spread so wide they met, and read as an even field
+// (hull-reviewer, the second round); the stations and radii are one
+// scatter fixed by hand, bow to stern, so a rebuild is a rebuild. The bed is one
 // part 90 m long, and its stalks' pods, gill slits and breathing lines are
 // what the chart counts: without these the median thing on this hull from
 // above was a slit under a metre on a side, and the band says a metre and
-// a half to five. Forty-three and none under 1.25 m, because a mat on the
-// rule's floor is a pentagon of three rows whose plan is 1.8 r² and not
-// πr², so a smaller one reads under the band's 2.25 m² and a hull of
+// a half to five. Forty-three and none under 1.2 m, because a mat on the
+// rule's floor is a pentagon of three rows whose plan is 1.78 r² and not
+// πr², under the band's 2.25 m² below 1.12 m of radius, and a hull of
 // fittings needs the parts over that floor to outnumber the fittings under
-// it. `[r, [x, z]]` each.
+// it; none over 2 m, since the mats' triangles are gate 6's and a colony
+// of seven has to fit. `[r, [x, z]]` each.
 const MATS = [
-  [1.83, [34.1, -4.4]],
-  [2.11, [31.4, 5.1]],
-  [1.35, [30.2, 15]],
-  [2.52, [29.7, -12.5]],
-  [3.23, [25.6, 1.3]],
-  [3.27, [23.5, -10.4]],
-  [1.99, [22.1, -4]],
-  [1.82, [18.8, 1.9]],
-  [2.4, [16.8, -3.6]],
-  [1.62, [14.2, 17.2]],
-  [2.94, [11.7, 7.1]],
-  [1.77, [10, 12.4]],
-  [2.71, [9.8, 0.3]],
-  [2.02, [9.4, -5.1]],
-  [1.68, [8.1, 19.7]],
-  [1.79, [4.8, 5.5]],
-  [2.85, [4.6, 14.8]],
-  [2.56, [4.1, -2.9]],
-  [2.92, [-0.5, 9]],
-  [2.59, [-0.5, -7.4]],
-  [2.46, [-0.5, -15.5]],
-  [1.45, [-0.5, -20.9]],
-  [2.25, [-1.6, 14.9]],
-  [1.44, [-4.8, -18.1]],
-  [3.34, [-5.1, 0.2]],
-  [1.42, [-6, 10.8]],
-  [2.83, [-7.8, -9.8]],
-  [2.67, [-11.2, 3.4]],
-  [2.63, [-12.5, -4.4]],
-  [1.7, [-13.3, -17]],
-  [2.72, [-15, -12.1]],
-  [1.5, [-18.1, -6.9]],
-  [1.54, [-18.3, -17]],
-  [2.48, [-19.1, 5.3]],
-  [1.28, [-19.6, -1.1]],
-  [1.8, [-23.9, 3.2]],
-  [2.28, [-24.7, -2.5]],
-  [1.43, [-24.9, 14.4]],
-  [3.16, [-25.7, 8.6]],
-  [1.64, [-28.6, 1.3]],
-  [2.26, [-31.8, 10.3]],
-  [2.74, [-32.4, -5.7]],
-  [3.24, [-34.4, 2.6]],
+  [1.36, [34.7, -7.1]],
+  [1.69, [34.6, -11.1]],
+  [1.73, [33, -2.7]],
+  [1.68, [30, -8.2]],
+  [1.41, [30, -12]],
+  [1.9, [28.8, 0]],
+  [1.67, [25.5, -3.3]],
+  [1.99, [25.1, -8.2]],
+  [1.33, [25.1, -12.1]],
+  [1.27, [23.1, -0.4]],
+  [1.79, [21.4, -3.5]],
+  [1.39, [14.9, 8]],
+  [1.43, [14.2, 16.9]],
+  [1.95, [13.3, 12.3]],
+  [1.24, [13.1, 4.1]],
+  [1.8, [10.7, 6.9]],
+  [1.76, [7.3, 11.5]],
+  [1.4, [5.9, -4.7]],
+  [1.64, [1.3, -9.8]],
+  [1.91, [-0.3, -14.6]],
+  [1.75, [-0.3, -6.1]],
+  [1.87, [-3.5, -9.9]],
+  [1.29, [-4.6, -6.2]],
+  [1.77, [-5.3, -13.8]],
+  [1.26, [-5.4, 14.2]],
+  [1.56, [-6.7, 10.1]],
+  [1.92, [-8.3, 3.8]],
+  [1.35, [-9.4, 7.4]],
+  [1.21, [-11.9, 1]],
+  [1.94, [-13.6, 5.3]],
+  [1.51, [-17, -8]],
+  [1.46, [-17.8, 3.1]],
+  [1.47, [-19.5, -1.1]],
+  [1.5, [-19.9, -5.2]],
+  [1.72, [-23.6, -3.4]],
+  [1.3, [-25.6, 6.9]],
+  [1.61, [-26.4, 1.9]],
+  [1.63, [-28.8, -4.1]],
+  [1.65, [-29, 9.8]],
+  [1.88, [-31, 0.7]],
+  [1.86, [-32.5, 5.7]],
+  [1.34, [-34.8, -0.9]],
+  [1.7, [-37.4, 1.6]],
 ];
 pelagia.grownNubs(root, ridge, {
   name: 'algae_mat',
