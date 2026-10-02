@@ -295,10 +295,11 @@ Node's default gzip settings. It reads the library as it stands, so the bytes mo
 whenever a model does.
 Those are sums over the source library, not a browser's initial download: Vite hashes
 assets and the client loads them by need. A solo match on the default map, its build at
-`c771ca8` served through `nginx.conf`, fetched 13 of them before its requests stopped:
-**1,213,200 bytes** raw and **150,459** gzipped, by nginx's access log. The whole load fell
-from 4,546,477 bytes to 3,483,736. The rank retains the issue's visual priority, and WebGPU
-is not a prerequisite for the other seven.
+`c771ca8` served by nginx 1.24 through `nginx.conf` and the image's `http` settings, fetched
+13 of the 108 models before its requests stopped: **1,213,200 bytes** raw and **150,459**
+gzipped, by nginx's access log. The whole load fell from 4,546,477 bytes to 3,483,736. The
+rank retains the issue's visual priority, and WebGPU is not a prerequisite for the other
+seven.
 
 ### Reading the Sea Floor
 
