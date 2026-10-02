@@ -88,7 +88,8 @@ tools/render-stack #974's audit and camera pairs, kept runnable rather than
                    the lamp halo, and readings.json beside the frames; the
                    run-game skill has
                    the recipe. fog.mjs reads fully fogged seabed against the
-                   backdrop (#1016), lamps.mjs own hulls quiet and loud
+                   backdrop (#1016) and the edge left where the two grade
+                   different depths (#1023), lamps.mjs own hulls quiet and loud
                    (gate 3), and halo.mjs what a lamp halo would work with:
                    near-black share, lamp sizes and light against SIG, a
                    ping's flash. route-cost.mjs times each halo route's own

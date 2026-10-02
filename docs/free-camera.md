@@ -249,10 +249,20 @@ What the phase settled:
 - **F1 is delivered.** At 10° of pitch with the eye at 403 m the frame is water rather than
   void: a column that darkens downward, particulate that parallaxes past the camera, and a
   seabed that dissolves into the medium instead of ending at a line.
-- **The horizon stops existing, and for a stated reason.** The fog over geometry and the
-  backdrop grade the same ramp, so the far seabed fades toward the colour the water behind
-  it already is. That is the term that removes the edge, and it is the one term the issue's
-  three candidate approaches would each have got half of.
+- **The horizon stops existing where the far ground is as deep as the water behind it.**
+  The fog over geometry and the backdrop grade the same ramp, so there the far seabed fades
+  toward the colour the water behind it already is. That is the term that removes the edge,
+  and it is the one term the issue's three candidate approaches would each have got half of.
+- **Where the far ground is at another depth, the edge stays, and it is meant (#1023).** The
+  two grade different depths: the fog takes the fragment's own, the backdrop the focus's,
+  moved by where the ray points. So a far trench seen against water graded from a plateau's depth stays darker than
+  that water, and far ground shallower than it stands brighter. Each is depth read as
+  luminance, the rule both terms transcribe, rather than a seam. With the focus raised to
+  700 m over Ventfront's north trench, the backdrop beside the far trench is graded 842 to
+  1,162 m and reads sRGB (6, 22, 32) over the trench's (3, 8, 14).
+  `tools/render-stack/fog.mjs` measures it, and `docs/screenshots/issue-1023/` holds the
+  frame and readings, taken on SwiftShader; the module's seam reading there matches #1016's
+  GPU one to the level.
 - **The camera has no depth, and this is where that first mattered.** The column is drawn
   at 0.22 world-metres per metre, so at the home dolly the eye sits 8,946 m *above* the
   surface. Anything anchored to the eye's height reads that as a depth and lights the frame

@@ -378,7 +378,10 @@ The ground has a shape and now the water has a body. This section is the sibling
 "Reading the Sea Floor" above and deliberately reads like it, because it is the *same
 rule* pointed at the other half of the frame: **depth is luminance**, applied to the
 medium rather than to the floor of it. The two agree, so a far ridge and the water in
-front of it are the same brightness family and the horizon stops being an edge.
+front of it are the same brightness family, and the horizon stops being an edge wherever
+the far ground is as deep as the water drawn behind it. Far ground at another depth stays
+darker or brighter than that water, and the edge left there is the depth, kept on purpose
+([free-camera.md](free-camera.md) Phase 5).
 
 It exists because freeing the camera exposed that it did not ([free-camera.md](free-camera.md)
 §9). A pinned 55° filled the frame with seabed; a camera at 12° spends most of the frame

@@ -16,9 +16,10 @@
  * 2. The fog over geometry, whose *colour* is that ramp sampled at the water
  *    the ray actually crossed rather than one constant for the whole map.
  * 3. The backdrop, which draws the same water where there is no geometry at
- *    all — and dissolves the horizon, because it samples the ramp by exactly
- *    the rule the fog does and therefore converges to the same colour the far
- *    seabed is fading into.
+ *    all, graded from the focus by the ray. It dissolves the horizon wherever
+ *    the far seabed is as deep as the water drawn behind it, because both
+ *    terms read one ramp; far ground at another depth keeps an edge, and that
+ *    edge is meant (#1023, docs/free-camera.md Phase 5).
  *
  * Marine snow rides along as the fourth: the medium you can *feel*, because
  * it is the only one of the four that parallaxes when the camera moves.
@@ -352,12 +353,15 @@ const BACKDROP_SPAN_M = 2200;
  * The water where there is no geometry.
  *
  * One screen-filling triangle pair, one draw call, no depth. Every pixel
- * unprojects to a world-space ray and asks the ramp what colour the water is
- * one reach along it — the *same* question `fog_fragment` asks — which is why
- * the horizon stops existing: the far seabed fades toward the colour the sky
- * behind it already is, so there is no edge left to see. Looking down darkens,
- * looking up brightens toward the Lid, and both happen because the ray goes
- * there, not because the screen has a top and a bottom.
+ * unprojects to a world-space ray and asks the ramp for the water at the focus
+ * depth, moved by where the ray points. `fog_fragment` asks the same ramp
+ * about the fragment's own depth instead, so the horizon stops existing where
+ * the two depths meet: the far seabed fades toward the colour the water behind
+ * it already is. Where they differ, a far trench stays darker than the water
+ * behind it, and that edge is the depth, kept on purpose (#1023,
+ * docs/free-camera.md Phase 5). Looking down darkens, looking up brightens
+ * toward the Lid, and both happen because the ray goes there, not because the
+ * screen has a top and a bottom.
  *
  * That last part is the reason this is a world-ray shader rather than a
  * vertical screen gradient, which would have been a third of the code: a
