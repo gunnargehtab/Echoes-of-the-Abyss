@@ -92,7 +92,8 @@
  *     floor's own edges at ±1.7 are under the plates. The hull in
  *     progress, whose plan reached x 0.69, covered 38 % of
  *     `bay_guide_0_2` at z 0.9, which showed 4.94 m² where its siblings
- *     show 6.8 to 8.1 — and 74 % once the rule cut it fifteen-sided
+ *     showed 6.8 to 8.1 (6.0–6.2 since the pass cut them 5 × 3) — and 74 %
+ *     once the rule cut it fifteen-sided
  *     (#919), so that guide steps 0.7 aft to z 0.2 (`foundryBay`
  *     `shift`) and shows 6.1 m². The port rank overlaps the forge line's edge by
  *     0.9 m, the line running 0.15 off centre; the starboard rank clears

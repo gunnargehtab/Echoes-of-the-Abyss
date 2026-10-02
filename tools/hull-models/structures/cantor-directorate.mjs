@@ -123,7 +123,9 @@
  * show over the dome from above, 868, 771 and 214 m² against 884, 784 and
  * 214, though the third now stands 1.5 m clear of the dome's facets where
  * it touched the file's. Every photophore is grown from the shell or the
- * foot (`on`), and every spine is rooted on the shell (`shellSpines` `on`).
+ * foot (`on`), every spine is rooted on the shell (`shellSpines` `on`), and
+ * the second ballast pipe stands on the collar, stepped 4 m out along its
+ * bearing and plumbed 0.6 m into the dome (`standpipes` `on`, below).
  */
 import { THREE, drawn, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -331,9 +333,23 @@ directorate.clawGrips(root, [red, black], {
   ].map((c) => ({ r: 0.27, ...c })),
 });
 
-// Two ballast pipes on the -x side, each standing on the upper tier or the
-// collar since #919 (`standpipes` `on`), leaning 0.12 fore and 0.28 / 0.42
-// across, each with a flange that leans with it.
+// Two ballast pipes on the -x side, leaning 0.12 fore and 0.28 / 0.42
+// across, each with a flange that leans with it. The second stands on the
+// collar since #919 (`standpipes` `on`): it stood 2.5 m off the plate it
+// had touched once the plate took the rule's window, in water otherwise.
+// Its station steps `OUT` units (4 m) out along its own bearing first:
+// seated where the file stood it, the slide down its lean ran its top 2.2 m
+// and its flange 0.4 m into the dome (hull-reviewer, the second pass), and
+// dropped straight down instead it sat deeper, the dome widening below.
+// Stepped out and seated, the flange stands clear of the shell and the
+// pipe's top runs 0.6 m into the dome's skin — a pipe plumbed into the
+// shell it feeds, where the file's stood 1.7 m short of it in water. The
+// first pipe stood sound on its tier and keeps the file's station.
+const OUT = 0.45;
+const out = ([x, y, z]) => {
+  const rho = Math.hypot(x, z);
+  return [x + (OUT * x) / rho, y, z + (OUT * z) / rho];
+};
 directorate.standpipes(
   root,
   { steel, black },
@@ -341,10 +357,6 @@ directorate.standpipes(
     name: 'ballast_pipe',
     flange: 'pipe_flange',
     cut,
-    // Each pipe's foot stands on the upper tier or the collar (`standpipes`
-    // `on`, #919): the second stood 2.5 m off the plate it had touched once
-    // the plate took the rule's window, in water otherwise.
-    on: ['base_tier_high', 'weld_collar'],
     pipes: [
       {
         radii: [0.22, 0.26],
@@ -355,8 +367,9 @@ directorate.standpipes(
       {
         radii: [0.22, 0.26],
         length: 2.4,
-        ...drawn([-5.4, 3.7, -1.6], [0.12, 0, -0.42]),
-        flange: { R: 0.3, tube: 0.07, ...drawn([-5.4, 4.6, -1.6], [Math.PI / 2 + 0.12, 0, -0.42]) },
+        on: ['base_tier_high', 'weld_collar'],
+        ...drawn(out([-5.4, 3.7, -1.6]), [0.12, 0, -0.42]),
+        flange: { R: 0.3, tube: 0.07, ...drawn(out([-5.4, 4.6, -1.6]), [Math.PI / 2 + 0.12, 0, -0.42]) },
       },
     ],
   }

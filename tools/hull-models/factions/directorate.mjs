@@ -2644,13 +2644,19 @@ export function shellSpines(root, { name, facets = 5, spines, on = null }) {
  * `at`, under `rot` — rests on the nearest of the parts `on` names with its
  * centre `r` in (kit.mjs `seat`, nearest). The part slides along its own
  * axis and keeps its lean, so a spine or a pipe a coarser cut left floating
- * meets the shell it was drawn against (#919).
+ * meets the shell it was drawn against (#919). A leaning part slides its
+ * far end with it — the Cantor's second ballast pipe, 0.42 rad in toward
+ * the dome, ran its top into the shell when it slid 3.4 m down its lean —
+ * so a script steps such a part's station first, and says what its far end
+ * then does (cantor-directorate.mjs). Dropping the foot straight down
+ * instead is worse there: the dome widens toward its equator, and the top
+ * at the same plan station but 8 m lower sat 2.3 m inside it.
  */
 function footed(root, on, { at, rot }, r, length) {
   const axis = new THREE.Vector3(0, 1, 0).applyEuler(new THREE.Euler(...rot));
   const base = new THREE.Vector3(...at).addScaledVector(axis, -length / 2);
   const foot = new THREE.Vector3(...seat(root, on, base.toArray(), { sink: r }).at);
-  return foot.addScaledVector(axis, length / 2).toArray();
+  return new THREE.Vector3(...at).add(foot.sub(base)).toArray();
 }
 
 /**
@@ -2736,13 +2742,14 @@ export function hullPipes(root, steel, { pipes, cut: rule = METRE }) {
 export function standpipes(root, { steel, black }, opts) {
   const { name = 'standpipe', flange: flangeName = 'standpipe_flange', pipes } = opts;
   const { cut: rule = METRE } = opts;
-  const { on = null } = opts;
-  pipes.forEach(({ radii, length, flange, ...placement }, i) => {
+  pipes.forEach(({ radii, length, flange, on = null, ...placement }, i) => {
     noCount(`${name}_${i}`, placement, 'facets');
-    // `on` names the parts a pipe stands on (#919): its foot is seated on
-    // them (`footed`) and its flange moves with it, so a pipe the rounder
-    // tiers and the re-cut plates left standing in water — the Cantor's
-    // `ballast_pipe_1`, 2.5 m off the plate it touched — meets the foot.
+    // A pipe's own `on` names the parts it stands on (#919): its foot is
+    // seated on them (`footed`) and its flange moves with it, so a pipe the
+    // re-cut plates left standing in water — the Cantor's `ballast_pipe_1`,
+    // 2.5 m off the plate it touched — meets the foot. Per pipe, not per
+    // rank: the Cantor's other pipe stood sound on its tier and keeps its
+    // station (hull-reviewer, the second pass).
     const at = on ? footed(root, on, placement, radii[1], length) : placement.at;
     const slid = at.map((c, k) => c - placement.at[k]);
     const p = { ...placement, at };

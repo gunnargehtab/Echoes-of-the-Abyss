@@ -625,17 +625,20 @@ round and seven down (the half-turn share of fifteen rounds down; the Treble's a
 eleven by five), the keels at eleven, the rostra from five to fifteen by their radius, and
 every six and eight that was a builder's default — limbs, hydrophones, booms, mandibles,
 guns, collars, ducts, the Slipway's legs, pylons and launch mandibles — goes to the rule; the
-fives stay, the torus tubes' among them (`torusOf`: the Bastion's seam rings, lips, pipes and
-flanges, the turret's collar and the Foundry's launch mouth keep their pentagon tubes while
-their rings go to the rule). The measure names eight of the navy's
+fives stay, the torus tubes' among them (`torusOf`, and the kit's `launchMouth` for the
+Foundry's mouth: the Bastion's seam rings, lips, pipes and flanges, the turret's collar and the
+Foundry's launch mouth keep their pentagon tubes while their rings go to the rule). The measure names eight of the navy's
 1,477 rings, all one reading: the capsule meridians of the Verger's, the Bastion's and the
 Foundry's ballast tanks, the Foundry's hull in progress and the turret's pod, where the
 rule's half-turn share is odd and a capsule draws an even count, built a segment over as the
 Order's are. What the coarser rounds left standing off was reseated through the builders:
-the Cantor's forty-two hydrophone spines rooted on its dome (`shellSpines` `on`) and its
-twenty-two photophores, the turret's two marks, the Bastion's two and the Foundry's ten
-lamps grown from their plates (`on`), the Harvester's flank dome and the Submersible's
-third port lamp seated, the Vent Tap's ember at its rim's own radius; the Refinery's
+the Cantor's forty-two hydrophone spines rooted on its dome (`shellSpines` `on`), its
+twenty-two photophores and its second ballast pipe stood on the collar (`standpipes` `on`,
+4 m out along its bearing and plumbed 0.6 m into the dome), the turret's two marks, the
+Bastion's four lamps (two grown from their tiers, one lowered, one swung off its rib) and
+the Foundry's ten lamps grown from their plates (`on`) and one bay guide stepped aft, the
+Harvester's flank dome and the Submersible's third port lamp seated, the Vent Tap's ember at
+its rim's own radius; the Refinery's
 crusher cowl takes the rule's fifteen by four and its maw's cells were re-chosen on that
 grid. Six fits moved a hair (the turret, the Cantor, the Bastion, the Foundry, the
 Harvester, the Vent Tap) and two more now assert theirs. Panels run one to three metres, argued from what the measure

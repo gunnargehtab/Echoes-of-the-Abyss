@@ -88,13 +88,14 @@
  * 14.6 m and `_3` at 9.8 the largest and the seven others 1.6 to 7.1,
  * with the two mouths at 0.2 m; the seven other lamps rested where the
  * file had them and stayed until the facet pass (#919), when the rule's
- * fifteen-gon tiers and five-by-fifteen seam rings covered two more from
- * above: `_6` fell to 7.3 m² of 32.7 under `seam_ring_2` and `_8` to
- * 2.7 of 36.2 under `seam_ring_1` and `reinforce_rib_3` (hull-reviewer).
- * `_6` comes down tier 2's wall to y 4.6 (`lower`, 28.6 m²); `_8` swings
- * 0.12 rad toward `_7` off the rib's bearing (`swung`, 25.2 m²), since at
- * no height under the rib does it show. `_1` and `_7` grow from their
- * tiers (`on`), 0.73 and 1.61 m off on the file's stations.
+ * fifteen-gon tiers and the first cut's eleven-by-fifteen seam rings
+ * covered two more from above: `_6` fell to 7.3 m² of 32.7 under
+ * `seam_ring_2` and `_8` to 2.7 of 36.2 under `seam_ring_1` and
+ * `reinforce_rib_3` (hull-reviewer). `_6` comes down tier 2's wall to y 4.6
+ * (`lower`, 28.6 m²); `_8` swings 0.12 rad toward `_7` off the rib's
+ * bearing (`swung`, 25.2 m²), since under the rib it showed 1.2 m² at y 2.9
+ * and none at 2.5. `_1` and `_7` grow from their tiers (`on`), 0.73 and
+ * 1.61 m off on the file's stations.
  *
  * THE FRAME is the export's own. It is X-long — 17.8096 by 16.9464 by the
  * measure intake takes, three's `Box3` over the parts' own boxes — and the
@@ -329,7 +330,7 @@ const lower = ([x, , z], y) => on([x, y, z]);
 // and height, then seats it (`on`): `_8` sits dead under `reinforce_rib_3`
 // (bearing −2.95 against the lamp's −2.96) and showed 8 m² of 36 past the
 // rib's plates in the file; on the fifteen-gon tiers, seated on its wall, it
-// shows none at any height under the rib, so it swings 0.12 rad toward `_7`,
+// showed 1.2 m² at y 2.9 and none at 2.5, so it swings 0.12 rad toward `_7`,
 // still between `_7` and `_9` in the climb (hull-reviewer, the first round).
 const swung = ([x, y, z], da) => {
   const a = Math.atan2(z, x) + da;
