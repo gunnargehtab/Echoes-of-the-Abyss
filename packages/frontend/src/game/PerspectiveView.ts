@@ -585,6 +585,8 @@ export class PerspectiveView {
   private readonly connCost = new FrameCost();
   /** Time inside the overlay painter's `draw`, reported by `EchoRenderer`. */
   private readonly overlayCost = new FrameCost();
+  /** The renders that made the last frame, in order (gate 6's pass list). */
+  private framePasses: readonly string[] = [];
   /** The frame's GPU time, every pass summed (gate 6); set up with the renderer. */
   private gpuTimer: GpuTimer | null = null;
   /** The station these three are measuring, or null before one is named. */
@@ -687,6 +689,10 @@ export class PerspectiveView {
       this.scene.environmentIntensity = MODEL_LIGHTING.ENVIRONMENT_INTENSITY;
     }
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO));
+    // Gate 6 counts a frame whole, every pass summed. three zeroes info on
+    // every render() by default, which would leave the probe the last pass
+    // alone; renderFrame resets it once instead, before the frame's first.
+    this.renderer.info.autoReset = false;
     // three has drawn only through WebGL 2 since r163; its typing predates that.
     this.gpuTimer = new GpuTimer(
       this.renderer.getContext() as WebGL2RenderingContext,
@@ -2065,6 +2071,8 @@ export class PerspectiveView {
   private renderFrame(): void {
     const renderer = this.renderer;
     if (renderer === null) return;
+    renderer.info.reset();
+    const passes: string[] = [];
     const now = performance.now();
     const frameMs = now - this.lastFrameAt;
     this.lastFrameAt = now;
@@ -2167,9 +2175,11 @@ export class PerspectiveView {
     this.gpuTimer?.begin();
     try {
       renderer.render(this.scene, this.camera);
+      passes.push('canvas');
     } finally {
       this.gpuTimer?.end();
     }
+    this.framePasses = passes;
     this.connCost.add(performance.now() - now);
   }
 
@@ -2312,8 +2322,11 @@ export class PerspectiveView {
       waterReachM: Math.round(this.waterReach),
       waterDensity: Number(this.waterDensity.toFixed(2)),
       hullScale: Number(this.drawScale.toFixed(2)),
+      // The whole last frame's, every pass summed: info is reset once a frame
+      // (renderFrame), not on every render(). `passes` names the renders.
       drawCalls: info?.render.calls ?? 0,
       triangles: info?.render.triangles ?? 0,
+      passes: this.framePasses,
       textures: info?.memory.textures ?? 0,
       // What the GPU shades: the capped pixel ratio, and the drawing buffer
       // it gives. Gate 6 reads GPU time at 1 and 1.5, and the same camera at
