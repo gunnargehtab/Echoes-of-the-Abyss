@@ -165,6 +165,23 @@
  * sixteen a turn (Block 2c, the capsule reading). Triangles
  * 3,884 → 4,714; `DRAWN` 17.4421, where the file measured 17.5184. The ten
  * flank photophores are grown from their plates now (`on`, below).
+ *
+ * PANELS (#919). The band for a structure is 2.5–8 m on a side, the median
+ * unlit part from above (facets.mjs `panelsOf`; Block 2c), and this file
+ * read 11.0 m over fifty-one, thirty-two parts over 64 m² against nineteen
+ * in the band. The pass adds fifteen spines where fourteen are the least: a
+ * second, smaller spike a plate's length abaft each spine spike, raked the
+ * one way, on five of the six — not the second starboard plate, where
+ * `flank_photophore_8` stands — and none on the bow plates, which carry no
+ * spine in the file (`spineRank`); a ring of seven round the stern spike on
+ * the stern carapace's crown and a ring of five round the outrigger's spike
+ * on the big pod, its first and third stations never grown, where that
+ * spike stands and where the pod meets the second port plate (`spineRing`).
+ * Each its own length, black, its base seated on its plate, carapace or
+ * pod, touching nothing else. They show 10–15 m² each, and the median part
+ * is 7.1 m over sixty-six, the two graft flanges. No lamp's plan changed, no
+ * plan grew from above. 85 parts and 4,714 triangles become 100 and 4,864;
+ * `DRAWN` holds at 17.4421.
  */
 import {
   THREE,
@@ -263,6 +280,25 @@ directorate.tergiteFlanks(
   }
 );
 
+// A second, smaller spike a plate's length abaft each spine spike (#919, the
+// panel pass; the header), raked the one way the spikes rake, seated on its
+// plate (`spineRank`; kit.mjs `seat`): five, since `flank_photophore_8`
+// stands where the second starboard plate's would grow, and none on the bow
+// plates, which carry no spine in the file.
+const barb = (n, [x, y, z], rake, length) => [n, black, 0.09, length, [x, y - 0.3, z - 1], rake];
+directorate.spineRank(root, {
+  name: 'spine_barb',
+  frame: drawn,
+  on: [0, 1, 2, 3].flatMap((i) => [`tergite_port_${i}`, `tergite_starboard_${i}`]),
+  spines: [
+    barb('0_0', [3.43499122, 3.155403486, -2.837859651], [0.35, 1, 0.1], 0.95),
+    barb('0_1', [3.320243272, 3.481266491, 0.477926649], [0.35, 1, 0.1], 0.88),
+    barb('0_2', [3.137728502, 3.118652864, 3.495065286], [0.35, 1, 0.1], 0.82),
+    barb('1_0', [-3.471891574, 2.66426164, -2.470173836], [-0.35, 1, 0.1], 0.9),
+    barb('1_2', [-3.221987448, 2.699392707, 3.379139271], [-0.35, 1, 0.1], 0.86),
+  ],
+});
+
 // The outrigger pods off the corners and the stern carapace at the blind end.
 directorate.outriggerPods(
   root,
@@ -295,6 +331,41 @@ directorate.sternCarapace(
     spike: { r: 0.2, length: 2, at: [1.4, 2.6, -8.6], rot: [-0.6, 0, 0] },
   }
 );
+
+// Rings round the file's two barbs (#919, the panel pass; the header): seven
+// stations round the stern spike on the stern carapace's crown; five round
+// the outrigger's spike on the big pod's crown, the first and the third never
+// grown, where that spike itself stands and where the pod meets the second
+// port plate. Each spine its own length, leaning out along its own bearing,
+// black, seated on its shell (`spineRing`; kit.mjs `seat`).
+directorate.spineRing(root, black, {
+  name: 'stern_spine',
+  frame: drawn,
+  on: 'stern_carapace',
+  about: [0.7, -7.2],
+  stations: 7,
+  phase: 0.3,
+  rho: 2.07,
+  y: 2.73,
+  tilt: 0.7,
+  r: 0.09,
+  holes: [],
+  lengths: [0.8, 0.9, 0.78, 0.71, 0.85, 0.88, 0.73],
+});
+directorate.spineRing(root, black, {
+  name: 'pod_spine',
+  frame: drawn,
+  on: 'outrigger_pod_big',
+  about: [6.5, -2],
+  stations: 5,
+  phase: 0.2,
+  rho: 1.1,
+  y: 1.75,
+  tilt: 0.75,
+  r: 0.08,
+  holes: [0, 2],
+  lengths: [0.77, 0.74, 0.62, 0.68, 0.78],
+});
 
 // The bay, at the kit's defaults — this file's numbers, the guides either
 // side of the forge line since #890 — with the −x lip one guide short; and

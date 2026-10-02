@@ -103,6 +103,21 @@
  * 3,908. The plates meet as before but for the first and third, which no
  * longer graze each other through the second (1.2 m), and the rostrum,
  * rooted in the bow plate, no longer grazes the one behind it.
+ *
+ * PANELS (#919). The Directorate's band for a hull is 1–3 m on a side, the
+ * median unlit part from above (facets.mjs `panelsOf`; Block 2c), and this
+ * file read 4.2 m over thirty-five: a hatch collar the median, twenty parts
+ * over 9 m², eleven dogs and dome studs under 1 m² and the four dorsal
+ * spines between. The pass adds eight shoulder spines where six are the
+ * least, a pair on each of the four aft plates at six and five tenths of the
+ * half-beam out by turns, the port one two metres aft of the plate's centre
+ * and the starboard one three forward, 4.5–6.5 m long at 0.6 of radius,
+ * raked 0.3 forward and leaning 0.55 outboard, black and five-sided like the
+ * dorsal rank, each its base seated on the plate or its seam (`spineRank`)
+ * and touching nothing else; none mirrors another. They show 1–2 m² each,
+ * and the median part is 1.6 m over forty-three, a dorsal spine. No lamp's
+ * plan changed, no plan grew from above. 58 parts and 3,908 triangles become
+ * 66 and 3,988.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -184,6 +199,32 @@ directorate.dorsalSpines(root, black, {
   spines: [spine(-38, -3, 6), spine(-22, 4, 7), spine(-6, -3, 8), spine(11, 4, 8)],
   r: 0.85,
   rake: -0.35,
+});
+
+// Eight shoulder spines on the four aft plates (#919, the panel pass; the
+// header): a pair a plate, six and five tenths of the half-beam out by
+// turns, the port one two metres aft of the plate's centre and the
+// starboard one three forward, no two the same length, so no pair mirrors;
+// each raked 0.3 forward and leaning 0.55 outboard, 4.5–6.5 m long, black
+// and five-sided like the dorsal rank, seated on its plate or seam
+// (`spineRank`; kit.mjs `seat`).
+directorate.spineRank(root, {
+  name: 'shoulder_spine',
+  on: [0, 1, 2, 3].flatMap((i) => [`tergite_${i}`, `tergite_seam_${i}`]),
+  spines: [
+    // [plate, side, tenths of the half-beam, length]
+    [0, -1, 0.6, 5.5],
+    [0, 1, 0.5, 4.5],
+    [1, -1, 0.5, 6],
+    [1, 1, 0.6, 5],
+    [2, -1, 0.6, 6.5],
+    [2, 1, 0.5, 5.5],
+    [3, -1, 0.5, 6],
+    [3, 1, 0.6, 5],
+  ].map(([i, sgn, f, length], n) => {
+    const [x, , sy, sz] = SEGMENTS[i];
+    return [n, black, 0.6, length, [x + (sgn < 0 ? -2 : 3), sy, sgn * f * sz], [0.3, 1, sgn * 0.55]];
+  }),
 });
 
 // The four cohort bays: one hatch a plate on the four biggest plates,

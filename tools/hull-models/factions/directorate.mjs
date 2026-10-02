@@ -343,7 +343,11 @@ export const ink = {
  * limbs, so under Block 2 it gains limbs or spines at the pass — its lit
  * points are livery, which the metric drops. A structure's band is the
  * hull's at the chart's ratio of densities, 4 to 1.5 px/m, rounded to the
- * half metre — a judgement, and Block 2c says what it rests on.
+ * half metre — a judgement, and Block 2c says what it rests on. The panel
+ * pass (#919, the seventh instalment) brought the seven models outside the
+ * bands inside them with spines alone — ranks and rings seated on the
+ * shells they grow from, `spineRing` and `spineRank` in the Panels section
+ * below — and each model's header says where.
  */
 export const facets = {
   chordM: 2,
@@ -4138,6 +4142,82 @@ export function telsonBlades(root, skins, { at: [x, z], blades, r = 7, flat = 0.
     blade.geometry.scale(1, flat, 1);
     blade.geometry.computeVertexNormals();
   });
+}
+
+/* --------------------------------------------------------------------------
+ * Panels (#919): the divisions the panel pass grows on a model whose median
+ * part from above lies outside its band (facets.mjs `panelsOf`; Block 2c,
+ * "Panels"). The measure counts unlit parts by their plan, so what moves a
+ * median is a division that shows — "a seam that reads in value or relief
+ * or a fitting that stands proud" — and the Listening's is the spine: the
+ * small half of its law, "spiked, insectoid, many-limbed", against the wide
+ * half, "segmented", that every plate and seam already carries. Nothing here
+ * is a coplanar split of one finish, which the chart cannot see, and nothing
+ * is a lamp. Every spine the pass grows is seated on the shell it grows
+ * from (`shellSpines` `on`, kit.mjs `seat`), so a script hands over a
+ * station near the skin and the skin settles the rest, and every one is a
+ * five-sided cone but the Submersible's, whose spikes keep the four the file
+ * cut (`section`). The seven models outside their bands took ranks and rings
+ * and nothing else — a regimented rule with a hole in it where a lamp, a
+ * rib, a pipe or a dock stands, the navy's own idiom (`crown_spine_4` was
+ * never grown) — and each script's header says where and why.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * A regimented ring of spines round a shell: `stations` of 2π/`stations`
+ * from `phase`, some never grown (`holes`), each its own length
+ * (`lengths[i]`, one an entry a station, a hole's unused), all of one `r`,
+ * each leaning `tilt` out of vertical along its own bearing (`leaning`) with
+ * its base `rho` out from `about` and `y` up in the file's frame, and seated
+ * on the parts `on` names (`shellSpines` `on`). The Bastion's crown spines'
+ * rule — seven stations of 2π/7 from 0.5 rad, the fifth never grown — made
+ * a builder, for the four rings down its tiers, the Cantor's fifth ring at
+ * the foot of its dome and the Foundry's rings round its stern spike and
+ * its outrigger's barb. Named `<name>_<first + i>` by station, so a hole
+ * leaves a gap in the numbering as `crown_spine_4` does; `skin` is one
+ * material or one a station, as the Cantor's fall by no rule.
+ */
+export function spineRing(root, skin, opts) {
+  const { name, first = 0, frame = laid, on, facets = 5, stations, phase = 0 } = opts;
+  const { about = [0, 0], rho, y, tilt, r, lengths, holes = [] } = opts;
+  if (lengths.length !== stations)
+    throw new Error(`${name}: ${lengths.length} lengths for ${stations} stations — one a station`);
+  const skins = Array.isArray(skin) ? skin : [skin];
+  const spines = [];
+  for (let i = 0; i < stations; i++) {
+    if (holes.includes(i)) continue;
+    const b = phase + (TAU * i) / stations;
+    const length = lengths[i];
+    // The base sits on the shell; `leaning` places the cone by its centre,
+    // half a length up its own axis from there.
+    const [t, e] = leaning(b, rho + (length / 2) * Math.sin(tilt), y + (length / 2) * Math.cos(tilt), tilt);
+    t[0] += about[0];
+    t[2] += about[1];
+    spines.push({ n: first + i, skin: skins[i % skins.length], r, length, ...frame(t, e) });
+  }
+  shellSpines(root, { name, facets, on, spines });
+}
+
+/**
+ * A rank of spines each by its own station — `[n, skin, r, length, base,
+ * dir]` each: a cone whose base is at `base` in the file's frame pointing
+ * along `dir`, placed by the minimal rotation from +Y (the Cruiser's
+ * `aimedSpikes` found its thirteen so) and seated on the parts `on` names
+ * (`shellSpines` `on`). The pass's ranks on the hulls: the Submersible's
+ * shoulder and tail spikes, the Dredge's second rank, claw spines and scoop
+ * teeth, the Verger's shoulder spines, the Foundry's second spikes and the
+ * Bio-Reactor's three more mound spines.
+ */
+export function spineRank(root, { name, frame = laid, on, facets = 5, spines: list }) {
+  const up = new THREE.Vector3(0, 1, 0);
+  const spines = list.map(([n, skin, r, length, base, dir]) => {
+    const d = new THREE.Vector3(...dir).normalize();
+    const q = new THREE.Quaternion().setFromUnitVectors(up, d);
+    const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+    const c = new THREE.Vector3(...base).addScaledVector(d, length / 2);
+    return { n, skin, r, length, ...frame(c.toArray(), [e.x, e.y, e.z]) };
+  });
+  shellSpines(root, { name, facets, on, spines });
 }
 
 export { THREE };

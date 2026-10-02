@@ -59,6 +59,19 @@
  * navy's section. Triangles 2,692 → 3,646; the fit, the after arms' rake
  * beams, is unchanged at 138.9627. `facets.mjs` names no ring here, and no
  * contact pair was lost or gained.
+ *
+ * PANELS (#919). The band for a structure is 2.5–8 m on a side, the median
+ * unlit part from above (facets.mjs `panelsOf`; Block 2c), and this file
+ * read 8.1 m over forty-six, the rake beams the median. The pass adds three
+ * mound spines where three are the least, a size down from the file's four
+ * (1.3 of radius for 1.6) and higher on the mound, on the same side — 231°,
+ * 258° and 278°, between the ports and the scutes, the stations the seam
+ * across the crown and the ports leave on that side — each leaning out 0.35
+ * as the four do, its base seated on the vessel (`spineRank`), touching
+ * nothing else. They show 7–8 m² each, and the median part is 6.7 m over
+ * forty-nine, a throat drum. No lamp's plan changed, no plan grew from
+ * above; the fit is the same 138.9627. 69 parts and 3,646 triangles become
+ * 72 and 3,676.
  */
 import {
   THREE,
@@ -167,6 +180,26 @@ directorate.reactorVessel(
     },
   }
 );
+
+// Three more mound spines (#919, the panel pass; the header), a size down
+// from the file's four and higher on the mound, on the same side — 231°,
+// 258° and 278°, between the ports and the scutes — each leaning out 0.35
+// along its own bearing as the four do, seated on the vessel (`spineRank`;
+// kit.mjs `seat`). The station is on the mound's skin: 17 up its 19.
+directorate.spineRank(root, {
+  name: 'mound_spine',
+  on: 'reactor_vessel',
+  spines: [
+    [4, 231, 9.5, 10],
+    [5, 258, 8.5, 9],
+    [6, 278, 8.8, 9.5],
+  ].map(([n, a, rho, length]) => {
+    const b = deg(a);
+    const y = 18 + 17 * Math.sqrt(1 - (rho / 19) ** 2);
+    const lean = [Math.sin(0.35) * Math.cos(b), Math.cos(0.35), Math.sin(0.35) * Math.sin(b)];
+    return [n, black, 1.3, length, [rho * Math.cos(b), y, rho * Math.sin(b)], lean];
+  }),
+});
 
 // The outflow: a gullet over the gap into the hopper.
 directorate.reactorOutflow(
