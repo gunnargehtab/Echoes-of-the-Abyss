@@ -51,7 +51,7 @@
  * sensor head. The pass set a dogged hatch and an older patch there, a seam
  * across the spine ahead of the hatch, and a patch on each flank of the
  * ten-gon hull, on its third facet from the crown, clear of the domes and
- * the beam rivets — six parts of 0.4–2 m² in plan, each seated on the
+ * the beam rivets — six parts of 0.3–2 m² in plan, each seated on the
  * plate or the facet under it (bathyarch.mjs `deckPlates`, `plateSeams`,
  * `deckHatches`; kit.mjs `seat`). The median reads 1.50 m over 28. 45 parts
  * and 756 triangles become 51 and 900. The sweep (contacts.mjs) reads the
@@ -219,7 +219,7 @@ bathyarch.deckPlates(root, { rust, black }, {
   on: 'pressure_hull',
   t: 0.1,
   plates: [
-    ['shell_patch_p', 'black', [0.6, 0.5], drawn([1.15, 0, -0.5]).at],
+    ['shell_patch_p', 'grey', [0.6, 0.5], drawn([1.15, 0, -0.5]).at],
     ['shell_patch_s', 'rust', [0.6, 0.5], drawn([-1.15, 0, 2]).at],
   ],
 });

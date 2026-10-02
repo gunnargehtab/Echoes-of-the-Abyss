@@ -54,13 +54,13 @@
  * PANELS (#919). The Klaxon's hull band is a median unlit part of 0.75–2 m
  * from above (Block 2c; bathyarch.mjs `panels`), and this hull read 3.0 m:
  * its median part was a spare plate, since a workshop's deck is one plate
- * of 1,640 m² and its stores are few. The pass laid twenty-nine fittings on
- * the deck and the workshop roof through bathyarch.mjs `deckPlates`,
+ * of 1,640 m² and its stores are few. The pass laid twenty-seven fittings,
+ * thirty-three parts, on the deck and the workshop roof through bathyarch.mjs `deckPlates`,
  * `plateSeams` and `deckHatches` (kit.mjs `seat`): fifteen plates of older
  * rust and newer black, 1.8–2 m by 1.3–1.4 and 0.25 proud — four on the
  * work deck, four on the strips outboard of the workshop, three on the
  * foredeck, two on the quarters, two on the roof; six seams 0.35 m wide and
- * 5–6 m long; and eight dogged hatches 1.6 m across. The work deck's own
+ * 5–6 m long; and six dogged hatches 1.6 m across. The work deck's own
  * plate lies 0.2 under the deck's top, so the deck is what a fitting there
  * stands on. The median reads 1.6 m. 100 parts and 1,680 triangles become
  * 133 and 2,508.

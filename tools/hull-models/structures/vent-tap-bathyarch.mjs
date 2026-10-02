@@ -52,7 +52,8 @@
  * on a side from above (Block 2c; bathyarch.mjs `panels`), and this model read
  * 6.2 m over 68 panels: the exchangers' fins, risers and platforms at 5–8 m
  * with the apron and the chimney over them. The pass dressed the apron with
- * forty-four parts, each seated on it (bathyarch.mjs "Panels"): four ranks
+ * forty-four parts, forty seated on it (bathyarch.mjs "Panels") and four laid
+ * on the anchor feet by their own numbers: four ranks
  * out across the scorched ground between the arms — a kerb, a capped
  * standpipe with its dogging wheel, two pairs of kerb posts flanking two
  * anchor blocks, and a kerb at the rim, steel and black bolted into the rust
@@ -61,8 +62,8 @@
  * lobes, which are orbs 28 units long on their bearings. The apron's top is
  * 2.6 m under the y 0 the conn view stands a structure on (#955), so every
  * fitting on it is tall enough to show above the ground: posts 5.2 m, blocks
- * and caps 3.9, kerbs 3.4. Each reads 2.7–3.7 m on a side from above, the
- * wheels 1.7. The median comes to 4.1 m (17.2 m²) over 112 panels, and 122
+ * and caps 3.9, kerbs 3.4. Each reads 2.6–3.7 m on a side from above, the
+ * wheels 1.6. The median comes to 4.1 m (17.2 m²) over 112 panels, and 122
  * parts and 2,984 triangles become 166 and 3,992. The footprint the fit
  * measures is the hazard bands' corners at r 68.6, and the ranks end at the
  * apron's rim, r 58.

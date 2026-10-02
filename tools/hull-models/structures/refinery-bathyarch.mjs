@@ -90,16 +90,20 @@
  * the platform, the aprons, the silo caps and the crusher roof own the
  * plan, and the yard east of the crusher hall — 95 × 90 m of platform
  * between the silos, the apron conveyor and the ballast tank — carried
- * nothing but the yard flood mast. The pass lays 23 fittings on it in four
- * staggered rows, z 0.6 to 1.8, x 0.2 to 2.65: five kerb posts, five dogged
- * hatches with their wheels, nine plates of grey and rust over the black
- * platform and four seams, each dropped onto `platform` from its station
- * (`deckPosts`, `deckHatches`, `deckPlates`; kit.mjs `seat`), 2.2–4 m on a
- * side from above, clear of the ballast pipe over the yard's south edge,
- * the yard mast's bank and the conveyor leg at its north-west corner;
- * nothing stands over a lamp, and each meets the platform alone. The median
- * edge goes 20.6 m → 3.9 m over 53 panels. 55 parts and 1,980 triangles
- * become 83 and 2,736.
+ * nothing but the yard flood mast. The pass dresses it as working hardware
+ * in five groups at stations no two alike: three dogged hatches, 4.6 m
+ * across under a 3 m wheel, each with one or two kerb posts 4 m across
+ * beside it; a run of four and a run of three plates of grey and rust, 4 ×
+ * 3.2 m, laid almost edge to edge along the yard's north side with a 5 × 1 m
+ * seam closing each run; a run of three down its east side between two
+ * seams; and two plates on the apron and two on its pad: 25 fittings, 29
+ * parts, since a hatch is two. Each is dropped onto `platform`, `apron` or
+ * `apron_pad` from its station (`deckPosts`, `deckHatches`, `deckPlates`;
+ * kit.mjs `seat`), 2.2–4 m on a side from above, clear of the ballast pipe
+ * over the yard's south edge, the apron belt, the yard mast's bank, the
+ * lit stripes and the apron lamps; nothing stands over a lamp, and each
+ * meets its slab alone. The median edge goes 20.6 m → 3.6 m over 54
+ * panels. 55 parts and 1,980 triangles become 84 and 2,604.
  */
 import { THREE, fitFootprint, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -291,59 +295,91 @@ bathyarch.lampRow(root, put, lampM, {
 
 // Panels (#919): the yard, the platform's top east of the crusher hall —
 // x 0.4 to 2.8, z −1.3 to 2.0, at y 0.5 — carries the yard flood mast and
-// nothing else, and the ballast pipe crosses its south edge a unit up.
-// The kerb furniture goes on its northern half in four staggered rows,
-// square to the platform: kerb posts, dogged hatches, plates of the other
-// two finishes over the black platform, and seams, a plate a metre wide,
-// the kinds taking turns along the rows. The rows stop at z 1.8 for the
-// platform's edge (2.0) and the apron belt that climbs over it at x 0.44,
-// at x 2.65 for its east edge (2.8), and at z 0.6 for the pipe, which runs
-// from (2.6, −1.5) to (0.4, −0.6) and is 0.6 clear of the nearest; the one
-// station west of x 0.4, at (0.2, 1.0), is 0.9 south of the conveyor leg at
-// (0.2, 1.9). Sizes are the export's units, 38.1 m a unit: a post is 2 m
-// across, a hatch 2.3, a plate 4 × 3.2 or 4.2 × 3.6, a seam 5 × 1, each
-// 2.2–4 m on a side from above.
-const stations = [
-  ...[0.7, 1.1, 1.5, 1.9, 2.3, 2.65].map((x) => [x, 1.8]),
-  ...[0.9, 1.3, 1.7, 2.1, 2.5].map((x) => [x, 1.4]),
-  ...[0.2, 0.7, 1.1, 1.5, 1.9, 2.3, 2.65].map((x) => [x, 1.0]),
-  ...[0.9, 1.3, 1.7, 2.1, 2.5].map((x) => [x, 0.6]),
-];
-const KINDS = ['post', 'plate', 'hatch', 'plate', 'seam'];
-const of = (kind) => stations.filter((_, i) => KINDS[i % KINDS.length] === kind);
-bathyarch.deckPosts(root, grey, {
-  on: 'platform',
-  r: 0.053,
-  h: 0.065,
-  posts: of('post').map((s, i) => [`kerb_post_${i + 1}`, s]),
-  cut,
-});
+// nothing else, and the ballast pipe crosses its south edge a unit up, from
+// (2.6, −1.5) to (0.4, −0.6). It is dressed as a working yard, in groups
+// and not on a grid (the first cut's 23 fittings on a 0.4 lattice read as
+// a dot matrix to the reviewer): a dogged hatch with a kerb post or two
+// beside it, three times — by the apron belt's foot, mid-yard, and by the
+// pipe's end — and runs of plates of the other two finishes laid almost
+// edge to edge (a 19 cm gap, so each is its own part to the sweep) with a
+// seam closing each run: four and three along the north side, three down
+// the east side between two seams. Four more plates lie on the apron east
+// of its lit stripe and on its pad. Sizes are the export's units, 38.1 m a
+// unit: a post r 0.053, 4 m across; a hatch coaming r 0.06, 4.6 m across,
+// its wheel R 0.04, 3 m across; a plate 0.105 × 0.085, 4 × 3.2 m; a seam
+// 0.13 × 0.026, 5 × 1 m; each reads 2.2–4 m on a side from above.
+const PLATE = [0.105, 0.085]; // long side along x
+const PLATE_NS = [0.085, 0.105]; // long side along z
 bathyarch.deckHatches(root, { hatch: grey, wheel: rust }, {
   on: 'platform',
   r: 0.06,
   h: 0.016,
-  // The wheel's six-sided tube reaches 0.87 of `t` below its centre, so it
-  // is set a hair lower than the coaming's top plus `t` to rest on it.
   wheel: { R: 0.04, t: 0.008 },
-  hatches: of('hatch').map((s, i) => [`yard_hatch_${i + 1}`, s]),
+  hatches: [
+    ['yard_hatch_1', [0.75, 1.55]],
+    ['yard_hatch_2', [1.6, 0.9]],
+    ['yard_hatch_3', [1.0, -0.2]],
+  ],
   cut,
 });
-// The newer grey and the older rust by turns, two sizes by turns, so the
-// patchwork reads as repairs and not a tiling.
+bathyarch.deckPosts(root, grey, {
+  on: 'platform',
+  r: 0.053,
+  h: 0.065,
+  posts: [
+    ['kerb_post_1', [0.58, 1.3]],
+    ['kerb_post_2', [0.95, 1.3]],
+    ['kerb_post_3', [1.42, 0.7]],
+    ['kerb_post_4', [1.78, 0.7]],
+    ['kerb_post_5', [0.78, -0.42]],
+  ],
+  cut,
+});
+// The runs: a 0.11 pitch for a 0.105 plate along the north side, the seam
+// 0.12 past the last plate; the east run the same on z.
 bathyarch.deckPlates(root, { grey, rust }, {
   on: 'platform',
   t: 0.013,
-  plates: of('plate').map((s, i) => [
-    `yard_plate_${i + 1}`,
-    i % 2 ? 'rust' : 'grey',
-    i % 3 ? [0.105, 0.085] : [0.11, 0.095],
-    s,
-  ]),
+  plates: [
+    ['yard_plate_1', 'grey', PLATE, [1.35, 1.65]],
+    ['yard_plate_2', 'rust', PLATE, [1.46, 1.65]],
+    ['yard_plate_3', 'grey', PLATE, [1.57, 1.65]],
+    ['yard_plate_4', 'rust', PLATE, [1.68, 1.65]],
+    ['yard_plate_5', 'rust', PLATE, [1.92, 1.65]],
+    ['yard_plate_6', 'grey', PLATE, [2.03, 1.65]],
+    ['yard_plate_7', 'rust', PLATE, [2.14, 1.65]],
+    ['yard_plate_8', 'grey', PLATE_NS, [2.5, 0.05]],
+    ['yard_plate_9', 'rust', PLATE_NS, [2.5, 0.16]],
+    ['yard_plate_10', 'grey', PLATE_NS, [2.5, 0.27]],
+  ],
 });
 bathyarch.deckPlates(root, { rust }, {
   on: 'platform',
   t: 0.01,
-  plates: of('seam').map((s, i) => [`yard_seam_${i + 1}`, 'rust', [0.026, 0.13], s]),
+  plates: [
+    ['yard_seam_1', 'rust', [0.026, 0.13], [1.8, 1.65]],
+    ['yard_seam_2', 'rust', [0.026, 0.13], [2.26, 1.65]],
+    ['yard_seam_3', 'rust', [0.13, 0.026], [2.5, -0.08]],
+    ['yard_seam_4', 'rust', [0.13, 0.026], [2.5, 0.4]],
+  ],
+});
+// The apron is grey and its pad black, so the plates on each are the other
+// two finishes; the apron's two stand east of the second lit stripe.
+bathyarch.deckPlates(root, { rust, black }, {
+  on: 'apron',
+  t: 0.013,
+  plates: [
+    ['apron_plate_1', 'rust', PLATE_NS, [2.95, 2.45]],
+    ['apron_plate_2', 'black', PLATE_NS, [2.95, 2.95]],
+  ],
+});
+bathyarch.deckPlates(root, { grey, rust }, {
+  on: 'apron_pad',
+  t: 0.013,
+  plates: [
+    ['apron_plate_3', 'grey', PLATE, [1.75, 3.25]],
+    ['apron_plate_4', 'rust', PLATE, [2.15, 2.1]],
+  ],
 });
 
 const size = fitFootprint(root, L);

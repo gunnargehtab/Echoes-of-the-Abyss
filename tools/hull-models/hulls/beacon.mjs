@@ -133,7 +133,7 @@
  *
  * PANELS (#919). The Klaxon's hull band is a median unlit part of 0.75–2 m
  * from above (Block 2c; bathyarch.mjs `panels`), and this hull read 0.5 m:
- * its median part was one of its sixty rivets and bolts, "a hull of
+ * its median part was one of its eighty-six rivets and bolts, "a hull of
  * fittings and no plate". The pass laid twenty-two fittings on the deck
  * through bathyarch.mjs `deckPlates`, `plateSeams` and `deckHatches`
  * (kit.mjs `seat`): fifteen plates of older rust and newer black, 1.4–2.4 m

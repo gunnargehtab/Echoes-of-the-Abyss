@@ -241,8 +241,9 @@ export const ink = {
  * the three divisions "Panels" below names — plates of another finish,
  * seams standing proud, fittings bolted on — and never with a coplanar
  * split, which the chart cannot see; `deckPlates`, `plateSeams`,
- * `deckHatches` and `deckPosts` are what it added, and each model's
- * header says where.
+ * `deckHatches` and `deckPosts` are what it added — all but the Vent
+ * Tap's four foot plates, laid by hand on feet that share one name — and
+ * each model's header says where.
  */
 export const facets = { chordM: 2.5, min: 6, max: 14, step: 2, sections: [4] };
 export const panels = { hull: [0.75, 2], structure: [2, 5.5] };

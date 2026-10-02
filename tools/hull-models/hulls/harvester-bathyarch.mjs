@@ -83,8 +83,8 @@
  * on a side from above (Block 2c; bathyarch.mjs `panels`), and this hull
  * read 2.6 m: a barge is a deck plate, two holds of four walls and a
  * gunwale a side, each four to twenty-seven metres on a side, and its
- * fittings were forty rivets too small to count. The pass laid thirty-seven
- * fittings, each seated on its plate (bathyarch.mjs `deckPlates`,
+ * fittings were forty rivets too small to count. The pass laid thirty-one
+ * fittings, thirty-seven parts, each seated on its plate (bathyarch.mjs `deckPlates`,
  * `plateSeams`, `deckHatches`): twenty-two patch plates of grey and rust,
  * 1.1–1.5 m on a side and 0.22 m proud — four along each gunwale top between
  * the markers, two on each hold floor, three on the divider, two on the
@@ -319,11 +319,11 @@ bar('marker_stern', lamp, [1.6, 0.32, 0.8], [0, 9.56, -33.76]);
 // walls, which the chart sees whole — the divider between them, the gunwale
 // tops between the markers, the crusher roof round its vents, the foredeck
 // either side of the conveyor and clear of the deck patch, and the cab's
-// visor beside its mast. Grey over black is the newer plate, rust the older;
-// the hold floors are dogged down to the barge hull.
+// visor beside its mast. A plate is the other finish than the one it lies
+// on: grey over black is the newer plate, rust the older, and on the grey
+// divider and visor rust and the hull's black; the hold floors are dogged
+// down to the barge hull.
 const at = (x, z) => drawn([x, 0, z]).at;
-// The wheel's `dy` is half the coaming's height plus the tube's radius less
-// 0.015, so the wheel sits into the coaming's top rather than a hair over it.
 const HATCH = { r: 0.75, h: 0.25, wheel: { R: 0.5, t: 0.1 }, cut };
 const PLATE_T = 0.2;
 const SEAM = { w: 0.4, h: 0.22, along: false };
@@ -370,7 +370,7 @@ bathyarch.deckPlates(root, { grey, rust }, {
   t: PLATE_T,
   plates: [
     ['patch_div_1', 'rust', [1.2, 1.4], at(-5.5, -10)],
-    ['patch_div_2', 'grey', [1.2, 1.4], at(0, -10)],
+    ['patch_div_2', 'rust', [1.2, 1.4], at(0, -10)],
     ['patch_div_3', 'rust', [1.2, 1.4], at(5.5, -10)],
   ],
 });
@@ -390,7 +390,7 @@ bathyarch.deckPlates(root, { grey, rust }, {
 bathyarch.deckPlates(root, { grey, rust }, {
   on: 'cab_visor',
   t: PLATE_T,
-  plates: [['patch_cab', 'grey', [1.2, 1.2], at(0.8, -29)]],
+  plates: [['patch_cab', 'black', [1.2, 1.2], at(0.8, -29)]],
 });
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });

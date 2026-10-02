@@ -101,11 +101,12 @@
  * its median part was a ballast cap, since a drum's fittings are few and its
  * plates wide. The pass seated thirty-four fittings on its plates through
  * bathyarch.mjs `deckPlates` and `deckHatches` (kit.mjs `seat`): two pads
- * and two hatches on the crown plate between the bands, nineteen pads on
+ * and two hatches on the crown plate between the bands, eighteen pads on
  * the plates either side of it, a pad fore and aft, a seam and a hatch on
  * each ballast tank's crown between its straps, and a pad and a hatch on
- * each pair of the tower cap's corners — each pad 1.6 × 1.2 m of older or
- * newer plate 0.2 m proud, each hatch 1.3 m across. The median reads 1.6 m.
+ * each pair of the tower cap's corners — each pad 1.6 × 1.2 m, 0.2 m proud
+ * and of a finish other than its plate's, grey on the rust tanks and cap,
+ * each hatch 1.3 m across. The median reads 1.6 m.
  * 121 parts and 3,120 triangles become 161 and 4,032.
  */
 import { THREE, add, box, hex, metreTrue, exportGlb } from '../kit.mjs';
@@ -328,7 +329,7 @@ for (const [side, sgn] of [['stb', 1], ['port', -1]]) {
   bathyarch.deckPlates(root, { grey, brown, black }, {
     on, t: PAD_T,
     plates: [
-      [`tank-pad-${side}-a`, 'brown', PAD, [-1.55, sgn * 1.18]],
+      [`tank-pad-${side}-a`, 'grey', PAD, [-1.55, sgn * 1.18]],
       [`tank-seam-${side}`, 'black', [0.3, 0.03], [-0.2, sgn * 1.18]],
       [`tank-pad-${side}-f`, 'grey', PAD, [0.4, sgn * 1.18]],
     ],
@@ -342,7 +343,7 @@ for (const [side, sgn] of [['stb', 1], ['port', -1]]) {
 }
 bathyarch.deckPlates(root, { grey, brown }, {
   on: 'tower-cap', t: PAD_T,
-  plates: [['cap-pad-stb', 'brown', PAD, [1.3, 0.45]], ['cap-pad-port', 'grey', PAD, [0.1, -0.45]]],
+  plates: [['cap-pad-stb', 'grey', PAD, [1.3, 0.45]], ['cap-pad-port', 'grey', PAD, [0.1, -0.45]]],
 });
 bathyarch.deckHatches(root, { hatch: grey, wheel: black }, {
   on: 'tower-cap', ...HATCH,

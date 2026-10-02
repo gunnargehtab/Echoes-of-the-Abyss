@@ -93,8 +93,8 @@
  * on a side from above (Block 2c; bathyarch.mjs `panels`), and this hull
  * read 2.8 m: its three deck plates, bow wedge, ballast and pipe runs are
  * each ten to twenty-four metres on a side and nothing on a deck divided
- * them. The pass laid forty-one fittings on the three decks, each seated on
- * its plate (bathyarch.mjs `deckPlates`, `plateSeams`, `deckHatches`):
+ * them. The pass laid thirty-four fittings, forty-one parts, on the three
+ * decks, each seated on its plate (bathyarch.mjs `deckPlates`, `plateSeams`, `deckHatches`):
  * nineteen patch plates of grey and rust over the black decks, 1.2–1.7 m on a
  * side and 0.22 m proud; eight grey seam straps 0.44 m wide and 5–7 m long
  * across one half of a deck at a time, staggered; and seven dogged hatches,
@@ -420,8 +420,6 @@ bar('stencil_stern', amber, [3.4, 1.2, 0.1], [0, 4.4, -49.05]);
 // the joint, on one half of the deck at a time, staggered — the patchwork,
 // not a grid.
 const at = (x, z) => drawn([x, 0, z]).at;
-// The wheel's `dy` is half the coaming's height plus the tube's radius less
-// 0.015, so the wheel sits into the coaming's top rather than a hair over it.
 const HATCH = { r: 0.75, h: 0.25, wheel: { R: 0.5, t: 0.1 }, cut };
 const PLATE_T = 0.18;
 const SEAM = { w: 0.36, h: 0.2, along: false };
@@ -461,7 +459,9 @@ bathyarch.deckPlates(root, { grey, rust }, {
     ['patch_mid_5', 'grey', [1.1, 1.2], at(4.0, -37.5)],
   ],
 });
-bathyarch.plateSeams(root, grey, { on: 'deck_mid', name: 'seam_mid_p', stations: [11], z: -3.2, length: 5, ...SEAM });
+// The port seam stands aft of the dish, which hangs over the middle deck from
+// x 8.2 to 11.9 and had a quarter of the seam under it at 11.
+bathyarch.plateSeams(root, grey, { on: 'deck_mid', name: 'seam_mid_p', stations: [14.5], z: -3.2, length: 5, ...SEAM });
 bathyarch.plateSeams(root, grey, { on: 'deck_mid', name: 'seam_mid_s', stations: [20], z: 3.2, length: 5, ...SEAM });
 bathyarch.deckHatches(root, { hatch: grey, wheel: rust }, {
   on: 'deck_mid',
