@@ -325,7 +325,9 @@ export function flankPlates(root, { grey, rust }, opts) {
   // between two plates on the slab's waist and kissed its flank by the
   // six-by-four orb's equator row, which the six-by-three orb has no vertex
   // on, so it stands 0.04 m clear; seating it slid it 0.6 m off the pitch,
-  // and a rivet off its line is the worse fault.
+  // and moving it in z alone would put it 0.13 m deeper than its
+  // neighbours, since the waist's flank there faces 20° off the beam. A
+  // rivet off its line or sunk past its rank is the worse fault.
   const rivet = new THREE.SphereGeometry(0.45, ...rule.orb(0.45));
   const { x: seamX = 0, y: seamY = 2.2, h: seamH = 0.5, t: seamT = 1.4, z: seamZ = z } = seam;
   bothSides((side, sgn) => {
@@ -3434,9 +3436,10 @@ export function lampRow(root, put, lampM, opts) {
  * to the file's radius would sink to 0.07 proud at a chord's middle and
  * read as half buried. Each rib is set out by that sag, so its chords'
  * middles sit at the file's radius, 2.42, and its vertices a sag further
- * out: flush with the dome at the chords, where the file's vertices sat
- * 1.15 m into it, and up to 1.2 m prouder at the vertices — the collars'
- * answer on the Order's Bio-reactor (hadron.mjs `reactorVessel`).
+ * out: flush with the dome at the chords, and at the vertices 3.2 m further
+ * out than the file's, up to 2.8 m clear of the dome's facets where the
+ * file's sat 1.15 m into its sphere — the collars' answer on the Order's
+ * Bio-reactor (hadron.mjs `reactorVessel`).
  */
 export function ribbedDome(root, put, { black, grey, rust, lampM }, opts) {
   const { foundation, skirt, dome, ribs, cap, beacon, cut: rule = METRE } = opts;

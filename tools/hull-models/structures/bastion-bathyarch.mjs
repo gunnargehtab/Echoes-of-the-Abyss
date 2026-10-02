@@ -104,8 +104,8 @@
  * export had six to sixteen; the dome four rows deep over its quarter and
  * each rib seven over its half, where it had seven and eighteen, the ribs
  * set out by the sag of a seven-segment chord, flush with the dome at the
- * chords and up to 1.2 m prouder at the vertices, where the file's sat into
- * it (`ribbedDome`); the beacon, the dock and perimeter
+ * chords and up to 2.8 m clear of its facets at the vertices, where the
+ * file's sat 1.15 m into it (`ribbedDome`); the beacon, the dock and perimeter
  * lamps and the crane lamp orbs — the beacon fourteen by seven, the dock
  * lamps ten by five, the perimeter and crane lamps eight by four; the
  * ballast and ring pipes eight; the eight perimeter posts six, where they

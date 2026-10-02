@@ -488,8 +488,8 @@ ten-gon's, so all ten portholes are seated on it (five were, since #907) and the
 is re-cut 0.4 rad round the skirt, since seated at its own station it stood 5 m into a
 ballast tank; its six ribs, seven segments over the half turn, are set out by the sag of
 such a chord, a fortieth of its radius (0.063 of the file's unit, 3.2 m), so each is flush
-with the dome at its chords and up to 1.2 m prouder at its vertices, where the file's
-sat into it. On the Bio-reactor the six run lights, a sixth of a turn apart, are dropped
+with the dome at its chords and up to 2.8 m clear of its facets at its vertices, where
+the file's sat 1.15 m into it. On the Bio-reactor the six run lights, a sixth of a turn apart, are dropped
 onto the fourteen-sided kerb, which has a chord under four of them; on the Vent Tap the
 ember is drawn at the rim's own 12 to rest in the fourteen-sided mouth, the Order's answer
 on its tap. The Bastion's crane cable and the Gantry's and the Slipway's kit cables keep
