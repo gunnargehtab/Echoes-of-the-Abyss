@@ -503,9 +503,9 @@ plates over them being small too. The panel pass brought the thirteen Consortium
 outside the bands inside them — `node tools/hull-models/facets.mjs bathyarch` names none, the
 hulls at 0.9–1.6 m and the structures at 3.1–5.5 — with the three divisions the measure sees
 and nothing else: plates of a finish other than the one under them laid over a deck or a slab,
-0.6–2.4 m on a side on a hull and 2.6–5 m on a structure, 0.2 m proud on a hull and up to
-5 m tall on the Vent Tap, whose apron lies 2.6 m under the seabed; seams standing proud
-across a deck; dogged hatches, and on the structures kerb posts, kerbs and anchor blocks; 313
+0.63–2.4 m on a side on a hull and 3–4.4 m on a structure, 0.2–0.26 m proud on a hull and up
+to 5.2 m tall on the Vent Tap, whose apron lies 2.6 m under the seabed; seams standing proud
+across a deck; dogged hatches, and on the structures kerb posts, kerbs and anchor blocks; 314
 fittings, 366 parts, all but the Vent Tap's four foot plates seated on the plate under their
 station (`factions/bathyarch.mjs`, "Panels"). They lie where a plate
 was bare: the shared kinds', the Tender's and the Chorister's decks, the Submersible's hull

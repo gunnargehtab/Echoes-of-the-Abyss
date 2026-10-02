@@ -215,7 +215,7 @@ bathyarch.plateSeams(root, rust, {
   w: 0.15,
   h: 0.1,
 });
-bathyarch.deckPlates(root, { rust, black }, {
+bathyarch.deckPlates(root, { rust, grey }, {
   on: 'pressure_hull',
   t: 0.1,
   plates: [

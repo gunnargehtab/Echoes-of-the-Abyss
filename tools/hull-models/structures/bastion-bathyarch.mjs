@@ -127,7 +127,7 @@
  * along the ring between them; and three dogged hatches, 4.6 m across
  * under a 3 m wheel: 31 fittings, 34 parts, since a hatch is two. Every one
  * is dropped onto `foundation` from its station (`deckPlates`,
- * `deckHatches`; kit.mjs `seat`) and reads 2.4–4.3 m on a side from above;
+ * `deckHatches`; kit.mjs `seat`) and reads 2.2–4.2 m on a side from above, the wheels the least;
  * nothing stands over a lamp, and each meets the slab alone. The median
  * edge goes 42.2 m → 4.2 m over 64 panels. 68 parts and 4,486 triangles
  * become 102 and 5,110.

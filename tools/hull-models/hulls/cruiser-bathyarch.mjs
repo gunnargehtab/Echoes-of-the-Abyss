@@ -460,8 +460,10 @@ bathyarch.deckPlates(root, { grey, rust }, {
   ],
 });
 // The port seam stands aft of the dish, which hangs over the middle deck from
-// x 8.2 to 11.9 and had a quarter of the seam under it at 11.
-bathyarch.plateSeams(root, grey, { on: 'deck_mid', name: 'seam_mid_p', stations: [14.5], z: -3.2, length: 5, ...SEAM });
+// x 8.2 to 11.9 and had a quarter of the seam under it at 11, and between
+// `patch_mid_2` (to x 15.1) and `patch_mid_4` (from 16.95), which a station
+// of 14.5 cut across.
+bathyarch.plateSeams(root, grey, { on: 'deck_mid', name: 'seam_mid_p', stations: [16], z: -3.2, length: 5, ...SEAM });
 bathyarch.plateSeams(root, grey, { on: 'deck_mid', name: 'seam_mid_s', stations: [20], z: 3.2, length: 5, ...SEAM });
 bathyarch.deckHatches(root, { hatch: grey, wheel: rust }, {
   on: 'deck_mid',

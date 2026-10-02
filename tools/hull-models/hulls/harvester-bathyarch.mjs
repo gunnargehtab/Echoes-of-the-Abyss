@@ -85,7 +85,7 @@
  * gunwale a side, each four to twenty-seven metres on a side, and its
  * fittings were forty rivets too small to count. The pass laid thirty-one
  * fittings, thirty-seven parts, each seated on its plate (bathyarch.mjs `deckPlates`,
- * `plateSeams`, `deckHatches`): twenty-two patch plates of grey and rust,
+ * `plateSeams`, `deckHatches`): twenty-two patch plates of grey, rust and black,
  * 1.1–1.5 m on a side and 0.22 m proud — four along each gunwale top between
  * the markers, two on each hold floor, three on the divider, two on the
  * crusher roof round its vents, four on the foredeck either side of the
@@ -387,7 +387,7 @@ bathyarch.deckPlates(root, { grey, rust }, {
     ['patch_roof_2', 'rust', [1.2, 1.2], at(3.0, 8.5)],
   ],
 });
-bathyarch.deckPlates(root, { grey, rust }, {
+bathyarch.deckPlates(root, { black }, {
   on: 'cab_visor',
   t: PLATE_T,
   plates: [['patch_cab', 'black', [1.2, 1.2], at(0.8, -29)]],

@@ -328,6 +328,10 @@ const planOf = (s) => (s.length === 3 ? [s[0], s[2]] : s);
  */
 export function deckPlates(root, mats, { on, t, plates }) {
   for (const [name, finish, [w, d], station, yaw = 0] of plates) {
+    // A finish the call did not hand over would go in as three's default —
+    // unnamed, white and unlit — which is what two of the pass's plates did
+    // for a round, unseen by every reading (#919).
+    if (!mats[finish]) throw new Error(`deckPlates: ${name} asks for '${finish}', not among ${Object.keys(mats)}`);
     const [x, z] = planOf(station);
     const { at, rot } = seat(root, on, [x, 0, z], { stand: t / 2, drop: true, yaw });
     add(root, name, box(w, t, d), mats[finish], at, rot);

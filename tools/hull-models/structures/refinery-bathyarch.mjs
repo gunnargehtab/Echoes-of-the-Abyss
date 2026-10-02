@@ -96,7 +96,7 @@
  * beside it; a run of four and a run of three plates of grey and rust, 4 ×
  * 3.2 m, laid almost edge to edge along the yard's north side with a 5 × 1 m
  * seam closing each run; a run of three down its east side between two
- * seams; and two plates on the apron and two on its pad: 25 fittings, 29
+ * seams; and two plates on the apron and two on its pad: 26 fittings, 29
  * parts, since a hatch is two. Each is dropped onto `platform`, `apron` or
  * `apron_pad` from its station (`deckPosts`, `deckHatches`, `deckPlates`;
  * kit.mjs `seat`), 2.2–4 m on a side from above, clear of the ballast pipe
