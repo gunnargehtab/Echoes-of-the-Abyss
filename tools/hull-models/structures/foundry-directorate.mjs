@@ -193,14 +193,14 @@
  * (`tergiteFlanks` `footed`; directorate.mjs `footed`), as the barbs,
  * rings and photophores are: the base moves to the plate's nearest point
  * and 0.14 (`spike.r`, 2.57 m) in along its normal; rake, length and the
- * station as the seed are the file's. The plates face up, out and a little
- * forward where the spikes stand, so every spike moved down, aft and
- * outboard along that normal: `0_0` 3.3 m (2.7 down, 1.8 aft, 0.6 out),
+ * station as the seed are the file's. The plates face up, forward and a
+ * little inboard where the spikes stand, so every spike moved down, aft
+ * and outboard, against that normal: `0_0` 3.3 m (2.7 down, 1.8 aft, 0.6 out),
  * `0_1` 5.0 (4.0, 2.9, 1.0), `0_2` 5.0 (4.1, 2.7, 0.8), `1_0` 2.8 (2.3,
  * 1.6, 0.2), `1_1` 4.0 (3.2, 1.8, 1.4), `1_2` 3.8 (3.1, 1.9, 1.1).
- * `contacts.mjs` pairs every spike with its own plate (`0_0`, `0_1` and
- * `1_0` with the plate abaft as well, where the plates overlap) and with
- * nothing else; the barbs keep their seeds off the file's stations and do
+ * `contacts.mjs` pairs every spike with its own plate (`0_0`, `0_1`, `1_0`
+ * and `1_1` with the plate forward of it as well, where the plates
+ * overlap) and with nothing else; the barbs keep their seeds off the file's stations and do
  * not move. `diff.mjs` lists the six spikes and no other part, its figure
  * the drop; `DRAWN` holds at 17.4421.
  */
@@ -317,9 +317,9 @@ directorate.tergiteFlanks(
 // A second, smaller spike a unit abaft each spine spike (#919, the panel
 // pass; the header), raked the one way the spikes rake, seated on the plate
 // under it (`spineRank`; kit.mjs `seat`) — the spike's own plate on all
-// five since the spikes were seated on theirs (#1050). Five, since `flank_photophore_8` stands where
-// the second starboard plate's would grow, and none on the bow
-// plates, which carry no spine in the file.
+// five since the spikes were seated on theirs (#1050). Five, since
+// `flank_photophore_8` stands where the second starboard plate's would
+// grow, and none on the bow plates, which carry no spine in the file.
 const barb = (n, [x, y, z], rake, length) => [n, black, 0.09, length, [x, y - 0.3, z - 1], rake];
 directorate.spineRank(root, {
   name: 'spine_barb',

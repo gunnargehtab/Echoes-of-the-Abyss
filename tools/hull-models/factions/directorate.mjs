@@ -2651,8 +2651,9 @@ export function shellSpines(root, { name, facets = 5, spines, on = null }) {
  * in whatever direction the nearest point lies, not down the part's own
  * axis — and the whole part moves with it, keeping its lean and its length,
  * so a spine or a pipe a coarser cut left floating meets the shell it was
- * drawn against (#919). On a plate facing up and out, that is mostly a
- * drop with a step aft or outboard: the Foundry's six spine spikes moved
+ * drawn against (#919). On a plate facing up, forward and a little
+ * inboard, that is a drop with a step aft and outboard, against the
+ * normal: the Foundry's six spine spikes moved
  * 2.8–5.0 m each along their plates' normals, 2.3–4.1 m of it down and
  * 0.2–1.4 m of it outboard (#1050); the Dredge's barbs the same way. A
  * leaning part takes its far end with it — the Cantor's second ballast
@@ -3602,7 +3603,7 @@ export function intakeMaw(root, { hopper: hopperMat, throat: throatMat, mouth: m
  * (`footed` above; #1050). The file's nodes put the feet on the export's
  * 9 × 6 plates; the rule's 15 × 4 (#919) lie elsewhere, and on them the
  * Foundry's third port spike stood 0.77 m off its plate (its base centre
- * 2.39 m) and its second met the plate abaft rather than its own. Seated,
+ * 2.39 m) and its second met the plate forward of its own. Seated,
  * each base lies 0.14 (`spike.r`) inside its own plate's surface, moved
  * along that plate's normal; the rake, the length and the file's station
  * as the seed stay. Off by default, the spikes stand where the nodes say.
@@ -3648,7 +3649,7 @@ export function tergiteFlanks(root, { violet, red, black, steel }, opts) {
         // `footed`: the spike's foot seated on its own plate (#1050). The
         // file's stations stood on the export's 9 × 6 plates; the rule's
         // 15 × 4 (#919) lie elsewhere, and on them the third port spike
-        // stood 0.77 m off its plate and the second met the plate abaft.
+        // stood 0.77 m off its plate and the second met the plate forward.
         // The export's node in the root's frame, which is what `footed` seats in.
         const placed =
           frame === zLong ? drawn(p.spike.at, p.spike.rot) : { at: p.spike.at, rot: p.spike.rot };
