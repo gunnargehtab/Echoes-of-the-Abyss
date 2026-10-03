@@ -3083,11 +3083,13 @@ export function facetPlates(root, mat, opts) {
     // Sunk a tenth of its thickness: seated to the digit on a sloped facet,
     // a plate's underside lands a few hundred nanometres off it, which the
     // sweep reads as nothing meeting (contacts.mjs is exact).
-    const { at, rot } = seat(root, on, seed, { stand: t / 2, sink: t / 10, yaw: b + Math.PI / 2 });
+    // The tangent at bearing b, in seat's own turn: +x goes to (cos θ, 0, −sin θ)
+    // about +y, as ceramicSeams' yaw says, so the quarter turn past b is −(b + π/2).
+    const yaw = -(b + Math.PI / 2);
+    const { at, rot } = seat(root, on, seed, { stand: t / 2, sink: t / 10, yaw });
     add(root, `${name}_${first + k}`, box(w, t, s), mat, at, rot);
   }
 }
-
 
 export { THREE };
 

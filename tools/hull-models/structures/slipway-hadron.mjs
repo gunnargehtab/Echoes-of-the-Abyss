@@ -68,8 +68,8 @@
  * PANELS (#919). The median unlit part from above read 4.24 m on a side
  * over fifty-four, a crystal spine, against the structures' band of
  * 5.5–16 (docs/asset-prompts-3d.md Block 2c; hadron.mjs `ceramicSeams`,
- * "Panels"): thirty-two parts under 30 m² — the spines, the posts, the
- * finials, the trolleys and the lesser keel blocks — against twenty-two
+ * "Panels"): thirty-one parts under 30 m² — the spines, the posts, the
+ * finials, the trolleys and the lesser keel blocks — against twenty-three
  * over, on two halls of 8,000 m² each whose backs were bare. Sixteen seams
  * of alloy across the shadow halls, eight a hall (`slipwayHall`
  * `panelSeams`), each 2.6 units wide standing 0.8 proud and laid on the

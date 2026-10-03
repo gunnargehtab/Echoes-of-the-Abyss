@@ -129,7 +129,9 @@
  * −16.5 inside the crystal ring and clear of the bays by a metre and a
  * quarter, and one along the keel between the two after bays — and three
  * of shadow across each pale wing, athwart at x −22, −28 and −34 from the
- * spine or the body's flank to half a metre short of the edge strip. They
+ * spine or the body's flank outboard — to 1.35 m short of the edge strip
+ * at −22, 0.4 short of it at −28, and 0.45 short of the trailing edge at
+ * −34, where no strip runs. They
  * show 3.5–12 m² each, so the median lands on the fore spine at 4.27 m
  * over twenty-seven; no part moved, no lamp's plan changed, and the
  * outline is what it was. 21 parts and 576 triangles become 31 and 696.

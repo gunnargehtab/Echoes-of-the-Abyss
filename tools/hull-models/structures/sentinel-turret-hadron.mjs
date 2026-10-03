@@ -79,18 +79,19 @@
  * on a frustum of 2,006 m² whose flank is facets and not plates. So the
  * facets are made to show — "mirror facets" (Block 2) — with a plate of
  * the dim alloy on each: 10 m along the facet by 6.5 up its slope, 0.3
- * proud, seated on the facet it faces with its centre 12.3 m up the
- * 15.4 m flank, its foot 1.2 m clear of the fore marks and its head a
- * third of a metre under the rim. The frustum is turned the file's eighth
+ * proud, its long side level, seated on the facet it faces from y 8.7 to
+ * 14.3 of the 15.4 m flank — its foot 1.1 m clear of the fore marks, its
+ * head a metre under the rim. The frustum is turned the file's eighth
  * (FACETS above), so no facet has a mirror and the plates go on every one
  * nothing stands before, eight of the twelve: not facets 3, 4 and 7, where
- * an ammo pod or an aft mark stands on the flank, and not facet 8, whose
- * lower corner the starboard pod's after end reached. Seven show 37–38 m²
- * each and `mirror_plate_11`, under the rail, 21, so the median lands on a
- * plate at 6.11 m over twenty-eight; the plates ring the flank under the
+ * an ammo pod or an aft mark stands on the flank, and not facet 8, which
+ * the starboard pod's after end reaches. Seven show 37.4–37.6 m² each
+ * and `mirror_plate_11`, under the rail, 21, so the median lands on a
+ * plate at 6.12 m over twenty-eight; the plates ring the flank under the
  * collar and inside the base, so no part moved, no mark's plan changed,
  * and the plan is what it was. 27 parts and 708 triangles become 35 and
- * 804.
+ * 804. A first cut yawed each plate the wrong way about its seat and six
+ * climbed their facets past the rim (hull-reviewer, round one).
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';

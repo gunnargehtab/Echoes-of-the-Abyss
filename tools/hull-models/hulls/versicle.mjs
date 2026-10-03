@@ -87,17 +87,18 @@
  * spine at 7 — and seven show less: the two guard blades, the two edge
  * strips, the inlay, the drive and the fin, 0.6–2.6 m² each, every one a
  * part the family's hulls carry at craft scale. A median at the floor
- * needs more parts at 4 m² or over than under it, so six new ones at
- * least, and the crown has no room for them: outside the spine it is
- * 0.6–1.4 m wide a side, 32 m² in all, and only one mirrored pair of
- * panels on it reaches 4 m² (x −5.5 to −2, where the crown is fullest),
- * before any seam is left between them. Six would plate three quarters
- * of the crown and the craft would be its panels; a fitting that stands
- * past the crown's edge grows the plan the Offertory's cradles are cut to
- * (`VERSICLE_PLAN`, the assertion at the foot), which #919 rules out. So
- * it takes none, on the owner's call, and the band is read as what it is:
- * the median of a hull whose fittings are a tenth of its plan, on a craft
- * whose every fitting is.
+ * needs more parts at 4 m² or over than under it — six new ones at 4 m²,
+ * or five at 5.4 with the median landing on one — and the crown has no
+ * room for them: outside the spine it is 0.6–1.4 m wide a side, 32 m² in
+ * all, and only one mirrored pair of panels on it reaches 4 m² (x −5.5 to
+ * −2, where the crown is fullest), before any seam is left between them.
+ * Five or six would plate most of the crown and the craft would be its
+ * panels; a fitting that stands past the crown's edge grows the plan the
+ * Offertory's cradles are cut to (`VERSICLE_PLAN`, the assertion at the
+ * foot), which #919 rules out. So it takes none — a call taken in the
+ * open, in the pull request's Options (#1053) — and the band is read as
+ * what it is: the median of a hull whose fittings are a tenth of its
+ * plan, on a craft whose every fitting is.
  */
 import { THREE, exportGlb, metreTrue, bounds } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';

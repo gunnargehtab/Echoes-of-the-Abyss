@@ -748,18 +748,20 @@ laid on the plate under its own station and every pair mirrored to the digit
 and not plates, the facets made to show, a plate of the dim alloy 10 by 6.5 m on each of the
 eight nothing stands before (`facetPlates`), since the turned twelve-gon mirrors on no axis
 and a mirrored few would lie on no facet. Forty-six seams and eight plates on six models:
-the Antiphon four across its deck and three across each guard wing, the Offertory three
-across its deck a side and two across each guard blade, the Reciter two along each wing, the
+the Antiphon four on its deck, three athwart and one along the keel between the after bays,
+and three across each guard wing, the Offertory three on its deck a side, two athwart and
+one along the coaming's outboard side, and two across each guard blade, the Reciter two along each wing, the
 Responsory three across each, the Slipway eight across each hall's back between its spines;
-2.6–12 m² each on a hull, 32–38 on a structure, no part moved, no lamp added or moved, no
-plan grown from above, and each script's header says where. The Versicle, the one Order hull
-under the band, takes none: nine parts, two of them at 4 m² or over, so a median at the floor
-needs six more at 4 m² each, and its crown outside the spine is 0.6–1.4 m wide a side and
-32 m² in all — one pair of panels on it reaches 4 m², six would plate three quarters of it,
-and a fitting past the crown's edge grows the plan the Offertory's cradles are cut to. It is
-left and recorded, on the owner's call, as the measure's own reading of a 22 m craft: the
-band is the median of a hull whose fittings are a tenth of its plan, and on a craft every
-fitting is.
+2.6–12 m² each on a hull, 32–36 a seam on the Slipway and 37–38 a plate on the Turret but
+the one under its rail at 21, no part moved, no lamp added or moved, no plan grown from
+above, and each script's header says where. The Versicle, the one Order hull under the band,
+takes none: nine parts, two of them at 4 m² or over, so a median at the floor needs six more
+at 4 m² each or five at 5.4, and its crown outside the spine is 0.6–1.4 m wide a side and
+32 m² in all — one pair of panels on it reaches 4 m², five or six would plate most of it, and
+a fitting past the crown's edge grows the plan the Offertory's cradles are cut to. It is left
+and recorded — a call taken in the open, in #1053's Options — as the measure's own reading of
+a 22 m craft: the band is the median of a hull whose fittings are a tenth of its plan, and on
+a craft every fitting is.
 
 **What the rule costs.** Gate 6 ([graphics-standards.md](graphics-standards.md) §6) allows
 the conn view 250 k triangles on screen, the terrain heightfield and the own roster together,
@@ -781,7 +783,7 @@ the bands 112 spines, a five-sided cone of ten triangles each but the Submersibl
 four-sided and eight; Order hulls 9.9 k → 8.0 k
 and structures 15.8 k → 12.1 k, the Order's as built since its facet pass, where this rebuild
 had said 12.4 k before the pass cut its pipes, stacks and throat drums as hexagons, and 8.3 k
-and 12.4 k since its panel pass laid forty-four boxes of twelve triangles; the fourteen
+and 12.4 k since its panel pass laid fifty-four boxes of twelve triangles; the fourteen
 props, under no rule, 4.3 k. The own force
 the gate names, taken as a navy's eight structures, four more Turrets and its five largest
 hulls, comes to 48.2 k for the Consortium since its panel pass (42.1 k before it), 116.3 k for the
@@ -856,11 +858,11 @@ hulls at 1.6–2.6 m, the structures at 2.6–7.1; five Order hulls
 facet pass thinned its rings, is a finding
 and not a doubt about the band, and the Reciter, at 6.1 m over eleven parts, is within one
 part of the edge) and three structures (the Sentinel Turret at 4.5 m and the Slipway at 4.2
-under the band, and the Bastion over it, 15.9 since the facet pass re-cut its rings and its
-plinth), every one inside its band since the Order's panel pass but the Versicle — the four
+under the band, and the Bastion at 16.2 over it, 15.9 since the facet pass turned its plinth
+to twelve). Every Bastion was among those structures, and three of the four Foundries. Since
+the Order's panel pass every one of its models is inside its band but the Versicle — the four
 hulls at 3.2–4.3 m, the Turret at 6.1 and the Slipway at 5.7, the Versicle at 1.5 still and
-recorded (the Knights paragraph) — every Bastion among those structures, and three of the
-four Foundries.
+recorded (the Knights paragraph).
 The pass that applied the table — the second half of #919 — is what brought those to the
 one, one navy at a time, each under a `hull-reviewer` pass of its own; the table itself
 moved no GLB.
