@@ -53,6 +53,7 @@ import { glowFactor, lampCoreRest } from './glow.ts';
 import { DREAM_LOOP, installDreamLamp, installDreamSteel } from './dreamLoop.ts';
 import { installHullSurface, type WorldLook } from './tutorialLook.ts';
 import { keepGlowOutsideToneMapping } from './modelLighting.ts';
+import { trimSheet } from './trimSheets.ts';
 
 /**
  * TUNABLE — the linear diffuse luminance a model's *brightest* cladding
@@ -355,6 +356,11 @@ function recolor(root: Group, faction: Faction, look: WorldLook, palette: Palett
       material.userData.exportIntensity = material.emissiveIntensity;
       const { r, g, b } = material.emissive;
       material.emissiveIntensity = lampCoreRest(Math.max(r, g, b), material.emissiveIntensity);
+    }
+    // A material the script laid out for its navy's trim sheet takes the
+    // sheet here, under the ink: grey, so hue stays the palette's (#1005).
+    if (typeof material.userData.trim === 'string') {
+      material.map = trimSheet(material.userData.trim);
     }
     if (DREAM_LOOP && look === 'standard') installDreamSteel(material);
   }

@@ -63,7 +63,8 @@ finish line to hand a `/goal`. It says the tree is sound, never that a number is
 Its flags go after a load-bearing `--` (`-- --help` lists them); without it npm takes
 `--only=…` for its own config, forwards nothing, and every gate runs.
 
-**Node 22+ is required** (`node --import tsx`, the stable `node:test` runner; CI pins 22).
+**Node 22.3+ is required** (`node --import tsx`, the stable `node:test` runner, the test
+shim's `process.getBuiltinModule`; CI pins 22).
 Older runtimes fail with errors that do not point at the Node version.
 
 ## Build order — the thing that breaks first

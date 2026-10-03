@@ -32,9 +32,10 @@ Load-time sprite bake             packages/frontend/src/game/hullTextures.ts
 
 **Where the GLB comes from.** Every approved model in `docs/concept-art/models/` is
 `THREE.GLTFExporter` output — a scene of named primitive parts, no sculpts, and no texture
-but the two a script opts into: the occlusion map it bakes
-([art-direction.md](art-direction.md#bevels-and-baked-occlusion--spec)) and the trim sheet it
-lays and draws ([art-direction.md](art-direction.md#uv-layout-and-trim-sheets--spec)). The
+but the occlusion map a script bakes in
+([art-direction.md](art-direction.md#bevels-and-baked-occlusion--spec)); a trim sheet
+([art-direction.md](art-direction.md#uv-layout-and-trim-sheets--spec)) is the navy's, drawn
+once into the client's assets, and leaves a model only a UV layout and a name. The
 Bulwark is `hull_slab` + `armour_tier_1..3` + `flank_plate_p0..p3`; the
 Dredge is `tergite_0..n` + `tergite_ridge_0..n` + `tergite_spine_0..n`. Because those
 repeating series are loops, a hull can be *built* as well as exported, and
@@ -275,11 +276,11 @@ conveniences rather than palette entries. What they owe each other instead is co
 see "Block 2b — the derived palette" in [asset-prompts-3d.md](asset-prompts-3d.md), which
 carries the registry and the one-name-one-value rule.
 
-A texture on a model obeys the same rule. A trim sheet
+A texture on a model obeys the same rule. A navy's trim sheet
 ([art-direction.md](art-direction.md#uv-layout-and-trim-sheets--spec)) is one grey channel
-that multiplies the recoloured ink, so it carries where a plate ends and nothing of what
-colour it is; a sheet with a hue in it would reach a pixel, and is refused for the reason a
-hex is.
+attached at load that multiplies the recoloured ink, so it carries where a plate ends and
+nothing of what colour it is; a sheet with a hue in it would reach a pixel, and is refused
+for the reason a hex is.
 
 ### 5. The Asymmetric Fidelity Law is a rendering gate
 
@@ -506,8 +507,9 @@ A baked occlusion map ([art-direction.md](art-direction.md#bevels-and-baked-occl
 triangle either: a texture on materials the frame already draws, at most 512² a model,
 1.33 MiB as three uploads a PNG with its mipmaps, and only on the models a script bakes. A
 trim sheet ([art-direction.md](art-direction.md#uv-layout-and-trim-sheets--spec)) is allocated
-the same and no more: 512² and 1.33 MiB a model, only where a script passes `trim`, and a
-model carrying both maps would come to 2.67 MiB, which none does yet.
+the same and no more, once a **navy** rather than once a model: 512² and 1.33 MiB for each
+navy with a sheet whose models have loaded, resident for the page's lifetime and shared by
+every laid-out material of that navy, and nothing for a model whose script passes no `trim`.
 Nor are the vignette and the sway
 ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)): the browser
 composites the one, and the other moves a camera the frame already draws through.

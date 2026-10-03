@@ -63,6 +63,24 @@
         const model = gltf.scene;
         scene.add(model);
 
+        // The navy's trim sheet (#1005), attached to the materials the
+        // script tagged for it, as rosterModels.ts does at load: the albedo
+        // pass below copies `map`, so the chart's sprite carries the plates.
+        const trimUrl = params.get('trim');
+        if (trimUrl) {
+          const sheet = await new THREE.TextureLoader().loadAsync(trimUrl);
+          sheet.colorSpace = THREE.SRGBColorSpace;
+          sheet.wrapS = sheet.wrapT = THREE.RepeatWrapping;
+          // v 0 is the sheet's first row, as glTF reads a texture (trimSheets.ts).
+          sheet.flipY = false;
+          model.traverse((o) => {
+            if (!o.isMesh) return;
+            for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+              if (typeof m.userData?.trim === 'string') m.map = sheet;
+            }
+          });
+        }
+
         // --- Measure the export as delivered, before touching it.
         const rawBox = new THREE.Box3().setFromObject(model);
         const rawSize = rawBox.getSize(new THREE.Vector3());

@@ -9,11 +9,12 @@
  * hull's plan section off the model that clads it. Every approved model is
  * GLTFExporter output — one buffer, float32 positions, indexed triangles,
  * no skins or morphs — so the parser is short, and it says so when handed
- * anything else rather than guessing. The two textures a model can carry,
- * the occlusion map (#1002) and the trim sheet (#1005) kit.mjs `exportGlb`
- * embeds, are read back too: a part's `uv1` and `uv0` beside its
- * positions, and each map decoded through png.mjs, since an image is the
- * one thing GLTFLoader could not have done here either.
+ * anything else rather than guessing. The one texture a model can carry,
+ * the occlusion map kit.mjs `exportGlb` embeds (#1002), is read back too:
+ * a part's `uv1` beside its positions, and the map itself decoded through
+ * png.mjs, since the image is the one thing GLTFLoader could not have done
+ * here either; so is a part's `uv0` and the trim sheet its materials are
+ * tagged for (#1005), whose image lives apart from the file.
  *
  * `sceneParts` produces the same shape from a live three.js scene, which is
  * what makes a build and its file comparable at all.
@@ -82,12 +83,13 @@ export const occludes = (finish) =>
  * `uv0` the first the same way — the trim sheet's layout where a script
  * laid one (#1005), and whatever the primitive carried otherwise.
  *
- * The model is `{ name, parts, occlusion, trim }`: each null, or the map
- * decoded — `{ width, height, pixels, texCoord, strength, materials }`,
- * `materials` the names that carry it, `strength` the occlusion map's
- * alone. Two images in one slot, or an image that is not an embedded PNG,
- * is refused: kit.mjs writes one a slot, and a reader guessing at another
- * tool's file is how a drift goes unread.
+ * The model is `{ name, parts, occlusion, trim }`: `occlusion` null, or the
+ * map decoded — `{ width, height, pixels, texCoord, strength, materials }`,
+ * `materials` the names that carry it; `trim` null, or `{ sheet, materials }`,
+ * the navy's sheet the tagged materials are laid out for (the image itself
+ * is not in the file; sheets.mjs). Two occlusion images, or an image that
+ * is not an embedded PNG, is refused: kit.mjs writes one, and a reader
+ * guessing at another tool's file is how a drift goes unread.
  *
  * The stored normals are what the conn view lights a hull by
  * (`rosterModels.ts` keeps the file's own), and a buffer can change under
@@ -221,8 +223,22 @@ export function readGlb(path) {
     name: json.nodes[json.scenes[json.scene ?? 0].nodes[0]]?.name ?? null,
     parts,
     occlusion: mapOf(json, bin, path, 'occlusion', (m) => m.occlusionTexture),
-    trim: mapOf(json, bin, path, 'trim', (m) => m.pbrMetallicRoughness?.baseColorTexture),
+    trim: trimOf((json.materials ?? []).map((m) => [m.name, m.extras?.trim]), path),
   };
+}
+
+/**
+ * The trim sheet a file's materials are laid out for (#1005): `{ sheet,
+ * materials }` from each material's `extras.trim`, or null when none is
+ * tagged. One sheet a file: a navy has one, and a model is one navy's.
+ */
+function trimOf(tags, path) {
+  const tagged = tags.filter(([, tag]) => tag);
+  if (tagged.length === 0) return null;
+  const sheets = new Set(tagged.map(([, tag]) => tag));
+  if (sheets.size !== 1)
+    throw new Error(`${path}: materials tagged for ${sheets.size} trim sheets — a model has one`);
+  return { sheet: [...sheets][0], materials: tagged.map(([name]) => name) };
 }
 
 /**
@@ -398,8 +414,15 @@ export function sceneParts(root) {
     });
   });
   // A live scene carries no map: the bake is the export's, so `occlusion`
-  // is a file's field and null here.
-  return { name: root.name, parts, occlusion: null };
+  // is a file's field and null here. The trim tag is on the live materials
+  // once trim.mjs has laid the scene out, and read the way the file's is.
+  const tags = [];
+  root.traverse((o) => {
+    if (!o.isMesh) return;
+    for (const m of Array.isArray(o.material) ? o.material : [o.material])
+      tags.push([m?.name ?? null, m?.userData?.trim]);
+  });
+  return { name: root.name, parts, occlusion: null, trim: trimOf(tags, root.name) };
 }
 
 /**

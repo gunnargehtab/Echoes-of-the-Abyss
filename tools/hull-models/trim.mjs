@@ -3,9 +3,8 @@
  * (#1005): every part's UV0 laid over its navy's plate, and the one grey
  * image that plate is drawn on.
  *
- *   const sheet = drawTrimSheet(navy.TRIM);           // the image
+ *   const sheet = drawTrimSheet(navy.TRIM);           // the navy's image
  *   const laid = layoutTrim(root, sheet, navy.TRIM);  // UV0, before the export
- *   embedImages(glb, [trimImage(sheet, laid.materials)]);
  *
  * Until this, UV0 on a part said only that it merges (kit.mjs `uvAlike`):
  * a three constructor carried its own 0..1 parameterisation, an extruded
@@ -13,22 +12,34 @@
  * them. A trim sheet needs a layout, and the layout is the kit's, written
  * at export the way occlusion.mjs writes `uv1`, so a script opts in with one
  * argument (kit.mjs `exportGlb`'s `trim`) and `check.mjs` rebuilds and
- * compares both the layout and the image on every machine.
+ * compares the layout on every machine.
+ *
+ * **The sheet is the navy's, and travels apart from the file.** One image
+ * serves every model of a navy, so a GLB carries none: it carries the
+ * layout on UV0 and, on each solid unlit material, `extras.trim` naming the
+ * sheet it is laid out for (three's `userData`, which GLTFExporter writes
+ * and GLTFLoader reads back). sheets.mjs draws every navy's sheet once into
+ * packages/frontend/src/assets/trim/<name>.png, check.mjs holds that file
+ * to the draw, and the conn view attaches it to the tagged materials at
+ * load (rosterModels.ts, trimSheets.ts), as the chart's bake does for its
+ * albedo pass (hull-intake bake.mjs `--trim`). Embedding it instead cost
+ * 31 KB a model that gzip cannot shrink and a re-export of every model on
+ * the sheet whenever a number in it moved.
  *
  * **The sheet is luminance only.** It multiplies the material's colour, and
  * the colour is the faction's ink, recoloured from the active palette at
  * load (rosterModels.ts, docs/graphics-standards.md gate 4), so the hue on
  * screen is still the palette's and the sheet says only where a plate ends.
- * It is written in linear light and encoded sRGB, as glTF reads a base
- * colour, and held bright: its mean is reported, and the Consortium's reads
+ * It is written in linear light and encoded sRGB, as a base colour is read,
+ * and held bright: its mean is reported, and the Consortium's reads
  * about 0.88 of white, so the register rosterModels.ts puts a navy on
  * (`CLADDING_CEILING`) moves by an eighth. Emissive is untouched, since
  * a base-colour map never reaches `emissive` (gate 3), and a lamp material
- * is not named on the sheet at all: the layout lays every part, and the
- * image goes to the solid, unlit materials (glb.mjs `occludes`). Sorrowgate's
- * triplanar surface (tutorialLook.ts) multiplies `diffuseColor` after
- * three's `map_fragment`, so on a Commune hull in the tutorial both apply,
- * the sheet under the laminate.
+ * is not tagged at all: the layout lays every part, and the tag goes to the
+ * solid, unlit materials (glb.mjs `occludes`). Sorrowgate's triplanar
+ * surface (tutorialLook.ts) multiplies `diffuseColor` after three's
+ * `map_fragment`, so on a Commune hull in the tutorial both apply, the
+ * sheet under the laminate.
  *
  * **The layout is in metres, per part, per face.** Each triangle is
  * projected on the world plane its face normal is most along, with the
@@ -54,8 +65,9 @@
  * light with `weatherPx` texels of weathering beside it, both at 512² and
  * scaled with the sheet, each plate at its
  * own tone from an integer hash, and a grain over all of it. Every number is
- * the navy's (factions/bathyarch.mjs `TRIM` is the first), so the image is
- * reproduced wherever the script runs and compared texel by texel.
+ * the navy's (factions/bathyarch.mjs `TRIM` is the first, and its `name` is
+ * the sheet's file and tag), so the image is reproduced wherever the script
+ * runs and compared texel by texel.
  */
 import * as THREE from 'three';
 import { occludes } from './glb.mjs';
@@ -63,6 +75,9 @@ import { encodeGray } from './png.mjs';
 
 /** The sheet's channel: glTF TEXCOORD_0, three's `uv`. */
 export const TEXCOORD = 0;
+
+/** Where sheets.mjs writes a navy's sheet, relative to the repository root. */
+export const SHEET_DIR = 'packages/frontend/src/assets/trim';
 
 /** Plates a wrap of the sheet: two, so a half-plate stagger tiles. */
 export const PLATES = 2;
@@ -258,13 +273,15 @@ function least(a) {
 }
 
 /**
- * Lay every mesh of `root` out on the sheet, writing `uv`. Returns
- * `{ parts, materials, flat, round, split, bands }`: `materials` the names
- * of the solid unlit materials the sheet is for, `flat` and `round` the
- * triangles laid each way, `split` the vertices added, `bands` how many
- * faces took each band's rows.
+ * Lay every mesh of `root` out on the sheet, writing `uv`, and tag each
+ * solid unlit material with the sheet's `name` (`userData.trim`, the file's
+ * `extras.trim`). Returns `{ parts, materials, flat, round, split, bands }`:
+ * `materials` the names tagged, `flat` and `round` the triangles laid each
+ * way, `split` the vertices added, `bands` how many faces took each band's
+ * rows.
  */
-export function layoutTrim(root, sheet, { strakeM = 6 } = {}) {
+export function layoutTrim(root, sheet, { strakeM = 6, name } = {}) {
+  if (!name) throw new Error('layoutTrim: the sheet needs a name (the navy\'s TRIM.name)');
   root.updateMatrixWorld(true);
   const { bands, wrapM } = sheet;
   const seen = new Set();
@@ -296,7 +313,10 @@ export function layoutTrim(root, sheet, { strakeM = 6 } = {}) {
       alpha: m.transparent ? 'BLEND' : m.alphaTest > 0 ? 'MASK' : 'OPAQUE',
       opacity: m.opacity ?? 1,
     });
-    if (unlit && solid) materials.add(m.name);
+    if (unlit && solid) {
+      materials.add(m.name);
+      m.userData.trim = name;
+    }
   }
   return { parts: meshes.length, materials, flat, round, split, bands: used };
 }
@@ -486,20 +506,4 @@ function writeUv(g, uv, corner) {
   g.setAttribute('uv', new THREE.Float32BufferAttribute(laid, 2));
   g.setIndex(newIndex);
   return sources.length - vertices;
-}
-
-/**
- * The sheet as images.mjs embeds it: a base-colour texture on TEXCOORD_0
- * for the named materials, repeating, since `u` runs past one wrap along
- * a long part, mipmapped and filtered.
- */
-export function trimImage(sheet, materials, { name = 'trim' } = {}) {
-  return {
-    name,
-    png: sheet.png,
-    slot: 'baseColorTexture',
-    texCoord: TEXCOORD,
-    materials,
-    sampler: { magFilter: 9729, minFilter: 9987, wrapS: 10497, wrapT: 10497 },
-  };
 }
