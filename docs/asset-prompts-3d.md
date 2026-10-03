@@ -1729,12 +1729,20 @@ TUNABLE. A block below states the pair and cites neither, as the other fifty-one
 is not something a generator can read, and this is the file's one place for saying where a
 number came from.
 
+A Bastion is low as well as wide. The conn view stands a structure's y 0 at the 600 m
+working depth, 132 m under the drawn sea surface, and a 440 m footprint makes that line
+three tenths of the plan; the four Bastions stood 213–258 m and put their crowns in
+surface water, so each is pressed in height to the line, its plan and every fitting where
+they were (#960; `tools/hull-models/kit.mjs` `holdCrown`). The Spire, the Refineries and
+the Foundry still cross it and were left, by the owner's choice on that issue.
+
 ```text
 STRUCTURE — Bastion (any faction): the HQ — a large pressure dome with
 visible reinforcement ribs, docking collars and external pipework, anchored
-to the seabed (SIG 35 sustained, the settlement's constant hum). Sustained
-glow from ports and working lights; the one building that can never run
-silent.
+to the seabed, and low: its crown stands no higher than three tenths of its
+footprint (132 m over 440 m), the dome pressed wide rather than raised
+(SIG 35 sustained, the settlement's constant hum). Sustained glow from ports
+and working lights; the one building that can never run silent.
 ```
 
 ```text

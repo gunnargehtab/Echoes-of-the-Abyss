@@ -819,6 +819,38 @@ export function fitFootprint(root, lengthM) {
 }
 
 /**
+ * Hold a structure's crown at `crownM` over its ground: the model pressed in
+ * y about its own y 0, the plan untouched (#960).
+ *
+ * The conn view stands a structure's y 0 at the 600 m working depth, 132 m
+ * under the drawn sea surface (rosterModels.ts `standingY`, #958), so a
+ * crown over that line stands in surface water. A press about the ground is
+ * an affine map: every seat, every half-sunk lamp and every contact a model
+ * earned (#907, #919) holds without re-measuring, since what touched touches
+ * and what was over stays over; a lamp's plan area and its occlusion from
+ * above are unchanged, so `lightAudit` reads the same `hidden` list and a
+ * `gap` that can only shrink; the plan is byte for byte the plan, so the
+ * maps and the outlines keep their footprint. The press rides on the root
+ * with the metre scale, after `metreTrue` or `fitFootprint` has set it, so
+ * every node under it stays the file's own and `parts.mjs` reads the same
+ * numbers; `diff.mjs` reports the root scale per axis and divides it out.
+ *
+ * Measured vertex-true (`Box3.setFromObject(root, true)`), the measure
+ * glb.mjs `boundsOf` takes on the export. Returns `{ before, after, press }`
+ * in metres; a model already under the line is left alone, press 1.
+ */
+export function holdCrown(root, crownM) {
+  root.updateMatrixWorld(true);
+  const before = new THREE.Box3().setFromObject(root, true).max.y;
+  if (before <= crownM) return { before, after: before, press: 1 };
+  const press = crownM / before;
+  root.scale.y *= press;
+  root.updateMatrixWorld(true);
+  const after = new THREE.Box3().setFromObject(root, true).max.y;
+  return { before, after, press };
+}
+
+/**
  * The wellhead: the basalt chimney with five lobes round its foot, the ember
  * mouth in it, the apron of scorched ground, the wellhead clamp and the draw
  * manifold over the mouth — "a basalt chimney at the centre with a wellhead

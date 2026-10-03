@@ -118,11 +118,48 @@
  * forty-nine. 47 parts
  * and 10,124 triangles become 67 and 13,788; no part moved, no lamp's plan
  * changed, no plan grew, and the fit is the same 16.7179 across.
+ *
+ * HEIGHT (#960). The conn view stands a structure's y 0 at the 600 m working
+ * depth, 132 m under the drawn surface (rosterModels.ts `standingY`, #958),
+ * and this file stood 238.19 m to the crown bud, 106 m of it in surface
+ * water. The rule across the four Bastions is one proportion: the crown at
+ * three tenths of the plan, 132 m over the ground at 440 (`CROWN`; kit.mjs
+ * `holdCrown`), and the whole model pressed in y about y 0 to meet it, the
+ * plan untouched. Here that is ×0.5542 on the root's y after `fitFootprint`,
+ * so every node below keeps the file's numbers and the file carries the
+ * press: the dome is 0.88 tall on its node and 0.49 in the file against its
+ * 1.12 across — the grown lobe "squashed low and wide" the header already
+ * describes, further; the roots sink 19.34 m → 10.72 under the ground.
+ * Measured vertex-true after: `crown_bud` 132.00 m, `crown_stalk` 125.8,
+ * `crown_pod` 118.9, `hull_pipe_0` 115.3. Three's loose node-box measure
+ * (the export's `bounds`, intake's `rawSize`) reads 144.4 m, which is
+ * `hull_pipe_1`'s box — a rolled torus arc's box overhangs its vertices —
+ * with `hull_pipe_0` at 138.8 and `bio_vein_2` at 138.6; no vertex is over
+ * 132. A press is affine, so no seat, sink or contact moved: `diff.mjs
+ * bastion-pelagia origin/main` reads the root scale 1.0000 / 0.5542 /
+ * 1.0000 and every part where it was; the light audit reads the same 13
+ * lit parts at 1618.2 m² and intake's raw E the same 12.90; `contacts.mjs`
+ * lists the same 135 pairs. `facets.mjs pelagia` names four rings here it
+ * did not — `ring_knot_7`'s meridian and the three standpipe flanges' tubes
+ * — reading a pressed orb's ring off its shortened vertical chord; the
+ * counts are #919's and did not move. The plan is the file's, so the maps
+ * keep their footprint.
  */
-import { THREE, xLong, ballastTanks, flangedPipes, exportGlb, fitFootprint } from '../kit.mjs';
+import {
+  THREE,
+  xLong,
+  ballastTanks,
+  flangedPipes,
+  exportGlb,
+  fitFootprint,
+  holdCrown,
+} from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 440;
+// HEIGHT (#960): the crown held at three tenths of the plan, 132 m over the
+// ground at 440 (kit.mjs `holdCrown`; the header).
+const CROWN = 0.3 * L;
 /**
  * Drawn across by the measure the fit takes (THE FRAME, above), since the
  * pass: the facet rule is asked at this scale and the fit is asserted
@@ -488,4 +525,5 @@ if (Math.abs(Math.max(size.x, size.z) - DRAWN) > 1e-3)
   throw new Error(
     `${root.name}: drawn ${Math.max(size.x, size.z).toFixed(4)} across; the facet rule was asked at ${DRAWN}`
   );
+holdCrown(root, CROWN);
 await exportGlb(root, 'bastion-pelagia.glb');

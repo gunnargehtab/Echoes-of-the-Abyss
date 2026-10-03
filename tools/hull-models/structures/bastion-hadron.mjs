@@ -208,11 +208,38 @@
  * along and six round, are the pipe's: the two facets it lies on and the
  * rule's six at 2.95 m. The equator band and the standpipes are unmoved,
  * and the plan is the docks' 20.90 still.
+ *
+ * HEIGHT (#960). The conn view stands a structure's y 0 at the 600 m working
+ * depth, 132 m under the drawn surface (rosterModels.ts `standingY`, #958),
+ * and this file stood 219.79 m to the finial, 88 m of it in surface water.
+ * The rule across the four Bastions is one proportion: the crown at three
+ * tenths of the plan, 132 m over the ground at 440 (`CROWN`; kit.mjs
+ * `holdCrown`), and the whole model pressed in y about y 0 to meet it, the
+ * plan untouched. Here that is ×0.6006 on the root's y after `fitFootprint`,
+ * so every node below keeps the file's numbers and the file carries the
+ * press: the dome is 0.92 on its node and 0.55 tall in the file; the
+ * lantern 1.6 on its node and 0.96 in the file against its 0.8 across, still
+ * taller than wide; the finial 1.8 → 1.08 against 0.55, still a spike; the
+ * docks, fins and anchor blades — the Order's bilateral plan — exactly where
+ * they were. Measured vertex-true after: `apex_finial` 132.00 m,
+ * `apex_lantern` 125.9, the x prongs 117.9; the ground is y 0 still. A press
+ * is affine, so no seat, sink or contact moved: `diff.mjs bastion-hadron
+ * origin/main` reads the root scale 1.0000 / 0.6006 / 1.0000 and every part
+ * where it was; the light audit reads the same 16 lit parts at 967.7 m² and
+ * intake's raw E the same 11.65; `contacts.mjs` lists the same 110 pairs.
+ * `facets.mjs hadron` names the twelve port lights' meridians (6 a turn
+ * where it now asks 4 at 2.32 m): it reads a pressed orb's ring off its
+ * shortened vertical chord, under the 2.53 m orb the four-by-three was cut
+ * for; the counts are #919's and did not move. The plan is the file's, so
+ * the maps keep their footprint.
  */
-import { THREE, fitFootprint, exportGlb } from '../kit.mjs';
+import { THREE, fitFootprint, holdCrown, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
 
 const L = 440;
+// HEIGHT (#960): the crown held at three tenths of the plan, 132 m over the
+// ground at 440 (kit.mjs `holdCrown`; the header).
+const CROWN = 0.3 * L;
 const DRAWN = 20.9;
 
 // The Order's facet rule at this file's scale (hadron.mjs `cut`, #919): the
@@ -376,4 +403,5 @@ if (Math.abs(size.x - DRAWN) > 1e-3 || size.z > size.x)
   throw new Error(
     `${root.name}: drawn ${size.x.toFixed(4)} × ${size.z.toFixed(4)}; the header says ${DRAWN} X-long`
   );
+holdCrown(root, CROWN);
 await exportGlb(root, 'bastion-hadron.glb');
