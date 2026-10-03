@@ -1,0 +1,612 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "dpr": 1.5
+  },
+  "unpaced": true,
+  "queueSteps": 12000,
+  "stations": [
+    {
+      "name": "home",
+      "summary": {
+        "name": "home",
+        "queuedOnMs": 0.49,
+        "queuedOffMs": 0.49,
+        "queuedHaloMs": 0,
+        "splitHaloMs": 0,
+        "splitCanvasOnMs": 0.48,
+        "splitCanvasOffMs": 0.5,
+        "unqueuedOnMs": 0.56,
+        "unqueuedOffMs": 0.52,
+        "connOnMs": 0.5,
+        "connOffMs": 0.49,
+        "frameOnMs": 2.09,
+        "frameOffMs": 2.16,
+        "sites": 0,
+        "parts": {
+          "canvas": 0.48,
+          "halo-gather": 0
+        }
+      },
+      "readings": [
+        {
+          "halo": true,
+          "queued": true,
+          "split": false,
+          "gpuMs": 0.49,
+          "worstGpuMs": 1.03,
+          "loadMs": 3.89,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "parts": null,
+          "connMs": 0.41,
+          "frameMs": 5.06,
+          "state": "idle",
+          "sites": 0,
+          "calls": 45,
+          "triangles": 46606
+        },
+        {
+          "halo": false,
+          "queued": true,
+          "split": false,
+          "gpuMs": 0.49,
+          "worstGpuMs": 1.01,
+          "loadMs": 3.86,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "parts": null,
+          "connMs": 0.45,
+          "frameMs": 4.81,
+          "state": "off",
+          "sites": 0,
+          "calls": 45,
+          "triangles": 46606
+        },
+        {
+          "halo": true,
+          "queued": true,
+          "split": true,
+          "gpuMs": 0.48,
+          "worstGpuMs": 0.62,
+          "loadMs": 3.93,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "parts": {
+            "canvas": {
+              "avgMs": 0.48,
+              "worstMs": 0.62,
+              "frames": 242
+            },
+            "halo-gather": {
+              "avgMs": 0,
+              "worstMs": 0,
+              "frames": 242
+            }
+          },
+          "connMs": 0.44,
+          "frameMs": 5.45,
+          "state": "idle",
+          "sites": 0,
+          "calls": 45,
+          "triangles": 46606
+        },
+        {
+          "halo": false,
+          "queued": true,
+          "split": true,
+          "gpuMs": 0.5,
+          "worstGpuMs": 1.11,
+          "loadMs": 3.93,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "parts": {
+            "canvas": {
+              "avgMs": 0.5,
+              "worstMs": 1.11,
+              "frames": 240
+            }
+          },
+          "connMs": 0.4,
+          "frameMs": 4.7,
+          "state": "off",
+          "sites": 0,
+          "calls": 45,
+          "triangles": 46606
+        },
+        {
+          "halo": true,
+          "queued": false,
+          "split": false,
+          "gpuMs": 0.56,
+          "worstGpuMs": 0.88,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "parts": null,
+          "connMs": 0.5,
+          "frameMs": 2.09,
+          "state": "idle",
+          "sites": 0,
+          "calls": 45,
+          "triangles": 46606
+        },
+        {
+          "halo": false,
+          "queued": false,
+          "split": false,
+          "gpuMs": 0.52,
+          "worstGpuMs": 1.14,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "parts": null,
+          "connMs": 0.49,
+          "frameMs": 2.16,
+          "state": "off",
+          "sites": 0,
+          "calls": 45,
+          "triangles": 46606
+        }
+      ]
+    },
+    {
+      "name": "close",
+      "summary": {
+        "name": "close",
+        "queuedOnMs": 1.19,
+        "queuedOffMs": 0.65,
+        "queuedHaloMs": 0.54,
+        "splitHaloMs": 0.56,
+        "splitCanvasOnMs": 0.65,
+        "splitCanvasOffMs": 0.65,
+        "unqueuedOnMs": 1.28,
+        "unqueuedOffMs": 0.67,
+        "connOnMs": 0.64,
+        "connOffMs": 0.5,
+        "frameOnMs": 2.17,
+        "frameOffMs": 1.98,
+        "sites": 10,
+        "parts": {
+          "canvas": 0.65,
+          "halo-gather": 0,
+          "depth-copy": 0.27,
+          "halo-source": 0.02,
+          "halo-spread": 0.17,
+          "halo-composite": 0.1
+        }
+      },
+      "readings": [
+        {
+          "halo": true,
+          "queued": true,
+          "split": false,
+          "gpuMs": 1.19,
+          "worstGpuMs": 1.85,
+          "loadMs": 3.99,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "parts": null,
+          "connMs": 0.51,
+          "frameMs": 5.91,
+          "state": "drawn",
+          "sites": 10,
+          "calls": 53,
+          "triangles": 46633
+        },
+        {
+          "halo": false,
+          "queued": true,
+          "split": false,
+          "gpuMs": 0.65,
+          "worstGpuMs": 1.19,
+          "loadMs": 3.96,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "parts": null,
+          "connMs": 0.4,
+          "frameMs": 5.18,
+          "state": "off",
+          "sites": 0,
+          "calls": 45,
+          "triangles": 46606
+        },
+        {
+          "halo": true,
+          "queued": true,
+          "split": true,
+          "gpuMs": 1.2,
+          "worstGpuMs": 1.7,
+          "loadMs": 4,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "parts": {
+            "canvas": {
+              "avgMs": 0.65,
+              "worstMs": 1.17,
+              "frames": 241
+            },
+            "halo-gather": {
+              "avgMs": 0,
+              "worstMs": 0,
+              "frames": 241
+            },
+            "depth-copy": {
+              "avgMs": 0.27,
+              "worstMs": 0.79,
+              "frames": 241
+            },
+            "halo-source": {
+              "avgMs": 0.02,
+              "worstMs": 0.09,
+              "frames": 241
+            },
+            "halo-spread": {
+              "avgMs": 0.17,
+              "worstMs": 0.19,
+              "frames": 241
+            },
+            "halo-composite": {
+              "avgMs": 0.1,
+              "worstMs": 0.17,
+              "frames": 241
+            }
+          },
+          "connMs": 0.52,
+          "frameMs": 6.18,
+          "state": "drawn",
+          "sites": 10,
+          "calls": 53,
+          "triangles": 46633
+        },
+        {
+          "halo": false,
+          "queued": true,
+          "split": true,
+          "gpuMs": 0.65,
+          "worstGpuMs": 1.64,
+          "loadMs": 3.95,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "parts": {
+            "canvas": {
+              "avgMs": 0.65,
+              "worstMs": 1.64,
+              "frames": 240
+            }
+          },
+          "connMs": 0.4,
+          "frameMs": 5.48,
+          "state": "off",
+          "sites": 0,
+          "calls": 45,
+          "triangles": 46606
+        },
+        {
+          "halo": true,
+          "queued": false,
+          "split": false,
+          "gpuMs": 1.28,
+          "worstGpuMs": 2.79,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "parts": null,
+          "connMs": 0.64,
+          "frameMs": 2.17,
+          "state": "drawn",
+          "sites": 10,
+          "calls": 53,
+          "triangles": 46633
+        },
+        {
+          "halo": false,
+          "queued": false,
+          "split": false,
+          "gpuMs": 0.67,
+          "worstGpuMs": 1,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "parts": null,
+          "connMs": 0.5,
+          "frameMs": 1.98,
+          "state": "off",
+          "sites": 0,
+          "calls": 45,
+          "triangles": 46606
+        }
+      ]
+    },
+    {
+      "name": "low",
+      "summary": {
+        "name": "low",
+        "queuedOnMs": 0.5,
+        "queuedOffMs": 0.51,
+        "queuedHaloMs": -0.01,
+        "splitHaloMs": 0,
+        "splitCanvasOnMs": 0.51,
+        "splitCanvasOffMs": 0.51,
+        "unqueuedOnMs": 0.56,
+        "unqueuedOffMs": 0.52,
+        "connOnMs": 0.51,
+        "connOffMs": 0.48,
+        "frameOnMs": 1.99,
+        "frameOffMs": 1.97,
+        "sites": 0,
+        "parts": {
+          "canvas": 0.51,
+          "halo-gather": 0
+        }
+      },
+      "readings": [
+        {
+          "halo": true,
+          "queued": true,
+          "split": false,
+          "gpuMs": 0.5,
+          "worstGpuMs": 1.07,
+          "loadMs": 3.94,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "parts": null,
+          "connMs": 0.42,
+          "frameMs": 5.22,
+          "state": "idle",
+          "sites": 0,
+          "calls": 46,
+          "triangles": 46606
+        },
+        {
+          "halo": false,
+          "queued": true,
+          "split": false,
+          "gpuMs": 0.51,
+          "worstGpuMs": 1.1,
+          "loadMs": 3.96,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "parts": null,
+          "connMs": 0.43,
+          "frameMs": 5.4,
+          "state": "off",
+          "sites": 0,
+          "calls": 46,
+          "triangles": 46606
+        },
+        {
+          "halo": true,
+          "queued": true,
+          "split": true,
+          "gpuMs": 0.51,
+          "worstGpuMs": 1.16,
+          "loadMs": 3.95,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "parts": {
+            "canvas": {
+              "avgMs": 0.51,
+              "worstMs": 1.16,
+              "frames": 240
+            },
+            "halo-gather": {
+              "avgMs": 0,
+              "worstMs": 0,
+              "frames": 240
+            }
+          },
+          "connMs": 0.47,
+          "frameMs": 5.26,
+          "state": "idle",
+          "sites": 0,
+          "calls": 46,
+          "triangles": 46606
+        },
+        {
+          "halo": false,
+          "queued": true,
+          "split": true,
+          "gpuMs": 0.51,
+          "worstGpuMs": 1.1,
+          "loadMs": 3.93,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "parts": {
+            "canvas": {
+              "avgMs": 0.51,
+              "worstMs": 1.1,
+              "frames": 240
+            }
+          },
+          "connMs": 0.41,
+          "frameMs": 5.12,
+          "state": "off",
+          "sites": 0,
+          "calls": 46,
+          "triangles": 46606
+        },
+        {
+          "halo": true,
+          "queued": false,
+          "split": false,
+          "gpuMs": 0.56,
+          "worstGpuMs": 0.8,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "parts": null,
+          "connMs": 0.51,
+          "frameMs": 1.99,
+          "state": "idle",
+          "sites": 0,
+          "calls": 46,
+          "triangles": 46606
+        },
+        {
+          "halo": false,
+          "queued": false,
+          "split": false,
+          "gpuMs": 0.52,
+          "worstGpuMs": 0.91,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "parts": null,
+          "connMs": 0.48,
+          "frameMs": 1.97,
+          "state": "off",
+          "sites": 0,
+          "calls": 46,
+          "triangles": 46606
+        }
+      ]
+    },
+    {
+      "name": "survey",
+      "summary": {
+        "name": "survey",
+        "queuedOnMs": 0.27,
+        "queuedOffMs": 0.27,
+        "queuedHaloMs": 0,
+        "splitHaloMs": 0,
+        "splitCanvasOnMs": 0.27,
+        "splitCanvasOffMs": 0.27,
+        "unqueuedOnMs": 0.37,
+        "unqueuedOffMs": 0.32,
+        "connOnMs": 0.5,
+        "connOffMs": 0.5,
+        "frameOnMs": 2.05,
+        "frameOffMs": 2.1,
+        "sites": 0,
+        "parts": {
+          "canvas": 0.27,
+          "halo-gather": 0
+        }
+      },
+      "readings": [
+        {
+          "halo": true,
+          "queued": true,
+          "split": false,
+          "gpuMs": 0.27,
+          "worstGpuMs": 0.77,
+          "loadMs": 3.93,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "parts": null,
+          "connMs": 0.47,
+          "frameMs": 4.72,
+          "state": "idle",
+          "sites": 0,
+          "calls": 45,
+          "triangles": 46606
+        },
+        {
+          "halo": false,
+          "queued": true,
+          "split": false,
+          "gpuMs": 0.27,
+          "worstGpuMs": 0.84,
+          "loadMs": 3.92,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "parts": null,
+          "connMs": 0.42,
+          "frameMs": 4.96,
+          "state": "off",
+          "sites": 0,
+          "calls": 45,
+          "triangles": 46606
+        },
+        {
+          "halo": true,
+          "queued": true,
+          "split": true,
+          "gpuMs": 0.27,
+          "worstGpuMs": 0.86,
+          "loadMs": 3.93,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "parts": {
+            "canvas": {
+              "avgMs": 0.27,
+              "worstMs": 0.86,
+              "frames": 240
+            },
+            "halo-gather": {
+              "avgMs": 0,
+              "worstMs": 0,
+              "frames": 240
+            }
+          },
+          "connMs": 0.44,
+          "frameMs": 5.13,
+          "state": "idle",
+          "sites": 0,
+          "calls": 46,
+          "triangles": 46030
+        },
+        {
+          "halo": false,
+          "queued": true,
+          "split": true,
+          "gpuMs": 0.27,
+          "worstGpuMs": 0.42,
+          "loadMs": 3.98,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "parts": {
+            "canvas": {
+              "avgMs": 0.27,
+              "worstMs": 0.42,
+              "frames": 240
+            }
+          },
+          "connMs": 0.47,
+          "frameMs": 4.54,
+          "state": "off",
+          "sites": 0,
+          "calls": 46,
+          "triangles": 46030
+        },
+        {
+          "halo": true,
+          "queued": false,
+          "split": false,
+          "gpuMs": 0.37,
+          "worstGpuMs": 0.95,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "parts": null,
+          "connMs": 0.5,
+          "frameMs": 2.05,
+          "state": "idle",
+          "sites": 0,
+          "calls": 46,
+          "triangles": 46030
+        },
+        {
+          "halo": false,
+          "queued": false,
+          "split": false,
+          "gpuMs": 0.32,
+          "worstGpuMs": 0.77,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "parts": null,
+          "connMs": 0.5,
+          "frameMs": 2.1,
+          "state": "off",
+          "sites": 0,
+          "calls": 46,
+          "triangles": 46030
+        }
+      ]
+    }
+  ]
+}

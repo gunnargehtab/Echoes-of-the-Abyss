@@ -194,9 +194,12 @@ brightening ("Reading the Water").
 first), so a sub-pixel lamp keeps all its light, and then a separable Gaussian of σ = 1.69 ×
 the pixel ratio in that level's texels, with taps one texel apart out to at least 2.3σ. At
 ratio 1 that is the nine-tap kernel #1001 timed. The horizontal half reads the level above
-at each tap's 2 × 2 block, where linear filtering gives the block's mean, so the downsample
-takes no draw of its own. Only a tap past a level's edge reads differently, clamped to the
-edge of the level above rather than its own. Each level blurs the one before it, so the
+at this level's texel centres, one of its texels apart, so the downsample takes no draw of
+its own. Where the level above has twice this level's texels, each tap lands on the centre
+of a 2 × 2 block and linear filtering gives the block's mean; along an odd count, such as
+the 225 rows a 1440 × 900 frame's 1/4 level has, the taps drift up to a texel from the block
+centres, as a downsample drawn at that size samples too. Only a tap past a level's edge
+reads differently, clamped to the edge of the level above rather than its own. Each level blurs the one before it, so the
 three widths are about **3.4, 7.6 and 15.6 CSS px** at any pixel ratio, summed in the
 composite with weights **0.6, 0.3 and 0.1**. A halo's size is the chain's, not the lamp's,
 so a louder hull's halo reaches further rather than only brighter.

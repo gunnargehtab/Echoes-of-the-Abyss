@@ -427,10 +427,12 @@ export class LampHaloPass {
       this.marker?.('halo-spread');
       let from: Texture = source.texture;
       for (const [a, b] of this.levels) {
-        // The level above, read one of this level's texels apart: each tap
-        // lands on the centre of a 2 × 2 block of it, where linear filtering
-        // is the block's mean, so this draw is the downsample and the
-        // horizontal blur at once (SPEC, Spread). It used to be two.
+        // The level above, read at this level's texel centres one texel
+        // apart, which is where a separate downsample would have sampled it:
+        // so this draw is the downsample and the horizontal blur at once
+        // (SPEC, Spread). Where the level above has twice the texels, each tap
+        // is a 2 × 2 block's mean; along an odd count it drifts up to a texel.
+        // Its step is this level's texel, not the level above's.
         this.blur(renderer, camera, from, b, 1 / b.width, 0);
         this.blur(renderer, camera, b.texture, a, 0, 1 / a.height);
         from = a.texture;
@@ -592,7 +594,7 @@ export class LampHaloPass {
   }
 
   // Each draw's uniforms are set in place, never through a fresh object: this
-  // runs eight times a frame, and its CPU side is gate 6's line (#1001).
+  // runs seven times a frame, and its CPU side is gate 6's line (#1001).
   private drawFullscreen(
     renderer: WebGLRenderer,
     camera: Camera,

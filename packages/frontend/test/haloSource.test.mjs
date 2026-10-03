@@ -170,6 +170,24 @@ describe('lamp halo source: over real roster models', () => {
     );
   });
 
+  it('walks a model to find its lamp meshes once, not every frame', async () => {
+    const caisson = await instance({ unit: UnitKind.Caisson, faction: Faction.Bathyarch }, 0);
+    let walks = 0;
+    const walk = caisson.root.traverse.bind(caisson.root);
+    caisson.root.traverse = (visit) => {
+      walks++;
+      return walk(visit);
+    };
+    const first = gather([{ sig: 64, model: caisson }]).splats;
+    const second = gather([{ sig: 64, model: caisson }]).splats;
+    assert.equal(walks, 1, 'one walk over two gathers');
+    assert.deepEqual(
+      second.map((s) => [s.x, s.y, s.z, s.energy]),
+      first.map((s) => [s.x, s.y, s.z, s.energy]),
+      'and the same splats from it'
+    );
+  });
+
   it('reaches the cap and counts the rest', async () => {
     const models = await Promise.all(
       Array.from({ length: 40 }, (_, i) =>

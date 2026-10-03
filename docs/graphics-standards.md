@@ -557,14 +557,16 @@ entity draws a splat.
 - **GPU time.** The halo's cost is on − off `avgGpuMs`, read unpaced and queued on the
   named GPU, two runs each (`halo-cost.mjs`): **at most 0.40 ms at ratio 1 and 0.75 ms at
   1.5** at every station, and no station's conn frame over 1.2 ms at ratio 1 or 1.7 ms at
-  1.5. Queued, it reads 0.25–0.28 ms at ratio 1 and 0.54–0.58 ms at 1.5, and the conn frame
-  where it draws 0.53–0.64 and 0.98–1.27 ms ([issue-1001](screenshots/issue-1001/README.md),
-  "Queued").
+  1.5. Queued, it reads 0.24–0.27 ms at ratio 1 and 0.55–0.59 ms at 1.5, and the conn frame
+  where it draws 0.51–0.63 and 0.98–1.29 ms ([issue-1001](screenshots/issue-1001/README.md),
+  "Six chain draws").
   `route-cost.mjs` read 0.29 and 0.54 ms for its stand-in route, and its depth copy cost the
   same with a canvas stencil present.
 - **CPU time.** `avgConnMs`, the CPU side (the per-site cull, the sort to 1,024 and the
-  instance upload), rises by at most 0.2 ms at the fight station. **Not met yet:** it rose
-  0.21 and 0.24 ms at ratio 1 and 0.19 and 0.26 ms at 1.5.
+  instance upload), rises by at most 0.2 ms at the fight station. It rose 0.16 and 0.17 ms
+  at ratio 1 and 0.15 and 0.20 ms at 1.5, and 0.08–0.24 ms at the other cameras: met, with no
+  margin, since most of what is left is three's own cost of the pass's eight render calls.
+  The nine-draw chain rose 0.19–0.26 ms.
 - **Stations.** capture.mjs's four cameras on Ventfront and Sorrowgate, and the fight
   station of `stations.mjs` on Ventfront, at ratio 1 and 1.5.
 
