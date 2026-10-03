@@ -145,6 +145,49 @@ describe('lamp halo source: over real roster models', () => {
     );
   });
 
+  it('reads each lamp mesh live after finding it once: hidden, moved and shown again', async () => {
+    const caisson = await instance({ unit: UnitKind.Caisson, faction: Faction.Bathyarch }, 0);
+    const before = gather([{ sig: 64, model: caisson }]).splats;
+    assert.ok(before.length > 0);
+    // The second gather reads the meshes the first one found: a lamp mesh
+    // hidden since still drops its sites, and a moved model moves its splats.
+    const lamp = [];
+    caisson.root.traverse((child) => {
+      if (child instanceof Mesh && caisson.emissives.some((e) => e.material === child.material)) {
+        lamp.push(child);
+      }
+    });
+    lamp[0].visible = false;
+    const hidden = gather([{ sig: 64, model: caisson }]).splats;
+    assert.ok(hidden.length < before.length, 'the hidden mesh drew no site');
+    lamp[0].visible = true;
+    caisson.root.position.x += 10;
+    caisson.root.updateMatrixWorld(true);
+    const moved = gather([{ sig: 64, model: caisson }]).splats;
+    assert.equal(moved.length, before.length, 'shown again, every site is back');
+    moved.forEach((s, i) =>
+      assert.ok(Math.abs(s.x - before[i].x - 10) < 1e-9, 'moved with its model')
+    );
+  });
+
+  it('walks a model to find its lamp meshes once, not every frame', async () => {
+    const caisson = await instance({ unit: UnitKind.Caisson, faction: Faction.Bathyarch }, 0);
+    let walks = 0;
+    const walk = caisson.root.traverse.bind(caisson.root);
+    caisson.root.traverse = (visit) => {
+      walks++;
+      return walk(visit);
+    };
+    const first = gather([{ sig: 64, model: caisson }]).splats;
+    const second = gather([{ sig: 64, model: caisson }]).splats;
+    assert.equal(walks, 1, 'one walk over two gathers');
+    assert.deepEqual(
+      second.map((s) => [s.x, s.y, s.z, s.energy]),
+      first.map((s) => [s.x, s.y, s.z, s.energy]),
+      'and the same splats from it'
+    );
+  });
+
   it('reaches the cap and counts the rest', async () => {
     const models = await Promise.all(
       Array.from({ length: 40 }, (_, i) =>

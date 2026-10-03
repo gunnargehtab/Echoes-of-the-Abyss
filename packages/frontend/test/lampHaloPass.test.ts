@@ -1,6 +1,6 @@
 /**
  * The lamp halo's pass on the headless renderer — docs/graphics-standards.md
- * gate 6, "Lamp halo": +11 calls at any force size, 2 × sites + 10 triangles,
+ * gate 6, "Lamp halo": +8 calls at any force size, 2 × sites + 7 triangles,
  * 17.25 bytes per drawing-buffer pixel plus the 64 KiB instance buffer, one
  * depth copy, and nothing at all when no site is drawn or the view cannot
  * draw it. Counted from the stand-in's ledger, never timed.
@@ -8,7 +8,16 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { Color, PerspectiveCamera } from 'three';
+import {
+  Color,
+  PerspectiveCamera,
+  type Camera,
+  type Mesh,
+  type Scene,
+  type ShaderMaterial,
+  type Texture,
+  type WebGLRenderTarget,
+} from 'three';
 import { INSTANCE_BYTES, LampHaloPass, type HaloSplat } from '../src/game/lampHaloPass.ts';
 import { HeadlessWebGLRenderer } from './support/headless.ts';
 
@@ -63,7 +72,7 @@ describe('lamp halo pass: what gate 6 allocates', () => {
     }
   });
 
-  it('adds 11 calls and 2 × sites + 10 triangles, whatever the force size', () => {
+  it('adds 8 calls and 2 × sites + 7 triangles, whatever the force size', () => {
     for (const count of [1, 108, 1024]) {
       const gl = renderer(1440, 900);
       const pass = new LampHaloPass();
@@ -72,8 +81,8 @@ describe('lamp halo pass: what gate 6 allocates', () => {
       gl.info.reset();
       const passes = pass.render(gl.asRenderer(), camera, splats(count), 0, 0.0001, 1, 2);
       assert.deepEqual(passes, ['depth-copy', 'halo-source', 'halo-spread', 'halo-composite']);
-      assert.equal(gl.info.render.calls, 11, `${count} sites`);
-      assert.equal(gl.info.render.triangles, 2 * count + 10);
+      assert.equal(gl.info.render.calls, 8, `${count} sites`);
+      assert.equal(gl.info.render.triangles, 2 * count + 7);
       assert.equal(gl.context.blits - blits, 1, 'one depth copy, a listed pass and not a call');
       assert.equal(gl.frameTargets.at(-1), null, 'the composite draws onto the canvas');
       assert.equal(pass.sites, count);
@@ -161,7 +170,7 @@ describe('lamp halo pass: what the split timer reads (gpuTimer.ts)', () => {
       'one mark a listed pass, in order'
     );
     // What lands before each mark is the previous part's: the blit inside the
-    // depth copy's, the splat draw inside the source's, nine draws inside the
+    // depth copy's, the splat draw inside the source's, six draws inside the
     // spread's, and the composite after the last mark.
     assert.deepEqual(
       marks.map(({ calls, blits }) => [calls, blits]),
@@ -169,9 +178,96 @@ describe('lamp halo pass: what the split timer reads (gpuTimer.ts)', () => {
         [0, 0],
         [0, 1],
         [1, 1],
-        [10, 1],
+        [7, 1],
       ]
     );
-    assert.equal(gl.info.render.calls, 11);
+    assert.equal(gl.info.render.calls, 8);
+  });
+});
+
+describe('lamp halo pass: what each chain draw reads and writes', () => {
+  type Draw = {
+    target: WebGLRenderTarget | null;
+    source: Texture | null;
+    step: [number, number] | null;
+    levels: Texture[] | null;
+  };
+
+  /** Every render the pass makes, with the uniforms it drew with. */
+  function recorded(gl: HeadlessWebGLRenderer): Draw[] {
+    const draws: Draw[] = [];
+    const real = gl.render.bind(gl);
+    gl.render = (scene: Scene, eye: Camera) => {
+      const uniforms = ((scene.children[0] as Mesh).material as ShaderMaterial).uniforms;
+      draws.push({
+        target: gl.getRenderTarget(),
+        source: (uniforms.uSource?.value as Texture | undefined) ?? null,
+        step: uniforms.uStep ? [uniforms.uStep.value.x, uniforms.uStep.value.y] : null,
+        levels: uniforms.uLevel1
+          ? [uniforms.uLevel1.value, uniforms.uLevel2!.value, uniforms.uLevel3!.value]
+          : null,
+      });
+      real(scene, eye);
+    };
+    return draws;
+  }
+
+  it('blurs each level across from the level above, then down itself, and composites the three', () => {
+    for (const [w, h] of [
+      [1440, 900],
+      [2160, 1350],
+    ] as const) {
+      const gl = renderer(w, h);
+      const pass = new LampHaloPass();
+      pass.enable(gl.asRenderer());
+      const draws = recorded(gl);
+      pass.render(gl.asRenderer(), camera, splats(4), 0, 0, 1, 2);
+      assert.equal(draws.length, 8);
+      let above = draws[0]!.target!.texture;
+      for (const [k, d] of [2, 4, 8].entries()) {
+        const across = draws[1 + 2 * k]!;
+        const down = draws[2 + 2 * k]!;
+        const lw = Math.ceil(w / d);
+        const lh = Math.ceil(h / d);
+        // Across: the level above, stepped one of this level's texels, into
+        // the level's spare target; that step is what lands each tap on a
+        // block of the level above, so the downsample needs no draw.
+        assert.equal(across.source, above, `1/${d}: across reads the level above`);
+        assert.deepEqual([across.target!.width, across.target!.height], [lw, lh]);
+        assert.deepEqual(across.step, [1 / lw, 0]);
+        // Down: the spare target, into the level itself.
+        assert.equal(down.source, across.target!.texture, `1/${d}: down reads across`);
+        assert.notEqual(down.target, across.target);
+        assert.deepEqual([down.target!.width, down.target!.height], [lw, lh]);
+        assert.deepEqual(down.step, [0, 1 / lh]);
+        above = down.target!.texture;
+      }
+      const composite = draws[7]!;
+      assert.equal(composite.target, null, 'the composite draws onto the canvas');
+      assert.deepEqual(
+        composite.levels,
+        [2, 4, 6].map((i) => draws[i]!.target!.texture),
+        `${w}×${h}: the composite reads the three levels this frame drew`
+      );
+    }
+  });
+
+  it('reads the new levels after the drawing buffer changes size', () => {
+    const gl = renderer(1440, 900);
+    const pass = new LampHaloPass();
+    pass.enable(gl.asRenderer());
+    const draws = recorded(gl);
+    pass.render(gl.asRenderer(), camera, splats(4), 0, 0, 1, 2);
+    const before = draws[7]!.levels!;
+    gl.setSize(2160, 1350);
+    draws.length = 0;
+    pass.render(gl.asRenderer(), camera, splats(4), 0, 0, 1.5, 2);
+    const after = draws[7]!.levels!;
+    assert.deepEqual(
+      after,
+      [2, 4, 6].map((i) => draws[i]!.target!.texture),
+      'bound to the levels the resized frame drew'
+    );
+    after.forEach((t, i) => assert.notEqual(t, before[i], 'never a disposed level'));
   });
 });

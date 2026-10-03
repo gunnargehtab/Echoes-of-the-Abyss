@@ -540,13 +540,15 @@ entity draws a splat.
 
 - **Passes.** One blit of the canvas depth, depth bit only, into a drawing-buffer-sized
   DEPTH24_STENCIL8 depth texture, a listed pass and not a call; one instanced splat draw into
-  a drawing-buffer-sized RGBA16F source, tested against that copy; nine chain draws, a
-  downsample and two blur draws at each of 1/2, 1/4 and 1/8 of the drawing buffer, each level
-  an RGBA16F pair with no depth buffer; and one composite onto the canvas.
-- **Calls and triangles.** **+11 calls at any force size**, and 2 × sites + 10 triangles, with
-  at most 1,024 sites (2,058 triangles). Ventfront's opening would read 65–66 calls,
-  Sorrowgate 56–57 while any entity draws a splat and 45–46 otherwise, and the fight station
-  68. The halo neither causes nor fixes the berth-ceiling breach of
+  a drawing-buffer-sized RGBA16F source, tested against that copy; six chain draws, a
+  horizontal blur that downsamples the level above and a vertical blur at each of 1/2, 1/4
+  and 1/8 of the drawing buffer, each level an RGBA16F pair with no depth buffer; and one
+  composite onto the canvas.
+- **Calls and triangles.** **+8 calls at any force size**, and 2 × sites + 7 triangles, with
+  at most 1,024 sites (2,055 triangles). Ventfront's opening reads 62–63 calls, Sorrowgate 53
+  while any entity draws a splat and 45–46 otherwise, and the fight station 65. Until #1001
+  folded each downsample into its blur, the chain was nine draws and the halo +11 calls.
+  The halo neither causes nor fixes the berth-ceiling breach of
   [#1027](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1027).
 - **Memory.** 17.25 bytes per drawing-buffer pixel (source 8, depth texture 4, chain 5.25):
   **21.32 MiB at 1440 × 900 and ratio 1, and 47.97 MiB at 2160 × 1350 and ratio 1.5**, plus a
@@ -555,14 +557,17 @@ entity draws a splat.
 - **GPU time.** The halo's cost is on − off `avgGpuMs`, read unpaced and queued on the
   named GPU, two runs each (`halo-cost.mjs`): **at most 0.40 ms at ratio 1 and 0.75 ms at
   1.5** at every station, and no station's conn frame over 1.2 ms at ratio 1 or 1.7 ms at
-  1.5. Queued, it reads 0.25–0.28 ms at ratio 1 and 0.54–0.58 ms at 1.5, and the conn frame
-  where it draws 0.53–0.64 and 0.98–1.27 ms ([issue-1001](screenshots/issue-1001/README.md),
-  "Queued").
+  1.5. Queued, it reads 0.24–0.27 ms at ratio 1 and 0.54–0.59 ms at 1.5, and the conn frame
+  where it draws 0.51–0.63 and 0.98–1.29 ms ([issue-1001](screenshots/issue-1001/README.md),
+  "Six chain draws").
   `route-cost.mjs` read 0.29 and 0.54 ms for its stand-in route, and its depth copy cost the
   same with a canvas stencil present.
 - **CPU time.** `avgConnMs`, the CPU side (the per-site cull, the sort to 1,024 and the
-  instance upload), rises by at most 0.2 ms at the fight station. **Not met yet:** it rose
-  0.21 and 0.24 ms at ratio 1 and 0.19 and 0.26 ms at 1.5.
+  instance upload), rises by at most 0.2 ms at the fight station. It rose 0.16 and 0.17 ms
+  at ratio 1 and 0.15 and 0.20 ms at 1.5, and 0.08–0.24 ms at the other cameras where it
+  draws: met, with no margin, since most of what is left is three's own cost of the pass's
+  eight render calls.
+  The nine-draw chain rose 0.19–0.26 ms.
 - **Stations.** capture.mjs's four cameras on Ventfront and Sorrowgate, and the fight
   station of `stations.mjs` on Ventfront, at ratio 1 and 1.5.
 
