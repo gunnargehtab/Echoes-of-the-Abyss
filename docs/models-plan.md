@@ -59,11 +59,11 @@ composing `factions/<navy>.mjs` and `kit.mjs`, run to write
 port on −z (#642), every material citing its palette token through `hex()`. The
 `hull-intake` bake at that length, warning-free, and the kit's `lightAudit` clean. A `UNITS`
 row in `tools/hull-maps/models.mjs` — `slug`, `model`, `lengthM`, `sig` — then
-`node tools/hull-maps/build.mjs`, which writes the three maps into
-`packages/frontend/src/assets/hulls/maps/` and rewrites `hullOutlines.generated.ts`. The
-three imports and the `MAP_URL` entry in `hullMaps.ts`. The kind's entry deleted from
-`HAND_DRAWN_OUTLINE`, which the type makes a compile error to leave. `npm run check:models`
-green, which now covers the new script.
+`node tools/hull-maps/build.mjs <slug>` (no slug bakes every model), which writes the three
+maps into `packages/frontend/src/assets/hulls/maps/` and rewrites
+`hullOutlines.generated.ts`. The three imports and the `MAP_URL` entry in `hullMaps.ts`. The
+kind's entry deleted from `HAND_DRAWN_OUTLINE`, which the type makes a compile error to
+leave. `npm run check:models` green, which now covers the new script.
 
 **Already there.** The design length, the plate class, the roster slug and the block. None
 of these is Phase 4's to write, and the block is Phase 4's to *amend*: where the script has
