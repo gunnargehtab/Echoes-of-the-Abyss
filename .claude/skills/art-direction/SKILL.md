@@ -55,8 +55,9 @@ outputs. Any GLB change also goes through the separate hull-reviewer.
 Stop on the brief's written criteria, not on a beauty score. Report measured GPU work
 and the hardware that produced timings. The probe's conn and overlay milliseconds are CPU
 time and its frame time an interval. Its GPU milliseconds are a timer query over every pass
-of the conn view's frame, read on a GPU and refused on a software rasteriser
-([run-game](../run-game/SKILL.md) says how), so shading cost is a reading, not a guess.
+of the conn view's frame, read on a GPU, unpaced and queued, and refused on a software
+rasteriser ([run-game](../run-game/SKILL.md) says how), so shading cost is a reading, not
+a guess.
 Render-stack work is accepted on desktop (gate 6).
 
 ## Related

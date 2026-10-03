@@ -87,14 +87,14 @@ tools/render-stack #974's audit and camera pairs, kept runnable rather than
                    limits asserted, the probe's GPU time required on a GPU
                    and refused on a software rasteriser (#1001), HALO=on for
                    the lamp halo, and readings.json beside the frames; the
-                   run-game skill has
-                   the recipe. fog.mjs reads fully fogged seabed against the
-                   backdrop (#1016) and the edge left where the two grade
-                   different depths (#1023), lamps.mjs own hulls quiet and loud
-                   (gate 3), and halo.mjs what a lamp halo would work with:
-                   near-black share, lamp sizes and light against SIG, a
-                   ping's flash. route-cost.mjs times each halo route's own
-                   passes on a stand-in scene (#1001).
+                   run-game skill has the recipe. fog.mjs reads fully fogged
+                   seabed against the backdrop (#1016) and the edge left where
+                   the two grade different depths (#1023), lamps.mjs own hulls
+                   quiet and loud (gate 3), and halo.mjs what a lamp halo would
+                   work with: near-black share, lamp sizes and light against
+                   SIG, a ping's flash. route-cost.mjs times each halo route's
+                   own passes on a stand-in scene, and halo-cost.mjs the built
+                   halo off and on, queued as gate 6 reads it (#1001).
 tools/audio-meter  What the mix measures, rather than what it was meant to.
                    meter.mjs bundles the production audio classes, renders one
                    layer at a time through Chromium's OfflineAudioContext, and

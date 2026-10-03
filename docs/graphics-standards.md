@@ -487,20 +487,34 @@ adds **zero steady-state draw calls or triangles**. ACES and environment samplin
 in existing material shaders; the PMREM bake does spend one-time GPU work at mount.
 Retain one filtered environment target below **1 MiB** per view and release the source
 texture, generator scratch and target at their respective lifecycle boundaries.
-Report material cost on the named GPU: zero extra draws does not mean zero GPU time.
-That report is the conn view's GPU time over every pass of its frame (today the one canvas
-render), from a timer query (`EXT_disjoint_timer_query_webgl2`, which Edge exposes on the
-named GPU). It is read before and after the change at pixel ratio 1 and 1.5: at the close,
-home, low (12°) and survey cameras of `tools/render-stack/capture.mjs` on Ventfront and
-Sorrowgate, and at the fight station of `stations.mjs` on Ventfront. It is read with the
-frame unpaced, vsync and the frame-rate limit off (`UNPACED=1` in `drive.mjs`): paced at
-60 fps the named GPU idled at 139–405 MHz against 1,771 MHz unpaced, and Ventfront's home
-frame read 2.0 ms paced against 0.5 ms unpaced, and less at pixel ratio 1.5 than at 1
+Report material cost on the named GPU: zero extra draws does not mean zero GPU time. That
+report is the conn view's GPU time over every pass of its frame (the canvas render, and the
+lamp halo's passes while it draws), from a timer query (`EXT_disjoint_timer_query_webgl2`,
+which Edge exposes on the named GPU). It is read before and after the change at pixel ratio
+1 and 1.5: at the close, home, low (12°) and survey cameras of
+`tools/render-stack/capture.mjs` on Ventfront and Sorrowgate, and at the fight station of
+`stations.mjs` on Ventfront. It is read with the frame unpaced, vsync and the frame-rate
+limit off (`UNPACED=1` in `drive.mjs`): paced at 60 fps the named GPU idled at 139–405 MHz
+against 1,771 MHz unpaced, and Ventfront's home frame read 2.0 ms paced against 0.5 ms
+unpaced, and less at pixel ratio 1.5 than at 1
 ([issue-1001](screenshots/issue-1001/README.md)). A software rasteriser's time is no
 reading.
+It is read **queued**, behind a fixed GPU load the frame does not draw
+(`packages/frontend/src/game/gpuQueueLoad.ts`). A timer query counts from the GPU reaching
+its begin to reaching its end, waiting included, and unpaced the named GPU runs the conn
+frame faster than the browser's GPU process hands it over. In one bracket Ventfront's canvas
+pass read 0.46–0.61 ms and the lamp halo 0.83–1.71 ms more; queued, they read 0.26–0.39 and
+0.25–0.28 ms, and the halo's passes the same within 0.01 ms at every camera
+([issue-1001](screenshots/issue-1001/README.md), "Queued"). The load is none of the frame's
+calls, triangles, passes or GPU time, and it must outlast the frame's unqueued bracket to
+have queued it, which `capture.mjs` and `tools/render-stack/halo-cost.mjs` assert. The
+unqueued bracket is still reported beside it. What it adds is the handover, CPU time in the
+browser's GPU process that no line here bounds.
 `__perspectiveProbe` reports it as `avgGpuMs` and `worstGpuMs` in a development build,
 with `gpuTimer` saying why a reading is absent, and `pixelRatio` and `drawingBuffer`
 saying what was shaded ([#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001)).
+`__perspectiveGpuQueue(steps)` sets the load, and `gpuQueue` reports what it took.
+`__perspectiveGpuSplit(true)` times each pass in a query of its own as well, as `gpuParts`.
 
 Gate 3's lamp core is allocated nothing: no pass, draw call, triangle or render-target byte.
 A baked occlusion map ([art-direction.md](art-direction.md#bevels-and-baked-occlusion--spec)) is allocated no pass, call or
@@ -536,12 +550,16 @@ entity draws a splat.
   **21.32 MiB at 1440 × 900 and ratio 1, and 47.97 MiB at 2160 × 1350 and ratio 1.5**, plus a
   64 KiB instance buffer, capped at 21.4 and 48.1 MiB and counted from the live targets. The
   canvas's stencil is a context buffer, not a target: it is reported, not capped, on or off.
-- **GPU time.** The halo's cost is on − off `avgGpuMs`, read unpaced on the named GPU, two
-  runs each: **at most 0.40 ms at ratio 1 and 0.75 ms at 1.5** at every station, and no
-  station's conn frame over 1.2 ms at ratio 1 or 1.7 ms at 1.5. `avgConnMs`, the CPU side
-  (the per-site cull, the sort to 1,024 and the instance upload), rises by at most 0.2 ms at
-  the fight station. `route-cost.mjs` read 0.29 and 0.54 ms for its stand-in route, and its
-  depth copy cost the same with a canvas stencil present.
+- **GPU time.** The halo's cost is on − off `avgGpuMs`, read unpaced and queued on the
+  named GPU, two runs each (`halo-cost.mjs`): **at most 0.40 ms at ratio 1 and 0.75 ms at
+  1.5** at every station, and no station's conn frame over 1.2 ms at ratio 1 or 1.7 ms at
+  1.5. Queued, it reads 0.25–0.28 ms at ratio 1 and 0.54–0.58 ms at 1.5, and the conn frame
+  0.53–0.64 and 0.98–1.27 ms ([issue-1001](screenshots/issue-1001/README.md), "Queued").
+  `route-cost.mjs` read 0.29 and 0.54 ms for its stand-in route, and its depth copy cost the
+  same with a canvas stencil present.
+- **CPU time.** `avgConnMs`, the CPU side (the per-site cull, the sort to 1,024 and the
+  instance upload), rises by at most 0.2 ms at the fight station. **Not met yet:** it rose
+  0.21 and 0.24 ms at ratio 1 and 0.19 and 0.26 ms at 1.5.
 - **Stations.** capture.mjs's four cameras on Ventfront and Sorrowgate, and the fight
   station of `stations.mjs` on Ventfront, at ratio 1 and 1.5.
 

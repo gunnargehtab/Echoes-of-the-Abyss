@@ -16,6 +16,11 @@
  * context switch — makes every result in flight meaningless, and those are
  * dropped and counted rather than averaged.
  *
+ * Split, a development switch, times each pass in a query of its own as well:
+ * the frame is still the sum, and `parts` holds each pass's series. One
+ * bracket cannot say which pass a cost lands in, and #1001's halo raised the
+ * bracket by about four times what its own passes read on their own.
+ *
  * Development builds only: a shipped frame pays nothing for an instrument
  * nobody reads, and only a capture against the dev server reads this one.
  */
@@ -30,10 +35,10 @@ import { FrameCost } from './frameCost.ts';
 export const SOFTWARE_RASTERISER = /swiftshader|llvmpipe|software|basic render/i;
 
 /**
- * Queries in flight at once. Results come back in two to four frames on the
+ * Frames in flight at once. Results come back in two to four frames on the
  * named GPU, so eight leaves room for a slow frame; a frame that finds all
  * eight still waiting goes untimed, which `gpuFrames` falling behind
- * `stationFrames` makes visible.
+ * `stationFrames` makes visible. Unsplit, a frame is one query.
  */
 const IN_FLIGHT = 8;
 
@@ -71,19 +76,35 @@ export function rendererName(
   return String(gl.getParameter(debug === null ? gl.RENDERER : debug.UNMASKED_RENDERER_WEBGL));
 }
 
+/** A query ended and not yet read: whose, which pass, and whether it closed a frame. */
+interface Pending {
+  readonly query: WebGLQuery;
+  readonly station: number;
+  readonly part: string;
+  readonly last: boolean;
+}
+
 export class GpuTimer {
   readonly state: GpuTimerState;
   /** This station's frame GPU times, in milliseconds. */
   readonly cost = new FrameCost();
-  /** Results this station lost to a disjoint event. */
+  /** Each pass's GPU times while split, by the name its mark gave it. */
+  readonly parts = new Map<string, FrameCost>();
+  /** Frames this station lost to a disjoint event. */
   dropped = 0;
   private readonly gl: TimerContext | null;
   private readonly ext: TimerQueryExtension | null = null;
   private readonly idle: WebGLQuery[] = [];
-  private readonly pending: { query: WebGLQuery; station: number }[] = [];
+  private readonly pending: Pending[] = [];
   private open: WebGLQuery | null = null;
+  private openPart = '';
   /** Bumped at each station boundary, so a late result lands in its own. */
   private station = 0;
+  private splitting = false;
+  /** Frames whose last query is still pending: the in-flight bound. */
+  private framesInFlight = 0;
+  /** The frame being collected, its parts summed so far. */
+  private frameSum = 0;
 
   constructor(gl: TimerContext | null, enabled: boolean) {
     this.gl = gl;
@@ -99,24 +120,41 @@ export class GpuTimer {
     }
   }
 
-  /** Before the frame's first pass. */
-  begin(): void {
+  get split(): boolean {
+    return this.splitting;
+  }
+
+  /** The development switch: split or not, the series start over. A timer
+   * that reads nothing splits nothing. */
+  setSplit(on: boolean): void {
+    this.splitting = on && this.state === 'timing';
+    this.reset();
+  }
+
+  /** Before the frame's first pass, which `part` names while split. */
+  begin(part = 'frame'): void {
     const { gl, ext } = this;
     if (gl === null || ext === null || this.open !== null) return;
     this.collect(gl, ext);
-    const query = this.idle.pop() ?? (this.pending.length < IN_FLIGHT ? gl.createQuery() : null);
-    if (query === null) return;
-    gl.beginQuery(ext.TIME_ELAPSED_EXT, query);
-    this.open = query;
+    if (this.framesInFlight >= IN_FLIGHT) return;
+    this.start(gl, ext, part);
+  }
+
+  /** Between two passes: while split, the next pass's own query starts here.
+   * Unsplit, or in a frame that went untimed, it does nothing. */
+  mark(part: string): void {
+    const { gl, ext } = this;
+    if (!this.splitting || gl === null || ext === null || this.open === null) return;
+    this.finish(gl, ext, false);
+    this.start(gl, ext, part);
   }
 
   /** After the frame's last pass. */
   end(): void {
-    const { gl, ext, open } = this;
-    if (gl === null || ext === null || open === null) return;
-    gl.endQuery(ext.TIME_ELAPSED_EXT);
-    this.pending.push({ query: open, station: this.station });
-    this.open = null;
+    const { gl, ext } = this;
+    if (gl === null || ext === null || this.open === null) return;
+    this.finish(gl, ext, true);
+    this.framesInFlight++;
   }
 
   /** A station boundary: the series starts over, and results in flight go
@@ -124,6 +162,7 @@ export class GpuTimer {
   reset(): void {
     this.station++;
     this.cost.reset();
+    this.parts.clear();
     this.dropped = 0;
   }
 
@@ -135,24 +174,50 @@ export class GpuTimer {
     for (const { query } of this.pending) gl.deleteQuery(query);
     this.idle.length = 0;
     this.pending.length = 0;
+    this.framesInFlight = 0;
+  }
+
+  private start(gl: TimerContext, ext: TimerQueryExtension, part: string): void {
+    const query = this.idle.pop() ?? gl.createQuery();
+    gl.beginQuery(ext.TIME_ELAPSED_EXT, query);
+    this.open = query;
+    this.openPart = part;
+  }
+
+  private finish(gl: TimerContext, ext: TimerQueryExtension, last: boolean): void {
+    gl.endQuery(ext.TIME_ELAPSED_EXT);
+    this.pending.push({ query: this.open!, station: this.station, part: this.openPart, last });
+    this.open = null;
   }
 
   private collect(gl: TimerContext, ext: TimerQueryExtension): void {
     if (gl.getParameter(ext.GPU_DISJOINT_EXT) === true) {
-      for (const { query, station } of this.pending) {
-        if (station === this.station) this.dropped++;
+      for (const { query, station, last } of this.pending) {
+        if (last && station === this.station) this.dropped++;
         this.idle.push(query);
       }
       this.pending.length = 0;
+      this.framesInFlight = 0;
+      this.frameSum = 0;
       return;
     }
     while (this.pending.length > 0) {
-      const { query, station } = this.pending[0]!;
+      const { query, station, part, last } = this.pending[0]!;
       if (gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE) !== true) return;
-      const ns = gl.getQueryParameter(query, gl.QUERY_RESULT) as number;
+      const ms = (gl.getQueryParameter(query, gl.QUERY_RESULT) as number) / 1e6;
       this.pending.shift();
       this.idle.push(query);
-      if (station === this.station) this.cost.add(ns / 1e6);
+      const mine = station === this.station;
+      if (mine) this.frameSum += ms;
+      if (mine && this.splitting) {
+        let series = this.parts.get(part);
+        if (series === undefined) this.parts.set(part, (series = new FrameCost()));
+        series.add(ms);
+      }
+      if (!last) continue;
+      if (mine) this.cost.add(this.frameSum);
+      this.frameSum = 0;
+      this.framesInFlight--;
     }
   }
 }

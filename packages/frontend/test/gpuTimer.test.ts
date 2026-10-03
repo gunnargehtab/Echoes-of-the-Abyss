@@ -139,3 +139,84 @@ describe('gpu timer: what it reads', () => {
     assert.equal(gl.live, 0);
   });
 });
+
+/** One split frame: its first pass begins it, and each later pass marks. */
+function splitFrame(timer: GpuTimer, parts: readonly string[]): void {
+  timer.begin(parts[0]);
+  for (const part of parts.slice(1)) timer.mark(part);
+  timer.end();
+}
+
+const HALO_FRAME = ['canvas', 'depth-copy', 'halo-spread'] as const;
+
+describe('gpu timer: split', () => {
+  it('times each pass in a query of its own, and the frame is still their sum', () => {
+    // Latency 0: every query has landed by the next frame's begin.
+    const gl = context({ ns: 1_000_000, latency: 0 });
+    const timer = start(gl);
+    timer.setSplit(true);
+    for (let i = 0; i < 4; i++) splitFrame(timer, HALO_FRAME);
+    assert.equal(timer.cost.count, 3, 'three frames have landed');
+    assert.equal(timer.cost.avg, 3, 'a frame is its three passes summed');
+    assert.deepEqual([...timer.parts.keys()], [...HALO_FRAME]);
+    for (const [part, cost] of timer.parts) {
+      assert.equal(cost.count, 3, `${part}: one reading a frame`);
+      assert.equal(cost.avg, 1, `${part}: its own query's time`);
+    }
+  });
+
+  it('unsplit, a mark does nothing: one query a frame, and no parts', () => {
+    const gl = context({ ns: 1_000_000, latency: 0 });
+    const timer = start(gl);
+    for (let i = 0; i < 4; i++) splitFrame(timer, HALO_FRAME);
+    assert.equal(timer.cost.avg, 1, 'the frame is the one bracket');
+    assert.equal(timer.parts.size, 0);
+    assert.equal(gl.live, 1, 'one query, reused every frame');
+  });
+
+  it('bounds frames in flight, not queries', () => {
+    const gl = context({ ns: 1e6, latency: 60 });
+    const timer = start(gl);
+    timer.setSplit(true);
+    for (let i = 0; i < 30; i++) splitFrame(timer, HALO_FRAME);
+    assert.equal(gl.live, IN_FLIGHT * HALO_FRAME.length, 'eight frames of three queries');
+  });
+
+  it('voids every frame in flight across a disjoint event, a part-read one too', () => {
+    // Latency 7 queries, read at each begin: by the fifth frame's, the first
+    // frame has landed and the second is two passes read. The sixth frame's
+    // begin meets the event, with the second to fifth frames in flight.
+    const gl = context({ ns: 1_000_000, latency: 7 });
+    const timer = start(gl);
+    timer.setSplit(true);
+    for (let i = 0; i < 5; i++) splitFrame(timer, HALO_FRAME);
+    gl.disjoint = true;
+    splitFrame(timer, HALO_FRAME);
+    assert.equal(timer.dropped, 4, 'the second to fifth frames are void, once each');
+    assert.equal(timer.cost.count, 1);
+    for (let i = 0; i < 6; i++) splitFrame(timer, HALO_FRAME);
+    assert.ok(timer.cost.count > 1, 'readings resume after the event');
+    assert.equal(timer.cost.worst, 3, 'no part of a void frame is summed into a later one');
+  });
+
+  it('splits nothing where it reads nothing', () => {
+    for (const timer of [start(context(null)), start(context({ ns: 1e6, latency: 0 }), false)]) {
+      timer.setSplit(true);
+      assert.equal(timer.split, false, timer.state);
+    }
+  });
+
+  it('starts the series over when the split is switched', () => {
+    const gl = context({ ns: 1_000_000, latency: 0 });
+    const timer = start(gl);
+    for (let i = 0; i < 4; i++) splitFrame(timer, HALO_FRAME);
+    timer.setSplit(true);
+    assert.equal(timer.cost.count, 0, 'an unsplit frame is not averaged with split ones');
+    splitFrame(timer, HALO_FRAME);
+    splitFrame(timer, HALO_FRAME);
+    assert.equal(timer.cost.count, 1);
+    assert.equal(timer.cost.avg, 3);
+    timer.setSplit(false);
+    assert.equal(timer.parts.size, 0);
+  });
+});
