@@ -64,6 +64,21 @@
  *   decision for all four yards; docs/models-plan.md §3.2 rule 5; #890).
  *   `diff.mjs` lists the seven crosses, moved by that 8 m and nothing
  *   else.
+ *
+ * PANELS (#919). The median unlit part from above read 4.24 m on a side
+ * over fifty-four, a crystal spine, against the structures' band of
+ * 5.5–16 (docs/asset-prompts-3d.md Block 2c; hadron.mjs `ceramicSeams`,
+ * "Panels"): thirty-two parts under 30 m² — the spines, the posts, the
+ * finials, the trolleys and the lesser keel blocks — against twenty-two
+ * over, on two halls of 8,000 m² each whose backs were bare. Sixteen seams
+ * of alloy across the shadow halls, eight a hall (`slipwayHall`
+ * `panelSeams`), each 2.6 units wide standing 0.8 proud and laid on the
+ * blade under it, at x ±25 and ±75 between the spines: one from the
+ * slip-side edge to half a unit short of the crest and one from the crest
+ * to the outer edge. They show 32.5–35.8 m² each, so the median lands on a
+ * seam at 5.70 m over seventy; no part moved, no lamp's plan changed, and
+ * the footprint is what it was. 82 parts and 1,016 triangles become 98
+ * and 1,208.
  */
 import {
   THREE,
@@ -108,9 +123,23 @@ for (const index of [0, 1, 2])
 // The head gate: two alloy pyramids under a crystal lintel.
 slipwayHeadGate(root, crystal, { pylon: hadron.slipwayPylon(alloy) });
 
-// Two halls, the +z one first as the file writes it (starboard, `hall_s`).
+// Two halls, the +z one first as the file writes it (starboard, `hall_s`),
+// each with the panel pass's eight seams across its back (PANELS, the header).
 bothSides((tag, sgn) =>
-  hadron.slipwayHall(group(root, `hall_${tag}`), { shadow, alloy, crystal, seam }, { sgn })
+  hadron.slipwayHall(
+    group(root, `hall_${tag}`),
+    { shadow, alloy, crystal, seam },
+    {
+      sgn,
+      panelSeams: {
+        stations: [-75, -25, 25, 75],
+        w: 2.6,
+        h: 0.8,
+        inboard: [35.7, 49.0],
+        outboard: [59.0, 72.3],
+      },
+    }
+  )
 );
 
 fitFootprint(root, L);

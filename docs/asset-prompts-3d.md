@@ -738,7 +738,28 @@ stone; past it a ring is a wheel, and the Responsory's and the Antiphon's resona
 twenty-eight-faceted until the pass, were its first cut: twelve round now, the crystal ring
 inside the Responsory's ten. Panels run two to six metres: planes — a wing, a
 fin, a spar — and the seams "the Order builds nothing bare" adds, centred on the Clarion's
-3.9.
+3.9. The panel pass (#919, the eighth instalment) brought six of the seven Order models
+outside the bands inside them with the one division the Order has — "fine ceramic panelling
+over the whole hull, seams tight" (the Responsory's block): a straight seam of the finish the
+plate under it is not, pale alloy across a shadow deck or hall and shadow across a pale wing,
+0.4–0.5 m wide and 0.2 m proud on a hull, 2.6 m and 0.8 on the Slipway's halls, every one
+laid on the plate under its own station and every pair mirrored to the digit
+(`factions/hadron.mjs` `ceramicSeams`); and on the Sentinel Turret, whose flank is facets
+and not plates, the facets made to show, a plate of the dim alloy 10 by 6.5 m on each of the
+eight nothing stands before (`facetPlates`), since the turned twelve-gon mirrors on no axis
+and a mirrored few would lie on no facet. Forty-six seams and eight plates on six models:
+the Antiphon four across its deck and three across each guard wing, the Offertory three
+across its deck a side and two across each guard blade, the Reciter two along each wing, the
+Responsory three across each, the Slipway eight across each hall's back between its spines;
+2.6–12 m² each on a hull, 32–38 on a structure, no part moved, no lamp added or moved, no
+plan grown from above, and each script's header says where. The Versicle, the one Order hull
+under the band, takes none: nine parts, two of them at 4 m² or over, so a median at the floor
+needs six more at 4 m² each, and its crown outside the spine is 0.6–1.4 m wide a side and
+32 m² in all — one pair of panels on it reaches 4 m², six would plate three quarters of it,
+and a fitting past the crown's edge grows the plan the Offertory's cradles are cut to. It is
+left and recorded, on the owner's call, as the measure's own reading of a 22 m craft: the
+band is the median of a hull whose fittings are a tenth of its plan, and on a craft every
+fitting is.
 
 **What the rule costs.** Gate 6 ([graphics-standards.md](graphics-standards.md) §6) allows
 the conn view 250 k triangles on screen, the terrain heightfield and the own roster together,
@@ -758,8 +779,9 @@ pass (this rebuild had said 33.5 k and 32.8 k, and 26.6 k for the structures bef
 Refinery's rebuild), and 33.9 k and 35.9 k since its panel pass grew its seven models outside
 the bands 112 spines, a five-sided cone of ten triangles each but the Submersible's ten,
 four-sided and eight; Order hulls 9.9 k → 8.0 k
-and structures 15.8 k → 12.1 k, the Order's as built since its pass, where this rebuild had
-said 12.4 k before the pass cut its pipes, stacks and throat drums as hexagons; the fourteen
+and structures 15.8 k → 12.1 k, the Order's as built since its facet pass, where this rebuild
+had said 12.4 k before the pass cut its pipes, stacks and throat drums as hexagons, and 8.3 k
+and 12.4 k since its panel pass laid forty-four boxes of twelve triangles; the fourteen
 props, under no rule, 4.3 k. The own force
 the gate names, taken as a navy's eight structures, four more Turrets and its five largest
 hulls, comes to 48.2 k for the Consortium since its panel pass (42.1 k before it), 116.3 k for the
@@ -775,7 +797,8 @@ called 120.3 k at a ceiling of seventeen still over and came down to sixteen for
 this pass records its sample over the same mark for a person instead: the probe is the
 check, and whether a base so dressed may stand on screen is that person's call —
 67.3 k for the Directorate since its panel pass
-(66.3 k since its facet pass, 64.0 k before it) and 18.9 k for the Order, as built. That mix is one sample base and not a worst case —
+(66.3 k since its facet pass, 64.0 k before it) and 19.9 k for the Order since its panel
+pass (18.9 k before it). That mix is one sample base and not a worst case —
 nothing caps what a base builds, and a dozen Commune Slipways alone are 170 k — so the
 probe, not this rebuild, is the check. The Commune's ceiling is the number gate 6 moved: at
 twenty-four that dozen and five were 181.0 k, its eight structures alone 110.5 k; at
@@ -832,11 +855,15 @@ hulls at 1.6–2.6 m, the structures at 2.6–7.1; five Order hulls
 6.0–7.2 — the Responsory's block asks for fine ceramic panelling, so its 6.0, 6.4 until the
 facet pass thinned its rings, is a finding
 and not a doubt about the band, and the Reciter, at 6.1 m over eleven parts, is within one
-part of the edge) and three structures — every Bastion among them, and three of the four
-Foundries.
-The pass that applies the table — the second half of #919 — is what brings those to zero,
-one navy at a time, each under a `hull-reviewer` pass of its own; the table itself moves no
-GLB.
+part of the edge) and three structures (the Sentinel Turret at 4.5 m and the Slipway at 4.2
+under the band, and the Bastion over it, 15.9 since the facet pass re-cut its rings and its
+plinth), every one inside its band since the Order's panel pass but the Versicle — the four
+hulls at 3.2–4.3 m, the Turret at 6.1 and the Slipway at 5.7, the Versicle at 1.5 still and
+recorded (the Knights paragraph) — every Bastion among those structures, and three of the
+four Foundries.
+The pass that applied the table — the second half of #919 — is what brought those to the
+one, one navy at a time, each under a `hull-reviewer` pass of its own; the table itself
+moved no GLB.
 
 The environment props (Block 4) carry no rule: "nothing manufactured" is the whole of their
 law, a crag's drum is a table under its export's own jittered vertices, and a chord is a

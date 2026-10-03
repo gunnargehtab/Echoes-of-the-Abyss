@@ -95,6 +95,20 @@
  * already and is asked of it now. 42 parts and 2,244 triangles become 42
  * and 1,084; `diff.mjs responsory-hadron fc217cb` lists the five re-cut
  * parts and no movement.
+ *
+ * PANELS (#919). "Fine ceramic panelling over the whole hull, seams tight"
+ * is this hull's own block, and its median unlit part from above read
+ * 6.04 m on a side over twenty-two, a resonator ring, against the hulls'
+ * band of 2–6 (docs/asset-prompts-3d.md Block 2c; hadron.mjs
+ * `ceramicSeams`, "Panels"): the wings, 289 m² each, were the barest
+ * plates in the navy. Six seams of shadow across them, three a wing in
+ * mirrored pairs, each 0.5 m wide standing 0.2 proud and laid on the wing
+ * under it, athwart at x −38, −30 and −22 from clear of the body's
+ * shoulder to half a metre short of the leading edge or the edge strip.
+ * They show 2.6–6.6 m² each, so the median lands between the array lip
+ * and the drive prism at 4.12 m over twenty-eight; no part moved, no lamp's plan changed, and the
+ * outline is what it was. 42 parts and 1,084 triangles become 48 and
+ * 1,156.
  */
 import { THREE, bothSides, add, box, seat, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -157,6 +171,21 @@ hadron.panelSeams(root, alloy, { from: -26, to: 22, count: 4, halfBeam: 4.2 });
 bothSides((side, sgn) => {
   const laid = seat(root, 'blade_hull', [-16, 4.9, sgn * 3.4], { stand: 0.15 });
   add(root, `nav_mark_${side}`, box(1.6, 0.3, 0.5), seam, laid.at, laid.rot);
+});
+
+// Seams across the wings — the block's "fine ceramic panelling ... seams
+// tight" where the hull was barest (PANELS, the header): three a wing,
+// athwart, from clear of the body's shoulder to short of the edge strip.
+hadron.ceramicSeams(root, shadow, {
+  name: 'wing_seam',
+  on: ['wing_s', 'wing_p'],
+  w: 0.5,
+  h: 0.2,
+  pairs: [
+    ['0', [-38, 2.5], [-38, 15.7]],
+    ['1', [-30, 3.5], [-30, 14.6]],
+    ['2', [-22, 4.2], [-22, 9.5]],
+  ],
 });
 
 await exportGlb(root, 'responsory-hadron.glb');

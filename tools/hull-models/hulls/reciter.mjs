@@ -38,6 +38,20 @@
  * with the flat's fall toward the stern (`drive` `mark.on`, kit.mjs
  * `seat`), 1.1 m lower and showing from above. Same name, size and
  * material; `diff.mjs reciter-hadron` lists it and no other part.
+ *
+ * PANELS (#919). The median unlit part from above read 6.14 m on a side
+ * over eleven, the lance crystal, against the hulls' band of 2–6
+ * (docs/asset-prompts-3d.md Block 2c; hadron.mjs `ceramicSeams`, "Panels"),
+ * one part over the edge. Four seams of shadow across the pale wings, two
+ * a wing in a mirrored pair, each 0.5 units wide standing 0.2 proud and
+ * laid on the wing under it: chordwise at z 7 from x −33.9 to −18.5 and
+ * at z 10.5 from −39.5 to −25.5, clear of the trailing and leading edges
+ * by half a unit, of the edge strip and of the wing lamp. They show
+ * 6.5–7.1 m² each under the root's squeeze, so the median lands on the
+ * starboard wing's edge at 3.17 m over fifteen; no part moved, no lamp's plan
+ * changed, and the outline is what it was. 19 parts and 288 triangles
+ * become 23 and 336; `diff.mjs reciter-hadron` lists the four added and
+ * the seam above.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -189,5 +203,19 @@ hadron.drive(
     mark: { name: 'drive_seam', mat: seam, size: [2, 0.4, 0.8], x: -46, y: 1.8, on: 'blade_hull' },
   }
 );
+
+// Seams along the wings (PANELS, the header): two a wing, chordwise, from
+// short of the trailing edge to short of the leading edge, in the file's
+// units like everything above.
+hadron.ceramicSeams(root, shadow, {
+  name: 'wing_seam',
+  on: ['wing_s', 'wing_p'],
+  w: 0.5,
+  h: 0.2,
+  pairs: [
+    ['0', [-33.9, 7], [-18.5, 7]],
+    ['1', [-39.5, 10.5], [-25.5, 10.5]],
+  ],
+});
 
 await exportGlb(root, 'reciter-hadron.glb');

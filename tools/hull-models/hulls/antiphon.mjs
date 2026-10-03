@@ -119,6 +119,20 @@
  * keel line fore and aft. The bays' outboard corners stand half a metre
  * inside the crystal ring's flats, where they had a metre inside its
  * circle. 21 parts and 1,280 triangles become 21 and 576.
+ *
+ * PANELS (#919). The median unlit part from above read 6.98 m on a side
+ * over seventeen, a bay floor, against the hulls' band of 2–6
+ * (docs/asset-prompts-3d.md Block 2c; hadron.mjs `ceramicSeams`, "Panels"),
+ * and the deck and the guard wings were the barest things on the hull. Ten
+ * seams, each 0.4 m wide standing 0.2 proud and laid on the plate under
+ * it: four of alloy across the shadow deck — athwart at x 5, −5.5 and
+ * −16.5 inside the crystal ring and clear of the bays by a metre and a
+ * quarter, and one along the keel between the two after bays — and three
+ * of shadow across each pale wing, athwart at x −22, −28 and −34 from the
+ * spine or the body's flank to half a metre short of the edge strip. They
+ * show 3.5–12 m² each, so the median lands on the fore spine at 4.27 m
+ * over twenty-seven; no part moved, no lamp's plan changed, and the
+ * outline is what it was. 21 parts and 576 triangles become 31 and 696.
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -316,5 +330,29 @@ hadron.drive(
 // Two navigation marks on the deck's forward shoulders, outboard of the
 // ring — with the bow mark, the whole of the resting light.
 hadron.navMarkPair(root, seam, { x: 2, y: 3.75, z: 15.2 });
+
+// Seams across the deck and the guard wings (PANELS, the header): alloy
+// across the shadow deck inside the crystal ring and between the bays,
+// shadow across the pale wings athwart from the spine or the body to
+// short of the edge strip.
+hadron.ceramicSeams(root, alloy, {
+  name: 'deck_seam',
+  on: 'landing_deck',
+  singles: [
+    ['0', [5, -5.7], [5, 5.7]],
+    ['1', [-5.5, -12], [-5.5, 12]],
+    ['2', [-16.5, -6.5], [-16.5, 6.5]],
+    ['3', [-14, 0], [-7, 0]],
+  ],
+});
+hadron.ceramicSeams(root, shadow, {
+  name: 'wing_seam',
+  on: ['guard_wing_s', 'guard_wing_p'],
+  pairs: [
+    ['0', [-22, 7.4], [-22, 20.5]],
+    ['1', [-28, 3.0], [-28, 20.7]],
+    ['2', [-34, 3.0], [-34, 11.8]],
+  ],
+});
 
 await exportGlb(root, 'antiphon-hadron.glb');
