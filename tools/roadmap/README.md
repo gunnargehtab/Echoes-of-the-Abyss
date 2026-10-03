@@ -11,7 +11,7 @@ npm run test:roadmap
 
 ## What is on the page
 
-One page, written for a player rather than for the people building the game, in the
+The roadmap is one page, written for a player rather than for the people building the game, in the
 neon-noir register of `docs/style-neon-noir.md` under the Mouth lockup from `docs/naming.md`:
 
 - **The lockup**, with the sounding: every seven seconds a pulse descends the bands, the
@@ -61,9 +61,30 @@ first issue was filed to the day its last one closed, both read from the tracker
 with anything still open reads *since* that first day rather than inventing an end. The
 footer says when the first issue on the whole roadmap was filed.
 
+## The second page
+
+`render-stack.html` is the **Abyss Render Stack**: #974's graphics audit, as the owner
+published it on 27 Sep 2026. It says what draws the game, where the frame falls short of
+the concept art, and ranks eight upgrades by look per unit of work. The roadmap links it
+under the fleet and in the footer.
+
+It is a dated record, so `lib/renderStack.mjs` keeps the audit's words and readings as
+written, and adds three things:
+
+- **An as-of note** under the headline. It names the three findings the checkpoint
+  (`docs/screenshots/issue-974/README.md`) corrected, rather than editing them into the
+  audit.
+- **A live tag per upgrade.** `UPGRADES` names the issue or pull request that tracks each
+  rank, and the tag reads its state, so the page says what has landed since.
+- **Its frames as files.** The audit embedded three crops. `FRAMES` names the repository
+  files they were cut from, and the build copies those instead.
+
+The audit loaded Google Fonts. This page uses the self-hosted display face and system faces
+for the rest, so the site still makes no third-party request.
+
 ## Whose words these are
 
-Five sources, and the split is the design:
+Six sources, and the split is the design:
 
 - **`docs/ROADMAP.md` owns the structure.** Which phases exist, which issues sit in each,
   the status rows, the sprints. **Adding a row to a phase table is how you add an item to
@@ -88,6 +109,9 @@ Five sources, and the split is the design:
   (`portraitKind` in `lib/content.mjs`), copies those four frames as they are, and captions
   each from `tools/hull-renders/shots.mjs` — the table the renderer read — so the caption
   names the water the frame was shot in. A re-render changes the page with no edit here.
+- **`lib/renderStack.mjs` owns the second page.** It holds #974's audit as written, so an
+  edit there changes a dated record and should say so. Its frames come from where the
+  repository keeps them, and its upgrade tags from GitHub, like every other state.
 
 The parser (`lib/parse.mjs`) is small and strict on purpose: it reads exactly the shapes
 the doc already uses — `## Phase N — Title` headings with `[#123](url)` table rows, the one
@@ -117,6 +141,9 @@ Each thing on the page has one owner, and each owner has a check:
 | The navy portraits | `docs/concept-art/renders/<kind>-<navy>.png`, captioned from `tools/hull-renders/shots.mjs` | `pages.yml` rebuilds when a render or the shot table changes; the test fails if any navy's frame is missing |
 | The dive: depths, ping radii, the Drift | `lib/ocean.mjs`, transcribed from `docs/` | `test/ocean.test.mjs` reads `systems-depth.md`, `systems-echo.md`, `bestiary.md` and `glossary.md` back and fails on any moved number |
 | The roster sheet | `docs/concept-art/roster-sheet.png`, baked with the maps | `test/sheet.test.mjs` fails when a map has changed since the sheet was baked, by the hashes in `roster-sheet.json`; `pages.yml` rebuilds when it changes |
+| The render-stack audit | `lib/renderStack.mjs`, as written on 27 Sep 2026 | nothing, by design: it is a dated record, and the page says so under its headline |
+| Each upgrade's state | the GitHub API at build time, for the issue `UPGRADES` names | `pages.yml` rebuilds on issue events; `test/renderStack.test.mjs` fails if a card loses its tag |
+| The render-stack frames | `FRAMES`: Plate V, the Bathyarch Cruiser's portrait, #836's 12° Ventfront frame | `pages.yml` rebuilds when one changes; the test fails if any is missing |
 | The dates each phase ran | issue `created_at` / `closed_at`, at build time | nothing to drift — no date is typed anywhere, and a phase with open rows says *since* rather than guessing an end |
 | Open issues with no row | the GitHub API against the doc | the build log names them, and the page counts them; epics and `routine-log` ledgers are not counted, being containers and records rather than missing work. An issue under an epic that has a row counts as placed — the doc gives an epic one row, not one per sub-issue |
 | Closed work with no row | the same, for closed issues | the build log names them and "The road so far" counts them, so the record says how much it leaves out; duplicates and issues closed as not planned are not work done |
@@ -166,8 +193,9 @@ issues it links,
 the player-facing copy in `lib/content.mjs` (itself transcribed from the design docs), the
 mission and map counts, the dive's depths and the five species it draws (from
 `lib/ocean.mjs`, likewise transcribed), the roster contact sheet, one hull portrait per
-navy, a count of open issues not yet on the roadmap, the logo, and the display font. No source, no design bible, no
-internal notes. Worth re-reading before enabling, because that is the moment it becomes
+navy, a count of open issues not yet on the roadmap, the render-stack audit and its three
+frames, the logo, and the display font. No source, no design bible, and no internal notes
+but the one below. Worth re-reading before enabling, because that is the moment it becomes
 public.
 
 **The roster sheet is public on purpose** — decided, so it does not have to be re-argued
@@ -181,6 +209,11 @@ what a Bulwark looks like.
 **So are the four portraits**, by the owner's decision when they were added. They are the
 same approved models, rendered: the page ships four frames, one Cruiser per navy, and not the
 other sixteen renders beside them or the scene that made them.
+
+**So is the render-stack audit**, at the owner's request when it was added. It is the one
+page that names source files, line numbers and frame-budget readings: internal notes by
+this list's own measure, published by choice. It ships the audit and the three frames it
+was written around, Plate V among them, and nothing behind them.
 
 Gameplay footage and lore are for later; the page's footer says so, and the sections are
 laid out so they can take them.

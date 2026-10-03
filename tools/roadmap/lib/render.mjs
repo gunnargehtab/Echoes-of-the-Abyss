@@ -196,6 +196,7 @@ export function render({
   unplaced = 0,
   unrecorded = 0,
   portraits = {},
+  renderStackHref = null,
 }) {
   const all = roadmap.phases.flatMap((phase) => phase.items);
   const overall = progress(all, states);
@@ -287,6 +288,13 @@ export function render({
     ? `${content.footer.provenance} Last read ${escape(generatedAt)}.` +
       (began === null ? '' : ` The first issue on this roadmap was filed ${escape(began)}.`)
     : `This copy of the page was built without access to the issue tracker, so every item shows as unknown.`;
+
+  // The way to the second page, the render-stack audit, under the fleet it
+  // explains: how those hulls are drawn and what the frame still lacks.
+  const stackLine =
+    renderStackHref === null
+      ? ''
+      : `      <a class="ref-line" href="${escape(renderStackHref)}">${escape(content.renderStack.link)} →</a>`;
 
   // The whole fleet in one picture. Width and height are written into the
   // markup so the box is reserved before the bytes arrive; without a sheet
@@ -799,6 +807,7 @@ ${pillars}
 ${factions}
       </div>
 ${roster}
+${stackLine}
     </div>
   </section>
 
@@ -864,7 +873,7 @@ ${sprints}
     <div class="wrap">
       <p class="note">${escape(content.footer.note)}</p>
       <p class="${haveState ? 'stamp' : 'warn'}">${provenance}</p>
-      <p><a href="https://github.com/${repo}">The project on GitHub</a></p>
+      <p>${renderStackHref === null ? '' : `<a href="${escape(renderStackHref)}">${escape(content.renderStack.footer)}</a> · `}<a href="https://github.com/${repo}">The project on GitHub</a></p>
     </div>
   </footer>
 </main>

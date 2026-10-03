@@ -37,6 +37,7 @@ import { driftReport } from './lib/drift.mjs';
 import { fetchAllIssues, fetchIssueStates } from './lib/github.mjs';
 import { parseRoadmap } from './lib/parse.mjs';
 import { render } from './lib/render.mjs';
+import * as renderStack from './lib/renderStack.mjs';
 import { findPortraits } from './lib/portraits.mjs';
 import { findContactSheet, pngSize } from './lib/sheet.mjs';
 
@@ -148,6 +149,21 @@ if (portraits.missing.length > 0) {
 }
 for (const p of Object.values(portraits.found)) ASSETS.push({ from: p.path, to: p.href });
 
+// The second page: #974's render-stack audit. Its frames are files the
+// repository already owns, copied rather than embedded, and each ranked
+// upgrade's tag reads the state of the issue that tracks it. A state map of
+// its own, so nothing the roadmap counts or dates includes these issues.
+const frames = renderStack.findFrames(repoRoot);
+if (frames.missing.length > 0) {
+  console.error(`No render-stack frame at: ${frames.missing.join(', ')}`);
+}
+for (const f of Object.values(frames.found)) ASSETS.push({ from: f.path, to: f.href });
+const stackStates = await fetchIssueStates(
+  REPO,
+  renderStack.UPGRADES.map((u) => u.issue),
+  TOKEN
+);
+
 // The numbers on the stat tiles are counted from the repository rather than
 // typed in, so a new mission or map shows up without anyone editing the site.
 const counts = {
@@ -182,6 +198,14 @@ const html = render({
   unplaced: drift.unplaced.length,
   unrecorded: drift.unrecorded.length,
   portraits: portraits.found,
+  renderStackHref: renderStack.PAGE,
+});
+const stackHtml = renderStack.renderStackPage({
+  states: stackStates,
+  repo: REPO,
+  generatedAt,
+  fontHref: 'fonts/big-shoulders-display-latin.woff2',
+  frames: frames.found,
 });
 
 // Respect an absolute --out. Joining it to the repo root silently wrote the
@@ -189,7 +213,9 @@ const html = render({
 const target = isAbsolute(out) ? out : join(repoRoot, out);
 mkdirSync(join(target, 'fonts'), { recursive: true });
 mkdirSync(join(target, 'renders'), { recursive: true });
+mkdirSync(join(target, 'render-stack'), { recursive: true });
 writeFileSync(join(target, 'index.html'), html);
+writeFileSync(join(target, renderStack.PAGE), stackHtml);
 for (const asset of ASSETS) copyFileSync(asset.from, join(target, asset.to));
 // GitHub Pages runs Jekyll over the artifact unless told not to, and Jekyll
 // drops anything it considers a hidden or special path.
@@ -201,5 +227,7 @@ console.error(
     `${roadmap.sprints.length} sprints, ${drift.unplaced.length} open issues unplaced, ` +
     `${drift.unrecorded.length} closed issues unrecorded, ` +
     `roster sheet ${sheetFile === null ? 'missing' : 'baked'}, ` +
-    `${Object.keys(portraits.found).length} of ${content.factions.length} navy portraits.`
+    `${Object.keys(portraits.found).length} of ${content.factions.length} navy portraits, ` +
+    `render stack with ${Object.keys(frames.found).length} of ${renderStack.FRAMES.length} frames ` +
+    `and ${stackStates.size} of ${renderStack.UPGRADES.length} upgrade states.`
 );
