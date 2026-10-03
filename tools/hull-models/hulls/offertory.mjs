@@ -92,6 +92,20 @@
  * with room either way. At 1 px/m, the squint the carriers are judged at,
  * the deck is 45 px of the 120 and each cradle a dark dart 24 px long in a
  * pale frame. 21 parts, 1,076 triangles, bounds x ±60, y −5.1..5.3, z ±22.
+ *
+ * PANELS (#919). The median unlit part from above read 7.22 m on a side
+ * over sixteen, a cradle coaming, against the hulls' band of 2–6
+ * (docs/asset-prompts-3d.md Block 2c; hadron.mjs `ceramicSeams`, "Panels"),
+ * on a deck of 942 m² that was bare outside its cradles. Ten seams, each
+ * 0.4 m wide standing 0.2 proud and laid on the plate under it, in
+ * mirrored pairs: alloy across the shadow deck athwart at x 12 abaft the
+ * coamings and at 44 ahead of them, from clear of the fore spine to the
+ * deck's edge, and along the keel at z ±14.7 outboard of each coaming
+ * from x 16 to 40; shadow across each pale guard blade athwart at x 4 and
+ * 6.5, from the trailing edge to short of the edge strip. They show
+ * 3.3–12 m² each, so the median lands on a deck seam at 3.46 m over
+ * twenty-six; no part moved, no lamp's plan changed, and the outline is
+ * what it was. 21 parts and 1,076 triangles become 31 and 1,196.
  */
 import { THREE, exportGlb, metreTrue } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -280,5 +294,26 @@ hadron.drive(
 
 // Metre-true as drawn: 120 from the drive's base to the bow prism's point.
 metreTrue(root, L, { drawn: L });
+
+// Seams across the flight deck and the guard (PANELS, the header): alloy
+// across the shadow deck abaft and ahead of the coamings and along their
+// outboard side, shadow across the pale guard blades athwart.
+hadron.ceramicSeams(root, alloy, {
+  name: 'deck_seam',
+  on: 'flight_deck',
+  pairs: [
+    ['0', [12, 1.7], [12, 15.5]],
+    ['1', [44, 1.7], [44, 13.5]],
+    ['2', [16, 14.7], [40, 14.7]],
+  ],
+});
+hadron.ceramicSeams(root, shadow, {
+  name: 'wing_seam',
+  on: ['guard_wing_s', 'guard_wing_p'],
+  pairs: [
+    ['0', [4, 12.1], [4, 18.4]],
+    ['1', [6.5, 8.6], [6.5, 15.9]],
+  ],
+});
 
 await exportGlb(root, 'offertory-hadron.glb');

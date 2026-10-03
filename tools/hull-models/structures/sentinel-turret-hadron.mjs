@@ -72,6 +72,26 @@
  * 11.7204 where the export's was 11.7165, the scale ×10.239 where it was
  * ×10.242, and every part 0.03 % smaller — 4 cm on the 120 m. 27 parts and
  * 704 triangles become 27 and 708.
+ *
+ * PANELS (#919). The median unlit part from above read 4.48 m on a side
+ * over twenty, a skirt blade, against the structures' band of 5.5–16
+ * (docs/asset-prompts-3d.md Block 2c; hadron.mjs `facetPlates`, "Panels"),
+ * on a frustum of 2,006 m² whose flank is facets and not plates. So the
+ * facets are made to show — "mirror facets" (Block 2) — with a plate of
+ * the dim alloy on each: 10 m along the facet by 6.5 up its slope, 0.3
+ * proud, its long side level, seated on the facet it faces from y 8.7 to
+ * 14.3 of the 15.4 m flank — its foot 1.1–1.2 m clear of the fore marks
+ * and the after one on facet 6, its head a metre under the rim. The frustum is turned the file's eighth
+ * (FACETS above), so no facet has a mirror and the plates go on every one
+ * nothing stands before, eight of the twelve: not facets 3, 4 and 7, where
+ * an ammo pod or an aft mark stands on the flank, and not facet 8, which
+ * the starboard pod's after end reaches. Seven show 37.4–37.6 m² each
+ * and `mirror_plate_11`, under the rail, 21, so the median lands on a
+ * plate at 6.12 m over twenty-eight; the plates ring the flank under the
+ * collar and inside the base, so no part moved, no mark's plan changed,
+ * and the plan is what it was. 27 parts and 708 triangles become 35 and
+ * 804. A first cut yawed each plate the wrong way about its seat and six
+ * climbed their facets past the rim (hull-reviewer, round one).
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -175,6 +195,21 @@ hadron.magazine(root, steel, {
   pipe: { r: [0.12, 0.15], length: 2.1, at: [1.4, 1.5, -0.9], rot: [0.2, 0, 0.5] },
   pods: { r: 0.5, waist: 1, at: [2.3, 0.7, -1.2], rot: [Math.PI / 2, 0, 0.3] },
   cut,
+});
+
+// Mirror plates on the frustum's facets (PANELS, the header): one on each
+// of the twelve but the four a pod or an aft mark stands before, 10 by
+// 6.5 m of the dim alloy, seated on the facet it faces.
+hadron.facetPlates(root, dim, {
+  name: 'mirror_plate',
+  on: 'base_frustum',
+  size: [0.977, 0.635],
+  t: 0.03,
+  rho: 2.5,
+  y: 0.75 + 0.45,
+  stations: 12,
+  phase: Math.PI / 8,
+  holes: [3, 4, 7, 8],
 });
 
 metreTrue(root, L, { drawn: DRAWN });

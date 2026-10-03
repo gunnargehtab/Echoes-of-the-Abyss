@@ -287,7 +287,11 @@ export const ink = {
  * nothing bare" adds, two to six metres, centred on the Clarion's 3.9. A
  * structure's band is the hull's at the chart's ratio of densities, 4 to
  * 1.5 px/m, rounded to the half metre — a judgement, and Block 2c says what
- * it rests on.
+ * it rests on. The panel pass (#919, the eighth instalment) brought six of
+ * the seven models outside the bands inside them with seams across their
+ * barest plates and, on the Sentinel Turret, a plate on each clear facet
+ * of its frustum (`ceramicSeams`, `facetPlates`, "Panels" below); the
+ * Versicle stays under the floor, and its header says why.
  */
 export const facets = { chordM: 3, min: 4, max: 12, step: 2, sections: [4, 6] };
 export const panels = { hull: [2, 6], structure: [5.5, 16] };
@@ -1988,6 +1992,7 @@ export function slipwayHall(hall, { shadow, alloy, crystal, seam }, opts) {
     lip = { size: [320, 3, 8], y: 1.5, z: 27 },
     lipSeam = { size: [300, 0.4, 1], y: 3.1 },
     buttresses = { xs: [-110, -40, 30, 100], halfBase: 8, reach: 20, t: 6, y: -1, z: 78 },
+    panelSeams = null,
   } = opts;
   spar(hall, 'blade_hall', shadow, { ...blade, z: sgn * z });
   spar(hall, 'blade_crest', alloy, { ...crest, z: sgn * z });
@@ -2010,6 +2015,24 @@ export function slipwayHall(hall, { shadow, alloy, crystal, seam }, opts) {
     wedge.translate(0, buttresses.t / 2, 0);
     add(hall, `buttress_${i}`, wedge, alloy, [x, buttresses.y, sgn * buttresses.z]);
   });
+  // The panel pass's seams across the hall's back (#919; `ceramicSeams`,
+  // "Panels" below): at each x of `stations`, one alloy strip from the
+  // slip-side edge to short of the crest and one from the crest to the
+  // outer edge, `w` wide and `h` tall, each laid on the blade under it.
+  // Left out, the hall is the approved file's.
+  if (panelSeams) {
+    const { stations, w, h, inboard, outboard } = panelSeams;
+    ceramicSeams(hall, alloy, {
+      name: 'hall_seam',
+      on: 'blade_hall',
+      w,
+      h,
+      singles: stations.flatMap((x, i) => [
+        [`${i}_in`, [x, sgn * inboard[0]], [x, sgn * inboard[1]]],
+        [`${i}_out`, [x, sgn * outboard[0]], [x, sgn * outboard[1]]],
+      ]),
+    });
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -2976,6 +2999,96 @@ export function mawBlades(root, shadow, { frame = xLong, r, length, at: [x, y, z
   pair((tag, sgn) =>
     frame.part(root, `maw_blade_${tag}`, tooth, shadow, [-sgn * x, y, z], [Math.PI, 0, 0])
   );
+}
+
+/* --------------------------------------------------------------------------
+ * Panels (#919): the divisions the panel pass lays on a model whose median
+ * part from above lies outside its band (facets.mjs `panelsOf`; Block 2c,
+ * "Panels"). The measure counts unlit parts by their plan, so what moves a
+ * median is a division that shows — "a seam that reads in value or relief
+ * or a fitting that stands proud" — and the Order's is the seam: "fine
+ * ceramic panelling over the whole hull, seams tight, everything faired —
+ * the Order builds nothing bare" (the Responsory's block), the Clarion's
+ * own `panel_seam` parts and `panelSeams` above. A seam here is a strip of
+ * the finish the plate under it is not — pale alloy across a shadow-indigo
+ * deck or crown, shadow indigo across a pale-alloy wing — standing a little
+ * proud and laid on the plate under its own station (kit.mjs `seat`,
+ * `drop`), so a script hands over the two ends in plan and the plate settles
+ * the height and the lie. Every seam is straight, and a pair mirrors port to
+ * starboard to the digit, since this navy cannot draw a line unmirrored. On
+ * the one structure whose flank is facets and not plates — the Sentinel
+ * Turret's frustum — the division is the facet itself made to show: a plate
+ * of the dim alloy on each clear facet, "mirror facets" (Block 2), seated on
+ * the facet it faces (`facetPlates`). Nothing here is a coplanar split of
+ * one finish, which the chart cannot see, nothing is a lamp, and no part
+ * moves; each script's header says what its model took and where, and the
+ * Versicle's says why it took none.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Seams standing proud across a plate: each of `pairs` is `[tag, a, b]`,
+ * the starboard seam's two ends `[x, z]` in the root's frame, drawn as
+ * `<name>_<tag>_s` and, with z negated, `<name>_<tag>_p` (`bothSides`,
+ * starboard first); each of `singles` is one seam on its own, `<name>_<tag>`,
+ * for a strip that crosses the keel or lies along it. A seam is a box `w`
+ * wide and `h` tall, as long as its two ends are apart, turned to run from
+ * `a` to `b` and dropped onto the part `on` names under its midpoint
+ * (kit.mjs `seat`, `drop`), so it lies on the facet it lands on. Sizes are
+ * in the root's units, as `seat` takes them — metres on a hull drawn in
+ * metres, the file's units on a port the root scales.
+ */
+export function ceramicSeams(root, mat, opts) {
+  const { name = 'seam', on, w = 0.4, h = 0.2, pairs = [], singles = [] } = opts;
+  const lay = (label, [x1, z1], [x2, z2]) => {
+    const length = Math.hypot(x2 - x1, z2 - z1);
+    // A box's length runs along its own x; a yaw about +y of −atan2(dz, dx)
+    // turns that onto the line from a to b (right-handed, x toward −z).
+    const yaw = -Math.atan2(z2 - z1, x2 - x1);
+    const { at, rot } = seat(root, on, [(x1 + x2) / 2, 0, (z1 + z2) / 2], {
+      stand: h / 2,
+      drop: true,
+      yaw,
+    });
+    add(root, label, box(length, h, w), mat, at, rot);
+  };
+  for (const [tag, a, b] of pairs)
+    bothSides((side, sgn) =>
+      lay(`${name}_${tag}_${side}`, [a[0], sgn * a[1]], [b[0], sgn * b[1]])
+    );
+  for (const [tag, a, b] of singles) lay(`${name}_${tag}`, a, b);
+}
+
+/**
+ * Mirror plates on the facets of a frustum or a drum: `stations` facets of
+ * 2π/`stations` from `phase`, some left bare (`holes`), each a plate `w`
+ * along the facet and `s` up its slope, `t` proud, seeded `rho` out from
+ * `about` at height `y` on its own bearing and seated on the nearest skin
+ * of the part `on` names (kit.mjs `seat`), so a seed on a facet's centre
+ * bearing lands flat on that facet with its long side level — the plate is
+ * yawed a quarter turn past its bearing first, which puts its length on
+ * the tangent the seating turns about. Named `<name>_<first + k>` by
+ * station, so a hole leaves a gap in the numbering as the Directorate's
+ * `crown_spine_4` does. The Sentinel Turret's frustum is the one caller:
+ * twelve facets turned the file's eighth, which mirror no axis, so the
+ * plates go on every facet nothing stands in front of rather than on a
+ * mirrored few.
+ */
+export function facetPlates(root, mat, opts) {
+  const { name, on, size: [w, s], t, about = [0, 0], rho, y, stations, phase = 0 } = opts;
+  const { holes = [], first = 0 } = opts;
+  for (let k = 0; k < stations; k++) {
+    if (holes.includes(k)) continue;
+    const b = phase + (2 * Math.PI * k) / stations;
+    const seed = [about[0] + rho * Math.cos(b), y, about[1] + rho * Math.sin(b)];
+    // Sunk a tenth of its thickness: seated to the digit on a sloped facet,
+    // a plate's underside lands a few hundred nanometres off it, which the
+    // sweep reads as nothing meeting (contacts.mjs is exact).
+    // The tangent at bearing b, in seat's own turn: +x goes to (cos θ, 0, −sin θ)
+    // about +y, as ceramicSeams' yaw says, so the quarter turn past b is −(b + π/2).
+    const yaw = -(b + Math.PI / 2);
+    const { at, rot } = seat(root, on, seed, { stand: t / 2, sink: t / 10, yaw });
+    add(root, `${name}_${first + k}`, box(w, t, s), mat, at, rot);
+  }
 }
 
 export { THREE };
