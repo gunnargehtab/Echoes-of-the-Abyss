@@ -441,40 +441,53 @@ and its caps laid flat. No vertex moves: a vertex whose corners disagree
 is split, as the occlusion bake splits a chart's edge, so `diff.mjs` reads the file as
 unchanged and `check.mjs` compares the layout to 1/4,096 of the sheet.
 
-**The sheet is drawn, not painted, and carries luminance only.** `drawTrimSheet` rasterises
-the four bands from the navy's numbers — two plates a wrap with half a plate of stagger on
-alternate strakes, a seam at **0.45** of the plate's light over 1.5 texels with 6 of
-weathering beside it, a 0.08 patchwork between plates from an integer hash, a 0.015 grain —
-so it is reproduced wherever the script runs and compared texel by texel. It goes into the
-binary as one 8-bit PNG, named as the base-colour texture of every solid unlit material and
-of no lamp; GLTFLoader reads it as `map`, which three multiplies into the material's colour.
-That colour is the faction's ink, recoloured from the active palette at load
-(`rosterModels.ts`, gate 4), so hue is still the palette's and the sheet says only where a
-plate ends. It never reaches `emissive`, so gate 3 holds unaltered, and it adds no pass, call
-or triangle, so gates 6 and 8 are untouched. The sheet is held bright for the register the
-conn view puts a navy on (`CLADDING_CEILING`): the Consortium's reads a mean of **0.88** in
-linear light, so the Bulwark lands an eighth under it. Sorrowgate's triplanar surfaces
+**The sheet is the navy's, drawn not painted, and carries luminance only.** `drawTrimSheet`
+rasterises the four bands from the navy's numbers — two plates a wrap with half a plate of
+stagger on alternate strakes, a seam at **0.45** of the plate's light over 1.5 texels with 6
+of weathering beside it, a 0.08 patchwork between plates from an integer hash, a 0.015
+grain — so it is reproduced wherever the script runs and compared texel by texel. One sheet
+serves every model of its navy, so no GLB carries it: `tools/hull-models/sheets.mjs` draws
+each navy's table once into `packages/frontend/src/assets/trim/<navy>.png`, `check.mjs`
+holds that file to the draw, and a laid-out model carries only its UV0 and, on every solid
+unlit material and no lamp, the sheet's name in the material's `extras`. The conn view
+attaches the sheet to the tagged materials at load (`trimSheets.ts`, one texture a navy for
+the page's lifetime), as `map`, which three multiplies into the material's colour. That
+colour is the faction's ink, recoloured from the active palette at load (`rosterModels.ts`,
+gate 4), so hue is still the palette's and the sheet says only where a plate ends. It never
+reaches `emissive`, so gate 3 holds unaltered, and it adds no pass, call or triangle, so
+gates 6 and 8 are untouched. The sheet is held bright for the register the conn view puts a
+navy on (`CLADDING_CEILING`): the Consortium's reads a mean of **0.88** in linear light, so
+the Bulwark lands an eighth under it. Sorrowgate's triplanar surfaces
 ([visual-reboot.md](visual-reboot.md)) are kept: the laminate multiplies `diffuseColor`
 after three's `map_fragment`, so a Commune hull in the tutorial wears both, the sheet under
 the laminate, and `packages/frontend/test/trimSheet.test.ts` holds the chain.
 
-Unlike the occlusion map, the sheet reaches the chart: intake's albedo pass copies a
-material's base map into its unlit material, so the Bulwark's baked sprite carries the same
-luminance detail at 4 px/m, which is gate 4 applied — the bake takes the albedo's luminance
-and recolours it — and its height and emissive maps are byte for byte what they were.
+Embedding the sheet in each file was the first cut and the owner's call to reverse: 31 KB a
+model that gzip cannot shrink, 2.9 MB over the 94 models a sheet could reach, and a
+re-export of every model on a sheet whenever one of its numbers moved. Apart from the file,
+a navy's look is one PNG and one table, and a model's part of it is a layout and a name.
+
+Unlike the occlusion map, the sheet reaches the chart: the sprite bake hands intake's albedo
+pass the navy's sheet (`hull-intake` `bake.mjs --trim`, which `tools/hull-maps/build.mjs`
+passes for a model named for a navy with one), so the Bulwark's baked sprite carries the
+same luminance detail at 4 px/m, which is gate 4 applied — the bake takes the albedo's
+luminance and recolours it — and its height and emissive maps are byte for byte what they
+were. The lit table (`tools/hull-renders/inspect.mjs`) and the portraits show the bare file,
+since neither attaches a sheet yet.
 
 The first hull is the Bulwark, the owner's choice where the issue asked for one hull, taken
 in the open in the pull request's Options: the hull #540 opened with, a slab with three tiers
 and patchworked flank plates, riveted plate its brief, and the roster's most flat plate.
 Its 162 parts lay 2,116 faces flat and 436 unrolled — 2,076 on the one-strake band, 244 on
 two, 76 on four, 156 on eight — and split 80 vertices. `bulwark-bathyarch.glb` goes from
-324,608 to **362,892 bytes**: 31,159 the PNG, 2,560 the split vertices, and the rest the
-glTF JSON naming them; the
-library goes from 19,738,720 to **19,777,004 raw bytes** and from 2,564,136 to **2,598,926
-gzipped**. On the GPU three uploads the PNG as RGBA8 with mipmaps, 1.33 MiB a model at
-512², the same line gate 6 holds the occlusion map to. Which hull is laid next is a call per
-hull: a second Consortium script passes the same table, and another navy's plate starts in
-its own faction module.
+324,608 to **331,428 bytes**: 2,560 the split vertices and the rest the glTF JSON naming
+them and the tags; the library goes from 19,738,720 to **19,745,540 raw bytes** and from
+2,564,136 to **2,567,479 gzipped**. The Consortium's sheet is **31,159 bytes** once, in the
+client's assets, and on the GPU three uploads it as RGBA8 with mipmaps, 1.33 MiB a navy
+present at 512², the line gate 6 holds the occlusion map to per model. Which hull is laid
+next is a call per hull, and cheap: a second Consortium script passes the same table and
+re-exports itself alone; another navy's plate starts in its own faction module, as a table
+and a drawn sheet.
 
 #### Ranked audit and remaining work
 
@@ -491,7 +504,7 @@ composer. Its still is a lighting reference, not a runtime implementation to cop
 | 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | Both landed ("Bevels and baked occlusion — SPEC" above). Coverage measured: 30 of 190 extruded plates are bevelled, and plates are 3 % of 7,480 parts, so no primitive was added. The Knights' Bastion carries the first baked occlusion map, on its own UV set, read by the conn view alone, its silhouette unchanged; the next model is a call per model |
 | 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | Vignette and sway are built, with no pass ([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)). The split waits on a gate-6 allocation for its full-screen draw and copy. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
 | 5 | GLB gzip ([#1004](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1004)) | Built. The nginx image's `mime.types` names no `glb`, so `packages/frontend/nginx.conf` names the type in the models' own location and gzips them at level 6. Delivery cost, not frame quality |
-| 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | Landed on one hull ("UV layout and trim sheets — SPEC" above). 6,863 of 7,025 primitives carry UV0 and 13 carry `uvAlike`'s zeros, but attribute presence is not a layout: the Bulwark's 162 parts are laid out in metres by its script and carry the Consortium's sheet on four materials, luminance only, hue still the palette's. Sorrowgate's triplanar surfaces are kept under it; the next hull is a call per hull |
+| 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | Landed on one hull ("UV layout and trim sheets — SPEC" above). 6,863 of 7,025 primitives carry UV0 and 13 carry `uvAlike`'s zeros, but attribute presence is not a layout: the Bulwark's 162 parts are laid out in metres by its script, and four materials are tagged for the Consortium's sheet, one PNG a navy attached at load, luminance only, hue still the palette's. Sorrowgate's triplanar surfaces are kept under it; the next hull is a call per hull |
 | 7 | Shallow caustics ([#1006](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1006)) | Decided: none. The sunlit layer is the milky Lid, which scatters rather than focuses, and the water ramp already carries what light reaches the Shelf ("Shallow caustics — SPEC" above). Nothing to build |
 | 8 | WebGPU/TSL ([#1007](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1007)) | Defer migration until a separate feasibility decision. Water, survey, surface and sway shader patches depend on the current WebGL pipeline; this is not a renderer-constructor swap |
 

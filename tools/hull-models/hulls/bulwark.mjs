@@ -60,10 +60,11 @@
  * TRIM (#1005). The first hull laid out on a trim sheet: `exportGlb`'s
  * `trim` takes the Klaxon's plate (factions/bathyarch.mjs `TRIM`) and
  * trim.mjs lays every part's UV0 in metres at export — 2,116 faces flat,
- * 436 unrolled, 80 vertices split, no triangle moved — and embeds the
- * sheet as the base-colour map of the four claddings and no lamp. Nothing
- * here changed for it but the export line: the layout is the kit's
- * (docs/art-direction.md "UV layout and trim sheets — SPEC").
+ * 436 unrolled, 80 vertices split, no triangle moved — and tags the four
+ * claddings, and no lamp, for the Consortium's sheet, which the client
+ * attaches at load. Nothing here changed for it but the export line: the
+ * layout is the kit's (docs/art-direction.md "UV layout and trim sheets —
+ * SPEC").
  *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.

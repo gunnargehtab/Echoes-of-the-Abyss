@@ -76,10 +76,11 @@ example; do not install another rendering stack.
 - **UV0 is not a layout, unless a script laid one.** A map reads the UV set its texture's
   `channel` names: `uv`, then `uv1`, so `uv2` is the third. `aoMap` darkens indirect light
   only. `uvAlike` writes zeros; a script that opts into a trim sheet has
-  `tools/hull-models/trim.mjs` lay every part's UV0 in metres and embeds one grey
-  base-colour map, which multiplies the recoloured ink and never reaches `emissive`
-  (#1005, the Bulwark first). `node tools/render-stack/audit.mjs` counts what the library
-  carries.
+  `tools/hull-models/trim.mjs` lay every part's UV0 in metres and tag each solid unlit
+  material for its navy's sheet, one grey PNG a navy in `src/assets/trim/` that
+  `trimSheets.ts` attaches as `map` at load, multiplying the recoloured ink and never
+  reaching `emissive` (#1005, the Bulwark first). `node tools/render-stack/audit.mjs`
+  counts what the library carries.
 
 ## Prove the surface
 

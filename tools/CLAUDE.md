@@ -24,7 +24,8 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    model file that is neither an env- prop nor named
                    -<navy>.glb (#888); CI runs it in the build job. It reads
                    uv1 and the occlusion map a script bakes (#1002), UV0 and the
-                   trim sheet one lays (trim.mjs, #1005; images.mjs embeds both).
+                   trim tag one lays (trim.mjs, #1005), and holds each navy's
+                   sheet, drawn once by sheets.mjs into the client, to its draw.
                    diff.mjs answers the one thing check.mjs cannot —
                    what a port changed about a shape — by reading the pre-port
                    binary out of git history, since after a port the committed

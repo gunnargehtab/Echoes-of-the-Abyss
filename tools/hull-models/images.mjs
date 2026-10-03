@@ -1,8 +1,11 @@
 /**
  * The images a model carries, into and out of the binary GLTFExporter
- * wrote: the occlusion map (#1002) and the trim sheet (#1005).
+ * wrote: the occlusion map (#1002) today, one slot a kind. The trim sheet
+ * (#1005) is not among them — it is the navy's, attached at load — and the
+ * `baseColorTexture` slot below is the door it would come through if one
+ * ever had to be a model's own.
  *
- *   const glb = embedImages(exported, [occlusionImage(ao), trimImage(sheet, names)]);
+ *   const glb = embedImages(exported, [occlusionImage(ao)]);
  *   const bare = stripImages(glb);
  *
  * GLTFExporter cannot write an image in Node (kit.mjs, the header), so a

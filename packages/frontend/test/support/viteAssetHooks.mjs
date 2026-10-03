@@ -40,8 +40,12 @@ const ASSET =
  * The two `import.meta` extensions, assigned from inside the module — the only
  * place `import.meta` is writable.
  *
- * `glob` returns nothing, so no roster or environment model is ever offered and
- * every hull draws as its vector shape.
+ * `glob` returns nothing for a model, so no roster or environment model is ever
+ * offered and every hull draws as its vector shape. A `.png` glob is listed off
+ * the disk instead, as Vite's `?url` glob would (`eager` gives the string, else
+ * a function to a promise of it), so the navies' trim sheets are offered and a
+ * test can hold which material takes one (#1005). Node 22.3's
+ * `process.getBuiltinModule` is what lets a prelude read a directory.
  *
  * `env` is a live view of `process.env`, restricted to the `VITE_` prefix Vite
  * itself exposes. A plain empty object would only ever reproduce one of the
@@ -53,7 +57,22 @@ const ASSET =
  * two calls, which is the only way to reach all three from one module instance.
  */
 const META_SHIM =
-  'import.meta.glob ??= () => ({});' +
+  'import.meta.glob ??= (pattern, opts) => {' +
+  '  if (!/\\.png$/.test(pattern)) return {};' +
+  '  const fs = process.getBuiltinModule("node:fs");' +
+  '  const path = process.getBuiltinModule("node:path");' +
+  '  const { fileURLToPath, pathToFileURL } = process.getBuiltinModule("node:url");' +
+  '  const rel = path.posix.dirname(pattern);' +
+  '  const dir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), rel);' +
+  '  const out = {};' +
+  '  if (!fs.existsSync(dir)) return out;' +
+  '  for (const f of fs.readdirSync(dir).sort()) {' +
+  '    if (!f.endsWith(".png")) continue;' +
+  '    const url = pathToFileURL(path.join(dir, f)).href;' +
+  '    out[rel + "/" + f] = opts && opts.eager ? url : () => Promise.resolve(url);' +
+  '  }' +
+  '  return out;' +
+  '};' +
   'import.meta.env ??= new Proxy({}, {' +
   '  get: (_t, key) => (typeof key === "string" && key.startsWith("VITE_")' +
   '    ? process.env[key]' +
