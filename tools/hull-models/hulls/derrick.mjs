@@ -41,8 +41,9 @@
  *   0.41 m past the eave at z 13.5. #893 stood the hood on the deck with
  *   its top blade under the eave of a wall that showed 3.5 m; #907 raised
  *   the house 5.5 m and left the hood at the deck, and #933 raised it the
- *   same 5.5 m, so it hangs under the eave again with 5.5 m of bare wall
- *   under its foot (the option taken in #933's pull request). The form is
+ *   same 5.5 m, so it hangs under the eave again with its foot 5.5 m over
+ *   the deck and 3.6 m of bare wall under the hood (the option taken in
+ *   #933's pull request). The form is
  *   the Caisson's and the Gantry's `exhaustLouvres`, slats over a well,
  *   stood against a wall. From above each blade shows its half-metre step
  *   past the one over it, so the chart reads one lit band 2.4 m wide down

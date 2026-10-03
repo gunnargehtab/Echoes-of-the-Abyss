@@ -492,8 +492,9 @@ export function propTunnels(root, { grey, rust }, { x, z, r, cut: rule = METRE }
  * A riveted machinery house: louvred sides, a lit roof grating, and a stack
  * lit at the throat.
  *
- * The louvred side is a raked hood: a well of hull black leaning from the
- * deck up to the wall (`louvre_well_s/p`), and `louvres.count` blades
+ * The louvred side is a raked hood: a well of hull black leaning from its
+ * foot line — the deck, unless `foot` is given — up to the wall
+ * (`louvre_well_s/p`), and `louvres.count` blades
  * stepped down its face, each `blade[1]` wide and `blade[0]` thick running
  * the house's length, canted up `tilt` radians — its outer edge the high
  * one — with its inner edge in the well. Blade `i` stands at `y + i ·
