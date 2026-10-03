@@ -631,6 +631,9 @@ export function GameCanvas({
         perspective.setReducedMotion(settings.reducedMotion);
         perspective.setVeilIntensity(settings.acousticVeil);
         perspective.setWaterDensity(settings.waterDensity);
+        // The lamp halo's toggle (art-direction.md "Lamp halo — SPEC"): the
+        // view runs its capability check on the way on and may refuse.
+        perspective.setLampHalos(settings.lampHalos);
         activeRenderer.setEdgeScroll(settings.edgeScroll);
         activeRenderer.setUiScale(settings.uiScale);
         setUiScale(settings.uiScale);

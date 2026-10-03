@@ -135,6 +135,7 @@ import { GpuTimer } from './gpuTimer.ts';
 import { lampScreen } from './lampScreen.ts';
 import { LampHaloPass, type HaloSplat } from './lampHaloPass.ts';
 import { LAMP_HALO } from './lampHalo.ts';
+import { publishLampHaloStatus } from './lampHaloStatus.ts';
 import { gatherHaloSplats } from './haloSource.ts';
 import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 import { FaunaStipple } from './faunaStipple.ts';
@@ -596,6 +597,7 @@ export class PerspectiveView {
     if (!this.halo.on) return;
     this.halo.disable();
     this.markLamps(false);
+    publishLampHaloStatus(this.halo.state);
   };
   private readonly onContextRestored = (): void => {
     if (this.renderer === null) return;
@@ -2519,6 +2521,9 @@ export class PerspectiveView {
       this.halo.disable();
       this.markLamps(false);
     }
+    // Settings reads the outcome here, not the choice: a refused display
+    // keeps the choice and says "Not available on this display" (SPEC).
+    publishLampHaloStatus(this.halo.state);
   }
 
   /** Every own lamp clone marks its pixels in the canvas stencil while the

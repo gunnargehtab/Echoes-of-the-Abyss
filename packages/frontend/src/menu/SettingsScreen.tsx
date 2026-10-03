@@ -14,9 +14,14 @@
  * mid-match — same screen, either door, one store.
  */
 
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { CONTACT_BOOST_MAX_DB } from '../audio/engine.ts';
 import { PALETTE_LABEL, PALETTE_NAMES, type PaletteName } from '../game/palette.ts';
+import {
+  lampHaloStatus,
+  lampHaloUnavailableReason,
+  subscribeLampHaloStatus,
+} from '../game/lampHaloStatus.ts';
 import {
   loadSettings,
   saveSettings,
@@ -58,6 +63,11 @@ const PALETTE_NOTE: Record<PaletteName, string> = {
 
 export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
+  // What the water is showing, against what the player chose: the view
+  // refuses the halo on a display that fails its capability check and keeps
+  // the choice, and this screen is where the SPEC has it say so.
+  const haloState = useSyncExternalStore(subscribeLampHaloStatus, lampHaloStatus, lampHaloStatus);
+  const haloUnavailable = lampHaloUnavailableReason(haloState);
 
   const patch = (change: Partial<Omit<Settings, 'version'>>) => {
     setSettings(saveSettings(change));
@@ -261,6 +271,21 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
             <span className="menu-toggle-note">
               The scope sweep, the exposure flash and the crush badge go still — each replaced by a
               mark carrying the same thing it said.
+            </span>
+          </label>
+
+          <label className="menu-toggle-row">
+            <input
+              type="checkbox"
+              checked={settings.lampHalos}
+              onChange={(event) => patch({ lampHalos: event.target.checked })}
+            />
+            <span className="menu-toggle-label">Lamp halos</span>
+            <span className="menu-toggle-note">
+              {haloUnavailable !== null && settings.lampHalos
+                ? `Not available on this display: ${haloUnavailable}. Your choice is kept.`
+                : 'The soft light a loud lamp of yours spreads into the water, a second reading of ' +
+                  'how loud you are. Off, the lamp and the collar still say it all.'}
             </span>
           </label>
 

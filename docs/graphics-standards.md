@@ -497,8 +497,8 @@ Nor are the vignette and the sway
 ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)): the browser
 composites the one, and the other moves a camera the frame already draws through.
 
-**Lamp halo** ([art-direction.md](art-direction.md#lamp-halo--spec), built and off: a
-development switch turns it on until its setting lands). With Lamp halos off it spends no pass, call, triangle or target. The one cost it
+**Lamp halo** ([art-direction.md](art-direction.md#lamp-halo--spec), built and off: the
+Lamp halos toggle in Settings turns it on, and a development switch for captures). With Lamp halos off it spends no pass, call, triangle or target. The one cost it
 keeps is the canvas's stencil, which the canvas always asks for so the setting stays live
 mid-match: a context buffer, likely no extra memory on ANGLE/D3D11, where the 24-bit depth
 is stored with a stencil either way, and up to 1 byte per sample elsewhere. On, it runs

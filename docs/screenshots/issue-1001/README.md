@@ -205,8 +205,8 @@ spread between runs, and its depth check is identical.
 ## The halo, built and off
 
 The lamp halo ([art-direction.md](../../art-direction.md), "Lamp halo — SPEC") is built and
-switched off; a development switch turns it on until its setting lands. `HALO=on` turns it
-on for `tools/render-stack/capture.mjs`. `halo-built/` holds a Ventfront capture each way at
+switched off; the Lamp halos toggle in Settings turns it on, and a development switch for
+captures. `HALO=on` turns it on for `tools/render-stack/capture.mjs`. `halo-built/` holds a Ventfront capture each way at
 ratio 1 and 1.5 on the named GPU, unpaced, and paced home and close frames off and on.
 
 | Camera | Ratio | Calls, off → on | Triangles, off → on | Sites | Frame GPU ms, off → on | Frame interval ms, off → on |

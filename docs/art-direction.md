@@ -90,8 +90,8 @@ experiment, not the production reference.
 #### Lamp halo — SPEC
 
 *Built for [#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001) and
-switched off.* Until the Lamp halos setting lands, only a development switch turns it on,
-and it turns on by default only after its reading on the named GPU
+switched off.* The Lamp halos toggle in Settings turns it on for a player, and a development
+switch for captures; it turns on by default only after its reading on the named GPU
 ([graphics-standards.md](graphics-standards.md) gate 6) and the owner's approval of its
 frames.
 
@@ -250,7 +250,7 @@ stations:
 - **Cost.** It spends only what gate 6 allocates.
 
 **Off, and when it is unavailable.** "Lamp halos" is a toggle in Settings
-([ui-ux.md](ui-ux.md) §14, once it lands). Off, no halo pass runs and no halo target is
+([ui-ux.md](ui-ux.md) §14). Off, no halo pass runs and no halo target is
 held, so the frame is the canvas pass alone. Reduced motion keeps the halo, because its
 flare is a change of state and the state is the message. The halo turns itself off for a
 view only when that view fails its capability check, run when the halo turns on and after a
