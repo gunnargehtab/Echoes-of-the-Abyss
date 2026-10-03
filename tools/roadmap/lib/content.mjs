@@ -128,6 +128,16 @@ export const roster = {
   caption: 'Re-baked whenever the art changes — the current roster, not a mock-up.',
 };
 
+/**
+ * The link to the site's second page, the Abyss Render Stack (lib/renderStack.mjs):
+ * #974's graphics audit. It sits under the fleet because it says how that
+ * fleet is drawn, and again in the footer.
+ */
+export const renderStack = {
+  link: 'How the frame is drawn, and what it still lacks',
+  footer: 'The Abyss Render Stack',
+};
+
 /** What exists and runs today. Counts are filled in at build time. */
 export const playable = [
   {

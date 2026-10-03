@@ -155,15 +155,15 @@ tools/prose-budget How long a GitHub body is, in the words a person reads —
                    the PR body workflow runs, advisory there and --strict
                    locally. Tested under npm test.
 tools/roadmap      docs/ROADMAP.md rendered against live GitHub issue state, for
-                   GitHub Pages. build.mjs parses the doc rather than keeping a
-                   second copy of it, so the doc owns the phases and the
-                   reasoning and GitHub owns whether each issue is open: adding a
-                   row to a phase table is how you add an item to the site.
-                   Dependency-free on purpose, so the page cannot fail to build
-                   on something in node_modules, and without a token it still
-                   builds with every state reading "unknown". npm run test:roadmap
-                   is its suite. Published by .github/workflows/pages.yml, not by
-                   ci.yml — see the root CLAUDE.md's CI section.
+                   GitHub Pages, and beside it lib/renderStack.mjs's page: #974's
+                   dated render-stack audit, each upgrade tagged with live state.
+                   build.mjs parses the doc rather than copying it, so the doc
+                   owns the phases and GitHub owns whether each issue is open:
+                   adding a row to a phase table is how you add an item.
+                   Dependency-free, so the site cannot fail to build on
+                   node_modules; without a token every state reads "unknown".
+                   npm run test:roadmap is its suite. Published by
+                   .github/workflows/pages.yml, not ci.yml (root CLAUDE.md, CI).
 tools/balance      Headless matches, telemetry, and a verdict against every
                    guard-rail the design bible names. run.mjs is a launcher only:
                    the harness is packages/backend/src/balance/, because it
