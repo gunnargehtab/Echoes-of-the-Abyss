@@ -437,6 +437,90 @@ export function cable(root, name, a, b, mat, { r = 0.15, sag = 0, steps = 8, fac
 }
 
 /**
+ * A pipe run along a polyline with mitred joints: `facets` round at radius
+ * `r`, one straight run between each pair of `points`, and at each inner
+ * point the ring on the plane that bisects the bend — the incoming run's
+ * section extruded onto it, which the outgoing run takes as its start — so
+ * the pipe keeps its section round the corner the way a cut-and-welded
+ * pipe does, where a torus arc of two segments would bend at its own angle
+ * and not the surface's (#1011: the Knights' Bastion conduits, pipe laid
+ * over a faceted dome, which bends where the dome does). `down` orients
+ * the section: the direction a flat faces, one vector for the whole run
+ * or one a run, so a pipe laid on a surface lies on a flat with its
+ * apothem `r · cos(π / facets)` off its centreline — the stand-off a
+ * caller seats it by — rather than balanced on an edge. `caps` closes both
+ * ends with a fan.
+ *
+ * A bend is taken as planar — `down` on each side of it in the plane the
+ * two runs span, as a pipe following a facet ridge has it — and the two
+ * extrusions onto the mitre plane then agree to the vertex; a skew bend
+ * draws the joint from its incoming side and twists the run after it.
+ * Flat-shaded and non-indexed (`faceted`). A run of `n` points on `f`
+ * facets is `2f(n − 1)` triangles, plus `2f` for the caps.
+ */
+export function mitredTube(points, r, { facets = 6, down = [0, -1, 0], caps = true } = {}) {
+  if (points.length < 2) throw new Error('mitredTube: a run needs two points');
+  const P = points.map((p) => new THREE.Vector3(...p));
+  const runs = P.length - 1;
+  const downs = Array.isArray(down[0]) ? down : Array.from({ length: runs }, () => down);
+  if (downs.length !== runs) throw new Error(`mitredTube: ${downs.length} downs for ${runs} runs`);
+  // Each run's frame: `d` along it, `e2` the facing (up, away from `down`)
+  // squared to it, `e1` across, right-handed so θ turns anticlockwise about
+  // `d` and a quad's winding faces out.
+  const frames = [];
+  for (let i = 0; i < runs; i++) {
+    const d = P[i + 1].clone().sub(P[i]).normalize();
+    const up = new THREE.Vector3(...downs[i]).negate();
+    const e2 = up.sub(d.clone().multiplyScalar(up.dot(d))).normalize();
+    if (e2.lengthSq() < 0.5) throw new Error(`mitredTube: run ${i} is along its own down`);
+    frames.push({ d, e1: e2.clone().cross(d), e2 });
+  }
+  // A flat faces `down`: the facet centred on θ = 3π/2 in the (e1, e2) plane.
+  const theta0 = (3 * Math.PI) / 2 - Math.PI / facets;
+  const section = ({ e1, e2 }) =>
+    Array.from({ length: facets }, (_, k) => {
+      const th = theta0 + (2 * Math.PI * k) / facets;
+      return e1
+        .clone()
+        .multiplyScalar(r * Math.cos(th))
+        .addScaledVector(e2, r * Math.sin(th));
+    });
+  const rings = [];
+  rings.push(section(frames[0]).map((v) => v.add(P[0])));
+  for (let i = 1; i < runs; i++) {
+    const m = frames[i - 1].d.clone().add(frames[i].d).normalize();
+    const along = frames[i - 1].d;
+    rings.push(
+      section(frames[i - 1]).map((v) => {
+        const s = -v.dot(m) / along.dot(m);
+        return v.add(P[i]).addScaledVector(along, s);
+      })
+    );
+  }
+  rings.push(section(frames[runs - 1]).map((v) => v.add(P[runs])));
+  const table = rings.flat().map((v) => v.toArray());
+  const tris = [];
+  const at = (ring, k) => ring * facets + (k % facets);
+  for (let i = 0; i < runs; i++)
+    for (let k = 0; k < facets; k++) {
+      tris.push([at(i, k), at(i, k + 1), at(i + 1, k + 1)]);
+      tris.push([at(i, k), at(i + 1, k + 1), at(i + 1, k)]);
+    }
+  if (caps) {
+    const c0 = table.push(P[0].toArray()) - 1;
+    const c1 = table.push(P[runs].toArray()) - 1;
+    for (let k = 0; k < facets; k++) {
+      tris.push([c0, at(0, k + 1), at(0, k)]);
+      tris.push([c1, at(runs, k), at(runs, k + 1)]);
+    }
+  }
+  // UV0 so the run merges with the constructor-built parts under its
+  // material (`uvAlike` above); intake warns on a material whose parts
+  // carry different attributes.
+  return uvAlike(faceted(table, tris));
+}
+
+/**
  * A louvre bank that reads from above: `count` slats running along X, each
  * `length` by `slat` wide, stepped across Z at `pitch` and tilted `tilt`
  * radians about their own axis, so every slat presents `slat·cos(tilt)` of

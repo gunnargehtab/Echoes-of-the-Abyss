@@ -57,6 +57,7 @@ import {
   zLong,
   xLong,
   seat,
+  mitredTube,
 } from '../kit.mjs';
 import { facetsFor, orbFacets } from '../facets.mjs';
 
@@ -2128,8 +2129,10 @@ export function cage(root, alloy, { r, length, at, lean }) {
  * tube `t`, `radial` facets round the tube and `tubular` along the arc,
  * starting on the ring's +x and turning toward its +y — three's own `arc`.
  * The Bastion's eight reinforcement ribs are one of these (0.52π, past the
- * equator by a facet, four-sided) and so are its four conduits (0.9 rad). Kit `torus` draws only the full ring; a partial one is
- * faction-neutral and is a kit candidate.
+ * equator by a facet, four-sided); its four conduits were, 0.9 rad each,
+ * until #1011 laid them on the dome's facets (`conduits`). Kit `torus`
+ * draws only the full ring; a partial one is faction-neutral and is a kit
+ * candidate.
  */
 export const arc = (r, t, radial, tubular, angle) =>
   new THREE.TorusGeometry(r, t, radial, tubular, angle);
@@ -2386,44 +2389,93 @@ export function dockingCollar(root, { alloy, shadow, crystal: lit }, opts) {
 }
 
 /**
- * The conduits — "external pipework" — four arcs (`arc` above) of a circle
- * of `r` about the dome's `at`, laid over the dome's crown (6.1
- * to 7.0 up on a dome that tops at 7.4) and pressed to its `scale`: `fore_r`
- * at the XYZ Euler (0, `lean`, `lean`), yawed and rolled by the one angle
- * (π/2 − 0.55 on the file), which drapes it from 2.5 out at −z to 1.4 out at
- * +z on the +x side; `aft_r` with the yaw negated, its z-mirror — so `fore`
- * is toward −z and `aft` toward +z, the file's names on an X-long file; and
- * each `_l` its `_r` mirrored across the export's x with the tube's
- * section turned over with it — two reflections, so a proper rotation and
- * not a node scale of −1 — which the file decomposes as (±π, yaw, roll − π),
- * the half turn carrying the yaw's sign, and which is written so, since the
- * matrix is the same to the sixteenth place either way and parts.mjs then
- * reads it back line for line. `fore` before `aft`,
- * `_r` before `_l`; each conduit its own buffer.
+ * The conduits — "external pipework" — four pipes of `t` laid down the
+ * dome's facets (#1011): one run drawn in the vertical plane on the bearing
+ * `azimuth` (radians from +x toward +z), from `from` out to `to` out in
+ * plan, over the facets of the part named `on`, and the same buffer yawed
+ * to four bearings — `fore_r` on `azimuth`, `aft_r` on its z-mirror, each
+ * `_l` on its `_r`'s x-mirror (`pair`), so `fore` is toward −z for a
+ * negative azimuth, as the Bastion's names have it. `fore` before `aft`,
+ * `_r` before `_l`; each conduit its own buffer, as the file had them.
  *
- * Both counts are the rule's unless passed (`cut`, #919): the tube's at `t`
- * — six at the Bastion's 2.95 m, where the file had five — and the run's
- * share of `angle` at `r + t`, two at 113 m over 0.9 rad where the file had
- * fourteen. A conduit is pipe over a faceted dome, and it bends where the
- * rule bends a ring that size.
+ * The run bends where the dome does. Each end station is seated on the
+ * facet under it (kit `seat` `drop`), the centreline is laid `h` off that
+ * facet along its own slope, and the bend is where the two offset lines
+ * meet, over the ridge between the facets (kit `mitredTube`, which cuts
+ * the joint on the bisecting plane); `h` is the hexagon's apothem
+ * `t · cos(π / radial)` less `sink`, so the pipe lies on a flat sunk `sink`
+ * into the skin and every other corner stands proud. Both ends must land
+ * on different facets — a run on one facet has no bend and is refused —
+ * and the bearing must be a facet's mid-line, where the facet normals lie
+ * in the run's plane; one that is not is refused rather than laid askew.
+ * The tube's count is the rule's at `t` (`cut`, #919), six at the
+ * Bastion's 2.95 m; its count along is the two facets it lies on, which is
+ * the two #919 gave the arc it replaced.
+ *
+ * On the Bastion (`azimuth` −π/4, `from` 1.0, `to` 4.9, `sink` 0.03, 21 m
+ * a unit): the cap facet under 1.0 out is at y 7.154 and slopes 14.9°,
+ * the second band's under 4.9 out at y 4.697 slopes 45.4°, and the
+ * centreline runs (ρ 1.023, y 7.242) → (3.050, 6.703) → (4.965, 4.761),
+ * 44.1 m and then 57.4 m with a 30.5° bend 0.095 over the ring-1 ridge
+ * (mid-edge ρ 3.002, y 6.621), `h` 1.92 m and the flat 0.63 m under the
+ * skin. The top end's crown is at 7.36 under the pole's 7.42, 0.6 clear of
+ * the lantern crystal (ρ 0.4 at that height on the bearing) and 0.57
+ * across from the nearest prong; the bottom end stops 0.17 short of
+ * ring 2's mid-edge (ρ 5.136). The ribs at ±20°, ±60°, ±120° and ±160° are
+ * 15° off the nearest run, and the sweep (contacts.mjs) lists each conduit
+ * against the dome alone. The arcs this replaced — 0.9 rad of a circle of
+ * 5.4 about (0, 1.6, 0), draped across the crown — lay 4.5 to 13.4 m
+ * under the facets at every corner, crossed one another over the pole and
+ * ran through the lantern.
  */
 export function conduits(root, steel, opts) {
-  const { r, t, angle, lean, at, scale, cut: rule = METRE } = opts;
-  const major = Math.max(...(scale ?? [1]));
-  const { radial = rule.round(t), tubular = rule.round((r + t) * major, angle) } = opts;
-  for (const [name, yaw] of [
-    ['fore', lean],
-    ['aft', -lean],
+  const { on, t, azimuth, from, to, sink = 0, cut: rule = METRE } = opts;
+  const { radial = rule.round(t) } = opts;
+  // The pipe lies on a flat, so its centreline stands an apothem off the
+  // skin, less the sink.
+  const h = t * Math.cos(Math.PI / radial) - sink;
+  // The run's plane through the axis: ρ out along `azimuth`, y up, w across.
+  const u = [Math.cos(azimuth), 0, Math.sin(azimuth)];
+  const w = [-Math.sin(azimuth), 0, Math.cos(azimuth)];
+  const inPlane = (v) => [v[0] * u[0] + v[2] * u[2], v[1], v[0] * w[0] + v[2] * w[2]];
+  // The facet under each end station, and its normal (kit `seat` `drop`).
+  const ends = [from, to].map((rho) => {
+    const { at, normal } = seat(root, on, [rho * u[0], 0, rho * u[2]], { drop: true });
+    const [pr, py, pw] = inPlane(at);
+    const [nr, ny, nw] = inPlane(normal);
+    if (Math.abs(nw) > 1e-6 || Math.abs(pw) > 1e-6)
+      throw new Error(`conduits: the facet under ${rho} out is not square to the run's plane`);
+    // The centreline over this facet: `h` off it, running down its slope.
+    return { q: [pr + nr * h, py + ny * h], d: [ny, -nr], down: [-nr, -ny, 0] };
+  });
+  const [a, c] = ends;
+  const cross = (p, q) => p[0] * q[1] - p[1] * q[0];
+  const turn = cross(a.d, c.d);
+  if (Math.abs(turn) < 1e-9)
+    throw new Error('conduits: both ends lie on one facet; a conduit bends where the dome does');
+  const s = cross([c.q[0] - a.q[0], c.q[1] - a.q[1]], c.d) / turn;
+  const b = [a.q[0] + s * a.d[0], a.q[1] + s * a.d[1]];
+  const run = [
+    [a.q[0], a.q[1], 0],
+    [b[0], b[1], 0],
+    [c.q[0], c.q[1], 0],
+  ];
+  // Each node yaws the one run to its bearing: `fore_r` to `azimuth`, `aft_r`
+  // to its z-mirror, each `_l` to its `_r`'s x-mirror. A yaw of φ about y
+  // carries +x to the bearing −φ.
+  const wrap = (rad) => Math.atan2(Math.sin(rad), Math.cos(rad));
+  for (const [name, bearing] of [
+    ['fore', azimuth],
+    ['aft', -azimuth],
   ])
     pair((tag, sgn) =>
       add(
         root,
         `conduit_${name}_${tag}`,
-        arc(r, t, radial, tubular, angle),
+        mitredTube(run, t, { facets: radial, down: [a.down, c.down] }),
         steel,
-        at,
-        sgn < 0 ? [0, yaw, lean] : [Math.sign(yaw) * Math.PI, yaw, lean - Math.PI],
-        scale
+        [0, 0, 0],
+        [0, wrap(sgn < 0 ? -bearing : bearing - Math.PI), 0]
       )
     );
 }

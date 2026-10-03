@@ -81,9 +81,9 @@
  * - the ribs are pressed to 0.92 on their own y, which after the quarter
  *   turn is the world's x-z, so a rib is a quarter-ellipse 5.41 out by 6.05
  *   up against a dome 5.99 out by 5.51 up (`hadron.reinforceRibs`);
- * - the `_l` conduits are the `_r` mirrored with the tube's section turned
+ * - the `_l` conduits were the `_r` mirrored with the tube's section turned
  *   over — proper rotations, written as parts.mjs decomposes them, (±π,
- *   yaw, roll − π) (`hadron.conduits`);
+ *   yaw, roll − π) — until CONDUITS, below, re-laid all four;
  * - the two lamps burn at 2.000036651280468 and 2.6000523589720967, the
  *   file's floats, not the 2 and 2.6 they plainly started as (#639 review,
  *   N1);
@@ -139,7 +139,8 @@
  * - each dock's throat, lip and mouth twelve, where they were eight
  *   (`hadron.dockingCollar`);
  * - each conduit two along its 0.9 rad on a tube of six, where it was
- *   fourteen on five;
+ *   fourteen on five (the two along are the two facets it lies on since
+ *   CONDUITS, below);
  * - the standpipes the navy's six-sided pipe, where they were eight, their
  *   flanges twelve round on a tube of four, where they were ten on five;
  *   the tanks twelve round, where they were eight;
@@ -178,6 +179,31 @@
  * the two drawn in by different amounts, most of it inside the plinth.
  * 58 parts and 3,788 triangles
  * become 58 and 1,948.
+ *
+ * CONDUITS (#1011). The file's four conduits, 0.9 rad each of a circle of
+ * 5.4 about (0, 1.6, 0) draped across the crown, lay wholly inside the
+ * dome: every one of their 18 corners 4.5 to 13.4 m under the facets
+ * (72 of 72 inside the sphere), the four crossing one another over the
+ * pole and running through the lantern (contacts.mjs listed each against
+ * the other three and `apex_lantern`). No view showed "external
+ * pipework". Each is now a pipe of the same 2.95 m tube laid on the dome's
+ * facets (`hadron.conduits`, kit.mjs `mitredTube`): `fore_r` in the
+ * vertical plane on the bearing −45°, toward −z, between the ribs at −20°
+ * and −60°, from 1.0 out at the lantern's foot down the cap facet, over
+ * the ring-1 ridge with a 30.5° mitre, and down the second band to 4.9
+ * out, 0.17 short of ring 2; `aft_r`, `fore_l` and `aft_l` the same buffer
+ * yawed to +45°, −135° and +135°. Centreline (ρ, y) 1.023, 7.242 → 3.050,
+ * 6.703 → 4.965, 4.761: 44.1 m and 57.4 m of run, 1.92 m off each facet
+ * on a flat sunk 0.63 m into it, so 14 of a conduit's 20 corners stand
+ * proud of the facets by up to 4.64 m and the bottom flat's six sit 0.63 m
+ * under; the top end's crown is at 7.36 under the pole's 7.42. The sweep
+ * lists each conduit against the dome and nothing else. `diff.mjs
+ * bastion-hadron origin/main` lists the four (39.6 m, 24 → 36 triangles
+ * each, the twelve being the end caps the open arcs never had) and
+ * nothing else; 1,948 triangles become 1,996. The arc's own counts, two
+ * along and six round, are the pipe's: the two facets it lies on and the
+ * rule's six at 2.95 m. The equator band and the standpipes are unmoved,
+ * and the plan is the docks' 20.90 still.
  */
 import { THREE, fitFootprint, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -205,8 +231,9 @@ const steel = hadron.ink.darkSteel();
 const root = new THREE.Group();
 root.name = 'bastion_hadron';
 
-// The dome's seat: every part that climbs it — dome, ribs, conduits — sits
-// on this node height and carries this press.
+// The dome's seat: the dome and the ribs that climb it sit on this node
+// height and carry this press; the conduits are seated on the dome's
+// facets instead (CONDUITS, at the head).
 const dome = { at: [0, 1.9, 0], scale: [1, 0.92, 1] };
 
 // The dome, 0.52π of a sphere, its lantern and finial, and the four prongs.
@@ -297,14 +324,16 @@ for (const [name, x, roll] of [
     }
   );
 
-// Four conduits, 0.9 rad of a ring each, laid over the dome's crown.
+// Four conduits laid down the dome's facets from the lantern's foot over the
+// crown's edge (CONDUITS, at the head): `fore_r` on the bearing −π/4, toward
+// −z, the other three its mirrors.
 hadron.conduits(root, steel, {
-  r: 5.4,
+  on: 'pressure_dome',
   t: 0.14,
-  angle: 0.9,
-  lean: Math.PI / 2 - 0.55,
-  at: [0, 1.6, 0],
-  scale: dome.scale,
+  azimuth: -Math.PI / 4,
+  from: 1.0,
+  to: 4.9,
+  sink: 0.03,
   cut,
 });
 
