@@ -272,10 +272,11 @@ export interface EdgePoint {
  *
  * The map rim and the skirt hang from this (#1041). Between two of its points
  * each draws a straight line, and so does the mesh's boundary triangle edge
- * between the same two vertices, so the three coincide by construction. A
- * coarser walk does not: sampled once a cell, the skirt ran straight over a
- * ramp the drawn floor only begins half a cell later, and stood 542 m of
- * depth above Ventfront's west trench floor at z 875.
+ * between the same two vertices, so the skirt's top is that edge by
+ * construction and the rim runs a constant 4 m over it. A coarser walk is
+ * neither: sampled once a cell, the skirt ran straight over a ramp the drawn
+ * floor only begins half a cell later, and stood 542 m of depth above
+ * Ventfront's west trench floor at z 875.
  */
 export function edgeRing(grid: HeightGrid): EdgePoint[] {
   const { vertsX, vertsZ, stepM, y } = grid;

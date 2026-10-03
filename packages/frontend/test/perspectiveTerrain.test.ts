@@ -133,8 +133,8 @@ describe('perspective heightfield', () => {
 
 /**
  * The walk the map rim and the skirt hang from (#1041). Each draws straight
- * lines between its points, so it meets the drawn floor only if its points are
- * the mesh's own boundary vertices, adjacent ones in turn.
+ * lines between its points, so it follows the drawn floor only if its points
+ * are the mesh's own boundary vertices, adjacent ones in turn.
  */
 describe('the edge ring', () => {
   it('walks every boundary vertex once, at the grid’s own spacing and heights', () => {
