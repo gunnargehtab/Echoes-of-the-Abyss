@@ -48,7 +48,8 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    reviews wrote by hand to find four clips no gate asks
                    about (#953); test/contacts.test.mjs holds it.
 tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
-                   the sprite maps (Chromium), outlines.mjs writes each modelled
+                   the sprite maps (Chromium), all 94 or the slugs named (#1055),
+                   scratch under the OS temp dir; outlines.mjs writes each modelled
                    kind's plan outline into packages/frontend/src/game/
                    hullOutlines.generated.ts (no browser). models.mjs is the one
                    table both read.
