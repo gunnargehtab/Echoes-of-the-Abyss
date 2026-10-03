@@ -327,6 +327,98 @@ Options written and rejected, so a later reader can overturn the call in one com
 Reopening this means a biome whose water is clear and sunlit, which no map has and
 [world.md](world.md) rules out; it would amend that document first.
 
+#### Bevels and baked occlusion — SPEC
+
+*For [#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002), row 3 of the
+audit below: the kit's bevel measured over the library before anything is added to it, and
+the first model given a baked occlusion map, with what that map is allowed to touch.*
+
+**The bevel is a plate's.** `tools/hull-models/kit.mjs` rounds a `plate` or a `plan`, a slab
+extruded from a plan outline, with one chamfer segment `bevelM` proud of the outline, and that
+is the kit's only bevel: a box, a cylinder, a lathe, a sphere or a torus has a square edge and
+no option for another. A GLB cannot say whether a slab was extruded or whether its rim is a
+chamfer, so `node tools/render-stack/bevels.mjs` runs every model script and sums what each
+export reports it is built from (kit.mjs `census`: the geometry each part holds, and whether an
+extruded one was bevelled). A part here is a scene mesh, which is what a script adds and the
+export names; row 6 below counts GLB primitives, a different unit. A plate is every extruded
+part, the kit's and the faction modules' own, and so is a bevel: `factions/hadron.mjs`
+`frameBlades` chamfers its own, and two of the Knights' three are its. At `9e3bfae2`:
+
+| Navy | Models | With plates | Parts | Plates | Bevelled |
+| --- | --- | --- | --- | --- | --- |
+| Bathyarch Consortium | 24 | 10 | 3,424 | 27 | 5 |
+| Pelagia Commune | 24 | 16 | 1,189 | 69 | 15 |
+| Abyssal Directorate | 22 | 4 | 1,734 | 19 | 7 |
+| Hadron Knights | 24 | 14 | 971 | 75 | 3 |
+| Environment props | 14 | 0 | 162 | 0 | 0 |
+| Library | 108 | 44 | 7,480 | 190 | 30 |
+
+Three readings follow, and they bound what the row can do:
+
+- **Plates are 3 % of the library.** 3,403 parts are boxes and 2,128 are cylinders, 74 %
+  between them; 190 are extruded plates. The razor edge the audit named is, in most places,
+  a box's or a cylinder's, and the kit's bevel does not reach it. A chamfered box would. It
+  is a new primitive, which the row excludes, and a chamfer switched on across 108 approved
+  files is 108 shape decisions taken at once; if one is wanted it is taken per model, by the
+  designer under rule 3 of [asset-prompts-3d.md](asset-prompts-3d.md), with
+  `tools/hull-models/diff.mjs` as the witness, and it starts in that document.
+- **Of the plates, 16 % are bevelled, and the spread is doctrine before it is coverage.**
+  The Knights' 3 of 75 is "square-edged is what an Order wing wants" (kit.mjs `plate`), and
+  razor-thin lines are their light ([style-neon-noir.md](style-neon-noir.md) "Faction accents
+  on a neon-noir ground"): not a gap. The Commune's 15 of 69 is the one to read for coverage:
+  the kit calls the navy "soft-edged by doctrine", yet 54 of its 69 plates have none: four
+  of its five shared kinds carry 29 plates, none bevelled, the Chorister and the Spinner five
+  each the same, and its membranes and intake scoops are extruded square
+  (`factions/pelagia.mjs` `membranes`, `intakeScoop`). The Consortium's 5 of 27 and the
+  Directorate's 7 of 19 carry a bevel where the hull's own numbers give one (a slab's,
+  plough's, scoop's or fan plate's `bevel`) and none otherwise.
+- **The count is the library at the commit named.** It moves whenever a model does, so a
+  later reading re-runs the script rather than trusting this table.
+
+So the row adds no primitive. Bevelling a Commune plate is a shape decision on an approved
+model, one hull at a time, and the designer's to take; this section records where the
+candidates are.
+
+**The occlusion map is baked by the script that builds the model, and read by the conn view
+alone.** A model opts in by one argument to its export (`tools/hull-models/kit.mjs`
+`exportGlb`'s `occlusion`), and `tools/hull-models/occlusion.mjs` does the rest at build time,
+so the map is reproduced on every machine `npm run check:models` runs on and compared there
+with the committed file, a texel to two grey levels and a corner to 1/4,096 of the atlas, an
+eighth of a texel at 512². The
+bake lays every part on one atlas on its own UV set (`uv1`, glTF `TEXCOORD_1`), in charts
+grown over shared edges within 50° of a seed face and cut until each fills its box; from
+every texel it casts 64 cosine-weighted rays and shades the texel by every solid face they
+meet within a reach of a quarter of the model's longest axis, the nearer the darker; and it
+writes the map as one 8-bit PNG into the binary, named on every solid material at strength 1.
+A haze neither shades nor carries it (`glb.mjs` `occludes`). No vertex moves: a vertex two
+charts share is split, and `diff.mjs` reads the baked file as unchanged.
+
+What the map may touch is set by where three applies an `aoMap`: the indirect light alone,
+the ambient and the environment of the shared rig, never the key or the rim, and never
+emissive. So gate 3 holds unaltered, a lamp in a crevice as loud as its SIG; gates 6 and 8
+are untouched, no pass, call, triangle or second projection; and the chart never sees it,
+because intake's albedo pass copies colour and base map into an unlit material and nothing
+else (`hull-intake` page.html), so the four maps of a baked model are byte for byte the maps
+of the bare one. That is the non-target control of [Shared model
+lighting](#shared-model-lighting--abyss-render-stack), kept.
+
+The first model is the Knights' Bastion, this session's choice where the issue asked for one
+reviewed asset and the owner's comment for one reviewed hull, taken in the open in the pull
+request's Options: reviewed on
+[#960](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/960) and
+[#1011](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1011), pre-built at every
+opening, and a dome with ribs and conduits lying on it that a map has something to say
+about. At 512², 744 charts fill 36 % of the atlas at 0.45 texels a metre, 64 rays to 110 m,
+13 s to bake. `bastion-hadron.glb` goes from 118,892 to 416,948 bytes, 170,426 of them the
+PNG and the rest the second UV set, the split vertices, and the fifteen parts that read a
+sibling's buffer and now carry their own (`audit.mjs` counts 7,010 primitives → 7,025). The
+library goes from 19,440,664 to **19,738,720 raw bytes** and from 2,366,027 to **2,564,136
+gzipped**, 1.5 % and 8.4 %. On the GPU three uploads the PNG as RGBA8 with mipmaps, 1.33 MiB
+a model at 512², which is the line gate 6 of [graphics-standards.md](graphics-standards.md)
+holds a model to. Which model is baked next is a call per model, not a switch: each costs a
+third of a megabyte raw and thirteen seconds in the round trip, and a hull drawn at 60 m has
+less for a map to say than a 440 m dome.
+
 #### Ranked audit and remaining work
 
 The baseline is commit `1df288a` (28 September 2026), not the earlier #286 scene.
@@ -339,7 +431,7 @@ composer. Its still is a lighting reference, not a runtime implementation to cop
 | --- | --- | --- |
 | 1 | Shared rig, tone mapping, PMREM | This increment. Promote the tutorial rig; no model edits or full-screen pass |
 | 2 | Lamp core, then a lamp halo ([#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001)) | The lamp core landed ([#1021](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1021), [#1029](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1029)). From #1001's readings the owner picked the full-screen route, drawn after the canvas over a depth-only copy of its depth; "Lamp halo — SPEC" above and gate 6's line specify it, landing off behind its setting |
-| 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | `kit.mjs` already supports bevelled `plate`/`plan`; this is coverage, not a missing primitive. None of the 108 source GLBs has an occlusion texture. Start with one reviewed asset and preserve its silhouette |
+| 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | Both landed ("Bevels and baked occlusion — SPEC" above). Coverage measured: 30 of 190 extruded plates are bevelled, and plates are 3 % of 7,480 parts, so no primitive was added. The Knights' Bastion carries the first baked occlusion map, on its own UV set, read by the conn view alone, its silhouette unchanged; the next model is a call per model |
 | 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | Vignette and sway are built, with no pass ([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)). The split waits on a gate-6 allocation for its full-screen draw and copy. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
 | 5 | GLB gzip ([#1004](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1004)) | Built. The nginx image's `mime.types` names no `glb`, so `packages/frontend/nginx.conf` names the type in the models' own location and gzips them at level 6. Delivery cost, not frame quality |
 | 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | 6,378 of 6,540 exported primitives have UV0, but attribute presence is not a laid-out atlas. `uvAlike` also writes zero-filled placeholder UVs. Sorrowgate already has triplanar surface detail; retain that work rather than replacing it blindly |
@@ -349,7 +441,8 @@ composer. Its still is a lighting reference, not a runtime implementation to cop
 Over the model library as it stood at `1df288a`, `node tools/render-stack/audit.mjs`
 counts **17,819,812 raw bytes** and **2,211,283 gzip bytes** over 108 source GLBs with
 Node's default gzip settings. It reads the library as it stands, so the bytes move
-whenever a model does.
+whenever a model does: with the Bastion's occlusion map it counts 19,738,720 and 2,564,136,
+and five materials with an occlusion texture ("Bevels and baked occlusion — SPEC" above).
 Those are sums over the source library, not a browser's initial download: Vite hashes
 assets and the client loads them by need. A solo match on the default map, its build at
 `c771ca8` served by nginx 1.24 through `nginx.conf` and the image's `http` settings, fetched

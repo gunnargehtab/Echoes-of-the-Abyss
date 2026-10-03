@@ -23,8 +23,8 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    finishes.mjs finds at two values inside one navy, and on a
                    model file that is neither an env- prop nor named
                    -<navy>.glb (#888); CI runs it in the build job. It
-                   reads no UVs, vertex colours or textures, so a change to
-                   those passes it (#1002, #1005).
+                   reads a part's uv1 and the occlusion map a script bakes in
+                   (#1002), not UV0 or vertex colours (#1005).
                    diff.mjs answers the one thing check.mjs cannot —
                    what a port changed about a shape — by reading the pre-port
                    binary out of git history, since after a port the committed
@@ -77,12 +77,12 @@ tools/hull-renders The same models photographed rather than measured:
                    measure.
 tools/render-stack #974's audit and camera pairs, kept runnable rather than
                    quoted; not an npm workspace and not a gate. audit.mjs
-                   recounts what docs/art-direction.md's ranked audit
-                   quotes: raw and gzip bytes over the committed GLBs (a
-                   library sum, not a download), primitives with UV0 and
-                   how many of those are uvAlike's zeros (UV0 is not a
-                   laid-out atlas), and materials with an occlusion
-                   texture. capture.mjs is a run-game --steps module: four
+                   recounts the ranked audit's figures off the committed GLBs:
+                   raw and gzip bytes (a library sum, not a download), UV0 and
+                   uvAlike's zeros, materials with an occlusion map. bevels.mjs
+                   runs the scripts and sums kit.mjs `census` by navy — parts
+                   by primitive, plates bevelled — since no GLB can say if a
+                   rim is a chamfer (#1002). capture.mjs, a run-game --steps module: four
                    held cameras with the HUD on, gate 6's call and triangle
                    limits asserted, the probe's GPU time required on a GPU
                    and refused on a software rasteriser (#1001), HALO=on for
