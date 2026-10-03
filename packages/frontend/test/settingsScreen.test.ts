@@ -154,6 +154,9 @@ describe('the settings screen: §11 commitments', () => {
     // a toggle in Settings; a view that fails its capability check keeps the
     // choice and Settings says "Not available on this display". The screen
     // learns the outcome through lampHaloStatus, which the view publishes.
+    // The status is driven by hand here, since this is the screen's test;
+    // that a refusal in the view reaches the module, and is asked again only
+    // on a context restore, is rendererSmoke.test.ts's "lamp halos" case.
     publishLampHaloStatus('off');
     const view = await settings();
     try {
