@@ -1995,8 +1995,9 @@ on its idle 58, the Responsory at E 3.1 on its compass 27. The one thing the bak
 the prompts did not say: the maps are top-down, so a louvre flat on a hull's side has no plan
 area and a lit feature has to face *up* to count — the Derrick's light is on its deck floods,
 its frame beams, its cradle lamp, its stack throat, its roof gratings and, since #893, the
-louvres of a raked hood down each side of its machinery house, stepped so that every blade
-shows from above, and four bridge ports boxed out past the house's forward eave; the
+louvres of a raked hood hung under the eave down each side of its machinery house, stepped
+so that every blade shows from above, and four bridge ports boxed out under and past the
+house's forward eave (#907 raised the house past both; #933 raised them back to it); the
 Responsory's rides the top of its horn.
 
 ```text
@@ -2020,9 +2021,10 @@ the after leg, head down; deck plating scuffed bare in a ring around the
 gun. No baffle, no cowl, no cone: this navy does not hide and does not
 point. Sustained glow at rest — six deck floods, work floods along the
 frame's top beams, the roof gratings and the louvres of the raked hood
-down each side of the house, the stack lit at the throat, four bridge
-ports boxed out past the house's forward eave, and a hard lamp in the
-cradle throwing the lattice's shadow across the deck; the drums dark — and
+hung under the eave down each side of the house, the stack lit at the
+throat, four bridge ports boxed out under and past the house's forward
+eave, and a hard lamp in the cradle throwing the lattice's shadow across
+the deck; the drums dark — and
 burning bright on the same lamps the moment the drive turns, because 66 is
 over the Klaxon's line and the loud state is the state this hull is bought
 to be in.
