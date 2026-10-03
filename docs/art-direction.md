@@ -307,6 +307,9 @@ assets and the client loads them by need. A solo match on the default map, its b
 `c771ca8` served by nginx 1.24 through `nginx.conf` and the image's `http` settings, fetched
 13 of the 108 models before its requests stopped: **1,213,200 bytes** raw and **150,459**
 gzipped, by nginx's access log. The whole load fell from 4,546,477 bytes to 3,483,736. The
+same load at `7788976` fetched 19 JS and CSS files, **2,238,882 bytes** raw; gzipped at the
+models' level ([#1038](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1038)),
+they sent **754,104**, and the whole load fell from 3,532,664 bytes to 2,047,886. The
 rank retains the issue's visual priority, and WebGPU is not a prerequisite for the other
 seven.
 
