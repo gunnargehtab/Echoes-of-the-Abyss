@@ -156,7 +156,9 @@ describe('the settings screen: §11 commitments', () => {
     // learns the outcome through lampHaloStatus, which the view publishes.
     // The status is driven by hand here, since this is the screen's test;
     // that a refusal in the view reaches the module, and is asked again only
-    // on a context restore, is rendererSmoke.test.ts's "lamp halos" case.
+    // on a context restore, is rendererSmoke.test.ts, "turns the lamp halo on
+    // and off, says why when the view cannot draw it, and checks again after
+    // a context restore".
     publishLampHaloStatus('off');
     const view = await settings();
     try {
