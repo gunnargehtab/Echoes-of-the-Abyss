@@ -86,6 +86,7 @@ import {
 } from './seabed.ts';
 import {
   buildHeightGrid,
+  edgeRing,
   patchHeightGrid,
   type HeightGrid,
   DEPTH_VISUAL_M_PER_M,
@@ -1350,9 +1351,10 @@ export class PerspectiveView {
    */
   private rebuildDressing(): void {
     const terrain = this.terrain;
-    if (terrain === null) return;
+    const grid = this.terrainGrid;
+    if (terrain === null || grid === null) return;
     this.terrainDressing.clear();
-    this.buildTerrainDressing(terrain);
+    this.buildTerrainDressing(terrain, grid);
     this.buildEmbers(terrain);
     // Props stand on the drawn ground — the same heights the mesh has, crag
     // included. Normal play rebuilds only here; the opt-in study also selects
@@ -1416,7 +1418,7 @@ export class PerspectiveView {
    * the edge so the world ends in deep water rather than in a void the fog
    * never explains.
    */
-  private buildTerrainDressing(terrain: TerrainPayload): void {
+  private buildTerrainDressing(terrain: TerrainPayload, grid: HeightGrid): void {
     const groundY = (xM: number, yM: number) => this.groundYAt(xM, yM);
     const isRock = (i: number) => terrain.ceiling[i]! > terrain.floor[i]!;
 
@@ -1451,20 +1453,14 @@ export class PerspectiveView {
       );
     }
 
-    // The rim and the skirt share one perimeter walk.
-    const widthM = terrain.cols * terrain.cellM;
-    const heightM = terrain.rows * terrain.cellM;
-    const step = terrain.cellM;
-    const perimeter: Array<{ x: number; y: number }> = [];
-    for (let x = 0; x <= widthM; x += step) perimeter.push({ x, y: 0 });
-    for (let y = step; y <= heightM; y += step) perimeter.push({ x: widthM, y });
-    for (let x = widthM - step; x >= 0; x -= step) perimeter.push({ x, y: heightM });
-    for (let y = heightM - step; y >= step; y -= step) perimeter.push({ x: 0, y });
+    // The rim and the skirt share one perimeter walk: the mesh's own edge
+    // vertices, so both follow the drawn floor rather than chords across it.
+    const perimeter = edgeRing(grid);
 
     // The rim is rung 5 too, at the ladder's alpha. The skirt below it is
     // unnamed in §5 and placed on rung 1, the deep water the world ends in.
     if (!this.dreamStudy) {
-      const rim = perimeter.map((p) => new Vector3(p.x, groundY(p.x, p.y) + 4, p.y));
+      const rim = perimeter.map((p) => new Vector3(p.x, p.y + 4, p.z));
       this.terrainDressing.add(
         new LineLoop(
           new BufferGeometry().setFromPoints(rim),
@@ -1483,8 +1479,7 @@ export class PerspectiveView {
     const skirtIndices: number[] = [];
     for (let i = 0; i < perimeter.length; i++) {
       const p = perimeter[i]!;
-      const top = groundY(p.x, p.y);
-      skirtPositions.push(p.x, top, p.y, p.x, skirtBottom, p.y);
+      skirtPositions.push(p.x, p.y, p.z, p.x, skirtBottom, p.z);
       const j = (i + 1) % perimeter.length;
       skirtIndices.push(i * 2, j * 2, i * 2 + 1, j * 2, j * 2 + 1, i * 2 + 1);
     }

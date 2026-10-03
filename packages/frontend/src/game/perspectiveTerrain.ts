@@ -257,3 +257,34 @@ export function patchHeightGrid(
   }
   return { first: iz0 * grid.vertsX + ix0, last: iz1 * grid.vertsX + ix1 };
 }
+
+/** One vertex of the mesh's boundary, in world metres: `y` is the grid's own. */
+export interface EdgePoint {
+  x: number;
+  y: number;
+  z: number;
+}
+
+/**
+ * The mesh's boundary, walked once round: the north edge west to east, then
+ * the east, south and west edges in turn. Every edge vertex the grid has, at
+ * the grid's own heights, each corner once.
+ *
+ * The map rim and the skirt hang from this (#1041). Between two of its points
+ * each draws a straight line, and so does the mesh's boundary triangle edge
+ * between the same two vertices, so the three coincide by construction. A
+ * coarser walk does not: sampled once a cell, the skirt ran straight over a
+ * ramp the drawn floor only begins half a cell later, and stood 542 m of
+ * depth above Ventfront's west trench floor at z 875.
+ */
+export function edgeRing(grid: HeightGrid): EdgePoint[] {
+  const { vertsX, vertsZ, stepM, y } = grid;
+  const ring: EdgePoint[] = [];
+  const at = (ix: number, iz: number) =>
+    ring.push({ x: ix * stepM, y: y[iz * vertsX + ix]!, z: iz * stepM });
+  for (let ix = 0; ix < vertsX; ix++) at(ix, 0);
+  for (let iz = 1; iz < vertsZ; iz++) at(vertsX - 1, iz);
+  for (let ix = vertsX - 2; ix >= 0; ix--) at(ix, vertsZ - 1);
+  for (let iz = vertsZ - 2; iz >= 1; iz--) at(0, iz);
+  return ring;
+}
