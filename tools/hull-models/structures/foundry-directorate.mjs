@@ -48,8 +48,9 @@
  * - The −x rank carries four guides, `bay_guide_1_0`, `_1`, `_3`, `_4`:
  *   there is no `bay_guide_1_2` in the file, and there is none here.
  * - The bow plate on each flank has no spine: three `spine_spike` a flank
- *   over four tergites. All six spines rake along (±0.35, 1, 0.1) and each
- *   stands where the file put it, its node transcribed to nine places.
+ *   over four tergites. All six spines rake along (±0.35, 1, 0.1), the
+ *   file's node transcribed to nine places as the seed; each foot is seated
+ *   on its own plate (SPINES, below; #1050).
  * - Each tergite's rotation is a YXZ Euler with a pitch of its own —
  *   −0.0043, 0.0166, −0.0350, 0.0003 down one flank — under a regular yaw
  *   and roll; its seam takes the yaw and roll and not the pitch.
@@ -182,6 +183,26 @@
  * is 7.1 m over sixty-six, the two graft flanges. No lamp's plan changed, no
  * plan grew from above. 85 parts and 4,714 triangles become 100 and 4,864;
  * `DRAWN` holds at 17.4421.
+ *
+ * SPINES (#1050). The file's six spine stations stood on the export's 9 × 6
+ * plates. On the rule's 15 × 4 (#919) `spine_spike_0_2`'s mesh stood 0.77 m
+ * off `tergite_port_2` with no contact at all, its base centre 2.39 m off;
+ * `spine_spike_0_1` met `tergite_port_2` and not `tergite_port_1`, its base
+ * 2.47 m off its own plate; the other four stood 0.21–1.38 m off theirs,
+ * meeting them by their rims. Each is seated on its own plate now
+ * (`tergiteFlanks` `footed`; directorate.mjs `footed`), as the barbs,
+ * rings and photophores are: the base moves to the plate's nearest point
+ * and 0.14 (`spike.r`, 2.57 m) in along its normal; rake, length and the
+ * station as the seed are the file's. The plates face up, forward and a
+ * little inboard where the spikes stand, so every spike moved down, aft
+ * and outboard, against that normal: `0_0` 3.3 m (2.7 down, 1.8 aft, 0.6 out),
+ * `0_1` 5.0 (4.0, 2.9, 1.0), `0_2` 5.0 (4.1, 2.7, 0.8), `1_0` 2.8 (2.3,
+ * 1.6, 0.2), `1_1` 4.0 (3.2, 1.8, 1.4), `1_2` 3.8 (3.1, 1.9, 1.1).
+ * `contacts.mjs` pairs every spike with its own plate (`0_0`, `0_1`, `1_0`
+ * and `1_1` with the plate forward of it as well, where the plates
+ * overlap) and with nothing else; the barbs keep their seeds off the file's stations and do
+ * not move. `diff.mjs` lists the six spikes and no other part, its figure
+ * the drop; `DRAWN` holds at 17.4421.
  */
 import {
   THREE,
@@ -217,9 +238,10 @@ root.name = 'foundry_directorate';
 // the +x flank, (−0.35, 1, 0.1) on the −x, the file's node decomposed.
 const RAKE_P = [0.094119023, -0.015933738, -0.335170772];
 const RAKE_S = [0.094119023, 0.015933738, 0.335170772];
-// The six spine spikes' stations, the file's nodes to nine places, read by
-// the plates below and by the second rank's barbs (#919), so a spike that
-// moves takes its barb with it.
+// The six spine spikes' stations, the file's nodes to nine places: the seed
+// each spike is seated from (`footed`; the header, SPINES) and the station
+// the second rank's barbs are seeded off (#919), so a station that moves
+// takes its barb with it.
 const SPIKES = {
   p0: [3.43499122, 3.155403486, -2.837859651],
   p1: [3.320243272, 3.481266491, 0.477926649],
@@ -236,6 +258,7 @@ directorate.tergiteFlanks(
   { violet, red, black, steel },
   {
     cut,
+    footed: true,
     flanks: [
       {
         name: 'port',
@@ -293,11 +316,10 @@ directorate.tergiteFlanks(
 
 // A second, smaller spike a unit abaft each spine spike (#919, the panel
 // pass; the header), raked the one way the spikes rake, seated on the plate
-// under it (`spineRank`; kit.mjs `seat`) — the spike's own plate on four;
-// the second port spike stands on the third plate's edge and its barb on
-// the second plate abaft it. Five, since `flank_photophore_8` stands where
-// the second starboard plate's would grow, and none on the bow
-// plates, which carry no spine in the file.
+// under it (`spineRank`; kit.mjs `seat`) — the spike's own plate on all
+// five since the spikes were seated on theirs (#1050). Five, since
+// `flank_photophore_8` stands where the second starboard plate's would
+// grow, and none on the bow plates, which carry no spine in the file.
 const barb = (n, [x, y, z], rake, length) => [n, black, 0.09, length, [x, y - 0.3, z - 1], rake];
 directorate.spineRank(root, {
   name: 'spine_barb',

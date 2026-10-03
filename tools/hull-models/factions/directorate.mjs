@@ -2646,15 +2646,23 @@ export function shellSpines(root, { name, facets = 5, spines, on = null }) {
  * A part stood on its foot: the centre a cone or a drum of `length` along
  * its own Y takes so that its base — half its length down its axis from
  * `at`, under `rot` — rests on the nearest of the parts `on` names with its
- * centre `r` in (kit.mjs `seat`, nearest). The part slides along its own
- * axis and keeps its lean, so a spine or a pipe a coarser cut left floating
- * meets the shell it was drawn against (#919). A leaning part slides its
- * far end with it — the Cantor's second ballast pipe, 0.42 rad in toward
- * the dome, ran its top into the shell when it slid 3.4 m down its lean —
- * so a script steps such a part's station first, and says what its far end
- * then does (cantor-directorate.mjs). Dropping the foot straight down
- * instead is worse there: the dome widens toward its equator, and the top
- * at the same plan station but 8 m lower sat 2.3 m inside it.
+ * centre `r` in (kit.mjs `seat`, nearest). The base moves to the nearest
+ * point of those surfaces and then `r` in along that surface's normal —
+ * in whatever direction the nearest point lies, not down the part's own
+ * axis — and the whole part moves with it, keeping its lean and its length,
+ * so a spine or a pipe a coarser cut left floating meets the shell it was
+ * drawn against (#919). On a plate facing up, forward and a little
+ * inboard, that is a drop with a step aft and outboard, against the
+ * normal: the Foundry's six spine spikes moved
+ * 2.8–5.0 m each along their plates' normals, 2.3–4.1 m of it down and
+ * 0.2–1.4 m of it outboard (#1050); the Dredge's barbs the same way. A
+ * leaning part takes its far end with it — the Cantor's second ballast
+ * pipe, 0.42 rad in toward the dome, ran its top into the shell when its
+ * foot moved 3.4 m — so a script steps such a part's station first, and
+ * says what its far end then does (cantor-directorate.mjs). Dropping the
+ * foot straight down instead (`seat` `drop`) is worse there: the dome
+ * widens toward its equator, and the top at the same plan station but 8 m
+ * lower sat 2.3 m inside it.
  */
 function footed(root, on, { at, rot }, r, length) {
   const axis = new THREE.Vector3(0, 1, 0).applyEuler(new THREE.Euler(...rot));
@@ -3586,11 +3594,19 @@ export function intakeMaw(root, { hopper: hopperMat, throat: throatMat, mouth: m
  * of its own, the rank's yaw (0.12 and 0.05 further each plate) and a roll
  * of 0.12 outboard — and its seam takes the yaw and the roll without the
  * pitch. Each spine's rotation is the minimal one carrying +Y onto
- * (±0.35, 1, 0.1), the one rake for all six, and its foot sits on its
- * plate's shoulder where the file put it; the file's node is transcribed
- * rather than the rule re-derived, since the feet are nowhere a formula
- * reaches. Both ranks are four plates and three spines: the bow plate on
- * each flank carries none.
+ * (±0.35, 1, 0.1), the one rake for all six; the file's node is
+ * transcribed rather than the rule re-derived, since the feet are nowhere
+ * a formula reaches. Both ranks are four plates and three spines: the bow
+ * plate on each flank carries none.
+ *
+ * `footed` seats each spine's foot on its own plate, `tergite_<name>_<i>`
+ * (`footed` above; #1050). The file's nodes put the feet on the export's
+ * 9 × 6 plates; the rule's 15 × 4 (#919) lie elsewhere, and on them the
+ * Foundry's third port spike stood 0.77 m off its plate (its base centre
+ * 2.39 m) and its second met the plate forward of its own. Seated,
+ * each base lies 0.14 (`spike.r`) inside its own plate's surface, moved
+ * along that plate's normal; the rake, the length and the file's station
+ * as the seed stay. Off by default, the spikes stand where the nodes say.
  */
 export function tergiteFlanks(root, { violet, red, black, steel }, opts) {
   const {
@@ -3598,6 +3614,7 @@ export function tergiteFlanks(root, { violet, red, black, steel }, opts) {
     down = 0.58,
     seam = { tube: 0.06, of: [0.9, 0.98], lift: 0.15 },
     spike: spk = { r: 0.14, facets: 5 },
+    footed: seated = false,
     flanks,
     cut: rule = METRE,
   } = opts;
@@ -3628,15 +3645,25 @@ export function tergiteFlanks(root, { violet, red, black, steel }, opts) {
         [0, yaw, roll],
         seamScale
       );
-      if (p.spike)
-        frame.part(
+      if (p.spike) {
+        // `footed`: the spike's foot seated on its own plate (#1050). The
+        // file's stations stood on the export's 9 × 6 plates; the rule's
+        // 15 × 4 (#919) lie elsewhere, and on them the third port spike
+        // stood 0.77 m off its plate and the second met the plate forward.
+        // The export's node in the root's frame, which is what `footed` seats in.
+        const placed =
+          frame === zLong ? drawn(p.spike.at, p.spike.rot) : { at: p.spike.at, rot: p.spike.rot };
+        const at = seated
+          ? footed(root, [`tergite_${name}_${i}`], placed, spk.r, p.spike.length)
+          : placed.at;
+        frame.place(
           root,
           `spine_spike_${n}_${i}`,
           spike(spk.r, p.spike.length, section(`spine_spike_${n}_${i}`, spk.facets)),
           black,
-          p.spike.at,
-          p.spike.rot
+          { ...placed, at }
         );
+      }
     });
 }
 
