@@ -1,4 +1,5 @@
-# The roadmap site — docs/ROADMAP.md rendered against live issue state.
+# The roadmap site — docs/ROADMAP.md rendered against live issue state, and
+# beside it the Abyss Render Stack, #974's graphics audit (render-stack.html).
 #
 # Publishing is **opt-in and off by default**, which is deliberate. This
 # repository is private; a Pages site is not. Merging a workflow should never
@@ -37,6 +38,10 @@ on:
       # (tools/roadmap/lib/portraits.mjs).
       - 'docs/concept-art/renders/**'
       - 'tools/hull-renders/shots.mjs'
+      # The render-stack page's other two frames (tools/roadmap/lib/renderStack.mjs
+      # FRAMES); its third is a portrait, covered above.
+      - 'docs/concept-art/plate-05-submarine-classes.png'
+      - 'docs/screenshots/issue-836/02-pitch-12-focus-736.png'
       - '.github/workflows/pages.yml'
   # Issue state is half the page, and it changes without any push at all.
   # `opened` too: the page counts the open issues the roadmap has not placed,
