@@ -24,8 +24,9 @@ r169's WebGPU renderer, three things the SPEC depends on change underneath the p
 3. **The halo's depth copy has no equivalent.** WebGPU cannot copy a 4× multisampled depth
    into a single-sampled texture.
 
-Each has a route through, below, and each route costs something gate 6 has to re-read. So
-the migration is not a renderer-constructor swap, as row 8 says. Nor is it a port, patch by
+Each has a route through, below. The first holds gate 3 only if every material carries its
+own curve; the second costs gate 6 triangles, and the third a call or a target. So the
+migration is not a renderer-constructor swap, as row 8 says. Nor is it a port, patch by
 patch: it changes how every material in the conn view ends, and it redraws three layers as
 geometry.
 
@@ -100,9 +101,11 @@ The `toneMapped` flag is read only on the WebGL side. Under the renderer's own s
 - a lamp's emission is summed before the curve, so ACES fades it toward white, which gate 3's
   lamp core exists to prevent;
 - every transparent layer blends in the linear target, where today it blends in encoded
-  space on the canvas. The survey ink's alphas, the stipple's dot gains and the halo's screen
-  composite are set in encoded space, and so is the loudness ladder that measures them
-  ([map-visuals.md](map-visuals.md) §5).
+  space on the canvas. The stipple's dot gains and the halo's screen composite are set in
+  encoded space, and so is the loudness ladder that measures them
+  ([map-visuals.md](map-visuals.md) §5). The survey ink is not among them: it mixes inside the
+  ground's opaque shader with its own encode and decode (`surveyInk.ts:280`), so only the
+  curve in the first bullet reaches it.
 
 The route through leaves the renderer at `NoToneMapping` with a linear output, so no output
 pass runs. Every conn-view material then ends in its own `outputNode`: a lit surface through
@@ -127,26 +130,30 @@ patch.
 
 r169 stores `PointsNodeMaterial.sizeNode` and never reads it. Its WebGL 2 backend writes
 `gl_PointSize = 1.0` (`renderers/webgl-fallback/nodes/GLSLNodeBuilder.js:811`), and WebGPU's
-point-list primitive has no size at all. Four layers draw sized points: marine snow (7,000
+point-list primitive has no size at all (the WebGPU specification's `"point-list"`
+topology draws each vertex as one point). Four layers draw sized points: marine snow (7,000
 motes), the public-life stipple (432 dots a Tetherjelly field, 72 a Lampfry shoal), the vent
 embers (400 at `VENT_EMBER_CAP`) and the Dream Loop's halos.
 
 Each becomes an instanced quad: `InstancedPointsNodeMaterial`
 (`materials/nodes/InstancedPointsNodeMaterial.js`), or a sprite node material on an instanced
-mesh, with `uv()` in place of `gl_PointCoord`. Each layer keeps its one draw call. The
+mesh, with `uv()` in place of `gl_PointCoord`. Each cloud keeps its one draw call. The
 triangles do not hold: the snow alone becomes 14,000, where gate 6 says the water spends
 none. Ventfront read 143–148 k against the 250 k ceiling (#836).
 
 ### The halo's depth copy
 
 Step 1 of the halo blits the canvas's 4× multisampled depth into a single-sampled
-`DEPTH24_STENCIL8` texture. WebGPU copies only between textures of equal sample count, and the
-depth aspect of a `depth24plus` format is not a copy source at all. The copy becomes one of
-two things:
+`DEPTH24_STENCIL8` texture, which resolves it. r169's equivalent is
+`copyFramebufferToTexture`, which copies the canvas depth with `copyTextureToTexture`
+(`renderers/webgpu/WebGPUBackend.js:1421`). The WebGPU specification lets that copy run only
+between textures of equal sample count, and core WebGPU has no depth resolve, so it fails here
+only because the canvas is 4× MSAA. The copy becomes one of two things:
 
 - a full-screen draw that reads the multisampled depth and writes depth: one call toward
   gate 6's 150, and new GPU time against its 0.40 ms bound at ratio 1;
-- a canvas pass drawn into a target whose depth texture the splats sample directly.
+- a canvas pass drawn into a target whose depth texture the splats sample directly. That
+  adds a drawing-buffer-sized colour target and a full-screen copy of it onto the canvas.
 
 The rest of the halo ports. Half-float colour targets are core in WebGPU, and the composite's
 stencil test is read from the material (`renderers/webgpu/utils/WebGPUPipelineUtils.js:73`).
@@ -159,9 +166,11 @@ and `checkFramebufferStatus`.
   falls back to `renderAsync` (`renderers/common/Renderer.js:485`). `PerspectiveView.mount`
   returns a boolean synchronously today.
 - **Timing.** Gate 6's GPU time comes from `EXT_disjoint_timer_query_webgl2`. r169's
-  equivalent is `trackTimestamp: true` with `resolveTimestampAsync()`, which needs the
-  adapter's `timestamp-query` feature (`renderers/webgpu/WebGPUBackend.js:111`). Every GPU
-  reading in gate 6 is a WebGL reading and would be taken again.
+  equivalent is `trackTimestamp: true`, which needs the adapter's `timestamp-query` feature
+  (`renderers/webgpu/WebGPUBackend.js:111`). The backend resolves the timestamps only inside
+  `renderAsync()` (`renderers/common/Renderer.js:394`), so the reading also needs the
+  asynchronous frame above. Every GPU reading in gate 6 is a WebGL reading and would be taken
+  again.
 - **Loss.** r169's WebGPU backend listens for no device loss. The halo's restore path listens
   for `webglcontextrestored`.
 - **Environment.** The PMREM moves from `PMREMGenerator(renderer)` to r169's node path
@@ -170,12 +179,15 @@ and `checkFramebufferStatus`.
 - **Counting.** r169's common `Info` keeps `autoReset` (`renderers/common/Info.js`), so gate
   6's whole-frame count carries over.
 
-### WGSL refuses a derivative in a branch
+### A derivative in a branch
 
 WGSL rejects `fwidth`, `dFdx` and implicitly differentiated texture samples in non-uniform
-control flow, at compile time. The survey ink already takes its derivatives outside every
-branch (`surveyInk.ts:252`), and every other patch takes its own in straight-line code. A TSL
-`If` wrapped around one would not compile.
+control flow by default. r169 turns that check off in every fragment shader outside Firefox
+(`diagnostic( off, derivative_uniformity )`,
+`renderers/webgpu/nodes/WGSLNodeBuilder.js:157`). So a TSL `If` wrapped around a derivative
+compiles on Edge, gate 6's named browser, and gives an undefined result there, as in GLSL; only
+Firefox refuses it. The survey ink already takes its derivatives outside every branch
+(`surveyInk.ts:252`), and every other patch takes its own in straight-line code.
 
 ## Each patch in TSL
 
@@ -217,9 +229,10 @@ What each becomes against r169's node API. All of them assume the output route a
 Beyond the patches:
 
 - **The water fog** becomes `scene.fogNode`, or a line in each `outputNode` (above).
-- **The backdrop** becomes `scene.backgroundNode` built from the view ray
-  (`renderers/common/Background.js` takes a node), or a node material whose `vertexNode`
-  writes clip space as the GLSL does.
+- **The backdrop** becomes a node material whose `vertexNode` writes clip space, as the GLSL
+  does: two triangles. r169's `scene.backgroundNode` would do it too, but draws a 32 × 32
+  sphere (`renderers/common/Background.js:77`), 1,984 triangles where today's backdrop has
+  two.
 - **The snow, the stipple and the embers** become instanced quads (above).
 - **The halo** becomes four node materials whose `vertexNode`s write clip space, so its
   full-screen draws still never use the conn camera.
@@ -228,18 +241,20 @@ Beyond the patches:
 
 - **Gate 3** holds only under the output route. Under the renderer's own tone mapping, the
   lamp core is lost.
-- **Gate 6** holds WebGL readings; a migration takes every one again. Two costs are known in
-  advance. The halo gains one call if its depth copy becomes a draw. The quads add two
-  triangles a point: 14,000 for the snow, 800 for the embers at the cap, 864 a Tetherjelly
-  field and 144 a Lampfry shoal.
+- **Gate 6** holds WebGL readings; a migration takes every one again. Some costs are known in
+  advance. The quads add two triangles a point: 14,000 for the snow, 800 for the embers at the
+  cap, 864 a Tetherjelly field and 144 a Lampfry shoal. The halo's depth copy costs either one
+  call, or a drawing-buffer-sized target and a full-screen copy. The PMREM's 1 MiB bound and
+  every GPU time are read again.
 - **Gate 8** is untouched. There is still one camera, and every full-screen draw writes clip
   space.
 
 ## What the decision weighs
 
-This note is the input, not the call. A migration touches the eight patches, eight shader-material
-sites (seven ship), one points material, the renderer, the timer and the halo's probe. On
-top of that it adds an `outputNode` to every conn-view material. Against that cost, none of
+This note is the input, not the call. A migration touches the eight patches, the global
+fog-chunk rewrite, eight shader-material sites (seven ship), one points material, the
+renderer, the timer, the PMREM bake, and the halo's depth blit and probe. On top of that it
+adds an `outputNode` to every conn-view material. Against that cost, none of
 the other seven upgrades in [art-direction.md](art-direction.md)'s ranked audit needs WebGPU;
 the audit says so.
 
