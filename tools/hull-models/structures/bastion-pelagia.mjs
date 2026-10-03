@@ -123,27 +123,33 @@
  * depth, 132 m under the drawn surface (rosterModels.ts `standingY`, #958),
  * and this file stood 238.19 m to the crown bud, 106 m of it in surface
  * water. The rule across the four Bastions is one proportion: the crown at
- * three tenths of the plan, 132 m over the ground at 440 (`CROWN`; kit.mjs
- * `holdCrown`), and the whole model pressed in y about y 0 to meet it, the
- * plan untouched. Here that is ×0.5542 on the root's y after `fitFootprint`,
- * so every node below keeps the file's numbers and the file carries the
- * press: the dome is 0.88 tall on its node and 0.49 in the file against its
- * 1.12 across — the grown lobe "squashed low and wide" the header already
- * describes, further; the roots sink 19.34 m → 10.72 under the ground.
- * Measured vertex-true after: `crown_bud` 132.00 m, `crown_stalk` 125.8,
- * `crown_pod` 118.9, `hull_pipe_0` 115.3. Three's loose node-box measure
- * (the export's `bounds`, intake's `rawSize`) reads 144.4 m, which is
- * `hull_pipe_1`'s box — a rolled torus arc's box overhangs its vertices —
- * with `hull_pipe_0` at 138.8 and `bio_vein_2` at 138.6; no vertex is over
- * 132. A press is affine, so no seat, sink or contact moved: `diff.mjs
- * bastion-pelagia origin/main` reads the root scale 1.0000 / 0.5542 /
- * 1.0000 and every part where it was; the light audit reads the same 13
- * lit parts at 1618.2 m² and intake's raw E the same 12.90; `contacts.mjs`
- * lists the same 135 pairs. `facets.mjs pelagia` names four rings here it
- * did not — `ring_knot_7`'s meridian and the three standpipe flanges' tubes
- * — reading a pressed orb's ring off its shortened vertical chord; the
- * counts are #919's and did not move. The plan is the file's, so the maps
- * keep their footprint.
+ * 0.29 of the plan, 127.6 m over the ground at 440 — a hand under the line,
+ * not on it (`CROWN`; kit.mjs `holdCrown`, which asserts the unpressed
+ * 238.19 as `TALL`) — and the whole model pressed in y about y 0 to meet it,
+ * the plan untouched. Here that is ×0.5357 on the root's y after
+ * `fitFootprint`, so every node below keeps the file's numbers and the file
+ * carries the press: the dome is 0.88 tall on its node and 0.47 in the file
+ * against its 1.12 across — the grown lobe "squashed low and wide" the
+ * header already describes, further; the roots sink 19.34 m → 10.36 under
+ * the ground. The facet rule is asked under the press (`pelagia.cut(L /
+ * DRAWN, { press })`, Block 2c), and two counts moved: `ring_knot_7`'s
+ * meridian, fourteen a turn → twelve (7 → 6 segments, 144 → 130
+ * triangles), which settles; and the three standpipe flanges' tubes, flat
+ * rings stood in a vertical plane that read 8 at 7 and 7 at 8 under the
+ * press — priced through `cut.torus` from their placement, built at the
+ * last, 7 (256 → 224 triangles each), and named by `facets.mjs pelagia`
+ * with the Harvester's and the Foundry's three (Block 2c: twelve in all).
+ * `diff.mjs bastion-pelagia origin/main` lists those four (0.05–0.11 m)
+ * and nothing else beyond the root scale 1.0000 / 0.5357 / 1.0000. 13,788
+ * triangles become 13,678. Measured vertex-true after: `crown_bud`
+ * 127.60 m, `crown_stalk` 121.6, `crown_pod` 115.0, `hull_pipe_0` 111.4.
+ * Three's loose node-box measure (the export's `bounds`, intake's
+ * `rawSize`) reads 139.6 m, which is `hull_pipe_1`'s box — a rolled torus
+ * arc's box overhangs its vertices — with `hull_pipe_0` at 134.2 and
+ * `bio_vein_2` at 134.0; no vertex is over 127.6. A press is affine, so no
+ * seat, sink or contact moved: the light audit reads the same 13 lit parts
+ * at 1618.2 m² and intake's raw E the same 12.90; `contacts.mjs` lists the
+ * same 135 pairs. The plan is the file's, so the maps keep their footprint.
  */
 import {
   THREE,
@@ -157,9 +163,14 @@ import {
 import * as pelagia from '../factions/pelagia.mjs';
 
 const L = 440;
-// HEIGHT (#960): the crown held at three tenths of the plan, 132 m over the
-// ground at 440 (kit.mjs `holdCrown`; the header).
-const CROWN = 0.3 * L;
+// HEIGHT (#960): the crown held at 0.29 of the plan, 127.6 m over the ground
+// at 440 — under the 132 m the drawn surface stands over a structure's y 0,
+// not on it (kit.mjs `holdCrown`; the header). `TALL` is the unpressed
+// crown, metres vertex-true, asserted by `holdCrown`, so the press is known
+// before the build and the facet rule prices each part as the file draws it.
+const CROWN = 0.29 * L;
+const TALL = 238.1872;
+const PRESS = CROWN / TALL;
 /**
  * Drawn across by the measure the fit takes (THE FRAME, above), since the
  * pass: the facet rule is asked at this scale and the fit is asserted
@@ -169,7 +180,7 @@ const DRAWN = 16.7179;
 // The Commune's facet rule at this file's scale (pelagia.mjs `cut`, #919;
 // kit.mjs `asked` for the tanks and the standpipes): the builders are
 // handed the export's units and the rule is a chord in metres.
-const cut = pelagia.cut(L / DRAWN);
+const cut = pelagia.cut(L / DRAWN, { press: PRESS });
 
 // The navy's ink (#888); the lamp burns at this file's own 2.9447, second
 // only to the Foundry's 3.0999 among the Commune's `bio_light`, for "the
@@ -480,7 +491,11 @@ flangedPipes(
     frame: xLong,
     stems: { pipe: 'standpipe', flange: 'standpipe_flange' },
     pipe: { radii: [0.22, 0.26], facets: cut.round },
-    flange: { R: 0.3, tube: 0.07, facets: [cut.round, cut.round] },
+    // The flange lies flat, so its tube's ring stands in a vertical plane and
+    // the root's press (#960) shortens the chord it draws: priced through
+    // `cut.torus` from its placement, as the Commune's own parts are, where
+    // `cut.round` at the tube's radius read 8 under a press that asks 7.
+    flange: { R: 0.3, tube: 0.07, facets: cut.torus(0.3, 0.07, { rot: [Math.PI / 2, 0, 0] }) },
     pipes: [
       {
         n: '0',
@@ -525,5 +540,5 @@ if (Math.abs(Math.max(size.x, size.z) - DRAWN) > 1e-3)
   throw new Error(
     `${root.name}: drawn ${Math.max(size.x, size.z).toFixed(4)} across; the facet rule was asked at ${DRAWN}`
   );
-holdCrown(root, CROWN);
+holdCrown(root, CROWN, { tall: TALL });
 await exportGlb(root, 'bastion-pelagia.glb');

@@ -827,7 +827,11 @@ export function fitFootprint(root, lengthM) {
  * crown over that line stands in surface water. A press about the ground is
  * an affine map: every seat, every half-sunk lamp and every contact a model
  * earned (#907, #919) holds without re-measuring, since what touched touches
- * and what was over stays over; a lamp's plan area and its occlusion from
+ * and what was over stays over — though a contact at exactly zero can read
+ * as a micrometre gap under the press, the file's float32 stations rounding
+ * differently under the new root scale (the Klaxon Bastion's dome on its
+ * skirt reads 3.8 µm, and `contacts.mjs` tests exact zero); a lamp's plan
+ * area and its occlusion from
  * above are unchanged, so `lightAudit` reads the same `hidden` list and a
  * `gap` that can only shrink; the plan is byte for byte the plan, so the
  * maps and the outlines keep their footprint. The press rides on the root
@@ -838,10 +842,20 @@ export function fitFootprint(root, lengthM) {
  * Measured vertex-true (`Box3.setFromObject(root, true)`), the measure
  * glb.mjs `boundsOf` takes on the export. Returns `{ before, after, press }`
  * in metres; a model already under the line is left alone, press 1.
+ *
+ * A script that needs the press before it builds — the facet rule prices a
+ * part as the file will draw it, so each navy's `cut` takes the press —
+ * states the unpressed crown as `tall`, metres, and it is asserted here to
+ * a centimetre the way `metreTrue` asserts `drawn`: a crown that moved
+ * fails the build rather than drifting the press the counts were cut at.
  */
-export function holdCrown(root, crownM) {
+export function holdCrown(root, crownM, { tall = null, tolerance = 0.01 } = {}) {
   root.updateMatrixWorld(true);
   const before = new THREE.Box3().setFromObject(root, true).max.y;
+  if (tall !== null && Math.abs(before - tall) > tolerance)
+    throw new Error(
+      `${root.name}: crown at ${before.toFixed(3)} m unpressed; the header says ${tall}`
+    );
   if (before <= crownM) return { before, after: before, press: 1 };
   const press = crownM / before;
   root.scale.y *= press;

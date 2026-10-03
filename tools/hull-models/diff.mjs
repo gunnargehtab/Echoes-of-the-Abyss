@@ -51,7 +51,9 @@
  *   same triangle count, so a nose cone flattened into a cylinder passes
  *   every check above — the Tender's four ballast caps did (#587 review, F1).
  *   Area is the cheapest measure of a part's shape that bounds cannot stand
- *   in for; it is compared per part, divided by the root scale squared, and
+ *   in for; it is compared per part, the before part's triangles taken
+ *   under the root scale per axis first (exact under a press on one axis,
+ *   kit.mjs `holdCrown`, where area times a factor squared is not), and
  *   a change over a quarter of a percent is listed with the part.
  * - **A square plan is compared at whichever yaw agrees.** The bake yaws a
  *   file only when Z is the longer, and on a plan that is square to the

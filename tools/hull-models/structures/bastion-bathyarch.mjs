@@ -136,36 +136,46 @@
  * depth, 132 m under the drawn surface (rosterModels.ts `standingY`, #958),
  * and this file stood 212.89 m to the beacon's crown, 81 m of it in surface
  * water. The rule across the four Bastions is one proportion: the crown at
- * three tenths of the plan, 132 m over the ground at 440 (`CROWN`; kit.mjs
- * `holdCrown`), and the whole model pressed in y about y 0 to meet it, the
- * plan untouched. Here that is ×0.6200 on the root's y after `metreTrue`,
- * so every node below keeps the file's numbers and the file carries the
- * press: the dome is 0.92 on its node and 0.57 tall in the file, a
- * pressure-vessel head on the riveted skirt rather than a hemisphere; the
- * foundation and skirt stand 71 m → 44 m; the crane mast 3.4 units → 2.1.
- * Measured vertex-true after: `beacon` 132.00 m, `dome_cap` 123.8,
- * `crane_jib` 123.3, `crane_mast` 122.3; the ground is y 0 still. A press is
- * affine, so no seat, sink or contact moved: `diff.mjs bastion-bathyarch
- * origin/main` reads the root scale 1.0000 / 0.6200 / 1.0000 and every part
- * where it was; the light audit reads the same 27 lit parts at 1819.1 m² and
+ * 0.29 of the plan, 127.6 m over the ground at 440 — a hand under the line,
+ * not on it (`CROWN`; kit.mjs `holdCrown`, which asserts the unpressed
+ * 212.89 as `TALL`) — and the whole model pressed in y about y 0 to meet it,
+ * the plan untouched. Here that is ×0.5994 on the root's y after
+ * `metreTrue`, so every node below keeps the file's numbers and the file
+ * carries the press: the dome is 0.92 on its node and 0.55 tall in the
+ * file, a pressure-vessel head on the riveted skirt rather than a
+ * hemisphere; the foundation and skirt stand 71 m → 42 m; the crane mast
+ * 3.4 units → 2.0. The facet rule is asked under the press
+ * (`bathyarch.cut(L / DRAWN, { press })`, Block 2c) and every count held:
+ * `facets.mjs bathyarch` names no ring, as before. Measured vertex-true
+ * after: `beacon` 127.60 m, `dome_cap` 119.7, `crane_jib` 119.2,
+ * `crane_mast` 118.2; the ground is y 0 still. A press is affine, so no
+ * seat, sink or contact moved: `diff.mjs bastion-bathyarch origin/main`
+ * reads the root scale 1.0000 / 0.5994 / 1.0000 and every part where it
+ * was; the light audit reads the same 27 lit parts at 1819.1 m² and
  * intake's raw E the same 14.43; `contacts.mjs` lists the same pairs but
- * `dome_skirt · dome`, whose gap reads 3.8 µm — the dome's foot on the
- * skirt's cap at float32 under the new root scale, where the sweep's test is
- * exact zero — and nothing else. The plan is the file's, so the maps and
- * the outline keep their footprint.
+ * `foundation · dome_skirt` and `foundation · module_refinery`, a skirt and
+ * a module stood on the slab's top at exactly zero, which read as a
+ * micrometre gap under the new root scale (float32 stations; the sweep
+ * tests exact zero — `holdCrown`), and nothing else. The plan is the
+ * file's, so the maps and the outline keep their footprint.
  */
 import { THREE, drawn, metreTrue, holdCrown, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
 
 const L = 440;
-// HEIGHT (#960): the crown held at three tenths of the plan, 132 m over the
-// ground at 440 (kit.mjs `holdCrown`; the header).
-const CROWN = 0.3 * L;
+// HEIGHT (#960): the crown held at 0.29 of the plan, 127.6 m over the ground
+// at 440 — under the 132 m the drawn surface stands over a structure's y 0,
+// not on it (kit.mjs `holdCrown`; the header). `TALL` is the unpressed
+// crown, metres vertex-true, asserted by `holdCrown`, so the press is known
+// before the build and the facet rule prices each part as the file draws it.
+const CROWN = 0.29 * L;
+const TALL = 212.8907;
+const PRESS = CROWN / TALL;
 const DRAWN = 8.7012;
 // The Klaxon's facet rule at this file's scale (bathyarch.mjs `cut`, #919):
 // the builders are handed the export's units and the rule is a chord in
 // metres.
-const cut = bathyarch.cut(L / DRAWN);
+const cut = bathyarch.cut(L / DRAWN, { press: PRESS });
 
 const black = bathyarch.ink.hullBlack();
 const grey = bathyarch.ink.ironGrey();
@@ -418,5 +428,5 @@ bathyarch.deckHatches(root, { hatch: grey, wheel: rust }, {
 });
 
 metreTrue(root, L, { drawn: DRAWN });
-holdCrown(root, CROWN);
+holdCrown(root, CROWN, { tall: TALL });
 await exportGlb(root, 'bastion-bathyarch.glb');

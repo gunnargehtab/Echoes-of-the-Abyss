@@ -57,6 +57,7 @@ import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { sceneParts, topDown, occludes } from './glb.mjs';
 import { NAVIES } from './finishes.mjs';
@@ -127,6 +128,49 @@ export function orbFacets(
     widthSegments: Math.max(ORB_FLOOR['sphere round'], facetsFor(rule, widest, phiLength)),
     heightSegments,
   };
+}
+
+/**
+ * An orb's two counts under a press on y — a structure held under the
+ * drawn surface by its root (kit.mjs `holdCrown`, #960). A pressed
+ * meridian draws a shorter chord than the circle's at the orb's radius,
+ * and the measure reads it at the radius that chord implies (Block 2c), so
+ * the counts are settled the way the Commune's `cut` settles a part its
+ * node presses: built at `orbFacets`'s answer, pressed, read back through
+ * `ringsOf` and asked again until they hold; on a cycle every count the
+ * cycle visited is tried, and the last is built if none reads back. Only
+ * `press` is applied here — a navy whose builders carry a node scale
+ * threads the press into its own probe instead.
+ */
+export function pressedOrb(rule, radiusM, window = {}, press = 1) {
+  const { thetaStart = 0, thetaLength = Math.PI, phiLength = TAU } = window;
+  const first = orbFacets(rule, radiusM, window);
+  const start = [first.widthSegments, first.heightSegments];
+  if (press === 1) return start;
+  const read = ([w, h]) => {
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(radiusM, w, h, 0, phiLength, thetaStart, thetaLength)
+    );
+    mesh.scale.set(1, press, 1);
+    mesh.updateMatrixWorld(true);
+    return ringsOf(mesh).map((r) =>
+      Math.max(ORB_FLOOR[r.kind] ?? 1, facetsFor(rule, r.radiusM, r.arc))
+    );
+  };
+  const same = (a, b) => a.length === b.length && a.every((n, k) => n === b[k]);
+  const seen = [];
+  let counts = start;
+  for (let i = 0; i < 2 * (rule.max - rule.min + 1); i++) {
+    const next = read(counts);
+    if (same(next, counts)) return counts;
+    if (seen.some((s) => same(s, next))) break;
+    seen.push(counts);
+    counts = next;
+  }
+  seen.push(counts);
+  const axes = counts.map((_, k) => [...new Set(seen.map((s) => s[k]))].sort((a, b) => a - b));
+  const tried = axes.reduce((acc, ax) => acc.flatMap((c) => ax.map((n) => [...c, n])), [[]]);
+  return tried.find((c) => same(read(c), c)) ?? counts;
 }
 
 /* --------------------------------------------------------------------------

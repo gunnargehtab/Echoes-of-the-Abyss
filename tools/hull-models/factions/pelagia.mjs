@@ -313,7 +313,7 @@ export const panels = { hull: [1.5, 5], structure: [4, 13.5] };
  * and the cap takes the segment over — the measure names those, and Block
  * 2c says how many. No section is asked, because the Commune has none.
  */
-export function cut(m = 1) {
+export function cut(m = 1, { press = 1 } = {}) {
   const round = (radius, arc) => facetsFor(facets, radius * m, arc);
   const probe = (geo, placement = {}) => {
     const { scale = [1, 1, 1], rot = [0, 0, 0], parent = null, yaw = false } = placement;
@@ -325,7 +325,9 @@ export function cut(m = 1) {
       parent.updateMatrixWorld(true);
       parent.remove(mesh);
     } else mesh.updateMatrixWorld(true);
-    mesh.matrixWorld.premultiply(new THREE.Matrix4().makeScale(m, m, m));
+    // The root's metre scale, and the press a held crown puts on its y
+    // (kit.mjs `holdCrown`, #960): a part is read as the file will draw it.
+    mesh.matrixWorld.premultiply(new THREE.Matrix4().makeScale(m, m * press, m));
     return ringsOf(mesh).map((r) =>
       Math.max(ORB_FLOOR[r.kind] ?? 1, facetsFor(facets, r.radiusM, r.arc))
     );
