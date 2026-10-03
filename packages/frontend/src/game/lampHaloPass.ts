@@ -9,8 +9,9 @@
  *    well cost 5–7 ms on the named GPU, #1001's readings).
  * 2. Source: one instanced draw of a splat per lamp site into a half-float
  *    target that shares that depth, tested less-or-equal and never written.
- * 3. Spread: a 2 × 2 box downsample and a separable blur at each of 1/2, 1/4
- *    and 1/8 of the drawing buffer, nine draws.
+ * 3. Spread: a separable blur at each of 1/2, 1/4 and 1/8 of the drawing
+ *    buffer, six draws, whose horizontal half reads the level above at each
+ *    tap's 2 × 2 block, so the box downsample takes no draw of its own.
  * 4. Composite: one full-screen draw, screen-blended onto the canvas, skipping
  *    every sample an own lamp marked in the canvas stencil.
  *
@@ -159,12 +160,6 @@ void main() {
 }
 `;
 
-const COPY_FRAGMENT = /* glsl */ `
-uniform sampler2D uSource;
-varying vec2 vUv;
-void main() { gl_FragColor = texture2D(uSource, vUv); }
-`;
-
 const BLUR_FRAGMENT = /* glsl */ `
 uniform sampler2D uSource;
 uniform vec2 uStep;
@@ -237,8 +232,6 @@ export class LampHaloPass {
   private height = 0;
   private weightsRatio = 0;
   private readonly savedClear = new Color();
-  private readonly stepH = new Vector2();
-  private readonly stepV = new Vector2();
 
   private readonly instanceData = new Float32Array(LAMP_HALO.SITE_CAP * STRIDE);
   private readonly instances = new InstancedInterleavedBuffer(this.instanceData, STRIDE);
@@ -266,15 +259,6 @@ export class LampHaloPass {
 
   private readonly fullscreen = new Mesh(fullscreenTriangle());
   private readonly fullscreenScene = new Scene();
-  private readonly copyMaterial = new ShaderMaterial({
-    vertexShader: FULLSCREEN_VERTEX,
-    fragmentShader: COPY_FRAGMENT,
-    uniforms: { uSource: { value: null } },
-    blending: NoBlending,
-    depthTest: false,
-    depthWrite: false,
-    toneMapped: false,
-  });
   private readonly blurMaterial = new ShaderMaterial({
     vertexShader: FULLSCREEN_VERTEX,
     fragmentShader: BLUR_FRAGMENT,
@@ -443,23 +427,16 @@ export class LampHaloPass {
       this.marker?.('halo-spread');
       let from: Texture = source.texture;
       for (const [a, b] of this.levels) {
-        this.draw(renderer, camera, this.copyMaterial, a, { uSource: from });
-        this.draw(renderer, camera, this.blurMaterial, b, {
-          uSource: a.texture,
-          uStep: this.stepH.set(1 / a.width, 0),
-        });
-        this.draw(renderer, camera, this.blurMaterial, a, {
-          uSource: b.texture,
-          uStep: this.stepV.set(0, 1 / a.height),
-        });
+        // The level above, read one of this level's texels apart: each tap
+        // lands on the centre of a 2 × 2 block of it, where linear filtering
+        // is the block's mean, so this draw is the downsample and the
+        // horizontal blur at once (SPEC, Spread). It used to be two.
+        this.blur(renderer, camera, from, b, 1 / b.width, 0);
+        this.blur(renderer, camera, b.texture, a, 0, 1 / a.height);
         from = a.texture;
       }
       this.marker?.('halo-composite');
-      this.draw(renderer, camera, this.compositeMaterial, null, {
-        uLevel1: this.levels[0]![0].texture,
-        uLevel2: this.levels[1]![0].texture,
-        uLevel3: this.levels[2]![0].texture,
-      });
+      this.drawFullscreen(renderer, camera, this.compositeMaterial, null);
     } finally {
       renderer.setRenderTarget(null);
       renderer.autoClear = autoClear;
@@ -473,7 +450,6 @@ export class LampHaloPass {
     this.splatGeometry.dispose();
     this.splatMaterial.dispose();
     this.fullscreen.geometry.dispose();
-    this.copyMaterial.dispose();
     this.blurMaterial.dispose();
     this.compositeMaterial.dispose();
   }
@@ -497,6 +473,11 @@ export class LampHaloPass {
       const h = Math.ceil(height / d);
       return [colorTarget(w, h), colorTarget(w, h)] as [WebGLRenderTarget, WebGLRenderTarget];
     });
+    // The composite reads the same three textures until the next allocation.
+    const composite = this.compositeMaterial.uniforms;
+    composite.uLevel1!.value = this.levels[0]![0].texture;
+    composite.uLevel2!.value = this.levels[1]![0].texture;
+    composite.uLevel3!.value = this.levels[2]![0].texture;
     this.width = width;
     this.height = height;
     this.bytes =
@@ -595,14 +576,29 @@ export class LampHaloPass {
     this.weightsRatio = pixelRatio;
   }
 
-  private draw(
+  /** One blur draw: `source` read a step of (x, y) apart, into `target`. */
+  private blur(
+    renderer: WebGLRenderer,
+    camera: Camera,
+    source: Texture,
+    target: WebGLRenderTarget,
+    x: number,
+    y: number
+  ): void {
+    const uniforms = this.blurMaterial.uniforms;
+    uniforms.uSource!.value = source;
+    (uniforms.uStep!.value as Vector2).set(x, y);
+    this.drawFullscreen(renderer, camera, this.blurMaterial, target);
+  }
+
+  // Each draw's uniforms are set in place, never through a fresh object: this
+  // runs eight times a frame, and its CPU side is gate 6's line (#1001).
+  private drawFullscreen(
     renderer: WebGLRenderer,
     camera: Camera,
     material: ShaderMaterial,
-    target: WebGLRenderTarget | null,
-    uniforms: Record<string, unknown>
+    target: WebGLRenderTarget | null
   ): void {
-    for (const [name, value] of Object.entries(uniforms)) material.uniforms[name]!.value = value;
     this.fullscreen.material = material;
     renderer.setRenderTarget(target);
     renderer.render(this.fullscreenScene, camera);

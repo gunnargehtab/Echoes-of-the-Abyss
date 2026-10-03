@@ -1,6 +1,6 @@
 /**
  * The lamp halo's pass on the headless renderer — docs/graphics-standards.md
- * gate 6, "Lamp halo": +11 calls at any force size, 2 × sites + 10 triangles,
+ * gate 6, "Lamp halo": +8 calls at any force size, 2 × sites + 7 triangles,
  * 17.25 bytes per drawing-buffer pixel plus the 64 KiB instance buffer, one
  * depth copy, and nothing at all when no site is drawn or the view cannot
  * draw it. Counted from the stand-in's ledger, never timed.
@@ -63,7 +63,7 @@ describe('lamp halo pass: what gate 6 allocates', () => {
     }
   });
 
-  it('adds 11 calls and 2 × sites + 10 triangles, whatever the force size', () => {
+  it('adds 8 calls and 2 × sites + 7 triangles, whatever the force size', () => {
     for (const count of [1, 108, 1024]) {
       const gl = renderer(1440, 900);
       const pass = new LampHaloPass();
@@ -72,8 +72,8 @@ describe('lamp halo pass: what gate 6 allocates', () => {
       gl.info.reset();
       const passes = pass.render(gl.asRenderer(), camera, splats(count), 0, 0.0001, 1, 2);
       assert.deepEqual(passes, ['depth-copy', 'halo-source', 'halo-spread', 'halo-composite']);
-      assert.equal(gl.info.render.calls, 11, `${count} sites`);
-      assert.equal(gl.info.render.triangles, 2 * count + 10);
+      assert.equal(gl.info.render.calls, 8, `${count} sites`);
+      assert.equal(gl.info.render.triangles, 2 * count + 7);
       assert.equal(gl.context.blits - blits, 1, 'one depth copy, a listed pass and not a call');
       assert.equal(gl.frameTargets.at(-1), null, 'the composite draws onto the canvas');
       assert.equal(pass.sites, count);
@@ -161,7 +161,7 @@ describe('lamp halo pass: what the split timer reads (gpuTimer.ts)', () => {
       'one mark a listed pass, in order'
     );
     // What lands before each mark is the previous part's: the blit inside the
-    // depth copy's, the splat draw inside the source's, nine draws inside the
+    // depth copy's, the splat draw inside the source's, six draws inside the
     // spread's, and the composite after the last mark.
     assert.deepEqual(
       marks.map(({ calls, blits }) => [calls, blits]),
@@ -169,9 +169,9 @@ describe('lamp halo pass: what the split timer reads (gpuTimer.ts)', () => {
         [0, 0],
         [0, 1],
         [1, 1],
-        [10, 1],
+        [7, 1],
       ]
     );
-    assert.equal(gl.info.render.calls, 11);
+    assert.equal(gl.info.render.calls, 8);
   });
 });

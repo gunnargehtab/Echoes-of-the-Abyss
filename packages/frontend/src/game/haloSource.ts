@@ -9,7 +9,15 @@
  * Kept apart from PerspectiveView so a test can hold it over real roster
  * templates. Read after the canvas render, so every matrix is this frame's.
  */
-import { Frustum, Matrix4, Mesh, Sphere, Vector3, type PerspectiveCamera } from 'three';
+import {
+  Frustum,
+  Matrix4,
+  Mesh,
+  Sphere,
+  Vector3,
+  type Material,
+  type PerspectiveCamera,
+} from 'three';
 import type { HaloSplat } from './lampHaloPass.ts';
 import { capSites, entityHaloEnergy, LAMP_HALO, peakField, siteShares } from './lampHalo.ts';
 import { lampSiteParts } from './lampSites.ts';
@@ -17,6 +25,15 @@ import type { RosterModelInstance } from './rosterModels.ts';
 
 /** A splat, and which of the input entities it belongs to. */
 export type SourceSplat = HaloSplat & { readonly entity: number };
+
+/** A lamp site as the gather weighs it, and then the splat it draws. */
+type Part = SourceSplat & {
+  readonly area: number;
+  readonly luminance: number;
+  /** Its light at one pixel, px² of full ink: per unit energy, then its own. */
+  light: number;
+  energy: number;
+};
 
 export interface HaloSourceInput {
   /** Own entities with their model showing, and each one's live SIG. */
@@ -37,6 +54,29 @@ const SIZE = new Vector3();
 const VIEW = new Vector3();
 const RAY = new Vector3();
 
+/**
+ * Each model's meshes by lamp material, in the order a walk of its tree meets
+ * them, found once per model. A model's parts and their materials are fixed
+ * once it is built (rosterModels.ts), and walking its whole tree for every
+ * lamp material every frame was half the gather's CPU time (#1001). Whether a
+ * mesh is visible is still asked each frame.
+ */
+const MESHES = new WeakMap<RosterModelInstance, Map<Material, Mesh[]>>();
+
+function lampMeshes(model: RosterModelInstance, material: Material): readonly Mesh[] {
+  let byMaterial = MESHES.get(model);
+  if (byMaterial === undefined) {
+    const found = new Map<Material, Mesh[]>(model.emissives.map((e) => [e.material, []]));
+    model.root.traverse((child) => {
+      if (!(child instanceof Mesh)) return;
+      const materials = Array.isArray(child.material) ? child.material : [child.material];
+      for (const lamp of new Set<Material>(materials)) found.get(lamp)?.push(child);
+    });
+    MESHES.set(model, (byMaterial = found));
+  }
+  return byMaterial.get(material) ?? [];
+}
+
 export function gatherHaloSplats(input: HaloSourceInput): {
   splats: SourceSplat[];
   dropped: number;
@@ -47,25 +87,22 @@ export function gatherHaloSplats(input: HaloSourceInput): {
   FRUSTUM.setFromProjectionMatrix(
     MATRIX.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)
   );
-  const candidates: (SourceSplat & { light: number })[] = [];
+  // One object a site, drawn or not: it becomes the splat itself, its energy
+  // and light set once its share is known. Copying it into a second object
+  // and wrapping it for the cap a frame was most of what the gather allocated.
+  const candidates: Part[] = [];
   input.entities.forEach(({ sig, model }, entity) => {
     const energy = entityHaloEnergy(sig, input.drawScale);
     if (energy <= 0) return;
-    const parts: (Omit<SourceSplat, 'energy'> & {
-      area: number;
-      luminance: number;
-      light: number;
-    })[] = [];
+    const parts: Part[] = [];
     for (const { material, restIntensity } of model.emissives) {
       const { r, g, b } = material.emissive;
       const peak = Math.max(r, g, b);
       if (peak <= 0) continue;
       const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) * restIntensity;
       const ink = material.emissive.clone().multiplyScalar(1 / peak);
-      model.root.traverse((child) => {
-        if (!(child instanceof Mesh) || !child.visible) return;
-        const materials = Array.isArray(child.material) ? child.material : [child.material];
-        if (!materials.includes(material)) return;
+      for (const child of lampMeshes(model, material)) {
+        if (!child.visible) continue;
         const m = child.matrixWorld.elements;
         for (const site of lampSiteParts(child.geometry)) {
           site.box.getCenter(POINT).applyMatrix4(child.matrixWorld);
@@ -107,9 +144,10 @@ export function gatherHaloSplats(input: HaloSourceInput): {
             area: site.area,
             luminance,
             light: depth > 0 ? ((fx * fy) / (depth * depth)) * tau ** 2.2 : 0,
+            energy: 0,
           });
         }
-      });
+      }
     }
     const shares = siteShares(parts);
     const light = parts.reduce((sum, p, i) => sum + energy * shares[i]! * p.light, 0);
@@ -119,20 +157,12 @@ export function gatherHaloSplats(input: HaloSourceInput): {
       SPHERE.center.set(p.x, p.y, p.z);
       SPHERE.radius = p.halfDiagonal;
       if (!FRUSTUM.intersectsSphere(SPHERE)) return;
-      candidates.push({
-        entity: p.entity,
-        x: p.x,
-        y: p.y,
-        z: p.z,
-        cov: p.cov,
-        ink: p.ink,
-        halfDiagonal: p.halfDiagonal,
-        nearOffset: p.nearOffset,
-        energy: energy * shares[i]!,
-        light: energy * shares[i]! * p.light,
-      });
+      p.energy = energy * shares[i]!;
+      p.light *= p.energy;
+      candidates.push(p);
     });
   });
+  if (candidates.length <= LAMP_HALO.SITE_CAP) return { splats: candidates, dropped: 0 };
   const { kept, dropped } = capSites(candidates.map((c) => ({ energy: c.light, splat: c })));
   return { splats: kept.map((k) => k.splat), dropped };
 }
