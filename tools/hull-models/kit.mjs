@@ -1272,11 +1272,14 @@ export function outputPath(filename) {
  * asked for, read where it can be read. A GLB cannot say whether a slab was
  * extruded or whether its rim is a chamfer, but the live geometry can:
  * `plate` and `plan` are three's ExtrudeGeometry, and a clone keeps the
- * constructor's `parameters` (BufferGeometry.copy), so the bevel is read off
- * the geometry a mesh holds wherever a builder made it. A plate re-wrapped
- * on the way — `toNonIndexed`, `mergeGeometries` — is a plain buffer here
- * and is counted as one. The export prints it, and
- * tools/render-stack/bevels.mjs sums it over the library.
+ * constructor's `parameters` (ExtrudeGeometry.copy), so the bevel is read off
+ * the geometry a mesh holds wherever a builder made it. A plate is every
+ * extruded part, the kit's and the faction modules' own — the Commune's
+ * membranes, the Order's well plates — and so is a bevel: hadron.mjs
+ * `frameBlades` chamfers its own. A plate re-wrapped on the way
+ * (`toNonIndexed`, `mergeGeometries`) is a plain buffer here and is counted
+ * as one. The export prints it, and tools/render-stack/bevels.mjs sums it
+ * over the library.
  */
 export function census(root) {
   const kinds = new Map();
@@ -1315,10 +1318,8 @@ export async function exportGlb(root, filename) {
   console.log(
     `${filename}: ${Buffer.from(glb).length} bytes, ${parts} parts, ${Math.round(tris)} tris\n` +
       `  bounds x ${b.x.join('..')}  y ${b.y.join('..')}  z ${b.z.join('..')}\n` +
-      `  primitives: ${kinds.join(', ')}
-` +
-      `  plates: ${built.plates} extruded, ${built.bevelled} bevelled
-` +
+      `  primitives: ${kinds.join(', ')}\n` +
+      `  plates: ${built.plates} extruded, ${built.bevelled} bevelled\n` +
       `  light: ${light.lit.length} lit parts, ${light.totalM2} m² facing up`
   );
   for (const name of light.hidden)

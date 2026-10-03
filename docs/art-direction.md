@@ -338,7 +338,10 @@ is the kit's only bevel: a box, a cylinder, a lathe, a sphere or a torus has a s
 no option for another. A GLB cannot say whether a slab was extruded or whether its rim is a
 chamfer, so `node tools/render-stack/bevels.mjs` runs every model script and sums what each
 export reports it is built from (kit.mjs `census`: the geometry each part holds, and whether an
-extruded one was bevelled). At `9e3bfae2`:
+extruded one was bevelled). A part here is a scene mesh, which is what a script adds and the
+export names; row 6 below counts GLB primitives, a different unit. A plate is every extruded
+part, the kit's and the faction modules' own, and so is a bevel: `factions/hadron.mjs`
+`frameBlades` chamfers its own, and two of the Knights' three are its. At `9e3bfae2`:
 
 | Navy | Models | With plates | Parts | Plates | Bevelled |
 | --- | --- | --- | --- | --- | --- |
@@ -362,11 +365,12 @@ Three readings follow, and they bound what the row can do:
   The Knights' 3 of 75 is "square-edged is what an Order wing wants" (kit.mjs `plate`), and
   razor-thin lines are their light ([style-neon-noir.md](style-neon-noir.md) "Faction accents
   on a neon-noir ground"): not a gap. The Commune's 15 of 69 is the one to read for coverage:
-  the kit calls the navy "soft-edged by doctrine", yet its four shared hulls carry 29 plates
-  with no bevel on any, and its membranes and intake scoops are extruded square
+  the kit calls the navy "soft-edged by doctrine", yet 54 of its 69 plates have none: four
+  of its five shared kinds carry 29 plates, none bevelled, the Chorister and the Spinner five
+  each the same, and its membranes and intake scoops are extruded square
   (`factions/pelagia.mjs` `membranes`, `intakeScoop`). The Consortium's 5 of 27 and the
   Directorate's 7 of 19 carry a bevel where the hull's own numbers give one (a slab's,
-  plough's or scoop's `bevel`) and none otherwise.
+  plough's, scoop's or fan plate's `bevel`) and none otherwise.
 - **The count is the library at the commit named.** It moves whenever a model does, so a
   later reading re-runs the script rather than trusting this table.
 
