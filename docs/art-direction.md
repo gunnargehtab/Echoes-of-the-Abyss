@@ -463,8 +463,8 @@ after three's `map_fragment`, so a Commune hull in the tutorial wears both, the 
 the laminate, and `packages/frontend/test/trimSheet.test.ts` holds the chain.
 
 Embedding the sheet in each file was the first cut and the owner's call to reverse: 31 KB a
-model that gzip cannot shrink, 2.9 MB over the 94 models a sheet could reach, and a
-re-export of every model on a sheet whenever one of its numbers moved. Apart from the file,
+model that gzip cannot shrink, 2.9 MB over the 94 navy models were every navy given a sheet,
+and a re-export of every model on a sheet whenever one of its numbers moved. Apart from the file,
 a navy's look is one PNG and one table, and a model's part of it is a layout and a name.
 
 Unlike the occlusion map, the sheet reaches the chart: the sprite bake hands intake's albedo

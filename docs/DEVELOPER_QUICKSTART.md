@@ -8,8 +8,9 @@ small code or documentation changes with confidence they will pass CI.
 - **Node.js 22 or newer**, npm 10+
 - Git
 
-Node 22 is a hard floor, not a recommendation. The backend dev and test scripts
-use `node --import tsx` and the stable `node:test` runner, and CI pins Node 22.
+Node 22.3 is a hard floor, not a recommendation. The backend dev and test scripts
+use `node --import tsx` and the stable `node:test` runner, the frontend test shim
+needs 22.3's `process.getBuiltinModule`, and CI pins Node 22.
 Older runtimes fail with errors that do not obviously point at the Node version.
 
 ## Repository layout

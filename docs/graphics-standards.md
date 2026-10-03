@@ -508,8 +508,8 @@ triangle either: a texture on materials the frame already draws, at most 512² a
 1.33 MiB as three uploads a PNG with its mipmaps, and only on the models a script bakes. A
 trim sheet ([art-direction.md](art-direction.md#uv-layout-and-trim-sheets--spec)) is allocated
 the same and no more, once a **navy** rather than once a model: 512² and 1.33 MiB for each
-navy with a sheet whose models are in the frame, shared by every laid-out material of that
-navy, and nothing for a model whose script passes no `trim`.
+navy with a sheet whose models have loaded, resident for the page's lifetime and shared by
+every laid-out material of that navy, and nothing for a model whose script passes no `trim`.
 Nor are the vignette and the sway
 ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)): the browser
 composites the one, and the other moves a camera the frame already draws through.

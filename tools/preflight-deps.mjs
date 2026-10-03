@@ -22,9 +22,11 @@ import { fileURLToPath } from 'node:url';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-// Node 22+: the backend dev and test scripts use `node --import tsx` and the
-// stable node:test runner, both of which fail obscurely on older runtimes.
-const MIN_NODE_MAJOR = 22;
+// Node 22.3+: the backend dev and test scripts use `node --import tsx` and the
+// stable node:test runner, both of which fail obscurely on older runtimes, and
+// the frontend test shim lists asset globs through `process.getBuiltinModule`
+// (packages/frontend/test/support/viteAssetHooks.mjs), which 22.3 added.
+const MIN_NODE = [22, 3];
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
@@ -48,11 +50,12 @@ function isInstalled(name, fromDir) {
 
 const problems = [];
 
-const nodeMajor = Number(process.versions.node.split('.')[0]);
-if (nodeMajor < MIN_NODE_MAJOR) {
+const [nodeMajor, nodeMinor] = process.versions.node.split('.').map(Number);
+const minNode = MIN_NODE.join('.');
+if (nodeMajor < MIN_NODE[0] || (nodeMajor === MIN_NODE[0] && nodeMinor < MIN_NODE[1])) {
   problems.push({
-    headline: `Node ${process.versions.node} is too old — this repository needs Node ${MIN_NODE_MAJOR}+.`,
-    fix: `Install Node ${MIN_NODE_MAJOR} or newer (24 recommended), then run \`npm install\` again.`,
+    headline: `Node ${process.versions.node} is too old — this repository needs Node ${minNode}+.`,
+    fix: `Install Node ${minNode} or newer (24 recommended), then run \`npm install\` again.`,
   });
 }
 
