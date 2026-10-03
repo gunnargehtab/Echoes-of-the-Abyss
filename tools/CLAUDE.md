@@ -22,9 +22,9 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    values and a part's normals included (#911), on any name
                    finishes.mjs finds at two values inside one navy, and on a
                    model file that is neither an env- prop nor named
-                   -<navy>.glb (#888); CI runs it in the build job. It
-                   reads a part's uv1 and the occlusion map a script bakes in
-                   (#1002), not UV0 or vertex colours (#1005).
+                   -<navy>.glb (#888); CI runs it in the build job. It reads
+                   uv1 and the occlusion map a script bakes (#1002), UV0 and the
+                   trim sheet one lays (trim.mjs, #1005; images.mjs embeds both).
                    diff.mjs answers the one thing check.mjs cannot —
                    what a port changed about a shape — by reading the pre-port
                    binary out of git history, since after a port the committed
@@ -79,7 +79,7 @@ tools/render-stack #974's audit and camera pairs, kept runnable rather than
                    quoted; not an npm workspace and not a gate. audit.mjs
                    recounts the ranked audit's figures off the committed GLBs:
                    raw and gzip bytes (a library sum, not a download), UV0 and
-                   uvAlike's zeros, materials with an occlusion map. bevels.mjs
+                   uvAlike's zeros, materials with an AO map or a trim sheet. bevels.mjs
                    runs the scripts and sums kit.mjs `census` by navy — parts
                    by primitive, plates bevelled — since no GLB can say if a
                    rim is a chamfer (#1002). capture.mjs, a run-game --steps module: four

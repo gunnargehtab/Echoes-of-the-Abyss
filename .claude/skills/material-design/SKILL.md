@@ -73,10 +73,13 @@ example; do not install another rendering stack.
   `envMapIntensity` there. Templates outlive a view (`rosterModels.ts`), so none takes the
   environment as its own `envMap`. It is never the background, and never a capture of the
   match: it reflects no entity, accent or hidden state.
-- **UV0 is not a layout.** A map reads the UV set its texture's `channel` names: `uv`,
-  then `uv1`, so `uv2` is the third. `aoMap` darkens indirect light only. `uvAlike` writes
-  zeros, and `node tools/render-stack/audit.mjs` counts what the library carries (#1002
-  and #1005 start there).
+- **UV0 is not a layout, unless a script laid one.** A map reads the UV set its texture's
+  `channel` names: `uv`, then `uv1`, so `uv2` is the third. `aoMap` darkens indirect light
+  only. `uvAlike` writes zeros; a script that opts into a trim sheet has
+  `tools/hull-models/trim.mjs` lay every part's UV0 in metres and embeds one grey
+  base-colour map, which multiplies the recoloured ink and never reaches `emissive`
+  (#1005, the Bulwark first). `node tools/render-stack/audit.mjs` counts what the library
+  carries.
 
 ## Prove the surface
 

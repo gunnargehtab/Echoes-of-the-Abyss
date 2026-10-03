@@ -24,7 +24,7 @@ import { Color, Mesh, MeshStandardMaterial } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 // A baked model's occlusion map (#1002) is an image three's loader can decode
 // only in a browser; nothing here measures it, so the parse goes without it.
-import { stripOcclusion } from '../../../tools/hull-models/occlusion.mjs';
+import { stripImages } from '../../../tools/hull-models/images.mjs';
 import { Faction, StructureKind, UnitKind } from '@echoes/shared';
 
 import { buildTemplate, slugFor } from '../src/game/rosterModels.ts';
@@ -47,7 +47,7 @@ async function parse(file) {
   if (!parsed.has(file)) {
     const bytes = readFileSync(new URL(file, MODELS));
     const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-    parsed.set(file, (await new GLTFLoader().parseAsync(stripOcclusion(buffer), '')).scene);
+    parsed.set(file, (await new GLTFLoader().parseAsync(stripImages(buffer), '')).scene);
   }
   return parsed.get(file);
 }

@@ -3,7 +3,8 @@
  *
  * Every approved model in `docs/concept-art/models/` is `THREE.GLTFExporter`
  * output: a scene of named primitive parts, no sculpts, and no texture but
- * the occlusion map a script opts into (`exportGlb`'s `occlusion`, #1002). The
+ * the two a script opts into (`exportGlb`'s `occlusion`, #1002, and its
+ * `trim`, #1005). The
  * Bulwark is `hull_slab` + `armour_tier_1..3` + `flank_plate_p0..p3`; the Dredge
  * is `tergite_0..n` + `tergite_ridge_0..n` + `tergite_spine_0..n`. Those repeating
  * series are loops, so the roster can be *built* rather than exported — which is
@@ -66,13 +67,14 @@
  * encodes a texture through `OffscreenCanvas` or `document` (`getCanvas`),
  * Node has neither, and a material carrying an `aoMap` or any other map
  * throws in `parseAsync`. Vertex attributes still export (a second UV set,
- * `COLOR_0`). The one image a model carries goes round it: `exportGlb`'s
+ * `COLOR_0`). The images a model carries go round it: `exportGlb`'s
  * `occlusion` option bakes the map with the materials still bare
- * (occlusion.mjs), lets the exporter write the geometry and its `uv1`, and
- * then appends the PNG to the binary and names it on every solid material
- * (`embedOcclusion`). A script that wants any other map has the same door
- * to widen; until one does, every model but the ones opted in is as
- * textureless as the history above says.
+ * (occlusion.mjs) and its `trim` lays UV0 and draws the sheet (trim.mjs),
+ * the exporter writes the geometry and both UV sets, and images.mjs then
+ * appends each PNG to the binary and names it on the materials it is for.
+ * A script that wants any other map has the same door to widen; until one
+ * does, every model but the ones opted in is as textureless as the history
+ * above says.
  */
 globalThis.FileReader = class {
   readAsArrayBuffer(b) {
@@ -94,7 +96,9 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
-import { bakeOcclusion, embedOcclusion } from './occlusion.mjs';
+import { bakeOcclusion, occlusionImage } from './occlusion.mjs';
+import { drawTrimSheet, layoutTrim, trimImage } from './trim.mjs';
+import { embedImages } from './images.mjs';
 import {
   sceneParts,
   topDown,
@@ -374,9 +378,11 @@ export const CHINE = [
  * `plan` their outline's metres; this, zeros; the env props, none
  * (`flatShaded` below, seabed.mjs `kept`). rosterModels.ts
  * `mergeByMaterial` stacks a material's parts in one buffer, islands
- * overlapping. A trim sheet (#1005) needs a layout none of these is; the
- * occlusion map (#1002) lays its own on `uv1` and leaves this channel as
- * it finds it; `node tools/render-stack/audit.mjs` counts what there is.
+ * overlapping. A trim sheet needs a layout none of these is, so a script
+ * that opts into one (`exportGlb`'s `trim`, #1005) has trim.mjs lay every
+ * part's UV0 over again, in metres, at export; the occlusion map (#1002)
+ * lays its own on `uv1` and leaves this channel as it finds it; `node
+ * tools/render-stack/audit.mjs` counts what there is.
  */
 export function uvAlike(geo) {
   const n = geo.attributes.position.count;
@@ -1309,15 +1315,24 @@ export function census(root) {
  * Write the GLB into docs/concept-art/models/ and report what it contains.
  * `occlusion`, when given, is `bakeOcclusion`'s options (occlusion.mjs:
  * `size`, `rays`, `reach`), and the file carries the baked map on every
- * solid material; the bake runs first, since it lays `uv1` on the
- * geometry the exporter is about to write, and the exporter runs with the
+ * solid material; `trim`, when given, is a navy's sheet (trim.mjs:
+ * `strakeM`, `plateM` and the sheet's own numbers), and the file carries
+ * the layout on every part's UV0 and the sheet on every solid unlit
+ * material. Both run first, since they lay UV sets on the geometry the
+ * exporter is about to write — the trim before the bake, so a vertex the
+ * bake splits carries its layout — and the exporter runs with the
  * materials bare, since it cannot write an image (the header).
  */
-export async function exportGlb(root, filename, { occlusion = null } = {}) {
+export async function exportGlb(root, filename, { occlusion = null, trim = null } = {}) {
   const out = outputPath(filename);
+  const sheet = trim ? drawTrimSheet(trim) : null;
+  const laid = sheet ? layoutTrim(root, sheet, trim) : null;
   const ao = occlusion ? bakeOcclusion(root, occlusion) : null;
   const exported = await new GLTFExporter().parseAsync(root, { binary: true });
-  const glb = ao ? embedOcclusion(exported, ao) : Buffer.from(exported);
+  const images = [];
+  if (sheet) images.push(trimImage(sheet, laid.materials));
+  if (ao) images.push(occlusionImage(ao));
+  const glb = images.length ? embedImages(exported, images) : Buffer.from(exported);
   writeFileSync(out, glb);
   let tris = 0;
   let parts = 0;
@@ -1337,6 +1352,12 @@ export async function exportGlb(root, filename, { occlusion = null } = {}) {
       `  primitives: ${kinds.join(', ')}\n` +
       `  plates: ${built.plates} extruded, ${built.bevelled} bevelled\n` +
       `  light: ${light.lit.length} lit parts, ${light.totalM2} m² facing up` +
+      (sheet
+        ? `\n  trim: ${sheet.size}² on uv0, ${laid.flat} faces flat and ${laid.round} unrolled, ` +
+          `${[...laid.bands].map(([rows, n]) => `${n} at ${rows}`).join(', ')} strakes, ` +
+          `${laid.split} vertices split, a wrap every ${sheet.wrapM} m, mean ${sheet.mean.toFixed(3)}, ` +
+          `${sheet.png.length} bytes of PNG on ${laid.materials.size} materials`
+        : '') +
       (ao
         ? `\n  occlusion: ${ao.size}² on uv1, ${ao.charts} charts filling ${Math.round(100 * ao.coverage)} % ` +
           `at ${ao.density.toFixed(2)} texels/m, ${ao.rays} rays to ${ao.reach.toFixed(1)} m, ` +

@@ -27,15 +27,16 @@
  * which is close enough to catch any edit that moves a vertex and loose
  * enough not to care which three.js wrote the bytes.
  *
- * Since #1002 it reads the one texture a model can carry: each part's
+ * Since #1002 it reads the textures a model can carry: each part's
  * `uv1` and the occlusion map its materials name (glb.mjs `readGlb`,
  * png.mjs), compared to 1/4,096 of the atlas and to two grey levels: the
  * slack a deterministic bake is allowed for another machine's floating
  * point, and no more, since a vertex that moves fails the position and
- * normal comparison above before the map is asked. It still does not
- * read UV0 or vertex colours — nothing samples them, and a trim sheet
- * (#1005) extends this the way the map did — so a change to those passes
- * here against a stale file.
+ * normal comparison above before the map is asked. Since #1005 each
+ * part's UV0 and the trim sheet are read the same way, so a layout a
+ * script lays (trim.mjs) and the sheet it draws are held to the file too.
+ * It still does not read vertex colours — nothing writes them — so a
+ * change to those passes here against a stale file.
  *
  * The normals are compared because the conn view lights a hull by the
  * file's own (`rosterModels.ts` keeps them), and a buffer can change under
@@ -92,6 +93,7 @@ const summarise = (parts) =>
       max: max.map(cm),
       normals: p.normals,
       uv1: p.uv1,
+      uv0: p.uv0,
     };
   });
 
@@ -156,16 +158,18 @@ function normalsTurned(built, committed) {
 const UV_SLACK = 1 / 4096;
 
 /**
- * How far a part's `uv1` moved between the file and the build, as a phrase,
- * or null; asked only of parts whose triangles agree, as `normalsTurned` is.
- * One side carrying a layout the other has not is its own line: the map was
- * baked or dropped, and re-running the script settles which.
+ * How far a part's UV set moved between the file and the build, as a
+ * phrase, or null; asked only of parts whose triangles agree, as
+ * `normalsTurned` is. One side carrying a set the other has not is its own
+ * line: the layout was laid or dropped, and re-running the script settles
+ * which. `what` names the set: the occlusion map's `uv1`, or UV0, which
+ * every constructor writes and a trim sheet lays out (#1005).
  */
-function uvsMoved(built, committed) {
+function uvsMoved(built, committed, what) {
   if (!built || !committed)
     return built === committed
       ? null
-      : `occlusion UVs ${built ? 'built, none in the file' : 'in the file, none built'}`;
+      : `${what} UVs ${built ? 'built, none in the file' : 'in the file, none built'}`;
   let moved = 0;
   let worst = 0;
   for (let k = 0; k < built.length; k++) {
@@ -176,7 +180,7 @@ function uvsMoved(built, committed) {
     }
   }
   return moved
-    ? `occlusion UVs moved at ${moved} of ${built.length} coordinates, up to ${worst.toFixed(4)}`
+    ? `${what} UVs moved at ${moved} of ${built.length} coordinates, up to ${worst.toFixed(4)}`
     : null;
 }
 
@@ -187,25 +191,27 @@ function uvsMoved(built, committed) {
  */
 const GREY_SLACK = 2;
 
-/** Lines describing how the built file's occlusion map differs from the committed one's. */
-export function diffOcclusion(built, committed) {
+/**
+ * Lines describing how one of the built file's maps differs from the
+ * committed one's: `kind` the occlusion map or the trim sheet, read the
+ * same way (glb.mjs `readGlb`).
+ */
+export function diffMap(kind, built, committed) {
   if (!built || !committed)
     return built === committed
       ? []
-      : [`occlusion map ${built ? 'built, none in the file' : 'in the file, none built'}`];
+      : [`${kind} map ${built ? 'built, none in the file' : 'in the file, none built'}`];
   const out = [];
   if (built.width !== committed.width || built.height !== committed.height)
-    return [
-      `occlusion map ${committed.width}×${committed.height} → ${built.width}×${built.height}`,
-    ];
+    return [`${kind} map ${committed.width}×${committed.height} → ${built.width}×${built.height}`];
   if (built.texCoord !== committed.texCoord || built.strength !== committed.strength)
     out.push(
-      `occlusion map on texCoord ${committed.texCoord} at ${committed.strength} → ` +
+      `${kind} map on texCoord ${committed.texCoord} at ${committed.strength} → ` +
         `texCoord ${built.texCoord} at ${built.strength}`
     );
   const a = built.materials.join(', ');
   const b = committed.materials.join(', ');
-  if (a !== b) out.push(`occlusion map on ${b} → ${a}`);
+  if (a !== b) out.push(`${kind} map on ${b} → ${a}`);
   let differ = 0;
   let worst = 0;
   for (let i = 0; i < built.pixels.length; i++) {
@@ -216,7 +222,7 @@ export function diffOcclusion(built, committed) {
     }
   }
   if (differ)
-    out.push(`occlusion map differs at ${differ} of ${built.pixels.length} texels, up to ${worst} levels`);
+    out.push(`${kind} map differs at ${differ} of ${built.pixels.length} texels, up to ${worst} levels`);
   return out;
 }
 
@@ -250,7 +256,7 @@ export function diffParts(built, committed) {
       const turned = normalsTurned(a.normals, b.normals);
       if (turned) out.push(`\`${a.name}\`: ${turned}`);
       else {
-        const moved = uvsMoved(a.uv1, b.uv1);
+        const moved = uvsMoved(a.uv1, b.uv1, 'occlusion') ?? uvsMoved(a.uv0, b.uv0, 'UV0');
         if (moved) out.push(`\`${a.name}\`: ${moved}`);
       }
     }
@@ -320,7 +326,8 @@ try {
     }
     const drift = [
       ...diffParts(built, committed),
-      ...diffOcclusion(builtModel.occlusion, committedModel.occlusion),
+      ...diffMap('occlusion', builtModel.occlusion, committedModel.occlusion),
+      ...diffMap('trim', builtModel.trim, committedModel.trim),
     ];
     const warnings = (run.stderr.match(/WARNING/g) ?? []).length;
     if (drift.length) {

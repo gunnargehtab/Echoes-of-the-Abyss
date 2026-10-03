@@ -57,6 +57,14 @@
  *   plough, at its station and size. Neither family moves in plan, so the
  *   outline is where it was.
  *
+ * TRIM (#1005). The first hull laid out on a trim sheet: `exportGlb`'s
+ * `trim` takes the Klaxon's plate (factions/bathyarch.mjs `TRIM`) and
+ * trim.mjs lays every part's UV0 in metres at export — 2,116 faces flat,
+ * 436 unrolled, 80 vertices split, no triangle moved — and embeds the
+ * sheet as the base-colour map of the four claddings and no lamp. Nothing
+ * here changed for it but the export line: the layout is the kit's
+ * (docs/art-direction.md "UV layout and trim sheets — SPEC").
+ *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.
  *
@@ -210,4 +218,4 @@ bathyarch.bowStencil(root, amber, { at: [58, 9.2, 0], size: [10, 0.3, 2] });
 // The bow lamp stands on the foredeck at the bow's lip, over the plough (header).
 bathyarch.bowLamp(root, lampM, { at: [74.5, 7.5, 0], size: [1.5, 1, 4] });
 
-await exportGlb(root, 'bulwark-bathyarch.glb');
+await exportGlb(root, 'bulwark-bathyarch.glb', { trim: bathyarch.TRIM });
