@@ -17,6 +17,8 @@ import { clearStorage, installStorage } from './support/headless.ts';
 import { render, type Rendered } from './support/screen.ts';
 import { SettingsScreen } from '../src/menu/SettingsScreen.tsx';
 import { loadSettings, UI_SCALE_MAX, UI_SCALE_MIN } from '../src/settings/store.ts';
+import { LAMP_HALOS_DEFAULT } from '../src/game/lampHalo.ts';
+import { publishLampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { PALETTE_LABEL, PALETTE_NAMES } from '../src/game/palette.ts';
 import { CONTACT_BOOST_MAX_DB } from '../src/audio/engine.ts';
 
@@ -144,6 +146,54 @@ describe('the settings screen: §11 commitments', () => {
       );
     } finally {
       await view.unmount();
+    }
+  });
+
+  it('offers the lamp halos as a toggle, and says when the display refused them', async () => {
+    // art-direction.md "Lamp halo — SPEC", "Off, and when it is unavailable":
+    // a toggle in Settings; a view that fails its capability check keeps the
+    // choice and Settings says "Not available on this display". The screen
+    // learns the outcome through lampHaloStatus, which the view publishes.
+    // The status is driven by hand here, since this is the screen's test;
+    // that a refusal in the view reaches the module, and is asked again only
+    // on a context restore, is rendererSmoke.test.ts, "turns the lamp halo on
+    // and off, says why when the view cannot draw it, and checks again after
+    // a context restore".
+    publishLampHaloStatus('off');
+    const view = await settings();
+    try {
+      const row = view.root.findAll(
+        (node) =>
+          node.type === 'label' &&
+          node.findAll((n) => n.type === 'span' && n.children.join('') === 'Lamp halos').length > 0
+      )[0];
+      assert.ok(row, '§14: a Lamp halos row');
+      const toggle = row.findAll((n) => n.type === 'input' && n.props.type === 'checkbox')[0];
+      assert.equal(toggle.props.checked, LAMP_HALOS_DEFAULT, 'the toggle shows the build default');
+      await view.act(() => {
+        (toggle.props.onChange as (e: unknown) => void)({ target: { checked: true } });
+      });
+      assert.equal(loadSettings().lampHalos, true, 'the toggle reaches the store');
+      const note = () => row.findAll((n) => n.type === 'span').map((n) => n.children.join(''));
+      assert.ok(
+        !note().some((text) => text.includes('Not available')),
+        'nothing refused yet, so no refusal is shown'
+      );
+      await view.act(() => {
+        publishLampHaloStatus('unavailable: no half-float colour target');
+      });
+      assert.ok(
+        note().some(
+          (text) =>
+            text.includes('Not available on this display') &&
+            text.includes('no half-float colour target')
+        ),
+        'a refused display is named, with its reason'
+      );
+      assert.equal(loadSettings().lampHalos, true, 'and the choice is kept');
+    } finally {
+      await view.unmount();
+      publishLampHaloStatus('off');
     }
   });
 

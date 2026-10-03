@@ -68,6 +68,8 @@ import {
 import { EchoRenderer, type RendererCallbacks } from '../src/game/EchoRenderer.ts';
 import type { ReadoutBox } from '../src/game/readouts.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
+import { LampHaloPass } from '../src/game/lampHaloPass.ts';
+import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FAUNA_COLOR, TIER_STYLE } from '../src/game/palette.ts';
 import {
@@ -1020,19 +1022,37 @@ describe('renderer smoke test: the conn view', () => {
     const probes = (globalThis as unknown as { window: Partial<Probes> }).window;
     assert.equal(probes.__perspectiveHalo, undefined, 'the switch goes with the view');
 
-    // A view without the float colour target keeps the canvas pass alone.
+    // A view without the float colour target keeps the canvas pass alone,
+    // and Settings learns it: the view publishes the pass's state, keeps
+    // the choice, and asks the display again only on a context restore —
+    // the settings subscription re-applies the whole store on every write,
+    // so a repeated ask must not allocate and read back the targets again.
     const blind = await boot();
+    const checks = mock.method(LampHaloPass.prototype, 'enable');
     try {
       blind.gl.extensionNames.delete('EXT_color_buffer_float');
       const window = (globalThis as unknown as { window: Probes }).window;
       assert.equal(window.__perspectiveHalo!(true), 'unavailable: no EXT_color_buffer_float');
+      assert.equal(lampHaloStatus(), 'unavailable: no EXT_color_buffer_float');
+      assert.equal(checks.mock.callCount(), 1);
+      window.__perspectiveHalo!(true);
+      window.__perspectiveHalo!(true);
+      assert.equal(checks.mock.callCount(), 1, 'a refused display is not asked on every write');
+      blind.gl.domElement.dispatchEvent({ type: 'webglcontextlost' });
+      blind.gl.domElement.dispatchEvent({ type: 'webglcontextrestored' });
+      assert.equal(checks.mock.callCount(), 2, 'but it is asked again after a restore');
       blind.frame(2);
       const reading = window.__perspectiveProbe();
       assert.equal(reading.haloBytes, 0);
       assert.deepEqual(reading.passes, ['canvas']);
+      assert.equal(window.__perspectiveHalo!(false), 'off');
+      assert.equal(lampHaloStatus(), 'off', 'turning a refused halo off clears the note');
+      assert.equal(window.__perspectiveHalo!(true), 'unavailable: no EXT_color_buffer_float');
     } finally {
+      checks.mock.restore();
       blind.teardown();
     }
+    assert.equal(lampHaloStatus(), 'off', 'a view that is gone has refused nothing');
   });
 
   it('times the frame on the GPU, every pass inside the bracket (gate 6, #1001)', async () => {

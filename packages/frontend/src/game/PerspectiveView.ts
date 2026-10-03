@@ -135,6 +135,7 @@ import { GpuTimer } from './gpuTimer.ts';
 import { lampScreen } from './lampScreen.ts';
 import { LampHaloPass, type HaloSplat } from './lampHaloPass.ts';
 import { LAMP_HALO } from './lampHalo.ts';
+import { publishLampHaloStatus } from './lampHaloStatus.ts';
 import { gatherHaloSplats } from './haloSource.ts';
 import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 import { FaunaStipple } from './faunaStipple.ts';
@@ -596,12 +597,13 @@ export class PerspectiveView {
     if (!this.halo.on) return;
     this.halo.disable();
     this.markLamps(false);
+    publishLampHaloStatus(this.halo.state);
   };
   private readonly onContextRestored = (): void => {
     if (this.renderer === null) return;
     const gl = this.renderer.getContext();
     this.canvasStencilBits = (gl.getParameter?.(gl.STENCIL_BITS) as number | undefined) ?? 0;
-    if (this.haloWanted) this.setLampHalos(true);
+    if (this.haloWanted) this.setLampHalos(true, true);
   };
 
   /**
@@ -950,6 +952,9 @@ export class PerspectiveView {
     this.gpuTimer?.dispose();
     this.gpuTimer = null;
     this.halo.dispose();
+    // The SPEC binds a refusal to a view; one that is gone has refused
+    // nothing, so Settings in the shell afterwards shows no stale note.
+    publishLampHaloStatus('off');
     this.renderer?.domElement.removeEventListener('webglcontextlost', this.onContextLost);
     this.renderer?.domElement.removeEventListener('webglcontextrestored', this.onContextRestored);
     this.renderer?.dispose();
@@ -2350,7 +2355,8 @@ export class PerspectiveView {
     if (import.meta.env?.PROD !== true) {
       (window as unknown as { __perspectiveLamps?: () => unknown }).__perspectiveLamps = () =>
         this.lampReading();
-      // The halo's switch until its setting lands: captures read on/off pairs.
+      // The capture switch (tools/render-stack/capture.mjs, HALO=on): an
+      // on/off pair on one page, beside the setting a player uses.
       (window as unknown as { __perspectiveHalo?: (on: boolean) => unknown }).__perspectiveHalo = (
         on: boolean
       ) => {
@@ -2510,15 +2516,27 @@ export class PerspectiveView {
    * the canvas pass alone and says why on the probe. Never on while the Dream
    * Loop study is, which has lamp halos of its own.
    */
-  setLampHalos(on: boolean): void {
+  setLampHalos(on: boolean, recheck = false): void {
+    const refused = this.halo.state.startsWith('unavailable');
+    const asked = this.haloWanted;
     this.haloWanted = on;
-    if (this.renderer === null || this.dreamStudy || on === this.halo.on) return;
+    if (this.renderer === null || this.dreamStudy) return;
     if (on) {
+      if (this.halo.on) return;
+      // A refused display is asked again after a context restore (SPEC) and
+      // not on every settings write: the subscription applies the whole
+      // store on each write, so without this a volume-slider step would
+      // allocate the halo's targets, read them back and dispose them again.
+      if (refused && asked && !recheck) return;
       this.halo.enable(this.renderer);
     } else {
+      if (!this.halo.on && !refused) return;
       this.halo.disable();
       this.markLamps(false);
     }
+    // Settings reads the outcome here, not the choice: a refused display
+    // keeps the choice and says "Not available on this display" (SPEC).
+    publishLampHaloStatus(this.halo.state);
   }
 
   /** Every own lamp clone marks its pixels in the canvas stencil while the

@@ -14,6 +14,7 @@
 
 import { ACTIONS, DEFAULT_BINDINGS, type Bindings, type LayoutName } from '../input/bindings.ts';
 import { PALETTES, type PaletteName } from '../game/palette.ts';
+import { LAMP_HALOS_DEFAULT } from '../game/lampHalo.ts';
 import type { TrimBus } from '../audio/engine.ts';
 import { prefersSpeakerProfile } from '../audio/speakerProfile.ts';
 
@@ -114,6 +115,20 @@ export interface Settings {
    * the class is on the mark and in the contact log either way (§11).
    */
   contactTimbre: boolean;
+  /**
+   * The lamp halo, the soft light a loud own lamp spreads into the water
+   * (docs/art-direction.md "Lamp halo — SPEC", docs/ui-ux.md §14, #1001).
+   *
+   * A toggle rather than a quality slider because the SPEC gives it one
+   * reading, loudness, and one cost, a few passes after the canvas; there
+   * is no half of it to offer. Off withholds nothing: the lamp core and the
+   * loudness collar carry every loudness fact without it. The default is
+   * `LAMP_HALOS_DEFAULT`, off until the halo's reading on the named GPU meets
+   * gate 6 and the owner approves its frames; the view may still refuse it on
+   * a display that fails its capability check, and then keeps this choice and
+   * says so in Settings.
+   */
+  lampHalos: boolean;
 }
 
 /**
@@ -148,6 +163,7 @@ export const DEFAULT_SETTINGS: Settings = {
   edgeScroll: true,
   speakerProfile: false,
   contactTimbre: false,
+  lampHalos: LAMP_HALOS_DEFAULT,
 };
 
 const STORAGE_KEY = 'echoes.settings';
@@ -215,6 +231,10 @@ function sanitise(raw: unknown): Settings {
     // written before this field existed loads it off, which is where a build
     // that has never offered the control would have left it anyway.
     contactTimbre: record.contactTimbre === true,
+    // The build default rather than off: once the default turns on, a record
+    // written before the control existed should turn on with it, since that
+    // player never chose otherwise. An explicit choice is kept either way.
+    lampHalos: typeof record.lampHalos === 'boolean' ? record.lampHalos : LAMP_HALOS_DEFAULT,
   };
 }
 
