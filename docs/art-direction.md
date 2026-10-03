@@ -286,15 +286,15 @@ there are none, and the reason is canon rather than budget.*
 
 A caustic is sunlight focused by a clear, moving surface into a bright moving pattern on
 whatever lies under it. This ocean has no clear sunlit water. The sunlit layer is the Lid,
-the sour top 150 m, and the Sounding of 141 found it pale and milky to the horizon
-([world.md](world.md) "The Lid", "The Sounding"). Milky water scatters light; it does not
+the sour top 150 m, pale and milky since the Collapse, and the Sounding of 141 found white
+water to the horizon ([world.md](world.md) "The Salinity Collapse", "The Sounding"). Milky water scatters light; it does not
 focus it. What reaches the first clear water under the Lid, where the Commune's kelp
 plateaus begin, is a dim light from everywhere above and nowhere in particular, and that
 light is already drawn: the water ramp makes the Lid the brightest water a hull can loiter
 in and fades it down the column ([Reading the Water](#reading-the-water)), and the shared
 rig's environment map grades from a cold overhead to the deep water below with no sun in it
-(the SPEC above). By 400 m there is nothing left to pattern, and the game lives at 600 m and
-below.
+(the SPEC above). By 400 m there is nothing left to pattern, and most factions live below
+that line ([systems-depth.md](systems-depth.md) §1).
 
 So the rule is a prohibition, and it binds the four places a caustic could have appeared:
 
@@ -302,11 +302,11 @@ So the rule is a prohibition, and it binds the four places a caustic could have 
   exactly three families ([style-neon-noir.md](style-neon-noir.md) "World light"); a moving
   light pattern on the ground would be a fourth family and area glow at once.
 - **No hull, structure or prop carries one at any depth.** The depth a hull sits at is
-  read from the water it stands in and the collar on the HUD, never from a pattern on its
-  skin; a pattern that brightened with shallowness would be a second depth instrument
-  outside the HUD ([Echo Layer requirements](#echo-layer-requirements)).
+  read from the water it stands in, never from a pattern on its skin; a pattern that
+  brightened with shallowness would be an instrument drawn in the world, and instruments
+  live on the HUD ([style-neon-noir.md](style-neon-noir.md) "World light", rule 4).
 - **The Lid's underside does not shimmer.** The surface is finished, not a hope
-  ([world.md](world.md) "Writing rule"), and a lit, moving ceiling is an invitation drawn
+  ([world.md](world.md) "There is nothing up there", "Writing rule"), and a lit, moving ceiling is an invitation drawn
   in light. The ramp's brightest stop is the whole of what the Lid shows.
 - **No pass is reserved for it.** Gate 6 allocates nothing to caustics; the halo's four
   steps are the only full-screen work after the canvas pass.
