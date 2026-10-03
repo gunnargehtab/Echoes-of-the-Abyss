@@ -67,10 +67,10 @@ const BAND_M = [2860, 2940];
 // is tens of rows, and the mesh runs to the map's edge (perspectiveTerrain.ts).
 // Its floor is smoothed between cell centres (authoredFloorAtM), so it is flat
 // only to the last trench row's centre, z 875. The skirt the world ends at
-// (PerspectiveView.buildTerrainDressing) hangs from the ground sampled every
-// 250 m along the edge, so on the west edge its top leaves the floor at z 750,
-// rising straight to the ramp's 1,800 m at z 1,000, and stands in front of the
-// backdrop above the floor there.
+// (PerspectiveView.buildTerrainDressing) follows that floor, since it hangs
+// from the mesh's own edge vertices (#1041). The stretch still stops at z 750,
+// where the skirt left the floor before that, so the edge reads what
+// docs/free-camera.md quotes; to z 875 it reads 19 more pairs and an 880 m median.
 const TRENCH = { x: [60, 7940], z: [60, 940] };
 const TRENCH_FLAT = { x: [0, 8000], z: [0, 750] };
 const EDGE_ROWS = 3;

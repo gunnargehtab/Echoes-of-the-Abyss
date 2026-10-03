@@ -17,6 +17,7 @@ import { BIOME_RELIEF, detailM, ROCK_RELIEF, seabedSeed } from '../src/game/seab
 import {
   authoredFloorAtM,
   buildHeightGrid,
+  edgeRing,
   patchHeightGrid,
   DEPTH_VISUAL_M_PER_M,
   depthToWorldY,
@@ -127,6 +128,62 @@ describe('perspective heightfield', () => {
         assert.equal(fresh.y[iz * fresh.vertsX + ix], untouched.y[iz * fresh.vertsX + ix]);
       }
     }
+  });
+});
+
+/**
+ * The walk the map rim and the skirt hang from (#1041). Each draws straight
+ * lines between its points, so it follows the drawn floor only if its points
+ * are the mesh's own boundary vertices, adjacent ones in turn.
+ */
+describe('the edge ring', () => {
+  it('walks every boundary vertex once, at the grid’s own spacing and heights', () => {
+    const grid = buildHeightGrid(demoTerrain());
+    const ring = edgeRing(grid);
+    assert.equal(ring.length, 2 * (grid.vertsX + grid.vertsZ) - 4);
+    assert.equal(new Set(ring.map((p) => `${p.x},${p.z}`)).size, ring.length);
+    ring.forEach((p, i) => {
+      const ix = p.x / grid.stepM;
+      const iz = p.z / grid.stepM;
+      assert.ok(ix === 0 || ix === grid.vertsX - 1 || iz === 0 || iz === grid.vertsZ - 1);
+      assert.equal(p.y, grid.y[iz * grid.vertsX + ix]);
+      // One mesh edge to the next point, closing the loop: a longer step is
+      // a chord across whatever the floor does between.
+      const next = ring[(i + 1) % ring.length]!;
+      assert.equal(Math.abs(next.x - p.x) + Math.abs(next.z - p.z), grid.stepM);
+    });
+  });
+
+  it('stays on a trench floor where a cell-spaced walk ran up the ramp beyond it', () => {
+    // Ventfront's west edge in small: a 2,900 m trench four rows deep, then
+    // 700 m plateau. The smoothed floor is flat to the last trench row's
+    // centre, z 875, and climbs to 1,800 m at the boundary, z 1,000.
+    const cols = 2;
+    const rows = 6;
+    const floor = new Array(cols * rows).fill(2900);
+    for (let i = 4 * cols; i < rows * cols; i++) floor[i] = 700;
+    const terrain: TerrainPayload = {
+      cols,
+      rows,
+      cellM: 250,
+      biomes: new Array(cols * rows).fill(Biome.OpenWater),
+      floor,
+      ceiling: new Array(cols * rows).fill(0),
+    };
+    const seed = seabedSeed(terrain);
+    const rockTop = rockTopDepthM(terrain);
+    const amplitude = BIOME_RELIEF[Biome.OpenWater].amplitudeM;
+    const at = edgeRing(buildHeightGrid(terrain, seed, rockTop)).find(
+      (p) => p.x === 0 && p.z === 875
+    )!;
+    assert.ok(-at.y / DEPTH_VISUAL_M_PER_M >= 2900 - amplitude, 'the ring left the trench floor');
+    // The walk this replaced, one sample a cell, drew a chord from z 750 to
+    // z 1,000 and stood more than 400 m of depth above the floor here.
+    const chord =
+      (seabedDepthAtM(terrain, seed, rockTop, 0, 750) +
+        seabedDepthAtM(terrain, seed, rockTop, 0, 1000)) /
+      2;
+    assert.ok(2900 - amplitude - chord > 400, 'the case no longer separates the two walks');
   });
 });
 
