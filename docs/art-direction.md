@@ -279,6 +279,54 @@ its drawn length at the close camera, so a portrait shows the close camera's hal
 with the hull. The 20 portraits are re-rendered once
 ([#1015](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1015)).
 
+#### Shallow caustics — SPEC
+
+*Decided for [#1006](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1006):
+there are none, and the reason is canon rather than budget.*
+
+A caustic is sunlight focused by a clear, moving surface into a bright moving pattern on
+whatever lies under it. This ocean has no clear sunlit water. The sunlit layer is the Lid,
+the sour top 150 m, pale and milky since the Collapse, and the Sounding of 141 found white
+water to the horizon ([world.md](world.md) "The Salinity Collapse", "The Sounding"). Milky
+water scatters light; it does not focus it. What reaches the first clear water under the
+Lid, where the Commune's kelp plateaus begin, is a dim light from everywhere above and
+nowhere in particular, and that light is already drawn: the water ramp makes the Lid the
+brightest water a hull can loiter in and fades it down the column ([Reading the
+Water](#reading-the-water)), and the shared rig's environment map grades from a cold
+overhead to the deep water below with no sun in it (the SPEC above). By 400 m there is
+nothing left to pattern, and most factions live below that line
+([systems-depth.md](systems-depth.md) §1).
+
+So the rule is a prohibition, and it binds the four places a caustic could have appeared:
+
+- **Terrain never carries one.** World light is points and seams, never area glow, in
+  exactly three families ([style-neon-noir.md](style-neon-noir.md) "World light"); a moving
+  light pattern on the ground would be a fourth family and area glow at once.
+- **No hull, structure or prop carries one at any depth.** The depth a hull sits at is
+  read from the water it stands in, never from a pattern on its skin; a pattern that
+  brightened with shallowness would be an instrument drawn in the world, and instruments
+  live on the HUD ([style-neon-noir.md](style-neon-noir.md) "World light", rule 4).
+- **The Lid's underside does not shimmer.** The surface is finished, not a hope
+  ([world.md](world.md) "There is nothing up there", "Writing rule"), and a lit, moving
+  ceiling is an invitation drawn in light. The ramp's brightest stop is the whole of what
+  the Lid shows.
+- **No pass is reserved for it.** Gate 6 allocates nothing to caustics; the halo's four
+  steps are the only full-screen work after the canvas pass.
+
+Options written and rejected, so a later reader can overturn the call in one comment:
+
+1. **None — taken.** Costs nothing and matches the canon above.
+2. **Caustics on hulls in the Lid only, fading out by 150 m.** Costs a depth-keyed texture
+   term in the shared rig. Rejected: it needs clear water the Lid does not have, and it
+   makes the one place no one should want to be the one place that looks alive.
+3. **A diffuse down-light on own hulls above 400 m, no pattern.** Costs a term in the
+   rig's environment weighting. Rejected as a duplicate: the PMREM environment and the
+   water ramp already say this, and a second copy of the depth reading on the hull drifts
+   from the first.
+
+Reopening this means a biome whose water is clear and sunlit, which no map has and
+[world.md](world.md) rules out; it would amend that document first.
+
 #### Ranked audit and remaining work
 
 The baseline is commit `1df288a` (28 September 2026), not the earlier #286 scene.
@@ -295,7 +343,7 @@ composer. Its still is a lighting reference, not a runtime implementation to cop
 | 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | Vignette and sway are built, with no pass ([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)). The split waits on a gate-6 allocation for its full-screen draw and copy. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
 | 5 | GLB gzip ([#1004](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1004)) | Built. The nginx image's `mime.types` names no `glb`, so `packages/frontend/nginx.conf` names the type in the models' own location and gzips them at level 6. Delivery cost, not frame quality |
 | 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | 6,378 of 6,540 exported primitives have UV0, but attribute presence is not a laid-out atlas. `uvAlike` also writes zero-filled placeholder UVs. Sorrowgate already has triplanar surface detail; retain that work rather than replacing it blindly |
-| 7 | Shallow caustics ([#1006](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1006)) | Design first: where light can exist, how it obeys depth and the licensed world-light families, and what stays unlit. No gameplay visibility |
+| 7 | Shallow caustics ([#1006](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1006)) | Decided: none. The sunlit layer is the milky Lid, which scatters rather than focuses, and the water ramp already carries what light reaches the Shelf ("Shallow caustics — SPEC" above). Nothing to build |
 | 8 | WebGPU/TSL ([#1007](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1007)) | Defer migration until a separate feasibility decision. Water, survey, surface and sway shader patches depend on the current WebGL pipeline; this is not a renderer-constructor swap |
 
 Over the model library as it stood at `1df288a`, `node tools/render-stack/audit.mjs`
