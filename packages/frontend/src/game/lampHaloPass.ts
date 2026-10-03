@@ -10,8 +10,9 @@
  * 2. Source: one instanced draw of a splat per lamp site into a half-float
  *    target that shares that depth, tested less-or-equal and never written.
  * 3. Spread: a separable blur at each of 1/2, 1/4 and 1/8 of the drawing
- *    buffer, six draws, whose horizontal half reads the level above at each
- *    tap's 2 × 2 block, so the box downsample takes no draw of its own.
+ *    buffer, six draws, whose horizontal half reads the level above at this
+ *    level's texel centres (a 2 × 2 block's mean along even counts), so the
+ *    box downsample takes no draw of its own.
  * 4. Composite: one full-screen draw, screen-blended onto the canvas, skipping
  *    every sample an own lamp marked in the canvas stencil.
  *
