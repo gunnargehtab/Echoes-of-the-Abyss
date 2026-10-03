@@ -221,8 +221,10 @@ directorate.domeShell(
 // stood 0.01–1.06 m off it, ten touching nothing. So each spine's base —
 // half its length down its own axis from the station — is seated on the
 // nearest of the dome and its plates (`shellSpines` `on`; kit.mjs `seat`),
-// and the spine slides along its axis to meet it; bearing, lean and length
-// are the file's.
+// and the whole spine moves with its base: to the nearest point of the
+// shell and 0.08–0.115 in along its normal, whichever way that lies, not
+// down the spine's own axis (directorate.mjs `footed`, #1050); bearing,
+// lean and length are the file's.
 const SHELL = ['dome_shell', 'shell_plate_0', 'shell_plate_1', 'shell_plate_2'];
 directorate.shellSpines(root, {
   name: 'hydrophone_spine',
