@@ -154,19 +154,56 @@
  * its tier and nothing else (contacts.mjs). They show 14–30 m² each, and the
  * median part is 5.9 m over 111. 84 parts and 4,539 triangles become 134
  * and 5,039; the fit is the same 17.7998 across.
+ *
+ * HEIGHT (#960). The conn view stands a structure's y 0 at the 600 m working
+ * depth, 132 m under the drawn surface (rosterModels.ts `standingY`, #958),
+ * and this file stood 255.10 m to the apex light, 123 m of it in surface
+ * water. The rule across the four Bastions is one proportion: the crown at
+ * 0.29 of the plan, 127.6 m over the ground at 440 — a hand under the line,
+ * not on it (`CROWN`; kit.mjs `holdCrown`, which asserts the unpressed
+ * 255.10 as `TALL`) — and the whole model pressed in y about y 0 to meet it,
+ * the plan untouched. Here that is ×0.5002 on the root's y after
+ * `fitFootprint`, so every node below keeps the file's numbers and the file
+ * carries the press: the four tiers are 2, 1.8, 1.6 and 1.4 on their nodes
+ * and 1.00, 0.90, 0.80 and 0.70 in the file, the crown 0.8 on its node and
+ * 0.40 — carapace plates stepping in under a boss, the spines and claws
+ * leaning further out of vertical (the crown spines' atan 0.8 reads as 58°
+ * in the file). The lowest point is `dock_main_mandible_1`'s, 3.28 m →
+ * 1.64 under the ground; the anchor claws end 4.8–5.7 m above y 0, as they
+ * ended 9.6–11.4 m before, a gap that predates this and is not touched
+ * here. The facet rule is asked under the press (`directorate.cut(L /
+ * DRAWN, { press })`, Block 2c) and every count held: `facets.mjs
+ * directorate` names the same two ballast meridians it did. Measured
+ * vertex-true after: `apex_light` 127.60 m, `apex_boss` 123.6,
+ * `carapace_crown` 114.4, `crown_spine_5` 114.0. Three's loose node-box
+ * measure reads the ground at −3.5, the mandible's box, a leaned cone's box
+ * overhanging its point. A press is affine, so no seat, sink or contact
+ * moved: `diff.mjs bastion-directorate origin/main` reads the root scale
+ * 1.0000 / 0.5002 / 1.0000 and every part where it was; the light audit
+ * reads the same 20 lit parts at 993.1 m² and intake's raw E the same 8.32;
+ * `contacts.mjs` lists the same 150 pairs. The plan is the file's, so the
+ * maps keep their footprint.
  */
-import { THREE, exportGlb, fitFootprint } from '../kit.mjs';
+import { THREE, exportGlb, fitFootprint, holdCrown } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
 
 const { laid, leaning } = directorate;
 
 const L = 440;
+// HEIGHT (#960): the crown held at 0.29 of the plan, 127.6 m over the ground
+// at 440 — under the 132 m the drawn surface stands over a structure's y 0,
+// not on it (kit.mjs `holdCrown`; the header). `TALL` is the unpressed
+// crown, metres vertex-true, asserted by `holdCrown`, so the press is known
+// before the build and the facet rule prices each part as the file draws it.
+const CROWN = 0.29 * L;
+const TALL = 255.1044;
+const PRESS = CROWN / TALL;
 // The export's extent as `fitFootprint` measures it, three's `Box3` over the
 // parts' own boxes, which the facet rule is asked at: a `fitFootprint` file
 // learns its scale after it is built, so the fit is held here and asserted
 // at the foot (directorate.mjs `cut`, #919).
 const DRAWN = 17.7998;
-const cut = directorate.cut(L / DRAWN);
+const cut = directorate.cut(L / DRAWN, { press: PRESS });
 
 // A torus is born in the XY plane; every seam ring and flange here lies flat.
 const FLAT = [Math.PI / 2, 0, 0];
@@ -425,4 +462,5 @@ if (Math.abs(Math.max(size.x, size.z) - DRAWN) > 1e-3)
   throw new Error(
     `${root.name}: drawn ${Math.max(size.x, size.z).toFixed(4)} across; the facet rule was asked at ${DRAWN}`
   );
+holdCrown(root, CROWN, { tall: TALL });
 await exportGlb(root, 'bastion-directorate.glb');

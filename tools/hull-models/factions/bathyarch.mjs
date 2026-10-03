@@ -46,7 +46,7 @@ import {
   zLong,
   xLong,
 } from '../kit.mjs';
-import { facetsFor, orbFacets } from '../facets.mjs';
+import { facetsFor, orbFacets, pressedOrb } from '../facets.mjs';
 
 /**
  * The Klaxon's palette — every material name the navy's twenty-four models
@@ -266,14 +266,13 @@ export const panels = { hull: [0.75, 2], structure: [2, 5.5] };
  * square the Klaxon cuts at any size, and a builder that draws one writes
  * the count (`squareWedge`, `jibCrane`'s cable, the kit's gantry cables).
  */
-export function cut(m = 1) {
+export function cut(m = 1, { press = 1 } = {}) {
   const round = (radius, arc) => facetsFor(facets, radius * m, arc);
   return {
     round,
-    orb: (radius, window) => {
-      const { widthSegments, heightSegments } = orbFacets(facets, radius * m, window);
-      return [widthSegments, heightSegments];
-    },
+    // Under a press on the root's y (kit.mjs `holdCrown`, #960) an orb is
+    // settled as the file will draw it, through the measure's own reader.
+    orb: (radius, window) => pressedOrb(facets, radius * m, window, press),
   };
 }
 /** The rule for a model drawn in metres, which is every builder's default. */

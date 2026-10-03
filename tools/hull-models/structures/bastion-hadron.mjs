@@ -208,16 +208,55 @@
  * along and six round, are the pipe's: the two facets it lies on and the
  * rule's six at 2.95 m. The equator band and the standpipes are unmoved,
  * and the plan is the docks' 20.90 still.
+ *
+ * HEIGHT (#960). The conn view stands a structure's y 0 at the 600 m working
+ * depth, 132 m under the drawn surface (rosterModels.ts `standingY`, #958),
+ * and this file stood 219.79 m to the finial, 88 m of it in surface water.
+ * The rule across the four Bastions is one proportion: the crown at 0.29 of
+ * the plan, 127.6 m over the ground at 440 — a hand under the line, not on
+ * it (`CROWN`; kit.mjs `holdCrown`, which asserts the unpressed 219.79 as
+ * `TALL`) — and the whole model pressed in y about y 0 to meet it, the plan
+ * untouched. Here that is ×0.5806 on the root's y after `fitFootprint`, so
+ * every node below keeps the file's numbers and the file carries the press:
+ * the dome is 0.92 on its node and 0.53 tall in the file; the lantern 1.6 on
+ * its node and 0.93 in the file against its 0.8 across, still taller than
+ * wide; the finial 1.8 → 1.05 against 0.55, still a spike; the docks, fins
+ * and anchor blades — the Order's bilateral plan — exactly where they were.
+ * The facet rule is asked under the press (`hadron.cut(L / DRAWN, { press
+ * })`; facets.mjs `pressedOrb`, Block 2c), and one count moved: the twelve
+ * port lights, orbs of four by three at the file's 2.53 m, draw their
+ * meridians at 2.3 m pressed and the rule asks four a turn there, so each is
+ * six by two (16 → 12 triangles; `diff.mjs bastion-hadron origin/main` lists
+ * the twelve at 0.68 m, the equator now at the orb's full radius, and
+ * nothing else beyond the root scale 1.0000 / 0.5806 / 1.0000), seated on
+ * the dome from its station as before. `facets.mjs hadron` names the
+ * Turret's two pod caps and nothing here, as on main. 1,996 triangles
+ * become 1,948; the flatter orbs show more from above, 967.7 → 1023.5 m²
+ * lit and intake's raw E 11.65 → 12.28. Measured vertex-true after:
+ * `apex_finial` 127.60 m, `apex_lantern` 121.7, the x prongs 113.9; the
+ * ground is y 0 still. `contacts.mjs` lists the same 110 pairs but
+ * `reinforce_rib_0_l · port_light_4_l` and `reinforce_rib_3_l ·
+ * port_light_4_r`, the old orbs' brush against the ribs beside them, which
+ * the re-cut pair clears; the pair rests on the dome. The plan is the
+ * file's, so the maps keep their footprint.
  */
-import { THREE, fitFootprint, exportGlb } from '../kit.mjs';
+import { THREE, fitFootprint, holdCrown, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
 
 const L = 440;
+// HEIGHT (#960): the crown held at 0.29 of the plan, 127.6 m over the ground
+// at 440 — under the 132 m the drawn surface stands over a structure's y 0,
+// not on it (kit.mjs `holdCrown`; the header). `TALL` is the unpressed
+// crown, metres vertex-true, asserted by `holdCrown`, so the press is known
+// before the build and the facet rule prices each part as the file draws it.
+const CROWN = 0.29 * L;
+const TALL = 219.7895;
+const PRESS = CROWN / TALL;
 const DRAWN = 20.9;
 
 // The Order's facet rule at this file's scale (hadron.mjs `cut`, #919): the
 // builders are handed the export's units and the rule is a chord in metres.
-const cut = hadron.cut(L / DRAWN);
+const cut = hadron.cut(L / DRAWN, { press: PRESS });
 
 const alloy = hadron.ink.alloyWhite();
 // The two strengths are the approved export's own floats (#639 review, N1).
@@ -376,4 +415,5 @@ if (Math.abs(size.x - DRAWN) > 1e-3 || size.z > size.x)
   throw new Error(
     `${root.name}: drawn ${size.x.toFixed(4)} × ${size.z.toFixed(4)}; the header says ${DRAWN} X-long`
   );
+holdCrown(root, CROWN, { tall: TALL });
 await exportGlb(root, 'bastion-hadron.glb');

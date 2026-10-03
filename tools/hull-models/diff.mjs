@@ -51,7 +51,9 @@
  *   same triangle count, so a nose cone flattened into a cylinder passes
  *   every check above — the Tender's four ballast caps did (#587 review, F1).
  *   Area is the cheapest measure of a part's shape that bounds cannot stand
- *   in for; it is compared per part, divided by the root scale squared, and
+ *   in for; it is compared per part, the before part's triangles taken
+ *   under the root scale per axis first (exact under a press on one axis,
+ *   kit.mjs `holdCrown`, where area times a factor squared is not), and
  *   a change over a quarter of a percent is listed with the part.
  * - **A square plan is compared at whichever yaw agrees.** The bake yaws a
  *   file only when Z is the longer, and on a plan that is square to the
@@ -156,10 +158,14 @@ function medianAxis(values) {
 
 /**
  * Surface area of a part, from its triangles, in the file's own units
- * squared — and the area-weighted centroid of that surface.
+ * squared — and the area-weighted centroid of that surface — with the
+ * triangles taken under a per-axis `scale` first. Under a uniform root
+ * scale that is the area times its square; under a press on one axis
+ * (kit.mjs `holdCrown`, #960) neither the area nor the centroid follows a
+ * closed form, and scaling the triangles is the exact answer to both.
  */
-function surface(part) {
-  const a = part.positions;
+function surface(part, scale = [1, 1, 1]) {
+  const a = Array.from(part.positions, (v, i) => v * scale[i % 3]);
   let sum = 0;
   const c = [0, 0, 0];
   for (let t = 0; t < a.length; t += 9) {
@@ -552,19 +558,18 @@ function report(beforePath, afterPath, label) {
     const note = [];
     if (p.tris !== q.tris) note.push(`tris ${p.tris}→${q.tris}`);
     if (p.material !== q.material) note.push(`material ${p.material}→${q.material}`);
-    // Area is a scalar, so the root scale enters squared; one axis's factor
-    // stands for all three, since a non-uniform scale is already flagged above.
-    const sa = surface(p);
+    // The before part's surface under the root scale, per axis, so a press on
+    // one axis (flagged above) reads as the root scale it is and not as every
+    // part's area and centroid moving.
+    const sa = surface(p, scale);
     const sb = surface(q);
-    const areaA = sa.area * scale[0] * scale[1];
+    const areaA = sa.area;
     const areaPct = areaA > 0 ? ((sb.area - areaA) / areaA) * 100 : 0;
     if (Math.abs(areaPct) > 0.25)
       note.push(`area ${areaPct > 0 ? '+' : ''}${areaPct.toFixed(1)}%`);
     // The surface centroid, under the same scale and shift as the bounds. A
     // move here beyond what the bounds moved is a part re-laid inside its box.
-    const cd = Math.max(
-      ...[0, 1, 2].map((i) => Math.abs(sb.centroid[i] - shift[i] - sa.centroid[i] * scale[i]))
-    );
+    const cd = Math.max(...[0, 1, 2].map((i) => Math.abs(sb.centroid[i] - shift[i] - sa.centroid[i])));
     if (cd > 0.005 && cd > d + 0.005) note.push(`centroid ${cd.toFixed(3)} m`);
     // Only a part that has not moved is worth reading at the triangle: a moved
     // part's triangles are all elsewhere, and the move is the finding.

@@ -59,7 +59,7 @@ import {
   seat,
   mitredTube,
 } from '../kit.mjs';
-import { facetsFor, orbFacets } from '../facets.mjs';
+import { facetsFor, orbFacets, pressedOrb } from '../facets.mjs';
 
 /**
  * The Order's palette — one table, one factory a material name (#888).
@@ -323,14 +323,13 @@ export const panels = { hull: [2, 6], structure: [5.5, 16] };
  * (kit.mjs `asked`), so the shared skeletons ask the rule at their own
  * radii.
  */
-export function cut(m = 1) {
+export function cut(m = 1, { press = 1 } = {}) {
   const round = (radius, arc) => facetsFor(facets, radius * m, arc);
   return {
     round,
-    orb: (radius, window) => {
-      const { widthSegments, heightSegments } = orbFacets(facets, radius * m, window);
-      return [widthSegments, heightSegments];
-    },
+    // Under a press on the root's y (kit.mjs `holdCrown`, #960) an orb is
+    // settled as the file will draw it, through the measure's own reader.
+    orb: (radius, window) => pressedOrb(facets, radius * m, window, press),
     capsule: (radius) => [Math.ceil(round(radius, Math.PI) / 2), round(radius)],
   };
 }

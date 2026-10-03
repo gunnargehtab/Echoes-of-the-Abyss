@@ -357,7 +357,9 @@ turn and its round the rule's count at the widest ring those meridians draw (`or
 `(32, 16)` three.js defaults to — and an odd rule does not call every orb wrong for closing
 its meridians in half a turn.
 A part scaled flat is read at the radius its widest facet is a chord of, so a squashed
-tergite is judged as the wide thing it is.
+tergite is judged as the wide thing it is — and a part pressed by its root, a Bastion held
+under the drawn surface (#960), the same: each navy's `cut` takes the press and prices the
+part as the file draws it.
 
 **A section keeps a count, not a shape.** A four-sided spar is a square, a five-sided spine
 a pentagon, a six-sided horn a hexagonal crystal: a shape the navy cuts at any size, listed
@@ -543,7 +545,10 @@ so `cut` builds each candidate, presses it as its placement will and reads it ba
 the measure's own reader until the counts hold. Three tubes it cannot settle — two of the
 Harvester's growth rings and one of the Foundry's lobe rings, pressed so that at one count
 the chord reads a step over the rule and at the next a step under — are built at the last
-and named with the tables, nine rings in all. The kit's capsule draws its meridian as two
+and named with the tables, nine rings in all; the Bastion's press (#960) adds its three
+standpipe flanges' tubes, flat rings stood in a vertical plane that read 8 at 7 and 7 at 8
+under it, built at 7, twelve in all. The same press re-cut `ring_knot_7`'s meridian from
+fourteen a turn to twelve, which settles. The kit's capsule draws its meridian as two
 quarter turns of one count, so where the rule's half-turn share is odd no capsule meets it
 and the cap takes the segment over, the Order's reading; the Commune's twenty-nine landed
 on even shares and none is named. Besides a count the pass moved what the coarser rounds
@@ -829,16 +834,18 @@ two disagree the law wins. So the rule names 792 of the Consortium's 1,119 rings
 Commune's 1,240 (452 of the 526 on hulls, six of them on the four ported `grownBody` bodies
 the pass leaves), 935 of the Directorate's 1,477 (516 of the 681 on hulls; its Refinery was
 rebuilt in #951), and 251 of the Order's 616, fourteen of them on hulls, since an Order hull
-is sections almost through. The Order's pass leaves two of its 616, neither on a hull: the
+is sections almost through. The Order's pass leaves two of its 608, neither on a hull: the
 Sentinel Turret's two pods' caps, a capsule's meridian at 5.1 m, where the rule's share of a
-half turn is five and a capsule draws an even count. The Consortium's pass leaves none of
-its 1,119: `node tools/hull-models/facets.mjs bathyarch` names no ring, and the navy
-carries seven distinct counts a turn where it carried fifteen. The Commune's leaves nine of
-its 1,240: the six on the four tables and three pressed tubes no count settles on (the
+half turn is five and a capsule draws an even count; the Bastion's press (#960) re-cut its
+twelve port lights from four by three to six by two, the orbs the rule asks at the 2.3 m
+their pressed meridians draw, and they read on it. The Consortium's pass leaves none of
+its 1,310: `node tools/hull-models/facets.mjs bathyarch` names no ring, and the navy
+carries seven distinct counts a turn where it carried fifteen. The Commune's leaves twelve
+of its 1,428: the six on the four tables and six pressed tubes no count settles on (the
 Commune paragraph), and the navy carries eighteen distinct counts a turn where it carried
 thirty-five, every ring from 4 m of radius up on sixteen a turn but the tables' and the
 part-turn arcs the measure reads a turn at a time. The Directorate's leaves eight of its
-1,477, every one a capsule meridian on the odd share (the Directorate paragraph), and the
+1,589, every one a capsule meridian on the odd share (the Directorate paragraph), and the
 navy carries seventeen distinct counts a turn where it carried twenty-four.
 Outside the bands, before the panel pass: eight Consortium hulls (the five shared kinds, the Chorister
 and the Tender at 2.2–3.9 m — the Corvette's 2.3 was 2.2 once the facet pass thinned its
@@ -1729,12 +1736,23 @@ TUNABLE. A block below states the pair and cites neither, as the other fifty-one
 is not something a generator can read, and this is the file's one place for saying where a
 number came from.
 
+A Bastion is low as well as wide. The conn view stands a structure's y 0 at the 600 m
+working depth, 132 m under the drawn sea surface, and a 440 m footprint makes that line
+three tenths of the plan; the four Bastions stood 213–258 m and put their crowns in
+surface water, so each is pressed in height to 0.29 of its plan, 127.6 m, a hand under the
+line rather than on it, its plan and every fitting where they were (#960;
+`tools/hull-models/kit.mjs` `holdCrown`). It still crosses at far zoom, where the draw
+scale reaches ×4, and wherever the seabed is shallower than 600 m, since `standingY`
+lifts a structure onto the floor. The Spire, the Refineries and the Foundry still cross it
+at every zoom and were left, by the owner's choice on that issue.
+
 ```text
 STRUCTURE — Bastion (any faction): the HQ — a large pressure dome with
 visible reinforcement ribs, docking collars and external pipework, anchored
-to the seabed (SIG 35 sustained, the settlement's constant hum). Sustained
-glow from ports and working lights; the one building that can never run
-silent.
+to the seabed, and low: its crown stands no higher than 0.29 of its
+footprint (127.6 m over 440 m), the dome pressed wide rather than raised
+(SIG 35 sustained, the settlement's constant hum). Sustained glow from ports
+and working lights; the one building that can never run silent.
 ```
 
 ```text
