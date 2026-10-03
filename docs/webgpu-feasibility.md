@@ -21,8 +21,8 @@ r169's WebGPU renderer, three things the SPEC depends on change underneath the p
    curve or add its glow after it, and the shared rig's SPEC and gate 3 require both.
 2. **A point is one pixel.** Marine snow, the public-life stipple and the vent embers all
    draw sized points.
-3. **The halo's depth copy has no equivalent.** WebGPU cannot copy a 4× multisampled depth
-   into a single-sampled texture.
+3. **The halo's depth copy fails on the 4× canvas.** WebGPU cannot copy a multisampled depth
+   into a single-sampled texture, so r169's copy has nothing to resolve it with.
 
 Each has a route through, below. The first holds gate 3 only if every material carries its
 own curve; the second costs gate 6 triangles, and the third a call or a target. So the
@@ -181,8 +181,8 @@ and `checkFramebufferStatus`.
 
 ### A derivative in a branch
 
-WGSL rejects `fwidth`, `dFdx` and implicitly differentiated texture samples in non-uniform
-control flow by default. r169 turns that check off in every fragment shader outside Firefox
+WGSL rejects `fwidth`, `dpdx` (TSL's `dFdx`) and implicitly differentiated texture samples
+in non-uniform control flow by default. r169 turns that check off in every fragment shader outside Firefox
 (`diagnostic( off, derivative_uniformity )`,
 `renderers/webgpu/nodes/WGSLNodeBuilder.js:157`). So a TSL `If` wrapped around a derivative
 compiles on Edge, gate 6's named browser, and gives an undefined result there, as in GLSL; only
