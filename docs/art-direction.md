@@ -287,9 +287,9 @@ there are none, and the reason is canon rather than budget.*
 A caustic is sunlight focused by a clear, moving surface into a bright moving pattern on
 whatever lies under it. This ocean has no clear sunlit water. The sunlit layer is the Lid,
 the sour top 150 m, pale and milky since the Collapse, and the Sounding of 141 found white
-water to the horizon ([world.md](world.md) "The Salinity Collapse", "The Sounding"). Milky water scatters light; it does not
-focus it. What reaches the first clear water under the Lid, where the Commune's kelp
-plateaus begin, is a dim light from everywhere above and nowhere in particular, and that
+water to the horizon ([world.md](world.md) "The Salinity Collapse", "The Sounding"). Milky
+water scatters light; it does not focus it. What reaches the first clear water under the
+Lid, where the Commune's kelp plateaus begin, is a dim light from everywhere above and nowhere in particular, and that
 light is already drawn: the water ramp makes the Lid the brightest water a hull can loiter
 in and fades it down the column ([Reading the Water](#reading-the-water)), and the shared
 rig's environment map grades from a cold overhead to the deep water below with no sun in it
@@ -306,8 +306,8 @@ So the rule is a prohibition, and it binds the four places a caustic could have 
   brightened with shallowness would be an instrument drawn in the world, and instruments
   live on the HUD ([style-neon-noir.md](style-neon-noir.md) "World light", rule 4).
 - **The Lid's underside does not shimmer.** The surface is finished, not a hope
-  ([world.md](world.md) "There is nothing up there", "Writing rule"), and a lit, moving ceiling is an invitation drawn
-  in light. The ramp's brightest stop is the whole of what the Lid shows.
+  ([world.md](world.md) "There is nothing up there", "Writing rule"), and a lit, moving
+  ceiling is an invitation drawn in light. The ramp's brightest stop is the whole of what the Lid shows.
 - **No pass is reserved for it.** Gate 6 allocates nothing to caustics; the halo's four
   steps are the only full-screen work after the canvas pass.
 
