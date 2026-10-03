@@ -21,7 +21,8 @@
  * eight-facet plinth turned an eighth, twelve port lights on one six-by-five
  * orb (the export's counts, here and through this paragraph; FACETS, at the
  * foot, gives the pass's), two docks each a frame of its own — throat, lip, lit mouth, two fins
- * — four five-sided conduits that are 0.9 rad of a ring, two standpipes with
+ * — four five-sided conduits that are 0.9 rad of a ring (re-laid on the
+ * dome's facets since: CONDUITS, at the foot), two standpipes with
  * flanges, two capsules of ballast tank, and four mirrored pairs of anchor
  * blades stood off one circle.
  *
@@ -187,16 +188,19 @@
  * pole and running through the lantern (contacts.mjs listed each against
  * the other three and `apex_lantern`). No view showed "external
  * pipework". Each is now a pipe of the same 2.95 m tube laid on the dome's
- * facets (`hadron.conduits`, kit.mjs `mitredTube`): `fore_r` in the
- * vertical plane on the bearing −45°, toward −z, between the ribs at −20°
- * and −60°, from 1.0 out at the lantern's foot down the cap facet, over
- * the ring-1 ridge with a 30.5° mitre, and down the second band to 4.9
- * out, 0.17 short of ring 2; `aft_r`, `fore_l` and `aft_l` the same buffer
- * yawed to +45°, −135° and +135°. Centreline (ρ, y) 1.023, 7.242 → 3.050,
- * 6.703 → 4.965, 4.761: 44.1 m and 57.4 m of run, 1.92 m off each facet
- * on a flat sunk 0.63 m into it, so 14 of a conduit's 20 corners stand
- * proud of the facets by up to 4.64 m and the bottom flat's six sit 0.63 m
- * under; the top end's crown is at 7.36 under the pole's 7.42. The sweep
+ * facets (`hadron.conduits`, kit.mjs `mitredTube`), in the file's units of
+ * 21.05 m with metres in brackets: `fore_r` in the vertical plane on the
+ * bearing −45°, toward −z, between the ribs at −20° and −60°, from 1.0
+ * (21 m) out at the lantern's foot down the cap facet, over the ring-1
+ * ridge with a 30.5° mitre, and down the second band to 4.9 (103 m) out,
+ * 0.17 (3.6 m) short of ring 2; `aft_r`, `fore_l` and `aft_l` the same
+ * buffer yawed to +45°, −135° and +135°, each bearing seated and measured
+ * against the first. Centreline (ρ, y) 1.023, 7.242 → 3.050, 6.703 →
+ * 4.965, 4.761: runs of 2.097 (44.1 m) and 2.728 (57.4 m), 0.091 (1.92 m)
+ * off each facet on a flat sunk 0.030 (0.63 m) into it, so 14 of a
+ * conduit's 20 corners stand proud of the facets by up to 0.22 (4.64 m)
+ * and the bottom flat's six sit 0.030 (0.63 m) under; the top end's crown
+ * is at y 7.36 under the pole's 7.42. The sweep
  * lists each conduit against the dome and nothing else. `diff.mjs
  * bastion-hadron origin/main` lists the four (39.6 m, 24 → 36 triangles
  * each, the twelve being the end caps the open arcs never had) and

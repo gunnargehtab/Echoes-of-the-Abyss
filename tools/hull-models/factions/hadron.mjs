@@ -2408,25 +2408,29 @@ export function dockingCollar(root, { alloy, shadow, crystal: lit }, opts) {
  * on different facets — a run on one facet has no bend and is refused —
  * and the bearing must be a facet's mid-line, where the facet normals lie
  * in the run's plane; one that is not is refused rather than laid askew.
- * The tube's count is the rule's at `t` (`cut`, #919), six at the
- * Bastion's 2.95 m; its count along is the two facets it lies on, which is
- * the two #919 gave the arc it replaced.
+ * All four bearings are seated and measured against the first, since one
+ * buffer serves four bearings only where the dome is the same under each;
+ * a dome that is not mirrored so is refused too. The tube's count is the
+ * rule's at `t` (`cut`, #919), six at the Bastion's 2.95 m; its count
+ * along is the two facets it lies on, which is the two #919 gave the arc
+ * it replaced.
  *
- * On the Bastion (`azimuth` −π/4, `from` 1.0, `to` 4.9, `sink` 0.03, 21 m
- * a unit): the cap facet under 1.0 out is at y 7.154 and slopes 14.9°,
- * the second band's under 4.9 out at y 4.697 slopes 45.4°, and the
- * centreline runs (ρ 1.023, y 7.242) → (3.050, 6.703) → (4.965, 4.761),
- * 44.1 m and then 57.4 m with a 30.5° bend 0.095 over the ring-1 ridge
- * (mid-edge ρ 3.002, y 6.621), `h` 1.92 m and the flat 0.63 m under the
- * skin. The top end's crown is at 7.36 under the pole's 7.42, 0.6 clear of
- * the lantern crystal (ρ 0.4 at that height on the bearing) and 0.57
- * across from the nearest prong; the bottom end stops 0.17 short of
- * ring 2's mid-edge (ρ 5.136). The ribs at ±20°, ±60°, ±120° and ±160° are
- * 15° off the nearest run, and the sweep (contacts.mjs) lists each conduit
- * against the dome alone. The arcs this replaced — 0.9 rad of a circle of
- * 5.4 about (0, 1.6, 0), draped across the crown — lay 4.5 to 13.4 m
- * under the facets at every corner, crossed one another over the pole and
- * ran through the lantern.
+ * On the Bastion (`azimuth` −π/4, `from` 1.0, `to` 4.9, `sink` 0.03), in
+ * the file's units of 21.05 m with metres in brackets: the cap facet under
+ * 1.0 out is at y 7.154 and slopes 14.9°, the second band's under 4.9 out
+ * at y 4.697 slopes 45.4°, and the centreline runs (ρ 1.023, y 7.242) →
+ * (3.050, 6.703) → (4.965, 4.761), runs of 2.097 (44.1 m) and 2.728
+ * (57.4 m) with a 30.5° bend 0.095 (2.0 m) over the ring-1 ridge (mid-edge
+ * ρ 3.002, y 6.621), `h` 0.091 (1.92 m) and the flat 0.030 (0.63 m) under
+ * the skin. The top end's crown is at y 7.36 under the pole's 7.42, 0.6
+ * (12.6 m) clear of the lantern crystal (ρ 0.4 at that height on the
+ * bearing) and 0.57 (12.0 m) across from the nearest prong; the bottom
+ * end stops 0.17 (3.6 m) short of ring 2's mid-edge (ρ 5.136). The ribs at
+ * ±20°, ±60°, ±120° and ±160° are 15° off the nearest run, and the sweep
+ * (contacts.mjs) lists each conduit against the dome alone. The arcs this
+ * replaced — 0.9 rad of a circle of 5.4 about (0, 1.6, 0), draped across
+ * the crown — lay 0.22 to 0.64 (4.5 to 13.4 m) under the facets at every
+ * corner, crossed one another over the pole and ran through the lantern.
  */
 export function conduits(root, steel, opts) {
   const { on, t, azimuth, from, to, sink = 0, cut: rule = METRE } = opts;
@@ -2435,20 +2439,52 @@ export function conduits(root, steel, opts) {
   // skin, less the sink.
   const h = t * Math.cos(Math.PI / radial) - sink;
   // The run's plane through the axis: ρ out along `azimuth`, y up, w across.
-  const u = [Math.cos(azimuth), 0, Math.sin(azimuth)];
-  const w = [-Math.sin(azimuth), 0, Math.cos(azimuth)];
-  const inPlane = (v) => [v[0] * u[0] + v[2] * u[2], v[1], v[0] * w[0] + v[2] * w[2]];
-  // The facet under each end station, and its normal (kit `seat` `drop`).
-  const ends = [from, to].map((rho) => {
-    const { at, normal } = seat(root, on, [rho * u[0], 0, rho * u[2]], { drop: true });
-    const [pr, py, pw] = inPlane(at);
-    const [nr, ny, nw] = inPlane(normal);
-    if (Math.abs(nw) > 1e-6 || Math.abs(pw) > 1e-6)
-      throw new Error(`conduits: the facet under ${rho} out is not square to the run's plane`);
-    // The centreline over this facet: `h` off it, running down its slope.
-    return { q: [pr + nr * h, py + ny * h], d: [ny, -nr], down: [-nr, -ny, 0] };
-  });
-  const [a, c] = ends;
+  // The facet under each end station on a bearing, and its normal (kit
+  // `seat` `drop`), in the run's plane.
+  const endsOn = (bearing) => {
+    const u = [Math.cos(bearing), 0, Math.sin(bearing)];
+    const w = [-Math.sin(bearing), 0, Math.cos(bearing)];
+    const inPlane = (v) => [v[0] * u[0] + v[2] * u[2], v[1], v[0] * w[0] + v[2] * w[2]];
+    return [from, to].map((rho) => {
+      const { at, normal } = seat(root, on, [rho * u[0], 0, rho * u[2]], { drop: true });
+      const [pr, py, pw] = inPlane(at);
+      const [nr, ny, nw] = inPlane(normal);
+      if (Math.abs(nw) > 1e-6 || Math.abs(pw) > 1e-6)
+        throw new Error(
+          `conduits: the facet under ${rho} out on the bearing ${bearing} is not square to the run's plane`
+        );
+      // The centreline over this facet: `h` off it, running down its slope.
+      return { q: [pr + nr * h, py + ny * h], d: [ny, -nr], down: [-nr, -ny, 0] };
+    });
+  };
+  // The four bearings: `fore_r` on `azimuth`, `aft_r` on its z-mirror, each
+  // `_l` on its `_r`'s x-mirror. One buffer serves all four only if the
+  // dome reads the same under each, so every bearing is seated and its
+  // facets must agree with the `fore_r`'s; the mirror is measured, not
+  // assumed.
+  const bearings = [];
+  for (const [name, az] of [
+    ['fore', azimuth],
+    ['aft', -azimuth],
+  ])
+    pair((tag, sgn) =>
+      bearings.push({ name: `${name}_${tag}`, bearing: sgn < 0 ? az : Math.PI - az })
+    );
+  const seated = bearings.map(({ bearing }) => endsOn(bearing));
+  const [a, c] = seated[0];
+  seated.forEach((ends, i) =>
+    ends.forEach((e, k) => {
+      const ref = seated[0][k];
+      const off = Math.max(
+        ...e.q.map((v, j) => Math.abs(v - ref.q[j])),
+        ...e.d.map((v, j) => Math.abs(v - ref.d[j]))
+      );
+      if (off > 1e-6)
+        throw new Error(
+          `conduits: the facet under ${[from, to][k]} out on the ${bearings[i].name} bearing is ${off} off the fore_r's`
+        );
+    })
+  );
   const cross = (p, q) => p[0] * q[1] - p[1] * q[0];
   const turn = cross(a.d, c.d);
   if (Math.abs(turn) < 1e-9)
@@ -2460,23 +2496,17 @@ export function conduits(root, steel, opts) {
     [b[0], b[1], 0],
     [c.q[0], c.q[1], 0],
   ];
-  // Each node yaws the one run to its bearing: `fore_r` to `azimuth`, `aft_r`
-  // to its z-mirror, each `_l` to its `_r`'s x-mirror. A yaw of φ about y
-  // carries +x to the bearing −φ.
+  // Each node yaws the one run to its bearing: a yaw of φ about y carries
+  // +x to the bearing −φ.
   const wrap = (rad) => Math.atan2(Math.sin(rad), Math.cos(rad));
-  for (const [name, bearing] of [
-    ['fore', azimuth],
-    ['aft', -azimuth],
-  ])
-    pair((tag, sgn) =>
-      add(
-        root,
-        `conduit_${name}_${tag}`,
-        mitredTube(run, t, { facets: radial, down: [a.down, c.down] }),
-        steel,
-        [0, 0, 0],
-        [0, wrap(sgn < 0 ? -bearing : bearing - Math.PI), 0]
-      )
+  for (const { name, bearing } of bearings)
+    add(
+      root,
+      `conduit_${name}`,
+      mitredTube(run, t, { facets: radial, down: [a.down, c.down] }),
+      steel,
+      [0, 0, 0],
+      [0, wrap(-bearing), 0]
     );
 }
 
