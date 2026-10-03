@@ -125,13 +125,13 @@ if (drift.unmentioned.length > 0) {
   );
 }
 
-// The roster contact sheet — the newest one an art PR committed. Its size is
+// The roster contact sheet tools/hull-maps bakes with the maps. Its size is
 // read from the file so the page can reserve the box; its absence is a
 // warning, not a failure, and the page simply has no picture.
-const sheetFile = findContactSheet(join(repoRoot, 'docs', 'screenshots'));
+const sheetFile = findContactSheet(repoRoot);
 const sheetSize = sheetFile === null ? null : pngSize(readFileSync(sheetFile.path));
 const sheet = sheetSize === null ? null : { ...sheetSize, href: 'roster-contact-sheet.png' };
-if (sheetFile === null) console.error('No rung-roster-sprites.png under docs/screenshots.');
+if (sheetFile === null) console.error('No roster sheet; node tools/hull-maps/sheet.mjs bakes one.');
 else if (sheetSize === null) console.error(`${sheetFile.path} is not a PNG; leaving it off.`);
 else ASSETS.push({ from: sheetFile.path, to: sheet.href });
 
@@ -200,6 +200,6 @@ console.error(
     `${states.size} states resolved, ${counts.missions} missions, ${counts.maps} maps, ` +
     `${roadmap.sprints.length} sprints, ${drift.unplaced.length} open issues unplaced, ` +
     `${drift.unrecorded.length} closed issues unrecorded, ` +
-    `roster sheet ${sheetFile === null ? 'missing' : `from #${sheetFile.issue}`}, ` +
+    `roster sheet ${sheetFile === null ? 'missing' : 'baked'}, ` +
     `${Object.keys(portraits.found).length} of ${content.factions.length} navy portraits.`
 );

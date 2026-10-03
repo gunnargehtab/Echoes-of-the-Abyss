@@ -17,7 +17,8 @@
  * A full run bakes all 94 models through Chromium, minutes for a change to one
  * GLB, so a slug list bakes just those (#1055). Either way the plan outlines
  * are rewritten at the end: outlines.mjs reads the 44 unit models without a
- * browser, which is cheap.
+ * browser, which is cheap. So is the roster contact sheet (sheet.mjs), a few
+ * seconds in Chromium with the frontend's own sprite code.
  *
  * The model table it bakes from is models.mjs, shared with outlines.mjs —
  * the second committed output of the same GLBs, which this script refreshes
@@ -35,6 +36,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { UNITS, STRUCTURES } from './models.mjs';
 import { writeOutlines } from './outlines.mjs';
+import { bakeSheet, SHEET } from './sheet.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const MAP_PPM = 4;
@@ -158,6 +160,11 @@ console.log(
   `\ndone: ${baked} model(s), units at ${MAP_PPM} px/m, structures at ${STRUCT_PPM} px/m`
 );
 
-// The plan outlines are the other committed output of the same models, so
-// one run of this script leaves both current.
+// The plan outlines and the roster contact sheet are the other committed
+// outputs of the same models, so one run of this script leaves all three
+// current. The sheet is drawn from the maps just written; the roadmap site
+// shows it, and tools/roadmap/test/sheet.test.mjs fails if a map changes
+// without it.
 await writeOutlines();
+await bakeSheet();
+console.log(`wrote ${SHEET}`);

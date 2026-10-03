@@ -77,11 +77,12 @@ Five sources, and the split is the design:
   number moves in a doc, it moves here. A row with no sentence renders in the doc's own
   words and the build says so by name, and `test/parse.test.mjs` fails if any row of the
   real roadmap is uncovered — so a new row cannot reach the public page in engineering-speak.
-- **`docs/screenshots/` owns the roster sheet.** Every roster PR bakes a contact sheet of the
-  whole roster and commits it as `docs/screenshots/issue-<N>/rung-roster-sprites.png` beside
-  its other review screenshots. The site takes the newest by issue number (`lib/sheet.mjs`)
-  and ships it as `roster-contact-sheet.png`, so a re-bake changes the page without anyone
-  touching this tool. Keep the filename; the number in the directory is what says "newest".
+- **`tools/hull-maps` owns the roster sheet.** `sheet.mjs` draws every navy's hulls and
+  structures with the game's own sprite code into `docs/concept-art/roster-sheet.png`, and
+  `build.mjs` runs it after every map bake. The site ships it as `roster-contact-sheet.png`
+  (`lib/sheet.mjs`), so a re-bake changes the page without anyone touching this tool. Art
+  PRs used to commit the sheet by hand under `docs/screenshots/`; none did after #466, and
+  the page showed a fleet a quarter its size, which is why it is a bake output now.
 - **`docs/concept-art/renders/` owns the portraits.** `tools/hull-renders` commits one beauty
   frame per hull per navy as `<kind>-<navy>.png`. The site takes one kind for all four navies
   (`portraitKind` in `lib/content.mjs`), copies those four frames as they are, and captions
@@ -115,7 +116,7 @@ Each thing on the page has one owner, and each owner has a check:
 | Mission, map, navy counts | counted from the repository at build time | nothing to drift — they are not typed anywhere |
 | The navy portraits | `docs/concept-art/renders/<kind>-<navy>.png`, captioned from `tools/hull-renders/shots.mjs` | `pages.yml` rebuilds when a render or the shot table changes; the test fails if any navy's frame is missing |
 | The dive: depths, ping radii, the Drift | `lib/ocean.mjs`, transcribed from `docs/` | `test/ocean.test.mjs` reads `systems-depth.md`, `systems-echo.md`, `bestiary.md` and `glossary.md` back and fails on any moved number |
-| The roster sheet | newest `docs/screenshots/issue-<N>/rung-roster-sprites.png` | `pages.yml` rebuilds when one lands; the test fails if none exists |
+| The roster sheet | `docs/concept-art/roster-sheet.png`, baked with the maps | `test/sheet.test.mjs` fails when a map has changed since the sheet was baked, by the hashes in `roster-sheet.json`; `pages.yml` rebuilds when it changes |
 | The dates each phase ran | issue `created_at` / `closed_at`, at build time | nothing to drift — no date is typed anywhere, and a phase with open rows says *since* rather than guessing an end |
 | Open issues with no row | the GitHub API against the doc | the build log names them, and the page counts them; epics and `routine-log` ledgers are not counted, being containers and records rather than missing work. An issue under an epic that has a row counts as placed — the doc gives an epic one row, not one per sub-issue |
 | Closed work with no row | the same, for closed issues | the build log names them and "The road so far" counts them, so the record says how much it leaves out; duplicates and issues closed as not planned are not work done |

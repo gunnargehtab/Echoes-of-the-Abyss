@@ -116,15 +116,14 @@ export const portraitKind = { slug: 'cruiser', label: 'Cruiser' };
 
 /**
  * The roster contact sheet — the whole fleet in one picture. The image itself is
- * the newest `rung-roster-sprites.png` an art PR committed under
- * docs/screenshots (see lib/sheet.mjs); these are the words around it. The
- * facts are graphics-standards.md's: baked from the approved models, glow set
- * from the hull's own SIG band, own force only.
+ * baked by tools/hull-maps/sheet.mjs with the maps (see lib/sheet.mjs); these
+ * are the words around it. The facts are graphics-standards.md's: baked from
+ * the approved models, glow set from the hull's own SIG band, own force only.
  */
 export const roster = {
   title: 'The fleet, as it renders today',
   text: 'Every hull and yard in the game, seen the way the sonar chart draws your own force. Each glows exactly as loud as it is. An enemy is a silhouette at best.',
-  alt: 'Contact sheet of every hull and yard in the game, seen from above, one row per navy: Consortium in amber, Commune in green, Directorate in red, Knights in violet, each hull labelled with its class and its length in metres.',
+  alt: 'Contact sheet of every hull and yard in the game, seen from above, one band per navy: Consortium in amber, Commune in green, Directorate in red, Knights in violet. Each hull is labelled with its class and its length in metres, each yard with its name.',
   caption: 'Re-baked whenever the art changes — the current roster, not a mock-up.',
 };
 

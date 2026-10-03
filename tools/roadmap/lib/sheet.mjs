@@ -1,35 +1,28 @@
 /**
  * Which roster contact sheet the site shows, and how big it is.
  *
- * The sheet is not generated here — it is baked by the art PRs, one per
- * roster change, and committed under `docs/screenshots/issue-<N>/` as
- * `rung-roster-sprites.png` beside the PR's other review screenshots (#461,
- * #466, and every roster PR since). That directory name is the PR's own
- * record and nobody should have to remember to copy a file out of it, so the
- * site takes the newest sheet by issue number: the highest `issue-<N>` that
- * carries one wins. A re-bake in a later PR replaces the picture on the page
- * without anyone touching this tool.
+ * The sheet is baked, not hand-committed. tools/hull-maps/sheet.mjs draws
+ * every navy's hulls and structures with the game's own sprite code, and
+ * tools/hull-maps/build.mjs runs it after every map bake, so the picture moves
+ * when the art does. test/sheet.test.mjs holds that: it fails when a map has
+ * changed since the sheet was baked.
  *
- * Highest issue number, not newest mtime: a checkout gives every file the
- * same mtime, and a shallow clone gives every path the same commit.
+ * Until then each art PR was to commit a `rung-roster-sprites.png` by hand
+ * under docs/screenshots/issue-<N>/, and the site took the highest N. None did
+ * after #466, so the page showed five hulls a navy where the game has up to
+ * twenty, under a caption calling it current. Those screenshots stay where
+ * they are, as their PRs' review record.
  */
 
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-export const SHEET_FILE = 'rung-roster-sprites.png';
+import { SHEET } from '../../hull-maps/sheet.mjs';
 
-/** `{ issue, path }` for the newest sheet under `screenshotsDir`, or null. */
-export function findContactSheet(screenshotsDir) {
-  if (!existsSync(screenshotsDir)) return null;
-  const candidates = readdirSync(screenshotsDir, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => /^issue-(\d+)$/.exec(entry.name))
-    .filter((match) => match !== null)
-    .map((match) => ({ issue: Number(match[1]), path: join(screenshotsDir, match[0], SHEET_FILE) }))
-    .filter((candidate) => existsSync(candidate.path))
-    .sort((a, b) => b.issue - a.issue);
-  return candidates[0] ?? null;
+/** `{ path }` for the baked sheet under `repoRoot`, or null if there is none. */
+export function findContactSheet(repoRoot) {
+  const path = join(repoRoot, ...SHEET.split('/'));
+  return existsSync(path) ? { path } : null;
 }
 
 /**
