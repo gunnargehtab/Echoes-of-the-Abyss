@@ -19,7 +19,7 @@ reads the phase tables, asks GitHub whether each issue is open, and draws that �
 row is a claim that the work is tracked, not a claim that it is live. The tracker is what
 says which, and the site asks it on every build. The site also counts the open issues this
 document places in no table, shows the
-newest roster contact sheet an art PR committed under `docs/screenshots/`, and dates every
+roster contact sheet `tools/hull-maps` bakes with the sprite maps, and dates every
 phase from the tracker — the day its first issue was filed to the day its last one closed —
 so no phase date is typed anywhere. The first issue on this roadmap was filed on 15 August
 2026, and Phase 0 below is that week.
