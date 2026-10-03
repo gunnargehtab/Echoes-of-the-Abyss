@@ -492,21 +492,31 @@ export function propTunnels(root, { grey, rust }, { x, z, r, cut: rule = METRE }
  * A riveted machinery house: louvred sides, a lit roof grating, and a stack
  * lit at the throat.
  *
- * The louvred side is a raked hood: a well of hull black leaning from the
- * deck up to the wall (`louvre_well_s/p`), and `louvres.count` blades
+ * The louvred side is a raked hood: a well of hull black leaning from its
+ * foot line — the deck, unless `foot` is given — up to the wall
+ * (`louvre_well_s/p`), and `louvres.count` blades
  * stepped down its face, each `blade[1]` wide and `blade[0]` thick running
  * the house's length, canted up `tilt` radians — its outer edge the high
  * one — with its inner edge in the well. Blade `i` stands at `y + i ·
  * pitch` and `(count − 1 − i) · step` further outboard than the top one,
  * whose centre is `z`; the well's top face is the line through the blades'
- * inner edges, slope `pitch / step`, from where it meets the deck (`deck`)
- * to where it meets the wall, and the well is `well.t` thick under that
- * face. Its ends are buried in the slab and the house whatever the
- * thickness; its underside is buried only if `well.t` reaches the corner
- * where the deck meets the wall, which lies under the face's midpoint —
- * 1.73 m on the Derrick, so a 1 m well left a hollow of triangular
- * section open at both ends under the whole hood (#893 round 3) — and the
- * builder throws on a thickness that would leave that hollow. The form is
+ * inner edges, slope `pitch / step`, from where it meets its foot line
+ * (`foot`, the deck `deck` unless given) to where it meets the wall, and
+ * the well is `well.t` thick under that face. Standing on the deck, its
+ * ends are buried in the slab and the house whatever the thickness; its
+ * underside is buried only if `well.t` reaches the corner where the deck
+ * meets the wall, which lies under the face's midpoint — 1.73 m on the
+ * Derrick's deck — so a 1 m well left a hollow of triangular section open
+ * at both ends under the whole hood (#893 round 3), and the builder throws
+ * on a thickness that would leave that hollow. Hung — a `foot` over the
+ * deck, which the Derrick's has been since #933 raised its hoods back
+ * under the eave #907 lifted the house past — the foot's end face is the
+ * hood's underside, a plane square to the face sloping back in to the
+ * wall, and the well must be thick enough for that face to reach the wall,
+ * `(A_z − beam / 2) / n_z` (2.93 m on the Derrick), or the same wedge
+ * stands open between the well's back and the wall below the foot; the
+ * builder throws on that too. Only the wall end then takes the extra
+ * length that sinks an end into what it meets. The form is
  * `exhaustLouvres` below — slats over a well of hull black — stood against
  * a wall rather than laid on a deck, and the well is what makes it a
  * louvred side rather than a slat screen in the air (#893 round 2). A
@@ -529,31 +539,46 @@ export function machineryHouse(root, { black, grey, rust, amber, vent, flood }, 
       y + height / 2 + 1,
       0,
     ]);
-  const { count = 5, y: ly, pitch, z: lz, step, tilt, blade, deck, well } = louvres;
+  const { count = 5, y: ly, pitch, z: lz, step, tilt, blade, deck, foot = deck, well } = louvres;
   const [bt, bw] = blade;
   // The well, in section (z out, y up) on the starboard side. Blade 0 is the
   // lowest and outermost; its inner edge and the slope give the face's line,
-  // cut at the deck (A) and the wall (B). The box is centred half its
+  // cut at the foot line (A) and the wall (B). The box is centred half its
   // thickness under the face's midpoint along the outward-up normal `n`,
-  // and turned about X so its local +y lies on `n`; a tenth of a metre of
-  // extra length sinks each end past the deck and into the wall.
+  // and turned about X so its local +y lies on `n`; a twentieth of a metre
+  // of extra length sinks the wall end into the wall, and the foot end past
+  // the deck when the hood stands on it.
   const ez = lz + (count - 1) * step - (bw / 2) * Math.cos(tilt);
   const ey = ly - (bw / 2) * Math.sin(tilt);
   const slope = pitch / step;
-  const A = [ez + (ey - deck) / slope, deck];
+  const A = [ez + (ey - foot) / slope, foot];
   const B = [beam / 2, ey + slope * (ez - beam / 2)];
   const run = Math.hypot(B[0] - A[0], B[1] - A[1]);
   const n = [(B[1] - A[1]) / run, (A[0] - B[0]) / run];
-  // The deck/wall corner's depth under the face: the well must be at least
-  // this thick or its underside stands clear of both, a hollow the conn
-  // view sees end-on (docstring).
+  const hung = foot > deck;
+  // On the deck: the deck/wall corner's depth under the face, which the well
+  // must be at least as thick as or its underside stands clear of both, a
+  // hollow the conn view sees end-on. Hung: the thickness at which the
+  // foot's end face, square to the face, reaches the wall (docstring).
   const hollow = (beam / 2 - A[0]) * n[0] + (deck - A[1]) * n[1];
-  if (well.t < -hollow)
+  const closes = (A[0] - beam / 2) / n[0];
+  if (!hung && well.t < -hollow)
     throw new Error(
       `machineryHouse: well.t ${well.t} leaves a hollow under the hood; the deck/wall ` +
         `corner lies ${(-hollow).toFixed(2)} m under the face`
     );
-  const C = [(A[0] + B[0]) / 2 - (n[0] * well.t) / 2, (A[1] + B[1]) / 2 - (n[1] * well.t) / 2];
+  if (hung && well.t < closes)
+    throw new Error(
+      `machineryHouse: well.t ${well.t} leaves the hung hood's foot clear of the wall; its ` +
+        `end face reaches the wall at ${closes.toFixed(2)} m`
+    );
+  const ext = hung ? [0, 0.05] : [0.05, 0.05];
+  const d = [(B[0] - A[0]) / run, (B[1] - A[1]) / run];
+  const along = (ext[1] - ext[0]) / 2;
+  const C = [
+    (A[0] + B[0]) / 2 - (n[0] * well.t) / 2 + d[0] * along,
+    (A[1] + B[1]) / 2 - (n[1] * well.t) / 2 + d[1] * along,
+  ];
   const rake = Math.atan2(n[0], n[1]);
   // Canting a blade about X drops its +z edge, so starboard (+z) takes the
   // negative angle and port the positive one: the outer edge rises on both.
@@ -562,7 +587,7 @@ export function machineryHouse(root, { black, grey, rust, amber, vent, flood }, 
     add(
       root,
       `louvre_well_${side}`,
-      box(length * 0.73, well.t, run + 0.1),
+      box(length * 0.73, well.t, run + ext[0] + ext[1]),
       black,
       [x, C[1], sgn * C[0]],
       [sgn * rake, 0, 0]

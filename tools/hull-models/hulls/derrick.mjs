@@ -32,22 +32,31 @@
  * - `louvre_s0..4`, `louvre_p0..4` (#893): five bars flat on each wall of
  *   the house under the roof's eave, the lower two below the deck line, in
  *   `amber_vent` until #890 clad them. `amber_vent` again, and a raked
- *   hood a side now: a well of hull black (`louvre_well_s/p`) leaning from
- *   the deck 2.25 m out from the wall (z ±15.25, y 11) up to the wall 2.7 m
- *   above it (z ±13, y 13.7, on a wall that since #907 runs on up to the
- *   roof's underside at 19.8), and five
- *   blades stepped down its face, each canted up 35° with its inner edge
- *   in the well and its outer edge half a metre out from the blade above's
- *   — the top one under the eave with its outer edge 0.4 m past it, the
- *   bottom one at the deck. The form is the Caisson's and the Gantry's
- *   `exhaustLouvres`, slats over a well, stood against a wall. From above
- *   each blade shows its half-metre step past the one over it, so the
- *   chart reads one lit band 2.4 m wide down each flank, from the eave at
- *   z 13.5 to the bottom blade's outer edge at 15.91 (`machineryHouse`).
- *   The well is 1.8 m thick because the corner where the deck meets the
- *   wall lies 1.73 m under its face: a metre of well left a hollow of
- *   triangular section under the whole hood, open at both ends. The two
- *   wells are the one part added in this file — two unlit parts the
+ *   hood a side now: a well of hull black (`louvre_well_s/p`) leaning out
+ *   from the wall (z ±13, y 19.2) down to its foot 2.25 m out from it
+ *   (z ±15.25, y 16.5), and five blades stepped down its face, each canted
+ *   up 35° with its inner edge in the well and its outer edge half a metre
+ *   out from the blade above's — the top one under the eave, its top
+ *   corner 0.18 m under the roof's underside at 19.8 and its outer corner
+ *   0.41 m past the eave at z 13.5. #893 stood the hood on the deck with
+ *   its top blade under the eave of a wall that showed 3.5 m; #907 raised
+ *   the house 5.5 m and left the hood at the deck, and #933 raised it the
+ *   same 5.5 m, so it hangs under the eave again with its foot 5.5 m over
+ *   the deck and 3.6 m of bare wall under the hood (the option taken in
+ *   #933's pull request). The form is
+ *   the Caisson's and the Gantry's `exhaustLouvres`, slats over a well,
+ *   stood against a wall. From above each blade shows its half-metre step
+ *   past the one over it, so the chart reads one lit band 2.4 m wide down
+ *   each flank, from the eave at z 13.5 to the bottom blade's outer edge
+ *   at 15.91 (`machineryHouse`), the same band at either height. On the
+ *   deck the well was 1.8 m thick, because the corner where the deck meets
+ *   the wall lay 1.73 m under its face and a metre of well left a hollow
+ *   of triangular section under the whole hood, open at both ends; hung,
+ *   its foot's end face is the hood's underside, square to the face and
+ *   sloping back in to the wall, and the well is 3 m thick so that face
+ *   reaches the wall (it does at 2.93; the corner lands at y 14.58, 5 cm
+ *   inside the wall) rather than leaving the same wedge open below the
+ *   foot. The two wells are the one part added in this file — two unlit parts the
  *   approved model did not have; the blades and the ports below are moved
  *   and reshaped, and `diff.mjs` lists all sixteen — added in #893's second
  *   round because a blade with nothing under it is a slat screen hanging
@@ -60,7 +69,9 @@
  *   on the house's forward face with their sills at the deck line, under
  *   the roof's half-metre eave; they are port boxes now, 1.1 m deep from the
  *   wall so the outer 0.6 m stands past the eave — the Tender's ports under
- *   its deckhouse eaves — a metre and a half up the wall.
+ *   its deckhouse eaves — with their tops 1.1 m under the roof's underside
+ *   (y 17.5–18.7), where #893 had them on the shorter wall; #907 left them
+ *   at y 12.0–13.2 and #933 raised them the house's 5.5 m with the hoods.
  *
  * The cradle lamp, the stack throat and the frame floods face up and never
  * moved, and the roof gratings rose 5.5 m with the house whose roof they
@@ -86,17 +97,18 @@
  * both undersides at their midpoints; every cable starts inside it and
  * took up its 0.9 rise, so the drums hang where they hung, and the stay
  * stands on it. The machinery house floored at `DECK` too, the slab
- * burying all but 3.5 m of its 9 (its louvred hoods stand on the exposed
- * wall since #893); since #907 it stands on the slab's top with the stack
+ * burying all but 3.5 m of its 9 (its louvred hoods stood on the exposed
+ * wall from #893 to #933); since #907 it stands on the slab's top with the stack
  * kept at its station, so the throat still tops out at 27.8, under the
  * frame's top at 28.2 — the frame reading as the biggest thing on the
  * hull is the block's one hard line, and lifting the stack with the house
  * would have carried it over. 5.2 m of the stack's 12 show above the roof
- * now where 10.7 did. The hoods and the bridge ports stand where they
- * stood, in the bottom 3 m of a wall now 9 m tall: the top blade is 5.7 m
- * under the eave and the ports 6.6, so #893's "under the eave" holds in
- * plan, where the chart reads them, and not in elevation — raising them
- * to the eave is a further decision this fix leaves to the owner.
+ * now where 10.7 did. The hoods and the bridge ports stayed where they
+ * stood, in the bottom 3 m of a wall now 9 m tall — the top blade 5.7 m
+ * under the eave and the ports 6.6, #893's "under the eave" holding in
+ * plan and not in elevation — until #933 raised both the same 5.5 m
+ * (above): the block names bridge ports and an eave, and a bridge's ports
+ * sit under the roof, not at the foot of a three-storey wall.
  *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.
@@ -202,16 +214,16 @@ add(root, 'cradle_lamp_stay', box(0.6, 1.9, 0.6), grey, [5, frame.top + 0.25, 0]
 // floored it at DECK and the slab buried all but 3.5 m of it), so the roof's
 // underside is at 19.8; the stack keeps its station, its lower 6.8 m inside
 // the house and roof, so its throat still tops out under the frame (header).
-// The louvred hood a side stands on the wall: the top blade's centre on the eave line
-// (beam/2 + 0.5) so its outer edge shows past it, each blade below half a
-// metre further out, and the well raked from the deck up to the wall under
-// them, 1.8 m thick so it reaches the deck/wall corner 1.73 m under its
-// face (header).
+// The louvred hood a side hangs under the eave (#933): the top blade's centre
+// on the eave line (beam/2 + 0.5) so its outer edge shows past it, each blade
+// below half a metre further out, and the well raked from the wall under them
+// down to its foot 5.5 m over the deck, 3 m thick so its end face closes on
+// the wall (header).
 bathyarch.machineryHouse(root, { black, grey, rust, amber, vent, flood }, {
   x: -24, y: DEPTH + 4.5, length: 22, height: 9, beam: 26, stack: { x: -30, y: 20, z: 6 },
   louvres: {
-    count: 5, y: DEPTH + 0.4, pitch: 0.6, z: 13.5, step: 0.5, tilt: 0.611, blade: [0.15, 0.9],
-    deck: DEPTH, well: { t: 1.8 },
+    count: 5, y: DEPTH + 5.9, pitch: 0.6, z: 13.5, step: 0.5, tilt: 0.611, blade: [0.15, 0.9],
+    deck: DEPTH, foot: DEPTH + 5.5, well: { t: 3 },
   },
 });
 // "Head down": the head stands on the slab's top and the shaft rises from
@@ -225,10 +237,11 @@ bathyarch.deckFloods(root, lampM, {
   spots: [[24, 16], [24, -16], [-42, 16], [-42, -16], [48, 14], [48, -14]],
 });
 // The bridge ports: boxes from the house's forward face (x -13) out past the
-// roof's eave (x -12.5) by 0.6, a metre and a half up the exposed wall (header).
+// roof's eave (x -12.5) by 0.6, their tops 1.1 m under the roof's underside
+// (header, #933).
 bothSides((side, sgn) => {
   for (let i = 0; i < 2; i++)
-    add(root, `bridge_port_${side}${i}`, box(1.1, 1.2, 2.2), lampM, [-12.45, 12.6, sgn * (2.5 + i * 5)]);
+    add(root, `bridge_port_${side}${i}`, box(1.1, 1.2, 2.2), lampM, [-12.45, 18.1, sgn * (2.5 + i * 5)]);
 });
 
 await exportGlb(root, 'derrick-bathyarch.glb');
