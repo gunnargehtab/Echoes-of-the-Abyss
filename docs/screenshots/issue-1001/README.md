@@ -220,8 +220,9 @@ ratio 1 and 1.5 on the named GPU, unpaced, and paced home and close frames off a
 | low | 1.5 | 55 → 66 | 148290 → 148516 | 108 | 0.65 → 1.95 | 3.28 → 3.71 |
 | survey | 1.5 | 55 → 66 | 148290 → 148496 | 98 | 0.65 → 1.84 | 3.49 → 3.84 |
 
-Calls and triangles are gate 6's allocation exactly: +11 calls, 2 × sites + 10 triangles,
-108 sites at Ventfront's opening. The halo holds 21.38 MiB at 1440×900 (gate 6's cap is
+Calls and triangles were gate 6's allocation exactly: +11 calls, 2 × sites + 10 triangles,
+108 sites at Ventfront's opening. That was the nine-draw chain; it is six draws and +8 calls
+since "Six chain draws" below. The halo holds 21.38 MiB at 1440×900 (gate 6's cap is
 21.4).
 
 **GPU time does not meet gate 6's line yet.** On − off frame
@@ -310,7 +311,8 @@ Read queued, the halo meets gate 6's GPU lines at every station:
 
 **The CPU line is not met.** `avgConnMs` rose 0.21 and 0.24 ms at the fight station at ratio
 1, and 0.19 and 0.26 ms at 1.5, against 0.2 ms. At Ventfront's other cameras it rose
-0.19–0.32 ms, and at Sorrowgate's close camera 0.07–0.16 ms.
+0.19–0.32 ms, and at Sorrowgate's close camera 0.07–0.16 ms. Met since, in "Six chain
+draws" below.
 
 **The handover is the rest of the unqueued bracket.** At Ventfront it rose 0.83–1.71 ms
 with the halo on at ratio 1 and 0.77–1.53 ms at 1.5, where the GPU's work rose a quarter or
@@ -324,6 +326,64 @@ nowhere. Ventfront's unpaced frame interval rose 0.07–0.65 ms at ratio 1 and 0
 GPU-bound, and it was not kept. The committed readings say the same thing another way:
 unpaced, Ventfront's frame interval is 3.05–4.74 ms against 0.28–1.27 ms of the conn view's
 GPU work, so it is bound by the CPU, and what it moves by is the CPU's cost, not the GPU's.
+
+## Six chain draws
+
+**Gate 6's CPU line is met at the fight station, with no margin.** `avgConnMs` rose 0.16 and
+0.17 ms there at ratio 1, and 0.15 and 0.20 ms at 1.5, against 0.2 ms; with the nine-draw
+chain it rose 0.19–0.26 ms.
+
+A Chrome CPU profile of the home camera, taken through the DevTools protocol against the dev
+build and not kept, put the halo's CPU at 0.24 ms a frame: 0.17 ms in the pass's eleven
+render calls and a clear, about 10 µs of three's own work each, and 0.07 ms in the
+splat gather, half of that walking each model's tree once per lamp material. Three changes
+took it to about 0.18 ms:
+
+- **The downsample is folded into the blur.** Each level's horizontal blur reads the level
+  above at this level's texel centres ("Lamp halo — SPEC", Spread), so the chain is six draws
+  and the halo +8 calls. Over a 400-splat half-float source on the named GPU, the six-draw
+  and nine-draw chains gave identical texels inside level 1, inside levels 2 and 3 within
+  0.008 of peaks of 10–38 (half-float rounding), and at the border up to about 2 % of a peak,
+  keeping 99.92 % of the energy or more. That comparison ran on a scratch WebGL2 page that
+  rebuilt both chains with the pass's shaders and weights, not in the game, and was not kept.
+- **The gather finds each model's lamp meshes once,** and allocates one object a site.
+- **The full-screen draws set their uniforms in place.**
+
+The readings below are `halo-cost.mjs`, two runs at each ratio on both maps, unpaced on the
+named GPU, in `halo-six/`. One more Ventfront run at ratio 1 is left out: other work ran on
+the machine beside it, and its halo-off CPU read 0.2–0.3 ms high at two cameras. No frame was
+voided by a disjoint event, and the loads took 3.60–4.00 ms against unqueued station averages
+of at most 1.86 ms.
+
+| Map | Ratio | Station | Frame, queued, off → on | Halo, queued | Frame, unqueued, off → on | CPU, off → on |
+| --- | --- | --- | --- | --- | --- | --- |
+| Ventfront | 1 | home | 0.30 → 0.54, 0.30 → 0.54 | 0.24, 0.24 | 0.52 → 1.37, 0.59 → 1.19 | 0.65 → 0.80, 0.57 → 0.75 |
+| Ventfront | 1 | close | 0.38 → 0.63, 0.38 → 0.63 | 0.25, 0.25 | 0.56 → 1.07, 0.58 → 1.07 | 0.57 → 0.76, 0.56 → 0.72 |
+| Ventfront | 1 | low | 0.31 → 0.55, 0.31 → 0.55 | 0.24, 0.24 | 0.47 → 1.25, 0.55 → 1.09 | 0.61 → 0.79, 0.58 → 0.73 |
+| Ventfront | 1 | survey | 0.27 → 0.52, 0.27 → 0.51 | 0.25, 0.24 | 0.55 → 1.26, 0.45 → 1.05 | 0.59 → 0.76, 0.57 → 0.72 |
+| Ventfront | 1 | fight | 0.32 → 0.59, 0.34 → 0.59 | 0.27, 0.25 | 0.73 → 1.86, 0.58 → 1.57 | 0.64 → 0.81, 0.63 → 0.79 |
+| Sorrowgate | 1 | home | 0.27 → 0.28, 0.26 → 0.26 | 0.01, 0.00 | 0.34 → 0.36, 0.32 → 0.35 | 0.46 → 0.48, 0.47 → 0.49 |
+| Sorrowgate | 1 | close | 0.34 → 0.58, 0.33 → 0.58 | 0.24, 0.25 | 0.36 → 0.65, 0.37 → 0.64 | 0.49 → 0.58, 0.46 → 0.59 |
+| Sorrowgate | 1 | low | 0.32 → 0.30, 0.32 → 0.31 | -0.02, -0.01 | 0.31 → 0.33, 0.32 → 0.34 | 0.46 → 0.49, 0.58 → 0.49 |
+| Sorrowgate | 1 | survey | 0.17 → 0.19, 0.17 → 0.16 | 0.02, -0.01 | 0.24 → 0.26, 0.24 → 0.25 | 0.49 → 0.53, 0.50 → 0.54 |
+| Ventfront | 1.5 | home | 0.51 → 1.06, 0.52 → 1.08 | 0.55, 0.56 | 0.83 → 1.73, 0.72 → 1.41 | 0.76 → 0.84, 0.59 → 0.76 |
+| Ventfront | 1.5 | close | 0.69 → 1.26, 0.71 → 1.29 | 0.57, 0.58 | 0.85 → 1.64, 0.79 → 1.51 | 0.60 → 0.80, 0.64 → 0.77 |
+| Ventfront | 1.5 | low | 0.51 → 1.07, 0.50 → 1.09 | 0.56, 0.59 | 0.70 → 1.57, 0.68 → 1.26 | 0.60 → 0.84, 0.60 → 0.75 |
+| Ventfront | 1.5 | survey | 0.42 → 0.99, 0.42 → 0.98 | 0.57, 0.56 | 0.60 → 1.65, 0.61 → 1.35 | 0.59 → 0.80, 0.59 → 0.76 |
+| Ventfront | 1.5 | fight | 0.53 → 1.11, 0.54 → 1.11 | 0.58, 0.57 | 0.69 → 1.73, 0.68 → 1.49 | 0.59 → 0.79, 0.61 → 0.76 |
+| Sorrowgate | 1.5 | home | 0.49 → 0.49, 0.50 → 0.49 | 0.00, -0.01 | 0.52 → 0.56, 0.53 → 0.59 | 0.49 → 0.50, 0.55 → 0.63 |
+| Sorrowgate | 1.5 | close | 0.65 → 1.19, 0.65 → 1.20 | 0.54, 0.55 | 0.67 → 1.28, 0.66 → 1.29 | 0.50 → 0.64, 0.46 → 0.64 |
+| Sorrowgate | 1.5 | low | 0.51 → 0.50, 0.50 → 0.51 | -0.01, 0.01 | 0.52 → 0.56, 0.52 → 0.56 | 0.48 → 0.51, 0.48 → 0.53 |
+| Sorrowgate | 1.5 | survey | 0.27 → 0.27, 0.33 → 0.27 | 0.00, -0.06 | 0.32 → 0.37, 0.34 → 0.38 | 0.50 → 0.50, 0.50 → 0.56 |
+
+- **The halo** costs the GPU 0.24–0.27 ms at ratio 1 and 0.54–0.59 ms at 1.5, the
+  nine-draw chain's figures within 0.03 ms, and the conn frame where it draws 0.51–0.63 and
+  0.98–1.29 ms.
+- **Calls and triangles** are +8 and 2 × sites + 7 at every station: 54–55 → 62–63 at
+  Ventfront's cameras, 57 → 65 at the fight and 45 → 53 at Sorrowgate's close camera.
+- **The handover** at Ventfront rose 0.49–1.13 ms at ratio 1 and 0.58–1.05 ms at 1.5, from
+  0.83–1.71 and 0.77–1.53: fewer render calls, less for the browser's GPU process to hand
+  over. At Sorrowgate's close camera it rose 0.27–0.29 ms at ratio 1.
 
 ## Related
 
