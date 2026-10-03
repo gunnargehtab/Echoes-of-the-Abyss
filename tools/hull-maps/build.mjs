@@ -16,7 +16,8 @@
  *
  * A full run bakes all 94 models through Chromium, minutes for a change to one
  * GLB, so a slug list bakes just those (#1055). Either way the plan outlines
- * are rewritten at the end, since outlines.mjs reads every model and is cheap.
+ * are rewritten at the end: outlines.mjs reads the 44 unit models without a
+ * browser, which is cheap.
  *
  * The model table it bakes from is models.mjs, shared with outlines.mjs —
  * the second committed output of the same GLBs, which this script refreshes
