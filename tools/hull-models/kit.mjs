@@ -829,10 +829,10 @@ export function fitFootprint(root, lengthM) {
  * earned (#907, #919) holds without re-measuring, since what touched touches
  * and what was over stays over — though a contact at exactly zero can read
  * as a micrometre gap under the press, the file's float32 stations rounding
- * differently under the new root scale (the Klaxon Bastion's dome on its
- * skirt reads 3.8 µm, and `contacts.mjs` tests exact zero); a lamp's plan
- * area and its occlusion from
- * above are unchanged, so `lightAudit` reads the same `hidden` list and a
+ * differently under the new root scale (the Klaxon Bastion's foundation
+ * under its skirt and its refinery module reads 0.95 µm, and `contacts.mjs`
+ * tests exact zero); a lamp's plan area and its occlusion from above are
+ * unchanged, so `lightAudit` reads the same `hidden` list and a
  * `gap` that can only shrink; the plan is byte for byte the plan, so the
  * maps and the outlines keep their footprint. The press rides on the root
  * with the metre scale, after `metreTrue` or `fitFootprint` has set it, so

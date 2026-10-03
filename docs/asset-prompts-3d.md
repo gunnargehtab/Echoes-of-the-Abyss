@@ -839,13 +839,13 @@ Sentinel Turret's two pods' caps, a capsule's meridian at 5.1 m, where the rule'
 half turn is five and a capsule draws an even count; the Bastion's press (#960) re-cut its
 twelve port lights from four by three to six by two, the orbs the rule asks at the 2.3 m
 their pressed meridians draw, and they read on it. The Consortium's pass leaves none of
-its 1,119: `node tools/hull-models/facets.mjs bathyarch` names no ring, and the navy
+its 1,310: `node tools/hull-models/facets.mjs bathyarch` names no ring, and the navy
 carries seven distinct counts a turn where it carried fifteen. The Commune's leaves twelve
 of its 1,428: the six on the four tables and six pressed tubes no count settles on (the
 Commune paragraph), and the navy carries eighteen distinct counts a turn where it carried
 thirty-five, every ring from 4 m of radius up on sixteen a turn but the tables' and the
 part-turn arcs the measure reads a turn at a time. The Directorate's leaves eight of its
-1,477, every one a capsule meridian on the odd share (the Directorate paragraph), and the
+1,589, every one a capsule meridian on the odd share (the Directorate paragraph), and the
 navy carries seventeen distinct counts a turn where it carried twenty-four.
 Outside the bands, before the panel pass: eight Consortium hulls (the five shared kinds, the Chorister
 and the Tender at 2.2–3.9 m — the Corvette's 2.3 was 2.2 once the facet pass thinned its
