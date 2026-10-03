@@ -749,14 +749,19 @@ export class PerspectiveView {
     const gl = this.renderer.getContext();
     this.canvasStencilBits = (gl.getParameter?.(gl.STENCIL_BITS) as number | undefined) ?? 0;
     // three has drawn only through WebGL 2 since r163; its typing predates that.
+    // One context, two timers: they share each read of the disjoint flag,
+    // which resets when read (gpuTimer.ts).
+    const timers: GpuTimer[] = [];
     this.gpuTimer = new GpuTimer(
       this.renderer.getContext() as WebGL2RenderingContext,
-      import.meta.env?.PROD !== true
+      import.meta.env?.PROD !== true,
+      timers
     );
     this.halo.marker = (pass) => this.gpuTimer?.mark(pass);
     this.queueTimer = new GpuTimer(
       this.renderer.getContext() as WebGL2RenderingContext,
-      import.meta.env?.PROD !== true
+      import.meta.env?.PROD !== true,
+      timers
     );
     this.renderer.domElement.addEventListener('webglcontextlost', this.onContextLost);
     this.renderer.domElement.addEventListener('webglcontextrestored', this.onContextRestored);
@@ -2534,6 +2539,7 @@ export class PerspectiveView {
               steps: this.queueLoad.steps,
               avgMs: ms(this.queueTimer?.cost.avg ?? 0),
               frames: this.queueTimer?.cost.count ?? 0,
+              dropped: this.queueTimer?.dropped ?? 0,
             },
       gpuSplit: gpu?.split ?? false,
       gpuParts:

@@ -76,6 +76,10 @@ async function read(page, label, { halo, queued, split }) {
     gpuMs: p.avgGpuMs,
     worstGpuMs: p.worstGpuMs,
     loadMs: p.gpuQueue?.avgMs ?? null,
+    // Frames a disjoint event voided, the frame's and the load's: dropped
+    // rather than averaged, and counted so a worst frame can be read.
+    gpuDropped: p.gpuDropped,
+    loadDropped: p.gpuQueue?.dropped ?? null,
     parts: p.gpuParts,
     connMs: p.avgConnMs,
     frameMs: p.avgFrameMs,

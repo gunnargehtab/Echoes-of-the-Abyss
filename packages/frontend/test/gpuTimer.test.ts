@@ -199,6 +199,37 @@ describe('gpu timer: split', () => {
     assert.equal(timer.cost.worst, 3, 'no part of a void frame is summed into a later one');
   });
 
+  it('hands a disjoint event to every timer on the context, since reading it resets it', () => {
+    // The view's two timers: the queue load's, which begins first in a
+    // frame, and the frame's. Each frame ends three queries on the one
+    // context, so latency 4 leaves the last frame or two in flight.
+    const gl = context({ ns: 1_000_000, latency: 4 });
+    const peers: GpuTimer[] = [];
+    const load = new GpuTimer(gl as unknown as WebGL2RenderingContext, true, peers);
+    const frame = start(gl);
+    const shared = new GpuTimer(gl as unknown as WebGL2RenderingContext, true, peers);
+    const queuedFrame = (): void => {
+      load.begin();
+      load.end();
+      shared.begin();
+      shared.end();
+      frame.begin();
+      frame.end();
+    };
+    for (let i = 0; i < 5; i++) queuedFrame();
+    const before = shared.cost.count;
+    gl.disjoint = true;
+    queuedFrame();
+    assert.ok(load.dropped > 0, 'the timer that read the flag voids its frames');
+    assert.ok(shared.dropped > 0, 'and so does the one after it, which read it reset');
+    assert.equal(shared.cost.count, before, 'none of them averaged');
+    assert.equal(frame.dropped, 0, 'a timer outside the peers never heard of it');
+    for (let i = 0; i < 6; i++) queuedFrame();
+    assert.ok(shared.cost.count > before, 'readings resume after the event');
+    load.dispose();
+    assert.deepEqual(peers, [shared], 'a disposed timer leaves its peers');
+  });
+
   it('splits nothing where it reads nothing', () => {
     for (const timer of [start(context(null)), start(context({ ns: 1e6, latency: 0 }), false)]) {
       timer.setSplit(true);

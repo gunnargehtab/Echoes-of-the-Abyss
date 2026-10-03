@@ -105,9 +105,20 @@ export class GpuTimer {
   private framesInFlight = 0;
   /** The frame being collected, its parts summed so far. */
   private frameSum = 0;
+  /** Every timer on this context, this one included (see `collect`). */
+  private readonly peers: GpuTimer[];
+  /** A disjoint event a peer read and this timer has not yet acted on. */
+  private disjointOwed = false;
 
-  constructor(gl: TimerContext | null, enabled: boolean) {
+  /**
+   * `peers` is shared by every timer on one context: GPU_DISJOINT_EXT resets
+   * when it is read, so whichever timer reads it first hands the event to the
+   * rest, and none of them averages a result the event voided.
+   */
+  constructor(gl: TimerContext | null, enabled: boolean, peers: GpuTimer[] = []) {
     this.gl = gl;
+    this.peers = peers;
+    peers.push(this);
     if (!enabled) {
       this.state = 'off';
     } else if (gl === null) {
@@ -175,6 +186,8 @@ export class GpuTimer {
     this.idle.length = 0;
     this.pending.length = 0;
     this.framesInFlight = 0;
+    const at = this.peers.indexOf(this);
+    if (at >= 0) this.peers.splice(at, 1);
   }
 
   private start(gl: TimerContext, ext: TimerQueryExtension, part: string): void {
@@ -192,6 +205,10 @@ export class GpuTimer {
 
   private collect(gl: TimerContext, ext: TimerQueryExtension): void {
     if (gl.getParameter(ext.GPU_DISJOINT_EXT) === true) {
+      for (const peer of this.peers) peer.disjointOwed = true;
+    }
+    if (this.disjointOwed) {
+      this.disjointOwed = false;
       for (const { query, station, last } of this.pending) {
         if (last && station === this.station) this.dropped++;
         this.idle.push(query);

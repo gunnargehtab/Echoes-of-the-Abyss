@@ -172,7 +172,9 @@ export default async ({ page, shot }) => {
   const unpaced = process.env.UNPACED === '1';
   console.log(
     unpaced
-      ? "unpaced: the gpu column is gate 6's reading; the frame columns are not a budget."
+      ? 'unpaced: the gpu column is one unqueued bracket, not gate 6\'s queued reading ' +
+          '(tools/render-stack/halo-cost.mjs stages this fight and reads it queued); ' +
+          'the frame columns are not a budget.'
       : "paced: the frame columns are the budget; the gpu column is clock-bound, not gate 6's."
   );
   if (software) {

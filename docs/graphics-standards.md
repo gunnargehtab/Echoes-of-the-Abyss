@@ -493,7 +493,8 @@ lamp halo's passes while it draws), from a timer query (`EXT_disjoint_timer_quer
 which Edge exposes on the named GPU). It is read before and after the change at pixel ratio
 1 and 1.5: at the close, home, low (12°) and survey cameras of
 `tools/render-stack/capture.mjs` on Ventfront and Sorrowgate, and at the fight station of
-`stations.mjs` on Ventfront. It is read with the frame unpaced, vsync and the frame-rate
+`stations.mjs` on Ventfront, which `tools/render-stack/halo-cost.mjs` stages the same way and
+reads queued. It is read with the frame unpaced, vsync and the frame-rate
 limit off (`UNPACED=1` in `drive.mjs`): paced at 60 fps the named GPU idled at 139–405 MHz
 against 1,771 MHz unpaced, and Ventfront's home frame read 2.0 ms paced against 0.5 ms
 unpaced, and less at pixel ratio 1.5 than at 1
@@ -502,13 +503,14 @@ reading.
 It is read **queued**, behind a fixed GPU load the frame does not draw
 (`packages/frontend/src/game/gpuQueueLoad.ts`). A timer query counts from the GPU reaching
 its begin to reaching its end, waiting included, and unpaced the named GPU runs the conn
-frame faster than the browser's GPU process hands it over. In one bracket Ventfront's canvas
-pass read 0.46–0.61 ms and the lamp halo 0.83–1.71 ms more; queued, they read 0.26–0.39 and
-0.25–0.28 ms, and the halo's passes the same within 0.01 ms at every camera
-([issue-1001](screenshots/issue-1001/README.md), "Queued"). The load is none of the frame's
-calls, triangles, passes or GPU time, and it must outlast the frame's unqueued bracket to
-have queued it, which `capture.mjs` and `tools/render-stack/halo-cost.mjs` assert. The
-unqueued bracket is still reported beside it. What it adds is the handover, CPU time in the
+frame faster than the browser's GPU process hands it over. At ratio 1, in one bracket,
+Ventfront's canvas pass read 0.46–0.61 ms and the lamp halo 0.83–1.71 ms more; queued, they
+read 0.26–0.39 and 0.25–0.28 ms, and the halo's passes the same within 0.01 ms at every
+camera ([issue-1001](screenshots/issue-1001/README.md), "Queued"). The load is none of the
+frame's calls, triangles, passes or GPU time. On average it must outlast the frame's
+unqueued bracket to have queued it, which `capture.mjs` and `halo-cost.mjs` assert; a
+single frame whose handover outlasts the load reads high, never low. The unqueued bracket
+is still reported beside it, and `stations.mjs` reads it alone. What it adds is the handover, CPU time in the
 browser's GPU process that no line here bounds.
 `__perspectiveProbe` reports it as `avgGpuMs` and `worstGpuMs` in a development build,
 with `gpuTimer` saying why a reading is absent, and `pixelRatio` and `drawingBuffer`
@@ -554,7 +556,8 @@ entity draws a splat.
   named GPU, two runs each (`halo-cost.mjs`): **at most 0.40 ms at ratio 1 and 0.75 ms at
   1.5** at every station, and no station's conn frame over 1.2 ms at ratio 1 or 1.7 ms at
   1.5. Queued, it reads 0.25–0.28 ms at ratio 1 and 0.54–0.58 ms at 1.5, and the conn frame
-  0.53–0.64 and 0.98–1.27 ms ([issue-1001](screenshots/issue-1001/README.md), "Queued").
+  where it draws 0.53–0.64 and 0.98–1.27 ms ([issue-1001](screenshots/issue-1001/README.md),
+  "Queued").
   `route-cost.mjs` read 0.29 and 0.54 ms for its stand-in route, and its depth copy cost the
   same with a canvas stencil present.
 - **CPU time.** `avgConnMs`, the CPU side (the per-site cull, the sort to 1,024 and the

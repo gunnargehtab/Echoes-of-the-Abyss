@@ -120,7 +120,13 @@ export default async ({ page, shot }) => {
       );
       const q = await page.evaluate(() => window.__perspectiveProbe());
       await page.evaluate(() => window.__perspectiveGpuQueue(0));
-      queued = { gpuMs: q.avgGpuMs, worstGpuMs: q.worstGpuMs, loadMs: q.gpuQueue.avgMs };
+      queued = {
+        gpuMs: q.avgGpuMs,
+        worstGpuMs: q.worstGpuMs,
+        loadMs: q.gpuQueue.avgMs,
+        gpuDropped: q.gpuDropped,
+        loadDropped: q.gpuQueue.dropped,
+      };
       assert.ok(
         queued.loadMs > probe.avgGpuMs,
         `${name}: the load (${queued.loadMs} ms) ran out before the unqueued frame (${probe.avgGpuMs} ms)`

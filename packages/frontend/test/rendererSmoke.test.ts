@@ -3311,7 +3311,7 @@ describe('renderer smoke test: the queued GPU reading (gate 6, #1001)', () => {
       assert.equal(queued.triangles, before.triangles);
       assert.deepEqual(queued.passes, before.passes);
       assert.deepEqual(world.gl.frameTargets, [null], 'the frame still opens on the world');
-      assert.deepEqual(queued.gpuQueue, { steps: 12000, avgMs: 0, frames: 0 });
+      assert.deepEqual(queued.gpuQueue, { steps: 12000, avgMs: 0, frames: 0, dropped: 0 });
       assert.equal(probes.__perspectiveGpuQueue!(0), 0);
       assert.equal(rendersInAFrame(), unloaded, 'taken away, it draws nothing');
       assert.equal(probes.__perspectiveProbe().gpuQueue, null);
