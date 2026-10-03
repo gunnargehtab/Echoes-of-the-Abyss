@@ -228,6 +228,8 @@ export class LampHaloPass {
   bytes = 0;
   sites = 0;
   dropped = 0;
+  /** Told each step's name as it starts: the GPU timer's split (gpuTimer.ts). */
+  marker: ((pass: string) => void) | null = null;
 
   private source: WebGLRenderTarget | null = null;
   private levels: [WebGLRenderTarget, WebGLRenderTarget][] = [];
@@ -427,8 +429,10 @@ export class LampHaloPass {
     renderer.setClearColor(0x000000, 0);
     try {
       renderer.setRenderTarget(source);
-      renderer.clear(true, false, false);
+      this.marker?.('depth-copy');
       this.copyDepth(renderer, gl, source);
+      this.marker?.('halo-source');
+      renderer.clear(true, false, false);
 
       const splatUniforms = this.splatMaterial.uniforms;
       (splatUniforms.uViewport!.value as Vector2).set(this.width, this.height);
@@ -436,6 +440,7 @@ export class LampHaloPass {
       splatUniforms.uBias!.value = biasM;
       renderer.render(this.splatScene, camera);
 
+      this.marker?.('halo-spread');
       let from: Texture = source.texture;
       for (const [a, b] of this.levels) {
         this.draw(renderer, camera, this.copyMaterial, a, { uSource: from });
@@ -449,6 +454,7 @@ export class LampHaloPass {
         });
         from = a.texture;
       }
+      this.marker?.('halo-composite');
       this.draw(renderer, camera, this.compositeMaterial, null, {
         uLevel1: this.levels[0]![0].texture,
         uLevel2: this.levels[1]![0].texture,

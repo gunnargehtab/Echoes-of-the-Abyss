@@ -3280,3 +3280,47 @@ describe('renderer smoke test: the free camera', () => {
     }
   });
 });
+
+describe('renderer smoke test: the queued GPU reading (gate 6, #1001)', () => {
+  it('draws its load outside the frame: no call, triangle or pass of the frame is its', async () => {
+    type Probes = {
+      __perspectiveProbe: () => Record<string, unknown>;
+      __perspectiveGpuQueue?: (steps: number) => number;
+      __perspectiveGpuSplit?: (on: boolean) => boolean;
+    };
+    const world = await boot();
+    try {
+      const probes = (globalThis as unknown as { window: Probes }).window;
+      assert.ok(probes.__perspectiveGpuQueue, 'outside a production build the switch is there');
+      /** Renders the stand-in made over one frame, the load's included. */
+      const rendersInAFrame = (): number => {
+        const at = world.gl.passes;
+        world.frame(1);
+        return world.gl.passes - at;
+      };
+      world.frame(2);
+      const before = probes.__perspectiveProbe();
+      assert.equal(before.gpuQueue, null, 'no load until a capture asks for one');
+      const unloaded = rendersInAFrame();
+      assert.deepEqual(world.gl.frameTargets, [null], 'the frame is the canvas pass');
+      assert.equal(probes.__perspectiveGpuQueue!(12000), 12000);
+      world.frame(1);
+      assert.equal(rendersInAFrame(), unloaded + 1, 'the load is one render the renderer made');
+      const queued = probes.__perspectiveProbe();
+      assert.equal(queued.drawCalls, before.drawCalls, 'and none of the frame it precedes');
+      assert.equal(queued.triangles, before.triangles);
+      assert.deepEqual(queued.passes, before.passes);
+      assert.deepEqual(world.gl.frameTargets, [null], 'the frame still opens on the world');
+      assert.deepEqual(queued.gpuQueue, { steps: 12000, avgMs: 0, frames: 0, dropped: 0 });
+      assert.equal(probes.__perspectiveGpuQueue!(0), 0);
+      assert.equal(rendersInAFrame(), unloaded, 'taken away, it draws nothing');
+      assert.equal(probes.__perspectiveProbe().gpuQueue, null);
+      assert.equal(probes.__perspectiveGpuSplit!(true), false, 'no timer here to split');
+    } finally {
+      world.teardown();
+    }
+    const probes = (globalThis as unknown as { window: Partial<Probes> }).window;
+    assert.equal(probes.__perspectiveGpuQueue, undefined, 'the switch goes with the view');
+    assert.equal(probes.__perspectiveGpuSplit, undefined);
+  });
+});

@@ -242,6 +242,89 @@ The 0.23–0.30, 0.26 and 0.14 ms readings were console output from local instru
 neither committed nor kept; the readings increment re-takes them with committed tools, and
 decides how gate 6 reads a multi-pass frame before the default can turn on.
 
+Settled below, in "Queued": the extra time was the GPU waiting for the frame's commands.
+
+## Queued
+
+**The halo's passes cost the GPU 0.25–0.28 ms at ratio 1 and 0.54–0.58 ms at 1.5, inside
+gate 6's 0.40 and 0.75 ms.** The bracket above read about four times that because it timed
+the GPU waiting as well as working.
+
+A timer query counts from the GPU reaching its begin to reaching its end. Unpaced, the named
+GPU runs the conn frame faster than the browser's GPU process hands it over: at Ventfront's
+cameras it sat at 1,809 MHz and 20–25 % busy (`nvidia-smi`), and the bracket held its waits
+between commands. Three local builds, not kept, showed it before any tool was written:
+
+| Build | Read |
+| --- | --- |
+| The spread chain drawn 1, 4 and 16 times a frame | 0.60–0.75, 1.58 and 3.46 ms. A repeat past the first added 0.19–0.29 ms, and the first 0.4 ms more |
+| A 3 ms load drawn first in the bracket, each pass in its own query | The canvas pass fell from 0.49–0.61 to 0.26–0.38 ms and read the same with the halo on. The halo's four steps read 0.12, 0.01, 0.07 and 0.05 ms at every camera |
+| The frame held GPU-bound by a 7.5 ms load, three on/off pairs | The frame interval rose 0.05–1.09 ms at ratio 1 and −1.17 to 1.27 ms at 1.5: too noisy for a 0.40 ms line |
+
+The second is the committed reading now. `gpuQueueLoad.ts` draws the load before the frame's
+bracket opens, so by the time the GPU reaches the frame its commands are queued behind the
+load. `tools/render-stack/halo-cost.mjs` reads each station six ways: the halo on and off,
+each in one bracket (unqueued), queued, and queued with each pass in a query of its own. It
+fails a station whose load took less than its unqueued frame on average, since a load that
+ran out first queued nothing. The loads took 3.54–4.00 ms against unqueued station averages
+of at most 2.28 ms. Single unqueued frames reached 12.6 ms, and a frame whose handover
+outlasts its load waits again and reads high, never low. The queued worst frames were under
+3 ms but for 4.53 and 9.86 ms, both in split readings taken before the two timers shared the
+disjoint flag, so either may be a voided result that was averaged.
+Two runs at each ratio on the named GPU, unpaced, are in `halo-cost/`, both runs per cell:
+
+| Map | Ratio | Station | Frame, queued, off → on | Halo, queued | Frame, unqueued, off → on | CPU, off → on |
+| --- | --- | --- | --- | --- | --- | --- |
+| Ventfront | 1 | home | 0.30 → 0.55, 0.30 → 0.55 | 0.25, 0.25 | 0.46 → 1.61, 0.54 → 1.49 | 0.60 → 0.81, 0.58 → 0.82 |
+| Ventfront | 1 | close | 0.38 → 0.64, 0.38 → 0.64 | 0.26, 0.26 | 0.61 → 1.62, 0.54 → 1.37 | 0.58 → 0.87, 0.56 → 0.80 |
+| Ventfront | 1 | low | 0.30 → 0.56, 0.29 → 0.57 | 0.26, 0.28 | 0.49 → 1.65, 0.56 → 1.42 | 0.63 → 0.86, 0.59 → 0.78 |
+| Ventfront | 1 | survey | 0.28 → 0.54, 0.28 → 0.53 | 0.26, 0.25 | 0.57 → 2.28, 0.54 → 1.88 | 0.79 → 1.10, 0.58 → 0.89 |
+| Ventfront | 1 | fight | 0.32 → 0.60, 0.33 → 0.61 | 0.28, 0.28 | 0.55 → 2.14, 0.55 → 1.85 | 0.64 → 0.88, 0.62 → 0.83 |
+| Sorrowgate | 1 | home | 0.27 → 0.27, 0.27 → 0.27 | 0.00, 0.00 | 0.32 → 0.37, 0.35 → 0.37 | 0.46 → 0.50, 0.54 → 0.49 |
+| Sorrowgate | 1 | close | 0.33 → 0.59, 0.34 → 0.59 | 0.26, 0.25 | 0.38 → 0.67, 0.37 → 0.68 | 0.47 → 0.63, 0.49 → 0.63 |
+| Sorrowgate | 1 | low | 0.29 → 0.30, 0.29 → 0.29 | 0.01, 0.00 | 0.33 → 0.35, 0.32 → 0.35 | 0.56 → 0.53, 0.50 → 0.51 |
+| Sorrowgate | 1 | survey | 0.17 → 0.16, 0.17 → 0.17 | -0.01, 0.00 | 0.22 → 0.26, 0.22 → 0.26 | 0.53 → 0.53, 0.49 → 0.50 |
+| Ventfront | 1.5 | home | 0.51 → 1.07, 0.52 → 1.08 | 0.56, 0.56 | 0.77 → 1.74, 0.74 → 1.74 | 0.62 → 0.81, 0.61 → 0.81 |
+| Ventfront | 1.5 | close | 0.71 → 1.27, 0.70 → 1.27 | 0.56, 0.57 | 0.79 → 1.56, 0.80 → 1.65 | 0.58 → 0.77, 0.62 → 0.82 |
+| Ventfront | 1.5 | low | 0.53 → 1.08, 0.55 → 1.09 | 0.55, 0.54 | 0.70 → 1.72, 0.66 → 1.83 | 0.60 → 0.79, 0.60 → 0.85 |
+| Ventfront | 1.5 | survey | 0.42 → 0.99, 0.43 → 0.98 | 0.57, 0.55 | 0.59 → 1.65, 0.61 → 2.14 | 0.59 → 0.80, 0.62 → 0.94 |
+| Ventfront | 1.5 | fight | 0.54 → 1.12, 0.54 → 1.12 | 0.58, 0.58 | 0.78 → 2.15, 0.78 → 2.16 | 0.64 → 0.83, 0.63 → 0.89 |
+| Sorrowgate | 1.5 | home | 0.50 → 0.50, 0.51 → 0.49 | 0.00, -0.02 | 0.53 → 0.58, 0.52 → 0.56 | 0.54 → 0.53, 0.51 → 0.50 |
+| Sorrowgate | 1.5 | close | 0.66 → 1.20, 0.65 → 1.20 | 0.54, 0.55 | 0.67 → 1.27, 0.67 → 1.27 | 0.56 → 0.63, 0.48 → 0.63 |
+| Sorrowgate | 1.5 | low | 0.51 → 0.51, 0.50 → 0.50 | 0.00, 0.00 | 0.52 → 0.58, 0.51 → 0.56 | 0.51 → 0.57, 0.49 → 0.50 |
+| Sorrowgate | 1.5 | survey | 0.27 → 0.28, 0.28 → 0.27 | 0.01, -0.01 | 0.33 → 0.38, 0.34 → 0.37 | 0.50 → 0.50, 0.49 → 0.50 |
+
+Read queued, the halo meets gate 6's GPU lines at every station:
+
+- **The halo** costs 0.25–0.28 ms at ratio 1 and 0.54–0.58 ms at 1.5. At Sorrowgate it
+  draws only at the close camera, 10 sites, for 0.25–0.26 and 0.54–0.55 ms; at its other
+  cameras no own entity draws a splat, and it runs no pass.
+- **The conn frame** with the halo on, where it draws, is 0.53–0.64 ms at ratio 1 and
+  0.98–1.27 ms at 1.5, against 1.2 and 1.7 ms.
+- **The depth copy is half of it**, split: 0.12–0.13 ms at ratio 1 and 0.27–0.28 ms at 1.5.
+  The source, spread and composite read 0.01, 0.07 and 0.05 ms, and 0.02, 0.18 and 0.10.
+- **The canvas pass** reads the same with the halo on or off, within 0.05 ms, so the lamp
+  stencil marks cost nothing a timer resolves.
+- **The stand-in agrees.** `route-cost.mjs` read 0.29 and 0.54 ms for its route on a bare
+  page.
+
+**The CPU line is not met.** `avgConnMs` rose 0.21 and 0.24 ms at the fight station at ratio
+1, and 0.19 and 0.26 ms at 1.5, against 0.2 ms. At Ventfront's other cameras it rose
+0.19–0.32 ms, and at Sorrowgate's close camera 0.07–0.16 ms.
+
+**The handover is the rest of the unqueued bracket.** At Ventfront it rose 0.83–1.71 ms
+with the halo on at ratio 1 and 0.77–1.53 ms at 1.5, where the GPU's work rose a quarter or
+half of a millisecond. At Sorrowgate's close camera, with 10 sites to Ventfront's 98–108 and
+the same GPU work, it rose 0.29–0.31 and 0.60 ms, so the handover tracks the sites drawn
+rather than the pixels. It is CPU time in the browser's GPU process, which gate 6 bounds
+nowhere. Ventfront's unpaced frame interval rose 0.07–0.65 ms at ratio 1 and 0.09–0.60 ms at
+1.5.
+
+**Why not the frame interval.** The third local build is the only one that held the frame
+GPU-bound, and it was not kept. The committed readings say the same thing another way:
+unpaced, Ventfront's frame interval is 3.05–4.74 ms against 0.28–1.27 ms of the conn view's
+GPU work, so it is bound by the CPU, and what it moves by is the CPU's cost, not the GPU's.
+
 ## Related
 
 [graphics-standards.md](../../graphics-standards.md) gate 6 ·

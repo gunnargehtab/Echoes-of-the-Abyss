@@ -143,3 +143,35 @@ describe('lamp halo pass: when the view cannot draw it', () => {
     });
   }
 });
+
+describe('lamp halo pass: what the split timer reads (gpuTimer.ts)', () => {
+  it('names each pass as it starts, so each split query holds that pass alone', () => {
+    const gl = renderer(1440, 900);
+    const pass = new LampHaloPass();
+    pass.enable(gl.asRenderer());
+    gl.info.reset();
+    const blits = gl.context.blits;
+    const marks: { pass: string; calls: number; blits: number }[] = [];
+    pass.marker = (name) =>
+      marks.push({ pass: name, calls: gl.info.render.calls, blits: gl.context.blits - blits });
+    const passes = pass.render(gl.asRenderer(), camera, splats(108), 0, 0.0001, 1, 2);
+    assert.deepEqual(
+      marks.map((m) => m.pass),
+      passes,
+      'one mark a listed pass, in order'
+    );
+    // What lands before each mark is the previous part's: the blit inside the
+    // depth copy's, the splat draw inside the source's, nine draws inside the
+    // spread's, and the composite after the last mark.
+    assert.deepEqual(
+      marks.map(({ calls, blits }) => [calls, blits]),
+      [
+        [0, 0],
+        [0, 1],
+        [1, 1],
+        [10, 1],
+      ]
+    );
+    assert.equal(gl.info.render.calls, 11);
+  });
+});

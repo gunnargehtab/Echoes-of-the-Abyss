@@ -132,6 +132,7 @@ import {
 } from './water.ts';
 import { FrameCost, ms } from './frameCost.ts';
 import { GpuTimer } from './gpuTimer.ts';
+import { GpuQueueLoad } from './gpuQueueLoad.ts';
 import { lampScreen } from './lampScreen.ts';
 import { LampHaloPass, type HaloSplat } from './lampHaloPass.ts';
 import { LAMP_HALO } from './lampHalo.ts';
@@ -594,6 +595,7 @@ export class PerspectiveView {
    * state by the time these run.
    */
   private readonly onContextLost = (): void => {
+    this.queueLoad.set(0);
     if (!this.halo.on) return;
     this.halo.disable();
     this.markLamps(false);
@@ -636,6 +638,10 @@ export class PerspectiveView {
   private framePasses: readonly string[] = [];
   /** The frame's GPU time, every pass summed (gate 6); set up with the renderer. */
   private gpuTimer: GpuTimer | null = null;
+  /** Gate 6's queued reading: a load before the frame's bracket, and its own
+   * timer, so a capture can check it outlasted the handover (gpuQueueLoad.ts). */
+  private readonly queueLoad = new GpuQueueLoad();
+  private queueTimer: GpuTimer | null = null;
   /** The station these three are measuring, or null before one is named. */
   private stationLabel: string | null = null;
   /** Set at construction so a probe read before the first frame still divides
@@ -743,9 +749,19 @@ export class PerspectiveView {
     const gl = this.renderer.getContext();
     this.canvasStencilBits = (gl.getParameter?.(gl.STENCIL_BITS) as number | undefined) ?? 0;
     // three has drawn only through WebGL 2 since r163; its typing predates that.
+    // One context, two timers: they share each read of the disjoint flag,
+    // which resets when read (gpuTimer.ts).
+    const timers: GpuTimer[] = [];
     this.gpuTimer = new GpuTimer(
       this.renderer.getContext() as WebGL2RenderingContext,
-      import.meta.env?.PROD !== true
+      import.meta.env?.PROD !== true,
+      timers
+    );
+    this.halo.marker = (pass) => this.gpuTimer?.mark(pass);
+    this.queueTimer = new GpuTimer(
+      this.renderer.getContext() as WebGL2RenderingContext,
+      import.meta.env?.PROD !== true,
+      timers
     );
     this.renderer.domElement.addEventListener('webglcontextlost', this.onContextLost);
     this.renderer.domElement.addEventListener('webglcontextrestored', this.onContextRestored);
@@ -951,6 +967,9 @@ export class PerspectiveView {
     this.lightingEnvironment = null;
     this.gpuTimer?.dispose();
     this.gpuTimer = null;
+    this.queueTimer?.dispose();
+    this.queueTimer = null;
+    this.queueLoad.dispose();
     this.halo.dispose();
     // The SPEC binds a refusal to a view; one that is gone has refused
     // nothing, so Settings in the shell afterwards shows no stale note.
@@ -965,6 +984,8 @@ export class PerspectiveView {
     delete (window as unknown as { __perspectiveCamera?: unknown }).__perspectiveCamera;
     delete (window as unknown as { __perspectiveLamps?: unknown }).__perspectiveLamps;
     delete (window as unknown as { __perspectiveHalo?: unknown }).__perspectiveHalo;
+    delete (window as unknown as { __perspectiveGpuSplit?: unknown }).__perspectiveGpuSplit;
+    delete (window as unknown as { __perspectiveGpuQueue?: unknown }).__perspectiveGpuQueue;
   }
 
   // ---------------------------------------------------------------- camera
@@ -2238,12 +2259,24 @@ export class PerspectiveView {
     // is timed with the rest (gate 6). Ended even if a pass throws: a query
     // left open would stop every later frame from starting its own.
     if (this.halo.on) this.markLamps(true);
-    this.gpuTimer?.begin();
+    if (this.queueLoad.steps > 0) {
+      // Outside the bracket, and the ledger starts again after it, since
+      // nothing else draws before the canvas pass: the load is none of the
+      // frame's calls, triangles, passes or GPU time.
+      this.queueTimer?.begin();
+      this.queueLoad.draw(renderer, this.camera);
+      this.queueTimer?.end();
+      renderer.info.reset();
+    }
+    this.gpuTimer?.begin('canvas');
     try {
       renderer.render(this.scene, this.camera);
       passes.push('canvas');
       this.haloCost = { calls: 0, triangles: 0 };
       if (this.halo.on) {
+        // Split, the CPU's gather of the splats is a part of its own: GPU
+        // time read there is the GPU waiting on it.
+        this.gpuTimer?.mark('halo-gather');
         const before = {
           calls: renderer.info.render.calls,
           triangles: renderer.info.render.triangles,
@@ -2304,6 +2337,7 @@ export class PerspectiveView {
     this.connCost.reset();
     this.overlayCost.reset();
     this.gpuTimer?.reset();
+    this.queueTimer?.reset();
   }
 
   /** Read-only telemetry for the harness, like the audio and hazard probes. */
@@ -2362,6 +2396,24 @@ export class PerspectiveView {
       ) => {
         this.setLampHalos(on);
         return this.halo.state;
+      };
+      // Each pass timed on its own as well as the frame (gpuTimer.ts), for
+      // #1001's question of where the halo's GPU time lands.
+      (
+        window as unknown as { __perspectiveGpuSplit?: (on: boolean) => unknown }
+      ).__perspectiveGpuSplit = (on: boolean) => {
+        this.gpuTimer?.setSplit(on);
+        return this.gpuTimer?.split ?? false;
+      };
+      // Gate 6's queued reading (gpuQueueLoad.ts): a fixed load of `steps`
+      // before the frame's bracket, 0 to take it away. The series start over.
+      (
+        window as unknown as { __perspectiveGpuQueue?: (steps: number) => unknown }
+      ).__perspectiveGpuQueue = (steps: number) => {
+        this.queueLoad.set(steps);
+        this.gpuTimer?.reset();
+        this.queueTimer?.reset();
+        return this.queueLoad.steps;
       };
     }
   }
@@ -2476,6 +2528,29 @@ export class PerspectiveView {
       worstGpuMs: gpuReads ? ms(gpu.cost.worst) : null,
       gpuFrames: gpu?.cost.count ?? 0,
       gpuDropped: gpu?.dropped ?? 0,
+      // Each pass's own GPU time, while the development split is on
+      // (`__perspectiveGpuSplit`); the frame above is then their sum.
+      // The load gate 6's queued reading draws first, and what it took: it
+      // must outlast the frame's unqueued bracket to have queued anything.
+      gpuQueue:
+        this.queueLoad.steps === 0
+          ? null
+          : {
+              steps: this.queueLoad.steps,
+              avgMs: ms(this.queueTimer?.cost.avg ?? 0),
+              frames: this.queueTimer?.cost.count ?? 0,
+              dropped: this.queueTimer?.dropped ?? 0,
+            },
+      gpuSplit: gpu?.split ?? false,
+      gpuParts:
+        gpu === null || !gpu.split
+          ? null
+          : Object.fromEntries(
+              [...gpu.parts].map(([part, cost]) => [
+                part,
+                { avgMs: ms(cost.avg), worstMs: ms(cost.worst), frames: cost.count },
+              ])
+            ),
       units: this.unitHandles.size,
       structures: this.structureHandles.size,
       // Own ordnance in the water, drawn by the instanced layer (gate 6).

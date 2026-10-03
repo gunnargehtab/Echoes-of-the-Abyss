@@ -241,8 +241,13 @@ says which. Zero new draws is not zero shading cost, and that column is what sho
 Gate 6 reads it at device pixel ratio 1 and 1.5; `VIEW_DPR=1.5` sets the second, and the
 probe's `pixelRatio` and `drawingBuffer` say what was shaded. Read it **unpaced**:
 `UNPACED=1` turns vsync off, because a GPU paced at 60 fps idles at a low clock and the
-timer then measures the clock (docs/screenshots/issue-1001/README.md). An unpaced run's
-frame columns are no budget, so a frame-time drive stays paced.
+timer then measures the clock (docs/screenshots/issue-1001/README.md). Read it
+**queued** too: unqueued, the timer also counts the GPU waiting for the browser to hand
+over the frame's commands, which read a multi-pass frame at several times its work.
+`__perspectiveGpuQueue(steps)` draws a fixed load before the frame's timer opens, and
+`tools/render-stack/capture.mjs` and `halo-cost.mjs` take both readings and fail a load
+that ran out first. An unpaced run's frame columns are no budget, so a frame-time drive
+stays paced.
 
 On a desktop with a GPU, drive **headed**. Headless Chromium may draw through SwiftShader
 anyway, and `--channel msedge` (or `chrome`) uses an installed browser where no Playwright
