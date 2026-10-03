@@ -41,6 +41,7 @@ import {
   Mesh,
   NoBlending,
   NotEqualStencilFunc,
+  EqualStencilFunc,
   OneFactor,
   OneMinusSrcColorFactor,
   Scene,
@@ -233,6 +234,7 @@ export class LampHaloPass {
   private height = 0;
   private weightsRatio = 0;
   private readonly savedClear = new Color();
+  private maskMaterial: ShaderMaterial | null = null;
 
   private readonly instanceData = new Float32Array(LAMP_HALO.SITE_CAP * STRIDE);
   private readonly instances = new InstancedInterleavedBuffer(this.instanceData, STRIDE);
@@ -448,8 +450,47 @@ export class LampHaloPass {
     return ['depth-copy', 'halo-source', 'halo-spread', 'halo-composite'];
   }
 
+  /**
+   * Development only (#1001's frame reading, tools/render-stack/halo-frames.mjs):
+   * the canvas cleared to black, then white on every sample an own lamp marked
+   * in its stencil. It overwrites the frame it runs in, so only a capture
+   * calls it, after reading that frame.
+   */
+  drawLampMask(renderer: WebGLRenderer, camera: Camera): void {
+    this.maskMaterial ??= new ShaderMaterial({
+      vertexShader: FULLSCREEN_VERTEX,
+      fragmentShader: 'void main() { gl_FragColor = vec4(1.0); }',
+      blending: NoBlending,
+      depthTest: false,
+      depthWrite: false,
+      toneMapped: false,
+      stencilWrite: true,
+      stencilWriteMask: 0x00,
+      stencilFunc: EqualStencilFunc,
+      stencilRef: 1,
+      stencilFuncMask: 0xff,
+      stencilFail: KeepStencilOp,
+      stencilZFail: KeepStencilOp,
+      stencilZPass: KeepStencilOp,
+    });
+    const autoClear = renderer.autoClear;
+    const clearColor = renderer.getClearColor(this.savedClear);
+    const clearAlpha = renderer.getClearAlpha();
+    renderer.autoClear = false;
+    renderer.setClearColor(0x000000, 1);
+    try {
+      renderer.setRenderTarget(null);
+      renderer.clear(true, false, false);
+      this.drawFullscreen(renderer, camera, this.maskMaterial, null);
+    } finally {
+      renderer.autoClear = autoClear;
+      renderer.setClearColor(clearColor, clearAlpha);
+    }
+  }
+
   dispose(): void {
     this.disable();
+    this.maskMaterial?.dispose();
     this.splatGeometry.dispose();
     this.splatMaterial.dispose();
     this.fullscreen.geometry.dispose();

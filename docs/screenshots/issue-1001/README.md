@@ -385,6 +385,49 @@ of at most 1.86 ms.
   0.83–1.71 and 0.77–1.53: fewer render calls, less for the browser's GPU process to hand
   over. At Sorrowgate's close camera it rose 0.27–0.29 ms at ratio 1.
 
+## The frames against the SPEC
+
+**Five of the SPEC's seven "What it must show" items hold; two do not, so the default stays
+off.** The resting Bastion and Foundry draw no halo at any camera, and at its ping the Light
+Scout's collar keeps 3:1 on 89.3–89.6 % of its core against 90 %. Both rest on TUNABLEs the
+SPEC says are approved on frames.
+
+`tools/render-stack/halo-frames.mjs` reads them on the named GPU with reduced motion, so
+paired shots frame the same water. A development hook reads one frame's conn canvas after
+the canvas pass, after the halo, and as a mask of the lamps the stencil marked; another draws
+one entity's halo and lamp marks alone. The readings are in `halo-frames/`, with Ventfront's
+frames at ratio 1, the halo off and on.
+
+| Must show | Read | Holds |
+| --- | --- | --- |
+| Loudness order | At the close camera, light in CSS px² of relative luminance: Caisson 49–50, Harvester (40–45) 9.6–10.2, Light Scout 0. The Bastion (35) and Foundry (25) draw 0 at every camera, with 300–3,750 px of lamp on screen | No |
+| Ping | The area a hull's halo lifts past 10 % luma: Caisson 709 → 2,621 px, Harvester 171 → 3,394, Light Scout 0 → 3,137 | Yes |
+| The lamp | Every whole lamp pixel unchanged, at every camera, map and ratio | Yes |
+| Darkness | 95.5–99.7 % of the conn canvas under 10 % luma with the halo on, at most 0.13 points lost; 64–83 % with the HUD | Yes |
+| Flash | One hull's ping changes at most 0.07 % of the frame and 0.67 % of a third-by-third window | Yes |
+| The collar at rest | The halo changes no core's contrast at the home and close cameras | Yes |
+| The collar at a ping | 3:1 on 100 % of the Caisson's core, 94 % of the Harvester's and 89.3 % (89.6 % at 1.5) of the Light Scout's; 100 % of each with the halo off | No |
+
+**Why the structures draw nothing.** Under the SPEC's energy law a SIG-35 Bastion carries an
+eighth of a Caisson's energy and a SIG-25 Foundry a thirty-second, and each spreads it over a
+footprint three to five times a hull's width: 27 sites across the Bastion's dome, most of the
+Foundry's in its flood bay. No pixel of either crosses the toe. With the toe at 0, in a scratch run not kept, the Bastion
+peaks at 6 encoded levels at the close camera and the Foundry at 1; the light is then in SIG
+order, Caisson, Harvester, Bastion, Foundry, but too faint to see. A Bastion loud enough to
+carry a Caisson's energy would show.
+
+**What hides a hull's halo is right.** At the home camera one Caisson and the Harvester draw
+no halo: neither has a lamp pixel on screen, both hidden behind the base, and the SPEC hides
+a halo where it hides its lamp. On Sorrowgate the halo draws 10 sites at the close camera and
+lifts no pixel: the tutorial's hulls show 1–6 px of lamp there.
+
+**Why the scout's collar misses.** The scout's collar sits a few pixels outside its selection
+ring, and at SIG 95 its halo reaches it: the left arc of the red core runs over amber glow
+(`ping-light-scout-collar.png`). The Caisson's collar is wider and clears its halo.
+
+The ridge case, a lamp behind a ridge at the low camera, was not staged. The flash and the
+collar at a ping are Ventfront's; the Harvester's ping did not register at ratio 1.5.
+
 ## Related
 
 [graphics-standards.md](../../graphics-standards.md) gate 6 ·

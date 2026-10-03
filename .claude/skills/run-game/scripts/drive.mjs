@@ -18,6 +18,9 @@
  * that way: paced at 60 fps the GPU idles at a low clock, and a timer query
  * then measures the clock as much as the frame (docs/screenshots/issue-1001/).
  * Its frame times are no frame budget, so a frame-time drive stays paced.
+ * REDUCED_MOTION=1 starts the browser preferring reduced motion, which the
+ * game takes as its default (docs/ui-ux.md §11): the camera sway, the snow
+ * and the collar crackle hold still, so two shots of one view match.
  *
  * With no --steps it runs the default smoke: connect, select a unit, ping.
  * A steps file is an ES module with `export default async ({ page, shot }) => {...}`.
@@ -124,6 +127,7 @@ const page = await (
   await browser.newContext({
     viewport: { width: Number(process.env.VIEW_W ?? 1440), height: Number(process.env.VIEW_H ?? 900) },
     deviceScaleFactor: Number(process.env.VIEW_DPR ?? 1),
+    ...(process.env.REDUCED_MOTION === '1' ? { reducedMotion: 'reduce' } : {}),
   })
 ).newPage();
 
