@@ -268,8 +268,9 @@ each in one bracket (unqueued), queued, and queued with each pass in a query of 
 fails a station whose load took less than its unqueued frame on average, since a load that
 ran out first queued nothing. The loads took 3.54–4.00 ms against unqueued station averages
 of at most 2.28 ms. Single unqueued frames reached 12.6 ms, and a frame whose handover
-outlasts its load waits again and reads high, never low: the queued worst frames were under
-3 ms but for one of 9.86 ms in a split reading.
+outlasts its load waits again and reads high, never low. The queued worst frames were under
+3 ms but for 4.53 and 9.86 ms, both in split readings taken before the two timers shared the
+disjoint flag, so either may be a voided result that was averaged.
 Two runs at each ratio on the named GPU, unpaced, are in `halo-cost/`, both runs per cell:
 
 | Map | Ratio | Station | Frame, queued, off → on | Halo, queued | Frame, unqueued, off → on | CPU, off → on |
