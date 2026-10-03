@@ -30,13 +30,16 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { UNITS, STRUCTURES } from './models.mjs';
 import { writeOutlines } from './outlines.mjs';
-import { bakeSheet, SHEET } from './sheet.mjs';
+// Two sheets meet here: a navy's trim sheet (#1005), which a model's bake
+// reads, and the roster contact sheet, which this run writes last.
+import { bakeSheet as bakeRosterSheet, SHEET as ROSTER_SHEET } from './sheet.mjs';
+import { SHEET_DIR } from '../hull-models/trim.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const MAP_PPM = 4;
@@ -57,6 +60,17 @@ const PASSES = ['albedo', 'height', 'emissive'];
  * visual law (quiet subs outshining loud cruisers, sister hulls 7× apart).
  */
 const glowTarget = (sig) => 0.45 * Math.exp(sig / 14);
+
+/**
+ * `--trim <png>` for a model whose navy has a sheet in the client's assets
+ * (tools/hull-models/sheets.mjs writes them, by the navy a file is named
+ * for: `bulwark-bathyarch.glb` → `bathyarch.png`), or nothing.
+ */
+function trimFlag(model) {
+  const navy = model.match(/-([a-z]+)\.glb$/)?.[1];
+  const sheet = navy && join(repo, SHEET_DIR, `${navy}.png`);
+  return sheet && existsSync(sheet) ? ['--trim', sheet] : [];
+}
 
 const JOBS = [
   { entries: UNITS, ppm: MAP_PPM, outDir: join(repo, 'packages/frontend/src/assets/hulls/maps') },
@@ -133,6 +147,9 @@ try {
           String(glowTarget(entry.sig)),
           '--out',
           tmp,
+          // The navy's trim sheet, where the build carries one (#1005): the
+          // model's materials are tagged for it and the file holds no image.
+          ...trimFlag(entry.model),
         ],
         { stdio: 'inherit' }
       );
@@ -166,5 +183,5 @@ console.log(
 // shows it, and tools/roadmap/test/sheet.test.mjs fails if a map changes
 // without it.
 await writeOutlines();
-await bakeSheet();
-console.log(`wrote ${SHEET}`);
+await bakeRosterSheet();
+console.log(`wrote ${ROSTER_SHEET}`);

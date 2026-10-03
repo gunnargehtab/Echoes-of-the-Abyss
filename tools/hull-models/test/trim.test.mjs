@@ -143,7 +143,7 @@ test('the sheet is bright, seamed, and the same twice', () => {
   assert.ok(mid > edge + 40, `strake middle ${mid}, edge ${edge}`);
 });
 
-test('the export carries the sheet on the solid unlit materials, and glb.mjs reads it back', async () => {
+test('the export tags the solid unlit materials for the sheet, and glb.mjs reads it back', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'trim-'));
   process.env.HULL_MODELS_OUT = dir;
   try {
@@ -151,24 +151,25 @@ test('the export carries the sheet on the solid unlit materials, and glb.mjs rea
     const { root } = yard();
     await exportGlb(root, 'yard.glb', { trim: SPEC });
     const file = readGlb(join(dir, 'yard.glb'));
-    assert.ok(file.trim, 'no trim sheet in the file');
-    assert.equal(file.trim.width, SPEC.size);
-    assert.equal(file.trim.texCoord, 0);
-    assert.deepEqual(file.trim.materials, ['steel']);
+    assert.deepEqual(file.trim, { sheet: SPEC.name, materials: ['steel'] });
     assert.equal(file.occlusion, null);
     assert.equal(file.parts.length, 4);
     for (const p of file.parts) assert.ok(p.uv0 && p.uv0.length === p.tris * 6, `${p.name} uv0`);
-    assert.deepEqual(file.trim.pixels, drawTrimSheet(SPEC).pixels);
-    // Beside an occlusion map, both land, each in its slot.
+    // The sheet itself is not in the file: no image at all.
+    const { readFileSync, writeFileSync } = await import('node:fs');
+    const bytes = readFileSync(join(dir, 'yard.glb'));
+    const json = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)).toString());
+    assert.equal(json.images, undefined);
+    assert.equal(json.materials.find((m) => m.name === 'steel').extras.trim, SPEC.name);
+    // Beside an occlusion map, the tag and the map both land.
     await exportGlb(yard().root, 'both.glb', { trim: SPEC, occlusion: { size: 64, reach: 6 } });
     const both = readGlb(join(dir, 'both.glb'));
     assert.ok(both.trim && both.occlusion);
     assert.equal(both.occlusion.texCoord, 1);
-    // And stripped, neither.
-    const { readFileSync, writeFileSync } = await import('node:fs');
+    // Stripped of its image, the file keeps the layout and the tag.
     writeFileSync(join(dir, 'bare.glb'), Buffer.from(stripImages(readFileSync(join(dir, 'both.glb')))));
     const bare = readGlb(join(dir, 'bare.glb'));
-    assert.equal(bare.trim, null);
+    assert.deepEqual(bare.trim, both.trim);
     assert.equal(bare.occlusion, null);
     assert.equal(bare.parts.length, 4);
   } finally {

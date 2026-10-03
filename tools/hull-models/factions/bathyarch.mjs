@@ -194,10 +194,13 @@ export const ink = {
  * 6 texels of weathering beside it, and a 0.08 patchwork between plates.
  * The rivets stay geometry — a plate's are its own parts (`rivetRows`) —
  * so none are drawn. Hue is not here: the sheet multiplies the ink
- * rosterModels.ts recolours from the palette (gate 4). The Bulwark is the
- * first hull on it; a second script passes the same table.
+ * rosterModels.ts recolours from the palette (gate 4). `name` is the file
+ * sheets.mjs draws (packages/frontend/src/assets/trim/bathyarch.png) and the
+ * tag a laid-out material carries. The Bulwark is the first hull on it; a
+ * second script passes the same table.
  */
 export const TRIM = {
+  name: 'bathyarch',
   size: 512,
   strakeM: 6,
   plateM: 12,

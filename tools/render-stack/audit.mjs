@@ -8,8 +8,9 @@
  * zlib's default level: the source library's size, not a download (Vite
  * hashes the files and the client loads them by need; delivery is #1004's).
  * UV0 on a primitive is not a layout, so uvAlike's zero-filled placeholders
- * (kit.mjs) are counted apart, and so are the materials on a trim sheet,
- * whose parts' UV0 a script laid out (trim.mjs, #1005). Not a gate.
+ * (kit.mjs) are counted apart, and so are the materials tagged for a navy's
+ * trim sheet, whose parts' UV0 a script laid out (trim.mjs, #1005). Not a
+ * gate.
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -40,8 +41,6 @@ for (const name of names) {
     }
   }
   result.materialsWithAO += (gltf.materials ?? []).filter((m) => m.occlusionTexture).length;
-  result.materialsWithTrim += (gltf.materials ?? []).filter(
-    (m) => m.pbrMetallicRoughness?.baseColorTexture
-  ).length;
+  result.materialsWithTrim += (gltf.materials ?? []).filter((m) => m.extras?.trim).length;
 }
 console.log(JSON.stringify(result, null, 2));

@@ -33,9 +33,10 @@
  * slack a deterministic bake is allowed for another machine's floating
  * point, and no more, since a vertex that moves fails the position and
  * normal comparison above before the map is asked. Since #1005 each
- * part's UV0 and the trim sheet are read the same way, so a layout a
- * script lays (trim.mjs) and the sheet it draws are held to the file too.
- * It still does not read vertex colours — nothing writes them — so a
+ * part's UV0 and the trim tag on its materials are read the same way, so a
+ * layout a script lays (trim.mjs) is held to the file too, and each navy's
+ * sheet, drawn once into the client's assets (sheets.mjs), is held to its
+ * draw. It still does not read vertex colours — nothing writes them — so a
  * change to those passes here against a stale file.
  *
  * The normals are compared because the conn view lights a hull by the
@@ -72,6 +73,9 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readGlb, boundsOf, finishFields } from './glb.mjs';
+import { decodeGray } from './png.mjs';
+import { drawTrimSheet } from './trim.mjs';
+import { navyTrims, sheetPath } from './sheets.mjs';
 import { OUTLINE_FILE, renderSource } from '../hull-maps/outlines.mjs';
 import { NAVIES, splitsIn } from './finishes.mjs';
 
@@ -226,6 +230,38 @@ export function diffMap(kind, built, committed) {
   return out;
 }
 
+/** Lines describing how a navy's freshly drawn sheet differs from the committed PNG. */
+export function diffSheet(drawn, committed) {
+  if (committed.width !== drawn.size || committed.height !== drawn.size)
+    return [`trim sheet ${committed.width}×${committed.height} → ${drawn.size}×${drawn.size}`];
+  let differ = 0;
+  let worst = 0;
+  for (let i = 0; i < drawn.pixels.length; i++) {
+    const d = Math.abs(drawn.pixels[i] - committed.pixels[i]);
+    if (d > GREY_SLACK) {
+      differ++;
+      if (d > worst) worst = d;
+    }
+  }
+  return differ
+    ? [`trim sheet differs at ${differ} of ${drawn.pixels.length} texels, up to ${worst} levels`]
+    : [];
+}
+
+/** Lines describing how the built file's trim tag differs from the committed one's. */
+export function diffTrim(built, committed) {
+  if (!built || !committed)
+    return built === committed
+      ? []
+      : [`trim sheet ${built ? 'laid in the build, none in the file' : 'in the file, none built'}`];
+  const out = [];
+  if (built.sheet !== committed.sheet) out.push(`trim sheet ${committed.sheet} → ${built.sheet}`);
+  const a = built.materials.join(', ');
+  const b = committed.materials.join(', ');
+  if (a !== b) out.push(`trim sheet on ${b} → ${a}`);
+  return out;
+}
+
 /** Lines describing how `built` differs from `committed`; empty when they agree. */
 export function diffParts(built, committed) {
   const out = [];
@@ -327,7 +363,7 @@ try {
     const drift = [
       ...diffParts(built, committed),
       ...diffMap('occlusion', builtModel.occlusion, committedModel.occlusion),
-      ...diffMap('trim', builtModel.trim, committedModel.trim),
+      ...diffTrim(builtModel.trim, committedModel.trim),
     ];
     const warnings = (run.stderr.match(/WARNING/g) ?? []).length;
     if (drift.length) {
@@ -342,6 +378,29 @@ try {
           (warnings ? ` (${warnings} light warnings)` : '')
       );
     }
+  }
+
+  // Each navy's trim sheet is drawn once into the client's assets
+  // (sheets.mjs), so the committed image is held to the draw as the
+  // occlusion map is held to the bake: two grey levels of slack, no more.
+  for (const [name, trim] of await navyTrims()) {
+    const drawn = drawTrimSheet(trim);
+    let committed;
+    try {
+      committed = decodeGray(readFileSync(sheetPath(name)));
+    } catch {
+      failed++;
+      console.error(`✗ trim sheet ${name}.png is not committed — run tools/hull-models/sheets.mjs`);
+      continue;
+    }
+    const lines = diffSheet(drawn, committed);
+    if (lines.length) {
+      failed++;
+      console.error(
+        `✗ trim sheet ${name}.png drifted:\n    ${lines.join('\n    ')}\n` +
+          '  run `node tools/hull-models/sheets.mjs` and commit the PNG'
+      );
+    } else console.log(`✓ trim sheet ${name}.png agrees with its draw`);
   }
 
   const want = await renderSource();

@@ -1,34 +1,36 @@
 /**
- * A trim sheet rides a model's materials as a base-colour map, and the
- * conn view keeps it through everything it does to a model
- * (docs/art-direction.md "UV layout and trim sheets — SPEC"): the recolour
- * writes the faction's ink into `color` and leaves `map` where the loader
- * put it, the merge buckets a material's parts under the one material that
- * carries it, and Sorrowgate's laminate patch chains onto a mapped material
- * rather than replacing it, so a Commune hull in the tutorial wears both.
- * The loader cannot decode an image here (rosterScale.test.mjs strips
- * them), so the sheet is a DataTexture on a built scene, and what is held
- * is ownership, not pixels.
+ * A navy's trim sheet is attached at load to the materials a model script
+ * tagged for it, and the conn view keeps it through everything it does to
+ * a model (docs/art-direction.md "UV layout and trim sheets — SPEC"): the
+ * recolour writes the faction's ink into `color` and the sheet into `map`,
+ * one shared texture for the navy, never a lamp's; the merge buckets a
+ * material's parts under the one material that carries it; and Sorrowgate's
+ * laminate patch chains onto a mapped material rather than replacing it, so
+ * a Commune hull in the tutorial wears both. The loader cannot decode an
+ * image here, so the sheet's texture is made and cached without one, and
+ * what is held is ownership, not pixels.
  */
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { BoxGeometry, DataTexture, Group, Mesh, MeshStandardMaterial, SRGBColorSpace } from 'three';
+import {
+  BoxGeometry,
+  Group,
+  Mesh,
+  MeshStandardMaterial,
+  RepeatWrapping,
+  SRGBColorSpace,
+} from 'three';
 import { Faction, UnitKind } from '@echoes/shared';
 import { buildTemplate } from '../src/game/rosterModels.ts';
 import { ACTIVE_PALETTE } from '../src/game/palette.ts';
+import { TRIM_SHEET_NAMES, trimSheet } from '../src/game/trimSheets.ts';
 
-function sheet(): DataTexture {
-  const texture = new DataTexture(new Uint8Array([200, 200, 200, 255]), 1, 1);
-  texture.colorSpace = SRGBColorSpace;
-  texture.name = 'trim';
-  return texture;
-}
-
-/** Two plates and a lamp, the plates on one mapped material as a GLB's are. */
-function hull(map: DataTexture): Group {
+/** Two plates and a lamp, the plates on one material tagged as a laid-out GLB's is. */
+function hull(tag: string): Group {
   const root = new Group();
-  const plate = new MeshStandardMaterial({ color: 0x8c8378, map });
+  const plate = new MeshStandardMaterial({ color: 0x8c8378 });
   plate.name = 'iron_grey';
+  plate.userData.trim = tag;
   const a = new Mesh(new BoxGeometry(60, 10, 30), plate);
   const b = new Mesh(new BoxGeometry(20, 4, 10), plate);
   b.position.y = 7;
@@ -49,9 +51,20 @@ const materialsOf = (root: Group): MeshStandardMaterial[] => {
 };
 
 describe('the trim sheet on a roster model', () => {
-  it('survives the recolour and the merge, under the faction ink', () => {
-    const map = sheet();
-    const template = buildTemplate(hull(map), {
+  it('ships the Consortium sheet, once, as a repeating sRGB texture', () => {
+    assert.ok(TRIM_SHEET_NAMES.includes('bathyarch'), `sheets: ${TRIM_SHEET_NAMES}`);
+    const sheet = trimSheet('bathyarch');
+    assert.ok(sheet);
+    assert.equal(trimSheet('bathyarch'), sheet, 'a second ask made a second texture');
+    assert.equal(sheet.colorSpace, SRGBColorSpace);
+    assert.equal(sheet.wrapS, RepeatWrapping);
+    // v 0 is the sheet's first row, as the layout and glTF have it.
+    assert.equal(sheet.flipY, false);
+    assert.equal(trimSheet('no-such-navy'), null);
+  });
+
+  it('attaches the tagged material to its sheet, under the faction ink, and never a lamp', () => {
+    const template = buildTemplate(hull('bathyarch'), {
       unit: UnitKind.Bulwark,
       faction: Faction.Bathyarch,
     });
@@ -61,8 +74,8 @@ describe('the trim sheet on a roster model', () => {
     const plate = materials.find((m) => m.name === 'iron_grey');
     const lamp = materials.find((m) => m.name === 'amber_lamp');
     assert.ok(plate && lamp);
-    assert.equal(plate.map, map, 'the plate lost its sheet');
-    assert.equal(lamp.map, null, 'the lamp gained one');
+    assert.equal(plate.map, trimSheet('bathyarch'), 'the plate did not take the sheet');
+    assert.equal(lamp.map, null, 'the lamp took one');
     // Hue is the palette's: the recoloured ink and the primary share a chromaticity.
     const ink = ACTIVE_PALETTE.faction[Faction.Bathyarch].primary;
     const primary = new MeshStandardMaterial({ color: ink }).color;
@@ -70,20 +83,18 @@ describe('the trim sheet on a roster model', () => {
     const got = plate.color.r + plate.color.g + plate.color.b;
     for (const c of ['r', 'g', 'b'] as const)
       assert.ok(Math.abs(plate.color[c] / got - primary[c] / sum) < 1e-6, `hue ${c}`);
-    // The emissive is untouched by the sheet: still the glow ink, not the map.
     assert.ok(lamp.emissiveIntensity > 0);
   });
 
   it('keeps the sheet under the Sorrowgate laminate on a Commune hull', () => {
-    const map = sheet();
     const template = buildTemplate(
-      hull(map),
+      hull('bathyarch'),
       { unit: UnitKind.Bulwark, faction: Faction.Pelagia },
       'sorrowgate'
     );
     const plate = materialsOf(template.root).find((m) => m.name === 'iron_grey');
     assert.ok(plate);
-    assert.equal(plate.map, map);
+    assert.equal(plate.map, trimSheet('bathyarch'));
     assert.match(plate.customProgramCacheKey(), /sorrowgate-laminate-1$/);
   });
 });

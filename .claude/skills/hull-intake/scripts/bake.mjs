@@ -72,6 +72,10 @@ const maxMaterials = Number(flag('--max-materials') || 2);
 // Target glow energy (graphics-standards.md gate 3). When set, the emissive
 // map is scaled onto it — placement stays the model's, intensity is spec'd.
 const glowE = Number(flag('--glow-e') || 0);
+// The navy's trim sheet (#1005): a model's laid-out materials are tagged for
+// it and carry no image of their own, so the albedo pass is handed the sheet
+// the conn view would attach, or the chart's sprite loses the plates.
+const trimPath = flag('--trim');
 
 if (!['hull', 'env'].includes(category)) {
   console.error(`unknown --category: ${category} (hull | env)`);
@@ -161,6 +165,7 @@ const server = createServer((req, res) => {
   let file;
   if (url.pathname === '/page.html') file = join(here, 'page.html');
   else if (url.pathname === '/model.glb') file = resolve(modelPath);
+  else if (url.pathname === '/trim.png' && trimPath) file = resolve(trimPath);
   else if (url.pathname.startsWith('/deps/')) {
     file = join(depsDir, normalize(url.pathname.slice('/deps/'.length)));
     if (!file.startsWith(depsDir)) file = undefined; // no path escapes
@@ -183,7 +188,8 @@ try {
   const page = await browser.newPage();
   page.on('pageerror', (e) => console.error(`page error: ${e.message}`));
   await page.goto(
-    `http://127.0.0.1:${port}/page.html?lengthM=${lengthM}&ppm=${ppm}&category=${category}`
+    `http://127.0.0.1:${port}/page.html?lengthM=${lengthM}&ppm=${ppm}&category=${category}` +
+      (trimPath ? '&trim=/trim.png' : '')
   );
   await page.waitForFunction(() => window.__ready || window.__error, null, { timeout: 60000 });
 
