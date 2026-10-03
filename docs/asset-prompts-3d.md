@@ -750,8 +750,9 @@ eight nothing stands before (`facetPlates`), since the turned twelve-gon mirrors
 and a mirrored few would lie on no facet. Forty-six seams and eight plates on six models:
 the Antiphon four on its deck, three athwart and one along the keel between the after bays,
 and three across each guard wing, the Offertory three on its deck a side, two athwart and
-one along the coaming's outboard side, and two across each guard blade, the Reciter two along each wing, the
-Responsory three across each, the Slipway eight across each hall's back between its spines;
+one along the coaming's outboard side, and two across each guard blade, the Reciter two along
+each wing, the Responsory three across each, the Slipway eight across each hall's back between
+its spines;
 2.6–12 m² each on a hull, 32–36 a seam on the Slipway and 37–38 a plate on the Turret but
 the one under its rail at 21, no part moved, no lamp added or moved, no plan grown from
 above, and each script's header says where. The Versicle, the one Order hull under the band,

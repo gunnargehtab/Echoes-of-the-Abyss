@@ -80,8 +80,8 @@
  * facets are made to show — "mirror facets" (Block 2) — with a plate of
  * the dim alloy on each: 10 m along the facet by 6.5 up its slope, 0.3
  * proud, its long side level, seated on the facet it faces from y 8.7 to
- * 14.3 of the 15.4 m flank — its foot 1.1 m clear of the fore marks, its
- * head a metre under the rim. The frustum is turned the file's eighth
+ * 14.3 of the 15.4 m flank — its foot 1.1–1.2 m clear of the fore marks
+ * and the after one on facet 6, its head a metre under the rim. The frustum is turned the file's eighth
  * (FACETS above), so no facet has a mirror and the plates go on every one
  * nothing stands before, eight of the twelve: not facets 3, 4 and 7, where
  * an ammo pod or an aft mark stands on the flank, and not facet 8, which

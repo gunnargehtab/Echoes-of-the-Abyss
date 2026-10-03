@@ -44,10 +44,11 @@
  * (docs/asset-prompts-3d.md Block 2c; hadron.mjs `ceramicSeams`, "Panels"),
  * one part over the edge. Four seams of shadow across the pale wings, two
  * a wing in a mirrored pair, each 0.5 units wide standing 0.2 proud and
- * laid on the wing under it: chordwise at z 7 from x −33.9 to −18.5 and
- * at z 10.5 from −39.5 to −25.5, clear of the trailing and leading edges
- * by half a unit, of the edge strip and of the wing lamp. They show
- * 6.5–7.1 m² each under the root's squeeze, so the median lands on the
+ * laid on the wing under it: chordwise at z 7 from x −33.4 to −19.0 and
+ * at z 10.5 from −39.0 to −26.0, a unit short of the swept trailing and
+ * leading edges along the seam, every corner 0.2–0.7 m inside them, and
+ * clear of the edge strip and the wing lamp. They show 6.0–6.8 m² each
+ * under the root's squeeze, so the median lands on the
  * starboard wing's edge at 3.17 m over fifteen; no part moved, no lamp's plan
  * changed, and the outline is what it was. 19 parts and 288 triangles
  * become 23 and 336; `diff.mjs reciter-hadron` lists the four added and
@@ -213,8 +214,8 @@ hadron.ceramicSeams(root, shadow, {
   w: 0.5,
   h: 0.2,
   pairs: [
-    ['0', [-33.9, 7], [-18.5, 7]],
-    ['1', [-39.5, 10.5], [-25.5, 10.5]],
+    ['0', [-33.4, 7], [-19.0, 7]],
+    ['1', [-39.0, 10.5], [-26.0, 10.5]],
   ],
 });
 

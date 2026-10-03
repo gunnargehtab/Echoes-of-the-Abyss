@@ -130,9 +130,10 @@
  * quarter, and one along the keel between the two after bays — and three
  * of shadow across each pale wing, athwart at x −22, −28 and −34 from the
  * spine or the body's flank outboard — to 1.35 m short of the edge strip
- * at −22, 0.4 short of it at −28, and 0.45 short of the trailing edge at
- * −34, where no strip runs. They
- * show 3.5–12 m² each, so the median lands on the fore spine at 4.27 m
+ * at −22, 0.4 short of it at −28, and at −34, where no strip runs, to a
+ * metre short of the swept trailing edge on the seam's centreline, its
+ * corners 0.3–0.7 inside it. They show 3.5–12 m² each, so the median
+ * lands on the fore spine at 4.27 m
  * over twenty-seven; no part moved, no lamp's plan changed, and the
  * outline is what it was. 21 parts and 576 triangles become 31 and 696.
  */
@@ -353,7 +354,7 @@ hadron.ceramicSeams(root, shadow, {
   pairs: [
     ['0', [-22, 7.4], [-22, 20.5]],
     ['1', [-28, 3.0], [-28, 20.7]],
-    ['2', [-34, 3.0], [-34, 11.8]],
+    ['2', [-34, 3.0], [-34, 11.0]],
   ],
 });
 

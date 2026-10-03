@@ -104,8 +104,9 @@
  * plates in the navy. Six seams of shadow across them, three a wing in
  * mirrored pairs, each 0.5 m wide standing 0.2 proud and laid on the wing
  * under it, athwart at x −38, −30 and −22 from clear of the body's
- * shoulder to short of the edge strip or the leading edge — 1.35 m short
- * of the strip at −38, 0.55 short of the edge at −30 and −22. They show
+ * shoulder to short of the edge strip or the leading edge — half a metre
+ * short of the strip at −38, and 0.3–0.6 short of the swept edge at −30
+ * and −22, corner to corner. They show
  * 2.6–6.6 m² each, so the median lands between the array lip and the
  * drive prism at 4.12 m over twenty-eight; no part moved, no lamp's plan
  * changed, and the outline is what it was. 42 parts and 1,084 triangles
