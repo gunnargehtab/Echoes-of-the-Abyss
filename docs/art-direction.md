@@ -327,6 +327,53 @@ Options written and rejected, so a later reader can overturn the call in one com
 Reopening this means a biome whose water is clear and sunlit, which no map has and
 [world.md](world.md) rules out; it would amend that document first.
 
+#### Bevels and baked occlusion — SPEC
+
+*For [#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002), row 3 of the
+audit below: the kit's bevel measured over the library before anything is added to it.*
+
+**The bevel is a plate's.** `tools/hull-models/kit.mjs` rounds a `plate` or a `plan`, a slab
+extruded from a plan outline, with one chamfer segment `bevelM` proud of the outline, and that
+is the kit's only bevel: a box, a cylinder, a lathe, a sphere or a torus has a square edge and
+no option for another. A GLB cannot say whether a slab was extruded or whether its rim is a
+chamfer, so `node tools/render-stack/bevels.mjs` runs every model script and sums what each
+export reports it is built from (kit.mjs `census`: the geometry each part holds, and whether an
+extruded one was bevelled). At `9e3bfae2`:
+
+| Navy | Models | With plates | Parts | Plates | Bevelled |
+| --- | --- | --- | --- | --- | --- |
+| Bathyarch Consortium | 24 | 10 | 3,424 | 27 | 5 |
+| Pelagia Commune | 24 | 16 | 1,189 | 69 | 15 |
+| Abyssal Directorate | 22 | 4 | 1,734 | 19 | 7 |
+| Hadron Knights | 24 | 14 | 971 | 75 | 3 |
+| Environment props | 14 | 0 | 162 | 0 | 0 |
+| Library | 108 | 44 | 7,480 | 190 | 30 |
+
+Three readings follow, and they bound what the row can do:
+
+- **Plates are 3 % of the library.** 3,403 parts are boxes and 2,128 are cylinders, 74 %
+  between them; 190 are extruded plates. The razor edge the audit named is, in most places,
+  a box's or a cylinder's, and the kit's bevel does not reach it. A chamfered box would. It
+  is a new primitive, which the row excludes, and a chamfer switched on across 108 approved
+  files is 108 shape decisions taken at once; if one is wanted it is taken per model, by the
+  designer under rule 3 of [asset-prompts-3d.md](asset-prompts-3d.md), with
+  `tools/hull-models/diff.mjs` as the witness, and it starts in that document.
+- **Of the plates, 16 % are bevelled, and the spread is doctrine before it is coverage.**
+  The Knights' 3 of 75 is "square-edged is what an Order wing wants" (kit.mjs `plate`), and
+  razor-thin lines are their light ([style-neon-noir.md](style-neon-noir.md) "Faction accents
+  on a neon-noir ground"): not a gap. The Commune's 15 of 69 is the one to read for coverage:
+  the kit calls the navy "soft-edged by doctrine", yet its four shared hulls carry 29 plates
+  with no bevel on any, and its membranes and intake scoops are extruded square
+  (`factions/pelagia.mjs` `membranes`, `intakeScoop`). The Consortium's 5 of 27 and the
+  Directorate's 7 of 19 carry a bevel where the hull's own numbers give one (a slab's,
+  plough's or scoop's `bevel`) and none otherwise.
+- **The count is the library at the commit named.** It moves whenever a model does, so a
+  later reading re-runs the script rather than trusting this table.
+
+So the row adds no primitive. Bevelling a Commune plate is a shape decision on an approved
+model, one hull at a time, and the designer's to take; this section records where the
+candidates are.
+
 #### Ranked audit and remaining work
 
 The baseline is commit `1df288a` (28 September 2026), not the earlier #286 scene.
@@ -339,7 +386,7 @@ composer. Its still is a lighting reference, not a runtime implementation to cop
 | --- | --- | --- |
 | 1 | Shared rig, tone mapping, PMREM | This increment. Promote the tutorial rig; no model edits or full-screen pass |
 | 2 | Lamp core, then a lamp halo ([#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001)) | The lamp core landed ([#1021](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1021), [#1029](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1029)). From #1001's readings the owner picked the full-screen route, drawn after the canvas over a depth-only copy of its depth; "Lamp halo — SPEC" above and gate 6's line specify it, landing off behind its setting |
-| 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | `kit.mjs` already supports bevelled `plate`/`plan`; this is coverage, not a missing primitive. None of the 108 source GLBs has an occlusion texture. Start with one reviewed asset and preserve its silhouette |
+| 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | Coverage measured: 30 of 190 extruded plates are bevelled, and plates are 3 % of 7,480 parts, so the kit's bevel reaches little of the library ("Bevels and baked occlusion — SPEC" above; no primitive added). None of the 108 source GLBs has an occlusion texture. Start with one reviewed asset and preserve its silhouette |
 | 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | Vignette and sway are built, with no pass ([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)). The split waits on a gate-6 allocation for its full-screen draw and copy. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
 | 5 | GLB gzip ([#1004](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1004)) | Built. The nginx image's `mime.types` names no `glb`, so `packages/frontend/nginx.conf` names the type in the models' own location and gzips them at level 6. Delivery cost, not frame quality |
 | 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | 6,378 of 6,540 exported primitives have UV0, but attribute presence is not a laid-out atlas. `uvAlike` also writes zero-filled placeholder UVs. Sorrowgate already has triplanar surface detail; retain that work rather than replacing it blindly |

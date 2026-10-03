@@ -1265,6 +1265,36 @@ export function outputPath(filename) {
   return fileURLToPath(new URL(`../../docs/concept-art/models/${filename}`, import.meta.url));
 }
 
+/**
+ * What a model is built from, by primitive: how many of its parts are
+ * boxes, cylinders, lathes, spheres, extruded plates and hand-built
+ * buffers, and how many of the plates carry a bevel — the coverage #1002
+ * asked for, read where it can be read. A GLB cannot say whether a slab was
+ * extruded or whether its rim is a chamfer, but the live geometry can:
+ * `plate` and `plan` are three's ExtrudeGeometry, and a clone keeps the
+ * constructor's `parameters` (BufferGeometry.copy), so the bevel is read off
+ * the geometry a mesh holds wherever a builder made it. A plate re-wrapped
+ * on the way — `toNonIndexed`, `mergeGeometries` — is a plain buffer here
+ * and is counted as one. The export prints it, and
+ * tools/render-stack/bevels.mjs sums it over the library.
+ */
+export function census(root) {
+  const kinds = new Map();
+  let plates = 0;
+  let bevelled = 0;
+  root.traverse((o) => {
+    if (!o.isMesh) return;
+    const g = o.geometry;
+    const kind = g.type.replace(/Geometry$/, '');
+    kinds.set(kind, (kinds.get(kind) ?? 0) + 1);
+    if (g.type === 'ExtrudeGeometry') {
+      plates++;
+      if (g.parameters?.options?.bevelEnabled) bevelled++;
+    }
+  });
+  return { kinds, plates, bevelled };
+}
+
 /** Write the GLB into docs/concept-art/models/ and report what it contains. */
 export async function exportGlb(root, filename) {
   const out = outputPath(filename);
@@ -1280,9 +1310,15 @@ export async function exportGlb(root, filename) {
   });
   const b = bounds(root);
   const light = lightAudit(root);
+  const built = census(root);
+  const kinds = [...built.kinds].sort().map(([k, n]) => `${n} ${k}`);
   console.log(
     `${filename}: ${Buffer.from(glb).length} bytes, ${parts} parts, ${Math.round(tris)} tris\n` +
       `  bounds x ${b.x.join('..')}  y ${b.y.join('..')}  z ${b.z.join('..')}\n` +
+      `  primitives: ${kinds.join(', ')}
+` +
+      `  plates: ${built.plates} extruded, ${built.bevelled} bevelled
+` +
       `  light: ${light.lit.length} lit parts, ${light.totalM2} m² facing up`
   );
   for (const name of light.hidden)
