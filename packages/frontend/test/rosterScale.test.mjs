@@ -24,7 +24,7 @@ import { Box3, Vector3 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 // A baked model's occlusion map (#1002) is an image three's loader can decode
 // only in a browser; nothing here measures it, so the parse goes without it.
-import { stripOcclusion } from '../../../tools/hull-models/occlusion.mjs';
+import { stripImages } from '../../../tools/hull-models/images.mjs';
 import { CONSTRUCTION, Faction, StructureKind, UnitKind } from '@echoes/shared';
 
 import { STRUCTURES, UNITS } from '../../../tools/hull-maps/models.mjs';
@@ -50,7 +50,7 @@ const LENGTH_M = new Map([...UNITS, ...STRUCTURES].map((row) => [row.model, row.
 async function parse(file) {
   const bytes = readFileSync(new URL(file, MODELS));
   const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-  return (await new GLTFLoader().parseAsync(stripOcclusion(buffer), '')).scene;
+  return (await new GLTFLoader().parseAsync(stripImages(buffer), '')).scene;
 }
 
 /**

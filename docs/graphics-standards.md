@@ -272,6 +272,12 @@ conveniences rather than palette entries. What they owe each other instead is co
 see "Block 2b — the derived palette" in [asset-prompts-3d.md](asset-prompts-3d.md), which
 carries the registry and the one-name-one-value rule.
 
+A texture on a model obeys the same rule. A trim sheet
+([art-direction.md](art-direction.md#uv-layout-and-trim-sheets--spec)) is one grey channel
+that multiplies the recoloured ink, so it carries where a plate ends and nothing of what
+colour it is; a sheet with a hue in it would reach a pixel, and is refused for the reason a
+hex is.
+
 ### 5. The Asymmetric Fidelity Law is a rendering gate
 
 The player's own force renders at full fidelity. The enemy renders **only at the fidelity

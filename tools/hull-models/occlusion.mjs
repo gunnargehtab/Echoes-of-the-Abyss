@@ -4,7 +4,7 @@
  * that carries both.
  *
  *   const ao = bakeOcclusion(root, { size: 512 });   // before the export
- *   const glb = embedOcclusion(exported, ao);          // after it
+ *   const glb = embedImages(exported, [occlusionImage(ao)]); // after it (images.mjs)
  *
  * Three things decided the shape of this, and kit.mjs `exportGlb` is where
  * they meet:
@@ -31,8 +31,9 @@
  *   triangles, bounds and normals corner by corner, and reads no change.
  *
  * The layout is the kit's own, on `uv1` (glTF `TEXCOORD_1`), so UV0 stays
- * whatever each primitive carried (`uvAlike`'s zeros included) and the trim
- * sheets of #1005 keep that channel. Charts are grown over shared edges
+ * whatever each primitive carried: `uvAlike`'s zeros, or the trim sheet's
+ * layout in metres where a script opts into one (trim.mjs, #1005). Charts
+ * are grown over shared edges
  * while a face stays within `maxAngleDeg` of the chart's seed, projected on
  * the chart's mean normal, and shelf-packed with a `gutter` of texels round
  * each; a face can stretch by at most 1/cos(maxAngleDeg), 1.56 at 50°. The
@@ -47,9 +48,10 @@
  * them so bilinear filtering never reads an empty texel at a seam.
  *
  * GLTFExporter writes the `uv1` attribute (its TEXCOORD_1) and cannot write
- * the image (kit.mjs, the header), so `embedOcclusion` opens the binary it
- * wrote, appends the PNG to the buffer as one more buffer view, and gives
- * every solid material an `occlusionTexture` on texCoord 1. GLTFLoader reads
+ * the image (kit.mjs, the header), so images.mjs `embedImages` opens the
+ * binary it wrote, appends the PNG to the buffer as one more buffer view,
+ * and gives every solid material an `occlusionTexture` on texCoord 1
+ * (`occlusionImage` below says which and how). GLTFLoader reads
  * that back as `aoMap` on channel 1 (three r152+), which `rosterModels.ts`
  * carries through its recolour and its merge. A Node-side reader uses
  * glb.mjs and png.mjs, never GLTFLoader, which needs a browser to decode an
@@ -869,131 +871,20 @@ function dilate(pixels, covered, size, passes) {
   }
 }
 
-/* --------------------------------------------------------------------------
- * The glTF: the image into the binary GLTFExporter wrote.
- * ------------------------------------------------------------------------ */
-
-const MAGIC = 0x46546c67;
-const CHUNK_JSON = 0x4e4f534a;
-const CHUNK_BIN = 0x004e4942;
-const pad4 = (n) => (n + 3) & ~3;
-
 /**
- * The GLB with the occlusion map in it: `glb` as GLTFExporter gave it (an
- * ArrayBuffer or Buffer), `ao` as `bakeOcclusion` returned it. The PNG goes
- * on the end of the binary chunk as one more buffer view, and every
- * material named in `ao.materials` gets `occlusionTexture` on
- * TEXCOORD_1 at strength 1. A material the bake did not name — a haze — is
- * left as it was. Returns a Buffer.
+ * The map as images.mjs embeds it: an occlusion texture on TEXCOORD_1 at
+ * strength 1 for the solid materials the bake named; linear, mipmapped and
+ * clamped, since the atlas has no reason to repeat and a wrap across its
+ * edge would read one chart's gutter from another's.
  */
-export function embedOcclusion(glb, ao, { name = 'occlusion' } = {}) {
-  const buf = Buffer.isBuffer(glb) ? glb : Buffer.from(glb);
-  if (buf.readUInt32LE(0) !== MAGIC || buf.readUInt32LE(4) !== 2)
-    throw new Error('embedOcclusion: not a glTF 2 binary');
-  let off = 12;
-  let json = null;
-  let bin = Buffer.alloc(0);
-  while (off < buf.length) {
-    const len = buf.readUInt32LE(off);
-    const type = buf.readUInt32LE(off + 4);
-    const body = buf.subarray(off + 8, off + 8 + len);
-    if (type === CHUNK_JSON) json = JSON.parse(body.toString('utf8'));
-    else if (type === CHUNK_BIN) bin = body;
-    off += 8 + len;
-  }
-  if (!json) throw new Error('embedOcclusion: no JSON chunk');
-  if (json.images?.length || json.textures?.length)
-    throw new Error('embedOcclusion: the file already carries an image');
-
-  const binLength = pad4(bin.length);
-  const png = ao.png;
-  const out = Buffer.alloc(binLength + pad4(png.length));
-  bin.copy(out, 0);
-  png.copy(out, binLength);
-  json.buffers = json.buffers ?? [{}];
-  json.buffers[0].byteLength = out.length;
-  json.bufferViews = json.bufferViews ?? [];
-  const view =
-    json.bufferViews.push({ buffer: 0, byteOffset: binLength, byteLength: png.length }) - 1;
-  json.images = [{ bufferView: view, mimeType: 'image/png', name }];
-  // Linear, mipmapped, clamped: the atlas has no reason to repeat, and a
-  // wrap across its edge would read one chart's gutter from another's.
-  json.samplers = [{ magFilter: 9729, minFilter: 9987, wrapS: 33071, wrapT: 33071 }];
-  json.textures = [{ sampler: 0, source: 0, name }];
-  let given = 0;
-  for (const m of json.materials ?? []) {
-    if (!ao.materials.has(m.name)) continue;
-    m.occlusionTexture = { index: 0, texCoord: TEXCOORD };
-    given++;
-  }
-  if (given === 0) throw new Error('embedOcclusion: no material named by the bake is in the file');
-
-  const jsonBytes = Buffer.from(JSON.stringify(json), 'utf8');
-  const jsonLength = pad4(jsonBytes.length);
-  const total = 12 + 8 + jsonLength + 8 + out.length;
-  const result = Buffer.alloc(total, 0);
-  result.writeUInt32LE(MAGIC, 0);
-  result.writeUInt32LE(2, 4);
-  result.writeUInt32LE(total, 8);
-  result.writeUInt32LE(jsonLength, 12);
-  result.writeUInt32LE(CHUNK_JSON, 16);
-  jsonBytes.copy(result, 20);
-  result.fill(0x20, 20 + jsonBytes.length, 20 + jsonLength);
-  const binAt = 20 + jsonLength;
-  result.writeUInt32LE(out.length, binAt);
-  result.writeUInt32LE(CHUNK_BIN, binAt + 4);
-  out.copy(result, binAt + 8);
-  return result;
-}
-
-/**
- * The same GLB without its occlusion map: the image, texture and sampler
- * gone and no material naming one, the geometry and its `uv1` as they were.
- * For a reader that parses a committed file in Node through GLTFLoader —
- * the frontend's roster tests — which decodes an image through
- * `ImageBitmap` or an `<img>` and has neither there, and measures nothing
- * the map changes: scale, seating, a lamp's rest. A file carrying no map
- * is returned as it came. Takes an ArrayBuffer or a Buffer and returns an
- * ArrayBuffer, which is what `parseAsync` takes.
- */
-export function stripOcclusion(glb) {
-  const buf = Buffer.isBuffer(glb) ? glb : Buffer.from(glb);
-  if (buf.readUInt32LE(0) !== MAGIC || buf.readUInt32LE(4) !== 2)
-    throw new Error('stripOcclusion: not a glTF 2 binary');
-  let off = 12;
-  let json = null;
-  let bin = Buffer.alloc(0);
-  while (off < buf.length) {
-    const len = buf.readUInt32LE(off);
-    const type = buf.readUInt32LE(off + 4);
-    const body = buf.subarray(off + 8, off + 8 + len);
-    if (type === CHUNK_JSON) json = JSON.parse(body.toString('utf8'));
-    else if (type === CHUNK_BIN) bin = body;
-    off += 8 + len;
-  }
-  if (!json) throw new Error('stripOcclusion: no JSON chunk');
-  if (!(json.materials ?? []).some((m) => m.occlusionTexture))
-    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-  for (const m of json.materials) delete m.occlusionTexture;
-  delete json.images;
-  delete json.textures;
-  delete json.samplers;
-  // The PNG's buffer view stays, unreferenced: the binary is left as it is,
-  // and a view nothing names costs a loader nothing.
-  const jsonBytes = Buffer.from(JSON.stringify(json), 'utf8');
-  const jsonLength = pad4(jsonBytes.length);
-  const binLength = pad4(bin.length);
-  const total = 12 + 8 + jsonLength + 8 + binLength;
-  const out = Buffer.alloc(total, 0);
-  out.writeUInt32LE(MAGIC, 0);
-  out.writeUInt32LE(2, 4);
-  out.writeUInt32LE(total, 8);
-  out.writeUInt32LE(jsonLength, 12);
-  out.writeUInt32LE(CHUNK_JSON, 16);
-  jsonBytes.copy(out, 20);
-  out.fill(0x20, 20 + jsonBytes.length, 20 + jsonLength);
-  out.writeUInt32LE(binLength, 20 + jsonLength);
-  out.writeUInt32LE(CHUNK_BIN, 24 + jsonLength);
-  bin.copy(out, 28 + jsonLength);
-  return out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength);
+export function occlusionImage(ao, { name = 'occlusion' } = {}) {
+  return {
+    name,
+    png: ao.png,
+    slot: 'occlusionTexture',
+    texCoord: TEXCOORD,
+    strength: 1,
+    materials: ao.materials,
+    sampler: { magFilter: 9729, minFilter: 9987, wrapS: 33071, wrapT: 33071 },
+  };
 }

@@ -184,6 +184,32 @@ export const ink = {
 };
 
 /**
+ * The Klaxon's plate, as the trim sheet kit.mjs `exportGlb` lays a hull
+ * over (trim.mjs, #1005): "riveted, over-engineered rectangles ... visibly
+ * patchworked repairs, older armour showing through newer plate" (Block 2),
+ * said in luminance alone. Strakes of 6 m and plates of 12 m, the pitch
+ * the Bulwark's own flank plates are hung at (`flankPlates`, 22 m plates at
+ * a 26 m pitch, 7 and 9 m deep), a seam darkened to 0.45 of the plate with
+ * 6 texels of weathering beside it, and a 0.08 patchwork between plates.
+ * The rivets stay geometry — a plate's are its own parts (`rivetRows`) —
+ * so none are drawn. Hue is not here: the sheet multiplies the ink
+ * rosterModels.ts recolours from the palette (gate 4). The Bulwark is the
+ * first hull on it; a second script passes the same table.
+ */
+export const TRIM = {
+  size: 512,
+  strakeM: 6,
+  plateM: 12,
+  seamPx: 1.5,
+  weatherPx: 6,
+  light: 0.98,
+  seam: 0.45,
+  weather: 0.1,
+  tone: 0.08,
+  grain: 0.015,
+};
+
+/**
  * The Klaxon's facet rule and panel bands (docs/asset-prompts-3d.md Block 2c,
  * #919; `tools/hull-models/facets.mjs` is the measure). "No curve unless a
  * pressure vessel demanded it" ranks this navy's curves third of four —

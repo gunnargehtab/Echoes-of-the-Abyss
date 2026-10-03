@@ -9,11 +9,11 @@
  * hull's plan section off the model that clads it. Every approved model is
  * GLTFExporter output — one buffer, float32 positions, indexed triangles,
  * no skins or morphs — so the parser is short, and it says so when handed
- * anything else rather than guessing. The one texture a model can carry,
- * the occlusion map kit.mjs `exportGlb` embeds (#1002), is read back too:
- * a part's `uv1` beside its positions, and the map itself decoded through
- * png.mjs, since the image is the one thing GLTFLoader could not have done
- * here either.
+ * anything else rather than guessing. The two textures a model can carry,
+ * the occlusion map (#1002) and the trim sheet (#1005) kit.mjs `exportGlb`
+ * embeds, are read back too: a part's `uv1` and `uv0` beside its
+ * positions, and each map decoded through png.mjs, since an image is the
+ * one thing GLTFLoader could not have done here either.
  *
  * `sceneParts` produces the same shape from a live three.js scene, which is
  * what makes a build and its file comparable at all.
@@ -78,13 +78,16 @@ export const occludes = (finish) =>
  * reflection, the Spire's `frame_blade_l`), which turns every triangle's
  * winding round, so a reader taking a normal off the winding has to turn it
  * back; `uv1` the second UV set at each corner, 2 floats a corner, or null
- * where the primitive carries none — the occlusion map's layout (#1002).
+ * where the primitive carries none — the occlusion map's layout (#1002);
+ * `uv0` the first the same way — the trim sheet's layout where a script
+ * laid one (#1005), and whatever the primitive carried otherwise.
  *
- * The model is `{ name, parts, occlusion }`: `occlusion` null, or the map
+ * The model is `{ name, parts, occlusion, trim }`: each null, or the map
  * decoded — `{ width, height, pixels, texCoord, strength, materials }`,
- * `materials` the names that carry it. A file with two images, or an image
- * that is not an embedded PNG, is refused: kit.mjs writes one, and a reader
- * guessing at another tool's file is how a drift goes unread.
+ * `materials` the names that carry it, `strength` the occlusion map's
+ * alone. Two images in one slot, or an image that is not an embedded PNG,
+ * is refused: kit.mjs writes one a slot, and a reader guessing at another
+ * tool's file is how a drift goes unread.
  *
  * The stored normals are what the conn view lights a hull by
  * (`rosterModels.ts` keeps the file's own), and a buffer can change under
@@ -161,6 +164,7 @@ export function readGlb(path) {
     const out = [];
     let normals = [];
     let uv1 = [];
+    let uv0 = [];
     let material = null;
     let finish = null;
     for (const prim of mesh.primitives) {
@@ -172,6 +176,9 @@ export function readGlb(path) {
       const uvs =
         prim.attributes.TEXCOORD_1 !== undefined ? accessor(prim.attributes.TEXCOORD_1) : null;
       if (!uvs) uv1 = null;
+      const uvs0 =
+        prim.attributes.TEXCOORD_0 !== undefined ? accessor(prim.attributes.TEXCOORD_0) : null;
+      if (!uvs0) uv0 = null;
       const idx = prim.indices !== undefined ? accessor(prim.indices).data : null;
       const count = idx ? idx.length : pos.count;
       for (let k = 0; k < count; k++) {
@@ -183,6 +190,7 @@ export function readGlb(path) {
           m[2] * x + m[6] * y + m[10] * z + m[14]
         );
         if (uv1) uv1.push(uvs.data[v * 2], uvs.data[v * 2 + 1]);
+        if (uv0) uv0.push(uvs0.data[v * 2], uvs0.data[v * 2 + 1]);
         if (normals) {
           const nx = nrm.data[v * 3], ny = nrm.data[v * 3 + 1], nz = nrm.data[v * 3 + 2];
           const wx = nm[0] * nx + nm[3] * ny + nm[6] * nz;
@@ -205,36 +213,42 @@ export function readGlb(path) {
       positions: Float32Array.from(out),
       normals: normals && Float32Array.from(normals),
       uv1: uv1 && Float32Array.from(uv1),
+      uv0: uv0 && Float32Array.from(uv0),
       mirrored: det3(m) < 0,
     });
   });
   return {
     name: json.nodes[json.scenes[json.scene ?? 0].nodes[0]]?.name ?? null,
     parts,
-    occlusion: occlusionOf(json, bin, path),
+    occlusion: mapOf(json, bin, path, 'occlusion', (m) => m.occlusionTexture),
+    trim: mapOf(json, bin, path, 'trim', (m) => m.pbrMetallicRoughness?.baseColorTexture),
   };
 }
 
-/** The occlusion map the file's materials name, decoded, or null when none does. */
-function occlusionOf(json, bin, path) {
-  const carrying = (json.materials ?? []).filter((m) => m.occlusionTexture);
+/**
+ * The map the file's materials name in one slot, decoded, or null when none
+ * does: `ref` reads a material's reference in that slot (`occlusionTexture`,
+ * or `baseColorTexture` under `pbrMetallicRoughness`).
+ */
+function mapOf(json, bin, path, kind, ref) {
+  const carrying = (json.materials ?? []).filter((m) => ref(m));
   if (carrying.length === 0) return null;
-  const refs = new Set(carrying.map((m) => m.occlusionTexture.index));
+  const refs = new Set(carrying.map((m) => ref(m).index));
   if (refs.size !== 1)
-    throw new Error(`${path}: ${refs.size} occlusion textures — kit.mjs writes one`);
+    throw new Error(`${path}: ${refs.size} ${kind} textures — kit.mjs writes one`);
   const texture = json.textures[[...refs][0]];
   const image = json.images[texture.source];
   if (image.bufferView === undefined || image.mimeType !== 'image/png')
-    throw new Error(`${path}: the occlusion image is not an embedded PNG`);
+    throw new Error(`${path}: the ${kind} image is not an embedded PNG`);
   const bv = json.bufferViews[image.bufferView];
   const start = bin.byteOffset + (bv.byteOffset ?? 0);
   const { width, height, pixels } = decodeGray(
     Buffer.from(bin.buffer, start, bv.byteLength)
   );
-  const texCoords = new Set(carrying.map((m) => m.occlusionTexture.texCoord ?? 0));
-  const strengths = new Set(carrying.map((m) => m.occlusionTexture.strength ?? 1));
+  const texCoords = new Set(carrying.map((m) => ref(m).texCoord ?? 0));
+  const strengths = new Set(carrying.map((m) => ref(m).strength ?? 1));
   if (texCoords.size !== 1 || strengths.size !== 1)
-    throw new Error(`${path}: the occlusion map is named at more than one texCoord or strength`);
+    throw new Error(`${path}: the ${kind} map is named at more than one texCoord or strength`);
   return {
     width,
     height,
@@ -321,11 +335,13 @@ export function sceneParts(root) {
     const pos = g.attributes.position;
     const nrm = g.attributes.normal ?? null;
     const uvs = g.attributes.uv1 ?? null;
+    const uvs0 = g.attributes.uv ?? null;
     const idx = g.index;
     const count = idx ? idx.count : pos.count;
     const out = new Float32Array(count * 3);
     const normals = nrm ? new Float32Array(count * 3) : null;
     const uv1 = uvs ? new Float32Array(count * 2) : null;
+    const uv0 = uvs0 ? new Float32Array(count * 2) : null;
     const m = o.matrixWorld.elements;
     const nm = normalMatrix(m);
     for (let k = 0; k < count; k++) {
@@ -347,6 +363,10 @@ export function sceneParts(root) {
       if (uv1) {
         uv1[k * 2] = uvs.getX(v);
         uv1[k * 2 + 1] = uvs.getY(v);
+      }
+      if (uv0) {
+        uv0[k * 2] = uvs0.getX(v);
+        uv0[k * 2 + 1] = uvs0.getY(v);
       }
     }
     const mat = o.material;
@@ -373,6 +393,7 @@ export function sceneParts(root) {
       positions: out,
       normals,
       uv1,
+      uv0,
       mirrored: o.matrixWorld.determinant() < 0,
     });
   });
