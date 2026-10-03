@@ -3324,3 +3324,49 @@ describe('renderer smoke test: the queued GPU reading (gate 6, #1001)', () => {
     assert.equal(probes.__perspectiveGpuSplit, undefined);
   });
 });
+
+describe('renderer smoke test: the halo frame reading (#1001, development only)', () => {
+  it('hands back the next frame around the halo while it is on, and nothing while it is off', async () => {
+    type Frame = {
+      width: number;
+      height: number;
+      state: string;
+      before: Uint8Array;
+      after: Uint8Array;
+      mask: Uint8Array;
+    };
+    type Probes = {
+      __perspectiveHalo?: (on: boolean) => string;
+      __perspectiveHaloFrame?: () => Promise<Frame | null>;
+      __perspectiveHaloOnly?: (key: string | null) => void;
+    };
+    const world = await boot();
+    try {
+      const probes = (globalThis as unknown as { window: Probes }).window;
+      assert.ok(probes.__perspectiveHaloFrame && probes.__perspectiveHaloOnly);
+      const off = probes.__perspectiveHaloFrame!();
+      world.frame(1);
+      assert.equal(await off, null, 'the halo is off: no frame');
+      probes.__perspectiveHalo!(true);
+      const on = probes.__perspectiveHaloFrame!();
+      world.frame(1);
+      const frame = await on;
+      assert.ok(frame);
+      assert.equal(frame.state, 'idle', 'the canned match draws sprites, so no splat');
+      for (const layer of [frame.before, frame.after, frame.mask]) {
+        assert.equal(
+          layer.length,
+          frame.width * frame.height * 4,
+          'RGBA, the whole drawing buffer'
+        );
+      }
+      probes.__perspectiveHaloOnly!('unit:1');
+      probes.__perspectiveHaloOnly!(null);
+    } finally {
+      world.teardown();
+    }
+    const probes = (globalThis as unknown as { window: Probes }).window;
+    assert.equal(probes.__perspectiveHaloFrame, undefined, 'the switches go with the view');
+    assert.equal(probes.__perspectiveHaloOnly, undefined);
+  });
+});

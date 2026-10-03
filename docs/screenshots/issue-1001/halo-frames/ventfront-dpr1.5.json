@@ -1,0 +1,534 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "dpr": 1.5
+  },
+  "reducedMotion": true,
+  "map": "ventfront",
+  "cameras": [
+    {
+      "name": "home",
+      "state": "drawn",
+      "sites": 108,
+      "darkness": {
+        "before": 0.9742,
+        "after": 0.9742,
+        "lossPoints": 0.01
+      },
+      "lamps": {
+        "wholeLampPixels": 4973,
+        "unchangedShare": 1,
+        "edgePixels": 1371
+      },
+      "entities": [
+        {
+          "key": "unit:867",
+          "name": "Light Scout",
+          "sig": 6,
+          "sites": 0,
+          "lampCssPx": 0,
+          "lightCssPx2": 0,
+          "liftedCssPx": 0
+        },
+        {
+          "key": "unit:868",
+          "name": "Caisson",
+          "sig": 64,
+          "sites": 31,
+          "lampCssPx": 0,
+          "lightCssPx2": 0,
+          "liftedCssPx": 0
+        },
+        {
+          "key": "unit:869",
+          "name": "Caisson",
+          "sig": 64,
+          "sites": 31,
+          "lampCssPx": 14.7,
+          "lightCssPx2": 3.22,
+          "liftedCssPx": 81.3
+        },
+        {
+          "key": "unit:870",
+          "name": "Harvester",
+          "sig": 40,
+          "sites": 9,
+          "lampCssPx": 0,
+          "lightCssPx2": 0,
+          "liftedCssPx": 0
+        },
+        {
+          "key": "structure:865",
+          "name": "Bastion",
+          "sig": 35,
+          "sites": 27,
+          "lampCssPx": 303.6,
+          "lightCssPx2": 0,
+          "liftedCssPx": 0
+        },
+        {
+          "key": "structure:866",
+          "name": "Foundry",
+          "sig": 25,
+          "sites": 10,
+          "lampCssPx": 2501.3,
+          "lightCssPx2": 0,
+          "liftedCssPx": 0
+        }
+      ],
+      "collarOn": [
+        {
+          "key": "unit:867",
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "corePixels": 18,
+          "atLeast3Share": 0.7778,
+          "p5": 1.03,
+          "min": 1.03
+        },
+        {
+          "key": "unit:868",
+          "name": "Caisson",
+          "sig": 64,
+          "ink": "#f2b233",
+          "corePixels": 171,
+          "atLeast3Share": 1,
+          "p5": 4.29,
+          "min": 3.46
+        },
+        {
+          "key": "unit:869",
+          "name": "Caisson",
+          "sig": 64,
+          "ink": "#f2b233",
+          "corePixels": 422,
+          "atLeast3Share": 0.9976,
+          "p5": 3.53,
+          "min": 2.98
+        },
+        {
+          "key": "unit:870",
+          "name": "Harvester",
+          "sig": 40,
+          "ink": "#f2b233",
+          "corePixels": 305,
+          "method": "moved",
+          "atLeast3Share": 0.9934,
+          "p5": 5.71,
+          "min": 2.26
+        },
+        {
+          "key": "structure:865",
+          "name": "Bastion",
+          "sig": 35,
+          "ink": "#f2b233",
+          "corePixels": 105,
+          "atLeast3Share": 1,
+          "p5": 10.51,
+          "min": 10.51
+        },
+        {
+          "key": "structure:866",
+          "name": "Foundry",
+          "sig": 25,
+          "ink": "#3fa86a",
+          "corePixels": 377,
+          "atLeast3Share": 1,
+          "p5": 6.87,
+          "min": 4.07
+        }
+      ],
+      "collarOff": [
+        {
+          "key": "unit:867",
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "corePixels": 18,
+          "atLeast3Share": 0.7778,
+          "p5": 1.03,
+          "min": 1.03
+        },
+        {
+          "key": "unit:868",
+          "name": "Caisson",
+          "sig": 64,
+          "ink": "#f2b233",
+          "corePixels": 171,
+          "atLeast3Share": 1,
+          "p5": 4.29,
+          "min": 3.46
+        },
+        {
+          "key": "unit:869",
+          "name": "Caisson",
+          "sig": 64,
+          "ink": "#f2b233",
+          "corePixels": 422,
+          "atLeast3Share": 0.9976,
+          "p5": 3.53,
+          "min": 2.98
+        },
+        {
+          "key": "unit:870",
+          "name": "Harvester",
+          "sig": 40,
+          "ink": "#f2b233",
+          "corePixels": 321,
+          "atLeast3Share": 0.9875,
+          "p5": 5.71,
+          "min": 1.18
+        },
+        {
+          "key": "structure:865",
+          "name": "Bastion",
+          "sig": 35,
+          "ink": "#f2b233",
+          "corePixels": 105,
+          "atLeast3Share": 1,
+          "p5": 10.51,
+          "min": 10.51
+        },
+        {
+          "key": "structure:866",
+          "name": "Foundry",
+          "sig": 25,
+          "ink": "#3fa86a",
+          "corePixels": 377,
+          "atLeast3Share": 1,
+          "p5": 6.87,
+          "min": 4.07
+        }
+      ],
+      "darknessWithHud": {
+        "off": 0.7802,
+        "on": 0.7801
+      }
+    },
+    {
+      "name": "close",
+      "state": "drawn",
+      "sites": 108,
+      "darkness": {
+        "before": 0.9567,
+        "after": 0.9554,
+        "lossPoints": 0.13
+      },
+      "lamps": {
+        "wholeLampPixels": 7981,
+        "unchangedShare": 1,
+        "edgePixels": 1867
+      },
+      "entities": [
+        {
+          "key": "unit:867",
+          "name": "Light Scout",
+          "sig": 6,
+          "sites": 0,
+          "lampCssPx": 16.9,
+          "lightCssPx2": 0,
+          "liftedCssPx": 0
+        },
+        {
+          "key": "unit:868",
+          "name": "Caisson",
+          "sig": 64,
+          "sites": 31,
+          "lampCssPx": 126.7,
+          "lightCssPx2": 49.02,
+          "liftedCssPx": 685.3
+        },
+        {
+          "key": "unit:869",
+          "name": "Caisson",
+          "sig": 64,
+          "sites": 31,
+          "lampCssPx": 125.8,
+          "lightCssPx2": 48.9,
+          "liftedCssPx": 690.2
+        },
+        {
+          "key": "unit:870",
+          "name": "Harvester",
+          "sig": 45,
+          "sites": 9,
+          "lampCssPx": 10.2,
+          "lightCssPx2": 10.23,
+          "liftedCssPx": 360
+        },
+        {
+          "key": "structure:865",
+          "name": "Bastion",
+          "sig": 35,
+          "sites": 27,
+          "lampCssPx": 604.9,
+          "lightCssPx2": 0,
+          "liftedCssPx": 0
+        },
+        {
+          "key": "structure:866",
+          "name": "Foundry",
+          "sig": 25,
+          "sites": 10,
+          "lampCssPx": 3492.4,
+          "lightCssPx2": 0,
+          "liftedCssPx": 0
+        }
+      ],
+      "collarOn": [
+        {
+          "key": "unit:867",
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "corePixels": 26,
+          "atLeast3Share": 1,
+          "p5": 4.43,
+          "min": 4.43
+        },
+        {
+          "key": "unit:868",
+          "name": "Caisson",
+          "sig": 64,
+          "ink": "#f2b233",
+          "corePixels": 428,
+          "atLeast3Share": 1,
+          "p5": 9.48,
+          "min": 9.45
+        },
+        {
+          "key": "unit:869",
+          "name": "Caisson",
+          "sig": 64,
+          "ink": "#f2b233",
+          "corePixels": 423,
+          "atLeast3Share": 1,
+          "p5": 9.48,
+          "min": 7.41
+        },
+        {
+          "key": "unit:870",
+          "name": "Harvester",
+          "sig": 45,
+          "ink": "#f2b233",
+          "corePixels": 222,
+          "atLeast3Share": 1,
+          "p5": 6.81,
+          "min": 3.07
+        },
+        {
+          "key": "structure:865",
+          "name": "Bastion",
+          "sig": 35,
+          "ink": "#f2b233",
+          "corePixels": 502,
+          "atLeast3Share": 1,
+          "p5": 9.61,
+          "min": 4.28
+        },
+        {
+          "key": "structure:866",
+          "name": "Foundry",
+          "sig": 25,
+          "ink": "#3fa86a",
+          "corePixels": 485,
+          "atLeast3Share": 1,
+          "p5": 5.95,
+          "min": 3.63
+        }
+      ],
+      "collarOff": [
+        {
+          "key": "unit:867",
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "corePixels": 26,
+          "atLeast3Share": 1,
+          "p5": 4.43,
+          "min": 4.43
+        },
+        {
+          "key": "unit:868",
+          "name": "Caisson",
+          "sig": 64,
+          "ink": "#f2b233",
+          "corePixels": 428,
+          "atLeast3Share": 1,
+          "p5": 9.48,
+          "min": 9.45
+        },
+        {
+          "key": "unit:869",
+          "name": "Caisson",
+          "sig": 64,
+          "ink": "#f2b233",
+          "corePixels": 423,
+          "atLeast3Share": 1,
+          "p5": 9.48,
+          "min": 7.41
+        },
+        {
+          "key": "unit:870",
+          "name": "Harvester",
+          "sig": 45,
+          "ink": "#f2b233",
+          "corePixels": 222,
+          "atLeast3Share": 1,
+          "p5": 9.2,
+          "min": 7.77
+        },
+        {
+          "key": "structure:865",
+          "name": "Bastion",
+          "sig": 35,
+          "ink": "#f2b233",
+          "corePixels": 502,
+          "atLeast3Share": 1,
+          "p5": 9.61,
+          "min": 4.28
+        },
+        {
+          "key": "structure:866",
+          "name": "Foundry",
+          "sig": 25,
+          "ink": "#3fa86a",
+          "corePixels": 485,
+          "atLeast3Share": 1,
+          "p5": 5.95,
+          "min": 3.63
+        }
+      ],
+      "darknessWithHud": {
+        "off": 0.7132,
+        "on": 0.7124
+      }
+    },
+    {
+      "name": "low",
+      "state": "drawn",
+      "sites": 108,
+      "darkness": {
+        "before": 0.9905,
+        "after": 0.9899,
+        "lossPoints": 0.06
+      },
+      "lamps": {
+        "wholeLampPixels": 759,
+        "unchangedShare": 1,
+        "edgePixels": 770
+      },
+      "darknessWithHud": {
+        "off": 0.7184,
+        "on": 0.7179
+      }
+    },
+    {
+      "name": "survey",
+      "state": "drawn",
+      "sites": 98,
+      "darkness": {
+        "before": 0.9888,
+        "after": 0.9888,
+        "lossPoints": 0
+      },
+      "lamps": {
+        "wholeLampPixels": 1669,
+        "unchangedShare": 1,
+        "edgePixels": 871
+      },
+      "darknessWithHud": {
+        "off": 0.8328,
+        "on": 0.8328
+      }
+    }
+  ],
+  "pings": [
+    {
+      "key": "unit:867",
+      "name": "Light Scout",
+      "restSig": 6,
+      "pinged": true,
+      "liftedCssPx": {
+        "rest": 0,
+        "ping": 3135.6
+      },
+      "liftRatio": null,
+      "flashWithHalo": {
+        "frame": 0.0005,
+        "window": 0.0046
+      },
+      "flashWithoutHalo": {
+        "frame": 0,
+        "window": 0
+      },
+      "collarAtPing": {
+        "key": "unit:867",
+        "name": "Light Scout",
+        "sig": 95,
+        "ink": "#e0452f",
+        "corePixels": 469,
+        "atLeast3Share": 0.8955,
+        "p5": 2.76,
+        "min": 2.48
+      },
+      "collarAtPingHaloOff": {
+        "key": "unit:867",
+        "name": "Light Scout",
+        "sig": 95,
+        "ink": "#e0452f",
+        "corePixels": 469,
+        "atLeast3Share": 1,
+        "p5": 4.28,
+        "min": 3.58
+      }
+    },
+    {
+      "key": "unit:868",
+      "name": "Caisson",
+      "restSig": 64,
+      "pinged": true,
+      "liftedCssPx": {
+        "rest": 685.3,
+        "ping": 2537.3
+      },
+      "liftRatio": 3.7,
+      "flashWithHalo": {
+        "frame": 0.0005,
+        "window": 0.0042
+      },
+      "flashWithoutHalo": {
+        "frame": 0,
+        "window": 0.0001
+      },
+      "collarAtPing": {
+        "key": "unit:868",
+        "name": "Caisson",
+        "sig": 95,
+        "ink": "#e0452f",
+        "corePixels": 650,
+        "atLeast3Share": 1,
+        "p5": 4.05,
+        "min": 3.6
+      },
+      "collarAtPingHaloOff": {
+        "key": "unit:868",
+        "name": "Caisson",
+        "sig": 95,
+        "ink": "#e0452f",
+        "corePixels": 650,
+        "atLeast3Share": 1,
+        "p5": 4.29,
+        "min": 3.6
+      }
+    },
+    {
+      "key": "unit:870",
+      "name": "Harvester",
+      "pinged": false
+    }
+  ]
+}

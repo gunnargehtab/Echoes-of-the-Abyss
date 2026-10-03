@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   Color,
+  EqualStencilFunc,
   PerspectiveCamera,
   type Camera,
   type Mesh,
@@ -269,5 +270,34 @@ describe('lamp halo pass: what each chain draw reads and writes', () => {
       'bound to the levels the resized frame drew'
     );
     after.forEach((t, i) => assert.notEqual(t, before[i], 'never a disposed level'));
+  });
+});
+
+describe('lamp halo pass: the lamp mask a frame reading draws (development only)', () => {
+  it('clears the canvas to black and draws white only where a lamp marked the stencil', () => {
+    const gl = renderer(1440, 900);
+    gl.setClearColor(0x040a12, 1);
+    const pass = new LampHaloPass();
+    pass.enable(gl.asRenderer());
+    let drawn: ShaderMaterial | null = null;
+    const real = gl.render.bind(gl);
+    gl.render = (scene: Scene, eye: Camera) => {
+      drawn = (scene.children[0] as Mesh).material as ShaderMaterial;
+      real(scene, eye);
+    };
+    gl.info.reset();
+    pass.drawLampMask(gl.asRenderer(), camera);
+    assert.equal(gl.info.render.calls, 1, 'one full-screen draw');
+    assert.equal(gl.frameTargets.at(-1), null, 'onto the canvas, whose stencil holds the marks');
+    const mask = drawn as ShaderMaterial | null;
+    assert.ok(mask);
+    // Tested against the marks and never writing them, so it shows them.
+    assert.equal(mask.stencilWrite, true);
+    assert.equal(mask.stencilWriteMask, 0);
+    assert.equal(mask.stencilFunc, EqualStencilFunc);
+    assert.equal(mask.stencilRef, 1);
+    assert.equal(mask.depthTest, false);
+    assert.equal(gl.autoClear, true, 'autoClear restored');
+    assert.equal(gl.getClearColor(new Color()).getHex(), 0x040a12, 'clear colour restored');
   });
 });

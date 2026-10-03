@@ -72,7 +72,7 @@ import {
   type OwnUnit,
 } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
-import { FACTION_PALETTE, UI, VENT_EMBER } from './palette.ts';
+import { FACTION_PALETTE, sigColor, UI, VENT_EMBER } from './palette.ts';
 import { DepthCues } from './depthCues.ts';
 import {
   bakeSeabed,
@@ -284,6 +284,36 @@ const SWAY_RIGHT = new Vector3();
 const SWAY_UP = new Vector3();
 /** The lamp reading's box and corner; a capture reads it once a frame at most. */
 const LAMP_BOX = new Box3();
+
+/** One frame's conn canvas around the halo, for #1001's frame reading. */
+interface HaloFramePixels {
+  width: number;
+  height: number;
+  state: string;
+  /** After the canvas pass, before the halo. */
+  before: Uint8Array;
+  /** After the halo's composite. */
+  after: Uint8Array;
+  /** White where an own lamp marked the stencil, black elsewhere. */
+  mask: Uint8Array;
+}
+
+/** The canvas's drawing buffer as RGBA bytes, rows bottom-up. */
+function readCanvasPixels(renderer: WebGLRenderer): Uint8Array {
+  renderer.setRenderTarget(null);
+  const gl = renderer.getContext();
+  const pixels = new Uint8Array(gl.drawingBufferWidth * gl.drawingBufferHeight * 4);
+  gl.readPixels(
+    0,
+    0,
+    gl.drawingBufferWidth,
+    gl.drawingBufferHeight,
+    gl.RGBA,
+    gl.UNSIGNED_BYTE,
+    pixels
+  );
+  return pixels;
+}
 const LAMP_CORNER = new Vector3();
 
 /** Every mesh one lamp material draws, measured together (lampScreen.ts). */
@@ -641,6 +671,10 @@ export class PerspectiveView {
   /** Gate 6's queued reading: a load before the frame's bracket, and its own
    * timer, so a capture can check it outlasted the handover (gpuQueueLoad.ts). */
   private readonly queueLoad = new GpuQueueLoad();
+  /** Captures waiting on the next frame's halo pixels (`__perspectiveHaloFrame`). */
+  private haloFrameWaiters: ((frame: HaloFramePixels | null) => void)[] = [];
+  /** Development only: draw one entity's halo alone (`__perspectiveHaloOnly`). */
+  private haloOnly: string | null = null;
   private queueTimer: GpuTimer | null = null;
   /** The station these three are measuring, or null before one is named. */
   private stationLabel: string | null = null;
@@ -986,6 +1020,10 @@ export class PerspectiveView {
     delete (window as unknown as { __perspectiveHalo?: unknown }).__perspectiveHalo;
     delete (window as unknown as { __perspectiveGpuSplit?: unknown }).__perspectiveGpuSplit;
     delete (window as unknown as { __perspectiveGpuQueue?: unknown }).__perspectiveGpuQueue;
+    delete (window as unknown as { __perspectiveHaloFrame?: unknown }).__perspectiveHaloFrame;
+    delete (window as unknown as { __perspectiveHaloOnly?: unknown }).__perspectiveHaloOnly;
+    for (const resolve of this.haloFrameWaiters) resolve(null);
+    this.haloFrameWaiters = [];
   }
 
   // ---------------------------------------------------------------- camera
@@ -2272,6 +2310,9 @@ export class PerspectiveView {
     try {
       renderer.render(this.scene, this.camera);
       passes.push('canvas');
+      // A capture reads the canvas before the halo, inside this frame.
+      const captured =
+        this.haloFrameWaiters.length > 0 && this.halo.on ? readCanvasPixels(renderer) : null;
       this.haloCost = { calls: 0, triangles: 0 };
       if (this.halo.on) {
         // Split, the CPU's gather of the splats is a part of its own: GPU
@@ -2298,6 +2339,7 @@ export class PerspectiveView {
           triangles: renderer.info.render.triangles - before.triangles,
         };
       }
+      if (this.haloFrameWaiters.length > 0) this.resolveHaloFrame(renderer, captured);
     } finally {
       this.gpuTimer?.end();
     }
@@ -2396,6 +2438,22 @@ export class PerspectiveView {
       ) => {
         this.setLampHalos(on);
         return this.halo.state;
+      };
+      // #1001's frame reading (tools/render-stack/halo-frames.mjs): the next
+      // frame's canvas before the halo, after it, and the lamp mask, as RGBA
+      // rows bottom-up. Null when the halo is off.
+      (
+        window as unknown as { __perspectiveHaloFrame?: () => Promise<HaloFramePixels | null> }
+      ).__perspectiveHaloFrame = () =>
+        new Promise((resolve) => {
+          this.haloFrameWaiters.push(resolve);
+        });
+      // One entity's halo alone, by `unit:<id>` or `structure:<id>`, so a
+      // capture reads each one's light exactly; null draws them all.
+      (
+        window as unknown as { __perspectiveHaloOnly?: (key: string | null) => void }
+      ).__perspectiveHaloOnly = (key: string | null) => {
+        this.haloOnly = key;
       };
       // Each pass timed on its own as well as the frame (gpuTimer.ts), for
       // #1001's question of where the halo's GPU time lands.
@@ -2617,10 +2675,21 @@ export class PerspectiveView {
   /** Every own lamp clone marks its pixels in the canvas stencil while the
    * halo is on, so the composite skips them; state only, no recompile. */
   private markLamps(on: boolean): void {
-    for (const handle of [...this.unitHandles.values(), ...this.structureHandles.values()]) {
+    // Under `__perspectiveHaloOnly` only that entity marks, so a capture's
+    // lamp mask is its lamps alone (development only).
+    const only = this.haloOnly;
+    const handles: [string, EntityHandle][] = [
+      ...[...this.unitHandles].map(([id, h]): [string, EntityHandle] => [`unit:${id}`, h]),
+      ...[...this.structureHandles].map(([id, h]): [string, EntityHandle] => [
+        `structure:${id}`,
+        h,
+      ]),
+    ];
+    for (const [key, handle] of handles) {
+      const mark = on && (only === null || key === only);
       for (const { material } of handle.model?.emissives ?? []) {
-        if (material.stencilWrite === on) continue;
-        material.stencilWrite = on;
+        if (material.stencilWrite === mark) continue;
+        material.stencilWrite = mark;
         material.stencilRef = 1;
         material.stencilFunc = AlwaysStencilFunc;
         material.stencilZPass = ReplaceStencilOp;
@@ -2628,17 +2697,45 @@ export class PerspectiveView {
     }
   }
 
+  /**
+   * Development only (#1001's frame reading): the canvas read after the
+   * halo, then the lamp mask drawn and read, all in the frame whose canvas
+   * pass `before` was read from. Null when the halo is off.
+   */
+  private resolveHaloFrame(renderer: WebGLRenderer, before: Uint8Array | null): void {
+    const waiters = this.haloFrameWaiters;
+    this.haloFrameWaiters = [];
+    let frame: HaloFramePixels | null = null;
+    if (before !== null) {
+      const after = readCanvasPixels(renderer);
+      this.halo.drawLampMask(renderer, this.camera);
+      const gl = renderer.getContext();
+      frame = {
+        width: gl.drawingBufferWidth,
+        height: gl.drawingBufferHeight,
+        state: this.halo.state,
+        before,
+        after,
+        mask: readCanvasPixels(renderer),
+      };
+    }
+    for (const resolve of waiters) resolve(frame);
+  }
+
   /** This frame's splats, from every own entity with its model showing (haloSource.ts). */
   private haloSplats(renderer: WebGLRenderer): { splats: HaloSplat[]; dropped: number } {
     const gl = renderer.getContext();
     const entities: { sig: number; model: RosterModelInstance }[] = [];
-    const add = (sig: number, handle: EntityHandle | undefined) => {
+    const only = this.haloOnly;
+    const add = (key: string, sig: number, handle: EntityHandle | undefined) => {
+      if (only !== null && key !== only) return;
       const model = handle === undefined || handle.mesh.visible ? null : handle.model;
       if (model !== null) entities.push({ sig, model });
     };
-    for (const unit of this.units) add(unit.sig, this.unitHandles.get(unit.id));
-    for (const structure of this.structures)
-      add(structure.sig, this.structureHandles.get(structure.id));
+    for (const unit of this.units) add(`unit:${unit.id}`, unit.sig, this.unitHandles.get(unit.id));
+    for (const structure of this.structures) {
+      add(`structure:${structure.id}`, structure.sig, this.structureHandles.get(structure.id));
+    }
     return gatherHaloSplats({
       entities,
       camera: this.camera,
@@ -2706,6 +2803,8 @@ export class PerspectiveView {
         kind: unit.kind,
         name: statsFor(unit.kind).name,
         sig: unit.sig,
+        // The collar's ink at this SIG (palette.ts), for #1001's frame reading.
+        ink: `#${sigColor(unit.sig).toString(16).padStart(6, '0')}`,
         restSig: statsFor(unit.kind).sigIdle,
         silentRunning: unit.silentRunning,
         engineOff: unit.engineOff,
@@ -2719,6 +2818,7 @@ export class PerspectiveView {
         kind: structure.kind,
         name: structureStatsFor(structure.kind).name,
         sig: structure.sig,
+        ink: `#${sigColor(structure.sig).toString(16).padStart(6, '0')}`,
         restSig: structureStatsFor(structure.kind).sigIdle,
         xM: structure.x,
         zM: structure.y,
