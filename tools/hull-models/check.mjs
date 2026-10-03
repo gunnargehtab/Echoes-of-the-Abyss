@@ -29,10 +29,10 @@
  *
  * Since #1002 it reads the one texture a model can carry: each part's
  * `uv1` and the occlusion map its materials name (glb.mjs `readGlb`,
- * png.mjs), compared to a quarter of a texel and to two grey levels. That
- * is the slack a deterministic bake needs on another machine's floating
- * point and far under what a moved vertex shows in the map, since a vertex
- * that moves changes every texel its triangles cover. It still does not
+ * png.mjs), compared to 1/4,096 of the atlas and to two grey levels: the
+ * slack a deterministic bake is allowed for another machine's floating
+ * point, and no more, since a vertex that moves fails the position and
+ * normal comparison above before the map is asked. It still does not
  * read UV0 or vertex colours — nothing samples them, and a trim sheet
  * (#1005) extends this the way the map did — so a change to those passes
  * here against a stale file.
@@ -181,9 +181,9 @@ function uvsMoved(built, committed) {
 }
 
 /**
- * Two grey levels of 255: what a bake may differ by between two machines'
- * `Math.cos` and `Math.sqrt`, which in practice is nothing, and a tenth of
- * what the nearest shape change shows in a map.
+ * Two grey levels of 255: room for two machines' `Math.cos` and `Math.sqrt`
+ * to disagree, which in practice is nothing. Shape drift is the position and
+ * normal comparison's to catch, not this one's.
  */
 const GREY_SLACK = 2;
 

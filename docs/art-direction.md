@@ -383,7 +383,8 @@ candidates are.
 alone.** A model opts in by one argument to its export (`tools/hull-models/kit.mjs`
 `exportGlb`'s `occlusion`), and `tools/hull-models/occlusion.mjs` does the rest at build time,
 so the map is reproduced on every machine `npm run check:models` runs on and compared there
-with the committed file, a texel to two grey levels and a corner to a quarter of a texel. The
+with the committed file, a texel to two grey levels and a corner to 1/4,096 of the atlas, an
+eighth of a texel at 512². The
 bake lays every part on one atlas on its own UV set (`uv1`, glTF `TEXCOORD_1`), in charts
 grown over shared edges within 50° of a seed face and cut until each fills its box; from
 every texel it casts 64 cosine-weighted rays and shades the texel by every solid face they
@@ -393,7 +394,7 @@ A haze neither shades nor carries it (`glb.mjs` `occludes`). No vertex moves: a 
 charts share is split, and `diff.mjs` reads the baked file as unchanged.
 
 What the map may touch is set by where three applies an `aoMap`: the indirect light alone,
-the environment and the hemisphere of the shared rig, never the key, rim or fill, and never
+the ambient and the environment of the shared rig, never the key or the rim, and never
 emissive. So gate 3 holds unaltered, a lamp in a crevice as loud as its SIG; gates 6 and 8
 are untouched, no pass, call, triangle or second projection; and the chart never sees it,
 because intake's albedo pass copies colour and base map into an unlit material and nothing
@@ -401,7 +402,9 @@ else (`hull-intake` page.html), so the four maps of a baked model are byte for b
 of the bare one. That is the non-target control of [Shared model
 lighting](#shared-model-lighting--abyss-render-stack), kept.
 
-The first model is the Knights' Bastion, by the owner's decision on the issue: reviewed on
+The first model is the Knights' Bastion, this session's choice where the issue asked for one
+reviewed asset and the owner's comment for one reviewed hull, taken in the open in the pull
+request's Options: reviewed on
 [#960](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/960) and
 [#1011](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1011), pre-built at every
 opening, and a dome with ribs and conduits lying on it that a map has something to say

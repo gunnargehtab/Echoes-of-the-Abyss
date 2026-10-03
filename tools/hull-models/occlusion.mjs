@@ -10,8 +10,8 @@
  * they meet:
  *
  * - **The map is the conn view's, and only its.** three applies an `aoMap`
- *   to the indirect terms alone — the environment and the hemisphere — never
- *   to the key, the rim or the fill, and never to emissive, so gate 3's glow
+ *   to the indirect terms alone — the ambient and the environment — never
+ *   to the key or the rim, and never to emissive, so gate 3's glow
  *   reads exactly as it did and a lamp in a crevice is as loud as the number
  *   says (docs/graphics-standards.md gate 3). The chart's maps never see it:
  *   intake's albedo pass copies a material's colour and base map into an
@@ -22,9 +22,9 @@
  *   the map and the UVs included, so the bake has no random number in it:
  *   the ray set is a Fibonacci spiral, the per-texel turn an integer hash,
  *   and every sum runs in the same order on every machine. The comparison
- *   still allows a texel two levels of slack and a UV a quarter of a texel,
- *   which is more than the arithmetic needs and less than any change to the
- *   shape would show.
+ *   still allows a texel two levels of slack and a UV 1/4,096 of the atlas,
+ *   an eighth of a texel at 512², for another machine's floating point; a
+ *   shape that moves fails the position and normal comparison before it.
  * - **The silhouette is untouched.** Nothing here moves a vertex. A vertex
  *   shared by triangles that land in different charts is split, so an
  *   indexed sphere gains vertices and no triangle; check.mjs compares

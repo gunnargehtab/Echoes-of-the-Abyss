@@ -240,9 +240,10 @@
  * the re-cut pair clears; the pair rests on the dome. The plan is the
  * file's, so the maps keep their footprint.
  *
- * OCCLUSION (#1002). The first model to carry a baked occlusion map, by the
- * owner's decision on the issue: reviewed on #960 and #1011, pre-built at
- * every opening, and a dome with ribs and conduits lying on it. The bake is
+ * OCCLUSION (#1002). The first model to carry a baked occlusion map, the
+ * session's choice for the issue's "one reviewed asset" (the pull request's
+ * Options): reviewed on #960 and #1011, pre-built at every opening, and a
+ * dome with ribs and conduits lying on it. The bake is
  * kit.mjs `exportGlb`'s `occlusion` at 512², the rest its defaults
  * (occlusion.mjs): 744 charts filling 36 % of the atlas at 0.45 texels a
  * metre, 64 rays to 110 m, 13 s. The file grows from 118,892 to 416,948
