@@ -20,9 +20,9 @@
  * load (rosterModels.ts, docs/graphics-standards.md gate 4), so the hue on
  * screen is still the palette's and the sheet says only where a plate ends.
  * It is written in linear light and encoded sRGB, as glTF reads a base
- * colour, and held bright: its mean is reported, and the Bulwark's reads
- * 0.9 of white and over, so the register rosterModels.ts puts a navy on
- * (`CLADDING_CEILING`) moves by under a tenth. Emissive is untouched, since
+ * colour, and held bright: its mean is reported, and the Consortium's reads
+ * about 0.88 of white, so the register rosterModels.ts puts a navy on
+ * (`CLADDING_CEILING`) moves by an eighth. Emissive is untouched, since
  * a base-colour map never reaches `emissive` (gate 3), and a lamp material
  * is not named on the sheet at all: the layout lays every part, and the
  * image goes to the solid, unlit materials (glb.mjs `occludes`). Sorrowgate's
@@ -42,8 +42,9 @@
  * of 7, a rivet one. A round part — a three cylinder, lathe, sphere, torus
  * or capsule, read by its geometry's type — is unrolled instead: the axis
  * is the local axis its vertices stay most evenly round, `u` is the arc at
- * whole plates round the mean girth so the seam closes on a seam, and `v`
- * runs the length; its caps are projected flat. Nothing moves: a vertex
+ * whole plates round the mean girth, so the unroll's seam falls on a plate
+ * seam along the even strakes and mid-plate along the staggered ones, and
+ * `v` runs the length; its caps are projected flat. Nothing moves: a vertex
  * whose corners want two UVs is split, as occlusion.mjs splits a chart's
  * edge, so an indexed box gains vertices and no triangle.
  *

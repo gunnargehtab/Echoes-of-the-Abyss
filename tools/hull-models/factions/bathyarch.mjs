@@ -187,9 +187,10 @@ export const ink = {
  * The Klaxon's plate, as the trim sheet kit.mjs `exportGlb` lays a hull
  * over (trim.mjs, #1005): "riveted, over-engineered rectangles ... visibly
  * patchworked repairs, older armour showing through newer plate" (Block 2),
- * said in luminance alone. Strakes of 6 m and plates of 12 m, the pitch
- * the Bulwark's own flank plates are hung at (`flankPlates`, 22 m plates at
- * a 26 m pitch, 7 and 9 m deep), a seam darkened to 0.45 of the plate with
+ * said in luminance alone. Strakes of 6 m and plates of 12 m: under the
+ * Bulwark's own flank plates (`flankPlates`, 22 m at a 26 m pitch, 7 and
+ * 9 m deep), so a hung plate reads as several welded ones rather than one
+ * seam per part; a seam darkened to 0.45 of the plate with
  * 6 texels of weathering beside it, and a 0.08 patchwork between plates.
  * The rivets stay geometry — a plate's are its own parts (`rivetRows`) —
  * so none are drawn. Hue is not here: the sheet multiplies the ink

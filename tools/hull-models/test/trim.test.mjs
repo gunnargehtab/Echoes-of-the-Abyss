@@ -96,7 +96,7 @@ test('a flat face takes the band its cross extent asks for, plates along its lon
   assert.ok(Math.abs(Math.max(...bow.map(([u]) => u)) - 1) < 1e-6);
 });
 
-test('a round part unrolls at whole plates and closes on a seam', () => {
+test('a round part unrolls at whole plates round its girth', () => {
   const { root, drum } = yard();
   const sheet = drawTrimSheet(SPEC);
   layoutTrim(root, sheet, SPEC);

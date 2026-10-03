@@ -435,8 +435,9 @@ part's longer in-plane extent from the part's own edge at one wrap of the sheet 
 **24 m**, and the shorter extent spread over one of four bands of **1, 2, 4 or 8** strakes,
 the band whose strakes come nearest **6 m** over it — a 60 m deck gets eight of 7.5 m, a 14 m
 flank two of 7, a rivet one. A round part (a cylinder, lathe, sphere, torus or capsule, by
-its geometry's type) is unrolled instead, whole 12 m plates round its girth so the seam
-closes on a seam, and its caps laid flat. No vertex moves: a vertex whose corners disagree
+its geometry's type) is unrolled instead, whole 12 m plates round its girth, so the unroll's
+seam falls on a plate seam along the even strakes and mid-plate along the staggered ones,
+and its caps laid flat. No vertex moves: a vertex whose corners disagree
 is split, as the occlusion bake splits a chart's edge, so `diff.mjs` reads the file as
 unchanged and `check.mjs` compares the layout to 1/4,096 of the sheet.
 
@@ -467,7 +468,8 @@ in the open in the pull request's Options: the hull #540 opened with, a slab wit
 and patchworked flank plates, riveted plate its brief, and the roster's most flat plate.
 Its 162 parts lay 2,116 faces flat and 436 unrolled — 2,076 on the one-strake band, 244 on
 two, 76 on four, 156 on eight — and split 80 vertices. `bulwark-bathyarch.glb` goes from
-324,608 to **362,892 bytes**, 31,159 of them the PNG and the rest the split vertices; the
+324,608 to **362,892 bytes**: 31,159 the PNG, 2,560 the split vertices, and the rest the
+glTF JSON naming them; the
 library goes from 19,738,720 to **19,777,004 raw bytes** and from 2,564,136 to **2,598,926
 gzipped**. On the GPU three uploads the PNG as RGBA8 with mipmaps, 1.33 MiB a model at
 512², the same line gate 6 holds the occlusion map to. Which hull is laid next is a call per
