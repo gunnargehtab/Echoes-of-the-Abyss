@@ -31,8 +31,8 @@ Load-time sprite bake             packages/frontend/src/game/hullTextures.ts
 ```
 
 **Where the GLB comes from.** Every approved model in `docs/concept-art/models/` is
-`THREE.GLTFExporter` output — a scene of named primitive parts, no sculpts and no
-textures. The Bulwark is `hull_slab` + `armour_tier_1..3` + `flank_plate_p0..p3`; the
+`THREE.GLTFExporter` output — a scene of named primitive parts, no sculpts, and no texture
+but the occlusion map a script bakes in ([art-direction.md](art-direction.md#bevels-and-baked-occlusion--spec)). The Bulwark is `hull_slab` + `armour_tier_1..3` + `flank_plate_p0..p3`; the
 Dredge is `tergite_0..n` + `tergite_ridge_0..n` + `tergite_spine_0..n`. Because those
 repeating series are loops, a hull can be *built* as well as exported, and
 `tools/hull-models/` is that path: a shared kit (metres, bow on +X, port on -z, the
@@ -493,6 +493,9 @@ with `gpuTimer` saying why a reading is absent, and `pixelRatio` and `drawingBuf
 saying what was shaded ([#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001)).
 
 Gate 3's lamp core is allocated nothing: no pass, draw call, triangle or render-target byte.
+A baked occlusion map ([art-direction.md](art-direction.md#bevels-and-baked-occlusion--spec)) is allocated no pass, call or
+triangle either: a texture on materials the frame already draws, at most 512² a model,
+1.33 MiB as three uploads a PNG with its mipmaps, and only on the models a script bakes.
 Nor are the vignette and the sway
 ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)): the browser
 composites the one, and the other moves a camera the frame already draws through.

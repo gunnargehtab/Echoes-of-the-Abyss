@@ -2,7 +2,8 @@
  * Hull models, authored as three.js scenes — the shared kit.
  *
  * Every approved model in `docs/concept-art/models/` is `THREE.GLTFExporter`
- * output: a scene of named primitive parts, no sculpts and no textures. The
+ * output: a scene of named primitive parts, no sculpts, and no texture but
+ * the occlusion map a script opts into (`exportGlb`'s `occlusion`, #1002). The
  * Bulwark is `hull_slab` + `armour_tier_1..3` + `flank_plate_p0..p3`; the Dredge
  * is `tergite_0..n` + `tergite_ridge_0..n` + `tergite_spine_0..n`. Those repeating
  * series are loops, so the roster can be *built* rather than exported — which is
@@ -61,13 +62,17 @@
  * `FileReader` is shimmed because three r169's GLTFExporter reads its own binary
  * chunk back through one, and Node has `Blob` but not `FileReader`.
  *
- * Nothing shims a canvas, so no image can leave this export: GLTFExporter
+ * Nothing shims a canvas, so no image leaves GLTFExporter itself: it
  * encodes a texture through `OffscreenCanvas` or `document` (`getCanvas`),
  * Node has neither, and a material carrying an `aoMap` or any other map
- * throws at `exportGlb`. Vertex attributes still export (a second UV set,
- * `COLOR_0`). So "no textures" above is this kit's limit as well as the
- * models' history: an occlusion texture (#1002) cannot be written from here
- * as it stands.
+ * throws in `parseAsync`. Vertex attributes still export (a second UV set,
+ * `COLOR_0`). The one image a model carries goes round it: `exportGlb`'s
+ * `occlusion` option bakes the map with the materials still bare
+ * (occlusion.mjs), lets the exporter write the geometry and its `uv1`, and
+ * then appends the PNG to the binary and names it on every solid material
+ * (`embedOcclusion`). A script that wants any other map has the same door
+ * to widen; until one does, every model but the ones opted in is as
+ * textureless as the history above says.
  */
 globalThis.FileReader = class {
   readAsArrayBuffer(b) {
@@ -89,6 +94,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
+import { bakeOcclusion, embedOcclusion } from './occlusion.mjs';
 import {
   sceneParts,
   topDown,
@@ -368,8 +374,9 @@ export const CHINE = [
  * `plan` their outline's metres; this, zeros; the env props, none
  * (`flatShaded` below, seabed.mjs `kept`). rosterModels.ts
  * `mergeByMaterial` stacks a material's parts in one buffer, islands
- * overlapping. A trim sheet or baked map (#1005, #1002) needs a layout none
- * of these is; `node tools/render-stack/audit.mjs` counts what there is.
+ * overlapping. A trim sheet (#1005) needs a layout none of these is; the
+ * occlusion map (#1002) lays its own on `uv1` and leaves this channel as
+ * it finds it; `node tools/render-stack/audit.mjs` counts what there is.
  */
 export function uvAlike(geo) {
   const n = geo.attributes.position.count;
@@ -1298,11 +1305,20 @@ export function census(root) {
   return { kinds, plates, bevelled };
 }
 
-/** Write the GLB into docs/concept-art/models/ and report what it contains. */
-export async function exportGlb(root, filename) {
+/**
+ * Write the GLB into docs/concept-art/models/ and report what it contains.
+ * `occlusion`, when given, is `bakeOcclusion`'s options (occlusion.mjs:
+ * `size`, `rays`, `reach`), and the file carries the baked map on every
+ * solid material; the bake runs first, since it lays `uv1` on the
+ * geometry the exporter is about to write, and the exporter runs with the
+ * materials bare, since it cannot write an image (the header).
+ */
+export async function exportGlb(root, filename, { occlusion = null } = {}) {
   const out = outputPath(filename);
-  const glb = await new GLTFExporter().parseAsync(root, { binary: true });
-  writeFileSync(out, Buffer.from(glb));
+  const ao = occlusion ? bakeOcclusion(root, occlusion) : null;
+  const exported = await new GLTFExporter().parseAsync(root, { binary: true });
+  const glb = ao ? embedOcclusion(exported, ao) : Buffer.from(exported);
+  writeFileSync(out, glb);
   let tris = 0;
   let parts = 0;
   root.traverse((o) => {
@@ -1316,11 +1332,16 @@ export async function exportGlb(root, filename) {
   const built = census(root);
   const kinds = [...built.kinds].sort().map(([k, n]) => `${n} ${k}`);
   console.log(
-    `${filename}: ${Buffer.from(glb).length} bytes, ${parts} parts, ${Math.round(tris)} tris\n` +
+    `${filename}: ${glb.length} bytes, ${parts} parts, ${Math.round(tris)} tris\n` +
       `  bounds x ${b.x.join('..')}  y ${b.y.join('..')}  z ${b.z.join('..')}\n` +
       `  primitives: ${kinds.join(', ')}\n` +
       `  plates: ${built.plates} extruded, ${built.bevelled} bevelled\n` +
-      `  light: ${light.lit.length} lit parts, ${light.totalM2} m² facing up`
+      `  light: ${light.lit.length} lit parts, ${light.totalM2} m² facing up` +
+      (ao
+        ? `\n  occlusion: ${ao.size}² on uv1, ${ao.charts} charts filling ${Math.round(100 * ao.coverage)} % ` +
+          `at ${ao.density.toFixed(2)} texels/m, ${ao.rays} rays to ${ao.reach.toFixed(1)} m, ` +
+          `${ao.png.length} bytes of PNG, ${(ao.ms / 1000).toFixed(1)} s`
+        : '')
   );
   for (const name of light.hidden)
     console.warn(

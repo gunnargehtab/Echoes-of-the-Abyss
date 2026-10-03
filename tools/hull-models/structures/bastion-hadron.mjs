@@ -239,6 +239,17 @@
  * port_light_4_r`, the old orbs' brush against the ribs beside them, which
  * the re-cut pair clears; the pair rests on the dome. The plan is the
  * file's, so the maps keep their footprint.
+ *
+ * OCCLUSION (#1002). The first model to carry a baked occlusion map, by the
+ * owner's decision on the issue: reviewed on #960 and #1011, pre-built at
+ * every opening, and a dome with ribs and conduits lying on it. The bake is
+ * kit.mjs `exportGlb`'s `occlusion` at 512², the rest its defaults
+ * (occlusion.mjs): 744 charts filling 36 % of the atlas at 0.45 texels a
+ * metre, 64 rays to 110 m, 13 s. The file grows from 118,892 to 416,948
+ * bytes, 170,426 of them the PNG. Nothing moved: `diff.mjs bastion-hadron
+ * origin/main` reads every part where it was, `contacts.mjs` the same
+ * pairs, and intake's four maps are byte for byte the bare file's
+ * (docs/art-direction.md "Bevels and baked occlusion — SPEC").
  */
 import { THREE, fitFootprint, holdCrown, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -416,4 +427,5 @@ if (Math.abs(size.x - DRAWN) > 1e-3 || size.z > size.x)
     `${root.name}: drawn ${size.x.toFixed(4)} × ${size.z.toFixed(4)}; the header says ${DRAWN} X-long`
   );
 holdCrown(root, CROWN, { tall: TALL });
-await exportGlb(root, 'bastion-hadron.glb');
+// OCCLUSION (#1002): the one model baked first, the header's last paragraph.
+await exportGlb(root, 'bastion-hadron.glb', { occlusion: { size: 512 } });

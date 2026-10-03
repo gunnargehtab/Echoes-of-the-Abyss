@@ -56,8 +56,9 @@ environment and adds lamp emission after the curve
 change's non-target control (`docs/art-direction.md` "Shared model lighting"),
 so none of it reaches a map, and gate 3 still sums glow over the untoned
 emissive pass. The albedo pass keeps colour and base map only: an export's
-occlusion map or vertex colours reach no map today, and whether baked AO should
-is #1002's call.
+occlusion map or vertex colours reach no map, and #1002 decided the baked
+occlusion map stays the conn view's (`docs/art-direction.md` "Bevels and baked
+occlusion — SPEC"), so a baked model's four maps are the bare model's, byte for byte.
 
 **The bake fails if no material is emissive** — that almost always means the
 export dropped the channel, and a glow-less hull is a style bug, not a
