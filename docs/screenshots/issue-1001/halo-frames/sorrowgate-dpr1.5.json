@@ -7,6 +7,17 @@
   },
   "reducedMotion": true,
   "map": "sorrowgate",
+  "tunables": {
+    "energyM2": 20,
+    "ceiling": 0.25,
+    "toe": 0.004,
+    "energySigCap": 80,
+    "levelWeights": [
+      0.6,
+      0.3,
+      0.1
+    ]
+  },
   "cameras": [
     {
       "name": "home",
@@ -24,93 +35,99 @@
       },
       "entities": [
         {
-          "key": "unit:889",
+          "key": "unit:148",
           "name": "Light Scout",
           "sig": 6,
           "sites": 0,
           "lampCssPx": 1.8,
           "lightCssPx2": 0,
-          "liftedCssPx": 0
+          "liftedCssPx": 0,
+          "peakLevels": 0
         },
         {
-          "key": "unit:890",
+          "key": "unit:149",
           "name": "Light Scout",
           "sig": 6,
           "sites": 0,
           "lampCssPx": 2.2,
           "lightCssPx2": 0,
-          "liftedCssPx": 0
+          "liftedCssPx": 0,
+          "peakLevels": 0
         },
         {
-          "key": "unit:891",
+          "key": "unit:150",
           "name": "Light Scout",
           "sig": 6,
           "sites": 0,
           "lampCssPx": 1.3,
           "lightCssPx2": 0,
-          "liftedCssPx": 0
+          "liftedCssPx": 0,
+          "peakLevels": 0
         },
         {
-          "key": "unit:892",
+          "key": "unit:151",
           "name": "Light Scout",
           "sig": 6,
           "sites": 0,
           "lampCssPx": 1.8,
           "lightCssPx2": 0,
-          "liftedCssPx": 0
+          "liftedCssPx": 0,
+          "peakLevels": 0
         },
         {
-          "key": "unit:893",
+          "key": "unit:152",
           "name": "Harvester",
           "sig": 18,
           "sites": 0,
           "lampCssPx": 4.4,
           "lightCssPx2": 0,
-          "liftedCssPx": 0
+          "liftedCssPx": 0,
+          "peakLevels": 0
         },
         {
-          "key": "unit:894",
+          "key": "unit:153",
           "name": "Harvester",
           "sig": 18,
           "sites": 0,
           "lampCssPx": 3.6,
           "lightCssPx2": 0,
-          "liftedCssPx": 0
+          "liftedCssPx": 0,
+          "peakLevels": 0
         }
       ],
       "collarOn": [
         {
-          "key": "unit:889",
+          "key": "unit:148",
           "name": "Light Scout",
           "sig": 6,
           "ink": "#3fa86a",
-          "corePixels": 17,
-          "atLeast3Share": 1,
-          "p5": 6.36,
-          "min": 6.36
-        },
-        {
-          "key": "unit:890",
-          "name": "Light Scout",
-          "sig": 6,
-          "ink": "#3fa86a",
-          "corePixels": 34,
-          "atLeast3Share": 1,
-          "p5": 6.36,
-          "min": 6.36
-        },
-        {
-          "key": "unit:891",
-          "name": "Light Scout",
-          "sig": 6,
-          "ink": "#3fa86a",
-          "corePixels": 16,
+          "corePixels": 10,
           "atLeast3Share": 1,
           "p5": 6.41,
           "min": 6.41
         },
         {
-          "key": "unit:892",
+          "key": "unit:149",
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "corePixels": 19,
+          "atLeast3Share": 1,
+          "p5": 6.36,
+          "min": 6.36
+        },
+        {
+          "key": "unit:150",
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "corePixels": 11,
+          "atLeast3Share": 1,
+          "p5": 6.41,
+          "min": 6.41
+        },
+        {
+          "key": "unit:151",
           "name": "Light Scout",
           "sig": 6,
           "ink": "#3fa86a",
@@ -120,59 +137,59 @@
           "min": null
         },
         {
-          "key": "unit:893",
+          "key": "unit:152",
           "name": "Harvester",
           "sig": 18,
           "ink": "#3fa86a",
-          "corePixels": 82,
-          "atLeast3Share": 0.9512,
-          "p5": 3.02,
-          "min": 1.67
+          "corePixels": 42,
+          "atLeast3Share": 0.9762,
+          "p5": 3.11,
+          "min": 2.14
         },
         {
-          "key": "unit:894",
+          "key": "unit:153",
           "name": "Harvester",
           "sig": 18,
           "ink": "#3fa86a",
-          "corePixels": 76,
-          "atLeast3Share": 0.9474,
-          "p5": 2.73,
-          "min": 2.64
+          "corePixels": 42,
+          "atLeast3Share": 1,
+          "p5": 3.72,
+          "min": 3.46
         }
       ],
       "collarOff": [
         {
-          "key": "unit:889",
+          "key": "unit:148",
           "name": "Light Scout",
           "sig": 6,
           "ink": "#3fa86a",
-          "corePixels": 17,
-          "atLeast3Share": 1,
-          "p5": 6.36,
-          "min": 6.36
-        },
-        {
-          "key": "unit:890",
-          "name": "Light Scout",
-          "sig": 6,
-          "ink": "#3fa86a",
-          "corePixels": 34,
-          "atLeast3Share": 1,
-          "p5": 6.36,
-          "min": 6.36
-        },
-        {
-          "key": "unit:891",
-          "name": "Light Scout",
-          "sig": 6,
-          "ink": "#3fa86a",
-          "corePixels": 16,
+          "corePixels": 10,
           "atLeast3Share": 1,
           "p5": 6.41,
           "min": 6.41
         },
         {
-          "key": "unit:892",
+          "key": "unit:149",
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "corePixels": 19,
+          "atLeast3Share": 1,
+          "p5": 6.36,
+          "min": 6.36
+        },
+        {
+          "key": "unit:150",
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "corePixels": 11,
+          "atLeast3Share": 1,
+          "p5": 6.41,
+          "min": 6.41
+        },
+        {
+          "key": "unit:151",
           "name": "Light Scout",
           "sig": 6,
           "ink": "#3fa86a",
@@ -182,24 +199,24 @@
           "min": null
         },
         {
-          "key": "unit:893",
+          "key": "unit:152",
           "name": "Harvester",
           "sig": 18,
           "ink": "#3fa86a",
-          "corePixels": 82,
-          "atLeast3Share": 0.9512,
-          "p5": 3.02,
-          "min": 1.67
+          "corePixels": 42,
+          "atLeast3Share": 0.9762,
+          "p5": 3.11,
+          "min": 2.14
         },
         {
-          "key": "unit:894",
+          "key": "unit:153",
           "name": "Harvester",
           "sig": 18,
           "ink": "#3fa86a",
-          "corePixels": 76,
-          "atLeast3Share": 0.9474,
-          "p5": 2.73,
-          "min": 2.64
+          "corePixels": 42,
+          "atLeast3Share": 1,
+          "p5": 3.72,
+          "min": 3.46
         }
       ],
       "darknessWithHud": {
@@ -223,117 +240,123 @@
       },
       "entities": [
         {
-          "key": "unit:889",
+          "key": "unit:148",
           "name": "Light Scout",
           "sig": 6,
           "sites": 0,
           "lampCssPx": 1.8,
           "lightCssPx2": 0,
-          "liftedCssPx": 0
+          "liftedCssPx": 0,
+          "peakLevels": 0
         },
         {
-          "key": "unit:890",
+          "key": "unit:149",
           "name": "Light Scout",
           "sig": 6,
           "sites": 0,
           "lampCssPx": 2.7,
           "lightCssPx2": 0,
-          "liftedCssPx": 0
+          "liftedCssPx": 0,
+          "peakLevels": 0
         },
         {
-          "key": "unit:891",
+          "key": "unit:150",
           "name": "Light Scout",
           "sig": 6,
           "sites": 0,
           "lampCssPx": 2.2,
           "lightCssPx2": 0,
-          "liftedCssPx": 0
+          "liftedCssPx": 0,
+          "peakLevels": 0
         },
         {
-          "key": "unit:892",
+          "key": "unit:151",
           "name": "Light Scout",
           "sig": 6,
           "sites": 0,
           "lampCssPx": 2.7,
           "lightCssPx2": 0,
-          "liftedCssPx": 0
+          "liftedCssPx": 0,
+          "peakLevels": 0
         },
         {
-          "key": "unit:893",
+          "key": "unit:152",
           "name": "Harvester",
           "sig": 18,
           "sites": 5,
           "lampCssPx": 5.3,
           "lightCssPx2": 0,
-          "liftedCssPx": 0
+          "liftedCssPx": 0,
+          "peakLevels": 0
         },
         {
-          "key": "unit:894",
+          "key": "unit:153",
           "name": "Harvester",
           "sig": 18,
           "sites": 5,
           "lampCssPx": 5.3,
           "lightCssPx2": 0,
-          "liftedCssPx": 0
+          "liftedCssPx": 0,
+          "peakLevels": 0
         }
       ],
       "collarOn": [
         {
-          "key": "unit:889",
+          "key": "unit:148",
           "name": "Light Scout",
           "sig": 6,
           "ink": "#3fa86a",
-          "corePixels": 23,
+          "corePixels": 15,
           "atLeast3Share": 1,
           "p5": 6.4,
           "min": 6.4
         },
         {
-          "key": "unit:890",
+          "key": "unit:149",
           "name": "Light Scout",
           "sig": 6,
           "ink": "#3fa86a",
-          "corePixels": 23,
+          "corePixels": 14,
           "atLeast3Share": 1,
-          "p5": 6.44,
+          "p5": 6.41,
           "min": 6.41
         },
         {
-          "key": "unit:891",
+          "key": "unit:150",
           "name": "Light Scout",
           "sig": 6,
           "ink": "#3fa86a",
-          "corePixels": 23,
-          "atLeast3Share": 1,
-          "p5": 6.41,
-          "min": 6.36
-        },
-        {
-          "key": "unit:892",
-          "name": "Light Scout",
-          "sig": 6,
-          "ink": "#3fa86a",
-          "corePixels": 26,
+          "corePixels": 15,
           "atLeast3Share": 1,
           "p5": 6.36,
           "min": 6.36
         },
         {
-          "key": "unit:893",
+          "key": "unit:151",
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "corePixels": 16,
+          "atLeast3Share": 1,
+          "p5": 6.36,
+          "min": 6.36
+        },
+        {
+          "key": "unit:152",
           "name": "Harvester",
           "sig": 18,
           "ink": "#3fa86a",
-          "corePixels": 82,
+          "corePixels": 52,
           "atLeast3Share": 1,
           "p5": 6.36,
           "min": 6.13
         },
         {
-          "key": "unit:894",
+          "key": "unit:153",
           "name": "Harvester",
           "sig": 18,
           "ink": "#3fa86a",
-          "corePixels": 86,
+          "corePixels": 52,
           "atLeast3Share": 1,
           "p5": 6.35,
           "min": 6.12
@@ -341,68 +364,68 @@
       ],
       "collarOff": [
         {
-          "key": "unit:889",
+          "key": "unit:148",
           "name": "Light Scout",
           "sig": 6,
           "ink": "#3fa86a",
-          "corePixels": 23,
+          "corePixels": 15,
           "atLeast3Share": 1,
           "p5": 6.4,
           "min": 6.4
         },
         {
-          "key": "unit:890",
+          "key": "unit:149",
           "name": "Light Scout",
           "sig": 6,
           "ink": "#3fa86a",
-          "corePixels": 23,
+          "corePixels": 14,
           "atLeast3Share": 1,
-          "p5": 6.44,
+          "p5": 6.41,
           "min": 6.41
         },
         {
-          "key": "unit:891",
+          "key": "unit:150",
           "name": "Light Scout",
           "sig": 6,
           "ink": "#3fa86a",
-          "corePixels": 23,
-          "atLeast3Share": 1,
-          "p5": 6.41,
-          "min": 6.36
-        },
-        {
-          "key": "unit:892",
-          "name": "Light Scout",
-          "sig": 6,
-          "ink": "#3fa86a",
-          "corePixels": 26,
+          "corePixels": 15,
           "atLeast3Share": 1,
           "p5": 6.36,
           "min": 6.36
         },
         {
-          "key": "unit:893",
+          "key": "unit:151",
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "corePixels": 16,
+          "atLeast3Share": 1,
+          "p5": 6.36,
+          "min": 6.36
+        },
+        {
+          "key": "unit:152",
           "name": "Harvester",
           "sig": 18,
           "ink": "#3fa86a",
-          "corePixels": 82,
+          "corePixels": 52,
           "atLeast3Share": 1,
           "p5": 6.36,
           "min": 6.13
         },
         {
-          "key": "unit:894",
+          "key": "unit:153",
           "name": "Harvester",
           "sig": 18,
           "ink": "#3fa86a",
-          "corePixels": 86,
+          "corePixels": 52,
           "atLeast3Share": 1,
           "p5": 6.35,
           "min": 6.12
         }
       ],
       "darknessWithHud": {
-        "off": 0.6457,
+        "off": 0.6458,
         "on": 0.6458
       }
     },
@@ -445,5 +468,40 @@
       }
     }
   ],
-  "pings": []
+  "pings": [],
+  "structures": [],
+  "ridge": {
+    "searched": 72,
+    "spot": {
+      "xM": 2400,
+      "zM": 2200,
+      "awayM": 0,
+      "yawDeg": 180,
+      "distance": 1500,
+      "overM": 11
+    },
+    "arrived": true,
+    "hidden": {
+      "pitchDeg": 12,
+      "key": "unit:148",
+      "name": "Light Scout",
+      "sig": 6,
+      "sites": 0,
+      "lampCssPx": 0,
+      "lightCssPx2": 0,
+      "liftedCssPx": 0,
+      "peakLevels": 0
+    },
+    "control": {
+      "pitchDeg": 35,
+      "key": "unit:148",
+      "name": "Light Scout",
+      "sig": 6,
+      "sites": 0,
+      "lampCssPx": 3.1,
+      "lightCssPx2": 0,
+      "liftedCssPx": 0,
+      "peakLevels": 0
+    }
+  }
 }

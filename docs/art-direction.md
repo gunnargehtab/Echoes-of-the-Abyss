@@ -163,7 +163,8 @@ rising linearly to full at SIG 35. It is not eased between snapshots, because th
 steps on the same 200 ms. An entity at weight 0 draws no splat, so gate 3's exclusion of
 SIG 0–15 holds by construction, over every input. Above 35 the halo rides the curve up to
 **SIG 80** and stops there, though `GLOW_FACTOR_MAX` stops the lamp itself at 6: a ping's
-SIG 95 carries what SIG 80 does, 25 times a SIG-35 entity's energy. Uncapped, a ping
+SIG 95 carries what SIG 80 does, 25 times a SIG-35 entity's energy, as does every SIG past
+80: a Reciter's resting 90, a firing burst that crosses it. Uncapped, a ping
 carried 73 times, and a pinging hull's halo reached its own collar
 ([issue-1001](screenshots/issue-1001/README.md), "The collar at a ping"). A hull whose live SIG
 stays at 15 or under, as a Light Scout's does idling (6) and cruising (12), gains a halo only
