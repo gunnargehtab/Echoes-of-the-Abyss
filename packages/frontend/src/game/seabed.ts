@@ -29,8 +29,9 @@
  *   same rebuild cadence `drawTerrain` already had.
  */
 
-import { Biome } from '@echoes/shared';
+import { Biome, SEABED_DETAIL } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
+import type { StoneSeat } from './environment.ts';
 import { BIOME_COLOR, depthShade, reliefShade, ROCK_FACE, scaleRgb } from './palette.ts';
 
 /**
@@ -364,6 +365,36 @@ export function seabedRange(terrain: TerrainPayload): SeabedRange {
   return { shallowest, deepest };
 }
 
+/**
+ * A seated stone's scour, as a darken-only gain at a world position
+ * (docs/art-direction.md "Silt detail and seated stones — SPEC").
+ *
+ * Deepest at and under the stone, recovering by `STONE_SCOUR_REACH` radii
+ * up-current and across, and `STONE_SCOUR_LEE` times further on the lee, the
+ * south side, where the current drops its silt. It never leaves the stone's
+ * own cell — faded to nothing over the last radius before the edge, like an
+ * ember's glow — so a ground delta's rebake of the touched cells and their
+ * ring redraws every scour the delta moved, and nothing past them.
+ */
+export function stoneScourGain(
+  xM: number,
+  yM: number,
+  seat: StoneSeat,
+  cell: { x0: number; y0: number; x1: number; y1: number }
+): number {
+  const reach = SEABED_DETAIL.STONE_SCOUR_REACH;
+  const dx = (xM - seat.xM) / seat.radiusM;
+  const dyUp = (yM - seat.yM) / seat.radiusM;
+  const dy = dyUp > 0 ? dyUp / SEABED_DETAIL.STONE_SCOUR_LEE : dyUp;
+  const d = Math.hypot(dx, dy);
+  if (d >= reach) return 1;
+  const edgeM = Math.min(xM - cell.x0, cell.x1 - xM, yM - cell.y0, cell.y1 - yM);
+  if (edgeM <= 0) return 1;
+  const keep = smooth(Math.min(1, edgeM / seat.radiusM));
+  const hollow = d <= 1 ? 1 : 1 - smooth((d - 1) / (reach - 1));
+  return 1 - (1 - SEABED_DETAIL.STONE_SCOUR_GAIN) * hollow * keep;
+}
+
 /** A rectangle of cells, inclusive at both ends. */
 export interface CellRect {
   col0: number;
@@ -397,7 +428,8 @@ export function shadeSeabed(
   terrain: TerrainPayload,
   seed: number,
   range: SeabedRange,
-  rect: CellRect
+  rect: CellRect,
+  stones: readonly StoneSeat[] = []
 ): SeabedPixels {
   const { cols, rows, cellM } = terrain;
   const w = cols * SEABED_PX_PER_CELL;
@@ -405,6 +437,14 @@ export function shadeSeabed(
   const { shallowest, deepest } = range;
 
   const isRock = (i: number) => terrain.ceiling[i]! > terrain.floor[i]!;
+
+  // A scour shades its own cell only, so a pixel asks its own cell's seats.
+  const seats = new Map<number, StoneSeat[]>();
+  for (const seat of stones) {
+    const list = seats.get(seat.cellIndex);
+    if (list === undefined) seats.set(seat.cellIndex, [seat]);
+    else list.push(seat);
+  }
 
   const clampCol = (c: number) => Math.min(cols - 1, Math.max(0, c));
   const clampRow = (r: number) => Math.min(rows - 1, Math.max(0, r));
@@ -545,6 +585,21 @@ export function shadeSeabed(
         const biome = terrain.biomes[index] as Biome;
         const base = BIOME_COLOR[biome] ?? BIOME_COLOR[Biome.OpenWater];
         const relief = BIOME_RELIEF[biome] ?? BIOME_RELIEF[Biome.OpenWater];
+        // The deepest scour wins rather than two stacking, so a cluster's
+        // hollow is no darker than one stone's.
+        let scour = 1;
+        const cellSeats = seats.get(index);
+        if (cellSeats !== undefined) {
+          const bounds = {
+            x0: col * cellM,
+            y0: row * cellM,
+            x1: (col + 1) * cellM,
+            y1: (row + 1) * cellM,
+          };
+          for (const seat of cellSeats) {
+            scour = Math.min(scour, stoneScourGain(xM, yM, seat, bounds));
+          }
+        }
         color = scaleRgb(
           reliefShade(
             depthShade(base, height[i]!, shallowest, deepest),
@@ -556,7 +611,8 @@ export function shadeSeabed(
           mottleFactor(xM, yM, seed, relief.mottle) *
             // The wall's lee: open floor darkens where it meets a mesa, so
             // the rock reads as standing on the seabed, not pasted over it.
-            edgeGain(oppositeDistM(xM, yM, row, col, true), CLIFF_SHADOW_M, CLIFF_SHADOW_GAIN)
+            edgeGain(oppositeDistM(xM, yM, row, col, true), CLIFF_SHADOW_M, CLIFF_SHADOW_GAIN) *
+            scour
         );
       }
 
@@ -587,19 +643,26 @@ function paintSeabed(canvas: HTMLCanvasElement, pixels: SeabedPixels): void {
 export function bakeSeabed(
   terrain: TerrainPayload,
   seed = seabedSeed(terrain),
-  range = seabedRange(terrain)
+  range = seabedRange(terrain),
+  stones: readonly StoneSeat[] = []
 ): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   canvas.width = terrain.cols * SEABED_PX_PER_CELL;
   canvas.height = terrain.rows * SEABED_PX_PER_CELL;
   paintSeabed(
     canvas,
-    shadeSeabed(terrain, seed, range, {
-      col0: 0,
-      row0: 0,
-      col1: terrain.cols - 1,
-      row1: terrain.rows - 1,
-    })
+    shadeSeabed(
+      terrain,
+      seed,
+      range,
+      {
+        col0: 0,
+        row0: 0,
+        col1: terrain.cols - 1,
+        row1: terrain.rows - 1,
+      },
+      stones
+    )
   );
   return canvas;
 }
@@ -615,15 +678,22 @@ export function rebakeSeabedCells(
   terrain: TerrainPayload,
   seed: number,
   range: SeabedRange,
-  touched: CellRect
+  touched: CellRect,
+  stones: readonly StoneSeat[] = []
 ): void {
   paintSeabed(
     canvas,
-    shadeSeabed(terrain, seed, range, {
-      col0: touched.col0 - 1,
-      row0: touched.row0 - 1,
-      col1: touched.col1 + 1,
-      row1: touched.row1 + 1,
-    })
+    shadeSeabed(
+      terrain,
+      seed,
+      range,
+      {
+        col0: touched.col0 - 1,
+        row0: touched.row0 - 1,
+        col1: touched.col1 + 1,
+        row1: touched.row1 + 1,
+      },
+      stones
+    )
   );
 }

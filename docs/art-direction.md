@@ -621,6 +621,95 @@ Three further layers of the same texture-not-information rule:
   occupancy, or anything else a player could read as a signal. The seafloor
   otherwise stays unlit.
 
+#### Silt detail and seated stones — SPEC
+
+*For [#1083](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1083): #967's dune
+study, made fit for every map. It is development-only until a decision written here
+promotes it.*
+
+The bake draws the ground at 7.8 m a pixel, so at the home dolly, about a metre a pixel,
+the plain between two isobaths is one smooth wash. The target asks for low silt dunes and
+current ripples running east–west, shallow scours, and faceted stone half-buried in the
+silt ([issue-967](screenshots/issue-967/README.md), round 2). It is a fourth layer of
+texture, not information, and it obeys every rule above: render-only, deterministic,
+hue-preserving, darken-only, and quieter than any authored step.
+
+**Silt detail** is four terms shaded in the terrain's own fragment shader. Each is a
+fraction in [0, 1], and the biome's strength says how far it may darken a pixel:
+
+| Ground | Dunes | Ripples | Scours | Grain | Sum |
+| --- | --- | --- | --- | --- | --- |
+| Open Water | 0.25 | 0.07 | 0.05 | 0.03 | 0.40 |
+| Kelp Forest | 0.18 | 0.04 | 0.10 | 0.06 | 0.38 |
+| Thermal Vein | 0 | 0 | 0.16 | 0.10 | 0.26 |
+| Abyssal Trench | 0.14 | 0 | 0.08 | 0.04 | 0.26 |
+| Resonance Field | 0.18 | 0.04 | 0.08 | 0.06 | 0.36 |
+| Coral Ruins | 0.10 | 0.05 | 0.08 | 0.08 | 0.31 |
+| Rock | 0 | 0 | 0.12 | 0.10 | 0.22 |
+
+The table is the ground's reading of its water. Loose silt drifts where the current runs,
+so open water carries the most. Kelp baffles the current, and a vent field is broken
+basalt with no silt to ripple. The trench is still water over pressure-eroded stone, swells
+without ripples, and rock admits no water at all.
+
+- **Never out-shading a step is structural.** A term never exceeds 1, so a pixel loses at
+  most its row's sum, an encoded-space gain like the bake's. No row may exceed **0.40**:
+  a full-strength authored face darkens the fill to 0.58, and the detail at its worst holds
+  0.60. The bound is a property of the table, which a test holds, not of a picture.
+- **Why so near a face.** The ground sits near 20 of 255 at the home dolly. Capped at half
+  a face, 0.21, the layer moved one pixel in ten by a single code value, and its texture
+  read nothing; at 0.40 two pixels in five move and the dunes show. The target's silt is
+  about two and a half times livelier still, because its lit faces rise above the fill.
+  This SPEC does not license that ([issue-1083](screenshots/issue-1083/README.md)).
+- **Dunes** run in crests 110 m apart, east–west, meandering over 420 m. The lee face is
+  the south 30 % of each dune, down-current. They are hillshaded by the key light about
+  flat ground: a face turned from it darkens by the whole strength, flat ground by half,
+  and a face turned to it not at all, so the dunes read by their shadows, the way a ridge
+  does. A second field on the meander's 420 m lattice fades them in and out, down to a
+  quarter of their strength.
+- **Ripples** lie 7 m apart, parallel to the dunes and settled in their troughs. A ripple
+  draws while it spans 8 pixels and is gone at 3. **Scours** are hollows on a 38 m field,
+  drawn out 1.8 times longer north–south, along the current.
+  **Grain** runs at 3 m and 1.3 m, each octave whole from 6 pixels and gone at 3.
+- **The layer fades with distance.** It is whole through 2 m a pixel and gone by 8, so the
+  survey dolly sees the bake and the ink and nothing else: no second map grid.
+- **Strength follows the cell.** One texel a cell, filtered between cell centres, as the
+  bake's relief does. The amount of texture fades across a biome edge while the field
+  stays one continuous function of position, so no authored rectangle prints on it.
+- **The shader hashes nothing.** Its noise is a 128 × 128 lattice of hashed bytes in one
+  page-lifetime texture, four fields to a fetch, read as value noise by shifting the
+  coordinate by the smoothstep of its fraction. A sine hash keeps few bits at map
+  coordinates in single precision and differs between GPUs; an integer hash cost the
+  named GPU up to a millisecond a frame. Seven fetches a fragment, and the meander's slope
+  comes from its screen derivatives rather than more of them.
+- **Order.** It lands after the bake's colour and the veil's vertex colour, and before the
+  survey ink and the fog. Ink lifts darker ground further, but the ladder already weighs
+  ink over black, the fully drained veil, so darkening cannot break it.
+- **Cost.** No pass, draw call or triangle. One RGBA8 texture of one texel a cell, 4 KiB
+  on a 32 × 32 map, and the 64 KiB noise lattice, once a page. GPU time is read on the
+  named GPU (gate 6, [issue-1083](screenshots/issue-1083/README.md)).
+
+**Seated stones.** The stone props stand sunk into the silt by a share of their own
+height: `env-open-boulder` 0.3 (1.8 of its 6 m), `env-vent-basalt` 0.15 (1.2 of 8 m) and
+`env-trench-slab` 0.3 (4.2 of 14 m). The share is never more than half, so the approved
+silhouette still stands. The models do not change; their instances stand lower.
+
+Each seated stone leaves a **scour** in the bake, on open ground only. Its radius is half
+its footprint at its own scale. The ground darkens to 0.7 at and under the stone, a
+shallower dip than a full face, and recovers by 2.2 radii up-current and across. The
+scour runs 1.6 times further on the lee, the south side, where the current drops its
+silt. It stays inside its stone's own cell, faded to nothing over the last radius before
+the edge, like an ember's glow. A ground delta's rebake of the touched cells and a ring
+then redraws every scour it moved. Being in the bake, it costs nothing per frame, and fog,
+veil and ink treat it as ground.
+
+**Gated until promoted.** The layer and the seated stones draw only in a development build
+opened with `?seabed-detail=1`, or with `?dream-loop=1`, which studies them alongside the
+rest of #967. It runs on the standard surfaces only: Sorrowgate keeps its own mission
+surface ([visual-reboot.md](visual-reboot.md) §5). Promotion to every match is one
+predicate, `seabedDetailEnabled` in `packages/frontend/src/game/seabedDetail.ts`, with
+the decision written here.
+
 ### Reading the Water
 
 The ground has a shape and now the water has a body. This section is the sibling of

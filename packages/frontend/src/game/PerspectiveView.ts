@@ -139,7 +139,15 @@ import { gatherHaloSplats } from './haloSource.ts';
 import { ChromaticSplit } from './chromaticSplit.ts';
 import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 import { FaunaStipple } from './faunaStipple.ts';
-import { DREAM_LOOP, installDreamGround } from './dreamLoop.ts';
+import { DREAM_LOOP } from './dreamLoop.ts';
+import {
+  groundDetailCells,
+  groundDetailTexture,
+  installGroundDetail,
+  patchGroundDetailCells,
+  SEABED_DETAIL_ON,
+} from './seabedDetail.ts';
+import { stoneSeats, type StoneSeat } from './environment.ts';
 import { installGroundSurface, type WorldLook } from './tutorialLook.ts';
 import { DreamGroundCover } from './dreamGroundCover.ts';
 import { DreamLightHalos } from './dreamLightHalos.ts';
@@ -492,6 +500,16 @@ export class PerspectiveView {
    */
   private surveyClasses: Uint8Array<ArrayBuffer> | null = null;
   private surveyCells: DataTexture | null = null;
+  /**
+   * The silt detail's opt-in (seabedDetail.ts, docs/art-direction.md "Silt
+   * detail and seated stones — SPEC"): its per-cell strengths, the texture the
+   * terrain shader reads them through, and the seated stones the bake scours.
+   * Patched with the ground; all null while the study is off.
+   */
+  private readonly seabedDetail: boolean;
+  private detailCells: Uint8Array<ArrayBuffer> | null = null;
+  private detailTexture: DataTexture | null = null;
+  private stones: StoneSeat[] = [];
   private readonly terrainDressing = new Group();
   private readonly dreamStudy: boolean;
   private readonly dreamCover: DreamGroundCover | null;
@@ -696,7 +714,9 @@ export class PerspectiveView {
   private stationStartedAt = performance.now();
 
   constructor(private readonly look: WorldLook = 'standard') {
-    this.environment = new EnvironmentLayer(look);
+    // Sorrowgate keeps its own mission surface (docs/visual-reboot.md §5).
+    this.seabedDetail = SEABED_DETAIL_ON && look === 'standard';
+    this.environment = new EnvironmentLayer(look, this.seabedDetail);
     this.dreamStudy = DREAM_LOOP && look === 'standard';
     this.dreamCover = this.dreamStudy ? new DreamGroundCover() : null;
     this.dreamLights = this.dreamStudy ? new DreamLightHalos() : null;
@@ -1321,11 +1341,14 @@ export class PerspectiveView {
       (this.terrainMesh.material as MeshBasicMaterial).map?.dispose();
       (this.terrainMesh.material as MeshBasicMaterial).dispose();
       this.surveyCells?.dispose();
+      this.detailTexture?.dispose();
       this.terrainGrid = null;
       this.seabedCanvas = null;
       this.seabedTexture = null;
       this.surveyClasses = null;
       this.surveyCells = null;
+      this.detailCells = null;
+      this.detailTexture = null;
     }
     if (this.embers !== null) {
       this.scene.remove(this.embers);
@@ -1387,7 +1410,10 @@ export class PerspectiveView {
     geometry.setAttribute('surveyFloor', new BufferAttribute(grid.floor, 1));
     geometry.setIndex(new BufferAttribute(indices, 1));
 
-    const canvas = bakeSeabed(terrain, this.groundSeed, this.seabedRange);
+    // Seated stones scour the bake (seabed.ts `stoneScourGain`) only where
+    // the layer seats them: a hollow with no stone in it would be a lie.
+    this.stones = this.seabedDetail ? stoneSeats(terrain) : [];
+    const canvas = bakeSeabed(terrain, this.groundSeed, this.seabedRange, this.stones);
     const texture = new CanvasTexture(canvas);
     // The bake's row 0 is the map's north edge, and so is the grid's iz 0;
     // an unflipped texture keeps the two aligned without inverting the v axis.
@@ -1401,7 +1427,12 @@ export class PerspectiveView {
     const cells = surveyCellTexture(terrain, classes);
     installSurveyInk(material, terrain, cells);
     if (this.look === 'sorrowgate') installGroundSurface(material);
-    else if (this.dreamStudy) installDreamGround(material);
+    else if (this.seabedDetail) {
+      // After the ink, whose world position it reads and whose hook it chains.
+      this.detailCells = groundDetailCells(terrain);
+      this.detailTexture = groundDetailTexture(terrain, this.detailCells);
+      installGroundDetail(material, terrain, this.detailTexture);
+    }
     this.terrainMesh = new Mesh(geometry, material);
     this.scene.add(this.terrainMesh);
     this.terrainGrid = grid;
@@ -1485,7 +1516,13 @@ export class PerspectiveView {
     mesh.geometry.computeBoundingSphere();
     mesh.geometry.computeBoundingBox();
 
-    rebakeSeabedCells(canvas, terrain, this.groundSeed, this.seabedRange, touched);
+    if (this.detailCells !== null && this.detailTexture !== null) {
+      patchGroundDetailCells(this.detailCells, terrain, touched);
+      this.detailTexture.needsUpdate = true;
+      // Seats read their cell and its ring, which the rebake below covers.
+      this.stones = stoneSeats(terrain);
+    }
+    rebakeSeabedCells(canvas, terrain, this.groundSeed, this.seabedRange, touched, this.stones);
     texture.needsUpdate = true;
 
     this.rebuildDressing();

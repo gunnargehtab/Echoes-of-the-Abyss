@@ -17,6 +17,8 @@ import {
   placeProps,
   PROP_INSTANCE_CAP,
   PROP_TRI_RESERVATION,
+  scatterProps,
+  stoneSeats,
   swayWeight,
   type PropSpec,
 } from '../src/game/environment.ts';
@@ -235,6 +237,59 @@ describe('prop placement', () => {
       'env-kelp-cluster': 'flora',
       'env-resonance-crystal': 'crystal',
     });
+  });
+});
+
+describe('seated stones', () => {
+  it('seats loose stone on open ground only, never past half its height', () => {
+    // docs/art-direction.md "Silt detail and seated stones — SPEC".
+    const seated = ENVIRONMENT_PROPS.filter((s) => (s.buryFraction ?? 0) > 0);
+    assert.deepEqual(Object.fromEntries(seated.map((s) => [s.slug, s.buryFraction])), {
+      'env-vent-basalt': 0.15,
+      'env-trench-slab': 0.3,
+      'env-open-boulder': 0.3,
+    });
+    for (const spec of seated) {
+      assert.ok(spec.buryFraction! <= 0.5, `${spec.slug} sinks past half its silhouette`);
+      assert.notEqual(spec.stands, 'rock', `${spec.slug} would scour ground with no silt`);
+      assert.equal(spec.swayM, 0, `${spec.slug} bends, so it is not stone`);
+      assert.equal(spec.worldLight, 'none', `${spec.slug} is lit, so it is not loose stone`);
+    }
+  });
+
+  it('are the stones the scatter stands, each at half its footprint and in its own cell', () => {
+    const terrain = demoTerrain();
+    terrain.biomes[0] = Biome.ThermalVein;
+    terrain.biomes[1] = Biome.AbyssalTrench;
+    const seats = stoneSeats(terrain);
+    const stones = [...scatterProps(terrain)].filter(({ spec }) => (spec.buryFraction ?? 0) > 0);
+    assert.ok(seats.length > 0, 'the demo map seats nothing');
+    assert.equal(seats.length, stones.length);
+    seats.forEach((seat, i) => {
+      const { placement, spec } = stones[i]!;
+      assert.equal(seat.xM, placement.xM);
+      assert.equal(seat.yM, placement.yM);
+      assert.equal(seat.cellIndex, placement.cellIndex);
+      assert.equal(seat.radiusM, (spec.footprintM * placement.scale) / 2);
+      const col = seat.cellIndex % terrain.cols;
+      const row = Math.floor(seat.cellIndex / terrain.cols);
+      assert.ok(seat.xM > col * terrain.cellM && seat.xM < (col + 1) * terrain.cellM);
+      assert.ok(seat.yM > row * terrain.cellM && seat.yM < (row + 1) * terrain.cellM);
+    });
+  });
+
+  it('move only beside a ground delta, as the props do', () => {
+    const before = stoneSeats(demoTerrain());
+    const changed = demoTerrain();
+    const target = 1 * changed.cols + 1; // an open cell
+    changed.ceiling[target] = 3000; // collapses into rock
+    const after = stoneSeats(changed);
+    const near = (index: number) =>
+      Math.abs(Math.floor(index / changed.cols) - 1) <= 1 &&
+      Math.abs((index % changed.cols) - 1) <= 1;
+    const settle = (list: typeof before) => JSON.stringify(list.filter((s) => !near(s.cellIndex)));
+    assert.equal(settle(before), settle(after), 'a delta moved a stone far from the change');
+    assert.equal(after.filter((s) => s.cellIndex === target).length, 0, 'rock seats no stone');
   });
 });
 

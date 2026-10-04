@@ -469,6 +469,9 @@ const LIGHT_X = -0.45;
 const LIGHT_Y = -0.6;
 const LIGHT_Z = 0.66;
 
+/** The same key light, for the shaders that shade the ground after the bake. */
+export const KEY_LIGHT = { x: LIGHT_X, y: LIGHT_Y, z: LIGHT_Z } as const;
+
 /**
  * TUNABLE. Metres of floor change across one cell that count as a full-strength
  * face. Without it every authored step saturates alike and a 300 m shelf edge
@@ -502,7 +505,7 @@ export const ROCK_FACE = 0x0c1014;
 export const ROCK_SHADOW = 0x06090d;
 
 /** TUNABLE. How much of a cell's colour the deepest shadow may take. */
-const RELIEF_DEPTH = 0.42;
+export const RELIEF_DEPTH = 0.42;
 
 /**
  * Shade a cell by the *shape* of the ground, after `depthShade` has said how

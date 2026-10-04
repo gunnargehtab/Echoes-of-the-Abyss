@@ -2,7 +2,7 @@
  * Opt-in material study for #967, not the shipped art direction.
  * The approved meshes, palette lamps, live SIG and public terrain stay authoritative.
  */
-import { Color, type Material, MeshStandardMaterial } from 'three';
+import { Color, MeshStandardMaterial } from 'three';
 import { UI } from './palette.ts';
 
 export function dreamLoopEnabled(dev: boolean, search: string): boolean {
@@ -34,6 +34,8 @@ export function installDreamLamp(material: MeshStandardMaterial): void {
   material.needsUpdate = true;
 }
 
+/** The steel's grain. The ground's own study moved to seabedDetail.ts (#1083),
+ * which reads a lattice texture rather than this sine. */
 const NOISE = `
 float dreamHash(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -44,48 +46,7 @@ float dreamNoise(vec2 p) {
   return mix(mix(dreamHash(i), dreamHash(i + vec2(1.0, 0.0)), f.x),
              mix(dreamHash(i + vec2(0.0, 1.0)), dreamHash(i + 1.0), f.x), f.y);
 }
-float dreamDune(vec2 p) {
-  return 18.0 * dreamNoise(p / 75.0) + 4.0 * dreamNoise(p / 23.0);
-}
 `;
-
-/** Chain rather than replace the survey's shader hook; the ink still reads authored depth. */
-export function installDreamGround(material: Material): void {
-  const before = material.onBeforeCompile;
-  const key = material.customProgramCacheKey();
-  material.onBeforeCompile = (shader, renderer) => {
-    before.call(material, shader, renderer);
-    shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec2 vDreamGround;')
-      .replace(
-        '#include <begin_vertex>',
-        '#include <begin_vertex>\nvDreamGround = (modelMatrix * vec4(transformed, 1.0)).xz;'
-      );
-    shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', `#include <common>\nvarying vec2 vDreamGround;\n${NOISE}`)
-      .replace(
-        '#include <color_fragment>',
-        `#include <color_fragment>
-        vec2 p = vDreamGround;
-        float drift = dreamNoise(p / 85.0);
-        float scours = dreamNoise(p / 23.0 + drift * 2.0);
-        float ripple = sin(p.y * 0.7 + drift * 15.0 + dreamNoise(p / 13.0) * 5.0);
-        float grain = dreamNoise(p * 1.7);
-        float footprint = max(length(dFdx(p)), length(dFdy(p)));
-        float fine = 1.0 - smoothstep(0.5, 3.0, footprint);
-        ripple *= 1.0 - smoothstep(0.5, 2.0, fwidth(p.y * 0.7));
-        float h = dreamDune(p);
-        vec3 duneNormal = normalize(vec3(h - dreamDune(p + vec2(1.0, 0.0)), 1.0,
-                                         h - dreamDune(p + vec2(0.0, 1.0))));
-        float rake = max(dot(duneNormal, normalize(vec3(-0.6, 0.45, -0.5))), 0.0);
-        float detail = 0.80 + 0.25 * rake + 0.025 * ripple +
-                       0.14 * (grain - 0.5) * fine + 0.12 * (scours - 0.5);
-        diffuseColor.rgb *= clamp(detail, 0.12, 1.0);`
-      );
-  };
-  material.customProgramCacheKey = () => `${key}:dream-ground-2`;
-  material.needsUpdate = true;
-}
 
 /** Object-space platework moves with a hull, not through it. No new geometry or textures. */
 export function installDreamSteel(material: MeshStandardMaterial): void {

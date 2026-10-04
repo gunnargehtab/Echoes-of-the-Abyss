@@ -41,6 +41,75 @@ export const SORROWGATE_LOOK = {
   ANISOTROPY: 4,
 } as const;
 
+/**
+ * Silt detail and seated stones — docs/art-direction.md "Silt detail and seated
+ * stones — SPEC" (#1083). Every number of this block the section prints is
+ * SPEC, and the frontend's seabedDetail test holds the prose to it; the rest
+ * are TUNABLE.
+ * Presentation only: the simulation never reads any of it, and no floor,
+ * collision, PF or detection derives from it.
+ */
+export const SEABED_DETAIL = {
+  /**
+   * SPEC — the most each term may darken a pixel, by biome: dunes, ripples,
+   * scours, grain, as encoded-space gains like the bake's. No row's sum may
+   * exceed `MAX_SUM`.
+   */
+  STRENGTH: {
+    [Biome.OpenWater]: [0.25, 0.07, 0.05, 0.03],
+    [Biome.KelpForest]: [0.18, 0.04, 0.1, 0.06],
+    [Biome.ThermalVein]: [0, 0, 0.16, 0.1],
+    [Biome.AbyssalTrench]: [0.14, 0, 0.08, 0.04],
+    [Biome.ResonanceField]: [0.18, 0.04, 0.08, 0.06],
+    [Biome.CoralRuins]: [0.1, 0.05, 0.08, 0.08],
+  } as Record<Biome, readonly [number, number, number, number]>,
+  /** SPEC — rock admits no water, so it has no silt to drift or ripple. */
+  ROCK_STRENGTH: [0, 0, 0.12, 0.1] as readonly [number, number, number, number],
+  /**
+   * SPEC — the most a row may darken in all. Its darkest pixel, 0.60 of the
+   * fill, stays lighter than a full-strength authored face (1 − the frontend's
+   * `RELIEF_DEPTH`, 0.58), which the frontend's seabed test holds.
+   */
+  MAX_SUM: 0.4,
+  /** SPEC — metres per pixel: whole through the first, gone by the second. */
+  FADE_M_PER_PX: [2, 8] as readonly [number, number],
+  /** SPEC — dune crest spacing, metres, and the lee face's share of it. */
+  DUNE_M: 110,
+  DUNE_LEE: 0.3,
+  /** TUNABLE — how hard the hillshade saturates: most of a lee dark, most of a stoss lit. */
+  DUNE_CONTRAST: 2.5,
+  /** SPEC — the meander's lattice, metres, which also carries the field that fades the dunes. */
+  MEANDER_M: 420,
+  /** TUNABLE — by how many crest spacings the crests meander, and a finer meander. */
+  MEANDER_CYCLES: 1,
+  MEANDER_FINE_M: 130,
+  MEANDER_FINE_CYCLES: 0.3,
+  /** SPEC — the least of their strength the fading field leaves the dunes: a quarter. */
+  PATCH_FLOOR: 0.25,
+  /** SPEC — ripple spacing, metres; drawn from 8 pixels a ripple, gone at 3. */
+  RIPPLE_M: 7,
+  RIPPLE_PX: [3, 8] as readonly [number, number],
+  /** TUNABLE — the ripple's lee share. */
+  RIPPLE_LEE: 0.35,
+  /** SPEC — the scour field, metres across, and how many times longer north–south. */
+  SCOUR_M: 38,
+  SCOUR_STRETCH: 1.8,
+  /** SPEC — the grain's two octaves, metres; each whole from 6 pixels, gone at 3. */
+  GRAIN_M: 3,
+  GRAIN_FINE_M: 1.3,
+  GRAIN_PX: [3, 6] as readonly [number, number],
+  /** SPEC — the stone scour: deepest gain, reach in radii, and the lee's stretch. */
+  STONE_SCOUR_GAIN: 0.7,
+  STONE_SCOUR_REACH: 2.2,
+  STONE_SCOUR_LEE: 1.6,
+  /**
+   * SPEC — the noise lattice's side, in lattice points. It repeats every 128:
+   * 54 km of meander, 4.9 km of scour field before the second octave's offset,
+   * and 384 m of grain, which reads as grain.
+   */
+  NOISE_SIZE: 128,
+} as const;
+
 /** SPEC — docs/systems-depth.md §1. Metres. */
 export const DEPTH_BANDS: Record<DepthBand, { min: number; max: number }> = {
   [DepthBand.Shelf]: { min: 0, max: 400 },

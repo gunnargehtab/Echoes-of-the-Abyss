@@ -29,6 +29,9 @@ mechanic change, amend the canonical table first and hold the painted cells in t
   it at tactical distance.
 - A ground delta must update the surface and dressing from the new public cells.
   Test locality: a collapse must not reshuffle the untouched map.
+- A mark a prop leaves on the ground, such as a seated stone's scour, comes from the
+  registry's own scatter, filtered after it (a spec's index is in its hash), and stays
+  inside the prop's cell. Then the rebake of the touched cells and a ring redraws it.
 
 Do not add scenery that visually promises a blocked path is open, or a traversable
 route is obstructed. The Service Lock's roof is a route mark, not permission to reveal

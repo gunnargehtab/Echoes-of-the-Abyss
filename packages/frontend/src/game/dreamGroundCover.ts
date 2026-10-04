@@ -29,6 +29,8 @@ interface Candidate {
   triangles: number;
   bounds: Sphere;
   priority: number;
+  /** A seated stone: the bake scours round it, so it is never the one dropped. */
+  stone: boolean;
 }
 
 export class DreamGroundCover {
@@ -75,6 +77,7 @@ export class DreamGroundCover {
       this.candidates.push({
         placement,
         triangles: spec.triBudget,
+        stone: (spec.buryFraction ?? 0) > 0,
         priority: propHash([
           placement.cellIndex,
           Math.round(placement.xM * 100),
@@ -89,8 +92,13 @@ export class DreamGroundCover {
     }
     // Stable, spatially distributed priority: a capped survey view must not
     // dress only the northern rows or only the ground closest to the camera.
+    // Seated stones first, whatever their hash: their scour is in the bake,
+    // and a hollow left standing empty for a kelp frond would be a lie.
     this.candidates.sort(
-      (a, b) => a.priority - b.priority || a.placement.cellIndex - b.placement.cellIndex
+      (a, b) =>
+        Number(b.stone) - Number(a.stone) ||
+        a.priority - b.priority ||
+        a.placement.cellIndex - b.placement.cellIndex
     );
     this.dirty = true;
   }

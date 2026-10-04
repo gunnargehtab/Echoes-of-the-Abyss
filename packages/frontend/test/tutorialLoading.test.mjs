@@ -213,6 +213,40 @@ describe('pending prop delivery', () => {
   });
 });
 
+describe('seated stones', () => {
+  it('sink each loose stone a share of its height, and only where the layer seats them', async () => {
+    controlLoads();
+    const open = { ...terrain(), biomes: Array(64).fill(Biome.OpenWater) };
+    const boulders = placeProps(open).filter((p) => p.slug === 'env-open-boulder');
+    assert.ok(boulders.length > 0, 'the open map seats no boulder');
+    const seated = new EnvironmentLayer('standard', true);
+    const standing = new EnvironmentLayer('standard');
+    try {
+      seated.rebuild(open, () => -200, boulders);
+      standing.rebuild(open, () => -200, boulders);
+      await until(() => pending.length === 1);
+      pending[0].resolve(source());
+      await until(() => seated.stats().props > 0 && standing.stats().props > 0);
+      // The source box is 4 m by 2 m tall, held to the boulder's 12 m: 6 m.
+      const height = env.envTemplate('env-open-boulder', 12, 0, () => {}).heightM;
+      assert.ok(Math.abs(height - 6) < 1e-9, `the template stands ${height} m, not 6`);
+      for (const mesh of seated.group.children) {
+        boulders.forEach((p, i) => {
+          const sunk = -200 - 0.3 * height * p.scale;
+          assert.ok(Math.abs(mesh.instanceMatrix.array[i * 16 + 13] - sunk) < 1e-4);
+        });
+      }
+      for (const mesh of standing.group.children) {
+        for (let i = 0; i < mesh.count; i++)
+          assert.equal(mesh.instanceMatrix.array[i * 16 + 13], -200);
+      }
+    } finally {
+      seated.destroy();
+      standing.destroy();
+    }
+  });
+});
+
 describe('roster look and palette cache isolation', () => {
   it('holds the requested palette across a pending load and shares only matching templates', async () => {
     controlLoads();

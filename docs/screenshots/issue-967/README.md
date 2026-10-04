@@ -51,6 +51,14 @@ runs.
 
 Open `http://localhost:5173/?dream-loop=1` to enable the material study. Without that
 explicit opt-in, or in a production build, the shipped appearance is unchanged.
+
+The study's ground is no longer a prototype
+([#1083](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1083)). Its dunes,
+ripples, scours and grain are `seabedDetail.ts`, specified in
+[art-direction.md](../../art-direction.md#silt-detail-and-seated-stones--spec), and the
+stones sit in the silt with a scour baked round each. `?seabed-detail=1` shows that ground
+alone, over the shipped look; `?dream-loop=1` shows it with the rest of the study. Rounds
+1–4 below were shot before #1083, on the sine-hashed ground they describe.
 On Windows, the existing development servers can be driven with:
 
 ```powershell
