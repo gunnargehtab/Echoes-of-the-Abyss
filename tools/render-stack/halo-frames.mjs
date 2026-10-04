@@ -56,6 +56,7 @@ import { decode } from './lamps.mjs';
 const STAGES = new Set(
   (process.env.STAGES ?? 'cameras,pings,structures,ridge').split(',').map((s) => s.trim())
 );
+const ROUTE_PINGS = Number(process.env.ROUTE_PINGS ?? 3);
 const PING_KINDS = process.env.PING_KINDS?.split(',').map((s) => s.trim()) ?? null;
 const slug = (name) => name.toLowerCase().replace(/\s+/g, '-');
 
@@ -441,17 +442,22 @@ async function collars(page, entities, dpr) {
 }
 
 /**
- * Cores found in one pair, located in another. A hull that travelled between
- * the pairs, so that no shift lands most of its cores on its ink, is read in
- * the second pair alone, from the pixels that match its ink exactly enough to
- * be the core and not a blended glow.
+ * Cores found in one pair, located in another. A hull that stood still keeps
+ * them where they were. One that travelled between the pairs is read in the
+ * second pair alone, from the pixels that match its ink exactly enough to be
+ * the core and not a blended glow. Sliding the old cores after it can land a
+ * pixel's error on the darker glow beside the stroke, which then reads as core
+ * failing 3:1.
  */
 function coresIn(cores, from, to, entities, dpr) {
   const aligned = alignCores(cores, from, to, entities);
   const direct = collarCores(to, entities, dpr, 10);
-  return aligned.map((moved, k) =>
-    moved.inked >= 0.8 * cores[k].length ? moved : Object.assign(direct[k], { method: 'moved' })
-  );
+  return aligned.map((moved, k) => {
+    const still = moved.shift[0] === 0 && moved.shift[1] === 0;
+    return still && moved.inked >= 0.8 * cores[k].length
+      ? moved
+      : Object.assign(direct[k], { method: 'moved' });
+  });
 }
 
 /**
@@ -502,6 +508,66 @@ async function collarOverPing(page, key, dpr, haloOn, shoot = null) {
   await page.evaluate(() => window.__perspectiveHalo(true));
   await page.waitForTimeout(200);
   return { haloOn, pinged, samples: shares.length, shares, worst };
+}
+
+/** Whether a unit's live SIG reads a ping (90 or more). */
+const pinging = (page, key) =>
+  page.evaluate(
+    (key) => (window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key)?.sig ?? 0) >= 90,
+    key
+  );
+
+/**
+ * A working hull's collar along its route: `n` pings 4 s apart without
+ * stopping it, each read through the whole ping with the halo on, plus one
+ * halo-off pair where the hull then stood. The hull moves between pairs, so
+ * each pair finds its own core: ink within 10 levels, one stroke, where glow
+ * over a lit background cannot pass for it. A still hull reads one spot; this
+ * reads the spots its work takes it to.
+ */
+async function collarAlongRoute(page, key, dpr, n) {
+  const readAt = async () => {
+    const u = (await ownEntities(page)).find((e) => e.key === key);
+    if (u === undefined) return null;
+    const pair = await hudPair(page);
+    const [cores] = collarCores(pair, [u], dpr, 10);
+    const [reading] = collarContrast(pair, [u], [cores]);
+    return { atCss: [Math.round(u.cx), Math.round(u.cy)], ...reading };
+  };
+  const out = [];
+  for (let k = 0; k < n; k++) {
+    await page.waitForTimeout(4000);
+    await page.keyboard.press('KeyP');
+    const pinged = await page
+      .waitForFunction(
+        (key) => (window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key)?.sig ?? 0) >= 90,
+        key,
+        { timeout: 3000 }
+      )
+      .then(
+        () => true,
+        () => false
+      );
+    if (!pinged) {
+      out.push({ pinged });
+      continue;
+    }
+    await page.evaluate(() => window.__perspectiveHalo(false));
+    await page.waitForTimeout(200);
+    const off = await readAt();
+    await page.evaluate(() => window.__perspectiveHalo(true));
+    await page.waitForTimeout(200);
+    let worst = null;
+    let samples = 0;
+    while (await pinging(page, key)) {
+      const reading = await readAt();
+      if (reading?.atLeast3Share == null) continue;
+      samples++;
+      if (worst === null || reading.atLeast3Share < worst.atLeast3Share) worst = reading;
+    }
+    out.push({ pinged, samples, worst, off });
+  }
+  return out;
 }
 
 /** Own entities on screen, as CSS centres, with a reach for their collar. */
@@ -764,6 +830,8 @@ export default async ({ page, shot }) => {
       // hull is stopped first (X), because a working Harvester travels
       // between the pairs a reading compares, and then the core has to be
       // found again in the halo-on frame, where the glow can pass for it.
+      // Along its route first, while it still works, then stopped.
+      reading.collarAlongRoute = await collarAlongRoute(page, u.key, dpr, ROUTE_PINGS);
       await page.keyboard.press('KeyX');
       reading.collarOverPing = [];
       for (const haloOn of [true, false]) {
