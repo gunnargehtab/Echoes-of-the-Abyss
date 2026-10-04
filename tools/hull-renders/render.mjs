@@ -38,6 +38,7 @@ import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { build } from 'esbuild';
 import { spawn } from '../lib/spawn.mjs';
 import { CHROMIUM_ARGS, emptyFrame } from './chromium.mjs';
 import { KINDS, NAVIES, NEW_KINDS, shots } from './shots.mjs';
@@ -97,6 +98,28 @@ if (!existsSync(join(depsDir, 'node_modules', 'three', 'package.json'))) {
   }
 }
 
+// --- the game's frame, bundled for the page ---------------------------------
+// frame.mjs re-exports the conn view's lamp ink, lamp core, glow after the
+// curve and lamp halo from packages/frontend (#1015). three stays external so
+// the page's importmap gives the bundle and the page the same three; shared
+// resolves to its build output, so it must be built.
+if (!existsSync(join(repo, 'packages/shared/dist/index.js'))) {
+  console.error('packages/shared/dist is missing — run `npm run build:shared` first.');
+  process.exit(1);
+}
+const frameJs = (
+  await build({
+    entryPoints: [join(here, 'frame.mjs')],
+    bundle: true,
+    format: 'esm',
+    platform: 'browser',
+    target: 'es2022',
+    external: ['three', 'three/*'],
+    write: false,
+    logLevel: 'error',
+  })
+).outputFiles[0].contents;
+
 // --- Playwright, same resolution dance as hull-intake's bake.mjs -------------
 function loadPlaywright() {
   const candidates = ['playwright', 'playwright-core'];
@@ -140,6 +163,10 @@ let currentModel = null;
 const server = createServer((req, res) => {
   const url = new URL(req.url, 'http://x');
   let file;
+  if (url.pathname === '/frame.js') {
+    res.writeHead(200, { 'Content-Type': 'text/javascript' }).end(frameJs);
+    return;
+  }
   if (url.pathname === '/scene.html') file = join(here, 'scene.html');
   else if (url.pathname === '/model.glb') file = currentModel;
   else if (url.pathname.startsWith('/props/')) {
@@ -223,7 +250,8 @@ try {
       const kb = Math.round(statSync(path).size / 1024);
       console.log(
         `${shot.id.padEnd(32)} ${shot.lengthM} m · SIG ${String(shot.sig).padStart(4)} · ` +
-          `${stats.lamps} lamp(s) ×${stats.glowGain.toFixed(2)} · ${navy.biome} · ${kb} KB`
+          `${stats.lamps} lamp(s) · halo ×${stats.haloScale.toFixed(1)} ${stats.haloState} ` +
+          `${stats.haloSites} site(s) · ${navy.biome} · ${kb} KB`
       );
     } catch (err) {
       console.error(`${shot.id}: ${err.message || err}`);

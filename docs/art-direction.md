@@ -290,8 +290,8 @@ weights, the 0.6 px floor, the 2 m bias, the 1,024 site cap and the build defaul
 frontend-only, because no other package reads them. The reach is derived from the chain and
 stored nowhere.
 
-**Hull portraits** take this halo rather than a bloom of their own, once
-[#1015](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1015) lands:
+**Hull portraits** take this halo rather than a bloom of their own
+([#1015](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1015)):
 `tools/hull-renders/scene.html` draws the game's frame and runs this pass at each hull's
 idle SIG, with its three widths multiplied by the hull's drawn length in the portrait over
 its drawn length at the close camera, so a portrait shows the close camera's halo magnified
@@ -512,8 +512,10 @@ and a drawn sheet.
 The baseline is commit `1df288a` (28 September 2026), not the earlier #286 scene.
 `PerspectiveView.ts` submits the world directly through WebGLRenderer with no tone
 mapping, environment, shadow-map enable or composer at that baseline.
-`tools/hull-renders/scene.html` instead configures ACES, PMREM, shadows and a bloom
-composer. Its still is a lighting reference, not a runtime implementation to copy.
+`tools/hull-renders/scene.html` instead configured ACES, PMREM, shadows and a bloom
+composer, a lighting reference rather than a runtime implementation to copy; since
+[#1015](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1015) it draws the conn
+view's frame.
 
 | Rank | Upgrade | Verified starting point and boundary |
 | --- | --- | --- |
@@ -746,15 +748,18 @@ photographed in the water its navy lives in, by
 [concept-art/renders/](concept-art/renders). One hull, a three-quarter hero
 angle, a displaced seabed, the biome's own environment props, and the rig this
 doc's [Lighting](#lighting) section and
-[style-neon-noir.md](style-neon-noir.md) describe — key, faction rim, fill, one
-bloom over the lamps. That bloom is the rig's own until [#1015](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1015) re-renders the
-portraits through the conn view's lamp halo.
+[style-neon-noir.md](style-neon-noir.md) describe — key, faction rim, fill —
+with no bloom of its own. Since
+[#1015](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1015) the frame is the
+conn view's: each material tone-maps itself, lamps and lit props add their glow after the
+curve, and the lamp halo spreads the lamps' light.
 
 Everything about a portrait is transcribed rather than invented. The dressing
 is each navy's biome and licensed world light; the accent is its neon signal;
-the lamps burn at the hull's own idle SIG through the same
-loudness-encodes-glow law the sprite maps bake with, so a Cruiser at SIG 55
-visibly outshines a Chorister at 16. What the renderer adds is the seabed and
+the lamps burn as the conn view draws a hull at its idle SIG, in the navy's glow ink at
+the strength the model was approved at, held at gate 3's lamp core, and the halo
+("Lamp halo — SPEC", "Hull portraits") spreads them as loud as that SIG is: a Cruiser at
+SIG 55 carries one, and a Chorister at 16 none. What the renderer adds is the seabed and
 the water, because a portrait needs a floor and a volume and neither is in the
 model.
 

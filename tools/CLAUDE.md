@@ -67,11 +67,11 @@ tools/hull-renders The same models photographed rather than measured:
                    sheet under the lowest part, not at the y 0 where the
                    conn view stands a structure (#955), so an anchor that
                    sinks into the seabed in the game rests on the table
-                   here. Both pages tone-map once, in the composer's
-                   OutputPass, lamps included, so the conn view's glow
-                   after the curve (#974, frontend modelLighting.ts) cannot
-                   hold in them: take lamp hue and strength from a run-game
-                   frame, never from these. Not an npm workspace and not a
+                   here. scene.html draws the game's frame: the curve per
+                   material, glow after it, lamp core and lamp halo, from the
+                   frontend through frame.mjs (#1015). inspect.mjs's page
+                   tone-maps once in OutputPass, lamps included: take glow
+                   from scene.html or run-game, never it. Not a workspace or a
                    gate — a picture is a presentation artifact, and a model
                    is still approved by hull-intake and check.mjs, which
                    measure.
