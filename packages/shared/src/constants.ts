@@ -43,9 +43,10 @@ export const SORROWGATE_LOOK = {
 
 /**
  * Silt detail and seated stones — docs/art-direction.md "Silt detail and seated
- * stones — SPEC" (#1083). The strengths and the fade are the section's SPEC
- * numbers; the shapes under them are TUNABLE. Presentation only: the simulation
- * never reads any of it, and no floor, collision, PF or detection derives from it.
+ * stones — SPEC" (#1083). Every number the section prints is SPEC, and the
+ * frontend's seabedDetail test holds the prose to it; the rest are TUNABLE.
+ * Presentation only: the simulation never reads any of it, and no floor,
+ * collision, PF or detection derives from it.
  */
 export const SEABED_DETAIL = {
   /**
@@ -71,27 +72,32 @@ export const SEABED_DETAIL = {
   MAX_SUM: 0.4,
   /** SPEC — metres per pixel: whole through the first, gone by the second. */
   FADE_M_PER_PX: [2, 8] as readonly [number, number],
-  /** TUNABLE — dune crest spacing and the lee face's share of it, metres. */
+  /** SPEC — dune crest spacing, metres, and the lee face's share of it. */
   DUNE_M: 110,
   DUNE_LEE: 0.3,
   /** TUNABLE — how hard the hillshade saturates: most of a lee dark, most of a stoss lit. */
   DUNE_CONTRAST: 2.5,
-  /** TUNABLE — how far the crests meander, and by how many crest spacings. */
+  /** SPEC — the meander's lattice, metres, which also carries the field that fades the dunes. */
   MEANDER_M: 420,
+  /** TUNABLE — by how many crest spacings the crests meander, and a finer meander. */
   MEANDER_CYCLES: 1,
   MEANDER_FINE_M: 130,
   MEANDER_FINE_CYCLES: 0.3,
-  /** TUNABLE — the field that fades dunes in and out, and the least it leaves. */
-  PATCH_M: 400,
+  /** SPEC — the least of their strength the fading field leaves the dunes: a quarter. */
   PATCH_FLOOR: 0.25,
-  /** TUNABLE — ripple spacing and lee share; drawn from 8 pixels a ripple, gone at 3. */
+  /** SPEC — ripple spacing, metres; drawn from 8 pixels a ripple, gone at 3. */
   RIPPLE_M: 7,
-  RIPPLE_LEE: 0.35,
   RIPPLE_PX: [3, 8] as readonly [number, number],
-  /** TUNABLE — scour hollows and the coarse grain octave, metres. */
+  /** TUNABLE — the ripple's lee share. */
+  RIPPLE_LEE: 0.35,
+  /** SPEC — the scour field, metres across, and how many times longer north–south. */
   SCOUR_M: 38,
+  SCOUR_STRETCH: 1.8,
+  /** SPEC — the grain's two octaves, metres; each whole from 6 pixels, gone at 3. */
   GRAIN_M: 3,
-  /** TUNABLE — the stone scour: deepest gain, reach in radii, lee stretch. */
+  GRAIN_FINE_M: 1.3,
+  GRAIN_PX: [3, 6] as readonly [number, number],
+  /** SPEC — the stone scour: deepest gain, reach in radii, and the lee's stretch. */
   STONE_SCOUR_GAIN: 0.7,
   STONE_SCOUR_REACH: 2.2,
   STONE_SCOUR_LEE: 1.6,

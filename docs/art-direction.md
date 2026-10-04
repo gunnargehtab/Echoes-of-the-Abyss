@@ -665,10 +665,11 @@ without ripples, and rock admits no water at all.
   the south 30 % of each dune, down-current. They are hillshaded by the key light about
   flat ground: a face turned from it darkens by the whole strength, flat ground by half,
   and a face turned to it not at all, so the dunes read by their shadows, the way a ridge
-  does. A 400 m field fades them in and out, down to a quarter of their strength.
+  does. A second field on the meander's 420 m lattice fades them in and out, down to a
+  quarter of their strength.
 - **Ripples** lie 7 m apart, parallel to the dunes and settled in their troughs. A ripple
   draws while it spans 8 pixels and is gone at 3. **Scours** are hollows on a 38 m field,
-  drawn out north–south along the current.
+  drawn out 1.8 times longer north–south, along the current.
   **Grain** runs at 3 m and 1.3 m, each octave whole from 6 pixels and gone at 3.
 - **The layer fades with distance.** It is whole through 2 m a pixel and gone by 8, so the
   survey dolly sees the bake and the ink and nothing else: no second map grid.

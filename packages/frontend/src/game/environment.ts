@@ -84,7 +84,7 @@ export interface PropSpec {
    * so placement, the probe and the budget are untouched by it. */
   swayM: number;
   /**
-   * TUNABLE — the share of its own height a seated stone stands sunk in the
+   * SPEC — the share of its own height a seated stone stands sunk in the
    * silt (docs/art-direction.md "Silt detail and seated stones — SPEC"): never
    * more than half, so the approved silhouette still stands. Absent for
    * everything that is not loose stone on open ground. Drawn only where the

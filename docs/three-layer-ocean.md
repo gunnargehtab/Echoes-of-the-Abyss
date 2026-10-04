@@ -151,7 +151,7 @@ The ground already has a shape; now it gets geometry.
   to the biome, the simulation never reads it, and no gameplay quantity may ever derive from
   it. Texture, not information — now with a third dimension. Below the mesh's 62.5 m vertex
   step, silt dunes, ripples and scours are shaded rather than displaced, and loose stone
-  sits half-buried in them ([art-direction.md](art-direction.md#silt-detail-and-seated-stones--spec)).
+  sits sunk partly into them ([art-direction.md](art-direction.md#silt-detail-and-seated-stones--spec)).
 - **Biome texturing carries the existing rules.** Hue belongs to the biome, depth is
   luminance, albedo mottling stays hue-preserving and darken-only. Vent embers become true
   emissive points, still `#E06A2B`, still stepping on the 5 Hz sonar cadence, still stateless.

@@ -178,14 +178,38 @@ describe('the bake with seated stones', () => {
   });
 
   it('rebakes a delta and its ring exactly as a full bake with the new stones would', () => {
+    // Collapse the cell a stone stands in: its seat goes, and with it the
+    // scour. The ring's rebake must equal a full bake on the new seats, and
+    // every cell outside the ring must be the old seated bake's.
+    const seatedCell = stones[0]!.cellIndex;
     const changed = demoTerrain();
-    changed.ceiling[9] = 3000; // a span collapses into rock
+    changed.ceiling[seatedCell] = 3000;
     const after = stoneSeats(changed);
+    assert.ok(
+      !after.some((s) => s.cellIndex === seatedCell),
+      'the delta left the stone standing, so it tests nothing'
+    );
     const full = shadeSeabed(changed, seed, range, whole, after);
-    const ring = { col0: 2, row0: 0, col1: 4, row1: 2 };
+    const col = seatedCell % terrain.cols;
+    const row = Math.floor(seatedCell / terrain.cols);
+    const ring = {
+      col0: Math.max(0, col - 1),
+      row0: Math.max(0, row - 1),
+      col1: Math.min(terrain.cols - 1, col + 1),
+      row1: Math.min(terrain.rows - 1, row + 1),
+    };
     const part = shadeSeabed(changed, seed, range, ring, after);
     assert.deepEqual(part.data, sliceOf(full.data, full.w, ring));
-    const far = { col0: 0, row0: 3, col1: 5, row1: 4 };
-    assert.deepEqual(sliceOf(full.data, full.w, far), sliceOf(seated.data, seated.w, far));
+    for (let r = 0; r < terrain.rows; r++) {
+      for (let c = 0; c < terrain.cols; c++) {
+        if (c >= ring.col0 && c <= ring.col1 && r >= ring.row0 && r <= ring.row1) continue;
+        const cell = { col0: c, row0: r, col1: c, row1: r };
+        assert.deepEqual(
+          sliceOf(full.data, full.w, cell),
+          sliceOf(seated.data, seated.w, cell),
+          `cell ${r * terrain.cols + c} moved outside the ring`
+        );
+      }
+    }
   });
 });

@@ -35,7 +35,7 @@ export function installDreamLamp(material: MeshStandardMaterial): void {
 }
 
 /** The steel's grain. The ground's own study moved to seabedDetail.ts (#1083),
- * which hashes with integers rather than this sine. */
+ * which reads a lattice texture rather than this sine. */
 const NOISE = `
 float dreamHash(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);

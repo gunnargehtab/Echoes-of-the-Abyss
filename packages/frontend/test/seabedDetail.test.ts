@@ -33,6 +33,7 @@ import {
   STRENGTH_SCALE,
 } from '../src/game/seabedDetail.ts';
 import { RELIEF_DEPTH } from '../src/game/palette.ts';
+import { ENVIRONMENT_PROPS } from '../src/game/environment.ts';
 import { installSurveyInk, surveyCellClasses, surveyCellTexture } from '../src/game/surveyInk.ts';
 import type { TerrainPayload } from '../src/net/GameClient.ts';
 
@@ -119,6 +120,41 @@ describe('the strength table', () => {
     }
     assert.match(section, new RegExp(`whole through ${SEABED_DETAIL.FADE_M_PER_PX[0]} m a pixel`));
     assert.match(section, new RegExp(`gone by ${SEABED_DETAIL.FADE_M_PER_PX[1]}`));
+  });
+
+  it('prints every SPEC number the constants hold, and no other', () => {
+    // The prose wraps, so read it as one line. A number moved in one place and
+    // not the other fails here, which is what makes it SPEC rather than TUNABLE.
+    const doc = readFileSync(new URL('../../../docs/art-direction.md', import.meta.url), 'utf8');
+    const start = doc.indexOf('#### Silt detail and seated stones');
+    const prose = doc
+      .slice(start, doc.indexOf('### Reading the Water', start))
+      .replace(/\s+/g, ' ');
+    const d = SEABED_DETAIL;
+    assert.equal(d.PATCH_FLOOR, 0.25, 'the prose says a quarter');
+    const phrases = [
+      `No row may exceed **${d.MAX_SUM.toFixed(2)}**`,
+      `crests ${d.DUNE_M} m apart`,
+      `meandering over ${d.MEANDER_M} m`,
+      `the south ${d.DUNE_LEE * 100} % of each dune`,
+      `the meander's ${d.MEANDER_M} m lattice`,
+      'down to a quarter of their strength',
+      `lie ${d.RIPPLE_M} m apart`,
+      `spans ${d.RIPPLE_PX[1]} pixels and is gone at ${d.RIPPLE_PX[0]}`,
+      `on a ${d.SCOUR_M} m field`,
+      `${d.SCOUR_STRETCH} times longer north–south`,
+      `runs at ${d.GRAIN_M} m and ${d.GRAIN_FINE_M} m`,
+      `whole from ${d.GRAIN_PX[1]} pixels and gone at ${d.GRAIN_PX[0]}`,
+      `darkens to ${d.STONE_SCOUR_GAIN} at and under the stone`,
+      `recovers by ${d.STONE_SCOUR_REACH} radii`,
+      `runs ${d.STONE_SCOUR_LEE} times further on the lee`,
+      ...ENVIRONMENT_PROPS.filter((spec) => (spec.buryFraction ?? 0) > 0).map(
+        (spec) => `\`${spec.slug}\` ${spec.buryFraction} (`
+      ),
+    ];
+    for (const phrase of phrases) {
+      assert.ok(prose.includes(phrase), `the SPEC no longer says "${phrase}"`);
+    }
   });
 });
 
@@ -248,7 +284,12 @@ describe('the silt detail shader', () => {
   });
 
   it('darkens only, by one gain on all three channels, and fades with distance', () => {
-    assert.match(fragment, /float gGain = 1\.0 - gFade \* dot\(gStrength, vec4\(/);
+    // The clamp is the structural half of the bound: no term past 1.
+    assert.match(
+      fragment,
+      /vec4 gTerms = clamp\(vec4\(gDune, gRipple, gScour, gGrain\), 0\.0, 1\.0\);/
+    );
+    assert.match(fragment, /float gGain = 1\.0 - gFade \* dot\(gStrength, gTerms\);/);
     // Scaled in encoded space, as the bake scales its bytes: RELIEF_DEPTH's units.
     assert.match(fragment, /surveyDecode\(surveyEncode\(diffuseColor\.rgb\) \* gGain\)/);
     const [near, far] = SEABED_DETAIL.FADE_M_PER_PX;

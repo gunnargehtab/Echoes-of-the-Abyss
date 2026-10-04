@@ -55,9 +55,11 @@ export function seabedDetailEnabled(dev: boolean, search: string): boolean {
   return params.get('seabed-detail') === '1' || params.get('dream-loop') === '1';
 }
 
-export const SEABED_DETAIL_ON =
-  import.meta.env?.DEV === true &&
-  seabedDetailEnabled(true, typeof window === 'undefined' ? '' : window.location.search);
+/** The predicate is the only gate: promoting the layer is a change to it alone. */
+export const SEABED_DETAIL_ON = seabedDetailEnabled(
+  import.meta.env?.DEV === true,
+  typeof window === 'undefined' ? '' : window.location.search
+);
 
 /**
  * The texel's byte range covers strengths up to this. Bytes round down, so a
@@ -263,10 +265,13 @@ function fragmentMain(): string {
   float gDune = 0.5 + 0.5 * clamp(${f(d.DUNE_CONTRAST)} * gPatch * gSlope *
                                   dot(gCycleGrad, gLight) * ${f(leeNorm)}, -1.0, 1.0);
 
-  // Scours: hollows the current took, drawn out along it (north-south) and on
-  // a lattice turned off the map's axes, so no square of the noise shows. The
-  // first fetch's last channel wobbles the ripples.
-  vec2 gQ = mat2(0.866, -0.5, 0.5, 0.866) * gp / vec2(${f(d.SCOUR_M)}, ${f(d.SCOUR_M * 1.8)});
+  // Scours: hollows the current took, drawn out along it, north-south. The
+  // stretch comes first, so the noise stays isotropic in the stretched frame and
+  // the hollows lie along z; the turn after it sets the lattice off the map's
+  // axes, so no square of it shows. The first fetch's last channel wobbles the
+  // ripples.
+  vec2 gQ = mat2(0.866, -0.5, 0.5, 0.866) *
+            (gp / vec2(${f(d.SCOUR_M)}, ${f(d.SCOUR_M * d.SCOUR_STRETCH)}));
   vec4 gS1 = groundNoise(gQ + gN1.b * 1.7);
   vec4 gS2 = groundNoise(gQ * 2.3 + 11.0);
   float gScour = smoothstep(0.52, 0.78, 0.65 * gS1.r + 0.35 * gS2.g);
@@ -282,13 +287,16 @@ function fragmentMain(): string {
   // Grain, two octaves, each gone before it can alias.
   float gGrain =
       0.6 * groundNoise(gp / ${f(d.GRAIN_M)} + 71.0).b *
-          smoothstep(3.0, 6.0, ${f(d.GRAIN_M)} / gMpp) +
-      0.4 * groundNoise(gp / ${f(d.GRAIN_M * 0.43)} + 19.0).a *
-          smoothstep(3.0, 6.0, ${f(d.GRAIN_M * 0.43)} / gMpp);
+          smoothstep(${f(d.GRAIN_PX[0])}, ${f(d.GRAIN_PX[1])}, ${f(d.GRAIN_M)} / gMpp) +
+      0.4 * groundNoise(gp / ${f(d.GRAIN_FINE_M)} + 19.0).a *
+          smoothstep(${f(d.GRAIN_PX[0])}, ${f(d.GRAIN_PX[1])}, ${f(d.GRAIN_FINE_M)} / gMpp);
 
   // In encoded space, as the bake scales its bytes: a strength here is the
-  // same gain as RELIEF_DEPTH there, so the bound compares like with like.
-  float gGain = 1.0 - gFade * dot(gStrength, vec4(gDune, gRipple, gScour, gGrain));
+  // same gain as RELIEF_DEPTH there, so the bound compares like with like. The
+  // clamp is what makes the bound structural: no term past 1, whatever a later
+  // edit does to one.
+  vec4 gTerms = clamp(vec4(gDune, gRipple, gScour, gGrain), 0.0, 1.0);
+  float gGain = 1.0 - gFade * dot(gStrength, gTerms);
   diffuseColor.rgb = surveyDecode(surveyEncode(diffuseColor.rgb) * gGain);
 }
 `;
