@@ -385,7 +385,7 @@ export class LampHaloPass {
    * renderable half-float target complete with its depth texture, a canvas
    * stencil, a depth copy that blits without error, and a known clear read
    * back from the half-float target. On a failure the targets go and the
-   * state says why; the frame is then the canvas pass alone.
+   * state says why; the frame is then drawn without the halo.
    */
   enable(renderer: WebGLRenderer): boolean {
     const gl = renderer.getContext() as WebGL2RenderingContext;

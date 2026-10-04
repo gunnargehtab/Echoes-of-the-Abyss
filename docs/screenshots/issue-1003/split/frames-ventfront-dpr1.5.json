@@ -1,0 +1,138 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "dpr": 1.5
+  },
+  "constants": {
+    "separationPx": 1,
+    "inner": 0.55
+  },
+  "cameras": [
+    {
+      "name": "home",
+      "width": 2160,
+      "height": 1350,
+      "inside": 1385632,
+      "insideChanged": 0,
+      "band": 1530368,
+      "bandChanged": 19091,
+      "maxError": 1.1538586174467866,
+      "within1": 1530365,
+      "within2": 1530368,
+      "maxDelta": 72,
+      "maxSeparationPx": 0.9986625728867071,
+      "crop": {
+        "x": 1704,
+        "yFromTop": 1306,
+        "size": 32
+      },
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "drawCalls": 64,
+      "triangles": 150696,
+      "splitBytes": 11664000
+    },
+    {
+      "name": "close",
+      "width": 2160,
+      "height": 1350,
+      "inside": 1385632,
+      "insideChanged": 0,
+      "band": 1530368,
+      "bandChanged": 18593,
+      "maxError": 0.7780906333652879,
+      "within1": 1530368,
+      "within2": 1530368,
+      "maxDelta": 24,
+      "maxSeparationPx": 0.9986625728867071,
+      "crop": {
+        "x": 232,
+        "yFromTop": 122,
+        "size": 32
+      },
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "drawCalls": 63,
+      "triangles": 150696,
+      "splitBytes": 11664000
+    },
+    {
+      "name": "low",
+      "width": 2160,
+      "height": 1350,
+      "inside": 1385632,
+      "insideChanged": 0,
+      "band": 1530368,
+      "bandChanged": 61102,
+      "maxError": 0.7984217638992703,
+      "within1": 1530368,
+      "within2": 1530368,
+      "maxDelta": 42,
+      "maxSeparationPx": 0.9986625728867071,
+      "crop": {
+        "x": 32,
+        "yFromTop": 818,
+        "size": 32
+      },
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "drawCalls": 64,
+      "triangles": 150696,
+      "splitBytes": 11664000
+    },
+    {
+      "name": "survey",
+      "width": 2160,
+      "height": 1350,
+      "inside": 1385632,
+      "insideChanged": 0,
+      "band": 1530368,
+      "bandChanged": 10070,
+      "maxError": 1.2655889280961787,
+      "within1": 1530364,
+      "within2": 1530368,
+      "maxDelta": 44,
+      "maxSeparationPx": 0.9986625728867071,
+      "crop": {
+        "x": 1316,
+        "yFromTop": 1282,
+        "size": 32
+      },
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "drawCalls": 64,
+      "triangles": 150676,
+      "splitBytes": 11664000
+    }
+  ]
+}

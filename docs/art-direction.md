@@ -112,7 +112,7 @@ already holds. It is not "bloom", which in this world is a Commune word
 
 **Route.** The canvas pass is drawn exactly as the SPEC above describes: per-material ACES,
 glow after the curve, the unlit layers, encoded blending and 4× MSAA. Then, inside the same
-GPU-timer bracket, four steps run, and nothing else is drawn:
+GPU-timer bracket, four steps run, and the halo draws nothing else:
 
 1. **Depth copy.** One framebuffer blit copies the canvas depth, the depth bit only, into a
    DEPTH24_STENCIL8 depth texture the size of the drawing buffer. Asking for the stencil
@@ -129,7 +129,9 @@ GPU-timer bracket, four steps run, and nothing else is drawn:
 There is no EffectComposer, no OutputPass and no second camera: the splats project through
 the conn camera, and the full-screen draws ignore its matrices (gate 8). A frame in which
 no entity draws a splat runs none of the four steps. The halo is never built while the
-development-only Dream Loop study is on, which has lamp halos of its own.
+development-only Dream Loop study is on, which has lamp halos of its own. The chromatic
+split runs after the composite, over the frame with its halo
+([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)).
 
 **What feeds it.** Only own hull and structure lamps whose model is showing feed the
 source, one splat per lamp site: one connected bulb or strip of an emissive material, the
@@ -267,15 +269,15 @@ stations:
 - **Cost.** It spends only what gate 6 allocates.
 
 **Off, and when it is unavailable.** "Lamp halos" is a toggle in Settings
-([ui-ux.md](ui-ux.md) §14). Off, no halo pass runs and no halo target is
-held, so the frame is the canvas pass alone. Reduced motion keeps the halo, because its
-flare is a change of state and the state is the message. The halo turns itself off for a
-view only when that view fails its capability check, run when the halo turns on and after a
-context restore: a renderable half-float colour target, framebuffer-complete with its depth
-texture; a canvas stencil buffer; a depth copy that blits without error; and a known clear
-read back from the half-float target. On a failure the stored choice is kept, Settings says
-"Not available on this display", and the probe gives the reason. A software rasteriser is
-not a reason, since half-float targets render under SwiftShader.
+([ui-ux.md](ui-ux.md) §14). Off, no halo pass runs and no halo target is held, so the
+frame is the canvas pass and the chromatic split after it. Reduced motion keeps the halo,
+because its flare is a change of state and the state is the message. The halo turns itself
+off for a view only when that view fails its capability check, run when the halo turns on
+and after a context restore: a renderable half-float colour target, framebuffer-complete
+with its depth texture; a canvas stencil buffer; a depth copy that blits without error;
+and a known clear read back from the half-float target. On a failure the stored choice is
+kept, Settings says "Not available on this display", and the probe gives the reason. A
+software rasteriser is not a reason, since half-float targets render under SwiftShader.
 
 **What it is not.** It is not world light: the world-light families keep "no halo recipe"
 ([style-neon-noir.md](style-neon-noir.md)). It is not an interface glow: the glow recipe's
@@ -1161,7 +1163,9 @@ along that ray, and it adds light in one place: blue from the brighter image wid
 edge's blue by up to the separation.
 
 It reaches only the world canvas. The HUD and every contact mark are on the glass above,
-outside it by layer order, as they are outside the vignette. The full-screen draw writes
+outside it by layer order, as they are outside the vignette. What the world canvas draws
+splits with it, by at most that pixel: the ground, hulls, lamps and the halo, and the map
+furniture drawn on the ground, such as the rim and the tunnel routes. The full-screen draw writes
 clip-space positions itself and never reads the conn camera, so it tilts, shears and
 rotates nothing (gate 8). It does not move, so reduced motion leaves it on. It is on
 wherever its check passes: an 8-bit target the canvas can blit into, complete, and a copy
@@ -1187,6 +1191,8 @@ Within it:
 
 - Slight vignette to simulate depth
 - Slow camera sway (submarine feel) — translation only, per the projection rules
+- A barely visible magenta/cyan split, at most 1 px, at the frame's edges — see
+  [Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)
 - The water itself is a rendered medium rather than a parallax layer — see
   [Reading the Water](#reading-the-water) above, which is where the old "fog layers for
   parallax depth" line went and why it is not a *layer*

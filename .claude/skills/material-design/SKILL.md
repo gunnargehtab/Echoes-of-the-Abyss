@@ -64,6 +64,12 @@ example; do not install another rendering stack.
   lamps mark the canvas stencil while it is on, and its screen composite skips them. Its
   mechanics are a depth-only blit of the canvas depth, instanced splats into a half-float
   source, a three-level half-float chain and that masked composite.
+- **The chromatic split copies the finished frame.** It runs last (`chromaticSplit.ts`):
+  a resolving blit of the canvas colour into a target of the canvas's own format, RGB8
+  under three's default context, then one full-screen draw back. Its texels are already
+  tone-mapped and encoded, so the draw leaves out `<colorspace_fragment>`; a second
+  encode would lift every pixel it writes. It discards the middle of the frame, so those
+  pixels keep their samples.
 - **Unlit layers stay off the curve.** A built-in material sets `toneMapped: false`, which
   `packages/frontend/test/modelLighting.test.ts` checks as flags over the canned match,
   not as pixels. A `ShaderMaterial` ends on `<colorspace_fragment>` without
