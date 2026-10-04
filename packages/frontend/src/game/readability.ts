@@ -62,6 +62,14 @@ export const HULL_FLOOR_PX = 26;
 export const MAX_HULL_SCALE = 4;
 
 /**
+ * TUNABLE — the conn camera's vertical field of view, degrees. Narrow keeps
+ * the range-ring foreshortening gentle; wide reads fisheye at RTS distance.
+ * Here beside the one curve that reads it, so a hull portrait's width
+ * multiplier (tools/hull-renders/scene.html) measures the same camera.
+ */
+export const CONN_FOV_DEG = 40;
+
+/**
  * Screen pixels per world metre on the ground under the camera target — the
  * one distance in the frame that depends on the dolly alone, which is what
  * makes the factor view-wide rather than per-entity.

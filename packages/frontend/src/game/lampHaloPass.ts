@@ -12,7 +12,9 @@
  * 3. Spread: a separable blur at each of 1/2, 1/4 and 1/8 of the drawing
  *    buffer, six draws, whose horizontal half reads the level above at this
  *    level's texel centres (a 2 × 2 block's mean along even counts), so the
- *    box downsample takes no draw of its own.
+ *    box downsample takes no draw of its own. A scale past seven taps' reach
+ *    (a hull portrait's, lampHalo.ts `chainShift`) first downsamples further,
+ *    a draw an octave, and starts the three levels below that; the game never does.
  * 4. Composite: one full-screen draw, screen-blended onto the canvas, skipping
  *    every sample an own lamp marked in the canvas stencil.
  *
@@ -24,6 +26,7 @@
  */
 import {
   AddEquation,
+  AlwaysStencilFunc,
   BufferAttribute,
   BufferGeometry,
   Color,
@@ -44,16 +47,18 @@ import {
   EqualStencilFunc,
   OneFactor,
   OneMinusSrcColorFactor,
+  ReplaceStencilOp,
   Scene,
   ShaderMaterial,
   UnsignedInt248Type,
   Vector2,
   WebGLRenderTarget,
   type Camera,
+  type Material,
   type Texture,
   type WebGLRenderer,
 } from 'three';
-import { blurWeights, LAMP_HALO } from './lampHalo.ts';
+import { BLUR_TAPS_MAX, blurWeights, chainShift, LAMP_HALO } from './lampHalo.ts';
 
 /** One lamp site as the source draws it, in world space. */
 export interface HaloSplat {
@@ -76,6 +81,19 @@ export interface HaloSplat {
   readonly nearOffset: number;
 }
 
+/**
+ * Mark a lamp material's samples in the canvas stencil while it draws, or stop:
+ * the composite skips every marked sample, so a lamp reads the same with the
+ * halo on or off (SPEC, Composite). It costs no draw of its own.
+ */
+export function markLamp(material: Material, mark: boolean): void {
+  if (material.stencilWrite === mark) return;
+  material.stencilWrite = mark;
+  material.stencilRef = 1;
+  material.stencilFunc = AlwaysStencilFunc;
+  material.stencilZPass = ReplaceStencilOp;
+}
+
 /** Why the halo is or is not drawing; the probe reports it. */
 export type LampHaloState = 'off' | 'idle' | 'drawn' | `unavailable: ${string}`;
 
@@ -83,7 +101,8 @@ export type LampHaloState = 'off' | 'idle' | 'drawn' | `unavailable: ${string}`;
 const STRIDE = 16;
 /** The instance buffer the cap bounds: 1,024 × 16 floats, 64 KiB. */
 export const INSTANCE_BYTES = LAMP_HALO.SITE_CAP * STRIDE * 4;
-const MAX_TAPS = 8;
+/** The blur's weights: the centre and BLUR_TAPS_MAX taps either side of it. */
+const WEIGHTS = BLUR_TAPS_MAX + 1;
 
 const SPLAT_VERTEX = /* glsl */ `
 attribute vec3 iCenter;
@@ -165,10 +184,10 @@ void main() {
 const BLUR_FRAGMENT = /* glsl */ `
 uniform sampler2D uSource;
 uniform vec2 uStep;
-uniform float uWeights[${MAX_TAPS}];
+uniform float uWeights[${WEIGHTS}];
 varying vec2 vUv;
-// TAPS is a define, set when the pixel ratio changes, so the loop has a
-// constant bound rather than a uniform one.
+// TAPS is a define, set when the scale changes, so the loop has a constant
+// bound rather than a uniform one.
 void main() {
   vec4 sum = texture2D(uSource, vUv) * uWeights[0];
   for (int i = 1; i <= TAPS; i++) {
@@ -176,6 +195,16 @@ void main() {
     sum += (texture2D(uSource, vUv + at) + texture2D(uSource, vUv - at)) * uWeights[i];
   }
   gl_FragColor = sum;
+}
+`;
+
+// Read at the smaller target's texel centres, linear filtering gives each
+// 2 × 2 block's mean: the box the blur's horizontal half folds in, alone.
+const DOWNSAMPLE_FRAGMENT = /* glsl */ `
+uniform sampler2D uSource;
+varying vec2 vUv;
+void main() {
+  gl_FragColor = texture2D(uSource, vUv);
 }
 `;
 
@@ -229,10 +258,13 @@ export class LampHaloPass {
   marker: ((pass: string) => void) | null = null;
 
   private source: WebGLRenderTarget | null = null;
+  /** A shifted chain's own 2 × 2 downsamples (`chainShift`); none in the game. */
+  private shift: WebGLRenderTarget[] = [];
   private levels: [WebGLRenderTarget, WebGLRenderTarget][] = [];
   private width = 0;
   private height = 0;
-  private weightsRatio = 0;
+  private octaves = 0;
+  private weightsScale = 0;
   private readonly savedClear = new Color();
   private maskMaterial: ShaderMaterial | null = null;
 
@@ -268,9 +300,18 @@ export class LampHaloPass {
     uniforms: {
       uSource: { value: null },
       uStep: { value: new Vector2() },
-      uWeights: { value: new Array<number>(MAX_TAPS).fill(0) },
+      uWeights: { value: new Array<number>(WEIGHTS).fill(0) },
     },
     defines: { TAPS: 1 },
+    blending: NoBlending,
+    depthTest: false,
+    depthWrite: false,
+    toneMapped: false,
+  });
+  private readonly downsampleMaterial = new ShaderMaterial({
+    vertexShader: FULLSCREEN_VERTEX,
+    fragmentShader: DOWNSAMPLE_FRAGMENT,
+    uniforms: { uSource: { value: null } },
     blending: NoBlending,
     depthTest: false,
     depthWrite: false,
@@ -366,7 +407,9 @@ export class LampHaloPass {
       a.dispose();
       b.dispose();
     }
+    for (const target of this.shift) target.dispose();
     this.source = null;
+    this.shift = [];
     this.levels = [];
     this.width = 0;
     this.height = 0;
@@ -381,8 +424,9 @@ export class LampHaloPass {
   }
 
   /**
-   * Draw the halo for this frame's splats, after the canvas render. Returns
-   * the passes it ran; none when no site is drawn.
+   * Draw the halo for this frame's splats, after the canvas render. `scale` is
+   * the pixel ratio, times a hull portrait's width multiplier where one draws
+   * it. Returns the passes it ran; none when no site is drawn.
    */
   render(
     renderer: WebGLRenderer,
@@ -390,13 +434,18 @@ export class LampHaloPass {
     splats: readonly HaloSplat[],
     dropped: number,
     fogDensity: number,
-    pixelRatio: number,
+    scale: number,
     biasM: number
   ): string[] {
     if (this.source === null) return [];
     const gl = renderer.getContext() as WebGL2RenderingContext;
-    if (gl.drawingBufferWidth !== this.width || gl.drawingBufferHeight !== this.height) {
-      this.allocate(gl.drawingBufferWidth, gl.drawingBufferHeight);
+    const { octaves } = chainShift(scale);
+    if (
+      gl.drawingBufferWidth !== this.width ||
+      gl.drawingBufferHeight !== this.height ||
+      octaves !== this.octaves
+    ) {
+      this.allocate(gl.drawingBufferWidth, gl.drawingBufferHeight, octaves);
     }
     this.dropped = dropped;
     this.sites = splats.length;
@@ -406,7 +455,7 @@ export class LampHaloPass {
     }
     this.state = 'drawn';
     this.pack(splats);
-    this.setBlur(pixelRatio);
+    this.setBlur(scale);
     const source = this.source!;
 
     const autoClear = renderer.autoClear;
@@ -429,6 +478,11 @@ export class LampHaloPass {
 
       this.marker?.('halo-spread');
       let from: Texture = source.texture;
+      for (const target of this.shift) {
+        this.downsampleMaterial.uniforms.uSource!.value = from;
+        this.drawFullscreen(renderer, camera, this.downsampleMaterial, target);
+        from = target.texture;
+      }
       for (const [a, b] of this.levels) {
         // The level above, read at this level's texel centres one texel
         // apart, which is where a separate downsample would have sampled it:
@@ -495,12 +549,14 @@ export class LampHaloPass {
     this.splatMaterial.dispose();
     this.fullscreen.geometry.dispose();
     this.blurMaterial.dispose();
+    this.downsampleMaterial.dispose();
     this.compositeMaterial.dispose();
   }
 
-  private allocate(width: number, height: number): void {
+  private allocate(width: number, height: number, octaves = this.octaves): void {
     this.source?.depthTexture?.dispose();
     this.source?.dispose();
+    for (const target of this.shift) target.dispose();
     for (const [a, b] of this.levels) {
       a.dispose();
       b.dispose();
@@ -512,9 +568,13 @@ export class LampHaloPass {
       stencilBuffer: true,
       depthTexture,
     });
+    this.shift = Array.from({ length: octaves }, (_, i) =>
+      colorTarget(Math.ceil(width / 2 ** (i + 1)), Math.ceil(height / 2 ** (i + 1)))
+    );
+    const below = 2 ** octaves;
     this.levels = [2, 4, 8].map((d) => {
-      const w = Math.ceil(width / d);
-      const h = Math.ceil(height / d);
+      const w = Math.ceil(width / (d * below));
+      const h = Math.ceil(height / (d * below));
       return [colorTarget(w, h), colorTarget(w, h)] as [WebGLRenderTarget, WebGLRenderTarget];
     });
     // The composite reads the same three textures until the next allocation.
@@ -524,9 +584,11 @@ export class LampHaloPass {
     composite.uLevel3!.value = this.levels[2]![0].texture;
     this.width = width;
     this.height = height;
+    this.octaves = octaves;
     this.bytes =
       width * height * 8 +
       width * height * 4 +
+      this.shift.reduce((sum, t) => sum + t.width * t.height * 8, 0) +
       this.levels.reduce((sum, [a, b]) => sum + (a.width * a.height + b.width * b.height) * 8, 0) +
       INSTANCE_BYTES;
   }
@@ -609,15 +671,15 @@ export class LampHaloPass {
     this.splatGeometry.instanceCount = splats.length;
   }
 
-  private setBlur(pixelRatio: number): void {
-    if (pixelRatio === this.weightsRatio) return;
-    const weights = blurWeights(pixelRatio).slice(0, MAX_TAPS);
+  private setBlur(scale: number): void {
+    if (scale === this.weightsScale) return;
+    const weights = blurWeights(scale);
     const uniform = this.blurMaterial.uniforms.uWeights!.value as number[];
     uniform.fill(0);
     weights.forEach((w, i) => (uniform[i] = w));
     this.blurMaterial.defines.TAPS = weights.length - 1;
     this.blurMaterial.needsUpdate = true;
-    this.weightsRatio = pixelRatio;
+    this.weightsScale = scale;
   }
 
   /** One blur draw: `source` read a step of (x, y) apart, into `target`. */

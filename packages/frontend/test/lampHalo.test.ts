@@ -17,8 +17,10 @@ import {
   haloWeight,
 } from '../src/game/glow.ts';
 import {
+  BLUR_TAPS_MAX,
   blurWeights,
   capSites,
+  chainShift,
   entityHaloEnergy,
   LAMP_HALO,
   levelSigmasPx,
@@ -137,6 +139,36 @@ describe('lamp halo: the spread (art-direction, Lamp halo — SPEC)', () => {
       const total = weights[0]! + 2 * weights.slice(1).reduce((a, b) => a + b, 0);
       assert.ok(close(total, 1), `ratio ${ratio} sums to ${total}`);
       for (let i = 1; i < weights.length; i++) assert.ok(weights[i]! < weights[i - 1]!);
+    }
+  });
+
+  it("shifts a portrait's scale down whole octaves, and never the game's", () => {
+    // The game's pixel ratio stops at 1.5 (PerspectiveView.ts MAX_PIXEL_RATIO).
+    for (const ratio of [1, 1.25, 1.5])
+      assert.deepEqual(chainShift(ratio), { octaves: 0, kernel: ratio });
+    // A hull portrait's width multipliers, about 1364 / length for 50-130 m hulls.
+    for (const scale of [1, 1.5, 1.9, 2, 3, 10.5, 13.6, 27.3]) {
+      const { octaves, kernel } = chainShift(scale);
+      assert.ok(
+        Math.abs(kernel * 2 ** octaves - scale) < 1e-9,
+        `${scale}: the shift and the kernel make the scale`
+      );
+      assert.ok(
+        blurWeights(scale).length - 1 <= BLUR_TAPS_MAX,
+        `${scale}: inside the shader's taps`
+      );
+    }
+  });
+
+  it("widens every level by the scale, the shift's own boxes inside a percent", () => {
+    const one = levelSigmasPx(1);
+    for (const scale of [3, 10.5, 13.6, 27.3]) {
+      levelSigmasPx(scale).forEach((sigma, k) =>
+        assert.ok(
+          Math.abs(sigma / (scale * one[k]!) - 1) < 0.01,
+          `${scale}: level ${k + 1}, ${sigma}`
+        )
+      );
     }
   });
 
