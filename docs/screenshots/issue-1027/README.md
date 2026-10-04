@@ -7,9 +7,9 @@ screen on the named GPU. Gate 6's "The berth ceiling" paragraph is what they dec
 
 Hardware: GTX 1070 through ANGLE/Direct3D 11, Edge headed at 1440×900, on 4 October 2026.
 The client was `main` at `9d83c95c`, and `capture.mjs` as on this branch, except that
-every run but `pel-dozen-r15-b` checked triangles against the old 250,000: their
-`breaches` name triangle breaches the 400 k check would not, and their calls, triangles
-and timings are the same either way. Every reading had
+every run but `pel-dozen-r15-b` checked triangles against the old 250,000. The eight of
+them above 250 k (the Beacon runs and the other three Submersible runs) name triangle
+breaches the 400 k check would not; calls, triangles and timings are the same either way. Every reading had
 `gpuTimer: timing`, 240 GPU frames in each average, no result dropped to a disjoint event,
 and the lamp halo drawn.
 

@@ -330,8 +330,9 @@ three resets `renderer.info` on every `render()` by default, which would leave a
 last pass alone, so the conn view turns that off and resets it once at the top of each
 frame: the probe's calls and triangles are the whole frame's, and its `passes` lists the
 renders that made it. Only the own
-force is ever geometry — at most forty berths of hulls (`BERTHS.CEILING`) and a dozen
-structures, never an army of contacts — which is what keeps the budget bounded. The offline bake (`tools/hull-maps/build.mjs`,
+force is ever geometry — at most forty berths of hulls (`BERTHS.CEILING`) and a base,
+sampled below as a dozen structures, never an army of contacts — which is what keeps the
+budget bounded. The offline bake (`tools/hull-maps/build.mjs`,
 **4 px/m** units, **1.5 px/m** structures) remains a contract with `hullTextures.ts` and
 `structureMaps.ts` (the maps carry no metadata; pixel size ÷ density *is* the metre
 extent): it is the loading
@@ -399,7 +400,7 @@ with a sample dozen structures, 200 calls and 382 k triangles. The **400 k** is 
 frame with the prop layer at its full reservation, 387 k, and margin: instancing cannot
 touch a drawn triangle, so the force's triangles are budgeted rather than engineered away.
 The dozen is a sample because nothing caps what a base builds. A base heavier in Foundries
-or Slipways exceeds the 400 k (a Bastion and eleven Pelagia Foundries count to about 457 k
+or Slipways can exceed the 400 k (a Bastion and eleven Pelagia Foundries count to about 457 k
 with those hulls), and that edge is recorded, not budgeted; the probe is the check. The **150
 calls stand**, and the ceiling breaches them until own models are instanced per kind
 ([#1079](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1079)), which
