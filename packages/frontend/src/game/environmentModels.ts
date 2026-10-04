@@ -85,6 +85,8 @@ export interface EnvTemplate {
   trianglesPerInstance: number;
   /** Present only on props that bend — the handle the layer ticks. */
   sway: SwayUniforms | null;
+  /** Its height at canonical scale, base to top: what a seated stone sinks a share of. */
+  heightM: number;
 }
 
 const loader = new GLTFLoader();
@@ -245,7 +247,7 @@ export function buildTemplate(
     }
     parts.push({ geometry, material });
   });
-  return { parts, trianglesPerInstance: triangles, sway };
+  return { parts, trianglesPerInstance: triangles, sway, heightM };
 }
 
 /**

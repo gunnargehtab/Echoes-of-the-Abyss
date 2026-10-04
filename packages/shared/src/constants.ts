@@ -41,6 +41,54 @@ export const SORROWGATE_LOOK = {
   ANISOTROPY: 4,
 } as const;
 
+/**
+ * Silt detail and seated stones — docs/art-direction.md "Silt detail and seated
+ * stones — SPEC" (#1083). The strengths and the fade are the section's SPEC
+ * numbers; the shapes under them are TUNABLE. Presentation only: the simulation
+ * never reads any of it, and no floor, collision, PF or detection derives from it.
+ */
+export const SEABED_DETAIL = {
+  /**
+   * SPEC — the most each term may darken a pixel, by biome: dunes, ripples,
+   * scours, grain. No row's sum may exceed half the hillshade's darkest
+   * shadow, which the frontend's seabed test holds against `RELIEF_DEPTH`.
+   */
+  STRENGTH: {
+    [Biome.OpenWater]: [0.1, 0.04, 0.04, 0.03],
+    [Biome.KelpForest]: [0.05, 0.02, 0.05, 0.04],
+    [Biome.ThermalVein]: [0, 0, 0.08, 0.06],
+    [Biome.AbyssalTrench]: [0.06, 0, 0.03, 0.02],
+    [Biome.ResonanceField]: [0.06, 0.02, 0.04, 0.04],
+    [Biome.CoralRuins]: [0.04, 0.03, 0.04, 0.05],
+  } as Record<Biome, readonly [number, number, number, number]>,
+  /** SPEC — rock admits no water, so it has no silt to drift or ripple. */
+  ROCK_STRENGTH: [0, 0, 0.06, 0.06] as readonly [number, number, number, number],
+  /** SPEC — metres per pixel: whole through the first, gone by the second. */
+  FADE_M_PER_PX: [2, 8] as readonly [number, number],
+  /** TUNABLE — dune crest spacing and the lee face's share of it, metres. */
+  DUNE_M: 60,
+  DUNE_LEE: 0.3,
+  /** TUNABLE — how far the crests meander, and by how many crest spacings. */
+  MEANDER_M: 240,
+  MEANDER_CYCLES: 1.2,
+  MEANDER_FINE_M: 80,
+  MEANDER_FINE_CYCLES: 0.35,
+  /** TUNABLE — the field that fades dunes in and out, and the least it leaves. */
+  PATCH_M: 400,
+  PATCH_FLOOR: 0.25,
+  /** TUNABLE — ripple spacing and lee share; drawn from 8 pixels a ripple, gone at 3. */
+  RIPPLE_M: 7,
+  RIPPLE_LEE: 0.35,
+  RIPPLE_PX: [3, 8] as readonly [number, number],
+  /** TUNABLE — scour hollows and the coarse grain octave, metres. */
+  SCOUR_M: 38,
+  GRAIN_M: 3,
+  /** TUNABLE — the stone scour: deepest gain, reach in radii, lee stretch. */
+  STONE_SCOUR_GAIN: 0.7,
+  STONE_SCOUR_REACH: 2.2,
+  STONE_SCOUR_LEE: 1.6,
+} as const;
+
 /** SPEC — docs/systems-depth.md §1. Metres. */
 export const DEPTH_BANDS: Record<DepthBand, { min: number; max: number }> = {
   [DepthBand.Shelf]: { min: 0, max: 400 },

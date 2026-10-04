@@ -289,6 +289,12 @@ base commit. Its header says what each millisecond field measures. It holds the 
 rest; gate 3's quiet-and-loud comparison is `tools/render-stack/lamps.mjs`, run the same
 way against the dev server, which stages each state with the player's own keys.
 
+A development study is a URL flag, so its on/off pair is one server with two URLs:
+`&seabed-detail=1` adds the silt detail and seated stones (#1083), and `&dream-loop=1` the
+whole #967 study, that ground included. Both are dead in a production build. A shader on a
+material the frame already draws costs no call or triangle, so its pair is read unpaced
+(`UNPACED=1`), where `avgGpuMs` and the `queued` reading are gate 6's.
+
 ### The esc menu's focus trap
 
 ```bash

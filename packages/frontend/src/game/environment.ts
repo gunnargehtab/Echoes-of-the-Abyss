@@ -83,6 +83,14 @@ export interface PropSpec {
    * everything that is stone). Vertex-only: the instance matrix never moves,
    * so placement, the probe and the budget are untouched by it. */
   swayM: number;
+  /**
+   * TUNABLE — the share of its own height a seated stone stands sunk in the
+   * silt (docs/art-direction.md "Silt detail and seated stones — SPEC"): never
+   * more than half, so the approved silhouette still stands. Absent for
+   * everything that is not loose stone on open ground. Drawn only where the
+   * silt detail is (seabedDetail.ts), with the scour the bake gives it.
+   */
+  buryFraction?: number;
 }
 
 /**
@@ -125,6 +133,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     scaleJitter: [0.7, 1.3],
     worldLight: 'none',
     swayM: 0,
+    buryFraction: 0.15,
   },
   // Kelp Forest — the forty-metre columns, and living coral stone between them.
   {
@@ -179,6 +188,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     scaleJitter: [0.7, 1.3],
     worldLight: 'none',
     swayM: 0,
+    buryFraction: 0.3,
   },
   // Resonance Field — faceted crystal, and the toppled remains of instruments.
   {
@@ -289,6 +299,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     scaleJitter: [0.7, 1.3],
     worldLight: 'none',
     swayM: 0,
+    buryFraction: 0.3,
   },
 ];
 
@@ -453,6 +464,40 @@ export function* scatterProps(
       }
     }
   }
+}
+
+/** A seated stone, as the bake's scour reads it. World metres. */
+export interface StoneSeat {
+  xM: number;
+  yM: number;
+  /** Half its footprint at its own scale. */
+  radiusM: number;
+  /** Its own cell: the scour never leaves it. */
+  cellIndex: number;
+}
+
+/**
+ * Every seated stone on the map, from the registry's own scatter — the same
+ * placements the prop layer stands, since the shipped maps dress without a
+ * cut (the backend's environmentBudget test). The scatter runs over the whole
+ * registry and is filtered after, because a spec's index is in its hash.
+ *
+ * Local like the scatter: a stone reads its own cell and the eight around it,
+ * so a ground delta moves only the seats a rebake of the touched cells and
+ * their ring redraws.
+ */
+export function stoneSeats(terrain: TerrainGrid): StoneSeat[] {
+  const seats: StoneSeat[] = [];
+  for (const { placement, spec } of scatterProps(terrain)) {
+    if ((spec.buryFraction ?? 0) <= 0) continue;
+    seats.push({
+      xM: placement.xM,
+      yM: placement.yM,
+      radiusM: (spec.footprintM * placement.scale) / 2,
+      cellIndex: placement.cellIndex,
+    });
+  }
+  return seats;
 }
 
 /**

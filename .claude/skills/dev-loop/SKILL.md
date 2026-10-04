@@ -68,6 +68,7 @@ doc; a passing critic says nothing about the build.
 | Echo Layer, detection, propagation | A `tools/echo-sim` scenario, committed beside its `.expected.json` |
 | Simulation, missions, combat | The backend test file, run alone: `npm -w packages/backend exec -- node --import tsx --test test/<file>.test.ts` |
 | Anything rendered, HUD or world | A screenshot through [`run-game`](../run-game/SKILL.md), against a real match |
+| A shader on a material already drawn | Frames at `tools/render-stack/capture.mjs`' four cameras, on and off, and gate 6's queued `avgGpuMs` from an unpaced run on the named GPU |
 | A screen, a panel, a control | Its frontend test, plus the accessibility path (`docs/ui-ux.md` §11) |
 | A hull, structure or prop | [`hull-intake`](../hull-intake/SKILL.md)'s bake and report; for an existing model, `node tools/hull-models/diff.mjs <slug>`, the lit sheet `node tools/hull-renders/inspect.mjs <slug> --before <base-sha>` and the sweep `node tools/hull-models/contacts.mjs <slug>` |
 | The mix | `tools/audio-meter` readings, taken at the bus |

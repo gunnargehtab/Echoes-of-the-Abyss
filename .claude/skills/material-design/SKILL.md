@@ -41,7 +41,32 @@ example; do not install another rendering stack.
 - Key cached templates by every look-changing input. A tutorial palette or material
   must not contaminate a later skirmish, including after a palette switch.
 - Keep normal materials on their original path outside the approved slice. Surface
-  detail does not add geometry, hidden state or a per-frame texture bake.
+  detail does not add geometry, hidden state or a per-frame texture bake. A study waiting
+  for approval sits behind a development URL flag of its own, read by one predicate
+  (`seabedDetailEnabled` is the shape), so promoting it is one line and a written decision.
+
+## Ground detail, after the bake
+
+The terrain is one unlit `MeshBasicMaterial` over a 7.8 m a pixel bake, so finer ground is
+shaded in its own fragment shader: `seabedDetail.ts` (#1083), against art-direction's "Silt
+detail and seated stones — SPEC". Its rules hold for any cosmetic on that material.
+
+- **Ride the survey ink.** Install after `installSurveyInk`, read its `vSurveyXZ`, chain its
+  hook and key. The patch lands after `<color_fragment>`, where the bake and the veil's
+  vertex colour already are, and before the ink and the fog.
+- **Strength per cell, blended by the sampler.** One RGBA8 texel a cell, linear filtered,
+  texel centres on cell centres: the GPU does the bake's bilinear `lerp2` in one fetch, so
+  the amount fades across a biome edge while the field stays continuous. A ground delta
+  rewrites the touched texels.
+- **Bound it by construction.** Each term is a fraction in [0, 1] times a table strength,
+  so the darkest pixel is the row's sum, and a test holds every row against
+  `RELIEF_DEPTH`. A screenshot cannot prove a bound; a table can.
+- **Hash with integers.** `fract(sin(dot(p, k)) * 43758.5453)` keeps few bits at map
+  coordinates in single precision and differs between GPUs; pcg2d on a `uvec2` does not.
+  Take a slope from value noise's analytic gradient, not from two more samples.
+- **Fade by pixels, then by distance.** Each octave fades as its wavelength nears a few
+  pixels, and the whole layer by metres a pixel, gone before the survey dolly. Take
+  `dFdx` and `fwidth` before any branch.
 
 ## The render stack
 

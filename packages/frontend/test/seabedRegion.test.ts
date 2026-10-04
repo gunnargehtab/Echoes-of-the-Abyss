@@ -7,14 +7,16 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { Biome } from '@echoes/shared';
+import { Biome, SEABED_DETAIL } from '@echoes/shared';
 import {
   SEABED_PX_PER_CELL,
   seabedRange,
   seabedSeed,
   shadeSeabed,
+  stoneScourGain,
   type CellRect,
 } from '../src/game/seabed.ts';
+import { stoneSeats, type StoneSeat } from '../src/game/environment.ts';
 import type { TerrainPayload } from '../src/net/GameClient.ts';
 
 /** A 6×5 map with a plateau, a trench, rock, and two biomes. */
@@ -107,5 +109,83 @@ describe('seabed region shading', () => {
     // And outside the ring nothing moved, which is why the ring is enough.
     const far = { col0: 0, row0: 3, col1: 5, row1: 4 };
     assert.deepEqual(sliceOf(after.data, after.w, far), sliceOf(full.data, full.w, far));
+  });
+});
+
+describe('the scour round a seated stone', () => {
+  const cell = { x0: 0, y0: 0, x1: 250, y1: 250 };
+  const seat: StoneSeat = { xM: 125, yM: 125, radiusM: 6, cellIndex: 0 };
+  const reach = SEABED_DETAIL.STONE_SCOUR_REACH;
+  const lee = SEABED_DETAIL.STONE_SCOUR_LEE;
+
+  it('darkens only, deepest at and under the stone, and recovers by its reach', () => {
+    const deepest = SEABED_DETAIL.STONE_SCOUR_GAIN;
+    assert.ok(Math.abs(stoneScourGain(125, 125, seat, cell) - deepest) < 1e-12);
+    assert.ok(Math.abs(stoneScourGain(125 + 6, 125, seat, cell) - deepest) < 1e-12);
+    assert.equal(stoneScourGain(125 + 6 * reach, 125, seat, cell), 1);
+    assert.equal(stoneScourGain(125, 125 - 6 * reach, seat, cell), 1, 'up-current');
+    for (let i = 0; i < 2000; i++) {
+      const g = stoneScourGain((i * 7.31) % 250, (i * 13.7) % 250, seat, cell);
+      assert.ok(g >= deepest - 1e-12 && g <= 1, `gain ${g} leaves [${deepest}, 1]`);
+    }
+    // A full-strength authored face darkens to 0.58; a scour is a shallower dip.
+    assert.ok(deepest > 0.58);
+  });
+
+  it('runs further on the lee, the south side, where the current drops its silt', () => {
+    const across = 6 * (1 + (reach - 1) / 2);
+    assert.ok(
+      stoneScourGain(125, 125 + across, seat, cell) < stoneScourGain(125, 125 - across, seat, cell)
+    );
+    assert.ok(stoneScourGain(125, 125 + 6 * reach * lee * 0.95, seat, cell) < 1);
+    assert.equal(stoneScourGain(125, 125 + 6 * reach * lee, seat, cell), 1);
+  });
+
+  it('never leaves its own cell, fading to nothing at the edge', () => {
+    const edge: StoneSeat = { xM: 4, yM: 125, radiusM: 6, cellIndex: 0 };
+    assert.equal(stoneScourGain(0, 125, edge, cell), 1);
+    assert.equal(stoneScourGain(-3, 125, edge, cell), 1);
+    assert.ok(stoneScourGain(4, 125, edge, cell) < 1, 'the stone itself still scours');
+  });
+});
+
+describe('the bake with seated stones', () => {
+  const terrain = demoTerrain();
+  const seed = seabedSeed(terrain);
+  const range = seabedRange(terrain);
+  const whole = { col0: 0, row0: 0, col1: terrain.cols - 1, row1: terrain.rows - 1 };
+  const bare = shadeSeabed(terrain, seed, range, whole);
+  const stones = stoneSeats(terrain);
+  const seated = shadeSeabed(terrain, seed, range, whole, stones);
+  const P = SEABED_PX_PER_CELL;
+
+  it('darkens only the cells a stone stands in, and only darkens them', () => {
+    assert.ok(stones.length > 0, 'the demo map seats no stone');
+    const holding = new Set(stones.map((s) => s.cellIndex));
+    let darkened = 0;
+    for (let py = 0; py < bare.h; py++) {
+      for (let px = 0; px < bare.w; px++) {
+        const index = Math.floor(py / P) * terrain.cols + Math.floor(px / P);
+        const j = (py * bare.w + px) * 4;
+        for (let k = 0; k < 3; k++) {
+          if (!holding.has(index)) assert.equal(seated.data[j + k], bare.data[j + k]);
+          else assert.ok(seated.data[j + k]! <= bare.data[j + k]!, 'a scour brightened the ground');
+        }
+        if (seated.data[j]! < bare.data[j]!) darkened++;
+      }
+    }
+    assert.ok(darkened > 0, 'no stone scoured anything');
+  });
+
+  it('rebakes a delta and its ring exactly as a full bake with the new stones would', () => {
+    const changed = demoTerrain();
+    changed.ceiling[9] = 3000; // a span collapses into rock
+    const after = stoneSeats(changed);
+    const full = shadeSeabed(changed, seed, range, whole, after);
+    const ring = { col0: 2, row0: 0, col1: 4, row1: 2 };
+    const part = shadeSeabed(changed, seed, range, ring, after);
+    assert.deepEqual(part.data, sliceOf(full.data, full.w, ring));
+    const far = { col0: 0, row0: 3, col1: 5, row1: 4 };
+    assert.deepEqual(sliceOf(full.data, full.w, far), sliceOf(seated.data, seated.w, far));
   });
 });

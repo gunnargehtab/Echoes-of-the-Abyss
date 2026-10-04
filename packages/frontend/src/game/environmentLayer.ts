@@ -41,7 +41,16 @@ const Y_AXIS = new Vector3(0, 1, 0);
 const TMP_COLOR = new Color();
 
 export class EnvironmentLayer {
-  constructor(private readonly look: WorldLook = 'standard') {}
+  /**
+   * `seatStones` sinks each loose stone a share of its height into the silt
+   * (`PropSpec.buryFraction`, docs/art-direction.md "Silt detail and seated
+   * stones — SPEC"). It travels with the silt detail: a stone seated over
+   * ground with no scour baked round it would read as a hole in the map.
+   */
+  constructor(
+    private readonly look: WorldLook = 'standard',
+    private readonly seatStones = false
+  ) {}
 
   /** Added to the scene once by the view; rebuilt in place. */
   readonly group = new Group();
@@ -106,11 +115,16 @@ export class EnvironmentLayer {
       );
       if (template === null) continue;
 
+      const sinkM = this.seatStones ? (spec.buryFraction ?? 0) * template.heightM : 0;
       for (const part of template.parts) {
         const mesh = new InstancedMesh(part.geometry, part.material, list.length);
         mesh.frustumCulled = false;
         list.forEach((placement, i) => {
-          TMP_POS.set(placement.xM, groundY(placement.xM, placement.yM), placement.yM);
+          TMP_POS.set(
+            placement.xM,
+            groundY(placement.xM, placement.yM) - sinkM * placement.scale,
+            placement.yM
+          );
           TMP_QUAT.setFromAxisAngle(Y_AXIS, placement.yawRad);
           TMP_SCALE.setScalar(placement.scale);
           mesh.setMatrixAt(i, TMP_MATRIX.compose(TMP_POS, TMP_QUAT, TMP_SCALE));
