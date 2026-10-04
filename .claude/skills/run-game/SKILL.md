@@ -160,9 +160,9 @@ That is the one case where clicking the bar is unavoidable.
 The "needs a selection" column is the thing that catches people: `EchoRenderer`
 returns early on most keys when nothing is selected, so a bare `page.keyboard
 .press('KeyP')` on a fresh connect silently does nothing. Click a unit first.
-Build and production keys are the exception in opposite directions — `R`/`F`/`T`
-work with nothing selected, while `1`–`5` route through a structure that can
-build the unit and so need one.
+Build keys are the exception: `R`/`F`/`T` work with nothing selected. `1`–`9` are
+control groups, not production. Selecting a yard opens its card, and its first
+button sits at about (782, 768) on the 1440×900 viewport (`halo-frames.mjs`).
 
 **There is nothing to select against, so commands go through the keyboard.**
 The page is two stacked canvases and about 17 DOM elements;

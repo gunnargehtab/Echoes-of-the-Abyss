@@ -53,8 +53,12 @@ describe('lamp halo: the SIG gate (gate 3)', () => {
   });
 
   it('rides gate 3 curve above 35, uncapped where the lamp factor stops at 6', () => {
+    // The gain alone: the halo's energy stops at ENERGY_SIG_CAP (below).
     assert.equal(haloGain(35), 1);
-    assert.ok(close(haloGain(95), Math.exp(60 / 14)), 'a ping carries about 73 times SIG 35');
+    assert.ok(
+      close(haloGain(95), Math.exp(60 / 14)),
+      'the gain at a ping is about 73 times SIG 35'
+    );
     assert.ok(haloGain(95) > GLOW_FACTOR_MAX);
   });
 });
@@ -69,6 +73,15 @@ describe('lamp halo: the energy (art-direction, Lamp halo — SPEC)', () => {
       `and 32 times the Foundry, saw ${at(64) / at(25)}`
     );
     assert.equal(at(6), 0, 'and the resting scout carries none');
+  });
+
+  it('stops rising at the cap, so a ping carries 25 times SIG 35 rather than 73', () => {
+    const at = (sig: number) => entityHaloEnergy(sig, 1);
+    const cap = LAMP_HALO.ENERGY_SIG_CAP;
+    assert.equal(at(95), at(cap), 'a ping lights what the cap does');
+    assert.ok(Math.abs(at(95) / at(35) - 24.9) < 0.1, `saw ${at(95) / at(35)}`);
+    assert.ok(at(cap - 5) < at(cap), 'and below the cap the curve still rises');
+    assert.ok(close(at(64) / at(35), haloGain(64)), 'which leaves every resting hull where it was');
   });
 
   it('grows with the draw scale squared, as its drawn hull does', () => {

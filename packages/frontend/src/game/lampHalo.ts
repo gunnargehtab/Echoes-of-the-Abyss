@@ -31,6 +31,13 @@ export const LAMP_HALO = {
   BIAS_M: 2,
   /** At most this many lamp sites are drawn; the faintest drop first. */
   SITE_CAP: 1024,
+  /**
+   * Past this live SIG the energy stops rising, so a ping (95) carries what SIG
+   * 80 does: 25 times SIG 35, not 73. Uncapped, a pinging Harvester's halo
+   * reached its own collar, which kept 3:1 on 83 % of its core against the
+   * SPEC's 90; capped at 85 it still dipped to 89 % on its working route.
+   */
+  ENERGY_SIG_CAP: 80,
 } as const;
 
 /** TUNABLE — whether "default" in Settings means on. Lands off (SPEC). */
@@ -41,7 +48,8 @@ export const LAMP_HALOS_DEFAULT = false;
  * lamp at full ink. Its lamp area is no input.
  */
 export function entityHaloEnergy(liveSig: number, drawScale: number): number {
-  return LAMP_HALO.ENERGY_M2 * haloGain(liveSig) * drawScale * drawScale;
+  const sig = Math.min(liveSig, LAMP_HALO.ENERGY_SIG_CAP);
+  return LAMP_HALO.ENERGY_M2 * haloGain(sig) * drawScale * drawScale;
 }
 
 /**

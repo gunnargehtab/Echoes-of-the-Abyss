@@ -1,0 +1,1215 @@
+{
+  "about": "#1001's scratch sweeps of the lamp halo's collar at a ping, one entry a run of tools/render-stack/halo-frames.mjs with STAGES=pings, extracted from the runs' own records; the README's 'The collar at a ping' quotes them. Shares are the part of the collar's core keeping 3:1, the worst moment of the read.",
+  "runs": [
+    {
+      "setting": "as built",
+      "map": "ventfront",
+      "ratio": 1,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.1
+        ],
+        "energySigCap": null
+      },
+      "reader": "stroke, read through whole pings; the scout idles",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Light Scout": {
+          "restSig": 6,
+          "liftedCssPx": {
+            "rest": 0,
+            "ping": 3137
+          },
+          "liftRatio": null,
+          "collarFirst": {
+            "share": 0.8919,
+            "corePixels": 148
+          },
+          "collarStill": {
+            "on": 0.8919,
+            "off": 1
+          },
+          "collarRoute": null
+        }
+      }
+    },
+    {
+      "setting": "as built",
+      "map": "ventfront",
+      "ratio": 1.5,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.1
+        ],
+        "energySigCap": null
+      },
+      "reader": "stroke, read through whole pings; the scout idles",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Light Scout": {
+          "restSig": 6,
+          "liftedCssPx": {
+            "rest": 0,
+            "ping": 3105.3
+          },
+          "liftRatio": null,
+          "collarFirst": {
+            "share": 0.8839,
+            "corePixels": 267
+          },
+          "collarStill": {
+            "on": 0.8839,
+            "off": 1
+          },
+          "collarRoute": null
+        }
+      }
+    },
+    {
+      "setting": "as built",
+      "map": "ventfront",
+      "ratio": 1,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.1
+        ],
+        "energySigCap": null
+      },
+      "reader": "stroke, through whole pings, stopped and along a working route",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Harvester": {
+          "restSig": 40,
+          "liftedCssPx": {
+            "rest": 214,
+            "ping": 3334
+          },
+          "liftRatio": 15.58,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 168
+          },
+          "collarStill": {
+            "on": 0.8343,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 0.8253,
+            "offWorst": 1,
+            "pings": 4
+          }
+        }
+      }
+    },
+    {
+      "setting": "widest 0.05, haze behind the scout",
+      "map": "ventfront",
+      "ratio": 1,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.05
+        ],
+        "energySigCap": null
+      },
+      "reader": "first: the core is the ink within 28 levels, read through whole pings",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Light Scout": {
+          "restSig": 6,
+          "liftedCssPx": {
+            "rest": 0,
+            "ping": 2523
+          },
+          "liftRatio": null,
+          "collarFirst": {
+            "share": 0.8634,
+            "corePixels": 205
+          },
+          "collarStill": {
+            "on": 0.8634,
+            "off": 1
+          },
+          "collarRoute": null
+        }
+      }
+    },
+    {
+      "setting": "widest 0.05",
+      "map": "ventfront",
+      "ratio": 1,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.05
+        ],
+        "energySigCap": null
+      },
+      "reader": "first: the core is the ink within 28 levels, read through whole pings",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Light Scout": {
+          "restSig": 6,
+          "liftedCssPx": {
+            "rest": 0,
+            "ping": 2523
+          },
+          "liftRatio": null,
+          "collarFirst": {
+            "share": 0.9119,
+            "corePixels": 159
+          },
+          "collarStill": {
+            "on": 0.9119,
+            "off": 1
+          },
+          "collarRoute": null
+        }
+      }
+    },
+    {
+      "setting": "widest 0.05",
+      "map": "ventfront",
+      "ratio": 1,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.05
+        ],
+        "energySigCap": null
+      },
+      "reader": "stroke, read through whole pings; the scout idles",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Light Scout": {
+          "restSig": 6,
+          "liftedCssPx": {
+            "rest": 0,
+            "ping": 2523
+          },
+          "liftRatio": null,
+          "collarFirst": {
+            "share": 0.9054,
+            "corePixels": 148
+          },
+          "collarStill": {
+            "on": 0.9054,
+            "off": 1
+          },
+          "collarRoute": null
+        }
+      }
+    },
+    {
+      "setting": "widest 0.05",
+      "map": "ventfront",
+      "ratio": 1.5,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.05
+        ],
+        "energySigCap": null
+      },
+      "reader": "stroke, read through whole pings; the scout idles",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Light Scout": {
+          "restSig": 6,
+          "liftedCssPx": {
+            "rest": 0,
+            "ping": 2489.8
+          },
+          "liftRatio": null,
+          "collarFirst": {
+            "share": 0.9142,
+            "corePixels": 268
+          },
+          "collarStill": {
+            "on": 0.9142,
+            "off": 1
+          },
+          "collarRoute": null
+        }
+      }
+    },
+    {
+      "setting": "widest 0.05",
+      "map": "ventfront",
+      "ratio": 1,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.05
+        ],
+        "energySigCap": null
+      },
+      "reader": "stroke, read through whole pings with the hull stopped",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Light Scout": {
+          "restSig": 6,
+          "liftedCssPx": {
+            "rest": 0,
+            "ping": 2523
+          },
+          "liftRatio": null,
+          "collarFirst": {
+            "share": 0.9079,
+            "corePixels": 152
+          },
+          "collarStill": {
+            "on": 0.9079,
+            "off": 1
+          },
+          "collarRoute": null
+        },
+        "Caisson": {
+          "restSig": 64,
+          "liftedCssPx": {
+            "rest": 650,
+            "ping": 2153
+          },
+          "liftRatio": 3.31,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 210
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": null
+        },
+        "Harvester": {
+          "restSig": 40,
+          "liftedCssPx": {
+            "rest": 147,
+            "ping": 2493
+          },
+          "liftRatio": 16.96,
+          "collarFirst": {
+            "share": 0.9811,
+            "corePixels": 159
+          },
+          "collarStill": {
+            "on": 0.8621,
+            "off": 0.9943
+          },
+          "collarRoute": null
+        }
+      }
+    },
+    {
+      "setting": "widest 0.05",
+      "map": "ventfront",
+      "ratio": 1.5,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.05
+        ],
+        "energySigCap": null
+      },
+      "reader": "stroke, read through whole pings with the hull stopped",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Light Scout": {
+          "restSig": 6,
+          "liftedCssPx": {
+            "rest": 0,
+            "ping": 2489.8
+          },
+          "liftRatio": null,
+          "collarFirst": {
+            "share": 0.9142,
+            "corePixels": 268
+          },
+          "collarStill": {
+            "on": 0.9142,
+            "off": 1
+          },
+          "collarRoute": null
+        },
+        "Caisson": {
+          "restSig": 64,
+          "liftedCssPx": {
+            "rest": 629.3,
+            "ping": 2069.8
+          },
+          "liftRatio": 3.29,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 378
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": null
+        },
+        "Harvester": {
+          "restSig": 40,
+          "liftedCssPx": {
+            "rest": 215.1,
+            "ping": 2573.8
+          },
+          "liftRatio": 11.96,
+          "collarFirst": {
+            "share": 0.9013,
+            "corePixels": 304
+          },
+          "collarStill": {
+            "on": 0.875,
+            "off": 1
+          },
+          "collarRoute": null
+        }
+      }
+    },
+    {
+      "setting": "widest 0.05, ceiling 0.2",
+      "map": "ventfront",
+      "ratio": 1,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.2,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.05
+        ],
+        "energySigCap": null
+      },
+      "reader": "stroke, read through whole pings with the hull stopped",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Harvester": {
+          "restSig": 40,
+          "liftedCssPx": {
+            "rest": 205,
+            "ping": 2814
+          },
+          "liftRatio": 13.73,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 174
+          },
+          "collarStill": {
+            "on": 0.8629,
+            "off": 1
+          },
+          "collarRoute": null
+        }
+      }
+    },
+    {
+      "setting": "widest 0.05, ceiling 0.15",
+      "map": "ventfront",
+      "ratio": 1,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.15,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.05
+        ],
+        "energySigCap": null
+      },
+      "reader": "stroke, read through whole pings with the hull stopped",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Harvester": {
+          "restSig": 40,
+          "liftedCssPx": {
+            "rest": 202,
+            "ping": 2819
+          },
+          "liftRatio": 13.96,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 171
+          },
+          "collarStill": {
+            "on": 0.8678,
+            "off": 1
+          },
+          "collarRoute": null
+        }
+      }
+    },
+    {
+      "setting": "widest 0.05, energy 12 m²",
+      "map": "ventfront",
+      "ratio": 1,
+      "halo": {
+        "energyM2": 12,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.05
+        ],
+        "energySigCap": null
+      },
+      "reader": "stroke, read through whole pings with the hull stopped",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Light Scout": {
+          "restSig": 6,
+          "liftedCssPx": {
+            "rest": 0,
+            "ping": 2094
+          },
+          "liftRatio": null,
+          "collarFirst": {
+            "share": 0.9932,
+            "corePixels": 148
+          },
+          "collarStill": {
+            "on": 0.9932,
+            "off": 1
+          },
+          "collarRoute": null
+        },
+        "Caisson": {
+          "restSig": 64,
+          "liftedCssPx": {
+            "rest": 435,
+            "ping": 1736
+          },
+          "liftRatio": 3.99,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 210
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": null
+        },
+        "Harvester": {
+          "restSig": 40,
+          "liftedCssPx": {
+            "rest": 49,
+            "ping": 2032
+          },
+          "liftRatio": 41.47,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 170
+          },
+          "collarStill": {
+            "on": 0.9023,
+            "off": 1
+          },
+          "collarRoute": null
+        }
+      }
+    },
+    {
+      "setting": "cap 85",
+      "map": "ventfront",
+      "ratio": 1,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.1
+        ],
+        "energySigCap": 85
+      },
+      "reader": "stroke, read through whole pings with the hull stopped",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Light Scout": {
+          "restSig": 6,
+          "liftedCssPx": {
+            "rest": 0,
+            "ping": 2300
+          },
+          "liftRatio": null,
+          "collarFirst": {
+            "share": 0.9932,
+            "corePixels": 148
+          },
+          "collarStill": {
+            "on": 0.9932,
+            "off": 1
+          },
+          "collarRoute": null
+        },
+        "Caisson": {
+          "restSig": 64,
+          "liftedCssPx": {
+            "rest": 709,
+            "ping": 1839
+          },
+          "liftRatio": 2.59,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 210
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": null
+        },
+        "Harvester": {
+          "restSig": 40,
+          "liftedCssPx": {
+            "rest": 169,
+            "ping": 2172
+          },
+          "liftRatio": 12.85,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 162
+          },
+          "collarStill": {
+            "on": 0.9368,
+            "off": 0.9885
+          },
+          "collarRoute": null
+        }
+      }
+    },
+    {
+      "setting": "cap 85",
+      "map": "ventfront",
+      "ratio": 1.5,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.1
+        ],
+        "energySigCap": 85
+      },
+      "reader": "stroke, read through whole pings with the hull stopped",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Light Scout": {
+          "restSig": 6,
+          "liftedCssPx": {
+            "rest": 0,
+            "ping": 2286.2
+          },
+          "liftRatio": null,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 268
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": null
+        },
+        "Caisson": {
+          "restSig": 64,
+          "liftedCssPx": {
+            "rest": 685.3,
+            "ping": 1792.4
+          },
+          "liftRatio": 2.62,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 378
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": null
+        },
+        "Harvester": {
+          "restSig": 40,
+          "liftedCssPx": {
+            "rest": 228,
+            "ping": 2336.4
+          },
+          "liftRatio": 10.25,
+          "collarFirst": {
+            "share": 0.9211,
+            "corePixels": 304
+          },
+          "collarStill": {
+            "on": 0.9276,
+            "off": 1
+          },
+          "collarRoute": null
+        }
+      }
+    },
+    {
+      "setting": "cap 85",
+      "map": "ventfront",
+      "ratio": 1,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.1
+        ],
+        "energySigCap": 85
+      },
+      "reader": "stroke, through whole pings, stopped and along a working route",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Light Scout": {
+          "restSig": 6,
+          "liftedCssPx": {
+            "rest": 0,
+            "ping": 2300
+          },
+          "liftRatio": null,
+          "collarFirst": {
+            "share": 0.9932,
+            "corePixels": 148
+          },
+          "collarStill": {
+            "on": 0.9932,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 1,
+            "offWorst": 1,
+            "pings": 4
+          }
+        },
+        "Caisson": {
+          "restSig": 64,
+          "liftedCssPx": {
+            "rest": 709,
+            "ping": 1839
+          },
+          "liftRatio": 2.59,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 210
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 1,
+            "offWorst": 1,
+            "pings": 4
+          }
+        },
+        "Harvester": {
+          "restSig": 40,
+          "liftedCssPx": {
+            "rest": 208,
+            "ping": 2335
+          },
+          "liftRatio": 11.23,
+          "collarFirst": {
+            "share": 0.9222,
+            "corePixels": 180
+          },
+          "collarStill": {
+            "on": 0.9075,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 0.8929,
+            "offWorst": 1,
+            "pings": 4
+          }
+        }
+      }
+    },
+    {
+      "setting": "cap 85",
+      "map": "ventfront",
+      "ratio": 1.5,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.1
+        ],
+        "energySigCap": 85
+      },
+      "reader": "stroke, through whole pings, stopped and along a working route",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Light Scout": {
+          "restSig": 6,
+          "liftedCssPx": {
+            "rest": 0,
+            "ping": 2286.2
+          },
+          "liftRatio": null,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 268
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 1,
+            "offWorst": 1,
+            "pings": 4
+          }
+        },
+        "Caisson": {
+          "restSig": 64,
+          "liftedCssPx": {
+            "rest": 685.3,
+            "ping": 1792.4
+          },
+          "liftRatio": 2.62,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 378
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 1,
+            "offWorst": 1,
+            "pings": 4
+          }
+        },
+        "Harvester": {
+          "restSig": 40,
+          "liftedCssPx": {
+            "rest": 166.2,
+            "ping": 2389.8
+          },
+          "liftRatio": 14.38,
+          "collarFirst": {
+            "share": 0.9106,
+            "corePixels": 302
+          },
+          "collarStill": {
+            "on": 0.9702,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 0.9106,
+            "offWorst": 0.9967,
+            "pings": 4
+          }
+        }
+      }
+    },
+    {
+      "setting": "cap 85, widest 0.05",
+      "map": "ventfront",
+      "ratio": 1,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.05
+        ],
+        "energySigCap": 85
+      },
+      "reader": "stroke, through whole pings, stopped and along a working route",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Light Scout": {
+          "restSig": 6,
+          "liftedCssPx": {
+            "rest": 0,
+            "ping": 1932
+          },
+          "liftRatio": null,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 148
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 1,
+            "offWorst": 1,
+            "pings": 6
+          }
+        },
+        "Caisson": {
+          "restSig": 64,
+          "liftedCssPx": {
+            "rest": 650,
+            "ping": 1584
+          },
+          "liftRatio": 2.44,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 210
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 1,
+            "offWorst": 1,
+            "pings": 6
+          }
+        },
+        "Harvester": {
+          "restSig": 45,
+          "liftedCssPx": {
+            "rest": 284,
+            "ping": 2128
+          },
+          "liftRatio": 7.49,
+          "collarFirst": {
+            "share": 0.927,
+            "corePixels": 178
+          },
+          "collarStill": {
+            "on": 0.9357,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 0.9207,
+            "offWorst": 1,
+            "pings": 6
+          }
+        }
+      }
+    },
+    {
+      "setting": "cap 85, widest 0.05",
+      "map": "ventfront",
+      "ratio": 1.5,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.05
+        ],
+        "energySigCap": 85
+      },
+      "reader": "stroke, through whole pings, stopped and along a working route",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Light Scout": {
+          "restSig": 6,
+          "liftedCssPx": {
+            "rest": 0,
+            "ping": 1908
+          },
+          "liftRatio": null,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 268
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 1,
+            "offWorst": 1,
+            "pings": 6
+          }
+        },
+        "Caisson": {
+          "restSig": 64,
+          "liftedCssPx": {
+            "rest": 629.3,
+            "ping": 1532.9
+          },
+          "liftRatio": 2.44,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 378
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 1,
+            "offWorst": 1,
+            "pings": 6
+          }
+        },
+        "Harvester": {
+          "restSig": 40,
+          "liftedCssPx": {
+            "rest": 170.2,
+            "ping": 2056.4
+          },
+          "liftRatio": 12.08,
+          "collarFirst": {
+            "share": 0.9309,
+            "corePixels": 304
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 0.9172,
+            "offWorst": 0.9934,
+            "pings": 6
+          }
+        }
+      }
+    },
+    {
+      "setting": "cap 80",
+      "map": "ventfront",
+      "ratio": 1,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.1
+        ],
+        "energySigCap": 80
+      },
+      "reader": "stroke, through whole pings, stopped and along a working route",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Harvester": {
+          "restSig": 40,
+          "liftedCssPx": {
+            "rest": 213,
+            "ping": 2060
+          },
+          "liftRatio": 9.67,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 165
+          },
+          "collarStill": {
+            "on": 0.9492,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 0.9455,
+            "offWorst": 1,
+            "pings": 4
+          }
+        }
+      }
+    },
+    {
+      "setting": "cap 80",
+      "map": "ventfront",
+      "ratio": 1,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.1
+        ],
+        "energySigCap": 80
+      },
+      "reader": "stroke, through whole pings, stopped and along a working route",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Light Scout": {
+          "restSig": 6,
+          "liftedCssPx": {
+            "rest": 0,
+            "ping": 1924
+          },
+          "liftRatio": null,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 148
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 1,
+            "offWorst": 1,
+            "pings": 6
+          }
+        },
+        "Caisson": {
+          "restSig": 64,
+          "liftedCssPx": {
+            "rest": 709,
+            "ping": 1524
+          },
+          "liftRatio": 2.15,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 210
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 1,
+            "offWorst": 1,
+            "pings": 6
+          }
+        },
+        "Harvester": {
+          "restSig": 45,
+          "liftedCssPx": {
+            "rest": 292,
+            "ping": 2015
+          },
+          "liftRatio": 6.9,
+          "collarFirst": {
+            "share": 0.9489,
+            "corePixels": 176
+          },
+          "collarStill": {
+            "on": 0.954,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 0.9512,
+            "offWorst": 1,
+            "pings": 6
+          }
+        }
+      }
+    },
+    {
+      "setting": "cap 80",
+      "map": "ventfront",
+      "ratio": 1.5,
+      "halo": {
+        "energyM2": 20,
+        "ceiling": 0.25,
+        "levelWeights": [
+          0.6,
+          0.3,
+          0.1
+        ],
+        "energySigCap": 80
+      },
+      "reader": "stroke, through whole pings, stopped and along a working route",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "hulls": {
+        "Light Scout": {
+          "restSig": 6,
+          "liftedCssPx": {
+            "rest": 0,
+            "ping": 1917.3
+          },
+          "liftRatio": null,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 268
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 1,
+            "offWorst": 1,
+            "pings": 6
+          }
+        },
+        "Caisson": {
+          "restSig": 64,
+          "liftedCssPx": {
+            "rest": 685.3,
+            "ping": 1478.2
+          },
+          "liftRatio": 2.16,
+          "collarFirst": {
+            "share": 1,
+            "corePixels": 378
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 1,
+            "offWorst": 1,
+            "pings": 6
+          }
+        },
+        "Harvester": {
+          "restSig": 40,
+          "liftedCssPx": {
+            "rest": 194.7,
+            "ping": 2008.9
+          },
+          "liftRatio": 10.32,
+          "collarFirst": {
+            "share": 0.9309,
+            "corePixels": 304
+          },
+          "collarStill": {
+            "on": 1,
+            "off": 1
+          },
+          "collarRoute": {
+            "onWorst": 0.9272,
+            "offWorst": 0.9934,
+            "pings": 6
+          }
+        }
+      }
+    }
+  ]
+}

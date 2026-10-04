@@ -65,7 +65,8 @@ export function haloWeight(liveSig: number): number {
  * The halo's gain at a live SIG, relative to SIG 35: its weight times gate 3's
  * E(SIG) normalised there. Uncapped above 35, unlike the lamp's own factor,
  * since a ping's light past white is what the halo is for; SIG is taken
- * between 0 and 100.
+ * between 0 and 100. The halo's energy stops at `ENERGY_SIG_CAP` (lampHalo.ts),
+ * below a ping, so the flare stops short of the collar.
  */
 export function haloGain(liveSig: number): number {
   const sig = Math.min(100, Math.max(0, liveSig));

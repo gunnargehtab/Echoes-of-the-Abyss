@@ -1,0 +1,78 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "dpr": 1.5
+  },
+  "reducedMotion": true,
+  "map": "ventfront",
+  "tunables": {
+    "energyM2": 20,
+    "ceiling": 0.25,
+    "toe": 0.004,
+    "energySigCap": 80,
+    "levelWeights": [
+      0.6,
+      0.3,
+      0.1
+    ]
+  },
+  "routePings": 3,
+  "note": "Bastion held at SIG 80 by a local, uncommitted change to its sigIdle and sigActive in packages/shared/src/structures.ts, standing in for the Order's instant refit",
+  "cameras": [],
+  "pings": [],
+  "structures": [
+    {
+      "state": "rest",
+      "key": "structure:118",
+      "name": "Bastion",
+      "sig": 80,
+      "sites": 27,
+      "lampCssPx": 604.9,
+      "lightCssPx2": 71.95,
+      "liftedCssPx": 672,
+      "peakLevels": 52
+    },
+    {
+      "state": "rest",
+      "key": "structure:119",
+      "name": "Foundry",
+      "sig": 25,
+      "sites": 10,
+      "lampCssPx": 3492.4,
+      "lightCssPx2": 0,
+      "liftedCssPx": 0,
+      "peakLevels": 0
+    },
+    {
+      "state": "working",
+      "key": "structure:118",
+      "name": "Bastion",
+      "sig": 80,
+      "sites": 27,
+      "lampCssPx": 604.9,
+      "lightCssPx2": 71.95,
+      "liftedCssPx": 672,
+      "peakLevels": 52
+    },
+    {
+      "state": "working",
+      "key": "structure:119",
+      "name": "Foundry",
+      "sig": 55,
+      "sites": 10,
+      "lampCssPx": 3492.4,
+      "lightCssPx2": 0,
+      "liftedCssPx": 0,
+      "peakLevels": 0
+    }
+  ],
+  "ridge": {
+    "searched": 0,
+    "spot": null,
+    "arrived": false,
+    "hidden": null,
+    "control": null
+  }
+}

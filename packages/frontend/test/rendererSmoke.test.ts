@@ -3369,4 +3369,24 @@ describe('renderer smoke test: the halo frame reading (#1001, development only)'
     assert.equal(probes.__perspectiveHaloFrame, undefined, 'the switches go with the view');
     assert.equal(probes.__perspectiveHaloOnly, undefined);
   });
+
+  it('reads the seabed the view draws for the ridge case, and goes with the view', async () => {
+    type Probes = { __perspectiveSeabedM?: (x: number, z: number) => number };
+    const world = await boot();
+    try {
+      const probes = (globalThis as unknown as { window: Probes }).window;
+      assert.ok(probes.__perspectiveSeabedM);
+      for (const [x, z] of [
+        [2000, 2000],
+        [500, 3500],
+      ] as const) {
+        // The ground the overlay already asks for, not a second heightfield.
+        assert.equal(probes.__perspectiveSeabedM!(x, z), world.conn.seabedDepthAt(x, z));
+      }
+    } finally {
+      world.teardown();
+    }
+    const probes = (globalThis as unknown as { window: Probes }).window;
+    assert.equal(probes.__perspectiveSeabedM, undefined);
+  });
 });
