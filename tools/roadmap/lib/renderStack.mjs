@@ -48,8 +48,9 @@ export const UPGRADES = [
 
 /**
  * The audit's three frames, each the repository file it was cropped from.
- * The portrait is the same file the roadmap's Bathyarch card shows, so both
- * pages share one copy of it.
+ * The portrait is the one the audit was taken against, the bloom rig's frame
+ * of 11 September, kept under issue-974 since #1015 re-rendered the roster
+ * through the game's own frame; the roadmap's cards show the current one.
  */
 export const FRAMES = [
   {
@@ -59,8 +60,8 @@ export const FRAMES = [
   },
   {
     key: 'portrait',
-    from: 'docs/concept-art/renders/cruiser-bathyarch.png',
-    href: 'renders/cruiser-bathyarch.png',
+    from: 'docs/screenshots/issue-974/portrait-cruiser-bathyarch.png',
+    href: 'render-stack/portrait-cruiser-bathyarch.png',
   },
   {
     key: 'game',

@@ -48,6 +48,11 @@ Each station records at least 240 frames from both painters.
 Hardware: NVIDIA GTX 1070, ANGLE/Direct3D 11, headed Microsoft Edge, 1440 × 900,
 development build with the backend on the same Windows machine.
 
+`portrait-cruiser-bathyarch.png` is the hull portrait the ranked audit compares against,
+from the bloom rig of 11 September. It is kept here because
+[#1015](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1015) re-rendered the
+roster through the game's own frame.
+
 | Scene | Before calls / triangles | After calls / triangles | Texture count before → after | After mean conn CPU ms, range over cameras |
 | --- | --- | --- | --- | --- |
 | Ventfront | 54–55 / 148,290 | 54–55 / 148,290 | 8 → 9 | 0.92–1.03 |
