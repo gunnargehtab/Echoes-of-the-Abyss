@@ -199,19 +199,22 @@
  * the sand, past the 0.05 m contacts.mjs allows a claw's point, so it lists
  * each one under the seabed — and the cone the span between (`spanning`).
  * The bearings, the points' stations in plan, the skins and the 0.3 base
- * are the file's; the lean and the length are the span's, 2.74–3.84 on the
- * nodes where the file wrote 1.94–2.94, the bases at y 0.51–0.55 (6.3–6.7 m
- * up). Rooted on the wall, three ran into what the file's hanging claws
- * had stood clear of (hull-reviewer, the first round): `_4` through the
+ * are the file's but for the three turns below; the lean and the length
+ * are the span's, 2.74–3.84 on the nodes where the file wrote 1.94–2.94,
+ * the bases at y 0.51–0.55 (6.3–6.8 m up). Rooted on the wall, three ran
+ * into what the file's hanging claws had stood clear of (hull-reviewer,
+ * the first round): `_4` through the
  * foot of `standpipe_1`, 1° off its bearing; `_5` through the belly of
  * `ballast_tank_0`, deeper than the file's 42 %; `_3` 2.4 m into the floor
- * of `dock_small_throat` mid-span. `_3` swings 0.2 rad about the dome's
- * axis, both ends (`swing`; as `swung` turns `photophore_8`), out from
- * under the throat. `_4` and `_5` turn their roots alone along the wall,
- * −0.12 and −0.22 rad (`foot`), the points held at the file's stations,
- * because the plan's −x extreme is `_4`'s point and the fit `fitFootprint`
- * measures goes with it: swung whole, ±0.12 rad moved the fit 1.3–1.6 %
- * and the dome's scale with it. contacts.mjs lists each claw on
+ * of `dock_small_throat` mid-span. A turn moves the root alone along the
+ * wall (`foot`), the point held at the file's station as the rest are:
+ * `_4` −0.12 rad and `_5` −0.22, both clips at the root. `_4`'s point is
+ * also the plan's −x extreme, which the fit `fitFootprint` measures goes
+ * with — swung whole by 0.10–0.15 rad either way, the fit moved 1.0–1.6 %
+ * and the dome's scale with it. `_3`'s graze is mid-span, where a root
+ * turn moves the claw half as far as at the wall, so it swings 0.2 rad
+ * about the dome's axis with both ends (`swing`; as `swung` turns
+ * `photophore_8`), out from under the throat. contacts.mjs lists each claw on
  * `carapace_tier_0` and nothing else, under the seabed to y −0.124, and
  * 152 pairs where #960 read 150: six tier mounts gained, the file's four
  * dock and tank clips gone. The fit moved 17.7998 → 17.8132 (`DRAWN`), a
