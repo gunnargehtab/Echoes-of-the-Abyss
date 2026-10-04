@@ -100,7 +100,8 @@ carries one fact: how loud that hull or structure is now. It carries the part of
 gate 3's lamp core cannot show. A lamp held at white along its hue has no headroom left, so
 a ping or a firing burst loses 66–83 % of a unit's lamp light to that white
 ([issue-1001](screenshots/issue-1001/README.md), "Halo readings"). The halo is where that
-flare reads.
+flare reads, up to SIG 80: past it the halo holds still ("The SIG gate" below), and the
+collar alone reads how much louder.
 
 It is a second reading of loudness, never the first. With the halo off, the lamp core and
 the loudness collar ([ui-ux.md](ui-ux.md) §3.5) carry every loudness fact, so turning it off
@@ -140,10 +141,11 @@ no way in.
 **Energy.** Each entity's halo is given one energy, set by its live SIG and nothing else:
 
 ```text
-Q = Ā · w(SIG) · e^((SIG − 35) / 14) · drawScale²
+Q = Ā · w(SIG) · e^((min(SIG, 80) − 35) / 14) · drawScale²
 ```
 
-w is the gate below. e^((SIG − 35)/14) is gate 3's E(SIG), normalised to 1 at SIG 35.
+w is the gate below. e^((SIG − 35)/14) is gate 3's E(SIG), normalised to 1 at SIG 35, and
+taken no further than SIG 80 (the gate below says why).
 drawScale is the far-zoom readability scale, so a halo grows with its drawn hull. Ā is
 **20 m²** (TUNABLE, set from the reading below): a SIG-35 entity's halo carries the light of
 20 square metres of lamp at full ink. Each site takes a share of Q in proportion to its
@@ -243,8 +245,8 @@ stations:
   live SIG: Caisson > Harvester (40, working), and nothing from the Light Scout. A structure
   spreads its energy over lamps three to five times a hull's width, so it stays dark through
   its working hum and shows only at its loudest: nothing from the Bastion (35) or the Foundry
-  (25, or 55 producing), while a Bastion striking an Order (80) shows. Its collar carries
-  the rest, as it carries everything a structure's loudness reports
+  (25, or 55 producing), while a Bastion striking the Order's instant refit (80) shows. Its
+  collar carries the rest, as it carries everything a structure's loudness reports
   ([ui-ux.md](ui-ux.md) §3.5). No own entity at live SIG 0–15 contributes a splat, over
   every input.
 - **Ping.** A ping at least doubles the area a hull's halo lifts past 10 % luma, for any hull

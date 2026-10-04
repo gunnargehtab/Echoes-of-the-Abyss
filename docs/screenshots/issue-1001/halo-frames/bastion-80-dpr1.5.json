@@ -18,6 +18,8 @@
       0.1
     ]
   },
+  "routePings": 3,
+  "note": "Bastion held at SIG 80 by a local, uncommitted change to its sigIdle and sigActive in packages/shared/src/structures.ts, standing in for the Order's instant refit",
   "cameras": [],
   "pings": [],
   "structures": [

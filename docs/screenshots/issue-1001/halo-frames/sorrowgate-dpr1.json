@@ -18,6 +18,8 @@
       0.1
     ]
   },
+  "routePings": 4,
+  "note": null,
   "cameras": [
     {
       "name": "home",
@@ -229,8 +231,8 @@
       "state": "drawn",
       "sites": 10,
       "darkness": {
-        "before": 0.992,
-        "after": 0.992,
+        "before": 0.9921,
+        "after": 0.9921,
         "lossPoints": 0
       },
       "lamps": {

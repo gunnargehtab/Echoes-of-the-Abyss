@@ -53,8 +53,12 @@ describe('lamp halo: the SIG gate (gate 3)', () => {
   });
 
   it('rides gate 3 curve above 35, uncapped where the lamp factor stops at 6', () => {
+    // The gain alone: the halo's energy stops at ENERGY_SIG_CAP (below).
     assert.equal(haloGain(35), 1);
-    assert.ok(close(haloGain(95), Math.exp(60 / 14)), 'a ping carries about 73 times SIG 35');
+    assert.ok(
+      close(haloGain(95), Math.exp(60 / 14)),
+      'the gain at a ping is about 73 times SIG 35'
+    );
     assert.ok(haloGain(95) > GLOW_FACTOR_MAX);
   });
 });

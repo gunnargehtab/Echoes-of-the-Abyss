@@ -31,22 +31,25 @@
  * Then, on Ventfront at the close camera, each own hull kind pings in turn:
  * the area its halo alone lifts past 10 % luma at rest and at SIG 95, and the
  * WCAG 2.3.1 flash between the rest and ping frames with every halo on, beside
- * the same pair without the halo. The hull is then stopped and pings twice
- * more, its collar read through each whole ping, halo on and then off; the
- * worst moment is the reading (`collarOverPing`). Writes halo-frames.json and
- * a composited shot of every camera with the halo off and on. Not a gate.
+ * the same pair without the halo. Its collar is then read through whole pings,
+ * the worst moment being the reading: `ROUTE_PINGS` pings (3 by default) while
+ * it works, each where it then is (`collarAlongRoute`), then stopped, two more
+ * with the halo on and off (`collarOverPing`). Writes halo-frames.json and a
+ * composited shot of every camera with the halo off and on. Not a gate.
  *
  * Two more stages answer #1001's calls of 4 October. **Structures**, on
  * Ventfront at the close camera: each structure's halo alone at rest, then
- * with the Foundry producing, the order a player gives, so a working
- * structure's light is read beside a resting one's. **Ridge**: own hulls at the
- * low (12°) pitch from every yaw, the seabed sampled along the sight line, and
- * where relief stands between the eye and a hull, that hull's halo alone.
+ * with the Foundry producing, pressed on its card, so a working structure's
+ * light is read beside a resting one's. **Ridge**: the Light Scout is sent to
+ * the nearest spot where relief stands between a 12° camera and it
+ * (`ridgeSpot`), pings there, and its halo alone is read hidden and, as the
+ * control, from the same yaw at 35°.
  *
  * `STAGES=cameras,pings,structures,ridge` picks stages (all by default), and
  * `PING_KINDS=light-scout` the hull kinds that ping, so a TUNABLE swept by
  * editing `lampHalo.ts` between runs reads one collar in a minute. The record
- * carries the TUNABLEs the served file held.
+ * carries the TUNABLEs the served file held, `ROUTE_PINGS`, and `NOTE`, which
+ * names anything a run changed by hand, such as a SIG held by a local patch.
  */
 import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -429,17 +432,28 @@ function alignCores(cores, from, to, entities) {
   });
 }
 
-/** The collars with the halo on, and off, at cores found with it off. */
+/**
+ * The collars with the halo on, and off, at cores found with it off. Each pair
+ * is read where its hulls then stand: a working hull moves in the half second
+ * between them, and cores looked for round an older position find only part
+ * of its ring.
+ */
 async function collars(page, entities, dpr) {
+  const here = async () => {
+    const now = await ownEntities(page);
+    return entities.map((e) => now.find((n) => n.key === e.key) ?? e);
+  };
+  const atOn = await here();
   const on = await hudPair(page);
   await page.evaluate(() => window.__perspectiveHalo(false));
   await page.waitForTimeout(200);
+  const atOff = await here();
   const off = await hudPair(page);
   await page.evaluate(() => window.__perspectiveHalo(true));
   await page.waitForTimeout(200);
-  const cores = collarCores(off, entities, dpr);
-  const onCores = coresIn(cores, off, on, entities, dpr);
-  return { on: collarContrast(on, entities, onCores), off: collarContrast(off, entities, cores) };
+  const cores = collarCores(off, atOff, dpr);
+  const onCores = coresIn(cores, off, on, atOn, dpr);
+  return { on: collarContrast(on, atOn, onCores), off: collarContrast(off, atOff, cores) };
 }
 
 /**
@@ -980,6 +994,8 @@ export default async ({ page, shot }) => {
     reducedMotion: reduced,
     map,
     tunables: tunables(),
+    routePings: ROUTE_PINGS,
+    note: process.env.NOTE ?? null,
     cameras,
     pings,
     structures,

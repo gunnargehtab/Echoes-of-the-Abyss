@@ -18,6 +18,8 @@
       0.1
     ]
   },
+  "routePings": 4,
+  "note": null,
   "cameras": [
     {
       "name": "home",
@@ -221,7 +223,7 @@
       ],
       "darknessWithHud": {
         "off": 0.6564,
-        "on": 0.6563
+        "on": 0.6564
       }
     },
     {

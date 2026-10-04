@@ -18,14 +18,16 @@
       0.1
     ]
   },
+  "routePings": 4,
+  "note": null,
   "cameras": [
     {
       "name": "home",
       "state": "drawn",
       "sites": 108,
       "darkness": {
-        "before": 0.9735,
-        "after": 0.9735,
+        "before": 0.9733,
+        "after": 0.9733,
         "lossPoints": 0.01
       },
       "lamps": {
@@ -131,7 +133,7 @@
           "name": "Harvester",
           "sig": 40,
           "ink": "#f2b233",
-          "corePixels": 52,
+          "corePixels": 51,
           "method": "moved",
           "atLeast3Share": 1,
           "p5": 5.68,
@@ -194,10 +196,10 @@
           "name": "Harvester",
           "sig": 40,
           "ink": "#f2b233",
-          "corePixels": 22,
+          "corePixels": 52,
           "atLeast3Share": 1,
-          "p5": 7.67,
-          "min": 7.67
+          "p5": 6.12,
+          "min": 5.68
         },
         {
           "key": "structure:56",
@@ -221,8 +223,8 @@
         }
       ],
       "darknessWithHud": {
-        "off": 0.7761,
-        "on": 0.776
+        "off": 0.773,
+        "on": 0.7729
       }
     },
     {
@@ -426,8 +428,8 @@
         }
       ],
       "darknessWithHud": {
-        "off": 0.7188,
-        "on": 0.7176
+        "off": 0.7166,
+        "on": 0.7155
       }
     },
     {
@@ -435,18 +437,18 @@
       "state": "drawn",
       "sites": 108,
       "darkness": {
-        "before": 0.9896,
-        "after": 0.9891,
+        "before": 0.9897,
+        "after": 0.9892,
         "lossPoints": 0.05
       },
       "lamps": {
         "wholeLampPixels": 237,
         "unchangedShare": 1,
-        "edgePixels": 504
+        "edgePixels": 506
       },
       "darknessWithHud": {
-        "off": 0.7084,
-        "on": 0.7079
+        "off": 0.7065,
+        "on": 0.706
       }
     },
     {
@@ -464,8 +466,8 @@
         "edgePixels": 582
       },
       "darknessWithHud": {
-        "off": 0.8256,
-        "on": 0.8256
+        "off": 0.8231,
+        "on": 0.8231
       }
     }
   ],
@@ -486,7 +488,7 @@
       },
       "flashWithoutHalo": {
         "frame": 0,
-        "window": 0.0001
+        "window": 0
       },
       "collarAtPing": {
         "key": "unit:58",
@@ -575,7 +577,7 @@
         },
         {
           "pinged": true,
-          "samples": 5,
+          "samples": 6,
           "worst": {
             "atCss": [
               480,
@@ -607,7 +609,7 @@
         },
         {
           "pinged": true,
-          "samples": 5,
+          "samples": 6,
           "worst": {
             "atCss": [
               480,
@@ -790,7 +792,7 @@
         },
         {
           "pinged": true,
-          "samples": 6,
+          "samples": 5,
           "worst": {
             "atCss": [
               611,
@@ -857,8 +859,9 @@
         {
           "haloOn": true,
           "pinged": true,
-          "samples": 4,
+          "samples": 5,
           "shares": [
+            1,
             1,
             1,
             1,
@@ -878,9 +881,8 @@
         {
           "haloOn": false,
           "pinged": true,
-          "samples": 5,
+          "samples": 4,
           "shares": [
-            1,
             1,
             1,
             1,
@@ -905,10 +907,10 @@
       "restSig": 40,
       "pinged": true,
       "liftedCssPx": {
-        "rest": 191,
-        "ping": 1971
+        "rest": 187,
+        "ping": 1956
       },
-      "liftRatio": 10.32,
+      "liftRatio": 10.46,
       "flashWithHalo": {
         "frame": 0.0002,
         "window": 0.0014
@@ -922,21 +924,21 @@
         "name": "Harvester",
         "sig": 95,
         "ink": "#e0452f",
-        "corePixels": 159,
+        "corePixels": 169,
         "method": "moved",
         "atLeast3Share": 1,
         "p5": 3.47,
-        "min": 3.36
+        "min": 3.4
       },
       "collarAtPingHaloOff": {
         "key": "unit:61",
         "name": "Harvester",
         "sig": 95,
         "ink": "#e0452f",
-        "corePixels": 21,
-        "atLeast3Share": 1,
-        "p5": 3.42,
-        "min": 3.4
+        "corePixels": 169,
+        "atLeast3Share": 0.9882,
+        "p5": 3.47,
+        "min": 2.87
       },
       "collarAlongRoute": [
         {
@@ -945,16 +947,16 @@
           "worst": {
             "atCss": [
               892,
-              424
+              423
             ],
             "key": "unit:61",
             "name": "Harvester",
             "sig": 95,
             "ink": "#e0452f",
-            "corePixels": 165,
+            "corePixels": 172,
             "atLeast3Share": 1,
-            "p5": 3.98,
-            "min": 3.67
+            "p5": 3.64,
+            "min": 3.33
           },
           "off": {
             "atCss": [
@@ -965,7 +967,7 @@
             "name": "Harvester",
             "sig": 95,
             "ink": "#e0452f",
-            "corePixels": 180,
+            "corePixels": 164,
             "atLeast3Share": 1,
             "p5": 4.28,
             "min": 3.4
@@ -1008,17 +1010,17 @@
           "samples": 5,
           "worst": {
             "atCss": [
-              953,
+              952,
               426
             ],
             "key": "unit:61",
             "name": "Harvester",
             "sig": 95,
             "ink": "#e0452f",
-            "corePixels": 170,
+            "corePixels": 163,
             "atLeast3Share": 1,
-            "p5": 3.91,
-            "min": 3.75
+            "p5": 4.02,
+            "min": 3.92
           },
           "off": {
             "atCss": [
@@ -1029,7 +1031,7 @@
             "name": "Harvester",
             "sig": 95,
             "ink": "#e0452f",
-            "corePixels": 169,
+            "corePixels": 166,
             "atLeast3Share": 1,
             "p5": 4.29,
             "min": 4.29
@@ -1047,10 +1049,10 @@
             "name": "Harvester",
             "sig": 95,
             "ink": "#e0452f",
-            "corePixels": 166,
+            "corePixels": 170,
             "atLeast3Share": 1,
             "p5": 3.47,
-            "min": 3.4
+            "min": 3.37
           },
           "off": {
             "atCss": [
@@ -1061,7 +1063,7 @@
             "name": "Harvester",
             "sig": 95,
             "ink": "#e0452f",
-            "corePixels": 169,
+            "corePixels": 168,
             "atLeast3Share": 1,
             "p5": 3.42,
             "min": 3.4
@@ -1074,21 +1076,21 @@
           "pinged": true,
           "samples": 5,
           "shares": [
-            0.9831,
-            0.9831,
-            0.9831,
-            0.9831,
-            0.9944
+            0.9943,
+            0.9943,
+            0.9943,
+            0.9943,
+            1
           ],
           "worst": {
             "key": "unit:61",
             "name": "Harvester",
             "sig": 95,
             "ink": "#e0452f",
-            "corePixels": 178,
-            "atLeast3Share": 0.9831,
-            "p5": 3.16,
-            "min": 2.85
+            "corePixels": 175,
+            "atLeast3Share": 0.9943,
+            "p5": 3.22,
+            "min": 2.95
           }
         },
         {
@@ -1096,21 +1098,21 @@
           "pinged": true,
           "samples": 5,
           "shares": [
-            0.9945,
-            0.9945,
-            0.9945,
-            0.9945,
-            0.9945
+            1,
+            1,
+            1,
+            1,
+            1
           ],
           "worst": {
             "key": "unit:61",
             "name": "Harvester",
             "sig": 95,
             "ink": "#e0452f",
-            "corePixels": 181,
-            "atLeast3Share": 0.9945,
-            "p5": 3.51,
-            "min": 2.85
+            "corePixels": 175,
+            "atLeast3Share": 1,
+            "p5": 3.89,
+            "min": 3.4
           }
         }
       ]
