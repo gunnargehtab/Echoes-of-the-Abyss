@@ -803,8 +803,9 @@ export class HeadlessGL {
   readback: [number, number, number, number] = [2.5, 1.25, 0.1, 1];
   /** Blits made, each a listed pass of the frame. */
   blits = 0;
-  /** The canvas's alpha, as three's default context asks: none. */
-  alpha = false;
+  /** The canvas's alpha: three r169 asks every context it creates for one
+   * (WebGLRenderer.js, `contextAttributes`), whatever its `alpha` option. */
+  alpha = true;
   private error = 0;
   readonly QUERY_RESULT = 0x8866;
   readonly QUERY_RESULT_AVAILABLE = 0x8867;

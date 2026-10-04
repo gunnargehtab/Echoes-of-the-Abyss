@@ -1174,7 +1174,7 @@ context drops the target and a restored one re-runs the check. There is no playe
 the owner decided on 4 October 2026 that a pixel at the corners needs none. A development
 switch turns it off for captures. A hull portrait does not take it either, since the
 portraits draw the halo through their own harness and the split belongs to the conn
-view's glass. Both numbers are TUNABLE, in `packages/frontend/src/game/chromaticSplit.ts`,
+view's world canvas. Both numbers are TUNABLE, in `packages/frontend/src/game/chromaticSplit.ts`,
 and the separation may only fall: 1 px is style-neon-noir's bound. Gate 6 allocates the
 copy and the draw ([graphics-standards.md](graphics-standards.md), "Chromatic split").
 

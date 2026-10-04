@@ -558,9 +558,10 @@ entity draws a splat.
 - **GPU time.** The halo's cost is on − off `avgGpuMs`, read unpaced and queued on the
   named GPU, two runs each (`halo-cost.mjs`): **at most 0.40 ms at ratio 1 and 0.75 ms at
   1.5** at every station, and no station's conn frame over 1.2 ms at ratio 1 or 1.7 ms at
-  1.5. Queued, it reads 0.24–0.27 ms at ratio 1 and 0.54–0.59 ms at 1.5, and the conn frame
+  1.5. Queued, it read 0.24–0.27 ms at ratio 1 and 0.54–0.59 ms at 1.5, and the conn frame
   where it draws 0.51–0.63 and 0.98–1.29 ms ([issue-1001](screenshots/issue-1001/README.md),
-  "Six chain draws").
+  "Six chain draws"), before the chromatic split; with it, the frame where it draws read 0.58–0.71
+  and 1.12–1.43 ms ([issue-1003](screenshots/issue-1003/README.md), "The cost").
   `route-cost.mjs` read 0.29 and 0.54 ms for its stand-in route, and its depth copy cost the
   same with a canvas stencil present.
 - **CPU time.** `avgConnMs`, the CPU side (the per-site cull, the sort to 1,024 and the
@@ -582,8 +583,8 @@ buffer, not by what is in frame: one copy and one draw of the whole frame.
 - **Calls and triangles.** **+1 call and +1 triangle**, whatever is in frame. Ventfront's
   opening reads 63–64 calls with the halo drawn, Sorrowgate 54 while any entity draws a
   splat and 46–47 otherwise, and the fight station 66.
-- **Memory.** 4 bytes per drawing-buffer pixel, an RGB8 target counted as Direct3D 11
-  stores it: **4.94 MiB at 1440 × 900 and ratio 1, and 11.12 MiB at 2160 × 1350 and ratio
+- **Memory.** 4 bytes per drawing-buffer pixel, an RGBA8 target in the canvas's own
+  format, since three r169 always asks the context for alpha: **4.94 MiB at 1440 × 900 and ratio 1, and 11.12 MiB at 2160 × 1350 and ratio
   1.5**, counted from the live target.
 - **GPU time.** The split's cost is on − off `avgGpuMs`, read unpaced and queued on the named
   GPU with the halo on, two runs each (`split-cost.mjs`): **at most 0.12 ms at ratio 1 and

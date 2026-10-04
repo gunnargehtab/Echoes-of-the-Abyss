@@ -8,6 +8,7 @@
  */
 
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { PerspectiveCamera, RGBAFormat, RGBFormat, type WebGLRenderTarget } from 'three';
 import {
@@ -51,6 +52,21 @@ describe('chromatic split: where it splits', () => {
       for (let y = 0; y <= h; y += 16) max = Math.max(max, splitSeparationPx(x, y, w, h));
     }
     assert.ok(max <= CHROMATIC_SPLIT.SEPARATION_PX);
+  });
+});
+
+describe('chromatic split: where the vignette clears', () => {
+  it("starts at the vignette's clear stop, on the same ellipse", () => {
+    // art-direction.md: "Nothing splits inside the vignette's clear ellipse."
+    // The stop lives in App.css and INNER in chromaticSplit.ts; this holds them
+    // together, so a vignette moved alone fails here rather than in the doc.
+    const css = readFileSync(new URL('../src/App.css', import.meta.url), 'utf8');
+    const block = css.match(/\.perspective-host::after\s*\{([^}]*)\}/);
+    assert.ok(block, 'App.css has the vignette layer');
+    assert.match(block[1]!, /radial-gradient\(\s*ellipse at center,/, 'the frame-shaped ellipse');
+    const stop = block[1]!.match(/transparent (\d+(?:\.\d+)?)%/);
+    assert.ok(stop, 'the vignette has a clear stop');
+    assert.equal(Number(stop[1]) / 100, CHROMATIC_SPLIT.INNER);
   });
 });
 

@@ -46,7 +46,9 @@
    so it costs the conn view no draw call and sits outside its tone mapping;
    painted over the world canvas and under the Pixi glass, so the HUD and
    every contact mark stay outside it. Clear inside 55% of the way to the
-   corners, 40% abyss at them. Both stops TUNABLE. */
+   corners, 40% abyss at them. Both stops TUNABLE; the clear one is also
+   where the chromatic split starts (chromaticSplit.ts INNER), and
+   test/chromaticSplit.test.ts holds the two equal. */
 .perspective-host::after {
   content: '';
   position: absolute;

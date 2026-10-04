@@ -42,8 +42,8 @@ export const CHROMATIC_SPLIT = {
   INNER: 0.55,
 } as const;
 
-/** Bytes a drawing-buffer pixel of the copy holds. An RGB8 copy is counted as
- * four: D3D11 has no three-byte format, so ANGLE stores it as RGBA8. */
+/** Bytes a drawing-buffer pixel of the copy holds: RGBA8, the canvas's format
+ * in the browser, since three r169 always asks the context for alpha. */
 export const SPLIT_BYTES_PER_PX = 4;
 
 /**
@@ -205,8 +205,10 @@ export class ChromaticSplit {
   private allocate(renderer: WebGLRenderer, width: number, height: number): void {
     this.copy?.dispose();
     const gl = renderer.getContext() as WebGL2RenderingContext;
-    // A resolving blit wants the canvas's own format: RGB8 when it has no
-    // alpha, which is three's default, and RGBA8 when it has.
+    // A resolving blit wants the canvas's own format. three r169 asks every
+    // context for alpha (WebGLRenderer.js, `contextAttributes`), whatever its
+    // `alpha` option says, so the browser's is RGBA8; a context handed in
+    // without alpha would be RGB8.
     const alpha = gl.getContextAttributes()?.alpha ?? false;
     this.copy = new WebGLRenderTarget(width, height, {
       format: alpha ? RGBAFormat : RGBFormat,

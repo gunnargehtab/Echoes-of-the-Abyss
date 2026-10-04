@@ -1,10 +1,12 @@
-# The vignette and the sway
+# The vignette, the sway and the chromatic split
 
 Evidence for [#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003):
-the conn view's slight vignette and slow camera sway, specified in
+the conn view's slight vignette, slow camera sway and chromatic split, specified in
 [art-direction.md](../../art-direction.md#atmosphere-rides-on-top-in-screen-space).
-Taken headless in a Linux container on Ventfront, so the frames come from SwiftShader:
-they show what is drawn, and no millisecond here is a gate-6 reading.
+The vignette and the sway were taken headless in a Linux container on Ventfront, so their
+frames come from SwiftShader: they show what is drawn, and no millisecond in those two
+sections is a gate-6 reading. The split was read on the named GPU, and its section is
+gate 6's reading.
 
 ```bash
 node .claude/skills/run-game/scripts/drive.mjs --out <dir> \
