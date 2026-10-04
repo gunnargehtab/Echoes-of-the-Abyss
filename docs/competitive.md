@@ -58,10 +58,11 @@ A map enters the rated pool when all three hold:
    ([maps.md](maps.md), "Mission maps").
 2. **Its ground is the same from every seat it draws.** The map tests already hold all
    three archetypes cell for cell — both mirrors on the Ventfront Divide and the Kelp
-   Labyrinth, a half turn on the Corridor — and compare each seat's distance to what it
-   contests: beds, currents, pockets, the crystal approach (`maps.test.ts`, "is the same
-   chair from all four corners"). Anything the cells do not carry, such as which way a
-   current flows, is a trade the map's literal names, and criterion 3 is what weighs it.
+   Labyrinth, a half turn on the Corridor — and the Labyrinth's also compare each seat's
+   distance to what it contests: beds, currents, pockets, the crystal approach
+   (`maps.test.ts`, "is the same chair from all four corners"). Anything the cells do not
+   carry, such as which way a current flows, is a trade the map's literal names, and
+   criterion 3 is what weighs it.
 3. **Its drawn pairings are measured, seat-rotated.** The balance harness plays every
    pairing the draw can produce, each way round, before the map is rated. This is a
    measurement and not a target: the freeze in `CLAUDE.md` still decides what may be done
@@ -202,10 +203,12 @@ refuse.
 deciding it is time — the way the freeze itself lifts. Its evidence is a duel matrix
 seat-rotated over every drawn pairing on every pool map: a rating measures skill only in a
 game whose navies win at comparable rates, and against today's readings it would measure
-navies. No rail decides it on its own. The one-navy rail cannot: at twice parity its bar
-in a duel is 100%, which the harness reports as no data rather than a verdict
-([economy.md](economy.md) §9). Everything else in this document can be built before then,
-and played unrated.
+navies. No rail decides it on its own, and the one-navy rail ([economy.md](economy.md) §9)
+cannot. Over one pairing of two navies its bar is twice a parity of 50%, which no win rate
+can clear, so the harness reads it as no data. Pooled over four navies,
+as the duel matrix is, the bar is 50%, and since every decided duel has one winner, only a
+field with every navy at exactly 50% holds it. Everything else in this document can be
+built before then, and played unrated.
 
 ---
 
@@ -344,7 +347,8 @@ as a film. It is never the world, and never the other side's.
 
 What no post-game shows, rated or not: anything about the other commander's force,
 economy or losses that your listeners did not resolve, and anything side by side with the
-other commander's pages. Each commander's pages are their own, and no spectator sees
+other commander's pages. The one exception is a broadcast every commander consented to,
+which each may watch afterwards at the price §7 states. Each commander's pages are their own, and no spectator sees
 them either.
 
 ---
@@ -420,7 +424,7 @@ replay is, so nothing about it exists while anybody could use it.
 
 **A custom room may be watched live, 180 seconds behind**, under a warning the ready room
 shows: a spectator can relay where the other side's listeners stand, and a Bastion among
-them. That is for showmatches and tournaments, whose organisers can seat the commanders
+them — and, in a room of three sides or more, the hulls one side heard of another. That is for showmatches and tournaments, whose organisers can seat the commanders
 where no relay reaches them. The delay is [systems-echo.md](systems-echo.md) §7's three
 minutes, the longest any mark outlives the event that made it — the residue of a destroyed
 structure — and it stales whatever moves: in that time the slowest hulls in the roster,
@@ -453,11 +457,12 @@ choose to pay.
 
 ### What it costs
 
-No second Echo pass, and no change to the one that runs. The contacts the heard view
-carries are already resolved, per side, every Echo tick. A live room keeps three minutes of
-them and hands one copy to one broadcast room; a rated broadcast is rebuilt after the
-match, on the server, from the replay. Either way the number of spectators never reaches
-the match's budget.
+No change to the Echo pass that runs, and no second one while a match is played. The
+contacts the heard view carries are already resolved, per side, every Echo tick, so a live
+room keeps three minutes of them and hands one copy to one broadcast room. A rated
+broadcast costs one re-simulation of the match from its replay, after the result, and it
+is the same re-simulation §6's listening replay already pays for. Either way the number of
+spectators never reaches a live match's budget.
 
 Two properties hold it, and both become rows in [invariants.md](invariants.md) when the
 broadcast is built, beside the tests that hold them:
@@ -486,7 +491,7 @@ In order, because each step is playable unrated before the next exists:
    stored replay and the listening replay.
 6. **The broadcast room** (§7).
 
-The ladder opens on §3's condition, whatever order these land in.
+The ladder opens by §3's written decision, whatever order these land in.
 
 ---
 
@@ -503,7 +508,7 @@ The ladder opens on §3's condition, whatever order these land in.
 - **A free-for-all ladder.** §3.
 - **A score at the time cap.** Every score of the other side is a post-match report.
 - **Shared resources or shared control between allies.** §5.
-- **Allied listening by acoustic relay** — a data link between allies that is itself an
+- **Allied listening by acoustic link** — a data link between allies that is itself an
   emission, so sharing what you heard costs noise. On both pillars at once, and it is a
   mechanic rather than a mode rule: it belongs in [systems-echo.md](systems-echo.md) first,
   and team play can adopt it there.
@@ -516,7 +521,7 @@ The ladder opens on §3's condition, whatever order these land in.
 [tech-stack.md](tech-stack.md) (the match lifecycle this extends, and the Echo pass budget)
 · [maps.md](maps.md) (the archetypes and their symmetry) ·
 [game-identity.md](game-identity.md) (the win condition and scuttling) ·
-[economy.md](economy.md) §9 (the rail the ladder waits on) ·
+[economy.md](economy.md) §9 (the one-navy rail, and why it cannot open the ladder) ·
 [systems-echo.md](systems-echo.md) (tiers and residue) · [ui-ux.md](ui-ux.md) (§5 markers,
 §10 the contact log, §14 the shell) · [campaign.md](campaign.md) §11 (the record that
 stays local) · [ROADMAP.md](ROADMAP.md) (Later, "Competitive play")
