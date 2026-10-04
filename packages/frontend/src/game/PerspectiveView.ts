@@ -26,7 +26,6 @@
 
 import {
   ACESFilmicToneMapping,
-  AlwaysStencilFunc,
   AdditiveBlending,
   AmbientLight,
   Box3,
@@ -50,7 +49,6 @@ import {
   Points,
   PointsMaterial,
   Raycaster,
-  ReplaceStencilOp,
   Scene,
   SRGBColorSpace,
   Vector2,
@@ -94,7 +92,7 @@ import {
   rockTopDepthM,
   seabedDepthAtM,
 } from './perspectiveTerrain.ts';
-import { groundPxPerM, hullReadabilityScale } from './readability.ts';
+import { CONN_FOV_DEG as FOV_DEG, groundPxPerM, hullReadabilityScale } from './readability.ts';
 import { hullSpriteCanvas, hullSpriteSizeM, primeHullArt } from './hullTextures.ts';
 import {
   primeStructureArt,
@@ -134,7 +132,7 @@ import { FrameCost, ms } from './frameCost.ts';
 import { GpuTimer } from './gpuTimer.ts';
 import { GpuQueueLoad } from './gpuQueueLoad.ts';
 import { lampScreen } from './lampScreen.ts';
-import { LampHaloPass, type HaloSplat } from './lampHaloPass.ts';
+import { LampHaloPass, markLamp, type HaloSplat } from './lampHaloPass.ts';
 import { LAMP_HALO } from './lampHalo.ts';
 import { publishLampHaloStatus } from './lampHaloStatus.ts';
 import { gatherHaloSplats } from './haloSource.ts';
@@ -216,10 +214,6 @@ export const FOCUS_STEP_M = 150;
  * yaw, and the pitch band crossed in about 280 px. */
 const ORBIT_YAW_PER_PX = (Math.PI * 2) / 640;
 const ORBIT_PITCH_PER_PX = ((PITCH_MAX_DEG - PITCH_MIN_DEG) * Math.PI) / 180 / 280;
-
-/** TUNABLE — vertical camera field of view, degrees. Narrow keeps the range-
- * ring foreshortening gentle; wide reads fisheye at RTS distance. */
-const FOV_DEG = 40;
 
 /**
  * TUNABLE — the gain the flat baked sprite is drawn through, so the fallback
@@ -2694,13 +2688,7 @@ export class PerspectiveView {
     ];
     for (const [key, handle] of handles) {
       const mark = on && (only === null || key === only);
-      for (const { material } of handle.model?.emissives ?? []) {
-        if (material.stencilWrite === mark) continue;
-        material.stencilWrite = mark;
-        material.stencilRef = 1;
-        material.stencilFunc = AlwaysStencilFunc;
-        material.stencilZPass = ReplaceStencilOp;
-      }
+      for (const { material } of handle.model?.emissives ?? []) markLamp(material, mark);
     }
   }
 

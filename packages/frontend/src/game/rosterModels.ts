@@ -49,7 +49,8 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Faction, StructureKind, structureStatsFor, UnitKind } from '@echoes/shared';
 import { ACTIVE_PALETTE, type Palette } from './palette.ts';
 import { HULL_LENGTH_M } from './silhouettes.ts';
-import { glowFactor, lampCoreRest } from './glow.ts';
+import { glowFactor } from './glow.ts';
+import { inkLamp } from './lampInk.ts';
 import { DREAM_LOOP, installDreamLamp, installDreamSteel } from './dreamLoop.ts';
 import { installHullSurface, type WorldLook } from './tutorialLook.ts';
 import { keepGlowOutsideToneMapping } from './modelLighting.ts';
@@ -315,7 +316,7 @@ function luminance(color: Color): number {
  * `emissiveIntensity`, which is where `applyLiveGlow` already reads the
  * resting value from, and the emitted luminance comes out as the model's own.
  * Past white, gate 3's lamp core holds the rest at white along the ink
- * (`lampCoreRest`), worked out here because the ink is this palette's; the
+ * (`lampCoreRest`, through lampInk.ts), worked out here because the ink is this palette's; the
  * export's own value stays on `userData.exportIntensity` for the lamp reading.
  * Recolouring it to the glow ink's chromaticity keeps the emissive colour
  * inside gamut, which writing the scaled ink straight into `emissive` would
@@ -327,7 +328,6 @@ function recolor(root: Group, faction: Faction, look: WorldLook, palette: Palett
   const primary = new Color(ink.primary);
   const glow = new Color(ink.glow);
   const primaryLum = luminance(primary);
-  const glowLum = luminance(glow);
 
   // Deduplicated: parts that shared a glTF material share one clone, and a
   // per-mesh walk would otherwise recolour that clone once per part — each
@@ -349,14 +349,7 @@ function recolor(root: Group, faction: Faction, look: WorldLook, palette: Palett
       const target = CLADDING_CEILING * (CLADDING_FLOOR + (1 - CLADDING_FLOOR) * ratio);
       material.color.copy(primary).multiplyScalar(target / primaryLum);
     }
-    const emissiveLum = luminance(material.emissive);
-    if (emissiveLum > 0 && glowLum > 0) {
-      material.emissive.copy(glow);
-      material.emissiveIntensity *= emissiveLum / glowLum;
-      material.userData.exportIntensity = material.emissiveIntensity;
-      const { r, g, b } = material.emissive;
-      material.emissiveIntensity = lampCoreRest(Math.max(r, g, b), material.emissiveIntensity);
-    }
+    inkLamp(material, glow);
     // A material the script laid out for its navy's trim sheet takes the
     // sheet here, under the ink: grey, so hue stays the palette's (#1005).
     if (typeof material.userData.trim === 'string') {

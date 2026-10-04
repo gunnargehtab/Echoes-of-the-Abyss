@@ -19,6 +19,7 @@ import {
   type Texture,
   type WebGLRenderTarget,
 } from 'three';
+import { chainShift } from '../src/game/lampHalo.ts';
 import { INSTANCE_BYTES, LampHaloPass, type HaloSplat } from '../src/game/lampHaloPass.ts';
 import { HeadlessWebGLRenderer } from './support/headless.ts';
 
@@ -251,6 +252,36 @@ describe('lamp halo pass: what each chain draw reads and writes', () => {
         `${w}×${h}: the composite reads the three levels this frame drew`
       );
     }
+  });
+
+  it("shifts the chain an octave a draw at a portrait's scale, and not at the game's", () => {
+    const [w, h] = [1920, 1080];
+    const gl = renderer(w, h);
+    const pass = new LampHaloPass();
+    pass.enable(gl.asRenderer());
+    const draws = recorded(gl);
+    // A 100 m hull's portrait draws the halo about 13.6 times as wide.
+    const { octaves } = chainShift(13.6);
+    assert.ok(octaves >= 3);
+    pass.render(gl.asRenderer(), camera, splats(4), 0, 0, 13.6, 2);
+    assert.equal(draws.length, 8 + octaves, 'a 2 × 2 downsample an octave, before the six');
+    let above = draws[0]!.target!.texture;
+    for (let i = 1; i <= octaves; i++) {
+      const down = draws[i]!;
+      assert.equal(down.source, above, `octave ${i} reads the one above`);
+      assert.deepEqual(
+        [down.target!.width, down.target!.height],
+        [Math.ceil(w / 2 ** i), Math.ceil(h / 2 ** i)]
+      );
+      above = down.target!.texture;
+    }
+    const first = draws[octaves + 1]!;
+    assert.equal(first.source, above, 'the first level reads the last octave');
+    assert.equal(first.target!.width, Math.ceil(w / 2 ** (octaves + 1)));
+    assert.equal(draws.at(-1)!.target, null, 'and the composite still draws onto the canvas');
+    draws.length = 0;
+    pass.render(gl.asRenderer(), camera, splats(4), 0, 0, 1, 2);
+    assert.equal(draws.length, 8, "back at the game's scale, the chain is the SPEC's six draws");
   });
 
   it('reads the new levels after the drawing buffer changes size', () => {

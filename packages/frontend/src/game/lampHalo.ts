@@ -79,15 +79,42 @@ export function capSites<T extends { energy: number }>(
   return { kept, dropped: sites.length - cap };
 }
 
+/** The taps past the centre the blur shader's weights hold: eight weights,
+ * the centre and seven (lampHaloPass.ts). */
+export const BLUR_TAPS_MAX = 7;
+
+/** The taps a kernel of σ = KERNEL_SIGMA_TEXELS × `kernel` reaches, 2.3σ out. */
+const tapsFor = (kernel: number) => Math.ceil(2.3 * LAMP_HALO.KERNEL_SIGMA_TEXELS * kernel);
+
 /**
- * The blur's half-kernel at a pixel ratio: σ = KERNEL_SIGMA_TEXELS × ratio in a
- * level's texels, taps one texel apart out to at least 2.3σ, normalised over
- * both sides. Stepping taps by the ratio instead would comb a level that is
- * not yet blurred, so σ scales and the taps do not.
+ * Where the spread starts for a scale: the pixel ratio, times the width
+ * multiplier a hull portrait draws the halo at (docs/art-direction.md "Hull
+ * portraits"). Seven taps reach a kernel of about 1.8, so a larger scale
+ * starts the three levels `octaves` 2 × 2 downsamples further down, each
+ * doubling every width, and leaves the kernel the rest. The game never
+ * shifts: its pixel ratio stops at 1.5.
  */
-export function blurWeights(pixelRatio: number): number[] {
-  const sigma = LAMP_HALO.KERNEL_SIGMA_TEXELS * pixelRatio;
-  const taps = Math.ceil(2.3 * sigma);
+export function chainShift(scale: number): { octaves: number; kernel: number } {
+  let octaves = 0;
+  let kernel = scale;
+  while (tapsFor(kernel) > BLUR_TAPS_MAX) {
+    kernel /= 2;
+    octaves++;
+  }
+  return { octaves, kernel };
+}
+
+/**
+ * The blur's half-kernel at a scale: σ = KERNEL_SIGMA_TEXELS × the kernel's
+ * part of the scale (`chainShift`) in a level's texels, taps one texel apart
+ * out to at least 2.3σ, normalised over both sides. Stepping taps by the scale
+ * instead would comb a level that is not yet blurred, so σ scales and the taps
+ * do not.
+ */
+export function blurWeights(scale: number): number[] {
+  const { kernel } = chainShift(scale);
+  const sigma = LAMP_HALO.KERNEL_SIGMA_TEXELS * kernel;
+  const taps = tapsFor(kernel);
   const raw = Array.from({ length: taps + 1 }, (_, i) => Math.exp(-(i * i) / (2 * sigma * sigma)));
   const total = raw[0]! + 2 * raw.slice(1).reduce((a, b) => a + b, 0);
   return raw.map((w) => w / total);
@@ -96,17 +123,19 @@ export function blurWeights(pixelRatio: number): number[] {
 /**
  * Each spread level's width as σ in drawing-buffer pixels: every level is a
  * 2 × 2 box downsample of the one before it, then a blur at its own texel, so
- * the widths compound, the box's variance included. At ratio 1 that is 3.42,
- * 7.64 and 15.66 px, within 0.1 px of the SPEC's figures; derived here and
- * stored nowhere.
+ * the widths compound, the box's variance included, as do a shifted chain's
+ * own downsamples. At ratio 1 that is 3.42, 7.64 and 15.66 px, within 0.1 px
+ * of the SPEC's figures; derived here and stored nowhere.
  */
-export function levelSigmasPx(pixelRatio: number): number[] {
+export function levelSigmasPx(scale: number): number[] {
+  const { octaves, kernel } = chainShift(scale);
   const sigmas: number[] = [];
+  // The box averages two texels of the level above, half this one apart.
   let variance = 0;
-  for (let level = 1; level <= LAMP_HALO.LEVEL_WEIGHTS.length; level++) {
+  for (let level = 1; level <= octaves; level++) variance += (2 ** level / 4) ** 2;
+  for (let level = octaves + 1; level <= octaves + LAMP_HALO.LEVEL_WEIGHTS.length; level++) {
     const texel = 2 ** level;
-    // The box averages two texels of the level above, half this one apart.
-    variance += (texel / 4) ** 2 + (LAMP_HALO.KERNEL_SIGMA_TEXELS * pixelRatio * texel) ** 2;
+    variance += (texel / 4) ** 2 + (LAMP_HALO.KERNEL_SIGMA_TEXELS * kernel * texel) ** 2;
     sigmas.push(Math.sqrt(variance));
   }
   return sigmas;
@@ -117,8 +146,8 @@ export function levelSigmasPx(pixelRatio: number): number[] {
  * whole light in drawing-buffer px² of full ink) gathered at one pixel. Below
  * the toe the entity draws no splat: it would composite to nothing.
  */
-export function peakField(lightPx2: number, pixelRatio: number): number {
-  const sigmas = levelSigmasPx(pixelRatio);
+export function peakField(lightPx2: number, scale: number): number {
+  const sigmas = levelSigmasPx(scale);
   return LAMP_HALO.LEVEL_WEIGHTS.reduce(
     (sum, weight, k) => sum + (lightPx2 * weight) / (2 * Math.PI * sigmas[k]! ** 2),
     0

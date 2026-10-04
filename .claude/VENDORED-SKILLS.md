@@ -20,9 +20,9 @@ The selection rule was **what the code actually imports**, not what looked
 useful. `packages/frontend` imports exactly five names from `pixi.js`
 (`Application`, `Container`, `Graphics`, `Text`, `Texture`) and drives the HUD
 off `app.ticker`; its three.js side loads GLBs through `GLTFLoader` and merges
-geometry through `BufferGeometryUtils`, and the tree's `EffectComposer` chains —
-render, bloom and output passes — are the two rigs in `tools/hull-renders/`
-(`tools/hull-renders/inspect.html` joined `tools/hull-renders/scene.html` in #947).
+geometry through `BufferGeometryUtils`, and the tree's `EffectComposer` chain —
+render, bloom and output passes — is the inspect rig, `tools/hull-renders/inspect.html`
+(#947); `tools/hull-renders/scene.html` dropped its own for the game's frame in #1015.
 The vendored set is those surfaces and nothing else. The client's shader
 patching, which since #974 includes the glow-after-tone-mapping hook in
 `packages/frontend/src/game/modelLighting.ts`, has no vendored skill; its rules
@@ -64,7 +64,7 @@ Why each one earns its context:
   standard/basic materials account for most of what it builds — and loaders is how
   hull and environment GLBs reach it. Post-processing serves `tools/hull-renders`
   rather than the client, and imports through `three/addons/postprocessing/`, the
-  same path those rigs use. The set does **not** cover `GLTFExporter`, so it
+  same path the inspect rig uses. The set does **not** cover `GLTFExporter`, so it
   reaches `tools/hull-models`, where the heaviest three.js authoring in this
   repository happens, only through the primitives `tools/hull-models/kit.mjs`
   builds from.

@@ -15,12 +15,11 @@
   - the blacks, the neons and the faction accents are docs/style-neon-noir.md;
   - the rule that near-black fills 85-90% of a frame is why the rig is three
     small lights and a very dark seabed rather than an evenly lit studio;
-  - the rule that glow encodes loudness is why emissive is driven from the
-    hull's SIG in the faction accent's hue. That is the rule, not the
-    runtime's glow: packages/frontend/src/game/rosterModels.ts recolours to
-    the glow ink at the model's approved strength, and modelLighting.ts adds
-    it after the tone curve (gates 3 and 4), where this page's composer
-    tone-maps it with the frame (see post);
+  - the lamps are the game's (#1015, docs/art-direction.md "Hull portraits"):
+    the navy's glow ink at the model's approved strength, held at gate 3's
+    lamp core, added after the tone curve (gates 3 and 4), and the lamp halo
+    over them at the hull's idle SIG, all from packages/frontend through
+    frame.mjs, which render.mjs bundles as /frame.js;
   - the props are the shipped environment registry, canonicalised to the same
     footprint metres packages/frontend/src/game/environmentModels.ts uses.
 
@@ -44,10 +43,7 @@
     <script type="module">
       import * as THREE from 'three';
       import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-      import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-      import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-      import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-      import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+      import * as FRAME from '/frame.js';
 
       const params = new URLSearchParams(location.search);
       const num = (k, d) => (params.has(k) ? Number(params.get(k)) : d);
@@ -103,7 +99,13 @@
       };
 
       // --- renderer ---------------------------------------------------------
-      const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      // The conn view's canvas: 4× MSAA and a stencil, which the lamp halo's
+      // composite reads to skip every lamp sample (PerspectiveView.ts).
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        stencil: true,
+        preserveDrawingBuffer: true,
+      });
       renderer.setSize(W, H);
       renderer.setPixelRatio(1);
       renderer.shadowMap.enabled = true;
@@ -197,22 +199,10 @@
 
       // --- the hull ---------------------------------------------------------
       const accent = new THREE.Color(shot.accent);
-      /**
-       * The lamp colour, which is not quite the accent.
-       *
-       * The faction accents are *signal* colours, picked to be legible as
-       * thin linework on a HUD, so they are pale — `#C9A6FF` is a violet with
-       * a 0.65 floor under every channel. Emitted at glow brightness and put
-       * through ACES, a colour with a high floor arrives white, and a white
-       * lamp tells you nothing about whose ship it is. So a lamp takes the
-       * accent's *hue* at full saturation and mid lightness: the core keeps
-       * the navy, and the halo bloom spreads that same hue instead of a wash.
-       */
-      const lampColor = (() => {
-        const hsl = { h: 0, s: 0, l: 0 };
-        accent.getHSL(hsl);
-        return new THREE.Color().setHSL(hsl.h, Math.min(1, hsl.s * 1.6), 0.52);
-      })();
+      // The navy's glow ink in the standard palette, the ink the conn view
+      // recolours this navy's lamps to (rosterModels.ts `recolor`).
+      const ink = FRAME.PALETTES.standard.faction[FRAME.Faction[shot.faction]];
+      const glowInk = new THREE.Color(ink.glow);
       const gltf = await new GLTFLoader().loadAsync('/model.glb');
       const hull = gltf.scene;
 
@@ -237,27 +227,17 @@
       scene.add(pitched);
 
       /**
-       * Glow encodes loudness (docs/style-neon-noir.md §3), and the runtime
-       * keeps only a lamp's luminance and recolours it to the faction glow
-       * (rosterModels.ts). Both rules applied here: every emissive material
-       * burns in the navy's accent at its own relative brightness, scaled by
-       * the hull's SIG, so sister ships in one frame differ by how loud they
-       * are rather than by whatever hue the model script happened to choose.
-       *
-       * The curve is the sprite baker's, flattened hard. build.mjs uses
-       * 0.45·e^(SIG/14) on a map where the glow *is* the whole dynamic range.
-       * A photograph has no such room. The composer's buffer clips at 1.0
-       * (see makeTarget below) and ACES desaturates hard on the way there, so
-       * a lamp driven anywhere near that stops being violet or amber and goes
-       * white — losing both its hue, which is the navy, and its shape, which
-       * is the lit feature. So the ordering is kept and the range is not: a fourth
-       * root of the same ratio spans 2.4× from a Light Scout at SIG 6 to a
-       * Cruiser at 55 (the sprite curve spans 33×), and the emissiveIntensity
-       * clamp below cuts it short for a bright lamp. That is a visible step up
-       * in a frame and still inside the colour.
+       * Glow encodes loudness (docs/style-neon-noir.md §3), and a portrait's
+       * lamps are drawn the way the conn view draws them (#1015): the navy's
+       * glow ink at the strength the model was approved at, held at white
+       * along the ink where it rests past it (gate 3's lamp core), and added
+       * after the tone curve, so ACES never fades it toward white. A hull at
+       * its idle SIG draws its lamps at rest, exactly as the game does; how
+       * loud it is shows in the halo over them, which the conn view weighs by
+       * the same SIG. Each material is inked once: parts share them.
        */
-      const glowGain = Math.pow(Math.exp(sig / 14) / Math.exp(6 / 14), 0.25);
       const lamps = [];
+      const inked = new Set();
       // Layer 1 is "the subject". A three.js light only illuminates objects
       // whose layer mask it shares, so putting the hull on a second layer and
       // aiming the rim at that layer alone is what keeps the rim a rim. A
@@ -310,18 +290,13 @@
             m.color.getHSL(hsl);
             m.color.setHSL(hsl.h, Math.min(hsl.s, 0.5), 0.08 + hsl.l * 0.1);
           }
-          if (!m.emissive) continue;
-          const lum = 0.2126 * m.emissive.r + 0.7152 * m.emissive.g + 0.0722 * m.emissive.b;
-          if (lum <= 0.002) continue;
-          // Hue from the navy, brightness from the model's own relative
-          // luminance and the hull's SIG.
-          m.emissive = lampColor.clone();
-          m.emissiveIntensity = THREE.MathUtils.clamp(
-            Math.pow(THREE.MathUtils.clamp(lum, 0, 1), 0.5) * 0.62 * glowGain,
-            0,
-            1.0
-          );
-          lamps.push(o);
+          // A lamp, as rosterModels.ts finds one: an emissive that emits.
+          if (!m.emissive || m.emissive.getHex() === 0 || inked.has(m)) continue;
+          inked.add(m);
+          FRAME.inkLamp(m, glowInk);
+          FRAME.keepGlowOutsideToneMapping(m);
+          FRAME.markLamp(m, true);
+          lamps.push({ material: m, restIntensity: m.emissiveIntensity });
         }
       });
 
@@ -360,6 +335,7 @@
       // on the displaced floor. A scatter ring: nothing inside the subject's
       // own footprint, nothing so far out the fog has eaten it.
       const propLights = [];
+      const glowing = new Set();
       for (const spec of shot.props) {
         const prop = await new GLTFLoader().loadAsync(`/props/${spec.slug}.glb`);
         const size = new THREE.Box3().setFromObject(prop.scene).getSize(new THREE.Vector3());
@@ -413,6 +389,12 @@
               // ember whoever is standing over it.
               m.emissive = new THREE.Color(shot.worldLight);
               m.emissiveIntensity = 0.85 * shot.worldLightPower;
+              // Its glow added after the tone curve, as the game adds a prop's
+              // (environmentModels.ts); once, since every copy shares it.
+              if (!glowing.has(m)) {
+                glowing.add(m);
+                FRAME.keepGlowOutsideToneMapping(m);
+              }
             }
           });
           scene.add(inst);
@@ -549,6 +531,10 @@
             float ends = smoothstep(0.0, 0.35, vUv.y) * (1.0 - smoothstep(0.55, 1.0, vUv.y));
             float graze = 1.0 - abs(dot(normalize(vNormalV), normalize(vViewV)));
             gl_FragColor = vec4(uColor, ends * pow(graze, 1.6) * uPower);
+            // Drawn straight to the canvas now, it maps and encodes itself,
+            // as OutputPass once did for it.
+            #include <tonemapping_fragment>
+            #include <colorspace_fragment>
           }
         `,
       });
@@ -622,81 +608,71 @@
               vec2 p = gl_PointCoord - 0.5;
               float a = smoothstep(0.5, 0.0, length(p));
               gl_FragColor = vec4(uColor, a * vFade * 0.75);
+              #include <tonemapping_fragment>
+              #include <colorspace_fragment>
             }
           `,
         })
       );
       scene.add(snow);
 
-      // --- post -------------------------------------------------------------
+      // --- the frame --------------------------------------------------------
       /**
-       * The composer's intermediate buffer, and the one hard-won thing on
-       * this page.
-       *
-       * EffectComposer defaults to a HalfFloatType target, which is the right
-       * choice everywhere with a real GPU: it is what lets a bloom threshold
-       * sit above 1.0 and pick out only genuine highlights. Under this
-       * container's SwiftShader it renders **pure black** through
-       * UnrealBloomPass — not dim, not wrong, zero in every channel, with no
-       * GL error and no page error to find it by. Multisampling is not the
-       * cause; a half-float target fails the same way at samples=0. An
-       * UnsignedByteType target renders correctly with the identical pass
-       * chain, so that is what this asks for.
-       *
-       * The cost is that the buffer clamps at 1.0, so bloom sees a clipped
-       * highlight rather than an HDR one. That is survivable here and
-       * arguably on-style: everything the rig puts on hull plate stays well
-       * under the threshold, and what crosses it is the lamps, which is
-       * exactly what is supposed to bloom.
-       *
-       * Where the tone curve runs. renderer.toneMapping (ACES at 0.88, above)
-       * reaches this frame once, in OutputPass, over the summed buffer: plate,
-       * lamps, bloom, water and snow alike. RenderPass draws into the
-       * composer's target, and three r169 defines TONE_MAPPING for a material
-       * only on the default framebuffer (WebGLPrograms.js), so nothing here
-       * tone-maps itself. That is why lampColor and glowGain above exist, and
-       * why the conn view's glow split (modelLighting.ts
-       * keepGlowOutsideToneMapping, gate 3) would be a silent no-op in this
-       * chain: glow after the curve under a composer means rendering the
-       * emission as its own term, the term #1001's bloom is to be built from.
-       * A composer copied from this page into the conn view would undo that
-       * correction.
+       * Drawn the way the conn view's canvas pass is (#1015), not through a
+       * composer: three r169 tone-maps a material only when it draws to the
+       * canvas (WebGLPrograms.js), so here every material maps itself with
+       * ACES at this rig's 0.88, a lamp adds its glow after the curve
+       * (modelLighting.ts `keepGlowOutsideToneMapping`), and the 4× MSAA canvas
+       * keeps its samples. The bloom this page once ran went with its
+       * composer; the light a lamp spreads into the water is the game's lamp
+       * halo, drawn after the canvas at the hull's idle SIG.
        */
-      function makeTarget() {
-        const t = new THREE.WebGLRenderTarget(W, H, {
-          type: THREE.UnsignedByteType,
-          colorSpace: THREE.LinearSRGBColorSpace,
+      renderer.render(scene, camera);
+
+      /**
+       * The halo's widths (docs/art-direction.md "Hull portraits"): the
+       * close camera's, magnified with the hull. The close camera is
+       * tools/render-stack/capture.mjs's, 1,800 m out on drive.mjs's 900 px
+       * of view height, where the conn view draws a hull at its draw scale.
+       * Drawn length is the draw's scale, pixels per metre at the hull times
+       * its length, as the SPEC says: about 940 px for every hull here, which
+       * the 38° hero angle foreshortens to 630–690 px on screen. So the
+       * multiplier is this frame's pixels per metre at the hull over that
+       * one, 10.5–27.3×, the hull's length cancelling. The light needs no
+       * factor: a splat's is its energy times the camera's pixels per metre
+       * squared, so a nearer camera already brings it.
+       */
+      const closePxPerM = FRAME.groundPxPerM(900, FRAME.CONN_FOV_DEG, 1800);
+      const closeHullPxPerM = closePxPerM * FRAME.hullReadabilityScale(closePxPerM);
+      const focalPx = (camera.projectionMatrix.elements[5] * H) / 2;
+      const haloScale = focalPx / camera.position.length() / closeHullPxPerM;
+      const halo = new FRAME.LampHaloPass();
+      if (!halo.enable(renderer)) throw new Error(`lamp halo: ${halo.state}`);
+      const drawHalo = () => {
+        const { splats, dropped } = FRAME.gatherHaloSplats({
+          entities: [{ sig, model: { root: hull, emissives: lamps } }],
+          camera,
+          bufferWidth: W,
+          bufferHeight: H,
+          drawScale: 1,
+          fogDensity: scene.fog.density,
+          pixelRatio: haloScale,
         });
-        t.samples = 4;
-        return t;
-      }
-
-      // One bloom, and the threshold is the whole decision.
-      // "Bloom-everything is the failure mode of this style"
-      // (docs/style-neon-noir.md, the glow recipe), so 0.42 is set above
-      // anything the rig puts on hull plate — which is dark albedo under a
-      // key that peaks well below it — and under the lamps, which are the
-      // only things in the frame that are supposed to bleed. The radius is
-      // deliberately tight: a wide one spreads the pass's own low mips, and
-      // on a byte buffer those show up as faint rectangles ringing the
-      // subject.
-      const composer = new EffectComposer(renderer, makeTarget());
-      composer.setSize(W, H);
-      composer.addPass(new RenderPass(scene, camera));
-      composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.55, 0.34, 0.42));
-      composer.addPass(new OutputPass());
-
-      composer.render();
+        const fog = scene.fog.density;
+        halo.render(renderer, camera, splats, dropped, fog, haloScale, FRAME.LAMP_HALO.BIAS_M);
+      };
+      drawHalo();
 
       // Debug hooks (render.mjs does not call these; they exist for probing
       // the pipeline when a frame comes back wrong).
       window.__debug = {
-        noPost: () => {
+        noHalo: () => {
           renderer.render(scene, camera);
           return renderer.domElement.toDataURL('image/png');
         },
-        post: () => {
-          composer.render();
+        frame: () => {
+          renderer.render(scene, camera);
+          drawHalo();
           return renderer.domElement.toDataURL('image/png');
         },
         peak: () => {
@@ -723,7 +699,9 @@
         hullSizeM: { x: hullSize.x, y: hullSize.y, z: hullSize.z },
         lamps: lamps.length,
         propLights: propLights.length,
-        glowGain,
+        haloScale,
+        haloState: halo.state,
+        haloSites: halo.sites,
       };
       window.__png = () => renderer.domElement.toDataURL('image/png');
       window.__ready = true;
