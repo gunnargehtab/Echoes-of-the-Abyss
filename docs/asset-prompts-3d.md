@@ -769,9 +769,12 @@ and recorded — a call taken in the open, in #1053's Options — as the measure
 a 22 m craft: the band is the median of a hull whose fittings are a tenth of its plan, and on
 a craft every fitting is.
 
-**What the rule costs.** Gate 6 ([graphics-standards.md](graphics-standards.md) §6) allows
+**What the rule costs.** Since #1027, gate 6 ([graphics-standards.md](graphics-standards.md)
+§6) allows 400 k triangles for forty berths of hulls and a dozen structures. The rule was
+cut against the 250 k it allowed before, for five hulls and a dozen structures, and that
+arithmetic is kept below as the record. That gate allowed
 the conn view 250 k triangles on screen, the terrain heightfield and the own roster together,
-and reserves 105 k of them for the environment props. The heightfield is a 129 × 129 grid
+and reserved 105 k of them for the environment props, as it still does. The heightfield is a 129 × 129 grid
 on a 32 × 32-cell map, 32,768 triangles (`packages/frontend/src/game/perspectiveTerrain.ts`;
 [three-layer-ocean.md](three-layer-ocean.md) measured the bare Ventfront scene at about
 33 k), so the own force — five hulls and a dozen structures — has about 112 k, and an orb's

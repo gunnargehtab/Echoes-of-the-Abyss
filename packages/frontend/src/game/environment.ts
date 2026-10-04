@@ -302,7 +302,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
  * per instance, and the batch cut eight densities to stay under the original
  * 80 k. This figure restores those densities; the tightest shipped map (Kelp
  * Labyrinth) dresses at ~102 k, and the whole layer still sits well inside the
- * conn view's 250 k on-screen budget. */
+ * conn view's 400 k on-screen budget. */
 export const PROP_INSTANCE_CAP = 600;
 export const PROP_TRI_RESERVATION = 105_000;
 

@@ -248,8 +248,9 @@ export const ink = {
  * three's own 32, which is the smooth render the header above refuses — and
  * it is 16 rather than 24 or 30 for gate 6 (docs/graphics-standards.md §6):
  * an orb's triangles go as the square of its count, and the own force on
- * screen has about 112k triangles once the environment props' 105k and the
- * terrain's 33k are out of the frame's 250k. Every model rebuilt at the
+ * screen had about 112k triangles once the environment props' 105k and the
+ * terrain's 33k were out of the frame's 250k (400k since #1027, for forty
+ * berths of hulls rather than five). Every model rebuilt at the
  * rule's counts, a dozen of the navy's structures and its five largest hulls
  * come to 181k at a ceiling of 24, 127k at 18 and 107k at 16 (Block 2c,
  * "What the rule costs"); the structures alone, 35k today, are 110k at 24

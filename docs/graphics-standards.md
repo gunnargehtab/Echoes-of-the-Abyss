@@ -300,7 +300,7 @@ The gate is **two independent rules**. Lifting one has never lifted the other:
   it that way. No debug path that renders a sprite for a sub-Track contact ships, ever.
   This is the server-authoritative rule in [tech-stack.md](tech-stack.md) wearing a
   renderer's clothes, and it is the half that is absolute.
-- **The conn view, at every tier.** Gate 6 spends its 150 draw calls and 250 k triangles on
+- **The conn view, at every tier.** Gate 6 spends its 150 draw calls and 400 k triangles on
   the own force, which is what keeps the budget flat — "never an army of contacts". The
   enemy is never geometry there. A billboarded sprite is not a mesh, so Tier 4 earning a
   sprite in the overlay does not touch this; `packages/frontend/test/rendererSmoke.test.ts`
@@ -318,8 +318,9 @@ edge is what keeps a track readable when it does.
 
 The conn view renders the world at runtime — the terrain heightfield and the player's
 *own* roster models — inside the budgets the Phase-1 measurement pinned
-([three-layer-ocean.md](three-layer-ocean.md)): **≤ 150 draw calls** and **≤ 250 k
-triangles** on screen (`mergeByMaterial` collapses each model to one mesh per material),
+([three-layer-ocean.md](three-layer-ocean.md)) and the berth ceiling restated (below):
+**≤ 150 draw calls** and **≤ 400 k triangles** on screen (`mergeByMaterial` collapses each
+model to one mesh per material),
 pixel ratio capped at 1.5, and the `__perspectiveProbe` frame-cost telemetry is how the
 number is checked rather than argued about. A frame that renders more than once is counted
 whole: every pass's draw calls, triangles and GPU time sum, a full-screen draw is a call
@@ -329,8 +330,9 @@ three resets `renderer.info` on every `render()` by default, which would leave a
 last pass alone, so the conn view turns that off and resets it once at the top of each
 frame: the probe's calls and triangles are the whole frame's, and its `passes` lists the
 renders that made it. Only the own
-force is ever geometry — five hulls and a dozen structures, never an army of contacts —
-which is what keeps the budget flat. The offline bake (`tools/hull-maps/build.mjs`,
+force is ever geometry — at most forty berths of hulls (`BERTHS.CEILING`) and a base,
+sampled below as a dozen structures, never an army of contacts — which is what keeps the
+budget bounded. The offline bake (`tools/hull-maps/build.mjs`,
 **4 px/m** units, **1.5 px/m** structures) remains a contract with `hullTextures.ts` and
 `structureMaps.ts` (the maps carry no metadata; pixel size ÷ density *is* the metre
 extent): it is the loading
@@ -386,6 +388,26 @@ is where the difference shows. And a ground delta no longer rebuilds the world: 
 collapsed span moves the vertices within a cell of itself and re-shades those cells
 and a ring on the seabed canvas the join baked, on the seed and the depth ramp the join
 set — so the arch falls and nothing else on the map re-textures.
+
+**The berth ceiling** ([#1027](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1027)).
+The force once budgeted was five hulls; a commander may hold forty berths, and a hull costs
+a call per material, up to six a berth in three navies. Read on the named GPU at
+`capture.mjs`'s four cameras on Ventfront, where the opening is 63–64 calls and 151 k
+triangles ([issue-1027](screenshots/issue-1027/README.md)): forty Beacons and the four
+structures that grant the ceiling read 290–292 calls and 292 k triangles; with a dozen
+structures, 336 calls and 314 k; and Pelagia's heaviest hulls, twenty Abyssal Submersibles,
+with a sample dozen structures, 200 calls and 382 k triangles. The **400 k** is that last
+frame with the prop layer at its full reservation, 387 k, and margin: instancing cannot
+touch a drawn triangle, so the force's triangles are budgeted rather than engineered away.
+The dozen is a sample because nothing caps what a base builds. A base heavier in Foundries
+or Slipways can exceed the 400 k (a Bastion and eleven Pelagia Foundries count to about 457 k
+with those hulls), and that edge is recorded, not budgeted; the probe is the check. The **150
+calls stand**, and the ceiling breaches them until own models are instanced per kind
+([#1079](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1079)), which
+counts the 336 back to about 102. The breach costs the CPU rather than the GPU: against
+the opening, queued GPU time rose 0.05–0.17 ms, `avgConnMs` 1.1–1.5 ms, and the unqueued
+bracket, the handover, 3.8–4.7 ms, at ratio 1 and 1.5. `capture.mjs` logs a breach
+instead of failing on it with `OVER_BUDGET=record`.
 
 A classified animal drawn as stipple ([map-visuals.md](map-visuals.md) §8) is overlay
 ink, not conn geometry: it spends no draw call and no triangle here, it is priced in
@@ -596,7 +618,7 @@ buffer, not by what is in frame: one copy and one draw of the whole frame.
 - **Stations.** The halo's: capture.mjs's four cameras on Ventfront and Sorrowgate, and the
   fight station of `stations.mjs` on Ventfront, at ratio 1 and 1.5.
 
-It must fit within the existing 150-call/250,000-triangle frame limits, not silently borrow historical
+It must fit within the existing 150-call/400,000-triangle frame limits, not silently borrow historical
 headroom from #286 as a current measurement. That reading measures CPU submit and overlay
 time, not isolated GPU execution time.
 
