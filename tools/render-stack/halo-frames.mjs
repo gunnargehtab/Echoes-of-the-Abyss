@@ -31,8 +31,10 @@
  * Then, on Ventfront at the close camera, each own hull kind pings in turn:
  * the area its halo alone lifts past 10 % luma at rest and at SIG 95, and the
  * WCAG 2.3.1 flash between the rest and ping frames with every halo on, beside
- * the same pair without the halo. Writes halo-frames.json and a composited
- * shot of every camera with the halo off and on. Not a gate.
+ * the same pair without the halo. The hull is then stopped and pings twice
+ * more, its collar read through each whole ping, halo on and then off; the
+ * worst moment is the reading (`collarOverPing`). Writes halo-frames.json and
+ * a composited shot of every camera with the halo off and on. Not a gate.
  *
  * Two more stages answer #1001's calls of 4 October. **Structures**, on
  * Ventfront at the close camera: each structure's halo alone at rest, then
@@ -79,6 +81,8 @@ const CAMERAS = [
   ['survey', 18000, 88],
 ];
 const COLLAR_CAMERAS = new Set(['home', 'close']);
+/** The selected yard's first production button, CSS px at 1440 × 900. */
+const CARD_FIRST_BUTTON = { x: 782, y: 768 };
 const SETTLE_MS = 800;
 
 /** Page-side readers over the frames the hook hands back, kept in the page. */
@@ -433,12 +437,7 @@ async function collars(page, entities, dpr) {
   await page.waitForTimeout(200);
   const cores = collarCores(off, entities, dpr);
   const onCores = coresIn(cores, off, on, entities, dpr);
-  return {
-    on: collarContrast(on, entities, onCores),
-    off: collarContrast(off, entities, cores),
-    cores,
-    offPair: off,
-  };
+  return { on: collarContrast(on, entities, onCores), off: collarContrast(off, entities, cores) };
 }
 
 /**
@@ -461,19 +460,17 @@ function coresIn(cores, from, to, entities, dpr) {
  * marks cross the water under the collar as it holds, so one capture reads
  * whichever moment it landed on; the worst moment is the reading.
  */
-async function collarOverPing(page, u, found, dpr, haloOn) {
-  await page.evaluate((on) => window.__perspectiveHalo(on), haloOn);
-  await page.waitForTimeout(200);
+async function collarOverPing(page, key, dpr, haloOn, shoot = null) {
   const loud = () =>
     page.evaluate(
       (key) => (window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key)?.sig ?? 0) >= 90,
-      u.key
+      key
     );
   await page.keyboard.press('KeyP');
   const pinged = await page
     .waitForFunction(
       (key) => (window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key)?.sig ?? 0) >= 90,
-      u.key,
+      key,
       { timeout: 3000 }
     )
     .then(
@@ -482,17 +479,29 @@ async function collarOverPing(page, u, found, dpr, haloOn) {
     );
   const shares = [];
   let worst = null;
-  while (pinged && (await loud())) {
-    const pair = await hudPair(page);
-    const [cores] = coresIn([found.cores], found.offPair, pair, [u], dpr);
-    const [reading] = collarContrast(pair, [u], [cores]);
-    if (reading.atLeast3Share === null) continue;
-    shares.push(reading.atLeast3Share);
-    if (worst === null || reading.atLeast3Share < worst.atLeast3Share) worst = reading;
+  if (pinged) {
+    // The core, found in a halo-off pair taken during this ping, where the
+    // hull now stands and in the ink it now wears.
+    const u = (await ownEntities(page)).find((e) => e.key === key);
+    await page.evaluate(() => window.__perspectiveHalo(false));
+    await page.waitForTimeout(200);
+    const offPair = await hudPair(page);
+    const [found] = collarCores(offPair, [u], dpr);
+    await page.evaluate((on) => window.__perspectiveHalo(on), haloOn);
+    await page.waitForTimeout(200);
+    while (await loud()) {
+      const pair = await hudPair(page);
+      const [cores] = coresIn([found], offPair, pair, [u], dpr);
+      const [reading] = collarContrast(pair, [u], [cores]);
+      if (reading.atLeast3Share === null) continue;
+      shares.push(reading.atLeast3Share);
+      if (shares.length === 1 && shoot !== null) await shoot();
+      if (worst === null || reading.atLeast3Share < worst.atLeast3Share) worst = reading;
+    }
   }
   await page.evaluate(() => window.__perspectiveHalo(true));
   await page.waitForTimeout(200);
-  return { haloOn, samples: shares.length, shares, worst };
+  return { haloOn, pinged, samples: shares.length, shares, worst };
 }
 
 /** Own entities on screen, as CSS centres, with a reach for their collar. */
@@ -558,6 +567,56 @@ async function alone(page, name, e, sites, dpr) {
     liftedCssPx: round(lifted / dpr ** 2, 1),
     peakLevels: peak,
   };
+}
+
+/**
+ * Page-side: the spot nearest `from` where a hull at its depth sits behind
+ * relief from a 12° camera, for the ridge case. Grid points 150 m apart, out
+ * to 2.4 km and nearest first, whose floor clears the hull by 40 m are tried
+ * from every 15° of yaw at three dollies. The eye is placed as `applyCamera`
+ * places it, focused on the seabed under the hull; one the rig would have to
+ * raise off the ground is skipped. The seabed is sampled along the line from
+ * the eye to the hull, and a spot is kept where it stands 8 world metres over
+ * that line, so the whole hull and not only its centre is behind it.
+ */
+function ridgeSpot({ x, z, depthM }) {
+  const Y = 0.22; // DEPTH_VISUAL_M_PER_M, perspectiveTerrain.ts
+  const groundY = (px, pz) => -window.__perspectiveSeabedM(px, pz) * Y;
+  const pitch = (12 * Math.PI) / 180;
+  const hullY = -depthM * Y;
+  const grid = [];
+  for (let dx = -2400; dx <= 2400; dx += 150)
+    for (let dz = -2400; dz <= 2400; dz += 150) grid.push([dx, dz, Math.hypot(dx, dz)]);
+  grid.sort((a, b) => a[2] - b[2]);
+  let searched = 0;
+  for (const [dx, dz, away] of grid) {
+    const px = x + dx;
+    const pz = z + dz;
+    if (window.__perspectiveSeabedM(px, pz) < depthM + 40) continue;
+    const focusY = groundY(px, pz);
+    let best = null;
+    for (const distance of [1500, 2500, 3500]) {
+      for (let yawDeg = 0; yawDeg < 360; yawDeg += 15) {
+        searched++;
+        const yaw = (yawDeg * Math.PI) / 180;
+        const reach = Math.cos(pitch) * distance;
+        const ex = px + Math.sin(yaw) * reach;
+        const ez = pz + Math.cos(yaw) * reach;
+        const ey = focusY + Math.sin(pitch) * distance;
+        if (ey < groundY(ex, ez) + 20) continue;
+        let over = -Infinity;
+        for (let k = 1; k < 120; k++) {
+          const f = k / 120;
+          const ground = groundY(ex + (px - ex) * f, ez + (pz - ez) * f);
+          over = Math.max(over, ground - (ey + (hullY - ey) * f));
+        }
+        if (over > 8 && (best === null || over > best.overM))
+          best = { xM: px, zM: pz, awayM: Math.round(away), yawDeg, distance, overM: Math.round(over) };
+      }
+    }
+    if (best !== null) return { searched, best };
+  }
+  return { searched, best: null };
 }
 
 export default async ({ page, shot }) => {
@@ -650,7 +709,10 @@ export default async ({ page, shot }) => {
     );
     const kinds = new Map();
     for (const u of units) if (!kinds.has(u.kind)) kinds.set(u.kind, u);
-    for (const u of kinds.values()) {
+    for (const first of kinds.values()) {
+      // Where the hull is now: a working Harvester has moved on while the
+      // hulls before it pinged.
+      const u = (await ownEntities(page)).find((e) => e.key === first.key) ?? first;
       await page.mouse.click(u.cx, u.cy);
       await page.waitForTimeout(500);
       await take(page, 'rest:all');
@@ -698,16 +760,18 @@ export default async ({ page, shot }) => {
         collarAtPing: collarPing ?? null,
         collarAtPingHaloOff: collarPingOff ?? null,
       };
-      // Two more pings, the collar read through each: halo on, then off.
-      const pe = entities.find((e) => e.key === u.key);
-      if (pe !== undefined) {
-        const found = { cores: atPing.cores[entities.indexOf(pe)], offPair: atPing.offPair };
-        reading.collarOverPing = [];
-        for (const haloOn of [true, false]) {
-          // A ping holds SIG 95 for 3 s; each read starts from rest.
-          await page.waitForTimeout(4000);
-          reading.collarOverPing.push(await collarOverPing(page, pe, found, dpr, haloOn));
-        }
+      // Two more pings, the collar read through each: halo on, then off. The
+      // hull is stopped first (X), because a working Harvester travels
+      // between the pairs a reading compares, and then the core has to be
+      // found again in the halo-on frame, where the glow can pass for it.
+      await page.keyboard.press('KeyX');
+      reading.collarOverPing = [];
+      for (const haloOn of [true, false]) {
+        // A ping holds SIG 95 for 3 s; each read starts from rest.
+        await page.waitForTimeout(4000);
+        reading.collarOverPing.push(
+          await collarOverPing(page, u.key, dpr, haloOn, () => shotAt(`ping-${slug(u.name)}-still-${haloOn ? 'on' : 'off'}`))
+        );
       }
       pings.push(reading);
       console.log(JSON.stringify(reading));
@@ -735,8 +799,11 @@ export default async ({ page, shot }) => {
     if (foundry !== undefined) {
       await page.mouse.click(foundry.cx, foundry.cy);
       await page.waitForTimeout(500);
-      // 1 builds the yard's first hull; the SIG it reaches says it took.
-      await page.keyboard.press('Digit1');
+      // Selecting a yard opens its card, and production has no key (digits
+      // are control groups), so this presses the card's first button: a Light
+      // Scout, at drive.mjs's 1440 × 900 CSS viewport, which VIEW_DPR leaves.
+      // The SIG the Foundry reaches says it took.
+      await page.mouse.click(CARD_FIRST_BUTTON.x, CARD_FIRST_BUTTON.y);
       const working = await page
         .waitForFunction(
           (key) =>
@@ -759,69 +826,81 @@ export default async ({ page, shot }) => {
       } else {
         structures.push({ key: foundry.key, name: foundry.name, state: 'working', produced: false });
       }
-      await page.keyboard.press('Escape');
     }
     await page.evaluate(() => window.__haloRead.drop());
   }
 
-  // The ridge case: each own hull at the low pitch from every yaw and three
-  // dollies, the seabed sampled along the line from the eye to the hull's
-  // centre. Where relief stands over that line, the hull's halo alone: a lamp
-  // the ridge hides wholly adds nothing (SPEC, "The lamp").
-  const ridge = { searched: 0, hidden: [] };
+  // The ridge case (SPEC, "The lamp"): a hull whose lamps relief hides at the
+  // low (12°) pitch adds nothing. Nothing at Ventfront's opening stands behind
+  // relief from any yaw, so the Light Scout goes to the nearest spot that does
+  // (`ridgeSpot`). There it pings, its halo at its widest, and its halo alone
+  // is read from the hidden camera and, as the control, from the same yaw at 35°.
+  const ridge = { searched: 0, spot: null, arrived: false, hidden: null, control: null };
   if (STAGES.has('ridge')) {
-    const units = await page.evaluate(() => window.__perspectiveLamps().units);
-    const found = await page.evaluate((units) => {
-      const Y = 0.22; // DEPTH_VISUAL_M_PER_M, perspectiveTerrain.ts
-      const best = new Map();
-      let searched = 0;
-      for (const u of units) {
-        for (const distance of [1500, 2500, 3500]) {
-          for (let yawDeg = 0; yawDeg < 360; yawDeg += 10) {
-            window.__perspectiveCamera(u.xM, u.zM, distance, { yawDeg, pitchDeg: 12, focusDepthM: null });
-            const { eye } = window.__perspectiveProbe();
-            const e = [eye.xM, -eye.depthM * Y, eye.zM];
-            const t = [u.xM, -u.depthM * Y, u.zM];
-            // How far the seabed stands over the sight line, world metres.
-            let over = -Infinity;
-            for (let k = 1; k < 200; k++) {
-              const f = k / 200;
-              const x = e[0] + (t[0] - e[0]) * f;
-              const z = e[2] + (t[2] - e[2]) * f;
-              const ground = -window.__perspectiveSeabedM(x, z) * Y;
-              over = Math.max(over, ground - (e[1] + (t[1] - e[1]) * f));
-            }
-            searched++;
-            const prior = best.get(u.id);
-            if (over > 0 && (prior === undefined || over > prior.overM))
-              best.set(u.id, { id: u.id, distance, yawDeg, overM: Math.round(over) });
-          }
-        }
-      }
-      return { searched, hits: [...best.values()] };
-    }, units);
-    ridge.searched = found.searched;
-    for (const hit of found.hits) {
-      const u = units.find((x) => x.id === hit.id);
-      const key = `unit:${u.id}`;
+    await camera(page, centre, CAMERAS[1]);
+    const scout = (await ownEntities(page)).find((e) => e.name === 'Light Scout');
+    const at = (await page.evaluate(() => window.__perspectiveLamps().units)).find(
+      (u) => scout !== undefined && `unit:${u.id}` === scout.key
+    );
+    if (at !== undefined) {
+      const found = await page.evaluate(ridgeSpot, { x: at.xM, z: at.zM, depthM: at.depthM });
+      ridge.searched = found.searched;
+      ridge.spot = found.best;
+    }
+    if (ridge.spot !== null) {
+      const { spot } = ridge;
+      await page.mouse.click(scout.cx, scout.cy);
+      await page.waitForTimeout(300);
+      // From overhead the spot is the canvas's centre, and a right click
+      // there is a move order to it.
       await page.evaluate(
-        ({ u, hit }) =>
-          window.__perspectiveCamera(u.xM, u.zM, hit.distance, {
-            yawDeg: hit.yawDeg,
-            pitchDeg: 12,
-            focusDepthM: null,
-          }),
-        { u, hit }
+        (s) => window.__perspectiveCamera(s.xM, s.zM, 2500, { yawDeg: 0, pitchDeg: 88, focusDepthM: null }),
+        spot
       );
       await page.waitForTimeout(SETTLE_MS);
-      const { sites } = await take(page, `ridge:${key}`, key);
-      const reading = {
-        ...hit,
-        ...(await alone(page, `ridge:${key}`, { key, name: u.name, sig: u.sig }, sites, dpr)),
+      await page.mouse.click(viewport.width / 2, viewport.height / 2, { button: 'right' });
+      ridge.arrived = await page
+        .waitForFunction(
+          ({ key, s }) => {
+            const u = window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key);
+            return u !== undefined && Math.hypot(u.xM - s.xM, u.zM - s.zM) < 60;
+          },
+          { key: scout.key, s: spot },
+          { timeout: 240000, polling: 1000 }
+        )
+        .then(
+          () => true,
+          () => false
+        );
+      const read = async (pitchDeg, name) => {
+        await page.evaluate(
+          ({ key, s, pitchDeg }) => {
+            const u = window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key);
+            window.__perspectiveCamera(u.xM, u.zM, s.distance, { yawDeg: s.yawDeg, pitchDeg, focusDepthM: null });
+          },
+          { key: scout.key, s: spot, pitchDeg }
+        );
+        await page.waitForTimeout(SETTLE_MS);
+        const { sites } = await take(page, name, scout.key);
+        const sig = (await ownEntities(page)).find((e) => e.key === scout.key)?.sig;
+        const reading = { pitchDeg, ...(await alone(page, name, { ...scout, sig }, sites, dpr)) };
+        await shotAt(name);
+        console.log(JSON.stringify(reading));
+        return reading;
       };
-      ridge.hidden.push(reading);
-      console.log(JSON.stringify(reading));
-      if (ridge.hidden.length === 1) await shotAt(`ridge-${slug(u.name)}`);
+      if (ridge.arrived) {
+        await page.waitForTimeout(1500);
+        await page.keyboard.press('KeyP');
+        await page
+          .waitForFunction(
+            (key) => (window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key)?.sig ?? 0) >= 90,
+            scout.key,
+            { timeout: 3000 }
+          )
+          .catch(() => {});
+        ridge.hidden = await read(12, 'ridge-hidden');
+        ridge.control = await read(35, 'ridge-control');
+      }
     }
     await page.evaluate(() => window.__haloRead.drop());
   }
