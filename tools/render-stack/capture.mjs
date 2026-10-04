@@ -115,7 +115,9 @@ export default async ({ page, shot }) => {
     if (probe.triangles > 400000) breaches.push(`${name}: triangle budget (${probe.triangles})`);
     if (OVER_BUDGET) breaches.forEach((breach) => console.log(`BREACH ${breach}`));
     else assert.deepEqual(breaches, [], 'gate 6');
+    // Null before 33af0f74, so a baseline capture of 1df288a still runs.
     const onScreen = await page.evaluate(() => {
+      if (typeof window.__perspectiveLamps !== 'function') return null;
       const seen = ({ screen }) =>
         screen !== null &&
         screen.x1 > 0 && screen.x0 < innerWidth && screen.y1 > 0 && screen.y0 < innerHeight;

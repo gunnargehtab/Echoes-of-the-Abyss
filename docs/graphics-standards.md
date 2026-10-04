@@ -394,10 +394,13 @@ a call per material, up to six a berth in three navies. Read on the named GPU at
 `capture.mjs`'s four cameras on Ventfront, where the opening is 63–64 calls and 151 k
 triangles ([issue-1027](screenshots/issue-1027/README.md)): forty Beacons and the four
 structures that grant the ceiling read 290–292 calls and 292 k triangles; with a dozen
-structures, 336 calls and 314 k; and Pelagia's heaviest force, twenty Abyssal Submersibles
-and a dozen structures, 200 calls and 382 k triangles. The **400 k** is that last frame with
-the prop layer at its full reservation, 387 k, and margin: instancing cannot touch a drawn
-triangle, so the force's triangles are budgeted rather than engineered away. The **150
+structures, 336 calls and 314 k; and Pelagia's heaviest hulls, twenty Abyssal Submersibles,
+with a sample dozen structures, 200 calls and 382 k triangles. The **400 k** is that last
+frame with the prop layer at its full reservation, 387 k, and margin: instancing cannot
+touch a drawn triangle, so the force's triangles are budgeted rather than engineered away.
+The dozen is a sample because nothing caps what a base builds. A base heavier in Foundries
+or Slipways exceeds the 400 k (a Bastion and eleven Pelagia Foundries count to about 457 k
+with those hulls), and that edge is recorded, not budgeted; the probe is the check. The **150
 calls stand**, and the ceiling breaches them until own models are instanced per kind
 ([#1079](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1079)), which
 counts the 336 back to about 102. The breach costs the CPU rather than the GPU: against

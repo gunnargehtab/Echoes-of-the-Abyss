@@ -6,7 +6,10 @@ five hulls and a dozen structures. A commander may hold forty berths (`BERTHS.CE
 screen on the named GPU. Gate 6's "The berth ceiling" paragraph is what they decided.
 
 Hardware: GTX 1070 through ANGLE/Direct3D 11, Edge headed at 1440×900, on 4 October 2026.
-The client was `main` at `9d83c95c`, and `capture.mjs` as on this branch. Every reading had
+The client was `main` at `9d83c95c`, and `capture.mjs` as on this branch, except that
+every run but `pel-dozen-r15-b` checked triangles against the old 250,000: their
+`breaches` name triangle breaches the 400 k check would not, and their calls, triangles
+and timings are the same either way. Every reading had
 `gpuTimer: timing`, 240 GPU frames in each average, no result dropped to a disjoint event,
 and the lamp halo drawn.
 
@@ -44,7 +47,8 @@ nothing caps what a base builds.
 ## The counts
 
 Calls and triangles at `capture.mjs`'s four cameras (home, close, low at 12°, survey),
-with the own hulls and structures on screen. Both ratios read the same counts.
+with the own hulls and structures on screen. Both ratios read the same counts, within a
+few calls between runs: one Submersible run read 168 calls at close, the others 164.
 
 | Force | Home, low, survey: calls / triangles | Close: calls / triangles | On screen |
 | --- | --- | --- | --- |
@@ -55,11 +59,13 @@ with the own hulls and structures on screen. Both ratios read the same counts.
 | 40 Beacons, dozen | 336 / 314,120–314,174 | 242 / 263,324 | 40, 12; close 32, 4 |
 | 20 Submersibles, dozen | 200 / 381,384–381,910 | 164–168 / 351,594–352,314 | 20, 12; close 16, 8 |
 
-Every ceiling breaches 150 calls. Only the Pelagia force breaches 250 k triangles, but
-40 Beacons with the four structures already read 292 k. Ventfront's prop layer read 99,520
-triangles of its 105 k reservation, and Ventfront and the Kelp Labyrinth have the largest
-shipped heightfield, 32,768 triangles. So the Pelagia frame with the reservation full is
-387,390, and gate 6's 400 k is that and 12.6 k of margin.
+Every ceiling breaches 150 calls, and every ceiling but the 40 Scouts breaches the old
+250 k triangles. Ventfront's prop layer read 99,520 triangles of its 105 k reservation, and
+Ventfront and the Kelp Labyrinth have the largest shipped heightfield, 32,768 triangles. So
+the Pelagia frame with the reservation full is 387,390, and gate 6's 400 k is that and
+12.6 k of margin. It bounds this sample dozen and not every dozen: a Bastion and eleven
+Pelagia Foundries count to 172,622 triangles against the sample's 102,734, about 457 k in
+all, and gate 6 records that edge rather than budgeting it.
 
 Instancing hulls per kind would draw the 40 Beacons as 6 calls rather than 240. Counted,
 not measured: the Beacons with a dozen structures would read 336 − 240 + 6 = 102
