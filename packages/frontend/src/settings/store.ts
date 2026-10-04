@@ -123,12 +123,18 @@ export interface Settings {
    * reading, loudness, and one cost, a few passes after the canvas; there
    * is no half of it to offer. Off withholds nothing: the lamp core and the
    * loudness collar carry every loudness fact without it. The default is
-   * `LAMP_HALOS_DEFAULT`, off until the halo's reading on the named GPU meets
-   * gate 6 and the owner approves its frames; the view may still refuse it on
-   * a display that fails its capability check, and then keeps this choice and
-   * says so in Settings.
+   * `LAMP_HALOS_DEFAULT`, on since the owner approved the halo's frames; the
+   * view may still refuse it on a display that fails its capability check,
+   * and then keeps this choice and says so in Settings.
    */
   lampHalos: boolean;
+  /**
+   * Whether the player set `lampHalos` themselves. Every save writes the whole
+   * record, so a stored `lampHalos` alone cannot tell a choice from the
+   * default it was saved at: without this, the default turning on would never
+   * reach a player who had saved any other setting while it was off.
+   */
+  lampHalosChosen: boolean;
 }
 
 /**
@@ -164,6 +170,7 @@ export const DEFAULT_SETTINGS: Settings = {
   speakerProfile: false,
   contactTimbre: false,
   lampHalos: LAMP_HALOS_DEFAULT,
+  lampHalosChosen: false,
 };
 
 const STORAGE_KEY = 'echoes.settings';
@@ -231,10 +238,14 @@ function sanitise(raw: unknown): Settings {
     // written before this field existed loads it off, which is where a build
     // that has never offered the control would have left it anyway.
     contactTimbre: record.contactTimbre === true,
-    // The build default rather than off: once the default turns on, a record
-    // written before the control existed should turn on with it, since that
-    // player never chose otherwise. An explicit choice is kept either way.
-    lampHalos: typeof record.lampHalos === 'boolean' ? record.lampHalos : LAMP_HALOS_DEFAULT,
+    // The build default unless the player chose: a record that only carries
+    // the default it was saved at follows the default when it moves, since
+    // that player never chose otherwise. An explicit choice is kept either way.
+    lampHalosChosen: record.lampHalosChosen === true,
+    lampHalos:
+      record.lampHalosChosen === true && typeof record.lampHalos === 'boolean'
+        ? record.lampHalos
+        : LAMP_HALOS_DEFAULT,
   };
 }
 
@@ -281,7 +292,9 @@ export function loadSettings(): Settings {
 }
 
 export function saveSettings(patch: Partial<Omit<Settings, 'version'>>): Settings {
-  const next: Settings = sanitise({ ...loadSettings(), ...patch, version: 1 });
+  // A patch that names the halo is the player choosing it.
+  const chosen = patch.lampHalos === undefined ? {} : { lampHalosChosen: true };
+  const next: Settings = sanitise({ ...loadSettings(), ...patch, ...chosen, version: 1 });
   try {
     globalThis.localStorage?.setItem(STORAGE_KEY, JSON.stringify(next));
   } catch {

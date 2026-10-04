@@ -390,7 +390,8 @@ of at most 1.86 ms.
 **All seven of the SPEC's "What it must show" items hold, after the owner's calls of
 4 October.** #1072 read five of seven. The halo's energy now stops rising at SIG 80, so a
 ping no longer lights the water under its hull's collar past 3:1. The loudness order is
-restated for structures, which stay dark until their loudest.
+restated for structures, which stay dark until their loudest. The owner approved these frames
+on 4 October, and the halo's default turned on.
 
 `tools/render-stack/halo-frames.mjs` reads them on the named GPU with reduced motion, so
 paired shots frame the same water. A development hook reads one frame's conn canvas after

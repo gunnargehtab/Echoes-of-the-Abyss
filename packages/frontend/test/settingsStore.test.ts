@@ -138,19 +138,32 @@ describe('the settings store', () => {
   });
 
   it('loads the lamp halos at the build default, and keeps an explicit choice', () => {
-    // art-direction.md "Lamp halo — SPEC": the halo lands off behind its
-    // setting and turns on by default only after its reading and the owner's
-    // approval. The default is the build's, not a hard-coded off, so a record
-    // from before the control existed follows the default when it moves; a
-    // choice the player wrote is honoured either way.
+    // art-direction.md "Lamp halo — SPEC": the halo is on by default since the
+    // owner approved its frames. The default is the build's, not a hard-coded
+    // value, so a record whose player never chose follows the default when it
+    // moves; a choice the player made is honoured either way.
+    assert.equal(LAMP_HALOS_DEFAULT, true, 'on by default (SPEC)');
     assert.equal(DEFAULT_SETTINGS.lampHalos, LAMP_HALOS_DEFAULT);
     assert.equal(loadSettings().lampHalos, LAMP_HALOS_DEFAULT);
     backing.set('echoes.settings', JSON.stringify({ version: 1, masterVolume: 0.5 }));
     assert.equal(loadSettings().lampHalos, LAMP_HALOS_DEFAULT);
+    // Saved while the default was off, by a player who changed another setting.
+    backing.set(
+      'echoes.settings',
+      JSON.stringify({ version: 1, masterVolume: 0.5, lampHalos: !LAMP_HALOS_DEFAULT })
+    );
+    assert.equal(loadSettings().lampHalos, LAMP_HALOS_DEFAULT, 'an unchosen value follows');
+    saveSettings({ masterVolume: 0.4 });
+    assert.equal(loadSettings().lampHalos, LAMP_HALOS_DEFAULT, 'another save is no choice');
     saveSettings({ lampHalos: !LAMP_HALOS_DEFAULT });
     assert.equal(loadSettings().lampHalos, !LAMP_HALOS_DEFAULT);
+    saveSettings({ masterVolume: 0.3 });
+    assert.equal(loadSettings().lampHalos, !LAMP_HALOS_DEFAULT, 'a choice outlives other saves');
     // A stored value that is not a boolean is the default, never truthy.
-    backing.set('echoes.settings', JSON.stringify({ version: 1, lampHalos: 'yes' }));
+    backing.set(
+      'echoes.settings',
+      JSON.stringify({ version: 1, lampHalos: 'yes', lampHalosChosen: true })
+    );
     assert.equal(loadSettings().lampHalos, LAMP_HALOS_DEFAULT);
   });
 
