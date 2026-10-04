@@ -1,0 +1,406 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "unpaced": true,
+  "halo": "drawn",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "dpr": 1
+  },
+  "overBudget": true,
+  "readings": [
+    {
+      "name": "home",
+      "probe": {
+        "active": true,
+        "look": "standard",
+        "pitchDeg": 55,
+        "yawDeg": 0,
+        "sway": "on",
+        "focus": {
+          "xM": 1158,
+          "zM": 1200,
+          "depthM": null
+        },
+        "eye": {
+          "xM": 1157,
+          "zM": 4643,
+          "depthM": -21617
+        },
+        "distance": 6000,
+        "waterReachM": 19200,
+        "waterDensity": 1,
+        "hullScale": 2.52,
+        "drawCalls": 200,
+        "triangles": 381910,
+        "passes": [
+          "canvas",
+          "depth-copy",
+          "halo-source",
+          "halo-spread",
+          "halo-composite",
+          "split-copy",
+          "split"
+        ],
+        "halo": "drawn",
+        "haloSites": 411,
+        "haloDropped": 0,
+        "haloCalls": 8,
+        "haloTriangles": 829,
+        "haloBytes": 22422976,
+        "split": "on",
+        "splitBytes": 5184000,
+        "canvasStencilBits": 8,
+        "textures": 22,
+        "pixelRatio": 1,
+        "drawingBuffer": {
+          "width": 1440,
+          "height": 900
+        },
+        "toneMapping": 4,
+        "environmentIntensity": 0.35,
+        "environmentBytes": 344064,
+        "station": "home",
+        "stationMs": 1714.4,
+        "stationFrames": 243,
+        "avgFrames": 240,
+        "fps": 141.7,
+        "avgFrameMs": 7.04,
+        "worstFrameMs": 19.3,
+        "avgConnMs": 1.7,
+        "worstConnMs": 6.3,
+        "avgOverlayMs": 1.68,
+        "worstOverlayMs": 3.3,
+        "overlayFrames": 243,
+        "gpuTimer": "timing",
+        "avgGpuMs": 5.11,
+        "worstGpuMs": 10.71,
+        "gpuFrames": 241,
+        "gpuDropped": 0,
+        "gpuQueue": null,
+        "gpuSplit": false,
+        "gpuParts": null,
+        "units": 20,
+        "structures": 12,
+        "ordnance": 0,
+        "props": 367,
+        "propTris": 99520,
+        "modelBacked": 32,
+        "ownCentre": {
+          "x": 1157.5,
+          "z": 1199.6875
+        }
+      },
+      "queued": {
+        "gpuMs": 0.92,
+        "worstGpuMs": 1.63,
+        "loadMs": 12.04,
+        "gpuDropped": 0,
+        "loadDropped": 0
+      },
+      "onScreen": {
+        "units": 20,
+        "structures": 12
+      },
+      "breaches": [
+        "home: draw budget (200)",
+        "home: triangle budget (381910)"
+      ]
+    },
+    {
+      "name": "close",
+      "probe": {
+        "active": true,
+        "look": "standard",
+        "pitchDeg": 55,
+        "yawDeg": 0,
+        "sway": "on",
+        "focus": {
+          "xM": 1158,
+          "zM": 1200,
+          "depthM": null
+        },
+        "eye": {
+          "xM": 1160,
+          "zM": 2230,
+          "depthM": -5989
+        },
+        "distance": 1800,
+        "waterReachM": 5760,
+        "waterDensity": 1,
+        "hullScale": 1,
+        "drawCalls": 164,
+        "triangles": 351600,
+        "passes": [
+          "canvas",
+          "depth-copy",
+          "halo-source",
+          "halo-spread",
+          "halo-composite",
+          "split-copy",
+          "split"
+        ],
+        "halo": "drawn",
+        "haloSites": 310,
+        "haloDropped": 0,
+        "haloCalls": 8,
+        "haloTriangles": 627,
+        "haloBytes": 22422976,
+        "split": "on",
+        "splitBytes": 5184000,
+        "canvasStencilBits": 8,
+        "textures": 22,
+        "pixelRatio": 1,
+        "drawingBuffer": {
+          "width": 1440,
+          "height": 900
+        },
+        "toneMapping": 4,
+        "environmentIntensity": 0.35,
+        "environmentBytes": 344064,
+        "station": "close",
+        "stationMs": 1772.9,
+        "stationFrames": 273,
+        "avgFrames": 240,
+        "fps": 154,
+        "avgFrameMs": 6.13,
+        "worstFrameMs": 118.9,
+        "avgConnMs": 1.43,
+        "worstConnMs": 3,
+        "avgOverlayMs": 1.52,
+        "worstOverlayMs": 4.3,
+        "overlayFrames": 273,
+        "gpuTimer": "timing",
+        "avgGpuMs": 3.87,
+        "worstGpuMs": 13.36,
+        "gpuFrames": 241,
+        "gpuDropped": 0,
+        "gpuQueue": null,
+        "gpuSplit": false,
+        "gpuParts": null,
+        "units": 20,
+        "structures": 12,
+        "ordnance": 0,
+        "props": 367,
+        "propTris": 99520,
+        "modelBacked": 32,
+        "ownCentre": {
+          "x": 1157.5,
+          "z": 1199.6875
+        }
+      },
+      "queued": {
+        "gpuMs": 0.97,
+        "worstGpuMs": 2.28,
+        "loadMs": 12.02,
+        "gpuDropped": 0,
+        "loadDropped": 0
+      },
+      "onScreen": {
+        "units": 16,
+        "structures": 8
+      },
+      "breaches": [
+        "close: draw budget (164)",
+        "close: triangle budget (351600)"
+      ]
+    },
+    {
+      "name": "low",
+      "probe": {
+        "active": true,
+        "look": "standard",
+        "pitchDeg": 12,
+        "yawDeg": 0,
+        "sway": "on",
+        "focus": {
+          "xM": 1158,
+          "zM": 1200,
+          "depthM": null
+        },
+        "eye": {
+          "xM": 1153,
+          "zM": 4625,
+          "depthM": -2558
+        },
+        "distance": 3500,
+        "waterReachM": 11200,
+        "waterDensity": 1,
+        "hullScale": 1.47,
+        "drawCalls": 200,
+        "triangles": 381910,
+        "passes": [
+          "canvas",
+          "depth-copy",
+          "halo-source",
+          "halo-spread",
+          "halo-composite",
+          "split-copy",
+          "split"
+        ],
+        "halo": "drawn",
+        "haloSites": 411,
+        "haloDropped": 0,
+        "haloCalls": 8,
+        "haloTriangles": 829,
+        "haloBytes": 22422976,
+        "split": "on",
+        "splitBytes": 5184000,
+        "canvasStencilBits": 8,
+        "textures": 22,
+        "pixelRatio": 1,
+        "drawingBuffer": {
+          "width": 1440,
+          "height": 900
+        },
+        "toneMapping": 4,
+        "environmentIntensity": 0.35,
+        "environmentBytes": 344064,
+        "station": "low",
+        "stationMs": 2113.8,
+        "stationFrames": 268,
+        "avgFrames": 240,
+        "fps": 126.8,
+        "avgFrameMs": 6.45,
+        "worstFrameMs": 398.1,
+        "avgConnMs": 1.6,
+        "worstConnMs": 381.9,
+        "avgOverlayMs": 1.5,
+        "worstOverlayMs": 8.2,
+        "overlayFrames": 268,
+        "gpuTimer": "timing",
+        "avgGpuMs": 3.86,
+        "worstGpuMs": 12.81,
+        "gpuFrames": 241,
+        "gpuDropped": 0,
+        "gpuQueue": null,
+        "gpuSplit": false,
+        "gpuParts": null,
+        "units": 20,
+        "structures": 12,
+        "ordnance": 0,
+        "props": 367,
+        "propTris": 99520,
+        "modelBacked": 32,
+        "ownCentre": {
+          "x": 1157.5,
+          "z": 1199.6875
+        }
+      },
+      "queued": {
+        "gpuMs": 0.82,
+        "worstGpuMs": 1.51,
+        "loadMs": 12.08,
+        "gpuDropped": 0,
+        "loadDropped": 0
+      },
+      "onScreen": {
+        "units": 20,
+        "structures": 12
+      },
+      "breaches": [
+        "low: draw budget (200)",
+        "low: triangle budget (381910)"
+      ]
+    },
+    {
+      "name": "survey",
+      "probe": {
+        "active": true,
+        "look": "standard",
+        "pitchDeg": 88,
+        "yawDeg": 0,
+        "sway": "on",
+        "focus": {
+          "xM": 1158,
+          "zM": 1200,
+          "depthM": null
+        },
+        "eye": {
+          "xM": 1163,
+          "zM": 1867,
+          "depthM": -81043
+        },
+        "distance": 18000,
+        "waterReachM": 57600,
+        "waterDensity": 1,
+        "hullScale": 4,
+        "drawCalls": 200,
+        "triangles": 381384,
+        "passes": [
+          "canvas",
+          "depth-copy",
+          "halo-source",
+          "halo-spread",
+          "halo-composite",
+          "split-copy",
+          "split"
+        ],
+        "halo": "drawn",
+        "haloSites": 148,
+        "haloDropped": 0,
+        "haloCalls": 8,
+        "haloTriangles": 303,
+        "haloBytes": 22422976,
+        "split": "on",
+        "splitBytes": 5184000,
+        "canvasStencilBits": 8,
+        "textures": 22,
+        "pixelRatio": 1,
+        "drawingBuffer": {
+          "width": 1440,
+          "height": 900
+        },
+        "toneMapping": 4,
+        "environmentIntensity": 0.35,
+        "environmentBytes": 344064,
+        "station": "survey",
+        "stationMs": 2126.2,
+        "stationFrames": 267,
+        "avgFrames": 240,
+        "fps": 125.6,
+        "avgFrameMs": 6.85,
+        "worstFrameMs": 267.2,
+        "avgConnMs": 1.55,
+        "worstConnMs": 8.3,
+        "avgOverlayMs": 1.62,
+        "worstOverlayMs": 3.3,
+        "overlayFrames": 267,
+        "gpuTimer": "timing",
+        "avgGpuMs": 4.76,
+        "worstGpuMs": 13.2,
+        "gpuFrames": 241,
+        "gpuDropped": 0,
+        "gpuQueue": null,
+        "gpuSplit": false,
+        "gpuParts": null,
+        "units": 20,
+        "structures": 12,
+        "ordnance": 0,
+        "props": 367,
+        "propTris": 99520,
+        "modelBacked": 32,
+        "ownCentre": {
+          "x": 1157.5,
+          "z": 1199.6875
+        }
+      },
+      "queued": {
+        "gpuMs": 0.79,
+        "worstGpuMs": 1.67,
+        "loadMs": 12.21,
+        "gpuDropped": 0,
+        "loadDropped": 0
+      },
+      "onScreen": {
+        "units": 20,
+        "structures": 12
+      },
+      "breaches": [
+        "survey: draw budget (200)",
+        "survey: triangle budget (381384)"
+      ]
+    }
+  ]
+}

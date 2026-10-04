@@ -1,0 +1,77 @@
+diff --git a/packages/backend/src/rooms/lobby.ts b/packages/backend/src/rooms/lobby.ts
+index 1c6fd832..c1da7615 100644
+--- a/packages/backend/src/rooms/lobby.ts
++++ b/packages/backend/src/rooms/lobby.ts
+@@ -10,6 +10,7 @@
+  * docs/tech-stack.md "Match lifecycle".
+  */
+ 
++import { existsSync, readFileSync } from 'node:fs';
+ import { Faction } from '@echoes/shared';
+ 
+ /**
+@@ -67,6 +68,10 @@ export function isFactionTaken(
+ 
+ /** The navy a new arrival is handed: the first one nobody else holds. */
+ export function defaultFaction(roster: readonly RosterEntry[]): Faction {
++  // LOCAL STAGING FOR #1027 — NEVER COMMIT.
++  const stageFile = process.env.STAGE_FILE ?? '';
++  const staged = existsSync(stageFile) ? readFileSync(stageFile, 'utf8').trim().split(/\s+/)[0] : '';
++  if (roster.length === 0 && staged) return Faction[staged as keyof typeof Faction] as Faction;
+   return FACTION_ORDER.find((faction) => !isFactionTaken(roster, faction)) ?? FACTION_ORDER[0]!;
+ }
+ 
+diff --git a/packages/backend/src/sim/match.ts b/packages/backend/src/sim/match.ts
+index 4447ec33..909a9847 100644
+--- a/packages/backend/src/sim/match.ts
++++ b/packages/backend/src/sim/match.ts
+@@ -14,6 +14,7 @@
+  * Bastion standing wins.
+  */
+ 
++import { existsSync, readFileSync } from 'node:fs';
+ import { addComponent, defineQuery, hasComponent, removeEntity } from 'bitecs';
+ import {
+   ACTIVE_SONAR,
+@@ -1098,6 +1099,41 @@ export class Match {
+       prebuilt: true,
+     });
+ 
++    // LOCAL STAGING FOR #1027 — NEVER COMMIT. The berth ceiling for slot 0.
++    const stageFile = process.env.STAGE_FILE ?? '';
++    const [, stageKind = '', stageCount = '40', stageExtra = ''] = existsSync(stageFile)
++      ? readFileSync(stageFile, 'utf8').trim().split(/\s+/)
++      : [];
++    if (slot === 0 && stageKind !== '') {
++      stageExtra.split(',').filter(Boolean).forEach((name, j) => {
++        const along = ((j % 4) - 1.5) * 420;
++        const away = -(950 + Math.floor(j / 4) * 420);
++        spawnStructure(this.world, {
++          kind: StructureKind[name as keyof typeof StructureKind] as StructureKind, slot, faction,
++          x: baseX + alongX * along + awayX * away,
++          y: baseY + alongY * along + awayY * away, prebuilt: true,
++        });
++      });
++      spawnStructure(this.world, {
++        kind: StructureKind.Foundry, slot, faction,
++        x: baseX - spawn.foundryOffsetX, y: baseY - spawn.foundryOffsetY, prebuilt: true,
++      });
++      spawnStructure(this.world, {
++        kind: StructureKind.Slipway, slot, faction,
++        x: baseX - awayX * 450, y: baseY - awayY * 450, prebuilt: true,
++      });
++      const kind = UnitKind[stageKind as keyof typeof UnitKind] as UnitKind;
++      for (let i = 0; i < Number(stageCount); i++) {
++        const along = ((i % 8) - 3.5) * 170;
++        const away = 350 + Math.floor(i / 8) * 170;
++        spawnUnit(this.world, {
++          kind, slot, faction,
++          x: baseX + alongX * along + awayX * away,
++          y: baseY + alongY * along + awayY * away,
++        });
++      }
++      return;
++    }
+     // The navy's own kit, centred on the perpendicular whatever its length,
+     // so a navy that opens with four hulls one day spreads them the same way.
+     const escort = OPENING_ESCORT[faction];
