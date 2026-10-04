@@ -750,11 +750,14 @@ A verb gets built when a commander branch needs it, not to round a count up.
 | A competitive-mode document | [#439](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/439) |
 
 The audit filed this as one document, which undersold it. A ladder, ratings, accounts, team
-rules and an observer are a whole mode the game does not have. The hard part is the observer:
-a spectator handed unresolved state is a maphack, so a watcher's view has to be resolved the
-way a player's is — delayed, per side, or from a designated listener set. It waits because a
-ladder measures skill against a game whose matches decide and whose navies are balanced, and
-three of the maps a pool would draw on are archetypes rather than built maps.
+rules and an observer are a whole mode the game does not have. The document is
+[competitive.md](competitive.md): a duel pool of the three built archetypes with spawns
+drawn from the seed, one Glicko-2 rating per navy, passkey accounts for rated play only,
+two-against-two teams that listen as one side, a post-game that only looks inward, and a
+spectator who sees the match as it was heard, three minutes late. Nothing in it is built.
+The rated queue waits on one condition the document states: a duel matrix inside the
+one-navy rail, because a ladder measures skill only against navies that win at comparable
+rates. The rest of the mode can be built and played unrated before then.
 
 **After the game ships**
 

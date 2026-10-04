@@ -394,6 +394,7 @@ return is something the server actually sent.
 - **No player-to-player markers, yet.** There are no allies in the water to signal — and
   when team play exists, a marker is a message, and messages will be server state for §9's
   reason exactly: two clients watching one slot cannot disagree about what was marked.
+  [competitive.md](competitive.md) §5 designs team play, and its markers reach allies only.
 
 Every cue here is a server-sent event, never a client inference — a falling hp number
 cannot tell a shell from crush attrition. The wedge is the one that needed no new sound:

@@ -250,6 +250,11 @@ Scuttling
 - The second way a commander leaves a match: a position with no harvester alive, nothing on a production line or rising, not the price of a harvester in the bank and nothing landing in any stockpile, held for sixty seconds while another commander is still earning and fields at least as many armed hulls, ends with the crew scuttling and the commander eliminated exactly as a lost Bastion eliminates them (game-identity.md "Match Structure").
 - Automatic and unilateral. It is not an offer of surrender, and it is distinct from a *resignation*, which is a player leaving a live match (tech-stack.md).
 
+Spectator
+
+- A person watching a match they hold no seat in. Designed and unbuilt (competitive.md §7): a spectator sees the *heard view* — what each side resolved of the other, at the tier and position that side received, and no commander's own force except as the other side heard it — three minutes behind the match, and only when every commander consented.
+- Not an *observer*. In the Echo Layer an observer is a slot the pass resolves for, seated or scripted (`EchoLayer.run`); a spectator is resolved for by nobody, and is sent only what the commanders' sides already resolved.
+
 Cohort Hull
 
 - Any hull the Directorate crews is a cohort's — a cohort is assigned at birth to a depth band and belongs to it (factions.md) — and mission documents use "cohort hull" in that sense for whatever the year is seated in.
