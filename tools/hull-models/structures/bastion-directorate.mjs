@@ -170,8 +170,9 @@
  * and 1.00, 0.90, 0.80 and 0.70 in the file, the crown 0.8 on its node and
  * 0.40 — carapace plates stepping in under a boss, the spines and claws
  * leaning further out of vertical (the crown spines' atan 0.8 reads as 58°
- * in the file). The lowest point is `dock_main_mandible_1`'s, 3.28 m →
- * 1.64 under the ground; the anchor claws ended 4.8–5.7 m above y 0 there,
+ * in the file). The lowest point was `dock_main_mandible_1`'s, 3.28 m →
+ * 1.64 under the ground, a burial this pass recorded and left and #1084
+ * lifted (MAIN COLLAR); the anchor claws ended 4.8–5.7 m above y 0 there,
  * as they had 9.6–11.4 m before, a gap this pass left and #1061 closed
  * (ANCHOR CLAWS). The facet rule is asked under the press (`directorate.cut(L /
  * DRAWN, { press })`, Block 2c) and every count held: `facets.mjs
@@ -227,6 +228,41 @@
  * reads the same 20 lit parts at 991.5 m², the map bake raw E 8.28 → 5.50
  * at ×0.662 with no warning, the outlines unchanged, the three maps and
  * the roster sheet rebaked.
+ *
+ * MAIN COLLAR (#1084). A structure stands on its y 0, and only an anchor,
+ * a root or a slab goes under it (#955; contacts.mjs). The file wrote the
+ * main collar's frame at y 1.7, and under its quarter-turn roll the
+ * collar's local x is the world's y: the lower mandible's point hangs
+ * 1.15 r + 0.65 sin 0.35 = 1.833 under the frame's centre and the throat's
+ * root 1.740 (its fifteen-gon's reach at 1.25 r), so the mandible stood
+ * 1.64 m into the sand and the throat 0.50 — the burial HEIGHT recorded and
+ * left — where the small collar (r 0.9 at y 1.3) clears the ground by
+ * 0.5 m. Three ways were weighed. Turning the mandible pair about the
+ * throat's axis keeps the frame but puts the fangs beside the mouth rather
+ * than over and under it, a new silhouette for one collar. Writing the
+ * burial into the header leaves a docking collar in the seabed, which the
+ * rule names no case for. The frame rises to y 1.85 instead (`DOCK_MAIN_Y`;
+ * `LIFT` 0.15, 1.86 m under the press), the whole collar with it, and the
+ * worklight too, since it rests on the lip ring's top — 0.04 into the tube
+ * on the file's y 3.4 — and the lift alone would have sunk it in the tube.
+ * Measured after: the mandible's point at y 0.21 m and the throat's
+ * underside at 1.36; contacts.mjs lists neither under the seabed, and 153
+ * pairs where #1061 read 152 — the lip on tiers 0 and 1 and the worklight
+ * on the lip and `dock_main_mandible_0` as before, and one gained, the
+ * lower mandible's point on `carapace_tier_0`, 3.3 m behind its wall and
+ * 0.21 m over its floor, as the small collar's sits 2.9 m behind and 0.52
+ * over (FACETS' 1 m, before the press): each lower fang's point meets the
+ * base tier it hangs beside, its tip vertex alone inside. `diff.mjs
+ * bastion-directorate origin/main` reads the collar's five parts and the
+ * worklight 1.855 m moved and nothing else, the root scale 1.0000. A lift
+ * along y leaves the plan, so the fit held at `DRAWN`, the unpressed crown
+ * at `TALL` and the press at 0.5006; every facet count held (`facets.mjs
+ * directorate` names the same two ballast meridians); the light audit reads
+ * the same 20 lit parts at 991.5 m², intake's raw E 8.30 with no warning,
+ * the map bake 8.28 → 5.50 at ×0.662, the outlines unchanged; the albedo
+ * and height maps and the roster sheet rebaked, the emissive map the same
+ * bytes. The three standpipes sink 0.06–0.11 m, a burial this pass did not
+ * touch.
  */
 import { THREE, exportGlb, fitFootprint, holdCrown, polar, seat } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
@@ -376,10 +412,25 @@ TIER_RINGS.forEach(({ tier, y, ...ring }) =>
 
 // Two docking collars on the flank: the main one on +x, rolled a quarter
 // turn and yawed 0.26; the small one on -x +z, the same the other way.
+// The main collar's frame stands at y 1.85 where the file wrote 1.7 (the
+// header, MAIN COLLAR; #1084): under the quarter-turn roll the collar's
+// local x is the world's y, so the lower mandible's point hangs
+// 1.15 r + 0.65 sin 0.35 = 1.833 under the frame's centre and the throat's
+// root 1.740 (its fifteen-gon's reach at 1.25 r), and the file's 1.7 put
+// both in the sand. 1.85 stands the point 0.017 over y 0 and the throat
+// 0.11; the worklight, which rests on the lip, rises the same `LIFT`.
+const DOCK_MAIN_Y = 1.85;
+const LIFT = DOCK_MAIN_Y - 1.7;
 directorate.dockingCollar(
   root,
   { violet, steel, crimson, black },
-  { cut, name: 'dock_main', r: 1.4, frame: laid, ...laid([7.5, 1.7, 2], [0, -0.26, Math.PI / 2]) }
+  {
+    cut,
+    name: 'dock_main',
+    r: 1.4,
+    frame: laid,
+    ...laid([7.5, DOCK_MAIN_Y, 2], [0, -0.26, Math.PI / 2]),
+  }
 );
 directorate.dockingCollar(
   root,
@@ -524,10 +575,11 @@ directorate.photophoreDomes(root, crimson, {
   ],
 });
 
-// The worklight over the main dock, a flat bar yawed with it.
+// The worklight over the main dock, a flat bar yawed with it, resting on the
+// top of the lip ring; it rises with the collar (`LIFT`, #1084).
 directorate.photophoreMarks(root, crimson, {
   size: [1.6, 0.14, 0.3],
-  marks: [['dock_worklight', laid([6.2, 3.4, 1.7], [0, -0.26, 0])]],
+  marks: [['dock_worklight', laid([6.2, 3.4 + LIFT, 1.7], [0, -0.26, 0])]],
 });
 
 const size = fitFootprint(root, L);
