@@ -18,12 +18,14 @@ detail and seated stones — SPEC".
 | `low-on.png`, `survey-on.png` | The 12° low view and the survey dolly, where the layer has faded |
 | `*-x6.png`, `*-x10.png` | Crops of the silt and trench frames, scaled up and multiplied by 6 or 10: a viewing aid for near-black ground, never a reading of brightness |
 | `stations-off.json`, `stations-on.json` | What `shoot.mjs` read at each view |
-| `gpu/` | `tools/render-stack/capture.mjs` readings, unpaced, at ratio 1 and 1.5, off and on, two runs each |
+| `fight.mjs` | A `run-game` steps module: gate 6's fight station, staged as `tools/render-stack/halo-cost.mjs` stages it, read queued and unqueued |
+| `gpu/`, `fight/` | `capture.mjs` and `fight.mjs` readings, unpaced, at ratio 1 and 1.5, off and on, two runs each |
 
 ## How the frames were taken
 
 A solo match on the Ventfront Divide from the Bathyarch Consortium seat, at 1920 × 1080
-and ratio 1, in headed Edge on a GeForce GTX 1070 through ANGLE and Direct3D 11:
+and ratio 1, in headed Edge on a GeForce GTX 1070 through ANGLE and Direct3D 11, with the
+client at `fa8d8160`:
 
 ```bash
 VIEW_W=1920 VIEW_H=1080 node .claude/skills/run-game/scripts/drive.mjs --headed \
@@ -56,11 +58,11 @@ code values, magnified ten times; the bake's mottle rounds the same way.
 
 | View | Off | On | Pixels moved a code value or more |
 | --- | --- | --- | --- |
-| Home, 1,500 m at 55° | 16.64 | 15.50 | 42.3 % |
-| Silt, 420 m at 50° | 9.80 | 8.48 | 65.4 % |
+| Home, 1,500 m at 55° | 16.64 | 15.49 | 42.3 % |
+| Silt, 420 m at 50° | 9.80 | 8.47 | 64.8 % |
 | Trench, 520 m at 50° | 3.67 | 3.45 | 0.7 % |
-| Low, 3,500 m at 12° | 17.26 | 16.91 | 14.4 % |
-| Survey, 18,000 m at 88° | 8.25 | 8.25 | 0.7 % |
+| Low, 3,500 m at 12° | 17.26 | 16.91 | 14.3 % |
+| Survey, 18,000 m at 88° | 8.25 | 8.24 | 0.7 % |
 
 The survey view is the fade working: the layer is gone by 8 m a pixel. The trench reads
 almost nothing because its ground sits near 3 of 255, where a darken-only layer has no
@@ -74,7 +76,7 @@ in the target of #967:
 | [Target](../issue-967/target.png) | 19.4 | 3.92 | 13.4 to 24.7 | 3.10 |
 | [#967 round 4](../issue-967/prototype-4.png) | 19.9 | 1.56 | 18.5 to 21.1 | 1.39 |
 | Shipped | 21.5 | 1.30 | 19.5 to 22.9 | 0.67 |
-| Silt detail | 19.3 | 1.60 | 16.9 to 21.4 | 0.77 |
+| Silt detail | 19.3 | 1.59 | 16.9 to 21.9 | 0.75 |
 | Silt detail in #967's study | 19.4 | 1.85 | 16.9 to 21.9 | 1.21 |
 
 The target's p95 sits above the shipped fill's: its lit faces are brighter than the
@@ -91,22 +93,28 @@ at 0.58. Lifting lit faces above the fill would reach the target and was not tak
 ## Cost
 
 Gate 6's reading ([graphics-standards.md](../../graphics-standards.md)): the conn view's
-GPU time, unpaced and queued, at `capture.mjs`'s four cameras on Ventfront, on minus off,
-two runs each. The first shader hashed its noise in the fragment shader, nine noises of
-four lattice points, and its integer multiplies cost what the hashed columns say. The
-shipped shader reads a 128 × 128 lattice texture instead, seven fetches a fragment.
+GPU time, unpaced and queued, on minus off, two runs each, at `capture.mjs`'s four
+cameras and the fight station on Ventfront, at `drive.mjs`'s 1440 × 900. The first shader
+hashed its noise in the fragment shader, nine noises of four lattice points, and its
+integer multiplies cost what the hashed columns say; the fight was not read for it. The
+shipped shader reads a 128 × 128 lattice texture instead, seven fetches a fragment, read
+at `fa8d8160`.
 
-| Camera | Hashed, ratio 1 | Lattice, ratio 1 | Hashed, ratio 1.5 | Lattice, ratio 1.5 |
+| Station | Hashed, ratio 1 | Lattice, ratio 1 | Hashed, ratio 1.5 | Lattice, ratio 1.5 |
 | --- | --- | --- | --- | --- |
-| Home | +0.33, +0.31 ms | +0.12, +0.08 ms | +0.64, +0.63 ms | +0.15, +0.15 ms |
-| Close | +0.49, +0.48 ms | +0.13, +0.10 ms | +1.03, +1.05 ms | +0.24, +0.23 ms |
-| Low | +0.33, +0.32 ms | +0.08, +0.07 ms | +0.66, +0.68 ms | +0.16, +0.16 ms |
-| Survey | +0.29, +0.27 ms | +0.06, +0.09 ms | +0.46, +0.48 ms | +0.12, +0.14 ms |
+| Home | +0.33, +0.31 ms | +0.08, +0.09 ms | +0.64, +0.63 ms | +0.15, +0.16 ms |
+| Close | +0.49, +0.48 ms | +0.12, +0.12 ms | +1.03, +1.05 ms | +0.25, +0.26 ms |
+| Low | +0.33, +0.32 ms | +0.09, +0.07 ms | +0.66, +0.68 ms | +0.16, +0.15 ms |
+| Survey | +0.29, +0.27 ms | +0.07, +0.06 ms | +0.46, +0.48 ms | +0.13, +0.11 ms |
+| Fight | — | +0.08, +0.09 ms | — | +0.15, +0.16 ms |
 
-With the lattice the conn frame reads 0.70 to 0.86 ms queued at ratio 1 and 1.30 to
-1.70 ms at 1.5, the close camera the most. `avgConnMs`, the CPU side, moved by run-to-run
-spread only, −0.10 to +0.03 ms. Calls and triangles did not move at any camera. The `gpu/`
-readings are the lattice shader's, at `drive.mjs`'s 1440 × 900.
+The allocation is **at most 0.15 ms at ratio 1 and 0.30 ms at 1.5**, a step above the
+worst reading, 0.12 and 0.26 ms. With the layer on, the conn frame reads 0.64 to 0.82 ms
+queued at ratio 1 and 1.25 to 1.67 ms at 1.5. Against the halo's ceiling of 1.2 and 1.7 ms
+that leaves 0.38 ms at ratio 1 and 0.03 ms at 1.5, at the close camera: met, with almost no
+margin at 1.5. `avgConnMs`, the CPU side, moved by run-to-run spread only, −0.16 to
++0.13 ms. Calls and triangles did not move at any station; the fight drew 66 to 68 calls
+off and on alike, as its ordnance varies between runs.
 
 ## Sorrowgate
 
@@ -125,8 +133,10 @@ unflagged runs; both draw 55 calls, 46,634 triangles and 80 props.
   moves little; the seated stones carry those views.
 - **The scour's resolution.** It is baked at 7.8 m a pixel, so it reads as a soft hollow
   rather than a crisp rim.
-- **One map measured.** Ventfront's four cameras, as gate 6 names them for the halo; no
-  other skirmish map was read.
+- **One map timed.** Gate 6 reads the halo on Ventfront and Sorrowgate; Sorrowgate never
+  draws this layer (above), so its time was not read. No other skirmish map was timed.
+- **The 1.7 ms line.** The close camera's frame at ratio 1.5 sits 0.03 ms under it with the
+  layer on. A further render-stack layer at that camera needs a cut somewhere first.
 
 ## Related
 
