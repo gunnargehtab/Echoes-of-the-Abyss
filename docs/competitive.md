@@ -56,11 +56,12 @@ A map enters the rated pool when all three hold:
 1. **It is built, and it is an archetype.** It is in the public catalogue (`MAPS`), not a
    mission map: a mission map is authored for one seat and answers to its mission
    ([maps.md](maps.md), "Mission maps").
-2. **It is symmetric under every pairing it draws.** For each pair of spawns the draw below
-   can seat, some symmetry of the map — a mirror or a half turn — swaps the two seats. The
-   map tests already hold all three archetypes cell for cell: both mirrors on the Ventfront
-   Divide and the Kelp Labyrinth, a half turn on the Corridor. A pairing no symmetry swaps
-   is not drawn.
+2. **Its ground is the same from every seat it draws.** The map tests already hold all
+   three archetypes cell for cell — both mirrors on the Ventfront Divide and the Kelp
+   Labyrinth, a half turn on the Corridor — and compare each seat's distance to what it
+   contests: beds, currents, pockets, the crystal approach (`maps.test.ts`, "is the same
+   chair from all four corners"). Anything the cells do not carry, such as which way a
+   current flows, is a trade the map's literal names, and criterion 3 is what weighs it.
 3. **Its drawn pairings are measured, seat-rotated.** The balance harness plays every
    pairing the draw can produce, each way round, before the map is rated. This is a
    measurement and not a target: the freeze in `CLAUDE.md` still decides what may be done
@@ -86,8 +87,12 @@ fewer arguments would rate a narrower game.
 
 The Kelp Labyrinth's *Ideal Use* reads "four-seat skirmish", and it stays the four-seat
 map it was built as. It is in the duel pool because its maze is one quadrant mirrored
-into four ([maps.md](maps.md), Map Type 2), so every one of its six pairings is fair by
-construction. The Fourfold Frontier is the fourth candidate, once it is built and admitted.
+into four ([maps.md](maps.md), Map Type 2), so its ground is the same from all six
+pairings. Its cold-shock currents are not mirrored, and on purpose: two seats find the
+water running out of their corner and two find it running in, a trade its literal states,
+on a hazard [hazards.md](hazards.md) §8 gives a direction on purpose. Which pairing that trade favours is criterion 3's
+to measure, not this paragraph's to assume. The Fourfold Frontier is the fourth candidate,
+once it is built and admitted.
 
 ### The spawn draw
 
@@ -125,8 +130,7 @@ a draw between two when they agree. No veto is shown to the other player.
 
 **One mode: 1v1.** Team play is specified in §5 and is unrated until its own pool reaches
 three built maps — today it has one. Four-seat free-for-all stays unrated: a four-way
-result rates a commander partly on what two others did to each other, and §7 shows why a
-free-for-all is also the one match a spectator cannot watch safely.
+result rates a commander partly on what two others did to each other.
 
 AI seats are refused in a rated room. A rated result is a statement about two people.
 
@@ -194,12 +198,14 @@ refuse.
 
 ### When the ladder opens
 
-The rated queue exists only once the duel matrix, seat-rotated over every drawn pairing
-on every pool map, reads inside the one-navy rail ([economy.md](economy.md) §9: no navy
-above twice parity of the decided matches). That is a condition on the ladder and not a
-target for anybody to tune toward: a rating measures skill only in a game whose navies
-win at comparable rates, and against today's readings it would measure navies. Everything
-else in this document can be built before then, and played unrated.
+**By a decision written in `CLAUDE.md`, beside the balance freeze**, and not by a run
+deciding it is time — the way the freeze itself lifts. Its evidence is a duel matrix
+seat-rotated over every drawn pairing on every pool map: a rating measures skill only in a
+game whose navies win at comparable rates, and against today's readings it would measure
+navies. No rail decides it on its own. The one-navy rail cannot: at twice parity its bar
+in a duel is 100%, which the harness reports as no data rather than a verdict
+([economy.md](economy.md) §9). Everything else in this document can be built before then,
+and played unrated.
 
 ---
 
@@ -257,8 +263,9 @@ already refuses a duplicate, so a team is two navies and the match is all four p
 learns the best tier any one of their own hulls resolved. The Echo Layer's unit of
 knowledge was never the hull; it is the side, and a team is a side with two commanders.
 Each commander's snapshot carries the ally's force as allied — positions and hull kinds,
-drawn in the ally's ink, never commanded — because the ally knows it, so sharing it hands
-nobody anything unresolved.
+drawn in the ally's ink, under the commander's own per-observer handles rather than
+entity ids, never commanded — because the ally knows it, so sharing it hands nobody
+anything unresolved.
 
 It costs the pass nothing and saves some. The pruning that keeps the pass inside 2 ms
 rejects every listener on a side that already holds a Track
@@ -347,8 +354,8 @@ them either.
 ### Four ways to watch, and the one taken
 
 A spectator is a client, so the question is only ever what the spectator is sent.
-[tech-stack.md](tech-stack.md), "Spectators", refused the easy answer and named three
-others; there is a fourth.
+[tech-stack.md](tech-stack.md), "Spectators", refused the easy answer; #439 named three
+others — delayed, per side, or from a designated listener set — and there is a fourth.
 
 | Option | What a spectator receives | Why not |
 | --- | --- | --- |
@@ -368,78 +375,98 @@ side's force, at the tier and the position that side received, and nothing else.
   room's public roster.
 - **No commander's own force**, except as the other side heard it. A hull nobody resolved
   is not on the spectator's screen, however close the fight.
+- **Phantoms included.** A ping in scattered water returns contacts with nothing behind
+  them ([glossary.md](glossary.md), *Phantom*), and the side that pinged received them as
+  the other side's hulls. The heard view shows what was received, not what was there, so
+  a spectator is lied to exactly as that commander was.
+
+Every contact crosses the wire under the handle its side received it by, never an entity
+id, as every contact does today.
 
 Two things a commander does hear are left out, because each can carry one side's position
 to the other. **Residue**: a mark names no owner ([systems-echo.md](systems-echo.md) §7),
 so a side reading the hum of its own haulers would show the spectator an economy the other
-side never heard. **Fauna**: the Drift is drawn to noise ([bestiary.md](bestiary.md)), so a herd a side
-hears gathering round its own base marks that base. A side's contacts of the other side's force carry
-neither risk, which is why they are the whole of the view.
+side never heard. **Fauna**: the Drift is drawn to noise ([bestiary.md](bestiary.md)), so a
+herd a side hears gathering round its own base marks that base. A side's contacts of the
+other side's force carry neither risk, which is why they are the whole of the view.
 
 It is the match's own subject made into a broadcast. The audience watches two commanders
 in the dark and sees exactly where each one's hearing ends, which is where every ambush
 in this game lives. A quiet commander is as hidden from the audience as from the
 opponent, and that is the game being shown rather than a limit on showing it.
 
-### Why it holds in a duel, and not in a free-for-all
+### What a relay can carry
 
-A spectator who relays to a player — a *ghost* — can carry only what the heard view
-holds. In a two-sided match that is the other side's contacts of you, which are your own
-hulls; and your side's contacts of them, which you already have. So the one thing a ghost
-can add is **which of your hulls the other side has heard**: the exposure report in more
-detail than the tier and count it carries. The delay below makes even that three minutes
-old.
+A spectator who passes what they see to a player — a *relay* — hands over exactly what the
+heard view holds, and in a duel that is less than it looks and more than nothing. Your
+side's contacts of the other side are already yours. The other side's contacts of you
+are your own hulls, but each carries a tier and, at Tier 2, a blur, and **both are
+measures of range from the listener that heard it**: the blur is a fixed fraction of that
+distance (`blurBearing`, `packages/shared/src/echo.ts`), and for a hull whose loudness its
+own commander knows, every tier is a band of distance, because the propagation model
+inverts ([tech-stack.md](tech-stack.md), "What keeps the pass inside 2 ms"). A handful of them place the listeners that heard you, and a
+listener beside a Bastion is a Bastion found.
 
-In a match of three sides or more, the third side's hearing of the second is news to the
-first, and a ghost who passes it on hands over hulls their listener never resolved. **A
-free-for-all broadcast is a maphack for whoever the ghost talks to**, and no delay mends a
-Bastion, which never moves. A free-for-all can be broadcast only from a custom room, with
-every commander's consent, under that warning.
+That is a maphack, in a duel as much as in a free-for-all, and no delay mends it: §2 makes
+the duel a conversation about where the Bastion is, and a Bastion never moves. A
+free-for-all only makes it worse — the third side's hearing of the second is news to the
+first, hulls and all. The heard view is safe from a relay only once the match is over.
 
-### Behind the match by three minutes
+### When a broadcast is released
 
-**The broadcast runs 180 seconds behind the match**: [systems-echo.md](systems-echo.md) §7's
-three minutes, the longest any mark outlives the event that made it — the residue of a
-destroyed structure. By the time the audience hears a thing, the Rift has forgotten it.
-In that time the slowest hulls in the roster, the Bulwark and the Freighter at 30 m/s,
-cover 5.4 km.
+**A rated match is broadcast after its result, never while it is played.** It is rebuilt
+from the stored replay on the server and resolved for both sides, the way §6's listening
+replay is, so nothing about it exists while anybody could use it.
 
-**The present never leaves the match room.** The room holds each side's resolved contacts
-in a ring and releases a frame only once it is 900 Echo ticks old — 180 seconds at 5 Hz —
-to one **broadcast room**, which serves every spectator. A spectator is never a client of
-the match room; a started room is locked, so that is structural today and stays so. The
-broadcast room's messages are declared in `wire.ts` like every other
+**A custom room may be watched live, 180 seconds behind**, under a warning the ready room
+shows: a spectator can relay where the other side's listeners stand, and a Bastion among
+them. That is for showmatches and tournaments, whose organisers can seat the commanders
+where no relay reaches them. The delay is [systems-echo.md](systems-echo.md) §7's three
+minutes, the longest any mark outlives the event that made it — the residue of a destroyed
+structure — and it stales whatever moves: in that time the slowest hulls in the roster,
+the Bulwark and the Freighter at 30 m/s, cover 5.4 km. It does nothing for what does not
+move, which is why the warning exists.
+
+**The present never leaves the match room.** A live room holds each side's resolved
+contacts in a ring and releases a frame only once it is 900 Echo ticks old — 180 seconds at
+5 Hz — to one **broadcast room**, which serves every spectator. A spectator is never a
+client of the match room; a started room is locked, so that is structural today and stays
+so. The broadcast room's messages are declared in `wire.ts` like every other
 ([wire.ts](../packages/shared/src/wire.ts)), and nothing on them goes back to the match.
 
 ### Consent
 
 **A match is broadcast only if every commander in it allowed it.** A rated match reads each
 account's setting, which is off until its owner turns it on. A custom room carries a
-broadcast mark the host sets, shown in the ready room, and readying under it is consent:
-ready already means *I am waiting on nobody*, and it is the one answer every commander in
-the room has to give.
+broadcast mark the host sets, shown in the ready room with the warning above, and readying
+under it is consent: ready already means *I am waiting on nobody*, and it is the one answer
+every commander in the room has to give.
 
-Consent is needed because the heard view has a price and it falls on the commanders. Watching
-their own match afterwards — a rated or broadcast match's replay is kept 30 days, so the
-heard view can be served again — each learns which of their hulls the other side heard,
-and when. It does not show where the other commander was. It does show what they knew,
-which is knowledge the match refused to give, and so the heard view is a delayed maphack
-of a narrow kind that a commander may choose to pay.
+Consent is needed because the heard view has a price after the match too, and it falls on
+the commanders. Watching their own match — a broadcast match's replay is kept 30 days, so
+the heard view can be served again — each learns which of their hulls the other side
+heard, when, and from roughly how far: enough to place the other side's listeners
+through the match. That is knowledge the match refused to give, so the heard view is a
+delayed maphack of a narrow kind, and the one exception to the result screen's rule
+([tech-stack.md](tech-stack.md), "The result, and the rematch") that a commander may
+choose to pay.
 
 ### What it costs
 
 No second Echo pass, and no change to the one that runs. The contacts the heard view
-carries are already resolved, per side, every Echo tick; the match room keeps three
-minutes of them and hands one copy to one broadcast room, so the number of spectators
-never reaches the match's budget.
+carries are already resolved, per side, every Echo tick. A live room keeps three minutes of
+them and hands one copy to one broadcast room; a rated broadcast is rebuilt after the
+match, on the server, from the replay. Either way the number of spectators never reaches
+the match's budget.
 
 Two properties hold it, and both become rows in [invariants.md](invariants.md) when the
 broadcast is built, beside the tests that hold them:
 
 - **Watching changes nothing.** A match broadcast and the same match unbroadcast produce
   the same state hash at every checkpoint.
-- **A frame carries only what was heard.** Every entity in a broadcast frame belongs to
-  one side and was resolved that tick by a listener on another.
+- **A frame carries only what was heard.** Every contact in a broadcast frame is one a
+  side received that tick, phantoms included, under the handle it received it by — never
+  an entity id, and never a contact of its own force.
 
 ---
 
@@ -449,8 +476,8 @@ In order, because each step is playable unrated before the next exists:
 
 1. **The spawn draw**, for every skirmish room rather than only a rated one, and the
    balance harness taught to seat a drawn pairing, so §2's admission measurement can be
-   run at all. Today the harness binds a navy to `spawns[0]` or `spawns[1]` and nothing else
-   ([tools/balance/README.md](../tools/balance/README.md)).
+   run at all. Today a duel in the harness binds a navy to `spawns[0]` or `spawns[1]` and
+   nothing else ([tools/balance/README.md](../tools/balance/README.md)).
 2. **Team play in custom rooms** (§5): the hostile predicate, a team as one side of the
    pass, team victory and the scuttling clause, markers and the team line.
 3. **The own-side post-game** (§6) for every skirmish match.
@@ -473,7 +500,7 @@ The ladder opens on §3's condition, whatever order these land in.
 - **Mirror matches.** The room refuses them, and the refusal is the asymmetry pillar
   working: a mirror is a duel the game was not designed to stage.
 - **One rating per account.** §3.
-- **A free-for-all ladder.** §3 and §7.
+- **A free-for-all ladder.** §3.
 - **A score at the time cap.** Every score of the other side is a post-match report.
 - **Shared resources or shared control between allies.** §5.
 - **Allied listening by acoustic relay** — a data link between allies that is itself an

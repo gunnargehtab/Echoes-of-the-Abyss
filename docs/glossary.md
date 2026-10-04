@@ -252,7 +252,7 @@ Scuttling
 
 Spectator
 
-- A person watching a match they hold no seat in. Designed and unbuilt (competitive.md §7): a spectator sees the *heard view* — what each side resolved of the other, at the tier and position that side received, and no commander's own force except as the other side heard it — three minutes behind the match, and only when every commander consented.
+- A person watching a match they hold no seat in. Designed and unbuilt (competitive.md §7): a spectator sees the *heard view* — what each side resolved of the other, at the tier and position that side received, and no commander's own force except as the other side heard it — after the result in a rated match, three minutes behind in a custom room, and only when every commander consented.
 - Not an *observer*. In the Echo Layer an observer is a slot the pass resolves for, seated or scripted (`EchoLayer.run`); a spectator is resolved for by nobody, and is sent only what the commanders' sides already resolved.
 
 Cohort Hull
