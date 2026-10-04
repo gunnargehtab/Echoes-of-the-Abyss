@@ -33,11 +33,44 @@
  * WCAG 2.3.1 flash between the rest and ping frames with every halo on, beside
  * the same pair without the halo. Writes halo-frames.json and a composited
  * shot of every camera with the halo off and on. Not a gate.
+ *
+ * Two more stages answer #1001's calls of 4 October. **Structures**, on
+ * Ventfront at the close camera: each structure's halo alone at rest, then
+ * with the Foundry producing, the order a player gives, so a working
+ * structure's light is read beside a resting one's. **Ridge**: own hulls at the
+ * low (12°) pitch from every yaw, the seabed sampled along the sight line, and
+ * where relief stands between the eye and a hull, that hull's halo alone.
+ *
+ * `STAGES=cameras,pings,structures,ridge` picks stages (all by default), and
+ * `PING_KINDS=light-scout` the hull kinds that ping, so a TUNABLE swept by
+ * editing `lampHalo.ts` between runs reads one collar in a minute. The record
+ * carries the TUNABLEs the served file held.
  */
 import assert from 'node:assert/strict';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { decode } from './lamps.mjs';
+
+const STAGES = new Set(
+  (process.env.STAGES ?? 'cameras,pings,structures,ridge').split(',').map((s) => s.trim())
+);
+const PING_KINDS = process.env.PING_KINDS?.split(',').map((s) => s.trim()) ?? null;
+const slug = (name) => name.toLowerCase().replace(/\s+/g, '-');
+
+/** The halo's TUNABLEs as the served file holds them, read from its source. */
+function tunables() {
+  const src = readFileSync(
+    new URL('../../packages/frontend/src/game/lampHalo.ts', import.meta.url),
+    'utf8'
+  );
+  const read = (name) => Number(src.match(new RegExp(`\\b${name}: ([0-9.]+)`))?.[1]);
+  return {
+    energyM2: read('ENERGY_M2'),
+    ceiling: read('CEILING'),
+    toe: read('TOE'),
+    levelWeights: JSON.parse(src.match(/\bLEVEL_WEIGHTS: (\[[^\]]*\])/)?.[1] ?? 'null'),
+  };
+}
 
 const CAMERAS = [
   ['home', 6000, 55],
@@ -98,18 +131,23 @@ function install() {
       }
       return { wholeLampPixels: whole, unchangedShare: whole === 0 ? null : same / whole, edgePixels: edge };
     },
-    /** The halo's light and the pixels it lifts past 10 % luma, whole frame. */
+    /**
+     * The halo's light and the pixels it lifts past 10 % luma, whole frame,
+     * and the most it raised any one channel, in encoded levels.
+     */
     light(name) {
       const { before, after } = this.frames[name];
       let light = 0;
       let lifted = 0;
+      let peak = 0;
       for (let i = 0; i < after.length; i += 4) {
         if (after[i] === before[i] && after[i + 1] === before[i + 1] && after[i + 2] === before[i + 2])
           continue;
         light += rel(after, i) - rel(before, i);
         if (luma(before, i) < 0.1 && luma(after, i) >= 0.1) lifted++;
+        peak = Math.max(peak, after[i] - before[i], after[i + 1] - before[i + 1], after[i + 2] - before[i + 2]);
       }
-      return { light, lifted };
+      return { light, lifted, peak };
     },
     /** WCAG 2.3.1's general-flash pair between two frames' same layer. */
     flash(nameA, nameB, layer) {
@@ -229,12 +267,90 @@ function collarCores({ withHud, water }, entities, dpr, tolerance = 28) {
   }
   return entities.map((e, k) => {
     const ink = [1, 3, 5].map((o) => parseInt(e.ink.slice(o, o + 2), 16));
-    return groups[k].filter(
-      (i) =>
-        Math.max(Math.abs(a[i] - ink[0]), Math.abs(a[i + 1] - ink[1]), Math.abs(a[i + 2] - ink[2])) <=
-        tolerance
+    const off = (i) =>
+      Math.max(Math.abs(a[i] - ink[0]), Math.abs(a[i + 1] - ink[1]), Math.abs(a[i + 2] - ink[2]));
+    return strokeOf(
+      groups[k].filter((i) => off(i) <= tolerance),
+      e,
+      dpr,
+      w,
+      off
     );
   });
+}
+
+/**
+ * The core is one stroke at full opacity, drawn over the collar's two glow
+ * layers: at each bearing round the ring, the one pixel nearest its ink,
+ * within 3 px of the ring's radius. An ink tolerance alone also takes the glow
+ * and the stroke's antialiased edge wherever a lighter HUD mark lies under
+ * them, as an unresolved contact's haze behind the Light Scout does in some
+ * matches (205 pixels where the stroke has 159), and those then read as core
+ * failing 3:1 against water the core never covered. The ring is fitted to the
+ * pixels (Kåsa) rather than centred on the model's box, which sits a few
+ * pixels off the hull's position; a short arc falls back to the box.
+ */
+function strokeOf(pixels, e, dpr, w, off) {
+  if (pixels.length < 3) return pixels;
+  const pts = pixels.map((i) => [((i / 4) % w) + 0.5, Math.floor(i / 4 / w) + 0.5]);
+  let [cx, cy] = [e.cx * dpr, e.cy * dpr];
+  const fit = fitCircle(pts);
+  if (fit !== null && Math.hypot(fit.cx - cx, fit.cy - cy) < 12 * dpr) [cx, cy] = [fit.cx, fit.cy];
+  const polar = pts.map(([x, y], k) => ({
+    i: pixels[k],
+    r: Math.hypot(x - cx, y - cy),
+    a: Math.atan2(y - cy, x - cx),
+  }));
+  const radii = polar.map((p) => p.r).sort((p, q) => p - q);
+  const radius = radii[Math.floor(radii.length / 2)];
+  const bins = Math.max(8, Math.round(2 * Math.PI * radius));
+  const best = new Map();
+  for (const p of polar) {
+    if (Math.abs(p.r - radius) > 3 * dpr) continue;
+    const bin = Math.floor(((p.a + Math.PI) / (2 * Math.PI)) * bins) % bins;
+    const prior = best.get(bin);
+    const nearer =
+      prior === undefined ||
+      off(p.i) < off(prior.i) ||
+      (off(p.i) === off(prior.i) && Math.abs(p.r - radius) < Math.abs(prior.r - radius));
+    if (nearer) best.set(bin, p);
+  }
+  return [...best.values()].map((p) => p.i);
+}
+
+/** The least-squares circle through points (Kåsa), or null if they are degenerate. */
+function fitCircle(pts) {
+  // Solve [Sxx Sxy Sx; Sxy Syy Sy; Sx Sy n]·[D E F] = −[Sxz Syz Sz], z = x² + y².
+  let sxx = 0, sxy = 0, syy = 0, sx = 0, sy = 0, sxz = 0, syz = 0, sz = 0;
+  for (const [x, y] of pts) {
+    const z = x * x + y * y;
+    sxx += x * x;
+    sxy += x * y;
+    syy += y * y;
+    sx += x;
+    sy += y;
+    sxz += x * z;
+    syz += y * z;
+    sz += z;
+  }
+  const m = [
+    [sxx, sxy, sx, -sxz],
+    [sxy, syy, sy, -syz],
+    [sx, sy, pts.length, -sz],
+  ];
+  for (let c = 0; c < 3; c++) {
+    let p = c;
+    for (let r = c + 1; r < 3; r++) if (Math.abs(m[r][c]) > Math.abs(m[p][c])) p = r;
+    if (Math.abs(m[p][c]) < 1e-9) return null;
+    [m[c], m[p]] = [m[p], m[c]];
+    for (let r = 0; r < 3; r++) {
+      if (r === c) continue;
+      const f = m[r][c] / m[c][c];
+      for (let k = c; k < 4; k++) m[r][k] -= f * m[c][k];
+    }
+  }
+  const [d, e] = [m[0][3] / m[0][0], m[1][3] / m[1][1]];
+  return { cx: -d / 2, cy: -e / 2 };
 }
 
 /** WCAG contrast, either way round, of each entity's core against the water under it. */
@@ -316,15 +432,67 @@ async function collars(page, entities, dpr) {
   await page.evaluate(() => window.__perspectiveHalo(true));
   await page.waitForTimeout(200);
   const cores = collarCores(off, entities, dpr);
-  // A hull that travelled between the pairs, so that no shift lands most of
-  // its cores on its ink, is read in the halo-on pair alone, from the pixels
-  // that match its ink exactly enough to be the core and not a blended glow.
-  const aligned = alignCores(cores, off, on, entities);
-  const direct = collarCores(on, entities, dpr, 10);
-  const onCores = aligned.map((moved, k) =>
+  const onCores = coresIn(cores, off, on, entities, dpr);
+  return {
+    on: collarContrast(on, entities, onCores),
+    off: collarContrast(off, entities, cores),
+    cores,
+    offPair: off,
+  };
+}
+
+/**
+ * Cores found in one pair, located in another. A hull that travelled between
+ * the pairs, so that no shift lands most of its cores on its ink, is read in
+ * the second pair alone, from the pixels that match its ink exactly enough to
+ * be the core and not a blended glow.
+ */
+function coresIn(cores, from, to, entities, dpr) {
+  const aligned = alignCores(cores, from, to, entities);
+  const direct = collarCores(to, entities, dpr, 10);
+  return aligned.map((moved, k) =>
     moved.inked >= 0.8 * cores[k].length ? moved : Object.assign(direct[k], { method: 'moved' })
   );
-  return { on: collarContrast(on, entities, onCores), off: collarContrast(off, entities, cores) };
+}
+
+/**
+ * One hull's collar through a whole ping, halo on or off: a pair taken every
+ * moment from the frame its SIG reaches 90 until it falls back. The ping's own
+ * marks cross the water under the collar as it holds, so one capture reads
+ * whichever moment it landed on; the worst moment is the reading.
+ */
+async function collarOverPing(page, u, found, dpr, haloOn) {
+  await page.evaluate((on) => window.__perspectiveHalo(on), haloOn);
+  await page.waitForTimeout(200);
+  const loud = () =>
+    page.evaluate(
+      (key) => (window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key)?.sig ?? 0) >= 90,
+      u.key
+    );
+  await page.keyboard.press('KeyP');
+  const pinged = await page
+    .waitForFunction(
+      (key) => (window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key)?.sig ?? 0) >= 90,
+      u.key,
+      { timeout: 3000 }
+    )
+    .then(
+      () => true,
+      () => false
+    );
+  const shares = [];
+  let worst = null;
+  while (pinged && (await loud())) {
+    const pair = await hudPair(page);
+    const [cores] = coresIn([found.cores], found.offPair, pair, [u], dpr);
+    const [reading] = collarContrast(pair, [u], [cores]);
+    if (reading.atLeast3Share === null) continue;
+    shares.push(reading.atLeast3Share);
+    if (worst === null || reading.atLeast3Share < worst.atLeast3Share) worst = reading;
+  }
+  await page.evaluate(() => window.__perspectiveHalo(true));
+  await page.waitForTimeout(200);
+  return { haloOn, samples: shares.length, shares, worst };
 }
 
 /** Own entities on screen, as CSS centres, with a reach for their collar. */
@@ -376,6 +544,22 @@ async function take(page, name, only = null) {
   return { ...frame, sites };
 }
 
+/** One entity's halo alone, as `take` captured it under `name`. */
+async function alone(page, name, e, sites, dpr) {
+  const { light, lifted, peak } = await page.evaluate((n) => window.__haloRead.light(n), name);
+  const lampPx = await page.evaluate((n) => window.__haloRead.lampPixels(n), name);
+  return {
+    key: e.key,
+    name: e.name,
+    sig: e.sig,
+    sites,
+    lampCssPx: round(lampPx / dpr ** 2, 1),
+    lightCssPx2: round(light / dpr ** 2, 2),
+    liftedCssPx: round(lifted / dpr ** 2, 1),
+    peakLevels: peak,
+  };
+}
+
 export default async ({ page, shot }) => {
   await page.waitForFunction(() => window.__perspectiveProbe?.().modelBacked > 0);
   await page.waitForTimeout(6000);
@@ -402,9 +586,16 @@ export default async ({ page, shot }) => {
   const centre = await page.evaluate(() => window.__perspectiveProbe().ownCentre);
   assert.ok(['idle', 'drawn'].includes(await page.evaluate(() => window.__perspectiveHalo(true))));
 
+  // The output directory is wherever drive.mjs puts the first shot.
+  let dir = null;
+  const shotAt = async (name) => {
+    const path = await shot(name);
+    dir ??= dirname(path);
+    return path;
+  };
+
   const cameras = [];
-  let dir;
-  for (const cam of CAMERAS) {
+  for (const cam of STAGES.has('cameras') ? CAMERAS : []) {
     const [name] = cam;
     await camera(page, centre, cam);
     const entities = await ownEntities(page);
@@ -422,21 +613,11 @@ export default async ({ page, shot }) => {
       reading.entities = [];
       for (const e of entities) {
         const { sites } = await take(page, `${name}:${e.key}`, e.key);
-        const { light, lifted } = await page.evaluate((n) => window.__haloRead.light(n), `${name}:${e.key}`);
-        const lampPx = await page.evaluate((n) => window.__haloRead.lampPixels(n), `${name}:${e.key}`);
-        reading.entities.push({
-          key: e.key,
-          name: e.name,
-          sig: e.sig,
-          sites,
-          lampCssPx: round(lampPx / dpr ** 2, 1),
-          lightCssPx2: round(light / dpr ** 2, 2),
-          liftedCssPx: round(lifted / dpr ** 2, 1),
-        });
+        reading.entities.push(await alone(page, `${name}:${e.key}`, e, sites, dpr));
       }
     }
     const onShot = await screen(page);
-    dir = dirname(await shot(`${name}-on`));
+    await shotAt(`${name}-on`);
     if (COLLAR_CAMERAS.has(name)) {
       const { on, off } = await collars(page, entities, dpr);
       reading.collarOn = on;
@@ -445,7 +626,7 @@ export default async ({ page, shot }) => {
     await page.evaluate(() => window.__perspectiveHalo(false));
     await page.waitForTimeout(400);
     const offShot = await screen(page);
-    await shot(`${name}-off`);
+    await shotAt(`${name}-off`);
     await page.evaluate(() => window.__perspectiveHalo(true));
     await page.waitForTimeout(400);
     reading.darknessWithHud = { off: round(darkShare(offShot)), on: round(darkShare(onShot)) };
@@ -462,9 +643,11 @@ export default async ({ page, shot }) => {
 
   // One hull kind at a time pings at the close camera (Ventfront only).
   const pings = [];
-  if (map === 'ventfront') {
+  if (STAGES.has('pings') && map === 'ventfront') {
     await camera(page, centre, CAMERAS[1]);
-    const units = (await ownEntities(page)).filter((e) => e.key.startsWith('unit:'));
+    const units = (await ownEntities(page)).filter(
+      (e) => e.key.startsWith('unit:') && (PING_KINDS === null || PING_KINDS.includes(slug(e.name)))
+    );
     const kinds = new Map();
     for (const u of units) if (!kinds.has(u.kind)) kinds.set(u.kind, u);
     for (const u of kinds.values()) {
@@ -501,7 +684,7 @@ export default async ({ page, shot }) => {
       const atPing = await collars(page, entities, dpr);
       const collarPing = atPing.on.find((c) => c.key === u.key);
       const collarPingOff = atPing.off.find((c) => c.key === u.key);
-      await shot(`ping-${u.name.toLowerCase().replace(/\s+/g, '-')}`);
+      await shotAt(`ping-${slug(u.name)}`);
       await page.evaluate(() => window.__haloRead.drop());
       const reading = {
         key: u.key,
@@ -515,13 +698,145 @@ export default async ({ page, shot }) => {
         collarAtPing: collarPing ?? null,
         collarAtPingHaloOff: collarPingOff ?? null,
       };
+      // Two more pings, the collar read through each: halo on, then off.
+      const pe = entities.find((e) => e.key === u.key);
+      if (pe !== undefined) {
+        const found = { cores: atPing.cores[entities.indexOf(pe)], offPair: atPing.offPair };
+        reading.collarOverPing = [];
+        for (const haloOn of [true, false]) {
+          // A ping holds SIG 95 for 3 s; each read starts from rest.
+          await page.waitForTimeout(4000);
+          reading.collarOverPing.push(await collarOverPing(page, pe, found, dpr, haloOn));
+        }
+      }
       pings.push(reading);
       console.log(JSON.stringify(reading));
-      // A ping holds SIG 95 for 3 s; the next hull starts from rest.
       await page.waitForTimeout(4000);
     }
   }
 
-  const record = { renderer, viewport, reducedMotion: reduced, map, cameras, pings };
+  // Each structure's halo alone at rest, then with the Foundry producing, the
+  // order a player gives (Ventfront, whose opening holds a Foundry and the
+  // nodules to spend): a working structure's light beside a resting one's.
+  const structures = [];
+  if (STAGES.has('structures') && map === 'ventfront') {
+    await camera(page, centre, CAMERAS[1]);
+    const readAll = async (state) => {
+      const own = (await ownEntities(page)).filter((e) => e.key.startsWith('structure:'));
+      for (const s of own) {
+        const { sites } = await take(page, `${state}:${s.key}`, s.key);
+        const reading = { state, ...(await alone(page, `${state}:${s.key}`, s, sites, dpr)) };
+        structures.push(reading);
+        console.log(JSON.stringify(reading));
+      }
+      return own;
+    };
+    const foundry = (await readAll('rest')).find((s) => s.name === 'Foundry');
+    if (foundry !== undefined) {
+      await page.mouse.click(foundry.cx, foundry.cy);
+      await page.waitForTimeout(500);
+      // 1 builds the yard's first hull; the SIG it reaches says it took.
+      await page.keyboard.press('Digit1');
+      const working = await page
+        .waitForFunction(
+          (key) =>
+            window.__perspectiveLamps().structures.find((x) => `structure:${x.id}` === key)?.sig >= 50,
+          foundry.key,
+          { timeout: 5000 }
+        )
+        .then(
+          () => true,
+          () => false
+        );
+      if (working) {
+        await readAll('working');
+        await shotAt('structures-working-on');
+        await page.evaluate(() => window.__perspectiveHalo(false));
+        await page.waitForTimeout(400);
+        await shotAt('structures-working-off');
+        await page.evaluate(() => window.__perspectiveHalo(true));
+        await page.waitForTimeout(400);
+      } else {
+        structures.push({ key: foundry.key, name: foundry.name, state: 'working', produced: false });
+      }
+      await page.keyboard.press('Escape');
+    }
+    await page.evaluate(() => window.__haloRead.drop());
+  }
+
+  // The ridge case: each own hull at the low pitch from every yaw and three
+  // dollies, the seabed sampled along the line from the eye to the hull's
+  // centre. Where relief stands over that line, the hull's halo alone: a lamp
+  // the ridge hides wholly adds nothing (SPEC, "The lamp").
+  const ridge = { searched: 0, hidden: [] };
+  if (STAGES.has('ridge')) {
+    const units = await page.evaluate(() => window.__perspectiveLamps().units);
+    const found = await page.evaluate((units) => {
+      const Y = 0.22; // DEPTH_VISUAL_M_PER_M, perspectiveTerrain.ts
+      const best = new Map();
+      let searched = 0;
+      for (const u of units) {
+        for (const distance of [1500, 2500, 3500]) {
+          for (let yawDeg = 0; yawDeg < 360; yawDeg += 10) {
+            window.__perspectiveCamera(u.xM, u.zM, distance, { yawDeg, pitchDeg: 12, focusDepthM: null });
+            const { eye } = window.__perspectiveProbe();
+            const e = [eye.xM, -eye.depthM * Y, eye.zM];
+            const t = [u.xM, -u.depthM * Y, u.zM];
+            // How far the seabed stands over the sight line, world metres.
+            let over = -Infinity;
+            for (let k = 1; k < 200; k++) {
+              const f = k / 200;
+              const x = e[0] + (t[0] - e[0]) * f;
+              const z = e[2] + (t[2] - e[2]) * f;
+              const ground = -window.__perspectiveSeabedM(x, z) * Y;
+              over = Math.max(over, ground - (e[1] + (t[1] - e[1]) * f));
+            }
+            searched++;
+            const prior = best.get(u.id);
+            if (over > 0 && (prior === undefined || over > prior.overM))
+              best.set(u.id, { id: u.id, distance, yawDeg, overM: Math.round(over) });
+          }
+        }
+      }
+      return { searched, hits: [...best.values()] };
+    }, units);
+    ridge.searched = found.searched;
+    for (const hit of found.hits) {
+      const u = units.find((x) => x.id === hit.id);
+      const key = `unit:${u.id}`;
+      await page.evaluate(
+        ({ u, hit }) =>
+          window.__perspectiveCamera(u.xM, u.zM, hit.distance, {
+            yawDeg: hit.yawDeg,
+            pitchDeg: 12,
+            focusDepthM: null,
+          }),
+        { u, hit }
+      );
+      await page.waitForTimeout(SETTLE_MS);
+      const { sites } = await take(page, `ridge:${key}`, key);
+      const reading = {
+        ...hit,
+        ...(await alone(page, `ridge:${key}`, { key, name: u.name, sig: u.sig }, sites, dpr)),
+      };
+      ridge.hidden.push(reading);
+      console.log(JSON.stringify(reading));
+      if (ridge.hidden.length === 1) await shotAt(`ridge-${slug(u.name)}`);
+    }
+    await page.evaluate(() => window.__haloRead.drop());
+  }
+
+  const record = {
+    renderer,
+    viewport,
+    reducedMotion: reduced,
+    map,
+    tunables: tunables(),
+    cameras,
+    pings,
+    structures,
+    ridge,
+  };
+  dir ??= dirname(await shot('end'));
   writeFileSync(join(dir, 'halo-frames.json'), JSON.stringify(record, null, 2) + '\n');
 };

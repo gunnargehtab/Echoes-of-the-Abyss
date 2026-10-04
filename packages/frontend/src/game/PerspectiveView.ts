@@ -1022,6 +1022,7 @@ export class PerspectiveView {
     delete (window as unknown as { __perspectiveGpuQueue?: unknown }).__perspectiveGpuQueue;
     delete (window as unknown as { __perspectiveHaloFrame?: unknown }).__perspectiveHaloFrame;
     delete (window as unknown as { __perspectiveHaloOnly?: unknown }).__perspectiveHaloOnly;
+    delete (window as unknown as { __perspectiveSeabedM?: unknown }).__perspectiveSeabedM;
     for (const resolve of this.haloFrameWaiters) resolve(null);
     this.haloFrameWaiters = [];
   }
@@ -2455,6 +2456,12 @@ export class PerspectiveView {
       ).__perspectiveHaloOnly = (key: string | null) => {
         this.haloOnly = key;
       };
+      // The seabed's depth under a point, for #1001's ridge case: a capture
+      // that finds a lamp hidden at the low camera has to tell relief from a
+      // structure, and the map's ground is no hidden information.
+      (
+        window as unknown as { __perspectiveSeabedM?: (x: number, z: number) => number }
+      ).__perspectiveSeabedM = (x: number, z: number) => this.seabedDepthAt(x, z);
       // Each pass timed on its own as well as the frame (gpuTimer.ts), for
       // #1001's question of where the halo's GPU time lands.
       (
