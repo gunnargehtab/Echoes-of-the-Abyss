@@ -9,6 +9,11 @@
 
 ## 1. What this is, and what it is not
 
+**Reading history.** Sections 2–7 preserve the September reading, including findings that later
+changes superseded. [Section 8](#8-independent-delivery-audit--4-october-2026) is the independent
+follow-up for [#469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/469): all 29 missions
+checked for faction register and habitat treatment, with a current disposition of F1–F8.
+
 This is a read of the text a player actually meets — the 29 briefings, the board's slot lines,
 and the record's six era pages — taken in one play order, at the three checkpoints
 [campaign.md](campaign.md) §1's shape suggests, asking the same three questions at each: what does
@@ -325,12 +330,271 @@ finding that contradicted one would be wrong rather than useful.
 
 ---
 
+## 8. Independent delivery audit — 4 October 2026
+
+### Scope and verdict
+
+**The world is stronger at conveying institutions than habitation.** The concern prices a rescue;
+the plateaus negotiate a command; the cohorts make non-arrival a political act; the Order makes
+a rest an instruction. Those distinctions survive the campaign's crises. Warmth, damp, and the
+comfort purchased by depth arrive less reliably than obligations, numbers and procedure.
+
+This is the independent reading requested by #469, against revision `17a35e7`, after
+[#939](https://github.com/gunnargehtab/Echoes-of-the-Abyss/pull/939). The dialogue pass read all
+29 mission dialogue sections, default and variant briefings, and corresponding script speech
+and endings. The habitat pass read the same missions' settings, soundscapes, maps and dialogue
+against [habitats.md](habitats.md) §10, with selective runtime checks. Neither pass accepts a
+mission's own “register test” paragraph as proof that it passes.
+
+**This completes a source-based register and habitat audit, not a live acceptance test.**
+The briefing screen renders catalogue paragraphs, not a mission document's setting prose
+([BriefingScreen](../packages/frontend/src/menu/BriefingScreen.tsx), lines 101–147).
+Script `say` entries carry speaker and text, not their authorial notes
+([runtime](../packages/backend/src/sim/missions/runtime.ts), lines 1058–1066).
+The audio is a signature and nonverbal murmur, not recorded words
+([speechVoice](../packages/frontend/src/audio/speechVoice.ts), lines 4–9).
+An authored place, a reachable text and a place a player recognises are three different claims.
+
+No story, rule, roster or rendering change is made here. Findings below propose follow-up,
+not a silently chosen resolution of disagreements between canon and code. No sub-issues were
+filed and none of the four deferred implementation boxes was worked.
+
+### Coverage — every mission, in its own campaign order
+
+The register column records the identifying argument or exception, not a blanket pass for
+every utterance. **Interior**, **precinct** and **exterior** distinguish where the habitat test
+applies: fighting outside somebody's city does not require seeing their bedroom. Each linked
+mission supplies the setting and its §12 dialogue; findings below cite the runtime where the
+distinction changes what a player receives.
+
+| Campaign / slot | Mission | Register reading | Habitat reading |
+| --- | --- | --- | --- |
+| Prologue | [Sorrowgate](mission-sorrowgate.md) | Court closes an unpriced count; four visitors answer in incompatible frames | Interior: reused transit court, enforced hush, refuge and flight |
+| Ledger 1 | [Asset Recovery](mission-asset-recovery.md) | Osk's humane rescue remains a dispute over an asset, not generic heroism | Industrial interior: struck iron, shoring, occupied refuge |
+| Ledger 2 | [Shift Change](mission-shift-change.md) | Crew clearance overrides the scheduled departure in the concern's own terms | Workplace/precinct: hum, rail head, seventy-one berths transferred |
+| Ledger 3 | [Baffle](mission-baffle.md) | Freight necessity and the picket's closure remain mutually intelligible, not reconciled | Exterior: compressor sustains forty-one unseen berths |
+| Ledger 4 | [Exposure](mission-exposure.md) | Fear, deniability and observations are priced differently | Exterior: another institution's economy heard from outside |
+| Ledger 5 | [Tolerance](mission-tolerance.md) | One seal and two obligations make the moral decision concrete | Interior boundary: inherited castings and occupied Vayle; domestic hierarchy thin |
+| Ledger 6 | [Prospect](mission-prospect.md) | Four readings of one rim; repeated lines retain their faction frames | Exterior: industry laid over attended ground |
+| Ledger 7 | [Item Nine](mission-item-nine.md) | Accounting cannot settle the decision to disclose | Interior: collective listening in a retrofitted vault; dryness absent |
+| Seeding 1 | [Tend](mission-tend.md) | Bread, invitation and reciprocal work establish consent | Inhabited rows: bell and moving hush; domestic damp mostly indirect |
+| Seeding 2 | [Thin Water](mission-thin-water.md) | Teel counts people through an evacuation nobody chose | Exterior: pumps and corridor, not a tour of Kell homes |
+| Seeding 3 | [Convocation](mission-convocation.md) | Marr's brief imperative is an earned fracture; its aside overlaps in delivery | Civic landscape: rows become a voting room; hush deliberately broken |
+| Seeding 4 | [Deep Furrow](mission-deep-furrow.md) | Anholt asks that a result be heard before it is argued over | New garden: old rock adapted, pigment light, habitable depth made |
+| Seeding 5 | [In Writing](mission-in-writing.md) | Teel distinguishes carrying guns from using them | Garden/shelter: dry seed shelf reaches the briefing |
+| Seeding 6 | [Radicals](mission-radicals.md) | “Told when” exposes Anholt's narrowing account of consent; watch text disagrees with prose | Ruined civic transit, not a resettled Sorrowgate; interval references disagree |
+| Seeding 7 | [The Second Seeding](mission-second-seeding.md) | Anholt's plural and Marr's later refusal of a record close different arguments | Exterior: a new bed, not a capital interior |
+| Attending 1 | [Attendance](mission-attendance.md) | Adze's belonging is sincere; the transcript refuses interpretation | Interior: rite and hush land; warm domestic life remains thin |
+| Attending 2 | [Intake](mission-intake.md) | Reassignment is entered without treating it as death | Cohort halls/work ground: retrofit present, accommodation mostly background |
+| Attending 3 | [The Dome](mission-the-dome.md) | The picket counts rather than threatens; reciprocal variant now exists | Gallery precinct: inhabited freight water, not an entered home |
+| Attending 4 | [Shallow](mission-shallow.md) | Korrin gives costly arithmetic without making the cohorts miserable | Exterior shoulder: vulnerability to altitude, not a slum |
+| Attending 5 | [Trench Awakening](mission-trench-awakening.md) | “I called it” makes Korrin accept responsibility personally | Rendering row/stalls: maintenance and reassignment, not a penal colony |
+| Attending 6 | [Conclave](mission-conclave-attending.md) | A body not crossing is authority; Ossary's silence becomes attributed text | Civic terraces: depth/status, breathing cells and a consequential hush |
+| Attending 7 | [First Arrival](mission-first-arrival.md) | Self-sufficient account of the other sides; culminating silence misattributed | Exterior rim: the column carries its silence order with it |
+| Chord 1 | [Aptitude](mission-aptitude.md) | Vrey examines through courtesy and precise measurement | Instrument precinct: generations of tuning; chord off the played ground |
+| Chord 2 | [Standing Wave](mission-standing-wave.md) | Technical exchanges are less exclusive than identity-bearing lines | Exterior canyon/works: the North Gallery is not a promised domestic room |
+| Chord 3 | [Nineteen](mission-nineteen.md) | Names make loss permanent rather than interchangeable | Exterior committal ground: a memorial, not habitat capacity |
+| Chord 4 | [Conclave](mission-conclave-chord.md) | Vrey authors an audible rest rather than mere inaction | Precinct: nine houses act through the lattice; no room is entered |
+| Chord 5 | [The Three](mission-the-three.md) | Courtesy, care and withheld knowledge coexist; causal history remains gated | Interior: maintained instrument, hospice, dry archive; strongest domestic treatment |
+| Chord 6 | [The Rim Deposits](mission-rim-deposits.md) | Crystal arithmetic gives the raid necessity; “Descend” is a deliberate borrowing | Exterior: extraction from somebody else's attended ground |
+| Chord 7 | [The Second Chord](mission-second-chord.md) | Kalliso refuses to make lives, personal years and seconds equivalent | Exterior: the instrument and its cost brought to the rim |
+
+### Applying the two tests
+
+For [culture.md](culture.md) §6, asking **which faction could not say this** is more useful than
+counting faction nouns. Tull's unaffordable fear ([exposure.ts](../packages/backend/src/sim/missions/exposure.ts),
+line 331) would import the concern's frame into Marr's mouth. Adze's gladness at their assigned
+floor ([attendance.ts](../packages/backend/src/sim/missions/attendance.ts), line 382) is not
+Consortium indebtedness with different terminology. Kalliso's distinction between nineteen
+lives, twenty-two years and thirty seconds
+([secondChord.ts](../packages/backend/src/sim/missions/secondChord.ts), line 1235) challenges
+interchangeability rather than merely counting. Halloran and Drenn's answers to the same fourteen
+at Sorrowgate make the court's fifth register necessary.
+
+Short acknowledgements, practical arithmetic and compassion are not automatically unwritten
+characterisation. Osk's “So would you” can be shared in isolation; its asset-recovery context
+does the distinguishing work. Marr's “All of them. Now, please” breaks her usual grammar because
+the campaign has earned that break. Conversely, a speaker's faction key proves attribution,
+not that the words pass the test.
+
+Auditory attention, status, incompatible frames, the Mouth, calendar, the Surface Age, and
+insider legitimacy were checked separately. No new authoritative explanation of the Mouth or
+surface-restoration goal was identified in the reviewed dialogue. That is a source observation,
+not proof that a new player understands the deliberate absence of an answer. The calendar
+exception below prevents an unqualified claim of compliance.
+
+For [habitats.md](habitats.md) §10, the seven rules produce this result:
+
+| Criterion | Evidence that works | Limit or finding |
+| --- | --- | --- |
+| Sound first | Face Six's struck iron; the Third's chord; the plateaus' bell; Sufficiency's hush | Authored sequence is not verified mix precedence; bespoke ambience remains a separate obligation |
+| Local light | Pigment-lit new garden; biolight rows; crystal-lit instrument vocabulary | Plateau map prose and the later key-art-only Lid decision need reconciliation, A6 |
+| Wealth as dryness | Anholt's dry shelf in the public briefing; dry sealed cases in The Three's objective | Holding's comfort hierarchy rarely reaches the player, A5 |
+| Retrofit | Castings, shoring, rock-cut cells, transit hall roofed into a vault | These often live in setting prose; no demand to replace canon with pristine city assets |
+| Inhabitants find home right | Adze's contentment; households tending and voting; cared-for people in the First | Warm cells and ordinary damp berths are less concrete than institutional claims, A5 |
+| Berths and metres | Shift Change's berth transfer; Vayle's capacity and depth; upper-terrace birth/seating depths | Troop counts, casualties and functional room counts are not measurements of habitat wealth |
+| Keep the hush | Court's struck hardpoints; voting's deliberate breach; the Order's rest; the terraces' crossing | Exterior work yards need not invent a gallery hush; a log saying “Nothing” is not silence, A1 |
+
+**Name-hidden reading:** the court, working Holding, voting rows and tuned First remain
+recognisable through acts and materials without faction labels. Intake's halls and the
+Fourth's freight galleries depend more heavily on the surrounding institutional voice.
+This is an auditor's judgement of the text, not a blinded participant test. The latter
+remains the right test for whether a player recognises a home rather than merely its employer.
+
+### Findings and follow-up decisions
+
+Priority means risk to intended understanding, not authority to implement a fix.
+
+#### A1 · High — silence is attributed as speech, and an aside gets no separate interval
+
+[firstArrival.ts](../packages/backend/src/sim/missions/firstArrival.ts), lines 950–962, gives
+Korrin and Ossary ordinary `say` beats at 20:30: “The record notes that the Undermarshal was
+present” and “Nothing. The record notes that the First Cantor was present.” The annotations
+are assigned to the people whose silence [the mission](mission-first-arrival.md) §12 is saving.
+This is not the absence of a recorded actor: the source itself opens their speech channels.
+
+The related Marr concern is at **Convocation**, not The Second Seeding.
+[convocation.ts](../packages/backend/src/sim/missions/convocation.ts), lines 253–261, emits the
+command and “quietly, to nobody” aside together. [engine.ts](../packages/frontend/src/audio/engine.ts),
+lines 667–686, explicitly overlaps same-tick hails rather than queueing them. Attribution
+text alone does not give the aside a quieter, later delivery. This establishes overlap,
+not inaudibility or loss of the log text.
+
+**Other reading:** these are captions for silence and simultaneous thought, not literal speech.
+**Recommendation:** decide the intended channel and temporal separation before adding a beat.
+Keep the neutral record distinct from a named speaker. Verify both muted text and an audible
+capture; preserving all rows is necessary but does not prove that the dramatic pause lands.
+
+#### A2 · Medium — Radicals turns an inference into a counted pack
+
+[mission-radicals.md](mission-radicals.md), lines 934–961, distinguishes one named Draymaw
+from inferred companions. [radicals.ts](../packages/backend/src/sim/missions/radicals.ts),
+lines 555–560 and 632–638, instead claims five at a name and then five off the edge.
+The player receives a firmer observation than the prose intended.
+
+**Other reading:** five describes a fictional pack represented by one simulation animal.
+That does not preserve the written distinction between hearing and inference.
+**Recommendation:** reconcile the watch's knowledge with the authored representation, retaining
+the uncertainty rather than changing fauna for balance. Compare both delivered lines with §12;
+this is a script/prose disagreement, not a demonstrated hidden-state leak.
+
+#### A3 · Medium — permanent loss changes the force, not all the words about it
+
+The Order's loss mechanic is built, not a missing feature.
+[roster.ts](../packages/backend/src/sim/missions/roster.ts), lines 138–171, removes spent hulls
+and adjusts `survive` predicates; it retains authored text and other requirements.
+[The Three's briefing](../packages/shared/src/missions.ts), lines 1312–1319, still declares
+four hulls and their certificates. [BriefingScreen](../packages/frontend/src/menu/BriefingScreen.tsx)
+selects by seen scenes, not the remaining cadre.
+
+**Other reading:** the commander is repeating the original order, and absence is the intended
+lesson. Without an explicit distinction, a player can also read it as a continuity error.
+**Recommendation:** test the post-Nineteen sequence with a full and a depleted roster, and
+communicate what was assigned versus what answered. Do not erase loss or relax extraction
+requirements to make the speech true. Success means the player can explain the missing hull
+and the remaining obligation without consulting the design document.
+
+#### A4 · Low–medium — the calendar rule is stricter than the dialogue
+
+[culture.md](culture.md) §6 prohibits hours, days and weeks. The shipped Tend reading says
+“another hour” ([tend.ts](../packages/backend/src/sim/missions/tend.ts), line 420);
+Prospect uses “this week”; The Rim Deposits' briefing says “thirty-nine hours”
+([missions.ts](../packages/shared/src/missions.ts), lines 554 and 1354).
+
+**Other reading:** instrument durations and familiar chronology are intended exceptions.
+**Recommendation:** decide and document that exception, or revise the affected dialogue and
+its canonical prose together. Do not use a word scan to rewrite deliberate rejections such
+as “listened to, not watched,” or to mistake a watch's name for a visual-attention verb.
+
+#### A5 · Medium — homes risk being understood only as systems of work
+
+Sufficiency's warm cells and equal dampness are concrete in [habitats.md](habitats.md) §6.
+Attendance conveys sincere belonging, but its breathing light-rows are a dream transcript,
+not an establishing description ([attendance.ts](../packages/backend/src/sim/missions/attendance.ts),
+lines 399–404). The Holding's depth/dryness hierarchy (§3) is likewise less visible in
+Tolerance and Item Nine than its industrial and political obligations.
+
+**Other reading:** these are operational scenes, not domestic tours. Nothing requires every
+room to illustrate every rule. Adze's contentment and the unassigned cohort “in its cells …
+breathing” already resist the barracks reading
+([conclaveAttending.ts](../packages/backend/src/sim/missions/conclaveAttending.ts), lines 195–209).
+**Recommendation:** consider one ordinary, player-facing comfort detail at an appropriate
+arrival, not an explanatory defence of the faction. Preserve The Three's dry-room objective
+([theThree.ts](../packages/backend/src/sim/missions/theThree.ts), lines 494–500) and In Writing's
+dry shelf as existing examples. Test whether a reader can describe why a resident stays.
+
+#### A6 · Low–medium — habitat instructions still carry superseded or ambiguous staging
+
+Tend's map description (lines 341–344) and Thin Water's (442–444) describe the Lid as overhead
+light. [habitats-art-brief.md](habitats-art-brief.md) §9 explicitly keeps that glow in key art
+and refuses it in the conn view. The missing overhead glow is therefore **not** a renderer defect.
+Separately, [habitats.md](habitats.md) §9 places Radicals “two tides on,” while its mission's
+§1 says “many tides later” and its dialogue remembers the spring.
+
+**Other reading:** the first descriptions are diegetic, not implementation instructions;
+the chapter-house entries index institutions rather than rooms the player physically enters.
+**Recommendation:** label those boundaries and reconcile the Sorrowgate interval. Preserve
+the existing light decision; do not invent a new effect or a domestic visit to make an index true.
+
+### What remains of the September findings
+
+| Earlier finding | Current disposition |
+| --- | --- |
+| F1 — one scene, no cross-campaign variant | **Partly superseded.** Three scene constants now exist: Marr's filing plus convoy/picket closure stamps. Baffle and The Dome read the opposite-side stamp ([missions.ts](../packages/shared/src/missions.ts), lines 273–292, 462–470, 940–950). The rim pair still has no equivalent variants; repetition there remains a judgement, not a broken mechanism. |
+| F2 — convergence assumes three prior campaigns | **Open.** [campaign.md](campaign.md) §8 still says the player has played the other sides. Free order does not guarantee it. First- and fourth-campaign readings should be distinguished. |
+| F3 — First Arrival is a good template | **Retained positive.** Its briefing supplies enough of the other sides' activity to make the rim comprehensible without requiring their playthroughs. |
+| F4 — First Chord history gated behind two campaigns | **Open.** [record.ts](../packages/frontend/src/menu/record.ts), lines 112–121 and 170–174, still places 178 PC behind `two-parties`. The Three's public premise supplies the date and muteness, not the forty-one-second reply. Preserve the unexplained Mouth; missing event history is a different question. The Second Chord ending is slot seven, not slot six as F4's earlier wording suggests. |
+| F5 — seventeen-year references before the dated page | **Retained, low priority.** Present Crisis still requires a finished rim mission. The local choices can work without the historical date; verify understanding before changing admission. |
+| F6 — Shallow's unglossed Marr | **Open, with ambiguity.** [missions.ts](../packages/shared/src/missions.ts), lines 988 and 1016, still says “Marr has rung” / “Marr rang off-tide.” A new reader may hear a person or the plateau; neither is introduced there. The earlier absolute count of such references is not renewed by this audit. |
+| F7 — board states Korrin's secret | **Resolved in the current source.** [campaignBoard.ts](../packages/frontend/src/menu/campaignBoard.ts), lines 150–154, now describes the call and the Cantorate's choice, matching [campaign.md](campaign.md) §6. Do not restore the spoiler to explain the silences. |
+| F8 — record initially names only two navies | **Retained as a deliberate distribution of information.** The board supplies all four names; the record's unequal dating is not by itself a completeness defect. |
+
+Witnessed conclusions are also now retained separately, including contradictory readings
+([campaign.md](campaign.md) §9; [ui-ux.md](ui-ux.md#witnessed-conclusions)).
+That addresses rereading, not whether a line was understood when it first arrived.
+The existing [scene-witness tests](../packages/backend/test/missionSceneWitness.test.ts),
+[briefing/record tests](../packages/frontend/test/briefingAndRecord.test.ts) and
+[roster tests](../packages/backend/test/missionRoster.test.ts) are useful regression anchors;
+their assertions are not evidence of comprehension, and they were not executed for this prose-only audit.
+
+### Remaining verification and deferred work
+
+The live attempt used the repository's run-game harness. After `npm ci`, both development
+servers started. Browser inspection did not run: the browser tool's transport was closed,
+and `drive.mjs --entry tutorial --steps .claude/skills/run-game/scripts/escFocus.mjs` could
+not load Playwright. **No live frame, audio capture, completed playthrough or participant
+comprehension result is claimed.** The following remain acceptance work, not boxes marked passed:
+
+- **First-campaign reading:** take each faction first, then revisit the rim after all four.
+  Ask the player what each navy needs, what the 178 PC event was, and what remains unknowable.
+  Do not accept knowledge supplied by the auditor as knowledge delivered by the game.
+- **Actionable briefings:** have a new player locate every named destination and explain the
+  obligation in their own words, using only the briefing, revealed markers and objectives.
+  The issue's remaining briefing-reference concern is not cleared by source transcription.
+- **Stress and loss:** compare full/depleted Order rosters, successful/failed readings, and
+  Marr's optional bell. Check log readability during orders and muted play, not only line presence.
+- **Habitat delivery:** listen to each interior's arrival before judging its image. Compare
+  hum, bell, chord and hush against the seven criteria above, then repeat with faction names
+  hidden in a reading sample. A speaker hail alone cannot certify an inhabited soundscape.
+
+The four named implementation items remain deferred: **Clarion mission-roster adoption**
+is still absent from mission literals and is not permission for balance tuning;
+**Korrin's silent transmission** is A1, not a hull's `silent` posture;
+**recorded dialogue** still needs its size budget, loading plan and register direction;
+**concept-art/DESIGN-PHILOSOPHY.md** remains unwritten. [README.md](README.md)'s
+“Planned / Not Yet Written” section carries these without pretending they have shipped.
+This audit supplies follow-up decisions; it does not certify the whole game's live delivery.
+
+---
+
 ## Related
 
 - **[campaign.md](campaign.md)** — the campaign this read is of: §1 the free order, §2 the five
   design rules each finding was checked against, §8 the convergence, §11 what is built
 - **[culture.md](culture.md)** — the five registers, and §6's register test, which every briefing
   applies to itself
+- **[habitats.md](habitats.md)** §9–10 · **[habitats-art-brief.md](habitats-art-brief.md)** — the
+  interior coverage, habitat test and distinction between world description and runtime treatment
 - **[timeline.md](timeline.md)** — 88, 141, 178, 197, 204, 211, 213 PC, and the anomaly log the
   record's six pages are transcribed from
 - **[world.md](world.md)** — the setting the record's first three pages carry
