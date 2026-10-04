@@ -89,11 +89,12 @@ experiment, not the production reference.
 
 #### Lamp halo — SPEC
 
-*Built for [#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001) and
-switched off.* The Lamp halos toggle in Settings turns it on for a player, and a development
-switch for captures; it turns on by default only after its reading on the named GPU
-([graphics-standards.md](graphics-standards.md) gate 6) and the owner's approval of its
-frames.
+*Built for [#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001), and on
+by default since the owner approved its frames on 4 October 2026*
+([issue-1001](screenshots/issue-1001/README.md), "The frames against the SPEC"), its reading
+on the named GPU inside [graphics-standards.md](graphics-standards.md) gate 6's line. The
+Lamp halos toggle in Settings turns it off for a player, and a development switch drives
+captures.
 
 The lamp halo is the soft light a loud own lamp spreads into the water around it. It
 carries one fact: how loud that hull or structure is now. It carries the part of that fact
@@ -289,12 +290,12 @@ weights, the 0.6 px floor, the 2 m bias, the 1,024 site cap and the build defaul
 frontend-only, because no other package reads them. The reach is derived from the chain and
 stored nowhere.
 
-**Hull portraits** take this halo rather than a bloom of their own. Once the default turns
-on, `tools/hull-renders/scene.html` draws the game's frame and runs this pass at each hull's
+**Hull portraits** take this halo rather than a bloom of their own, once
+[#1015](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1015) lands:
+`tools/hull-renders/scene.html` draws the game's frame and runs this pass at each hull's
 idle SIG, with its three widths multiplied by the hull's drawn length in the portrait over
 its drawn length at the close camera, so a portrait shows the close camera's halo magnified
-with the hull. The 20 portraits are re-rendered once
-([#1015](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1015)).
+with the hull. The 20 portraits are re-rendered once.
 
 #### Shallow caustics — SPEC
 
@@ -517,7 +518,7 @@ composer. Its still is a lighting reference, not a runtime implementation to cop
 | Rank | Upgrade | Verified starting point and boundary |
 | --- | --- | --- |
 | 1 | Shared rig, tone mapping, PMREM | This increment. Promote the tutorial rig; no model edits or full-screen pass |
-| 2 | Lamp core, then a lamp halo ([#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001)) | The lamp core landed ([#1021](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1021), [#1029](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1029)). From #1001's readings the owner picked the full-screen route, drawn after the canvas over a depth-only copy of its depth; "Lamp halo — SPEC" above and gate 6's line specify it, landing off behind its setting |
+| 2 | Lamp core, then a lamp halo ([#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001)) | The lamp core landed ([#1021](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1021), [#1029](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1029)). From #1001's readings the owner picked the full-screen route, drawn after the canvas over a depth-only copy of its depth; "Lamp halo — SPEC" above and gate 6's line specify it, on by default behind its setting since the owner approved its frames |
 | 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | Both landed ("Bevels and baked occlusion — SPEC" above). Coverage measured: 30 of 190 extruded plates are bevelled, and plates are 3 % of 7,480 parts, so no primitive was added. The Knights' Bastion carries the first baked occlusion map, on its own UV set, read by the conn view alone, its silhouette unchanged; the next model is a call per model |
 | 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | Vignette and sway are built, with no pass ([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)). The split waits on a gate-6 allocation for its full-screen draw and copy. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
 | 5 | GLB gzip ([#1004](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1004)) | Built. The nginx image's `mime.types` names no `glb`, so `packages/frontend/nginx.conf` names the type in the models' own location and gzips them at level 6. Delivery cost, not frame quality |

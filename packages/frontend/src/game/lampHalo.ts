@@ -12,7 +12,7 @@ import { haloGain } from './glow.ts';
 
 /**
  * TUNABLE — the SPEC's halo numbers, approved on frames from the named GPU
- * before the default turns on. Frontend-only: no other package reads them.
+ * (#1073). Frontend-only: no other package reads them.
  */
 export const LAMP_HALO = {
   /** A SIG-35 entity's halo carries the light of this much lamp at full ink, m². */
@@ -40,8 +40,12 @@ export const LAMP_HALO = {
   ENERGY_SIG_CAP: 80,
 } as const;
 
-/** TUNABLE — whether "default" in Settings means on. Lands off (SPEC). */
-export const LAMP_HALOS_DEFAULT = false;
+/**
+ * TUNABLE — whether "default" in Settings means on. On since the owner
+ * approved the halo's frames on 4 October 2026 (#1001), its GPU time inside
+ * gate 6's line (SPEC).
+ */
+export const LAMP_HALOS_DEFAULT = true;
 
 /**
  * An entity's halo energy at its live SIG and the view's draw scale, in m² of

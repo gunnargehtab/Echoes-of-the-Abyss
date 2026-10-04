@@ -56,15 +56,18 @@ export default async ({ page, shot }) => {
     );
   }
   const unpaced = process.env.UNPACED === '1';
-  // HALO=on turns the lamp halo on through its development switch (#1001),
-  // for an on/off pair; a view that cannot draw it fails the capture.
-  const halo = process.env.HALO === 'on';
+  // HALO=on or HALO=off sets the lamp halo through its development switch
+  // (#1001), for an on/off pair; a view that cannot draw it fails HALO=on.
+  // Unset, the capture takes the setting, on by default since the owner
+  // approved the halo's frames, so an off frame has to say HALO=off.
+  const asked = process.env.HALO;
   // Absent before #1001's queued reading, so an older revision still runs.
   const queueable = await page.evaluate(() => typeof window.__perspectiveGpuQueue === 'function');
-  if (halo) {
-    const state = await page.evaluate(() => window.__perspectiveHalo?.(true));
-    assert.ok(state === 'idle' || state === 'drawn', `the lamp halo is ${state}`);
+  if (asked === 'on' || asked === 'off') {
+    const state = await page.evaluate((on) => window.__perspectiveHalo?.(on), asked === 'on');
+    if (asked === 'on') assert.ok(state === 'idle' || state === 'drawn', `the lamp halo is ${state}`);
   }
+  const halo = await page.evaluate(() => window.__perspectiveProbe().halo);
   if (!unpaced && !software) {
     console.log(
       'NOTE: paced at the display rate, the GPU idles at a low clock, so avgGpuMs here ' +

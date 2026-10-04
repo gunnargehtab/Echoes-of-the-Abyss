@@ -170,10 +170,13 @@ describe('the settings screen: §11 commitments', () => {
       assert.ok(row, '§14: a Lamp halos row');
       const toggle = row.findAll((n) => n.type === 'input' && n.props.type === 'checkbox')[0];
       assert.equal(toggle.props.checked, LAMP_HALOS_DEFAULT, 'the toggle shows the build default');
-      await view.act(() => {
-        (toggle.props.onChange as (e: unknown) => void)({ target: { checked: true } });
-      });
-      assert.equal(loadSettings().lampHalos, true, 'the toggle reaches the store');
+      // Away from the default and back, so each flip is a change the store saw.
+      for (const checked of [!LAMP_HALOS_DEFAULT, true]) {
+        await view.act(() => {
+          (toggle.props.onChange as (e: unknown) => void)({ target: { checked } });
+        });
+        assert.equal(loadSettings().lampHalos, checked, 'the toggle reaches the store');
+      }
       const note = () => row.findAll((n) => n.type === 'span').map((n) => n.children.join(''));
       assert.ok(
         !note().some((text) => text.includes('Not available')),

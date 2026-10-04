@@ -85,8 +85,8 @@ tools/render-stack #974's audit and camera pairs, kept runnable rather than
                    rim is a chamfer (#1002). capture.mjs, a run-game --steps module: four
                    held cameras with the HUD on, gate 6's call and triangle
                    limits asserted, the probe's GPU time required on a GPU
-                   and refused on a software rasteriser (#1001), HALO=on for
-                   the lamp halo, and readings.json beside the frames; the
+                   and refused on a software rasteriser (#1001), HALO=on|off (the
+                   setting if unset), and readings.json beside the frames; the
                    run-game skill has the recipe. fog.mjs reads fully fogged
                    seabed against the backdrop (#1016) and the edge left where
                    the two grade different depths (#1023), lamps.mjs own hulls quiet and
