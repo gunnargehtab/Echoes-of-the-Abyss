@@ -201,7 +201,8 @@
       const accent = new THREE.Color(shot.accent);
       // The navy's glow ink in the standard palette, the ink the conn view
       // recolours this navy's lamps to (rosterModels.ts `recolor`).
-      const glowInk = new THREE.Color(FRAME.PALETTES.standard.faction[FRAME.Faction[shot.faction]].glow);
+      const ink = FRAME.PALETTES.standard.faction[FRAME.Faction[shot.faction]];
+      const glowInk = new THREE.Color(ink.glow);
       const gltf = await new GLTFLoader().loadAsync('/model.glb');
       const hull = gltf.scene;
 
@@ -632,11 +633,14 @@
        * The halo's widths (docs/art-direction.md "Hull portraits"): the
        * close camera's, magnified with the hull. The close camera is
        * tools/render-stack/capture.mjs's, 1,800 m out on drive.mjs's 900 px
-       * of view height, where the conn view draws a hull at its draw scale;
-       * a portrait draws every hull about 940 px long, so the multiplier is
-       * this frame's pixels per metre at the hull over that one, 10–27×. The
-       * light needs no factor: a splat's is its energy times the camera's
-       * pixels per metre squared, so a nearer camera already brings it.
+       * of view height, where the conn view draws a hull at its draw scale.
+       * Drawn length is the draw's scale, pixels per metre at the hull times
+       * its length, as the SPEC says: about 940 px for every hull here, which
+       * the 38° hero angle foreshortens to 630–690 px on screen. So the
+       * multiplier is this frame's pixels per metre at the hull over that
+       * one, 10.5–27.3×, the hull's length cancelling. The light needs no
+       * factor: a splat's is its energy times the camera's pixels per metre
+       * squared, so a nearer camera already brings it.
        */
       const closePxPerM = FRAME.groundPxPerM(900, FRAME.CONN_FOV_DEG, 1800);
       const closeHullPxPerM = closePxPerM * FRAME.hullReadabilityScale(closePxPerM);
@@ -654,7 +658,8 @@
           fogDensity: scene.fog.density,
           pixelRatio: haloScale,
         });
-        halo.render(renderer, camera, splats, dropped, scene.fog.density, haloScale, FRAME.LAMP_HALO.BIAS_M);
+        const fog = scene.fog.density;
+        halo.render(renderer, camera, splats, dropped, fog, haloScale, FRAME.LAMP_HALO.BIAS_M);
       };
       drawHalo();
 

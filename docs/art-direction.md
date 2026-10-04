@@ -295,7 +295,12 @@ stored nowhere.
 `tools/hull-renders/scene.html` draws the game's frame and runs this pass at each hull's
 idle SIG, with its three widths multiplied by the hull's drawn length in the portrait over
 its drawn length at the close camera, so a portrait shows the close camera's halo magnified
-with the hull. The 20 portraits are re-rendered once.
+with the hull. Drawn length is the draw's scale, pixels per metre at the hull times its
+length, not its span on screen: the same at any heading or camera angle, so the halo grows
+as the hull's metres do. At 900 px of view 1,800 m out and a portrait's 940 px a hull, the
+widths grow 10.5 to 27.3 times, past the blur's seven taps, so a portrait starts the
+three levels whole octaves further down, a 2 × 2 downsample each (`chainShift`); the game
+never does. The 20 portraits are re-rendered once.
 
 #### Shallow caustics — SPEC
 

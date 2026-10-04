@@ -36,8 +36,8 @@ energy at 0.05 and 0.15, under the toe, as the conn view would.
 - **The deep shadows lift.** The old composer held the frame in an 8-bit linear buffer, which
   crushes everything under about 5 % encoded luma to black. The canvas is 8-bit sRGB and
   keeps those tones. The share under 10 % luma barely moves, 91.5–99.3 % before and
-  92.2–99.5 % after, inside the style's 85–90 % floor; mean luma goes from 1.0–4.4 % to
-  2.0–5.7 %.
+  92.2–99.5 % after, darker than the style's roughly 85–90 % of near-black, as before.
+  Mean luma goes from 1.0–4.4 % to 2.0–5.7 %.
 - **The vent chimneys go dark, from their model.** `env-vent-chimney.glb` turned its ember to
   face up in #890, after these portraits were taken; `main`'s own rig, bloom included, now
   draws the chimney dark from this camera too.

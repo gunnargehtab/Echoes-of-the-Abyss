@@ -17,8 +17,9 @@
  * One navy's water. `faction` names its `Faction` (@echoes/shared), whose glow
  * ink in the standard palette its lamps take, as in the game. `accent` is the
  * faction's neon signal and `treatment` its noir behaviour, both from
- * docs/style-neon-noir.md "Faction accents on a neon-noir ground"; `biome` names the environment the props are drawn from
- * (docs/environments.md), and `props` are the registry slugs that stand in it
+ * docs/style-neon-noir.md "Faction accents on a neon-noir ground"; `biome` names
+ * the environment the props are drawn from (docs/environments.md), and `props`
+ * are the registry slugs that stand in it
  * (packages/frontend/src/game/environment.ts ENVIRONMENT_PROPS), each with the
  * footprint metres the registry canonicalises it to.
  *
@@ -100,11 +101,11 @@ export const NAVIES = {
  * docs/units.md.
  *
  * SIG is here because the style law says glow encodes loudness
- * (docs/style-neon-noir.md §3): the scene drives each hull's emissive from it,
- * so a Cruiser at 55 burns visibly hotter than a Chorister at 16 in the same
- * frame. That is the same law tools/hull-maps/build.mjs applies to the sprite
- * maps, applied to a picture; it is a presentation choice and moves no
- * constant.
+ * (docs/style-neon-noir.md §3): the scene draws each hull's lamps at rest, as
+ * the conn view draws a hull at its idle SIG, and runs the lamp halo at that
+ * SIG, so a Cruiser at 55 carries a halo a Chorister at 16 does not
+ * (docs/art-direction.md "Hull portraits"). It is the hull's documented
+ * signature, read rather than chosen, and moves no constant.
  */
 export const KINDS = [
   { slug: 'light-scout', lengthM: 60, sig: 6 },
