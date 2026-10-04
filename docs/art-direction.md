@@ -639,43 +639,54 @@ fraction in [0, 1], and the biome's strength says how far it may darken a pixel:
 
 | Ground | Dunes | Ripples | Scours | Grain | Sum |
 | --- | --- | --- | --- | --- | --- |
-| Open Water | 0.10 | 0.04 | 0.04 | 0.03 | 0.21 |
-| Kelp Forest | 0.05 | 0.02 | 0.05 | 0.04 | 0.16 |
-| Thermal Vein | 0 | 0 | 0.08 | 0.06 | 0.14 |
-| Abyssal Trench | 0.06 | 0 | 0.03 | 0.02 | 0.11 |
-| Resonance Field | 0.06 | 0.02 | 0.04 | 0.04 | 0.16 |
-| Coral Ruins | 0.04 | 0.03 | 0.04 | 0.05 | 0.16 |
-| Rock | 0 | 0 | 0.06 | 0.06 | 0.12 |
+| Open Water | 0.25 | 0.07 | 0.05 | 0.03 | 0.40 |
+| Kelp Forest | 0.18 | 0.04 | 0.10 | 0.06 | 0.38 |
+| Thermal Vein | 0 | 0 | 0.16 | 0.10 | 0.26 |
+| Abyssal Trench | 0.14 | 0 | 0.08 | 0.04 | 0.26 |
+| Resonance Field | 0.18 | 0.04 | 0.08 | 0.06 | 0.36 |
+| Coral Ruins | 0.10 | 0.05 | 0.08 | 0.08 | 0.31 |
+| Rock | 0 | 0 | 0.12 | 0.10 | 0.22 |
 
 The table is the ground's reading of its water. Loose silt drifts where the current runs,
 so open water carries the most. Kelp baffles the current, and a vent field is broken
-basalt with no silt to ripple. The trench is still water over pressure-eroded stone, and
-rock admits no water at all.
+basalt with no silt to ripple. The trench is still water over pressure-eroded stone, swells
+without ripples, and rock admits no water at all.
 
 - **Never out-shading a step is structural.** A term never exceeds 1, so a pixel loses at
-  most its row's sum. No row may exceed **0.21**, half of the hillshade's 0.42: a
-  full-strength authored face darkens the fill to 0.58, and the detail at its worst holds
-  0.79. The bound is a property of the table, which a test holds, not of a picture.
-- **Dunes** run in crests 60 m apart, east–west, meandering over 240 m. The lee face is the
-  south 30 % of each dune, down-current. Only a face turned from the key light darkens, so
-  the dunes read by their shadows, the way a ridge does. A 400 m field fades them in and
-  out, down to a quarter of their strength.
+  most its row's sum, an encoded-space gain like the bake's. No row may exceed **0.40**:
+  a full-strength authored face darkens the fill to 0.58, and the detail at its worst holds
+  0.60. The bound is a property of the table, which a test holds, not of a picture.
+- **Why so near a face.** The ground sits near 20 of 255 at the home dolly. Capped at half
+  a face, 0.21, the layer moved one pixel in ten by a single code value, and its texture
+  read nothing; at 0.40 two pixels in five move and the dunes show. The target's silt is
+  about two and a half times livelier still, because its lit faces rise above the fill.
+  This SPEC does not license that ([issue-1083](screenshots/issue-1083/README.md)).
+- **Dunes** run in crests 110 m apart, east–west, meandering over 420 m. The lee face is
+  the south 30 % of each dune, down-current. They are hillshaded by the key light about
+  flat ground: a face turned from it darkens by the whole strength, flat ground by half,
+  and a face turned to it not at all, so the dunes read by their shadows, the way a ridge
+  does. A 400 m field fades them in and out, down to a quarter of their strength.
 - **Ripples** lie 7 m apart, parallel to the dunes and settled in their troughs. A ripple
-  draws while it spans 8 pixels and is gone at 3. **Scours** are hollows on a 38 m field.
+  draws while it spans 8 pixels and is gone at 3. **Scours** are hollows on a 38 m field,
+  drawn out north–south along the current.
   **Grain** runs at 3 m and 1.3 m, each octave whole from 6 pixels and gone at 3.
 - **The layer fades with distance.** It is whole through 2 m a pixel and gone by 8, so the
   survey dolly sees the bake and the ink and nothing else: no second map grid.
 - **Strength follows the cell.** One texel a cell, filtered between cell centres, as the
   bake's relief does. The amount of texture fades across a biome edge while the field
   stays one continuous function of position, so no authored rectangle prints on it.
-- **The hash is integer.** `fract(sin(x) · 43758)` keeps few bits at map coordinates in
-  single precision and differs between GPUs, so it stays out of this layer.
+- **The shader hashes nothing.** Its noise is a 128 × 128 lattice of hashed bytes in one
+  page-lifetime texture, four fields to a fetch, read as value noise by shifting the
+  coordinate by the smoothstep of its fraction. A sine hash keeps few bits at map
+  coordinates in single precision and differs between GPUs; an integer hash cost the
+  named GPU up to a millisecond a frame. Seven fetches a fragment, and the meander's slope
+  comes from its screen derivatives rather than more of them.
 - **Order.** It lands after the bake's colour and the veil's vertex colour, and before the
   survey ink and the fog. Ink lifts darker ground further, but the ladder already weighs
   ink over black, the fully drained veil, so darkening cannot break it.
-- **Cost.** No pass, draw call or triangle: one RGBA8 texture of one texel a cell, 4 KiB
-  on a 32 × 32 map. GPU time is read on the named GPU (gate 6,
-  [issue-1083](screenshots/issue-1083/README.md)).
+- **Cost.** No pass, draw call or triangle. One RGBA8 texture of one texel a cell, 4 KiB
+  on a 32 × 32 map, and the 64 KiB noise lattice, once a page. GPU time is read on the
+  named GPU (gate 6, [issue-1083](screenshots/issue-1083/README.md)).
 
 **Seated stones.** The stone props stand sunk into the silt by a share of their own
 height: `env-open-boulder` 0.3 (1.8 of its 6 m), `env-vent-basalt` 0.15 (1.2 of 8 m) and

@@ -58,12 +58,22 @@ detail and seated stones — SPEC". Its rules hold for any cosmetic on that mate
   texel centres on cell centres: the GPU does the bake's bilinear `lerp2` in one fetch, so
   the amount fades across a biome edge while the field stays continuous. A ground delta
   rewrites the touched texels.
-- **Bound it by construction.** Each term is a fraction in [0, 1] times a table strength,
-  so the darkest pixel is the row's sum, and a test holds every row against
-  `RELIEF_DEPTH`. A screenshot cannot prove a bound; a table can.
-- **Hash with integers.** `fract(sin(dot(p, k)) * 43758.5453)` keeps few bits at map
-  coordinates in single precision and differs between GPUs; pcg2d on a `uvec2` does not.
-  Take a slope from value noise's analytic gradient, not from two more samples.
+- **Bound it by construction, in the bake's units.** Each term is a fraction in [0, 1]
+  times a table strength, so the darkest pixel is the row's sum, and a test holds every
+  row against `RELIEF_DEPTH`. That constant scales encoded bytes, so the shader scales
+  encoded colour too (the survey ink's `surveyEncode`/`surveyDecode`); a linear multiply
+  by the same number darkens ground near 20 of 255 about three quarters as much.
+- **Measure that it shows.** Ground sits near 20 of 255 at the home dolly, where a
+  darken-only term moves a code value or two. Read the frame's pixels on and off
+  (`docs/screenshots/issue-1083/contrast.mjs`) before trusting a strength table: #1083's
+  first table moved one pixel in ten.
+- **Hash nothing per fragment.** `fract(sin(dot(p, k)) * 43758.5453)` keeps few bits at
+  map coordinates in single precision and differs between GPUs, and an integer hash
+  (pcg2d) cost the named GPU up to 1 ms a frame at ratio 1.5: Pascal runs 32-bit integer
+  multiplies at a fraction of its float rate. Put the lattice in a small repeating
+  texture of `propHash` bytes and read it as value noise by shifting the coordinate by
+  the smoothstep of its fraction, four fields a fetch. A smooth field's world slope comes
+  free from its screen derivatives, solved through `dFdx`/`dFdy` of the world position.
 - **Fade by pixels, then by distance.** Each octave fades as its wavelength nears a few
   pixels, and the whole layer by metres a pixel, gone before the survey dolly. Take
   `dFdx` and `fwidth` before any branch.

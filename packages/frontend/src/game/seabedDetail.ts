@@ -13,13 +13,16 @@
  * - **Render-only.** Nothing in the simulation reads it, and nothing here reads
  *   anything but the public cell grid: biome and rock.
  * - **Darken-only and hue-preserving.** Every term is a fraction in [0, 1]
- *   times a strength, and the three channels scale together. A row's strengths
- *   sum to at most half the hillshade's darkest shadow, so the detail can never
- *   out-shade an authored step — a property of the table the tests hold, not of
- *   a picture.
- * - **Deterministic.** An integer hash of world position. `fract(sin(x) * k)`
- *   keeps few bits at map coordinates in single precision and differs between
- *   GPUs, which is why it is not used here.
+ *   times a strength, and the three channels scale together, in encoded space
+ *   as the bake's bytes do (the survey ink's own transfer). A row's strengths
+ *   sum to at most `MAX_SUM`, so the darkest the detail leaves is still lighter
+ *   than a full-strength authored face — a property of the table the tests
+ *   hold, not of a picture.
+ * - **Deterministic.** The shader hashes nothing: its noise is a lattice of
+ *   `propHash` bytes in one 128² texture, the same on every client. A shader
+ *   hash such as `fract(sin(x) * k)` keeps few bits at map coordinates in
+ *   single precision and differs between GPUs; an integer one cost the named
+ *   GPU up to 1 ms a frame.
  * - **Quiet at distance.** Each octave fades as its wavelength nears a pixel,
  *   and the whole layer is gone by `FADE_M_PER_PX[1]`, so the survey dolly
  *   reads the bake and the ink and nothing else.
@@ -28,10 +31,18 @@
  * the standard surfaces only. Promotion to every match is `seabedDetailEnabled`
  * and the decision the SPEC section records.
  */
-import { DataTexture, LinearFilter, type Material, RGBAFormat, UnsignedByteType } from 'three';
+import {
+  DataTexture,
+  LinearFilter,
+  type Material,
+  RepeatWrapping,
+  RGBAFormat,
+  UnsignedByteType,
+} from 'three';
 import { Biome, SEABED_DETAIL } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import { KEY_LIGHT } from './palette.ts';
+import { propHash } from './environment.ts';
 
 /**
  * Whether this page studies the silt detail. Development builds only, and only
@@ -128,41 +139,72 @@ function lightHeading(): [number, number] {
 }
 
 /**
- * The GLSL, as text so a test can read what the GPU will run. pcg2d
- * (Jarzynski and Olano, 2020) folded to one word; value noise with its
- * analytic gradient, so a dune's slope costs no second sample.
+ * The noise lattice's side, in lattice points. It repeats every 128: 54 km of
+ * meander, 4.9 km of scour field before the second octave's offset, and 384 m
+ * of grain, which reads as grain.
+ */
+export const NOISE_SIZE = 128;
+
+/**
+ * Four independent lattices, one byte a point a channel, from `propHash`: the
+ * same bytes on every client. The shader interpolates them as value noise, so
+ * the GPU never hashes. The first cut hashed in the shader, pcg2d, nine noises
+ * of four lattice points a fragment: 32-bit integer multiplies, which the named
+ * GPU runs at a fraction of its float rate, cost up to 1 ms a frame at ratio 1.5.
+ */
+export function groundNoisePixels(): Uint8Array<ArrayBuffer> {
+  const pixels = new Uint8Array(NOISE_SIZE * NOISE_SIZE * 4);
+  for (let y = 0; y < NOISE_SIZE; y++) {
+    for (let x = 0; x < NOISE_SIZE; x++) {
+      for (let c = 0; c < 4; c++) {
+        pixels[(y * NOISE_SIZE + x) * 4 + c] = Math.floor(propHash([x, y, c, 0x51d7]) * 256);
+      }
+    }
+  }
+  return pixels;
+}
+
+let noise: DataTexture | null = null;
+
+/**
+ * Page-lifetime and shared, like the Sorrowgate surface: 64 KiB, never per
+ * match. Linear, repeating, no mipmaps — the shader's smoothstep-shifted
+ * coordinates step at every lattice line, which would throw a mip chain's
+ * level choice, and the layer is gone before a lattice cell shrinks to a pixel.
+ */
+export function groundNoiseTexture(): DataTexture {
+  if (noise !== null) return noise;
+  noise = new DataTexture(
+    groundNoisePixels(),
+    NOISE_SIZE,
+    NOISE_SIZE,
+    RGBAFormat,
+    UnsignedByteType
+  );
+  noise.name = 'seabed-detail-noise';
+  noise.wrapS = noise.wrapT = RepeatWrapping;
+  noise.magFilter = LinearFilter;
+  noise.minFilter = LinearFilter;
+  noise.generateMipmaps = false;
+  noise.needsUpdate = true;
+  return noise;
+}
+
+/**
+ * The GLSL, as text so a test can read what the GPU will run. `groundNoise`
+ * is value noise in all four channels from one fetch: the lattice is the
+ * texture, and shifting the coordinate by the smoothstep of its fraction makes
+ * the bilinear filter interpolate it as value noise does.
  */
 function fragmentPars(): string {
   return `
 uniform sampler2D uGroundDetail;
+uniform sampler2D uGroundNoise;
 uniform vec2 uGroundDetailSize;
-uint groundHash(uvec2 v) {
-  v = v * 1664525u + 1013904223u;
-  v.x += v.y * 1664525u;
-  v.y += v.x * 1664525u;
-  v ^= v >> 16u;
-  v.x += v.y * 1664525u;
-  v.y += v.x * 1664525u;
-  v ^= v >> 16u;
-  return v.x;
-}
-float groundLattice(ivec2 c, uint salt) {
-  uvec2 at = uvec2(c + 4096) ^ uvec2(salt * 0x9e3779b9u, salt * 0x85ebca6bu);
-  return float(groundHash(at) >> 8u) * (1.0 / 16777216.0);
-}
-vec3 groundNoise(vec2 x, uint salt) {
+vec4 groundNoise(vec2 x) {
   vec2 i = floor(x);
   vec2 t = x - i;
-  vec2 u = t * t * (3.0 - 2.0 * t);
-  vec2 du = 6.0 * t * (1.0 - t);
-  ivec2 c = ivec2(i);
-  float a = groundLattice(c, salt);
-  float b = groundLattice(c + ivec2(1, 0), salt);
-  float d = groundLattice(c + ivec2(0, 1), salt);
-  float e = groundLattice(c + ivec2(1, 1), salt);
-  float k = a - b - d + e;
-  return vec3(a + (b - a) * u.x + (d - a) * u.y + k * u.x * u.y,
-              du * vec2(b - a + k * u.y, d - a + k * u.x));
+  return texture2D(uGroundNoise, (i + t * t * (3.0 - 2.0 * t) + 0.5) / ${f(NOISE_SIZE)});
 }
 `;
 }
@@ -172,24 +214,35 @@ function fragmentMain(): string {
   const [lx, lz] = lightHeading();
   const stoss = 1 - d.DUNE_LEE;
   const rippleStoss = 1 - d.RIPPLE_LEE;
-  // A lee face as steep as a full-patch dune's steepest darkens by the whole
-  // term: the smoothstep profile's peak slope is 1.5 per cycle over the lee.
+  // A lee face as steep as a full-patch dune's steepest reaches the end of
+  // the term: the smoothstep profile's peak slope is 1.5 per cycle over the lee.
   const leeNorm = (d.DUNE_M * d.DUNE_LEE) / 1.5;
   return `
 {
   vec2 gp = vSurveyXZ;
   vec4 gStrength = texture2D(uGroundDetail, gp / uGroundDetailSize) * ${f(STRENGTH_SCALE)};
   // Derivatives first, outside every branch.
-  float gMpp = max(max(length(dFdx(gp)), length(dFdy(gp))), 1e-4);
+  vec2 gDx = dFdx(gp);
+  vec2 gDy = dFdy(gp);
+  float gMpp = max(max(length(gDx), length(gDy)), 1e-4);
   float gFade = 1.0 - smoothstep(${f(d.FADE_M_PER_PX[0])}, ${f(d.FADE_M_PER_PX[1])}, gMpp);
   vec2 gLight = vec2(${f(lx)}, ${f(lz)});
 
-  // The meander dunes and ripples share, so their crests stay parallel.
-  vec3 gW1 = groundNoise(gp / ${f(d.MEANDER_M)}, 1u);
-  vec3 gW2 = groundNoise(gp / ${f(d.MEANDER_FINE_M)}, 2u);
-  float gWarp = ${f(d.MEANDER_CYCLES)} * gW1.x + ${f(d.MEANDER_FINE_CYCLES)} * gW2.x;
-  vec2 gWarpGrad = ${f(d.MEANDER_CYCLES)} * gW1.yz / ${f(d.MEANDER_M)} +
-                   ${f(d.MEANDER_FINE_CYCLES)} * gW2.yz / ${f(d.MEANDER_FINE_M)};
+  // The meander dunes and ripples share, so their crests stay parallel; the
+  // coarse fetch's second channel is the patch field that fades the dunes.
+  vec4 gN1 = groundNoise(gp / ${f(d.MEANDER_M)});
+  vec4 gN2 = groundNoise(gp / ${f(d.MEANDER_FINE_M)} + 37.0);
+  float gWarp = ${f(d.MEANDER_CYCLES)} * gN1.r + ${f(d.MEANDER_FINE_CYCLES)} * gN2.r;
+  // Its world gradient from its screen derivatives: the meander is smooth
+  // over many pixels, so a quad's difference is its slope, and no fetch is
+  // spent on it. Clamped where a silhouette makes the quad a poor witness.
+  vec2 gWs = vec2(dFdx(gWarp), dFdy(gWarp));
+  float gDet = gDx.x * gDy.y - gDx.y * gDy.x;
+  vec2 gWarpGrad = abs(gDet) > 1e-6
+      ? vec2(gWs.x * gDy.y - gDx.y * gWs.y, gDx.x * gWs.y - gWs.x * gDy.x) / gDet
+      : vec2(0.0);
+  float gWarpMax = 3.0 / ${f(d.MEANDER_FINE_M)};
+  gWarpGrad *= min(1.0, gWarpMax / max(length(gWarpGrad), 1e-6));
 
   // Dunes: crests east-west, the lee the south share of each, down-current.
   float gCycle = gp.y / ${f(d.DUNE_M)} + gWarp;
@@ -201,45 +254,58 @@ function fragmentMain(): string {
   float gProfile = gLee ? 1.0 - gFall * gFall * (3.0 - 2.0 * gFall) : gRise * gRise * (3.0 - 2.0 * gRise);
   float gSlope = gLee ? -6.0 * gFall * (1.0 - gFall) / ${f(d.DUNE_LEE)}
                       : 6.0 * gRise * (1.0 - gRise) / ${f(stoss)};
-  float gPatch = mix(${f(d.PATCH_FLOOR)}, 1.0, groundNoise(gp / ${f(d.PATCH_M)}, 3u).x);
-  // A face darkens when the ground rises toward the light: it faces away.
-  float gDune = clamp(gPatch * gSlope * dot(gCycleGrad, gLight) * ${f(leeNorm)}, 0.0, 1.0);
+  float gPatch = mix(${f(d.PATCH_FLOOR)}, 1.0, gN1.g);
+  // A hillshade centred on flat ground: a face turned from the light (the
+  // ground rising toward it) runs to 1, one turned to it toward 0. Darken-only
+  // still, and twice the range a lee-only term had inside the same strength.
+  // DUNE_CONTRAST saturates it, so most of a lee reads dark and most of a
+  // stoss lit, rather than a thin line where the profile is steepest.
+  float gDune = 0.5 + 0.5 * clamp(${f(d.DUNE_CONTRAST)} * gPatch * gSlope *
+                                  dot(gCycleGrad, gLight) * ${f(leeNorm)}, -1.0, 1.0);
+
+  // Scours: hollows the current took, drawn out along it (north-south) and on
+  // a lattice turned off the map's axes, so no square of the noise shows. The
+  // first fetch's last channel wobbles the ripples.
+  vec2 gQ = mat2(0.866, -0.5, 0.5, 0.866) * gp / vec2(${f(d.SCOUR_M)}, ${f(d.SCOUR_M * 1.8)});
+  vec4 gS1 = groundNoise(gQ + gN1.b * 1.7);
+  vec4 gS2 = groundNoise(gQ * 2.3 + 11.0);
+  float gScour = smoothstep(0.52, 0.78, 0.65 * gS1.r + 0.35 * gS2.g);
 
   // Ripples: the dunes' meander at their own spacing, lying in the troughs.
-  float gRCycle = (gp.y + gWarp * ${f(d.DUNE_M)}) / ${f(d.RIPPLE_M)} +
-                  0.6 * groundNoise(gp / 25.0, 4u).x;
+  float gRCycle = (gp.y + gWarp * ${f(d.DUNE_M)}) / ${f(d.RIPPLE_M)} + 0.6 * gS1.a;
   float gR = fract(gRCycle);
   float gRLee = gR >= ${f(rippleStoss)} ? sin(PI * (gR - ${f(rippleStoss)}) / ${f(d.RIPPLE_LEE)}) : 0.0;
   float gAway = clamp(-dot(normalize(gCycleGrad), gLight), 0.0, 1.0);
   float gRipple = gRLee * gAway * (1.0 - gProfile) *
                   smoothstep(${f(d.RIPPLE_PX[0])}, ${f(d.RIPPLE_PX[1])}, ${f(d.RIPPLE_M)} / gMpp);
 
-  // Scours: hollows the current took, on their own field.
-  float gScour = smoothstep(0.5, 0.85, groundNoise(gp / ${f(d.SCOUR_M)} + gW1.x * 1.7, 5u).x);
-
   // Grain, two octaves, each gone before it can alias.
   float gGrain =
-      0.6 * groundNoise(gp / ${f(d.GRAIN_M)}, 6u).x *
+      0.6 * groundNoise(gp / ${f(d.GRAIN_M)} + 71.0).b *
           smoothstep(3.0, 6.0, ${f(d.GRAIN_M)} / gMpp) +
-      0.4 * groundNoise(gp / ${f(d.GRAIN_M * 0.43)}, 7u).x *
+      0.4 * groundNoise(gp / ${f(d.GRAIN_M * 0.43)} + 19.0).a *
           smoothstep(3.0, 6.0, ${f(d.GRAIN_M * 0.43)} / gMpp);
 
-  diffuseColor.rgb *= 1.0 - gFade * dot(gStrength, vec4(gDune, gRipple, gScour, gGrain));
+  // In encoded space, as the bake scales its bytes: a strength here is the
+  // same gain as RELIEF_DEPTH there, so the bound compares like with like.
+  float gGain = 1.0 - gFade * dot(gStrength, vec4(gDune, gRipple, gScour, gGrain));
+  diffuseColor.rgb = surveyDecode(surveyEncode(diffuseColor.rgb) * gGain);
 }
 `;
 }
 
 export interface GroundDetailUniforms {
   uGroundDetail: { value: DataTexture };
+  uGroundNoise: { value: DataTexture };
   uGroundDetailSize: { value: [number, number] };
 }
 
 /**
  * Patch the terrain's material to shade the silt detail. Install after the
- * survey ink: it reads the ink's world position (`vSurveyXZ`), chains the ink's
- * hook and key, and lands right after the bake's colour — before the ink and
- * the fog, after the veil's vertex colour, which three applies inside
- * `<color_fragment>`.
+ * survey ink: it reads the ink's world position (`vSurveyXZ`) and its sRGB
+ * transfer, chains the ink's hook and key, and lands right after the bake's
+ * colour — before the ink and the fog, after the veil's vertex colour, which
+ * three applies inside `<color_fragment>`.
  */
 export function installGroundDetail(
   material: Material,
@@ -248,6 +314,7 @@ export function installGroundDetail(
 ): GroundDetailUniforms {
   const uniforms: GroundDetailUniforms = {
     uGroundDetail: { value: texture },
+    uGroundNoise: { value: groundNoiseTexture() },
     uGroundDetailSize: { value: [terrain.cols * terrain.cellM, terrain.rows * terrain.cellM] },
   };
   const before = material.onBeforeCompile;
@@ -259,7 +326,7 @@ export function installGroundDetail(
       .replace('#include <common>', `#include <common>\n${fragmentPars()}`)
       .replace('#include <color_fragment>', `#include <color_fragment>\n${fragmentMain()}`);
   };
-  material.customProgramCacheKey = () => `${key}:seabed-detail-1`;
+  material.customProgramCacheKey = () => `${key}:seabed-detail-2`;
   material.needsUpdate = true;
   return uniforms;
 }

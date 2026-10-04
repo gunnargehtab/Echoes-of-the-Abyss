@@ -14,6 +14,7 @@ import {
   LinearFilter,
   MeshBasicMaterial,
   NoColorSpace,
+  RepeatWrapping,
   RGBAFormat,
   ShaderLib,
   UnsignedByteType,
@@ -23,7 +24,10 @@ import {
   detailStrengths,
   groundDetailCells,
   groundDetailTexture,
+  groundNoisePixels,
+  groundNoiseTexture,
   installGroundDetail,
+  NOISE_SIZE,
   patchGroundDetailCells,
   seabedDetailEnabled,
   STRENGTH_SCALE,
@@ -66,12 +70,17 @@ describe('the silt detail opt-in', () => {
 describe('the strength table', () => {
   it('never lets the detail out-shade an authored step', () => {
     // Every term is a fraction in [0, 1], so a pixel loses at most its row's
-    // sum. Half the hillshade's darkest shadow is the most it may lose.
+    // sum. The darkest it may leave is still lighter than a full-strength
+    // authored face, 1 - RELIEF_DEPTH, in the same encoded units.
+    assert.ok(1 - SEABED_DETAIL.MAX_SUM > 1 - RELIEF_DEPTH, 'MAX_SUM reaches a full face');
     for (const row of ROWS) {
-      for (const strength of row) assert.ok(strength >= 0, `negative strength in ${row}`);
+      for (const strength of row) {
+        assert.ok(strength >= 0, `negative strength in ${row}`);
+        assert.ok(strength <= STRENGTH_SCALE, `${strength} is past what a texel can store`);
+      }
       assert.ok(
-        sum(row) <= RELIEF_DEPTH / 2 + 1e-9,
-        `${row} darkens by ${sum(row)}, past half the hillshade's ${RELIEF_DEPTH}`
+        sum(row) <= SEABED_DETAIL.MAX_SUM + 1e-9,
+        `${row} darkens by ${sum(row)}, past ${SEABED_DETAIL.MAX_SUM}`
       );
     }
   });
@@ -129,7 +138,7 @@ describe('the per-cell strengths', () => {
         assert.ok(stored[k]! <= row[k]! + 1e-12, `cell ${i} stores more than its strength`);
         assert.ok(row[k]! - stored[k]! < STRENGTH_SCALE / 255, `cell ${i} lost a step`);
       }
-      assert.ok(sum(stored) <= RELIEF_DEPTH / 2 + 1e-9);
+      assert.ok(sum(stored) <= SEABED_DETAIL.MAX_SUM + 1e-9);
     }
   });
 
@@ -164,6 +173,50 @@ describe('the per-cell strengths', () => {
   });
 });
 
+describe('the noise lattice', () => {
+  it('is four independent channels of the same bytes on every client', () => {
+    const a = groundNoisePixels();
+    const b = groundNoisePixels();
+    assert.deepEqual(a, b);
+    assert.equal(a.length, NOISE_SIZE * NOISE_SIZE * 4);
+    // Independent channels: no two correlate, and each spans the byte.
+    const n = NOISE_SIZE * NOISE_SIZE;
+    const mean = [0, 1, 2, 3].map((c) => {
+      let sum = 0;
+      for (let i = 0; i < n; i++) sum += a[i * 4 + c]!;
+      return sum / n;
+    });
+    for (let c = 0; c < 4; c++) assert.ok(Math.abs(mean[c]! - 127.5) < 4, `channel ${c} is biased`);
+    for (let c = 0; c < 4; c++) {
+      for (let d = c + 1; d < 4; d++) {
+        let cov = 0;
+        let vc = 0;
+        let vd = 0;
+        for (let i = 0; i < n; i++) {
+          const x = a[i * 4 + c]! - mean[c]!;
+          const y = a[i * 4 + d]! - mean[d]!;
+          cov += x * y;
+          vc += x * x;
+          vd += y * y;
+        }
+        assert.ok(Math.abs(cov / Math.sqrt(vc * vd)) < 0.05, `channels ${c} and ${d} correlate`);
+      }
+    }
+  });
+
+  it('is one page-lifetime texture: linear, repeating, no mipmaps', () => {
+    const texture = groundNoiseTexture();
+    assert.equal(groundNoiseTexture(), texture, 'one texture a page, never one a match');
+    assert.equal(texture.image.width, NOISE_SIZE);
+    assert.equal(texture.wrapS, RepeatWrapping);
+    assert.equal(texture.wrapT, RepeatWrapping);
+    assert.equal(texture.magFilter, LinearFilter);
+    assert.equal(texture.minFilter, LinearFilter);
+    assert.equal(texture.generateMipmaps, false);
+    assert.equal(texture.colorSpace, NoColorSpace);
+  });
+});
+
 describe('the silt detail shader', () => {
   const terrain = demoTerrain();
   const material = new MeshBasicMaterial({ vertexColors: true });
@@ -175,16 +228,19 @@ describe('the silt detail shader', () => {
   const fragment = shader.fragmentShader;
 
   it('chains the survey ink, keeps its cells, and keys itself apart', () => {
-    assert.equal(material.customProgramCacheKey(), 'survey-ink:seabed-detail-1');
+    assert.equal(material.customProgramCacheKey(), 'survey-ink:seabed-detail-2');
     assert.equal((shader.uniforms.uSurveyCells as { value: unknown }).value, surveyCells);
     assert.equal((shader.uniforms.uGroundDetail as { value: unknown }).value, texture);
     assert.deepEqual((shader.uniforms.uGroundDetailSize as { value: unknown }).value, [1500, 1250]);
+    assert.equal((shader.uniforms.uGroundNoise as { value: unknown }).value, groundNoiseTexture());
   });
 
   it('shades after the bake and the veil, before the ink and the fog', () => {
     const colour = fragment.indexOf('#include <color_fragment>');
-    const detail = fragment.indexOf('diffuseColor.rgb *= 1.0 - gFade');
-    const ink = fragment.indexOf('diffuseColor.rgb = surveyDecode');
+    const detail = fragment.indexOf(
+      'diffuseColor.rgb = surveyDecode(surveyEncode(diffuseColor.rgb) * gGain)'
+    );
+    const ink = fragment.indexOf('diffuseColor.rgb = surveyDecode( mix(');
     const fog = fragment.indexOf('#include <fog_fragment>');
     assert.ok(colour > 0 && detail > colour, 'the detail must follow the bake and vertex colour');
     assert.ok(ink > detail, 'the ink must be drawn over the detail');
@@ -192,29 +248,39 @@ describe('the silt detail shader', () => {
   });
 
   it('darkens only, by one gain on all three channels, and fades with distance', () => {
-    assert.match(fragment, /diffuseColor\.rgb \*= 1\.0 - gFade \* dot\(gStrength, vec4\(/);
+    assert.match(fragment, /float gGain = 1\.0 - gFade \* dot\(gStrength, vec4\(/);
+    // Scaled in encoded space, as the bake scales its bytes: RELIEF_DEPTH's units.
+    assert.match(fragment, /surveyDecode\(surveyEncode\(diffuseColor\.rgb\) \* gGain\)/);
     const [near, far] = SEABED_DETAIL.FADE_M_PER_PX;
     assert.match(fragment, new RegExp(`smoothstep\\(${near}\\.0, ${far}\\.0, gMpp\\)`));
     for (const term of ['gDune', 'gRipple', 'gScour', 'gGrain']) {
       assert.match(fragment, new RegExp(`float ${term} =`), `${term} is never computed`);
     }
-    assert.match(fragment, /float gDune = clamp\(/, 'the dune term must stay in [0, 1]');
+    assert.match(
+      fragment,
+      /float gDune = 0\.5 \+ 0\.5 \* clamp\(/,
+      'the dune term must stay in [0, 1]'
+    );
   });
 
-  it('hashes with integers, never a sine, and takes derivatives before any branch', () => {
+  it('hashes nothing, fetches seven times, and takes derivatives before any branch', () => {
+    // The lattice is a texture of propHash bytes. A shader hash either loses
+    // bits at map coordinates (a sine) or costs the named GPU a millisecond
+    // (integer multiplies, the first cut), so neither may come back.
     const main = fragment.slice(fragment.indexOf('vec2 gp = vSurveyXZ;'));
-    assert.doesNotMatch(
-      main.slice(0, main.indexOf('diffuseColor.rgb *= 1.0 - gFade')),
-      /\bsin\(dot/
-    );
-    assert.match(fragment, /uint groundHash\(uvec2 v\)/);
-    assert.doesNotMatch(fragment, /fract\(sin\(dot\(p/);
-    const derivative = main.indexOf('dFdx(gp)');
+    assert.doesNotMatch(fragment, /\buint\b|\buvec2\b|43758/);
+    assert.doesNotMatch(main.slice(0, main.indexOf('float gGain')), /\bsin\(dot/);
+    const detail = main.slice(0, main.indexOf('diffuseColor.rgb = surveyDecode'));
+    const fetches = (detail.match(/texture2D\(|groundNoise\(/g) ?? []).length;
+    assert.ok(fetches <= 7, `${fetches} fetches a fragment, past seven`);
     const branch = main.search(/\?|\bif\b/);
-    assert.ok(
-      derivative > 0 && derivative < branch,
-      'derivatives in non-uniform flow are undefined'
-    );
+    for (const derivative of ['dFdx(gp)', 'dFdy(gp)', 'dFdx(gWarp)', 'dFdy(gWarp)']) {
+      const at = main.indexOf(derivative);
+      assert.ok(
+        at > 0 && at < branch,
+        `${derivative}: derivatives in non-uniform flow are undefined`
+      );
+    }
   });
 
   it('leaves the material unlit and its other hooks in place', () => {

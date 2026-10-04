@@ -50,29 +50,37 @@ export const SORROWGATE_LOOK = {
 export const SEABED_DETAIL = {
   /**
    * SPEC — the most each term may darken a pixel, by biome: dunes, ripples,
-   * scours, grain. No row's sum may exceed half the hillshade's darkest
-   * shadow, which the frontend's seabed test holds against `RELIEF_DEPTH`.
+   * scours, grain, as encoded-space gains like the bake's. No row's sum may
+   * exceed `MAX_SUM`.
    */
   STRENGTH: {
-    [Biome.OpenWater]: [0.1, 0.04, 0.04, 0.03],
-    [Biome.KelpForest]: [0.05, 0.02, 0.05, 0.04],
-    [Biome.ThermalVein]: [0, 0, 0.08, 0.06],
-    [Biome.AbyssalTrench]: [0.06, 0, 0.03, 0.02],
-    [Biome.ResonanceField]: [0.06, 0.02, 0.04, 0.04],
-    [Biome.CoralRuins]: [0.04, 0.03, 0.04, 0.05],
+    [Biome.OpenWater]: [0.25, 0.07, 0.05, 0.03],
+    [Biome.KelpForest]: [0.18, 0.04, 0.1, 0.06],
+    [Biome.ThermalVein]: [0, 0, 0.16, 0.1],
+    [Biome.AbyssalTrench]: [0.14, 0, 0.08, 0.04],
+    [Biome.ResonanceField]: [0.18, 0.04, 0.08, 0.06],
+    [Biome.CoralRuins]: [0.1, 0.05, 0.08, 0.08],
   } as Record<Biome, readonly [number, number, number, number]>,
   /** SPEC — rock admits no water, so it has no silt to drift or ripple. */
-  ROCK_STRENGTH: [0, 0, 0.06, 0.06] as readonly [number, number, number, number],
+  ROCK_STRENGTH: [0, 0, 0.12, 0.1] as readonly [number, number, number, number],
+  /**
+   * SPEC — the most a row may darken in all. Its darkest pixel, 0.60 of the
+   * fill, stays lighter than a full-strength authored face (1 − the frontend's
+   * `RELIEF_DEPTH`, 0.58), which the frontend's seabed test holds.
+   */
+  MAX_SUM: 0.4,
   /** SPEC — metres per pixel: whole through the first, gone by the second. */
   FADE_M_PER_PX: [2, 8] as readonly [number, number],
   /** TUNABLE — dune crest spacing and the lee face's share of it, metres. */
-  DUNE_M: 60,
+  DUNE_M: 110,
   DUNE_LEE: 0.3,
+  /** TUNABLE — how hard the hillshade saturates: most of a lee dark, most of a stoss lit. */
+  DUNE_CONTRAST: 2.5,
   /** TUNABLE — how far the crests meander, and by how many crest spacings. */
-  MEANDER_M: 240,
-  MEANDER_CYCLES: 1.2,
-  MEANDER_FINE_M: 80,
-  MEANDER_FINE_CYCLES: 0.35,
+  MEANDER_M: 420,
+  MEANDER_CYCLES: 1,
+  MEANDER_FINE_M: 130,
+  MEANDER_FINE_CYCLES: 0.3,
   /** TUNABLE — the field that fades dunes in and out, and the least it leaves. */
   PATCH_M: 400,
   PATCH_FLOOR: 0.25,

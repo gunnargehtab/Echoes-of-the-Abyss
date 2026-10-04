@@ -618,6 +618,23 @@ buffer, not by what is in frame: one copy and one draw of the whole frame.
 - **Stations.** The halo's: capture.mjs's four cameras on Ventfront and Sorrowgate, and the
   fight station of `stations.mjs` on Ventfront, at ratio 1 and 1.5.
 
+**Silt detail** ([art-direction.md](art-direction.md#silt-detail-and-seated-stones--spec),
+development-only behind `?seabed-detail=1` until a decision there promotes it). A patch on
+the terrain material the canvas already draws, and stones the prop layer already stands.
+
+- **Passes, calls and triangles.** None. Ventfront reads 63–64 calls and 150,676–150,696
+  triangles at capture.mjs's four cameras, on and off.
+- **Memory.** One RGBA8 texel a cell, 4 KiB on a 32 × 32 map, a view; and a 128 × 128
+  RGBA8 noise lattice, 64 KiB, once a page. The scours are pixels of the bake the view
+  already holds.
+- **GPU time.** On − off `avgGpuMs`, unpaced and queued on the named GPU, two runs each:
+  **0.06–0.13 ms at ratio 1 and 0.12–0.24 ms at 1.5**, the close camera the most, with the
+  conn frame at 0.70–0.86 and 1.30–1.70 ms ([issue-1083](screenshots/issue-1083/README.md)).
+  A first cut that hashed its noise per fragment read 0.27–0.49 and 0.46–1.05 ms.
+- **CPU time.** `avgConnMs`, on − off, read −0.10 to +0.03 ms: run-to-run spread.
+- **Stations.** capture.mjs's four cameras on Ventfront at ratio 1 and 1.5. Sorrowgate keeps
+  its own surface and never draws the layer.
+
 It must fit within the existing 150-call/400,000-triangle frame limits, not silently borrow historical
 headroom from #286 as a current measurement. That reading measures CPU submit and overlay
 time, not isolated GPU execution time.
